@@ -22,6 +22,7 @@ const compileTestNode = (
   const resolution = resolveNode(input, {
     ...shared.registries,
     ...shared.layout,
+    gatingOn: shared.host.lowerTex !== undefined,
     scopeDefaults: style.defaults,
     mode: style.theme.mode,
     irPath,

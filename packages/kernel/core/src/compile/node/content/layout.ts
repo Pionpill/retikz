@@ -1,6 +1,6 @@
 import type { TextFont } from '../../../contract';
-import { resolveTextMetrics, resolveTextLine } from '../../../resolve';
-import type { CanonicalFont, TextLineResolution } from '../../../resolve';
+import { resolveTextMetrics } from '../../../resolve';
+import type { CanonicalFont } from '../../../resolve';
 import type { InlineLineLayout, LineLayoutContext } from '../../text';
 import { layoutInlineLine } from '../../text';
 import type { NodeTextLineLayout, NodeTextLayoutContext } from '../types';
@@ -8,13 +8,7 @@ import { measureMinimumTextWidth, wrapText } from './text';
 
 /** 节点正文布局输入 */
 type InputNodeContentLayout = NodeTextLayoutContext & {
-  /** 基准字体大小 */
-  fontSize: number;
-  /** 未缩放前的节点基准字号 */
-  baseFontSize: number;
-  /** preset 与 rem 字号解析的根字号 */
-  rootFontSize: number;
-  /** 行高 */
+  /** 已确定的行高 */
   lineHeight: number;
   /** 已按节点缩放处理的最大文本宽度 */
   maxTextWidth?: number;
@@ -36,8 +30,6 @@ type NodeContentLayout = {
       baselineOffset: number;
     }>;
   };
-  /** 按作者行排列的有效文字属性 */
-  resolvedLines: Array<TextLineResolution>;
   /** 内容文本宽度 */
   textWidth: number;
   /** 内容文本高度 */
@@ -48,60 +40,18 @@ type NodeContentLayout = {
 
 /** 布局节点正文文本 */
 export const layoutNodeContent = (input: InputNodeContentLayout): NodeContentLayout => {
-  const {
-    node,
-    measureText,
-    texLowering,
-    fontSize,
-    baseFontSize,
-    fontScale,
-    rootFontSize,
-    fontFamily,
-    fontWeight,
-    fontStyle,
-    lineHeight,
-    maxTextWidth,
-    minimumTextWidth = false,
-  } = input;
-
-  const rawLines = node.text;
-  const resolvedLines: Array<TextLineResolution> = [];
+  const { node, measureText, tex: texLowering, lineHeight, maxTextWidth, minimumTextWidth = false } = input;
+  const { text: resolved, font: blockFont } = node;
+  const { size: fontSize, family: fontFamily, weight: fontWeight, style: fontStyle } = blockFont;
   let textWidth = 0;
   let textHeight = 0;
   let lines: Array<NodeTextLineLayout> | undefined;
   let inlineBlock: { lines: Array<{ laid: InlineLineLayout; baselineOffset: number }> } | undefined;
   let textBaselineOffsets: Array<number> | undefined;
 
-  const texGatingOn = texLowering?.lowerTex !== undefined;
   const inlineWarn = texLowering?.warn ?? ((): void => {});
-  if (rawLines) {
-    const anyMixed = rawLines.some(spec => typeof spec === 'object' && 'segments' in spec);
-    let resolved: Array<TextLineResolution> = [];
-    if (
-      anyMixed ||
-      (texGatingOn &&
-        rawLines.some(spec =>
-          typeof spec === 'string' ? spec.includes('$') : 'text' in spec && spec.text.includes('$'),
-        ))
-    ) {
-      const scaledBlockFont: CanonicalFont = {
-        size: fontSize,
-        family: fontFamily,
-        weight: fontWeight,
-        style: fontStyle,
-      };
-      resolved = rawLines.map(spec =>
-        resolveTextLine(spec, {
-          rootFontSize,
-          inheritedFont: scaledBlockFont,
-          gatingOn: texGatingOn,
-          warn: inlineWarn,
-          warningMessage: 'Unbalanced `$` in node text; the trailing fragment is kept literal.',
-        }),
-      );
-    }
-    if (anyMixed || resolved.some(line => line.hasMath)) {
-      const blockFont: TextFont = { size: fontSize, family: fontFamily, weight: fontWeight, style: fontStyle };
+  if (resolved) {
+    if (resolved.some(line => line.mixed)) {
       const ctx: LineLayoutContext = {
         measureText,
         lowerTex: texLowering?.lowerTex,
@@ -116,7 +66,6 @@ export const layoutNodeContent = (input: InputNodeContentLayout): NodeContentLay
         cursor += slot;
         if (laid.width > textWidth) textWidth = laid.width;
 
-        resolvedLines.push(r);
         return { laid, baselineOffset };
       });
       inlineBlock = { lines: blockLines };
@@ -142,27 +91,16 @@ export const layoutNodeContent = (input: InputNodeContentLayout): NodeContentLay
         return measured;
       };
 
-      const plainLines = rawLines.map(spec => {
-        const line = resolveTextLine(spec, {
-          rootFontSize,
-          inheritedFont: {
-            size: baseFontSize,
-            family: fontFamily,
-            weight: fontWeight,
-            style: fontStyle,
-          },
-          gatingOn: texGatingOn,
-        });
+      const plainLines = resolved.map(line => {
         const lineStyle = line.style;
         const lineFontSize = lineStyle?.font?.size;
-        const font: TextFont = {
-          size: lineFontSize !== undefined ? lineFontSize * fontScale : fontSize,
+        const font: CanonicalFont = {
+          size: lineFontSize ?? fontSize,
           family: lineStyle?.font?.family ?? fontFamily,
           weight: lineStyle?.font?.weight ?? fontWeight,
           style: lineStyle?.font?.style ?? fontStyle,
         };
 
-        resolvedLines.push(line);
         return { text: line.plainText, lineStyle, lineFontSize, font };
       });
 
@@ -209,7 +147,7 @@ export const layoutNodeContent = (input: InputNodeContentLayout): NodeContentLay
           textBaselineOffsets.push(firstPlainBaselineOffset + lines.length * lineHeight);
           const out: NodeTextLineLayout = { text: ptext, sourceLineIndex };
           if (lineStyle !== undefined) {
-            if (lineFontSize !== undefined) out.fontSize = lineFontSize * fontScale;
+            if (lineFontSize !== undefined) out.fontSize = lineFontSize;
             if (lineStyle.font?.family !== undefined) out.fontFamily = lineStyle.font.family;
             if (lineStyle.font?.weight !== undefined) out.fontWeight = lineStyle.font.weight;
             if (lineStyle.font?.style !== undefined) out.fontStyle = lineStyle.font.style;
@@ -223,5 +161,5 @@ export const layoutNodeContent = (input: InputNodeContentLayout): NodeContentLay
     }
   }
 
-  return { lines, inlineBlock, resolvedLines, textWidth, textHeight, textBaselineOffsets };
+  return { lines, inlineBlock, textWidth, textHeight, textBaselineOffsets };
 };

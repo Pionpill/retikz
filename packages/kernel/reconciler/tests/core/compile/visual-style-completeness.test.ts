@@ -1,4 +1,4 @@
-﻿import { expect, it } from 'vitest';
+import { expect, it } from 'vitest';
 
 import {
   defineArrow,
@@ -61,7 +61,7 @@ it('分段线默认保留部分字体和视觉覆盖', () => {
     ],
   });
   const text = leaves(compileToScene(source).scene.primitives).filter(item => item.type === 'text');
-  expect(text[0]).toMatchObject({ fontSize: 24, fontFamily: 'serif', fontWeight: 'bold', fill: 'red', opacity: 0.5 });
+  expect(text[0]).toMatchObject({ fontSize: 24, fontFamily: 'serif', fontWeight: 700, fill: 'red', opacity: 0.5 });
   expect(text[1]).toMatchObject({ fontSize: 24, fontFamily: 'serif', fill: 'blue', opacity: 0.8 });
 });
 

@@ -162,6 +162,8 @@ import { NodeTextColor } from '@retikz/core';
 
 单文本行与分段行都支持 `fill`、`opacity` 和 `font`。分段行先继承块级字体，再应用行级默认和片段覆盖；片段只改字重时，字号和字体族仍继承所在行。公式采用所在行的有效字号，也可用公式片段的 `fontSize` 单独设置；`em` 相对所在行字号，`rem` 相对根字号。公式字体由 TeX 接入方处理。
 
+字重在字体解析阶段统一为数值：`normal` 对应 `400`，`bold` 对应 `700`，数值字重保持原值。Core 调用文本测量器及生成文本图元时使用数值字重；自定义 `measureText` 应按数值判断粗细。未指定字重时先继承，仍无值则保留宿主默认行为。
+
 ## 错误与限制
 
 Text 只在 Node 中生效，每个 Text 的 children 是字符串或数字。块级对齐、行距与折行宽度分别写在 `Node.layout.align`、`lineHeight` 与 `maxTextWidth`；行级字体写在 Text 的 `font`。

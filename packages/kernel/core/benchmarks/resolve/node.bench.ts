@@ -12,6 +12,8 @@ for (const kind of ['simple', 'inherited', 'contrast', 'pattern', 'labels'] as c
     { id: `resolve/node/${kind}`, dimensions: ['Node 解析', kind, kind === 'labels' ? '单节点，16 标签' : '单节点'] },
     () => {
       const context: NodeResolveContext = {
+        rootFontSize: 16,
+        gatingOn: false,
         mode: 'light',
         scopeDefaults:
           kind === 'inherited'
@@ -51,15 +53,20 @@ for (const kind of ['simple', 'inherited', 'contrast', 'pattern', 'labels'] as c
             });
           if (kind === 'contrast') {
             expect(result.node.textColor).toBe('#000000');
-            expect(result.node.text).toEqual(['A']);
+            expect(result.node.text).toMatchObject([{ plainText: 'A', segments: [{ text: 'A', font: { size: 16 } }] }]);
           }
           if (kind === 'pattern')
             expect(result.node.fill).toMatchObject({ kind: 'paint', pattern: { name: 'dots', size: 8 } });
           if (kind === 'labels') {
             expect(result.node.label).toHaveLength(16);
-            expect(result.node.label?.at(-1)).toMatchObject({ text: 'L15', position: 'top', distance: 12 });
+            expect(result.node.label?.at(-1)).toMatchObject({
+              text: [{ plainText: 'L15' }],
+              position: 'top',
+              distance: 12,
+            });
           }
-          if (kind === 'simple') expect(result.node.text).toEqual(['A']);
+          if (kind === 'simple')
+            expect(result.node.text).toMatchObject([{ plainText: 'A', segments: [{ text: 'A', font: { size: 16 } }] }]);
           expect(JSON.stringify(source)).toBe(original);
         },
       };

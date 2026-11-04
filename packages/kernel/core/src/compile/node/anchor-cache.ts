@@ -6,8 +6,7 @@ import type { Side } from '../../shared';
 import { isAnchor } from '../../shared';
 import { snapshotProviderPosition } from '../shared';
 import { anchorOf, angleBoundaryOf } from './anchors';
-import type { NodeBoundaryState } from './boundary-store';
-import type { CompiledNodeLayout } from './types';
+import type { CompiledNodeLayout, NodeBoundaryState } from './types';
 
 /** 单个 CompiledNodeLayout 生命周期内的 anchor 坐标缓存 */
 const cache = new WeakMap<CompiledNodeLayout, Map<string, IRPosition>>();

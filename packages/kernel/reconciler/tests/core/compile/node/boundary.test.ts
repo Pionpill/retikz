@@ -65,6 +65,8 @@ const layoutBoundaryNode = (node: IRNode, namespaceStack: NamespaceStack) =>
   (() => {
     const boundaries = resolveBoundaryRegistry();
     const resolution = resolveNode(node, {
+      rootFontSize: 16,
+      gatingOn: false,
       scopeDefaults: {},
       mode: 'light',
       shapeRegistry: BUILTIN_SHAPES,

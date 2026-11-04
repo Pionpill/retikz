@@ -46,6 +46,7 @@ export const visitNode = (
       const resolution = resolveNode(child, {
         ...stageRuntime.context.registries,
         ...stageRuntime.context.layout,
+        gatingOn: stageRuntime.context.host.lowerTex !== undefined,
         scopeDefaults,
         mode: theme.mode,
         irPath: nodeIrPath,
@@ -57,7 +58,6 @@ export const visitNode = (
         positionContext: createTreePositionContext(stageRuntime, scopeChain),
         composedTransform: stageRuntime.state.execution.scopeTransformComposer.resolve(scopeChain),
         scopeChain,
-        rootFontSize: stageRuntime.context.layout.rootFontSize,
         allocationWidthProposal: layoutContext?.childProposal?.x,
         texLowering: { lowerTex: stageRuntime.context.host.lowerTex, warn },
         warn,

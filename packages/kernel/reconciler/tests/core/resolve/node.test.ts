@@ -21,8 +21,10 @@ const sceneWith = (child: IRNode): IRScene => ({
   children: [child],
 });
 
-const resolve = (source: IRNode, scopeDefaults: MergedScopeDefaults = {}) =>
+const resolve = (source: IRNode, scopeDefaults: MergedScopeDefaults = {}, rootFontSize = 16) =>
   resolveNode(source, {
+    rootFontSize,
+    gatingOn: false,
     scopeDefaults,
     mode: 'light',
     shapeRegistry: resolveShapeRegistry(),
@@ -35,6 +37,35 @@ const resolve = (source: IRNode, scopeDefaults: MergedScopeDefaults = {}) =>
   });
 
 describe('resolveNode', () => {
+  it.each([false, true])('解析正文与标签字体并保留缩放顺序，混排=%s', mixed => {
+    const source: IRNode = {
+      type: 'node',
+      scale: { x: 2, y: 3 },
+      style: { font: { size: '2em', weight: 'bold', family: 'serif' } },
+      text: [
+        mixed ? { segments: [{ text: 'inherited' }] } : 'inherited',
+        { text: 'absolute', font: { size: 12 } },
+        { text: 'relative', font: { size: '0.5em' } },
+        { text: 'root', font: { size: '1rem' } },
+      ],
+      label: { text: [{ text: 'label', font: { size: '1em' } }], font: { size: '0.5em', weight: 'normal' } },
+    };
+    const before = structuredClone(source);
+    const result = resolve(source, {}, 20).node;
+    expect(result.font).toEqual({ size: 80, weight: 700, family: 'serif', style: undefined });
+    expect(result.lineHeight).toBe(144);
+    expect(result.text?.map(line => line.segments)).toMatchObject([
+      [{ text: 'inherited', font: { size: 80, weight: 700 } }],
+      [{ text: 'absolute', font: { size: mixed ? 12 : 24 } }],
+      [{ text: 'relative', font: { size: 40 } }],
+      [{ text: 'root', font: { size: mixed ? 20 : 40 } }],
+    ]);
+    expect(result.label).toMatchObject([
+      { font: { size: 40, weight: 400 }, text: [{ segments: [{ text: 'label', font: { size: 40, weight: 400 } }] }] },
+    ]);
+    expect(source).toEqual(before);
+  });
+
   it('节点填充绑定图案实现与默认尺寸，描边保留纯色且不修改源配置', () => {
     const source = node({ style: { fill: { kind: 'pattern', shape: 'dots' }, stroke: 'red' } });
     const result = resolve(source).node;
@@ -136,13 +167,15 @@ describe('resolveNode', () => {
   it('提供 Node 默认值，而不更改不相关的 IR 字段', () => {
     const source = node({ id: 'node-a', text: 'A' });
 
-    expect(resolve(source).node).toEqual({
+    expect(resolve(source).node).toMatchObject({
       ...source,
       padding: { top: 8, right: 8, bottom: 8, left: 8 },
       margin: { top: 0, right: 0, bottom: 0, left: 0 },
       minimumSize: { width: 0, height: 0 },
       scale: { x: 1, y: 1 },
-      text: ['A'],
+      text: [{ plainText: 'A', segments: [{ text: 'A', font: { size: 16 } }], mixed: false, hasMath: false }],
+      font: { size: 16 },
+      lineHeight: 19.2,
       label: undefined,
       align: 'middle',
       rotate: 0,
@@ -152,11 +185,12 @@ describe('resolveNode', () => {
   });
 
   it('规范化文本简写，而不删除空字符串或重新排序行', () => {
-    expect(resolve(node({ text: '' })).node.text).toEqual(['']);
+    expect(resolve(node({ text: '' })).node.text?.map(line => line.plainText)).toEqual(['']);
 
     const lines: NonNullable<IRNode['text']> = ['first', { text: 'second' }];
 
-    expect(resolve(node({ text: lines })).node.text).toEqual(lines);
+    expect(resolve(node({ text: lines })).node.text?.map(line => line.plainText)).toEqual(['first', 'second']);
+    expect(lines).toEqual(['first', { text: 'second' }]);
   });
 
   it('将有效标签默认值具体化到每个规范标签中', () => {
@@ -179,23 +213,23 @@ describe('resolveNode', () => {
     });
     const resolved = resolve(node({ label: { text: 'x', font: { size: 10 } } }), frame).node;
 
-    expect(resolved.label).toEqual([
+    expect(resolved.label).toMatchObject([
       {
-        text: 'x',
+        text: [{ plainText: 'x' }],
         align: 'middle',
         position: 'top',
         placement: 'outside',
         distance: 12,
         textColor: 'blue',
         opacity: 0.5,
-        font: { family: 'default', size: 10, weight: 'bold' },
+        font: { family: 'default', size: 10, weight: 700 },
       },
     ]);
   });
 
   it('填充规范标签默认值，而不替换明确的零或 false', () => {
-    expect(resolve(node({ label: { text: 'default' } })).node.label).toEqual([
-      { text: 'default', align: 'middle', position: 'top', placement: 'outside', distance: 12 },
+    expect(resolve(node({ label: { text: 'default' } })).node.label).toMatchObject([
+      { text: [{ plainText: 'default' }], align: 'middle', position: 'top', placement: 'outside', distance: 12 },
     ]);
 
     expect(
@@ -211,9 +245,9 @@ describe('resolveNode', () => {
           },
         }),
       ).node.label,
-    ).toEqual([
+    ).toMatchObject([
       {
-        text: 'explicit',
+        text: [{ plainText: 'explicit' }],
         align: 'middle',
         position: { boundary: 'left', fraction: 0 },
         placement: 'inside',
@@ -225,19 +259,19 @@ describe('resolveNode', () => {
   });
 
   it('默认规范标签对齐到中间并保留显式对齐', () => {
-    expect(resolve(node({ label: { text: 'default' } })).node.label).toEqual([
-      { text: 'default', position: 'top', placement: 'outside', distance: 12, align: 'middle' },
+    expect(resolve(node({ label: { text: 'default' } })).node.label).toMatchObject([
+      { text: [{ plainText: 'default' }], position: 'top', placement: 'outside', distance: 12, align: 'middle' },
     ]);
 
-    expect(resolve(node({ label: { text: 'explicit', align: 'start' } })).node.label).toEqual([
-      { text: 'explicit', position: 'top', placement: 'outside', distance: 12, align: 'start' },
+    expect(resolve(node({ label: { text: 'explicit', align: 'start' } })).node.label).toMatchObject([
+      { text: [{ plainText: 'explicit' }], position: 'top', placement: 'outside', distance: 12, align: 'start' },
     ]);
   });
 
   it('当其位置省略 1 时，填充边界标签分数', () => {
-    expect(resolve(node({ label: { text: 'boundary', position: { boundary: 'right' } } })).node.label).toEqual([
+    expect(resolve(node({ label: { text: 'boundary', position: { boundary: 'right' } } })).node.label).toMatchObject([
       {
-        text: 'boundary',
+        text: [{ plainText: 'boundary' }],
         align: 'middle',
         position: { boundary: 'right', fraction: 0.5 },
         placement: 'outside',

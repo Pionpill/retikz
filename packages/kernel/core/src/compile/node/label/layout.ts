@@ -1,24 +1,10 @@
 import type { TextMeasurer } from '../../../contract';
-import { resolveTextMetrics, resolveFont, resolveTextLine } from '../../../resolve';
-import type { CanonicalFont } from '../../../resolve';
+import { resolveTextMetrics } from '../../../resolve';
+import type { CanonicalNodeLabel } from '../../../resolve';
 import { layoutInlineLine } from '../../text';
 import { DEFAULT_LINE_HEIGHT_FACTOR } from '../content';
-import type {
-  CompiledNodeLayout,
-  MeasuredNodeLabel,
-  NodeLabelLayout,
-  NodeLabelResolution,
-  NodeTextLayoutContext,
-} from '../types';
+import type { CompiledNodeLayout, MeasuredNodeLabel, NodeLabelLayout, NodeTextLayoutContext } from '../types';
 import { resolveNodeLabelGeometry } from './geometry';
-
-/** 节点附属 label 布局输入 */
-type InputNodeLabelsLayout = NodeTextLayoutContext & {
-  /** 基准字体大小 */
-  baseFontSize: number;
-  /** preset 与 rem 字号解析的根字号 */
-  rootFontSize: number;
-};
 
 /** 只为 Node label 包装规范化文字度量 */
 const nodeLabelMeasurer =
@@ -28,37 +14,15 @@ const nodeLabelMeasurer =
 
 /** 测量节点附属 label，不读取 Node rect */
 export const measureNodeLabels = (
-  input: InputNodeLabelsLayout,
-): Array<{ layout: MeasuredNodeLabel; properties: NodeLabelResolution }> | undefined => {
-  const { node, measureText, texLowering, baseFontSize, rootFontSize, fontScale, fontFamily, fontWeight, fontStyle } =
-    input;
-  const rawLabels = node.label;
-  const texGatingOn = texLowering?.lowerTex !== undefined;
+  input: NodeTextLayoutContext,
+): Array<{ layout: MeasuredNodeLabel; properties: CanonicalNodeLabel }> | undefined => {
+  const { node, measureText, tex: texLowering } = input;
   const inlineWarn = texLowering?.warn ?? ((): void => {});
   const measureLabelText = nodeLabelMeasurer(measureText);
 
-  return rawLabels?.map(lab => {
-    const resolvedLabelFont = resolveFont(lab.font, {
-      rootFontSize,
-      inheritedFont: { size: baseFontSize, family: fontFamily, weight: fontWeight, style: fontStyle },
-    });
-    const labFontSize = resolvedLabelFont.size * fontScale;
-    const labFamily = resolvedLabelFont.family;
-    const labWeight = resolvedLabelFont.weight;
-    const labStyle = resolvedLabelFont.style;
-    const labTextColor = lab.textColor ?? node.textColor;
-    const labTextFont: CanonicalFont = { size: labFontSize, family: labFamily, weight: labWeight, style: labStyle };
-
-    const sourceLines = typeof lab.text === 'string' ? lab.text.split('\n') : lab.text;
-    const resolved = sourceLines.map(line =>
-      resolveTextLine(line, {
-        rootFontSize,
-        inheritedFont: labTextFont,
-        gatingOn: texGatingOn,
-        warn: inlineWarn,
-        warningMessage: 'Unbalanced `$` in node label; the trailing fragment is kept literal.',
-      }),
-    );
+  return node.label?.map(lab => {
+    const { font: labTextFont, text: resolved } = lab;
+    const labFontSize = labTextFont.size;
     const laid =
       resolved.length > 1 || resolved[0].mixed || resolved[0].style !== undefined
         ? resolved.map(line =>
@@ -84,7 +48,7 @@ export const measureNodeLabels = (
         : resolveTextMetrics(measureText(resolved[0].plainText, labTextFont));
 
     return {
-      properties: { ...lab, text: resolved, font: labTextFont, textColor: labTextColor },
+      properties: lab,
       layout: {
         laid,
         measuredWidth: metrics.width,
@@ -99,6 +63,6 @@ export const measureNodeLabels = (
 /** 把已测量 label 绑定到最终 Node rect */
 export const layoutNodeLabels = (
   layout: CompiledNodeLayout,
-  labels: Array<{ layout: MeasuredNodeLabel; properties: NodeLabelResolution }> | undefined,
+  labels: Array<{ layout: MeasuredNodeLabel; properties: CanonicalNodeLabel }> | undefined,
 ): Array<NodeLabelLayout> | undefined =>
   labels?.map(label => resolveNodeLabelGeometry(layout, label.layout, label.properties));

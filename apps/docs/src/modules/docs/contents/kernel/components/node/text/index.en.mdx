@@ -162,6 +162,8 @@ import { NodeTextColor } from '@retikz/core';
 
 Both text lines and segmented lines accept `fill`, `opacity`, and `font`. Segmented lines inherit the block font, then apply line defaults and segment overrides. A segment that changes only weight keeps the line size and family. Math uses the effective line size unless its `fontSize` overrides it; `em` is relative to that line and `rem` to the root size. The TeX integration controls math fonts.
 
+Font resolution converts `normal` to `400` and `bold` to `700`, while preserving numeric weights. Core passes numeric weights to text measurers and generated text primitives; custom `measureText` callbacks should compare numeric weights. An omitted weight inherits first; if no inherited value exists, the host default remains in effect.
+
 ## Errors and limitations
 
 Text only works inside Node and takes string or number children. Block alignment, line height, and wrapping width belong to `Node.layout.align`, `lineHeight`, and `maxTextWidth`; per-line fonts belong to Text `font`.

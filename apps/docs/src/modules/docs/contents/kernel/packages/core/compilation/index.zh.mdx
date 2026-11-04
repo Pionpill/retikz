@@ -143,7 +143,7 @@ Scene 组装时单独校验 `padding` 非负且有限，显式提供 viewBox 时
 
 `compileChildrenToPrimitives` 按 `children` 的声明顺序分派子项。本例先把 Path 放入待处理列表，再处理 A、B。一个节点的内部过程可以用三个结果理解：
 
-- CanonicalNode：合并有效样式、补齐缺省值并解析填充与描边后的节点，`fill` / `stroke` 直接携带 paint 解析结果。
+- CanonicalNode：已完成样式继承、默认值、正文与标签字体和绘制资源解析的节点，`fill` / `stroke` 直接携带 paint 解析结果。
 - NodeResolution：CanonicalNode 加上已经选定的形状与连接边界，供布局使用。
 - CompiledNodeLayout：测量并定位后的节点结果，按节点属性、形状、连接面、几何、正文排版和标签分组。
 
@@ -171,27 +171,33 @@ export type CanonicalNode = Omit<
   | 'shadow'
   | 'fill'
   | 'stroke'
-> & {
-  fill?: InputPaintResolution;
-  stroke?: InputPaintResolution;
-  position: NonNullable<IRNode['position']>;
-  padding: BoundsInsets;
-  margin: BoundsInsets;
-  minimumSize: {
-    width: number;
-    height: number;
+  | 'opacity'
+  | 'font'
+  | 'lineHeight'
+> &
+  GraphicOpacityResolution & {
+    fill?: InputPaintResolution;
+    stroke?: InputPaintResolution;
+    position: NonNullable<IRNode['position']>;
+    padding: BoundsInsets;
+    margin: BoundsInsets;
+    minimumSize: {
+      width: number;
+      height: number;
+    };
+    scale: {
+      x: number;
+      y: number;
+    };
+    font: CanonicalFont;
+    lineHeight: number;
+    text?: Array<TextLineResolution>;
+    label?: Array<CanonicalNodeLabel>;
+    align: NodeTextAlign;
+    rotate: number;
+    dashPattern?: StrokeDashPattern;
+    shadow?: CanonicalDropShadow;
   };
-  scale: {
-    x: number;
-    y: number;
-  };
-  text?: Array<TextLineColorSource>;
-  label?: Array<CanonicalNodeLabel>;
-  align: NodeTextAlign;
-  rotate: number;
-  dashPattern?: StrokeDashPattern;
-  shadow?: CanonicalDropShadow;
-};
 ```
 
 </DocTab>
@@ -200,9 +206,10 @@ export type CanonicalNode = Omit<
 
 ```ts
 export type NodeResolution = Readonly<{
+  irPath: PropertyPath;
   node: CanonicalNode;
   shape: ShapeResolution;
-  boundary: BoundaryReferenceResolution;
+  boundary: BoundaryResolution;
 }>;
 ```
 
@@ -230,22 +237,12 @@ export type NodeLayoutGeometry = {
 };
 
 export type CompiledNode = {
-  properties: NodeResolvedProperties;
+  properties: CanonicalNode;
   layout: CompiledNodeLayout;
 };
 
-export type NodeResolvedProperties = Omit<CanonicalNode, 'text' | 'label'> & {
-  text?: Array<TextLineResolution>;
-  label?: Array<NodeLabelResolution>;
-};
-
-export type NodeLabelResolution = Omit<CanonicalNodeLabel, 'text' | 'font'> & {
-  text: TextLineResolution;
-  font: CanonicalFont;
-};
-
 export type NodeTextLayout = {
-  font: TextFont;
+  font: CanonicalFont;
   align: 'start' | 'middle' | 'end';
   lineHeight: number;
   baselineOffsets?: Array<number>;
@@ -259,7 +256,7 @@ export type NodeTextLayout = {
 
 </DocTabs>
 
-`resolveNode` 先确定有效配置和能力绑定，`layoutNode` 再确定正文与标签的文字属性，计算排版、节点尺寸及位置。返回的 `properties` 保存完整有效属性及身份，`layout` 保存计算后的几何与排版。描边宽度、颜色和虚线保持在同一属性来源；标签引线也保留完整配置。`emitNodePrimitives` 消费布局与当前属性生成 Scene 图元；普通文本通过作者行索引读取当前行样式，改色时无需重新折行。这里的数据结构不代替变化影响判断，Weave 的分类调度仍需要独立的能力契约。
+`resolveNode` 根据根字号和公式开关确定有效配置、能力绑定，以及正文和标签的字体、分段与样式，返回完整的 `CanonicalNode`。`layoutNode` 消费这些属性，计算测量、折行、节点尺寸及位置；尝试不同宽度时不再解析文字。返回的 `properties` 直接保留解析结果，`layout` 保存计算后的几何与排版。描边宽度、颜色和虚线保持在同一属性来源；标签引线也保留完整配置。`emitNodePrimitives` 消费布局与当前属性生成 Scene 图元；普通文本通过作者行索引读取当前行样式，改色时无需重新折行。这里的数据结构不代替变化影响判断，Weave 的分类调度仍需要独立的能力契约。
 
 <ComponentPreview files="compilation-node" size="lg" hideCode type="illustration" />
 
@@ -447,6 +444,7 @@ const resolution = resolveNode(
   {
     ...shared.registries,
     ...shared.layout,
+    gatingOn: shared.host.lowerTex !== undefined,
     scopeDefaults: {},
     mode: 'light',
     irPath: ['children', 0],

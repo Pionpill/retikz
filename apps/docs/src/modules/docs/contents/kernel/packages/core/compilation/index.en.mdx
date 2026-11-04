@@ -148,7 +148,7 @@ Traversal also creates state for this execution: emitted primitives, accumulated
 
 `compileChildrenToPrimitives` dispatches children in declaration order. Here it records the pending Path before processing A and B. Three results explain the work inside a node:
 
-- CanonicalNode: the node after effective styles are merged, defaults are filled, and paints are resolved; `fill` / `stroke` directly carry the paint resolution results.
+- CanonicalNode: the node with inherited styles, defaults, body and label fonts, and paints resolved; `fill` / `stroke` directly carry the paint resolution results.
 - NodeResolution: CanonicalNode together with the selected shape and connection boundary, ready for layout.
 - CompiledNodeLayout: the measured and positioned result, grouped into node properties, shape, boundary, geometry, text layout, and labels.
 
@@ -176,27 +176,33 @@ export type CanonicalNode = Omit<
   | 'shadow'
   | 'fill'
   | 'stroke'
-> & {
-  fill?: InputPaintResolution;
-  stroke?: InputPaintResolution;
-  position: NonNullable<IRNode['position']>;
-  padding: BoundsInsets;
-  margin: BoundsInsets;
-  minimumSize: {
-    width: number;
-    height: number;
+  | 'opacity'
+  | 'font'
+  | 'lineHeight'
+> &
+  GraphicOpacityResolution & {
+    fill?: InputPaintResolution;
+    stroke?: InputPaintResolution;
+    position: NonNullable<IRNode['position']>;
+    padding: BoundsInsets;
+    margin: BoundsInsets;
+    minimumSize: {
+      width: number;
+      height: number;
+    };
+    scale: {
+      x: number;
+      y: number;
+    };
+    font: CanonicalFont;
+    lineHeight: number;
+    text?: Array<TextLineResolution>;
+    label?: Array<CanonicalNodeLabel>;
+    align: NodeTextAlign;
+    rotate: number;
+    dashPattern?: StrokeDashPattern;
+    shadow?: CanonicalDropShadow;
   };
-  scale: {
-    x: number;
-    y: number;
-  };
-  text?: Array<TextLineColorSource>;
-  label?: Array<CanonicalNodeLabel>;
-  align: NodeTextAlign;
-  rotate: number;
-  dashPattern?: StrokeDashPattern;
-  shadow?: CanonicalDropShadow;
-};
 ```
 
 </DocTab>
@@ -205,9 +211,10 @@ export type CanonicalNode = Omit<
 
 ```ts
 export type NodeResolution = Readonly<{
+  irPath: PropertyPath;
   node: CanonicalNode;
   shape: ShapeResolution;
-  boundary: BoundaryReferenceResolution;
+  boundary: BoundaryResolution;
 }>;
 ```
 
@@ -235,22 +242,12 @@ export type NodeLayoutGeometry = {
 };
 
 export type CompiledNode = {
-  properties: NodeResolvedProperties;
+  properties: CanonicalNode;
   layout: CompiledNodeLayout;
 };
 
-export type NodeResolvedProperties = Omit<CanonicalNode, 'text' | 'label'> & {
-  text?: Array<TextLineResolution>;
-  label?: Array<NodeLabelResolution>;
-};
-
-export type NodeLabelResolution = Omit<CanonicalNodeLabel, 'text' | 'font'> & {
-  text: TextLineResolution;
-  font: CanonicalFont;
-};
-
 export type NodeTextLayout = {
-  font: TextFont;
+  font: CanonicalFont;
   align: 'start' | 'middle' | 'end';
   lineHeight: number;
   baselineOffsets?: Array<number>;
@@ -264,7 +261,7 @@ export type NodeTextLayout = {
 
 </DocTabs>
 
-`resolveNode` determines effective configuration and capability bindings. `layoutNode` then prepares body and label text properties and computes typesetting, node size, and position. The returned `properties` field holds complete effective properties and identity, while `layout` holds computed geometry and typesetting. Stroke width, color, and dashes share one property source; label pins also retain their complete configuration. `emitNodePrimitives` consumes layout and current properties to produce Scene primitives. Physical text lines retain their authored-line index so painting can read current line styles without wrapping again. This structure does not replace change-impact analysis; Weave still needs a separate capability contract for classified scheduling.
+`resolveNode` uses the root font size and TeX gating flag to resolve effective configuration, capability bindings, and body and label fonts, segments, and styles into a complete `CanonicalNode`. `layoutNode` consumes those properties to measure and wrap text and compute node size and position; trying another width does not parse text again. The returned `properties` field retains the resolution result, while `layout` holds computed geometry and typesetting. Stroke width, color, and dashes share one property source; label pins also retain their complete configuration. `emitNodePrimitives` consumes layout and current properties to produce Scene primitives. Physical text lines retain their authored-line index so painting can read current line styles without wrapping again. This structure does not replace change-impact analysis; Weave still needs a separate capability contract for classified scheduling.
 
 <ComponentPreview files="compilation-node" size="lg" hideCode type="illustration" />
 
@@ -474,6 +471,7 @@ const resolution = resolveNode(
   {
     ...shared.registries,
     ...shared.layout,
+    gatingOn: shared.host.lowerTex !== undefined,
     scopeDefaults: {},
     mode: 'light',
     irPath: ['children', 0],

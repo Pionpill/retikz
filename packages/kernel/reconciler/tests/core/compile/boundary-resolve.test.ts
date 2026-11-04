@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { strictObject } from 'zod';
 
 import { BuiltinCompileWarningCode } from '../../../../core/src';
-import type { BoundaryGeometryResolveContext } from '../../../../core/src/compile/node';
+import type { NodeBoundaryState, NodeVisualResolution } from '../../../../core/src/compile/node';
 import { resolveBoundary as resolveBoundaryGeometry } from '../../../../core/src/compile/node';
 import type { BoundaryDefinition, ShapeDefinition } from '../../../../core/src/contract';
 import { defineBoundary } from '../../../../core/src/contract';
@@ -34,15 +34,16 @@ const customWithoutEnvelope = {
   computeConnectionEnvelope: undefined,
 };
 
-type BoundaryTestContext = BoundaryGeometryResolveContext & {
-  shapeRegistry: ProviderRegistry<ShapeDefinition>;
-  boundaryRegistry: ProviderRegistry<BoundaryDefinition>;
-};
+type BoundaryTestContext = NodeBoundaryState &
+  NodeVisualResolution & {
+    shapeRegistry: ProviderRegistry<ShapeDefinition>;
+    boundaryRegistry: ProviderRegistry<BoundaryDefinition>;
+  };
 
 const resolveContext = (overrides: Partial<BoundaryTestContext> = {}): BoundaryTestContext => ({
-  visualDef: rectangle,
-  visualRect,
-  visualParams: {},
+  def: rectangle,
+  rect: visualRect,
+  params: {},
   shapeRegistry: registry,
   boundaryRegistry: resolveBoundaryRegistry(),
   ...overrides,
@@ -51,12 +52,13 @@ const resolveContext = (overrides: Partial<BoundaryTestContext> = {}): BoundaryT
 const resolveBoundary = (boundary: Parameters<typeof resolveNodeBoundary>[0], context: BoundaryTestContext) =>
   resolveBoundaryGeometry(
     resolveNodeBoundary(boundary, {
-      visualDef: context.visualDef,
-      visualParams: context.visualParams,
+      visualDef: context.def,
+      visualParams: context.params,
       shapeRegistry: context.shapeRegistry,
       boundaryRegistry: context.boundaryRegistry,
       irPath: context.irPath,
     }),
+    context,
     context,
   );
 
@@ -70,7 +72,7 @@ describe('resolveBoundary', () => {
   });
 
   it("'rectangle' / 'ellipse' → 视觉 AABB 上的内置边界提供者", () => {
-    expect(resolveBoundary('rectangle', resolveContext({ visualDef: ellipseShape })).def.name).toBe('rectangle');
+    expect(resolveBoundary('rectangle', resolveContext({ def: ellipseShape })).def.name).toBe('rectangle');
     expect(resolveBoundary('ellipse', resolveContext()).def.name).toBe('ellipse');
   });
 
@@ -97,7 +99,7 @@ describe('resolveBoundary', () => {
 
   it("'circle' 旋转连接面仍包围各角点并保留标准锚点", () => {
     const rotatedRect: CenteredBox = { x: 5, y: -7, width: 40, height: 20, rotate: Math.PI / 2 };
-    const r = resolveBoundary('circle', resolveContext({ visualRect: rotatedRect }));
+    const r = resolveBoundary('circle', resolveContext({ rect: rotatedRect }));
     const corner = r.def.computeBoundaryPoint(r.rect, [-5, 13], r.params);
     const top = r.def.resolveAnchor?.(r.rect, 'top', r.params);
 
@@ -120,7 +122,7 @@ describe('resolveBoundary', () => {
 
   it("'ellipse' 旋转连接面仍包围各角点并保留标准锚点", () => {
     const rotatedRect: CenteredBox = { x: 5, y: -7, width: 40, height: 20, rotate: Math.PI / 2 };
-    const r = resolveBoundary('ellipse', resolveContext({ visualRect: rotatedRect }));
+    const r = resolveBoundary('ellipse', resolveContext({ rect: rotatedRect }));
     const corner = r.def.computeBoundaryPoint(r.rect, [-5, 13], r.params);
     const top = r.def.resolveAnchor?.(r.rect, 'top', r.params);
 
@@ -137,8 +139,8 @@ describe('resolveBoundary', () => {
   });
 
   it("fit:'tight' → 使用视觉 shape 的 connection envelope", () => {
-    const circle = resolveBoundary('circle', resolveContext({ visualDef: shapeAwareVisual }));
-    const ellipse = resolveBoundary('ellipse', resolveContext({ visualDef: shapeAwareVisual }));
+    const circle = resolveBoundary('circle', resolveContext({ def: shapeAwareVisual }));
+    const ellipse = resolveBoundary('ellipse', resolveContext({ def: shapeAwareVisual }));
 
     expect(circle.rect).toMatchObject({ width: 24, height: 24 });
     expect(ellipse.rect).toMatchObject({ width: 28, height: 16 });
@@ -147,11 +149,11 @@ describe('resolveBoundary', () => {
   it("fit:'bounds' → 忽略 shape envelope，使用 AABB 安全公式", () => {
     const circle = resolveBoundary(
       { type: 'circle', params: { fit: 'bounds' } },
-      resolveContext({ visualDef: shapeAwareVisual }),
+      resolveContext({ def: shapeAwareVisual }),
     );
     const ellipse = resolveBoundary(
       { type: 'ellipse', params: { fit: 'bounds' } },
-      resolveContext({ visualDef: shapeAwareVisual }),
+      resolveContext({ def: shapeAwareVisual }),
     );
 
     expect(circle.rect.width).toBeCloseTo(2 * Math.hypot(20, 10));
@@ -163,11 +165,11 @@ describe('resolveBoundary', () => {
   it('gap → 在 fit 后统一增减半径或半轴', () => {
     const circle = resolveBoundary(
       { type: 'circle', params: { fit: 'tight', gap: 3 } },
-      resolveContext({ visualDef: shapeAwareVisual }),
+      resolveContext({ def: shapeAwareVisual }),
     );
     const ellipse = resolveBoundary(
       { type: 'ellipse', params: { fit: 'tight', gap: -2 } },
-      resolveContext({ visualDef: shapeAwareVisual }),
+      resolveContext({ def: shapeAwareVisual }),
     );
 
     expect(circle.rect).toMatchObject({ width: 30, height: 30 });
@@ -177,11 +179,11 @@ describe('resolveBoundary', () => {
   it('rectangle 的 tight / bounds 表现一致，仍应用 gap', () => {
     const tight = resolveBoundary(
       { type: 'rectangle', params: { fit: 'tight', gap: 3 } },
-      resolveContext({ visualDef: shapeAwareVisual }),
+      resolveContext({ def: shapeAwareVisual }),
     );
     const bounds = resolveBoundary(
       { type: 'rectangle', params: { fit: 'bounds', gap: 3 } },
-      resolveContext({ visualDef: shapeAwareVisual }),
+      resolveContext({ def: shapeAwareVisual }),
     );
 
     expect(tight.rect).toEqual(bounds.rect);
@@ -191,7 +193,7 @@ describe('resolveBoundary', () => {
   it('custom shape 缺少 envelope → warning 一次并回退 bounds', () => {
     const warnings: Array<{ code: string; message: string }> = [];
     const context = resolveContext({
-      visualDef: customWithoutEnvelope,
+      def: customWithoutEnvelope,
       connectionEnvelopeCache: new Map(),
       warn: (code, message) => warnings.push({ code, message }),
     });
@@ -211,11 +213,11 @@ describe('resolveBoundary', () => {
       computeConnectionEnvelope: () => ({ halfWidth: 0, halfHeight: 0 }),
     };
 
-    expect(() => resolveBoundary('circle', resolveContext({ visualDef: invalidVisual }))).toThrow(/envelope/i);
+    expect(() => resolveBoundary('circle', resolveContext({ def: invalidVisual }))).toThrow(/envelope/i);
     expect(() =>
       resolveBoundary(
         { type: 'ellipse', params: { fit: 'tight', gap: -8 } },
-        resolveContext({ visualDef: shapeAwareVisual }),
+        resolveContext({ def: shapeAwareVisual }),
       ),
     ).toThrow(/half-axis|half axes|positive/i);
   });

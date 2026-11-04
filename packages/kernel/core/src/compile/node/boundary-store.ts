@@ -1,21 +1,4 @@
-import type { PropertyPath } from '@retikz/foundation';
-import type { CenteredBox } from '@retikz/math';
-
-import type { ConnectionEnvelopeKind } from '../../contract';
-import type { CompileWarningCode } from '../shared';
-import type { CompiledNodeLayout } from './types';
-
-/** 连接面消费过程中的缓存和诊断状态 */
-export type NodeBoundaryState = {
-  /** 按连接面缓存已计算的包络 */
-  connectionEnvelopeCache?: Map<string, CenteredBox>;
-  /** 已发布回退诊断的连接面种类 */
-  connectionEnvelopeWarnings?: Set<ConnectionEnvelopeKind>;
-  /** 当前节点的诊断出口 */
-  warn?: (code: CompileWarningCode, message: string) => void;
-  /** 当前节点的来源路径 */
-  irPath?: PropertyPath;
-};
+import type { CompiledNodeLayout, NodeBoundaryState } from './types';
 
 /** 编译调用持有的节点连接边界上下文，不进入布局结果 */
 export type NodeBoundaryStore = {

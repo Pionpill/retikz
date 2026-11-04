@@ -20,7 +20,7 @@ import type {
 import type { ThemeMode } from '../../shared';
 import type { InputPaintResolution } from '../resource';
 import type { GraphicOpacityResolution, MergedScopeDefaults } from '../style';
-import type { ColorResolvedTextLine, LabelTextColorSource } from '../text';
+import type { CanonicalFont, ColorResolvedTextLine, LabelTextColorSource, TextLineResolution } from '../text';
 
 /** 已解析描边颜色与绘制资源的节点标签引线 */
 export type CanonicalNodeLabelPin = Omit<Exclude<IRNodeLabel['pin'], boolean | undefined>, 'stroke'> & {
@@ -64,7 +64,7 @@ export type NodeColorSource = Omit<NodePrimaryColorSource, 'text' | 'label'> & {
   /** 已解析行级与片段颜色的正文 */
   text?: string | Array<ColorResolvedTextLine>;
   /** 已解析文字和引线颜色的附属标签 */
-  label?: Array<CanonicalNodeLabel>;
+  label?: Array<NodeLabelColorSource>;
 };
 
 /** 已补齐边界比例的节点标签位置 */
@@ -73,8 +73,8 @@ export type CanonicalNodeLabelBoundaryPosition = Omit<IRNodeLabelBoundaryPositio
   fraction: number;
 };
 
-/** 展开静态位置与放置默认值后的节点标签 */
-export type CanonicalNodeLabel = Omit<
+/** 已展开位置默认值并解析正文与引线颜色的标签输入 */
+export type NodeLabelColorSource = Omit<
   IRNodeLabel,
   'align' | 'position' | 'placement' | 'distance' | 'textColor' | 'text' | 'pin'
 > & {
@@ -94,7 +94,15 @@ export type CanonicalNodeLabel = Omit<
   pin?: boolean | CanonicalNodeLabelPin;
 };
 
-/** 已展开节点简写、补齐静态默认值并解析绘制资源的待布局节点 */
+/** 已完成字体、正文和外观解析的节点标签 */
+export type CanonicalNodeLabel = Omit<NodeLabelColorSource, 'text' | 'font'> & {
+  /** 已解析的正文行 */
+  text: Array<TextLineResolution>;
+  /** 完成缩放后的有效字体 */
+  font: CanonicalFont;
+};
+
+/** 已确定正文、标签、字体及绘制资源的待布局节点 */
 export type CanonicalNode = Omit<
   Omit<NodeColorSource, 'style' | 'layout'> & NonNullable<NodeColorSource['style']> & IRNodeLayout,
   | 'padding'
@@ -113,6 +121,8 @@ export type CanonicalNode = Omit<
   | 'fill'
   | 'stroke'
   | 'opacity'
+  | 'font'
+  | 'lineHeight'
 > &
   GraphicOpacityResolution & {
     /** 已解析的节点填充 */
@@ -139,8 +149,12 @@ export type CanonicalNode = Omit<
       /** 垂直方向缩放系数 */
       y: number;
     };
-    /** 多行正文 */
-    text?: Array<ColorResolvedTextLine>;
+    /** 完成缩放后的有效块级字体 */
+    font: CanonicalFont;
+    /** 完成默认值补全与纵向缩放的行高 */
+    lineHeight: number;
+    /** 已完成字体和分段解析的多行正文 */
+    text?: Array<TextLineResolution>;
     /** 已按数组形态展开的附属标签 */
     label?: Array<CanonicalNodeLabel>;
     /** 正文对齐 */
@@ -195,6 +209,10 @@ export type NodeResolution = Readonly<{
 
 /** 节点解析所需的默认配置、扩展定义与诊断能力 */
 export type NodeResolveContext = {
+  /** preset 与 rem 字号解析的根字号 */
+  rootFontSize: number;
+  /** 是否启用公式简写解析 */
+  gatingOn: boolean;
   /** 当前节点所在作用域的有效默认配置 */
   scopeDefaults: MergedScopeDefaults;
   /** 当前节点使用的主题明暗模式 */

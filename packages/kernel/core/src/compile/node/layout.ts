@@ -11,8 +11,6 @@ import {
   guardProviderOutput,
   isFatalProbeError,
   isLayoutProbeRecoverableError,
-  resolveFont,
-  resolveTextLineHeight,
   safeThrownDetail,
 } from '../../resolve';
 import type { IRAnchorPosition, IRPosition } from '../../schemas';
@@ -21,7 +19,6 @@ import type { PositionTargetResolveContext } from '../reference';
 import { resolvePosition, resolvePositionTargetWorld } from '../reference';
 import type { CompileWarningCode, ComposedScopeTransform } from '../shared';
 import { composeScopeTransform, inverseScopeTransform, snapshotProviderPosition } from '../shared';
-import { DEFAULT_FONT_SIZE } from '../text';
 import { resolveAnchorRefUncached } from './anchor-cache';
 import type { NodeBoundaryStore } from './boundary-store';
 import { createNodeBoundaryStore } from './boundary-store';
@@ -132,8 +129,7 @@ export type NodeLayoutContext = {
   nodeBoundaryStore?: NodeBoundaryStore;
   /** Position/Target Source IR 确定化上下文 */
   positionContext: PositionTargetResolveContext;
-  /** preset 与 rem 字号解析的根字号 */
-  rootFontSize?: number;
+
   /** 当前 scope 累积 transform */
   scopeChain?: ReadonlyArray<Transform>;
   /** 当前 Scope 已合成的坐标消费态 */
@@ -152,7 +148,6 @@ export const layoutNode = (resolution: NodeResolution, context: NodeLayoutContex
   const {
     measureText,
     positionContext,
-    rootFontSize = DEFAULT_FONT_SIZE,
     scopeChain = [],
     texLowering,
     warn,
@@ -164,18 +159,9 @@ export const layoutNode = (resolution: NodeResolution, context: NodeLayoutContex
   // 缩放影响节点尺寸与字体。
   // 字号取 min(sx,sy) 保 glyph 形状，避免非均匀缩放下文字被拉变形。
   const { x: sx, y: sy } = node.scale;
-  const fontScale = Math.min(sx, sy);
   const { definition: shapeDef, params: shapeParams } = shapeResolution;
 
-  const baseFont = resolveFont(node.font, {
-    rootFontSize,
-    inheritedFont: { size: rootFontSize },
-  });
-  const baseFontSize = baseFont.size;
-  const fontSize = baseFontSize * fontScale;
-  const fontFamily = baseFont.family;
-  const fontWeight = baseFont.weight;
-  const fontStyle = baseFont.style;
+  const { size: fontSize, family: fontFamily, weight: fontWeight, style: fontStyle } = node.font;
 
   // spacing 受 node scale 影响。
   const padding = node.padding;
@@ -190,7 +176,7 @@ export const layoutNode = (resolution: NodeResolution, context: NodeLayoutContex
     bottom: marginSpacing.bottom * sy,
     left: marginSpacing.left * sx,
   };
-  const lineHeight = resolveTextLineHeight(node.lineHeight, baseFontSize) * sy;
+  const lineHeight = node.lineHeight;
   const align = node.align;
 
   // 折行阈值受 x 缩放。
@@ -211,14 +197,7 @@ export const layoutNode = (resolution: NodeResolution, context: NodeLayoutContex
     layoutNodeContent({
       node,
       measureText,
-      texLowering,
-      fontSize,
-      baseFontSize,
-      fontScale,
-      rootFontSize,
-      fontFamily,
-      fontWeight,
-      fontStyle,
+      tex: texLowering,
       lineHeight,
       maxTextWidth: textWidthBudget,
       minimumTextWidth,
@@ -326,7 +305,7 @@ export const layoutNode = (resolution: NodeResolution, context: NodeLayoutContex
   }
 
   const { contentLayout, circumscribed } = selectedCandidate;
-  const { textWidth, textHeight, textBaselineOffsets, lines, inlineBlock, resolvedLines } = contentLayout;
+  const { textWidth, textHeight, textBaselineOffsets, lines, inlineBlock } = contentLayout;
 
   const paddingOffsetX = (paddingRight - paddingLeft) / 2;
   const paddingOffsetY = (paddingBottom - paddingTop) / 2;
@@ -358,13 +337,7 @@ export const layoutNode = (resolution: NodeResolution, context: NodeLayoutContex
   const measuredLabels = measureNodeLabels({
     node,
     measureText,
-    texLowering,
-    baseFontSize,
-    rootFontSize,
-    fontScale,
-    fontFamily,
-    fontWeight,
-    fontStyle,
+    tex: texLowering,
   });
 
   const provisional: CompiledNodeLayout = {
@@ -425,10 +398,6 @@ export const layoutNode = (resolution: NodeResolution, context: NodeLayoutContex
     : resolved;
   return {
     layout,
-    properties: {
-      ...node,
-      text: node.text === undefined ? undefined : resolvedLines,
-      label: measuredLabels?.map(label => label.properties),
-    },
+    properties: node,
   };
 };

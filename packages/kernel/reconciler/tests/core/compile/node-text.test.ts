@@ -9,6 +9,36 @@ const findText = (prims: Array<ScenePrimitive>): TextPrimitive | undefined =>
   flattenPrims(prims).find((p): p is TextPrimitive => p.type === 'text');
 
 describe('Node 多行文本', () => {
+  it('正文和标签在测量与输出前将字重关键字换算为数值', () => {
+    const measured = new Map<string, number | string | undefined>();
+    const { scene } = compileToScene(
+      {
+        version: 1,
+        type: 'scene',
+        children: [
+          {
+            type: 'node',
+            id: 'A',
+            text: 'body',
+            style: { font: { weight: 'bold' } },
+            label: { text: 'label', font: { weight: 'normal' } },
+          },
+        ],
+      },
+      {
+        measureText: (text, font) => {
+          measured.set(text, font.weight);
+          return { width: text.length * 10, height: font.size };
+        },
+      },
+    );
+    expect(measured.get('body')).toBe(700);
+    expect(measured.get('label')).toBe(400);
+    const texts = flattenPrims(scene.primitives).filter(p => p.type === 'text');
+    expect(texts.find(p => p.lines.some(line => line.text === 'body'))?.fontWeight).toBe(700);
+    expect(texts.find(p => p.lines.some(line => line.text === 'label'))?.fontWeight).toBe(400);
+  });
+
   it("text: 'Hello' 与 text: ['Hello'] 编译产出相同 lines", () => {
     const single: IRScene = {
       version: 1,
@@ -260,7 +290,7 @@ describe('Node 多行文本', () => {
     expect(t?.lines[0]).toEqual({
       text: 'big',
       fontSize: 20,
-      fontWeight: 'bold',
+      fontWeight: 700,
     });
 
     // 第二行无任何覆盖

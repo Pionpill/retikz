@@ -25,7 +25,16 @@ describe('解析文本', () => {
           inheritedFont: { size: 20, family: 'Inter', weight: 400, style: 'italic' },
         },
       ),
-    ).toEqual({ size: 10, family: 'Inter', weight: 'bold', style: 'italic' });
+    ).toEqual({ size: 10, family: 'Inter', weight: 700, style: 'italic' });
+  });
+
+  it('字重关键字转为数值，缺省继承且数值不取整', () => {
+    const context = { rootFontSize: 16, inheritedFont: { size: 16, weight: 700 } };
+    expect(resolveFont({ weight: 'normal' }, context).weight).toBe(400);
+    expect(resolveFont({ weight: 'bold' }, context).weight).toBe(700);
+    expect(resolveFont({ weight: 462.5 }, context).weight).toBe(462.5);
+    expect(resolveFont(undefined, context).weight).toBe(700);
+    expect(resolveFont(undefined, { rootFontSize: 16, inheritedFont: { size: 16 } }).weight).toBeUndefined();
   });
 
   it('解析字符串简写和 TeX 门控', () => {
@@ -72,13 +81,13 @@ describe('解析文本', () => {
         text: 'styled',
         fill: 'red',
         opacity: 0.5,
-        font: { size: 10, family: 'Inter', weight: 'bold', style: 'italic' },
+        font: { size: 10, family: 'Inter', weight: 700, style: 'italic' },
       },
     ]);
     expect(resolved.style).toEqual({
       fill: 'red',
       opacity: 0.5,
-      font: { size: 10, weight: 'bold' },
+      font: { size: 10, weight: 700 },
     });
     expect(resolved.mixed).toBe(false);
   });
@@ -88,8 +97,8 @@ describe('解析文本', () => {
     const omitted = resolveTextLine({ text: 'plain' }, context);
     expect(omitted.style?.font).toBeUndefined();
     const overridden = resolveTextLine({ text: 'bold', font: { weight: 'bold' } }, context);
-    expect(overridden.style?.font).toEqual({ weight: 'bold' });
-    expect(overridden.segments).toMatchObject([{ text: 'bold', font: { size: 20, family: 'Inter', weight: 'bold' } }]);
+    expect(overridden.style?.font).toEqual({ weight: 700 });
+    expect(overridden.segments).toMatchObject([{ text: 'bold', font: { size: 20, family: 'Inter', weight: 700 } }]);
   });
 
   it.each([false, true])('显式混排共享行级相对字体并保留片段覆盖，公式简写开关=%s', gatingOn => {

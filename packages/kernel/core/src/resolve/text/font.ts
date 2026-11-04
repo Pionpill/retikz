@@ -32,14 +32,18 @@ export const resolveFontSize = (size: IRFont['size'] | undefined, context: FontS
   throw new RetikzCoreError(RetikzCoreErrorCode.Compile, `resolveFontSize: unsupported font size '${size}'.`);
 };
 
-/** 用继承字体补齐缺省字段，并将字号换算为数值 */
+/** 将字重关键字换算为数值，保留未声明状态 */
+export const resolveFontWeight = (weight: IRFont['weight']): number | undefined =>
+  weight === 'normal' ? 400 : weight === 'bold' ? 700 : weight;
+
+/** 用继承字体补齐缺省字段，并将字号与字重换算为数值 */
 export const resolveFont = (source: IRFont | undefined, context: FontResolveContext): CanonicalFont => ({
   size: resolveFontSize(source?.size, {
     rootFontSize: context.rootFontSize,
     inheritedFontSize: context.inheritedFont.size,
   }),
   family: source?.family ?? context.inheritedFont.family,
-  weight: source?.weight ?? context.inheritedFont.weight,
+  weight: resolveFontWeight(source?.weight) ?? context.inheritedFont.weight,
   style: source?.style ?? context.inheritedFont.style,
 });
 

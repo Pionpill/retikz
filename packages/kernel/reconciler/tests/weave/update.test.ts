@@ -24,6 +24,45 @@ const scene: IRScene = {
 };
 
 describe('Weave 批次更新', () => {
+  it('父级字体更新重新解析正文和标签，增量结果与全量一致', () => {
+    const child = {
+      type: 'node',
+      id: 'text',
+      text: 'body',
+      label: { text: 'label', font: { size: '0.5em' } },
+    } as const;
+    const input: IRScene = {
+      type: 'scene',
+      version: 1,
+      children: [
+        {
+          type: 'scope',
+          defaults: { node: { style: { font: { size: '1em', weight: 'normal' } } } },
+          children: [child],
+        },
+      ],
+    };
+    const options = { fontSize: 20 };
+    const session = new WeaveReconciler(input, options);
+    const mounted = session.mount();
+    const scope = readWeaveCurrent(mounted.root).children[0];
+    if (scope.type !== 'scope') throw new Error('Expected scope');
+    const defaults = { node: { style: { font: { size: '2em', weight: 'bold' } } } } as const;
+    const prepared = session.update({
+      operations: [
+        {
+          kind: 'update',
+          target: { kind: 'scope', scopeId: scope.scopeId },
+          input: { type: 'scope', defaults },
+        },
+      ],
+    });
+    const expected = compileToScene({ ...input, children: [{ type: 'scope', defaults, children: [child] }] }, options);
+    expect(prepared.compilation.result).toEqual(expected);
+    expect(prepared.compilation.result).not.toEqual(mounted.compilation.result);
+    prepared.rollback();
+  });
+
   it('重名诊断在删除后重新汇总，与全量一致且不修改已发布快照', () => {
     const input: IRScene = {
       type: 'scene',

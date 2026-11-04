@@ -1,10 +1,46 @@
 import { describe, expect, it } from 'vitest';
 
-import { emitNodeOutput, layoutNode, resolveNode } from '../../../../core/src';
+import { emitNodeOutput, layoutNode, resolveNode, LayoutAxisProposalKind } from '../../../../core/src';
 import { flattenPrims } from '../../../../core/tests/helpers/flatten';
 import { createSharedCompileContext } from '../../../src/compile';
 
 describe('原子编译阶段', () => {
+  it('同一解析结果可用于不同宽度布局，公式解析诊断不随布局重试重复', () => {
+    const shared = createSharedCompileContext({ fontSize: 20 });
+    const warnings: Array<string> = [];
+    const resolution = resolveNode(
+      { type: 'node', text: 'one two $unfinished', label: { text: 'label $unfinished' } },
+      {
+        ...shared.registries,
+        ...shared.layout,
+        scopeDefaults: {},
+        mode: 'light',
+        gatingOn: true,
+        irPath: [],
+        warn: code => warnings.push(code),
+      },
+    );
+    expect(warnings).toEqual(['TEXT_TEX_PARSE_ERROR', 'TEXT_TEX_PARSE_ERROR']);
+    const before = structuredClone(resolution.node);
+    const layouts = [80, 500].map(
+      value =>
+        layoutNode(resolution, {
+          measureText: (text, font) => ({ width: (text.length * font.size) / 2, height: font.size }),
+          positionContext: {
+            nodeDistance: 10,
+            pointOfNodeTarget: () => [0, 0],
+            lookupReference: () => undefined,
+            toLocal: point => point,
+            toWorld: point => point,
+          },
+          allocationWidthProposal: { kind: LayoutAxisProposalKind.Exact, value },
+        }).layout,
+    );
+    expect(layouts[0].geometry.contentSize.height).toBeGreaterThan(layouts[1].geometry.contentSize.height);
+    expect(resolution.node).toEqual(before);
+    expect(warnings).toHaveLength(2);
+  });
+
   it('节点解析、布局和输出仅通过显式能力组合，不要求元素工作区', () => {
     const shared = createSharedCompileContext();
     const warnings: Array<string> = [];
@@ -13,6 +49,7 @@ describe('原子编译阶段', () => {
       {
         ...shared.registries,
         ...shared.layout,
+        gatingOn: shared.host.lowerTex !== undefined,
         scopeDefaults: {},
         mode: 'light',
         irPath: ['children', 0],

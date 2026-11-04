@@ -18,6 +18,8 @@ const measureText = (): { width: number; height: number; ascent: number } => ({
 const layoutSquare = (node: IRNode) => {
   const boundaries = resolveBoundaryRegistry();
   const resolution = resolveNode(node, {
+    rootFontSize: 16,
+    gatingOn: false,
     scopeDefaults: {},
     mode: 'light',
     shapeRegistry: BUILTIN_SHAPES,

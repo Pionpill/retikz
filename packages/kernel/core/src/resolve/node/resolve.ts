@@ -10,6 +10,7 @@ import { resolveBoxSpacing } from '../spacing';
 import { resolveGraphicOpacity } from '../style';
 import { resolveContextualColor, resolveDashPattern, resolveDropShadow, mergeNodeStyle } from '../style';
 import { resolveNodeBoundary } from './boundary';
+import { resolveNodeContent } from './content';
 import { resolveNodeShape } from './shape';
 import { expandNodeText, expandNodeLabels, resolveNodeDependentColors, resolveNodeTextColor } from './text';
 import type {
@@ -49,9 +50,7 @@ const expandBoxSize = (value: number | IRBoxSize | undefined): CanonicalNode['mi
 };
 
 /** 展开节点简写与默认值，将样式、布局字段合入节点结果，绘制资源随后解析 */
-const expandNodeFields = (
-  node: NodeColorSource,
-): Omit<CanonicalNode, 'fill' | 'stroke'> & Pick<NonNullable<NodeColorSource['style']>, 'fill' | 'stroke'> => {
+const expandNodeFields = (node: NodeColorSource) => {
   const { style, layout, ...structure } = node;
   const { scale, text, label, rotate } = structure;
   const { dashed, dotted, opacity, ...visual } = style ?? {};
@@ -66,7 +65,7 @@ const expandNodeFields = (
     scale: expandAxisScale(scale),
     text: expandNodeText(text),
     label,
-    align: source.align ?? 'middle',
+    align: source.align ?? ('middle' as const),
     rotate: rotate ?? 0,
     dashPattern: resolveDashPattern(source.dashPattern, dashed, dotted),
     shadow: resolveDropShadow(source.shadow),
@@ -121,7 +120,7 @@ const resolveNodePrimaryColors = (node: NodeLabelSource, context: NodeColorConte
 };
 
 /**
- * 合并节点默认配置并解析颜色、形状、连接面和绘制资源，得到待布局的节点
+ * 合并节点默认配置并解析正文、标签、颜色、形状、连接面和绘制资源，得到待布局的节点
  * @description 补齐静态默认值并展开简写；位置引用、文本测量与最终尺寸由布局阶段处理
  */
 export const resolveNode = (source: IRNode, context: NodeResolveContext): NodeResolution => {
@@ -176,6 +175,7 @@ export const resolveNode = (source: IRNode, context: NodeResolveContext): NodeRe
     irPath: context.irPath,
     node: {
       ...node,
+      ...resolveNodeContent(node, context),
       fill,
       stroke,
       animations: resolveAnimations(node.animations, {

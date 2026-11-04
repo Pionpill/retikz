@@ -12,8 +12,8 @@ import type { InlineSegmentColorSource, ColorResolvedTextLine } from '../text';
 import type {
   NodePrimaryColorSource,
   NodeColorSource,
-  CanonicalNode,
   CanonicalNodeLabel,
+  NodeLabelColorSource,
   CanonicalNodeLabelPin,
   NodeLabelPlacementSource,
   NodeLabelPrimaryColorSource,
@@ -131,7 +131,7 @@ export const resolveNodeTextColor = <TNode extends NodePrimaryColorSource>(
 };
 
 /** 展开正文单字符串为单行数组 */
-export const expandNodeText = (text: NodeColorSource['text']): CanonicalNode['text'] =>
+export const expandNodeText = (text: NodeColorSource['text']): Array<ColorResolvedTextLine> | undefined =>
   text === undefined ? undefined : typeof text === 'string' ? [text] : text;
 
 /** 补齐标签位置：缺省为 top，边界位置对象缺省比例为 0.5 */
@@ -230,7 +230,7 @@ const resolveNodeLabelColors = (
   inheritedTextColor: string | undefined,
   context: NodeResolveContext,
   fieldPath: PropertyPath,
-): CanonicalNodeLabel => {
+): NodeLabelColorSource => {
   const { textColor, text, pin, ...source } = label;
   const resolvedTextColor =
     textColor === undefined

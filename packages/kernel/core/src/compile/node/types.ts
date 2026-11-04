@@ -1,50 +1,47 @@
-import type { JsonObject } from '@retikz/foundation';
+import type { JsonObject, PropertyPath } from '@retikz/foundation';
 import type { BoundsInsets, CenteredBox, Position } from '@retikz/math';
 
-import type { TextFont, TextLine, TextMeasurer, ShapeDefinition } from '../../contract';
 import type {
-  NodeResolution,
-  CanonicalFont,
-  CanonicalNode,
-  CanonicalNodeLabel,
-  TextLineResolution,
-} from '../../resolve';
-import type { IRFont } from '../../schemas';
+  BoundaryDefinition,
+  ConnectionEnvelopeKind,
+  TextLine,
+  TextMeasurer,
+  ShapeDefinition,
+} from '../../contract';
+import type { NodeResolution, CanonicalFont, CanonicalNode } from '../../resolve';
 import type { CompileWarningCode } from '../shared';
 import type { InlineLineLayout, TexLowerer } from '../text';
-import type { NodeBoundaryState } from './boundary-store';
 
-/** 节点文本布局消费的字重，沿用 IR font weight 契约 */
-type NodeFontWeight = NonNullable<IRFont['weight']>;
-
-/** 连接面 provider 的几何实现契约 */
-export type BoundaryGeometryDefinition = {
-  /** provider 名称 */
-  name: string;
-  /** 按方向求连接点 */
-  computeBoundaryPoint: (rect: CenteredBox, toward: Position, params: JsonObject) => Position;
-  /** 求命名 anchor */
-  resolveAnchor?: (rect: CenteredBox, name: string, params: JsonObject) => Position | undefined;
+/** 连接面消费过程中的缓存和诊断状态 */
+export type NodeBoundaryState = {
+  /** 按连接面缓存已计算的包络 */
+  connectionEnvelopeCache?: Map<string, CenteredBox>;
+  /** 已发布回退诊断的连接面种类 */
+  connectionEnvelopeWarnings?: Set<ConnectionEnvelopeKind>;
+  /** 当前节点的诊断出口 */
+  warn?: (code: CompileWarningCode, message: string) => void;
+  /** 当前节点的来源路径 */
+  irPath?: PropertyPath;
 };
 
 /** 已按视觉 rect 解析出的连接面几何 */
-export type BoundaryGeometryResolution = {
+export type NodeBoundaryResolution = {
   /** 连接面 definition */
-  def: BoundaryGeometryDefinition;
+  def: ShapeDefinition | BoundaryDefinition;
   /** provider 使用的连接面 rect */
   rect: CenteredBox;
   /** 已校验参数 */
   params: JsonObject;
 };
 
-/** 连接面几何解析所需的布局上下文 */
-export type BoundaryGeometryResolveContext = NodeBoundaryState & {
+/** 节点视觉形状及其布局几何 */
+export type NodeVisualResolution = {
   /** 节点视觉 shape definition */
-  visualDef: ShapeDefinition;
+  def: ShapeDefinition;
   /** 节点视觉 shape rect */
-  visualRect: CenteredBox;
+  rect: CenteredBox;
   /** 节点视觉 shape 参数 */
-  visualParams: JsonObject;
+  params: JsonObject;
 };
 
 /** 节点正文与附属 label 共享的文本布局上下文 */
@@ -54,37 +51,13 @@ export type NodeTextLayoutContext = {
   /** 文本度量函数 */
   measureText: TextMeasurer;
   /** TeX 降级上下文 */
-  texLowering?: TexLoweringContext;
-  /** 字体缩放 */
-  fontScale: number;
-  /** 继承字体族 */
-  fontFamily?: string;
-  /** 继承字重 */
-  fontWeight?: NodeFontWeight;
-  /** 继承字体样式 */
-  fontStyle?: TextFont['style'];
-};
-
-/** 保持语义完整、正文与标签已确定化的节点属性 */
-export type NodeResolvedProperties = Omit<CanonicalNode, 'text' | 'label'> & {
-  /** 包含字体和外观的作者行解析结果 */
-  text?: Array<TextLineResolution>;
-  /** 按声明顺序排列的标签解析结果 */
-  label?: Array<NodeLabelResolution>;
-};
-
-/** 字体及行内内容已确定化的标签属性 */
-export type NodeLabelResolution = Omit<CanonicalNodeLabel, 'text' | 'font'> & {
-  /** 已解析的正文内容 */
-  text: Array<TextLineResolution>;
-  /** 完成缩放后的有效字体 */
-  font: CanonicalFont;
+  tex?: TexLoweringContext;
 };
 
 /** 分别持有有效属性与计算布局的节点编译状态 */
 export type CompiledNode = {
   /** 当前有效语义属性 */
-  properties: NodeResolvedProperties;
+  properties: CanonicalNode;
   /** 已计算的几何与排版结果 */
   layout: CompiledNodeLayout;
 };
@@ -118,7 +91,7 @@ export type NodeLayoutGeometry = {
 /** 节点正文排版结果 */
 export type NodeTextLayout = {
   /** 实际用于测量和输出的字体 */
-  font: TextFont;
+  font: CanonicalFont;
   /** 正文对齐方式 */
   align: 'start' | 'middle' | 'end';
   /** 实际行高 */

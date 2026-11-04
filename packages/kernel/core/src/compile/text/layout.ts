@@ -1,14 +1,7 @@
-import type {
-  TextFont,
-  TextMeasurer,
-  GroupPrimitive,
-  PathPrimitive,
-  ScenePrimitive,
-  TextPrimitive,
-} from '../../contract';
+import type { TextMeasurer, GroupPrimitive, PathPrimitive, ScenePrimitive, TextPrimitive } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { combineOpacity, resolveTextMetrics } from '../../resolve';
-import type { CanonicalInlineSegment } from '../../resolve';
+import type { CanonicalFont, CanonicalInlineSegment } from '../../resolve';
 import { BuiltinCompileWarningCode } from '../shared';
 import type { CompileWarningCode } from '../shared';
 import { ASCENT_FACTOR, DESCENT_FACTOR } from './baseline';
@@ -51,7 +44,7 @@ export type LineLayoutContext = {
   /** TeX 降解能力 */
   lowerTex?: TexLowerer;
   /** 块级字体 */
-  font: TextFont;
+  font: CanonicalFont;
   /** 接收混排行布局与公式降解产生的诊断 */
   warn: (code: CompileWarningCode, message: string) => void;
 };
@@ -75,7 +68,7 @@ type TextPiece = {
   segmentIndex: number;
   x: number;
   text: string;
-  font: TextFont;
+  font: CanonicalFont;
   width: number;
   measuredHeight: number;
 };

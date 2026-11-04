@@ -10,7 +10,7 @@ import type { IRNode, IRPosition } from '../../schemas';
 import { ThemeMode } from '../../shared';
 import type { PositionTargetResolveContext } from '../reference';
 import { applyTransformChain } from '../shared';
-import { fallbackMeasurer } from '../text';
+import { DEFAULT_FONT_SIZE, fallbackMeasurer } from '../text';
 import { layoutNode } from './layout';
 import type { CompiledNodeLayout } from './types';
 
@@ -92,6 +92,8 @@ const resolveSyntheticLayout = (
   const boundaries = context.boundaries ?? BUILTIN_BOUNDARIES;
   const node = syntheticNode(input, shape, shapeParams);
   const resolution = resolveNode(node, {
+    rootFontSize: DEFAULT_FONT_SIZE,
+    gatingOn: false,
     scopeDefaults: {},
     mode: ThemeMode.Light,
     shapeRegistry: shapes,

@@ -49,6 +49,7 @@ export const compileWeaveNode = (input: IRNode, runtime: WeaveElementRuntime): W
   const resolution = resolveNode(input, {
     ...shared.registries,
     ...shared.layout,
+    gatingOn: shared.host.lowerTex !== undefined,
     scopeDefaults: style.defaults,
     mode: style.theme.mode,
     irPath,
@@ -60,7 +61,6 @@ export const compileWeaveNode = (input: IRNode, runtime: WeaveElementRuntime): W
     composedTransform,
     nodeBoundaryStore: workspace.nodeBoundaryStore,
     scopeChain: transforms,
-    rootFontSize: shared.layout.rootFontSize,
     allocationWidthProposal: proposal?.x,
     warn,
     texLowering: { lowerTex: shared.host.lowerTex, warn },

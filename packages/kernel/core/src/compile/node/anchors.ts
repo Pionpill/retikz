@@ -8,8 +8,7 @@ import type { IRBoundary } from '../../schemas';
 import { CenterAnchor, isAnchor } from '../../shared';
 import { snapshotProviderPosition } from '../shared';
 import { fallbackBoundaryAnchor, resolveBoundary as resolveBoundaryGeometry } from './boundary';
-import type { NodeBoundaryState } from './boundary-store';
-import type { CompiledNodeLayout } from './types';
+import type { CompiledNodeLayout, NodeBoundaryState } from './types';
 
 /** 保留合法 undefined fallback，并校验 provider 实际返回的二维坐标 */
 const snapshotOptionalProviderPosition = (owner: string, value: Position | undefined): Position | undefined =>
@@ -68,14 +67,11 @@ const resolveBoundaryOf = (
     );
   }
 
-  return resolveBoundaryGeometry(resolution, {
-    visualDef: layout.shape.definition,
-    visualRect: layout.geometry.rect,
-    visualParams: layout.shape.params,
-    irPath: state?.irPath,
-    ...state,
-    warn: state?.warn ?? warn,
-  });
+  return resolveBoundaryGeometry(
+    resolution,
+    { def: layout.shape.definition, rect: layout.geometry.rect, params: layout.shape.params },
+    { ...state, warn: state?.warn ?? warn },
+  );
 };
 
 /** 取节点 shape 在 toward 方向的附着点 */

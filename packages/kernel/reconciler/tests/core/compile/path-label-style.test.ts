@@ -50,10 +50,15 @@ describe('Happy: StepLabel 样式字段落地', () => {
           text: [{ text: 'A', font: { size: 24, weight: 'bold' }, fill: 'red', opacity: 0.4 }],
         },
       ),
-      { measureText: (_text, font) => ({ width: font.size * 2, height: font.size }) },
+      {
+        measureText: (_text, font) => {
+          expect(font.weight).toBe(700);
+          return { width: font.size * 2, height: font.size };
+        },
+      },
     ).scene;
     const label = flatten(scene.primitives).find(primitive => primitive.type === 'text');
-    expect(label).toMatchObject({ fontSize: 24, fontWeight: 'bold', fill: 'red', measuredWidth: 48 });
+    expect(label).toMatchObject({ fontSize: 24, fontWeight: 700, fill: 'red', measuredWidth: 48 });
     expect(label?.opacity).toBeCloseTo(0.1);
   });
 

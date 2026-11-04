@@ -40,14 +40,14 @@ export type FontSizeResolveContext = Readonly<{
   inheritedFontSize: number;
 }>;
 
-/** 已确定为数值字号的字体 */
+/** 字号与字重已确定为数值的字体 */
 export type CanonicalFont = Readonly<{
   /** 数值字号 */
   size: number;
   /** 字体族 */
   family?: IRFont['family'];
-  /** 字重 */
-  weight?: IRFont['weight'];
+  /** 数值字重，缺省时沿用宿主默认值 */
+  weight?: number;
   /** 字形 */
   style?: IRFont['style'];
 }>;

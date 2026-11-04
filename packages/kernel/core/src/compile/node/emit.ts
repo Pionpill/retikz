@@ -2,7 +2,7 @@ import type { CenteredBox } from '@retikz/math';
 import { RAD_TO_DEG } from '@retikz/math';
 
 import type { CompiledShapeStyle, GroupPrimitive, ScenePrimitive, TextLine } from '../../contract';
-import type { CanonicalNode } from '../../resolve';
+import type { CanonicalNodeLabel, CanonicalNode } from '../../resolve';
 import {
   createLayoutProbeRecoverableError,
   isFatalProbeError,
@@ -14,13 +14,7 @@ import { snapshotScenePrimitives } from '../shared';
 import { emitInlineLine, calculateAlphabeticBaselineY } from '../text';
 import { DEFAULT_LINE_HEIGHT_FACTOR } from './content';
 import { labelBorderPoint, labelBoxEdgeToward, labelCenter } from './label';
-import type {
-  CompiledNodeLayout,
-  NodeLabelLayout,
-  CompiledNode,
-  NodeLabelResolution,
-  NodeResolvedProperties,
-} from './types';
+import type { CompiledNodeLayout, NodeLabelLayout, CompiledNode } from './types';
 
 /** 节点形状绘制使用的有效样式 */
 type NodeShapeProperties = Pick<
@@ -120,7 +114,7 @@ const emitNodeShapePrimitives = (
 /** 发出节点正文图元 */
 const emitNodeContentPrimitives = (
   layout: CompiledNodeLayout,
-  properties: NodeResolvedProperties,
+  properties: CanonicalNode,
   round: Round,
 ): Array<ScenePrimitive> => {
   const text = layout.text;
@@ -191,8 +185,8 @@ const emitNodeContentPrimitives = (
 const emitNodeLabelPinPrimitive = (
   layout: CompiledNodeLayout,
   label: NodeLabelLayout,
-  labelProperties: NodeLabelResolution,
-  properties: NodeResolvedProperties,
+  labelProperties: CanonicalNodeLabel,
+  properties: CanonicalNode,
   labelCenterPosition: [number, number],
   round: Round,
   registerPaint: RegisterPaint,
@@ -230,8 +224,8 @@ const emitNodeLabelPinPrimitive = (
 const emitNodeLabelContentPrimitive = (
   layout: CompiledNodeLayout,
   label: NodeLabelLayout,
-  labelProperties: NodeLabelResolution,
-  properties: NodeResolvedProperties,
+  labelProperties: CanonicalNodeLabel,
+  properties: CanonicalNode,
   labelCenterPosition: [number, number],
   round: Round,
 ): ScenePrimitive => {
@@ -288,8 +282,8 @@ const emitNodeLabelContentPrimitive = (
 const emitNodeLabelPrimitives = (
   layout: CompiledNodeLayout,
   label: NodeLabelLayout,
-  labelProperties: NodeLabelResolution,
-  properties: NodeResolvedProperties,
+  labelProperties: CanonicalNodeLabel,
+  properties: CanonicalNode,
   round: Round,
   registerPaint: RegisterPaint,
 ): Array<ScenePrimitive> => {
