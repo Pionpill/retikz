@@ -131,6 +131,22 @@ export const resolveCoreBudget = (scenario: BenchmarkScenario): BenchmarkBudget 
     }
   } else if (layer === 'resolve') {
     switch (family) {
+      case 'coordinate':
+        policy = {
+          warningMs: 0.005,
+          errorMs: 0.02,
+          rationale:
+            'Reconciler 逐坐标声明确定化；假设1000个坐标更新，解析阶段目标5ms、错误线20ms，单次5/20μs；不含引用查询或几何计算',
+        };
+        break;
+      case 'scope':
+        policy = {
+          warningMs: 0.05,
+          errorMs: 0.2,
+          rationale:
+            'Reconciler 进入子树前解析单个Scope；假设100个作用域更新，解析阶段目标5ms、错误线20ms，单次50/200μs；包含继承、变换配置和能力绑定，不含子树编译与几何聚合',
+        };
+        break;
       case 'path': {
         const count = Number(scale);
         policy =

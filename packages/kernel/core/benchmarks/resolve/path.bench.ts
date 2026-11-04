@@ -1,15 +1,12 @@
-import { encodePropertyPath } from '@retikz/foundation';
 import { expect } from 'vitest';
 
 import { defineBenchmark } from '../../../../../scripts/benchmarks/scenario';
-import { bindPathTargets } from '../../src/compile/path';
-import type { PathTargetContext } from '../../src/compile/path';
 import { resolveArrowRegistry, resolvePathRegistry, resolvePatternRegistry } from '../../src/providers';
 import { resolvePath } from '../../src/resolve/path';
 import type { PathResolveContext } from '../../src/resolve/path';
-import type { IRPathBase, IRPosition, IRStep } from '../../src/schemas';
+import type { IRPathBase, IRStep } from '../../src/schemas';
 
-// 规模表示一次解析的步骤或 smooth 点数；查询上下文预置，不包含编译索引构建
+// 只测 IR 到 Canonical 的解析；不绑定目标，不计算引用点位或路径几何
 for (const count of [16, 1_000, 10_000]) {
   for (const kind of ['absolute', 'relative', 'reference', 'labels', 'smooth'] as const) {
     defineBenchmark(
@@ -18,19 +15,12 @@ for (const count of [16, 1_000, 10_000]) {
         dimensions: ['Path 解析', kind, `${count} ${kind === 'smooth' ? '点' : '步骤'}`],
       },
       () => {
-        const positions = new Map<string, IRPosition>(
-          Array.from({ length: count }, (_, index) => [`p${index}`, [index, 0]]),
-        );
-        const context: PathResolveContext & PathTargetContext = {
+        const context: PathResolveContext = {
           mode: 'light',
           pathRegistry: resolvePathRegistry(),
           arrowRegistry: resolveArrowRegistry(),
           patternRegistry: resolvePatternRegistry(),
           round: value => value,
-          targetResolver: {
-            pointOfTarget: target =>
-              Array.isArray(target) ? target : 'id' in target ? (positions.get(target.id) ?? null) : null,
-          },
         };
         const children: Array<IRStep> =
           kind === 'smooth'
@@ -51,17 +41,28 @@ for (const count of [16, 1_000, 10_000]) {
         const source: IRPathBase = { type: 'path', children, style: { stroke: 'blue' } };
         const original = JSON.stringify(source);
         return {
-          run: () => bindPathTargets(resolvePath(source, context), context),
+          run: () => resolvePath(source, context),
           verify: result => {
             expect(result.properties.stroke).toBe('blue');
             expect(result.properties.children).toHaveLength(kind === 'smooth' ? 1 : count);
-            expect(result.targets.size).toBe(count);
-            const key = encodePropertyPath(
-              kind === 'smooth' ? ['children', 0, 'points', count - 1] : ['children', count - 1, 'to'],
-            );
-            expect(result.targets.get(key)?.point).toEqual([count - 1, 0]);
+            expect(result.definition.name).toBe('stroke');
+            expect(result.properties.strokeWidth).toBe(1);
+            if (kind !== 'smooth')
+              expect(result.properties.children?.at(-1)).toMatchObject({
+                kind: 'line',
+                to:
+                  kind === 'reference'
+                    ? { id: `p${count - 1}` }
+                    : kind === 'relative'
+                      ? { relativeAccumulate: [1, 0] }
+                      : [count - 1, 0],
+              });
             if (kind === 'smooth')
-              expect(result.properties.children?.[0]).toMatchObject({ kind: 'smooth', tension: 1 });
+              expect(result.properties.children?.[0]).toMatchObject({
+                kind: 'smooth',
+                tension: 1,
+                points: Array.from({ length: count }, (_, index) => [index, 0]),
+              });
             if (kind === 'labels')
               expect(result.properties.children?.at(-1)).toMatchObject({
                 label: { text: `L${count - 1}`, position: 0.5, distance: 4 },
