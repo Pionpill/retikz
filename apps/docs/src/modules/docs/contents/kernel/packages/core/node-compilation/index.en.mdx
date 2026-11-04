@@ -9,7 +9,7 @@ Start with [Node basic usage](/kernel/components/node/usage) and [text syntax](/
 
 ## Overall flow
 
-Node layout determines the space needed by content, computes shape dimensions, and then places the body and attached labels. `CanonicalNode` contains effective node configuration and bound shape and boundary definitions. `CompiledNode` retains final geometry, layout, and drawing data. `NodeGeometryContext` temporarily combines capability bindings with geometry for computation and connection queries.
+Node layout determines the space needed by content, computes shape dimensions, and then places the body and attached labels. `CanonicalNode` contains effective node configuration and bound shape and boundary definitions. `CompiledNode` retains final geometry, layout, and drawing data. `CompiledNodeLayout` temporarily combines capability bindings with geometry for computation and connection queries.
 
 <ComponentPreview files="layout-overview" size="xs" hideCode type="flow" />
 
@@ -153,7 +153,7 @@ The flow below follows a plain-text node. The left side shows layout stages; the
 
 <ComponentPreview files="layout-implementation" size="xl" hideCode type="flow" />
 
-Start reading at `compileNode`. It consumes `CanonicalNode`, decides whether measurements can be reused, and calls `layoutNode` for text layout, shape constraints, and label placement. `NodeGeometryContext` temporarily combines capabilities and geometry for computation and connection queries. The final `CompiledNode` separates `geometry`, `layout`, `style`, `text`, `labels`, and `animations`; body text further separates measured layout from drawing styles. Output no longer reads the complete canon. Connection queries that need a Definition explicitly combine canon bindings with compiled geometry.
+Start reading at `compileNode`. It consumes `CanonicalNode`, decides whether measurements can be reused, and calls `layoutNode` for text layout, shape constraints, and label placement. `CompiledNodeLayout` temporarily combines capabilities and geometry for computation and connection queries. The final `CompiledNode` separates `geometry`, `layout`, `style`, `text`, `labels`, and `animations`; body text further separates measured layout from drawing styles. Output no longer reads the complete canon. Connection queries that need a Definition explicitly combine canon bindings with compiled geometry.
 
 Traversal then projects geometry into world space for named references. Emission turns the local layout into shape, body-text, and label primitives. Reference geometry in the namespace and local primitives in Scene have different consumers; drawing coordinates do not all need to be expanded into world coordinates beforehand.
 

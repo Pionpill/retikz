@@ -1,11 +1,11 @@
 import { referencePositionOf, resolveAnchorRefUncached } from '@retikz/core';
-import type { ReferenceGeometryContext, ReferenceReadKind } from '@retikz/core';
+import type { CompiledReferenceGeometry, ReferenceReadKind } from '@retikz/core';
 import { jsonStructuralEquals } from '@retikz/foundation';
 
 /** 按实际引用能力比较结果；Definition 使用绑定身份，正文及绘制属性不参与连接比较 */
 export const compareReferenceGeometry = (
-  previous: ReferenceGeometryContext,
-  current: ReferenceGeometryContext,
+  previous: CompiledReferenceGeometry,
+  current: CompiledReferenceGeometry,
   kind: ReferenceReadKind,
 ): boolean => {
   if (previous === current) return true;

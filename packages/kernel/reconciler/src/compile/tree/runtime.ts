@@ -1,5 +1,5 @@
 import type {
-  ReferenceGeometryContext,
+  CompiledReferenceGeometry,
   CompositeInputScope,
   LayoutAlignmentGuide,
   LayoutBoundsContribution,
@@ -40,11 +40,11 @@ export type SubtreeCompileState = Readonly<{
   /** 用于组装 Scene 的图元及待回填的路径占位项 */
   primitives: Array<InternalScenePrimitive>;
   /** 用于计算当前 Scope 包络及相关变换的子元素布局 */
-  layoutContexts: Array<ReferenceGeometryContext>;
+  geometries: Array<CompiledReferenceGeometry>;
   /** 等待命名目标和 Scope 几何确定后执行的路径编译任务 */
   paths: Array<PendingPathEmission>;
   /** 供祖先 Scope 补齐变换并更新命名空间绑定的已发布布局 */
-  publications: Array<ReferenceGeometryContext>;
+  publications: Array<CompiledReferenceGeometry>;
   /** 用于计算整体边界和自动 viewBox 的几何贡献，包含附属 label 和阴影 */
   bounds: Array<LayoutBoundsContribution>;
   /** 用于父布局测量的占位贡献，默认不额外计入 Node 附属 label 和阴影 */

@@ -25,24 +25,28 @@ export const emitNodeOutput = (
   primitives: Array<ScenePrimitive>;
   bounds: Array<{ boundsPoints: Array<IRPosition>; shadow?: CanonicalDropShadow }>;
 } => {
-  const { geometry, layout, style, text, labels, animations } = compiled;
+  const { geometry, layout, metadata, style, text, labels, animations } = compiled;
   const shape = emitCompiledDrawing({ geometry: geometry.shape, style: style.shape });
   const children = [
     ...shape,
     ...(text === undefined
       ? []
-      : emitCompiledNodeText({ geometry: { rect: geometry.rect, ...layout }, text: text.layout }, text.style, round)),
+      : emitCompiledNodeText(
+          { geometry: { rect: geometry.rect, margin: geometry.margin, ...layout }, text: text.layout },
+          text.style,
+          round,
+        )),
     ...labels.flatMap(emitCompiledDrawing),
   ];
   const { rect: visualRect } = geometry;
   const rotated = (visualRect.rotate ?? 0) !== 0;
-  const metadata = { ...style.metadata, ...(animations.length === 0 ? {} : { animations }) };
+  const primitiveMetadata = { ...metadata, ...(animations.length === 0 ? {} : { animations }) };
   let primitives: Array<ScenePrimitive>;
   if (rotated || text !== undefined) {
     primitives = [
       {
         type: 'group',
-        ...metadata,
+        ...primitiveMetadata,
         children,
         ...(rotated
           ? {
@@ -59,11 +63,14 @@ export const emitNodeOutput = (
       },
     ];
   } else {
-    for (const primitive of shape) Object.assign(primitive, metadata);
+    for (const primitive of shape) Object.assign(primitive, primitiveMetadata);
     primitives = children;
   }
-  const measured = { geometry: { rect: visualRect, ...layout }, labels: labels.map(label => label.layout) };
-  const outer = outerRectOf(measured);
+  const measured = {
+    geometry: { rect: visualRect, margin: geometry.margin, ...layout },
+    labels: labels.map(label => label.layout),
+  };
+  const outer = outerRectOf(compiled);
   return {
     primitives,
     bounds: [

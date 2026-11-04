@@ -8,14 +8,13 @@ import { ScopeBoundingShape } from '../../schemas';
 import { Anchor } from '../../shared';
 import { rect as rectOps } from '../../shared/geometry';
 import { outerRectOf } from '../node';
-import type { BoundaryGeometryContext } from '../reference';
+import type { CompiledBoundaryGeometry, CompiledReferenceGeometry } from '../reference';
 import { projectReferenceGeometry } from '../reference';
-import type { ReferenceGeometryContext } from '../reference';
 import { composeScopeTransform } from '../shared';
-import type { CompiledScopeGeometry } from './types';
+import type { CompiledScope } from './types';
 
-/** 收集一组 NodeGeometryContext 的全局 4 角点，供 AABB / MEC 等包络复用 */
-export const collectScopeCornerPoints = (layouts: ReadonlyArray<ReferenceGeometryContext>): Array<IRPosition> => {
+/** 收集子元素编译产物的全局边界点，供 AABB / MEC 等包络复用 */
+export const collectScopeCornerPoints = (layouts: ReadonlyArray<CompiledReferenceGeometry>): Array<IRPosition> => {
   const points: Array<IRPosition> = [];
 
   for (const layout of layouts) {
@@ -36,7 +35,7 @@ export const collectScopeCornerPoints = (layouts: ReadonlyArray<ReferenceGeometr
 };
 
 /** 计算一组 layout 的全局 AABB；空数组返回 null */
-export const computeScopeBoundingBox = (layouts: ReadonlyArray<ReferenceGeometryContext>): CenteredBox | null => {
+export const computeScopeBoundingBox = (layouts: ReadonlyArray<CompiledReferenceGeometry>): CenteredBox | null => {
   const bounds = boundsOf(collectScopeCornerPoints(layouts));
   if (bounds === undefined) return null;
 
@@ -48,8 +47,8 @@ export const computeScopeBoundingBox = (layouts: ReadonlyArray<ReferenceGeometry
 /** 从真实子布局聚合 rectangle / circle 包络，不经过节点解析或文字测量 */
 export const createIntrinsicScopeLayout = (
   canon: CanonicalScope,
-  scopeLayouts: ReadonlyArray<ReferenceGeometryContext>,
-): CompiledScopeGeometry => {
+  scopeLayouts: ReadonlyArray<CompiledReferenceGeometry>,
+): Pick<CompiledScope, 'shape' | 'boundary' | 'geometry'> => {
   let rect: CenteredBox;
   if (canon.envelope.kind === ScopeBoundingShape.Circle) {
     const points = collectScopeCornerPoints(scopeLayouts);
@@ -64,29 +63,21 @@ export const createIntrinsicScopeLayout = (
   } else {
     rect = { rotate: 0, ...(computeScopeBoundingBox(scopeLayouts) ?? { x: 0, y: 0, width: 0, height: 0 }) };
   }
-  return { rect };
-};
-
-/** 查询 Scope 连接几何时显式组合能力和最终包络 */
-export const createScopeGeometryContext = (
-  canon: CanonicalScope,
-  geometry: CompiledScopeGeometry,
-): BoundaryGeometryContext => {
   const { shape } = canon.envelope;
   return {
     shape,
     boundary: { ...shape, isShape: true },
-    geometry: { rect: geometry.rect, margin: { top: 0, right: 0, bottom: 0, left: 0 } },
+    geometry: { rect, margin: { top: 0, right: 0, bottom: 0, left: 0 } },
   };
 };
 
 /** 按 Core 包络规则向父 Scope 贡献布局；匿名 Scope 透传子布局 */
 export const projectScopeCompileLayouts = (
   input: Pick<IRScope, 'id'>,
-  envelope: BoundaryGeometryContext,
-  children: ReadonlyArray<ReferenceGeometryContext>,
+  envelope: CompiledBoundaryGeometry,
+  children: ReadonlyArray<CompiledReferenceGeometry>,
   transforms: ReadonlyArray<Transform>,
-): Array<ReferenceGeometryContext> => {
+): Array<CompiledReferenceGeometry> => {
   const transform = composeScopeTransform(transforms);
   return (input.id === undefined ? children : [envelope]).map(layout => projectReferenceGeometry(layout, transform));
 };

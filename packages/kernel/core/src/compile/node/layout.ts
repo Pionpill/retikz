@@ -26,7 +26,7 @@ import { createNodeBoundaryStore } from './boundary-store';
 import { layoutNodeContent } from './content';
 import { layoutNodeLabels, measureNodeLabels } from './label';
 import { projectLayoutWithTransform } from './projection';
-import type { NodeLayoutResult, NodeGeometryContext, TexLoweringContext } from './types';
+import type { CompiledNodeLayout, TexLoweringContext } from './types';
 
 /** 限制 custom circumscribe 反馈次数，保证 proposal 求值有确定上界 */
 const MAX_ALLOCATION_REFLOW_ATTEMPTS = 32;
@@ -60,11 +60,11 @@ const localDeltaOf = (
 const placeAnchorPositionedLayout = (
   node: CanonicalNode,
   position: IRAnchorPosition,
-  provisional: NodeGeometryContext,
+  provisional: CompiledNodeLayout,
   positionContext: PositionTargetEvaluateContext,
   transform: ComposedScopeTransform,
   nodeBoundaryStore: NodeBoundaryStore,
-): NodeGeometryContext => {
+): CompiledNodeLayout => {
   if (node.id === position.target.id || node.aliasIds.includes(position.target.id)) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Compile,
@@ -132,7 +132,6 @@ export type NodeLayoutContext = {
   nodeBoundaryStore?: NodeBoundaryStore;
   /** Position/Target Source IR 确定化上下文 */
   positionContext: PositionTargetEvaluateContext;
-
   /** 当前 scope 累积 transform */
   scopeChain?: ReadonlyArray<Transform>;
   /** 当前 Scope 已合成的坐标消费态 */
@@ -146,7 +145,7 @@ export type NodeLayoutContext = {
 };
 
 /** 按文本测量、节点缩放与父级宽度提案计算正文、形状和边界布局 */
-export const layoutNode = (resolution: CanonicalNode, context: NodeLayoutContext): NodeLayoutResult => {
+export const layoutNode = (resolution: CanonicalNode, context: NodeLayoutContext): CompiledNodeLayout => {
   const node = resolution;
   const { shape: shapeResolution, boundary: canonicalBoundary } = node;
   const irPath = context.irPath ?? [];
@@ -343,7 +342,7 @@ export const layoutNode = (resolution: CanonicalNode, context: NodeLayoutContext
     tex: texLowering,
   });
 
-  const provisional: NodeGeometryContext = {
+  const provisional: CompiledNodeLayout = {
     shape: shapeResolution,
     geometry: {
       rect: {
@@ -383,7 +382,7 @@ export const layoutNode = (resolution: CanonicalNode, context: NodeLayoutContext
   };
   nodeBoundaryStore.get(provisional).warn = warn;
   nodeBoundaryStore.get(provisional).irPath = irPath;
-  const resolved: NodeGeometryContext = {
+  const resolved: CompiledNodeLayout = {
     ...provisional,
     labels: layoutNodeLabels(provisional, measuredLabels),
   };
@@ -398,8 +397,5 @@ export const layoutNode = (resolution: CanonicalNode, context: NodeLayoutContext
         nodeBoundaryStore,
       )
     : resolved;
-  return {
-    context: layout,
-    properties: node,
-  };
+  return layout;
 };

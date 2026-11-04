@@ -4,7 +4,7 @@ import type {
   IRPathBase,
   InputScopeCompile,
   ScopeGeometryPreparation,
-  BoundaryGeometryContext,
+  CompiledBoundaryGeometry,
 } from '@retikz/core';
 
 import {
@@ -33,6 +33,6 @@ export const testPrepareScopeCompilation = (input: InputScopeCompile, options: W
 export const testCompileScope = (
   input: InputScopeCompile,
   preparation: ScopeGeometryPreparation,
-  layouts: ReadonlyArray<BoundaryGeometryContext>,
+  layouts: ReadonlyArray<CompiledBoundaryGeometry>,
   options: WeaveCompileOptions,
 ) => runWeaveCompilation(options, runtime => compileWeaveScope(input, preparation, layouts, runtime));

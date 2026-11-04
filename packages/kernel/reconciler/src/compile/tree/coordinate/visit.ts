@@ -1,4 +1,4 @@
-import { resolveCoordinate, layoutCoordinate } from '@retikz/core';
+import { resolveCoordinate, compileCoordinate } from '@retikz/core';
 import type { IRCoordinate } from '@retikz/core';
 
 import { compareCanonicalCoordinates } from '../../compare';
@@ -17,7 +17,7 @@ export const visitCoordinate = (
 ): void => {
   const {
     context: { transformChains: scopeChain, pathPrefix: locatorPrefix, layout },
-    state: { layoutContexts: layouts, publications, allocations },
+    state: { geometries: layouts, publications, allocations },
   } = frame;
   const coordinateIrPath = createCompileChildPath(locatorPrefix, index);
   const { compiled } = runCompileStage(
@@ -32,7 +32,7 @@ export const visitCoordinate = (
       equals: compareCanonicalCoordinates,
       compile: (stageRuntime, canon) => ({
         canon,
-        compiled: layoutCoordinate(canon, createTreePositionContext(stageRuntime, scopeChain)),
+        compiled: compileCoordinate(canon, createTreePositionContext(stageRuntime, scopeChain)),
       }),
     },
   );
@@ -44,7 +44,7 @@ export const visitCoordinate = (
       : runtime.state.execution.scopeTransformComposer.apply(localCenter, scopeChain);
   const coordinateLayout = { position: globalCenter };
   runtime.state.execution.namespaceStack.register(child.id, {
-    context: coordinateLayout,
+    geometry: coordinateLayout,
     irPath: [...coordinateIrPath, 'id'],
   });
   publications.push(coordinateLayout);

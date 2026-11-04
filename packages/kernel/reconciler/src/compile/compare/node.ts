@@ -25,3 +25,38 @@ export const compareCanonicalNodes = (previous: CanonicalNode, current: Canonica
     jsonStructuralEquals(previous.meta, current.meta)
   );
 };
+
+/** 只比较影响节点正文测量与放置的输入，颜色和透明度不触发布局 */
+export const compareNodeLayoutInputs = (previous: CanonicalNode, current: CanonicalNode): boolean => {
+  if (previous.labels.length !== 0 || current.labels.length !== 0) return false;
+  if (
+    previous.shape.definition !== current.shape.definition ||
+    previous.boundary.definition !== current.boundary.definition
+  )
+    return false;
+  if (
+    !jsonStructuralEquals(previous.shape.params, current.shape.params) ||
+    !jsonStructuralEquals(previous.boundary.params, current.boundary.params)
+  )
+    return false;
+  if (!jsonStructuralEquals(previous.layout, current.layout)) return false;
+  const geometryOfText = (text: CanonicalNode['text']) =>
+    text === undefined
+      ? undefined
+      : {
+          font: text.font,
+          align: text.align,
+          lineHeight: text.lineHeight,
+          lines: text.lines.map(line => ({
+            mixed: line.mixed,
+            plainText: line.plainText,
+            font: line.style?.font,
+            segments: line.segments.map(({ fill, opacity, ...segment }) => {
+              void fill;
+              void opacity;
+              return segment;
+            }),
+          })),
+        };
+  return jsonStructuralEquals(geometryOfText(previous.text), geometryOfText(current.text));
+};

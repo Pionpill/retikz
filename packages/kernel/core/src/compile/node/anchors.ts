@@ -6,7 +6,7 @@ import type { CanonicalNodeBoundary } from '../../resolve';
 import { boundaryKey } from '../../resolve';
 import type { IRBoundary } from '../../schemas';
 import { CenterAnchor, isAnchor } from '../../shared';
-import type { BoundaryGeometryContext } from '../reference';
+import type { CompiledBoundaryGeometry } from '../reference';
 import { snapshotProviderPosition } from '../shared';
 import { fallbackBoundaryAnchor, resolveBoundary as resolveBoundaryGeometry } from './boundary';
 import type { NodeBoundaryState } from './types';
@@ -37,10 +37,10 @@ const inflateRect = (r: CenteredBox, m: BoundsInsets): CenteredBox => {
 };
 
 /** 取节点视觉 rect 外扩 margin 后的外边界 */
-export const outerRectOf = (layout: Pick<BoundaryGeometryContext, 'geometry'>): CenteredBox =>
+export const outerRectOf = (layout: Pick<CompiledBoundaryGeometry, 'geometry'>): CenteredBox =>
   inflateRect(layout.geometry.rect, layout.geometry.margin);
 
-const shapeBoundaryResolutionOf = (layout: BoundaryGeometryContext): CanonicalNodeBoundary => ({
+const shapeBoundaryResolutionOf = (layout: CompiledBoundaryGeometry): CanonicalNodeBoundary => ({
   name: layout.shape.name,
   definition: layout.shape.definition,
   params: layout.shape.params,
@@ -48,7 +48,7 @@ const shapeBoundaryResolutionOf = (layout: BoundaryGeometryContext): CanonicalNo
 });
 
 const resolveBoundaryOf = (
-  layout: BoundaryGeometryContext,
+  layout: CompiledBoundaryGeometry,
   boundary: IRBoundary | undefined,
   canonicalBoundary?: CanonicalNodeBoundary,
   warn?: (code: string, message: string) => void,
@@ -79,7 +79,7 @@ const resolveBoundaryOf = (
 
 /** 取节点 shape 在 toward 方向的附着点 */
 export const boundaryPointOf = (
-  layout: BoundaryGeometryContext,
+  layout: CompiledBoundaryGeometry,
   toward: Position,
   boundary?: IRBoundary,
   canonicalBoundary?: CanonicalNodeBoundary,
@@ -93,7 +93,7 @@ export const boundaryPointOf = (
 
 /** 沿折线移除起始节点连接面内的前缀，保留原线段上的出界交点 */
 export const clipNodePolyline = (
-  layout: BoundaryGeometryContext,
+  layout: CompiledBoundaryGeometry,
   points: ReadonlyArray<Position>,
   boundary?: IRBoundary,
   canonicalBoundary?: CanonicalNodeBoundary,
@@ -133,7 +133,7 @@ export const clipNodePolyline = (
 
 /** 取节点 shape 的命名 anchor；标准 anchor 可选在 boundary 拟合后应用 margin */
 export const anchorOf = (
-  layout: BoundaryGeometryContext,
+  layout: CompiledBoundaryGeometry,
   name: string,
   boundary?: IRBoundary,
   applyMargin = false,
@@ -200,7 +200,7 @@ export const anchorOf = (
 
 /** 取节点 shape 在指定角度方向的边界点 */
 export const angleBoundaryOf = (
-  layout: BoundaryGeometryContext,
+  layout: CompiledBoundaryGeometry,
   angleDeg: number,
   boundary?: IRBoundary,
   applyMargin = false,

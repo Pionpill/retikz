@@ -2,7 +2,7 @@ import type { Transform } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { IRPosition, IRScopeSelfPoint, IRTransform } from '../../schemas';
 import { projectLayoutWithTransform, resolveAnchorRefUncached } from '../node';
-import type { BoundaryGeometryContext } from '../reference';
+import type { CompiledBoundaryGeometry } from '../reference';
 import { BuiltinCompileWarningCode, applyTransformChain, composeScopeTransform } from '../shared';
 import { lowerScopeTransforms } from './transform';
 import type { InputScopeCompile, ScopeGeometryContext } from './types';
@@ -33,7 +33,7 @@ const assertFiniteScopePoint = (point: IRPosition, label: string): IRPosition =>
 /** anchor position self point：anchor 在 transformed envelope 上解析；origin / 显式点先按 own chain 投影 */
 const calculateTransformedSelfPoint = (
   point: IRScopeSelfPoint,
-  transformedContext: BoundaryGeometryContext,
+  transformedContext: CompiledBoundaryGeometry,
   scopeTransforms: ReadonlyArray<Transform>,
 ): IRPosition => {
   if (typeof point === 'string') {
@@ -58,7 +58,7 @@ const calculateTransformedSelfPoint = (
 export const calculateScopePlacementTransforms = (
   child: InputScopeCompile,
   context: ScopeGeometryContext,
-  intrinsicContext: BoundaryGeometryContext,
+  intrinsicContext: CompiledBoundaryGeometry,
   positionTarget: IRPosition | undefined,
   preliminaryTransforms: Array<Transform> | undefined,
 ): Array<Transform> => {

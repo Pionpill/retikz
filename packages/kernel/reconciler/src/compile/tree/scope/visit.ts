@@ -1,6 +1,6 @@
 import type { CompiledScope, CompileOccurrenceLocator, IRScope, SceneClipPath, Transform } from '@retikz/core';
 import {
-  compileScopeGeometry,
+  compileScope,
   finalizeScopeCompilation,
   prepareScopeGeometry,
   projectLayoutWithTransform,
@@ -8,11 +8,10 @@ import {
   projectScopeCompileLayouts,
   projectScopeOutputBounds,
   resolveScope,
-  createScopeGeometryContext,
 } from '@retikz/core';
 import { formatPropertyPath } from '@retikz/foundation';
 
-import { compareCanonicalScopes } from '../../compare';
+import { compareCanonicalScopes, compareScopeAnimations } from '../../compare';
 import type { CompileOwnerKey } from '../../provenance';
 import { runCompileStage, readCompileStageCanon } from '../../runtime';
 import type { CompileRuntime, CompileReferenceRead, CompileStageRecord } from '../../runtime';
@@ -46,7 +45,7 @@ const registerScopeLayoutPlaceholder = (
     position: runtime.state.execution.scopeTransformComposer.apply([0, 0], transformChains),
   };
   runtime.state.execution.namespaceStack.register(child.id, {
-    context: placeholderLayout,
+    geometry: placeholderLayout,
     irPath: [...scopeIrPath, 'id'],
     state: 'scope-placeholder',
     scopeId,
@@ -129,7 +128,7 @@ export const visitScope = (
 
   const state: SubtreeCompileState = {
     primitives: [],
-    layoutContexts: [],
+    geometries: [],
     paths: [],
     publications: [],
     bounds: [],
@@ -179,7 +178,7 @@ export const visitScope = (
       {
         child: { ...child, children: undefined },
         preparation,
-        layouts: state.layoutContexts,
+        layouts: state.geometries,
         scopeChain: transformChains,
       },
       {
@@ -188,7 +187,7 @@ export const visitScope = (
         preparedDiagnostics,
         compileInputs: {
           preparation,
-          layouts: state.layoutContexts,
+          layouts: state.geometries,
           scopeChain: transformChains,
           childCount: state.primitives.length,
           preResolvedClipPath,
@@ -197,23 +196,23 @@ export const visitScope = (
         equals: compareCanonicalScopes,
         compile: (stageRuntime, resolved) => ({
           canon: resolved,
-          compiled: compileScopeGeometry(
+          compiled: compileScope(
             resolved,
-            preparation,
-            state.layoutContexts,
             {
               ...scopeGeometryContext,
+              layouts: state.geometries,
+              resolvedClipPath: preResolvedClipPath,
               registerClip: stageRuntime.state.workspace.clipRegistry.register,
               registerClipPath: stageRuntime.state.workspace.clipRegistry.registerPath,
               onWarn: stageRuntime.state.workspace.diagnosticCollector.collect,
             },
-            preResolvedClipPath,
+            { placement: preparation },
           ),
         }),
       },
     );
 
-    const intrinsicLayout = createScopeGeometryContext(geometry.canon, geometry.compiled.geometry);
+    const intrinsicLayout = geometry.compiled;
     compiledScope = geometry.compiled;
     scopeTransforms = geometry.compiled.transforms;
 
@@ -224,7 +223,7 @@ export const visitScope = (
 
     for (const layout of state.publications) {
       const projected = projectPublishedReference(layout, transformChains, postTransforms);
-      runtime.state.execution.namespaceStack.replacePublishedContext(layout, projected);
+      runtime.state.execution.namespaceStack.replacePublishedGeometry(layout, projected);
       frameState.publications.push(projected);
     }
 
@@ -245,15 +244,15 @@ export const visitScope = (
             intrinsicLayout,
             runtime.state.execution.scopeTransformComposer.resolve(scopeTransforms),
           );
-    frameState.layoutContexts.push(
-      ...projectScopeCompileLayouts(child, intrinsicLayout, state.layoutContexts, scopeTransforms),
+    frameState.geometries.push(
+      ...projectScopeCompileLayouts(child, intrinsicLayout, state.geometries, scopeTransforms),
     );
     if (child.id !== undefined) {
       const globalEnvelope = projectLayoutWithTransform(
         finalEnvelope,
         runtime.state.execution.scopeTransformComposer.resolve(transformChains),
       );
-      runtime.state.execution.namespaceStack.replaceContext(
+      runtime.state.execution.namespaceStack.replaceGeometry(
         child.id,
         globalEnvelope,
         layoutPlaceholder.parentFrameDepth,
@@ -290,7 +289,8 @@ export const visitScope = (
   }
 
   const finalWarningCount = runtime.state.workspace.diagnosticCollector.warnings.length;
-  compiledScope = finalizeScopeCompilation(canon, compiledScope!, state.primitives.length, scopeGeometryContext);
+  const finalizedScope = finalizeScopeCompilation(canon, compiledScope!, state.primitives.length, scopeGeometryContext);
+  if (!compareScopeAnimations(compiledScope!.animations, finalizedScope.animations)) compiledScope = finalizedScope;
   if (pendingRecord?.record.phase === 'scope') {
     const { record, reused } = pendingRecord;
     runtime.cache?.write(

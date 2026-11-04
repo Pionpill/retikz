@@ -36,9 +36,9 @@ export const bindPathTarget = (target: IRTarget, context: PositionTargetEvaluate
     target,
     point: resolution.point,
     referencePoint: resolution.referencePoint,
-    ...(resolution.reference === undefined || 'position' in resolution.reference.context
+    ...(resolution.reference === undefined || 'position' in resolution.reference.geometry
       ? {}
-      : { context: resolution.reference.context, irPath: resolution.reference.irPath }),
+      : { geometry: resolution.reference.geometry, irPath: resolution.reference.irPath }),
     ...(resolution.canonicalBoundary === undefined ? {} : { canonicalBoundary: resolution.canonicalBoundary }),
   };
 };
@@ -88,10 +88,10 @@ export const pathTargetViewOf = (
     referenceOfTarget: target => bindingOf(target)?.referencePoint ?? pointOf(target),
     clipPolylineTarget: (target, points, scopeChain) => {
       const binding = bindingOf(target);
-      if (binding?.context === undefined || !isNodeTarget(target) || !isAutoBoundaryTarget(target)) return [...points];
+      if (binding?.geometry === undefined || !isNodeTarget(target) || !isAutoBoundaryTarget(target)) return [...points];
 
       const transform = resolveTransform(scopeChain);
-      const node = binding.context;
+      const node = binding.geometry;
       const clipped = clipNodePolyline(
         node,
         points.map(position => applyScopeTransform(position, transform)),
@@ -104,10 +104,10 @@ export const pathTargetViewOf = (
     },
     clipTarget: (target, toward, scopeChain) => {
       const binding = bindingOf(target);
-      if (binding?.context === undefined || !isNodeTarget(target)) return pointOf(target);
+      if (binding?.geometry === undefined || !isNodeTarget(target)) return pointOf(target);
 
       const transform = resolveTransform(scopeChain);
-      const node = binding.context;
+      const node = binding.geometry;
       const boundary = target.boundary;
       const towardGlobal = scopeChain.length === 0 ? toward : applyScopeTransform(toward, transform);
       const base =

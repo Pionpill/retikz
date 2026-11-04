@@ -13,8 +13,8 @@ import type {
 } from '../../schemas';
 import type { CompiledCoordinate } from '../coordinate';
 
-/** 查询连接几何时临时组合的能力绑定与最终尺寸，不包含节点正文或布局意图 */
-export type BoundaryGeometryContext = {
+/** 边界查询直接消费的编译产物字段，不要求生成独立投影对象 */
+export type CompiledBoundaryGeometry = {
   /** 视觉形状的能力绑定 */
   shape: CanonicalNodeShape;
   /** 默认连接面的能力绑定 */
@@ -28,8 +28,8 @@ export type BoundaryGeometryContext = {
   };
 };
 
-/** 引用查询的临时上下文：真实坐标位置，或显式组合能力绑定的边界几何 */
-export type ReferenceGeometryContext = BoundaryGeometryContext | CompiledCoordinate;
+/** 引用查询直接消费的位置或边界编译结果 */
+export type CompiledReferenceGeometry = CompiledBoundaryGeometry | CompiledCoordinate;
 
 /** 引用消费者实际读取的几何能力 */
 export type ReferenceReadKind =
@@ -49,8 +49,8 @@ export type PositionReferenceState = 'resolved' | 'scope-placeholder';
 export type PositionReferenceView = Readonly<{
   /** 引用当前是否已经完成布局 */
   state: PositionReferenceState;
-  /** 引用目标的几何查询上下文 */
-  context: ReferenceGeometryContext;
+  /** 引用目标的几何编译产物 */
+  geometry: CompiledReferenceGeometry;
   /** 引用声明来源 */
   irPath?: PropertyPath;
 }>;

@@ -123,7 +123,9 @@ export const flushPendingPathEmissions = (
             equals: compareCanonicalPaths,
             compile: (stageRuntime, canon) => ({
               canon,
-              compiled: compilePath(canon, pendingPath, targetResolver, {
+              compiled: compilePath(canon, {
+                ...pendingPath,
+                targetResolver,
                 registries: stageRuntime.context.registries,
                 ...stageRuntime.context.layout,
                 ...stageRuntime.context.host,

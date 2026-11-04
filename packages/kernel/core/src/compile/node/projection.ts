@@ -1,12 +1,12 @@
 import type { Transform } from '../../contract';
 import type { IRPosition } from '../../schemas';
-import type { BoundaryGeometryContext } from '../reference';
+import type { CompiledBoundaryGeometry } from '../reference';
 import { applyScopeTransform, applyTransformChain, inverseTransformChain } from '../shared';
 import type { ComposedScopeTransform } from '../shared';
 
 /** 保持既有布局投影口径，只复用合成的点变换与旋转/缩放累计量 */
 export const projectLayoutWithTransform = <
-  TGeometry extends BoundaryGeometryContext & { geometry: { contentCenter?: IRPosition } },
+  TGeometry extends CompiledBoundaryGeometry & { geometry: { contentCenter?: IRPosition } },
 >(
   layout: TGeometry,
   transform: ComposedScopeTransform,
@@ -43,7 +43,7 @@ export const projectLayoutWithTransform = <
 
 /** 将已按 parent ancestor chain 发布的 layout 投影并返回新布局，不修改已发布对象当前 Scope own chain */
 export const projectPublishedCompileLayout = <
-  TGeometry extends BoundaryGeometryContext & { geometry: { contentCenter?: IRPosition } },
+  TGeometry extends CompiledBoundaryGeometry & { geometry: { contentCenter?: IRPosition } },
 >(
   layout: TGeometry,
   parentChain: ReadonlyArray<Transform>,

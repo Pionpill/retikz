@@ -32,10 +32,12 @@ const layoutSquare = (node: IRNode) => {
     labelDistance: 12,
   });
 
-  return layoutNode(resolution, {
-    measureText,
-    positionContext: createPositionEvaluateContext({ lookupReference: () => undefined, nodeDistance: 24 }),
-  }).context;
+  return {
+    ...layoutNode(resolution, {
+      measureText,
+      positionContext: createPositionEvaluateContext({ lookupReference: () => undefined, nodeDistance: 24 }),
+    }),
+  };
 };
 
 /** 40×40 正方轮廓的 4 条 CW Line 段（用于独立复算 fillet 弧，断言边界端点落弧上） */

@@ -5,15 +5,18 @@ import type { PathHostCompileContext } from './emit';
 import { emitDefinedPath } from './emit';
 import type { PathTargetResolver, CompiledPath, InputPathCompilation } from './types';
 
+/** 路径编译使用的当前环境、目标查询与宿主能力 */
+export type PathCompilationContext = PathHostCompileContext &
+  Omit<InputPathCompilation, 'path'> & {
+    /** 当前路径目标查询能力 */
+    targetResolver: PathTargetResolver;
+  };
+
 /** 消费已确定路径属性，绑定引用并生成纯数据最终结果 */
-export const compilePath = (
-  canon: CanonicalPath,
-  input: Omit<InputPathCompilation, 'path'>,
-  targetResolver: PathTargetResolver,
-  context: PathHostCompileContext,
-): CompiledPath => {
-  const resolution = bindPathTargets(canon, { scopeChain: input.scopeChain, targetResolver });
-  const result = emitDefinedPath(input, resolution, targetResolver, context);
+export const compilePath = (canon: CanonicalPath, context: PathCompilationContext): CompiledPath => {
+  const { scopeChain, targetResolver } = context;
+  const resolution = bindPathTargets(canon, { scopeChain, targetResolver });
+  const result = emitDefinedPath(context, resolution, targetResolver, context);
   const drawing = splitCompiledDrawing(result?.primitives ?? []);
   return {
     geometry: drawing.geometry,

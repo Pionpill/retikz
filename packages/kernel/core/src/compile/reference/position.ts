@@ -35,7 +35,7 @@ export const evaluatePosition = (
   if (typeof position === 'string') {
     const reference = context.lookupReference(position, 'position');
     if (reference === undefined) return null;
-    return evaluationOfWorld(referencePositionOf(reference.context), context);
+    return evaluationOfWorld(referencePositionOf(reference.geometry), context);
   }
 
   if (isPositionTuple(position)) return evaluationOfLocal([position[0], position[1]], context);
@@ -43,7 +43,7 @@ export const evaluatePosition = (
     const reference = context.lookupReference(position.of, 'position');
     if (reference === undefined) return null;
 
-    const referenceLocal = context.toLocal(referencePositionOf(reference.context));
+    const referenceLocal = context.toLocal(referencePositionOf(reference.geometry));
     const distance = position.distance ?? context.nodeDistance;
     const [dx, dy] = anchorUnitVectorByAnchor[position.direction];
 

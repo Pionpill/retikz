@@ -5,7 +5,7 @@ import type { CanonicalNodeBoundary, MergedScopeDefaults, CanonicalPath } from '
 import type { IRPathBase, IRPosition, IRTarget } from '../../schemas';
 import type { CanonicalDropShadow } from '../../schemas';
 import type { CanonicalTheme } from '../../shared';
-import type { BoundaryGeometryContext } from '../reference';
+import type { CompiledBoundaryGeometry } from '../reference';
 import type { RegisterPaint } from '../resource';
 import type { CompiledDrawing } from '../scene';
 import type { CompileWarning } from '../shared';
@@ -94,7 +94,7 @@ export type TargetResolution = Readonly<{
   /** 绑定器提供的世界参考点；未提供时可能沿用局部坐标，无法定位时为 null */
   referencePoint: IRPosition | null;
   /** 直接引用的节点或作用域边界查询上下文，坐标目标不设置 */
-  context?: BoundaryGeometryContext;
+  geometry?: CompiledBoundaryGeometry;
   /** 目标引用的声明来源 */
   irPath?: PropertyPath;
   /** 节点目标选用的连接面，普通坐标目标不设置 */

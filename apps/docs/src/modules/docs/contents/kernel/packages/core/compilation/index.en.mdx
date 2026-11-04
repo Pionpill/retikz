@@ -149,8 +149,8 @@ Traversal also creates state for this execution: emitted primitives, accumulated
 `compileChildrenToPrimitives` dispatches children in declaration order. Here it records the pending Path before processing A and B. Three results explain the work inside a node:
 
 - CanonicalNode: complete layout intent, text, labels, drawing properties, and capability bindings; paints reside in `style.fill` / `style.stroke`.
-- NodeGeometryContext: a transient context combining bindings and geometry for measurement and connection queries.
-- CompiledNode: final geometry, layout, styles, text, labels, and animations without input configuration or Definitions.
+- CompiledNodeLayout: measurement, placement, and label layout results with bindings required by subsequent queries.
+- CompiledNode: final geometry, layout, styles, text, labels, animations, and query bindings, without the complete input configuration.
 
 These are the source definitions of the three internal types, with comments omitted and referenced types left unexpanded.
 
@@ -176,12 +176,12 @@ export type CanonicalNode = Readonly<{
 
 </DocTab>
 
-<DocTab value="node-layout" label="NodeGeometryContext">
+<DocTab value="node-layout" label="CompiledNodeLayout">
 
-`irPath` belongs to execution diagnostics and provenance, outside final compiled geometry. Node canon and compiled products are retained separately; connection queries temporarily construct `NodeGeometryContext`.
+`irPath` belongs to execution diagnostics and provenance, outside final compiled geometry. Node canon and compiled products are retained separately; connection queries directly consume shape and boundary bindings and geometry from compiled results without assembling an intermediate object from the canon.
 
 ```ts
-export type NodeGeometryContext = {
+export type CompiledNodeLayout = {
   shape: CanonicalNode['shape'];
   boundary: CanonicalNode['boundary'];
   geometry: NodeLayoutGeometry;
@@ -197,8 +197,11 @@ export type NodeLayoutGeometry = {
 };
 
 export type CompiledNode = {
+  shape: CanonicalNode['shape'];
+  boundary: CanonicalNode['boundary'];
   geometry: CompiledNodeGeometry;
-  layout: CompiledNodeLayout;
+  layout: CompiledNodeMetrics;
+  metadata: CompiledNodeMetadata;
   style: CompiledNodeStyle;
   text?: CompiledNodeText;
   labels: Array<CompiledNodeLabel>;
@@ -220,7 +223,11 @@ export type CompiledNodeTextLayout = {
 
 </DocTabs>
 
-`resolveNode` uses the root font size, relative distance, and TeX gating flag to produce a complete `CanonicalNode`. `compileNode` reuses eligible layout or calls `layoutNode` for measurement and placement, then calculates final drawing data. Authored-line indexes associate physical lines with current styles. `emitNodeOutput` consumes only compiled results. Reconciler compares effective configuration and reference geometry, and Weave manages stage caches. Core provides product contracts and geometry queries.
+`resolveNode` uses the root font size, relative distance, and TeX gating flag to produce a complete `CanonicalNode`. `layoutNode` returns `CompiledNodeLayout` without the complete canon, while retaining Definitions and parameters required by subsequent queries. `compileNode(canon, context, prepared?)` measures and positions the node when `prepared.layout` is absent; otherwise it consumes that layout directly to calculate the current drawing. Final `geometry` holds the visual rectangle, connection margins, and primitive geometry. `layout` uses `CompiledNodeMetrics` for content placement and alignment, while text and label results remain in their respective fields.
+
+Reconciler compares effective configuration, compilation context, and reference geometry, while Weave manages stage caches. When layout can be reused, Reconciler reads position dependencies again and passes the prepared layout to the same `compileNode` entrypoint. Core neither compares historical versions nor decides cache validity. Authored-line indexes associate physical lines with current styles. `emitNodeOutput` consumes only compiled results.
+
+Element compilation follows `compileXxx(canon, context, prepared?)`: Node accepts prepared layout, and Scope accepts `prepared.placement` captured before child traversal. Scope receives child layouts and an already resolved clip path through its current context; animation finalization still waits for deferred path output. `compilePath(canon, context)` and `compileCoordinate(canon, context)` currently have no independently reusable partial stage, so they have no empty third parameter. The caller ensures that prepared data matches the current input and context; Core calculates only missing steps.
 
 <ComponentPreview files="compilation-node" size="lg" hideCode type="illustration" />
 
@@ -410,12 +417,12 @@ Start in `compileSceneSnapshot` to see context creation, traversal, and assembly
 
 Core provides composable domain stages. Reconciler owns traversal, dependency waiting, and workspace lifetime, supplying the narrow capabilities required by each stage.
 
-| Element    | Shared stages                                                                      | Facts retained by the driver                               |
-| ---------- | ---------------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| Node       | `resolveNode` → `layoutNode` → `emitNodeOutput`                                    | Effective properties, layout, output, and paired resources |
-| Coordinate | `evaluatePosition` → `layoutCoordinate`                                            | `CompiledCoordinate.position`                              |
-| Path       | `resolvePathAnimations` → `compilePath`                                            | Kind-host output, resources, and bounds                    |
-| Scope      | `resolveScope`, `prepareScopeGeometry`, `compileScopeGeometry`, `createScopeGroup` | Envelope, own group properties, and output                 |
+| Element    | Shared stages                                                              | Facts retained by the driver                               |
+| ---------- | -------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| Node       | `resolveNode` → `layoutNode` → `emitNodeOutput`                            | Effective properties, layout, output, and paired resources |
+| Coordinate | `evaluatePosition` → `compileCoordinate`                                   | `CompiledCoordinate.position`                              |
+| Path       | `resolvePathAnimations` → `compilePath`                                    | Kind-host output, resources, and bounds                    |
+| Scope      | `resolveScope`, `prepareScopeGeometry`, `compileScope`, `createScopeGroup` | Envelope, own group properties, and output                 |
 
 Resolution may use semantic context such as registries and position lookup, but does not read compilation execution state. Layout and output require their own measurement, position, and resource capabilities. The caller owns the complete `SharedCompileContext` and workspace. This example composes the stages for a node without references; `undefined` from lookup means no named target is visible.
 
@@ -460,7 +467,7 @@ Resource IDs are derived from content when resources are created. `assembleCompi
 
 To calculate a layout rectangle from existing axis-aligned bounds, call Core's public `computeLayoutFromBounds(bounds, padding, round)`. It applies padding and output precision, returning a 100×100 fallback rectangle at the origin when `bounds` is `undefined`. Callers with a point set first compute its bounds using `boundsOf` from `@retikz/math`.
 
-Core provides domain algorithms; Reconciler owns complete output assembly. Reconciler owns name mapping, dependency invalidation, version isolation and publication; the interface does not construct or update the Weave tree automatically. Callers must not mutate data reachable from published compiled state. Changes to shared definitions or measurement services invalidate affected caches. Canonical capability bindings contain runtime Definitions. Compiled results retain final data without Definitions or emission callbacks; transferring them also requires the referenced resources.
+Core provides domain algorithms; Reconciler owns complete output assembly. Reconciler owns name mapping, dependency invalidation, version isolation and publication; the interface does not construct or update the Weave tree automatically. Callers must not mutate data reachable from published compiled state. Changes to shared definitions or measurement services invalidate affected caches. Node and Scope compiled results retain Definitions and parameters required by subsequent geometry queries; Path and Coordinate retain no unused bindings. Reconciler compares actual query results at the required granularity, using Definition identity for boundary comparisons. Compiled results are not guaranteed to be serializable; Scene output contains no Definitions and must travel with its referenced resources.
 
 <SourceLinks
   sources={[

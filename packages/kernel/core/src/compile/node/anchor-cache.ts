@@ -4,20 +4,20 @@ import { boundaryKey } from '../../resolve';
 import type { IRAnchorRef, IRBoundary, IRPosition } from '../../schemas';
 import type { Side } from '../../shared';
 import { isAnchor } from '../../shared';
-import type { BoundaryGeometryContext } from '../reference';
+import type { CompiledBoundaryGeometry } from '../reference';
 import { snapshotProviderPosition } from '../shared';
 import { anchorOf, angleBoundaryOf } from './anchors';
 import type { NodeBoundaryState } from './types';
 
-/** 单个 BoundaryGeometryContext 生命周期内的 anchor 坐标缓存 */
-const cache = new WeakMap<BoundaryGeometryContext, Map<string, IRPosition>>();
+/** 单个 CompiledBoundaryGeometry 生命周期内的 anchor 坐标缓存 */
+const cache = new WeakMap<CompiledBoundaryGeometry, Map<string, IRPosition>>();
 
 /** 角度字符串识别规则，与文本 target parser 保持一致 */
 const ANGLE_RE = /^-?\d+(\.\d+)?$/;
 
 /** 不经过 WeakMap 缓存解析命名或角度 anchor */
 const computeAnchor = (
-  layout: BoundaryGeometryContext,
+  layout: CompiledBoundaryGeometry,
   anchorName: string,
   boundary: IRBoundary | undefined,
   canonicalBoundary?: CanonicalNodeBoundary,
@@ -31,7 +31,7 @@ const computeAnchor = (
 };
 
 /** 不经过 WeakMap 缓存解析视觉 shape 的边上比例点 */
-const computeEdgePoint = (layout: BoundaryGeometryContext, side: Side, fraction: number): IRPosition => {
+const computeEdgePoint = (layout: CompiledBoundaryGeometry, side: Side, fraction: number): IRPosition => {
   const { computeEdgePoint: edgePoint } = layout.shape.definition;
   if (!edgePoint) {
     throw new RetikzCoreError(
@@ -57,7 +57,7 @@ const computeEdgePoint = (layout: BoundaryGeometryContext, side: Side, fraction:
  * @description 供仍会整体平移的 provisional layout 使用，避免缓存平移前坐标
  */
 export const resolveAnchorRefUncached = (
-  layout: BoundaryGeometryContext,
+  layout: CompiledBoundaryGeometry,
   anchor: IRAnchorRef,
   boundary?: IRBoundary,
   canonicalBoundary?: CanonicalNodeBoundary,
@@ -70,7 +70,7 @@ export const resolveAnchorRefUncached = (
 
 /** 取节点 anchor 的全局坐标 */
 export const resolveAnchor = (
-  layout: BoundaryGeometryContext,
+  layout: CompiledBoundaryGeometry,
   anchorName: string,
   boundary?: IRBoundary,
   canonicalBoundary?: CanonicalNodeBoundary,
@@ -93,7 +93,7 @@ export const resolveAnchor = (
 };
 
 /** 取节点边上比例点的全局坐标 */
-const resolveEdgePoint = (layout: BoundaryGeometryContext, side: Side, t: number): IRPosition => {
+const resolveEdgePoint = (layout: CompiledBoundaryGeometry, side: Side, t: number): IRPosition => {
   let layoutCache = cache.get(layout);
   if (!layoutCache) {
     layoutCache = new Map<string, IRPosition>();
@@ -112,7 +112,7 @@ const resolveEdgePoint = (layout: BoundaryGeometryContext, side: Side, t: number
 
 /** 使用既有 WeakMap 缓存解析完整 anchor 引用 */
 export const resolveAnchorRef = (
-  layout: BoundaryGeometryContext,
+  layout: CompiledBoundaryGeometry,
   anchor: IRAnchorRef,
   boundary?: IRBoundary,
   canonicalBoundary?: CanonicalNodeBoundary,

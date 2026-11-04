@@ -7,7 +7,7 @@ description: Follow how Core resolves positions, names, and anchors, then determ
 
 Start with the authoring forms in [Node positioning](/kernel/components/node/usage), [Coordinate](/kernel/components/node/coordinate), and [Scope](/kernel/components/scope/usage). This page stops at resolved positions, reference geometry, and group transforms. Text measurement, path clipping, and renderer internals belong to the following topics.
 
-Position and target evaluation belong to compile. Lookup returns a reference holding a `ReferenceGeometryContext`, source path, and readiness directly. The target declaration supplies the name; neither the reference record nor its geometry is copied.
+Position and target evaluation belong to compile. Lookup returns a reference holding a `CompiledReferenceGeometry`, source path, and readiness directly. The target declaration supplies the name; neither the reference record nor its geometry is copied.
 
 ## Overall flow
 
@@ -125,7 +125,7 @@ This source excerpt shows the core data structure, omitting diagnostics, branch 
 export type NamespaceEntryState = 'resolved' | 'scope-placeholder';
 
 export type NamespaceEntry = {
-  context: ReferenceGeometryContext;
+  context: CompiledReferenceGeometry;
   state: NamespaceEntryState;
 };
 
@@ -136,7 +136,7 @@ export class NamespaceStack {
 }
 ```
 
-The outer `Array` records scope levels: `frames[0]` is the root, and the last item is the top frame. Each `Map` maps an element id to a `NamespaceEntry`. Its `context` holds the geometry needed for references, while `state` distinguishes a resolved layout from a Scope placeholder. `ReferenceGeometryContext` distinguishes actual coordinate positions from Node and Scope boundary query contexts.
+The outer `Array` records scope levels: `frames[0]` is the root, and the last item is the top frame. Each `Map` maps an element id to a `NamespaceEntry`. Its `context` holds the geometry needed for references, while `state` distinguishes a resolved layout from a Scope placeholder. `CompiledReferenceGeometry` distinguishes actual coordinate positions from Node and Scope boundary query contexts.
 
 The constructor creates the root frame with `[new Map()]`. Here, `readonly` prevents reassignment of the `frames` field; it does not freeze the array or its Maps. Entering a frame still calls `frames.push(new Map())`, and registration writes to the top Map.
 
@@ -287,7 +287,7 @@ The upper target is `[140, 0]`, the node center is `[200, 0]`, and the envelope'
 
 A Scope envelope is known only after child layout. Core collects layout contributions from Nodes, Coordinates, child Scopes, and similar children. `boundingShape` selects a rectangle or circle. Path visual extents and clipping do not expand this intrinsic envelope.
 
-Before entering children, a Scope with an `id` registers a `scope-placeholder` entry in the parent namespace. It is an intermediate compilation state, not a completed envelope. Anchor placement requiring complete geometry cannot use it as a target. Once the children finish, `replaceContext` upgrades the name to `resolved` without treating the normal upgrade as duplicate registration.
+Before entering children, a Scope with an `id` registers a `scope-placeholder` entry in the parent namespace. It is an intermediate compilation state, not a completed envelope. Anchor placement requiring complete geometry cannot use it as a target. Once the children finish, `replaceCompiled` upgrades the name to `resolved` without treating the normal upgrade as duplicate registration.
 
 These snapshots follow nodes `a` and `b` being laid out inside `S`, sharing one Map without `localNamespace: true`. The blue outline below marks the Scope envelope determined during finalization.
 

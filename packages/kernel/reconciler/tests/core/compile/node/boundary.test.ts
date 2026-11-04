@@ -79,13 +79,15 @@ const layoutBoundaryNode = (node: IRNode, namespaceStack: NamespaceStack) =>
       labelDistance: 12,
     });
 
-    return layoutNode(resolution, {
-      measureText,
-      positionContext: createPositionEvaluateContext({
-        lookupReference: id => namespaceStack.lookupReference(id),
-        nodeDistance: 24,
+    return {
+      ...layoutNode(resolution, {
+        measureText,
+        positionContext: createPositionEvaluateContext({
+          lookupReference: id => namespaceStack.lookupReference(id),
+          nodeDistance: 24,
+        }),
       }),
-    }).context;
+    };
   })();
 
 describe('边界感知边界/规范', () => {

@@ -44,7 +44,7 @@ export class SubtreeCompiler {
   run(): SubtreeCompilation {
     const state: SubtreeCompileState = {
       primitives: [],
-      layoutContexts: [],
+      geometries: [],
       paths: [],
       publications: [],
       bounds: [],
@@ -97,7 +97,7 @@ export class SubtreeCompiler {
         ? {}
         : { contribution: this.compositeCompiler.rootContribution }),
       layoutBounds,
-      layoutContexts: state.layoutContexts,
+      geometries: state.geometries,
       bounds: state.bounds,
       allocations: state.allocations.filter(allocation => allocation.skipAllocation !== true),
       artifacts: orderCompileArtifacts(state.artifacts),
@@ -239,7 +239,7 @@ export class SubtreeCompiler {
       const zIndex = contribution.primitiveZIndices[index];
       if (zIndex !== undefined) this.output.zIndexOf.set(primitive, zIndex);
     }
-    runtime.state.layoutContexts.push(...contribution.layoutContexts);
+    runtime.state.geometries.push(...contribution.geometries);
     runtime.state.publications.push(...contribution.publications);
     runtime.state.bounds.push(...contribution.bounds);
     for (const allocation of contribution.allocations) {

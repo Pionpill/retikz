@@ -30,7 +30,7 @@ Most users consume core indirectly through [`@retikz/react`](https://www.npmjs.c
 
 ## Exports
 
-- Atomic stages: `resolveNode`, `compileNode`, `layoutNode`, `emitNodeOutput`, `resolveCoordinate`, `layoutCoordinate`, `compilePath`, and `compileScopeGeometry`
+- Atomic stages: `resolveNode`, `compileNode`, `layoutNode`, `emitNodeOutput`, `resolveCoordinate`, `compileCoordinate`, `compilePath`, and `compileScope`
 - Complete `compileToScene` / `compileSceneSnapshot` APIs and result types are exported by `@retikz/reconciler`
 - `computeLayoutFromBounds` — axis-aligned bounds → `BoundsRect`; `fallbackMeasurer` — dependency-free default `TextMeasurer`
 - Layout-aware composite authoring — `layoutChild(child, proposal)` evaluates two-axis `minimum` / `natural` / `range` / `exact` proposals and returns a resolved `slotSize`, real allocation / visual bounds, alignment guides, or an isolated failure; `context.replay()` / `context.raise()` select one callback-local transaction without adding runtime handles to IR or Scene

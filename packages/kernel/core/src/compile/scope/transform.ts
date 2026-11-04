@@ -13,7 +13,7 @@ import type {
   PolarPosition,
 } from '../../schemas';
 import { resolveAnchorRefUncached } from '../node';
-import type { BoundaryGeometryContext } from '../reference';
+import type { CompiledBoundaryGeometry } from '../reference';
 import { evaluatePosition } from '../reference';
 import type { PositionEvaluation, PositionEvaluateContext, PositionTargetEvaluateContext } from '../reference';
 import { createCompileInvariantError } from '../shared';
@@ -25,7 +25,7 @@ type ScopeTransformsLoweringContext = {
   /** transform 引用解析失败时的回调 */
   onUnresolved?: (failed: IRTransform) => void;
   /** 旋转与缩放中心求值使用的 Scope 固有包络查询上下文 */
-  intrinsicContext?: BoundaryGeometryContext;
+  intrinsicContext?: CompiledBoundaryGeometry;
 };
 
 /** 断言 self point / placement 计算结果是可发布的有限坐标 */
@@ -43,7 +43,7 @@ const assertFiniteScopePoint = (point: IRPosition, label: string): IRPosition =>
  */
 const resolveScopeSelfPoint = (
   point: IRScopeSelfPoint,
-  intrinsicContext: BoundaryGeometryContext | undefined,
+  intrinsicContext: CompiledBoundaryGeometry | undefined,
 ): IRPosition => {
   if (point === 'origin') return [0, 0];
   if (Array.isArray(point)) return assertFiniteScopePoint([point[0], point[1]], 'scope self point');

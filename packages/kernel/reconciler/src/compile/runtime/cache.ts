@@ -149,7 +149,7 @@ export const runCompileStage = <TPhase extends keyof CompileStageProducts>(
         current.state === read.entry.state &&
         current.scopeId === read.entry.scopeId &&
         jsonStructuralEquals(current.irPath, read.entry.irPath) &&
-        compareReferenceGeometry(read.entry.context, current.context, read.kind)
+        compareReferenceGeometry(read.entry.geometry, current.geometry, read.kind)
       );
     }) === true;
   if (

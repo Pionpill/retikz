@@ -9,7 +9,7 @@ import {
   evaluatePosition,
   evaluatePositionTarget,
 } from '../../src/compile';
-import type { NodeGeometryContext } from '../../src/compile/node';
+import type { CompiledNodeLayout } from '../../src/compile/node';
 import { resolveTransformTranslation } from '../../src/compile/scope';
 import { BUILTIN_SHAPES } from '../../src/providers';
 import type { CanonicalNodeBoundary } from '../../src/resolve';
@@ -22,7 +22,7 @@ const rectangleBoundary: CanonicalNodeBoundary = {
   isShape: true,
 };
 
-const rectangleLayout = (): NodeGeometryContext => ({
+const rectangleLayout = (): CompiledNodeLayout => ({
   shape: { name: 'rectangle', definition: BUILTIN_SHAPES.get('rectangle')!, params: {} },
   boundary: rectangleBoundary,
   geometry: {
@@ -38,7 +38,7 @@ const reference = (
   center: IRPosition,
   state: PositionReferenceState = 'resolved',
 ): PositionReferenceView & { id: string } => {
-  const node: NodeGeometryContext = {
+  const node: CompiledNodeLayout = {
     shape: { name: 'rectangle', definition: BUILTIN_SHAPES.get('rectangle')!, params: {} },
     geometry: {
       rect: { x: center[0], y: center[1], width: 20, height: 10 },
@@ -48,7 +48,7 @@ const reference = (
     },
     boundary: rectangleBoundary,
   };
-  return { state, context: node, id };
+  return { state, geometry: node, id };
 };
 
 const contextOf = (
@@ -60,14 +60,14 @@ const contextOf = (
     lookupReference: id => byId.get(id),
     toLocal: world => [world[0] - 100, world[1] - 50],
     toWorld: local => [local[0] + 100, local[1] + 50],
-    canonicalBoundaryOf: (_target, item) => ('position' in item.context ? undefined : item.context.boundary),
+    canonicalBoundaryOf: (_target, item) => ('position' in item.geometry ? undefined : item.geometry.boundary),
     pointOfNodeTarget: (target, item) => {
-      if ('position' in item.context) return item.context.position;
+      if ('position' in item.geometry) return item.geometry.position;
       if (target.anchor === 'right') {
-        return [item.context.geometry.rect.x + item.context.geometry.rect.width / 2, item.context.geometry.rect.y];
+        return [item.geometry.geometry.rect.x + item.geometry.geometry.rect.width / 2, item.geometry.geometry.rect.y];
       }
 
-      return [item.context.geometry.rect.x, item.context.geometry.rect.y];
+      return [item.geometry.geometry.rect.x, item.geometry.geometry.rect.y];
     },
   };
 };
@@ -79,7 +79,7 @@ describe('compiled layout references', () => {
     store.get(layout).irPath = ['original'];
     const paths: Array<unknown> = [];
     const references = new Map<string, PositionReferenceView>(
-      ['A', 'B'].map(id => [id, { state: 'resolved', context: layout, irPath: ['aliases', id] }]),
+      ['A', 'B'].map(id => [id, { state: 'resolved', geometry: layout, irPath: ['aliases', id] }]),
     );
     const context = createPositionEvaluateContext({
       nodeDistance: 24,
@@ -93,7 +93,7 @@ describe('compiled layout references', () => {
     for (const id of ['A', 'B']) {
       const result = evaluatePositionTarget({ id, anchor: 'right', boundary: 'rectangle' }, context);
       expect(result.reference).toBe(references.get(id));
-      expect(result.reference?.context).toBe(layout);
+      expect(result.reference?.geometry).toBe(layout);
       expect(result.reference?.irPath).toEqual(['aliases', id]);
       expect(result.point).toEqual([30, 20]);
     }
@@ -110,7 +110,7 @@ describe('compiled layout references', () => {
     const context = createPositionEvaluateContext({
       nodeDistance: 24,
       nodeBoundaryStore: createNodeBoundaryStore(),
-      lookupReference: () => ({ state: 'resolved', context: layout }),
+      lookupReference: () => ({ state: 'resolved', geometry: layout }),
     });
     expect(evaluatePositionTarget({ id: 'A', anchor: 'right' }, context).point).toEqual([30, 20]);
     layout = projectLayoutWithTransform(original, composeScopeTransform([{ kind: 'translate', x: 100, y: 50 }]));

@@ -7,7 +7,7 @@ description: 追踪 Core 如何解析位置、查找名称与锚点，并在 Sco
 
 阅读前可先了解 [Node 定位](/kernel/components/node/usage)、[Coordinate](/kernel/components/node/coordinate) 与 [Scope](/kernel/components/scope/usage) 的写法。本页止于位置、引用几何和分组变换的交付；文字测量、路径裁剪与渲染器内部绘制分别由后续主题承接。
 
-位置与目标求值属于 compile：查询直接返回持有 `ReferenceGeometryContext`、来源路径与就绪状态的引用记录。名称由目标声明提供，不复制引用记录或几何。
+位置与目标求值属于 compile：查询直接返回持有 `CompiledReferenceGeometry`、来源路径与就绪状态的引用记录。名称由目标声明提供，不复制引用记录或几何。
 
 ## 整体流程
 
@@ -116,7 +116,7 @@ Node 对齐自身锚点时，要先获得临时布局：自己的尺寸与旋转
 export type NamespaceEntryState = 'resolved' | 'scope-placeholder';
 
 export type NamespaceEntry = {
-  context: ReferenceGeometryContext;
+  context: CompiledReferenceGeometry;
   state: NamespaceEntryState;
 };
 
@@ -127,7 +127,7 @@ export class NamespaceStack {
 }
 ```
 
-外层 `Array` 记录作用域层次：`frames[0]` 是根层，最后一项是栈顶；每个 `Map` 用元素 id 查到一条 `NamespaceEntry`。条目中的 `context` 保存引用几何，`state` 区分已就绪引用与 Scope 占位。`ReferenceGeometryContext` 区分真实坐标位置与 Node、Scope 的边界查询上下文。
+外层 `Array` 记录作用域层次：`frames[0]` 是根层，最后一项是栈顶；每个 `Map` 用元素 id 查到一条 `NamespaceEntry`。条目中的 `context` 保存引用几何，`state` 区分已就绪引用与 Scope 占位。`CompiledReferenceGeometry` 区分真实坐标位置与 Node、Scope 的边界查询上下文。
 
 构造函数用 `[new Map()]` 建立根层。这里的 `readonly` 只禁止重新赋值 `frames` 字段，不会冻结数组或 Map：入栈仍使用 `frames.push(new Map())`，注册则写入栈顶 Map。
 
@@ -263,7 +263,7 @@ Scope 的原点和内容包络中心通常不同。`position: [x, y]` 放置的�
 
 Scope 的包络要等子布局完成才知道。Core 从 Node、Coordinate、子 Scope 等贡献的布局汇总包络；`boundingShape` 选择矩形或圆形。路径视觉范围和裁剪不反过来扩张这个固有包络。
 
-有 `id` 的 Scope 在进入子树前注册一条 `scope-placeholder` 记录，以占住父命名空间中的名称。这个记录是编译中的临时状态，不是完成的包络；需要完整几何的锚点定位不能用它作为目标。子树完成后，Core 用 `replaceContext` 将同一名称升级为 `resolved`，不把正常升级当作重复名称注册。
+有 `id` 的 Scope 在进入子树前注册一条 `scope-placeholder` 记录，以占住父命名空间中的名称。这个记录是编译中的临时状态，不是完成的包络；需要完整几何的锚点定位不能用它作为目标。子树完成后，Core 用 `replaceCompiled` 将同一名称升级为 `resolved`，不把正常升级当作重复名称注册。
 
 下面以 `S` 内依次布局节点 `a`、`b` 为例，展示同一 Map 的三个快照（未设置 `localNamespace: true`）。下方蓝框表示收尾后确定的 Scope 包络。
 

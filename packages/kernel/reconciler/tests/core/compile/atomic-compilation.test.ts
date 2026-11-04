@@ -1,10 +1,48 @@
 import { describe, expect, it } from 'vitest';
 
-import { emitNodeOutput, compileNode, layoutNode, resolveNode, LayoutAxisProposalKind } from '../../../../core/src';
+import {
+  emitNodeOutput,
+  compileNode,
+  layoutNode,
+  resolveNode,
+  LayoutAxisProposalKind,
+  compileScope,
+  createPositionEvaluateContext,
+  prepareScopeGeometry,
+  resolveScope,
+  resolveScopeInheritance,
+} from '../../../../core/src';
+import type { ScopeCompileContext, IRScope } from '../../../../core/src';
 import { flattenPrims } from '../../../../core/tests/helpers/flatten';
 import { createSharedCompileContext } from '../../../src/compile';
 
 describe('原子编译阶段', () => {
+  it('Scope 消费提前冻结的放置数据，与本次直接计算结果一致', () => {
+    const shared = createSharedCompileContext();
+    const input: IRScope = { type: 'scope', transforms: [{ kind: 'translate', x: 10, y: 20 }], children: [] };
+    const canon = resolveScope(input, {
+      ...shared.registries,
+      nodeDistance: shared.layout.nodeDistance,
+      parent: resolveScopeInheritance({}, shared.registries.themeRegistry),
+      irPath: [],
+    });
+    const context: ScopeCompileContext = {
+      layouts: [],
+      positionContext: createPositionEvaluateContext({
+        lookupReference: () => undefined,
+        nodeDistance: shared.layout.nodeDistance,
+      }),
+      irPath: [],
+      onWarn: () => {},
+      registerClip: () => 'clip',
+      registerClipPath: () => 'clip-path',
+    };
+    const placement = prepareScopeGeometry(input, context);
+    const prepared = compileScope(canon, context, { placement });
+    expect(prepared).toEqual(compileScope(canon, context));
+    expect(prepared.transforms).toContainEqual({ kind: 'translate', x: 10, y: 20 });
+  });
+
   it('同一解析结果可用于不同宽度布局，公式解析诊断不随布局重试重复', () => {
     const shared = createSharedCompileContext({ fontSize: 20 });
     const warnings: Array<string> = [];
@@ -22,19 +60,18 @@ describe('原子编译阶段', () => {
     );
     expect(warnings).toEqual(['TEXT_TEX_PARSE_ERROR', 'TEXT_TEX_PARSE_ERROR']);
     const before = JSON.stringify(resolution);
-    const layouts = [80, 500].map(
-      value =>
-        layoutNode(resolution, {
-          measureText: (text, font) => ({ width: (text.length * font.size) / 2, height: font.size }),
-          positionContext: {
-            nodeDistance: 10,
-            pointOfNodeTarget: () => [0, 0],
-            lookupReference: () => undefined,
-            toLocal: point => point,
-            toWorld: point => point,
-          },
-          allocationWidthProposal: { kind: LayoutAxisProposalKind.Exact, value },
-        }).context,
+    const layouts = [80, 500].map(value =>
+      layoutNode(resolution, {
+        measureText: (text, font) => ({ width: (text.length * font.size) / 2, height: font.size }),
+        positionContext: {
+          nodeDistance: 10,
+          pointOfNodeTarget: () => [0, 0],
+          lookupReference: () => undefined,
+          toLocal: point => point,
+          toWorld: point => point,
+        },
+        allocationWidthProposal: { kind: LayoutAxisProposalKind.Exact, value },
+      }),
     );
     expect(layouts[0].geometry.contentSize.height).toBeGreaterThan(layouts[1].geometry.contentSize.height);
     expect(JSON.stringify(resolution)).toBe(before);

@@ -8,7 +8,7 @@ import {
   resolveScopeInheritance,
 } from '../../../../core/src';
 import type { IRNode, CanonicalScopeInheritance } from '../../../../core/src';
-import { emitNodePrimitives, compileNodeDrawing } from '../../../../core/src/compile/node';
+import { emitNodePrimitives, compileNode } from '../../../../core/src/compile/node';
 import { createPaintRegistry } from '../../../../core/src/compile/resource';
 import { flattenPrims } from '../../../../core/tests/helpers/flatten';
 import { compileToScene, createSharedCompileContext } from '../../../src/compile';
@@ -28,18 +28,24 @@ const compileTestNode = (
     irPath,
     warn: () => {},
   });
-  const compilation = layoutNode(resolution, {
+  const compileContext = {
+    round: shared.layout.round,
+    registerPaint: createPaintRegistry(shared.layout.round).register,
     measureText: shared.host.measureText,
     positionContext: createPositionEvaluateContext({
       nodeDistance: shared.layout.nodeDistance,
       lookupReference: () => undefined,
     }),
-  });
-  const output = emitNodeOutput(
-    compileNodeDrawing(compilation, shared.layout.round, createPaintRegistry(shared.layout.round).register),
-    shared.layout.round,
-  );
-  return { ...compilation, output };
+  };
+  const compilation = layoutNode(resolution, compileContext);
+  const output = emitNodeOutput(compileNode(resolution, compileContext, { layout: compilation }), shared.layout.round);
+  return {
+    properties: resolution,
+    layout: compilation,
+    compileContext,
+    context: { ...compilation, shape: resolution.shape, boundary: resolution.boundary },
+    output,
+  };
 };
 
 describe('节点有效属性与布局复用', () => {
@@ -62,7 +68,8 @@ describe('节点有效属性与布局复用', () => {
     const next = compileTestNode(nextSource, context);
     expect(next.context).toEqual(first.context);
     const reused = emitNodePrimitives(
-      { ...first, properties: next.properties },
+      next.properties,
+      first.context,
       shared.layout.round,
       createPaintRegistry(shared.layout.round).register,
     );
@@ -108,11 +115,10 @@ describe('节点有效属性与布局复用', () => {
               })),
             },
     };
-    const primitives = emitNodePrimitives(
-      { ...result, properties },
+    const primitives = emitNodeOutput(
+      compileNode(properties, result.compileContext, { layout: result.layout }),
       shared.layout.round,
-      createPaintRegistry(shared.layout.round).register,
-    );
+    ).primitives;
     const text = flattenPrims(primitives).find(primitive => primitive.type === 'text');
     expect(text?.lines.map(line => ({ text: line.text, fill: line.fill }))).toEqual([
       { text: 'aaa', fill: 'green' },

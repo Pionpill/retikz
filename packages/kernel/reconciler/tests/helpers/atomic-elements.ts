@@ -1,5 +1,5 @@
 import { resolveScope } from '@retikz/core';
-import type { CanonicalScope, BoundaryGeometryContext } from '@retikz/core';
+import type { CanonicalScope, CompiledBoundaryGeometry } from '@retikz/core';
 import type {
   CompiledNode,
   CanonicalNode,
@@ -19,7 +19,7 @@ import {
   compileNode,
   emitNodeOutput,
   resolveCoordinate,
-  layoutCoordinate,
+  compileCoordinate,
   resolvePathAnimations,
   compilePath,
   resolvePath,
@@ -28,7 +28,7 @@ import {
   composeScopeTransform,
   resolveScopeInheritance,
   prepareScopeGeometry,
-  compileScopeGeometry,
+  compileScope,
   createScopeGroup,
 } from '@retikz/core';
 import type { PropertyPath } from '@retikz/foundation';
@@ -83,7 +83,7 @@ export const compileWeaveNode = (input: IRNode, runtime: WeaveElementRuntime): W
 
 /** 记录坐标解析的独立事实，引用投影由发布阶段按需执行 */
 export const compileWeaveCoordinate = (input: IRCoordinate, runtime: WeaveElementRuntime): CompiledCoordinate =>
-  layoutCoordinate(resolveCoordinate(input, runtime.options.shared.layout), runtime.positionContext);
+  compileCoordinate(resolveCoordinate(input, runtime.options.shared.layout), runtime.positionContext);
 
 /** Path 编译结果与所属工作区资源输出 */
 export type WeavePathCompilation = {
@@ -105,26 +105,21 @@ export const compileWeavePath = (input: IRPathBase, runtime: WeaveElementRuntime
     mode: style.theme.mode,
     irPath,
   });
-  const compiled = compilePath(
-    canon,
-    {
-      irPath,
-      scopeChain: transforms ?? [],
-      scopeDefaults: style.defaults,
-      theme: style.theme,
-    },
-    createPathTargetResolver(() => positionContext),
-    {
-      registries: shared.registries,
-      ...shared.layout,
-      ...shared.host,
-      nodeBoundaryStore: workspace.nodeBoundaryStore,
-      registerPaint: workspace.paintRegistry.register,
-      resources: () => [...workspace.paintRegistry.getResources(), ...workspace.clipRegistry.getResources()],
-      onWarn: workspace.diagnosticCollector.collect,
-      resolveTransform: composeScopeTransform,
-    },
-  );
+  const compiled = compilePath(canon, {
+    irPath,
+    scopeChain: transforms ?? [],
+    scopeDefaults: style.defaults,
+    theme: style.theme,
+    targetResolver: createPathTargetResolver(() => positionContext),
+    registries: shared.registries,
+    ...shared.layout,
+    ...shared.host,
+    nodeBoundaryStore: workspace.nodeBoundaryStore,
+    registerPaint: workspace.paintRegistry.register,
+    resources: () => [...workspace.paintRegistry.getResources(), ...workspace.clipRegistry.getResources()],
+    onWarn: workspace.diagnosticCollector.collect,
+    resolveTransform: composeScopeTransform,
+  });
   return Object.freeze({
     compiled,
     output: Object.freeze({
@@ -168,7 +163,7 @@ export type WeaveScopeCompilation = ScopeOutput & {
 export const compileWeaveScope = (
   input: InputScopeCompile,
   preparation: ScopeGeometryPreparation,
-  layouts: ReadonlyArray<BoundaryGeometryContext>,
+  layouts: ReadonlyArray<CompiledBoundaryGeometry>,
   runtime: WeaveElementRuntime,
 ): WeaveScopeCompilation => {
   const { options, workspace, positionContext } = runtime;
@@ -179,13 +174,18 @@ export const compileWeaveScope = (
     ...shared.registries,
     irPath,
   });
-  const compiled = compileScopeGeometry(canon, preparation, layouts, {
-    positionContext,
-    irPath,
-    onWarn: workspace.diagnosticCollector.collect,
-    registerClip: workspace.clipRegistry.register,
-    registerClipPath: workspace.clipRegistry.registerPath,
-  });
+  const compiled = compileScope(
+    canon,
+    {
+      layouts,
+      positionContext,
+      irPath,
+      onWarn: workspace.diagnosticCollector.collect,
+      registerClip: workspace.clipRegistry.register,
+      registerClipPath: workspace.clipRegistry.registerPath,
+    },
+    { placement: preparation },
+  );
   const group = createScopeGroup(compiled);
   return Object.freeze({
     compiled,

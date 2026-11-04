@@ -163,7 +163,7 @@ The envelope collects Node, Coordinate, and nested Scope layouts, excluding Path
 
 For example, a path between two child nodes may take a large detour without expanding the Scope's reference boundary. The reference envelope is therefore not the same as the final drawing bounds of the whole diagram.
 
-Once the children finish, `replaceContext` updates the placeholder to a resolved entry. If a child shares the Scope's id without a local namespace, that child replaces the placeholder under the later-entry-wins rule; finalization does not overwrite it with the Scope envelope. Without a Scope `id`, no group reference is published, and child layouts pass upward for further aggregation.
+Once the children finish, `replaceCompiled` updates the placeholder to a resolved entry. If a child shares the Scope's id without a local namespace, that child replaces the placeholder under the later-entry-wins rule; finalization does not overwrite it with the Scope envelope. Without a Scope `id`, no group reference is published, and child layouts pass upward for further aggregation.
 
 <SourceLinks
   sources={[

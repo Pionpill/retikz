@@ -10,14 +10,11 @@ import {
   safeThrownDetail,
 } from '../../resolve';
 import type { RegisterPaint } from '../resource';
-import { splitCompiledDrawing } from '../scene';
 import { snapshotScenePrimitives } from '../shared';
 import { emitInlineLine, calculateAlphabeticBaselineY } from '../text';
 import { DEFAULT_LINE_HEIGHT_FACTOR } from './content';
 import { labelBorderPoint, labelBoxEdgeToward, labelCenter } from './label';
-import { alignmentGuidesOfNode } from './layout-metrics';
-import type { CompiledNode, CompiledNodeTextStyle } from './types';
-import type { NodeGeometryContext, NodeLabelLayout, NodeLayoutResult } from './types';
+import type { CompiledNodeTextStyle, CompiledNodeLayout, NodeLabelLayout } from './types';
 
 /** 节点形状绘制使用的有效样式 */
 type NodeShapeProperties = Pick<
@@ -40,7 +37,7 @@ type NodeShapeProperties = Pick<
 type Round = (n: number) => number;
 
 /** 计算 Node 正文绘制所用的物理行 alphabetic baseline y */
-const nodeBaselineYsOf = (layout: Pick<NodeGeometryContext, 'geometry' | 'text'>, round: Round): Array<number> => {
+const nodeBaselineYsOf = (layout: Pick<CompiledNodeLayout, 'geometry' | 'text'>, round: Round): Array<number> => {
   const text = layout.text;
   if (text === undefined) return [];
   const lineCount = text.lines.length;
@@ -68,7 +65,7 @@ const nodeBaselineYsOf = (layout: Pick<NodeGeometryContext, 'geometry' | 'text'>
   return [firstBaseline];
 };
 
-/** 从 NodeGeometryContext 收敛 shape emit 所需的视觉样式 */
+/** 从 CompiledNodeLayout 收敛 shape emit 所需的视觉样式 */
 const toShapeStyle = (properties: NodeShapeProperties, registerPaint: RegisterPaint): CompiledShapeStyle => ({
   fill: registerPaint(properties.fill),
   fillOpacity: properties.fillOpacity,
@@ -86,8 +83,8 @@ const toShapeStyle = (properties: NodeShapeProperties, registerPaint: RegisterPa
 });
 
 /** 发出节点 shape 主体图元 */
-const emitNodeShapePrimitives = (
-  layout: NodeGeometryContext,
+export const emitNodeShapePrimitives = (
+  layout: CompiledNodeLayout,
   properties: NodeShapeProperties,
   round: Round,
   registerPaint: RegisterPaint,
@@ -116,7 +113,7 @@ const emitNodeShapePrimitives = (
 
 /** 发出节点正文图元 */
 export const emitCompiledNodeText = (
-  layout: Pick<NodeGeometryContext, 'geometry' | 'text'>,
+  layout: Pick<CompiledNodeLayout, 'geometry' | 'text'>,
   style: CompiledNodeTextStyle,
   round: Round,
 ): Array<ScenePrimitive> => {
@@ -186,7 +183,7 @@ export const emitCompiledNodeText = (
 
 /** 发出 label pin 引线图元 */
 const emitNodeLabelPinPrimitive = (
-  layout: NodeGeometryContext,
+  layout: CompiledNodeLayout,
   label: NodeLabelLayout,
   labelProperties: CanonicalNodeLabel,
   properties: CanonicalNode,
@@ -225,7 +222,7 @@ const emitNodeLabelPinPrimitive = (
 
 /** 发出 label 正文图元 */
 const emitNodeLabelContentPrimitive = (
-  layout: NodeGeometryContext,
+  layout: CompiledNodeLayout,
   label: NodeLabelLayout,
   labelProperties: CanonicalNodeLabel,
   properties: CanonicalNode,
@@ -282,8 +279,8 @@ const emitNodeLabelContentPrimitive = (
 };
 
 /** 发出节点附属 label 图元 */
-const emitNodeLabelPrimitives = (
-  layout: NodeGeometryContext,
+export const emitNodeLabelPrimitives = (
+  layout: CompiledNodeLayout,
   label: NodeLabelLayout,
   labelProperties: CanonicalNodeLabel,
   properties: CanonicalNode,
@@ -346,7 +343,7 @@ const stampNodeShapePrimitives = (
 
 /** 包装带文本或旋转的节点 group */
 const wrapNodeGroupPrimitive = (
-  layout: NodeGeometryContext,
+  layout: CompiledNodeLayout,
   metadata: Pick<CanonicalNode, 'id' | 'meta' | 'animations'>,
   children: Array<ScenePrimitive>,
   round: Round,
@@ -369,7 +366,7 @@ const wrapNodeGroupPrimitive = (
   return group;
 };
 
-const compileNodeTextStyle = (node: CanonicalNode): CompiledNodeTextStyle => ({
+export const compileNodeTextStyle = (node: CanonicalNode): CompiledNodeTextStyle => ({
   color: node.text?.color,
   opacity: node.style.opacity,
   lines: (node.text?.lines ?? []).map(line => ({
@@ -383,11 +380,11 @@ const compileNodeTextStyle = (node: CanonicalNode): CompiledNodeTextStyle => ({
  * @description shape 主体走 `shapeDef.emit`；文本和 label 追加为附属 primitive
  */
 export const emitNodePrimitives = (
-  compilation: NodeLayoutResult,
+  properties: CanonicalNode,
+  layout: CompiledNodeLayout,
   round: Round,
   registerPaint: RegisterPaint,
 ): Array<ScenePrimitive> => {
-  const { context: layout, properties } = compilation;
   const shapePrimitives = emitNodeShapePrimitives(layout, properties.style, round, registerPaint);
   const inner: Array<ScenePrimitive> = [
     ...shapePrimitives,
@@ -404,43 +401,4 @@ export const emitNodePrimitives = (
   }
 
   return [wrapNodeGroupPrimitive(layout, properties, inner, round)];
-};
-
-/** 将测量结果和当前 canon 消费为不含能力绑定的最终节点结果 */
-export const compileNodeDrawing = (
-  result: NodeLayoutResult,
-  round: Round,
-  registerPaint: RegisterPaint,
-): CompiledNode => {
-  const { context: layout, properties } = result;
-  const shape = splitCompiledDrawing(emitNodeShapePrimitives(layout, properties.style, round, registerPaint));
-  return {
-    geometry: { rect: layout.geometry.rect, shape: shape.geometry },
-    layout: {
-      margin: layout.geometry.margin,
-      contentCenter: layout.geometry.contentCenter,
-      contentSize: layout.geometry.contentSize,
-      alignmentGuides: alignmentGuidesOfNode(layout, round),
-    },
-    style: {
-      shape: shape.style,
-      metadata: {
-        ...(properties.id === undefined ? {} : { id: properties.id }),
-        ...(properties.meta === undefined ? {} : { meta: properties.meta }),
-      },
-      shadow: properties.style.shadow,
-    },
-    text: layout.text === undefined ? undefined : { layout: layout.text, style: compileNodeTextStyle(properties) },
-    labels: (layout.labels ?? []).map((label, index) => {
-      const { laid, ...metrics } = label;
-      void laid;
-      return {
-        layout: metrics,
-        ...splitCompiledDrawing(
-          emitNodeLabelPrimitives(layout, label, properties.labels[index], properties, round, registerPaint),
-        ),
-      };
-    }),
-    animations: properties.animations,
-  };
 };

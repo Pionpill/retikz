@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { PositionEvaluateContext } from '../../../../core/src/compile';
-import type { NodeGeometryContext } from '../../../../core/src/compile/node';
+import type { CompiledNodeLayout } from '../../../../core/src/compile/node';
 import { projectLayoutWithTransform } from '../../../../core/src/compile/node';
 import { referencePositionOf } from '../../../../core/src/compile/reference';
 import { createPositionEvaluateContext } from '../../../../core/src/compile/reference';
@@ -17,7 +17,7 @@ const makeStack = (entries: Array<[string, [number, number]]>): NamespaceStack =
   const stack = new NamespaceStack();
 
   for (const [index, [id, [x, y]]] of entries.entries()) {
-    const layout: NodeGeometryContext = {
+    const layout: CompiledNodeLayout = {
       shape: { name: 'rectangle', definition: BUILTIN_SHAPES.get('rectangle')!, params: {} },
       geometry: {
         rect: { x, y, width: 0, height: 0, rotate: 0 },
@@ -32,13 +32,13 @@ const makeStack = (entries: Array<[string, [number, number]]>): NamespaceStack =
         isShape: true,
       },
     };
-    stack.register(id, { context: layout, irPath: ['children', index, 'id'] });
+    stack.register(id, { geometry: layout, irPath: ['children', index, 'id'] });
   }
 
   return stack;
 };
 
-const layoutForProjection = (): NodeGeometryContext => ({
+const layoutForProjection = (): CompiledNodeLayout => ({
   shape: { name: 'rectangle', definition: BUILTIN_SHAPES.get('rectangle')!, params: {} },
   geometry: {
     rect: { x: 10, y: 20, width: 30, height: 40, rotate: 0 },
@@ -171,8 +171,8 @@ describe('lowerScopeTransforms 5 translate 变体', () => {
     const out = lower([{ kind: 'between-translate', between: [{ id: 'A' }, { id: 'B' }], fraction: 0.25 }], idx, {
       resolveBetweenGlobal: between => {
         const [a, b] = between.between;
-        const aLayout = 'id' in a ? idx.lookupReference(a.id)?.context : null;
-        const bLayout = 'id' in b ? idx.lookupReference(b.id)?.context : null;
+        const aLayout = 'id' in a ? idx.lookupReference(a.id)?.geometry : null;
+        const bLayout = 'id' in b ? idx.lookupReference(b.id)?.geometry : null;
         if (!aLayout || !bLayout) return null;
         const aPoint = referencePositionOf(aLayout);
         const bPoint = referencePositionOf(bLayout);
@@ -320,8 +320,8 @@ describe('lowerScopeTransforms 链复合', () => {
     const out = lower(transforms, idx, {
       resolveBetweenGlobal: between => {
         const [a, b] = between.between;
-        const aLayout = 'id' in a ? idx.lookupReference(a.id)?.context : null;
-        const bLayout = 'id' in b ? idx.lookupReference(b.id)?.context : null;
+        const aLayout = 'id' in a ? idx.lookupReference(a.id)?.geometry : null;
+        const bLayout = 'id' in b ? idx.lookupReference(b.id)?.geometry : null;
         if (!aLayout || !bLayout) return null;
         const aPoint = referencePositionOf(aLayout);
         const bPoint = referencePositionOf(bLayout);

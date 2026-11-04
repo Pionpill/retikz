@@ -584,7 +584,7 @@ describe('布局感知复合运行时包装树', () => {
     expect(workspace.diagnosticCollector.warnings).toEqual([]);
     expect(workspace.paintRegistry.getResources()).toEqual([]);
     expect(workspace.clipRegistry.getResources()).toEqual([]);
-    expect(namespaceStack.lookupReference('same')?.context).toBeUndefined();
+    expect(namespaceStack.lookupReference('same')?.geometry).toBeUndefined();
     expect([...provenanceTracker!.capture([]).ownerMap.values()].filter(owner => owner.id !== undefined)).toEqual([]);
     expect(composite.outputChildren.get(replayHandle!)).toMatchObject({ used: false });
     expect(composite.outputChildren.get(scopeHandle!)).toMatchObject({ used: false });

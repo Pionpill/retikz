@@ -3,11 +3,11 @@ import { describe, expect, it } from 'vitest';
 
 import type { CompileWarning, IRScene, ScenePrimitive } from '../../../../core/src';
 import { BuiltinCompileWarningCode } from '../../../../core/src';
-import type { NodeGeometryContext } from '../../../../core/src/compile/node';
+import type { CompiledNodeLayout } from '../../../../core/src/compile/node';
 import { projectLayoutWithTransform } from '../../../../core/src/compile/node';
-import type { ReferenceGeometryContext } from '../../../../core/src/compile/reference';
+import type { CompiledReferenceGeometry } from '../../../../core/src/compile/reference';
 import { collectScopeCornerPoints } from '../../../../core/src/compile/scope';
-import { createIntrinsicScopeLayout, createScopeGeometryContext } from '../../../../core/src/compile/scope';
+import { createIntrinsicScopeLayout } from '../../../../core/src/compile/scope';
 import { composeScopeTransform } from '../../../../core/src/compile/shared';
 import { BUILTIN_SHAPES } from '../../../../core/src/providers';
 import { resolveScope, resolveScopeInheritance } from '../../../../core/src/resolve';
@@ -15,7 +15,7 @@ import { compileToScene, createSharedCompileContext } from '../../../src/compile
 
 const scopeLayout = (
   shape: 'rectangle' | 'circle',
-  layouts: ReadonlyArray<ReferenceGeometryContext>,
+  layouts: ReadonlyArray<CompiledReferenceGeometry>,
   offset: [number, number] = [0, 0],
 ) => {
   const shared = createSharedCompileContext();
@@ -28,7 +28,7 @@ const scopeLayout = (
       irPath: [],
     },
   );
-  const layout = createScopeGeometryContext(canon, createIntrinsicScopeLayout(canon, layouts));
+  const layout = createIntrinsicScopeLayout(canon, layouts);
   return projectLayoutWithTransform(layout, composeScopeTransform([{ kind: 'translate', x: offset[0], y: offset[1] }]));
 };
 
@@ -52,7 +52,7 @@ const lineTo = (prim: ScenePrimitive | undefined): [number, number] | undefined 
 };
 
 /** 构造一个 width/height 已知、中心已知的 0-rotate 测试 layout */
-const layoutAt = (cx: number, cy: number, w: number, h: number): NodeGeometryContext => ({
+const layoutAt = (cx: number, cy: number, w: number, h: number): CompiledNodeLayout => ({
   shape: { name: 'rectangle', definition: BUILTIN_SHAPES.get('rectangle')!, params: {} },
   geometry: {
     rect: { x: cx, y: cy, width: w, height: h, rotate: 0 },

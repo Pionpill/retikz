@@ -1,15 +1,16 @@
 import {
   emitNodeOutput,
   compileNode,
-  createNodeGeometryContext,
+  evaluatePosition,
+  evaluatePositionTargetWorld,
   projectLayoutWithTransform,
   resolveNode,
 } from '@retikz/core';
-import type { CompileOccurrenceLocator, IRNode } from '@retikz/core';
+import type { CompileOccurrenceLocator, IRNode, NodeLayoutContext, NodeEmitContext } from '@retikz/core';
 import type { PropertyPath } from '@retikz/foundation';
 import { formatPropertyPath } from '@retikz/foundation';
 
-import { compareCanonicalNodes } from '../../compare';
+import { compareCanonicalNodes, compareNodeLayoutInputs } from '../../compare';
 import type { CompileOwnerKey } from '../../provenance';
 import { runCompileStage } from '../../runtime';
 import type { CompileRuntime } from '../../runtime';
@@ -33,7 +34,7 @@ export const visitNode = (
     context: { transformChains: scopeChain, pathPrefix: locatorPrefix, inheritance: style, layout: layoutContext },
     state: {
       primitives,
-      layoutContexts: layouts,
+      geometries: layouts,
       publications,
       bounds,
       allocations,
@@ -66,23 +67,42 @@ export const visitNode = (
       compile: (stageRuntime, resolution, previous) => {
         const warn = (code: string, message: string, path: PropertyPath = nodeIrPath): void =>
           stageRuntime.state.workspace.diagnosticCollector.collect({ code, message, path });
-        const compilation = compileNode(
-          resolution,
-          {
-            round: stageRuntime.context.layout.round,
-            registerPaint: stageRuntime.state.workspace.paintRegistry.register,
-            irPath: nodeIrPath,
-            measureText: stageRuntime.context.host.measureText,
-            nodeBoundaryStore: stageRuntime.state.workspace.nodeBoundaryStore,
-            positionContext: createTreePositionContext(stageRuntime, scopeChain),
-            composedTransform: stageRuntime.state.execution.scopeTransformComposer.resolve(scopeChain),
-            scopeChain,
-            allocationWidthProposal: layoutContext?.childProposal?.x,
-            texLowering: { lowerTex: stageRuntime.context.host.lowerTex, warn },
-            warn,
-          },
-          previous,
-        );
+        const context: NodeLayoutContext & NodeEmitContext = {
+          round: stageRuntime.context.layout.round,
+          registerPaint: stageRuntime.state.workspace.paintRegistry.register,
+          irPath: nodeIrPath,
+          measureText: stageRuntime.context.host.measureText,
+          nodeBoundaryStore: stageRuntime.state.workspace.nodeBoundaryStore,
+          positionContext: createTreePositionContext(stageRuntime, scopeChain),
+          composedTransform: stageRuntime.state.execution.scopeTransformComposer.resolve(scopeChain),
+          scopeChain,
+          allocationWidthProposal: layoutContext?.childProposal?.x,
+          texLowering: { lowerTex: stageRuntime.context.host.lowerTex, warn },
+          warn,
+        };
+        const compilation = (() => {
+          if (previous === undefined || !compareNodeLayoutInputs(previous.canon, resolution))
+            return compileNode(resolution, context);
+
+          // 复用布局时重新读取定位依赖，保持后续增量更新的依赖记录完整
+          const position = resolution.layout.position;
+          if (!Array.isArray(position) && 'kind' in position)
+            evaluatePositionTargetWorld(position.target, context.positionContext);
+          else evaluatePosition(position, context.positionContext);
+          return compileNode(resolution, context, {
+            layout: {
+              shape: previous.compiled.shape,
+              boundary: previous.compiled.boundary,
+              geometry: {
+                rect: previous.compiled.geometry.rect,
+                margin: previous.compiled.geometry.margin,
+                ...previous.compiled.layout,
+              },
+              text: previous.compiled.text?.layout,
+              labels: previous.compiled.labels.map(label => label.layout),
+            },
+          });
+        })();
 
         return {
           canon: resolution,
@@ -93,7 +113,7 @@ export const visitNode = (
   );
   const compilation = staged.compiled;
 
-  const layout = createNodeGeometryContext(staged.canon, compilation);
+  const layout = compilation;
   const boundaryState = runtime.state.workspace.nodeBoundaryStore.get(layout);
   boundaryState.irPath = nodeIrPath;
   boundaryState.warn = (code, message) =>
@@ -103,10 +123,13 @@ export const visitNode = (
       layout,
       runtime.state.execution.scopeTransformComposer.resolve(scopeChain),
     );
-    runtime.state.execution.namespaceStack.register(child.id, { context: globalLayout, irPath: [...nodeIrPath, 'id'] });
+    runtime.state.execution.namespaceStack.register(child.id, {
+      geometry: globalLayout,
+      irPath: [...nodeIrPath, 'id'],
+    });
     child.aliasIds?.forEach((id, aliasIndex) =>
       runtime.state.execution.namespaceStack.register(id, {
-        context: globalLayout,
+        geometry: globalLayout,
         irPath: [...nodeIrPath, 'aliasIds', aliasIndex],
       }),
     );

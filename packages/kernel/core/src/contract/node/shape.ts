@@ -29,7 +29,7 @@ export type ConnectionEnvelope = {
 
 /**
  * emit 需要的已解析视觉样式子集
- * @description 从 NodeGeometryContext 的样式字段收敛（不含几何 / 文本），作为 shape provider 的 runtime 输入。
+ * @description 从 CompiledNodeLayout 的样式字段收敛（不含几何 / 文本），作为 shape provider 的 runtime 输入。
  *   与 IR style schema 同语义的标量字段通过 `IRGraphicStyle` 复用类型；paint / shadow 等 compile 后字段显式组合
  */
 export type CompiledShapeStyle = {

@@ -1,9 +1,9 @@
 import type { PropertyPath } from '@retikz/foundation';
-import type { CenteredBox } from '@retikz/math';
+import type { BoundsInsets, CenteredBox } from '@retikz/math';
 
 import type { ScenePrimitive, SceneResource, Transform } from '../../contract';
 import type { CanonicalDropShadow, IRPosition, IRScope, IRAnimationTrack } from '../../schemas';
-import type { PositionTargetEvaluateContext } from '../reference';
+import type { CompiledBoundaryGeometry, PositionTargetEvaluateContext } from '../reference';
 import type { CompileWarning } from '../shared';
 
 /** Scope 子元素计算前的准备状态，不代表包络已就绪 */
@@ -15,23 +15,26 @@ export type ScopeGeometryPreparation = Readonly<{
 }>;
 
 /** 子布局确定后的 Scope 几何阶段产物 */
-export type CompiledScope = Readonly<{
-  /** 局部内容包络，包含空内容时的退化布局 */
-  geometry: CompiledScopeGeometry;
-  /** 子布局完成后确定的自身变换 */
-  transforms: Array<Transform>;
-  /** 分组自身的最终身份与排序，不包含子树 */
-  style: Pick<IRScope, 'id' | 'meta' | 'zIndex'>;
-  /** 已登记的裁剪资源标识 */
-  clip?: string;
-  /** 分组最终动画 */
-  animations: Array<IRAnimationTrack>;
-}>;
+export type CompiledScope = Pick<CompiledBoundaryGeometry, 'shape' | 'boundary'> &
+  Readonly<{
+    /** 局部内容包络，包含空内容时的退化布局 */
+    geometry: CompiledScopeGeometry;
+    /** 子布局完成后确定的自身变换 */
+    transforms: Array<Transform>;
+    /** 分组自身的最终身份与排序，不包含子树 */
+    style: Pick<IRScope, 'id' | 'meta' | 'zIndex'>;
+    /** 已登记的裁剪资源标识 */
+    clip?: string;
+    /** 分组最终动画 */
+    animations: Array<IRAnimationTrack>;
+  }>;
 
-/** 子元素聚合形成的最终包络，不包含节点文字或 Definition */
+/** 子元素聚合形成的最终包络，不包含节点文字 */
 export type CompiledScopeGeometry = {
   /** 包络最终矩形；circle 包络的宽高相等 */
   rect: CenteredBox;
+  /** 包络连接外扩距离，默认四边均为零 */
+  margin: BoundsInsets;
 };
 
 /** Scope 自身几何声明，不包含子树 */

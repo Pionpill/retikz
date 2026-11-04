@@ -1,6 +1,6 @@
 import type {
   CompileOccurrenceLocator,
-  ReferenceGeometryContext,
+  CompiledReferenceGeometry,
   IRChild,
   IRScope,
   LayoutAlignmentGuide,
@@ -28,7 +28,7 @@ export type SubtreeCompilation = {
   /** 自动 layout 使用的全局 bbox */
   layoutBounds: AxisAlignedBounds | undefined;
   /** 顶层 child 对父 Scope 的 allocation layout 贡献 */
-  layoutContexts: Array<ReferenceGeometryContext>;
+  geometries: Array<CompiledReferenceGeometry>;
   /** 顶层自动 layout 几何贡献 */
   bounds: Array<LayoutBoundsContribution>;
   /** 顶层父布局 allocation 几何贡献 */
@@ -68,9 +68,9 @@ export type SubtreeOutputContribution = {
   /** 与图元一一对应的编译期排序值 */
   primitiveZIndices: ReadonlyArray<number | undefined>;
   /** 当前局部坐标系中的布局 */
-  layoutContexts: Array<ReferenceGeometryContext>;
+  geometries: Array<CompiledReferenceGeometry>;
   /** 已完成命名提交的全局布局，供祖先收尾投影 */
-  publications: Array<ReferenceGeometryContext>;
+  publications: Array<CompiledReferenceGeometry>;
   /** 可见边界贡献 */
   bounds: Array<LayoutBoundsContribution>;
   /** 父布局分配贡献 */

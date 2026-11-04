@@ -1,6 +1,6 @@
 import type {
   CompileOccurrenceLocator,
-  ReferenceGeometryContext,
+  CompiledReferenceGeometry,
   CompositeReplay,
   CompositeReplayWrapper,
   ScenePrimitive,
@@ -85,7 +85,7 @@ export const commitCompositeReplay = (
     primitives: committedPrimitives,
     primitiveZIndices: transaction.primitiveZIndices,
     publications: [],
-    layoutContexts: [],
+    geometries: [],
     bounds: [],
     allocations: [],
     artifacts: [],
@@ -104,14 +104,14 @@ export const commitCompositeReplay = (
       ? frame.context.transformChains
       : frame.context.transformChains.slice(0, frame.context.transformChains.length - authoredPreliminary.length);
   const namespaceTransforms = [...(authoredPreliminary ?? []), ...(transforms ?? [])];
-  const publishedLayouts = new Map<ReferenceGeometryContext, ReferenceGeometryContext>();
+  const publishedLayouts = new Map<CompiledReferenceGeometry, CompiledReferenceGeometry>();
 
   for (const [changeIndex, change] of transaction.namespaceChanges.entries()) {
-    const previousLayout = change.entry.context;
+    const previousLayout = change.entry.geometry;
     const alreadyPublished = publishedLayouts.get(previousLayout);
     const projectedLayout =
       alreadyPublished ?? projectPublishedReference(previousLayout, namespaceParentChain, namespaceTransforms);
-    const projectedChange = { ...change, entry: { ...change.entry, context: projectedLayout } };
+    const projectedChange = { ...change, entry: { ...change.entry, geometry: projectedLayout } };
 
     const changeOccurrence = transaction.namespaceChangeOccurrences[changeIndex] ?? occurrence;
     execution.runtime.state.execution.withWarningOccurrence(
@@ -123,8 +123,8 @@ export const commitCompositeReplay = (
     publishedLayouts.set(previousLayout, projectedLayout);
   }
 
-  for (const layout of transaction.layoutContexts) {
-    contribution.layoutContexts.push(
+  for (const layout of transaction.geometries) {
+    contribution.geometries.push(
       transforms === undefined || transforms.length === 0
         ? layout
         : projectReferenceGeometry(

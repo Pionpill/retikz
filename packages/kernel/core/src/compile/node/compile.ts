@@ -1,71 +1,53 @@
-import { jsonStructuralEquals } from '@retikz/foundation';
-
 import type { CanonicalNode } from '../../resolve';
-import { evaluatePosition, evaluatePositionTargetWorld } from '../reference';
-import { compileNodeDrawing } from './emit';
+import { splitCompiledDrawing } from '../scene';
+import { compileNodeTextStyle, emitNodeShapePrimitives, emitNodeLabelPrimitives } from './emit';
 import { layoutNode } from './layout';
 import type { NodeLayoutContext } from './layout';
+import { alignmentGuidesOfNode } from './layout-metrics';
 import type { NodeEmitContext } from './output';
-import type { CompiledNode, NodeGeometryContext } from './types';
+import type { CompiledNode, CompiledNodeLayout, PreparedNodeCompilation } from './types';
 
-/** 消费完整 canon，完成节点测量、定位和最终绘制计算 */
+/** 编译当前节点，直接消费已准备的布局或完成测量定位，不判断跨次复用条件 */
 export const compileNode = (
-  node: CanonicalNode,
+  properties: CanonicalNode,
   context: NodeLayoutContext & NodeEmitContext,
-  previous?: { canon: CanonicalNode; compiled: CompiledNode },
+  prepared?: PreparedNodeCompilation,
 ): CompiledNode => {
-  if (previous !== undefined && canReuseNodeLayout(previous.canon, node)) {
-    // 复用测量结果仍重新读取当前绑定，保持下次更新的依赖记录完整
-    const position = node.layout.position;
-    if (!Array.isArray(position) && 'kind' in position)
-      evaluatePositionTargetWorld(position.target, context.positionContext);
-    else evaluatePosition(position, context.positionContext);
-    const layout = createNodeGeometryContext(node, previous.compiled);
-    return compileNodeDrawing({ properties: node, context: layout }, context.round, context.registerPaint);
-  }
-  return compileNodeDrawing(layoutNode(node, context), context.round, context.registerPaint);
+  const { round, registerPaint } = context;
+  const layout: CompiledNodeLayout = {
+    ...(prepared?.layout ?? layoutNode(properties, context)),
+    shape: properties.shape,
+    boundary: properties.boundary,
+  };
+  const shape = splitCompiledDrawing(emitNodeShapePrimitives(layout, properties.style, round, registerPaint));
+  return {
+    shape: properties.shape,
+    boundary: properties.boundary,
+    geometry: { rect: layout.geometry.rect, margin: layout.geometry.margin, shape: shape.geometry },
+    layout: {
+      contentCenter: layout.geometry.contentCenter,
+      contentSize: layout.geometry.contentSize,
+      alignmentGuides: alignmentGuidesOfNode(layout, round),
+    },
+    metadata: {
+      ...(properties.id === undefined ? {} : { id: properties.id }),
+      ...(properties.meta === undefined ? {} : { meta: properties.meta }),
+    },
+    style: {
+      shape: shape.style,
+      shadow: properties.style.shadow,
+    },
+    text: layout.text === undefined ? undefined : { layout: layout.text, style: compileNodeTextStyle(properties) },
+    labels: (layout.labels ?? []).map((label, index) => {
+      const { laid, ...metrics } = label;
+      void laid;
+      return {
+        layout: metrics,
+        ...splitCompiledDrawing(
+          emitNodeLabelPrimitives(layout, label, properties.labels[index], properties, round, registerPaint),
+        ),
+      };
+    }),
+    animations: properties.animations,
+  };
 };
-
-/** 只比较影响节点正文测量与放置的输入，颜色和透明度不触发布局 */
-const canReuseNodeLayout = (previous: CanonicalNode, current: CanonicalNode): boolean => {
-  if (previous.labels.length !== 0 || current.labels.length !== 0) return false;
-  if (
-    previous.shape.definition !== current.shape.definition ||
-    previous.boundary.definition !== current.boundary.definition
-  )
-    return false;
-  if (
-    !jsonStructuralEquals(previous.shape.params, current.shape.params) ||
-    !jsonStructuralEquals(previous.boundary.params, current.boundary.params)
-  )
-    return false;
-  if (!jsonStructuralEquals(previous.layout, current.layout)) return false;
-  const geometryOfText = (text: CanonicalNode['text']) =>
-    text === undefined
-      ? undefined
-      : {
-          font: text.font,
-          align: text.align,
-          lineHeight: text.lineHeight,
-          lines: text.lines.map(line => ({
-            mixed: line.mixed,
-            plainText: line.plainText,
-            font: line.style?.font,
-            segments: line.segments.map(({ fill, opacity, ...segment }) => {
-              void fill;
-              void opacity;
-              return segment;
-            }),
-          })),
-        };
-  return jsonStructuralEquals(geometryOfText(previous.text), geometryOfText(current.text));
-};
-
-/** 为连接查询临时组合能力绑定和最终几何，不保存重复的持久引用模型 */
-export const createNodeGeometryContext = (canon: CanonicalNode, compiled: CompiledNode): NodeGeometryContext => ({
-  shape: canon.shape,
-  boundary: canon.boundary,
-  geometry: { rect: compiled.geometry.rect, ...compiled.layout },
-  text: compiled.text?.layout,
-  labels: compiled.labels.map(label => label.layout),
-});

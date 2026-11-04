@@ -1,5 +1,5 @@
 import type {
-  NodeGeometryContext,
+  CompiledBoundaryGeometry,
   CompileOccurrenceLocator,
   CompileWarning,
   LayoutProposal,
@@ -27,7 +27,7 @@ import { RetikzReconcilerError, RetikzReconcilerErrorCode } from '../../src/erro
 /** 候选版本中的名称绑定，身份对应稳定的 Weave 节点 */
 export type WeaveBinding =
   | Readonly<{ state: 'pending'; binding: object }>
-  | Readonly<{ state: 'ready'; binding: object; irPath?: PropertyPath; layout: NodeGeometryContext }>;
+  | Readonly<{ state: 'ready'; binding: object; irPath?: PropertyPath; layout: CompiledBoundaryGeometry }>;
 
 /** 声明位置可见的名称 frame */
 export type WeaveNamespace = Readonly<{
@@ -143,7 +143,7 @@ export const runWeaveCompilation = <TCompiled>(
         }
         throw pending;
       }
-      return { state: 'resolved', context: entry.layout, irPath: entry.irPath };
+      return { state: 'resolved', geometry: entry.layout, irPath: entry.irPath };
     },
     resolveExplicitBoundary: (boundary, reference) =>
       resolveNodeBoundary(boundary, {

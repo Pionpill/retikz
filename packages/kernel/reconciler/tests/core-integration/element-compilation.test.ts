@@ -1,5 +1,3 @@
-import { createScopeGeometryContext } from '@retikz/core';
-import { createNodeGeometryContext } from '@retikz/core';
 import type { CompileOutput, IRCoordinate, IRNode, IRPathBase, IRScope, ShapeDefinition } from '@retikz/core';
 import {
   BUILTIN_SHAPES,
@@ -8,11 +6,13 @@ import {
   projectLayoutWithTransform,
   composeScopeTransform,
   resolveScopeInheritance,
+  resolveAnchorRefUncached,
 } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { SharedCompileContext } from '../../src/compile';
 import { assembleSceneCompilationSnapshot, compileToScene, createSharedCompileContext } from '../../src/compile';
+import { compareReferenceGeometry } from '../../src/compile/compare';
 import { assembleCompileOutputs } from '../../src/compile/index';
 import { RetikzReconcilerError } from '../../src/error';
 import type { WeaveBinding } from '../helpers/atomic-runtime';
@@ -113,18 +113,13 @@ describe('独立元素编译', () => {
         transforms: prepared.compiled.preliminaryTransforms,
       });
       if (node.status !== 'compiled') throw new Error('expected node');
-      const scope = testCompileScope(
-        scopeInput,
-        prepared.compiled,
-        [createNodeGeometryContext(node.compiled.canon, node.compiled.compiled)],
-        context,
-      );
+      const scope = testCompileScope(scopeInput, prepared.compiled, [node.compiled.compiled], context);
       if (scope.status !== 'compiled') throw new Error('expected scope');
       bindings.set(id, {
         state: 'ready',
         binding: {},
         layout: projectLayoutWithTransform(
-          createNodeGeometryContext(node.compiled.canon, node.compiled.compiled),
+          node.compiled.compiled,
           composeScopeTransform(scope.compiled.group.transforms ?? []),
         ),
       });
@@ -157,6 +152,10 @@ describe('独立元素编译', () => {
     const definition: ShapeDefinition = {
       ...BUILTIN_SHAPES.get('rectangle')!,
       name: 'counted',
+      resolveAnchor: (rect, name, params) =>
+        name === 'query'
+          ? [rect.x + 7, rect.y - 4]
+          : BUILTIN_SHAPES.get('rectangle')!.resolveAnchor(rect, name, params),
       emit: (...args) => {
         emitted += 1;
         return BUILTIN_SHAPES.get('rectangle')!.emit(...args);
@@ -173,6 +172,15 @@ describe('独立元素编译', () => {
     );
     if (result.status !== 'compiled') throw new Error('expected node');
     const rectangle = { ...result.compiled.compiled.geometry.rect };
+    expect(result.compiled.compiled.shape.definition).toBe(definition);
+    expect(resolveAnchorRefUncached(result.compiled.compiled, 'query')).toEqual([rectangle.x + 7, rectangle.y - 4]);
+    expect(
+      compareReferenceGeometry(
+        result.compiled.compiled,
+        { ...result.compiled.compiled, shape: { ...result.compiled.compiled.shape, definition: { ...definition } } },
+        'boundary',
+      ),
+    ).toBe(false);
     const count = emitted;
     const first = finalizeOutputs({
       root: {},
@@ -184,10 +192,13 @@ describe('独立元素编译', () => {
       outputs: [result.compiled.output],
       shared,
     });
-    projectLayoutWithTransform(
-      createNodeGeometryContext(result.compiled.canon, result.compiled.compiled),
+    const projected = projectLayoutWithTransform(
+      result.compiled.compiled,
       composeScopeTransform([{ kind: 'translate', x: 20, y: 30 }]),
     );
+    expect(projected.shape.definition).toBe(definition);
+    expect(resolveAnchorRefUncached(projected, 'query')).toEqual([rectangle.x + 27, rectangle.y + 26]);
+    expect(structuredClone(first.result.scene)).toEqual(first.result.scene);
     expect(result.compiled.compiled.geometry.rect).toEqual(rectangle);
     expect(next.result.scene).toEqual(first.result.scene);
     expect(emitted).toBe(count);
@@ -215,22 +226,12 @@ describe('独立元素编译', () => {
     if (b.status !== 'compiled') throw new Error('expected inner');
     const node = testCompileNode(input, { ...innerContext, style: b.compiled.scope });
     if (node.status !== 'compiled') throw new Error('expected node');
-    const child = testCompileScope(
-      inner,
-      b.compiled,
-      [createNodeGeometryContext(node.compiled.canon, node.compiled.compiled)],
-      innerContext,
-    );
+    const child = testCompileScope(inner, b.compiled, [node.compiled.compiled], innerContext);
     if (child.status !== 'compiled') throw new Error('expected inner compiled');
     const parent = testCompileScope(
       outer,
       a.compiled,
-      [
-        projectLayoutWithTransform(
-          createScopeGeometryContext(child.compiled.canon, child.compiled.compiled.geometry),
-          composeScopeTransform(child.compiled.compiled.transforms),
-        ),
-      ],
+      [projectLayoutWithTransform(child.compiled.compiled, composeScopeTransform(child.compiled.compiled.transforms))],
       context,
     );
     if (parent.status !== 'compiled') throw new Error('expected outer compiled');
@@ -283,7 +284,7 @@ describe('独立元素编译', () => {
             {
               state: 'ready',
               binding: {},
-              layout: createNodeGeometryContext(node.compiled.canon, node.compiled.compiled),
+              layout: node.compiled.compiled,
             },
           ],
         ]),
@@ -332,12 +333,7 @@ describe('独立元素编译', () => {
       irPath: [...context.irPath, 'children', 0],
     });
     if (node.status !== 'compiled') throw new Error('expected node');
-    const scope = testCompileScope(
-      scopeInput,
-      prepared.compiled,
-      [createNodeGeometryContext(node.compiled.canon, node.compiled.compiled)],
-      context,
-    );
+    const scope = testCompileScope(scopeInput, prepared.compiled, [node.compiled.compiled], context);
     if (scope.status !== 'compiled') throw new Error('expected scope');
     const output = assembleTestScopeOutput(scope.compiled, [node.compiled.output], shared);
     const assembled = finalizeOutputs({

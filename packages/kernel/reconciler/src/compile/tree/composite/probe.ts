@@ -213,7 +213,7 @@ export const probeCompositeLayout = (
     used: false,
     primitives: laid.primitives,
     primitiveZIndices: laid.primitiveZIndices,
-    layoutContexts: laid.layoutContexts,
+    geometries: laid.geometries,
     bounds: laid.bounds,
     allocations: laid.allocations,
     namespaceChanges,

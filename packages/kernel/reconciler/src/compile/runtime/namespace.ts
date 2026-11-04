@@ -1,5 +1,5 @@
 import { RetikzCoreError, RetikzCoreErrorCode, registerFatalProbeError } from '@retikz/core';
-import type { ReferenceGeometryContext, ReferenceReadKind } from '@retikz/core';
+import type { CompiledReferenceGeometry, ReferenceReadKind } from '@retikz/core';
 import type { PropertyPath, WithOptionalProperties } from '@retikz/foundation';
 import { createIdAllocator } from '@retikz/foundation';
 
@@ -9,15 +9,15 @@ import { createExecutionInvariantError } from './errors';
 /** namespace 栈当前写入/解析阶段 */
 type NamespacePhase = 'registering' | 'resolving';
 
-/** 名称绑定的几何查询上下文的编译生命周期状态 */
+/** 名称绑定的几何编译产物的编译生命周期状态 */
 export type NamespaceEntryState = 'resolved' | 'scope-placeholder';
 
 /** namespace 中带生命周期状态的内部条目 */
 export type NamespaceEntry = {
   /** 当前名称绑定的来源路径 */
   irPath: PropertyPath;
-  /** 当前名称绑定的几何查询上下文 */
-  context: ReferenceGeometryContext;
+  /** 当前名称绑定的几何编译产物 */
+  geometry: CompiledReferenceGeometry;
   /** 区分已就绪引用与尚未闭合的 Scope 占位引用 */
   state: NamespaceEntryState;
   /** Scope 自身的内部身份，不随占位布局替换或投影改变 */
@@ -219,7 +219,7 @@ export class NamespaceStack {
     this.frameStack.pop();
   }
 
-  /** 设置名称处理阶段并更新快照身份；resolving 阶段禁止 register / replaceContext */
+  /** 设置名称处理阶段并更新快照身份；resolving 阶段禁止 register / replaceGeometry */
   setPhase(phase: NamespacePhase): void {
     this.snapshotIdentity = {};
     this.currentPhase = phase;
@@ -227,7 +227,7 @@ export class NamespaceStack {
 
   /** 注册 id 到栈顶 frame；返回是否覆盖了同 frame 旧值 */
   register(id: string, entry: WithOptionalProperties<NamespaceEntry, 'state'>): boolean {
-    const { context: layout, irPath, state = 'resolved', scopeId } = entry;
+    const { geometry: layout, irPath, state = 'resolved', scopeId } = entry;
     if (this.currentPhase !== 'registering') {
       throw createExecutionInvariantError(
         `NamespaceStack.register('${id}'): only allowed during registering; current phase is '${this.currentPhase}'`,
@@ -249,7 +249,7 @@ export class NamespaceStack {
     }
 
     this.snapshotIdentity = {};
-    topFrame.set(id, { context: layout, irPath, state, ...(scopeId === undefined ? {} : { scopeId }) });
+    topFrame.set(id, { geometry: layout, irPath, state, ...(scopeId === undefined ? {} : { scopeId }) });
     this.onRegister?.({
       id,
       frameDepth: this.frameStack.length - 1,
@@ -260,24 +260,29 @@ export class NamespaceStack {
     return isOverwrite;
   }
 
-  /** 替换指定 frame 内已注册的几何查询上下文；用于 Scope 占位升级，不触发重复 id 诊断 */
-  replaceContext(id: string, layout: ReferenceGeometryContext, frameDepth: number, expectedScopeId?: string): boolean {
+  /** 替换指定 frame 内已注册的几何编译产物；用于 Scope 占位升级，不触发重复 id 诊断 */
+  replaceGeometry(
+    id: string,
+    layout: CompiledReferenceGeometry,
+    frameDepth: number,
+    expectedScopeId?: string,
+  ): boolean {
     if (this.currentPhase !== 'registering') {
       throw createExecutionInvariantError(
-        `NamespaceStack.replaceContext('${id}'): only allowed during registering; current phase is '${this.currentPhase}'`,
+        `NamespaceStack.replaceGeometry('${id}'): only allowed during registering; current phase is '${this.currentPhase}'`,
       );
     }
 
     if (frameDepth < 0 || frameDepth >= this.frameStack.length) {
       throw createExecutionInvariantError(
-        `NamespaceStack.replaceContext('${id}'): frameDepth ${frameDepth} out of range (stack depth ${this.frameStack.length})`,
+        `NamespaceStack.replaceGeometry('${id}'): frameDepth ${frameDepth} out of range (stack depth ${this.frameStack.length})`,
       );
     }
 
     const targetFrame = this.frameStack[frameDepth].entryMap;
     if (!targetFrame.has(id)) {
       throw createExecutionInvariantError(
-        `NamespaceStack.replaceContext('${id}'): id not previously registered in frame at depth ${frameDepth}`,
+        `NamespaceStack.replaceGeometry('${id}'): id not previously registered in frame at depth ${frameDepth}`,
       );
     }
 
@@ -285,18 +290,18 @@ export class NamespaceStack {
     if (expectedScopeId !== undefined && current.scopeId !== expectedScopeId) return false;
 
     this.snapshotIdentity = {};
-    targetFrame.set(id, { ...current, context: layout, state: 'resolved' });
+    targetFrame.set(id, { ...current, geometry: layout, state: 'resolved' });
 
     return true;
   }
 
   /** 用新的投影替换本次名称绑定，不原位修改上下文或 fork 共享的条目 */
-  replacePublishedContext(previous: ReferenceGeometryContext, next: ReferenceGeometryContext): void {
+  replacePublishedGeometry(previous: CompiledReferenceGeometry, next: CompiledReferenceGeometry): void {
     if (previous === next) return;
     for (const { entryMap: frame } of this.frameStack) {
       for (const [id, entry] of frame) {
-        if (entry.context !== previous) continue;
-        frame.set(id, { ...entry, context: next });
+        if (entry.geometry !== previous) continue;
+        frame.set(id, { ...entry, geometry: next });
         this.snapshotIdentity = {};
       }
     }

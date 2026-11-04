@@ -5,7 +5,7 @@ import type { PositionEvaluateContext } from '../reference';
 import type { CompiledCoordinate } from './types';
 
 /** 在引用就绪后计算坐标的局部位置 */
-export const layoutCoordinate = (
+export const compileCoordinate = (
   coordinate: CanonicalCoordinate,
   context: PositionEvaluateContext,
 ): CompiledCoordinate => {

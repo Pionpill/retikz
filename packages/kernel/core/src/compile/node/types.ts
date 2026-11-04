@@ -7,8 +7,8 @@ import type {
   TextLine,
   TextMeasurer,
   ShapeDefinition,
+  LayoutAlignmentGuide,
 } from '../../contract';
-import type { ScenePrimitiveBase, LayoutAlignmentGuide } from '../../contract';
 import type { CanonicalFont, CanonicalNode } from '../../resolve';
 import type { IRAnimationTrack, CanonicalDropShadow } from '../../schemas';
 import type { CompiledDrawing } from '../scene';
@@ -19,14 +19,14 @@ import type { InlineLineLayout, TexLowerer } from '../text';
 export type CompiledNodeGeometry = {
   /** 节点视觉外框及旋转 */
   rect: CenteredBox;
+  /** 连接边界的最终外扩距离 */
+  margin: BoundsInsets;
   /** 形状最终图元几何 */
   shape: CompiledDrawing['geometry'];
 };
 
 /** 节点实际占位与正文内容盒，不重复存放视觉 rect */
-export type CompiledNodeLayout = {
-  /** 最终外边距 */
-  margin: BoundsInsets;
+export type CompiledNodeMetrics = {
   /** 正文内容盒中心 */
   contentCenter: Position;
   /** 正文实际占用尺寸 */
@@ -35,12 +35,18 @@ export type CompiledNodeLayout = {
   alignmentGuides?: Array<LayoutAlignmentGuide>;
 };
 
-/** 节点的最终形状外观与输出身份 */
+/** 节点最终输出身份与来源元数据 */
+export type CompiledNodeMetadata = {
+  /** 节点输出标识 */
+  id?: string;
+  /** 节点来源元数据 */
+  meta?: JsonObject;
+};
+
+/** 节点的最终形状外观 */
 export type CompiledNodeStyle = {
   /** 与形状几何逐项对应的外观 */
   shape: CompiledDrawing['style'];
-  /** 最终输出身份及交互元数据 */
-  metadata: Omit<ScenePrimitiveBase, 'animations'>;
   /** 已确定的阴影，省略表示无阴影 */
   shadow?: CanonicalDropShadow;
 };
@@ -74,13 +80,19 @@ export type CompiledNodeText = {
   style: CompiledNodeTextStyle;
 };
 
-/** 节点最终产物；后续连接查询显式结合 canon 能力与此处几何 */
+/** 节点最终产物，保留后续几何查询必需的能力绑定 */
 export type CompiledNode = {
+  /** 视觉形状查询使用的定义与参数 */
+  shape: CanonicalNode['shape'];
+  /** 默认连接面查询使用的定义与参数 */
+  boundary: CanonicalNode['boundary'];
   /** 视觉几何 */
   geometry: CompiledNodeGeometry;
   /** 布局占用与对齐信息 */
-  layout: CompiledNodeLayout;
-  /** 最终外观与输出身份 */
+  layout: CompiledNodeMetrics;
+  /** 最终输出身份与来源元数据 */
+  metadata: CompiledNodeMetadata;
+  /** 最终形状外观 */
   style: CompiledNodeStyle;
   /** 正文排版与样式，省略表示无正文 */
   text?: CompiledNodeText;
@@ -132,14 +144,6 @@ export type NodeTextLayoutContext = {
   tex?: TexLoweringContext;
 };
 
-/** 分别持有有效属性与计算布局的节点编译状态 */
-export type NodeLayoutResult = {
-  /** 当前有效语义属性 */
-  properties: CanonicalNode;
-  /** 结合能力绑定、几何与排版结果的消费上下文 */
-  context: NodeGeometryContext;
-};
-
 /** 公式渲染上下文 */
 export type TexLoweringContext = {
   /** 将公式源码转换为可参与文本布局的结果；未提供时由公式布局分支处理缺失能力 */
@@ -181,11 +185,11 @@ export type CompiledNodeTextLayout = {
   | { kind: 'inline'; lines: Array<{ laid: InlineLineLayout; baselineOffset: number }> }
 );
 
-/** 节点完成测量和定位后的消费结果 */
-export type NodeGeometryContext = {
-  /** 已绑定的形状定义和参数 */
+/** 节点测量、定位和标签排版结果及后续查询必需的绑定 */
+export type CompiledNodeLayout = {
+  /** 当前形状定义和参数 */
   shape: CanonicalNode['shape'];
-  /** 已绑定的连接面定义和参数 */
+  /** 当前连接面定义和参数 */
   boundary: CanonicalNode['boundary'];
   /** 测量和定位结果 */
   geometry: NodeLayoutGeometry;
@@ -193,6 +197,12 @@ export type NodeGeometryContext = {
   text?: CompiledNodeTextLayout;
   /** 已定位的附属标签 */
   labels?: Array<NodeLabelLayout>;
+};
+
+/** 调用方保证适用于当前输入与上下文的节点阶段产物 */
+export type PreparedNodeCompilation = {
+  /** 已完成的布局；省略时执行测量和定位 */
+  layout?: CompiledNodeLayout;
 };
 
 /** 已完成内容与视觉盒测量、尚未绑定 Node rect 的附属标签 */

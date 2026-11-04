@@ -2,7 +2,7 @@ import type {
   CanonicalTheme,
   CompileOccurrenceLocator,
   CompileWarning,
-  ReferenceGeometryContext,
+  CompiledReferenceGeometry,
   CompositeBoundChild,
   CompositeCompileChild,
   CompositeCompileScopeProps,
@@ -46,7 +46,7 @@ export type CompositeReplayTransaction = {
   /** 与 primitives 对齐的父层 zIndex */
   primitiveZIndices: Array<number | undefined>;
   /** probe 的父布局输入 */
-  layoutContexts: Array<ReferenceGeometryContext>;
+  geometries: Array<CompiledReferenceGeometry>;
   /** probe 自动 layout 几何贡献 */
   bounds: Array<LayoutBoundsContribution>;
   /** probe allocation 几何贡献 */
