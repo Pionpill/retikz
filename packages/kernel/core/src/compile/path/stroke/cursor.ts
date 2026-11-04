@@ -3,10 +3,10 @@ import type { PropertyPath } from '@retikz/foundation';
 import type { Transform } from '../../../contract';
 import type { CanonicalStep } from '../../../resolve';
 import type { IRPosition, IRTarget } from '../../../schemas';
-import { nodeIdFromResolvableTarget } from '../../reference';
 import { BuiltinCompileWarningCode } from '../../shared';
 import { pointOfTarget } from '../host';
 import type { PathTargetView } from '../types';
+import { nodeIdFromResolvableTarget } from './target-diagnostic';
 
 /** 具有普通目标点、可作为后续 step 前驱的 path step */
 type StrokeTargetStep = Exclude<

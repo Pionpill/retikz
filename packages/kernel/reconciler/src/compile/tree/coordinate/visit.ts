@@ -1,4 +1,4 @@
-import { createCoordinateLayout, resolveCoordinatePosition } from '@retikz/core';
+import { createCoordinateLayout, createLayoutProbeRecoverableError, resolvePosition } from '@retikz/core';
 import type { IRCoordinate } from '@retikz/core';
 
 import { runCompileStage } from '../../runtime';
@@ -24,11 +24,15 @@ export const visitCoordinate = (
     coordinateIrPath,
     'coordinate',
     { child, scopeChain },
-    stageRuntime =>
-      createCoordinateLayout(
-        resolveCoordinatePosition(child, createTreePositionContext(stageRuntime, scopeChain)),
-        stageRuntime.context.registries.shapeRegistry,
-      ),
+    stageRuntime => {
+      const position = resolvePosition(child.position, createTreePositionContext(stageRuntime, scopeChain))?.localPoint;
+      if (position === undefined) {
+        throw createLayoutProbeRecoverableError(
+          `Cannot resolve position for coordinate ${child.id}; polar.origin or at.of may reference an undefined node`,
+        );
+      }
+      return createCoordinateLayout(position, stageRuntime.context.registries.shapeRegistry);
+    },
   );
   const localCenter = [localCoordinateLayout.geometry.rect.x, localCoordinateLayout.geometry.rect.y] as [
     number,

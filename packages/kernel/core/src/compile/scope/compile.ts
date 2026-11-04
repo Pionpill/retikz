@@ -1,7 +1,7 @@
 import type { CompiledNodeLayout, SyntheticLayoutRegistryContext } from '../node';
-import { resolveScopePositionTarget } from '../reference';
 import { createIntrinsicScopeLayout } from './layout';
 import { calculateScopePlacementTransforms, lowerPreliminaryScopeTransforms } from './placement';
+import { resolveScopePositionTarget } from './position';
 import type { CompiledScope, InputScopeCompile, ScopeGeometryContext, ScopeGeometryPreparation } from './types';
 
 /** 在子树执行前冻结 Scope 放置引用与不依赖包络的变换 */

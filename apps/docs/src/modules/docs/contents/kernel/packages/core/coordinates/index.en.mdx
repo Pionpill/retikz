@@ -7,7 +7,7 @@ description: Follow how Core resolves positions, names, and anchors, then determ
 
 Start with the authoring forms in [Node positioning](/kernel/components/node/usage), [Coordinate](/kernel/components/node/coordinate), and [Scope](/kernel/components/scope/usage). This page stops at resolved positions, reference geometry, and group transforms. Text measurement, path clipping, and renderer internals belong to the following topics.
 
-Position and target evaluation belong to compile. Each reference holds a `CompiledNodeLayout` directly, with identity, source path, and readiness stored separately; no reference-geometry copy is created.
+Position and target evaluation belong to compile. Lookup returns a reference holding a `CompiledNodeLayout`, source path, and readiness directly. The target declaration supplies the name; neither the reference record nor its geometry is copied.
 
 ## Overall flow
 
@@ -241,7 +241,7 @@ The first follows the current Scope's scaling and rotation. The second always ad
   sources={[
     {
       label: 'Position context toLocal / toWorld',
-      path: 'packages/kernel/core/src/compile/reference/position-context.ts',
+      path: 'packages/kernel/core/src/compile/reference/context.ts',
     },
     {
       label: 'Forward and inverse transforms',
@@ -355,7 +355,7 @@ The overview's positioning and layout step, followed by world reference registra
     },
     {
       label: 'Compilation state to position resolver adaptation',
-      path: 'packages/kernel/core/src/compile/reference/position-context.ts',
+      path: 'packages/kernel/core/src/compile/reference/context.ts',
     },
     { label: 'Narrow position contexts and result types', path: 'packages/kernel/core/src/compile/reference/types.ts' },
   ]}

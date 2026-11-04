@@ -78,15 +78,4 @@ describe('解析源结构', () => {
     expect(pathLabel).not.toContain('resolveLineRunsWithWarning');
     expect(pathLabel).not.toContain('resolveFontSize');
   });
-
-  it('在位置解析中保持 Scope 平移 Source IR 确定', () => {
-    const scope = source('src/compile/scope/transform.ts');
-
-    expect(scope).toContain('resolveTransformTranslation');
-    expect(scope).not.toContain('resolvePosition(');
-    expect(scope).not.toContain('IRAtPosition');
-    expect(scope).not.toContain('IRBetweenPosition');
-    expect(scope).not.toContain('IROffsetPosition');
-    expect(scope).not.toContain('PolarPosition');
-  });
 });

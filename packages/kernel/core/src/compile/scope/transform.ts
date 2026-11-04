@@ -1,10 +1,21 @@
 import type { Transform } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import type { IRPosition, IRScopeSelfPoint, IRTransform } from '../../schemas';
+import type {
+  IRAtTranslateTransform,
+  IRBetweenPosition,
+  IRBetweenTranslateTransform,
+  IROffsetTranslateTransform,
+  IRPolarTranslateTransform,
+  IRPosition,
+  IRScopeSelfPoint,
+  IRTransform,
+  IRTranslateTransform,
+  PolarPosition,
+} from '../../schemas';
 import type { CompiledNodeLayout } from '../node';
 import { resolveAnchorRefUncached } from '../node';
-import type { PositionTargetResolveContext } from '../reference';
-import { resolveTransformTranslation } from '../reference';
+import { resolvePosition } from '../reference';
+import type { PositionResolution, PositionResolveContext, PositionTargetResolveContext } from '../reference';
 import { createCompileInvariantError } from '../shared';
 
 /** scope transform lowering 所需的编译上下文 */
@@ -104,4 +115,45 @@ export const lowerScopeTransforms = (
   }
 
   return out;
+};
+
+/** 位置解析器支持的平移配置 */
+type IRTranslationTransform =
+  | IRTranslateTransform
+  | IRPolarTranslateTransform
+  | IRAtTranslateTransform
+  | IROffsetTranslateTransform
+  | IRBetweenTranslateTransform;
+
+/** 解析平移配置对应的局部与世界坐标；依赖的位置无法解析时返回 null */
+export const resolveTransformTranslation = (
+  source: IRTranslationTransform,
+  context: PositionResolveContext,
+): PositionResolution | null => {
+  switch (source.kind) {
+    case 'translate': {
+      const localPoint: [number, number] = [source.x, source.y];
+      return { localPoint, worldPoint: context.toWorld(localPoint) };
+    }
+    case 'polar-translate': {
+      const position: PolarPosition = { angle: source.angle, radius: source.radius };
+      if (source.origin !== undefined) position.origin = source.origin;
+      return resolvePosition(position, context);
+    }
+    case 'at-translate':
+      return resolvePosition(
+        {
+          direction: source.direction,
+          of: source.of,
+          ...(source.distance === undefined ? {} : { distance: source.distance }),
+        },
+        context,
+      );
+    case 'offset-translate':
+      return resolvePosition({ of: source.of, offset: source.offset ?? [0, 0] }, context);
+    case 'between-translate': {
+      const position: IRBetweenPosition = { between: source.between, fraction: source.fraction };
+      return resolvePosition(position, context);
+    }
+  }
 };

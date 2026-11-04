@@ -12,7 +12,6 @@ import type { Transform } from '../../../contract';
 import type { CanonicalStep } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
 import { rectPerimeterSample } from '../../../shared/geometry';
-import { nodeIdFromResolvableTarget } from '../../reference';
 import { BuiltinCompileWarningCode } from '../../shared';
 import { clipTarget, pointOfTarget, samePoint } from '../host';
 import { isAutoBoundaryTarget } from '../target';
@@ -20,6 +19,7 @@ import type { PathTargetView } from '../types';
 import type { PathCommandEmitter } from './commands';
 import type { StrokeCursor } from './cursor';
 import type { StrokeSamplingCollector } from './sampling';
+import { nodeIdFromResolvableTarget } from './target-diagnostic';
 
 /** 由几何形状产生路径命令的 shape step */
 type StrokeShapeStep = Extract<

@@ -13,16 +13,14 @@ import type {
 import type { CompiledNodeLayout } from '../node';
 
 /** 引用的布局状态：已完成布局，或暂用作用域占位几何 */
-type PositionReferenceState = 'resolved' | 'scope-placeholder';
+export type PositionReferenceState = 'resolved' | 'scope-placeholder';
 
 /** 位置解析器可读取的引用状态与节点几何 */
 export type PositionReferenceView = Readonly<{
   /** 引用当前是否已经完成布局 */
   state: PositionReferenceState;
   /** 由编译阶段提供的只读节点几何 */
-  node: CompiledNodeLayout;
-  /** 本次引用的名称 */
-  id?: string;
+  layout: CompiledNodeLayout;
   /** 引用声明来源 */
   irPath?: PropertyPath;
 }>;
@@ -52,7 +50,7 @@ export type PositionResolution = Readonly<{
 /** 目标解析额外需要的节点连接面与锚点查询能力 */
 export type PositionTargetResolveContext = PositionResolveContext &
   Readonly<{
-    /** 解析节点目标选用的连接面 */
+    /** 解析目标额外指定的连接面；沿用布局或视觉形状时可省略结果 */
     boundaryResolutionOf?: (target: IRNodeTarget, reference: PositionReferenceView) => BoundaryResolution | undefined;
     /** 返回节点目标的世界坐标中心或显式锚点，结果不含 target.offset */
     pointOfNodeTarget: (
@@ -87,11 +85,3 @@ export type ResolvablePosition =
   | IROffsetPosition
   | IRBetweenPosition
   | string;
-
-/** Scope 放置目标解析只需要父空间引用查询与来源 */
-export type ScopePositionResolveContext = Readonly<{
-  /** 父坐标系的位置查询与转换 */
-  positionContext: PositionTargetResolveContext;
-  /** Scope 声明来源 */
-  irPath: PropertyPath;
-}>;

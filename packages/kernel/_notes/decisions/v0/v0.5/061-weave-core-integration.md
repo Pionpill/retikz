@@ -22,7 +22,7 @@ Reconciler 负责声明结构、状态生命周期、名称绑定关联与计算
 | Weave 类别 | compiled 类型        | 持有内容                                                      | Core 调用                                                          |
 | ---------- | -------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------ |
 | Node       | `CompiledNode`       | `layout: CompiledNodeLayout` 与局部 `output`                  | `resolveNode`、`layoutNode`、`emitNodeOutput`                      |
-| Coordinate | `CompiledCoordinate` | id 与局部 position                                            | `resolveCoordinatePosition`                                        |
+| Coordinate | `CompiledCoordinate` | id 与局部 position                                            | `resolvePosition`                                        |
 | Path       | `CompiledPath`       | 完整 Path kind 编译后的 output                                | `compilePath`                                                      |
 | Scope      | `CompiledScope`      | envelope、不含 children/animations 的 group 属性及自身 output | `prepareScopeGeometry`、`compileScopeGeometry`、`createScopeGroup` |
 

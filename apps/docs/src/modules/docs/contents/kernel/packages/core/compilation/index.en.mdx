@@ -457,7 +457,7 @@ Core provides composable domain stages. Reconciler owns traversal, dependency wa
 | Element    | Shared stages                                                                           | Facts retained by the driver                               |
 | ---------- | --------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
 | Node       | `resolveNode` → `layoutNode` → `emitNodeOutput`                                         | Effective properties, layout, output, and paired resources |
-| Coordinate | `resolveCoordinatePosition` → `createCoordinateLayout`                                  | Local `CompiledNodeLayout`                                 |
+| Coordinate | `resolvePosition` → `createCoordinateLayout`                                            | Local `CompiledNodeLayout`                                 |
 | Path       | `resolvePathAnimations` → `compilePath`                                                 | Kind-host output, resources, and bounds                    |
 | Scope      | `resolveScopeStyle`, `prepareScopeGeometry`, `compileScopeGeometry`, `createScopeGroup` | Envelope, own group properties, and output                 |
 

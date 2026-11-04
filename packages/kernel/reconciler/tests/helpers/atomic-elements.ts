@@ -15,7 +15,8 @@ import {
   resolveNode,
   layoutNode,
   emitNodeOutput,
-  resolveCoordinatePosition,
+  resolvePosition,
+  createLayoutProbeRecoverableError,
   createCoordinateLayout,
   resolvePathAnimations,
   compilePath,
@@ -75,11 +76,15 @@ export const compileWeaveNode = (input: IRNode, runtime: WeaveElementRuntime): W
 };
 
 /** 记录坐标解析的独立事实，引用投影由发布阶段按需执行 */
-export const compileWeaveCoordinate = (input: IRCoordinate, runtime: WeaveElementRuntime): CompiledNodeLayout =>
-  createCoordinateLayout(
-    resolveCoordinatePosition(input, runtime.positionContext),
-    runtime.options.shared.registries.shapeRegistry,
-  );
+export const compileWeaveCoordinate = (input: IRCoordinate, runtime: WeaveElementRuntime): CompiledNodeLayout => {
+  const position = resolvePosition(input.position, runtime.positionContext)?.localPoint;
+  if (position === undefined) {
+    throw createLayoutProbeRecoverableError(
+      `Cannot resolve position for coordinate ${input.id}; polar.origin or at.of may reference an undefined node`,
+    );
+  }
+  return createCoordinateLayout(position, runtime.options.shared.registries.shapeRegistry);
+};
 
 /** Path 编译结果与所属工作区资源输出 */
 export type WeavePathCompilation = {

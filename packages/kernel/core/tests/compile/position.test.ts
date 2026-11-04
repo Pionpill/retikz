@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { PositionReferenceView, PositionTargetResolveContext } from '../../src/compile';
+import type { PositionReferenceState, PositionReferenceView, PositionTargetResolveContext } from '../../src/compile';
 import {
   composeScopeTransform,
   createNodeBoundaryStore,
@@ -9,9 +9,9 @@ import {
   projectLayoutWithTransform,
   resolvePosition,
   resolvePositionTarget,
-  resolveTransformTranslation,
 } from '../../src/compile';
 import type { CompiledNodeLayout } from '../../src/compile/node';
+import { resolveTransformTranslation } from '../../src/compile/scope';
 import { BUILTIN_SHAPES } from '../../src/providers';
 import type { BoundaryResolution } from '../../src/resolve';
 import type { IRNodeTarget, IRPosition, IRTransform } from '../../src/schemas';
@@ -26,8 +26,8 @@ const rectangleBoundary: BoundaryResolution = {
 const reference = (
   id: string,
   center: IRPosition,
-  state: PositionReferenceView['state'] = 'resolved',
-): PositionReferenceView => {
+  state: PositionReferenceState = 'resolved',
+): PositionReferenceView & { id: string } => {
   const node: CompiledNodeLayout = {
     shape: { name: 'rectangle', definition: BUILTIN_SHAPES.get('rectangle')!, params: {} },
     geometry: {
@@ -38,23 +38,25 @@ const reference = (
     },
     boundary: rectangleBoundary,
   };
-  return { state, node, id };
+  return { state, layout: node, id };
 };
 
-const contextOf = (references: ReadonlyArray<PositionReferenceView> = []): PositionTargetResolveContext => {
+const contextOf = (
+  references: ReadonlyArray<PositionReferenceView & { id: string }> = [],
+): PositionTargetResolveContext => {
   const byId = new Map(references.map(item => [item.id, item]));
   return {
     nodeDistance: 24,
     lookupReference: id => byId.get(id),
     toLocal: world => [world[0] - 100, world[1] - 50],
     toWorld: local => [local[0] + 100, local[1] + 50],
-    boundaryResolutionOf: (_target, item) => item.node.boundary,
+    boundaryResolutionOf: (_target, item) => item.layout.boundary,
     pointOfNodeTarget: (target, item) => {
       if (target.anchor === 'right') {
-        return [item.node.geometry.rect.x + item.node.geometry.rect.width / 2, item.node.geometry.rect.y];
+        return [item.layout.geometry.rect.x + item.layout.geometry.rect.width / 2, item.layout.geometry.rect.y];
       }
 
-      return [item.node.geometry.rect.x, item.node.geometry.rect.y];
+      return [item.layout.geometry.rect.x, item.layout.geometry.rect.y];
     },
   };
 };
@@ -65,10 +67,13 @@ describe('compiled layout references', () => {
     const store = createNodeBoundaryStore();
     store.get(layout).irPath = ['original'];
     const paths: Array<unknown> = [];
+    const references = new Map<string, PositionReferenceView>(
+      ['A', 'B'].map(id => [id, { state: 'resolved', layout, irPath: ['aliases', id] }]),
+    );
     const context = createPositionResolveContext({
       nodeDistance: 24,
       nodeBoundaryStore: store,
-      lookupReference: id => ({ state: 'resolved', layout, irPath: ['aliases', id] }),
+      lookupReference: id => references.get(id),
       resolveExplicitBoundary: (_boundary, input) => {
         paths.push(input.irPath);
         return rectangleBoundary;
@@ -76,8 +81,8 @@ describe('compiled layout references', () => {
     });
     for (const id of ['A', 'B']) {
       const result = resolvePositionTarget({ id, anchor: 'right', boundary: 'rectangle' }, context);
-      expect(result.reference?.node).toBe(layout);
-      expect(result.reference?.id).toBe(id);
+      expect(result.reference).toBe(references.get(id));
+      expect(result.reference?.layout).toBe(layout);
       expect(result.reference?.irPath).toEqual(['aliases', id]);
       expect(result.point).toEqual([30, 20]);
     }
@@ -168,7 +173,7 @@ describe('resolvePositionTarget', () => {
 });
 
 describe('resolveTransformTranslation', () => {
-  it('通过位置所属模块解析每个平移变换', () => {
+  it('按当前坐标系解析每种平移变换', () => {
     const base = contextOf([reference('A', [120, 80]), reference('B', [140, 100])]);
     const context: PositionTargetResolveContext = {
       ...base,

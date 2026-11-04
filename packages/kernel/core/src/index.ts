@@ -38,6 +38,8 @@ export {
   projectPublishedCompileLayout,
   projectScopeCompileLayouts,
   projectScopeOutputBounds,
+  resolveScopePositionTarget,
+  resolveTransformTranslation,
   samplePathRoute,
   viewBoxToLayout,
 } from './compile';
@@ -70,6 +72,7 @@ export type {
   ScopeEmitContext,
   ScopeGeometryContext,
   ScopeGeometryPreparation,
+  ScopePositionResolveContext,
   SyntheticLayoutRegistryContext,
   TexLowerer,
 } from './compile';

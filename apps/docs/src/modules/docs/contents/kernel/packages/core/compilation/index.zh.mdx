@@ -430,7 +430,7 @@ Core 提供可组合的领域阶段。Reconciler 统一管理遍历、依赖等�
 | 元素       | 共享阶段                                                                                | 驱动保存的事实                       |
 | ---------- | --------------------------------------------------------------------------------------- | ------------------------------------ |
 | Node       | `resolveNode` → `layoutNode` → `emitNodeOutput`                                         | 有效属性、布局，以及配套的输出和资源 |
-| Coordinate | `resolveCoordinatePosition` → `createCoordinateLayout`                                  | 局部 `CompiledNodeLayout`            |
+| Coordinate | `resolvePosition` → `createCoordinateLayout`                                            | 局部 `CompiledNodeLayout`            |
 | Path       | `resolvePathAnimations` → `compilePath`                                                 | kind 宿主产生的输出、资源和边界      |
 | Scope      | `resolveScopeStyle`、`prepareScopeGeometry`、`compileScopeGeometry`、`createScopeGroup` | 包络、自身分组属性和输出             |
 

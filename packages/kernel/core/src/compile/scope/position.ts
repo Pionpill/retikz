@@ -3,7 +3,7 @@ import { formatPropertyPath } from '@retikz/foundation';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { createLayoutProbeRecoverableError } from '../../resolve';
 import type { IRPosition, IRScope, IRScopePositionTarget } from '../../schemas';
-import { resolvePositionTargetWorld } from './target';
+import { resolvePositionTargetWorld } from '../reference';
 import type { ScopePositionResolveContext } from './types';
 
 /** 拒绝引用适配返回的非有限位置 */

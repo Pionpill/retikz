@@ -26,7 +26,7 @@ const SYNTHETIC_POSITION_CONTEXT: PositionTargetResolveContext = {
   lookupReference: () => undefined,
   toLocal: point => [point[0], point[1]],
   toWorld: point => [point[0], point[1]],
-  pointOfNodeTarget: (_target, reference) => [reference.node.geometry.rect.x, reference.node.geometry.rect.y],
+  pointOfNodeTarget: (_target, reference) => [reference.layout.geometry.rect.x, reference.layout.geometry.rect.y],
 };
 
 /** synthetic layout 构造使用的 shape / boundary 注册表 */

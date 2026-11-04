@@ -5,29 +5,10 @@ import {
   anchorUnitVectorByAnchor,
   isAtPositionLike,
   isBetweenPositionLike,
-  isNodeTargetLike,
   isOffsetPositionLike,
-  isPolarPositionLike,
   isPositionTuple,
 } from '../../shared';
 import type { PositionResolution, PositionResolveContext, ResolvablePosition } from './types';
-
-/** 从位置引用中提取诊断用的节点 id，不查询节点是否存在 */
-const nodeIdFromPositionReferent = (reference: unknown): string | undefined =>
-  typeof reference === 'string' ? reference : nodeIdFromResolvableTarget(reference);
-
-/** 从目标或位置配置中提取一个节点 id，用于引用未找到时的警告 */
-export const nodeIdFromResolvableTarget = (target: unknown): string | undefined => {
-  if (isNodeTargetLike(target)) return target.id;
-  if (isBetweenPositionLike(target)) {
-    return nodeIdFromResolvableTarget(target.between[0]) ?? nodeIdFromResolvableTarget(target.between[1]);
-  }
-
-  if (isOffsetPositionLike(target) || isAtPositionLike(target)) return nodeIdFromPositionReferent(target.of);
-  if (isPolarPositionLike(target)) return nodeIdFromPositionReferent(target.origin);
-
-  return undefined;
-};
 
 /** 为局部坐标点补上对应的世界坐标 */
 const resolutionOfLocal = (localPoint: IRPosition, context: PositionResolveContext): PositionResolution => ({
@@ -53,7 +34,7 @@ export const resolvePosition = (
   if (typeof position === 'string') {
     const reference = context.lookupReference(position);
     if (reference === undefined) return null;
-    return resolutionOfWorld([reference.node.geometry.rect.x, reference.node.geometry.rect.y], context);
+    return resolutionOfWorld([reference.layout.geometry.rect.x, reference.layout.geometry.rect.y], context);
   }
 
   if (isPositionTuple(position)) return resolutionOfLocal([position[0], position[1]], context);
@@ -61,7 +42,7 @@ export const resolvePosition = (
     const reference = context.lookupReference(position.of);
     if (reference === undefined) return null;
 
-    const referenceLocal = context.toLocal([reference.node.geometry.rect.x, reference.node.geometry.rect.y]);
+    const referenceLocal = context.toLocal([reference.layout.geometry.rect.x, reference.layout.geometry.rect.y]);
     const distance = position.distance ?? context.nodeDistance;
     const [dx, dy] = anchorUnitVectorByAnchor[position.direction];
 

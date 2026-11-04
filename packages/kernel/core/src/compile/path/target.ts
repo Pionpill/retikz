@@ -38,7 +38,7 @@ export const bindPathTarget = (target: IRTarget, context: PositionTargetResolveC
     referencePoint: resolution.referencePoint,
     ...(resolution.reference === undefined
       ? {}
-      : { node: resolution.reference.node, irPath: resolution.reference.irPath }),
+      : { node: resolution.reference.layout, irPath: resolution.reference.irPath }),
     ...(resolution.boundaryResolution === undefined ? {} : { boundaryResolution: resolution.boundaryResolution }),
   };
 };
