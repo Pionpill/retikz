@@ -11,9 +11,12 @@ import type {
 } from '../../contract';
 import { computeSceneTextBounds } from '../../contract';
 import type { CanonicalDropShadow, IRPosition } from '../../schemas';
-import type { CompileOutput } from '../shared';
-import { CANONICAL_STROKE_MITER_LIMIT, applyTransformChain, createCompileInvariantError } from '../shared';
+import type { CompileOutput } from '../scope';
+import { applyTransformChain, createCompileInvariantError } from '../shared';
 import { buildMarkMarkerGroup } from './marker';
+
+/** canonical visual bounds 对 miter join 使用的保守上限 */
+const CANONICAL_STROKE_MITER_LIMIT = 10;
 
 /** 把 bounds 字段中的负零规范化为稳定的正零 */
 export const canonicalizeBoundsRect = (bounds: Readonly<BoundsRect>): Readonly<BoundsRect> =>

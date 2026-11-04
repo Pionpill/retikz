@@ -3,9 +3,9 @@ import { literal } from 'zod';
 
 import { defineMark, definePath, definePattern, PathSchema, visitSceneContent } from '../../../../core/src';
 import type { TextPrimitive, Scene, GroupPrimitive, ScenePrimitive, IRScene } from '../../../../core/src';
-import { createClipRegistry, createPaintRegistry, importSceneResources } from '../../../../core/src/compile/resource';
+import { createClipRegistry, createPaintRegistry } from '../../../../core/src/compile/resource';
 import { BUILTIN_SHAPES } from '../../../../core/src/providers';
-import { createSharedCompileContext, compileToScene } from '../../../src/compile';
+import { createSharedCompileContext, compileToScene, importSceneResources } from '../../../src/compile';
 import { assembleCompileOutputs } from '../../../src/compile/index';
 
 describe('资源内容复用基础图元', () => {

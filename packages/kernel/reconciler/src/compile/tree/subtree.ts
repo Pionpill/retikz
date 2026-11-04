@@ -6,7 +6,6 @@ import {
   isFatalProbeError,
   isLayoutProbeRecoverableError,
   naturalLayoutProposal,
-  resolveStructuralAlignmentGuides,
   safeErrorMessage,
   selectCompositeInputScope,
 } from '@retikz/core';
@@ -21,6 +20,7 @@ import { visitNode } from './node/visit';
 import { queuePathChild, flushPendingPathEmissions } from './path/deferred';
 import type { SubtreeCompileRuntime, SubtreeCompileState } from './runtime';
 import { visitScope } from './scope/visit';
+import { resolveStructuralAlignmentGuides } from './shared';
 import { PATH_PLACEHOLDER } from './shared/constants';
 import { stableSortByZIndex } from './shared/output';
 import type { InternalScenePrimitive, TreeOutputState } from './shared/output';

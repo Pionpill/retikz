@@ -4,7 +4,7 @@ import { DEFAULT_EPSILON, DEG_TO_RAD } from '@retikz/math';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import type { CanonicalNodeLabelBoundaryPosition } from '../../../resolve';
 import { anchorUnitVectorByAnchor } from '../../../shared';
-import { placeBoundaryLabelBox, resolveBoundaryLabelRotation } from '../../text';
+import { placeLabelBox, resolveLabelRotation } from '../../text';
 import { anchorOf, angleBoundaryOf } from '../anchors';
 import type { CompiledNodeLayout, MeasuredNodeLabel, NodeLabelLayout, NodeLabelResolution } from '../types';
 
@@ -144,7 +144,7 @@ export const labelBoxEdgeToward = ({
  * @description keepUpright 会翻转倒置文本
  */
 const resolveLabelRotateDeg = (label: Pick<NodeLabelResolution, 'position' | 'rotate' | 'keepUpright'>): number => {
-  return resolveBoundaryLabelRotation(label.rotate, label.keepUpright, labelPlacementVector(label.position));
+  return resolveLabelRotation(label.rotate, label.keepUpright, labelPlacementVector(label.position));
 };
 
 /** 把已测量 label 解析为相对最终 Node rect 的局部几何 */
@@ -158,7 +158,7 @@ export const resolveNodeLabelGeometry = (
     return { ...label, rotateDeg, centerOffset: [0, 0] };
   }
 
-  const placed = placeBoundaryLabelBox({
+  const placed = placeLabelBox({
     label: {
       text: properties.text.map(line => line.plainText).join('\n'),
       rotate: properties.rotate,

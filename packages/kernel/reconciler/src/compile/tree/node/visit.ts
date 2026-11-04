@@ -1,6 +1,5 @@
 import {
   alignmentGuidesOfNode,
-  cloneAlignmentGuides,
   emitNodeOutput,
   layoutNode,
   projectLayoutWithTransform,
@@ -16,6 +15,7 @@ import type { CompileRuntime } from '../../runtime';
 import { createCompileChildPath } from '../../shared';
 import { createTreePositionContext } from '../reference';
 import type { SubtreeCompileRuntime } from '../runtime';
+import { cloneAlignmentGuides } from '../shared';
 import type { TreeOutputState } from '../shared';
 
 /** 布局并 emit node，同时注册 id、收集边界点和父 scope layout 输入 */

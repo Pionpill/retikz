@@ -16,6 +16,8 @@ This page follows the output of one full compile. Core owns drawing semantics an
 
 `onWarn` receives compilation warnings. The preparation entry can also return diagnostics and provenance separately.
 
+When assembling compiled fragments manually, import `importSceneResources` from `@retikz/reconciler`. That package also provides `formatCompileWarning` for readable diagnostics. Core continues to define resource generation and warning types.
+
 With the artifact generic simplified to its default, `CompileResult` has this shape:
 
 ```ts

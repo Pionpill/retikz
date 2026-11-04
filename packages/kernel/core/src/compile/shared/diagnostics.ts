@@ -1,5 +1,7 @@
 import type { PropertyPath, ValueOf } from '@retikz/foundation';
-import { formatPropertyPath } from '@retikz/foundation';
+
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
+import { registerFatalProbeError } from '../../resolve';
 
 /** 内置编译警告码 */
 export const BuiltinCompileWarningCode = {
@@ -54,6 +56,15 @@ export type CompileWarning = {
   path: PropertyPath;
 };
 
-/** 把结构化编译 warning 格式化为统一的可读消息 */
-export const formatCompileWarning = (warning: CompileWarning): string =>
-  `[retikz] ${warning.code} at ${formatPropertyPath(warning.path)}: ${warning.message}`;
+/** 创建 Core compile transaction 内部不可能状态错误 */
+export const createCompileInvariantError = (message: string, options?: ErrorOptions): RetikzCoreError => {
+  const error = new RetikzCoreError({
+    code: RetikzCoreErrorCode.CompileInvariantViolation,
+    message,
+    details: Object.freeze({}),
+    cause: options?.cause,
+  });
+  registerFatalProbeError(error);
+
+  return error;
+};

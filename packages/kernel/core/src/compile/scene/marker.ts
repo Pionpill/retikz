@@ -2,7 +2,7 @@ import type { CurveSegmentSample } from '@retikz/math';
 import { RAD_TO_DEG } from '@retikz/math';
 
 import type { CompiledArrowEnd, GroupPrimitive, PaintValue, ScenePrimitive, Transform } from '../../contract';
-import { combineOpacity } from '../shared';
+import { combineOpacity } from '../../resolve';
 
 /** marker 放置所需上下文 */
 export type MarkerPlacementContext = {

@@ -2,6 +2,7 @@ export { compileSceneSnapshot, compileToScene } from './compile';
 export * from './options';
 export * from './output';
 export * from './provenance';
+export * from './resource';
 export { createSharedCompileContext, createWorkspaceCompileState } from './runtime';
 export type {
   CompileContextHost,

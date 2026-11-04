@@ -1,6 +1,6 @@
+import { DEFAULT_LABEL_DISTANCE } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { DEFAULT_LABEL_DISTANCE } from '../../../../core/src/compile/shared';
 import type { ScenePrimitive, TextPrimitive } from '../../../../core/src/contract';
 import type { IRScene } from '../../../../core/src/schemas';
 import { compileToScene } from '../../../src/compile';

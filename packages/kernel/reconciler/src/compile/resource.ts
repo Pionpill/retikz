@@ -1,6 +1,4 @@
-import type { SceneResource } from '../../contract';
-import type { ClipRegistry } from './clip';
-import type { PaintRegistry } from './paint';
+import type { SceneResource, ClipRegistry, PaintRegistry } from '@retikz/core';
 
 /** 导入已编译资源，保留内容身份及图元引用 */
 export const importSceneResources = (

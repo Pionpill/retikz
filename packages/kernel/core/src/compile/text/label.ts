@@ -4,7 +4,7 @@ import { DEG_TO_RAD, RAD_TO_DEG, normalizeDegrees } from '@retikz/math';
 import type { IRBoundaryLabel } from '../../schemas';
 
 /** 根据外向轴解析文字旋转，保持 Node 既有翻转语义 */
-export const resolveBoundaryLabelRotation = (
+export const resolveLabelRotation = (
   rotate: IRBoundaryLabel['rotate'],
   keepUpright: boolean | undefined,
   outward: Position,
@@ -34,7 +34,7 @@ const labelProjectedHalfExtent = (vector: Position, width: number, height: numbe
 };
 
 /** 共享边界标签布局输入，向量均为宿主局部单位轴 */
-type InputBoundaryLabelBox = {
+type InputLabelBox = {
   /** 决定内外放置、对齐及旋转的边界标签配置 */
   label: IRBoundaryLabel;
   /** 宿主局部坐标中的边界采样点 */
@@ -52,7 +52,7 @@ type InputBoundaryLabelBox = {
 };
 
 /** 将已测量文字框放在边界内外，位置和旋转独立计算 */
-export const placeBoundaryLabelBox = ({
+export const placeLabelBox = ({
   label,
   point,
   outward,
@@ -60,8 +60,8 @@ export const placeBoundaryLabelBox = ({
   width,
   height,
   distance,
-}: InputBoundaryLabelBox): { center: Position; rotateDeg: number } => {
-  const rotateDeg = resolveBoundaryLabelRotation(label.rotate, label.keepUpright, outward);
+}: InputLabelBox): { center: Position; rotateDeg: number } => {
+  const rotateDeg = resolveLabelRotation(label.rotate, label.keepUpright, outward);
   const extent = labelProjectedHalfExtent(outward, width, height, rotateDeg);
   const offset = (label.placement === 'inside' ? -1 : 1) * (distance + extent);
   const alignment =

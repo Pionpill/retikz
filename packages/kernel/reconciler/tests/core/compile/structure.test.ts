@@ -39,7 +39,6 @@ describe('编译源结构', () => {
       'emitNodeOutput',
       'emitScopePrimitive',
       'fallbackMeasurer',
-      'formatCompileWarning',
       'layoutNode',
       'prepareScopeGeometry',
       'projectCompileReference',
@@ -51,6 +50,8 @@ describe('编译源结构', () => {
       expect(compile).toHaveProperty(name);
 
     for (const name of [
+      'formatCompileWarning',
+      'importSceneResources',
       'compileToScene',
       'compileSceneSnapshot',
       'createCompileChildPath',

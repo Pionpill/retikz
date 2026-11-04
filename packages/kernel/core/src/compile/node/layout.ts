@@ -19,8 +19,9 @@ import {
 } from '../../resolve';
 import type { IRAnchorPosition, IRPosition } from '../../schemas';
 import { CenterAnchor } from '../../shared';
-import { DEFAULT_FONT_SIZE, composeScopeTransform, inverseScopeTransform, snapshotProviderPosition } from '../shared';
+import { composeScopeTransform, inverseScopeTransform, snapshotProviderPosition } from '../shared';
 import type { CompileWarningCode, ComposedScopeTransform } from '../shared';
+import { DEFAULT_FONT_SIZE } from '../text';
 import { resolveAnchorRefUncached } from './anchor-cache';
 import type { NodeBoundaryStore } from './boundary-store';
 import { createNodeBoundaryStore } from './boundary-store';

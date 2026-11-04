@@ -9,10 +9,10 @@ import type {
   ClipRegistry,
   emitNodeOutput,
 } from '@retikz/core';
-import { importSceneResources } from '@retikz/core';
 import type { PropertyPath } from '@retikz/foundation';
 import { jsonStructuralEquals } from '@retikz/foundation';
 
+import { importSceneResources } from '../resource';
 import type { NamespaceEntry } from './namespace';
 import type { CompileRuntime } from './runtime';
 

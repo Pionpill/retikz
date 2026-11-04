@@ -1,7 +1,7 @@
 import type { AnyCompositeDefinition, CompileWarning, IRScene } from '@retikz/core';
-import { formatCompileWarning } from '@retikz/core';
 
 import { createCompileRuntime } from './runtime';
+import { formatCompileWarning } from './shared';
 import type { CompositeArtifactOf } from './shared';
 import { CompileManager } from './tree';
 import type { ExecuteOptions, SceneCompilationSnapshot, CompileOptions, CompileResult } from './types';

@@ -10,12 +10,12 @@ import {
   CompileExpansionKind,
   allocationPointsOf,
   calculateBoundsOfPrimitives,
-  importSceneResources,
   projectLayoutWithTransform,
   projectPublishedCompileLayout,
 } from '@retikz/core';
 
 import type { CompileOwnerKey } from '../../provenance';
+import { importSceneResources } from '../../resource';
 import { createExecutionInvariantError } from '../../runtime';
 import { compileWarningOccurrenceOf, freezeCompileArtifact, replaceCompileWarningOccurrence } from '../../shared';
 import type { SubtreeCompileRuntime } from '../runtime';

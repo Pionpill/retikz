@@ -1,5 +1,7 @@
 import type { ScenePrimitive, CompileBounds, CompileOutput } from '@retikz/core';
-import { createClipRegistry, createPaintRegistry, importSceneResources } from '@retikz/core';
+import { createClipRegistry, createPaintRegistry } from '@retikz/core';
+
+import { importSceneResources } from './resource';
 
 /** 合并资源和输出所需的稳定数值能力 */
 export type CompileOutputContext = Readonly<{

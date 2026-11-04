@@ -1,10 +1,9 @@
 import type { AnyCompositeDefinition, IRScene } from '@retikz/core';
-import { formatCompileWarning } from '@retikz/core';
 import type { PerformanceTraceSink } from '@retikz/foundation';
 import { RetikzError } from '@retikz/foundation';
 
 import type { CompileOptions, ExecuteOptions, SceneCompilationSnapshot } from './compile';
-import { compileSceneSnapshot } from './compile';
+import { compileSceneSnapshot, formatCompileWarning } from './compile';
 import { RetikzReconcilerError, RetikzReconcilerErrorCode } from './error';
 import { ReconcilerTracePhase, ReconcilerTraceUnit } from './trace';
 import type { WeaveBatch, WeavePreparedUpdate, WeaveRoot } from './weave';

@@ -6,13 +6,17 @@ import type {
   ScenePrimitive,
   TextPrimitive,
 } from '../../contract';
-import { resolveTextMetrics } from '../../resolve';
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
+import { combineOpacity, resolveTextMetrics } from '../../resolve';
 import type { CanonicalInlineSegment } from '../../resolve';
-import { combineOpacity, BuiltinCompileWarningCode } from '../shared';
+import { BuiltinCompileWarningCode } from '../shared';
 import type { CompileWarningCode } from '../shared';
 import { ASCENT_FACTOR, DESCENT_FACTOR } from './baseline';
 import type { LoweredTexPaint, LoweredTexPath, TexLowerer } from './tex';
 import { snapshotLoweredTex } from './tex';
+
+/** 默认字号，同时作为 preset 与 rem 的解析根字号 */
+export const DEFAULT_FONT_SIZE = 16;
 
 /** 行高近似系数 */
 const LINE_HEIGHT_FACTOR = 1.2;
@@ -98,7 +102,7 @@ const resolveTexPaint = (paint: LoweredTexPaint, hostColor: string | undefined):
 /** 度量一行 inline segment，并返回可 emit 的行布局 */
 export const layoutInlineLine = (
   segments: Array<InputInlineSegmentLayout>,
-  ctx: LineLayoutContext,
+  context: LineLayoutContext,
 ): InlineLineLayout => {
   let x = 0;
   let ascent = 0;
@@ -107,20 +111,20 @@ export const layoutInlineLine = (
 
   for (const [segmentIndex, segment] of segments.entries()) {
     if ('tex' in segment) {
-      if (!ctx.lowerTex) {
-        ctx.warn(
+      if (!context.lowerTex) {
+        context.warn(
           BuiltinCompileWarningCode.TexLowererMissing,
           `Inline math "${segment.tex}" has no lowerTex injected; provide CompileOptions.lowerTex (from @retikz/tex). Segment skipped.`,
         );
         continue;
       }
 
-      const rawLowered = ctx.lowerTex(
+      const rawLowered = context.lowerTex(
         { tex: segment.tex, displayMode: segment.displayMode },
         { fontSize: segment.fontSize },
       );
       if (rawLowered === null) {
-        ctx.warn(BuiltinCompileWarningCode.TexInvalid, `Failed to render inline tex: ${segment.tex}`);
+        context.warn(BuiltinCompileWarningCode.TexInvalid, `Failed to render inline tex: ${segment.tex}`);
         continue;
       }
 
@@ -140,7 +144,7 @@ export const layoutInlineLine = (
       x += lowered.width;
     } else {
       const font = segment.font;
-      const m = resolveTextMetrics(ctx.measureText(segment.text, font));
+      const m = resolveTextMetrics(context.measureText(segment.text, font));
       ascent = Math.max(ascent, m.ascent);
       descent = Math.max(descent, m.descent);
       pieces.push({
@@ -158,8 +162,8 @@ export const layoutInlineLine = (
 
   // 全部 segment 被跳过 / 空行：给一个 fontSize 高度的空盒，避免 0 高行
   if (ascent === 0 && descent === 0) {
-    ascent = ctx.font.size * ASCENT_FACTOR;
-    descent = ctx.font.size * DESCENT_FACTOR;
+    ascent = context.font.size * ASCENT_FACTOR;
+    descent = context.font.size * DESCENT_FACTOR;
   }
 
   const isPlain = pieces.every((p): p is TextPiece => p.kind === 'text');
@@ -243,4 +247,22 @@ export const emitInlineLine = (
   }
 
   return out;
+};
+
+/**
+ * 兜底文字度量
+ * @description 基于平均字宽估算；非法字号会 throw
+ */
+export const fallbackMeasurer: TextMeasurer = (text, font) => {
+  if (!Number.isFinite(font.size) || font.size < 0) {
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Compile,
+      `fallbackMeasurer: invalid font.size '${font.size}'; must be a non-negative finite number`,
+    );
+  }
+
+  return {
+    width: text.length * font.size * 0.55,
+    height: font.size * 1.2,
+  };
 };

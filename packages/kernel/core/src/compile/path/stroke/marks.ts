@@ -4,6 +4,7 @@ import { RAD_TO_DEG } from '@retikz/math';
 import type { GroupPrimitive, PaintValue, ScenePrimitive } from '../../../contract';
 import type { MarkResolution } from '../../../resolve';
 import {
+  combineOpacity,
   createCompositeContractError,
   createLayoutProbeRecoverableError,
   isFatalProbeError,
@@ -12,7 +13,7 @@ import {
 import type { RegisterPaint } from '../../resource';
 import { materializeMarkerPrimitive } from '../../scene';
 import type { MarkerPlacementContext } from '../../scene';
-import { combineOpacity, materializeScenePrimitives } from '../../shared';
+import { materializeScenePrimitives } from '../../shared';
 
 /** 由共同定义生成箭头或沿线标记的局部图元 */
 export const emitMarkPrimitives = (

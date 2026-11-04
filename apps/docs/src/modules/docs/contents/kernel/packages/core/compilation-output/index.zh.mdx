@@ -16,6 +16,8 @@ description: 追踪 Core 如何汇总 Scene、资源与画布，并交付领域�
 
 `onWarn` 接收本次编译的警告。编译快照入口还可单独交付诊断与来源信息。
 
+手动组装已编译片段时，资源导入函数 `importSceneResources` 从 `@retikz/reconciler` 导入；警告格式化函数 `formatCompileWarning` 也由该包提供。资源生成和警告类型仍由 Core 定义。
+
 `CompileResult` 的结构如下，产物泛型按默认类型简化：
 
 ```ts

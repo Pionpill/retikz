@@ -107,3 +107,7 @@ export const orderCompileWarnings = (warnings: ReadonlyArray<CompileWarning>): A
       compareCompileOccurrences(compileWarningOccurrenceOf(left), compileWarningOccurrenceOf(right)),
     );
 };
+
+/** 把结构化编译 warning 格式化为统一的可读消息 */
+export const formatCompileWarning = (warning: CompileWarning): string =>
+  `[retikz] ${warning.code} at ${formatPropertyPath(warning.path)}: ${warning.message}`;

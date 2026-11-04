@@ -6,8 +6,7 @@ import type { AnimationResolveContext } from '../../resolve';
 import type { IRScope } from '../../schemas';
 import { collectLayoutBounds, calculateBoundsOfPrimitives, allocationPointsOf } from '../scene';
 import { applyTransformChain } from '../shared';
-import type { CompileBounds } from '../shared';
-import type { LayoutBoundsContribution } from './types';
+import type { CompileBounds, LayoutBoundsContribution } from './types';
 
 /** 判断 Scope 是否需要保留可见分组，空匿名分组可被裁去 */
 export const shouldEmitScopeGroup = (

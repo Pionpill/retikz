@@ -8,8 +8,6 @@ import {
   projectScopeCompileLayouts,
   projectScopeOutputBounds,
   resolveScopeStyle,
-  resolveStructuralAlignmentGuides,
-  transformAlignmentGuides,
 } from '@retikz/core';
 import { formatPropertyPath } from '@retikz/foundation';
 
@@ -20,6 +18,7 @@ import { createCompileChildPath, formatCompileOccurrence } from '../../shared';
 import { flushPendingPathEmissions } from '../path/deferred';
 import { createTreePositionContext } from '../reference';
 import type { SubtreeCompileRuntime, SubtreeCompileState } from '../runtime';
+import { resolveStructuralAlignmentGuides, transformAlignmentGuides } from '../shared';
 import type { TreeOutputState } from '../shared';
 import type { SubtreeCompileOptions } from '../types';
 import { emitScopeGroup } from './group';

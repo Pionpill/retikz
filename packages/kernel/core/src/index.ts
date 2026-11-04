@@ -11,7 +11,6 @@ export {
   bindPathTarget,
   calculateBoundsOfPrimitives,
   canonicalizeBoundsRect,
-  cloneAlignmentGuides,
   collectLayoutBounds,
   compilePath,
   compileScopeGeometry,
@@ -31,8 +30,6 @@ export {
   emitNodeOutput,
   emitScopePrimitive,
   fallbackMeasurer,
-  formatCompileWarning,
-  importSceneResources,
   inverseScopeTransform,
   layoutNode,
   prepareScopeGeometry,
@@ -41,9 +38,7 @@ export {
   projectPublishedCompileLayout,
   projectScopeCompileLayouts,
   projectScopeOutputBounds,
-  resolveStructuralAlignmentGuides,
   samplePathRoute,
-  transformAlignmentGuides,
   viewBoxToLayout,
 } from './compile';
 export type {

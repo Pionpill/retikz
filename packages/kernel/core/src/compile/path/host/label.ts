@@ -2,13 +2,12 @@ import type { CurveSegmentSample } from '@retikz/math';
 import { RAD_TO_DEG } from '@retikz/math';
 
 import type { TextMeasurer, GroupPrimitive, ScenePrimitive, TextPrimitive } from '../../../contract';
-import { resolveTextMetrics, resolveFont, resolveTextLine } from '../../../resolve';
+import { combineOpacity, resolveTextMetrics, resolveFont, resolveTextLine } from '../../../resolve';
 import type { CanonicalFont, CanonicalPathLabel } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
-import { combineOpacity, DEFAULT_FONT_SIZE } from '../../shared';
 import type { CompileWarningCode } from '../../shared';
 import type { LineLayoutContext, TexLowerer } from '../../text';
-import { emitInlineLine, layoutInlineLine, calculateAlphabeticBaselineY } from '../../text';
+import { DEFAULT_FONT_SIZE, emitInlineLine, layoutInlineLine, calculateAlphabeticBaselineY } from '../../text';
 
 /** 边标注默认行高 */
 const LABEL_LINE_HEIGHT_FACTOR = 1.2;

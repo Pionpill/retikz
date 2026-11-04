@@ -3,8 +3,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { strictObject } from 'zod';
 
 import type { CompileWarning, IRChild, IRScene } from '../../../../core/src';
-import { BUILTIN_SHAPES, BuiltinCompileWarningCode, defineShape, formatCompileWarning } from '../../../../core/src';
-import { compileToScene } from '../../../src/compile';
+import { BUILTIN_SHAPES, BuiltinCompileWarningCode, defineShape } from '../../../../core/src';
+import { compileToScene, formatCompileWarning } from '../../../src';
 
 const scene = (children: IRScene['children']): IRScene => ({
   version: 1,

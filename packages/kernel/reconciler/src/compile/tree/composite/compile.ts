@@ -15,7 +15,6 @@ import {
   RetikzCoreErrorCode,
   allocationPointsOf,
   bindComposite,
-  cloneAlignmentGuides,
   cloneAndFreezeJson,
   createCompositeContractError,
   createLayoutProbeRecoverableError,
@@ -35,6 +34,7 @@ import type { CompileRuntime, CompositeCompileOwner } from '../../runtime';
 import type { CompositeArtifact } from '../../shared';
 import { createCompileChildPath, formatCompileOccurrence, freezeCompileArtifact } from '../../shared';
 import type { SubtreeCompileRuntime } from '../runtime';
+import { cloneAlignmentGuides } from '../shared';
 import { createCompositeCallbackContext } from './context';
 import { isCompositeOutputHandle, snapshotCompositeOutputChild } from './handle';
 import { snapshotAllocationBounds } from './layout';

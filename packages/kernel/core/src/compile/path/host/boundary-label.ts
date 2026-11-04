@@ -2,7 +2,7 @@ import type { InputPathBoundaryLabel, ScenePrimitive } from '../../../contract';
 import type { PathLabelColorSource } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
 import { BoundaryLabelSchema } from '../../../schemas';
-import { placeBoundaryLabelBox } from '../../text';
+import { placeLabelBox } from '../../text';
 import type { EmitLabelPrimitiveContext } from './label';
 import { emitLabelPrimitive } from './label';
 
@@ -25,7 +25,7 @@ export const emitBoundaryLabelPrimitive = (
   const width = Math.max(...xs) - Math.min(...xs);
   const height = Math.max(...ys) - Math.min(...ys);
   const origin: IRPosition = [(Math.max(...xs) + Math.min(...xs)) / 2, (Math.max(...ys) + Math.min(...ys)) / 2];
-  const { center, rotateDeg: degrees } = placeBoundaryLabelBox({
+  const { center, rotateDeg: degrees } = placeLabelBox({
     label: { ...defaults, ...label },
     point,
     outward,
