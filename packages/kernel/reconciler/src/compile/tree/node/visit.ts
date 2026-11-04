@@ -1,3 +1,4 @@
+import type { CompileOccurrenceLocator, IRNode, NodeCompileContext } from '@retikz/core';
 import {
   emitNodeOutput,
   compileNode,
@@ -6,19 +7,18 @@ import {
   projectLayoutWithTransform,
   resolveNode,
 } from '@retikz/core';
-import type { CompileOccurrenceLocator, IRNode, NodeLayoutContext, NodeEmitContext } from '@retikz/core';
 import type { PropertyPath } from '@retikz/foundation';
 import { formatPropertyPath } from '@retikz/foundation';
 
 import { compareCanonicalNodes, compareNodeLayoutInputs } from '../../compare';
 import type { CompileOwnerKey } from '../../provenance';
-import { runCompileStage } from '../../runtime';
 import type { CompileRuntime } from '../../runtime';
+import { runCompileStage } from '../../runtime';
 import { createCompileChildPath } from '../../shared';
 import { createTreePositionContext } from '../reference';
 import type { SubtreeCompileRuntime } from '../runtime';
-import { cloneAlignmentGuides } from '../shared';
 import type { TreeOutputState } from '../shared';
+import { cloneAlignmentGuides } from '../shared';
 
 /** 布局并 emit node，同时注册 id、收集边界点和父 scope layout 输入 */
 export const visitNode = (
@@ -67,7 +67,7 @@ export const visitNode = (
       compile: (stageRuntime, resolution, previous) => {
         const warn = (code: string, message: string, path: PropertyPath = nodeIrPath): void =>
           stageRuntime.state.workspace.diagnosticCollector.collect({ code, message, path });
-        const context: NodeLayoutContext & NodeEmitContext = {
+        const context: NodeCompileContext = {
           round: stageRuntime.context.layout.round,
           registerPaint: stageRuntime.state.workspace.paintRegistry.register,
           irPath: nodeIrPath,

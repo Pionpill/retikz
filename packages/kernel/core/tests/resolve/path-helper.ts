@@ -1,11 +1,11 @@
 import { resolveArrowRegistry, resolvePathRegistry, resolvePatternRegistry } from '../../src';
-import type { BoundPathResolution, PathTargetContext } from '../../src/compile/path';
+import type { BoundPathResolution, PathCompileContext } from '../../src/compile/path';
 import { bindPathTargets } from '../../src/compile/path';
 import type { PathResolveContext, CanonicalStrokePath } from '../../src/resolve/path';
 import { resolvePath, resolveStrokePathProviders } from '../../src/resolve/path';
 import type { IRPathBase } from '../../src/schemas';
 
-type BuiltinProviderContext = PathTargetContext &
+type BuiltinProviderContext = Partial<Pick<PathCompileContext, 'scopeChain' | 'targetResolver'>> &
   Omit<Partial<PathResolveContext>, 'pathRegistry' | 'arrowRegistry'> &
   Partial<Pick<PathResolveContext, 'pathRegistry' | 'arrowRegistry' | 'patternRegistry' | 'round'>>;
 

@@ -1,7 +1,7 @@
-import type { CanonicalPathConfig } from '@retikz/core';
 import type {
+  CanonicalPathConfig,
   IRPosition,
-  PathCompileContext,
+  PathDefinitionCompileContext,
   InputPathLabel,
   InputPathBoundaryLabel,
   CompiledPathAppearance,
@@ -110,11 +110,11 @@ export type RibbonEmitOptions = Readonly<{
   /** 当前编译使用的取整函数 */
   round: (value: number) => number;
   /** 当前路径的物化服务 */
-  materializePath: PathCompileContext['materializePath'];
+  materializePath: PathDefinitionCompileContext['materializePath'];
   /** 当前路径的宿主标签服务 */
   emitHostLabels: (input: InputPathLabel) => ReadonlyArray<ScenePrimitive>;
   /** 在几何采样前继承宿主标签配置 */
-  resolveHostLabel: PathCompileContext['resolveHostLabel'];
+  resolveHostLabel: PathDefinitionCompileContext['resolveHostLabel'];
   /** Kernel 共享边界标签服务 */
   emitBoundaryLabels: (input: ReadonlyArray<InputPathBoundaryLabel>) => ReadonlyArray<ScenePrimitive>;
 }>;

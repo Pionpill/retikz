@@ -16,11 +16,11 @@ const nodeLabelMeasurer =
 export const measureNodeLabels = (
   input: NodeTextLayoutContext,
 ): Array<{ layout: MeasuredNodeLabel; properties: CanonicalNodeLabel }> | undefined => {
-  const { node, measureText, tex: texLowering } = input;
+  const { canon, measureText, tex: texLowering } = input;
   const inlineWarn = texLowering?.warn ?? ((): void => {});
   const measureLabelText = nodeLabelMeasurer(measureText);
 
-  return node.labels.map(lab => {
+  return canon.labels.map(lab => {
     const { font: labTextFont, text: resolved } = lab;
     const labFontSize = labTextFont.size;
     const laid =

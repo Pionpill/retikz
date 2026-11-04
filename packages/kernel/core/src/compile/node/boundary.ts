@@ -101,17 +101,17 @@ const resolveBoundaryRect = (providerName: string, value: CenteredBox, irPath?: 
 
 /** 将已解析连接面引用绑定到视觉 rect 并执行 provider 几何 */
 export const resolveBoundary = (
-  resolution: CanonicalNodeBoundary,
+  canon: CanonicalNodeBoundary,
   visual: NodeVisualResolution,
   state: NodeBoundaryState,
 ): NodeBoundaryResolution => {
   const { rect: visualRect } = visual;
   const { irPath } = state;
-  if (resolution.isShape) {
-    return { def: resolution.definition, rect: visualRect, params: resolution.params };
+  if (canon.isShape) {
+    return { def: canon.definition, rect: visualRect, params: canon.params };
   }
 
-  const boundaryDef = resolution.definition as BoundaryDefinition;
+  const boundaryDef = canon.definition as BoundaryDefinition;
   let rect = visualRect;
   if (boundaryDef.resolveRect !== undefined) {
     let rawRect: CenteredBox;
@@ -122,24 +122,24 @@ export const resolveBoundary = (
           visualRect,
           computeConnectionEnvelope: kind => connectionEnvelopeOf(kind, visual, state),
         },
-        resolution.params,
+        canon.params,
       );
     } catch (error) {
       if (isFatalProbeError(error) || isLayoutProbeRecoverableError(error)) throw error;
 
       const message = safeThrownDetail(error);
       throw createLayoutProbeRecoverableError(
-        `Boundary '${resolution.name}' failed to resolve its rect at ${formatPropertyPath(irPath ?? [])}: ${message}`,
-        { cause: error, providerKey: `boundary:${resolution.name}` },
+        `Boundary '${canon.name}' failed to resolve its rect at ${formatPropertyPath(irPath ?? [])}: ${message}`,
+        { cause: error, providerKey: `boundary:${canon.name}` },
       );
     }
 
-    rect = guardProviderOutput(`Boundary '${resolution.name}' resolveRect`, () =>
-      resolveBoundaryRect(resolution.name, rawRect, irPath),
+    rect = guardProviderOutput(`Boundary '${canon.name}' resolveRect`, () =>
+      resolveBoundaryRect(canon.name, rawRect, irPath),
     );
   }
 
-  return { def: boundaryDef, rect, params: resolution.params };
+  return { def: boundaryDef, rect, params: canon.params };
 };
 
 /** 将标准方向锚点退回到矩形边界求解；非标准名称返回 undefined */

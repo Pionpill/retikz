@@ -1,19 +1,12 @@
 import type { PropertyPath } from '@retikz/foundation';
 
 import type {
-  AnyPathDefinition,
-  ArrowDefinition,
   CompiledPathAppearance,
   InputPathBoundaryLabel,
   InputPathLabel,
-  MarkDefinition,
-  PathCompileContext,
+  PathDefinitionCompileContext,
   PathCompileResult,
-  PatternDefinition,
   ScenePrimitive,
-  SceneResource,
-  TextMeasurer,
-  Transform,
 } from '../../contract';
 import {
   createCompositeContractError,
@@ -24,51 +17,13 @@ import {
   resolveStrokePathProviders,
 } from '../../resolve';
 import type { IRPathBase, IRPosition, IRStep } from '../../schemas';
-import type { NodeBoundaryStore } from '../node';
 import type { RegisterPaint } from '../resource';
-import type { CompileWarning, ComposedScopeTransform } from '../shared';
 import { snapshotProviderPosition, snapshotScenePrimitives } from '../shared';
-import type { TexLowerer } from '../text';
 import { bindPathTargets } from './bind';
 import { emitBoundaryLabelPrimitive, emitLabelPrimitive } from './host';
 import { pathTargetViewOf } from './index';
 import { emitPathPrimitive, lowerStrokePathGeometry, wrapPathPrimitiveOutput } from './stroke';
-import type { PathTargetResolver } from './types';
-import type { BoundPathResolution } from './types';
-import type { InputPathCompilation } from './types';
-
-/** Path 宿主编译所需的显式服务与本次工作区 */
-export type PathHostCompileContext = Readonly<{
-  /** 路径与装饰解析所需的定义 */
-  registries: Readonly<{
-    /** 路径主体定义 */
-    pathRegistry: ReadonlyMap<string, AnyPathDefinition>;
-    /** 箭头定义 */
-    arrowRegistry: ReadonlyMap<string, ArrowDefinition>;
-    /** 路径标记定义 */
-    markRegistry: ReadonlyMap<string, MarkDefinition>;
-    /** 图案定义 */
-    patternRegistry: ReadonlyMap<string, PatternDefinition>;
-  }>;
-  /** 数值圆整 */
-  round: (value: number) => number;
-  /** 根字号 */
-  rootFontSize: number;
-  /** 文字测量 */
-  measureText: TextMeasurer;
-  /** 公式降级服务 */
-  lowerTex?: TexLowerer;
-  /** 几何缓存 */
-  nodeBoundaryStore: NodeBoundaryStore;
-  /** 资源登记 */
-  registerPaint: RegisterPaint;
-  /** 当前可读取的绘制与裁剪资源 */
-  resources: () => ReadonlyArray<SceneResource>;
-  /** 收集诊断，不向用户发布 */
-  onWarn: (warning: CompileWarning) => void;
-  /** 按坐标链提供合成变换 */
-  resolveTransform: (chain: ReadonlyArray<Transform>) => ComposedScopeTransform;
-}>;
+import type { PathCompileContext, BoundPathResolution } from './types';
 
 /** 校验并脱离 BuiltinPath provider 返回的 primitive 与 bounds point */
 const snapshotPathCompileResult = (
@@ -94,13 +49,8 @@ const snapshotPathCompileResult = (
   });
 
 /** 消费已完成配置解析与目标绑定的路径，并提供内置 stroke emit 回调 */
-export const emitDefinedPath = (
-  pendingPath: Omit<InputPathCompilation, 'path'>,
-  resolution: BoundPathResolution,
-  targetResolver: PathTargetResolver,
-  context: PathHostCompileContext,
-) => {
-  const { scopeChain, scopeDefaults, theme } = pendingPath;
+export const emitDefinedPath = (resolution: BoundPathResolution, context: PathCompileContext) => {
+  const { scopeChain, scopeDefaults, theme, targetResolver } = context;
   const { irPath, definition, targets, properties: canonicalPath } = resolution;
   const targetWarn = (code: string, message: string, node?: { irPath?: PropertyPath }): void =>
     context.onWarn({ code, message, path: node?.irPath ?? irPath });
@@ -230,7 +180,7 @@ export const emitDefinedPath = (
   });
 
   const hostLabelBoundsPoints: Array<IRPosition> = [];
-  const resolveHostLabel: PathCompileContext['resolveHostLabel'] = label =>
+  const resolveHostLabel: PathDefinitionCompileContext['resolveHostLabel'] = label =>
     resolvePathLabel(label, scopeDefaults.path?.label ?? {}, canonicalPath.color);
   const emitHostLabels = (input: InputPathLabel): ReadonlyArray<ScenePrimitive> =>
     input.labels.flatMap((label, index) => {
@@ -291,7 +241,7 @@ export const emitDefinedPath = (
       return emitted.primitive;
     });
 
-  const compilePath = definition.compile as (context: PathCompileContext) => PathCompileResult | null;
+  const compilePath = definition.compile as (context: PathDefinitionCompileContext) => PathCompileResult | null;
   const produced = compilePath({
     path: canonicalPath,
     materializePath,

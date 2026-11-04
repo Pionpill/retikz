@@ -1,5 +1,5 @@
 import { BUILTIN_PATHS } from '@retikz/core';
-import type { IRPathBase, PathCompileContext, PathCompileResult, PathDefinition } from '@retikz/core';
+import type { IRPathBase, PathDefinitionCompileContext, PathCompileResult, PathDefinition } from '@retikz/core';
 import { expect } from 'vitest';
 
 import { defineBenchmark } from '../../../../../scripts/benchmarks/scenario';
@@ -13,7 +13,7 @@ for (const empty of [false, true]) {
       dimensions: ['Path dispatch', empty ? '空结果' : '固定宿主结果', '单次委托'],
     },
     () => {
-      const path: PathCompileContext['path'] = { type: 'path', children: [] };
+      const path: PathDefinitionCompileContext['path'] = { type: 'path', children: [] };
       const result: PathCompileResult | null = empty
         ? null
         : {
@@ -32,7 +32,7 @@ for (const empty of [false, true]) {
             ],
           };
       let receivedPath: IRPathBase | undefined;
-      const context: PathCompileContext = {
+      const context: PathDefinitionCompileContext = {
         path,
         emitStroke: subject => {
           receivedPath = subject;

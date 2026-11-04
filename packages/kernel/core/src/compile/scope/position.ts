@@ -4,7 +4,7 @@ import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { createLayoutProbeRecoverableError } from '../../resolve';
 import type { IRPosition, IRScope, IRScopePositionTarget } from '../../schemas';
 import { evaluatePositionTargetWorld } from '../reference';
-import type { ScopePositionResolveContext } from './types';
+import type { ScopeCompileContext } from './types';
 
 /** 拒绝引用适配返回的非有限位置 */
 const assertFiniteScopePoint = (point: IRPosition, label: string): IRPosition => {
@@ -20,7 +20,7 @@ const assertFiniteScopePoint = (point: IRPosition, label: string): IRPosition =>
  */
 export const resolveScopePositionTarget = (
   child: Pick<IRScope, 'position' | 'id'>,
-  context: ScopePositionResolveContext,
+  context: Pick<ScopeCompileContext, 'positionContext' | 'irPath'>,
 ): IRPosition | undefined => {
   const target: IRScopePositionTarget | undefined = Array.isArray(child.position) ? undefined : child.position?.target;
   if (target === undefined) return undefined;

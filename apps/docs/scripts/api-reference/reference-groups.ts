@@ -273,7 +273,7 @@ export const referenceGroups: Readonly<Partial<Record<string, ReadonlyArray<Refe
         'CanonicalPathLabelPlacement',
         'PathLabelGeometryOptions',
         'InputPathBoundaryLabel',
-        'PathCompileContext',
+        'PathDefinitionCompileContext',
         'PathCompileResult',
         'WayDSL',
         'WayItem',

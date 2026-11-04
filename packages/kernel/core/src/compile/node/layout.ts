@@ -1,8 +1,7 @@
-import type { PropertyPath } from '@retikz/foundation';
 import { formatPropertyPath } from '@retikz/foundation';
 import { DEG_TO_RAD } from '@retikz/math';
 
-import type { LayoutAxisProposal, ShapeCircumscribedGeometry, TextMeasurer, Transform } from '../../contract';
+import type { ShapeCircumscribedGeometry } from '../../contract';
 import { LayoutAxisProposalKind, LayoutIntrinsicMode } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { CanonicalNode, CanonicalPosition } from '../../resolve';
@@ -18,7 +17,7 @@ import type { IRAnchorPosition, IRPosition } from '../../schemas';
 import { CenterAnchor } from '../../shared';
 import type { PositionTargetEvaluateContext } from '../reference';
 import { evaluatePosition, evaluatePositionTargetWorld } from '../reference';
-import type { CompileWarningCode, ComposedScopeTransform } from '../shared';
+import type { ComposedScopeTransform } from '../shared';
 import { composeScopeTransform, inverseScopeTransform, snapshotProviderPosition } from '../shared';
 import { resolveAnchorRefUncached } from './anchor-cache';
 import type { NodeBoundaryStore } from './boundary-store';
@@ -26,7 +25,7 @@ import { createNodeBoundaryStore } from './boundary-store';
 import { layoutNodeContent } from './content';
 import { layoutNodeLabels, measureNodeLabels } from './label';
 import { projectLayoutWithTransform } from './projection';
-import type { CompiledNodeLayout, TexLoweringContext } from './types';
+import type { CompiledNodeLayout, NodeCompileContext } from './types';
 
 /** 限制 custom circumscribe 反馈次数，保证 proposal 求值有确定上界 */
 const MAX_ALLOCATION_REFLOW_ATTEMPTS = 32;
@@ -58,17 +57,17 @@ const localDeltaOf = (
 
 /** 根据 target 与 self anchor 平移完整 provisional layout */
 const placeAnchorPositionedLayout = (
-  node: CanonicalNode,
+  canon: CanonicalNode,
   position: IRAnchorPosition,
   provisional: CompiledNodeLayout,
   positionContext: PositionTargetEvaluateContext,
   transform: ComposedScopeTransform,
   nodeBoundaryStore: NodeBoundaryStore,
 ): CompiledNodeLayout => {
-  if (node.id === position.target.id || node.aliasIds.includes(position.target.id)) {
+  if (canon.id === position.target.id || canon.aliasIds.includes(position.target.id)) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Compile,
-      `Node anchor position cannot reference itself ('${node.id}')`,
+      `Node anchor position cannot reference itself ('${canon.id}')`,
     );
   }
 
@@ -100,7 +99,7 @@ const placeAnchorPositionedLayout = (
     projected,
     position.selfAnchor ?? CenterAnchor.Center,
     undefined,
-    node.boundary,
+    canon.boundary,
     nodeBoundaryStore.get(provisional),
   );
   const deltaGlobal: IRPosition = [target.referencePoint[0] - selfPoint[0], target.referencePoint[1] - selfPoint[1]];
@@ -123,31 +122,12 @@ const placeAnchorPositionedLayout = (
   };
 };
 
-/** 节点 layout 阶段使用的编译依赖 */
-export type NodeLayoutContext = {
-  irPath?: PropertyPath;
-  /** 文本测量函数 */
-  measureText: TextMeasurer;
-  /** 当前编译共享的连接面缓存与诊断状态 */
-  nodeBoundaryStore?: NodeBoundaryStore;
-  /** Position/Target Source IR 确定化上下文 */
-  positionContext: PositionTargetEvaluateContext;
-  /** 当前 scope 累积 transform */
-  scopeChain?: ReadonlyArray<Transform>;
-  /** 当前 Scope 已合成的坐标消费态 */
-  composedTransform?: ComposedScopeTransform;
-  /** TeX 降级上下文 */
-  texLowering?: TexLoweringContext;
-  /** 当前 node 的 compile warning 分发函数 */
-  warn?: (code: CompileWarningCode, message: string) => void;
-  /** 父级给 allocation box 的水平 proposal */
-  allocationWidthProposal?: LayoutAxisProposal;
-};
-
 /** 按文本测量、节点缩放与父级宽度提案计算正文、形状和边界布局 */
-export const layoutNode = (resolution: CanonicalNode, context: NodeLayoutContext): CompiledNodeLayout => {
-  const node = resolution;
-  const { shape: shapeResolution, boundary: canonicalBoundary } = node;
+export const layoutNode = (
+  canon: CanonicalNode,
+  context: Omit<NodeCompileContext, 'round' | 'registerPaint'>,
+): CompiledNodeLayout => {
+  const { shape: shapeResolution, boundary: canonicalBoundary } = canon;
   const irPath = context.irPath ?? [];
   const {
     measureText,
@@ -162,28 +142,28 @@ export const layoutNode = (resolution: CanonicalNode, context: NodeLayoutContext
 
   // 缩放影响节点尺寸与字体。
   // 字号取 min(sx,sy) 保 glyph 形状，避免非均匀缩放下文字被拉变形。
-  const { x: sx, y: sy } = node.layout.scale;
+  const { x: sx, y: sy } = canon.layout.scale;
   const { definition: shapeDef, params: shapeParams } = shapeResolution;
 
   // spacing 受 node scale 影响。
-  const padding = node.layout.padding;
+  const padding = canon.layout.padding;
   const paddingLeft = padding.left * sx;
   const paddingRight = padding.right * sx;
   const paddingTop = padding.top * sy;
   const paddingBottom = padding.bottom * sy;
-  const marginSpacing = node.layout.margin;
+  const marginSpacing = canon.layout.margin;
   const margin = {
     top: marginSpacing.top * sy,
     right: marginSpacing.right * sx,
     bottom: marginSpacing.bottom * sy,
     left: marginSpacing.left * sx,
   };
-  const lineHeight = node.text?.lineHeight ?? 0;
-  const align = node.text?.align ?? 'middle';
+  const lineHeight = canon.text?.lineHeight ?? 0;
+  const align = canon.text?.align ?? 'middle';
 
   // 折行阈值受 x 缩放。
-  const explicitMaxTextWidth = node.layout.maxTextWidth !== undefined ? node.layout.maxTextWidth * sx : undefined;
-  const fixedVisualWidth = node.layout.width === undefined ? undefined : node.layout.width * sx;
+  const explicitMaxTextWidth = canon.layout.maxTextWidth !== undefined ? canon.layout.maxTextWidth * sx : undefined;
+  const fixedVisualWidth = canon.layout.width === undefined ? undefined : canon.layout.width * sx;
   const proposedAllocationWidth =
     allocationWidthProposal?.kind === LayoutAxisProposalKind.Exact
       ? allocationWidthProposal.value
@@ -197,7 +177,7 @@ export const layoutNode = (resolution: CanonicalNode, context: NodeLayoutContext
   /** 使用同一正文 owner 与 measurer 求当前 wrap budget 的真实内容布局 */
   const layoutContent = (textWidthBudget: number | undefined) =>
     layoutNodeContent({
-      node,
+      canon,
       measureText,
       tex: texLowering,
       lineHeight,
@@ -206,7 +186,7 @@ export const layoutNode = (resolution: CanonicalNode, context: NodeLayoutContext
     });
 
   // minimumSize 作用于外接边界，且随 scale 缩放。
-  const minimumSize = node.layout.minimumSize;
+  const minimumSize = canon.layout.minimumSize;
   const minHalfW = (minimumSize.width * sx) / 2;
   const minHalfH = (minimumSize.height * sy) / 2;
 
@@ -245,7 +225,7 @@ export const layoutNode = (resolution: CanonicalNode, context: NodeLayoutContext
     });
   };
 
-  const rotateDeg = node.layout.rotate;
+  const rotateDeg = canon.layout.rotate;
 
   const allocationWidthOf = (halfWidth: number, halfHeight: number): number => {
     const outerWidth = 2 * Math.max(halfWidth, minHalfW) + margin.left + margin.right;
@@ -317,17 +297,17 @@ export const layoutNode = (resolution: CanonicalNode, context: NodeLayoutContext
 
   let anchorPosition: IRAnchorPosition | undefined;
   let center: IRPosition | null;
-  if (isAnchorPosition(node.layout.position)) {
-    anchorPosition = node.layout.position;
+  if (isAnchorPosition(canon.layout.position)) {
+    anchorPosition = canon.layout.position;
     center = [0, 0];
   } else {
-    center = evaluatePosition(node.layout.position, positionContext)?.localPoint ?? null;
+    center = evaluatePosition(canon.layout.position, positionContext)?.localPoint ?? null;
   }
 
   if (!center) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Compile,
-      `Cannot resolve position for node ${node.id ?? '(unnamed)'}; polar.origin / at.of / between endpoint may reference an undefined node`,
+      `Cannot resolve position for node ${canon.id ?? '(unnamed)'}; polar.origin / at.of / between endpoint may reference an undefined node`,
     );
   }
 
@@ -337,7 +317,7 @@ export const layoutNode = (resolution: CanonicalNode, context: NodeLayoutContext
   const rectCenterY = center[1] + paddingOffsetY + (aabbOffset?.[1] ?? 0);
   const contentCenter: [number, number] = [rectCenterX - paddingOffsetX, rectCenterY - paddingOffsetY];
   const measuredLabels = measureNodeLabels({
-    node,
+    canon,
     measureText,
     tex: texLowering,
   });
@@ -366,7 +346,7 @@ export const layoutNode = (resolution: CanonicalNode, context: NodeLayoutContext
             align,
             lineHeight,
             baselineOffsets: textBaselineOffsets,
-            font: node.text!.font,
+            font: canon.text!.font,
           }
         : lines === undefined
           ? undefined
@@ -376,7 +356,7 @@ export const layoutNode = (resolution: CanonicalNode, context: NodeLayoutContext
               align,
               lineHeight,
               baselineOffsets: textBaselineOffsets,
-              font: node.text!.font,
+              font: canon.text!.font,
             },
     boundary: canonicalBoundary,
   };
@@ -389,7 +369,7 @@ export const layoutNode = (resolution: CanonicalNode, context: NodeLayoutContext
 
   const layout = anchorPosition
     ? placeAnchorPositionedLayout(
-        node,
+        canon,
         anchorPosition,
         resolved,
         positionContext,

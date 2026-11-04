@@ -44,13 +44,13 @@ type ShapeStepLoweringContext = {
 };
 
 /** 判断 step 是否属于 shape family */
-export const isStrokeShapeStep = (step: CanonicalPathStep): step is StrokeShapeStep =>
-  step.kind === 'cycle' ||
-  step.kind === 'rectangle' ||
-  step.kind === 'arc' ||
-  step.kind === 'circlePath' ||
-  step.kind === 'ellipsePath' ||
-  step.kind === 'smooth';
+export const isStrokeShapeStep = (canon: CanonicalPathStep): canon is StrokeShapeStep =>
+  canon.kind === 'cycle' ||
+  canon.kind === 'rectangle' ||
+  canon.kind === 'arc' ||
+  canon.kind === 'circlePath' ||
+  canon.kind === 'ellipsePath' ||
+  canon.kind === 'smooth';
 
 /** 将 partial circle/ellipse 的 closed 选项规范化 */
 const resolvePartialClosed = (

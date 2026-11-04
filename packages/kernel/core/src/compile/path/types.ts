@@ -1,14 +1,22 @@
 import type { PropertyPath } from '@retikz/foundation';
 
-import type { SceneResource, Transform } from '../../contract';
+import type {
+  AnyPathDefinition,
+  ArrowDefinition,
+  MarkDefinition,
+  PatternDefinition,
+  TextMeasurer,
+  SceneResource,
+  Transform,
+} from '../../contract';
 import type { CanonicalNodeBoundary, MergedScopeDefaults, CanonicalPath } from '../../resolve';
-import type { IRPathBase, IRPosition, IRTarget } from '../../schemas';
-import type { CanonicalDropShadow } from '../../schemas';
+import type { IRPathBase, IRPosition, IRTarget, CanonicalDropShadow } from '../../schemas';
 import type { CanonicalTheme } from '../../shared';
+import type { NodeBoundaryStore } from '../node';
 import type { CompiledBoundaryGeometry } from '../reference';
 import type { RegisterPaint } from '../resource';
 import type { CompiledDrawing } from '../scene';
-import type { CompileWarning } from '../shared';
+import type { ComposedScopeTransform, CompileWarning } from '../shared';
 import type { TexLowerer } from '../text';
 
 /** path emit 阶段的可选服务与诊断上下文 */
@@ -101,16 +109,44 @@ export type TargetResolution = Readonly<{
   canonicalBoundary?: CanonicalNodeBoundary;
 }>;
 
-/** 路径目标绑定使用的坐标查询能力 */
-export type PathTargetContext = {
-  /** 当前作用域变换 */
-  scopeChain?: ReadonlyArray<Transform>;
-  /** 目标查询服务 */
-  targetResolver?: PathTargetResolver;
-};
-
 /** 完成声明解析和目标几何绑定的路径 */
 export type BoundPathResolution = CanonicalPath & {
   /** 按目标来源路径索引的绑定 */
   targets: ReadonlyMap<string, TargetResolution>;
 };
+
+/** 路径编译使用的当前环境、目标查询与宿主能力 */
+export type PathCompileContext = Omit<InputPathCompilation, 'path'> &
+  Readonly<{
+    /** 当前路径目标查询能力 */
+    targetResolver: PathTargetResolver;
+    /** 路径与装饰解析所需的定义 */
+    registries: Readonly<{
+      /** 路径主体定义 */
+      pathRegistry: ReadonlyMap<string, AnyPathDefinition>;
+      /** 箭头定义 */
+      arrowRegistry: ReadonlyMap<string, ArrowDefinition>;
+      /** 路径标记定义 */
+      markRegistry: ReadonlyMap<string, MarkDefinition>;
+      /** 图案定义 */
+      patternRegistry: ReadonlyMap<string, PatternDefinition>;
+    }>;
+    /** 数值圆整 */
+    round: (value: number) => number;
+    /** 根字号 */
+    rootFontSize: number;
+    /** 文字测量 */
+    measureText: TextMeasurer;
+    /** 公式降级服务 */
+    lowerTex?: TexLowerer;
+    /** 几何缓存 */
+    nodeBoundaryStore: NodeBoundaryStore;
+    /** 资源登记 */
+    registerPaint: RegisterPaint;
+    /** 当前可读取的绘制与裁剪资源 */
+    resources: () => ReadonlyArray<SceneResource>;
+    /** 收集诊断，不向用户发布 */
+    onWarn: (warning: CompileWarning) => void;
+    /** 按坐标链提供合成变换 */
+    resolveTransform: (chain: ReadonlyArray<Transform>) => ComposedScopeTransform;
+  }>;

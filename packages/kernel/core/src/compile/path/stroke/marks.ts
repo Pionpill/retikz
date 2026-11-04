@@ -59,7 +59,7 @@ export const emitMarkPrimitives = (
 /** 按统一尺寸和局部锚点放置标记图元 */
 export const placeMarkPrimitives = (
   primitives: Array<ScenePrimitive>,
-  resolution: CanonicalPathMark,
+  canon: CanonicalPathMark,
   sample: CurveSegmentSample,
   context: MarkerPlacementContext,
 ): GroupPrimitive => ({
@@ -76,20 +76,20 @@ export const placeMarkPrimitives = (
     },
     {
       kind: 'scale',
-      x: context.round((resolution.geometry.resolvedLength * context.strokeWidth) / resolution.geometry.baseSize),
-      y: context.round((resolution.geometry.resolvedWidth * context.strokeWidth) / resolution.geometry.baseSize),
+      x: context.round((canon.geometry.resolvedLength * context.strokeWidth) / canon.geometry.baseSize),
+      y: context.round((canon.geometry.resolvedWidth * context.strokeWidth) / canon.geometry.baseSize),
     },
     {
       kind: 'translate',
-      x: context.round(-resolution.geometry.anchor[0]),
-      y: context.round(-resolution.geometry.anchor[1]),
+      x: context.round(-canon.geometry.anchor[0]),
+      y: context.round(-canon.geometry.anchor[1]),
     },
   ],
   children: primitives.map(primitive =>
     materializeMarkerPrimitive(
       primitive,
       context.contextStroke,
-      combineOpacity(resolution.mark.opacity, context.hostOpacity),
+      combineOpacity(canon.mark.opacity, context.hostOpacity),
     ),
   ),
 });

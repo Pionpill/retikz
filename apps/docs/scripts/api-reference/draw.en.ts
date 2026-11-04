@@ -1,5 +1,14 @@
 /** 经核对的绘制 API 英文说明，源码标识符保持不变 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  注册路径定义的解析与编译契约: 'Parsing and compilation contract for a registered path definition',
+  '把该 path 编译成 Scene primitive；返回 null 表示该 path 不产生输出':
+    'Compile the path into Scene primitives; return null when the path produces no output',
+  '非空 path registry key': 'Non-empty path registry key',
+  '该 path 的完整 source subject schema': 'Complete source subject schema for this path',
+  '经 schema、继承及默认值解析后的配置，不保留 Source 简写':
+    'Configuration resolved from the schema, inheritance, and defaults, without Source shorthands',
+  '定义路径并保留 schema 与编译上下文的类型关联':
+    'Define a path while preserving the type relationship between its schema and compilation context',
   '宿主是否允许自动断线；为 true 且标签居中时，缺省的 interrupt 取 true，显式值始终优先':
     'Whether the host allows automatic interruption; if true and the label is centered, interrupt defaults to true. An explicit value always takes precedence',
   '默认位置为 0.5，距离和断口每侧留白均为 4；未指定 side 时，随线倾斜的标签居中，其余位于上方':

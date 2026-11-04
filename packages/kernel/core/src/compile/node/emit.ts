@@ -366,10 +366,10 @@ const wrapNodeGroupPrimitive = (
   return group;
 };
 
-export const compileNodeTextStyle = (node: CanonicalNode): CompiledNodeTextStyle => ({
-  color: node.text?.color,
-  opacity: node.style.opacity,
-  lines: (node.text?.lines ?? []).map(line => ({
+export const compileNodeTextStyle = (canon: CanonicalNode): CompiledNodeTextStyle => ({
+  color: canon.text?.color,
+  opacity: canon.style.opacity,
+  lines: (canon.text?.lines ?? []).map(line => ({
     style: line.style === undefined ? undefined : { fill: line.style.fill, opacity: line.style.opacity },
     segments: line.segments.map(({ fill, opacity }) => ({ fill, opacity })),
   })),
@@ -380,25 +380,25 @@ export const compileNodeTextStyle = (node: CanonicalNode): CompiledNodeTextStyle
  * @description shape 主体走 `shapeDef.emit`；文本和 label 追加为附属 primitive
  */
 export const emitNodePrimitives = (
-  properties: CanonicalNode,
+  canon: CanonicalNode,
   layout: CompiledNodeLayout,
   round: Round,
   registerPaint: RegisterPaint,
 ): Array<ScenePrimitive> => {
-  const shapePrimitives = emitNodeShapePrimitives(layout, properties.style, round, registerPaint);
+  const shapePrimitives = emitNodeShapePrimitives(layout, canon.style, round, registerPaint);
   const inner: Array<ScenePrimitive> = [
     ...shapePrimitives,
-    ...emitCompiledNodeText(layout, compileNodeTextStyle(properties), round),
+    ...emitCompiledNodeText(layout, compileNodeTextStyle(canon), round),
     ...(layout.labels?.flatMap((label, index) =>
-      emitNodeLabelPrimitives(layout, label, properties.labels[index], properties, round, registerPaint),
+      emitNodeLabelPrimitives(layout, label, canon.labels[index], canon, round, registerPaint),
     ) ?? []),
   ];
 
   const needsGroup = (layout.geometry.rect.rotate ?? 0) !== 0 || layout.text !== undefined;
   if (!needsGroup) {
-    stampNodeShapePrimitives(properties, shapePrimitives);
+    stampNodeShapePrimitives(canon, shapePrimitives);
     return inner;
   }
 
-  return [wrapNodeGroupPrimitive(layout, properties, inner, round)];
+  return [wrapNodeGroupPrimitive(layout, canon, inner, round)];
 };

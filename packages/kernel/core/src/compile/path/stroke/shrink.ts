@@ -8,12 +8,12 @@ import { emitMarkPrimitives } from './marks';
 
 /** 把箭头视觉输入物化为 Scene 端点箭头描述 */
 const emitArrowEnd = (
-  resolution: CanonicalPathArrow,
+  canon: CanonicalPathArrow,
   round: (n: number) => number,
   registerPaint: RegisterPaint,
 ): CompiledArrowEnd => {
-  const { mark, geometry } = resolution;
-  const marker = emitMarkPrimitives(resolution, round, registerPaint, {
+  const { mark, geometry } = canon;
+  const marker = emitMarkPrimitives(canon, round, registerPaint, {
     label: `Arrow '${mark.shape}'`,
     providerKey: `arrow:${mark.shape}`,
   });
@@ -42,13 +42,13 @@ type EndpointArrowMarkEmission = {
 
 /** 物化端点箭头，并按重叠比例插值路径收缩量与边界外缘内缩量 */
 export const emitEndpointArrowMark = (
-  resolution: CanonicalPathArrow,
+  canon: CanonicalPathArrow,
   endpointOverlap: number,
   round: (n: number) => number,
   registerPaint: RegisterPaint,
 ): EndpointArrowMarkEmission => {
-  const { geometry, mark } = resolution;
-  const spec = emitArrowEnd(resolution, round, registerPaint);
+  const { geometry, mark } = canon;
+  const spec = emitArrowEnd(canon, round, registerPaint);
   // 将半线宽接缝重叠放在线接触点内侧，尖端的目标位置保持不变
   const contactWithOverlap = geometry.tipX - (geometry.shrink * geometry.baseSize) / geometry.resolvedLength;
   spec.refX += (contactWithOverlap - geometry.contactX) * (1 - endpointOverlap);

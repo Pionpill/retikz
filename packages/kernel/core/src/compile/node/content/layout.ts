@@ -40,9 +40,9 @@ type NodeContentLayout = {
 
 /** 布局节点正文文本 */
 export const layoutNodeContent = (input: InputNodeContentLayout): NodeContentLayout => {
-  const { node, measureText, tex: texLowering, lineHeight, maxTextWidth, minimumTextWidth = false } = input;
-  if (node.text === undefined) return { textWidth: 0, textHeight: 0 };
-  const { lines: resolved, font: blockFont } = node.text;
+  const { canon, measureText, tex: texLowering, lineHeight, maxTextWidth, minimumTextWidth = false } = input;
+  if (canon.text === undefined) return { textWidth: 0, textHeight: 0 };
+  const { lines: resolved, font: blockFont } = canon.text;
   const { size: fontSize, family: fontFamily, weight: fontWeight, style: fontStyle } = blockFont;
   let textWidth = 0;
   let textHeight: number;

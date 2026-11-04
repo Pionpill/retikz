@@ -1,9 +1,10 @@
 import type { PropertyPath } from '@retikz/foundation';
 import type { BoundsInsets, CenteredBox } from '@retikz/math';
 
-import type { ScenePrimitive, SceneResource, Transform } from '../../contract';
+import type { SceneClipPath, ScenePrimitive, SceneResource, Transform } from '../../contract';
 import type { CanonicalDropShadow, IRPosition, IRScope, IRAnimationTrack } from '../../schemas';
-import type { CompiledBoundaryGeometry, PositionTargetEvaluateContext } from '../reference';
+import type { CompiledReferenceGeometry, CompiledBoundaryGeometry, PositionTargetEvaluateContext } from '../reference';
+import type { ClipRegistry } from '../resource';
 import type { CompileWarning } from '../shared';
 
 /** Scope 子元素计算前的准备状态，不代表包络已就绪 */
@@ -40,10 +41,18 @@ export type CompiledScopeGeometry = {
 /** Scope 自身几何声明，不包含子树 */
 export type InputScopeCompile = Omit<IRScope, 'children'>;
 
-/** Scope 单次几何计算环境 */
-export type ScopeGeometryContext = Readonly<{
+/** 分组编译使用的子布局、定位、裁剪与诊断能力 */
+export type ScopeCompileContext = Readonly<{
   /** 当前位置读取能力 */
   positionContext: PositionTargetEvaluateContext;
+  /** 当前子元素的布局贡献 */
+  layouts: ReadonlyArray<CompiledReferenceGeometry>;
+  /** 已由调用方解析的裁剪路径 */
+  resolvedClipPath?: SceneClipPath;
+  /** 登记已绑定的裁剪 */
+  registerClip: ClipRegistry['register'];
+  /** 登记已生成的裁剪路径 */
+  registerClipPath: ClipRegistry['registerPath'];
   /** 当前诊断位置 */
   irPath: PropertyPath;
   /** 当前诊断接收器 */
@@ -82,12 +91,4 @@ export type CompileOutput = Readonly<{
   resources: Array<SceneResource>;
   /** 可见边界贡献 */
   bounds: ReadonlyArray<CompileBounds>;
-}>;
-
-/** Scope 放置目标解析只需要父空间引用查询与来源 */
-export type ScopePositionResolveContext = Readonly<{
-  /** 父坐标系的位置查询与转换 */
-  positionContext: PositionTargetEvaluateContext;
-  /** Scope 声明来源 */
-  irPath: PropertyPath;
 }>;

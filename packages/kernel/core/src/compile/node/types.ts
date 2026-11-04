@@ -2,6 +2,8 @@ import type { JsonObject, PropertyPath } from '@retikz/foundation';
 import type { BoundsInsets, CenteredBox, Position } from '@retikz/math';
 
 import type {
+  LayoutAxisProposal,
+  Transform,
   BoundaryDefinition,
   ConnectionEnvelopeKind,
   TextLine,
@@ -11,9 +13,12 @@ import type {
 } from '../../contract';
 import type { CanonicalFont, CanonicalNode } from '../../resolve';
 import type { IRAnimationTrack, CanonicalDropShadow } from '../../schemas';
+import type { PositionTargetEvaluateContext } from '../reference';
+import type { RegisterPaint } from '../resource';
 import type { CompiledDrawing } from '../scene';
-import type { CompileWarningCode } from '../shared';
+import type { ComposedScopeTransform, CompileWarningCode } from '../shared';
 import type { InlineLineLayout, TexLowerer } from '../text';
+import type { NodeBoundaryStore } from './boundary-store';
 
 /** 节点最终位置、视觉尺寸及自定义形状图元几何 */
 export type CompiledNodeGeometry = {
@@ -137,7 +142,7 @@ export type NodeVisualResolution = {
 /** 节点正文与附属 label 共享的文本布局上下文 */
 export type NodeTextLayoutContext = {
   /** 待布局节点 */
-  node: CanonicalNode;
+  canon: CanonicalNode;
   /** 文本度量函数 */
   measureText: TextMeasurer;
   /** TeX 降级上下文 */
@@ -225,4 +230,30 @@ export type NodeLabelLayout = MeasuredNodeLabel & {
   rotateDeg: number;
   /** 相对最终 Node rect 几何中心的局部偏移 */
   centerOffset: [number, number];
+};
+
+/** 节点编译使用的测量、定位、资源与诊断能力 */
+export type NodeCompileContext = {
+  /** 当前节点的来源路径 */
+  irPath?: PropertyPath;
+  /** 文本测量函数 */
+  measureText: TextMeasurer;
+  /** 当前编译共享的连接面缓存与诊断状态 */
+  nodeBoundaryStore?: NodeBoundaryStore;
+  /** 位置与目标的运行时求值能力 */
+  positionContext: PositionTargetEvaluateContext;
+  /** 当前 scope 累积 transform */
+  scopeChain?: ReadonlyArray<Transform>;
+  /** 当前 Scope 已合成的坐标消费态 */
+  composedTransform?: ComposedScopeTransform;
+  /** TeX 降级上下文 */
+  texLowering?: TexLoweringContext;
+  /** 当前 node 的 compile warning 分发函数 */
+  warn?: (code: CompileWarningCode, message: string) => void;
+  /** 父级给 allocation box 的水平 proposal */
+  allocationWidthProposal?: LayoutAxisProposal;
+  /** 数值圆整 */
+  round: (value: number) => number;
+  /** 绘制资源登记 */
+  registerPaint: RegisterPaint;
 };

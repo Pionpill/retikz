@@ -22,24 +22,24 @@ const assertBoxLikeLabelBoundary = (layout: CompiledNodeLayout): void => {
   }
 };
 
-const labelBoundaryPoint = (layout: CompiledNodeLayout, position: CanonicalNodeLabelBoundaryPosition): Position => {
+const labelBoundaryPoint = (layout: CompiledNodeLayout, canon: CanonicalNodeLabelBoundaryPosition): Position => {
   assertBoxLikeLabelBoundary(layout);
-  const fraction = position.fraction;
+  const fraction = canon.fraction;
   const left = layout.geometry.rect.x - layout.geometry.rect.width / 2;
   const right = layout.geometry.rect.x + layout.geometry.rect.width / 2;
   const top = layout.geometry.rect.y - layout.geometry.rect.height / 2;
   const bottom = layout.geometry.rect.y + layout.geometry.rect.height / 2;
-  if (position.boundary === 'top') return [left + layout.geometry.rect.width * fraction, top];
-  if (position.boundary === 'right') return [right, top + layout.geometry.rect.height * fraction];
-  if (position.boundary === 'bottom') return [left + layout.geometry.rect.width * fraction, bottom];
+  if (canon.boundary === 'top') return [left + layout.geometry.rect.width * fraction, top];
+  if (canon.boundary === 'right') return [right, top + layout.geometry.rect.height * fraction];
+  if (canon.boundary === 'bottom') return [left + layout.geometry.rect.width * fraction, bottom];
 
   return [left, top + layout.geometry.rect.height * fraction];
 };
 
-const labelBoundaryDirection = (position: CanonicalNodeLabelBoundaryPosition): Position => {
-  if (position.boundary === 'top') return [0, -1];
-  if (position.boundary === 'right') return [1, 0];
-  if (position.boundary === 'bottom') return [0, 1];
+const labelBoundaryDirection = (canon: CanonicalNodeLabelBoundaryPosition): Position => {
+  if (canon.boundary === 'top') return [0, -1];
+  if (canon.boundary === 'right') return [1, 0];
+  if (canon.boundary === 'bottom') return [0, 1];
 
   return [-1, 0];
 };
@@ -152,27 +152,27 @@ const resolveLabelRotateDeg = (label: Pick<CanonicalNodeLabel, 'position' | 'rot
 export const resolveNodeLabelGeometry = (
   layout: CompiledNodeLayout,
   label: MeasuredNodeLabel,
-  properties: CanonicalNodeLabel,
+  canon: CanonicalNodeLabel,
 ): NodeLabelLayout => {
-  const rotateDeg = resolveLabelRotateDeg(properties);
-  if (properties.position === 'center') {
+  const rotateDeg = resolveLabelRotateDeg(canon);
+  if (canon.position === 'center') {
     return { ...label, rotateDeg, centerOffset: [0, 0] };
   }
 
   const placed = placeLabelBox({
     label: {
-      text: properties.text.map(line => line.plainText).join('\n'),
-      rotate: properties.rotate,
-      keepUpright: properties.keepUpright,
-      placement: properties.placement,
-      align: properties.align,
+      text: canon.text.map(line => line.plainText).join('\n'),
+      rotate: canon.rotate,
+      keepUpright: canon.keepUpright,
+      placement: canon.placement,
+      align: canon.align,
     },
-    point: labelBorderPoint(layout, properties.position),
-    outward: labelPlacementVector(properties.position),
-    tangent: labelTangentVector(properties.position),
+    point: labelBorderPoint(layout, canon.position),
+    outward: labelPlacementVector(canon.position),
+    tangent: labelTangentVector(canon.position),
     width: label.measuredWidth,
     height: label.measuredHeight,
-    distance: properties.distance,
+    distance: canon.distance,
   });
 
   return {

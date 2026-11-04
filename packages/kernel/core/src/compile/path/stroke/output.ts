@@ -19,24 +19,24 @@ type EmitPathBasePropsContext = {
 
 /** 将已解析 path 样式物化为 PathPrimitive 公共属性 */
 export const emitPathBaseProps = (
-  path: CanonicalPathProperties,
+  canon: CanonicalPathProperties,
   context: EmitPathBasePropsContext,
 ): PathBasePropsWithStrokeWidth => {
   const { registerPaint } = context;
   return {
-    stroke: registerPaint(path.stroke) ?? 'currentColor',
-    strokeWidth: path.strokeWidth,
-    fill: registerPaint(path.fill) ?? 'none',
-    fillRule: path.fillRule === 'nonzero' ? undefined : path.fillRule,
-    dashPattern: path.dashPattern.length === 0 ? undefined : path.dashPattern,
-    dashOffset: path.dashOffset === 0 ? undefined : path.dashOffset,
-    lineCap: path.lineCap === 'butt' ? undefined : path.lineCap,
-    lineJoin: path.lineJoin === 'miter' ? undefined : path.lineJoin,
-    opacity: path.opacity === 1 ? undefined : path.opacity,
-    fillOpacity: path.fillOpacity === 1 ? undefined : path.fillOpacity,
-    strokeOpacity: path.strokeOpacity === 1 ? undefined : path.strokeOpacity,
-    shadow: path.shadow,
-    blendMode: path.blendMode === 'normal' ? undefined : path.blendMode,
+    stroke: registerPaint(canon.stroke) ?? 'currentColor',
+    strokeWidth: canon.strokeWidth,
+    fill: registerPaint(canon.fill) ?? 'none',
+    fillRule: canon.fillRule === 'nonzero' ? undefined : canon.fillRule,
+    dashPattern: canon.dashPattern.length === 0 ? undefined : canon.dashPattern,
+    dashOffset: canon.dashOffset === 0 ? undefined : canon.dashOffset,
+    lineCap: canon.lineCap === 'butt' ? undefined : canon.lineCap,
+    lineJoin: canon.lineJoin === 'miter' ? undefined : canon.lineJoin,
+    opacity: canon.opacity === 1 ? undefined : canon.opacity,
+    fillOpacity: canon.fillOpacity === 1 ? undefined : canon.fillOpacity,
+    strokeOpacity: canon.strokeOpacity === 1 ? undefined : canon.strokeOpacity,
+    shadow: canon.shadow,
+    blendMode: canon.blendMode === 'normal' ? undefined : canon.blendMode,
   };
 };
 
@@ -58,15 +58,15 @@ type InputPathPrimitiveWrapping = {
 const assignPathAnimations = (
   owner: ScenePrimitive,
   primitive: ScenePrimitive,
-  path: CanonicalPathProperties,
+  canon: CanonicalPathProperties,
 ): void => {
-  if (path.animations === undefined) return;
+  if (canon.animations === undefined) return;
   if (owner === primitive) {
-    owner.animations = path.animations;
+    owner.animations = canon.animations;
     return;
   }
-  const drawing = path.animations.filter(track => track.property === 'pathDraw');
-  const remaining = path.animations.filter(track => track.property !== 'pathDraw');
+  const drawing = canon.animations.filter(track => track.property === 'pathDraw');
+  const remaining = canon.animations.filter(track => track.property !== 'pathDraw');
   if (drawing.length > 0) primitive.animations = drawing;
   if (remaining.length > 0) owner.animations = remaining;
 };

@@ -4,18 +4,11 @@ import type { ScenePrimitive } from '../../contract';
 import type { CanonicalDropShadow, IRPosition } from '../../schemas';
 import { Anchor } from '../../shared';
 import { rect } from '../../shared/geometry';
-import type { RegisterPaint } from '../resource';
 import { emitCompiledDrawing } from '../scene';
 import { outerRectOf } from './anchors';
 import { emitCompiledNodeText } from './emit';
 import { labelExtentPoints } from './label';
 import type { CompiledNode } from './types';
-
-/** 节点最终绘制计算使用的数值圆整与资源登记能力 */
-export type NodeEmitContext = Readonly<{
-  round: (value: number) => number;
-  registerPaint: RegisterPaint;
-}>;
 
 /** 从最终节点结果组装图元与边界，不访问 canon、Definition 或测量服务 */
 export const emitNodeOutput = (

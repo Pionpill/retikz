@@ -114,7 +114,7 @@ export type InputPathBoundaryLabel = Readonly<{
  * @description 自定义路径可以完全接管输出，也可以调用回调复用标准描边逻辑
  * @template TPath 经当前路径定义的 schema 解析后的路径类型，决定 path 字段的结构；默认使用 IRPathBase
  */
-export type PathCompileContext<TPath extends IRPathBase = IRPathBase> = {
+export type PathDefinitionCompileContext<TPath extends IRPathBase = IRPathBase> = {
   /** 经 schema、继承及默认值解析后的配置，不保留 Source 简写 */
   path: CanonicalPathConfig<TPath>;
   /** 物化选定 steps，不应用 marker、dash、fill 或 custom path geometry */
@@ -150,7 +150,7 @@ export type PathDefinition<TPath extends IRPathBase = IRPathBase> = {
   /** 该 path 的完整 source subject schema */
   schema: ZodType<TPath>;
   /** 把该 path 编译成 Scene primitive；返回 null 表示该 path 不产生输出 */
-  compile: (context: PathCompileContext<TPath>) => PathCompileResult | null;
+  compile: (context: PathDefinitionCompileContext<TPath>) => PathCompileResult | null;
 };
 
 /** 注册表中擦除路径声明泛型后的路径定义 */

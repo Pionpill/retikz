@@ -50,10 +50,10 @@ const expandBoundsForShadow = (
 export const collectLayoutBounds = (
   current: AxisAlignedBounds | undefined,
   boundsPoints: ReadonlyArray<IRPosition>,
-  shadow?: CanonicalDropShadow,
+  canon?: CanonicalDropShadow,
 ): AxisAlignedBounds | undefined => {
   const bounds = boundsOf(boundsPoints);
-  return bounds === undefined ? current : mergeBounds(current, expandBoundsForShadow(bounds, shadow));
+  return bounds === undefined ? current : mergeBounds(current, expandBoundsForShadow(bounds, canon));
 };
 
 /** 将分配矩形转换为四角贡献点 */

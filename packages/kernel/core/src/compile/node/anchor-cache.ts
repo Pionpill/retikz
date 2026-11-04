@@ -20,14 +20,14 @@ const computeAnchor = (
   layout: CompiledBoundaryGeometry,
   anchorName: string,
   boundary: IRBoundary | undefined,
-  canonicalBoundary?: CanonicalNodeBoundary,
+  canon?: CanonicalNodeBoundary,
   state?: NodeBoundaryState,
 ): IRPosition => {
   if (ANGLE_RE.test(anchorName)) {
-    return angleBoundaryOf(layout, Number(anchorName), boundary, true, canonicalBoundary, state);
+    return angleBoundaryOf(layout, Number(anchorName), boundary, true, canon, state);
   }
 
-  return anchorOf(layout, anchorName, boundary, isAnchor(anchorName), canonicalBoundary, state);
+  return anchorOf(layout, anchorName, boundary, isAnchor(anchorName), canon, state);
 };
 
 /** 不经过 WeakMap 缓存解析视觉 shape 的边上比例点 */
@@ -60,11 +60,11 @@ export const resolveAnchorRefUncached = (
   layout: CompiledBoundaryGeometry,
   anchor: IRAnchorRef,
   boundary?: IRBoundary,
-  canonicalBoundary?: CanonicalNodeBoundary,
+  canon?: CanonicalNodeBoundary,
   state?: NodeBoundaryState,
 ): IRPosition => {
-  if (typeof anchor === 'number') return computeAnchor(layout, String(anchor), boundary, canonicalBoundary, state);
-  if (typeof anchor === 'string') return computeAnchor(layout, anchor, boundary, canonicalBoundary, state);
+  if (typeof anchor === 'number') return computeAnchor(layout, String(anchor), boundary, canon, state);
+  if (typeof anchor === 'string') return computeAnchor(layout, anchor, boundary, canon, state);
   return computeEdgePoint(layout, anchor.side, anchor.fraction);
 };
 
@@ -73,7 +73,7 @@ export const resolveAnchor = (
   layout: CompiledBoundaryGeometry,
   anchorName: string,
   boundary?: IRBoundary,
-  canonicalBoundary?: CanonicalNodeBoundary,
+  canon?: CanonicalNodeBoundary,
   state?: NodeBoundaryState,
 ): IRPosition => {
   let layoutCache = cache.get(layout);
@@ -86,7 +86,7 @@ export const resolveAnchor = (
   const cached = layoutCache.get(key);
   if (cached !== undefined) return cached;
 
-  const result = computeAnchor(layout, anchorName, boundary, canonicalBoundary, state);
+  const result = computeAnchor(layout, anchorName, boundary, canon, state);
   layoutCache.set(key, result);
 
   return result;
@@ -115,10 +115,10 @@ export const resolveAnchorRef = (
   layout: CompiledBoundaryGeometry,
   anchor: IRAnchorRef,
   boundary?: IRBoundary,
-  canonicalBoundary?: CanonicalNodeBoundary,
+  canon?: CanonicalNodeBoundary,
   state?: NodeBoundaryState,
 ): IRPosition => {
-  if (typeof anchor === 'number') return resolveAnchor(layout, String(anchor), boundary, canonicalBoundary, state);
-  if (typeof anchor === 'string') return resolveAnchor(layout, anchor, boundary, canonicalBoundary, state);
+  if (typeof anchor === 'number') return resolveAnchor(layout, String(anchor), boundary, canon, state);
+  if (typeof anchor === 'string') return resolveAnchor(layout, anchor, boundary, canon, state);
   return resolveEdgePoint(layout, anchor.side, anchor.fraction);
 };

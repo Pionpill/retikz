@@ -6,7 +6,7 @@ import type { Transform } from '../../contract';
 import type { CanonicalPathStep, CanonicalPath } from '../../resolve';
 import type { IRPosition, IRTarget } from '../../schemas';
 import { isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../shared';
-import type { BoundPathResolution, PathTargetContext, PathTargetResolver, TargetResolution } from './types';
+import type { BoundPathResolution, PathCompileContext, PathTargetResolver, TargetResolution } from './types';
 
 /** 通过调用方提供的解析器读取目标的局部坐标，无法解析时返回 null */
 const pointOfTarget = (
@@ -18,7 +18,7 @@ const pointOfTarget = (
 /** 优先获取目标的完整绑定；未提供绑定时读取坐标，参考点缺省时沿用局部点 */
 const bindTarget = (
   target: IRTarget,
-  context: PathTargetContext,
+  context: Partial<Pick<PathCompileContext, 'scopeChain' | 'targetResolver'>>,
   scopeChain: ReadonlyArray<Transform>,
 ): TargetResolution => {
   const bound = context.targetResolver?.bindTarget?.(target, scopeChain);
@@ -36,7 +36,7 @@ const bindTarget = (
  */
 const resolveSteps = (
   steps: ReadonlyArray<CanonicalPathStep>,
-  context: PathTargetContext,
+  context: Partial<Pick<PathCompileContext, 'scopeChain' | 'targetResolver'>>,
   targets: Map<string, TargetResolution>,
   prefix: PropertyPath,
 ): Array<CanonicalPathStep> => {
@@ -131,15 +131,18 @@ const resolveSteps = (
 };
 
 /** 在布局引用就绪后绑定路径目标，不重复解析样式和默认值 */
-export const bindPathTargets = (resolution: CanonicalPath, context: PathTargetContext): BoundPathResolution => {
+export const bindPathTargets = (
+  canon: CanonicalPath,
+  context: Partial<Pick<PathCompileContext, 'scopeChain' | 'targetResolver'>>,
+): BoundPathResolution => {
   const targets = new Map<string, TargetResolution>();
   const children =
-    resolution.properties.children === undefined
+    canon.properties.children === undefined
       ? undefined
-      : resolveSteps(resolution.properties.children, context, targets, resolution.irPath);
+      : resolveSteps(canon.properties.children, context, targets, canon.irPath);
   return {
-    ...resolution,
-    properties: children === undefined ? resolution.properties : { ...resolution.properties, children },
+    ...canon,
+    properties: children === undefined ? canon.properties : { ...canon.properties, children },
     targets,
   };
 };

@@ -141,8 +141,8 @@ export const createStrokeSamplingCollector = ({
   let activeStepIndex = -1;
   let activeStepKind: CanonicalPathStep['kind'] = 'move';
 
-  const emitLegacyLabel = (label: CanonicalPathLabel, sample: CurveSegmentSample): void => {
-    const result = emitLabelPrimitive(label, sample, {
+  const emitLegacyLabel = (canon: CanonicalPathLabel, sample: CurveSegmentSample): void => {
+    const result = emitLabelPrimitive(canon, sample, {
       measureText,
       round,
       rootFontSize,
@@ -172,20 +172,20 @@ export const createStrokeSamplingCollector = ({
     activeStepKind = stepKind;
   };
 
-  const collect = (step: CanonicalPathStep, sampleAt: StrokeSegmentSampler, segmentCount = 1): void => {
+  const collect = (canon: CanonicalPathStep, sampleAt: StrokeSegmentSampler, segmentCount = 1): void => {
     for (let index = 0; index < segmentCount; index += 1) {
       const start = index / segmentCount;
       const end = (index + 1) / segmentCount;
       addSampler(t => sampleAt(start + t * (end - start)), [start, end]);
     }
-    if (step.kind === 'move' || step.kind === 'cycle' || !('label' in step) || !step.label) return;
-    if (!step.label.interrupt) {
-      emitLegacyLabel(step.label, sampleAt(step.label.position));
+    if (canon.kind === 'move' || canon.kind === 'cycle' || !('label' in canon) || !canon.label) return;
+    if (!canon.label.interrupt) {
+      emitLegacyLabel(canon.label, sampleAt(canon.label.position));
       return;
     }
 
     labelRequests.push({
-      label: step.label,
+      label: canon.label,
       sourceStepIndex: activeStepIndex,
       stepKind: activeStepKind,
     });

@@ -50,12 +50,12 @@ const shapeBoundaryResolutionOf = (layout: CompiledBoundaryGeometry): CanonicalN
 const resolveBoundaryOf = (
   layout: CompiledBoundaryGeometry,
   boundary: IRBoundary | undefined,
-  canonicalBoundary?: CanonicalNodeBoundary,
+  canon?: CanonicalNodeBoundary,
   warn?: (code: string, message: string) => void,
   state?: NodeBoundaryState,
 ) => {
   const resolution =
-    canonicalBoundary ??
+    canon ??
     (boundary === 'shape'
       ? shapeBoundaryResolutionOf(layout)
       : boundary === undefined ||
@@ -82,11 +82,11 @@ export const boundaryPointOf = (
   layout: CompiledBoundaryGeometry,
   toward: Position,
   boundary?: IRBoundary,
-  canonicalBoundary?: CanonicalNodeBoundary,
+  canon?: CanonicalNodeBoundary,
   warn?: (code: string, message: string) => void,
   state?: NodeBoundaryState,
 ): Position => {
-  const { def, rect, params } = resolveBoundaryOf(layout, boundary, canonicalBoundary, warn, state);
+  const { def, rect, params } = resolveBoundaryOf(layout, boundary, canon, warn, state);
   const raw = def.computeBoundaryPoint(inflateRect(rect, layout.geometry.margin), toward, params);
   return snapshotProviderPosition(`Boundary '${boundaryKey(boundary)}' boundaryPoint`, raw);
 };
@@ -96,11 +96,11 @@ export const clipNodePolyline = (
   layout: CompiledBoundaryGeometry,
   points: ReadonlyArray<Position>,
   boundary?: IRBoundary,
-  canonicalBoundary?: CanonicalNodeBoundary,
+  canon?: CanonicalNodeBoundary,
   warn?: (code: string, message: string) => void,
   state?: NodeBoundaryState,
 ): Array<Position> => {
-  const { def, rect, params } = resolveBoundaryOf(layout, boundary, canonicalBoundary, warn, state);
+  const { def, rect, params } = resolveBoundaryOf(layout, boundary, canon, warn, state);
   const outer = inflateRect(rect, layout.geometry.margin);
   const center: Position = [outer.x, outer.y];
   const boundaryAt = (position: Position): Position =>
@@ -137,7 +137,7 @@ export const anchorOf = (
   name: string,
   boundary?: IRBoundary,
   applyMargin = false,
-  canonicalBoundary?: CanonicalNodeBoundary,
+  canon?: CanonicalNodeBoundary,
   state?: NodeBoundaryState,
 ): Position => {
   if (isAnchor(name)) {
@@ -171,7 +171,7 @@ export const anchorOf = (
       return p;
     }
 
-    const { def, rect, params } = resolveBoundaryOf(layout, boundary, canonicalBoundary, undefined, state);
+    const { def, rect, params } = resolveBoundaryOf(layout, boundary, canon, undefined, state);
     const anchorRect = applyMargin ? inflateRect(rect, layout.geometry.margin) : rect;
     const raw = def.resolveAnchor?.(anchorRect, name, params);
     const p =
@@ -204,13 +204,13 @@ export const angleBoundaryOf = (
   angleDeg: number,
   boundary?: IRBoundary,
   applyMargin = false,
-  canonicalBoundary?: CanonicalNodeBoundary,
+  canon?: CanonicalNodeBoundary,
   state?: NodeBoundaryState,
 ): Position => {
   const rad = angleDeg * DEG_TO_RAD;
   const lx = Math.cos(rad);
   const ly = Math.sin(rad);
-  const { def, rect, params } = resolveBoundaryOf(layout, boundary, canonicalBoundary, undefined, state);
+  const { def, rect, params } = resolveBoundaryOf(layout, boundary, canon, undefined, state);
   const boundaryRect = applyMargin ? inflateRect(rect, layout.geometry.margin) : rect;
   const rot = boundaryRect.rotate ?? 0;
   const cosR = Math.cos(rot);

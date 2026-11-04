@@ -65,13 +65,13 @@ type InputStrokeCursor = {
 };
 
 /** 判断 step 是否具有普通 `to` 目标 */
-export const isStrokeTargetStep = (step: CanonicalPathStep): step is StrokeTargetStep =>
-  step.kind !== 'cycle' &&
-  step.kind !== 'arc' &&
-  step.kind !== 'circlePath' &&
-  step.kind !== 'ellipsePath' &&
-  step.kind !== 'rectangle' &&
-  step.kind !== 'smooth';
+export const isStrokeTargetStep = (canon: CanonicalPathStep): canon is StrokeTargetStep =>
+  canon.kind !== 'cycle' &&
+  canon.kind !== 'arc' &&
+  canon.kind !== 'circlePath' &&
+  canon.kind !== 'ellipsePath' &&
+  canon.kind !== 'rectangle' &&
+  canon.kind !== 'smooth';
 
 /**
  * 创建 path stroke step 游标

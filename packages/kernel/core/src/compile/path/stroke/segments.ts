@@ -37,13 +37,13 @@ type SegmentStepLoweringContext = {
 };
 
 /** 判断 step 是否属于普通 segment family */
-export const isStrokeSegmentStep = (step: CanonicalPathStep): step is StrokeSegmentStep =>
-  step.kind === 'line' ||
-  step.kind === 'axis-line' ||
-  step.kind === 'curve' ||
-  step.kind === 'cubic' ||
-  step.kind === 'bend' ||
-  step.kind === 'fold';
+export const isStrokeSegmentStep = (canon: CanonicalPathStep): canon is StrokeSegmentStep =>
+  canon.kind === 'line' ||
+  canon.kind === 'axis-line' ||
+  canon.kind === 'curve' ||
+  canon.kind === 'cubic' ||
+  canon.kind === 'bend' ||
+  canon.kind === 'fold';
 
 /**
  * 将普通 segment step 降级为 path commands

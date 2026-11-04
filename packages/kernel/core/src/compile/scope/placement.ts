@@ -5,7 +5,7 @@ import { projectLayoutWithTransform, resolveAnchorRefUncached } from '../node';
 import type { CompiledBoundaryGeometry } from '../reference';
 import { BuiltinCompileWarningCode, applyTransformChain, composeScopeTransform } from '../shared';
 import { lowerScopeTransforms } from './transform';
-import type { InputScopeCompile, ScopeGeometryContext } from './types';
+import type { InputScopeCompile, ScopeCompileContext } from './types';
 
 /** 按 transform 失败来源选择 warning code */
 const getTransformWarningCode = (failed: IRTransform | undefined): BuiltinCompileWarningCode => {
@@ -57,7 +57,7 @@ const calculateTransformedSelfPoint = (
 /** children intrinsic layout 完成后解析 pivot，并生成最终 own chain */
 export const calculateScopePlacementTransforms = (
   child: InputScopeCompile,
-  context: ScopeGeometryContext,
+  context: Pick<ScopeCompileContext, 'positionContext' | 'irPath' | 'onWarn'>,
   intrinsicContext: CompiledBoundaryGeometry,
   positionTarget: IRPosition | undefined,
   preliminaryTransforms: Array<Transform> | undefined,
@@ -114,7 +114,7 @@ export const calculateScopePlacementTransforms = (
  */
 export const lowerPreliminaryScopeTransforms = (
   child: InputScopeCompile,
-  context: ScopeGeometryContext,
+  context: Pick<ScopeCompileContext, 'positionContext' | 'irPath' | 'onWarn'>,
 ): Array<Transform> | undefined => {
   const needsIntrinsicEnvelope = (child.transforms ?? []).some(transform => {
     if (transform.kind !== 'rotate' && transform.kind !== 'scale') return false;

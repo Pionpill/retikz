@@ -44,9 +44,9 @@ type EmitPathPrimitiveContext = {
 };
 
 /** 将路径步骤转换为共享的几何命令与采样数据 */
-export const lowerStrokePathGeometry = (resolution: CanonicalPath, context: EmitPathPrimitiveContext) => {
+export const lowerStrokePathGeometry = (canon: CanonicalPath, context: EmitPathPrimitiveContext) => {
   const { targetView, round, measureText = fallbackMeasurer, options: pathEmitOptions = {} } = context;
-  const { properties: path, irPath } = resolution;
+  const { properties: path, irPath } = canon;
   const canonicalSteps = path.children ?? [];
 
   const warn = (code: string, message: string, subPath: PropertyPath = []): void => {
@@ -302,10 +302,10 @@ export const lowerStrokePathGeometry = (resolution: CanonicalPath, context: Emit
 };
 
 /** 将标准描边几何编译为场景图元 */
-const emitCanonicalPathPrimitive = (resolution: CanonicalStrokePath, context: EmitPathPrimitiveContext) => {
+const emitCanonicalPathPrimitive = (canon: CanonicalStrokePath, context: EmitPathPrimitiveContext) => {
   const { round, measureText = fallbackMeasurer, options: pathEmitOptions = {} } = context;
-  const { properties: path, irPath, arrows: resolutionArrows, marks: resolutionMarks } = resolution;
-  const geometry = lowerStrokePathGeometry(resolution, context);
+  const { properties: path, irPath, arrows: resolutionArrows, marks: resolutionMarks } = canon;
+  const geometry = lowerStrokePathGeometry(canon, context);
   if (geometry === null) return null;
   const { commands, stepIndexes, boundsPoints, endpointSource, sampling, roundedCommands } = geometry;
   const { labelPrimitives: labelPrims, materializeStepLabels, sampleHostLabel } = sampling;
@@ -467,5 +467,5 @@ const emitCanonicalPathPrimitive = (resolution: CanonicalStrokePath, context: Em
 };
 
 /** 将已解析的 path 输出为路径图元 */
-export const emitPathPrimitive = (resolution: CanonicalStrokePath, context: EmitPathPrimitiveContext) =>
-  emitCanonicalPathPrimitive(resolution, context);
+export const emitPathPrimitive = (canon: CanonicalStrokePath, context: EmitPathPrimitiveContext) =>
+  emitCanonicalPathPrimitive(canon, context);

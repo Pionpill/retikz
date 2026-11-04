@@ -52,7 +52,7 @@ export type EmitLabelPrimitiveContext = {
  * @description 返回 label primitive 及其 bbox 外接点
  */
 export const emitLabelPrimitive = (
-  label: CanonicalPathLabel,
+  canon: CanonicalPathLabel,
   sample: CurveSegmentSample,
   context: EmitLabelPrimitiveContext,
 ): { primitive: ScenePrimitive; boundsPoints: Array<IRPosition> } => {
@@ -66,7 +66,7 @@ export const emitLabelPrimitive = (
   } = context;
 
   // label.font / textColor / opacity 已由 resolve/style 解析（fold scope labelDefault + 宿主 path 主色）
-  const font: CanonicalFont = resolveFont(label.font, {
+  const font: CanonicalFont = resolveFont(canon.font, {
     rootFontSize,
     inheritedFont: { size: rootFontSize },
   });
@@ -74,18 +74,18 @@ export const emitLabelPrimitive = (
   const fontFamily = font.family;
   const fontWeight = font.weight;
   const fontStyle = font.style;
-  const side = label.side;
-  const sloped = label.sloped === true;
-  const sideDistance = label.distance;
+  const side = canon.side;
+  const sloped = canon.sloped === true;
+  const sideDistance = canon.distance;
   const sideOffset = placementCtx?.sideOffset ?? sideDistance;
-  const labelOpacity = combineOpacity(label.opacity, hostOpacity);
+  const labelOpacity = combineOpacity(canon.opacity, hostOpacity);
 
   const gatingOn = texCtx?.gatingOn ?? false;
-  const sourceLines = Array.isArray(label.text)
-    ? label.text
-    : typeof label.text === 'string'
-      ? label.text.split('\n')
-      : [label.text];
+  const sourceLines = Array.isArray(canon.text)
+    ? canon.text
+    : typeof canon.text === 'string'
+      ? canon.text.split('\n')
+      : [canon.text];
   const resolvedLines = sourceLines.map(text =>
     resolveTextLine(text, {
       rootFontSize,
@@ -140,7 +140,7 @@ export const emitLabelPrimitive = (
       return emitInlineLine(
         laid,
         {
-          color: label.textColor,
+          color: canon.textColor,
           opacity: labelOpacity,
           segments: resolvedLines[index].segments,
         },
@@ -228,7 +228,7 @@ export const emitLabelPrimitive = (
     lineHeight: emittedLineHeight,
     measuredWidth: round(measuredWidth),
     measuredHeight: round(measuredHeight),
-    fill: label.textColor ?? 'currentColor',
+    fill: canon.textColor ?? 'currentColor',
   };
   if (fontFamily !== undefined) textPrim.fontFamily = fontFamily;
   if (fontWeight !== undefined) textPrim.fontWeight = fontWeight;
