@@ -7,7 +7,7 @@ import { rect } from '../../shared/geometry';
 import { emitCompiledDrawing } from '../scene';
 import { outerRectOf } from './anchors';
 import { emitCompiledNodeText } from './emit';
-import { labelExtentPoints } from './label';
+import { labelExtentPoints } from './label-geometry';
 import type { CompiledNode } from './types';
 
 /** 从最终节点结果组装图元与边界，不访问 canon、Definition 或测量服务 */

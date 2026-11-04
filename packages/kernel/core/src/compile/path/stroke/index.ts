@@ -1,6 +1,7 @@
 export * from './commands';
 export * from './decorations';
 export * from './emit';
+export * from './geometry';
 export * from './marks';
 export * from './output';
 export * from './rounded-corners';

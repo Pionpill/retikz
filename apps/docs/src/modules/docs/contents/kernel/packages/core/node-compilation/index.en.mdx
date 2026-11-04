@@ -9,7 +9,7 @@ Start with [Node basic usage](/kernel/components/node/usage) and [text syntax](/
 
 ## Overall flow
 
-Node layout determines the space needed by content, computes shape dimensions, and then places the body and attached labels. `CanonicalNode` contains effective node configuration and bound shape and boundary definitions. `CompiledNode` retains final geometry, layout, and drawing data. `CompiledNodeLayout` temporarily combines capability bindings with geometry for computation and connection queries.
+Node layout determines the space needed by content, computes shape dimensions, and then places the body and attached labels. `CanonicalNode` contains effective node configuration and bound shape and boundary definitions. `CompiledNode` retains final geometry, layout, and drawing data. `CompiledNodeLayout` is the measured and positioned layout result. It retains bindings needed for geometry queries and can be passed into compilation as prepared layout.
 
 <ComponentPreview files="layout-overview" size="xs" hideCode type="flow" />
 
@@ -23,7 +23,7 @@ The text is first split into the lines that will actually be displayed, called *
   sources={[
     {
       label: 'layoutNode: layout entry point',
-      path: 'packages/kernel/core/src/compile/node/layout.ts',
+      path: 'packages/kernel/core/src/compile/node/layout/layout.ts',
     },
     { label: 'CanonicalNode: layout input', path: 'packages/kernel/core/src/resolve/node/types.ts' },
     {
@@ -51,9 +51,9 @@ Within one plain-text layout pass, repeated measurements of the same text and fo
     { label: 'resolveTextMetrics', path: 'packages/kernel/core/src/resolve/text/metrics.ts' },
     {
       label: 'Content branches and physical lines',
-      path: 'packages/kernel/core/src/compile/node/content/layout.ts',
+      path: 'packages/kernel/core/src/compile/node/layout/content.ts',
     },
-    { label: 'Plain-text wrapping', path: 'packages/kernel/core/src/compile/node/content/text.ts' },
+    { label: 'Plain-text wrapping', path: 'packages/kernel/core/src/compile/node/layout/text.ts' },
     { label: 'Mixed-line measurement and baseline alignment', path: 'packages/kernel/core/src/compile/text/layout.ts' },
   ]}
 />
@@ -91,7 +91,7 @@ Asymmetric padding can also make the visual box center differ from the content c
   sources={[
     {
       label: 'Content budgets, circumscribe, and size constraints',
-      path: 'packages/kernel/core/src/compile/node/layout.ts',
+      path: 'packages/kernel/core/src/compile/node/layout/layout.ts',
     },
     { label: 'Shape containment contract', path: 'packages/kernel/core/src/contract/node/shape.ts' },
   ]}
@@ -111,11 +111,11 @@ When placement aligns a node's own anchor with a target, Core first needs a prov
 
 <SourceLinks
   sources={[
-    { label: 'Line height and baseline offsets', path: 'packages/kernel/core/src/compile/node/content/layout.ts' },
-    { label: 'Label measurement and placement', path: 'packages/kernel/core/src/compile/node/label/layout.ts' },
+    { label: 'Line height and baseline offsets', path: 'packages/kernel/core/src/compile/node/layout/content.ts' },
+    { label: 'Label measurement and placement', path: 'packages/kernel/core/src/compile/node/layout/label.ts' },
     {
       label: 'Label clearance and visual extents',
-      path: 'packages/kernel/core/src/compile/node/label/geometry.ts',
+      path: 'packages/kernel/core/src/compile/node/label-geometry.ts',
     },
     {
       label: 'Physical baselines shared by emission and observation',
@@ -153,7 +153,7 @@ The flow below follows a plain-text node. The left side shows layout stages; the
 
 <ComponentPreview files="layout-implementation" size="xl" hideCode type="flow" />
 
-Start reading at `compileNode`. It consumes `CanonicalNode`, decides whether measurements can be reused, and calls `layoutNode` for text layout, shape constraints, and label placement. `CompiledNodeLayout` temporarily combines capabilities and geometry for computation and connection queries. The final `CompiledNode` separates `geometry`, `layout`, `style`, `text`, `labels`, and `animations`; body text further separates measured layout from drawing styles. Output no longer reads the complete canon. Connection queries that need a Definition explicitly combine canon bindings with compiled geometry.
+Start reading at `compileNode`. It consumes `CanonicalNode` and optional prepared results, calling `layoutNode` only when layout is absent; Reconciler decides whether results can be reused. The `layout/` directory follows internal phases: `content.ts` lays out content, `sizing.ts` handles shape dimensions and width feedback, `label.ts` measures and places labels, and `placement.ts` resolves anchor positioning. `layout.ts` coordinates these steps. Width-feedback attempts share text measurements within one layout call; each new call starts a fresh cache. The final `CompiledNode` separates geometry, metrics, metadata, styles, text, labels, and animations, and retains the shape and boundary bindings needed by later geometry queries.
 
 Traversal then projects geometry into world space for named references. Emission turns the local layout into shape, body-text, and label primitives. Reference geometry in the namespace and local primitives in Scene have different consumers; drawing coordinates do not all need to be expanded into world coordinates beforehand.
 

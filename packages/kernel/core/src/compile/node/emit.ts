@@ -2,7 +2,7 @@ import type { CenteredBox } from '@retikz/math';
 import { RAD_TO_DEG } from '@retikz/math';
 
 import type { CompiledShapeStyle, GroupPrimitive, ScenePrimitive, TextLine } from '../../contract';
-import type { CanonicalNodeLabel, CanonicalNode } from '../../resolve';
+import type { CanonicalNode, CanonicalNodeLabel } from '../../resolve';
 import {
   createLayoutProbeRecoverableError,
   isFatalProbeError,
@@ -11,10 +11,10 @@ import {
 } from '../../resolve';
 import type { RegisterPaint } from '../resource';
 import { snapshotScenePrimitives } from '../shared';
-import { emitInlineLine, calculateAlphabeticBaselineY } from '../text';
-import { DEFAULT_LINE_HEIGHT_FACTOR } from './content';
-import { labelBorderPoint, labelBoxEdgeToward, labelCenter } from './label';
-import type { CompiledNodeTextStyle, CompiledNodeLayout, NodeLabelLayout } from './types';
+import { calculateAlphabeticBaselineY, emitInlineLine } from '../text';
+import { labelBorderPoint, labelBoxEdgeToward, labelCenter } from './label-geometry';
+import { DEFAULT_LINE_HEIGHT_FACTOR } from './layout';
+import type { CompiledNodeLayout, CompiledNodeTextStyle, NodeLabelLayout } from './types';
 
 /** 节点形状绘制使用的有效样式 */
 type NodeShapeProperties = Pick<

@@ -30,11 +30,11 @@ describe('解析源结构', () => {
     expect(stroke).not.toContain('IRPathBase');
     expect(stroke).not.toContain('resolution?:');
     expect(stroke).not.toContain('emitResolvedPathPrimitive');
-    expect(stroke).toMatch(/export const emitPathPrimitive = \(\s*resolution:\s*CanonicalStrokePath/u);
+    expect(stroke).toMatch(/export const emitPathPrimitive = \(\s*canon:\s*CanonicalStrokePath/u);
   });
 
   it('使节点布局不受提供者查找编排的影响', () => {
-    const text = source('src/compile/node/layout.ts');
+    const text = source('src/compile/node/layout/layout.ts');
 
     expect(text).not.toContain('getProviderDefinition(');
     expect(text).not.toContain('resolveShapeRegistry(');
@@ -65,9 +65,9 @@ describe('解析源结构', () => {
 
     const compileText = sourceFiles('src/compile/text').map(source).join('\n');
     const nodeLayout = [
-      source('src/compile/node/layout.ts'),
-      source('src/compile/node/content/layout.ts'),
-      source('src/compile/node/label/layout.ts'),
+      source('src/compile/node/layout/layout.ts'),
+      source('src/compile/node/layout/content.ts'),
+      source('src/compile/node/layout/label.ts'),
     ].join('\n');
     const pathLabel = source('src/compile/path/host/label.ts');
 

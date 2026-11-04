@@ -17,6 +17,8 @@ description: 追踪 Core 如何把路径目标和步骤转为几何命令，再�
 
 本页以内置描边路径为主线。自定义 Path 通过自己的 Definition 输出图元。
 
+实现按内部步骤拆分：`definition.ts` 为单次 Definition 调用组装能力，`host/callbacks.ts` 管理标签回调与边界贡献，`stroke/geometry.ts` 生成路径命令，`stroke/step.ts` 求值相对目标，`stroke/emit.ts` 完成描边、箭头、标签和图元输出。只有存在标签断口时才计算路径切分片段。
+
 <SourceLinks
   sources={[
     { label: '路径解析入口', path: 'packages/kernel/core/src/resolve/path/resolve.ts' },
@@ -177,7 +179,7 @@ description: 追踪 Core 如何把路径目标和步骤转为几何命令，再�
 
 <SourceLinks
   sources={[
-    { label: '步骤循环与后处理顺序', path: 'packages/kernel/core/src/compile/path/stroke/emit.ts' },
+    { label: '步骤循环与后处理顺序', path: 'packages/kernel/core/src/compile/path/stroke/geometry.ts' },
     { label: '子路径拆分与端点箭头归属', path: 'packages/kernel/core/src/compile/path/stroke/split.ts' },
     { label: '图元组合与路径变换', path: 'packages/kernel/core/src/compile/path/stroke/output.ts' },
     { label: '输出契约', path: 'packages/kernel/core/src/compile/path/types.ts' },

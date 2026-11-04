@@ -17,6 +17,8 @@ Both examples connect A to B. The left uses center coordinates; the right uses n
 
 This page follows the built-in stroke path. Custom Path definitions emit primitives through their own Definitions.
 
+The implementation separates internal phases: `definition.ts` assembles capabilities for one Definition call; `host/callbacks.ts` manages label callbacks and bounds contributions; `stroke/geometry.ts` generates path commands; `stroke/step.ts` evaluates relative targets; and `stroke/emit.ts` emits strokes, arrows, labels, and primitives. Path fragments are computed only when label gaps exist.
+
 <SourceLinks
   sources={[
     { label: 'Path resolution entry', path: 'packages/kernel/core/src/resolve/path/resolve.ts' },
@@ -204,7 +206,7 @@ An unresolved ordinary target or a missing required predecessor produces a warni
 
 <SourceLinks
   sources={[
-    { label: 'Step loop and post-processing order', path: 'packages/kernel/core/src/compile/path/stroke/emit.ts' },
+    { label: 'Step loop and post-processing order', path: 'packages/kernel/core/src/compile/path/stroke/geometry.ts' },
     {
       label: 'Subpaths and endpoint-arrow ownership',
       path: 'packages/kernel/core/src/compile/path/stroke/split.ts',

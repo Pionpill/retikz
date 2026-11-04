@@ -1,10 +1,10 @@
 import type { TextMeasurer } from '../../../contract';
-import { resolveTextMetrics } from '../../../resolve';
 import type { CanonicalNodeLabel } from '../../../resolve';
+import { resolveTextMetrics } from '../../../resolve';
 import { layoutInlineLine } from '../../text';
-import { DEFAULT_LINE_HEIGHT_FACTOR } from '../content';
+import { resolveNodeLabelGeometry } from '../label-geometry';
 import type { CompiledNodeLayout, MeasuredNodeLabel, NodeLabelLayout, NodeTextLayoutContext } from '../types';
-import { resolveNodeLabelGeometry } from './geometry';
+import { DEFAULT_LINE_HEIGHT_FACTOR } from './text';
 
 /** 只为 Node label 包装规范化文字度量 */
 const nodeLabelMeasurer =
@@ -17,6 +17,7 @@ export const measureNodeLabels = (
   input: NodeTextLayoutContext,
 ): Array<{ layout: MeasuredNodeLabel; properties: CanonicalNodeLabel }> | undefined => {
   const { canon, measureText, tex: texLowering } = input;
+  if (canon.labels.length === 0) return undefined;
   const inlineWarn = texLowering?.warn ?? ((): void => {});
   const measureLabelText = nodeLabelMeasurer(measureText);
 

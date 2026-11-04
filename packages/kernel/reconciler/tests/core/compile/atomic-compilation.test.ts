@@ -17,6 +17,39 @@ import { flattenPrims } from '../../../../core/tests/helpers/flatten';
 import { createSharedCompileContext } from '../../../src/compile';
 
 describe('原子编译阶段', () => {
+  it('宽度反馈重排复用同次文字测量，新一轮布局重新测量', () => {
+    const shared = createSharedCompileContext({ fontSize: 10 });
+    const canon = resolveNode(
+      { type: 'node', text: 'one two three four' },
+      {
+        ...shared.registries,
+        ...shared.layout,
+        scopeDefaults: {},
+        mode: 'light',
+        gatingOn: false,
+        irPath: [],
+        warn: () => {},
+      },
+    );
+    const calls = new Map<string, number>();
+    const layout = () =>
+      layoutNode(canon, {
+        measureText: (text, font) => {
+          const key = JSON.stringify([text, font]);
+          calls.set(key, (calls.get(key) ?? 0) + 1);
+          return { width: text.length * 5, height: 10 };
+        },
+        positionContext: createPositionEvaluateContext({ lookupReference: () => undefined, nodeDistance: 10 }),
+        allocationWidthProposal: { kind: LayoutAxisProposalKind.Exact, value: 60 },
+      });
+    const first = layout();
+    expect(first.geometry.contentSize.height).toBeGreaterThan(12);
+    expect(calls.size).toBeGreaterThan(1);
+    expect([...calls.values()].every(count => count === 1)).toBe(true);
+    expect(layout()).toEqual(first);
+    expect([...calls.values()].every(count => count === 2)).toBe(true);
+  });
+
   it('Scope 消费提前冻结的放置数据，与本次直接计算结果一致', () => {
     const shared = createSharedCompileContext();
     const input: IRScope = { type: 'scope', transforms: [{ kind: 'translate', x: 10, y: 20 }], children: [] };
