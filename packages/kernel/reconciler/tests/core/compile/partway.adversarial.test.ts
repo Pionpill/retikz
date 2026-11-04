@@ -191,7 +191,7 @@ describe('between 在带 scale / 复合 transform 的 scope 内投影到正确�
   it('端点引用 scope 外节点：between 在 scope 内但端点是全局节点，投影正确', () => {
     // 顶层 A=[0,0] B=[200,0]（全局）。scope scale(2) 内 between({id:A},{id:B}) t=0.5。
     // refPointOfTarget 拿到全局中点 [100,0]；resolveBetweenGlobal 返回全局 [100,0]；
-    // resolvePosition 反投影回局部 [50,0]；caller applyTransformChain(scale2) → [100,0]。
+    // evaluatePosition 反投影回局部 [50,0]；caller applyTransformChain(scale2) → [100,0]。
     // 即结果应为全局中点 [100,0]，不受 scope scale 二次缩放。
     const ir = scene([
       { type: 'coordinate', id: 'A', position: [0, 0] },

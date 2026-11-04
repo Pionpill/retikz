@@ -1,5 +1,5 @@
-import type { PositionTargetResolveContext, Transform } from '@retikz/core';
-import { createPositionResolveContext, resolveNodeBoundary } from '@retikz/core';
+import type { PositionTargetEvaluateContext, Transform } from '@retikz/core';
+import { createPositionEvaluateContext, resolveNodeBoundary } from '@retikz/core';
 
 import type { CompileRuntime } from '../../runtime';
 
@@ -7,10 +7,10 @@ import type { CompileRuntime } from '../../runtime';
 export const createTreePositionContext = (
   runtime: CompileRuntime,
   scopeChain: ReadonlyArray<Transform>,
-): PositionTargetResolveContext =>
-  createPositionResolveContext({
+): PositionTargetEvaluateContext =>
+  createPositionEvaluateContext({
     nodeBoundaryStore: runtime.state.workspace.nodeBoundaryStore,
-    lookupReference: id => runtime.state.execution.namespaceStack.lookupReference(id),
+    lookupReference: (id, kind) => runtime.state.execution.namespaceStack.lookupReference(id, kind),
     nodeDistance: runtime.context.layout.nodeDistance,
     transformChain: scopeChain,
     resolveExplicitBoundary: (boundary, referenceContext) =>

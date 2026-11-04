@@ -1,4 +1,4 @@
-import type { CompileOccurrenceLocator, IRChild, SceneClipPath, Transform } from '@retikz/core';
+import type { CompileOccurrenceLocator, IRChild } from '@retikz/core';
 
 import type { CompileOwnerKey } from '../../provenance';
 import type { SubtreeCompileRuntime } from '../runtime';
@@ -22,16 +22,10 @@ export type ScopeLayoutPlaceholderContext = {
 
 /** 将已编译的 Scope 子树封装为场景分组所需的坐标、裁剪与身份上下文 */
 export type EmitScopeGroupContext = {
-  /** 当前作用域在父层子项中的索引 */
-  index: number;
-  /** 施加于该作用域场景分组的变换链 */
-  scopeTransforms: ReadonlyArray<Transform>;
   /** 已收集的作用域子图元及待回填占位项 */
   scopePrimitives: Array<InternalScenePrimitive>;
   /** 接收作用域输出和布局贡献的父遍历帧 */
   frame: SubtreeCompileRuntime;
-  /** runtime Scope 预检阶段已生成且尚未登记的裁剪路径 */
-  resolvedClipPath?: SceneClipPath;
   /** Scope child 的 semantic owner */
   semanticOwner?: CompileOwnerKey;
 };

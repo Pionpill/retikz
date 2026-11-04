@@ -4,7 +4,7 @@ import { isFinitePoint } from '@retikz/math';
 
 import type { ScenePrimitive, TextMeasurer } from '../../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
-import type { CanonicalStep, PathResolution, StrokePathResolution } from '../../../resolve';
+import type { CanonicalPathStep, CanonicalPath, CanonicalStrokePath } from '../../../resolve';
 import type { IRPosition, IRTarget } from '../../../schemas';
 import { isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../../shared';
 import type { RegisterPaint } from '../../resource';
@@ -44,9 +44,9 @@ type EmitPathPrimitiveContext = {
 };
 
 /** 将路径步骤转换为共享的几何命令与采样数据 */
-export const lowerStrokePathGeometry = (resolution: PathResolution, context: EmitPathPrimitiveContext) => {
+export const lowerStrokePathGeometry = (resolution: CanonicalPath, context: EmitPathPrimitiveContext) => {
   const { targetView, round, measureText = fallbackMeasurer, options: pathEmitOptions = {} } = context;
-  const { path, irPath } = resolution;
+  const { properties: path, irPath } = resolution;
   const canonicalSteps = path.children ?? [];
 
   const warn = (code: string, message: string, subPath: PropertyPath = []): void => {
@@ -245,7 +245,7 @@ export const lowerStrokePathGeometry = (resolution: PathResolution, context: Emi
         throw new RetikzCoreError(RetikzCoreErrorCode.Compile, 'Axis-line produced a non-finite projected endpoint.');
       }
 
-      const projectedStep: Extract<CanonicalStep, { kind: 'axis-line' }> = { ...step, to: projected };
+      const projectedStep: Extract<CanonicalPathStep, { kind: 'axis-line' }> = { ...step, to: projected };
       cursor.setTargetAt(i, projectedStep, projected);
       step = projectedStep;
       cursor.relativeBaseline = projected;
@@ -302,9 +302,9 @@ export const lowerStrokePathGeometry = (resolution: PathResolution, context: Emi
 };
 
 /** 将标准描边几何编译为场景图元 */
-const emitCanonicalPathPrimitive = (resolution: StrokePathResolution, context: EmitPathPrimitiveContext) => {
+const emitCanonicalPathPrimitive = (resolution: CanonicalStrokePath, context: EmitPathPrimitiveContext) => {
   const { round, measureText = fallbackMeasurer, options: pathEmitOptions = {} } = context;
-  const { path, irPath, arrows: resolutionArrows, marks: resolutionMarks } = resolution;
+  const { properties: path, irPath, arrows: resolutionArrows, marks: resolutionMarks } = resolution;
   const geometry = lowerStrokePathGeometry(resolution, context);
   if (geometry === null) return null;
   const { commands, stepIndexes, boundsPoints, endpointSource, sampling, roundedCommands } = geometry;
@@ -467,5 +467,5 @@ const emitCanonicalPathPrimitive = (resolution: StrokePathResolution, context: E
 };
 
 /** 将已解析的 path 输出为路径图元 */
-export const emitPathPrimitive = (resolution: StrokePathResolution, context: EmitPathPrimitiveContext) =>
+export const emitPathPrimitive = (resolution: CanonicalStrokePath, context: EmitPathPrimitiveContext) =>
   emitCanonicalPathPrimitive(resolution, context);

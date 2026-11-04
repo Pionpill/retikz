@@ -95,13 +95,13 @@ const snapshotPathCompileResult = (
 
 /** 消费已完成配置解析与目标绑定的路径，并提供内置 stroke emit 回调 */
 export const emitDefinedPath = (
-  pendingPath: InputPathCompilation,
+  pendingPath: Omit<InputPathCompilation, 'path'>,
   resolution: BoundPathResolution,
   targetResolver: PathTargetResolver,
   context: PathHostCompileContext,
 ) => {
-  const { path, scopeChain, scopeDefaults, theme } = pendingPath;
-  const { irPath, definition, targets, path: canonicalPath, source: pathSource } = resolution;
+  const { scopeChain, scopeDefaults, theme } = pendingPath;
+  const { irPath, definition, targets, properties: canonicalPath } = resolution;
   const targetWarn = (code: string, message: string, node?: { irPath?: PropertyPath }): void =>
     context.onWarn({ code, message, path: node?.irPath ?? irPath });
   const targetView = pathTargetViewOf(targets, targetWarn, context.nodeBoundaryStore, context.resolveTransform);
@@ -124,11 +124,25 @@ export const emitDefinedPath = (
     rootFontSize: context.rootFontSize,
   };
   const resolutionOf = (nextPath: IRPathBase): BoundPathResolution =>
-    nextPath === path
-      ? resolution
-      : bindPathTargets(
-          resolvePathValue(nextPath, {
-            scopeDefaults,
+    bindPathTargets(
+      resolvePathValue(nextPath, {
+        scopeDefaults,
+        mode: theme.mode,
+        pathRegistry: context.registries.pathRegistry,
+        arrowRegistry: context.registries.arrowRegistry,
+        markRegistry: context.registries.markRegistry,
+        patternRegistry: context.registries.patternRegistry,
+        round: context.round,
+        irPath,
+      }),
+      { scopeChain, targetResolver },
+    );
+
+  const emitStroke = (nextPath?: IRPathBase) => {
+    const sourceResolution = nextPath === undefined ? resolution : resolutionOf(nextPath);
+    const strokeResolution =
+      sourceResolution.stroke === undefined
+        ? resolveStrokePathProviders(sourceResolution, {
             mode: theme.mode,
             pathRegistry: context.registries.pathRegistry,
             arrowRegistry: context.registries.arrowRegistry,
@@ -136,22 +150,8 @@ export const emitDefinedPath = (
             patternRegistry: context.registries.patternRegistry,
             round: context.round,
             irPath,
-          }),
-          { scopeChain, targetResolver },
-        );
-
-  const emitStroke = (nextPath?: IRPathBase) => {
-    const source = nextPath ?? path;
-    const sourceResolution = resolutionOf(source);
-    const strokeResolution = resolveStrokePathProviders(sourceResolution, {
-      mode: theme.mode,
-      pathRegistry: context.registries.pathRegistry,
-      arrowRegistry: context.registries.arrowRegistry,
-      markRegistry: context.registries.markRegistry,
-      patternRegistry: context.registries.patternRegistry,
-      round: context.round,
-      irPath,
-    });
+          })
+        : { ...sourceResolution, ...sourceResolution.stroke };
     const emittedTargetView = pathTargetViewOf(
       strokeResolution.targets,
       targetWarn,
@@ -171,21 +171,28 @@ export const emitDefinedPath = (
   };
 
   const materializePath = (input?: Readonly<{ children?: ReadonlyArray<IRStep> }>) => {
-    const pathWithoutKindOptions = { ...path };
-    delete pathWithoutKindOptions.kindOptions;
-    const source: IRPathBase = {
-      ...pathWithoutKindOptions,
-      kind: 'stroke',
-      children: (input?.children ?? path.children ?? []).map(step =>
-        'label' in step ? { ...step, label: undefined } : step,
-      ),
-      label: undefined,
-      marks: undefined,
-      style: { ...path.style, color: undefined, fill: undefined, stroke: undefined, strokeWidth: undefined },
-      rotate: undefined,
-      scale: undefined,
+    const base =
+      input?.children === undefined
+        ? resolution
+        : resolutionOf({
+            type: 'path',
+            kind: 'stroke',
+            children: input.children.map(step => ('label' in step ? { ...step, label: undefined } : step)),
+          });
+    const emittedResolution = {
+      ...base,
+      properties: {
+        ...base.properties,
+        children: base.properties.children?.map(step => ('label' in step ? { ...step, label: undefined } : step)),
+        label: undefined,
+        marks: undefined,
+        fill: undefined,
+        stroke: undefined,
+        strokeWidth: 1,
+        rotate: undefined,
+        scale: undefined,
+      },
     };
-    const emittedResolution = resolutionOf(source);
     const geometry = lowerStrokePathGeometry(emittedResolution, {
       targetView: pathTargetViewOf(
         emittedResolution.targets,
@@ -205,20 +212,21 @@ export const emitDefinedPath = (
   const resolvedStroke =
     canonicalPath.stroke === undefined ? undefined : emitOptions.registerPaint(canonicalPath.stroke);
   const appearance: CompiledPathAppearance = Object.freeze({
+    strokeEnabled: canonicalPath.strokeEnabled,
     ...(canonicalPath.color === undefined ? {} : { color: canonicalPath.color }),
     ...(resolvedFill === undefined ? {} : { fill: resolvedFill }),
     ...(resolvedStroke === undefined ? {} : { stroke: resolvedStroke }),
-    ...(canonicalPath.fillRule === undefined ? {} : { fillRule: canonicalPath.fillRule }),
+    fillRule: canonicalPath.fillRule,
     strokeWidth: canonicalPath.strokeWidth,
-    ...(canonicalPath.dashPattern === undefined ? {} : { dashPattern: canonicalPath.dashPattern }),
-    ...(canonicalPath.dashOffset === undefined ? {} : { dashOffset: canonicalPath.dashOffset }),
-    ...(canonicalPath.lineCap === undefined ? {} : { lineCap: canonicalPath.lineCap }),
-    ...(canonicalPath.lineJoin === undefined ? {} : { lineJoin: canonicalPath.lineJoin }),
-    ...(canonicalPath.opacity === undefined ? {} : { opacity: canonicalPath.opacity }),
-    ...(canonicalPath.fillOpacity === undefined ? {} : { fillOpacity: canonicalPath.fillOpacity }),
-    ...(canonicalPath.strokeOpacity === undefined ? {} : { strokeOpacity: canonicalPath.strokeOpacity }),
+    ...(canonicalPath.dashPattern.length === 0 ? {} : { dashPattern: canonicalPath.dashPattern }),
+    dashOffset: canonicalPath.dashOffset,
+    lineCap: canonicalPath.lineCap,
+    lineJoin: canonicalPath.lineJoin,
+    opacity: canonicalPath.opacity,
+    fillOpacity: canonicalPath.fillOpacity,
+    strokeOpacity: canonicalPath.strokeOpacity,
     ...(canonicalPath.shadow === undefined ? {} : { shadow: canonicalPath.shadow }),
-    ...(canonicalPath.blendMode === undefined ? {} : { blendMode: canonicalPath.blendMode }),
+    blendMode: canonicalPath.blendMode,
   });
 
   const hostLabelBoundsPoints: Array<IRPosition> = [];
@@ -278,14 +286,14 @@ export const emitDefinedPath = (
         },
       });
       hostLabelBoundsPoints.push(...emitted.boundsPoints);
-      if (path.meta !== undefined) emitted.primitive.meta = path.meta;
+      if (canonicalPath.meta !== undefined) emitted.primitive.meta = canonicalPath.meta;
 
       return emitted.primitive;
     });
 
   const compilePath = definition.compile as (context: PathCompileContext) => PathCompileResult | null;
   const produced = compilePath({
-    path: pathSource,
+    path: canonicalPath,
     materializePath,
     emitStroke,
     emitHostLabels,

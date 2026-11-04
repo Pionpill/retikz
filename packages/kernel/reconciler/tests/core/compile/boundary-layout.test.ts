@@ -7,7 +7,7 @@ import {
   projectLayoutWithTransform,
   resolveAnchor,
 } from '../../../../core/src/compile/node';
-import { createPositionResolveContext } from '../../../../core/src/compile/reference';
+import { createPositionEvaluateContext } from '../../../../core/src/compile/reference';
 import { composeScopeTransform } from '../../../../core/src/compile/shared';
 import { resolveBoundaryRegistry, resolvePatternRegistry, resolveShapeRegistry } from '../../../../core/src/providers';
 import { resolveNode } from '../../../../core/src/resolve';
@@ -21,6 +21,7 @@ const measureText = (): { width: number; height: number; ascent: number } => ({
 const layoutOf = (source: Parameters<typeof resolveNode>[0], shapes = resolveShapeRegistry()) => {
   const boundaries = resolveBoundaryRegistry();
   const resolution = resolveNode(source, {
+    nodeDistance: 24,
     rootFontSize: 16,
     gatingOn: false,
     scopeDefaults: {},
@@ -36,11 +37,11 @@ const layoutOf = (source: Parameters<typeof resolveNode>[0], shapes = resolveSha
 
   return layoutNode(resolution, {
     measureText,
-    positionContext: createPositionResolveContext({ lookupReference: () => undefined, nodeDistance: 24 }),
-  }).layout;
+    positionContext: createPositionEvaluateContext({ lookupReference: () => undefined, nodeDistance: 24 }),
+  }).context;
 };
 
-describe('CompiledNodeLayout 边界/形状', () => {
+describe('NodeGeometryContext 边界/形状', () => {
   it('连接面消费上下文在布局投影和引用视图间共享缓存，并区分几何位置', () => {
     const shapes = new Map(resolveShapeRegistry());
     const rectangle = shapes.get('rectangle')!;
@@ -79,7 +80,7 @@ describe('CompiledNodeLayout 边界/形状', () => {
     const shapes = resolveShapeRegistry();
     const layout = layoutOf({ type: 'node', id: 'a', shape: 'rectangle', position: [0, 0] }, shapes);
 
-    expect(layout.boundarySource).toBeUndefined();
+    expect(layout.boundary.definition).toBe(layout.shape.definition);
     expect(layout.shape.definition).toBe(shapes.get('rectangle'));
   });
 
@@ -90,7 +91,7 @@ describe('CompiledNodeLayout 边界/形状', () => {
       shapes,
     );
 
-    expect(layout.boundarySource).toBe('circle');
+    expect(layout.boundary.name).toBe('circle');
     expect(layout.shape.definition).toBe(shapes.get('rectangle'));
   });
 
@@ -117,9 +118,9 @@ describe('CompiledNodeLayout 边界/形状', () => {
       layout: { minimumSize: { width: 40, height: 20 } },
     });
     const toward = [100, 0] as [number, number];
-    const clipped = boundaryPointOf(layout, toward, layout.boundarySource);
+    const clipped = boundaryPointOf(layout, toward, undefined);
 
     expect(clipped[0]).toBeGreaterThan(layout.geometry.rect.x + layout.geometry.rect.width / 2);
-    expect(resolveAnchor(layout, 'right', layout.boundarySource)).toEqual(clipped);
+    expect(resolveAnchor(layout, 'right', undefined)).toEqual(clipped);
   });
 });

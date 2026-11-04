@@ -1,7 +1,7 @@
 import type { IRFont } from '../../schemas';
 import { isMathSegment, parseInlineSegments, resolveFont, resolveTextLine, resolveTextLineHeight } from '../text';
 import type { ColorResolvedTextLine, TextLineResolution } from '../text';
-import type { CanonicalNode, NodeLabelColorSource, NodeResolveContext } from './types';
+import type { NodeLabelColorSource, NodeResolveContext } from './types';
 
 /** 节点字体和已确定颜色的正文、标签输入 */
 type InputNodeContent = {
@@ -10,7 +10,7 @@ type InputNodeContent = {
   /** 作者显式行高 */
   lineHeight?: number;
   /** 节点轴向缩放 */
-  scale: CanonicalNode['scale'];
+  scale: { x: number; y: number };
   /** 已解析颜色的正文行 */
   text?: Array<ColorResolvedTextLine>;
   /** 已解析颜色的标签 */

@@ -1,13 +1,14 @@
-import { createCoordinateLayout, createLayoutProbeRecoverableError, resolvePosition } from '@retikz/core';
+import { resolveCoordinate, layoutCoordinate } from '@retikz/core';
 import type { IRCoordinate } from '@retikz/core';
 
+import { compareCanonicalCoordinates } from '../../compare';
 import { runCompileStage } from '../../runtime';
 import type { CompileRuntime } from '../../runtime';
 import { createCompileChildPath } from '../../shared';
 import { createTreePositionContext } from '../reference';
 import type { SubtreeCompileRuntime } from '../runtime';
 
-/** 解析 coordinate 位置并注册为零尺寸 layout，供后续命名引用使用 */
+/** 编译坐标并直接发布位置，供后续命名引用与 Scope 包络使用 */
 export const visitCoordinate = (
   runtime: CompileRuntime,
   child: IRCoordinate,
@@ -16,40 +17,37 @@ export const visitCoordinate = (
 ): void => {
   const {
     context: { transformChains: scopeChain, pathPrefix: locatorPrefix, layout },
-    state: { layouts, publications, allocations },
+    state: { layoutContexts: layouts, publications, allocations },
   } = frame;
   const coordinateIrPath = createCompileChildPath(locatorPrefix, index);
-  const localCoordinateLayout = runCompileStage(
+  const { compiled } = runCompileStage(
     runtime,
     coordinateIrPath,
     'coordinate',
     { child, scopeChain },
-    stageRuntime => {
-      const position = resolvePosition(child.position, createTreePositionContext(stageRuntime, scopeChain))?.localPoint;
-      if (position === undefined) {
-        throw createLayoutProbeRecoverableError(
-          `Cannot resolve position for coordinate ${child.id}; polar.origin or at.of may reference an undefined node`,
-        );
-      }
-      return createCoordinateLayout(position, stageRuntime.context.registries.shapeRegistry);
+    {
+      resolveInputs: { child, nodeDistance: runtime.context.layout.nodeDistance },
+      compileInputs: { scopeChain },
+      resolve: stageRuntime => resolveCoordinate(child, stageRuntime.context.layout),
+      equals: compareCanonicalCoordinates,
+      compile: (stageRuntime, canon) => ({
+        canon,
+        compiled: layoutCoordinate(canon, createTreePositionContext(stageRuntime, scopeChain)),
+      }),
     },
   );
-  const localCenter = [localCoordinateLayout.geometry.rect.x, localCoordinateLayout.geometry.rect.y] as [
-    number,
-    number,
-  ];
+  const localCenter = compiled.position;
 
   const globalCenter =
     scopeChain.length === 0
       ? localCenter
       : runtime.state.execution.scopeTransformComposer.apply(localCenter, scopeChain);
-  const { shapeRegistry } = runtime.context.registries;
-  const coordinateLayout = createCoordinateLayout(globalCenter, shapeRegistry);
+  const coordinateLayout = { position: globalCenter };
   runtime.state.execution.namespaceStack.register(child.id, {
-    layout: coordinateLayout,
+    context: coordinateLayout,
     irPath: [...coordinateIrPath, 'id'],
   });
   publications.push(coordinateLayout);
   allocations.push({ boundsPoints: [localCenter], skipAllocation: layout?.skipAllocation });
-  layouts.push(localCoordinateLayout);
+  layouts.push(compiled);
 };

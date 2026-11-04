@@ -2,7 +2,7 @@ import type { ContourSegment } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
 import { boundaryPointOf, layoutNode } from '../../../../core/src/compile/node';
-import { createPositionResolveContext } from '../../../../core/src/compile/reference';
+import { createPositionEvaluateContext } from '../../../../core/src/compile/reference';
 import { resolveBoundaryRegistry, resolvePatternRegistry, BUILTIN_SHAPES } from '../../../../core/src/providers';
 import { resolveNode } from '../../../../core/src/resolve';
 import type { IRNode } from '../../../../core/src/schemas';
@@ -18,6 +18,7 @@ const measureText = (): { width: number; height: number; ascent: number } => ({
 const layoutSquare = (node: IRNode) => {
   const boundaries = resolveBoundaryRegistry();
   const resolution = resolveNode(node, {
+    nodeDistance: 24,
     rootFontSize: 16,
     gatingOn: false,
     scopeDefaults: {},
@@ -33,8 +34,8 @@ const layoutSquare = (node: IRNode) => {
 
   return layoutNode(resolution, {
     measureText,
-    positionContext: createPositionResolveContext({ lookupReference: () => undefined, nodeDistance: 24 }),
-  }).layout;
+    positionContext: createPositionEvaluateContext({ lookupReference: () => undefined, nodeDistance: 24 }),
+  }).context;
 };
 
 /** 40×40 正方轮廓的 4 条 CW Line 段（用于独立复算 fillet 弧，断言边界端点落弧上） */

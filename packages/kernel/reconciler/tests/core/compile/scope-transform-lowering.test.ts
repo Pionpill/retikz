@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import type { PositionResolveContext } from '../../../../core/src/compile';
-import type { CompiledNodeLayout } from '../../../../core/src/compile/node';
+import type { PositionEvaluateContext } from '../../../../core/src/compile';
+import type { NodeGeometryContext } from '../../../../core/src/compile/node';
 import { projectLayoutWithTransform } from '../../../../core/src/compile/node';
-import { createPositionResolveContext } from '../../../../core/src/compile/reference';
+import { referencePositionOf } from '../../../../core/src/compile/reference';
+import { createPositionEvaluateContext } from '../../../../core/src/compile/reference';
 import { lowerScopeTransforms } from '../../../../core/src/compile/scope/transform';
 import { composeScopeTransform } from '../../../../core/src/compile/shared';
 import type { Transform } from '../../../../core/src/contract';
@@ -16,7 +17,7 @@ const makeStack = (entries: Array<[string, [number, number]]>): NamespaceStack =
   const stack = new NamespaceStack();
 
   for (const [index, [id, [x, y]]] of entries.entries()) {
-    const layout: CompiledNodeLayout = {
+    const layout: NodeGeometryContext = {
       shape: { name: 'rectangle', definition: BUILTIN_SHAPES.get('rectangle')!, params: {} },
       geometry: {
         rect: { x, y, width: 0, height: 0, rotate: 0 },
@@ -31,13 +32,13 @@ const makeStack = (entries: Array<[string, [number, number]]>): NamespaceStack =
         isShape: true,
       },
     };
-    stack.register(id, { layout, irPath: ['children', index, 'id'] });
+    stack.register(id, { context: layout, irPath: ['children', index, 'id'] });
   }
 
   return stack;
 };
 
-const layoutForProjection = (): CompiledNodeLayout => ({
+const layoutForProjection = (): NodeGeometryContext => ({
   shape: { name: 'rectangle', definition: BUILTIN_SHAPES.get('rectangle')!, params: {} },
   geometry: {
     rect: { x: 10, y: 20, width: 30, height: 40, rotate: 0 },
@@ -57,7 +58,7 @@ type LowerOptions = Omit<Parameters<typeof lowerScopeTransforms>[1], 'positionCo
   Readonly<{
     nodeDistance?: number;
     scopeChain?: ReadonlyArray<Transform>;
-    resolveBetweenGlobal?: PositionResolveContext['resolveBetweenWorld'];
+    resolveBetweenGlobal?: PositionEvaluateContext['evaluateBetweenWorld'];
   }>;
 
 const lower = (
@@ -66,12 +67,12 @@ const lower = (
   options: LowerOptions = {},
 ) => {
   const { nodeDistance = 24, scopeChain, resolveBetweenGlobal, ...rest } = options;
-  const base = createPositionResolveContext({
+  const base = createPositionEvaluateContext({
     lookupReference: id => namespaceStack.lookupReference(id),
     nodeDistance,
     transformChain: scopeChain,
   });
-  const positionContext = { ...base, resolveBetweenWorld: resolveBetweenGlobal };
+  const positionContext = { ...base, evaluateBetweenWorld: resolveBetweenGlobal };
 
   return lowerScopeTransforms(transforms, { positionContext, ...rest });
 };
@@ -170,13 +171,15 @@ describe('lowerScopeTransforms 5 translate 变体', () => {
     const out = lower([{ kind: 'between-translate', between: [{ id: 'A' }, { id: 'B' }], fraction: 0.25 }], idx, {
       resolveBetweenGlobal: between => {
         const [a, b] = between.between;
-        const aLayout = 'id' in a ? idx.lookupReference(a.id)?.layout : null;
-        const bLayout = 'id' in b ? idx.lookupReference(b.id)?.layout : null;
+        const aLayout = 'id' in a ? idx.lookupReference(a.id)?.context : null;
+        const bLayout = 'id' in b ? idx.lookupReference(b.id)?.context : null;
         if (!aLayout || !bLayout) return null;
+        const aPoint = referencePositionOf(aLayout);
+        const bPoint = referencePositionOf(bLayout);
 
         return [
-          aLayout.geometry.rect.x + (bLayout.geometry.rect.x - aLayout.geometry.rect.x) * between.fraction,
-          aLayout.geometry.rect.y + (bLayout.geometry.rect.y - aLayout.geometry.rect.y) * between.fraction,
+          aPoint[0] + (bPoint[0] - aPoint[0]) * between.fraction,
+          aPoint[1] + (bPoint[1] - aPoint[1]) * between.fraction,
         ];
       },
     });
@@ -231,7 +234,7 @@ describe('lowerScopeTransforms 失败情形', () => {
 describe('lowerScopeTransforms rotate / scale 透传', () => {
   it('rotate pivot=center 解析 intrinsic envelope 中心并 lower 为 Scene cx/cy', () => {
     const out = lower([{ kind: 'rotate', degrees: 45, pivot: 'center' }], undefined, {
-      intrinsicLayout: layoutForProjection(),
+      intrinsicContext: layoutForProjection(),
     });
 
     expect(out![0]).toEqual({ kind: 'rotate', degrees: 45, cx: 10, cy: 20 });
@@ -257,7 +260,7 @@ describe('lowerScopeTransforms rotate / scale 透传', () => {
 
   it('scale pivot 显式坐标展开为 translate(p) → scale → translate(-p)', () => {
     const out = lower([{ kind: 'scale', x: 2, y: 3, pivot: [4, 5] }], undefined, {
-      intrinsicLayout: layoutForProjection(),
+      intrinsicContext: layoutForProjection(),
     });
 
     expect(out).toEqual([
@@ -269,7 +272,7 @@ describe('lowerScopeTransforms rotate / scale 透传', () => {
 
   it('rectangle self point 包含 margin，top-left 解析为 outerRect 左上角', () => {
     const out = lower([{ kind: 'rotate', degrees: 15, pivot: 'top-left' }], undefined, {
-      intrinsicLayout: layoutForProjection(),
+      intrinsicContext: layoutForProjection(),
     });
 
     expect(out).toEqual([{ kind: 'rotate', degrees: 15, cx: -7, cy: -2 }]);
@@ -317,13 +320,15 @@ describe('lowerScopeTransforms 链复合', () => {
     const out = lower(transforms, idx, {
       resolveBetweenGlobal: between => {
         const [a, b] = between.between;
-        const aLayout = 'id' in a ? idx.lookupReference(a.id)?.layout : null;
-        const bLayout = 'id' in b ? idx.lookupReference(b.id)?.layout : null;
+        const aLayout = 'id' in a ? idx.lookupReference(a.id)?.context : null;
+        const bLayout = 'id' in b ? idx.lookupReference(b.id)?.context : null;
         if (!aLayout || !bLayout) return null;
+        const aPoint = referencePositionOf(aLayout);
+        const bPoint = referencePositionOf(bLayout);
 
         return [
-          aLayout.geometry.rect.x + (bLayout.geometry.rect.x - aLayout.geometry.rect.x) * between.fraction,
-          aLayout.geometry.rect.y + (bLayout.geometry.rect.y - aLayout.geometry.rect.y) * between.fraction,
+          aPoint[0] + (bPoint[0] - aPoint[0]) * between.fraction,
+          aPoint[1] + (bPoint[1] - aPoint[1]) * between.fraction,
         ];
       },
     });

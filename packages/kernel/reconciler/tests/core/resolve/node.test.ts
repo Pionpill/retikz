@@ -23,6 +23,7 @@ const sceneWith = (child: IRNode): IRScene => ({
 
 const resolve = (source: IRNode, scopeDefaults: MergedScopeDefaults = {}, rootFontSize = 16) =>
   resolveNode(source, {
+    nodeDistance: 24,
     rootFontSize,
     gatingOn: false,
     scopeDefaults,
@@ -51,16 +52,16 @@ describe('resolveNode', () => {
       label: { text: [{ text: 'label', font: { size: '1em' } }], font: { size: '0.5em', weight: 'normal' } },
     };
     const before = structuredClone(source);
-    const result = resolve(source, {}, 20).node;
-    expect(result.font).toEqual({ size: 80, weight: 700, family: 'serif', style: undefined });
-    expect(result.lineHeight).toBe(144);
-    expect(result.text?.map(line => line.segments)).toMatchObject([
+    const result = resolve(source, {}, 20);
+    expect(result.text?.font).toEqual({ size: 80, weight: 700, family: 'serif', style: undefined });
+    expect(result.text?.lineHeight).toBe(144);
+    expect(result.text?.lines.map(line => line.segments)).toMatchObject([
       [{ text: 'inherited', font: { size: 80, weight: 700 } }],
       [{ text: 'absolute', font: { size: mixed ? 12 : 24 } }],
       [{ text: 'relative', font: { size: 40 } }],
       [{ text: 'root', font: { size: mixed ? 20 : 40 } }],
     ]);
-    expect(result.label).toMatchObject([
+    expect(result.labels).toMatchObject([
       { font: { size: 40, weight: 400 }, text: [{ segments: [{ text: 'label', font: { size: 40, weight: 400 } }] }] },
     ]);
     expect(source).toEqual(before);
@@ -68,14 +69,14 @@ describe('resolveNode', () => {
 
   it('节点填充绑定图案实现与默认尺寸，描边保留纯色且不修改源配置', () => {
     const source = node({ style: { fill: { kind: 'pattern', shape: 'dots' }, stroke: 'red' } });
-    const result = resolve(source).node;
+    const result = resolve(source);
 
-    expect(result.fill).toMatchObject({
+    expect(result.style.fill).toMatchObject({
       kind: 'paint',
       spec: { kind: 'pattern', shape: 'dots' },
       pattern: { name: 'dots', size: 8, definition: { emit: expect.any(Function) } },
     });
-    expect(result.stroke).toBe('red');
+    expect(result.style.stroke).toBe('red');
     expect(source.style?.fill).toEqual({ kind: 'pattern', shape: 'dots' });
   });
 
@@ -91,16 +92,16 @@ describe('resolveNode', () => {
         },
       },
     });
-    const result = resolve(source).node;
+    const result = resolve(source);
 
-    expect(result.fill).toBeUndefined();
-    expect(result.stroke).toEqual({ kind: 'paint', spec: source.style?.stroke });
+    expect(result.style.fill).toBe('transparent');
+    expect(result.style.stroke).toEqual({ kind: 'paint', spec: source.style?.stroke });
   });
 
   it('在 Core 解析阶段补齐局部原点且不修改 Source', () => {
     const source: IRNode = { type: 'node' };
 
-    expect(resolve(source).node.position).toEqual([0, 0]);
+    expect(resolve(source).layout.position).toEqual([0, 0]);
     expect(source).not.toHaveProperty('position');
   });
 
@@ -110,7 +111,7 @@ describe('resolveNode', () => {
         node({
           layout: { padding: 3, margin: { y: 5, bottom: 0 } },
         }),
-      ).node,
+      ).layout,
     ).toMatchObject({
       padding: { top: 3, right: 3, bottom: 3, left: 3 },
       margin: { top: 5, right: 0, bottom: 0, left: 0 },
@@ -121,7 +122,7 @@ describe('resolveNode', () => {
         node({
           layout: { padding: { default: 2, x: 4, left: 1 } },
         }),
-      ).node.padding,
+      ).layout.padding,
     ).toEqual({
       top: 2,
       right: 4,
@@ -137,7 +138,7 @@ describe('resolveNode', () => {
           scale: 2,
           layout: { minimumSize: 12 },
         }),
-      ).node,
+      ).layout,
     ).toMatchObject({
       minimumSize: { width: 12, height: 12 },
       scale: { x: 2, y: 2 },
@@ -149,7 +150,7 @@ describe('resolveNode', () => {
           scale: { default: 3, y: 1 },
           layout: { minimumSize: { default: 10, width: 0 } },
         }),
-      ).node,
+      ).layout,
     ).toMatchObject({
       minimumSize: { width: 0, height: 10 },
       scale: { x: 3, y: 1 },
@@ -161,35 +162,41 @@ describe('resolveNode', () => {
       expect.objectContaining({ code: RetikzCoreErrorCode.Resolve }) as RetikzCoreError,
     );
 
-    expect(resolve(node({ layout: { width: 50, minimumSize: { width: 50 } } })).node.width).toBe(50);
+    expect(resolve(node({ layout: { width: 50, minimumSize: { width: 50 } } })).layout.width).toBe(50);
   });
 
   it('提供 Node 默认值，而不更改不相关的 IR 字段', () => {
     const source = node({ id: 'node-a', text: 'A' });
 
-    expect(resolve(source).node).toMatchObject({
-      ...source,
-      padding: { top: 8, right: 8, bottom: 8, left: 8 },
-      margin: { top: 0, right: 0, bottom: 0, left: 0 },
-      minimumSize: { width: 0, height: 0 },
-      scale: { x: 1, y: 1 },
-      text: [{ plainText: 'A', segments: [{ text: 'A', font: { size: 16 } }], mixed: false, hasMath: false }],
-      font: { size: 16 },
-      lineHeight: 19.2,
-      label: undefined,
-      align: 'middle',
-      rotate: 0,
-      dashPattern: undefined,
-      shadow: undefined,
+    expect(resolve(source)).toMatchObject({
+      id: 'node-a',
+      aliasIds: [],
+      animations: [],
+      labels: [],
+      layout: {
+        position: [0, 0],
+        padding: { top: 8, right: 8, bottom: 8, left: 8 },
+        margin: { top: 0, right: 0, bottom: 0, left: 0 },
+        minimumSize: { width: 0, height: 0 },
+        scale: { x: 1, y: 1 },
+        rotate: 0,
+      },
+      text: {
+        lines: [{ plainText: 'A', segments: [{ text: 'A', font: { size: 16 } }], mixed: false, hasMath: false }],
+        font: { size: 16 },
+        lineHeight: 19.2,
+        align: 'middle',
+      },
+      style: { dashPattern: [], shadow: undefined },
     });
   });
 
   it('规范化文本简写，而不删除空字符串或重新排序行', () => {
-    expect(resolve(node({ text: '' })).node.text?.map(line => line.plainText)).toEqual(['']);
+    expect(resolve(node({ text: '' })).text?.lines.map(line => line.plainText)).toEqual(['']);
 
     const lines: NonNullable<IRNode['text']> = ['first', { text: 'second' }];
 
-    expect(resolve(node({ text: lines })).node.text?.map(line => line.plainText)).toEqual(['first', 'second']);
+    expect(resolve(node({ text: lines })).text?.lines.map(line => line.plainText)).toEqual(['first', 'second']);
     expect(lines).toEqual(['first', { text: 'second' }]);
   });
 
@@ -211,9 +218,9 @@ describe('resolveNode', () => {
         },
       },
     });
-    const resolved = resolve(node({ label: { text: 'x', font: { size: 10 } } }), frame).node;
+    const resolved = resolve(node({ label: { text: 'x', font: { size: 10 } } }), frame);
 
-    expect(resolved.label).toMatchObject([
+    expect(resolved.labels).toMatchObject([
       {
         text: [{ plainText: 'x' }],
         align: 'middle',
@@ -228,7 +235,7 @@ describe('resolveNode', () => {
   });
 
   it('填充规范标签默认值，而不替换明确的零或 false', () => {
-    expect(resolve(node({ label: { text: 'default' } })).node.label).toMatchObject([
+    expect(resolve(node({ label: { text: 'default' } })).labels).toMatchObject([
       { text: [{ plainText: 'default' }], align: 'middle', position: 'top', placement: 'outside', distance: 12 },
     ]);
 
@@ -244,7 +251,7 @@ describe('resolveNode', () => {
             pin: false,
           },
         }),
-      ).node.label,
+      ).labels,
     ).toMatchObject([
       {
         text: [{ plainText: 'explicit' }],
@@ -259,17 +266,17 @@ describe('resolveNode', () => {
   });
 
   it('默认规范标签对齐到中间并保留显式对齐', () => {
-    expect(resolve(node({ label: { text: 'default' } })).node.label).toMatchObject([
+    expect(resolve(node({ label: { text: 'default' } })).labels).toMatchObject([
       { text: [{ plainText: 'default' }], position: 'top', placement: 'outside', distance: 12, align: 'middle' },
     ]);
 
-    expect(resolve(node({ label: { text: 'explicit', align: 'start' } })).node.label).toMatchObject([
+    expect(resolve(node({ label: { text: 'explicit', align: 'start' } })).labels).toMatchObject([
       { text: [{ plainText: 'explicit' }], position: 'top', placement: 'outside', distance: 12, align: 'start' },
     ]);
   });
 
   it('当其位置省略 1 时，填充边界标签分数', () => {
-    expect(resolve(node({ label: { text: 'boundary', position: { boundary: 'right' } } })).node.label).toMatchObject([
+    expect(resolve(node({ label: { text: 'boundary', position: { boundary: 'right' } } })).labels).toMatchObject([
       {
         text: [{ plainText: 'boundary' }],
         align: 'middle',
@@ -281,44 +288,44 @@ describe('resolveNode', () => {
   });
 
   it('解析 Node 标量默认值以及静态虚线和阴影形式', () => {
-    const defaults = resolve(node()).node;
+    const defaults = resolve(node({ text: '' }));
 
-    expect(defaults.align).toBe('middle');
-    expect(defaults.rotate).toBe(0);
+    expect(defaults.text?.align).toBe('middle');
+    expect(defaults.layout.rotate).toBe(0);
     expect(
       resolve(
         node({
           style: { dashed: true, dotted: true },
         }),
-      ).node.dashPattern,
+      ).style.dashPattern,
     ).toEqual([4, 2]);
     expect(
       resolve(
         node({
           style: { dashPattern: [0, 2], dashed: true, dotted: true },
         }),
-      ).node.dashPattern,
+      ).style.dashPattern,
     ).toEqual([0, 2]);
     expect(
       resolve(
         node({
           style: { dashed: true, dotted: true },
         }),
-      ).node,
+      ).style,
     ).not.toHaveProperty('dashed');
     expect(
       resolve(
         node({
           style: { dashed: true, dotted: true },
         }),
-      ).node,
+      ).style,
     ).not.toHaveProperty('dotted');
     expect(
       resolve(
         node({
           style: { shadow: { offsetX: 0, offsetY: 0, opacity: 0 } },
         }),
-      ).node.shadow,
+      ).style.shadow,
     ).toEqual({
       offsetX: 0,
       offsetY: 0,

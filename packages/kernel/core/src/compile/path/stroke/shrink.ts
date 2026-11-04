@@ -1,6 +1,6 @@
 import type { CompiledArrowEnd, PathCommand } from '../../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
-import type { ArrowMarkResolution } from '../../../resolve';
+import type { CanonicalPathArrow } from '../../../resolve';
 import type { RegisterPaint } from '../../resource';
 import type { EndpointArrowSpecs } from './endpoint-contact';
 import { shortenEndpointContacts } from './endpoint-contact';
@@ -8,7 +8,7 @@ import { emitMarkPrimitives } from './marks';
 
 /** 把箭头视觉输入物化为 Scene 端点箭头描述 */
 const emitArrowEnd = (
-  resolution: ArrowMarkResolution,
+  resolution: CanonicalPathArrow,
   round: (n: number) => number,
   registerPaint: RegisterPaint,
 ): CompiledArrowEnd => {
@@ -42,7 +42,7 @@ type EndpointArrowMarkEmission = {
 
 /** 物化端点箭头，并按重叠比例插值路径收缩量与边界外缘内缩量 */
 export const emitEndpointArrowMark = (
-  resolution: ArrowMarkResolution,
+  resolution: CanonicalPathArrow,
   endpointOverlap: number,
   round: (n: number) => number,
   registerPaint: RegisterPaint,

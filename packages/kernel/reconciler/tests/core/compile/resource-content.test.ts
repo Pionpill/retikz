@@ -141,7 +141,11 @@ describe('Scene 资源依赖关闭', () => {
       name: 'custom',
       schema: PathSchema.extend({ kind: literal('custom') }),
       compile: context =>
-        context.emitStroke({ ...context.path, style: { stroke: { kind: 'pattern', shape: 'first' } } }),
+        context.emitStroke({
+          type: 'path',
+          children: context.path.children,
+          style: { stroke: { kind: 'pattern', shape: 'first' } },
+        }),
     });
     const result = compileToScene(input, { patterns, paths: [path] }).scene;
     expect(result.resources).toHaveLength(1);

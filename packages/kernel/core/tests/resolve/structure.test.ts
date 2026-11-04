@@ -30,7 +30,7 @@ describe('解析源结构', () => {
     expect(stroke).not.toContain('IRPathBase');
     expect(stroke).not.toContain('resolution?:');
     expect(stroke).not.toContain('emitResolvedPathPrimitive');
-    expect(stroke).toMatch(/export const emitPathPrimitive = \(\s*resolution:\s*StrokePathResolution/u);
+    expect(stroke).toMatch(/export const emitPathPrimitive = \(\s*resolution:\s*CanonicalStrokePath/u);
   });
 
   it('使节点布局不受提供者查找编排的影响', () => {

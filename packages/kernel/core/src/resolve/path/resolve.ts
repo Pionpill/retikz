@@ -16,17 +16,17 @@ import { BendAngleSchema, BuiltinPath, SmoothTensionSchema } from '../../schemas
 import { resolvePaint } from '../resource';
 import { mergePathStyle, resolveContextualColor, resolveDropShadow, resolveGraphicOpacity } from '../style';
 import type { ColorResolvedTextLine, InlineSegmentColorSource, LabelTextColorSource } from '../text';
-import { resolvePathDefinition } from './provider';
+import { resolvePathDefinition, resolveStrokePathProviders } from './provider';
 import type {
-  CanonicalPath,
+  CanonicalPathProperties,
   CanonicalPathLabel,
   CanonicalPathLabelPlacement,
-  CanonicalStep,
+  CanonicalPathStep,
   MarkColorSource,
   PathColorSource,
   PathLabelColorSource,
   PathLabelGeometryOptions,
-  PathResolution,
+  CanonicalPath,
   PathResolveContext,
   StepColorSource,
 } from './types';
@@ -140,7 +140,7 @@ const canonicalizeLabel = (label: PathLabelColorSource, canAutomaticallyInterrup
   canonicalizeLabelPlacement(label, canAutomaticallyInterrupt);
 
 /** 为路径步骤及其标签补齐静态默认值，保留目标引用供后续解析 */
-const canonicalizeStep = (step: StepColorSource, canAutomaticallyInterrupt: boolean): CanonicalStep => {
+const canonicalizeStep = (step: StepColorSource, canAutomaticallyInterrupt: boolean): CanonicalPathStep => {
   if (step.kind === 'move' || step.kind === 'cycle' || step.kind === 'rectangle') return step;
 
   const label = step.label === undefined ? undefined : canonicalizeLabel(step.label, canAutomaticallyInterrupt);
@@ -176,13 +176,13 @@ const canonicalizeStep = (step: StepColorSource, canAutomaticallyInterrupt: bool
 const canonicalizeSteps = (
   steps: ReadonlyArray<StepColorSource> | undefined,
   canAutomaticallyInterrupt: boolean,
-): Array<CanonicalStep> | undefined => steps?.map(step => canonicalizeStep(step, canAutomaticallyInterrupt));
+): Array<CanonicalPathStep> | undefined => steps?.map(step => canonicalizeStep(step, canAutomaticallyInterrupt));
 
 /** 合入路径样式并展开步骤、标签与阴影默认值，填充和描边资源随后解析 */
 const canonicalizePath = (
   path: PathColorSource,
   canAutomaticallyInterrupt: boolean,
-): Omit<CanonicalPath, 'fill' | 'stroke' | 'strokeWidth'> &
+): Omit<CanonicalPathProperties, 'fill' | 'stroke' | 'strokeWidth'> &
   Pick<NonNullable<PathColorSource['style']>, 'fill' | 'stroke' | 'strokeWidth'> => {
   const { style, ...source } = path;
   const { children, label: pathLabel } = source;
@@ -190,6 +190,17 @@ const canonicalizePath = (
   return {
     ...source,
     ...visual,
+    kind: source.kind ?? BuiltinPath.Stroke,
+    fillRule: visual.fillRule ?? 'nonzero',
+    dashPattern: visual.dashPattern ?? [],
+    dashOffset: visual.dashOffset ?? 0,
+    lineCap: visual.lineCap ?? 'butt',
+    lineJoin: visual.lineJoin ?? 'miter',
+    blendMode: visual.blendMode ?? 'normal',
+    strokeEnabled: visual.stroke !== undefined || visual.strokeWidth !== undefined,
+    opacity: 1,
+    fillOpacity: 1,
+    strokeOpacity: 1,
     ...resolveGraphicOpacity(opacity),
     children: canonicalizeSteps(children, canAutomaticallyInterrupt),
     label:
@@ -439,9 +450,9 @@ const resolvePathContextualColors = (
 
 /**
  * 解析路径默认配置、定义与颜色，得到待绑定目标的路径
- * @description 补齐静态默认值与绘制配置；箭头与沿线标记定义在实际编译 Stroke 时另行解析
+ * @description 补齐静态默认值与绘制配置，内置 Stroke 同时绑定箭头与标记；自定义路径仅在请求描边能力时绑定
  */
-export const resolvePath = (path: IRPathBase, context: PathResolveContext): PathResolution => {
+export const resolvePath = (path: IRPathBase, context: PathResolveContext): CanonicalPath => {
   const styled = context.scopeDefaults === undefined ? path : mergePathStyle(path, context.scopeDefaults);
   const irPath = context.irPath ?? [];
   const labelDefault = context.scopeDefaults?.path?.label ?? {};
@@ -461,10 +472,22 @@ export const resolvePath = (path: IRPathBase, context: PathResolveContext): Path
   const fill = resolvePaint(canonicalPath.fill, paintContext);
   const stroke = resolvePaint(canonicalPath.stroke, paintContext);
 
-  return {
+  const result: CanonicalPath = {
     irPath,
-    path: { ...canonicalPath, fill, stroke, strokeWidth: canonicalPath.strokeWidth ?? 1 },
+    properties: {
+      ...canonicalPath,
+      kind: pathDefinition.kind,
+      fill,
+      stroke,
+      strokeWidth: canonicalPath.strokeWidth ?? 1,
+    },
     definition: pathDefinition.definition,
-    source: pathDefinition.path,
+  };
+  if (pathDefinition.kind !== BuiltinPath.Stroke) return result;
+  const resolvedStroke = resolveStrokePathProviders(result, context);
+  return {
+    ...result,
+    properties: resolvedStroke.properties,
+    stroke: { arrows: resolvedStroke.arrows, marks: resolvedStroke.marks },
   };
 };

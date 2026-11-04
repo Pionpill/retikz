@@ -29,6 +29,8 @@ The `highlight` kind below reuses Core stroke emission and emits a wide underlay
 
 ## Define the capability
 
+`context.path` is a `CanonicalPathConfig` with defaults applied. Custom fields retain their schema-inferred types, and label positions are numeric. Read drawing properties from `context.appearance`. Call `context.emitStroke()` to reuse the current stroke. An argument represents new Source IR: construct it explicitly instead of spreading canonical configuration into a source object.
+
 Use `definePath` to declare an explicit registry key, a complete Path subject schema, and a compile function that owns the whole path. Compose the schema from the open `PathSchema` host plus the kind literal and `kindOptions`, so the definition owns the complete payload contract.
 
 ```tsx
@@ -49,11 +51,12 @@ const highlight = definePath<HighlightPath>({
   name: 'highlight',
   schema: HighlightPathSchema,
   compile: context => {
-    const { kindOptions, ...strokePath } = context.path;
+    const { kindOptions, children } = context.path;
     const base = context.emitStroke({
-      ...strokePath,
+      type: 'path',
+      children,
       kind: 'stroke',
-      style: { ...strokePath.style, strokeWidth: kindOptions.strokeWidth },
+      style: { strokeWidth: kindOptions.strokeWidth },
     });
     if (base === null) return null;
     return {

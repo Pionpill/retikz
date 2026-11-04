@@ -1,30 +1,69 @@
 import type {
   CompiledNode,
-  CompiledNodeLayout,
+  CompiledCoordinate,
+  CanonicalCoordinate,
   CompiledPath,
   CompiledScope,
   CompileWarning,
   SceneResource,
   PaintRegistry,
   ClipRegistry,
-  emitNodeOutput,
+  CanonicalNode,
+  resolvePath,
+  CanonicalScope,
+  ReferenceReadKind,
 } from '@retikz/core';
 import type { PropertyPath } from '@retikz/foundation';
 import { jsonStructuralEquals } from '@retikz/foundation';
 
+import { compareReferenceGeometry } from '../compare';
 import { importSceneResources } from '../resource';
 import type { NamespaceEntry } from './namespace';
 import type { CompileRuntime } from './runtime';
 
 /** 一次阶段计算的名称读取事实 */
-export type CompileReferenceRead = Readonly<{ name: string; entry: NamespaceEntry | undefined }>;
+export type CompileReferenceRead = Readonly<{
+  name: string;
+  entry: NamespaceEntry | undefined;
+  kind: ReferenceReadKind;
+}>;
 
 /** 原子阶段对应的实际产物，执行器不可交换不同阶段的缓存 */
 export type CompileStageProducts = {
-  node: { compiled: CompiledNode; output: ReturnType<typeof emitNodeOutput> };
-  coordinate: CompiledNodeLayout;
-  path: CompiledPath;
-  scope: CompiledScope;
+  node: { canon: CanonicalNode; compiled: CompiledNode };
+  coordinate: { canon: CanonicalCoordinate; compiled: CompiledCoordinate };
+  path: { canon: ReturnType<typeof resolvePath>; compiled: CompiledPath };
+  scope: { canon: CanonicalScope; compiled: CompiledScope };
+};
+
+/** Core 拥有的各元素确定化产物 */
+export type CompileStageCanons = {
+  node: CanonicalNode;
+  coordinate: CanonicalCoordinate;
+  path: ReturnType<typeof resolvePath>;
+  scope: CanonicalScope;
+};
+
+/** 分离确定化与几何计算，由 Reconciler 比较 canonical 等价性 */
+export type CompileStageComputation<TPhase extends keyof CompileStageProducts> = {
+  /** 子树执行前准备阶段已读取的依赖 */
+  preparedReads?: ReadonlyArray<CompileReferenceRead>;
+  /** 子树执行前确定化与准备阶段产生的诊断 */
+  preparedDiagnostics?: ReadonlyArray<CompileWarning>;
+  /** 只影响确定化的输入与上下文 */
+  resolveInputs: unknown;
+  /** 几何计算的额外上下文 */
+  compileInputs: unknown;
+  /** 不读取最终布局的确定化阶段 */
+  resolve: (runtime: CompileRuntime) => CompileStageCanons[TPhase];
+  /** 确定化产物的领域比较 */
+  equals: (previous: CompileStageCanons[TPhase], current: CompileStageCanons[TPhase]) => boolean;
+  /** 消费已确定的属性进行计算 */
+  compile: (
+    runtime: CompileRuntime,
+    canon: CompileStageCanons[TPhase],
+    previous?: CompileStageProducts[TPhase],
+  ) => CompileStageProducts[TPhase];
 };
 
 /** 阶段缓存及其有效性依据 */
@@ -32,6 +71,9 @@ export type CompileStageRecord = {
   [TPhase in keyof CompileStageProducts]: Readonly<{
     phase: TPhase;
     inputs: unknown;
+    canon?: CompileStageCanons[TPhase];
+    resolveInputs?: unknown;
+    compileInputs?: unknown;
     value: CompileStageProducts[TPhase];
     reads: ReadonlyArray<CompileReferenceRead>;
     resources: ReadonlyArray<SceneResource>;
@@ -47,22 +89,75 @@ export type CompileStageCache = {
   write: (path: PropertyPath, phase: keyof CompileStageProducts, record: CompileStageRecord, reused: boolean) => void;
 };
 
+/** 比较稀疏输入的直接属性，不向嵌套声明递归补全或结构遍历 */
+const compareInputProperties = (previous: unknown, current: unknown): boolean => {
+  if (Object.is(previous, current)) return true;
+  if (previous === null || current === null || typeof previous !== 'object' || typeof current !== 'object')
+    return false;
+  const keys = Object.keys(previous);
+  return (
+    keys.length === Object.keys(current).length &&
+    keys.every(key => Object.hasOwn(current, key) && Object.is(Reflect.get(previous, key), Reflect.get(current, key)))
+  );
+};
+
+/** 阶段输入容器的各项分别做浅属性比较；嵌套声明变化交给 Core 确定化 */
+const compareStageInputs = (previous: unknown, current: unknown): boolean => {
+  if (Object.is(previous, current)) return true;
+  if (previous === null || current === null || typeof previous !== 'object' || typeof current !== 'object')
+    return false;
+  const keys = Object.keys(previous);
+  return (
+    keys.length === Object.keys(current).length &&
+    keys.every(
+      key =>
+        Object.hasOwn(current, key) && compareInputProperties(Reflect.get(previous, key), Reflect.get(current, key)),
+    )
+  );
+};
+
+/** 为必须先向子树提供继承环境的元素复用确定化结果 */
+export const readCompileStageCanon = <TPhase extends keyof CompileStageProducts>(
+  runtime: CompileRuntime,
+  path: PropertyPath,
+  phase: TPhase,
+  resolveInputs: unknown,
+): CompileStageCanons[TPhase] | undefined => {
+  const previous = runtime.cache?.read(path, phase);
+  return previous?.phase === phase &&
+    previous.diagnostics.length === 0 &&
+    compareStageInputs(previous.resolveInputs, resolveInputs)
+    ? (previous.canon as CompileStageCanons[TPhase] | undefined)
+    : undefined;
+};
+
 /** 在相同执行路径中计算或复用阶段，资源与产物始终一起进入本次工作区 */
 export const runCompileStage = <TPhase extends keyof CompileStageProducts>(
   runtime: CompileRuntime,
   path: PropertyPath,
   phase: TPhase,
   inputs: unknown,
-  compute: (runtime: CompileRuntime) => CompileStageProducts[TPhase],
+  compute: ((runtime: CompileRuntime) => CompileStageProducts[TPhase]) | CompileStageComputation<TPhase>,
 ): CompileStageProducts[TPhase] => {
   const namespace = runtime.state.execution.namespaceStack;
   const previous = runtime.cache?.read(path, phase);
+  const referencesMatch = () =>
+    previous?.reads.every(read => {
+      const current = namespace.lookupReference(read.name, read.kind);
+      if (current === undefined || read.entry === undefined) return current === read.entry;
+      return (
+        current.state === read.entry.state &&
+        current.scopeId === read.entry.scopeId &&
+        jsonStructuralEquals(current.irPath, read.entry.irPath) &&
+        compareReferenceGeometry(read.entry.context, current.context, read.kind)
+      );
+    }) === true;
   if (
     previous !== undefined &&
     previous.phase === phase &&
     previous.diagnostics.length === 0 &&
-    jsonStructuralEquals(previous.inputs, inputs) &&
-    previous.reads.every(read => jsonStructuralEquals(read.entry, namespace.lookupReference(read.name)))
+    compareStageInputs(previous.inputs, inputs) &&
+    referencesMatch()
   ) {
     importSceneResources(
       previous.resources,
@@ -75,7 +170,7 @@ export const runCompileStage = <TPhase extends keyof CompileStageProducts>(
   }
 
   const warningCount = runtime.state.workspace.diagnosticCollector.warnings.length;
-  const reads: Array<CompileReferenceRead> = [];
+  const reads: Array<CompileReferenceRead> = typeof compute === 'function' ? [] : [...(compute.preparedReads ?? [])];
   const diagnostics: Array<CompileWarning> = [];
   const workspace = runtime.state.workspace;
   const resourceIds = new Set<string>();
@@ -122,9 +217,55 @@ export const runCompileStage = <TPhase extends keyof CompileStageProducts>(
       },
     },
   };
+  let canon: CompileStageCanons[TPhase] | undefined;
+  if (typeof compute !== 'function') {
+    // phase 与遍历器一一对应，复用只在同一阶段内发生
+    const previousCanon =
+      previous?.phase === phase ? (previous.canon as CompileStageCanons[TPhase] | undefined) : undefined;
+    canon =
+      previousCanon !== undefined &&
+      previous?.diagnostics.length === 0 &&
+      compareStageInputs(previous.resolveInputs, compute.resolveInputs)
+        ? previousCanon
+        : compute.resolve(local);
+    if (
+      previousCanon !== undefined &&
+      previous !== undefined &&
+      previous.diagnostics.length === 0 &&
+      diagnostics.length === 0 &&
+      compute.equals(previousCanon, canon) &&
+      jsonStructuralEquals(previous.compileInputs, compute.compileInputs) &&
+      referencesMatch()
+    ) {
+      importSceneResources(previous.resources, workspace.paintRegistry, workspace.clipRegistry);
+      const value = { ...previous.value, canon } as CompileStageProducts[TPhase];
+      runtime.cache?.write(
+        path,
+        phase,
+        {
+          ...previous,
+          inputs,
+          canon,
+          value,
+          resolveInputs: compute.resolveInputs,
+          compileInputs: compute.compileInputs,
+        } as CompileStageRecord,
+        true,
+      );
+      return value;
+    }
+  }
+  const reusablePrevious =
+    typeof compute !== 'function' &&
+    previous?.phase === phase &&
+    previous.diagnostics.length === 0 &&
+    jsonStructuralEquals(previous.compileInputs, compute.compileInputs) &&
+    referencesMatch()
+      ? (previous.value as CompileStageProducts[TPhase])
+      : undefined;
   const value = namespace.observeReferences(
-    (name, entry) => reads.push({ name, entry }),
-    () => compute(local),
+    (name, entry, kind) => reads.push({ name, entry, kind }),
+    () => (typeof compute === 'function' ? compute(local) : compute.compile(local, canon!, reusablePrevious)),
   );
   const resources = [...paintRegistry.getResources(), ...clipRegistry.getResources()];
   runtime.cache?.write(
@@ -133,10 +274,20 @@ export const runCompileStage = <TPhase extends keyof CompileStageProducts>(
     {
       phase,
       inputs,
+      ...(typeof compute === 'function'
+        ? {}
+        : {
+            canon,
+            resolveInputs: compute.resolveInputs,
+            compileInputs: compute.compileInputs,
+          }),
       value,
       reads,
       resources,
-      diagnostics: runtime.state.workspace.diagnosticCollector.warnings.slice(warningCount),
+      diagnostics: [
+        ...(typeof compute === 'function' ? [] : (compute.preparedDiagnostics ?? [])),
+        ...runtime.state.workspace.diagnosticCollector.warnings.slice(warningCount),
+      ],
     } as CompileStageRecord,
     false,
   );

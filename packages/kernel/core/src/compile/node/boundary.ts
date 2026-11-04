@@ -3,7 +3,7 @@ import { formatPropertyPath } from '@retikz/foundation';
 import type { CenteredBox, Position } from '@retikz/math';
 
 import type { BoundaryDefinition, ConnectionEnvelope, ConnectionEnvelopeKind } from '../../contract';
-import type { BoundaryResolution } from '../../resolve';
+import type { CanonicalNodeBoundary } from '../../resolve';
 import {
   guardProviderOutput,
   createCompositeContractError,
@@ -101,7 +101,7 @@ const resolveBoundaryRect = (providerName: string, value: CenteredBox, irPath?: 
 
 /** 将已解析连接面引用绑定到视觉 rect 并执行 provider 几何 */
 export const resolveBoundary = (
-  resolution: BoundaryResolution,
+  resolution: CanonicalNodeBoundary,
   visual: NodeVisualResolution,
   state: NodeBoundaryState,
 ): NodeBoundaryResolution => {

@@ -4,7 +4,7 @@ import {
   RetikzCoreErrorCode,
   bindPathTarget,
   bindPathTargets,
-  createPositionResolveContext,
+  createPositionEvaluateContext,
   isFatalProbeError,
   naturalLayoutProposal,
   resolveNodeBoundary,
@@ -37,7 +37,7 @@ export const createCompositeTargetQuery = (
   return {
     /** 在指定主题下查询目标点，缓存不保存可消费的重放凭证 */
     resolve: (
-      theme: SubtreeCompileRuntime['context']['style']['theme'],
+      theme: SubtreeCompileRuntime['context']['inheritance']['theme'],
       query: Parameters<CompositeCompileContext['resolvePathTargets']>[0],
     ): ReturnType<CompositeCompileContext['resolvePathTargets']> => {
       const queryChild = snapshotCompositeLayoutChild(owner.label, query.child, probeSequence.index++);
@@ -47,7 +47,12 @@ export const createCompositeTargetQuery = (
         queryNamespaceIdentity = namespaceIdentity;
       }
       // Definition、测量器、绑定所有者与递归预算在当前回调内固定；派生 theme 按值区分
-      const queryKey = JSON.stringify([queryChild, theme, frame.context.style.defaults, frame.context.transformChains]);
+      const queryKey = JSON.stringify([
+        queryChild,
+        theme,
+        frame.context.inheritance.defaults,
+        frame.context.transformChains,
+      ]);
       let shared = queryEnvironments.get(queryKey);
       if (shared === undefined) {
         let queryNamespace: NamespaceStack | undefined;
@@ -58,7 +63,7 @@ export const createCompositeTargetQuery = (
           naturalLayoutProposal,
           occurrence,
           frame.context.transformChains,
-          frame.context.style.defaults,
+          frame.context.inheritance.defaults,
           theme,
           false,
           undefined,
@@ -80,7 +85,7 @@ export const createCompositeTargetQuery = (
       // fork 隔离 resolving phase 与引用解析状态，缓存快照始终只读
       const targetNamespace = shared.namespaceStack.fork();
       const queryChain = shared.scopeChain;
-      const positionContext = createPositionResolveContext({
+      const positionContext = createPositionEvaluateContext({
         nodeBoundaryStore: runtime.state.workspace.nodeBoundaryStore,
         lookupReference: id => targetNamespace.lookupReference(id),
         nodeDistance: runtime.context.layout.nodeDistance,

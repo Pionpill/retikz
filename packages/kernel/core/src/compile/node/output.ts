@@ -1,32 +1,69 @@
+import { RAD_TO_DEG } from '@retikz/math';
+
 import type { ScenePrimitive } from '../../contract';
 import type { CanonicalDropShadow, IRPosition } from '../../schemas';
 import { Anchor } from '../../shared';
 import { rect } from '../../shared/geometry';
 import type { RegisterPaint } from '../resource';
+import { emitCompiledDrawing } from '../scene';
 import { outerRectOf } from './anchors';
-import { emitNodePrimitives } from './emit';
+import { emitCompiledNodeText } from './emit';
 import { labelExtentPoints } from './label';
 import type { CompiledNode } from './types';
 
-/** 节点输出所需的圆整与资源登记能力 */
+/** 节点最终绘制计算使用的数值圆整与资源登记能力 */
 export type NodeEmitContext = Readonly<{
-  /** 输出数值圆整 */
   round: (value: number) => number;
-  /** 将绘制值登记到调用方工作区 */
   registerPaint: RegisterPaint;
 }>;
 
-/** 从已完成的节点布局生成图元及边界，资源通过显式能力登记 */
+/** 从最终节点结果组装图元与边界，不访问 canon、Definition 或测量服务 */
 export const emitNodeOutput = (
-  compilation: CompiledNode,
-  context: NodeEmitContext,
+  compiled: CompiledNode,
+  round: (value: number) => number,
 ): {
   primitives: Array<ScenePrimitive>;
   bounds: Array<{ boundsPoints: Array<IRPosition>; shadow?: CanonicalDropShadow }>;
 } => {
-  const { layout, properties } = compilation;
-  const primitives = emitNodePrimitives(compilation, context.round, context.registerPaint);
-  const outer = outerRectOf(layout);
+  const { geometry, layout, style, text, labels, animations } = compiled;
+  const shape = emitCompiledDrawing({ geometry: geometry.shape, style: style.shape });
+  const children = [
+    ...shape,
+    ...(text === undefined
+      ? []
+      : emitCompiledNodeText({ geometry: { rect: geometry.rect, ...layout }, text: text.layout }, text.style, round)),
+    ...labels.flatMap(emitCompiledDrawing),
+  ];
+  const { rect: visualRect } = geometry;
+  const rotated = (visualRect.rotate ?? 0) !== 0;
+  const metadata = { ...style.metadata, ...(animations.length === 0 ? {} : { animations }) };
+  let primitives: Array<ScenePrimitive>;
+  if (rotated || text !== undefined) {
+    primitives = [
+      {
+        type: 'group',
+        ...metadata,
+        children,
+        ...(rotated
+          ? {
+              transforms: [
+                {
+                  kind: 'rotate',
+                  degrees: round((visualRect.rotate ?? 0) * RAD_TO_DEG),
+                  cx: round(visualRect.x),
+                  cy: round(visualRect.y),
+                },
+              ],
+            }
+          : {}),
+      },
+    ];
+  } else {
+    for (const primitive of shape) Object.assign(primitive, metadata);
+    primitives = children;
+  }
+  const measured = { geometry: { rect: visualRect, ...layout }, labels: labels.map(label => label.layout) };
+  const outer = outerRectOf(measured);
   return {
     primitives,
     bounds: [
@@ -34,9 +71,9 @@ export const emitNodeOutput = (
         boundsPoints: [Anchor.TopLeft, Anchor.TopRight, Anchor.BottomLeft, Anchor.BottomRight].map(anchor =>
           rect.anchor(outer, anchor),
         ),
-        shadow: properties.shadow,
+        shadow: style.shadow,
       },
-      { boundsPoints: labelExtentPoints(layout) },
+      { boundsPoints: labelExtentPoints(measured) },
     ],
   };
 };

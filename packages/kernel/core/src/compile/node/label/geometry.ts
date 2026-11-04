@@ -7,13 +7,13 @@ import type { CanonicalNodeLabelBoundaryPosition } from '../../../resolve';
 import { anchorUnitVectorByAnchor } from '../../../shared';
 import { placeLabelBox, resolveLabelRotation } from '../../text';
 import { anchorOf, angleBoundaryOf } from '../anchors';
-import type { CompiledNodeLayout, MeasuredNodeLabel, NodeLabelLayout } from '../types';
+import type { NodeGeometryContext, MeasuredNodeLabel, NodeLabelLayout } from '../types';
 
 const isLabelBoundaryPosition = (
   position: CanonicalNodeLabel['position'],
 ): position is CanonicalNodeLabelBoundaryPosition => typeof position === 'object';
 
-const assertBoxLikeLabelBoundary = (layout: CompiledNodeLayout): void => {
+const assertBoxLikeLabelBoundary = (layout: NodeGeometryContext): void => {
   if (layout.shape.name !== 'rectangle') {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Compile,
@@ -22,7 +22,7 @@ const assertBoxLikeLabelBoundary = (layout: CompiledNodeLayout): void => {
   }
 };
 
-const labelBoundaryPoint = (layout: CompiledNodeLayout, position: CanonicalNodeLabelBoundaryPosition): Position => {
+const labelBoundaryPoint = (layout: NodeGeometryContext, position: CanonicalNodeLabelBoundaryPosition): Position => {
   assertBoxLikeLabelBoundary(layout);
   const fraction = position.fraction;
   const left = layout.geometry.rect.x - layout.geometry.rect.width / 2;
@@ -73,10 +73,10 @@ const labelTangentVector = (position: CanonicalNodeLabel['position']): Position 
 };
 
 /** label 在 node 边界上的附着点 */
-export const labelBorderPoint = (layout: CompiledNodeLayout, position: CanonicalNodeLabel['position']): Position => {
+export const labelBorderPoint = (layout: NodeGeometryContext, position: CanonicalNodeLabel['position']): Position => {
   if (position === 'center') return [layout.geometry.rect.x, layout.geometry.rect.y];
 
-  const aaLayout: CompiledNodeLayout = {
+  const aaLayout: NodeGeometryContext = {
     ...layout,
     geometry: { ...layout.geometry, rect: { ...layout.geometry.rect, rotate: 0 } },
   };
@@ -92,7 +92,7 @@ export const labelBorderPoint = (layout: CompiledNodeLayout, position: Canonical
 };
 
 /** 将标签相对节点中心的偏移换算为当前布局坐标中的中心点 */
-export const labelCenter = (layout: CompiledNodeLayout, label: NodeLabelLayout): Position => {
+export const labelCenter = (layout: Pick<NodeGeometryContext, 'geometry'>, label: NodeLabelLayout): Position => {
   return [layout.geometry.rect.x + label.centerOffset[0], layout.geometry.rect.y + label.centerOffset[1]];
 };
 
@@ -150,7 +150,7 @@ const resolveLabelRotateDeg = (label: Pick<CanonicalNodeLabel, 'position' | 'rot
 
 /** 把已测量 label 解析为相对最终 Node rect 的局部几何 */
 export const resolveNodeLabelGeometry = (
-  layout: CompiledNodeLayout,
+  layout: NodeGeometryContext,
   label: MeasuredNodeLabel,
   properties: CanonicalNodeLabel,
 ): NodeLabelLayout => {
@@ -186,7 +186,7 @@ export const resolveNodeLabelGeometry = (
  * 节点 label 的外接点
  * @description 用于顶层 bbox / viewBox 计算
  */
-export const labelExtentPoints = (layout: CompiledNodeLayout): Array<Position> => {
+export const labelExtentPoints = (layout: Pick<NodeGeometryContext, 'geometry' | 'labels'>): Array<Position> => {
   if (!layout.labels || layout.labels.length === 0) return [];
 
   const cx = layout.geometry.rect.x;

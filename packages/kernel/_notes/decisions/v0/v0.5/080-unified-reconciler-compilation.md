@@ -38,12 +38,12 @@ Reconciler 单向依赖 Core 与实际使用的 Foundation 能力，拥有完整
 
 相同领域阶段只定义一种权威产物，由 Core 产生，全量和增量消费同一结构。Weave 保存阶段实际返回的结果，不为缓存建立简化的平行布局、复制属性投影或完整元素模型；是否跨次保留不改变产物的类型和语义。
 
-| 元素       | 共享阶段产物与约束                                                                                                                           |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| Coordinate | 位置解析后生成局部引用布局，使用 `CompiledNodeLayout`；增量缓存直接保存该布局，不保存另一份待重建布局的坐标包装，不要求可见输出              |
-| Node       | `CompiledNode` 表示有效属性与布局的计算结果；绘制阶段另行返回输出，不使用可选 output 混淆计算是否完成，也不维护仅为 Weave 定义的完整节点副本 |
-| Path       | 保留不同 kind 的解析与计算契约，统一其绘制与边界贡献；不要求所有 kind 存在中心线，不把完整输出伪装为布局                                     |
-| Scope      | 前置继承与放置准备、子布局完成后的包络与变换、分组属性和输出分别按就绪点产生；不重复保存后代声明或完整子树输出                               |
+| 元素       | 共享阶段产物与约束                                                                                                             |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Coordinate | `CanonicalCoordinate` 保存完整位置意图，`CompiledCoordinate` 仅保存实际位置；引用投影不构造虚拟 Node，不要求可见输出           |
+| Node       | `CanonicalNode` 保存有效配置和能力绑定；`CompiledNode` 仅保存 geometry、layout、style、text、labels、animations 等最终计算结果 |
+| Path       | 保留不同 kind 的解析与计算契约，统一其绘制与边界贡献；不要求所有 kind 存在中心线，不把完整输出伪装为布局                       |
+| Scope      | 前置继承与放置准备、子布局完成后的包络与变换、分组属性和输出分别按就绪点产生；不重复保存后代声明或完整子树输出                 |
 
 布局产物不承担声明身份和来源。名称来自当前输入，来源与出现位置来自本次执行记录；投影及重新发布引用使用当前记录，不能从旧缓存推断新的声明位置。引用包络、可见边界与父布局 allocation 保持各自语义，不因共用产物而合并。
 
@@ -57,7 +57,7 @@ Weave 额外维护的节点身份、current / pending、依赖、失效及版本
 - `compileSceneSnapshot`：执行相同完整编译，返回 `SceneCompilationSnapshot`，收集诊断而不派发 warning，并按执行选项收集来源。
 - `CompileOptions` 及完整调用配置组合、`ExecuteOptions`、`CompileResult`、`SceneCompilationSnapshot` 由 Reconciler 拥有；Core 继续拥有这些组合所消费的原子绘图配置、Definition、Scene、Composite artifact、绘图诊断和阶段契约。
 
-入口名称不因迁包而增加同义替代。现有 Definition 集合到 artifact 返回类型的泛型关联必须保留。Core 的 `NodeCompilation` 更名为上述 `CompiledNode`，原来附带输出的同名包装删除；`CompiledCoordinate` 以及仅为增量封装来源与输出的元素包装不再作为独立 Core 编译产物。
+入口名称不因迁包而增加同义替代。现有 Definition 集合到 artifact 返回类型的泛型关联必须保留。Node、Coordinate、Path、Scope 分别拥有独立 Canonical 与 Compiled 产物；仅为增量封装来源与重复输出的元素包装删除。
 
 普通结果继续遵循 [077](./077-compile-output-contract.md)：只返回 Scene 与 Composite artifacts。诊断与按需来源通过快照契约交付；中间产物共享不增加普通结果的节点布局表、观察出口或空间句柄。
 

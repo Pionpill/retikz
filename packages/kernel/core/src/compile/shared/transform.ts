@@ -80,9 +80,9 @@ export type ComposedScopeTransform = Readonly<{
   finiteForward: boolean;
   /** 逆矩阵系数是否可直接消费 */
   finiteInverse: boolean;
-  /** 保持 CompiledNodeLayout 投影规则的累计旋转弧度 */
+  /** 保持 NodeGeometryContext 投影规则的累计旋转弧度 */
   rotation: number;
-  /** 保持 CompiledNodeLayout 投影规则的逐轴缩放乘积 */
+  /** 保持 NodeGeometryContext 投影规则的逐轴缩放乘积 */
   scaleX: number;
   scaleY: number;
 }>;

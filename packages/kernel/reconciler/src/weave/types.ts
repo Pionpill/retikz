@@ -1,11 +1,15 @@
 import type {
   CompileWarning,
+  ReferenceReadKind,
   CompiledNode,
-  emitNodeOutput,
-  CompiledNodeLayout,
+  CompiledCoordinate,
+  CanonicalCoordinate,
+  CanonicalNode,
+  CanonicalPath,
   CompiledPath,
   CompiledScope,
-  ScopeStyleResolution,
+  CanonicalScope,
+  CanonicalScopeInheritance,
   IRComposite,
   IRCoordinate,
   IRNode,
@@ -19,25 +23,23 @@ import type { CompileStageRecord } from '../compile/runtime';
 import type { WeaveCompileRead } from './compile';
 import type { WeaveChangeKind, WeaveChangeSource } from './constants';
 
-/**
- * 依赖读取需求的占位值，不表示无依赖
- * TODO: 明确 layout / style 等分类后接入读取需求与变化匹配算法
- * 分类前传播一律使消费者失效，不根据此值过滤更新；完整读取事实保留在 records
- */
-export type WeaveDependencyKind = null;
+/** 名称读取与父包络聚合实际依赖的最终结果粒度 */
+export type WeaveDependencyKind = ReferenceReadKind | 'layout';
 
 /** 节点自身输入与有效继承上下文，不重复保存合并后的输入 */
 type InputWeave<TInput> = {
   /** Core 定义的自身输入 */
   own: TInput;
   /** Core 负责解析的有效继承上下文 */
-  context: ScopeStyleResolution;
+  context: CanonicalScopeInheritance;
 };
 
 /** 节点的可替换逻辑状态，集合写入由候选工作区隔离 */
 type WeaveNodeStateBase<TInput> = {
-  /** 阶段复用依据；实际产物仅保存在 compiled / output */
-  cache?: Omit<CompileStageRecord, 'value'>;
+  /** 阶段复用依据与资源诊断；实际产物分别保存在 canon / compiled */
+  cache?: {
+    [TPhase in CompileStageRecord['phase']]: Omit<Extract<CompileStageRecord, { phase: TPhase }>, 'value' | 'canon'>;
+  }[CompileStageRecord['phase']];
   /** 所属声明容器，引用稳定对象 */
   parent: WeaveRoot | WeaveScopeNode;
   /** 自身输入与有效上下文，替换对象而非修改共享内容 */
@@ -52,26 +54,32 @@ type WeaveNodeStateBase<TInput> = {
 
 /** 普通图元状态 */
 type WeaveShapeState = WeaveNodeStateBase<IRNode> & {
+  /** Core 已补全的配置与能力绑定 */
+  canon: CanonicalNode | null;
   /** Core 完整编译产物，只读复用 */
   compiled: CompiledNode | null;
-  /** 独立绘制阶段结果，资源与图元一同复用 */
-  output: ReturnType<typeof emitNodeOutput> | null;
 };
 
 /** 坐标状态 */
 type WeaveCoordinateState = WeaveNodeStateBase<IRCoordinate> & {
-  /** Core 完整编译产物，只读复用 */
-  compiled: CompiledNodeLayout | null;
+  /** Core 已补全的位置表达式 */
+  canon: CanonicalCoordinate | null;
+  /** Core 最终位置，只读复用 */
+  compiled: CompiledCoordinate | null;
 };
 
 /** 路径状态 */
 type WeavePathState = WeaveNodeStateBase<IRPathBase> & {
+  /** Core 已补全的路径配置与能力绑定 */
+  canon: CanonicalPath | null;
   /** Core 完整编译产物，只读复用 */
   compiled: CompiledPath | null;
 };
 
 /** Scope 状态，自身输入不重复保存 children */
 type WeaveScopeState = WeaveNodeStateBase<Omit<IRScope, 'children'>> & {
+  /** Core 已补全的自身配置及后代继承覆盖 */
+  canon: CanonicalScope | null;
   /** Core 完整编译产物，只读复用 */
   compiled: CompiledScope | null;
   /** 有序子节点，子节点状态变化不改变此数组 */

@@ -1,3 +1,4 @@
+import type { CanonicalPathConfig } from '@retikz/core';
 import type { PathCommand, PathCompileResult, PathLabel, ScenePrimitive } from '@retikz/core';
 
 import { RetikzExtensionError, RetikzExtensionErrorCode } from '../../errors';
@@ -105,7 +106,7 @@ const resultOf = (
   const labelPrimitives: ReadonlyArray<ScenePrimitive> =
     labels.length === 0 ? [] : context.emitHostLabels({ labels, samples, sourcePath: ['kindOptions', 'label'] });
   return {
-    primitives: [styledPrimitiveFromOutline(ribbon, outline, context.appearance), ...labelPrimitives],
+    primitives: [styledPrimitiveFromOutline(outline, context.appearance), ...labelPrimitives],
     boundsPoints: [...outline.points, ...samples.map(sample => sample.point)],
   };
 };
@@ -115,7 +116,7 @@ const resultOf = (
  * @description boundary 模式保留 upper/lower 两条曲线并闭合轮廓；centerline 模式复用 Core materializePath 的已结算 commands，再按宽度函数生成左右边界
  */
 export const emitRibbonPrimitive = (
-  path: IRRibbonPath,
+  path: CanonicalPathConfig<IRRibbonPath>,
   context: EmitRibbonPrimitiveContext,
   profileRegistry: ReadonlyMap<string, RibbonWidthProfileDefinition>,
   capRegistry: ReadonlyMap<string, RibbonCapDefinition>,

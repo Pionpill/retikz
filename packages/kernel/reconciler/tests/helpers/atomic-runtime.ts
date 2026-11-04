@@ -1,15 +1,15 @@
 import type {
-  CompiledNodeLayout,
+  NodeGeometryContext,
   CompileOccurrenceLocator,
   CompileWarning,
   LayoutProposal,
   Transform,
-  ScopeStyleResolution,
-  PositionTargetResolveContext,
+  CanonicalScopeInheritance,
+  PositionTargetEvaluateContext,
   ComposedScopeTransform,
 } from '@retikz/core';
 import {
-  createPositionResolveContext,
+  createPositionEvaluateContext,
   composeScopeTransform,
   resolveNodeBoundary,
   RetikzCoreError,
@@ -27,7 +27,7 @@ import { RetikzReconcilerError, RetikzReconcilerErrorCode } from '../../src/erro
 /** 候选版本中的名称绑定，身份对应稳定的 Weave 节点 */
 export type WeaveBinding =
   | Readonly<{ state: 'pending'; binding: object }>
-  | Readonly<{ state: 'ready'; binding: object; irPath?: PropertyPath; layout: CompiledNodeLayout }>;
+  | Readonly<{ state: 'ready'; binding: object; irPath?: PropertyPath; layout: NodeGeometryContext }>;
 
 /** 声明位置可见的名称 frame */
 export type WeaveNamespace = Readonly<{
@@ -54,7 +54,7 @@ export type WeaveCompileOptions = Readonly<{
   /** 稳定环境 */
   shared: SharedCompileContext;
   /** 当前有效样式 */
-  style: ScopeStyleResolution;
+  style: CanonicalScopeInheritance;
   /** 来源路径 */
   irPath: PropertyPath;
   /** 祖先变换 */
@@ -74,7 +74,7 @@ export type WeaveElementRuntime = Readonly<{
   /** 驱动输入 */
   options: WeaveCompileOptions;
   /** 当前局部坐标解释能力 */
-  positionContext: PositionTargetResolveContext;
+  positionContext: PositionTargetEvaluateContext;
   /** 已合成变换 */
   composedTransform: ComposedScopeTransform;
   /** 本次尝试独占资源、几何缓存与诊断 */
@@ -122,7 +122,7 @@ export const runWeaveCompilation = <TCompiled>(
   const transforms = options.transforms ?? [];
   const composedTransform = composeScopeTransform(transforms);
   let pending: RetikzReconcilerError | undefined;
-  const positionContext = createPositionResolveContext({
+  const positionContext = createPositionEvaluateContext({
     nodeDistance: options.shared.layout.nodeDistance,
     transformChain: transforms,
     composedTransform,
@@ -143,7 +143,7 @@ export const runWeaveCompilation = <TCompiled>(
         }
         throw pending;
       }
-      return { state: 'resolved', layout: entry.layout, irPath: entry.irPath };
+      return { state: 'resolved', context: entry.layout, irPath: entry.irPath };
     },
     resolveExplicitBoundary: (boundary, reference) =>
       resolveNodeBoundary(boundary, {

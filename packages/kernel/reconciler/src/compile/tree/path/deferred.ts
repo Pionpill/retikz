@@ -4,8 +4,15 @@ import type {
   InputPathCompilation,
   LayoutBoundsContribution,
 } from '@retikz/core';
-import { compilePath, createPathTargetResolver, resolvePathAnimations } from '@retikz/core';
+import {
+  compilePath,
+  createPathTargetResolver,
+  resolvePathAnimations,
+  resolvePath,
+  emitPathOutput,
+} from '@retikz/core';
 
+import { compareCanonicalPaths } from '../../compare';
 import type { CompileOwnerKey } from '../../provenance';
 import { createExecutionInvariantError } from '../../runtime';
 import { runCompileStage } from '../../runtime';
@@ -52,7 +59,7 @@ export const queuePathChild = (
   semanticOwner?: CompileOwnerKey,
 ): void => {
   const {
-    context: { transformChains: scopeChain, pathPrefix: locatorPrefix, style, layout },
+    context: { transformChains: scopeChain, pathPrefix: locatorPrefix, inheritance: style, layout },
     state: { primitives, paths, bounds, allocations },
   } = frame;
   const { defaults: scopeDefaults, theme } = style;
@@ -91,7 +98,7 @@ export const flushPendingPathEmissions = (
   try {
     for (const pendingPath of pendingPaths) {
       const targetResolver = createPathTargetResolver(chain => createTreePositionContext(runtime, chain));
-      const { result, resolution } = runtime.state.execution.withWarningOccurrence(pendingPath.occurrence, () =>
+      const { compiled } = runtime.state.execution.withWarningOccurrence(pendingPath.occurrence, () =>
         runCompileStage(
           pendingPath.cacheable ? runtime : { ...runtime, cache: undefined },
           pendingPath.irPath,
@@ -102,23 +109,39 @@ export const flushPendingPathEmissions = (
             scopeDefaults: pendingPath.scopeDefaults,
             theme: pendingPath.theme,
           },
-          stageRuntime =>
-            compilePath(pendingPath, targetResolver, {
-              registries: stageRuntime.context.registries,
-              ...stageRuntime.context.layout,
-              ...stageRuntime.context.host,
-              nodeBoundaryStore: stageRuntime.state.workspace.nodeBoundaryStore,
-              registerPaint: stageRuntime.state.workspace.paintRegistry.register,
-              resources: () => [
-                ...stageRuntime.state.workspace.paintRegistry.getResources(),
-                ...stageRuntime.state.workspace.clipRegistry.getResources(),
-              ],
-              onWarn: stageRuntime.state.workspace.diagnosticCollector.collect,
-              resolveTransform: stageRuntime.state.execution.scopeTransformComposer.resolve,
+          {
+            resolveInputs: { path: pendingPath.path, defaults: pendingPath.scopeDefaults, theme: pendingPath.theme },
+            compileInputs: { scopeChain: pendingPath.scopeChain },
+            resolve: stageRuntime =>
+              resolvePath(pendingPath.path, {
+                ...stageRuntime.context.registries,
+                ...stageRuntime.context.layout,
+                scopeDefaults: pendingPath.scopeDefaults,
+                mode: pendingPath.theme.mode,
+                irPath: pendingPath.irPath,
+              }),
+            equals: compareCanonicalPaths,
+            compile: (stageRuntime, canon) => ({
+              canon,
+              compiled: compilePath(canon, pendingPath, targetResolver, {
+                registries: stageRuntime.context.registries,
+                ...stageRuntime.context.layout,
+                ...stageRuntime.context.host,
+                nodeBoundaryStore: stageRuntime.state.workspace.nodeBoundaryStore,
+                registerPaint: stageRuntime.state.workspace.paintRegistry.register,
+                resources: () => [
+                  ...stageRuntime.state.workspace.paintRegistry.getResources(),
+                  ...stageRuntime.state.workspace.clipRegistry.getResources(),
+                ],
+                onWarn: stageRuntime.state.workspace.diagnosticCollector.collect,
+                resolveTransform: stageRuntime.state.execution.scopeTransformComposer.resolve,
+              }),
             }),
+          },
         ),
       );
-      const rawPrimitives = result?.primitives ?? [];
+      const result = emitPathOutput(compiled);
+      const rawPrimitives = result.primitives;
       const primitives =
         runtime.state.execution.provenanceTracker?.materializePrimitives(rawPrimitives) ?? rawPrimitives;
       const idx = pendingPath.placeholderSlot.primitives.indexOf(pendingPath.placeholderSlot.placeholder);
@@ -136,10 +159,10 @@ export const flushPendingPathEmissions = (
       if (pendingPath.zIndex !== undefined) {
         for (const prim of primitives) output.zIndexOf.set(prim, pendingPath.zIndex);
       }
-      if (result !== null) {
+      if (compiled.layout !== null) {
         pendingPath.bounds.push({
           boundsPoints: [...result.boundsPoints],
-          shadow: resolution.path.shadow,
+          shadow: compiled.style.shadow,
         });
         pendingPath.allocations.push({
           boundsPoints: [...result.boundsPoints],

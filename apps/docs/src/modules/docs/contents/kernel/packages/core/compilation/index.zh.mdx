@@ -143,9 +143,9 @@ Scene 组装时单独校验 `padding` 非负且有限，显式提供 viewBox 时
 
 `compileChildrenToPrimitives` 按 `children` 的声明顺序分派子项。本例先把 Path 放入待处理列表，再处理 A、B。一个节点的内部过程可以用三个结果理解：
 
-- CanonicalNode：已完成样式继承、默认值、正文与标签字体和绘制资源解析的节点，`fill` / `stroke` 直接携带 paint 解析结果。
-- NodeResolution：CanonicalNode 加上已经选定的形状与连接边界，供布局使用。
-- CompiledNodeLayout：测量并定位后的节点结果，按节点属性、形状、连接面、几何、正文排版和标签分组。
+- CanonicalNode：完整的布局意图、正文、标签、绘制属性和能力绑定，paint 解析结果位于 `style.fill` / `style.stroke`。
+- NodeGeometryContext：单次布局和引用查询临时组合的能力、几何与排版。
+- CompiledNode：最终几何、占用、文字、标签和外观，供输出与增量复用。
 
 以下为这三个内部类型的源码定义，省略注释，不展开它们引用的其他类型。
 
@@ -154,78 +154,33 @@ Scene 组装时单独校验 `padding` 非负且有限，显式提供 viewBox 时
 <DocTab value="canonical-node" label="CanonicalNode">
 
 ```ts
-export type CanonicalNode = Omit<
-  Omit<NodeColorSource, 'style' | 'layout'> & NonNullable<NodeColorSource['style']> & IRNodeLayout,
-  | 'padding'
-  | 'position'
-  | 'margin'
-  | 'minimumSize'
-  | 'scale'
-  | 'text'
-  | 'label'
-  | 'align'
-  | 'rotate'
-  | 'dashed'
-  | 'dotted'
-  | 'dashPattern'
-  | 'shadow'
-  | 'fill'
-  | 'stroke'
-  | 'opacity'
-  | 'font'
-  | 'lineHeight'
-> &
-  GraphicOpacityResolution & {
-    fill?: InputPaintResolution;
-    stroke?: InputPaintResolution;
-    position: NonNullable<IRNode['position']>;
-    padding: BoundsInsets;
-    margin: BoundsInsets;
-    minimumSize: {
-      width: number;
-      height: number;
-    };
-    scale: {
-      x: number;
-      y: number;
-    };
-    font: CanonicalFont;
-    lineHeight: number;
-    text?: Array<TextLineResolution>;
-    label?: Array<CanonicalNodeLabel>;
-    align: NodeTextAlign;
-    rotate: number;
-    dashPattern?: StrokeDashPattern;
-    shadow?: CanonicalDropShadow;
-  };
-```
-
-</DocTab>
-
-<DocTab value="node-resolution" label="NodeResolution">
-
-```ts
-export type NodeResolution = Readonly<{
-  irPath: PropertyPath;
-  node: CanonicalNode;
-  shape: ShapeResolution;
-  boundary: BoundaryResolution;
+export type CanonicalNode = Readonly<{
+  id?: string;
+  aliasIds: Array<string>;
+  meta?: JsonObject;
+  zIndex?: number;
+  layout: CanonicalNodeLayout;
+  shape: CanonicalNodeShape;
+  boundary: CanonicalNodeBoundary;
+  style: CanonicalNodeStyle;
+  text?: CanonicalNodeText;
+  labels: Array<CanonicalNodeLabel>;
+  animations: NonNullable<IRNode['animations']>;
 }>;
 ```
 
 </DocTab>
 
-<DocTab value="node-layout" label="CompiledNodeLayout">
+<DocTab value="node-layout" label="NodeGeometryContext">
 
-`irPath` 属于编译结果顶层的来源信息，与节点的 `properties`、`layout` 平级。Node、Coordinate、Path 和 Scope 的编译结果都在顶层保存该路径，布局对象不持有来源位置。
+`irPath` 属于本次执行的诊断和来源记录，不进入最终 compiled 几何。Node 的 canon 与 compiled 分开保存；查询连接能力时临时构造 `NodeGeometryContext`。
 
 ```ts
-export type CompiledNodeLayout = {
-  boundarySource?: CanonicalNode['boundary'];
-  shape: NodeResolution['shape'];
-  boundary: NodeResolution['boundary'];
+export type NodeGeometryContext = {
+  shape: CanonicalNode['shape'];
+  boundary: CanonicalNode['boundary'];
   geometry: NodeLayoutGeometry;
-  text?: NodeTextLayout;
+  text?: CompiledNodeTextLayout;
   labels?: Array<NodeLabelLayout>;
 };
 
@@ -237,17 +192,21 @@ export type NodeLayoutGeometry = {
 };
 
 export type CompiledNode = {
-  properties: CanonicalNode;
+  geometry: CompiledNodeGeometry;
   layout: CompiledNodeLayout;
+  style: CompiledNodeStyle;
+  text?: CompiledNodeText;
+  labels: Array<CompiledNodeLabel>;
+  animations: Array<IRAnimationTrack>;
 };
 
-export type NodeTextLayout = {
+export type CompiledNodeTextLayout = {
   font: CanonicalFont;
   align: 'start' | 'middle' | 'end';
   lineHeight: number;
   baselineOffsets?: Array<number>;
 } & (
-  | { kind: 'plain'; lines: Array<NodeTextLineLayout> }
+  | { kind: 'plain'; lines: Array<CompiledNodeTextLineLayout> }
   | { kind: 'inline'; lines: Array<{ laid: InlineLineLayout; baselineOffset: number }> }
 );
 ```
@@ -256,7 +215,7 @@ export type NodeTextLayout = {
 
 </DocTabs>
 
-`resolveNode` 根据根字号和公式开关确定有效配置、能力绑定，以及正文和标签的字体、分段与样式，返回完整的 `CanonicalNode`。`layoutNode` 消费这些属性，计算测量、折行、节点尺寸及位置；尝试不同宽度时不再解析文字。返回的 `properties` 直接保留解析结果，`layout` 保存计算后的几何与排版。描边宽度、颜色和虚线保持在同一属性来源；标签引线也保留完整配置。`emitNodePrimitives` 消费布局与当前属性生成 Scene 图元；普通文本通过作者行索引读取当前行样式，改色时无需重新折行。这里的数据结构不代替变化影响判断，Weave 的分类调度仍需要独立的能力契约。
+`resolveNode` 根据根字号、相对距离和公式开关确定完整的 `CanonicalNode`。`compileNode` 消费 canon，复用符合条件的排版，或调用 `layoutNode` 重新测量和定位，再生成最终绘制结果。正文通过作者行索引将物理行与当前外观对应；`emitNodeOutput` 只消费 compiled。Reconciler 比较有效配置及实际引用几何，并由 Weave 维护阶段缓存；Core 提供产物契约和几何查询算法。
 
 <ComponentPreview files="compilation-node" size="lg" hideCode type="illustration" />
 
@@ -424,17 +383,17 @@ Scene 之外，`artifacts` 保存 Composite 返回的领域产物；没有产物
 
 Core 提供可组合的领域阶段。Reconciler 统一管理遍历、依赖等待与工作区，完整和增量执行都调用同一套解析、布局和输出规则。
 
-| 元素       | 共享阶段                                                                                | 驱动保存的事实                       |
-| ---------- | --------------------------------------------------------------------------------------- | ------------------------------------ |
-| Node       | `resolveNode` → `layoutNode` → `emitNodeOutput`                                         | 有效属性、布局，以及配套的输出和资源 |
-| Coordinate | `resolvePosition` → `createCoordinateLayout`                                            | 局部 `CompiledNodeLayout`            |
-| Path       | `resolvePathAnimations` → `compilePath`                                                 | kind 宿主产生的输出、资源和边界      |
-| Scope      | `resolveScopeStyle`、`prepareScopeGeometry`、`compileScopeGeometry`、`createScopeGroup` | 包络、自身分组属性和输出             |
+| 元素       | 共享阶段                                                                           | 驱动保存的事实                       |
+| ---------- | ---------------------------------------------------------------------------------- | ------------------------------------ |
+| Node       | `resolveNode` → `layoutNode` → `emitNodeOutput`                                    | 有效属性、布局，以及配套的输出和资源 |
+| Coordinate | `evaluatePosition` → `layoutCoordinate`                                            | `CompiledCoordinate.position`        |
+| Path       | `resolvePathAnimations` → `compilePath`                                            | kind 宿主产生的输出、资源和边界      |
+| Scope      | `resolveScope`、`prepareScopeGeometry`、`compileScopeGeometry`、`createScopeGroup` | 包络、自身分组属性和输出             |
 
 `resolve` 可使用注册表和位置查询等语义上下文，不读取编译执行状态。布局和输出阶段分别要求测量、位置解析、资源登记等能力；完整 `SharedCompileContext` 和工作区由调用方持有。下面以无引用节点说明阶段组合，位置查询返回 `undefined` 表示没有可见的命名目标。
 
 ```ts
-import { createPositionResolveContext, emitNodeOutput, layoutNode, resolveNode } from '@retikz/core';
+import { createPositionEvaluateContext, emitNodeOutput, layoutNode, resolveNode } from '@retikz/core';
 import { createSharedCompileContext, createWorkspaceCompileState } from '@retikz/reconciler';
 
 const shared = createSharedCompileContext();
@@ -451,21 +410,20 @@ const resolution = resolveNode(
     warn: (code, message, path = ['children', 0]) => workspace.diagnosticCollector.collect({ code, message, path }),
   },
 );
-const compilation = layoutNode(resolution, {
+const compilation = compileNode(resolution, {
+  round: shared.layout.round,
+  registerPaint: workspace.paintRegistry.register,
   measureText: shared.host.measureText,
-  positionContext: createPositionResolveContext({
+  positionContext: createPositionEvaluateContext({
     nodeDistance: shared.layout.nodeDistance,
     lookupReference: () => undefined,
   }),
 });
-const output = emitNodeOutput(compilation, {
-  round: shared.layout.round,
-  registerPaint: workspace.paintRegistry.register,
-});
+const output = emitNodeOutput(compilation, shared.layout.round);
 const resources = workspace.paintRegistry.getResources();
 ```
 
-`output` 的资源引用需要与 `resources` 一起保存。该例只组合节点计算；名称发布、诊断派发和最终 Scene 组装由驱动决定。`CompiledNodeLayout` 保存布局几何，`CompiledNode` 保存有效属性与布局，绘制输出由 `emitNodeOutput` 另行返回。阶段可单独调用并不表示它们可无条件独立缓存。
+`output` 的资源引用需要与 `resources` 一起保存。该例只组合节点计算；名称发布、诊断派发和最终 Scene 组装由驱动决定。`CanonicalNode` 保存完整配置，`CompiledNode` 保存最终结果，`emitNodeOutput` 组装图元与边界。阶段复用还必须检查输入、上下文和实际引用。
 
 Reconciler 的名称栈管理声明可见性与 Scope 未完成状态，路径在依赖就绪后统一计算。各阶段通过窄查询能力消费名称；失败的候选工作区不会发布资源或半成品，真实错误保留 cause。
 
@@ -475,7 +433,7 @@ Scope 在子元素之前解析有效样式并准备放置，子布局就绪后�
 
 只需从已有轴对齐边界计算布局矩形时，可调用 Core 公开的 `computeLayoutFromBounds(bounds, padding, round)`。它应用留白和输出精度；`bounds` 为 `undefined` 时返回位于原点的 100×100 兜底框。持有点集的调用方先用 `@retikz/math` 的 `boundsOf` 求边界。
 
-领域算法来自 Core，完整输出组装入口属于 Reconciler。Reconciler 负责名称映射、依赖失效、版本隔离和提交；本接口不自动构建或更新 Weave 树。调用方不得修改已发布的 compiled 可达数据，环境定义或测量服务改变时也必须使相关缓存失效。包含 Definition 与文本 emit 函数的编译状态不能直接作为 Worker 消息序列化。
+领域算法来自 Core，完整输出组装入口属于 Reconciler。Reconciler 负责名称映射、依赖失效、版本隔离和提交；本接口不自动构建或更新 Weave 树。调用方不得修改已发布的 compiled 可达数据，环境定义或测量服务改变时也必须使相关缓存失效。canon 的能力绑定包含运行时 Definition；compiled 只保留最终数据，不持有 Definition 或输出回调，跨线程传输时还需携带其引用的资源。
 
 <SourceLinks
   sources={[
@@ -494,7 +452,7 @@ Scope 在子元素之前解析有效样式并准备放置，子布局就绪后�
 
 增量更新先按顺序应用 `WeaveBatch`，再从候选输入执行统一遍历。输入、声明路径和实际名称读取仍有效时，阶段可以复用；资源随产物一起导入本次工作区，来源记录按当前执行重新建立。有诊断的阶段重新计算，避免遗漏本轮诊断。布局查询仍遵守声明可见性、局部名称遮蔽和延迟 Path 规则。
 
-Weave 保存稳定作者节点，以及已提交的 `current` 和候选 `pending` 状态。Coordinate 保存 `CompiledNodeLayout`，Node 保存 `CompiledNode`，Path 和 Scope 保存各自原子计算的真实结果。候选状态共享未变化的产物，修改集合时复制；提交前保留旧状态，提交后到最终确认前仍可回滚。
+Weave 为 Node、Coordinate、Path、Scope 分别保存 input、canon、compiled。稀疏输入和上下文相同则复用 canon；否则先 resolve，canon 等价且编译上下文与依赖未变时仍复用 compiled。位置、连接边界和明确锚点按实际读取粒度比较，查询结果相同则停止该分支重算。候选状态共享未变化的产物，修改集合时复制；提交后到最终确认前仍可回滚。
 
 含 Composite 的输入也走同一执行器，并可批次更新其中的作者基础元素。Composite 的生成子树不进入可编辑 Weave 地址空间；修改 Composite 作者输入使用 `replace`。probe、重放凭证和测量工作区属于单轮执行，跨轮重新计算。`captureProvenance` 默认关闭，与是否增量无关。
 

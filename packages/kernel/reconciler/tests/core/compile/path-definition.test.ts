@@ -76,7 +76,7 @@ describe('Path 注册表', () => {
         kindOptions: strictObject({ stroke: NonBlankStringSchema }),
       }),
       compile: context => {
-        const base = context.emitStroke(context.path);
+        const base = context.emitStroke();
         if (base === null) return null;
 
         return {
@@ -103,7 +103,7 @@ describe('Path 注册表', () => {
     expect(prim.stroke).toBe('gold');
   });
 
-  it('自定义 Path 无需 Stroke steps，仍接收分组 Source', () => {
+  it('自定义 Path 无需 Stroke steps，仍接收确定化配置', () => {
     let observed: unknown;
     const empty = definePath({
       name: 'empty',
@@ -118,11 +118,11 @@ describe('Path 注册表', () => {
     });
 
     expect(output.scene.primitives).toEqual([]);
-    expect(observed).toMatchObject({ type: 'path', kind: 'empty', style: { stroke: 'blue' } });
-    expect(observed).not.toHaveProperty('stroke');
+    expect(observed).toMatchObject({ type: 'path', kind: 'empty', stroke: 'blue' });
+    expect(observed).not.toHaveProperty('style');
   });
 
-  it('在 emitStroke 规范化之前，保持 Source 简写对自定义提供者可见', () => {
+  it('自定义提供者接收确定化标签位置及独立宿主外观', () => {
     let observedPosition: unknown;
     let observedStyle: unknown;
     let observedStroke: unknown;
@@ -132,7 +132,7 @@ describe('Path 注册表', () => {
       compile: context => {
         const line = context.path.children?.[1];
         observedPosition = line && 'label' in line ? line.label?.position : undefined;
-        observedStyle = context.path.style;
+        observedStyle = context.appearance;
         observedStroke = context.appearance.stroke;
 
         return context.emitStroke();
@@ -151,7 +151,7 @@ describe('Path 注册表', () => {
     ).scene;
     const label = flatten(compiled.primitives).find(primitive => primitive.type === 'text');
 
-    expect(observedPosition).toBe('at-end');
+    expect(observedPosition).toBe(1);
     expect(observedStyle).toMatchObject({ color: '#336699', stroke: '#5c85ad' });
     expect(observedStroke).toBe('#5c85ad');
     expect(label).toMatchObject({ type: 'text', x: 100 });
@@ -209,8 +209,9 @@ describe('Path 注册表', () => {
       schema: customPathSchema('short-stroke'),
       compile: context =>
         context.emitStroke({
-          ...context.path,
+          type: 'path',
           kind: 'stroke',
+          arrow: context.path.arrow,
           children: context.path.children?.slice(0, 1),
         }),
     });
@@ -305,7 +306,7 @@ describe('Path 注册表', () => {
         kind: literal('highlight'),
         kindOptions: strictObject({ stroke: NonBlankStringSchema }),
       }),
-      compile: context => context.emitStroke(context.path),
+      compile: context => context.emitStroke(),
     });
     const ir = scene([
       {

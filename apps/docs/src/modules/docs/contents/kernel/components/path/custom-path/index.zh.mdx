@@ -29,6 +29,8 @@ description: 定义并注册整条 Path 的输出方式，复用公开的描边�
 
 ## 定义能力
 
+`context.path` 是已补齐默认值的 `CanonicalPathConfig`，自定义字段保留 schema 推导的类型，标签位置已换算成数值。绘制属性从 `context.appearance` 读取。直接复用当前描边时调用 `context.emitStroke()`；传入参数表示一份新的 Source IR，应显式构造它，不能将 canonical 配置展开后当成原始输入。
+
 用 `definePath` 声明一个显式 registry key、完整 Path subject schema，以及整条路径的 compile 函数。schema 应在开放的 `PathSchema` 上组合该 kind 的 literal 与 `kindOptions`，从而让 definition 自己拥有完整的 payload 约束。
 
 ```tsx
@@ -49,11 +51,12 @@ const highlight = definePath<HighlightPath>({
   name: 'highlight',
   schema: HighlightPathSchema,
   compile: context => {
-    const { kindOptions, ...strokePath } = context.path;
+    const { kindOptions, children } = context.path;
     const base = context.emitStroke({
-      ...strokePath,
+      type: 'path',
+      children,
       kind: 'stroke',
-      style: { ...strokePath.style, strokeWidth: kindOptions.strokeWidth },
+      style: { strokeWidth: kindOptions.strokeWidth },
     });
     if (base === null) return null;
     return {

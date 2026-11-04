@@ -2,13 +2,14 @@ import type { BoundsInsets, CenteredBox, Position } from '@retikz/math';
 import { DEG_TO_RAD, point } from '@retikz/math';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import type { BoundaryResolution } from '../../resolve';
+import type { CanonicalNodeBoundary } from '../../resolve';
 import { boundaryKey } from '../../resolve';
 import type { IRBoundary } from '../../schemas';
 import { CenterAnchor, isAnchor } from '../../shared';
+import type { BoundaryGeometryContext } from '../reference';
 import { snapshotProviderPosition } from '../shared';
 import { fallbackBoundaryAnchor, resolveBoundary as resolveBoundaryGeometry } from './boundary';
-import type { CompiledNodeLayout, NodeBoundaryState } from './types';
+import type { NodeBoundaryState } from './types';
 
 /** 保留合法 undefined fallback，并校验 provider 实际返回的二维坐标 */
 const snapshotOptionalProviderPosition = (owner: string, value: Position | undefined): Position | undefined =>
@@ -36,10 +37,10 @@ const inflateRect = (r: CenteredBox, m: BoundsInsets): CenteredBox => {
 };
 
 /** 取节点视觉 rect 外扩 margin 后的外边界 */
-export const outerRectOf = (layout: CompiledNodeLayout): CenteredBox =>
+export const outerRectOf = (layout: Pick<BoundaryGeometryContext, 'geometry'>): CenteredBox =>
   inflateRect(layout.geometry.rect, layout.geometry.margin);
 
-const shapeBoundaryResolutionOf = (layout: CompiledNodeLayout): BoundaryResolution => ({
+const shapeBoundaryResolutionOf = (layout: BoundaryGeometryContext): CanonicalNodeBoundary => ({
   name: layout.shape.name,
   definition: layout.shape.definition,
   params: layout.shape.params,
@@ -47,17 +48,19 @@ const shapeBoundaryResolutionOf = (layout: CompiledNodeLayout): BoundaryResoluti
 });
 
 const resolveBoundaryOf = (
-  layout: CompiledNodeLayout,
+  layout: BoundaryGeometryContext,
   boundary: IRBoundary | undefined,
-  boundaryResolution?: BoundaryResolution,
+  canonicalBoundary?: CanonicalNodeBoundary,
   warn?: (code: string, message: string) => void,
   state?: NodeBoundaryState,
 ) => {
   const resolution =
-    boundaryResolution ??
-    (boundary === undefined || boundary === 'shape'
+    canonicalBoundary ??
+    (boundary === 'shape'
       ? shapeBoundaryResolutionOf(layout)
-      : boundary === layout.boundarySource || boundaryKey(boundary) === boundaryKey(layout.boundarySource)
+      : boundary === undefined ||
+          boundary === layout.boundary.name ||
+          boundaryKey(boundary) === boundaryKey({ type: layout.boundary.name, params: layout.boundary.params })
         ? layout.boundary
         : undefined);
   if (resolution === undefined) {
@@ -76,28 +79,28 @@ const resolveBoundaryOf = (
 
 /** 取节点 shape 在 toward 方向的附着点 */
 export const boundaryPointOf = (
-  layout: CompiledNodeLayout,
+  layout: BoundaryGeometryContext,
   toward: Position,
   boundary?: IRBoundary,
-  boundaryResolution?: BoundaryResolution,
+  canonicalBoundary?: CanonicalNodeBoundary,
   warn?: (code: string, message: string) => void,
   state?: NodeBoundaryState,
 ): Position => {
-  const { def, rect, params } = resolveBoundaryOf(layout, boundary, boundaryResolution, warn, state);
+  const { def, rect, params } = resolveBoundaryOf(layout, boundary, canonicalBoundary, warn, state);
   const raw = def.computeBoundaryPoint(inflateRect(rect, layout.geometry.margin), toward, params);
   return snapshotProviderPosition(`Boundary '${boundaryKey(boundary)}' boundaryPoint`, raw);
 };
 
 /** 沿折线移除起始节点连接面内的前缀，保留原线段上的出界交点 */
 export const clipNodePolyline = (
-  layout: CompiledNodeLayout,
+  layout: BoundaryGeometryContext,
   points: ReadonlyArray<Position>,
   boundary?: IRBoundary,
-  boundaryResolution?: BoundaryResolution,
+  canonicalBoundary?: CanonicalNodeBoundary,
   warn?: (code: string, message: string) => void,
   state?: NodeBoundaryState,
 ): Array<Position> => {
-  const { def, rect, params } = resolveBoundaryOf(layout, boundary, boundaryResolution, warn, state);
+  const { def, rect, params } = resolveBoundaryOf(layout, boundary, canonicalBoundary, warn, state);
   const outer = inflateRect(rect, layout.geometry.margin);
   const center: Position = [outer.x, outer.y];
   const boundaryAt = (position: Position): Position =>
@@ -130,11 +133,11 @@ export const clipNodePolyline = (
 
 /** 取节点 shape 的命名 anchor；标准 anchor 可选在 boundary 拟合后应用 margin */
 export const anchorOf = (
-  layout: CompiledNodeLayout,
+  layout: BoundaryGeometryContext,
   name: string,
   boundary?: IRBoundary,
   applyMargin = false,
-  boundaryResolution?: BoundaryResolution,
+  canonicalBoundary?: CanonicalNodeBoundary,
   state?: NodeBoundaryState,
 ): Position => {
   if (isAnchor(name)) {
@@ -168,7 +171,7 @@ export const anchorOf = (
       return p;
     }
 
-    const { def, rect, params } = resolveBoundaryOf(layout, boundary, boundaryResolution, undefined, state);
+    const { def, rect, params } = resolveBoundaryOf(layout, boundary, canonicalBoundary, undefined, state);
     const anchorRect = applyMargin ? inflateRect(rect, layout.geometry.margin) : rect;
     const raw = def.resolveAnchor?.(anchorRect, name, params);
     const p =
@@ -197,17 +200,17 @@ export const anchorOf = (
 
 /** 取节点 shape 在指定角度方向的边界点 */
 export const angleBoundaryOf = (
-  layout: CompiledNodeLayout,
+  layout: BoundaryGeometryContext,
   angleDeg: number,
   boundary?: IRBoundary,
   applyMargin = false,
-  boundaryResolution?: BoundaryResolution,
+  canonicalBoundary?: CanonicalNodeBoundary,
   state?: NodeBoundaryState,
 ): Position => {
   const rad = angleDeg * DEG_TO_RAD;
   const lx = Math.cos(rad);
   const ly = Math.sin(rad);
-  const { def, rect, params } = resolveBoundaryOf(layout, boundary, boundaryResolution, undefined, state);
+  const { def, rect, params } = resolveBoundaryOf(layout, boundary, canonicalBoundary, undefined, state);
   const boundaryRect = applyMargin ? inflateRect(rect, layout.geometry.margin) : rect;
   const rot = boundaryRect.rotate ?? 0;
   const cosR = Math.cos(rot);

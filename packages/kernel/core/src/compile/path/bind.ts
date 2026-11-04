@@ -3,7 +3,7 @@ import { encodePropertyPath } from '@retikz/foundation';
 import { pointAtArcAngle } from '@retikz/math';
 
 import type { Transform } from '../../contract';
-import type { CanonicalStep, PathResolution } from '../../resolve';
+import type { CanonicalPathStep, CanonicalPath } from '../../resolve';
 import type { IRPosition, IRTarget } from '../../schemas';
 import { isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../shared';
 import type { BoundPathResolution, PathTargetContext, PathTargetResolver, TargetResolution } from './types';
@@ -35,16 +35,16 @@ const bindTarget = (
  * @description 普通相对目标不更新后续偏移的基点，累积相对目标会更新；经过轴向线或平滑步骤后，后续相对目标保留给编译游标处理
  */
 const resolveSteps = (
-  steps: ReadonlyArray<CanonicalStep>,
+  steps: ReadonlyArray<CanonicalPathStep>,
   context: PathTargetContext,
   targets: Map<string, TargetResolution>,
   prefix: PropertyPath,
-): Array<CanonicalStep> => {
+): Array<CanonicalPathStep> => {
   const resolver = context.targetResolver;
   const scopeChain = context.scopeChain ?? [];
   let previous: IRPosition | null = null;
   let deferRelative = false;
-  const out: Array<CanonicalStep> = [];
+  const out: Array<CanonicalPathStep> = [];
 
   const resolve = (target: IRTarget, key: PropertyPath): IRTarget => {
     let value = target;
@@ -131,15 +131,15 @@ const resolveSteps = (
 };
 
 /** 在布局引用就绪后绑定路径目标，不重复解析样式和默认值 */
-export const bindPathTargets = (resolution: PathResolution, context: PathTargetContext): BoundPathResolution => {
+export const bindPathTargets = (resolution: CanonicalPath, context: PathTargetContext): BoundPathResolution => {
   const targets = new Map<string, TargetResolution>();
   const children =
-    resolution.path.children === undefined
+    resolution.properties.children === undefined
       ? undefined
-      : resolveSteps(resolution.path.children, context, targets, resolution.irPath);
+      : resolveSteps(resolution.properties.children, context, targets, resolution.irPath);
   return {
     ...resolution,
-    path: children === undefined ? resolution.path : { ...resolution.path, children },
+    properties: children === undefined ? resolution.properties : { ...resolution.properties, children },
     targets,
   };
 };

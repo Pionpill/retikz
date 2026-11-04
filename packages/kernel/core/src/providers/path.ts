@@ -8,7 +8,7 @@ import { createProviderRegistry } from './registry';
 const strokePath = definePath<IRPathBase>({
   name: BuiltinPath.Stroke,
   schema: StrokePathSchema,
-  compile: context => context.emitStroke(context.path),
+  compile: context => context.emitStroke(),
 });
 
 /** 内置 path provider 注册项 */

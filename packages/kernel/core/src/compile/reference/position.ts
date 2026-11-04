@@ -8,16 +8,17 @@ import {
   isOffsetPositionLike,
   isPositionTuple,
 } from '../../shared';
-import type { PositionResolution, PositionResolveContext, ResolvablePosition } from './types';
+import { referencePositionOf } from './geometry';
+import type { PositionEvaluation, PositionEvaluateContext, EvaluablePosition } from './types';
 
 /** 为局部坐标点补上对应的世界坐标 */
-const resolutionOfLocal = (localPoint: IRPosition, context: PositionResolveContext): PositionResolution => ({
+const evaluationOfLocal = (localPoint: IRPosition, context: PositionEvaluateContext): PositionEvaluation => ({
   localPoint,
   worldPoint: context.toWorld(localPoint),
 });
 
 /** 为世界坐标点补上对应的局部坐标 */
-const resolutionOfWorld = (worldPoint: IRPosition, context: PositionResolveContext): PositionResolution => ({
+const evaluationOfWorld = (worldPoint: IRPosition, context: PositionEvaluateContext): PositionEvaluation => ({
   localPoint: context.toLocal(worldPoint),
   worldPoint,
 });
@@ -27,46 +28,46 @@ const resolutionOfWorld = (worldPoint: IRPosition, context: PositionResolveConte
  * @description 坐标对、极坐标及偏移量按局部坐标计算；命名引用读取节点中心，between 由上下文回调解析
  * @returns 引用未找到或 between 无法解析时返回 null
  */
-export const resolvePosition = (
-  position: ResolvablePosition,
-  context: PositionResolveContext,
-): PositionResolution | null => {
+export const evaluatePosition = (
+  position: EvaluablePosition,
+  context: PositionEvaluateContext,
+): PositionEvaluation | null => {
   if (typeof position === 'string') {
-    const reference = context.lookupReference(position);
+    const reference = context.lookupReference(position, 'position');
     if (reference === undefined) return null;
-    return resolutionOfWorld([reference.layout.geometry.rect.x, reference.layout.geometry.rect.y], context);
+    return evaluationOfWorld(referencePositionOf(reference.context), context);
   }
 
-  if (isPositionTuple(position)) return resolutionOfLocal([position[0], position[1]], context);
+  if (isPositionTuple(position)) return evaluationOfLocal([position[0], position[1]], context);
   if (isAtPositionLike(position)) {
-    const reference = context.lookupReference(position.of);
+    const reference = context.lookupReference(position.of, 'position');
     if (reference === undefined) return null;
 
-    const referenceLocal = context.toLocal([reference.layout.geometry.rect.x, reference.layout.geometry.rect.y]);
+    const referenceLocal = context.toLocal(referencePositionOf(reference.context));
     const distance = position.distance ?? context.nodeDistance;
     const [dx, dy] = anchorUnitVectorByAnchor[position.direction];
 
-    return resolutionOfLocal([referenceLocal[0] + dx * distance, referenceLocal[1] + dy * distance], context);
+    return evaluationOfLocal([referenceLocal[0] + dx * distance, referenceLocal[1] + dy * distance], context);
   }
 
   if (isOffsetPositionLike(position)) {
-    const base = resolvePosition(position.of, context);
+    const base = evaluatePosition(position.of, context);
     if (base === null) return null;
 
-    return resolutionOfLocal(
+    return evaluationOfLocal(
       [base.localPoint[0] + position.offset[0], base.localPoint[1] + position.offset[1]],
       context,
     );
   }
 
   if (isBetweenPositionLike(position)) {
-    const worldPoint = context.resolveBetweenWorld?.(position);
-    return worldPoint === null || worldPoint === undefined ? null : resolutionOfWorld(worldPoint, context);
+    const worldPoint = context.evaluateBetweenWorld?.(position);
+    return worldPoint === null || worldPoint === undefined ? null : evaluationOfWorld(worldPoint, context);
   }
 
   const origin =
-    position.origin === undefined ? resolutionOfLocal([0, 0], context) : resolvePosition(position.origin, context);
+    position.origin === undefined ? evaluationOfLocal([0, 0], context) : evaluatePosition(position.origin, context);
   if (origin === null) return null;
 
-  return resolutionOfLocal(pointAtArcAngle(origin.localPoint, position.radius, position.angle), context);
+  return evaluationOfLocal(pointAtArcAngle(origin.localPoint, position.radius, position.angle), context);
 };

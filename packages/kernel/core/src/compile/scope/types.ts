@@ -1,9 +1,9 @@
 import type { PropertyPath } from '@retikz/foundation';
+import type { CenteredBox } from '@retikz/math';
 
 import type { ScenePrimitive, SceneResource, Transform } from '../../contract';
-import type { CanonicalDropShadow, IRPosition, IRScope } from '../../schemas';
-import type { CompiledNodeLayout } from '../node';
-import type { PositionTargetResolveContext } from '../reference';
+import type { CanonicalDropShadow, IRPosition, IRScope, IRAnimationTrack } from '../../schemas';
+import type { PositionTargetEvaluateContext } from '../reference';
 import type { CompileWarning } from '../shared';
 
 /** Scope 子元素计算前的准备状态，不代表包络已就绪 */
@@ -17,10 +17,22 @@ export type ScopeGeometryPreparation = Readonly<{
 /** 子布局确定后的 Scope 几何阶段产物 */
 export type CompiledScope = Readonly<{
   /** 局部内容包络，包含空内容时的退化布局 */
-  envelope: CompiledNodeLayout;
+  geometry: CompiledScopeGeometry;
   /** 子布局完成后确定的自身变换 */
   transforms: Array<Transform>;
+  /** 分组自身的最终身份与排序，不包含子树 */
+  style: Pick<IRScope, 'id' | 'meta' | 'zIndex'>;
+  /** 已登记的裁剪资源标识 */
+  clip?: string;
+  /** 分组最终动画 */
+  animations: Array<IRAnimationTrack>;
 }>;
+
+/** 子元素聚合形成的最终包络，不包含节点文字或 Definition */
+export type CompiledScopeGeometry = {
+  /** 包络最终矩形；circle 包络的宽高相等 */
+  rect: CenteredBox;
+};
 
 /** Scope 自身几何声明，不包含子树 */
 export type InputScopeCompile = Omit<IRScope, 'children'>;
@@ -28,7 +40,7 @@ export type InputScopeCompile = Omit<IRScope, 'children'>;
 /** Scope 单次几何计算环境 */
 export type ScopeGeometryContext = Readonly<{
   /** 当前位置读取能力 */
-  positionContext: PositionTargetResolveContext;
+  positionContext: PositionTargetEvaluateContext;
   /** 当前诊断位置 */
   irPath: PropertyPath;
   /** 当前诊断接收器 */
@@ -72,7 +84,7 @@ export type CompileOutput = Readonly<{
 /** Scope 放置目标解析只需要父空间引用查询与来源 */
 export type ScopePositionResolveContext = Readonly<{
   /** 父坐标系的位置查询与转换 */
-  positionContext: PositionTargetResolveContext;
+  positionContext: PositionTargetEvaluateContext;
   /** Scope 声明来源 */
   irPath: PropertyPath;
 }>;

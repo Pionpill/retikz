@@ -1,10 +1,10 @@
 import type {
-  CompiledNodeLayout,
+  ReferenceGeometryContext,
   CompositeInputScope,
   LayoutAlignmentGuide,
   LayoutBoundsContribution,
   LayoutProposal,
-  ScopeStyleResolution,
+  CanonicalScopeInheritance,
   Transform,
 } from '@retikz/core';
 import type { PropertyPath } from '@retikz/foundation';
@@ -30,7 +30,7 @@ export type SubtreeCompileContext = Readonly<{
   /** 当前层声明路径前缀 */
   pathPrefix: PropertyPath;
   /** 有效默认配置与主题 */
-  style: ScopeStyleResolution;
+  inheritance: CanonicalScopeInheritance;
   /** 当前子树的编译溯源归属标识，仅在开启来源追踪时提供 */
   compileOwner?: CompileOwnerKey;
 }>;
@@ -40,11 +40,11 @@ export type SubtreeCompileState = Readonly<{
   /** 用于组装 Scene 的图元及待回填的路径占位项 */
   primitives: Array<InternalScenePrimitive>;
   /** 用于计算当前 Scope 包络及相关变换的子元素布局 */
-  layouts: Array<CompiledNodeLayout>;
+  layoutContexts: Array<ReferenceGeometryContext>;
   /** 等待命名目标和 Scope 几何确定后执行的路径编译任务 */
   paths: Array<PendingPathEmission>;
   /** 供祖先 Scope 补齐变换并更新命名空间绑定的已发布布局 */
-  publications: Array<CompiledNodeLayout>;
+  publications: Array<ReferenceGeometryContext>;
   /** 用于计算整体边界和自动 viewBox 的几何贡献，包含附属 label 和阴影 */
   bounds: Array<LayoutBoundsContribution>;
   /** 用于父布局测量的占位贡献，默认不额外计入 Node 附属 label 和阴影 */

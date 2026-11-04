@@ -197,7 +197,7 @@ describe('OffsetPosition: step.to 编译解析', () => {
       const countedStroke = definePath({
         name: 'counted-stroke',
         schema: PathSchema.extend({ kind: literal('counted-stroke') }),
-        compile: context => context.emitStroke(context.path),
+        compile: context => context.emitStroke(),
       });
       const target = { id: 'A', boundary: { type: 'counted', params: {} } } as const;
       const ir: IRScene = {
@@ -250,7 +250,7 @@ describe('OffsetPosition: step.to 编译解析', () => {
       };
       const scene = compileToScene(ir).scene;
 
-      // 未定义 id 让 resolvePosition 返回 null，emitPathPrimitive 返回 null
+      // 未定义 id 让 evaluatePosition 返回 null，emitPathPrimitive 返回 null
       const pathPrim = scene.primitives.find(p => p.type === 'path');
 
       expect(pathPrim).toBeUndefined();

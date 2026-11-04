@@ -1,5 +1,5 @@
 import type { GroupPrimitive, ScenePrimitive } from '../../../contract';
-import type { CanonicalPath } from '../../../resolve';
+import type { CanonicalPathProperties } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
 import type { RegisterPaint } from '../../resource';
 import type { PathBaseProps } from './split';
@@ -19,7 +19,7 @@ type EmitPathBasePropsContext = {
 
 /** 将已解析 path 样式物化为 PathPrimitive 公共属性 */
 export const emitPathBaseProps = (
-  path: CanonicalPath,
+  path: CanonicalPathProperties,
   context: EmitPathBasePropsContext,
 ): PathBasePropsWithStrokeWidth => {
   const { registerPaint } = context;
@@ -27,23 +27,23 @@ export const emitPathBaseProps = (
     stroke: registerPaint(path.stroke) ?? 'currentColor',
     strokeWidth: path.strokeWidth,
     fill: registerPaint(path.fill) ?? 'none',
-    fillRule: path.fillRule,
-    dashPattern: path.dashPattern,
-    dashOffset: path.dashOffset,
-    lineCap: path.lineCap,
-    lineJoin: path.lineJoin,
-    opacity: path.opacity,
-    fillOpacity: path.fillOpacity,
-    strokeOpacity: path.strokeOpacity,
+    fillRule: path.fillRule === 'nonzero' ? undefined : path.fillRule,
+    dashPattern: path.dashPattern.length === 0 ? undefined : path.dashPattern,
+    dashOffset: path.dashOffset === 0 ? undefined : path.dashOffset,
+    lineCap: path.lineCap === 'butt' ? undefined : path.lineCap,
+    lineJoin: path.lineJoin === 'miter' ? undefined : path.lineJoin,
+    opacity: path.opacity === 1 ? undefined : path.opacity,
+    fillOpacity: path.fillOpacity === 1 ? undefined : path.fillOpacity,
+    strokeOpacity: path.strokeOpacity === 1 ? undefined : path.strokeOpacity,
     shadow: path.shadow,
-    blendMode: path.blendMode,
+    blendMode: path.blendMode === 'normal' ? undefined : path.blendMode,
   };
 };
 
 /** path emit 最终输出包装输入 */
 type InputPathPrimitiveWrapping = {
   /** 原始 IR path，用于读取 transform 与水合元数据 */
-  path: CanonicalPath;
+  path: CanonicalPathProperties;
   /** 主体 primitive；无整体 transform 时 id/meta/animations 会落在这里 */
   primitive: ScenePrimitive;
   /** 主体、label、mark primitives */
@@ -55,7 +55,11 @@ type InputPathPrimitiveWrapping = {
 };
 
 /** 路径绘制进度保留在主体上，其余动画随整个宿主输出播放 */
-const assignPathAnimations = (owner: ScenePrimitive, primitive: ScenePrimitive, path: CanonicalPath): void => {
+const assignPathAnimations = (
+  owner: ScenePrimitive,
+  primitive: ScenePrimitive,
+  path: CanonicalPathProperties,
+): void => {
   if (path.animations === undefined) return;
   if (owner === primitive) {
     owner.animations = path.animations;

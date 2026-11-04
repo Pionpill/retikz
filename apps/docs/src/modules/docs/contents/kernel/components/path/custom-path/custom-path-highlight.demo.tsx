@@ -20,15 +20,15 @@ const highlight = definePath<HighlightPath>({
   name: 'highlight',
   schema: HighlightPathSchema,
   compile: context => {
-    const { kindOptions, ...strokePath } = context.path;
+    const { kindOptions, children } = context.path;
     const base = context.emitStroke({
-      ...strokePath,
+      type: 'path',
+      children,
       kind: 'stroke',
       style: {
-        ...strokePath.style,
         lineCap: 'round',
         lineJoin: 'round',
-        strokeWidth: kindOptions.strokeWidth ?? context.path.style?.strokeWidth ?? 10,
+        strokeWidth: kindOptions.strokeWidth ?? context.appearance.strokeWidth ?? 10,
       },
     });
     if (base === null) return null;

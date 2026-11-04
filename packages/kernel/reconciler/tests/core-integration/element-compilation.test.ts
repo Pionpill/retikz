@@ -1,11 +1,13 @@
+import { createScopeGeometryContext } from '@retikz/core';
+import { createNodeGeometryContext } from '@retikz/core';
 import type { CompileOutput, IRCoordinate, IRNode, IRPathBase, IRScope, ShapeDefinition } from '@retikz/core';
 import {
   BUILTIN_SHAPES,
-  createCoordinateLayout,
+  projectReferenceGeometry,
   computeCompileOutputBounds,
   projectLayoutWithTransform,
   composeScopeTransform,
-  resolveScopeStyle,
+  resolveScopeInheritance,
 } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
@@ -54,20 +56,19 @@ const ancestor = {};
 
 describe('独立元素编译', () => {
   it('引用投影先应用自身变换再应用父级变换，且不修改局部布局', () => {
-    const shared = createSharedCompileContext();
-    const layout = createCoordinateLayout([2, 3], shared.registries.shapeRegistry);
-    const original = structuredClone(layout.geometry);
-    const identity = projectLayoutWithTransform(layout, composeScopeTransform([]));
-    expect(identity.geometry).toEqual(original);
-    const projected = projectLayoutWithTransform(
+    const layout = { position: [2, 3] as [number, number] };
+    const original = structuredClone(layout);
+    const identity = projectReferenceGeometry(layout, composeScopeTransform([]));
+    expect(identity).toEqual(original);
+    const projected = projectReferenceGeometry(
       layout,
       composeScopeTransform([
         { kind: 'scale', x: 2, y: 3 },
         { kind: 'translate', x: 5, y: 7 },
       ]),
     );
-    expect(projected.geometry.rect).toMatchObject({ x: 14, y: 30, width: 0, height: 0 });
-    expect(layout.geometry).toEqual(original);
+    expect(projected).toEqual({ position: [14, 30] });
+    expect(layout).toEqual(original);
   });
   it('查询回调真实异常保留 cause，不误判为依赖等待', () => {
     const shared = createSharedCompileContext();
@@ -82,7 +83,7 @@ describe('独立元素编译', () => {
         { type: 'coordinate', id: 'b', position: { direction: 'right' as const, of: 'a', distance: 10 } },
         {
           shared,
-          style: resolveScopeStyle({}, shared.registries.themeRegistry),
+          style: resolveScopeInheritance({}, shared.registries.themeRegistry),
           irPath: ['children', 1],
           namespace: { bindings },
         },
@@ -96,7 +97,7 @@ describe('独立元素编译', () => {
 
   it('顶层 Path 等待两个 Scope 的节点投影后编译，保持声明绘制顺序', () => {
     const shared = createSharedCompileContext();
-    const context = { shared, style: resolveScopeStyle({}, shared.registries.themeRegistry), irPath: ['root'] };
+    const context = { shared, style: resolveScopeInheritance({}, shared.registries.themeRegistry), irPath: ['root'] };
     const bindings = new Map<string, WeaveBinding>();
     const outputs: Array<CompileOutput> = [];
     const scopes: Array<IRScope> = [];
@@ -112,13 +113,18 @@ describe('独立元素编译', () => {
         transforms: prepared.compiled.preliminaryTransforms,
       });
       if (node.status !== 'compiled') throw new Error('expected node');
-      const scope = testCompileScope(scopeInput, prepared.compiled, [node.compiled.compiled.layout], context);
+      const scope = testCompileScope(
+        scopeInput,
+        prepared.compiled,
+        [createNodeGeometryContext(node.compiled.canon, node.compiled.compiled)],
+        context,
+      );
       if (scope.status !== 'compiled') throw new Error('expected scope');
       bindings.set(id, {
         state: 'ready',
         binding: {},
         layout: projectLayoutWithTransform(
-          node.compiled.compiled.layout,
+          createNodeGeometryContext(node.compiled.canon, node.compiled.compiled),
           composeScopeTransform(scope.compiled.group.transforms ?? []),
         ),
       });
@@ -161,12 +167,12 @@ describe('独立元素编译', () => {
       { type: 'node', position: [2, 3], shape: 'counted' },
       {
         shared,
-        style: resolveScopeStyle({}, shared.registries.themeRegistry),
+        style: resolveScopeInheritance({}, shared.registries.themeRegistry),
         irPath: ['children', 0],
       },
     );
     if (result.status !== 'compiled') throw new Error('expected node');
-    const rectangle = { ...result.compiled.compiled.layout.geometry.rect };
+    const rectangle = { ...result.compiled.compiled.geometry.rect };
     const count = emitted;
     const first = finalizeOutputs({
       root: {},
@@ -179,17 +185,21 @@ describe('独立元素编译', () => {
       shared,
     });
     projectLayoutWithTransform(
-      result.compiled.compiled.layout,
+      createNodeGeometryContext(result.compiled.canon, result.compiled.compiled),
       composeScopeTransform([{ kind: 'translate', x: 20, y: 30 }]),
     );
-    expect(result.compiled.compiled.layout.geometry.rect).toEqual(rectangle);
+    expect(result.compiled.compiled.geometry.rect).toEqual(rectangle);
     expect(next.result.scene).toEqual(first.result.scene);
     expect(emitted).toBe(count);
   });
 
   it('嵌套作用域经过祖先裁剪时保持全量可见边界和资源语义', () => {
     const shared = createSharedCompileContext();
-    const context = { shared, style: resolveScopeStyle({}, shared.registries.themeRegistry), irPath: ['children', 0] };
+    const context = {
+      shared,
+      style: resolveScopeInheritance({}, shared.registries.themeRegistry),
+      irPath: ['children', 0],
+    };
     const outer: Omit<IRScope, 'children'> = {
       type: 'scope',
       id: 'outer',
@@ -205,14 +215,19 @@ describe('独立元素编译', () => {
     if (b.status !== 'compiled') throw new Error('expected inner');
     const node = testCompileNode(input, { ...innerContext, style: b.compiled.scope });
     if (node.status !== 'compiled') throw new Error('expected node');
-    const child = testCompileScope(inner, b.compiled, [node.compiled.compiled.layout], innerContext);
+    const child = testCompileScope(
+      inner,
+      b.compiled,
+      [createNodeGeometryContext(node.compiled.canon, node.compiled.compiled)],
+      innerContext,
+    );
     if (child.status !== 'compiled') throw new Error('expected inner compiled');
     const parent = testCompileScope(
       outer,
       a.compiled,
       [
         projectLayoutWithTransform(
-          child.compiled.compiled.envelope,
+          createScopeGeometryContext(child.compiled.canon, child.compiled.compiled.geometry),
           composeScopeTransform(child.compiled.compiled.transforms),
         ),
       ],
@@ -240,7 +255,7 @@ describe('独立元素编译', () => {
 
   it('引用从 pending 就绪后可重算，祖先包络引用仍报错', () => {
     const shared = createSharedCompileContext();
-    const context = { shared, style: resolveScopeStyle({}, shared.registries.themeRegistry), irPath: ['a'] };
+    const context = { shared, style: resolveScopeInheritance({}, shared.registries.themeRegistry), irPath: ['a'] };
     const input: IRCoordinate = { type: 'coordinate', id: 'c', position: { direction: 'right', of: 'a' } };
     expect(
       testCompileCoordinate(input, {
@@ -268,7 +283,7 @@ describe('独立元素编译', () => {
             {
               state: 'ready',
               binding: {},
-              layout: node.compiled.compiled.layout,
+              layout: createNodeGeometryContext(node.compiled.canon, node.compiled.compiled),
             },
           ],
         ]),
@@ -276,12 +291,12 @@ describe('独立元素编译', () => {
     });
     expect(result.status).toBe('compiled');
     if (result.status !== 'compiled') throw new Error('expected coordinate');
-    expect(result.compiled.geometry.rect.x).toBeGreaterThan(30);
+    expect(result.compiled.position[0]).toBeGreaterThan(30);
   });
 
   it('同层 zIndex 排序与删除资源不重算旧状态', () => {
     const shared = createSharedCompileContext();
-    const context = { shared, style: resolveScopeStyle({}, shared.registries.themeRegistry), irPath: ['a'] };
+    const context = { shared, style: resolveScopeInheritance({}, shared.registries.themeRegistry), irPath: ['a'] };
     const a: IRNode = { type: 'node', id: 'a', position: [0, 0], zIndex: 3 };
     const b: IRNode = { type: 'node', id: 'b', position: [40, 0], zIndex: -1 };
     const first = testCompileNode(a, context);
@@ -305,7 +320,7 @@ describe('独立元素编译', () => {
 
   it('已编译 Scope 与子节点组装后等价于全量输出', () => {
     const shared = createSharedCompileContext();
-    const parent = resolveScopeStyle({}, shared.registries.themeRegistry);
+    const parent = resolveScopeInheritance({}, shared.registries.themeRegistry);
     const scopeInput = { type: 'scope' as const, position: [30, 40] as [number, number] };
     const context = { shared, style: parent, irPath: ['scene', 'children', 0] };
     const prepared = testPrepareScopeCompilation(scopeInput, context);
@@ -317,7 +332,12 @@ describe('独立元素编译', () => {
       irPath: [...context.irPath, 'children', 0],
     });
     if (node.status !== 'compiled') throw new Error('expected node');
-    const scope = testCompileScope(scopeInput, prepared.compiled, [node.compiled.compiled.layout], context);
+    const scope = testCompileScope(
+      scopeInput,
+      prepared.compiled,
+      [createNodeGeometryContext(node.compiled.canon, node.compiled.compiled)],
+      context,
+    );
     if (scope.status !== 'compiled') throw new Error('expected scope');
     const output = assembleTestScopeOutput(scope.compiled, [node.compiled.output], shared);
     const assembled = finalizeOutputs({
@@ -331,7 +351,7 @@ describe('独立元素编译', () => {
 
   it('独立编译时区分资源身份，组装保留原资源及片段', () => {
     const shared = createSharedCompileContext();
-    const context = { shared, style: resolveScopeStyle({}, shared.registries.themeRegistry), irPath: [] };
+    const context = { shared, style: resolveScopeInheritance({}, shared.registries.themeRegistry), irPath: [] };
     const first = testCompileNode(
       {
         type: 'node',
@@ -389,7 +409,7 @@ describe('独立元素编译', () => {
       { type: 'coordinate', id: 'b', position: { direction: 'right', of: 'a' } },
       {
         shared,
-        style: resolveScopeStyle({}, shared.registries.themeRegistry),
+        style: resolveScopeInheritance({}, shared.registries.themeRegistry),
         irPath: ['b'],
         namespace: { bindings: new Map([['a', { state: 'pending', binding: ancestor }]]) },
       },
@@ -404,7 +424,7 @@ describe('独立元素编译', () => {
       },
       {
         shared,
-        style: resolveScopeStyle({}, shared.registries.themeRegistry),
+        style: resolveScopeInheritance({}, shared.registries.themeRegistry),
         irPath: [],
         namespace: { bindings: new Map([['a', { state: 'pending', binding: ancestor }]]) },
       },
@@ -427,7 +447,7 @@ describe('独立元素编译', () => {
     };
     const result = testCompilePath(input, {
       shared,
-      style: resolveScopeStyle({}, shared.registries.themeRegistry),
+      style: resolveScopeInheritance({}, shared.registries.themeRegistry),
       irPath: ['scene', 'children', 0],
     });
     if (result.status !== 'compiled') throw new Error('expected compiled');
@@ -444,13 +464,13 @@ describe('独立元素编译', () => {
     const shared = createSharedCompileContext();
     const result = testCompileNode(input, {
       shared,
-      style: resolveScopeStyle({}, shared.registries.themeRegistry),
+      style: resolveScopeInheritance({}, shared.registries.themeRegistry),
       irPath: ['scene', 'children', 0],
     });
     expect(result.status).toBe('compiled');
     if (result.status !== 'compiled') return;
-    expect(result.compiled.compiled.layout.geometry.rect.x).toBe(12);
-    expect(result.compiled.compiled.layout.geometry.rect.y).toBe(24);
+    expect(result.compiled.compiled.geometry.rect.x).toBe(12);
+    expect(result.compiled.compiled.geometry.rect.y).toBe(24);
     expect(result.compiled.output.primitives).toEqual(
       compileToScene({ version: 1, type: 'scene', children: [input] }).scene.primitives,
     );
@@ -462,7 +482,7 @@ describe('独立元素编译', () => {
     const input: IRNode = { type: 'node', position: [0, 0] };
     const result = testCompileNode(input, {
       shared,
-      style: resolveScopeStyle(scope, shared.registries.themeRegistry),
+      style: resolveScopeInheritance(scope, shared.registries.themeRegistry),
       irPath: ['scene', 'children', 0, 'children', 0],
     });
     if (result.status !== 'compiled') throw new Error('expected compiled');

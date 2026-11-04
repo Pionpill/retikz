@@ -9,15 +9,15 @@ import { createCompositeContractError } from '../diagnostics';
 import { parseProviderPayload } from '../provider';
 import { resolveMarkStyle } from './mark';
 import type {
-  ArrowMarkGeometry,
-  ArrowMarkResolution,
+  CanonicalPathArrowGeometry,
+  CanonicalPathArrow,
   MarkColorSource,
-  MarkResolution,
+  CanonicalPathMark,
   PathColorSource,
   PathDefinitionResolution,
-  PathResolution,
+  CanonicalPath,
   PathResolveContext,
-  StrokePathResolution,
+  CanonicalStrokePath,
 } from './types';
 
 /** 路径描边与箭头接触处的重叠量，以宿主线宽为单位 */
@@ -44,7 +44,7 @@ export const resolvePathDefinition = (
 };
 
 /** 绑定箭头定义，确定外观、有效尺寸及端点接触与收缩参数 */
-export const resolveArrowMark = (mark: MarkColorSource, context: PathResolveContext): ArrowMarkResolution => {
+export const resolveArrowMark = (mark: MarkColorSource, context: PathResolveContext): CanonicalPathArrow => {
   const shape = mark.shape ?? DEFAULT_ARROW_SHAPE;
   const definition = getProviderDefinition(context.arrowRegistry, shape);
   const shared = resolveMarkStyle(mark, definition, context);
@@ -69,7 +69,7 @@ export const resolveArrowMark = (mark: MarkColorSource, context: PathResolveCont
     );
   }
 
-  const geometry: ArrowMarkGeometry = {
+  const geometry: CanonicalPathArrowGeometry = {
     baseSize,
     tipX,
     visualBackX,
@@ -86,16 +86,16 @@ export const resolveArrowMark = (mark: MarkColorSource, context: PathResolveCont
     );
   }
 
-  return { source: mark, definition, mark: canonicalMark, geometry };
+  return { definition, mark: canonicalMark, geometry };
 };
 
 /** 解析已声明的起点、终点箭头，并以声明对象为键保存结果 */
 const resolveEndpointArrowProviders = (
   arrow: PathColorSource['arrow'],
   context: PathResolveContext,
-): ReadonlyMap<IRArrowStyle, ArrowMarkResolution> => {
+): ReadonlyMap<IRArrowStyle, CanonicalPathArrow> => {
   /** 按端点声明对象索引的箭头解析结果 */
-  const resolutionMap = new Map<IRArrowStyle, ArrowMarkResolution>();
+  const resolutionMap = new Map<IRArrowStyle, CanonicalPathArrow>();
   for (const endpoint of [arrow?.start, arrow?.end])
     if (endpoint !== undefined) resolutionMap.set(endpoint, resolveArrowMark(endpoint, context));
   return resolutionMap;
@@ -105,23 +105,23 @@ const resolveEndpointArrowProviders = (
  * 为 Stroke 路径补齐缺省填充和描边，并绑定箭头与沿线标记定义
  * @description 不足以绘制的步骤序列返回空绑定表，单个矩形步骤除外
  */
-export const resolveStrokePathProviders = <TResolution extends PathResolution>(
+export const resolveStrokePathProviders = <TResolution extends CanonicalPath>(
   resolution: TResolution,
   context: PathResolveContext,
-): TResolution & StrokePathResolution => {
+): TResolution & CanonicalStrokePath => {
   const path = {
-    ...resolution.path,
-    fill: resolution.path.fill ?? 'none',
-    stroke: resolution.path.stroke ?? 'currentColor',
+    ...resolution.properties,
+    fill: resolution.properties.fill ?? 'none',
+    stroke: resolution.properties.stroke ?? 'currentColor',
   };
   const children = path.children;
   const strokeTooShort = children === undefined || (children.length < 2 && children[0]?.kind !== 'rectangle');
   if (strokeTooShort) {
-    return { ...resolution, path, arrows: new Map(), marks: new Map() };
+    return { ...resolution, properties: path, arrows: new Map(), marks: new Map() };
   }
 
   /** 按标记声明对象索引的解析结果 */
-  const marks = new Map<NonNullable<typeof path.marks>[number], MarkResolution>();
+  const marks = new Map<NonNullable<typeof path.marks>[number], CanonicalPathMark>();
   for (const [index, placement] of (path.marks ?? []).entries()) {
     const shape = placement.shape ?? DEFAULT_ARROW_SHAPE;
     const definition = context.markRegistry?.get(shape);
@@ -134,7 +134,7 @@ export const resolveStrokePathProviders = <TResolution extends PathResolution>(
   }
   return {
     ...resolution,
-    path,
+    properties: path,
     arrows: resolveEndpointArrowProviders(path.arrow, context),
     marks,
   };

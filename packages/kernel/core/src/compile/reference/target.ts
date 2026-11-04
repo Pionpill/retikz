@@ -2,8 +2,8 @@ import { lerp } from '@retikz/math';
 
 import type { IRAbsoluteTarget, IRNodeTarget, IRPosition } from '../../schemas';
 import { isBetweenPositionLike, isNodeTargetLike } from '../../shared';
-import { resolvePosition } from './position';
-import type { PositionTargetResolution, PositionTargetResolveContext, PositionTargetWorldResolution } from './types';
+import { evaluatePosition } from './position';
+import type { PositionTargetEvaluation, PositionTargetEvaluateContext, PositionTargetWorldEvaluation } from './types';
 
 /** 在节点目标的世界坐标上叠加 offset */
 const addNodeTargetOffset = (point: IRPosition, target: IRNodeTarget): IRPosition =>
@@ -13,31 +13,33 @@ const addNodeTargetOffset = (point: IRPosition, target: IRNodeTarget): IRPositio
 const isFinitePoint = (point: IRPosition): boolean => Number.isFinite(point[0]) && Number.isFinite(point[1]);
 
 /** 解析目标的世界坐标，并保留直接节点引用与连接面；无法定位时 referencePoint 为 null */
-export const resolvePositionTargetWorld = (
+export const evaluatePositionTargetWorld = (
   target: IRAbsoluteTarget,
-  context: PositionTargetResolveContext,
-): PositionTargetWorldResolution => {
+  context: PositionTargetEvaluateContext,
+): PositionTargetWorldEvaluation => {
   if (isNodeTargetLike(target)) {
-    const reference = context.lookupReference(target.id);
+    const reference = context.lookupReference(
+      target.id,
+      target.anchor !== undefined && (target.boundary === undefined || target.boundary === 'shape')
+        ? { anchor: target.anchor, boundary: target.boundary === undefined ? undefined : 'shape' }
+        : 'boundary',
+    );
     if (reference === undefined) return { target, referencePoint: null };
 
-    const boundaryResolution = context.boundaryResolutionOf?.(target, reference);
-    const referencePoint = addNodeTargetOffset(
-      context.pointOfNodeTarget(target, reference, boundaryResolution),
-      target,
-    );
+    const canonicalBoundary = context.canonicalBoundaryOf?.(target, reference);
+    const referencePoint = addNodeTargetOffset(context.pointOfNodeTarget(target, reference, canonicalBoundary), target);
 
     return {
       target,
       referencePoint,
       reference,
-      ...(boundaryResolution === undefined ? {} : { boundaryResolution }),
+      ...(canonicalBoundary === undefined ? {} : { canonicalBoundary }),
     };
   }
 
   if (isBetweenPositionLike(target)) {
-    const start = resolvePositionTargetWorld(target.between[0], context).referencePoint;
-    const end = resolvePositionTargetWorld(target.between[1], context).referencePoint;
+    const start = evaluatePositionTargetWorld(target.between[0], context).referencePoint;
+    const end = evaluatePositionTargetWorld(target.between[1], context).referencePoint;
     if (start === null || end === null) return { target, referencePoint: null };
 
     const referencePoint = lerp(start, end, target.fraction);
@@ -46,9 +48,9 @@ export const resolvePositionTargetWorld = (
     return { target, referencePoint };
   }
 
-  const position = resolvePosition(target, {
+  const position = evaluatePosition(target, {
     ...context,
-    resolveBetweenWorld: between => resolvePositionTargetWorld(between, context).referencePoint,
+    evaluateBetweenWorld: between => evaluatePositionTargetWorld(between, context).referencePoint,
   });
 
   return {
@@ -58,11 +60,11 @@ export const resolvePositionTargetWorld = (
 };
 
 /** 解析目标的局部坐标、世界坐标和直接节点引用；无法定位时两个坐标均为 null */
-export const resolvePositionTarget = (
+export const evaluatePositionTarget = (
   target: IRAbsoluteTarget,
-  context: PositionTargetResolveContext,
-): PositionTargetResolution => {
-  const world = resolvePositionTargetWorld(target, context);
+  context: PositionTargetEvaluateContext,
+): PositionTargetEvaluation => {
+  const world = evaluatePositionTargetWorld(target, context);
   return {
     ...world,
     point: world.referencePoint === null ? null : context.toLocal(world.referencePoint),

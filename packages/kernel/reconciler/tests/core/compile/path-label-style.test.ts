@@ -117,8 +117,8 @@ describe('边界: 回退链 / 不跟 stroke', () => {
     expect(t?.fontFamily).toBeUndefined();
   });
 
-  it('step_label_opacity_omitted：无 opacity + path 无 opacity → 不设（undefined）', () => {
-    expect(labelOf(pathWithLabel({}, {}))?.opacity).toBeUndefined();
+  it('step_label_opacity_omitted：标签和宿主省略 opacity 时保持完全不透明', () => {
+    expect(labelOf(pathWithLabel({}, {}))?.opacity ?? 1).toBe(1);
   });
 });
 

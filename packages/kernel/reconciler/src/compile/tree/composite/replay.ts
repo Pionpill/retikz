@@ -1,6 +1,6 @@
 import type {
   CompileOccurrenceLocator,
-  CompiledNodeLayout,
+  ReferenceGeometryContext,
   CompositeReplay,
   CompositeReplayWrapper,
   ScenePrimitive,
@@ -10,8 +10,8 @@ import {
   CompileExpansionKind,
   allocationPointsOf,
   calculateBoundsOfPrimitives,
-  projectLayoutWithTransform,
-  projectPublishedCompileLayout,
+  projectReferenceGeometry,
+  projectPublishedReference,
 } from '@retikz/core';
 
 import type { CompileOwnerKey } from '../../provenance';
@@ -40,12 +40,12 @@ export const commitCompositeReplay = (
   const { wrapperClipPath, transaction: preparedTransaction } = prepared;
   const transaction =
     preparedTransaction.materialize !== undefined &&
-    (preparedTransaction.styleFingerprint !== replayStyleFingerprint(frame.context.style.defaults) ||
-      preparedTransaction.themeFingerprint !== replayThemeFingerprint(frame.context.style.theme))
+    (preparedTransaction.styleFingerprint !== replayStyleFingerprint(frame.context.inheritance.defaults) ||
+      preparedTransaction.themeFingerprint !== replayThemeFingerprint(frame.context.inheritance.theme))
       ? preparedTransaction.materialize({
           scopeChain: frame.context.transformChains,
-          scopeDefaults: frame.context.style.defaults,
-          theme: frame.context.style.theme,
+          scopeDefaults: frame.context.inheritance.defaults,
+          theme: frame.context.inheritance.theme,
         })
       : preparedTransaction;
 
@@ -85,7 +85,7 @@ export const commitCompositeReplay = (
     primitives: committedPrimitives,
     primitiveZIndices: transaction.primitiveZIndices,
     publications: [],
-    layouts: [],
+    layoutContexts: [],
     bounds: [],
     allocations: [],
     artifacts: [],
@@ -104,14 +104,14 @@ export const commitCompositeReplay = (
       ? frame.context.transformChains
       : frame.context.transformChains.slice(0, frame.context.transformChains.length - authoredPreliminary.length);
   const namespaceTransforms = [...(authoredPreliminary ?? []), ...(transforms ?? [])];
-  const publishedLayouts = new Map<CompiledNodeLayout, CompiledNodeLayout>();
+  const publishedLayouts = new Map<ReferenceGeometryContext, ReferenceGeometryContext>();
 
   for (const [changeIndex, change] of transaction.namespaceChanges.entries()) {
-    const previousLayout = change.entry.layout;
+    const previousLayout = change.entry.context;
     const alreadyPublished = publishedLayouts.get(previousLayout);
     const projectedLayout =
-      alreadyPublished ?? projectPublishedCompileLayout(previousLayout, namespaceParentChain, namespaceTransforms);
-    const projectedChange = { ...change, entry: { ...change.entry, layout: projectedLayout } };
+      alreadyPublished ?? projectPublishedReference(previousLayout, namespaceParentChain, namespaceTransforms);
+    const projectedChange = { ...change, entry: { ...change.entry, context: projectedLayout } };
 
     const changeOccurrence = transaction.namespaceChangeOccurrences[changeIndex] ?? occurrence;
     execution.runtime.state.execution.withWarningOccurrence(
@@ -123,11 +123,11 @@ export const commitCompositeReplay = (
     publishedLayouts.set(previousLayout, projectedLayout);
   }
 
-  for (const layout of transaction.layouts) {
-    contribution.layouts.push(
+  for (const layout of transaction.layoutContexts) {
+    contribution.layoutContexts.push(
       transforms === undefined || transforms.length === 0
         ? layout
-        : projectLayoutWithTransform(
+        : projectReferenceGeometry(
             layout,
             execution.runtime.state.execution.scopeTransformComposer.resolve(transforms),
           ),
@@ -192,11 +192,12 @@ export const commitCompositeReplay = (
 };
 
 /** 按有效默认配置判断 replay 是否需要重新物化 */
-export const replayStyleFingerprint = (scopeDefaults: SubtreeCompileRuntime['context']['style']['defaults']): string =>
-  JSON.stringify(scopeDefaults);
+export const replayStyleFingerprint = (
+  scopeDefaults: SubtreeCompileRuntime['context']['inheritance']['defaults'],
+): string => JSON.stringify(scopeDefaults);
 
 /** 对 resolved Theme 做 compile-local 稳定比较 */
-export const replayThemeFingerprint = (theme: SubtreeCompileRuntime['context']['style']['theme']): string =>
+export const replayThemeFingerprint = (theme: SubtreeCompileRuntime['context']['inheritance']['theme']): string =>
   JSON.stringify(theme);
 
 /** 将试编译内的出现位置重定位到最终重放位置，保留内部展开后缀 */

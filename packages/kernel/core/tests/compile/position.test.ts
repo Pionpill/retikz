@@ -1,34 +1,44 @@
 import { describe, expect, it } from 'vitest';
 
-import type { PositionReferenceState, PositionReferenceView, PositionTargetResolveContext } from '../../src/compile';
+import type { PositionReferenceState, PositionReferenceView, PositionTargetEvaluateContext } from '../../src/compile';
 import {
   composeScopeTransform,
   createNodeBoundaryStore,
-  createPositionResolveContext,
-  createSyntheticRectangleLayout,
+  createPositionEvaluateContext,
   projectLayoutWithTransform,
-  resolvePosition,
-  resolvePositionTarget,
+  evaluatePosition,
+  evaluatePositionTarget,
 } from '../../src/compile';
-import type { CompiledNodeLayout } from '../../src/compile/node';
+import type { NodeGeometryContext } from '../../src/compile/node';
 import { resolveTransformTranslation } from '../../src/compile/scope';
 import { BUILTIN_SHAPES } from '../../src/providers';
-import type { BoundaryResolution } from '../../src/resolve';
+import type { CanonicalNodeBoundary } from '../../src/resolve';
 import type { IRNodeTarget, IRPosition, IRTransform } from '../../src/schemas';
 
-const rectangleBoundary: BoundaryResolution = {
+const rectangleBoundary: CanonicalNodeBoundary = {
   name: 'rectangle',
   definition: BUILTIN_SHAPES.get('rectangle')!,
   params: {},
   isShape: true,
 };
 
+const rectangleLayout = (): NodeGeometryContext => ({
+  shape: { name: 'rectangle', definition: BUILTIN_SHAPES.get('rectangle')!, params: {} },
+  boundary: rectangleBoundary,
+  geometry: {
+    rect: { x: 10, y: 20, width: 40, height: 20 },
+    contentCenter: [10, 20],
+    contentSize: { width: 40, height: 20 },
+    margin: { top: 0, right: 0, bottom: 0, left: 0 },
+  },
+});
+
 const reference = (
   id: string,
   center: IRPosition,
   state: PositionReferenceState = 'resolved',
 ): PositionReferenceView & { id: string } => {
-  const node: CompiledNodeLayout = {
+  const node: NodeGeometryContext = {
     shape: { name: 'rectangle', definition: BUILTIN_SHAPES.get('rectangle')!, params: {} },
     geometry: {
       rect: { x: center[0], y: center[1], width: 20, height: 10 },
@@ -38,39 +48,40 @@ const reference = (
     },
     boundary: rectangleBoundary,
   };
-  return { state, layout: node, id };
+  return { state, context: node, id };
 };
 
 const contextOf = (
   references: ReadonlyArray<PositionReferenceView & { id: string }> = [],
-): PositionTargetResolveContext => {
+): PositionTargetEvaluateContext => {
   const byId = new Map(references.map(item => [item.id, item]));
   return {
     nodeDistance: 24,
     lookupReference: id => byId.get(id),
     toLocal: world => [world[0] - 100, world[1] - 50],
     toWorld: local => [local[0] + 100, local[1] + 50],
-    boundaryResolutionOf: (_target, item) => item.layout.boundary,
+    canonicalBoundaryOf: (_target, item) => ('position' in item.context ? undefined : item.context.boundary),
     pointOfNodeTarget: (target, item) => {
+      if ('position' in item.context) return item.context.position;
       if (target.anchor === 'right') {
-        return [item.layout.geometry.rect.x + item.layout.geometry.rect.width / 2, item.layout.geometry.rect.y];
+        return [item.context.geometry.rect.x + item.context.geometry.rect.width / 2, item.context.geometry.rect.y];
       }
 
-      return [item.layout.geometry.rect.x, item.layout.geometry.rect.y];
+      return [item.context.geometry.rect.x, item.context.geometry.rect.y];
     },
   };
 };
 
 describe('compiled layout references', () => {
   it('保留别名来源并直接复用布局，不修改共享诊断状态', () => {
-    const layout = createSyntheticRectangleLayout({ id: 'A', rect: { x: 10, y: 20, width: 40, height: 20 } });
+    const layout = rectangleLayout();
     const store = createNodeBoundaryStore();
     store.get(layout).irPath = ['original'];
     const paths: Array<unknown> = [];
     const references = new Map<string, PositionReferenceView>(
-      ['A', 'B'].map(id => [id, { state: 'resolved', layout, irPath: ['aliases', id] }]),
+      ['A', 'B'].map(id => [id, { state: 'resolved', context: layout, irPath: ['aliases', id] }]),
     );
-    const context = createPositionResolveContext({
+    const context = createPositionEvaluateContext({
       nodeDistance: 24,
       nodeBoundaryStore: store,
       lookupReference: id => references.get(id),
@@ -80,9 +91,9 @@ describe('compiled layout references', () => {
       },
     });
     for (const id of ['A', 'B']) {
-      const result = resolvePositionTarget({ id, anchor: 'right', boundary: 'rectangle' }, context);
+      const result = evaluatePositionTarget({ id, anchor: 'right', boundary: 'rectangle' }, context);
       expect(result.reference).toBe(references.get(id));
-      expect(result.reference?.layout).toBe(layout);
+      expect(result.reference?.context).toBe(layout);
       expect(result.reference?.irPath).toEqual(['aliases', id]);
       expect(result.point).toEqual([30, 20]);
     }
@@ -94,30 +105,30 @@ describe('compiled layout references', () => {
   });
 
   it('重新发布变换后的布局时重新计算锚点', () => {
-    const original = createSyntheticRectangleLayout({ id: 'A', rect: { x: 10, y: 20, width: 40, height: 20 } });
+    const original = rectangleLayout();
     let layout = original;
-    const context = createPositionResolveContext({
+    const context = createPositionEvaluateContext({
       nodeDistance: 24,
       nodeBoundaryStore: createNodeBoundaryStore(),
-      lookupReference: () => ({ state: 'resolved', layout }),
+      lookupReference: () => ({ state: 'resolved', context: layout }),
     });
-    expect(resolvePositionTarget({ id: 'A', anchor: 'right' }, context).point).toEqual([30, 20]);
+    expect(evaluatePositionTarget({ id: 'A', anchor: 'right' }, context).point).toEqual([30, 20]);
     layout = projectLayoutWithTransform(original, composeScopeTransform([{ kind: 'translate', x: 100, y: 50 }]));
-    expect(resolvePositionTarget({ id: 'A', anchor: 'right' }, context).point).toEqual([130, 70]);
+    expect(evaluatePositionTarget({ id: 'A', anchor: 'right' }, context).point).toEqual([130, 70]);
     expect(original.geometry.rect.x).toBe(10);
   });
 });
 
-describe('resolvePosition', () => {
+describe('evaluatePosition', () => {
   it('同时保留 tuple 的局部点与投影后的世界点', () => {
-    expect(resolvePosition([5, 7], contextOf())).toEqual({ localPoint: [5, 7], worldPoint: [105, 57] });
+    expect(evaluatePosition([5, 7], contextOf())).toEqual({ localPoint: [5, 7], worldPoint: [105, 57] });
   });
 
   it('把命名引用和 at 从世界中心反投影后应用局部距离', () => {
     const context = contextOf([reference('A', [120, 80])]);
 
-    expect(resolvePosition('A', context)).toEqual({ localPoint: [20, 30], worldPoint: [120, 80] });
-    expect(resolvePosition({ direction: 'right', of: 'A' }, context)).toEqual({
+    expect(evaluatePosition('A', context)).toEqual({ localPoint: [20, 30], worldPoint: [120, 80] });
+    expect(evaluatePosition({ direction: 'right', of: 'A' }, context)).toEqual({
       localPoint: [44, 30],
       worldPoint: [144, 80],
     });
@@ -126,34 +137,34 @@ describe('resolvePosition', () => {
   it('在局部空间递归应用 polar 与 OffsetPosition', () => {
     const context = contextOf();
 
-    expect(resolvePosition({ origin: [10, 20], angle: 0, radius: 5 }, context)).toEqual({
+    expect(evaluatePosition({ origin: [10, 20], angle: 0, radius: 5 }, context)).toEqual({
       localPoint: [15, 20],
       worldPoint: [115, 70],
     });
-    expect(resolvePosition({ of: { origin: [10, 20], angle: 90, radius: 5 }, offset: [2, 3] }, context)).toEqual({
+    expect(evaluatePosition({ of: { origin: [10, 20], angle: 90, radius: 5 }, offset: [2, 3] }, context)).toEqual({
       localPoint: [12, 28],
       worldPoint: [112, 78],
     });
   });
 
   it('引用不存在时返回 null', () => {
-    expect(resolvePosition({ direction: 'top', of: 'missing' }, contextOf())).toBeNull();
+    expect(evaluatePosition({ direction: 'top', of: 'missing' }, contextOf())).toBeNull();
   });
 });
 
-describe('resolvePositionTarget', () => {
+describe('evaluatePositionTarget', () => {
   it('保留 reference 生命周期并在世界坐标叠加 NodeTarget offset', () => {
     const target: IRNodeTarget = { id: 'A', anchor: 'right', offset: [3, 4] };
-    const result = resolvePositionTarget(target, contextOf([reference('A', [120, 80], 'scope-placeholder')]));
+    const result = evaluatePositionTarget(target, contextOf([reference('A', [120, 80], 'scope-placeholder')]));
 
     expect(result.point).toEqual([33, 34]);
     expect(result.referencePoint).toEqual([133, 84]);
     expect(result.reference?.state).toBe('scope-placeholder');
-    expect(result.boundaryResolution).toBe(rectangleBoundary);
+    expect(result.canonicalBoundary).toBe(rectangleBoundary);
   });
 
   it('在世界坐标递归解析 between 后投影到局部', () => {
-    const result = resolvePositionTarget(
+    const result = evaluatePositionTarget(
       { between: [{ id: 'A' }, { id: 'B', offset: [10, 0] }], fraction: 0.5 },
       contextOf([reference('A', [100, 50]), reference('B', [120, 70])]),
     );
@@ -164,7 +175,7 @@ describe('resolvePositionTarget', () => {
   it('absolute target 引用不存在时保留原 target 并返回 null 点', () => {
     const target: IRNodeTarget = { id: 'missing' };
 
-    expect(resolvePositionTarget(target, contextOf())).toEqual({
+    expect(evaluatePositionTarget(target, contextOf())).toEqual({
       target,
       point: null,
       referencePoint: null,
@@ -175,9 +186,9 @@ describe('resolvePositionTarget', () => {
 describe('resolveTransformTranslation', () => {
   it('按当前坐标系解析每种平移变换', () => {
     const base = contextOf([reference('A', [120, 80]), reference('B', [140, 100])]);
-    const context: PositionTargetResolveContext = {
+    const context: PositionTargetEvaluateContext = {
       ...base,
-      resolveBetweenWorld: between => {
+      evaluateBetweenWorld: between => {
         const fraction = between.fraction;
         return [120 + (140 - 120) * fraction, 80 + (100 - 80) * fraction];
       },

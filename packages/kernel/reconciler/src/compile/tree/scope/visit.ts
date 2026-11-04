@@ -1,19 +1,21 @@
-import type { CompileOccurrenceLocator, IRScope, SceneClipPath, Transform } from '@retikz/core';
+import type { CompiledScope, CompileOccurrenceLocator, IRScope, SceneClipPath, Transform } from '@retikz/core';
 import {
   compileScopeGeometry,
-  createScopePlaceholderLayout,
+  finalizeScopeCompilation,
   prepareScopeGeometry,
   projectLayoutWithTransform,
-  projectPublishedCompileLayout,
+  projectPublishedReference,
   projectScopeCompileLayouts,
   projectScopeOutputBounds,
-  resolveScopeStyle,
+  resolveScope,
+  createScopeGeometryContext,
 } from '@retikz/core';
 import { formatPropertyPath } from '@retikz/foundation';
 
+import { compareCanonicalScopes } from '../../compare';
 import type { CompileOwnerKey } from '../../provenance';
-import { runCompileStage } from '../../runtime';
-import type { CompileRuntime } from '../../runtime';
+import { runCompileStage, readCompileStageCanon } from '../../runtime';
+import type { CompileRuntime, CompileReferenceRead, CompileStageRecord } from '../../runtime';
 import { createCompileChildPath, formatCompileOccurrence } from '../../shared';
 import { flushPendingPathEmissions } from '../path/deferred';
 import { createTreePositionContext } from '../reference';
@@ -40,12 +42,11 @@ const registerScopeLayoutPlaceholder = (
     return { parentFrameDepth };
   }
 
-  const placeholderLayout = createScopePlaceholderLayout(child.id, transformChains, {
-    shapes: runtime.context.registries.shapeRegistry,
-    boundaries: runtime.context.registries.boundaryRegistry,
-  });
+  const placeholderLayout = {
+    position: runtime.state.execution.scopeTransformComposer.apply([0, 0], transformChains),
+  };
   runtime.state.execution.namespaceStack.register(child.id, {
-    layout: placeholderLayout,
+    context: placeholderLayout,
     irPath: [...scopeIrPath, 'id'],
     state: 'scope-placeholder',
     scopeId,
@@ -76,7 +77,7 @@ export const visitScope = (
     context: {
       pathPrefix: locatorPrefix,
       transformChains,
-      style: inheritedStyle,
+      inheritance: inheritedStyle,
       compositeInput,
       layout: layoutContext,
     },
@@ -87,19 +88,29 @@ export const visitScope = (
     generatedOccurrence === undefined
       ? formatPropertyPath([...createCompileChildPath(locatorPrefix, index), 'theme'])
       : `${formatCompileOccurrence(generatedOccurrence)}.scope.theme`;
-  const style = resolveScopeStyle(
-    child,
-    runtime.context.registries.themeRegistry,
-    inheritedStyle,
-    createCompileChildPath(locatorPrefix, index),
-    themePath,
-  );
+  const resolveInputs = { child: { ...child, children: undefined }, inheritedStyle };
+  const warningCount = runtime.state.workspace.diagnosticCollector.warnings.length;
+  const canon =
+    readCompileStageCanon(runtime, createCompileChildPath(locatorPrefix, index), 'scope', resolveInputs) ??
+    resolveScope(child, {
+      nodeDistance: runtime.context.layout.nodeDistance,
+      parent: inheritedStyle,
+      ...runtime.context.registries,
+      irPath: createCompileChildPath(locatorPrefix, index),
+      themePath,
+    });
+  const style = canon.inheritance;
   const scopeGeometryContext = {
     positionContext: createTreePositionContext(runtime, transformChains),
     irPath: createCompileChildPath(locatorPrefix, index),
     onWarn: runtime.state.workspace.diagnosticCollector.collect,
   };
-  const preparation = prepareScopeGeometry(child, scopeGeometryContext);
+  const preparedReads: Array<CompileReferenceRead> = [];
+  const preparation = runtime.state.execution.namespaceStack.observeReferences(
+    (name, entry, kind) => preparedReads.push({ name, entry, kind }),
+    () => prepareScopeGeometry({ type: 'scope', ...canon.transform }, scopeGeometryContext),
+  );
+  const preparedDiagnostics = runtime.state.workspace.diagnosticCollector.warnings.slice(warningCount);
 
   // runtime Scope 可能包住在当前 frame 外完成的 replay probe，因此它的数值 transform
   // 必须在 Scope 收尾时统一投影到普通 child 与 replay 导入的 布局发布结果
@@ -118,7 +129,7 @@ export const visitScope = (
 
   const state: SubtreeCompileState = {
     primitives: [],
-    layouts: [],
+    layoutContexts: [],
     paths: [],
     publications: [],
     bounds: [],
@@ -127,6 +138,21 @@ export const visitScope = (
     artifacts: [],
   };
   let scopeTransforms: Array<Transform> = [];
+  let compiledScope: CompiledScope;
+  // Scope 必须等延迟路径裁空后才能完成动画与诊断；缓存只发布完整产物
+  let pendingRecord: { record: CompileStageRecord; reused: boolean } | undefined;
+  const scopeRuntime: CompileRuntime = {
+    ...runtime,
+    cache:
+      runtime.cache === undefined
+        ? undefined
+        : {
+            read: runtime.cache.read,
+            write: (_path, _phase, record, reused) => {
+              pendingRecord = { record, reused };
+            },
+          },
+  };
 
   try {
     const scopeFrame: SubtreeCompileRuntime = {
@@ -136,7 +162,7 @@ export const visitScope = (
         transformChains: preliminaryScopeChain,
         pathPrefix: createCompileChildPath(locatorPrefix, index),
         ...(semanticOwner === undefined ? {} : { compileOwner: semanticOwner }),
-        style,
+        inheritance: style,
       },
       state,
     };
@@ -147,27 +173,49 @@ export const visitScope = (
     }
 
     const geometry = runCompileStage(
-      runtime,
+      scopeRuntime,
       scopeGeometryContext.irPath,
       'scope',
       {
         child: { ...child, children: undefined },
         preparation,
-        layouts: state.layouts,
+        layouts: state.layoutContexts,
         scopeChain: transformChains,
       },
-      () =>
-        compileScopeGeometry(
-          child,
+      {
+        resolveInputs,
+        preparedReads,
+        preparedDiagnostics,
+        compileInputs: {
           preparation,
-          state.layouts,
-          { shapes: runtime.context.registries.shapeRegistry, boundaries: runtime.context.registries.boundaryRegistry },
-          scopeGeometryContext,
-        ),
+          layouts: state.layoutContexts,
+          scopeChain: transformChains,
+          childCount: state.primitives.length,
+          preResolvedClipPath,
+        },
+        resolve: () => canon,
+        equals: compareCanonicalScopes,
+        compile: (stageRuntime, resolved) => ({
+          canon: resolved,
+          compiled: compileScopeGeometry(
+            resolved,
+            preparation,
+            state.layoutContexts,
+            {
+              ...scopeGeometryContext,
+              registerClip: stageRuntime.state.workspace.clipRegistry.register,
+              registerClipPath: stageRuntime.state.workspace.clipRegistry.registerPath,
+              onWarn: stageRuntime.state.workspace.diagnosticCollector.collect,
+            },
+            preResolvedClipPath,
+          ),
+        }),
+      },
     );
 
-    const intrinsicLayout = geometry.envelope;
-    scopeTransforms = geometry.transforms;
+    const intrinsicLayout = createScopeGeometryContext(geometry.canon, geometry.compiled.geometry);
+    compiledScope = geometry.compiled;
+    scopeTransforms = geometry.compiled.transforms;
 
     const postTransforms =
       preliminaryTransforms === undefined
@@ -175,8 +223,8 @@ export const visitScope = (
         : scopeTransforms.slice(0, scopeTransforms.length - preliminaryTransforms.length);
 
     for (const layout of state.publications) {
-      const projected = projectPublishedCompileLayout(layout, transformChains, postTransforms);
-      runtime.state.execution.namespaceStack.replacePublishedLayout(layout, projected);
+      const projected = projectPublishedReference(layout, transformChains, postTransforms);
+      runtime.state.execution.namespaceStack.replacePublishedContext(layout, projected);
       frameState.publications.push(projected);
     }
 
@@ -197,13 +245,15 @@ export const visitScope = (
             intrinsicLayout,
             runtime.state.execution.scopeTransformComposer.resolve(scopeTransforms),
           );
-    frameState.layouts.push(...projectScopeCompileLayouts(child, intrinsicLayout, state.layouts, scopeTransforms));
+    frameState.layoutContexts.push(
+      ...projectScopeCompileLayouts(child, intrinsicLayout, state.layoutContexts, scopeTransforms),
+    );
     if (child.id !== undefined) {
       const globalEnvelope = projectLayoutWithTransform(
         finalEnvelope,
         runtime.state.execution.scopeTransformComposer.resolve(transformChains),
       );
-      runtime.state.execution.namespaceStack.replaceLayout(
+      runtime.state.execution.namespaceStack.replaceContext(
         child.id,
         globalEnvelope,
         layoutPlaceholder.parentFrameDepth,
@@ -239,13 +289,28 @@ export const visitScope = (
     }
   }
 
-  const clipRef = emitScopeGroup(runtime, output, child, {
-    index,
-    scopeTransforms,
+  const finalWarningCount = runtime.state.workspace.diagnosticCollector.warnings.length;
+  compiledScope = finalizeScopeCompilation(canon, compiledScope!, state.primitives.length, scopeGeometryContext);
+  if (pendingRecord?.record.phase === 'scope') {
+    const { record, reused } = pendingRecord;
+    runtime.cache?.write(
+      scopeGeometryContext.irPath,
+      'scope',
+      {
+        ...record,
+        value: { canon, compiled: compiledScope },
+        diagnostics: [
+          ...record.diagnostics,
+          ...runtime.state.workspace.diagnosticCollector.warnings.slice(finalWarningCount),
+        ],
+      },
+      reused,
+    );
+  }
+  const clipRef = emitScopeGroup(runtime, output, compiledScope, {
     scopePrimitives: state.primitives,
     frame,
     ...(semanticOwner === undefined ? {} : { semanticOwner }),
-    ...(preResolvedClipPath === undefined ? {} : { resolvedClipPath: preResolvedClipPath }),
   });
 
   frameState.bounds.push(

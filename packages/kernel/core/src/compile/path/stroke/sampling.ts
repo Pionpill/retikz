@@ -2,7 +2,7 @@ import type { PropertyPath } from '@retikz/foundation';
 import type { CurveSegmentSample } from '@retikz/math';
 
 import type { TextMeasurer, PathCommand, ScenePrimitive } from '../../../contract';
-import type { CanonicalPathLabel, CanonicalStep } from '../../../resolve';
+import type { CanonicalPathLabel, CanonicalPathStep } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
 import type { TexLowerer } from '../../text';
 import { emitLabelPrimitive } from '../host';
@@ -53,9 +53,9 @@ export type StrokeSamplingCollector = {
   /** 登记不需要 label 处理的绘制段采样器 */
   addSampler: (sampleAt: StrokeSegmentSampler) => void;
   /** 设置后续 collect 所属的 Source Path step */
-  beginStep: (sourceStepIndex: number, stepKind: CanonicalStep['kind']) => void;
+  beginStep: (sourceStepIndex: number, stepKind: CanonicalPathStep['kind']) => void;
   /** 登记采样器并按需延迟记录 step label */
-  collect: (step: CanonicalStep, sampleAt: StrokeSegmentSampler, segmentCount?: number) => void;
+  collect: (step: CanonicalPathStep, sampleAt: StrokeSegmentSampler, segmentCount?: number) => void;
   /** 在最终 command geometry 上 materialize 已登记的 step label */
   materializeStepLabels: (
     geometry: Parameters<typeof sampleStrokeStepParameterGeometry>[0],
@@ -90,13 +90,13 @@ type StrokeHostLabelSample = {
 
 type StrokeSamplerRecord = {
   sourceStepIndex: number;
-  stepKind: CanonicalStep['kind'];
+  stepKind: CanonicalPathStep['kind'];
   sampleAt: StrokeSegmentSampler;
   /** 当前绘制段在源 step 参数区间中的起止位置 */
   parameterRange: readonly [number, number];
 };
 
-const parameterBoundaryOwnerOfStep = (stepKind: CanonicalStep['kind']): 'previous' | 'next' =>
+const parameterBoundaryOwnerOfStep = (stepKind: CanonicalPathStep['kind']): 'previous' | 'next' =>
   stepKind === 'fold' ? 'previous' : 'next';
 
 /** 创建 stroke sampling collector 所需的上下文 */
@@ -136,10 +136,10 @@ export const createStrokeSamplingCollector = ({
   const labelRequests: Array<{
     label: CanonicalPathLabel;
     sourceStepIndex: number;
-    stepKind: CanonicalStep['kind'];
+    stepKind: CanonicalPathStep['kind'];
   }> = [];
   let activeStepIndex = -1;
-  let activeStepKind: CanonicalStep['kind'] = 'move';
+  let activeStepKind: CanonicalPathStep['kind'] = 'move';
 
   const emitLegacyLabel = (label: CanonicalPathLabel, sample: CurveSegmentSample): void => {
     const result = emitLabelPrimitive(label, sample, {
@@ -167,12 +167,12 @@ export const createStrokeSamplingCollector = ({
     });
   };
 
-  const beginStep = (sourceStepIndex: number, stepKind: CanonicalStep['kind']): void => {
+  const beginStep = (sourceStepIndex: number, stepKind: CanonicalPathStep['kind']): void => {
     activeStepIndex = sourceStepIndex;
     activeStepKind = stepKind;
   };
 
-  const collect = (step: CanonicalStep, sampleAt: StrokeSegmentSampler, segmentCount = 1): void => {
+  const collect = (step: CanonicalPathStep, sampleAt: StrokeSegmentSampler, segmentCount = 1): void => {
     for (let index = 0; index < segmentCount; index += 1) {
       const start = index / segmentCount;
       const end = (index + 1) / segmentCount;

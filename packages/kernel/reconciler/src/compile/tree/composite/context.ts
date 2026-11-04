@@ -52,7 +52,9 @@ export const createCompositeCallbackContext = (
   const probeSequence: CompositeProbeSequence = { index: 0 };
   const targetQuery = createCompositeTargetQuery(probeContext, frame, probeSequence);
   /** 装配继承指定主题的作者能力视图 */
-  const createLayoutContext = (theme: SubtreeCompileRuntime['context']['style']['theme']): CompositeCompileContext => ({
+  const createLayoutContext = (
+    theme: SubtreeCompileRuntime['context']['inheritance']['theme'],
+  ): CompositeCompileContext => ({
     ...runtimeInputContext,
     theme,
     withTheme: override =>

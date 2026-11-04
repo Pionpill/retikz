@@ -2,7 +2,7 @@ import type { CurveSegmentSample } from '@retikz/math';
 import { RAD_TO_DEG } from '@retikz/math';
 
 import type { GroupPrimitive, PaintValue, ScenePrimitive } from '../../../contract';
-import type { MarkResolution } from '../../../resolve';
+import type { CanonicalPathMark } from '../../../resolve';
 import {
   combineOpacity,
   createCompositeContractError,
@@ -17,12 +17,12 @@ import { materializeScenePrimitives } from '../../shared';
 
 /** 由共同定义生成箭头或沿线标记的局部图元 */
 export const emitMarkPrimitives = (
-  resolution: Pick<MarkResolution, 'source' | 'mark' | 'definition'>,
+  resolution: Pick<CanonicalPathMark, 'mark' | 'definition'>,
   round: (value: number) => number,
   registerPaint: RegisterPaint,
   owner: { label: string; providerKey: string },
 ): Array<ScenePrimitive> => {
-  const { source, mark, definition } = resolution;
+  const { mark, definition } = resolution;
   const contextStroke: PaintValue = { kind: 'contextStroke' };
   const stroke = registerPaint(mark.stroke) ?? contextStroke;
   const fill = definition.hollow ? contextStroke : (registerPaint(mark.fill) ?? contextStroke);
@@ -33,7 +33,7 @@ export const emitMarkPrimitives = (
   let emitted: Array<ScenePrimitive>;
   try {
     const output = definition.emit({
-      params: source.params ?? {},
+      params: mark.params,
       stroke,
       fill,
       lineWidth: mark.lineWidth,
@@ -59,7 +59,7 @@ export const emitMarkPrimitives = (
 /** 按统一尺寸和局部锚点放置标记图元 */
 export const placeMarkPrimitives = (
   primitives: Array<ScenePrimitive>,
-  resolution: MarkResolution,
+  resolution: CanonicalPathMark,
   sample: CurveSegmentSample,
   context: MarkerPlacementContext,
 ): GroupPrimitive => ({

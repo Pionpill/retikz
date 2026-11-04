@@ -8,9 +8,87 @@ import type {
   TextMeasurer,
   ShapeDefinition,
 } from '../../contract';
-import type { NodeResolution, CanonicalFont, CanonicalNode } from '../../resolve';
+import type { ScenePrimitiveBase, LayoutAlignmentGuide } from '../../contract';
+import type { CanonicalFont, CanonicalNode } from '../../resolve';
+import type { IRAnimationTrack, CanonicalDropShadow } from '../../schemas';
+import type { CompiledDrawing } from '../scene';
 import type { CompileWarningCode } from '../shared';
 import type { InlineLineLayout, TexLowerer } from '../text';
+
+/** 节点最终位置、视觉尺寸及自定义形状图元几何 */
+export type CompiledNodeGeometry = {
+  /** 节点视觉外框及旋转 */
+  rect: CenteredBox;
+  /** 形状最终图元几何 */
+  shape: CompiledDrawing['geometry'];
+};
+
+/** 节点实际占位与正文内容盒，不重复存放视觉 rect */
+export type CompiledNodeLayout = {
+  /** 最终外边距 */
+  margin: BoundsInsets;
+  /** 正文内容盒中心 */
+  contentCenter: Position;
+  /** 正文实际占用尺寸 */
+  contentSize: { width: number; height: number };
+  /** 可供父布局读取的对齐线 */
+  alignmentGuides?: Array<LayoutAlignmentGuide>;
+};
+
+/** 节点的最终形状外观与输出身份 */
+export type CompiledNodeStyle = {
+  /** 与形状几何逐项对应的外观 */
+  shape: CompiledDrawing['style'];
+  /** 最终输出身份及交互元数据 */
+  metadata: Omit<ScenePrimitiveBase, 'animations'>;
+  /** 已确定的阴影，省略表示无阴影 */
+  shadow?: CanonicalDropShadow;
+};
+
+/** 附属标签最终排版和绘制内容，不持有布局意图 */
+export type CompiledNodeLabel = CompiledDrawing & {
+  /** 标签最终尺寸与相对定位 */
+  layout: Omit<NodeLabelLayout, 'laid'>;
+};
+
+/** 节点正文最终外观，物理行通过索引读取，不持有作者正文或解析产物 */
+export type CompiledNodeTextStyle = {
+  /** 正文主色 */
+  color?: string;
+  /** 正文整体透明度 */
+  opacity?: number;
+  /** 对应作者行与片段的最终外观 */
+  lines: Array<{
+    /** 行级外观 */
+    style?: Pick<TextLine, 'fill' | 'opacity'>;
+    /** 片段级外观 */
+    segments: Array<Pick<TextLine, 'fill' | 'opacity'>>;
+  }>;
+};
+
+/** 最终正文排版与外观；绘制只需此结果及节点内容盒 */
+export type CompiledNodeText = {
+  /** 文字和公式的实际测量、折行及片段位置 */
+  layout: CompiledNodeTextLayout;
+  /** 与排版分离的最终外观 */
+  style: CompiledNodeTextStyle;
+};
+
+/** 节点最终产物；后续连接查询显式结合 canon 能力与此处几何 */
+export type CompiledNode = {
+  /** 视觉几何 */
+  geometry: CompiledNodeGeometry;
+  /** 布局占用与对齐信息 */
+  layout: CompiledNodeLayout;
+  /** 最终外观与输出身份 */
+  style: CompiledNodeStyle;
+  /** 正文排版与样式，省略表示无正文 */
+  text?: CompiledNodeText;
+  /** 附属标签最终结果 */
+  labels: Array<CompiledNodeLabel>;
+  /** 已确定的动画轨道 */
+  animations: Array<IRAnimationTrack>;
+};
 
 /** 连接面消费过程中的缓存和诊断状态 */
 export type NodeBoundaryState = {
@@ -55,11 +133,11 @@ export type NodeTextLayoutContext = {
 };
 
 /** 分别持有有效属性与计算布局的节点编译状态 */
-export type CompiledNode = {
+export type NodeLayoutResult = {
   /** 当前有效语义属性 */
   properties: CanonicalNode;
-  /** 已计算的几何与排版结果 */
-  layout: CompiledNodeLayout;
+  /** 结合能力绑定、几何与排版结果的消费上下文 */
+  context: NodeGeometryContext;
 };
 
 /** 公式渲染上下文 */
@@ -71,7 +149,7 @@ export type TexLoweringContext = {
 };
 
 /** 物理行排版与其作者行的对应关系 */
-export type NodeTextLineLayout = Omit<TextLine, 'fill' | 'opacity'> & {
+export type CompiledNodeTextLineLayout = Omit<TextLine, 'fill' | 'opacity'> & {
   /** 折行前的作者行索引，供绘制阶段读取当前外观 */
   sourceLineIndex: number;
 };
@@ -89,7 +167,7 @@ export type NodeLayoutGeometry = {
 };
 
 /** 节点正文排版结果 */
-export type NodeTextLayout = {
+export type CompiledNodeTextLayout = {
   /** 实际用于测量和输出的字体 */
   font: CanonicalFont;
   /** 正文对齐方式 */
@@ -99,22 +177,20 @@ export type NodeTextLayout = {
   /** 物理行相对内容顶部的基线偏移 */
   baselineOffsets?: Array<number>;
 } & (
-  | { kind: 'plain'; lines: Array<NodeTextLineLayout> }
+  | { kind: 'plain'; lines: Array<CompiledNodeTextLineLayout> }
   | { kind: 'inline'; lines: Array<{ laid: InlineLineLayout; baselineOffset: number }> }
 );
 
 /** 节点完成测量和定位后的消费结果 */
-export type CompiledNodeLayout = {
-  /** 用于匹配已解析连接面的作者配置 */
-  boundarySource?: CanonicalNode['boundary'];
+export type NodeGeometryContext = {
   /** 已绑定的形状定义和参数 */
-  shape: NodeResolution['shape'];
+  shape: CanonicalNode['shape'];
   /** 已绑定的连接面定义和参数 */
-  boundary: NodeResolution['boundary'];
+  boundary: CanonicalNode['boundary'];
   /** 测量和定位结果 */
   geometry: NodeLayoutGeometry;
   /** 正文排版结果 */
-  text?: NodeTextLayout;
+  text?: CompiledNodeTextLayout;
   /** 已定位的附属标签 */
   labels?: Array<NodeLabelLayout>;
 };

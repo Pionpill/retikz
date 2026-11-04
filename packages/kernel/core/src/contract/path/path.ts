@@ -19,11 +19,52 @@ export type PathCompileResult = {
 /** 编译标准描边 */
 export type StrokeEmitter = (path?: IRPathBase) => PathCompileResult | null;
 
+/** 路径扩展消费的确定化标签位置；颜色和字体由宿主服务处理 */
+export type CanonicalPathProviderLabel<TLabel extends IRPathLabel = IRPathLabel> = Omit<
+  TLabel,
+  'position' | 'side' | 'distance' | 'interrupt' | 'gap'
+> & {
+  /** 归一化路径位置 */
+  position: number;
+  /** 路径相对放置方向 */
+  side: NonNullable<IRPathLabel['side']>;
+  /** 与路径的距离 */
+  distance: number;
+  /** 是否中断描边 */
+  interrupt: boolean;
+  /** 断口留白 */
+  gap: number;
+};
+
+type CanonicalProviderStep<TStep extends IRStep> = TStep extends unknown
+  ? 'label' extends keyof TStep
+    ? Omit<TStep, 'label'> & { label?: CanonicalPathProviderLabel<Extract<NonNullable<TStep['label']>, IRPathLabel>> }
+    : TStep
+  : never;
+
+/** 扩展回调的确定化配置，保留自定义字段；绘制外观通过 appearance 消费 */
+type ProviderLabelOf<TLabel> =
+  TLabel extends ReadonlyArray<infer TItem extends IRPathLabel> ? TItem : Extract<TLabel, IRPathLabel>;
+
+/** 扩展路径的 canonical 配置保留 schema 子类型与 union 的字段关联 */
+export type CanonicalPathConfig<TPath extends IRPathBase = IRPathBase> = TPath extends unknown
+  ? Omit<TPath, 'style' | 'children' | 'label'> & {
+      /** 已确定步骤默认值和标签位置的路径 */
+      children?: Array<CanonicalProviderStep<NonNullable<TPath['children']>[number]>>;
+      /** 已确定位置并统一为数组的宿主标签 */
+      label?: [ProviderLabelOf<TPath['label']>] extends [never]
+        ? never
+        : Array<CanonicalPathProviderLabel<ProviderLabelOf<TPath['label']>>>;
+    }
+  : never;
+
 /** Path 可消费的宿主外观，不包含领域专属字段 */
 export type CompiledPathAppearance = Readonly<
   {
     /** 宿主生效的主色，保留至选定的路径定义消费 */
     color?: NonNullable<IRPathBase['style']>['color'];
+    /** 宿主声明了有效描边或描边宽度，供填充型扩展决定是否绘制轮廓 */
+    strokeEnabled: boolean;
   } & PathPrimitiveAppearance
 >;
 
@@ -74,8 +115,8 @@ export type InputPathBoundaryLabel = Readonly<{
  * @template TPath 经当前路径定义的 schema 解析后的路径类型，决定 path 字段的结构；默认使用 IRPathBase
  */
 export type PathCompileContext<TPath extends IRPathBase = IRPathBase> = {
-  /** 经该 definition 完整 schema 解析后的 path subject */
-  path: TPath;
+  /** 经 schema、继承及默认值解析后的配置，不保留 Source 简写 */
+  path: CanonicalPathConfig<TPath>;
   /** 物化选定 steps，不应用 marker、dash、fill 或 custom path geometry */
   materializePath: (input?: Readonly<{ children?: ReadonlyArray<IRStep> }>) => ReadonlyArray<PathCommand>;
   /**

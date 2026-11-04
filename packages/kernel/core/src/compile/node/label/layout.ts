@@ -3,7 +3,7 @@ import { resolveTextMetrics } from '../../../resolve';
 import type { CanonicalNodeLabel } from '../../../resolve';
 import { layoutInlineLine } from '../../text';
 import { DEFAULT_LINE_HEIGHT_FACTOR } from '../content';
-import type { CompiledNodeLayout, MeasuredNodeLabel, NodeLabelLayout, NodeTextLayoutContext } from '../types';
+import type { NodeGeometryContext, MeasuredNodeLabel, NodeLabelLayout, NodeTextLayoutContext } from '../types';
 import { resolveNodeLabelGeometry } from './geometry';
 
 /** 只为 Node label 包装规范化文字度量 */
@@ -20,7 +20,7 @@ export const measureNodeLabels = (
   const inlineWarn = texLowering?.warn ?? ((): void => {});
   const measureLabelText = nodeLabelMeasurer(measureText);
 
-  return node.label?.map(lab => {
+  return node.labels.map(lab => {
     const { font: labTextFont, text: resolved } = lab;
     const labFontSize = labTextFont.size;
     const laid =
@@ -62,7 +62,7 @@ export const measureNodeLabels = (
 
 /** 把已测量 label 绑定到最终 Node rect */
 export const layoutNodeLabels = (
-  layout: CompiledNodeLayout,
+  layout: NodeGeometryContext,
   labels: Array<{ layout: MeasuredNodeLabel; properties: CanonicalNodeLabel }> | undefined,
 ): Array<NodeLabelLayout> | undefined =>
   labels?.map(label => resolveNodeLabelGeometry(layout, label.layout, label.properties));

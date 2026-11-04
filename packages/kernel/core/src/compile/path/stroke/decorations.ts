@@ -3,8 +3,8 @@ import { formatPropertyPath } from '@retikz/foundation';
 
 import type { CompiledArrowEnd, ScenePrimitive } from '../../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
-import type { CanonicalPath } from '../../../resolve';
-import type { StrokePathResolution } from '../../../resolve';
+import type { CanonicalPathProperties } from '../../../resolve';
+import type { CanonicalStrokePath } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
 import type { RegisterPaint } from '../../resource';
 import type { StrokePathGeometry } from './interruption';
@@ -32,7 +32,7 @@ type PathEndpointArrows = {
 /** 端点箭头生成上下文 */
 type EmitPathEndpointArrowsContext = {
   /** 箭头声明对应的解析结果 Map */
-  arrowResolutions: StrokePathResolution['arrows'];
+  arrowResolutions: CanonicalStrokePath['arrows'];
   /** 坐标取整函数 */
   round: (value: number) => number;
   /** 绘制资源登记函数 */
@@ -43,7 +43,7 @@ type EmitPathEndpointArrowsContext = {
 
 /** 仅消费显式端点箭头，标记位置不影响截断 */
 export const emitPathEndpointArrows = (
-  endpointArrows: CanonicalPath['arrow'],
+  endpointArrows: CanonicalPathProperties['arrow'],
   context: EmitPathEndpointArrowsContext,
 ): PathEndpointArrows => {
   const arrows: PathEndpointArrows = {
@@ -80,9 +80,9 @@ type InputPathMarkEmission = {
   /** 截断前路径几何 */
   geometry: StrokePathGeometry;
   /** 按绘制顺序保存的标记放置列表 */
-  placements: NonNullable<CanonicalPath['marks']>;
+  placements: NonNullable<CanonicalPathProperties['marks']>;
   /** 按标记声明索引的解析结果 Map */
-  markResolutions: StrokePathResolution['marks'];
+  markResolutions: CanonicalStrokePath['marks'];
   /** 宿主有效外观 */
   baseProps: PathBasePropsWithStrokeWidth;
   /** 坐标取整函数 */

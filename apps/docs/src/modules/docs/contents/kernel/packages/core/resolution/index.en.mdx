@@ -9,31 +9,36 @@ These mechanisms apply to basic IR entering Core's compiler, including nodes and
 
 ## Overall flow
 
-A compilation first prepares registries and the root theme. On entering a Scope, traversal merges inherited and local descendant defaults and resolves its local theme. Node and Path read that environment to merge properties, resolve colors, bind definitions, and complete fields, producing `NodeResolution` and `PathResolution` respectively.
+A compilation first prepares registries and the root theme. On entering a Scope, traversal merges inherited and local descendant defaults and resolves its local theme. Node and Path read that environment to merge properties, resolve colors, bind definitions, and complete fields, producing `CanonicalNode` and `CanonicalPath` respectively.
 
 The tabs show the two return types from source, with comments omitted. Referenced types are discussed below.
 
 <DocTabs defaultValue="node-resolution">
-<DocTab value="node-resolution" label="NodeResolution">
+<DocTab value="node-resolution" label="CanonicalNode">
 
 ```ts
-export type NodeResolution = Readonly<{
-  irPath: ReadonlyArray<string | number>;
-  node: CanonicalNode;
-  shape: ShapeResolution;
-  boundary: BoundaryReferenceResolution;
-}>;
+type CanonicalNode = {
+  id?: string;
+  aliasIds: Array<string>;
+  layout: CanonicalNodeLayout;
+  shape: CanonicalNodeShape;
+  boundary: CanonicalNodeBoundary;
+  style: CanonicalNodeStyle;
+  text?: CanonicalNodeText;
+  labels: Array<CanonicalNodeLabel>;
+  animations: Array<IRAnimationTrack>;
+};
 ```
 
 </DocTab>
-<DocTab value="path-resolution" label="PathResolution">
+<DocTab value="path-resolution" label="CanonicalPath">
 
 ```ts
-export type PathResolution = Readonly<{
+export type CanonicalPath = Readonly<{
   irPath: ReadonlyArray<string | number>;
-  path: CanonicalPath;
+  path: CanonicalPathProperties;
   definition: AnyPathDefinition;
-  source: IRPathBase;
+  stroke?: Pick<CanonicalStrokePath, 'arrows' | 'marks'>;
 }>;
 ```
 
@@ -68,7 +73,7 @@ After Node styles and defaults are merged, `resolveNodeShape` looks up the effec
 
 Path looks up a path by `kind`, using builtin `stroke` when the field is omitted. Arrows also use their registry; their binding timing is covered in the Path branch below.
 
-`resolveBoundaryReference` resolves the connection boundary next. It can use the visual shape or bind a separate boundary. Layout receives these results and calls the selected capabilities directly. Unknown names and parameters that violate a Definition's contract fail the compilation.
+`resolveNodeBoundary` resolves the connection boundary next. It can use the visual shape or bind a separate boundary. Layout receives these results and calls the selected capabilities directly. Unknown names and parameters that violate a Definition's contract fail the compilation.
 
 <SourceLinks
   sources={[
@@ -206,41 +211,36 @@ Once effective colors are determined, `expandNodeFields` expands compact values 
 
 Defaults materialize at their corresponding stages. Position uses the schema field default, node padding is supplied during field expansion, and a Definition's schema handles shape parameters. Merging sparse declarations before applying defaults preserves parent values that were not overridden. If schema parsing has already materialized default fields in the input, those fields participate in later merging as existing values.
 
-After shape and boundary binding, the results of `resolvePaint` are stored in `CanonicalNode.fill` and `CanonicalNode.stroke`.
+After shape and boundary binding, the results of `resolvePaint` are stored in `CanonicalNode.style.fill` and `CanonicalNode.style.stroke`.
 
-The example's `NodeResolution` has four fields:
+The example's `CanonicalNode` groups properties by their consumers:
 
-| Field      | Content                                              | Downstream use                               |
-| ---------- | ---------------------------------------------------- | -------------------------------------------- |
-| `irPath`   | Source path of the node                              | Diagnostics and location                     |
-| `node`     | Merged, expanded `CanonicalNode` with resolved paint | Properties for layout and primitive emission |
-| `shape`    | Shape name, Definition, and parameters               | Outer-box measurement and shape emission     |
-| `boundary` | Resolved connection boundary                         | Anchors and path connections                 |
+| Field             | Content                                         | Downstream use                           |
+| ----------------- | ----------------------------------------------- | ---------------------------------------- |
+| `layout`          | Complete position, size, and spacing intent     | Measurement and placement                |
+| `style`           | Resolved paints and complete drawing properties | Primitive emission                       |
+| `text` / `labels` | Fonts, body text, and attached labels           | Text and label layout                    |
+| `shape`           | Shape name, Definition, and parameters          | Outer-box measurement and shape emission |
+| `boundary`        | Resolved connection boundary                    | Anchors and path connections             |
 
 ```ts
 // Selected CanonicalNode fields
 {
   id: 'A',
-  position: [0, 0],
-  text: ['A'],
-  color: '#204060',
-  fill: '#90a0b0',
-  stroke: '#204060',
-  strokeWidth: 3,
-  textColor: '#ffffff',
-  minimumSize: { width: 100, height: 48 },
-  scale: { x: 1, y: 1 },
-  align: 'middle',
-  rotate: 0,
+  layout: { position: [0, 0], minimumSize: { width: 100, height: 48 }, scale: { x: 1, y: 1 }, rotate: 0 },
+  style: { fill: '#90a0b0', stroke: '#204060', strokeWidth: 3 },
+  text: { color: '#ffffff', align: 'middle' },
 }
 ```
 
-`CanonicalNode` is an internal resolved result and can carry bound paint capabilities. It still retains position expressions for layout to resolve and has no final text dimensions or outer box. `layoutNode` receives `NodeResolution` and combines it with measurement capabilities and position context to produce separate layout, paint, and identity metadata.
+`CanonicalNode` is an internal resolved result and can carry bound paint capabilities. It retains position expressions for compilation and has no final text dimensions or outer box. `compileNode` combines it with measurement capabilities and position context to produce final geometry, layout, and styles.
+
+Canon completes fixed defaults such as Node and Path opacity, line caps, and dash offsets. Fields whose absence carries meaning remain optional: absent text, clipping, names, provider-specific options, and marker colors inherited from their host. Scope inheritance represents overrides for descendants and may remain sparse; the consuming element completes its own configuration. Output may omit neutral values, so output field presence does not indicate whether canon is complete.
 
 <SourceLinks
   sources={[
     { label: 'Node resolution and field expansion', path: 'packages/kernel/core/src/resolve/node/resolve.ts' },
-    { label: 'CanonicalNode / NodeResolution', path: 'packages/kernel/core/src/resolve/node/types.ts' },
+    { label: 'CanonicalNode', path: 'packages/kernel/core/src/resolve/node/types.ts' },
   ]}
 />
 
@@ -252,16 +252,16 @@ That schema may supply fields, so contextual colors are resolved again afterward
 
 P inherits master color `'#204060'`; its stroke resolves to `'#90a0b0'` in Light mode, with width 3. Its two absolute-coordinate steps retain their positions. `resolvePath` records the source path and definition-parsed input, and writes resolved paint and effective stroke width into `CanonicalPath`. The compile-stage `bindPathTargets` then uses the transform chain and node layouts to produce `BoundPathResolution`. Target references and relative coordinates belong to the path geometry topic.
 
-| Field               | Content                                                                  | Downstream use                      |
-| ------------------- | ------------------------------------------------------------------------ | ----------------------------------- |
-| `path`              | `CanonicalPath` with resolved paint, effective styles, steps, and labels | Main path compilation input         |
-| `definition`        | Definition for the selected path kind                                    | Invoke the selected path capability |
-| `irPath` / `source` | Source path and definition-parsed input                                  | Diagnostics and subsequent geometry |
+| Field        | Content                                                                            | Downstream use                      |
+| ------------ | ---------------------------------------------------------------------------------- | ----------------------------------- |
+| `properties` | `CanonicalPathProperties` with resolved paint, effective styles, steps, and labels | Main path compilation input         |
+| `definition` | Definition for the selected path kind                                              | Invoke the selected path capability |
+| `irPath`     | Declaration source path                                                            | Diagnostics and subsequent geometry |
 
 ```ts
-// Selected PathResolution fields
+// Selected CanonicalPath fields
 {
-  path: { id: 'P', color: '#204060', stroke: '#90a0b0', strokeWidth: 3 },
+  properties: { id: 'P', color: '#204060', stroke: '#90a0b0', strokeWidth: 3 },
   definition: { name: 'stroke' },
 }
 ```
@@ -274,19 +274,19 @@ P inherits master color `'#204060'`; its stroke resolves to `'#90a0b0'` in Light
 
 Path likewise stores resolved paint in its Canonical object, as `path.fill` and `path.stroke`.
 
-Label appearance comes from the Label channel; path canonicalization supplies static placement configuration. Arrow defaults come from the Arrow channel. Its master color resolves first, then supplies the basis for its fill. The builtin Stroke emission chain subsequently calls `resolveStrokePathProviders` to supply omitted fill and stroke as `none` and `currentColor` and bind Definitions for the arrow marks it consumes. This produces `StrokePathResolution` with an `arrows` map. Those bindings are absent from the base `resolvePath` result. This example has no arrows, so the map is empty.
+Label appearance comes from the Label channel; path canonicalization supplies static placement configuration. For builtin Stroke, `resolvePath` supplies fill and stroke defaults and binds the arrows and marks it uses in `stroke`. This example has no arrows, so the bindings are empty. A custom Path controls its own output and resolves Stroke capabilities only when it requests `emitStroke()`.
 
 <SourceLinks
   sources={[
     { label: 'Path styles, colors, and canonicalization', path: 'packages/kernel/core/src/resolve/path/resolve.ts' },
     { label: 'Path and arrow binding', path: 'packages/kernel/core/src/resolve/path/provider.ts' },
-    { label: 'PathResolution / StrokePathResolution', path: 'packages/kernel/core/src/resolve/path/types.ts' },
+    { label: 'CanonicalPath / CanonicalStrokePath', path: 'packages/kernel/core/src/resolve/path/types.ts' },
   ]}
 />
 
 ## Complete implementation flow
 
-The tabs show the Node and Path call chains. The Node diagram follows environment preparation through the node return value. `resolveTheme` runs during context and Scope processing. Primary color resolution is followed by `resolveNodeTextColor` and `resolveNodeDependentColors`; shape binding is followed by `resolveBoundaryReference`. Those subsidiary steps are omitted here, while the side nodes show the direct products of the displayed calls.
+The tabs show the Node and Path call chains. The Node diagram follows environment preparation through the node return value. `resolveTheme` runs during context and Scope processing. Primary color resolution is followed by `resolveNodeTextColor` and `resolveNodeDependentColors`; shape binding is followed by `resolveNodeBoundary`. Those subsidiary steps are omitted here, while the side nodes show the direct products of the displayed calls.
 
 <DocTabs defaultValue="node-flow">
   <DocTab value="node-flow" label="Node">

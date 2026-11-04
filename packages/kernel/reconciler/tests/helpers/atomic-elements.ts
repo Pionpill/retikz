@@ -1,28 +1,32 @@
+import { resolveScope } from '@retikz/core';
+import type { CanonicalScope, BoundaryGeometryContext } from '@retikz/core';
 import type {
   CompiledNode,
+  CanonicalNode,
   CompileOutput,
   CompiledPath,
   CompiledScope,
-  CompiledNodeLayout,
+  CompiledCoordinate,
   IRCoordinate,
   IRNode,
   IRPathBase,
   InputScopeCompile,
   ScopeGeometryPreparation,
-  ScopeStyleResolution,
+  CanonicalScopeInheritance,
 } from '@retikz/core';
 import {
   resolveNode,
-  layoutNode,
+  compileNode,
   emitNodeOutput,
-  resolvePosition,
-  createLayoutProbeRecoverableError,
-  createCoordinateLayout,
+  resolveCoordinate,
+  layoutCoordinate,
   resolvePathAnimations,
   compilePath,
+  resolvePath,
+  emitPathOutput,
   createPathTargetResolver,
   composeScopeTransform,
-  resolveScopeStyle,
+  resolveScopeInheritance,
   prepareScopeGeometry,
   compileScopeGeometry,
   createScopeGroup,
@@ -35,6 +39,7 @@ import type { WeaveElementRuntime } from './atomic-runtime';
 /** 节点阶段产物与当前工作区绘制输出，分别交给执行器保存 */
 export type WeaveNodeCompilation = {
   /** Core 产生的权威布局阶段结果 */
+  canon: CanonicalNode;
   compiled: CompiledNode;
   /** 绘制阶段输出及资源 */
   output: CompileOutput;
@@ -55,7 +60,10 @@ export const compileWeaveNode = (input: IRNode, runtime: WeaveElementRuntime): W
     irPath,
     warn,
   });
-  const compilation = layoutNode(resolution, {
+  const compilation = compileNode(resolution, {
+    round: shared.layout.round,
+    registerPaint: workspace.paintRegistry.register,
+    irPath,
     measureText: shared.host.measureText,
     positionContext,
     composedTransform,
@@ -65,26 +73,17 @@ export const compileWeaveNode = (input: IRNode, runtime: WeaveElementRuntime): W
     warn,
     texLowering: { lowerTex: shared.host.lowerTex, warn },
   });
-  const output = emitNodeOutput(compilation, {
-    round: shared.layout.round,
-    registerPaint: workspace.paintRegistry.register,
-  });
+  const output = emitNodeOutput(compilation, shared.layout.round);
   return Object.freeze({
+    canon: resolution,
     compiled: compilation,
     output: Object.freeze({ ...output, zIndex: input.zIndex, resources: workspace.paintRegistry.getResources() }),
   });
 };
 
 /** 记录坐标解析的独立事实，引用投影由发布阶段按需执行 */
-export const compileWeaveCoordinate = (input: IRCoordinate, runtime: WeaveElementRuntime): CompiledNodeLayout => {
-  const position = resolvePosition(input.position, runtime.positionContext)?.localPoint;
-  if (position === undefined) {
-    throw createLayoutProbeRecoverableError(
-      `Cannot resolve position for coordinate ${input.id}; polar.origin or at.of may reference an undefined node`,
-    );
-  }
-  return createCoordinateLayout(position, runtime.options.shared.registries.shapeRegistry);
-};
+export const compileWeaveCoordinate = (input: IRCoordinate, runtime: WeaveElementRuntime): CompiledCoordinate =>
+  layoutCoordinate(resolveCoordinate(input, runtime.options.shared.layout), runtime.positionContext);
 
 /** Path 编译结果与所属工作区资源输出 */
 export type WeavePathCompilation = {
@@ -99,9 +98,16 @@ export const compileWeavePath = (input: IRPathBase, runtime: WeaveElementRuntime
   const { options, workspace, positionContext } = runtime;
   const { shared, style, irPath, transforms } = options;
   const path = resolvePathAnimations(input, irPath, workspace.diagnosticCollector.collect);
+  const canon = resolvePath(path, {
+    ...shared.registries,
+    ...shared.layout,
+    scopeDefaults: style.defaults,
+    mode: style.theme.mode,
+    irPath,
+  });
   const compiled = compilePath(
+    canon,
     {
-      path,
       irPath,
       scopeChain: transforms ?? [],
       scopeDefaults: style.defaults,
@@ -123,12 +129,10 @@ export const compileWeavePath = (input: IRPathBase, runtime: WeaveElementRuntime
     compiled,
     output: Object.freeze({
       zIndex: input.zIndex,
-      primitives: compiled.result?.primitives ?? [],
+      primitives: emitPathOutput(compiled).primitives,
       resources: workspace.paintRegistry.getResources(),
       bounds:
-        compiled.result === null
-          ? []
-          : [{ boundsPoints: compiled.result.boundsPoints, shadow: compiled.resolution.path.shadow }],
+        compiled.layout === null ? [] : [{ boundsPoints: compiled.layout.boundsPoints, shadow: compiled.style.shadow }],
     }),
   });
 };
@@ -137,14 +141,14 @@ export const compileWeavePath = (input: IRPathBase, runtime: WeaveElementRuntime
 export type WeaveScopePreparation = ScopeGeometryPreparation &
   Readonly<{
     /** 子元素继承的有效样式 */
-    scope: ScopeStyleResolution;
+    scope: CanonicalScopeInheritance;
   }>;
 
 /** 在子元素计算前组合样式与放置准备 */
 export const prepareWeaveScope = (input: InputScopeCompile, runtime: WeaveElementRuntime): WeaveScopePreparation => {
   const { options, workspace, positionContext } = runtime;
   return Object.freeze({
-    scope: resolveScopeStyle(input, options.shared.registries.themeRegistry, options.style, options.irPath),
+    scope: resolveScopeInheritance(input, options.shared.registries.themeRegistry, options.style, options.irPath),
     ...prepareScopeGeometry(input, {
       positionContext,
       irPath: options.irPath,
@@ -157,36 +161,35 @@ export const prepareWeaveScope = (input: InputScopeCompile, runtime: WeaveElemen
 export type WeaveScopeCompilation = ScopeOutput & {
   /** Core 产生的包络与自身变换 */
   compiled: CompiledScope;
+  canon: CanonicalScope;
 };
 
 /** 在子布局完成后组合 Scope 包络、变换与自身输出 */
 export const compileWeaveScope = (
   input: InputScopeCompile,
   preparation: ScopeGeometryPreparation,
-  layouts: ReadonlyArray<CompiledNodeLayout>,
+  layouts: ReadonlyArray<BoundaryGeometryContext>,
   runtime: WeaveElementRuntime,
 ): WeaveScopeCompilation => {
   const { options, workspace, positionContext } = runtime;
   const { shared, irPath } = options;
-  const compiled = compileScopeGeometry(
-    input,
-    preparation,
-    layouts,
-    { shapes: shared.registries.shapeRegistry, boundaries: shared.registries.boundaryRegistry },
-    { positionContext, irPath, onWarn: workspace.diagnosticCollector.collect },
-  );
-  const group = createScopeGroup(
-    input,
-    compiled.transforms,
-    {
-      clipRegistry: shared.registries.clipRegistry,
-      registerClip: workspace.clipRegistry.register,
-      registerClipPath: workspace.clipRegistry.registerPath,
-    },
+  const canon = resolveScope(input, {
+    nodeDistance: shared.layout.nodeDistance,
+    parent: options.style,
+    ...shared.registries,
     irPath,
-  );
+  });
+  const compiled = compileScopeGeometry(canon, preparation, layouts, {
+    positionContext,
+    irPath,
+    onWarn: workspace.diagnosticCollector.collect,
+    registerClip: workspace.clipRegistry.register,
+    registerClipPath: workspace.clipRegistry.registerPath,
+  });
+  const group = createScopeGroup(compiled);
   return Object.freeze({
     compiled,
+    canon,
     group: Object.freeze(group),
     output: Object.freeze({
       zIndex: input.zIndex,

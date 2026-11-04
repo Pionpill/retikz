@@ -1,7 +1,7 @@
 import { curve } from '@retikz/math';
 
 import type { Transform } from '../../../contract';
-import type { CanonicalStep } from '../../../resolve';
+import type { CanonicalPathStep } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
 import { BendInAngleSchema, BendLoosenessSchema, BendOutAngleSchema } from '../../../schemas';
 import { bendControlPoints, foldSegmentSample, outInControlPoints } from '../../../shared/geometry';
@@ -13,7 +13,10 @@ import type { StrokePreviousTarget } from './cursor';
 import type { StrokeSamplingCollector } from './sampling';
 
 /** 连接前驱目标与当前目标的普通 path segment step */
-type StrokeSegmentStep = Extract<CanonicalStep, { kind: 'line' | 'axis-line' | 'curve' | 'cubic' | 'bend' | 'fold' }>;
+type StrokeSegmentStep = Extract<
+  CanonicalPathStep,
+  { kind: 'line' | 'axis-line' | 'curve' | 'cubic' | 'bend' | 'fold' }
+>;
 
 /** 普通 segment step 降级所需的共享上下文 */
 type SegmentStepLoweringContext = {
@@ -34,7 +37,7 @@ type SegmentStepLoweringContext = {
 };
 
 /** 判断 step 是否属于普通 segment family */
-export const isStrokeSegmentStep = (step: CanonicalStep): step is StrokeSegmentStep =>
+export const isStrokeSegmentStep = (step: CanonicalPathStep): step is StrokeSegmentStep =>
   step.kind === 'line' ||
   step.kind === 'axis-line' ||
   step.kind === 'curve' ||

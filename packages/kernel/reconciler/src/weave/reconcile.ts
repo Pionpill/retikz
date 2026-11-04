@@ -1,5 +1,5 @@
-import type { IRChild, IRScene, ScopeStyleResolution } from '@retikz/core';
-import { resolveScopeStyle } from '@retikz/core';
+import type { IRChild, IRScene, CanonicalScopeInheritance } from '@retikz/core';
+import { resolveScopeInheritance } from '@retikz/core';
 import type { PropertyPath } from '@retikz/foundation';
 import { createIdAllocator, isPropertyPathEqual } from '@retikz/foundation';
 
@@ -105,7 +105,7 @@ export class WeaveReconciler {
       for (const operation of input.operations) {
         const changes = editor.applyOperation(
           operation,
-          resolveScopeStyle(batch.source, this.context.shared.registries.themeRegistry),
+          resolveScopeInheritance(batch.source, this.context.shared.registries.themeRegistry),
         );
         if (changes === undefined) continue;
         for (const node of changes.insertedNodes) tracker.registerNodeBinding(node);
@@ -175,7 +175,7 @@ export class WeaveReconciler {
       children: ReadonlyArray<IRChild>,
       parent: WeaveRoot | WeaveScopeNode,
       prefix: PropertyPath,
-      style: ScopeStyleResolution,
+      style: CanonicalScopeInheritance,
       inheritedIds: Map<string, WeaveNode>,
     ): void => {
       const parentState = transaction.editNode(parent);
@@ -200,7 +200,7 @@ export class WeaveReconciler {
             child.children,
             node,
             path,
-            resolveScopeStyle(child, this.context.shared.registries.themeRegistry, style, path),
+            resolveScopeInheritance(child, this.context.shared.registries.themeRegistry, style, path),
             ids,
           );
       }
@@ -209,7 +209,7 @@ export class WeaveReconciler {
       batch.source.children,
       root,
       [],
-      resolveScopeStyle(batch.source, this.context.shared.registries.themeRegistry),
+      resolveScopeInheritance(batch.source, this.context.shared.registries.themeRegistry),
       new Map(),
     );
     // 别名与生成内容路径归属最近的作者声明，不创建生成节点身份
@@ -225,30 +225,37 @@ export class WeaveReconciler {
     const cache: CompileStageCache = {
       read: (path, phase) => {
         const node = nodes.get(keyOf(path));
-        if (node === undefined || batch.forceFull || !batch.updating || tracker.isNodeDirty(node)) return;
+        if (node === undefined || batch.forceFull || !batch.updating) return;
         if (!isPropertyPathEqual(batch.previousNodeIrPaths.get(node) ?? [], path)) return;
         const metadata = transaction.readNode(node).cache;
         if (metadata === undefined || metadata.phase !== phase) return;
-        switch (node.type) {
+        switch (metadata.phase) {
           case 'node': {
-            const { compiled, output } = transaction.readNode(node);
-            if (compiled !== null && output !== null)
-              return { ...metadata, phase: 'node', value: { compiled, output } };
+            if (node.type !== 'node') return;
+            const { canon, compiled } = transaction.readNode(node);
+            if (canon !== null && compiled !== null)
+              return { ...metadata, canon, phase: 'node', value: { canon, compiled } };
             break;
           }
           case 'coordinate': {
-            const value = transaction.readNode(node).compiled;
-            if (value !== null) return { ...metadata, phase: 'coordinate', value };
+            if (node.type !== 'coordinate') return;
+            const { canon, compiled } = transaction.readNode(node);
+            if (canon !== null && compiled !== null)
+              return { ...metadata, canon, phase: 'coordinate', value: { canon, compiled } };
             break;
           }
           case 'path': {
-            const value = transaction.readNode(node).compiled;
-            if (value !== null) return { ...metadata, phase: 'path', value };
+            if (node.type !== 'path') return;
+            const { canon, compiled } = transaction.readNode(node);
+            if (canon !== null && compiled !== null)
+              return { ...metadata, canon, phase: 'path', value: { canon, compiled } };
             break;
           }
           case 'scope': {
-            const value = transaction.readNode(node).compiled;
-            if (value !== null) return { ...metadata, phase: 'scope', value };
+            if (node.type !== 'scope') return;
+            const { canon, compiled } = transaction.readNode(node);
+            if (canon !== null && compiled !== null)
+              return { ...metadata, canon, phase: 'scope', value: { canon, compiled } };
             break;
           }
         }
@@ -261,24 +268,35 @@ export class WeaveReconciler {
           batch.visited++;
         }
         const state = transaction.editNode(node);
-        const { value: product, ...metadata } = record;
+        const { value: product, canon, ...metadata } = record;
+        void canon;
         void product;
         state.cache = metadata;
         // phase 由唯一遍历器固定，对应值直接保存为 Core 阶段产物
         if (node.type === 'node' && record.phase === 'node') {
           const value = record.value;
           const shape = transaction.editNode(node);
+          shape.canon = value.canon;
           shape.compiled = value.compiled;
-          shape.output = value.output;
-        } else if (node.type === 'coordinate' && record.phase === 'coordinate')
-          transaction.editNode(node).compiled = record.value;
-        else if (node.type === 'path' && record.phase === 'path') transaction.editNode(node).compiled = record.value;
-        else if (node.type === 'scope' && record.phase === 'scope') transaction.editNode(node).compiled = record.value;
+        } else if (node.type === 'coordinate' && record.phase === 'coordinate') {
+          const coordinate = transaction.editNode(node);
+          coordinate.canon = record.value.canon;
+          coordinate.compiled = record.value.compiled;
+        } else if (node.type === 'path' && record.phase === 'path') {
+          const pathState = transaction.editNode(node);
+          pathState.canon = record.value.canon;
+          pathState.compiled = record.value.compiled;
+        } else if (node.type === 'scope' && record.phase === 'scope') {
+          const scope = transaction.editNode(node);
+          scope.canon = record.value.canon;
+          scope.compiled = record.value.compiled;
+        }
         const reads: Array<WeaveCompileRead> = record.reads.map(read => {
           const sourcePath = read.entry?.irPath;
           const producer = sourcePath === undefined ? undefined : findProducer(sourcePath);
           return {
             name: read.name,
+            kind: read.kind,
             state: read.entry === undefined ? 'missing' : read.entry.state === 'resolved' ? 'ready' : 'pending',
             binding: producer,
           };

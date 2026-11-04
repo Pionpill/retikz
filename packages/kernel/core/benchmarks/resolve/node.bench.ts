@@ -12,6 +12,7 @@ for (const kind of ['simple', 'inherited', 'contrast', 'pattern', 'labels'] as c
     { id: `resolve/node/${kind}`, dimensions: ['Node 解析', kind, kind === 'labels' ? '单节点，16 标签' : '单节点'] },
     () => {
       const context: NodeResolveContext = {
+        nodeDistance: 24,
         rootFontSize: 16,
         gatingOn: false,
         mode: 'light',
@@ -42,31 +43,34 @@ for (const kind of ['simple', 'inherited', 'contrast', 'pattern', 'labels'] as c
       return {
         run: () => resolveNode(source, context),
         verify: result => {
-          expect(result.node.position).toEqual([0, 0]);
-          expect(result.node.scale).toEqual({ x: 1, y: 1 });
+          expect(result.layout.position).toEqual([0, 0]);
+          expect(result.layout.scale).toEqual({ x: 1, y: 1 });
           if (kind === 'inherited')
-            expect(result.node).toMatchObject({
-              stroke: 'red',
-              font: { family: 'serif', size: 20 },
-              padding: { top: 3, right: 3, bottom: 3, left: 3 },
-              margin: { top: 2, bottom: 2 },
+            expect(result).toMatchObject({
+              style: { stroke: 'red' },
+              text: { font: { family: 'serif', size: 20 } },
+              layout: { padding: { top: 3, right: 3, bottom: 3, left: 3 }, margin: { top: 2, bottom: 2 } },
             });
           if (kind === 'contrast') {
-            expect(result.node.textColor).toBe('#000000');
-            expect(result.node.text).toMatchObject([{ plainText: 'A', segments: [{ text: 'A', font: { size: 16 } }] }]);
+            expect(result.text?.color).toBe('#000000');
+            expect(result.text?.lines).toMatchObject([
+              { plainText: 'A', segments: [{ text: 'A', font: { size: 16 } }] },
+            ]);
           }
           if (kind === 'pattern')
-            expect(result.node.fill).toMatchObject({ kind: 'paint', pattern: { name: 'dots', size: 8 } });
+            expect(result.style.fill).toMatchObject({ kind: 'paint', pattern: { name: 'dots', size: 8 } });
           if (kind === 'labels') {
-            expect(result.node.label).toHaveLength(16);
-            expect(result.node.label?.at(-1)).toMatchObject({
+            expect(result.labels).toHaveLength(16);
+            expect(result.labels.at(-1)).toMatchObject({
               text: [{ plainText: 'L15' }],
               position: 'top',
               distance: 12,
             });
           }
           if (kind === 'simple')
-            expect(result.node.text).toMatchObject([{ plainText: 'A', segments: [{ text: 'A', font: { size: 16 } }] }]);
+            expect(result.text?.lines).toMatchObject([
+              { plainText: 'A', segments: [{ text: 'A', font: { size: 16 } }] },
+            ]);
           expect(JSON.stringify(source)).toBe(original);
         },
       };

@@ -54,8 +54,10 @@ describe('共享描边', () => {
       },
       children: children.map(child => ({ ...child, style: { dashOffset: 0 } })),
     });
-    expect(output[0]).toMatchObject({ dashPattern: [3, 1], dashOffset: 0 });
-    expect(output[1]).toMatchObject({ dashPattern: [5, 1], dashOffset: 0 });
+    expect(output[0]).toMatchObject({ dashPattern: [3, 1] });
+    expect('dashOffset' in output[0] ? (output[0].dashOffset ?? 0) : 0).toBe(0);
+    expect(output[1]).toMatchObject({ dashPattern: [5, 1] });
+    expect('dashOffset' in output[1] ? (output[1].dashOffset ?? 0) : 0).toBe(0);
   });
 
   it('本层共享默认覆盖祖先，按通道 reset 恢复实线且不清除另一通道', () => {

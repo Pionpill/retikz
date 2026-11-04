@@ -1,4 +1,4 @@
-import type { PropertyPath } from '@retikz/foundation';
+import type { PropertyPath, JsonObject } from '@retikz/foundation';
 
 import type { AnyPathDefinition, ArrowDefinition, MarkDefinition, PatternDefinition } from '../../contract';
 import type { ProviderRegistry } from '../../providers';
@@ -128,14 +128,24 @@ type CompleteCanonicalStep<TStep extends StepColorSource> = TStep extends {
         : WithCanonicalStepLabel<TStep>;
 
 /** 已补齐路径步骤及其标签静态默认值的结果 */
-export type CanonicalStep = CompleteCanonicalStep<StepColorSource>;
+export type CanonicalPathStep = CompleteCanonicalStep<StepColorSource>;
 
 /** 已补齐静态默认值并解析绘制资源的待编译路径 */
-export type CanonicalPath = Omit<
+export type CanonicalPathProperties = Omit<
   Omit<PathColorSource, 'style'> & NonNullable<PathColorSource['style']>,
   'children' | 'label' | 'shadow' | 'fill' | 'stroke' | 'strokeWidth' | 'opacity'
 > &
-  GraphicOpacityResolution & {
+  Required<GraphicOpacityResolution> &
+  Required<
+    Pick<
+      NonNullable<PathColorSource['style']>,
+      'fillRule' | 'dashPattern' | 'dashOffset' | 'lineCap' | 'lineJoin' | 'blendMode'
+    >
+  > & {
+    /** 是否存在宿主描边意图，补默认线宽前确定 */
+    strokeEnabled: boolean;
+    /** 已确定的路径种类 */
+    kind: string;
     /** 已补齐缺省值的描边宽度 */
     strokeWidth: number;
     /** 已解析的路径填充输入 */
@@ -143,7 +153,7 @@ export type CanonicalPath = Omit<
     /** 已解析的路径描边输入 */
     stroke?: InputPaintResolution;
     /** 完整路径步骤 */
-    children?: Array<CanonicalStep>;
+    children?: Array<CanonicalPathStep>;
     /** 统一为数组的宿主标签 */
     label?: Array<CanonicalPathLabel>;
     /** 已展开预设并补齐颜色的阴影 */
@@ -156,12 +166,14 @@ export type PathDefinitionResolution = Readonly<{
   kind: string;
   /** 与当前路径匹配的路径定义 */
   definition: AnyPathDefinition;
-  /** 经过定义的完整 schema 解析、尚未展开为 CanonicalPath 的路径 */
+  /** 经过定义的完整 schema 解析、尚未展开为 CanonicalPathProperties 的路径 */
   path: IRPathBase;
 }>;
 
 /** 已补齐默认值并解析绘制资源的标记属性 */
 export type CanonicalMark = Readonly<{
+  /** 标记定义消费的完整实例参数 */
+  params: JsonObject;
   /** 箭头或标记定义的注册名称 */
   shape: string;
   /** 对有效长度与宽度共同应用的比例系数 */
@@ -189,7 +201,7 @@ export type CanonicalMark = Readonly<{
 }>;
 
 /** 箭头放置、边界补偿与路径收缩所需的几何参数 */
-export type ArrowMarkGeometry = Readonly<{
+export type CanonicalPathArrowGeometry = Readonly<{
   /** 箭头定义采用的几何基准尺寸 */
   baseSize: number;
   /** 箭头尖端在定义基准坐标中的 x */
@@ -209,18 +221,13 @@ export type ArrowMarkGeometry = Readonly<{
 }>;
 
 /** 已绑定定义并确定外观与几何参数的端点箭头 */
-export type ArrowMarkResolution = Readonly<{
-  /** 已解析上下文颜色的箭头输入配置 */
-  source: MarkColorSource & {
-    /** 箭头与路径端点的重叠比例 */
-    endpointOverlap?: number;
-  };
+export type CanonicalPathArrow = Readonly<{
   /** 当前箭头匹配的形状定义 */
   definition: ArrowDefinition;
   /** 完成默认值与颜色解析的视觉属性 */
   mark: CanonicalMark;
   /** 用于端点放置和路径收缩的几何参数 */
-  geometry: ArrowMarkGeometry;
+  geometry: CanonicalPathArrowGeometry;
 }>;
 
 /** 路径解析所需的作用域配置、目标查询与扩展定义 */
@@ -244,40 +251,38 @@ export type PathResolveContext = Readonly<{
 }>;
 
 /** 路径输入经样式解析、定义绑定与默认值补全后的结果 */
-export type PathResolution = Readonly<{
+export type CanonicalPath = Readonly<{
+  /** 内置描边已选用的箭头与标记绑定；自定义定义仅在请求描边能力时解析 */
+  stroke?: Pick<CanonicalStrokePath, 'arrows' | 'marks'>;
   /** 当前路径的 IR 路径，用于扩展定义与输出的错误定位 */
   irPath: PropertyPath;
   /** 已补齐默认值并解析绘制资源、供后续编译使用的路径 */
-  path: CanonicalPath;
+  properties: CanonicalPathProperties;
   /** 与当前路径匹配的定义 */
   definition: AnyPathDefinition;
-  /** 经过定义 schema 解析、供自定义路径编译回调使用的输入 */
-  source: IRPathBase;
 }>;
 
 /** 补齐端点箭头与沿线标记定义后，供 Stroke 编译使用的路径结果 */
-export type StrokePathResolution = PathResolution &
+export type CanonicalStrokePath = CanonicalPath &
   Readonly<{
     /** 以路径端点箭头声明对象为键的解析结果 */
-    arrows: ReadonlyMap<IRArrowStyle, ArrowMarkResolution>;
+    arrows: ReadonlyMap<IRArrowStyle, CanonicalPathArrow>;
     /** 以沿线标记声明对象为键的解析结果 */
-    marks: ReadonlyMap<IRPathMark, MarkResolution>;
+    marks: ReadonlyMap<IRPathMark, CanonicalPathMark>;
   }>;
 
 /** 标记的已解析定义、样式与放置几何 */
-export type MarkResolution = Readonly<{
-  /** 已解析上下文颜色的标记输入配置 */
-  source: MarkColorSource;
+export type CanonicalPathMark = Readonly<{
   /** 已绑定的形状定义 */
   definition: MarkDefinition;
   /** 有效绘制样式 */
   mark: CanonicalMark;
   /** 局部尺寸和锚点 */
-  geometry: MarkGeometry;
+  geometry: CanonicalPathMarkGeometry;
 }>;
 
 /** 标记的有效尺寸与定义坐标系中的定位锚点 */
-export type MarkGeometry = Readonly<{
+export type CanonicalPathMarkGeometry = Readonly<{
   /** 定义采用的基准尺寸 */
   baseSize: number;
   /** 长度乘 scale 后的有效值 */

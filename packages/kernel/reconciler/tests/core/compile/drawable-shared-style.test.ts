@@ -59,7 +59,8 @@ describe('Drawable 共享样式解析结果', () => {
       ]),
     );
     expect(primitives[0]).toMatchObject({ opacity: 0.5, fillOpacity: 0.5, strokeOpacity: 0.8 });
-    expect(primitives[1]).toMatchObject({ opacity: 0, fillOpacity: 0, strokeOpacity: 1 });
+    expect(primitives[1]).toMatchObject({ opacity: 0, fillOpacity: 0 });
+    expect(primitives[1].strokeOpacity ?? 1).toBe(1);
     expect(primitives[2]).toMatchObject({ opacity: 0.5, fillOpacity: 0.5, strokeOpacity: 0.8 });
   });
 

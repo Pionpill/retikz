@@ -44,7 +44,7 @@ export class SubtreeCompiler {
   run(): SubtreeCompilation {
     const state: SubtreeCompileState = {
       primitives: [],
-      layouts: [],
+      layoutContexts: [],
       paths: [],
       publications: [],
       bounds: [],
@@ -64,7 +64,7 @@ export class SubtreeCompiler {
           ...(this.runtime.state.execution.provenanceTracker === undefined
             ? {}
             : { compileOwner: this.runtime.state.execution.provenanceTracker.root }),
-          style: { defaults: this.options.scopeDefaults ?? {}, theme: this.runtime.context.theme },
+          inheritance: { defaults: this.options.scopeDefaults ?? {}, theme: this.runtime.context.theme },
         },
         state,
       },
@@ -97,7 +97,7 @@ export class SubtreeCompiler {
         ? {}
         : { contribution: this.compositeCompiler.rootContribution }),
       layoutBounds,
-      layouts: state.layouts,
+      layoutContexts: state.layoutContexts,
       bounds: state.bounds,
       allocations: state.allocations.filter(allocation => allocation.skipAllocation !== true),
       artifacts: orderCompileArtifacts(state.artifacts),
@@ -239,7 +239,7 @@ export class SubtreeCompiler {
       const zIndex = contribution.primitiveZIndices[index];
       if (zIndex !== undefined) this.output.zIndexOf.set(primitive, zIndex);
     }
-    runtime.state.layouts.push(...contribution.layouts);
+    runtime.state.layoutContexts.push(...contribution.layoutContexts);
     runtime.state.publications.push(...contribution.publications);
     runtime.state.bounds.push(...contribution.bounds);
     for (const allocation of contribution.allocations) {

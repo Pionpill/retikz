@@ -65,7 +65,6 @@ describe('Path 全标的契约', () => {
           typeof context.emitBoundaryLabels === 'function' &&
           typeof context.wrapOutput === 'function' &&
           typeof context.round === 'function' &&
-          context.path.style?.color === 'red' &&
           context.appearance.color === 'red' &&
           context.appearance.fill === 'blue' &&
           context.appearance.blendMode === 'multiply' &&

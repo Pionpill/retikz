@@ -9,7 +9,7 @@ import {
 } from '@retikz/math';
 
 import type { Transform } from '../../../contract';
-import type { CanonicalStep } from '../../../resolve';
+import type { CanonicalPathStep } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
 import { rectPerimeterSample } from '../../../shared/geometry';
 import { BuiltinCompileWarningCode } from '../../shared';
@@ -23,7 +23,7 @@ import { nodeIdFromResolvableTarget } from './target-diagnostic';
 
 /** 由几何形状产生路径命令的 shape step */
 type StrokeShapeStep = Extract<
-  CanonicalStep,
+  CanonicalPathStep,
   { kind: 'cycle' | 'rectangle' | 'arc' | 'circlePath' | 'ellipsePath' | 'smooth' }
 >;
 
@@ -44,7 +44,7 @@ type ShapeStepLoweringContext = {
 };
 
 /** 判断 step 是否属于 shape family */
-export const isStrokeShapeStep = (step: CanonicalStep): step is StrokeShapeStep =>
+export const isStrokeShapeStep = (step: CanonicalPathStep): step is StrokeShapeStep =>
   step.kind === 'cycle' ||
   step.kind === 'rectangle' ||
   step.kind === 'arc' ||

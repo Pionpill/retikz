@@ -3,7 +3,7 @@ import { formatPropertyPath } from '@retikz/foundation';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { createLayoutProbeRecoverableError } from '../../resolve';
 import type { IRPosition, IRScope, IRScopePositionTarget } from '../../schemas';
-import { resolvePositionTargetWorld } from '../reference';
+import { evaluatePositionTargetWorld } from '../reference';
 import type { ScopePositionResolveContext } from './types';
 
 /** 拒绝引用适配返回的非有限位置 */
@@ -36,14 +36,14 @@ export const resolveScopePositionTarget = (
   }
 
   const positionContext = context.positionContext;
-  const reference = positionContext.lookupReference(target.id);
+  const reference = positionContext.lookupReference(target.id, 'position');
   if (reference === undefined || reference.state !== 'resolved') {
     throw createLayoutProbeRecoverableError(
       `Cannot resolve scope position target '${target.id}' at ${formatPropertyPath(scopeIrPath)}: target must be defined and fully resolved before this Scope`,
     );
   }
 
-  const resolution = resolvePositionTargetWorld(target, positionContext);
+  const resolution = evaluatePositionTargetWorld(target, positionContext);
   if (resolution.referencePoint === null) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Compile,

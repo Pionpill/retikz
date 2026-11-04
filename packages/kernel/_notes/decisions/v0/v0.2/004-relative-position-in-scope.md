@@ -1,6 +1,6 @@
 ---
 description: scope 下相对定位（Polar / At / Offset）语义
-keywords: 'scope、Polar、Offset、resolvePosition、applyScopeTransform、inverseScopeTransform、distance'
+keywords: 'scope、Polar、Offset、evaluatePosition、applyScopeTransform、inverseScopeTransform、distance'
 ---
 
 # ADR-004：scope 下相对定位（Polar / At / Offset）语义
@@ -27,7 +27,7 @@ keywords: 'scope、Polar、Offset、resolvePosition、applyScopeTransform、inve
 - **polar / at / offset 三 schema 行为一致**：统一"当前 scope 局部度量 + 末端 apply 当前 scope chain"，不出现"polar 用 A 规则、at 用 B 规则"。
 - **笛卡尔字面量 `[x, y]` 同样按 scope 投影**：v0.1 行为延续，是 ADR-001 Pass 1 累积 transform 的自然结果。
 - **嵌套 polar / offset 整条链都在当前 node 的 scope 局部度量**，不切换基准 scope。
-- **scope chain 传到 `resolvePosition` 时已是 Cartesian-only**：ADR-001 compile 阶段已把 polar-translate 展平为 Cartesian translate，故 `applyScopeTransform` / `inverseScopeTransform` 只需处理 translate / rotate / scale 3 变体。
+- **scope chain 传到 `evaluatePosition` 时已是 Cartesian-only**：ADR-001 compile 阶段已把 polar-translate 展平为 Cartesian translate，故 `applyScopeTransform` / `inverseScopeTransform` 只需处理 translate / rotate / scale 3 变体。
 - **`direction: 'right'` 是当前 scope 局部的 right**：scope rotate 90 后视觉变 down——当前 scope 局部基准已隐含此行为。
 - **scale=0 反向投影无定义**：约定不允许（schema `.refine(s !== 0)` 或 compile warn + fallback 到 1）。
 - **nodeDistance** 仍是全局 CompileOption（不加 scope 局部 nodeDistance，YAGNI）；其单位与当前 scope 局部度量同步（scope scale=2 时 `nodeDistance=10` 视觉表现 20，可用显式 `distance` 覆盖）。
@@ -43,4 +43,4 @@ keywords: 'scope、Polar、Offset、resolvePosition、applyScopeTransform、inve
 
 ## 最终实现结果
 
-已实现本 ADR 的核心决策。兼容性：非 breaking（`resolvePosition` 不传 scope transform 时等价 v0.1 全局行为）；其余默认行为、失败语义与公开契约以正文为准。
+已实现本 ADR 的核心决策。兼容性：非 breaking（`evaluatePosition` 不传 scope transform 时等价 v0.1 全局行为）；其余默认行为、失败语义与公开契约以正文为准。

@@ -12,20 +12,20 @@ import type {
   IRTranslateTransform,
   PolarPosition,
 } from '../../schemas';
-import type { CompiledNodeLayout } from '../node';
 import { resolveAnchorRefUncached } from '../node';
-import { resolvePosition } from '../reference';
-import type { PositionResolution, PositionResolveContext, PositionTargetResolveContext } from '../reference';
+import type { BoundaryGeometryContext } from '../reference';
+import { evaluatePosition } from '../reference';
+import type { PositionEvaluation, PositionEvaluateContext, PositionTargetEvaluateContext } from '../reference';
 import { createCompileInvariantError } from '../shared';
 
 /** scope transform lowering 所需的编译上下文 */
 type ScopeTransformsLoweringContext = {
-  /** Position Source IR 确定化上下文 */
-  positionContext: PositionTargetResolveContext;
+  /** 位置引用求值上下文 */
+  positionContext: PositionTargetEvaluateContext;
   /** transform 引用解析失败时的回调 */
   onUnresolved?: (failed: IRTransform) => void;
-  /** pivot 解析使用的 Scope 固有包络 layout */
-  intrinsicLayout?: CompiledNodeLayout;
+  /** 旋转与缩放中心求值使用的 Scope 固有包络查询上下文 */
+  intrinsicContext?: BoundaryGeometryContext;
 };
 
 /** 断言 self point / placement 计算结果是可发布的有限坐标 */
@@ -43,15 +43,15 @@ const assertFiniteScopePoint = (point: IRPosition, label: string): IRPosition =>
  */
 const resolveScopeSelfPoint = (
   point: IRScopeSelfPoint,
-  intrinsicLayout: CompiledNodeLayout | undefined,
+  intrinsicContext: BoundaryGeometryContext | undefined,
 ): IRPosition => {
   if (point === 'origin') return [0, 0];
   if (Array.isArray(point)) return assertFiniteScopePoint([point[0], point[1]], 'scope self point');
-  if (intrinsicLayout === undefined) {
+  if (intrinsicContext === undefined) {
     throw createCompileInvariantError('internal: intrinsic Scope layout is required to resolve an anchor self point');
   }
 
-  return assertFiniteScopePoint(resolveAnchorRefUncached(intrinsicLayout, point), 'scope self point');
+  return assertFiniteScopePoint(resolveAnchorRefUncached(intrinsicContext, point), 'scope self point');
 };
 
 /**
@@ -64,7 +64,7 @@ export const lowerScopeTransforms = (
   transforms: ReadonlyArray<IRTransform>,
   context: ScopeTransformsLoweringContext,
 ): Array<Transform> | null => {
-  const { positionContext, onUnresolved, intrinsicLayout } = context;
+  const { positionContext, onUnresolved, intrinsicContext: intrinsicContext } = context;
   const out: Array<Transform> = [];
 
   for (const t of transforms) {
@@ -86,7 +86,7 @@ export const lowerScopeTransforms = (
       case 'rotate': {
         const r: Transform = { kind: 'rotate', degrees: t.degrees };
         if (t.pivot !== undefined && t.pivot !== 'origin') {
-          const [cx, cy] = resolveScopeSelfPoint(t.pivot, intrinsicLayout);
+          const [cx, cy] = resolveScopeSelfPoint(t.pivot, intrinsicContext);
           r.cx = cx;
           r.cy = cy;
         }
@@ -102,7 +102,7 @@ export const lowerScopeTransforms = (
           break;
         }
 
-        const [px, py] = resolveScopeSelfPoint(t.pivot, intrinsicLayout);
+        const [px, py] = resolveScopeSelfPoint(t.pivot, intrinsicContext);
         if (px === 0 && py === 0) {
           out.push(s);
           break;
@@ -128,8 +128,8 @@ type IRTranslationTransform =
 /** 解析平移配置对应的局部与世界坐标；依赖的位置无法解析时返回 null */
 export const resolveTransformTranslation = (
   source: IRTranslationTransform,
-  context: PositionResolveContext,
-): PositionResolution | null => {
+  context: PositionEvaluateContext,
+): PositionEvaluation | null => {
   switch (source.kind) {
     case 'translate': {
       const localPoint: [number, number] = [source.x, source.y];
@@ -138,10 +138,10 @@ export const resolveTransformTranslation = (
     case 'polar-translate': {
       const position: PolarPosition = { angle: source.angle, radius: source.radius };
       if (source.origin !== undefined) position.origin = source.origin;
-      return resolvePosition(position, context);
+      return evaluatePosition(position, context);
     }
     case 'at-translate':
-      return resolvePosition(
+      return evaluatePosition(
         {
           direction: source.direction,
           of: source.of,
@@ -150,10 +150,10 @@ export const resolveTransformTranslation = (
         context,
       );
     case 'offset-translate':
-      return resolvePosition({ of: source.of, offset: source.offset ?? [0, 0] }, context);
+      return evaluatePosition({ of: source.of, offset: source.offset ?? [0, 0] }, context);
     case 'between-translate': {
       const position: IRBetweenPosition = { between: source.between, fraction: source.fraction };
-      return resolvePosition(position, context);
+      return evaluatePosition(position, context);
     }
   }
 };

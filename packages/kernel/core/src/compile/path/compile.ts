@@ -1,28 +1,29 @@
-import { resolvePath } from '../../resolve';
+import type { CanonicalPath } from '../../resolve';
+import { emitCompiledDrawing, splitCompiledDrawing } from '../scene';
 import { bindPathTargets } from './bind';
 import type { PathHostCompileContext } from './emit';
 import { emitDefinedPath } from './emit';
-import type { PathTargetResolver } from './types';
-import type { CompiledPath, InputPathCompilation } from './types';
+import type { PathTargetResolver, CompiledPath, InputPathCompilation } from './types';
 
-/** 解析并生成引用已就绪的路径输出，供遍历与独立调用共同使用 */
+/** 消费已确定路径属性，绑定引用并生成纯数据最终结果 */
 export const compilePath = (
-  input: InputPathCompilation,
+  canon: CanonicalPath,
+  input: Omit<InputPathCompilation, 'path'>,
   targetResolver: PathTargetResolver,
   context: PathHostCompileContext,
 ): CompiledPath => {
-  const resolution = bindPathTargets(
-    resolvePath(input.path, {
-      scopeDefaults: input.scopeDefaults,
-      mode: input.theme.mode,
-      pathRegistry: context.registries.pathRegistry,
-      arrowRegistry: context.registries.arrowRegistry,
-      markRegistry: context.registries.markRegistry,
-      patternRegistry: context.registries.patternRegistry,
-      round: context.round,
-      irPath: input.irPath,
-    }),
-    { scopeChain: input.scopeChain, targetResolver },
-  );
-  return { resolution, result: emitDefinedPath(input, resolution, targetResolver, context) };
+  const resolution = bindPathTargets(canon, { scopeChain: input.scopeChain, targetResolver });
+  const result = emitDefinedPath(input, resolution, targetResolver, context);
+  const drawing = splitCompiledDrawing(result?.primitives ?? []);
+  return {
+    geometry: drawing.geometry,
+    layout: result === null ? null : { boundsPoints: result.boundsPoints },
+    style: { primitives: drawing.style, shadow: canon.properties.shadow },
+  };
 };
+
+/** 从路径最终结果组装 Scene，不访问输入、定义或目标绑定 */
+export const emitPathOutput = (compiled: CompiledPath) => ({
+  primitives: emitCompiledDrawing({ geometry: compiled.geometry, style: compiled.style.primitives }),
+  boundsPoints: compiled.layout?.boundsPoints ?? [],
+});

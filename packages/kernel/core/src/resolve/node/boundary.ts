@@ -6,7 +6,7 @@ import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { ProviderRegistry } from '../../providers';
 import type { IRBoundary } from '../../schemas';
 import { parseProviderPayload } from '../provider';
-import type { BoundaryResolution } from './types';
+import type { CanonicalNodeBoundary } from './types';
 
 /** 解析连接面所需的节点形状与定义注册表 */
 type NodeBoundaryResolveContext = {
@@ -29,7 +29,7 @@ type NodeBoundaryResolveContext = {
 export const resolveNodeBoundary = (
   boundary: IRBoundary | undefined,
   context: NodeBoundaryResolveContext,
-): BoundaryResolution => {
+): CanonicalNodeBoundary => {
   if (boundary === undefined || boundary === 'shape') {
     return {
       name: context.visualDef.name,

@@ -9,7 +9,6 @@ import type {
   IRNode,
   IRNodeLabel,
   IRNodeLabelBoundaryPosition,
-  IRNodeLayout,
   IRNodeStyle,
   IRPaint,
   NodeLabelPlacement,
@@ -18,8 +17,9 @@ import type {
   StrokeDashPattern,
 } from '../../schemas';
 import type { ThemeMode } from '../../shared';
+import type { CanonicalPosition } from '../position';
 import type { InputPaintResolution } from '../resource';
-import type { GraphicOpacityResolution, MergedScopeDefaults } from '../style';
+import type { MergedScopeDefaults } from '../style';
 import type { CanonicalFont, ColorResolvedTextLine, LabelTextColorSource, TextLineResolution } from '../text';
 
 /** 已解析描边颜色与绘制资源的节点标签引线 */
@@ -102,73 +102,8 @@ export type CanonicalNodeLabel = Omit<NodeLabelColorSource, 'text' | 'font'> & {
   font: CanonicalFont;
 };
 
-/** 已确定正文、标签、字体及绘制资源的待布局节点 */
-export type CanonicalNode = Omit<
-  Omit<NodeColorSource, 'style' | 'layout'> & NonNullable<NodeColorSource['style']> & IRNodeLayout,
-  | 'padding'
-  | 'position'
-  | 'margin'
-  | 'minimumSize'
-  | 'scale'
-  | 'text'
-  | 'label'
-  | 'align'
-  | 'rotate'
-  | 'dashed'
-  | 'dotted'
-  | 'dashPattern'
-  | 'shadow'
-  | 'fill'
-  | 'stroke'
-  | 'opacity'
-  | 'font'
-  | 'lineHeight'
-> &
-  GraphicOpacityResolution & {
-    /** 已解析的节点填充 */
-    fill?: InputPaintResolution;
-    /** 已解析的节点描边 */
-    stroke?: InputPaintResolution;
-    /** 已补齐默认值的位置，非笛卡尔形态交由布局阶段定位 */
-    position: NonNullable<IRNode['position']>;
-    /** 完整内边距 */
-    padding: BoundsInsets;
-    /** 完整外边距 */
-    margin: BoundsInsets;
-    /** 完整最小尺寸 */
-    minimumSize: {
-      /** 节点边界的最小宽度 */
-      width: number;
-      /** 节点边界的最小高度 */
-      height: number;
-    };
-    /** 完整轴向缩放 */
-    scale: {
-      /** 水平方向缩放系数 */
-      x: number;
-      /** 垂直方向缩放系数 */
-      y: number;
-    };
-    /** 完成缩放后的有效块级字体 */
-    font: CanonicalFont;
-    /** 完成默认值补全与纵向缩放的行高 */
-    lineHeight: number;
-    /** 已完成字体和分段解析的多行正文 */
-    text?: Array<TextLineResolution>;
-    /** 已按数组形态展开的附属标签 */
-    label?: Array<CanonicalNodeLabel>;
-    /** 正文对齐 */
-    align: NodeTextAlign;
-    /** 节点旋转角度，单位为度 */
-    rotate: number;
-    /** 已解析的边框虚线样式 */
-    dashPattern?: StrokeDashPattern;
-    /** 已展开预设并补齐颜色的阴影 */
-    shadow?: CanonicalDropShadow;
-  };
-
 /** 已绑定的节点形状定义与实例参数 */
-export type ShapeResolution = {
+export type CanonicalNodeShape = {
   /** 实际选中的形状定义名称 */
   name: string;
   /** 形状定义 */
@@ -178,7 +113,7 @@ export type ShapeResolution = {
 };
 
 /** 已绑定定义与参数的连接面，几何需结合节点视觉尺寸计算 */
-export type BoundaryResolution = {
+export type CanonicalNodeBoundary = {
   /** 实际选中的定义名称；沿用节点形状时为该形状的名称 */
   name: string;
   /** 选中的连接面定义或形状定义 */
@@ -193,22 +128,112 @@ export type BoundaryResolution = {
 export type NodeBoundaryResolver = (
   boundary: IRBoundary | undefined,
   context: Readonly<{ visualDef: ShapeDefinition; visualParams: JsonObject; irPath?: PropertyPath }>,
-) => BoundaryResolution;
+) => CanonicalNodeBoundary;
 
 /** 已解析的节点输入、形状与默认连接面 */
-export type NodeResolution = Readonly<{
-  /** 当前节点的 IR 路径，用于布局与扩展定义的错误定位 */
-  irPath: PropertyPath;
-  /** 已完成样式继承、颜色和绘制资源解析并补齐默认值的节点 */
-  node: CanonicalNode;
-  /** 节点视觉形状 */
-  shape: ShapeResolution;
-  /** 节点默认连接面引用 */
-  boundary: BoundaryResolution;
+export type CanonicalNode = Readonly<{
+  /** 可选的声明名称 */
+  id?: string;
+  /** 同一节点的其他声明名称 */
+  aliasIds: Array<string>;
+  /** 用户元数据 */
+  meta?: JsonObject;
+  /** 显式绘制顺序，省略时沿用声明顺序 */
+  zIndex?: number;
+  /** 已补全的布局意图 */
+  layout: CanonicalNodeLayout;
+  /** 视觉形状能力与参数 */
+  shape: CanonicalNodeShape;
+  /** 连接边界能力与参数 */
+  boundary: CanonicalNodeBoundary;
+  /** 已补全的有效绘制属性 */
+  style: CanonicalNodeStyle;
+  /** 正文内容，省略表示无正文 */
+  text?: CanonicalNodeText;
+  /** 已解析的附属标签 */
+  labels: Array<CanonicalNodeLabel>;
+  /** 已校验的元素动画 */
+  animations: NonNullable<IRNode['animations']>;
 }>;
+
+/** 已补齐位置、尺寸和间距意图的节点布局配置 */
+export type CanonicalNodeLayout = {
+  /** 位置表达式的静态默认值已完成，引用在 compile 阶段读取 */
+  position: CanonicalPosition | Required<Extract<NonNullable<IRNode['position']>, { kind: 'anchor' }>>;
+  /** 完整内边距 */
+  padding: BoundsInsets;
+  /** 完整外边距 */
+  margin: BoundsInsets;
+  /** 节点边界的最小尺寸 */
+  minimumSize: {
+    /** 最小宽度 */
+    width: number;
+    /** 最小高度 */
+    height: number;
+  };
+  /** 完整轴向缩放 */
+  scale: {
+    /** 水平方向缩放系数 */
+    x: number;
+    /** 垂直方向缩放系数 */
+    y: number;
+  };
+  /** 节点旋转角度，单位为度 */
+  rotate: number;
+  /** 显式节点宽度，省略时由内容和布局约束确定 */
+  width?: number;
+  /** 正文最大宽度，省略时不增加此项折行约束 */
+  maxTextWidth?: number;
+};
+
+/** 完整绘制属性；shadow 缺失表示不投影 */
+export type CanonicalNodeStyle = {
+  /** 已解析的节点填充 */
+  fill: InputPaintResolution;
+  /** 已解析的节点描边 */
+  stroke: InputPaintResolution;
+  /** 填充不透明度 */
+  fillOpacity: number;
+  /** 描边不透明度 */
+  strokeOpacity: number;
+  /** 整体不透明度 */
+  opacity: number;
+  /** 描边宽度 */
+  strokeWidth: number;
+  /** 已解析的边框虚线样式 */
+  dashPattern: StrokeDashPattern;
+  /** 虚线起始偏移 */
+  dashOffset: number;
+  /** 描边端点样式 */
+  lineCap: NonNullable<IRNodeStyle['lineCap']>;
+  /** 描边连接样式 */
+  lineJoin: NonNullable<IRNodeStyle['lineJoin']>;
+  /** 节点圆角半径 */
+  cornerRadius: number;
+  /** 绘制混合模式 */
+  blendMode: NonNullable<IRNodeStyle['blendMode']>;
+  /** 已展开预设并补齐颜色的阴影 */
+  shadow?: CanonicalDropShadow;
+};
+
+/** 完成字体单位、行高与内容分段解析的节点正文 */
+export type CanonicalNodeText = {
+  /** 已确定数值字号及字形属性 */
+  font: CanonicalFont;
+  /** 正文对齐方式 */
+  align: NodeTextAlign;
+  /** 有效行高 */
+  lineHeight: number;
+  /** 主色，省略表示继承绘制环境颜色 */
+  color?: string;
+  /** 已解析的作者行与片段 */
+  lines: Array<TextLineResolution>;
+};
 
 /** 节点解析所需的默认配置、扩展定义与诊断能力 */
 export type NodeResolveContext = {
+  /** 相对定位缺省距离 */
+  nodeDistance: number;
   /** preset 与 rem 字号解析的根字号 */
   rootFontSize: number;
   /** 是否启用公式简写解析 */

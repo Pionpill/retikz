@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import * as core from '../../../../../core/src';
 import { angleBoundaryOf, boundaryPointOf, layoutNode, resolveAnchor } from '../../../../../core/src/compile/node';
-import { createPositionResolveContext } from '../../../../../core/src/compile/reference';
+import { createPositionEvaluateContext } from '../../../../../core/src/compile/reference';
 import { resolveBoundaryRegistry, resolvePatternRegistry, BUILTIN_SHAPES } from '../../../../../core/src/providers';
 import { resolveNode } from '../../../../../core/src/resolve';
 import type { IRNode } from '../../../../../core/src/schemas';
@@ -65,6 +65,7 @@ const layoutBoundaryNode = (node: IRNode, namespaceStack: NamespaceStack) =>
   (() => {
     const boundaries = resolveBoundaryRegistry();
     const resolution = resolveNode(node, {
+      nodeDistance: 24,
       rootFontSize: 16,
       gatingOn: false,
       scopeDefaults: {},
@@ -80,11 +81,11 @@ const layoutBoundaryNode = (node: IRNode, namespaceStack: NamespaceStack) =>
 
     return layoutNode(resolution, {
       measureText,
-      positionContext: createPositionResolveContext({
+      positionContext: createPositionEvaluateContext({
         lookupReference: id => namespaceStack.lookupReference(id),
         nodeDistance: 24,
       }),
-    }).layout;
+    }).context;
   })();
 
 describe('边界感知边界/规范', () => {

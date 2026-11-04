@@ -1,6 +1,6 @@
 ---
 description: Node at 节点间相对定位
-keywords: 'Node、positioning、position、resolvePosition、AtPosition'
+keywords: 'Node、positioning、position、evaluatePosition、AtPosition'
 ---
 
 # ADR-001：Node `at` 节点间相对定位
@@ -14,7 +14,7 @@ keywords: 'Node、positioning、position、resolvePosition、AtPosition'
 ## 背景 / 约束
 
 - alpha.3 的 Node 只能绝对笛卡尔 `[x,y]` 或极坐标——画"三 step 横向均分"得手算每个坐标。
-- alpha.3 已把 polar 进 IR、编译期 `resolvePosition` 解析；相对定位是同类问题，须保持同模式（否则两种定位语法心智分裂）。
+- alpha.3 已把 polar 进 IR、编译期 `evaluatePosition` 解析；相对定位是同类问题，须保持同模式（否则两种定位语法心智分裂）。
 
 ## 决策：嵌入 `position` union + 编译期解析
 

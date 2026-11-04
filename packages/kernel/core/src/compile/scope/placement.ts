@@ -1,8 +1,8 @@
 import type { Transform } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { IRPosition, IRScopeSelfPoint, IRTransform } from '../../schemas';
-import type { CompiledNodeLayout } from '../node';
 import { projectLayoutWithTransform, resolveAnchorRefUncached } from '../node';
+import type { BoundaryGeometryContext } from '../reference';
 import { BuiltinCompileWarningCode, applyTransformChain, composeScopeTransform } from '../shared';
 import { lowerScopeTransforms } from './transform';
 import type { InputScopeCompile, ScopeGeometryContext } from './types';
@@ -33,12 +33,12 @@ const assertFiniteScopePoint = (point: IRPosition, label: string): IRPosition =>
 /** anchor position self point：anchor 在 transformed envelope 上解析；origin / 显式点先按 own chain 投影 */
 const calculateTransformedSelfPoint = (
   point: IRScopeSelfPoint,
-  transformedLayout: CompiledNodeLayout,
+  transformedContext: BoundaryGeometryContext,
   scopeTransforms: ReadonlyArray<Transform>,
 ): IRPosition => {
   if (typeof point === 'string') {
     if (point !== 'origin') {
-      return assertFiniteScopePoint(resolveAnchorRefUncached(transformedLayout, point), 'scope position selfAnchor');
+      return assertFiniteScopePoint(resolveAnchorRefUncached(transformedContext, point), 'scope position selfAnchor');
     }
 
     return assertFiniteScopePoint(applyTransformChain([0, 0], scopeTransforms), 'scope position selfAnchor');
@@ -51,14 +51,14 @@ const calculateTransformedSelfPoint = (
     );
   }
 
-  return assertFiniteScopePoint(resolveAnchorRefUncached(transformedLayout, point), 'scope position selfAnchor');
+  return assertFiniteScopePoint(resolveAnchorRefUncached(transformedContext, point), 'scope position selfAnchor');
 };
 
 /** children intrinsic layout 完成后解析 pivot，并生成最终 own chain */
 export const calculateScopePlacementTransforms = (
   child: InputScopeCompile,
   context: ScopeGeometryContext,
-  intrinsicLayout: CompiledNodeLayout,
+  intrinsicContext: BoundaryGeometryContext,
   positionTarget: IRPosition | undefined,
   preliminaryTransforms: Array<Transform> | undefined,
 ): Array<Transform> => {
@@ -68,7 +68,7 @@ export const calculateScopePlacementTransforms = (
     preliminaryTransforms ??
     lowerScopeTransforms(child.transforms ?? [], {
       positionContext: context.positionContext,
-      intrinsicLayout,
+      intrinsicContext,
       onUnresolved: transform => {
         failedTransform = transform;
       },
@@ -89,13 +89,13 @@ export const calculateScopePlacementTransforms = (
   }
   if (positionTarget === undefined) return scopeTransforms;
 
-  const transformedLayout =
+  const transformedContext =
     scopeTransforms.length === 0
-      ? intrinsicLayout
-      : projectLayoutWithTransform(intrinsicLayout, composeScopeTransform(scopeTransforms));
+      ? intrinsicContext
+      : projectLayoutWithTransform(intrinsicContext, composeScopeTransform(scopeTransforms));
   const selfPoint = calculateTransformedSelfPoint(
     (!Array.isArray(child.position) ? child.position?.selfAnchor : undefined) ?? 'center',
-    transformedLayout,
+    transformedContext,
     scopeTransforms,
   );
   const alignment: Transform = {

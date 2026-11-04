@@ -5,6 +5,7 @@ import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { IRAxisScale, IRBoxSize, IRNode, IRPaintValue } from '../../schemas';
 import { NodeSchema } from '../../schemas';
 import { resolveAnimations } from '../animation';
+import { resolvePosition } from '../position';
 import { resolvePaint } from '../resource';
 import { resolveBoxSpacing } from '../spacing';
 import { resolveGraphicOpacity } from '../style';
@@ -15,7 +16,6 @@ import { resolveNodeShape } from './shape';
 import { expandNodeText, expandNodeLabels, resolveNodeDependentColors, resolveNodeTextColor } from './text';
 import type {
   CanonicalNode,
-  NodeResolution,
   NodeResolveContext,
   NodeColorSource,
   NodeLabelSource,
@@ -26,7 +26,7 @@ import type {
 const DEFAULT_NODE_PADDING = 8;
 
 /** 将节点缩放展开为 x、y 两轴系数，未指定时为 1 */
-const expandAxisScale = (value: number | IRAxisScale | undefined): CanonicalNode['scale'] => {
+const expandAxisScale = (value: number | IRAxisScale | undefined): { x: number; y: number } => {
   if (typeof value === 'number') return { x: value, y: value };
 
   const base = value?.default ?? 1;
@@ -38,7 +38,7 @@ const expandAxisScale = (value: number | IRAxisScale | undefined): CanonicalNode
 };
 
 /** 将最小尺寸展开为宽和高，未指定时为 0 */
-const expandBoxSize = (value: number | IRBoxSize | undefined): CanonicalNode['minimumSize'] => {
+const expandBoxSize = (value: number | IRBoxSize | undefined): { width: number; height: number } => {
   if (typeof value === 'number') return { width: value, height: value };
 
   const base = value?.default ?? 0;
@@ -123,7 +123,7 @@ const resolveNodePrimaryColors = (node: NodeLabelSource, context: NodeColorConte
  * 合并节点默认配置并解析正文、标签、颜色、形状、连接面和绘制资源，得到待布局的节点
  * @description 补齐静态默认值并展开简写；位置引用、文本测量与最终尺寸由布局阶段处理
  */
-export const resolveNode = (source: IRNode, context: NodeResolveContext): NodeResolution => {
+export const resolveNode = (source: IRNode, context: NodeResolveContext): CanonicalNode => {
   const mergedNode = mergeNodeStyle(source, context.scopeDefaults);
   const mergedLabelDefault = context.scopeDefaults.node?.label ?? {};
   const labelWasArray = Array.isArray(mergedNode.label);
@@ -171,20 +171,58 @@ export const resolveNode = (source: IRNode, context: NodeResolveContext): NodeRe
     round: context.round,
     irPath: context.irPath,
   });
+  const content = resolveNodeContent(node, context);
   return {
-    irPath: context.irPath,
-    node: {
-      ...node,
-      ...resolveNodeContent(node, context),
-      fill,
-      stroke,
-      animations: resolveAnimations(node.animations, {
-        target: 'element',
-        irPath: context.irPath,
-        onWarn: warning => context.warn(warning.code, warning.message, warning.path),
-      }),
+    id: node.id,
+    aliasIds: node.aliasIds ?? [],
+    meta: node.meta,
+    zIndex: node.zIndex,
+    layout: {
+      position:
+        !Array.isArray(node.position) && 'kind' in node.position
+          ? { ...node.position, selfAnchor: node.position.selfAnchor ?? 'center' }
+          : resolvePosition(node.position, context),
+      padding: node.padding,
+      margin: node.margin,
+      minimumSize: node.minimumSize,
+      scale: node.scale,
+      rotate: node.rotate,
+      width: node.width,
+      maxTextWidth: node.maxTextWidth,
     },
     shape,
     boundary,
+    style: {
+      fill: fill ?? 'transparent',
+      stroke: stroke ?? 'currentColor',
+      fillOpacity: node.fillOpacity ?? 1,
+      strokeOpacity: node.strokeOpacity ?? 1,
+      opacity: node.opacity ?? 1,
+      strokeWidth: node.strokeWidth ?? 1,
+      dashPattern: node.dashPattern ?? [],
+      dashOffset: node.dashOffset ?? 0,
+      lineCap: node.lineCap ?? 'butt',
+      lineJoin: node.lineJoin ?? 'miter',
+      cornerRadius: node.cornerRadius ?? 0,
+      shadow: node.shadow,
+      blendMode: node.blendMode ?? 'normal',
+    },
+    text:
+      content.text === undefined
+        ? undefined
+        : {
+            font: content.font,
+            align: node.align,
+            lineHeight: content.lineHeight,
+            color: node.textColor,
+            lines: content.text,
+          },
+    labels: content.label ?? [],
+    animations:
+      resolveAnimations(node.animations, {
+        target: 'element',
+        irPath: context.irPath,
+        onWarn: warning => context.warn(warning.code, warning.message, warning.path),
+      }) ?? [],
   };
 };

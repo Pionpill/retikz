@@ -1,7 +1,7 @@
 import { resolveArrowRegistry, resolvePathRegistry, resolvePatternRegistry } from '../../src';
 import type { BoundPathResolution, PathTargetContext } from '../../src/compile/path';
 import { bindPathTargets } from '../../src/compile/path';
-import type { PathResolveContext, StrokePathResolution } from '../../src/resolve/path';
+import type { PathResolveContext, CanonicalStrokePath } from '../../src/resolve/path';
 import { resolvePath, resolveStrokePathProviders } from '../../src/resolve/path';
 import type { IRPathBase } from '../../src/schemas';
 
@@ -28,7 +28,7 @@ export const resolvePathWithBuiltinProviders = (
 export const resolveStrokePathWithBuiltinProviders = (
   path: IRPathBase,
   context: BuiltinProviderContext = {},
-): BoundPathResolution & StrokePathResolution => {
+): BoundPathResolution & CanonicalStrokePath => {
   const providerContext = contextWithBuiltinProviders(context);
   return resolveStrokePathProviders(bindPathTargets(resolvePath(path, providerContext), context), providerContext);
 };

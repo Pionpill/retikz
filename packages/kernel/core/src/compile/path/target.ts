@@ -5,8 +5,8 @@ import type { IRNodeTarget, IRPosition, IRRelativeAccumulateTarget, IRRelativeTa
 import { isNodeTargetLike, isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../shared';
 import type { NodeBoundaryStore } from '../node';
 import { boundaryPointOf, clipNodePolyline, createNodeBoundaryStore, resolveAnchorRef } from '../node';
-import type { PositionTargetResolveContext } from '../reference';
-import { resolvePositionTarget } from '../reference';
+import type { PositionTargetEvaluateContext } from '../reference';
+import { evaluatePositionTarget } from '../reference';
 import type { ComposedScopeTransform } from '../shared';
 import { applyScopeTransform, composeScopeTransform, inverseScopeTransform } from '../shared';
 import type { PathTargetView, TargetResolution } from './types';
@@ -27,19 +27,19 @@ const addOffset = (base: IRPosition, offset: IRNodeTarget['offset']): IRPosition
   offset ? [base[0] + offset[0], base[1] + offset[1]] : base;
 
 /** 在编译阶段绑定路径目标，保留布局引用与来源 */
-export const bindPathTarget = (target: IRTarget, context: PositionTargetResolveContext): TargetResolution | null => {
+export const bindPathTarget = (target: IRTarget, context: PositionTargetEvaluateContext): TargetResolution | null => {
   if (isRelative(target)) return null;
 
-  const resolution = resolvePositionTarget(target, context);
+  const resolution = evaluatePositionTarget(target, context);
 
   return {
     target,
     point: resolution.point,
     referencePoint: resolution.referencePoint,
-    ...(resolution.reference === undefined
+    ...(resolution.reference === undefined || 'position' in resolution.reference.context
       ? {}
-      : { node: resolution.reference.layout, irPath: resolution.reference.irPath }),
-    ...(resolution.boundaryResolution === undefined ? {} : { boundaryResolution: resolution.boundaryResolution }),
+      : { context: resolution.reference.context, irPath: resolution.reference.irPath }),
+    ...(resolution.canonicalBoundary === undefined ? {} : { canonicalBoundary: resolution.canonicalBoundary }),
   };
 };
 
@@ -88,15 +88,15 @@ export const pathTargetViewOf = (
     referenceOfTarget: target => bindingOf(target)?.referencePoint ?? pointOf(target),
     clipPolylineTarget: (target, points, scopeChain) => {
       const binding = bindingOf(target);
-      if (binding?.node === undefined || !isNodeTarget(target) || !isAutoBoundaryTarget(target)) return [...points];
+      if (binding?.context === undefined || !isNodeTarget(target) || !isAutoBoundaryTarget(target)) return [...points];
 
       const transform = resolveTransform(scopeChain);
-      const node = binding.node;
+      const node = binding.context;
       const clipped = clipNodePolyline(
         node,
         points.map(position => applyScopeTransform(position, transform)),
-        target.boundary ?? node.boundarySource,
-        binding.boundaryResolution,
+        target.boundary,
+        binding.canonicalBoundary,
         warn === undefined ? undefined : (code, message) => warn(code, message, binding),
         { ...nodeBoundaryStore.get(node), irPath: binding.irPath ?? nodeBoundaryStore.get(node).irPath },
       );
@@ -104,11 +104,11 @@ export const pathTargetViewOf = (
     },
     clipTarget: (target, toward, scopeChain) => {
       const binding = bindingOf(target);
-      if (binding?.node === undefined || !isNodeTarget(target)) return pointOf(target);
+      if (binding?.context === undefined || !isNodeTarget(target)) return pointOf(target);
 
       const transform = resolveTransform(scopeChain);
-      const node = binding.node;
-      const boundary = target.boundary ?? node.boundarySource;
+      const node = binding.context;
+      const boundary = target.boundary;
       const towardGlobal = scopeChain.length === 0 ? toward : applyScopeTransform(toward, transform);
       const base =
         target.anchor === undefined
@@ -116,11 +116,11 @@ export const pathTargetViewOf = (
               node,
               towardGlobal,
               boundary,
-              binding.boundaryResolution,
+              binding.canonicalBoundary,
               warn === undefined ? undefined : (code, message) => warn(code, message, binding),
               { ...nodeBoundaryStore.get(node), irPath: binding.irPath ?? nodeBoundaryStore.get(node).irPath },
             )
-          : resolveAnchorRef(node, target.anchor, boundary, binding.boundaryResolution, {
+          : resolveAnchorRef(node, target.anchor, boundary, binding.canonicalBoundary, {
               ...nodeBoundaryStore.get(node),
               irPath: binding.irPath ?? nodeBoundaryStore.get(node).irPath,
             });

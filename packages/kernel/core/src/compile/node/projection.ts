@@ -1,14 +1,16 @@
 import type { Transform } from '../../contract';
 import type { IRPosition } from '../../schemas';
+import type { BoundaryGeometryContext } from '../reference';
 import { applyScopeTransform, applyTransformChain, inverseTransformChain } from '../shared';
 import type { ComposedScopeTransform } from '../shared';
-import type { CompiledNodeLayout } from './types';
 
 /** 保持既有布局投影口径，只复用合成的点变换与旋转/缩放累计量 */
-export const projectLayoutWithTransform = (
-  layout: CompiledNodeLayout,
+export const projectLayoutWithTransform = <
+  TGeometry extends BoundaryGeometryContext & { geometry: { contentCenter?: IRPosition } },
+>(
+  layout: TGeometry,
   transform: ComposedScopeTransform,
-): CompiledNodeLayout => {
+): TGeometry => {
   const [x, y] = applyScopeTransform([layout.geometry.rect.x, layout.geometry.rect.y], transform);
   const scaleX = Math.abs(transform.scaleX);
   const scaleY = Math.abs(transform.scaleY);
@@ -16,6 +18,11 @@ export const projectLayoutWithTransform = (
     ...layout,
     geometry: {
       ...layout.geometry,
+      ...(layout.geometry.contentCenter === undefined
+        ? {}
+        : {
+            contentCenter: applyScopeTransform(layout.geometry.contentCenter, transform),
+          }),
       rect: {
         ...layout.geometry.rect,
         x,
@@ -35,11 +42,13 @@ export const projectLayoutWithTransform = (
 };
 
 /** 将已按 parent ancestor chain 发布的 layout 投影并返回新布局，不修改已发布对象当前 Scope own chain */
-export const projectPublishedCompileLayout = (
-  layout: CompiledNodeLayout,
+export const projectPublishedCompileLayout = <
+  TGeometry extends BoundaryGeometryContext & { geometry: { contentCenter?: IRPosition } },
+>(
+  layout: TGeometry,
   parentChain: ReadonlyArray<Transform>,
   ownChain: ReadonlyArray<Transform>,
-): CompiledNodeLayout => {
+): TGeometry => {
   if (ownChain.length === 0) return layout;
 
   const projectAcrossParent = (point: IRPosition): IRPosition => {
@@ -49,7 +58,6 @@ export const projectPublishedCompileLayout = (
   };
 
   const [x, y] = projectAcrossParent([layout.geometry.rect.x, layout.geometry.rect.y]);
-  const [contentX, contentY] = projectAcrossParent(layout.geometry.contentCenter);
   let rotateDegrees = 0;
   let scaleX = 1;
   let scaleY = 1;
@@ -76,5 +84,17 @@ export const projectPublishedCompileLayout = (
     bottom: layout.geometry.margin.bottom * Math.abs(scaleY),
     left: layout.geometry.margin.left * Math.abs(scaleX),
   };
-  return { ...layout, geometry: { ...layout.geometry, rect, margin, contentCenter: [contentX, contentY] } };
+  return {
+    ...layout,
+    geometry: {
+      ...layout.geometry,
+      rect,
+      margin,
+      ...(layout.geometry.contentCenter === undefined
+        ? {}
+        : {
+            contentCenter: projectAcrossParent(layout.geometry.contentCenter),
+          }),
+    },
+  };
 };

@@ -204,7 +204,7 @@ describe('scope.transforms lower 后生成 GroupPrimitive 的 Cartesian transfor
     const compiled = compileToScene(ir).scene;
     const group = findTopScopeGroup(compiled.primitives);
 
-    expect(group?.transforms).toEqual([{ kind: 'scale', x: 2 }]);
+    expect(group?.transforms).toEqual([{ kind: 'scale', x: 2, y: 2 }]);
   });
 });
 

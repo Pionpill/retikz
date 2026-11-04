@@ -1,5 +1,5 @@
 import { RetikzCoreError, RetikzCoreErrorCode, registerFatalProbeError } from '@retikz/core';
-import type { CompiledNodeLayout } from '@retikz/core';
+import type { ReferenceGeometryContext, ReferenceReadKind } from '@retikz/core';
 import type { PropertyPath, WithOptionalProperties } from '@retikz/foundation';
 import { createIdAllocator } from '@retikz/foundation';
 
@@ -9,16 +9,16 @@ import { createExecutionInvariantError } from './errors';
 /** namespace 栈当前写入/解析阶段 */
 type NamespacePhase = 'registering' | 'resolving';
 
-/** namespace layout 的编译生命周期状态 */
+/** 名称绑定的几何查询上下文的编译生命周期状态 */
 export type NamespaceEntryState = 'resolved' | 'scope-placeholder';
 
 /** namespace 中带生命周期状态的内部条目 */
 export type NamespaceEntry = {
   /** 当前名称绑定的来源路径 */
   irPath: PropertyPath;
-  /** 可供既有引用解析逻辑消费的布局 */
-  layout: CompiledNodeLayout;
-  /** 区分合法已解析布局与尚未闭合的 Scope 占位布局 */
+  /** 当前名称绑定的几何查询上下文 */
+  context: ReferenceGeometryContext;
+  /** 区分已就绪引用与尚未闭合的 Scope 占位引用 */
   state: NamespaceEntryState;
   /** Scope 自身的内部身份，不随占位布局替换或投影改变 */
   scopeId?: string;
@@ -84,10 +84,15 @@ type NamespaceFrame = {
  */
 export class NamespaceStack {
   /** 当前阶段读取观察器，嵌套阶段退出时恢复 */
-  private readonly referenceObservers: Array<(name: string, entry: NamespaceEntry | undefined) => void> = [];
+  private readonly referenceObservers: Array<
+    (name: string, entry: NamespaceEntry | undefined, kind: ReferenceReadKind) => void
+  > = [];
 
   /** 只观察实际引用读取，不改变名称可见性 */
-  observeReferences<T>(observe: (name: string, entry: NamespaceEntry | undefined) => void, execute: () => T): T {
+  observeReferences<T>(
+    observe: (name: string, entry: NamespaceEntry | undefined, kind: ReferenceReadKind) => void,
+    execute: () => T,
+  ): T {
     this.referenceObservers.push(observe);
     try {
       return execute();
@@ -214,7 +219,7 @@ export class NamespaceStack {
     this.frameStack.pop();
   }
 
-  /** 设置名称处理阶段并更新快照身份；resolving 阶段禁止 register / replaceLayout */
+  /** 设置名称处理阶段并更新快照身份；resolving 阶段禁止 register / replaceContext */
   setPhase(phase: NamespacePhase): void {
     this.snapshotIdentity = {};
     this.currentPhase = phase;
@@ -222,7 +227,7 @@ export class NamespaceStack {
 
   /** 注册 id 到栈顶 frame；返回是否覆盖了同 frame 旧值 */
   register(id: string, entry: WithOptionalProperties<NamespaceEntry, 'state'>): boolean {
-    const { layout, irPath, state = 'resolved', scopeId } = entry;
+    const { context: layout, irPath, state = 'resolved', scopeId } = entry;
     if (this.currentPhase !== 'registering') {
       throw createExecutionInvariantError(
         `NamespaceStack.register('${id}'): only allowed during registering; current phase is '${this.currentPhase}'`,
@@ -244,7 +249,7 @@ export class NamespaceStack {
     }
 
     this.snapshotIdentity = {};
-    topFrame.set(id, { layout, irPath, state, ...(scopeId === undefined ? {} : { scopeId }) });
+    topFrame.set(id, { context: layout, irPath, state, ...(scopeId === undefined ? {} : { scopeId }) });
     this.onRegister?.({
       id,
       frameDepth: this.frameStack.length - 1,
@@ -255,24 +260,24 @@ export class NamespaceStack {
     return isOverwrite;
   }
 
-  /** 替换指定 frame 内已注册的 layout；用于 scope 占位升级，不触发重复 id 诊断 */
-  replaceLayout(id: string, layout: CompiledNodeLayout, frameDepth: number, expectedScopeId?: string): boolean {
+  /** 替换指定 frame 内已注册的几何查询上下文；用于 Scope 占位升级，不触发重复 id 诊断 */
+  replaceContext(id: string, layout: ReferenceGeometryContext, frameDepth: number, expectedScopeId?: string): boolean {
     if (this.currentPhase !== 'registering') {
       throw createExecutionInvariantError(
-        `NamespaceStack.replaceLayout('${id}'): only allowed during registering; current phase is '${this.currentPhase}'`,
+        `NamespaceStack.replaceContext('${id}'): only allowed during registering; current phase is '${this.currentPhase}'`,
       );
     }
 
     if (frameDepth < 0 || frameDepth >= this.frameStack.length) {
       throw createExecutionInvariantError(
-        `NamespaceStack.replaceLayout('${id}'): frameDepth ${frameDepth} out of range (stack depth ${this.frameStack.length})`,
+        `NamespaceStack.replaceContext('${id}'): frameDepth ${frameDepth} out of range (stack depth ${this.frameStack.length})`,
       );
     }
 
     const targetFrame = this.frameStack[frameDepth].entryMap;
     if (!targetFrame.has(id)) {
       throw createExecutionInvariantError(
-        `NamespaceStack.replaceLayout('${id}'): id not previously registered in frame at depth ${frameDepth}`,
+        `NamespaceStack.replaceContext('${id}'): id not previously registered in frame at depth ${frameDepth}`,
       );
     }
 
@@ -280,18 +285,18 @@ export class NamespaceStack {
     if (expectedScopeId !== undefined && current.scopeId !== expectedScopeId) return false;
 
     this.snapshotIdentity = {};
-    targetFrame.set(id, { ...current, layout, state: 'resolved' });
+    targetFrame.set(id, { ...current, context: layout, state: 'resolved' });
 
     return true;
   }
 
-  /** 用新的投影替换本次名称绑定，不原位修改布局或 fork 共享的 entry */
-  replacePublishedLayout(previous: CompiledNodeLayout, next: CompiledNodeLayout): void {
+  /** 用新的投影替换本次名称绑定，不原位修改上下文或 fork 共享的条目 */
+  replacePublishedContext(previous: ReferenceGeometryContext, next: ReferenceGeometryContext): void {
     if (previous === next) return;
     for (const { entryMap: frame } of this.frameStack) {
       for (const [id, entry] of frame) {
-        if (entry.layout !== previous) continue;
-        frame.set(id, { ...entry, layout: next });
+        if (entry.context !== previous) continue;
+        frame.set(id, { ...entry, context: next });
         this.snapshotIdentity = {};
       }
     }
@@ -310,9 +315,9 @@ export class NamespaceStack {
   }
 
   /** 解析作者几何引用，拒绝实际绑定到祖先 Scope 的目标 */
-  lookupReference(id: string): NamespaceEntry | undefined {
+  lookupReference(id: string, kind: ReferenceReadKind = 'boundary'): NamespaceEntry | undefined {
     const entry = this.lookupEntry(id);
-    for (const observe of this.referenceObservers) observe(id, entry);
+    for (const observe of this.referenceObservers) observe(id, entry, kind);
     if (entry?.scopeId !== undefined && this.scopeAncestorStack.some(ancestor => ancestor.scopeId === entry.scopeId)) {
       const source = this.scopeAncestorStack.findLast(ancestor => ancestor.id !== undefined)?.id;
       const error = new RetikzCoreError({

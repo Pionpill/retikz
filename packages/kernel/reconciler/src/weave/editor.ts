@@ -1,4 +1,4 @@
-import type { ScopeStyleResolution, IRChild } from '@retikz/core';
+import type { CanonicalScopeInheritance, IRChild } from '@retikz/core';
 import type { IdAllocator, PropertyPath } from '@retikz/foundation';
 
 import { createCompileChildPath } from '../compile/shared';
@@ -35,7 +35,7 @@ export class WeaveEditor {
   ) {}
 
   /** 应用一条操作并刷新候选地址；空插入仍校验位置，但不产生变化 */
-  applyOperation(operation: WeaveOperation, context: ScopeStyleResolution): WeaveEditResult | undefined {
+  applyOperation(operation: WeaveOperation, context: CanonicalScopeInheritance): WeaveEditResult | undefined {
     const changes: WeaveEditResult = { changedNodes: [], insertedNodes: [], removedNodes: [] };
     if (operation.kind === 'insert') {
       const parent = this.findScope(operation.parentId);
@@ -90,7 +90,7 @@ export class WeaveEditor {
   createNode(
     childElement: IRChild,
     parentWeaveNode: WeaveRoot | WeaveScopeNode,
-    context: ScopeStyleResolution,
+    context: CanonicalScopeInheritance,
   ): WeaveNode {
     const base = {
       parent: parentWeaveNode,
@@ -107,14 +107,14 @@ export class WeaveEditor {
           node = {
             type: 'node',
             current: null,
-            pending: { ...base, input: { own: childElement, context }, compiled: null, output: null },
+            pending: { ...base, input: { own: childElement, context }, canon: null, compiled: null },
           };
           break;
         case 'coordinate':
           node = {
             type: 'coordinate',
             current: null,
-            pending: { ...base, input: { own: childElement, context }, compiled: null },
+            pending: { ...base, input: { own: childElement, context }, canon: null, compiled: null },
           };
           break;
         case 'scope': {
@@ -128,6 +128,7 @@ export class WeaveEditor {
             pending: {
               ...base,
               input: { own: scopeInput, context },
+              canon: null,
               compiled: null,
               children: [],
               ...(localNamespace ? { ids: new Map<string, WeaveNode>() } : {}),
@@ -140,7 +141,7 @@ export class WeaveEditor {
           node = {
             type: 'path',
             current: null,
-            pending: { ...base, input: { own: childElement, context }, compiled: null },
+            pending: { ...base, input: { own: childElement, context }, canon: null, compiled: null },
           };
       }
     this.transaction.editNode(node);
@@ -238,7 +239,7 @@ export class WeaveEditor {
   private insertSubtree(
     input: InputWeaveElement,
     parent: WeaveRoot | WeaveScopeNode,
-    context: ScopeStyleResolution,
+    context: CanonicalScopeInheritance,
     insertedNodes: Array<WeaveNode>,
   ): WeaveNode {
     const node = this.createNode(input, parent, context);

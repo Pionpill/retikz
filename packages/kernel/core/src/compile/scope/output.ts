@@ -1,9 +1,6 @@
 import { boundsToRect } from '@retikz/math';
 
 import type { GroupPrimitive, ScenePrimitive, SceneResource, Transform } from '../../contract';
-import { resolveAnimations } from '../../resolve';
-import type { AnimationResolveContext } from '../../resolve';
-import type { IRScope } from '../../schemas';
 import { collectLayoutBounds, calculateBoundsOfPrimitives, allocationPointsOf } from '../scene';
 import { applyTransformChain } from '../shared';
 import type { CompileBounds, LayoutBoundsContribution } from './types';
@@ -16,16 +13,13 @@ export const shouldEmitScopeGroup = (
   hasClip: boolean,
 ): boolean => childCount > 0 || transforms.length > 0 || id !== undefined || hasClip;
 
-/** 在真实子输出就绪后裁空、解析动画并生成分组 */
+/** 将最终分组属性与真实子输出组装，裁去空匿名分组 */
 export const emitScopePrimitive = (
-  group: Omit<GroupPrimitive, 'children' | 'animations'>,
+  group: Omit<GroupPrimitive, 'children'>,
   children: Array<ScenePrimitive>,
-  input: Pick<IRScope, 'animations'>,
-  context: Pick<AnimationResolveContext, 'onWarn' | 'irPath'>,
 ): GroupPrimitive | undefined => {
   if (!shouldEmitScopeGroup(children.length, group.transforms ?? [], group.id, group.clipRef !== undefined)) return;
-  const animations = resolveAnimations(input.animations, { ...context, target: 'element' });
-  return { ...group, ...(animations === undefined ? {} : { animations }), children };
+  return { ...group, children };
 };
 
 /** 投影子输出边界；装饰经过裁剪，布局贡献只应用变换 */

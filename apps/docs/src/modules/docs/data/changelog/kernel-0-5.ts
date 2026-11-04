@@ -388,6 +388,13 @@ export const kernelV05: Release = {
           },
         },
         {
+          label: { zh: '待发布：BREAKING 三层编译产物', en: 'Unreleased: BREAKING three-stage compilation products' },
+          content: {
+            zh: 'Node、Coordinate、Path、Scope 分别保存稀疏输入、Canonical 配置与纯数据 Compiled 结果；连接查询显式结合 canon 能力与最终几何。自定义 Path 回调的 context.path 改为确定化配置，标签位置已展开，外观改从 context.appearance 读取；委托新路径时向 emitStroke 显式传入 IR，不能将 canonical 配置当作原始输入回传。旧 NodeResolution、PathResolution 和虚拟 Node 坐标工具删除，原子阶段消费者需迁移到对应 Canonical/Compiled 类型。',
+            en: 'Node, Coordinate, Path, and Scope retain sparse input, Canonical configuration, and data-only Compiled results separately. Connection queries explicitly combine canon capabilities with final geometry. Custom Path callbacks receive canonical context.path with resolved label placement; read drawing styles from context.appearance. Pass explicit IR when delegating a new path to emitStroke instead of passing canonical configuration back as source input. NodeResolution, PathResolution, and synthetic Node coordinate helpers are removed; atomic-stage consumers must migrate to the corresponding Canonical/Compiled types.',
+          },
+        },
+        {
           label: { zh: '待发布：BREAKING 冗余 API 清理', en: 'Unreleased: BREAKING unused API cleanup' },
           content: {
             zh: '删除无生产消费者的内部 helper 和测试专用入口；Reconciler 同步移除 createSceneRevision，SceneRevision 类型及编译 revision 语义保持。',

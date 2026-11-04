@@ -126,7 +126,7 @@ export class CompositeCompiler {
     );
 
     try {
-      callbackResult = callable.compile(callable.node, callbackContext.createContext(frame.context.style.theme));
+      callbackResult = callable.compile(callable.node, callbackContext.createContext(frame.context.inheritance.theme));
     } catch (thrown) {
       if (isFatalProbeError(thrown) || isLayoutProbeRecoverableError(thrown)) throw thrown;
 

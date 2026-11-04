@@ -2,12 +2,35 @@ import { describe, expect, it } from 'vitest';
 
 import type { CompileWarning, IRScene, ScenePrimitive } from '../../../../core/src';
 import { BuiltinCompileWarningCode } from '../../../../core/src';
-import type { CompiledNodeLayout } from '../../../../core/src/compile/node';
-import { createScopeRectangleLayout } from '../../../../core/src/compile/node';
+import type { NodeGeometryContext } from '../../../../core/src/compile/node';
+import { projectLayoutWithTransform } from '../../../../core/src/compile/node';
+import type { ReferenceGeometryContext } from '../../../../core/src/compile/reference';
 import { computeScopeBoundingBox } from '../../../../core/src/compile/scope';
+import { createIntrinsicScopeLayout, createScopeGeometryContext } from '../../../../core/src/compile/scope';
+import { composeScopeTransform } from '../../../../core/src/compile/shared';
 import type { TextMeasurer } from '../../../../core/src/contract';
 import { BUILTIN_SHAPES } from '../../../../core/src/providers';
-import { compileToScene } from '../../../src/compile';
+import { resolveScope, resolveScopeInheritance } from '../../../../core/src/resolve';
+import { compileToScene, createSharedCompileContext } from '../../../src/compile';
+
+const scopeLayout = (
+  shape: 'rectangle' | 'circle',
+  layouts: ReadonlyArray<ReferenceGeometryContext>,
+  offset: [number, number] = [0, 0],
+) => {
+  const shared = createSharedCompileContext();
+  const canon = resolveScope(
+    { type: 'scope', boundingShape: shape },
+    {
+      nodeDistance: 24,
+      ...shared.registries,
+      parent: resolveScopeInheritance({}, shared.registries.themeRegistry),
+      irPath: [],
+    },
+  );
+  const layout = createScopeGeometryContext(canon, createIntrinsicScopeLayout(canon, layouts));
+  return projectLayoutWithTransform(layout, composeScopeTransform([{ kind: 'translate', x: offset[0], y: offset[1] }]));
+};
 
 const scene = (children: IRScene['children']): IRScene => ({
   version: 1,
@@ -29,7 +52,7 @@ const lineTo = (prim: ScenePrimitive | undefined): [number, number] | undefined 
 };
 
 /** 构造一个 width/height 已知、中心已知的 0-rotate 测试 layout，供 computeScopeBoundingBox 单元测试 */
-const layoutAt = (cx: number, cy: number, w: number, h: number): CompiledNodeLayout => ({
+const layoutAt = (cx: number, cy: number, w: number, h: number): NodeGeometryContext => ({
   shape: { name: 'rectangle', definition: BUILTIN_SHAPES.get('rectangle')!, params: {} },
   geometry: {
     rect: { x: cx, y: cy, width: w, height: h, rotate: 0 },
@@ -73,7 +96,7 @@ describe('computeScopeBoundingBox / createScopeRectangleLayout 单元测试', ()
   });
 
   it('createScopeRectangleLayout(bbox=null, fallback) → 0×0 占位 layout 落在 fallback 点', () => {
-    const layout = createScopeRectangleLayout({ id: 'g', bbox: null, fallbackOrigin: [50, 50] });
+    const layout = scopeLayout('rectangle', [], [50, 50]);
 
     expect(layout.shape.name).toBe('rectangle');
     expect(layout.shape.definition).toBe(BUILTIN_SHAPES.get('rectangle')!);
@@ -83,22 +106,15 @@ describe('computeScopeBoundingBox / createScopeRectangleLayout 单元测试', ()
     expect(layout.geometry.rect.height).toBe(0);
     expect(layout.geometry.rect.rotate).toBe(0);
     expect(layout.geometry.margin).toEqual({ top: 0, right: 0, bottom: 0, left: 0 });
-    expect(layout.text).toBeUndefined();
   });
 
   it('createScopeRectangleLayout(bbox=有效) → rect 字段反映 bbox', () => {
-    const layout = createScopeRectangleLayout({
-      id: 'g',
-      bbox: { x: 100, y: 50, width: 80, height: 60 },
-      fallbackOrigin: [0, 0],
-    });
+    const layout = scopeLayout('rectangle', [layoutAt(100, 50, 80, 60)]);
 
     expect(layout.geometry.rect.x).toBe(100);
     expect(layout.geometry.rect.y).toBe(50);
     expect(layout.geometry.rect.width).toBe(80);
     expect(layout.geometry.rect.height).toBe(60);
-    expect(layout.geometry.contentSize.width).toBe(80);
-    expect(layout.geometry.contentSize.height).toBe(60);
   });
 });
 

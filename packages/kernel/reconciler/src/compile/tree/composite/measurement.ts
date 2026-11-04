@@ -25,7 +25,7 @@ export const createCompositeMeasurementMethods = (
   probeContext: CompositeProbeContext,
   frame: SubtreeCompileRuntime,
   probeSequence: CompositeProbeSequence,
-  theme: SubtreeCompileRuntime['context']['style']['theme'],
+  theme: SubtreeCompileRuntime['context']['inheritance']['theme'],
 ): Pick<CompositeCompileContext, 'measureChild' | 'layoutChild'> => {
   const { runtime, owner, key, occurrence, compositeDepth } = probeContext;
   return {
@@ -56,7 +56,7 @@ export const createCompositeMeasurementMethods = (
         clonedChild,
         axis,
         clonedProposal,
-        frame.context.style.defaults,
+        frame.context.inheritance.defaults,
         theme,
         frame.context.transformChains,
         inputs?.bindings.map(input => [input.path, runtime.state.composite.identityOf(input.input)]),
@@ -74,7 +74,7 @@ export const createCompositeMeasurementMethods = (
           clonedProposal,
           probeOccurrence,
           frame.context.transformChains,
-          frame.context.style.defaults,
+          frame.context.inheritance.defaults,
           theme,
           inputs,
           undefined,
@@ -125,7 +125,7 @@ export const createCompositeMeasurementMethods = (
           clonedProposal,
           probeOccurrence,
           frame.context.transformChains,
-          frame.context.style.defaults,
+          frame.context.inheritance.defaults,
           theme,
           false,
           probeInputs,

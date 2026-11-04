@@ -1,11 +1,13 @@
 import type { PropertyPath } from '@retikz/foundation';
 
-import type { ScenePrimitive, SceneResource, Transform } from '../../contract';
-import type { BoundaryResolution, MergedScopeDefaults, PathResolution } from '../../resolve';
+import type { SceneResource, Transform } from '../../contract';
+import type { CanonicalNodeBoundary, MergedScopeDefaults, CanonicalPath } from '../../resolve';
 import type { IRPathBase, IRPosition, IRTarget } from '../../schemas';
+import type { CanonicalDropShadow } from '../../schemas';
 import type { CanonicalTheme } from '../../shared';
-import type { CompiledNodeLayout } from '../node';
+import type { BoundaryGeometryContext } from '../reference';
 import type { RegisterPaint } from '../resource';
+import type { CompiledDrawing } from '../scene';
 import type { CompileWarning } from '../shared';
 import type { TexLowerer } from '../text';
 
@@ -35,15 +37,12 @@ export type PathEmitOptions = {
 
 /** Path 宿主阶段产物，自定义路径不要求具有单一中心线 */
 export type CompiledPath = Readonly<{
-  /** 当前路径已绑定的语义与目标 */
-  resolution: BoundPathResolution;
-  /** 已校验且物化的输出，null 表示合法空结果 */
-  result: {
-    /** 路径局部绘制图元 */
-    primitives: Array<ScenePrimitive>;
-    /** 路径局部布局贡献 */
-    boundsPoints: Array<IRPosition>;
-  } | null;
+  /** 任意路径种类的实际绘制几何，包含最终箭头及标签 */
+  geometry: CompiledDrawing['geometry'];
+  /** 实际布局贡献；null 保留 provider 合法空结果的语义 */
+  layout: { boundsPoints: Array<IRPosition> } | null;
+  /** 与实际图元逐项对应的最终外观 */
+  style: { primitives: CompiledDrawing['style']; shadow?: CanonicalDropShadow };
 }>;
 
 /** 引用就绪后的路径编译输入，不包含遍历队列或输出容器 */
@@ -94,12 +93,12 @@ export type TargetResolution = Readonly<{
   point: IRPosition | null;
   /** 绑定器提供的世界参考点；未提供时可能沿用局部坐标，无法定位时为 null */
   referencePoint: IRPosition | null;
-  /** 直接引用的节点、坐标或作用域几何，普通坐标目标不设置 */
-  node?: CompiledNodeLayout;
+  /** 直接引用的节点或作用域边界查询上下文，坐标目标不设置 */
+  context?: BoundaryGeometryContext;
   /** 目标引用的声明来源 */
   irPath?: PropertyPath;
   /** 节点目标选用的连接面，普通坐标目标不设置 */
-  boundaryResolution?: BoundaryResolution;
+  canonicalBoundary?: CanonicalNodeBoundary;
 }>;
 
 /** 路径目标绑定使用的坐标查询能力 */
@@ -111,7 +110,7 @@ export type PathTargetContext = {
 };
 
 /** 完成声明解析和目标几何绑定的路径 */
-export type BoundPathResolution = PathResolution & {
+export type BoundPathResolution = CanonicalPath & {
   /** 按目标来源路径索引的绑定 */
   targets: ReadonlyMap<string, TargetResolution>;
 };

@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { TexLowerer } from '../../../../core/src/compile';
 import { BuiltinCompileWarningCode } from '../../../../core/src/compile';
-import type { CompiledNodeLayout } from '../../../../core/src/compile/node';
+import type { NodeGeometryContext } from '../../../../core/src/compile/node';
 import type { CompileWarning } from '../../../../core/src/compile/shared';
 import type { TextMeasurer, TextPrimitive } from '../../../../core/src/contract';
 import type { IRScene } from '../../../../core/src/schemas';
@@ -58,7 +58,7 @@ const collectLayouts = (
     precision?: number;
   } = {},
 ): {
-  layouts: Array<CompiledNodeLayout>;
+  layouts: Array<NodeGeometryContext>;
   warnings: ReadonlyArray<CompileWarning>;
   textPrims: Array<TextPrimitive>;
 } => {
@@ -68,13 +68,13 @@ const collectLayouts = (
 
     ...(options.withTex === true ? { lowerTex } : {}),
   });
-  let layouts: Array<CompiledNodeLayout> = [];
+  let layouts: Array<NodeGeometryContext> = [];
   const run = SubtreeCompiler.prototype.run;
   const observeLayouts = vi
     .spyOn(SubtreeCompiler.prototype, 'run')
     .mockImplementation(function (this: SubtreeCompiler) {
       const out = run.call(this);
-      layouts = out.layouts;
+      layouts = out.layoutContexts.filter((layout): layout is NodeGeometryContext => !('position' in layout));
       return out;
     });
   try {
@@ -131,7 +131,7 @@ describe('Node 内容测量', () => {
   });
 
   it('对多行内容使用最宽的行和累积行高', () => {
-    const { layouts } = collectLayouts(
+    const { layouts, textPrims } = collectLayouts(
       scene([
         {
           type: 'node',
@@ -144,11 +144,11 @@ describe('Node 内容测量', () => {
     );
 
     expect(layouts[0].geometry.contentSize).toEqual({ width: 40, height: 24 });
-    expect(layouts[0].text?.lines.length).toBe(2);
+    expect(textPrims.flatMap(primitive => primitive.lines.map(line => line.text))).toEqual(['a', 'abcd']);
   });
 
   it('累加混合行中文本及已下沉 TeX 的宽度', () => {
-    const { layouts, warnings } = collectLayouts(
+    const { layouts, warnings, textPrims } = collectLayouts(
       scene([
         {
           type: 'node',
@@ -163,8 +163,7 @@ describe('Node 内容测量', () => {
 
     expect(warnings).toEqual([]);
     expect(layouts[0].geometry.contentSize).toEqual({ width: 60, height: 12 });
-    expect(layouts[0].text?.kind).toBe('inline');
-    expect(layouts[0].text?.lines).toHaveLength(1);
+    expect(textPrims.flatMap(primitive => primitive.lines.map(line => line.text))).toEqual(['A ', ' B']);
   });
 
   it('当 lowerTex 缺失时，按字面意思测量字符串 TeX 糖', () => {

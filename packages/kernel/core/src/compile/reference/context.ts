@@ -1,26 +1,27 @@
 import type { PropertyPath } from '@retikz/foundation';
 
 import type { Transform } from '../../contract';
-import type { BoundaryResolution, NodeBoundaryResolver } from '../../resolve';
-import { boundaryKey } from '../../resolve';
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
+import type { CanonicalNodeBoundary, NodeBoundaryResolver } from '../../resolve';
 import type { IRBetweenPosition, IRNodeTarget, IRPosition } from '../../schemas';
-import type { CompiledNodeLayout, NodeBoundaryStore } from '../node';
+import { isAnchor } from '../../shared';
+import type { NodeBoundaryStore } from '../node';
 import { resolveAnchorRef } from '../node';
 import type { ComposedScopeTransform } from '../shared';
 import { applyScopeTransform, composeScopeTransform, inverseScopeTransform } from '../shared';
-import { resolvePositionTarget } from './target';
-import type { PositionReferenceView, PositionTargetResolveContext } from './types';
+import { evaluatePositionTarget } from './target';
+import type { BoundaryGeometryContext } from './types';
+import type { PositionReferenceView, PositionTargetEvaluateContext, ReferenceReadKind } from './types';
 
 /** 仅解析目标额外指定的连接面；视觉形状与默认连接面由几何消费端读取布局 */
 const resolveTargetBoundary = (
-  node: CompiledNodeLayout,
+  node: BoundaryGeometryContext,
   target: IRNodeTarget,
   resolveExplicitBoundary?: NodeBoundaryResolver,
   irPath?: PropertyPath,
-): BoundaryResolution | undefined => {
+): CanonicalNodeBoundary | undefined => {
   const boundary = target.boundary;
   if (boundary === undefined || boundary === 'shape') return undefined;
-  if (boundaryKey(boundary) === boundaryKey(node.boundarySource)) return undefined;
   if (resolveExplicitBoundary === undefined) return undefined;
 
   return resolveExplicitBoundary(boundary, {
@@ -31,9 +32,9 @@ const resolveTargetBoundary = (
 };
 
 /** 创建位置求值上下文所需的编译状态 */
-export type InputPositionResolveContext = Readonly<{
+export type InputPositionEvaluateContext = Readonly<{
   /** 当前命名空间 */
-  lookupReference: (id: string) => PositionReferenceView | undefined;
+  lookupReference: (id: string, kind?: ReferenceReadKind) => PositionReferenceView | undefined;
   /** 与节点布局及路径裁剪共享的几何消费状态 */
   nodeBoundaryStore?: NodeBoundaryStore;
   /** 相对定位默认距离 */
@@ -50,7 +51,7 @@ export type InputPositionResolveContext = Readonly<{
  * 从编译状态创建位置与目标求值上下文
  * @description 直接复用查询返回的布局引用与来源路径，不构造中间引用副本
  */
-export const createPositionResolveContext = (input: InputPositionResolveContext): PositionTargetResolveContext => {
+export const createPositionEvaluateContext = (input: InputPositionEvaluateContext): PositionTargetEvaluateContext => {
   const {
     lookupReference,
     nodeBoundaryStore,
@@ -66,34 +67,49 @@ export const createPositionResolveContext = (input: InputPositionResolveContext)
     transformChain.length === 0 ? [world[0], world[1]] : inverseScopeTransform(world, transform);
   const toWorld = (local: IRPosition): IRPosition =>
     transformChain.length === 0 ? [local[0], local[1]] : applyScopeTransform(local, transform);
-  const boundaryResolutionOf = (target: IRNodeTarget, reference: PositionReferenceView) =>
-    resolveTargetBoundary(reference.layout, target, resolveExplicitBoundary, reference.irPath);
+  const canonicalBoundaryOf = (target: IRNodeTarget, reference: PositionReferenceView) =>
+    'position' in reference.context
+      ? undefined
+      : resolveTargetBoundary(reference.context, target, resolveExplicitBoundary, reference.irPath);
 
   const pointOfNodeTarget = (
     target: IRNodeTarget,
     reference: PositionReferenceView,
-    boundaryResolution: BoundaryResolution | undefined,
+    canonicalBoundary: CanonicalNodeBoundary | undefined,
   ): IRPosition => {
-    const node = reference.layout;
+    const node = reference.context;
+    if ('position' in node) {
+      if (typeof target.anchor === 'string' && !isAnchor(target.anchor))
+        throw new RetikzCoreError(
+          RetikzCoreErrorCode.Compile,
+          `Unknown anchor '${target.anchor}' for coordinate '${target.id}'`,
+        );
+      if (typeof target.anchor === 'object')
+        throw new RetikzCoreError(
+          RetikzCoreErrorCode.Compile,
+          '{ side, fraction } is not meaningful on a zero-size target (coordinate)',
+        );
+      return node.position;
+    }
     if (target.anchor === undefined) return [node.geometry.rect.x, node.geometry.rect.y];
     const state = nodeBoundaryStore?.get(node);
-    return resolveAnchorRef(node, target.anchor, target.boundary ?? node.boundarySource, boundaryResolution, {
+    return resolveAnchorRef(node, target.anchor, target.boundary, canonicalBoundary, {
       ...state,
       irPath: reference.irPath ?? state?.irPath,
     });
   };
 
-  const resolveBetweenWorld = (between: IRBetweenPosition): IRPosition | null =>
-    resolvePositionTarget(between, context).referencePoint;
+  const evaluateBetweenWorld = (between: IRBetweenPosition): IRPosition | null =>
+    evaluatePositionTarget(between, context).referencePoint;
 
-  const context: PositionTargetResolveContext = {
+  const context: PositionTargetEvaluateContext = {
     nodeDistance,
     lookupReference,
     toLocal,
     toWorld,
-    boundaryResolutionOf,
+    canonicalBoundaryOf,
     pointOfNodeTarget,
-    resolveBetweenWorld,
+    evaluateBetweenWorld,
   };
 
   return context;

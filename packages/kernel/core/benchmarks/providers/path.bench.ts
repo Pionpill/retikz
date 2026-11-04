@@ -13,7 +13,7 @@ for (const empty of [false, true]) {
       dimensions: ['Path dispatch', empty ? '空结果' : '固定宿主结果', '单次委托'],
     },
     () => {
-      const path: IRPathBase = { type: 'path', children: [] };
+      const path: PathCompileContext['path'] = { type: 'path', children: [] };
       const result: PathCompileResult | null = empty
         ? null
         : {
@@ -43,14 +43,14 @@ for (const empty of [false, true]) {
         emitHostLabels: () => [],
         emitBoundaryLabels: () => [],
         wrapOutput: value => value,
-        appearance: {},
+        appearance: { strokeEnabled: false },
         round: Math.round,
       };
       return {
         run: () => stroke.compile(context),
         verify: actual => {
           expect(actual).toBe(result);
-          expect(receivedPath).toBe(path);
+          expect(receivedPath).toBeUndefined();
         },
       };
     },

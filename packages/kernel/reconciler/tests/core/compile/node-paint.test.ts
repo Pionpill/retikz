@@ -4,11 +4,11 @@ import {
   resolveNode,
   layoutNode,
   emitNodeOutput,
-  createPositionResolveContext,
-  resolveScopeStyle,
+  createPositionEvaluateContext,
+  resolveScopeInheritance,
 } from '../../../../core/src';
-import type { IRNode, ScopeStyleResolution } from '../../../../core/src';
-import { emitNodePrimitives } from '../../../../core/src/compile/node';
+import type { IRNode, CanonicalScopeInheritance } from '../../../../core/src';
+import { emitNodePrimitives, compileNodeDrawing } from '../../../../core/src/compile/node';
 import { createPaintRegistry } from '../../../../core/src/compile/resource';
 import { flattenPrims } from '../../../../core/tests/helpers/flatten';
 import { compileToScene, createSharedCompileContext } from '../../../src/compile';
@@ -16,7 +16,7 @@ import type { SharedCompileContext } from '../../../src/compile';
 
 const compileTestNode = (
   input: IRNode,
-  context: { shared: SharedCompileContext; style: ScopeStyleResolution; irPath: Array<string> },
+  context: { shared: SharedCompileContext; style: CanonicalScopeInheritance; irPath: Array<string> },
 ) => {
   const { shared, style, irPath } = context;
   const resolution = resolveNode(input, {
@@ -30,22 +30,22 @@ const compileTestNode = (
   });
   const compilation = layoutNode(resolution, {
     measureText: shared.host.measureText,
-    positionContext: createPositionResolveContext({
+    positionContext: createPositionEvaluateContext({
       nodeDistance: shared.layout.nodeDistance,
       lookupReference: () => undefined,
     }),
   });
-  const output = emitNodeOutput(compilation, {
-    round: shared.layout.round,
-    registerPaint: createPaintRegistry(shared.layout.round).register,
-  });
+  const output = emitNodeOutput(
+    compileNodeDrawing(compilation, shared.layout.round, createPaintRegistry(shared.layout.round).register),
+    shared.layout.round,
+  );
   return { ...compilation, output };
 };
 
 describe('节点有效属性与布局复用', () => {
   it('节点与标签引线的虚线变化复用布局并更新绘制输出', () => {
     const shared = createSharedCompileContext();
-    const context = { shared, style: resolveScopeStyle({}, shared.registries.themeRegistry), irPath: ['root'] };
+    const context = { shared, style: resolveScopeInheritance({}, shared.registries.themeRegistry), irPath: ['root'] };
     const source: IRNode = {
       type: 'node',
       position: [0, 0],
@@ -60,7 +60,7 @@ describe('节点有效属性与布局复用', () => {
     };
     const first = compileTestNode(source, context);
     const next = compileTestNode(nextSource, context);
-    expect(next.layout).toEqual(first.layout);
+    expect(next.context).toEqual(first.context);
     const reused = emitNodePrimitives(
       { ...first, properties: next.properties },
       shared.layout.round,
@@ -74,7 +74,7 @@ describe('节点有效属性与布局复用', () => {
         expect.objectContaining({ stroke: 'red', dashPattern: [8, 9], dashOffset: 4 }),
       ]),
     );
-    expect(first.properties.dashPattern).toEqual([2, 3]);
+    expect(first.properties.style.dashPattern).toEqual([2, 3]);
   });
 
   it('复用折行布局绘制当前作者行外观，不重复度量且不修改旧输出', () => {
@@ -90,17 +90,23 @@ describe('节点有效属性与布局复用', () => {
           { text: 'ccc', fill: 'blue' },
         ],
       },
-      { shared, style: resolveScopeStyle({}, shared.registries.themeRegistry), irPath: ['root'] },
+      { shared, style: resolveScopeInheritance({}, shared.registries.themeRegistry), irPath: ['root'] },
     );
     const measured = measureText.mock.calls.length;
     const output = JSON.stringify(result.output);
     const properties = {
       ...result.properties,
-      text: result.properties.text?.map((line, index) => ({
-        ...line,
-        style: { ...line.style, fill: index === 0 ? 'green' : 'purple' },
-        segments: line.segments.map(segment => ({ ...segment, fill: index === 0 ? 'green' : 'purple' })),
-      })),
+      text:
+        result.properties.text === undefined
+          ? undefined
+          : {
+              ...result.properties.text,
+              lines: result.properties.text.lines.map((line, index) => ({
+                ...line,
+                style: { ...line.style, fill: index === 0 ? 'green' : 'purple' },
+                segments: line.segments.map(segment => ({ ...segment, fill: index === 0 ? 'green' : 'purple' })),
+              })),
+            },
     };
     const primitives = emitNodePrimitives(
       { ...result, properties },
@@ -119,7 +125,7 @@ describe('节点有效属性与布局复用', () => {
 
   it('颜色改变有效属性但不改变布局，静态与单元素输出保持一致', () => {
     const shared = createSharedCompileContext();
-    const context = { shared, style: resolveScopeStyle({}, shared.registries.themeRegistry), irPath: ['root'] };
+    const context = { shared, style: resolveScopeInheritance({}, shared.registries.themeRegistry), irPath: ['root'] };
     const source: IRNode = {
       type: 'node',
       id: 'a',
@@ -129,7 +135,7 @@ describe('节点有效属性与布局复用', () => {
     };
     const first = compileTestNode(source, context);
     const next = compileTestNode({ ...source, style: { fill: 'green', textColor: 'purple' } }, context);
-    expect(next.layout).toEqual(first.layout);
+    expect(next.context).toEqual(first.context);
     expect(next.properties).not.toEqual(first.properties);
     expect(next.properties.id).toBe('a');
     expect(first.output.primitives).toEqual(

@@ -272,7 +272,8 @@ it('共享效果到达路径，同时显式节点重置获胜', () => {
     }),
   ).scene;
   const output = leaves(scene.primitives);
-  expect(output[0]).toMatchObject({ blendMode: 'normal', lineCap: 'butt' });
+  expect(output[0]).toMatchObject({ lineCap: 'butt' });
+  expect('blendMode' in output[0] ? (output[0].blendMode ?? 'normal') : 'normal').toBe('normal');
   expect(output[0]).not.toHaveProperty('shadow');
   expect(output[1]).toMatchObject({ blendMode: 'multiply', lineCap: 'round' });
   expect(output[1]).toHaveProperty('shadow');

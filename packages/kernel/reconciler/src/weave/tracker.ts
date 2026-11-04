@@ -70,7 +70,9 @@ export class WeaveTracker {
     for (const read of reads) {
       const producer = read.binding === undefined ? undefined : this.bindings.get(read.binding);
       if (producer === undefined) continue;
-      this.transaction.editNodeAttribute(node, 'dependencies').set(producer, [null]);
+      const dependencies = this.transaction.editNodeAttribute(node, 'dependencies');
+      const kinds = dependencies.get(producer) ?? [];
+      if (!kinds.includes(read.kind)) dependencies.set(producer, [...kinds, read.kind]);
       this.transaction.editNodeAttribute(producer, 'consumers').add(node);
     }
   }
@@ -79,7 +81,9 @@ export class WeaveTracker {
   recordScopeLayoutDependencies(node: WeaveScopeNode): void {
     for (const dependency of this.transaction.readNode(node).children) {
       if (dependency.type === 'path') continue;
-      this.transaction.editNodeAttribute(node, 'dependencies').set(dependency, [null]);
+      const dependencies = this.transaction.editNodeAttribute(node, 'dependencies');
+      const kinds = dependencies.get(dependency) ?? [];
+      if (!kinds.includes('layout')) dependencies.set(dependency, [...kinds, 'layout']);
       this.transaction.editNodeAttribute(dependency, 'consumers').add(node);
     }
   }

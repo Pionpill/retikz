@@ -1,4 +1,5 @@
-import { resolveScopeStyle } from '@retikz/core';
+import { createNodeGeometryContext } from '@retikz/core';
+import { resolveScopeInheritance } from '@retikz/core';
 import type { CompileWarning } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
@@ -11,7 +12,7 @@ import type { WeaveCompileRead, WeaveBinding } from '../helpers/atomic-runtime';
 describe('版本内名称与读取', () => {
   it('保留未命中 frame，pending 就绪后使用新结果，祖先引用不放宽', () => {
     const shared = createSharedCompileContext();
-    const context = { shared, style: resolveScopeStyle({}, shared.registries.themeRegistry), irPath: [] };
+    const context = { shared, style: resolveScopeInheritance({}, shared.registries.themeRegistry), irPath: [] };
     const outer = createWeaveNamespaceRegistry();
     const inner = createWeaveNamespaceRegistry(outer.namespace);
     const binding = {};
@@ -38,11 +39,15 @@ describe('版本内名称与读取', () => {
       compileWeaveNode({ type: 'node', position: [30, 10] }, runtime),
     );
     if (node.status !== 'compiled') throw new Error('expected node');
-    outer.replace(binding, { state: 'ready', binding, layout: node.compiled.compiled.layout });
+    outer.replace(binding, {
+      state: 'ready',
+      binding,
+      layout: createNodeGeometryContext(node.compiled.canon, node.compiled.compiled),
+    });
     const ready = runWeaveCompilation(options, core => compileWeaveCoordinate(input, core));
     expect(ready.reads.map(read => read.state)).toEqual(['missing', 'ready']);
     if (ready.status !== 'compiled') throw new Error('expected coordinate');
-    expect(ready.compiled.geometry.rect).toMatchObject({ x: 40, y: 10 });
+    expect(ready.compiled.position).toEqual([40, 10]);
 
     const replacement = createWeaveNamespaceRegistry();
     replacement.register('a', { state: 'pending', binding: {} }, ['children', 0, 'id'], occurrence);
@@ -57,7 +62,7 @@ describe('版本内名称与读取', () => {
     const bindings = new Map<string, WeaveBinding>([['a', { state: 'pending', binding: {} }]]);
     const options = {
       shared,
-      style: resolveScopeStyle({}, shared.registries.themeRegistry),
+      style: resolveScopeInheritance({}, shared.registries.themeRegistry),
       irPath: [],
       namespace: { bindings },
     };

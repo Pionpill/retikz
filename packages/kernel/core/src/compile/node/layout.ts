@@ -1,10 +1,11 @@
+import type { PropertyPath } from '@retikz/foundation';
 import { formatPropertyPath } from '@retikz/foundation';
 import { DEG_TO_RAD } from '@retikz/math';
 
 import type { LayoutAxisProposal, ShapeCircumscribedGeometry, TextMeasurer, Transform } from '../../contract';
 import { LayoutAxisProposalKind, LayoutIntrinsicMode } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import type { CanonicalNode, NodeResolution } from '../../resolve';
+import type { CanonicalNode, CanonicalPosition } from '../../resolve';
 import {
   createCompositeContractError,
   createLayoutProbeRecoverableError,
@@ -15,8 +16,8 @@ import {
 } from '../../resolve';
 import type { IRAnchorPosition, IRPosition } from '../../schemas';
 import { CenterAnchor } from '../../shared';
-import type { PositionTargetResolveContext } from '../reference';
-import { resolvePosition, resolvePositionTargetWorld } from '../reference';
+import type { PositionTargetEvaluateContext } from '../reference';
+import { evaluatePosition, evaluatePositionTargetWorld } from '../reference';
 import type { CompileWarningCode, ComposedScopeTransform } from '../shared';
 import { composeScopeTransform, inverseScopeTransform, snapshotProviderPosition } from '../shared';
 import { resolveAnchorRefUncached } from './anchor-cache';
@@ -25,14 +26,15 @@ import { createNodeBoundaryStore } from './boundary-store';
 import { layoutNodeContent } from './content';
 import { layoutNodeLabels, measureNodeLabels } from './label';
 import { projectLayoutWithTransform } from './projection';
-import type { CompiledNode, CompiledNodeLayout, TexLoweringContext } from './types';
+import type { NodeLayoutResult, NodeGeometryContext, TexLoweringContext } from './types';
 
 /** 限制 custom circumscribe 反馈次数，保证 proposal 求值有确定上界 */
 const MAX_ALLOCATION_REFLOW_ATTEMPTS = 32;
 
 /** 判断 Node.position 是否为锚点对锚点定位 */
-const isAnchorPosition = (position: CanonicalNode['position']): position is IRAnchorPosition =>
-  !Array.isArray(position) && 'kind' in position;
+const isAnchorPosition = (
+  position: CanonicalPosition | Required<IRAnchorPosition>,
+): position is Required<IRAnchorPosition> => !Array.isArray(position) && 'kind' in position;
 
 /** 把全局位移反投影为当前 Scope 的局部位移 */
 const localDeltaOf = (
@@ -58,19 +60,19 @@ const localDeltaOf = (
 const placeAnchorPositionedLayout = (
   node: CanonicalNode,
   position: IRAnchorPosition,
-  provisional: CompiledNodeLayout,
-  positionContext: PositionTargetResolveContext,
+  provisional: NodeGeometryContext,
+  positionContext: PositionTargetEvaluateContext,
   transform: ComposedScopeTransform,
   nodeBoundaryStore: NodeBoundaryStore,
-): CompiledNodeLayout => {
-  if (node.id === position.target.id || node.aliasIds?.includes(position.target.id)) {
+): NodeGeometryContext => {
+  if (node.id === position.target.id || node.aliasIds.includes(position.target.id)) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Compile,
       `Node anchor position cannot reference itself ('${node.id}')`,
     );
   }
 
-  const reference = positionContext.lookupReference(position.target.id);
+  const reference = positionContext.lookupReference(position.target.id, 'position');
   if (reference === undefined) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Compile,
@@ -85,7 +87,7 @@ const placeAnchorPositionedLayout = (
     );
   }
 
-  const target = resolvePositionTargetWorld(position.target, positionContext);
+  const target = evaluatePositionTargetWorld(position.target, positionContext);
   if (target.referencePoint === null) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Compile,
@@ -97,8 +99,8 @@ const placeAnchorPositionedLayout = (
   const selfPoint = resolveAnchorRefUncached(
     projected,
     position.selfAnchor ?? CenterAnchor.Center,
-    node.boundary,
     undefined,
+    node.boundary,
     nodeBoundaryStore.get(provisional),
   );
   const deltaGlobal: IRPosition = [target.referencePoint[0] - selfPoint[0], target.referencePoint[1] - selfPoint[1]];
@@ -123,12 +125,13 @@ const placeAnchorPositionedLayout = (
 
 /** 节点 layout 阶段使用的编译依赖 */
 export type NodeLayoutContext = {
+  irPath?: PropertyPath;
   /** 文本测量函数 */
   measureText: TextMeasurer;
   /** 当前编译共享的连接面缓存与诊断状态 */
   nodeBoundaryStore?: NodeBoundaryStore;
   /** Position/Target Source IR 确定化上下文 */
-  positionContext: PositionTargetResolveContext;
+  positionContext: PositionTargetEvaluateContext;
 
   /** 当前 scope 累积 transform */
   scopeChain?: ReadonlyArray<Transform>;
@@ -143,8 +146,10 @@ export type NodeLayoutContext = {
 };
 
 /** 按文本测量、节点缩放与父级宽度提案计算正文、形状和边界布局 */
-export const layoutNode = (resolution: NodeResolution, context: NodeLayoutContext): CompiledNode => {
-  const { node, shape: shapeResolution, boundary: boundaryResolution, irPath } = resolution;
+export const layoutNode = (resolution: CanonicalNode, context: NodeLayoutContext): NodeLayoutResult => {
+  const node = resolution;
+  const { shape: shapeResolution, boundary: canonicalBoundary } = node;
+  const irPath = context.irPath ?? [];
   const {
     measureText,
     positionContext,
@@ -158,30 +163,28 @@ export const layoutNode = (resolution: NodeResolution, context: NodeLayoutContex
 
   // 缩放影响节点尺寸与字体。
   // 字号取 min(sx,sy) 保 glyph 形状，避免非均匀缩放下文字被拉变形。
-  const { x: sx, y: sy } = node.scale;
+  const { x: sx, y: sy } = node.layout.scale;
   const { definition: shapeDef, params: shapeParams } = shapeResolution;
 
-  const { size: fontSize, family: fontFamily, weight: fontWeight, style: fontStyle } = node.font;
-
   // spacing 受 node scale 影响。
-  const padding = node.padding;
+  const padding = node.layout.padding;
   const paddingLeft = padding.left * sx;
   const paddingRight = padding.right * sx;
   const paddingTop = padding.top * sy;
   const paddingBottom = padding.bottom * sy;
-  const marginSpacing = node.margin;
+  const marginSpacing = node.layout.margin;
   const margin = {
     top: marginSpacing.top * sy,
     right: marginSpacing.right * sx,
     bottom: marginSpacing.bottom * sy,
     left: marginSpacing.left * sx,
   };
-  const lineHeight = node.lineHeight;
-  const align = node.align;
+  const lineHeight = node.text?.lineHeight ?? 0;
+  const align = node.text?.align ?? 'middle';
 
   // 折行阈值受 x 缩放。
-  const explicitMaxTextWidth = node.maxTextWidth !== undefined ? node.maxTextWidth * sx : undefined;
-  const fixedVisualWidth = node.width === undefined ? undefined : node.width * sx;
+  const explicitMaxTextWidth = node.layout.maxTextWidth !== undefined ? node.layout.maxTextWidth * sx : undefined;
+  const fixedVisualWidth = node.layout.width === undefined ? undefined : node.layout.width * sx;
   const proposedAllocationWidth =
     allocationWidthProposal?.kind === LayoutAxisProposalKind.Exact
       ? allocationWidthProposal.value
@@ -204,7 +207,7 @@ export const layoutNode = (resolution: NodeResolution, context: NodeLayoutContex
     });
 
   // minimumSize 作用于外接边界，且随 scale 缩放。
-  const minimumSize = node.minimumSize;
+  const minimumSize = node.layout.minimumSize;
   const minHalfW = (minimumSize.width * sx) / 2;
   const minHalfH = (minimumSize.height * sy) / 2;
 
@@ -243,7 +246,7 @@ export const layoutNode = (resolution: NodeResolution, context: NodeLayoutContex
     });
   };
 
-  const rotateDeg = node.rotate;
+  const rotateDeg = node.layout.rotate;
 
   const allocationWidthOf = (halfWidth: number, halfHeight: number): number => {
     const outerWidth = 2 * Math.max(halfWidth, minHalfW) + margin.left + margin.right;
@@ -315,11 +318,11 @@ export const layoutNode = (resolution: NodeResolution, context: NodeLayoutContex
 
   let anchorPosition: IRAnchorPosition | undefined;
   let center: IRPosition | null;
-  if (isAnchorPosition(node.position)) {
-    anchorPosition = node.position;
+  if (isAnchorPosition(node.layout.position)) {
+    anchorPosition = node.layout.position;
     center = [0, 0];
   } else {
-    center = resolvePosition(node.position, positionContext)?.localPoint ?? null;
+    center = evaluatePosition(node.layout.position, positionContext)?.localPoint ?? null;
   }
 
   if (!center) {
@@ -340,8 +343,7 @@ export const layoutNode = (resolution: NodeResolution, context: NodeLayoutContex
     tex: texLowering,
   });
 
-  const provisional: CompiledNodeLayout = {
-    boundarySource: node.boundary,
+  const provisional: NodeGeometryContext = {
     shape: shapeResolution,
     geometry: {
       rect: {
@@ -365,7 +367,7 @@ export const layoutNode = (resolution: NodeResolution, context: NodeLayoutContex
             align,
             lineHeight,
             baselineOffsets: textBaselineOffsets,
-            font: { size: fontSize, family: fontFamily, weight: fontWeight, style: fontStyle },
+            font: node.text!.font,
           }
         : lines === undefined
           ? undefined
@@ -375,13 +377,13 @@ export const layoutNode = (resolution: NodeResolution, context: NodeLayoutContex
               align,
               lineHeight,
               baselineOffsets: textBaselineOffsets,
-              font: { size: fontSize, family: fontFamily, weight: fontWeight, style: fontStyle },
+              font: node.text!.font,
             },
-    boundary: boundaryResolution,
+    boundary: canonicalBoundary,
   };
   nodeBoundaryStore.get(provisional).warn = warn;
   nodeBoundaryStore.get(provisional).irPath = irPath;
-  const resolved: CompiledNodeLayout = {
+  const resolved: NodeGeometryContext = {
     ...provisional,
     labels: layoutNodeLabels(provisional, measuredLabels),
   };
@@ -397,7 +399,7 @@ export const layoutNode = (resolution: NodeResolution, context: NodeLayoutContex
       )
     : resolved;
   return {
-    layout,
+    context: layout,
     properties: node,
   };
 };

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { emitNodeOutput, layoutNode, resolveNode, LayoutAxisProposalKind } from '../../../../core/src';
+import { emitNodeOutput, compileNode, layoutNode, resolveNode, LayoutAxisProposalKind } from '../../../../core/src';
 import { flattenPrims } from '../../../../core/tests/helpers/flatten';
 import { createSharedCompileContext } from '../../../src/compile';
 
@@ -21,7 +21,7 @@ describe('原子编译阶段', () => {
       },
     );
     expect(warnings).toEqual(['TEXT_TEX_PARSE_ERROR', 'TEXT_TEX_PARSE_ERROR']);
-    const before = structuredClone(resolution.node);
+    const before = JSON.stringify(resolution);
     const layouts = [80, 500].map(
       value =>
         layoutNode(resolution, {
@@ -34,10 +34,10 @@ describe('原子编译阶段', () => {
             toWorld: point => point,
           },
           allocationWidthProposal: { kind: LayoutAxisProposalKind.Exact, value },
-        }).layout,
+        }).context,
     );
     expect(layouts[0].geometry.contentSize.height).toBeGreaterThan(layouts[1].geometry.contentSize.height);
-    expect(resolution.node).toEqual(before);
+    expect(JSON.stringify(resolution)).toBe(before);
     expect(warnings).toHaveLength(2);
   });
 
@@ -56,7 +56,12 @@ describe('原子编译阶段', () => {
         warn: (_code, message) => warnings.push(message),
       },
     );
-    const compilation = layoutNode(resolution, {
+    const compilation = compileNode(resolution, {
+      round: shared.layout.round,
+      registerPaint: paint => {
+        if (paint !== undefined && typeof paint !== 'string') throw new Error('expected solid paint');
+        return paint;
+      },
       measureText: shared.host.measureText,
       positionContext: {
         nodeDistance: 10,
@@ -66,14 +71,8 @@ describe('原子编译阶段', () => {
         toWorld: point => point,
       },
     });
-    const output = emitNodeOutput(compilation, {
-      round: shared.layout.round,
-      registerPaint: paint => {
-        if (paint !== undefined && typeof paint !== 'string') throw new Error('expected solid paint');
-        return paint;
-      },
-    });
-    expect(compilation.layout.geometry.rect).toMatchObject({ x: 12, y: 24 });
+    const output = emitNodeOutput(compilation, shared.layout.round);
+    expect(compilation.geometry.rect).toMatchObject({ x: 12, y: 24 });
     expect(
       flattenPrims(output.primitives).some(primitive => primitive.type === 'rect' && primitive.fill === 'red'),
     ).toBe(true);

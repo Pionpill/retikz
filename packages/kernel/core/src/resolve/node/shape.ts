@@ -8,7 +8,7 @@ import { getProviderDefinition } from '../../providers';
 import type { IRNode, IRShapeRef } from '../../schemas';
 import { BuiltinShape } from '../../schemas';
 import { parseProviderPayload, guardProviderOutput } from '../provider';
-import type { ShapeResolution } from './types';
+import type { CanonicalNodeShape } from './types';
 
 /** 节点形状解析所需的输入与缩放参数 */
 type InputNodeShapeResolve = {
@@ -77,7 +77,7 @@ const scaleJsonObjectNumbers = (value: JsonObject, factor: number): JsonObject =
  * 查找节点形状定义，解析参数并应用节点缩放
  * @description 优先使用定义提供的 scaleParams；未提供时，将参数中的所有数值乘以两轴缩放系数的几何平均值
  */
-export const resolveNodeShape = (input: InputNodeShapeResolve): ShapeResolution => {
+export const resolveNodeShape = (input: InputNodeShapeResolve): CanonicalNodeShape => {
   const { node, shapeRegistry, scaleX, scaleY, irPath = [] } = input;
   const { type: shapeName, params: rawShapeParams } = resolveNodeShapePreset(node.shape);
   const shapeParamsPath = [...irPath, 'shape', 'params'];
