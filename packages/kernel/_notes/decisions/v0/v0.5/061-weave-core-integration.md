@@ -22,7 +22,7 @@ Reconciler 负责声明结构、状态生命周期、名称绑定关联与计算
 | Weave 类别 | compiled 类型        | 持有内容                                                      | Core 调用                                                          |
 | ---------- | -------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------ |
 | Node       | `CompiledNode`       | `layout: CompiledNodeLayout` 与局部 `output`                  | `resolveNode`、`layoutNode`、`emitNodeOutput`                      |
-| Coordinate | `CompiledCoordinate` | id 与局部 position                                            | `resolvePosition`                                        |
+| Coordinate | `CompiledCoordinate` | id 与局部 position                                            | `resolvePosition`                                                  |
 | Path       | `CompiledPath`       | 完整 Path kind 编译后的 output                                | `compilePath`                                                      |
 | Scope      | `CompiledScope`      | envelope、不含 children/animations 的 group 属性及自身 output | `prepareScopeGeometry`、`compileScopeGeometry`、`createScopeGroup` |
 
@@ -62,7 +62,7 @@ Root 的容器索引覆盖自身与全部 Scope；Root / 局部命名空间 Scop
 
 用户查询索引、Core 名称可见性和计算依赖是不同关系。Weave 的 ids 不能直接作为无差别的编译名称表；调用方必须提供符合 Core 声明顺序、局部命名空间和遮蔽规则的 `WeaveNamespace` 视图，不能因预先构建整树而放宽引用规则。
 
-每个可引用绑定使用版本内不透明 token，工作区维护 token 到对应 WeaveNode 的映射。未完成绑定登记为 pending；完成后通过 `projectCompileReference` 投影可供读取的布局，再登记 ready。该投影由 Core 生成，不修改原 compiled；Path 不因此获得几何被引用能力。
+每个可引用绑定使用版本内不透明 token，工作区维护 token 到对应 WeaveNode 的映射。未完成绑定登记为 pending；完成后通过 `composeScopeTransform` 与 `projectLayoutWithTransform` 投影可供读取的布局，再登记 ready。该投影由 Core 生成，不修改原 compiled；Path 不因此获得几何被引用能力。
 
 每次调用由驱动收集的 `WeaveCompileRead` 均需保留，包括 namespace/name、missing、pending 和 ready。命中绑定映射到当前候选的节点关联；未命中记录保留在名称读取索引中，不能伪造生产者节点。一次编译成功后，以本次读取替换旧读取关系；等待计算保留本次已发现的阻塞信息，继续计算时可以发现更多依赖。
 

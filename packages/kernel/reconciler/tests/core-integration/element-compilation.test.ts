@@ -1,5 +1,12 @@
 import type { CompileOutput, IRCoordinate, IRNode, IRPathBase, IRScope, ShapeDefinition } from '@retikz/core';
-import { BUILTIN_SHAPES, computeCompileOutputBounds, projectCompileReference, resolveScopeStyle } from '@retikz/core';
+import {
+  BUILTIN_SHAPES,
+  createCoordinateLayout,
+  computeCompileOutputBounds,
+  projectLayoutWithTransform,
+  composeScopeTransform,
+  resolveScopeStyle,
+} from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { SharedCompileContext } from '../../src/compile';
@@ -46,6 +53,22 @@ const finalizeOutputs = (input: { root: {}; outputs: ReadonlyArray<CompileOutput
 const ancestor = {};
 
 describe('独立元素编译', () => {
+  it('引用投影先应用自身变换再应用父级变换，且不修改局部布局', () => {
+    const shared = createSharedCompileContext();
+    const layout = createCoordinateLayout([2, 3], shared.registries.shapeRegistry);
+    const original = structuredClone(layout.geometry);
+    const identity = projectLayoutWithTransform(layout, composeScopeTransform([]));
+    expect(identity.geometry).toEqual(original);
+    const projected = projectLayoutWithTransform(
+      layout,
+      composeScopeTransform([
+        { kind: 'scale', x: 2, y: 3 },
+        { kind: 'translate', x: 5, y: 7 },
+      ]),
+    );
+    expect(projected.geometry.rect).toMatchObject({ x: 14, y: 30, width: 0, height: 0 });
+    expect(layout.geometry).toEqual(original);
+  });
   it('查询回调真实异常保留 cause，不误判为依赖等待', () => {
     const shared = createSharedCompileContext();
     const failure = new Error('lookup failed');
@@ -94,9 +117,9 @@ describe('独立元素编译', () => {
       bindings.set(id, {
         state: 'ready',
         binding: {},
-        layout: projectCompileReference(
-          { type: 'node', compiled: node.compiled.compiled },
-          scope.compiled.group.transforms,
+        layout: projectLayoutWithTransform(
+          node.compiled.compiled.layout,
+          composeScopeTransform(scope.compiled.group.transforms ?? []),
         ),
       });
       outputs.push(assembleTestScopeOutput(scope.compiled, [node.compiled.output], shared));
@@ -155,9 +178,10 @@ describe('独立元素编译', () => {
       outputs: [result.compiled.output],
       shared,
     });
-    projectCompileReference({ type: 'node', compiled: result.compiled.compiled }, [
-      { kind: 'translate', x: 20, y: 30 },
-    ]);
+    projectLayoutWithTransform(
+      result.compiled.compiled.layout,
+      composeScopeTransform([{ kind: 'translate', x: 20, y: 30 }]),
+    );
     expect(result.compiled.compiled.layout.geometry.rect).toEqual(rectangle);
     expect(next.result.scene).toEqual(first.result.scene);
     expect(emitted).toBe(count);
@@ -186,7 +210,12 @@ describe('独立元素编译', () => {
     const parent = testCompileScope(
       outer,
       a.compiled,
-      [projectCompileReference({ type: 'scope', compiled: child.compiled.compiled })],
+      [
+        projectLayoutWithTransform(
+          child.compiled.compiled.envelope,
+          composeScopeTransform(child.compiled.compiled.transforms),
+        ),
+      ],
       context,
     );
     if (parent.status !== 'compiled') throw new Error('expected outer compiled');
@@ -239,7 +268,7 @@ describe('独立元素编译', () => {
             {
               state: 'ready',
               binding: {},
-              layout: projectCompileReference({ type: 'node', compiled: node.compiled.compiled }),
+              layout: node.compiled.compiled.layout,
             },
           ],
         ]),

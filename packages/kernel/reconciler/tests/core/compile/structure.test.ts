@@ -41,7 +41,6 @@ describe('编译源结构', () => {
       'fallbackMeasurer',
       'layoutNode',
       'prepareScopeGeometry',
-      'projectCompileReference',
       'projectPublishedCompileLayout',
       'projectScopeCompileLayouts',
       'projectScopeOutputBounds',
@@ -50,6 +49,7 @@ describe('编译源结构', () => {
       expect(compile).toHaveProperty(name);
 
     for (const name of [
+      'projectCompileReference',
       'formatCompileWarning',
       'importSceneResources',
       'compileToScene',
