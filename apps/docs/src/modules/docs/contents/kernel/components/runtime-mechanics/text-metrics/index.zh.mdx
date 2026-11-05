@@ -37,7 +37,7 @@ Vanilla 在未提供 `compile.measureText` 时选择默认测量器，实际测�
     { label: 'React 透传度量与默认字体', path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx' },
     { label: 'Vanilla 默认测量与字体补入', path: 'packages/kernel/vanilla/src/processing/text-measurement.ts' },
     { label: 'Vanilla 传递编译选项', path: 'packages/kernel/vanilla/src/processing/prepare.ts' },
-    { label: '缺省文字估算器', path: 'packages/kernel/core/src/compile/text/layout.ts' },
+    { label: '缺省文字估算器', path: 'packages/kernel/core/src/compile/text/helpers.ts' },
     { label: 'TextMetrics', path: 'packages/kernel/core/src/contract/text.ts' },
     { label: 'resolveTextMetrics', path: 'packages/kernel/core/src/resolve/text/metrics.ts' },
   ]}
@@ -66,7 +66,7 @@ Reconciler 为每次全量编译或增量更新创建文字度量缓存，按文
 <SourceLinks
   sources={[
     { label: '正文排版与基线', path: 'packages/kernel/core/src/compile/node/content/layout.ts' },
-    { label: '普通文字折行', path: 'packages/kernel/core/src/compile/text/block.ts' },
+    { label: '普通文字折行', path: 'packages/kernel/core/src/compile/text/layout.ts' },
     { label: '正文尺寸进入节点求解', path: 'packages/kernel/core/src/compile/node/layout.ts' },
     { label: '节点连接边界', path: 'packages/kernel/core/src/compile/boundary/boundary.ts' },
     { label: '宿主测量服务', path: 'packages/kernel/reconciler/src/compile/runtime/text-measurement.ts' },
@@ -88,7 +88,9 @@ Reconciler 为每次全量编译或增量更新创建文字度量缓存，按文
 <SourceLinks
   sources={[
     { label: '文字与公式的解析入口', path: 'packages/kernel/core/src/resolve/text/resolve.ts' },
-    { label: '混排度量、基线与图元输出', path: 'packages/kernel/core/src/compile/text/layout.ts' },
+    { label: '混排度量与基线', path: 'packages/kernel/core/src/compile/text/layout.ts' },
+    { label: '混排行图元输出', path: 'packages/kernel/core/src/compile/text/emit.ts' },
+    { label: '公式降解与图元输出', path: 'packages/kernel/core/src/compile/text/tex.ts' },
     { label: '异步初始化、同步下沉', path: 'packages/kernel/tex/src/lower/create-mathjax.ts' },
     { label: 'TeX 转换与实例缓存', path: 'packages/kernel/tex/src/lower/lower-tex.ts' },
   ]}

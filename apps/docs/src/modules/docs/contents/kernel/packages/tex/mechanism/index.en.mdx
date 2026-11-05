@@ -30,7 +30,7 @@ This page follows the inline example. Display mode also calls the lowerer throug
 <SourceLinks
   sources={[
     { label: 'String formula recognition and gating', path: 'packages/kernel/core/src/resolve/text/inline.ts' },
-    { label: 'Lowering calls for formula segments', path: 'packages/kernel/core/src/compile/text/layout.ts' },
+    { label: 'Lowering calls for formula segments', path: 'packages/kernel/core/src/compile/text/tex.ts' },
   ]}
 />
 
@@ -90,7 +90,10 @@ Core emits each glyph path as a `PathPrimitive` inside a baseline-translated `Gr
 
 <SourceLinks
   sources={[
-    { label: 'Baseline metrics and PathPrimitive emission', path: 'packages/kernel/core/src/compile/text/layout.ts' },
+    {
+      label: 'Formula baseline translation and PathPrimitive emission',
+      path: 'packages/kernel/core/src/compile/text/tex.ts',
+    },
   ]}
 />
 
@@ -158,7 +161,7 @@ Start with `createLowerTex()` for orchestration and caching, follow `lowerMathJa
   sources={[
     { label: '1. Request orchestration', path: 'packages/kernel/tex/src/lower/lower-tex.ts' },
     { label: '2. SVG lowering', path: 'packages/kernel/tex/src/svg/lower-mathjax-svg.ts' },
-    { label: '3. Core output', path: 'packages/kernel/core/src/compile/text/layout.ts' },
+    { label: '3. Core output', path: 'packages/kernel/core/src/compile/text/tex.ts' },
   ]}
 />
 

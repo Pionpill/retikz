@@ -30,7 +30,7 @@ Core 将公式内容、`displayMode` 和字号传入同步 `TexLowerer`。宿主
 <SourceLinks
   sources={[
     { label: '字符串公式识别与 gating', path: 'packages/kernel/core/src/resolve/text/inline.ts' },
-    { label: '公式片段的 lowering 调用', path: 'packages/kernel/core/src/compile/text/layout.ts' },
+    { label: '公式片段的 lowering 调用', path: 'packages/kernel/core/src/compile/text/tex.ts' },
   ]}
 />
 
@@ -89,7 +89,7 @@ type TexLowerer = (content: { tex: string; displayMode?: boolean }, style: { fon
 Core 把每条字形路径发为 `PathPrimitive`，用带基线平移的 `GroupPrimitive` 放入文本行。公式颜色等 paint 在这个边界结合宿主样式处理；renderer 最终只看到普通 Scene 图元，无需理解 TeX、MathJax 或 SVG。
 
 <SourceLinks
-  sources={[{ label: '基线度量与 PathPrimitive 发出', path: 'packages/kernel/core/src/compile/text/layout.ts' }]}
+  sources={[{ label: '公式基线平移与 PathPrimitive 发出', path: 'packages/kernel/core/src/compile/text/tex.ts' }]}
 />
 
 ## 缓存、失败与重试
@@ -156,7 +156,7 @@ Core 把每条字形路径发为 `PathPrimitive`，用带基线平移的 `GroupP
   sources={[
     { label: '1. 请求编排', path: 'packages/kernel/tex/src/lower/lower-tex.ts' },
     { label: '2. SVG lowering', path: 'packages/kernel/tex/src/svg/lower-mathjax-svg.ts' },
-    { label: '3. Core 输出', path: 'packages/kernel/core/src/compile/text/layout.ts' },
+    { label: '3. Core 输出', path: 'packages/kernel/core/src/compile/text/tex.ts' },
   ]}
 />
 

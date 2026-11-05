@@ -43,7 +43,7 @@ The fallback estimates width as `text.length × font.size × 0.55` and height as
       path: 'packages/kernel/vanilla/src/processing/text-measurement.ts',
     },
     { label: 'Vanilla compile option forwarding', path: 'packages/kernel/vanilla/src/processing/prepare.ts' },
-    { label: 'Fallback text measurer', path: 'packages/kernel/core/src/compile/text/layout.ts' },
+    { label: 'Fallback text measurer', path: 'packages/kernel/core/src/compile/text/helpers.ts' },
     { label: 'TextMetrics', path: 'packages/kernel/core/src/contract/text.ts' },
     { label: 'resolveTextMetrics', path: 'packages/kernel/core/src/resolve/text/metrics.ts' },
   ]}
@@ -72,7 +72,7 @@ The third argument of `TextMeasurer(text, font, disableCache?)` defaults to `fal
 <SourceLinks
   sources={[
     { label: 'Content layout and baselines', path: 'packages/kernel/core/src/compile/node/content/layout.ts' },
-    { label: 'Shared text layout', path: 'packages/kernel/core/src/compile/text/block.ts' },
+    { label: 'Shared text layout', path: 'packages/kernel/core/src/compile/text/layout.ts' },
     { label: 'Content dimensions enter node sizing', path: 'packages/kernel/core/src/compile/node/layout.ts' },
     { label: 'Node connection boundaries', path: 'packages/kernel/core/src/compile/boundary/boundary.ts' },
     { label: 'Host measurement service', path: 'packages/kernel/reconciler/src/compile/runtime/text-measurement.ts' },
@@ -95,9 +95,11 @@ Without a lowerer, `$...$` inside a string stays literal text, while an explicit
   sources={[
     { label: 'Text and formula resolution', path: 'packages/kernel/core/src/resolve/text/resolve.ts' },
     {
-      label: 'Mixed metrics, baselines and primitive emission',
+      label: 'Mixed metrics and baselines',
       path: 'packages/kernel/core/src/compile/text/layout.ts',
     },
+    { label: 'Mixed-line primitive emission', path: 'packages/kernel/core/src/compile/text/emit.ts' },
+    { label: 'Formula lowering and emission', path: 'packages/kernel/core/src/compile/text/tex.ts' },
     { label: 'Async initialization and synchronous lowering', path: 'packages/kernel/tex/src/lower/create-mathjax.ts' },
     { label: 'TeX conversion and instance cache', path: 'packages/kernel/tex/src/lower/lower-tex.ts' },
   ]}
