@@ -1,20 +1,5 @@
-import { resolveScope } from '@retikz/core';
-import type { CanonicalScope, CompiledBoundaryGeometry } from '@retikz/core';
-import type {
-  CompiledNode,
-  CanonicalNode,
-  CompileOutput,
-  CompiledPath,
-  CompiledScope,
-  CompiledCoordinate,
-  IRCoordinate,
-  IRNode,
-  IRPathBase,
-  InputScopeCompile,
-  ScopeGeometryPreparation,
-  CanonicalScopeInheritance,
-} from '@retikz/core';
 import {
+  resolveScope,
   resolveNode,
   compileNode,
   emitNodeOutput,
@@ -27,9 +12,25 @@ import {
   createPathTargetResolver,
   composeScopeTransform,
   resolveScopeInheritance,
-  prepareScopeGeometry,
+  prepareScopePlacement,
   compileScope,
   createScopeGroup,
+} from '@retikz/core';
+import type {
+  CanonicalScope,
+  CompiledBoundaryGeometry,
+  CompiledNode,
+  CanonicalNode,
+  CompileOutput,
+  CompiledPath,
+  CompiledScope,
+  CompiledCoordinate,
+  IRCoordinate,
+  IRNode,
+  IRPathBase,
+  InputScopeCompile,
+  ScopePlacementPreparation,
+  CanonicalScopeInheritance,
 } from '@retikz/core';
 import type { PropertyPath } from '@retikz/foundation';
 
@@ -137,7 +138,7 @@ export const compileWeavePath = (input: IRPathBase, runtime: WeaveElementRuntime
 };
 
 /** 候选 Scope 下传样式及前置几何，生命周期归本次遍历 */
-export type WeaveScopePreparation = ScopeGeometryPreparation &
+export type WeaveScopePreparation = ScopePlacementPreparation &
   Readonly<{
     /** 子元素继承的有效样式 */
     scope: CanonicalScopeInheritance;
@@ -148,7 +149,7 @@ export const prepareWeaveScope = (input: InputScopeCompile, runtime: WeaveElemen
   const { options, workspace, positionContext } = runtime;
   return Object.freeze({
     scope: resolveScopeInheritance(input, options.shared.registries.themeRegistry, options.style, options.irPath),
-    ...prepareScopeGeometry(input, {
+    ...prepareScopePlacement(input, {
       positionContext,
       irPath: options.irPath,
       onWarn: workspace.diagnosticCollector.collect,
@@ -166,7 +167,7 @@ export type WeaveScopeCompilation = ScopeOutput & {
 /** 在子布局完成后组合 Scope 包络、变换与自身输出 */
 export const compileWeaveScope = (
   input: InputScopeCompile,
-  preparation: ScopeGeometryPreparation,
+  preparation: ScopePlacementPreparation,
   layouts: ReadonlyArray<CompiledBoundaryGeometry>,
   runtime: WeaveElementRuntime,
 ): WeaveScopeCompilation => {
@@ -188,7 +189,7 @@ export const compileWeaveScope = (
       registerClip: workspace.clipRegistry.register,
       registerClipPath: workspace.clipRegistry.registerPath,
     },
-    { placement: preparation },
+    preparation,
   );
   const group = createScopeGroup(compiled);
   return Object.freeze({

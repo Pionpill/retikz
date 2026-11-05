@@ -3,7 +3,7 @@ import type {
   IRCoordinate,
   IRPathBase,
   InputScopeCompile,
-  ScopeGeometryPreparation,
+  ScopePlacementPreparation,
   CompiledBoundaryGeometry,
 } from '@retikz/core';
 
@@ -32,7 +32,7 @@ export const testPrepareScopeCompilation = (input: InputScopeCompile, options: W
 /** 在真实 Weave 候选工作区中组合Scope 后置阶段，供行为测试使用 */
 export const testCompileScope = (
   input: InputScopeCompile,
-  preparation: ScopeGeometryPreparation,
+  preparation: ScopePlacementPreparation,
   layouts: ReadonlyArray<CompiledBoundaryGeometry>,
   options: WeaveCompileOptions,
 ) => runWeaveCompilation(options, runtime => compileWeaveScope(input, preparation, layouts, runtime));

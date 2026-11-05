@@ -1,13 +1,14 @@
 import type { CompiledScope, CompileOccurrenceLocator, IRScope, SceneClipPath, Transform } from '@retikz/core';
 import {
   compileScope,
-  finalizeScopeCompilation,
-  prepareScopeGeometry,
+  prepareScopePlacement,
   projectLayoutWithTransform,
   projectPublishedReference,
   projectScopeCompileLayouts,
   projectScopeOutputBounds,
   resolveScope,
+  resolveAnimations,
+  shouldEmitScopeGroup,
 } from '@retikz/core';
 import { formatPropertyPath } from '@retikz/foundation';
 
@@ -107,7 +108,7 @@ export const visitScope = (
   const preparedReads: Array<CompileReferenceRead> = [];
   const preparation = runtime.state.execution.namespaceStack.observeReferences(
     (name, entry, kind) => preparedReads.push({ name, entry, kind }),
-    () => prepareScopeGeometry({ type: 'scope', ...canon.transform }, scopeGeometryContext),
+    () => prepareScopePlacement({ type: 'scope', ...canon.transform }, scopeGeometryContext),
   );
   const preparedDiagnostics = runtime.state.workspace.diagnosticCollector.warnings.slice(warningCount);
 
@@ -206,7 +207,7 @@ export const visitScope = (
               registerClipPath: stageRuntime.state.workspace.clipRegistry.registerPath,
               onWarn: stageRuntime.state.workspace.diagnosticCollector.collect,
             },
-            { placement: preparation },
+            preparation,
           ),
         }),
       },
@@ -288,9 +289,26 @@ export const visitScope = (
     }
   }
 
+  /** 延迟路径输出收敛后绑定分组动画，裁空分组不产生动画诊断 */
+  const bindScopeAnimations = (compiled: CompiledScope): CompiledScope => {
+    const animations = shouldEmitScopeGroup(
+      state.primitives.length,
+      compiled.transforms,
+      compiled.style.id,
+      compiled.clip !== undefined,
+    )
+      ? (resolveAnimations(canon.animations, {
+          target: 'element',
+          irPath: scopeGeometryContext.irPath,
+          onWarn: scopeGeometryContext.onWarn,
+        }) ?? [])
+      : [];
+    return { ...compiled, animations };
+  };
+
   const finalWarningCount = runtime.state.workspace.diagnosticCollector.warnings.length;
-  const finalizedScope = finalizeScopeCompilation(canon, compiledScope!, state.primitives.length, scopeGeometryContext);
-  if (!compareScopeAnimations(compiledScope!.animations, finalizedScope.animations)) compiledScope = finalizedScope;
+  const animatedScope = bindScopeAnimations(compiledScope!);
+  if (!compareScopeAnimations(compiledScope!.animations, animatedScope.animations)) compiledScope = animatedScope;
   if (pendingRecord?.record.phase === 'scope') {
     const { record, reused } = pendingRecord;
     runtime.cache?.write(

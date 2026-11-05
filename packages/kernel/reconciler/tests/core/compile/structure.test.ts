@@ -40,7 +40,7 @@ describe('编译源结构', () => {
       'emitScopePrimitive',
       'fallbackMeasurer',
       'layoutNode',
-      'prepareScopeGeometry',
+      'prepareScopePlacement',
       'projectPublishedCompileLayout',
       'projectScopeCompileLayouts',
       'projectScopeOutputBounds',

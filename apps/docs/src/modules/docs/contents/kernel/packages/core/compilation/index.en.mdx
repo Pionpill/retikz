@@ -233,7 +233,7 @@ The caller ensures that supplied results match the current configuration, width 
 
 Reconciler compares effective configuration, compilation context, and reference geometry, while Weave manages stage caches. When layout can be reused, Reconciler reads position dependencies again and passes it through `prepared.layout.overall` to the same `compileNode` entrypoint. Automatic reuse currently operates on complete layouts; the partial-result API supports explicit composition and does not imply that Reconciler already caches at those finer levels. Core neither compares historical versions nor decides cache validity. Authored-line indexes associate physical lines with current styles. `emitNodeOutput` consumes only compiled results.
 
-Element compilation follows `compileXxx(canon, context, prepared?)`: Node accepts prepared layout, and Scope accepts `prepared.placement` captured before child traversal. Scope receives child layouts and an already resolved clip path through its current context; animation finalization still waits for deferred path output. `compilePath(canon, context)` and `compileCoordinate(canon, context)` currently have no independently reusable partial stage, so they have no empty third parameter. The caller ensures that prepared data matches the current input and context; Core calculates only missing steps.
+Element compilation follows `compileXxx(canon, context, prepared?)`: Node accepts prepared layout, and Scope directly accepts `ScopePlacementPreparation` captured before child traversal. Scope receives child layouts and an already resolved clip path through its current context; animation finalization still waits for deferred path output. `compilePath(canon, context)` and `compileCoordinate(canon, context)` currently have no independently reusable partial stage, so they have no empty third parameter. The caller ensures that prepared data matches the current input and context; Core calculates only missing steps.
 
 <ComponentPreview files="compilation-node" size="lg" hideCode type="illustration" />
 
@@ -423,12 +423,12 @@ Start in `compileSceneSnapshot` to see context creation, traversal, and assembly
 
 Core provides composable domain stages. Reconciler owns traversal, dependency waiting, and workspace lifetime, supplying the narrow capabilities required by each stage.
 
-| Element    | Shared stages                                                              | Facts retained by the driver                               |
-| ---------- | -------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| Node       | `resolveNode` → `layoutNode` → `emitNodeOutput`                            | Effective properties, layout, output, and paired resources |
-| Coordinate | `evaluatePosition` → `compileCoordinate`                                   | `CompiledCoordinate.position`                              |
-| Path       | `resolvePathAnimations` → `compilePath`                                    | Kind-host output, resources, and bounds                    |
-| Scope      | `resolveScope`, `prepareScopeGeometry`, `compileScope`, `createScopeGroup` | Envelope, own group properties, and output                 |
+| Element    | Shared stages                                                               | Facts retained by the driver                               |
+| ---------- | --------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| Node       | `resolveNode` → `layoutNode` → `emitNodeOutput`                             | Effective properties, layout, output, and paired resources |
+| Coordinate | `evaluatePosition` → `compileCoordinate`                                    | `CompiledCoordinate.position`                              |
+| Path       | `resolvePathAnimations` → `compilePath`                                     | Kind-host output, resources, and bounds                    |
+| Scope      | `resolveScope`, `prepareScopePlacement`, `compileScope`, `createScopeGroup` | Envelope, own group properties, and output                 |
 
 Resolution may use semantic context such as registries and position lookup, but does not read compilation execution state. Layout and output require their own measurement, position, and resource capabilities. The caller owns the complete `SharedCompileContext` and workspace. This example composes the stages for a node without references; `undefined` from lookup means no named target is visible.
 

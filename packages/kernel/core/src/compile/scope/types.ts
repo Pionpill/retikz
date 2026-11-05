@@ -9,7 +9,7 @@ import type { ClipRegistry } from '../resource';
 import type { CompileWarning } from '../shared';
 
 /** Scope 子元素计算前的准备状态，不代表包络已就绪 */
-export type ScopeGeometryPreparation = Readonly<{
+export type ScopePlacementPreparation = Readonly<{
   /** 已在父坐标系解析的放置目标 */
   positionTarget?: IRPosition;
   /** 不依赖包络时可提前使用的自身变换 */

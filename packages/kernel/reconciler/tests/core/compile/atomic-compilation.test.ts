@@ -8,7 +8,7 @@ import {
   LayoutAxisProposalKind,
   compileScope,
   createPositionEvaluateContext,
-  prepareScopeGeometry,
+  prepareScopePlacement,
   resolveScope,
   resolveScopeInheritance,
 } from '../../../../core/src';
@@ -78,8 +78,8 @@ describe('原子编译阶段', () => {
       registerClip: () => 'clip',
       registerClipPath: () => 'clip-path',
     };
-    const placement = prepareScopeGeometry(input, context);
-    const prepared = compileScope(canon, context, { placement });
+    const placement = prepareScopePlacement(input, context);
+    const prepared = compileScope(canon, context, placement);
     expect(prepared).toEqual(compileScope(canon, context));
     expect(prepared.transforms).toContainEqual({ kind: 'translate', x: 10, y: 20 });
   });

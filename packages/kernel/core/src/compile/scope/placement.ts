@@ -4,8 +4,9 @@ import type { IRPosition, IRScopeSelfPoint, IRTransform } from '../../schemas';
 import { projectLayoutWithTransform, evaluateAnchorReference } from '../boundary';
 import type { CompiledBoundaryGeometry } from '../boundary';
 import { BuiltinCompileWarningCode, applyTransformChain, composeScopeTransform } from '../shared';
+import { evaluateScopePositionTarget } from './position';
 import { lowerScopeTransforms } from './transform';
-import type { InputScopeCompile, ScopeCompileContext } from './types';
+import type { InputScopeCompile, ScopeCompileContext, ScopePlacementPreparation } from './types';
 
 /** 按 transform 失败来源选择 warning code */
 const getTransformWarningCode = (failed: IRTransform | undefined): BuiltinCompileWarningCode => {
@@ -151,3 +152,12 @@ export const lowerPreliminaryScopeTransforms = (
     ? [{ kind: 'translate', x: child.position[0], y: child.position[1] }]
     : [];
 };
+
+/** 在子树执行前冻结 Scope 放置引用与不依赖包络的变换 */
+export const prepareScopePlacement = (
+  input: InputScopeCompile,
+  context: Pick<ScopeCompileContext, 'positionContext' | 'irPath' | 'onWarn'>,
+): ScopePlacementPreparation => ({
+  positionTarget: evaluateScopePositionTarget(input, context),
+  preliminaryTransforms: lowerPreliminaryScopeTransforms(input, context),
+});
