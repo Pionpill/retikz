@@ -1,14 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import {
-  resolveNode,
-  layoutNode,
-  emitNodeOutput,
-  createPositionEvaluateContext,
-  resolveScopeInheritance,
-} from '../../../../core/src';
+import { resolveNode, compileNode, createPositionEvaluateContext, resolveScopeInheritance } from '../../../../core/src';
 import type { IRNode, CanonicalScopeInheritance } from '../../../../core/src';
-import { emitNodePrimitives, compileNode } from '../../../../core/src/compile/node';
 import { createPaintRegistry } from '../../../../core/src/compile/resource';
 import { compileToScene, createSharedCompileContext } from '../../../src/compile';
 import type { SharedCompileContext } from '../../../src/compile';
@@ -37,11 +30,9 @@ const compileTestNode = (
       lookupReference: () => undefined,
     }),
   };
-  const compilation = layoutNode(resolution, compileContext).overall;
-  const output = emitNodeOutput(
-    compileNode(resolution, compileContext, { layout: { overall: compilation } }),
-    shared.layout.round,
-  );
+  const compiled = compileNode(resolution, compileContext);
+  const compilation = compiled.layout.overall;
+  const output = compiled.emit.overall;
   return {
     properties: resolution,
     layout: compilation,
@@ -70,12 +61,9 @@ describe('节点有效属性与布局复用', () => {
     const first = compileTestNode(source, context);
     const next = compileTestNode(nextSource, context);
     expect(next.context).toEqual(first.context);
-    const reused = emitNodePrimitives(
-      next.properties,
-      first.context,
-      shared.layout.round,
-      createPaintRegistry(shared.layout.round).register,
-    );
+    const reused = compileNode(next.properties, next.compileContext, {
+      layout: { overall: first.layout },
+    }).emit.overall.primitives;
     expect(reused).toEqual(next.output.primitives);
     const strokes = flattenPrims(reused).filter(primitive => primitive.type === 'path' || primitive.type === 'rect');
     expect(strokes).toEqual(
@@ -118,10 +106,8 @@ describe('节点有效属性与布局复用', () => {
               })),
             },
     };
-    const primitives = emitNodeOutput(
-      compileNode(properties, result.compileContext, { layout: { overall: result.layout } }),
-      shared.layout.round,
-    ).primitives;
+    const primitives = compileNode(properties, result.compileContext, { layout: { overall: result.layout } }).emit
+      .overall.primitives;
     const text = flattenPrims(primitives).find(primitive => primitive.type === 'text');
     expect(text?.lines.map(line => ({ text: line.text, fill: line.fill }))).toEqual([
       { text: 'aaa', fill: 'green' },

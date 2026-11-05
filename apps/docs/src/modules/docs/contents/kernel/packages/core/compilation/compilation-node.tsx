@@ -60,7 +60,7 @@ const CompilationNode: FC<CompilationNodeProps> = props => {
             },
             {
               id: 'emit',
-              text: 'emitNodePrimitives',
+              text: 'emitNode',
               role: 'activity',
               kind: 'docs.logic.important',
               layout: { width: 160 },

@@ -3,7 +3,7 @@ import type { NodeCompileContext } from '@retikz/core';
 import { describe, expect, it, vi } from 'vitest';
 
 import { evaluateBoundaryPoint, projectLayoutWithTransform } from '../../../../core/src/compile/boundary';
-import { layoutNode } from '../../../../core/src/compile/node';
+import { layoutNode } from '../../../../core/src/compile/node/layout';
 import { createPositionEvaluateContext } from '../../../../core/src/compile/reference';
 import { composeScopeTransform } from '../../../../core/src/compile/shared';
 import { resolveBoundaryRegistry, resolvePatternRegistry, resolveShapeRegistry } from '../../../../core/src/providers';
@@ -37,6 +37,8 @@ const layoutOf = (
   });
 
   return {
+    shape: resolution.shape,
+    boundary: resolution.boundary,
     ...layoutNode(resolution, {
       measureText,
       positionContext: createPositionEvaluateContext({ lookupReference: () => undefined, nodeDistance: 24 }),

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import type { CompiledBoundaryGeometry } from '../../../../core/src';
 import type { PositionEvaluateContext } from '../../../../core/src/compile';
 import { projectLayoutWithTransform } from '../../../../core/src/compile/boundary';
 import type { CompiledNodeLayout } from '../../../../core/src/compile/node';
@@ -16,7 +17,7 @@ const makeStack = (entries: Array<[string, [number, number]]>): NamespaceStack =
   const stack = new NamespaceStack();
 
   for (const [index, [id, [x, y]]] of entries.entries()) {
-    const layout: CompiledNodeLayout = {
+    const layout: CompiledBoundaryGeometry & Pick<CompiledNodeLayout, 'geometry'> = {
       shape: { name: 'rectangle', definition: BUILTIN_SHAPES.get('rectangle')!, params: {} },
       geometry: {
         rect: { x, y, width: 0, height: 0, rotate: 0 },
@@ -37,7 +38,7 @@ const makeStack = (entries: Array<[string, [number, number]]>): NamespaceStack =
   return stack;
 };
 
-const layoutForProjection = (): CompiledNodeLayout => ({
+const layoutForProjection = (): CompiledBoundaryGeometry & Pick<CompiledNodeLayout, 'geometry'> => ({
   shape: { name: 'rectangle', definition: BUILTIN_SHAPES.get('rectangle')!, params: {} },
   geometry: {
     rect: { x: 10, y: 20, width: 30, height: 40, rotate: 0 },

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import * as core from '../../../../../core/src';
 import { evaluateAngleBoundaryPoint, evaluateBoundaryPoint } from '../../../../../core/src/compile/boundary';
-import { layoutNode } from '../../../../../core/src/compile/node';
+import { layoutNode } from '../../../../../core/src/compile/node/layout';
 import { createPositionEvaluateContext } from '../../../../../core/src/compile/reference';
 import { resolveBoundaryRegistry, resolvePatternRegistry, BUILTIN_SHAPES } from '../../../../../core/src/providers';
 import { resolveNode } from '../../../../../core/src/resolve';
@@ -82,6 +82,8 @@ const layoutBoundaryNode = (node: IRNode, namespaceStack: NamespaceStack) =>
     });
 
     return {
+      shape: resolution.shape,
+      boundary: resolution.boundary,
       ...layoutNode(resolution, {
         measureText,
         positionContext: createPositionEvaluateContext({

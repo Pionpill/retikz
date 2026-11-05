@@ -2,7 +2,6 @@ import {
   resolveScope,
   resolveNode,
   compileNode,
-  emitNodeOutput,
   resolveCoordinate,
   compileCoordinate,
   resolvePathAnimations,
@@ -77,7 +76,7 @@ export const compileWeaveNode = (input: IRNode, runtime: WeaveElementRuntime): W
     warn,
     texLowering: { lowerTex: shared.host.lowerTex, warn },
   });
-  const output = emitNodeOutput(compilation, shared.layout.round);
+  const output = compilation.emit.overall;
   return Object.freeze({
     canon: resolution,
     compiled: compilation,

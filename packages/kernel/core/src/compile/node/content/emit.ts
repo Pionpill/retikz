@@ -1,7 +1,22 @@
 import type { ScenePrimitive, TextLine } from '../../../contract';
 import type { CanonicalNode } from '../../../resolve';
 import { calculateAlphabeticBaselineY, emitTextLine } from '../../text';
-import type { CompiledNodeLayout, CompiledNodeTextStyle } from '../types';
+import type { CompiledNodeLayout } from '../types';
+
+/** 节点正文最终外观，物理行通过索引读取，不持有作者正文或解析产物 */
+type CompiledNodeTextStyle = {
+  /** 正文主色 */
+  color?: string;
+  /** 正文整体透明度 */
+  opacity?: number;
+  /** 对应作者行与片段的最终外观 */
+  lines: Array<{
+    /** 行级外观 */
+    style?: Pick<TextLine, 'fill' | 'opacity'>;
+    /** 片段级外观 */
+    segments: Array<Pick<TextLine, 'fill' | 'opacity'>>;
+  }>;
+};
 
 type Round = (n: number) => number;
 

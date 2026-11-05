@@ -1,8 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import type { CompiledBoundaryGeometry } from '../../../../core/src';
 import type { TexLowerer } from '../../../../core/src/compile';
 import { BuiltinCompileWarningCode } from '../../../../core/src/compile';
-import type { CompiledNode } from '../../../../core/src/compile/node';
+import type { CompiledNodeLayout } from '../../../../core/src/compile/node';
 import type { CompileWarning } from '../../../../core/src/compile/shared';
 import type { TextMeasurer, TextPrimitive } from '../../../../core/src/contract';
 import type { IRScene } from '../../../../core/src/schemas';
@@ -58,7 +59,7 @@ const collectLayouts = (
     precision?: number;
   } = {},
 ): {
-  layouts: Array<CompiledNode>;
+  layouts: Array<CompiledBoundaryGeometry & Pick<CompiledNodeLayout, 'geometry'>>;
   warnings: ReadonlyArray<CompileWarning>;
   textPrims: Array<TextPrimitive>;
 } => {
@@ -68,13 +69,16 @@ const collectLayouts = (
 
     ...(options.withTex === true ? { lowerTex } : {}),
   });
-  let layouts: Array<CompiledNode> = [];
+  let layouts: Array<CompiledBoundaryGeometry & Pick<CompiledNodeLayout, 'geometry'>> = [];
   const run = SubtreeCompiler.prototype.run;
   const observeLayouts = vi
     .spyOn(SubtreeCompiler.prototype, 'run')
     .mockImplementation(function (this: SubtreeCompiler) {
       const out = run.call(this);
-      layouts = out.geometries.filter((layout): layout is CompiledNode => 'metadata' in layout);
+      layouts = out.geometries.filter(
+        (layout): layout is CompiledBoundaryGeometry & Pick<CompiledNodeLayout, 'geometry'> =>
+          'geometry' in layout && 'contentSize' in layout.geometry,
+      );
       return out;
     });
   try {
@@ -125,9 +129,9 @@ describe('Node 内容测量', () => {
     );
 
     expect(layouts).toHaveLength(1);
-    expect(layouts[0].layout).toMatchObject({ contentCenter: [0, 0], contentSize: { width: 30, height: 12 } });
-    expect(layouts[0].layout.contentSize.width).toBe(textPrims[0].measuredWidth);
-    expect(layouts[0].layout.contentSize.height).toBe(textPrims[0].measuredHeight);
+    expect(layouts[0].geometry).toMatchObject({ contentCenter: [0, 0], contentSize: { width: 30, height: 12 } });
+    expect(layouts[0].geometry.contentSize.width).toBe(textPrims[0].measuredWidth);
+    expect(layouts[0].geometry.contentSize.height).toBe(textPrims[0].measuredHeight);
   });
 
   it('对多行内容使用最宽的行和累积行高', () => {
@@ -143,7 +147,7 @@ describe('Node 内容测量', () => {
       ]),
     );
 
-    expect(layouts[0].layout.contentSize).toEqual({ width: 40, height: 24 });
+    expect(layouts[0].geometry.contentSize).toEqual({ width: 40, height: 24 });
     expect(textPrims.flatMap(primitive => primitive.lines.map(line => line.text))).toEqual(['a', 'abcd']);
   });
 
@@ -162,7 +166,7 @@ describe('Node 内容测量', () => {
     );
 
     expect(warnings).toEqual([]);
-    expect(layouts[0].layout.contentSize).toEqual({ width: 60, height: 12 });
+    expect(layouts[0].geometry.contentSize).toEqual({ width: 60, height: 12 });
     expect(textPrims.flatMap(primitive => primitive.lines.map(line => line.text))).toEqual(['A ', ' B']);
   });
 
@@ -179,7 +183,7 @@ describe('Node 内容测量', () => {
       ]),
     );
 
-    expect(layouts[0].layout.contentSize.width).toBe(70);
+    expect(layouts[0].geometry.contentSize.width).toBe(70);
 
     expect(warnings).toEqual([]);
   });
@@ -197,7 +201,7 @@ describe('Node 内容测量', () => {
       ]),
     );
 
-    expect(layouts[0].layout.contentSize.width).toBe(20);
+    expect(layouts[0].geometry.contentSize.width).toBe(20);
 
     expect(warnings.some(warning => warning.code === BuiltinCompileWarningCode.TexLowererMissing)).toBe(true);
   });
@@ -216,7 +220,7 @@ describe('Node 内容测量', () => {
       { withTex: true },
     );
 
-    expect(layouts[0].layout.contentSize.width).toBe(40);
+    expect(layouts[0].geometry.contentSize.width).toBe(40);
 
     expect(warnings.some(warning => warning.code === BuiltinCompileWarningCode.TexInvalid)).toBe(true);
   });
@@ -235,10 +239,10 @@ describe('Node 内容测量', () => {
       ]),
     );
 
-    expect(layouts[0].layout.contentCenter).toEqual([0, 0]);
-    expect(layouts[0].layout.contentSize).toEqual({ width: 10, height: 12 });
-    expect(layouts[0].geometry.rect.x).toBeGreaterThan(layouts[0].layout.contentCenter[0]);
-    expect(layouts[0].geometry.rect.width).toBeGreaterThan(layouts[0].layout.contentSize.width);
+    expect(layouts[0].geometry.contentCenter).toEqual([0, 0]);
+    expect(layouts[0].geometry.contentSize).toEqual({ width: 10, height: 12 });
+    expect(layouts[0].geometry.rect.x).toBeGreaterThan(layouts[0].geometry.contentCenter[0]);
+    expect(layouts[0].geometry.rect.width).toBeGreaterThan(layouts[0].geometry.contentSize.width);
   });
 
   it('内容大小中不包括节点标签', () => {
@@ -266,7 +270,7 @@ describe('Node 内容测量', () => {
       ]),
     );
 
-    expect(withLabel.layouts[0].layout.contentSize).toEqual(base.layouts[0].layout.contentSize);
+    expect(withLabel.layouts[0].geometry.contentSize).toEqual(base.layouts[0].geometry.contentSize);
   });
 
   it('当 Scene 输出四舍五入时，使内部测量保持双精度', () => {
@@ -283,7 +287,7 @@ describe('Node 内容测量', () => {
       { measurer: fractionalMeasureText, precision: 0 },
     );
 
-    expect(layouts[0].layout.contentSize.width).toBeCloseTo(1 / 3, 8);
+    expect(layouts[0].geometry.contentSize.width).toBeCloseTo(1 / 3, 8);
     expect(textPrims[0].measuredWidth).toBe(0);
   });
 });

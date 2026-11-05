@@ -151,8 +151,8 @@ Traversal also creates state for this execution: emitted primitives, accumulated
 `compileChildrenToPrimitives` dispatches children in declaration order. Here it records the pending Path before processing A and B. Three results explain the work inside a node:
 
 - CanonicalNode: complete layout intent, text, labels, drawing properties, and capability bindings; paints reside in `style.fill` / `style.stroke`.
-- CompiledNodeLayout: measurement, placement, and label layout results with bindings required by subsequent queries.
-- CompiledNode: final geometry, layout, styles, text, labels, animations, and query bindings, without the complete input configuration.
+- CompiledNodeLayout: measurement, placement, and label layout results without capability bindings.
+- CompiledNode: overall and local layout and emission products with query bindings, without the complete input configuration.
 
 These are the source definitions of the three internal types, with comments omitted and referenced types left unexpanded.
 
@@ -184,8 +184,6 @@ export type CanonicalNode = Readonly<{
 
 ```ts
 export type CompiledNodeLayout = {
-  shape: CanonicalNode['shape'];
-  boundary: CanonicalNode['boundary'];
   geometry: NodeLayoutGeometry;
   text?: CompiledNodeTextLayout;
   labels?: Array<NodeLabelLayout>;
@@ -201,14 +199,9 @@ export type NodeLayoutGeometry = {
 export type CompiledNode = {
   shape: CanonicalNode['shape'];
   boundary: CanonicalNode['boundary'];
-  geometry: CompiledNodeGeometry;
-  structure: { shape: CompiledDrawing['structure'] };
-  layout: CompiledNodeMetrics;
-  metadata: CompiledNodeMetadata;
-  style: CompiledNodeStyle;
-  text?: CompiledNodeText;
-  labels: Array<CompiledNodeLabel>;
-  animations: Array<IRAnimationTrack>;
+  layout: WithRequiredProperties<PreparedNodeLayout, 'overall'>;
+  emit: WithRequiredProperties<PreparedNodeEmit, 'overall'>;
+  alignmentGuides?: Array<LayoutAlignmentGuide>;
 };
 
 export type CompiledNodeTextLayout = {
@@ -217,8 +210,7 @@ export type CompiledNodeTextLayout = {
   lineHeight: number;
   baselineOffsets?: Array<number>;
 } & (
-  | { kind: 'plain'; lines: Array<CompiledNodeTextLineLayout> }
-  | { kind: 'inline'; lines: Array<{ lineLayout: CompiledTextLineLayout; baselineOffset: number }> }
+  { kind: 'plain'; lines: Array<CompiledNodeTextLineLayout> } | { kind: 'inline'; lines: Array<CompiledTextBlockLine> }
 );
 ```
 
@@ -226,17 +218,23 @@ export type CompiledNodeTextLayout = {
 
 </DocTabs>
 
-`resolveNode` uses the root font size, relative distance, and TeX gating flag to produce a complete `CanonicalNode`. `layoutNode(canon, context, prepared?)` returns `WithRequiredProperties<PreparedNodeLayout, 'overall'>`: `overall` holds the complete `CompiledNodeLayout` without the complete canon, while retaining Definitions and parameters required by subsequent queries; `body` holds the joint text-and-shape measurement, `placement` holds node placement, and `labels` holds each label's `measurement` and `placement` in current label order.
+`resolveNode` uses font size, relative distance, and TeX gating to produce a complete `CanonicalNode`. The internal `layoutNode(canon, context, prepared?)` returns `WithRequiredProperties<PreparedNodeLayout, 'overall'>`: `overall` is the complete layout, `content` is text layout under the final width budget, `shape` holds shape dimensions and offset, `placement` holds node placement, and `labels` contains measurement and placement in current label order.
 
-`compileNode(canon, context, { layout: prepared })` consumes these results. Providing `layout.overall` skips all layout calculations; providing partial results makes Core calculate only the missing stages. A complete-layout hit does not reconstruct missing intermediate results. Label measurement is independent of body dimensions, while label placement depends on the body boundary. Text and shape dimensions feed back into each other, so body measurement retains the full reflow algorithm. Individual operations are available through `measureNodeBody`, `measureNodeLabel`, and `placeNodeLabel`; `placeNode` consumes a body layout with its initial position already determined and completes final anchor alignment.
+Label measurements retain only the `lineLayout` text block. Read dimensions from `lineLayout.width` and `lineLayout.height`; physical-line baselines and font metrics remain inside the block, without duplicate label dimensions or ascent/descent fields.
 
-The caller ensures that supplied results match the current configuration, width proposal, and measurement environment, and aligns `labels` with the current label order. Core does not modify prepared data or retain a cross-call cache. Final `geometry` holds the visual rectangle and connection margins; shape primitive structure is stored separately in `structure.shape`. `layout` uses `CompiledNodeMetrics` for content placement and alignment, while text and label results remain in their respective fields.
+`compileNode(canon, context, prepared?)` accepts `prepared.layout` and `prepared.emit`. A complete layout skips layout computation without reconstructing missing intermediate results. A content-only hit computes shape dimensions from the caller-approved final text layout. A shape-only hit lays out text using the stored `contentWidthBudget`, without calling the shape measurement provider. Content records its layout input in `widthBudget`, allowing a newly computed shape to remain independently reusable. When both are absent, the bounded width-feedback algorithm still runs for at most 32 attempts. The caller guarantees validity under the final constraints; Core does not compare cache versions.
 
-Drawing results use `structure` for the primitive tree with appearance fields removed, and `style` for appearance entries in matching preorder. Node bodies use `structure.shape`; labels and paths use their own `structure`. These trees retain text content, group hierarchy, and arrow primitives. The name `geometry` is reserved for positions, dimensions, and boundaries.
+Prepared emission has sibling `content`, `shape`, `labels`, and `overall` fields, with no duplicate placement. Content and shape results directly hold `Array<ScenePrimitive>`. A label entry is `{ overall?: Array<ScenePrimitive> }`: `{}` requests computation, while an empty primitive array is a valid empty result. Core computes missing drawings from current layout and appearance, including body text during compilation.
 
-Reconciler compares effective configuration, compilation context, and reference geometry, while Weave manages stage caches. When layout can be reused, Reconciler reads position dependencies again and passes it through `prepared.layout.overall` to the same `compileNode` entrypoint. Automatic reuse currently operates on complete layouts; the partial-result API supports explicit composition and does not imply that Reconciler already caches at those finer levels. Core neither compares historical versions nor decides cache validity. Authored-line indexes associate physical lines with current styles. `emitNodeOutput` consumes only compiled results.
+`emit.overall` contains final `primitives` and complete `bounds`, including grouping, rotation, identity, and animation binding. A hit skips content, shape, and label drawing without reconstructing local drawings; layout results required for reference queries remain available. `CompiledNode` retains overall and known local results in `layout` and `emit`; both `overall` fields are always available. An overall hit preserves supplied valid local products without reconstructing missing ones. Reconciler selects valid parts from this result and passes them back to `compileNode` through prepared.
 
-Element compilation follows `compileXxx(canon, context, prepared?)`: Node accepts prepared layout, and Scope directly accepts `ScopePlacementPreparation` captured before child traversal. Scope receives child layouts and an already resolved clip path through its current context; animation finalization still waits for deferred path output. `compilePath(canon, context)` and `compileCoordinate(canon, context)` currently have no independently reusable partial stage, so they have no empty third parameter. The caller ensures that prepared data matches the current input and context; Core calculates only missing steps.
+Local primitives retain text, groups, arrows, and appearance together, without splitting structure from style. Assembling node output applies host metadata without modifying reused local primitives. `layout.overall` holds complete geometry and text and label layouts; top-level `shape` and `boundary` carry query bindings from the current canon; `alignmentGuides` supplies alignment lines for the parent layout. Text appearance is projected only when producing primitives.
+
+The caller aligns label caches with current label order and imports paired resources before reusing drawings across workspaces. Cached drawings do not call `registerPaint` again; retaining a `resourceRef` does not restore its resource. Core does not mutate prepared data or keep a cross-call cache.
+
+Reconciler compares effective configuration, compilation context, and reference geometry, while Weave manages stage caches. When layout can be reused, Reconciler reads position dependencies again and passes it through `prepared.layout` to the same `compileNode` entrypoint. Automatic reuse currently operates on complete layouts; the partial-result API supports explicit composition and does not imply that Reconciler already caches at those finer levels. Core neither compares historical versions nor decides cache validity. Authored-line indexes associate physical lines with current styles. Reconciler reads bindings and layout geometry through `projectNodeGeometry(compiled)` and collects `emit.overall` without scheduling internal layout or emission stages.
+
+Element compilation follows `compileXxx(canon, context, prepared?)`: Node accepts prepared layout and drawing results, and Scope directly accepts `ScopePlacementPreparation` captured before child traversal. Scope receives child layouts and an already resolved clip path through its current context; animation finalization still waits for deferred path output. `compilePath(canon, context)` and `compileCoordinate(canon, context)` currently have no independently reusable partial stage, so they have no empty third parameter. The caller ensures that prepared data matches the current input and context; Core calculates only missing steps.
 
 <ComponentPreview files="compilation-node" size="lg" hideCode type="illustration" />
 
@@ -428,7 +426,7 @@ Core provides composable domain stages. Reconciler owns traversal, dependency wa
 
 | Element    | Shared stages                                                               | Facts retained by the driver                               |
 | ---------- | --------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| Node       | `resolveNode` → `layoutNode` → `emitNodeOutput`                             | Effective properties, layout, output, and paired resources |
+| Node       | `resolveNode` → `compileNode`                                               | Effective properties, layout, output, and paired resources |
 | Coordinate | `evaluatePosition` → `compileCoordinate`                                    | `CompiledCoordinate.position`                              |
 | Path       | `resolvePathAnimations` → `compilePath`                                     | Kind-host output, resources, and bounds                    |
 | Scope      | `resolveScope`, `prepareScopePlacement`, `compileScope`, `createScopeGroup` | Envelope, own group properties, and output                 |
@@ -436,7 +434,7 @@ Core provides composable domain stages. Reconciler owns traversal, dependency wa
 Resolution may use semantic context such as registries and position lookup, but does not read compilation execution state. Layout and output require their own measurement, position, and resource capabilities. The caller owns the complete `SharedCompileContext` and workspace. This example composes the stages for a node without references; `undefined` from lookup means no named target is visible.
 
 ```ts
-import { createPositionEvaluateContext, emitNodeOutput, layoutNode, resolveNode } from '@retikz/core';
+import { compileNode, createPositionEvaluateContext, resolveNode } from '@retikz/core';
 import { createSharedCompileContext, createWorkspaceCompileState } from '@retikz/reconciler';
 
 const shared = createSharedCompileContext();
@@ -462,11 +460,11 @@ const compilation = compileNode(resolution, {
     lookupReference: () => undefined,
   }),
 });
-const output = emitNodeOutput(compilation, shared.layout.round);
+const output = compilation.emit.overall;
 const resources = workspace.paintRegistry.getResources();
 ```
 
-Keep the resource references in `output` together with `resources`. The driver decides when to publish names, dispatch diagnostics, and assemble the Scene. `CanonicalNode` retains complete configuration; `CompiledNode` retains final results; `emitNodeOutput` assembles primitives and bounds. Reuse also checks inputs, context, and actual references.
+Keep the resource references in `output` together with `resources`. The driver decides when to publish names, dispatch diagnostics, and assemble the Scene. `CanonicalNode` retains complete configuration; `CompiledNode` retains final results; `compileNode` assembles primitives and bounds internally. Reuse also checks inputs, context, and actual references.
 
 Reconciler’s namespace stack manages declaration visibility and unfinished Scope state. Paths are compiled when their dependencies are ready. Stages consume names through narrow lookup capabilities; failed candidate workspaces publish neither resources nor partial results, and real errors retain their cause.
 

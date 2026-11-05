@@ -1,10 +1,11 @@
 import type { Position } from '@retikz/math';
-import { DEFAULT_EPSILON, DEG_TO_RAD } from '@retikz/math';
+import { DEG_TO_RAD } from '@retikz/math';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import type { CanonicalNodeLabel, CanonicalNodeLabelBoundaryPosition } from '../../../resolve';
 import { anchorUnitVectorByAnchor } from '../../../shared';
 import { evaluateNamedBoundaryAnchor, evaluateAngleBoundaryPoint } from '../../boundary';
+import type { CompiledBoundaryGeometry } from '../../boundary';
 import { placeLabelBox, calculateLabelRotation, layoutTextBlock } from '../../text';
 import type {
   CompiledNodeLayout,
@@ -18,7 +19,7 @@ const isLabelBoundaryPosition = (
   position: CanonicalNodeLabel['position'],
 ): position is CanonicalNodeLabelBoundaryPosition => typeof position === 'object';
 
-const assertBoxLikeLabelBoundary = (layout: CompiledNodeLayout): void => {
+const assertBoxLikeLabelBoundary = (layout: CompiledBoundaryGeometry): void => {
   if (layout.shape.name !== 'rectangle') {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Compile,
@@ -28,7 +29,7 @@ const assertBoxLikeLabelBoundary = (layout: CompiledNodeLayout): void => {
 };
 
 const calculateLabelBoundaryPoint = (
-  layout: CompiledNodeLayout,
+  layout: CompiledBoundaryGeometry,
   canon: CanonicalNodeLabelBoundaryPosition,
 ): Position => {
   assertBoxLikeLabelBoundary(layout);
@@ -82,12 +83,12 @@ const calculateLabelTangentVector = (position: CanonicalNodeLabel['position']): 
 
 /** label 在 node 边界上的附着点 */
 export const calculateNodeLabelBorderPoint = (
-  layout: CompiledNodeLayout,
+  layout: CompiledBoundaryGeometry,
   position: CanonicalNodeLabel['position'],
 ): Position => {
   if (position === 'center') return [layout.geometry.rect.x, layout.geometry.rect.y];
 
-  const aaLayout: CompiledNodeLayout = {
+  const aaLayout: CompiledBoundaryGeometry = {
     ...layout,
     geometry: { ...layout.geometry, rect: { ...layout.geometry.rect, rotate: 0 } },
   };
@@ -110,50 +111,6 @@ export const calculateNodeLabelCenter = (
   return [layout.geometry.rect.x + label.centerOffset[0], layout.geometry.rect.y + label.centerOffset[1]];
 };
 
-/** 从 label 中心朝 border 方向，求 label 框边界交点 */
-type InputLabelBoxIntersection = {
-  /** 标签视觉盒的中心，与 border 使用同一坐标系 */
-  center: Position;
-  /** 用于确定从标签中心向外求交方向的目标点 */
-  border: Position;
-  /** 标签未旋转视觉盒的半宽 */
-  halfWidth: number;
-  /** 标签未旋转视觉盒的半高 */
-  halfHeight: number;
-  /** label 视觉盒自旋角 */
-  rotateDeg: number;
-};
-
-/**
- * 从标签中心朝目标点求旋转矩形的边界交点
- * @returns 射线与视觉盒的首次交点；两点距离小于几何容差时返回原 center 引用
- */
-export const calculateLabelBoxIntersection = ({
-  center,
-  border,
-  halfWidth,
-  halfHeight,
-  rotateDeg,
-}: InputLabelBoxIntersection): Position => {
-  const dx = border[0] - center[0];
-  const dy = border[1] - center[1];
-  const len = Math.hypot(dx, dy);
-  if (len < DEFAULT_EPSILON) return center;
-
-  const ux = dx / len;
-  const uy = dy / len;
-  const rad = rotateDeg * DEG_TO_RAD;
-  const cos = Math.cos(rad);
-  const sin = Math.sin(rad);
-  const alongX = Math.abs(ux * cos + uy * sin);
-  const alongY = Math.abs(ux * -sin + uy * cos);
-  const sx = alongX > DEFAULT_EPSILON ? halfWidth / alongX : Number.POSITIVE_INFINITY;
-  const sy = alongY > DEFAULT_EPSILON ? halfHeight / alongY : Number.POSITIVE_INFINITY;
-  const s = Math.min(sx, sy);
-
-  return [center[0] + ux * s, center[1] + uy * s];
-};
-
 /**
  * 算 label 文本自旋角度
  * @description keepUpright 会翻转倒置文本
@@ -166,18 +123,16 @@ const calculateLabelRotationDegrees = (
 
 /** 把已测量 label 解析为相对最终 Node rect 的局部几何 */
 export const placeNodeLabel = (
-  layout: CompiledNodeLayout,
+  layout: CompiledBoundaryGeometry,
   label: MeasuredNodeLabel,
   canon: CanonicalNodeLabel,
 ): CompiledNodeLabelPlacement => {
-  const rotateDeg = calculateLabelRotationDegrees(canon);
   if (canon.position === 'center') {
-    return { rotateDeg, centerOffset: [0, 0] };
+    return { rotateDeg: calculateLabelRotationDegrees(canon), centerOffset: [0, 0] };
   }
 
   const placed = placeLabelBox({
     label: {
-      text: canon.text.lines.map(line => line.plainText).join('\n'),
       rotate: canon.rotate,
       keepUpright: canon.keepUpright,
       placement: canon.placement,
@@ -186,8 +141,8 @@ export const placeNodeLabel = (
     point: calculateNodeLabelBorderPoint(layout, canon.position),
     outward: calculateLabelPlacementVector(canon.position),
     tangent: calculateLabelTangentVector(canon.position),
-    width: label.measuredWidth,
-    height: label.measuredHeight,
+    width: label.lineLayout.width,
+    height: label.lineLayout.height,
     distance: canon.distance,
   });
 
@@ -202,7 +157,7 @@ export const placeNodeLabel = (
  * @description 用于顶层 bbox / viewBox 计算
  */
 export const calculateNodeLabelExtentPoints = (
-  layout: Pick<CompiledNodeLayout, 'geometry'> & { labels?: Array<Omit<NodeLabelLayout, 'lineLayout'>> },
+  layout: Pick<CompiledNodeLayout, 'geometry' | 'labels'>,
 ): Array<Position> => {
   if (!layout.labels || layout.labels.length === 0) return [];
 
@@ -215,8 +170,8 @@ export const calculateNodeLabelExtentPoints = (
 
   for (const lab of layout.labels) {
     const [lx, ly] = calculateNodeLabelCenter(layout, lab);
-    const halfW = lab.measuredWidth / 2;
-    const halfH = lab.measuredHeight / 2;
+    const halfW = lab.lineLayout.width / 2;
+    const halfH = lab.lineLayout.height / 2;
     const labelRad = lab.rotateDeg * DEG_TO_RAD;
     const labelCos = Math.cos(labelRad);
     const labelSin = Math.sin(labelRad);
@@ -260,9 +215,5 @@ export const measureNodeLabel = (
   );
   return {
     lineLayout,
-    measuredWidth: lineLayout.width,
-    measuredHeight: lineLayout.height,
-    ascent: lineLayout.height / 2,
-    descent: lineLayout.height / 2,
   };
 };

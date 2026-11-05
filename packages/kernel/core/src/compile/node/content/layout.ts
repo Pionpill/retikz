@@ -2,13 +2,15 @@ import { RAD_TO_DEG } from '@retikz/math';
 
 import type { LayoutAlignmentGuide } from '../../../contract';
 import { BuiltinLayoutAlignmentGuideName, LayoutAlignmentGuideDimension } from '../../../contract';
-import type { CanonicalTextBlock } from '../../../resolve';
-import type { CompiledTextLineLayout } from '../../text';
+import type { CanonicalNode, CanonicalTextBlock } from '../../../resolve';
+import type { CompiledTextBlockLine } from '../../text';
 import { layoutTextBlock, measureMaxTextTokenWidth } from '../../text';
-import type { CompiledNodeLayout, CompiledNodeTextLineLayout, NodeTextLayoutContext } from '../types';
+import type { CompiledNodeLayout, CompiledNodeTextLineLayout, NodeCompileContext } from '../types';
 
 /** 节点正文布局输入 */
-type InputNodeContentLayout = NodeTextLayoutContext & {
+type InputNodeContentLayout = Pick<NodeCompileContext, 'measureText' | 'texLowering'> & {
+  /** 待布局节点 */
+  canon: CanonicalNode;
   /** 已确定的行高 */
   lineHeight: number;
   /** 已按节点缩放处理的最大文本宽度 */
@@ -19,19 +21,14 @@ type InputNodeContentLayout = NodeTextLayoutContext & {
 
 /** 节点正文排版与完整作者行解析结果 */
 export type NodeContentLayout = {
+  /** 本次排版采用的正文宽度预算；供独立形状求解重放 */
+  widthBudget?: number;
   /** 普通文本行 */
   lines?: Array<CompiledNodeTextLineLayout>;
   /** 行内公式混排块 */
   inlineBlock?: {
     /** 按正文顺序排列的混排行及其基线位置 */
-    lines: Array<{
-      /** 该行的测量与片段布局 */
-      lineLayout: CompiledTextLineLayout;
-      /** 折行前的作者行索引 */
-      sourceLineIndex: number;
-      /** 相对正文块顶部的基线垂直偏移 */
-      baselineOffset: number;
-    }>;
+    lines: Array<CompiledTextBlockLine>;
   };
   /** 内容文本宽度 */
   textWidth: number;
@@ -43,15 +40,15 @@ export type NodeContentLayout = {
 
 /** 混排按实际片段度量确定行槽与基线 */
 const layoutInlineContent = (canon: CanonicalTextBlock, input: InputNodeContentLayout): NodeContentLayout => {
-  const { measureText, tex, lineHeight, maxTextWidth } = input;
+  const { measureText, texLowering, lineHeight, maxTextWidth } = input;
   const block = layoutTextBlock(
     canon.lines,
     { lineHeight, maxTextWidth },
     {
       font: canon.font,
       measureText,
-      lowerTex: tex?.lowerTex,
-      warn: tex?.warn ?? (() => {}),
+      lowerTex: texLowering?.lowerTex,
+      warn: texLowering?.warn ?? (() => {}),
     },
   );
   return {
@@ -103,8 +100,11 @@ const layoutPlainContent = (canon: CanonicalTextBlock, input: InputNodeContentLa
 /** 布局节点正文，无正文时直接返回空内容尺寸 */
 export const layoutNodeContent = (input: InputNodeContentLayout): NodeContentLayout => {
   const { text } = input.canon;
-  if (text === undefined) return { textWidth: 0, textHeight: 0 };
-  return text.lines.some(line => line.mixed) ? layoutInlineContent(text, input) : layoutPlainContent(text, input);
+  if (text === undefined) return { textWidth: 0, textHeight: 0, widthBudget: input.maxTextWidth };
+  const content = text.lines.some(line => line.mixed)
+    ? layoutInlineContent(text, input)
+    : layoutPlainContent(text, input);
+  return { ...content, widthBudget: input.maxTextWidth };
 };
 
 const isEffectiveIdentityRotation = (degrees: number): boolean => Object.is(degrees % 360, -0) || degrees % 360 === 0;

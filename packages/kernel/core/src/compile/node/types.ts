@@ -1,4 +1,4 @@
-import type { JsonObject, PropertyPath } from '@retikz/foundation';
+import type { PropertyPath, WithRequiredProperties } from '@retikz/foundation';
 import type { BoundsInsets, CenteredBox, Position } from '@retikz/math';
 
 import type {
@@ -8,116 +8,33 @@ import type {
   TextLine,
   TextMeasurer,
   LayoutAlignmentGuide,
+  ScenePrimitive,
 } from '../../contract';
 import type { CanonicalNode } from '../../resolve';
-import type { IRAnimationTrack, CanonicalDropShadow } from '../../schemas';
+import type { CanonicalDropShadow } from '../../schemas';
 import type { BoundaryState } from '../boundary';
 import type { PositionTargetEvaluateContext } from '../reference';
 import type { RegisterPaint } from '../resource';
-import type { CompiledDrawing } from '../scene';
 import type { ComposedScopeTransform, CompileWarningCode } from '../shared';
-import type { CompiledTextBlockLayout, CompiledTextLineLayout, TexLowerer } from '../text';
+import type { CompiledTextBlockLayout, CompiledTextBlockLine, TexLowerer } from '../text';
 import type { NodeContentLayout } from './content';
 
-/** 节点最终位置、视觉尺寸和连接边界 */
-export type CompiledNodeGeometry = {
-  /** 节点视觉外框及旋转 */
-  rect: CenteredBox;
-  /** 连接边界的最终外扩距离 */
-  margin: BoundsInsets;
-};
-
-/** 节点实际占位与正文内容盒，不重复存放视觉 rect */
-export type CompiledNodeMetrics = {
-  /** 正文内容盒中心 */
-  contentCenter: Position;
-  /** 正文实际占用尺寸 */
-  contentSize: { width: number; height: number };
+/** 节点编译结果，保留整体输出与可供调用方选择复用的阶段产物 */
+export type CompiledNode = {
+  /** 当前形状的能力绑定，直接来自 canon */
+  shape: CanonicalNode['shape'];
+  /** 当前连接面的能力绑定，直接来自 canon */
+  boundary: CanonicalNode['boundary'];
+  /** 整体布局与本次已知的局部布局产物 */
+  layout: WithRequiredProperties<PreparedNodeLayout, 'overall'>;
+  /** 最终输出与本次已知的局部绘制产物 */
+  emit: WithRequiredProperties<PreparedNodeEmit, 'overall'>;
   /** 可供父布局读取的对齐线 */
   alignmentGuides?: Array<LayoutAlignmentGuide>;
 };
 
-/** 节点最终输出身份与来源元数据 */
-export type CompiledNodeMetadata = {
-  /** 节点输出标识 */
-  id?: string;
-  /** 节点来源元数据 */
-  meta?: JsonObject;
-};
-
-/** 节点的最终形状外观 */
-export type CompiledNodeStyle = {
-  /** 与形状图元结构逐项对应的外观 */
-  shape: CompiledDrawing['style'];
-  /** 已确定的阴影，省略表示无阴影 */
-  shadow?: CanonicalDropShadow;
-};
-
-/** 附属标签最终排版和绘制内容，不持有布局意图 */
-export type CompiledNodeLabel = CompiledDrawing & {
-  /** 标签最终尺寸与相对定位 */
-  layout: Omit<NodeLabelLayout, 'lineLayout'>;
-};
-
-/** 节点正文最终外观，物理行通过索引读取，不持有作者正文或解析产物 */
-export type CompiledNodeTextStyle = {
-  /** 正文主色 */
-  color?: string;
-  /** 正文整体透明度 */
-  opacity?: number;
-  /** 对应作者行与片段的最终外观 */
-  lines: Array<{
-    /** 行级外观 */
-    style?: Pick<TextLine, 'fill' | 'opacity'>;
-    /** 片段级外观 */
-    segments: Array<Pick<TextLine, 'fill' | 'opacity'>>;
-  }>;
-};
-
-/** 最终正文排版与外观；绘制只需此结果及节点内容盒 */
-export type CompiledNodeText = {
-  /** 文字和公式的实际测量、折行及片段位置 */
-  layout: CompiledNodeTextLayout;
-  /** 与排版分离的最终外观 */
-  style: CompiledNodeTextStyle;
-};
-
-/** 节点最终产物，保留后续几何查询必需的能力绑定 */
-export type CompiledNode = {
-  /** 视觉形状查询使用的定义与参数 */
-  shape: CanonicalNode['shape'];
-  /** 默认连接面查询使用的定义与参数 */
-  boundary: CanonicalNode['boundary'];
-  /** 视觉几何 */
-  geometry: CompiledNodeGeometry;
-  /** 与外观分离的最终形状图元结构 */
-  structure: { shape: CompiledDrawing['structure'] };
-  /** 布局占用与对齐信息 */
-  layout: CompiledNodeMetrics;
-  /** 最终输出身份与来源元数据 */
-  metadata: CompiledNodeMetadata;
-  /** 最终形状外观 */
-  style: CompiledNodeStyle;
-  /** 正文排版与样式，省略表示无正文 */
-  text?: CompiledNodeText;
-  /** 附属标签最终结果 */
-  labels: Array<CompiledNodeLabel>;
-  /** 已确定的动画轨道 */
-  animations: Array<IRAnimationTrack>;
-};
-
-/** 节点正文与附属 label 共享的文本布局上下文 */
-export type NodeTextLayoutContext = {
-  /** 待布局节点 */
-  canon: CanonicalNode;
-  /** 文本度量函数 */
-  measureText: TextMeasurer;
-  /** TeX 降级上下文 */
-  tex?: TexLoweringContext;
-};
-
 /** 公式渲染上下文 */
-export type TexLoweringContext = {
+type TexLoweringContext = {
   /** 将公式源码转换为可参与文本布局的结果；未提供时由公式布局分支处理缺失能力 */
   lowerTex?: TexLowerer;
   /** 分发公式降级或布局过程中产生的编译诊断 */
@@ -158,16 +75,12 @@ export type CompiledNodeTextLayout = {
   | { kind: 'plain'; lines: Array<CompiledNodeTextLineLayout> }
   | {
       kind: 'inline';
-      lines: Array<{ lineLayout: CompiledTextLineLayout; baselineOffset: number; sourceLineIndex: number }>;
+      lines: Array<CompiledTextBlockLine>;
     }
 );
 
-/** 节点测量、定位和标签排版结果及后续查询必需的绑定 */
+/** 节点测量、定位和标签排版的计算结果 */
 export type CompiledNodeLayout = {
-  /** 当前形状定义和参数 */
-  shape: CanonicalNode['shape'];
-  /** 当前连接面定义和参数 */
-  boundary: CanonicalNode['boundary'];
   /** 测量和定位结果 */
   geometry: NodeLayoutGeometry;
   /** 正文排版结果 */
@@ -176,10 +89,10 @@ export type CompiledNodeLayout = {
   labels?: Array<NodeLabelLayout>;
 };
 
-/** 正文与形状联合求解后的主体测量，不包含节点位置 */
-export type MeasuredNodeBody = {
-  /** 最终宽度预算对应的正文排版 */
-  contentLayout: NodeContentLayout;
+/** 应用节点尺寸约束后的形状布局，不包含节点位置 */
+export type NodeShapeLayout = {
+  /** 最终正文排版采用的宽度预算；省略表示不限制宽度 */
+  contentWidthBudget?: number;
   /** 应用最小尺寸与固定宽度后的视觉尺寸 */
   size: { width: number; height: number };
   /** 形状外接中心相对包含 padding 的内容盒中心的偏移 */
@@ -204,8 +117,10 @@ export type PreparedNodeLabelLayout = {
 export type PreparedNodeLayout = {
   /** 完整布局；提供时跳过所有布局计算 */
   overall?: CompiledNodeLayout;
-  /** 主体测量；缺省时求解正文与形状尺寸 */
-  body?: MeasuredNodeBody;
+  /** 已适用于当前最终宽度条件的正文排版 */
+  content?: NodeContentLayout;
+  /** 已适用于当前内容和节点约束的形状尺寸 */
+  shape?: NodeShapeLayout;
   /** 最终节点位置；缺省时读取当前定位依赖 */
   placement?: NodePlacement;
   /** 与当前 Canonical 标签顺序对应的阶段产物；缺项按需计算 */
@@ -216,20 +131,14 @@ export type PreparedNodeLayout = {
 export type PreparedNodeCompilation = {
   /** 完整或部分布局产物，缺失阶段由 Core 执行 */
   layout?: PreparedNodeLayout;
+  /** 已确认有效的绘制结果；调用方同时恢复其引用资源 */
+  emit?: PreparedNodeEmit;
 };
 
 /** 已完成内容与视觉盒测量、尚未绑定 Node rect 的附属标签 */
 export type MeasuredNodeLabel = {
   /** 混排计算结果 */
   lineLayout: CompiledTextBlockLayout;
-  /** 测量宽度 */
-  measuredWidth: number;
-  /** 测量高度 */
-  measuredHeight: number;
-  /** 基线上伸 */
-  ascent: number;
-  /** 基线下伸 */
-  descent: number;
 };
 
 /** 节点附属标签的最终局部布局 */
@@ -264,4 +173,30 @@ export type NodeCompileContext = {
   round: (value: number) => number;
   /** 绘制资源登记 */
   registerPaint: RegisterPaint;
+};
+
+/** 节点最终图元与布局边界贡献 */
+export type NodeEmitOutput = {
+  /** 已完成分组、变换和身份绑定的图元 */
+  primitives: Array<ScenePrimitive>;
+  /** 布局与视觉范围使用的边界贡献 */
+  bounds: Array<{ boundsPoints: Array<Position>; shadow?: CanonicalDropShadow }>;
+};
+
+/** 调用方确认有效的单个标签绘制结果 */
+export type PreparedNodeLabelEmit = {
+  /** 完整图元；缺省时重新绘制该标签 */
+  overall?: Array<ScenePrimitive>;
+};
+
+/** 调用方保证适用于当前布局、外观、圆整与资源环境的绘制产物 */
+export type PreparedNodeEmit = {
+  /** 最终完整输出；命中时跳过局部绘制和整体组装 */
+  overall?: NodeEmitOutput;
+  /** 正文图元；空绘制结果表示已计算的空正文 */
+  content?: Array<ScenePrimitive>;
+  /** 形状 provider 输出的图元结构及外观 */
+  shape?: Array<ScenePrimitive>;
+  /** 按当前标签顺序对应的绘制结果，空对象表示需要计算 */
+  labels?: Array<PreparedNodeLabelEmit>;
 };

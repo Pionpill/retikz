@@ -7,6 +7,7 @@ import type {
   PatternDefinition,
   TextMeasurer,
   SceneResource,
+  ScenePrimitive,
   Transform,
 } from '../../contract';
 import type { CanonicalNodeBoundary, MergedScopeDefaults, CanonicalPath } from '../../resolve';
@@ -14,7 +15,6 @@ import type { IRPathBase, IRPosition, IRTarget, CanonicalDropShadow } from '../.
 import type { CanonicalTheme } from '../../shared';
 import type { BoundaryStore, CompiledBoundaryGeometry } from '../boundary';
 import type { RegisterPaint } from '../resource';
-import type { CompiledDrawing } from '../scene';
 import type { ComposedScopeTransform, CompileWarning } from '../shared';
 import type { TexLowerer } from '../text';
 
@@ -42,12 +42,12 @@ export type PathEmitOptions = {
 
 /** Path 宿主阶段产物，自定义路径不要求具有单一中心线 */
 export type CompiledPath = Readonly<{
-  /** 任意路径种类的实际图元结构，包含最终箭头及标签 */
-  structure: CompiledDrawing['structure'];
+  /** 任意路径种类的实际图元，包含最终箭头及标签 */
+  primitives: Array<ScenePrimitive>;
   /** 实际布局贡献；null 保留 provider 合法空结果的语义 */
   layout: { boundsPoints: Array<IRPosition> } | null;
-  /** 与实际图元逐项对应的最终外观 */
-  style: { primitives: CompiledDrawing['style']; shadow?: CanonicalDropShadow };
+  /** 布局边界计算使用的外观 */
+  style: { shadow?: CanonicalDropShadow };
 }>;
 
 /** 引用就绪后的路径编译输入，不包含遍历队列或输出容器 */

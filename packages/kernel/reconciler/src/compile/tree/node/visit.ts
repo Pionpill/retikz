@@ -1,10 +1,10 @@
 import type { CompileOccurrenceLocator, IRNode, NodeCompileContext } from '@retikz/core';
 import {
-  emitNodeOutput,
   compileNode,
   evaluatePosition,
   evaluatePositionTargetWorld,
   projectLayoutWithTransform,
+  projectNodeGeometry,
   resolveNode,
 } from '@retikz/core';
 import type { PropertyPath } from '@retikz/foundation';
@@ -93,19 +93,7 @@ export const visitNode = (
             evaluatePositionTargetWorld(position.target, context.positionContext);
           else evaluatePosition(position, context.positionContext);
           return compileNode(resolution, context, {
-            layout: {
-              overall: {
-                shape: previous.compiled.shape,
-                boundary: previous.compiled.boundary,
-                geometry: {
-                  rect: previous.compiled.geometry.rect,
-                  margin: previous.compiled.geometry.margin,
-                  ...previous.compiled.layout,
-                },
-                text: previous.compiled.text?.layout,
-                labels: [],
-              },
-            },
+            layout: previous.compiled.layout,
           });
         })();
 
@@ -118,7 +106,7 @@ export const visitNode = (
   );
   const compilation = staged.compiled;
 
-  const layout = compilation;
+  const layout = projectNodeGeometry(compilation);
   const boundaryState = runtime.state.workspace.boundaryStore.getOrCreateState(layout.shape);
   boundaryState.irPath = nodeIrPath;
   boundaryState.warn = (code, message) =>
@@ -141,7 +129,7 @@ export const visitNode = (
     publications.push(globalLayout);
   }
 
-  const output = emitNodeOutput(compilation, runtime.context.layout.round);
+  const output = compilation.emit.overall;
   const emittedPrimitives =
     runtime.state.execution.provenanceTracker?.materializePrimitives(output.primitives) ?? output.primitives;
   if (semanticOwner !== undefined) {
@@ -158,7 +146,7 @@ export const visitNode = (
     boundsPoints: output.bounds[0].boundsPoints,
     skipAllocation: layoutContext?.skipAllocation,
   });
-  const alignmentGuides = compilation.layout.alignmentGuides;
+  const alignmentGuides = compilation.alignmentGuides;
   if (alignmentGuides !== undefined) {
     frameAlignmentGuides.push(...cloneAlignmentGuides(alignmentGuides, `Node '${formatPropertyPath(nodeIrPath)}'`));
   }

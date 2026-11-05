@@ -122,7 +122,7 @@ export type TextBlockLayoutOptions = {
 /** 共享边界标签布局输入，向量均为宿主局部单位轴 */
 export type InputLabelBox = {
   /** 决定内外放置、对齐及旋转的边界标签配置 */
-  label: IRBoundaryLabel;
+  label: Pick<IRBoundaryLabel, 'rotate' | 'keepUpright' | 'placement' | 'align'>;
   /** 宿主局部坐标中的边界采样点 */
   point: Position;
   /** 采样点处朝外的单位法向量 */

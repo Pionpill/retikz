@@ -1,3 +1,4 @@
+import { projectNodeGeometry } from '@retikz/core';
 import { resolveScopeInheritance } from '@retikz/core';
 import type { CompileWarning } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
@@ -41,7 +42,7 @@ describe('版本内名称与读取', () => {
     outer.replace(binding, {
       state: 'ready',
       binding,
-      layout: node.compiled.compiled,
+      layout: projectNodeGeometry(node.compiled.compiled),
     });
     const ready = runWeaveCompilation(options, core => compileWeaveCoordinate(input, core));
     expect(ready.reads.map(read => read.state)).toEqual(['missing', 'ready']);

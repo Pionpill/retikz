@@ -1,112 +1,55 @@
+import type { WithRequiredProperties } from '@retikz/foundation';
 import { RAD_TO_DEG } from '@retikz/math';
 
-import type { GroupPrimitive, ScenePrimitive } from '../../contract';
+import type { ScenePrimitive } from '../../contract';
 import type { CanonicalNode } from '../../resolve';
-import type { CanonicalDropShadow, IRPosition } from '../../schemas';
 import { Anchor } from '../../shared';
 import { rect } from '../../shared/geometry';
 import { calculateOuterBoundaryRect } from '../boundary';
-import type { RegisterPaint } from '../resource';
-import { emitCompiledDrawing } from '../scene';
 import { emitCompiledNodeText, buildNodeTextStyle } from './content';
 import { emitNodeLabelPrimitives, calculateNodeLabelExtentPoints } from './label';
 import { emitNodeShapePrimitives } from './shape';
-import type { CompiledNode, CompiledNodeLayout } from './types';
+import type { CompiledNodeLayout, NodeCompileContext, NodeEmitOutput, PreparedNodeEmit } from './types';
 
-type Round = (n: number) => number;
-
-/** 把节点标识和元数据写到纯几何节点的 shape 图元 */
-const stampNodeShapePrimitives = (
-  metadata: Pick<CanonicalNode, 'id' | 'meta' | 'animations'>,
-  primitives: Array<ScenePrimitive>,
-): void => {
-  if (metadata.id !== undefined) {
-    for (const prim of primitives) prim.id = metadata.id;
-  }
-
-  if (metadata.meta !== undefined) {
-    for (const prim of primitives) prim.meta = metadata.meta;
-  }
-
-  if (metadata.animations.length > 0) {
-    for (const prim of primitives) prim.animations = metadata.animations;
-  }
-};
-
-/** 包装带文本或旋转的节点 group */
-const wrapNodeGroupPrimitive = (
-  layout: CompiledNodeLayout,
-  metadata: Pick<CanonicalNode, 'id' | 'meta' | 'animations'>,
-  children: Array<ScenePrimitive>,
-  round: Round,
-): GroupPrimitive => {
-  const group: GroupPrimitive = { type: 'group', children };
-  if (metadata.id !== undefined) group.id = metadata.id;
-  if (metadata.meta !== undefined) group.meta = metadata.meta;
-  if (metadata.animations.length > 0) group.animations = metadata.animations;
-  if ((layout.geometry.rect.rotate ?? 0) !== 0) {
-    group.transforms = [
-      {
-        kind: 'rotate',
-        degrees: round((layout.geometry.rect.rotate ?? 0) * RAD_TO_DEG),
-        cx: round(layout.geometry.rect.x),
-        cy: round(layout.geometry.rect.y),
-      },
-    ];
-  }
-
-  return group;
-};
-
-/**
- * 将节点布局转换为场景图元
- * @description shape 主体走 `shapeDef.emit`；文本和 label 追加为附属 primitive
- */
-export const emitNodePrimitives = (
+/** 复用已准备的节点绘制产物并计算缺失部分，不判断跨次复用条件 */
+export const emitNode = (
   canon: CanonicalNode,
   layout: CompiledNodeLayout,
-  round: Round,
-  registerPaint: RegisterPaint,
-): Array<ScenePrimitive> => {
-  const shapePrimitives = emitNodeShapePrimitives(layout, canon.style, round, registerPaint);
-  const inner: Array<ScenePrimitive> = [
-    ...shapePrimitives,
-    ...emitCompiledNodeText(layout, buildNodeTextStyle(canon), round),
-    ...(layout.labels?.flatMap((label, index) =>
-      emitNodeLabelPrimitives(layout, label, canon.labels[index], canon, round, registerPaint),
-    ) ?? []),
-  ];
+  context: Pick<NodeCompileContext, 'round' | 'registerPaint'>,
+  prepared?: PreparedNodeEmit,
+): WithRequiredProperties<PreparedNodeEmit, 'overall'> => {
+  if (prepared?.overall !== undefined) return { ...prepared, overall: prepared.overall };
 
-  const needsGroup = (layout.geometry.rect.rotate ?? 0) !== 0 || layout.text !== undefined;
-  if (!needsGroup) {
-    stampNodeShapePrimitives(canon, shapePrimitives);
-    return inner;
-  }
-
-  return [wrapNodeGroupPrimitive(layout, canon, inner, round)];
+  const { round, registerPaint } = context;
+  const drawing = {
+    shape: prepared?.shape ?? emitNodeShapePrimitives(layout, canon.style, canon.shape, round, registerPaint),
+    content: prepared?.content ?? emitCompiledNodeText(layout, buildNodeTextStyle(canon), round),
+    labels: (layout.labels ?? []).map(
+      (label, index) =>
+        prepared?.labels?.[index]?.overall ??
+        emitNodeLabelPrimitives(layout, label, canon.labels[index], canon, round, registerPaint),
+    ),
+  };
+  return {
+    ...drawing,
+    labels: drawing.labels.map(overall => ({ overall })),
+    overall: emitNodeOutput(canon, layout, drawing, round),
+  };
 };
 
-/** 从最终节点结果组装图元与边界，不访问 canon、Definition 或测量服务 */
-export const emitNodeOutput = (
-  compiled: CompiledNode,
+/** 组装局部绘制产物、节点元数据和边界 */
+const emitNodeOutput = (
+  canon: CanonicalNode,
+  layout: CompiledNodeLayout,
+  drawing: Required<Pick<PreparedNodeEmit, 'content' | 'shape'>> & { labels: Array<Array<ScenePrimitive>> },
   round: (value: number) => number,
-): {
-  primitives: Array<ScenePrimitive>;
-  bounds: Array<{ boundsPoints: Array<IRPosition>; shadow?: CanonicalDropShadow }>;
-} => {
-  const { geometry, structure, layout, metadata, style, text, labels, animations } = compiled;
-  const shape = emitCompiledDrawing({ structure: structure.shape, style: style.shape });
-  const children = [
-    ...shape,
-    ...(text === undefined
-      ? []
-      : emitCompiledNodeText(
-          { geometry: { rect: geometry.rect, margin: geometry.margin, ...layout }, text: text.layout },
-          text.style,
-          round,
-        )),
-    ...labels.flatMap(emitCompiledDrawing),
-  ];
+): NodeEmitOutput => {
+  const { geometry, text } = layout;
+  const { style, animations } = canon;
+  const metadata = {
+    ...(canon.id === undefined ? {} : { id: canon.id }),
+    ...(canon.meta === undefined ? {} : { meta: canon.meta }),
+  };
   const { rect: visualRect } = geometry;
   const rotated = (visualRect.rotate ?? 0) !== 0;
   const primitiveMetadata = { ...metadata, ...(animations.length === 0 ? {} : { animations }) };
@@ -116,7 +59,7 @@ export const emitNodeOutput = (
       {
         type: 'group',
         ...primitiveMetadata,
-        children,
+        children: [...drawing.shape, ...drawing.content, ...drawing.labels.flat()],
         ...(rotated
           ? {
               transforms: [
@@ -132,14 +75,13 @@ export const emitNodeOutput = (
       },
     ];
   } else {
-    for (const primitive of shape) Object.assign(primitive, primitiveMetadata);
-    primitives = children;
+    primitives = [
+      ...drawing.shape.map(primitive => ({ ...primitive, ...primitiveMetadata })),
+      ...drawing.content,
+      ...drawing.labels.flat(),
+    ];
   }
-  const measured = {
-    geometry: { rect: visualRect, margin: geometry.margin, ...layout },
-    labels: labels.map(label => label.layout),
-  };
-  const outer = calculateOuterBoundaryRect(compiled);
+  const outer = calculateOuterBoundaryRect(layout);
   return {
     primitives,
     bounds: [
@@ -149,7 +91,7 @@ export const emitNodeOutput = (
         ),
         shadow: style.shadow,
       },
-      { boundsPoints: calculateNodeLabelExtentPoints(measured) },
+      { boundsPoints: calculateNodeLabelExtentPoints(layout) },
     ],
   };
 };

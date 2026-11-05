@@ -32,7 +32,7 @@ type NodeShapeProperties = Pick<
 
 type Round = (n: number) => number;
 
-/** 从 CompiledNodeLayout 收敛 shape emit 所需的视觉样式 */
+/** 从有效节点外观收敛 shape emit 所需的视觉样式 */
 const toShapeStyle = (properties: NodeShapeProperties, registerPaint: RegisterPaint): CompiledShapeStyle => ({
   fill: registerPaint(properties.fill),
   fillOpacity: properties.fillOpacity,
@@ -53,6 +53,7 @@ const toShapeStyle = (properties: NodeShapeProperties, registerPaint: RegisterPa
 export const emitNodeShapePrimitives = (
   layout: CompiledNodeLayout,
   properties: NodeShapeProperties,
+  shape: CanonicalNode['shape'],
   round: Round,
   registerPaint: RegisterPaint,
 ): Array<ScenePrimitive> => {
@@ -65,15 +66,15 @@ export const emitNodeShapePrimitives = (
   let emitted: Iterable<ScenePrimitive>;
 
   try {
-    emitted = layout.shape.definition.emit(axisAlignedRect, style, round, layout.shape.params);
+    emitted = shape.definition.emit(axisAlignedRect, style, round, shape.params);
   } catch (thrown) {
     if (isFatalProbeError(thrown) || isLayoutProbeRecoverableError(thrown)) throw thrown;
 
-    throw createLayoutProbeRecoverableError(`Shape '${layout.shape.name}' emit failed: ${safeThrownDetail(thrown)}`, {
+    throw createLayoutProbeRecoverableError(`Shape '${shape.name}' emit failed: ${safeThrownDetail(thrown)}`, {
       cause: thrown,
-      providerKey: `shape:${layout.shape.name}`,
+      providerKey: `shape:${shape.name}`,
     });
   }
 
-  return snapshotScenePrimitives(`Shape '${layout.shape.name}'`, emitted, allowedResourceIds);
+  return snapshotScenePrimitives(`Shape '${shape.name}'`, emitted, allowedResourceIds);
 };

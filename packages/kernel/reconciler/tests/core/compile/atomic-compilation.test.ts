@@ -1,9 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  emitNodeOutput,
   compileNode,
-  layoutNode,
   resolveNode,
   LayoutAxisProposalKind,
   compileScope,
@@ -13,6 +11,7 @@ import {
   resolveScopeInheritance,
 } from '../../../../core/src';
 import type { ScopeCompileContext, IRScope } from '../../../../core/src';
+import { layoutNode } from '../../../../core/src/compile/node/layout';
 import { createSharedCompileContext } from '../../../src/compile';
 import { createCompileRuntime } from '../../../src/compile/runtime';
 import { flattenPrims } from '../../helpers/flatten';
@@ -150,8 +149,8 @@ describe('原子编译阶段', () => {
         toWorld: point => point,
       },
     });
-    const output = emitNodeOutput(compilation, shared.layout.round);
-    expect(compilation.geometry.rect).toMatchObject({ x: 12, y: 24 });
+    const output = compilation.emit.overall;
+    expect(compilation.layout.overall.geometry.rect).toMatchObject({ x: 12, y: 24 });
     expect(
       flattenPrims(output.primitives).some(primitive => primitive.type === 'rect' && primitive.fill === 'red'),
     ).toBe(true);

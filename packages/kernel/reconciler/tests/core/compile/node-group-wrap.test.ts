@@ -7,7 +7,7 @@ const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: '
 
 const silent = { onWarn: () => {} };
 
-describe('emitNodePrimitives：带文本 Node 包 <g>', () => {
+describe('节点绘制：带文本 Node 包 <g>', () => {
   // Happy path
   it('带文本 Node → 单个 GroupPrimitive（无旋转时无 transform）', () => {
     const ir = scene([{ type: 'node', position: [0, 0], text: 'A' }]);

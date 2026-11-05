@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import type { CompiledBoundaryGeometry } from '../../src';
 import type { PositionReferenceState, PositionReferenceView, PositionTargetEvaluateContext } from '../../src/compile';
 import {
   composeScopeTransform,
@@ -21,7 +22,7 @@ const rectangleBoundary: CanonicalNodeBoundary = {
   isShape: true,
 };
 
-const rectangleLayout = (): CompiledNodeLayout => ({
+const rectangleLayout = (): CompiledBoundaryGeometry & Pick<CompiledNodeLayout, 'geometry'> => ({
   shape: { name: 'rectangle', definition: BUILTIN_SHAPES.get('rectangle')!, params: {} },
   boundary: rectangleBoundary,
   geometry: {
@@ -37,7 +38,7 @@ const reference = (
   center: IRPosition,
   state: PositionReferenceState = 'resolved',
 ): PositionReferenceView & { id: string } => {
-  const node: CompiledNodeLayout = {
+  const node: CompiledBoundaryGeometry & Pick<CompiledNodeLayout, 'geometry'> = {
     shape: { name: 'rectangle', definition: BUILTIN_SHAPES.get('rectangle')!, params: {} },
     geometry: {
       rect: { x: center[0], y: center[1], width: 20, height: 10 },

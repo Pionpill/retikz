@@ -1,11 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import type { CompiledBoundaryGeometry } from '../../../../core/src';
 import type { CompiledNodeLayout } from '../../../../core/src/compile/node';
 import { BUILTIN_SHAPES } from '../../../../core/src/providers';
 import type { DuplicateRegisterInfo } from '../../../src/compile/runtime';
 import { NamespaceStack } from '../../../src/compile/runtime';
 
-const makeLayout = (_id: string, x = 0, y = 0): CompiledNodeLayout => ({
+const makeLayout = (_id: string, x = 0, y = 0): CompiledBoundaryGeometry & Pick<CompiledNodeLayout, 'geometry'> => ({
   shape: { name: 'rectangle', definition: BUILTIN_SHAPES.get('rectangle')!, params: {} },
   geometry: {
     rect: { x, y, width: 0, height: 0, rotate: 0 },

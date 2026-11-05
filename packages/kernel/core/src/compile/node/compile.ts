@@ -1,50 +1,22 @@
 import type { CanonicalNode } from '../../resolve';
-import { splitCompiledDrawing } from '../scene';
-import { alignmentGuidesOfNode, buildNodeTextStyle } from './content';
-import { emitNodeLabelPrimitives } from './label';
+import { alignmentGuidesOfNode } from './content';
+import { emitNode } from './emit';
 import { layoutNode } from './layout';
-import { emitNodeShapePrimitives } from './shape';
 import type { CompiledNode, NodeCompileContext, PreparedNodeCompilation } from './types';
 
-/** 编译当前节点，直接消费已准备的布局或完成测量定位，不判断跨次复用条件 */
+/** 编排当前节点的布局与绘制阶段，消费已准备的产物并补算缺项，不判断跨次复用条件 */
 export const compileNode = (
   canon: CanonicalNode,
   context: NodeCompileContext,
   prepared?: PreparedNodeCompilation,
 ): CompiledNode => {
-  const { round, registerPaint } = context;
-  const layout = layoutNode(canon, context, prepared?.layout).overall;
-  const shape = splitCompiledDrawing(emitNodeShapePrimitives(layout, canon.style, round, registerPaint));
-
+  const layout = layoutNode(canon, context, prepared?.layout);
+  const emit = emitNode(canon, layout.overall, context, prepared?.emit);
   return {
     shape: canon.shape,
     boundary: canon.boundary,
-    geometry: { rect: layout.geometry.rect, margin: layout.geometry.margin },
-    structure: { shape: shape.structure },
-    layout: {
-      contentCenter: layout.geometry.contentCenter,
-      contentSize: layout.geometry.contentSize,
-      alignmentGuides: alignmentGuidesOfNode(layout, round),
-    },
-    metadata: {
-      ...(canon.id === undefined ? {} : { id: canon.id }),
-      ...(canon.meta === undefined ? {} : { meta: canon.meta }),
-    },
-    style: {
-      shape: shape.style,
-      shadow: canon.style.shadow,
-    },
-    text: layout.text === undefined ? undefined : { layout: layout.text, style: buildNodeTextStyle(canon) },
-    labels: (layout.labels ?? []).map((label, index) => {
-      const { lineLayout, ...metrics } = label;
-      void lineLayout;
-      return {
-        layout: metrics,
-        ...splitCompiledDrawing(
-          emitNodeLabelPrimitives(layout, label, canon.labels[index], canon, round, registerPaint),
-        ),
-      };
-    }),
-    animations: canon.animations,
+    layout,
+    emit,
+    alignmentGuides: alignmentGuidesOfNode(layout.overall, context.round),
   };
 };

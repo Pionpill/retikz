@@ -1,7 +1,4 @@
 export * from './compile';
-export * from './content';
-export * from './emit';
-export * from './label';
-export * from './layout';
-export * from './shape';
+export type { NodeContentLayout } from './content';
+export { projectNodeGeometry } from './layout';
 export * from './types';

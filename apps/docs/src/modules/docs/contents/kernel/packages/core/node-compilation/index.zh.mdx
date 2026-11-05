@@ -9,7 +9,7 @@ description: 追踪 Core 如何把文字度量和形状约束转为节点尺寸�
 
 ## 整体流程
 
-节点布局先确定内容需要的空间，再计算形状尺寸，最后放置正文和附属标签。`CanonicalNode` 包含有效节点配置以及已绑定的形状、连接面定义；`CompiledNode` 保存最终几何、排版和绘制结果。`CompiledNodeLayout` 是测量与定位的阶段结果，保留几何查询需要的能力绑定，可作为准备好的布局传入编译。
+节点布局先确定内容需要的空间，再计算形状尺寸，最后放置正文和附属标签。`CanonicalNode` 包含有效节点配置以及已绑定的形状、连接面定义；`CompiledNode` 保存最终几何、排版和绘制结果。`CompiledNodeLayout` 是测量与定位的阶段结果，只保存计算结果，可作为准备好的布局传入编译；几何查询所需绑定由 `CompiledNode` 顶层携带。
 
 节点输入的缩放在 `resolveNode` 中完成：内外边距和最小尺寸按对应轴缩放，固定宽度与最大文字宽度按横轴缩放，字号、行高和形状参数也在解析阶段处理。`CanonicalNode` 保存这些有效值，不再保留待应用的 `scale`；编译阶段直接使用它们。父布局在运行时提供的宽度提案不再乘节点缩放，描边宽度与标签距离保持原有语义。
 
@@ -143,9 +143,9 @@ Reconciler 在同次编译内按文字与字体参数共享度量，使不同节
 
 <ComponentPreview files="layout-implementation" size="xl" hideCode type="flow" />
 
-阅读源码时从 `compileNode` 开始。它消费 `CanonicalNode` 和可选的准备结果，缺少布局时才调用 `layoutNode`，复用条件由 Reconciler 判断。`content/`、`label/`、`shape/` 按产物组织，各自维护 `layout.ts` 和 `emit.ts`，分别处理正文、标签和形状的计算与绘制。节点根目录的 `layout.ts` 协调各产物，在文件内部完成正文宽度与形状尺寸之间的反馈、锚点定位及整体布局；`emit.ts` 组装节点图元与边界。宽度反馈负责最多 32 次有界试算，测量复用由本次编译注入的测量器负责。最终 `CompiledNode` 分开保存几何、占位、元数据、样式、正文、标签和动画，并直接保留后续几何查询必需的形状与连接面绑定。
+阅读源码时从 `compileNode` 开始。它消费 `CanonicalNode` 和可选的准备结果，由 `layoutNode` 和 `emitNode` 分别消费完整或局部布局、绘制产物并补算缺项，复用条件由 Reconciler 判断。`content/`、`label/`、`shape/` 按产物组织，各自维护 `layout.ts` 和 `emit.ts`，分别处理正文、标签和形状的计算与绘制。节点根目录的 `layout.ts` 协调各产物，在文件内部完成正文宽度与形状尺寸之间的反馈、锚点定位及整体布局；`emit.ts` 组装节点图元与边界。宽度反馈负责最多 32 次有界试算，测量复用由本次编译注入的测量器负责。正文、形状和标签的局部绘制可分别复用，完整输出也可直接命中。最终 `CompiledNode` 保留 `layout`、`emit` 的整体与已知局部产物，调用方可直接选择其中仍有效的部分作为下一次 prepared 输入。顶层 `shape`、`boundary` 携带当前 canon 的绑定，`projectNodeGeometry` 按需组合这些绑定与 `layout.overall.geometry` 供查询使用，`emit.overall` 已包含最终图元与边界。
 
-遍历器随后把几何投影到世界空间，供命名引用查询；绘制阶段把局部布局转为形状、正文和标签图元。命名空间中的引用几何与 Scene 中的局部图元用途不同，不必把所有绘制坐标提前展开成世界坐标。
+遍历器随后把几何投影到世界空间，供命名引用查询；直接收集 `compileNode` 返回的 `emit.overall`，不再调用内部绘制阶段。命名空间中的引用几何与 Scene 中的局部图元用途不同，不必把所有绘制坐标提前展开成世界坐标。
 
 <SourceLinks
   sources={[

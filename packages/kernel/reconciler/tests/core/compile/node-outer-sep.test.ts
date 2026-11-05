@@ -1,6 +1,7 @@
 import { createBoundaryStore } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
+import type { CompiledBoundaryGeometry } from '../../../../core/src';
 import type { CompiledNodeLayout } from '../../../../core/src/compile/node';
 import type { ScenePrimitive, TextPrimitive } from '../../../../core/src/contract';
 import { BUILTIN_SHAPES } from '../../../../core/src/providers';
@@ -10,7 +11,7 @@ import { compileToScene } from '../../../src/compile';
 import { line, move } from '../../helpers/path-command-factory';
 
 /** 最简 rectangle CompiledNodeLayout（rect 40×30、半轴 20×15、中心原点），margin 可调 */
-const mkLayout = (margin: number, rotate = 0): CompiledNodeLayout => ({
+const mkLayout = (margin: number, rotate = 0): CompiledBoundaryGeometry & Pick<CompiledNodeLayout, 'geometry'> => ({
   shape: { name: 'rectangle', definition: BUILTIN_SHAPES.get('rectangle')!, params: {} },
   geometry: {
     rect: { x: 0, y: 0, width: 40, height: 30, rotate },

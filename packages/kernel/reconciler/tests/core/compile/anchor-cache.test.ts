@@ -2,6 +2,7 @@ import { createBoundaryStore } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { strictObject } from 'zod';
 
+import type { CompiledBoundaryGeometry } from '../../../../core/src';
 import type { CompiledNodeLayout } from '../../../../core/src/compile/node';
 import type { ShapeDefinition } from '../../../../core/src/contract';
 import { defineShape } from '../../../../core/src/contract';
@@ -16,7 +17,7 @@ const makeLayout = (
   cx = 0,
   cy = 0,
   rotate = 0,
-): CompiledNodeLayout => {
+): CompiledBoundaryGeometry & Pick<CompiledNodeLayout, 'geometry'> => {
   // circle / diamond 是内置 shape preset：circle → ellipse 等轴、diamond → polygon 4/0。
   const def =
     shape === 'circle'
@@ -225,7 +226,7 @@ describe('锚点查询 边上比例点', () => {
       resolveAnchor: (r, name) => (name === 'center' ? [r.x, r.y] : undefined),
       *emit() {},
     });
-    const layout: CompiledNodeLayout = {
+    const layout: CompiledBoundaryGeometry & Pick<CompiledNodeLayout, 'geometry'> = {
       shape: { name: 'custom', definition: noEdge, params: {} },
       geometry: {
         rect: { x: 0, y: 0, width: 20, height: 10, rotate: 0 },

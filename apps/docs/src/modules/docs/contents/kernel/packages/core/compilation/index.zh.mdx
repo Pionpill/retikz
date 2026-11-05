@@ -146,7 +146,7 @@ Scene 组装时单独校验 `padding` 非负且有限，显式提供 viewBox 时
 `compileChildrenToPrimitives` 按 `children` 的声明顺序分派子项。本例先把 Path 放入待处理列表，再处理 A、B。一个节点的内部过程可以用三个结果理解：
 
 - CanonicalNode：完整的布局意图、正文、标签、绘制属性和能力绑定，paint 解析结果位于 `style.fill` / `style.stroke`。
-- CompiledNodeLayout：测量、定位和标签排版结果，以及后续查询必需的绑定。
+- CompiledNodeLayout：测量、定位和标签排版的计算结果，不携带能力绑定。
 - CompiledNode：最终几何、占用、文字、标签、外观与查询绑定，供输出、连接查询与增量复用。
 
 以下为这三个内部类型的源码定义，省略注释，不展开它们引用的其他类型。
@@ -179,8 +179,6 @@ export type CanonicalNode = Readonly<{
 
 ```ts
 export type CompiledNodeLayout = {
-  shape: CanonicalNode['shape'];
-  boundary: CanonicalNode['boundary'];
   geometry: NodeLayoutGeometry;
   text?: CompiledNodeTextLayout;
   labels?: Array<NodeLabelLayout>;
@@ -196,14 +194,9 @@ export type NodeLayoutGeometry = {
 export type CompiledNode = {
   shape: CanonicalNode['shape'];
   boundary: CanonicalNode['boundary'];
-  geometry: CompiledNodeGeometry;
-  structure: { shape: CompiledDrawing['structure'] };
-  layout: CompiledNodeMetrics;
-  metadata: CompiledNodeMetadata;
-  style: CompiledNodeStyle;
-  text?: CompiledNodeText;
-  labels: Array<CompiledNodeLabel>;
-  animations: Array<IRAnimationTrack>;
+  layout: WithRequiredProperties<PreparedNodeLayout, 'overall'>;
+  emit: WithRequiredProperties<PreparedNodeEmit, 'overall'>;
+  alignmentGuides?: Array<LayoutAlignmentGuide>;
 };
 
 export type CompiledNodeTextLayout = {
@@ -212,8 +205,7 @@ export type CompiledNodeTextLayout = {
   lineHeight: number;
   baselineOffsets?: Array<number>;
 } & (
-  | { kind: 'plain'; lines: Array<CompiledNodeTextLineLayout> }
-  | { kind: 'inline'; lines: Array<{ lineLayout: CompiledTextLineLayout; baselineOffset: number }> }
+  { kind: 'plain'; lines: Array<CompiledNodeTextLineLayout> } | { kind: 'inline'; lines: Array<CompiledTextBlockLine> }
 );
 ```
 
@@ -221,17 +213,23 @@ export type CompiledNodeTextLayout = {
 
 </DocTabs>
 
-`resolveNode` 根据根字号、相对距离和公式开关确定完整的 `CanonicalNode`。`layoutNode(canon, context, prepared?)` 返回 `WithRequiredProperties<PreparedNodeLayout, 'overall'>`：`overall` 是完整的 `CompiledNodeLayout`，不回传完整 canon，但保留后续查询必需的 Definition 与参数；`body` 是正文与形状联合求解后的尺寸，`placement` 是节点放置结果，`labels` 按当前标签顺序保存各自的 `measurement` 和 `placement`。
+`resolveNode` 根据根字号、相对距离和公式开关确定完整的 `CanonicalNode`。内部函数 `layoutNode(canon, context, prepared?)` 返回 `WithRequiredProperties<PreparedNodeLayout, 'overall'>`：`overall` 是完整布局，`content` 是最终宽度预算下的正文排版，`shape` 是形状尺寸与偏移，`placement` 是节点放置结果，`labels` 按当前标签顺序保存各自的 `measurement` 和 `placement`。
 
-`compileNode(canon, context, { layout: prepared })` 消费这些产物。提供 `layout.overall` 时跳过全部布局计算；只提供部分产物时，Core 补算缺失阶段。整体命中不会反推缺失的局部产物。标签测量不依赖主体尺寸，标签放置则依赖主体边界；正文和形状之间存在宽度反馈，因此 body 测量保留完整的重排过程。单独执行这些操作可使用 `measureNodeBody`、`measureNodeLabel`、`placeNodeLabel`；`placeNode` 消费已确定初始位置的主体布局，完成最后的锚点对齐。
+标签测量结果仅保存 `lineLayout` 文本块布局，尺寸从 `lineLayout.width`、`lineLayout.height` 读取；各物理行的基线与字体度量保留在文本块内部，不重复保存标签宽高或上伸、下伸字段。
 
-调用方保证传入产物适用于当前配置、宽度提案与测量环境，并将 `labels` 与当前标签顺序对齐。Core 不修改准备数据，也不保存跨次缓存。最终产物的 `geometry` 保存视觉矩形和连接外扩距离，形状图元结构单独保存在 `structure.shape`；`layout` 使用 `CompiledNodeMetrics` 保存正文占位和对齐指标，正文和标签结果分别归属各自字段。
+`compileNode(canon, context, prepared?)` 接受 `prepared.layout` 和 `prepared.emit`。布局整体命中时跳过布局计算，不反推缺失的局部结果。只有正文命中时，Core 按已确认有效的最终正文计算形状；只有形状命中时，按形状记录的 `contentWidthBudget` 重排正文而不调用形状尺寸 provider。正文产物的 `widthBudget` 记录其实际排版输入，允许重新计算形状后继续独立复用。两项都缺失时，仍执行最多 32 次有界宽度反馈。调用方负责保证各产物适用于本轮最终约束，Core 不重新判断缓存有效性。
 
-绘制产物统一以 `structure` 保存剥离外观后的图元树，以 `style` 保存与其先序遍历对应的外观。节点主体使用 `structure.shape`，标签和路径使用各自的 `structure`；其中仍包含文本内容、分组层级和箭头内部图元，因此不称为几何数据。`geometry` 专用于位置、尺寸和边界等几何信息。
+绘制准备结果平铺 `content`、`shape`、`labels` 和 `overall`，不重复保存 placement。正文和形状直接保存 `Array<ScenePrimitive>`；标签项为 `{ overall?: Array<ScenePrimitive> }`，`{}` 表示需要绘制，空图元数组则是有效的空输出。缺少局部绘制产物时，Core 从本轮布局和外观补算，正文图元也在编译阶段生成。
 
-Reconciler 比较有效配置、编译上下文及实际引用几何，并由 Weave 维护阶段缓存；布局满足复用条件时，重新读取定位依赖，再通过 `prepared.layout.overall` 传给同一个 `compileNode`。当前自动复用仍使用完整布局，局部产物入口供调用方显式组合，不表示 Reconciler 已按这些粒度自动缓存。Core 不比较历史版本，也不判断缓存是否有效。正文通过作者行索引将物理行与当前外观对应；`emitNodeOutput` 只消费 compiled。
+`emit.overall` 保存已完成分组、旋转、身份和动画绑定的 `primitives` 及完整 `bounds`。命中时不执行正文、形状或标签绘制，也不反推局部图元；仍按布局契约提供引用查询所需结果。`CompiledNode` 保留 `layout` 和 `emit` 的整体及已知局部结果；两组 `overall` 始终可用。整体命中时保留传入的有效局部产物，但不重算未提供的局部产物。Reconciler 从结果中选择仍有效的部分，通过 prepared 传回 `compileNode`。
 
-元素编译入口统一按 `compileXxx(canon, context, prepared?)` 组织：Node 接受已准备的布局，Scope 直接接受子树执行前冻结的 `ScopePlacementPreparation`；Scope 的子布局和已解析裁剪路径放在当前上下文中，动画仍在延迟路径输出收敛后完成。`compilePath(canon, context)` 和 `compileCoordinate(canon, context)` 当前没有独立的部分复用阶段，因此不设置空的第三参数。调用方保证准备数据适用于本轮输入和上下文，Core 只计算缺失步骤。
+局部图元完整保留文本、分组、箭头和外观，不再拆分结构与样式。组装节点输出时独立写入宿主元数据，不修改复用的局部图元。`layout.overall` 保存完整几何、正文与标签布局；顶层 `shape`、`boundary` 直接携带当前 canon 的查询绑定，`alignmentGuides` 提供父布局所需的对齐线；正文外观投影只在生成图元时使用。
+
+调用方负责将标签缓存与当前标签顺序对齐，并在跨工作区复用绘制结果时导入其配套资源。命中的绘制单元不会再调用 `registerPaint`，仅保留 `resourceRef` 不能替代资源恢复。Core 不修改 prepared，不持有跨调用缓存。
+
+Reconciler 比较有效配置、编译上下文及实际引用几何，并由 Weave 维护阶段缓存；布局满足复用条件时，重新读取定位依赖，再通过 `prepared.layout` 传给同一个 `compileNode`。当前自动复用仍使用完整布局，局部产物入口供调用方显式组合，不表示 Reconciler 已按这些粒度自动缓存。Core 不比较历史版本，也不判断缓存是否有效。正文通过作者行索引将物理行与当前外观对应；Reconciler 通过 `projectNodeGeometry(compiled)` 按需读取绑定与布局几何，并直接收集 `emit.overall`，不调度内部布局或绘制阶段。
+
+元素编译入口统一按 `compileXxx(canon, context, prepared?)` 组织：Node 接受已准备的布局与绘制产物，Scope 直接接受子树执行前冻结的 `ScopePlacementPreparation`；Scope 的子布局和已解析裁剪路径放在当前上下文中，动画仍在延迟路径输出收敛后完成。`compilePath(canon, context)` 和 `compileCoordinate(canon, context)` 当前没有独立的部分复用阶段，因此不设置空的第三参数。调用方保证准备数据适用于本轮输入和上下文，Core 只计算缺失步骤。
 
 <ComponentPreview files="compilation-node" size="lg" hideCode type="illustration" />
 
@@ -401,7 +399,7 @@ Core 提供可组合的领域阶段。Reconciler 统一管理遍历、依赖等�
 
 | 元素       | 共享阶段                                                                    | 驱动保存的事实                       |
 | ---------- | --------------------------------------------------------------------------- | ------------------------------------ |
-| Node       | `resolveNode` → `layoutNode` → `emitNodeOutput`                             | 有效属性、布局，以及配套的输出和资源 |
+| Node       | `resolveNode` → `compileNode`                                               | 有效属性、布局，以及配套的输出和资源 |
 | Coordinate | `evaluatePosition` → `compileCoordinate`                                    | `CompiledCoordinate.position`        |
 | Path       | `resolvePathAnimations` → `compilePath`                                     | kind 宿主产生的输出、资源和边界      |
 | Scope      | `resolveScope`、`prepareScopePlacement`、`compileScope`、`createScopeGroup` | 包络、自身分组属性和输出             |
@@ -409,7 +407,7 @@ Core 提供可组合的领域阶段。Reconciler 统一管理遍历、依赖等�
 `resolve` 可使用注册表和位置查询等语义上下文，不读取编译执行状态。布局和输出阶段分别要求测量、位置解析、资源登记等能力；完整 `SharedCompileContext` 和工作区由调用方持有。下面以无引用节点说明阶段组合，位置查询返回 `undefined` 表示没有可见的命名目标。
 
 ```ts
-import { createPositionEvaluateContext, emitNodeOutput, layoutNode, resolveNode } from '@retikz/core';
+import { compileNode, createPositionEvaluateContext, resolveNode } from '@retikz/core';
 import { createSharedCompileContext, createWorkspaceCompileState } from '@retikz/reconciler';
 
 const shared = createSharedCompileContext();
@@ -435,11 +433,11 @@ const compilation = compileNode(resolution, {
     lookupReference: () => undefined,
   }),
 });
-const output = emitNodeOutput(compilation, shared.layout.round);
+const output = compilation.emit.overall;
 const resources = workspace.paintRegistry.getResources();
 ```
 
-`output` 的资源引用需要与 `resources` 一起保存。该例只组合节点计算；名称发布、诊断派发和最终 Scene 组装由驱动决定。`CanonicalNode` 保存完整配置，`CompiledNode` 保存最终结果，`emitNodeOutput` 组装图元与边界。阶段复用还必须检查输入、上下文和实际引用。
+`output` 的资源引用需要与 `resources` 一起保存。该例只组合节点计算；名称发布、诊断派发和最终 Scene 组装由驱动决定。`CanonicalNode` 保存完整配置，`CompiledNode` 保存最终结果，`compileNode` 内部完成图元与边界组装。阶段复用还必须检查输入、上下文和实际引用。
 
 Reconciler 的名称栈管理声明可见性与 Scope 未完成状态，路径在依赖就绪后统一计算。各阶段通过窄查询能力消费名称；失败的候选工作区不会发布资源或半成品，真实错误保留 cause。
 
