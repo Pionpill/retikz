@@ -3,7 +3,7 @@ import type { CanonicalPathProperties } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
 import type { RegisterPaint } from '../../resource';
 import type { PathBaseProps } from './split';
-import { bboxCenter, buildPathTransforms, projectPathTransformPoints } from './transform';
+import { calculatePathBoundsCenter, lowerPathTransforms, applyPathTransforms } from './transform';
 
 /** 已物化默认值后的 PathPrimitive 公共样式属性 */
 export type PathBasePropsWithStrokeWidth = PathBaseProps & {
@@ -83,15 +83,15 @@ export const wrapPathPrimitiveOutput = ({
   round,
 }: InputPathPrimitiveWrapping) => {
   if ((path.rotate !== undefined || path.scale !== undefined) && boundsPoints.length > 0) {
-    const center = bboxCenter(boundsPoints);
-    const transforms = buildPathTransforms({ rotate: path.rotate, scale: path.scale, center, round });
+    const center = calculatePathBoundsCenter(boundsPoints);
+    const transforms = lowerPathTransforms({ rotate: path.rotate, scale: path.scale, center, round });
     if (transforms.length > 0) {
       const group: GroupPrimitive = { type: 'group', transforms, children: bodyPrims };
       if (path.id !== undefined) group.id = path.id;
       if (path.meta !== undefined) group.meta = path.meta;
       assignPathAnimations(group, primitive, path);
 
-      return { primitives: [group], boundsPoints: projectPathTransformPoints(boundsPoints, transforms) };
+      return { primitives: [group], boundsPoints: applyPathTransforms(boundsPoints, transforms) };
     }
   }
 
