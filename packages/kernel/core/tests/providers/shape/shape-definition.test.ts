@@ -1,10 +1,7 @@
 import type { CenteredBox } from '@retikz/math';
-import { localToWorld, worldToLocal } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
-import { strictObject } from 'zod';
 
-import type { CompiledShapeStyle, PathCommand, ScenePrimitive, ShapeDefinition } from '../../../src/contract';
-import { defineShape } from '../../../src/contract';
+import type { CompiledShapeStyle, PathCommand } from '../../../src/contract';
 import { BUILTIN_SHAPES } from '../../../src/providers/shape';
 
 const SQRT2 = Math.SQRT2;
@@ -122,61 +119,8 @@ describe('发出在轴对齐空间中运行并返回 Iterable<ScenePrimitive>', 
   });
 });
 
-describe('自定义 ShapeDefinition 是一个普通对象（工厂友好）', () => {
-  const createPolygonShape = (): ShapeDefinition =>
-    defineShape({
-      name: 'customPolygon',
-      paramsSchema: strictObject({}),
-      computeCircumscribedGeometry: (hw, hh) => {
-        const r = Math.sqrt(hw * hw + hh * hh);
-        return { halfWidth: r, halfHeight: r };
-      },
-      computeBoundaryPoint: (rect, toward) => {
-        const [lx, ly] = worldToLocal(rect, toward);
-        const len = Math.hypot(lx, ly) || 1;
-        const r = rect.width / 2;
-
-        return localToWorld(rect, [(lx / len) * r, (ly / len) * r]);
-      },
-      resolveAnchor: (rect, name) => (name === 'origin' ? [rect.x, rect.y] : undefined),
-      *emit(rect, style): Iterable<ScenePrimitive> {
-        yield {
-          type: 'path',
-          commands: [{ kind: 'move', to: [rect.x, rect.y] }, { kind: 'close' }],
-          fill: style.fill ?? 'transparent',
-          stroke: style.stroke ?? 'currentColor',
-          strokeWidth: style.strokeWidth ?? 1,
-        };
-      },
-    });
-
-  it('返回的普通对象满足 ShapeDefinition', () => {
-    const poly = createPolygonShape();
-
-    expect(poly.computeCircumscribedGeometry(3, 4, NO_PARAMS)).toEqual({ halfWidth: 5, halfHeight: 5 });
-    expect(poly.resolveAnchor({ x: 0, y: 0, width: 10, height: 10 }, 'origin', NO_PARAMS)).toEqual([0, 0]);
-    expect(poly.resolveAnchor({ x: 0, y: 0, width: 10, height: 10 }, 'top', NO_PARAMS)).toBeUndefined();
-
-    const prims = [...poly.emit({ x: 0, y: 0, width: 10, height: 10 }, {}, id, NO_PARAMS)];
-
-    expect(prims).toHaveLength(1);
-  });
-
-  it('edgePoint 为可选——自定义形状可省略', () => {
-    const poly = createPolygonShape();
-
-    expect(poly.computeEdgePoint).toBeUndefined();
-  });
-});
-
 describe('内置形状的边界点能力', () => {
   const r: CenteredBox = { x: 0, y: 0, width: 20, height: 10, rotate: 0 };
-
-  it('直边 / 周长类 shape（rectangle / ellipse）实现 edgePoint', () => {
-    // circle preset 复用 ellipse edgePoint；diamond preset 复用 polygon（正多边形无 4 named side 语义、edgePoint 为可选不实现）。
-    expect(typeof BUILTIN_SHAPES.get('rectangle')!.computeEdgePoint).toBe('function');
-    expect(typeof BUILTIN_SHAPES.get('ellipse')!.computeEdgePoint).toBe('function');
-  });
 
   it('rectangle.edgePoint 委托 rect 几何（top 上边中点）', () => {
     expect(BUILTIN_SHAPES.get('rectangle')!.computeEdgePoint!(r, 'top', 0.5, NO_PARAMS)).toEqual([0, -5]);

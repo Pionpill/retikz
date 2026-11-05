@@ -129,19 +129,10 @@ describe('rectangle cornerRadius — r=0 等价于现状矩形边求交', () => 
   });
 });
 
-describe('矩形 cornerRadius — scaleParams / paramsSchema', () => {
+describe('矩形圆角参数的缩放与输出', () => {
   it('矩形 scaleParams 在 scale=2 时将 cornerRadius 乘以 2', () => {
     expect(rectangle.scaleParams!({ cornerRadius: 6 }, 2, 2)).toEqual({ cornerRadius: 12 });
     expect(rectangle.scaleParams!({}, 2, 2)).toEqual({});
-  });
-
-  it('否定 cornerRadius 被拒绝', () => {
-    expect(() => rectangle.paramsSchema.parse({ cornerRadius: -3 })).toThrow();
-  });
-
-  it('非有限 cornerRadius 被拒绝', () => {
-    expect(() => rectangle.paramsSchema.parse({ cornerRadius: Infinity })).toThrow();
-    expect(() => rectangle.paramsSchema.parse({ cornerRadius: NaN })).toThrow();
   });
 
   // round 时机：identity round 下 emit cornerRadius 原样

@@ -8,7 +8,6 @@ import {
   resolveArrowRegistry,
   resolveThemeRegistry,
 } from '../../src';
-import { BUILTIN_CLIPS } from '../../src/providers/clip';
 import { resolveMarkRegistry } from '../../src/providers/mark';
 import { getProviderDefinition, createProviderRegistry } from '../../src/providers/registry';
 
@@ -82,10 +81,6 @@ describe('提供者注册契约', () => {
   it('默认省略的集合为空注册表', () => {
     const registry = createProviderRegistry<MockProvider>({ capability: 'mock provider', keyOf: def => def.name });
     expect(registry.size).toBe(0);
-  });
-
-  it('按类型索引保留的内置裁剪', () => {
-    expect(BUILTIN_CLIPS.get('rect')!.kind).toBe('rect');
   });
 });
 

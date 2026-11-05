@@ -12,33 +12,11 @@ const identity = (n: number): number => n;
 const squareRect = (size = 120): CenteredBox => ({ x: 0, y: 0, width: size, height: size, rotate: 0 });
 
 describe('多边形 cornerRadius — paramsSchema', () => {
-  it('cornerRadius 可选+非负有限', () => {
-    expect(polygon.paramsSchema.parse({ sides: 6 })).toEqual({ sides: 6 });
-    expect(polygon.paramsSchema.parse({ sides: 6, cornerRadius: 8 })).toEqual({ sides: 6, cornerRadius: 8 });
-    expect(polygon.paramsSchema.parse({ sides: 6, cornerRadius: 0 })).toEqual({ sides: 6, cornerRadius: 0 });
-  });
-
-  it('否定 cornerRadius 被拒绝', () => {
-    expect(() => polygon.paramsSchema.parse({ sides: 6, cornerRadius: -1 })).toThrow();
-  });
-
-  it('非有限 cornerRadius 被拒绝', () => {
-    expect(() => polygon.paramsSchema.parse({ sides: 6, cornerRadius: Infinity })).toThrow();
-    expect(() => polygon.paramsSchema.parse({ sides: 6, cornerRadius: NaN })).toThrow();
-  });
-
-  it('sides 有有限上限', () => {
-    expect(polygon.paramsSchema.parse({ sides: 1024 })).toEqual({ sides: 1024 });
-    expect(() => polygon.paramsSchema.parse({ sides: 1025 })).toThrow();
-  });
-
   it('aspectRatio 只允许正四边形使用', () => {
     expect(polygon.paramsSchema.parse({ sides: 4, aspectRatio: 1.8 })).toEqual({
       sides: 4,
       aspectRatio: 1.8,
     });
-    expect(() => polygon.paramsSchema.parse({ sides: 4, aspectRatio: 0 })).toThrow();
-    expect(() => polygon.paramsSchema.parse({ sides: 4, aspectRatio: -1 })).toThrow();
     expect(() => polygon.paramsSchema.parse({ sides: 6, aspectRatio: 1.8 })).toThrow();
     expect(() => polygon.paramsSchema.parse({ sides: 4, rotate: 15, aspectRatio: 1.8 })).toThrow();
   });

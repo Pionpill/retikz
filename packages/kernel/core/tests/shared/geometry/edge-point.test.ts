@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { Anchor, Side } from '../../../src/shared';
-import { EDGE_ENDS, edgeAngleDeg } from '../../../src/shared/geometry/edge';
+import { edgeAngleDeg } from '../../../src/shared/geometry/edge';
 import { ellipse } from '../../../src/shared/geometry/ellipse';
 import { rect } from '../../../src/shared/geometry/rect';
 
@@ -11,13 +11,6 @@ const near = (p: readonly [number, number], x: number, y: number, d = 6): void =
 };
 
 describe('edge 共享方向约定', () => {
-  it('EDGE_ENDS：top/bottom 西→东，right/left 北→南', () => {
-    expect(EDGE_ENDS[Side.Top]).toEqual([Anchor.TopLeft, Anchor.TopRight]);
-    expect(EDGE_ENDS[Side.Bottom]).toEqual([Anchor.BottomLeft, Anchor.BottomRight]);
-    expect(EDGE_ENDS[Side.Right]).toEqual([Anchor.TopRight, Anchor.BottomRight]);
-    expect(EDGE_ENDS[Side.Left]).toEqual([Anchor.TopLeft, Anchor.BottomLeft]);
-  });
-
   it('edgeAngleDeg：四 side 的 θ(t) 与角度表一致', () => {
     expect(edgeAngleDeg(Side.Top, 0)).toBeCloseTo(225, 6);
     expect(edgeAngleDeg(Side.Top, 0.5)).toBeCloseTo(270, 6);

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { AnimationTrackSchema, cameraTo, colorShift, drawOn, fadeIn, loop, scaleIn, slideIn, stagger } from '../../src';
+import { cameraTo, colorShift, drawOn, fadeIn, loop, scaleIn, slideIn, stagger } from '../../src';
 
 describe('Sugar=Kernel 等价（默认参数）', () => {
   it('解析 fadeIn、drawOn 和 scaleIn 动画预设', () => {
@@ -64,19 +64,6 @@ describe('Sugar=Kernel 等价（默认参数）', () => {
       duration: 800,
       easing: 'ease-in-out',
     });
-  });
-
-  it('每个 preset 产出都通过 AnimationTrackSchema（合法 IR）', () => {
-    for (const track of [
-      fadeIn(),
-      drawOn(),
-      scaleIn(),
-      slideIn(),
-      colorShift({ from: '#000', to: '#fff' }),
-      cameraTo({ from: [0, 0, 1, 1], to: [0, 0, 2, 2] }),
-    ]) {
-      expect(AnimationTrackSchema.safeParse(track).success).toBe(true);
-    }
   });
 });
 

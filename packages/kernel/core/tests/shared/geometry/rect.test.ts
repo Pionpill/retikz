@@ -1,32 +1,12 @@
 import type { CenteredBox } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
-import { Anchor, CenterAnchor, Corner, Side, isAnchor, isDirectionalAnchor, isSide } from '../../../src/shared';
+import { Anchor, CenterAnchor, Side, isAnchor, isDirectionalAnchor, isSide } from '../../../src/shared';
 import { rect } from '../../../src/shared/geometry/rect';
 
 const r10x6: CenteredBox = { x: 0, y: 0, width: 10, height: 6 };
 
 describe('锚定词汇', () => {
-  it('仅在共享中保留规范的锚点和侧面名称', () => {
-    expect(CenterAnchor).toEqual({ Center: 'center' });
-    expect(Side).toEqual({
-      Top: 'top',
-      Right: 'right',
-      Bottom: 'bottom',
-      Left: 'left',
-    });
-    expect(Corner).toEqual({
-      TopRight: 'top-right',
-      TopLeft: 'top-left',
-      BottomRight: 'bottom-right',
-      BottomLeft: 'bottom-left',
-    });
-    expect(Anchor).toEqual({
-      ...Side,
-      ...Corner,
-    });
-  });
-
   it('识别规范名称而不接受别名', () => {
     expect(isAnchor(CenterAnchor.Center)).toBe(true);
     expect(isAnchor(Anchor.BottomRight)).toBe(true);

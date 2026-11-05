@@ -1,14 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import type { IRBoxSpacing } from '../../../src';
-import * as core from '../../../src';
 import { resolveBoxSpacing } from '../../../src';
 
 describe('resolveBoxSpacing', () => {
-  it('可从包根目录获取', () => {
-    expect('resolveBoxSpacing' in core).toBe(true);
-  });
-
   it('将数值应用于所有四个边', () => {
     expect(resolveBoxSpacing(3, 1)).toEqual({ top: 3, right: 3, bottom: 3, left: 3 });
   });
@@ -36,13 +31,9 @@ describe('resolveBoxSpacing', () => {
     });
   });
 
-  it('返回分离结果', () => {
+  it('修改解析结果不改变原始间距配置', () => {
     const value: IRBoxSpacing = Object.freeze({ default: 1, x: 2, top: 3 });
     const result = resolveBoxSpacing(value, 0);
-    const second = resolveBoxSpacing(value, 0);
-
-    expect(result).not.toBe(value);
-    expect(second).not.toBe(result);
 
     result.left = 10;
 

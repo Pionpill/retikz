@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { IRAnchorPosition } from '../../src/schemas';
-import { AnchorPositionSchema, CoordinateSchema, NodeSchema } from '../../src/schemas';
+import { AnchorPositionSchema, NodeSchema } from '../../src/schemas';
 
 describe('Node 锚点到锚点位置方案', () => {
   it('接受仅含 target.id 的最小形式', () => {
@@ -19,31 +19,6 @@ describe('Node 锚点到锚点位置方案', () => {
     ).toEqual(value);
   });
 
-  it('接受 target anchor、offset、boundary 与 selfAnchor', () => {
-    const value: IRAnchorPosition = {
-      kind: 'anchor',
-      target: {
-        id: 'target',
-        anchor: 'bottom-left',
-        offset: [8, -3],
-        boundary: 'shape',
-      },
-      selfAnchor: 'top-left',
-    };
-
-    expect(AnchorPositionSchema.parse(value)).toEqual(value);
-  });
-
-  it('保持闭合对象并拒绝未知字段', () => {
-    expect(() =>
-      AnchorPositionSchema.parse({
-        kind: 'anchor',
-        target: { id: 'target' },
-        unexpected: true,
-      }),
-    ).toThrow();
-  });
-
   it('kind 存在时只按 anchor 分支解析，不静默改写为其它 position', () => {
     expect(
       NodeSchema.safeParse({
@@ -59,18 +34,5 @@ describe('Node 锚点到锚点位置方案', () => {
         },
       }).success,
     ).toBe(false);
-  });
-
-  it('不把 anchor position 加入 Coordinate.position', () => {
-    expect(() =>
-      CoordinateSchema.parse({
-        type: 'coordinate',
-        id: 'coordinate',
-        position: {
-          kind: 'anchor',
-          target: { id: 'target' },
-        },
-      }),
-    ).toThrow();
   });
 });

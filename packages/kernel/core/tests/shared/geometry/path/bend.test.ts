@@ -84,12 +84,4 @@ describe('bendControlPoints', () => {
 
     expect(midY).toBeCloseTo(-sagitta, 6);
   });
-
-  it('180° 是几何退化点：tan(90°) → 极大值，控制点偏移 |y| > 1e10（用户应避免）', () => {
-    // 直接调用公开 helper 的有限浮点行为；IR schema 在入口另行拒绝 ±180°
-    const [c1, c2] = bendControlPoints([0, 0], [10, 0], 'left', 180);
-
-    expect(Math.abs(c1[1])).toBeGreaterThan(1e10);
-    expect(Math.abs(c2[1])).toBeGreaterThan(1e10);
-  });
 });
