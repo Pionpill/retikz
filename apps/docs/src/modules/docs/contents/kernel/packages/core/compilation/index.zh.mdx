@@ -121,7 +121,7 @@ Reconciler 的 `compile/runtime` 管理稳定环境与单次工作区，包括�
 | `layout`     | 节点和标签距离、根字号及输出 rounder |
 | `limits`     | 复合展开和裁剪转换的深度限制         |
 
-编译通过 `shared.host.measureText` 使用宿主测量服务，消费测量结果时统一规范化指标。上下文不另设测量入口或编译级文字缓存。Weave 可在同一实例的增量更新中复用环境，资源工作区仍按计算调用隔离。输入侧 `CompileOptions` 的字段保持扁平，环境侧按分组保存已补齐的配置。
+共享配置的 `shared.host.measureText` 保留原始宿主测量服务。每次根 Runtime 创建时，将其包装为 `runtime.context.host.measureText`，按文本与字体值缓存本次编译的度量；节点、标签、路径和 Composite 试算共享该服务，消费结果时仍统一规范化指标。全量编译与增量更新共用此入口，下一次执行重新创建缓存。Weave 可在同一实例的增量更新中复用环境，资源工作区仍按计算调用隔离。输入侧 `CompileOptions` 的字段保持扁平，环境侧按分组保存已补齐的配置。
 
 创建共享上下文时会校验数值配置，即使场景为空也不跳过：`labelDistance` 必须非负且有限，`fontSize` 必须大于零且有限；`nodeDistance` 必须有限，允许负值表示反方向偏移。`precision` 必须是非负整数且 `10 ** precision` 有限；这不保证任意极大坐标参与运算时都不会溢出。`maxCompositeDepth` 和 `maxClipDepth` 必须是非负安全整数，其中 `maxCompositeDepth: 0` 禁止展开复合组件。
 

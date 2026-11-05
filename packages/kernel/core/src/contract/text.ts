@@ -37,5 +37,10 @@ export type TextMetrics = {
   descent?: number;
 };
 
-/** 文字度量函数接口 */
-export type TextMeasurer = (text: string, font: TextFont) => TextMetrics;
+/**
+ * 文字度量函数接口
+ * @param text 待测量文本
+ * @param font 本次测量使用的字体
+ * @param disableCache 是否绕过本次调用的缓存读取和写入，默认 false；无缓存的实现可忽略此参数
+ */
+export type TextMeasurer = (text: string, font: TextFont, disableCache?: boolean) => TextMetrics;

@@ -108,21 +108,3 @@ export const wrapText = (text: string, context: WrapTextContext): Array<string> 
 
   return lines.length > 0 ? lines : [''];
 };
-
-/** 在一次节点布局的宽度尝试之间复用相同字体与文本的测量 */
-export const createNodeTextMeasurer = (measureText: TextMeasurer): TextMeasurer => {
-  const measurements = new Map<string, Map<string, ReturnType<TextMeasurer>>>();
-  return (text, font) => {
-    const key = JSON.stringify([font.size, font.family, font.weight, font.style]);
-    let byText = measurements.get(key);
-    if (byText === undefined) {
-      byText = new Map();
-      measurements.set(key, byText);
-    }
-    const previous = byText.get(text);
-    if (previous !== undefined) return previous;
-    const measured = measureText(text, font);
-    byText.set(text, measured);
-    return measured;
-  };
-};

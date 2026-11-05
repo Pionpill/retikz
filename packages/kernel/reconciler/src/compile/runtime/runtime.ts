@@ -9,6 +9,7 @@ import { createSharedCompileContext } from './context';
 import type { CompileContext } from './context';
 import { createCompileEnvironment } from './state';
 import type { CompileState } from './state';
+import { createCompileTextMeasurer } from './text-measurement';
 import { createWorkspaceCompileState } from './workspace';
 
 /** 一次树编译的稳定环境与可变执行状态 */
@@ -30,6 +31,7 @@ export const createCompileRuntime = (
 ): CompileRuntime => ({
   context: {
     ...shared,
+    host: { ...shared.host, measureText: createCompileTextMeasurer(shared.host.measureText) },
     compositeInputs: resolveCompositeInputScope(ir, options.compositeInputs),
     theme: resolveTheme(DEFAULT_RESOLVED_THEME, ir.theme, 'scene.theme', shared.registries.themeRegistry),
     padding: options.padding,

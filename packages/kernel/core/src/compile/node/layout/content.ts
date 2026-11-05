@@ -74,24 +74,10 @@ const layoutPlainContent = (canon: CanonicalNodeText, input: InputNodeContentLay
   const { lines: resolved, font: blockFont } = canon;
   const { size: fontSize, family: fontFamily, weight: fontWeight, style: fontStyle } = blockFont;
   let textWidth = 0;
-  const metricsByFont = new Map<TextFont, Map<string, ReturnType<typeof resolveTextMetrics>>>();
 
-  /** 在单次正文 layout 内复用同一 authored font/text 的真实测量结果 */
-  const measurePhysicalText = (text: string, font: TextFont): ReturnType<typeof resolveTextMetrics> => {
-    let metricsByText = metricsByFont.get(font);
-    if (metricsByText === undefined) {
-      metricsByText = new Map();
-      metricsByFont.set(font, metricsByText);
-    }
-
-    const cached = metricsByText.get(text);
-    if (cached !== undefined) return cached;
-
-    const measured = resolveTextMetrics(measureText(text, font));
-    metricsByText.set(text, measured);
-
-    return measured;
-  };
+  /** 将宿主测量结果规范化为正文需要的基线度量 */
+  const measurePhysicalText = (text: string, font: TextFont): ReturnType<typeof resolveTextMetrics> =>
+    resolveTextMetrics(measureText(text, font));
 
   const plainLines = resolved.map(line => {
     const lineStyle = line.style;

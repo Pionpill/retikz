@@ -9,8 +9,8 @@ import { DEFAULT_LINE_HEIGHT_FACTOR } from './text';
 /** 只为 Node label 包装规范化文字度量 */
 const createNodeLabelMeasurer =
   (measureText: TextMeasurer): TextMeasurer =>
-  (text, font) =>
-    resolveTextMetrics(measureText(text, font));
+  (text, font, disableCache) =>
+    resolveTextMetrics(measureText(text, font, disableCache));
 
 /** 测量节点附属 label，不读取 Node rect */
 export const measureNodeLabels = (

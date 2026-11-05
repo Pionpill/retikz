@@ -6,6 +6,7 @@ import type { TexLowerer } from '@retikz/core';
 export type CompileHostOptions = {
   /**
    * 注入文字度量函数
+   * @description 每次编译执行统一缓存相同文本与字体的度量；测量调用传入 disableCache=true 时绕过缓存
    * @default fallbackMeasurer
    */
   measureText?: TextMeasurer;

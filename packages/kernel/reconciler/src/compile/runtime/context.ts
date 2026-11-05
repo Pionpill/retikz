@@ -60,9 +60,9 @@ export type CompileContextRegistries = Readonly<{
   themeRegistry: ReadonlyMap<string, ThemeDefinition>;
 }>;
 
-/** 宿主注入的稳定服务，诊断出口由单次工作区持有 */
+/** 编译使用的宿主服务，诊断出口由单次工作区持有 */
 export type CompileContextHost = Readonly<{
-  /** 已补齐默认实现的文字度量函数 */
+  /** 已补齐默认实现的文字度量函数；根 Runtime 为本次执行包装缓存 */
   measureText: NonNullable<CompileHostOptions['measureText']>;
   /** 运行时注入的 TeX lowering 钩子 */
   lowerTex: CompileHostOptions['lowerTex'];

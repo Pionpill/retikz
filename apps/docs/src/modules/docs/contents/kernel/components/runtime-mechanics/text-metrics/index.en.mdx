@@ -63,7 +63,9 @@ With another node fixed to the right, a horizontal connection and no arrow or ex
 
 A width constraint may instead increase the line count. The plain-text branch wraps using measured width, finding breaks between Western words or CJK characters. An indivisible segment wider than the limit may overflow. The actual line count and line height determine content height, which then participates in node sizing. Shape geometry, explicit sizes and layout proposals still affect the final boundary; the rectangular calculation above does not apply to every node.
 
-Compilation uses the host measurement service stored in the environment. Node content layout can reuse identical requests within a local calculation. The context maintains no text metric cache across nodes or probes and does not watch fonts for changes.
+Reconciler creates a text metric cache for each full compilation or incremental update, keyed by text, font size, family, weight, and style. Content, labels, paths, and probes within that execution share the cache. It does not survive into another execution, and Core layout has no additional local cache. When calling a Core atomic layout function directly, caching is the responsibility of the supplied measurer.
+
+The third argument of `TextMeasurer(text, font, disableCache?)` defaults to `false`. Passing `true` delegates directly to the underlying measurer without reading or writing the cache; existing entries remain unchanged. A custom measurer without caching may ignore the argument; one with its own cache should honor it. Thrown measurement errors are not cached. This argument controls a measurement call, not whether incremental compilation reruns a reused layout, and it does not watch fonts for changes.
 
 <SourceLinks
   sources={[
@@ -71,7 +73,7 @@ Compilation uses the host measurement service stored in the environment. Node co
     { label: 'Plain-text wrapping', path: 'packages/kernel/core/src/compile/node/layout/text.ts' },
     { label: 'Content dimensions enter node sizing', path: 'packages/kernel/core/src/compile/node/layout/layout.ts' },
     { label: 'Node connection boundaries', path: 'packages/kernel/core/src/compile/node/boundary.ts' },
-    { label: 'Host measurement service', path: 'packages/kernel/reconciler/src/compile/runtime/context.ts' },
+    { label: 'Host measurement service', path: 'packages/kernel/reconciler/src/compile/runtime/text-measurement.ts' },
   ]}
 />
 

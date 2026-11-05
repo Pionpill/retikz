@@ -9,8 +9,7 @@ import { createNodeBoundaryStore } from '../boundary-store';
 import type { CompiledNodeLayout, NodeCompileContext } from '../types';
 import { layoutNodeLabels, measureNodeLabels } from './label';
 import { isAnchorPosition, placeAnchorPositionedLayout } from './placement';
-import { sizeNode } from './sizing';
-import { createNodeTextMeasurer } from './text';
+import { sizeNode } from './size';
 
 /** 按文本测量、节点缩放与父级宽度提案计算正文、形状和边界布局 */
 export const layoutNode = (
@@ -31,7 +30,7 @@ export const layoutNode = (
 
   const { contentLayout, circumscribed, margin, paddingOffsetX, paddingOffsetY, boundsHalfW, boundsHalfH } = sizeNode(
     canon,
-    { ...context, measureText: createNodeTextMeasurer(measureText) },
+    context,
   );
   const { textWidth, textHeight, textBaselineOffsets, lines, inlineBlock } = contentLayout;
   const lineHeight = canon.text?.lineHeight ?? 0;

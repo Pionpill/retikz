@@ -15,9 +15,10 @@ import {
 import type { ScopeCompileContext, IRScope } from '../../../../core/src';
 import { flattenPrims } from '../../../../core/tests/helpers/flatten';
 import { createSharedCompileContext } from '../../../src/compile';
+import { createCompileRuntime } from '../../../src/compile/runtime';
 
 describe('原子编译阶段', () => {
-  it('宽度反馈重排复用同次文字测量，新一轮布局重新测量', () => {
+  it('宽度反馈重排复用同次文字测量，新一轮编译重新测量', () => {
     const shared = createSharedCompileContext({ fontSize: 10 });
     const canon = resolveNode(
       { type: 'node', text: 'one two three four' },
@@ -32,16 +33,23 @@ describe('原子编译阶段', () => {
       },
     );
     const calls = new Map<string, number>();
-    const layout = () =>
-      layoutNode(canon, {
-        measureText: (text, font) => {
-          const key = JSON.stringify([text, font]);
-          calls.set(key, (calls.get(key) ?? 0) + 1);
-          return { width: text.length * 5, height: 10 };
+    const layout = () => {
+      const runtime = createCompileRuntime(
+        { type: 'scene', version: 1, children: [] },
+        {
+          measureText: (text, font) => {
+            const key = JSON.stringify([text, font]);
+            calls.set(key, (calls.get(key) ?? 0) + 1);
+            return { width: text.length * 5, height: 10 };
+          },
         },
+      );
+      return layoutNode(canon, {
+        measureText: runtime.context.host.measureText,
         positionContext: createPositionEvaluateContext({ lookupReference: () => undefined, nodeDistance: 10 }),
         allocationWidthProposal: { kind: LayoutAxisProposalKind.Exact, value: 60 },
       });
+    };
     const first = layout();
     expect(first.geometry.contentSize.height).toBeGreaterThan(12);
     expect(calls.size).toBeGreaterThan(1);
