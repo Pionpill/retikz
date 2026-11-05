@@ -21,7 +21,7 @@ description: Use when adding or changing retikz unit, integration, or regression
 
 ## 单测写入规范
 
-- 新增、修改或收敛单测时必读 [单元测试编写与 Review 规范](references/unit-tests.md)，统一正式测试准入、低价值 case 判定、schema 例外及临时测试生命周期。
+- 新增、修改、迁移或收敛单测时必读 [单元测试编写与 Review 规范](references/unit-tests.md)，统一源码目录对应、正式测试准入、低价值 case 判定、schema 例外及临时测试生命周期。
 - 测试可访问范围遵循 [导入导出的测试例外](../standard-structure/references/imports.md#测试访问例外)：私有实现经消费方验证，已有内部导出可深层导入，不因功能或性能测试扩大导出范围。
 
 ## 输入与产物

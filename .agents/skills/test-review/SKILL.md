@@ -26,7 +26,7 @@ description: Use when auditing an existing retikz test suite, module test direct
 1. 声明范围：一个 workspace、子模块或测试目录；全仓先拆包，不做无边界扫描。
 2. 记录 `git rev-parse HEAD` 和 `git status --short`，保留并区分并发工作区改动。
 3. 读取根与就近 `AGENTS.md`；审 docs 时再读 `apps/docs/AGENTS.md` 及相关 docs skill。
-4. 列出范围内测试、对应实现入口与公开契约。测试名、注释和 Git 历史只能说明当初意图，当前实现与公开契约才是判断真源。
+4. 列出范围内测试、对应实现入口与公开契约，按共享规范核对一、二级目录与源码 owner 的对应关系。测试名、注释和 Git 历史只能说明当初意图，当前实现与公开契约才是判断真源。
 
 ## 评审方法
 
