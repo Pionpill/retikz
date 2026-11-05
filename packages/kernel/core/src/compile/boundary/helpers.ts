@@ -1,8 +1,32 @@
+import type { BoundsInsets, CenteredBox } from '@retikz/math';
+
 import type { Transform } from '../../contract';
 import type { IRPosition } from '../../schemas';
 import { applyScopeTransform, applyTransformChain, inverseTransformChain } from '../shared';
 import type { ComposedScopeTransform } from '../shared';
 import type { CompiledBoundaryGeometry } from './types';
+
+/** 按 rect 局部坐标系四边外扩，非对称外扩会移动外边界中心 */
+export const calculateExpandedBoundaryRect = (rect: CenteredBox, margin: BoundsInsets): CenteredBox => {
+  const isZeroInsets = (insets: BoundsInsets): boolean =>
+    insets.top === 0 && insets.right === 0 && insets.bottom === 0 && insets.left === 0;
+
+  if (isZeroInsets(margin)) return rect;
+
+  const dx = (margin.right - margin.left) / 2;
+  const dy = (margin.bottom - margin.top) / 2;
+  const rot = rect.rotate ?? 0;
+  const cos = Math.cos(rot);
+  const sin = Math.sin(rot);
+
+  return {
+    x: rect.x + dx * cos - dy * sin,
+    y: rect.y + dx * sin + dy * cos,
+    width: rect.width + margin.left + margin.right,
+    height: rect.height + margin.top + margin.bottom,
+    rotate: rect.rotate,
+  };
+};
 
 /** 保持既有布局投影口径，只复用合成的点变换与旋转/缩放累计量 */
 export const projectLayoutWithTransform = <
