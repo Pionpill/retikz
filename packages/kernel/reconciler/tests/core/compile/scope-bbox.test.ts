@@ -5,7 +5,7 @@ import { BuiltinCompileWarningCode } from '../../../../core/src';
 import type { CompiledNodeLayout } from '../../../../core/src/compile/node';
 import { projectLayoutWithTransform } from '../../../../core/src/compile/node';
 import type { CompiledReferenceGeometry } from '../../../../core/src/compile/reference';
-import { computeScopeBoundingBox } from '../../../../core/src/compile/scope';
+import { calculateScopeBoundingBox } from '../../../../core/src/compile/scope';
 import { createIntrinsicScopeLayout } from '../../../../core/src/compile/scope';
 import { composeScopeTransform } from '../../../../core/src/compile/shared';
 import type { TextMeasurer } from '../../../../core/src/contract';
@@ -51,7 +51,7 @@ const lineTo = (prim: ScenePrimitive | undefined): [number, number] | undefined 
   return undefined;
 };
 
-/** 构造一个 width/height 已知、中心已知的 0-rotate 测试 layout，供 computeScopeBoundingBox 单元测试 */
+/** 构造一个 width/height 已知、中心已知的 0-rotate 测试 layout，供 calculateScopeBoundingBox 单元测试 */
 const layoutAt = (cx: number, cy: number, w: number, h: number): CompiledNodeLayout => ({
   shape: { name: 'rectangle', definition: BUILTIN_SHAPES.get('rectangle')!, params: {} },
   geometry: {
@@ -68,13 +68,13 @@ const layoutAt = (cx: number, cy: number, w: number, h: number): CompiledNodeLay
   },
 });
 
-describe('computeScopeBoundingBox / createScopeRectangleLayout 单元测试', () => {
+describe('calculateScopeBoundingBox / createScopeRectangleLayout 单元测试', () => {
   it('空 layouts → 返回 null', () => {
-    expect(computeScopeBoundingBox([])).toBeNull();
+    expect(calculateScopeBoundingBox([])).toBeNull();
   });
 
   it('3 个 0×0 单点 layout → bbox 包 3 点的 AABB', () => {
-    const bbox = computeScopeBoundingBox([layoutAt(0, 0, 0, 0), layoutAt(40, 30, 0, 0), layoutAt(80, -20, 0, 0)]);
+    const bbox = calculateScopeBoundingBox([layoutAt(0, 0, 0, 0), layoutAt(40, 30, 0, 0), layoutAt(80, -20, 0, 0)]);
 
     expect(bbox).not.toBeNull();
 
@@ -86,7 +86,7 @@ describe('computeScopeBoundingBox / createScopeRectangleLayout 单元测试', ()
   });
 
   it('单 layout (10,20) 30×40 → bbox 就是该 layout', () => {
-    const bbox = computeScopeBoundingBox([layoutAt(10, 20, 30, 40)]);
+    const bbox = calculateScopeBoundingBox([layoutAt(10, 20, 30, 40)]);
 
     expect(bbox).not.toBeNull();
     expect(bbox!.x).toBeCloseTo(10, 5);

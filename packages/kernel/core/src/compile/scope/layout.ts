@@ -35,7 +35,7 @@ export const collectScopeCornerPoints = (layouts: ReadonlyArray<CompiledReferenc
 };
 
 /** 计算一组 layout 的全局 AABB；空数组返回 null */
-export const computeScopeBoundingBox = (layouts: ReadonlyArray<CompiledReferenceGeometry>): CenteredBox | null => {
+export const calculateScopeBoundingBox = (layouts: ReadonlyArray<CompiledReferenceGeometry>): CenteredBox | null => {
   const bounds = boundsOf(collectScopeCornerPoints(layouts));
   if (bounds === undefined) return null;
 
@@ -61,7 +61,7 @@ export const createIntrinsicScopeLayout = (
       rotate: 0,
     };
   } else {
-    rect = { rotate: 0, ...(computeScopeBoundingBox(scopeLayouts) ?? { x: 0, y: 0, width: 0, height: 0 }) };
+    rect = { rotate: 0, ...(calculateScopeBoundingBox(scopeLayouts) ?? { x: 0, y: 0, width: 0, height: 0 }) };
   }
   const { shape } = canon.envelope;
   return {

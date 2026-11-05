@@ -8,7 +8,7 @@ describe('核心公共编译导出', () => {
     expect('compositeOpaqueColor' in core).toBe(false);
     expect('parseStaticCssColor' in core).toBe(false);
     expect('compileToScene' in core).toBe(false);
-    expect(core.computeLayoutFromBounds).toBeDefined();
+    expect(core.calculateLayoutFromBounds).toBeDefined();
     expect(core.resolveCoreProviderDependencies).toBeDefined();
     expect('resolveCompositeDependencies' in core).toBe(false);
     expect(core.BuiltinCompileWarningCode).toBeDefined();

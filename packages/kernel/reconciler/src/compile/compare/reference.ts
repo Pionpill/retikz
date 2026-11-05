@@ -1,4 +1,4 @@
-import { referencePositionOf, resolveAnchorRefUncached } from '@retikz/core';
+import { referencePositionOf, evaluateAnchorReference } from '@retikz/core';
 import type { CompiledReferenceGeometry, ReferenceReadKind } from '@retikz/core';
 import { jsonStructuralEquals } from '@retikz/foundation';
 
@@ -19,8 +19,8 @@ export const compareReferenceGeometry = (
       warnings.push(true);
     };
     try {
-      const before = resolveAnchorRefUncached(previous, kind.anchor, kind.boundary, undefined, { warn });
-      const after = resolveAnchorRefUncached(current, kind.anchor, kind.boundary, undefined, { warn });
+      const before = evaluateAnchorReference(previous, kind.anchor, kind.boundary, undefined, { warn });
+      const after = evaluateAnchorReference(current, kind.anchor, kind.boundary, undefined, { warn });
       return warnings.length === 0 && jsonStructuralEquals(before, after);
     } catch {
       return false;

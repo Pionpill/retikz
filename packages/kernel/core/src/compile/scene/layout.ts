@@ -13,7 +13,7 @@ export const roundLayout = ({ height, width, x, y }: BoundsRect, round: (n: numb
 });
 
 /** 由 bbox 算出有限的 Scene 布局边界；无 bbox 时返回 100x100 兜底 */
-export const computeLayoutFromBounds = (
+export const calculateLayoutFromBounds = (
   bounds: AxisAlignedBounds | undefined,
   padding: number,
   round: (n: number) => number,

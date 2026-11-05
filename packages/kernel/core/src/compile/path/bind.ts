@@ -34,7 +34,7 @@ const bindTarget = (
  * 解析路径步骤中可确定的目标坐标，并按字段路径登记绑定结果
  * @description 普通相对目标不更新后续偏移的基点，累积相对目标会更新；经过轴向线或平滑步骤后，后续相对目标保留给编译游标处理
  */
-const resolveSteps = (
+const bindPathStepTargets = (
   steps: ReadonlyArray<CanonicalPathStep>,
   context: Partial<Pick<PathCompileContext, 'scopeChain' | 'targetResolver'>>,
   targets: Map<string, TargetResolution>,
@@ -46,7 +46,7 @@ const resolveSteps = (
   let deferRelative = false;
   const out: Array<CanonicalPathStep> = [];
 
-  const resolve = (target: IRTarget, key: PropertyPath): IRTarget => {
+  const bindStepTarget = (target: IRTarget, key: PropertyPath): IRTarget => {
     let value = target;
     if (isRelativeTargetLike(target) && !deferRelative) {
       const base = previous ?? [0, 0];
@@ -70,14 +70,14 @@ const resolveSteps = (
 
     if (step.kind === 'axis-line') {
       deferRelative = true;
-      const value = resolve(step.to, [...prefix, 'children', index, 'to']) as typeof step.to;
+      const value = bindStepTarget(step.to, [...prefix, 'children', index, 'to']) as typeof step.to;
       out.push({ ...step, to: value });
       continue;
     }
 
     if (step.kind === 'arc') {
       const center =
-        step.center === undefined ? undefined : resolve(step.center, [...prefix, 'children', index, 'center']);
+        step.center === undefined ? undefined : bindStepTarget(step.center, [...prefix, 'children', index, 'center']);
       out.push(center === undefined ? step : { ...step, center });
       if (previous && typeof step.radius === 'number' && step.center === undefined) {
         previous = pointAtArcAngle(previous, step.radius, step.endAngle);
@@ -113,13 +113,13 @@ const resolveSteps = (
     }
 
     if (step.kind === 'rectangle') {
-      const from = resolve(step.from, [...prefix, 'children', index, 'from']);
-      const to = resolve(step.to, [...prefix, 'children', index, 'to']);
+      const from = bindStepTarget(step.from, [...prefix, 'children', index, 'from']);
+      const to = bindStepTarget(step.to, [...prefix, 'children', index, 'to']);
       out.push({ ...step, from, to });
       continue;
     }
 
-    const value = resolve(step.to, [...prefix, 'children', index, 'to']);
+    const value = bindStepTarget(step.to, [...prefix, 'children', index, 'to']);
     out.push({ ...step, to: value });
     if (!isRelativeTargetLike(step.to)) {
       const point = pointOfTarget(value, resolver, scopeChain);
@@ -139,7 +139,7 @@ export const bindPathTargets = (
   const children =
     canon.properties.children === undefined
       ? undefined
-      : resolveSteps(canon.properties.children, context, targets, canon.irPath);
+      : bindPathStepTargets(canon.properties.children, context, targets, canon.irPath);
   return {
     ...canon,
     properties: children === undefined ? canon.properties : { ...canon.properties, children },

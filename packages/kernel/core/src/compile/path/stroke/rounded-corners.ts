@@ -36,7 +36,7 @@ const endpointOf = (c: PathCommand): [number, number] | undefined => {
 };
 
 /** 两点近似相等（坐标已 round，容差取小常量） */
-const samePoint = (a: [number, number], b: [number, number]): boolean =>
+const isSamePoint = (a: [number, number], b: [number, number]): boolean =>
   Math.abs(a[0] - b[0]) < 1e-6 && Math.abs(a[1] - b[1]) < 1e-6;
 
 /**
@@ -177,7 +177,7 @@ export const applyRoundedCorners = ({
       // 否则补一条 lastEnd → start 的环绕缝。两种写法（隐式 cycle / 显式 line 回起点 + cycle）都倒首尾接缝。
       const lastEnd = lineEnds[lineEnds.length - 1];
       const segs = runSegments(run);
-      if (!samePoint(lastEnd, start)) segs.push({ kind: 'line', from: lastEnd, to: start });
+      if (!isSamePoint(lastEnd, start)) segs.push({ kind: 'line', from: lastEnd, to: start });
 
       // 需 ≥3 段才是可倒角的闭合多边形；退化（如 A→B→A）落开放分支处理
       if (segs.length >= 3) {

@@ -1,6 +1,6 @@
 import type { CanonicalNode } from '../../resolve';
 import { splitCompiledDrawing } from '../scene';
-import { compileNodeTextStyle, emitNodeShapePrimitives, emitNodeLabelPrimitives } from './emit';
+import { projectNodeTextStyle, emitNodeShapePrimitives, emitNodeLabelPrimitives } from './emit';
 import { layoutNode } from './layout';
 import { alignmentGuidesOfNode } from './layout-metrics';
 import type { CompiledNode, CompiledNodeLayout, NodeCompileContext, PreparedNodeCompilation } from './types';
@@ -36,7 +36,7 @@ export const compileNode = (
       shape: shape.style,
       shadow: canon.style.shadow,
     },
-    text: layout.text === undefined ? undefined : { layout: layout.text, style: compileNodeTextStyle(canon) },
+    text: layout.text === undefined ? undefined : { layout: layout.text, style: projectNodeTextStyle(canon) },
     labels: (layout.labels ?? []).map((label, index) => {
       const { laid, ...metrics } = label;
       void laid;

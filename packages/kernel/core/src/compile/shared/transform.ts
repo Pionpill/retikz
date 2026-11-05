@@ -100,7 +100,7 @@ const IDENTITY_SCOPE_TRANSFORM: ComposedScopeTransform = Object.freeze({
 });
 
 /** 由 Scene transform 声明构造正向或逆向矩阵，不使用行列式阈值 */
-const computeTransformToMatrix = (transform: Transform, inverse = false): AffineMatrix => {
+const transformToMatrix = (transform: Transform, inverse = false): AffineMatrix => {
   if (transform.kind === 'translate')
     return [1, 0, 0, 1, inverse ? -transform.x : transform.x, inverse ? -transform.y : transform.y];
   if (transform.kind === 'scale')
@@ -133,13 +133,13 @@ export const composeScopeTransform = (
   let scaleX = parent.scaleX;
   let scaleY = parent.scaleY;
   for (const transform of transforms) {
-    forward = multiplyAffine(forward, computeTransformToMatrix(transform));
+    forward = multiplyAffine(forward, transformToMatrix(transform));
     if (transform.kind === 'scale') {
       scaleX *= transform.x;
       scaleY *= transform.y ?? transform.x;
       if (transform.x === 0 || (transform.y ?? transform.x) === 0) inverse = null;
     } else if (transform.kind === 'rotate') rotation += transform.degrees * DEG_TO_RAD;
-    if (inverse !== null) inverse = multiplyAffine(computeTransformToMatrix(transform, true), inverse);
+    if (inverse !== null) inverse = multiplyAffine(transformToMatrix(transform, true), inverse);
   }
   if (__DEV__) {
     // 仅在本层首次产生不可逆变换时提示，避免后代继承同一状态而重复报警

@@ -86,7 +86,7 @@ type MathPiece = {
 type Piece = TextPiece | MathPiece;
 
 /** 把 TeX paint 三态解析为 Scene paint */
-const resolveTexPaint = (paint: LoweredTexPaint, hostColor: string | undefined): string | undefined => {
+const materializeTexPaint = (paint: LoweredTexPaint, hostColor: string | undefined): string | undefined => {
   if (paint.kind === 'none') return undefined;
   if (paint.kind === 'color') return paint.value;
   return hostColor ?? 'currentColor';
@@ -210,13 +210,13 @@ export const emitInlineLine = (
           commands: path.commands,
           fillRule: path.fillRule ?? 'evenodd',
         };
-        const fill = resolveTexPaint(path.fill, hostColor);
+        const fill = materializeTexPaint(path.fill, hostColor);
         if (fill !== undefined) {
           glyph.fill = fill;
           if (path.fillOpacity !== undefined) glyph.fillOpacity = path.fillOpacity;
         }
 
-        const stroke = resolveTexPaint(path.stroke, hostColor);
+        const stroke = materializeTexPaint(path.stroke, hostColor);
         if (stroke !== undefined) {
           glyph.stroke = stroke;
           if (path.strokeWidth !== undefined) glyph.strokeWidth = path.strokeWidth;

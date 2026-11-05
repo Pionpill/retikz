@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { strictObject } from 'zod';
 
 import type { CompiledNodeLayout } from '../../../../core/src/compile/node';
-import { resolveAnchor, resolveAnchorRef } from '../../../../core/src/compile/node';
+import { getOrCreateNamedAnchor, getOrCreateAnchorReference } from '../../../../core/src/compile/node';
 import type { ShapeDefinition } from '../../../../core/src/contract';
 import { defineShape } from '../../../../core/src/contract';
 import { BUILTIN_SHAPES } from '../../../../core/src/providers';
@@ -45,33 +45,33 @@ const makeLayout = (
   };
 };
 
-describe('resolveAnchor cache 命中返回同一引用', () => {
+describe('getOrCreateNamedAnchor cache 命中返回同一引用', () => {
   it('anchor_cache_hit_returns_same_reference：keyword 第二次 lookup 返回 === 引用', () => {
     const layout = makeLayout();
-    const first = resolveAnchor(layout, 'top');
-    const second = resolveAnchor(layout, 'top');
+    const first = getOrCreateNamedAnchor(layout, 'top');
+    const second = getOrCreateNamedAnchor(layout, 'top');
 
     expect(second).toBe(first);
   });
 
   it('数字角度第二次 lookup 同样返回 === 引用', () => {
     const layout = makeLayout();
-    const first = resolveAnchor(layout, '30');
-    const second = resolveAnchor(layout, '30');
+    const first = getOrCreateNamedAnchor(layout, '30');
+    const second = getOrCreateNamedAnchor(layout, '30');
 
     expect(second).toBe(first);
   });
 });
 
-describe('resolveAnchor 不同 key 互不串扰', () => {
+describe('getOrCreateNamedAnchor 不同 key 互不串扰', () => {
   it('anchor_cache_keyword_vs_numeric_isolated：同 layout 上 keyword 与数字角度 cache 互不影响', () => {
     const layout = makeLayout();
-    const kw = resolveAnchor(layout, 'right');
-    const num = resolveAnchor(layout, '0');
+    const kw = getOrCreateNamedAnchor(layout, 'right');
+    const num = getOrCreateNamedAnchor(layout, '0');
 
     // right 关键字与 0 度数字角度数值上等价但缓存键不同 → 各自独立存储
-    expect(resolveAnchor(layout, 'right')).toBe(kw);
-    expect(resolveAnchor(layout, '0')).toBe(num);
+    expect(getOrCreateNamedAnchor(layout, 'right')).toBe(kw);
+    expect(getOrCreateNamedAnchor(layout, '0')).toBe(num);
 
     // 数值上 right 与 .0 都是 (+x, 0) 方向；不强求引用相等（key 不同）
     expect(Math.abs(kw[0] - num[0])).toBeLessThan(1e-6);
@@ -80,45 +80,45 @@ describe('resolveAnchor 不同 key 互不串扰', () => {
 
   it('同 layout 多个 keyword 各自独立缓存', () => {
     const layout = makeLayout();
-    const n = resolveAnchor(layout, 'top');
-    const s = resolveAnchor(layout, 'bottom');
-    const e = resolveAnchor(layout, 'right');
+    const n = getOrCreateNamedAnchor(layout, 'top');
+    const s = getOrCreateNamedAnchor(layout, 'bottom');
+    const e = getOrCreateNamedAnchor(layout, 'right');
 
     expect(n).not.toBe(s);
     expect(n).not.toBe(e);
     expect(s).not.toBe(e);
 
     // 各自二次 lookup 仍命中各自 cache
-    expect(resolveAnchor(layout, 'top')).toBe(n);
-    expect(resolveAnchor(layout, 'bottom')).toBe(s);
-    expect(resolveAnchor(layout, 'right')).toBe(e);
+    expect(getOrCreateNamedAnchor(layout, 'top')).toBe(n);
+    expect(getOrCreateNamedAnchor(layout, 'bottom')).toBe(s);
+    expect(getOrCreateNamedAnchor(layout, 'right')).toBe(e);
   });
 });
 
-describe('resolveAnchor 不同 layout 独立 WeakMap entry', () => {
+describe('getOrCreateNamedAnchor 不同 layout 独立 WeakMap entry', () => {
   it('anchor_cache_different_layouts_isolated：两 layout 各自一份缓存', () => {
     const layoutA = makeLayout('rectangle', 40, 30, 0, 0);
     const layoutB = makeLayout('rectangle', 40, 30, 100, 0);
-    const aNorth = resolveAnchor(layoutA, 'top');
-    const bNorth = resolveAnchor(layoutB, 'top');
+    const aNorth = getOrCreateNamedAnchor(layoutA, 'top');
+    const bNorth = getOrCreateNamedAnchor(layoutB, 'top');
 
     // 不同 layout → 不同 IRPosition 引用，且各自坐标不同（cx 差 100）
     expect(aNorth).not.toBe(bNorth);
     expect(Math.abs(bNorth[0] - aNorth[0] - 100)).toBeLessThan(1e-6);
 
     // 各自二次 lookup 仍命中各自 cache（不串）
-    expect(resolveAnchor(layoutA, 'top')).toBe(aNorth);
-    expect(resolveAnchor(layoutB, 'top')).toBe(bNorth);
+    expect(getOrCreateNamedAnchor(layoutA, 'top')).toBe(aNorth);
+    expect(getOrCreateNamedAnchor(layoutB, 'top')).toBe(bNorth);
   });
 });
 
-describe('resolveAnchor 多次调用结果一致', () => {
+describe('getOrCreateNamedAnchor 多次调用结果一致', () => {
   it('anchor_cache_consistent_across_lookups：同 layout 同 anchor 多次 lookup 都返首调结果', () => {
     const layout = makeLayout();
-    const first = resolveAnchor(layout, 'top-right');
+    const first = getOrCreateNamedAnchor(layout, 'top-right');
 
     // 模拟 path 引用 A.top-right 在不同 sub-path / segment 重复触发
-    const refs = Array.from({ length: 5 }, () => resolveAnchor(layout, 'top-right'));
+    const refs = Array.from({ length: 5 }, () => getOrCreateNamedAnchor(layout, 'top-right'));
 
     for (const r of refs) {
       expect(r).toBe(first);
@@ -128,10 +128,10 @@ describe('resolveAnchor 多次调用结果一致', () => {
   });
 });
 
-describe('resolveAnchor 各 shape 分发正确', () => {
+describe('getOrCreateNamedAnchor 各 shape 分发正确', () => {
   it('circle layout 调 anchor 关键字返回圆周点', () => {
     const layout = makeLayout('circle', 40, 40, 0, 0);
-    const right = resolveAnchor(layout, 'right');
+    const right = getOrCreateNamedAnchor(layout, 'right');
 
     // circle 半径 20 → right 应在 (20, 0)
     expect(right[0]).toBeCloseTo(20, 5);
@@ -140,7 +140,7 @@ describe('resolveAnchor 各 shape 分发正确', () => {
 
   it('ellipse layout 调 anchor 关键字返回椭圆周点', () => {
     const layout = makeLayout('ellipse', 60, 40, 0, 0);
-    const right = resolveAnchor(layout, 'right');
+    const right = getOrCreateNamedAnchor(layout, 'right');
 
     expect(right[0]).toBeCloseTo(30, 5);
     expect(right[1]).toBeCloseTo(0, 5);
@@ -148,7 +148,7 @@ describe('resolveAnchor 各 shape 分发正确', () => {
 
   it('diamond (= polygon 4/0) layout 调 anchor 关键字返回外接 AABB 边点', () => {
     const layout = makeLayout('diamond', 40, 30, 0, 0);
-    const top = resolveAnchor(layout, 'top');
+    const top = getOrCreateNamedAnchor(layout, 'top');
 
     // polygon 命名 anchor 走外接 AABB：top = AABB 上边中点 (0, -height/2) = (0, -15)
     expect(top[0]).toBeCloseTo(0, 5);
@@ -156,12 +156,12 @@ describe('resolveAnchor 各 shape 分发正确', () => {
   });
 });
 
-describe('resolveAnchor 数字角度支持负号 / 小数', () => {
+describe('getOrCreateNamedAnchor 数字角度支持负号 / 小数', () => {
   it('负角度作为字符串 key 正确缓存', () => {
     const layout = makeLayout('circle', 40, 40, 0, 0);
-    const neg = resolveAnchor(layout, '-90');
+    const neg = getOrCreateNamedAnchor(layout, '-90');
 
-    expect(resolveAnchor(layout, '-90')).toBe(neg);
+    expect(getOrCreateNamedAnchor(layout, '-90')).toBe(neg);
 
     // -90° = 局部 -y 方向 → 应在 (0, -20)
     expect(neg[0]).toBeCloseTo(0, 5);
@@ -170,16 +170,16 @@ describe('resolveAnchor 数字角度支持负号 / 小数', () => {
 
   it('小数角度作为字符串 key 正确缓存', () => {
     const layout = makeLayout('circle', 40, 40, 0, 0);
-    const fractional = resolveAnchor(layout, '45.5');
+    const fractional = getOrCreateNamedAnchor(layout, '45.5');
 
-    expect(resolveAnchor(layout, '45.5')).toBe(fractional);
+    expect(getOrCreateNamedAnchor(layout, '45.5')).toBe(fractional);
   });
 });
 
-describe('resolveAnchorRef 边上比例点', () => {
+describe('getOrCreateAnchorReference 边上比例点', () => {
   it('rect top t=0.5 = 上边中点', () => {
     const layout = makeLayout('rectangle', 20, 10, 0, 0);
-    const p = resolveAnchorRef(layout, { side: 'top', fraction: 0.5 });
+    const p = getOrCreateAnchorReference(layout, { side: 'top', fraction: 0.5 });
 
     expect(p[0]).toBeCloseTo(0, 6);
     expect(p[1]).toBeCloseTo(-5, 6);
@@ -187,15 +187,15 @@ describe('resolveAnchorRef 边上比例点', () => {
 
   it('缓存命中返回同一引用（key = `${side}:${t}`）', () => {
     const layout = makeLayout('rectangle', 20, 10, 0, 0);
-    const first = resolveAnchorRef(layout, { side: 'top', fraction: 0.25 });
+    const first = getOrCreateAnchorReference(layout, { side: 'top', fraction: 0.25 });
 
-    expect(resolveAnchorRef(layout, { side: 'top', fraction: 0.25 })).toBe(first);
+    expect(getOrCreateAnchorReference(layout, { side: 'top', fraction: 0.25 })).toBe(first);
   });
 
   it('与命名 anchor cache key 命名空间不冲突（top vs top:0.5）', () => {
     const layout = makeLayout('rectangle', 20, 10, 0, 0);
-    const named = resolveAnchor(layout, 'top'); // 上边中点 (0,-5)
-    const edge = resolveAnchorRef(layout, { side: 'top', fraction: 0 }); // NW 角 (-10,-5)
+    const named = getOrCreateNamedAnchor(layout, 'top'); // 上边中点 (0,-5)
+    const edge = getOrCreateAnchorReference(layout, { side: 'top', fraction: 0 }); // NW 角 (-10,-5)
 
     expect(named).not.toBe(edge);
     expect(edge[0]).toBeCloseTo(-10, 6);
@@ -221,12 +221,14 @@ describe('resolveAnchorRef 边上比例点', () => {
       boundary: { name: noEdge.name, definition: noEdge, params: {}, isShape: true },
     };
 
-    expect(() => resolveAnchorRef(layout, { side: 'top', fraction: 0.5 })).toThrow(/does not support side anchors/);
+    expect(() => getOrCreateAnchorReference(layout, { side: 'top', fraction: 0.5 })).toThrow(
+      /does not support side anchors/,
+    );
   });
 
   it('零尺寸 Coordinate → { side, fraction } 报错（决策细节 #10）', () => {
     const layout = makeLayout('rectangle', 0, 0, 5, 5);
 
-    expect(() => resolveAnchorRef(layout, { side: 'top', fraction: 0.5 })).toThrow(/zero-size target/);
+    expect(() => getOrCreateAnchorReference(layout, { side: 'top', fraction: 0.5 })).toThrow(/zero-size target/);
   });
 });

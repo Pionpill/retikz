@@ -8,7 +8,7 @@ import {
   safeThrownDetail,
 } from '../../resolve';
 import type { ClipResolution } from '../../resolve';
-import { createResourceId, serializeResourceContent, storeSceneResource } from './identity';
+import { formatResourceId, serializeResourceContent, storeSceneResource } from './identity';
 
 /** 生成裁剪路径并登记可复用资源 */
 export type ClipRegistry = {
@@ -201,7 +201,7 @@ export const createClipRegistry = (
   };
 
   const registerPath = (path: SceneClipPath): string => {
-    const id = createResourceId('clip', serializeResourceContent(path));
+    const id = formatResourceId('clip', serializeResourceContent(path));
     return importResource({ kind: 'clip', id, path });
   };
 

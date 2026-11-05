@@ -4,7 +4,7 @@ import { DEFAULT_EPSILON, DEG_TO_RAD } from '@retikz/math';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { CanonicalNodeLabel, CanonicalNodeLabelBoundaryPosition } from '../../resolve';
 import { anchorUnitVectorByAnchor } from '../../shared';
-import { placeLabelBox, resolveLabelRotation } from '../text';
+import { placeLabelBox, calculateLabelRotation } from '../text';
 import { anchorOf, angleBoundaryOf } from './anchors';
 import type { CompiledNodeLayout, MeasuredNodeLabel, NodeLabelLayout } from './types';
 
@@ -21,7 +21,10 @@ const assertBoxLikeLabelBoundary = (layout: CompiledNodeLayout): void => {
   }
 };
 
-const labelBoundaryPoint = (layout: CompiledNodeLayout, canon: CanonicalNodeLabelBoundaryPosition): Position => {
+const calculateLabelBoundaryPoint = (
+  layout: CompiledNodeLayout,
+  canon: CanonicalNodeLabelBoundaryPosition,
+): Position => {
   assertBoxLikeLabelBoundary(layout);
   const fraction = canon.fraction;
   const left = layout.geometry.rect.x - layout.geometry.rect.width / 2;
@@ -35,7 +38,7 @@ const labelBoundaryPoint = (layout: CompiledNodeLayout, canon: CanonicalNodeLabe
   return [left, top + layout.geometry.rect.height * fraction];
 };
 
-const labelBoundaryDirection = (canon: CanonicalNodeLabelBoundaryPosition): Position => {
+const getLabelBoundaryDirection = (canon: CanonicalNodeLabelBoundaryPosition): Position => {
   if (canon.boundary === 'top') return [0, -1];
   if (canon.boundary === 'right') return [1, 0];
   if (canon.boundary === 'bottom') return [0, 1];
@@ -44,9 +47,9 @@ const labelBoundaryDirection = (canon: CanonicalNodeLabelBoundaryPosition): Posi
 };
 
 /** 从 attachment 直接解析 label 放置单位向量 */
-const labelPlacementVector = (position: CanonicalNodeLabel['position']): Position => {
+const calculateLabelPlacementVector = (position: CanonicalNodeLabel['position']): Position => {
   if (position === 'center') return [1, 0];
-  if (isLabelBoundaryPosition(position)) return labelBoundaryDirection(position);
+  if (isLabelBoundaryPosition(position)) return getLabelBoundaryDirection(position);
   if (typeof position === 'number') {
     const rad = position * DEG_TO_RAD;
     return [Math.cos(rad), Math.sin(rad)];
@@ -56,7 +59,7 @@ const labelPlacementVector = (position: CanonicalNodeLabel['position']): Positio
 };
 
 /** 从 label 附着方向取得稳定的切线正向 */
-const labelTangentVector = (position: CanonicalNodeLabel['position']): Position => {
+const calculateLabelTangentVector = (position: CanonicalNodeLabel['position']): Position => {
   if (isLabelBoundaryPosition(position)) {
     if (position.boundary === 'top' || position.boundary === 'bottom') return [1, 0];
     return [0, 1];
@@ -66,7 +69,7 @@ const labelTangentVector = (position: CanonicalNodeLabel['position']): Position 
   if (position === 'left' || position === 'right') return [0, 1];
   if (position === 'center') return [1, 0];
 
-  const radial = labelPlacementVector(position);
+  const radial = calculateLabelPlacementVector(position);
 
   return [-radial[1], radial[0]];
 };
@@ -80,7 +83,7 @@ export const labelBorderPoint = (layout: CompiledNodeLayout, position: Canonical
     geometry: { ...layout.geometry, rect: { ...layout.geometry.rect, rotate: 0 } },
   };
   if (isLabelBoundaryPosition(position)) {
-    return labelBoundaryPoint(aaLayout, position);
+    return calculateLabelBoundaryPoint(aaLayout, position);
   }
 
   if (typeof position === 'number') {
@@ -143,17 +146,19 @@ export const labelBoxEdgeToward = ({
  * 算 label 文本自旋角度
  * @description keepUpright 会翻转倒置文本
  */
-const resolveLabelRotateDeg = (label: Pick<CanonicalNodeLabel, 'position' | 'rotate' | 'keepUpright'>): number => {
-  return resolveLabelRotation(label.rotate, label.keepUpright, labelPlacementVector(label.position));
+const calculateLabelRotationDegrees = (
+  label: Pick<CanonicalNodeLabel, 'position' | 'rotate' | 'keepUpright'>,
+): number => {
+  return calculateLabelRotation(label.rotate, label.keepUpright, calculateLabelPlacementVector(label.position));
 };
 
 /** 把已测量 label 解析为相对最终 Node rect 的局部几何 */
-export const resolveNodeLabelGeometry = (
+export const layoutNodeLabelGeometry = (
   layout: CompiledNodeLayout,
   label: MeasuredNodeLabel,
   canon: CanonicalNodeLabel,
 ): NodeLabelLayout => {
-  const rotateDeg = resolveLabelRotateDeg(canon);
+  const rotateDeg = calculateLabelRotationDegrees(canon);
   if (canon.position === 'center') {
     return { ...label, rotateDeg, centerOffset: [0, 0] };
   }
@@ -167,8 +172,8 @@ export const resolveNodeLabelGeometry = (
       align: canon.align,
     },
     point: labelBorderPoint(layout, canon.position),
-    outward: labelPlacementVector(canon.position),
-    tangent: labelTangentVector(canon.position),
+    outward: calculateLabelPlacementVector(canon.position),
+    tangent: calculateLabelTangentVector(canon.position),
     width: label.measuredWidth,
     height: label.measuredHeight,
     distance: canon.distance,

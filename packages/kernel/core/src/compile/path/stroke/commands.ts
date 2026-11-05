@@ -2,7 +2,7 @@ import { DEG_TO_RAD, pointAtArcAngle } from '@retikz/math';
 
 import type { PathCommand } from '../../../contract';
 import type { IRPosition } from '../../../schemas';
-import { samePoint } from '../host';
+import { isSamePoint } from '../host';
 
 /** 向路径追加三次贝塞尔曲线所需的控制点和终点 */
 type InputCubicCommandEmission = {
@@ -221,7 +221,7 @@ export const createPathCommandEmitter = ({
   };
 
   const startSegment = (p: IRPosition, sourceAutoBoundary = false): void => {
-    if (samePoint(p, lastEnd)) return;
+    if (isSamePoint(p, lastEnd)) return;
     emitMove(p, sourceAutoBoundary);
   };
 

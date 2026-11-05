@@ -109,7 +109,7 @@ type SplitStrokePathOptions = {
 
 const clampUnit = (value: number): number => Math.max(0, Math.min(1, value));
 
-const pointsEqual = (left: IRPosition, right: IRPosition): boolean =>
+const arePointsEqual = (left: IRPosition, right: IRPosition): boolean =>
   Math.abs(left[0] - right[0]) <= DISTANCE_EPSILON && Math.abs(left[1] - right[1]) <= DISTANCE_EPSILON;
 
 type StrokeCommandGeometry = Pick<StrokeCommandOccurrence, 'command' | 'from' | 'to'>;
@@ -606,7 +606,7 @@ export const splitStrokePathAtInterruptions = (
       }
     | undefined;
 
-  const finishCurrent = (): void => {
+  const finishCurrentFragment = (): void => {
     if (current !== undefined && current.commands.length > 1) {
       fragments.push({
         commands: current.commands,
@@ -625,7 +625,7 @@ export const splitStrokePathAtInterruptions = (
     const subPathIsInterrupted = subPathIntervals.length > 0;
     const visibleRanges = visibleRangesForOccurrence(occurrence, subPathIntervals);
     if (visibleRanges.length === 0) {
-      finishCurrent();
+      finishCurrentFragment();
       continue;
     }
 
@@ -640,9 +640,9 @@ export const splitStrokePathAtInterruptions = (
         current !== undefined &&
         current.subPathIndex === occurrence.subPathIndex &&
         Math.abs(range.start - occurrence.logicalStart) <= DISTANCE_EPSILON &&
-        pointsEqual(current.lastPoint, startPoint);
+        arePointsEqual(current.lastPoint, startPoint);
       if (!joinsCurrent) {
-        finishCurrent();
+        finishCurrentFragment();
         current = {
           subPathIndex: occurrence.subPathIndex,
           commands: [{ kind: 'move', to: roundPoint(startPoint, round) }],
@@ -686,14 +686,14 @@ export const splitStrokePathAtInterruptions = (
         hasClosingOccurrenceAfterTerminalDrawable &&
         occurrence.commandIndex === lastDrawableCommandIndex
       ) {
-        finishCurrent();
+        finishCurrentFragment();
       }
     }
 
-    if (Math.abs(occurrence.logicalEnd - occurrence.subPathLogicalEnd) <= DISTANCE_EPSILON) finishCurrent();
+    if (Math.abs(occurrence.logicalEnd - occurrence.subPathLogicalEnd) <= DISTANCE_EPSILON) finishCurrentFragment();
   }
 
-  finishCurrent();
+  finishCurrentFragment();
 
   return fragments;
 };

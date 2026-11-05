@@ -4,7 +4,7 @@ import { DEG_TO_RAD, RAD_TO_DEG, normalizeDegrees } from '@retikz/math';
 import type { IRBoundaryLabel } from '../../schemas';
 
 /** 根据外向轴解析文字旋转，保持 Node 既有翻转语义 */
-export const resolveLabelRotation = (
+export const calculateLabelRotation = (
   rotate: IRBoundaryLabel['rotate'],
   keepUpright: boolean | undefined,
   outward: Position,
@@ -61,7 +61,7 @@ export const placeLabelBox = ({
   height,
   distance,
 }: InputLabelBox): { center: Position; rotateDeg: number } => {
-  const rotateDeg = resolveLabelRotation(label.rotate, label.keepUpright, outward);
+  const rotateDeg = calculateLabelRotation(label.rotate, label.keepUpright, outward);
   const extent = labelProjectedHalfExtent(outward, width, height, rotateDeg);
   const offset = (label.placement === 'inside' ? -1 : 1) * (distance + extent);
   const alignment =

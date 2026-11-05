@@ -9,7 +9,7 @@ import type {
 import { createCompositeContractError, createLayoutProbeRecoverableError, safeThrownDetail } from '../../resolve';
 import type { InputPaintResolution, PaintResolution, PatternResolution } from '../../resolve';
 import { materializeScenePrimitives } from '../shared';
-import { createResourceId, serializeResourceContent, storeSceneResource } from './identity';
+import { formatResourceId, serializeResourceContent, storeSceneResource } from './identity';
 
 /** 登记已解析的绘制资源，普通颜色直接返回 */
 export type RegisterPaint = (paint: InputPaintResolution | undefined) => PaintValue | undefined;
@@ -100,7 +100,7 @@ export const createPaintRegistry = (round: (n: number) => number): PaintRegistry
         : resolution.spec.kind === 'image'
           ? { kind: 'paint', id: '', spec: resolution.spec }
           : { kind: 'paint', id: '', spec: resolution.spec };
-    const id = createResourceId(
+    const id = formatResourceId(
       'paint',
       serializeResourceContent({
         spec: resource.spec,

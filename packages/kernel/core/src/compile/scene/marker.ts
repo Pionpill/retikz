@@ -26,7 +26,7 @@ export const materializeMarkerPrimitive = (
   contextStroke: PaintValue,
   hostOpacity?: number,
 ): ScenePrimitive => {
-  const resolveMarkerContextFill = (value: PaintValue): PaintValue =>
+  const substituteMarkerContextPaint = (value: PaintValue): PaintValue =>
     typeof value === 'object' && value.kind === 'contextStroke' ? contextStroke : value;
 
   const content = { ...prim };
@@ -46,8 +46,8 @@ export const materializeMarkerPrimitive = (
   return {
     ...content,
     ...appearance,
-    ...(content.fill !== undefined && { fill: resolveMarkerContextFill(content.fill) }),
-    ...(content.stroke !== undefined && { stroke: resolveMarkerContextFill(content.stroke) }),
+    ...(content.fill !== undefined && { fill: substituteMarkerContextPaint(content.fill) }),
+    ...(content.stroke !== undefined && { stroke: substituteMarkerContextPaint(content.stroke) }),
   };
 };
 

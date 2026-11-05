@@ -5,7 +5,7 @@ import {
   boundaryPointOf,
   layoutNode,
   projectLayoutWithTransform,
-  resolveAnchor,
+  getOrCreateNamedAnchor,
 } from '../../../../core/src/compile/node';
 import { createPositionEvaluateContext } from '../../../../core/src/compile/reference';
 import { composeScopeTransform } from '../../../../core/src/compile/shared';
@@ -123,6 +123,6 @@ describe('CompiledNodeLayout 边界/形状', () => {
     const clipped = boundaryPointOf(layout, toward, undefined);
 
     expect(clipped[0]).toBeGreaterThan(layout.geometry.rect.x + layout.geometry.rect.width / 2);
-    expect(resolveAnchor(layout, 'right', undefined)).toEqual(clipped);
+    expect(getOrCreateNamedAnchor(layout, 'right', undefined)).toEqual(clipped);
   });
 });

@@ -6,7 +6,7 @@ import type { CanonicalNodeBoundary, NodeBoundaryResolver } from '../../resolve'
 import type { IRBetweenPosition, IRNodeTarget, IRPosition } from '../../schemas';
 import { isAnchor } from '../../shared';
 import type { NodeBoundaryStore } from '../node';
-import { resolveAnchorRef } from '../node';
+import { getOrCreateAnchorReference } from '../node';
 import type { ComposedScopeTransform } from '../shared';
 import { applyScopeTransform, composeScopeTransform, inverseScopeTransform } from '../shared';
 import { evaluatePositionTarget } from './target';
@@ -14,7 +14,7 @@ import type { CompiledBoundaryGeometry } from './types';
 import type { PositionReferenceView, PositionTargetEvaluateContext, ReferenceReadKind } from './types';
 
 /** 仅解析目标额外指定的连接面；视觉形状与默认连接面由几何消费端读取布局 */
-const resolveTargetBoundary = (
+const bindTargetBoundary = (
   geometry: CompiledBoundaryGeometry,
   target: IRNodeTarget,
   resolveExplicitBoundary?: NodeBoundaryResolver,
@@ -70,7 +70,7 @@ export const createPositionEvaluateContext = (input: InputPositionEvaluateContex
   const canonicalBoundaryOf = (target: IRNodeTarget, reference: PositionReferenceView) =>
     'position' in reference.geometry
       ? undefined
-      : resolveTargetBoundary(reference.geometry, target, resolveExplicitBoundary, reference.irPath);
+      : bindTargetBoundary(reference.geometry, target, resolveExplicitBoundary, reference.irPath);
 
   const pointOfNodeTarget = (
     target: IRNodeTarget,
@@ -93,7 +93,7 @@ export const createPositionEvaluateContext = (input: InputPositionEvaluateContex
     }
     if (target.anchor === undefined) return [geometry.geometry.rect.x, geometry.geometry.rect.y];
     const state = nodeBoundaryStore?.get(geometry);
-    return resolveAnchorRef(geometry, target.anchor, target.boundary, canonicalBoundary, {
+    return getOrCreateAnchorReference(geometry, target.anchor, target.boundary, canonicalBoundary, {
       ...state,
       irPath: reference.irPath ?? state?.irPath,
     });

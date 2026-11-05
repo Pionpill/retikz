@@ -2,12 +2,12 @@ import type { TextMeasurer } from '../../../contract';
 import type { CanonicalNodeLabel } from '../../../resolve';
 import { resolveTextMetrics } from '../../../resolve';
 import { layoutInlineLine } from '../../text';
-import { resolveNodeLabelGeometry } from '../label-geometry';
+import { layoutNodeLabelGeometry } from '../label-geometry';
 import type { CompiledNodeLayout, MeasuredNodeLabel, NodeLabelLayout, NodeTextLayoutContext } from '../types';
 import { DEFAULT_LINE_HEIGHT_FACTOR } from './text';
 
 /** 只为 Node label 包装规范化文字度量 */
-const nodeLabelMeasurer =
+const createNodeLabelMeasurer =
   (measureText: TextMeasurer): TextMeasurer =>
   (text, font) =>
     resolveTextMetrics(measureText(text, font));
@@ -19,7 +19,7 @@ export const measureNodeLabels = (
   const { canon, measureText, tex: texLowering } = input;
   if (canon.labels.length === 0) return undefined;
   const inlineWarn = texLowering?.warn ?? ((): void => {});
-  const measureLabelText = nodeLabelMeasurer(measureText);
+  const measureLabelText = createNodeLabelMeasurer(measureText);
 
   return canon.labels.map(lab => {
     const { font: labTextFont, text: resolved } = lab;
@@ -66,4 +66,4 @@ export const layoutNodeLabels = (
   layout: CompiledNodeLayout,
   labels: Array<{ layout: MeasuredNodeLabel; properties: CanonicalNodeLabel }> | undefined,
 ): Array<NodeLabelLayout> | undefined =>
-  labels?.map(label => resolveNodeLabelGeometry(layout, label.layout, label.properties));
+  labels?.map(label => layoutNodeLabelGeometry(layout, label.layout, label.properties));

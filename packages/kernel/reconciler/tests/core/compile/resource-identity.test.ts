@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { createClipRegistry } from '../../../../core/src/compile/resource';
 import {
-  createResourceId,
+  formatResourceId,
   serializeResourceContent,
   storeSceneResource,
 } from '../../../../core/src/compile/resource/identity';
@@ -54,8 +54,8 @@ describe('资源内容身份', () => {
         Array.from({ length }, (_, index) => String.fromCharCode((index * 7919 + length * 257) & 65535)).join(''),
       );
     }
-    for (const input of inputs) expect(createResourceId('clip', input)).toBe(referenceId(input));
-    expect(createResourceId('paint', 'abc').slice(6)).toBe(createResourceId('clip', 'abc').slice(5));
+    for (const input of inputs) expect(formatResourceId('clip', input)).toBe(referenceId(input));
+    expect(formatResourceId('paint', 'abc').slice(6)).toBe(formatResourceId('clip', 'abc').slice(5));
   });
 
   it('规范 JSON 保留数值键顺序、省略和转义语义', () => {

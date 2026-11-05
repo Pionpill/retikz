@@ -197,7 +197,7 @@ describe('Scene round-trip：layout JSON 序列化等价', () => {
 
 // ──────────────────────────────────────────────────────────────────────────
 // 攻击面 2：override 彻底性——内容含极端 / NaN 坐标时 layout 仍 = viewBox
-// （viewBox 应彻底取代 computeLayoutFromBounds，内容点压根不该参与）
+// （viewBox 应彻底取代 calculateLayoutFromBounds，内容点压根不该参与）
 // ──────────────────────────────────────────────────────────────────────────
 describe('override 绝对：内容再脏 layout 仍只用 viewBox', () => {
   it('内容空 + viewBox → layout = viewBox（不走兜底 100×100）', () => {

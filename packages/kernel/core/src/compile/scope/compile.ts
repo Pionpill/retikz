@@ -2,8 +2,8 @@ import type { CanonicalScope } from '../../resolve';
 import { resolveAnimations } from '../../resolve';
 import { createIntrinsicScopeLayout } from './layout';
 import { shouldEmitScopeGroup } from './output';
-import { calculateScopePlacementTransforms, lowerPreliminaryScopeTransforms } from './placement';
-import { resolveScopePositionTarget } from './position';
+import { lowerScopePlacementTransforms, lowerPreliminaryScopeTransforms } from './placement';
+import { evaluateScopePositionTarget } from './position';
 import type { CompiledScope, InputScopeCompile, ScopeCompileContext, ScopeGeometryPreparation } from './types';
 
 /** 调用方提前冻结的分组阶段结果 */
@@ -17,7 +17,7 @@ export const prepareScopeGeometry = (
   input: InputScopeCompile,
   context: Pick<ScopeCompileContext, 'positionContext' | 'irPath' | 'onWarn'>,
 ) => ({
-  positionTarget: resolveScopePositionTarget(input, context),
+  positionTarget: evaluateScopePositionTarget(input, context),
   preliminaryTransforms: lowerPreliminaryScopeTransforms(input, context),
 });
 
@@ -31,7 +31,7 @@ export const compileScope = (
   const preparation =
     prepared?.placement ?? prepareScopeGeometry({ type: 'scope', id: canon.style.id, ...canon.transform }, context);
   const envelope = createIntrinsicScopeLayout(canon, layouts);
-  const transforms = calculateScopePlacementTransforms(
+  const transforms = lowerScopePlacementTransforms(
     { type: 'scope', ...canon.transform },
     context,
     envelope,

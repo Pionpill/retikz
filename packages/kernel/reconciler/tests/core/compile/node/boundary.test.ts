@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
 import * as core from '../../../../../core/src';
-import { angleBoundaryOf, boundaryPointOf, layoutNode, resolveAnchor } from '../../../../../core/src/compile/node';
+import {
+  angleBoundaryOf,
+  boundaryPointOf,
+  layoutNode,
+  getOrCreateNamedAnchor,
+} from '../../../../../core/src/compile/node';
 import { createPositionEvaluateContext } from '../../../../../core/src/compile/reference';
 import { resolveBoundaryRegistry, resolvePatternRegistry, BUILTIN_SHAPES } from '../../../../../core/src/providers';
 import { resolveNode } from '../../../../../core/src/resolve';
@@ -139,8 +144,8 @@ describe('边界感知边界/规范', () => {
     );
     const boundary = { type: 'circle', params: { fit: 'tight', gap: 2 } } as const;
     const automatic = boundaryPointOf(layout, [100, 0], boundary);
-    const standard = resolveAnchor(layout, 'right', boundary);
-    const numeric = resolveAnchor(layout, '0', boundary);
+    const standard = getOrCreateNamedAnchor(layout, 'right', boundary);
+    const numeric = getOrCreateNamedAnchor(layout, '0', boundary);
 
     expect(standard[0]).toBeCloseTo(automatic[0]);
     expect(standard[1]).toBeCloseTo(automatic[1]);

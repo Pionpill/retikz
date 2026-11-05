@@ -12,7 +12,7 @@ import type {
   IRTranslateTransform,
   PolarPosition,
 } from '../../schemas';
-import { resolveAnchorRefUncached } from '../node';
+import { evaluateAnchorReference } from '../node';
 import type { CompiledBoundaryGeometry } from '../reference';
 import { evaluatePosition } from '../reference';
 import type { PositionEvaluation, PositionEvaluateContext, PositionTargetEvaluateContext } from '../reference';
@@ -29,29 +29,33 @@ type ScopeTransformsLoweringContext = {
 };
 
 /** 断言 self point / placement 计算结果是可发布的有限坐标 */
-const assertFiniteScopePoint = (point: IRPosition, label: string): IRPosition => {
+const assertFiniteScopePoint = (point: IRPosition, label: string): void => {
   if (!Number.isFinite(point[0]) || !Number.isFinite(point[1])) {
     throw new RetikzCoreError(RetikzCoreErrorCode.Compile, `${label} must resolve to a finite point`);
   }
-
-  return point;
 };
 
 /**
  * 在 Scope 固有包络上解析 self point
  * @description `origin` 与显式坐标不依赖包络；anchor 引用统一走现有 shape / boundary resolver
  */
-const resolveScopeSelfPoint = (
+const evaluateScopeSelfPoint = (
   point: IRScopeSelfPoint,
   intrinsicContext: CompiledBoundaryGeometry | undefined,
 ): IRPosition => {
   if (point === 'origin') return [0, 0];
-  if (Array.isArray(point)) return assertFiniteScopePoint([point[0], point[1]], 'scope self point');
+  if (Array.isArray(point)) {
+    const finitePoint: IRPosition = [point[0], point[1]];
+    assertFiniteScopePoint(finitePoint, 'scope self point');
+    return finitePoint;
+  }
   if (intrinsicContext === undefined) {
     throw createCompileInvariantError('internal: intrinsic Scope layout is required to resolve an anchor self point');
   }
 
-  return assertFiniteScopePoint(resolveAnchorRefUncached(intrinsicContext, point), 'scope self point');
+  const finitePoint: IRPosition = evaluateAnchorReference(intrinsicContext, point);
+  assertFiniteScopePoint(finitePoint, 'scope self point');
+  return finitePoint;
 };
 
 /**
@@ -74,7 +78,7 @@ export const lowerScopeTransforms = (
       case 'at-translate':
       case 'offset-translate':
       case 'between-translate': {
-        const resolved = resolveTransformTranslation(t, positionContext)?.localPoint;
+        const resolved = evaluateTransformTranslation(t, positionContext)?.localPoint;
         if (!resolved) {
           onUnresolved?.(t);
           return null;
@@ -86,7 +90,7 @@ export const lowerScopeTransforms = (
       case 'rotate': {
         const r: Transform = { kind: 'rotate', degrees: t.degrees };
         if (t.pivot !== undefined && t.pivot !== 'origin') {
-          const [cx, cy] = resolveScopeSelfPoint(t.pivot, intrinsicContext);
+          const [cx, cy] = evaluateScopeSelfPoint(t.pivot, intrinsicContext);
           r.cx = cx;
           r.cy = cy;
         }
@@ -102,7 +106,7 @@ export const lowerScopeTransforms = (
           break;
         }
 
-        const [px, py] = resolveScopeSelfPoint(t.pivot, intrinsicContext);
+        const [px, py] = evaluateScopeSelfPoint(t.pivot, intrinsicContext);
         if (px === 0 && py === 0) {
           out.push(s);
           break;
@@ -126,7 +130,7 @@ type IRTranslationTransform =
   | IRBetweenTranslateTransform;
 
 /** 解析平移配置对应的局部与世界坐标；依赖的位置无法解析时返回 null */
-export const resolveTransformTranslation = (
+export const evaluateTransformTranslation = (
   source: IRTranslationTransform,
   context: PositionEvaluateContext,
 ): PositionEvaluation | null => {

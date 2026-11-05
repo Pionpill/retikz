@@ -436,9 +436,9 @@ Reconciler 的名称栈管理声明可见性与 Scope 未完成状态，路径�
 
 Scope 在子元素之前解析有效样式并准备放置，子布局就绪后计算包络与最终变换，准备不含动画的自身分组属性。真实子输出就绪后，输出组装才统一裁去空分组、解析动画；被裁掉的 Scope 不产生动画诊断。子元素接收已确定的祖先变换；包络相关的后置放置由驱动在完成后投影。
 
-资源 id 在生成时由内容确定。`assembleCompileOutputs` 合并去重资源，保留图元引用，按同层 zIndex 稳定排序；Scope visitor 统一处理分组包装、裁剪与边界。调用方选择本次有效的输出贡献，使用 `computeCompileOutputBounds` 汇总可见边界，再交给 `assembleSceneCompilationSnapshot` 完成 viewBox、padding、根动画、诊断与 provenance 收尾。传入的 Composite artifacts 应已按最终声明顺序整理，并与本次结果配对；组装不重新编译元素，也不推断增量复用策略。
+资源 id 在生成时由内容确定。`assembleCompileOutputs` 合并去重资源，保留图元引用，按同层 zIndex 稳定排序；Scope visitor 统一处理分组包装、裁剪与边界。调用方选择本次有效的输出贡献，使用 `calculateCompileOutputBounds` 汇总可见边界，再交给 `assembleSceneCompilationSnapshot` 完成 viewBox、padding、根动画、诊断与 provenance 收尾。传入的 Composite artifacts 应已按最终声明顺序整理，并与本次结果配对；组装不重新编译元素，也不推断增量复用策略。
 
-只需从已有轴对齐边界计算布局矩形时，可调用 Core 公开的 `computeLayoutFromBounds(bounds, padding, round)`。它应用留白和输出精度；`bounds` 为 `undefined` 时返回位于原点的 100×100 兜底框。持有点集的调用方先用 `@retikz/math` 的 `boundsOf` 求边界。
+只需从已有轴对齐边界计算布局矩形时，可调用 Core 公开的 `calculateLayoutFromBounds(bounds, padding, round)`。它应用留白和输出精度；`bounds` 为 `undefined` 时返回位于原点的 100×100 兜底框。持有点集的调用方先用 `@retikz/math` 的 `boundsOf` 求边界。
 
 领域算法来自 Core，完整输出组装入口属于 Reconciler。Reconciler 负责名称映射、依赖失效、版本隔离和提交；本接口不自动构建或更新 Weave 树。调用方不得修改已发布的 compiled 可达数据，环境定义或测量服务改变时也必须使相关缓存失效。Node 和 Scope 的 compiled 直接保留后续几何查询必需的 Definition 与参数；Path 和 Coordinate 不保留无后续消费者的绑定。Reconciler 按实际读取粒度比较结果，连接面比较中的 Definition 使用身份比较。compiled 不保证可序列化；Scene 输出不携带 Definition，传输时应包含其引用的资源。
 

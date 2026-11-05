@@ -1,7 +1,7 @@
 import type { Transform } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { IRPosition, IRScopeSelfPoint, IRTransform } from '../../schemas';
-import { projectLayoutWithTransform, resolveAnchorRefUncached } from '../node';
+import { projectLayoutWithTransform, evaluateAnchorReference } from '../node';
 import type { CompiledBoundaryGeometry } from '../reference';
 import { BuiltinCompileWarningCode, applyTransformChain, composeScopeTransform } from '../shared';
 import { lowerScopeTransforms } from './transform';
@@ -22,40 +22,43 @@ const getTransformWarningCode = (failed: IRTransform | undefined): BuiltinCompil
 };
 
 /** 拒绝非 finite 的 Scope position 中间结果 */
-const assertFiniteScopePoint = (point: IRPosition, label: string): IRPosition => {
+const assertFiniteScopePoint = (point: IRPosition, label: string): void => {
   if (!Number.isFinite(point[0]) || !Number.isFinite(point[1])) {
     throw new RetikzCoreError(RetikzCoreErrorCode.Compile, `${label} must resolve to a finite point`);
   }
-
-  return point;
 };
 
 /** anchor position self point：anchor 在 transformed envelope 上解析；origin / 显式点先按 own chain 投影 */
-const calculateTransformedSelfPoint = (
+const evaluateTransformedSelfPoint = (
   point: IRScopeSelfPoint,
   transformedContext: CompiledBoundaryGeometry,
   scopeTransforms: ReadonlyArray<Transform>,
 ): IRPosition => {
   if (typeof point === 'string') {
     if (point !== 'origin') {
-      return assertFiniteScopePoint(resolveAnchorRefUncached(transformedContext, point), 'scope position selfAnchor');
+      const finitePoint: IRPosition = evaluateAnchorReference(transformedContext, point);
+      assertFiniteScopePoint(finitePoint, 'scope position selfAnchor');
+      return finitePoint;
     }
 
-    return assertFiniteScopePoint(applyTransformChain([0, 0], scopeTransforms), 'scope position selfAnchor');
+    const finitePoint: IRPosition = applyTransformChain([0, 0], scopeTransforms);
+    assertFiniteScopePoint(finitePoint, 'scope position selfAnchor');
+    return finitePoint;
   }
 
   if (Array.isArray(point)) {
-    return assertFiniteScopePoint(
-      applyTransformChain([point[0], point[1]], scopeTransforms),
-      'scope position selfAnchor',
-    );
+    const finitePoint: IRPosition = applyTransformChain([point[0], point[1]], scopeTransforms);
+    assertFiniteScopePoint(finitePoint, 'scope position selfAnchor');
+    return finitePoint;
   }
 
-  return assertFiniteScopePoint(resolveAnchorRefUncached(transformedContext, point), 'scope position selfAnchor');
+  const finitePoint: IRPosition = evaluateAnchorReference(transformedContext, point);
+  assertFiniteScopePoint(finitePoint, 'scope position selfAnchor');
+  return finitePoint;
 };
 
 /** children intrinsic layout 完成后解析 pivot，并生成最终 own chain */
-export const calculateScopePlacementTransforms = (
+export const lowerScopePlacementTransforms = (
   child: InputScopeCompile,
   context: Pick<ScopeCompileContext, 'positionContext' | 'irPath' | 'onWarn'>,
   intrinsicContext: CompiledBoundaryGeometry,
@@ -93,7 +96,7 @@ export const calculateScopePlacementTransforms = (
     scopeTransforms.length === 0
       ? intrinsicContext
       : projectLayoutWithTransform(intrinsicContext, composeScopeTransform(scopeTransforms));
-  const selfPoint = calculateTransformedSelfPoint(
+  const selfPoint = evaluateTransformedSelfPoint(
     (!Array.isArray(child.position) ? child.position?.selfAnchor : undefined) ?? 'center',
     transformedContext,
     scopeTransforms,

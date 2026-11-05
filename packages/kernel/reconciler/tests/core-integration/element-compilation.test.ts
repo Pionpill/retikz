@@ -2,11 +2,11 @@ import type { CompileOutput, IRCoordinate, IRNode, IRPathBase, IRScope, ShapeDef
 import {
   BUILTIN_SHAPES,
   projectReferenceGeometry,
-  computeCompileOutputBounds,
+  calculateCompileOutputBounds,
   projectLayoutWithTransform,
   composeScopeTransform,
   resolveScopeInheritance,
-  resolveAnchorRefUncached,
+  evaluateAnchorReference,
 } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
@@ -47,7 +47,7 @@ const finalizeOutputs = (input: { root: {}; outputs: ReadonlyArray<CompileOutput
     root: input.root,
     primitives: output.primitives,
     resources: output.resources,
-    layoutBounds: computeCompileOutputBounds(output.bounds),
+    layoutBounds: calculateCompileOutputBounds(output.bounds),
     round: input.shared.layout.round,
   });
 };
@@ -173,7 +173,7 @@ describe('独立元素编译', () => {
     if (result.status !== 'compiled') throw new Error('expected node');
     const rectangle = { ...result.compiled.compiled.geometry.rect };
     expect(result.compiled.compiled.shape.definition).toBe(definition);
-    expect(resolveAnchorRefUncached(result.compiled.compiled, 'query')).toEqual([rectangle.x + 7, rectangle.y - 4]);
+    expect(evaluateAnchorReference(result.compiled.compiled, 'query')).toEqual([rectangle.x + 7, rectangle.y - 4]);
     expect(
       compareReferenceGeometry(
         result.compiled.compiled,
@@ -197,7 +197,7 @@ describe('独立元素编译', () => {
       composeScopeTransform([{ kind: 'translate', x: 20, y: 30 }]),
     );
     expect(projected.shape.definition).toBe(definition);
-    expect(resolveAnchorRefUncached(projected, 'query')).toEqual([rectangle.x + 27, rectangle.y + 26]);
+    expect(evaluateAnchorReference(projected, 'query')).toEqual([rectangle.x + 27, rectangle.y + 26]);
     expect(structuredClone(first.result.scene)).toEqual(first.result.scene);
     expect(result.compiled.compiled.geometry.rect).toEqual(rectangle);
     expect(next.result.scene).toEqual(first.result.scene);

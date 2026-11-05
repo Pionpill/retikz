@@ -8,7 +8,7 @@ import type { IRBoundary } from '../../schemas';
 import { CenterAnchor, isAnchor } from '../../shared';
 import type { CompiledBoundaryGeometry } from '../reference';
 import { snapshotProviderPosition } from '../shared';
-import { fallbackBoundaryAnchor, resolveBoundary as resolveBoundaryGeometry } from './boundary';
+import { fallbackBoundaryAnchor, bindNodeBoundary } from './boundary';
 import type { NodeBoundaryState } from './types';
 
 /** 保留合法 undefined fallback，并校验 provider 实际返回的二维坐标 */
@@ -47,7 +47,7 @@ const shapeBoundaryResolutionOf = (layout: CompiledBoundaryGeometry): CanonicalN
   isShape: true,
 });
 
-const resolveBoundaryOf = (
+const bindLayoutBoundary = (
   layout: CompiledBoundaryGeometry,
   boundary: IRBoundary | undefined,
   canon?: CanonicalNodeBoundary,
@@ -70,7 +70,7 @@ const resolveBoundaryOf = (
     );
   }
 
-  return resolveBoundaryGeometry(
+  return bindNodeBoundary(
     resolution,
     { def: layout.shape.definition, rect: layout.geometry.rect, params: layout.shape.params },
     { ...state, warn: state?.warn ?? warn },
@@ -86,7 +86,7 @@ export const boundaryPointOf = (
   warn?: (code: string, message: string) => void,
   state?: NodeBoundaryState,
 ): Position => {
-  const { def, rect, params } = resolveBoundaryOf(layout, boundary, canon, warn, state);
+  const { def, rect, params } = bindLayoutBoundary(layout, boundary, canon, warn, state);
   const raw = def.computeBoundaryPoint(inflateRect(rect, layout.geometry.margin), toward, params);
   return snapshotProviderPosition(`Boundary '${boundaryKey(boundary)}' boundaryPoint`, raw);
 };
@@ -100,7 +100,7 @@ export const clipNodePolyline = (
   warn?: (code: string, message: string) => void,
   state?: NodeBoundaryState,
 ): Array<Position> => {
-  const { def, rect, params } = resolveBoundaryOf(layout, boundary, canon, warn, state);
+  const { def, rect, params } = bindLayoutBoundary(layout, boundary, canon, warn, state);
   const outer = inflateRect(rect, layout.geometry.margin);
   const center: Position = [outer.x, outer.y];
   const boundaryAt = (position: Position): Position =>
@@ -171,7 +171,7 @@ export const anchorOf = (
       return p;
     }
 
-    const { def, rect, params } = resolveBoundaryOf(layout, boundary, canon, undefined, state);
+    const { def, rect, params } = bindLayoutBoundary(layout, boundary, canon, undefined, state);
     const anchorRect = applyMargin ? inflateRect(rect, layout.geometry.margin) : rect;
     const raw = def.resolveAnchor?.(anchorRect, name, params);
     const p =
@@ -210,7 +210,7 @@ export const angleBoundaryOf = (
   const rad = angleDeg * DEG_TO_RAD;
   const lx = Math.cos(rad);
   const ly = Math.sin(rad);
-  const { def, rect, params } = resolveBoundaryOf(layout, boundary, canon, undefined, state);
+  const { def, rect, params } = bindLayoutBoundary(layout, boundary, canon, undefined, state);
   const boundaryRect = applyMargin ? inflateRect(rect, layout.geometry.margin) : rect;
   const rot = boundaryRect.rotate ?? 0;
   const cosR = Math.cos(rot);

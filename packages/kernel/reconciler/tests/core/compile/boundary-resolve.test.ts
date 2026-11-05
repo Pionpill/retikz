@@ -4,7 +4,7 @@ import { strictObject } from 'zod';
 
 import { BuiltinCompileWarningCode } from '../../../../core/src';
 import type { NodeBoundaryState, NodeVisualResolution } from '../../../../core/src/compile/node';
-import { resolveBoundary as resolveBoundaryGeometry } from '../../../../core/src/compile/node';
+import { bindNodeBoundary } from '../../../../core/src/compile/node';
 import type { BoundaryDefinition, ShapeDefinition } from '../../../../core/src/contract';
 import { defineBoundary } from '../../../../core/src/contract';
 import { resolveBoundaryRegistry, ellipseShape, rectangle } from '../../../../core/src/providers';
@@ -50,7 +50,7 @@ const resolveContext = (overrides: Partial<BoundaryTestContext> = {}): BoundaryT
 });
 
 const resolveBoundary = (boundary: Parameters<typeof resolveNodeBoundary>[0], context: BoundaryTestContext) =>
-  resolveBoundaryGeometry(
+  bindNodeBoundary(
     resolveNodeBoundary(boundary, {
       visualDef: context.def,
       visualParams: context.params,

@@ -16,7 +16,7 @@ const cache = new WeakMap<CompiledBoundaryGeometry, Map<string, IRPosition>>();
 const ANGLE_RE = /^-?\d+(\.\d+)?$/;
 
 /** 不经过 WeakMap 缓存解析命名或角度 anchor */
-const computeAnchor = (
+const evaluateNamedAnchor = (
   layout: CompiledBoundaryGeometry,
   anchorName: string,
   boundary: IRBoundary | undefined,
@@ -31,7 +31,7 @@ const computeAnchor = (
 };
 
 /** 不经过 WeakMap 缓存解析视觉 shape 的边上比例点 */
-const computeEdgePoint = (layout: CompiledBoundaryGeometry, side: Side, fraction: number): IRPosition => {
+const calculateEdgePoint = (layout: CompiledBoundaryGeometry, side: Side, fraction: number): IRPosition => {
   const { computeEdgePoint: edgePoint } = layout.shape.definition;
   if (!edgePoint) {
     throw new RetikzCoreError(
@@ -56,20 +56,20 @@ const computeEdgePoint = (layout: CompiledBoundaryGeometry, side: Side, fraction
  * 不经过 WeakMap 缓存解析完整 anchor 引用
  * @description 供仍会整体平移的 provisional layout 使用，避免缓存平移前坐标
  */
-export const resolveAnchorRefUncached = (
+export const evaluateAnchorReference = (
   layout: CompiledBoundaryGeometry,
   anchor: IRAnchorRef,
   boundary?: IRBoundary,
   canon?: CanonicalNodeBoundary,
   state?: NodeBoundaryState,
 ): IRPosition => {
-  if (typeof anchor === 'number') return computeAnchor(layout, String(anchor), boundary, canon, state);
-  if (typeof anchor === 'string') return computeAnchor(layout, anchor, boundary, canon, state);
-  return computeEdgePoint(layout, anchor.side, anchor.fraction);
+  if (typeof anchor === 'number') return evaluateNamedAnchor(layout, String(anchor), boundary, canon, state);
+  if (typeof anchor === 'string') return evaluateNamedAnchor(layout, anchor, boundary, canon, state);
+  return calculateEdgePoint(layout, anchor.side, anchor.fraction);
 };
 
 /** 取节点 anchor 的全局坐标 */
-export const resolveAnchor = (
+export const getOrCreateNamedAnchor = (
   layout: CompiledBoundaryGeometry,
   anchorName: string,
   boundary?: IRBoundary,
@@ -86,14 +86,14 @@ export const resolveAnchor = (
   const cached = layoutCache.get(key);
   if (cached !== undefined) return cached;
 
-  const result = computeAnchor(layout, anchorName, boundary, canon, state);
+  const result = evaluateNamedAnchor(layout, anchorName, boundary, canon, state);
   layoutCache.set(key, result);
 
   return result;
 };
 
 /** 取节点边上比例点的全局坐标 */
-const resolveEdgePoint = (layout: CompiledBoundaryGeometry, side: Side, t: number): IRPosition => {
+const getOrCreateEdgePoint = (layout: CompiledBoundaryGeometry, side: Side, t: number): IRPosition => {
   let layoutCache = cache.get(layout);
   if (!layoutCache) {
     layoutCache = new Map<string, IRPosition>();
@@ -104,21 +104,21 @@ const resolveEdgePoint = (layout: CompiledBoundaryGeometry, side: Side, t: numbe
   const cached = layoutCache.get(key);
   if (cached !== undefined) return cached;
 
-  const result = computeEdgePoint(layout, side, t);
+  const result = calculateEdgePoint(layout, side, t);
   layoutCache.set(key, result);
 
   return result;
 };
 
 /** 使用既有 WeakMap 缓存解析完整 anchor 引用 */
-export const resolveAnchorRef = (
+export const getOrCreateAnchorReference = (
   layout: CompiledBoundaryGeometry,
   anchor: IRAnchorRef,
   boundary?: IRBoundary,
   canon?: CanonicalNodeBoundary,
   state?: NodeBoundaryState,
 ): IRPosition => {
-  if (typeof anchor === 'number') return resolveAnchor(layout, String(anchor), boundary, canon, state);
-  if (typeof anchor === 'string') return resolveAnchor(layout, anchor, boundary, canon, state);
-  return resolveEdgePoint(layout, anchor.side, anchor.fraction);
+  if (typeof anchor === 'number') return getOrCreateNamedAnchor(layout, String(anchor), boundary, canon, state);
+  if (typeof anchor === 'string') return getOrCreateNamedAnchor(layout, anchor, boundary, canon, state);
+  return getOrCreateEdgePoint(layout, anchor.side, anchor.fraction);
 };

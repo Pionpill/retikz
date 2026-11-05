@@ -13,7 +13,7 @@ import type { CanonicalPathStep } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
 import { rectPerimeterSample } from '../../../shared/geometry';
 import { BuiltinCompileWarningCode } from '../../shared';
-import { clipTarget, pointOfTarget, samePoint } from '../host';
+import { clipTarget, pointOfTarget, isSamePoint } from '../host';
 import { isAutoBoundaryTarget } from '../target';
 import type { PathTargetView } from '../types';
 import type { PathCommandEmitter } from './commands';
@@ -53,7 +53,7 @@ export const isStrokeShapeStep = (canon: CanonicalPathStep): canon is StrokeShap
   canon.kind === 'smooth';
 
 /** 将 partial circle/ellipse 的 closed 选项规范化 */
-const resolvePartialClosed = (
+const lowerPartialArcClosure = (
   closed: 'closed' | 'chord' | 'open' | 'sector',
   index: number,
   warn: ShapeStepLoweringContext['warn'],
@@ -108,7 +108,7 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: Sh
     if (!fromClip || !toClip) return false;
 
     sampling.addSampler(t => curve.sampleAt({ kind: 'line', from: fromClip, to: toClip }, t));
-    if (samePoint(fromClip, getLastEnd()) && samePoint(toClip, getSubPathStart())) {
+    if (isSamePoint(fromClip, getLastEnd()) && isSamePoint(toClip, getSubPathStart())) {
       emitClose();
       return true;
     }
@@ -318,7 +318,7 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: Sh
         ),
       );
 
-      const closing = resolvePartialClosed(step.closed, index, warn);
+      const closing = lowerPartialArcClosure(step.closed, index, warn);
       if (closing === 'chord') {
         emitClose();
         cursor.setPenOverride(
@@ -386,7 +386,7 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: Sh
           t,
         ),
       );
-      const closing = resolvePartialClosed(step.closed, index, warn);
+      const closing = lowerPartialArcClosure(step.closed, index, warn);
       if (closing === 'chord') {
         emitClose();
         cursor.setPenOverride(pointAtEllipseArcAngle({ center, radiusX, radiusY, angleDeg: startAngle }));
@@ -458,7 +458,7 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: Sh
     // 端点重复 knot 可使一阶导数为零，沿首个非零控制差向量确定极限入射方向
     const from = finalIndex === 0 ? fromClip : segments[finalIndex - 1].to;
     const toward =
-      [finalSegment.control2, finalSegment.control1, from].find(point => !samePoint(point, finalSegment.to)) ??
+      [finalSegment.control2, finalSegment.control1, from].find(point => !isSamePoint(point, finalSegment.to)) ??
       finalSegment.to;
     const distance = Math.hypot(toward[0] - finalSegment.to[0], toward[1] - finalSegment.to[1]);
     const boundaryToward: IRPosition =

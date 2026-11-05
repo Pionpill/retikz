@@ -17,11 +17,11 @@ import { BuiltinCompileWarningCode } from '../shared';
 import type { NodeBoundaryResolution, NodeBoundaryState, NodeVisualResolution } from './types';
 
 /** 同一 layout 在局部 / 全局投影后尺寸可能不同，缓存 key 必须包含 rect 几何 */
-const connectionEnvelopeCacheKey = (rect: NodeVisualResolution['rect'], kind: ConnectionEnvelopeKind): string =>
+const formatConnectionEnvelopeCacheKey = (rect: NodeVisualResolution['rect'], kind: ConnectionEnvelopeKind): string =>
   `${kind}:${rect.x}:${rect.y}:${rect.width}:${rect.height}:${rect.rotate ?? 0}`;
 
 /** 校验 Shape definition 返回的安全包络 */
-const resolveConnectionEnvelope = (
+const snapshotConnectionEnvelope = (
   shapeName: string,
   kind: ConnectionEnvelopeKind,
   envelope: ConnectionEnvelope,
@@ -46,10 +46,14 @@ const resolveConnectionEnvelope = (
 };
 
 /** 解析并缓存视觉 shape 对规则连接面的安全包络矩形 */
-const connectionEnvelopeOf = (kind: ConnectionEnvelopeKind, visual: NodeVisualResolution, state: NodeBoundaryState) => {
+const getOrCreateConnectionEnvelope = (
+  kind: ConnectionEnvelopeKind,
+  visual: NodeVisualResolution,
+  state: NodeBoundaryState,
+) => {
   const { def, rect, params } = visual;
   const { connectionEnvelopeCache, connectionEnvelopeWarnings, warn, irPath } = state;
-  const cacheKey = connectionEnvelopeCacheKey(rect, kind);
+  const cacheKey = formatConnectionEnvelopeCacheKey(rect, kind);
   const cached = connectionEnvelopeCache?.get(cacheKey);
   if (cached !== undefined) return cached;
 
@@ -58,7 +62,7 @@ const connectionEnvelopeOf = (kind: ConnectionEnvelopeKind, visual: NodeVisualRe
     rawOwn === undefined
       ? undefined
       : guardProviderOutput(`Shape '${def.name}' connectionEnvelope`, () =>
-          resolveConnectionEnvelope(def.name, kind, rawOwn, irPath),
+          snapshotConnectionEnvelope(def.name, kind, rawOwn, irPath),
         );
   const envelope = own ?? boundsConnectionEnvelope(rect, kind);
   if (own === undefined && !connectionEnvelopeWarnings?.has(kind)) {
@@ -80,7 +84,7 @@ const connectionEnvelopeOf = (kind: ConnectionEnvelopeKind, visual: NodeVisualRe
 };
 
 /** 校验 Boundary provider 解析出的最终矩形 */
-const resolveBoundaryRect = (providerName: string, value: CenteredBox, irPath?: PropertyPath) => {
+const snapshotBoundaryRect = (providerName: string, value: CenteredBox, irPath?: PropertyPath) => {
   const { x, y, width, height, rotate } = value;
   if (
     !Number.isFinite(x) ||
@@ -100,7 +104,7 @@ const resolveBoundaryRect = (providerName: string, value: CenteredBox, irPath?: 
 };
 
 /** 将已解析连接面引用绑定到视觉 rect 并执行 provider 几何 */
-export const resolveBoundary = (
+export const bindNodeBoundary = (
   canon: CanonicalNodeBoundary,
   visual: NodeVisualResolution,
   state: NodeBoundaryState,
@@ -120,7 +124,7 @@ export const resolveBoundary = (
       rawRect = boundaryDef.resolveRect(
         {
           visualRect,
-          computeConnectionEnvelope: kind => connectionEnvelopeOf(kind, visual, state),
+          computeConnectionEnvelope: kind => getOrCreateConnectionEnvelope(kind, visual, state),
         },
         canon.params,
       );
@@ -135,7 +139,7 @@ export const resolveBoundary = (
     }
 
     rect = guardProviderOutput(`Boundary '${canon.name}' resolveRect`, () =>
-      resolveBoundaryRect(canon.name, rawRect, irPath),
+      snapshotBoundaryRect(canon.name, rawRect, irPath),
     );
   }
 

@@ -4,7 +4,7 @@ import type { Transform } from '../../contract';
 import type { IRNodeTarget, IRPosition, IRRelativeAccumulateTarget, IRRelativeTarget, IRTarget } from '../../schemas';
 import { isNodeTargetLike, isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../shared';
 import type { NodeBoundaryStore } from '../node';
-import { boundaryPointOf, clipNodePolyline, createNodeBoundaryStore, resolveAnchorRef } from '../node';
+import { boundaryPointOf, clipNodePolyline, createNodeBoundaryStore, getOrCreateAnchorReference } from '../node';
 import type { PositionTargetEvaluateContext } from '../reference';
 import { evaluatePositionTarget } from '../reference';
 import type { ComposedScopeTransform } from '../shared';
@@ -120,7 +120,7 @@ export const pathTargetViewOf = (
               warn === undefined ? undefined : (code, message) => warn(code, message, binding),
               { ...nodeBoundaryStore.get(node), irPath: binding.irPath ?? nodeBoundaryStore.get(node).irPath },
             )
-          : resolveAnchorRef(node, target.anchor, boundary, binding.canonicalBoundary, {
+          : getOrCreateAnchorReference(node, target.anchor, boundary, binding.canonicalBoundary, {
               ...nodeBoundaryStore.get(node),
               irPath: binding.irPath ?? nodeBoundaryStore.get(node).irPath,
             });

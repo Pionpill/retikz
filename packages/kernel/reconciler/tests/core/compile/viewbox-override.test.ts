@@ -94,7 +94,7 @@ describe('IR 根含小数 viewBox 按精度 round', () => {
 });
 
 describe('IR 根无 viewBox 时回退自动算 layout', () => {
-  it('空场景无 viewBox → 回退 computeLayoutFromBounds 兜底框', () => {
+  it('空场景无 viewBox → 回退 calculateLayoutFromBounds 兜底框', () => {
     const ir = scene([]);
     const result = compileToScene(ir).scene;
 
@@ -106,7 +106,7 @@ describe('IR 根无 viewBox 时回退自动算 layout', () => {
     const withSmallPadding = compileToScene(scene(content), { padding: 10 }).scene;
     const withLargePadding = compileToScene(scene(content), { padding: 50 }).scene;
 
-    // 回退到 computeLayoutFromBounds：padding 越大 layout 越大（证明未走 override 分支）
+    // 回退到 calculateLayoutFromBounds：padding 越大 layout 越大（证明未走 override 分支）
     expect(withLargePadding.layout.width).toBeGreaterThan(withSmallPadding.layout.width);
     expect(withLargePadding.layout.height).toBeGreaterThan(withSmallPadding.layout.height);
   });

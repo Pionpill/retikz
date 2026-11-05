@@ -5,7 +5,7 @@ import type { CanonicalPathStep } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
 import { BendInAngleSchema, BendLoosenessSchema, BendOutAngleSchema } from '../../../schemas';
 import { bendControlPoints, foldSegmentSample, outInControlPoints } from '../../../shared/geometry';
-import { clipTarget, foldCornersOf, samePoint } from '../host';
+import { clipTarget, foldCornersOf, isSamePoint } from '../host';
 import { isAutoBoundaryTarget } from '../target';
 import type { PathTargetView } from '../types';
 import type { PathCommandEmitter } from './commands';
@@ -156,8 +156,8 @@ export const lowerSegmentStep = (step: StrokeSegmentStep, context: SegmentStepLo
   if (targetAutoBoundary) points = targetView.clipPolylineTarget(step.to, points.toReversed(), scopeChain).reverse();
   if (points.length === 0) return true;
 
-  const fromToward = points.find(candidate => !samePoint(candidate, points[0])) ?? currentAnchor;
-  const toToward = points.findLast(candidate => !samePoint(candidate, points.at(-1)!)) ?? fromReference;
+  const fromToward = points.find(candidate => !isSamePoint(candidate, points[0])) ?? currentAnchor;
+  const toToward = points.findLast(candidate => !isSamePoint(candidate, points.at(-1)!)) ?? fromReference;
   const fromClip = sourceAutoBoundary
     ? points[0]
     : (penOverride ?? clipTarget(previous.step.to, fromToward, targetContext));
@@ -165,7 +165,7 @@ export const lowerSegmentStep = (step: StrokeSegmentStep, context: SegmentStepLo
   if (!fromClip || !toClip) return false;
 
   points = [fromClip, ...points.slice(1, -1), toClip].filter(
-    (position, index, all) => index === 0 || !samePoint(position, all[index - 1]),
+    (position, index, all) => index === 0 || !isSamePoint(position, all[index - 1]),
   );
   if (points.length < 2) return true;
 

@@ -9,7 +9,7 @@ import type {
 import {
   RetikzCoreError,
   RetikzCoreErrorCode,
-  computeLayoutFromBounds,
+  calculateLayoutFromBounds,
   resolveAnimations,
   viewBoxToLayout,
 } from '@retikz/core';
@@ -81,7 +81,7 @@ export const assembleSceneCompilationSnapshot = <
     primitives,
     layout:
       root.viewBox === undefined
-        ? computeLayoutFromBounds(layoutBounds, padding, round)
+        ? calculateLayoutFromBounds(layoutBounds, padding, round)
         : viewBoxToLayout(root.viewBox, round),
     ...(resources.length === 0 ? {} : { resources }),
     ...(animations === undefined ? {} : { animations }),

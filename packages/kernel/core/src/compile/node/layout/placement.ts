@@ -6,7 +6,7 @@ import type { PositionTargetEvaluateContext } from '../../reference';
 import { evaluatePositionTargetWorld } from '../../reference';
 import type { ComposedScopeTransform } from '../../shared';
 import { inverseScopeTransform } from '../../shared';
-import { resolveAnchorRefUncached } from '../anchor-cache';
+import { evaluateAnchorReference } from '../anchor-cache';
 import type { NodeBoundaryStore } from '../boundary-store';
 import { projectLayoutWithTransform } from '../projection';
 import type { CompiledNodeLayout } from '../types';
@@ -76,7 +76,7 @@ export const placeAnchorPositionedLayout = (
   }
 
   const projected = transform.chain.length === 0 ? provisional : projectLayoutWithTransform(provisional, transform);
-  const selfPoint = resolveAnchorRefUncached(
+  const selfPoint = evaluateAnchorReference(
     projected,
     position.selfAnchor ?? CenterAnchor.Center,
     undefined,

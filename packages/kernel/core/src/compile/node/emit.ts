@@ -366,7 +366,8 @@ const wrapNodeGroupPrimitive = (
   return group;
 };
 
-export const compileNodeTextStyle = (canon: CanonicalNode): CompiledNodeTextStyle => ({
+/** 从节点确定态投影输出文字所需的样式字段 */
+export const projectNodeTextStyle = (canon: CanonicalNode): CompiledNodeTextStyle => ({
   color: canon.text?.color,
   opacity: canon.style.opacity,
   lines: (canon.text?.lines ?? []).map(line => ({
@@ -388,7 +389,7 @@ export const emitNodePrimitives = (
   const shapePrimitives = emitNodeShapePrimitives(layout, canon.style, round, registerPaint);
   const inner: Array<ScenePrimitive> = [
     ...shapePrimitives,
-    ...emitCompiledNodeText(layout, compileNodeTextStyle(canon), round),
+    ...emitCompiledNodeText(layout, projectNodeTextStyle(canon), round),
     ...(layout.labels?.flatMap((label, index) =>
       emitNodeLabelPrimitives(layout, label, canon.labels[index], canon, round, registerPaint),
     ) ?? []),

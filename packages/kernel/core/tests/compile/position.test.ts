@@ -10,7 +10,7 @@ import {
   evaluatePositionTarget,
 } from '../../src/compile';
 import type { CompiledNodeLayout } from '../../src/compile/node';
-import { resolveTransformTranslation } from '../../src/compile/scope';
+import { evaluateTransformTranslation } from '../../src/compile/scope';
 import { BUILTIN_SHAPES } from '../../src/providers';
 import type { CanonicalNodeBoundary } from '../../src/resolve';
 import type { IRNodeTarget, IRPosition, IRTransform } from '../../src/schemas';
@@ -183,7 +183,7 @@ describe('evaluatePositionTarget', () => {
   });
 });
 
-describe('resolveTransformTranslation', () => {
+describe('evaluateTransformTranslation', () => {
   it('按当前坐标系解析每种平移变换', () => {
     const base = contextOf([reference('A', [120, 80]), reference('B', [140, 100])]);
     const context: PositionTargetEvaluateContext = {
@@ -201,7 +201,7 @@ describe('resolveTransformTranslation', () => {
       { kind: 'between-translate', between: [{ id: 'A' }, { id: 'B' }], fraction: 0.25 },
     ];
 
-    expect(transforms.map(transform => resolveTransformTranslation(transform, context)?.localPoint)).toEqual([
+    expect(transforms.map(transform => evaluateTransformTranslation(transform, context)?.localPoint)).toEqual([
       [3, 4],
       [15, 20],
       [30, 30],
@@ -212,7 +212,7 @@ describe('resolveTransformTranslation', () => {
 
   it('当无法解析转换引用时返回 null', () => {
     expect(
-      resolveTransformTranslation({ kind: 'at-translate', direction: 'top', of: 'missing' }, contextOf()),
+      evaluateTransformTranslation({ kind: 'at-translate', direction: 'top', of: 'missing' }, contextOf()),
     ).toBeNull();
   });
 });
