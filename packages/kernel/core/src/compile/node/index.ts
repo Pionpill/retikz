@@ -1,7 +1,3 @@
-export * from './anchor-cache';
-export * from './anchors';
-export * from './boundary';
-export * from './boundary-store';
 export * from './compile';
 export * from './constants';
 export * from './emit';
@@ -9,5 +5,4 @@ export * from './label-geometry';
 export * from './layout';
 export * from './layout-metrics';
 export * from './output';
-export * from './projection';
 export * from './types';

@@ -60,6 +60,9 @@ export const compileWeaveNode = (input: IRNode, runtime: WeaveElementRuntime): W
     irPath,
     warn,
   });
+  const boundaryState = workspace.boundaryStore.get(resolution.shape);
+  boundaryState.warn = warn;
+  boundaryState.irPath = irPath;
   const compilation = compileNode(resolution, {
     round: shared.layout.round,
     registerPaint: workspace.paintRegistry.register,
@@ -67,7 +70,7 @@ export const compileWeaveNode = (input: IRNode, runtime: WeaveElementRuntime): W
     measureText: shared.host.measureText,
     positionContext,
     composedTransform,
-    nodeBoundaryStore: workspace.nodeBoundaryStore,
+    boundaryState,
     scopeChain: transforms,
     allocationWidthProposal: proposal?.x,
     warn,
@@ -114,7 +117,7 @@ export const compileWeavePath = (input: IRPathBase, runtime: WeaveElementRuntime
     registries: shared.registries,
     ...shared.layout,
     ...shared.host,
-    nodeBoundaryStore: workspace.nodeBoundaryStore,
+    boundaryStore: workspace.boundaryStore,
     registerPaint: workspace.paintRegistry.register,
     resources: () => [...workspace.paintRegistry.getResources(), ...workspace.clipRegistry.getResources()],
     onWarn: workspace.diagnosticCollector.collect,

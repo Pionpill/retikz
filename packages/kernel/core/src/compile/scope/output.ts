@@ -2,8 +2,8 @@ import { boundsToRect } from '@retikz/math';
 
 import type { GroupPrimitive, ScenePrimitive, SceneResource, Transform } from '../../contract';
 import { collectLayoutBounds, calculateBoundsOfPrimitives, allocationPointsOf } from '../scene';
+import type { CompileBounds, LayoutBoundsContribution } from '../scene';
 import { applyTransformChain } from '../shared';
-import type { CompileBounds, LayoutBoundsContribution } from './types';
 
 /** 判断 Scope 是否需要保留可见分组，空匿名分组可被裁去 */
 export const shouldEmitScopeGroup = (

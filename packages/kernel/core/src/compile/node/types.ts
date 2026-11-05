@@ -1,24 +1,15 @@
 import type { JsonObject, PropertyPath } from '@retikz/foundation';
 import type { BoundsInsets, CenteredBox, Position } from '@retikz/math';
 
-import type {
-  LayoutAxisProposal,
-  Transform,
-  BoundaryDefinition,
-  ConnectionEnvelopeKind,
-  TextLine,
-  TextMeasurer,
-  ShapeDefinition,
-  LayoutAlignmentGuide,
-} from '../../contract';
+import type { LayoutAxisProposal, Transform, TextLine, TextMeasurer, LayoutAlignmentGuide } from '../../contract';
 import type { CanonicalFont, CanonicalNode } from '../../resolve';
 import type { IRAnimationTrack, CanonicalDropShadow } from '../../schemas';
+import type { BoundaryState } from '../boundary';
 import type { PositionTargetEvaluateContext } from '../reference';
 import type { RegisterPaint } from '../resource';
 import type { CompiledDrawing } from '../scene';
 import type { ComposedScopeTransform, CompileWarningCode } from '../shared';
 import type { InlineLineLayout, TexLowerer } from '../text';
-import type { NodeBoundaryStore } from './boundary-store';
 
 /** 节点最终位置、视觉尺寸及自定义形状图元几何 */
 export type CompiledNodeGeometry = {
@@ -105,38 +96,6 @@ export type CompiledNode = {
   labels: Array<CompiledNodeLabel>;
   /** 已确定的动画轨道 */
   animations: Array<IRAnimationTrack>;
-};
-
-/** 连接面消费过程中的缓存和诊断状态 */
-export type NodeBoundaryState = {
-  /** 按连接面缓存已计算的包络 */
-  connectionEnvelopeCache?: Map<string, CenteredBox>;
-  /** 已发布回退诊断的连接面种类 */
-  connectionEnvelopeWarnings?: Set<ConnectionEnvelopeKind>;
-  /** 当前节点的诊断出口 */
-  warn?: (code: CompileWarningCode, message: string) => void;
-  /** 当前节点的来源路径 */
-  irPath?: PropertyPath;
-};
-
-/** 已按视觉 rect 解析出的连接面几何 */
-export type NodeBoundaryResolution = {
-  /** 连接面 definition */
-  def: ShapeDefinition | BoundaryDefinition;
-  /** provider 使用的连接面 rect */
-  rect: CenteredBox;
-  /** 已校验参数 */
-  params: JsonObject;
-};
-
-/** 节点视觉形状及其布局几何 */
-export type NodeVisualResolution = {
-  /** 节点视觉 shape definition */
-  def: ShapeDefinition;
-  /** 节点视觉 shape rect */
-  rect: CenteredBox;
-  /** 节点视觉 shape 参数 */
-  params: JsonObject;
 };
 
 /** 节点正文与附属 label 共享的文本布局上下文 */
@@ -238,8 +197,8 @@ export type NodeCompileContext = {
   irPath?: PropertyPath;
   /** 文本测量函数 */
   measureText: TextMeasurer;
-  /** 当前编译共享的连接面缓存与诊断状态 */
-  nodeBoundaryStore?: NodeBoundaryStore;
+  /** 调用方提供的当前节点连接面缓存与诊断状态；省略时只使用本次诊断信息 */
+  boundaryState?: BoundaryState;
   /** 位置与目标的运行时求值能力 */
   positionContext: PositionTargetEvaluateContext;
   /** 当前 scope 累积 transform */

@@ -11,9 +11,9 @@ import type {
 } from '../../contract';
 import { computeSceneTextBounds } from '../../contract';
 import type { CanonicalDropShadow, IRPosition } from '../../schemas';
-import type { CompileOutput } from '../scope';
 import { applyTransformChain, createCompileInvariantError } from '../shared';
 import { buildMarkMarkerGroup } from './marker';
+import type { CompileOutput } from './types';
 
 /** canonical visual bounds 对 miter join 使用的保守上限 */
 const CANONICAL_STROKE_MITER_LIMIT = 10;

@@ -126,7 +126,7 @@ export const runWeaveCompilation = <TCompiled>(
     nodeDistance: options.shared.layout.nodeDistance,
     transformChain: transforms,
     composedTransform,
-    nodeBoundaryStore: workspace.nodeBoundaryStore,
+    boundaryStore: workspace.boundaryStore,
     lookupReference: name => {
       const entry = lookupWeaveBinding(options.namespace, name, reads);
       if (entry === undefined) return undefined;

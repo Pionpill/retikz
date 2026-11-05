@@ -22,7 +22,7 @@ export const createPathDefinitionContext = (
     theme,
     targetResolver,
     onWarn,
-    nodeBoundaryStore,
+    boundaryStore,
     resolveTransform,
     registerPaint: registerContextPaint,
     resources,
@@ -35,7 +35,7 @@ export const createPathDefinitionContext = (
   const { irPath, definition, targets, properties: canonicalPath } = resolution;
   const targetWarn = (code: string, message: string, node?: { irPath?: PropertyPath }): void =>
     onWarn({ code, message, path: node?.irPath ?? irPath });
-  const targetView = pathTargetViewOf(targets, targetWarn, nodeBoundaryStore, resolveTransform);
+  const targetView = pathTargetViewOf(targets, targetWarn, boundaryStore, resolveTransform);
 
   const kind = definition.name;
   const registerPaint: RegisterPaint = paint => {
@@ -82,12 +82,7 @@ export const createPathDefinitionContext = (
             irPath,
           })
         : { ...sourceResolution, ...sourceResolution.stroke };
-    const emittedTargetView = pathTargetViewOf(
-      strokeResolution.targets,
-      targetWarn,
-      nodeBoundaryStore,
-      resolveTransform,
-    );
+    const emittedTargetView = pathTargetViewOf(strokeResolution.targets, targetWarn, boundaryStore, resolveTransform);
     const emitted = emitPathPrimitive(strokeResolution, {
       targetView: emittedTargetView,
       round,
@@ -124,7 +119,7 @@ export const createPathDefinitionContext = (
       },
     };
     const geometry = lowerStrokePathGeometry(emittedResolution, {
-      targetView: pathTargetViewOf(emittedResolution.targets, targetWarn, nodeBoundaryStore, resolveTransform),
+      targetView: pathTargetViewOf(emittedResolution.targets, targetWarn, boundaryStore, resolveTransform),
       round,
       measureText,
       options: emitOptions,

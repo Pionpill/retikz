@@ -4,10 +4,9 @@ import { boundaryKey } from '../../resolve';
 import type { IRAnchorRef, IRBoundary, IRPosition } from '../../schemas';
 import type { Side } from '../../shared';
 import { isAnchor } from '../../shared';
-import type { CompiledBoundaryGeometry } from '../reference';
 import { snapshotProviderPosition } from '../shared';
 import { anchorOf, angleBoundaryOf } from './anchors';
-import type { NodeBoundaryState } from './types';
+import type { CompiledBoundaryGeometry, BoundaryState } from './types';
 
 /** 单个 CompiledBoundaryGeometry 生命周期内的 anchor 坐标缓存 */
 const cache = new WeakMap<CompiledBoundaryGeometry, Map<string, IRPosition>>();
@@ -21,7 +20,7 @@ const evaluateNamedAnchor = (
   anchorName: string,
   boundary: IRBoundary | undefined,
   canon?: CanonicalNodeBoundary,
-  state?: NodeBoundaryState,
+  state?: BoundaryState,
 ): IRPosition => {
   if (ANGLE_RE.test(anchorName)) {
     return angleBoundaryOf(layout, Number(anchorName), boundary, true, canon, state);
@@ -61,20 +60,20 @@ export const evaluateAnchorReference = (
   anchor: IRAnchorRef,
   boundary?: IRBoundary,
   canon?: CanonicalNodeBoundary,
-  state?: NodeBoundaryState,
+  state?: BoundaryState,
 ): IRPosition => {
   if (typeof anchor === 'number') return evaluateNamedAnchor(layout, String(anchor), boundary, canon, state);
   if (typeof anchor === 'string') return evaluateNamedAnchor(layout, anchor, boundary, canon, state);
   return calculateEdgePoint(layout, anchor.side, anchor.fraction);
 };
 
-/** 取节点 anchor 的全局坐标 */
+/** 取命名 anchor 的全局坐标 */
 export const getOrCreateNamedAnchor = (
   layout: CompiledBoundaryGeometry,
   anchorName: string,
   boundary?: IRBoundary,
   canon?: CanonicalNodeBoundary,
-  state?: NodeBoundaryState,
+  state?: BoundaryState,
 ): IRPosition => {
   let layoutCache = cache.get(layout);
   if (!layoutCache) {
@@ -92,7 +91,7 @@ export const getOrCreateNamedAnchor = (
   return result;
 };
 
-/** 取节点边上比例点的全局坐标 */
+/** 取视觉形状边上比例点的全局坐标 */
 const getOrCreateEdgePoint = (layout: CompiledBoundaryGeometry, side: Side, t: number): IRPosition => {
   let layoutCache = cache.get(layout);
   if (!layoutCache) {
@@ -116,7 +115,7 @@ export const getOrCreateAnchorReference = (
   anchor: IRAnchorRef,
   boundary?: IRBoundary,
   canon?: CanonicalNodeBoundary,
-  state?: NodeBoundaryState,
+  state?: BoundaryState,
 ): IRPosition => {
   if (typeof anchor === 'number') return getOrCreateNamedAnchor(layout, String(anchor), boundary, canon, state);
   if (typeof anchor === 'string') return getOrCreateNamedAnchor(layout, anchor, boundary, canon, state);

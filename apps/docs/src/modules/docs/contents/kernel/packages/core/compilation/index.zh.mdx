@@ -110,7 +110,7 @@ Reconciler 使用 Foundation 的 `createIdAllocator(prefix)` 分配树内唯一�
 
 同一命名空间内重复声明的 ID 在编译成功后汇总为一条 `DUPLICATE_NODE_ID` 诊断。消息按声明顺序列出全部位置，`path` 指向最后一次声明；名称绑定仍由最后一次声明覆盖。独立命名空间中的同名 ID 分别处理。试编译的声明仅在选中重放后计入实际目标命名空间，未选中的试编译不发布诊断。
 
-Reconciler 的 `compile/runtime` 管理稳定环境与单次工作区，包括名称栈、变换缓存及组件状态。Core 的 `compile` 按 node、path、scope 等领域组织原子计算，节点布局类型归 `compile/node/types.ts`，Scope 边界贡献归 `compile/scope/types.ts`。布局投影和位置引用适配属于 Core；树遍历与阶段调度属于 Reconciler。
+Reconciler 的 `compile/runtime` 管理稳定环境与单次工作区，包括名称栈、变换缓存及组件状态。Core 的 `compile` 按 node、path、scope 等领域组织原子计算，节点布局类型归 `compile/node/types.ts`；共享的连接面、锚点、几何投影和消费状态归 `compile/boundary`，通用输出及边界贡献类型归 `compile/scene/types.ts`。`compile/reference` 负责名称引用与位置表达式求值，直接消费共享边界能力。树遍历与阶段调度属于 Reconciler。
 
 环境按职责分为四组：
 

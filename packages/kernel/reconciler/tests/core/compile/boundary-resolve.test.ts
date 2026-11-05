@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { strictObject } from 'zod';
 
 import { BuiltinCompileWarningCode } from '../../../../core/src';
-import type { NodeBoundaryState, NodeVisualResolution } from '../../../../core/src/compile/node';
-import { bindNodeBoundary } from '../../../../core/src/compile/node';
+import type { BoundaryState, BoundaryVisualResolution } from '../../../../core/src/compile/boundary';
+import { bindBoundary } from '../../../../core/src/compile/boundary';
 import type { BoundaryDefinition, ShapeDefinition } from '../../../../core/src/contract';
 import { defineBoundary } from '../../../../core/src/contract';
 import { resolveBoundaryRegistry, ellipseShape, rectangle } from '../../../../core/src/providers';
@@ -34,8 +34,8 @@ const customWithoutEnvelope = {
   computeConnectionEnvelope: undefined,
 };
 
-type BoundaryTestContext = NodeBoundaryState &
-  NodeVisualResolution & {
+type BoundaryTestContext = BoundaryState &
+  BoundaryVisualResolution & {
     shapeRegistry: ProviderRegistry<ShapeDefinition>;
     boundaryRegistry: ProviderRegistry<BoundaryDefinition>;
   };
@@ -50,7 +50,7 @@ const resolveContext = (overrides: Partial<BoundaryTestContext> = {}): BoundaryT
 });
 
 const resolveBoundary = (boundary: Parameters<typeof resolveNodeBoundary>[0], context: BoundaryTestContext) =>
-  bindNodeBoundary(
+  bindBoundary(
     resolveNodeBoundary(boundary, {
       visualDef: context.def,
       visualParams: context.params,

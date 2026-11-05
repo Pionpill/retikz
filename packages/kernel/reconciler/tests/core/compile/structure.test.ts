@@ -32,7 +32,7 @@ describe('编译源结构', () => {
       'calculateCompileOutputBounds',
       'calculateLayoutFromBounds',
       'compileCoordinate',
-      'createNodeBoundaryStore',
+      'createBoundaryStore',
       'createPathTargetResolver',
       'createPositionEvaluateContext',
       'createScopeGroup',

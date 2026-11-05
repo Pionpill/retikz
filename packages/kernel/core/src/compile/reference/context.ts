@@ -5,12 +5,11 @@ import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { CanonicalNodeBoundary, NodeBoundaryResolver } from '../../resolve';
 import type { IRBetweenPosition, IRNodeTarget, IRPosition } from '../../schemas';
 import { isAnchor } from '../../shared';
-import type { NodeBoundaryStore } from '../node';
-import { getOrCreateAnchorReference } from '../node';
+import type { BoundaryStore, CompiledBoundaryGeometry } from '../boundary';
+import { getOrCreateAnchorReference } from '../boundary';
 import type { ComposedScopeTransform } from '../shared';
 import { applyScopeTransform, composeScopeTransform, inverseScopeTransform } from '../shared';
 import { evaluatePositionTarget } from './target';
-import type { CompiledBoundaryGeometry } from './types';
 import type { PositionReferenceView, PositionTargetEvaluateContext, ReferenceReadKind } from './types';
 
 /** 仅解析目标额外指定的连接面；视觉形状与默认连接面由几何消费端读取布局 */
@@ -36,7 +35,7 @@ export type InputPositionEvaluateContext = Readonly<{
   /** 当前命名空间 */
   lookupReference: (id: string, kind?: ReferenceReadKind) => PositionReferenceView | undefined;
   /** 与节点布局及路径裁剪共享的几何消费状态 */
-  nodeBoundaryStore?: NodeBoundaryStore;
+  boundaryStore?: BoundaryStore;
   /** 相对定位默认距离 */
   nodeDistance: number;
   /** 当前 Scope 累积 transform */
@@ -54,7 +53,7 @@ export type InputPositionEvaluateContext = Readonly<{
 export const createPositionEvaluateContext = (input: InputPositionEvaluateContext): PositionTargetEvaluateContext => {
   const {
     lookupReference,
-    nodeBoundaryStore,
+    boundaryStore,
     nodeDistance,
     transformChain = [],
     composedTransform,
@@ -92,7 +91,7 @@ export const createPositionEvaluateContext = (input: InputPositionEvaluateContex
       return geometry.position;
     }
     if (target.anchor === undefined) return [geometry.geometry.rect.x, geometry.geometry.rect.y];
-    const state = nodeBoundaryStore?.get(geometry);
+    const state = boundaryStore?.get(geometry.shape);
     return getOrCreateAnchorReference(geometry, target.anchor, target.boundary, canonicalBoundary, {
       ...state,
       irPath: reference.irPath ?? state?.irPath,

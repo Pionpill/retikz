@@ -12,8 +12,8 @@ import type {
   IRTranslateTransform,
   PolarPosition,
 } from '../../schemas';
-import { evaluateAnchorReference } from '../node';
-import type { CompiledBoundaryGeometry } from '../reference';
+import { evaluateAnchorReference } from '../boundary';
+import type { CompiledBoundaryGeometry } from '../boundary';
 import { evaluatePosition } from '../reference';
 import type { PositionEvaluation, PositionEvaluateContext, PositionTargetEvaluateContext } from '../reference';
 import { createCompileInvariantError } from '../shared';

@@ -9,7 +9,7 @@ export const createTreePositionContext = (
   scopeChain: ReadonlyArray<Transform>,
 ): PositionTargetEvaluateContext =>
   createPositionEvaluateContext({
-    nodeBoundaryStore: runtime.state.workspace.nodeBoundaryStore,
+    boundaryStore: runtime.state.workspace.boundaryStore,
     lookupReference: (id, kind) => runtime.state.execution.namespaceStack.lookupReference(id, kind),
     nodeDistance: runtime.context.layout.nodeDistance,
     transformChain: scopeChain,

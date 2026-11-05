@@ -1,8 +1,8 @@
 import type { Transform } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { IRPosition, IRScopeSelfPoint, IRTransform } from '../../schemas';
-import { projectLayoutWithTransform, evaluateAnchorReference } from '../node';
-import type { CompiledBoundaryGeometry } from '../reference';
+import { projectLayoutWithTransform, evaluateAnchorReference } from '../boundary';
+import type { CompiledBoundaryGeometry } from '../boundary';
 import { BuiltinCompileWarningCode, applyTransformChain, composeScopeTransform } from '../shared';
 import { lowerScopeTransforms } from './transform';
 import type { InputScopeCompile, ScopeCompileContext } from './types';

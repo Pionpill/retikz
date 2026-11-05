@@ -1,7 +1,8 @@
 import type { ContourSegment } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
-import { boundaryPointOf, layoutNode } from '../../../../core/src/compile/node';
+import { boundaryPointOf } from '../../../../core/src/compile/boundary';
+import { layoutNode } from '../../../../core/src/compile/node';
 import { createPositionEvaluateContext } from '../../../../core/src/compile/reference';
 import { resolveBoundaryRegistry, resolvePatternRegistry, BUILTIN_SHAPES } from '../../../../core/src/providers';
 import { resolveNode } from '../../../../core/src/resolve';

@@ -12,8 +12,7 @@ import type {
 import type { CanonicalNodeBoundary, MergedScopeDefaults, CanonicalPath } from '../../resolve';
 import type { IRPathBase, IRPosition, IRTarget, CanonicalDropShadow } from '../../schemas';
 import type { CanonicalTheme } from '../../shared';
-import type { NodeBoundaryStore } from '../node';
-import type { CompiledBoundaryGeometry } from '../reference';
+import type { BoundaryStore, CompiledBoundaryGeometry } from '../boundary';
 import type { RegisterPaint } from '../resource';
 import type { CompiledDrawing } from '../scene';
 import type { ComposedScopeTransform, CompileWarning } from '../shared';
@@ -140,7 +139,7 @@ export type PathCompileContext = Omit<InputPathCompilation, 'path'> &
     /** 公式降级服务 */
     lowerTex?: TexLowerer;
     /** 几何缓存 */
-    nodeBoundaryStore: NodeBoundaryStore;
+    boundaryStore: BoundaryStore;
     /** 资源登记 */
     registerPaint: RegisterPaint;
     /** 当前可读取的绘制与裁剪资源 */

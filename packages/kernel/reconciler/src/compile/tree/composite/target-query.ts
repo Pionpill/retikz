@@ -86,7 +86,7 @@ export const createCompositeTargetQuery = (
       const targetNamespace = shared.namespaceStack.fork();
       const queryChain = shared.scopeChain;
       const positionContext = createPositionEvaluateContext({
-        nodeBoundaryStore: runtime.state.workspace.nodeBoundaryStore,
+        boundaryStore: runtime.state.workspace.boundaryStore,
         lookupReference: id => targetNamespace.lookupReference(id),
         nodeDistance: runtime.context.layout.nodeDistance,
         transformChain: queryChain,
@@ -129,6 +129,8 @@ export const createCompositeTargetQuery = (
             },
             {
               mode: theme.mode,
+              rootFontSize: runtime.context.layout.rootFontSize,
+              gatingOn: runtime.context.host.lowerTex !== undefined,
               pathRegistry: runtime.context.registries.pathRegistry,
               arrowRegistry: runtime.context.registries.arrowRegistry,
               markRegistry: runtime.context.registries.markRegistry,

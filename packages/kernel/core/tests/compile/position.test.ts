@@ -3,12 +3,11 @@ import { describe, expect, it } from 'vitest';
 import type { PositionReferenceState, PositionReferenceView, PositionTargetEvaluateContext } from '../../src/compile';
 import {
   composeScopeTransform,
-  createNodeBoundaryStore,
   createPositionEvaluateContext,
-  projectLayoutWithTransform,
   evaluatePosition,
   evaluatePositionTarget,
 } from '../../src/compile';
+import { createBoundaryStore, projectLayoutWithTransform } from '../../src/compile/boundary';
 import type { CompiledNodeLayout } from '../../src/compile/node';
 import { evaluateTransformTranslation } from '../../src/compile/scope';
 import { BUILTIN_SHAPES } from '../../src/providers';
@@ -75,15 +74,15 @@ const contextOf = (
 describe('compiled layout references', () => {
   it('保留别名来源并直接复用布局，不修改共享诊断状态', () => {
     const layout = rectangleLayout();
-    const store = createNodeBoundaryStore();
-    store.get(layout).irPath = ['original'];
+    const store = createBoundaryStore();
+    store.get(layout.shape).irPath = ['original'];
     const paths: Array<unknown> = [];
     const references = new Map<string, PositionReferenceView>(
       ['A', 'B'].map(id => [id, { state: 'resolved', geometry: layout, irPath: ['aliases', id] }]),
     );
     const context = createPositionEvaluateContext({
       nodeDistance: 24,
-      nodeBoundaryStore: store,
+      boundaryStore: store,
       lookupReference: id => references.get(id),
       resolveExplicitBoundary: (_boundary, input) => {
         paths.push(input.irPath);
@@ -101,7 +100,7 @@ describe('compiled layout references', () => {
       ['aliases', 'A'],
       ['aliases', 'B'],
     ]);
-    expect(store.get(layout).irPath).toEqual(['original']);
+    expect(store.get(layout.shape).irPath).toEqual(['original']);
   });
 
   it('重新发布变换后的布局时重新计算锚点', () => {
@@ -109,7 +108,7 @@ describe('compiled layout references', () => {
     let layout = original;
     const context = createPositionEvaluateContext({
       nodeDistance: 24,
-      nodeBoundaryStore: createNodeBoundaryStore(),
+      boundaryStore: createBoundaryStore(),
       lookupReference: () => ({ state: 'resolved', geometry: layout }),
     });
     expect(evaluatePositionTarget({ id: 'A', anchor: 'right' }, context).point).toEqual([30, 20]);

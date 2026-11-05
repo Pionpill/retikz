@@ -1,6 +1,6 @@
 import type { Transform } from '../../contract';
 import type { IRPosition } from '../../schemas';
-import { projectLayoutWithTransform, projectPublishedCompileLayout } from '../node';
+import { projectLayoutWithTransform, projectPublishedCompileLayout } from '../boundary';
 import { applyScopeTransform, applyTransformChain, inverseTransformChain } from '../shared';
 import type { ComposedScopeTransform } from '../shared';
 import type { CompiledReferenceGeometry } from './types';

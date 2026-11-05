@@ -14,11 +14,13 @@ import {
 } from '../../resolve';
 import { boundsConnectionEnvelope, isDirectionalAnchor, rect as rectOps } from '../../shared';
 import { BuiltinCompileWarningCode } from '../shared';
-import type { NodeBoundaryResolution, NodeBoundaryState, NodeVisualResolution } from './types';
+import type { BoundaryResolution, BoundaryState, BoundaryVisualResolution } from './types';
 
 /** 同一 layout 在局部 / 全局投影后尺寸可能不同，缓存 key 必须包含 rect 几何 */
-const formatConnectionEnvelopeCacheKey = (rect: NodeVisualResolution['rect'], kind: ConnectionEnvelopeKind): string =>
-  `${kind}:${rect.x}:${rect.y}:${rect.width}:${rect.height}:${rect.rotate ?? 0}`;
+const formatConnectionEnvelopeCacheKey = (
+  rect: BoundaryVisualResolution['rect'],
+  kind: ConnectionEnvelopeKind,
+): string => `${kind}:${rect.x}:${rect.y}:${rect.width}:${rect.height}:${rect.rotate ?? 0}`;
 
 /** 校验 Shape definition 返回的安全包络 */
 const snapshotConnectionEnvelope = (
@@ -48,8 +50,8 @@ const snapshotConnectionEnvelope = (
 /** 解析并缓存视觉 shape 对规则连接面的安全包络矩形 */
 const getOrCreateConnectionEnvelope = (
   kind: ConnectionEnvelopeKind,
-  visual: NodeVisualResolution,
-  state: NodeBoundaryState,
+  visual: BoundaryVisualResolution,
+  state: BoundaryState,
 ) => {
   const { def, rect, params } = visual;
   const { connectionEnvelopeCache, connectionEnvelopeWarnings, warn, irPath } = state;
@@ -104,11 +106,11 @@ const snapshotBoundaryRect = (providerName: string, value: CenteredBox, irPath?:
 };
 
 /** 将已解析连接面引用绑定到视觉 rect 并执行 provider 几何 */
-export const bindNodeBoundary = (
+export const bindBoundary = (
   canon: CanonicalNodeBoundary,
-  visual: NodeVisualResolution,
-  state: NodeBoundaryState,
-): NodeBoundaryResolution => {
+  visual: BoundaryVisualResolution,
+  state: BoundaryState,
+): BoundaryResolution => {
   const { rect: visualRect } = visual;
   const { irPath } = state;
   if (canon.isShape) {
@@ -147,5 +149,5 @@ export const bindNodeBoundary = (
 };
 
 /** 将标准方向锚点退回到矩形边界求解；非标准名称返回 undefined */
-export const fallbackBoundaryAnchor = (rect: NodeBoundaryResolution['rect'], name: string): Position | undefined =>
+export const fallbackBoundaryAnchor = (rect: BoundaryResolution['rect'], name: string): Position | undefined =>
   isDirectionalAnchor(name) ? rectOps.anchor(rect, name) : undefined;

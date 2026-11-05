@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { strictObject } from 'zod';
 
+import { getOrCreateNamedAnchor, getOrCreateAnchorReference } from '../../../../core/src/compile/boundary';
 import type { CompiledNodeLayout } from '../../../../core/src/compile/node';
-import { getOrCreateNamedAnchor, getOrCreateAnchorReference } from '../../../../core/src/compile/node';
 import type { ShapeDefinition } from '../../../../core/src/contract';
 import { defineShape } from '../../../../core/src/contract';
 import { BUILTIN_SHAPES } from '../../../../core/src/providers';

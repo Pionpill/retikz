@@ -2,13 +2,12 @@ import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import type { CanonicalNode, CanonicalPosition } from '../../../resolve';
 import type { IRAnchorPosition, IRPosition } from '../../../schemas';
 import { CenterAnchor } from '../../../shared';
+import { evaluateAnchorReference, projectLayoutWithTransform } from '../../boundary';
+import type { BoundaryState } from '../../boundary';
 import type { PositionTargetEvaluateContext } from '../../reference';
 import { evaluatePositionTargetWorld } from '../../reference';
 import type { ComposedScopeTransform } from '../../shared';
 import { inverseScopeTransform } from '../../shared';
-import { evaluateAnchorReference } from '../anchor-cache';
-import type { NodeBoundaryStore } from '../boundary-store';
-import { projectLayoutWithTransform } from '../projection';
 import type { CompiledNodeLayout } from '../types';
 
 /** 判断 Node.position 是否为锚点对锚点定位 */
@@ -43,7 +42,7 @@ export const placeAnchorPositionedLayout = (
   provisional: CompiledNodeLayout,
   positionContext: PositionTargetEvaluateContext,
   transform: ComposedScopeTransform,
-  nodeBoundaryStore: NodeBoundaryStore,
+  boundaryState: BoundaryState,
 ): CompiledNodeLayout => {
   if (canon.id === position.target.id || canon.aliasIds.includes(position.target.id)) {
     throw new RetikzCoreError(
@@ -81,7 +80,7 @@ export const placeAnchorPositionedLayout = (
     position.selfAnchor ?? CenterAnchor.Center,
     undefined,
     canon.boundary,
-    nodeBoundaryStore.get(provisional),
+    boundaryState,
   );
   const deltaGlobal: IRPosition = [target.referencePoint[0] - selfPoint[0], target.referencePoint[1] - selfPoint[1]];
   const deltaLocal = localDeltaOf(deltaGlobal, [projected.geometry.rect.x, projected.geometry.rect.y], transform);

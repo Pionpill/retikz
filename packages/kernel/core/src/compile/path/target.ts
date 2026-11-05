@@ -3,8 +3,8 @@ import type { PropertyPath } from '@retikz/foundation';
 import type { Transform } from '../../contract';
 import type { IRNodeTarget, IRPosition, IRRelativeAccumulateTarget, IRRelativeTarget, IRTarget } from '../../schemas';
 import { isNodeTargetLike, isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../shared';
-import type { NodeBoundaryStore } from '../node';
-import { boundaryPointOf, clipNodePolyline, createNodeBoundaryStore, getOrCreateAnchorReference } from '../node';
+import type { BoundaryStore } from '../boundary';
+import { boundaryPointOf, clipBoundaryPolyline, createBoundaryStore, getOrCreateAnchorReference } from '../boundary';
 import type { PositionTargetEvaluateContext } from '../reference';
 import { evaluatePositionTarget } from '../reference';
 import type { ComposedScopeTransform } from '../shared';
@@ -65,7 +65,7 @@ export const targetKeyOf = (target: IRTarget): string => {
 export const pathTargetViewOf = (
   targets: ReadonlyMap<string, TargetResolution>,
   warn?: (code: string, message: string, reference?: { irPath?: PropertyPath }) => void,
-  nodeBoundaryStore: NodeBoundaryStore = createNodeBoundaryStore(),
+  boundaryStore: BoundaryStore = createBoundaryStore(),
   resolveTransform: (chain: ReadonlyArray<Transform>) => ComposedScopeTransform = composeScopeTransform,
 ): PathTargetView => {
   const byTarget = new Map<string, TargetResolution>();
@@ -92,13 +92,13 @@ export const pathTargetViewOf = (
 
       const transform = resolveTransform(scopeChain);
       const node = binding.geometry;
-      const clipped = clipNodePolyline(
+      const clipped = clipBoundaryPolyline(
         node,
         points.map(position => applyScopeTransform(position, transform)),
         target.boundary,
         binding.canonicalBoundary,
         warn === undefined ? undefined : (code, message) => warn(code, message, binding),
-        { ...nodeBoundaryStore.get(node), irPath: binding.irPath ?? nodeBoundaryStore.get(node).irPath },
+        { ...boundaryStore.get(node.shape), irPath: binding.irPath ?? boundaryStore.get(node.shape).irPath },
       );
       return clipped.map(position => inverseScopeTransform(position, transform));
     },
@@ -118,11 +118,14 @@ export const pathTargetViewOf = (
               boundary,
               binding.canonicalBoundary,
               warn === undefined ? undefined : (code, message) => warn(code, message, binding),
-              { ...nodeBoundaryStore.get(node), irPath: binding.irPath ?? nodeBoundaryStore.get(node).irPath },
+              {
+                ...boundaryStore.get(node.shape),
+                irPath: binding.irPath ?? boundaryStore.get(node.shape).irPath,
+              },
             )
           : getOrCreateAnchorReference(node, target.anchor, boundary, binding.canonicalBoundary, {
-              ...nodeBoundaryStore.get(node),
-              irPath: binding.irPath ?? nodeBoundaryStore.get(node).irPath,
+              ...boundaryStore.get(node.shape),
+              irPath: binding.irPath ?? boundaryStore.get(node.shape).irPath,
             });
       const global = addOffset(base, target.offset);
 

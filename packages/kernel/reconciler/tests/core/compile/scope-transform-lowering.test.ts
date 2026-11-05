@@ -1,10 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import type { PositionEvaluateContext } from '../../../../core/src/compile';
+import { projectLayoutWithTransform } from '../../../../core/src/compile/boundary';
 import type { CompiledNodeLayout } from '../../../../core/src/compile/node';
-import { projectLayoutWithTransform } from '../../../../core/src/compile/node';
-import { referencePositionOf } from '../../../../core/src/compile/reference';
-import { createPositionEvaluateContext } from '../../../../core/src/compile/reference';
+import { referencePositionOf, createPositionEvaluateContext } from '../../../../core/src/compile/reference';
 import { lowerScopeTransforms } from '../../../../core/src/compile/scope/transform';
 import { composeScopeTransform } from '../../../../core/src/compile/shared';
 import type { Transform } from '../../../../core/src/contract';

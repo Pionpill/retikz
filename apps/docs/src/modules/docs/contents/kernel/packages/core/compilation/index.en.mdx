@@ -112,7 +112,7 @@ Each recursive subtree uses `SubtreeCompileRuntime`: its `context` holds effecti
 
 After successful compilation, repeated declarations of an ID in the same namespace produce one `DUPLICATE_NODE_ID` diagnostic. Its message lists every location in declaration order, and `path` points to the last declaration; the last declaration still wins name resolution. Independent namespaces are handled separately. Probed declarations count toward the actual destination namespace only when selected for replay; discarded probes publish no diagnostics.
 
-Reconciler owns stable environments and per-execution workspaces in `compile/runtime`, including namespaces, transform caches, and component state. Core organizes atomic computation by domain under `compile`: node, path, and scope. Node layout types live in `compile/node/types.ts`; Scope bounds contributions live in `compile/scope/types.ts`. Layout projection and position reference adaptation belong to Core; tree traversal and stage scheduling belong to Reconciler.
+Reconciler owns stable environments and per-execution workspaces in `compile/runtime`, including namespaces, transform caches, and component state. Core organizes atomic computation by domain under `compile`: node, path, and scope. Node layout types live in `compile/node/types.ts`. Shared connection boundaries, anchors, geometry projection, and query state belong to `compile/boundary`; common output and bounds contribution types belong to `compile/scene/types.ts`. `compile/reference` evaluates named references and position expressions using the shared boundary capabilities. Tree traversal and stage scheduling belong to Reconciler.
 
 The shared context has four groups:
 

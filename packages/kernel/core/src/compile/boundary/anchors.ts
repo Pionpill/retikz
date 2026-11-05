@@ -6,10 +6,9 @@ import type { CanonicalNodeBoundary } from '../../resolve';
 import { boundaryKey } from '../../resolve';
 import type { IRBoundary } from '../../schemas';
 import { CenterAnchor, isAnchor } from '../../shared';
-import type { CompiledBoundaryGeometry } from '../reference';
 import { snapshotProviderPosition } from '../shared';
-import { fallbackBoundaryAnchor, bindNodeBoundary } from './boundary';
-import type { NodeBoundaryState } from './types';
+import { fallbackBoundaryAnchor, bindBoundary } from './boundary';
+import type { CompiledBoundaryGeometry, BoundaryState } from './types';
 
 /** 保留合法 undefined fallback，并校验 provider 实际返回的二维坐标 */
 const snapshotOptionalProviderPosition = (owner: string, value: Position | undefined): Position | undefined =>
@@ -36,7 +35,7 @@ const inflateRect = (r: CenteredBox, m: BoundsInsets): CenteredBox => {
   };
 };
 
-/** 取节点视觉 rect 外扩 margin 后的外边界 */
+/** 取视觉 rect 外扩 margin 后的外边界 */
 export const outerRectOf = (layout: Pick<CompiledBoundaryGeometry, 'geometry'>): CenteredBox =>
   inflateRect(layout.geometry.rect, layout.geometry.margin);
 
@@ -52,7 +51,7 @@ const bindLayoutBoundary = (
   boundary: IRBoundary | undefined,
   canon?: CanonicalNodeBoundary,
   warn?: (code: string, message: string) => void,
-  state?: NodeBoundaryState,
+  state?: BoundaryState,
 ) => {
   const resolution =
     canon ??
@@ -70,35 +69,35 @@ const bindLayoutBoundary = (
     );
   }
 
-  return bindNodeBoundary(
+  return bindBoundary(
     resolution,
     { def: layout.shape.definition, rect: layout.geometry.rect, params: layout.shape.params },
     { ...state, warn: state?.warn ?? warn },
   );
 };
 
-/** 取节点 shape 在 toward 方向的附着点 */
+/** 取连接面在 toward 方向的附着点 */
 export const boundaryPointOf = (
   layout: CompiledBoundaryGeometry,
   toward: Position,
   boundary?: IRBoundary,
   canon?: CanonicalNodeBoundary,
   warn?: (code: string, message: string) => void,
-  state?: NodeBoundaryState,
+  state?: BoundaryState,
 ): Position => {
   const { def, rect, params } = bindLayoutBoundary(layout, boundary, canon, warn, state);
   const raw = def.computeBoundaryPoint(inflateRect(rect, layout.geometry.margin), toward, params);
   return snapshotProviderPosition(`Boundary '${boundaryKey(boundary)}' boundaryPoint`, raw);
 };
 
-/** 沿折线移除起始节点连接面内的前缀，保留原线段上的出界交点 */
-export const clipNodePolyline = (
+/** 沿折线移除起始连接面内的前缀，保留原线段上的出界交点 */
+export const clipBoundaryPolyline = (
   layout: CompiledBoundaryGeometry,
   points: ReadonlyArray<Position>,
   boundary?: IRBoundary,
   canon?: CanonicalNodeBoundary,
   warn?: (code: string, message: string) => void,
-  state?: NodeBoundaryState,
+  state?: BoundaryState,
 ): Array<Position> => {
   const { def, rect, params } = bindLayoutBoundary(layout, boundary, canon, warn, state);
   const outer = inflateRect(rect, layout.geometry.margin);
@@ -131,14 +130,14 @@ export const clipNodePolyline = (
   return [];
 };
 
-/** 取节点 shape 的命名 anchor；标准 anchor 可选在 boundary 拟合后应用 margin */
+/** 取视觉形状的命名 anchor；标准 anchor 可选在 boundary 拟合后应用 margin */
 export const anchorOf = (
   layout: CompiledBoundaryGeometry,
   name: string,
   boundary?: IRBoundary,
   applyMargin = false,
   canon?: CanonicalNodeBoundary,
-  state?: NodeBoundaryState,
+  state?: BoundaryState,
 ): Position => {
   if (isAnchor(name)) {
     if (name === CenterAnchor.Center) {
@@ -198,14 +197,14 @@ export const anchorOf = (
   return p;
 };
 
-/** 取节点 shape 在指定角度方向的边界点 */
+/** 取连接面在指定角度方向的边界点 */
 export const angleBoundaryOf = (
   layout: CompiledBoundaryGeometry,
   angleDeg: number,
   boundary?: IRBoundary,
   applyMargin = false,
   canon?: CanonicalNodeBoundary,
-  state?: NodeBoundaryState,
+  state?: BoundaryState,
 ): Position => {
   const rad = angleDeg * DEG_TO_RAD;
   const lx = Math.cos(rad);

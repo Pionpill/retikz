@@ -98,7 +98,7 @@ Node 对齐自身锚点时，要先获得临时布局：自己的尺寸与旋转
 <SourceLinks
   sources={[
     { label: '节点目标、角度与边上比例锚点', path: 'packages/kernel/core/src/schemas/position/target.ts' },
-    { label: '锚点取点与缓存', path: 'packages/kernel/core/src/compile/node/anchor-cache.ts' },
+    { label: '锚点取点与缓存', path: 'packages/kernel/core/src/compile/boundary/anchor-cache.ts' },
     {
       label: 'placeAnchorPositionedLayout：自身锚点的最终对齐',
       path: 'packages/kernel/core/src/compile/node/layout/layout.ts',
@@ -241,7 +241,7 @@ A 收尾时，b 还未注册，因此 A 中的 Path 无法引用 b。退出普�
 
 <SourceLinks
   sources={[
-    { label: '局部布局到世界引用几何的投影', path: 'packages/kernel/core/src/compile/node/projection.ts' },
+    { label: '局部布局到世界引用几何的投影', path: 'packages/kernel/core/src/compile/boundary/projection.ts' },
     {
       label: 'emitScopeGroup：局部图元与分组变换的交付',
       path: 'packages/kernel/core/src/compile/scope/output.ts',

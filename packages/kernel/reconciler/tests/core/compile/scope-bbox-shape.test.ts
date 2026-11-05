@@ -3,11 +3,10 @@ import { describe, expect, it } from 'vitest';
 
 import type { CompileWarning, IRScene, ScenePrimitive } from '../../../../core/src';
 import { BuiltinCompileWarningCode } from '../../../../core/src';
+import { projectLayoutWithTransform } from '../../../../core/src/compile/boundary';
 import type { CompiledNodeLayout } from '../../../../core/src/compile/node';
-import { projectLayoutWithTransform } from '../../../../core/src/compile/node';
 import type { CompiledReferenceGeometry } from '../../../../core/src/compile/reference';
-import { collectScopeCornerPoints } from '../../../../core/src/compile/scope';
-import { createIntrinsicScopeLayout } from '../../../../core/src/compile/scope';
+import { collectScopeCornerPoints, createIntrinsicScopeLayout } from '../../../../core/src/compile/scope';
 import { composeScopeTransform } from '../../../../core/src/compile/shared';
 import { BUILTIN_SHAPES } from '../../../../core/src/providers';
 import { resolveScope, resolveScopeInheritance } from '../../../../core/src/resolve';

@@ -1,12 +1,13 @@
-import { createNodeBoundaryStore } from '@retikz/core';
+import { createBoundaryStore } from '@retikz/core';
+import type { NodeCompileContext } from '@retikz/core';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
   boundaryPointOf,
-  layoutNode,
   projectLayoutWithTransform,
   getOrCreateNamedAnchor,
-} from '../../../../core/src/compile/node';
+} from '../../../../core/src/compile/boundary';
+import { layoutNode } from '../../../../core/src/compile/node';
 import { createPositionEvaluateContext } from '../../../../core/src/compile/reference';
 import { composeScopeTransform } from '../../../../core/src/compile/shared';
 import { resolveBoundaryRegistry, resolvePatternRegistry, resolveShapeRegistry } from '../../../../core/src/providers';
@@ -18,7 +19,11 @@ const measureText = (): { width: number; height: number; ascent: number } => ({
   ascent: 8,
 });
 
-const layoutOf = (source: Parameters<typeof resolveNode>[0], shapes = resolveShapeRegistry()) => {
+const layoutOf = (
+  source: Parameters<typeof resolveNode>[0],
+  shapes = resolveShapeRegistry(),
+  context: Partial<NodeCompileContext> = {},
+) => {
   const boundaries = resolveBoundaryRegistry();
   const resolution = resolveNode(source, {
     nodeDistance: 24,
@@ -39,25 +44,55 @@ const layoutOf = (source: Parameters<typeof resolveNode>[0], shapes = resolveSha
     ...layoutNode(resolution, {
       measureText,
       positionContext: createPositionEvaluateContext({ lookupReference: () => undefined, nodeDistance: 24 }),
+      ...context,
     }),
   };
 };
 
 describe('CompiledNodeLayout 边界/形状', () => {
+  it('直接布局自身锚点时无缓存状态也能定位并保留回退诊断', () => {
+    const shapes = new Map(resolveShapeRegistry());
+    shapes.set('rectangle', { ...shapes.get('rectangle')!, computeConnectionEnvelope: undefined });
+    const warn = vi.fn();
+    const layout = layoutOf(
+      {
+        type: 'node',
+        boundary: 'circle',
+        position: { kind: 'anchor', target: { id: 'target' }, selfAnchor: 'right' },
+      },
+      shapes,
+      {
+        warn,
+        irPath: ['children', 0],
+        positionContext: createPositionEvaluateContext({
+          nodeDistance: 24,
+          lookupReference: () => ({ state: 'resolved', geometry: { position: [100, 0] } }),
+        }),
+      },
+    );
+    expect(getOrCreateNamedAnchor(layout, 'right')).toEqual([100, 0]);
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0][1]).toContain('falling back');
+  });
+
   it('连接面消费上下文在布局投影和引用视图间共享缓存，并区分几何位置', () => {
     const shapes = new Map(resolveShapeRegistry());
     const rectangle = shapes.get('rectangle')!;
     const envelope = vi.fn(() => ({ halfWidth: 30, halfHeight: 30 }));
     shapes.set('rectangle', { ...rectangle, computeConnectionEnvelope: envelope });
     const layout = layoutOf({ type: 'node', position: [0, 0], boundary: 'circle' }, shapes);
-    const context = createNodeBoundaryStore();
+    const context = createBoundaryStore();
     const projected = projectLayoutWithTransform(layout, composeScopeTransform([]));
-    const first = boundaryPointOf(layout, [100, 0], 'circle', undefined, undefined, context.get(layout));
-    expect(boundaryPointOf(projected, [100, 0], 'circle', undefined, undefined, context.get(projected))).toEqual(first);
+    const first = boundaryPointOf(layout, [100, 0], 'circle', undefined, undefined, context.get(layout.shape));
+    expect(boundaryPointOf(projected, [100, 0], 'circle', undefined, undefined, context.get(projected.shape))).toEqual(
+      first,
+    );
     expect(envelope).toHaveBeenCalledTimes(1);
 
     const moved = projectLayoutWithTransform(layout, composeScopeTransform([{ kind: 'translate', x: 10, y: 0 }]));
-    expect(boundaryPointOf(moved, [100, 0], 'circle', undefined, undefined, context.get(moved))[0]).toBe(first[0] + 10);
+    expect(boundaryPointOf(moved, [100, 0], 'circle', undefined, undefined, context.get(moved.shape))[0]).toBe(
+      first[0] + 10,
+    );
     expect(envelope).toHaveBeenCalledTimes(2);
   });
 
@@ -66,16 +101,16 @@ describe('CompiledNodeLayout 边界/形状', () => {
     shapes.set('rectangle', { ...shapes.get('rectangle')!, computeConnectionEnvelope: undefined });
     const layout = layoutOf({ type: 'node', position: [0, 0], boundary: 'circle' }, shapes);
     const warn = vi.fn();
-    const context = createNodeBoundaryStore();
-    context.get(layout).warn = warn;
+    const context = createBoundaryStore();
+    context.get(layout.shape).warn = warn;
     const moved = projectLayoutWithTransform(layout, composeScopeTransform([{ kind: 'translate', x: 10, y: 0 }]));
-    boundaryPointOf(layout, [100, 0], 'circle', undefined, undefined, context.get(layout));
-    boundaryPointOf(moved, [100, 0], 'circle', undefined, undefined, context.get(moved));
+    boundaryPointOf(layout, [100, 0], 'circle', undefined, undefined, context.get(layout.shape));
+    boundaryPointOf(moved, [100, 0], 'circle', undefined, undefined, context.get(moved.shape));
     expect(warn).toHaveBeenCalledTimes(1);
 
-    const another = createNodeBoundaryStore();
-    another.get(layout).warn = warn;
-    boundaryPointOf(layout, [100, 0], 'circle', undefined, undefined, another.get(layout));
+    const another = createBoundaryStore();
+    another.get(layout.shape).warn = warn;
+    boundaryPointOf(layout, [100, 0], 'circle', undefined, undefined, another.get(layout.shape));
     expect(warn).toHaveBeenCalledTimes(2);
   });
   it('未指定 boundary 时 layout.boundary 为 undefined，shapes 指向传入注册表', () => {

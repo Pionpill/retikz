@@ -129,7 +129,7 @@ export const flushPendingPathEmissions = (
                 registries: stageRuntime.context.registries,
                 ...stageRuntime.context.layout,
                 ...stageRuntime.context.host,
-                nodeBoundaryStore: stageRuntime.state.workspace.nodeBoundaryStore,
+                boundaryStore: stageRuntime.state.workspace.boundaryStore,
                 registerPaint: stageRuntime.state.workspace.paintRegistry.register,
                 resources: () => [
                   ...stageRuntime.state.workspace.paintRegistry.getResources(),

@@ -136,14 +136,16 @@ Standard directional and numeric-angle anchors use the connection surface with m
 
 When the same layout is referenced repeatedly, Core reuses calculated connection envelopes and anchors. These serve the current geometry; they are not another persistent node configuration. See [Node implementation](/kernel/components/node/mechanism#visual-shape-vs-connection-geometry) for the detailed reference rules.
 
+Node layout accepts only the current node's `boundaryState`; it neither creates nor retains a multi-node store. Before layout, Reconciler obtains the state through `boundaryStore.get(canon.shape)` and supplies diagnostics. Later references reuse state through the same shape binding. Direct Core callers may omit the state: ordinary positioning needs no initialization, while self-anchor positioning carries only `warn` and `irPath`, without implicitly creating a connection-envelope cache.
+
 <SourceLinks
   sources={[
     {
       label: 'Binding connection surfaces to node geometry',
-      path: 'packages/kernel/core/src/compile/node/boundary.ts',
+      path: 'packages/kernel/core/src/compile/boundary/boundary.ts',
     },
-    { label: 'Standard versus shape-specific anchors', path: 'packages/kernel/core/src/compile/node/anchors.ts' },
-    { label: 'Anchor reuse within a layout', path: 'packages/kernel/core/src/compile/node/anchor-cache.ts' },
+    { label: 'Standard versus shape-specific anchors', path: 'packages/kernel/core/src/compile/boundary/anchors.ts' },
+    { label: 'Anchor reuse within a layout', path: 'packages/kernel/core/src/compile/boundary/anchor-cache.ts' },
   ]}
 />
 

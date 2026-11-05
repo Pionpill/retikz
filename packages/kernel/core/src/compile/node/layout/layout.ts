@@ -5,7 +5,6 @@ import type { CanonicalNode } from '../../../resolve';
 import type { IRAnchorPosition, IRPosition } from '../../../schemas';
 import { evaluatePosition } from '../../reference';
 import { composeScopeTransform } from '../../shared';
-import { createNodeBoundaryStore } from '../boundary-store';
 import type { CompiledNodeLayout, NodeCompileContext } from '../types';
 import { layoutNodeLabels, measureNodeLabels } from './label';
 import { isAnchorPosition, placeAnchorPositionedLayout } from './placement';
@@ -24,7 +23,7 @@ export const layoutNode = (
     scopeChain = [],
     texLowering,
     warn,
-    nodeBoundaryStore = createNodeBoundaryStore(),
+    boundaryState,
     composedTransform,
   } = context;
 
@@ -102,9 +101,6 @@ export const layoutNode = (
             },
     boundary,
   };
-  const boundaryState = nodeBoundaryStore.get(provisional);
-  boundaryState.warn = warn;
-  boundaryState.irPath = irPath;
   const resolved: CompiledNodeLayout = {
     ...provisional,
     labels: layoutNodeLabels(provisional, measuredLabels),
@@ -117,6 +113,6 @@ export const layoutNode = (
     resolved,
     positionContext,
     composedTransform ?? composeScopeTransform(scopeChain),
-    nodeBoundaryStore,
+    boundaryState ?? { warn, irPath },
   );
 };

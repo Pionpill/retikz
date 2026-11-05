@@ -1,7 +1,6 @@
 import type { PropertyPath } from '@retikz/foundation';
-import type { BoundsInsets, CenteredBox } from '@retikz/math';
 
-import type { CanonicalNodeBoundary, CanonicalNodeShape } from '../../resolve';
+import type { CanonicalNodeBoundary } from '../../resolve';
 import type {
   IRAbsoluteTarget,
   IRAtPosition,
@@ -11,22 +10,8 @@ import type {
   IRPosition,
   PolarPosition,
 } from '../../schemas';
+import type { CompiledBoundaryGeometry } from '../boundary';
 import type { CompiledCoordinate } from '../coordinate';
-
-/** 边界查询直接消费的编译产物字段，不要求生成独立投影对象 */
-export type CompiledBoundaryGeometry = {
-  /** 视觉形状的能力绑定 */
-  shape: CanonicalNodeShape;
-  /** 默认连接面的能力绑定 */
-  boundary: CanonicalNodeBoundary;
-  /** 连接查询必需的最终几何 */
-  geometry: {
-    /** 最终视觉矩形 */
-    rect: CenteredBox;
-    /** 连接外扩距离 */
-    margin: BoundsInsets;
-  };
-};
 
 /** 引用查询直接消费的位置或边界编译结果 */
 export type CompiledReferenceGeometry = CompiledBoundaryGeometry | CompiledCoordinate;
