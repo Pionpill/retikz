@@ -2,6 +2,7 @@
 
 ## 导入导出
 
+- 导出范围按实际生产需求收敛：仅同文件使用的成员不 `export`；内部跨文件使用的成员只保留模块级导出；包根与公开子路径仅暴露必要的 API 和配套契约。不得无依据导出内部实现，也不得仅为功能测试或性能测试新增导出、扩大 barrel 或包根公共面。
 - 内部 owner 的 `index.ts` 默认使用 `export *`（type-only 聚合使用 `export type *`），递归聚合该 owner 的稳定 API。只有明确承担公共 facade 的入口，才可使用 `export { ... }`、`export type { ... }` 或 `export * as Namespace` 来裁剪公共面、处理冲突或建立稳定的公共名称；该入口必须有 `package.json` 的显式 `exports` 映射（字符串形式视为根 `.` 映射；对象形式只认可显式键，通配符仅表达路径映射，不能单独证明每个匹配文件都是稳定 API）、包内规范或 public-surface 测试作为依据，单个源码文件存在不构成公共入口。
 - 包根 `index.ts` 是否是公共 facade 由 package `exports`、包内规范或 public-surface 测试决定：作为公共 facade 时允许有证据的显式导出；作为 owner 聚合时继续使用 `export *`。无论采用哪种形式，都不得把内部实现、测试符号或仅为复用准备的符号转发到包外。
 - 不需要公开的模块不得进入向上 barrel；owner 内通过相邻路径或私有子 barrel 导入，不得为测试或复用便利转发到包根。
@@ -11,3 +12,8 @@
 - 同一文件中同 kind（type 或 value）且同 source 的 named import 必须合并为一条；不同符号的 type/value 导入保持分离。同名符号同时用于值和类型时只保留普通 import，不重复 import type；仅用于类型时使用 import type。
 - 内部尽量避免 import / export `as` 重命名；公共 facade 仅在稳定公共名称或冲突隔离确有需要时建立别名，不建立兼容旧 API 的迁移别名、fallback 或双轨实现。
 - 主题内部可相邻导入；模块外避免 deep import 到 `constants.ts` / `schema.ts` 等私有文件。
+
+## 测试访问例外
+
+- 上述导入边界约束生产源码；仓库内测试可深层导入因生产代码跨文件使用而已导出的内部成员，无需经包根或公开子路径转发。此例外不适用于生产消费方。
+- 完全未导出的实现通过其消费方验证，不为直接测试增加导出或测试专用访问入口；测试需求不得反向决定生产 API 的公开范围。

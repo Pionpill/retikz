@@ -28,6 +28,8 @@ description: Use when adding or changing retikz unit, integration, or regression
 - 核心规则在拥有契约的最低层验证；adapter 只补接入、转换和差异，跨层只补必要闭环，不重复底层全套 case。通用测试须断言实际结果，不能仅检查不报错、存在或快照未变。
 - Snapshot 必须小而聚焦且逐项审阅；不以自动更新快照、测试数量或覆盖率增长证明有效性。完成时核对核心失效模式仍有守卫，未覆盖风险显式记录。
 
+- 测试可访问范围遵循 [导入导出的测试例外](../standard-structure/references/imports.md#测试访问例外)：私有实现经消费方验证，已有内部导出可深层导入，不因功能或性能测试扩大导出范围。
+
 ## 输入与产物
 
 Alpha 在 ADR 人工确认且获准进入实现准备后，读取长期 ADR 与已同步创建的镜像 `PLAN.md`；Beta 读取 TODO / plan。再读取公开类型或 schema、相关实现边界、已有测试与 docs 页面。把详细矩阵写入与 ADR / TODO 同构的 ignored plan：
