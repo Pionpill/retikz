@@ -7,7 +7,7 @@ import type { CompiledTextBlockLayout, InlineLineLayout, InlineLinePaint } from 
 const LINE_HEIGHT_FACTOR = 1.2;
 
 /** 用当前外观绘制既有布局，不调用测量或公式降解服务 */
-export const emitInlineLine = (
+export const emitTextLine = (
   layout: InlineLineLayout,
   paint: InlineLinePaint,
   originX: number,
@@ -73,7 +73,7 @@ export const emitTextBlock = (
 ): Array<ScenePrimitive> =>
   layout.lines.flatMap(({ laid, sourceLineIndex, baselineOffset }) => {
     const offset = paint.textAlign === 'start' ? 0 : (layout.width - laid.width) / (paint.textAlign === 'end' ? 1 : 2);
-    const primitives = emitInlineLine(
+    const primitives = emitTextLine(
       laid,
       {
         color: paint.color,

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { emitInlineLine, fallbackMeasurer, layoutInlineLine } from '../../../../core/src/compile/text';
+import { emitTextLine, fallbackMeasurer, layoutTextLine } from '../../../../core/src/compile/text';
 
 describe('内联布局和绘制', () => {
   it('同一布局可换色，保持公式显式色且不重新测量或降解', () => {
@@ -14,7 +14,7 @@ describe('内联布局和绘制', () => {
         { commands: [], fill: { kind: 'color' as const, value: 'red' }, stroke: { kind: 'none' as const } },
       ],
     }));
-    const layout = layoutInlineLine(
+    const layout = layoutTextLine(
       [
         { text: 'A', font: { size: 16 } },
         { tex: 'x', fontSize: 16 },
@@ -27,8 +27,8 @@ describe('内联布局和绘制', () => {
       },
     );
     const snapshot = JSON.stringify(layout);
-    const first = emitInlineLine(layout, { color: 'blue', opacity: 0.5, segments: [{}, {}] }, 0, 8, n => n);
-    const next = emitInlineLine(
+    const first = emitTextLine(layout, { color: 'blue', opacity: 0.5, segments: [{}, {}] }, 0, 8, n => n);
+    const next = emitTextLine(
       layout,
       { color: 'green', opacity: 0.8, segments: [{ fill: 'purple' }, {}] },
       0,
@@ -46,7 +46,7 @@ describe('内联布局和绘制', () => {
   });
 
   it('跳过无效公式后仍按原 run 对应外观', () => {
-    const layout = layoutInlineLine(
+    const layout = layoutTextLine(
       [
         { tex: 'bad', fontSize: 16 },
         { text: 'A', font: { size: 16 } },
@@ -58,7 +58,7 @@ describe('内联布局和绘制', () => {
         warn: () => undefined,
       },
     );
-    expect(emitInlineLine(layout, { segments: [{ fill: 'red' }, { fill: 'blue' }] }, 0, 8, n => n)).toMatchObject([
+    expect(emitTextLine(layout, { segments: [{ fill: 'red' }, { fill: 'blue' }] }, 0, 8, n => n)).toMatchObject([
       { fill: 'blue' },
     ]);
   });

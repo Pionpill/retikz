@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  emitInlineLine,
-  fallbackMeasurer,
-  layoutInlineLine,
-  snapshotLoweredTex,
-} from '../../../../core/src/compile/text';
+import { emitTextLine, fallbackMeasurer, layoutTextLine, snapshotLoweredTex } from '../../../../core/src/compile/text';
 import type { GroupPrimitive, PathPrimitive } from '../../../../core/src/contract';
 
 describe('[tex-lowering]多路径契约', () => {
@@ -32,7 +27,7 @@ describe('[tex-lowering]多路径契约', () => {
   });
 
   it('按 paint order 输出多条路径并解析宿主颜色与透明度', () => {
-    const line = layoutInlineLine([{ tex: 'x', fontSize: 16 }], {
+    const line = layoutTextLine([{ tex: 'x', fontSize: 16 }], {
       measureText: fallbackMeasurer,
       font: { size: 16 },
       warn: () => undefined,
@@ -66,7 +61,7 @@ describe('[tex-lowering]多路径契约', () => {
       }),
     });
 
-    const [group] = emitInlineLine(
+    const [group] = emitTextLine(
       line,
       { color: '#333', opacity: 0.5, segments: [{ fill: '#0af', opacity: 0.8 }] },
       0,
@@ -99,7 +94,7 @@ describe('[tex-lowering]多路径契约', () => {
   });
 
   it('仅 currentColor 回退到宿主默认色，none 不输出 paint', () => {
-    const line = layoutInlineLine([{ tex: 'x', fontSize: 16 }], {
+    const line = layoutTextLine([{ tex: 'x', fontSize: 16 }], {
       measureText: fallbackMeasurer,
       font: { size: 16 },
       warn: () => undefined,
@@ -117,7 +112,7 @@ describe('[tex-lowering]多路径契约', () => {
       }),
     });
 
-    const [group] = emitInlineLine(line, { segments: [{}] }, 0, 1, value => value) as Array<GroupPrimitive>;
+    const [group] = emitTextLine(line, { segments: [{}] }, 0, 1, value => value) as Array<GroupPrimitive>;
     const [path] = group.children as Array<PathPrimitive>;
 
     expect(path).not.toHaveProperty('fill');
@@ -138,7 +133,7 @@ describe('[tex-lowering]多路径契约', () => {
       height: 1,
       depth: 0,
     };
-    const line = layoutInlineLine([{ tex: 'x', fontSize: 16 }], {
+    const line = layoutTextLine([{ tex: 'x', fontSize: 16 }], {
       measureText: fallbackMeasurer,
       font: { size: 16 },
       warn: () => undefined,
@@ -148,7 +143,7 @@ describe('[tex-lowering]多路径契约', () => {
     command.to[0] = 99;
     lowered.paths.length = 0;
 
-    const [group] = emitInlineLine(line, { segments: [{}] }, 0, 1, value => value) as Array<GroupPrimitive>;
+    const [group] = emitTextLine(line, { segments: [{}] }, 0, 1, value => value) as Array<GroupPrimitive>;
     const [path] = group.children as Array<PathPrimitive>;
 
     expect(path.commands).toEqual([{ kind: 'move', to: [0, 0] }]);

@@ -123,7 +123,7 @@ Reconciler 为每次全量编译或增量更新创建文字度量缓存，按文
 
 ## 完整实现流程
 
-下图从度量来源追踪到节点几何。顶行按优先级列出普通文字测量器，每次只选用其中一个；公式通过 `lowerTex` 提供尺寸、基线和路径，在 `layoutInlineLine` 与普通文字对齐后回到节点尺寸求解。蓝色节点标出核心测量与排版方法。
+下图从度量来源追踪到节点几何。顶行按优先级列出普通文字测量器，每次只选用其中一个；公式通过 `lowerTex` 提供尺寸、基线和路径，在 `layoutTextLine` 与普通文字对齐后回到节点尺寸求解。蓝色节点标出核心测量与排版方法。
 
 <ComponentPreview files="metrics-implementation" size="xxl" hideCode type="flow" />
 

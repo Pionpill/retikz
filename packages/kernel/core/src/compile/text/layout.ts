@@ -21,7 +21,7 @@ import type {
 } from './types';
 
 /** 度量一行 inline segment，并返回可 emit 的行布局 */
-export const layoutInlineLine = (
+export const layoutTextLine = (
   segments: Array<InputInlineSegmentLayout>,
   context: LineLayoutContext,
 ): InlineLineLayout => {
@@ -108,7 +108,7 @@ export const layoutTextBlock = (
 
     const flushLine = () => {
       if (pieces.length === 0) {
-        const empty = layoutInlineLine([], {
+        const empty = layoutTextLine([], {
           ...context,
           font: { ...context.font, size: source.style?.font?.size ?? context.font.size },
         });
@@ -150,7 +150,7 @@ export const layoutTextBlock = (
               };
         let laid = 'tex' in segment ? formulas.get(span.segmentIndex) : undefined;
         if (laid === undefined) {
-          laid = layoutInlineLine([segment], context);
+          laid = layoutTextLine([segment], context);
           if ('tex' in segment) formulas.set(span.segmentIndex, laid);
         }
         for (const piece of laid.pieces)

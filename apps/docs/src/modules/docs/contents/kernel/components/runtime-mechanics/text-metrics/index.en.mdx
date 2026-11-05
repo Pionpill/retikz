@@ -138,7 +138,7 @@ The formula lowerer has its own instance cache, keyed by formula source, display
 
 ## Complete implementation flow
 
-The diagram follows metric sources through to node geometry. The top row lists plain-text measurers in priority order; only one is selected. Formulas supply dimensions, baseline metrics and paths through `lowerTex`. `layoutInlineLine` aligns them with ordinary text before returning to node sizing. Blue nodes highlight the core measurement and layout methods.
+The diagram follows metric sources through to node geometry. The top row lists plain-text measurers in priority order; only one is selected. Formulas supply dimensions, baseline metrics and paths through `lowerTex`. `layoutTextLine` aligns them with ordinary text before returning to node sizing. Blue nodes highlight the core measurement and layout methods.
 
 <ComponentPreview files="metrics-implementation" size="xxl" hideCode type="flow" />
 

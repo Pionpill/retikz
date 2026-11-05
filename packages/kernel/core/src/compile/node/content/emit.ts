@@ -1,6 +1,6 @@
 import type { ScenePrimitive, TextLine } from '../../../contract';
 import type { CanonicalNode } from '../../../resolve';
-import { calculateAlphabeticBaselineY, emitInlineLine } from '../../text';
+import { calculateAlphabeticBaselineY, emitTextLine } from '../../text';
 import type { CompiledNodeLayout, CompiledNodeTextStyle } from '../types';
 
 type Round = (n: number) => number;
@@ -55,7 +55,7 @@ export const emitCompiledNodeText = (
           : text.align === 'end'
             ? layout.geometry.contentCenter[0] + halfBlockW - laid.width
             : layout.geometry.contentCenter[0] - laid.width / 2;
-      return emitInlineLine(
+      return emitTextLine(
         laid,
         {
           color: style.color,
