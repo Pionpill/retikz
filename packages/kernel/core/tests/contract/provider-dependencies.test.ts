@@ -1,0 +1,457 @@
+import { describe, expect, it, vi } from 'vitest';
+import { literal, strictObject } from 'zod';
+
+import type {
+  AnyCompositeDefinition,
+  AnyCoreDependencyProvider,
+  CoreDependencyProvider,
+  CoreProviderContribution,
+  CoreProviderDefinition,
+  CoreProviderKey,
+} from '../../src';
+import {
+  defineArrow,
+  defineClip,
+  defineComposite,
+  defineShape,
+  resolveCoreProviderDependencies,
+  RetikzCoreError,
+  RetikzCoreErrorCode,
+} from '../../src';
+
+const shapeKey = (name: string): CoreProviderKey => ({ capability: 'shape', name });
+
+const arrowKey = (name: string): CoreProviderKey => ({ capability: 'arrow', name });
+
+const clipKey = (name: string): CoreProviderKey => ({ capability: 'clip', name });
+
+const compositeKey = (namespace: string, type: string): CoreProviderKey => ({
+  capability: 'composite',
+  namespace,
+  type,
+});
+
+const shapeDefinitionOf = (name: string) =>
+  defineShape({
+    name,
+    paramsSchema: strictObject({}),
+    computeCircumscribedGeometry: (halfWidth, halfHeight) => ({ halfWidth, halfHeight }),
+    computeBoundaryPoint: (_rect, toward) => toward,
+    emit: () => [],
+    resolveAnchor: () => undefined,
+  });
+
+const compositeDefinitionOf = (namespace: string, type: string): AnyCompositeDefinition =>
+  defineComposite({
+    namespace,
+    type,
+    schema: strictObject({ namespace: literal(namespace), type: literal(type) }),
+    compile: () => ({ children: [] }),
+  });
+
+const arrowDefinitionOf = (name: string) =>
+  defineArrow({
+    name,
+    backX: 0,
+    lineContactX: 0,
+    emit: () => [],
+  });
+
+const clipDefinitionOf = (name: string) =>
+  defineClip({
+    kind: name,
+    schema: strictObject({ kind: literal(name), params: strictObject({}) }),
+
+    lower: () => {
+      const params = { size: 4 };
+      return {
+        commands: [
+          { kind: 'move', to: [0, 0] },
+          { kind: 'line', to: [params.size, params.size] },
+        ],
+        fillRule: 'nonzero',
+      };
+    },
+  });
+
+const definitionOf = (key: CoreProviderKey): CoreProviderDefinition => {
+  if (key.capability === 'composite') return compositeDefinitionOf(key.namespace, key.type);
+  if (key.capability === 'shape') return shapeDefinitionOf(key.name);
+  if (key.capability === 'arrow') return arrowDefinitionOf(key.name);
+  if (key.capability === 'clip') return clipDefinitionOf(key.name);
+
+  throw new Error(`unsupported test capability ${key.capability}`);
+};
+
+const providerOf = (
+  key: CoreProviderKey,
+  options: Readonly<{
+    dependencies?: ReadonlyArray<CoreProviderKey>;
+    params?: Readonly<Record<string, unknown>>;
+    makeDefinition?: CoreDependencyProvider<Readonly<Record<string, unknown>>>['makeDefinition'];
+  }> = {},
+): CoreDependencyProvider<Readonly<Record<string, unknown>>> => ({
+  key,
+  dependencies: options.dependencies,
+  params: options.params,
+  makeDefinition: options.makeDefinition ?? (() => definitionOf(key)),
+});
+
+const contributionOf = (
+  roots: ReadonlyArray<CoreProviderKey>,
+  providers: ReadonlyArray<AnyCoreDependencyProvider>,
+): CoreProviderContribution => ({ roots, providers });
+
+const compositeNamesOf = (definitions: ReadonlyArray<AnyCompositeDefinition>): Array<string> =>
+  definitions.map(definition => `${definition.namespace}/${definition.type}`);
+
+describe('resolveCoreProviderDependencies', () => {
+  it('省略依赖与参数时仍物化定义，且与显式空依赖等价', () => {
+    const key = shapeKey('optional');
+    const definition = definitionOf(key);
+    const makeDefinition = vi.fn((params: ReadonlyArray<void>) => {
+      expect(params).toEqual([]);
+      expect(Object.isFrozen(params)).toBe(true);
+      return definition;
+    });
+    const resolved = resolveCoreProviderDependencies({
+      contributions: [
+        contributionOf(
+          [key],
+          [
+            { key, makeDefinition },
+            { key, dependencies: [], params: undefined, makeDefinition },
+          ],
+        ),
+      ],
+    });
+
+    expect(resolved.shapes).toEqual([definition]);
+    expect(makeDefinition).toHaveBeenCalledTimes(1);
+  });
+
+  it('跳过缺省参数，保留 null、false、零与空字符串的贡献顺序', () => {
+    const key = shapeKey('values');
+    const definition = definitionOf(key);
+    const makeDefinition = (params: ReadonlyArray<unknown>) => {
+      expect(params).toEqual([null, false, 0, '']);
+      return definition;
+    };
+    const resolved = resolveCoreProviderDependencies({
+      contributions: [
+        contributionOf(
+          [key],
+          [
+            { key, makeDefinition },
+            ...[null, undefined, false, 0, ''].map(params => ({ key, params, makeDefinition })),
+          ],
+        ),
+      ],
+    });
+
+    expect(resolved.shapes).toEqual([definition]);
+  });
+
+  it('将带有分隔符的命名空间和类型字段保留为不同的限定标识', () => {
+    const left = compositeKey('a.b', 'c');
+    const right = compositeKey('a', 'b.c');
+
+    const resolved = resolveCoreProviderDependencies({
+      contributions: [contributionOf([left, right], [providerOf(left), providerOf(right)])],
+    });
+
+    expect(compositeNamesOf(resolved.composites ?? [])).toEqual(['a.b/c', 'a/b.c']);
+  });
+
+  it('仅实现具有稳定的首次到达抢七的可到达依赖优先闭包', () => {
+    const shared = compositeKey('shared', 'base');
+    const left = compositeKey('left', 'card');
+    const right = compositeKey('right', 'card');
+    const unused = compositeKey('unused', 'card');
+    const calls: Array<string> = [];
+    const make = (key: CoreProviderKey) =>
+      vi.fn(() => {
+        calls.push(key.capability === 'composite' ? `${key.namespace}/${key.type}` : key.name);
+        return definitionOf(key);
+      });
+    const sharedMaker = make(shared);
+    const leftMaker = make(left);
+    const rightMaker = make(right);
+    const unusedMaker = make(unused);
+
+    const resolved = resolveCoreProviderDependencies({
+      contributions: [
+        contributionOf(
+          [right, left],
+          [
+            providerOf(left, { dependencies: [shared], makeDefinition: leftMaker }),
+            providerOf(unused, { makeDefinition: unusedMaker }),
+            providerOf(shared, { makeDefinition: sharedMaker }),
+            providerOf(right, { dependencies: [shared], makeDefinition: rightMaker }),
+          ],
+        ),
+      ],
+    });
+
+    expect(compositeNamesOf(resolved.composites ?? [])).toEqual(['shared/base', 'right/card', 'left/card']);
+    expect(calls).toEqual(['shared/base', 'right/card', 'left/card']);
+    expect(sharedMaker).toHaveBeenCalledTimes(1);
+    expect(rightMaker).toHaveBeenCalledTimes(1);
+    expect(leftMaker).toHaveBeenCalledTimes(1);
+    expect(unusedMaker).not.toHaveBeenCalled();
+    expect(Object.isFrozen(resolved)).toBe(true);
+  });
+
+  it('按贡献顺序传递每个相同键的参数，而不进行合并或克隆', () => {
+    const key = compositeKey('demo', 'panel');
+    const first = { label: 'first' };
+    const second = { label: 'second' };
+    const makeDefinition = vi.fn((params: ReadonlyArray<Readonly<Record<string, unknown>>>) => {
+      expect(params).toEqual([first, second, first]);
+      expect(params[0]).toBe(first);
+      expect(params[1]).toBe(second);
+      expect(params[2]).toBe(first);
+      expect(Object.isFrozen(params)).toBe(true);
+      expect(Object.isFrozen(first)).toBe(false);
+      return compositeDefinitionOf('demo', 'panel');
+    });
+    const resolved = resolveCoreProviderDependencies({
+      contributions: [
+        contributionOf([key], [providerOf(key, { params: first, makeDefinition })]),
+        contributionOf([key], [providerOf(key, { params: second, makeDefinition })]),
+        contributionOf([key], [providerOf(key, { params: first, makeDefinition })]),
+      ],
+    });
+    expect(compositeNamesOf(resolved.composites ?? [])).toEqual(['demo/panel']);
+    expect(makeDefinition).toHaveBeenCalledTimes(1);
+  });
+
+  it('通过提供者键保持异构参数隔离', () => {
+    const left = shapeKey('left');
+    const right = shapeKey('right');
+    const leftProvider: CoreDependencyProvider<string> = {
+      key: left,
+      params: 'left-value',
+      makeDefinition: params => {
+        expect(params).toEqual(['left-value']);
+        return definitionOf(left);
+      },
+    };
+    const rightProvider: CoreDependencyProvider<number> = {
+      key: right,
+      params: 42,
+      makeDefinition: params => {
+        expect(params).toEqual([42]);
+        return definitionOf(right);
+      },
+    };
+    const resolved = resolveCoreProviderDependencies({
+      contributions: [contributionOf([left, right], [leftProvider, rightProvider])],
+    });
+    expect(resolved.shapes?.map(definition => definition.name)).toEqual(['left', 'right']);
+  });
+
+  it('使同名提供者在功能之间保持独立', () => {
+    const shape = shapeKey('cross');
+    const arrow = arrowKey('cross');
+    const resolved = resolveCoreProviderDependencies({
+      contributions: [contributionOf([shape, arrow], [providerOf(shape), providerOf(arrow)])],
+    });
+
+    expect(resolved.shapes?.map(definition => definition.name)).toEqual(['cross']);
+    expect(resolved.arrows?.map(definition => definition.name)).toEqual(['cross']);
+  });
+
+  it('具体化一个完整的自定义裁剪提供者，无需形状依赖性', () => {
+    const key = clipKey('ticket');
+    const definition = clipDefinitionOf('ticket');
+    const maker = vi.fn(() => definition);
+
+    const resolved = resolveCoreProviderDependencies({
+      contributions: [contributionOf([key], [providerOf(key, { makeDefinition: maker })])],
+    });
+
+    expect(maker).toHaveBeenCalledTimes(1);
+    expect(resolved).toEqual({ clips: [definition] });
+  });
+
+  it('拒绝同一裁剪键处的第二个显式完整定义', () => {
+    const key = clipKey('ticket');
+    const providerDefinition = clipDefinitionOf('ticket');
+    const explicitDefinition = clipDefinitionOf('ticket');
+
+    expect(() =>
+      resolveCoreProviderDependencies({
+        contributions: [contributionOf([key], [providerOf(key, { makeDefinition: () => providerDefinition })])],
+        definitions: { clips: [explicitDefinition] },
+      }),
+    ).toThrow(/definition.*conflict.*clip:ticket/i);
+  });
+
+  it('在任何工厂运行之前拒绝冲突的工厂引用和有序依赖声明', () => {
+    const root = compositeKey('third', 'card');
+    const firstDependency = compositeKey('standard', 'frame');
+    const secondDependency = compositeKey('layout', 'flexLayout');
+    const firstMaker = vi.fn(() => definitionOf(root));
+    const secondMaker = vi.fn(() => definitionOf(root));
+    const dependencyMaker = vi.fn(() => definitionOf(firstDependency));
+
+    expect(() =>
+      resolveCoreProviderDependencies({
+        contributions: [
+          contributionOf([root], [providerOf(root, { makeDefinition: firstMaker })]),
+          contributionOf([root], [providerOf(root, { makeDefinition: secondMaker })]),
+        ],
+      }),
+    ).toThrow(/third\.card.*maker/i);
+    expect(firstMaker).not.toHaveBeenCalled();
+    expect(secondMaker).not.toHaveBeenCalled();
+
+    expect(() =>
+      resolveCoreProviderDependencies({
+        contributions: [
+          contributionOf(
+            [root],
+            [
+              providerOf(root, {
+                dependencies: [firstDependency, secondDependency],
+                makeDefinition: firstMaker,
+              }),
+              providerOf(firstDependency, { makeDefinition: dependencyMaker }),
+              providerOf(secondDependency),
+            ],
+          ),
+          contributionOf(
+            [root],
+            [providerOf(root, { dependencies: [secondDependency, firstDependency], makeDefinition: firstMaker })],
+          ),
+        ],
+      }),
+    ).toThrow(/third\.card.*dependencies/i);
+    expect(firstMaker).not.toHaveBeenCalled();
+    expect(dependencyMaker).not.toHaveBeenCalled();
+  });
+
+  it('在任何生成器运行之前预检缺少根、缺少依赖项和循环', () => {
+    const root = compositeKey('third', 'card');
+    const dependency = compositeKey('standard', 'frame');
+    const rootMaker = vi.fn(() => definitionOf(root));
+    const dependencyMaker = vi.fn(() => definitionOf(dependency));
+
+    expect(() => resolveCoreProviderDependencies({ contributions: [contributionOf([root], [])] })).toThrow(
+      /missing root provider.*composite:third\.card/i,
+    );
+
+    expect(() =>
+      resolveCoreProviderDependencies({
+        contributions: [
+          contributionOf([root], [providerOf(root, { dependencies: [dependency], makeDefinition: rootMaker })]),
+        ],
+      }),
+    ).toThrow(/missing dependency provider.*composite:third\.card -> composite:standard\.frame/i);
+    expect(rootMaker).not.toHaveBeenCalled();
+
+    expect(() =>
+      resolveCoreProviderDependencies({
+        contributions: [
+          contributionOf(
+            [root],
+            [
+              providerOf(root, { dependencies: [dependency], makeDefinition: rootMaker }),
+              providerOf(dependency, { dependencies: [root], makeDefinition: dependencyMaker }),
+            ],
+          ),
+        ],
+      }),
+    ).toThrow(/provider cycle.*composite:third\.card -> composite:standard\.frame -> composite:third\.card/i);
+    expect(rootMaker).not.toHaveBeenCalled();
+    expect(dependencyMaker).not.toHaveBeenCalled();
+  });
+
+  it('拒绝名称与提供者键不同的工厂输出', () => {
+    const root = shapeKey('cross');
+    const mismatchedName = vi.fn(() => shapeDefinitionOf('other'));
+
+    expect(() =>
+      resolveCoreProviderDependencies({
+        contributions: [contributionOf([root], [providerOf(root, { makeDefinition: mismatchedName })])],
+      }),
+    ).toThrow(/provider shape:cross returned definition other/i);
+    expect(mismatchedName).toHaveBeenCalledTimes(1);
+  });
+
+  it('按编写顺序附加显式定义，对同一对象进行去重，并拒绝冲突', () => {
+    const root = compositeKey('third', 'card');
+    const providerDefinition = compositeDefinitionOf('third', 'card');
+    const explicit = compositeDefinitionOf('host', 'overlay');
+    const makeDefinition = vi.fn(() => providerDefinition);
+
+    const resolved = resolveCoreProviderDependencies({
+      contributions: [contributionOf([root], [providerOf(root, { makeDefinition })])],
+      definitions: { composites: [providerDefinition, explicit] },
+    });
+
+    expect(resolved.composites).toEqual([providerDefinition, explicit]);
+    expect(resolved.composites?.[0]).toBe(providerDefinition);
+    expect(resolved.composites?.[1]).toBe(explicit);
+
+    expect(() =>
+      resolveCoreProviderDependencies({
+        contributions: [contributionOf([root], [providerOf(root, { makeDefinition })])],
+        definitions: { composites: [compositeDefinitionOf('third', 'card')] },
+      }),
+    ).toThrow(/definition.*conflict.*composite:third\.card/i);
+  });
+
+  it.each([new Error('factory failed'), 'factory failed'])('包装工厂异常并保留所属者与原始原因：%s', cause => {
+    const root = compositeKey('third', 'card');
+    const resolve = () =>
+      resolveCoreProviderDependencies({
+        contributions: [
+          contributionOf(
+            [root],
+            [
+              providerOf(root, {
+                makeDefinition: () => {
+                  throw cause;
+                },
+              }),
+            ],
+          ),
+        ],
+      });
+
+    let failure: unknown;
+    try {
+      resolve();
+    } catch (error) {
+      failure = error;
+    }
+    expect(failure).toBeInstanceOf(RetikzCoreError);
+    if (!(failure instanceof RetikzCoreError)) throw new Error('Expected a Core error');
+    expect(failure.code).toBe(RetikzCoreErrorCode.Provider);
+    expect(failure.message).toContain('composite:third.card');
+    expect(failure.cause).toBe(cause);
+    expect(failure.details).toEqual({ key: root });
+  });
+
+  it('在提供者执行之前快照显式定义', () => {
+    const root = compositeKey('third', 'card');
+    const providerDefinition = compositeDefinitionOf('third', 'card');
+    const explicit = compositeDefinitionOf('host', 'overlay');
+    const injectedDuringMaterialization = compositeDefinitionOf('host', 'late');
+    const composites: Array<AnyCompositeDefinition> = [explicit];
+    const makeDefinition = vi.fn(() => {
+      composites.push(injectedDuringMaterialization);
+      return providerDefinition;
+    });
+
+    const resolved = resolveCoreProviderDependencies({
+      contributions: [contributionOf([root], [providerOf(root, { makeDefinition })])],
+      definitions: { composites },
+    });
+
+    expect(resolved.composites).toEqual([providerDefinition, explicit]);
+    expect(composites).toEqual([explicit, injectedDuringMaterialization]);
+  });
+});
