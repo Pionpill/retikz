@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  ArrowDetailSchema,
   NodeLabelDefaultSchema,
   NodeDefaultSchema,
   PathDefaultSchema,
@@ -69,7 +68,7 @@ describe('NodeDefaultSchema（every node 默认）', () => {
     ).toBe(true);
   });
 
-  it('接受空对象（nodeDefault={{}} 无效果但合法）', () => {
+  it('接受空对象（defaults.node={{}} 无效果但合法）', () => {
     expect(NodeDefaultSchema.safeParse({}).success).toBe(true);
   });
 
@@ -106,11 +105,12 @@ describe('NodeDefaultSchema（every node 默认）', () => {
     expect(NodeDefaultSchema.safeParse({ position: [0, 0] }).success).toBe(false);
   });
 
-  it('拒被排除字段 id / text / label / type', () => {
-    expect(NodeDefaultSchema.safeParse({ id: 'A' }).success).toBe(false);
-    expect(NodeDefaultSchema.safeParse({ text: 'x' }).success).toBe(false);
-    expect(NodeDefaultSchema.safeParse({ label: { text: 'x' } }).success).toBe(false);
-    expect(NodeDefaultSchema.safeParse({ type: 'node' }).success).toBe(false);
+  it('拒绝实例身份和正文，但允许配置已有标签', () => {
+    for (const value of [{ id: 'A' }, { text: 'x' }, { type: 'node' }, { label: { text: 'x' } }]) {
+      expect(NodeDefaultSchema.safeParse(value).success).toBe(false);
+    }
+    const defaults = { label: { font: { size: 12 }, textColor: 'red' } };
+    expect(NodeDefaultSchema.parse(defaults)).toEqual(defaults);
   });
 
   it('拒未知字段（strict）', () => {
@@ -164,7 +164,9 @@ describe('PathDefaultSchema（every path 默认）', () => {
     ).toBe(false);
   });
 
-  it('拒被排除字段 arrow（走 arrowDefault 通道）', () => {
+  it('保留对象箭头默认值并拒绝字符串方向糖', () => {
+    const defaults = { arrow: { shape: 'stealth', end: { scale: 2 } } };
+    expect(PathDefaultSchema.parse(defaults)).toEqual(defaults);
     expect(PathDefaultSchema.safeParse({ arrow: '->' }).success).toBe(false);
   });
 
@@ -177,7 +179,7 @@ describe('PathDefaultSchema（every path 默认）', () => {
     expect(PathDefaultSchema.safeParse({ type: 'path' }).success).toBe(false);
   });
 
-  it('拒 instance / structure / decoration 字段', () => {
+  it('拒绝实例身份、结构与创建标签或标记的字段', () => {
     for (const value of [
       { id: 'path' },
       { zIndex: 1 },
@@ -226,35 +228,6 @@ describe('NodeLabelDefaultSchema（every label 默认）', () => {
   it('opacity 越界拒', () => {
     expect(NodeLabelDefaultSchema.safeParse({ opacity: 1.5 }).success).toBe(false);
     expect(NodeLabelDefaultSchema.safeParse({ opacity: -0.1 }).success).toBe(false);
-  });
-});
-
-describe('ArrowDetailSchema（every arrow 默认）', () => {
-  it('接受箭头视觉字段', () => {
-    expect(ArrowDetailSchema.safeParse({ shape: 'stealth', scale: 1.5 }).success).toBe(true);
-  });
-
-  it('= ArrowDetailSchema：接受 start / end 子对象', () => {
-    expect(
-      ArrowDetailSchema.safeParse({
-        shape: 'normal',
-        end: { shape: 'circle' },
-      }).success,
-    ).toBe(true);
-  });
-
-  it('接受从 Path master 派生的数值 color 与从 arrow color 派生的数值 fill', () => {
-    expect(ArrowDetailSchema.safeParse({ color: 0.9, fill: 0.2, end: { color: 0.8, fill: 0.1 } }).success).toBe(true);
-  });
-
-  it('接受任意非空白 shape 名（未注册名拒绝移到 compile 期）', () => {
-    // shape 已开成开放字符串（NonBlankStringSchema）：schema 不再门控名字白名单，
-    // 未注册名的拒绝移到 compile 期（见 arrows/builtin-registry.test.ts 的 compile throw 用例）
-    expect(ArrowDetailSchema.safeParse({ shape: 'bogus' }).success).toBe(true);
-  });
-
-  it.each(['', '   '])('拒绝空白 shape %j', shape => {
-    expect(ArrowDetailSchema.safeParse({ shape }).success).toBe(false);
   });
 });
 
@@ -315,8 +288,8 @@ describe('ScopeSchema 级联 graphic state', () => {
   });
 });
 
-describe('ScopeSchema 四通道 every-X', () => {
-  it('接受 nodeDefault / pathDefault / labelDefault / arrowDefault', () => {
+describe('ScopeSchema 节点与路径默认通道', () => {
+  it('接受 defaults.node / defaults.path / label / arrow', () => {
     expect(
       ScopeSchema.safeParse({
         type: 'scope',
@@ -329,7 +302,7 @@ describe('ScopeSchema 四通道 every-X', () => {
     ).toBe(true);
   });
 
-  it('nodeDefault 含被排除字段（position）拒', () => {
+  it('defaults.node 含被排除字段（position）拒', () => {
     expect(
       ScopeSchema.safeParse({
         type: 'scope',
@@ -338,20 +311,10 @@ describe('ScopeSchema 四通道 every-X', () => {
       }).success,
     ).toBe(false);
   });
-
-  it('pathDefault 含 arrow 拒', () => {
-    expect(
-      ScopeSchema.safeParse({
-        type: 'scope',
-        children: [],
-        defaults: { path: { arrow: '->' } },
-      }).success,
-    ).toBe(false);
-  });
 });
 
-describe('ScopeSchema resetStyle 屏障', () => {
-  it('接受 resetStyle: true', () => {
+describe('ScopeSchema defaults.reset 屏障', () => {
+  it('接受 defaults.reset: true', () => {
     expect(
       ScopeSchema.safeParse({
         type: 'scope',
@@ -361,7 +324,7 @@ describe('ScopeSchema resetStyle 屏障', () => {
     ).toBe(true);
   });
 
-  it('接受 resetStyle 通道数组', () => {
+  it('接受 defaults.reset 通道数组', () => {
     expect(
       ScopeSchema.safeParse({
         type: 'scope',
@@ -371,7 +334,7 @@ describe('ScopeSchema resetStyle 屏障', () => {
     ).toBe(true);
   });
 
-  it('resetStyle 含非法通道拒', () => {
+  it('defaults.reset 含非法通道拒', () => {
     expect(
       ScopeSchema.safeParse({
         type: 'scope',
@@ -381,7 +344,7 @@ describe('ScopeSchema resetStyle 屏障', () => {
     ).toBe(false);
   });
 
-  it('resetStyle 为数字拒', () => {
+  it('defaults.reset 为数字拒', () => {
     expect(
       ScopeSchema.safeParse({
         type: 'scope',
@@ -393,7 +356,7 @@ describe('ScopeSchema resetStyle 屏障', () => {
 });
 
 describe('Scope 样式 JSON round-trip', () => {
-  it('级联 + 四通道 + resetStyle scope 序列化往返语义等价', () => {
+  it('级联 + 节点与路径默认通道 + defaults.reset scope 序列化往返语义等价', () => {
     const ir = {
       type: 'scope' as const,
       children: [
@@ -417,34 +380,5 @@ describe('Scope 样式 JSON round-trip', () => {
     const restored = ScopeSchema.parse(JSON.parse(JSON.stringify(ir)));
 
     expect(restored).toEqual({ ...ir, position: [0, 0] });
-  });
-});
-
-describe('Node / Path 主色 color 字段', () => {
-  it('Node 接受 color', async () => {
-    const { NodeSchema } = await import('../../src/schemas');
-
-    expect(
-      NodeSchema.safeParse({
-        type: 'node',
-        position: [0, 0],
-        style: { color: 'blue' },
-      }).success,
-    ).toBe(true);
-  });
-
-  it('Path 接受 color', async () => {
-    const { PathSchema } = await import('../../src/schemas');
-
-    expect(
-      PathSchema.safeParse({
-        type: 'path',
-        children: [
-          { type: 'step', kind: 'move', to: [0, 0] },
-          { type: 'step', kind: 'line', to: [10, 0] },
-        ],
-        style: { color: 'crimson' },
-      }).success,
-    ).toBe(true);
   });
 });

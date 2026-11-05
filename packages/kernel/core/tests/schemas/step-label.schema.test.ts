@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { PathLabelSchema } from '../../src/schemas';
 
-describe('PathLabelSchema 新增样式字段', () => {
+describe('PathLabelSchema 文本与样式', () => {
   it('接受与 Node 相同的多行 TextBlock', () => {
     const text = [
       '标题',
@@ -84,21 +84,21 @@ describe('PathLabelSchema 错误路径', () => {
     expect(PathLabelSchema.safeParse({ text: 'x', opacity: -0.1 }).success).toBe(false);
   });
 
-  it('font 非法字段类型拒（size 为字符串）', () => {
+  it('font 拒绝未知字号预设', () => {
     expect(PathLabelSchema.safeParse({ text: 'x', font: { size: 'big' } }).success).toBe(false);
   });
 
-  it('textColor 非字符串拒', () => {
+  it('textColor 拒绝范围外的派生颜色权重', () => {
     expect(PathLabelSchema.safeParse({ text: 'x', textColor: 123 }).success).toBe(false);
   });
 });
 
-describe('PathLabelSchema 零破坏（旧形态仍合法）', () => {
+describe('PathLabelSchema 稀疏字段', () => {
   it('仅 text', () => {
     expect(PathLabelSchema.safeParse({ text: 'x' }).success).toBe(true);
   });
 
-  it('text + position + side（v0.1 形态）', () => {
+  it('text + position + side', () => {
     expect(PathLabelSchema.safeParse({ text: 'x', position: 'midway', side: 'top' }).success).toBe(true);
   });
 });
@@ -110,7 +110,7 @@ describe('StepLabel JSON 往返', () => {
     expect(PathLabelSchema.parse(JSON.parse(JSON.stringify(label)))).toEqual(label);
   });
 
-  it('含三新字段的 label 序列化往返语义等价', () => {
+  it('标签文本、位置和样式序列化往返语义等价', () => {
     const label = {
       text: 'sin',
       position: 'near-end' as const,

@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import type { GroupPrimitive, ScenePrimitive, TextPrimitive } from '../../../../core/src/contract';
 import type { IRScene } from '../../../../core/src/schemas';
 import { NodeLabelSchema } from '../../../../core/src/schemas';
-import { flattenPrims } from '../../../../core/tests/helpers/flatten';
 import { compileToScene } from '../../../src/compile';
+import { flattenPrims } from '../../helpers/flatten';
 
 // fallback measurer 不提供 ascent / descent，Node label 规范化为上下对称视觉盒
 const visualMiddle = (t: TextPrimitive): number => t.y;

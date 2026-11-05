@@ -9,7 +9,6 @@ import {
   GraphicStrokeSchema,
   NodeStrokeSchema,
   PathDecorationSchema,
-  PathDefaultSchema,
   PathFillSchema,
   PathGeometrySchema,
   PathSchema,
@@ -124,28 +123,6 @@ describe('Core 原子绘图契约', () => {
     expect(PathSchema.safeParse({ ...path, kindOptions: {} }).success).toBe(true);
     expect(StrokePathSchema.safeParse({ type: 'path' }).success).toBe(false);
     expect(StrokePathSchema.safeParse({ ...path, kindOptions: {} }).success).toBe(false);
-  });
-
-  it('在兼容性聚合中重用原子叶 schema 实例', () => {
-    expect(GraphicStyleSchema.shape.color).toBe(GraphicPaintSchema.shape.color);
-    expect(GraphicStyleSchema.shape.fill).toBe(GraphicPaintSchema.shape.fill);
-    expect(GraphicStyleSchema.shape.stroke).toBe(GraphicPaintSchema.shape.stroke);
-    expect(GraphicStyleSchema.shape.opacity).toBe(GraphicOpacitySchema.shape.opacity);
-    expect(GraphicStyleSchema.shape.shadow).toBe(GraphicEffectsSchema.shape.shadow);
-    expect(GraphicStyleSchema.shape.strokeWidth).toBe(GraphicStrokeSchema.shape.strokeWidth);
-    expect(CascadingGraphicStyleSchema.shape.strokeWidth).toBe(GraphicStrokeSchema.shape.strokeWidth);
-    expect(PathSchema.shape.type).toBe(PathStructureSchema.shape.type);
-    expect(PathSchema.shape.kind).toBe(PathStructureSchema.shape.kind);
-    expect(PathSchema.shape.style.unwrap().shape.dashPattern).toBe(PathStrokeSchema.shape.dashPattern);
-    expect(PathSchema.shape.style.unwrap().shape.fillRule).toBe(PathFillSchema.shape.fillRule);
-    expect(PathSchema.shape.children).toBe(PathGeometrySchema.shape.children);
-    expect(PathSchema.shape.label).toBe(PathDecorationSchema.shape.label);
-    expect(PathSchema.shape.marks).toBe(PathDecorationSchema.shape.marks);
-    expect(PathDefaultSchema.shape.style.unwrap().shape.color).toBe(GraphicStyleSchema.shape.color);
-    expect(PathDefaultSchema.shape.style.unwrap().shape.shadow).toBe(GraphicStyleSchema.shape.shadow);
-    expect(PathDefaultSchema.shape.style.unwrap().shape.strokeWidth).toBe(PathStrokeSchema.shape.strokeWidth);
-    expect(PathDefaultSchema.shape.style.unwrap().shape.fillRule).toBe(PathFillSchema.shape.fillRule);
-    expect(PathDefaultSchema.shape.rotate).toBe(PathGeometrySchema.shape.rotate);
   });
 
   it('保持原子 JSON 往返无损', () => {

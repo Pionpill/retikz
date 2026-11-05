@@ -3,9 +3,9 @@ import { describe, expect, it } from 'vitest';
 import type { PathPrimitive, ScenePrimitive } from '../../../../core/src/contract';
 import type { IRScene } from '../../../../core/src/schemas';
 import { PathSchema, SHADOW_PRESETS } from '../../../../core/src/schemas';
-import { flattenPrims } from '../../../../core/tests/helpers/flatten';
-import { pathArrows } from '../../../../core/tests/helpers/path-arrows';
 import { compileToScene } from '../../../src/compile';
+import { flattenPrims } from '../../helpers/flatten';
+import { pathArrows } from '../../helpers/path-arrows';
 
 const silent = { onWarn: () => {} };
 

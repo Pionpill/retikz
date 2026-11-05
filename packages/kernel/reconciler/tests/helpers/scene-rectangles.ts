@@ -1,7 +1,6 @@
+import { applyScopeTransform, composeScopeTransform } from '@retikz/core';
+import type { Scene, ScenePrimitive, Transform } from '@retikz/core';
 import type { CenteredBox } from '@retikz/math';
-
-import { applyTransformChain } from '../../src/compile/shared';
-import type { Scene, ScenePrimitive, Transform } from '../../src/contract';
 
 /** 从实际绘制的矩形读取世界坐标几何，用于定位和变换行为断言 */
 export const sceneRectangles = (scene: Scene): Array<{ id?: string; rect: CenteredBox }> => {
@@ -15,17 +14,18 @@ export const sceneRectangles = (scene: Scene): Array<{ id?: string; rect: Center
       if (primitive.type === 'group') {
         visit(primitive.children, [...transforms, ...(primitive.transforms ?? [])], primitive.id ?? id);
       } else if (primitive.type === 'rect') {
-        const center = applyTransformChain(
+        const transform = composeScopeTransform(transforms);
+        const center = applyScopeTransform(
           [primitive.x + primitive.width / 2, primitive.y + primitive.height / 2],
-          transforms,
+          transform,
         );
-        const right = applyTransformChain(
+        const right = applyScopeTransform(
           [primitive.x + primitive.width, primitive.y + primitive.height / 2],
-          transforms,
+          transform,
         );
-        const bottom = applyTransformChain(
+        const bottom = applyScopeTransform(
           [primitive.x + primitive.width / 2, primitive.y + primitive.height],
-          transforms,
+          transform,
         );
         rectangles.push({
           id: primitive.id ?? id,

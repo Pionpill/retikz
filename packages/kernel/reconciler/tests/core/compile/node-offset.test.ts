@@ -3,8 +3,8 @@
 import type { EllipsePrimitive, RectPrimitive, ScenePrimitive } from '../../../../core/src/contract';
 import type { IROffsetPosition, IRScene } from '../../../../core/src/schemas';
 import { OffsetPositionSchema } from '../../../../core/src/schemas';
-import { flattenPrims } from '../../../../core/tests/helpers/flatten';
 import { compileToScene } from '../../../src/compile';
+import { flattenPrims } from '../../helpers/flatten';
 
 /** 取所有 RectPrimitive（默认 rectangle 节点；带文本节点包 group，flatten 穿透） */
 const rects = (prims: Array<ScenePrimitive>): Array<RectPrimitive> =>

@@ -11,8 +11,8 @@ import type {
   MarkDefinition,
 } from '../../../../core/src';
 import { defineArrow, defineMark, resolveCoreProviderDependencies } from '../../../../core/src';
-import { flattenPrims } from '../../../../core/tests/helpers/flatten';
 import { compileToScene } from '../../../src/compile';
+import { flattenPrims } from '../../helpers/flatten';
 import { pathIr } from './path/helpers';
 
 const steps: Array<IRStep> = [

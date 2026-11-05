@@ -4,8 +4,8 @@ import type { CompileWarning, IRScene } from '../../../../core/src';
 import { BuiltinCompileWarningCode } from '../../../../core/src';
 import type { PathPrimitive, ScenePrimitive } from '../../../../core/src/contract';
 import { RectangleStepSchema } from '../../../../core/src/schemas';
-import { arc, close, line, move } from '../../../../core/tests/helpers/path-command-factory';
 import { compileToScene } from '../../../src/compile';
+import { arc, close, line, move } from '../../helpers/path-command-factory';
 
 const silent = { onWarn: () => {} };
 

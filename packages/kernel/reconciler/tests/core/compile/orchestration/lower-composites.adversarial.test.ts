@@ -3,8 +3,8 @@ import { literal, string } from 'zod';
 
 import type { CompileWarning, IRScene, ScenePrimitive } from '../../../../../core/src';
 import { BuiltinCompileWarningCode, CompositeBaseSchema, defineComposite } from '../../../../../core/src';
-import { flattenPrims } from '../../../../../core/tests/helpers/flatten';
 import { compileToScene } from '../../../../src/compile';
+import { flattenPrims } from '../../../helpers/flatten';
 
 const findByType = <T extends ScenePrimitive['type']>(
   prims: Array<ScenePrimitive>,

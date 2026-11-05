@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import type { IRStep } from '../../../../core/src';
-import { flattenPrims } from '../../../../core/tests/helpers/flatten';
 import { compileToScene } from '../../../src/compile';
+import { flattenPrims } from '../../helpers/flatten';
 import { pathIr } from './path/helpers';
 
 const steps: Array<IRStep> = [

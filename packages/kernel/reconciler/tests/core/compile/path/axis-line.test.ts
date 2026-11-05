@@ -2,10 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import type { CompileWarning, IRPosition, IRScene, IRStep, ScenePrimitive } from '../../../../../core/src';
 import { BuiltinCompileWarningCode } from '../../../../../core/src';
-import { flattenPrims } from '../../../../../core/tests/helpers/flatten';
-import { pathArrows } from '../../../../../core/tests/helpers/path-arrows';
-import { line, move } from '../../../../../core/tests/helpers/path-command-factory';
 import { compileToScene } from '../../../../src/compile';
+import { flattenPrims } from '../../../helpers/flatten';
+import { pathArrows } from '../../../helpers/path-arrows';
+import { line, move } from '../../../helpers/path-command-factory';
 import { findPathPrim, pathCommands } from './helpers';
 
 describe('编译路径：轴线', () => {

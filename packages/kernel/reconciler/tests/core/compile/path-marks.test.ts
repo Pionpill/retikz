@@ -4,8 +4,8 @@ import { describe, expect, it } from 'vitest';
 
 import type { IRPath, IRScene, ScenePrimitive } from '../../../../core/src';
 import type { ArrowDefinition } from '../../../../core/src/contract';
-import { flattenPrims } from '../../../../core/tests/helpers/flatten';
 import { compileToScene } from '../../../src/compile';
+import { flattenPrims } from '../../helpers/flatten';
 
 type TestArrowDefinition = WithOptionalProperties<ArrowDefinition, 'name'>;
 

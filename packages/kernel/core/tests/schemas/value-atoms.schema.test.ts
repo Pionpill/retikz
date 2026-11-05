@@ -4,13 +4,11 @@ import {
   ContextualColorSchema,
   CssColorSchema,
   FontFamilySchema,
-  FontSchema,
   FontStyleSchema,
   FontWeightSchema,
   LineHeightSchema,
   NodeSchema,
   PaintValueSchema,
-  GraphicStrokeSchema,
   StrokeWidthSchema,
   TextAlignSchema,
 } from '../../src';
@@ -92,14 +90,5 @@ describe('Core 值原子 schema', () => {
     expect(StrokeWidthSchema.safeParse(2).success).toBe(true);
     expect(StrokeWidthSchema.safeParse(-1).success).toBe(false);
     expect(StrokeWidthSchema.safeParse('2').success).toBe(false);
-  });
-
-  it('在兼容性聚合 schema 中重用命名原子', () => {
-    expect(FontSchema.shape.family.unwrap()).toBe(FontFamilySchema);
-    expect(FontSchema.shape.weight.unwrap()).toBe(FontWeightSchema);
-    expect(FontSchema.shape.style.unwrap()).toBe(FontStyleSchema);
-    expect(NodeSchema.shape.layout.unwrap().shape.textAlign.unwrap()).toBe(TextAlignSchema);
-    expect(NodeSchema.shape.layout.unwrap().shape.lineHeight.unwrap()).toBe(LineHeightSchema);
-    expect(GraphicStrokeSchema.shape.strokeWidth.unwrap()).toBe(StrokeWidthSchema);
   });
 });

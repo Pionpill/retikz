@@ -24,10 +24,10 @@ import {
   LayoutIntrinsicMode,
   naturalLayoutProposal,
 } from '../../../../core/src';
-import { sceneRectangles } from '../../../../core/tests/helpers/scene-rectangles';
 import { compileToScene } from '../../../src/compile';
 import { createCompileRuntime } from '../../../src/compile/runtime';
 import { CompileManager } from '../../../src/compile/tree';
+import { sceneRectangles } from '../../helpers/scene-rectangles';
 
 const scene = (children: IRScene['children']): IRScene => ({
   version: 1,

@@ -7,6 +7,9 @@ import { ArrowDetailSchema, ArrowStyleSchema, BuiltinArrowShape, PathSchema } fr
  * @description 顶层 8 字段（shape/scale/length/width/color/fill/opacity/lineWidth）全 optional + start/end 子对象（同字段集，无递归）；compile/render merge 语义由 compile 测试覆盖
  */
 describe('ArrowDetailSchema：字段合法 / optional', () => {
+  it('接受从 Path master 派生的数值 color 与从 arrow color 派生的数值 fill', () => {
+    expect(ArrowDetailSchema.safeParse({ color: 0.9, fill: 0.2, end: { color: 0.8, fill: 0.1 } }).success).toBe(true);
+  });
   it('内置箭头形状常量使用 BuiltinArrowShape 命名', () => {
     expect(BuiltinArrowShape.Stealth).toBe('stealth');
     expect(Object.values(BuiltinArrowShape)).toEqual([
@@ -65,7 +68,7 @@ describe('ArrowDetailSchema：字段合法 / optional', () => {
 });
 
 describe('PathSchema：箭头糖在外核 IR', () => {
-  it('拒绝顶级箭头和 arrowDetail 字段', () => {
+  it('拒绝字符串箭头糖和未知 arrowDetail 字段', () => {
     const result = PathSchema.safeParse({
       type: 'path',
       arrow: '->',
@@ -81,9 +84,9 @@ describe('PathSchema：箭头糖在外核 IR', () => {
   });
 });
 
-describe('ArrowDetailSchema：错误路径', () => {
+describe('ArrowDetailSchema：开放名称与值域边界', () => {
   // shape 已开成开放字符串（NonBlankStringSchema）：任意非空白名 schema 接受，
-  // 未注册名的拒绝移到 compile 期（见 arrows/builtin-registry.test.ts 的 compile throw 用例）
+  // 未注册名由 provider lookup 诊断
   it('任意非空白 shape 名 schema 接受（顶层）', () => {
     expect(ArrowDetailSchema.safeParse({ shape: 'unknown' }).success).toBe(true);
   });
@@ -139,8 +142,8 @@ describe('ArrowDetailSchema：错误路径', () => {
   });
 });
 
-describe('PathSchema：arrowDetail 嵌入 + arrowShape 删除', () => {
-  it('PathSchema 接受 arrowDetail', () => {
+describe('PathSchema：对象箭头与闭合字段', () => {
+  it('PathSchema 保留对象箭头', () => {
     const ok = PathSchema.safeParse({
       type: 'path',
       arrow: { end: { shape: 'stealth', scale: 1.5 } },

@@ -57,8 +57,4 @@ describe('PathSchema.id 拒绝非法形态', () => {
       expect(parsed.error.issues.some(issue => issue.path.includes('id'))).toBe(true);
     }
   });
-
-  it.each(['', '   '])('PathSchema.parse 对空白 id=%j 直接抛异常', id => {
-    expect(() => PathSchema.parse(pathWithId(id))).toThrow();
-  });
 });

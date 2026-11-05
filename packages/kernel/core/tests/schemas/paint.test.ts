@@ -134,12 +134,6 @@ describe('PaintSchema — 错误路径', () => {
 });
 
 describe('PaintSchema — 图案', () => {
-  it('接受 lines / dots / grid（仅 shape 必填）', () => {
-    for (const shape of ['lines', 'dots', 'grid'] as const) {
-      expect(() => PaintSchema.parse({ kind: 'pattern', shape })).not.toThrow();
-    }
-  });
-
   it('接受并保留完整图案与线型字段', () => {
     const input = {
       kind: 'pattern' as const,
@@ -194,23 +188,6 @@ describe('PaintSchema — 图案', () => {
     expect(PaintSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
   });
 
-  it.each([
-    ['period 小于 2', { period: 1, overrides: [{ index: 0, style: {} }] }],
-    ['period 大于 512', { period: 513, overrides: [{ index: 0, style: {} }] }],
-    ['period 不是整数', { period: 2.5, overrides: [{ index: 0, style: {} }] }],
-    ['period 不是 finite number', { period: Number.POSITIVE_INFINITY, overrides: [{ index: 0, style: {} }] }],
-  ])('拒绝非法 lineStyleCycle：%s', (_label, lineStyleCycle) => {
-    const result = PaintSchema.safeParse({ kind: 'pattern', shape: 'lines', lineStyleCycle });
-
-    expect(result.success).toBe(false);
-
-    if (!result.success) {
-      expect(result.error.issues.some(issue => issue.path[0] === 'lineStyleCycle' && issue.path[1] === 'period')).toBe(
-        true,
-      );
-    }
-  });
-
   it('拒绝空 lineStyleCycle overrides', () => {
     const result = PaintSchema.safeParse({
       kind: 'pattern',
@@ -223,37 +200,6 @@ describe('PaintSchema — 图案', () => {
     if (!result.success) {
       expect(
         result.error.issues.some(issue => issue.path[0] === 'lineStyleCycle' && issue.path[1] === 'overrides'),
-      ).toBe(true);
-    }
-  });
-
-  it.each([
-    ['负 index', { period: 3, overrides: [{ index: -1, style: {} }] }],
-    ['越界 index', { period: 3, overrides: [{ index: 3, style: {} }] }],
-    [
-      '重复 index',
-      {
-        period: 3,
-        overrides: [
-          { index: 1, style: {} },
-          { index: 1, style: { dashed: true } },
-        ],
-      },
-    ],
-  ])('拒绝非法 lineStyleCycle override：%s', (_label, lineStyleCycle) => {
-    const result = PaintSchema.safeParse({ kind: 'pattern', shape: 'lines', lineStyleCycle });
-
-    expect(result.success).toBe(false);
-
-    if (!result.success) {
-      expect(
-        result.error.issues.some(
-          issue =>
-            issue.path[0] === 'lineStyleCycle' &&
-            issue.path[1] === 'overrides' &&
-            typeof issue.path[2] === 'number' &&
-            issue.path[3] === 'index',
-        ),
       ).toBe(true);
     }
   });
@@ -288,16 +234,6 @@ describe('PaintSchema — 图案', () => {
   it('空串 shape / size 非正 被拒', () => {
     expect(() => PaintSchema.parse({ kind: 'pattern', shape: '' })).toThrow();
     expect(() => PaintSchema.parse({ kind: 'pattern', shape: 'dots', size: 0 })).toThrow();
-  });
-
-  it('非法 dash pattern 被拒', () => {
-    expect(() => PaintSchema.parse({ kind: 'pattern', shape: 'lines', dashPattern: [] })).toThrow();
-    expect(() => PaintSchema.parse({ kind: 'pattern', shape: 'lines', dashPattern: [2, -1] })).toThrow();
-  });
-
-  it('未知 line cap / join 被拒', () => {
-    expect(() => PaintSchema.parse({ kind: 'pattern', shape: 'lines', lineCap: 'triangle' })).toThrow();
-    expect(() => PaintSchema.parse({ kind: 'pattern', shape: 'grid', lineJoin: 'curve' })).toThrow();
   });
 });
 
@@ -435,16 +371,28 @@ describe('外部图案输入的线型约束', () => {
   });
 
   it.each([
-    ['period_nan', { period: NaN, overrides: [{ index: 0, style: {} }] }],
-    ['period_infinity', { period: Infinity, overrides: [{ index: 0, style: {} }] }],
-    ['period_too_small', { period: 1, overrides: [{ index: 0, style: {} }] }],
-    ['period_too_large', { period: 513, overrides: [{ index: 0, style: {} }] }],
-    ['period_fractional', { period: 2.5, overrides: [{ index: 0, style: {} }] }],
-    ['period_string', { period: '3', overrides: [{ index: 0, style: {} }] }],
-    ['index_negative', { period: 3, overrides: [{ index: -1, style: {} }] }],
-    ['index_out_of_range', { period: 3, overrides: [{ index: 3, style: {} }] }],
+    ['period 小于 2', { period: 1, overrides: [{ index: 0, style: {} }] }],
+    ['period 大于 512', { period: 513, overrides: [{ index: 0, style: {} }] }],
+    ['period 不是整数', { period: 2.5, overrides: [{ index: 0, style: {} }] }],
+    ['period 不是 finite number', { period: Number.POSITIVE_INFINITY, overrides: [{ index: 0, style: {} }] }],
+    ['period NaN', { period: NaN, overrides: [{ index: 0, style: {} }] }],
+    ['period 非数字', { period: '3', overrides: [{ index: 0, style: {} }] }],
+  ])('拒绝非法 lineStyleCycle：%s', (_label, lineStyleCycle) => {
+    const result = PaintSchema.safeParse({ kind: 'pattern', shape: 'lines', lineStyleCycle });
+
+    expect(result.success).toBe(false);
+
+    if (!result.success) {
+      expect(result.error.issues.some(issue => issue.path[0] === 'lineStyleCycle' && issue.path[1] === 'period')).toBe(
+        true,
+      );
+    }
+  });
+  it.each([
+    ['负 index', { period: 3, overrides: [{ index: -1, style: {} }] }],
+    ['越界 index', { period: 3, overrides: [{ index: 3, style: {} }] }],
     [
-      'index_duplicate',
+      '重复 index',
       {
         period: 3,
         overrides: [
@@ -453,10 +401,22 @@ describe('外部图案输入的线型约束', () => {
         ],
       },
     ],
-  ])('%s → 抛 lineStyleCycle 诊断', (_label, lineStyleCycle) => {
-    expect(() => PaintSchema.parse({ kind: 'pattern', shape: 'ignoreStyle', lineStyleCycle })).toThrow(
-      /lineStyleCycle/i,
-    );
+  ])('拒绝非法 lineStyleCycle override：%s', (_label, lineStyleCycle) => {
+    const result = PaintSchema.safeParse({ kind: 'pattern', shape: 'lines', lineStyleCycle });
+
+    expect(result.success).toBe(false);
+
+    if (!result.success) {
+      expect(
+        result.error.issues.some(
+          issue =>
+            issue.path[0] === 'lineStyleCycle' &&
+            issue.path[1] === 'overrides' &&
+            typeof issue.path[2] === 'number' &&
+            issue.path[3] === 'index',
+        ),
+      ).toBe(true);
+    }
   });
 
   it.each([

@@ -7,8 +7,8 @@ import { defineShape } from '../../../../core/src/contract';
 import { BUILTIN_SHAPES } from '../../../../core/src/providers';
 import type { IRScene } from '../../../../core/src/schemas';
 import { NodeSchema } from '../../../../core/src/schemas';
-import { flattenPrims } from '../../../../core/tests/helpers/flatten';
 import { compileToScene } from '../../../src/compile';
+import { flattenPrims } from '../../helpers/flatten';
 
 const findByType = <T extends ScenePrimitive['type']>(
   prims: Array<ScenePrimitive>,

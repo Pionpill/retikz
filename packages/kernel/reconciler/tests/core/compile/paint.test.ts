@@ -5,10 +5,10 @@ import type { PathPrimitive, RectPrimitive, ScenePrimitive } from '../../../../c
 import { definePattern } from '../../../../core/src/contract';
 import { resolvePaint } from '../../../../core/src/resolve';
 import type { IRPaint, IRScene } from '../../../../core/src/schemas';
-import { flattenPrims } from '../../../../core/tests/helpers/flatten';
-import { pathArrows } from '../../../../core/tests/helpers/path-arrows';
 import { compileToScene } from '../../../src/compile';
 import { createSharedCompileContext } from '../../../src/compile';
+import { flattenPrims } from '../../helpers/flatten';
+import { pathArrows } from '../../helpers/path-arrows';
 
 const grad: IRPaint = {
   kind: 'linearGradient',

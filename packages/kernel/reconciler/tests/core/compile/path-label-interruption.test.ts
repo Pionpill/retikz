@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import type { GroupPrimitive, PathPrimitive, ScenePrimitive, TextMeasurer, TextPrimitive } from '../../../../core/src';
 import type { IRPath, IRScene } from '../../../../core/src/schemas';
-import { flattenPrims } from '../../../../core/tests/helpers/flatten';
 import { compileToScene } from '../../../src/compile';
+import { flattenPrims } from '../../helpers/flatten';
 
 const STROKE = '#13579b';
 

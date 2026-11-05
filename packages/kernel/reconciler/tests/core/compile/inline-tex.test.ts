@@ -5,8 +5,8 @@ import type { CompileWarning } from '../../../../core/src/compile/shared';
 import type { TexLowerer } from '../../../../core/src/compile/text';
 import type { PathPrimitive, ScenePrimitive, TextPrimitive } from '../../../../core/src/contract';
 import type { IRScene } from '../../../../core/src/schemas';
-import { flattenPrims } from '../../../../core/tests/helpers/flatten';
 import { compileToScene } from '../../../src/compile';
+import { flattenPrims } from '../../helpers/flatten';
 
 const lowerTexCalls: Array<{ tex: string; displayMode?: boolean }> = [];
 

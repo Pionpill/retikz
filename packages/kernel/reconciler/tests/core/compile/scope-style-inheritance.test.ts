@@ -10,8 +10,8 @@ import type {
   TextPrimitive,
 } from '../../../../core/src/contract';
 import type { IRScene } from '../../../../core/src/schemas';
-import { pathArrows } from '../../../../core/tests/helpers/path-arrows';
 import { compileToScene } from '../../../src/compile';
+import { pathArrows } from '../../helpers/path-arrows';
 
 /** 递归展开 GroupPrimitive，把所有叶子 primitive 拍平（scope 子元素在 GroupPrimitive 内） */
 const flatten = (prims: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> => {

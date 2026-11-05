@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import type { IRScene } from '../../../../../core/src/schemas';
-import { cubic, line, move } from '../../../../../core/tests/helpers/path-command-factory';
 import { compileToScene } from '../../../../src/compile';
+import { cubic, line, move } from '../../../helpers/path-command-factory';
 import { findPathPrim } from './helpers';
 
 describe("编译路径：'bend'", () => {

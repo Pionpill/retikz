@@ -20,7 +20,7 @@ const EQUAL_PARAMS = { circumscribe: 'equal' } as const;
 /** diamond 是内置 shape preset；compile 解析后由 polygon + 此 params 提供几何 */
 const DIAMOND_PARAMS = { sides: 4, rotate: 0 } as const;
 
-describe('BUILTIN_SHAPES.circumscribe 与传统 layoutNode 交换机匹配', () => {
+describe('内置形状的外接尺寸', () => {
   it('矩形为单位', () => {
     expect(BUILTIN_SHAPES.get('rectangle')!.computeCircumscribedGeometry(10, 6, NO_PARAMS)).toEqual({
       halfWidth: 10,
@@ -59,11 +59,6 @@ describe('BUILTIN_SHAPES.anchor 返回规范锚点，否则 undefined', () => {
     expect(BUILTIN_SHAPES.get('rectangle')!.resolveAnchor(rect, 'center', NO_PARAMS)).toBeUndefined();
     expect(BUILTIN_SHAPES.get('rectangle')!.resolveAnchor(rect, 'top', NO_PARAMS)).toEqual([0, -5]);
     expect(BUILTIN_SHAPES.get('rectangle')!.resolveAnchor(rect, 'right', NO_PARAMS)).toEqual([10, 0]);
-    expect(BUILTIN_SHAPES.get('rectangle')!.resolveAnchor(rect, 'bottom-left', NO_PARAMS)).toEqual([-10, 5]);
-  });
-
-  it('规范的方向锚点仍然被内置提供者接受', () => {
-    expect(BUILTIN_SHAPES.get('rectangle')!.resolveAnchor(rect, 'top', NO_PARAMS)).toEqual([0, -5]);
     expect(BUILTIN_SHAPES.get('rectangle')!.resolveAnchor(rect, 'bottom-left', NO_PARAMS)).toEqual([-10, 5]);
   });
 
@@ -174,7 +169,7 @@ describe('自定义 ShapeDefinition 是一个普通对象（工厂友好）', ()
   });
 });
 
-describe('BUILTIN_SHAPES.edgePoint —— 内置 4 shape 必实现，落真实边界', () => {
+describe('内置形状的边界点能力', () => {
   const r: CenteredBox = { x: 0, y: 0, width: 20, height: 10, rotate: 0 };
 
   it('直边 / 周长类 shape（rectangle / ellipse）实现 edgePoint', () => {
@@ -195,13 +190,10 @@ describe('BUILTIN_SHAPES.edgePoint —— 内置 4 shape 必实现，落真实�
     expect(p[1]).toBeCloseTo(0, 6);
   });
 
-  it('ellipse.edgePoint：外接框 ×√2 后落椭圆周（right t=0.5 = (rx, 0)）', () => {
-    // shapes/ellipse 把 CenteredBox(width) → rx = width/2 / √2？实际由 toEllipse 决定，仅校验在周长上
-    const p = BUILTIN_SHAPES.get('ellipse')!.computeEdgePoint!(r, 'right', 0.5, NO_PARAMS);
-
-    // right 中点必在 +x 轴上
-    expect(p[1]).toBeCloseTo(0, 6);
-    expect(p[0]).toBeGreaterThan(0);
+  it('ellipse.edgePoint 将外接框半轴映射到右侧中点', () => {
+    const point = BUILTIN_SHAPES.get('ellipse')!.computeEdgePoint!(r, 'right', 0.5, NO_PARAMS);
+    expect(point[0]).toBeCloseTo(10, 6);
+    expect(point[1]).toBeCloseTo(0, 6);
   });
 
   it('polygon（diamond preset）不实现 edgePoint（正多边形无 named side 语义）', () => {

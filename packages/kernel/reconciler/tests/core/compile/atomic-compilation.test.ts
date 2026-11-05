@@ -13,9 +13,9 @@ import {
   resolveScopeInheritance,
 } from '../../../../core/src';
 import type { ScopeCompileContext, IRScope } from '../../../../core/src';
-import { flattenPrims } from '../../../../core/tests/helpers/flatten';
 import { createSharedCompileContext } from '../../../src/compile';
 import { createCompileRuntime } from '../../../src/compile/runtime';
+import { flattenPrims } from '../../helpers/flatten';
 
 describe('原子编译阶段', () => {
   it('宽度反馈重排复用同次文字测量，新一轮编译重新测量', () => {

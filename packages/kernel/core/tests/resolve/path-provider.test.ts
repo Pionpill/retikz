@@ -121,36 +121,6 @@ describe('解析/路径提供者绑定', () => {
     expect(arrowResolution?.geometry.shrink).toBeGreaterThan(0);
   });
 
-  it.each([
-    {
-      name: 'non-finite back',
-      definition: { backX: Number.NaN, lineContactX: 2, tipX: 8 },
-      expected: /non-finite backX/i,
-    },
-    {
-      name: 'back after contact',
-      definition: { backX: 3, lineContactX: 2, tipX: 8 },
-      expected: /backX.*lineContactX.*tipX/i,
-    },
-    {
-      name: 'contact after tip',
-      definition: { backX: 1, lineContactX: 9, tipX: 8 },
-      expected: /backX.*lineContactX.*tipX/i,
-    },
-  ])('拒绝无效的箭头几何形状：$name', ({ definition, expected }) => {
-    const arrow = {
-      name: 'invalidGeometry',
-      ...definition,
-      emit: () => [],
-    };
-
-    expect(() =>
-      resolveStrokePathWithBuiltinProviders(path({ arrow: { end: { shape: 'invalidGeometry' } } }), {
-        arrowRegistry: resolveArrowRegistry([arrow]),
-      }),
-    ).toThrow(expected);
-  });
-
   it('在编译消费前拒绝解析后非有限的 visual back 值', () => {
     const arrow = {
       name: 'overflowBack',

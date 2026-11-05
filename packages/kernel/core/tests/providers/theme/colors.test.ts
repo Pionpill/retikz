@@ -62,10 +62,6 @@ const cases = [
 ] as const;
 
 describe('Core 默认主题颜色', () => {
-  it('不公开内置 Theme', () => {
-    expect(resolveDefaultCoreThemeColors(ThemeMode.Light)).toBeDefined();
-  });
-
   it.each(cases)('%s 使用对应 semantic colors', (mode, _toneVector, semantic) => {
     expect(resolveDefaultCoreThemeColors(mode).semantic).toEqual(semantic);
   });

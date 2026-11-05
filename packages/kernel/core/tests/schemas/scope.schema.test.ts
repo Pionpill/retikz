@@ -313,9 +313,18 @@ describe('ChildSchema discriminated union 含 scope', () => {
     expect(parsed.success).toBe(true);
   });
 
-  it('node / path / coordinate 兼容性维持', () => {
-    expect(ChildSchema.safeParse({ type: 'node', position: [0, 0] }).success).toBe(true);
-    expect(ChildSchema.safeParse({ type: 'coordinate', id: 'A', position: [0, 0] }).success).toBe(true);
+  it.each([
+    { type: 'node', position: [0, 0] },
+    {
+      type: 'path',
+      children: [
+        { type: 'step', kind: 'move', to: [0, 0] },
+        { type: 'step', kind: 'line', to: [10, 0] },
+      ],
+    },
+    { type: 'coordinate', id: 'A', position: [0, 0] },
+  ])('总入口保留 child 成员：$type', child => {
+    expect(ChildSchema.parse(child)).toEqual(child);
   });
 });
 

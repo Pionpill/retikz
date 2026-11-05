@@ -4,8 +4,8 @@ import { BuiltinCompileWarningCode } from '../../../../../core/src';
 import type { CompileWarning } from '../../../../../core/src/compile/shared';
 import type { TextPrimitive } from '../../../../../core/src/contract';
 import type { IRNode, IRNodeStyle, IRScene } from '../../../../../core/src/schemas';
-import { flattenPrims } from '../../../../../core/tests/helpers/flatten';
 import { compileToScene } from '../../../../src/compile';
+import { flattenPrims } from '../../../helpers/flatten';
 
 const AUTO_CONTRAST = 'contrast' as const;
 

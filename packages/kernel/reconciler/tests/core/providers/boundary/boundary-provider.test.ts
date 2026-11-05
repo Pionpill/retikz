@@ -6,9 +6,9 @@ import { defineBoundary, defineShape } from '../../../../../core/src/contract';
 import { BUILTIN_BOUNDARIES } from '../../../../../core/src/providers/boundary';
 import type { IRBoundary, IRChild, IRScene } from '../../../../../core/src/schemas';
 import { BoundarySchema } from '../../../../../core/src/schemas';
-import { flattenPrims } from '../../../../../core/tests/helpers/flatten';
 import type { CompileOptions } from '../../../../src/compile';
 import { compileToScene } from '../../../../src/compile';
+import { flattenPrims } from '../../../helpers/flatten';
 
 const lineEndpoint = (options: CompileOptions, boundary?: IRBoundary): [number, number] => {
   const node = {

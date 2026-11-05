@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { BuiltinCompileWarningCode } from '../../../../core/src';
 import type { PathPrimitive, ScenePrimitive } from '../../../../core/src/contract';
 import type { IRScene } from '../../../../core/src/schemas';
-import { close, ellipseArc, line, move } from '../../../../core/tests/helpers/path-command-factory';
 import { compileToScene } from '../../../src/compile';
+import { close, ellipseArc, line, move } from '../../helpers/path-command-factory';
 
 const silent = { onWarn: () => {} };
 

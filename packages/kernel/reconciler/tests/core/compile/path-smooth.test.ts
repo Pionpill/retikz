@@ -4,9 +4,9 @@ import type { CompileWarning, IRScene, IRTarget } from '../../../../core/src';
 import { BuiltinCompileWarningCode } from '../../../../core/src';
 import type { CubicPathCommand, PathPrimitive, ScenePrimitive, TextPrimitive } from '../../../../core/src/contract';
 import { PathSchema, SmoothStepSchema } from '../../../../core/src/schemas';
-import { flattenPrims } from '../../../../core/tests/helpers/flatten';
-import { move } from '../../../../core/tests/helpers/path-command-factory';
 import { compileToScene } from '../../../src/compile';
+import { flattenPrims } from '../../helpers/flatten';
+import { move } from '../../helpers/path-command-factory';
 
 const silent = { onWarn: () => {} };
 

@@ -4,8 +4,8 @@ import type { ScenePrimitive } from '../../../../../core/src/contract';
 import { rectangle } from '../../../../../core/src/providers/shape';
 import type { IRChild, IRScene } from '../../../../../core/src/schemas';
 import { NodeSchema, ShapeRefSchema } from '../../../../../core/src/schemas';
-import { flattenPrims } from '../../../../../core/tests/helpers/flatten';
 import { compileToScene } from '../../../../src/compile';
+import { flattenPrims } from '../../../helpers/flatten';
 
 const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: 'scene', children });
 

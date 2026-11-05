@@ -2,9 +2,9 @@
 
 import type { GroupPrimitive, PathCommand, PathPrimitive, ScenePrimitive } from '../../../../core/src/contract';
 import type { IRScene } from '../../../../core/src/schemas';
-import { pathArrows } from '../../../../core/tests/helpers/path-arrows';
-import { close, line, move } from '../../../../core/tests/helpers/path-command-factory';
 import { compileToScene } from '../../../src/compile';
+import { pathArrows } from '../../helpers/path-arrows';
+import { close, line, move } from '../../helpers/path-command-factory';
 
 const findPathPrim = (prims: Array<ScenePrimitive>): PathPrimitive | undefined =>
   prims.find((p): p is PathPrimitive => p.type === 'path');

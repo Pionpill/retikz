@@ -6,11 +6,11 @@ import type { CompiledNode } from '../../../../core/src/compile/node';
 import type { CompileWarning } from '../../../../core/src/compile/shared';
 import type { TextMeasurer, TextPrimitive } from '../../../../core/src/contract';
 import type { IRScene } from '../../../../core/src/schemas';
-import { flattenPrims } from '../../../../core/tests/helpers/flatten';
 import { createSharedCompileContext } from '../../../src/compile';
 import { createCompileRuntime } from '../../../src/compile/runtime';
 import { CompileManager } from '../../../src/compile/tree';
 import { SubtreeCompiler } from '../../../src/compile/tree/subtree';
+import { flattenPrims } from '../../helpers/flatten';
 
 const measureText: TextMeasurer = (text, font) => ({
   width: text.length * font.size,

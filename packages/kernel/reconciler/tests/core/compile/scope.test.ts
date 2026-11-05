@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import type { CompileWarning, GroupPrimitive, IRScene, ScenePrimitive, Transform } from '../../../../core/src';
 import { BuiltinCompileWarningCode } from '../../../../core/src';
-import { flattenPrims } from '../../../../core/tests/helpers/flatten';
 import { compileToScene } from '../../../src/compile';
+import { flattenPrims } from '../../helpers/flatten';
 
 const scene = (children: IRScene['children']): IRScene => ({
   version: 1,

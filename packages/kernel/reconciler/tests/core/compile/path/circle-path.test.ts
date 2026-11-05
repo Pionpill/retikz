@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { ellipseArc, line, move } from '../../../../../core/tests/helpers/path-command-factory';
+import { ellipseArc, line, move } from '../../../helpers/path-command-factory';
 import { pathCommands } from './helpers';
 
 describe("编译路径：'circlePath'", () => {

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import type { IRScene, ScenePrimitive } from '../../../../core/src';
-import { flattenPrims } from '../../../../core/tests/helpers/flatten';
 import { compileToScene } from '../../../src/compile';
+import { flattenPrims } from '../../helpers/flatten';
 
 const scene = (children: IRScene['children']): IRScene => ({
   version: 1,

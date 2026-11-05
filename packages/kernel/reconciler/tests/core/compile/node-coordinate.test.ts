@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import type { IRScene } from '../../../../core/src/schemas';
-import { flattenPrims } from '../../../../core/tests/helpers/flatten';
-import { line, move } from '../../../../core/tests/helpers/path-command-factory';
 import { compileToScene } from '../../../src/compile';
+import { flattenPrims } from '../../helpers/flatten';
+import { line, move } from '../../helpers/path-command-factory';
 
 describe('Coordinate 占位符', () => {
   it('coordinate 自身不发任何 primitive', () => {

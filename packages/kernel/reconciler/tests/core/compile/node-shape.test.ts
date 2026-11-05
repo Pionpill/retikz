@@ -3,9 +3,9 @@ import { describe, expect, it } from 'vitest';
 import type { ScenePrimitive } from '../../../../core/src/contract';
 import type { IRNode, IRScene } from '../../../../core/src/schemas';
 import { NodeSchema } from '../../../../core/src/schemas';
-import { flattenPrims } from '../../../../core/tests/helpers/flatten';
-import { line, move } from '../../../../core/tests/helpers/path-command-factory';
 import { compileToScene } from '../../../src/compile';
+import { flattenPrims } from '../../helpers/flatten';
+import { line, move } from '../../helpers/path-command-factory';
 
 const findByType = <T extends ScenePrimitive['type']>(
   prims: Array<ScenePrimitive>,

@@ -3,9 +3,9 @@ import { definePath, PathSchema } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
-import { flattenPrims } from '../../../../core/tests/helpers/flatten';
 import { compileToScene } from '../../../src/compile';
 import { WeaveReconciler } from '../../../src/weave';
+import { flattenPrims } from '../../helpers/flatten';
 
 const measureText = (text: string) => ({ width: [...text].length * 5, height: 10, ascent: 8, descent: 2 });
 const layout = { textAlign: 'end' as const, lineHeight: 20, maxTextWidth: 10 };

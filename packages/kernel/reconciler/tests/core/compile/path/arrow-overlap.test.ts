@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import type { GroupPrimitive, IRChild, IRPathBase, IRScene, PathCommand, PathPrimitive } from '../../../../../core/src';
-import { flattenPrims } from '../../../../../core/tests/helpers/flatten';
 import { compileToScene } from '../../../../src/compile';
+import { flattenPrims } from '../../../helpers/flatten';
 
 const steps = [
   { type: 'step' as const, kind: 'move' as const, to: [0, 0] as [number, number] },

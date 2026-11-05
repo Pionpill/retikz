@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import type { RectPrimitive, ScenePrimitive } from '../../../../core/src/contract';
 import type { IRPaint, IRScene } from '../../../../core/src/schemas';
-import { flattenPrims } from '../../../../core/tests/helpers/flatten';
 import { compileToScene } from '../../../src/compile';
+import { flattenPrims } from '../../helpers/flatten';
 
 const conicGrad: IRPaint = {
   kind: 'conicGradient',

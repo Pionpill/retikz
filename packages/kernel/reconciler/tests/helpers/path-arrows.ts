@@ -1,4 +1,4 @@
-import type { IRArrowDetail, IRArrowStyle, IRPathBase } from '../../src';
+import type { IRArrowDetail, IRArrowStyle, IRPathBase } from '@retikz/core';
 
 type PathArrowDirection = 'none' | '->' | '<-' | '<->';
 

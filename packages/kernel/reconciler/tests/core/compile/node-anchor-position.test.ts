@@ -6,10 +6,10 @@ import type { RectPrimitive } from '../../../../core/src/contract';
 import { defineBoundary } from '../../../../core/src/contract';
 import type { IRNode, IRScene } from '../../../../core/src/schemas';
 import { rect as rectOps } from '../../../../core/src/shared/geometry';
-import { flattenPrims } from '../../../../core/tests/helpers/flatten';
-import { sceneRectangles } from '../../../../core/tests/helpers/scene-rectangles';
 import type { CompileOptions } from '../../../src/compile';
 import { compileToScene } from '../../../src/compile';
+import { flattenPrims } from '../../helpers/flatten';
+import { sceneRectangles } from '../../helpers/scene-rectangles';
 
 const scene = (children: IRScene['children']): IRScene => ({ type: 'scene', version: 1, children });
 

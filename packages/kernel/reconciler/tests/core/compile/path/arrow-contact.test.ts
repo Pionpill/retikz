@@ -7,8 +7,8 @@ import {
   curveSegmentOfOccurrence,
 } from '../../../../../core/src/compile/path/stroke/interruption';
 import { applyTransformChain } from '../../../../../core/src/compile/shared';
-import { flattenPrims } from '../../../../../core/tests/helpers/flatten';
 import { compileToScene } from '../../../../src/compile';
+import { flattenPrims } from '../../../helpers/flatten';
 
 describe('端点箭头触点', () => {
   it.each(['line', 'curve', 'cubic'] as const)('%s 的默认箭头尖端落在目标坐标', kind => {

@@ -3,9 +3,9 @@ import { describe, expect, it } from 'vitest';
 import type { EllipsePrimitive, PathPrimitive, RectPrimitive, TextPrimitive } from '../../../../core/src/contract';
 import type { IRScene } from '../../../../core/src/schemas';
 import { NodeSchema } from '../../../../core/src/schemas';
-import { flattenPrims } from '../../../../core/tests/helpers/flatten';
-import { line, move } from '../../../../core/tests/helpers/path-command-factory';
 import { compileToScene } from '../../../src/compile';
+import { flattenPrims } from '../../helpers/flatten';
+import { line, move } from '../../helpers/path-command-factory';
 
 const findRect = (ir: IRScene): RectPrimitive | undefined =>
   flattenPrims(compileToScene(ir).scene.primitives).find((p): p is RectPrimitive => p.type === 'rect');

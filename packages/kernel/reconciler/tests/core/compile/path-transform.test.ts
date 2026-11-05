@@ -8,8 +8,8 @@ import type {
   ScaleTransform,
   ScenePrimitive,
 } from '../../../../core/src';
-import { pathArrows } from '../../../../core/tests/helpers/path-arrows';
 import { compileToScene } from '../../../src/compile';
+import { pathArrows } from '../../helpers/path-arrows';
 
 /** 找顶层第一个带 transforms 的 GroupPrimitive */
 const findTransformGroup = (prims: ReadonlyArray<ScenePrimitive>): GroupPrimitive | undefined => {

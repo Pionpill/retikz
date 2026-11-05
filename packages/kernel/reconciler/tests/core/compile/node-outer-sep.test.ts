@@ -6,8 +6,8 @@ import type { ScenePrimitive, TextPrimitive } from '../../../../core/src/contrac
 import { BUILTIN_SHAPES } from '../../../../core/src/providers';
 import type { IRScene } from '../../../../core/src/schemas';
 import { NodeSchema } from '../../../../core/src/schemas';
-import { line, move } from '../../../../core/tests/helpers/path-command-factory';
 import { compileToScene } from '../../../src/compile';
+import { line, move } from '../../helpers/path-command-factory';
 
 /** 最简 rectangle CompiledNodeLayout（rect 40×30、半轴 20×15、中心原点），margin 可调 */
 const mkLayout = (margin: number, rotate = 0): CompiledNodeLayout => ({

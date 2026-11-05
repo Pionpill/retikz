@@ -10,9 +10,9 @@ import {
 import type { IRNode, CanonicalScopeInheritance } from '../../../../core/src';
 import { emitNodePrimitives, compileNode } from '../../../../core/src/compile/node';
 import { createPaintRegistry } from '../../../../core/src/compile/resource';
-import { flattenPrims } from '../../../../core/tests/helpers/flatten';
 import { compileToScene, createSharedCompileContext } from '../../../src/compile';
 import type { SharedCompileContext } from '../../../src/compile';
+import { flattenPrims } from '../../helpers/flatten';
 
 const compileTestNode = (
   input: IRNode,

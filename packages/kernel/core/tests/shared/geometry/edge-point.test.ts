@@ -1,4 +1,3 @@
-import { lerp } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
 import { Anchor, Side } from '../../../src/shared';
@@ -29,12 +28,6 @@ describe('edge 共享方向约定', () => {
     expect(edgeAngleDeg(Side.Right, 1)).toBeCloseTo(45, 6);
     expect(edgeAngleDeg(Side.Left, 0)).toBeCloseTo(225, 6);
     expect(edgeAngleDeg(Side.Left, 1)).toBeCloseTo(135, 6);
-  });
-
-  it('lerp：线性插值', () => {
-    near(lerp([0, 0], [10, 20], 0.5), 5, 10);
-    near(lerp([0, 0], [10, 20], 0), 0, 0);
-    near(lerp([0, 0], [10, 20], 1), 10, 20);
   });
 });
 

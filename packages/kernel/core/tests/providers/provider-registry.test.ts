@@ -97,10 +97,32 @@ describe('静态标记几何注册准入', () => {
     );
   });
 
-  it('经 define 或直接构造的箭头使用同一注册约束', () => {
-    const arrow = { name: 'invalid-order', backX: 4, lineContactX: 2, emit: () => [] };
-    expect(() => resolveArrowRegistry([arrow])).toThrow(/backX.*lineContactX.*tipX/);
-    expect(() => resolveArrowRegistry([defineArrow(arrow)])).toThrow(/backX.*lineContactX.*tipX/);
+  it.each([
+    {
+      name: 'non-finite back',
+      geometry: { backX: Number.NaN, lineContactX: 2, tipX: 8 },
+      message: /non-finite backX/i,
+    },
+    {
+      name: 'back after contact',
+      geometry: { backX: 3, lineContactX: 2, tipX: 8 },
+      message: /backX.*lineContactX.*tipX/i,
+    },
+    {
+      name: 'contact after tip',
+      geometry: { backX: 1, lineContactX: 9, tipX: 8 },
+      message: /backX.*lineContactX.*tipX/i,
+    },
+  ])('直接构造与 define 的箭头均在注册时拒绝：$name', ({ geometry, message }) => {
+    const arrow = { name: 'invalid-geometry', ...geometry, emit: () => [] };
+    for (const definition of [arrow, defineArrow(arrow)]) {
+      expect(() => resolveArrowRegistry([definition])).toThrow(
+        expect.objectContaining({
+          code: RetikzCoreErrorCode.ContractViolation,
+          message: expect.stringMatching(message),
+        }),
+      );
+    }
   });
 
   it('再次注册会检查已变更的定义', () => {

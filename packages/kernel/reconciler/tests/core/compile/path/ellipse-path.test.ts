@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import type { IRScene } from '../../../../../core/src/schemas';
-import { ellipseArc, move } from '../../../../../core/tests/helpers/path-command-factory';
 import { compileToScene } from '../../../../src/compile';
+import { ellipseArc, move } from '../../../helpers/path-command-factory';
 import { findPathPrim } from './helpers';
 
 describe("编译路径：'ellipsePath'", () => {

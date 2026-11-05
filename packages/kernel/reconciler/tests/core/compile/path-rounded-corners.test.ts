@@ -4,9 +4,9 @@ import type { GroupPrimitive, IRScene, PathCommand, ScenePrimitive, TextPrimitiv
 import type { PathPrimitive } from '../../../../core/src/contract';
 import type { IRPath } from '../../../../core/src/schemas';
 import { PathSchema } from '../../../../core/src/schemas';
-import { flattenPrims } from '../../../../core/tests/helpers/flatten';
-import { close } from '../../../../core/tests/helpers/path-command-factory';
 import { compileToScene } from '../../../src/compile';
+import { flattenPrims } from '../../helpers/flatten';
+import { close } from '../../helpers/path-command-factory';
 
 const silent = { onWarn: () => {} };
 

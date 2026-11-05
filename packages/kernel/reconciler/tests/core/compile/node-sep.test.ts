@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import type { ScenePrimitive } from '../../../../core/src/contract';
 import type { IRScene } from '../../../../core/src/schemas';
 import { NodeSchema } from '../../../../core/src/schemas';
-import { line, move } from '../../../../core/tests/helpers/path-command-factory';
 import { compileToScene } from '../../../src/compile';
+import { line, move } from '../../helpers/path-command-factory';
 
 const findRect = (prims: Array<ScenePrimitive>) => prims.find(p => p.type === 'rect');
 

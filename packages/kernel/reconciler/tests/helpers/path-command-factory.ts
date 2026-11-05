@@ -6,7 +6,7 @@
   LinePathCommand,
   MovePathCommand,
   QuadPathCommand,
-} from '../../src/contract';
+} from '@retikz/core';
 
 /**
  * 测试 helper：PathCommand 工厂

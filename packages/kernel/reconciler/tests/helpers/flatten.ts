@@ -1,4 +1,4 @@
-﻿import type { ScenePrimitive } from '../../src/contract';
+﻿import type { ScenePrimitive } from '@retikz/core';
 
 /**
  * 测试 helper：把 Scene primitive 树递归摊平为前序序列（含 GroupPrimitive 自身与其后代）

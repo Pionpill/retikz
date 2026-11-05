@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import type { ScenePrimitive, TextPrimitive } from '../../../../core/src/contract';
 import type { IRNode, IRNodeLabel, IRScene } from '../../../../core/src/schemas';
 import { NodeLabelSchema, SceneSchema } from '../../../../core/src/schemas';
-import { flattenPrims } from '../../../../core/tests/helpers/flatten';
 import { compileToScene } from '../../../src/compile';
+import { flattenPrims } from '../../helpers/flatten';
 
 const silent = { onWarn: () => {} };
 

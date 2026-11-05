@@ -225,14 +225,12 @@ describe('PathSchema：marks 合法', () => {
     expect(PathSchema.safeParse(basePath({ marks: [{ pos: 0.5, shape: 'stealth' }] })).success).toBe(true);
   });
 
-  it('接受多个 mark + pos 端点 0 / 1', () => {
-    expect(
-      PathSchema.safeParse(
-        basePath({
-          arrow: { start: {}, end: { shape: 'normal' } },
-        }),
-      ).success,
-    ).toBe(true);
+  it('往返保留多个标记及 pos 两个端点', () => {
+    const marks = [
+      { pos: 0, shape: 'stealth' },
+      { pos: 1, shape: 'normal' },
+    ];
+    expect(PathSchema.parse(JSON.parse(JSON.stringify(basePath({ marks })))).marks).toEqual(marks);
   });
 
   it('空 marks 数组合法', () => {

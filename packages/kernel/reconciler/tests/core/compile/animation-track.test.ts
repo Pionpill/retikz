@@ -8,8 +8,8 @@ import {
   PathDefaultSchema,
   SceneSchema,
 } from '../../../../core/src';
-import { flattenPrims } from '../../../../core/tests/helpers/flatten';
 import { compileToScene } from '../../../src/compile';
+import { flattenPrims } from '../../helpers/flatten';
 
 const scene = (children: IRScene['children'], extra: Partial<IRScene> = {}): IRScene => ({
   version: 1,

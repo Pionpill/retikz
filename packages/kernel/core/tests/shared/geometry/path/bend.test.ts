@@ -86,8 +86,7 @@ describe('bendControlPoints', () => {
   });
 
   it('180° 是几何退化点：tan(90°) → 极大值，控制点偏移 |y| > 1e10（用户应避免）', () => {
-    // JS Math.tan(Math.PI/2) 实际返回 1.633e+16（不是 Infinity——Math.PI
-    // 非真 π）。本测试记录此现状；schema 层未来可能加 angle ∈ (0, 180) 验证
+    // 直接调用公开 helper 的有限浮点行为；IR schema 在入口另行拒绝 ±180°
     const [c1, c2] = bendControlPoints([0, 0], [10, 0], 'left', 180);
 
     expect(Math.abs(c1[1])).toBeGreaterThan(1e10);

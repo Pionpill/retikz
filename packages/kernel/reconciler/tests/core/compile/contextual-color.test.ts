@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { ThemeMode } from '../../../../core/src';
 import type { PathPrimitive, RectPrimitive, ScenePrimitive, TextPrimitive } from '../../../../core/src/contract';
 import type { IRScene } from '../../../../core/src/schemas';
-import { flattenPrims } from '../../../../core/tests/helpers/flatten';
 import { compileToScene } from '../../../src/compile';
+import { flattenPrims } from '../../helpers/flatten';
 
 const sceneOf = (children: IRScene['children'], mode: ThemeMode = ThemeMode.Light): IRScene => ({
   version: 1,

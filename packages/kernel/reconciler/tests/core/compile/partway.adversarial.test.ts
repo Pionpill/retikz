@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import type { CompileWarning, IRScene, ScenePrimitive } from '../../../../core/src';
 import { SceneSchema } from '../../../../core/src';
 import type { RectPrimitive } from '../../../../core/src/contract';
-import { flattenPrims } from '../../../../core/tests/helpers/flatten';
 import { compileToScene } from '../../../src/compile';
+import { flattenPrims } from '../../helpers/flatten';
 
 /** 取所有 RectPrimitive（默认 rectangle 节点；带文本节点包 group，flatten 穿透） */
 const rects = (prims: Array<ScenePrimitive>): Array<RectPrimitive> =>

@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import type { PathPrimitive, RectPrimitive, ScenePrimitive } from '../../../../core/src/contract';
 import type { IRScene } from '../../../../core/src/schemas';
 import { NodeDefaultSchema, NodeSchema, PathDefaultSchema, PathSchema } from '../../../../core/src/schemas';
-import { flattenPrims } from '../../../../core/tests/helpers/flatten';
 import { compileToScene } from '../../../src/compile';
+import { flattenPrims } from '../../helpers/flatten';
 
 const strokePath = (dashOffset: unknown): unknown => ({
   type: 'path',

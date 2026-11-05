@@ -2,10 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import type { PathPrimitive, ScenePrimitive } from '../../../../../core/src/contract';
 import type { IRScene } from '../../../../../core/src/schemas';
-import { flattenPrims } from '../../../../../core/tests/helpers/flatten';
-import { pathArrows } from '../../../../../core/tests/helpers/path-arrows';
-import { line, move } from '../../../../../core/tests/helpers/path-command-factory';
 import { compileToScene } from '../../../../src/compile';
+import { flattenPrims } from '../../../helpers/flatten';
+import { pathArrows } from '../../../helpers/path-arrows';
+import { line, move } from '../../../helpers/path-command-factory';
 import { findPathPrim } from './helpers';
 
 describe('compile path: arrow 箭头', () => {

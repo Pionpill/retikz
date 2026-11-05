@@ -40,11 +40,11 @@ import { createCompileInvariantError, snapshotProviderPosition } from '../../../
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../../core/src/error';
 import { isLayoutProbeRecoverableError } from '../../../../core/src/resolve';
 import { cloneAndFreezeJson } from '../../../../core/src/shared';
-import { pathArrows } from '../../../../core/tests/helpers/path-arrows';
 import { compileToScene } from '../../../src/compile';
 import * as compileProvenance from '../../../src/compile/provenance/tracker';
 import { createExecutionInvariantError, createCompileRuntime, NamespaceStack } from '../../../src/compile/runtime';
 import { CompileManager } from '../../../src/compile/tree';
+import { pathArrows } from '../../helpers/path-arrows';
 
 const fixedMeasurer: TextMeasurer = text => ({
   width: text.length * 10,

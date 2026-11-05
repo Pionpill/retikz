@@ -20,9 +20,9 @@ import {
   LayoutChildProbeKind,
   LayoutIntrinsicMode,
 } from '../../../../core/src';
-import { flattenPrims } from '../../../../core/tests/helpers/flatten';
 import type { CompileOptions } from '../../../src/compile';
 import { compileToScene } from '../../../src/compile';
+import { flattenPrims } from '../../helpers/flatten';
 
 const fixedMeasurer: TextMeasurer = text => ({
   width: [...text].length * 10,

@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import type { ScenePrimitive, TextPrimitive } from '../../../../core/src/contract';
 import type { IRScene } from '../../../../core/src/schemas';
-import { flattenPrims } from '../../../../core/tests/helpers/flatten';
 import { compileToScene } from '../../../src/compile';
+import { flattenPrims } from '../../helpers/flatten';
 
 const findText = (prims: Array<ScenePrimitive>): TextPrimitive | undefined =>
   flattenPrims(prims).find((p): p is TextPrimitive => p.type === 'text');

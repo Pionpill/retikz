@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import type { PathPrimitive, RectPrimitive, ScenePrimitive } from '../../../../core/src/contract';
 import type { IRScene } from '../../../../core/src/schemas';
 import { OffsetPositionSchema, PolarPositionSchema, TargetSchema } from '../../../../core/src/schemas';
-import { flattenPrims } from '../../../../core/tests/helpers/flatten';
 import { compileToScene } from '../../../src/compile';
+import { flattenPrims } from '../../helpers/flatten';
 
 const rects = (prims: Array<ScenePrimitive>): Array<RectPrimitive> =>
   flattenPrims(prims).filter((p): p is RectPrimitive => p.type === 'rect');

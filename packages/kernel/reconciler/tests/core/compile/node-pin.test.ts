@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import type { PathPrimitive, ScenePrimitive } from '../../../../core/src/contract';
 import type { IRScene } from '../../../../core/src/schemas';
-import { flattenPrims } from '../../../../core/tests/helpers/flatten';
 import { compileToScene } from '../../../src/compile';
+import { flattenPrims } from '../../helpers/flatten';
 
 const findPaths = (prims: Array<ScenePrimitive>): Array<PathPrimitive> =>
   flattenPrims(prims).filter((p): p is PathPrimitive => p.type === 'path');

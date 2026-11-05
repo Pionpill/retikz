@@ -14,9 +14,9 @@ import { RetikzCoreError } from '../../../../core/src/error';
 import { resolveTextMetrics } from '../../../../core/src/resolve';
 import type { IRNode, IRNodeLabel, IRScene } from '../../../../core/src/schemas';
 import { NodeLabelSchema } from '../../../../core/src/schemas';
-import { flattenPrims } from '../../../../core/tests/helpers/flatten';
-import { sceneRectangles } from '../../../../core/tests/helpers/scene-rectangles';
 import { compileToScene } from '../../../src/compile';
+import { flattenPrims } from '../../helpers/flatten';
+import { sceneRectangles } from '../../helpers/scene-rectangles';
 
 const LABEL_METRICS: TextMetrics = {
   width: 40,
