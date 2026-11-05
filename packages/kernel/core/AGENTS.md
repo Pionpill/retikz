@@ -82,6 +82,6 @@ parse/       字符串 / DSL / Sugar parser，输出 IR 节点或 IR 片段
 
 ## 测试
 
-- schema / IR 改动：补 schema 行为测试，并按 [schema](../../../.agents/skills/standard-structure/references/schema.md) 同步描述、类型和 docs。
+- schema / IR 改动：按 [单元测试规范](../../../.agents/skills/test-contract/references/unit-tests.md) 复用或补齐自定义校验、组合及消费语义的测试，不机械复测 Zod 声明；按 [schema](../../../.agents/skills/standard-structure/references/schema.md) 同步描述、类型和 docs。
 - compile / lowering 改动：补 compile 输出和边界输入测试。
 - 几何 / shape / path 改动：补几何或 snapshot 回归，避免只靠视觉 demo。
