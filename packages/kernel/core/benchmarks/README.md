@@ -2,7 +2,7 @@
 
 ## 编译资源注册表
 
-[resource.bench.ts](./compile/resource.bench.ts) 测量 Paint / Clip 一次独立注册表生命周期：创建注册表、处理 10 / 100 / 1000 次登记或导入、取得资源和引用结果。规模表示登记次数；重复输入最终只有一份资源，独立输入最终有同等数量资源。共 48 个场景；独立资源引用校验 API 移除后，对应 6 个旧场景不再运行，历史报告仍保留。
+[resource-paint.bench.ts](./compile/resource-paint.bench.ts) 与 [resource-clip.bench.ts](./compile/resource-clip.bench.ts) 分别测量 Paint / Clip 一次独立注册表生命周期：创建注册表、处理 10 / 100 / 1000 次登记或导入、取得资源和引用结果。规模表示登记次数；重复输入最终只有一份资源，独立输入最终有同等数量资源。每个文件 24 个场景，共 48 个场景；独立资源引用校验 API 移除后，对应 6 个旧场景不再运行，历史报告仍保留。
 
 绘制输入分为两色渐变和固定 8 图元 Pattern；裁剪分为矩形和固定 32 段路径。分别覆盖不同内容、重复实例、等值独立对象及导入已有资源。输入解析和导入源资源生成均在计时外；计时包含登记所需的 provider 执行、路径生成、快照、key 序列化、去重与输出分配。计数器用于核对 provider 次数，计数开销未扣除。
 
@@ -19,17 +19,52 @@
 登记阶段在最大档接近一帧时间即有同步阻塞风险，其他编译与渲染阶段仍需单独留时。源码加载结果只用于本机探索，稳定历史回归基线尚未选定。最初无预算报告保留为历史记录，补预算后重新采样，不追溯声称旧报告采样前已设阈值。
 
 ```bash
-pnpm --filter @retikz/core exec vitest bench --run --config vitest.bench.config.ts benchmarks/compile/resource.bench.ts --fsModuleCache=false
+pnpm --filter @retikz/core exec vitest bench --run --config vitest.bench.config.ts benchmarks/compile/resource-paint.bench.ts benchmarks/compile/resource-clip.bench.ts --fsModuleCache=false
+```
+
+## 编译文本
+
+[text.bench.ts](./compile/text.bench.ts) 测量单行文本块布局（含分词与行槽准备）、文本块折行、既有布局的图元输出与最宽文本单元查询，共 24 个代表场景。每个样本只调用一次对应操作，不用外部循环增加调用量。fixture 集中在 [_text-workloads.ts](./_text-workloads.ts)
+
+| 操作             | 形态与规模                                                    | 场景数 | P90 警告 / 错误：小档；大档 |
+| ---------------- | ------------------------------------------------------------- | ------ | --------------------------- |
+| 单行文本块布局   | 纯文字 / 公式混排，8 / 128 片段                               | 4      | 0.05 / 0.2ms；0.5 / 2ms     |
+| 无自动折行文本块 | 32 / 1024 字符                                                | 2      | 均为 0.1 / 0.5ms            |
+| 自动折行文本块   | 英文、中文、组合字素长词、跨词切换字重，128 / 2048 字符或字素 | 8      | 0.2 / 1ms；2 / 8ms          |
+| 公式混排折行     | 8 / 64 片段                                                   | 2      | 0.2 / 1ms；2 / 8ms          |
+| 文本块输出       | 纯文字 / 公式混排，4 / 64 物理行                              | 4      | 0.05 / 0.2ms；0.5 / 2ms     |
+| 最宽文本单元     | 英文 / 中文，128 / 2048 字符                                  | 4      | 0.05 / 0.2ms；0.5 / 2ms     |
+
+字符规模指 UTF-16 code unit 数；长词使用 `a\u0301` 组合字素，规模指字素数，实际 code unit 数为两倍。折行宽度固定为 80 user units，行槽为 14。单行与公式混排块的文字片段固定为 `ab`，公式固定为两个路径；输出场景每行含一个文字片段，可选一个公式片段。单元查询的英文词固定七字符，中文按单字测量
+
+度量器用字符串长度和字号进行常量时间计算，不运行字体引擎或额外分词。公式回调返回预置结果；Core 对公式结果的快照仍计入布局。输入解析、fixture 构造、独立预期结果与断言均在计时外；输出场景直接使用手工构造的既有布局，不重新测量或降解。验证宽高、行数、基线、字素完整性、片段来源、颜色、透明度、公式路径及输入不变性
+
+每场景预热 10 次、正式测量 100 次，共 110 次操作；整组共 2640 次操作、2400 个正式样本。预算为采样前的普通宿主更新与单个长内容编辑假设，具体消费频率和阶段分配见 [_budgets.ts](./_budgets.ts)，不代表业务硬上限或整帧保证，不启用耗时阻断，不自动更新历史基线
+
+```bash
+pnpm --filter @retikz/core exec vitest bench --run --config vitest.bench.config.ts benchmarks/compile/text.bench.ts --fsModuleCache=false
+```
+
+## 场景可见边界
+
+[scene.bench.ts](./compile/scene.bench.ts) 测量一次完整的 `calculateBoundsOfPrimitives`，包括资源索引、路径保守包络、描边、可见箭头、分组裁剪及变换。六种输入为折线、三次贝塞尔、旋转椭圆弧、双端可见箭头、双端透明箭头、局部裁剪后平移，各16/1024条路径命令，共12场景。规模包含首条move；裁剪额外固定5条clip命令，箭头各固定一个小矩形marker
+
+fixture及独立几何预期在 [_scene-workloads.ts](./_scene-workloads.ts) 构造，均不计时；验证边界四字段、冻结输出和输入不变性。单样本只调用一次汇总，不包含路径生成、完整编译或渲染，不用外包循环扩容。每场景10次预热、100次正式测量，共110次；全组1320次调用、1200正式样本
+
+P90警告/错误预算：16命令0.05/0.2ms，1024命令0.5/2ms。消费频率是局部几何更新及Composite探测的规划假设，详见预算配置；不按箭头/曲线/裁剪复杂度放宽，不更新历史基线
+
+```bash
+pnpm --filter @retikz/core exec vitest bench --run --config vitest.bench.config.ts benchmarks/compile/scene.bench.ts --fsModuleCache=false
 ```
 
 ## 测量边界
 
-当前测 `src/providers` 与 `src/resolve` 的单次操作，不调用 `compileToScene`。shape / arrow / mark 的 iterable 在计时内完整消费，包含该操作自身的计算与分配。
+当前覆盖 `src/providers`、`src/resolve`、`src/contract` 的代表操作，以及 `src/compile` 的资源注册表和文本操作，不调用 `compileToScene`。shape / arrow / mark 的 iterable 在计时内完整消费，包含该操作自身的计算与分配。
 
 - Scene 图元生成属于编译计算；SVG 字符串生成、Canvas 绘制、DOM 更新、浏览器布局与绘制均不计入。
 - 不接入 `@retikz/render`、React/Vanilla renderer 或浏览器。Runtime / Reconciler 调度、增量更新与生命周期不属于本目录。
 - fixture 构造、正确性断言、报告生成及构建均在计时区间外。Provider 基准的参数 schema 解析在计时外；resolver 自身拥有的参数解析与默认化计入完整操作耗时。
-- 后续文本场景使用确定性的预置测量输入或纯计算测量器，不引入 DOM / Canvas 字体测量。
+- 编译文本场景使用确定性度量器和预置公式结果，不引入 DOM / Canvas 字体测量。
 
 ## 当前范围
 
@@ -46,7 +81,7 @@ pnpm --filter @retikz/core exec vitest bench --run --config vitest.bench.config.
 
 anchor、edge、关键点、参数缩放及等价参数组合不再独立采样；polygon 的轮廓生成路径通过 emit 保留观测。所有内置 arrow / mark 各保留一个显式样式输入，theme 保留明暗模式下的默认与稀疏覆盖。正确性边界、注册冲突与缺失名称仍由功能测试负责。此前 263 项报告保留为历史结果，不代表精简后的用例清单。
 
-boundary 的上游 envelope 使用预置值；path 的宿主 emitter 使用固定结果，故这两类分别只反映 fit / gap 与委托开销，不代表几何计算或完整路径编译耗时。短操作可能接近计时及回调开销，结果需谨慎解释。未添加 compile、parse 或 contract 的独立基准。
+boundary 的上游 envelope 使用预置值；path 的宿主 emitter 使用固定结果，故这两类分别只反映 fit / gap 与委托开销，不代表几何计算或完整路径编译耗时。短操作可能接近计时及回调开销，结果需谨慎解释。本节仅列 provider 场景；资源、文本、contract 和 resolve 场景使用各自的测量边界。
 
 复用根目录 `scripts/benchmarks` 的采样与报告工具：预热 10 次、正式采样 100 次；结果保留并在计时外校验。每个场景在采样前配置 P90 警告/错误预算；预算评价与用例执行成功分别报告，不启用 CI 耗时阻断。
 

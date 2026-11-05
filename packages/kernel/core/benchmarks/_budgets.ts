@@ -28,6 +28,64 @@ export const resolveCoreBudget = (scenario: BenchmarkScenario): BenchmarkBudget 
       rationale:
         '一次工作区或结果组装中的完整注册表生命周期，包含创建及N次登记/导入；假设10次为局部编辑（1/4ms），100次为普通更新（4/8ms），1000次为大批资源处理（8/16.6ms）。该阶段接近一帧即有同步阻塞风险，复杂Pattern不放宽预算；不含输入解析和renderer，不代表整帧保证或稳定回归上限',
     };
+  } else if (layer === 'compile' && family === 'scene') {
+    const count = Number(scale);
+    if (![16, 1024].includes(count)) throw new Error(`Missing Core scene scale budget: ${identity}`);
+    policy = {
+      warningMs: count === 16 ? 0.05 : 0.5,
+      errorMs: count === 16 ? 0.2 : 2,
+      rationale:
+        'Reconciler局部几何或Composite探测消费一次完整可见边界汇总；假设100个16命令短路径更新，每次分配0.05/0.2ms，边界阶段约5/20ms；单个1024命令长路径分配0.5/2ms。命令规模包含move，裁剪组额外固定5条clip命令；箭头及裁剪不放宽预算，不含路径生成、布局、renderer或浏览器，不代表已验证业务上限',
+    };
+  } else if (layer === 'compile' && family === 'text') {
+    const count = Number(scale);
+    if (variant === 'block-segments-plain' || variant === 'block-segments-mixed') {
+      if (![8, 128].includes(count)) throw new Error(`Missing Core text line scale budget: ${identity}`);
+      policy = {
+        warningMs: count === 8 ? 0.05 : 0.5,
+        errorMs: count === 8 ? 0.2 : 2,
+        rationale:
+          '节点正文与节点/路径标签的单行文本块布局，包含分词与行槽准备；假设一次更新100条短行，每块8片段分配0.05/0.2ms，阶段约5/20ms；128片段作为单个长混排块编辑，分配0.5/2ms。确定性度量与固定公式结果回调计时，Core公式快照计时，真实字体测量和TeX引擎不计时；两类片段使用相同预算，与原私有单行函数的旧计时边界不同',
+      };
+    } else if (variant === 'block-nowrap') {
+      if (![32, 1024].includes(count)) throw new Error(`Missing Core text nowrap scale budget: ${identity}`);
+      policy = {
+        warningMs: 0.1,
+        errorMs: 0.5,
+        rationale:
+          '单个无自动折行文本块的完整布局，包含Intl.Segmenter准备和行槽计算；32/1024字符均假设20个普通宿主更新，每块分配0.1/0.5ms，阶段约2/10ms。保持相同准备成本目标，不把源码加载结果当作整帧或原生ESM保证',
+      };
+    } else if (['block-english', 'block-chinese', 'block-longword', 'block-styled', 'block-mixed'].includes(variant)) {
+      const mixed = variant === 'block-mixed';
+      if (!(mixed ? [8, 64] : [128, 2048]).includes(count)) {
+        throw new Error(`Missing Core text block scale budget: ${identity}`);
+      }
+      const large = count === (mixed ? 64 : 2048);
+      policy = {
+        warningMs: large ? 2 : 0.2,
+        errorMs: large ? 8 : 1,
+        rationale:
+          '节点正文与节点/路径标签共用单文本块折行；假设20个普通宿主更新，128字符/字素或8混排片段每块分配0.2/1ms，阶段约4/20ms；2048字符/字素或64混排片段作为单个长内容更新，分配2/8ms。字符/字素与片段不是同一输入单位，报告分别标明；按代表性普通/长内容需求分档，不因中文、长词、样式切分或公式复杂度放宽预算',
+      };
+    } else if (variant === 'emit-plain' || variant === 'emit-mixed') {
+      if (![4, 64].includes(count)) throw new Error(`Missing Core text emit scale budget: ${identity}`);
+      policy = {
+        warningMs: count === 4 ? 0.05 : 0.5,
+        errorMs: count === 4 ? 0.2 : 2,
+        rationale:
+          '单个已布局文本块转换为Scene图元；假设一次更新20个普通四行文本块，每块分配0.05/0.2ms，输出阶段约1/4ms；64物理行作为单个长块输出，分配0.5/2ms。不重新布局、测量或降解；含公式时每行固定2字形路径，预算与普通文字相同',
+      };
+    } else if (variant === 'token-english' || variant === 'token-chinese') {
+      if (![128, 2048].includes(count)) throw new Error(`Missing Core text token scale budget: ${identity}`);
+      policy = {
+        warningMs: count === 128 ? 0.05 : 0.5,
+        errorMs: count === 128 ? 0.2 : 2,
+        rationale:
+          '节点最小内容宽度消费一次最宽文本单元查询；假设100条普通128字符行，每行分配0.05/0.2ms，阶段约5/20ms；2048字符作为单条长内容查询，分配0.5/2ms。只测分词与确定性度量，不含节点布局或浏览器字体测量',
+      };
+    } else {
+      throw new Error(`Missing Core compile text budget: ${identity}`);
+    }
   } else if (layer === 'providers') {
     switch (family) {
       case 'shape':
