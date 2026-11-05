@@ -44,17 +44,17 @@ const canonicalizeClipPath = (path: SceneClipPath, owner: string, round: (n: num
     const { commands: sourceCommands, fillRule } = path;
     const commands: Array<PathCommand> = [];
 
-    let activeSubpath = false;
+    let hasActiveSubpath = false;
     let hasDrawingSegment = false;
 
     for (const [index, command] of sourceCommands.entries()) {
       switch (command.kind) {
         case 'move':
           commands.push({ kind: 'move', to: roundPoint(command.to) });
-          activeSubpath = true;
+          hasActiveSubpath = true;
           break;
         case 'line':
-          if (!activeSubpath) {
+          if (!hasActiveSubpath) {
             throw createCompositeContractError(
               `${owner} lower returned '${command.kind}' at command ${index} without an active subpath.`,
             );
@@ -63,7 +63,7 @@ const canonicalizeClipPath = (path: SceneClipPath, owner: string, round: (n: num
           hasDrawingSegment = true;
           break;
         case 'quad':
-          if (!activeSubpath) {
+          if (!hasActiveSubpath) {
             throw createCompositeContractError(
               `${owner} lower returned '${command.kind}' at command ${index} without an active subpath.`,
             );
@@ -76,7 +76,7 @@ const canonicalizeClipPath = (path: SceneClipPath, owner: string, round: (n: num
           hasDrawingSegment = true;
           break;
         case 'cubic':
-          if (!activeSubpath) {
+          if (!hasActiveSubpath) {
             throw createCompositeContractError(
               `${owner} lower returned '${command.kind}' at command ${index} without an active subpath.`,
             );
@@ -98,7 +98,7 @@ const canonicalizeClipPath = (path: SceneClipPath, owner: string, round: (n: num
             endAngle: round(command.endAngle),
             ...(command.counterClockwise !== undefined ? { counterClockwise: command.counterClockwise } : {}),
           });
-          activeSubpath = true;
+          hasActiveSubpath = true;
           hasDrawingSegment = true;
           break;
         case 'ellipseArc':
@@ -112,17 +112,17 @@ const canonicalizeClipPath = (path: SceneClipPath, owner: string, round: (n: num
             endAngle: round(command.endAngle),
             ...(command.counterClockwise !== undefined ? { counterClockwise: command.counterClockwise } : {}),
           });
-          activeSubpath = true;
+          hasActiveSubpath = true;
           hasDrawingSegment = true;
           break;
         case 'close':
-          if (!activeSubpath) {
+          if (!hasActiveSubpath) {
             throw createCompositeContractError(
               `${owner} lower returned '${command.kind}' at command ${index} without an active subpath.`,
             );
           }
           commands.push({ kind: 'close' });
-          activeSubpath = false;
+          hasActiveSubpath = false;
           break;
       }
     }
@@ -142,38 +142,45 @@ export const createClipRegistry = (
   round: (n: number) => number,
   maxClipDepth = DEFAULT_MAX_CLIP_DEPTH,
 ): ClipRegistry => {
+  /** 一次降解的访问预算与当前递归链，退出分支时移除活动对象 */
   type ClipTraversalGuard = {
-    visited: number;
-    readonly max: number;
-    readonly active: WeakSet<object>;
+    /** 已进入的声明数量 */
+    visitedCount: number;
+    /** 允许进入的声明总数 */
+    readonly maxCount: number;
+    /** 当前递归链中的声明及参数对象，不是全局已访问集合 */
+    readonly activeObjects: WeakSet<object>;
   };
 
-  const resources = new Map<string, ClipResource>();
+  /** 本次编译按内容身份去重的裁剪资源，保持首次登记顺序 */
+  const resourceMap = new Map<string, ClipResource>();
 
+  /** 降解当前裁剪并递归消费子声明，成功或异常退出均清理当前递归链 */
   const lowerClip = (resolution: ClipResolution, guard: ClipTraversalGuard): SceneClipPath => {
     const { kind, definition, params, spec } = resolution;
+    /** 本层加入递归链的对象，用于 finally 中成对移除 */
     const entered: Array<object> = [];
     for (const value of [spec, params]) {
       if (entered.includes(value)) continue;
-      if (guard.active.has(value)) {
+      if (guard.activeObjects.has(value)) {
         throw createCompositeContractError('Clip traversal detected a cyclic clip object.');
       }
-      guard.active.add(value);
+      guard.activeObjects.add(value);
       entered.push(value);
     }
     try {
-      if (guard.visited >= guard.max) {
+      if (guard.visitedCount >= guard.maxCount) {
         throw createCompositeContractError(
-          `Clip traversal exceeded CompileOptions.maxClipDepth ${guard.max} while entering clip '${kind}'.`,
+          `Clip traversal exceeded CompileOptions.maxClipDepth ${guard.maxCount} while entering clip '${kind}'.`,
         );
       }
-      guard.visited += 1;
+      guard.visitedCount += 1;
       let path: SceneClipPath;
       try {
         path = definition.lower(params, {
           round,
           lower: nested => {
-            if (guard.active.has(nested)) {
+            if (guard.activeObjects.has(nested)) {
               throw createCompositeContractError('Clip traversal detected a cyclic clip object.');
             }
             return lowerClip(resolution.resolve(nested), guard);
@@ -191,12 +198,12 @@ export const createClipRegistry = (
       }
       return canonicalizeClipPath(path, `Clip provider 'clip:${kind}'`, round);
     } finally {
-      entered.forEach(value => guard.active.delete(value));
+      entered.forEach(value => guard.activeObjects.delete(value));
     }
   };
 
   const importResource = (resource: ClipResource): string => {
-    storeSceneResource(resource, resources);
+    storeSceneResource(resource, resourceMap);
     return resource.id;
   };
 
@@ -206,7 +213,7 @@ export const createClipRegistry = (
   };
 
   const lower = (clip: ClipResolution): SceneClipPath =>
-    lowerClip(clip, { visited: 0, max: maxClipDepth, active: new WeakSet() });
+    lowerClip(clip, { visitedCount: 0, maxCount: maxClipDepth, activeObjects: new WeakSet() });
   const register = (clip: ClipResolution): string => registerPath(lower(clip));
-  return { lower, register, registerPath, importResource, getResources: () => [...resources.values()] };
+  return { lower, register, registerPath, importResource, getResources: () => [...resourceMap.values()] };
 };

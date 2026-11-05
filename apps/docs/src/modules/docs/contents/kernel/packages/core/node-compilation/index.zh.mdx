@@ -127,7 +127,7 @@ Reconciler 在同次编译内按文字与字体参数共享度量，使不同节
 
 同一份布局被多次引用时，Core 会复用已计算的连接包络和锚点。它们服务于当前布局几何，不是另一份可持久化节点配置；具体引用规则见 [Node 实现原理](/kernel/components/node/mechanism#视觉形状与连接几何)。
 
-节点布局只接收当前节点的 `boundaryState`，不创建或持有多节点 store。Reconciler 在布局前通过 `boundaryStore.get(canon.shape)` 取得状态并设置诊断信息，后续引用继续使用同一形状绑定关联状态。直接调用 Core 时可省略状态：普通定位无需初始化，自身锚点定位只携带 `warn` 与 `irPath`，不隐式创建连接包络缓存。
+节点布局只接收当前节点的 `boundaryState`，不创建或持有多节点 store。Reconciler 在布局前通过 `boundaryStore.getOrCreateState(canon.shape)` 取得状态并设置诊断信息，后续引用继续使用同一形状绑定关联状态。直接调用 Core 时可省略状态：普通定位无需初始化，自身锚点定位只携带 `warn` 与 `irPath`，不隐式创建连接包络缓存。
 
 <SourceLinks
   sources={[

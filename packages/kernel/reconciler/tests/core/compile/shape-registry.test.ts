@@ -358,7 +358,7 @@ describe('形状注册表 - 错误路径', () => {
 
   it('custom_shape_anchor_only_center: canonical anchor (top) 通过 AABB 上提不再 throw', () => {
     // canonical 名（top / bottom / right / left / center / top-right / top-left / bottom-right / bottom-left）
-    // 在 anchorOf 内上提为 rectangle AABB，所有自定义 shape 自动获得 canonical anchor。
+    // 在 evaluateNamedBoundaryAnchor 内上提为 rectangle AABB，所有自定义 shape 自动获得 canonical anchor。
     const ir: IRScene = {
       version: 1,
       type: 'scene',

@@ -48,15 +48,15 @@ export const emitCompiledNodeText = (
     const baselineYs = nodeBaselineYsOf(layout, round);
     const halfBlockW = layout.geometry.contentSize.width / 2;
 
-    return text.lines.flatMap(({ laid, sourceLineIndex }, index) => {
+    return text.lines.flatMap(({ lineLayout, sourceLineIndex }, index) => {
       const originX =
         text.align === 'start'
           ? layout.geometry.contentCenter[0] - halfBlockW
           : text.align === 'end'
-            ? layout.geometry.contentCenter[0] + halfBlockW - laid.width
-            : layout.geometry.contentCenter[0] - laid.width / 2;
+            ? layout.geometry.contentCenter[0] + halfBlockW - lineLayout.width
+            : layout.geometry.contentCenter[0] - lineLayout.width / 2;
       return emitTextLine(
-        laid,
+        lineLayout,
         {
           color: style.color,
           opacity: style.opacity,

@@ -1,7 +1,7 @@
 import { boundsToRect } from '@retikz/math';
 
 import type { GroupPrimitive, ScenePrimitive, SceneResource, Transform } from '../../contract';
-import { collectLayoutBounds, calculateBoundsOfPrimitives, allocationPointsOf } from '../scene';
+import { mergeLayoutBounds, calculateBoundsOfPrimitives, allocationPointsOf } from '../scene';
 import type { CompileBounds, LayoutBoundsContribution } from '../scene';
 import { applyTransformChain } from '../shared';
 
@@ -31,7 +31,7 @@ export const projectScopeOutputBounds = (
   const projectedBounds: Array<LayoutBoundsContribution> = [];
   for (const contribution of bounds) {
     if (contribution.decoration) {
-      const box = collectLayoutBounds(undefined, contribution.boundsPoints);
+      const box = mergeLayoutBounds(undefined, contribution.boundsPoints);
       if (box === undefined) continue;
       const projected = calculateBoundsOfPrimitives(
         [{ ...group, children: [{ type: 'rect', ...boundsToRect(box), fill: 'black' }] }],

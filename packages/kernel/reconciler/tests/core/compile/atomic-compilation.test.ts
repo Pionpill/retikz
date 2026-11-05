@@ -107,7 +107,7 @@ describe('原子编译阶段', () => {
           measureText: (text, font) => ({ width: (text.length * font.size) / 2, height: font.size }),
           positionContext: {
             nodeDistance: 10,
-            pointOfNodeTarget: () => [0, 0],
+            evaluateNodeTargetPoint: () => [0, 0],
             lookupReference: () => undefined,
             toLocal: point => point,
             toWorld: point => point,
@@ -144,7 +144,7 @@ describe('原子编译阶段', () => {
       measureText: shared.host.measureText,
       positionContext: {
         nodeDistance: 10,
-        pointOfNodeTarget: () => [0, 0],
+        evaluateNodeTargetPoint: () => [0, 0],
         lookupReference: () => undefined,
         toLocal: point => point,
         toWorld: point => point,

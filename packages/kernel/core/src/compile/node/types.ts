@@ -16,7 +16,7 @@ import type { PositionTargetEvaluateContext } from '../reference';
 import type { RegisterPaint } from '../resource';
 import type { CompiledDrawing } from '../scene';
 import type { ComposedScopeTransform, CompileWarningCode } from '../shared';
-import type { CompiledTextBlockLayout, InlineLineLayout, TexLowerer } from '../text';
+import type { CompiledTextBlockLayout, CompiledTextLineLayout, TexLowerer } from '../text';
 import type { NodeContentLayout } from './content';
 
 /** 节点最终位置、视觉尺寸和连接边界 */
@@ -56,7 +56,7 @@ export type CompiledNodeStyle = {
 /** 附属标签最终排版和绘制内容，不持有布局意图 */
 export type CompiledNodeLabel = CompiledDrawing & {
   /** 标签最终尺寸与相对定位 */
-  layout: Omit<NodeLabelLayout, 'laid'>;
+  layout: Omit<NodeLabelLayout, 'lineLayout'>;
 };
 
 /** 节点正文最终外观，物理行通过索引读取，不持有作者正文或解析产物 */
@@ -156,7 +156,10 @@ export type CompiledNodeTextLayout = {
   baselineOffsets?: Array<number>;
 } & (
   | { kind: 'plain'; lines: Array<CompiledNodeTextLineLayout> }
-  | { kind: 'inline'; lines: Array<{ laid: InlineLineLayout; baselineOffset: number; sourceLineIndex: number }> }
+  | {
+      kind: 'inline';
+      lines: Array<{ lineLayout: CompiledTextLineLayout; baselineOffset: number; sourceLineIndex: number }>;
+    }
 );
 
 /** 节点测量、定位和标签排版结果及后续查询必需的绑定 */
@@ -218,7 +221,7 @@ export type PreparedNodeCompilation = {
 /** 已完成内容与视觉盒测量、尚未绑定 Node rect 的附属标签 */
 export type MeasuredNodeLabel = {
   /** 混排计算结果 */
-  laid: CompiledTextBlockLayout;
+  lineLayout: CompiledTextBlockLayout;
   /** 测量宽度 */
   measuredWidth: number;
   /** 测量高度 */

@@ -1,6 +1,6 @@
+import { createBoundaryStore } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { getOrCreateNamedAnchor, getOrCreateAnchorReference } from '../../../../core/src/compile/boundary';
 import type { CompiledNodeLayout } from '../../../../core/src/compile/node';
 import type { ScenePrimitive, TextPrimitive } from '../../../../core/src/contract';
 import { BUILTIN_SHAPES } from '../../../../core/src/providers';
@@ -33,20 +33,20 @@ const hypot = (p: readonly [number, number]): number => Math.hypot(p[0], p[1]);
 describe('margin：border 类 anchor 外扩（happy）', () => {
   it('canonical-margin：A.top / A.right 落在视觉 shape 外 margin 处', () => {
     // 视觉半轴 (20,15)。top = [0,-15]，right = [20,0]；margin=10 → 外边界半轴 (30,25)
-    expect(getOrCreateNamedAnchor(mkLayout(0), 'top')).toEqual([0, -15]);
-    expect(getOrCreateNamedAnchor(mkLayout(10), 'top')).toEqual([0, -25]);
-    expect(getOrCreateNamedAnchor(mkLayout(0), 'right')).toEqual([20, 0]);
-    expect(getOrCreateNamedAnchor(mkLayout(10), 'right')).toEqual([30, 0]);
+    expect(createBoundaryStore().getOrCreateAnchor(mkLayout(0), 'top')).toEqual([0, -15]);
+    expect(createBoundaryStore().getOrCreateAnchor(mkLayout(10), 'top')).toEqual([0, -25]);
+    expect(createBoundaryStore().getOrCreateAnchor(mkLayout(0), 'right')).toEqual([20, 0]);
+    expect(createBoundaryStore().getOrCreateAnchor(mkLayout(10), 'right')).toEqual([30, 0]);
   });
 
   it('angle-margin：A.30 沿 30° 射线打到外扩后的矩形边', () => {
     const tan30 = Math.tan((30 * Math.PI) / 180);
-    const a0 = getOrCreateNamedAnchor(mkLayout(0), '30'); // 命中 right 边 x=20
+    const a0 = createBoundaryStore().getOrCreateAnchor(mkLayout(0), '30'); // 命中 right 边 x=20
 
     expect(a0[0]).toBeCloseTo(20, 6);
     expect(a0[1]).toBeCloseTo(20 * tan30, 6);
 
-    const a10 = getOrCreateNamedAnchor(mkLayout(10), '30'); // 命中外边界 right 边 x=30
+    const a10 = createBoundaryStore().getOrCreateAnchor(mkLayout(10), '30'); // 命中外边界 right 边 x=30
 
     expect(a10[0]).toBeCloseTo(30, 6);
     expect(a10[1]).toBeCloseTo(30 * tan30, 6);
@@ -56,9 +56,9 @@ describe('margin：border 类 anchor 外扩（happy）', () => {
     const layout = mkLayout(0);
     layout.geometry.margin = { top: 0, right: 10, bottom: 0, left: 0 };
 
-    expect(getOrCreateNamedAnchor(layout, '0')).toEqual([30, 0]);
-    expect(getOrCreateNamedAnchor(layout, '180')[0]).toBeCloseTo(-20);
-    expect(getOrCreateNamedAnchor(layout, '180')[1]).toBeCloseTo(0);
+    expect(createBoundaryStore().getOrCreateAnchor(layout, '0')).toEqual([30, 0]);
+    expect(createBoundaryStore().getOrCreateAnchor(layout, '180')[0]).toBeCloseTo(-20);
+    expect(createBoundaryStore().getOrCreateAnchor(layout, '180')[1]).toBeCloseTo(0);
   });
 
   it('autoclip-margin-regression：自动连线端点仍停在 shape 外 margin（行为不变）', () => {
@@ -116,19 +116,19 @@ describe('margin：边界', () => {
   it('margin-zero-identity：margin=0 时所有 anchor = 视觉 shape（同改前）', () => {
     const tan30 = Math.tan((30 * Math.PI) / 180);
 
-    expect(getOrCreateNamedAnchor(mkLayout(0), 'top')).toEqual([0, -15]);
-    expect(getOrCreateNamedAnchor(mkLayout(0), 'bottom')).toEqual([0, 15]);
-    expect(getOrCreateNamedAnchor(mkLayout(0), 'right')).toEqual([20, 0]);
+    expect(createBoundaryStore().getOrCreateAnchor(mkLayout(0), 'top')).toEqual([0, -15]);
+    expect(createBoundaryStore().getOrCreateAnchor(mkLayout(0), 'bottom')).toEqual([0, 15]);
+    expect(createBoundaryStore().getOrCreateAnchor(mkLayout(0), 'right')).toEqual([20, 0]);
 
-    const a0 = getOrCreateNamedAnchor(mkLayout(0), '30');
+    const a0 = createBoundaryStore().getOrCreateAnchor(mkLayout(0), '30');
 
     expect(a0[0]).toBeCloseTo(20, 6);
     expect(a0[1]).toBeCloseTo(20 * tan30, 6);
   });
 
   it('center-unaffected：A.center 不随 margin 变（inflate 下中心不变）', () => {
-    expect(getOrCreateNamedAnchor(mkLayout(0), 'center')).toEqual([0, 0]);
-    expect(getOrCreateNamedAnchor(mkLayout(10), 'center')).toEqual([0, 0]);
+    expect(createBoundaryStore().getOrCreateAnchor(mkLayout(0), 'center')).toEqual([0, 0]);
+    expect(createBoundaryStore().getOrCreateAnchor(mkLayout(10), 'center')).toEqual([0, 0]);
   });
 });
 
@@ -156,8 +156,8 @@ describe('margin：不外扩护栏 + 校验', () => {
   });
 
   it('edgePoint-no-margin：{ side, fraction } 恒走视觉 shape，不受 margin 影响', () => {
-    const e0 = getOrCreateAnchorReference(mkLayout(0), { side: 'top', fraction: 0.5 });
-    const e10 = getOrCreateAnchorReference(mkLayout(10), { side: 'top', fraction: 0.5 });
+    const e0 = createBoundaryStore().getOrCreateAnchor(mkLayout(0), { side: 'top', fraction: 0.5 });
+    const e10 = createBoundaryStore().getOrCreateAnchor(mkLayout(10), { side: 'top', fraction: 0.5 });
 
     expect(e10).toEqual(e0); // 视觉 top 边中点 = [0,-15]
     expect(e0).toEqual([0, -15]);
@@ -204,11 +204,11 @@ describe('margin：不外扩护栏 + 校验', () => {
 describe('margin：交互', () => {
   it('margin-x-rotate：旋转后外扩量随旋转一致（距中心 = 外边界半轴）', () => {
     // top 半轴：margin=0 → 15，margin=10 → 25；旋转保距离
-    expect(hypot(getOrCreateNamedAnchor(mkLayout(0, Math.PI / 2), 'top'))).toBeCloseTo(15, 6);
-    expect(hypot(getOrCreateNamedAnchor(mkLayout(10, Math.PI / 2), 'top'))).toBeCloseTo(25, 6);
+    expect(hypot(createBoundaryStore().getOrCreateAnchor(mkLayout(0, Math.PI / 2), 'top'))).toBeCloseTo(15, 6);
+    expect(hypot(createBoundaryStore().getOrCreateAnchor(mkLayout(10, Math.PI / 2), 'top'))).toBeCloseTo(25, 6);
 
     // 90° 旋转把 top 转到 right 侧（x≈25），确认确有旋转
-    expect(getOrCreateNamedAnchor(mkLayout(10, Math.PI / 2), 'top')[0]).toBeCloseTo(25, 6);
+    expect(createBoundaryStore().getOrCreateAnchor(mkLayout(10, Math.PI / 2), 'top')[0]).toBeCloseTo(25, 6);
   });
 
   it('margin-x-borrowed-boundary：footprint = 视觉 AABB + margin，不受 boundary 影响', () => {

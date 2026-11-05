@@ -1,7 +1,7 @@
 import type { CompileOccurrenceLocator, IRChild, ScenePrimitive } from '@retikz/core';
 import {
   CompileExpansionKind,
-  collectLayoutBounds,
+  mergeLayoutBounds,
   createLayoutProbeRecoverableError,
   isFatalProbeError,
   isLayoutProbeRecoverableError,
@@ -75,7 +75,7 @@ export class SubtreeCompiler {
 
     let layoutBounds: SubtreeCompilation['layoutBounds'];
     for (const contribution of state.bounds) {
-      layoutBounds = collectLayoutBounds(layoutBounds, contribution.boundsPoints, contribution.shadow);
+      layoutBounds = mergeLayoutBounds(layoutBounds, contribution.boundsPoints, contribution.shadow);
     }
 
     if (this.output.pendingPathCount !== 0) {

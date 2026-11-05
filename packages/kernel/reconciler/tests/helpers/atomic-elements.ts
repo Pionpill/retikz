@@ -61,7 +61,7 @@ export const compileWeaveNode = (input: IRNode, runtime: WeaveElementRuntime): W
     irPath,
     warn,
   });
-  const boundaryState = workspace.boundaryStore.get(resolution.shape);
+  const boundaryState = workspace.boundaryStore.getOrCreateState(resolution.shape);
   boundaryState.warn = warn;
   boundaryState.irPath = irPath;
   const compilation = compileNode(resolution, {

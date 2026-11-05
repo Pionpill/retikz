@@ -4,7 +4,7 @@ import type { Transform } from '../../contract';
 import type { IRNodeTarget, IRPosition, IRRelativeAccumulateTarget, IRRelativeTarget, IRTarget } from '../../schemas';
 import { isNodeTargetLike, isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../shared';
 import type { BoundaryStore } from '../boundary';
-import { boundaryPointOf, clipBoundaryPolyline, createBoundaryStore, getOrCreateAnchorReference } from '../boundary';
+import { evaluateBoundaryPoint, clipBoundaryPolyline, createBoundaryStore } from '../boundary';
 import type { PositionTargetEvaluateContext } from '../reference';
 import { evaluatePositionTarget } from '../reference';
 import type { ComposedScopeTransform } from '../shared';
@@ -98,7 +98,10 @@ export const pathTargetViewOf = (
         target.boundary,
         binding.canonicalBoundary,
         warn === undefined ? undefined : (code, message) => warn(code, message, binding),
-        { ...boundaryStore.get(node.shape), irPath: binding.irPath ?? boundaryStore.get(node.shape).irPath },
+        {
+          ...boundaryStore.getOrCreateState(node.shape),
+          irPath: binding.irPath ?? boundaryStore.getOrCreateState(node.shape).irPath,
+        },
       );
       return clipped.map(position => inverseScopeTransform(position, transform));
     },
@@ -112,20 +115,20 @@ export const pathTargetViewOf = (
       const towardGlobal = scopeChain.length === 0 ? toward : applyScopeTransform(toward, transform);
       const base =
         target.anchor === undefined
-          ? boundaryPointOf(
+          ? evaluateBoundaryPoint(
               node,
               towardGlobal,
               boundary,
               binding.canonicalBoundary,
               warn === undefined ? undefined : (code, message) => warn(code, message, binding),
               {
-                ...boundaryStore.get(node.shape),
-                irPath: binding.irPath ?? boundaryStore.get(node.shape).irPath,
+                ...boundaryStore.getOrCreateState(node.shape),
+                irPath: binding.irPath ?? boundaryStore.getOrCreateState(node.shape).irPath,
               },
             )
-          : getOrCreateAnchorReference(node, target.anchor, boundary, binding.canonicalBoundary, {
-              ...boundaryStore.get(node.shape),
-              irPath: binding.irPath ?? boundaryStore.get(node.shape).irPath,
+          : boundaryStore.getOrCreateAnchor(node, target.anchor, boundary, binding.canonicalBoundary, {
+              ...boundaryStore.getOrCreateState(node.shape),
+              irPath: binding.irPath ?? boundaryStore.getOrCreateState(node.shape).irPath,
             });
       const global = addOffset(base, target.offset);
 

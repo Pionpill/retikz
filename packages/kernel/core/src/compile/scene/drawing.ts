@@ -73,8 +73,10 @@ const STYLE_KEYS = [
 
 /** 将已物化的 Scene 图元按计算结果拆分，保留任意自定义多图元与箭头 */
 export const splitCompiledDrawing = (primitives: ReadonlyArray<ScenePrimitive>): CompiledDrawing => {
+  /** 以先序遍历顺序保存图元外观，与结构树逐项对应 */
   const styles: Array<CompiledPrimitiveStyle> = [];
-  const split = (primitive: ScenePrimitive): CompiledPrimitiveStructure => {
+  /** 拆分当前图元并递归登记子图元外观 */
+  const splitPrimitive = (primitive: ScenePrimitive): CompiledPrimitiveStructure => {
     const structure = { ...primitive };
     const style: CompiledPrimitiveStyle = {};
     for (const key of STYLE_KEYS) {
@@ -84,7 +86,7 @@ export const splitCompiledDrawing = (primitives: ReadonlyArray<ScenePrimitive>):
     }
     styles.push(style);
     if (primitive.type === 'group')
-      return { ...structure, children: primitive.children.map(split) } as CompiledPrimitiveStructure;
+      return { ...structure, children: primitive.children.map(splitPrimitive) } as CompiledPrimitiveStructure;
     if (primitive.type === 'text') {
       style.lines = primitive.lines.map(line => ({
         ...(Object.hasOwn(line, 'fill') ? { fill: line.fill } : {}),
@@ -100,28 +102,30 @@ export const splitCompiledDrawing = (primitives: ReadonlyArray<ScenePrimitive>):
       } as CompiledPrimitiveStructure;
     }
     if (primitive.type === 'path') {
-      const arrow = (end: CompiledArrowEnd, key: 'arrowStart' | 'arrowEnd'): CompiledDrawingArrow => {
+      /** 分离箭头透明度并递归拆分标记图元 */
+      const splitArrow = (end: CompiledArrowEnd, key: 'arrowStart' | 'arrowEnd'): CompiledDrawingArrow => {
         const { opacity, marker, ...arrowStructure } = end;
         style[key] = Object.hasOwn(end, 'opacity') ? { opacity } : {};
-        return { ...arrowStructure, marker: marker.map(split) };
+        return { ...arrowStructure, marker: marker.map(splitPrimitive) };
       };
       return {
         ...structure,
-        ...(primitive.arrowStart === undefined ? {} : { arrowStart: arrow(primitive.arrowStart, 'arrowStart') }),
-        ...(primitive.arrowEnd === undefined ? {} : { arrowEnd: arrow(primitive.arrowEnd, 'arrowEnd') }),
+        ...(primitive.arrowStart === undefined ? {} : { arrowStart: splitArrow(primitive.arrowStart, 'arrowStart') }),
+        ...(primitive.arrowEnd === undefined ? {} : { arrowEnd: splitArrow(primitive.arrowEnd, 'arrowEnd') }),
       };
     }
     return structure;
   };
-  return { structure: primitives.map(split), style: styles };
+  return { structure: primitives.map(splitPrimitive), style: styles };
 };
 
 /** 从最终图元结构和外观组装 Scene，不读取 canon 或重新执行 provider */
 export const emitCompiledDrawing = (drawing: CompiledDrawing): Array<ScenePrimitive> => {
   let cursor = 0;
-  const emit = (structure: CompiledPrimitiveStructure): ScenePrimitive => {
+  /** 按结构树先序消费外观并重建当前图元 */
+  const emitPrimitive = (structure: CompiledPrimitiveStructure): ScenePrimitive => {
     const { lines, arrowStart, arrowEnd, ...style } = drawing.style[cursor++];
-    if (structure.type === 'group') return { ...structure, ...style, children: structure.children.map(emit) };
+    if (structure.type === 'group') return { ...structure, ...style, children: structure.children.map(emitPrimitive) };
     if (structure.type === 'text')
       return {
         ...structure,
@@ -129,18 +133,19 @@ export const emitCompiledDrawing = (drawing: CompiledDrawing): Array<ScenePrimit
         lines: structure.lines.map((line, index) => ({ ...line, ...lines?.[index] })),
       } as ScenePrimitive;
     if (structure.type === 'path') {
-      const arrow = (
+      /** 合并箭头外观并恢复标记图元 */
+      const emitArrow = (
         end: CompiledDrawingArrow,
         appearance: Pick<CompiledArrowEnd, 'opacity'> | undefined,
-      ): CompiledArrowEnd => ({ ...end, ...appearance, marker: end.marker.map(emit) });
+      ): CompiledArrowEnd => ({ ...end, ...appearance, marker: end.marker.map(emitPrimitive) });
       return {
         ...structure,
         ...style,
-        ...(structure.arrowStart === undefined ? {} : { arrowStart: arrow(structure.arrowStart, arrowStart) }),
-        ...(structure.arrowEnd === undefined ? {} : { arrowEnd: arrow(structure.arrowEnd, arrowEnd) }),
+        ...(structure.arrowStart === undefined ? {} : { arrowStart: emitArrow(structure.arrowStart, arrowStart) }),
+        ...(structure.arrowEnd === undefined ? {} : { arrowEnd: emitArrow(structure.arrowEnd, arrowEnd) }),
       };
     }
     return { ...structure, ...style };
   };
-  return drawing.structure.map(emit);
+  return drawing.structure.map(emitPrimitive);
 };

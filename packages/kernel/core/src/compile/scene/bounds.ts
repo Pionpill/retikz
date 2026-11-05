@@ -12,7 +12,7 @@ import type {
 import { computeSceneTextBounds } from '../../contract';
 import type { CanonicalDropShadow, IRPosition } from '../../schemas';
 import { applyTransformChain, createCompileInvariantError } from '../shared';
-import { buildMarkMarkerGroup } from './marker';
+import { buildMarkerGroup } from './marker';
 import type { CompileOutput } from './types';
 
 /** canonical visual bounds 对 miter join 使用的保守上限 */
@@ -47,7 +47,7 @@ const expandBoundsForShadow = (
 };
 
 /** 将几何点及其 shadow 外溢范围合并到自动 layout bbox */
-export const collectLayoutBounds = (
+export const mergeLayoutBounds = (
   current: AxisAlignedBounds | undefined,
   boundsPoints: ReadonlyArray<IRPosition>,
   canon?: CanonicalDropShadow,
@@ -66,7 +66,8 @@ export const allocationPointsOf = (bounds: Readonly<BoundsRect>): Array<IRPositi
   ];
 };
 
-const union = (left: BoundsRect | undefined, right: BoundsRect | undefined): BoundsRect | undefined => {
+/** 合并两个可选矩形，保留空贡献语义 */
+const unionBoundsRects = (left: BoundsRect | undefined, right: BoundsRect | undefined): BoundsRect | undefined => {
   if (left === undefined) return right;
   if (right === undefined) return left;
 
@@ -78,7 +79,8 @@ const union = (left: BoundsRect | undefined, right: BoundsRect | undefined): Bou
   return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
 };
 
-const intersect = (left: BoundsRect, right: BoundsRect): BoundsRect | undefined => {
+/** 求矩形交集，无交集时返回 undefined */
+const intersectBoundsRects = (left: BoundsRect, right: BoundsRect): BoundsRect | undefined => {
   const x = Math.max(left.x, right.x);
   const y = Math.max(left.y, right.y);
   const maxX = Math.min(left.x + left.width, right.x + right.width);
@@ -87,20 +89,23 @@ const intersect = (left: BoundsRect, right: BoundsRect): BoundsRect | undefined 
   return maxX < x || maxY < y ? undefined : { x, y, width: maxX - x, height: maxY - y };
 };
 
-const rectOfPoints = (points: ReadonlyArray<IRPosition>): BoundsRect | undefined => {
+/** 从贡献点计算轴对齐矩形，无点时不贡献边界 */
+const calculatePointBounds = (points: ReadonlyArray<IRPosition>): BoundsRect | undefined => {
   const bounds = boundsOf(points);
   return bounds === undefined ? undefined : boundsToRect(bounds);
 };
 
+/** 投影矩形四角并重新计算轴对齐边界 */
 const projectRect = (rect: BoundsRect, transforms: ReadonlyArray<Transform>): BoundsRect | undefined =>
-  rectOfPoints([
+  calculatePointBounds([
     applyTransformChain([rect.x, rect.y], transforms),
     applyTransformChain([rect.x + rect.width, rect.y], transforms),
     applyTransformChain([rect.x + rect.width, rect.y + rect.height], transforms),
     applyTransformChain([rect.x, rect.y + rect.height], transforms),
   ]);
 
-const ellipseRect = (cx: number, cy: number, rx: number, ry: number, rotationDegrees = 0): BoundsRect => {
+/** 计算旋转椭圆的轴对齐边界 */
+const calculateEllipseBounds = (cx: number, cy: number, rx: number, ry: number, rotationDegrees = 0): BoundsRect => {
   const theta = rotationDegrees * DEG_TO_RAD;
   const cos = Math.cos(theta);
   const sin = Math.sin(theta);
@@ -115,7 +120,8 @@ const ellipseRect = (cx: number, cy: number, rx: number, ry: number, rotationDeg
   };
 };
 
-const commandPoints = (command: PathCommand): Array<IRPosition> => {
+/** 提取命令的保守边界点，曲线使用控制点包络 */
+const calculateCommandBoundsPoints = (command: PathCommand): Array<IRPosition> => {
   switch (command.kind) {
     case 'move':
     case 'line':
@@ -130,7 +136,7 @@ const commandPoints = (command: PathCommand): Array<IRPosition> => {
         [command.center[0] + command.radius, command.center[1] + command.radius],
       ];
     case 'ellipseArc': {
-      const rect = ellipseRect(
+      const rect = calculateEllipseBounds(
         command.center[0],
         command.center[1],
         command.radiusX,
@@ -147,12 +153,14 @@ const commandPoints = (command: PathCommand): Array<IRPosition> => {
   }
 };
 
-const pathGeometry = (commands: ReadonlyArray<PathCommand>): BoundsRect | undefined =>
-  rectOfPoints(commands.flatMap(commandPoints));
+/** 合并路径命令的保守边界点 */
+const calculatePathBounds = (commands: ReadonlyArray<PathCommand>): BoundsRect | undefined =>
+  calculatePointBounds(commands.flatMap(calculateCommandBoundsPoints));
 
-const expandStroke = (rect: BoundsRect, strokeWidth: number | undefined, miter: boolean): BoundsRect => {
+/** 按线宽及 miter 上限扩张几何边界 */
+const expandStroke = (rect: BoundsRect, strokeWidth: number | undefined, hasMiterJoin: boolean): BoundsRect => {
   const half = (strokeWidth ?? 1) / 2;
-  const amount = miter ? half * CANONICAL_STROKE_MITER_LIMIT : half;
+  const amount = hasMiterJoin ? half * CANONICAL_STROKE_MITER_LIMIT : half;
 
   return {
     x: rect.x - amount,
@@ -162,9 +170,16 @@ const expandStroke = (rect: BoundsRect, strokeWidth: number | undefined, miter: 
   };
 };
 
-type EndpointSample = { point: IRPosition; tangent: IRPosition };
+/** 箭头定位需要的路径端点及切线 */
+type EndpointSample = {
+  /** 路径端点坐标 */
+  point: IRPosition;
+  /** 采样处的切线方向 */
+  tangent: IRPosition;
+};
 
-const endpointSamples = (
+/** 遍历子路径取得首尾采样点和朝外切线，供箭头边界计算 */
+const samplePathEndpoints = (
   commands: ReadonlyArray<PathCommand>,
 ): {
   start?: EndpointSample;
@@ -217,7 +232,8 @@ const endpointSamples = (
       case 'ellipseArc': {
         const theta = (command.rotation ?? 0) * DEG_TO_RAD;
 
-        const pointAndTangent = (degrees: number): EndpointSample => {
+        /** 在椭圆局部角度处采样旋转后的点和切线 */
+        const sampleEllipsePoint = (degrees: number): EndpointSample => {
           const angle = degrees * DEG_TO_RAD;
           const x = command.radiusX * Math.cos(angle);
           const y = command.radiusY * Math.sin(angle);
@@ -233,8 +249,8 @@ const endpointSamples = (
           };
         };
 
-        const first = pointAndTangent(command.startAngle);
-        const last = pointAndTangent(command.endAngle);
+        const first = sampleEllipsePoint(command.startAngle);
+        const last = sampleEllipsePoint(command.endAngle);
         const direction = command.counterClockwise === true ? -1 : 1;
         next = last.point;
         startTangent = [first.tangent[0] * direction, first.tangent[1] * direction];
@@ -256,16 +272,20 @@ const endpointSamples = (
   return { start, end };
 };
 
-const markerBounds = (path: PathPrimitive, resources: ReadonlyMap<string, SceneResource>): BoundsRect | undefined => {
-  const samples = endpointSamples(path.commands);
+/** 计算路径首尾箭头的可见边界并合并 */
+const calculateMarkerBounds = (
+  path: PathPrimitive,
+  resources: ReadonlyMap<string, SceneResource>,
+): BoundsRect | undefined => {
+  const samples = samplePathEndpoints(path.commands);
   const strokeWidth = path.strokeWidth ?? 1;
   const contextStroke = typeof path.stroke === 'string' ? path.stroke : 'currentColor';
   let bounds: BoundsRect | undefined;
   if (path.arrowStart !== undefined && path.arrowStart.opacity !== 0 && samples.start !== undefined) {
-    bounds = union(
+    bounds = unionBoundsRects(
       bounds,
-      primitiveBounds(
-        buildMarkMarkerGroup(path.arrowStart, samples.start, {
+      calculatePrimitiveBounds(
+        buildMarkerGroup(path.arrowStart, samples.start, {
           strokeWidth,
           round: value => value,
           contextStroke,
@@ -276,10 +296,10 @@ const markerBounds = (path: PathPrimitive, resources: ReadonlyMap<string, SceneR
   }
 
   if (path.arrowEnd !== undefined && path.arrowEnd.opacity !== 0 && samples.end !== undefined) {
-    bounds = union(
+    bounds = unionBoundsRects(
       bounds,
-      primitiveBounds(
-        buildMarkMarkerGroup(path.arrowEnd, samples.end, {
+      calculatePrimitiveBounds(
+        buildMarkerGroup(path.arrowEnd, samples.end, {
           strokeWidth,
           round: value => value,
           contextStroke,
@@ -292,24 +312,25 @@ const markerBounds = (path: PathPrimitive, resources: ReadonlyMap<string, SceneR
   return bounds;
 };
 
-const styledGeometryBounds = (
+/** 合并图元填充、描边和阴影对几何边界的贡献 */
+const calculateStyledGeometryBounds = (
   primitive: Exclude<ScenePrimitive, GroupPrimitive | { type: 'text' }>,
 ): BoundsRect | undefined => {
   if (primitive.opacity === 0) return undefined;
 
-  const fillVisible = primitive.fill !== undefined && primitive.fillOpacity !== 0;
-  const strokeVisible = primitive.stroke !== undefined && primitive.strokeOpacity !== 0;
-  if (!fillVisible && !strokeVisible) return undefined;
+  const isFillVisible = primitive.fill !== undefined && primitive.fillOpacity !== 0;
+  const isStrokeVisible = primitive.stroke !== undefined && primitive.strokeOpacity !== 0;
+  if (!isFillVisible && !isStrokeVisible) return undefined;
 
   const geometry =
     primitive.type === 'rect'
       ? { x: primitive.x, y: primitive.y, width: primitive.width, height: primitive.height }
       : primitive.type === 'ellipse'
-        ? ellipseRect(primitive.cx, primitive.cy, primitive.rx, primitive.ry, primitive.rotate)
-        : pathGeometry(primitive.commands);
+        ? calculateEllipseBounds(primitive.cx, primitive.cy, primitive.rx, primitive.ry, primitive.rotate)
+        : calculatePathBounds(primitive.commands);
   if (geometry === undefined) return undefined;
 
-  const painted = strokeVisible
+  const painted = isStrokeVisible
     ? expandStroke(
         geometry,
         primitive.strokeWidth,
@@ -322,7 +343,8 @@ const styledGeometryBounds = (
     : boundsToRect(expandBoundsForShadow(rectToBounds(painted), primitive.shadow));
 };
 
-const primitiveBounds = (
+/** 递归计算图元的可见边界，应用裁剪与组变换 */
+const calculatePrimitiveBounds = (
   primitive: ScenePrimitive,
   resources: ReadonlyMap<string, SceneResource>,
 ): BoundsRect | undefined => {
@@ -334,7 +356,7 @@ const primitiveBounds = (
 
   if (primitive.type === 'group') {
     let bounds = primitive.children.reduce<BoundsRect | undefined>(
-      (current, child) => union(current, primitiveBounds(child, resources)),
+      (current, child) => unionBoundsRects(current, calculatePrimitiveBounds(child, resources)),
       undefined,
     );
     if (bounds === undefined) return undefined;
@@ -346,9 +368,9 @@ const primitiveBounds = (
         );
       }
 
-      const clip = pathGeometry(resource.path.commands);
+      const clip = calculatePathBounds(resource.path.commands);
       if (clip !== undefined && (clip.width === 0 || clip.height === 0)) return undefined;
-      if (clip !== undefined) bounds = intersect(bounds, clip);
+      if (clip !== undefined) bounds = intersectBoundsRects(bounds, clip);
       if (bounds === undefined) return undefined;
     }
 
@@ -359,9 +381,9 @@ const primitiveBounds = (
 
   if (primitive.type === 'path' && primitive.opacity === 0) return undefined;
 
-  const geometry = styledGeometryBounds(primitive);
+  const geometry = calculateStyledGeometryBounds(primitive);
 
-  return primitive.type === 'path' ? union(geometry, markerBounds(primitive, resources)) : geometry;
+  return primitive.type === 'path' ? unionBoundsRects(geometry, calculateMarkerBounds(primitive, resources)) : geometry;
 };
 
 /** 计算最终 Scene 图元树的可见边界；没有可见内容时返回 undefined */
@@ -369,9 +391,10 @@ export const calculateBoundsOfPrimitives = (
   primitives: ReadonlyArray<ScenePrimitive>,
   resources: ReadonlyArray<SceneResource>,
 ): Readonly<BoundsRect> | undefined => {
+  /** 当前输出按资源 ID 索引的资源，仅用于本次边界求值 */
   const resourceMap = new Map(resources.map(resource => [resource.id, resource]));
   const bounds = primitives.reduce<BoundsRect | undefined>(
-    (current, primitive) => union(current, primitiveBounds(primitive, resourceMap)),
+    (current, primitive) => unionBoundsRects(current, calculatePrimitiveBounds(primitive, resourceMap)),
     undefined,
   );
   if (bounds === undefined) return undefined;
@@ -393,7 +416,7 @@ export const calculateBoundsOfPrimitives = (
 export const calculateCompileOutputBounds = (contributions: CompileOutput['bounds']): AxisAlignedBounds | undefined => {
   let bounds: AxisAlignedBounds | undefined;
   for (const contribution of contributions) {
-    bounds = collectLayoutBounds(bounds, contribution.boundsPoints, contribution.shadow);
+    bounds = mergeLayoutBounds(bounds, contribution.boundsPoints, contribution.shadow);
   }
   return bounds;
 };

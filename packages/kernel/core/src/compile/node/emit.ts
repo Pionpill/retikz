@@ -5,7 +5,7 @@ import type { CanonicalNode } from '../../resolve';
 import type { CanonicalDropShadow, IRPosition } from '../../schemas';
 import { Anchor } from '../../shared';
 import { rect } from '../../shared/geometry';
-import { outerRectOf } from '../boundary';
+import { calculateOuterBoundaryRect } from '../boundary';
 import type { RegisterPaint } from '../resource';
 import { emitCompiledDrawing } from '../scene';
 import { emitCompiledNodeText, buildNodeTextStyle } from './content';
@@ -139,7 +139,7 @@ export const emitNodeOutput = (
     geometry: { rect: visualRect, margin: geometry.margin, ...layout },
     labels: labels.map(label => label.layout),
   };
-  const outer = outerRectOf(compiled);
+  const outer = calculateOuterBoundaryRect(compiled);
   return {
     primitives,
     bounds: [

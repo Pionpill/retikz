@@ -405,7 +405,7 @@ describe('跨 scope anchor 错误路径', () => {
         type: 'scope',
         children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
       },
-      // 非法 anchor 名（schema 接受任意非空串，compile 端 anchorOf 据 shape 抛 Unknown anchor）
+      // 非法 anchor 名（schema 接受任意非空串，compile 端 evaluateNamedBoundaryAnchor 据 shape 抛 Unknown anchor）
       {
         type: 'path',
         children: [
@@ -415,7 +415,7 @@ describe('跨 scope anchor 错误路径', () => {
       },
     ]);
 
-    // 对象形态：compile 端 anchorOf（shapeDef.anchor 返回 undefined）抛错（避免静默吞拼写错误）
+    // 对象形态：compile 端 evaluateNamedBoundaryAnchor（shapeDef.anchor 返回 undefined）抛错（避免静默吞拼写错误）
     expect(() => compileToScene(ir).scene).toThrow(/Unknown anchor/);
   });
 });

@@ -1,7 +1,7 @@
 import type { ContourSegment } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
-import { boundaryPointOf } from '../../../../core/src/compile/boundary';
+import { evaluateBoundaryPoint } from '../../../../core/src/compile/boundary';
 import { layoutNode } from '../../../../core/src/compile/node';
 import { createPositionEvaluateContext } from '../../../../core/src/compile/reference';
 import { resolveBoundaryRegistry, resolvePatternRegistry, BUILTIN_SHAPES } from '../../../../core/src/providers';
@@ -62,7 +62,7 @@ describe('顶层 Node.cornerRadius 连接边界感知（P1）', () => {
 
     // 朝右上角方向取边界点
     const toward = [100, -100] as [number, number];
-    const hit = boundaryPointOf(layout, toward);
+    const hit = evaluateBoundaryPoint(layout, toward);
 
     // 直角矩形顶点 = [20,-20]；命中点应离中心更近（落在 fillet 弧上）
     const dHit = Math.hypot(hit[0], hit[1]);
@@ -93,8 +93,8 @@ describe('顶层 Node.cornerRadius 连接边界感知（P1）', () => {
       layout: { minimumSize: { width: 40, height: 40 } },
     };
     const toward = [100, -100] as [number, number];
-    const hitTop = boundaryPointOf(layoutSquare(top), toward);
-    const hitParams = boundaryPointOf(layoutSquare(viaParams), toward);
+    const hitTop = evaluateBoundaryPoint(layoutSquare(top), toward);
+    const hitParams = evaluateBoundaryPoint(layoutSquare(viaParams), toward);
 
     expect(hitTop[0]).toBeCloseTo(hitParams[0]);
     expect(hitTop[1]).toBeCloseTo(hitParams[1]);
@@ -117,8 +117,8 @@ describe('顶层 Node.cornerRadius 连接边界感知（P1）', () => {
       layout: { minimumSize: { width: 40, height: 40 } },
     };
     const toward = [100, -100] as [number, number];
-    const hitBoth = boundaryPointOf(layoutSquare(both), toward);
-    const hitOnly = boundaryPointOf(layoutSquare(onlyParams), toward);
+    const hitBoth = evaluateBoundaryPoint(layoutSquare(both), toward);
+    const hitOnly = evaluateBoundaryPoint(layoutSquare(onlyParams), toward);
 
     expect(hitBoth[0]).toBeCloseTo(hitOnly[0]);
     expect(hitBoth[1]).toBeCloseTo(hitOnly[1]);

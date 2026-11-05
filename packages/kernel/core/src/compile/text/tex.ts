@@ -2,7 +2,7 @@ import type { GroupPrimitive, PathCommand, PathPrimitive } from '../../contract'
 import { combineOpacity, guardProviderOutput, createCompositeContractError } from '../../resolve';
 import type { IRTexContent } from '../../schemas';
 import { assertProviderOutputNonNegative, BuiltinCompileWarningCode, snapshotProviderOutputJson } from '../shared';
-import type { InlineLinePaint, LineLayoutContext } from './types';
+import type { TextLinePaint, TextLayoutContext } from './types';
 
 /** TeX 字形路径的绘制通道 */
 export type LoweredTexPaint =
@@ -54,7 +54,7 @@ export type LoweredTex = {
 };
 
 /** 校验数值约束并脱离 lowerTex 返回的公式结果 */
-export const snapshotLoweredTex = (value: LoweredTex): LoweredTex =>
+const snapshotLoweredTex = (value: LoweredTex): LoweredTex =>
   guardProviderOutput('lowerTex', () => {
     const snapshot = snapshotProviderOutputJson('lowerTex', value, 'result');
     assertProviderOutputNonNegative('lowerTex', snapshot.width, 'result.width');
@@ -77,7 +77,7 @@ export type TexLowerer = (content: IRTexContent, style: { fontSize: number }) =>
 export const lowerTexSegment = (
   content: IRTexContent,
   fontSize: number,
-  context: Pick<LineLayoutContext, 'lowerTex' | 'warn'>,
+  context: Pick<TextLayoutContext, 'lowerTex' | 'warn'>,
 ): LoweredTex | undefined => {
   if (!context.lowerTex) {
     context.warn(
@@ -99,7 +99,7 @@ export const lowerTexSegment = (
 /** 使用既有公式布局和当前宿主外观输出字形，不调用降解器 */
 export const emitTexPrimitive = (
   layout: Pick<LoweredTex, 'paths' | 'height' | 'depth'>,
-  paint: Pick<InlineLinePaint, 'color' | 'opacity'>,
+  paint: Pick<TextLinePaint, 'color' | 'opacity'>,
   originX: number,
   baselineY: number,
   round: (value: number) => number,

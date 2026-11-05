@@ -3,8 +3,8 @@ import { RAD_TO_DEG } from '@retikz/math';
 import type { LayoutAlignmentGuide } from '../../../contract';
 import { BuiltinLayoutAlignmentGuideName, LayoutAlignmentGuideDimension } from '../../../contract';
 import type { CanonicalTextBlock } from '../../../resolve';
-import type { InlineLineLayout } from '../../text';
-import { layoutTextBlock, measureMinimumTextWidth } from '../../text';
+import type { CompiledTextLineLayout } from '../../text';
+import { layoutTextBlock, measureMaxTextTokenWidth } from '../../text';
 import type { CompiledNodeLayout, CompiledNodeTextLineLayout, NodeTextLayoutContext } from '../types';
 
 /** 节点正文布局输入 */
@@ -26,7 +26,7 @@ export type NodeContentLayout = {
     /** 按正文顺序排列的混排行及其基线位置 */
     lines: Array<{
       /** 该行的测量与片段布局 */
-      laid: InlineLineLayout;
+      lineLayout: CompiledTextLineLayout;
       /** 折行前的作者行索引 */
       sourceLineIndex: number;
       /** 相对正文块顶部的基线垂直偏移 */
@@ -68,7 +68,7 @@ const layoutPlainContent = (canon: CanonicalTextBlock, input: InputNodeContentLa
   const intrinsicWidth = minimumTextWidth
     ? canon.lines.reduce((width, line) => {
         const font = { ...canon.font, ...line.style?.font };
-        return Math.max(width, measureMinimumTextWidth(line.plainText, { font, measureText }));
+        return Math.max(width, measureMaxTextTokenWidth(line.plainText, { font, measureText }));
       }, 0)
     : undefined;
   const budget = intrinsicWidth === undefined ? maxTextWidth : Math.min(intrinsicWidth, maxTextWidth ?? Infinity);
@@ -82,12 +82,12 @@ const layoutPlainContent = (canon: CanonicalTextBlock, input: InputNodeContentLa
     },
   );
   return {
-    lines: block.lines.map(({ laid, sourceLineIndex }) => {
+    lines: block.lines.map(({ lineLayout, sourceLineIndex }) => {
       const font = canon.lines[sourceLineIndex].style?.font;
       return {
-        text: laid.pieces.map(piece => (piece.kind === 'text' ? piece.text : '')).join(''),
+        text: lineLayout.pieces.map(piece => (piece.kind === 'text' ? piece.text : '')).join(''),
         sourceLineIndex,
-        measuredHeight: laid.ascent + laid.descent,
+        measuredHeight: lineLayout.ascent + lineLayout.descent,
         fontSize: font?.size,
         fontFamily: font?.family,
         fontWeight: font?.weight,

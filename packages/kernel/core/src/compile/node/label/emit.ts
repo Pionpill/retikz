@@ -57,7 +57,7 @@ const emitNodeLabelContentPrimitive = (
 ): ScenePrimitive => {
   const [lx, ly] = labelCenterPosition;
   const children = emitTextBlock(
-    label.laid,
+    label.lineLayout,
     {
       lines: labelProperties.text.lines,
       color: labelProperties.text.color,

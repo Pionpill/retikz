@@ -159,9 +159,10 @@ const snapshotOptionalProviderPosition = (owner: string, value: Position | undef
   value === undefined ? undefined : snapshotProviderPosition(owner, value);
 
 /** 取视觉 rect 外扩 margin 后的外边界 */
-export const outerRectOf = (layout: Pick<CompiledBoundaryGeometry, 'geometry'>): CenteredBox =>
+export const calculateOuterBoundaryRect = (layout: Pick<CompiledBoundaryGeometry, 'geometry'>): CenteredBox =>
   calculateExpandedBoundaryRect(layout.geometry.rect, layout.geometry.margin);
 
+/** 从视觉形状绑定投影出连接面配置，不重新解析定义 */
 const shapeBoundaryResolutionOf = (layout: CompiledBoundaryGeometry): CanonicalNodeBoundary => ({
   name: layout.shape.name,
   definition: layout.shape.definition,
@@ -169,6 +170,7 @@ const shapeBoundaryResolutionOf = (layout: CompiledBoundaryGeometry): CanonicalN
   isShape: true,
 });
 
+/** 选取已绑定的连接面配置并结合布局几何求值 */
 const bindLayoutBoundary = (
   layout: CompiledBoundaryGeometry,
   boundary: IRBoundary | undefined,
@@ -200,7 +202,7 @@ const bindLayoutBoundary = (
 };
 
 /** 取连接面在 toward 方向的附着点 */
-export const boundaryPointOf = (
+export const evaluateBoundaryPoint = (
   layout: CompiledBoundaryGeometry,
   toward: Position,
   boundary?: IRBoundary,
@@ -254,7 +256,7 @@ export const clipBoundaryPolyline = (
 };
 
 /** 取视觉形状的命名 anchor；标准 anchor 可选在 boundary 拟合后应用 margin */
-export const anchorOf = (
+export const evaluateNamedBoundaryAnchor = (
   layout: CompiledBoundaryGeometry,
   name: string,
   boundary?: IRBoundary,
@@ -327,7 +329,7 @@ export const anchorOf = (
 };
 
 /** 取连接面在指定角度方向的边界点 */
-export const angleBoundaryOf = (
+export const evaluateAngleBoundaryPoint = (
   layout: CompiledBoundaryGeometry,
   angleDeg: number,
   boundary?: IRBoundary,
@@ -363,10 +365,10 @@ const evaluateNamedAnchor = (
   state?: BoundaryState,
 ): IRPosition => {
   if (ANGLE_RE.test(anchorName)) {
-    return angleBoundaryOf(layout, Number(anchorName), boundary, true, canon, state);
+    return evaluateAngleBoundaryPoint(layout, Number(anchorName), boundary, true, canon, state);
   }
 
-  return anchorOf(layout, anchorName, boundary, isAnchor(anchorName), canon, state);
+  return evaluateNamedBoundaryAnchor(layout, anchorName, boundary, isAnchor(anchorName), canon, state);
 };
 
 /** 不经过 WeakMap 缓存解析视觉 shape 的边上比例点 */

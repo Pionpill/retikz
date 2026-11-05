@@ -35,14 +35,14 @@ describe('共享文本块布局', () => {
     );
     expect(block.width).toBe(9);
     expect(block.lines).toHaveLength(1);
-    expect(block.lines[0].laid.pieces).toMatchObject([{ kind: 'text', text: 'a b', width: 9 }]);
+    expect(block.lines[0].lineLayout.pieces).toMatchObject([{ kind: 'text', text: 'a b', width: 9 }]);
   });
 
   it('换行处不生成只包含分隔空格的物理行', () => {
     const lines = [resolveTextLine('ab cd', resolveContext)];
     const block = layoutTextBlock(lines, { lineHeight: 12, maxTextWidth: 10 }, context);
     expect(
-      block.lines.map(line => line.laid.pieces.map(piece => (piece.kind === 'text' ? piece.text : '')).join('')),
+      block.lines.map(line => line.lineLayout.pieces.map(piece => (piece.kind === 'text' ? piece.text : '')).join('')),
     ).toEqual(['ab', 'cd']);
   });
   it('硬换行保留空行并使用实际基线和统一行槽', () => {
@@ -69,13 +69,13 @@ describe('共享文本块布局', () => {
     expect(block.width).toBe(10);
     expect(
       block.lines.map(line =>
-        line.laid.pieces
+        line.lineLayout.pieces
           .filter(piece => piece.kind === 'text')
           .map(piece => piece.text)
           .join(''),
       ),
     ).toEqual(['áb', 'cd', 'e']);
-    expect(block.lines[1].laid.pieces.map(piece => piece.segmentIndex)).toEqual([0, 1]);
+    expect(block.lines[1].lineLayout.pieces.map(piece => piece.segmentIndex)).toEqual([0, 1]);
   });
 
   it('不可拆公式超宽时独占一行且后续文字仍可继续布局', () => {
@@ -88,7 +88,7 @@ describe('共享文本块布局', () => {
         lowerTex: () => ({ width: 30, height: 15, depth: 3, paths: [] }),
       },
     );
-    expect(block.lines.map(line => line.laid.width)).toEqual([5, 30, 5]);
+    expect(block.lines.map(line => line.lineLayout.width)).toEqual([5, 30, 5]);
     expect(block.height).toBe(39);
   });
 });

@@ -13,22 +13,22 @@ import { lowerTexSegment } from './tex';
 import type {
   CompiledTextBlockLayout,
   CompiledTextBlockLine,
-  InlineLineLayout,
+  CompiledTextLineLayout,
   InputInlineSegmentLayout,
   InputLabelBox,
-  LineLayoutContext,
+  TextLayoutContext,
   TextBlockLayoutOptions,
 } from './types';
 
 /** 度量一行 inline segment，并返回可 emit 的行布局 */
 export const layoutTextLine = (
   segments: Array<InputInlineSegmentLayout>,
-  context: LineLayoutContext,
-): InlineLineLayout => {
+  context: TextLayoutContext,
+): CompiledTextLineLayout => {
   let x = 0;
   let ascent = 0;
   let descent = 0;
-  const pieces: InlineLineLayout['pieces'] = [];
+  const pieces: CompiledTextLineLayout['pieces'] = [];
 
   for (const [segmentIndex, segment] of segments.entries()) {
     if ('tex' in segment) {
@@ -54,19 +54,19 @@ export const layoutTextLine = (
       x += lowered.width;
     } else {
       const font = segment.font;
-      const m = resolveTextMetrics(context.measureText(segment.text, font));
-      ascent = Math.max(ascent, m.ascent);
-      descent = Math.max(descent, m.descent);
+      const metrics = resolveTextMetrics(context.measureText(segment.text, font));
+      ascent = Math.max(ascent, metrics.ascent);
+      descent = Math.max(descent, metrics.descent);
       pieces.push({
         kind: 'text',
         segmentIndex,
         x,
         text: segment.text,
         font,
-        width: m.width,
-        measuredHeight: m.height,
+        width: metrics.width,
+        measuredHeight: metrics.height,
       });
-      x += m.width;
+      x += metrics.width;
     }
   }
 
@@ -76,13 +76,10 @@ export const layoutTextLine = (
     descent = context.font.size * DESCENT_FACTOR;
   }
 
-  const isPlain = pieces.every(p => p.kind === 'text');
-
   return {
     width: x,
     ascent,
     descent,
-    isPlain,
     pieces,
   };
 };
@@ -91,7 +88,7 @@ export const layoutTextLine = (
 export const layoutTextBlock = (
   sourceLines: ReadonlyArray<TextContentLine>,
   options: TextBlockLayoutOptions,
-  context: LineLayoutContext,
+  context: TextLayoutContext,
 ): CompiledTextBlockLayout => {
   const { lineHeight, maxTextWidth } = options;
   const lines: Array<CompiledTextBlockLine> = [];
@@ -101,11 +98,12 @@ export const layoutTextBlock = (
   const graphemes = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
 
   for (const [sourceLineIndex, source] of sourceLines.entries()) {
-    let pieces: InlineLineLayout['pieces'] = [];
+    let pieces: CompiledTextLineLayout['pieces'] = [];
     let lineWidth = 0;
     let ascent = 0;
     let descent = 0;
 
+    /** 保存当前物理行并重置下一行的尺寸累积 */
     const flushLine = () => {
       if (pieces.length === 0) {
         const empty = layoutTextLine([], {
@@ -118,7 +116,7 @@ export const layoutTextBlock = (
       const slot = Math.max(lineHeight, ascent + descent);
       lines.push({
         sourceLineIndex,
-        laid: { pieces, width: lineWidth, ascent, descent, isPlain: pieces.every(piece => piece.kind === 'text') },
+        lineLayout: { pieces, width: lineWidth, ascent, descent },
         baselineOffset: height + (slot - ascent - descent) / 2 + ascent,
       });
       width = Math.max(width, lineWidth);
@@ -136,9 +134,11 @@ export const layoutTextBlock = (
       sourceText += 'tex' in segment ? '\ufffc' : segment.text;
       return { segment, segmentIndex, start, end: sourceText.length };
     });
-    const formulas = new Map<number, InlineLineLayout>();
-    const measureRange = (start: number, end: number): InlineLineLayout => {
-      const result: InlineLineLayout = { pieces: [], width: 0, ascent: 0, descent: 0, isPlain: true };
+    /** 当前作者行按片段索引缓存公式布局，避免折行候选重复降解 */
+    const texLayoutCache = new Map<number, CompiledTextLineLayout>();
+    /** 布局作者行的指定范围，复用本行已降解的公式 */
+    const measureRange = (start: number, end: number): CompiledTextLineLayout => {
+      const result: CompiledTextLineLayout = { pieces: [], width: 0, ascent: 0, descent: 0 };
       for (const span of spans) {
         if (span.end <= start || span.start >= end) continue;
         const segment =
@@ -148,31 +148,32 @@ export const layoutTextBlock = (
                 ...span.segment,
                 text: sourceText.slice(Math.max(start, span.start), Math.min(end, span.end)),
               };
-        let laid = 'tex' in segment ? formulas.get(span.segmentIndex) : undefined;
-        if (laid === undefined) {
-          laid = layoutTextLine([segment], context);
-          if ('tex' in segment) formulas.set(span.segmentIndex, laid);
+        let lineLayout = 'tex' in segment ? texLayoutCache.get(span.segmentIndex) : undefined;
+        if (lineLayout === undefined) {
+          lineLayout = layoutTextLine([segment], context);
+          if ('tex' in segment) texLayoutCache.set(span.segmentIndex, lineLayout);
         }
-        for (const piece of laid.pieces)
+        for (const piece of lineLayout.pieces)
           result.pieces.push({ ...piece, segmentIndex: span.segmentIndex, x: piece.x + result.width });
-        result.width += laid.width;
-        result.ascent = Math.max(result.ascent, laid.ascent);
-        result.descent = Math.max(result.descent, laid.descent);
-        result.isPlain &&= laid.isPlain;
+        result.width += lineLayout.width;
+        result.ascent = Math.max(result.ascent, lineLayout.ascent);
+        result.descent = Math.max(result.descent, lineLayout.descent);
       }
       return result;
     };
     let lineStart = 0;
     let lineEnd = 0;
+    /** 用指定范围替换当前物理行布局 */
     const setRange = (start: number, end: number) => {
       lineStart = start;
       lineEnd = end;
-      const laid = measureRange(start, end);
-      pieces = laid.pieces;
-      lineWidth = laid.width;
-      ascent = laid.ascent;
-      descent = laid.descent;
+      const lineLayout = measureRange(start, end);
+      pieces = lineLayout.pieces;
+      lineWidth = lineLayout.width;
+      ascent = lineLayout.ascent;
+      descent = lineLayout.descent;
     };
+    /** 尝试追加文本范围，超出宽度时先提交上一行 */
     const appendRange = (start: number, end: number) => {
       const candidate = measureRange(pieces.length === 0 ? start : lineStart, end);
       if (
@@ -206,8 +207,8 @@ export const layoutTextBlock = (
       const tokens = maxTextWidth === undefined ? [{ segment: text, index: 0 }] : words.segment(text);
       for (const token of tokens) {
         const offset = start + token.index;
-        const laid = measureRange(offset, offset + token.segment.length);
-        if (maxTextWidth !== undefined && laid.width > maxTextWidth) {
+        const lineLayout = measureRange(offset, offset + token.segment.length);
+        if (maxTextWidth !== undefined && lineLayout.width > maxTextWidth) {
           for (const grapheme of graphemes.segment(token.segment)) {
             appendRange(offset + grapheme.index, offset + grapheme.index + grapheme.segment.length);
           }
@@ -219,10 +220,10 @@ export const layoutTextBlock = (
   return { width, height, lines };
 };
 
-/** 用既有 tokenization 与文本测量器返回最宽不可断单元 */
-export const measureMinimumTextWidth = (
+/** 测量按空白和 CJK 字符切分后的最宽文本单元，不代表字素折行的最小宽度 */
+export const measureMaxTextTokenWidth = (
   text: string,
-  context: Pick<LineLayoutContext, 'font' | 'measureText'>,
+  context: Pick<TextLayoutContext, 'font' | 'measureText'>,
 ): number => {
   const { font, measureText } = context;
   return tokenizeText(text).reduce(

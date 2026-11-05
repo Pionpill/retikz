@@ -19,7 +19,7 @@ export type InlineSegmentPaint = {
 };
 
 /** 混排行当前外观，独立于测量结果 */
-export type InlineLinePaint = {
+export type TextLinePaint = {
   /** 块继承色 */
   readonly color?: string;
   /** 块透明度 */
@@ -29,7 +29,7 @@ export type InlineLinePaint = {
 };
 
 /** 混排行布局服务与块级字体，不接收宿主外观 */
-export type LineLayoutContext = {
+export type TextLayoutContext = {
   /** 测量每个文本片段在指定字体下的尺寸 */
   measureText: TextMeasurer;
   /** TeX 降解能力 */
@@ -41,15 +41,13 @@ export type LineLayoutContext = {
 };
 
 /** 一行混排的布局结果 */
-export type InlineLineLayout = {
+export type CompiledTextLineLayout = {
   /** 行宽 = Σ segment 宽 */
   width: number;
   /** 基线之上最大上伸（文字 ascent / 公式 height-depth） */
   ascent: number;
   /** 基线之下最大下伸（文字 descent / 公式 depth） */
   descent: number;
-  /** 无 math segment（纯文本，可与既有 TextPrimitive 路径等价） */
-  isPlain: boolean;
   /** 按原始 segment 索引定位外观的纯数据片段 */
   pieces: Array<InlinePiece>;
 };
@@ -98,7 +96,7 @@ export type CompiledTextBlockLine = {
   /** 作者行索引，供绘制读取当前外观 */
   sourceLineIndex: number;
   /** 已测量的片段及其原始片段索引 */
-  laid: InlineLineLayout;
+  lineLayout: CompiledTextLineLayout;
   /** 相对块顶部的基线 */
   baselineOffset: number;
 };

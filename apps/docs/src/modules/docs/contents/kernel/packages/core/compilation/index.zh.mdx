@@ -213,7 +213,7 @@ export type CompiledNodeTextLayout = {
   baselineOffsets?: Array<number>;
 } & (
   | { kind: 'plain'; lines: Array<CompiledNodeTextLineLayout> }
-  | { kind: 'inline'; lines: Array<{ laid: InlineLineLayout; baselineOffset: number }> }
+  | { kind: 'inline'; lines: Array<{ lineLayout: CompiledTextLineLayout; baselineOffset: number }> }
 );
 ```
 

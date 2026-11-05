@@ -15,9 +15,9 @@ export const calculateExpandedBoundaryRect = (rect: CenteredBox, margin: BoundsI
 
   const dx = (margin.right - margin.left) / 2;
   const dy = (margin.bottom - margin.top) / 2;
-  const rot = rect.rotate ?? 0;
-  const cos = Math.cos(rot);
-  const sin = Math.sin(rot);
+  const rotation = rect.rotate ?? 0;
+  const cos = Math.cos(rotation);
+  const sin = Math.sin(rotation);
 
   return {
     x: rect.x + dx * cos - dy * sin,

@@ -27,19 +27,19 @@ export type PaintRegistry = {
 /** compile 仅消费 resolve 阶段已绑定的 pattern 并调用 provider emit */
 const emitPatternTile = (resolution: PatternResolution, round: (n: number) => number): CompiledPatternTile => {
   const { spec, definition, size, style } = resolution;
-  const ctx: PatternEmitContext = {
+  const context: PatternEmitContext = {
     size,
     ...style.base,
     round,
   };
-  if (spec.background !== undefined) ctx.background = spec.background;
-  if (style.horizontalStyle !== undefined) ctx.horizontalStyle = style.horizontalStyle;
-  if (style.verticalStyle !== undefined) ctx.verticalStyle = style.verticalStyle;
-  if (style.lineStyleCycle !== undefined) ctx.lineStyleCycle = style.lineStyleCycle;
+  if (spec.background !== undefined) context.background = spec.background;
+  if (style.horizontalStyle !== undefined) context.horizontalStyle = style.horizontalStyle;
+  if (style.verticalStyle !== undefined) context.verticalStyle = style.verticalStyle;
+  if (style.lineStyleCycle !== undefined) context.lineStyleCycle = style.lineStyleCycle;
   let emitted: PatternEmitOutput;
 
   try {
-    emitted = definition.emit(ctx);
+    emitted = definition.emit(context);
   } catch (e) {
     throw createLayoutProbeRecoverableError(`Pattern '${spec.shape}' emit failed: ${safeThrownDetail(e)}`, {
       cause: e,
@@ -77,12 +77,12 @@ const emitPatternTile = (resolution: PatternResolution, round: (n: number) => nu
 /** 创建 compile resource 注册表 */
 export const createPaintRegistry = (round: (n: number) => number): PaintRegistry => {
   /** 当前编译内已发射的声明；导入内容不能代替本地 provider 的输出 */
-  const idBySpec = new Map<string, string>();
+  const resourceIdBySpecMap = new Map<string, string>();
   /** 按最终内容身份保存资源，保持首次登记顺序 */
-  const resources = new Map<string, PaintResource>();
+  const resourceMap = new Map<string, PaintResource>();
 
   const importResource: PaintRegistry['importResource'] = resource => {
-    storeSceneResource(resource, resources);
+    storeSceneResource(resource, resourceMap);
     return { kind: 'resourceRef', id: resource.id };
   };
 
@@ -91,7 +91,7 @@ export const createPaintRegistry = (round: (n: number) => number): PaintRegistry
 
     const resolution: PaintResolution = paint;
     const specKey = serializeResourceContent(resolution.spec);
-    const existingId = idBySpec.get(specKey);
+    const existingId = resourceIdBySpecMap.get(specKey);
     if (existingId !== undefined) return { kind: 'resourceRef', id: existingId };
 
     const resource: PaintResource =
@@ -109,9 +109,9 @@ export const createPaintRegistry = (round: (n: number) => number): PaintRegistry
     );
     resource.id = id;
     const reference = importResource(resource);
-    idBySpec.set(specKey, id);
+    resourceIdBySpecMap.set(specKey, id);
     return reference;
   };
 
-  return { register, importResource, getResources: () => [...resources.values()] };
+  return { register, importResource, getResources: () => [...resourceMap.values()] };
 };

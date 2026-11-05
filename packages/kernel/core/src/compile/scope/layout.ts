@@ -7,7 +7,7 @@ import type { IRPosition, IRScope } from '../../schemas';
 import { ScopeBoundingShape } from '../../schemas';
 import { Anchor } from '../../shared';
 import { rect as rectOps } from '../../shared/geometry';
-import { outerRectOf } from '../boundary';
+import { calculateOuterBoundaryRect } from '../boundary';
 import type { CompiledBoundaryGeometry } from '../boundary';
 import type { CompiledReferenceGeometry } from '../reference';
 import { projectReferenceGeometry } from '../reference';
@@ -23,7 +23,7 @@ export const collectScopeCornerPoints = (layouts: ReadonlyArray<CompiledReferenc
       points.push(layout.position);
       continue;
     }
-    const outerRect = outerRectOf(layout);
+    const outerRect = calculateOuterBoundaryRect(layout);
     points.push(
       rectOps.anchor(outerRect, Anchor.TopLeft),
       rectOps.anchor(outerRect, Anchor.TopRight),

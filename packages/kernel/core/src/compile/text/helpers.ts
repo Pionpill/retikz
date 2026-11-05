@@ -31,17 +31,17 @@ type InputAlphabeticBaseline = {
 /** 把文本块垂直锚点折算成首行 alphabetic 基线 y */
 export const calculateAlphabeticBaselineY = (input: InputAlphabeticBaseline): number => {
   const { y, baseline, lineCount, lineHeight, fontSize } = input;
-  const asc = fontSize * ASCENT_FACTOR;
-  const desc = fontSize * DESCENT_FACTOR;
+  const ascent = fontSize * ASCENT_FACTOR;
+  const descent = fontSize * DESCENT_FACTOR;
   const span = (lineCount - 1) * lineHeight;
 
   switch (baseline) {
     case 'top':
-      return y + asc;
+      return y + ascent;
     case 'bottom':
-      return y - span - desc;
+      return y - span - descent;
     case 'middle':
-      return y - span / 2 + (asc - desc) / 2;
+      return y - span / 2 + (ascent - descent) / 2;
     case 'alphabetic':
       return y;
   }
@@ -100,42 +100,42 @@ export const calculateLabelProjectedHalfExtent = (
   );
 };
 
-/** CJK / 全角字符范围：无需空白分隔，折行时可按单字符切分 */
-const isCjk = (ch: string): boolean => {
-  const c = ch.codePointAt(0) ?? 0;
-  return (
-    (c >= 0x3000 && c <= 0x303f) ||
-    (c >= 0x3040 && c <= 0x30ff) ||
-    (c >= 0x3400 && c <= 0x4dbf) ||
-    (c >= 0x4e00 && c <= 0x9fff) ||
-    (c >= 0xf900 && c <= 0xfaff) ||
-    (c >= 0xff00 && c <= 0xffef)
-  );
-};
-
 /** 按既有折行规则把文本拆成可断单元与规范化空格 */
 export const tokenizeText = (text: string): Array<string> => {
+  /** CJK / 全角字符范围：无需空白分隔，折行时可按单字符切分 */
+  const isCjk = (character: string): boolean => {
+    const codePoint = character.codePointAt(0) ?? 0;
+    return (
+      (codePoint >= 0x3000 && codePoint <= 0x303f) ||
+      (codePoint >= 0x3040 && codePoint <= 0x30ff) ||
+      (codePoint >= 0x3400 && codePoint <= 0x4dbf) ||
+      (codePoint >= 0x4e00 && codePoint <= 0x9fff) ||
+      (codePoint >= 0xf900 && codePoint <= 0xfaff) ||
+      (codePoint >= 0xff00 && codePoint <= 0xffef)
+    );
+  };
+
   const units: Array<string> = [];
 
-  for (const seg of text.split(/(\s+)/)) {
-    if (seg === '') continue;
-    if (/^\s+$/.test(seg)) {
+  for (const segment of text.split(/(\s+)/)) {
+    if (segment === '') continue;
+    if (/^\s+$/.test(segment)) {
       units.push(' ');
       continue;
     }
 
     let run = '';
 
-    for (const ch of seg) {
-      if (isCjk(ch)) {
+    for (const character of segment) {
+      if (isCjk(character)) {
         if (run) {
           units.push(run);
           run = '';
         }
 
-        units.push(ch);
+        units.push(character);
       } else {
-        run += ch;
+        run += character;
       }
     }
 

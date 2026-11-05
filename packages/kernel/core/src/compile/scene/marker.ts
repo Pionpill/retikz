@@ -22,14 +22,14 @@ export type MarkerPlacementContext = {
 
 /** 保留标记结构，递归解析宿主描边色并将透明度因子应用到绘制图元 */
 export const materializeMarkerPrimitive = (
-  prim: ScenePrimitive,
+  primitive: ScenePrimitive,
   contextStroke: PaintValue,
   hostOpacity?: number,
 ): ScenePrimitive => {
   const substituteMarkerContextPaint = (value: PaintValue): PaintValue =>
     typeof value === 'object' && value.kind === 'contextStroke' ? contextStroke : value;
 
-  const content = { ...prim };
+  const content = { ...primitive };
   delete content.id;
   delete content.meta;
   if (content.type === 'group') {
@@ -55,20 +55,20 @@ export const materializeMarkerPrimitive = (
  * 把已物化的 arrow marker（局部 baseSize 坐标系，尖端 +x）按路径切线定向放到采样点
  * @description marker 局部系：viewBox `0 0 baseSize baseSize`，参考点 (refX, baseSize/2)，尖端朝 +x
  */
-export const buildMarkMarkerGroup = (
+export const buildMarkerGroup = (
   spec: CompiledArrowEnd,
   sample: CurveSegmentSample,
   context: MarkerPlacementContext,
 ): GroupPrimitive => {
   const { strokeWidth, round, contextStroke, rotate, scale, hostOpacity } = context;
   const angleDeg = typeof rotate === 'number' ? rotate : Math.atan2(sample.tangent[1], sample.tangent[0]) * RAD_TO_DEG;
-  const sx = (spec.markerWidth * strokeWidth * (scale ?? 1)) / spec.baseSize;
-  const sy = (spec.markerHeight * strokeWidth * (scale ?? 1)) / spec.baseSize;
+  const scaleX = (spec.markerWidth * strokeWidth * (scale ?? 1)) / spec.baseSize;
+  const scaleY = (spec.markerHeight * strokeWidth * (scale ?? 1)) / spec.baseSize;
   const refY = spec.baseSize / 2;
   const transforms: Array<Transform> = [
     { kind: 'translate', x: round(sample.point[0]), y: round(sample.point[1]) },
     { kind: 'rotate', degrees: round(angleDeg) },
-    { kind: 'scale', x: round(sx), y: round(sy) },
+    { kind: 'scale', x: round(scaleX), y: round(scaleY) },
     { kind: 'translate', x: round(-spec.refX), y: round(-refY) },
   ];
 

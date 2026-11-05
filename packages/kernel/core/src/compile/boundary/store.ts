@@ -1,78 +1,51 @@
-import type { CanonicalNodeBoundary, CanonicalNodeShape } from '../../resolve';
+import type { Position } from '@retikz/math';
+
+import type { CanonicalNodeShape } from '../../resolve';
 import { boundaryKey } from '../../resolve';
-import type { IRAnchorRef, IRBoundary, IRPosition } from '../../schemas';
-import type { Side } from '../../shared';
 import { evaluateAnchorReference } from './layout';
 import type { BoundaryState, BoundaryStore, CompiledBoundaryGeometry } from './types';
 
-/** 为一次编译创建独立的连接面缓存与诊断容器 */
+/** 为一次编译创建独立的连接面状态、锚点缓存与诊断容器 */
 export const createBoundaryStore = (): BoundaryStore => {
-  const states = new WeakMap<object, BoundaryState>();
-  const get = (shape: CanonicalNodeShape): BoundaryState => {
-    let state = states.get(shape);
+  /** 本次编译按形状绑定共享的包络缓存与已派发诊断 */
+  const stateMap = new WeakMap<CanonicalNodeShape, BoundaryState>();
+  /** 本次编译按最终几何身份缓存锚点；投影后的新几何独立求值 */
+  const anchorCache = new WeakMap<CompiledBoundaryGeometry, Map<string, Position>>();
+
+  const getOrCreateState: BoundaryStore['getOrCreateState'] = shape => {
+    let state = stateMap.get(shape);
     if (state === undefined) {
       state = { connectionEnvelopeCache: new Map(), connectionEnvelopeWarnings: new Set() };
-      states.set(shape, state);
+      stateMap.set(shape, state);
     }
     return state;
   };
-  return { get };
-};
 
-/** 单个 CompiledBoundaryGeometry 生命周期内的 anchor 坐标缓存 */
-const cache = new WeakMap<CompiledBoundaryGeometry, Map<string, IRPosition>>();
+  const getOrCreateAnchor: BoundaryStore['getOrCreateAnchor'] = (
+    layout,
+    anchor,
+    boundary,
+    canonicalBoundary,
+    context,
+  ) => {
+    let geometryCache = anchorCache.get(layout);
+    if (geometryCache === undefined) {
+      geometryCache = new Map();
+      anchorCache.set(layout, geometryCache);
+    }
 
-/** 取命名 anchor 的全局坐标 */
-export const getOrCreateNamedAnchor = (
-  layout: CompiledBoundaryGeometry,
-  anchorName: string,
-  boundary?: IRBoundary,
-  canon?: CanonicalNodeBoundary,
-  state?: BoundaryState,
-): IRPosition => {
-  let layoutCache = cache.get(layout);
-  if (!layoutCache) {
-    layoutCache = new Map<string, IRPosition>();
-    cache.set(layout, layoutCache);
-  }
+    const key =
+      typeof anchor === 'object'
+        ? `edge:${anchor.side}:${anchor.fraction}`
+        : JSON.stringify([boundaryKey(boundary), String(anchor)]);
+    const cached = geometryCache.get(key);
+    if (cached !== undefined) return cached;
 
-  const key = `${boundaryKey(boundary)} ${anchorName}`;
-  const cached = layoutCache.get(key);
-  if (cached !== undefined) return cached;
+    const state = getOrCreateState(layout.shape);
+    const position = evaluateAnchorReference(layout, anchor, boundary, canonicalBoundary, { ...state, ...context });
+    geometryCache.set(key, position);
+    return position;
+  };
 
-  const result = evaluateAnchorReference(layout, anchorName, boundary, canon, state);
-  layoutCache.set(key, result);
-
-  return result;
-};
-
-/** 取视觉形状边上比例点的全局坐标 */
-const getOrCreateEdgePoint = (layout: CompiledBoundaryGeometry, side: Side, t: number): IRPosition => {
-  let layoutCache = cache.get(layout);
-  if (!layoutCache) {
-    layoutCache = new Map<string, IRPosition>();
-    cache.set(layout, layoutCache);
-  }
-
-  const key = `${side}:${t}`;
-  const cached = layoutCache.get(key);
-  if (cached !== undefined) return cached;
-
-  const result = evaluateAnchorReference(layout, { side, fraction: t });
-  layoutCache.set(key, result);
-
-  return result;
-};
-
-/** 使用既有 WeakMap 缓存解析完整 anchor 引用 */
-export const getOrCreateAnchorReference = (
-  layout: CompiledBoundaryGeometry,
-  anchor: IRAnchorRef,
-  boundary?: IRBoundary,
-  canon?: CanonicalNodeBoundary,
-  state?: BoundaryState,
-): IRPosition => {
-  if (typeof anchor === 'number') return getOrCreateNamedAnchor(layout, String(anchor), boundary, canon, state);
-  if (typeof anchor === 'string') return getOrCreateNamedAnchor(layout, anchor, boundary, canon, state);
-  return getOrCreateEdgePoint(layout, anchor.side, anchor.fraction);
+  return { getOrCreateState, getOrCreateAnchor };
 };

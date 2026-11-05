@@ -36,8 +36,8 @@ export const compileNode = (
     },
     text: layout.text === undefined ? undefined : { layout: layout.text, style: buildNodeTextStyle(canon) },
     labels: (layout.labels ?? []).map((label, index) => {
-      const { laid, ...metrics } = label;
-      void laid;
+      const { lineLayout, ...metrics } = label;
+      void lineLayout;
       return {
         layout: metrics,
         ...splitCompiledDrawing(

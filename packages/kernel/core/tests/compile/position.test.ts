@@ -59,8 +59,8 @@ const contextOf = (
     lookupReference: id => byId.get(id),
     toLocal: world => [world[0] - 100, world[1] - 50],
     toWorld: local => [local[0] + 100, local[1] + 50],
-    canonicalBoundaryOf: (_target, item) => ('position' in item.geometry ? undefined : item.geometry.boundary),
-    pointOfNodeTarget: (target, item) => {
+    bindNodeTargetBoundary: (_target, item) => ('position' in item.geometry ? undefined : item.geometry.boundary),
+    evaluateNodeTargetPoint: (target, item) => {
       if ('position' in item.geometry) return item.geometry.position;
       if (target.anchor === 'right') {
         return [item.geometry.geometry.rect.x + item.geometry.geometry.rect.width / 2, item.geometry.geometry.rect.y];
@@ -75,7 +75,7 @@ describe('compiled layout references', () => {
   it('保留别名来源并直接复用布局，不修改共享诊断状态', () => {
     const layout = rectangleLayout();
     const store = createBoundaryStore();
-    store.get(layout.shape).irPath = ['original'];
+    store.getOrCreateState(layout.shape).irPath = ['original'];
     const paths: Array<unknown> = [];
     const references = new Map<string, PositionReferenceView>(
       ['A', 'B'].map(id => [id, { state: 'resolved', geometry: layout, irPath: ['aliases', id] }]),
@@ -100,7 +100,7 @@ describe('compiled layout references', () => {
       ['aliases', 'A'],
       ['aliases', 'B'],
     ]);
-    expect(store.get(layout.shape).irPath).toEqual(['original']);
+    expect(store.getOrCreateState(layout.shape).irPath).toEqual(['original']);
   });
 
   it('重新发布变换后的布局时重新计算锚点', () => {

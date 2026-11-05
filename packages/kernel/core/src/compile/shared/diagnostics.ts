@@ -31,8 +31,6 @@ export const BuiltinCompileWarningCode = {
   TexLowererMissing: 'TEX_LOWERER_MISSING',
   /** lowerTex 返回 null，公式转换失败并跳过对应片段 */
   TexInvalid: 'TEX_INVALID',
-  /** 文本与 TeX 内容冲突的警告码，当前编译流程未派发此码 */
-  TexTextConflict: 'TEX_TEXT_CONFLICT',
   /** 文本中的公式分隔符未配对，无法完成内联 TeX 解析 */
   TextTexParseError: 'TEXT_TEX_PARSE_ERROR',
   /** 形状未提供所需的连接面包络，回退到根据视觉边界计算的包络 */

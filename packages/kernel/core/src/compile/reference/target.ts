@@ -5,18 +5,18 @@ import { isBetweenPositionLike, isNodeTargetLike } from '../../shared';
 import { evaluatePosition } from './position';
 import type { PositionTargetEvaluation, PositionTargetEvaluateContext, PositionTargetWorldEvaluation } from './types';
 
-/** 在节点目标的世界坐标上叠加 offset */
-const addNodeTargetOffset = (point: IRPosition, target: IRNodeTarget): IRPosition =>
-  target.offset === undefined ? point : [point[0] + target.offset[0], point[1] + target.offset[1]];
-
-/** 判断点的两个坐标是否均为有限数值 */
-const isFinitePoint = (point: IRPosition): boolean => Number.isFinite(point[0]) && Number.isFinite(point[1]);
-
 /** 解析目标的世界坐标，并保留直接节点引用与连接面；无法定位时 referencePoint 为 null */
 export const evaluatePositionTargetWorld = (
   target: IRAbsoluteTarget,
   context: PositionTargetEvaluateContext,
 ): PositionTargetWorldEvaluation => {
+  /** 在节点目标的世界坐标上叠加 offset */
+  const addNodeTargetOffset = (point: IRPosition, nodeTarget: IRNodeTarget): IRPosition =>
+    nodeTarget.offset === undefined ? point : [point[0] + nodeTarget.offset[0], point[1] + nodeTarget.offset[1]];
+
+  /** 判断点的两个坐标是否均为有限数值 */
+  const isFinitePoint = (point: IRPosition): boolean => Number.isFinite(point[0]) && Number.isFinite(point[1]);
+
   if (isNodeTargetLike(target)) {
     const reference = context.lookupReference(
       target.id,
@@ -26,8 +26,11 @@ export const evaluatePositionTargetWorld = (
     );
     if (reference === undefined) return { target, referencePoint: null };
 
-    const canonicalBoundary = context.canonicalBoundaryOf?.(target, reference);
-    const referencePoint = addNodeTargetOffset(context.pointOfNodeTarget(target, reference, canonicalBoundary), target);
+    const canonicalBoundary = context.bindNodeTargetBoundary?.(target, reference);
+    const referencePoint = addNodeTargetOffset(
+      context.evaluateNodeTargetPoint(target, reference, canonicalBoundary),
+      target,
+    );
 
     return {
       target,

@@ -1,8 +1,9 @@
 import type { JsonObject, PropertyPath } from '@retikz/foundation';
-import type { BoundsInsets, CenteredBox } from '@retikz/math';
+import type { BoundsInsets, CenteredBox, Position } from '@retikz/math';
 
 import type { BoundaryDefinition, ConnectionEnvelopeKind, ShapeDefinition } from '../../contract';
 import type { CanonicalNodeBoundary, CanonicalNodeShape } from '../../resolve';
+import type { IRAnchorRef, IRBoundary } from '../../schemas';
 import type { CompileWarningCode } from '../shared';
 
 /** 边界查询直接消费的编译产物字段，不要求生成独立投影对象 */
@@ -54,6 +55,14 @@ export type BoundaryVisualResolution = {
 
 /** 编译调用持有的连接面状态查询能力，不进入布局结果 */
 export type BoundaryStore = {
-  /** 按共享的形状绑定读取状态，布局前与布局投影后使用同一身份 */
-  get: (shape: CanonicalNodeShape) => BoundaryState;
+  /** 按共享的形状绑定获取或创建状态，布局前与布局投影后使用同一身份 */
+  getOrCreateState: (shape: CanonicalNodeShape) => BoundaryState;
+  /** 当前编译内缓存最终几何的锚点；诊断覆盖只作用于本次求值，不修改共享状态 */
+  getOrCreateAnchor: (
+    geometry: CompiledBoundaryGeometry,
+    anchor: IRAnchorRef,
+    boundary?: IRBoundary,
+    canonicalBoundary?: CanonicalNodeBoundary,
+    context?: Pick<BoundaryState, 'warn' | 'irPath'>,
+  ) => Position;
 };

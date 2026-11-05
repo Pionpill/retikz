@@ -66,9 +66,12 @@ export type PositionEvaluation = Readonly<{
 export type PositionTargetEvaluateContext = PositionEvaluateContext &
   Readonly<{
     /** 解析目标额外指定的连接面；沿用布局或视觉形状时可省略结果 */
-    canonicalBoundaryOf?: (target: IRNodeTarget, reference: PositionReferenceView) => CanonicalNodeBoundary | undefined;
+    bindNodeTargetBoundary?: (
+      target: IRNodeTarget,
+      reference: PositionReferenceView,
+    ) => CanonicalNodeBoundary | undefined;
     /** 返回节点目标的世界坐标中心或显式锚点，结果不含 target.offset */
-    pointOfNodeTarget: (
+    evaluateNodeTargetPoint: (
       target: IRNodeTarget,
       reference: PositionReferenceView,
       canonicalBoundary: CanonicalNodeBoundary | undefined,

@@ -6,7 +6,7 @@ import type { CanonicalNodeBoundary, NodeBoundaryResolver } from '../../resolve'
 import type { IRBetweenPosition, IRNodeTarget, IRPosition } from '../../schemas';
 import { isAnchor } from '../../shared';
 import type { BoundaryStore, CompiledBoundaryGeometry } from '../boundary';
-import { getOrCreateAnchorReference } from '../boundary';
+import { createBoundaryStore } from '../boundary';
 import type { ComposedScopeTransform } from '../shared';
 import { applyScopeTransform, composeScopeTransform, inverseScopeTransform } from '../shared';
 import { evaluatePositionTarget } from './target';
@@ -53,7 +53,7 @@ export type InputPositionEvaluateContext = Readonly<{
 export const createPositionEvaluateContext = (input: InputPositionEvaluateContext): PositionTargetEvaluateContext => {
   const {
     lookupReference,
-    boundaryStore,
+    boundaryStore = createBoundaryStore(),
     nodeDistance,
     transformChain = [],
     composedTransform,
@@ -66,12 +66,12 @@ export const createPositionEvaluateContext = (input: InputPositionEvaluateContex
     transformChain.length === 0 ? [world[0], world[1]] : inverseScopeTransform(world, transform);
   const toWorld = (local: IRPosition): IRPosition =>
     transformChain.length === 0 ? [local[0], local[1]] : applyScopeTransform(local, transform);
-  const canonicalBoundaryOf = (target: IRNodeTarget, reference: PositionReferenceView) =>
+  const bindNodeTargetBoundary = (target: IRNodeTarget, reference: PositionReferenceView) =>
     'position' in reference.geometry
       ? undefined
       : bindTargetBoundary(reference.geometry, target, resolveExplicitBoundary, reference.irPath);
 
-  const pointOfNodeTarget = (
+  const evaluateNodeTargetPoint = (
     target: IRNodeTarget,
     reference: PositionReferenceView,
     canonicalBoundary: CanonicalNodeBoundary | undefined,
@@ -91,10 +91,9 @@ export const createPositionEvaluateContext = (input: InputPositionEvaluateContex
       return geometry.position;
     }
     if (target.anchor === undefined) return [geometry.geometry.rect.x, geometry.geometry.rect.y];
-    const state = boundaryStore?.get(geometry.shape);
-    return getOrCreateAnchorReference(geometry, target.anchor, target.boundary, canonicalBoundary, {
-      ...state,
-      irPath: reference.irPath ?? state?.irPath,
+    const state = boundaryStore.getOrCreateState(geometry.shape);
+    return boundaryStore.getOrCreateAnchor(geometry, target.anchor, target.boundary, canonicalBoundary, {
+      irPath: reference.irPath ?? state.irPath,
     });
   };
 
@@ -106,8 +105,8 @@ export const createPositionEvaluateContext = (input: InputPositionEvaluateContex
     lookupReference,
     toLocal,
     toWorld,
-    canonicalBoundaryOf,
-    pointOfNodeTarget,
+    bindNodeTargetBoundary,
+    evaluateNodeTargetPoint,
     evaluateBetweenWorld,
   };
 

@@ -645,7 +645,7 @@ describe('scope.id bbox 错误路径', () => {
         id: 'g',
         children: [{ type: 'node', id: 'a', position: [0, 0], text: 'a' }],
       },
-      // 非法 anchor 名（schema 接受任意非空串，compile 端 anchorOf 据 shape 抛 Unknown anchor）
+      // 非法 anchor 名（schema 接受任意非空串，compile 端 evaluateNamedBoundaryAnchor 据 shape 抛 Unknown anchor）
       {
         type: 'path',
         children: [

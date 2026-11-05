@@ -77,9 +77,9 @@ export type ComposedScopeTransform = Readonly<{
   /** 逆向仿射矩阵；零缩放轴时为空，直到实际反投影才报错 */
   inverse: AffineMatrix | null;
   /** 矩阵系数是否可直接消费 */
-  finiteForward: boolean;
+  canApplyForwardMatrix: boolean;
   /** 逆矩阵系数是否可直接消费 */
-  finiteInverse: boolean;
+  canApplyInverseMatrix: boolean;
   /** 保持 CompiledNodeLayout 投影规则的累计旋转弧度 */
   rotation: number;
   /** 保持 CompiledNodeLayout 投影规则的逐轴缩放乘积 */
@@ -92,8 +92,8 @@ const IDENTITY_SCOPE_TRANSFORM: ComposedScopeTransform = Object.freeze({
   chain: Object.freeze([]),
   forward: AFFINE_IDENTITY,
   inverse: AFFINE_IDENTITY,
-  finiteForward: true,
-  finiteInverse: true,
+  canApplyForwardMatrix: true,
+  canApplyInverseMatrix: true,
   rotation: 0,
   scaleX: 1,
   scaleY: 1,
@@ -147,15 +147,15 @@ export const composeScopeTransform = (
       console.warn('Scope transform contains a zero scale axis; inverse coordinate projection is unavailable.');
     }
   }
-  const finiteForward = forward.every(Number.isFinite);
-  const finiteInverse = inverse !== null && inverse.every(Number.isFinite);
+  const isForwardFinite = forward.every(Number.isFinite);
+  const isInverseFinite = inverse !== null && inverse.every(Number.isFinite);
   return {
     chain,
     forward,
     inverse,
     // 正逆系数任一溢出时，另一方向也可能已经丢失非零尺度，保留逐项计算
-    finiteForward: finiteForward && (inverse === null || finiteInverse),
-    finiteInverse: finiteForward && finiteInverse,
+    canApplyForwardMatrix: isForwardFinite && (inverse === null || isInverseFinite),
+    canApplyInverseMatrix: isForwardFinite && isInverseFinite,
     rotation,
     scaleX,
     scaleY,
@@ -165,7 +165,9 @@ export const composeScopeTransform = (
 /** 用已合成消费态投影点；系数溢出时保留逐项算术的数值范围 */
 export const applyScopeTransform = (point: IRPosition, transform: ComposedScopeTransform): IRPosition => {
   if (transform.chain.length === 0) return [point[0], point[1]];
-  return transform.finiteForward ? applyAffine(transform.forward, point) : applyTransformChain(point, transform.chain);
+  return transform.canApplyForwardMatrix
+    ? applyAffine(transform.forward, point)
+    : applyTransformChain(point, transform.chain);
 };
 
 /** 用已合成消费态反投影，保留零轴错误与极小非零轴的既有语义 */
@@ -173,7 +175,7 @@ export const inverseScopeTransform = (point: IRPosition, transform: ComposedScop
   if (transform.chain.length === 0) return [point[0], point[1]];
   if (transform.inverse === null)
     throw new RetikzCoreError(RetikzCoreErrorCode.Compile, 'non-invertible scope transform');
-  return transform.finiteInverse
+  return transform.canApplyInverseMatrix
     ? applyAffine(transform.inverse, point)
     : inverseTransformChain(point, transform.chain);
 };

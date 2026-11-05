@@ -4,7 +4,7 @@ import { DEFAULT_EPSILON, DEG_TO_RAD } from '@retikz/math';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import type { CanonicalNodeLabel, CanonicalNodeLabelBoundaryPosition } from '../../../resolve';
 import { anchorUnitVectorByAnchor } from '../../../shared';
-import { anchorOf, angleBoundaryOf } from '../../boundary';
+import { evaluateNamedBoundaryAnchor, evaluateAngleBoundaryPoint } from '../../boundary';
 import { placeLabelBox, calculateLabelRotation, layoutTextBlock } from '../../text';
 import type {
   CompiledNodeLayout,
@@ -96,10 +96,10 @@ export const calculateNodeLabelBorderPoint = (
   }
 
   if (typeof position === 'number') {
-    return angleBoundaryOf(aaLayout, position);
+    return evaluateAngleBoundaryPoint(aaLayout, position);
   }
 
-  return anchorOf(aaLayout, position);
+  return evaluateNamedBoundaryAnchor(aaLayout, position);
 };
 
 /** 将标签相对节点中心的偏移换算为当前布局坐标中的中心点 */
@@ -202,7 +202,7 @@ export const placeNodeLabel = (
  * @description 用于顶层 bbox / viewBox 计算
  */
 export const calculateNodeLabelExtentPoints = (
-  layout: Pick<CompiledNodeLayout, 'geometry'> & { labels?: Array<Omit<NodeLabelLayout, 'laid'>> },
+  layout: Pick<CompiledNodeLayout, 'geometry'> & { labels?: Array<Omit<NodeLabelLayout, 'lineLayout'>> },
 ): Array<Position> => {
   if (!layout.labels || layout.labels.length === 0) return [];
 
@@ -250,7 +250,7 @@ export const measureNodeLabel = (
 ): MeasuredNodeLabel => {
   const { measureText, texLowering } = context;
   const inlineWarn = texLowering?.warn ?? ((): void => {});
-  const laid = layoutTextBlock(
+  const lineLayout = layoutTextBlock(
     canon.text.lines,
     {
       lineHeight: canon.text.lineHeight,
@@ -259,10 +259,10 @@ export const measureNodeLabel = (
     { measureText, lowerTex: texLowering?.lowerTex, font: canon.text.font, warn: inlineWarn },
   );
   return {
-    laid,
-    measuredWidth: laid.width,
-    measuredHeight: laid.height,
-    ascent: laid.height / 2,
-    descent: laid.height / 2,
+    lineLayout,
+    measuredWidth: lineLayout.width,
+    measuredHeight: lineLayout.height,
+    ascent: lineLayout.height / 2,
+    descent: lineLayout.height / 2,
   };
 };

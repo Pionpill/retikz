@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { emitTextLine, fallbackMeasurer, layoutTextLine, snapshotLoweredTex } from '../../../../core/src/compile/text';
+import { emitTextLine, fallbackMeasurer, layoutTextLine, lowerTexSegment } from '../../../../core/src/compile/text';
+import type { LoweredTex } from '../../../../core/src/compile/text';
 import type { GroupPrimitive, PathPrimitive } from '../../../../core/src/contract';
+
+/** 经实际公式降解入口消费测试提供者的结果 */
+const lowerFormula = (value: LoweredTex): LoweredTex | undefined =>
+  lowerTexSegment({ tex: 'x' }, 16, { lowerTex: () => value, warn: () => undefined });
 
 describe('[tex-lowering]多路径契约', () => {
   it.each([
@@ -12,12 +17,12 @@ describe('[tex-lowering]多路径契约', () => {
     { width: Number.NaN, height: 8, depth: 2 },
     { width: 10, height: Number.POSITIVE_INFINITY, depth: 2 },
   ])('拒绝无法用于公式布局的尺寸 %j', metrics => {
-    expect(() => snapshotLoweredTex({ paths: [], ...metrics })).toThrow(/invalid|non-finite|depth greater/);
+    expect(() => lowerFormula({ paths: [], ...metrics })).toThrow(/invalid|non-finite|depth greater/);
   });
 
   it.each([{ strokeWidth: -1 }, { opacity: Number.NaN }])('拒绝非法描边尺寸或非有限的公式属性 %j', style => {
     expect(() =>
-      snapshotLoweredTex({
+      lowerFormula({
         paths: [{ commands: [], fill: { kind: 'none' }, stroke: { kind: 'currentColor' }, ...style }],
         width: 10,
         height: 8,
@@ -198,7 +203,7 @@ describe('[tex-lowering]多路径契约', () => {
       },
     );
 
-    expect(snapshotLoweredTex(lowered)).toEqual({
+    expect(lowerFormula(lowered)).toEqual({
       paths: [
         {
           commands: [{ kind: 'move', to: [0, 0] }],

@@ -23,19 +23,20 @@ export const snapshotProviderOutputJson = <T>(
   path: string,
   allowedResourceIds?: ReadonlySet<string>,
 ): T => {
-  const snapshot = (
+  /** 递归复制 JSON 值并检查数值与资源引用，元数据不参与资源引用检查 */
+  const snapshotValue = (
     input: unknown,
     currentPath: string,
-    checkResources = allowedResourceIds !== undefined,
+    shouldCheckResources = allowedResourceIds !== undefined,
   ): unknown => {
     if (typeof input === 'number' && !Number.isFinite(input)) {
       throw createCompositeContractError(`${owner} emit produced a ${currentPath} with a non-finite number.`);
     }
     if (input === null || typeof input !== 'object') return input;
     if (Array.isArray(input)) {
-      return input.map((entry, index) => snapshot(entry, `${currentPath}[${index}]`, checkResources));
+      return input.map((entry, index) => snapshotValue(entry, `${currentPath}[${index}]`, shouldCheckResources));
     }
-    if (checkResources) {
+    if (shouldCheckResources) {
       if ('resources' in input || ('clipRef' in input && input.clipRef !== undefined)) {
         throw createCompositeContractError(
           `${owner} output ${currentPath}: provider cannot declare resources or clipRef; use input properties instead.`,
@@ -53,11 +54,12 @@ export const snapshotProviderOutputJson = <T>(
     }
     const output = Object.create(null) as Record<string, unknown>;
     for (const [key, entry] of Object.entries(input)) {
-      if (entry !== undefined) output[key] = snapshot(entry, `${currentPath}.${key}`, checkResources && key !== 'meta');
+      if (entry !== undefined)
+        output[key] = snapshotValue(entry, `${currentPath}.${key}`, shouldCheckResources && key !== 'meta');
     }
     return output;
   };
-  return snapshot(value, path) as T;
+  return snapshotValue(value, path) as T;
 };
 
 /** 校验已复制且有限的数值非负；省略的可选值无需校验 */
@@ -127,9 +129,9 @@ export const snapshotScenePrimitives = (
     if ('resources' in emitted)
       throw createCompositeContractError(`${owner} output: provider cannot declare resources.`);
     return Array.from(emitted, primitive => {
-      const snapshot = snapshotProviderOutputJson(owner, primitive, 'Scene primitive', allowedResourceIds);
-      assertScenePrimitive(owner, snapshot, 'Scene primitive');
-      return snapshot;
+      const primitiveSnapshot = snapshotProviderOutputJson(owner, primitive, 'Scene primitive', allowedResourceIds);
+      assertScenePrimitive(owner, primitiveSnapshot, 'Scene primitive');
+      return primitiveSnapshot;
     });
   });
 

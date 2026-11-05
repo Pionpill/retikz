@@ -1,49 +1,49 @@
 import type { ScenePrimitive, TextContentLine, TextPrimitive } from '../../contract';
 import { combineOpacity } from '../../resolve';
 import { emitTexPrimitive } from './tex';
-import type { CompiledTextBlockLayout, InlineLineLayout, InlineLinePaint } from './types';
+import type { CompiledTextBlockLayout, CompiledTextLineLayout, TextLinePaint } from './types';
 
 /** 行高近似系数 */
 const LINE_HEIGHT_FACTOR = 1.2;
 
 /** 用当前外观绘制既有布局，不调用测量或公式降解服务 */
 export const emitTextLine = (
-  layout: InlineLineLayout,
-  paint: InlineLinePaint,
+  layout: CompiledTextLineLayout,
+  paint: TextLinePaint,
   originX: number,
   baselineY: number,
   round: (value: number) => number,
 ): Array<ScenePrimitive> => {
-  const out: Array<ScenePrimitive> = [];
+  const primitives: Array<ScenePrimitive> = [];
 
-  for (const p of layout.pieces) {
-    const segmentPaint = paint.segments[p.segmentIndex];
-    if (p.kind === 'text') {
-      const tp: TextPrimitive = {
+  for (const piece of layout.pieces) {
+    const segmentPaint = paint.segments[piece.segmentIndex];
+    if (piece.kind === 'text') {
+      const textPrimitive: TextPrimitive = {
         type: 'text',
-        x: round(originX + p.x),
+        x: round(originX + piece.x),
         y: round(baselineY),
-        lines: [{ text: p.text }],
-        fontSize: p.font.size,
+        lines: [{ text: piece.text }],
+        fontSize: piece.font.size,
         align: 'start',
         baseline: 'alphabetic',
-        lineHeight: round(p.font.size * LINE_HEIGHT_FACTOR),
-        measuredWidth: round(p.width),
-        measuredHeight: round(p.measuredHeight),
+        lineHeight: round(piece.font.size * LINE_HEIGHT_FACTOR),
+        measuredWidth: round(piece.width),
+        measuredHeight: round(piece.measuredHeight),
         fill: segmentPaint.fill ?? paint.color ?? 'currentColor',
       };
-      if (p.font.family !== undefined) tp.fontFamily = p.font.family;
-      if (p.font.weight !== undefined) tp.fontWeight = p.font.weight;
-      if (p.font.style !== undefined) tp.fontStyle = p.font.style;
-      const op = combineOpacity(segmentPaint.opacity, paint.opacity);
-      if (op !== undefined) tp.opacity = op;
-      out.push(tp);
+      if (piece.font.family !== undefined) textPrimitive.fontFamily = piece.font.family;
+      if (piece.font.weight !== undefined) textPrimitive.fontWeight = piece.font.weight;
+      if (piece.font.style !== undefined) textPrimitive.fontStyle = piece.font.style;
+      const opacity = combineOpacity(segmentPaint.opacity, paint.opacity);
+      if (opacity !== undefined) textPrimitive.opacity = opacity;
+      primitives.push(textPrimitive);
     } else {
-      out.push(
+      primitives.push(
         emitTexPrimitive(
-          p,
+          piece,
           { color: segmentPaint.fill ?? paint.color, opacity: combineOpacity(segmentPaint.opacity, paint.opacity) },
-          originX + p.x,
+          originX + piece.x,
           baselineY,
           round,
         ),
@@ -51,7 +51,7 @@ export const emitTextLine = (
     }
   }
 
-  return out;
+  return primitives;
 };
 
 /** 使用已完成的物理行布局和当前文本外观绘制文本块 */
@@ -71,10 +71,11 @@ export const emitTextBlock = (
   top: number,
   round: (value: number) => number,
 ): Array<ScenePrimitive> =>
-  layout.lines.flatMap(({ laid, sourceLineIndex, baselineOffset }) => {
-    const offset = paint.textAlign === 'start' ? 0 : (layout.width - laid.width) / (paint.textAlign === 'end' ? 1 : 2);
+  layout.lines.flatMap(({ lineLayout, sourceLineIndex, baselineOffset }) => {
+    const offset =
+      paint.textAlign === 'start' ? 0 : (layout.width - lineLayout.width) / (paint.textAlign === 'end' ? 1 : 2);
     const primitives = emitTextLine(
-      laid,
+      lineLayout,
       {
         color: paint.color,
         opacity: paint.opacity,

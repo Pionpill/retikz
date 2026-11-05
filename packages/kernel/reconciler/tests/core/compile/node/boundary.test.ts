@@ -1,7 +1,8 @@
+import { createBoundaryStore } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import * as core from '../../../../../core/src';
-import { angleBoundaryOf, boundaryPointOf, getOrCreateNamedAnchor } from '../../../../../core/src/compile/boundary';
+import { evaluateAngleBoundaryPoint, evaluateBoundaryPoint } from '../../../../../core/src/compile/boundary';
 import { layoutNode } from '../../../../../core/src/compile/node';
 import { createPositionEvaluateContext } from '../../../../../core/src/compile/reference';
 import { resolveBoundaryRegistry, resolvePatternRegistry, BUILTIN_SHAPES } from '../../../../../core/src/providers';
@@ -92,7 +93,7 @@ const layoutBoundaryNode = (node: IRNode, namespaceStack: NamespaceStack) =>
   })();
 
 describe('边界感知边界/规范', () => {
-  it("boundaryPointOf 缺省参数等价于 'shape'", () => {
+  it("evaluateBoundaryPoint 缺省参数等价于 'shape'", () => {
     const namespaceStack = new NamespaceStack();
     const layout = layoutBoundaryNode(
       {
@@ -106,10 +107,10 @@ describe('边界感知边界/规范', () => {
     const toward: [number, number] = [100, 0];
 
     // 缺省与显式 'shape' 结果相同
-    expect(boundaryPointOf(layout, toward)).toEqual(boundaryPointOf(layout, toward, 'shape'));
+    expect(evaluateBoundaryPoint(layout, toward)).toEqual(evaluateBoundaryPoint(layout, toward, 'shape'));
   });
 
-  it('angleBoundaryOf 缺省与显式 shape 等价', () => {
+  it('evaluateAngleBoundaryPoint 缺省与显式 shape 等价', () => {
     const namespaceStack = new NamespaceStack();
     const layout = layoutBoundaryNode(
       {
@@ -121,8 +122,8 @@ describe('边界感知边界/规范', () => {
       namespaceStack,
     );
 
-    expect(angleBoundaryOf(layout, 0)).toEqual(angleBoundaryOf(layout, 0, 'shape'));
-    expect(angleBoundaryOf(layout, 90)).toEqual(angleBoundaryOf(layout, 90, 'shape'));
+    expect(evaluateAngleBoundaryPoint(layout, 0)).toEqual(evaluateAngleBoundaryPoint(layout, 0, 'shape'));
+    expect(evaluateAngleBoundaryPoint(layout, 90)).toEqual(evaluateAngleBoundaryPoint(layout, 90, 'shape'));
   });
 
   it('tight boundary 在 fit / gap 后应用 margin，自动端点与标准/数字 anchor 一致', () => {
@@ -139,9 +140,9 @@ describe('边界感知边界/规范', () => {
       namespaceStack,
     );
     const boundary = { type: 'circle', params: { fit: 'tight', gap: 2 } } as const;
-    const automatic = boundaryPointOf(layout, [100, 0], boundary);
-    const standard = getOrCreateNamedAnchor(layout, 'right', boundary);
-    const numeric = getOrCreateNamedAnchor(layout, '0', boundary);
+    const automatic = evaluateBoundaryPoint(layout, [100, 0], boundary);
+    const standard = createBoundaryStore().getOrCreateAnchor(layout, 'right', boundary);
+    const numeric = createBoundaryStore().getOrCreateAnchor(layout, '0', boundary);
 
     expect(standard[0]).toBeCloseTo(automatic[0]);
     expect(standard[1]).toBeCloseTo(automatic[1]);
@@ -161,7 +162,7 @@ describe('公共导出+剩余象限', () => {
   });
 
   it('boundary_unregistered_throws: boundary 指向未注册 shape 且有 path 连到该节点时编译抛错', () => {
-    // resolveBoundary 在 clipForTarget → boundaryPointOf 里被调用（有 path 才触发）
+    // resolveBoundary 在 clipForTarget → evaluateBoundaryPoint 里被调用（有 path 才触发）
     const ir: core.IRScene = {
       version: 1,
       type: 'scene',
