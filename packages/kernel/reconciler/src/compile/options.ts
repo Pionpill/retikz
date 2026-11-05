@@ -40,13 +40,13 @@ export type CompileLayoutOptions = {
   /**
    * 相对定位距离
    * @description `Node.position` 为 `{ direction, of }` 且未自带 `distance` 时取此值。必须是有限数值，负值表示反方向偏移
-   * @default DEFAULT_NODE_DISTANCE (24)
+   * @default 24
    */
   nodeDistance?: number;
   /**
    * 节点 label 视觉盒与节点边界的默认净距
    * @description `Node.label.distance` 未设置时取此值，必须是 finite nonnegative number
-   * @default DEFAULT_LABEL_DISTANCE (12)
+   * @default 12
    */
   labelDistance?: number;
   /**

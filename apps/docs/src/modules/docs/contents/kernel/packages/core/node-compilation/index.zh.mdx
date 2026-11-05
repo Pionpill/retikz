@@ -23,7 +23,7 @@ description: 追踪 Core 如何把文字度量和形状约束转为节点尺寸�
 
 <SourceLinks
   sources={[
-    { label: 'layoutNode：节点布局入口', path: 'packages/kernel/core/src/compile/node/layout/layout.ts' },
+    { label: 'layoutNode：节点布局入口', path: 'packages/kernel/core/src/compile/node/layout.ts' },
     { label: 'CanonicalNode：布局输入', path: 'packages/kernel/core/src/resolve/node/types.ts' },
     {
       label: 'CompiledNode：最终几何、排版与样式',
@@ -48,7 +48,7 @@ Reconciler 在同次编译内按文字与字体参数共享度量，使不同节
     { label: '缺省文字估算器', path: 'packages/kernel/core/src/compile/text/layout.ts' },
     { label: 'TextMetrics', path: 'packages/kernel/core/src/contract/text.ts' },
     { label: 'resolveTextMetrics', path: 'packages/kernel/core/src/resolve/text/metrics.ts' },
-    { label: '正文分支与物理行汇总', path: 'packages/kernel/core/src/compile/node/layout/content.ts' },
+    { label: '正文分支与物理行汇总', path: 'packages/kernel/core/src/compile/node/content/layout.ts' },
     { label: '普通文本折行', path: 'packages/kernel/core/src/compile/text/block.ts' },
     { label: '混排行的度量与基线对齐', path: 'packages/kernel/core/src/compile/text/layout.ts' },
   ]}
@@ -86,9 +86,10 @@ Reconciler 在同次编译内按文字与字体参数共享度量，使不同节
 <SourceLinks
   sources={[
     {
-      label: '内容预算、computeCircumscribedGeometry 与尺寸约束',
-      path: 'packages/kernel/core/src/compile/node/layout/layout.ts',
+      label: '内容预算与尺寸约束',
+      path: 'packages/kernel/core/src/compile/node/layout.ts',
     },
+    { label: '形状外接几何计算', path: 'packages/kernel/core/src/compile/node/shape/layout.ts' },
     { label: '形状定义的包围契约', path: 'packages/kernel/core/src/contract/node/shape.ts' },
   ]}
 />
@@ -107,10 +108,10 @@ Reconciler 在同次编译内按文字与字体参数共享度量，使不同节
 
 <SourceLinks
   sources={[
-    { label: '正文行高与基线偏移', path: 'packages/kernel/core/src/compile/node/layout/content.ts' },
-    { label: '标签测量与放置', path: 'packages/kernel/core/src/compile/node/layout/label.ts' },
-    { label: '标签净距与视觉范围', path: 'packages/kernel/core/src/compile/node/label-geometry.ts' },
-    { label: '绘制与观测共用的物理行基线', path: 'packages/kernel/core/src/compile/node/emit.ts' },
+    { label: '正文行高与基线偏移', path: 'packages/kernel/core/src/compile/node/content/layout.ts' },
+    { label: '标签测量与放置', path: 'packages/kernel/core/src/compile/node/label/layout.ts' },
+    { label: '标签净距与视觉范围', path: 'packages/kernel/core/src/compile/node/label/layout.ts' },
+    { label: '绘制与观测共用的物理行基线', path: 'packages/kernel/core/src/compile/node/content/emit.ts' },
   ]}
 />
 
@@ -142,7 +143,7 @@ Reconciler 在同次编译内按文字与字体参数共享度量，使不同节
 
 <ComponentPreview files="layout-implementation" size="xl" hideCode type="flow" />
 
-阅读源码时从 `compileNode` 开始。它消费 `CanonicalNode` 和可选的准备结果，缺少布局时才调用 `layoutNode`，复用条件由 Reconciler 判断。`layout/` 按内部阶段组织：`content.ts` 排版正文，`size.ts` 处理形状尺寸与宽度反馈，`label.ts` 测量和放置标签，`placement.ts` 完成锚点定位；`layout.ts` 串联这些步骤。宽度反馈负责最多 32 次有界试算，测量复用由本次编译注入的测量器负责。最终 `CompiledNode` 分开保存几何、占位、元数据、样式、正文、标签和动画，并直接保留后续几何查询必需的形状与连接面绑定。
+阅读源码时从 `compileNode` 开始。它消费 `CanonicalNode` 和可选的准备结果，缺少布局时才调用 `layoutNode`，复用条件由 Reconciler 判断。`content/`、`label/`、`shape/` 按产物组织，各自维护 `layout.ts` 和 `emit.ts`，分别处理正文、标签和形状的计算与绘制。节点根目录的 `layout.ts` 协调各产物，在文件内部完成正文宽度与形状尺寸之间的反馈、锚点定位及整体布局；`emit.ts` 组装节点图元与边界。宽度反馈负责最多 32 次有界试算，测量复用由本次编译注入的测量器负责。最终 `CompiledNode` 分开保存几何、占位、元数据、样式、正文、标签和动画，并直接保留后续几何查询必需的形状与连接面绑定。
 
 遍历器随后把几何投影到世界空间，供命名引用查询；绘制阶段把局部布局转为形状、正文和标签图元。命名空间中的引用几何与 Scene 中的局部图元用途不同，不必把所有绘制坐标提前展开成世界坐标。
 
@@ -150,6 +151,9 @@ Reconciler 在同次编译内按文字与字体参数共享度量，使不同节
   sources={[
     { label: '布局结果的数据结构', path: 'packages/kernel/core/src/compile/node/types.ts', startLine: 42 },
     { label: '节点布局到图元', path: 'packages/kernel/core/src/compile/node/emit.ts' },
+    { label: '正文图元', path: 'packages/kernel/core/src/compile/node/content/emit.ts' },
+    { label: '标签图元与引线', path: 'packages/kernel/core/src/compile/node/label/emit.ts' },
+    { label: '形状提供者输出', path: 'packages/kernel/core/src/compile/node/shape/emit.ts' },
     { label: '布局、引用注册与绘制的交接', path: 'packages/kernel/reconciler/src/compile/tree/node/visit.ts' },
   ]}
 />

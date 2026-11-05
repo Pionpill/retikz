@@ -1,4 +1,4 @@
-import type { TextFont, TextMeasurer } from '../../../contract';
+import type { TextFont, TextMeasurer } from '../../contract';
 
 /** CJK / 全角字符范围：无需空白分隔，折行时可按单字符切分 */
 const isCjk = (ch: string): boolean => {

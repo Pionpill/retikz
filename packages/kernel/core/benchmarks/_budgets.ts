@@ -188,7 +188,7 @@ export const resolveCoreBudget = (scenario: BenchmarkScenario): BenchmarkBudget 
               warningMs: 0.5,
               errorMs: 2,
               rationale:
-                'compile/node/layout/content、node/layout/label、path/host/label 共用行解析；假设单个长行编辑（16384字符或2048混排片段），给分段及字体确定化0.5/2ms，字体测量和TeX排版另计',
+                'compile/node/content/layout、node/label/layout、path/host/label 共用行解析；假设单个长行编辑（16384字符或2048混排片段），给分段及字体确定化0.5/2ms，字体测量和TeX排版另计',
             }
           : {
               warningMs: 0.05,

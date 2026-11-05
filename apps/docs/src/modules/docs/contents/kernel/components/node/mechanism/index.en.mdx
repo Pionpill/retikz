@@ -25,7 +25,7 @@ Fonts, wrapping, and padding change the required content area. `minimumSize` can
   sources={[
     {
       label: 'Lay out text, spacing, and the shape',
-      path: 'packages/kernel/core/src/compile/node/layout/layout.ts',
+      path: 'packages/kernel/core/src/compile/node/layout.ts',
     },
   ]}
 />
@@ -42,7 +42,7 @@ The label has its own text box. The compiler uses its rotated box and `distance`
   sources={[
     {
       label: 'Label visual box and attachment offset',
-      path: 'packages/kernel/core/src/compile/node/label-geometry.ts',
+      path: 'packages/kernel/core/src/compile/node/label/layout.ts',
     },
   ]}
 />
@@ -51,7 +51,7 @@ The label has its own text box. The compiler uses its rotated box and `distance`
   sources={[
     {
       label: 'Collect node and label extents separately',
-      path: 'packages/kernel/core/src/compile/node/output.ts',
+      path: 'packages/kernel/core/src/compile/node/emit.ts',
     },
   ]}
 />
@@ -260,7 +260,7 @@ A per-line `font` still participates in that line's width measurement; wrapping,
     },
     {
       label: 'Node body text layout',
-      path: 'packages/kernel/core/src/compile/node/layout/content.ts',
+      path: 'packages/kernel/core/src/compile/node/content/layout.ts',
     },
   ]}
 />
@@ -367,7 +367,7 @@ The result of `<Rectangle>` is pure Path geometry. A rectangular `<Node>` retain
     },
     {
       label: 'Text and padding to shape-boundary layout',
-      path: 'packages/kernel/core/src/compile/node/layout/layout.ts',
+      path: 'packages/kernel/core/src/compile/node/layout.ts',
     },
     {
       label: 'Rectangle outline, anchors, and boundary intersection',

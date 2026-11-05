@@ -112,6 +112,8 @@ Reconciler 使用 Foundation 的 `createIdAllocator(prefix)` 分配树内唯一�
 
 Reconciler 的 `compile/runtime` 管理稳定环境与单次工作区，包括名称栈、变换缓存及组件状态。Core 的 `compile` 按 node、path、scope 等领域组织原子计算，节点布局类型归 `compile/node/types.ts`；共享的连接面、锚点、几何投影和消费状态归 `compile/boundary`，通用输出及边界贡献类型归 `compile/scene/types.ts`。`compile/reference` 负责名称引用与位置表达式求值，直接消费共享边界能力。树遍历与阶段调度属于 Reconciler。
 
+相对定位距离和节点标签净距由 Reconciler 在创建共享上下文时补齐，默认分别为 `24` 和 `12`。Core 阶段只消费上下文中的有效值，不再次兜底；这两个默认距离常量属于 Reconciler 的内部配置，不再从 Core 导出。
+
 环境按职责分为四组：
 
 | 分组         | 内容                                 |
@@ -239,7 +241,7 @@ Reconciler 比较有效配置、编译上下文及实际引用几何，并由 We
 <SourceLinks
   sources={[
     { label: 'resolveNode：有效配置与能力绑定', path: 'packages/kernel/core/src/resolve/node/resolve.ts' },
-    { label: '节点布局', path: 'packages/kernel/core/src/compile/node/layout/layout.ts' },
+    { label: '节点布局', path: 'packages/kernel/core/src/compile/node/layout.ts' },
     { label: '节点图元生成', path: 'packages/kernel/core/src/compile/node/emit.ts' },
   ]}
 />

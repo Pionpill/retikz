@@ -25,7 +25,7 @@ description: 解释节点尺寸、连接面、文字处理与引用时序
   sources={[
     {
       label: '正文与间距参与形状布局',
-      path: 'packages/kernel/core/src/compile/node/layout/layout.ts',
+      path: 'packages/kernel/core/src/compile/node/layout.ts',
     },
   ]}
 />
@@ -42,7 +42,7 @@ description: 解释节点尺寸、连接面、文字处理与引用时序
   sources={[
     {
       label: '标签视觉框与附着偏移',
-      path: 'packages/kernel/core/src/compile/node/label-geometry.ts',
+      path: 'packages/kernel/core/src/compile/node/label/layout.ts',
     },
   ]}
 />
@@ -51,7 +51,7 @@ description: 解释节点尺寸、连接面、文字处理与引用时序
   sources={[
     {
       label: '节点与标签分别收集内容范围',
-      path: 'packages/kernel/core/src/compile/node/output.ts',
+      path: 'packages/kernel/core/src/compile/node/emit.ts',
     },
   ]}
 />
@@ -257,7 +257,7 @@ Map 的 key 是 `id`，value 包含 `layout` 和 `state`。`layout` 是已解析
     },
     {
       label: 'Node 正文文本布局',
-      path: 'packages/kernel/core/src/compile/node/layout/content.ts',
+      path: 'packages/kernel/core/src/compile/node/content/layout.ts',
     },
   ]}
 />
@@ -364,7 +364,7 @@ Map 的 key 是 `id`，value 包含 `layout` 和 `state`。`layout` 是已解析
     },
     {
       label: '文字与 padding 到形状边界的布局',
-      path: 'packages/kernel/core/src/compile/node/layout/layout.ts',
+      path: 'packages/kernel/core/src/compile/node/layout.ts',
     },
     {
       label: '矩形轮廓、anchor 与边界交点',

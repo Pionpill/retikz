@@ -1,8 +1,9 @@
 import type { CanonicalNode } from '../../resolve';
 import { splitCompiledDrawing } from '../scene';
-import { projectNodeTextStyle, emitNodeShapePrimitives, emitNodeLabelPrimitives } from './emit';
+import { alignmentGuidesOfNode, buildNodeTextStyle } from './content';
+import { emitNodeLabelPrimitives } from './label';
 import { layoutNode } from './layout';
-import { alignmentGuidesOfNode } from './layout-metrics';
+import { emitNodeShapePrimitives } from './shape';
 import type { CompiledNode, CompiledNodeLayout, NodeCompileContext, PreparedNodeCompilation } from './types';
 
 /** 编译当前节点，直接消费已准备的布局或完成测量定位，不判断跨次复用条件 */
@@ -36,7 +37,7 @@ export const compileNode = (
       shape: shape.style,
       shadow: canon.style.shadow,
     },
-    text: layout.text === undefined ? undefined : { layout: layout.text, style: projectNodeTextStyle(canon) },
+    text: layout.text === undefined ? undefined : { layout: layout.text, style: buildNodeTextStyle(canon) },
     labels: (layout.labels ?? []).map((label, index) => {
       const { laid, ...metrics } = label;
       void laid;

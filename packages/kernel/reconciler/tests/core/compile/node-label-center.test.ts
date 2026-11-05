@@ -1,4 +1,3 @@
-import { DEFAULT_LABEL_DISTANCE } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { ScenePrimitive, TextPrimitive } from '../../../../core/src/contract';
@@ -68,6 +67,6 @@ describe('Node 标签位置中心', () => {
 
     expect(defaultLabel).toBeDefined();
     expect(customLabel).toBeDefined();
-    expect(customLabel!.x - defaultLabel!.x).toBeCloseTo(customDistance - DEFAULT_LABEL_DISTANCE);
+    expect(customLabel!.x - defaultLabel!.x).toBeCloseTo(customDistance - 12);
   });
 });

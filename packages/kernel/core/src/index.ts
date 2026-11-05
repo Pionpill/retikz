@@ -1,9 +1,7 @@
 export {
   BuiltinCompileWarningCode,
   DEFAULT_FONT_SIZE,
-  DEFAULT_LABEL_DISTANCE,
   DEFAULT_MAX_CLIP_DEPTH,
-  DEFAULT_NODE_DISTANCE,
   DEFAULT_PRECISION,
   alignmentGuidesOfNode,
   allocationPointsOf,

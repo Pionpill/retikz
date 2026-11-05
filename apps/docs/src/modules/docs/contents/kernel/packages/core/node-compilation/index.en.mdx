@@ -25,7 +25,7 @@ The text is first split into the lines that will actually be displayed, called *
   sources={[
     {
       label: 'layoutNode: layout entry point',
-      path: 'packages/kernel/core/src/compile/node/layout/layout.ts',
+      path: 'packages/kernel/core/src/compile/node/layout.ts',
     },
     { label: 'CanonicalNode: layout input', path: 'packages/kernel/core/src/resolve/node/types.ts' },
     {
@@ -53,7 +53,7 @@ Reconciler shares metrics by text and font values across nodes and probes within
     { label: 'resolveTextMetrics', path: 'packages/kernel/core/src/resolve/text/metrics.ts' },
     {
       label: 'Content branches and physical lines',
-      path: 'packages/kernel/core/src/compile/node/layout/content.ts',
+      path: 'packages/kernel/core/src/compile/node/content/layout.ts',
     },
     { label: 'Shared text layout', path: 'packages/kernel/core/src/compile/text/block.ts' },
     { label: 'Mixed-line measurement and baseline alignment', path: 'packages/kernel/core/src/compile/text/layout.ts' },
@@ -92,9 +92,10 @@ Asymmetric padding can also make the visual box center differ from the content c
 <SourceLinks
   sources={[
     {
-      label: 'Content budgets, circumscribe, and size constraints',
-      path: 'packages/kernel/core/src/compile/node/layout/layout.ts',
+      label: 'Content budgets and size constraints',
+      path: 'packages/kernel/core/src/compile/node/layout.ts',
     },
+    { label: 'Shape circumscribed geometry', path: 'packages/kernel/core/src/compile/node/shape/layout.ts' },
     { label: 'Shape containment contract', path: 'packages/kernel/core/src/contract/node/shape.ts' },
   ]}
 />
@@ -113,15 +114,15 @@ When placement aligns a node's own anchor with a target, Core first needs a prov
 
 <SourceLinks
   sources={[
-    { label: 'Line height and baseline offsets', path: 'packages/kernel/core/src/compile/node/layout/content.ts' },
-    { label: 'Label measurement and placement', path: 'packages/kernel/core/src/compile/node/layout/label.ts' },
+    { label: 'Line height and baseline offsets', path: 'packages/kernel/core/src/compile/node/content/layout.ts' },
+    { label: 'Label measurement and placement', path: 'packages/kernel/core/src/compile/node/label/layout.ts' },
     {
       label: 'Label clearance and visual extents',
-      path: 'packages/kernel/core/src/compile/node/label-geometry.ts',
+      path: 'packages/kernel/core/src/compile/node/label/layout.ts',
     },
     {
       label: 'Physical baselines shared by emission and observation',
-      path: 'packages/kernel/core/src/compile/node/emit.ts',
+      path: 'packages/kernel/core/src/compile/node/content/emit.ts',
     },
   ]}
 />
@@ -157,7 +158,7 @@ The flow below follows a plain-text node. The left side shows layout stages; the
 
 <ComponentPreview files="layout-implementation" size="xl" hideCode type="flow" />
 
-Start reading at `compileNode`. It consumes `CanonicalNode` and optional prepared results, calling `layoutNode` only when layout is absent; Reconciler decides whether results can be reused. The `layout/` directory follows internal phases: `content.ts` lays out content, `size.ts` handles shape dimensions and width feedback, `label.ts` measures and places labels, and `placement.ts` resolves anchor positioning. `layout.ts` coordinates these steps. Width feedback remains bounded to 32 attempts; the measurer injected for the current compilation handles measurement reuse. The final `CompiledNode` separates geometry, metrics, metadata, styles, text, labels, and animations, and retains the shape and boundary bindings needed by later geometry queries.
+Start reading at `compileNode`. It consumes `CanonicalNode` and optional prepared results, calling `layoutNode` only when layout is absent; Reconciler decides whether results can be reused. The `content/`, `label/`, and `shape/` directories group code by product, each with a `layout.ts` and an `emit.ts` for calculation and drawing. The node-level `layout.ts` coordinates these products, keeping feedback between text width and shape dimensions, anchor positioning, and overall layout in the same file. The top-level `emit.ts` assembles node primitives and bounds. Width feedback remains bounded to 32 attempts; the measurer injected for the current compilation handles measurement reuse. The final `CompiledNode` separates geometry, metrics, metadata, styles, text, labels, and animations, and retains the shape and boundary bindings needed by later geometry queries.
 
 Traversal then projects geometry into world space for named references. Emission turns the local layout into shape, body-text, and label primitives. Reference geometry in the namespace and local primitives in Scene have different consumers; drawing coordinates do not all need to be expanded into world coordinates beforehand.
 
@@ -165,6 +166,9 @@ Traversal then projects geometry into world space for named references. Emission
   sources={[
     { label: 'Layout result structure', path: 'packages/kernel/core/src/compile/node/types.ts', startLine: 42 },
     { label: 'From node layout to primitives', path: 'packages/kernel/core/src/compile/node/emit.ts' },
+    { label: 'Body-text primitives', path: 'packages/kernel/core/src/compile/node/content/emit.ts' },
+    { label: 'Label primitives and pins', path: 'packages/kernel/core/src/compile/node/label/emit.ts' },
+    { label: 'Shape provider output', path: 'packages/kernel/core/src/compile/node/shape/emit.ts' },
     {
       label: 'Layout, registration, and emission handoff',
       path: 'packages/kernel/reconciler/src/compile/tree/node/visit.ts',

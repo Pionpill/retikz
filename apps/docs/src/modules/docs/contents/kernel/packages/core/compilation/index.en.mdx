@@ -114,6 +114,8 @@ After successful compilation, repeated declarations of an ID in the same namespa
 
 Reconciler owns stable environments and per-execution workspaces in `compile/runtime`, including namespaces, transform caches, and component state. Core organizes atomic computation by domain under `compile`: node, path, and scope. Node layout types live in `compile/node/types.ts`. Shared connection boundaries, anchors, geometry projection, and query state belong to `compile/boundary`; common output and bounds contribution types belong to `compile/scene/types.ts`. `compile/reference` evaluates named references and position expressions using the shared boundary capabilities. Tree traversal and stage scheduling belong to Reconciler.
 
+Reconciler fills in relative positioning distance and node label spacing when creating the shared context, defaulting to `24` and `12` respectively. Core stages consume the supplied effective values without applying another fallback. These two default distance constants are internal Reconciler configuration and are no longer exported from Core.
+
 The shared context has four groups:
 
 | Group        | Contents                                                     |
@@ -247,7 +249,7 @@ The layout border uses a center position; a Scene rectangle uses its top-left co
       label: 'resolveNode: effective configuration and bindings',
       path: 'packages/kernel/core/src/resolve/node/resolve.ts',
     },
-    { label: 'Node layout', path: 'packages/kernel/core/src/compile/node/layout/layout.ts' },
+    { label: 'Node layout', path: 'packages/kernel/core/src/compile/node/layout.ts' },
     { label: 'Node primitive emission', path: 'packages/kernel/core/src/compile/node/emit.ts' },
   ]}
 />

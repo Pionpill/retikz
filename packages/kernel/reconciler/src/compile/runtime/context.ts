@@ -13,9 +13,7 @@ import type {
 } from '@retikz/core';
 import {
   DEFAULT_FONT_SIZE,
-  DEFAULT_LABEL_DISTANCE,
   DEFAULT_MAX_CLIP_DEPTH,
-  DEFAULT_NODE_DISTANCE,
   DEFAULT_PRECISION,
   RetikzCoreError,
   RetikzCoreErrorCode,
@@ -34,6 +32,12 @@ import {
 
 import type { CompileHostOptions, CompileLayoutOptions } from '../options';
 import type { CompileOptions } from '../types';
+
+/** 相对定位默认距离，只在编译配置入口补齐 */
+const DEFAULT_NODE_DISTANCE = 24;
+
+/** 节点标签与节点边界的默认净距，只在编译配置入口补齐 */
+const DEFAULT_LABEL_DISTANCE = 12;
 
 /** 复合组件递归深度上限 */
 const DEFAULT_MAX_COMPOSITE_DEPTH = 32;

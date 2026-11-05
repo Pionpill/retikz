@@ -1,12 +1,12 @@
 import type { Position } from '@retikz/math';
 import { DEFAULT_EPSILON, DEG_TO_RAD } from '@retikz/math';
 
-import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import type { CanonicalNodeLabel, CanonicalNodeLabelBoundaryPosition } from '../../resolve';
-import { anchorUnitVectorByAnchor } from '../../shared';
-import { anchorOf, angleBoundaryOf } from '../boundary';
-import { placeLabelBox, calculateLabelRotation } from '../text';
-import type { CompiledNodeLayout, MeasuredNodeLabel, NodeLabelLayout } from './types';
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
+import type { CanonicalNodeLabel, CanonicalNodeLabelBoundaryPosition } from '../../../resolve';
+import { anchorUnitVectorByAnchor } from '../../../shared';
+import { anchorOf, angleBoundaryOf } from '../../boundary';
+import { placeLabelBox, calculateLabelRotation, layoutTextBlock } from '../../text';
+import type { CompiledNodeLayout, MeasuredNodeLabel, NodeLabelLayout, NodeTextLayoutContext } from '../types';
 
 const isLabelBoundaryPosition = (
   position: CanonicalNodeLabel['position'],
@@ -75,7 +75,10 @@ const calculateLabelTangentVector = (position: CanonicalNodeLabel['position']): 
 };
 
 /** label 在 node 边界上的附着点 */
-export const labelBorderPoint = (layout: CompiledNodeLayout, position: CanonicalNodeLabel['position']): Position => {
+export const calculateNodeLabelBorderPoint = (
+  layout: CompiledNodeLayout,
+  position: CanonicalNodeLabel['position'],
+): Position => {
   if (position === 'center') return [layout.geometry.rect.x, layout.geometry.rect.y];
 
   const aaLayout: CompiledNodeLayout = {
@@ -94,7 +97,7 @@ export const labelBorderPoint = (layout: CompiledNodeLayout, position: Canonical
 };
 
 /** 将标签相对节点中心的偏移换算为当前布局坐标中的中心点 */
-export const labelCenter = (
+export const calculateNodeLabelCenter = (
   layout: Pick<CompiledNodeLayout, 'geometry'>,
   label: Pick<NodeLabelLayout, 'centerOffset'>,
 ): Position => {
@@ -102,7 +105,7 @@ export const labelCenter = (
 };
 
 /** 从 label 中心朝 border 方向，求 label 框边界交点 */
-type InputLabelBoxEdgeToward = {
+type InputLabelBoxIntersection = {
   /** 标签视觉盒的中心，与 border 使用同一坐标系 */
   center: Position;
   /** 用于确定从标签中心向外求交方向的目标点 */
@@ -119,13 +122,13 @@ type InputLabelBoxEdgeToward = {
  * 从标签中心朝目标点求旋转矩形的边界交点
  * @returns 射线与视觉盒的首次交点；两点距离小于几何容差时返回原 center 引用
  */
-export const labelBoxEdgeToward = ({
+export const calculateLabelBoxIntersection = ({
   center,
   border,
   halfWidth,
   halfHeight,
   rotateDeg,
-}: InputLabelBoxEdgeToward): Position => {
+}: InputLabelBoxIntersection): Position => {
   const dx = border[0] - center[0];
   const dy = border[1] - center[1];
   const len = Math.hypot(dx, dy);
@@ -174,7 +177,7 @@ export const layoutNodeLabelGeometry = (
       placement: canon.placement,
       align: canon.align,
     },
-    point: labelBorderPoint(layout, canon.position),
+    point: calculateNodeLabelBorderPoint(layout, canon.position),
     outward: calculateLabelPlacementVector(canon.position),
     tangent: calculateLabelTangentVector(canon.position),
     width: label.measuredWidth,
@@ -193,7 +196,7 @@ export const layoutNodeLabelGeometry = (
  * 节点 label 的外接点
  * @description 用于顶层 bbox / viewBox 计算
  */
-export const labelExtentPoints = (
+export const calculateNodeLabelExtentPoints = (
   layout: Pick<CompiledNodeLayout, 'geometry'> & { labels?: Array<Omit<NodeLabelLayout, 'laid'>> },
 ): Array<Position> => {
   if (!layout.labels || layout.labels.length === 0) return [];
@@ -206,7 +209,7 @@ export const labelExtentPoints = (
   const pts: Array<Position> = [];
 
   for (const lab of layout.labels) {
-    const [lx, ly] = labelCenter(layout, lab);
+    const [lx, ly] = calculateNodeLabelCenter(layout, lab);
     const halfW = lab.measuredWidth / 2;
     const halfH = lab.measuredHeight / 2;
     const labelRad = lab.rotateDeg * DEG_TO_RAD;
@@ -234,3 +237,40 @@ export const labelExtentPoints = (
 
   return pts;
 };
+
+/** 测量节点附属 label，不读取 Node rect */
+export const measureNodeLabels = (
+  input: NodeTextLayoutContext,
+): Array<{ layout: MeasuredNodeLabel; canon: CanonicalNodeLabel }> | undefined => {
+  const { canon, measureText, tex: texLowering } = input;
+  if (canon.labels.length === 0) return undefined;
+  const inlineWarn = texLowering?.warn ?? ((): void => {});
+
+  return canon.labels.map(lab => {
+    const laid = layoutTextBlock(
+      lab.text.lines,
+      {
+        lineHeight: lab.text.lineHeight,
+        maxTextWidth: lab.text.maxTextWidth,
+      },
+      { measureText, lowerTex: texLowering?.lowerTex, font: lab.text.font, warn: inlineWarn },
+    );
+    return {
+      canon: lab,
+      layout: {
+        laid,
+        measuredWidth: laid.width,
+        measuredHeight: laid.height,
+        ascent: laid.height / 2,
+        descent: laid.height / 2,
+      },
+    };
+  });
+};
+
+/** 把已测量 label 绑定到最终 Node rect */
+export const layoutNodeLabels = (
+  layout: CompiledNodeLayout,
+  labels: Array<{ layout: MeasuredNodeLabel; canon: CanonicalNodeLabel }> | undefined,
+): Array<NodeLabelLayout> | undefined =>
+  labels?.map(label => layoutNodeLabelGeometry(layout, label.layout, label.canon));
