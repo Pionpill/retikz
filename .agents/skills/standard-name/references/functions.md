@@ -28,6 +28,9 @@
 | `snapshotXxx` / `sealXxx`            | 分别表达脱离复制，或移除不允许语义并最终冻结                            | 内部包含校验时仍按主要产物动作命名，并在 JSDoc 说明校验               |
 | `tryXxx`                             | 尝试可能失败的动作，将预期失败编码进返回值                              | 成功必然发生或失败仍抛错时不得添加 `try`                              |
 | `lowerXxx` / `layoutXxx` / `emitXxx` | 分别表达语义下沉、布局计算和 Scene / primitive 输出                     | 不使用 `processXxx`、`handleXxx`、`completeXxx` 等泛化阶段词          |
+| `measureXxx`                         | 获取内容的宽高、基线等度量指标                                          | 可调用内部排版，不决定对象在宿主中的最终位置                          |
+| `placeXxx`                           | 根据已有尺寸、锚点、方向与距离确定对象位置和朝向                        | 不承担内容解析或完整排版                                              |
+| `sampleXxx`                          | 按参数位置取得曲线或路径的点、切线等局部几何信息                        | 不表示整体度量；随机采样或性能采样须在名称中明确对象                  |
 | `collectXxx`                         | 遍历并收集明确领域对象或 diagnostics                                    | 名称必须说明收集对象；不是所有返回数组的函数都叫 `collect`            |
 | `defineXxx`                          | 声明并返回具体 `XxxDefinition`                                          | 不使用泛化 `createDefinition`                                         |
 | `resolveXxxRegistry`                 | 合并并解析 registry                                                     | 可表达优先级或诊断，不与直接 lookup 混用                              |
