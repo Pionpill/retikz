@@ -120,42 +120,61 @@ const calculateEllipseBounds = (cx: number, cy: number, rx: number, ry: number, 
   };
 };
 
-/** 提取命令的保守边界点，曲线使用控制点包络 */
-const calculateCommandBoundsPoints = (command: PathCommand): Array<IRPosition> => {
-  switch (command.kind) {
-    case 'move':
-    case 'line':
-      return [command.to];
-    case 'quad':
-      return [command.control, command.to];
-    case 'cubic':
-      return [command.control1, command.control2, command.to];
-    case 'arc':
-      return [
-        [command.center[0] - command.radius, command.center[1] - command.radius],
-        [command.center[0] + command.radius, command.center[1] + command.radius],
-      ];
-    case 'ellipseArc': {
-      const rect = calculateEllipseBounds(
-        command.center[0],
-        command.center[1],
-        command.radiusX,
-        command.radiusY,
-        command.rotation,
-      );
-      return [
-        [rect.x, rect.y],
-        [rect.x + rect.width, rect.y + rect.height],
-      ];
-    }
-    case 'close':
-      return [];
-  }
-};
+/** 单次遍历汇总命令的保守边界，曲线仍使用控制点包络，不物化中间点集 */
+const calculatePathBounds = (commands: ReadonlyArray<PathCommand>): BoundsRect | undefined => {
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  let pointCount = 0;
 
-/** 合并路径命令的保守边界点 */
-const calculatePathBounds = (commands: ReadonlyArray<PathCommand>): BoundsRect | undefined =>
-  calculatePointBounds(commands.flatMap(calculateCommandBoundsPoints));
+  /** 保持boundsOf的比较顺序、负零与非有限数语义，仅将点提取和扫描融合 */
+  const includePoint = (x: number, y: number): void => {
+    if (x < minX) minX = x;
+    if (y < minY) minY = y;
+    if (x > maxX) maxX = x;
+    if (y > maxY) maxY = y;
+    pointCount++;
+  };
+
+  for (const command of commands) {
+    switch (command.kind) {
+      case 'move':
+      case 'line':
+        includePoint(command.to[0], command.to[1]);
+        break;
+      case 'quad':
+        includePoint(command.control[0], command.control[1]);
+        includePoint(command.to[0], command.to[1]);
+        break;
+      case 'cubic':
+        includePoint(command.control1[0], command.control1[1]);
+        includePoint(command.control2[0], command.control2[1]);
+        includePoint(command.to[0], command.to[1]);
+        break;
+      case 'arc':
+        includePoint(command.center[0] - command.radius, command.center[1] - command.radius);
+        includePoint(command.center[0] + command.radius, command.center[1] + command.radius);
+        break;
+      case 'ellipseArc': {
+        const rect = calculateEllipseBounds(
+          command.center[0],
+          command.center[1],
+          command.radiusX,
+          command.radiusY,
+          command.rotation,
+        );
+        includePoint(rect.x, rect.y);
+        includePoint(rect.x + rect.width, rect.y + rect.height);
+        break;
+      }
+      case 'close':
+        break;
+    }
+  }
+
+  return pointCount === 0 ? undefined : boundsToRect({ minX, minY, maxX, maxY });
+};
 
 /** 按线宽及 miter 上限扩张几何边界 */
 const expandStroke = (rect: BoundsRect, strokeWidth: number | undefined, hasMiterJoin: boolean): BoundsRect => {
@@ -231,6 +250,8 @@ const samplePathEndpoints = (
       }
       case 'ellipseArc': {
         const theta = (command.rotation ?? 0) * DEG_TO_RAD;
+        const cos = Math.cos(theta);
+        const sin = Math.sin(theta);
 
         /** 在椭圆局部角度处采样旋转后的点和切线 */
         const sampleEllipsePoint = (degrees: number): EndpointSample => {
@@ -241,11 +262,8 @@ const samplePathEndpoints = (
           const ty = command.radiusY * Math.cos(angle);
 
           return {
-            point: [
-              command.center[0] + x * Math.cos(theta) - y * Math.sin(theta),
-              command.center[1] + x * Math.sin(theta) + y * Math.cos(theta),
-            ],
-            tangent: [tx * Math.cos(theta) - ty * Math.sin(theta), tx * Math.sin(theta) + ty * Math.cos(theta)],
+            point: [command.center[0] + x * cos - y * sin, command.center[1] + x * sin + y * cos],
+            tangent: [tx * cos - ty * sin, tx * sin + ty * cos],
           };
         };
 
@@ -277,6 +295,13 @@ const calculateMarkerBounds = (
   path: PathPrimitive,
   resources: ReadonlyMap<string, SceneResource>,
 ): BoundsRect | undefined => {
+  // 没有可见箭头时无需遍历路径计算端点与切线
+  if (
+    (path.arrowStart === undefined || path.arrowStart.opacity === 0) &&
+    (path.arrowEnd === undefined || path.arrowEnd.opacity === 0)
+  )
+    return undefined;
+
   const samples = samplePathEndpoints(path.commands);
   const strokeWidth = path.strokeWidth ?? 1;
   const contextStroke = typeof path.stroke === 'string' ? path.stroke : 'currentColor';

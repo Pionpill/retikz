@@ -51,9 +51,9 @@ describe('共享文本块布局', () => {
       block.lines.map(line => line.lineLayout.pieces.map(piece => (piece.kind === 'text' ? piece.text : '')).join('')),
     ).toEqual(['ab', 'cd']);
   });
-  it('硬换行保留空行并使用实际基线和统一行槽', () => {
+  it.each([undefined, 10])('宽度限制为 %s 时硬换行保留空行与统一行槽', maxTextWidth => {
     const lines = [resolveTestLine('a\n\nb', resolveContext)];
-    const block = layoutTextBlock(lines, { lineHeight: 20 }, context);
+    const block = layoutTextBlock(lines, { lineHeight: 20, maxTextWidth }, context);
     expect(block.height).toBe(60);
     expect(block.lines.map(line => line.baselineOffset)).toEqual([13, 33, 53]);
     expect(block.lines.map(line => line.sourceLineIndex)).toEqual([0, 0, 0]);
@@ -96,5 +96,45 @@ describe('共享文本块布局', () => {
     );
     expect(block.lines.map(line => line.lineLayout.width)).toEqual([5, 30, 5]);
     expect(block.height).toBe(39);
+  });
+
+  it('跨片段折行保留内部空片段的行高与后续公式来源', () => {
+    const block = layoutTextBlock(
+      [
+        {
+          segments: [
+            { text: 'ab', font },
+            { text: '', font: { size: 40 } },
+            { text: 'cd', font },
+            { tex: 'x', fontSize: 10 },
+            { text: '', font },
+            { text: 'ef', font },
+          ],
+        },
+      ],
+      { lineHeight: 12, maxTextWidth: 20 },
+      {
+        ...context,
+        measureText: (text, currentFont) => ({
+          width: text.length * 5,
+          height: currentFont.size,
+          ascent: currentFont.size * 0.8,
+          descent: currentFont.size * 0.2,
+        }),
+        lowerTex: () => ({ width: 10, height: 12, depth: 3, paths: [] }),
+      },
+    );
+    expect(block.width).toBe(20);
+    expect(block.height).toBe(52);
+    expect(block.lines.map(line => line.baselineOffset)).toEqual([32, 49]);
+    expect(block.lines.map(line => line.lineLayout.pieces.map(piece => piece.segmentIndex))).toEqual([
+      [0, 1, 2],
+      [3, 4, 5],
+    ]);
+    expect(block.lines[1].lineLayout.pieces).toMatchObject([
+      { kind: 'math', x: 0 },
+      { kind: 'text', text: '', x: 10 },
+      { kind: 'text', text: 'ef', x: 10 },
+    ]);
   });
 });

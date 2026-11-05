@@ -94,8 +94,8 @@ export const layoutTextBlock = (
   const lines: Array<CompiledTextBlockLine> = [];
   let width = 0;
   let height = 0;
-  const words = new Intl.Segmenter(undefined, { granularity: 'word' });
-  const graphemes = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
+  let words: Intl.Segmenter | undefined;
+  let graphemes: Intl.Segmenter | undefined;
 
   for (const [sourceLineIndex, source] of sourceLines.entries()) {
     let pieces: CompiledTextLineLayout['pieces'] = [];
@@ -139,8 +139,18 @@ export const layoutTextBlock = (
     /** 布局作者行的指定范围，复用本行已降解的公式 */
     const measureRange = (start: number, end: number): CompiledTextLineLayout => {
       const result: CompiledTextLineLayout = { pieces: [], width: 0, ascent: 0, descent: 0 };
-      for (const span of spans) {
-        if (span.end <= start || span.start >= end) continue;
+      // end 按作者顺序单调不减，范围内部的零长片段也参与行高计算
+      let lower = 0;
+      let upper = spans.length;
+      while (lower < upper) {
+        const middle = Math.floor((lower + upper) / 2);
+        if (spans[middle].end <= start) lower = middle + 1;
+        else upper = middle;
+      }
+
+      for (let spanIndex = lower; spanIndex < spans.length; spanIndex++) {
+        const span = spans[spanIndex];
+        if (span.start >= end) break;
         const segment =
           'tex' in span.segment
             ? span.segment
@@ -164,32 +174,42 @@ export const layoutTextBlock = (
     let lineStart = 0;
     let lineEnd = 0;
     /** 用指定范围替换当前物理行布局 */
-    const setRange = (start: number, end: number) => {
+    const setRange = (start: number, end: number, lineLayout = measureRange(start, end)) => {
       lineStart = start;
       lineEnd = end;
-      const lineLayout = measureRange(start, end);
       pieces = lineLayout.pieces;
       lineWidth = lineLayout.width;
       ascent = lineLayout.ascent;
       descent = lineLayout.descent;
     };
+
+    // 无自动折行时每个硬换行范围只求值一次，不重复测量逐片段增长的前缀
+    if (maxTextWidth === undefined) {
+      for (const match of sourceText.matchAll(/\r\n|[\r\n]/g)) {
+        setRange(lineStart, match.index);
+        flushLine();
+        lineStart = match.index + match[0].length;
+      }
+      setRange(lineStart, sourceText.length);
+      flushLine();
+      continue;
+    }
+
     /** 尝试追加文本范围，超出宽度时先提交上一行 */
     const appendRange = (start: number, end: number) => {
-      const candidate = measureRange(pieces.length === 0 ? start : lineStart, end);
-      if (
-        maxTextWidth !== undefined &&
-        pieces.length > 0 &&
-        candidate.width > maxTextWidth &&
-        /\S/u.test(sourceText.slice(start, end))
-      ) {
+      const candidateStart = pieces.length === 0 ? start : lineStart;
+      const candidate = measureRange(candidateStart, end);
+      if (pieces.length > 0 && candidate.width > maxTextWidth && /\S/u.test(sourceText.slice(start, end))) {
         const trimmedEnd = sourceText.slice(lineStart, lineEnd).trimEnd().length + lineStart;
         setRange(lineStart, trimmedEnd);
         flushLine();
         lineStart = start;
         while (lineStart < end && /[^\S\r\n]/u.test(sourceText[lineStart])) lineStart++;
         if (lineStart === end) return;
-      } else if (pieces.length === 0) lineStart = start;
-      setRange(lineStart, end);
+        setRange(lineStart, end);
+      } else {
+        setRange(candidateStart, end, candidate);
+      }
     };
     for (const match of sourceText.matchAll(/\r\n|[\r\n]|\ufffc|[^\r\n\ufffc]+/g)) {
       const text = match[0];
@@ -204,11 +224,13 @@ export const layoutTextBlock = (
         appendRange(start, start + 1);
         continue;
       }
-      const tokens = maxTextWidth === undefined ? [{ segment: text, index: 0 }] : words.segment(text);
+      if (words === undefined) words = new Intl.Segmenter(undefined, { granularity: 'word' });
+      const tokens = words.segment(text);
       for (const token of tokens) {
         const offset = start + token.index;
         const lineLayout = measureRange(offset, offset + token.segment.length);
-        if (maxTextWidth !== undefined && lineLayout.width > maxTextWidth) {
+        if (lineLayout.width > maxTextWidth) {
+          if (graphemes === undefined) graphemes = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
           for (const grapheme of graphemes.segment(token.segment)) {
             appendRange(offset + grapheme.index, offset + grapheme.index + grapheme.segment.length);
           }
