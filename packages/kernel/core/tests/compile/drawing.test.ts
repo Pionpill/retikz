@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { emitCompiledDrawing, splitCompiledDrawing } from '../../src/compile';
 import type { ScenePrimitive } from '../../src/contract';
 
-describe('最终绘制几何与外观', () => {
+describe('最终图元结构与外观', () => {
   it('往返保留嵌套组、箭头、文本行及省略字段', () => {
     const primitives: Array<ScenePrimitive> = [
       {
@@ -46,9 +46,9 @@ describe('最终绘制几何与外观', () => {
     expect(emitCompiledDrawing(drawing)).toStrictEqual(primitives);
     const changed: Array<ScenePrimitive> = [{ ...primitives[0], id: 'repainted' }];
     const repainted = splitCompiledDrawing(changed);
-    expect(repainted.geometry).toStrictEqual(drawing.geometry);
+    expect(repainted.structure).toStrictEqual(drawing.structure);
     expect(repainted.style).not.toEqual(drawing.style);
-    expect(JSON.parse(JSON.stringify(drawing.geometry))).toEqual(drawing.geometry);
+    expect(JSON.parse(JSON.stringify(drawing.structure))).toEqual(drawing.structure);
   });
 
   it('空输出保持为空，不产生占位图元', () => {

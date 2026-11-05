@@ -19,14 +19,12 @@ import type { ComposedScopeTransform, CompileWarningCode } from '../shared';
 import type { CompiledTextBlockLayout, InlineLineLayout, TexLowerer } from '../text';
 import type { NodeContentLayout } from './content';
 
-/** 节点最终位置、视觉尺寸及自定义形状图元几何 */
+/** 节点最终位置、视觉尺寸和连接边界 */
 export type CompiledNodeGeometry = {
   /** 节点视觉外框及旋转 */
   rect: CenteredBox;
   /** 连接边界的最终外扩距离 */
   margin: BoundsInsets;
-  /** 形状最终图元几何 */
-  shape: CompiledDrawing['geometry'];
 };
 
 /** 节点实际占位与正文内容盒，不重复存放视觉 rect */
@@ -49,7 +47,7 @@ export type CompiledNodeMetadata = {
 
 /** 节点的最终形状外观 */
 export type CompiledNodeStyle = {
-  /** 与形状几何逐项对应的外观 */
+  /** 与形状图元结构逐项对应的外观 */
   shape: CompiledDrawing['style'];
   /** 已确定的阴影，省略表示无阴影 */
   shadow?: CanonicalDropShadow;
@@ -92,6 +90,8 @@ export type CompiledNode = {
   boundary: CanonicalNode['boundary'];
   /** 视觉几何 */
   geometry: CompiledNodeGeometry;
+  /** 与外观分离的最终形状图元结构 */
+  structure: { shape: CompiledDrawing['structure'] };
   /** 布局占用与对齐信息 */
   layout: CompiledNodeMetrics;
   /** 最终输出身份与来源元数据 */

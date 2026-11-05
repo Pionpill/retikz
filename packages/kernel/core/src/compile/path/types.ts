@@ -42,8 +42,8 @@ export type PathEmitOptions = {
 
 /** Path 宿主阶段产物，自定义路径不要求具有单一中心线 */
 export type CompiledPath = Readonly<{
-  /** 任意路径种类的实际绘制几何，包含最终箭头及标签 */
-  geometry: CompiledDrawing['geometry'];
+  /** 任意路径种类的实际图元结构，包含最终箭头及标签 */
+  structure: CompiledDrawing['structure'];
   /** 实际布局贡献；null 保留 provider 合法空结果的语义 */
   layout: { boundsPoints: Array<IRPosition> } | null;
   /** 与实际图元逐项对应的最终外观 */

@@ -94,8 +94,8 @@ export const emitNodeOutput = (
   primitives: Array<ScenePrimitive>;
   bounds: Array<{ boundsPoints: Array<IRPosition>; shadow?: CanonicalDropShadow }>;
 } => {
-  const { geometry, layout, metadata, style, text, labels, animations } = compiled;
-  const shape = emitCompiledDrawing({ geometry: geometry.shape, style: style.shape });
+  const { geometry, structure, layout, metadata, style, text, labels, animations } = compiled;
+  const shape = emitCompiledDrawing({ structure: structure.shape, style: style.shape });
   const children = [
     ...shape,
     ...(text === undefined

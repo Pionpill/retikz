@@ -11,7 +11,7 @@ export const compilePath = (canon: CanonicalPath, context: PathCompileContext): 
   const result = emitDefinedPath(resolution, context);
   const drawing = splitCompiledDrawing(result?.primitives ?? []);
   return {
-    geometry: drawing.geometry,
+    structure: drawing.structure,
     layout: result === null ? null : { boundsPoints: result.boundsPoints },
     style: { primitives: drawing.style, shadow: canon.properties.shadow },
   };
@@ -19,6 +19,6 @@ export const compilePath = (canon: CanonicalPath, context: PathCompileContext): 
 
 /** 从路径最终结果组装 Scene，不访问输入、定义或目标绑定 */
 export const emitPathOutput = (compiled: CompiledPath) => ({
-  primitives: emitCompiledDrawing({ geometry: compiled.geometry, style: compiled.style.primitives }),
+  primitives: emitCompiledDrawing({ structure: compiled.structure, style: compiled.style.primitives }),
   boundsPoints: compiled.layout?.boundsPoints ?? [],
 });

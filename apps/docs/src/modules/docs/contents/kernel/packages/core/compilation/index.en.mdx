@@ -202,6 +202,7 @@ export type CompiledNode = {
   shape: CanonicalNode['shape'];
   boundary: CanonicalNode['boundary'];
   geometry: CompiledNodeGeometry;
+  structure: { shape: CompiledDrawing['structure'] };
   layout: CompiledNodeMetrics;
   metadata: CompiledNodeMetadata;
   style: CompiledNodeStyle;
@@ -229,7 +230,9 @@ export type CompiledNodeTextLayout = {
 
 `compileNode(canon, context, { layout: prepared })` consumes these results. Providing `layout.overall` skips all layout calculations; providing partial results makes Core calculate only the missing stages. A complete-layout hit does not reconstruct missing intermediate results. Label measurement is independent of body dimensions, while label placement depends on the body boundary. Text and shape dimensions feed back into each other, so body measurement retains the full reflow algorithm. Individual operations are available through `measureNodeBody`, `measureNodeLabel`, and `placeNodeLabel`; `placeNode` consumes a body layout with its initial position already determined and completes final anchor alignment.
 
-The caller ensures that supplied results match the current configuration, width proposal, and measurement environment, and aligns `labels` with the current label order. Core does not modify prepared data or retain a cross-call cache. Final `geometry` holds the visual rectangle, connection margins, and primitive geometry. `layout` uses `CompiledNodeMetrics` for content placement and alignment, while text and label results remain in their respective fields.
+The caller ensures that supplied results match the current configuration, width proposal, and measurement environment, and aligns `labels` with the current label order. Core does not modify prepared data or retain a cross-call cache. Final `geometry` holds the visual rectangle and connection margins; shape primitive structure is stored separately in `structure.shape`. `layout` uses `CompiledNodeMetrics` for content placement and alignment, while text and label results remain in their respective fields.
+
+Drawing results use `structure` for the primitive tree with appearance fields removed, and `style` for appearance entries in matching preorder. Node bodies use `structure.shape`; labels and paths use their own `structure`. These trees retain text content, group hierarchy, and arrow primitives. The name `geometry` is reserved for positions, dimensions, and boundaries.
 
 Reconciler compares effective configuration, compilation context, and reference geometry, while Weave manages stage caches. When layout can be reused, Reconciler reads position dependencies again and passes it through `prepared.layout.overall` to the same `compileNode` entrypoint. Automatic reuse currently operates on complete layouts; the partial-result API supports explicit composition and does not imply that Reconciler already caches at those finer levels. Core neither compares historical versions nor decides cache validity. Authored-line indexes associate physical lines with current styles. `emitNodeOutput` consumes only compiled results.
 

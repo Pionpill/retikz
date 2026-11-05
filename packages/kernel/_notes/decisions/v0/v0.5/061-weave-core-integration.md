@@ -19,14 +19,14 @@ Reconciler 负责声明结构、状态生命周期、名称绑定关联与计算
 
 ## 节点编译状态
 
-| Weave 类别 | compiled 类型        | 持有内容                                                 | Core 调用                                               |
-| ---------- | -------------------- | -------------------------------------------------------- | ------------------------------------------------------- |
-| Node       | `CompiledNode`       | 最终 geometry、layout、style、text、labels 与 animations | `resolveNode`、`compileNode`、`emitNodeOutput`          |
-| Coordinate | `CompiledCoordinate` | 最终局部 position                                        | `resolveCoordinate`、`compileCoordinate`                |
-| Path       | `CompiledPath`       | kind 宿主最终 geometry、layout 与 style                  | `resolvePath`、`compilePath`                            |
-| Scope      | `CompiledScope`      | 实际包络、最终变换、分组属性、裁剪引用与动画             | `resolveScope`、`prepareScopePlacement`、`compileScope` |
+| Weave 类别 | compiled 类型        | 持有内容                                                            | Core 调用                                               |
+| ---------- | -------------------- | ------------------------------------------------------------------- | ------------------------------------------------------- |
+| Node       | `CompiledNode`       | 最终 geometry、structure、layout、style、text、labels 与 animations | `resolveNode`、`compileNode`、`emitNodeOutput`          |
+| Coordinate | `CompiledCoordinate` | 最终局部 position                                                   | `resolveCoordinate`、`compileCoordinate`                |
+| Path       | `CompiledPath`       | kind 宿主最终 structure、layout 与 style                            | `resolvePath`、`compilePath`                            |
+| Scope      | `CompiledScope`      | 实际包络、最终变换、分组属性、裁剪引用与动画                        | `resolveScope`、`prepareScopePlacement`、`compileScope` |
 
-各基础元素分别持有稀疏 input、补齐有效默认值及能力绑定的 canon、保存计算结果与下游必需绑定的 compiled。Node 与 Scope 的形状、连接面 Definition 和参数直接供查询消费，不再拼装 canon 与 compiled 的中间对象。CompiledNodeMetrics 只保存正文占位和对齐指标；连接外扩距离归 geometry。Path 不预设统一中心线结构，也不保留无后续消费者的 Definition；Coordinate 只保存位置；Scope 不重复保存子树。Scene 输出仍可序列化，资源与诊断由对应编译记录维护。
+各基础元素分别持有稀疏 input、补齐有效默认值及能力绑定的 canon、保存计算结果与下游必需绑定的 compiled。Node 与 Scope 的形状、连接面 Definition 和参数直接供查询消费，不再拼装 canon 与 compiled 的中间对象。CompiledNodeMetrics 只保存正文占位和对齐指标；连接外扩距离归 geometry。剥离外观的图元树统一归 structure：Node 主体保存在 structure.shape，标签与 Path 保存各自的 structure；style 按结构先序遍历对应，几何查询不依赖图元结构。Path 不预设统一中心线结构，也不保留无后续消费者的 Definition；Coordinate 只保存位置；Scope 不重复保存子树。Scene 输出仍可序列化，资源与诊断由对应编译记录维护。
 
 已完成节点只读持有 Core 产物，不复制其内部几何。新建或失效候选节点的 `compiled` 允许为 `null`，表示当前候选输入尚无有效结果；不得用伪造空结果或旧 compiled 表示就绪。提交条件要求所有参与输出的节点完成计算。旧版本结果只作为复用候选，满足有效性条件后才可成为新版本的有效 compiled。
 

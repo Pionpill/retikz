@@ -19,7 +19,8 @@ export const compileNode = (
   return {
     shape: canon.shape,
     boundary: canon.boundary,
-    geometry: { rect: layout.geometry.rect, margin: layout.geometry.margin, shape: shape.geometry },
+    geometry: { rect: layout.geometry.rect, margin: layout.geometry.margin },
+    structure: { shape: shape.structure },
     layout: {
       contentCenter: layout.geometry.contentCenter,
       contentSize: layout.geometry.contentSize,

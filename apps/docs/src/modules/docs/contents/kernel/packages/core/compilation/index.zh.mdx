@@ -197,6 +197,7 @@ export type CompiledNode = {
   shape: CanonicalNode['shape'];
   boundary: CanonicalNode['boundary'];
   geometry: CompiledNodeGeometry;
+  structure: { shape: CompiledDrawing['structure'] };
   layout: CompiledNodeMetrics;
   metadata: CompiledNodeMetadata;
   style: CompiledNodeStyle;
@@ -224,7 +225,9 @@ export type CompiledNodeTextLayout = {
 
 `compileNode(canon, context, { layout: prepared })` 消费这些产物。提供 `layout.overall` 时跳过全部布局计算；只提供部分产物时，Core 补算缺失阶段。整体命中不会反推缺失的局部产物。标签测量不依赖主体尺寸，标签放置则依赖主体边界；正文和形状之间存在宽度反馈，因此 body 测量保留完整的重排过程。单独执行这些操作可使用 `measureNodeBody`、`measureNodeLabel`、`placeNodeLabel`；`placeNode` 消费已确定初始位置的主体布局，完成最后的锚点对齐。
 
-调用方保证传入产物适用于当前配置、宽度提案与测量环境，并将 `labels` 与当前标签顺序对齐。Core 不修改准备数据，也不保存跨次缓存。最终产物的 `geometry` 保存视觉矩形、连接外扩距离和图元几何；`layout` 使用 `CompiledNodeMetrics` 保存正文占位和对齐指标，正文和标签结果分别归属各自字段。
+调用方保证传入产物适用于当前配置、宽度提案与测量环境，并将 `labels` 与当前标签顺序对齐。Core 不修改准备数据，也不保存跨次缓存。最终产物的 `geometry` 保存视觉矩形和连接外扩距离，形状图元结构单独保存在 `structure.shape`；`layout` 使用 `CompiledNodeMetrics` 保存正文占位和对齐指标，正文和标签结果分别归属各自字段。
+
+绘制产物统一以 `structure` 保存剥离外观后的图元树，以 `style` 保存与其先序遍历对应的外观。节点主体使用 `structure.shape`，标签和路径使用各自的 `structure`；其中仍包含文本内容、分组层级和箭头内部图元，因此不称为几何数据。`geometry` 专用于位置、尺寸和边界等几何信息。
 
 Reconciler 比较有效配置、编译上下文及实际引用几何，并由 Weave 维护阶段缓存；布局满足复用条件时，重新读取定位依赖，再通过 `prepared.layout.overall` 传给同一个 `compileNode`。当前自动复用仍使用完整布局，局部产物入口供调用方显式组合，不表示 Reconciler 已按这些粒度自动缓存。Core 不比较历史版本，也不判断缓存是否有效。正文通过作者行索引将物理行与当前外观对应；`emitNodeOutput` 只消费 compiled。
 
