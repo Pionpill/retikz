@@ -65,7 +65,7 @@ describe('Node 标签', () => {
     expect(first).toBeDefined();
     expect(second).toBeDefined();
     expect(second!.y - first!.y).toBeCloseTo(12);
-    expect(first!.x + first!.measuredWidth / 2).toBeCloseTo(second!.x + second!.measuredWidth / 2);
+    expect(first!.x).toBeCloseTo(second!.x);
   });
   it.each([undefined, 0, 0.4])('普通、混排标签及默认引线使用标签透明度，省略时继承节点：%s', opacity => {
     const scene = compileToScene({
@@ -86,10 +86,10 @@ describe('Node 标签', () => {
         },
       ],
     }).scene;
-    expect(findLabel(scene.primitives, 'plain')?.opacity).toBe(opacity ?? 0.5);
-    expect(findLabel(scene.primitives, 'mixed')?.opacity).toBe(0.5 * (opacity ?? 0.5));
+    expect(findLabel(scene.primitives, 'plain')?.opacity).toBe(0.5 * (opacity ?? 1));
+    expect(findLabel(scene.primitives, 'mixed')?.opacity).toBe(0.5 * 0.5 * (opacity ?? 1));
     const pins = scene.primitives.filter(primitive => primitive.type === 'path');
-    expect(pins.map(pin => pin.opacity)).toEqual([opacity ?? 0.5, 0.7]);
+    expect(pins.map(pin => pin.opacity)).toEqual([0.5 * (opacity ?? 1), 0.5 * 0.7]);
   });
 
   describe('基本生成', () => {

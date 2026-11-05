@@ -72,7 +72,7 @@ const textStyleProps = (style: GuideTextStyle | undefined): GuideTextStyle => ({
   ...(style?.font !== undefined ? { font: style.font } : {}),
   ...(style?.textColor !== undefined ? { textColor: style.textColor } : {}),
   ...(style?.opacity !== undefined ? { opacity: style.opacity } : {}),
-  ...(style?.align !== undefined ? { align: style.align } : {}),
+  ...(style?.textAlign !== undefined ? { textAlign: style.textAlign } : {}),
   ...(style?.lineHeight !== undefined ? { lineHeight: style.lineHeight } : {}),
   ...(style?.maxTextWidth !== undefined ? { maxTextWidth: style.maxTextWidth } : {}),
   ...(style?.rotate !== undefined ? { rotate: style.rotate } : {}),
@@ -316,7 +316,7 @@ const axisTitleAnchorAlignTokenOf = (
 const axisTitleAlignOf = (
   title: NonNullable<ReturnType<typeof axisTitleOf>>,
   tangent: readonly [number, number],
-): GuideTextStyle['align'] | undefined => {
+): GuideTextStyle['textAlign'] | undefined => {
   const align = axisTitleAnchorAlignTokenOf(title.anchor);
   if (align === undefined) return undefined;
   if (align === AxisTitleAnchor.Center) return 'middle';
@@ -333,7 +333,7 @@ const axisTitleTextStyleOf = (
   tangent: readonly [number, number],
 ): GuideTextStyle => {
   const anchorAlign = axisTitleAlignOf(title, tangent);
-  return { ...textStyleProps(title), ...(anchorAlign !== undefined ? { align: anchorAlign } : {}) };
+  return { ...textStyleProps(title), ...(anchorAlign !== undefined ? { textAlign: anchorAlign } : {}) };
 };
 
 type TickShapePlacement = {
@@ -1285,7 +1285,10 @@ const lowerAngularAxis = (
             type: 'node',
             position: labelLayout.position,
             text,
-            ...guideTextSourceProps({ ...tickLabelStyle, align: tickLabelStyle.align ?? labelLayout.align }, fontSize),
+            ...guideTextSourceProps(
+              { ...tickLabelStyle, textAlign: tickLabelStyle.textAlign ?? labelLayout.align },
+              fontSize,
+            ),
           };
         }),
         { fontSize, textMeasurer: measure, mode: 'generic', axis: 'both' },

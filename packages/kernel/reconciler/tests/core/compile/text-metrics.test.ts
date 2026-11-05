@@ -38,7 +38,7 @@ describe('fallbackMeasurer', () => {
 
   it('忽略 family / weight / style——fallback 不取这些字段', () => {
     const plain = fallbackMeasurer('abc', { size: 14 });
-    const bold = fallbackMeasurer('abc', { size: 14, weight: 'bold', style: 'italic', family: 'serif' });
+    const bold = fallbackMeasurer('abc', { size: 14, weight: 700, style: 'italic', family: 'serif' });
 
     expect(bold).toEqual(plain);
   });

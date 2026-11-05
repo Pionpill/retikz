@@ -20,7 +20,7 @@ const renderMobileNode = (node: MobileFlowNode) => (
     position={node.position}
     cornerRadius={4}
     style={{ stroke: node.color, fill: node.color, opacity: { fill: 0.08 } }}
-    layout={{ minimumSize: { width: node.width, height: 48 }, align: 'middle', lineHeight: 15 }}
+    layout={{ minimumSize: { width: node.width, height: 48 }, textAlign: 'middle', lineHeight: 15 }}
   >
     <Text font={{ size: 13, weight: 'bold' }}>{node.title}</Text>
     <Text fill="gray" font={{ size: 11 }}>
@@ -39,7 +39,7 @@ const Demo: FC = () => (
           position={[-300, -76]}
           cornerRadius={4}
           style={{ stroke: 'dimgray', fill: 'dimgray', opacity: { fill: 0.08 } }}
-          layout={{ minimumSize: { width: 150, height: 52 }, align: 'middle', lineHeight: 16 }}
+          layout={{ minimumSize: { width: 150, height: 52 }, textAlign: 'middle', lineHeight: 16 }}
         >
           <Text font={{ size: 14, weight: 'bold' }}>React standalone</Text>
           <Text fill="gray" font={{ size: 12 }}>
@@ -51,7 +51,7 @@ const Demo: FC = () => (
           position={[-300, 0]}
           cornerRadius={4}
           style={{ stroke: 'dimgray', fill: 'dimgray', opacity: { fill: 0.08 } }}
-          layout={{ minimumSize: { width: 150, height: 52 }, align: 'middle', lineHeight: 16 }}
+          layout={{ minimumSize: { width: 150, height: 52 }, textAlign: 'middle', lineHeight: 16 }}
         >
           <Text font={{ size: 14, weight: 'bold' }}>Vanilla / direct</Text>
           <Text fill="gray" font={{ size: 12 }}>
@@ -63,7 +63,7 @@ const Demo: FC = () => (
           position={[-300, 76]}
           cornerRadius={4}
           style={{ stroke: 'dimgray', fill: 'dimgray', opacity: { fill: 0.08 } }}
-          layout={{ minimumSize: { width: 150, height: 52 }, align: 'middle', lineHeight: 16 }}
+          layout={{ minimumSize: { width: 150, height: 52 }, textAlign: 'middle', lineHeight: 16 }}
         >
           <Text font={{ size: 14, weight: 'bold' }}>Embedded host</Text>
           <Text fill="gray" font={{ size: 12 }}>
@@ -78,7 +78,7 @@ const Demo: FC = () => (
             position={[-105, 0]}
             cornerRadius={4}
             style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
-            layout={{ minimumSize: { width: 142, height: 52 }, align: 'middle', lineHeight: 16 }}
+            layout={{ minimumSize: { width: 142, height: 52 }, textAlign: 'middle', lineHeight: 16 }}
           >
             <Text font={{ size: 14, weight: 'bold' }}>Table runtime</Text>
             <Text fill="gray" font={{ size: 12 }}>
@@ -90,7 +90,7 @@ const Demo: FC = () => (
             position={[62, 0]}
             cornerRadius={4}
             style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
-            layout={{ minimumSize: { width: 142, height: 52 }, align: 'middle', lineHeight: 16 }}
+            layout={{ minimumSize: { width: 142, height: 52 }, textAlign: 'middle', lineHeight: 16 }}
           >
             <Text font={{ size: 14, weight: 'bold' }}>table.table</Text>
             <Text fill="gray" font={{ size: 12 }}>
@@ -104,7 +104,7 @@ const Demo: FC = () => (
           position={[218, 0]}
           cornerRadius={4}
           style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
-          layout={{ minimumSize: { width: 118, height: 52 }, align: 'middle', lineHeight: 16 }}
+          layout={{ minimumSize: { width: 118, height: 52 }, textAlign: 'middle', lineHeight: 16 }}
         >
           <Text font={{ size: 14, weight: 'bold' }}>Core compile</Text>
           <Text fill="gray" font={{ size: 12 }}>
@@ -117,7 +117,7 @@ const Demo: FC = () => (
           position={[352, -46]}
           cornerRadius={4}
           style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
-          layout={{ minimumSize: { width: 142, height: 52 }, align: 'middle', lineHeight: 16 }}
+          layout={{ minimumSize: { width: 142, height: 52 }, textAlign: 'middle', lineHeight: 16 }}
         >
           <Text font={{ size: 14, weight: 'bold' }}>Standalone 输出</Text>
           <Text fill="gray" font={{ size: 12 }}>
@@ -129,7 +129,7 @@ const Demo: FC = () => (
           position={[352, 46]}
           cornerRadius={4}
           style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
-          layout={{ minimumSize: { width: 142, height: 52 }, align: 'middle', lineHeight: 16 }}
+          layout={{ minimumSize: { width: 142, height: 52 }, textAlign: 'middle', lineHeight: 16 }}
         >
           <Text font={{ size: 14, weight: 'bold' }}>宿主输出</Text>
           <Text fill="gray" font={{ size: 12 }}>

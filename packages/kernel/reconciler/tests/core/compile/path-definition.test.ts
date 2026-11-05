@@ -154,7 +154,7 @@ describe('Path 注册表', () => {
     expect(observedPosition).toBe(1);
     expect(observedStyle).toMatchObject({ color: '#336699', stroke: '#5c85ad' });
     expect(observedStroke).toBe('#5c85ad');
-    expect(label).toMatchObject({ type: 'text', x: 100 });
+    expect(label).toMatchObject({ type: 'text', align: 'middle', x: 100 });
   });
 
   it('不解析自定义输出的未使用的辅助提供者', () => {
@@ -212,7 +212,7 @@ describe('Path 注册表', () => {
           type: 'path',
           kind: 'stroke',
           arrow: context.path.arrow,
-          children: context.path.children?.slice(0, 1),
+          children: [{ type: 'step', kind: 'move', to: [0, 0] }],
         }),
     });
     const warnings: Array<CompileWarning> = [];

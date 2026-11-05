@@ -293,8 +293,8 @@ describe('原子 Node 内容拒绝不支持的布局提议', () => {
 
     expect(minimum.result.slotSize).toEqual({ width: 50, height: 20 });
     expect(minimum.result.allocationBounds).toMatchObject({ width: 50, height: 20 });
-    expect(exact.result.slotSize).toEqual({ width: 20, height: 20 });
-    expect(exact.result.allocationBounds).toMatchObject({ width: 50, height: 20 });
+    expect(exact.result.slotSize).toEqual({ width: 20, height: 40 });
+    expect(exact.result.allocationBounds).toMatchObject({ width: 20, height: 40 });
   });
 
   it('已下沉的 TeX 显式行在最小、范围及精确 x 布局提议下保持原子性', () => {

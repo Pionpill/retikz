@@ -78,11 +78,11 @@ describe('Diagram 中性主题', () => {
       presentation: {
         title: {
           style: { textColor: '#000000', opacity: 1, font: { size: 18, weight: 600 } },
-          layout: { align: 'start', lineHeight: 22 },
+          layout: { textAlign: 'start', lineHeight: 22 },
         },
         description: {
           style: { textColor: 'hsl(215, 12%, 48%)', opacity: 1, font: { size: 14, weight: 400 } },
-          layout: { align: 'start', lineHeight: 20 },
+          layout: { textAlign: 'start', lineHeight: 20 },
         },
       },
     });

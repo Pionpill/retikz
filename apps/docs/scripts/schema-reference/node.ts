@@ -52,7 +52,7 @@ export const nodeSchemas = {
   NodeLayoutSchema: {
     description: '节点的尺寸、内外间距和文字排布',
     descriptions: {
-      align: '多行文字块内的水平对齐，缺省为 middle',
+      textAlign: '多行文字块内的水平对齐，缺省为 middle',
       lineHeight: '行高，单位为用户单位；省略时使用字号的 1.2 倍',
       maxTextWidth: '自动折行阈值，单位为用户单位；省略时不自动折行',
       width: '缩放前可见边框的精确宽度，不含 margin，不能小于有效最小宽度',
@@ -66,7 +66,10 @@ export const nodeSchemas = {
     descriptions: {
       text: '标签文本块：字符串支持换行，非空行数组支持逐行样式与混排片段',
       textColor: '标签文字颜色，缺省沿继承链求值',
-      opacity: '标签不透明度覆盖；省略时继承节点整体不透明度',
+      opacity: '与节点整体透明度相乘的标签因子；省略为 1，显式 0 保留',
+      textAlign: '文本块内部行对齐，缺省 middle；独立于边界附着 align',
+      lineHeight: '最小行槽高度，缺省为有效字号的 1.2 倍，实际内容更高时扩展',
+      maxTextWidth: '自动折行宽度；过长文字按字素拆分，公式保持完整',
       font: '标签字体覆盖，缺省字段继承节点字体',
       align: '标签视觉框沿附着点切线的对齐方式，缺省 middle',
       position: '命名方向、center、角度或边界比例位置，缺省 top',
@@ -84,7 +87,7 @@ export const nodeSchemas = {
   NodeLabelPinSchema: {
     description: '外侧节点标签的引线样式',
     descriptions: {
-      opacity: '引线独立透明度；省略时使用标签的有效透明度',
+      opacity: '与宿主透明度相乘的引线因子；省略时使用标签有效透明度，不受行或片段影响',
       stroke: '引线颜色或由标签主色派生的权重',
       strokeWidth: '引线宽度，单位为用户单位；默认 1',
       dashPattern: '引线虚线段与间隔长度',

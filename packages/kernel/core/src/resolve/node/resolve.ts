@@ -1,5 +1,6 @@
 import { formatPropertyPath } from '@retikz/foundation';
 import type { PropertyPath } from '@retikz/foundation';
+import type { BoundsInsets } from '@retikz/math';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { IRAxisScale, IRBoxSize, IRNode, IRPaintValue } from '../../schemas';
@@ -65,7 +66,7 @@ const expandNodeFields = (node: NodeColorSource) => {
     scale: expandAxisScale(scale),
     text: expandNodeText(text),
     label,
-    align: source.align ?? ('middle' as const),
+    textAlign: source.textAlign ?? ('middle' as const),
     rotate: rotate ?? 0,
     dashPattern: resolveDashPattern(source.dashPattern, dashed, dotted),
     shadow: resolveDropShadow(source.shadow),
@@ -121,7 +122,7 @@ const resolveNodePrimaryColors = (node: NodeLabelSource, context: NodeColorConte
 
 /**
  * 合并节点默认配置并解析正文、标签、颜色、形状、连接面和绘制资源，得到待布局的节点
- * @description 补齐静态默认值并展开简写；位置引用、文本测量与最终尺寸由布局阶段处理
+ * @description 补齐静态默认值、展开简写并完成输入尺寸缩放；位置引用、文本测量与最终尺寸由布局阶段处理
  */
 export const resolveNode = (source: IRNode, context: NodeResolveContext): CanonicalNode => {
   const mergedNode = mergeNodeStyle(source, context.scopeDefaults);
@@ -172,6 +173,16 @@ export const resolveNode = (source: IRNode, context: NodeResolveContext): Canoni
     irPath: context.irPath,
   });
   const content = resolveNodeContent(node, context);
+  const { x: scaleX, y: scaleY } = node.scale;
+
+  /** 将完整四边间距转换为节点缩放后的有效值 */
+  const scaleSpacing = ({ top, right, bottom, left }: BoundsInsets): BoundsInsets => ({
+    top: top * scaleY,
+    right: right * scaleX,
+    bottom: bottom * scaleY,
+    left: left * scaleX,
+  });
+
   return {
     id: node.id,
     aliasIds: node.aliasIds ?? [],
@@ -182,13 +193,11 @@ export const resolveNode = (source: IRNode, context: NodeResolveContext): Canoni
         !Array.isArray(node.position) && 'kind' in node.position
           ? { ...node.position, selfAnchor: node.position.selfAnchor ?? 'center' }
           : resolvePosition(node.position, context),
-      padding: node.padding,
-      margin: node.margin,
-      minimumSize: node.minimumSize,
-      scale: node.scale,
+      padding: scaleSpacing(node.padding),
+      margin: scaleSpacing(node.margin),
+      minimumSize: { width: node.minimumSize.width * scaleX, height: node.minimumSize.height * scaleY },
       rotate: node.rotate,
-      width: node.width,
-      maxTextWidth: node.maxTextWidth,
+      width: node.width === undefined ? undefined : node.width * scaleX,
     },
     shape,
     boundary,
@@ -207,16 +216,7 @@ export const resolveNode = (source: IRNode, context: NodeResolveContext): Canoni
       shadow: node.shadow,
       blendMode: node.blendMode ?? 'normal',
     },
-    text:
-      content.text === undefined
-        ? undefined
-        : {
-            font: content.font,
-            align: node.align,
-            lineHeight: content.lineHeight,
-            color: node.textColor,
-            lines: content.text,
-          },
+    text: content.text,
     labels: content.label ?? [],
     animations:
       resolveAnimations(node.animations, {

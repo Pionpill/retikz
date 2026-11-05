@@ -1,15 +1,22 @@
 import type { JsonObject, PropertyPath } from '@retikz/foundation';
 import type { BoundsInsets, CenteredBox, Position } from '@retikz/math';
 
-import type { LayoutAxisProposal, Transform, TextLine, TextMeasurer, LayoutAlignmentGuide } from '../../contract';
-import type { CanonicalFont, CanonicalNode } from '../../resolve';
+import type {
+  TextFont,
+  LayoutAxisProposal,
+  Transform,
+  TextLine,
+  TextMeasurer,
+  LayoutAlignmentGuide,
+} from '../../contract';
+import type { CanonicalNode } from '../../resolve';
 import type { IRAnimationTrack, CanonicalDropShadow } from '../../schemas';
 import type { BoundaryState } from '../boundary';
 import type { PositionTargetEvaluateContext } from '../reference';
 import type { RegisterPaint } from '../resource';
 import type { CompiledDrawing } from '../scene';
 import type { ComposedScopeTransform, CompileWarningCode } from '../shared';
-import type { InlineLineLayout, TexLowerer } from '../text';
+import type { CompiledTextBlockLayout, InlineLineLayout, TexLowerer } from '../text';
 
 /** 节点最终位置、视觉尺寸及自定义形状图元几何 */
 export type CompiledNodeGeometry = {
@@ -118,6 +125,8 @@ export type TexLoweringContext = {
 
 /** 物理行排版与其作者行的对应关系 */
 export type CompiledNodeTextLineLayout = Omit<TextLine, 'fill' | 'opacity'> & {
+  /** 该物理行的实际度量高度 */
+  measuredHeight: number;
   /** 折行前的作者行索引，供绘制阶段读取当前外观 */
   sourceLineIndex: number;
 };
@@ -137,7 +146,7 @@ export type NodeLayoutGeometry = {
 /** 节点正文排版结果 */
 export type CompiledNodeTextLayout = {
   /** 实际用于测量和输出的字体 */
-  font: CanonicalFont;
+  font: TextFont;
   /** 正文对齐方式 */
   align: 'start' | 'middle' | 'end';
   /** 实际行高 */
@@ -146,7 +155,7 @@ export type CompiledNodeTextLayout = {
   baselineOffsets?: Array<number>;
 } & (
   | { kind: 'plain'; lines: Array<CompiledNodeTextLineLayout> }
-  | { kind: 'inline'; lines: Array<{ laid: InlineLineLayout; baselineOffset: number }> }
+  | { kind: 'inline'; lines: Array<{ laid: InlineLineLayout; baselineOffset: number; sourceLineIndex: number }> }
 );
 
 /** 节点测量、定位和标签排版结果及后续查询必需的绑定 */
@@ -172,7 +181,7 @@ export type PreparedNodeCompilation = {
 /** 已完成内容与视觉盒测量、尚未绑定 Node rect 的附属标签 */
 export type MeasuredNodeLabel = {
   /** 混排计算结果 */
-  laid?: Array<InlineLineLayout>;
+  laid: CompiledTextBlockLayout;
   /** 测量宽度 */
   measuredWidth: number;
   /** 测量高度 */

@@ -266,7 +266,7 @@ describe('Standard Legend 文档', () => {
       'LegendTick.children',
       'Legend.titleGap',
       'Node.style.font',
-      'Node.layout.align',
+      'Node.layout.textAlign',
       'Legend.contentAlign',
       'Legend.direction',
       'Legend.wrap',
@@ -287,7 +287,7 @@ describe('Standard Legend 文档', () => {
       title: {
         text: 'A–D',
         style: { font: { size: 16, weight: 'bold', style: 'normal' }, stroke: 'none', fill: 'none' },
-        layout: { align: 'start', padding: 0 },
+        layout: { textAlign: 'start', padding: 0 },
       },
       content: { kind: 'items' },
     });
@@ -307,7 +307,7 @@ describe('Standard Legend 文档', () => {
       }),
     ).toMatchObject({
       title: {
-        layout: { align: 'end' },
+        layout: { textAlign: 'end' },
         style: { font: { size: 22, weight: 'normal', style: 'italic' } },
       },
       titleGap: 20,

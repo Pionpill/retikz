@@ -143,7 +143,10 @@ describe('Scene 资源依赖关闭', () => {
       compile: context =>
         context.emitStroke({
           type: 'path',
-          children: context.path.children,
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [100, 0] },
+          ],
           style: { stroke: { kind: 'pattern', shape: 'first' } },
         }),
     });

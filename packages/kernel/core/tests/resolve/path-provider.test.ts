@@ -79,7 +79,7 @@ describe('解析/路径提供者绑定', () => {
           style: { fill: 'gold' },
         }),
       ).properties.label,
-    ).toMatchObject([{ text: 'continuous', interrupt: false }]);
+    ).toMatchObject([{ text: { lines: [{ plainText: 'continuous' }] }, interrupt: false }]);
   });
 
   it('通过解析器注册表诊断未知路径定义失败', () => {

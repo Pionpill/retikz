@@ -98,7 +98,7 @@ describe('Core 值原子 schema', () => {
     expect(FontSchema.shape.family.unwrap()).toBe(FontFamilySchema);
     expect(FontSchema.shape.weight.unwrap()).toBe(FontWeightSchema);
     expect(FontSchema.shape.style.unwrap()).toBe(FontStyleSchema);
-    expect(NodeSchema.shape.layout.unwrap().shape.align.unwrap()).toBe(TextAlignSchema);
+    expect(NodeSchema.shape.layout.unwrap().shape.textAlign.unwrap()).toBe(TextAlignSchema);
     expect(NodeSchema.shape.layout.unwrap().shape.lineHeight.unwrap()).toBe(LineHeightSchema);
     expect(GraphicStrokeSchema.shape.strokeWidth.unwrap()).toBe(StrokeWidthSchema);
   });

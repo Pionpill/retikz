@@ -1,7 +1,8 @@
+import type { TextFont } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { WebFontSizePreset, IRFont } from '../../schemas';
 import { webFontSizeRatio } from '../../schemas';
-import type { CanonicalFont, FontResolveContext, FontSizeResolveContext } from './types';
+import type { FontResolveContext, FontSizeResolveContext } from './types';
 
 /** 文本默认行高系数 */
 const DEFAULT_TEXT_LINE_HEIGHT_FACTOR = 1.2;
@@ -37,7 +38,7 @@ export const resolveFontWeight = (weight: IRFont['weight']): number | undefined 
   weight === 'normal' ? 400 : weight === 'bold' ? 700 : weight;
 
 /** 用继承字体补齐缺省字段，并将字号与字重换算为数值 */
-export const resolveFont = (source: IRFont | undefined, context: FontResolveContext): CanonicalFont => ({
+export const resolveFont = (source: IRFont | undefined, context: FontResolveContext): TextFont => ({
   size: resolveFontSize(source?.size, {
     rootFontSize: context.rootFontSize,
     inheritedFontSize: context.inheritedFont.size,

@@ -102,6 +102,7 @@ export const compileWeavePath = (input: IRPathBase, runtime: WeaveElementRuntime
   const { shared, style, irPath, transforms } = options;
   const path = resolvePathAnimations(input, irPath, workspace.diagnosticCollector.collect);
   const canon = resolvePath(path, {
+    gatingOn: shared.host.lowerTex !== undefined,
     ...shared.registries,
     ...shared.layout,
     scopeDefaults: style.defaults,

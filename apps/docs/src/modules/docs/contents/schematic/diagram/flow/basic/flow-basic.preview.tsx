@@ -84,7 +84,7 @@ export const FlowBasicPreview = (values: FlowBasicPreviewValues, lang: Lang) => 
             role: values.formRole,
             ...statusProps(values.formStatus),
             layout: {
-              align: isTextAlign(values.formTextAlign) ? values.formTextAlign : undefined,
+              textAlign: isTextAlign(values.formTextAlign) ? values.formTextAlign : undefined,
               lineHeight: values.formLineHeight,
               maxTextWidth: values.formMaxTextWidth,
             },

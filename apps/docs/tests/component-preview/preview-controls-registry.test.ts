@@ -250,7 +250,7 @@ const compileBuiltinText = (
           position: [0, 0],
           text,
           style: { font: { size: values.fontSize, weight: 'bold' } },
-          layout: { align: values.align, lineHeight: values.lineHeight, maxTextWidth: values.maxTextWidth },
+          layout: { textAlign: values.align, lineHeight: values.lineHeight, maxTextWidth: values.maxTextWidth },
         },
       ],
     } satisfies IRScene,

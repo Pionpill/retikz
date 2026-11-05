@@ -3,12 +3,13 @@ import type { ParsedCssColor } from '@retikz/foundation';
 import { parseStaticCssColor } from '@retikz/foundation';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import type { IRNode, IRNodeLabel, IRLine, IRMathSegment, IRTextSegment } from '../../schemas';
+import type { IRNode, IRNodeLabel } from '../../schemas';
 import { NodeTextColor } from '../../schemas';
 import type { IRNodeLabelDefault } from '../../schemas';
 import { resolvePaint } from '../resource';
 import { resolveGraphicOpacity, mergeNodeLabelDefaults, resolveContextualColor } from '../style';
-import type { InlineSegmentColorSource, ColorResolvedTextLine } from '../text';
+import type { ColorResolvedTextLine } from '../text';
+import { resolveTextLineColors } from '../text';
 import type {
   NodePrimaryColorSource,
   NodeColorSource,
@@ -176,53 +177,6 @@ export const expandNodeLabels = (
       ? label.map(item => expandNodeLabel(item, labelDefault, labelDistance))
       : [expandNodeLabel(label, labelDefault, labelDistance)];
 
-/** 解析单个文字或公式片段的数值颜色 */
-const resolveInlineSegmentColor = (
-  segment: IRTextSegment | IRMathSegment,
-  masterColor: string | undefined,
-  mode: NodeResolveContext['mode'],
-  fieldPath: PropertyPath,
-): InlineSegmentColorSource => {
-  const { fill, ...source } = segment;
-  return {
-    ...source,
-    ...(fill === undefined
-      ? {}
-      : { fill: resolveContextualColor(fill, { masterColor, mode, fieldPath: [...fieldPath, 'fill'] }) }),
-  };
-};
-
-/** 解析正文行及其片段的数值颜色 */
-const resolveNodeLineColors = (
-  line: IRLine,
-  masterColor: string | undefined,
-  mode: NodeResolveContext['mode'],
-  fieldPath: PropertyPath,
-): ColorResolvedTextLine => {
-  if (typeof line === 'string') return line;
-  if ('segments' in line) {
-    return {
-      ...line,
-      fill:
-        line.fill === undefined
-          ? undefined
-          : resolveContextualColor(line.fill, { masterColor, mode, fieldPath: [...fieldPath, 'fill'] }),
-      segments: line.segments.map((segment, index) =>
-        resolveInlineSegmentColor(segment, masterColor, mode, [...fieldPath, 'segments', index]),
-      ),
-    };
-  }
-
-  const { fill, ...source } = line;
-
-  return {
-    ...source,
-    ...(fill === undefined
-      ? {}
-      : { fill: resolveContextualColor(fill, { masterColor, mode, fieldPath: [...fieldPath, 'fill'] }) }),
-  };
-};
-
 /** 解析节点标签的文字主色、行内片段颜色与引线绘制配置 */
 const resolveNodeLabelColors = (
   label: NodeLabelPlacementSource,
@@ -276,7 +230,7 @@ const resolveNodeLabelColors = (
       typeof text === 'string'
         ? text
         : text.map((line, index) =>
-            resolveNodeLineColors(line, textMaster, context.mode, [...fieldPath, 'text', index]),
+            resolveTextLineColors(line, textMaster, context.mode, [...fieldPath, 'text', index]),
           ),
     ...(resolvedPin === undefined ? {} : { pin: resolvedPin }),
   };
@@ -302,7 +256,7 @@ export const resolveNodeDependentColors = (
             typeof text === 'string'
               ? text
               : text.map((line, index) =>
-                  resolveNodeLineColors(line, textMaster, context.mode, [...context.irPath, 'text', index]),
+                  resolveTextLineColors(line, textMaster, context.mode, [...context.irPath, 'text', index]),
                 ),
         }),
     ...(label === undefined

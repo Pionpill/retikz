@@ -124,7 +124,7 @@ describe('行程 Path 标签中断', () => {
     expect(fragments).toHaveLength(2);
     const boundaries = [lastLine(fragments[0])[1], firstMove(fragments[1])[1]].sort((a, b) => a - b);
     // 断口只覆盖实际标签高度和两端留白，不能把偏移量镜像到采样点另一侧
-    expect(boundaries[1] - boundaries[0]).toBeCloseTo(10 + 2 * (4 + 0.5));
+    expect(boundaries[1] - boundaries[0]).toBeCloseTo(16 * 1.2 + 2 * (4 + 0.5));
     if (side === 'top') expect(boundaries[1]).toBeLessThan(50);
     else expect(boundaries[0]).toBeGreaterThan(50);
   });

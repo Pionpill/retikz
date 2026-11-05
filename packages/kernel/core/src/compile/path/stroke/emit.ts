@@ -46,11 +46,9 @@ export const emitPathPrimitive = (canon: CanonicalStrokePath, context: EmitPathP
     const result = emitLabelPrimitive(label, labelSample.visualSample, {
       measureText,
       round,
-      rootFontSize: pathEmitOptions.rootFontSize,
       hostOpacity: path.opacity,
       tex: {
         lowerTex: pathEmitOptions.lowerTex,
-        gatingOn: pathEmitOptions.lowerTex !== undefined,
         warn: (code, message) => warn(code, message, ['label']),
       },
     });

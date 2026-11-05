@@ -6,6 +6,12 @@ export type NodeLabelStylePreviewValues = {
   fontSize: number;
   opacity: number;
   multiline: boolean;
+  /** 文本块内部对齐 */
+  textAlign: 'start' | 'middle' | 'end';
+  /** 最小行槽高度 */
+  lineHeight: number;
+  /** 自动折行宽度 */
+  maxTextWidth: number;
 };
 
 /** 绘制示例图形 */
@@ -20,6 +26,9 @@ export const NodeLabelStylePreview = (values: NodeLabelStylePreviewValues) => (
         textColor: values.textColor,
         font: { size: values.fontSize },
         opacity: values.opacity,
+        textAlign: values.textAlign,
+        lineHeight: values.lineHeight,
+        maxTextWidth: values.maxTextWidth,
       }}
       style={{ fill: 'lightgray', stroke: 'gray' }}
       layout={{ minimumSize: { width: 120, height: 76 } }}

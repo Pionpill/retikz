@@ -280,7 +280,7 @@ describe('Flow Diagram 的 ComponentPreview 预览', () => {
         text: ['前端', '表单', { text: '补充说明', fill: 'darkorange', font: { size: 'lg' } }],
         role: 'resource',
         status: 'success',
-        layout: { align: 'start', lineHeight: 24, maxTextWidth: 120 },
+        layout: { textAlign: 'start', lineHeight: 24, maxTextWidth: 120 },
       },
       { id: 'backend-validation', text: '后端服务', role: 'activity' },
       { id: 'database-input', text: '数据库输入', role: 'resource' },

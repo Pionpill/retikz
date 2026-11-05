@@ -44,7 +44,7 @@ for (const kind of ['simple', 'inherited', 'contrast', 'pattern', 'labels'] as c
         run: () => resolveNode(source, context),
         verify: result => {
           expect(result.layout.position).toEqual([0, 0]);
-          expect(result.layout.scale).toEqual({ x: 1, y: 1 });
+          expect(result.layout.minimumSize).toEqual({ width: 0, height: 0 });
           if (kind === 'inherited')
             expect(result).toMatchObject({
               style: { stroke: 'red' },

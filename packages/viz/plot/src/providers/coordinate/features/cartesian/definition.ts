@@ -76,8 +76,8 @@ const textNodeBoundsOf = (
   const authoredFontSize = node.style?.font?.size;
   const fontSize = typeof authoredFontSize === 'number' ? authoredFontSize : fallbackFontSize;
   const { width, height } = measure(node, fontSize);
-  const localMinX = node.layout?.align === 'start' ? 0 : node.layout?.align === 'end' ? -width : -width / 2;
-  const localMaxX = node.layout?.align === 'start' ? width : node.layout?.align === 'end' ? 0 : width / 2;
+  const localMinX = node.layout?.textAlign === 'start' ? 0 : node.layout?.textAlign === 'end' ? -width : -width / 2;
+  const localMaxX = node.layout?.textAlign === 'start' ? width : node.layout?.textAlign === 'end' ? 0 : width / 2;
   const localMinY = -height / 2;
   const localMaxY = height / 2;
   const radians = ((node.rotate ?? 0) * Math.PI) / 180;

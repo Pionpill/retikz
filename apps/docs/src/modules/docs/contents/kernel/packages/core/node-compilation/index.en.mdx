@@ -11,6 +11,8 @@ Start with [Node basic usage](/kernel/components/node/usage) and [text syntax](/
 
 Node layout determines the space needed by content, computes shape dimensions, and then places the body and attached labels. `CanonicalNode` contains effective node configuration and bound shape and boundary definitions. `CompiledNode` retains final geometry, layout, and drawing data. `CompiledNodeLayout` is the measured and positioned layout result. It retains bindings needed for geometry queries and can be passed into compilation as prepared layout.
 
+`resolveNode` applies input scaling: padding, margin, and minimum dimensions follow their respective axes; fixed width and maximum text width follow the horizontal axis. Font size, line height, and shape parameters are also handled during resolution. `CanonicalNode` stores these effective values without a pending `scale`, and compilation consumes them directly. Runtime width proposals from parent layouts are not multiplied by node scale; stroke width and label distance retain their existing semantics.
+
 <ComponentPreview files="layout-overview" size="xs" hideCode type="flow" />
 
 The three nodes below use the same sentence. The middle node narrows the text width, so wrapping increases its height. The right node only adds an outside label; its shape has the same dimensions as the middle node.
@@ -38,9 +40,9 @@ The text is first split into the lines that will actually be displayed, called *
 
 Core obtains metrics through the injected `measureText` function; it does not read the DOM. Inputs are text and font settings. Results contain width, height, and optional `ascent` and `descent`, the extents above and below the baseline. When both are absent, Core assigns half the height to each. Without an injected measurer, it estimates using average character width. Accuracy depends on the measurement provider.
 
-Plain text is split at explicit line breaks, then wrapped at available break positions within the width limit: words for Western text and characters for CJK. An unbreakable segment wider than the limit remains intact. Content width is the widest physical line; height is the number of physical lines multiplied by `lineHeight`. This includes line spacing and differs from the glyph height itself.
+Text preserves explicit line breaks, then prefers word boundaries within the width limit; oversized words split at grapheme boundaries. Content width is the widest physical line, and height is the sum of line slots. Each slot is the larger of `lineHeight` and actual ascent + descent, with extra leading split equally above and below the content.
 
-Math or explicit `segments` content is measured fragment by fragment, then aligned to a shared baseline within each line. Widths are added; the required extents above and below the baseline are taken separately. Each line slot is tall enough for those fragments. **Content that mixes formulas with plain text does not use plain-text automatic wrapping**; setting a width does not imply that formulas will wrap.
+Math or explicit `segments` content uses the same wrapping rules and aligns fragments to a shared baseline within each physical line. Widths are added; the required extents above and below the baseline are taken separately. Each line slot is tall enough for those fragments. Formulas remain indivisible and may overflow on their own line.
 
 Reconciler shares metrics by text and font values across nodes and probes within one compilation. Node layout calls the supplied measurer without maintaining a local cache. The measurement cache does not survive another full compilation or incremental batch, and a width change still requires layout to segment again. See [Query evaluation and caching](/kernel/packages/core/composite-compilation#query-evaluation-and-caching).
 
@@ -53,7 +55,7 @@ Reconciler shares metrics by text and font values across nodes and probes within
       label: 'Content branches and physical lines',
       path: 'packages/kernel/core/src/compile/node/layout/content.ts',
     },
-    { label: 'Plain-text wrapping', path: 'packages/kernel/core/src/compile/node/layout/text.ts' },
+    { label: 'Shared text layout', path: 'packages/kernel/core/src/compile/text/block.ts' },
     { label: 'Mixed-line measurement and baseline alignment', path: 'packages/kernel/core/src/compile/text/layout.ts' },
   ]}
 />
@@ -78,7 +80,7 @@ Width constraints also have distinct roles:
 
 | Constraint            | Effect                                                                                          |
 | --------------------- | ----------------------------------------------------------------------------------------------- |
-| `maxTextWidth`        | Limits plain-text wrapping width without forcing the shape to that exact width                  |
+| `maxTextWidth`        | Limits text wrapping width without forcing the shape to that exact width                        |
 | `minimumSize`         | Sets a lower bound for the shape box without shrinking text                                     |
 | `width`               | Fixes the visual box width; plain text may reflow, and compilation fails if it still cannot fit |
 | Parent width proposal | Constrains allocation, accounting for shape, margin, and rotation                               |

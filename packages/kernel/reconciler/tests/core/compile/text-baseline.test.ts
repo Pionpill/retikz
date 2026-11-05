@@ -219,7 +219,7 @@ describe('Node 布局对齐基线', () => {
     expect(measureText).toHaveBeenCalledTimes(1);
   });
 
-  it('使用编写的第一个物理线路指标和固定的 lineHeight 槽位作为多线路基线', () => {
+  it('在各自行槽内按每行实际度量确定基线', () => {
     const measureText = vi.fn<TextMeasurer>(text => ({
       width: text.length * 10,
       height: 10,
@@ -239,7 +239,7 @@ describe('Node 布局对齐基线', () => {
       ),
     ).toEqual([
       { name: 'first-baseline', dimension: 'y', position: 3 },
-      { name: 'last-baseline', dimension: 'y', position: 23 },
+      { name: 'last-baseline', dimension: 'y', position: 21 },
     ]);
     expect(measureText).toHaveBeenCalledTimes(2);
   });
@@ -283,7 +283,7 @@ describe('Node 布局对齐基线', () => {
     expect(emittedFirstLastBaselines(output.primitives)).toEqual(output.guides?.map(guide => guide.position));
   });
 
-  it('保留编写的 textHeight，同时将超大的多行指标与发出的物理基线进行匹配', () => {
+  it('内容超出指定行高时扩展行槽并同步输出基线', () => {
     const output = probeEmissionOf(
       {
         type: 'node',
@@ -294,15 +294,15 @@ describe('Node 布局对齐基线', () => {
       text => ({ width: text.length * 10, height: 24, ascent: 16, descent: 8 }),
     );
 
-    expect(output.allocationHeight).toBe(40);
+    expect(output.allocationHeight).toBe(48);
     expect(output.guides).toEqual([
-      { name: 'first-baseline', dimension: 'y', position: 4 },
-      { name: 'last-baseline', dimension: 'y', position: 24 },
+      { name: 'first-baseline', dimension: 'y', position: 2 },
+      { name: 'last-baseline', dimension: 'y', position: 26 },
     ]);
-    expect(emittedPhysicalBaselines(output.primitives)).toEqual([4, 24]);
+    expect(emittedPhysicalBaselines(output.primitives)).toEqual([2, 26]);
   });
 
-  it('当编写的线指标不同时，保留一组多线 TextPrimitive 和固定的视觉边界', () => {
+  it('不同行度量产生独立基线和对应的文字图元', () => {
     const output = probeEmissionOf(
       {
         type: 'node',
@@ -321,15 +321,15 @@ describe('Node 布局对齐基线', () => {
 
     expect(output.guides).toEqual([
       { name: 'first-baseline', dimension: 'y', position: 3 },
-      { name: 'last-baseline', dimension: 'y', position: 23 },
+      { name: 'last-baseline', dimension: 'y', position: 21 },
     ]);
-    expect(emittedPhysicalBaselines(output.primitives)).toEqual([3, 23]);
-    expect(emittedTextPrimitives(output.primitives)).toHaveLength(1);
-    expect(emittedTextPrimitives(output.primitives)[0].lines).toHaveLength(2);
-    expect(output.visualBounds).toEqual({ x: -1, y: -17, width: 10, height: 40 });
+    expect(emittedPhysicalBaselines(output.primitives)).toEqual([3, 21]);
+    expect(emittedTextPrimitives(output.primitives)).toHaveLength(2);
+    expect(emittedTextPrimitives(output.primitives).map(text => text.lines.length)).toEqual([1, 1]);
+    expect(output.visualBounds).toEqual({ x: -1, y: -7, width: 10, height: 28 });
   });
 
-  it('以与分组 TextPrimitive 物理基线相同的精度倒圆导轨', () => {
+  it('基线辅助线与逐行输出使用相同圆整精度', () => {
     const output = probeEmissionOf(
       {
         type: 'node',
@@ -349,11 +349,12 @@ describe('Node 布局对齐基线', () => {
 
     expect(output.guides).toEqual([
       { name: 'first-baseline', dimension: 'y', position: 2.9 },
-      { name: 'last-baseline', dimension: 'y', position: 23.2 },
+      { name: 'last-baseline', dimension: 'y', position: 21.1 },
     ]);
-    expect(emittedPhysicalBaselines(output.primitives)).toEqual([2.9, 23.2]);
-    expect(emittedTextPrimitives(output.primitives)).toHaveLength(1);
-    expect(output.visualBounds).toEqual({ x: -1, y: -17.3, width: 10, height: 40.5 });
+    expect(emittedPhysicalBaselines(output.primitives)).toEqual([2.9, 21.1]);
+    expect(emittedTextPrimitives(output.primitives)).toHaveLength(2);
+    expect(output.visualBounds).toMatchObject({ x: -1, y: -7.1, width: 10 });
+    expect(output.visualBounds?.height).toBeCloseTo(28.2);
   });
 
   it('使用每个混合/TeX 线真正的圆形基线，而不是分组的普通 lineHeight 间距', () => {

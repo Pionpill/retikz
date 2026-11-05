@@ -17,7 +17,7 @@ describe('browserMeasurer (SSR / node 环境降级路径)', () => {
   it('空字符串、长串、不同 font 均与 fallback 对齐', () => {
     const cases = [
       { text: '', font: { size: 12 } },
-      { text: 'a', font: { size: 16, weight: 'bold' } },
+      { text: 'a', font: { size: 16, weight: 700 } },
       { text: 'abcdefghijklmnop', font: { size: 10, family: 'serif', style: 'italic' as const } },
     ];
 

@@ -72,7 +72,7 @@ export const PointTextPreview = (values: PointTextPreviewValues) => {
           encodings: { text: values.textField, position: { x: { field: 'x' }, y: { field: 'y' } } },
           properties: {
             displayFormat,
-            align: values.align,
+            textAlign: values.align,
             lineHeight: values.lineHeight,
             maxTextWidth: values.maxTextWidth,
             textColor,

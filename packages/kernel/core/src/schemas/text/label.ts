@@ -4,18 +4,19 @@ import type { input as ZodInput } from 'zod';
 
 import { ContextualColorSchema, OpacitySchema } from '../style/graphic';
 import { FontSchema } from './font';
-import { TextBlockSchema, TextAlignSchema } from './text';
+import { TextBlockSchema, TextAlignSchema, TextLayoutSchema } from './text';
 
 /** 允许调用方替换的标签字段说明 */
 type LabelVisualStyleDescriptionOverrides = Partial<Record<'textColor' | 'opacity' | 'font', string>>;
 
 /** 创建标签共用的视觉字段校验器，并允许调用方覆盖字段的英文契约描述 */
 export const createLabelVisualStyleShape = (descriptions: LabelVisualStyleDescriptionOverrides = {}) => ({
+  ...TextLayoutSchema.shape,
   textColor: ContextualColorSchema.optional().describe(
     descriptions.textColor ?? 'Label text color override. Missing values inherit from host defaults.',
   ),
   opacity: OpacitySchema.optional().describe(
-    descriptions.opacity ?? 'Label-only opacity. Host opacity may still multiply it at emit time.',
+    descriptions.opacity ?? 'Label opacity factor multiplied by host opacity; omitted values use 1.',
   ),
   font: FontSchema.optional().describe(
     descriptions.font ?? 'Label font overrides. Missing fields inherit from host defaults.',

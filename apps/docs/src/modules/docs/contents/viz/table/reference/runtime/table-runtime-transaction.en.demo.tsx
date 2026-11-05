@@ -20,7 +20,7 @@ const renderMobileNode = (node: MobileFlowNode) => (
     position={node.position}
     cornerRadius={4}
     style={{ stroke: node.color, fill: node.color, opacity: { fill: 0.08 } }}
-    layout={{ minimumSize: { width: node.width, height: 48 }, align: 'middle', lineHeight: 15 }}
+    layout={{ minimumSize: { width: node.width, height: 48 }, textAlign: 'middle', lineHeight: 15 }}
   >
     <Text font={{ size: 13, weight: 'bold' }}>{node.title}</Text>
     <Text fill="gray" font={{ size: 11 }}>
@@ -41,7 +41,7 @@ const Demo: FC = () => (
             position={[-278, 0]}
             cornerRadius={4}
             style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
-            layout={{ minimumSize: { width: 126, height: 54 }, align: 'middle', lineHeight: 16 }}
+            layout={{ minimumSize: { width: 126, height: 54 }, textAlign: 'middle', lineHeight: 16 }}
           >
             <Text font={{ size: 14, weight: 'bold' }}>Canonical model</Text>
             <Text fill="gray" font={{ size: 11 }}>
@@ -53,7 +53,7 @@ const Demo: FC = () => (
             position={[-140, 0]}
             cornerRadius={4}
             style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
-            layout={{ minimumSize: { width: 120, height: 54 }, align: 'middle', lineHeight: 16 }}
+            layout={{ minimumSize: { width: 120, height: 54 }, textAlign: 'middle', lineHeight: 16 }}
           >
             <Text font={{ size: 14, weight: 'bold' }}>Natural probes</Text>
             <Text fill="gray" font={{ size: 11 }}>
@@ -65,7 +65,7 @@ const Demo: FC = () => (
             position={[0, 0]}
             cornerRadius={4}
             style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
-            layout={{ minimumSize: { width: 128, height: 54 }, align: 'middle', lineHeight: 16 }}
+            layout={{ minimumSize: { width: 128, height: 54 }, textAlign: 'middle', lineHeight: 16 }}
           >
             <Text font={{ size: 14, weight: 'bold' }}>Columns + wrap</Text>
             <Text fill="gray" font={{ size: 11 }}>
@@ -77,7 +77,7 @@ const Demo: FC = () => (
             position={[145, 0]}
             cornerRadius={4}
             style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
-            layout={{ minimumSize: { width: 138, height: 54 }, align: 'middle', lineHeight: 16 }}
+            layout={{ minimumSize: { width: 138, height: 54 }, textAlign: 'middle', lineHeight: 16 }}
           >
             <Text font={{ size: 14, weight: 'bold' }}>Rows + placement</Text>
             <Text fill="gray" font={{ size: 11 }}>
@@ -89,7 +89,7 @@ const Demo: FC = () => (
             position={[295, 0]}
             cornerRadius={4}
             style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
-            layout={{ minimumSize: { width: 132, height: 54 }, align: 'middle', lineHeight: 16 }}
+            layout={{ minimumSize: { width: 132, height: 54 }, textAlign: 'middle', lineHeight: 16 }}
           >
             <Text font={{ size: 14, weight: 'bold' }}>Replay + publish</Text>
             <Text fill="gray" font={{ size: 11 }}>
@@ -103,7 +103,7 @@ const Demo: FC = () => (
           position={[-278, 98]}
           cornerRadius={4}
           style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.06 } }}
-          layout={{ minimumSize: { width: 138, height: 46 }, align: 'middle', lineHeight: 15 }}
+          layout={{ minimumSize: { width: 138, height: 46 }, textAlign: 'middle', lineHeight: 15 }}
         >
           <Text font={{ size: 13, weight: 'bold' }}>Runtime inputs</Text>
           <Text fill="gray" font={{ size: 11 }}>
@@ -115,7 +115,7 @@ const Demo: FC = () => (
           position={[0, 98]}
           cornerRadius={4}
           style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.06 } }}
-          layout={{ minimumSize: { width: 138, height: 46 }, align: 'middle', lineHeight: 15 }}
+          layout={{ minimumSize: { width: 138, height: 46 }, textAlign: 'middle', lineHeight: 15 }}
         >
           <Text font={{ size: 13, weight: 'bold' }}>Parent x proposal</Text>
           <Text fill="gray" font={{ size: 11 }}>
@@ -127,7 +127,7 @@ const Demo: FC = () => (
           position={[230, 98]}
           cornerRadius={4}
           style={{ stroke: 'dimgray', fill: 'dimgray', opacity: { fill: 0.08 } }}
-          layout={{ minimumSize: { width: 104, height: 46 }, align: 'middle', lineHeight: 15 }}
+          layout={{ minimumSize: { width: 104, height: 46 }, textAlign: 'middle', lineHeight: 15 }}
         >
           <Text font={{ size: 13, weight: 'bold' }}>Scene</Text>
           <Text fill="gray" font={{ size: 11 }}>
@@ -139,7 +139,7 @@ const Demo: FC = () => (
           position={[355, 98]}
           cornerRadius={4}
           style={{ stroke: 'dimgray', fill: 'dimgray', opacity: { fill: 0.08 } }}
-          layout={{ minimumSize: { width: 128, height: 46 }, align: 'middle', lineHeight: 15 }}
+          layout={{ minimumSize: { width: 128, height: 46 }, textAlign: 'middle', lineHeight: 15 }}
         >
           <Text font={{ size: 13, weight: 'bold' }}>TableLayoutManifest</Text>
           <Text fill="gray" font={{ size: 11 }}>

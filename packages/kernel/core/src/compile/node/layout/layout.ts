@@ -33,7 +33,7 @@ export const layoutNode = (
   );
   const { textWidth, textHeight, textBaselineOffsets, lines, inlineBlock } = contentLayout;
   const lineHeight = canon.text?.lineHeight ?? 0;
-  const align = canon.text?.align ?? 'middle';
+  const align = canon.text?.textAlign ?? 'middle';
   const rotateDeg = canon.layout.rotate;
 
   let anchorPosition: IRAnchorPosition | undefined;

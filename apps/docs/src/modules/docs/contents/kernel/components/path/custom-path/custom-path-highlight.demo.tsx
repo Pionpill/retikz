@@ -20,17 +20,8 @@ const highlight = definePath<HighlightPath>({
   name: 'highlight',
   schema: HighlightPathSchema,
   compile: context => {
-    const { kindOptions, children } = context.path;
-    const base = context.emitStroke({
-      type: 'path',
-      children,
-      kind: 'stroke',
-      style: {
-        lineCap: 'round',
-        lineJoin: 'round',
-        strokeWidth: kindOptions.strokeWidth ?? context.appearance.strokeWidth ?? 10,
-      },
-    });
+    const { kindOptions } = context.path;
+    const base = context.emitStroke();
     if (base === null) return null;
 
     return {
@@ -41,6 +32,9 @@ const highlight = definePath<HighlightPath>({
               {
                 ...primitive,
                 stroke: kindOptions.stroke,
+                strokeWidth: kindOptions.strokeWidth ?? context.appearance.strokeWidth ?? 10,
+                lineCap: 'round',
+                lineJoin: 'round',
               },
               { ...primitive, stroke: '#0f766e', strokeWidth: 1.5 },
             ]

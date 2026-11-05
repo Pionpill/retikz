@@ -38,8 +38,6 @@ export type PathEmitOptions = {
   targetView?: PathTargetView;
   /** 注入的 TeX 降级能力 */
   lowerTex?: TexLowerer;
-  /** preset 与 rem 字号解析的根字号 */
-  rootFontSize?: number;
 };
 
 /** Path 宿主阶段产物，自定义路径不要求具有单一中心线 */

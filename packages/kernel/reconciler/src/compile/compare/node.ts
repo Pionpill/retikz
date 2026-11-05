@@ -45,7 +45,8 @@ export const compareNodeLayoutInputs = (previous: CanonicalNode, current: Canoni
       ? undefined
       : {
           font: text.font,
-          align: text.align,
+          textAlign: text.textAlign,
+          maxTextWidth: text.maxTextWidth,
           lineHeight: text.lineHeight,
           lines: text.lines.map(line => ({
             mixed: line.mixed,

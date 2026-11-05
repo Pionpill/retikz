@@ -51,12 +51,14 @@ export const createPathDefinitionContext = (
     registerPaint,
     targetView,
     lowerTex,
-    rootFontSize,
   };
   const resolutionOf = (nextPath: IRPathBase): BoundPathResolution =>
     bindPathTargets(
       resolvePathValue(nextPath, {
         scopeDefaults,
+        rootFontSize,
+        gatingOn: lowerTex !== undefined,
+        warn: targetWarn,
         mode: theme.mode,
         pathRegistry: registries.pathRegistry,
         arrowRegistry: registries.arrowRegistry,
@@ -73,6 +75,9 @@ export const createPathDefinitionContext = (
     const strokeResolution =
       sourceResolution.stroke === undefined
         ? resolveStrokePathProviders(sourceResolution, {
+            rootFontSize,
+            gatingOn: lowerTex !== undefined,
+            warn: targetWarn,
             mode: theme.mode,
             pathRegistry: registries.pathRegistry,
             arrowRegistry: registries.arrowRegistry,

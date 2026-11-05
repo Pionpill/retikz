@@ -55,6 +55,19 @@ const createControls = (lang: Lang) => {
         controls: [
           { kind: 'switch', id: 'sloped', label: i18n.rotateAlongPath, defaultValue: false },
           { kind: 'color', id: 'textColor', label: i18n.textColor, defaultValue: '#6b7280' },
+          {
+            kind: 'select',
+            id: 'textAlign',
+            label: i18n.textAlign,
+            defaultValue: 'middle',
+            options: [
+              { value: 'start', label: i18n.left },
+              { value: 'middle', label: i18n.center },
+              { value: 'end', label: i18n.right },
+            ],
+          },
+          { kind: 'range', id: 'lineHeight', label: i18n.lineHeight, defaultValue: 20, min: 10, max: 40, step: 1 },
+          { kind: 'range', id: 'maxTextWidth', label: i18n.maxTextWidth, defaultValue: 80, min: 30, max: 160, step: 5 },
         ],
       },
     ],
@@ -68,7 +81,16 @@ export const drawLabelControls = createControls('zh');
 export const createPreviewControlContract = (lang: Lang) =>
   ({
     controls: createControls(lang),
-    canonicalValues: { segmentKind: 'line', position: 0.5, side: 'top', sloped: false, textColor: '#6b7280' },
+    canonicalValues: {
+      segmentKind: 'line',
+      position: 0.5,
+      side: 'top',
+      sloped: false,
+      textColor: '#6b7280',
+      textAlign: 'middle',
+      lineHeight: 20,
+      maxTextWidth: 80,
+    },
     relatedApis: ['Draw.label'],
   }) satisfies PreviewControlContract;
 

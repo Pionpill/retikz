@@ -498,7 +498,7 @@ describe('Flow Diagram 编译事务', () => {
 
     const plain = compile('Frontend form');
     const rich = compile(['Frontend form', { text: 'Complete user details', fill: 'gray', font: { size: 'sm' } }], {
-      align: 'start',
+      textAlign: 'start',
       lineHeight: 18,
       maxTextWidth: 160,
     });

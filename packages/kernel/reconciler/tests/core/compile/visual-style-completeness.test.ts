@@ -62,7 +62,7 @@ it('分段线默认保留部分字体和视觉覆盖', () => {
   });
   const text = leaves(compileToScene(source).scene.primitives).filter(item => item.type === 'text');
   expect(text[0]).toMatchObject({ fontSize: 24, fontFamily: 'serif', fontWeight: 700, fill: 'red', opacity: 0.5 });
-  expect(text[1]).toMatchObject({ fontSize: 24, fontFamily: 'serif', fill: 'blue', opacity: 0.8 });
+  expect(text[1]).toMatchObject({ fontSize: 24, fontFamily: 'serif', fill: 'blue', opacity: 0.5 * 0.8 });
 });
 
 it('共享效果和描边几何体到达范围节点', () => {
@@ -121,7 +121,7 @@ it('pin 解析绘画资源并使用其自己的不透明度和描边几何形状
   const pin = leaves(scene.primitives).find(item => item.type === 'path');
   expect(pin).toMatchObject({
     stroke: { kind: 'resourceRef' },
-    opacity: 0.8,
+    opacity: 0.4 * 0.8,
     lineCap: 'round',
     lineJoin: 'bevel',
     dashPattern: [2, 3],

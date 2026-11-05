@@ -11,7 +11,7 @@ const Demo: FC = () => (
       position={[-320, -10]}
       cornerRadius={4}
       style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
-      layout={{ minimumSize: { width: 130, height: 58 }, align: 'middle', lineHeight: 17 }}
+      layout={{ minimumSize: { width: 130, height: 58 }, textAlign: 'middle', lineHeight: 17 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>runtime inputs</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -26,7 +26,7 @@ const Demo: FC = () => (
         position={[-150, -10]}
         cornerRadius={4}
         style={{ stroke: 'dimgray', fill: 'dimgray', opacity: { fill: 0.08 } }}
-        layout={{ minimumSize: { width: 140, height: 58 }, align: 'middle', lineHeight: 17 }}
+        layout={{ minimumSize: { width: 140, height: 58 }, textAlign: 'middle', lineHeight: 17 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>data preparation</Text>
         <Text fill="gray" font={{ size: 12 }}>
@@ -38,7 +38,7 @@ const Demo: FC = () => (
         position={[20, -10]}
         cornerRadius={4}
         style={{ stroke: 'dimgray', fill: 'dimgray', opacity: { fill: 0.08 } }}
-        layout={{ minimumSize: { width: 150, height: 58 }, align: 'middle', lineHeight: 17 }}
+        layout={{ minimumSize: { width: 150, height: 58 }, textAlign: 'middle', lineHeight: 17 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>Plot lowering</Text>
         <Text fill="gray" font={{ size: 12 }}>
@@ -54,7 +54,7 @@ const Demo: FC = () => (
         position={[195, -10]}
         cornerRadius={4}
         style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
-        layout={{ minimumSize: { width: 112, height: 58 }, align: 'middle', lineHeight: 17 }}
+        layout={{ minimumSize: { width: 112, height: 58 }, textAlign: 'middle', lineHeight: 17 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>Core IR</Text>
         <Text fill="gray" font={{ size: 12 }}>
@@ -66,7 +66,7 @@ const Demo: FC = () => (
         position={[335, -10]}
         cornerRadius={4}
         style={{ stroke: 'dimgray', fill: 'dimgray', opacity: { fill: 0.08 } }}
-        layout={{ minimumSize: { width: 112, height: 58 }, align: 'middle', lineHeight: 17 }}
+        layout={{ minimumSize: { width: 112, height: 58 }, textAlign: 'middle', lineHeight: 17 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>Scene</Text>
         <Text fill="gray" font={{ size: 12 }}>
@@ -80,7 +80,7 @@ const Demo: FC = () => (
       position={[-320, 100]}
       cornerRadius={4}
       style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
-      layout={{ minimumSize: { width: 146, height: 50 }, align: 'middle', lineHeight: 16 }}
+      layout={{ minimumSize: { width: 146, height: 50 }, textAlign: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>runtime-only queries</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -92,7 +92,7 @@ const Demo: FC = () => (
       position={[-150, 100]}
       cornerRadius={4}
       style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
-      layout={{ minimumSize: { width: 132, height: 50 }, align: 'middle', lineHeight: 16 }}
+      layout={{ minimumSize: { width: 132, height: 50 }, textAlign: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Definitions</Text>
       <Text fill="gray" font={{ size: 12 }}>

@@ -1,23 +1,17 @@
 import type { CurveSegmentSample } from '@retikz/math';
 import { RAD_TO_DEG } from '@retikz/math';
 
-import type { TextMeasurer, GroupPrimitive, ScenePrimitive, TextPrimitive } from '../../../contract';
-import { combineOpacity, resolveTextMetrics, resolveFont, resolveTextLine } from '../../../resolve';
-import type { CanonicalFont, CanonicalPathLabel } from '../../../resolve';
+import type { TextMeasurer, GroupPrimitive, ScenePrimitive, PathDefinitionLabel } from '../../../contract';
+import { combineOpacity } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
 import type { CompileWarningCode } from '../../shared';
-import type { LineLayoutContext, TexLowerer } from '../../text';
-import { DEFAULT_FONT_SIZE, emitInlineLine, layoutInlineLine, calculateAlphabeticBaselineY } from '../../text';
-
-/** 边标注默认行高 */
-const LABEL_LINE_HEIGHT_FACTOR = 1.2;
+import type { TexLowerer } from '../../text';
+import { emitTextBlock, layoutTextBlock } from '../../text';
 
 /** 边标注公式上下文 */
 type LabelTexContext = {
   /** 注入的 TeX 降解能力 */
   lowerTex?: TexLowerer;
-  /** `$...$` 解析门控 */
-  gatingOn: boolean;
   /** 接收公式解析与排版产生的编译诊断 */
   warn: (code: CompileWarningCode, message: string) => void;
 };
@@ -34,248 +28,101 @@ export type EmitLabelPrimitiveContext = {
   measureText: TextMeasurer;
   /** 统一输出坐标与尺寸的数值精度 */
   round: (n: number) => number;
-  /**
-   * 解析预设与 rem 字号时使用的根字号
-   * @default DEFAULT_FONT_SIZE
-   */
-  rootFontSize?: number;
   /** 与标签自身透明度合成的宿主透明度 */
   hostOpacity?: number;
-  /** 公式识别、降解和诊断能力；省略时不启用公式识别 */
+  /** 已解析公式的降解和诊断能力 */
   tex?: LabelTexContext;
   /** 宿主提供的标签几何定位结果 */
   placement?: LabelPlacementContext;
 };
 
 /**
- * step.label + 段采样 → 单行 primitive
- * @description 返回 label primitive 及其 bbox 外接点
+ * 将共享文本块放置到路径采样点
+ * @description 返回文字或组合图元及旋转后的文本块包络
  */
 export const emitLabelPrimitive = (
-  canon: CanonicalPathLabel,
+  canon: PathDefinitionLabel,
   sample: CurveSegmentSample,
   context: EmitLabelPrimitiveContext,
 ): { primitive: ScenePrimitive; boundsPoints: Array<IRPosition> } => {
-  const {
-    measureText,
-    round,
-    rootFontSize = DEFAULT_FONT_SIZE,
-    hostOpacity,
-    tex: texCtx,
-    placement: placementCtx,
-  } = context;
+  const { measureText, round, hostOpacity, tex: texCtx, placement: placementCtx } = context;
 
-  // label.font / textColor / opacity 已由 resolve/style 解析（fold scope labelDefault + 宿主 path 主色）
-  const font: CanonicalFont = resolveFont(canon.font, {
-    rootFontSize,
-    inheritedFont: { size: rootFontSize },
-  });
-  const fontSize = font.size;
-  const fontFamily = font.family;
-  const fontWeight = font.weight;
-  const fontStyle = font.style;
   const side = canon.side;
   const sloped = canon.sloped === true;
   const sideDistance = canon.distance;
   const sideOffset = placementCtx?.sideOffset ?? sideDistance;
   const labelOpacity = combineOpacity(canon.opacity, hostOpacity);
 
-  const gatingOn = texCtx?.gatingOn ?? false;
-  const sourceLines = Array.isArray(canon.text)
-    ? canon.text
-    : typeof canon.text === 'string'
-      ? canon.text.split('\n')
-      : [canon.text];
-  const resolvedLines = sourceLines.map(text =>
-    resolveTextLine(text, {
-      rootFontSize,
-      inheritedFont: font,
-      gatingOn,
-      warn: texCtx?.warn ?? ((): void => {}),
-      warningMessage: 'Unbalanced `$` in edge label; the trailing fragment is kept literal.',
-    }),
-  );
-
-  // 无行级覆盖的单行纯文本直接输出；带样式的行与混排共用完整布局和绘制链路。
-  if (sourceLines.length > 1 || resolvedLines[0].mixed || resolvedLines[0].style !== undefined) {
-    const ctx: LineLayoutContext = {
-      measureText,
-      lowerTex: texCtx?.lowerTex,
-      font,
-      warn: texCtx?.warn ?? ((): void => {}),
-    };
-    const laidLines = resolvedLines.map(line => layoutInlineLine(line.segments, ctx));
-    const slots = laidLines.map(line => Math.max(fontSize * LABEL_LINE_HEIGHT_FACTOR, line.ascent + line.descent));
-    const blockWidth = Math.max(...laidLines.map(line => line.width));
-    const blockHeight = slots.reduce((height, slot) => height + slot, 0);
-
-    const ax = sample.point[0];
-    const ay = sample.point[1];
-    let left: number;
-    let top: number;
-    if (side === 'bottom') {
-      left = ax - blockWidth / 2;
-      top = ay + sideOffset;
-    } else if (side === 'left') {
-      left = ax - sideOffset - blockWidth;
-      top = ay - blockHeight / 2;
-    } else if (side === 'right') {
-      left = ax + sideOffset;
-      top = ay - blockHeight / 2;
-    } else if (side === 'center') {
-      left = ax - blockWidth / 2;
-      top = ay - blockHeight / 2;
-    } else {
-      left = ax - blockWidth / 2;
-      top = ay - sideOffset - blockHeight;
-    }
-
-    let verticalOffset = 0;
-    const children = laidLines.flatMap((laid, index) => {
-      const slot = slots[index];
-      const naturalHeight = laid.ascent + laid.descent;
-      const baselineY = top + verticalOffset + (slot - naturalHeight) / 2 + laid.ascent;
-      verticalOffset += slot;
-
-      return emitInlineLine(
-        laid,
-        {
-          color: canon.textColor,
-          opacity: labelOpacity,
-          segments: resolvedLines[index].segments,
-        },
-        left + (blockWidth - laid.width) / 2,
-        baselineY,
-        round,
-      );
-    });
-    const group: GroupPrimitive = { type: 'group', children };
-    const right = left + blockWidth;
-    const bottom = top + blockHeight;
-
-    if (sloped) {
-      const angleDeg = Math.atan2(sample.tangent[1], sample.tangent[0]) * RAD_TO_DEG;
-      const rotated: GroupPrimitive = {
-        type: 'group',
-        transforms: [{ kind: 'rotate', degrees: round(angleDeg), cx: round(ax), cy: round(ay) }],
-        children: [group],
-      };
-      const angleRad = angleDeg / RAD_TO_DEG;
-      const cos = Math.cos(angleRad);
-      const sin = Math.sin(angleRad);
-      const boundsPoints = [
-        [left, top],
-        [right, top],
-        [left, bottom],
-        [right, bottom],
-      ].map(([x, y]): IRPosition => [ax + (x - ax) * cos - (y - ay) * sin, ay + (x - ax) * sin + (y - ay) * cos]);
-
-      return {
-        primitive: rotated,
-        boundsPoints,
-      };
-    }
-
-    return {
-      primitive: group,
-      boundsPoints: [
-        [left, top],
-        [right, top],
-        [left, bottom],
-        [right, bottom],
-      ],
-    };
-  }
-
-  // 纯文本：维持既有 TextPrimitive 路径（gating 时用反转义后的文字，否则原字符串、零回归）
-  const resolved = resolvedLines[0];
-  const text = resolved.plainText;
-  const lineHeight = fontSize * LABEL_LINE_HEIGHT_FACTOR;
-  const m = resolveTextMetrics(measureText(text, font));
-  const measuredWidth = m.width;
-  const measuredHeight = m.height || lineHeight;
-
-  let x = sample.point[0];
-  let y = sample.point[1];
-  let align: 'start' | 'middle' | 'end' = 'middle';
-  let baseline: 'top' | 'middle' | 'bottom' | 'alphabetic' = 'middle';
-
-  if (side === 'top') {
-    y -= sideOffset;
-    baseline = 'bottom';
-  } else if (side === 'bottom') {
-    y += sideOffset;
-    baseline = 'top';
+  const block = layoutTextBlock(canon.text.lines, canon.text, {
+    measureText,
+    lowerTex: texCtx?.lowerTex,
+    font: canon.text.font,
+    warn: texCtx?.warn ?? (() => {}),
+  });
+  const blockWidth = block.width;
+  const blockHeight = block.height;
+  const ax = sample.point[0];
+  const ay = sample.point[1];
+  let left: number;
+  let top: number;
+  if (side === 'bottom') {
+    left = ax - blockWidth / 2;
+    top = ay + sideOffset;
   } else if (side === 'left') {
-    x -= sideOffset;
-    align = 'end';
+    left = ax - sideOffset - blockWidth;
+    top = ay - blockHeight / 2;
   } else if (side === 'right') {
-    x += sideOffset;
-    align = 'start';
+    left = ax + sideOffset;
+    top = ay - blockHeight / 2;
+  } else if (side === 'center') {
+    left = ax - blockWidth / 2;
+    top = ay - blockHeight / 2;
   } else {
-    baseline = 'middle';
+    left = ax - blockWidth / 2;
+    top = ay - sideOffset - blockHeight;
   }
 
-  const emittedLineHeight = round(lineHeight);
-  const textPrim: TextPrimitive = {
-    type: 'text',
-    x: round(x),
-    y: round(calculateAlphabeticBaselineY({ y, baseline, lineCount: 1, lineHeight: emittedLineHeight, fontSize })),
-    lines: [{ text }],
-    fontSize,
-    align,
-    baseline: 'alphabetic',
-    lineHeight: emittedLineHeight,
-    measuredWidth: round(measuredWidth),
-    measuredHeight: round(measuredHeight),
-    fill: canon.textColor ?? 'currentColor',
-  };
-  if (fontFamily !== undefined) textPrim.fontFamily = fontFamily;
-  if (fontWeight !== undefined) textPrim.fontWeight = fontWeight;
-  if (fontStyle !== undefined) textPrim.fontStyle = fontStyle;
-  if (labelOpacity !== undefined) textPrim.opacity = labelOpacity;
+  const children = emitTextBlock(
+    block,
+    {
+      lines: canon.text.lines,
+      color: canon.text.color,
+      opacity: labelOpacity,
+      textAlign: canon.text.textAlign,
+    },
+    left,
+    top,
+    round,
+  );
+  const group: GroupPrimitive = { type: 'group', children };
+  const right = left + blockWidth;
+  const bottom = top + blockHeight;
 
   if (sloped) {
     const angleDeg = Math.atan2(sample.tangent[1], sample.tangent[0]) * RAD_TO_DEG;
-    const groupPrim: ScenePrimitive = {
+    const rotated: GroupPrimitive = {
       type: 'group',
-      transforms: [
-        {
-          kind: 'rotate',
-          degrees: round(angleDeg),
-          cx: round(sample.point[0]),
-          cy: round(sample.point[1]),
-        },
-      ],
-      children: [textPrim],
+      transforms: [{ kind: 'rotate', degrees: round(angleDeg), cx: round(ax), cy: round(ay) }],
+      children,
     };
-
-    // sloped 旋转后用半径外接近似四角点
-    const r = Math.max(measuredWidth / 2, measuredHeight / 2);
+    const angleRad = angleDeg / RAD_TO_DEG;
+    const cos = Math.cos(angleRad);
+    const sin = Math.sin(angleRad);
+    const boundsPoints = [
+      [left, top],
+      [right, top],
+      [left, bottom],
+      [right, bottom],
+    ].map(([x, y]): IRPosition => [ax + (x - ax) * cos - (y - ay) * sin, ay + (x - ax) * sin + (y - ay) * cos]);
 
     return {
-      primitive: groupPrim,
-      boundsPoints: [
-        [x - r, y - r],
-        [x + r, y - r],
-        [x - r, y + r],
-        [x + r, y + r],
-      ],
+      primitive: rotated,
+      boundsPoints,
     };
   }
 
-  // 非 sloped：按 align / baseline 求文本块的真实左右 / 上下边，再取四角加进 bbox 候选。
-  // 锚点居中对称取角会少覆盖半个宽 / 高——side='left'（align=end）文本完全在锚点左侧、
-  // side='top'（baseline=bottom）文本完全在锚点上方，长 label 会超出自动 viewBox 被裁。
-  const halfW = measuredWidth / 2;
-  const halfH = measuredHeight / 2;
-  const left = align === 'start' ? x : align === 'end' ? x - measuredWidth : x - halfW;
-  const right = align === 'start' ? x + measuredWidth : align === 'end' ? x : x + halfW;
-  const top = baseline === 'top' ? y : baseline === 'bottom' ? y - measuredHeight : y - halfH;
-  const bottom = baseline === 'top' ? y + measuredHeight : baseline === 'bottom' ? y : y + halfH;
-
   return {
-    primitive: textPrim,
+    primitive: children.length === 1 ? children[0] : group,
     boundsPoints: [
       [left, top],
       [right, top],

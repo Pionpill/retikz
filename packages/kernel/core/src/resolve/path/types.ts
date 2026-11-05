@@ -17,7 +17,7 @@ import type {
 import type { ThemeMode } from '../../shared';
 import type { InputPaintResolution } from '../resource';
 import type { GraphicOpacityResolution, MergedScopeDefaults } from '../style';
-import type { LabelTextColorSource } from '../text';
+import type { LabelTextColorSource, CanonicalTextBlock } from '../text';
 
 /** 已解析文字主色与行内片段颜色的路径标签 */
 export type PathLabelColorSource = Omit<IRPathLabel, 'textColor' | 'text'> & {
@@ -48,7 +48,22 @@ export type CanonicalPathLabelPlacement = Omit<
 };
 
 /** 展开位置、方向与距离默认值后的路径标签 */
-export type CanonicalPathLabel = Omit<PathLabelColorSource, 'position' | 'side' | 'distance' | 'interrupt' | 'gap'> & {
+export type CanonicalPathLabel = Omit<
+  PathLabelColorSource,
+  | 'position'
+  | 'side'
+  | 'distance'
+  | 'interrupt'
+  | 'gap'
+  | 'text'
+  | 'font'
+  | 'textColor'
+  | 'textAlign'
+  | 'lineHeight'
+  | 'maxTextWidth'
+> & {
+  /** 已确定的共享文本块 */
+  text: CanonicalTextBlock;
   /** 路径上的归一化位置 */
   position: number;
   /** 相对宿主线段的方向 */
@@ -232,6 +247,12 @@ export type CanonicalPathArrow = Readonly<{
 
 /** 路径解析所需的作用域配置、目标查询与扩展定义 */
 export type PathResolveContext = Readonly<{
+  /** 字体预设和相对单位的根字号 */
+  rootFontSize: number;
+  /** 是否启用公式简写 */
+  gatingOn: boolean;
+  /** 文本解析诊断出口 */
+  warn?: (code: string, message: string) => void;
   /** 当前作用域的默认配置，省略时不执行作用域样式合并 */
   scopeDefaults?: MergedScopeDefaults;
   /** 当前路径使用的主题明暗模式 */

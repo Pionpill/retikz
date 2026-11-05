@@ -158,11 +158,11 @@ Each column uses one width setting: short text above and the same longer sentenc
 | -------------------------- | ----------------------------------------------- | ---------------------------------------------------------------------------------------- |
 | `layout.width`             | Unscaled visible border width, excluding margin | Keeps the width fixed and reflows plain text into the available space                    |
 | `layout.minimumSize.width` | A lower bound on visible border width           | Expands short text to the minimum; longer text can enlarge the border                    |
-| `layout.maxTextWidth`      | A plain-text wrapping threshold                 | Wraps long text without stretching short text; padding and shape still affect the border |
+| `layout.maxTextWidth`      | A text wrapping threshold                       | Wraps long text without stretching short text; padding and shape still affect the border |
 
 <ComponentPreview files="node-width-comparison" size="md" />
 
-A fixed width must accommodate the effective minimum size, padding, and shape geometry. If an unbreakable word or mixed content still cannot fit, compilation fails rather than clipping it or shrinking its font. See [text](/kernel/components/node/text#multiple-lines-and-wrapping) for multiline and mixed-segment limits.
+A fixed width must accommodate the effective minimum size, padding, and shape geometry. If an indivisible grapheme or formula still cannot fit, compilation fails rather than clipping it or shrinking its font. See [text](/kernel/components/node/text#multiple-lines-and-wrapping) for multiline and mixed-segment limits.
 
 ## Additional notes
 
@@ -219,7 +219,7 @@ The following are the props most relevant to this page. See the [API reference](
       kind: 'property',
       type: "InputNode['layout']",
       description:
-        'Fields used here:\n\n- `padding` / `margin`: a number or numeric `{ default?, x?, y?, left?, right?, top?, bottom? }`; side overrides axis, then default\n- `minimumSize`: a number or numeric `{ default?, width?, height? }`\n- `width?: number`: unscaled border width, excluding margin, no smaller than the minimum\n- `maxTextWidth?: number`: plain-text wrapping threshold, not a fixed border width',
+        'Fields used here:\n\n- `padding` / `margin`: a number or numeric `{ default?, x?, y?, left?, right?, top?, bottom? }`; side overrides axis, then default\n- `minimumSize`: a number or numeric `{ default?, width?, height? }`\n- `width?: number`: unscaled border width, excluding margin, no smaller than the minimum\n- `maxTextWidth?: number`: text wrapping threshold, not a fixed border width',
     },
     {
       name: 'scale',

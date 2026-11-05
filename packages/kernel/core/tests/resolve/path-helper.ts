@@ -11,6 +11,8 @@ type BuiltinProviderContext = Partial<Pick<PathCompileContext, 'scopeChain' | 't
 
 const contextWithBuiltinProviders = (context: BuiltinProviderContext): PathResolveContext => ({
   mode: 'light',
+  rootFontSize: 16,
+  gatingOn: false,
   pathRegistry: resolvePathRegistry(),
   arrowRegistry: resolveArrowRegistry(),
   patternRegistry: resolvePatternRegistry(),

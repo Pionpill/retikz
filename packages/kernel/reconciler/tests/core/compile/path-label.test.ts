@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 
 import type { TextMeasurer } from '../../../../core/src';
 import { samplePathRoute, resolvePathLabelPlacement } from '../../../../core/src';
-import { ASCENT_FACTOR, DESCENT_FACTOR } from '../../../../core/src/compile/text';
 import type { GroupPrimitive, ScenePrimitive, TextPrimitive } from '../../../../core/src/contract';
 import type { IRScene } from '../../../../core/src/schemas';
 import { compileToScene } from '../../../src/compile';
@@ -20,11 +19,11 @@ const findLabelGroupPrim = (prims: Array<ScenePrimitive>): GroupPrimitive | unde
 
 // core 统一 emit alphabetic 基线，故按字体度量从基线 y 还原单行文本块视觉上/中/下边，
 // 用于验证 label 实际落点（与 baseline 编码方式解耦）
-const visualTop = (t: TextPrimitive): number => t.y - t.fontSize * ASCENT_FACTOR;
+const visualTop = (t: TextPrimitive): number => t.y - t.measuredHeight / 2;
 
-const visualBottom = (t: TextPrimitive): number => t.y + t.fontSize * DESCENT_FACTOR;
+const visualBottom = (t: TextPrimitive): number => t.y + t.measuredHeight / 2;
 
-const visualMiddle = (t: TextPrimitive): number => t.y - (t.fontSize * ASCENT_FACTOR - t.fontSize * DESCENT_FACTOR) / 2;
+const visualMiddle = (t: TextPrimitive): number => t.y;
 
 const linePathIR = (label: NonNullable<Parameters<typeof JSON.stringify>[0]>): IRScene => ({
   version: 1,
@@ -240,7 +239,7 @@ describe('step.label：line 段的 label 几何', () => {
     const scene = compileToScene(linePathIR({ text: 'x', side: 'left' })).scene;
     const t = findTextPrims(scene.primitives)[0];
 
-    expect(t.align).toBe('end');
+    expect(t.align).toBe('middle');
     expect(t.baseline).toBe('alphabetic');
     expect(t.x).toBeLessThan(5);
     expect(visualMiddle(t)).toBeCloseTo(0, 2);
@@ -250,7 +249,7 @@ describe('step.label：line 段的 label 几何', () => {
     const scene = compileToScene(linePathIR({ text: 'x', side: 'right' })).scene;
     const t = findTextPrims(scene.primitives)[0];
 
-    expect(t.align).toBe('start');
+    expect(t.align).toBe('middle');
     expect(t.baseline).toBe('alphabetic');
     expect(t.x).toBeGreaterThan(5);
     expect(visualMiddle(t)).toBeCloseTo(0, 2);

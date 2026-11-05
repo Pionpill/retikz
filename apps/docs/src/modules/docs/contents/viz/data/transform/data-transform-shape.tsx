@@ -70,7 +70,7 @@ export const DataTransformShapeFigure: FC<DataTransformShapeFigureProps> = props
           role="activity"
           kind={LogicFigureEntityKind.Operation}
           position={[0, 0]}
-          layout={{ minimumSize: { width: 108, height: 52 }, align: 'middle', lineHeight: 17 }}
+          layout={{ minimumSize: { width: 108, height: 52 }, textAlign: 'middle', lineHeight: 17 }}
         >
           summarize
         </Entity>

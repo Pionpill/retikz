@@ -41,8 +41,8 @@ describe('独立视觉契约', () => {
     expect(schema.safeParse({ opacity: 0.5 }).success).toBe(false);
     expect(schema.safeParse({ lineCap: 'invalid' }).success).toBe(false);
     expect(TextVisualSchema.safeParse({ align: 'middle' }).success).toBe(false);
-    expect(TextLayoutSchema.parse({ align: 'middle', maxTextWidth: 10 })).toEqual({
-      align: 'middle',
+    expect(TextLayoutSchema.parse({ textAlign: 'middle', maxTextWidth: 10 })).toEqual({
+      textAlign: 'middle',
       maxTextWidth: 10,
     });
     expect(TextLayoutSchema.safeParse({ lineHeight: 0 }).success).toBe(false);

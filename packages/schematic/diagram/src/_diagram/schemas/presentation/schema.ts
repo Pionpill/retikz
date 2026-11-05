@@ -11,7 +11,7 @@ const DiagramPresentationTextStyleSchema = strictObject({
 
 /** Diagram Presentation 文本区域的块级布局覆盖 */
 const DiagramPresentationTextLayoutSchema = strictObject({
-  align: NodeSchema.shape.layout.unwrap().shape.align,
+  textAlign: NodeSchema.shape.layout.unwrap().shape.textAlign,
   lineHeight: NodeSchema.shape.layout.unwrap().shape.lineHeight,
   maxTextWidth: NodeSchema.shape.layout.unwrap().shape.maxTextWidth,
 }).describe('Block-level layout overrides for one Diagram presentation text region.');

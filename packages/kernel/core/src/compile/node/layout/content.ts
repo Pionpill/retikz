@@ -1,10 +1,8 @@
-import type { TextFont } from '../../../contract';
-import type { CanonicalFont, CanonicalNodeText } from '../../../resolve';
-import { resolveTextMetrics } from '../../../resolve';
-import type { InlineLineLayout, LineLayoutContext } from '../../text';
-import { layoutInlineLine } from '../../text';
+import type { CanonicalTextBlock } from '../../../resolve';
+import type { InlineLineLayout } from '../../text';
+import { layoutTextBlock } from '../../text';
 import type { CompiledNodeTextLineLayout, NodeTextLayoutContext } from '../types';
-import { measureMinimumTextWidth, wrapText } from './text';
+import { measureMinimumTextWidth } from './text';
 
 /** 节点正文布局输入 */
 type InputNodeContentLayout = NodeTextLayoutContext & {
@@ -26,6 +24,8 @@ type NodeContentLayout = {
     lines: Array<{
       /** 该行的测量与片段布局 */
       laid: InlineLineLayout;
+      /** 折行前的作者行索引 */
+      sourceLineIndex: number;
       /** 相对正文块顶部的基线垂直偏移 */
       baselineOffset: number;
     }>;
@@ -34,118 +34,67 @@ type NodeContentLayout = {
   textWidth: number;
   /** 内容文本高度 */
   textHeight: number;
-  /** 同次正文排版得到的 authored physical-line baseline offsets */
+  /** 同次排版得到的物理行基线偏移 */
   textBaselineOffsets?: Array<number>;
 };
 
 /** 混排按实际片段度量确定行槽与基线 */
-const layoutInlineContent = (canon: CanonicalNodeText, input: InputNodeContentLayout): NodeContentLayout => {
-  const { measureText, tex: texLowering, lineHeight } = input;
-  const { lines: resolved, font: blockFont } = canon;
-  const inlineWarn = texLowering?.warn ?? (() => {});
-  let textWidth = 0;
-  const ctx: LineLayoutContext = {
-    measureText,
-    lowerTex: texLowering?.lowerTex,
-    font: blockFont,
-    warn: inlineWarn,
-  };
-  let cursor = 0;
-  const blockLines = resolved.map(r => {
-    const laid = layoutInlineLine(r.segments, ctx);
-    const slot = Math.max(lineHeight, laid.ascent + laid.descent);
-    const baselineOffset = cursor + (slot - (laid.ascent + laid.descent)) / 2 + laid.ascent;
-    cursor += slot;
-    if (laid.width > textWidth) textWidth = laid.width;
-
-    return { laid, baselineOffset };
-  });
+const layoutInlineContent = (canon: CanonicalTextBlock, input: InputNodeContentLayout): NodeContentLayout => {
+  const { measureText, tex, lineHeight, maxTextWidth } = input;
+  const block = layoutTextBlock(
+    canon.lines,
+    { lineHeight, maxTextWidth },
+    {
+      font: canon.font,
+      measureText,
+      lowerTex: tex?.lowerTex,
+      warn: tex?.warn ?? (() => {}),
+    },
+  );
   return {
-    inlineBlock: { lines: blockLines },
-    textBaselineOffsets: blockLines.map(line => line.baselineOffset),
-    textWidth,
-    textHeight: cursor,
+    inlineBlock: { lines: block.lines },
+    textBaselineOffsets: block.lines.map(line => line.baselineOffset),
+    textWidth: block.width,
+    textHeight: block.height,
   };
 };
 
 /** 普通正文按硬换行与宽度预算生成物理行 */
-const layoutPlainContent = (canon: CanonicalNodeText, input: InputNodeContentLayout): NodeContentLayout => {
+const layoutPlainContent = (canon: CanonicalTextBlock, input: InputNodeContentLayout): NodeContentLayout => {
   const { measureText, lineHeight, maxTextWidth, minimumTextWidth = false } = input;
-  const { lines: resolved, font: blockFont } = canon;
-  const { size: fontSize, family: fontFamily, weight: fontWeight, style: fontStyle } = blockFont;
-  let textWidth = 0;
-
-  /** 将宿主测量结果规范化为正文需要的基线度量 */
-  const measurePhysicalText = (text: string, font: TextFont): ReturnType<typeof resolveTextMetrics> =>
-    resolveTextMetrics(measureText(text, font));
-
-  const plainLines = resolved.map(line => {
-    const lineStyle = line.style;
-    const lineFontSize = lineStyle?.font?.size;
-    const font: CanonicalFont = {
-      size: lineFontSize ?? fontSize,
-      family: lineStyle?.font?.family ?? fontFamily,
-      weight: lineStyle?.font?.weight ?? fontWeight,
-      style: lineStyle?.font?.style ?? fontStyle,
-    };
-
-    return { text: line.plainText, lineStyle, lineFontSize, font };
-  });
-
-  const intrinsicMinimumWidth = minimumTextWidth
-    ? plainLines.reduce(
-        (width, line) =>
-          line.text
-            .split('\n')
-            .reduce(
-              (lineWidth, hardLine) =>
-                Math.max(
-                  lineWidth,
-                  measureMinimumTextWidth(hardLine, { font: line.font, measureText: measurePhysicalText }),
-                ),
-              width,
-            ),
-        0,
-      )
+  const intrinsicWidth = minimumTextWidth
+    ? canon.lines.reduce((width, line) => {
+        const font = { ...canon.font, ...line.style?.font };
+        return Math.max(width, measureMinimumTextWidth(line.plainText, { font, measureText }));
+      }, 0)
     : undefined;
-
-  const wrappingWidth =
-    intrinsicMinimumWidth === undefined
-      ? maxTextWidth
-      : maxTextWidth === undefined
-        ? intrinsicMinimumWidth
-        : Math.min(intrinsicMinimumWidth, maxTextWidth);
-
-  const lines: Array<CompiledNodeTextLineLayout> = [];
-  const textBaselineOffsets: Array<number> = [];
-  let firstPlainBaselineOffset: number | undefined;
-
-  for (const [sourceLineIndex, { text, lineStyle, lineFontSize, font }] of plainLines.entries()) {
-    const hardLines = text.split('\n');
-    const physical = hardLines.flatMap(hardLine =>
-      wrappingWidth !== undefined
-        ? wrapText(hardLine, { font, maxWidth: wrappingWidth, measureText: measurePhysicalText })
-        : [hardLine],
-    );
-
-    for (const ptext of physical) {
-      const m = measurePhysicalText(ptext, font);
-      if (m.width > textWidth) textWidth = m.width;
-      firstPlainBaselineOffset ??= (lineHeight - (m.ascent + m.descent)) / 2 + m.ascent;
-      textBaselineOffsets.push(firstPlainBaselineOffset + lines.length * lineHeight);
-      const out: CompiledNodeTextLineLayout = { text: ptext, sourceLineIndex };
-      if (lineStyle !== undefined) {
-        if (lineFontSize !== undefined) out.fontSize = lineFontSize;
-        if (lineStyle.font?.family !== undefined) out.fontFamily = lineStyle.font.family;
-        if (lineStyle.font?.weight !== undefined) out.fontWeight = lineStyle.font.weight;
-        if (lineStyle.font?.style !== undefined) out.fontStyle = lineStyle.font.style;
-      }
-
-      lines.push(out);
-    }
-  }
-
-  return { lines, textWidth, textHeight: lines.length * lineHeight, textBaselineOffsets };
+  const budget = intrinsicWidth === undefined ? maxTextWidth : Math.min(intrinsicWidth, maxTextWidth ?? Infinity);
+  const block = layoutTextBlock(
+    canon.lines,
+    { lineHeight, maxTextWidth: budget },
+    {
+      font: canon.font,
+      measureText,
+      warn: () => {},
+    },
+  );
+  return {
+    lines: block.lines.map(({ laid, sourceLineIndex }) => {
+      const font = canon.lines[sourceLineIndex].style?.font;
+      return {
+        text: laid.pieces.map(piece => (piece.kind === 'text' ? piece.text : '')).join(''),
+        sourceLineIndex,
+        measuredHeight: laid.ascent + laid.descent,
+        fontSize: font?.size,
+        fontFamily: font?.family,
+        fontWeight: font?.weight,
+        fontStyle: font?.style,
+      };
+    }),
+    textWidth: block.width,
+    textHeight: block.height,
+    textBaselineOffsets: block.lines.map(line => line.baselineOffset),
+  };
 };
 
 /** 布局节点正文，无正文时直接返回空内容尺寸 */

@@ -14,8 +14,7 @@ import {
 
 import { compareCanonicalPaths } from '../../compare';
 import type { CompileOwnerKey } from '../../provenance';
-import { createExecutionInvariantError } from '../../runtime';
-import { runCompileStage } from '../../runtime';
+import { createExecutionInvariantError, runCompileStage } from '../../runtime';
 import type { CompileRuntime } from '../../runtime';
 import { createCompileChildPath } from '../../shared';
 import { createTreePositionContext } from '../reference';
@@ -116,6 +115,9 @@ export const flushPendingPathEmissions = (
               resolvePath(pendingPath.path, {
                 ...stageRuntime.context.registries,
                 ...stageRuntime.context.layout,
+                gatingOn: stageRuntime.context.host.lowerTex !== undefined,
+                warn: (code, message) =>
+                  stageRuntime.state.workspace.diagnosticCollector.collect({ code, message, path: pendingPath.irPath }),
                 scopeDefaults: pendingPath.scopeDefaults,
                 mode: pendingPath.theme.mode,
                 irPath: pendingPath.irPath,

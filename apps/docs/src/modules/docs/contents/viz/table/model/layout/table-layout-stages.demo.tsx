@@ -25,7 +25,7 @@ const stageNode = (stage: Stage) => (
     style={{ stroke: 'gray', fill: 'lightgray', opacity: { fill: 0.16 } }}
     layout={{
       minimumSize: { width: stage.id === 'tracks' || stage.id === 'place' ? 144 : 122, height: 50 },
-      align: 'middle',
+      textAlign: 'middle',
       lineHeight: 15,
     }}
   >

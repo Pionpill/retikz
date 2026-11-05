@@ -50,14 +50,14 @@ describe('Chart 正式呈现，默认，Plot 转发', () => {
         title: {
           text: 'Revenue',
           style: { textColor: '#0f172a', font: { size: 20 }, opacity: 0 },
-          layout: { align: 'start', lineHeight: 24, maxTextWidth: 320 },
+          layout: { textAlign: 'start', lineHeight: 24, maxTextWidth: 320 },
         },
       },
       layout: { width: 640, height: 360, padding: 0, gap: 0 },
       defaultChart: {
         background: { fill: '#f8fafc' },
         layout: { padding: 12, gap: 4 },
-        presentation: { title: { style: { font: { size: 22 } }, layout: { align: 'middle' } } },
+        presentation: { title: { style: { font: { size: 22 } }, layout: { textAlign: 'middle' } } },
       },
     });
     const parsed = ScatterChartSchema.parse(source);

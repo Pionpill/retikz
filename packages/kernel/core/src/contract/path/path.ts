@@ -3,6 +3,7 @@ import type { ZodType } from 'zod';
 
 import type { IRBoundaryLabel, IRPathBase, IRPathLabel, IRPosition, IRStep } from '../../schemas';
 import type { PathCommand, PathPrimitiveAppearance, ScenePrimitive } from '../scene';
+import type { TextBlockContent } from '../text';
 
 /**
  * path 编译结果
@@ -19,11 +20,23 @@ export type PathCompileResult = {
 /** 编译标准描边 */
 export type StrokeEmitter = (path?: IRPathBase) => PathCompileResult | null;
 
-/** 路径扩展消费的确定化标签位置；颜色和字体由宿主服务处理 */
-export type CanonicalPathProviderLabel<TLabel extends IRPathLabel = IRPathLabel> = Omit<
+/** 路径扩展消费的确定态标签，位置和共享文本已完成解析 */
+export type PathDefinitionLabel<TLabel extends IRPathLabel = IRPathLabel> = Omit<
   TLabel,
-  'position' | 'side' | 'distance' | 'interrupt' | 'gap'
+  | 'position'
+  | 'side'
+  | 'distance'
+  | 'interrupt'
+  | 'gap'
+  | 'text'
+  | 'font'
+  | 'textColor'
+  | 'textAlign'
+  | 'lineHeight'
+  | 'maxTextWidth'
 > & {
+  /** 已解析字体、颜色和排版配置的共享文本块 */
+  text: TextBlockContent;
   /** 归一化路径位置 */
   position: number;
   /** 路径相对放置方向 */
@@ -36,9 +49,9 @@ export type CanonicalPathProviderLabel<TLabel extends IRPathLabel = IRPathLabel>
   gap: number;
 };
 
-type CanonicalProviderStep<TStep extends IRStep> = TStep extends unknown
+type PathDefinitionStep<TStep extends IRStep> = TStep extends unknown
   ? 'label' extends keyof TStep
-    ? Omit<TStep, 'label'> & { label?: CanonicalPathProviderLabel<Extract<NonNullable<TStep['label']>, IRPathLabel>> }
+    ? Omit<TStep, 'label'> & { label?: PathDefinitionLabel<Extract<NonNullable<TStep['label']>, IRPathLabel>> }
     : TStep
   : never;
 
@@ -47,14 +60,14 @@ type ProviderLabelOf<TLabel> =
   TLabel extends ReadonlyArray<infer TItem extends IRPathLabel> ? TItem : Extract<TLabel, IRPathLabel>;
 
 /** 扩展路径的 canonical 配置保留 schema 子类型与 union 的字段关联 */
-export type CanonicalPathConfig<TPath extends IRPathBase = IRPathBase> = TPath extends unknown
+export type PathDefinitionConfig<TPath extends IRPathBase = IRPathBase> = TPath extends unknown
   ? Omit<TPath, 'style' | 'children' | 'label'> & {
       /** 已确定步骤默认值和标签位置的路径 */
-      children?: Array<CanonicalProviderStep<NonNullable<TPath['children']>[number]>>;
+      children?: Array<PathDefinitionStep<NonNullable<TPath['children']>[number]>>;
       /** 已确定位置并统一为数组的宿主标签 */
       label?: [ProviderLabelOf<TPath['label']>] extends [never]
         ? never
-        : Array<CanonicalPathProviderLabel<ProviderLabelOf<TPath['label']>>>;
+        : Array<PathDefinitionLabel<ProviderLabelOf<TPath['label']>>>;
     }
   : never;
 
@@ -69,14 +82,7 @@ export type CompiledPathAppearance = Readonly<
 >;
 
 /** Path 请求宿主标签编译时提供的已定位几何信息，不包含 Stroke 专属 interruption */
-export type PathLabel = Omit<IRPathLabel, 'position' | 'side' | 'distance' | 'interrupt' | 'gap'> & {
-  /** 标签在宿主路径上的归一化位置 */
-  position: number;
-  /** 标签相对路径的放置侧，center 表示居中 */
-  side: NonNullable<IRPathLabel['side']>;
-  /** 标签相对宿主边界的间距 */
-  distance: number;
-};
+export type PathLabel = Omit<PathDefinitionLabel, 'interrupt' | 'gap'>;
 
 /** Path 请求宿主标签编译时提供的已定位几何信息 */
 export type InputPathLabel = Readonly<{
@@ -116,7 +122,7 @@ export type InputPathBoundaryLabel = Readonly<{
  */
 export type PathDefinitionCompileContext<TPath extends IRPathBase = IRPathBase> = {
   /** 经 schema、继承及默认值解析后的配置，不保留 Source 简写 */
-  path: CanonicalPathConfig<TPath>;
+  path: PathDefinitionConfig<TPath>;
   /** 物化选定 steps，不应用 marker、dash、fill 或 custom path geometry */
   materializePath: (input?: Readonly<{ children?: ReadonlyArray<IRStep> }>) => ReadonlyArray<PathCommand>;
   /**
@@ -124,7 +130,7 @@ export type PathDefinitionCompileContext<TPath extends IRPathBase = IRPathBase> 
    */
   emitStroke: StrokeEmitter;
   /** 合并宿主标签默认配置，供路径定义在采样前确定标签位置 */
-  resolveHostLabel: (label: IRPathLabel) => IRPathLabel;
+  resolveHostLabel: (label: IRPathLabel) => PathDefinitionLabel;
   /** 编译共享宿主标签，并支持路径定义提供侧向距离 */
   emitHostLabels: (input: InputPathLabel) => ReadonlyArray<ScenePrimitive>;
   /** 通过 Kernel 共享布局编译已定位的边界标签 */

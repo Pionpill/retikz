@@ -11,6 +11,8 @@ description: 追踪 Core 如何把文字度量和形状约束转为节点尺寸�
 
 节点布局先确定内容需要的空间，再计算形状尺寸，最后放置正文和附属标签。`CanonicalNode` 包含有效节点配置以及已绑定的形状、连接面定义；`CompiledNode` 保存最终几何、排版和绘制结果。`CompiledNodeLayout` 是测量与定位的阶段结果，保留几何查询需要的能力绑定，可作为准备好的布局传入编译。
 
+节点输入的缩放在 `resolveNode` 中完成：内外边距和最小尺寸按对应轴缩放，固定宽度与最大文字宽度按横轴缩放，字号、行高和形状参数也在解析阶段处理。`CanonicalNode` 保存这些有效值，不再保留待应用的 `scale`；编译阶段直接使用它们。父布局在运行时提供的宽度提案不再乘节点缩放，描边宽度与标签距离保持原有语义。
+
 <ComponentPreview files="layout-overview" size="xs" hideCode type="flow" />
 
 下面三个节点使用同一句正文。中间收紧文字宽度，折行增加了高度；右侧只增加外侧标签，节点形状的尺寸与中间相同。
@@ -35,9 +37,9 @@ description: 追踪 Core 如何把文字度量和形状约束转为节点尺寸�
 
 Core 通过注入的 `measureText` 取得度量，不直接读取 DOM。测量输入是文字和字体，输出包含宽度、高度，以及可选的 `ascent`、`descent`：它们分别表示基线上方和下方的高度。没有提供这两项时，Core 各取总高度的一半。未注入测量器时采用平均字宽估算，精度取决于测量提供方。
 
-普通文本先按显式换行拆分，再按宽度限制寻找可断位置：西文按词，CJK 按字。一个不可断片段超过限制时会保留整段，不强行截断。正文宽度取最宽物理行，高度为物理行数乘以 `lineHeight`，因此包含行间留白，并不等于字形本身的高度。
+文本先保留显式换行，再按宽度限制优先寻找词边界；过长单词按完整字素拆分。正文宽度取最宽物理行，高度为各行槽之和。每个行槽取 `lineHeight` 与实际 ascent + descent 的较大值，多余留白平均分布在基线上下。
 
-公式或显式 `segments` 混排则逐片段测量，再把同一行的片段对齐到共同基线。行宽累加，基线上下分别取所需的最大空间，行槽高度至少容纳这些片段。**公式与普通文本混排时，不使用普通文本的自动折行算法**，不能假定设置宽度后公式也会自动换行。
+公式或显式 `segments` 混排使用相同折行规则，把同一物理行的片段对齐到共同基线。行宽累加，基线上下分别取所需的最大空间，行槽高度至少容纳这些片段。公式本身不可拆分，超宽时独占一行并允许溢出。
 
 Reconciler 在同次编译内按文字与字体参数共享度量，使不同节点和多次试算复用测量。节点排版只调用传入的测量器，不维护局部缓存；测量缓存不跨全量编译或增量批次保留，宽度变化后仍需重新排版，详见[复合编译的查询求值与缓存](/kernel/packages/core/composite-compilation#查询求值与缓存)。
 
@@ -47,7 +49,7 @@ Reconciler 在同次编译内按文字与字体参数共享度量，使不同节
     { label: 'TextMetrics', path: 'packages/kernel/core/src/contract/text.ts' },
     { label: 'resolveTextMetrics', path: 'packages/kernel/core/src/resolve/text/metrics.ts' },
     { label: '正文分支与物理行汇总', path: 'packages/kernel/core/src/compile/node/layout/content.ts' },
-    { label: '普通文本折行', path: 'packages/kernel/core/src/compile/node/layout/text.ts' },
+    { label: '普通文本折行', path: 'packages/kernel/core/src/compile/text/block.ts' },
     { label: '混排行的度量与基线对齐', path: 'packages/kernel/core/src/compile/text/layout.ts' },
   ]}
 />

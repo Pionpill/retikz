@@ -14,7 +14,7 @@ const Demo: FC = () => (
     </Node>
 
     {/* Text: override the style of a single line inside a node */}
-    <Node id="textDemo" position={[0, -5]} style={{ stroke: 'none', fill: 'none' }} layout={{ align: 'middle' }}>
+    <Node id="textDemo" position={[0, -5]} style={{ stroke: 'none', fill: 'none' }} layout={{ textAlign: 'middle' }}>
       <Text fill="darkorange" font={{ weight: 'bold' }}>
         Text
       </Text>
@@ -33,7 +33,7 @@ const Demo: FC = () => (
       id="capNode"
       position={[-190, 30]}
       style={{ stroke: 'none', fill: 'none', textColor: 'gray', font: { size: 12 } }}
-      layout={{ align: 'middle' }}
+      layout={{ textAlign: 'middle' }}
     >
       Node · visible named primitive
     </Node>
@@ -41,7 +41,7 @@ const Demo: FC = () => (
       id="capText"
       position={[0, 35]}
       style={{ stroke: 'none', fill: 'none', textColor: 'gray', font: { size: 12 } }}
-      layout={{ align: 'middle' }}
+      layout={{ textAlign: 'middle' }}
     >
       Text · whole-line override
     </Node>
@@ -49,7 +49,7 @@ const Demo: FC = () => (
       id="capCoord"
       position={[190, 35]}
       style={{ stroke: 'none', fill: 'none', textColor: 'gray', font: { size: 12 } }}
-      layout={{ align: 'middle' }}
+      layout={{ textAlign: 'middle' }}
     >
       Coordinate · invisible point
     </Node>

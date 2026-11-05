@@ -143,7 +143,7 @@ describe('Node 多行文本', () => {
           id: 'A',
           position: [100, 0],
           text: ['line one', 'line two'],
-          layout: { align: 'start' },
+          layout: { textAlign: 'start' },
         },
       ],
     };
@@ -165,7 +165,7 @@ describe('Node 多行文本', () => {
           id: 'A',
           position: [100, 0],
           text: ['ab', 'cdefg'],
-          layout: { align: 'end' },
+          layout: { textAlign: 'end' },
         },
       ],
     };
@@ -285,20 +285,23 @@ describe('Node 多行文本', () => {
         },
       ],
     };
-    const t = findText(compileToScene(ir).scene.primitives);
+    const texts = flattenPrims(compileToScene(ir).scene.primitives).filter(
+      (p): p is TextPrimitive => p.type === 'text',
+    );
+    const t = texts[0];
 
-    expect(t?.lines[0]).toEqual({
+    expect(t.lines[0]).toEqual({
       text: 'big',
       fontSize: 20,
       fontWeight: 700,
     });
 
     // 第二行无任何覆盖
-    expect(t?.lines[1]).toEqual({ text: 'normal' });
+    expect(texts[1]?.lines[0]).toEqual({ text: 'normal' });
 
     // 块级默认仍写在 TextPrimitive 顶层
-    expect(t?.fontSize).toBe(12);
-    expect(t?.fontFamily).toBe('monospace');
+    expect(t.fontSize).toBe(12);
+    expect(t.fontFamily).toBe('monospace');
   });
 
   it('行级 font.size 影响该行宽度度量（max 取所有行）', () => {

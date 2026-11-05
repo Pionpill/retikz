@@ -235,7 +235,7 @@ describe('lowerGuide（契约）', () => {
     );
     const title = nodeByText(axisLayer as IRScope, 'x');
 
-    expect(title.layout?.align).toBe('end');
+    expect(title.layout?.textAlign).toBe('end');
     expect((title.position as [number, number])[0]).toBe(434);
     // 11px 字号的 Core 默认行高为 13.2，标签和标题均按实际行高占位
     expect((title.position as [number, number])[1]).toBe(301.8);
@@ -341,18 +341,18 @@ describe('lowerGuide（契约）', () => {
     const left = nodeByText(axisLayer as IRScope, 'Left');
     const top = nodeByText(axisLayer as IRScope, 'Top');
 
-    expect(right.layout?.align).toBe('start');
+    expect(right.layout?.textAlign).toBe('start');
     expect(right.position).toEqual([323.75, 200]);
-    expect(diagonal.layout?.align).toBe('start');
+    expect(diagonal.layout?.textAlign).toBe('start');
     // Core 默认宽度为 14 × 10 × 0.55，行高为 12；矩形沿径向投影后与刻度间距相切
     const diagonalRadius = 110 + (Math.cos(Math.PI / 6) * 77) / 2 + (Math.sin(Math.PI / 6) * 12) / 2;
     expect((diagonal.position as [number, number])[0]).toBeCloseTo(200 + Math.cos(Math.PI / 6) * diagonalRadius, 6);
     expect((diagonal.position as [number, number])[1]).toBeCloseTo(200 + Math.sin(Math.PI / 6) * diagonalRadius, 6);
-    expect(bottom.layout?.align).toBe('middle');
+    expect(bottom.layout?.textAlign).toBe('middle');
     expect(bottom.position).toEqual([200, 316]);
-    expect(left.layout?.align).toBe('end');
+    expect(left.layout?.textAlign).toBe('end');
     expect(left.position).toEqual([79, 200]);
-    expect(top.layout?.align).toBe('middle');
+    expect(top.layout?.textAlign).toBe('middle');
     expect(top.position).toEqual([200, 84]);
   });
 
@@ -373,11 +373,11 @@ describe('lowerGuide（契约）', () => {
 
   it('极坐标角度刻度标签的显式对齐覆盖角度默认值', () => {
     const { axisLayer } = lowerGuide(
-      { type: 'axis', dimension: 'x', tickLabels: { align: 'middle' } },
+      { type: 'axis', dimension: 'x', tickLabels: { textAlign: 'middle' } },
       polarAngularGuideContext([0], ['Right']),
     );
 
-    expect(nodeByText(axisLayer as IRScope, 'Right').layout?.align).toBe('middle');
+    expect(nodeByText(axisLayer as IRScope, 'Right').layout?.textAlign).toBe('middle');
   });
 
   it('极坐标半径轴标题放置沿半径范围采样', () => {

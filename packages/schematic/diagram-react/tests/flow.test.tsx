@@ -691,7 +691,7 @@ describe('@retikz/diagram-react/flow', () => {
         createElement(FlowEntity, {
           id: 'form',
           text: ['Frontend form', { text: 'Complete user details', fill: 'gray', font: { size: 'sm' } }],
-          layout: { align: 'start', lineHeight: 18, maxTextWidth: 160 },
+          layout: { textAlign: 'start', lineHeight: 18, maxTextWidth: 160 },
         }),
       ),
     );
@@ -705,7 +705,7 @@ describe('@retikz/diagram-react/flow', () => {
           {
             id: 'form',
             text: ['Frontend form', { text: 'Complete user details', fill: 'gray', font: { size: 'sm' } }],
-            layout: { align: 'start', lineHeight: 18, maxTextWidth: 160 },
+            layout: { textAlign: 'start', lineHeight: 18, maxTextWidth: 160 },
           },
         ],
         children: ['form'],

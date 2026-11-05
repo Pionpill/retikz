@@ -176,7 +176,7 @@ describe('Block 系列布局感知下沉', () => {
         expect.objectContaining({ lines: expect.any(Array), opacity: 0.7 }),
       ]),
     );
-    expect(texts[1]).toEqual(expect.objectContaining({ fontSize: 16, fontWeight: 'bold', opacity: 1 }));
+    expect(texts[1]).toEqual(expect.objectContaining({ fontSize: 16, fontWeight: 700, opacity: 1 }));
     expect(texts[2]).toEqual(expect.objectContaining({ fontSize: 12, opacity: 0.7 }));
 
     const overridden = compileInHarness(
@@ -191,7 +191,7 @@ describe('Block 系列布局感知下沉', () => {
       primitive => primitive.type === 'text',
     );
 
-    expect(overriddenTexts[0]).toEqual(expect.objectContaining({ fontWeight: 'normal' }));
+    expect(overriddenTexts[0]).toEqual(expect.objectContaining({ fontWeight: 400 }));
     expect(overriddenTexts[1]).toEqual(expect.objectContaining({ fontSize: 16 }));
 
     const titleOnly = compileInHarness(
@@ -215,7 +215,7 @@ describe('Block 系列布局感知下沉', () => {
     const texts = primitivesOf(output.scene.primitives).filter(primitive => primitive.type === 'text');
 
     expect(textValues(texts)).toEqual(['Service', 'Public API']);
-    expect(texts[0]).toEqual(expect.objectContaining({ fontSize: 16, fontWeight: 'bold', opacity: 1 }));
+    expect(texts[0]).toEqual(expect.objectContaining({ fontSize: 16, fontWeight: 700, opacity: 1 }));
     expect(texts[1]).toEqual(expect.objectContaining({ fontSize: 12, opacity: 0.7 }));
   });
 
@@ -437,9 +437,7 @@ describe('Block 系列布局感知下沉', () => {
 
     expect(textValues(texts)).toEqual(['name', 'string']);
     expect(texts[0]).toEqual(expect.objectContaining({ fontSize: 14 }));
-    expect(texts[1]).toEqual(
-      expect.objectContaining({ fill: '#64748b', fontSize: 20, fontWeight: 'bold', opacity: 0.4 }),
-    );
+    expect(texts[1]).toEqual(expect.objectContaining({ fill: '#64748b', fontSize: 20, fontWeight: 700, opacity: 0.4 }));
     expect(flexArtifactWithKeys(output, ['item:0', 'item:1']).value.items.map(item => item.slotBounds.width)).toEqual([
       120, 120,
     ]);

@@ -2,20 +2,12 @@ import type { PropertyPath } from '@retikz/foundation';
 import { formatPropertyPath } from '@retikz/foundation';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import type {
-  IRLine,
-  IRMarkStyle,
-  IRMathSegment,
-  IRPaintValue,
-  IRPathBase,
-  IRPathLabel,
-  IRStep,
-  IRTextSegment,
-} from '../../schemas';
+import type { IRMarkStyle, IRPaintValue, IRPathBase, IRPathLabel, IRStep } from '../../schemas';
 import { BendAngleSchema, BuiltinPath, SmoothTensionSchema } from '../../schemas';
 import { resolvePaint } from '../resource';
 import { mergePathStyle, resolveContextualColor, resolveDropShadow, resolveGraphicOpacity } from '../style';
-import type { ColorResolvedTextLine, InlineSegmentColorSource, LabelTextColorSource } from '../text';
+import { resolveTextBlock, resolveTextLineColors } from '../text';
+import type { LabelTextColorSource } from '../text';
 import { resolvePathDefinition, resolveStrokePathProviders } from './provider';
 import type {
   CanonicalPathProperties,
@@ -136,14 +128,34 @@ export const resolvePathLabelPlacement = (
 ): CanonicalPathLabelPlacement => canonicalizeLabelPlacement(label, canAutomaticallyInterrupt);
 
 /** 为已解析颜色的标签补齐放置与断线默认值 */
-const canonicalizeLabel = (label: PathLabelColorSource, canAutomaticallyInterrupt: boolean): CanonicalPathLabel =>
-  canonicalizeLabelPlacement(label, canAutomaticallyInterrupt);
+export const resolvePathLabelContent = (
+  label: PathLabelColorSource,
+  canAutomaticallyInterrupt: boolean,
+  context: Pick<PathResolveContext, 'rootFontSize' | 'gatingOn' | 'warn'>,
+): CanonicalPathLabel => {
+  const { text, font, textColor, textAlign, lineHeight, maxTextWidth, ...host } = label;
+  return {
+    ...canonicalizeLabelPlacement(host, canAutomaticallyInterrupt),
+    text: resolveTextBlock(
+      { text, font, textColor, textAlign, lineHeight, maxTextWidth },
+      {
+        ...context,
+        inheritedFont: { size: context.rootFontSize },
+      },
+    ),
+  };
+};
 
 /** 为路径步骤及其标签补齐静态默认值，保留目标引用供后续解析 */
-const canonicalizeStep = (step: StepColorSource, canAutomaticallyInterrupt: boolean): CanonicalPathStep => {
+const canonicalizeStep = (
+  step: StepColorSource,
+  canAutomaticallyInterrupt: boolean,
+  context: PathResolveContext,
+): CanonicalPathStep => {
   if (step.kind === 'move' || step.kind === 'cycle' || step.kind === 'rectangle') return step;
 
-  const label = step.label === undefined ? undefined : canonicalizeLabel(step.label, canAutomaticallyInterrupt);
+  const label =
+    step.label === undefined ? undefined : resolvePathLabelContent(step.label, canAutomaticallyInterrupt, context);
   if (step.kind === 'fold') {
     switch (step.via) {
       case '-|-':
@@ -176,12 +188,15 @@ const canonicalizeStep = (step: StepColorSource, canAutomaticallyInterrupt: bool
 const canonicalizeSteps = (
   steps: ReadonlyArray<StepColorSource> | undefined,
   canAutomaticallyInterrupt: boolean,
-): Array<CanonicalPathStep> | undefined => steps?.map(step => canonicalizeStep(step, canAutomaticallyInterrupt));
+  context: PathResolveContext,
+): Array<CanonicalPathStep> | undefined =>
+  steps?.map(step => canonicalizeStep(step, canAutomaticallyInterrupt, context));
 
 /** 合入路径样式并展开步骤、标签与阴影默认值，填充和描边资源随后解析 */
 const canonicalizePath = (
   path: PathColorSource,
   canAutomaticallyInterrupt: boolean,
+  context: PathResolveContext,
 ): Omit<CanonicalPathProperties, 'fill' | 'stroke' | 'strokeWidth'> &
   Pick<NonNullable<PathColorSource['style']>, 'fill' | 'stroke' | 'strokeWidth'> => {
   const { style, ...source } = path;
@@ -202,12 +217,12 @@ const canonicalizePath = (
     fillOpacity: 1,
     strokeOpacity: 1,
     ...resolveGraphicOpacity(opacity),
-    children: canonicalizeSteps(children, canAutomaticallyInterrupt),
+    children: canonicalizeSteps(children, canAutomaticallyInterrupt, context),
     label:
       pathLabel === undefined
         ? undefined
         : (Array.isArray(pathLabel) ? pathLabel : [pathLabel]).map(label =>
-            canonicalizeLabel(label, canAutomaticallyInterrupt),
+            resolvePathLabelContent(label, canAutomaticallyInterrupt, context),
           ),
     shadow: resolveDropShadow(style?.shadow),
   };
@@ -222,59 +237,6 @@ const resolvePathPaint = (
 ): Exclude<IRPaintValue, number> | undefined =>
   typeof value === 'number' ? resolveContextualColor(value, { masterColor, mode: context.mode, fieldPath }) : value;
 
-/** 解析路径标签中单个文字或公式片段的数值颜色 */
-const resolveLabelSegmentColor = (
-  segment: IRTextSegment | IRMathSegment,
-  masterColor: string | undefined,
-  mode: PathResolveContext['mode'],
-  fieldPath: PropertyPath,
-): InlineSegmentColorSource => {
-  const { fill, ...source } = segment;
-  return {
-    ...source,
-    ...(fill === undefined
-      ? {}
-      : {
-          fill: resolveContextualColor(fill, {
-            masterColor,
-            mode,
-            fieldPath: [...fieldPath, 'fill'],
-          }),
-        }),
-  };
-};
-
-/** 解析路径标签的行级与片段数值颜色 */
-const resolvePathLabelTextLine = (
-  text: IRLine,
-  masterColor: string | undefined,
-  mode: PathResolveContext['mode'],
-  fieldPath: PropertyPath,
-): ColorResolvedTextLine => {
-  if (typeof text === 'string') return text;
-  if ('segments' in text) {
-    return {
-      ...text,
-      fill:
-        text.fill === undefined
-          ? undefined
-          : resolveContextualColor(text.fill, { masterColor, mode, fieldPath: [...fieldPath, 'fill'] }),
-      segments: text.segments.map((segment, index) =>
-        resolveLabelSegmentColor(segment, masterColor, mode, [...fieldPath, 'segments', index]),
-      ),
-    };
-  }
-
-  const { fill, ...style } = text;
-
-  return {
-    ...style,
-    ...(fill === undefined
-      ? {}
-      : { fill: resolveContextualColor(fill, { masterColor, mode, fieldPath: [...fieldPath, 'fill'] }) }),
-  };
-};
-
 /** 逐行解析路径标签的数值颜色 */
 const resolvePathLabelText = (
   text: IRPathLabel['text'],
@@ -283,7 +245,7 @@ const resolvePathLabelText = (
   fieldPath: PropertyPath,
 ): LabelTextColorSource =>
   Array.isArray(text)
-    ? text.map((line, index) => resolvePathLabelTextLine(line, masterColor, mode, [...fieldPath, index]))
+    ? text.map((line, index) => resolveTextLineColors(line, masterColor, mode, [...fieldPath, index]))
     : text;
 
 /** 确定路径标签的文字主色，并据此解析行级与片段颜色 */
@@ -463,7 +425,7 @@ export const resolvePath = (path: IRPathBase, context: PathResolveContext): Cano
   assertPathLabelInterruptionPolicy(colorsResolved, irPath);
   const pathDefinition = resolvePathDefinition(colorsResolved, context, irPath);
   const providerColorsResolved = resolvePathContextualColors(pathDefinition.path, context, irPath, labelMasterColor);
-  const canonicalPath = canonicalizePath(providerColorsResolved, canAutomaticallyInterrupt);
+  const canonicalPath = canonicalizePath(providerColorsResolved, canAutomaticallyInterrupt, context);
   const paintContext = {
     patternRegistry: context.patternRegistry,
     round: context.round,

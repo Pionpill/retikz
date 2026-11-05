@@ -69,7 +69,6 @@ export const lowerStrokePathGeometry = (canon: CanonicalPath, context: EmitPathP
     measureText,
     round,
     hostOpacity: path.opacity,
-    rootFontSize: pathEmitOptions.rootFontSize,
     lowerTex: pathEmitOptions.lowerTex,
     warn,
   });

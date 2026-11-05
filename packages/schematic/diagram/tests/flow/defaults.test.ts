@@ -188,7 +188,7 @@ describe('Flow 默认值和正式的 Source 片段', () => {
         title: {
           text: 'Pipeline',
           style: { textColor: '#0f172a', font: { size: 18 } },
-          layout: { align: 'start', maxTextWidth: 320 },
+          layout: { textAlign: 'start', maxTextWidth: 320 },
         },
         description: { text: 'Service graph', style: { opacity: 0 }, layout: { lineHeight: 14 } },
       },

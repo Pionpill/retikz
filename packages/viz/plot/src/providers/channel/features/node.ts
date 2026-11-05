@@ -489,7 +489,7 @@ const directNodeChannels = {
     value =>
       typeof value === 'string' && textAlignValues.has(value) ? (value as 'start' | 'middle' | 'end') : undefined,
     (node, value) => {
-      node.layout = { ...node.layout, align: value };
+      node.layout = { ...node.layout, textAlign: value };
     },
   ),
   lineHeight: defineSimpleNodeChannel<number>(

@@ -3,6 +3,7 @@ import type { IRPathBase, PathDefinitionCompileContext, PathCompileResult, PathD
 import { expect } from 'vitest';
 
 import { defineBenchmark } from '../../../../../scripts/benchmarks/scenario';
+import { resolvePathLabelContent, resolvePathLabelColors } from '../../src/resolve';
 
 // 注册表擦除了泛型；此处验证已知的内置 stroke 委托契约
 const stroke = BUILTIN_PATHS.get('stroke')! as PathDefinition<IRPathBase>;
@@ -39,7 +40,11 @@ for (const empty of [false, true]) {
           return result;
         },
         materializePath: () => [],
-        resolveHostLabel: label => label,
+        resolveHostLabel: label =>
+          resolvePathLabelContent(resolvePathLabelColors(label, undefined, 'light', []), false, {
+            rootFontSize: 16,
+            gatingOn: false,
+          }),
         emitHostLabels: () => [],
         emitBoundaryLabels: () => [],
         wrapOutput: value => value,

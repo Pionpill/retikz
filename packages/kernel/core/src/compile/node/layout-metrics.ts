@@ -24,7 +24,10 @@ export const alignmentGuidesOfNode = (
 
   const blockTop = layout.geometry.contentCenter[1] - layout.geometry.contentSize.height / 2;
   const firstBaseline = round(blockTop + offsets[0]);
-  if (text.kind === 'inline') {
+  if (
+    text.kind === 'inline' ||
+    !offsets.every((offset, index) => Math.abs(offset - offsets[0] - index * text.lineHeight) < 1e-8)
+  ) {
     return [
       {
         name: BuiltinLayoutAlignmentGuideName.FirstBaseline,

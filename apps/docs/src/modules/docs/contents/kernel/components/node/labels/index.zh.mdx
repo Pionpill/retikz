@@ -80,7 +80,10 @@ const view = mount(document.getElementById('diagram')!, ir);
 - 还可写中心 `'center'`、角度 `30`，或边界比例 `{ boundary: 'right', fraction: 0.25 }`；中心标签不做重叠避让
 - `placement` 默认 `'outside'`，写 `'inside'` 可放在边框内侧
 - `font` / `textColor` 优先使用标签显式值，再使用 `Scope.defaults.node.label`，仍未提供的值从节点继承
-- `opacity` 为 0..1，显式值覆盖节点整体透明度；省略时继承节点整体透明度。普通文字与混排遵循同一规则，片段透明度再与标签的有效透明度相乘
+- `opacity` 为 0..1，与节点整体透明度相乘；省略的因子按 1 处理。行和片段透明度继续相乘，显式 0 会保留
+- `textAlign` 控制文本块内的行对齐，默认 `middle`；它与控制边界附着的 `align` 独立。`lineHeight` 默认有效字号的 1.2 倍，内容更高时行槽随之扩展；`maxTextWidth` 设置自动折行宽度，省略时只处理硬换行
+
+正文与两类标签使用相同的折行规则：优先在词边界折行，过长单词按完整字素拆分；公式保持完整，超过宽度时独占一行并允许溢出。空行仍占用行槽。
 
 <ComponentPreview
   files={['node-label-list', 'node-label-list.preview.tsx']}
@@ -140,7 +143,7 @@ import { Node } from '@retikz/react';
   defaultSourceFile="node-label-rotate-pin.preview.tsx"
 />
 
-`pin.stroke` 可使用颜色、渐变或图案；`lineCap` 和 `lineJoin` 分别设置端帽和连接样式。显式 `pin.opacity` 单独控制引线透明度；省略时沿用标签的有效透明度。
+`pin.stroke` 可使用颜色、渐变或图案；`lineCap` 和 `lineJoin` 分别设置端帽和连接样式。显式 `pin.opacity` 与节点透明度相乘；省略时沿用标签的有效透明度。行和片段透明度不影响引线。
 
 <Comparison target="tikz" title="节点标签写法">
 

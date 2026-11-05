@@ -23,29 +23,16 @@ const MAX_ALLOCATION_REFLOW_ATTEMPTS = 32;
 /** 求得正文与形状的最终尺寸 */
 export const sizeNode = (canon: CanonicalNode, context: Omit<NodeCompileContext, 'round' | 'registerPaint'>) => {
   const { measureText, texLowering, allocationWidthProposal, irPath = [] } = context;
-  // 缩放影响节点尺寸与字体。
-  // 字号取 min(sx,sy) 保 glyph 形状，避免非均匀缩放下文字被拉变形。
-  const { x: sx, y: sy } = canon.layout.scale;
   const { definition, params: shapeParams } = canon.shape;
-
-  // spacing 受 node scale 影响。
-  const padding = canon.layout.padding;
-  const paddingLeft = padding.left * sx;
-  const paddingRight = padding.right * sx;
-  const paddingTop = padding.top * sy;
-  const paddingBottom = padding.bottom * sy;
-  const marginSpacing = canon.layout.margin;
-  const margin = {
-    top: marginSpacing.top * sy,
-    right: marginSpacing.right * sx,
-    bottom: marginSpacing.bottom * sy,
-    left: marginSpacing.left * sx,
-  };
+  const {
+    padding: { left: paddingLeft, right: paddingRight, top: paddingTop, bottom: paddingBottom },
+    margin,
+    minimumSize,
+    width: fixedVisualWidth,
+    rotate: rotateDeg,
+  } = canon.layout;
+  const explicitMaxTextWidth = canon.text?.maxTextWidth;
   const lineHeight = canon.text?.lineHeight ?? 0;
-
-  // 折行阈值受 x 缩放。
-  const explicitMaxTextWidth = canon.layout.maxTextWidth !== undefined ? canon.layout.maxTextWidth * sx : undefined;
-  const fixedVisualWidth = canon.layout.width === undefined ? undefined : canon.layout.width * sx;
   const proposedAllocationWidth =
     allocationWidthProposal?.kind === LayoutAxisProposalKind.Exact
       ? allocationWidthProposal.value
@@ -56,21 +43,8 @@ export const sizeNode = (canon: CanonicalNode, context: Omit<NodeCompileContext,
     allocationWidthProposal?.kind === LayoutAxisProposalKind.Intrinsic &&
     allocationWidthProposal.mode === LayoutIntrinsicMode.Minimum;
 
-  /** 使用同一正文 owner 与 measurer 求当前 wrap budget 的真实内容布局 */
-  const layoutContent = (textWidthBudget: number | undefined) =>
-    layoutNodeContent({
-      canon,
-      measureText,
-      tex: texLowering,
-      lineHeight,
-      maxTextWidth: textWidthBudget,
-      minimumTextWidth,
-    });
-
-  // minimumSize 作用于外接边界，且随 scale 缩放。
-  const minimumSize = canon.layout.minimumSize;
-  const minHalfW = (minimumSize.width * sx) / 2;
-  const minHalfH = (minimumSize.height * sy) / 2;
+  const minHalfW = minimumSize.width / 2;
+  const minHalfH = minimumSize.height / 2;
 
   const circumscribeContent = (textWidth: number, textHeight: number) => {
     let raw: ShapeCircumscribedGeometry;
@@ -107,8 +81,6 @@ export const sizeNode = (canon: CanonicalNode, context: Omit<NodeCompileContext,
     });
   };
 
-  const rotateDeg = canon.layout.rotate;
-
   const allocationWidthOf = (halfWidth: number, halfHeight: number): number => {
     const outerWidth = 2 * Math.max(halfWidth, minHalfW) + margin.left + margin.right;
     const outerHeight = 2 * Math.max(halfHeight, minHalfH) + margin.top + margin.bottom;
@@ -119,7 +91,14 @@ export const sizeNode = (canon: CanonicalNode, context: Omit<NodeCompileContext,
 
   /** 前向求值一个正文 budget 对应的真实 content、shape 与 allocation width */
   const evaluateContentCandidate = (textWidthBudget: number | undefined) => {
-    const contentLayout = layoutContent(textWidthBudget);
+    const contentLayout = layoutNodeContent({
+      canon,
+      measureText,
+      tex: texLowering,
+      lineHeight,
+      maxTextWidth: textWidthBudget,
+      minimumTextWidth,
+    });
     const circumscribed = circumscribeContent(contentLayout.textWidth, contentLayout.textHeight);
 
     return {
@@ -139,7 +118,7 @@ export const sizeNode = (canon: CanonicalNode, context: Omit<NodeCompileContext,
     if (
       widthConstraint === undefined ||
       candidateWidth(selectedCandidate) <= widthConstraint ||
-      selectedCandidate.contentLayout.lines === undefined
+      canon.text === undefined
     )
       return selectedCandidate;
     let currentCandidate = selectedCandidate;

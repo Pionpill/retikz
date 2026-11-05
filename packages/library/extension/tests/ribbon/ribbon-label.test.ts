@@ -14,10 +14,6 @@ import { describe, expect, it } from 'vitest';
 
 import { RibbonLabelSchema, ribbonPathDefinition, RibbonPathSchema } from '../../src/ribbon';
 
-const ASCENT_FACTOR = 0.8;
-
-const DESCENT_FACTOR = 0.2;
-
 const scene = (children: IRScene['children']): IRScene => ({
   version: 1,
   type: 'scene',
@@ -83,9 +79,9 @@ const textOf = (primitives: ReadonlyArray<ScenePrimitive>, text: string): TextPr
       primitive.type === 'text' && primitive.lines.some(line => line.text === text),
   );
 
-const visualBottom = (t: TextPrimitive): number => t.y + t.fontSize * DESCENT_FACTOR;
+const visualBottom = (t: TextPrimitive): number => t.y + t.measuredHeight / 2;
 
-const visualMiddle = (t: TextPrimitive): number => t.y - (t.fontSize * ASCENT_FACTOR - t.fontSize * DESCENT_FACTOR) / 2;
+const visualMiddle = (t: TextPrimitive): number => t.y;
 
 const slopedGroupOf = (primitives: ReadonlyArray<ScenePrimitive>, text: string): GroupPrimitive | undefined =>
   flatten(primitives).find(
@@ -152,8 +148,8 @@ describe('功能区标签编译', () => {
     ).scene;
     const inside = textOf(compiled.primitives, 'inside');
     const outside = textOf(compiled.primitives, 'outside');
-    expect(inside).toMatchObject({ x: 25, fontSize: 18, fontWeight: 'bold', fill: 'crimson' });
-    expect(outside).toMatchObject({ x: 25, fontSize: 12, fontWeight: 'bold', fill: 'crimson' });
+    expect(inside).toMatchObject({ x: 25, fontSize: 18, fontWeight: 700, fill: 'crimson' });
+    expect(outside).toMatchObject({ x: 25, fontSize: 12, fontWeight: 700, fill: 'crimson' });
     expect(visualMiddle(inside!)).toBeCloseTo(0);
     expect(visualBottom(outside!)).toBeCloseTo(-9);
   });
@@ -365,7 +361,7 @@ describe('功能区标签编译', () => {
 
     expect(label?.fill).toBe('crimson');
     expect(label?.fontSize).toBe(12);
-    expect(label?.fontWeight).toBe('bold');
+    expect(label?.fontWeight).toBe(700);
     expect(label?.opacity).toBe(0.25);
   });
 

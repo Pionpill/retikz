@@ -1,5 +1,5 @@
 import type {
-  CanonicalPathConfig,
+  PathDefinitionConfig,
   IRPosition,
   PathDefinitionCompileContext,
   InputPathLabel,
@@ -12,7 +12,7 @@ import type { CurveSegmentSample, Vector2 } from '@retikz/math';
 import type { CanonicalRibbonOptions, IRRibbonPath } from '../types';
 
 /** ribbon 编译期归一化后的输入 */
-export type RibbonLike = Omit<CanonicalPathConfig<IRRibbonPath>, 'kindOptions' | 'label'> & CanonicalRibbonOptions;
+export type RibbonLike = Omit<PathDefinitionConfig<IRRibbonPath>, 'kindOptions' | 'label'> & CanonicalRibbonOptions;
 
 /** 可按 t∈[0,1] 采样的中心线段 */
 export type RibbonSegment = {

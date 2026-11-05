@@ -89,7 +89,7 @@ describe('Graph 默认并规则 Source 片段', () => {
       defaultGraph: {
         entity: {
           style: { color: '#2563eb', font: { size: 14 } },
-          layout: { align: 'middle', minimumSize: { width: 100 } },
+          layout: { textAlign: 'middle', minimumSize: { width: 100 } },
         },
         relation: { style: { strokeWidth: 2 }, labelFont: { size: 12 } },
         group: { border: { stroke: '#64748b' } },
@@ -202,7 +202,7 @@ describe('Graph 默认并规则 Source 片段', () => {
       source: {
         namespace: 'graph',
         type: 'graph',
-        graphRules: [{ type: 'entity', layout: { align: 'middle' }, style: { color: '#2563eb' } }],
+        graphRules: [{ type: 'entity', layout: { textAlign: 'middle' }, style: { color: '#2563eb' } }],
         children: [],
       },
       path: ['graphRules', 0],

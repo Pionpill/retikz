@@ -2,6 +2,7 @@ import type { CenteredBox } from '@retikz/math';
 import { RAD_TO_DEG } from '@retikz/math';
 
 import type { CompiledShapeStyle, GroupPrimitive, ScenePrimitive, TextLine } from '../../contract';
+import { combineOpacity } from '../../resolve';
 import type { CanonicalNode, CanonicalNodeLabel } from '../../resolve';
 import {
   createLayoutProbeRecoverableError,
@@ -11,9 +12,9 @@ import {
 } from '../../resolve';
 import type { RegisterPaint } from '../resource';
 import { snapshotScenePrimitives } from '../shared';
+import { emitTextBlock } from '../text';
 import { calculateAlphabeticBaselineY, emitInlineLine } from '../text';
 import { labelBorderPoint, labelBoxEdgeToward, labelCenter } from './label-geometry';
-import { DEFAULT_LINE_HEIGHT_FACTOR } from './layout';
 import type { CompiledNodeLayout, CompiledNodeTextStyle, NodeLabelLayout } from './types';
 
 /** 节点形状绘制使用的有效样式 */
@@ -62,7 +63,9 @@ const nodeBaselineYsOf = (layout: Pick<CompiledNodeLayout, 'geometry' | 'text'>,
           fontSize: text.font.size,
         });
 
-  return [firstBaseline];
+  return baselineOffsets?.length === lineCount
+    ? baselineOffsets.map(offset => blockTop + offset)
+    : text.lines.map((_, index) => firstBaseline + index * emittedLineHeight);
 };
 
 /** 从 CompiledNodeLayout 收敛 shape emit 所需的视觉样式 */
@@ -123,7 +126,7 @@ export const emitCompiledNodeText = (
     const baselineYs = nodeBaselineYsOf(layout, round);
     const halfBlockW = layout.geometry.contentSize.width / 2;
 
-    return text.lines.flatMap(({ laid }, index) => {
+    return text.lines.flatMap(({ laid, sourceLineIndex }, index) => {
       const originX =
         text.align === 'start'
           ? layout.geometry.contentCenter[0] - halfBlockW
@@ -135,7 +138,7 @@ export const emitCompiledNodeText = (
         {
           color: style.color,
           opacity: style.opacity,
-          segments: style.lines[index].segments,
+          segments: style.lines[sourceLineIndex].segments,
         },
         originX,
         baselineYs[index],
@@ -168,17 +171,14 @@ export const emitCompiledNodeText = (
     measuredHeight: round(measuredHeight),
   });
 
-  return [
-    textPrimitive(
-      text.lines.map(({ sourceLineIndex, ...line }) => ({
-        ...line,
-        fill: style.lines[sourceLineIndex].style?.fill,
-        opacity: style.lines[sourceLineIndex].style?.opacity,
-      })),
-      baselineYs[0],
-      layout.geometry.contentSize.height,
-    ),
-  ];
+  const lines = text.lines.map(({ sourceLineIndex, measuredHeight: _measuredHeight, ...line }) => ({
+    ...line,
+    fill: style.lines[sourceLineIndex].style?.fill,
+    opacity: style.lines[sourceLineIndex].style?.opacity,
+  }));
+  if (baselineYs.every((baseline, index) => Math.abs(baseline - baselineYs[0] - index * text.lineHeight) < 1e-8))
+    return [textPrimitive(lines, baselineYs[0], layout.geometry.contentSize.height)];
+  return lines.map((line, index) => textPrimitive([line], baselineYs[index], text.lines[index].measuredHeight));
 };
 
 /** 发出 label pin 引线图元 */
@@ -210,19 +210,18 @@ const emitNodeLabelPinPrimitive = (
       { kind: 'move', to: [round(bx), round(by)] },
       { kind: 'line', to: [round(nx), round(ny)] },
     ],
-    stroke: registerPaint(style?.stroke) ?? labelProperties.textColor ?? 'currentColor',
+    stroke: registerPaint(style?.stroke) ?? labelProperties.text.color ?? 'currentColor',
     strokeWidth: style?.strokeWidth ?? 1,
     dashPattern: style?.dashPattern,
     dashOffset: style?.dashOffset,
     lineCap: style?.lineCap,
     lineJoin: style?.lineJoin,
-    opacity: style?.opacity ?? labelProperties.opacity ?? properties.style.opacity,
+    opacity: combineOpacity(style?.opacity ?? labelProperties.opacity, properties.style.opacity),
   };
 };
 
 /** 发出 label 正文图元 */
 const emitNodeLabelContentPrimitive = (
-  layout: CompiledNodeLayout,
   label: NodeLabelLayout,
   labelProperties: CanonicalNodeLabel,
   properties: CanonicalNode,
@@ -230,52 +229,19 @@ const emitNodeLabelContentPrimitive = (
   round: Round,
 ): ScenePrimitive => {
   const [lx, ly] = labelCenterPosition;
-  if (label.laid) {
-    let offset = 0;
-    return {
-      type: 'group',
-      children: label.laid.flatMap((laid, index) => {
-        const height =
-          label.laid!.length > 1
-            ? Math.max(labelProperties.font.size * DEFAULT_LINE_HEIGHT_FACTOR, laid.ascent + laid.descent)
-            : laid.ascent + laid.descent;
-        const baselineY =
-          ly - label.measuredHeight / 2 + offset + (height - laid.ascent - laid.descent) / 2 + laid.ascent;
-        offset += height;
-        return emitInlineLine(
-          laid,
-          {
-            color: labelProperties.textColor,
-            opacity: labelProperties.opacity ?? properties.style.opacity,
-            segments: labelProperties.text[index].segments,
-          },
-          lx - laid.width / 2,
-          baselineY,
-          round,
-        );
-      }),
-    };
-  }
-
-  const labelLineHeight = round(labelProperties.font.size * DEFAULT_LINE_HEIGHT_FACTOR);
-
-  return {
-    type: 'text',
-    x: round(lx),
-    y: round(ly + (label.ascent - label.descent) / 2),
-    lines: [{ text: labelProperties.text[0].plainText }],
-    fontSize: labelProperties.font.size,
-    fontFamily: labelProperties.font.family,
-    fontWeight: labelProperties.font.weight,
-    fontStyle: labelProperties.font.style,
-    align: 'middle',
-    baseline: 'alphabetic',
-    lineHeight: labelLineHeight,
-    fill: labelProperties.textColor ?? 'currentColor',
-    opacity: labelProperties.opacity ?? properties.style.opacity,
-    measuredWidth: round(label.measuredWidth),
-    measuredHeight: round(label.measuredHeight),
-  };
+  const children = emitTextBlock(
+    label.laid,
+    {
+      lines: labelProperties.text.lines,
+      color: labelProperties.text.color,
+      opacity: combineOpacity(labelProperties.opacity, properties.style.opacity),
+      textAlign: labelProperties.text.textAlign,
+    },
+    lx - label.measuredWidth / 2,
+    ly - label.measuredHeight / 2,
+    round,
+  );
+  return children.length === 1 ? children[0] : { type: 'group', children };
 };
 
 /** 发出节点附属 label 图元 */
@@ -301,14 +267,7 @@ export const emitNodeLabelPrimitives = (
   );
   if (pinPrimitive !== undefined) primitives.push(pinPrimitive);
 
-  const labelContent = emitNodeLabelContentPrimitive(
-    layout,
-    label,
-    labelProperties,
-    properties,
-    labelCenterPosition,
-    round,
-  );
+  const labelContent = emitNodeLabelContentPrimitive(label, labelProperties, properties, labelCenterPosition, round);
   const deg = label.rotateDeg;
   primitives.push(
     deg === 0

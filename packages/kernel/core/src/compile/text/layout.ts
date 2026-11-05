@@ -1,7 +1,14 @@
-import type { TextMeasurer, GroupPrimitive, PathPrimitive, ScenePrimitive, TextPrimitive } from '../../contract';
+import type {
+  TextMeasurer,
+  GroupPrimitive,
+  PathPrimitive,
+  ScenePrimitive,
+  TextPrimitive,
+  TextFont,
+  TextInlineSegment,
+} from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { combineOpacity, resolveTextMetrics } from '../../resolve';
-import type { CanonicalFont, CanonicalInlineSegment } from '../../resolve';
 import { BuiltinCompileWarningCode } from '../shared';
 import type { CompileWarningCode } from '../shared';
 import { ASCENT_FACTOR, DESCENT_FACTOR } from './baseline';
@@ -16,8 +23,8 @@ const LINE_HEIGHT_FACTOR = 1.2;
 
 /** 布局阶段消费的文字或公式输入，不含宿主外观 */
 type InputInlineSegmentLayout =
-  | Omit<Extract<CanonicalInlineSegment, { text: string }>, 'fill' | 'opacity'>
-  | Omit<Extract<CanonicalInlineSegment, { tex: string }>, 'fill' | 'opacity'>;
+  | Omit<Extract<TextInlineSegment, { text: string }>, 'fill' | 'opacity'>
+  | Omit<Extract<TextInlineSegment, { tex: string }>, 'fill' | 'opacity'>;
 
 /** 绘制阶段只读的片段外观覆盖 */
 type InlineSegmentPaint = {
@@ -44,7 +51,7 @@ export type LineLayoutContext = {
   /** TeX 降解能力 */
   lowerTex?: TexLowerer;
   /** 块级字体 */
-  font: CanonicalFont;
+  font: TextFont;
   /** 接收混排行布局与公式降解产生的诊断 */
   warn: (code: CompileWarningCode, message: string) => void;
 };
@@ -68,7 +75,7 @@ type TextPiece = {
   segmentIndex: number;
   x: number;
   text: string;
-  font: CanonicalFont;
+  font: TextFont;
   width: number;
   measuredHeight: number;
 };

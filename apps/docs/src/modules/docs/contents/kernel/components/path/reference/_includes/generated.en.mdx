@@ -659,14 +659,17 @@ export type SmoothStepProps = {
 
 <ApiTable>
 
-| Member      | Type                                           | Default | Description                                                                              |
-| ----------- | ---------------------------------------------- | ------- | ---------------------------------------------------------------------------------------- |
-| `distance`  | `number`                                       | —       | Distance relative to the host                                                            |
-| `gap`       | `number`                                       | —       | Gap around the stroke interruption                                                       |
-| `interrupt` | `boolean`                                      | —       | Whether to interrupt the host stroke                                                     |
-| `position`  | `number`                                       | —       | Normalized position along the path                                                       |
-| `side`      | `NonNullable<IRPathLabel['side']> \| 'center'` | —       | Side relative to the host                                                                |
-| `sloped?`   | `false \| true`                                | —       | Rotate the label along the sampled tangent. An omitted `side` canonicalizes to `center`. |
+| Member          | Type                                           | Default | Description                                                                                   |
+| --------------- | ---------------------------------------------- | ------- | --------------------------------------------------------------------------------------------- |
+| `distance`      | `number`                                       | —       | Distance relative to the host                                                                 |
+| `gap`           | `number`                                       | —       | Gap around the stroke interruption                                                            |
+| `interrupt`     | `boolean`                                      | —       | Whether to interrupt the host stroke                                                          |
+| `lineHeight?`   | `number`                                       | —       | Line height in user units; falls back to `font.size × 1.2` when omitted.                      |
+| `maxTextWidth?` | `number`                                       | —       | Maximum line width before wrapping, in user units. Omitted fields disable automatic wrapping. |
+| `position`      | `number`                                       | —       | Normalized position along the path                                                            |
+| `side`          | `NonNullable<IRPathLabel['side']> \| 'center'` | —       | Side relative to the host                                                                     |
+| `sloped?`       | `false \| true`                                | —       | Rotate the label along the sampled tangent. An omitted `side` canonicalizes to `center`.      |
+| `textAlign?`    | `"start" \| "middle" \| "end"`                 | —       | Multi-line text alignment within the text block. Omitted fields use middle.                   |
 
 </ApiTable>
 
@@ -699,14 +702,17 @@ export type CanonicalPathLabelPlacement = Omit<
 
 <ApiTable>
 
-| Member       | Type                                                                                                                 | Default | Description                                                                                                                                       |
-| ------------ | -------------------------------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `distance?`  | `number`                                                                                                             | —       | Side offset distance in user units. Defaults to the same distance as Path step labels.                                                            |
-| `gap?`       | `number`                                                                                                             | —       | Extra clearance in user units on each side of an interrupted host stroke gap. Defaults to 4.                                                      |
-| `interrupt?` | `false \| true`                                                                                                      | —       | Whether this label requests a gap in a compatible host stroke. Omitted values use the host policy.                                                |
-| `position?`  | `number \| "at-start" \| "very-near-start" \| "near-start" \| "midway" \| "near-end" \| "very-near-end" \| "at-end"` | —       | Position along the step: keyword or normalized number. Parameter meaning follows the step kind.                                                   |
-| `side?`      | `"center" \| "top" \| "right" \| "bottom" \| "left"`                                                                 | —       | Side relative to the label anchor; center places text on the path independently of sloped. Omitted values use top, or center when sloped is true. |
-| `sloped?`    | `false \| true`                                                                                                      | —       | Rotate the label along the sampled tangent. An omitted `side` canonicalizes to `center`.                                                          |
+| Member          | Type                                                                                                                 | Default | Description                                                                                                                                       |
+| --------------- | -------------------------------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `distance?`     | `number`                                                                                                             | —       | Side offset distance in user units. Defaults to the same distance as Path step labels.                                                            |
+| `gap?`          | `number`                                                                                                             | —       | Extra clearance in user units on each side of an interrupted host stroke gap. Defaults to 4.                                                      |
+| `interrupt?`    | `false \| true`                                                                                                      | —       | Whether this label requests a gap in a compatible host stroke. Omitted values use the host policy.                                                |
+| `lineHeight?`   | `number`                                                                                                             | —       | Line height in user units; falls back to `font.size × 1.2` when omitted.                                                                          |
+| `maxTextWidth?` | `number`                                                                                                             | —       | Maximum line width before wrapping, in user units. Omitted fields disable automatic wrapping.                                                     |
+| `position?`     | `number \| "at-start" \| "very-near-start" \| "near-start" \| "midway" \| "near-end" \| "very-near-end" \| "at-end"` | —       | Position along the step: keyword or normalized number. Parameter meaning follows the step kind.                                                   |
+| `side?`         | `"center" \| "top" \| "right" \| "bottom" \| "left"`                                                                 | —       | Side relative to the label anchor; center places text on the path independently of sloped. Omitted values use top, or center when sloped is true. |
+| `sloped?`       | `false \| true`                                                                                                      | —       | Rotate the label along the sampled tangent. An omitted `side` canonicalizes to `center`.                                                          |
+| `textAlign?`    | `"start" \| "middle" \| "end"`                                                                                       | —       | Multi-line text alignment within the text block. Omitted fields use middle.                                                                       |
 
 </ApiTable>
 
@@ -722,7 +728,7 @@ export type PathLabelGeometryOptions = Omit<IRPathLabel, 'text' | 'textColor' | 
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InputPathBoundaryLabel"} path={"packages/kernel/core/src/contract/path/path.ts"} startLine={101}>InputPathBoundaryLabel</ApiSourceLink>
+#### <ApiSourceLink label={"InputPathBoundaryLabel"} path={"packages/kernel/core/src/contract/path/path.ts"} startLine={107}>InputPathBoundaryLabel</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -756,7 +762,7 @@ export type InputPathBoundaryLabel = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathDefinitionCompileContext"} path={"packages/kernel/core/src/contract/path/path.ts"} startLine={117}>PathDefinitionCompileContext</ApiSourceLink>
+#### <ApiSourceLink label={"PathDefinitionCompileContext"} path={"packages/kernel/core/src/contract/path/path.ts"} startLine={123}>PathDefinitionCompileContext</ApiSourceLink>
 
 A custom kind can take over output completely or reuse standard stroke logic through callbacks
 
@@ -774,8 +780,8 @@ A custom kind can take over output completely or reuse standard stroke logic thr
 | `emitHostLabels`         | `(input: InputPathLabel) => ReadonlyArray<ScenePrimitive>`                                              | —       | Compile shared host labels with optional side offsets supplied by the kind                                                                                                                                                                                    |
 | `emitStroke`             | `StrokeEmitter`                                                                                         | —       | Reuse Core's standard stroke compiler; omission uses the current `path`                                                                                                                                                                                       |
 | `materializePath`        | `(input?: Readonly<{`<br />`children?: ReadonlyArray<IRStep>;`<br />`}>) => ReadonlyArray<PathCommand>` | —       | Materialize selected steps without applying markers, dashes, fill, or custom path geometry                                                                                                                                                                    |
-| `path`                   | `CanonicalPathConfig<TPath>`                                                                            | —       | Configuration resolved from the schema, inheritance, and defaults, without Source shorthands                                                                                                                                                                  |
-| `resolveHostLabel`       | `(label: IRPathLabel) => IRPathLabel`                                                                   | —       | Merge host label defaults before the path samples label positions                                                                                                                                                                                             |
+| `path`                   | `PathDefinitionConfig<TPath>`                                                                           | —       | Configuration resolved from the schema, inheritance, and defaults, without Source shorthands                                                                                                                                                                  |
+| `resolveHostLabel`       | `(label: IRPathLabel) => PathDefinitionLabel`                                                           | —       | Merge host label defaults before the path samples label positions                                                                                                                                                                                             |
 | `round`                  | `(value: number) => number`                                                                             | —       | Rounding function shared with the current compilation                                                                                                                                                                                                         |
 | `wrapOutput`             | `(output: PathCompileResult) => PathCompileResult`                                                      | —       | Wraps complete custom geometry output, includes host-label bounds, and applies Path rotate / scale and metadata<br />Call once after emitting all labels and return the result directly; emitStroke results are already wrapped and must not be wrapped again |
 
@@ -787,14 +793,14 @@ A custom kind can take over output completely or reuse standard stroke logic thr
 
 ```ts
 export type PathDefinitionCompileContext<TPath extends IRPathBase = IRPathBase> = {
-  path: CanonicalPathConfig<TPath>;
+  path: PathDefinitionConfig<TPath>;
   materializePath: (
     input?: Readonly<{
       children?: ReadonlyArray<IRStep>;
     }>,
   ) => ReadonlyArray<PathCommand>;
   emitStroke: StrokeEmitter;
-  resolveHostLabel: (label: IRPathLabel) => IRPathLabel;
+  resolveHostLabel: (label: IRPathLabel) => PathDefinitionLabel;
   emitHostLabels: (input: InputPathLabel) => ReadonlyArray<ScenePrimitive>;
   emitBoundaryLabels: (input: ReadonlyArray<InputPathBoundaryLabel>) => ReadonlyArray<ScenePrimitive>;
   wrapOutput: (output: PathCompileResult) => PathCompileResult;
@@ -807,7 +813,7 @@ export type PathDefinitionCompileContext<TPath extends IRPathBase = IRPathBase> 
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathCompileResult"} path={"packages/kernel/core/src/contract/path/path.ts"} startLine={12}>PathCompileResult</ApiSourceLink>
+#### <ApiSourceLink label={"PathCompileResult"} path={"packages/kernel/core/src/contract/path/path.ts"} startLine={13}>PathCompileResult</ApiSourceLink>
 
 A path definition compiles a high-level path into Scene primitives in the current Path's local coordinates and returns points in that same space for bounds and transform calculations
 
@@ -929,7 +935,7 @@ export const DrawWay = {
 } as const;
 ```
 
-#### <ApiSourceLink label={"resolvePathLabelPlacement"} path={"packages/kernel/core/src/resolve/path/resolve.ts"} startLine={133}>resolvePathLabelPlacement</ApiSourceLink>
+#### <ApiSourceLink label={"resolvePathLabelPlacement"} path={"packages/kernel/core/src/resolve/path/resolve.ts"} startLine={125}>resolvePathLabelPlacement</ApiSourceLink>
 
 Position defaults to 0.5; distance and the gap on each side default to 4. If side is omitted, sloped labels are centered and other labels are placed above the path
 
@@ -1195,7 +1201,7 @@ export type MarkEmitContext = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathDefinition"} path={"packages/kernel/core/src/contract/path/path.ts"} startLine={147}>PathDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"PathDefinition"} path={"packages/kernel/core/src/contract/path/path.ts"} startLine={153}>PathDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1228,7 +1234,7 @@ export type PathDefinition<TPath extends IRPathBase = IRPathBase> = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"definePath"} path={"packages/kernel/core/src/contract/path/path.ts"} startLine={167}>definePath</ApiSourceLink>
+#### <ApiSourceLink label={"definePath"} path={"packages/kernel/core/src/contract/path/path.ts"} startLine={173}>definePath</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 

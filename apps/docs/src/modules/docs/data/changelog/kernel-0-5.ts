@@ -379,6 +379,16 @@ export const kernelV05: Release = {
       highlights: [
         {
           label: {
+            zh: '待发布：BREAKING 正文与标签共享文本能力',
+            en: 'Unreleased: BREAKING shared text capabilities for body text and labels',
+          },
+          content: {
+            zh: 'Node 正文、Node 标签与 Path 标签统一支持硬换行、混排折行、textAlign、lineHeight 和 maxTextWidth。Node layout.align 改为 layout.textAlign，标签附着 align 保留。过长单词按字素拆分，公式保持完整；行槽至少容纳实际度量。标签透明度与宿主、行和片段透明度相乘，可能改变已有标签外观与包络。Path Definition 的标签 text 改为 TextBlockContent；动态原始标签先调用 resolveHostLabel，再交给 emitHostLabels。',
+            en: 'Node body text, Node labels, and Path labels share hard breaks, mixed-content wrapping, textAlign, lineHeight, and maxTextWidth. Rename Node layout.align to layout.textAlign; attachment align remains. Oversized words split at grapheme boundaries while formulas stay intact, and line slots accommodate measured content. Label opacity multiplies host, line, and segment factors, which can change existing appearance and bounds. Path Definition label text is now TextBlockContent; resolve dynamic source labels with resolveHostLabel before passing them to emitHostLabels.',
+          },
+        },
+        {
+          label: {
             zh: '待发布：BREAKING 编译入口迁至 Reconciler',
             en: 'Unreleased: BREAKING compilation APIs move to Reconciler',
           },

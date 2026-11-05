@@ -1,8 +1,5 @@
 import type { TextFont, TextMeasurer } from '../../../contract';
 
-/** 行高倍率 */
-export const DEFAULT_LINE_HEIGHT_FACTOR = 1.2;
-
 /** CJK / 全角字符范围：无需空白分隔，折行时可按单字符切分 */
 const isCjk = (ch: string): boolean => {
   const c = ch.codePointAt(0) ?? 0;
@@ -71,40 +68,4 @@ export const measureMinimumTextWidth = (
     (width, unit) => (unit === ' ' ? width : Math.max(width, measureText(unit, font).width)),
     0,
   );
-};
-
-/**
- * 按测量宽度贪心折行，西文按词、CJK 按字寻找可断位置
- * @description 连续空白归一为单空格；单个不可断片段超宽时允许溢出，不强行截断
- * @param text 待折行文本
- * @param context 字体、最大行宽和使用同一坐标单位的文本测量器
- * @returns 按原文顺序排列的文本行；空白文本返回仅含空字符串的一行
- */
-export const wrapText = (text: string, context: WrapTextContext): Array<string> => {
-  const { font, maxWidth, measureText } = context;
-  const units = tokenizeText(text);
-
-  const lines: Array<string> = [];
-  let cur = '';
-
-  for (const u of units) {
-    if (u === ' ') {
-      if (cur !== '') cur += ' ';
-      continue;
-    }
-
-    const candidate = cur === '' ? u : cur + u;
-
-    // cur 为空时即使溢出也接受（单 token 宽于阈值 → 溢出不硬断）
-    if (cur !== '' && measureText(candidate, font).width > maxWidth) {
-      lines.push(cur.trimEnd());
-      cur = u;
-    } else {
-      cur = candidate;
-    }
-  }
-
-  if (cur.trimEnd() !== '') lines.push(cur.trimEnd());
-
-  return lines.length > 0 ? lines : [''];
 };

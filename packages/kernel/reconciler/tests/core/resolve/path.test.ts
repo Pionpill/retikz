@@ -142,16 +142,19 @@ describe('resolvePath', () => {
     );
 
     expect(canonical.properties.label).toMatchObject([
-      { text: 'center', side: 'center', interrupt: true },
-      { text: 'above', side: 'top', interrupt: false },
-      { text: 'force', side: 'bottom', interrupt: true },
-      { text: 'continuous', side: 'center', interrupt: false },
+      { text: { lines: [{ plainText: 'center' }] }, side: 'center', interrupt: true },
+      { text: { lines: [{ plainText: 'above' }] }, side: 'top', interrupt: false },
+      { text: { lines: [{ plainText: 'force' }] }, side: 'bottom', interrupt: true },
+      { text: { lines: [{ plainText: 'continuous' }] }, side: 'center', interrupt: false },
     ]);
     expect(canonical.properties.children).toMatchObject([
       { kind: 'move' },
-      { kind: 'line', label: { text: 'sloped', side: 'center', interrupt: true } },
-      { kind: 'line', label: { text: 'step-above', side: 'top', interrupt: false } },
-      { kind: 'line', label: { text: 'step-continuous', side: 'center', interrupt: false } },
+      { kind: 'line', label: { text: { lines: [{ plainText: 'sloped' }] }, side: 'center', interrupt: true } },
+      { kind: 'line', label: { text: { lines: [{ plainText: 'step-above' }] }, side: 'top', interrupt: false } },
+      {
+        kind: 'line',
+        label: { text: { lines: [{ plainText: 'step-continuous' }] }, side: 'center', interrupt: false },
+      },
     ]);
   });
 
@@ -160,8 +163,16 @@ describe('resolvePath', () => {
       path({ label: { text: 'host', position: 'at-end', side: 'bottom', distance: 0, sloped: false } }),
     );
 
-    expect(canonical.properties.label).toEqual([
-      { text: 'host', position: 1, side: 'bottom', distance: 0, sloped: false, interrupt: false, gap: 4 },
+    expect(canonical.properties.label).toMatchObject([
+      {
+        text: { lines: [{ plainText: 'host' }] },
+        position: 1,
+        side: 'bottom',
+        distance: 0,
+        sloped: false,
+        interrupt: false,
+        gap: 4,
+      },
     ]);
   });
 

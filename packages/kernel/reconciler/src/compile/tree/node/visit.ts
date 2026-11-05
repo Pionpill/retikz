@@ -102,7 +102,7 @@ export const visitNode = (
                 ...previous.compiled.layout,
               },
               text: previous.compiled.text?.layout,
-              labels: previous.compiled.labels.map(label => label.layout),
+              labels: [],
             },
           });
         })();

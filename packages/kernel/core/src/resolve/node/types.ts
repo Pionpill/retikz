@@ -20,7 +20,7 @@ import type { ThemeMode } from '../../shared';
 import type { CanonicalPosition } from '../position';
 import type { InputPaintResolution } from '../resource';
 import type { MergedScopeDefaults } from '../style';
-import type { CanonicalFont, ColorResolvedTextLine, LabelTextColorSource, TextLineResolution } from '../text';
+import type { CanonicalTextBlock, ColorResolvedTextLine, LabelTextColorSource } from '../text';
 
 /** 已解析描边颜色与绘制资源的节点标签引线 */
 export type CanonicalNodeLabelPin = Omit<Exclude<IRNodeLabel['pin'], boolean | undefined>, 'stroke'> & {
@@ -95,11 +95,12 @@ export type NodeLabelColorSource = Omit<
 };
 
 /** 已完成字体、正文和外观解析的节点标签 */
-export type CanonicalNodeLabel = Omit<NodeLabelColorSource, 'text' | 'font'> & {
-  /** 已解析的正文行 */
-  text: Array<TextLineResolution>;
-  /** 完成缩放后的有效字体 */
-  font: CanonicalFont;
+export type CanonicalNodeLabel = Omit<
+  NodeLabelColorSource,
+  'text' | 'font' | 'textColor' | 'lineHeight' | 'maxTextWidth' | 'textAlign'
+> & {
+  /** 已确定的共享文本块 */
+  text: CanonicalTextBlock;
 };
 
 /** 已绑定的节点形状定义与实例参数 */
@@ -149,41 +150,32 @@ export type CanonicalNode = Readonly<{
   /** 已补全的有效绘制属性 */
   style: CanonicalNodeStyle;
   /** 正文内容，省略表示无正文 */
-  text?: CanonicalNodeText;
+  text?: CanonicalTextBlock;
   /** 已解析的附属标签 */
   labels: Array<CanonicalNodeLabel>;
   /** 已校验的元素动画 */
   animations: NonNullable<IRNode['animations']>;
 }>;
 
-/** 已补齐位置、尺寸和间距意图的节点布局配置 */
+/** 已补齐位置默认值并完成尺寸、间距缩放的节点布局配置 */
 export type CanonicalNodeLayout = {
   /** 位置表达式的静态默认值已完成，引用在 compile 阶段读取 */
   position: CanonicalPosition | Required<Extract<NonNullable<IRNode['position']>, { kind: 'anchor' }>>;
-  /** 完整内边距 */
+  /** 已按节点两轴缩放的完整内边距 */
   padding: BoundsInsets;
-  /** 完整外边距 */
+  /** 已按节点两轴缩放的完整外边距 */
   margin: BoundsInsets;
-  /** 节点边界的最小尺寸 */
+  /** 已按节点两轴缩放的边界最小尺寸 */
   minimumSize: {
     /** 最小宽度 */
     width: number;
     /** 最小高度 */
     height: number;
   };
-  /** 完整轴向缩放 */
-  scale: {
-    /** 水平方向缩放系数 */
-    x: number;
-    /** 垂直方向缩放系数 */
-    y: number;
-  };
   /** 节点旋转角度，单位为度 */
   rotate: number;
-  /** 显式节点宽度，省略时由内容和布局约束确定 */
+  /** 已按节点水平缩放的显式宽度，省略时由内容和布局约束确定 */
   width?: number;
-  /** 正文最大宽度，省略时不增加此项折行约束 */
-  maxTextWidth?: number;
 };
 
 /** 完整绘制属性；shadow 缺失表示不投影 */
@@ -214,20 +206,6 @@ export type CanonicalNodeStyle = {
   blendMode: NonNullable<IRNodeStyle['blendMode']>;
   /** 已展开预设并补齐颜色的阴影 */
   shadow?: CanonicalDropShadow;
-};
-
-/** 完成字体单位、行高与内容分段解析的节点正文 */
-export type CanonicalNodeText = {
-  /** 已确定数值字号及字形属性 */
-  font: CanonicalFont;
-  /** 正文对齐方式 */
-  align: NodeTextAlign;
-  /** 有效行高 */
-  lineHeight: number;
-  /** 主色，省略表示继承绘制环境颜色 */
-  color?: string;
-  /** 已解析的作者行与片段 */
-  lines: Array<TextLineResolution>;
 };
 
 /** 节点解析所需的默认配置、扩展定义与诊断能力 */

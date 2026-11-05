@@ -17,6 +17,8 @@ for (const count of [16, 1_000, 10_000]) {
       () => {
         const context: PathResolveContext = {
           mode: 'light',
+          rootFontSize: 16,
+          gatingOn: false,
           pathRegistry: resolvePathRegistry(),
           arrowRegistry: resolveArrowRegistry(),
           patternRegistry: resolvePatternRegistry(),

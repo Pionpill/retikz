@@ -1,5 +1,4 @@
-import type { InputPathBoundaryLabel, ScenePrimitive } from '../../../contract';
-import type { PathLabelColorSource } from '../../../resolve';
+import type { InputPathBoundaryLabel, ScenePrimitive, PathDefinitionLabel } from '../../../contract';
 import type { IRPosition } from '../../../schemas';
 import { BoundaryLabelSchema } from '../../../schemas';
 import { placeLabelBox } from '../../text';
@@ -11,15 +10,11 @@ const defaults = BoundaryLabelSchema.parse({ text: '' });
 /** 复用文字发射与测量，以独立边界轴和文字角度定位 */
 export const emitBoundaryLabelPrimitive = (
   input: InputPathBoundaryLabel,
-  styled: PathLabelColorSource,
+  canon: PathDefinitionLabel,
   context: EmitLabelPrimitiveContext,
 ): { primitive: ScenePrimitive; boundsPoints: Array<IRPosition> } => {
   const { label, point, outward } = input;
-  const base = emitLabelPrimitive(
-    { ...styled, position: 0, side: 'center', sloped: false, distance: 0, interrupt: false, gap: 0 },
-    { point: [0, 0], tangent: [1, 0] },
-    context,
-  );
+  const base = emitLabelPrimitive(canon, { point: [0, 0], tangent: [1, 0] }, context);
   const xs = base.boundsPoints.map(p => p[0]);
   const ys = base.boundsPoints.map(p => p[1]);
   const width = Math.max(...xs) - Math.min(...xs);

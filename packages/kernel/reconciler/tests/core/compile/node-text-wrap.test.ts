@@ -76,10 +76,10 @@ describe('折出物理行继承 IRLine 样式', () => {
   });
 });
 
-describe('长不可断 token 溢出不硬断', () => {
-  it('"abcdefgh"（单词 8 字符）+ maxTextWidth=3 → 单行溢出', () => {
+describe('长单词按字素折行', () => {
+  it('八个字符在三字符宽度内折成三行', () => {
     const t = compileNode({ text: 'abcdefgh', maxTextWidth: 3 });
 
-    expect(t.lines.map(l => l.text)).toEqual(['abcdefgh']);
+    expect(t.lines.map(l => l.text)).toEqual(['abc', 'def', 'gh']);
   });
 });

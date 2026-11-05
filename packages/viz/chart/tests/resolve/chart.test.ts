@@ -57,7 +57,7 @@ const source = sourceSchema.parse({
   type: 'point',
   data: { reference: 'rows' },
   presentation: { title: { text: 'Revenue' } },
-  defaultChart: { presentation: { title: { style: { textColor: '#123456' }, layout: { align: 'middle' } } } },
+  defaultChart: { presentation: { title: { style: { textColor: '#123456' }, layout: { textAlign: 'middle' } } } },
   recipe: { chartType: 'demo', encodings: { x: 'x', y: 'y' } },
 });
 

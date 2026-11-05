@@ -6,7 +6,7 @@ import type {
   PathDefinitionCompileContext,
   ScenePrimitive,
 } from '../../../contract';
-import { resolvePathLabel, resolvePathLabelColors } from '../../../resolve';
+import { resolvePathLabel, resolvePathLabelColors, resolvePathLabelContent } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
 import type { BoundPathResolution, PathCompileContext } from '../types';
 import { emitBoundaryLabelPrimitive } from './boundary-label';
@@ -22,36 +22,30 @@ export const createPathLabelCallbacks = (
   const { irPath, properties: canonicalPath } = resolution;
   const hostLabelBoundsPoints: Array<IRPosition> = [];
   const resolveHostLabel: PathDefinitionCompileContext['resolveHostLabel'] = label =>
-    resolvePathLabel(label, scopeDefaults.path?.label ?? {}, canonicalPath.color);
+    resolvePathLabelContent(
+      resolvePathLabelColors(
+        resolvePathLabel(label, scopeDefaults.path?.label ?? {}, canonicalPath.color),
+        scopeDefaults.path?.label?.color ?? canonicalPath.color,
+        theme.mode,
+        [...irPath, 'label'],
+      ),
+      false,
+      { rootFontSize, gatingOn: lowerTex !== undefined, warn: targetWarn },
+    );
   const emitHostLabels = (input: InputPathLabel): ReadonlyArray<ScenePrimitive> =>
     input.labels.flatMap((label, index) => {
       const sample = input.samples[index];
-      const labelDefault = scopeDefaults.path?.label ?? {};
       const sourcePath = [...irPath, ...input.sourcePath, index];
-      const { side, ...labelSource } = label;
-      const { position, distance } = labelSource;
-      const styled = resolvePathLabelColors(
-        labelSource,
-        labelDefault.color ?? canonicalPath.color,
-        theme.mode,
-        sourcePath,
-      );
-      const emittedLabel = emitLabelPrimitive(
-        { ...styled, position, side, distance, interrupt: false, gap: 0 },
-        sample,
-        {
-          measureText,
-          round,
-          rootFontSize,
-          hostOpacity: canonicalPath.opacity,
-          placement: { sideOffset: sample.sideOffset },
-          tex: {
-            lowerTex,
-            gatingOn: lowerTex !== undefined,
-            warn: (code, message) => targetWarn(code, message, { irPath: sourcePath }),
-          },
+      const emittedLabel = emitLabelPrimitive({ ...label, interrupt: false, gap: 0 }, sample, {
+        measureText,
+        round,
+        hostOpacity: canonicalPath.opacity,
+        placement: { sideOffset: sample.sideOffset },
+        tex: {
+          lowerTex,
+          warn: (code, message) => targetWarn(code, message, { irPath: sourcePath }),
         },
-      );
+      });
       hostLabelBoundsPoints.push(...emittedLabel.boundsPoints);
 
       return [emittedLabel.primitive];
@@ -65,17 +59,27 @@ export const createPathLabelCallbacks = (
         theme.mode,
         [...irPath, ...request.sourcePath],
       );
-      const emitted = emitBoundaryLabelPrimitive(request, styled, {
-        measureText,
-        round,
-        rootFontSize,
-        hostOpacity: canonicalPath.opacity,
-        tex: {
-          lowerTex,
-          gatingOn: lowerTex !== undefined,
-          warn: (code, message) => targetWarn(code, message, { irPath: [...irPath, ...request.sourcePath] }),
+      const emitted = emitBoundaryLabelPrimitive(
+        request,
+        resolvePathLabelContent(
+          { ...styled, position: 0, side: 'center', sloped: false, distance: 0, interrupt: false, gap: 0 },
+          false,
+          {
+            rootFontSize,
+            gatingOn: lowerTex !== undefined,
+            warn: (code, message) => targetWarn(code, message, { irPath: [...irPath, ...request.sourcePath] }),
+          },
+        ),
+        {
+          measureText,
+          round,
+          hostOpacity: canonicalPath.opacity,
+          tex: {
+            lowerTex,
+            warn: (code, message) => targetWarn(code, message, { irPath: [...irPath, ...request.sourcePath] }),
+          },
         },
-      });
+      );
       hostLabelBoundsPoints.push(...emitted.boundsPoints);
       if (canonicalPath.meta !== undefined) emitted.primitive.meta = canonicalPath.meta;
 

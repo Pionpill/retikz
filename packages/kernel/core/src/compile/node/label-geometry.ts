@@ -94,7 +94,10 @@ export const labelBorderPoint = (layout: CompiledNodeLayout, position: Canonical
 };
 
 /** 将标签相对节点中心的偏移换算为当前布局坐标中的中心点 */
-export const labelCenter = (layout: Pick<CompiledNodeLayout, 'geometry'>, label: NodeLabelLayout): Position => {
+export const labelCenter = (
+  layout: Pick<CompiledNodeLayout, 'geometry'>,
+  label: Pick<NodeLabelLayout, 'centerOffset'>,
+): Position => {
   return [layout.geometry.rect.x + label.centerOffset[0], layout.geometry.rect.y + label.centerOffset[1]];
 };
 
@@ -165,7 +168,7 @@ export const layoutNodeLabelGeometry = (
 
   const placed = placeLabelBox({
     label: {
-      text: canon.text.map(line => line.plainText).join('\n'),
+      text: canon.text.lines.map(line => line.plainText).join('\n'),
       rotate: canon.rotate,
       keepUpright: canon.keepUpright,
       placement: canon.placement,
@@ -190,7 +193,9 @@ export const layoutNodeLabelGeometry = (
  * 节点 label 的外接点
  * @description 用于顶层 bbox / viewBox 计算
  */
-export const labelExtentPoints = (layout: Pick<CompiledNodeLayout, 'geometry' | 'labels'>): Array<Position> => {
+export const labelExtentPoints = (
+  layout: Pick<CompiledNodeLayout, 'geometry'> & { labels?: Array<Omit<NodeLabelLayout, 'laid'>> },
+): Array<Position> => {
   if (!layout.labels || layout.labels.length === 0) return [];
 
   const cx = layout.geometry.rect.x;

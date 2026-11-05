@@ -109,8 +109,6 @@ type InputStrokeSamplingCollector = {
   round: (value: number) => number;
   /** path 级 opacity，传递给 label host */
   hostOpacity: number | undefined;
-  /** preset/rem 字号解析根字号 */
-  rootFontSize?: number;
   /** 可选 TeX 降级能力 */
   lowerTex?: TexLowerer;
   /** path warning 收集器 */
@@ -126,7 +124,6 @@ export const createStrokeSamplingCollector = ({
   measureText,
   round,
   hostOpacity,
-  rootFontSize,
   lowerTex,
   warn,
 }: InputStrokeSamplingCollector): StrokeSamplingCollector => {
@@ -141,15 +138,13 @@ export const createStrokeSamplingCollector = ({
   let activeStepIndex = -1;
   let activeStepKind: CanonicalPathStep['kind'] = 'move';
 
-  const emitLegacyLabel = (canon: CanonicalPathLabel, sample: CurveSegmentSample): void => {
+  const emitStepLabel = (canon: CanonicalPathLabel, sample: CurveSegmentSample): void => {
     const result = emitLabelPrimitive(canon, sample, {
       measureText,
       round,
-      rootFontSize,
       hostOpacity,
       tex: {
         lowerTex,
-        gatingOn: lowerTex !== undefined,
         warn: (code, message) => warn(code, message, ['label']),
       },
     });
@@ -180,7 +175,7 @@ export const createStrokeSamplingCollector = ({
     }
     if (canon.kind === 'move' || canon.kind === 'cycle' || !('label' in canon) || !canon.label) return;
     if (!canon.label.interrupt) {
-      emitLegacyLabel(canon.label, sampleAt(canon.label.position));
+      emitStepLabel(canon.label, sampleAt(canon.label.position));
       return;
     }
 
@@ -208,11 +203,9 @@ export const createStrokeSamplingCollector = ({
       const result = emitLabelPrimitive(request.label, sample.sample, {
         measureText,
         round,
-        rootFontSize,
         hostOpacity,
         tex: {
           lowerTex,
-          gatingOn: lowerTex !== undefined,
           warn: (code, message) => warn(code, message, ['label']),
         },
       });

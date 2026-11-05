@@ -7,7 +7,7 @@ import type { FC } from 'react';
  */
 const Demo: FC = () => (
   <Layout>
-    <Node id="mix" position={[0, 0]} layout={{ align: 'start' }}>
+    <Node id="mix" position={[0, 0]} layout={{ textAlign: 'start' }}>
       {'before\nplain1'}
       <Text fill="red" font={{ weight: 'bold' }}>
         RED + BOLD

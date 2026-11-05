@@ -70,11 +70,11 @@ describe('Diagram 主题 schema', () => {
             opacity: 0.95,
             font: { family: 'Inter', size: 20, weight: 700, style: 'normal' },
           },
-          layout: { align: 'start', lineHeight: 24, maxTextWidth: 320 },
+          layout: { textAlign: 'start', lineHeight: 24, maxTextWidth: 320 },
         },
         description: {
           style: { textColor: 'gray', opacity: 0.8, font: { size: 14 } },
-          layout: { align: 'middle', lineHeight: 20, maxTextWidth: 360 },
+          layout: { textAlign: 'middle', lineHeight: 20, maxTextWidth: 360 },
         },
       },
     });
