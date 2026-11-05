@@ -17,6 +17,7 @@ import type { RegisterPaint } from '../resource';
 import type { CompiledDrawing } from '../scene';
 import type { ComposedScopeTransform, CompileWarningCode } from '../shared';
 import type { CompiledTextBlockLayout, InlineLineLayout, TexLowerer } from '../text';
+import type { NodeContentLayout } from './content';
 
 /** 节点最终位置、视觉尺寸及自定义形状图元几何 */
 export type CompiledNodeGeometry = {
@@ -172,10 +173,46 @@ export type CompiledNodeLayout = {
   labels?: Array<NodeLabelLayout>;
 };
 
+/** 正文与形状联合求解后的主体测量，不包含节点位置 */
+export type MeasuredNodeBody = {
+  /** 最终宽度预算对应的正文排版 */
+  contentLayout: NodeContentLayout;
+  /** 应用最小尺寸与固定宽度后的视觉尺寸 */
+  size: { width: number; height: number };
+  /** 形状外接中心相对包含 padding 的内容盒中心的偏移 */
+  offset?: Position;
+};
+
+/** 节点放置后的视觉矩形和正文中心 */
+export type NodePlacement = Pick<NodeLayoutGeometry, 'rect' | 'contentCenter'>;
+
+/** 标签相对节点的放置，不包含文本测量 */
+export type CompiledNodeLabelPlacement = Pick<NodeLabelLayout, 'rotateDeg' | 'centerOffset'>;
+
+/** 调用方已确认有效的单标签布局阶段产物 */
+export type PreparedNodeLabelLayout = {
+  /** 标签自身的文本测量 */
+  measurement?: MeasuredNodeLabel;
+  /** 标签相对主体的放置 */
+  placement?: CompiledNodeLabelPlacement;
+};
+
+/** 调用方保证适用于当前输入与上下文的节点布局产物 */
+export type PreparedNodeLayout = {
+  /** 完整布局；提供时跳过所有布局计算 */
+  overall?: CompiledNodeLayout;
+  /** 主体测量；缺省时求解正文与形状尺寸 */
+  body?: MeasuredNodeBody;
+  /** 最终节点位置；缺省时读取当前定位依赖 */
+  placement?: NodePlacement;
+  /** 与当前 Canonical 标签顺序对应的阶段产物；缺项按需计算 */
+  labels?: Array<PreparedNodeLabelLayout>;
+};
+
 /** 调用方保证适用于当前输入与上下文的节点阶段产物 */
 export type PreparedNodeCompilation = {
-  /** 已完成的布局；省略时执行测量和定位 */
-  layout?: CompiledNodeLayout;
+  /** 完整或部分布局产物，缺失阶段由 Core 执行 */
+  layout?: PreparedNodeLayout;
 };
 
 /** 已完成内容与视觉盒测量、尚未绑定 Node rect 的附属标签 */

@@ -87,7 +87,7 @@ const layoutBoundaryNode = (node: IRNode, namespaceStack: NamespaceStack) =>
           lookupReference: id => namespaceStack.lookupReference(id),
           nodeDistance: 24,
         }),
-      }),
+      }).overall,
     };
   })();
 

@@ -18,7 +18,7 @@ type InputNodeContentLayout = NodeTextLayoutContext & {
 };
 
 /** 节点正文排版与完整作者行解析结果 */
-type NodeContentLayout = {
+export type NodeContentLayout = {
   /** 普通文本行 */
   lines?: Array<CompiledNodeTextLineLayout>;
   /** 行内公式混排块 */

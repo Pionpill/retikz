@@ -94,15 +94,17 @@ export const visitNode = (
           else evaluatePosition(position, context.positionContext);
           return compileNode(resolution, context, {
             layout: {
-              shape: previous.compiled.shape,
-              boundary: previous.compiled.boundary,
-              geometry: {
-                rect: previous.compiled.geometry.rect,
-                margin: previous.compiled.geometry.margin,
-                ...previous.compiled.layout,
+              overall: {
+                shape: previous.compiled.shape,
+                boundary: previous.compiled.boundary,
+                geometry: {
+                  rect: previous.compiled.geometry.rect,
+                  margin: previous.compiled.geometry.margin,
+                  ...previous.compiled.layout,
+                },
+                text: previous.compiled.text?.layout,
+                labels: [],
               },
-              text: previous.compiled.text?.layout,
-              labels: [],
             },
           });
         })();

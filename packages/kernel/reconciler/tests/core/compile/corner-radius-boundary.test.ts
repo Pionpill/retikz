@@ -37,7 +37,7 @@ const layoutSquare = (node: IRNode) => {
     ...layoutNode(resolution, {
       measureText,
       positionContext: createPositionEvaluateContext({ lookupReference: () => undefined, nodeDistance: 24 }),
-    }),
+    }).overall,
   };
 };
 

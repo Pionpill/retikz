@@ -1,9 +1,10 @@
+import type { WithRequiredProperties } from '@retikz/foundation';
 import { formatPropertyPath } from '@retikz/foundation';
 import { DEG_TO_RAD } from '@retikz/math';
 
 import { LayoutAxisProposalKind, LayoutIntrinsicMode } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import type { CanonicalNode, CanonicalPosition } from '../../resolve';
+import type { CanonicalNode } from '../../resolve';
 import type { IRAnchorPosition, IRPosition } from '../../schemas';
 import { CenterAnchor } from '../../shared';
 import type { BoundaryState } from '../boundary';
@@ -13,42 +14,45 @@ import { evaluatePosition, evaluatePositionTargetWorld } from '../reference';
 import type { ComposedScopeTransform } from '../shared';
 import { composeScopeTransform, inverseScopeTransform } from '../shared';
 import { layoutNodeContent } from './content';
-import { layoutNodeLabels, measureNodeLabels } from './label';
+import { measureNodeLabel, placeNodeLabel } from './label';
 import { layoutNodeShape } from './shape';
-import type { CompiledNodeLayout, NodeCompileContext } from './types';
+import type {
+  CompiledNodeLayout,
+  NodeCompileContext,
+  MeasuredNodeBody,
+  NodePlacement,
+  PreparedNodeLayout,
+} from './types';
 
-/** 按文本测量、节点缩放与父级宽度提案计算正文、形状和边界布局 */
+/** 消费有效阶段产物并补齐布局，不判断跨次有效性或保存执行状态 */
 export const layoutNode = (
   canon: CanonicalNode,
   context: Omit<NodeCompileContext, 'round' | 'registerPaint'>,
-): CompiledNodeLayout => {
+  prepared?: PreparedNodeLayout,
+): WithRequiredProperties<PreparedNodeLayout, 'overall'> => {
   const { shape, boundary } = canon;
-  const {
-    irPath = [],
-    measureText,
-    positionContext,
-    scopeChain = [],
-    texLowering,
-    warn,
-    boundaryState,
-    composedTransform,
-  } = context;
-
-  const { contentLayout, circumscribed, margin, paddingOffsetX, paddingOffsetY, boundsHalfW, boundsHalfH } =
-    measureNode(canon, context);
+  if (prepared?.overall !== undefined) {
+    return { ...prepared, overall: { ...prepared.overall, shape, boundary } };
+  }
+  const { positionContext } = context;
+  const body = prepared?.body ?? measureNodeBody(canon, context);
+  const { contentLayout, size, offset } = body;
+  const { margin, padding } = canon.layout;
+  const paddingOffsetX = (padding.right - padding.left) / 2;
+  const paddingOffsetY = (padding.bottom - padding.top) / 2;
   const { textWidth, textHeight, textBaselineOffsets, lines, inlineBlock } = contentLayout;
   const lineHeight = canon.text?.lineHeight ?? 0;
   const align = canon.text?.textAlign ?? 'middle';
   const rotateDeg = canon.layout.rotate;
 
-  let anchorPosition: IRAnchorPosition | undefined;
-  let center: IRPosition | null;
-  if (isAnchorPosition(canon.layout.position)) {
-    anchorPosition = canon.layout.position;
-    center = [0, 0];
-  } else {
-    center = evaluatePosition(canon.layout.position, positionContext)?.localPoint ?? null;
-  }
+  const { position } = canon.layout;
+  const anchorPosition = !Array.isArray(position) && 'kind' in position;
+  // 锚点定位的标签仍在初始主体上采样，最后随主体一起平移
+  const initialPlacement = anchorPosition ? undefined : prepared?.placement;
+  const center: IRPosition | null =
+    anchorPosition || initialPlacement !== undefined
+      ? [0, 0]
+      : (evaluatePosition(position, positionContext)?.localPoint ?? null);
 
   if (!center) {
     throw new RetikzCoreError(
@@ -58,15 +62,16 @@ export const layoutNode = (
   }
 
   // shape 可声明 AABB 中心相对 position 的偏移。
-  const aabbOffset = circumscribed.offset;
-  const rectCenterX = center[0] + paddingOffsetX + (aabbOffset?.[0] ?? 0);
-  const rectCenterY = center[1] + paddingOffsetY + (aabbOffset?.[1] ?? 0);
-  const contentCenter: [number, number] = [rectCenterX - paddingOffsetX, rectCenterY - paddingOffsetY];
-  const measuredLabels = measureNodeLabels({
-    canon,
-    measureText,
-    tex: texLowering,
-  });
+  const aabbOffset = offset;
+  const rectCenterX = initialPlacement?.rect.x ?? center[0] + paddingOffsetX + (aabbOffset?.[0] ?? 0);
+  const rectCenterY = initialPlacement?.rect.y ?? center[1] + paddingOffsetY + (aabbOffset?.[1] ?? 0);
+  const contentCenter: [number, number] = initialPlacement?.contentCenter ?? [
+    rectCenterX - paddingOffsetX,
+    rectCenterY - paddingOffsetY,
+  ];
+  const measuredLabels = canon.labels.map(
+    (label, index) => prepared?.labels?.[index]?.measurement ?? measureNodeLabel(label, context),
+  );
 
   const provisional: CompiledNodeLayout = {
     shape,
@@ -75,8 +80,8 @@ export const layoutNode = (
         // x, y 是外接 AABB 几何中心。
         x: rectCenterX,
         y: rectCenterY,
-        width: 2 * boundsHalfW,
-        height: 2 * boundsHalfH,
+        width: size.width,
+        height: size.height,
         // geometry 用弧度。
         rotate: rotateDeg * DEG_TO_RAD,
       },
@@ -106,27 +111,55 @@ export const layoutNode = (
             },
     boundary,
   };
-  const resolved: CompiledNodeLayout = {
-    ...provisional,
-    labels: layoutNodeLabels(provisional, measuredLabels),
+  const labels = measuredLabels.map((measurement, index) => ({
+    measurement,
+    placement: prepared?.labels?.[index]?.placement ?? placeNodeLabel(provisional, measurement, canon.labels[index]),
+  }));
+  const placement = prepared?.placement ?? placeNode(canon, provisional, context);
+  return {
+    body,
+    placement,
+    labels,
+    overall: {
+      ...provisional,
+      geometry: { ...provisional.geometry, ...placement },
+      labels: labels.length === 0 ? undefined : labels.map(label => ({ ...label.measurement, ...label.placement })),
+    },
   };
+};
 
-  if (anchorPosition === undefined) return resolved;
-  return placeAnchorPositionedLayout(
-    canon,
-    anchorPosition,
-    resolved,
-    positionContext,
-    composedTransform ?? composeScopeTransform(scopeChain),
-    boundaryState ?? { warn, irPath },
-  );
+/** 对已求得初始位置的主体执行最终放置；锚点对齐使用当前引用环境 */
+export const placeNode = (
+  canon: CanonicalNode,
+  provisional: CompiledNodeLayout,
+  context: Pick<
+    NodeCompileContext,
+    'positionContext' | 'scopeChain' | 'composedTransform' | 'boundaryState' | 'warn' | 'irPath'
+  >,
+): NodePlacement => {
+  const { position } = canon.layout;
+  const { rect, contentCenter } =
+    Array.isArray(position) || !('kind' in position)
+      ? provisional.geometry
+      : placeAnchorPositionedLayout(
+          canon,
+          position,
+          provisional,
+          context.positionContext,
+          context.composedTransform ?? composeScopeTransform(context.scopeChain ?? []),
+          context.boundaryState ?? { warn: context.warn, irPath: context.irPath ?? [] },
+        ).geometry;
+  return { rect, contentCenter };
 };
 
 /** 自定义形状反馈的最大重排次数 */
 const MAX_ALLOCATION_REFLOW_ATTEMPTS = 32;
 
 /** 求得正文与形状的最终尺寸 */
-const measureNode = (canon: CanonicalNode, context: Omit<NodeCompileContext, 'round' | 'registerPaint'>) => {
+export const measureNodeBody = (
+  canon: CanonicalNode,
+  context: Pick<NodeCompileContext, 'measureText' | 'texLowering' | 'allocationWidthProposal' | 'irPath'>,
+): MeasuredNodeBody => {
   const { measureText, texLowering, allocationWidthProposal, irPath = [] } = context;
   const {
     padding: { left: paddingLeft, right: paddingRight, top: paddingTop, bottom: paddingBottom },
@@ -227,19 +260,12 @@ const measureNode = (canon: CanonicalNode, context: Omit<NodeCompileContext, 'ro
 
   const { contentLayout, circumscribed } = selectedCandidate;
 
-  const paddingOffsetX = (paddingRight - paddingLeft) / 2;
-  const paddingOffsetY = (paddingBottom - paddingTop) / 2;
   const boundsHalfW =
     fixedVisualWidth === undefined ? Math.max(circumscribed.halfWidth, minHalfW) : fixedVisualWidth / 2;
   const boundsHalfH = Math.max(circumscribed.halfHeight, minHalfH);
 
-  return { contentLayout, circumscribed, margin, paddingOffsetX, paddingOffsetY, boundsHalfW, boundsHalfH };
+  return { contentLayout, size: { width: 2 * boundsHalfW, height: 2 * boundsHalfH }, offset: circumscribed.offset };
 };
-
-/** 判断 Node.position 是否为锚点对锚点定位 */
-const isAnchorPosition = (
-  position: CanonicalPosition | Required<IRAnchorPosition>,
-): position is Required<IRAnchorPosition> => !Array.isArray(position) && 'kind' in position;
 
 /** 把全局位移反投影为当前 Scope 的局部位移 */
 const localDeltaOf = (

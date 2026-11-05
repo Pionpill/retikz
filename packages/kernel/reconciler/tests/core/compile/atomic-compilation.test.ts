@@ -48,7 +48,7 @@ describe('原子编译阶段', () => {
         measureText: runtime.context.host.measureText,
         positionContext: createPositionEvaluateContext({ lookupReference: () => undefined, nodeDistance: 10 }),
         allocationWidthProposal: { kind: LayoutAxisProposalKind.Exact, value: 60 },
-      });
+      }).overall;
     };
     const first = layout();
     expect(first.geometry.contentSize.height).toBeGreaterThan(12);
@@ -101,18 +101,19 @@ describe('原子编译阶段', () => {
     );
     expect(warnings).toEqual(['TEXT_TEX_PARSE_ERROR', 'TEXT_TEX_PARSE_ERROR']);
     const before = JSON.stringify(resolution);
-    const layouts = [80, 500].map(value =>
-      layoutNode(resolution, {
-        measureText: (text, font) => ({ width: (text.length * font.size) / 2, height: font.size }),
-        positionContext: {
-          nodeDistance: 10,
-          pointOfNodeTarget: () => [0, 0],
-          lookupReference: () => undefined,
-          toLocal: point => point,
-          toWorld: point => point,
-        },
-        allocationWidthProposal: { kind: LayoutAxisProposalKind.Exact, value },
-      }),
+    const layouts = [80, 500].map(
+      value =>
+        layoutNode(resolution, {
+          measureText: (text, font) => ({ width: (text.length * font.size) / 2, height: font.size }),
+          positionContext: {
+            nodeDistance: 10,
+            pointOfNodeTarget: () => [0, 0],
+            lookupReference: () => undefined,
+            toLocal: point => point,
+            toWorld: point => point,
+          },
+          allocationWidthProposal: { kind: LayoutAxisProposalKind.Exact, value },
+        }).overall,
     );
     expect(layouts[0].geometry.contentSize.height).toBeGreaterThan(layouts[1].geometry.contentSize.height);
     expect(JSON.stringify(resolution)).toBe(before);

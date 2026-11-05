@@ -220,9 +220,13 @@ export type CompiledNodeTextLayout = {
 
 </DocTabs>
 
-`resolveNode` 根据根字号、相对距离和公式开关确定完整的 `CanonicalNode`。`layoutNode` 返回 `CompiledNodeLayout`，不回传完整 canon，但保留后续查询必需的 Definition 与参数。`compileNode(canon, context, prepared?)` 在未提供 `prepared.layout` 时完成测量和定位；已提供时直接消费该布局，生成当前绘制结果。最终产物的 `geometry` 保存视觉矩形、连接外扩距离和图元几何；`layout` 使用 `CompiledNodeMetrics` 保存正文占位和对齐指标，正文和标签结果分别归属各自字段。
+`resolveNode` 根据根字号、相对距离和公式开关确定完整的 `CanonicalNode`。`layoutNode(canon, context, prepared?)` 返回 `WithRequiredProperties<PreparedNodeLayout, 'overall'>`：`overall` 是完整的 `CompiledNodeLayout`，不回传完整 canon，但保留后续查询必需的 Definition 与参数；`body` 是正文与形状联合求解后的尺寸，`placement` 是节点放置结果，`labels` 按当前标签顺序保存各自的 `measurement` 和 `placement`。
 
-Reconciler 比较有效配置、编译上下文及实际引用几何，并由 Weave 维护阶段缓存；布局满足复用条件时，重新读取定位依赖，再将准备好的布局传给同一个 `compileNode`。Core 不比较历史版本，也不判断缓存是否有效。正文通过作者行索引将物理行与当前外观对应；`emitNodeOutput` 只消费 compiled。
+`compileNode(canon, context, { layout: prepared })` 消费这些产物。提供 `layout.overall` 时跳过全部布局计算；只提供部分产物时，Core 补算缺失阶段。整体命中不会反推缺失的局部产物。标签测量不依赖主体尺寸，标签放置则依赖主体边界；正文和形状之间存在宽度反馈，因此 body 测量保留完整的重排过程。单独执行这些操作可使用 `measureNodeBody`、`measureNodeLabel`、`placeNodeLabel`；`placeNode` 消费已确定初始位置的主体布局，完成最后的锚点对齐。
+
+调用方保证传入产物适用于当前配置、宽度提案与测量环境，并将 `labels` 与当前标签顺序对齐。Core 不修改准备数据，也不保存跨次缓存。最终产物的 `geometry` 保存视觉矩形、连接外扩距离和图元几何；`layout` 使用 `CompiledNodeMetrics` 保存正文占位和对齐指标，正文和标签结果分别归属各自字段。
+
+Reconciler 比较有效配置、编译上下文及实际引用几何，并由 Weave 维护阶段缓存；布局满足复用条件时，重新读取定位依赖，再通过 `prepared.layout.overall` 传给同一个 `compileNode`。当前自动复用仍使用完整布局，局部产物入口供调用方显式组合，不表示 Reconciler 已按这些粒度自动缓存。Core 不比较历史版本，也不判断缓存是否有效。正文通过作者行索引将物理行与当前外观对应；`emitNodeOutput` 只消费 compiled。
 
 元素编译入口统一按 `compileXxx(canon, context, prepared?)` 组织：Node 接受已准备的布局，Scope 接受子树执行前冻结的 `prepared.placement`；Scope 的子布局和已解析裁剪路径放在当前上下文中，动画仍在延迟路径输出收敛后完成。`compilePath(canon, context)` 和 `compileCoordinate(canon, context)` 当前没有独立的部分复用阶段，因此不设置空的第三参数。调用方保证准备数据适用于本轮输入和上下文，Core 只计算缺失步骤。
 

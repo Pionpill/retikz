@@ -45,7 +45,7 @@ const layoutOf = (
       measureText,
       positionContext: createPositionEvaluateContext({ lookupReference: () => undefined, nodeDistance: 24 }),
       ...context,
-    }),
+    }).overall,
   };
 };
 

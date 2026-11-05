@@ -6,7 +6,13 @@ import type { CanonicalNodeLabel, CanonicalNodeLabelBoundaryPosition } from '../
 import { anchorUnitVectorByAnchor } from '../../../shared';
 import { anchorOf, angleBoundaryOf } from '../../boundary';
 import { placeLabelBox, calculateLabelRotation, layoutTextBlock } from '../../text';
-import type { CompiledNodeLayout, MeasuredNodeLabel, NodeLabelLayout, NodeTextLayoutContext } from '../types';
+import type {
+  CompiledNodeLayout,
+  MeasuredNodeLabel,
+  NodeLabelLayout,
+  CompiledNodeLabelPlacement,
+  NodeCompileContext,
+} from '../types';
 
 const isLabelBoundaryPosition = (
   position: CanonicalNodeLabel['position'],
@@ -159,14 +165,14 @@ const calculateLabelRotationDegrees = (
 };
 
 /** 把已测量 label 解析为相对最终 Node rect 的局部几何 */
-export const layoutNodeLabelGeometry = (
+export const placeNodeLabel = (
   layout: CompiledNodeLayout,
   label: MeasuredNodeLabel,
   canon: CanonicalNodeLabel,
-): NodeLabelLayout => {
+): CompiledNodeLabelPlacement => {
   const rotateDeg = calculateLabelRotationDegrees(canon);
   if (canon.position === 'center') {
-    return { ...label, rotateDeg, centerOffset: [0, 0] };
+    return { rotateDeg, centerOffset: [0, 0] };
   }
 
   const placed = placeLabelBox({
@@ -186,7 +192,6 @@ export const layoutNodeLabelGeometry = (
   });
 
   return {
-    ...label,
     rotateDeg: placed.rotateDeg,
     centerOffset: [placed.center[0] - layout.geometry.rect.x, placed.center[1] - layout.geometry.rect.y],
   };
@@ -238,39 +243,26 @@ export const calculateNodeLabelExtentPoints = (
   return pts;
 };
 
-/** 测量节点附属 label，不读取 Node rect */
-export const measureNodeLabels = (
-  input: NodeTextLayoutContext,
-): Array<{ layout: MeasuredNodeLabel; canon: CanonicalNodeLabel }> | undefined => {
-  const { canon, measureText, tex: texLowering } = input;
-  if (canon.labels.length === 0) return undefined;
+/** 测量单个节点附属标签，不读取主体几何或附着配置 */
+export const measureNodeLabel = (
+  canon: CanonicalNodeLabel,
+  context: Pick<NodeCompileContext, 'measureText' | 'texLowering'>,
+): MeasuredNodeLabel => {
+  const { measureText, texLowering } = context;
   const inlineWarn = texLowering?.warn ?? ((): void => {});
-
-  return canon.labels.map(lab => {
-    const laid = layoutTextBlock(
-      lab.text.lines,
-      {
-        lineHeight: lab.text.lineHeight,
-        maxTextWidth: lab.text.maxTextWidth,
-      },
-      { measureText, lowerTex: texLowering?.lowerTex, font: lab.text.font, warn: inlineWarn },
-    );
-    return {
-      canon: lab,
-      layout: {
-        laid,
-        measuredWidth: laid.width,
-        measuredHeight: laid.height,
-        ascent: laid.height / 2,
-        descent: laid.height / 2,
-      },
-    };
-  });
+  const laid = layoutTextBlock(
+    canon.text.lines,
+    {
+      lineHeight: canon.text.lineHeight,
+      maxTextWidth: canon.text.maxTextWidth,
+    },
+    { measureText, lowerTex: texLowering?.lowerTex, font: canon.text.font, warn: inlineWarn },
+  );
+  return {
+    laid,
+    measuredWidth: laid.width,
+    measuredHeight: laid.height,
+    ascent: laid.height / 2,
+    descent: laid.height / 2,
+  };
 };
-
-/** 把已测量 label 绑定到最终 Node rect */
-export const layoutNodeLabels = (
-  layout: CompiledNodeLayout,
-  labels: Array<{ layout: MeasuredNodeLabel; canon: CanonicalNodeLabel }> | undefined,
-): Array<NodeLabelLayout> | undefined =>
-  labels?.map(label => layoutNodeLabelGeometry(layout, label.layout, label.canon));

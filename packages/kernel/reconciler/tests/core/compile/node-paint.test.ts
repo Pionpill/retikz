@@ -37,8 +37,11 @@ const compileTestNode = (
       lookupReference: () => undefined,
     }),
   };
-  const compilation = layoutNode(resolution, compileContext);
-  const output = emitNodeOutput(compileNode(resolution, compileContext, { layout: compilation }), shared.layout.round);
+  const compilation = layoutNode(resolution, compileContext).overall;
+  const output = emitNodeOutput(
+    compileNode(resolution, compileContext, { layout: { overall: compilation } }),
+    shared.layout.round,
+  );
   return {
     properties: resolution,
     layout: compilation,
@@ -116,7 +119,7 @@ describe('节点有效属性与布局复用', () => {
             },
     };
     const primitives = emitNodeOutput(
-      compileNode(properties, result.compileContext, { layout: result.layout }),
+      compileNode(properties, result.compileContext, { layout: { overall: result.layout } }),
       shared.layout.round,
     ).primitives;
     const text = flattenPrims(primitives).find(primitive => primitive.type === 'text');

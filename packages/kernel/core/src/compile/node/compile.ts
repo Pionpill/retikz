@@ -4,7 +4,7 @@ import { alignmentGuidesOfNode, buildNodeTextStyle } from './content';
 import { emitNodeLabelPrimitives } from './label';
 import { layoutNode } from './layout';
 import { emitNodeShapePrimitives } from './shape';
-import type { CompiledNode, CompiledNodeLayout, NodeCompileContext, PreparedNodeCompilation } from './types';
+import type { CompiledNode, NodeCompileContext, PreparedNodeCompilation } from './types';
 
 /** 编译当前节点，直接消费已准备的布局或完成测量定位，不判断跨次复用条件 */
 export const compileNode = (
@@ -13,11 +13,7 @@ export const compileNode = (
   prepared?: PreparedNodeCompilation,
 ): CompiledNode => {
   const { round, registerPaint } = context;
-  const layout: CompiledNodeLayout = {
-    ...(prepared?.layout ?? layoutNode(canon, context)),
-    shape: canon.shape,
-    boundary: canon.boundary,
-  };
+  const layout = layoutNode(canon, context, prepared?.layout).overall;
   const shape = splitCompiledDrawing(emitNodeShapePrimitives(layout, canon.style, round, registerPaint));
 
   return {
