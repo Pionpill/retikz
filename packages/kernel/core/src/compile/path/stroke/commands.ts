@@ -1,17 +1,11 @@
 import { DEG_TO_RAD, pointAtArcAngle } from '@retikz/math';
 
-import type { PathCommand } from '../../../contract';
+import type { PathCommand, CubicPathCommand, ArcPathCommand, EllipseArcPathCommand } from '../../../contract';
 import type { IRPosition } from '../../../schemas';
 import { isSamePoint } from '../host';
 
 /** 向路径追加三次贝塞尔曲线所需的控制点和终点 */
-type InputCubicCommandEmission = {
-  /** 靠近当前路径端点的第一控制点 */
-  control1: IRPosition;
-  /** 靠近曲线终点的第二控制点 */
-  control2: IRPosition;
-  /** 曲线终点，写入后成为当前路径端点 */
-  to: IRPosition;
+type InputCubicCommandEmission = Pick<CubicPathCommand, 'control1' | 'control2' | 'to'> & {
   /**
    * 终点是否来自自动连接面求交，供后续端点裁剪判断
    * @default false
@@ -20,30 +14,13 @@ type InputCubicCommandEmission = {
 };
 
 /** 以圆心、半径及角度范围描述待追加的圆弧 */
-type InputArcCommandEmission = {
-  /** 圆弧圆心，使用当前路径坐标系 */
-  center: IRPosition;
-  /** 圆弧半径 */
-  radius: number;
-  /** 圆弧起始角，单位为度 */
-  startAngle: number;
-  /** 圆弧终止角，单位为度；对应点成为当前路径端点 */
-  endAngle: number;
-};
+type InputArcCommandEmission = Pick<ArcPathCommand, 'center' | 'radius' | 'startAngle' | 'endAngle'>;
 
 /** 以轴向半径及角度范围描述待追加的椭圆弧 */
-type InputEllipseArcCommandEmission = {
-  /** 椭圆中心，使用当前路径坐标系 */
-  center: IRPosition;
-  /** 椭圆沿 x 轴的半径 */
-  radiusX: number;
-  /** 椭圆沿 y 轴的半径 */
-  radiusY: number;
-  /** 椭圆弧起始参数角，单位为度 */
-  startAngle: number;
-  /** 椭圆弧终止参数角，单位为度；对应点成为当前路径端点 */
-  endAngle: number;
-};
+type InputEllipseArcCommandEmission = Pick<
+  EllipseArcPathCommand,
+  'center' | 'radiusX' | 'radiusY' | 'startAngle' | 'endAngle'
+>;
 
 /** 累积路径命令并同步维护来源、当前端点和边界采样点的写入器 */
 export type PathCommandEmitter = {

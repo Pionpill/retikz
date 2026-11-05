@@ -125,10 +125,24 @@ export type CanonicalNodeBoundary = {
   isShape: boolean;
 };
 
+/** 解析连接面所需的节点形状与定义注册表 */
+export type NodeBoundaryResolveContext = {
+  /** 节点视觉形状定义 */
+  visualDef: ShapeDefinition;
+  /** 节点视觉形状参数 */
+  visualParams: JsonObject;
+  /** 形状定义注册表 */
+  shapeRegistry: ProviderRegistry<ShapeDefinition>;
+  /** 连接面定义注册表 */
+  boundaryRegistry: ProviderRegistry<BoundaryDefinition>;
+  /** 当前节点的 IR 路径，用于参数校验错误定位 */
+  irPath?: PropertyPath;
+};
+
 /** 结合节点视觉形状解析连接面定义与参数的回调 */
 export type NodeBoundaryResolver = (
   boundary: IRBoundary | undefined,
-  context: Readonly<{ visualDef: ShapeDefinition; visualParams: JsonObject; irPath?: PropertyPath }>,
+  context: Readonly<Pick<NodeBoundaryResolveContext, 'visualDef' | 'visualParams' | 'irPath'>>,
 ) => CanonicalNodeBoundary;
 
 /** 已解析的节点输入、形状与默认连接面 */

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { layoutTextBlock } from '../../../src/compile/text';
-import { resolveTextLine } from '../../../src/resolve/text';
+import { resolveTextBlock } from '../../../src/resolve/text';
 
 const font = { size: 10 };
 const resolveContext = { rootFontSize: 10, inheritedFont: font, gatingOn: false };
@@ -16,15 +16,21 @@ const context = {
   warn: () => {},
 };
 
+/** 经文本块解析消费单个作者行 */
+const resolveTestLine = (
+  source: Parameters<typeof resolveTextBlock>[0]['text'][number],
+  lineContext: Parameters<typeof resolveTextBlock>[1],
+) => resolveTextBlock({ text: [source] }, lineContext).lines[0];
+
 describe('共享文本块布局', () => {
   it('空的作者行仍保留行级字号占位', () => {
-    const lines = [resolveTextLine({ text: '', font: { size: 40 } }, resolveContext)];
+    const lines = [resolveTestLine({ text: '', font: { size: 40 } }, resolveContext)];
     const block = layoutTextBlock(lines, { lineHeight: 12 }, context);
     expect(block.height).toBe(40);
     expect(block.lines).toHaveLength(1);
   });
   it('按整行测量字距，不因词边界拆开输出片段', () => {
-    const lines = [resolveTextLine('a b', resolveContext)];
+    const lines = [resolveTestLine('a b', resolveContext)];
     const block = layoutTextBlock(
       lines,
       { lineHeight: 12, maxTextWidth: 10 },
@@ -39,14 +45,14 @@ describe('共享文本块布局', () => {
   });
 
   it('换行处不生成只包含分隔空格的物理行', () => {
-    const lines = [resolveTextLine('ab cd', resolveContext)];
+    const lines = [resolveTestLine('ab cd', resolveContext)];
     const block = layoutTextBlock(lines, { lineHeight: 12, maxTextWidth: 10 }, context);
     expect(
       block.lines.map(line => line.lineLayout.pieces.map(piece => (piece.kind === 'text' ? piece.text : '')).join('')),
     ).toEqual(['ab', 'cd']);
   });
   it('硬换行保留空行并使用实际基线和统一行槽', () => {
-    const lines = [resolveTextLine('a\n\nb', resolveContext)];
+    const lines = [resolveTestLine('a\n\nb', resolveContext)];
     const block = layoutTextBlock(lines, { lineHeight: 20 }, context);
     expect(block.height).toBe(60);
     expect(block.lines.map(line => line.baselineOffset)).toEqual([13, 33, 53]);
@@ -55,7 +61,7 @@ describe('共享文本块布局', () => {
 
   it('长文字按字素折行并保留片段来源', () => {
     const lines = [
-      resolveTextLine(
+      resolveTestLine(
         {
           segments: [
             { text: 'ábc', fill: 'red' },
@@ -79,7 +85,7 @@ describe('共享文本块布局', () => {
   });
 
   it('不可拆公式超宽时独占一行且后续文字仍可继续布局', () => {
-    const lines = [resolveTextLine({ segments: [{ text: 'a' }, { tex: 'x' }, { text: 'b' }] }, resolveContext)];
+    const lines = [resolveTestLine({ segments: [{ text: 'a' }, { tex: 'x' }, { text: 'b' }] }, resolveContext)];
     const block = layoutTextBlock(
       lines,
       { lineHeight: 12, maxTextWidth: 10 },

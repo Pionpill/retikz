@@ -5,15 +5,24 @@
  * 或直接产字符串（`renderToSvgString`，SSR / 构建期）。
  * 字符串 / Vanilla / 多框架逐字消费 attrs（SVG 真名）；React 唯一需把呈现属性 kebab→camelCase。
  *
- * 公开 API 白名单（受 semver 约束）由子目录 barrel 自身 curate：`builders/index.ts` 只聚合公开 builder、
- * 不含内部 helper（arrowCollect / attrs），故此处可直接 `export *`
+ * 公开 API 白名单（受 semver 约束）由本入口裁剪：builders 还供包内复用只读层组装，
+ * 因此这里只显式转发公开 builder
  */
 
 // ============ 描述树类型 ============
 export * from './types';
 
 // ============ builder（总装入口 + 粒度化）/ 字符串序列化 ============
-export * from './builders';
+export {
+  buildArrowMarker,
+  buildClipDef,
+  buildPaintDef,
+  buildPrim,
+  buildSvgDocument,
+  buildSvgFragment,
+  buildSvgFrameDocument,
+} from './builders';
+export type { SvgDocumentOptions, SvgPrimitiveBuildContext } from './builders';
 export * from './serialize';
 
 // ============ renderer-neutral 几何 / 字符串工具（src 下扁平文件，本就与框架无关，多 renderer 共用） ============

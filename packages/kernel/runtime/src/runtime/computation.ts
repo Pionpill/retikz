@@ -1,4 +1,5 @@
 import type {
+  InputRuntimeComputationWarning,
   RuntimeCandidateLookup,
   RuntimeCandidateView,
   RuntimeComputationContext,
@@ -9,7 +10,7 @@ import type {
   RuntimeUpdateOutcome,
 } from '../computation';
 import { RuntimeComputationExecution, RuntimeComputationKind, RuntimeComputationPhase } from '../computation';
-import type { RuntimeDiagnostic, RuntimeDiagnosticPhase } from '../diagnostic';
+import type { RuntimeDiagnostic } from '../diagnostic';
 import { BuiltinRuntimeDiagnosticCode } from '../diagnostic';
 import { getRuntimeDiagnosticMessage, runtimeTraceDiagnosticCodes } from '../diagnostic/internal';
 import { RetikzRuntimeError, RetikzRuntimeErrorCode } from '../error';
@@ -227,7 +228,7 @@ export const runRuntimeComputation = (
     Object.freeze({
       execution,
       trace: Object.freeze({ owner: traceReporter.owner, report: traceReporter.report }),
-      diagnose: (diagnostic: Readonly<{ code: string; phase: RuntimeDiagnosticPhase; message: string }>) => {
+      diagnose: (diagnostic: InputRuntimeComputationWarning) => {
         drainTraceDiagnostics();
         const { code, phase: diagnosticPhase, message } = diagnostic;
 

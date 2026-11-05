@@ -97,19 +97,19 @@ type WeaveNodeVersions<TState> = {
 };
 
 /** 稳定普通图元引用 */
-export type WeaveShapeNode = WeaveNodeVersions<WeaveShapeState> & {
+type WeaveShapeNode = WeaveNodeVersions<WeaveShapeState> & {
   /** 不随状态变化的类别 */
   readonly type: 'node';
 };
 
 /** 稳定坐标引用 */
-export type WeaveCoordinateNode = WeaveNodeVersions<WeaveCoordinateState> & {
+type WeaveCoordinateNode = WeaveNodeVersions<WeaveCoordinateState> & {
   /** 不随状态变化的类别 */
   readonly type: 'coordinate';
 };
 
 /** 稳定路径引用 */
-export type WeavePathNode = WeaveNodeVersions<WeavePathState> & {
+type WeavePathNode = WeaveNodeVersions<WeavePathState> & {
   /** 不随状态变化的类别 */
   readonly type: 'path';
 };
@@ -123,7 +123,7 @@ export type WeaveScopeNode = WeaveNodeVersions<WeaveScopeState> & {
 };
 
 /** 作者 Composite 的不透明更新边界，不公开生成节点 */
-export type WeaveCompositeNode = WeaveNodeVersions<
+type WeaveCompositeNode = WeaveNodeVersions<
   WeaveNodeStateBase<IRComposite> & { /** 生成结果由统一执行器管理，不暴露基础元素产物 */ compiled?: never }
 > & {
   /** 稳定的作者声明类别 */

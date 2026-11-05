@@ -14,8 +14,7 @@ import type {
   RetainedRenderer,
   RetainedRendererFactory,
   RetainedRendererRead,
-  RetainedSvgRendererImmutableOptions,
-  RetainedCanvasRendererImmutableOptions,
+  InputRetainedRendererFactory,
 } from './renderer';
 import { runtimeStructuralEquals } from './shared';
 import { assertSceneRuntimeSnapshot, sceneRuntimeSnapshotEquals, assertScenePatch } from './validator';
@@ -39,13 +38,12 @@ export type RetainedRenderTargetOptions = Readonly<{
   mountMode?: 'create' | 'adopt';
 }> &
   (
-    | Readonly<{
-        backend: 'svg';
-        host: SVGSVGElement;
-        immutableOptions: RetainedSvgRendererImmutableOptions;
-        expectedInitialFrame?: StaticRenderFrame;
-      }>
-    | Readonly<{ backend: 'canvas'; host: HTMLCanvasElement; immutableOptions: RetainedCanvasRendererImmutableOptions }>
+    | (Extract<InputRetainedRendererFactory, { backend: 'svg' }> &
+        Readonly<{
+          /** 接管 SVG 宿主时预期的首帧 */
+          expectedInitialFrame?: StaticRenderFrame;
+        }>)
+    | Extract<InputRetainedRendererFactory, { backend: 'canvas' }>
   );
 /** Render 对外的读取及单目标提交能力 */
 export type RetainedRenderTarget = Readonly<{

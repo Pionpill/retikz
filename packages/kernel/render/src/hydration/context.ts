@@ -487,7 +487,7 @@ export const createCanvasIdAnimationControls = (deps: CanvasIdControlsDeps): Hyd
  */
 export const resolvePointViaLayout =
   (root: Element, layout: BoundsRect) =>
-  (event: Event): { x: number; y: number } | null => {
+  (event: Event): HydrationContext['point'] => {
     const mouse = event as MouseEvent;
     if (typeof mouse.clientX !== 'number') return null;
 
@@ -511,7 +511,7 @@ export const resolvePointViaLayout =
  */
 export const resolveSvgPointViaCtm =
   (root: Element) =>
-  (event: Event): { x: number; y: number } | null => {
+  (event: Event): HydrationContext['point'] => {
     const mouse = event as MouseEvent;
     if (typeof mouse.clientX !== 'number') return null;
 
@@ -552,7 +552,7 @@ export type HydrationContextDependencies = {
   /** 命中 DOM 元素定位（svg = closest；canvas = () => null） */
   resolveElement: (event: Event, id: string) => Element | null;
   /** 指针逆映射到 scene user units（非指针事件 → null） */
-  resolvePoint: (event: Event) => { x: number; y: number } | null;
+  resolvePoint: (event: Event) => HydrationContext['point'];
   /** 据命中 id 与事件造动画控制（缺省作用于命中 occurrence）；无 runtime → noopAnimationControls */
   makeAnimation: (defaultId: string, event: Event) => HydrationAnimationControls;
 };

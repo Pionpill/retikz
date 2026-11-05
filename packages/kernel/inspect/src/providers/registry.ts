@@ -22,7 +22,7 @@ type InspectorRegistryIndex = InspectorRegistry &
   }>;
 
 /** 把公开 Inspector key 转为无歧义的 registry 内部键 */
-export const formatInspectorRegistryKey = (key: InspectorKey): string => JSON.stringify([key.namespace, key.type]);
+const formatInspectorRegistryKey = (key: InspectorKey): string => JSON.stringify([key.namespace, key.type]);
 
 /** 创建无全局状态的 Inspector registry
  *

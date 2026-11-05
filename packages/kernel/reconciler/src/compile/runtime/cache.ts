@@ -29,7 +29,7 @@ export type CompileReferenceRead = Readonly<{
 }>;
 
 /** 原子阶段对应的实际产物，执行器不可交换不同阶段的缓存 */
-export type CompileStageProducts = {
+type CompileStageProducts = {
   node: { canon: CanonicalNode; compiled: CompiledNode };
   coordinate: { canon: CanonicalCoordinate; compiled: CompiledCoordinate };
   path: { canon: ReturnType<typeof resolvePath>; compiled: CompiledPath };
@@ -37,15 +37,12 @@ export type CompileStageProducts = {
 };
 
 /** Core 拥有的各元素确定化产物 */
-export type CompileStageCanons = {
-  node: CanonicalNode;
-  coordinate: CanonicalCoordinate;
-  path: ReturnType<typeof resolvePath>;
-  scope: CanonicalScope;
+type CompileStageCanons = {
+  [TPhase in keyof CompileStageProducts]: CompileStageProducts[TPhase]['canon'];
 };
 
 /** 分离确定化与几何计算，由 Reconciler 比较 canonical 等价性 */
-export type CompileStageComputation<TPhase extends keyof CompileStageProducts> = {
+type CompileStageComputation<TPhase extends keyof CompileStageProducts> = {
   /** 子树执行前准备阶段已读取的依赖 */
   preparedReads?: ReadonlyArray<CompileReferenceRead>;
   /** 子树执行前确定化与准备阶段产生的诊断 */

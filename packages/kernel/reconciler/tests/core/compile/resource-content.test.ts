@@ -5,8 +5,9 @@ import { defineMark, definePath, definePattern, PathSchema, visitSceneContent } 
 import type { TextPrimitive, Scene, GroupPrimitive, ScenePrimitive, IRScene } from '../../../../core/src';
 import { createClipRegistry, createPaintRegistry } from '../../../../core/src/compile/resource';
 import { BUILTIN_SHAPES } from '../../../../core/src/providers';
-import { createSharedCompileContext, compileToScene, importSceneResources } from '../../../src/compile';
+import { createSharedCompileContext, compileToScene } from '../../../src/compile';
 import { assembleCompileOutputs } from '../../../src/compile/index';
+import { importSceneResources } from '../../../src/compile/resource';
 
 describe('资源内容复用基础图元', () => {
   it('自定义 Pattern 保留已度量文本和基础图元样式', () => {

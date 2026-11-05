@@ -28,7 +28,7 @@ export type WeaveCompileContext = Readonly<{
 }>;
 
 /** 跨批次保留的声明身份与已完成结果 */
-export type WeavePersistentState = {
+type WeavePersistentState = {
   /** 稳定节点与已提交、候选版本槽 */
   readonly root: WeaveRoot;
   /** Scope 身份分配器，回滚不复用编号 */

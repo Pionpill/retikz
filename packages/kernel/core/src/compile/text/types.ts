@@ -11,7 +11,7 @@ export type InputInlineSegmentLayout =
   | Omit<Extract<TextInlineSegment, { tex: string }>, 'fill' | 'opacity'>;
 
 /** 绘制阶段只读的片段外观覆盖 */
-export type InlineSegmentPaint = {
+type InlineSegmentPaint = {
   /** 显式文字或公式宿主颜色 */
   readonly fill?: string;
   /** 与块透明度相乘的 segment 透明度 */

@@ -1,6 +1,6 @@
 import type { IRScene, Scene } from '@retikz/core';
 import type { CompositeArtifact } from '@retikz/reconciler';
-import type { CompileOptions, CompileResult } from '@retikz/reconciler';
+import type { CompileResult } from '@retikz/reconciler';
 import type { ReconcilerDiagnostic, ReconcilerUpdateStrategy } from '@retikz/reconciler';
 import type { AnimationControls } from '@retikz/render/animation';
 import type { HydrationHandlers } from '@retikz/render/hydration';
@@ -8,7 +8,6 @@ import type { RetainedRendererFactory } from '@retikz/render/runtime';
 
 import type { InputRuntimeMeta, InputScene, SynchronousInputEmbedAdapter } from '../normalize';
 import type { ProcessingOptions } from '../processing';
-import type { VanillaCompileDriver } from './compile-driver';
 import type { VanillaViewMode } from './constants';
 
 export { VanillaViewMode } from './constants';
@@ -111,16 +110,9 @@ export type VanillaRuntimeOptions = VanillaRetainedRuntimeOptions | VanillaStati
  *   Core 编译；`compileDriver` 提供领域中立扩展接线；`animation` 控制 SVG / Canvas runtime 动画；
  *   `adapters` 只参与 InputScene normalization
  */
-export type CommonOptions = Pick<ProcessingOptions, 'defaultFontFamily'> & {
+export type CommonOptions = Pick<ProcessingOptions, 'defaultFontFamily' | 'compile' | 'compileDriver'> & {
   /** 输出资源与显示尺寸选项 */
   output?: VanillaOutputOptions;
-  /** core compile 选项；输入已是 Scene 时忽略 */
-  compile?: CompileOptions;
-  /**
-   * 领域中立编译驱动
-   * @default defaultVanillaCompileDriver
-   */
-  compileDriver?: VanillaCompileDriver;
   /** runtime 动画选项 */
   animation?: VanillaAnimationOptions;
   /** 可嵌入 Tier2 adapter 列表，仅 InputScene normalize 使用 */

@@ -164,16 +164,7 @@ export type RetainedRendererFactory = {
 };
 
 /** Render 私有 renderer executor */
-type RetainedRendererExecutor = Readonly<{
-  /** 准备首次场景挂载，返回可提交和回滚的事务 */
-  prepareMount: RetainedRendererDefinitionBase['prepareMount'];
-  /** 准备场景补丁与运行时配置的原子更新 */
-  prepare: RetainedRendererDefinitionBase['prepare'];
-  /** 读取已提交的渲染帧与动画状态 */
-  read: RetainedRendererDefinitionBase['read'];
-  /** 释放渲染器持有的宿主资源 */
-  dispose: RetainedRendererDefinitionBase['dispose'];
-}>;
+type RetainedRendererExecutor = Pick<RetainedRendererDefinitionBase, 'prepareMount' | 'prepare' | 'read' | 'dispose'>;
 
 const retainedRenderers = new WeakSet<object>();
 

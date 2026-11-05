@@ -1,16 +1,13 @@
 import { curve } from '@retikz/math';
 
-import type { Transform } from '../../../contract';
 import type { CanonicalPathStep } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
 import { BendInAngleSchema, BendLoosenessSchema, BendOutAngleSchema } from '../../../schemas';
 import { bendControlPoints, foldSegmentSample, outInControlPoints } from '../../../shared/geometry';
 import { clipTarget, foldCornersOf, isSamePoint } from '../host';
 import { isAutoBoundaryTarget } from '../target';
-import type { PathTargetView } from '../types';
-import type { PathCommandEmitter } from './commands';
 import type { StrokePreviousTarget } from './cursor';
-import type { StrokeSamplingCollector } from './sampling';
+import type { StrokeLoweringContext } from './types';
 
 /** 连接前驱目标与当前目标的普通 path segment step */
 type StrokeSegmentStep = Extract<
@@ -19,21 +16,16 @@ type StrokeSegmentStep = Extract<
 >;
 
 /** 普通 segment step 降级所需的共享上下文 */
-type SegmentStepLoweringContext = {
-  /** compile 目标绑定阶段绑定的 target view */
-  targetView: PathTargetView;
-  /** 当前 scope 的累计变换链 */
-  scopeChain: ReadonlyArray<Transform>;
+type SegmentStepLoweringContext = Pick<
+  StrokeLoweringContext,
+  'targetView' | 'scopeChain' | 'commandEmitter' | 'sampling'
+> & {
   /** 最近一个有效目标 step */
   previous: StrokePreviousTarget;
   /** 当前 step 预解析后的目标 anchor */
   currentAnchor: IRPosition;
   /** 特殊形状留下且将由当前 segment 消费的笔位覆盖 */
   penOverride: IRPosition | null;
-  /** path command 写入器 */
-  commandEmitter: PathCommandEmitter;
-  /** label 与 mark 采样收集器 */
-  sampling: StrokeSamplingCollector;
 };
 
 /** 判断 step 是否属于普通 segment family */

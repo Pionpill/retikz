@@ -1,12 +1,13 @@
 import { normalizeFlowDiagram } from '@retikz/diagram-vanilla/flow';
 import { FlowDiagramSchema } from '@retikz/diagram/flow';
 import { createInputScene } from '@retikz/react';
-import { normalizeScene, prepareProcessingInput, processToStaticInputResult } from '@retikz/vanilla';
+import { normalizeScene, processToStaticInputResult } from '@retikz/vanilla';
 import type { FC, ReactNode } from 'react';
 import { createElement, Fragment } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
+import { prepareProcessingInput } from '../../../kernel/vanilla/src/processing/prepare';
 import { RetikzDiagramReactError, RetikzDiagramReactErrorCode } from '../src';
 import * as FlowReact from '../src/flow';
 

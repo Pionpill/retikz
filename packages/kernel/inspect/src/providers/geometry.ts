@@ -29,7 +29,7 @@ const createPathChild = (children: Array<IRStep>, style: InspectionPathStyle): P
 });
 
 /** 忽略三角函数浮点尾差，合并同一几何位置的辅助标记 */
-export const samePosition = (left: IRPosition, right: IRPosition): boolean =>
+const samePosition = (left: IRPosition, right: IRPosition): boolean =>
   Math.abs(left[0] - right[0]) <= DEFAULT_EPSILON && Math.abs(left[1] - right[1]) <= DEFAULT_EPSILON;
 
 /** 圆弧按参数角求点，角度约定与 Core PathCommand 一致 */
@@ -56,7 +56,7 @@ export const pointAtArcCommand = (
 };
 
 /** 把 command 的方向字段折叠为普通 Core arc 可表达的有向角区间 */
-export const arcAnglesOf = (
+const arcAnglesOf = (
   command: Extract<PathCommand, { kind: 'arc' | 'ellipseArc' }>,
 ): Readonly<{ start: number; end: number }> =>
   alignAngleSweep(

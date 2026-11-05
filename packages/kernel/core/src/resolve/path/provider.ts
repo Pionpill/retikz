@@ -44,7 +44,7 @@ export const resolvePathDefinition = (
 };
 
 /** 绑定箭头定义，确定外观、有效尺寸及端点接触与收缩参数 */
-export const resolveArrowMark = (mark: MarkColorSource, context: PathResolveContext): CanonicalPathArrow => {
+const resolveArrowMark = (mark: MarkColorSource, context: PathResolveContext): CanonicalPathArrow => {
   const shape = mark.shape ?? DEFAULT_ARROW_SHAPE;
   const definition = getProviderDefinition(context.arrowRegistry, shape);
   const shared = resolveMarkStyle(mark, definition, context);

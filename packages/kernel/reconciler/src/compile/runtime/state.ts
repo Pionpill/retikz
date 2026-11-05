@@ -8,7 +8,7 @@ import { ScopeTransformComposer } from './transform';
 import type { WorkspaceCompileState } from './workspace';
 
 /** 单次树执行独占的名称、来源、变换与诊断绑定状态 */
-export type ExecutionCompileState = Readonly<{
+type ExecutionCompileState = Readonly<{
   /** 当前执行的名称注册与查找栈 */
   namespaceStack: NamespaceStack;
   /** 当前执行的可选来源记录 */

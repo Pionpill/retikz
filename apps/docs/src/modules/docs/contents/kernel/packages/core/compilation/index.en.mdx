@@ -5,6 +5,8 @@ description: Follow IR, node layout, and deferred paths through one full Reconci
 
 This page follows one synchronous compilation from a complete IR input to a Scene ready for a renderer. React / Vanilla input construction happens upstream, rendering happens downstream, and subsequent updates belong to another execution.
 
+Import full compilation entrypoints and session contracts from `@retikz/reconciler`. Artifact freezing, child-path construction, resource importing, and duplicate-warning assembly are internal execution details, excluded from the package root. Public warning and occurrence formatters remain available.
+
 ## Input and example
 
 IR stores drawing declarations such as “place a node here” and “connect A to B.” Scene stores primitives with resolved geometry and appearance, such as rectangles, text, and path commands. `compileToScene` performs this conversion and returns a result containing the Scene. Its public signature, with generic details omitted, is:

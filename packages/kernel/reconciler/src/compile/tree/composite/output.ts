@@ -154,7 +154,7 @@ export const compileCompositeOutput = (
 };
 
 /** 将组件生成的 Scope 属性转换为普通作用域声明 */
-export const runtimeScopeChildOf = (props: CompositeCompileScopeProps): IRScope => {
+const runtimeScopeChildOf = (props: CompositeCompileScopeProps): IRScope => {
   const { transforms, animations, ...rest } = props;
   return {
     type: 'scope',

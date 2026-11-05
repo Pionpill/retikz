@@ -1,8 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
-import { emitTextLine, fallbackMeasurer, layoutTextLine, lowerTexSegment } from '../../../../core/src/compile/text';
+import { emitTextLine, fallbackMeasurer, layoutTextBlock, lowerTexSegment } from '../../../../core/src/compile/text';
 import type { LoweredTex } from '../../../../core/src/compile/text';
 import type { GroupPrimitive, PathPrimitive } from '../../../../core/src/contract';
+
+/** 经文本块布局消费单个作者行 */
+const layoutTestLine = (
+  segments: Parameters<typeof layoutTextBlock>[0][number]['segments'],
+  context: Parameters<typeof layoutTextBlock>[2],
+) => layoutTextBlock([{ segments }], { lineHeight: context.font.size }, context).lines[0].lineLayout;
 
 /** 经实际公式降解入口消费测试提供者的结果 */
 const lowerFormula = (value: LoweredTex): LoweredTex | undefined =>
@@ -32,7 +38,7 @@ describe('[tex-lowering]多路径契约', () => {
   });
 
   it('按 paint order 输出多条路径并解析宿主颜色与透明度', () => {
-    const line = layoutTextLine([{ tex: 'x', fontSize: 16 }], {
+    const line = layoutTestLine([{ tex: 'x', fontSize: 16 }], {
       measureText: fallbackMeasurer,
       font: { size: 16 },
       warn: () => undefined,
@@ -99,7 +105,7 @@ describe('[tex-lowering]多路径契约', () => {
   });
 
   it('仅 currentColor 回退到宿主默认色，none 不输出 paint', () => {
-    const line = layoutTextLine([{ tex: 'x', fontSize: 16 }], {
+    const line = layoutTestLine([{ tex: 'x', fontSize: 16 }], {
       measureText: fallbackMeasurer,
       font: { size: 16 },
       warn: () => undefined,
@@ -138,7 +144,7 @@ describe('[tex-lowering]多路径契约', () => {
       height: 1,
       depth: 0,
     };
-    const line = layoutTextLine([{ tex: 'x', fontSize: 16 }], {
+    const line = layoutTestLine([{ tex: 'x', fontSize: 16 }], {
       measureText: fallbackMeasurer,
       font: { size: 16 },
       warn: () => undefined,

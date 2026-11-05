@@ -112,7 +112,7 @@ const snapshotBoundaryRect = (providerName: string, value: CenteredBox, irPath?:
 };
 
 /** 将已解析连接面引用绑定到视觉 rect 并执行 provider 几何 */
-export const bindBoundary = (
+const bindBoundary = (
   canon: CanonicalNodeBoundary,
   visual: BoundaryVisualResolution,
   state: BoundaryState,

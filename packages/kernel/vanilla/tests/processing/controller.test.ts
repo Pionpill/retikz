@@ -5,12 +5,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { literal } from 'zod';
 
 import type { InputEmbedAdapter, InputScene, VanillaCompileDriver, VanillaCompileDriverSession } from '../../src';
-import {
-  createProcessingController,
-  prepareProcessingInput,
-  processToStaticInputResult,
-  processToStaticResult,
-} from '../../src';
+import { createProcessingController, processToStaticInputResult, processToStaticResult } from '../../src';
+import { prepareProcessingInput } from '../../src/processing/prepare';
 
 describe('Vanilla 处理', () => {
   it('只在 processing prepare 中解析 InputEmbed 的 Composite contribution', () => {

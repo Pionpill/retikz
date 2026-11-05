@@ -18,7 +18,7 @@ type InspectionSite =
   | { target: Extract<InspectionTarget, { kind: 'artifact' }>; value: CompositeArtifact; transform?: never };
 
 /** 已解析选项、唯一目标和定义的执行请求 */
-export type PreparedInspectionRequest = {
+type PreparedInspectionRequest = {
   definition: AnyInspectorDefinition;
   site: InspectionSite;
   options: JsonObject;

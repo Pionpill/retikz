@@ -3,8 +3,12 @@ import { describe, expect, it } from 'vitest';
 import { strictObject } from 'zod';
 
 import { BuiltinCompileWarningCode } from '../../../../core/src';
-import type { BoundaryState, BoundaryVisualResolution } from '../../../../core/src/compile/boundary';
-import { bindBoundary } from '../../../../core/src/compile/boundary';
+import type {
+  BoundaryState,
+  BoundaryVisualResolution,
+  CompiledBoundaryGeometry,
+} from '../../../../core/src/compile/boundary';
+import { evaluateBoundaryPoint, evaluateNamedBoundaryAnchor } from '../../../../core/src/compile/boundary';
 import type { BoundaryDefinition, ShapeDefinition } from '../../../../core/src/contract';
 import { defineBoundary } from '../../../../core/src/contract';
 import { resolveBoundaryRegistry, ellipseShape, rectangle } from '../../../../core/src/providers';
@@ -49,47 +53,60 @@ const resolveContext = (overrides: Partial<BoundaryTestContext> = {}): BoundaryT
   ...overrides,
 });
 
-const resolveBoundary = (boundary: Parameters<typeof resolveNodeBoundary>[0], context: BoundaryTestContext) =>
-  bindBoundary(
-    resolveNodeBoundary(boundary, {
+/** 解析连接面并通过生产查询入口消费，缓存与诊断由同一次查询上下文持有 */
+const resolveBoundary = (boundary: Parameters<typeof resolveNodeBoundary>[0], context: BoundaryTestContext) => {
+  const layout: CompiledBoundaryGeometry = {
+    shape: { name: context.def.name, definition: context.def, params: context.params },
+    boundary: resolveNodeBoundary(boundary, {
       visualDef: context.def,
       visualParams: context.params,
       shapeRegistry: context.shapeRegistry,
       boundaryRegistry: context.boundaryRegistry,
       irPath: context.irPath,
     }),
-    context,
-    context,
-  );
+    geometry: { rect: context.rect, margin: { top: 0, right: 0, bottom: 0, left: 0 } },
+  };
+  // 求值触发 provider 几何校验与回退诊断
+  evaluateBoundaryPoint(layout, [context.rect.x + 100, context.rect.y], undefined, undefined, undefined, context);
+  return { layout, context };
+};
+
+const pointAt = (query: ReturnType<typeof resolveBoundary>, toward: Parameters<typeof evaluateBoundaryPoint>[1]) =>
+  evaluateBoundaryPoint(query.layout, toward, undefined, undefined, undefined, query.context);
+const anchorAt = (query: ReturnType<typeof resolveBoundary>, name: string) =>
+  evaluateNamedBoundaryAnchor(query.layout, name, undefined, false, undefined, query.context);
 
 describe('resolveBoundary', () => {
   it("'shape' 或 undefined 使用视觉定义和矩形", () => {
     const r = resolveBoundary('shape', resolveContext());
 
-    expect(r.def).toBe(rectangle);
-    expect(r.rect).toEqual(visualRect);
-    expect(resolveBoundary(undefined, resolveContext()).def).toBe(rectangle);
+    expect(r.layout.boundary.definition).toBe(rectangle);
+    expect(pointAt(r, [100, 0])).toEqual([20, 0]);
+    expect(anchorAt(r, 'top')).toEqual([0, -10]);
+    expect(resolveBoundary(undefined, resolveContext()).layout.boundary.definition).toBe(rectangle);
   });
 
   it("'rectangle' / 'ellipse' → 视觉 AABB 上的内置边界提供者", () => {
-    expect(resolveBoundary('rectangle', resolveContext({ def: ellipseShape })).def.name).toBe('rectangle');
-    expect(resolveBoundary('ellipse', resolveContext()).def.name).toBe('ellipse');
+    expect(resolveBoundary('rectangle', resolveContext({ def: ellipseShape })).layout.boundary.definition.name).toBe(
+      'rectangle',
+    );
+    expect(resolveBoundary('ellipse', resolveContext()).layout.boundary.definition.name).toBe('ellipse');
   });
 
   it("'circle' → 圆边界提供者使用视觉 AABB 外接圆", () => {
     const r = resolveBoundary('circle', resolveContext());
 
-    expect(r.def.name).toBe('circle');
-    expect(r.def.computeBoundaryPoint(r.rect, [0, -100], r.params)[1]).toBeCloseTo(-Math.hypot(20, 10));
-    expect(r.rect.width).toBeCloseTo(2 * Math.hypot(20, 10));
-    expect(r.rect.height).toBeCloseTo(2 * Math.hypot(20, 10));
-    expect(r.rect.x).toBe(0);
+    expect(r.layout.boundary.definition.name).toBe('circle');
+    expect(pointAt(r, [0, -100])[1]).toBeCloseTo(-Math.hypot(20, 10));
+    expect(pointAt(r, [100, 0])[0]).toBeCloseTo(Math.hypot(20, 10));
+    expect(pointAt(r, [0, 100])[1]).toBeCloseTo(Math.hypot(20, 10));
+    expect(anchorAt(r, 'center')).toEqual([0, 0]);
   });
 
   it("'circle'→连接面外接视觉 AABB", () => {
     const r = resolveBoundary('circle', resolveContext());
-    const corner = r.def.computeBoundaryPoint(r.rect, [20, 10], r.params);
-    const right = r.def.computeBoundaryPoint(r.rect, [100, 0], r.params);
+    const corner = pointAt(r, [20, 10]);
+    const right = pointAt(r, [100, 0]);
 
     expect(corner[0]).toBeCloseTo(20);
     expect(corner[1]).toBeCloseTo(10);
@@ -100,19 +117,19 @@ describe('resolveBoundary', () => {
   it("'circle' 旋转连接面仍包围各角点并保留标准锚点", () => {
     const rotatedRect: CenteredBox = { x: 5, y: -7, width: 40, height: 20, rotate: Math.PI / 2 };
     const r = resolveBoundary('circle', resolveContext({ rect: rotatedRect }));
-    const corner = r.def.computeBoundaryPoint(r.rect, [-5, 13], r.params);
-    const top = r.def.resolveAnchor?.(r.rect, 'top', r.params);
+    const corner = pointAt(r, [-5, 13]);
+    const top = anchorAt(r, 'top');
 
     expect(corner[0]).toBeCloseTo(-5);
     expect(corner[1]).toBeCloseTo(13);
-    expect(top?.[0]).toBeCloseTo(5 + Math.hypot(20, 10));
-    expect(top?.[1]).toBeCloseTo(-7);
+    expect(top[0]).toBeCloseTo(5 + Math.hypot(20, 10));
+    expect(top[1]).toBeCloseTo(-7);
   });
 
   it("'ellipse'→连接面外接视觉 AABB", () => {
     const r = resolveBoundary('ellipse', resolveContext());
-    const corner = r.def.computeBoundaryPoint(r.rect, [20, 10], r.params);
-    const right = r.def.computeBoundaryPoint(r.rect, [100, 0], r.params);
+    const corner = pointAt(r, [20, 10]);
+    const right = pointAt(r, [100, 0]);
 
     expect(corner[0]).toBeCloseTo(20);
     expect(corner[1]).toBeCloseTo(10);
@@ -123,27 +140,29 @@ describe('resolveBoundary', () => {
   it("'ellipse' 旋转连接面仍包围各角点并保留标准锚点", () => {
     const rotatedRect: CenteredBox = { x: 5, y: -7, width: 40, height: 20, rotate: Math.PI / 2 };
     const r = resolveBoundary('ellipse', resolveContext({ rect: rotatedRect }));
-    const corner = r.def.computeBoundaryPoint(r.rect, [-5, 13], r.params);
-    const top = r.def.resolveAnchor?.(r.rect, 'top', r.params);
+    const corner = pointAt(r, [-5, 13]);
+    const top = anchorAt(r, 'top');
 
     expect(corner[0]).toBeCloseTo(-5);
     expect(corner[1]).toBeCloseTo(13);
-    expect(top?.[0]).toBeCloseTo(5 + 10 * Math.SQRT2);
-    expect(top?.[1]).toBeCloseTo(-7);
+    expect(top[0]).toBeCloseTo(5 + 10 * Math.SQRT2);
+    expect(top[1]).toBeCloseTo(-7);
   });
 
   it('内置 {type, params} 使用边界提供者及解析后的参数', () => {
     const r = resolveBoundary({ type: 'ellipse' }, resolveContext());
 
-    expect(r.def.name).toBe('ellipse');
+    expect(r.layout.boundary.definition.name).toBe('ellipse');
   });
 
   it("fit:'tight' → 使用视觉 shape 的 connection envelope", () => {
     const circle = resolveBoundary('circle', resolveContext({ def: shapeAwareVisual }));
     const ellipse = resolveBoundary('ellipse', resolveContext({ def: shapeAwareVisual }));
 
-    expect(circle.rect).toMatchObject({ width: 24, height: 24 });
-    expect(ellipse.rect).toMatchObject({ width: 28, height: 16 });
+    expect(pointAt(circle, [100, 0])[0]).toBeCloseTo(12);
+    expect(pointAt(circle, [0, 100])[1]).toBeCloseTo(12);
+    expect(pointAt(ellipse, [100, 0])[0]).toBeCloseTo(14);
+    expect(pointAt(ellipse, [0, 100])[1]).toBeCloseTo(8);
   });
 
   it("fit:'bounds' → 忽略 shape envelope，使用 AABB 安全公式", () => {
@@ -156,10 +175,10 @@ describe('resolveBoundary', () => {
       resolveContext({ def: shapeAwareVisual }),
     );
 
-    expect(circle.rect.width).toBeCloseTo(2 * Math.hypot(20, 10));
-    expect(circle.rect.height).toBeCloseTo(2 * Math.hypot(20, 10));
-    expect(ellipse.rect.width).toBeCloseTo(40 * Math.SQRT2);
-    expect(ellipse.rect.height).toBeCloseTo(20 * Math.SQRT2);
+    expect(pointAt(circle, [100, 0])[0]).toBeCloseTo(Math.hypot(20, 10));
+    expect(pointAt(circle, [0, 100])[1]).toBeCloseTo(Math.hypot(20, 10));
+    expect(pointAt(ellipse, [100, 0])[0]).toBeCloseTo(20 * Math.SQRT2);
+    expect(pointAt(ellipse, [0, 100])[1]).toBeCloseTo(10 * Math.SQRT2);
   });
 
   it('gap → 在 fit 后统一增减半径或半轴', () => {
@@ -172,8 +191,10 @@ describe('resolveBoundary', () => {
       resolveContext({ def: shapeAwareVisual }),
     );
 
-    expect(circle.rect).toMatchObject({ width: 30, height: 30 });
-    expect(ellipse.rect).toMatchObject({ width: 24, height: 12 });
+    expect(pointAt(circle, [100, 0])[0]).toBeCloseTo(15);
+    expect(pointAt(circle, [0, 100])[1]).toBeCloseTo(15);
+    expect(pointAt(ellipse, [100, 0])[0]).toBeCloseTo(12);
+    expect(pointAt(ellipse, [0, 100])[1]).toBeCloseTo(6);
   });
 
   it('rectangle 的 tight / bounds 表现一致，仍应用 gap', () => {
@@ -186,8 +207,10 @@ describe('resolveBoundary', () => {
       resolveContext({ def: shapeAwareVisual }),
     );
 
-    expect(tight.rect).toEqual(bounds.rect);
-    expect(tight.rect).toMatchObject({ width: 46, height: 26 });
+    expect(pointAt(tight, [100, 0])).toEqual(pointAt(bounds, [100, 0]));
+    expect(pointAt(tight, [0, 100])).toEqual(pointAt(bounds, [0, 100]));
+    expect(pointAt(tight, [100, 0])).toEqual([23, 0]);
+    expect(pointAt(tight, [0, 100])).toEqual([0, 13]);
   });
 
   it('custom shape 缺少 envelope → warning 一次并回退 bounds', () => {
@@ -201,8 +224,8 @@ describe('resolveBoundary', () => {
     const first = resolveBoundary('circle', context);
     const second = resolveBoundary('circle', context);
 
-    expect(first.rect.width).toBeCloseTo(2 * Math.hypot(20, 10));
-    expect(second.rect).toEqual(first.rect);
+    expect(pointAt(first, [100, 0])[0]).toBeCloseTo(Math.hypot(20, 10));
+    expect(pointAt(second, [100, 0])).toEqual(pointAt(first, [100, 0]));
     expect(warnings).toHaveLength(1);
     expect(warnings[0]).toMatchObject({ code: BuiltinCompileWarningCode.BoundaryTightFallback });
   });
@@ -245,8 +268,8 @@ describe('resolveBoundary', () => {
       resolveContext({ shapeRegistry: new Map([...registry, [fakeCircle.name, fakeCircle]]) }),
     );
 
-    expect(r.def.name).toBe('circle');
-    expect(r.def.computeBoundaryPoint(r.rect, [0, -100], r.params)[1]).toBeCloseTo(-Math.hypot(20, 10));
+    expect(r.layout.boundary.definition.name).toBe('circle');
+    expect(pointAt(r, [0, -100])[1]).toBeCloseTo(-Math.hypot(20, 10));
   });
 });
 

@@ -103,7 +103,7 @@ const resolveSegment = (
  * 解析单行文字与公式片段，补齐片段字体和行级外观，并保留纯文本内容与混排标记
  * @param parsed 调用方为确定块级字体策略已完成的分段结果；省略时在本函数内分段
  */
-export const resolveTextLine = (
+const resolveTextLine = (
   source: ColorResolvedTextLine,
   context: TextLineResolveContext,
   parsed: ParsedInlineSegments = typeof source === 'string'

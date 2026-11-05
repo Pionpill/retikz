@@ -74,6 +74,12 @@ export type PathTargetResolver = Readonly<{
   bindTarget?: (target: IRTarget, scopeChain: ReadonlyArray<Transform>) => TargetResolution | null;
 }>;
 
+/** 路径目标查询所需的能力绑定和当前坐标系 */
+export type PathTargetContext = Pick<InputPathCompilation, 'scopeChain'> & {
+  /** 当前编译绑定的目标查询能力 */
+  targetView: PathTargetView;
+};
+
 /** 基于已绑定目标提供的坐标查询与边界裁剪能力 */
 export type PathTargetView = Readonly<{
   /** 读取目标的局部坐标，无法定位时返回 null */

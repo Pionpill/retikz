@@ -186,7 +186,7 @@ export type PathDefinitionResolution = Readonly<{
 }>;
 
 /** 已补齐默认值并解析绘制资源的标记属性 */
-export type CanonicalMark = Readonly<{
+type CanonicalMark = Readonly<{
   /** 标记定义消费的完整实例参数 */
   params: JsonObject;
   /** 箭头或标记定义的注册名称 */
@@ -303,7 +303,7 @@ export type CanonicalPathMark = Readonly<{
 }>;
 
 /** 标记的有效尺寸与定义坐标系中的定位锚点 */
-export type CanonicalPathMarkGeometry = Readonly<{
+type CanonicalPathMarkGeometry = Readonly<{
   /** 定义采用的基准尺寸 */
   baseSize: number;
   /** 长度乘 scale 后的有效值 */

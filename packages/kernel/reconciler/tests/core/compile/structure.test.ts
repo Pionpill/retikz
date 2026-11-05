@@ -5,6 +5,8 @@ import { fileURLToPath } from 'node:url';
 import * as compile from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
+import * as reconciler from '../../../src';
+
 const here = dirname(fileURLToPath(import.meta.url));
 
 const root = resolve(here, '../../../../core');
@@ -12,6 +14,34 @@ const root = resolve(here, '../../../../core');
 const source = (path: string): string => readFileSync(resolve(root, path), 'utf8');
 
 describe('编译源结构', () => {
+  it('Reconciler 根入口保留编译契约，隐藏内部产物与诊断组装', () => {
+    for (const name of [
+      'compileToScene',
+      'compileSceneSnapshot',
+      'createSharedCompileContext',
+      'createWorkspaceCompileState',
+      'formatCompileWarning',
+      'formatCompileOccurrence',
+    ])
+      expect(reconciler).toHaveProperty(name);
+    for (const name of [
+      'createCompileChildPath',
+      'freezeOccurrence',
+      'freezeCompileArtifact',
+      'orderCompileArtifacts',
+      'createDuplicateWarning',
+      'createDuplicateCompileWarning',
+      'withCompileWarningOccurrence',
+      'replaceCompileWarningOccurrence',
+      'compileWarningOccurrenceOf',
+      'orderCompileWarnings',
+      'wrapLayoutProbeError',
+      'enrichLayoutProbeError',
+      'importSceneResources',
+    ])
+      expect(reconciler).not.toHaveProperty(name);
+  });
+
   it('执行器不重复解析 provider 输入', () => {
     const lower = source('../reconciler/src/compile/tree/composite/output.ts');
     const traversal = source('../reconciler/src/compile/tree/scope/visit.ts');
@@ -36,7 +66,7 @@ describe('编译源结构', () => {
       'createBoundaryStore',
       'createPathTargetResolver',
       'createPositionEvaluateContext',
-      'createScopeGroup',
+      'projectScopeGeometry',
       'emitScopePrimitive',
       'fallbackMeasurer',
       'prepareScopePlacement',

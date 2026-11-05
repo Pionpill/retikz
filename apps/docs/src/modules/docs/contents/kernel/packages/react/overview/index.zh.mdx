@@ -7,6 +7,8 @@ description: 用 JSX 组织 Kernel 与 Sugar 组件，构造 Vanilla InputScene�
 
 它负责 React 写法和结果宿主，不另造图形语义：IR、schema、几何与编译规则属于 `@retikz/core`；Input 归一、composite 依赖解析、Core Computation 与 retained processing 状态属于 `@retikz/vanilla`。
 
+包根提供组件、Props 和作者协议；样式筛选、组件名称读取与事件收集由 `Layout` 内部完成。`pickScopeStyle`、`getDisplayName` 和 `collectHydrationHandlers` 是源码中的内部助手，不从包根导出。
+
 ## 安装与使用
 
 `react` 与 `react-dom` 是 peer dependencies，版本不低于 18：

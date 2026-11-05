@@ -21,7 +21,7 @@ import type {
 } from './types';
 
 /** 度量一行 inline segment，并返回可 emit 的行布局 */
-export const layoutTextLine = (
+const layoutTextLine = (
   segments: Array<InputInlineSegmentLayout>,
   context: TextLayoutContext,
 ): CompiledTextLineLayout => {

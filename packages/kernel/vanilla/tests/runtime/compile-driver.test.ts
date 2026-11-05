@@ -6,14 +6,10 @@ import type { RenderReadonlyLayer } from '@retikz/render/runtime';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { VanillaCompileDriver, VanillaCompileOutput } from '../../src';
-import {
-  compileVanillaWithDriver,
-  createVanillaCompileDriverSession,
-  defaultVanillaCompileDriver,
-  resolveVanillaCompileOutput,
-  RetikzVanillaError,
-  RetikzVanillaErrorCode,
-} from '../../src';
+import { defaultVanillaCompileDriver, RetikzVanillaError, RetikzVanillaErrorCode } from '../../src';
+import { createVanillaCompileDriverSession } from '../../src/runtime/compile-driver';
+import { resolveVanillaCompileOutput } from '../../src/runtime/compile-driver';
+import { compileVanillaWithDriver } from '../../src/runtime/compile-driver';
 
 const source: IRScene = {
   version: 1,

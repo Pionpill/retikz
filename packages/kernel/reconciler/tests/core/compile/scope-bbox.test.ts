@@ -6,7 +6,7 @@ import { BuiltinCompileWarningCode } from '../../../../core/src';
 import { projectLayoutWithTransform } from '../../../../core/src/compile/boundary';
 import type { CompiledNodeLayout } from '../../../../core/src/compile/node';
 import type { CompiledReferenceGeometry } from '../../../../core/src/compile/reference';
-import { calculateScopeBoundingBox, createIntrinsicScopeLayout } from '../../../../core/src/compile/scope';
+import { layoutScopeEnvelope } from '../../../../core/src/compile/scope/envelope/layout';
 import { composeScopeTransform } from '../../../../core/src/compile/shared';
 import type { TextMeasurer } from '../../../../core/src/contract';
 import { BUILTIN_SHAPES } from '../../../../core/src/providers';
@@ -28,7 +28,11 @@ const scopeLayout = (
       irPath: [],
     },
   );
-  const layout = createIntrinsicScopeLayout(canon, layouts);
+  const layout = {
+    shape: canon.envelope.shape,
+    boundary: { ...canon.envelope.shape, isShape: true },
+    geometry: layoutScopeEnvelope(canon, layouts),
+  };
   return projectLayoutWithTransform(layout, composeScopeTransform([{ kind: 'translate', x: offset[0], y: offset[1] }]));
 };
 
@@ -51,7 +55,7 @@ const lineTo = (prim: ScenePrimitive | undefined): [number, number] | undefined 
   return undefined;
 };
 
-/** 构造一个 width/height 已知、中心已知的 0-rotate 测试 layout，供 calculateScopeBoundingBox 单元测试 */
+/** 构造一个 width/height 已知、中心已知的 0-rotate 测试 layout，供 Scope 包络测试 */
 const layoutAt = (
   cx: number,
   cy: number,
@@ -73,31 +77,29 @@ const layoutAt = (
   },
 });
 
-describe('calculateScopeBoundingBox / createScopeRectangleLayout 单元测试', () => {
-  it('空 layouts → 返回 null', () => {
-    expect(calculateScopeBoundingBox([])).toBeNull();
+describe('Scope 矩形包络', () => {
+  it('空 layouts → 零尺寸包络', () => {
+    expect(scopeLayout('rectangle', []).geometry.rect).toMatchObject({ x: 0, y: 0, width: 0, height: 0 });
   });
 
   it('3 个 0×0 单点 layout → bbox 包 3 点的 AABB', () => {
-    const bbox = calculateScopeBoundingBox([layoutAt(0, 0, 0, 0), layoutAt(40, 30, 0, 0), layoutAt(80, -20, 0, 0)]);
-
-    expect(bbox).not.toBeNull();
+    const bbox = scopeLayout('rectangle', [layoutAt(0, 0, 0, 0), layoutAt(40, 30, 0, 0), layoutAt(80, -20, 0, 0)])
+      .geometry.rect;
 
     // x 范围 [0, 80]，y 范围 [-20, 30]
-    expect(bbox!.x).toBeCloseTo(40, 5);
-    expect(bbox!.y).toBeCloseTo(5, 5);
-    expect(bbox!.width).toBeCloseTo(80, 5);
-    expect(bbox!.height).toBeCloseTo(50, 5);
+    expect(bbox.x).toBeCloseTo(40, 5);
+    expect(bbox.y).toBeCloseTo(5, 5);
+    expect(bbox.width).toBeCloseTo(80, 5);
+    expect(bbox.height).toBeCloseTo(50, 5);
   });
 
   it('单 layout (10,20) 30×40 → bbox 就是该 layout', () => {
-    const bbox = calculateScopeBoundingBox([layoutAt(10, 20, 30, 40)]);
+    const bbox = scopeLayout('rectangle', [layoutAt(10, 20, 30, 40)]).geometry.rect;
 
-    expect(bbox).not.toBeNull();
-    expect(bbox!.x).toBeCloseTo(10, 5);
-    expect(bbox!.y).toBeCloseTo(20, 5);
-    expect(bbox!.width).toBeCloseTo(30, 5);
-    expect(bbox!.height).toBeCloseTo(40, 5);
+    expect(bbox.x).toBeCloseTo(10, 5);
+    expect(bbox.y).toBeCloseTo(20, 5);
+    expect(bbox.width).toBeCloseTo(30, 5);
+    expect(bbox.height).toBeCloseTo(40, 5);
   });
 
   it('createScopeRectangleLayout(bbox=null, fallback) → 0×0 占位 layout 落在 fallback 点', () => {

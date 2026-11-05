@@ -4,17 +4,11 @@ import { RAD_TO_DEG } from '@retikz/math';
 import type { TextMeasurer, GroupPrimitive, ScenePrimitive, PathDefinitionLabel } from '../../../contract';
 import { combineOpacity } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
-import type { CompileWarningCode } from '../../shared';
-import type { TexLowerer } from '../../text';
+import type { TextLayoutContext } from '../../text';
 import { emitTextBlock, layoutTextBlock } from '../../text';
 
 /** 边标注公式上下文 */
-type LabelTexContext = {
-  /** 注入的 TeX 降解能力 */
-  lowerTex?: TexLowerer;
-  /** 接收公式解析与排版产生的编译诊断 */
-  warn: (code: CompileWarningCode, message: string) => void;
-};
+type LabelTexContext = Pick<TextLayoutContext, 'lowerTex' | 'warn'>;
 
 /** step label 放置时额外需要的宿主几何信息 */
 type LabelPlacementContext = {

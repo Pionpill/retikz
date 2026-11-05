@@ -29,7 +29,8 @@ import {
 } from '../hydration';
 import { prepareRuntimeSceneContent } from '../shared';
 import type { SvgNode } from '../svg';
-import { buildSvgDocument, buildSvgFragment, buildSvgReadonlyLayer } from '../svg';
+import { buildSvgDocument, buildSvgFragment } from '../svg';
+import { buildSvgReadonlyLayer } from '../svg/builders';
 import type { RenderRuntimeConfig } from './config';
 import type { RenderFrameSnapshot } from './frame';
 import { mergeRenderHandlers } from './handlers';

@@ -5,7 +5,7 @@ import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { IRViewBox } from '../../schemas';
 
 /** 对 layout 四字段应用输出精度 */
-export const roundLayout = ({ height, width, x, y }: BoundsRect, round: (n: number) => number): BoundsRect => ({
+const roundLayout = ({ height, width, x, y }: BoundsRect, round: (n: number) => number): BoundsRect => ({
   x: round(x),
   y: round(y),
   width: round(width),

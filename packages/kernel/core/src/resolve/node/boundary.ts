@@ -1,26 +1,8 @@
-import type { PropertyPath } from '@retikz/foundation';
-import type { JsonObject } from '@retikz/foundation';
-
-import type { BoundaryDefinition, ShapeDefinition } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { ProviderRegistry } from '../../providers';
 import type { IRBoundary } from '../../schemas';
 import { parseProviderPayload } from '../provider';
-import type { CanonicalNodeBoundary } from './types';
-
-/** 解析连接面所需的节点形状与定义注册表 */
-type NodeBoundaryResolveContext = {
-  /** 节点视觉形状定义 */
-  visualDef: ShapeDefinition;
-  /** 节点视觉形状参数 */
-  visualParams: JsonObject;
-  /** 形状定义注册表 */
-  shapeRegistry: ProviderRegistry<ShapeDefinition>;
-  /** 连接面定义注册表 */
-  boundaryRegistry: ProviderRegistry<BoundaryDefinition>;
-  /** 当前节点的 IR 路径，用于参数校验错误定位 */
-  irPath?: PropertyPath;
-};
+import type { CanonicalNodeBoundary, NodeBoundaryResolveContext } from './types';
 
 /**
  * 为连接面选择定义并解析参数，几何计算留到节点尺寸确定之后

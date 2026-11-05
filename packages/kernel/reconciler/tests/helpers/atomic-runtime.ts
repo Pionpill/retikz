@@ -18,10 +18,11 @@ import {
 } from '@retikz/core';
 import type { PropertyPath } from '@retikz/foundation';
 import { formatPropertyPath } from '@retikz/foundation';
-import { orderCompileWarnings, withCompileWarningOccurrence } from '@retikz/reconciler';
 
 import type { SharedCompileContext, WorkspaceCompileState } from '../../src/compile';
 import { createWorkspaceCompileState } from '../../src/compile';
+import { orderCompileWarnings } from '../../src/compile/shared';
+import { withCompileWarningOccurrence } from '../../src/compile/shared';
 import { RetikzReconcilerError, RetikzReconcilerErrorCode } from '../../src/error';
 
 /** 候选版本中的名称绑定，身份对应稳定的 Weave 节点 */

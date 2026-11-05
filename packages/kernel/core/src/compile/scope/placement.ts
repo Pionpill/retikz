@@ -116,7 +116,7 @@ export const lowerScopePlacementTransforms = (
  * 不依赖 intrinsic envelope 的既有 transform 可在 children 前冻结
  * @description 保持 v0.4 Scope transform 下跨 frame relative 定位语义；anchor pivot 才进入完整两阶段收尾
  */
-export const lowerPreliminaryScopeTransforms = (
+const lowerPreliminaryScopeTransforms = (
   child: InputScopeCompile,
   context: Pick<ScopeCompileContext, 'positionContext' | 'irPath' | 'onWarn'>,
 ): Array<Transform> | undefined => {

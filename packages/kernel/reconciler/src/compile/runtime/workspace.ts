@@ -16,7 +16,7 @@ export type WorkspaceCompileState = Readonly<{
 }>;
 
 /** 单次计算的诊断收集能力，不负责发布 */
-export type CompileDiagnosticCollector = Readonly<{
+type CompileDiagnosticCollector = Readonly<{
   /** 已收集的诊断，只通过 collect 追加 */
   warnings: ReadonlyArray<CompileWarning>;
   /** 收集本次计算产生的诊断 */

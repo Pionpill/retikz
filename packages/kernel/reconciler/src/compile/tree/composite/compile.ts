@@ -44,7 +44,7 @@ import type { CompositeProbeContext } from './probe';
 import type { CompositeCompileHost } from './types';
 
 /** 复合组件执行策略及按需测量的根元素 */
-export type CompositeCompilerOptions = {
+type CompositeCompilerOptions = {
   /** 当前子树首个元素，仅该元素允许返回测量贡献 */
   rootChild: IRChild | undefined;
   /** 是否在隔离试编译中执行 */

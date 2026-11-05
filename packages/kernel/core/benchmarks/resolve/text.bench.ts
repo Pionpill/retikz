@@ -1,26 +1,28 @@
+// 计时边界为单行文本块的完整解析，包含块字体、缩放与行槽配置，不与旧行解析基准直接比较
 import { expect } from 'vitest';
 
 import { defineBenchmark } from '../../../../../scripts/benchmarks/scenario';
-import { resolveTextLine } from '../../src/resolve/text';
-import type { ColorResolvedTextLine, TextLineResolveContext } from '../../src/resolve/text';
+import { resolveTextBlock } from '../../src/resolve/text';
+import type { ColorResolvedTextLine, TextBlockResolveContext } from '../../src/resolve/text';
 
 for (const count of [32, 1_024, 16_384]) {
   for (const gatingOn of [false, true]) {
     defineBenchmark(
       {
-        id: `resolve/text/plain/${gatingOn}/${count}`,
-        dimensions: ['Text 解析', gatingOn ? '纯文本，公式开启' : '纯文本，公式关闭', `${count} 字符`],
+        id: `resolve/text-block/plain/${gatingOn}/${count}`,
+        dimensions: ['Text 块解析', gatingOn ? '纯文本，公式开启' : '纯文本，公式关闭', `${count} 字符`],
       },
       () => {
         const source = '文'.repeat(count);
-        const context: TextLineResolveContext = {
+        const context: TextBlockResolveContext = {
           rootFontSize: 16,
           inheritedFont: { size: 20, family: 'serif' },
           gatingOn,
         };
         return {
-          run: () => resolveTextLine(source, context),
-          verify: result => {
+          run: () => resolveTextBlock({ text: [source] }, context),
+          verify: block => {
+            const result = block.lines[0];
             expect(result.plainText).toBe(source);
             expect(result.hasMath).toBe(false);
             expect(result.segments).toEqual([{ text: source, font: { size: 20, family: 'serif' } }]);
@@ -35,8 +37,8 @@ for (const count of [8, 128, 1_024]) {
   for (const explicit of [false, true]) {
     defineBenchmark(
       {
-        id: `resolve/text/mixed/${explicit}/${count}`,
-        dimensions: ['Text 解析', explicit ? '显式片段与相对字号' : '美元公式混排', `${count * 2} 片段`],
+        id: `resolve/text-block/mixed/${explicit}/${count}`,
+        dimensions: ['Text 块解析', explicit ? '显式片段与相对字号' : '美元公式混排', `${count * 2} 片段`],
       },
       () => {
         const source: ColorResolvedTextLine = explicit
@@ -49,15 +51,16 @@ for (const count of [8, 128, 1_024]) {
               fill: 'red',
             }
           : 'a$x$'.repeat(count);
-        const context: TextLineResolveContext = {
+        const context: TextBlockResolveContext = {
           rootFontSize: 16,
           inheritedFont: { size: 20, family: 'serif' },
           gatingOn: true,
         };
         const original = JSON.stringify(source);
         return {
-          run: () => resolveTextLine(source, context),
-          verify: result => {
+          run: () => resolveTextBlock({ text: [source] }, context),
+          verify: block => {
+            const result = block.lines[0];
             expect(result.plainText).toBe('a'.repeat(count));
             expect(result.hasMath).toBe(true);
             expect(result.mixed).toBe(true);

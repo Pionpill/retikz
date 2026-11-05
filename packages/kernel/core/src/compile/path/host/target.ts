@@ -3,7 +3,7 @@ import { point } from '@retikz/math';
 import type { Transform } from '../../../contract';
 import type { IRPosition, IRTarget } from '../../../schemas';
 import { FoldStepVia } from '../../../schemas';
-import type { PathTargetView } from '../types';
+import type { PathTargetView, PathTargetContext } from '../types';
 
 /** 使用 resolving phase 绑定的 target view 获取局部参考点 */
 export const pointOfTarget = (
@@ -16,7 +16,7 @@ export const pointOfTarget = (
 export const clipTarget = (
   target: IRTarget,
   toward: IRPosition,
-  context: Readonly<{ targetView: PathTargetView; scopeChain: ReadonlyArray<Transform> }>,
+  context: Readonly<PathTargetContext>,
 ): IRPosition | null => context.targetView.clipTarget(target, toward, context.scopeChain);
 
 /** 根据 fold step 的方向计算正交折角点 */

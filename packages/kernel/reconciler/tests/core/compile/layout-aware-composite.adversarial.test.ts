@@ -1,6 +1,5 @@
 import type { JsonValue } from '@retikz/foundation';
 import { RetikzError } from '@retikz/foundation';
-import { wrapLayoutProbeError } from '@retikz/reconciler';
 import { describe, expect, it, vi } from 'vitest';
 import { boolean, custom, literal, number, strictObject, enum as zodEnum } from 'zod';
 
@@ -43,6 +42,7 @@ import { cloneAndFreezeJson } from '../../../../core/src/shared';
 import { compileToScene } from '../../../src/compile';
 import * as compileProvenance from '../../../src/compile/provenance/tracker';
 import { createExecutionInvariantError, createCompileRuntime, NamespaceStack } from '../../../src/compile/runtime';
+import { wrapLayoutProbeError } from '../../../src/compile/shared';
 import { CompileManager } from '../../../src/compile/tree';
 import { pathArrows } from '../../helpers/path-arrows';
 

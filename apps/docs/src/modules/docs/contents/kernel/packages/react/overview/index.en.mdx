@@ -7,6 +7,8 @@ description: Author Kernel and Sugar components in JSX, construct a Vanilla Inpu
 
 It owns React authoring and result hosting rather than new drawing semantics. IR, schemas, geometry, and compilation belong to `@retikz/core`; Input normalization, composite dependency resolution, the Core Computation, and retained processing state belong to `@retikz/vanilla`.
 
+The package root exposes components, Props, and authoring protocols. `Layout` handles style selection, component-name lookup, and event collection internally. The source helpers `pickScopeStyle`, `getDisplayName`, and `collectHydrationHandlers` are not package-root exports.
+
 ## Install and usage
 
 `react` and `react-dom` are peer dependencies at version 18 or newer:

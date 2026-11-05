@@ -7,7 +7,7 @@ import { BuiltinCompileWarningCode } from '../../../../core/src';
 import { projectLayoutWithTransform } from '../../../../core/src/compile/boundary';
 import type { CompiledNodeLayout } from '../../../../core/src/compile/node';
 import type { CompiledReferenceGeometry } from '../../../../core/src/compile/reference';
-import { collectScopeCornerPoints, createIntrinsicScopeLayout } from '../../../../core/src/compile/scope';
+import { layoutScopeEnvelope } from '../../../../core/src/compile/scope/envelope/layout';
 import { composeScopeTransform } from '../../../../core/src/compile/shared';
 import { BUILTIN_SHAPES } from '../../../../core/src/providers';
 import { resolveScope, resolveScopeInheritance } from '../../../../core/src/resolve';
@@ -28,7 +28,11 @@ const scopeLayout = (
       irPath: [],
     },
   );
-  const layout = createIntrinsicScopeLayout(canon, layouts);
+  const layout = {
+    shape: canon.envelope.shape,
+    boundary: { ...canon.envelope.shape, isShape: true },
+    geometry: layoutScopeEnvelope(canon, layouts),
+  };
   return projectLayoutWithTransform(layout, composeScopeTransform([{ kind: 'translate', x: offset[0], y: offset[1] }]));
 };
 
@@ -300,32 +304,17 @@ describe('scope boundingShape 缺省（矩形 AABB）向后兼容', () => {
   });
 });
 
-describe('collectScopeCornerPoints 单元测试', () => {
-  it('空 layouts → 空点集', () => {
-    expect(collectScopeCornerPoints([])).toHaveLength(0);
+describe('Scope 圆包络退化输入', () => {
+  it('空 layouts 保留零尺寸包络', () => {
+    expect(scopeLayout('circle', []).geometry.rect).toMatchObject({ x: 0, y: 0, width: 0, height: 0 });
   });
 
-  it('1 个 layout → 4 个角点', () => {
-    const points = collectScopeCornerPoints([layoutAt(0, 0, 40, 20)]);
-
-    expect(points).toHaveLength(4);
-  });
-
-  it('N 个 layouts → 4N 个角点', () => {
-    const layouts = [layoutAt(0, 0, 10, 10), layoutAt(50, 50, 10, 10), layoutAt(100, 0, 10, 10)];
-    const points = collectScopeCornerPoints(layouts);
-
-    expect(points).toHaveLength(12);
-  });
-
-  it('0×0 layout → 4 个相同角点（退化为单点）', () => {
-    const points = collectScopeCornerPoints([layoutAt(30, 20, 0, 0)]);
-
-    expect(points).toHaveLength(4);
-
-    for (const [px, py] of points) {
-      expect(px).toBeCloseTo(30, 5);
-      expect(py).toBeCloseTo(20, 5);
-    }
+  it('零尺寸 layout 的圆包络退化到原点位', () => {
+    expect(scopeLayout('circle', [layoutAt(30, 20, 0, 0)]).geometry.rect).toMatchObject({
+      x: 30,
+      y: 20,
+      width: 0,
+      height: 0,
+    });
   });
 });

@@ -6,20 +6,20 @@ import type { PropertyPath } from '@retikz/foundation';
 import type { CompileNamespaceKey } from '../provenance';
 import { freezeOccurrence } from './artifact';
 
-/** 执行器内部来源标记，不进入公开绘图诊断契约 */
-const compileWarningOccurrence = Symbol('compileWarningOccurrence');
-
-/** 同一命名空间内重名诊断所需的注册信息 */
-type DuplicateCompileWarningContext = {
-  /** 重复名称 */
+/** 同一 namespace frame 内重复 id 的诊断载荷 */
+export type DuplicateRegisterInfo = {
+  /** 同 frame 内重复出现的 id */
   id: string;
-  /** 命名空间深度 */
+  /** 当前 frame 在栈中的深度（0 = 根 frame；每层 pushFrame 自增 1） */
   frameDepth: number;
-  /** 声明所属命名空间的身份，同深度的独立 frame 不共享身份 */
+  /** 当前 frame 的身份，用于隔离同深度的不同命名空间 */
   namespace: CompileNamespaceKey;
-  /** 按声明顺序包含首次声明的完整位置快照，重名时至少有两项 */
+  /** 按注册顺序排列的全部声明位置，包含首次声明 */
   duplicateIrPaths: ReadonlyArray<PropertyPath>;
 };
+
+/** 执行器内部来源标记，不进入公开绘图诊断契约 */
+const compileWarningOccurrence = Symbol('compileWarningOccurrence');
 
 /** 内部诊断分组身份，不进入枚举或 JSON 输出 */
 const duplicateWarningContext = Symbol('duplicateWarningContext');
@@ -27,20 +27,11 @@ const duplicateWarningContext = Symbol('duplicateWarningContext');
 /** 保留分组信息的内部重名诊断 */
 type DuplicateCompileWarning = CompileWarning & {
   [compileWarningOccurrence]?: CompileOccurrenceLocator;
-  [duplicateWarningContext]?: Pick<DuplicateCompileWarningContext, 'namespace' | 'id'>;
-};
-
-/** 为调用方维护的名称 frame 生成与全量编译一致的重名诊断 */
-export const createDuplicateCompileWarning = (
-  info: DuplicateCompileWarningContext,
-  occurrence?: CompileOccurrenceLocator,
-): CompileWarning => {
-  const warning = createDuplicateWarning(info);
-  return Object.freeze(replaceCompileWarningOccurrence(warning, occurrence ?? compileWarningOccurrenceOf(warning)));
+  [duplicateWarningContext]?: Pick<DuplicateRegisterInfo, 'namespace' | 'id'>;
 };
 
 /** 格式化重复 id warning */
-export const createDuplicateWarning = (info: DuplicateCompileWarningContext): CompileWarning => {
+export const createDuplicateWarning = (info: DuplicateRegisterInfo): CompileWarning => {
   const frameNote =
     info.frameDepth === 0
       ? 'frame depth: 0 (root namespace)'

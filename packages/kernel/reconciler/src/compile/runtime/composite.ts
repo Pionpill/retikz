@@ -107,7 +107,7 @@ export type CompositeCompileOwner = Readonly<{
 }>;
 
 /** opaque output handle 对应的 callback-local context entry */
-export type CompositeRuntimeOutputEntry = Readonly<{
+type CompositeRuntimeOutputEntry = Readonly<{
   /** 创建该输出句柄的复合组件回调身份 */
   owner: CompositeCompileOwner;
   /** 句柄对应的实际输出子树 */
@@ -118,7 +118,7 @@ export type CompositeRuntimeOutputEntry = Readonly<{
 };
 
 /** layoutChild 返回对象对应的 callback-local replay identity */
-export type CompositeLayoutResultEntry = Readonly<{
+type CompositeLayoutResultEntry = Readonly<{
   /** 创建布局结果的复合组件回调身份 */
   owner: CompositeCompileOwner;
   /** 与该布局结果绑定的重放凭证 */

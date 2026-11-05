@@ -4,13 +4,14 @@ import type { PropertyPath, WithOptionalProperties } from '@retikz/foundation';
 import { createIdAllocator } from '@retikz/foundation';
 
 import type { CompileNamespaceKey } from '../provenance';
+import type { DuplicateRegisterInfo } from '../shared';
 import { createExecutionInvariantError } from './errors';
 
 /** namespace 栈当前写入/解析阶段 */
 type NamespacePhase = 'registering' | 'resolving';
 
 /** 名称绑定的几何编译产物的编译生命周期状态 */
-export type NamespaceEntryState = 'resolved' | 'scope-placeholder';
+type NamespaceEntryState = 'resolved' | 'scope-placeholder';
 
 /** namespace 中带生命周期状态的内部条目 */
 export type NamespaceEntry = {
@@ -22,18 +23,6 @@ export type NamespaceEntry = {
   state: NamespaceEntryState;
   /** Scope 自身的内部身份，不随占位布局替换或投影改变 */
   scopeId?: string;
-};
-
-/** 同一 namespace frame 内重复 id 的诊断载荷 */
-export type DuplicateRegisterInfo = {
-  /** 同 frame 内重复出现的 id */
-  id: string;
-  /** 当前 frame 在栈中的深度（0 = 根 frame；每层 pushFrame 自增 1） */
-  frameDepth: number;
-  /** 当前 frame 的身份，用于隔离同深度的不同命名空间 */
-  namespace: CompileNamespaceKey;
-  /** 按注册顺序排列的全部声明位置，包含首次声明 */
-  duplicateIrPaths: ReadonlyArray<PropertyPath>;
 };
 
 /** namespace 单次 register 的内部观测信息 */

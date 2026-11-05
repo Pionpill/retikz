@@ -80,7 +80,7 @@ export type SubtreeOutputContribution = {
 };
 
 /** 使用独占工作区与名称环境执行子树；实现由全量会话持有 */
-export type CompileSubtree = (
+type CompileSubtree = (
   children: ReadonlyArray<IRChild>,
   runtime: CompileRuntime,
   options: SubtreeCompileOptions,

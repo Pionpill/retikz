@@ -1,4 +1,3 @@
-import type { PropertyPath } from '@retikz/foundation';
 import {
   collectArcBoundingCandidates,
   collectEllipseArcBoundingCandidates,
@@ -8,40 +7,20 @@ import {
   rectOutline,
 } from '@retikz/math';
 
-import type { Transform } from '../../../contract';
 import type { CanonicalPathStep } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
 import { rectPerimeterSample } from '../../../shared/geometry';
 import { BuiltinCompileWarningCode } from '../../shared';
 import { clipTarget, pointOfTarget, isSamePoint } from '../host';
 import { isAutoBoundaryTarget } from '../target';
-import type { PathTargetView } from '../types';
-import type { PathCommandEmitter } from './commands';
-import type { StrokeCursor } from './cursor';
-import type { StrokeSamplingCollector } from './sampling';
 import { nodeIdFromResolvableTarget } from './target-diagnostic';
+import type { StrokeLoweringContext } from './types';
 
 /** 由几何形状产生路径命令的 shape step */
 type StrokeShapeStep = Extract<
   CanonicalPathStep,
   { kind: 'cycle' | 'rectangle' | 'arc' | 'circlePath' | 'ellipsePath' | 'smooth' }
 >;
-
-/** shape step 降级所需的共享上下文 */
-type ShapeStepLoweringContext = {
-  /** compile 目标绑定阶段绑定的 target view */
-  targetView: PathTargetView;
-  /** 当前 scope 的累计变换链 */
-  scopeChain: ReadonlyArray<Transform>;
-  /** path warning 回调 */
-  warn: (code: string, message: string, subPath?: PropertyPath) => void;
-  /** path command 写入器 */
-  commandEmitter: PathCommandEmitter;
-  /** step 游标 */
-  cursor: StrokeCursor;
-  /** label 与 mark 采样收集器 */
-  sampling: StrokeSamplingCollector;
-};
 
 /** 判断 step 是否属于 shape family */
 export const isStrokeShapeStep = (canon: CanonicalPathStep): canon is StrokeShapeStep =>
@@ -56,7 +35,7 @@ export const isStrokeShapeStep = (canon: CanonicalPathStep): canon is StrokeShap
 const lowerPartialArcClosure = (
   closed: 'closed' | 'chord' | 'open' | 'sector',
   index: number,
-  warn: ShapeStepLoweringContext['warn'],
+  warn: StrokeLoweringContext['warn'],
 ): 'chord' | 'open' | 'sector' => {
   if (closed === 'open') return 'open';
   if (closed === 'sector') return 'sector';
@@ -75,7 +54,7 @@ const lowerPartialArcClosure = (
  * 将 shape family step 降级为 path commands
  * @returns `false` 表示 target clipping 或 provider 解析失败，调用方应跳过整个 path
  */
-export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: ShapeStepLoweringContext): boolean => {
+export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: StrokeLoweringContext): boolean => {
   const { targetView, scopeChain, warn, commandEmitter, cursor, sampling } = context;
   const {
     boundsPoints,

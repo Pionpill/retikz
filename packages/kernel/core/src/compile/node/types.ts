@@ -16,7 +16,7 @@ import type { BoundaryState } from '../boundary';
 import type { PositionTargetEvaluateContext } from '../reference';
 import type { RegisterPaint } from '../resource';
 import type { ComposedScopeTransform, CompileWarningCode } from '../shared';
-import type { CompiledTextBlockLayout, CompiledTextBlockLine, TexLowerer } from '../text';
+import type { CompiledTextBlockLayout, CompiledTextBlockLine, TextLayoutContext } from '../text';
 import type { NodeContentLayout } from './content';
 
 /** 节点编译结果，保留整体输出与可供调用方选择复用的阶段产物 */
@@ -34,12 +34,7 @@ export type CompiledNode = {
 };
 
 /** 公式渲染上下文 */
-type TexLoweringContext = {
-  /** 将公式源码转换为可参与文本布局的结果；未提供时由公式布局分支处理缺失能力 */
-  lowerTex?: TexLowerer;
-  /** 分发公式降级或布局过程中产生的编译诊断 */
-  warn: (code: CompileWarningCode, message: string) => void;
-};
+type TexLoweringContext = Pick<TextLayoutContext, 'lowerTex' | 'warn'>;
 
 /** 物理行排版与其作者行的对应关系 */
 export type CompiledNodeTextLineLayout = Omit<TextLine, 'fill' | 'opacity'> & {

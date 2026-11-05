@@ -10,7 +10,7 @@ const EVENT_NAMES = new Set<string>(Object.values(RetikzEvent));
 const isRetikzEventName = (event: string): event is RetikzEvent => EVENT_NAMES.has(event);
 
 /** Scene 中含 canvas `{ onEvent }` trigger 的 id → 事件名集合 */
-export const collectCanvasAnimationEventTriggers = (scene: Scene): Map<string, Set<RetikzEvent>> => {
+const collectCanvasAnimationEventTriggers = (scene: Scene): Map<string, Set<RetikzEvent>> => {
   const triggers = new Map<string, Set<RetikzEvent>>();
   visitSceneAnimations(scene, (primitive, { hostId }) => {
     if (hostId === undefined || primitive.animations === undefined) return;

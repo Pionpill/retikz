@@ -1,8 +1,8 @@
 import type { CompileOccurrenceLocator, CompileWarning } from '@retikz/core';
 import type { PropertyPath } from '@retikz/foundation';
-import { createDuplicateCompileWarning } from '@retikz/reconciler';
 import type { CompileNamespaceKey } from '@retikz/reconciler';
 
+import { createDuplicateWarning, replaceCompileWarningOccurrence } from '../../src/compile/shared';
 import type { WeaveBinding, WeaveNamespace } from './atomic-runtime';
 
 /** 一个调用方持有的名称 frame；更新仅作用于所属编译版本 */
@@ -35,13 +35,13 @@ export const createWeaveNamespaceRegistry = (
       paths.set(name, duplicateIrPaths);
       if (bindings.has(name)) {
         onWarning?.(
-          createDuplicateCompileWarning(
-            {
+          replaceCompileWarningOccurrence(
+            createDuplicateWarning({
               id: name,
               frameDepth: depth,
               namespace: identity,
               duplicateIrPaths,
-            },
+            }),
             occurrence,
           ),
         );

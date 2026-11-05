@@ -7,6 +7,8 @@ description: Renders backend-neutral Scenes to SVG / Canvas and coordinates fram
 
 This group covers how retikz actually paints a figure to the screen. Your figure is first compiled into a **renderer-agnostic Scene**, then handed to a backend: **SVG** emits a vector DOM where every primitive is a real, CSS-targetable element; **Canvas** paints the same Scene as a raster bitmap, suited to many primitives or frequent repaints. The backends share Scene semantics and align their output where each backend supports the required feature; check host capabilities and interaction needs before switching. **Hydration** is the mechanism both backends share: render statically first, then bind event handlers back to primitives by id on the client.
 
+Readonly layers are materialized with the primary figure through static-frame or retained commit APIs. `drawReadonlyLayer` and `buildSvgReadonlyLayer` are internal assembly helpers, excluded from the public Canvas/SVG subpaths. Public granular SVG builders remain available.
+
 ## Responsibilities
 
 | Topic            | Responsibility                                                                               | Reach for it when                                                   |

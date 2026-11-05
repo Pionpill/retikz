@@ -201,7 +201,7 @@ export const replayThemeFingerprint = (theme: SubtreeCompileRuntime['context']['
   JSON.stringify(theme);
 
 /** 将试编译内的出现位置重定位到最终重放位置，保留内部展开后缀 */
-export const replayOccurrence = (
+const replayOccurrence = (
   parent: CompileOccurrenceLocator,
   index: number,
   origin: CompileOccurrenceLocator,

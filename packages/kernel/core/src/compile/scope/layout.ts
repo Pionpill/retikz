@@ -15,7 +15,7 @@ import { composeScopeTransform } from '../shared';
 import type { CompiledScope } from './types';
 
 /** 收集子元素编译产物的全局边界点，供 AABB / MEC 等包络复用 */
-export const collectScopeCornerPoints = (layouts: ReadonlyArray<CompiledReferenceGeometry>): Array<IRPosition> => {
+const collectScopeCornerPoints = (layouts: ReadonlyArray<CompiledReferenceGeometry>): Array<IRPosition> => {
   const points: Array<IRPosition> = [];
 
   for (const layout of layouts) {
@@ -36,7 +36,7 @@ export const collectScopeCornerPoints = (layouts: ReadonlyArray<CompiledReferenc
 };
 
 /** 计算一组 layout 的全局 AABB；空数组返回 null */
-export const calculateScopeBoundingBox = (layouts: ReadonlyArray<CompiledReferenceGeometry>): CenteredBox | null => {
+const calculateScopeBoundingBox = (layouts: ReadonlyArray<CompiledReferenceGeometry>): CenteredBox | null => {
   const bounds = boundsOf(collectScopeCornerPoints(layouts));
   if (bounds === undefined) return null;
 
