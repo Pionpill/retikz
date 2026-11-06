@@ -2,14 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { literal, number, object, string, union } from 'zod';
 
 import type { IRScene } from '../../../../core/src';
-import {
-  BUILTIN_PATHS,
-  BUILTIN_SHAPES,
-  CompositeBaseSchema,
-  defineComposite,
-  defineShape,
-  resolveCompositeRegistry,
-} from '../../../../core/src';
+import { CompositeBaseSchema, defineComposite, defineShape, resolveCompositeRegistry } from '../../../../core/src';
+import { BUILTIN_PATHS, BUILTIN_SHAPES } from '../../../../core/src/providers';
 import { compileToScene } from '../../../src/compile';
 
 describe('提供者键契约', () => {

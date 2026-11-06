@@ -94,33 +94,6 @@ Node.position 可省略，Core 解析时使用局部原点 [0, 0]；直接 schem
   }}
 />
 
-## NodeLabelBoundaryPositionSchema
-
-<ZodSchema
-  name="NodeLabelBoundaryPositionSchema"
-  description="标签在盒状节点某条边界上的附着位置"
-  descriptions={{
-    boundary: '用于附着标签的标准边界方向',
-    fraction: '沿所选边的 0–1 比例位置，缺省 0.5',
-  }}
-/>
-
-## NodeLabelPinSchema
-
-<ZodSchema
-  name="NodeLabelPinSchema"
-  description="外侧节点标签的引线样式"
-  descriptions={{
-    opacity: '与宿主透明度相乘的引线因子；省略时使用标签有效透明度，不受行或片段影响',
-    stroke: '引线颜色或由标签主色派生的权重',
-    strokeWidth: '引线宽度，单位为用户单位；默认 1',
-    dashPattern: '引线虚线段与间隔长度',
-    dashOffset: '虚线起点偏移，允许正数、零或负数',
-    lineCap: '描边端帽形状',
-    lineJoin: '描边拐角连接形状',
-  }}
-/>
-
 ## CoordinateSchema
 
 <ZodSchema

@@ -1,8 +1,8 @@
-﻿import { BUILTIN_ARROWS, BUILTIN_PATTERNS, BUILTIN_CLIPS } from '@retikz/core';
-import type { MarkEmitContext, PatternEmitContext, ScenePrimitive } from '@retikz/core';
+﻿import type { MarkEmitContext, PatternEmitContext, ScenePrimitive } from '@retikz/core';
 import { expect } from 'vitest';
 
 import { defineBenchmark } from '../../../../../scripts/benchmarks/scenario';
+import { BUILTIN_ARROWS, BUILTIN_PATTERNS, BUILTIN_CLIPS } from '../../src/providers';
 import { resolveMarkRegistry } from '../../src/providers/mark';
 
 /** 每个内置外观保留一个带显式描边的代表输入 */

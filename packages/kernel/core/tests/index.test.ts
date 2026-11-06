@@ -2,14 +2,8 @@ import { describe, expect, it } from 'vitest';
 import type { ZodType } from 'zod';
 import { toJSONSchema } from 'zod';
 
-import {
-  ArrowShapeSchema,
-  BuiltinArrowShape,
-  BuiltinShape,
-  BuiltinPatternShape,
-  PatternShapeNameSchema,
-  ShapeNameSchema,
-} from '../src';
+import { BuiltinArrowShape, BuiltinShape, BuiltinPatternShape, PatternShapeNameSchema, ShapeNameSchema } from '../src';
+import { ArrowShapeSchema } from '../src/schemas';
 
 const expectOpenStringSchema = (schema: ZodType, values: ReadonlyArray<string>): void => {
   expect(toJSONSchema(schema)).toMatchObject({

@@ -1,10 +1,11 @@
 import type { CompileWarning, IRScene } from '@retikz/core';
-import { BUILTIN_SHAPES, CompositeBaseSchema, defineComposite, defineShape } from '@retikz/core';
+import { CompositeBaseSchema, defineComposite, defineShape } from '@retikz/core';
 import type { ReconcilerResult, RuntimeScenePrimitive } from '@retikz/reconciler';
 import { createFullSceneRuntimeSnapshot, ReconcilerSession } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject, string } from 'zod';
 
+import { BUILTIN_SHAPES } from '../../../core/src/providers';
 import { compileToScene } from '../../src/compile';
 
 const sceneWithText = (text: string): IRScene => ({

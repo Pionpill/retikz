@@ -576,26 +576,6 @@ export type ShapeCircumscribedGeometry = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"BUILTIN_BOUNDARIES"} path={"packages/kernel/core/src/providers/boundary.ts"} startLine={105}>BUILTIN_BOUNDARIES</ApiSourceLink>
-
-```ts
-export const BUILTIN_BOUNDARIES: ReadonlyMap<string, BoundaryDefinition> = new Map([
-  [circleBoundary.name, circleBoundary],
-  [rectangleBoundary.name, rectangleBoundary],
-  [ellipseBoundary.name, ellipseBoundary],
-]);
-```
-
-#### <ApiSourceLink label={"BUILTIN_SHAPES"} path={"packages/kernel/core/src/providers/shape/shape.ts"} startLine={8}>BUILTIN_SHAPES</ApiSourceLink>
-
-```ts
-export const BUILTIN_SHAPES: ReadonlyMap<string, ShapeDefinition> = new Map([
-  [rectangle.name, rectangle],
-  [ellipseShape.name, ellipseShape],
-  [polygon.name, polygon],
-]);
-```
-
 #### <ApiSourceLink label={"defineBoundary"} path={"packages/kernel/core/src/contract/node/boundary.ts"} startLine={51}>defineBoundary</ApiSourceLink>
 
 Add the result to CompileOptions.boundaries so nodes or path endpoints can reference its name through boundary. This function does not register the boundary or parse instance parameters
@@ -869,14 +849,6 @@ export type IRNodeStyle = ZodInfer<typeof NodeStyleSchema>;
 #### <ApiSourceLink label={"NodeSchema"} path={"packages/kernel/core/src/schemas/node/node.ts"} startLine={190}>NodeSchema</ApiSourceLink>
 
 <ZodSchema name="NodeSchema" />
-
-#### <ApiSourceLink label={"NodeLabelBoundaryPositionSchema"} path={"packages/kernel/core/src/schemas/node/label.ts"} startLine={41}>NodeLabelBoundaryPositionSchema</ApiSourceLink>
-
-<ZodSchema name="NodeLabelBoundaryPositionSchema" />
-
-#### <ApiSourceLink label={"NodeLabelPinSchema"} path={"packages/kernel/core/src/schemas/node/label.ts"} startLine={49}>NodeLabelPinSchema</ApiSourceLink>
-
-<ZodSchema name="NodeLabelPinSchema" />
 
 #### <ApiSourceLink label={"BoundarySchema"} path={"packages/kernel/core/src/schemas/node/boundary.ts"} startLine={31}>BoundarySchema</ApiSourceLink>
 

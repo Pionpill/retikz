@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { IRClip, IRScene } from '../../../../core/src';
-import { BUILTIN_ARROWS, BUILTIN_CLIPS, BUILTIN_SHAPES } from '../../../../core/src';
+import { BUILTIN_ARROWS, BUILTIN_CLIPS, BUILTIN_SHAPES } from '../../../../core/src/providers';
 import { compileToScene } from '../../../src/compile';
 
 const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: 'scene', children });

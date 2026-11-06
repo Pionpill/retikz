@@ -13,7 +13,7 @@ For initial setup, see [Basic usage](/kernel/components/layout/usage). React pro
 
 ## Component declarations
 
-#### <ApiSourceLink label={"Layout"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={403}>Layout</ApiSourceLink> / <ApiSourceLink label={"LayoutProps"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={226}>LayoutProps</ApiSourceLink>
+#### <ApiSourceLink label={"Layout"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={402}>Layout</ApiSourceLink> / <ApiSourceLink label={"LayoutProps"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={225}>LayoutProps</ApiSourceLink>
 
 Declare drawings through children or pass a complete scene through ir; ir takes precedence when both are supplied. Subsequent updates use retained mode by default; runtime can select static mode for full compilation.
 
@@ -97,7 +97,7 @@ export type LayoutProps = {
 
 ## Execution and supporting contracts
 
-#### <ApiSourceLink label={"LayoutExtensions"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={180}>LayoutExtensions</ApiSourceLink>
+#### <ApiSourceLink label={"LayoutExtensions"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={179}>LayoutExtensions</ApiSourceLink>
 
 Pass these options through the extensions prop of Layout. Each field accepts an array of definitions; these runtime definitions are excluded from persisted scene data.
 
@@ -109,14 +109,14 @@ Pass these options through the extensions prop of Layout. Each field accepts an 
 
 | Member                       | Type                                    | Default                   | Description                                |
 | ---------------------------- | --------------------------------------- | ------------------------- | ------------------------------------------ |
-| `readonly arrows?`           | `ReadonlyArray<ArrowDefinition>`        | `BUILTIN_ARROWS`          | Arrow definitions                          |
-| `readonly boundaries?`       | `ReadonlyArray<BoundaryDefinition>`     | `BUILTIN_BOUNDARIES`      | Connection boundary definitions            |
-| `readonly clips?`            | `ReadonlyArray<ClipDefinition>`         | `BUILTIN_CLIPS`           | Clip definitions                           |
+| `readonly arrows?`           | `ReadonlyArray<ArrowDefinition>`        | `undefined`               | Arrow definitions                          |
+| `readonly boundaries?`       | `ReadonlyArray<BoundaryDefinition>`     | `undefined`               | Connection boundary definitions            |
+| `readonly clips?`            | `ReadonlyArray<ClipDefinition>`         | `undefined`               | Clip definitions                           |
 | `readonly composites?`       | `ReadonlyArray<AnyCompositeDefinition>` | `[]`                      | Tier 2 composite expansion logic           |
 | `readonly marks?`            | `ReadonlyArray<MarkDefinition>`         | —                         | Definitions of markers placed along a path |
-| `readonly paths?`            | `ReadonlyArray<AnyPathDefinition>`      | `BUILTIN_PATHS`           | Path definitions                           |
-| `readonly patterns?`         | `ReadonlyArray<PatternDefinition>`      | `BUILTIN_PATTERNS`        | Pattern definitions                        |
-| `readonly shapes?`           | `ReadonlyArray<ShapeDefinition>`        | `BUILTIN_SHAPES`          | Shape definitions                          |
+| `readonly paths?`            | `ReadonlyArray<AnyPathDefinition>`      | `undefined`               | Path definitions                           |
+| `readonly patterns?`         | `ReadonlyArray<PatternDefinition>`      | `undefined`               | Pattern definitions                        |
+| `readonly shapes?`           | `ReadonlyArray<ShapeDefinition>`        | `undefined`               | Shape definitions                          |
 | `readonly themeDefinitions?` | `ReadonlyArray<ThemeDefinition>`        | `ThemeDefinitionsContext` | Theme definitions                          |
 
 </ApiTable>
@@ -279,7 +279,7 @@ export const LayoutRuntimeMode = Object.freeze({
 export type LayoutRuntimeMode = ValueOf<typeof LayoutRuntimeMode>;
 ```
 
-#### <ApiSourceLink label={"scene"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={108}>scene</ApiSourceLink>
+#### <ApiSourceLink label={"scene"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={110}>scene</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 

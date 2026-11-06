@@ -579,26 +579,6 @@ export type ShapeCircumscribedGeometry = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"BUILTIN_BOUNDARIES"} path={"packages/kernel/core/src/providers/boundary.ts"} startLine={105}>BUILTIN_BOUNDARIES</ApiSourceLink>
-
-```ts
-export const BUILTIN_BOUNDARIES: ReadonlyMap<string, BoundaryDefinition> = new Map([
-  [circleBoundary.name, circleBoundary],
-  [rectangleBoundary.name, rectangleBoundary],
-  [ellipseBoundary.name, ellipseBoundary],
-]);
-```
-
-#### <ApiSourceLink label={"BUILTIN_SHAPES"} path={"packages/kernel/core/src/providers/shape/shape.ts"} startLine={8}>BUILTIN_SHAPES</ApiSourceLink>
-
-```ts
-export const BUILTIN_SHAPES: ReadonlyMap<string, ShapeDefinition> = new Map([
-  [rectangle.name, rectangle],
-  [ellipseShape.name, ellipseShape],
-  [polygon.name, polygon],
-]);
-```
-
 #### <ApiSourceLink label={"defineBoundary"} path={"packages/kernel/core/src/contract/node/boundary.ts"} startLine={51}>defineBoundary</ApiSourceLink>
 
 将返回值加入 CompileOptions.boundaries 后，节点或路径端点可通过 boundary 引用其 name。此函数不注册连接面，也不解析实例参数
@@ -870,23 +850,23 @@ export type IRNodeLayout = ZodInfer<typeof NodeLayoutSchema>;
 
 <ApiTable>
 
-| 成员           | 类型                                                                                                                                                                                                                                                                                  | 默认值 | 说明                                                                   |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------- |
-| `blendMode?`   | `"normal" \| "color" \| "multiply" \| "screen" \| "overlay" \| "darken" \| "lighten" \| "color-dodge" \| "color-burn" \| "hard-light" \| "soft-light" \| "difference" \| "exclusion" \| "hue" \| "saturation" \| "luminosity"`                                                        | —      | 图元与背景的混合模式                                                   |
-| `color?`       | `string`                                                                                                                                                                                                                                                                              | —      | 图元主色，未单独覆盖的描边、填充和标签可由它派生                       |
-| `dashed?`      | `false \| true`                                                                                                                                                                                                                                                                       | —      | 虚线预设，被显式 dashPattern 覆盖                                      |
-| `dashOffset?`  | `number`                                                                                                                                                                                                                                                                              | —      | 虚线起点偏移，允许正数、零或负数                                       |
-| `dashPattern?` | `Array<number>`                                                                                                                                                                                                                                                                       | —      | 显式虚线段与间隔长度，优先于 dashed 和 dotted                          |
-| `dotted?`      | `false \| true`                                                                                                                                                                                                                                                                       | —      | 点线预设，被 dashPattern 或 dashed 覆盖                                |
-| `fill?`        | `ZodInfer<typeof NodeStyleSchema.shape["fill"]>`                                                                                                                                                                                                                                      | —      | 填充：精确颜色、主色权重或 Paint                                       |
-| `font?`        | `{ family?: string \| undefined; size?: string \| number \| undefined; weight?: number \| "normal" \| "bold" \| undefined; style?: "normal" \| "italic" \| "oblique" \| undefined; }`                                                                                                 | —      | 正文字体覆盖，缺省字段沿用文字默认值                                   |
-| `lineCap?`     | `"butt" \| "round" \| "square"`                                                                                                                                                                                                                                                       | —      | 描边端帽形状                                                           |
-| `lineJoin?`    | `"round" \| "miter" \| "bevel"`                                                                                                                                                                                                                                                       | —      | 描边拐角连接形状                                                       |
-| `opacity?`     | `number \| { overall?: number \| undefined; fill?: number \| undefined; stroke?: number \| undefined; }`                                                                                                                                                                              | —      | 整体透明度或独立的 overall、fill、stroke 因子                          |
-| `shadow?`      | `"none" \| "sm" \| "lg" \| "xl" \| "2xl" \| "md" \| { preset?: "none" \| "sm" \| "lg" \| "xl" \| "2xl" \| "md" \| undefined; offsetX?: number \| undefined; offsetY?: number \| undefined; blur?: number \| undefined; color?: string \| undefined; opacity?: number \| undefined; }` | —      | 投影预设或投影配置，不影响节点形状尺寸                                 |
-| `stroke?`      | `ZodInfer<typeof NodeStyleSchema.shape["stroke"]>`                                                                                                                                                                                                                                    | —      | 描边：精确颜色、主色权重或 Paint                                       |
-| `strokeWidth?` | `number`                                                                                                                                                                                                                                                                              | —      | 边框宽度，单位为用户单位；省略时默认 1                                 |
-| `textColor?`   | `string \| number`                                                                                                                                                                                                                                                                    | —      | 文字颜色或主色权重；contrast 根据静态填充选择黑白，缺省为 currentColor |
+| 成员           | 类型                                                                                                                                                                                                                                                                                  | 默认值 | 说明                                                                           |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------ |
+| `blendMode?`   | `"normal" \| "color" \| "multiply" \| "screen" \| "overlay" \| "darken" \| "lighten" \| "color-dodge" \| "color-burn" \| "hard-light" \| "soft-light" \| "difference" \| "exclusion" \| "hue" \| "saturation" \| "luminosity"`                                                        | —      | 图元与背景的混合模式                                                           |
+| `color?`       | `string`                                                                                                                                                                                                                                                                              | —      | 主色，描边、填充、标签与箭头可继承，独立设置优先                               |
+| `dashed?`      | `false \| true`                                                                                                                                                                                                                                                                       | —      | 虚线预设，被显式 dashPattern 覆盖                                              |
+| `dashOffset?`  | `number`                                                                                                                                                                                                                                                                              | —      | 虚线起点偏移，允许正数、零或负数                                               |
+| `dashPattern?` | `Array<number>`                                                                                                                                                                                                                                                                       | —      | 显式虚线段与间隔长度，优先于 dashed 和 dotted                                  |
+| `dotted?`      | `false \| true`                                                                                                                                                                                                                                                                       | —      | 点线预设，被 dashPattern 或 dashed 覆盖                                        |
+| `fill?`        | `ZodInfer<typeof NodeStyleSchema.shape["fill"]>`                                                                                                                                                                                                                                      | —      | 填充颜色或绘制对象                                                             |
+| `font?`        | `{ family?: string \| undefined; size?: string \| number \| undefined; weight?: number \| "normal" \| "bold" \| undefined; style?: "normal" \| "italic" \| "oblique" \| undefined; }`                                                                                                 | —      | 内容文字的字体设置，省略字段沿用文字默认                                       |
+| `lineCap?`     | `"butt" \| "round" \| "square"`                                                                                                                                                                                                                                                       | —      | 描边端帽形状                                                                   |
+| `lineJoin?`    | `"round" \| "miter" \| "bevel"`                                                                                                                                                                                                                                                       | —      | 描边拐角连接形状                                                               |
+| `opacity?`     | `number \| { overall?: number \| undefined; fill?: number \| undefined; stroke?: number \| undefined; }`                                                                                                                                                                              | —      | 单元格整体透明度                                                               |
+| `shadow?`      | `"none" \| "sm" \| "lg" \| "xl" \| "2xl" \| "md" \| { preset?: "none" \| "sm" \| "lg" \| "xl" \| "2xl" \| "md" \| undefined; offsetX?: number \| undefined; offsetY?: number \| undefined; blur?: number \| undefined; color?: string \| undefined; opacity?: number \| undefined; }` | —      | 投影预设或投影配置，不影响节点形状尺寸                                         |
+| `stroke?`      | `ZodInfer<typeof NodeStyleSchema.shape["stroke"]>`                                                                                                                                                                                                                                    | —      | 描边颜色或绘制对象                                                             |
+| `strokeWidth?` | `number`                                                                                                                                                                                                                                                                              | —      | 边框宽度，单位为用户单位；省略时默认 1                                         |
+| `textColor?`   | `string \| number`                                                                                                                                                                                                                                                                    | —      | 文字颜色；数字由有效主色派生，contrast 根据静态填充选黑或白，默认 currentColor |
 
 </ApiTable>
 
@@ -952,33 +932,6 @@ export type IRNodeStyle = ZodInfer<typeof NodeStyleSchema>;
     layout: '节点尺寸、间距与文字排布配置',
     meta: '透传至输出图元的 JSON 元数据，不参与编译计算',
     animations: '元素动画轨道，透传至输出图元，不参与布局且不跨 Scope 继承',
-  }}
-/>
-
-#### <ApiSourceLink label={"NodeLabelBoundaryPositionSchema"} path={"packages/kernel/core/src/schemas/node/label.ts"} startLine={41}>NodeLabelBoundaryPositionSchema</ApiSourceLink>
-
-<ZodSchema
-  name="NodeLabelBoundaryPositionSchema"
-  description="标签在盒状节点某条边界上的附着位置"
-  descriptions={{
-    boundary: '用于附着标签的标准边界方向',
-    fraction: '沿所选边的 0–1 比例位置，缺省 0.5',
-  }}
-/>
-
-#### <ApiSourceLink label={"NodeLabelPinSchema"} path={"packages/kernel/core/src/schemas/node/label.ts"} startLine={49}>NodeLabelPinSchema</ApiSourceLink>
-
-<ZodSchema
-  name="NodeLabelPinSchema"
-  description="外侧节点标签的引线样式"
-  descriptions={{
-    opacity: '与宿主透明度相乘的引线因子；省略时使用标签有效透明度，不受行或片段影响',
-    stroke: '引线颜色或由标签主色派生的权重',
-    strokeWidth: '引线宽度，单位为用户单位；默认 1',
-    dashPattern: '引线虚线段与间隔长度',
-    dashOffset: '虚线起点偏移，允许正数、零或负数',
-    lineCap: '描边端帽形状',
-    lineJoin: '描边拐角连接形状',
   }}
 />
 

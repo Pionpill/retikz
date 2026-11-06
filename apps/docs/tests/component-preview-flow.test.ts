@@ -1,10 +1,11 @@
 import type { IRScene } from '@retikz/core';
-import { resolveCoreThemeColors, ThemeMode } from '@retikz/core';
+import { ThemeMode } from '@retikz/core';
 import { createFlowDiagramProviderContribution, FlowDiagramSchema } from '@retikz/diagram/flow';
 import { compositeOpaqueColor } from '@retikz/foundation';
 import type { FC } from 'react';
 import { describe, expect, it } from 'vitest';
 
+import { resolveCoreThemeColors } from '../../../packages/kernel/core/src/providers';
 import { getPreviewControlFields } from '../src/modules/docs/components/component-preview/controls';
 import { PreviewThemeDefinitionBundle } from '../src/modules/docs/components/component-preview/theme';
 import type { PreviewIR } from '../src/modules/docs/components/component-preview/utils';

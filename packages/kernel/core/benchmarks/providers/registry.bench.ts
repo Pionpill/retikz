@@ -1,10 +1,4 @@
 ﻿import {
-  BUILTIN_ARROWS,
-  BUILTIN_BOUNDARIES,
-  BUILTIN_CLIPS,
-  BUILTIN_PATHS,
-  BUILTIN_PATTERNS,
-  BUILTIN_SHAPES,
   resolveArrowRegistry,
   resolveBoundaryRegistry,
   resolveClipRegistry,
@@ -19,6 +13,14 @@ import { expect } from 'vitest';
 import { strictObject, string } from 'zod';
 
 import { defineBenchmark } from '../../../../../scripts/benchmarks/scenario';
+import {
+  BUILTIN_ARROWS,
+  BUILTIN_BOUNDARIES,
+  BUILTIN_CLIPS,
+  BUILTIN_PATHS,
+  BUILTIN_PATTERNS,
+  BUILTIN_SHAPES,
+} from '../../src/providers';
 import { resolveMarkRegistry } from '../../src/providers/mark';
 import { createProviderRegistry, getProviderDefinition } from '../../src/providers/registry';
 

@@ -1,14 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-import {
-  AxisLineStepSchema,
-  ContextualColorSchema,
-  CoordinateSchema,
-  MoveStepSchema,
-  RelativeTargetSchema,
-  SceneSchema,
-} from '@retikz/core';
+import { AxisLineStepSchema, ContextualColorSchema, CoordinateSchema, MoveStepSchema, SceneSchema } from '@retikz/core';
 import { TransformSchema } from '@retikz/data';
 import {
   BlockHeaderSchema,
@@ -37,6 +30,8 @@ import { z } from 'zod';
 
 import { lookupSchema, SCHEMA_REGISTRY } from '@/modules/docs/components';
 import { expandMdxIncludes } from '@/modules/docs/lib';
+
+import { RelativeTargetSchema } from '../../../packages/kernel/core/src/schemas';
 
 describe('SCHEMA_REGISTRY', () => {
   it('包含文档中声明的 Kernel、Data、Table 和 Plot schema 接口', () => {

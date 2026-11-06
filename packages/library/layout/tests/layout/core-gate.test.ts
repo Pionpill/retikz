@@ -1,6 +1,5 @@
 import type { IRChild, IRScene, LayoutChildResult, LayoutProposal, ScenePrimitive, TextMeasurer } from '@retikz/core';
 import {
-  BUILTIN_SHAPES,
   BuiltinLayoutAlignmentGuideName,
   ChildSchema,
   CompositeBaseSchema,
@@ -17,6 +16,8 @@ import type { CompileOptions } from '@retikz/reconciler';
 import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject, enum as zodEnum } from 'zod';
+
+import { BUILTIN_SHAPES } from '../../../../kernel/core/src/providers';
 
 const fixedMeasurer: TextMeasurer = text => ({
   width: [...text].length * 10,

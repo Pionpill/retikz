@@ -18,7 +18,6 @@ import type {
   TextMeasurer,
 } from '../../../../core/src';
 import {
-  BUILTIN_SHAPES,
   BuiltinCompileWarningCode,
   ChildSchema,
   CompositeBaseSchema,
@@ -37,6 +36,7 @@ import {
 } from '../../../../core/src';
 import { createCompileInvariantError, snapshotProviderPosition } from '../../../../core/src/compile/shared';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../../core/src/error';
+import { BUILTIN_SHAPES } from '../../../../core/src/providers';
 import { isLayoutProbeRecoverableError } from '../../../../core/src/resolve';
 import { cloneAndFreezeJson } from '../../../../core/src/shared';
 import { compileToScene } from '../../../src/compile';

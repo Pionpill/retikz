@@ -1,8 +1,8 @@
-import { BUILTIN_SHAPES } from '@retikz/core';
 import type { JsonObject } from '@retikz/foundation';
 import { expect } from 'vitest';
 
 import { defineBenchmark } from '../../../../../scripts/benchmarks/scenario';
+import { BUILTIN_SHAPES } from '../../src/providers';
 
 /** 典型形态与单个 polygon 的边数参考，不枚举所有方法和参数组合 */
 const cases: Array<{ name: string; params: JsonObject }> = [

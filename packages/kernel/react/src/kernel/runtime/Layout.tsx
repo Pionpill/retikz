@@ -179,34 +179,34 @@ const canonicalizeDefinitionArray = <TDefinition extends object>(
 export type LayoutExtensions = Readonly<{
   /**
    * 形状定义
-   * @default BUILTIN_SHAPES
+   * @default undefined
    */
   shapes?: ReadonlyArray<ShapeDefinition>;
   /**
    * 连接表面定义
-   * @default BUILTIN_BOUNDARIES
+   * @default undefined
    */
   boundaries?: ReadonlyArray<BoundaryDefinition>;
   /**
    * 裁剪定义
-   * @default BUILTIN_CLIPS
+   * @default undefined
    */
   clips?: ReadonlyArray<ClipDefinition>;
   /**
    * 箭头定义
-   * @default BUILTIN_ARROWS
+   * @default undefined
    */
   arrows?: ReadonlyArray<ArrowDefinition>;
   /** 沿路径放置的标记定义 */
   marks?: ReadonlyArray<MarkDefinition>;
   /**
    * 图案定义
-   * @default BUILTIN_PATTERNS
+   * @default undefined
    */
   patterns?: ReadonlyArray<PatternDefinition>;
   /**
    * 路径定义
-   * @default BUILTIN_PATHS
+   * @default undefined
    */
   paths?: ReadonlyArray<AnyPathDefinition>;
   /**

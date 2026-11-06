@@ -15,10 +15,6 @@ describe('核心公共编译导出', () => {
     expect(core.ThemeSchema).toBeDefined();
     expect('Theme' in core).toBe(false);
     expect(core.ThemeMode).toBeDefined();
-    expect(core.ThemeTokenSource).toEqual({
-      Inherit: 'inherit',
-      Local: 'local',
-    });
   });
 
   it('使用 Foundation 来共享 schema 基元', () => {

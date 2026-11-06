@@ -1,9 +1,7 @@
 import { projectNodeGeometry } from '@retikz/core';
 import type { CompileOutput, IRCoordinate, IRNode, IRPathBase, IRScope, ShapeDefinition } from '@retikz/core';
 import {
-  BUILTIN_SHAPES,
   projectReferenceGeometry,
-  calculateCompileOutputBounds,
   projectLayoutWithTransform,
   composeScopeTransform,
   resolveScopeInheritance,
@@ -11,6 +9,8 @@ import {
 } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
+import { calculateCompileOutputBounds } from '../../../core/src/compile';
+import { BUILTIN_SHAPES } from '../../../core/src/providers';
 import type { SharedCompileContext } from '../../src/compile';
 import { assembleSceneCompilationSnapshot, compileToScene, createSharedCompileContext } from '../../src/compile';
 import { compareReferenceGeometry } from '../../src/compile/compare';

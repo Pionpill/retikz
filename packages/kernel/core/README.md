@@ -36,9 +36,9 @@ Most users consume core indirectly through [`@retikz/react`](https://www.npmjs.c
 - Layout-aware composite authoring — `layoutChild(child, proposal)` evaluates two-axis `minimum` / `natural` / `range` / `exact` proposals and returns a resolved `slotSize`, real allocation / visual bounds, alignment guides, or an isolated failure; `context.replay()` / `context.raise()` select one callback-local transaction without adding runtime handles to IR or Scene
 - IR & `Scene` zod schemas + inferred types
 - Authoring parsers `parseWay` / `parseNodeTarget` / `parseTargetSugar` are provided by `@retikz/vanilla`; Core consumes their structured IR output
-- `point` / `rect` / `circle` / `ellipse` / `diamond` / `polar` — geometry
-- Provider registries and definition helpers for `shapes`, `boundaries`, `clips`, `arrows`, `patterns`, `pathGenerators`, `paths`, and `composites`
-- Built-in provider collections such as `BUILTIN_SHAPES`, `BUILTIN_BOUNDARIES`, `BUILTIN_CLIPS`, `BUILTIN_ARROWS`, `BUILTIN_PATTERNS`, `BUILTIN_PATH_GENERATORS`, and `BUILTIN_PATHS`; optional kinds such as Ribbon come from `@retikz/extension` and are injected through `paths` or a provider contribution
+- `rect` / `polar` — Core geometry helpers; general calculations are provided by `@retikz/math`
+- Provider registries and definition helpers for `shapes`, `boundaries`, `clips`, `arrows`, `patterns`, `paths`, and `composites`
+- `resolveShapeRegistry`, `resolveBoundaryRegistry`, `resolveClipRegistry`, `resolveArrowRegistry`, `resolvePatternRegistry`, and `resolvePathRegistry` combine built-in and custom definitions; optional kinds such as Ribbon come from `@retikz/extension` and are injected through `paths` or a provider contribution
 
 ## Docs
 
