@@ -166,3 +166,23 @@ describe('resolveDropShadow', () => {
     expect(resolveDropShadow('none')).toBeUndefined();
   });
 });
+
+describe('路径主色的延迟消费', () => {
+  it.each([
+    ['cascade-only', undefined, { style: { color: 'gold' } }, 'gold'],
+    ['pathDefault-only', undefined, { path: { style: { color: 'purple' } } }, 'purple'],
+    [
+      'instance override',
+      { color: 'teal' },
+      { style: { color: 'gold' }, path: { style: { color: 'purple' } } },
+      'teal',
+    ],
+  ])('保持 %s 颜色有效，直到所选路径消费它', (_, style, defaults, color) => {
+    const resolved = mergePathStyle(
+      { type: 'path', kind: 'custom', children: [], style },
+      resolveScopeDefaults(defaults),
+    );
+    expect(resolved.style?.color).toBe(color);
+    expect(resolved.style?.stroke).toBeUndefined();
+  });
+});

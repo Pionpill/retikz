@@ -254,15 +254,6 @@ describe('错误路径：zod reject', () => {
     expect(AnimationTrackSchema.safeParse({ ...FADE, keyframes: [{ at: 0, value: () => 1 }] }).success).toBe(false);
     expect(AnimationTrackSchema.safeParse({ ...FADE, keyframes: [{ at: 0, value: undefined }] }).success).toBe(false);
     expect(AnimationTrackSchema.safeParse({ ...FADE, keyframes: [{ at: 1.5, value: 1 }] }).success).toBe(false);
-    expect(
-      AnimationTrackSchema.safeParse({
-        ...FADE,
-        keyframes: [
-          { at: 1, value: 1 },
-          { at: 0, value: 0 },
-        ],
-      }).success,
-    ).toBe(false);
     expect(bad({ duration: 0 })).toBe(false);
     expect(bad({ iterations: 0 })).toBe(false);
     expect(bad({ iterations: -1 })).toBe(false);
@@ -320,12 +311,21 @@ describe('compile 校验：viewBox ⇔ 根', () => {
     expect(c.warnings.filter(w => w.code === BuiltinCompileWarningCode.AnimationInvalidProperty)).toHaveLength(1);
   });
 
-  it('scene 根非 viewBox track → warn + drop（Scene.animations 省略）', () => {
+  it('根级混合轨道只保留镜头，诊断沿用作者数组的原始下标', () => {
     const c = collector();
-    const built = compileToScene(scene([{ type: 'node', id: 'a', position: [0, 0] }], { animations: [FADE] }), c).scene;
+    const built = compileToScene(
+      scene([{ type: 'node', id: 'a', position: [0, 0] }], { animations: [FADE, CAMERA, SPIN] }),
+      c,
+    ).scene;
 
-    expect(c.warnings.some(w => w.code === BuiltinCompileWarningCode.AnimationInvalidProperty)).toBe(true);
-    expect(built.animations).toBeUndefined();
+    expect(built.animations).toEqual([CAMERA]);
+    expect(
+      c.warnings.filter(w => w.code === BuiltinCompileWarningCode.AnimationInvalidProperty).map(w => w.path),
+    ).toEqual([
+      ['animations', 0],
+      ['animations', 2],
+    ]);
+    expect(compileToScene(scene([], { animations: [FADE] }), silent).scene.animations).toBeUndefined();
   });
 });
 

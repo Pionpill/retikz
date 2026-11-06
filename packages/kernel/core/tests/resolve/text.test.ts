@@ -1,13 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { BuiltinCompileWarningCode } from '../../src/compile/shared';
-import {
-  parseInlineSegments,
-  resolveFont,
-  resolveFontSize,
-  resolveTextBlock,
-  resolveTextLineHeight,
-} from '../../src/resolve/text';
+import { resolveFont, resolveFontSize, resolveTextBlock, resolveTextLineHeight } from '../../src/resolve/text';
 
 /** 经文本块解析消费单个作者行 */
 const resolveTestLine = (
@@ -164,9 +158,5 @@ describe('解析文本', () => {
   it('使用继承的字体大小来省略行高', () => {
     expect(resolveTextLineHeight(undefined, 20)).toBe(24);
     expect(resolveTextLineHeight(30, 20)).toBe(30);
-  });
-
-  it('保持内联解析器对文本解析器所属模块可用', () => {
-    expect(parseInlineSegments('$x$', true)).toEqual({ segments: [{ tex: 'x' }], hasMath: true, warn: false });
   });
 });

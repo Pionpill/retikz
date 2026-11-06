@@ -4,7 +4,7 @@ import type { IRPathBase, IRScene, IRStep } from '../../../../core/src/schemas';
 import {
   resolvePathWithBuiltinProviders,
   resolveStrokePathWithBuiltinProviders,
-} from '../../../../core/tests/resolve/path/path-helper';
+} from '../../../../core/tests/resolve/path-helper';
 import { compileToScene } from '../../../src/compile';
 
 const path = (overrides: Partial<IRPathBase> = {}): IRPathBase => ({

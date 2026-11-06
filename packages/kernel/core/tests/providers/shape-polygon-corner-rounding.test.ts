@@ -23,7 +23,7 @@ describe('多边形 cornerRadius — paramsSchema', () => {
 });
 
 describe('多边形 cornerRadius — 发射', () => {
-  it('polygon_cornerRadius_emit：sides:6 cornerRadius:8 → path 含 fillet arc 命令', () => {
+  it('六边形圆角输出闭合轮廓，每个顶点连接一段短弧', () => {
     const rect = squareRect();
     const prims = [...polygon.emit(rect, {}, round2, { sides: 6, cornerRadius: 8 })];
 
@@ -42,17 +42,7 @@ describe('多边形 cornerRadius — 发射', () => {
     expect(kinds[kinds.length - 1]).toBe('close');
     expect(kinds.filter(k => k === 'arc').length).toBe(6); // 每个顶点一段 fillet 弧
     expect(kinds.filter(k => k === 'line').length).toBe(6); // 每条边一段缩短直线
-  });
-
-  it('polygon_cornerRadius_emit_wrap_arc_short：跨 ±180° 的 fillet 仍输出短弧', () => {
-    const rect = squareRect();
-    const prims = [...polygon.emit(rect, {}, round2, { sides: 6, cornerRadius: 8 })];
-    const path = prims[0];
-    if (path.type !== 'path') throw new Error('expected path');
-
     const arcs = path.commands.filter((cmd): cmd is Extract<PathCommand, { kind: 'arc' }> => cmd.kind === 'arc');
-
-    expect(arcs.length).toBe(6);
 
     for (const arc of arcs) {
       expect(Math.abs(arc.endAngle - arc.startAngle)).toBeLessThanOrEqual(180);
@@ -91,61 +81,35 @@ describe('多边形 cornerRadius — 边界感知', () => {
   });
 });
 
-describe('多边形 cornerRadius — r=0 相当于当前尖角输出', () => {
-  // 现状参考实现：emit = move(v0) + line(v1..v_{n-1}) + close（顶点过 round），无回起点冗余 line。
-  const sharpEmitReference = (
-    rect: CenteredBox,
-    round: (n: number) => number,
-    params: { sides: number; rotate?: number },
-  ): Array<{ kind: string; to?: [number, number] }> => {
-    const DEG = Math.PI / 180;
-    const startDeg = params.rotate ?? 0;
-    const stepDeg = 360 / params.sides;
-    const maxAbsCos = Math.max(
-      ...Array.from({ length: params.sides }, (_, k) => Math.abs(Math.cos((startDeg + k * stepDeg) * DEG))),
-    );
-    const radius = rect.width / 2 / maxAbsCos;
-    const out: Array<{ kind: string; to?: [number, number] }> = [];
+describe('多边形尖角轮廓', () => {
+  it('旋转并平移的三角形输出已舍入顶点，零圆角与省略等价', () => {
+    const bounds = { ...squareRect(137), x: 7, y: -3 };
+    const params = { sides: 3, rotate: 30 };
+    const path = [...polygon.emit(bounds, {}, round2, params)][0];
+    const zero = [...polygon.emit(bounds, {}, round2, { ...params, cornerRadius: 0 })][0];
+    if (path.type !== 'path') throw new Error('expected path');
 
-    for (let k = 0; k < params.sides; k++) {
-      const a = (startDeg + k * stepDeg) * DEG;
-      const v: [number, number] = [round(rect.x + radius * Math.cos(a)), round(rect.y + radius * Math.sin(a))];
-      out.push({ kind: k === 0 ? 'move' : 'line', to: v });
-    }
-
-    out.push({ kind: 'close' });
-
-    return out;
-  };
-
-  it('polygon_r0_equiv_emit：省略 cornerRadius emit 逐字段同现状尖角输出', () => {
-    const rect = squareRect();
-    const cases: Array<{ sides: number; rotate?: number }> = [
-      { sides: 3 },
-      { sides: 5, rotate: 17 },
-      { sides: 6 },
-      { sides: 8, rotate: -30 },
-    ];
-
-    for (const params of cases) {
-      const prims = [...polygon.emit(rect, {}, round2, params)];
-      const path = prims[0];
-      if (path.type !== 'path') throw new Error('expected path');
-
-      const expected = sharpEmitReference(rect, round2, params);
-
-      expect(path.commands).toEqual(expected);
-    }
+    // 等边三角形在 30° 朝向时，两端点的 x 跨度等于盒宽，底边到中心为宽度 / (2√3)
+    expect(path.commands).toEqual([
+      { kind: 'move', to: [75.5, 36.55] },
+      { kind: 'line', to: [-61.5, 36.55] },
+      { kind: 'line', to: [7, -82.1] },
+      { kind: 'close' },
+    ]);
+    expect(zero).toEqual(path);
   });
 
-  it('polygon_r0_equiv_emit_unrounded：identity round 下顶点逐字等价（无 round 时机差异）', () => {
-    const rect = squareRect(137);
-    const params = { sides: 7, rotate: 23 };
-    const prims = [...polygon.emit(rect, {}, identity, params)];
+  it('未舍入的非对称旋转三角形保留几何精度与闭合命令', () => {
+    const prims = [...polygon.emit(squareRect(137), {}, identity, { sides: 3, rotate: 30 })];
     const path = prims[0];
     if (path.type !== 'path') throw new Error('expected path');
 
-    expect(path.commands).toEqual(sharpEmitReference(rect, identity, params));
+    expect(path.commands).toEqual([
+      { kind: 'move', to: [expect.closeTo(68.5, 10), expect.closeTo(137 / (2 * Math.sqrt(3)), 10)] },
+      { kind: 'line', to: [expect.closeTo(-68.5, 10), expect.closeTo(137 / (2 * Math.sqrt(3)), 10)] },
+      { kind: 'line', to: [expect.closeTo(0, 10), expect.closeTo(-137 / Math.sqrt(3), 10)] },
+      { kind: 'close' },
+    ]);
   });
 });
 

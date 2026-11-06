@@ -23,7 +23,7 @@ describe('rectangle cornerRadius — emit 仍 RectPrimitive', () => {
 
     if (prim.type !== 'rect') throw new Error('expected rect');
 
-    // params.cornerRadius 优先于 style（顶层迁移回退）
+    // 圆角由形状参数决定，绘制样式不改变几何
     expect(prim.cornerRadius).toBe(8);
   });
 
@@ -92,39 +92,21 @@ describe('rectangle cornerRadius — r=0 等价于现状矩形边求交', () => 
     [-640, -90],
   ];
 
-  it('rect_r0_boundary_equiv：省略 cornerRadius 多方向 = rect.boundaryPoint', () => {
-    const rect = aaRect(120, 80);
-
+  it.each([
+    { name: '轴对齐', bounds: aaRect(120, 80) },
+    { name: '旋转与平移', bounds: { x: 10, y: -5, width: 120, height: 80, rotate: 0.6 } },
+  ])('$name 下省略与零圆角均保持尖角矩形交点', ({ bounds }) => {
+    const sharpParameterVariants: Array<Parameters<typeof rectangle.computeBoundaryPoint>[2]> = [
+      {},
+      { cornerRadius: 0 },
+    ];
     for (const toward of towards) {
-      const expected = sharpRectangleBoundary(rect, toward);
-      const got = rectangle.computeBoundaryPoint(rect, toward, {});
-
-      expect(got[0]).toBeCloseTo(expected[0], 9);
-      expect(got[1]).toBeCloseTo(expected[1], 9);
-    }
-  });
-
-  it('rect_r0_boundary_equiv_zero：cornerRadius:0 与省略一致', () => {
-    const rect = aaRect(120, 80);
-
-    for (const toward of towards) {
-      const omitted = rectangle.computeBoundaryPoint(rect, toward, {});
-      const zero = rectangle.computeBoundaryPoint(rect, toward, { cornerRadius: 0 });
-
-      expect(zero[0]).toBeCloseTo(omitted[0], 9);
-      expect(zero[1]).toBeCloseTo(omitted[1], 9);
-    }
-  });
-
-  it('rect_r0_boundary_equiv_rotated：带 rotate 的 rect 下省略 cornerRadius 仍 = rect.boundaryPoint', () => {
-    const rect: CenteredBox = { x: 10, y: -5, width: 120, height: 80, rotate: 0.6 };
-
-    for (const toward of towards) {
-      const expected = sharpRectangleBoundary(rect, toward);
-      const got = rectangle.computeBoundaryPoint(rect, toward, {});
-
-      expect(got[0]).toBeCloseTo(expected[0], 9);
-      expect(got[1]).toBeCloseTo(expected[1], 9);
+      const expected = sharpRectangleBoundary(bounds, toward);
+      for (const params of sharpParameterVariants) {
+        const got = rectangle.computeBoundaryPoint(bounds, toward, params);
+        expect(got[0]).toBeCloseTo(expected[0], 9);
+        expect(got[1]).toBeCloseTo(expected[1], 9);
+      }
     }
   });
 });

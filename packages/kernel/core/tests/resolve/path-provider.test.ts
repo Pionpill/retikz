@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { literal, strictObject, string } from 'zod';
 
 import { definePath, PathSchema, resolveArrowRegistry, resolvePathRegistry } from '../../src';
+import { resolveScopeDefaults } from '../../src/resolve/style';
 import type { IRPathBase } from '../../src/schemas';
 import { resolvePathWithBuiltinProviders, resolveStrokePathWithBuiltinProviders } from './path-helper';
 
@@ -137,5 +138,25 @@ describe('解析/路径提供者绑定', () => {
         arrowRegistry: resolveArrowRegistry([arrow]),
       }),
     ).toThrow(/resolved visual back.*non-finite/i);
+  });
+});
+
+describe('继承样式后的路径中断', () => {
+  it('在拒绝请求的标签中断之前使用级联填充', () => {
+    expect(() =>
+      resolvePathWithBuiltinProviders(
+        {
+          type: 'path',
+          label: { text: 'filled', interrupt: true },
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+          ],
+        },
+        {
+          scopeDefaults: resolveScopeDefaults({ path: { style: { fill: 'red' } } }),
+        },
+      ),
+    ).toThrow(/label\.interrupt.*filled stroke path/i);
   });
 });
