@@ -149,9 +149,38 @@ pnpm --filter @retikz/core exec vitest bench --run --config vitest.bench.config.
 
 正式命令沿用Vite源码加载，用于本机探索；原生ESM报告另记录当前源码叶入口构建、产物external与transform哨兵证据，不能跨加载环境直接计算收益
 
+## Scope 编译与阶段复用
+
+[scope.bench.ts](./compile/scope.bench.ts) 共44项，输入由[_scope-workloads.ts](./_scope-workloads.ts)通过真实resolver、位置上下文与裁剪资源表在计时外准备。测量Scope自身，不递归编译children，不包含Reconciler的依赖追踪、失效判断、排序或输出事务
+
+| 操作           | 输入与复用组合                                                                            | 场景数 | P90警告/错误                                 |
+| -------------- | ----------------------------------------------------------------------------------------- | -----: | -------------------------------------------- |
+| 完整编译       | rectangle32/1024、circle128，各none/envelope/preparation/placement/layout/all             |     18 | 32项0.1/0.5ms，大档0.5/2ms                   |
+| 裁剪编译       | rectangle32、128命令规范裁剪路径，none/clip/layout+clip/all                               |      4 | 0.1/0.5ms                                    |
+| 空Scope        | 无layouts、变换或裁剪                                                                     |      1 | 0.1/0.5ms                                    |
+| 子布局包络     | rectangle32/1024、circle16/128                                                            |      4 | 小档0.05/0.2ms，大档0.5/2ms                  |
+| 放置准备与收尾 | 原点pivot准备、包络pivot最终放置，各3/24项含引用变换                                      |      4 | 0.02/0.1ms                                   |
+| 发布布局       | 匿名32/1024子布局、命名单包络1项                                                          |      3 | 匿名小0.05/0.2ms，大0.5/2ms；命名0.01/0.05ms |
+| 输出边界投影   | 普通32/1024贡献带shadow，装饰8/128贡献受真实clip裁剪                                      |      4 | 小0.05/0.2ms，大0.5/2ms                      |
+| 真实更新       | 移动复用envelope、子布局平移复用preparation、动画收尾复用layout+clip，各完整重算/部分复用 |      6 | 0.1/0.5ms                                    |
+
+固定布局顺序：前两个坐标(110,20)/(-90,20)支撑半径100的最小圆，其余坐标、6×8节点位于内部；节点带左右4、上下2的margin，部分旋转π/6。rectangle的极值由对跖坐标和上下旋转节点共同确定，使用独立角点展开及手算AABB验证；circle同时校验支撑直径与全部角点包含。16/128圆包络用于避免盲目扩大有序最小圆输入，不代表全部分布或复杂度上限
+
+背景BoundaryStore与裁剪资源均在计时外准备为暖态；无prepared只关闭Core阶段复用。各档消费同一最终输入，有效部分产物来自真实编译，all只复用Core自身layout/emit，不代表Weave完整命中。空clip对象是有效无裁剪结果，资源恢复归调用方。动画收尾只复用layout/clip并输出当前动画，移动不复用旧放置，子布局变化不复用旧包络/pivot
+
+一次样本调用一次完整操作。输入、resolve、预期、prepared构造与断言不计时，本操作拥有的循环、矩阵合成、分配和裁剪登记计时。命名发布仅投影1个包络，不将被忽略的子布局标为规模。普通bounds只变换并透传shadow，装饰bounds受clip约束
+
+每项10预热+100正式、110协议调用；每轮4400正式样本、4840调用，两轮8800样本、9680调用；额外fixture准备调用不混算。预算首次采样前固定，是消费规划假设，未取得业务遥测，不启用CI阻断、不更新历史基线
+
+```bash
+pnpm --filter @retikz/core exec vitest bench --run --config vitest.bench.config.ts benchmarks/compile/scope.bench.ts --fsModuleCache=false
+```
+
+此命令使用Vite源码加载；原生ESM报告另记录当前源码叶入口构建、external与transform哨兵、源码/fixture/配置/产物指纹。不同加载环境不得直接比较
+
 ## 测量边界
 
-当前覆盖 `src/providers`、`src/resolve`、`src/contract` 的代表操作，以及 `src/compile` 的资源注册表、文本、Scene、共享、Boundary、Reference与Node操作，不调用 `compileToScene`。shape / arrow / mark 的 iterable 在计时内完整消费，包含该操作自身的计算与分配。
+当前覆盖 `src/providers`、`src/resolve`、`src/contract` 的代表操作，以及 `src/compile` 的资源注册表、文本、Scene、共享、Boundary、Reference、Node与Scope操作，不调用 `compileToScene`。shape / arrow / mark 的 iterable 在计时内完整消费，包含该操作自身的计算与分配。
 
 - Scene 图元生成属于编译计算；SVG 字符串生成、Canvas 绘制、DOM 更新、浏览器布局与绘制均不计入。
 - 不接入 `@retikz/render`、React/Vanilla renderer 或浏览器。Runtime / Reconciler 调度、增量更新与生命周期不属于本目录。

@@ -70,6 +70,15 @@ export const lowerScopeTransforms = (
 ): Array<Transform> | null => {
   const { positionContext, onUnresolved, intrinsicContext: intrinsicContext } = context;
   const out: Array<Transform> = [];
+  let lastPivot: IRScopeSelfPoint | undefined;
+  let lastPivotPosition: IRPosition | undefined;
+  /** ⚡同次降解共用连续相同pivot的求值，不跨调用缓存或绕过shape锚点语义 */
+  const resolvePivot = (pivot: IRScopeSelfPoint): IRPosition => {
+    if (pivot === lastPivot && lastPivotPosition !== undefined) return lastPivotPosition;
+    lastPivot = pivot;
+    lastPivotPosition = evaluateScopeSelfPoint(pivot, intrinsicContext);
+    return lastPivotPosition;
+  };
 
   for (const t of transforms) {
     switch (t.kind) {
@@ -90,7 +99,7 @@ export const lowerScopeTransforms = (
       case 'rotate': {
         const r: Transform = { kind: 'rotate', degrees: t.degrees };
         if (t.pivot !== undefined && t.pivot !== 'origin') {
-          const [cx, cy] = evaluateScopeSelfPoint(t.pivot, intrinsicContext);
+          const [cx, cy] = resolvePivot(t.pivot);
           r.cx = cx;
           r.cy = cy;
         }
@@ -106,7 +115,7 @@ export const lowerScopeTransforms = (
           break;
         }
 
-        const [px, py] = evaluateScopeSelfPoint(t.pivot, intrinsicContext);
+        const [px, py] = resolvePivot(t.pivot);
         if (px === 0 && py === 0) {
           out.push(s);
           break;

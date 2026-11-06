@@ -28,6 +28,46 @@ export const resolveCoreBudget = (scenario: BenchmarkScenario): BenchmarkBudget 
       rationale:
         '一次工作区或结果组装中的完整注册表生命周期，包含创建及N次登记/导入；假设10次为局部编辑（1/4ms），100次为普通更新（4/8ms），1000次为大批资源处理（8/16.6ms）。该阶段接近一帧即有同步阻塞风险，复杂Pattern不放宽预算；不含输入解析和renderer，不代表整帧保证或稳定回归上限',
     };
+  } else if (layer === 'compile' && family === 'scope') {
+    const count = Number(scale);
+    const complete = /^complete-(rectangle|circle)-(none|envelope|preparation|placement|layout|all)$/.test(variant);
+    const clipped = /^clipped-(none|clip|layout\+clip|all)$/.test(variant);
+    const envelope = /^envelope-(rectangle|circle)$/.test(variant);
+    const placement = variant === 'prepare' || variant === 'placement';
+    const publish = /^publish-(anonymous|named)$/.test(variant);
+    const bounds = /^bounds-(layout|decoration)$/.test(variant);
+    const update = /^update-(move|children|animation)-(none|partial)$/.test(variant);
+    const empty = variant === 'empty' && count === 0;
+    const valid = complete
+      ? variant.includes('circle')
+        ? count === 128
+        : [32, 1024].includes(count)
+      : clipped || update
+        ? count === 32
+        : envelope
+          ? variant.endsWith('circle')
+            ? [16, 128].includes(count)
+            : [32, 1024].includes(count)
+          : placement
+            ? [3, 24].includes(count)
+            : publish
+              ? variant.endsWith('named') && !variant.endsWith('anonymous')
+                ? count === 1
+                : [32, 1024].includes(count)
+              : bounds
+                ? variant.endsWith('decoration')
+                  ? [8, 128].includes(count)
+                  : [32, 1024].includes(count)
+                : empty;
+    if (!valid) throw new Error(`Missing Core scope operation budget: ${identity}`);
+    const named = variant === 'publish-named';
+    const large = complete ? count > 32 : (envelope || publish || bounds) && (count === 1024 || count === 128);
+    policy = {
+      warningMs: placement ? 0.02 : named ? 0.01 : large ? 0.5 : envelope || publish || bounds ? 0.05 : 0.1,
+      errorMs: placement ? 0.1 : named ? 0.05 : large ? 2 : envelope || publish || bounds ? 0.2 : 0.5,
+      rationale:
+        'Core一次Scope自身编译或完整阶段，不含子树递归、resolve、fixture和调用方失效/资源恢复。规划假设100个普通Scope完整编译10/50ms，20个复杂Scope10/40ms；100次小包络、匿名发布或输出投影5/20ms，单个复杂聚合0.5/2ms；100次前置/最终放置2/10ms，100次命名单包络发布1/5ms。32子布局更新按普通Scope，16/128圆包络和1024矩形子布局是固定代表分布，同输入prepared各档预算相同。资源暖态但登记仍计时，命名规模为实际投影数1；缺少业务遥测，不表示业务硬上限或整帧保证，不按测量值放宽',
+    };
   } else if (layer === 'compile' && family === 'node') {
     const count = Number(scale);
     const complete =

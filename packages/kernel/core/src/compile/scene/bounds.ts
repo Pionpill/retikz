@@ -386,14 +386,7 @@ const calculatePrimitiveBounds = (
     );
     if (bounds === undefined) return undefined;
     if (primitive.clipRef !== undefined) {
-      const resource = resources.get(primitive.clipRef);
-      if (resource === undefined || resource.kind !== 'clip') {
-        throw createCompileInvariantError(
-          `Cannot resolve clip resource '${primitive.clipRef}' for canonical visual bounds`,
-        );
-      }
-
-      const clip = calculatePathBounds(resource.path.commands);
+      const clip = resolveGroupClipBounds(primitive.clipRef, resources);
       if (clip !== undefined && (clip.width === 0 || clip.height === 0)) return undefined;
       if (clip !== undefined) bounds = intersectBoundsRects(bounds, clip);
       if (bounds === undefined) return undefined;
@@ -424,6 +417,23 @@ export const calculateBoundsOfPrimitives = (
   );
   if (bounds === undefined) return undefined;
 
+  return finalizeVisualBounds(bounds);
+};
+
+/** 查询分组裁剪资源并保持路径的保守包络语义 */
+const resolveGroupClipBounds = (
+  clipRef: string,
+  resources: ReadonlyMap<string, SceneResource>,
+): BoundsRect | undefined => {
+  const resource = resources.get(clipRef);
+  if (resource === undefined || resource.kind !== 'clip') {
+    throw createCompileInvariantError(`Cannot resolve clip resource '${clipRef}' for canonical visual bounds`);
+  }
+  return calculatePathBounds(resource.path.commands);
+};
+
+/** 验证可见边界及派生边沿，统一冻结与负零规范化 */
+const finalizeVisualBounds = (bounds: BoundsRect): Readonly<BoundsRect> => {
   const right = bounds.x + bounds.width;
   const bottom = bounds.y + bounds.height;
   if (
@@ -435,6 +445,32 @@ export const calculateBoundsOfPrimitives = (
   }
 
   return canonicalizeBoundsRect(bounds);
+};
+
+/** 包内分组矩形投影器；一次消费共享裁剪准备，不持有跨次缓存 */
+export const createGroupBoundsProjector = (
+  group: Omit<GroupPrimitive, 'children'>,
+  resources: ReadonlyArray<SceneResource>,
+): ((bounds: BoundsRect) => Readonly<BoundsRect> | undefined) => {
+  let prepared = false;
+  let clip: BoundsRect | undefined;
+  return bounds => {
+    // ⚡整组贡献只索引资源并扫描裁剪一次；延迟到首个非空装饰以保留报错时点
+    if (!prepared) {
+      if (group.clipRef !== undefined) {
+        clip = resolveGroupClipBounds(group.clipRef, new Map(resources.map(resource => [resource.id, resource])));
+      }
+      prepared = true;
+    }
+    if (clip !== undefined && (clip.width === 0 || clip.height === 0)) return undefined;
+    const visible = clip === undefined ? bounds : intersectBoundsRects(bounds, clip);
+    if (visible === undefined) return undefined;
+    const projected =
+      group.transforms === undefined || group.transforms.length === 0
+        ? visible
+        : projectRect(visible, group.transforms);
+    return projected === undefined ? undefined : finalizeVisualBounds(projected);
+  };
 };
 
 /** 汇总输出的可见布局边界，保留各项阴影扩张语义 */

@@ -5,13 +5,26 @@ import { createCompileInvariantError } from '../shared';
 export const serializeResourceContent = (value: unknown): string =>
   JSON.stringify(value, (_key, current: unknown) => {
     if (current === null || typeof current !== 'object' || Array.isArray(current)) return current;
-    return Object.fromEntries(
-      Object.keys(current)
-        .sort()
-        .map(key => [key, Reflect.get(current, key)]),
-    );
+    const keys = Object.keys(current);
+    const prototype: unknown = Object.getPrototypeOf(current);
+    let ordered = true;
+    for (let index = 1; index < keys.length; index++) {
+      if (keys[index - 1] > keys[index]) {
+        ordered = false;
+        break;
+      }
+    }
+    // ⚡字段已有稳定顺序的JSON对象直接交给原生序列化，避免逐命令重建与排序
+    if (ordered && (prototype === Object.prototype || prototype === null)) return current;
+    const sorted: Record<string, unknown> = {};
+    for (const key of keys.sort()) {
+      const entry: unknown = Reflect.get(current, key);
+      if (key === '__proto__')
+        Object.defineProperty(sorted, key, { value: entry, enumerable: true, configurable: true, writable: true });
+      else sorted[key] = entry;
+    }
+    return sorted;
   });
-
 /** 对规范内容的 UTF-16LE 字节计算 FNV-1a 128 位摘要，生成与注册顺序无关的资源 ID */
 export const formatResourceId = (kind: SceneResource['kind'], content: string): string => {
   // 四个小端 32 位字保存状态；素数为 2^88 + 315，乘积与进位均处于精确整数范围

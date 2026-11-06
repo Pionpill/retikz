@@ -32,28 +32,20 @@ const assertFiniteScopePoint = (point: IRPosition, label: string): void => {
 /** anchor position self point：anchor 在 transformed envelope 上解析；origin / 显式点先按 own chain 投影 */
 const evaluateTransformedSelfPoint = (
   point: IRScopeSelfPoint,
-  transformedContext: CompiledBoundaryGeometry,
+  intrinsicContext: CompiledBoundaryGeometry,
   scopeTransforms: ReadonlyArray<Transform>,
 ): IRPosition => {
-  if (typeof point === 'string') {
-    if (point !== 'origin') {
-      const finitePoint: IRPosition = evaluateAnchorReference(transformedContext, point);
-      assertFiniteScopePoint(finitePoint, 'scope position selfAnchor');
-      return finitePoint;
-    }
-
-    const finitePoint: IRPosition = applyTransformChain([0, 0], scopeTransforms);
-    assertFiniteScopePoint(finitePoint, 'scope position selfAnchor');
-    return finitePoint;
+  let finitePoint: IRPosition;
+  // ⚡原点和显式self点只需逐项变换，包络锚点才合成矩阵并投影整个几何
+  if (point === 'origin') finitePoint = applyTransformChain([0, 0], scopeTransforms);
+  else if (Array.isArray(point)) finitePoint = applyTransformChain([point[0], point[1]], scopeTransforms);
+  else {
+    const transformedContext =
+      scopeTransforms.length === 0
+        ? intrinsicContext
+        : projectLayoutWithTransform(intrinsicContext, composeScopeTransform(scopeTransforms));
+    finitePoint = evaluateAnchorReference(transformedContext, point);
   }
-
-  if (Array.isArray(point)) {
-    const finitePoint: IRPosition = applyTransformChain([point[0], point[1]], scopeTransforms);
-    assertFiniteScopePoint(finitePoint, 'scope position selfAnchor');
-    return finitePoint;
-  }
-
-  const finitePoint: IRPosition = evaluateAnchorReference(transformedContext, point);
   assertFiniteScopePoint(finitePoint, 'scope position selfAnchor');
   return finitePoint;
 };
@@ -93,13 +85,9 @@ export const lowerScopePlacementTransforms = (
   }
   if (positionTarget === undefined) return scopeTransforms;
 
-  const transformedContext =
-    scopeTransforms.length === 0
-      ? intrinsicContext
-      : projectLayoutWithTransform(intrinsicContext, composeScopeTransform(scopeTransforms));
   const selfPoint = evaluateTransformedSelfPoint(
     (!Array.isArray(child.position) ? child.position?.selfAnchor : undefined) ?? 'center',
-    transformedContext,
+    intrinsicContext,
     scopeTransforms,
   );
   const alignment: Transform = {
