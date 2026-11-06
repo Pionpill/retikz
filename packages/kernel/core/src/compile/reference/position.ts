@@ -1,15 +1,43 @@
 import { pointAtArcAngle } from '@retikz/math';
 
 import type { IRPosition } from '../../schemas';
-import {
-  anchorUnitVectorByAnchor,
-  isAtPositionLike,
-  isBetweenPositionLike,
-  isOffsetPositionLike,
-  isPositionTuple,
-} from '../../shared';
+import { anchorUnitVectorByAnchor } from '../../shared';
 import { referencePositionOf } from './geometry';
 import type { PositionEvaluation, PositionEvaluateContext, EvaluablePosition } from './types';
+
+/** ⚡递归只求消费者需要的局部点，避免为中间原点生成世界点与结果对象 */
+const evaluateLocalPosition = (position: EvaluablePosition, context: PositionEvaluateContext): IRPosition | null => {
+  if (typeof position === 'string') {
+    const reference = context.lookupReference(position, 'position');
+    return reference === undefined ? null : context.toLocal(referencePositionOf(reference.geometry));
+  }
+
+  // ⚡消费已类型化的位置union，只按结构分支，不在每层重复校验字段值
+  if (Array.isArray(position)) return [position[0], position[1]];
+  if ('direction' in position) {
+    const reference = context.lookupReference(position.of, 'position');
+    if (reference === undefined) return null;
+
+    const referenceLocal = context.toLocal(referencePositionOf(reference.geometry));
+    const distance = position.distance ?? context.nodeDistance;
+    const [dx, dy] = anchorUnitVectorByAnchor[position.direction];
+    return [referenceLocal[0] + dx * distance, referenceLocal[1] + dy * distance];
+  }
+
+  if ('of' in position) {
+    const base = evaluateLocalPosition(position.of, context);
+    return base === null ? null : [base[0] + position.offset[0], base[1] + position.offset[1]];
+  }
+
+  if ('between' in position) {
+    const worldPoint = context.evaluateBetweenWorld?.(position);
+    return worldPoint === null || worldPoint === undefined ? null : context.toLocal(worldPoint);
+  }
+
+  const origin =
+    position.origin === undefined ? ([0, 0] satisfies IRPosition) : evaluateLocalPosition(position.origin, context);
+  return origin === null ? null : pointAtArcAngle(origin, position.radius, position.angle);
+};
 
 /**
  * 将位置配置解析为当前作用域的局部坐标与世界坐标
@@ -20,51 +48,21 @@ export const evaluatePosition = (
   position: EvaluablePosition,
   context: PositionEvaluateContext,
 ): PositionEvaluation | null => {
-  /** 为局部坐标点补上对应的世界坐标 */
-  const evaluateLocalPoint = (localPoint: IRPosition): PositionEvaluation => ({
-    localPoint,
-    worldPoint: context.toWorld(localPoint),
-  });
-
-  /** 为世界坐标点补上对应的局部坐标 */
-  const evaluateWorldPoint = (worldPoint: IRPosition): PositionEvaluation => ({
-    localPoint: context.toLocal(worldPoint),
-    worldPoint,
-  });
-
   if (typeof position === 'string') {
     const reference = context.lookupReference(position, 'position');
     if (reference === undefined) return null;
-    return evaluateWorldPoint(referencePositionOf(reference.geometry));
+    const worldPoint = referencePositionOf(reference.geometry);
+    return { localPoint: context.toLocal(worldPoint), worldPoint };
   }
 
-  if (isPositionTuple(position)) return evaluateLocalPoint([position[0], position[1]]);
-  if (isAtPositionLike(position)) {
-    const reference = context.lookupReference(position.of, 'position');
-    if (reference === undefined) return null;
-
-    const referenceLocal = context.toLocal(referencePositionOf(reference.geometry));
-    const distance = position.distance ?? context.nodeDistance;
-    const [dx, dy] = anchorUnitVectorByAnchor[position.direction];
-
-    return evaluateLocalPoint([referenceLocal[0] + dx * distance, referenceLocal[1] + dy * distance]);
-  }
-
-  if (isOffsetPositionLike(position)) {
-    const base = evaluatePosition(position.of, context);
-    if (base === null) return null;
-
-    return evaluateLocalPoint([base.localPoint[0] + position.offset[0], base.localPoint[1] + position.offset[1]]);
-  }
-
-  if (isBetweenPositionLike(position)) {
+  // 根级世界点直接保留，避免局部往返改变原引用或插值结果
+  if ('between' in position) {
     const worldPoint = context.evaluateBetweenWorld?.(position);
-    return worldPoint === null || worldPoint === undefined ? null : evaluateWorldPoint(worldPoint);
+    return worldPoint === null || worldPoint === undefined
+      ? null
+      : { localPoint: context.toLocal(worldPoint), worldPoint };
   }
 
-  const origin =
-    position.origin === undefined ? evaluateLocalPoint([0, 0]) : evaluatePosition(position.origin, context);
-  if (origin === null) return null;
-
-  return evaluateLocalPoint(pointAtArcAngle(origin.localPoint, position.radius, position.angle));
+  const localPoint = evaluateLocalPosition(position, context);
+  return localPoint === null ? null : { localPoint, worldPoint: context.toWorld(localPoint) };
 };

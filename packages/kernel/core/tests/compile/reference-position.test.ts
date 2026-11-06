@@ -150,6 +150,35 @@ describe('evaluatePosition', () => {
   it('引用不存在时返回 null', () => {
     expect(evaluatePosition({ direction: 'top', of: 'missing' }, contextOf())).toBeNull();
   });
+
+  it('嵌套原点从世界空间转到局部后应用偏移，直接世界结果保留原点身份', () => {
+    const world: IRPosition = [120, 80];
+    const context: PositionTargetEvaluateContext = {
+      ...contextOf([{ state: 'resolved', geometry: { position: world }, id: 'A' }]),
+      toLocal: point => [(point[0] - 100) / -2, (point[1] - 50) / 3],
+      toWorld: point => [100 - 2 * point[0], 50 + 3 * point[1]],
+      evaluateBetweenWorld: () => world,
+    };
+    const between = { between: [{ id: 'A' }, { id: 'A' }], fraction: 0.5 } satisfies Parameters<
+      typeof evaluatePosition
+    >[0];
+
+    expect(evaluatePosition('A', context)?.worldPoint).toBe(world);
+    expect(evaluatePosition(between, context)?.worldPoint).toBe(world);
+    expect(evaluatePosition({ of: { origin: 'A', radius: 2, angle: 90 }, offset: [3, -1] }, context)).toEqual({
+      localPoint: [-7, 11],
+      worldPoint: [114, 83],
+    });
+  });
+
+  it('递归原点无法解析时向外传播 null', () => {
+    const context = contextOf();
+    expect(
+      evaluatePosition({ origin: { origin: 'missing', radius: 2, angle: 0 }, radius: 2, angle: 0 }, context),
+    ).toBeNull();
+    expect(evaluatePosition({ of: 'missing', offset: [2, -1] }, context)).toBeNull();
+    expect(evaluatePosition({ between: [{ id: 'A' }, { id: 'B' }], fraction: 0.5 }, context)).toBeNull();
+  });
 });
 
 describe('evaluatePositionTarget', () => {

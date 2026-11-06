@@ -94,9 +94,38 @@ pnpm --filter @retikz/core exec vitest bench --run --config vitest.bench.config.
 pnpm --filter @retikz/core exec vitest bench --run --config vitest.bench.config.ts benchmarks/compile/shared-transform.bench.ts benchmarks/compile/shared-provider.bench.ts --fsModuleCache=false
 ```
 
+## Boundary 与 Reference
+
+[boundary.bench.ts](./compile/boundary.bench.ts)覆盖连接面完整消费，[reference.bench.ts](./compile/reference.bench.ts)覆盖位置、目标与引用求值；fixture分别位于[_boundary-workloads.ts](./_boundary-workloads.ts)、[_reference-workloads.ts](./_reference-workloads.ts)，混合变换复用既有Shared fixture
+
+| 模块      | 操作与输入                                                | 场景数 | P90警告/错误                             |
+| --------- | --------------------------------------------------------- | -----: | ---------------------------------------- |
+| Boundary  | 零margin、旋转90°非对称margin外扩                         |      2 | 2/10μs                                   |
+| Boundary  | 已准备24项链矩阵的完整布局投影，含contentCenter           |      1 | 5/20μs                                   |
+| Boundary  | 已发布布局再投影：3/24项父链、非交换本层3项               |      2 | 10/50μs                                  |
+| Boundary  | 视觉矩形、显式circle tight、ellipse bounds附着点          |      3 | 5/20μs                                   |
+| Boundary  | 16/1024顶点折线，一半内部前缀、非中心线段出界             |      2 | 50/200μs、500/2000μs                     |
+| Boundary  | 完整命名/角度/边比例锚点                                  |      3 | 5/20μs                                   |
+| Boundary  | store创建+首次锚点、已准备缓存查询                        |      2 | 5/20μs、2/10μs                           |
+| Reference | 无变换、预合成24项、内部合成24项的上下文创建              |      3 | 2/10μs、2/10μs、10/50μs                  |
+| Reference | tuple、命名引用、at、offset、3/24层polar、between位置     |      7 | 简单2/10μs，相对5/20μs，递归polar10/50μs |
+| Reference | 节点中心、预置命名/边比例锚点、显式连接面、1/4层between树 |      6 | 中心2/10μs，锚点5/20μs，between10/50μs   |
+| Reference | 目标世界坐标，含世界offset                                |      1 | 5/20μs                                   |
+| Reference | 坐标引用的已准备矩阵投影、3/24项父链下已发布坐标再投影    |      3 | 2/10μs、10/50μs                          |
+
+共35场景（Boundary15、Reference20），每场景10预热+100正式、110次协议内调用，全组3850调用、3500正式样本。一次样本只求值一个完整输入，不把多个查询外包成批量。缓存为BoundaryStore公开拥有的能力，first包含创建与完整首次求值；hit显式在计时外准备，不评测Reconciler跨次缓存。其它锚点目标和circle包络也明确预置缓存，不让正式样本随首轮执行切换工作负载
+
+已发布再投影使用不交换的父/本层矩阵，手算验证中心、内容中心和累计尺寸；位置与目标使用实际lookup/BoundaryStore/内置boundary resolver，验证局部点、世界点、原目标和直接引用身份，between不携带直接引用。4层between有16叶、31个表达式节点；polar为合法递归原点，不伪造嵌套offset。构造、参数解析、矩阵/缓存准备和结果断言在计时外，目标显式boundary的真实resolver解析属于该次目标求值并计时
+
+预算基于1000次简单查询、100次布局/复杂位置或单条复杂折线的阶段分配假设；3/24层及16/1024顶点均为规划输入，不表示实测业务上限。Core入口现沿用Vite源码探索配置，不能与原生ESM/浏览器或历史不同fixture直接比较；命名空间、依赖追踪、Node/Scope/Path完整编译与renderer不在计时内
+
+```bash
+pnpm --filter @retikz/core exec vitest bench --run --config vitest.bench.config.ts benchmarks/compile/boundary.bench.ts benchmarks/compile/reference.bench.ts --fsModuleCache=false
+```
+
 ## 测量边界
 
-当前覆盖 `src/providers`、`src/resolve`、`src/contract` 的代表操作，以及 `src/compile` 的资源注册表、文本、Scene和共享操作，不调用 `compileToScene`。shape / arrow / mark 的 iterable 在计时内完整消费，包含该操作自身的计算与分配。
+当前覆盖 `src/providers`、`src/resolve`、`src/contract` 的代表操作，以及 `src/compile` 的资源注册表、文本、Scene、共享、Boundary与Reference操作，不调用 `compileToScene`。shape / arrow / mark 的 iterable 在计时内完整消费，包含该操作自身的计算与分配。
 
 - Scene 图元生成属于编译计算；SVG 字符串生成、Canvas 绘制、DOM 更新、浏览器布局与绘制均不计入。
 - 不接入 `@retikz/render`、React/Vanilla renderer 或浏览器。Runtime / Reconciler 调度、增量更新与生命周期不属于本目录。

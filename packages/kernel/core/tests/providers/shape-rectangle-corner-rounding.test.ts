@@ -109,6 +109,13 @@ describe('rectangle cornerRadius — r=0 等价于现状矩形边求交', () => 
       }
     }
   });
+
+  it('中心同点和零尺寸矩形没有正向交点时返回中心', () => {
+    const bounds = { x: 10, y: 20, width: 80, height: 60, rotate: 0.6 };
+    expect(rectangle.computeBoundaryPoint(bounds, [10, 20], {})).toEqual([10, 20]);
+    expect(rectangle.computeBoundaryPoint({ ...bounds, width: 0 }, [200, 100], {})).toEqual([10, 20]);
+    expect(rectangle.computeBoundaryPoint({ ...bounds, height: 0 }, [200, 100], { cornerRadius: 0 })).toEqual([10, 20]);
+  });
 });
 
 describe('矩形圆角参数的缩放与输出', () => {

@@ -28,6 +28,118 @@ export const resolveCoreBudget = (scenario: BenchmarkScenario): BenchmarkBudget 
       rationale:
         '一次工作区或结果组装中的完整注册表生命周期，包含创建及N次登记/导入；假设10次为局部编辑（1/4ms），100次为普通更新（4/8ms），1000次为大批资源处理（8/16.6ms）。该阶段接近一帧即有同步阻塞风险，复杂Pattern不放宽预算；不含输入解析和renderer，不代表整帧保证或稳定回归上限',
     };
+  } else if (layer === 'compile' && family === 'boundary') {
+    const count = Number(scale);
+    const rationale =
+      'Core节点/作用域布局与路径目标逐次消费一次边界操作；假设1000次查询或100次布局准备，为后续路径几何和renderer保留时间。缓存属于BoundaryStore自身契约：first含store创建和首次完整求值，hit在计时外预置。规模和频率是规划假设，不表示已验证业务上限';
+    if (variant === 'clip-polyline') {
+      if (![16, 1024].includes(count)) throw new Error(`Missing Core boundary clipping budget: ${identity}`);
+      policy = {
+        warningMs: count === 16 ? 0.05 : 0.5,
+        errorMs: count === 16 ? 0.2 : 2,
+        rationale:
+          'PathTargetView对完整折线移除节点连接面内前缀；假设100条16顶点普通曲线各分配0.05/0.2ms（5/20ms阶段），单条1024顶点复杂折线分配0.5/2ms。固定一半内部顶点及一条非中心出界线段，包含扫描、provider求交和二分，不含调用方采样或坐标批量投影',
+      };
+    } else if (variant === 'project-published') {
+      if (![3, 24].includes(count)) throw new Error(`Missing Core published layout budget: ${identity}`);
+      policy = {
+        warningMs: 0.01,
+        errorMs: 0.05,
+        rationale: `${rationale}；一次已发布布局经过父链逆变换、本层3项和父链正变换，含内容中心；假设100个布局各10/50μs，阶段约1/5ms，不按父链长放宽`,
+      };
+    } else if (variant === 'project-prepared') {
+      if (count !== 24) throw new Error(`Missing Core prepared layout budget: ${identity}`);
+      policy = {
+        warningMs: 0.005,
+        errorMs: 0.02,
+        rationale: `${rationale}；矩阵已预置，单布局投影5/20μs，100个布局约0.5/2ms；包括输出分配、contentCenter及margin投影`,
+      };
+    } else {
+      if (
+        count !== 1 ||
+        ![
+          'expand-zero',
+          'expand-rotated',
+          'point-shape',
+          'point-circle',
+          'point-ellipse',
+          'anchor-named',
+          'anchor-angle',
+          'anchor-fraction',
+          'store-first',
+          'store-hit',
+        ].includes(variant)
+      )
+        throw new Error(`Missing Core boundary operation budget: ${identity}`);
+      const simple = variant.startsWith('expand-') || variant === 'store-hit';
+      policy = {
+        warningMs: simple ? 0.002 : 0.005,
+        errorMs: simple ? 0.01 : 0.02,
+        rationale: `${rationale}；简单矩形外扩或缓存查询按每次2/10μs，完整附着点/锚点/首次缓存求值按5/20μs；1000次分别对应2/10ms与5/20ms`,
+      };
+    }
+  } else if (layer === 'compile' && family === 'reference') {
+    const count = Number(scale);
+    const rationale =
+      'Core坐标、节点放置和路径目标消费一次完整引用/位置操作，引用Map与几何、作用域矩阵在计时外准备；不含Reconciler命名空间、依赖追踪或跨次缓存。假设1000次简单查询或100次复杂表达式求值，预算为规划分配，不表示已验证业务上限';
+    if (
+      variant === 'context-compose' ||
+      variant === 'project-published' ||
+      variant === 'position-polar' ||
+      variant === 'target-between'
+    ) {
+      const valid =
+        variant === 'context-compose'
+          ? count === 24
+          : variant === 'target-between'
+            ? [1, 4].includes(count)
+            : [3, 24].includes(count);
+      if (!valid) throw new Error(`Missing Core recursive reference budget: ${identity}`);
+      policy = {
+        warningMs: 0.01,
+        errorMs: 0.05,
+        rationale: `${rationale}；完整准备或递归表达式每次10/50μs，100次约1/5ms。polar为3/24层合法嵌套原点，between为1/4层二叉树（2/16叶）；再投影含3/24项父链与非交换本层3项，不以复杂度放宽同类预算`,
+      };
+    } else {
+      const simple = [
+        'context-empty',
+        'context-prepared',
+        'position-tuple',
+        'position-reference',
+        'target-center',
+        'project-coordinate',
+      ].includes(variant);
+      const valid =
+        variant === 'context-empty'
+          ? count === 0
+          : ['context-prepared', 'project-coordinate'].includes(variant)
+            ? count === 24
+            : count === 1;
+      if (
+        !valid ||
+        ![
+          'context-empty',
+          'context-prepared',
+          'position-tuple',
+          'position-reference',
+          'position-at',
+          'position-offset',
+          'position-between',
+          'target-center',
+          'target-anchor-cached',
+          'target-fraction-cached',
+          'target-explicit-boundary',
+          'target-world',
+          'project-coordinate',
+        ].includes(variant)
+      )
+        throw new Error(`Missing Core reference operation budget: ${identity}`);
+      policy = {
+        warningMs: simple ? 0.002 : 0.005,
+        errorMs: simple ? 0.01 : 0.02,
+        rationale: `${rationale}；简单上下文创建/坐标或中心查询/已准备矩阵投影每次2/10μs，完整相对位置与锚点目标每次5/20μs。显式边界包含真实resolver的查表与参数解析；锚点缓存预置但每次引用查询和坐标转换仍计时`,
+      };
+    }
   } else if (layer === 'compile' && family === 'shared-transform') {
     const count = Number(scale);
     if (variant === 'chain-forward' || variant === 'chain-inverse') {
