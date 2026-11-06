@@ -556,8 +556,7 @@ export const vizSection: Array<Section> = [
         label: 'viz.grammarCoordinate',
         sidebarGroup: 'viz.plotGrammar',
         children: [
-          { id: '2d', label: 'viz.grammarCoordinate2d', difficulty: DocDifficulty.Beginner },
-          { id: '1d', label: 'viz.grammarCoordinate1d', difficulty: DocDifficulty.Advanced },
+          { id: 'dimension', label: 'viz.grammarCoordinateDimension', difficulty: DocDifficulty.Beginner },
           { id: 'composition', label: 'viz.grammarCoordinateComposition', difficulty: DocDifficulty.Advanced },
           {
             id: 'custom-coordinate',

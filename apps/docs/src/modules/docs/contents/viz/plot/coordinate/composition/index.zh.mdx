@@ -5,6 +5,8 @@ description: 坐标组合在一张 Plot 中组织双轴、数据分面与共享�
 
 一张图有时需要同时表达不同单位、按类别拆成多个小图，或让多条指标轨道共享同一条时间轴。坐标组合提供三种直接写法：额外坐标轴、`<PlotFacet>` 分面和 `<PlotScaffold>` 共享轨道。
 
+先用[维度坐标系](/viz/plot/coordinate/dimension)确定图元怎样定位，再选择多个图层或区域之间的组织关系。
+
 ## 先选择结构
 
 | 你的数据关系                   | 推荐结构  | 适合原因                           |
@@ -25,6 +27,7 @@ description: 坐标组合在一张 Plot 中组织双轴、数据分面与共享�
 温度使用默认纵轴，降雨量使用右侧的 `rainfall` 纵轴。数据面板可以用来对照两个指标的量级。
 
 <ComponentPreview
+  mode="showcase"
   files={[
     'coordinate-composition-scopes',
     'coordinate-composition-scopes.preview.tsx',
@@ -46,6 +49,7 @@ description: 坐标组合在一张 Plot 中组织双轴、数据分面与共享�
 完成线使用底部的经过天数，预测线使用顶部的日历日期。两条线仍共享完成度纵轴。
 
 <ComponentPreview
+  mode="showcase"
   files={[
     'coordinate-composition-x-axis',
     'coordinate-composition-x-axis.preview.tsx',
@@ -65,6 +69,7 @@ description: 坐标组合在一张 Plot 中组织双轴、数据分面与共享�
 先尝试单行分面，再切换为行列网格。网格模式下可以保留缺失组合，并比较统一纵轴范围与各面板独立范围。
 
 <ComponentPreview
+  mode="showcase"
   files={[
     'coordinate-composition-facet',
     'coordinate-composition-facet.preview.tsx',
@@ -90,6 +95,7 @@ description: 坐标组合在一张 Plot 中组织双轴、数据分面与共享�
 `row` 和 `column` 也可以接收字段配置数组。数组顺序决定从外到内的分组层级，适合“地区 → 渠道”这类嵌套维度。
 
 <ComponentPreview
+  mode="showcase"
   files={[
     'coordinate-composition-facet-multilevel',
     'coordinate-composition-facet-multilevel.preview.tsx',
@@ -111,6 +117,7 @@ description: 坐标组合在一张 Plot 中组织双轴、数据分面与共享�
 三个指标共享交易日横轴，各自在独立纵向空间中绘制，适合时间对齐的运行指标。
 
 <ComponentPreview
+  mode="showcase"
   files={[
     'coordinate-composition-tracks',
     'coordinate-composition-tracks.preview.tsx',
@@ -128,6 +135,7 @@ description: 坐标组合在一张 Plot 中组织双轴、数据分面与共享�
 共享轨道也能使用 `polar2D`。此时多条径向轨道共享角度分类，每条轨道占据不同半径区间。
 
 <ComponentPreview
+  mode="showcase"
   files={[
     'coordinate-composition-tracks-polar',
     'coordinate-composition-tracks-polar.preview.tsx',
