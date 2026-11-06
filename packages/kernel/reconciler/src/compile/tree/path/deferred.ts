@@ -3,6 +3,7 @@ import type {
   IRPathBase,
   InputPathCompilation,
   LayoutBoundsContribution,
+  ScenePrimitive,
 } from '@retikz/core';
 import { compilePath, createPathTargetResolver, resolvePathAnimations, resolvePath } from '@retikz/core';
 
@@ -86,11 +87,15 @@ export const flushPendingPathEmissions = (
 ): void => {
   if (pendingPaths.length === 0) return;
 
+  // ⚡同一输出容器集中回填，避免每条 Path 从头查找并移动后续图元
+  const replacementsBySink = new Map<
+    Array<InternalScenePrimitive>,
+    Map<InternalScenePrimitive, ReadonlyArray<ScenePrimitive>>
+  >();
   runtime.state.execution.namespaceStack.setPhase('resolving');
 
   try {
     for (const pendingPath of pendingPaths) {
-      const targetResolver = createPathTargetResolver(chain => createTreePositionContext(runtime, chain));
       const { compiled } = runtime.state.execution.withWarningOccurrence(pendingPath.occurrence, () =>
         runCompileStage(
           pendingPath.cacheable ? runtime : { ...runtime, cache: undefined },
@@ -121,7 +126,8 @@ export const flushPendingPathEmissions = (
               canon: resolution,
               compiled: compilePath(resolution, {
                 ...pendingPath,
-                targetResolver,
+                // ⚡只有阶段实际执行时才创建解析器，整条缓存命中不承担准备成本
+                targetResolver: createPathTargetResolver(chain => createTreePositionContext(runtime, chain)),
                 registries: stageRuntime.context.registries,
                 ...stageRuntime.context.layout,
                 ...stageRuntime.context.host,
@@ -142,12 +148,13 @@ export const flushPendingPathEmissions = (
       const rawPrimitives = result?.primitives ?? [];
       const primitives =
         runtime.state.execution.provenanceTracker?.materializePrimitives(rawPrimitives) ?? rawPrimitives;
-      const idx = pendingPath.placeholderSlot.primitives.indexOf(pendingPath.placeholderSlot.placeholder);
-      if (idx === -1) {
-        throw createExecutionInvariantError('internal: path placeholder missing from its sink');
+      const { primitives: sink, placeholder } = pendingPath.placeholderSlot;
+      let replacements = replacementsBySink.get(sink);
+      if (replacements === undefined) {
+        replacements = new Map();
+        replacementsBySink.set(sink, replacements);
       }
-
-      pendingPath.placeholderSlot.primitives.splice(idx, 1, ...primitives);
+      replacements.set(placeholder, primitives);
       if (pendingPath.semanticOwner !== undefined) {
         runtime.state.execution.provenanceTracker?.recordPrimitives(primitives, pendingPath.semanticOwner, 'path');
       }
@@ -167,6 +174,21 @@ export const flushPendingPathEmissions = (
           skipAllocation: pendingPath.skipAllocation,
         });
       }
+    }
+    for (const [sink, replacements] of replacementsBySink) {
+      const materialized: Array<InternalScenePrimitive> = [];
+      for (const primitive of sink) {
+        const replacement = replacements.get(primitive);
+        if (replacement === undefined) materialized.push(primitive);
+        else {
+          for (const emitted of replacement) materialized.push(emitted);
+          replacements.delete(primitive);
+        }
+      }
+      if (replacements.size !== 0)
+        throw createExecutionInvariantError('internal: path placeholder missing from its sink');
+      for (let index = 0; index < materialized.length; index++) sink[index] = materialized[index];
+      sink.length = materialized.length;
     }
   } finally {
     runtime.state.execution.namespaceStack.setPhase('registering');

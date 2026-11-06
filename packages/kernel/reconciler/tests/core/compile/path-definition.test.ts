@@ -323,6 +323,49 @@ describe('Path 注册表', () => {
 });
 
 describe('Path 输出环绕', () => {
+  it('多路径回填保留空输出、多图元、普通图元和嵌套作用域的绘制顺序', () => {
+    const definition = definePath({
+      name: 'ordered',
+      schema: customPathSchema('ordered'),
+      compile: context => {
+        if (context.path.id === 'empty') return null;
+        const id = context.path.id ?? 'path';
+        return {
+          primitives: [0, 1].map(index => ({
+            type: 'rect' as const,
+            id: id + '-' + index,
+            x: index * 10,
+            y: 0,
+            width: 10,
+            height: 10,
+            fill: 'red',
+          })),
+          boundsPoints: [
+            [0, 0],
+            [20, 10],
+          ] as Array<IRPosition>,
+        };
+      },
+    });
+    const result = compileToScene(
+      scene([
+        { type: 'path', kind: 'ordered', id: 'a' },
+        { type: 'path', id: 'ordinary', children: steps },
+        { type: 'path', kind: 'ordered', id: 'empty' },
+        { type: 'scope', children: [{ type: 'path', kind: 'ordered', id: 'inner' }] },
+        { type: 'path', kind: 'ordered', id: 'b' },
+        { type: 'path', kind: 'ordered', id: 'front', zIndex: -1 },
+      ]),
+      { paths: [definition], padding: 0 },
+    );
+    expect(
+      flatten(result.scene.primitives)
+        .filter(p => p.type === 'rect')
+        .map(p => p.id),
+    ).toEqual(['front-0', 'front-1', 'a-0', 'a-1', 'inner-0', 'inner-1', 'b-0', 'b-1']);
+    expect(flatten(result.scene.primitives).filter(p => p.type === 'path')).toHaveLength(1);
+  });
+
   const once = <T>(items: ReadonlyArray<T>): Iterable<T> => {
     let consumed = false;
     return {
