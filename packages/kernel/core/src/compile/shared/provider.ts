@@ -23,23 +23,40 @@ export const snapshotProviderOutputJson = <T>(
   path: string,
   allowedResourceIds?: ReadonlySet<string>,
 ): T => {
+  /** ⚡复用递归路径槽位，仅失败时组装完整诊断字符串，减少路径字符串分配 */
+  const pathSegments: Array<string | number> = [];
+  /** 将当前深度的路径槽位拼接为诊断路径 */
+  const formatCurrentPath = (depth: number): string => {
+    let currentPath = path;
+    for (let index = 0; index < depth; index++) {
+      const segment = pathSegments[index];
+      currentPath += typeof segment === 'number' ? `[${segment}]` : `.${segment}`;
+    }
+    return currentPath;
+  };
+
   /** 递归复制 JSON 值并检查数值与资源引用，元数据不参与资源引用检查 */
   const snapshotValue = (
     input: unknown,
-    currentPath: string,
+    depth: number,
     shouldCheckResources = allowedResourceIds !== undefined,
   ): unknown => {
     if (typeof input === 'number' && !Number.isFinite(input)) {
-      throw createCompositeContractError(`${owner} emit produced a ${currentPath} with a non-finite number.`);
+      throw createCompositeContractError(
+        `${owner} emit produced a ${formatCurrentPath(depth)} with a non-finite number.`,
+      );
     }
     if (input === null || typeof input !== 'object') return input;
     if (Array.isArray(input)) {
-      return input.map((entry, index) => snapshotValue(entry, `${currentPath}[${index}]`, shouldCheckResources));
+      return input.map((entry, index) => {
+        pathSegments[depth] = index;
+        return snapshotValue(entry, depth + 1, shouldCheckResources);
+      });
     }
     if (shouldCheckResources) {
       if ('resources' in input || ('clipRef' in input && input.clipRef !== undefined)) {
         throw createCompositeContractError(
-          `${owner} output ${currentPath}: provider cannot declare resources or clipRef; use input properties instead.`,
+          `${owner} output ${formatCurrentPath(depth)}: provider cannot declare resources or clipRef; use input properties instead.`,
         );
       }
       if (
@@ -48,18 +65,26 @@ export const snapshotProviderOutputJson = <T>(
         (!('id' in input) || !allowedResourceIds?.has(input.id as string))
       ) {
         throw createCompositeContractError(
-          `${owner} output ${currentPath}: resource reference '${'id' in input ? String(input.id) : ''}' was not supplied to this provider; use input fill or stroke instead.`,
+          `${owner} output ${formatCurrentPath(depth)}: resource reference '${'id' in input ? String(input.id) : ''}' was not supplied to this provider; use input fill or stroke instead.`,
         );
       }
     }
     const output = Object.create(null) as Record<string, unknown>;
-    for (const [key, entry] of Object.entries(input)) {
-      if (entry !== undefined)
-        output[key] = snapshotValue(entry, `${currentPath}.${key}`, shouldCheckResources && key !== 'meta');
+    const fields = input as Record<string, unknown>;
+    /** ⚡分别保存键和值，减少键值对数组分配；先完整取值再递归，保持 getter 时序 */
+    const keys = Object.keys(fields);
+    const values = keys.map(key => fields[key]);
+    for (let index = 0; index < keys.length; index++) {
+      const key = keys[index];
+      const entry = values[index];
+      if (entry !== undefined) {
+        pathSegments[depth] = key;
+        output[key] = snapshotValue(entry, depth + 1, shouldCheckResources && key !== 'meta');
+      }
     }
     return output;
   };
-  return snapshotValue(value, path) as T;
+  return snapshotValue(value, 0) as T;
 };
 
 /** 校验已复制且有限的数值非负；省略的可选值无需校验 */

@@ -28,6 +28,60 @@ export const resolveCoreBudget = (scenario: BenchmarkScenario): BenchmarkBudget 
       rationale:
         '一次工作区或结果组装中的完整注册表生命周期，包含创建及N次登记/导入；假设10次为局部编辑（1/4ms），100次为普通更新（4/8ms），1000次为大批资源处理（8/16.6ms）。该阶段接近一帧即有同步阻塞风险，复杂Pattern不放宽预算；不含输入解析和renderer，不代表整帧保证或稳定回归上限',
     };
+  } else if (layer === 'compile' && family === 'shared-transform') {
+    const count = Number(scale);
+    if (variant === 'chain-forward' || variant === 'chain-inverse') {
+      if (![3, 24].includes(count)) throw new Error(`Missing Core transform chain budget: ${identity}`);
+      policy = {
+        warningMs: 0.005,
+        errorMs: 0.02,
+        rationale:
+          'Core边界、Scene四角及定位投影逐点消费一条变换链；假设1000点更新，每点5/20μs，对应5/20ms阶段分配。3/24项是普通/深层混合链的规划输入，不含点集调度或renderer，不按链长放宽预算',
+      };
+    } else if (variant === 'compose-full' || variant === 'compose-append') {
+      if (!(variant === 'compose-full' ? [3, 24].includes(count) : count === 3)) {
+        throw new Error(`Missing Core transform composition budget: ${identity}`);
+      }
+      policy = {
+        warningMs: 0.01,
+        errorMs: 0.05,
+        rationale:
+          'Reconciler进入Scope或定位上下文准备时消费一次纯变换合成；假设100个作用域各分配10/50μs，阶段约1/5ms。完整链3/24项；追加固定21项父链结果与显式完整链均预置，只测3项本层合成，不含调用方链构造、缓存查找或跨调用复用',
+      };
+    } else if (variant === 'composed-forward' || variant === 'composed-inverse') {
+      if (count !== 1) throw new Error(`Missing Core composed transform budget: ${identity}`);
+      policy = {
+        warningMs: 0.002,
+        errorMs: 0.01,
+        rationale:
+          'Core引用、路径目标与边界消费已合成矩阵投影一个点；假设1000点各分配2/10μs，阶段约2/10ms。24项链矩阵在计时外准备，不包含合成或Reconciler缓存；短操作接近计时开销，不表示整帧保证',
+      };
+    } else throw new Error(`Missing Core shared transform budget: ${identity}`);
+  } else if (layer === 'compile' && family === 'shared-provider') {
+    const count = Number(scale);
+    if (variant === 'position') {
+      if (count !== 1) throw new Error(`Missing Core provider position budget: ${identity}`);
+      policy = {
+        warningMs: 0.002,
+        errorMs: 0.01,
+        rationale:
+          'Boundary/Shape provider返回有限二维坐标后执行一次guard内快照；假设1000次查询各分配2/10μs，快照阶段约2/10ms。只含有限值校验与坐标脱离，不含provider几何计算',
+      };
+    } else {
+      const isPath = variant === 'snapshot-path';
+      if (
+        !['snapshot-tree', 'snapshot-path', 'materialize-tree'].includes(variant) ||
+        !(isPath ? [16, 1024] : [8, 128]).includes(count)
+      )
+        throw new Error(`Missing Core provider snapshot budget: ${identity}`);
+      const large = count === (isPath ? 1024 : 128);
+      policy = {
+        warningMs: large ? 0.5 : 0.05,
+        errorMs: large ? 2 : 0.2,
+        rationale:
+          'Shape/Path/Mark一次完整provider输出快照，包含iterable消费、递归复制、有限值与资源检查；snapshot另含图元领域尺寸校验。假设100个8叶图元或16命令普通输出各分配0.05/0.2ms，阶段约5/20ms；单个128叶图元或1024命令复杂输出分配0.5/2ms。混合树固定三层组，不含provider生成、标记放置、完整编译或renderer；规模为规划假设',
+      };
+    }
   } else if (layer === 'compile' && family === 'scene') {
     const count = Number(scale);
     if (variant === 'layout-auto' || variant === 'layout-explicit') {

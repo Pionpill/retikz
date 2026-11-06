@@ -69,9 +69,34 @@ P90警告/错误预算：16命令0.05/0.2ms，1024命令0.5/2ms。消费频率�
 pnpm --filter @retikz/core exec vitest bench --run --config vitest.bench.config.ts benchmarks/compile/scene.bench.ts --fsModuleCache=false
 ```
 
+## 编译共享操作
+
+[shared-transform.bench.ts](./compile/shared-transform.bench.ts) 测量变换链、矩阵合成与预合成矩阵消费；[shared-provider.bench.ts](./compile/shared-provider.bench.ts) 测量provider输出的完整快照及坐标快照。两个职责分别维护fixture，见[_shared-transform-workloads.ts](./_shared-transform-workloads.ts)与[_shared-provider-workloads.ts](./_shared-provider-workloads.ts)
+
+| 操作                    | 输入与规模                                 | 场景数 | P90警告/错误                |
+| ----------------------- | ------------------------------------------ | -----: | --------------------------- |
+| 逐项正向/逆向变换       | 3/24项平移、带中心旋转、非均匀负缩放，单点 |      4 | 5/20μs                      |
+| 完整变换合成            | 3/24项，正逆矩阵及累计旋转/尺度            |      2 | 10/50μs                     |
+| 父级追加合成            | 21项父链结果与完整声明链预置，追加3项      |      1 | 10/50μs                     |
+| 预合成矩阵正向/逆向投影 | 24项链矩阵预置，单点                       |      2 | 2/10μs                      |
+| 图元快照与领域校验      | 8/128叶混合图元，固定3层组                 |      2 | 小档0.05/0.2ms，大档0.5/2ms |
+| 长路径快照与领域校验    | 单条路径16/1024命令                        |      2 | 同上                        |
+| 标记图元物化快照        | 8/128叶混合图元，固定3层组                 |      2 | 同上                        |
+| Provider坐标快照        | 一个有限二维坐标                           |      1 | 2/10μs                      |
+
+共16场景，每场景10预热+100正式样本、110调用；全组1760调用、1600正式样本。每个样本仅执行一次操作，不通过外包循环扩容。混合树包含等量rect/ellipse/path/text，固定合法资源引用、meta内非消费引用和对象可选undefined字段；叶数不含组节点。长路径规模包含首条move
+
+输入构造、独立手算预期、父级/预合成矩阵准备、允许资源集合构造及断言均在计时外。变换执行、合成输出分配、iterable消费、递归JSON快照、有限值/资源/领域约束检查计时。完整输出、字段存在性、深层引用脱离、输入不变性及允许资源集合均校验；快照保留id/meta，不与Marker放置时的身份剥离混淆
+
+预算来自1000点投影、100个Scope准备或100个普通provider输出的阶段分配假设，见[_budgets.ts](./_budgets.ts)，不表示已验证业务上限。只测Core拥有的纯操作，不测Reconciler的缓存命中、跨调用复用或链插入调度。通用JSON复制和非负断言由完整快照覆盖；错误构造及极端数值分支复用功能证据，不逐helper增加基准
+
+```bash
+pnpm --filter @retikz/core exec vitest bench --run --config vitest.bench.config.ts benchmarks/compile/shared-transform.bench.ts benchmarks/compile/shared-provider.bench.ts --fsModuleCache=false
+```
+
 ## 测量边界
 
-当前覆盖 `src/providers`、`src/resolve`、`src/contract` 的代表操作，以及 `src/compile` 的资源注册表、文本和Scene操作，不调用 `compileToScene`。shape / arrow / mark 的 iterable 在计时内完整消费，包含该操作自身的计算与分配。
+当前覆盖 `src/providers`、`src/resolve`、`src/contract` 的代表操作，以及 `src/compile` 的资源注册表、文本、Scene和共享操作，不调用 `compileToScene`。shape / arrow / mark 的 iterable 在计时内完整消费，包含该操作自身的计算与分配。
 
 - Scene 图元生成属于编译计算；SVG 字符串生成、Canvas 绘制、DOM 更新、浏览器布局与绘制均不计入。
 - 不接入 `@retikz/render`、React/Vanilla renderer 或浏览器。Runtime / Reconciler 调度、增量更新与生命周期不属于本目录。
