@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { CompileOccurrenceLocator } from '../../src';
 import { compareCompileOccurrences } from '../../src';
-import { isCompileOccurrenceEqual } from '../../src/contract';
+import { isCompileOccurrenceEqual } from '../../src/contract/occurrence';
 
 describe('编译 occurrence 比较', () => {
   it('逐项比较源位置与展开路径，不依赖对象身份', () => {

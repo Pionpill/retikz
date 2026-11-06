@@ -3,7 +3,8 @@ import { literal, number, object, string, union } from 'zod';
 
 import type { IRScene } from '../../../../core/src';
 import { CompositeBaseSchema, defineComposite, defineShape, resolveCompositeRegistry } from '../../../../core/src';
-import { BUILTIN_PATHS, BUILTIN_SHAPES } from '../../../../core/src/providers';
+import { BUILTIN_PATHS } from '../../../../core/src/providers/path';
+import { BUILTIN_SHAPES } from '../../../../core/src/providers/shape/shape';
 import { compileToScene } from '../../../src/compile';
 
 describe('提供者键契约', () => {

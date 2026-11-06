@@ -17,7 +17,8 @@ import {
   naturalLayoutProposal,
 } from '../../../../core/src';
 import type { TexLowerer } from '../../../../core/src/compile/text';
-import { ASCENT_FACTOR, DESCENT_FACTOR, calculateAlphabeticBaselineY } from '../../../../core/src/compile/text';
+import { calculateAlphabeticBaselineY } from '../../../../core/src/compile/text';
+import { ASCENT_FACTOR, DESCENT_FACTOR } from '../../../../core/src/compile/text/helpers';
 import { compileToScene } from '../../../src/compile';
 
 const fixedMeasurer: TextMeasurer = text => ({

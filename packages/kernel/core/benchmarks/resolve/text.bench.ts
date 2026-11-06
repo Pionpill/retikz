@@ -3,7 +3,8 @@ import { expect } from 'vitest';
 
 import { defineBenchmark } from '../../../../../scripts/benchmarks/scenario';
 import { resolveTextBlock } from '../../src/resolve/text';
-import type { ColorResolvedTextLine, TextBlockResolveContext } from '../../src/resolve/text';
+import type { ColorResolvedTextLine } from '../../src/resolve/text';
+import type { TextBlockResolveContext } from '../../src/resolve/text/types';
 
 for (const count of [32, 1_024, 16_384]) {
   for (const gatingOn of [false, true]) {

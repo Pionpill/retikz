@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import { SceneSchema } from '../../../../core/src';
-import { mergeNodeStyle, resolveScopeDefaults } from '../../../../core/src/resolve';
+import { resolveScopeDefaults } from '../../../../core/src/resolve/style/defaults';
+import { mergeNodeStyle } from '../../../../core/src/resolve/style/node';
 import { NodeSchema, ScopeSchema } from '../../../../core/src/schemas';
 import { compileToScene } from '../../../src/compile';
 

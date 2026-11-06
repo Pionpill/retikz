@@ -77,8 +77,8 @@ parse/       字符串 / DSL / Sugar parser，输出 IR 节点或 IR 片段
 ## 公开 API
 
 - 只通过 `src/index.ts` 暴露公开 API；adapter 不 import core 内部子路径。
-- 顶层 `src/index.ts` 默认只从 owner barrel `export *`；owner barrel 负责定义稳定公共面。
-- 新增或调整顶层 `export *` 前必须跑类型检查，确认不存在同名 / 重复导出冲突。只有存在无法通过 owner barrel 消除的冲突时，顶层才允许最小 named re-export，并在代码注释说明原因。
+- 顶层 `src/index.ts` 只从 owner barrel 聚合；各级入口按可见性选择全部或精选导出，遵循根规范与 `standard-structure` 的导入导出规则。
+- 新增或调整顶层导出前须逐项审查公开必要性、契约稳定性及消费方影响，并跑类型检查确认无同名 / 重复导出冲突；不将仅供 Core 内部复用的成员转为公共 API。
 
 ## 测试
 

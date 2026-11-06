@@ -2,7 +2,7 @@ import type { CenteredBox } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
 import type { CompiledShapeStyle, PathCommand } from '../../src/contract';
-import { BUILTIN_SHAPES } from '../../src/providers/shape';
+import { BUILTIN_SHAPES } from '../../src/providers/shape/shape';
 
 const SQRT2 = Math.SQRT2;
 

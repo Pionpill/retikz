@@ -1,9 +1,5 @@
-import type {
-  CompiledTextBlockLayout,
-  CompiledTextLineLayout,
-  LoweredTex,
-  TextLayoutContext,
-} from '../src/compile/text';
+import type { CompiledTextBlockLayout, LoweredTex, TextLayoutContext } from '../src/compile/text';
+import type { CompiledTextLineLayout } from '../src/compile/text/types';
 import type { TextContentLine, TextFont, TextInlineSegment } from '../src/contract';
 
 /** 固定字号与字重，单个 UTF-16 code unit 宽度为五个 user units */

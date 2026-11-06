@@ -17,7 +17,7 @@ import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject, enum as zodEnum } from 'zod';
 
-import { BUILTIN_SHAPES } from '../../../../kernel/core/src/providers';
+import { BUILTIN_SHAPES } from '../../../../kernel/core/src/providers/shape/shape';
 
 const fixedMeasurer: TextMeasurer = text => ({
   width: [...text].length * 10,

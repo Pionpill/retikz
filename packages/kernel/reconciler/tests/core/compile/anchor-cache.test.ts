@@ -6,7 +6,7 @@ import type { CompiledBoundaryGeometry } from '../../../../core/src';
 import type { CompiledNodeLayout } from '../../../../core/src/compile/node';
 import type { ShapeDefinition } from '../../../../core/src/contract';
 import { defineShape } from '../../../../core/src/contract';
-import { BUILTIN_SHAPES } from '../../../../core/src/providers';
+import { BUILTIN_SHAPES } from '../../../../core/src/providers/shape/shape';
 import type { BuiltinShape } from '../../../../core/src/schemas';
 
 /** 构造一个最简 CompiledNodeLayout，rect 已是全局坐标 */

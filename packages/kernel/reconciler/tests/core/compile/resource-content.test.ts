@@ -4,7 +4,7 @@ import { literal } from 'zod';
 import { defineMark, definePath, definePattern, PathSchema, visitSceneContent } from '../../../../core/src';
 import type { TextPrimitive, Scene, GroupPrimitive, ScenePrimitive, IRScene } from '../../../../core/src';
 import { createClipRegistry, createPaintRegistry } from '../../../../core/src/compile/resource';
-import { BUILTIN_SHAPES } from '../../../../core/src/providers';
+import { BUILTIN_SHAPES } from '../../../../core/src/providers/shape/shape';
 import { createSharedCompileContext, compileToScene } from '../../../src/compile';
 import { assembleCompileOutputs } from '../../../src/compile/index';
 import { importSceneResources } from '../../../src/compile/resource';

@@ -3,7 +3,6 @@ import { expect } from 'vitest';
 
 import { defineBenchmark } from '../../../../../scripts/benchmarks/scenario';
 import {
-  calculateExpandedBoundaryRect,
   clipBoundaryPolyline,
   createBoundaryStore,
   evaluateAnchorReference,
@@ -11,6 +10,7 @@ import {
   projectLayoutWithTransform,
   projectPublishedCompileLayout,
 } from '../../src/compile/boundary';
+import { calculateExpandedBoundaryRect } from '../../src/compile/boundary/helpers';
 import { composeScopeTransform } from '../../src/compile/shared';
 import type { IRAnchorRef, IRPosition } from '../../src/schemas';
 import {

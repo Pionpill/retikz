@@ -19,7 +19,7 @@ import {
   LayoutChildProbeKind,
   LayoutIntrinsicMode,
 } from '../../../../core/src';
-import { BUILTIN_SHAPES } from '../../../../core/src/providers';
+import { BUILTIN_SHAPES } from '../../../../core/src/providers/shape/shape';
 import type { CompileOptions } from '../../../src/compile';
 import { compileToScene } from '../../../src/compile';
 import { flattenPrims } from '../../helpers/flatten';

@@ -31,7 +31,7 @@ import { z } from 'zod';
 import { lookupSchema, SCHEMA_REGISTRY } from '@/modules/docs/components';
 import { expandMdxIncludes } from '@/modules/docs/lib';
 
-import { RelativeTargetSchema } from '../../../packages/kernel/core/src/schemas';
+import { RelativeTargetSchema } from '../../../packages/kernel/core/src/schemas/path/target';
 
 describe('SCHEMA_REGISTRY', () => {
   it('包含文档中声明的 Kernel、Data、Table 和 Plot schema 接口', () => {

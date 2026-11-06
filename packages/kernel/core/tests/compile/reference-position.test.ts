@@ -2,16 +2,12 @@ import { describe, expect, it } from 'vitest';
 
 import type { CompiledBoundaryGeometry } from '../../src';
 import type { PositionReferenceState, PositionReferenceView, PositionTargetEvaluateContext } from '../../src/compile';
-import {
-  composeScopeTransform,
-  createPositionEvaluateContext,
-  evaluatePosition,
-  evaluatePositionTarget,
-} from '../../src/compile';
+import { composeScopeTransform, createPositionEvaluateContext, evaluatePosition } from '../../src/compile';
 import { createBoundaryStore, projectLayoutWithTransform } from '../../src/compile/boundary';
 import type { CompiledNodeLayout } from '../../src/compile/node';
-import { evaluateTransformTranslation } from '../../src/compile/scope';
-import { BUILTIN_SHAPES } from '../../src/providers';
+import { evaluatePositionTarget } from '../../src/compile/reference/target';
+import { evaluateTransformTranslation } from '../../src/compile/scope/placement/transform';
+import { BUILTIN_SHAPES } from '../../src/providers/shape/shape';
 import type { CanonicalNodeBoundary } from '../../src/resolve';
 import type { IRNodeTarget, IRPosition, IRTransform } from '../../src/schemas';
 

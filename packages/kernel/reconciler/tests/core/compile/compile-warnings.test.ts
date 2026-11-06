@@ -4,7 +4,7 @@ import { strictObject } from 'zod';
 
 import type { CompileWarning, IRChild, IRScene } from '../../../../core/src';
 import { BuiltinCompileWarningCode, defineShape } from '../../../../core/src';
-import { BUILTIN_SHAPES } from '../../../../core/src/providers';
+import { BUILTIN_SHAPES } from '../../../../core/src/providers/shape/shape';
 import { compileToScene, formatCompileWarning } from '../../../src';
 
 const scene = (children: IRScene['children']): IRScene => ({

@@ -3,13 +3,13 @@ import { expect } from 'vitest';
 import { defineBenchmark } from '../../../../../scripts/benchmarks/scenario';
 import {
   compileScope,
-  lowerScopePlacementTransforms,
   prepareScopePlacement,
   projectScopeCompileLayouts,
   projectScopeOutputBounds,
 } from '../../src/compile/scope';
 import type { CompiledScope, ScopePlacementPreparation } from '../../src/compile/scope';
 import { layoutScopeEnvelope } from '../../src/compile/scope/envelope';
+import { lowerScopePlacementTransforms } from '../../src/compile/scope/placement/layout';
 import type { Transform } from '../../src/contract';
 import {
   createScopeBenchmarkBounds,

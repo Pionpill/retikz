@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { CompiledBoundaryGeometry } from '../../../../core/src';
 import type { CompiledNodeLayout } from '../../../../core/src/compile/node';
-import { BUILTIN_SHAPES } from '../../../../core/src/providers';
+import { BUILTIN_SHAPES } from '../../../../core/src/providers/shape/shape';
 import { NamespaceStack } from '../../../src/compile/runtime';
 import type { DuplicateRegisterInfo } from '../../../src/compile/shared';
 

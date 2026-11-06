@@ -5,10 +5,10 @@ import type { PositionEvaluateContext } from '../../../../core/src/compile';
 import { projectLayoutWithTransform } from '../../../../core/src/compile/boundary';
 import type { CompiledNodeLayout } from '../../../../core/src/compile/node';
 import { referencePositionOf, createPositionEvaluateContext } from '../../../../core/src/compile/reference';
-import { lowerScopeTransforms } from '../../../../core/src/compile/scope/placement';
+import { lowerScopeTransforms } from '../../../../core/src/compile/scope/placement/transform';
 import { composeScopeTransform } from '../../../../core/src/compile/shared';
 import type { Transform } from '../../../../core/src/contract';
-import { BUILTIN_SHAPES } from '../../../../core/src/providers';
+import { BUILTIN_SHAPES } from '../../../../core/src/providers/shape/shape';
 import type { IRTransform } from '../../../../core/src/schemas';
 import { NamespaceStack } from '../../../src/compile/runtime';
 

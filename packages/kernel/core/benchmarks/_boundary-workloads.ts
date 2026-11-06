@@ -2,7 +2,8 @@ import type { BoundsInsets, CenteredBox } from '@retikz/math';
 
 import type { CompiledBoundaryGeometry } from '../src/compile/boundary';
 import type { Transform } from '../src/contract';
-import { BUILTIN_BOUNDARIES, BUILTIN_SHAPES } from '../src/providers';
+import { BUILTIN_BOUNDARIES } from '../src/providers/boundary';
+import { BUILTIN_SHAPES } from '../src/providers/shape/shape';
 import type { CanonicalNodeBoundary } from '../src/resolve';
 import type { IRPosition } from '../src/schemas';
 

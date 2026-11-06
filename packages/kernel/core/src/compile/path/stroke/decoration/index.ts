@@ -1,5 +1,6 @@
 export * from './decorations';
-export * from './endpoint-contact';
+export { shortenEndpointContacts } from './endpoint-contact';
+export type { StrokeEndpointPlacements } from './endpoint-contact';
 export * from './interruption';
 export * from './labels';
 export * from './split';

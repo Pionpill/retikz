@@ -1,4 +1,4 @@
-export * from './helpers';
+export { projectLayoutWithTransform, projectPublishedCompileLayout } from './helpers';
 export * from './layout';
 export * from './store';
-export * from './types';
+export type { BoundaryState, BoundaryStore, CompiledBoundaryGeometry } from './types';

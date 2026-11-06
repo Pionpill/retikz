@@ -4,7 +4,7 @@ import { number, strictObject } from 'zod';
 
 import type { ScenePrimitive, ShapeDefinition } from '../../../../core/src/contract';
 import { defineShape } from '../../../../core/src/contract';
-import { BUILTIN_SHAPES } from '../../../../core/src/providers';
+import { BUILTIN_SHAPES } from '../../../../core/src/providers/shape/shape';
 import type { IRScene } from '../../../../core/src/schemas';
 import { NodeSchema } from '../../../../core/src/schemas';
 import { compileToScene } from '../../../src/compile';

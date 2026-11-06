@@ -9,7 +9,7 @@ import type { CompiledNodeLayout } from '../../../../core/src/compile/node';
 import type { CompiledReferenceGeometry } from '../../../../core/src/compile/reference';
 import { layoutScopeEnvelope } from '../../../../core/src/compile/scope/envelope';
 import { composeScopeTransform } from '../../../../core/src/compile/shared';
-import { BUILTIN_SHAPES } from '../../../../core/src/providers';
+import { BUILTIN_SHAPES } from '../../../../core/src/providers/shape/shape';
 import { resolveScope, resolveScopeInheritance } from '../../../../core/src/resolve';
 import { compileToScene, createSharedCompileContext } from '../../../src/compile';
 

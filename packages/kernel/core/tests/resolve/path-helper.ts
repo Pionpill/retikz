@@ -1,8 +1,9 @@
 import { resolveArrowRegistry, resolvePathRegistry, resolvePatternRegistry } from '../../src';
 import type { BoundPathResolution, PathCompileContext } from '../../src/compile/path';
 import { bindPathTargets } from '../../src/compile/path';
-import type { PathResolveContext, StrokePathResolution } from '../../src/resolve/path';
+import type { StrokePathResolution } from '../../src/resolve/path';
 import { resolvePath, resolveStrokePathProviders } from '../../src/resolve/path';
+import type { PathResolveContext } from '../../src/resolve/path/types';
 import type { IRPathBase } from '../../src/schemas';
 
 type BuiltinProviderContext = Partial<Pick<PathCompileContext, 'scopeChain' | 'targetResolver'>> &

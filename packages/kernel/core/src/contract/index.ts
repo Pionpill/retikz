@@ -1,10 +1,11 @@
 export * from './composite';
 export * from './node';
-export * from './occurrence';
+export { CompileExpansionKind, compareCompileOccurrences } from './occurrence';
+export type { CompileExpansionSegment, CompileOccurrenceLocator } from './occurrence';
 export * from './path';
 export * from './provider';
 export * from './scene';
 export * from './scope';
 export * from './style';
-export * from './text';
+export type * from './text';
 export * from './theme';

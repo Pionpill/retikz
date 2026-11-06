@@ -57,7 +57,7 @@ compile / pipeline 阶段的类型，**前缀表示数据处理阶段，主体�
 ## Pipeline / Compile 文件结构
 
 - `compile.ts` 只放 `CompileOptions`、`compileToScene` 和顶层编排；domain 细节下沉到对应目录。
-- 目录级 `index.ts` 只做稳定入口导出，不承载业务逻辑；默认 `export *`，公共 facade 或需要避免冲突时才精选导出。
+- 目录级 `index.ts` 只做稳定入口导出，不承载业务逻辑；按 [导入导出](imports.md) 的可见性规则选择全部或精选导出。
 - 大型 compile domain 按 `types.ts` / `lower.ts` / `layout.ts` / `emit.ts` / `decorations.ts` / `output.ts` 拆分；领域 `resolve.ts` 位于顶层 `resolve/<domain>/`。缺哪个阶段就省略对应文件，不为了模板机械建空文件。
 - `compile/<domain>/types.ts` 只放 compile / pipeline 私有消费态类型；`CanonicalXxx`、`XxxResolveContext` 与必要的 `XxxResolution` 定义在 `resolve/<domain>/types.ts`。orchestration 创建并维护 broad context，在调用点投影为窄 resolve context；`lower.ts` 输出低层 IR / command / geometry input；`layout.ts` 度量或计算中间模型；`emit.ts` 输出 primitive / resource；`decorations.ts` 输出附属 primitive；`output.ts` 做 group wrapping、bounds result、transform 等输出包装。
 - `orchestration/` 放跨 domain 编排：context、composite lowering、traversal、primitive sink、diagnostics、bounds、运行时 types；不要放 node/path/text 的具体 emit 细节。

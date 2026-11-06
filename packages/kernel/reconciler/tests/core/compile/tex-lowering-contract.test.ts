@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { emitTextLine, fallbackMeasurer, layoutTextBlock, lowerTexSegment } from '../../../../core/src/compile/text';
+import { emitTextLine, fallbackMeasurer, layoutTextBlock } from '../../../../core/src/compile/text';
 import type { LoweredTex } from '../../../../core/src/compile/text';
+import { lowerTexSegment } from '../../../../core/src/compile/text/tex';
 import type { GroupPrimitive, PathPrimitive } from '../../../../core/src/contract';
 
 /** 经文本块布局消费单个作者行 */

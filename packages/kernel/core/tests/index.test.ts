@@ -3,7 +3,7 @@ import type { ZodType } from 'zod';
 import { toJSONSchema } from 'zod';
 
 import { BuiltinArrowShape, BuiltinShape, BuiltinPatternShape, PatternShapeNameSchema, ShapeNameSchema } from '../src';
-import { ArrowShapeSchema } from '../src/schemas';
+import { ArrowShapeSchema } from '../src/schemas/path/arrow';
 
 const expectOpenStringSchema = (schema: ZodType, values: ReadonlyArray<string>): void => {
   expect(toJSONSchema(schema)).toMatchObject({

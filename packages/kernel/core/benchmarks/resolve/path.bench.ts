@@ -3,7 +3,7 @@ import { expect } from 'vitest';
 import { defineBenchmark } from '../../../../../scripts/benchmarks/scenario';
 import { resolveArrowRegistry, resolvePathRegistry, resolvePatternRegistry } from '../../src/providers';
 import { resolvePath } from '../../src/resolve/path';
-import type { PathResolveContext } from '../../src/resolve/path';
+import type { PathResolveContext } from '../../src/resolve/path/types';
 import type { IRPathBase, IRStep } from '../../src/schemas';
 
 // 只测 IR 到 Canonical 的解析；不绑定目标，不计算引用点位或路径几何

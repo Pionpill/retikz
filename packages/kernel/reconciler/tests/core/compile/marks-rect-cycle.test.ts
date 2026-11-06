@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { IRScene, ScenePrimitive } from '../../../../core/src';
-import { rectPerimeterSample } from '../../../../core/src/shared';
+import { rectPerimeterSample } from '../../../../core/src/shared/geometry/path/segment';
 import { compileToScene } from '../../../src/compile';
 
 /** mark marker group 的签名：transforms = [translate(point), rotate, scale, translate]；取首个 translate 为落点 */

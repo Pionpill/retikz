@@ -34,7 +34,7 @@ src/
   transaction/ Snapshot、revision、revision-bound change hint 与 opaque Source command
 ```
 
-目录只在相应 ADR 落地时创建，不提前放占位实现。公开入口使用 owner barrel 的 `export *` 聚合。
+目录只在相应 ADR 落地时创建，不提前放占位实现。公开入口从 owner barrel 聚合，导出形式与公开必要性按根规范判断。
 
 ## 验证
 

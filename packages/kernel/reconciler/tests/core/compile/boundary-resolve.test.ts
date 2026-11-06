@@ -3,12 +3,9 @@ import { describe, expect, it } from 'vitest';
 import { strictObject } from 'zod';
 
 import { BuiltinCompileWarningCode } from '../../../../core/src';
-import type {
-  BoundaryState,
-  BoundaryVisualResolution,
-  CompiledBoundaryGeometry,
-} from '../../../../core/src/compile/boundary';
+import type { BoundaryState, CompiledBoundaryGeometry } from '../../../../core/src/compile/boundary';
 import { evaluateBoundaryPoint, evaluateNamedBoundaryAnchor } from '../../../../core/src/compile/boundary';
+import type { BoundaryVisualResolution } from '../../../../core/src/compile/boundary/types';
 import type { BoundaryDefinition, ShapeDefinition } from '../../../../core/src/contract';
 import { defineBoundary } from '../../../../core/src/contract';
 import { resolveBoundaryRegistry, ellipseShape, rectangle } from '../../../../core/src/providers';

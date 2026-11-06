@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { BuiltinCompileWarningCode } from '../../src/compile/shared';
-import { resolveFont, resolveFontSize, resolveTextBlock, resolveTextLineHeight } from '../../src/resolve/text';
+import { resolveFont, resolveTextBlock } from '../../src/resolve/text';
+import { resolveFontSize, resolveTextLineHeight } from '../../src/resolve/text/font';
 
 /** 经文本块解析消费单个作者行 */
 const resolveTestLine = (

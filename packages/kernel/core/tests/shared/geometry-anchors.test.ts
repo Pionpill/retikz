@@ -1,7 +1,8 @@
 import type { CenteredBox, Ellipse } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
-import { Anchor, CenterAnchor, Side, isAnchor, isDirectionalAnchor, isSide } from '../../src/shared';
+import { Anchor, CenterAnchor, Side, isAnchor, isDirectionalAnchor } from '../../src/shared';
+import { isSide } from '../../src/shared/anchor/utils';
 import { edgeAngleDeg } from '../../src/shared/geometry/edge';
 import { ellipse } from '../../src/shared/geometry/ellipse';
 import { rect } from '../../src/shared/geometry/rect';

@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import type { CompiledBoundaryGeometry } from '../../../../core/src';
 import type { CompiledNodeLayout } from '../../../../core/src/compile/node';
 import type { ScenePrimitive, TextPrimitive } from '../../../../core/src/contract';
-import { BUILTIN_SHAPES } from '../../../../core/src/providers';
+import { BUILTIN_SHAPES } from '../../../../core/src/providers/shape/shape';
 import type { IRScene } from '../../../../core/src/schemas';
 import { NodeSchema } from '../../../../core/src/schemas';
 import { compileToScene } from '../../../src/compile';

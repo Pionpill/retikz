@@ -2,7 +2,7 @@ import { expect, it } from 'vitest';
 
 import { defineArrow, SceneSchema, ArrowStyleSchema, TextLineSchema, SegmentedLineSchema } from '../../../../core/src';
 import type { ScenePrimitive } from '../../../../core/src';
-import { NodeLabelPinSchema } from '../../../../core/src/schemas';
+import { NodeLabelPinSchema } from '../../../../core/src/schemas/node/label';
 import { compileToScene } from '../../../src/compile';
 
 const leaves = (items: Array<ScenePrimitive>): Array<ScenePrimitive> =>

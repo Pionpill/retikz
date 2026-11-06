@@ -180,7 +180,8 @@ Control: <human-directed|llm-autonomous>
 - 内部代码依赖明确的 TypeScript 类型契约，不为纯 JavaScript 调用额外维护 `unknown`、`typeof`、`Array.isArray`、对象结构探测、重复 `throw` 或错误分支；纯 JavaScript 调用方自行负责类型校验。
 - `packages/**/src` 由 Retikz 主动创建的错误必须是 `RetikzError` 或其子类，自定义错误类统一命名为 `RetikzXxxError`；每个发布包一般只保留一个统一的 `Retikz<Package>Error`，通过 code、message、details 与 cause 区分失败。只有错误边界独立且调用方确实需要按 class 分支，或存在额外稳定结构字段时，才允许增加专用错误类型。生产源码不得创建原生 `Error`；第三方或用户回调异常在 Retikz API 边界包装为 owner 错误并原样保留为 `cause`，测试可用原生 `Error` 模拟外部失败。
 - JSON、持久化配置和其他类型不明确的外部输入只在 parse / schema 入口完成一次解析和校验；adapter 只将已类型化的 `InputXxx` 调度至 Vanilla API `normalizeXxx`。纵向领域 `resolveXxx` 只校验补全后才出现的领域不变量与真实上下文错误；不得在 normalize、resolve、lower 或 emit 重复 schema 已覆盖或明确 TypeScript 类型已保证的校验。已类型化的 Tier 2 封装和扩展回调由作者负责满足契约，不强制 Schema 解析；用户编写的代码不等同于外部数据。校验边界按数据来源判断，不按包边界判断；内部调用、跨包传递和官方编译产物消费不得重复执行 schema 结构校验。Schema 仍可用于类型派生与权威默认值复用，不得借此重新解析完整内部对象。
-- barrel 默认 `export * from './xxx'`，不要用 `export { ... } from './xxx'` 聚合；需要裁剪公共面、避免冲突或显式重命名时才用 named re-export。公共入口可按包内 AGENTS 要求显式导出。
+- barrel 按当前入口的可见性选择导出形式：转导出与来源模块的全部导出完全一致时，直接用 `export *`，不重复列举成员；仅部分 API 需要暴露、其余仅供内部复用时用 `export { ... }` 精选导出，类型使用对应的 `export type` 形式。
+- 包根 `index.ts` 的每项导出都须审查公开必要性、契约稳定性及消费方影响；内部复用不构成包外公开依据，避免将实现细节变为公共 API，使后续内部调整迫使消费方修改代码或升级适配。
 - 跨 owner 导入必须走目标 owner 的目录 barrel；带独立 barrel 的稳定子域可作为二级 owner（如 `shared/geometry`）；同 owner 内部可相邻导入，不从其它 owner deep import 到子文件。
 - 尽量避免 import / export `as` 重命名；命名冲突优先在定义源头改成准确名称，或由 owner barrel 调整公共面。
 - 数组类型写 `Array<T>`，不用 `T[]`；函数优先箭头形式，确需 hoisting / class 方法时例外。

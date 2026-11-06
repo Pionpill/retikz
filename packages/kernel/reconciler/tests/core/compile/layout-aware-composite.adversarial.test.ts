@@ -36,7 +36,7 @@ import {
 } from '../../../../core/src';
 import { createCompileInvariantError, snapshotProviderPosition } from '../../../../core/src/compile/shared';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../../core/src/error';
-import { BUILTIN_SHAPES } from '../../../../core/src/providers';
+import { BUILTIN_SHAPES } from '../../../../core/src/providers/shape/shape';
 import { isLayoutProbeRecoverableError } from '../../../../core/src/resolve';
 import { cloneAndFreezeJson } from '../../../../core/src/shared';
 import { compileToScene } from '../../../src/compile';

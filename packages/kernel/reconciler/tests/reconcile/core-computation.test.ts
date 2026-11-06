@@ -5,7 +5,7 @@ import { createFullSceneRuntimeSnapshot, ReconcilerSession } from '@retikz/recon
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject, string } from 'zod';
 
-import { BUILTIN_SHAPES } from '../../../core/src/providers';
+import { BUILTIN_SHAPES } from '../../../core/src/providers/shape/shape';
 import { compileToScene } from '../../src/compile';
 
 const sceneWithText = (text: string): IRScene => ({

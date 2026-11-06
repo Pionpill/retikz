@@ -9,8 +9,8 @@ import {
 } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { calculateCompileOutputBounds } from '../../../core/src/compile';
-import { BUILTIN_SHAPES } from '../../../core/src/providers';
+import { calculateCompileOutputBounds } from '../../../core/src/compile/scene/bounds';
+import { BUILTIN_SHAPES } from '../../../core/src/providers/shape/shape';
 import type { SharedCompileContext } from '../../src/compile';
 import { assembleSceneCompilationSnapshot, compileToScene, createSharedCompileContext } from '../../src/compile';
 import { compareReferenceGeometry } from '../../src/compile/compare';

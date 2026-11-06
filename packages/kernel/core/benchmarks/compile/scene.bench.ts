@@ -2,13 +2,13 @@ import { assert, expect } from 'vitest';
 
 import { defineBenchmark } from '../../../../../scripts/benchmarks/scenario';
 import {
-  buildMarkerGroup,
   calculateBoundsOfPrimitives,
   calculateLayoutFromBounds,
   createRound,
   mergeLayoutBounds,
   viewBoxToLayout,
 } from '../../src/compile/scene';
+import { buildMarkerGroup } from '../../src/compile/scene/marker';
 import { createSceneBoundsWorkload, createSceneMarkerWorkload, createSceneMergeWorkload } from '../_scene-workloads';
 import type { SceneBoundsMode } from '../_scene-workloads';
 

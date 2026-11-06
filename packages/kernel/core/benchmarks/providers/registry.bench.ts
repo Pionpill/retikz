@@ -13,16 +13,14 @@ import { expect } from 'vitest';
 import { strictObject, string } from 'zod';
 
 import { defineBenchmark } from '../../../../../scripts/benchmarks/scenario';
-import {
-  BUILTIN_ARROWS,
-  BUILTIN_BOUNDARIES,
-  BUILTIN_CLIPS,
-  BUILTIN_PATHS,
-  BUILTIN_PATTERNS,
-  BUILTIN_SHAPES,
-} from '../../src/providers';
+import { BUILTIN_ARROWS } from '../../src/providers/arrow';
+import { BUILTIN_BOUNDARIES } from '../../src/providers/boundary';
+import { BUILTIN_CLIPS } from '../../src/providers/clip';
 import { resolveMarkRegistry } from '../../src/providers/mark';
+import { BUILTIN_PATHS } from '../../src/providers/path';
+import { BUILTIN_PATTERNS } from '../../src/providers/pattern';
 import { createProviderRegistry, getProviderDefinition } from '../../src/providers/registry';
+import { BUILTIN_SHAPES } from '../../src/providers/shape/shape';
 
 /** 表规模表示一次编译初始化所注册的 definition 数；128 项为探索规模，不是业务预算 */
 const registerRegistry = <T>(

@@ -4,8 +4,9 @@ import { createRound } from '../src/compile/scene';
 import type { ClipDefinition, PathCommand, ScenePrimitive } from '../src/contract';
 import { defineClip, definePattern } from '../src/contract';
 import { resolveClipRegistry, resolvePatternRegistry } from '../src/providers';
-import { resolveClip, resolvePaint } from '../src/resolve';
+import { resolveClip } from '../src/resolve';
 import type { ClipResolution, InputPaintResolution } from '../src/resolve';
+import { resolvePaint } from '../src/resolve/resource/paint';
 
 /** 统一使用默认两位小数精度 */
 export const resourceRound = createRound(2);

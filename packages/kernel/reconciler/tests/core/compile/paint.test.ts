@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { createPaintRegistry } from '../../../../core/src/compile/resource';
 import type { PathPrimitive, RectPrimitive, ScenePrimitive } from '../../../../core/src/contract';
 import { definePattern } from '../../../../core/src/contract';
-import { resolvePaint } from '../../../../core/src/resolve';
+import { resolvePaint } from '../../../../core/src/resolve/resource/paint';
 import type { IRPaint, IRScene } from '../../../../core/src/schemas';
 import { compileToScene } from '../../../src/compile';
 import { createSharedCompileContext } from '../../../src/compile';
