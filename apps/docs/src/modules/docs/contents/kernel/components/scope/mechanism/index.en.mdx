@@ -48,15 +48,15 @@ For the coordinate calculations, see Math's [Coordinate transforms](/kernel/pack
   sources={[
     {
       label: 'Freeze the position target before children',
-      path: 'packages/kernel/core/src/compile/scope/placement.ts',
+      path: 'packages/kernel/core/src/compile/scope/placement/layout.ts',
     },
     {
       label: 'Envelope anchors, final translation, and early resolution',
-      path: 'packages/kernel/core/src/compile/scope/placement.ts',
+      path: 'packages/kernel/core/src/compile/scope/placement/layout.ts',
     },
     {
       label: 'Lower to translation, rotation, and scaling',
-      path: 'packages/kernel/core/src/compile/scope/transform.ts',
+      path: 'packages/kernel/core/src/compile/scope/placement/transform.ts',
     },
   ]}
 />
@@ -169,7 +169,7 @@ Once the children finish, `replaceCompiled` updates the placeholder to a resolve
   sources={[
     {
       label: 'Build rectangular or circular bounds from layouts',
-      path: 'packages/kernel/core/src/compile/scope/layout.ts',
+      path: 'packages/kernel/core/src/compile/scope/envelope/layout.ts',
     },
     {
       label: 'Reserve a placeholder in the parent frame',

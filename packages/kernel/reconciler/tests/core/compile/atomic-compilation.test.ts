@@ -78,9 +78,9 @@ describe('原子编译阶段', () => {
       registerClipPath: () => 'clip-path',
     };
     const placement = prepareScopePlacement(input, context);
-    const prepared = compileScope(canon, context, placement);
+    const prepared = compileScope(canon, context, { layout: { preparation: placement } });
     expect(prepared).toEqual(compileScope(canon, context));
-    expect(prepared.transforms).toContainEqual({ kind: 'translate', x: 10, y: 20 });
+    expect(prepared.layout.overall.transforms).toContainEqual({ kind: 'translate', x: 10, y: 20 });
   });
 
   it('同一解析结果可用于不同宽度布局，公式解析诊断不随布局重试重复', () => {

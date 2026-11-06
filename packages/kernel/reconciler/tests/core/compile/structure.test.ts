@@ -66,8 +66,6 @@ describe('编译源结构', () => {
       'createBoundaryStore',
       'createPathTargetResolver',
       'createPositionEvaluateContext',
-      'projectScopeGeometry',
-      'emitScopePrimitive',
       'fallbackMeasurer',
       'prepareScopePlacement',
       'projectPublishedCompileLayout',

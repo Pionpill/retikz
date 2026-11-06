@@ -243,7 +243,16 @@ describe('独立元素编译', () => {
     const parent = testCompileScope(
       outer,
       a.compiled,
-      [projectLayoutWithTransform(child.compiled.compiled, composeScopeTransform(child.compiled.compiled.transforms))],
+      [
+        projectLayoutWithTransform(
+          {
+            shape: child.compiled.compiled.shape,
+            boundary: child.compiled.compiled.boundary,
+            geometry: child.compiled.compiled.layout.overall.geometry,
+          },
+          composeScopeTransform(child.compiled.compiled.layout.overall.transforms),
+        ),
+      ],
       context,
     );
     if (parent.status !== 'compiled') throw new Error('expected outer compiled');

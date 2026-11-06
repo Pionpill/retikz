@@ -1,15 +1,11 @@
 import type { GroupPrimitive, ScenePrimitive, IRScope, CompileOutput, CompileWarning } from '@retikz/core';
-import {
-  resolveAnimations,
-  emitScopePrimitive,
-  projectScopeOutputBounds,
-  calculateBoundsOfPrimitives,
-} from '@retikz/core';
+import { resolveAnimations, projectScopeOutputBounds, calculateBoundsOfPrimitives } from '@retikz/core';
 import type { PropertyPath } from '@retikz/foundation';
 import type { CompileOwnerKey } from '@retikz/reconciler';
 
 import type { CompileOutputContext, CompileProvenanceTracker } from '../../src/compile';
 import { assembleCompileOutputs } from '../../src/compile';
+import { shouldEmitScopeGroup } from '../../src/compile/tree/scope/group';
 
 /** Scope 绘制阶段产物，与几何阶段结果分别保存 */
 export type ScopeOutput = {
@@ -45,7 +41,14 @@ export const assembleScopeOutput = (
   const frame = group.children;
   const nested = merged.primitives.slice(0, -1);
   const animations = resolveAnimations(input.animations, { target: 'element', onWarn: context.onWarn, irPath });
-  const primitive = emitScopePrimitive({ ...group, animations }, [...frame, ...nested]);
+  const primitive = shouldEmitScopeGroup(
+    frame.length + nested.length,
+    group.transforms ?? [],
+    group.id,
+    group.clipRef !== undefined,
+  )
+    ? { ...group, animations, children: [...frame, ...nested] }
+    : undefined;
   const primitives: Array<ScenePrimitive> = primitive === undefined ? [] : [primitive];
   if (owner !== undefined) provenance?.recordPrimitives(primitives, owner, 'scope');
   const bounds = projectScopeOutputBounds(

@@ -1,18 +1,14 @@
 import type { CenteredBox } from '@retikz/math';
 import { boundsOf, centerOfBounds, circle } from '@retikz/math';
 
-import type { Transform } from '../../contract';
-import type { CanonicalScope } from '../../resolve';
-import type { IRPosition, IRScope } from '../../schemas';
-import { ScopeBoundingShape } from '../../schemas';
-import { Anchor } from '../../shared';
-import { rect as rectOps } from '../../shared/geometry';
-import { calculateOuterBoundaryRect } from '../boundary';
-import type { CompiledBoundaryGeometry } from '../boundary';
-import type { CompiledReferenceGeometry } from '../reference';
-import { projectReferenceGeometry } from '../reference';
-import { composeScopeTransform } from '../shared';
-import type { CompiledScope } from './types';
+import type { CanonicalScope } from '../../../resolve';
+import type { IRPosition } from '../../../schemas';
+import { ScopeBoundingShape } from '../../../schemas';
+import { Anchor } from '../../../shared';
+import { rect as rectOps } from '../../../shared/geometry';
+import { calculateOuterBoundaryRect } from '../../boundary';
+import type { CompiledReferenceGeometry } from '../../reference';
+import type { CompiledScopeGeometry } from '../types';
 
 /** 收集子元素编译产物的全局边界点，供 AABB / MEC 等包络复用 */
 const collectScopeCornerPoints = (layouts: ReadonlyArray<CompiledReferenceGeometry>): Array<IRPosition> => {
@@ -46,10 +42,10 @@ const calculateScopeBoundingBox = (layouts: ReadonlyArray<CompiledReferenceGeome
 };
 
 /** 从真实子布局聚合 rectangle / circle 包络，不经过节点解析或文字测量 */
-export const createIntrinsicScopeLayout = (
+export const layoutScopeEnvelope = (
   canon: CanonicalScope,
   scopeLayouts: ReadonlyArray<CompiledReferenceGeometry>,
-): Pick<CompiledScope, 'shape' | 'boundary' | 'geometry'> => {
+): CompiledScopeGeometry => {
   let rect: CenteredBox;
   if (canon.envelope.kind === ScopeBoundingShape.Circle) {
     const points = collectScopeCornerPoints(scopeLayouts);
@@ -64,21 +60,5 @@ export const createIntrinsicScopeLayout = (
   } else {
     rect = { rotate: 0, ...(calculateScopeBoundingBox(scopeLayouts) ?? { x: 0, y: 0, width: 0, height: 0 }) };
   }
-  const { shape } = canon.envelope;
-  return {
-    shape,
-    boundary: { ...shape, isShape: true },
-    geometry: { rect, margin: { top: 0, right: 0, bottom: 0, left: 0 } },
-  };
-};
-
-/** 按 Core 包络规则向父 Scope 贡献布局；匿名 Scope 透传子布局 */
-export const projectScopeCompileLayouts = (
-  input: Pick<IRScope, 'id'>,
-  envelope: CompiledBoundaryGeometry,
-  children: ReadonlyArray<CompiledReferenceGeometry>,
-  transforms: ReadonlyArray<Transform>,
-): Array<CompiledReferenceGeometry> => {
-  const transform = composeScopeTransform(transforms);
-  return (input.id === undefined ? children : [envelope]).map(layout => projectReferenceGeometry(layout, transform));
+  return { rect, margin: { top: 0, right: 0, bottom: 0, left: 0 } };
 };

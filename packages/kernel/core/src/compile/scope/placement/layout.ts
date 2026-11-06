@@ -1,12 +1,12 @@
-import type { Transform } from '../../contract';
-import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import type { IRPosition, IRScopeSelfPoint, IRTransform } from '../../schemas';
-import { projectLayoutWithTransform, evaluateAnchorReference } from '../boundary';
-import type { CompiledBoundaryGeometry } from '../boundary';
-import { BuiltinCompileWarningCode, applyTransformChain, composeScopeTransform } from '../shared';
+import type { Transform } from '../../../contract';
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
+import type { IRPosition, IRScopeSelfPoint, IRTransform } from '../../../schemas';
+import { projectLayoutWithTransform, evaluateAnchorReference } from '../../boundary';
+import type { CompiledBoundaryGeometry } from '../../boundary';
+import { BuiltinCompileWarningCode, applyTransformChain, composeScopeTransform } from '../../shared';
+import type { InputScopeCompile, ScopeCompileContext, ScopePlacementPreparation } from '../types';
 import { evaluateScopePositionTarget } from './position';
 import { lowerScopeTransforms } from './transform';
-import type { InputScopeCompile, ScopeCompileContext, ScopePlacementPreparation } from './types';
 
 /** 按 transform 失败来源选择 warning code */
 const getTransformWarningCode = (failed: IRTransform | undefined): BuiltinCompileWarningCode => {
@@ -113,8 +113,8 @@ export const lowerScopePlacementTransforms = (
 };
 
 /**
- * 不依赖 intrinsic envelope 的既有 transform 可在 children 前冻结
- * @description 保持 v0.4 Scope transform 下跨 frame relative 定位语义；anchor pivot 才进入完整两阶段收尾
+ * 在子树执行前解析不依赖自身包络的变换，冻结当前引用结果
+ * @description 使用包络锚点作为旋转或缩放中心时，延后至子布局完成后计算
  */
 const lowerPreliminaryScopeTransforms = (
   child: InputScopeCompile,

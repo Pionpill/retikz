@@ -5,7 +5,7 @@ import type { PositionEvaluateContext } from '../../../../core/src/compile';
 import { projectLayoutWithTransform } from '../../../../core/src/compile/boundary';
 import type { CompiledNodeLayout } from '../../../../core/src/compile/node';
 import { referencePositionOf, createPositionEvaluateContext } from '../../../../core/src/compile/reference';
-import { lowerScopeTransforms } from '../../../../core/src/compile/scope/transform';
+import { lowerScopeTransforms } from '../../../../core/src/compile/scope/placement';
 import { composeScopeTransform } from '../../../../core/src/compile/shared';
 import type { Transform } from '../../../../core/src/contract';
 import { BUILTIN_SHAPES } from '../../../../core/src/providers';

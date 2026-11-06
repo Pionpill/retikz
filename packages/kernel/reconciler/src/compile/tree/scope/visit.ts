@@ -8,7 +8,6 @@ import {
   projectScopeOutputBounds,
   resolveScope,
   resolveAnimations,
-  shouldEmitScopeGroup,
 } from '@retikz/core';
 import { formatPropertyPath } from '@retikz/foundation';
 
@@ -23,7 +22,7 @@ import type { SubtreeCompileRuntime, SubtreeCompileState } from '../runtime';
 import { resolveStructuralAlignmentGuides, transformAlignmentGuides } from '../shared';
 import type { TreeOutputState } from '../shared';
 import type { SubtreeCompileOptions } from '../types';
-import { emitScopeGroup } from './group';
+import { emitScopeGroup, shouldEmitScopeGroup } from './group';
 import type { ScopeLayoutPlaceholder, ScopeLayoutPlaceholderContext, ScopeVisitHost } from './visit-types';
 
 /** 有 scope.id 时先注册占位 layout，等子树 bbox 算出后再替换 */
@@ -108,7 +107,7 @@ export const visitScope = (
   const preparedReads: Array<CompileReferenceRead> = [];
   const preparation = runtime.state.execution.namespaceStack.observeReferences(
     (name, entry, kind) => preparedReads.push({ name, entry, kind }),
-    () => prepareScopePlacement({ type: 'scope', ...canon.transform }, scopeGeometryContext),
+    () => prepareScopePlacement({ type: 'scope', id: canon.style.id, ...canon.transform }, scopeGeometryContext),
   );
   const preparedDiagnostics = runtime.state.workspace.diagnosticCollector.warnings.slice(warningCount);
 
@@ -207,15 +206,19 @@ export const visitScope = (
               registerClipPath: stageRuntime.state.workspace.clipRegistry.registerPath,
               onWarn: stageRuntime.state.workspace.diagnosticCollector.collect,
             },
-            preparation,
+            { layout: { preparation } },
           ),
         }),
       },
     );
 
-    const intrinsicLayout = geometry.compiled;
+    const intrinsicLayout = {
+      shape: geometry.compiled.shape,
+      boundary: geometry.compiled.boundary,
+      geometry: geometry.compiled.layout.overall.geometry,
+    };
     compiledScope = geometry.compiled;
-    scopeTransforms = geometry.compiled.transforms;
+    scopeTransforms = geometry.compiled.layout.overall.transforms;
 
     const postTransforms =
       preliminaryTransforms === undefined
@@ -293,9 +296,9 @@ export const visitScope = (
   const bindScopeAnimations = (compiled: CompiledScope): CompiledScope => {
     const animations = shouldEmitScopeGroup(
       state.primitives.length,
-      compiled.transforms,
-      compiled.style.id,
-      compiled.clip !== undefined,
+      compiled.layout.overall.transforms,
+      compiled.emit.overall.id,
+      compiled.emit.overall.clipRef !== undefined,
     )
       ? (resolveAnimations(canon.animations, {
           target: 'element',
@@ -303,12 +306,27 @@ export const visitScope = (
           onWarn: scopeGeometryContext.onWarn,
         }) ?? [])
       : [];
-    return { ...compiled, animations };
+    if (compareScopeAnimations(compiled.emit.overall.animations ?? [], animations)) return compiled;
+    return compileScope(
+      canon,
+      {
+        ...scopeGeometryContext,
+        layouts: state.geometries,
+        resolvedClipPath: preResolvedClipPath,
+        registerClip: runtime.state.workspace.clipRegistry.register,
+        registerClipPath: runtime.state.workspace.clipRegistry.registerPath,
+        animations,
+      },
+      {
+        layout: compiled.layout,
+        emit: { clip: compiled.emit.clip ?? { clipRef: compiled.emit.overall.clipRef } },
+      },
+    );
   };
 
   const finalWarningCount = runtime.state.workspace.diagnosticCollector.warnings.length;
   const animatedScope = bindScopeAnimations(compiledScope!);
-  if (!compareScopeAnimations(compiledScope!.animations, animatedScope.animations)) compiledScope = animatedScope;
+  compiledScope = animatedScope;
   if (pendingRecord?.record.phase === 'scope') {
     const { record, reused } = pendingRecord;
     runtime.cache?.write(

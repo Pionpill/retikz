@@ -13,7 +13,6 @@ import {
   resolveScopeInheritance,
   prepareScopePlacement,
   compileScope,
-  createScopeGroup,
 } from '@retikz/core';
 import type {
   CanonicalScope,
@@ -188,9 +187,9 @@ export const compileWeaveScope = (
       registerClip: workspace.clipRegistry.register,
       registerClipPath: workspace.clipRegistry.registerPath,
     },
-    preparation,
+    { layout: { preparation } },
   );
-  const group = createScopeGroup(compiled);
+  const group = compiled.emit.overall;
   return Object.freeze({
     compiled,
     canon,

@@ -1,5 +1,5 @@
-import type { Transform } from '../../contract';
-import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
+import type { Transform } from '../../../contract';
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import type {
   IRAtTranslateTransform,
   IRBetweenPosition,
@@ -11,12 +11,12 @@ import type {
   IRTransform,
   IRTranslateTransform,
   PolarPosition,
-} from '../../schemas';
-import { evaluateAnchorReference } from '../boundary';
-import type { CompiledBoundaryGeometry } from '../boundary';
-import { evaluatePosition } from '../reference';
-import type { PositionEvaluation, PositionEvaluateContext, PositionTargetEvaluateContext } from '../reference';
-import { createCompileInvariantError } from '../shared';
+} from '../../../schemas';
+import { evaluateAnchorReference } from '../../boundary';
+import type { CompiledBoundaryGeometry } from '../../boundary';
+import { evaluatePosition } from '../../reference';
+import type { PositionEvaluation, PositionEvaluateContext, PositionTargetEvaluateContext } from '../../reference';
+import { createCompileInvariantError } from '../../shared';
 
 /** scope transform lowering 所需的编译上下文 */
 type ScopeTransformsLoweringContext = {

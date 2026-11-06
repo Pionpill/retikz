@@ -21,9 +21,7 @@ export {
   createPathTargetResolver,
   createPositionEvaluateContext,
   createRound,
-  createScopeGroup,
   emitPathOutput,
-  emitScopePrimitive,
   evaluateAnchorReference,
   evaluatePosition,
   evaluatePositionTargetWorld,
@@ -39,7 +37,6 @@ export {
   projectScopeOutputBounds,
   referencePositionOf,
   samplePathRoute,
-  shouldEmitScopeGroup,
   viewBoxToLayout,
 } from './compile';
 export type {
@@ -93,6 +90,10 @@ export type {
   ReferenceReadKind,
   ScopeCompileContext,
   ScopePlacementPreparation,
+  PreparedScopeCompilation,
+  PreparedScopeLayout,
+  PreparedScopeEmit,
+  CompiledScopeLayout,
   TargetResolution,
   TexLowerer,
 } from './compile';

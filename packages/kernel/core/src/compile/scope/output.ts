@@ -1,26 +1,14 @@
 import { boundsToRect } from '@retikz/math';
 
-import type { GroupPrimitive, ScenePrimitive, SceneResource, Transform } from '../../contract';
+import type { GroupPrimitive, SceneResource, Transform } from '../../contract';
+import type { IRScope } from '../../schemas';
+import type { CompiledBoundaryGeometry } from '../boundary';
+import type { CompiledReferenceGeometry } from '../reference';
+import { projectReferenceGeometry } from '../reference';
 import { mergeLayoutBounds, calculateBoundsOfPrimitives, allocationPointsOf } from '../scene';
 import type { CompileBounds, LayoutBoundsContribution } from '../scene';
+import { composeScopeTransform } from '../shared';
 import { applyTransformChain } from '../shared';
-
-/** 判断 Scope 是否需要保留可见分组，空匿名分组可被裁去 */
-export const shouldEmitScopeGroup = (
-  childCount: number,
-  transforms: ReadonlyArray<Transform>,
-  id: string | undefined,
-  hasClip: boolean,
-): boolean => childCount > 0 || transforms.length > 0 || id !== undefined || hasClip;
-
-/** 将最终分组属性与真实子输出组装，裁去空匿名分组 */
-export const emitScopePrimitive = (
-  group: Omit<GroupPrimitive, 'children'>,
-  children: Array<ScenePrimitive>,
-): GroupPrimitive | undefined => {
-  if (!shouldEmitScopeGroup(children.length, group.transforms ?? [], group.id, group.clipRef !== undefined)) return;
-  return { ...group, children };
-};
 
 /** 投影子输出边界；装饰经过裁剪，布局贡献只应用变换 */
 export const projectScopeOutputBounds = (
@@ -47,4 +35,15 @@ export const projectScopeOutputBounds = (
     }
   }
   return projectedBounds;
+};
+
+/** 按 Core 包络规则向父 Scope 贡献布局；匿名 Scope 透传子布局 */
+export const projectScopeCompileLayouts = (
+  input: Pick<IRScope, 'id'>,
+  envelope: CompiledBoundaryGeometry,
+  children: ReadonlyArray<CompiledReferenceGeometry>,
+  transforms: ReadonlyArray<Transform>,
+): Array<CompiledReferenceGeometry> => {
+  const transform = composeScopeTransform(transforms);
+  return (input.id === undefined ? children : [envelope]).map(layout => projectReferenceGeometry(layout, transform));
 };

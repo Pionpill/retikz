@@ -7,7 +7,7 @@ import { BuiltinCompileWarningCode } from '../../../../core/src';
 import { projectLayoutWithTransform } from '../../../../core/src/compile/boundary';
 import type { CompiledNodeLayout } from '../../../../core/src/compile/node';
 import type { CompiledReferenceGeometry } from '../../../../core/src/compile/reference';
-import { layoutScopeEnvelope } from '../../../../core/src/compile/scope/envelope/layout';
+import { layoutScopeEnvelope } from '../../../../core/src/compile/scope/envelope';
 import { composeScopeTransform } from '../../../../core/src/compile/shared';
 import { BUILTIN_SHAPES } from '../../../../core/src/providers';
 import { resolveScope, resolveScopeInheritance } from '../../../../core/src/resolve';

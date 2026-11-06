@@ -327,6 +327,16 @@ Scene 输出可以保留局部几何和 Group 变换。命名查询使用所需�
   ]}
 />
 
+### Scope 阶段复用
+
+`compileScope(canon, context, prepared)` 返回 `layout` 和 `emit`，调用方可以从结果中选取仍有效的产物，再通过 `PreparedScopeCompilation` 传回。Core 只补算缺项，缓存失效判断由调用方负责。
+
+- `layout.overall` 保存包络几何和最终变换；局部产物包括子布局聚合得到的 `envelope`、子树执行前冻结的 `preparation`，以及最终变换 `placement`。
+- `emit.overall` 保存不含 `children` 的分组属性；`clip` 保存裁剪登记结果，空对象表示已确认无裁剪。复用裁剪前，调用方须恢复相应资源。
+- 整体命中直接复用对应结果，保留已提供的局部产物，不反推缺失项。当前 shape / boundary 绑定从 canonical 输入取得，由消费方按需与缓存几何组合。
+
+Reconciler 仍在进入子树前调用 `prepareScopePlacement` 冻结引用；子布局完成后确定包络、最终变换并发布几何，再处理待定路径。真实子输出确定后才解析动画，通过 context 传给 `compileScope`；此时可复用布局和裁剪，仅重组分组属性。最后将实际子图元附加到分组，缓存不持有子树。
+
 ## 汇总编译结果
 
 子项编译完成后，`compileSceneSnapshot` 收集有序图元、paint 与 clip 资源，以及可用于根场景的动画配置。画布范围分两种情况：指定 `viewBox` 时直接使用该范围；否则根据累计布局边界加上 `padding` 计算。
@@ -399,12 +409,12 @@ Scene 之外，`artifacts` 保存 Composite 返回的领域产物；没有产物
 
 Core 提供可组合的领域阶段。Reconciler 统一管理遍历、依赖等待与工作区，完整和增量执行都调用同一套解析、布局和输出规则。
 
-| 元素       | 共享阶段                                                                    | 驱动保存的事实                       |
-| ---------- | --------------------------------------------------------------------------- | ------------------------------------ |
-| Node       | `resolveNode` → `compileNode`                                               | 有效属性、布局，以及配套的输出和资源 |
-| Coordinate | `evaluatePosition` → `compileCoordinate`                                    | `CompiledCoordinate.position`        |
-| Path       | `resolvePathAnimations` → `compilePath`                                     | kind 宿主产生的输出、资源和边界      |
-| Scope      | `resolveScope`、`prepareScopePlacement`、`compileScope`、`createScopeGroup` | 包络、自身分组属性和输出             |
+| 元素       | 共享阶段                                                | 驱动保存的事实                       |
+| ---------- | ------------------------------------------------------- | ------------------------------------ |
+| Node       | `resolveNode` → `compileNode`                           | 有效属性、布局，以及配套的输出和资源 |
+| Coordinate | `evaluatePosition` → `compileCoordinate`                | `CompiledCoordinate.position`        |
+| Path       | `resolvePathAnimations` → `compilePath`                 | kind 宿主产生的输出、资源和边界      |
+| Scope      | `resolveScope`、`prepareScopePlacement`、`compileScope` | 包络、自身分组属性和输出             |
 
 `resolve` 可使用注册表和位置查询等语义上下文，不读取编译执行状态。布局和输出阶段分别要求测量、位置解析、资源登记等能力；完整 `SharedCompileContext` 和工作区由调用方持有。下面以无引用节点说明阶段组合，位置查询返回 `undefined` 表示没有可见的命名目标。
 

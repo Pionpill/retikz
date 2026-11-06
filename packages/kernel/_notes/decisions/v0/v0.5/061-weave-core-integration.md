@@ -72,11 +72,13 @@ Root 的容器索引覆盖自身与全部 Scope；Root / 局部命名空间 Scop
 
 ## Scope 分阶段消费
 
+Scope 的 compiled 保存 layout 与 emit 阶段结果，并通过 PreparedScopeCompilation 接收调用方确认有效的产物。layout 支持整体结果、包络、前置准备与最终放置复用；emit 支持不含 children 的整体分组属性与裁剪登记结果复用。整体命中保留已知局部产物，不反推缺失项；shape / boundary 绑定来自当前 canon，按需与布局几何组合。调用方负责缓存失效与配套资源恢复。
+
 Scope 上下文下传与包络上收是独立的计算职责：
 
 - `resolveScopeInheritance` 解析有效继承上下文；`prepareScopePlacement` 准备 Scope 放置目标与可提前确定的变换，可能等待外部引用
 - 子元素在自身实际依赖就绪后调用对应 Core 编译入口，不把父 Scope 包络完成作为所有子元素的前置条件
-- `compileScope` 消费 Core 语义要求的局部子布局，生成 Scope 包络与最终变换；真实子输出就绪后，输出阶段统一执行空分组裁剪、动画解析与分组生成；不递归编译 children
+- `compileScope` 消费 Core 语义要求的局部子布局，生成 Scope 包络与最终变换；发布几何并完成待定路径后，调用方依据真实子输出解析动画，再通过 context 交给 compileScope 重组分组属性，此时可复用布局与裁剪。最终输出组装负责附加 children 和空分组裁剪；Core 不递归编译 children
 - 引用布局由 Core 投影到正确坐标系；最终子输出通过 `assembleScopeOutput` 包装，不能重复应用变换
 
 Scope 引用包络、可见边界与布局 allocation 不混为同一对象。Path 不加入现有 Scope 引用包络；匿名与具名 Scope 的几何贡献继续遵循 Core 规则，运行时容器 id 不改变这些规则。若接线仍需解释聚合规则，缺少的选择或投影能力应由 Core 提供，不能由 Weave 复制。

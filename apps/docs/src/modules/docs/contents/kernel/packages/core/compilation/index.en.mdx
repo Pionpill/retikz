@@ -344,6 +344,16 @@ Composite entries join compilation through registered Definitions, and the basic
   ]}
 />
 
+### Reusing Scope stages
+
+`compileScope(canon, context, prepared)` returns `layout` and `emit`. Callers select valid products from that result and pass them back through `PreparedScopeCompilation`. Core computes missing products; callers decide cache validity.
+
+- `layout.overall` holds envelope geometry and final transforms. Local products are the aggregated `envelope`, the `preparation` frozen before traversing children, and final transforms in `placement`.
+- `emit.overall` holds group properties without `children`. `clip` holds the clip registration result; an empty object means no clip. Callers must restore associated resources before reuse.
+- An overall hit reuses the result and preserves supplied local products without reconstructing missing ones. Current shape / boundary bindings come from canonical input; consumers combine them with cached geometry as needed.
+
+Reconciler still calls `prepareScopePlacement` before entering children to freeze references. Once child layouts settle, it computes the envelope and final transforms, publishes geometry, and flushes pending paths. Animations are resolved after actual child outputs settle and passed to `compileScope` through context; layout and clip can be reused while rebuilding group properties. Actual child primitives are attached last and are not retained in these caches.
+
 ## Assemble the result
 
 After child compilation, `compileSceneSnapshot` collects ordered primitives, paint and clip resources, and supported root animation configuration. An explicit `viewBox` determines the canvas bounds directly. Otherwise, Reconciler computes them from accumulated layout bounds and `padding`.
@@ -426,12 +436,12 @@ Start in `compileSceneSnapshot` to see context creation, traversal, and assembly
 
 Core provides composable domain stages. Reconciler owns traversal, dependency waiting, and workspace lifetime, supplying the narrow capabilities required by each stage.
 
-| Element    | Shared stages                                                               | Facts retained by the driver                               |
-| ---------- | --------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| Node       | `resolveNode` → `compileNode`                                               | Effective properties, layout, output, and paired resources |
-| Coordinate | `evaluatePosition` → `compileCoordinate`                                    | `CompiledCoordinate.position`                              |
-| Path       | `resolvePathAnimations` → `compilePath`                                     | Kind-host output, resources, and bounds                    |
-| Scope      | `resolveScope`, `prepareScopePlacement`, `compileScope`, `createScopeGroup` | Envelope, own group properties, and output                 |
+| Element    | Shared stages                                           | Facts retained by the driver                               |
+| ---------- | ------------------------------------------------------- | ---------------------------------------------------------- |
+| Node       | `resolveNode` → `compileNode`                           | Effective properties, layout, output, and paired resources |
+| Coordinate | `evaluatePosition` → `compileCoordinate`                | `CompiledCoordinate.position`                              |
+| Path       | `resolvePathAnimations` → `compilePath`                 | Kind-host output, resources, and bounds                    |
+| Scope      | `resolveScope`, `prepareScopePlacement`, `compileScope` | Envelope, own group properties, and output                 |
 
 Resolution may use semantic context such as registries and position lookup, but does not read compilation execution state. Layout and output require their own measurement, position, and resource capabilities. The caller owns the complete `SharedCompileContext` and workspace. This example composes the stages for a node without references; `undefined` from lookup means no named target is visible.
 

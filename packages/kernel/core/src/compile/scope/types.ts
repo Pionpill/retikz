@@ -1,7 +1,7 @@
-import type { PropertyPath } from '@retikz/foundation';
+import type { PropertyPath, WithRequiredProperties } from '@retikz/foundation';
 import type { BoundsInsets, CenteredBox } from '@retikz/math';
 
-import type { SceneClipPath, Transform } from '../../contract';
+import type { GroupPrimitive, SceneClipPath, Transform } from '../../contract';
 import type { IRPosition, IRScope, IRAnimationTrack } from '../../schemas';
 import type { CompiledBoundaryGeometry } from '../boundary';
 import type { CompiledReferenceGeometry, PositionTargetEvaluateContext } from '../reference';
@@ -16,20 +16,52 @@ export type ScopePlacementPreparation = Readonly<{
   preliminaryTransforms?: Array<Transform>;
 }>;
 
-/** 子布局确定后的 Scope 几何阶段产物 */
+/** Scope 编译结果，不持有子树图元或跨次失效状态 */
 export type CompiledScope = Pick<CompiledBoundaryGeometry, 'shape' | 'boundary'> &
   Readonly<{
-    /** 局部内容包络，包含空内容时的退化布局 */
-    geometry: CompiledScopeGeometry;
-    /** 子布局完成后确定的自身变换 */
-    transforms: Array<Transform>;
-    /** 分组自身的最终身份与排序，不包含子树 */
-    style: Pick<IRScope, 'id' | 'meta' | 'zIndex'>;
-    /** 已登记的裁剪资源标识 */
-    clip?: string;
-    /** 分组最终动画 */
-    animations: Array<IRAnimationTrack>;
+    /** 完整布局与本次已知的局部产物 */
+    layout: WithRequiredProperties<PreparedScopeLayout, 'overall'>;
+    /** 分组自身绘制属性与已知裁剪产物 */
+    emit: WithRequiredProperties<PreparedScopeEmit, 'overall'>;
+    /** 父级输出排序所需的当前声明 */
+    zIndex?: IRScope['zIndex'];
   }>;
+
+/** Scope 完整布局计算结果，不含能力绑定 */
+export type CompiledScopeLayout = {
+  /** 子元素形成的局部包络 */
+  geometry: CompiledScopeGeometry;
+  /** 包络确定后的最终自身变换 */
+  transforms: Array<Transform>;
+};
+
+/** 调用方确认有效的 Scope 布局产物 */
+export type PreparedScopeLayout = {
+  /** 整体命中跳过布局计算，不反推局部产物 */
+  overall?: CompiledScopeLayout;
+  /** 子布局聚合得到的包络 */
+  envelope?: CompiledScopeGeometry;
+  /** 子树执行前冻结的引用与初步变换；对象内缺省字段仍代表已计算 */
+  preparation?: ScopePlacementPreparation;
+  /** 包络确定后的最终自身变换 */
+  placement?: CompiledScopeLayout['transforms'];
+};
+
+/** 调用方保证当前外观、动画与资源环境有效的 Scope 绘制产物 */
+export type PreparedScopeEmit = {
+  /** 完整分组属性，不包含 children；整体命中不反推局部结果 */
+  overall?: Omit<GroupPrimitive, 'children'>;
+  /** 已完成裁剪登记；空对象代表无裁剪，复用前由调用方恢复资源 */
+  clip?: Pick<GroupPrimitive, 'clipRef'>;
+};
+
+/** Scope 可复用阶段产物，Core 不判断跨次有效性 */
+export type PreparedScopeCompilation = {
+  /** 完整或局部布局 */
+  layout?: PreparedScopeLayout;
+  /** 完整或局部绘制 */
+  emit?: PreparedScopeEmit;
+};
 
 /** 子元素聚合形成的最终包络，不包含节点文字 */
 export type CompiledScopeGeometry = {
@@ -54,6 +86,8 @@ export type ScopeCompileContext = Readonly<{
   registerClip: ClipRegistry['register'];
   /** 登记已生成的裁剪路径 */
   registerClipPath: ClipRegistry['registerPath'];
+  /** 调用方在真实子输出收尾后解析的动画；省略表示尚无动画 */
+  animations?: Array<IRAnimationTrack>;
   /** 当前诊断位置 */
   irPath: PropertyPath;
   /** 当前诊断接收器 */

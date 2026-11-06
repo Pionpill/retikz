@@ -1,10 +1,10 @@
 import { formatPropertyPath } from '@retikz/foundation';
 
-import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import { createLayoutProbeRecoverableError } from '../../resolve';
-import type { IRPosition, IRScope, IRScopePositionTarget } from '../../schemas';
-import { evaluatePositionTargetWorld } from '../reference';
-import type { ScopeCompileContext } from './types';
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
+import { createLayoutProbeRecoverableError } from '../../../resolve';
+import type { IRPosition, IRScope, IRScopePositionTarget } from '../../../schemas';
+import { evaluatePositionTargetWorld } from '../../reference';
+import type { ScopeCompileContext } from '../types';
 
 /** 拒绝引用适配返回的非有限位置 */
 const assertFiniteScopePoint = (point: IRPosition, label: string): void => {
