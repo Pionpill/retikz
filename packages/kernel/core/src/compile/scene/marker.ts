@@ -26,29 +26,20 @@ export const materializeMarkerPrimitive = (
   contextStroke: PaintValue,
   hostOpacity?: number,
 ): ScenePrimitive => {
-  const substituteMarkerContextPaint = (value: PaintValue): PaintValue =>
-    typeof value === 'object' && value.kind === 'contextStroke' ? contextStroke : value;
-
-  const content = { ...primitive };
-  delete content.id;
-  delete content.meta;
+  // 一次排除宿主标识，后续仅更新新副本，保留其它嵌套字段的共享引用
+  const { id: _id, meta: _meta, ...content } = primitive;
   if (content.type === 'group') {
-    return {
-      ...content,
-      children: content.children.map(c => materializeMarkerPrimitive(c, contextStroke, hostOpacity)),
-    };
+    content.children = content.children.map(c => materializeMarkerPrimitive(c, contextStroke, hostOpacity));
+    return content;
   }
 
   const opacity = combineOpacity(content.opacity, hostOpacity);
-  const appearance = opacity === undefined ? {} : { opacity };
-  if (content.type === 'text') return { ...content, ...appearance };
+  if (opacity !== undefined) content.opacity = opacity;
+  if (content.type === 'text') return content;
 
-  return {
-    ...content,
-    ...appearance,
-    ...(content.fill !== undefined && { fill: substituteMarkerContextPaint(content.fill) }),
-    ...(content.stroke !== undefined && { stroke: substituteMarkerContextPaint(content.stroke) }),
-  };
+  if (typeof content.fill === 'object' && content.fill.kind === 'contextStroke') content.fill = contextStroke;
+  if (typeof content.stroke === 'object' && content.stroke.kind === 'contextStroke') content.stroke = contextStroke;
+  return content;
 };
 
 /**

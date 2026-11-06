@@ -45,11 +45,23 @@ pnpm --filter @retikz/core exec vitest bench --run --config vitest.bench.config.
 pnpm --filter @retikz/core exec vitest bench --run --config vitest.bench.config.ts benchmarks/compile/text.bench.ts --fsModuleCache=false
 ```
 
-## 场景可见边界
+## Scene 编译操作
 
 [scene.bench.ts](./compile/scene.bench.ts) 测量一次完整的 `calculateBoundsOfPrimitives`，包括资源索引、路径保守包络、描边、可见箭头、分组裁剪及变换。六种输入为折线、三次贝塞尔、旋转椭圆弧、双端可见箭头、双端透明箭头、局部裁剪后平移，各16/1024条路径命令，共12场景。规模包含首条move；裁剪额外固定5条clip命令，箭头各固定一个小矩形marker
 
-fixture及独立几何预期在 [_scene-workloads.ts](./_scene-workloads.ts) 构造，均不计时；验证边界四字段、冻结输出和输入不变性。单样本只调用一次汇总，不包含路径生成、完整编译或渲染，不用外包循环扩容。每场景10次预热、100次正式测量，共110次；全组1320次调用、1200正式样本
+另有10项代表操作，与上述12项合计22场景：
+
+| 操作             | 输入与规模                                                                     | 场景数 | P90警告/错误                |
+| ---------------- | ------------------------------------------------------------------------------ | -----: | --------------------------- |
+| 布局边界合并     | 单个16/1024点贡献，无/有方向性阴影，与已有边界合并                             |      4 | 小档0.05/0.2ms，大档0.5/2ms |
+| Scene布局        | 固定自动边界加padding、显式viewBox，含precision2取整                           |      2 | 均0.01/0.05ms               |
+| Marker放置与物化 | 自动/固定角度，8/128叶图元，固定3层嵌套组，含文字、描边色、透明度与id/meta剥离 |      4 | 小档0.05/0.2ms，大档0.5/2ms |
+
+fixture及独立几何预期在 [_scene-workloads.ts](./_scene-workloads.ts) 或固定输入的setup中构造，均不计时。验证边界四字段、可见边界冻结、布局舍入、marker完整输出树及输入不变性。单样本只调用一次对应操作，不包含路径生成、完整编译或渲染，不用外包循环扩容。每场景10次预热、100次正式测量，共110次；全组2420次调用、2200正式样本
+
+边界合并的规模为一次贡献的点数；marker规模为一个标记的叶图元数，包含等量矩形和文字，三层组不计入该数量。标记位置/切线和已编译定义预置，provider生成、曲线采样、预期构造及rounder工厂不计时，放置变换、递归复制和外观物化计时。消费频率为显式规划假设，规模不表示已验证业务上限
+
+代表性覆盖不逐helper机械加case：负零归一和marker物化由完整消费操作覆盖；取整工厂、四角构造和简单汇总包装复用功能证据，不单列性能场景。新增场景改变完整fixture摘要，历史12项结果不直接用于回归判断
 
 P90警告/错误预算：16命令0.05/0.2ms，1024命令0.5/2ms。消费频率是局部几何更新及Composite探测的规划假设，详见预算配置；不按箭头/曲线/裁剪复杂度放宽，不更新历史基线
 
@@ -59,7 +71,7 @@ pnpm --filter @retikz/core exec vitest bench --run --config vitest.bench.config.
 
 ## 测量边界
 
-当前覆盖 `src/providers`、`src/resolve`、`src/contract` 的代表操作，以及 `src/compile` 的资源注册表和文本操作，不调用 `compileToScene`。shape / arrow / mark 的 iterable 在计时内完整消费，包含该操作自身的计算与分配。
+当前覆盖 `src/providers`、`src/resolve`、`src/contract` 的代表操作，以及 `src/compile` 的资源注册表、文本和Scene操作，不调用 `compileToScene`。shape / arrow / mark 的 iterable 在计时内完整消费，包含该操作自身的计算与分配。
 
 - Scene 图元生成属于编译计算；SVG 字符串生成、Canvas 绘制、DOM 更新、浏览器布局与绘制均不计入。
 - 不接入 `@retikz/render`、React/Vanilla renderer 或浏览器。Runtime / Reconciler 调度、增量更新与生命周期不属于本目录。

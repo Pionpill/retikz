@@ -30,13 +30,43 @@ export const resolveCoreBudget = (scenario: BenchmarkScenario): BenchmarkBudget 
     };
   } else if (layer === 'compile' && family === 'scene') {
     const count = Number(scale);
-    if (![16, 1024].includes(count)) throw new Error(`Missing Core scene scale budget: ${identity}`);
-    policy = {
-      warningMs: count === 16 ? 0.05 : 0.5,
-      errorMs: count === 16 ? 0.2 : 2,
-      rationale:
-        'Reconciler局部几何或Composite探测消费一次完整可见边界汇总；假设100个16命令短路径更新，每次分配0.05/0.2ms，边界阶段约5/20ms；单个1024命令长路径分配0.5/2ms。命令规模包含move，裁剪组额外固定5条clip命令；箭头及裁剪不放宽预算，不含路径生成、布局、renderer或浏览器，不代表已验证业务上限',
-    };
+    if (variant === 'layout-auto' || variant === 'layout-explicit') {
+      if (count !== 1) throw new Error(`Missing Core scene layout budget: ${identity}`);
+      policy = {
+        warningMs: 0.01,
+        errorMs: 0.05,
+        rationale:
+          'Reconciler scene/output每次输出消费一次自动边界或显式viewBox转换，固定输入单次操作分配0.01/0.05ms；取整回调在计时内，rounder工厂在环境准备时创建，不通过批量循环放大固定成本，不代表整帧保证',
+      };
+    } else if (variant === 'marker-auto' || variant === 'marker-fixed') {
+      if (![8, 128].includes(count)) throw new Error(`Missing Core scene marker budget: ${identity}`);
+      policy = {
+        warningMs: count === 8 ? 0.05 : 0.5,
+        errorMs: count === 8 ? 0.2 : 2,
+        rationale:
+          'Core箭头可见边界放置一个已编译marker，递归物化同样用于path marks；假设100个8叶图元普通标记，每次分配0.05/0.2ms，阶段约5/20ms，单个128叶图元复杂标记分配0.5/2ms。固定3层嵌套组，数量不含组节点；包括变换、描边色和透明度物化，不含provider生成、路径采样或renderer，规模为规划假设',
+      };
+    } else if (variant === 'merge-plain' || variant === 'merge-shadow') {
+      if (![16, 1024].includes(count)) throw new Error(`Missing Core scene merge budget: ${identity}`);
+      policy = {
+        warningMs: count === 16 ? 0.05 : 0.5,
+        errorMs: count === 16 ? 0.2 : 2,
+        rationale:
+          'Reconciler subtree逐项合并布局贡献，每样本一次新点集与已有边界合并；假设100个16点普通贡献各分配0.05/0.2ms，阶段约5/20ms，单个1024点长贡献分配0.5/2ms。输入点数不是合并调用次数，阴影与普通贡献同预算，不包含调用方逐贡献调度或renderer，消费频率为规划假设',
+      };
+    } else {
+      if (
+        !['polyline', 'bezier', 'ellipse', 'arrows', 'hidden-arrows', 'clipped-group'].includes(variant) ||
+        ![16, 1024].includes(count)
+      )
+        throw new Error(`Missing Core scene bounds budget: ${identity}`);
+      policy = {
+        warningMs: count === 16 ? 0.05 : 0.5,
+        errorMs: count === 16 ? 0.2 : 2,
+        rationale:
+          'Reconciler局部几何或Composite探测消费一次完整可见边界汇总；假设100个16命令短路径更新，每次分配0.05/0.2ms，边界阶段约5/20ms；单个1024命令长路径分配0.5/2ms。命令规模包含move，裁剪组额外固定5条clip命令；箭头及裁剪不放宽预算，不含路径生成、布局、renderer或浏览器，不代表已验证业务上限',
+      };
+    }
   } else if (layer === 'compile' && family === 'text') {
     const count = Number(scale);
     if (variant === 'block-segments-plain' || variant === 'block-segments-mixed') {
