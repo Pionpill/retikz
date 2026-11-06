@@ -27,7 +27,7 @@ describe('协调器编译跟踪', () => {
 
     expect(records).toEqual([
       {
-        owner: '@retikz/reconciler',
+        owner: 'kernel/reconciler',
         phase: ReconcilerTracePhase.Update,
         unit: ReconcilerTraceUnit.ElementCompile,
         outcome: 'full',
@@ -53,7 +53,7 @@ describe('协调器编译跟踪', () => {
     expect(traced).toEqual(plain);
     expect(records).toEqual([
       {
-        owner: '@retikz/reconciler',
+        owner: 'kernel/reconciler',
         phase: ReconcilerTracePhase.Update,
         unit: ReconcilerTraceUnit.ElementCompile,
         outcome: 'full',
@@ -94,7 +94,7 @@ describe('协调器编译跟踪', () => {
     expect(records).toHaveLength(2);
     for (const [index, record] of records.entries()) {
       expect(record).toEqual({
-        owner: '@retikz/reconciler',
+        owner: 'kernel/reconciler',
         phase: ReconcilerTracePhase.Update,
         unit: ReconcilerTraceUnit.ElementCompile,
         outcome: 'full',

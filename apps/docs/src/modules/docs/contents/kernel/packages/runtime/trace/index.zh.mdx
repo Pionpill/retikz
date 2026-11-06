@@ -352,9 +352,11 @@ const records: Array<PerformanceTraceRecord> = [];
 const session = new ReconcilerSession({}, { trace: record => records.push(record) });
 session.mount({ version: 1, type: 'scene', children: [{ type: 'node', id: 'a', position: [0, 0] }] });
 console.log(records.map(record => [record.owner, record.phase, record.unit, record.visited]));
-// [['@retikz/reconciler', 'update', 'element-compile', 1]]
+// [['kernel/reconciler', 'update', 'element-compile', 1]]
 session.dispose();
 ```
+
+Trace 的 `owner` 按分组和模块命名：编译会话使用 `kernel/reconciler`，渲染提交使用 `kernel/render/svg` 或 `kernel/render/canvas`。
 
 `ReconcilerTracePhase.Update` 对应 `update`；`ReconcilerTraceUnit` 区分以下两种工作量：
 

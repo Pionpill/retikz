@@ -244,7 +244,7 @@ export class ReconcilerSession {
   private reportTrace(outcome: 'full' | 'incremental', unit: ReconcilerTraceUnit, visited: number): void {
     try {
       this.execution.trace?.({
-        owner: '@retikz/reconciler',
+        owner: 'kernel/reconciler',
         phase: ReconcilerTracePhase.Update,
         unit,
         outcome,

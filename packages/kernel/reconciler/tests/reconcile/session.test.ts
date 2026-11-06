@@ -109,7 +109,7 @@ describe('独立编译会话', () => {
       );
       counts.push(trace.mock.calls.at(-1)![0].visited);
       expect(trace.mock.calls.at(-1)![0]).toMatchObject({
-        owner: '@retikz/reconciler',
+        owner: 'kernel/reconciler',
         phase: 'update',
         unit: 'element-compile',
         outcome: updateStrategy === 'full' ? 'full' : 'incremental',

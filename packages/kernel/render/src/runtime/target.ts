@@ -169,7 +169,7 @@ export const createRetainedRenderTarget = (input: RetainedRenderTargetOptions): 
               if (committed) {
                 try {
                   options.trace?.({
-                    owner: `@retikz/render:${options.backend}`,
+                    owner: `kernel/render/${options.backend}`,
                     phase: prior === undefined ? 'commit' : 'update',
                     unit: 'scene-change',
                     outcome: 'full',

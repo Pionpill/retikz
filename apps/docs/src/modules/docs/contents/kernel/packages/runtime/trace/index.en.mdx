@@ -364,9 +364,11 @@ const records: Array<PerformanceTraceRecord> = [];
 const session = new ReconcilerSession({}, { trace: record => records.push(record) });
 session.mount({ version: 1, type: 'scene', children: [{ type: 'node', id: 'a', position: [0, 0] }] });
 console.log(records.map(record => [record.owner, record.phase, record.unit, record.visited]));
-// [['@retikz/reconciler', 'update', 'element-compile', 1]]
+// [['kernel/reconciler', 'update', 'element-compile', 1]]
 session.dispose();
 ```
+
+Trace `owner` values use group and module names: compilation sessions use `kernel/reconciler`, and render commits use `kernel/render/svg` or `kernel/render/canvas`.
 
 `ReconcilerTracePhase.Update` represents `update`. `ReconcilerTraceUnit` distinguishes two units of work:
 

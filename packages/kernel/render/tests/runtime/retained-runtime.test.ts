@@ -1,4 +1,5 @@
 import type { IRScene } from '@retikz/core';
+import type { PerformanceTraceSink } from '@retikz/foundation';
 import { isRetikzError } from '@retikz/foundation';
 import type { ScenePatch } from '@retikz/reconciler';
 import { ReconcilerSession } from '@retikz/reconciler';
@@ -84,11 +85,16 @@ const createRendererHarness = (capability: 'none' | 'group' | 'entity' = 'entity
   return { renderer, prepareMount, prepare, read, patches };
 };
 
-const createHarness = (capability: 'none' | 'group' | 'entity' = 'entity', initialScene: IRScene = scene('A')) => {
+const createHarness = (
+  capability: 'none' | 'group' | 'entity' = 'entity',
+  initialScene: IRScene = scene('A'),
+  trace?: PerformanceTraceSink,
+) => {
   const renderer = createRendererHarness(capability);
   let config: InputRenderRuntimeConfig = {};
   const factory = vi.fn(() => renderer.renderer) as unknown as RetainedRendererFactory;
   const handle = createRetainedRenderTarget({
+    trace,
     backend: 'svg',
     host: svgHost,
     rendererFactory: factory,
@@ -366,11 +372,12 @@ describe('createRetainedRenderTarget', () => {
   });
 
   it('Core update 原子提交 Patch 与 next snapshot', () => {
+    const trace = vi.fn();
     const initial = {
       ...scene('A'),
       children: [{ ...scene('A').children[0], style: { fill: '#ef4444' } }],
     };
-    const { renderer, handle, session } = createHarness('entity', initial);
+    const { renderer, handle, session } = createHarness('entity', initial, trace);
     const previous = handle.read();
 
     session.replace({
@@ -382,6 +389,11 @@ describe('createRetainedRenderTarget', () => {
 
     expect(next).not.toBe(previous);
     expect(next.frame.primary.revision).toBe(1);
+    expect(next.frame.primary.root).toEqual({ owner: 'kernel', path: ['root'] });
+    expect(trace.mock.calls.map(([record]) => [record.owner, record.phase])).toEqual([
+      ['kernel/render/svg', 'commit'],
+      ['kernel/render/svg', 'update'],
+    ]);
     expect(renderer.prepare).toHaveBeenCalledTimes(1);
     expect(renderer.read).toHaveBeenCalledTimes(2);
     expect(renderer.patches[0]).toMatchObject({ baseRevision: 0, nextRevision: 1 });
