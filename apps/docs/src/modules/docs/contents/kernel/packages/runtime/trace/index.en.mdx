@@ -370,15 +370,15 @@ session.dispose();
 
 Trace `owner` values use group and module names: compilation sessions use `kernel/reconciler`, and render commits use `kernel/render/svg` or `kernel/render/canvas`.
 
-`ReconcilerTracePhase.Update` represents `update`. `ReconcilerTraceUnit` distinguishes two units of work:
+`ReconcilerLifecyclePhase` defines the `mount`, `update`, and `unmount` lifecycle phases. Compilation work continues to be reported under `ReconcilerLifecyclePhase.Update`, without separate mount or unmount records. `ReconcilerTraceUnit` distinguishes two units of work:
 
-| Compilation path                                              | unit              | visited                                   | outcome       |
-| ------------------------------------------------------------- | ----------------- | ----------------------------------------- | ------------- |
-| Weave mount, complete replacement, or forced full update      | `element-compile` | Actual element compilation count          | `full`        |
-| Weave incremental batch                                       | `element-compile` | Actual element compilations in this batch | `incremental` |
-| Complete compilation of a scene containing Composite elements | `scene-compile`   | 1 per successful commit                   | `full`        |
+| Compilation path                                                    | unit              | visited                                   | outcome       |
+| ------------------------------------------------------------------- | ----------------- | ----------------------------------------- | ------------- |
+| Weave mount, complete replacement, or forced full update            | `element-compile` | Actual element compilation count          | `full`        |
+| Weave incremental batch                                             | `element-compile` | Actual element compilations in this batch | `incremental` |
+| Initial compilation or complete replacement in non-incremental mode | `scene-compile`   | 1 per successful commit                   | `full`        |
 
-Composite expansion, layout probes, and replay are not counted separately. `reused` is always 0 and `changed` equals `visited`; these fields do not measure tree traversal, primitive changes, or cache hit rates. An empty base scene reports zero element compilations. Empty batches and output-target-only updates emit no compilation record.
+The unit depends on whether incremental mode is enabled, regardless of whether the scene contains Composite elements. Composite expansion, layout probes, and replay are not counted separately. `reused` is always 0 and `changed` equals `visited`; these fields do not measure tree traversal, primitive changes, or cache hit rates. In incremental mode, an empty scene reports zero element compilations. Empty batches and output-target-only updates emit no compilation record.
 
 Records are delivered after successful publication; failed commits emit no success record. A throwing sink does not undo the published result. Read observation failures through `session.diagnostics()`. Core domain diagnostics are available in `session.read().compilation.diagnostics`.
 
@@ -392,7 +392,7 @@ Render owns backend phases through `RenderTracePhase` and units through `RenderT
       label: 'Reconciler session reporting and failure isolation',
       path: 'packages/kernel/reconciler/src/reconciler.ts',
     },
-    { label: 'Reconciler phases and units', path: 'packages/kernel/reconciler/src/trace.ts' },
+    { label: 'Reconciler phases and units', path: 'packages/kernel/reconciler/src/constants.ts' },
     { label: 'Render phases and units', path: 'packages/kernel/render/src/trace/constants.ts' },
   ]}
 />

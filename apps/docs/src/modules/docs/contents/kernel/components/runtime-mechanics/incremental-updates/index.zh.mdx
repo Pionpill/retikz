@@ -45,6 +45,8 @@ React 将组件声明转换为 `InputScene`，Vanilla 再归一化为 `IRScene`�
 
 Weave 保存输入、上下文、编译状态和依赖。`SceneReconciler.update(batch, expected)` 可在已有基础元素树上应用 `WeaveBatch`；`expected` 必须是当前会话结果，旧结果会被拒绝。含 Composite 的场景可以更新作者基础元素；生成节点不可寻址，修改 Composite 作者输入需 replace。增量模式下空批次保留当前结果。
 
+生命周期由 `ReconcilerLifecyclePhase` 定义，包含挂载、更新和卸载；一批内容变化发生在更新阶段，其中 `WeaveOperationKind.Insert`、`Update` 和 `Remove` 分别表示插入、修改和删除。两个常量均可从 `@retikz/reconciler` 导入，内容操作的 payload 保持原有契约。
+
 批次更新按最终输入重算受影响元素，复用仍有效的产物。上下文沿声明结构传递，失效沿依赖传播；Scope 变化可能使整个子树重算。名称索引和输出组装仍可能遍历整树，因此局部编译不等于整次更新只有局部成本。普通 React／Vanilla 输入更新尚未接入此批次入口。
 
 <SourceLinks

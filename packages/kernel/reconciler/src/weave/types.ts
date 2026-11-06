@@ -21,7 +21,7 @@ import type {
 import type { SharedCompileContext } from '../compile';
 import type { CompileStageRecord } from '../compile/runtime';
 import type { WeaveCompileRead } from './compile';
-import type { WeaveChangeKind, WeaveChangeSource } from './constants';
+import type { WeaveChangeKind, WeaveChangeSource, WeaveOperationKind } from './constants';
 
 /** 名称读取与父包络聚合实际依赖的最终结果粒度 */
 export type WeaveDependencyKind = ReferenceReadKind | 'layout';
@@ -212,7 +212,7 @@ export type WeaveTarget = WeaveScopeTarget | WeaveIdTarget | WeaveChildTarget;
 /** 在候选容器中按数组顺序连续插入基础元素或 Scope 子树 */
 type WeaveInsertOperation = {
   /** 插入操作 */
-  kind: 'insert';
+  kind: typeof WeaveOperationKind.Insert;
   /** Scope 或 root 的容器定位 id */
   parentId: string;
   /** 插入前的位置，等于 children 长度时追加 */
@@ -224,7 +224,7 @@ type WeaveInsertOperation = {
 /** 完整替换已有元素自身输入，不改变类别或 Scope children */
 type WeaveUpdateOperation = {
   /** 修改操作 */
-  kind: 'update';
+  kind: typeof WeaveOperationKind.Update;
   /** 已有元素的地址 */
   target: WeaveTarget;
   /** 类别必须与目标一致，省略旧覆盖字段表示移除覆盖 */
@@ -234,7 +234,7 @@ type WeaveUpdateOperation = {
 /** 删除元素；Scope 连同其声明子树删除 */
 type WeaveRemoveOperation = {
   /** 删除操作 */
-  kind: 'remove';
+  kind: typeof WeaveOperationKind.Remove;
   /** 待删除元素的地址 */
   target: WeaveTarget;
 };

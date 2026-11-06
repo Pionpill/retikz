@@ -4,7 +4,7 @@ import type { PerformanceTraceRecord } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
-import { SceneReconciler, ReconcilerTracePhase, ReconcilerTraceUnit } from '../../src';
+import { SceneReconciler, ReconcilerLifecyclePhase, ReconcilerTraceUnit } from '../../src';
 import { compileToScene } from '../../src/compile';
 
 const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: 'scene', children });
@@ -28,7 +28,7 @@ describe('协调器编译跟踪', () => {
     expect(records).toEqual([
       {
         owner: 'kernel/reconciler',
-        phase: ReconcilerTracePhase.Update,
+        phase: ReconcilerLifecyclePhase.Update,
         unit: ReconcilerTraceUnit.ElementCompile,
         outcome: 'full',
         visited: 3,
@@ -54,7 +54,7 @@ describe('协调器编译跟踪', () => {
     expect(records).toEqual([
       {
         owner: 'kernel/reconciler',
-        phase: ReconcilerTracePhase.Update,
+        phase: ReconcilerLifecyclePhase.Update,
         unit: ReconcilerTraceUnit.ElementCompile,
         outcome: 'full',
         visited: 0,
@@ -95,7 +95,7 @@ describe('协调器编译跟踪', () => {
     for (const [index, record] of records.entries()) {
       expect(record).toEqual({
         owner: 'kernel/reconciler',
-        phase: ReconcilerTracePhase.Update,
+        phase: ReconcilerLifecyclePhase.Update,
         unit: ReconcilerTraceUnit.ElementCompile,
         outcome: 'full',
         visited: index + 1,

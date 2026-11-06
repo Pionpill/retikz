@@ -1,23 +1,28 @@
+export * from './compile';
+export { CORE_SOURCE_KEY, ReconcilerLifecyclePhase, ReconcilerTraceUnit, ReconcilerUpdateStrategy } from './constants';
 export * from './error';
-export { CORE_SOURCE_KEY } from './constants';
+export * from './reconciler';
+export {
+  createFullSceneRuntimeSnapshot,
+  createSceneIdentity,
+  createSceneIdentityLookup,
+  sceneIdentityEquals,
+} from './scene';
 export type {
   RuntimeDeepReadonly,
   RuntimeScene,
   RuntimeScenePrimitive,
   RuntimeSceneResource,
+  SceneIdentity,
+  SceneIdentityLookup,
   ScenePatch,
   ScenePatchOperation,
+  SceneRevision,
   SceneRuntimeNode,
   SceneRuntimeSnapshot,
   SceneRuntimeSubtree,
   SceneRuntimeSubtreeNode,
 } from './scene';
-export * from './trace';
-
-export * from './reconciler';
-export { createSceneIdentity, createSceneIdentityLookup, sceneIdentityEquals } from './scene';
-export type { SceneIdentity, SceneIdentityLookup, SceneRevision } from './scene';
+export type * from './types';
+export { WeaveOperationKind } from './weave';
 export type { WeaveBatch, WeaveOperation, WeaveTarget } from './weave';
-export { createFullSceneRuntimeSnapshot } from './scene';
-
-export * from './compile';

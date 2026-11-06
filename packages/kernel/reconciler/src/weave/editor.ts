@@ -3,6 +3,7 @@ import type { IdAllocator, PropertyPath } from '@retikz/foundation';
 
 import { createCompileChildPath } from '../compile/shared';
 import { RetikzReconcilerError, RetikzReconcilerErrorCode } from '../error';
+import { WeaveOperationKind } from './constants';
 import { readWeaveCurrent } from './transaction';
 import type { WeaveTransaction } from './transaction';
 import type {
@@ -37,7 +38,7 @@ export class WeaveEditor {
   /** 应用一条操作并刷新候选地址；空插入仍校验位置，但不产生变化 */
   applyOperation(operation: WeaveOperation, context: CanonicalScopeInheritance): WeaveEditResult | undefined {
     const changes: WeaveEditResult = { changedNodes: [], insertedNodes: [], removedNodes: [] };
-    if (operation.kind === 'insert') {
+    if (operation.kind === WeaveOperationKind.Insert) {
       const parent = this.findScope(operation.parentId);
       const length = this.transaction.readNode(parent).children.length;
       if (!Number.isInteger(operation.index) || operation.index < 0 || operation.index > length)
@@ -59,7 +60,7 @@ export class WeaveEditor {
           'Replace the scene to edit a Composite declaration',
         );
       changes.changedNodes.push(node);
-      if (operation.kind === 'update') this.replaceNodeInput(node, operation.input);
+      if (operation.kind === WeaveOperationKind.Update) this.replaceNodeInput(node, operation.input);
       else {
         const parent = this.transaction.readNode(node).parent;
         const children = this.transaction.editNodeAttribute(parent, 'children');

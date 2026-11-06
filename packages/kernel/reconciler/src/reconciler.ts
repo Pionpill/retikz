@@ -1,61 +1,26 @@
 import type { AnyCompositeDefinition, IRScene } from '@retikz/core';
-import type { PerformanceTraceSink } from '@retikz/foundation';
 import { RetikzError } from '@retikz/foundation';
 
-import type { CompileOptions, ExecuteOptions, SceneCompilationSnapshot } from './compile';
+import type { CompileOptions } from './compile';
 import { compileSceneSnapshot, formatCompileWarning } from './compile';
+import {
+  ReconcilerMode,
+  ReconcilerLifecyclePhase,
+  ReconcilerStatus,
+  ReconcilerTraceUnit,
+  ReconcilerUpdateStrategy,
+} from './constants';
 import { RetikzReconcilerError, RetikzReconcilerErrorCode } from './error';
-import { ReconcilerTracePhase, ReconcilerTraceUnit } from './trace';
-import type { WeaveBatch, WeavePreparedUpdate, WeaveRoot } from './weave';
+import type { ReconcilerPreparedCommit, ReconcilerResult, SceneReconcilerOptions } from './types';
+import type { WeaveBatch, WeavePreparedUpdate } from './weave';
 import { WeaveManager } from './weave';
-
-/** 同一会话发布的完整编译结果 */
-export type ReconcilerResult = Readonly<{
-  /** 会话内的已提交版本，首次发布为零 */
-  revision: number;
-  /** 统一执行器的完整编译产物，不强制生成渲染快照 */
-  compilation: SceneCompilationSnapshot<ReadonlyArray<AnyCompositeDefinition>>;
-  /** 增量模式的稳定作者声明根，非增量模式不保留此字段 */
-  root?: WeaveRoot;
-}>;
-
-/** 宿主准备完成后的修改与恢复能力 */
-export type ReconcilerPreparedCommit = Readonly<{
-  /** 应用宿主修改，失败时仍须允许 rollback */
-  commit: () => void;
-  /** 放弃准备或恢复本次尚未最终确认的修改 */
-  rollback: () => void;
-  /** 释放临时资源，不改变成功发布的画面 */
-  dispose: () => void;
-}>;
-
-/** 可选的单个输出提交目标，由 Render 或其它结果消费者实现 */
-export type ReconcilerCommitTarget = Readonly<{
-  /** 准备本次完整输出，不发布宿主修改 */
-  prepare: (candidate: ReconcilerResult, previous: ReconcilerResult | undefined) => ReconcilerPreparedCommit;
-  /** 释放目标拥有的长期资源 */
-  dispose?: () => void;
-}>;
-
-/** 编译会话的输出接线 */
-export type SceneReconcilerOptions = ExecuteOptions &
-  Readonly<{
-    /** 是否保留用于后续更新的 Weave 阶段缓存，默认 true */
-    incremental?: boolean;
-    /** 可选宿主目标；省略时仅提交计算状态 */
-    target?: ReconcilerCommitTarget;
-    /** 基础批次是否强制重算全部元素，完整输入替换始终完整编译 */
-    updateStrategy?: ReconcilerUpdateStrategy;
-    /** 已提交编译的工作量；Weave 按元素编译计数，Composite 按整场景编译计数 */
-    trace?: PerformanceTraceSink;
-  }>;
 
 /** 同步协调编译与一个输出目标，不依赖 DOM 或 Runtime 注册图 */
 export class SceneReconciler {
   private targetDisposed = false;
   private current: ReconcilerResult | undefined;
   private weave: WeaveManager | undefined;
-  private status: 'idle' | 'preparing' | 'committing' | 'broken' | 'disposed' = 'idle';
+  private status: ReconcilerStatus = ReconcilerStatus.Idle;
   /** 已隔离的观察或资源释放异常，读取后清空 */
   private readonly diagnosticQueue: Array<unknown> = [];
 
@@ -63,7 +28,7 @@ export class SceneReconciler {
     private options: CompileOptions<ReadonlyArray<AnyCompositeDefinition>> = {},
     private readonly execution: SceneReconcilerOptions = {},
   ) {
-    if (execution.incremental === false && execution.updateStrategy !== undefined)
+    if (this.mode === ReconcilerMode.Full && execution.updateStrategy !== undefined)
       throw this.contractError('A non-incremental session cannot configure an update strategy');
   }
 
@@ -77,10 +42,9 @@ export class SceneReconciler {
   /** 显式完整重建，准备失败仍保留原计算状态 */
   replace(source: IRScene, options = this.options): ReconcilerResult {
     this.assertIdle();
-    this.status = 'preparing';
+    this.status = ReconcilerStatus.Preparing;
     try {
-      const weave =
-        this.execution.incremental === false ? undefined : new WeaveManager(source, options, this.execution);
+      const weave = this.mode === ReconcilerMode.Full ? undefined : new WeaveManager(source, options, this.execution);
       const prepared = weave?.mount();
       const compilation = prepared?.compilation ?? compileSceneSnapshot(source, options, this.execution);
       const candidate: ReconcilerResult = {
@@ -114,16 +78,16 @@ export class SceneReconciler {
     if (expected !== this.current) throw this.contractError('The update belongs to a stale session result');
     if (this.weave === undefined) throw this.contractError('Non-incremental sessions do not support Weave batches');
     if (batch.operations.length === 0) return expected;
-    this.status = 'preparing';
+    this.status = ReconcilerStatus.Preparing;
     try {
-      const prepared = this.weave.update(batch, this.execution.updateStrategy === 'full');
+      const prepared = this.weave.update(batch, this.execution.updateStrategy === ReconcilerUpdateStrategy.Full);
       const published = this.publish(
         { revision: this.nextRevision(), compilation: prepared.compilation, root: prepared.root },
         this.weave,
         prepared,
       );
       this.reportTrace(
-        this.execution.updateStrategy === 'full' ? 'full' : 'incremental',
+        this.execution.updateStrategy === ReconcilerUpdateStrategy.Full ? 'full' : 'incremental',
         ReconcilerTraceUnit.ElementCompile,
         prepared.visited,
       );
@@ -137,7 +101,7 @@ export class SceneReconciler {
   updateTarget(): ReconcilerResult {
     this.assertIdle();
     const current = this.read();
-    this.status = 'preparing';
+    this.status = ReconcilerStatus.Preparing;
     try {
       return this.publish({ ...current, revision: this.nextRevision() }, this.weave);
     } finally {
@@ -147,7 +111,11 @@ export class SceneReconciler {
 
   /** 读取已发布结果；准备期间仍返回旧结果，提交期间拒绝重入 */
   read(): ReconcilerResult {
-    if (this.status === 'committing' || this.status === 'broken' || this.status === 'disposed')
+    if (
+      this.status === ReconcilerStatus.Committing ||
+      this.status === ReconcilerStatus.Broken ||
+      this.status === ReconcilerStatus.Disposed
+    )
       throw this.contractError(`Cannot read a ${this.status} session`);
     if (this.current === undefined) throw this.contractError('Session is not mounted');
     return this.current;
@@ -161,9 +129,9 @@ export class SceneReconciler {
   /** 释放计算与宿主资源；允许在恢复失败后清理 */
   dispose(): void {
     if (this.targetDisposed) return;
-    if (this.status === 'preparing' || this.status === 'committing')
+    if (this.status === ReconcilerStatus.Preparing || this.status === ReconcilerStatus.Committing)
       throw this.contractError('Cannot dispose an active update');
-    this.status = 'disposed';
+    this.status = ReconcilerStatus.Disposed;
     this.current = undefined;
     this.weave = undefined;
     try {
@@ -190,7 +158,7 @@ export class SceneReconciler {
     let target: ReconcilerPreparedCommit | undefined;
     try {
       target = this.execution.target?.prepare(candidate, this.current);
-      this.status = 'committing';
+      this.status = ReconcilerStatus.Committing;
       prepared?.commit();
       target?.commit();
     } catch (cause) {
@@ -207,7 +175,7 @@ export class SceneReconciler {
       }
       this.releaseCommit(target);
       if (recoveryErrors.length > 0) {
-        this.status = 'broken';
+        this.status = ReconcilerStatus.Broken;
         throw new RetikzReconcilerError({
           code: RetikzReconcilerErrorCode.Contract,
           message: 'Failed to restore the previous committed result',
@@ -245,7 +213,7 @@ export class SceneReconciler {
     try {
       this.execution.trace?.({
         owner: 'kernel/reconciler',
-        phase: ReconcilerTracePhase.Update,
+        phase: ReconcilerLifecyclePhase.Update,
         unit,
         outcome,
         visited,
@@ -274,11 +242,12 @@ export class SceneReconciler {
 
   /** 结束本次调用，恢复失败的会话继续保持阻断 */
   private endUpdate(): void {
-    if (this.status !== 'broken' && this.status !== 'disposed') this.status = 'idle';
+    if (this.status !== ReconcilerStatus.Broken && this.status !== ReconcilerStatus.Disposed)
+      this.status = ReconcilerStatus.Idle;
   }
 
   private assertIdle(): void {
-    if (this.status !== 'idle') throw this.contractError(`Cannot update a ${this.status} session`);
+    if (this.status !== ReconcilerStatus.Idle) throw this.contractError(`Cannot update a ${this.status} session`);
   }
 
   private nextRevision(): number {
@@ -290,22 +259,9 @@ export class SceneReconciler {
   private contractError(message: string): RetikzReconcilerError {
     return new RetikzReconcilerError(RetikzReconcilerErrorCode.Contract, message);
   }
-}
 
-/** 执行层非致命诊断 */
-export type ReconcilerDiagnostic = Readonly<{
-  code: string;
-  phase: string;
-  severity: 'warning' | 'error';
-  message: string;
-  owner?: string;
-  cause?: unknown;
-}>;
-/** 批次计算策略 */
-export const ReconcilerUpdateStrategy = { Auto: 'auto', Full: 'full' } as const;
-/** 批次计算策略取值 */
-export type ReconcilerUpdateStrategy = (typeof ReconcilerUpdateStrategy)[keyof typeof ReconcilerUpdateStrategy];
-/** 下游消费的完整编译输出 */
-export type ReconcilerOutput<
-  TComposites extends ReadonlyArray<AnyCompositeDefinition> = ReadonlyArray<AnyCompositeDefinition>,
-> = Pick<SceneCompilationSnapshot<TComposites>, 'result' | 'diagnostics'>;
+  /** 从当前执行选项读取模式，不重复保存派生状态 */
+  private get mode(): ReconcilerMode {
+    return this.execution.incremental === false ? ReconcilerMode.Full : ReconcilerMode.Incremental;
+  }
+}

@@ -48,6 +48,8 @@ One-shot compilation, complete replacement, and batch updates share Reconcilerâ€
 
 Weave retains input, context, compiled state and dependencies. `SceneReconciler.update(batch, expected)` applies a `WeaveBatch` to an existing basic-element tree. `expected` must be the current session result; stale results are rejected. Scenes containing Composites support edits to authored basic elements. Generated children cannot be addressed; use replace to change Composite author input. Empty incremental batches retain the current result.
 
+`ReconcilerLifecyclePhase` defines mount, update, and unmount. A content batch runs during the update phase; `WeaveOperationKind.Insert`, `Update`, and `Remove` identify insertion, modification, and removal. Both constants are available from `@retikz/reconciler`, and operation payloads keep their existing contracts.
+
 Batches recompute affected elements from final inputs and reuse valid products. Context follows declaration structure and invalidation follows dependencies; a Scope change can recompute its whole subtree. Name indexing and output assembly can still traverse the tree, so local compilation does not imply local total update cost. Ordinary React and Vanilla input updates do not yet use this batch entry.
 
 <SourceLinks

@@ -86,9 +86,9 @@ Core 删除这些旧出口，不 re-export Reconciler，不保留兼容别名。
 
 Core 不提供 trace 选项、reporter 或工作量计数；编译工作量由持有执行策略与提交边界的 Reconciler 报告。Foundation 保留通用 `PerformanceTraceRecord` 与 `PerformanceTraceSink` 契约。
 
-Reconciler 在成功提交后报告 `update` 阶段：Weave 使用 `element-compile` 记录实际元素编译次数，包含 Composite 的完整 Core 编译使用 `scene-compile`，每次计 1，不统计内部展开、布局探测或 replay。完整编译报告 `full`，增量批次报告 `incremental`；`reused` 为 0，`changed` 等于 `visited`。
+Reconciler 在成功提交后报告 `update` 阶段：Weave 使用 `element-compile` 记录实际元素编译次数，非增量模式的整场景编译使用 `scene-compile`，每次计 1，不统计内部展开、布局探测或 replay。完整编译报告 `full`，增量批次报告 `incremental`；`reused` 为 0，`changed` 等于 `visited`。
 
-Reconciler 通过 `ReconcilerTracePhase`、`ReconcilerTraceUnit` 公开自己的观测词汇，隔离接收函数异常并提供诊断；观测失败不撤销已发布结果，失败事务不报告成功记录。空批次与只更新输出目标的调用不报告编译工作量。
+Reconciler 通过 `ReconcilerLifecyclePhase`、`ReconcilerTraceUnit` 公开自己的观测词汇，隔离接收函数异常并提供诊断；观测失败不撤销已发布结果，失败事务不报告成功记录。空批次与只更新输出目标的调用不报告编译工作量。
 
 Render 自行拥有 `RenderTracePhase` 与 `RenderTraceUnit.ScenePrimitive`，SVG / Canvas 的图元计数保持原语义。Core 旧 trace 出口直接删除，不保留别名；编译 observer 与 provenance 契约不受影响。
 
