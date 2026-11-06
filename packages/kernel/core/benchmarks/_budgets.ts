@@ -28,6 +28,26 @@ export const resolveCoreBudget = (scenario: BenchmarkScenario): BenchmarkBudget 
       rationale:
         '一次工作区或结果组装中的完整注册表生命周期，包含创建及N次登记/导入；假设10次为局部编辑（1/4ms），100次为普通更新（4/8ms），1000次为大批资源处理（8/16.6ms）。该阶段接近一帧即有同步阻塞风险，复杂Pattern不放宽预算；不含输入解析和renderer，不代表整帧保证或稳定回归上限',
     };
+  } else if (layer === 'compile' && family === 'node') {
+    const count = Number(scale);
+    const complete =
+      /^complete-(empty|plain|mixed|labels|fixed)-(none|content|body|labels-half|labels-all|layout|drawing|all)$/.test(
+        variant,
+      );
+    const body = /^body-(exact|range|intrinsic)-(none|shape)$/.test(variant);
+    const emit = /^emit-(plain|mixed|labels|gradient)$/.test(variant);
+    const update = /^update-(move|color|label)-(none|partial)$/.test(variant);
+    const anchor = variant === 'layout-anchor';
+    if (!(complete || body || emit || update || anchor) || ![0, 1, 3, 8, 16, 24, 32, 64, 1024].includes(count)) {
+      throw new Error(`Missing Core node operation budget: ${identity}`);
+    }
+    const small = (complete && [0, 1, 8, 32].includes(count)) || variant.startsWith('update-color-');
+    policy = {
+      warningMs: anchor ? 0.02 : emit || small ? 0.1 : 0.5,
+      errorMs: anchor ? 0.1 : emit || small ? 0.5 : 2,
+      rationale:
+        '一次Core节点完整编译或明确阶段，不含resolve、fixture、调用方有效性判断与缓存恢复。假设100个普通节点完整编译分配10/50ms，20个复杂节点或1024字符宽度求解分配10/40ms；100个已测量节点定位2/10ms，100次独立绘制10/50ms。同最终输入各prepared档预算相同，移动/改单标签按16标签复杂节点，32字符换色按普通节点。规模、频率和阶段时间均为规划假设，缺少业务遥测，不代表整帧保证；不传prepared只表示不复用阶段产物',
+    };
   } else if (layer === 'compile' && family === 'boundary') {
     const count = Number(scale);
     const rationale =

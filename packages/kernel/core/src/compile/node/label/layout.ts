@@ -88,10 +88,13 @@ export const calculateNodeLabelBorderPoint = (
 ): Position => {
   if (position === 'center') return [layout.geometry.rect.x, layout.geometry.rect.y];
 
-  const aaLayout: CompiledBoundaryGeometry = {
-    ...layout,
-    geometry: { ...layout.geometry, rect: { ...layout.geometry.rect, rotate: 0 } },
-  };
+  // ⚡旋转已为规范化零值时直接消费布局，省去附着点查询的三层对象复制
+  const aaLayout: CompiledBoundaryGeometry = Object.is(layout.geometry.rect.rotate, 0)
+    ? layout
+    : {
+        ...layout,
+        geometry: { ...layout.geometry, rect: { ...layout.geometry.rect, rotate: 0 } },
+      };
   if (isLabelBoundaryPosition(position)) {
     return calculateLabelBoundaryPoint(aaLayout, position);
   }
@@ -169,23 +172,20 @@ export const calculateNodeLabelExtentPoints = (
   const pts: Array<Position> = [];
 
   for (const lab of layout.labels) {
-    const [lx, ly] = calculateNodeLabelCenter(layout, lab);
+    // ⚡以标量中心和角点符号直接生成包络，省去中心坐标与四角偏移的临时数组
+    const lx = cx + lab.centerOffset[0];
+    const ly = cy + lab.centerOffset[1];
     const halfW = lab.lineLayout.width / 2;
     const halfH = lab.lineLayout.height / 2;
     const labelRad = lab.rotateDeg * DEG_TO_RAD;
     const labelCos = Math.cos(labelRad);
     const labelSin = Math.sin(labelRad);
-    const cornerOffsets: Array<Position> = [
-      [-halfW, -halfH],
-      [halfW, -halfH],
-      [-halfW, halfH],
-      [halfW, halfH],
-    ];
-
-    for (const [offsetX, offsetY] of cornerOffsets) {
+    for (let corner = 0; corner < 4; corner++) {
+      const offsetX = (corner & 1) === 0 ? -halfW : halfW;
+      const offsetY = (corner & 2) === 0 ? -halfH : halfH;
       const px = lx + offsetX * labelCos - offsetY * labelSin;
       const py = ly + offsetX * labelSin + offsetY * labelCos;
-      if ((layout.geometry.rect.rotate ?? 0) === 0) {
+      if (rad === 0) {
         pts.push([px, py]);
       } else {
         const dx = px - cx;

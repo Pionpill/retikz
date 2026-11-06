@@ -3,18 +3,18 @@ import type { CanonicalNode } from '../../../resolve';
 import { calculateAlphabeticBaselineY, emitTextLine } from '../../text';
 import type { CompiledNodeLayout } from '../types';
 
-/** 节点正文最终外观，物理行通过索引读取，不持有作者正文或解析产物 */
+/** 节点绘制期间只读的外观视图，物理行通过索引读取当前作者行样式 */
 type CompiledNodeTextStyle = {
   /** 正文主色 */
   color?: string;
   /** 正文整体透明度 */
   opacity?: number;
   /** 对应作者行与片段的最终外观 */
-  lines: Array<{
+  lines: ReadonlyArray<{
     /** 行级外观 */
     style?: Pick<TextLine, 'fill' | 'opacity'>;
     /** 片段级外观 */
-    segments: Array<Pick<TextLine, 'fill' | 'opacity'>>;
+    segments: ReadonlyArray<Pick<TextLine, 'fill' | 'opacity'>>;
   }>;
 };
 
@@ -118,12 +118,9 @@ export const emitCompiledNodeText = (
   return lines.map((line, index) => textPrimitive([line], baselineYs[index], text.lines[index].measuredHeight));
 };
 
-/** 从节点确定态投影输出文字所需的样式字段 */
+/** ⚡只读消费确定态的行与片段外观，省去逐行和逐片段的样式投影副本 */
 export const buildNodeTextStyle = (canon: CanonicalNode): CompiledNodeTextStyle => ({
   color: canon.text?.color,
   opacity: canon.style.opacity,
-  lines: (canon.text?.lines ?? []).map(line => ({
-    style: line.style === undefined ? undefined : { fill: line.style.fill, opacity: line.style.opacity },
-    segments: line.segments.map(({ fill, opacity }) => ({ fill, opacity })),
-  })),
+  lines: canon.text?.lines ?? [],
 });

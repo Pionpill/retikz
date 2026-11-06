@@ -123,9 +123,35 @@ pnpm --filter @retikz/core exec vitest bench --run --config vitest.bench.config.
 pnpm --filter @retikz/core exec vitest bench --run --config vitest.bench.config.ts benchmarks/compile/boundary.bench.ts benchmarks/compile/reference.bench.ts --fsModuleCache=false
 ```
 
+## Node 编译与阶段复用
+
+[node.bench.ts](./compile/node.bench.ts) 测量完整单节点编译、正文宽度求解、锚点布局、独立绘制和真实更新，共43项。输入与已准备阶段产物由[_node-workloads.ts](./_node-workloads.ts)在计时外通过真实resolver和编译链构造
+
+| 操作         | 输入与复用组合                                                                                           | 场景数 | P90警告/错误               |
+| ------------ | -------------------------------------------------------------------------------------------------------- | -----: | -------------------------- |
+| 完整编译     | 1024纯文本字符、64混排片段各6档；16标签8档；空节点、正文32字符、混排8片段、1标签、固定宽度1024字符冷编译 |     25 | 小档0.1/0.5ms，大档0.5/2ms |
+| 主体宽度求解 | 1024字符，Exact/Range/Minimum Intrinsic，各不复用/只准备形状                                             |      6 | 0.5/2ms                    |
+| 锚点布局     | 主体已准备，真实目标right与自身left锚点，3/24项混合变换链                                                |      2 | 0.02/0.1ms                 |
+| 独立绘制     | 64物理行、64混排片段、16旋转带pin标签、单个暖态渐变资源                                                  |      4 | 0.1/0.5ms                  |
+| 更新对照     | 移动16标签节点、32字符换色、16标签只改一个，各完整重算/有效部分复用                                      |      6 | 换色0.1/0.5ms，其余0.5/2ms |
+
+无标签节点比较不复用、仅正文、正文与形状、整体布局、整体布局与部分绘制、整体布局与整体绘制六档；16标签增加主体与一半/全部标签测量两档。部分绘制复用shape；有标签时再复用正文与一半标签绘制。标签测量与放置分开，移动不复用旧位置，改单标签不复用已变标签，换色只复用布局。不同档位比较最终布局、绘制和对齐线，不要求局部阶段字段完全相同
+
+Core只消费调用方确认有效的prepared产物，不判断失效或持有跨次缓存；这些组合展示Core支持的复用效果，不能等同于当前Reconciler策略或Weave完整阶段命中。不传prepared表示关闭阶段产物复用，背景BoundaryStore和暖态资源保持一致。文字度量无额外Map缓存，使用每code unit宽字号一半的确定性回调；公式固定两个路径、宽10高12深3，不执行真实字体或TeX引擎
+
+Exact/Range的allocation宽度为700，节点旋转30°、margin为上2右4下6左8；Minimum Intrinsic使用7字符英文词。固定视觉宽度为80。规模分别为字符、片段、标签、物理行或变换项，不是批量节点数。每样本只调用一次完整操作，计时包含自身计算与分配，resolve、输入/预期/缓存准备及断言不计时
+
+每项10预热+100正式、110次协议内调用，43项共4730调用、4300正式样本，不含fixture在计时外的预期构造调用。独立手算宽高、行数、锚点位置、标签和公式图元，检查身份、元数据、资源引用及输入不变性；复用跳过哪些计算另经临时计数核实。消费预算在首次采样前固定，同输入各档相同，依据为规划假设，不启用CI阻断、不自动更新回归基线
+
+```bash
+pnpm --filter @retikz/core exec vitest bench --run --config vitest.bench.config.ts benchmarks/compile/node.bench.ts --fsModuleCache=false
+```
+
+正式命令沿用Vite源码加载，用于本机探索；原生ESM报告另记录当前源码叶入口构建、产物external与transform哨兵证据，不能跨加载环境直接计算收益
+
 ## 测量边界
 
-当前覆盖 `src/providers`、`src/resolve`、`src/contract` 的代表操作，以及 `src/compile` 的资源注册表、文本、Scene、共享、Boundary与Reference操作，不调用 `compileToScene`。shape / arrow / mark 的 iterable 在计时内完整消费，包含该操作自身的计算与分配。
+当前覆盖 `src/providers`、`src/resolve`、`src/contract` 的代表操作，以及 `src/compile` 的资源注册表、文本、Scene、共享、Boundary、Reference与Node操作，不调用 `compileToScene`。shape / arrow / mark 的 iterable 在计时内完整消费，包含该操作自身的计算与分配。
 
 - Scene 图元生成属于编译计算；SVG 字符串生成、Canvas 绘制、DOM 更新、浏览器布局与绘制均不计入。
 - 不接入 `@retikz/render`、React/Vanilla renderer 或浏览器。Runtime / Reconciler 调度、增量更新与生命周期不属于本目录。
