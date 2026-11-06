@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
 import { compileToScene } from '../../../src/compile';
-import { WeaveReconciler } from '../../../src/weave';
+import { WeaveManager } from '../../../src/weave';
 import { flattenPrims } from '../../helpers/flatten';
 
 const measureText = (text: string) => ({ width: [...text].length * 5, height: 10, ascent: 8, descent: 2 });
@@ -40,10 +40,10 @@ describe('正文和标签共享文本能力', () => {
   it('路径标签折行与透明度更新后的增量结果等同完整编译', () => {
     const initial = { ...pathOf({ text: 'abcd', font }), id: 'path-text' };
     const input: IRScene = { type: 'scene', version: 1, children: [initial] };
-    const reconciler = new WeaveReconciler(input, { measureText });
-    const mounted = reconciler.mount();
+    const manager = new WeaveManager(input, { measureText });
+    const mounted = manager.mount();
     const next = { ...pathOf({ text: 'abcdef', font, ...layout, opacity: 0.5 }), id: 'path-text' };
-    const update = reconciler.update({
+    const update = manager.update({
       operations: [
         { kind: 'update', target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'path-text' }, input: next },
       ],
@@ -91,8 +91,8 @@ describe('正文和标签共享文本能力', () => {
       style: { font },
     };
     const input: IRScene = { type: 'scene', version: 1, children: [initial] };
-    const reconciler = new WeaveReconciler(input, { measureText });
-    const mounted = reconciler.mount();
+    const manager = new WeaveManager(input, { measureText });
+    const mounted = manager.mount();
     for (const width of [10, 30]) {
       const next: IRNode = {
         ...initial,
@@ -100,7 +100,7 @@ describe('正文和标签共享文本能力', () => {
         layout: { ...layout, maxTextWidth: width },
         label: { text: 'label\nnext', ...layout, maxTextWidth: width, opacity: 0.5 },
       };
-      const update = reconciler.update({
+      const update = manager.update({
         operations: [
           { kind: 'update', target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'text' }, input: next },
         ],

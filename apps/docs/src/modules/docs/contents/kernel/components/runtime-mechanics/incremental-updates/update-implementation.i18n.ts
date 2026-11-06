@@ -5,7 +5,7 @@ export const text: Record<Lang, Record<string, [string, string]>> = {
   zh: {
     edge0: ['准备输出', ''],
     prepare: ['prepareProcessingInput', 'Vanilla 整理新输入'],
-    runtime: ['ReconcilerSession.replace', '准备完整替换'],
+    runtime: ['SceneReconciler.replace', '准备完整替换'],
     update: ['CompileManager', '统一调度 Core 阶段'],
     full: ['publish', '协调候选状态与目标'],
     render: ['输出目标', '准备帧并提交宿主'],
@@ -14,7 +14,7 @@ export const text: Record<Lang, Record<string, [string, string]>> = {
   en: {
     edge0: ['Prepare output', ''],
     prepare: ['prepareProcessingInput', 'Vanilla prepares input'],
-    runtime: ['ReconcilerSession.replace', 'Prepare complete replacement'],
+    runtime: ['SceneReconciler.replace', 'Prepare complete replacement'],
     update: ['CompileManager', 'Compose Core stages'],
     full: ['publish', 'Coordinate state and target'],
     render: ['Output target', 'Prepare frame and commit host'],

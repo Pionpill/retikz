@@ -346,10 +346,10 @@ Source 的捕获、比较和释放故障由 Runtime 转换为结构化错误或�
 
 ```ts
 import type { PerformanceTraceRecord } from '@retikz/foundation';
-import { ReconcilerSession } from '@retikz/reconciler';
+import { SceneReconciler } from '@retikz/reconciler';
 
 const records: Array<PerformanceTraceRecord> = [];
-const session = new ReconcilerSession({}, { trace: record => records.push(record) });
+const session = new SceneReconciler({}, { trace: record => records.push(record) });
 session.mount({ version: 1, type: 'scene', children: [{ type: 'node', id: 'a', position: [0, 0] }] });
 console.log(records.map(record => [record.owner, record.phase, record.unit, record.visited]));
 // [['kernel/reconciler', 'update', 'element-compile', 1]]
@@ -376,7 +376,7 @@ Render 的后端阶段和单位分别使用 `RenderTracePhase` 与 `RenderTraceU
 
 <SourceLinks
   sources={[
-    { label: 'Reconciler 会话报告与异常隔离', path: 'packages/kernel/reconciler/src/session.ts' },
+    { label: 'Reconciler 会话报告与异常隔离', path: 'packages/kernel/reconciler/src/reconciler.ts' },
     { label: 'Reconciler 阶段与单位', path: 'packages/kernel/reconciler/src/trace.ts' },
     { label: 'Render 阶段与单位', path: 'packages/kernel/render/src/trace/constants.ts' },
   ]}

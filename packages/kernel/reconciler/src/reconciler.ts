@@ -7,7 +7,7 @@ import { compileSceneSnapshot, formatCompileWarning } from './compile';
 import { RetikzReconcilerError, RetikzReconcilerErrorCode } from './error';
 import { ReconcilerTracePhase, ReconcilerTraceUnit } from './trace';
 import type { WeaveBatch, WeavePreparedUpdate, WeaveRoot } from './weave';
-import { WeaveReconciler } from './weave';
+import { WeaveManager } from './weave';
 
 /** 同一会话发布的完整编译结果 */
 export type ReconcilerResult = Readonly<{
@@ -38,7 +38,7 @@ export type ReconcilerCommitTarget = Readonly<{
 }>;
 
 /** 编译会话的输出接线 */
-export type ReconcilerSessionOptions = ExecuteOptions &
+export type SceneReconcilerOptions = ExecuteOptions &
   Readonly<{
     /** 是否保留用于后续更新的 Weave 阶段缓存，默认 true */
     incremental?: boolean;
@@ -51,17 +51,17 @@ export type ReconcilerSessionOptions = ExecuteOptions &
   }>;
 
 /** 同步协调编译与一个输出目标，不依赖 DOM 或 Runtime 注册图 */
-export class ReconcilerSession {
+export class SceneReconciler {
   private targetDisposed = false;
   private current: ReconcilerResult | undefined;
-  private weave: WeaveReconciler | undefined;
+  private weave: WeaveManager | undefined;
   private status: 'idle' | 'preparing' | 'committing' | 'broken' | 'disposed' = 'idle';
   /** 已隔离的观察或资源释放异常，读取后清空 */
   private readonly diagnosticQueue: Array<unknown> = [];
 
   constructor(
     private options: CompileOptions<ReadonlyArray<AnyCompositeDefinition>> = {},
-    private readonly execution: ReconcilerSessionOptions = {},
+    private readonly execution: SceneReconcilerOptions = {},
   ) {
     if (execution.incremental === false && execution.updateStrategy !== undefined)
       throw this.contractError('A non-incremental session cannot configure an update strategy');
@@ -80,7 +80,7 @@ export class ReconcilerSession {
     this.status = 'preparing';
     try {
       const weave =
-        this.execution.incremental === false ? undefined : new WeaveReconciler(source, options, this.execution);
+        this.execution.incremental === false ? undefined : new WeaveManager(source, options, this.execution);
       const prepared = weave?.mount();
       const compilation = prepared?.compilation ?? compileSceneSnapshot(source, options, this.execution);
       const candidate: ReconcilerResult = {
@@ -183,7 +183,7 @@ export class ReconcilerSession {
   /** 保留两侧恢复依据，直到双方均提交成功 */
   private publish(
     candidate: ReconcilerResult,
-    weave: WeaveReconciler | undefined,
+    weave: WeaveManager | undefined,
     prepared?: WeavePreparedUpdate,
     options = this.options,
   ): ReconcilerResult {

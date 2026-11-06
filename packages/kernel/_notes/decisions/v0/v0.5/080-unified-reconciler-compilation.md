@@ -63,7 +63,7 @@ Weave 额外维护的节点身份、current / pending、依赖、失效及版本
 
 ### 会话模式与更新
 
-`ReconcilerSession` 继续提供 `mount`、`replace`、`read`、`update`、`updateTarget` 和 `dispose`。会话执行选项增加 `incremental?: boolean`，默认 `true`，在创建时固定：
+`SceneReconciler` 继续提供 `mount`、`replace`、`read`、`update`、`updateTarget` 和 `dispose`。会话执行选项增加 `incremental?: boolean`，默认 `true`，在创建时固定：
 
 - `incremental: false`：完整执行并返回结果，结束后释放本次计算记录，不保留 Weave 更新缓存；会话可以保留已发布结果和输出目标，通过 `replace` 重新编译完整输入。调用 `update` 报告执行契约错误。
 - `incremental: true`：首轮完成相同计算，将有效阶段结果、输入及依赖等必要记录提交到 Weave；后续 `update` 消费权威批次并复用仍有效的结果。

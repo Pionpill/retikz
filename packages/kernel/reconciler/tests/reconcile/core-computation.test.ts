@@ -1,7 +1,7 @@
 import type { CompileWarning, IRScene } from '@retikz/core';
 import { CompositeBaseSchema, defineComposite, defineShape } from '@retikz/core';
 import type { ReconcilerResult, RuntimeScenePrimitive } from '@retikz/reconciler';
-import { createFullSceneRuntimeSnapshot, ReconcilerSession } from '@retikz/reconciler';
+import { createFullSceneRuntimeSnapshot, SceneReconciler } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject, string } from 'zod';
 
@@ -53,7 +53,7 @@ describe('Core Runtime 计算初始完整运行', () => {
         },
       ],
     };
-    const session = new ReconcilerSession({ onWarn: () => {} }, { captureProvenance: true });
+    const session = new SceneReconciler({ onWarn: () => {} }, { captureProvenance: true });
 
     session.mount(ir);
     const snapshot = snapshotOf(session.read());
@@ -99,7 +99,7 @@ describe('Core Runtime 计算初始完整运行', () => {
     const expectedWarnings: Array<CompileWarning> = [];
     const expected = compileToScene(ir, { onWarn: warning => expectedWarnings.push(warning) });
     const observedWarnings: Array<CompileWarning> = [];
-    const session = new ReconcilerSession({ onWarn: warning => observedWarnings.push(warning) });
+    const session = new SceneReconciler({ onWarn: warning => observedWarnings.push(warning) });
 
     session.mount(ir);
 
@@ -119,7 +119,7 @@ describe('Core Runtime 计算初始完整运行', () => {
       ],
     };
     const observedWarnings: Array<CompileWarning> = [];
-    const session = new ReconcilerSession({ onWarn: warning => observedWarnings.push(warning) });
+    const session = new SceneReconciler({ onWarn: warning => observedWarnings.push(warning) });
 
     expect(() => session.mount(ir)).toThrow();
     expect(observedWarnings).toEqual([]);
@@ -143,7 +143,7 @@ describe('Core Runtime 领域产物事务', () => {
     children: [{ namespace: 'test', type: 'artifact', label }],
   });
   it('Scene 和领域产物同次提交，失败保留上一 revision', () => {
-    const session = new ReconcilerSession({ composites: [definition] });
+    const session = new SceneReconciler({ composites: [definition] });
     session.mount(source('A'));
     const before = session.read();
     session.replace(source('B'));
@@ -159,7 +159,7 @@ describe('Core Runtime 领域产物事务', () => {
 
 describe('Core Runtime 计算完整回退更新', () => {
   it('完整输入替换同时更新根配置与子元素', () => {
-    const session = new ReconcilerSession({ onWarn: () => {} }, { captureProvenance: true });
+    const session = new SceneReconciler({ onWarn: () => {} }, { captureProvenance: true });
 
     session.mount(sceneWithText('A'));
     const next: IRScene = {
@@ -183,7 +183,7 @@ describe('Core Runtime 计算完整回退更新', () => {
   });
 
   it('完整输入编译失败时不发布诊断或替换已提交结果', () => {
-    const session = new ReconcilerSession({ onWarn: () => {} }, { captureProvenance: true });
+    const session = new SceneReconciler({ onWarn: () => {} }, { captureProvenance: true });
 
     session.mount(sceneWithText('A'));
     const before = session.read();
@@ -212,7 +212,7 @@ describe('Core Runtime 计算替换样式更新', () => {
       ...initial,
       children: [{ type: 'node', id: 'a', position: [0, 0], style: { fill: 'blue', stroke: 'green', strokeWidth: 4 } }],
     };
-    const session = new ReconcilerSession({ onWarn: () => {} }, { captureProvenance: true });
+    const session = new SceneReconciler({ onWarn: () => {} }, { captureProvenance: true });
 
     session.mount(initial);
     session.replace(next);
@@ -239,7 +239,7 @@ describe('Core Runtime 计算替换样式更新', () => {
       ...initial,
       children: [{ ...initial.children[0], style: { fill: '#22c55e' } }, initial.children[1]],
     };
-    const session = new ReconcilerSession({ onWarn: () => {} }, { captureProvenance: true });
+    const session = new SceneReconciler({ onWarn: () => {} }, { captureProvenance: true });
 
     session.mount(initial);
 
@@ -285,7 +285,7 @@ describe('Core Runtime 计算替换样式更新', () => {
     };
     const next: IRScene = { ...initial, children: [{ ...initial.children[0], style: { fill: '#22c55e' } }] };
     const options = { shapes: [fillSensitiveShape], onWarn: () => {} } as const;
-    const session = new ReconcilerSession(options, { captureProvenance: true });
+    const session = new SceneReconciler(options, { captureProvenance: true });
 
     session.mount(initial);
 
@@ -296,7 +296,7 @@ describe('Core Runtime 计算替换样式更新', () => {
 });
 
 it('Scope 子内容更新、资源撤销和匿名组删除与全量编译等价', () => {
-  const session = new ReconcilerSession({});
+  const session = new SceneReconciler({});
 
   const initial: IRScene = { version: 1, type: 'scene', children: [] };
   session.mount(initial);
@@ -334,7 +334,7 @@ it('Scope 子内容更新、资源撤销和匿名组删除与全量编译等价'
 
 it('宿主提交失败保留旧编译结果，重试发布完整新树', () => {
   let failing = false;
-  const session = new ReconcilerSession(
+  const session = new SceneReconciler(
     { onWarn: () => {} },
     {
       target: {

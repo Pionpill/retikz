@@ -17,7 +17,7 @@ import {
   LayoutIntrinsicMode,
   naturalLayoutProposal,
 } from '@retikz/core';
-import { ReconcilerSession } from '@retikz/reconciler';
+import { SceneReconciler } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal, number, strictObject, string } from 'zod';
 
@@ -790,7 +790,7 @@ describe('盒子 Layout 综合契约', () => {
     const initial = sceneOf({ namespace: 'test', type: 'runtimeBox', x: 0 });
     const next = sceneOf({ namespace: 'test', type: 'runtimeBox', x: 30 });
     const options = { composites: [definition], onWarn: () => {} };
-    const session = new ReconcilerSession(options);
+    const session = new SceneReconciler(options);
     session.mount(initial);
 
     const result = session.replace(next);

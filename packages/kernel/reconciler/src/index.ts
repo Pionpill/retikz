@@ -14,7 +14,7 @@ export type {
 } from './scene';
 export * from './trace';
 
-export * from './session';
+export * from './reconciler';
 export { createSceneIdentity, createSceneIdentityLookup, sceneIdentityEquals } from './scene';
 export type { SceneIdentity, SceneIdentityLookup, SceneRevision } from './scene';
 export type { WeaveBatch, WeaveOperation, WeaveTarget } from './weave';

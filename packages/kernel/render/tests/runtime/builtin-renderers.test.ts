@@ -4,7 +4,7 @@ import type { IRScene, Scene } from '@retikz/core';
 import { compileSceneSnapshot } from '@retikz/reconciler';
 import type { RuntimeScenePrimitive, ScenePatch, ScenePatchOperation, SceneRuntimeSnapshot } from '@retikz/reconciler';
 import {
-  ReconcilerSession,
+  SceneReconciler,
   createSceneIdentity,
   createFullSceneRuntimeSnapshot,
   RetikzReconcilerErrorCode,
@@ -216,21 +216,18 @@ const createSession = (
     },
     dispose: () => handle.target.dispose?.(),
   };
-  const session = Object.assign(
-    new ReconcilerSession({ onWarn: () => undefined }, { captureProvenance: true, target }),
-    {
-      updateConfig: (next: InputRenderRuntimeConfig) => {
-        const previous = config;
-        config = next;
-        try {
-          return session.updateTarget();
-        } catch (cause) {
-          config = previous;
-          throw cause;
-        }
-      },
+  const session = Object.assign(new SceneReconciler({ onWarn: () => undefined }, { captureProvenance: true, target }), {
+    updateConfig: (next: InputRenderRuntimeConfig) => {
+      const previous = config;
+      config = next;
+      try {
+        return session.updateTarget();
+      } catch (cause) {
+        config = previous;
+        throw cause;
+      }
     },
-  );
+  });
   session.mount(options.ir ?? scene('#ef4444'));
 
   return { handle, session };

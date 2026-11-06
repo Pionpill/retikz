@@ -1,6 +1,6 @@
 import type { AnyCompositeDefinition } from '@retikz/core';
 import type { ReconcilerCommitTarget, ReconcilerOutput } from '@retikz/reconciler';
-import { ReconcilerSession } from '@retikz/reconciler';
+import { SceneReconciler } from '@retikz/reconciler';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../error';
 import type {
@@ -142,7 +142,7 @@ const createRetainedProcessingState = (
     },
     dispose: () => participant?.target.dispose?.(),
   };
-  const session = new ReconcilerSession(initial.coreOptions, {
+  const session = new SceneReconciler(initial.coreOptions, {
     captureProvenance: participant !== undefined,
     target,
   });

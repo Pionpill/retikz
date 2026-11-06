@@ -2,7 +2,7 @@ import type { IRScene } from '@retikz/core';
 import type { PerformanceTraceSink } from '@retikz/foundation';
 import { isRetikzError } from '@retikz/foundation';
 import type { ScenePatch } from '@retikz/reconciler';
-import { ReconcilerSession } from '@retikz/reconciler';
+import { SceneReconciler } from '@retikz/reconciler';
 import type { ReconcilerPreparedCommit } from '@retikz/reconciler';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -102,7 +102,7 @@ const createHarness = (
     configuration: () => config,
   });
   const session = Object.assign(
-    new ReconcilerSession({ onWarn: () => undefined }, { target: handle.target, captureProvenance: true }),
+    new SceneReconciler({ onWarn: () => undefined }, { target: handle.target, captureProvenance: true }),
     {
       updateConfig: (next: InputRenderRuntimeConfig) => {
         const previous = config;
@@ -350,7 +350,7 @@ describe('createRetainedRenderTarget', () => {
       immutableOptions: { backend: 'svg', idPrefix: 'failed' },
       configuration: () => ({}),
     });
-    const session = new ReconcilerSession({}, { target: handle.target, captureProvenance: true });
+    const session = new SceneReconciler({}, { target: handle.target, captureProvenance: true });
     expect(() => session.mount(scene('A'))).toThrow();
     session.dispose();
     session.dispose();
@@ -448,7 +448,7 @@ describe('createRetainedRenderTarget', () => {
       configuration: () => ({}),
     });
 
-    const session = new ReconcilerSession(
+    const session = new SceneReconciler(
       { onWarn: () => undefined },
       { target: handle.target, captureProvenance: true },
     );
@@ -491,7 +491,7 @@ describe('createRetainedRenderTarget', () => {
       configuration: () => ({}),
     });
 
-    const session = new ReconcilerSession(
+    const session = new SceneReconciler(
       { onWarn: () => undefined },
       { target: handle.target, captureProvenance: true },
     );
@@ -588,7 +588,7 @@ describe('createRetainedRenderTarget', () => {
       configuration: () => ({}),
     });
 
-    const session = new ReconcilerSession(
+    const session = new SceneReconciler(
       { onWarn: () => undefined },
       { target: handle.target, captureProvenance: true },
     );
@@ -663,7 +663,7 @@ describe('createRetainedRenderTarget', () => {
     });
 
     try {
-      new ReconcilerSession({ onWarn: () => undefined }, { target: handle.target, captureProvenance: true }).mount(
+      new SceneReconciler({ onWarn: () => undefined }, { target: handle.target, captureProvenance: true }).mount(
         scene('A'),
       );
       throw new Error('expected create to fail');
@@ -706,7 +706,7 @@ describe('createRetainedRenderTarget', () => {
     });
 
     try {
-      new ReconcilerSession({ onWarn: () => undefined }, { target: handle.target, captureProvenance: true }).mount(
+      new SceneReconciler({ onWarn: () => undefined }, { target: handle.target, captureProvenance: true }).mount(
         scene('A'),
       );
       throw new Error('expected create to fail');
@@ -743,7 +743,7 @@ describe('createRetainedRenderTarget', () => {
     });
 
     try {
-      new ReconcilerSession({ onWarn: () => undefined }, { target: handle.target, captureProvenance: true }).mount(
+      new SceneReconciler({ onWarn: () => undefined }, { target: handle.target, captureProvenance: true }).mount(
         scene('A'),
       );
       throw new Error('expected create to fail');
@@ -784,7 +784,7 @@ describe('createRetainedRenderTarget', () => {
     });
 
     expect(() =>
-      new ReconcilerSession({ onWarn: () => undefined }, { target: handle.target, captureProvenance: true }).mount(
+      new SceneReconciler({ onWarn: () => undefined }, { target: handle.target, captureProvenance: true }).mount(
         scene('A'),
       ),
     ).toThrowError(
@@ -830,7 +830,7 @@ describe('createRetainedRenderTarget', () => {
       configuration: () => ({}),
     });
 
-    const session = new ReconcilerSession(
+    const session = new SceneReconciler(
       { onWarn: () => undefined },
       { target: handle.target, captureProvenance: true },
     );

@@ -501,7 +501,7 @@ Core provides domain algorithms; Reconciler owns complete output assembly. Recon
 
 ## Weave integration
 
-One-shot `compileToScene`, `compileSceneSnapshot`, and `ReconcilerSession` share Reconciler's executor. `incremental` defaults to `true`: initial compilation builds the authored Weave tree and retains the actual products returned by Core. With `false`, the same compilation flow runs without retaining Weave; `update` and `updateStrategy` are rejected. Both modes support `replace`.
+One-shot `compileToScene`, `compileSceneSnapshot`, and `SceneReconciler` share Reconciler's executor. `incremental` defaults to `true`: initial compilation builds the authored Weave tree and retains the actual products returned by Core. With `false`, the same compilation flow runs without retaining Weave; `update` and `updateStrategy` are rejected. Both modes support `replace`.
 
 An incremental update applies `WeaveBatch` operations in order, then traverses the candidate input with the shared executor. A stage can reuse its product while its inputs, declaration path, and observed name lookups remain valid. Resources accompany reused products into the new workspace, and provenance is rebuilt for the current execution. Stages with diagnostics are recomputed so current warnings are not lost. Reference queries preserve declaration visibility, local shadowing, and deferred Path semantics.
 
@@ -515,8 +515,8 @@ Composite inputs use the same executor and allow batch edits to authored basic e
   sources={[
     { label: 'Shared executor', path: 'packages/kernel/reconciler/src/compile/tree/manager.ts' },
     { label: 'Stage reuse and resources', path: 'packages/kernel/reconciler/src/compile/runtime/cache.ts' },
-    { label: 'Weave integration', path: 'packages/kernel/reconciler/src/weave/reconcile.ts' },
+    { label: 'Weave integration', path: 'packages/kernel/reconciler/src/weave/manager.ts' },
     { label: 'Shared products and candidate states', path: 'packages/kernel/reconciler/src/weave/types.ts' },
-    { label: 'Session modes and publication', path: 'packages/kernel/reconciler/src/session.ts' },
+    { label: 'Session modes and publication', path: 'packages/kernel/reconciler/src/reconciler.ts' },
   ]}
 />

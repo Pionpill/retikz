@@ -3,7 +3,7 @@ import { CompositeBaseSchema, defineComposite, naturalLayoutProposal, LayoutChil
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
-import { compileSceneSnapshot, compileToScene, ReconcilerSession } from '../../src';
+import { compileSceneSnapshot, compileToScene, SceneReconciler } from '../../src';
 
 const input: IRScene = {
   version: 1,
@@ -18,7 +18,7 @@ describe('统一编译模式', () => {
   it('两种模式与一次性入口产生相同的完整结果和诊断', () => {
     const expected = compileSceneSnapshot(input);
     for (const incremental of [false, true]) {
-      const session = new ReconcilerSession({}, { incremental });
+      const session = new SceneReconciler({}, { incremental });
       const actual = session.mount(input);
       expect(actual.compilation.result).toEqual(expected.result);
       expect(actual.compilation.diagnostics).toEqual(expected.diagnostics);
@@ -29,7 +29,7 @@ describe('统一编译模式', () => {
   });
 
   it('非增量会话支持完整替换但拒绝批次更新，拒绝后仍保留已发布结果', () => {
-    const session = new ReconcilerSession({}, { incremental: false });
+    const session = new SceneReconciler({}, { incremental: false });
     const initial = session.mount(input);
     expect(() => session.update({ operations: [] })).toThrow();
     expect(session.read()).toBe(initial);
@@ -54,7 +54,7 @@ describe('统一编译模式', () => {
       children: [...input.children, { namespace: 'mode-test', type: 'marker' }],
     };
     const options = { composites: [definition] };
-    const session = new ReconcilerSession(options, { incremental: true });
+    const session = new SceneReconciler(options, { incremental: true });
     const first = session.mount(source);
     expect(first.compilation.result).toEqual(compileToScene(source, options));
     expect(first.root).toBeDefined();
@@ -85,7 +85,7 @@ describe('统一编译模式', () => {
         { type: 'node', id: 'stable', position: [200, 0] },
       ],
     };
-    const session = new ReconcilerSession({}, { captureProvenance: true });
+    const session = new SceneReconciler({}, { captureProvenance: true });
     const first = session.mount(source);
     const root = first.root!;
     const stable = root.current!.children[2];
@@ -144,7 +144,7 @@ describe('统一编译模式', () => {
         { type: 'node', id: 'remove', position: [100, 0], style: { fill: gradient } },
       ],
     };
-    const session = new ReconcilerSession();
+    const session = new SceneReconciler();
     const first = session.mount(source);
     const keep = first.root!.current!.children[0];
     const product = keep.current!.compiled;
@@ -158,7 +158,7 @@ describe('统一编译模式', () => {
   });
 
   it('非增量模式拒绝增量策略配置', () => {
-    expect(() => new ReconcilerSession({}, { incremental: false, updateStrategy: 'full' })).toThrow();
+    expect(() => new SceneReconciler({}, { incremental: false, updateStrategy: 'full' })).toThrow();
   });
   it('Composite 试算重放在基础元素更新后重新执行，失败候选保持旧结果', () => {
     const definition = defineComposite({
@@ -178,7 +178,7 @@ describe('统一编译模式', () => {
     const source: IRScene = { ...input, children: [input.children[0], { namespace: 'mode-test', type: 'probe' }] };
     const options = { composites: [definition] };
     for (const updateStrategy of ['auto', 'full'] as const) {
-      const session = new ReconcilerSession(options, { updateStrategy, captureProvenance: true });
+      const session = new SceneReconciler(options, { updateStrategy, captureProvenance: true });
       const first = session.mount(source);
       const root = first.root!;
       expect(() =>

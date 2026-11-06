@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
 import { compileToScene } from '../../src/compile';
-import { WeaveReconciler } from '../../src/weave';
+import { WeaveManager } from '../../src/weave';
 
 describe('Node 阶段复用', () => {
   it('尺寸变化只重算边界消费者，中心锚点结果不变则复用路径', () => {
@@ -43,7 +43,7 @@ describe('Node 阶段复用', () => {
         },
       ],
     };
-    const session = new WeaveReconciler(source, { paths });
+    const session = new WeaveManager(source, { paths });
     const mounted = session.mount();
     const before = { ...calls };
     const resized: IRNode = { ...node, layout: { minimumSize: 80 } };
@@ -75,7 +75,7 @@ describe('Node 阶段复用', () => {
       version: 1,
       children: [{ type: 'coordinate', id: 'origin', position: [0, 0] }, body],
     };
-    const session = new WeaveReconciler(source, { measureText });
+    const session = new WeaveManager(source, { measureText });
     const mounted = session.mount();
     const before = measurements;
     const repainted = { ...body, style: { textColor: 'blue' } };

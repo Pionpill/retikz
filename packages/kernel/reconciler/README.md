@@ -3,9 +3,9 @@
 统一执行完整与增量编译，组合 Core 原子阶段，按需保留 Weave 缓存，并协调单个输出目标的原子提交。
 
 ```ts
-import { ReconcilerSession } from '@retikz/reconciler';
+import { SceneReconciler } from '@retikz/reconciler';
 
-const session = new ReconcilerSession();
+const session = new SceneReconciler();
 session.mount({ type: 'scene', version: 1, children: [] });
 const result = session.read();
 session.dispose();

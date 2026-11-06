@@ -358,10 +358,10 @@ Reconciler sessions report compilation work. Pass a sink in the second construct
 
 ```ts
 import type { PerformanceTraceRecord } from '@retikz/foundation';
-import { ReconcilerSession } from '@retikz/reconciler';
+import { SceneReconciler } from '@retikz/reconciler';
 
 const records: Array<PerformanceTraceRecord> = [];
-const session = new ReconcilerSession({}, { trace: record => records.push(record) });
+const session = new SceneReconciler({}, { trace: record => records.push(record) });
 session.mount({ version: 1, type: 'scene', children: [{ type: 'node', id: 'a', position: [0, 0] }] });
 console.log(records.map(record => [record.owner, record.phase, record.unit, record.visited]));
 // [['kernel/reconciler', 'update', 'element-compile', 1]]
@@ -388,7 +388,10 @@ Render owns backend phases through `RenderTracePhase` and units through `RenderT
 
 <SourceLinks
   sources={[
-    { label: 'Reconciler session reporting and failure isolation', path: 'packages/kernel/reconciler/src/session.ts' },
+    {
+      label: 'Reconciler session reporting and failure isolation',
+      path: 'packages/kernel/reconciler/src/reconciler.ts',
+    },
     { label: 'Reconciler phases and units', path: 'packages/kernel/reconciler/src/trace.ts' },
     { label: 'Render phases and units', path: 'packages/kernel/render/src/trace/constants.ts' },
   ]}

@@ -2,13 +2,13 @@ import type { IRScene } from '@retikz/core';
 import { describe, expect, it, vi } from 'vitest';
 
 import { compileToScene } from '../../src/compile';
-import { ReconcilerSession } from '../../src/session';
+import { SceneReconciler } from '../../src/reconciler';
 
 const scene: IRScene = { type: 'scene', version: 1, children: [{ type: 'node', id: 'a', position: [0, 0] }] };
 
 describe('独立编译会话', () => {
   it('不接入渲染端也能连续提交基础元素批次', () => {
-    const session = new ReconcilerSession();
+    const session = new SceneReconciler();
     const initial = session.mount(scene);
     const scopeId = initial.root!.scopeId;
     const first = session.update({
@@ -31,7 +31,7 @@ describe('独立编译会话', () => {
   });
 
   it('无效批次不推进结果且后续合法批次仍可提交', () => {
-    const session = new ReconcilerSession();
+    const session = new SceneReconciler();
     const initial = session.mount(scene);
     expect(() =>
       session.update({
@@ -45,7 +45,7 @@ describe('独立编译会话', () => {
   it('宿主提交抛错时恢复计算与画面，并允许重试', () => {
     let visible = 0;
     let fail = false;
-    const session = new ReconcilerSession(
+    const session = new SceneReconciler(
       {},
       {
         target: {
@@ -79,7 +79,7 @@ describe('独立编译会话', () => {
   });
 
   it('配置更新复用编译结果，销毁与过期更新有明确边界', () => {
-    const session = new ReconcilerSession();
+    const session = new SceneReconciler();
     const initial = session.mount(scene);
     const configured = session.updateTarget();
     expect(configured.compilation).toBe(initial.compilation);
@@ -93,7 +93,7 @@ describe('独立编译会话', () => {
     const counts: Array<number> = [];
     for (const updateStrategy of ['auto', 'full'] as const) {
       const trace = vi.fn();
-      const session = new ReconcilerSession({}, { updateStrategy, trace });
+      const session = new SceneReconciler({}, { updateStrategy, trace });
       const initial = session.mount(input);
       const result = session.update({
         operations: [
@@ -124,7 +124,7 @@ describe('独立编译会话', () => {
       throw new Error('observer');
     });
     let fail = false;
-    const session = new ReconcilerSession(
+    const session = new SceneReconciler(
       {},
       {
         trace,
@@ -151,7 +151,7 @@ describe('独立编译会话', () => {
   it('恢复失败阻断会话读写，但仍允许释放', () => {
     let fail = false;
     const dispose = vi.fn();
-    const session = new ReconcilerSession(
+    const session = new SceneReconciler(
       {},
       {
         target: {

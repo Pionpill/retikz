@@ -27,8 +27,8 @@ export type WeavePreparedUpdate = WeaveCompilation & {
 /** 当前模块实例内的树编号分配器，用于生成各树独立的 scopeId 前缀 */
 let nextTreeId = 0;
 
-/** 协调声明树、Core 编译与依赖记录；当前每次准备独占可变状态 */
-export class WeaveReconciler {
+/** 管理 Weave 声明树、阶段缓存、依赖记录与候选事务；每次准备独占可变状态 */
+export class WeaveManager {
   /** 会话稳定配置，与可变批次分离 */
   private readonly context: WeaveCompileContext;
   /** 跨批次事实源与当前候选状态 */

@@ -4,7 +4,7 @@ import type { PerformanceTraceRecord } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
-import { ReconcilerSession, ReconcilerTracePhase, ReconcilerTraceUnit } from '../../src';
+import { SceneReconciler, ReconcilerTracePhase, ReconcilerTraceUnit } from '../../src';
 import { compileToScene } from '../../src/compile';
 
 const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: 'scene', children });
@@ -14,7 +14,7 @@ describe('协调器编译跟踪', () => {
     const records: Array<PerformanceTraceRecord> = [];
     const trace = (record: PerformanceTraceRecord) => records.push(record);
 
-    const session = new ReconcilerSession({}, { trace });
+    const session = new SceneReconciler({}, { trace });
     session.mount(
       scene([
         { type: 'node', id: 'outside', position: [0, 0] },
@@ -44,7 +44,7 @@ describe('协调器编译跟踪', () => {
     const trace = (record: PerformanceTraceRecord) => records.push(record);
     const input = scene([]);
 
-    const session = new ReconcilerSession({}, { trace });
+    const session = new SceneReconciler({}, { trace });
     const mounted = session.mount(input);
     const traced = mounted.compilation.result;
     expect(session.update({ operations: [] })).toBe(mounted);
@@ -82,7 +82,7 @@ describe('协调器编译跟踪', () => {
       },
     });
 
-    const session = new ReconcilerSession({ composites: [composite] }, { trace });
+    const session = new SceneReconciler({ composites: [composite] }, { trace });
     session.mount(scene([{ namespace: 'trace', type: 'replay' }]));
     session.replace(
       scene([

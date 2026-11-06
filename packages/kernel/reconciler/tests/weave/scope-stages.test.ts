@@ -2,7 +2,7 @@ import type { IRScene, IRScope, IRCoordinate } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import { compileToScene } from '../../src/compile';
-import { readWeaveCurrent, WeaveReconciler } from '../../src/weave';
+import { readWeaveCurrent, WeaveManager } from '../../src/weave';
 
 describe('Scope 三层复用', () => {
   it('显式默认变换复用最终包络，外部引用变化重新放置且回滚不污染缓存', () => {
@@ -17,7 +17,7 @@ describe('Scope 三层复用', () => {
       version: 1,
       children: [{ type: 'coordinate', id: 'origin', position: [10, 20] }, scope],
     };
-    const session = new WeaveReconciler(source);
+    const session = new WeaveManager(source);
     const mounted = session.mount();
     const child = readWeaveCurrent(mounted.root).children[1];
     if (child.type !== 'scope') throw new Error('Expected scope');

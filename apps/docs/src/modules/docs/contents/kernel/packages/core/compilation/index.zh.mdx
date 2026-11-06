@@ -474,7 +474,7 @@ Scope 在子元素之前解析有效样式并准备放置，子布局就绪后�
 
 ## Weave 接入
 
-一次性 `compileToScene`、`compileSceneSnapshot` 和 `ReconcilerSession` 共用 Reconciler 的执行器。`incremental` 默认为 `true`：首轮编译建立作者 Weave 树，保存 Core 实际返回的阶段产物；设为 `false` 时执行相同编译主线，但不保留 Weave，也不允许 `update` 或配置 `updateStrategy`。两种模式均支持 `replace`。
+一次性 `compileToScene`、`compileSceneSnapshot` 和 `SceneReconciler` 共用 Reconciler 的执行器。`incremental` 默认为 `true`：首轮编译建立作者 Weave 树，保存 Core 实际返回的阶段产物；设为 `false` 时执行相同编译主线，但不保留 Weave，也不允许 `update` 或配置 `updateStrategy`。两种模式均支持 `replace`。
 
 增量更新先按顺序应用 `WeaveBatch`，再从候选输入执行统一遍历。输入、声明路径和实际名称读取仍有效时，阶段可以复用；资源随产物一起导入本次工作区，来源记录按当前执行重新建立。有诊断的阶段重新计算，避免遗漏本轮诊断。布局查询仍遵守声明可见性、局部名称遮蔽和延迟 Path 规则。
 
@@ -488,8 +488,8 @@ Weave 为 Node、Coordinate、Path、Scope 分别保存 input、canon、compiled
   sources={[
     { label: '统一执行器', path: 'packages/kernel/reconciler/src/compile/tree/manager.ts' },
     { label: '阶段复用与资源', path: 'packages/kernel/reconciler/src/compile/runtime/cache.ts' },
-    { label: 'Weave 接入', path: 'packages/kernel/reconciler/src/weave/reconcile.ts' },
+    { label: 'Weave 接入', path: 'packages/kernel/reconciler/src/weave/manager.ts' },
     { label: '共享产物与候选状态', path: 'packages/kernel/reconciler/src/weave/types.ts' },
-    { label: '会话模式与发布', path: 'packages/kernel/reconciler/src/session.ts' },
+    { label: '会话模式与发布', path: 'packages/kernel/reconciler/src/reconciler.ts' },
   ]}
 />

@@ -25,7 +25,7 @@ Ordinary React and Vanilla input updates use complete replacement. Reconciler ba
 
 ## Input preparation
 
-React converts component declarations into `InputScene`, which Vanilla normalizes into `IRScene`; existing IR enters processing directly. `prepareProcessingInput` also prepares compilation configuration and Composite inputs. The controller owns a `ReconcilerSession`, calling `mount` initially and `replace` for ordinary subsequent input.
+React converts component declarations into `InputScene`, which Vanilla normalizes into `IRScene`; existing IR enters processing directly. `prepareProcessingInput` also prepares compilation configuration and Composite inputs. The controller owns a `SceneReconciler`, calling `mount` initially and `replace` for ordinary subsequent input.
 
 This path does not use the generic Runtime package's Source / Computation registry graph. `replace` explicitly rebuilds compilation output; it does not promise to skip compilation for equal document contents. Configuration-only changes can use `updateTarget` to retain compilation output.
 
@@ -36,7 +36,7 @@ This path does not use the generic Runtime package's Source / Computation regist
       label: 'Controller and session integration',
       path: 'packages/kernel/vanilla/src/processing/internal/controller.ts',
     },
-    { label: 'Replacement and configuration updates', path: 'packages/kernel/reconciler/src/session.ts' },
+    { label: 'Replacement and configuration updates', path: 'packages/kernel/reconciler/src/reconciler.ts' },
   ]}
 />
 
@@ -46,16 +46,16 @@ One-shot compilation, complete replacement, and batch updates share Reconcilerâ€
 
 <ComponentPreview files="update-reuse" size="md" hideCode type="flow" />
 
-Weave retains input, context, compiled state and dependencies. `ReconcilerSession.update(batch, expected)` applies a `WeaveBatch` to an existing basic-element tree. `expected` must be the current session result; stale results are rejected. Scenes containing Composites support edits to authored basic elements. Generated children cannot be addressed; use replace to change Composite author input. Empty incremental batches retain the current result.
+Weave retains input, context, compiled state and dependencies. `SceneReconciler.update(batch, expected)` applies a `WeaveBatch` to an existing basic-element tree. `expected` must be the current session result; stale results are rejected. Scenes containing Composites support edits to authored basic elements. Generated children cannot be addressed; use replace to change Composite author input. Empty incremental batches retain the current result.
 
 Batches recompute affected elements from final inputs and reuse valid products. Context follows declaration structure and invalidation follows dependencies; a Scope change can recompute its whole subtree. Name indexing and output assembly can still traverse the tree, so local compilation does not imply local total update cost. Ordinary React and Vanilla input updates do not yet use this batch entry.
 
 <SourceLinks
   sources={[
-    { label: 'Session batches and version constraints', path: 'packages/kernel/reconciler/src/session.ts' },
+    { label: 'Session batches and version constraints', path: 'packages/kernel/reconciler/src/reconciler.ts' },
     {
       label: 'Element scheduling and dependency invalidation',
-      path: 'packages/kernel/reconciler/src/weave/reconcile.ts',
+      path: 'packages/kernel/reconciler/src/weave/manager.ts',
     },
     { label: 'Candidate isolation and recovery', path: 'packages/kernel/reconciler/src/weave/transaction.ts' },
   ]}
@@ -90,7 +90,7 @@ Warning callbacks, tracing and commit-token cleanup failures after publication a
 
 <SourceLinks
   sources={[
-    { label: 'Publication, rollback and broken state', path: 'packages/kernel/reconciler/src/session.ts' },
+    { label: 'Publication, rollback and broken state', path: 'packages/kernel/reconciler/src/reconciler.ts' },
     { label: 'Host state recovery', path: 'packages/kernel/render/src/runtime/target.ts' },
     { label: 'React retains successful results', path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx' },
   ]}
@@ -102,7 +102,7 @@ This diagram locates an ordinary Vanilla DOM input replacement. Member names are
 
 <ComponentPreview files="update-implementation" size="lg" hideCode type="flow" />
 
-Start at `prepareProcessingInput` and the controller, then follow `ReconcilerSession.replace` through the shared executor and optional Weave cache. `publish` prepares and commits the target; the Render target materializes candidate output as a host frame. The session then publishes its result and the controller notifies subscribers.
+Start at `prepareProcessingInput` and the controller, then follow `SceneReconciler.replace` through the shared executor and optional Weave cache. `publish` prepares and commits the target; the Render target materializes candidate output as a host frame. The session then publishes its result and the controller notifies subscribers.
 
 ## Further reading
 

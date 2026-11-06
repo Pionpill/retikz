@@ -1,6 +1,6 @@
 import type { IRScene, Scene } from '@retikz/core';
 import type { ReconcilerOutput } from '@retikz/reconciler';
-import { ReconcilerSession } from '@retikz/reconciler';
+import { SceneReconciler } from '@retikz/reconciler';
 import { describe, expect, it, vi } from 'vitest';
 
 import type {
@@ -91,10 +91,7 @@ const createHarness = (
     ...(options.expectedInitialFrame === undefined ? {} : { expectedInitialFrame: options.expectedInitialFrame }),
     ...(options.resolveReadonlyLayers === undefined ? {} : { resolveReadonlyLayers: options.resolveReadonlyLayers }),
   });
-  const session = new ReconcilerSession(
-    { onWarn: () => undefined },
-    { target: handle.target, captureProvenance: true },
-  );
+  const session = new SceneReconciler({ onWarn: () => undefined }, { target: handle.target, captureProvenance: true });
   session.mount(source('initial'));
   return { handle, prepare, prepareMount, renderer, session };
 };

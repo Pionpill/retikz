@@ -25,7 +25,7 @@ description: 沿一次节点改色，追踪输入准备、Reconciler 会话、We
 
 ## 输入准备
 
-React 将组件声明转换为 `InputScene`，Vanilla 再归一化为 `IRScene`；已有 IR 直接进入处理流程。`prepareProcessingInput` 同时整理编译配置和 Composite 输入。控制器持有 `ReconcilerSession`，初始化调用 `mount`，普通后续输入调用 `replace`。
+React 将组件声明转换为 `InputScene`，Vanilla 再归一化为 `IRScene`；已有 IR 直接进入处理流程。`prepareProcessingInput` 同时整理编译配置和 Composite 输入。控制器持有 `SceneReconciler`，初始化调用 `mount`，普通后续输入调用 `replace`。
 
 这条链路不经过通用 Runtime 包的 Source／Computation 注册图。`replace` 显式重建编译结果，没有基于文档内容相等而跳过编译的保证。仅修改渲染配置时，控制器可调用 `updateTarget` 复用已有编译结果。
 
@@ -33,7 +33,7 @@ React 将组件声明转换为 `InputScene`，Vanilla 再归一化为 `IRScene`�
   sources={[
     { label: '输入准备', path: 'packages/kernel/vanilla/src/processing/prepare.ts' },
     { label: '控制器与会话接线', path: 'packages/kernel/vanilla/src/processing/internal/controller.ts' },
-    { label: '完整替换与配置更新', path: 'packages/kernel/reconciler/src/session.ts' },
+    { label: '完整替换与配置更新', path: 'packages/kernel/reconciler/src/reconciler.ts' },
   ]}
 />
 
@@ -43,14 +43,14 @@ React 将组件声明转换为 `InputScene`，Vanilla 再归一化为 `IRScene`�
 
 <ComponentPreview files="update-reuse" size="md" hideCode type="flow" />
 
-Weave 保存输入、上下文、编译状态和依赖。`ReconcilerSession.update(batch, expected)` 可在已有基础元素树上应用 `WeaveBatch`；`expected` 必须是当前会话结果，旧结果会被拒绝。含 Composite 的场景可以更新作者基础元素；生成节点不可寻址，修改 Composite 作者输入需 replace。增量模式下空批次保留当前结果。
+Weave 保存输入、上下文、编译状态和依赖。`SceneReconciler.update(batch, expected)` 可在已有基础元素树上应用 `WeaveBatch`；`expected` 必须是当前会话结果，旧结果会被拒绝。含 Composite 的场景可以更新作者基础元素；生成节点不可寻址，修改 Composite 作者输入需 replace。增量模式下空批次保留当前结果。
 
 批次更新按最终输入重算受影响元素，复用仍有效的产物。上下文沿声明结构传递，失效沿依赖传播；Scope 变化可能使整个子树重算。名称索引和输出组装仍可能遍历整树，因此局部编译不等于整次更新只有局部成本。普通 React／Vanilla 输入更新尚未接入此批次入口。
 
 <SourceLinks
   sources={[
-    { label: '会话批次与版本约束', path: 'packages/kernel/reconciler/src/session.ts' },
-    { label: '元素调度与依赖失效', path: 'packages/kernel/reconciler/src/weave/reconcile.ts' },
+    { label: '会话批次与版本约束', path: 'packages/kernel/reconciler/src/reconciler.ts' },
+    { label: '元素调度与依赖失效', path: 'packages/kernel/reconciler/src/weave/manager.ts' },
     { label: '候选状态隔离与恢复', path: 'packages/kernel/reconciler/src/weave/transaction.ts' },
   ]}
 />
@@ -84,7 +84,7 @@ React Layout 先订阅成功发布的 `ProcessingResult`，再构建宿主输出
 
 <SourceLinks
   sources={[
-    { label: '发布、回滚与 broken 边界', path: 'packages/kernel/reconciler/src/session.ts' },
+    { label: '发布、回滚与 broken 边界', path: 'packages/kernel/reconciler/src/reconciler.ts' },
     { label: '宿主状态恢复', path: 'packages/kernel/render/src/runtime/target.ts' },
     { label: 'React 保留成功结果', path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx' },
   ]}
@@ -96,7 +96,7 @@ React Layout 先订阅成功发布的 `ProcessingResult`，再构建宿主输出
 
 <ComponentPreview files="update-implementation" size="lg" hideCode type="flow" />
 
-从 `prepareProcessingInput` 进入控制器，再沿 `ReconcilerSession.replace` 查看统一执行器与可选 Weave 缓存。`publish` 调用目标准备和提交，Render 目标将候选结果物化为宿主帧；最后会话发布结果，控制器通知订阅者。
+从 `prepareProcessingInput` 进入控制器，再沿 `SceneReconciler.replace` 查看统一执行器与可选 Weave 缓存。`publish` 调用目标准备和提交，Render 目标将候选结果物化为宿主帧；最后会话发布结果，控制器通知订阅者。
 
 ## 延伸阅读
 

@@ -8,7 +8,7 @@ import {
   naturalLayoutProposal,
   RetikzCoreError,
 } from '@retikz/core';
-import { ReconcilerSession } from '@retikz/reconciler';
+import { SceneReconciler } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal, string } from 'zod';
 
@@ -210,7 +210,7 @@ describe('复合实例运行时输入', () => {
   it('重新编译相同 JSON 的更改输入并回滚不匹配的候选者', () => {
     const source = sceneOf([leaf()]);
     const inputs = (text: string) => createCompositeInputBindings(source, [{ path: ['children', 0], input: text }]);
-    const session = new ReconcilerSession({ composites: [prepared], compositeInputs: inputs('initial-ready') });
+    const session = new SceneReconciler({ composites: [prepared], compositeInputs: inputs('initial-ready') });
     session.mount(source);
     session.replace(source, { composites: [prepared], compositeInputs: inputs('updated-ready') });
 

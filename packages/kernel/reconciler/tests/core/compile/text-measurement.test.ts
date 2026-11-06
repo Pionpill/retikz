@@ -5,7 +5,7 @@ import { literal } from 'zod';
 
 import { compileToScene } from '../../../src/compile';
 import { createCompileRuntime } from '../../../src/compile/runtime';
-import { WeaveReconciler } from '../../../src/weave';
+import { WeaveManager } from '../../../src/weave';
 
 const emptyScene: IRScene = { type: 'scene', version: 1, children: [] };
 
@@ -107,11 +107,11 @@ describe('单次编译文字测量', () => {
       if (reject) throw new Error('measurement failed');
       return { width: 20, height: 10 };
     });
-    const reconciler = new WeaveReconciler({ ...emptyScene, children: nodes }, { measureText });
-    const mounted = reconciler.mount();
+    const manager = new WeaveManager({ ...emptyScene, children: nodes }, { measureText });
+    const mounted = manager.mount();
     expect(measureText).toHaveBeenCalledTimes(1);
     const update = (text: string) =>
-      reconciler.update({
+      manager.update({
         operations: nodes.map(node => ({
           kind: 'update',
           target: { kind: 'id', scopeId: mounted.root.scopeId, id: node.id! },

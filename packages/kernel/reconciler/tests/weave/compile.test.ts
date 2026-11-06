@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
 import { compileSceneSnapshot, compileToScene } from '../../src/compile';
-import { readWeaveCurrent, WeaveReconciler } from '../../src/weave';
+import { readWeaveCurrent, WeaveManager } from '../../src/weave';
 
 const readEmissions = (provenance: CompileProvenanceSnapshot) =>
   [...provenance.ownerMap.values()]
@@ -33,12 +33,12 @@ const scene: IRScene = {
 
 describe('Weave 编译构建', () => {
   it.each([0, 7])('外层 Scene 留白 %s 与全量编译一致', padding => {
-    const prepared = new WeaveReconciler(scene, { padding }).mount();
+    const prepared = new WeaveManager(scene, { padding }).mount();
     expect(prepared.compilation.result).toEqual(compileToScene(scene, { padding }));
   });
 
   it('保留跨 Scope 延后路径、声明结构和完整来源', () => {
-    const prepared = new WeaveReconciler(scene, {}, { captureProvenance: true }).mount();
+    const prepared = new WeaveManager(scene, {}, { captureProvenance: true }).mount();
     expect(prepared.compilation.result).toEqual(compileToScene(scene));
     expect(prepared.root.pending).toBeNull();
     expect(readWeaveCurrent(prepared.root).children.every(node => node.pending === null)).toBe(true);
@@ -55,11 +55,11 @@ describe('Weave 编译构建', () => {
   });
 
   it('失败的新候选不改变此前树、索引和已完成输出', () => {
-    const previous = new WeaveReconciler(scene, {}, { captureProvenance: true }).mount();
+    const previous = new WeaveManager(scene, {}, { captureProvenance: true }).mount();
     const output = JSON.stringify(previous.compilation.result);
     const nodes = [...readWeaveCurrent(previous.root).scopeIds.values()];
     expect(() =>
-      new WeaveReconciler({
+      new WeaveManager({
         ...scene,
         children: [{ type: 'coordinate', id: 'bad', position: { direction: 'right', of: 'absent' } }],
       }).mount(),
@@ -96,7 +96,7 @@ describe('Weave 编译构建', () => {
         },
       ],
     };
-    expect(new WeaveReconciler(input).mount().compilation.result).toEqual(compileToScene(input));
+    expect(new WeaveManager(input).mount().compilation.result).toEqual(compileToScene(input));
   });
 });
 
@@ -177,7 +177,7 @@ describe('Weave 与 Core 可观察等价', () => {
   ];
   it.each(inputs)('保持引用、变换、排序、诊断与发射归属', input => {
     const full = compileSceneSnapshot(input, {}, { captureProvenance: true });
-    const weave = new WeaveReconciler(input, {}, { captureProvenance: true }).mount().compilation;
+    const weave = new WeaveManager(input, {}, { captureProvenance: true }).mount().compilation;
     expect(weave.result).toEqual(full.result);
     expect(weave.diagnostics).toEqual(full.diagnostics);
     expect(
@@ -255,7 +255,7 @@ it('嵌套旋转缩放后的引用、渐变资源与观察结果保持同版本'
     ],
   };
   const full = compileSceneSnapshot(input, {});
-  const weave = new WeaveReconciler(input, {}, { captureProvenance: true }).mount().compilation;
+  const weave = new WeaveManager(input, {}, { captureProvenance: true }).mount().compilation;
   expect(weave.result).toEqual(full.result);
 });
 
@@ -265,11 +265,11 @@ it('新环境的测量服务生效，空树不携带旧资源或读取记录', (
     version: 1,
     children: [{ type: 'node', id: 'a', text: 'A', position: [0, 0] }],
   };
-  const first = new WeaveReconciler(input, { measureText: () => ({ width: 10, height: 10 }) }).mount();
-  const second = new WeaveReconciler(input, { measureText: () => ({ width: 100, height: 10 }) }).mount();
+  const first = new WeaveManager(input, { measureText: () => ({ width: 10, height: 10 }) }).mount();
+  const second = new WeaveManager(input, { measureText: () => ({ width: 100, height: 10 }) }).mount();
   expect(second.compilation.result.scene.layout.width).toBeGreaterThan(first.compilation.result.scene.layout.width);
   expect(second.root.scopeId).not.toBe(first.root.scopeId);
-  const empty = new WeaveReconciler({ ...input, children: [] }).mount();
+  const empty = new WeaveManager({ ...input, children: [] }).mount();
   expect(readWeaveCurrent(empty.root).records.size).toBe(0);
   expect(readWeaveCurrent(empty.root).ids.size).toBe(0);
   expect(readWeaveCurrent(empty.root).scopeIds.size).toBe(1);
@@ -278,7 +278,7 @@ it('新环境的测量服务生效，空树不携带旧资源或读取记录', (
 
 it('祖先 Scope 几何引用失败，未来声明不会提前对 Node 可见', () => {
   expect(() =>
-    new WeaveReconciler({
+    new WeaveManager({
       type: 'scene',
       version: 1,
       children: [
@@ -299,7 +299,7 @@ it('祖先 Scope 几何引用失败，未来声明不会提前对 Node 可见', 
     ],
   };
   expect(() => compileSceneSnapshot(input)).toThrow(/Cannot resolve position/);
-  expect(() => new WeaveReconciler(input).mount()).toThrow(/Cannot resolve position/);
+  expect(() => new WeaveManager(input).mount()).toThrow(/Cannot resolve position/);
 });
 
 it('自定义 Path 重用相同图元对象时保留各自的发射来源', () => {
@@ -339,7 +339,7 @@ it('自定义 Path 重用相同图元对象时保留各自的发射来源', () =
       },
     ],
   };
-  const prepared = new WeaveReconciler(input, { paths: [kind] }, { captureProvenance: true }).mount();
+  const prepared = new WeaveManager(input, { paths: [kind] }, { captureProvenance: true }).mount();
   expect(prepared.compilation.result).toEqual(compileToScene(input, { paths: [kind] }));
   const owners = [...prepared.compilation.provenance!.ownerMap.values()].filter(owner => owner.emissions.length > 0);
   expect(owners).toHaveLength(2);
@@ -363,7 +363,7 @@ it.each(['empty', 'null-path', 'retained'] as const)('Scope 裁空与动画诊�
     ],
   };
   const full = compileSceneSnapshot(input, options);
-  const weave = new WeaveReconciler(input, options).mount().compilation;
+  const weave = new WeaveManager(input, options).mount().compilation;
   expect(weave.result).toEqual(full.result);
   expect(weave.diagnostics).toEqual(full.diagnostics);
   expect(weave.diagnostics).toHaveLength(variant === 'retained' ? 1 : 0);

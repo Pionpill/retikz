@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
 import { compileToScene } from '../../src/compile';
-import { readWeaveCurrent, WeaveReconciler } from '../../src/weave';
+import { readWeaveCurrent, WeaveManager } from '../../src/weave';
 
 describe('Path 三层复用', () => {
   it('省略与显式 stroke 种类复用同一最终结果', () => {
@@ -16,7 +16,7 @@ describe('Path 三层复用', () => {
         { type: 'step', kind: 'line', to: [10, 0] },
       ],
     };
-    const session = new WeaveReconciler({ type: 'scene', version: 1, children: [path] });
+    const session = new WeaveManager({ type: 'scene', version: 1, children: [path] });
     const mounted = session.mount();
     const node = readWeaveCurrent(mounted.root).children[0];
     if (node.type !== 'path') throw new Error('Expected path');
@@ -55,7 +55,7 @@ describe('Path 三层复用', () => {
       ],
     };
     const source: IRScene = { type: 'scene', version: 1, children: [path] };
-    const session = new WeaveReconciler(source, { paths: [definition] });
+    const session = new WeaveManager(source, { paths: [definition] });
     const mounted = session.mount();
     const before = calls;
     const node = readWeaveCurrent(mounted.root).children[0];

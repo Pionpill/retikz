@@ -2,7 +2,7 @@ import type { IRScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import { compileToScene } from '../../src/compile';
-import { readWeaveCurrent, WeaveReconciler } from '../../src/weave';
+import { readWeaveCurrent, WeaveManager } from '../../src/weave';
 
 describe('Coordinate 三层复用', () => {
   it('真实坐标引用拒绝不存在的命名锚点', () => {
@@ -34,7 +34,7 @@ describe('Coordinate 三层复用', () => {
         { type: 'node', position: { of: 'c', direction: 'right', distance: 0 } },
       ],
     };
-    const session = new WeaveReconciler(source);
+    const session = new WeaveManager(source);
     const mounted = session.mount();
     const coordinate = readWeaveCurrent(mounted.root).children[2];
     if (coordinate.type !== 'coordinate') throw new Error('Expected coordinate');
