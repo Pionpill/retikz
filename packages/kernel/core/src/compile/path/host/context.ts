@@ -10,7 +10,34 @@ import { compileStrokePath, lowerStrokePathGeometry, wrapPathPrimitiveOutput } f
 import type { CompiledStrokePath } from '../stroke';
 import { bindPathTargets } from '../target';
 import { pathTargetViewOf } from '../target';
-import type { BoundPathResolution, PathCompileContext, PreparedPathCompilation } from '../types';
+import type { BoundPathResolution, PathCompileContext, PathEmitOutput, PreparedPathCompilation } from '../types';
+
+/** ⚡只复制宿主已生成的 JSON 描边数据，保留共享引用与 undefined，避免通用结构化克隆开销 */
+const cloneStrokeOutput = (output: PathEmitOutput): PathEmitOutput => {
+  const copies = new WeakMap<object, object>();
+  /** 递归脱离可变容器，同次输出内的别名仍指向同一副本 */
+  const cloneValue = (value: unknown): unknown => {
+    if (value === null || typeof value !== 'object') return value;
+    const cached = copies.get(value);
+    if (cached !== undefined) return cached;
+    if (Array.isArray(value)) {
+      const copy = new Array<unknown>(value.length);
+      copies.set(value, copy);
+      for (let index = 0; index < value.length; index++) copy[index] = cloneValue(value[index]);
+      return copy;
+    }
+    const copy: Record<string, unknown> = {};
+    copies.set(value, copy);
+    for (const key of Object.keys(value)) {
+      const entry = cloneValue((value as Record<string, unknown>)[key]);
+      if (key === '__proto__')
+        Object.defineProperty(copy, key, { value: entry, enumerable: true, configurable: true, writable: true });
+      else copy[key] = entry;
+    }
+    return copy;
+  };
+  return cloneValue(output) as PathEmitOutput;
+};
 
 /** 为一次路径 Definition 调用组装受控的宿主能力，不跨编译保存状态 */
 export const createPathDefinitionContext = (
@@ -74,7 +101,8 @@ export const createPathDefinitionContext = (
       { scopeChain, targetResolver },
     );
 
-  const emitStroke = (nextPath?: IRPathBase) => {
+  /** ⚡同次标准描边只准备一次 provider 和目标视图，派生路径仍独立解析 */
+  const compileStroke = (nextPath?: IRPathBase): CompiledStrokePath => {
     const sourceResolution = nextPath === undefined ? resolution : resolutionOf(nextPath);
     const strokeResolution =
       sourceResolution.stroke === undefined
@@ -91,23 +119,20 @@ export const createPathDefinitionContext = (
             irPath,
           })
         : { ...sourceResolution, ...sourceResolution.stroke };
-    const emittedTargetView = pathTargetViewOf(strokeResolution.targets, targetWarn, boundaryStore, resolveTransform);
-    const emitted =
-      nextPath === undefined && compiledStroke !== undefined
-        ? compiledStroke
-        : compileStrokePath(
-            strokeResolution,
-            {
-              targetView: emittedTargetView,
-              round,
-              measureText,
-              options: {
-                ...emitOptions,
-              },
-            },
-            nextPath === undefined ? prepared : undefined,
-          );
-    if (nextPath === undefined) compiledStroke = emitted;
+    const emittedTargetView =
+      sourceResolution === resolution
+        ? targetView
+        : pathTargetViewOf(strokeResolution.targets, targetWarn, boundaryStore, resolveTransform);
+    return compileStrokePath(
+      strokeResolution,
+      { targetView: emittedTargetView, round, measureText, options: { ...emitOptions } },
+      nextPath === undefined ? prepared : undefined,
+    );
+  };
+
+  const emitStroke = (nextPath?: IRPathBase) => {
+    // ⚡缓存命中先于 provider 解析和视图构建；返回值仍逐次隔离
+    const emitted = nextPath === undefined ? (compiledStroke ??= compileStroke()) : compileStroke(nextPath);
     const output = emitted.emit.overall;
     if (output === null) return null;
     // 只许可本次宿主实际取得的可信缓存内容；配套资源由调用方恢复
@@ -118,7 +143,7 @@ export const createPathDefinitionContext = (
         if (typeof paint === 'object' && paint.kind === 'resourceRef') allowedResourceIds.add(paint.id);
       }
     });
-    return structuredClone(output);
+    return cloneStrokeOutput(output);
   };
 
   const materializePath = (input?: Readonly<{ children?: ReadonlyArray<IRStep> }>) => {

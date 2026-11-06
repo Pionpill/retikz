@@ -13,7 +13,7 @@ type CoreBudgetPolicy = {
 /** 按稳定场景标识选择预设预算，不读取测量值；新增类别未配置时显式报错 */
 export const resolveCoreBudget = (scenario: BenchmarkScenario): BenchmarkBudget | undefined => {
   const identity = scenario.id.slice(scenario.id.lastIndexOf(' > ') + 3);
-  const [layer, family, variant, scale] = identity.split('/');
+  const [layer, family, variant, scale, reuseMode] = identity.split('/');
   // 1024 边是支持上限参考，尚未承诺普通节点批量实时更新预算；仅报告，不等同于达标
   if (layer === 'providers' && family === 'shape' && variant === 'polygon' && /"sides":1024(?:,|})/.test(scale)) {
     return undefined;
@@ -27,6 +27,48 @@ export const resolveCoreBudget = (scenario: BenchmarkScenario): BenchmarkBudget 
       errorMs: count === 10 ? 4 : count === 100 ? 8 : 16.6,
       rationale:
         '一次工作区或结果组装中的完整注册表生命周期，包含创建及N次登记/导入；假设10次为局部编辑（1/4ms），100次为普通更新（4/8ms），1000次为大批资源处理（8/16.6ms）。该阶段接近一帧即有同步阻塞风险，复杂Pattern不放宽预算；不含输入解析和renderer，不代表整帧保证或稳定回归上限',
+    };
+  } else if (layer === 'compile' && family === 'path') {
+    const count = Number(scale);
+    const complete =
+      /^complete-(absolute|relative-axis|reference-clip|curves-shapes|smooth|rounded-subpaths|step-labels|interrupt-labels|marks|combined)$/.exec(
+        variant,
+      );
+    const completeValid =
+      complete !== null &&
+      (reuseMode === 'none'
+        ? [16, 1024].includes(count)
+        : count === 1024 &&
+          ((['absolute', 'interrupt-labels', 'combined'].includes(complete[1]) &&
+            ['targets', 'geometry', 'layout', 'stroke', 'all'].includes(reuseMode)) ||
+            (['interrupt-labels', 'combined'].includes(complete[1]) &&
+              ['labels-half', 'labels-all', 'label-content', 'drawing'].includes(reuseMode)) ||
+            (complete[1] === 'combined' && ['marks-placement', 'marks-content'].includes(reuseMode))));
+    const update = /^update-(color|label|endpoint)-(none|partial)$/.test(variant);
+    const custom = /^custom-(iterable|double-stroke|materialized)$/.test(variant);
+    const binding = variant === 'bind-targets';
+    const stage = variant === 'stroke-layout' || variant === 'stroke-emit';
+    const valid =
+      complete !== null
+        ? completeValid
+        : binding
+          ? [16, 1024].includes(count)
+          : stage
+            ? count === 1024
+            : update
+              ? count === (variant.startsWith('update-color-') ? 16 : 1024)
+              : custom
+                ? variant === 'custom-iterable'
+                  ? [8, 128].includes(count)
+                  : count === (variant === 'custom-double-stroke' ? 1024 : 16)
+                : false;
+    if (!valid) throw new Error(`Missing Core path operation budget: ${identity}`);
+    const large = count === 1024 || count === 128;
+    policy = {
+      warningMs: large ? 0.5 : binding ? 0.05 : 0.1,
+      errorMs: large ? 2 : binding ? 0.2 : 0.5,
+      rationale:
+        '一次Core Path完整编译或明确阶段，不含Source resolve、fixture、prepared构造、调用方有效性比较/跨次资源恢复及renderer。真实目标解析器每次新建并计时，单次绑定缓存不跨样本；BoundaryStore背景与paint资源暖态。规划假设100条16步骤普通路径编译分配10/50ms，20条1024步骤复杂路径分配10/40ms；16目标绑定分配0.05/0.2ms，1024目标或复杂stroke阶段0.5/2ms。8/128叶图元Definition分别按普通/复杂路径，同最终输入各prepared档预算相同。scale表示步骤、smooth过点或自定义叶图元，装饰为1/16个且箭头恒双端；缺少业务遥测，不代表业务硬上限或整帧保证，不按本次测量放宽',
     };
   } else if (layer === 'compile' && family === 'scope') {
     const count = Number(scale);

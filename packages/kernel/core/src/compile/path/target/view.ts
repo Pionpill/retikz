@@ -51,6 +51,11 @@ export const bindPathTarget = (target: IRTarget, context: PositionTargetEvaluate
 
 /** 稳定序列化目标，使绑定与几何消费共享同一查找键 */
 export const targetKeyOf = (target: IRTarget): string => {
+  // ⚡有限坐标直接组成等价 JSON 键，省去递归副本和通用序列化
+  if (Array.isArray(target))
+    return Number.isFinite(target[0]) && Number.isFinite(target[1])
+      ? `[${target[0]},${target[1]}]`
+      : JSON.stringify(target);
   const stable = (value: unknown): unknown => {
     if (Array.isArray(value)) return value.map(stable);
     if (value !== null && typeof value === 'object') {
@@ -113,7 +118,15 @@ export const pathTargetViewOf = (
     },
     clipTarget: (target, toward, scopeChain) => {
       const binding = bindingOf(target);
-      if (binding?.geometry === undefined || !isNodeTarget(target)) return pointOf(target);
+      // ⚡复用本次查到的绑定，普通坐标不再重复生成查询键
+      if (binding?.geometry === undefined || !isNodeTarget(target))
+        return isRelative(target)
+          ? null
+          : binding !== undefined
+            ? binding.point
+            : Array.isArray(target)
+              ? target
+              : null;
 
       const transform = resolveTransform(scopeChain);
       const node = binding.geometry;

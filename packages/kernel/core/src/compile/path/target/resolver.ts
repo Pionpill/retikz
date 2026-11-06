@@ -16,7 +16,9 @@ export const createPathTargetResolver = (
       bindingsByScope.set(chain, bindings);
     }
     const key = targetKeyOf(target);
-    if (bindings.has(key)) return bindings.get(key) ?? null;
+    // ⚡undefined 表示未登记，null 仍是合法命中，避免 has/get 双重查找
+    const cached = bindings.get(key);
+    if (cached !== undefined) return cached;
     const binding = bindPathTarget(target, positionContextOf(chain));
     bindings.set(key, binding);
     return binding;

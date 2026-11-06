@@ -25,7 +25,8 @@ export const layoutStrokeLabels = (
 ): Required<StrokeLabelSlots<PreparedStrokeLabelLayout>> => {
   const { canon: path, irPath } = resolution;
   const { samplerRecords } = geometry.sampling;
-  const sampleStep = metrics === undefined ? undefined : createStrokeStepSampler(metrics);
+  // ⚡只在实际定位标签时建立步骤索引，marks-only 或已准备 placement 不承担整路索引成本
+  let sampleStep: ReturnType<typeof createStrokeStepSampler> | undefined;
   const labelContext = {
     round: context.round,
     measureText: context.measureText ?? fallbackMeasurer,
@@ -62,7 +63,14 @@ export const layoutStrokeLabels = (
       const label = step.label;
       return layoutLabel(label, prepared?.steps?.[index], () => {
         if (label.interrupt) {
-          const logical = sampleStep?.(index, label.position, step.kind === 'fold' ? 'previous' : 'next');
+          const logical =
+            metrics === undefined
+              ? undefined
+              : (sampleStep ??= createStrokeStepSampler(metrics))(
+                  index,
+                  label.position,
+                  step.kind === 'fold' ? 'previous' : 'next',
+                );
           return { visual: logical?.sample, logical };
         }
         const record = samplerRecords.find(candidate => candidate.sourceStepIndex === index);
@@ -83,7 +91,7 @@ export const layoutStrokeLabels = (
         const record = samplerRecords[recordIndex];
         const parameter =
           record.parameterRange[0] + localPosition * (record.parameterRange[1] - record.parameterRange[0]);
-        const logical = sampleStep?.(
+        const logical = (sampleStep ??= createStrokeStepSampler(metrics))(
           record.sourceStepIndex,
           parameter,
           record.stepKind === 'fold' ? 'previous' : 'next',

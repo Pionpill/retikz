@@ -405,8 +405,16 @@ describe('Path 局部图元缓存与隔离', () => {
       const first = context.emitStroke();
       if (first === null) return null;
       const primitives = Array.from(first.primitives);
+      const before = structuredClone(first);
       primitives[0].id = 'provider-mutated';
+      const primitive = primitives[0];
+      if (primitive.type !== 'path') throw new Error('Expected a path');
+      const command = primitive.commands[0];
+      if (command.kind !== 'move') throw new Error('Expected a move');
+      command.to[0] = 999;
+      Array.from(first.boundsPoints)[0][1] = 777;
       const second = context.emitStroke();
+      expect(second).toEqual(before);
       expect(Array.from(second?.primitives ?? [])[0]?.id).toBeUndefined();
       return { ...first, primitives };
     });

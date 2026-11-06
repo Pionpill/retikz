@@ -162,11 +162,13 @@ const roundPoint = (point: IRPosition, round: (value: number) => number): IRPosi
 const visibleRangesForOccurrence = (
   occurrence: StrokeCommandOccurrence,
   intervals: ReadonlyArray<StrokeInterruptionInterval>,
+  firstIntervalIndex: number,
 ): Array<{ start: number; end: number }> => {
   const ranges: Array<{ start: number; end: number }> = [];
   let cursor = occurrence.logicalStart;
 
-  for (const interval of intervals) {
+  for (let index = firstIntervalIndex; index < intervals.length; index++) {
+    const interval = intervals[index];
     if (interval.end <= cursor + DISTANCE_EPSILON) continue;
     if (interval.start >= occurrence.logicalEnd - DISTANCE_EPSILON) break;
     if (interval.start > cursor + DISTANCE_EPSILON) {
@@ -244,10 +246,22 @@ export const splitStrokePathAtInterruptions = (
     current = undefined;
   };
 
+  // ⚡occurrence 与合并断口按逻辑距离有序，跨过的断口无需从头扫描
+  let activeSubPathIndex = -1;
+  let firstIntervalIndex = 0;
   for (const occurrence of geometry.occurrences) {
     const subPathIntervals = intervalsBySubPath.get(occurrence.subPathIndex) ?? [];
     const subPathIsInterrupted = subPathIntervals.length > 0;
-    const visibleRanges = visibleRangesForOccurrence(occurrence, subPathIntervals);
+    if (activeSubPathIndex !== occurrence.subPathIndex) {
+      activeSubPathIndex = occurrence.subPathIndex;
+      firstIntervalIndex = 0;
+    }
+    while (
+      firstIntervalIndex < subPathIntervals.length &&
+      subPathIntervals[firstIntervalIndex].end <= occurrence.logicalStart + DISTANCE_EPSILON
+    )
+      firstIntervalIndex++;
+    const visibleRanges = visibleRangesForOccurrence(occurrence, subPathIntervals, firstIntervalIndex);
     if (visibleRanges.length === 0) {
       finishCurrentFragment();
       continue;
