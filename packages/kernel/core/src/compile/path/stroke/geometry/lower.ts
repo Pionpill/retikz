@@ -2,25 +2,24 @@ import type { PropertyPath } from '@retikz/foundation';
 import { formatPropertyPath } from '@retikz/foundation';
 import { isFinitePoint } from '@retikz/math';
 
-import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
-import type { CanonicalPath, CanonicalPathStep } from '../../../resolve';
-import type { IRPosition } from '../../../schemas';
-import { BuiltinCompileWarningCode } from '../../shared';
-import { fallbackMeasurer } from '../../text';
-import { pointOfTarget } from '../host';
-import { createPathCommandEmitter } from './commands';
-import { createStrokeCursor } from './cursor';
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../../../error';
+import type { PathResolution, CanonicalPathStep } from '../../../../resolve';
+import type { IRPosition } from '../../../../schemas';
+import { BuiltinCompileWarningCode } from '../../../shared';
+import { pointOfTarget } from '../../target';
+import type { StrokePathCompileContext } from '../types';
+import { PathCommandEmitter } from './commands';
+import { StrokeCursor } from './cursor';
 import { applyRoundedCorners } from './rounded-corners';
-import { createStrokeSamplingCollector } from './sampling';
+import { StrokeSamplingCollector } from './sampling';
 import { isStrokeSegmentStep, lowerSegmentStep } from './segments';
 import { isStrokeShapeStep, lowerShapeStep } from './shapes';
 import { evaluateStrokeStep } from './step';
-import type { EmitPathPrimitiveContext } from './types';
 
 /** 将路径步骤转换为共享的几何命令与采样数据 */
-export const lowerStrokePathGeometry = (canon: CanonicalPath, context: EmitPathPrimitiveContext) => {
-  const { targetView, round, measureText = fallbackMeasurer, options: pathEmitOptions = {} } = context;
-  const { properties: path, irPath } = canon;
+export const lowerStrokePathGeometry = (resolution: PathResolution, context: StrokePathCompileContext) => {
+  const { targetView, round, options: pathEmitOptions = {} } = context;
+  const { canon: path, irPath } = resolution;
   const canonicalSteps = path.children ?? [];
 
   const warn = (code: string, message: string, subPath: PropertyPath = []): void => {
@@ -48,30 +47,16 @@ export const lowerStrokePathGeometry = (canon: CanonicalPath, context: EmitPathP
     return null;
   }
 
-  const cursor = createStrokeCursor({
+  const cursor = new StrokeCursor({
     steps,
     targetView,
     scopeChain,
     warn,
   });
 
-  /** 主循环每轮置为当前 step.kind，emit* 据此标记 provenance */
-  let currentStepKind = '';
-  let currentStepIndex = -1;
-  const commandEmitter = createPathCommandEmitter({
-    round,
-    currentStepKind: () => currentStepKind,
-    currentStepIndex: () => currentStepIndex,
-  });
+  const commandEmitter = new PathCommandEmitter(round);
   const { commands, provenance, stepIndexes, boundsPoints, endpointSource } = commandEmitter;
-  const sampling = createStrokeSamplingCollector({
-    boundsPoints,
-    measureText,
-    round,
-    hostOpacity: path.opacity,
-    lowerTex: pathEmitOptions.lowerTex,
-    warn,
-  });
+  const sampling = new StrokeSamplingCollector();
 
   for (let i = 0; i < steps.length; i++) {
     cursor.advance(i);
@@ -79,8 +64,7 @@ export const lowerStrokePathGeometry = (canon: CanonicalPath, context: EmitPathP
     let step = steps[i];
     const originalStep = canonicalSteps[i];
     sampling.beginStep(i, step.kind);
-    currentStepKind = step.kind;
-    currentStepIndex = i;
+    commandEmitter.beginStep(i, step.kind);
 
     step = evaluateStrokeStep(step, originalStep, i, { cursor, targetView, scopeChain });
 
@@ -188,5 +172,12 @@ export const lowerStrokePathGeometry = (canon: CanonicalPath, context: EmitPathP
     }
   }
 
-  return { commands, stepIndexes, boundsPoints, endpointSource, sampling, roundedCommands };
+  return {
+    commands,
+    stepIndexes,
+    boundsPoints,
+    endpointSource,
+    sampling: { samplerRecords: sampling.samplerRecords },
+    roundedCommands,
+  };
 };

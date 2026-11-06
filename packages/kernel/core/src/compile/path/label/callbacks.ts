@@ -9,8 +9,8 @@ import type {
 import { resolvePathLabel, resolvePathLabelColors, resolvePathLabelContent } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
 import type { BoundPathResolution, PathCompileContext } from '../types';
-import { emitBoundaryLabelPrimitive } from './boundary-label';
-import { emitLabelPrimitive } from './label';
+import { emitBoundaryLabelPrimitive } from './boundary';
+import { emitLabelPrimitive } from './emit';
 
 /** 标签回调共享本次 Definition 调用的边界贡献，供最终包装读取 */
 export const createPathLabelCallbacks = (
@@ -19,7 +19,7 @@ export const createPathLabelCallbacks = (
   targetWarn: (code: string, message: string, node?: { irPath?: PropertyPath }) => void,
 ) => {
   const { scopeDefaults, theme, measureText, round, rootFontSize, lowerTex } = context;
-  const { irPath, properties: canonicalPath } = resolution;
+  const { irPath, canon: canonicalPath } = resolution;
   const hostLabelBoundsPoints: Array<IRPosition> = [];
   const resolveHostLabel: PathDefinitionCompileContext['resolveHostLabel'] = label =>
     resolvePathLabelContent(

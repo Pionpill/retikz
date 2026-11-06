@@ -383,7 +383,7 @@ describe('交互：rotated node 与 path 在 rotated parent 中', () => {
 });
 
 describe('边界 / 错误路径', () => {
-  it('单步 path（只有 move）→ emitPathPrimitive 返回 null，不产 primitive', () => {
+  it('单步 path（只有 move）→ compileStrokePath 返回 null，不产 primitive', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',

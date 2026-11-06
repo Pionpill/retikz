@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { applyArrowShrinks } from '../../../../../core/src/compile/path/stroke/shrink';
+import { shortenEndpointContacts } from '../../../../../core/src/compile/path/stroke/decoration/endpoint-contact';
 import type { PathCommand } from '../../../../../core/src/contract';
 
 const identity = (value: number) => value;
@@ -17,7 +17,7 @@ const ellipseArcOf = (commands: Array<PathCommand>) => {
   return command;
 };
 
-describe('applyArrowShrinks 圆弧命令', () => {
+describe('shortenEndpointContacts 圆弧命令', () => {
   it('按 rotation 计算 ellipseArc 收缩后的起点与 move', () => {
     const commands: Array<PathCommand> = [
       { kind: 'move', to: [0, 8] },
@@ -32,7 +32,7 @@ describe('applyArrowShrinks 圆弧命令', () => {
       },
     ];
 
-    applyArrowShrinks(commands, { shrinkStart: 1, shrinkEnd: 0, strokeWidth: 1, round: identity });
+    shortenEndpointContacts(commands, { shrinkStart: 1, shrinkEnd: 0, strokeWidth: 1, round: identity });
 
     const arc = ellipseArcOf(commands);
     const move = commands[0];
@@ -53,7 +53,7 @@ describe('applyArrowShrinks 圆弧命令', () => {
       { kind: 'arc', center: [0, 0], radius: 10, startAngle: 0, endAngle: 90, counterClockwise: true },
     ];
 
-    applyArrowShrinks(commands, { shrinkStart: 1, shrinkEnd: 0, strokeWidth: 1, round: identity });
+    shortenEndpointContacts(commands, { shrinkStart: 1, shrinkEnd: 0, strokeWidth: 1, round: identity });
 
     expect(arcOf(commands).startAngle).toBeCloseTo(-2 * Math.asin(1 / 20) * (180 / Math.PI), 8);
   });
@@ -64,7 +64,7 @@ describe('applyArrowShrinks 圆弧命令', () => {
       { kind: 'arc', center: [0, 0], radius: 10, startAngle: 90, endAngle: 0, counterClockwise: false },
     ];
 
-    applyArrowShrinks(commands, { shrinkStart: 1, shrinkEnd: 0, strokeWidth: 1, round: identity });
+    shortenEndpointContacts(commands, { shrinkStart: 1, shrinkEnd: 0, strokeWidth: 1, round: identity });
 
     expect(arcOf(commands).startAngle).toBeCloseTo(90 + 2 * Math.asin(1 / 20) * (180 / Math.PI), 8);
   });
@@ -78,7 +78,7 @@ describe('applyArrowShrinks 圆弧命令', () => {
       { kind: 'arc', center: [0, 0], radius: 10, startAngle: 0, endAngle: 360, counterClockwise },
     ];
 
-    applyArrowShrinks(commands, { shrinkStart: 1, shrinkEnd: 1, strokeWidth: 1, round: identity });
+    shortenEndpointContacts(commands, { shrinkStart: 1, shrinkEnd: 1, strokeWidth: 1, round: identity });
 
     const delta = 2 * Math.asin(1 / 20) * (180 / Math.PI);
     const arc = arcOf(commands);

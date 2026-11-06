@@ -15,9 +15,9 @@ import type {
   CanonicalPathMark,
   PathColorSource,
   PathDefinitionResolution,
-  CanonicalPath,
+  PathResolution,
   PathResolveContext,
-  CanonicalStrokePath,
+  StrokePathResolution,
 } from './types';
 
 /** 路径描边与箭头接触处的重叠量，以宿主线宽为单位 */
@@ -105,19 +105,19 @@ const resolveEndpointArrowProviders = (
  * 为 Stroke 路径补齐缺省填充和描边，并绑定箭头与沿线标记定义
  * @description 不足以绘制的步骤序列返回空绑定表，单个矩形步骤除外
  */
-export const resolveStrokePathProviders = <TResolution extends CanonicalPath>(
+export const resolveStrokePathProviders = <TResolution extends PathResolution>(
   resolution: TResolution,
   context: PathResolveContext,
-): TResolution & CanonicalStrokePath => {
+): TResolution & StrokePathResolution => {
   const path = {
-    ...resolution.properties,
-    fill: resolution.properties.fill ?? 'none',
-    stroke: resolution.properties.stroke ?? 'currentColor',
+    ...resolution.canon,
+    fill: resolution.canon.fill ?? 'none',
+    stroke: resolution.canon.stroke ?? 'currentColor',
   };
   const children = path.children;
   const strokeTooShort = children === undefined || (children.length < 2 && children[0]?.kind !== 'rectangle');
   if (strokeTooShort) {
-    return { ...resolution, properties: path, arrows: new Map(), marks: new Map() };
+    return { ...resolution, canon: path, arrows: new Map(), marks: new Map() };
   }
 
   /** 按标记声明对象索引的解析结果 */
@@ -134,7 +134,7 @@ export const resolveStrokePathProviders = <TResolution extends CanonicalPath>(
   }
   return {
     ...resolution,
-    properties: path,
+    canon: path,
     arrows: resolveEndpointArrowProviders(path.arrow, context),
     marks,
   };

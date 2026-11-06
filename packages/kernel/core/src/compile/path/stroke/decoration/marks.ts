@@ -1,19 +1,19 @@
 import type { CurveSegmentSample } from '@retikz/math';
 import { RAD_TO_DEG } from '@retikz/math';
 
-import type { GroupPrimitive, PaintValue, ScenePrimitive } from '../../../contract';
-import type { CanonicalPathMark } from '../../../resolve';
+import type { GroupPrimitive, PaintValue, ScenePrimitive, Transform } from '../../../../contract';
+import type { CanonicalPathMark } from '../../../../resolve';
 import {
   combineOpacity,
   createCompositeContractError,
   createLayoutProbeRecoverableError,
   isFatalProbeError,
   safeThrownDetail,
-} from '../../../resolve';
-import type { RegisterPaint } from '../../resource';
-import { materializeMarkerPrimitive } from '../../scene';
-import type { MarkerPlacementContext } from '../../scene';
-import { materializeScenePrimitives } from '../../shared';
+} from '../../../../resolve';
+import type { RegisterPaint } from '../../../resource';
+import { materializeMarkerPrimitive } from '../../../scene';
+import type { MarkerPlacementContext } from '../../../scene';
+import { materializeScenePrimitives } from '../../../shared';
 
 /** 由共同定义生成箭头或沿线标记的局部图元 */
 export const emitMarkPrimitives = (
@@ -56,35 +56,38 @@ export const emitMarkPrimitives = (
   return materializeScenePrimitives(owner.label, emitted, allowedResourceIds);
 };
 
-/** 按统一尺寸和局部锚点放置标记图元 */
+/** 依据路径切线、尺寸与局部锚点计算标记变换 */
+export const placeStrokeMark = (
+  canon: CanonicalPathMark,
+  sample: CurveSegmentSample,
+  context: Pick<MarkerPlacementContext, 'round' | 'rotate' | 'strokeWidth'>,
+): Array<Transform> => [
+  { kind: 'translate', x: context.round(sample.point[0]), y: context.round(sample.point[1]) },
+  {
+    kind: 'rotate',
+    degrees: context.round(
+      typeof context.rotate === 'number'
+        ? context.rotate
+        : Math.atan2(sample.tangent[1], sample.tangent[0]) * RAD_TO_DEG,
+    ),
+  },
+  {
+    kind: 'scale',
+    x: context.round((canon.geometry.resolvedLength * context.strokeWidth) / canon.geometry.baseSize),
+    y: context.round((canon.geometry.resolvedWidth * context.strokeWidth) / canon.geometry.baseSize),
+  },
+  { kind: 'translate', x: context.round(-canon.geometry.anchor[0]), y: context.round(-canon.geometry.anchor[1]) },
+];
+
+/** 放置局部内容并应用当前宿主外观，保持缓存内容不变 */
 export const placeMarkPrimitives = (
   primitives: Array<ScenePrimitive>,
   canon: CanonicalPathMark,
-  sample: CurveSegmentSample,
-  context: MarkerPlacementContext,
+  transforms: Array<Transform>,
+  context: Pick<MarkerPlacementContext, 'contextStroke' | 'hostOpacity'>,
 ): GroupPrimitive => ({
   type: 'group',
-  transforms: [
-    { kind: 'translate', x: context.round(sample.point[0]), y: context.round(sample.point[1]) },
-    {
-      kind: 'rotate',
-      degrees: context.round(
-        typeof context.rotate === 'number'
-          ? context.rotate
-          : Math.atan2(sample.tangent[1], sample.tangent[0]) * RAD_TO_DEG,
-      ),
-    },
-    {
-      kind: 'scale',
-      x: context.round((canon.geometry.resolvedLength * context.strokeWidth) / canon.geometry.baseSize),
-      y: context.round((canon.geometry.resolvedWidth * context.strokeWidth) / canon.geometry.baseSize),
-    },
-    {
-      kind: 'translate',
-      x: context.round(-canon.geometry.anchor[0]),
-      y: context.round(-canon.geometry.anchor[1]),
-    },
-  ],
+  transforms,
   children: primitives.map(primitive =>
     materializeMarkerPrimitive(
       primitive,

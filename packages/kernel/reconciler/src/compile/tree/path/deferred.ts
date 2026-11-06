@@ -4,15 +4,9 @@ import type {
   InputPathCompilation,
   LayoutBoundsContribution,
 } from '@retikz/core';
-import {
-  compilePath,
-  createPathTargetResolver,
-  resolvePathAnimations,
-  resolvePath,
-  emitPathOutput,
-} from '@retikz/core';
+import { compilePath, createPathTargetResolver, resolvePathAnimations, resolvePath } from '@retikz/core';
 
-import { compareCanonicalPaths } from '../../compare';
+import { comparePathResolutions } from '../../compare';
 import type { CompileOwnerKey } from '../../provenance';
 import { createExecutionInvariantError, runCompileStage } from '../../runtime';
 import type { CompileRuntime } from '../../runtime';
@@ -122,10 +116,10 @@ export const flushPendingPathEmissions = (
                 mode: pendingPath.theme.mode,
                 irPath: pendingPath.irPath,
               }),
-            equals: compareCanonicalPaths,
-            compile: (stageRuntime, canon) => ({
-              canon,
-              compiled: compilePath(canon, {
+            equals: comparePathResolutions,
+            compile: (stageRuntime, resolution) => ({
+              canon: resolution,
+              compiled: compilePath(resolution, {
                 ...pendingPath,
                 targetResolver,
                 registries: stageRuntime.context.registries,
@@ -144,8 +138,8 @@ export const flushPendingPathEmissions = (
           },
         ),
       );
-      const result = emitPathOutput(compiled);
-      const rawPrimitives = result.primitives;
+      const result = compiled.emit;
+      const rawPrimitives = result?.primitives ?? [];
       const primitives =
         runtime.state.execution.provenanceTracker?.materializePrimitives(rawPrimitives) ?? rawPrimitives;
       const idx = pendingPath.placeholderSlot.primitives.indexOf(pendingPath.placeholderSlot.placeholder);
@@ -163,7 +157,7 @@ export const flushPendingPathEmissions = (
       if (pendingPath.zIndex !== undefined) {
         for (const prim of primitives) output.zIndexOf.set(prim, pendingPath.zIndex);
       }
-      if (compiled.layout !== null) {
+      if (result !== null) {
         pendingPath.bounds.push({
           boundsPoints: [...result.boundsPoints],
           shadow: compiled.style.shadow,

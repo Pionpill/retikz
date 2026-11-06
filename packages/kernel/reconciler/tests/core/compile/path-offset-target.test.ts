@@ -250,7 +250,7 @@ describe('OffsetPosition: step.to 编译解析', () => {
       };
       const scene = compileToScene(ir).scene;
 
-      // 未定义 id 让 evaluatePosition 返回 null，emitPathPrimitive 返回 null
+      // 未定义 id 让 evaluatePosition 返回 null，compileStrokePath 返回 null
       const pathPrim = scene.primitives.find(p => p.type === 'path');
 
       expect(pathPrim).toBeUndefined();

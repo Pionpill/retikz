@@ -26,8 +26,8 @@ describe('resolvePath', () => {
   it('解决有效宽度和描边绘制默认值，而不更改显式值', () => {
     const resolved = resolvePathWithBuiltinProviders(path(), { irPath: ['children', 2] });
     expect(resolved.irPath).toEqual(['children', 2]);
-    expect(resolved.properties.strokeWidth).toBe(1);
-    expect(resolveStrokePathWithBuiltinProviders(path()).properties).toMatchObject({
+    expect(resolved.canon.strokeWidth).toBe(1);
+    expect(resolveStrokePathWithBuiltinProviders(path()).canon).toMatchObject({
       strokeWidth: 1,
       fill: 'none',
       stroke: 'currentColor',
@@ -37,7 +37,7 @@ describe('resolvePath', () => {
         path({
           style: { strokeWidth: 2, fill: 'gold', stroke: 'none' },
         }),
-      ).properties,
+      ).canon,
     ).toMatchObject({ strokeWidth: 2, fill: 'gold', stroke: 'none' });
   });
 
@@ -54,10 +54,10 @@ describe('resolvePath', () => {
       }),
     );
 
-    expect(canonical.properties.children![1]).toMatchObject({ kind: 'bend', bendDirection: 'left', bendAngle: 30 });
-    expect(canonical.properties.children![2]).toMatchObject({ kind: 'bend', bendDirection: 'right', bendAngle: -15 });
-    expect(canonical.properties.children![3]).toMatchObject({ kind: 'circlePath', closed: 'chord' });
-    expect(canonical.properties.children![4]).toMatchObject({ kind: 'ellipsePath', closed: 'open' });
+    expect(canonical.canon.children![1]).toMatchObject({ kind: 'bend', bendDirection: 'left', bendAngle: 30 });
+    expect(canonical.canon.children![2]).toMatchObject({ kind: 'bend', bendDirection: 'right', bendAngle: -15 });
+    expect(canonical.canon.children![3]).toMatchObject({ kind: 'circlePath', closed: 'chord' });
+    expect(canonical.canon.children![4]).toMatchObject({ kind: 'ellipsePath', closed: 'open' });
   });
 
   it('在不更改几何输入的情况下扩展折叠和平滑静态默认值', () => {
@@ -71,9 +71,9 @@ describe('resolvePath', () => {
       }),
     );
 
-    expect(canonical.properties.children![1]).toMatchObject({ kind: 'fold', fraction: 0.5 });
-    expect(canonical.properties.children![2]).toMatchObject({ kind: 'smooth', tension: 1 });
-    expect(canonical.properties.children![0]).toMatchObject({ to: [0, 0] });
+    expect(canonical.canon.children![1]).toMatchObject({ kind: 'fold', fraction: 0.5 });
+    expect(canonical.canon.children![2]).toMatchObject({ kind: 'smooth', tension: 1 });
+    expect(canonical.canon.children![0]).toMatchObject({ to: [0, 0] });
   });
 
   it('规范化每个几何标签位置、边和距离', () => {
@@ -97,7 +97,7 @@ describe('resolvePath', () => {
       path({ children: [{ type: 'step', kind: 'move', to: [0, 0] }, ...children] }),
     );
 
-    for (const [index, step] of canonical.properties.children!.slice(1).entries()) {
+    for (const [index, step] of canonical.canon.children!.slice(1).entries()) {
       expect(step).toMatchObject({ label: { position: expected[index], side: 'top', distance: 4 } });
     }
 
@@ -114,7 +114,7 @@ describe('resolvePath', () => {
             },
           ],
         }),
-      ).properties.children![1],
+      ).canon.children![1],
     ).toMatchObject({ label: { position: 0.5, side: 'center', distance: 4 } });
   });
 
@@ -141,13 +141,13 @@ describe('resolvePath', () => {
       }),
     );
 
-    expect(canonical.properties.label).toMatchObject([
+    expect(canonical.canon.label).toMatchObject([
       { text: { lines: [{ plainText: 'center' }] }, side: 'center', interrupt: true },
       { text: { lines: [{ plainText: 'above' }] }, side: 'top', interrupt: false },
       { text: { lines: [{ plainText: 'force' }] }, side: 'bottom', interrupt: true },
       { text: { lines: [{ plainText: 'continuous' }] }, side: 'center', interrupt: false },
     ]);
-    expect(canonical.properties.children).toMatchObject([
+    expect(canonical.canon.children).toMatchObject([
       { kind: 'move' },
       { kind: 'line', label: { text: { lines: [{ plainText: 'sloped' }] }, side: 'center', interrupt: true } },
       { kind: 'line', label: { text: { lines: [{ plainText: 'step-above' }] }, side: 'top', interrupt: false } },
@@ -163,7 +163,7 @@ describe('resolvePath', () => {
       path({ label: { text: 'host', position: 'at-end', side: 'bottom', distance: 0, sloped: false } }),
     );
 
-    expect(canonical.properties.label).toMatchObject([
+    expect(canonical.canon.label).toMatchObject([
       {
         text: { lines: [{ plainText: 'host' }] },
         position: 1,

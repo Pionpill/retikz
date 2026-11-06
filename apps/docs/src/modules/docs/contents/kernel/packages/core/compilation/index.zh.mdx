@@ -231,7 +231,7 @@ export type CompiledNodeTextLayout = {
 
 Reconciler 比较有效配置、编译上下文及实际引用几何，并由 Weave 维护阶段缓存；布局满足复用条件时，重新读取定位依赖，再通过 `prepared.layout` 传给同一个 `compileNode`。当前自动复用仍使用完整布局，局部产物入口供调用方显式组合，不表示 Reconciler 已按这些粒度自动缓存。Core 不比较历史版本，也不判断缓存是否有效。正文通过作者行索引将物理行与当前外观对应；Reconciler 通过 `projectNodeGeometry(compiled)` 按需读取绑定与布局几何，并直接收集 `emit.overall`，不调度内部布局或绘制阶段。
 
-元素编译入口统一按 `compileXxx(canon, context, prepared?)` 组织：Node 接受已准备的布局与绘制产物，Scope 直接接受子树执行前冻结的 `ScopePlacementPreparation`；Scope 的子布局和已解析裁剪路径放在当前上下文中，动画仍在延迟路径输出收敛后完成。`compilePath(canon, context)` 和 `compileCoordinate(canon, context)` 当前没有独立的部分复用阶段，因此不设置空的第三参数。调用方保证准备数据适用于本轮输入和上下文，Core 只计算缺失步骤。
+元素编译入口统一按 `compileXxx(canon, context, prepared?)` 组织：Node 接受已准备的布局与绘制产物，Scope 直接接受子树执行前冻结的 `ScopePlacementPreparation`；Scope 的子布局和已解析裁剪路径放在当前上下文中，动画仍在延迟路径输出收敛后完成。`compilePath(canon, context, prepared)` 接收目标绑定、完整绘制结果和当前源路径的描边原子产物，详见[路径编译](/kernel/packages/core/path-compilation#阶段复用)。`compileCoordinate(canon, context)` 没有独立的部分复用阶段，不设置空的第三参数。调用方保证准备数据适用于本轮输入和上下文，Core 只计算缺失步骤。
 
 <ComponentPreview files="compilation-node" size="lg" hideCode type="illustration" />
 

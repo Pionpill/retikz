@@ -146,7 +146,7 @@ type CompleteCanonicalStep<TStep extends StepColorSource> = TStep extends {
 export type CanonicalPathStep = CompleteCanonicalStep<StepColorSource>;
 
 /** 已补齐静态默认值并解析绘制资源的待编译路径 */
-export type CanonicalPathProperties = Omit<
+export type CanonicalPath = Omit<
   Omit<PathColorSource, 'style'> & NonNullable<PathColorSource['style']>,
   'children' | 'label' | 'shadow' | 'fill' | 'stroke' | 'strokeWidth' | 'opacity'
 > &
@@ -181,7 +181,7 @@ export type PathDefinitionResolution = Readonly<{
   kind: string;
   /** 与当前路径匹配的路径定义 */
   definition: AnyPathDefinition;
-  /** 经过定义的完整 schema 解析、尚未展开为 CanonicalPathProperties 的路径 */
+  /** 经过定义的完整 schema 解析、尚未展开为 CanonicalPath 的路径 */
   path: IRPathBase;
 }>;
 
@@ -272,19 +272,19 @@ export type PathResolveContext = Readonly<{
 }>;
 
 /** 路径输入经样式解析、定义绑定与默认值补全后的结果 */
-export type CanonicalPath = Readonly<{
+export type PathResolution = Readonly<{
   /** 内置描边已选用的箭头与标记绑定；自定义定义仅在请求描边能力时解析 */
-  stroke?: Pick<CanonicalStrokePath, 'arrows' | 'marks'>;
+  stroke?: Pick<StrokePathResolution, 'arrows' | 'marks'>;
   /** 当前路径的 IR 路径，用于扩展定义与输出的错误定位 */
   irPath: PropertyPath;
   /** 已补齐默认值并解析绘制资源、供后续编译使用的路径 */
-  properties: CanonicalPathProperties;
+  canon: CanonicalPath;
   /** 与当前路径匹配的定义 */
   definition: AnyPathDefinition;
 }>;
 
 /** 补齐端点箭头与沿线标记定义后，供 Stroke 编译使用的路径结果 */
-export type CanonicalStrokePath = CanonicalPath &
+export type StrokePathResolution = PathResolution &
   Readonly<{
     /** 以路径端点箭头声明对象为键的解析结果 */
     arrows: ReadonlyMap<IRArrowStyle, CanonicalPathArrow>;

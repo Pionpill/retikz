@@ -10,7 +10,7 @@ import { resolveTextBlock, resolveTextLineColors } from '../text';
 import type { LabelTextColorSource } from '../text';
 import { resolvePathDefinition, resolveStrokePathProviders } from './provider';
 import type {
-  CanonicalPathProperties,
+  CanonicalPath,
   CanonicalPathLabel,
   CanonicalPathLabelPlacement,
   CanonicalPathStep,
@@ -18,7 +18,7 @@ import type {
   PathColorSource,
   PathLabelColorSource,
   PathLabelGeometryOptions,
-  CanonicalPath,
+  PathResolution,
   PathResolveContext,
   StepColorSource,
 } from './types';
@@ -197,7 +197,7 @@ const canonicalizePath = (
   path: PathColorSource,
   canAutomaticallyInterrupt: boolean,
   context: PathResolveContext,
-): Omit<CanonicalPathProperties, 'fill' | 'stroke' | 'strokeWidth'> &
+): Omit<CanonicalPath, 'fill' | 'stroke' | 'strokeWidth'> &
   Pick<NonNullable<PathColorSource['style']>, 'fill' | 'stroke' | 'strokeWidth'> => {
   const { style, ...source } = path;
   const { children, label: pathLabel } = source;
@@ -414,7 +414,7 @@ const resolvePathContextualColors = (
  * 解析路径默认配置、定义与颜色，得到待绑定目标的路径
  * @description 补齐静态默认值与绘制配置，内置 Stroke 同时绑定箭头与标记；自定义路径仅在请求描边能力时绑定
  */
-export const resolvePath = (path: IRPathBase, context: PathResolveContext): CanonicalPath => {
+export const resolvePath = (path: IRPathBase, context: PathResolveContext): PathResolution => {
   const styled = context.scopeDefaults === undefined ? path : mergePathStyle(path, context.scopeDefaults);
   const irPath = context.irPath ?? [];
   const labelDefault = context.scopeDefaults?.path?.label ?? {};
@@ -434,9 +434,9 @@ export const resolvePath = (path: IRPathBase, context: PathResolveContext): Cano
   const fill = resolvePaint(canonicalPath.fill, paintContext);
   const stroke = resolvePaint(canonicalPath.stroke, paintContext);
 
-  const result: CanonicalPath = {
+  const result: PathResolution = {
     irPath,
-    properties: {
+    canon: {
       ...canonicalPath,
       kind: pathDefinition.kind,
       fill,
@@ -449,7 +449,7 @@ export const resolvePath = (path: IRPathBase, context: PathResolveContext): Cano
   const resolvedStroke = resolveStrokePathProviders(result, context);
   return {
     ...result,
-    properties: resolvedStroke.properties,
+    canon: resolvedStroke.canon,
     stroke: { arrows: resolvedStroke.arrows, marks: resolvedStroke.marks },
   };
 };

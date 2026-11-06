@@ -1,15 +1,6 @@
-import type {
-  CompiledArrowEnd,
-  PathCommand,
-  PathPrimitive,
-  PathPrimitiveAppearance,
-  ScenePrimitive,
-  ScenePrimitiveBase,
-} from '../../../contract';
+import type { CompiledArrowEnd, PathCommand, PathPrimitive, ScenePrimitive } from '../../../../contract';
+import type { StrokePrimitiveAppearance } from '../types';
 import type { StrokeCommandFragment } from './interruption';
-
-/** baseProps：除 commands / endpoint arrows 外 PathPrimitive 公共属性集合（多 sub-path 复用） */
-export type PathBaseProps = ScenePrimitiveBase & PathPrimitiveAppearance;
 
 /**
  * 多 sub-path + 有端点箭头：按 sub-path split 成多个 PathPrimitive
@@ -17,10 +8,12 @@ export type PathBaseProps = ScenePrimitiveBase & PathPrimitiveAppearance;
  */
 export const splitSubPathsForEndpointArrows = (
   commands: Array<PathCommand>,
-  baseProps: PathBaseProps,
+  appearance: StrokePrimitiveAppearance,
   endpointArrows: { arrowStart?: CompiledArrowEnd; arrowEnd?: CompiledArrowEnd },
-): { primitive: ScenePrimitive; isGrouped: boolean } => {
+): ScenePrimitive => {
   const hasArrows = !!endpointArrows.arrowStart || !!endpointArrows.arrowEnd;
+
+  if (!hasArrows) return { type: 'path', commands, ...appearance, ...endpointArrows };
 
   // 每个 sub-path 起始命令索引（每个 move 都是新 sub-path）
   const subPathStarts: Array<number> = [];
@@ -29,14 +22,14 @@ export const splitSubPathsForEndpointArrows = (
   });
 
   // 单 sub-path 或无箭头 → 一个 PathPrimitive
-  if (!hasArrows || subPathStarts.length <= 1) {
+  if (subPathStarts.length <= 1) {
     const primitive: PathPrimitive = {
       type: 'path',
       commands,
-      ...baseProps,
+      ...appearance,
       ...endpointArrows,
     };
-    return { primitive, isGrouped: false };
+    return primitive;
   }
 
   // 多 sub-path + 有箭头：首段挂 arrowStart，末段挂 arrowEnd，中间段不挂箭头。
@@ -55,7 +48,7 @@ export const splitSubPathsForEndpointArrows = (
     return {
       type: 'path',
       commands: sub,
-      ...baseProps,
+      ...appearance,
       ...(isFirst && endpointArrows.arrowStart ? { arrowStart: endpointArrows.arrowStart } : {}),
       ...(isLast && endpointArrows.arrowEnd ? { arrowEnd: endpointArrows.arrowEnd } : {}),
     };
@@ -66,7 +59,7 @@ export const splitSubPathsForEndpointArrows = (
     children: subPathPrims,
   };
 
-  return { primitive: groupPrim, isGrouped: true };
+  return groupPrim;
 };
 
 /**
@@ -75,17 +68,19 @@ export const splitSubPathsForEndpointArrows = (
  */
 export const emitInterruptedPathFragments = (
   fragments: ReadonlyArray<StrokeCommandFragment>,
-  baseProps: PathBaseProps,
+  appearance: StrokePrimitiveAppearance,
   endpointArrows: { arrowStart?: CompiledArrowEnd; arrowEnd?: CompiledArrowEnd },
 ): ScenePrimitive => {
   const pathPrimitives: Array<PathPrimitive> = fragments.map(fragment => {
     const dashOffset =
-      baseProps.dashPattern === undefined ? baseProps.dashOffset : (baseProps.dashOffset ?? 0) - fragment.logicalStart;
+      appearance.dashPattern === undefined
+        ? appearance.dashOffset
+        : (appearance.dashOffset ?? 0) - fragment.logicalStart;
     return {
       type: 'path',
       commands: fragment.commands,
-      ...baseProps,
-      ...(baseProps.dashPattern !== undefined ? { dashOffset } : {}),
+      ...appearance,
+      ...(appearance.dashPattern !== undefined ? { dashOffset } : {}),
       ...(fragment.hasPathStart && endpointArrows.arrowStart !== undefined
         ? { arrowStart: endpointArrows.arrowStart }
         : {}),

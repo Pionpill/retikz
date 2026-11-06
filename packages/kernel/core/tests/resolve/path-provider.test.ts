@@ -33,7 +33,7 @@ describe('解析/路径提供者绑定', () => {
 
     expect(resolution.definition.name).toBe('highlight');
     expect(resolution.definition).toBe(custom);
-    expect(resolution.properties.kindOptions).toEqual({ stroke: 'gold' });
+    expect(resolution.canon.kindOptions).toEqual({ stroke: 'gold' });
     expect(resolvePathWithBuiltinProviders(path()).definition.name).toBe('stroke');
   });
 
@@ -79,7 +79,7 @@ describe('解析/路径提供者绑定', () => {
           label: { text: 'continuous', interrupt: false },
           style: { fill: 'gold' },
         }),
-      ).properties.label,
+      ).canon.label,
     ).toMatchObject([{ text: { lines: [{ plainText: 'continuous' }] }, interrupt: false }]);
   });
 
@@ -109,7 +109,7 @@ describe('解析/路径提供者绑定', () => {
     const resolution = resolveStrokePathWithBuiltinProviders(path({ arrow: { end: mark } }), {
       arrowRegistry: resolveArrowRegistry([arrow]),
     });
-    const resolvedMark = resolution.properties.arrow?.end;
+    const resolvedMark = resolution.canon.arrow?.end;
     if (resolvedMark === undefined) throw new Error('Expected endpoint arrow');
     const arrowResolution = resolution.arrows.get(resolvedMark);
 

@@ -1,13 +1,10 @@
-import { curve } from '@retikz/math';
-
-import type { CanonicalPathStep } from '../../../resolve';
-import type { IRPosition } from '../../../schemas';
-import { BendInAngleSchema, BendLoosenessSchema, BendOutAngleSchema } from '../../../schemas';
-import { bendControlPoints, foldSegmentSample, outInControlPoints } from '../../../shared/geometry';
-import { clipTarget, foldCornersOf, isSamePoint } from '../host';
-import { isAutoBoundaryTarget } from '../target';
+import type { CanonicalPathStep } from '../../../../resolve';
+import type { IRPosition } from '../../../../schemas';
+import { BendInAngleSchema, BendLoosenessSchema, BendOutAngleSchema } from '../../../../schemas';
+import { bendControlPoints, outInControlPoints } from '../../../../shared/geometry';
+import { clipTarget, foldCornersOf, isAutoBoundaryTarget, isSamePoint } from '../../target';
+import type { StrokeLoweringContext } from '../types';
 import type { StrokePreviousTarget } from './cursor';
-import type { StrokeLoweringContext } from './types';
 
 /** 连接前驱目标与当前目标的普通 path segment step */
 type StrokeSegmentStep = Extract<
@@ -43,7 +40,6 @@ export const isStrokeSegmentStep = (canon: CanonicalPathStep): canon is StrokeSe
  */
 export const lowerSegmentStep = (step: StrokeSegmentStep, context: SegmentStepLoweringContext): boolean => {
   const { targetView, scopeChain, previous, currentAnchor, penOverride, commandEmitter, sampling } = context;
-  const { emitLine, emitQuad, emitCubic, startSegment } = commandEmitter;
   const targetContext = { targetView, scopeChain };
 
   if (step.kind === 'line') {
@@ -51,9 +47,9 @@ export const lowerSegmentStep = (step: StrokeSegmentStep, context: SegmentStepLo
     const toClip = clipTarget(step.to, penOverride ?? previous.anchor, targetContext);
     if (!fromClip || !toClip) return false;
 
-    startSegment(fromClip, penOverride === null && isAutoBoundaryTarget(previous.step.to));
-    emitLine(toClip, isAutoBoundaryTarget(step.to));
-    sampling.collect(step, t => curve.sampleAt({ kind: 'line', from: fromClip, to: toClip }, t));
+    commandEmitter.startSegment(fromClip, penOverride === null && isAutoBoundaryTarget(previous.step.to));
+    commandEmitter.emitLine(toClip, isAutoBoundaryTarget(step.to));
+    sampling.collect({ kind: 'line', from: fromClip, to: toClip });
 
     return true;
   }
@@ -62,9 +58,9 @@ export const lowerSegmentStep = (step: StrokeSegmentStep, context: SegmentStepLo
     const fromClip = penOverride ?? clipTarget(previous.step.to, currentAnchor, targetContext);
     if (!fromClip) return false;
 
-    startSegment(fromClip, penOverride === null && isAutoBoundaryTarget(previous.step.to));
-    emitLine(currentAnchor);
-    sampling.collect(step, t => curve.sampleAt({ kind: 'line', from: fromClip, to: currentAnchor }, t));
+    commandEmitter.startSegment(fromClip, penOverride === null && isAutoBoundaryTarget(previous.step.to));
+    commandEmitter.emitLine(currentAnchor);
+    sampling.collect({ kind: 'line', from: fromClip, to: currentAnchor });
 
     return true;
   }
@@ -74,11 +70,9 @@ export const lowerSegmentStep = (step: StrokeSegmentStep, context: SegmentStepLo
     const toClip = clipTarget(step.to, step.control, targetContext);
     if (!fromClip || !toClip) return false;
 
-    startSegment(fromClip, penOverride === null && isAutoBoundaryTarget(previous.step.to));
-    emitQuad(step.control, toClip, isAutoBoundaryTarget(step.to));
-    sampling.collect(step, t =>
-      curve.sampleAt({ kind: 'quadraticBezier', from: fromClip, control: step.control, to: toClip }, t),
-    );
+    commandEmitter.startSegment(fromClip, penOverride === null && isAutoBoundaryTarget(previous.step.to));
+    commandEmitter.emitQuad(step.control, toClip, isAutoBoundaryTarget(step.to));
+    sampling.collect({ kind: 'quadraticBezier', from: fromClip, control: step.control, to: toClip });
 
     return true;
   }
@@ -88,19 +82,20 @@ export const lowerSegmentStep = (step: StrokeSegmentStep, context: SegmentStepLo
     const toClip = clipTarget(step.to, step.control2, targetContext);
     if (!fromClip || !toClip) return false;
 
-    startSegment(fromClip, penOverride === null && isAutoBoundaryTarget(previous.step.to));
-    emitCubic({
+    commandEmitter.startSegment(fromClip, penOverride === null && isAutoBoundaryTarget(previous.step.to));
+    commandEmitter.emitCubic({
       control1: step.control1,
       control2: step.control2,
       to: toClip,
       sourceAutoBoundary: isAutoBoundaryTarget(step.to),
     });
-    sampling.collect(step, t =>
-      curve.sampleAt(
-        { kind: 'cubicBezier', from: fromClip, control1: step.control1, control2: step.control2, to: toClip },
-        t,
-      ),
-    );
+    sampling.collect({
+      kind: 'cubicBezier',
+      from: fromClip,
+      control1: step.control1,
+      control2: step.control2,
+      to: toClip,
+    });
 
     return true;
   }
@@ -121,16 +116,14 @@ export const lowerSegmentStep = (step: StrokeSegmentStep, context: SegmentStepLo
     const toClip = clipTarget(step.to, control2, targetContext);
     if (!fromClip || !toClip) return false;
 
-    startSegment(fromClip, penOverride === null && isAutoBoundaryTarget(previous.step.to));
-    emitCubic({
+    commandEmitter.startSegment(fromClip, penOverride === null && isAutoBoundaryTarget(previous.step.to));
+    commandEmitter.emitCubic({
       control1,
       control2,
       to: toClip,
       sourceAutoBoundary: isAutoBoundaryTarget(step.to),
     });
-    sampling.collect(step, t =>
-      curve.sampleAt({ kind: 'cubicBezier', from: fromClip, control1, control2, to: toClip }, t),
-    );
+    sampling.collect({ kind: 'cubicBezier', from: fromClip, control1, control2, to: toClip });
 
     return true;
   }
@@ -161,18 +154,11 @@ export const lowerSegmentStep = (step: StrokeSegmentStep, context: SegmentStepLo
   );
   if (points.length < 2) return true;
 
-  startSegment(points[0], sourceAutoBoundary);
+  commandEmitter.startSegment(points[0], sourceAutoBoundary);
   for (let index = 1; index < points.length; index += 1) {
-    emitLine(points[index], index === points.length - 1 && targetAutoBoundary);
+    commandEmitter.emitLine(points[index], index === points.length - 1 && targetAutoBoundary);
   }
-  sampling.collect(
-    step,
-    t =>
-      points.length === 2
-        ? curve.sampleAt({ kind: 'line', from: points[0], to: points[1] }, t)
-        : foldSegmentSample(points[0], points.slice(1, -1), points.at(-1)!, t),
-    points.length - 1,
-  );
+  sampling.collect({ kind: 'fold', points }, points.length - 1);
 
   return true;
 };

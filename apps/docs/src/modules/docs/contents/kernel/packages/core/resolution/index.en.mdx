@@ -9,7 +9,7 @@ These mechanisms apply to basic IR entering Core's compiler, including nodes and
 
 ## Overall flow
 
-A compilation first prepares registries and the root theme. On entering a Scope, traversal merges inherited and local descendant defaults and resolves its local theme. Node and Path read that environment to merge properties, resolve colors, bind definitions, and complete fields, producing `CanonicalNode` and `CanonicalPath` respectively.
+A compilation first prepares registries and the root theme. On entering a Scope, traversal merges inherited and local descendant defaults and resolves its local theme. Node and Path read that environment to merge properties, resolve colors, bind definitions, and complete fields, producing `CanonicalNode` and `PathResolution` respectively.
 
 The tabs show the two return types from source, with comments omitted. Referenced types are discussed below.
 
@@ -31,14 +31,14 @@ type CanonicalNode = {
 ```
 
 </DocTab>
-<DocTab value="path-resolution" label="CanonicalPath">
+<DocTab value="path-resolution" label="PathResolution">
 
 ```ts
-export type CanonicalPath = Readonly<{
+export type PathResolution = Readonly<{
   irPath: ReadonlyArray<string | number>;
-  path: CanonicalPathProperties;
+  canon: CanonicalPath;
   definition: AnyPathDefinition;
-  stroke?: Pick<CanonicalStrokePath, 'arrows' | 'marks'>;
+  stroke?: Pick<StrokePathResolution, 'arrows' | 'marks'>;
 }>;
 ```
 
@@ -250,18 +250,18 @@ Canon completes fixed defaults such as Node and Path opacity, line caps, and das
 
 That schema may supply fields, so contextual colors are resolved again afterward. `canonicalizePath` then expands path fields: it collects `style` fields into the path, turns labels into arrays, and supplies static defaults for label placement and steps such as bend and smooth. The result is not yet final drawing commands.
 
-P inherits master color `'#204060'`; its stroke resolves to `'#90a0b0'` in Light mode, with width 3. Its two absolute-coordinate steps retain their positions. `resolvePath` records the source path and definition-parsed input, and writes resolved paint and effective stroke width into `CanonicalPath`. The compile-stage `bindPathTargets` then uses the transform chain and node layouts to produce `BoundPathResolution`. Target references and relative coordinates belong to the path geometry topic.
+P inherits master color `'#204060'`; its stroke resolves to `'#90a0b0'` in Light mode, with width 3. Its two absolute-coordinate steps retain their positions. `resolvePath` records the source path and definition-parsed input, and writes resolved paint and effective stroke width into `PathResolution`. The compile-stage `bindPathTargets` then uses the transform chain and node layouts to produce `BoundPathResolution`. Target references and relative coordinates belong to the path geometry topic.
 
-| Field        | Content                                                                            | Downstream use                      |
-| ------------ | ---------------------------------------------------------------------------------- | ----------------------------------- |
-| `properties` | `CanonicalPathProperties` with resolved paint, effective styles, steps, and labels | Main path compilation input         |
-| `definition` | Definition for the selected path kind                                              | Invoke the selected path capability |
-| `irPath`     | Declaration source path                                                            | Diagnostics and subsequent geometry |
+| Field        | Content                                                                  | Downstream use                      |
+| ------------ | ------------------------------------------------------------------------ | ----------------------------------- |
+| `canon`      | `CanonicalPath` with resolved paint, effective styles, steps, and labels | Main path compilation input         |
+| `definition` | Definition for the selected path kind                                    | Invoke the selected path capability |
+| `irPath`     | Declaration source path                                                  | Diagnostics and subsequent geometry |
 
 ```ts
-// Selected CanonicalPath fields
+// Selected PathResolution fields
 {
-  properties: { id: 'P', color: '#204060', stroke: '#90a0b0', strokeWidth: 3 },
+  canon: { id: 'P', color: '#204060', stroke: '#90a0b0', strokeWidth: 3 },
   definition: { name: 'stroke' },
 }
 ```
@@ -280,7 +280,7 @@ Label appearance comes from the Label channel; path canonicalization supplies st
   sources={[
     { label: 'Path styles, colors, and canonicalization', path: 'packages/kernel/core/src/resolve/path/resolve.ts' },
     { label: 'Path and arrow binding', path: 'packages/kernel/core/src/resolve/path/provider.ts' },
-    { label: 'CanonicalPath / CanonicalStrokePath', path: 'packages/kernel/core/src/resolve/path/types.ts' },
+    { label: 'PathResolution / StrokePathResolution', path: 'packages/kernel/core/src/resolve/path/types.ts' },
   ]}
 />
 

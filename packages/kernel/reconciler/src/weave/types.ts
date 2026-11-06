@@ -5,7 +5,7 @@ import type {
   CompiledCoordinate,
   CanonicalCoordinate,
   CanonicalNode,
-  CanonicalPath,
+  PathResolution,
   CompiledPath,
   CompiledScope,
   CanonicalScope,
@@ -71,7 +71,7 @@ type WeaveCoordinateState = WeaveNodeStateBase<IRCoordinate> & {
 /** 路径状态 */
 type WeavePathState = WeaveNodeStateBase<IRPathBase> & {
   /** Core 已补全的路径配置与能力绑定 */
-  canon: CanonicalPath | null;
+  canon: PathResolution | null;
   /** Core 完整编译产物，只读复用 */
   compiled: CompiledPath | null;
 };

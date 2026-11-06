@@ -1,5 +1,7 @@
 /** 经核对的绘制 API 英文说明，源码标识符保持不变 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  '按绘制段均分参数采样参考路径；圆角路径按最终几何弧长采样':
+    'Sample the reference path with equally divided segment parameters; rounded paths use arc length along the final geometry',
   注册路径定义的解析与编译契约: 'Parsing and compilation contract for a registered path definition',
   '把该 path 编译成 Scene primitive；返回 null 表示该 path 不产生输出':
     'Compile the path into Scene primitives; return null when the path produces no output',

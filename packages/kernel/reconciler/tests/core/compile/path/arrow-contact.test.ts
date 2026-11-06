@@ -5,7 +5,7 @@ import type { IRScene, IRStep, PathPrimitive, CompiledArrowEnd } from '../../../
 import {
   createStrokePathGeometry,
   curveSegmentOfOccurrence,
-} from '../../../../../core/src/compile/path/stroke/interruption';
+} from '../../../../../core/src/compile/path/stroke/geometry';
 import { applyTransformChain } from '../../../../../core/src/compile/shared';
 import { compileToScene } from '../../../../src/compile';
 import { flattenPrims } from '../../../helpers/flatten';

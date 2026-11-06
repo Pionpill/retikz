@@ -1,11 +1,4 @@
-export * from './commands';
-export * from './decorations';
-export * from './emit';
-export * from './geometry';
-export * from './marks';
+export * from './compile';
+export { lowerStrokePathGeometry, samplePathRoute } from './geometry';
 export * from './output';
-export * from './rounded-corners';
-export * from './route-sampling';
-export * from './shrink';
-export * from './split';
-export * from './transform';
+export type * from './types';

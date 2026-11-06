@@ -236,7 +236,7 @@ describe('OffsetPosition adversarial: step.to 首步 / 极端', () => {
     expect(ey).toBeCloseTo(30);
   });
 
-  it('step.to OffsetPosition.of=未定义 id → emitPathPrimitive 返回 null，整个 path 不产 PathPrimitive', () => {
+  it('step.to OffsetPosition.of=未定义 id → compileStrokePath 返回 null，整个 path 不产 PathPrimitive', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',

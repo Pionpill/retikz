@@ -7,7 +7,6 @@ import {
   resolvePathAnimations,
   compilePath,
   resolvePath,
-  emitPathOutput,
   createPathTargetResolver,
   composeScopeTransform,
   resolveScopeInheritance,
@@ -127,10 +126,10 @@ export const compileWeavePath = (input: IRPathBase, runtime: WeaveElementRuntime
     compiled,
     output: Object.freeze({
       zIndex: input.zIndex,
-      primitives: emitPathOutput(compiled).primitives,
+      primitives: compiled.emit?.primitives ?? [],
       resources: workspace.paintRegistry.getResources(),
       bounds:
-        compiled.layout === null ? [] : [{ boundsPoints: compiled.layout.boundsPoints, shadow: compiled.style.shadow }],
+        compiled.emit === null ? [] : [{ boundsPoints: compiled.emit.boundsPoints, shadow: compiled.style.shadow }],
     }),
   });
 };

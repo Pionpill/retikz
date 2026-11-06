@@ -10,45 +10,49 @@ import type {
   ScenePrimitive,
   Transform,
 } from '../../contract';
-import type { CanonicalNodeBoundary, MergedScopeDefaults, CanonicalPath } from '../../resolve';
+import type { CanonicalNodeBoundary, MergedScopeDefaults, PathResolution } from '../../resolve';
 import type { IRPathBase, IRPosition, IRTarget, CanonicalDropShadow } from '../../schemas';
 import type { CanonicalTheme } from '../../shared';
 import type { BoundaryStore, CompiledBoundaryGeometry } from '../boundary';
 import type { RegisterPaint } from '../resource';
 import type { ComposedScopeTransform, CompileWarning } from '../shared';
 import type { TexLowerer } from '../text';
+import type { PreparedStrokePathCompilation } from './stroke';
 
-/** path emit 阶段的可选服务与诊断上下文 */
-export type PathEmitOptions = {
-  /** 当前编译资源，用于标记可视边界计算 */
-  resources?: () => ReadonlyArray<SceneResource>;
-  /**
-   * 警告收集器（由 compileToScene 传入）
-   * 缺省时不发出警告
-   */
-  onWarn?: (warning: CompileWarning) => void;
-  /** 该 path 所属 scope 的累积 transform 链 */
-  scopeChain?: ReadonlyArray<Transform>;
-  /**
-   * paint 登记函数（已解析绘制值 → resourceRef）；缺省时纯色透传、IRPaint 退化为无填充 / currentColor
-   * @default undefined
-   */
-  registerPaint?: RegisterPaint;
-  /** compile 阶段绑定的 target geometry view（由 emit context 提供） */
-  targetView?: PathTargetView;
-  /** 注入的 TeX 降级能力 */
-  lowerTex?: TexLowerer;
+/** 路径绘制的可选服务；调用方可省略资源、诊断、变换和公式能力 */
+export type PathEmitOptions = Partial<
+  Pick<PathCompileContext, 'resources' | 'onWarn' | 'scopeChain' | 'registerPaint' | 'lowerTex'> &
+    Pick<PathTargetContext, 'targetView'>
+>;
+
+/** 已快照化、可反复读取的 Path 图元与边界贡献 */
+export type PathEmitOutput = {
+  /** 已校验并快照化的图元 */
+  primitives: Array<ScenePrimitive>;
+  /** 当前路径局部坐标中的布局边界点 */
+  boundsPoints: Array<IRPosition>;
 };
 
 /** Path 宿主阶段产物，自定义路径不要求具有单一中心线 */
-export type CompiledPath = Readonly<{
-  /** 任意路径种类的实际图元，包含最终箭头及标签 */
-  primitives: Array<ScenePrimitive>;
-  /** 实际布局贡献；null 保留 provider 合法空结果的语义 */
-  layout: { boundsPoints: Array<IRPosition> } | null;
-  /** 布局边界计算使用的外观 */
-  style: { shadow?: CanonicalDropShadow };
-}>;
+export type CompiledPath = Pick<PreparedPathCompilation, 'targets'> &
+  Readonly<{
+    /** 完整 Definition 输出；null 表示合法空结果 */
+    emit: PathEmitOutput | null;
+    /** 本次 Definition 实际使用的当前源路径标准描边产物 */
+    stroke?: PreparedStrokePathCompilation;
+    /** 当前输入声明的阴影，供布局贡献消费 */
+    style: { shadow?: CanonicalDropShadow };
+  }>;
+
+/** 调用方确认有效的 Path 原子阶段产物，Core 不判断跨次有效性 */
+export type PreparedPathCompilation = {
+  /** 与当前步骤及字段路径对应的目标绑定，空 Map 也是有效结果 */
+  targets?: BoundPathResolution['targets'];
+  /** 完整 Definition 输出，undefined 为未计算，null 为合法空结果；调用方恢复配套资源 */
+  emit?: PathEmitOutput | null;
+  /** 当前源路径标准描边能力的局部或完整产物 */
+  stroke?: PreparedStrokePathCompilation;
+};
 
 /** 引用就绪后的路径编译输入，不包含遍历队列或输出容器 */
 export type InputPathCompilation = {
@@ -113,7 +117,7 @@ export type TargetResolution = Readonly<{
 }>;
 
 /** 完成声明解析和目标几何绑定的路径 */
-export type BoundPathResolution = CanonicalPath & {
+export type BoundPathResolution = PathResolution & {
   /** 按目标来源路径索引的绑定 */
   targets: ReadonlyMap<string, TargetResolution>;
 };

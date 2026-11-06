@@ -1,15 +1,21 @@
 import type { PropertyPath } from '@retikz/foundation';
 
-import type { Transform } from '../../contract';
-import type { IRNodeTarget, IRPosition, IRRelativeAccumulateTarget, IRRelativeTarget, IRTarget } from '../../schemas';
-import { isNodeTargetLike, isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../shared';
-import type { BoundaryStore } from '../boundary';
-import { evaluateBoundaryPoint, clipBoundaryPolyline, createBoundaryStore } from '../boundary';
-import type { PositionTargetEvaluateContext } from '../reference';
-import { evaluatePositionTarget } from '../reference';
-import type { ComposedScopeTransform } from '../shared';
-import { applyScopeTransform, composeScopeTransform, inverseScopeTransform } from '../shared';
-import type { PathTargetView, TargetResolution } from './types';
+import type { Transform } from '../../../contract';
+import type {
+  IRNodeTarget,
+  IRPosition,
+  IRRelativeAccumulateTarget,
+  IRRelativeTarget,
+  IRTarget,
+} from '../../../schemas';
+import { isNodeTargetLike, isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../../shared';
+import type { BoundaryStore } from '../../boundary';
+import { evaluateBoundaryPoint, clipBoundaryPolyline, createBoundaryStore } from '../../boundary';
+import type { PositionTargetEvaluateContext } from '../../reference';
+import { evaluatePositionTarget } from '../../reference';
+import type { ComposedScopeTransform } from '../../shared';
+import { applyScopeTransform, composeScopeTransform, inverseScopeTransform } from '../../shared';
+import type { PathTargetView, TargetResolution } from '../types';
 
 /** 判断 target 是否为按 id 引用节点或坐标的对象目标 */
 const isNodeTarget = (t: IRTarget): t is IRNodeTarget => isNodeTargetLike(t);

@@ -1,8 +1,8 @@
-import type { Transform } from '../../contract';
-import type { IRTarget } from '../../schemas';
-import type { PositionTargetEvaluateContext } from '../reference';
-import { bindPathTarget, targetKeyOf } from './target';
-import type { PathTargetResolver, TargetResolution } from './types';
+import type { Transform } from '../../../contract';
+import type { IRTarget } from '../../../schemas';
+import type { PositionTargetEvaluateContext } from '../../reference';
+import type { PathTargetResolver, TargetResolution } from '../types';
+import { bindPathTarget, targetKeyOf } from './view';
 
 /** 在一次 Path 计算内按变换链复用目标绑定；不持有调用方名称树 */
 export const createPathTargetResolver = (

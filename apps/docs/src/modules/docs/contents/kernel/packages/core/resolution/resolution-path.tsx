@@ -21,16 +21,16 @@ const ResolutionPath: FC<ResolutionPathProps> = props => {
     { id: 'kind', name: 'resolvePathDefinition' },
     { id: 'canonical', name: 'canonicalizePath' },
     { id: 'paint', name: 'resolvePaint' },
-    { id: 'result', name: 'CanonicalPath' },
+    { id: 'result', name: 'PathResolution' },
     { id: 'providers', name: 'resolveStrokePathProviders' },
   ] as const;
   const products = [
     { id: 'effective', name: 'IRPathBase' },
     { id: 'bound', name: 'PathDefinitionResolution' },
     { id: 'path', name: 'Expanded path fields' },
-    { id: 'resolved', name: 'CanonicalPath' },
+    { id: 'resolved', name: 'PathResolution' },
     { id: 'extras', name: 'irPath / source' },
-    { id: 'stroke', name: 'CanonicalStrokePath' },
+    { id: 'stroke', name: 'StrokePathResolution' },
   ] as const;
   return (
     <PreviewFlowDiagram {...logicFigureGraphProps()} style={{ maxWidth: '100%', height: 'auto' }}>

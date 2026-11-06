@@ -1,4 +1,4 @@
-import type { ScenePrimitive, TextContentLine, TextPrimitive } from '../../contract';
+import type { GroupPrimitive, TextContentLine, TextPrimitive } from '../../contract';
 import { combineOpacity } from '../../resolve';
 import { emitTexPrimitive } from './tex';
 import type { CompiledTextBlockLayout, CompiledTextLineLayout, TextLinePaint } from './types';
@@ -13,8 +13,8 @@ export const emitTextLine = (
   originX: number,
   baselineY: number,
   round: (value: number) => number,
-): Array<ScenePrimitive> => {
-  const primitives: Array<ScenePrimitive> = [];
+): Array<TextPrimitive | GroupPrimitive> => {
+  const primitives: Array<TextPrimitive | GroupPrimitive> = [];
 
   for (const piece of layout.pieces) {
     const segmentPaint = paint.segments[piece.segmentIndex];
@@ -70,7 +70,7 @@ export const emitTextBlock = (
   left: number,
   top: number,
   round: (value: number) => number,
-): Array<ScenePrimitive> =>
+): Array<TextPrimitive | GroupPrimitive> =>
   layout.lines.flatMap(({ lineLayout, sourceLineIndex, baselineOffset }) => {
     const offset =
       paint.textAlign === 'start' ? 0 : (layout.width - lineLayout.width) / (paint.textAlign === 'end' ? 1 : 2);

@@ -7,14 +7,13 @@ import {
   rectOutline,
 } from '@retikz/math';
 
-import type { CanonicalPathStep } from '../../../resolve';
-import type { IRPosition } from '../../../schemas';
-import { rectPerimeterSample } from '../../../shared/geometry';
-import { BuiltinCompileWarningCode } from '../../shared';
-import { clipTarget, pointOfTarget, isSamePoint } from '../host';
-import { isAutoBoundaryTarget } from '../target';
-import { nodeIdFromResolvableTarget } from './target-diagnostic';
-import type { StrokeLoweringContext } from './types';
+import type { CanonicalPathStep } from '../../../../resolve';
+import type { IRPosition } from '../../../../schemas';
+import { BuiltinCompileWarningCode } from '../../../shared';
+import { clipTarget, pointOfTarget, isSamePoint } from '../../target';
+import { isAutoBoundaryTarget } from '../../target';
+import type { StrokeLoweringContext } from '../types';
+import { nodeIdFromResolvableTarget } from './helpers';
 
 /** 由几何形状产生路径命令的 shape step */
 type StrokeShapeStep = Extract<
@@ -56,18 +55,7 @@ const lowerPartialArcClosure = (
  */
 export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: StrokeLoweringContext): boolean => {
   const { targetView, scopeChain, warn, commandEmitter, cursor, sampling } = context;
-  const {
-    boundsPoints,
-    emitMove,
-    emitLine,
-    emitClose,
-    emitCubic,
-    emitArc,
-    emitEllipseArc,
-    startSegment,
-    getLastEnd,
-    getSubPathStart,
-  } = commandEmitter;
+  const { boundsPoints } = commandEmitter;
 
   if (step.kind === 'cycle') {
     const usedOverride = cursor.takePenOverride();
@@ -86,14 +74,17 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: St
     });
     if (!fromClip || !toClip) return false;
 
-    sampling.addSampler(t => curve.sampleAt({ kind: 'line', from: fromClip, to: toClip }, t));
-    if (isSamePoint(fromClip, getLastEnd()) && isSamePoint(toClip, getSubPathStart())) {
-      emitClose();
+    sampling.addSampler({ kind: 'line', from: fromClip, to: toClip });
+    if (isSamePoint(fromClip, commandEmitter.getLastEnd()) && isSamePoint(toClip, commandEmitter.getSubPathStart())) {
+      commandEmitter.emitClose();
       return true;
     }
 
-    startSegment(fromClip, usedOverride === null && previous !== null && isAutoBoundaryTarget(previous.step.to));
-    emitLine(toClip, isAutoBoundaryTarget(moveTo));
+    commandEmitter.startSegment(
+      fromClip,
+      usedOverride === null && previous !== null && isAutoBoundaryTarget(previous.step.to),
+    );
+    commandEmitter.emitLine(toClip, isAutoBoundaryTarget(moveTo));
 
     return true;
   }
@@ -127,19 +118,19 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: St
 
     for (const operation of rectOutline(from, to, step.cornerRadius)) {
       if (operation.kind === 'move') {
-        emitMove(operation.to);
+        commandEmitter.emitMove(operation.to);
         rectangleStart = operation.to;
       } else if (operation.kind === 'line') {
-        emitLine(operation.to);
+        commandEmitter.emitLine(operation.to);
       } else if (operation.kind === 'arc') {
-        emitArc({
+        commandEmitter.emitArc({
           center: operation.center,
           radius: operation.radius,
           startAngle: operation.startAngle,
           endAngle: operation.endAngle,
         });
       } else {
-        emitClose();
+        commandEmitter.emitClose();
       }
     }
 
@@ -148,7 +139,7 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: St
     const minY = Math.min(from[1], to[1]);
     const maxY = Math.max(from[1], to[1]);
     boundsPoints.push([minX, minY], [maxX, minY], [maxX, maxY], [minX, maxY]);
-    sampling.addSampler(t => rectPerimeterSample(from, to, t));
+    sampling.addSampler({ kind: 'rectangle', from, to });
     if (rectangleStart) cursor.setPenOverride(rectangleStart);
 
     return true;
@@ -189,8 +180,8 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: St
     if (typeof step.radius === 'object') {
       const radiusX = step.radius.x;
       const radiusY = step.radius.y;
-      startSegment(pointAtEllipseArcAngle({ center, radiusX, radiusY, angleDeg: step.startAngle }));
-      emitEllipseArc({
+      commandEmitter.startSegment(pointAtEllipseArcAngle({ center, radiusX, radiusY, angleDeg: step.startAngle }));
+      commandEmitter.emitEllipseArc({
         center,
         radiusX,
         radiusY,
@@ -208,19 +199,14 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: St
         }),
       );
 
-      sampling.collect(step, t =>
-        curve.sampleAt(
-          {
-            kind: 'ellipseArc',
-            center,
-            radiusX,
-            radiusY,
-            startAngleDeg: step.startAngle,
-            endAngleDeg: step.endAngle,
-          },
-          t,
-        ),
-      );
+      sampling.collect({
+        kind: 'ellipseArc',
+        center,
+        radiusX,
+        radiusY,
+        startAngleDeg: step.startAngle,
+        endAngleDeg: step.endAngle,
+      });
 
       cursor.setPenOverride(pointAtEllipseArcAngle({ center, radiusX, radiusY, angleDeg: step.endAngle }));
 
@@ -229,8 +215,8 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: St
 
     if (typeof step.radius === 'number') {
       const radius = step.radius;
-      startSegment(pointAtArcAngle(center, radius, step.startAngle));
-      emitArc({ center, radius, startAngle: step.startAngle, endAngle: step.endAngle });
+      commandEmitter.startSegment(pointAtArcAngle(center, radius, step.startAngle));
+      commandEmitter.emitArc({ center, radius, startAngle: step.startAngle, endAngle: step.endAngle });
       boundsPoints.push(
         ...collectArcBoundingCandidates({
           center,
@@ -239,18 +225,13 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: St
           endAngleDeg: step.endAngle,
         }),
       );
-      sampling.collect(step, t =>
-        curve.sampleAt(
-          {
-            kind: 'arc',
-            center,
-            radius,
-            startAngleDeg: step.startAngle,
-            endAngleDeg: step.endAngle,
-          },
-          t,
-        ),
-      );
+      sampling.collect({
+        kind: 'arc',
+        center,
+        radius,
+        startAngleDeg: step.startAngle,
+        endAngleDeg: step.endAngle,
+      });
       cursor.setPenOverride(pointAtArcAngle(center, radius, step.endAngle));
 
       return true;
@@ -270,8 +251,10 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: St
     if (step.startAngle !== undefined && step.endAngle !== undefined) {
       const startAngle = step.startAngle;
       const endAngle = step.endAngle;
-      startSegment(pointAtEllipseArcAngle({ center, radiusX: radius, radiusY: radius, angleDeg: startAngle }));
-      emitEllipseArc({ center, radiusX: radius, radiusY: radius, startAngle, endAngle });
+      commandEmitter.startSegment(
+        pointAtEllipseArcAngle({ center, radiusX: radius, radiusY: radius, angleDeg: startAngle }),
+      );
+      commandEmitter.emitEllipseArc({ center, radiusX: radius, radiusY: radius, startAngle, endAngle });
 
       boundsPoints.push(
         ...collectEllipseArcBoundingCandidates({
@@ -283,29 +266,24 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: St
         }),
       );
 
-      sampling.collect(step, t =>
-        curve.sampleAt(
-          {
-            kind: 'ellipseArc',
-            center,
-            radiusX: radius,
-            radiusY: radius,
-            startAngleDeg: startAngle,
-            endAngleDeg: endAngle,
-          },
-          t,
-        ),
-      );
+      sampling.collect({
+        kind: 'ellipseArc',
+        center,
+        radiusX: radius,
+        radiusY: radius,
+        startAngleDeg: startAngle,
+        endAngleDeg: endAngle,
+      });
 
       const closing = lowerPartialArcClosure(step.closed, index, warn);
       if (closing === 'chord') {
-        emitClose();
+        commandEmitter.emitClose();
         cursor.setPenOverride(
           pointAtEllipseArcAngle({ center, radiusX: radius, radiusY: radius, angleDeg: startAngle }),
         );
       } else if (closing === 'sector') {
-        emitLine(center);
-        emitClose();
+        commandEmitter.emitLine(center);
+        commandEmitter.emitClose();
         cursor.setPenOverride(center);
       } else {
         cursor.setPenOverride(pointAtEllipseArcAngle({ center, radiusX: radius, radiusY: radius, angleDeg: endAngle }));
@@ -322,20 +300,22 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: St
       );
     }
 
-    startSegment([center[0] + radius, center[1]]);
-    emitEllipseArc({ center, radiusX: radius, radiusY: radius, startAngle: 0, endAngle: 360 });
+    commandEmitter.startSegment([center[0] + radius, center[1]]);
+    commandEmitter.emitEllipseArc({ center, radiusX: radius, radiusY: radius, startAngle: 0, endAngle: 360 });
     boundsPoints.push(
       [center[0] + radius, center[1]],
       [center[0] - radius, center[1]],
       [center[0], center[1] + radius],
       [center[0], center[1] - radius],
     );
-    sampling.collect(step, t =>
-      curve.sampleAt(
-        { kind: 'ellipseArc', center, radiusX: radius, radiusY: radius, startAngleDeg: 0, endAngleDeg: 360 },
-        t,
-      ),
-    );
+    sampling.collect({
+      kind: 'ellipseArc',
+      center,
+      radiusX: radius,
+      radiusY: radius,
+      startAngleDeg: 0,
+      endAngleDeg: 360,
+    });
     cursor.setPenOverride(center);
 
     return true;
@@ -348,8 +328,8 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: St
     if (step.startAngle !== undefined && step.endAngle !== undefined) {
       const startAngle = step.startAngle;
       const endAngle = step.endAngle;
-      startSegment(pointAtEllipseArcAngle({ center, radiusX, radiusY, angleDeg: startAngle }));
-      emitEllipseArc({ center, radiusX, radiusY, startAngle, endAngle });
+      commandEmitter.startSegment(pointAtEllipseArcAngle({ center, radiusX, radiusY, angleDeg: startAngle }));
+      commandEmitter.emitEllipseArc({ center, radiusX, radiusY, startAngle, endAngle });
       boundsPoints.push(
         ...collectEllipseArcBoundingCandidates({
           center,
@@ -359,19 +339,21 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: St
           endAngleDeg: endAngle,
         }),
       );
-      sampling.collect(step, t =>
-        curve.sampleAt(
-          { kind: 'ellipseArc', center, radiusX, radiusY, startAngleDeg: startAngle, endAngleDeg: endAngle },
-          t,
-        ),
-      );
+      sampling.collect({
+        kind: 'ellipseArc',
+        center,
+        radiusX,
+        radiusY,
+        startAngleDeg: startAngle,
+        endAngleDeg: endAngle,
+      });
       const closing = lowerPartialArcClosure(step.closed, index, warn);
       if (closing === 'chord') {
-        emitClose();
+        commandEmitter.emitClose();
         cursor.setPenOverride(pointAtEllipseArcAngle({ center, radiusX, radiusY, angleDeg: startAngle }));
       } else if (closing === 'sector') {
-        emitLine(center);
-        emitClose();
+        commandEmitter.emitLine(center);
+        commandEmitter.emitClose();
         cursor.setPenOverride(center);
       } else {
         cursor.setPenOverride(pointAtEllipseArcAngle({ center, radiusX, radiusY, angleDeg: endAngle }));
@@ -388,17 +370,15 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: St
       );
     }
 
-    startSegment([center[0] + radiusX, center[1]]);
-    emitEllipseArc({ center, radiusX, radiusY, startAngle: 0, endAngle: 360 });
+    commandEmitter.startSegment([center[0] + radiusX, center[1]]);
+    commandEmitter.emitEllipseArc({ center, radiusX, radiusY, startAngle: 0, endAngle: 360 });
     boundsPoints.push(
       [center[0] + radiusX, center[1]],
       [center[0] - radiusX, center[1]],
       [center[0], center[1] + radiusY],
       [center[0], center[1] - radiusY],
     );
-    sampling.collect(step, t =>
-      curve.sampleAt({ kind: 'ellipseArc', center, radiusX, radiusY, startAngleDeg: 0, endAngleDeg: 360 }, t),
-    );
+    sampling.collect({ kind: 'ellipseArc', center, radiusX, radiusY, startAngleDeg: 0, endAngleDeg: 360 });
     cursor.setPenOverride(center);
 
     return true;
@@ -458,10 +438,10 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: St
     segments[finalIndex] = { ...finalSegment, control2, to };
   }
 
-  startSegment(fromClip, usedOverride === null && isAutoBoundaryTarget(previous.step.to));
+  commandEmitter.startSegment(fromClip, usedOverride === null && isAutoBoundaryTarget(previous.step.to));
 
   for (const [segmentIndex, segment] of segments.entries()) {
-    emitCubic({
+    commandEmitter.emitCubic({
       control1: segment.control1,
       control2: segment.control2,
       to: segment.to,
@@ -469,26 +449,17 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: St
     });
   }
 
-  sampling.collect(step, t => {
-    const segmentCount = segments.length;
-    const scaled = t * segmentCount;
-    const segmentIndex = Math.min(Math.floor(scaled), segmentCount - 1);
-    const localT = t === 1 ? 1 : scaled - segmentIndex;
-    const from = segmentIndex === 0 ? fromClip : segments[segmentIndex - 1].to;
-    const segment = segments[segmentIndex];
-
-    return curve.sampleAt(
-      {
-        kind: 'cubicBezier',
-        from,
-        control1: segment.control1,
-        control2: segment.control2,
-        to: segment.to,
-      },
-      localT,
-    );
+  sampling.collect({
+    kind: 'smooth',
+    segments: segments.map((segment, segmentIndex) => ({
+      kind: 'cubicBezier' as const,
+      from: segmentIndex === 0 ? fromClip : segments[segmentIndex - 1].to,
+      control1: segment.control1,
+      control2: segment.control2,
+      to: segment.to,
+    })),
   });
-  cursor.setPenOverride(getLastEnd());
+  cursor.setPenOverride(commandEmitter.getLastEnd());
 
   return true;
 };

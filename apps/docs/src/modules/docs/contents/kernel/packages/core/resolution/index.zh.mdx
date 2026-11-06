@@ -9,7 +9,7 @@ description: 追踪 Core 如何合并作用域样式、解析主题颜色，并�
 
 ## 整体流程
 
-一次编译先准备注册表与根主题。遍历进入 Scope 时，合并父级与当前层的后代默认值，并解析局部主题。Node 和 Path 各自读取当前环境，合并属性、解析颜色、绑定定义并补齐字段，分别产出 `CanonicalNode` 与 `CanonicalPath`。
+一次编译先准备注册表与根主题。遍历进入 Scope 时，合并父级与当前层的后代默认值，并解析局部主题。Node 和 Path 各自读取当前环境，合并属性、解析颜色、绑定定义并补齐字段，分别产出 `CanonicalNode` 与 `PathResolution`。
 
 以下摘录两个返回类型的主要字段；引用的类型在后文说明。
 
@@ -31,14 +31,14 @@ type CanonicalNode = {
 ```
 
 </DocTab>
-<DocTab value="path-resolution" label="CanonicalPath">
+<DocTab value="path-resolution" label="PathResolution">
 
 ```ts
-export type CanonicalPath = Readonly<{
+export type PathResolution = Readonly<{
   irPath: ReadonlyArray<string | number>;
-  path: CanonicalPathProperties;
+  canon: CanonicalPath;
   definition: AnyPathDefinition;
-  stroke?: Pick<CanonicalStrokePath, 'arrows' | 'marks'>;
+  stroke?: Pick<StrokePathResolution, 'arrows' | 'marks'>;
 }>;
 ```
 
@@ -247,19 +247,19 @@ canon 补齐固定默认值，例如 Node 与 Path 的透明度、线帽和虚�
 
 定义的 schema 可能补充字段，因此返回后会再次确定上下文颜色，再由 `canonicalizePath` 展开路径字段：将 `style` 字段合入路径、标签统一为数组，并补齐标签位置、距离及 bend、smooth 等步骤的静态默认值。它尚不是最终的路径指令。
 
-本例 P 的主色继承为 `'#204060'`，描边在 Light 下变成 `'#90a0b0'`，线宽为 3。两个绝对坐标步骤保持原有位置。`resolvePath` 保存来源路径与定义解析后的输入，并将已解析 paint 与有效线宽写入 `CanonicalPath`。随后 compile 中的 `bindPathTargets` 使用变换链和节点布局绑定目标，产出 `BoundPathResolution`。目标引用和相对坐标的细节留给路径几何专题。
+本例 P 的主色继承为 `'#204060'`，描边在 Light 下变成 `'#90a0b0'`，线宽为 3。两个绝对坐标步骤保持原有位置。`resolvePath` 保存来源路径与定义解析后的输入，并将已解析 paint 与有效线宽写入 `PathResolution`。随后 compile 中的 `bindPathTargets` 使用变换链和节点布局绑定目标，产出 `BoundPathResolution`。目标引用和相对坐标的细节留给路径几何专题。
 
-| 字段         | 内容                                                              | 后续用途               |
-| ------------ | ----------------------------------------------------------------- | ---------------------- |
-| `properties` | `CanonicalPathProperties`，包含已解析 paint、有效样式、步骤和标签 | 路径编译的主体输入     |
-| `definition` | 当前路径类型的 Definition                                         | 调用对应类型的处理能力 |
-| `irPath`     | 声明来源路径                                                      | 诊断定位               |
-| `stroke`     | 内置描边实际使用的箭头与标记绑定                                  | 描边编译               |
+| 字段         | 内容                                                    | 后续用途               |
+| ------------ | ------------------------------------------------------- | ---------------------- |
+| `canon`      | `CanonicalPath`，包含已解析 paint、有效样式、步骤和标签 | 路径编译的主体输入     |
+| `definition` | 当前路径类型的 Definition                               | 调用对应类型的处理能力 |
+| `irPath`     | 声明来源路径                                            | 诊断定位               |
+| `stroke`     | 内置描边实际使用的箭头与标记绑定                        | 描边编译               |
 
 ```ts
-// CanonicalPath 的字段摘录
+// PathResolution 的字段摘录
 {
-  properties: { id: 'P', color: '#204060', stroke: '#90a0b0', strokeWidth: 3 },
+  canon: { id: 'P', color: '#204060', stroke: '#90a0b0', strokeWidth: 3 },
   definition: { name: 'stroke' },
 }
 ```
@@ -278,7 +278,7 @@ Label 的默认外观来自 Label 通道，标签位置等静态配置在路径�
   sources={[
     { label: 'Path 样式、颜色与确定化', path: 'packages/kernel/core/src/resolve/path/resolve.ts' },
     { label: '路径类型与箭头绑定', path: 'packages/kernel/core/src/resolve/path/provider.ts' },
-    { label: 'CanonicalPath / CanonicalStrokePath', path: 'packages/kernel/core/src/resolve/path/types.ts' },
+    { label: 'PathResolution / StrokePathResolution', path: 'packages/kernel/core/src/resolve/path/types.ts' },
   ]}
 />
 

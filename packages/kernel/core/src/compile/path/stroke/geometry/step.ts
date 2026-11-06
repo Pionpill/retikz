@@ -1,12 +1,12 @@
 import { isFinitePoint } from '@retikz/math';
 
-import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
-import type { CanonicalPathStep } from '../../../resolve';
-import type { IRPosition, IRTarget } from '../../../schemas';
-import { isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../../shared';
-import { pointOfTarget } from '../host';
-import { isStrokeTargetStep } from './cursor';
-import type { StrokeLoweringContext } from './types';
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../../../error';
+import type { CanonicalPathStep } from '../../../../resolve';
+import type { IRPosition, IRTarget } from '../../../../schemas';
+import { isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../../../shared';
+import { pointOfTarget } from '../../target';
+import type { StrokeLoweringContext } from '../types';
+import { isStrokeTargetStep } from './helpers';
 
 /** 根据当前游标基线求值相对目标，并更新后续步骤使用的基线 */
 export const evaluateStrokeStep = (

@@ -45,12 +45,12 @@ for (const count of [16, 1_000, 10_000]) {
         return {
           run: () => resolvePath(source, context),
           verify: result => {
-            expect(result.properties.stroke).toBe('blue');
-            expect(result.properties.children).toHaveLength(kind === 'smooth' ? 1 : count);
+            expect(result.canon.stroke).toBe('blue');
+            expect(result.canon.children).toHaveLength(kind === 'smooth' ? 1 : count);
             expect(result.definition.name).toBe('stroke');
-            expect(result.properties.strokeWidth).toBe(1);
+            expect(result.canon.strokeWidth).toBe(1);
             if (kind !== 'smooth')
-              expect(result.properties.children?.at(-1)).toMatchObject({
+              expect(result.canon.children?.at(-1)).toMatchObject({
                 kind: 'line',
                 to:
                   kind === 'reference'
@@ -60,13 +60,13 @@ for (const count of [16, 1_000, 10_000]) {
                       : [count - 1, 0],
               });
             if (kind === 'smooth')
-              expect(result.properties.children?.[0]).toMatchObject({
+              expect(result.canon.children?.[0]).toMatchObject({
                 kind: 'smooth',
                 tension: 1,
                 points: Array.from({ length: count }, (_, index) => [index, 0]),
               });
             if (kind === 'labels')
-              expect(result.properties.children?.at(-1)).toMatchObject({
+              expect(result.canon.children?.at(-1)).toMatchObject({
                 label: { text: `L${count - 1}`, position: 0.5, distance: 4 },
               });
             expect(JSON.stringify(source)).toBe(original);

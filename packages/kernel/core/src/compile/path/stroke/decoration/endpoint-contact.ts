@@ -1,9 +1,9 @@
 import { curve, point, vector2 } from '@retikz/math';
 
-import type { CompiledArrowEnd, PathCommand } from '../../../contract';
-import type { IRPosition } from '../../../schemas';
-import type { StrokeCommandOccurrence } from './interruption';
-import { createStrokePathGeometry, curveSegmentOfOccurrence, sliceOccurrenceCommand } from './interruption';
+import type { CompiledArrowEnd, PathCommand } from '../../../../contract';
+import type { IRPosition } from '../../../../schemas';
+import type { StrokeCommandOccurrence } from '../geometry';
+import { createStrokePathGeometry, curveSegmentOfOccurrence, sliceOccurrenceCommand } from '../geometry';
 
 /** 路径首尾箭头 */
 export type EndpointArrowSpecs = {
@@ -25,6 +25,22 @@ type EndpointContact = {
   direction: IRPosition;
   /** 路径不足以容纳箭头时的等比缩放 */
   scale: number;
+};
+
+/** 箭头相对最终线段的接触补偿 */
+export type StrokeEndpointPlacement = {
+  /** 相对最终切线的弧度旋转 */
+  angle: number;
+  /** 短路径所需的等比缩放 */
+  scale: number;
+};
+
+/** undefined 表示无需补偿，null 表示端点不可绘制 */
+export type StrokeEndpointPlacements = {
+  /** 首端接触补偿 */
+  start?: StrokeEndpointPlacement | null;
+  /** 末端接触补偿 */
+  end?: StrokeEndpointPlacement | null;
 };
 
 /** 从端点向内查找与目标距离等于箭头接合长度的第一个位置 */
@@ -82,17 +98,16 @@ const findContact = (
 };
 
 /** 在 marker 局部坐标中补偿宿主切线，使箭头连接原曲线断点与目标 */
-const orientArrow = (
+export const placeEndpointArrow = (
   spec: CompiledArrowEnd | undefined,
-  contact: EndpointContact,
-  tangent: IRPosition,
-  start: boolean,
+  placement: StrokeEndpointPlacement | null | undefined,
 ): CompiledArrowEnd | undefined => {
-  if (spec === undefined || contact.scale <= 1e-10) return undefined;
-  const nativeAngle = Math.atan2(tangent[1], tangent[0]) + (start ? Math.PI : 0);
-  const angle = Math.atan2(contact.direction[1], contact.direction[0]) - nativeAngle;
-  const width = spec.markerWidth * contact.scale;
-  const height = spec.markerHeight * contact.scale;
+  if (spec === undefined || placement === null || (placement !== undefined && placement.scale <= 1e-10))
+    return undefined;
+  if (placement === undefined) return spec;
+  const { angle, scale } = placement;
+  const width = spec.markerWidth * scale;
+  const height = spec.markerHeight * scale;
   if (Math.abs(angle) < 1e-10) return { ...spec, markerWidth: width, markerHeight: height };
   // S^-1 R S 抵消 marker 的非等比宽高，旋转中心固定在线接触点
   const sx = width / spec.baseSize;
@@ -120,7 +135,7 @@ const orientArrow = (
 /** 保形截取首尾路径，并将 marker 朝向对齐到接合点与目标之间 */
 export const shortenEndpointContacts = (
   commands: Array<PathCommand>,
-  context: EndpointArrowSpecs & {
+  context: {
     /** 起点接合长度的线宽系数 */
     shrinkStart: number;
     /** 终点接合长度的线宽系数 */
@@ -130,17 +145,17 @@ export const shortenEndpointContacts = (
     /** 输出坐标精度 */
     round: (value: number) => number;
   },
-): EndpointArrowSpecs => {
-  const { round, strokeWidth, shrinkStart, shrinkEnd, arrowStart, arrowEnd } = context;
+): StrokeEndpointPlacements => {
+  const { round, strokeWidth, shrinkStart, shrinkEnd } = context;
   if (shrinkStart === 0 && shrinkEnd === 0) {
-    return { arrowStart, arrowEnd };
+    return {};
   }
   const occurrences = createStrokePathGeometry(
     commands,
     commands.map(() => 0),
   ).occurrences.filter(item => item.command.kind !== 'close');
-  if (occurrences.length === 0) return {};
-  if (occurrences.every(item => item.logicalEnd - item.logicalStart <= 1e-10)) return {};
+  if (occurrences.length === 0) return { start: null, end: null };
+  if (occurrences.every(item => item.logicalEnd - item.logicalStart <= 1e-10)) return { start: null, end: null };
   let startDistance = shrinkStart * strokeWidth;
   let endDistance = shrinkEnd * strokeWidth;
   const first = occurrences[0];
@@ -165,6 +180,9 @@ export const shortenEndpointContacts = (
   start.scale *= startScale;
   end.scale *= endScale;
   const output: Array<PathCommand> = [];
+  let startTangent: IRPosition | undefined;
+  let endTangent: IRPosition | undefined;
+  let terminalPoint: IRPosition | undefined;
   for (let index = start.index; index <= end.index; index++) {
     const occurrence = occurrences[index];
     const fromParameter = index === start.index ? start.parameter : 0;
@@ -176,13 +194,29 @@ export const shortenEndpointContacts = (
     } else {
       output.push(...commands.slice(occurrences[index - 1].commandIndex + 1, occurrence.commandIndex));
     }
-    output.push(sliceOccurrenceCommand(occurrence, fromParameter, toParameter, round));
+    const command = sliceOccurrenceCommand(occurrence, fromParameter, toParameter, round);
+    output.push(command);
+    if (index === start.index || index === end.index) {
+      // 从最终圆整后的端点段取切线，无需再次建立整条路径的弧长模型
+      const position = curve.sampleAt(curveSegmentOfOccurrence(occurrence), fromParameter).point;
+      const from: IRPosition = [round(position[0]), round(position[1])];
+      const segment = curveSegmentOfOccurrence({ command, from, to: 'to' in command ? command.to : from });
+      startTangent ??= curve.sampleAt(segment, 0).tangent;
+      const terminalSample = curve.sampleAt(segment, 1);
+      endTangent = terminalSample.tangent;
+      terminalPoint = terminalSample.point;
+    }
   }
   if (endDistance === 0) output.push(...commands.slice(last.commandIndex + 1));
-  if (output.length === 0) return {};
+  if (startTangent === undefined || endTangent === undefined || terminalPoint === undefined)
+    return { start: null, end: null };
   if (startDistance < 0) {
     const move = output[0];
     if (move.kind === 'move') {
+      startTangent = curve.sampleAt(
+        { kind: 'line', from: [round(start.position[0]), round(start.position[1])], to: move.to },
+        0,
+      ).tangent;
       output.splice(
         0,
         1,
@@ -191,16 +225,21 @@ export const shortenEndpointContacts = (
       );
     }
   }
-  if (endDistance < 0) output.push({ kind: 'line', to: [round(end.position[0]), round(end.position[1])] });
+  if (endDistance < 0) {
+    const to: IRPosition = [round(end.position[0]), round(end.position[1])];
+    output.push({ kind: 'line', to });
+    endTangent = curve.sampleAt({ kind: 'line', from: terminalPoint, to }, 1).tangent;
+  }
   commands.splice(0, commands.length, ...output);
-  const shortened = createStrokePathGeometry(
-    commands,
-    commands.map(() => 0),
-  ).occurrences.filter(item => item.command.kind !== 'close');
-  const startTangent = curve.sampleAt(curveSegmentOfOccurrence(shortened[0]), 0).tangent;
-  const endTangent = curve.sampleAt(curveSegmentOfOccurrence(shortened[shortened.length - 1]), 1).tangent;
   return {
-    arrowStart: orientArrow(arrowStart, start, startTangent, true),
-    arrowEnd: orientArrow(arrowEnd, end, endTangent, false),
+    start: {
+      angle:
+        Math.atan2(start.direction[1], start.direction[0]) - Math.atan2(startTangent[1], startTangent[0]) - Math.PI,
+      scale: start.scale,
+    },
+    end: {
+      angle: Math.atan2(end.direction[1], end.direction[0]) - Math.atan2(endTangent[1], endTangent[0]),
+      scale: end.scale,
+    },
   };
 };

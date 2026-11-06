@@ -2,8 +2,8 @@ import type { InputPathBoundaryLabel, ScenePrimitive, PathDefinitionLabel } from
 import type { IRPosition } from '../../../schemas';
 import { BoundaryLabelSchema } from '../../../schemas';
 import { placeLabelBox } from '../../text';
-import type { EmitLabelPrimitiveContext } from './label';
-import { emitLabelPrimitive } from './label';
+import { emitLabelPrimitive } from './emit';
+import type { PathLabelContext } from './types';
 
 const defaults = BoundaryLabelSchema.parse({ text: '' });
 
@@ -11,7 +11,7 @@ const defaults = BoundaryLabelSchema.parse({ text: '' });
 export const emitBoundaryLabelPrimitive = (
   input: InputPathBoundaryLabel,
   canon: PathDefinitionLabel,
-  context: EmitLabelPrimitiveContext,
+  context: PathLabelContext,
 ): { primitive: ScenePrimitive; boundsPoints: Array<IRPosition> } => {
   const { label, point, outward } = input;
   const base = emitLabelPrimitive(canon, { point: [0, 0], tangent: [1, 0] }, context);

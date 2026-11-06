@@ -2,11 +2,11 @@ import type { PropertyPath } from '@retikz/foundation';
 import { encodePropertyPath } from '@retikz/foundation';
 import { pointAtArcAngle } from '@retikz/math';
 
-import type { Transform } from '../../contract';
-import type { CanonicalPathStep, CanonicalPath } from '../../resolve';
-import type { IRPosition, IRTarget } from '../../schemas';
-import { isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../shared';
-import type { BoundPathResolution, PathCompileContext, PathTargetResolver, TargetResolution } from './types';
+import type { Transform } from '../../../contract';
+import type { CanonicalPathStep, PathResolution } from '../../../resolve';
+import type { IRPosition, IRTarget } from '../../../schemas';
+import { isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../../shared';
+import type { BoundPathResolution, PathCompileContext, PathTargetResolver, TargetResolution } from '../types';
 
 /** 通过调用方提供的解析器读取目标的局部坐标，无法解析时返回 null */
 const pointOfTarget = (
@@ -130,19 +130,61 @@ const bindPathStepTargets = (
   return out;
 };
 
+/** 将缓存中已归一化的目标应用到当前步骤，保留当前标签及其余属性 */
+const restorePathStepTargets = (
+  steps: ReadonlyArray<CanonicalPathStep>,
+  targets: BoundPathResolution['targets'],
+  prefix: PropertyPath,
+): Array<CanonicalPathStep> =>
+  steps.map((step, index) => {
+    const targetAt = (field: string, target: IRTarget, pointIndex?: number): IRTarget =>
+      targets.get(
+        encodePropertyPath([...prefix, 'children', index, field, ...(pointIndex === undefined ? [] : [pointIndex])]),
+      )?.target ?? target;
+    switch (step.kind) {
+      case 'cycle':
+      case 'circlePath':
+      case 'ellipsePath':
+        return step;
+      case 'arc':
+        return step.center === undefined ? step : { ...step, center: targetAt('center', step.center) };
+      case 'smooth':
+        return { ...step, points: step.points.map((target, pointIndex) => targetAt('points', target, pointIndex)) };
+      case 'rectangle':
+        return { ...step, from: targetAt('from', step.from), to: targetAt('to', step.to) };
+      case 'axis-line':
+        return { ...step, to: targetAt('to', step.to) as typeof step.to };
+      default:
+        return { ...step, to: targetAt('to', step.to) };
+    }
+  });
+
 /** 在布局引用就绪后绑定路径目标，不重复解析样式和默认值 */
 export const bindPathTargets = (
-  canon: CanonicalPath,
+  resolution: PathResolution,
   context: Partial<Pick<PathCompileContext, 'scopeChain' | 'targetResolver'>>,
+  prepared?: BoundPathResolution['targets'],
 ): BoundPathResolution => {
+  if (prepared !== undefined)
+    return {
+      ...resolution,
+      canon:
+        resolution.canon.children === undefined
+          ? resolution.canon
+          : {
+              ...resolution.canon,
+              children: restorePathStepTargets(resolution.canon.children, prepared, resolution.irPath),
+            },
+      targets: prepared,
+    };
   const targets = new Map<string, TargetResolution>();
   const children =
-    canon.properties.children === undefined
+    resolution.canon.children === undefined
       ? undefined
-      : bindPathStepTargets(canon.properties.children, context, targets, canon.irPath);
+      : bindPathStepTargets(resolution.canon.children, context, targets, resolution.irPath);
   return {
-    ...canon,
-    properties: children === undefined ? canon.properties : { ...canon.properties, children },
+    ...resolution,
+    canon: children === undefined ? resolution.canon : { ...resolution.canon, children },
     targets,
   };
 };
