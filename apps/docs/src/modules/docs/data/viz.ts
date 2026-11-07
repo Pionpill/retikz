@@ -107,6 +107,27 @@ export const vizSection: Array<Section> = [
         ],
       },
       {
+        id: 'scale',
+        label: 'viz.dataScale',
+        sidebarGroup: 'viz.dataContents',
+        meta: { pageType: 'group', audience: 'user', capability: 'data.scale', sourceOfTruth: 'runtime' },
+        children: [
+          {
+            id: 'builtins',
+            label: 'viz.dataScaleBuiltins',
+            difficulty: DocDifficulty.Advanced,
+            meta: { pageType: 'guide', audience: 'user', capability: 'data.scale.builtins', sourceOfTruth: 'runtime' },
+          },
+          {
+            id: 'custom-scale',
+            label: 'viz.dataScaleCustom',
+            difficulty: DocDifficulty.Advanced,
+            meta: extensionGuide('data.scale.custom'),
+          },
+          { id: 'reference', label: 'viz.dataScaleReference' },
+        ],
+      },
+      {
         id: 'provenance',
         label: 'viz.dataProvenance',
         sidebarGroup: 'viz.dataContents',
@@ -527,13 +548,7 @@ export const vizSection: Array<Section> = [
         sidebarGroup: 'viz.plotGrammar',
         children: [
           { id: 'position', label: 'viz.grammarScalePosition', difficulty: DocDifficulty.Advanced },
-          { id: 'color', label: 'viz.grammarScaleColor', difficulty: DocDifficulty.Advanced },
-          {
-            id: 'custom-scale',
-            label: 'viz.grammarScaleCustom',
-            difficulty: DocDifficulty.Internals,
-            meta: extensionGuide('plot.scale.extensions'),
-          },
+          { id: 'mark-attributes', label: 'viz.grammarScaleAttributes', difficulty: DocDifficulty.Advanced },
         ],
       },
       {
@@ -541,8 +556,7 @@ export const vizSection: Array<Section> = [
         label: 'viz.grammarCoordinate',
         sidebarGroup: 'viz.plotGrammar',
         children: [
-          { id: '2d', label: 'viz.grammarCoordinate2d', difficulty: DocDifficulty.Beginner },
-          { id: '1d', label: 'viz.grammarCoordinate1d', difficulty: DocDifficulty.Advanced },
+          { id: 'dimension', label: 'viz.grammarCoordinateDimension', difficulty: DocDifficulty.Beginner },
           { id: 'composition', label: 'viz.grammarCoordinateComposition', difficulty: DocDifficulty.Advanced },
           {
             id: 'custom-coordinate',

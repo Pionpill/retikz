@@ -1,5 +1,5 @@
 import { CssColorSchema } from '@retikz/core';
-import { scaleThreshold as d3ScaleThreshold } from 'd3-scale';
+import { resolveScale } from '@retikz/data';
 import { array, number, strictObject } from 'zod';
 
 import { defineCellVisualScale } from '../../contract';
@@ -38,17 +38,18 @@ export const THRESHOLD_COLOR_CELL_VISUAL_SCALE = defineCellVisualScale({
     }
 
     const domain = [...options.thresholds];
-    const scale = d3ScaleThreshold<number, string>().domain(domain).range(range);
+    const mapping = resolveScale({ type: 'threshold', range, params: { breakpoints: domain } }, { values });
 
     return {
       of: value => {
         if (typeof value !== 'number') throw new RetikzTableError('threshold-color values must be numbers');
-        return scale(value);
+        const mapped = mapping.map(value);
+        return typeof mapped === 'string' ? mapped : undefined;
       },
       legendForm: 'swatch',
       domain,
       range,
-      edges: [...domain],
+      edges: [...(mapping.thresholds ?? [])],
     };
   },
 });

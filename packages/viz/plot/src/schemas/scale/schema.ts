@@ -1,4 +1,5 @@
 import { CssColorSchema } from '@retikz/core';
+import * as data from '@retikz/data';
 import {
   createOpenStringSchema,
   NonBlankStringSchema,
@@ -6,19 +7,7 @@ import {
   PositiveNumberSchema,
   NormalizedFractionSchema,
 } from '@retikz/foundation';
-import {
-  array,
-  boolean,
-  discriminatedUnion,
-  literal,
-  looseObject,
-  number,
-  object,
-  strictObject,
-  string,
-  tuple,
-  union,
-} from 'zod';
+import { array, boolean, discriminatedUnion, literal, number, object, strictObject, string, tuple, union } from 'zod';
 
 import { BUILTIN_SCALE_TYPES, BuiltinPlotColorScheme, PlotDomainPaddingKind, BuiltinPlotScale } from './constants';
 
@@ -171,7 +160,7 @@ export const OrdinalScaleSchema = object({
   domain: array(CategoryValueSchema)
     .optional()
     .describe('Ordered category list; omit to infer the distinct field values in data-encounter order at lowering'),
-  range: array(CssColorSchema)
+  range: union([array(number()), array(string())])
     .optional()
     .describe(
       'Output values cycled across the domain (e.g. color strings); omit to use a default categorical color scheme',
@@ -378,8 +367,7 @@ export const QuantizeColorScaleSchema = object({
   scheme: ColorSchemeNameSchema.optional().describe(
     'Named color scheme sampled at count evenly spaced points to produce the discrete bin colors; a built-in name or a custom one registered via options.colorSchemes; omit to default to viridis at lowering. Overridden by range when both are given',
   ),
-  range: array(CssColorSchema)
-    .min(2)
+  range: union([array(number()).min(2), array(string()).min(2)])
     .optional()
     .describe('Explicit discrete bin colors that override scheme; the array length is the bin count'),
 }).describe(
@@ -400,8 +388,7 @@ export const ThresholdColorScaleSchema = object({
   scheme: ColorSchemeNameSchema.optional().describe(
     'Named color scheme sampled at breakpoints.length + 1 evenly spaced points to produce the discrete bin colors; a built-in name or a custom one registered via options.colorSchemes; omit to default to viridis at lowering. Overridden by range when both are given',
   ),
-  range: array(CssColorSchema)
-    .min(2)
+  range: union([array(number()).min(2), array(string()).min(2)])
     .optional()
     .describe(
       'Explicit discrete bin colors that override scheme; length must equal breakpoints.length + 1 (enforced at lowering)',
@@ -426,8 +413,7 @@ export const QuantileColorScaleSchema = object({
   scheme: ColorSchemeNameSchema.optional().describe(
     'Named color scheme sampled at count evenly spaced points to produce the discrete bin colors; a built-in name or a custom one registered via options.colorSchemes; omit to default to viridis at lowering. Overridden by range when both are given',
   ),
-  range: array(CssColorSchema)
-    .min(2)
+  range: union([array(number()).min(2), array(string()).min(2)])
     .optional()
     .describe('Explicit discrete bin colors that override scheme; the array length is the bin count'),
 }).describe(
@@ -456,7 +442,11 @@ export const ScaleSchema = discriminatedUnion('type', [
 );
 
 /** 校验带名称的自定义比例尺开放配置，具体结构由运行时定义校验 */
-export const CustomScaleSchema = looseObject({
+export const CustomScaleSchema = strictObject({
+  domain: data.ScaleOperationSchema.shape.domain,
+  range: data.ScaleOperationSchema.shape.range,
+  params: data.ScaleOperationSchema.shape.params,
+  domainPadding: DomainPaddingSchema.optional(),
   type: PlotScaleTypeSchema.refine(type => !BUILTIN_SCALE_TYPES.has(type), {
     message: 'custom scale type must not collide with a built-in scale type',
   }).describe(

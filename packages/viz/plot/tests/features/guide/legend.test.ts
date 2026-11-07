@@ -328,6 +328,7 @@ describe('lowerPlots legend — review 修复回归（sector color / shape glyph
       ...shapeLegendSpec(),
       defaultPlot: { palette: { shape: [pentagon, 'cross', 'circle'] } },
     });
+
     const legend = findLegendLayer(expandOf(spec, { d: ORDINAL_ROWS }));
 
     expect(legend).toBeDefined();
@@ -376,7 +377,7 @@ describe('lowerPlots legend — review 修复回归（sector color / shape glyph
 
   // P2：color legend 绑到位置 linear scale（非颜色 scale）→ fail-loud，而非落空 ordinal 出空图例
   it('颜色图例绑定非颜色比例尺时明确报错', () => {
-    expect(() => expandOf(ordinalColorLegendSpec({ scale: 'x' }), { d: ORDINAL_ROWS })).toThrow(/not a color scale/);
+    expect(() => expandOf(ordinalColorLegendSpec({ scale: 'x' }), { d: ORDINAL_ROWS })).toThrow(/no bound scale/);
   });
 });
 
@@ -826,6 +827,18 @@ const quantileColorLegendSpec = (): IRPlot =>
     guides: [{ type: 'legend', channel: 'color', scale: 'densColor' }],
   });
 
+describe('空分位样本的图例', () => {
+  it.each([{ rows: [] }, { rows: [{ lon: 1, lat: 1, density: null }] }])(
+    '没有有效样本时不生成分档图例或标题：%j',
+    ({ rows }) => {
+      const spec = quantileColorLegendSpec();
+      spec.guides = [{ type: 'legend', channel: 'color', scale: 'densColor', title: 'Density' }];
+      const outer = expandOf(spec, { d: rows });
+      expect(allScopes(outer).some(scope => scope.id?.startsWith('legend'))).toBe(false);
+    },
+  );
+});
+
 describe('lowerPlots legend — ramp 刻度域取配置 domain', () => {
   // 数据 temperature 仅 [5,30]，显式 domain [0,100]；ramp 刻度应落 domain（取色基准同源），非数据 extent
   const explicitDomainRampSpec = (): IRPlot =>
@@ -1033,4 +1046,53 @@ it('将序数索引步骤应用于有效主题调色板', () => {
   const legend = findLegendLayer(expandOf(spec, { d: ORDINAL_ROWS }));
 
   expect(swatchNodesOf(legend!).map(node => node.style?.fill)).toEqual(['#222222', '#111111', '#333333']);
+});
+
+describe('数值属性图例与图元共享映射', () => {
+  const mappedSpec = (scale: Record<string, unknown>): IRPlot => {
+    const base = sizeLegendSpec({ style: { symbolFit: 'preserve' } });
+    return PlotSchema.parse({
+      ...base,
+      scales: [...base.scales, { name: 'mapped-size', ...scale }],
+      marks: [
+        {
+          type: 'point',
+          encodings: {
+            size: { field: 'population', scale: 'mapped-size' },
+            position: { x: { field: 'lon' }, y: { field: 'lat' } },
+          },
+        },
+      ],
+    });
+  };
+
+  it('分档尺寸图例使用实际半径并保留阈值标签', () => {
+    const result = expandOf(mappedSpec({ type: 'threshold', breakpoints: [30, 70], range: [4, 8, 12] }), {
+      d: [
+        { lon: 0, lat: 0, population: 30 },
+        { lon: 1, lat: 1, population: 80 },
+      ],
+    });
+    const legend = findLegendLayer(result)!;
+    expect(sizeSymbolNodesOf(legend).map(nodeMinimumSide)).toEqual([4, 8, 12].map(radius => radius * Math.SQRT2));
+    expect(labelsOf(legend).map(node => node.text)).toEqual(['< 30', '30 – < 70', '≥ 70']);
+    expect(ChildSchema.safeParse(legend).success).toBe(true);
+  });
+
+  it('分类尺寸图例按类别映射，不构造连续数值刻度', () => {
+    const result = expandOf(mappedSpec({ type: 'ordinal', domain: ['a', 'b'], range: [4, 8] }), {
+      d: [
+        { lon: 0, lat: 0, population: 'a' },
+        { lon: 1, lat: 1, population: 'b' },
+      ],
+    });
+    const legend = findLegendLayer(result)!;
+    expect(sizeSymbolNodesOf(legend).map(nodeMinimumSide)).toEqual([4, 8].map(radius => radius * Math.SQRT2));
+    expect(labelsOf(legend).map(node => node.text)).toEqual(['a', 'b']);
+  });
+
+  it('没有有效样本的分位数尺寸映射不生成图例', () => {
+    const result = expandOf(mappedSpec({ type: 'quantile', range: [4, 8] }), { d: [] });
+    expect(allScopes(result).some(scope => scope.id?.startsWith('legend'))).toBe(false);
+  });
 });

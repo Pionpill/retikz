@@ -1,10 +1,11 @@
 import { DEFAULT_RESOLVED_THEME } from '@retikz/core';
 import type { IRChild, IRNode, IRScope } from '@retikz/core';
+import { defineScale } from '@retikz/data';
 import type { JsonObject } from '@retikz/foundation';
 import type { IRPlotMark, IRPlotScaleOperation } from '@retikz/plot';
-import { defineScale, PathMarkSchema, PositionScaleContinuity, lowerPlotWithLineage } from '@retikz/plot';
+import { PathMarkSchema, PositionScaleContinuity, lowerPlotWithLineage } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
-import { literal, strictObject, string } from 'zod';
+import { strictObject } from 'zod';
 
 import type {
   ChartEncodingRuntime,
@@ -265,9 +266,8 @@ describe('点 Chart 配方定义', () => {
 
   it('使用自定义缩放 Definition 连续性而不是内置缩放白名单', () => {
     const customDiscreteScale = defineScale({
-      family: 'position',
-      continuity: PositionScaleContinuity.Discrete,
-      schema: strictObject({ type: literal('custom-discrete'), name: string().min(1) }),
+      type: 'custom-discrete',
+      paramsSchema: strictObject({}),
       isFieldCompatible: () => true,
       resolve: () => {
         throw new Error('Chart resolution must not execute custom scale geometry');
@@ -278,7 +278,18 @@ describe('点 Chart 配方定义', () => {
         family: 'point',
         recipe: stripChartDefinition,
         chartThemeDefinitions: [],
-        runtimeDefinitions: { scales: [customDiscreteScale] },
+        runtimeDefinitions: {
+          scales: [customDiscreteScale],
+          channels: [
+            {
+              kind: 'position',
+              channel: 'custom-x',
+              role: 'x',
+              pick: () => 'category',
+              scales: { 'custom-discrete': { continuity: PositionScaleContinuity.Discrete, allowsBaseline: true } },
+            },
+          ],
+        },
       },
     ]).runtime;
     const source = StripChartSchema.parse({

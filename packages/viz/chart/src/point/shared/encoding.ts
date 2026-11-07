@@ -81,12 +81,12 @@ export const pointFieldConsumersOf = (
   {
     slot: 'size',
     outputType: DataFieldType.Continuous,
-    scale: { family: 'position', type: BuiltinPlotScale.Sqrt },
+    scale: { family: 'channel' },
   },
   {
     slot: 'opacity',
     outputType: DataFieldType.Continuous,
-    scale: { family: 'position', type: BuiltinPlotScale.Linear },
+    scale: { family: 'channel' },
   },
   { slot: 'shape' },
 ];

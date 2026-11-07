@@ -10,6 +10,15 @@ const thresholdBreakpoints = {
 } as const;
 
 const buildDiscretizationScale = (values: typeof previewControlContract.canonicalValues): IRPlotScale => {
+  const count = values.scaleType === 'threshold' ? 4 : values.count;
+  const output =
+    values.target === 'color'
+      ? { scheme: values.scheme }
+      : {
+          range: Array.from({ length: count }, (_, index) =>
+            values.target === 'size' ? 4 + (index / (count - 1)) * 12 : 0.2 + (index / (count - 1)) * 0.8,
+          ),
+        };
   if (values.scaleType === 'threshold') {
     const preset = values.thresholdPreset === 'service' ? 'service' : 'risk';
 
@@ -17,7 +26,7 @@ const buildDiscretizationScale = (values: typeof previewControlContract.canonica
       type: 'threshold',
       name: 'color',
       breakpoints: [...thresholdBreakpoints[preset]],
-      scheme: values.scheme,
+      ...output,
     };
   }
 
@@ -26,7 +35,7 @@ const buildDiscretizationScale = (values: typeof previewControlContract.canonica
       type: 'quantile',
       name: 'color',
       count: values.count,
-      scheme: values.scheme,
+      ...output,
     };
   }
 
@@ -35,12 +44,13 @@ const buildDiscretizationScale = (values: typeof previewControlContract.canonica
     name: 'color',
     domain: [0, 100],
     count: values.count,
-    scheme: values.scheme,
+    ...output,
   };
 };
 
 /** 图形参数 */
 export type ScaleDiscretizationPreviewValues = {
+  target: 'color' | 'size' | 'opacity';
   scaleType: 'quantize' | 'threshold' | 'quantile';
   count: number;
   thresholdPreset: 'risk' | 'service';
@@ -59,14 +69,19 @@ export const ScaleDiscretizationPreview = (values: ScaleDiscretizationPreviewVal
       {
         type: 'point',
 
-        encodings: { color: { field: 'value', scale: 'color' }, position: { x: { field: 'x' }, y: { field: 'y' } } },
+        encodings: {
+          ...(values.target === 'opacity'
+            ? { opacity: { overall: { field: 'value', scale: 'color' } } }
+            : { [values.target]: { field: 'value', scale: 'color' } }),
+          position: { x: { field: 'x' }, y: { field: 'y' } },
+        },
         properties: { size: 7 },
       },
     ],
     guides: [
       { type: 'axis', dimension: 'x' },
       { type: 'axis', dimension: 'y', grid: true },
-      { type: 'legend', channel: 'color', scale: 'color', position: 'bottom' },
+      { type: 'legend', channel: values.target, scale: 'color', position: 'bottom' },
     ],
   };
 

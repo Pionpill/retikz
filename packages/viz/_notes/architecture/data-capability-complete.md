@@ -26,6 +26,8 @@ Data Complete 不代表内置所有 ETL、数据库连接器或高频流式计�
 
 ## 3. 能力面
 
+通用值映射的归属方向已确认，公开契约草案见 [ADR-006](../decisions/data/v0/v0.2/006-scale-mapping.md)：Data 拟拥有 scale operation、Definition、registry 与数学解析，作为与 transform 并列的能力供 Plot/Table 消费。宿主仍拥有视觉选型、绑定作用域、主题、布局与 Guide；Data 不依赖 Core、Plot 或 Table。这修订本文对 scale 的整体排除，仅保留对宿主视觉尺度协调的排除；不表示当前代码已迁移。
+
 Data 当前统一拥有十二种内置行数据变换，包括堆叠、分桶、归一化、区间派生、关联、数据单位扰动与统计采样；绘图用途与默认输出字段名不使这些纯数据算法转归 Plot。具体所有权见 [Data v0.2 ADR-001](../decisions/data/v0/v0.2/001-shared-transforms.md)。
 
 | 能力面                   | 目标                                                             | 不属于 data 的情况                        |

@@ -1,0 +1,50 @@
+---
+title: 比例尺
+description: 将数值、时间或类别映射为输出值，供绘图、表格或其他消费者复用。
+---
+
+比例尺建立输入值与输出值之间的对应关系。例如，把评分 `0–100` 映射到 `0–1`，输入 `75` 得到 `0.75`。输入范围称为 **domain（定义域）**，输出范围称为 **range（值域）**。
+
+`@retikz/data` 提供数学映射；调用方决定 `0.75` 表示位置、透明度还是其他数值。它可以独立使用，不需要创建图元，也不要求先执行数据变换。
+
+## 职责一览
+
+| 章节                                         | 职责                     | 何时阅读                   |
+| -------------------------------------------- | ------------------------ | -------------------------- |
+| [内置比例尺](/viz/data/scale/builtins)       | 选择连续、分类或分档规则 | 使用现有映射算法           |
+| [自定义比例尺](/viz/data/scale/custom-scale) | 定义、注册并引用新的映射 | 内置算法无法表达计算规则   |
+| [API 参考](/viz/data/scale/reference)        | 查询公开声明和运行时能力 | 核对参数、返回值和扩展契约 |
+
+## 从声明到求值
+
+声明选择算法并提供 domain、range 和专有参数；运行时传入参与计算的样本，得到可重复求值的映射。
+
+```ts
+import { resolveScale } from '@retikz/data';
+
+const scale = resolveScale({ type: 'linear', domain: [0, 100], range: [0, 1] }, { values: [25, 75] });
+
+scale.map(75); // 0.75
+```
+
+`type` 选择映射规则。显式 domain 优先；未提供时，内置映射按样本及自身规则确定输入域。range 可以由声明提供，也可以由调用方通过运行时上下文提供。专有参数放在 `params`，例如幂映射的 `params.exponent`。
+
+## 声明与运行时
+
+不需要样本时，可以省略运行时参数，直接调用 `resolveScale(operation)`。只需要提供 range 或插值器时，也无需额外填写 `values: []`。省略 values 与传入空数组等价，不改变各算法的空样本规则；自定义定义的回调仍会收到数组。
+
+声明只有 JSON 值，可以持久化。自定义定义中的函数、registry 和解析后的映射留在运行时。读取外部 JSON 时使用 `parseScaleOperation`，它校验公共结构与对应定义的参数；已经类型化的内部调用使用 `resolveScale`，不把完整对象重新解析一遍。
+
+结果包含 `map` 和实际 domain/range。算法还可直接提供 `ticks`、`invert`、`rebuild`、`bandwidth`、`step` 和 `thresholds` 等数学操作或结果。分类列表直接读取 domain，分档输出直接读取 range。坐标轴标签、图例形式、属性适用性和自动留白由消费方决定，Data 不定义这些消费协议。
+
+Data 不选择图表的默认通道映射，也不生成坐标轴、图例或布局。Plot 的命名、绑定与视觉策略见[Plot 比例尺](/viz/plot/scale)。Table 同样可以消费数学映射，并保留自己的单元格规则。
+
+## 章节内容
+
+<LinkedSections
+  items={[
+    { title: '内置比例尺', description: '比较连续、分类和分档算法，完成基本求值。', url: '/viz/data/scale/builtins' },
+    { title: '自定义比例尺', description: '使用 params 定义并注册新的计算规则。', url: '/viz/data/scale/custom-scale' },
+    { title: 'API 参考', description: '查看公开类型、函数与能力声明。', url: '/viz/data/scale/reference' },
+  ]}
+/>

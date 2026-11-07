@@ -1,9 +1,23 @@
 ---
-title: 颜色比例尺
-description: 颜色比例尺把分类、连续和带中点的数据映射成离散颜色、连续色带或分档颜色。
+title: 图元属性映射
+description: 将比例尺绑定到颜色、尺寸、透明度、描边宽度和形状，由通道确定默认映射与输出约束。
 ---
 
-颜色比例尺回答「这个数据值应该用什么颜色」。scale 负责建立数据到颜色的映射，`Legend` 再把这套映射解释给读者；添加图例不会改变 scale 类型或配色。
+比例尺可以映射多个图元属性。映射算法由 Data 提供，Plot 通道决定默认配置、输出是否合法，以及图例怎样解释结果。颜色是其中一种应用。
+
+固定属性直接使用目标值；字段字符串采用通道默认处理；`{ field, scale }` 引用命名映射。透明度沿用 `encodings.opacity.overall / fill / stroke`，不是单一的 `opacity` 字段绑定。
+
+| 属性                              | 字段绑定的默认处理                      | 显式映射的输出约束 |
+| --------------------------------- | --------------------------------------- | ------------------ |
+| `color / fill / stroke`           | 分类用 ordinal，数值与时间用 sequential | 合法颜色           |
+| `size`                            | sqrt，输出半径，默认范围 2–20           | 有限非负数         |
+| `strokeWidth`                     | linear，默认范围 0.5–4                  | 有限非负数         |
+| `opacity.overall / fill / stroke` | linear，默认范围 0.2–1                  | 0–1 内的有限数     |
+| `shape`                           | 分类到主题形状序列                      | 支持的形状名称     |
+
+同一算法可有不同输出，例如 threshold 的 `range: [4, 8, 12]` 用于尺寸，颜色范围用于填充。内置与自定义数学定义都经过通道的输出检查；数值输出不自动获得位置通道的许可。文本、排序和对象属性也不会因为允许字段绑定就自动支持比例尺。
+
+下面先展示已有的颜色映射；数值映射与自定义消费的完整接入见[自定义通道](/viz/plot/channel/custom-channel)。
 
 | 数据与任务           | 推荐 scale                            | 图例形态 |
 | -------------------- | ------------------------------------- | -------- |
@@ -17,6 +31,7 @@ description: 颜色比例尺把分类、连续和带中点的数据映射成离�
 把 `color` 绑定到分类字段，`<Plot>` 会自动派生 `ordinal`，每个类别取一个离散颜色。分类 color 也会在没有显式 series 时把 path 数据拆成多个系列。
 
 <ComponentPreview
+  mode="showcase"
   size="lg"
   files={['scale-ordinal', 'scale-ordinal.preview.tsx', 'scale-ordinal.data.ts']}
   caption="切换离散配色并显示或隐藏图例，分别观察颜色映射与图例解释承担的职责。"
@@ -30,6 +45,7 @@ description: 颜色比例尺把分类、连续和带中点的数据映射成离�
 `sequential` 用一条由低到高的色带表达连续量；`diverging` 用三段 domain 表达低端、中点和高端，适合盈亏、偏差、温差等围绕基准值展开的数据。
 
 <ComponentPreview
+  mode="showcase"
   size="lg"
   files={['scale-continuous', 'scale-continuous.preview.tsx', 'scale-continuous.data.ts']}
   caption="切换 sequential 与 diverging、选择配色并移动中点；同一份 -50 到 50 数据会立即显示映射差异。"
@@ -56,6 +72,7 @@ description: 颜色比例尺把分类、连续和带中点的数据映射成离�
 | `quantile`  | 根据数据分位切档，每档样本数近似相等 | 偏斜分布、减弱离群值影响 |
 
 <ComponentPreview
+  mode="showcase"
   size="lg"
   files={['scale-discretization', 'scale-discretization.preview.tsx', 'scale-discretization.data.ts']}
   caption="切换 quantize、threshold 与 quantile；调整档数、业务阈值和配色，比较同一份偏斜数据如何落入不同色档。"
@@ -67,7 +84,7 @@ description: 颜色比例尺把分类、连续和带中点的数据映射成离�
 - `threshold.breakpoints` 必须严格升序，档数等于断点数加一；显式 `range` 的长度也必须匹配
 - `quantize` / `quantile` 的 `count` 默认是 `5`；只给 `range` 时，以 `range` 长度作为档数
 - 同时提供 `count` 与 `range` 时，两者必须一致
-- `quantile` 的边界由实际数据计算，不使用显式数值 domain
+- `quantile` 的边界由实际数据计算，不使用显式数值 domain；没有有效样本时不生成分档图例及其标题
 
 ## 技术原理
 
@@ -80,7 +97,7 @@ React 的自动入口覆盖两条常用路径：
 
 自动派生和显式配置只是两个入口：它们最终都由同一套 scale definition 与 resolver 解析，不会形成两套颜色语义。
 
-<ComponentPreview files="scale-color-flow" size="xs" hideCode />
+<ComponentPreview mode="showcase" files="scale-color-flow" size="xs" hideCode />
 
 resolver 按 scale 类型解析 domain、分档边界与 scheme / range，得到包含颜色映射和必要边界信息的 resolved scale。mark 用它给 datum 着色，Legend 读取同一个结果生成色带或分档色块，因此添加图例不会改变映射本身。
 
@@ -94,15 +111,15 @@ resolver 按 scale 类型解析 domain、分档边界与 scheme / range，得到
     },
     {
       label: 'ordinal、sequential 与 diverging 的解析',
-      path: 'packages/viz/plot/src/providers/scale/features/color.ts',
-      startLine: 349,
-      endLine: 422,
+      path: 'packages/viz/plot/src/resolve/scale/mapping.ts',
+      startLine: 188,
+      endLine: 246,
     },
     {
       label: 'quantize、threshold 与 quantile 的解析',
-      path: 'packages/viz/plot/src/providers/scale/features/color.ts',
-      startLine: 425,
-      endLine: 481,
+      path: 'packages/viz/data/src/scale/builtins.ts',
+      startLine: 394,
+      endLine: 437,
     },
   ]}
 />
@@ -169,7 +186,7 @@ resolver 按 scale 类型解析 domain、分档边界与 scheme / range，得到
     {
       title: '自定义比例尺',
       description: '注册领域专用的 scale definition',
-      url: '/viz/plot/scale/custom-scale',
+      url: '/viz/plot/channel/custom-channel',
     },
   ]}
 />
