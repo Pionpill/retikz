@@ -30,7 +30,6 @@ export const releaseGroups = {
     packages: [
       '@retikz/foundation',
       '@retikz/math',
-      '@retikz/runtime',
       '@retikz/core',
       '@retikz/reconciler',
       '@retikz/inspect',
