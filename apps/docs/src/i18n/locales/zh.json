@@ -134,7 +134,7 @@
     "pkgCoreCompilation": "编译流程",
     "pkgCoreResolution": "语义解析",
     "pkgCoreCoordinates": "坐标解析",
-    "pkgCoreNodeCompilation": "节点编译",
+    "pkgCoreNodeCompilation": "Node 编译",
     "pkgCorePathCompilation": "路径编译",
     "pkgCoreCompositeCompilation": "复合编译",
     "pkgCoreCompilationOutput": "编译产物",

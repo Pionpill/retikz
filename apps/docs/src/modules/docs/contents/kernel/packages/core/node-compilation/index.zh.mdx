@@ -1,160 +1,99 @@
 ---
-title: 节点编译
-description: 追踪 Core 如何把文字度量和形状约束转为节点尺寸、正文基线、标签位置与引用几何。
+title: Node 编译
+description: 追踪节点从确定语义到文字度量、形状布局、连接几何和后端中立图元的过程
 ---
 
-[语义解析](/kernel/packages/core/resolution) 已经确定节点采用的字体、形状与样式，[坐标解析](/kernel/packages/core/coordinates) 说明它应放在哪里。本页接着回答：文字需要多大空间，形状如何包住正文，标签和连线又依据哪份几何定位？
-
-阅读前可先了解 [Node 基础用法](/kernel/components/node/usage)与[文字写法](/kernel/components/node/text)。本页从已解析的 `CanonicalNode` 开始，到 `CompiledNode` 交给绘制与引用消费为止；不展开浏览器字体加载、TeX 引擎和路径裁剪算法。
+节点声明同时包含正文、形状、定位和样式意图。`resolveNode` 先确定这些意图，`compileNode` 再完成布局与绘制。Reconciler 提供测量、引用、资源和提案上下文，并把结果接回名称环境与子树输出。
 
 ## 整体流程
 
-节点布局先确定内容需要的空间，再计算形状尺寸，最后放置正文和附属标签。`CanonicalNode` 包含有效节点配置以及已绑定的形状、连接面定义；`CompiledNode` 保存最终几何、排版和绘制结果。`CompiledNodeLayout` 是测量与定位的阶段结果，只保存计算结果，可作为准备好的布局传入编译；几何查询所需绑定由 `CompiledNode` 顶层携带。
+CanonicalNode 保存有效配置与能力绑定；CompiledNodeLayout 保存测量和定位结果；CompiledNode 将当前 Shape / Boundary 绑定与 layout、emit 产物关联。查询几何按需组合，绘制消费 emit.overall，不需要复制一份可持久化的“完整节点模型”。
 
-节点输入的缩放在 `resolveNode` 中完成：内外边距和最小尺寸按对应轴缩放，固定宽度与最大文字宽度按横轴缩放，字号、行高和形状参数也在解析阶段处理。`CanonicalNode` 保存这些有效值，不再保留待应用的 `scale`；编译阶段直接使用它们。父布局在运行时提供的宽度提案不再乘节点缩放，描边宽度与标签距离保持原有语义。
+<ComponentPreview files="layout-overview" size="lg" hideCode type="flow" />
 
-<ComponentPreview files="layout-overview" size="xs" hideCode type="flow" />
+## 解析后还剩下什么
 
-下面三个节点使用同一句正文。中间收紧文字宽度，折行增加了高度；右侧只增加外侧标签，节点形状的尺寸与中间相同。
+语义解析已完成继承、默认、颜色与阴影展开，并把 Shape、Boundary 和参数绑定到定义。节点 scale 也已折入相应尺寸、字号与参数；编译不再重复乘一次。位置引用仍可能依赖当前几何，文字尺寸也取决于测量服务，因此 Canonical 不等于最终布局。
+
+下面是贯穿示例中 A 的完整声明片段。普通文字 A 能放入给定最小尺寸；最终视觉矩形为 60 × 40，中心 [0, 0]，默认无额外旋转。
+
+```ts
+const node = {
+  type: 'node',
+  id: 'A',
+  position: [0, 0],
+  text: 'A',
+  layout: { minimumSize: { width: 60, height: 40 }, padding: 0, margin: 0 },
+} satisfies import('@retikz/core').IRNode;
+```
+
+## 内容测量与形状约束
+
+Core 调用注入的 measureText，不读取 DOM。宽度、高度以及 ascent / descent 由宿主提供；缺少上下基线指标时，各取高度的一半。Reconciler 未收到宿主测量器时使用近似估算，同次执行的测量复用也由它负责。
+
+普通文本保留显式换行，按预算折成物理行。混排片段在同一行共享基线；不可拆的公式超宽时可能溢出。正文盒加入 padding 后，交给 Shape 的 computeCircumscribedGeometry；最小尺寸和固定视觉宽度再参与最终尺寸选择。
+
+下面三个节点使用同一句正文：收紧文字宽度会增加行数；增加外侧标签则不改变主体尺寸。
 
 <ComponentPreview files="layout-example" size="md" hideCode type="illustration" />
 
-图中的正文先被拆成实际显示的行，这些行称为**物理行**。正文范围确定后才加入内边距并交给形状计算。标签需要形状的位置才能放置，因此不反过来撑大节点形状。
+| 约束         | 所属范围                             |
+| ------------ | ------------------------------------ |
+| maxTextWidth | 正文折行预算，不保证形状恰好等宽     |
+| minimumSize  | 视觉外框下限，不压缩正文             |
+| width        | 固定视觉宽度，仍放不下时失败         |
+| 父级宽度提案 | 布局占位预算，需要考虑 margin 与旋转 |
 
-<SourceLinks
-  sources={[
-    { label: 'layoutNode：节点布局入口', path: 'packages/kernel/core/src/compile/node/layout.ts' },
-    { label: 'CanonicalNode：布局输入', path: 'packages/kernel/core/src/resolve/node/types.ts' },
-    {
-      label: 'CompiledNode：最终几何、排版与样式',
-      path: 'packages/kernel/core/src/compile/node/types.ts',
-      startLine: 42,
-    },
-  ]}
-/>
+`measureNodeBody` 在正文宽度与自定义形状尺寸之间执行有界反馈。父级提案不是保证能满足的硬裁剪；父级必须消费实际返回的布局贡献。固定 width 的语义与提案不同，不能用二者互相替换。
 
-## 内容测量
+## 正文盒、视觉外框与布局占位
 
-Core 通过注入的 `measureText` 取得度量，不直接读取 DOM。测量输入是文字和字体，输出包含宽度、高度，以及可选的 `ascent`、`descent`：它们分别表示基线上方和下方的高度。没有提供这两项时，Core 各取总高度的一半。未注入测量器时采用平均字宽估算，精度取决于测量提供方。
-
-文本先保留显式换行，再按宽度限制优先寻找词边界；过长单词按完整字素拆分。正文宽度取最宽物理行，高度为各行槽之和。每个行槽取 `lineHeight` 与实际 ascent + descent 的较大值，多余留白平均分布在基线上下。
-
-公式或显式 `segments` 混排使用相同折行规则，把同一物理行的片段对齐到共同基线。行宽累加，基线上下分别取所需的最大空间，行槽高度至少容纳这些片段。公式本身不可拆分，超宽时独占一行并允许溢出。
-
-Reconciler 在同次编译内按文字与字体参数共享度量，使不同节点和多次试算复用测量。节点排版只调用传入的测量器，不维护局部缓存；测量缓存不跨全量编译或增量批次保留，宽度变化后仍需重新排版，详见[复合编译的查询求值与缓存](/kernel/packages/core/composite-compilation#查询求值与缓存)。
-
-<SourceLinks
-  sources={[
-    { label: '缺省文字估算器', path: 'packages/kernel/core/src/compile/text/helpers.ts' },
-    { label: 'TextMetrics', path: 'packages/kernel/core/src/contract/text.ts' },
-    { label: 'resolveTextMetrics', path: 'packages/kernel/core/src/resolve/text/metrics.ts' },
-    { label: '正文分支与物理行汇总', path: 'packages/kernel/core/src/compile/node/content/layout.ts' },
-    { label: '普通文本折行', path: 'packages/kernel/core/src/compile/text/layout.ts' },
-    { label: '混排行的度量与基线对齐', path: 'packages/kernel/core/src/compile/text/layout.ts' },
-  ]}
-/>
-
-## 节点尺寸
-
-这里需要区分三层范围：
-
-- **正文盒**：排版完成后的文字宽度与行槽总高度。
-- **视觉形状**：形状包住“正文盒 + padding”后，结合尺寸约束得到的轮廓。
-- **布局占位**：在节点外框基础上考虑 `margin` 与旋转，供父级布局分配空间。
-
-形状的 `computeCircumscribedGeometry` 接收内容半宽、半高，返回能够容纳它的形状外框。矩形通常直接包住内容；圆形需要更大的直径才能容纳同一个矩形内容区。
-
-下图假定正文盒已经测得为 `40 × 24`，使用无旋转的矩形、四边 `padding = 8`、`minimumSize = { width: 80, height: 48 }` 和 `margin = 6`，且没有固定 `width`。为便于观察，图形等比放大；灰色点线表示计算范围，不是额外绘制的节点边框。
+以下图为例，正文 40 × 24、padding 8 先得到 56 × 40；minimumSize 80 × 48 再扩大视觉外框；margin 6 使布局占位成为 92 × 60。margin 不会把可见矩形也画大，标签也不反向撑大形状。
 
 <ComponentPreview files="layout-boxes" size="lg" hideCode type="illustration" />
 
-加入 padding 后是 `56 × 40`；最小尺寸再把视觉外框扩大为 `80 × 48`；margin 使布局占位达到 `92 × 60`。这三个尺寸并不互相替代：margin 不会把可见矩形也画大。
+不对称 padding 和形状 offset 可能使正文中心与视觉外框中心不同。布局分别保存它们；自身锚点定位还需要先做临时布局，求出自身锚点后再整体平移。
 
-宽度约束的作用也不同：
+## 基线、标签与连接几何
 
-| 约束           | 影响                                                         |
-| -------------- | ------------------------------------------------------------ |
-| `maxTextWidth` | 限制普通正文的折行宽度，不保证最终形状恰好等宽               |
-| `minimumSize`  | 为形状外框设置尺寸下限，不压缩正文                           |
-| `width`        | 固定视觉外框宽度；普通正文可尝试重新折行，仍放不下时编译失败 |
-| 父级宽度提案   | 约束布局占位；计算会考虑形状、margin 与旋转                  |
-
-固定 `width` 决定最终视觉宽度，水平的 `minimumSize` 不再把它扩大；高度仍按内容与最小高度确定。父级提案与固定宽度不是同一份契约：提案不能保证每个不可断文本都能缩进目标范围，父级仍需处理实际返回的占位。提案与重放的完整过程见[复合编译](/kernel/packages/core/composite-compilation)。
-
-不对称 padding 还会让视觉外框中心与正文中心不同。布局分别保存两者，避免绘制正文时误用外框中心。
-
-<SourceLinks
-  sources={[
-    {
-      label: '内容预算与尺寸约束',
-      path: 'packages/kernel/core/src/compile/node/layout.ts',
-    },
-    { label: '形状外接几何计算', path: 'packages/kernel/core/src/compile/node/shape/layout.ts' },
-    { label: '形状定义的包围契约', path: 'packages/kernel/core/src/contract/node/shape.ts' },
-  ]}
-/>
-
-## 基线与标签
-
-基线是安排字形的垂直参考线，不是文字盒的中心线。对普通正文，Core 根据第一条物理行的度量，把字形上下的剩余行高均分，再确定首行基线；后续基线按 `lineHeight` 递增。混排则按每一行的片段高度单独确定基线。
-
-例如，行高为 `24`，规范化后的 `ascent = 14`、`descent = 4`，则上下各留 `3`，基线距行槽顶部为 `17`。下图将这组度量放大展示，蓝线是基线，灰色范围是字形度量盒。
+行槽必须容纳实际 ascent + descent。行高 24、ascent 14、descent 4 时，上下各留 3，基线距槽顶 17。绘制沿用布局确定的基线，不重新猜测文字中心。
 
 <ComponentPreview files="layout-baseline" size="lg" hideCode type="illustration" />
 
-附属标签独立测量，再根据可见形状上的附着点、附着方向、标签旋转和 `distance` 放置。`distance` 是形状边缘与标签视觉盒之间的净距。开篇右侧节点说明了结果：label 不改变正文或形状尺寸，但自动视框仍会包含它，避免图像导出时裁掉标签。
-
-如果节点用自身锚点对齐目标，需要先完成临时布局才能知道自身锚点在哪里，然后整体平移。标签保存相对节点的偏移，会随节点一起移动；定位时序详见[坐标解析](/kernel/packages/core/coordinates)。
-
-<SourceLinks
-  sources={[
-    { label: '正文行高与基线偏移', path: 'packages/kernel/core/src/compile/node/content/layout.ts' },
-    { label: '标签测量与放置', path: 'packages/kernel/core/src/compile/node/label/layout.ts' },
-    { label: '标签净距与视觉范围', path: 'packages/kernel/core/src/compile/node/label/layout.ts' },
-    { label: '绘制与观测共用的物理行基线', path: 'packages/kernel/core/src/compile/node/content/emit.ts' },
-  ]}
-/>
-
-## 连接边界
-
-完成节点布局不意味着每条连线都沿可见轮廓结束。`shape` 决定画出来的形状，`boundary` 决定自动连线与标准边界锚点使用的连接面；最终解析为 `'shape'` 时才直接沿用视觉形状。
-
-下图保留同一个圆形及连线方向，只改变连接面和 margin。灰色点线画出辅助连接范围，比较箭头的终点即可看到差别。
+标签独立测量，依靠形状上的附着点和 direction / distance 等配置放置；最终视框包含标签，但连线不会自动连到标签边缘。Shape 是视觉轮廓，Boundary 是自动连接所用表面，二者可分别选择。
 
 <ComponentPreview files="layout-boundaries" size="lg" hideCode type="illustration" />
 
-标准方位和数字角度锚点使用连接面并考虑 margin；形状专属锚点及 `{ side, fraction }` 边上比例点则使用视觉形状。标签的外伸也不会把连线终点推到标签边缘。
-
-同一份布局被多次引用时，Core 会复用已计算的连接包络和锚点。它们服务于当前布局几何，不是另一份可持久化节点配置；具体引用规则见 [Node 实现原理](/kernel/components/node/mechanism#视觉形状与连接几何)。
-
-节点布局只接收当前节点的 `boundaryState`，不创建或持有多节点 store。Reconciler 在布局前通过 `boundaryStore.getOrCreateState(canon.shape)` 取得状态并设置诊断信息，后续引用继续使用同一形状绑定关联状态。直接调用 Core 时可省略状态：普通定位无需初始化，自身锚点定位只携带 `warn` 与 `irPath`，不隐式创建连接包络缓存。
+标准方位与数字角度锚点使用连接面及 margin；形状专属锚点和边上比例点使用视觉形状。Reconciler 管理 boundaryStore，为当前绑定关联查询状态；Core 的节点阶段不创建跨节点 store。
 
 <SourceLinks
   sources={[
-    { label: '连接面绑定到节点几何', path: 'packages/kernel/core/src/compile/boundary/layout.ts' },
-    { label: '标准锚点与形状锚点分流', path: 'packages/kernel/core/src/compile/boundary/layout.ts' },
-    { label: '单份布局的锚点复用', path: 'packages/kernel/core/src/compile/boundary/store.ts' },
+    { label: '正文排版与基线', path: 'packages/kernel/core/src/compile/node/content/layout.ts' },
+    { label: '标签布局', path: 'packages/kernel/core/src/compile/node/label/layout.ts' },
+    { label: '连接几何与锚点', path: 'packages/kernel/core/src/compile/boundary/layout.ts' },
   ]}
 />
 
+## 图元与查询几何的交接
+
+emitNode 分别处理 shape、content、label，并组装局部图元与边界贡献。文字节点或有旋转的节点使用 GroupPrimitive 统一承载元数据和变换；不能假定一个 Node 恰好对应一个矩形图元。
+
+Reconciler 用 projectNodeGeometry 组合当前能力绑定与布局，按 Scope 变换投影后发布到名称环境；Scene 中的图元仍保留所属空间。prepared 可以提供完整或局部 layout / emit 产物，Core 只补缺项，跨次复用裁决由 Reconciler 完成。
+
 ## 完整实现流程
 
-以下以普通文本节点为主线。左侧是布局阶段，右侧是拿到结果后的消费方；几何查询按需发生，不要求在绘制前预先算出全部锚点。
+<ComponentPreview files="layout-implementation" size="xxl" hideCode type="flow" />
 
-<ComponentPreview files="layout-implementation" size="xl" hideCode type="flow" />
-
-阅读源码时从 `compileNode` 开始。它消费 `CanonicalNode` 和可选的准备结果，由 `layoutNode` 和 `emitNode` 分别消费完整或局部布局、绘制产物并补算缺项，复用条件由 Reconciler 判断。`content/`、`label/`、`shape/` 按产物组织，各自维护 `layout.ts` 和 `emit.ts`，分别处理正文、标签和形状的计算与绘制。节点根目录的 `layout.ts` 协调各产物，在文件内部完成正文宽度与形状尺寸之间的反馈、锚点定位及整体布局；`emit.ts` 组装节点图元与边界。宽度反馈负责最多 32 次有界试算，测量复用由本次编译注入的测量器负责。正文、形状和标签的局部绘制可分别复用，完整输出也可直接命中。最终 `CompiledNode` 保留 `layout`、`emit` 的整体与已知局部产物，调用方可直接选择其中仍有效的部分作为下一次 prepared 输入。顶层 `shape`、`boundary` 携带当前 canon 的绑定，`projectNodeGeometry` 按需组合这些绑定与 `layout.overall.geometry` 供查询使用，`emit.overall` 已包含最终图元与边界。
-
-遍历器随后把几何投影到世界空间，供命名引用查询；直接收集 `compileNode` 返回的 `emit.overall`，不再调用内部绘制阶段。命名空间中的引用几何与 Scene 中的局部图元用途不同，不必把所有绘制坐标提前展开成世界坐标。
+源码先看 resolveNode 和 compileNode 的边界，再进入 measureNodeBody、layoutNode、emitNode。content、shape、label 子目录分别拥有自身 layout / emit；根布局只协调它们。宽度反馈位于 measure.ts，不应从旧版布局入口推断所有计算都在 layout.ts 中。
 
 <SourceLinks
   sources={[
-    { label: '布局结果的数据结构', path: 'packages/kernel/core/src/compile/node/types.ts', startLine: 42 },
-    { label: '节点布局到图元', path: 'packages/kernel/core/src/compile/node/emit.ts' },
-    { label: '正文图元', path: 'packages/kernel/core/src/compile/node/content/emit.ts' },
-    { label: '标签图元与引线', path: 'packages/kernel/core/src/compile/node/label/emit.ts' },
-    { label: '形状提供者输出', path: 'packages/kernel/core/src/compile/node/shape/emit.ts' },
-    { label: '布局、引用注册与绘制的交接', path: 'packages/kernel/reconciler/src/compile/tree/node/visit.ts' },
+    { label: 'CanonicalNode', path: 'packages/kernel/core/src/resolve/node/types.ts' },
+    { label: 'Compilation entry', path: 'packages/kernel/core/src/compile/node/compile.ts' },
+    { label: 'Content budget and shape feedback', path: 'packages/kernel/core/src/compile/node/measure.ts' },
+    { label: 'Node layout', path: 'packages/kernel/core/src/compile/node/layout.ts' },
+    { label: 'Node output', path: 'packages/kernel/core/src/compile/node/emit.ts' },
+    { label: 'Reconciler call site', path: 'packages/kernel/reconciler/src/compile/tree/node/visit.ts' },
   ]}
 />
 
@@ -162,18 +101,13 @@ Reconciler 在同次编译内按文字与字体参数共享度量，使不同节
 
 <LinkedSections
   items={[
+    { title: '语义解析', description: '查看节点编译前确定了哪些语义', url: '/kernel/packages/core/resolution' },
+    { title: '坐标与引用求值', description: '查看定位与边界读取的空间规则', url: '/kernel/packages/core/coordinates' },
+    { title: 'Path 编译', description: '跟踪节点几何怎样被连线消费', url: '/kernel/packages/core/path-compilation' },
     {
-      title: '路径编译',
-      description: '追踪路径目标、几何步骤与图元输出',
-      url: '/kernel/packages/core/path-compilation',
-    },
-    {
-      title: '复合编译',
-      description: '追踪子项查询、隔离试算与结果重放',
+      title: 'Composite 编译',
+      description: '查看父级提案与子项布局协作',
       url: '/kernel/packages/core/composite-compilation',
     },
-    { title: 'Node 基础用法', description: '操作节点尺寸、文字宽度与样式', url: '/kernel/components/node/usage' },
-    { title: 'Node 文字', description: '查看正文、混排和标签的输入写法', url: '/kernel/components/node/text' },
-    { title: 'Node 实现原理', description: '查阅形状与连接面的局部规则', url: '/kernel/components/node/mechanism' },
   ]}
 />
