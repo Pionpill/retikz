@@ -85,7 +85,7 @@ A Composite artifact carries namespace, type, structured occurrence and JSON val
 
 Diagnostics contain warnings that can be committed after successful compilation, including code, message and source data. Unselected probes do not leak warnings. Optional provenance links primitives to compilation sources and is not required by the renderer. Transaction rollback belongs to Reconciler rather than an individual Core emit function.
 
-Readonly snapshot, result and array shells do not imply that all Scene data is recursively frozen at runtime. Consumers respect result ownership rather than mutating published output as a substitute for updating declarations.
+Readonly snapshot, result and artifacts / diagnostics array shells do not imply that all Scene data is recursively frozen at runtime. Consumers respect result ownership rather than mutating published output as a substitute for updating declarations.
 
 <SourceLinks
   sources={[

@@ -7,7 +7,7 @@ import { logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
 
 import { outputImplementationI18n } from './output-implementation.i18n';
 
-/** 完成延迟路径、边界与稳定排序流程图的语言 */
+/** 以根 IR 启动子树编译与结果收集流程图的语言 */
 export type OutputImplementationProps = { lang?: Lang };
 
 /** 展示本页追踪的阶段、产物与必要输入 */
@@ -15,12 +15,12 @@ const OutputImplementation: FC<OutputImplementationProps> = props => {
   const { lang = 'zh' } = props;
   const text = outputImplementationI18n[lang];
   const stages = [
-    { id: 'subtree', name: 'SubtreeCompiler.run', state: false },
     { id: 'manager', name: 'CompileManager.compileScene', state: false },
+    { id: 'subtree', name: 'SubtreeCompiler.run', state: false },
     { id: 'assemble', name: 'assembleSceneCompilationSnapshot', state: false },
     { id: 'publish', name: 'SceneReconciler', state: true },
   ] as const;
-  const inputs = [{ id: 'options', name: 'IRScene + options', target: 'assemble' }] as const;
+  const inputs = [{ id: 'options', name: 'IRScene + options', target: 'manager' }] as const;
   return (
     <PreviewFlowDiagram {...logicFigureGraphProps()} style={{ maxWidth: '100%', height: 'auto' }}>
       <FlowLayout
@@ -28,9 +28,9 @@ const OutputImplementation: FC<OutputImplementationProps> = props => {
         kind="grid"
         gap={{ row: 20, column: 28 }}
         placements={[
+          ['options', 'manager'],
           [null, 'subtree'],
-          [null, 'manager'],
-          ['options', 'assemble'],
+          [null, 'assemble'],
           [null, 'publish'],
         ]}
       >

@@ -3,7 +3,7 @@ export const compositeImplementationI18n = {
   zh: {
     resolve: '绑定完整键，解析领域 Schema',
     context: '创建当前回调拥有的窄服务',
-    call: '调用 Definition.compile',
+    call: 'Reconciler 调用领域回调',
     preflight: '核对句柄、重放、产物与输出',
     commit: '编译 IR 或提交选中 replay',
     core: 'proposal / probe / result / handle',

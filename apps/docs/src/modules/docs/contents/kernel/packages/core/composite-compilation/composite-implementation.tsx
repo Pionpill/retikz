@@ -17,7 +17,7 @@ const CompositeImplementation: FC<CompositeImplementationProps> = props => {
   const stages = [
     { id: 'resolve', name: 'bindComposite → resolveComposite', state: false },
     { id: 'context', name: 'createCompositeCallbackContext', state: false },
-    { id: 'call', name: 'CompositeCompiler.compile', state: false },
+    { id: 'call', name: 'Definition.compile', state: false },
     { id: 'preflight', name: 'preflightCompositeOutputs', state: false },
     { id: 'commit', name: 'compileCompositeOutput', state: true },
   ] as const;

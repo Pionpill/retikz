@@ -80,7 +80,7 @@ const shiftedNode = defineComposite({
 
 ## 领域产物与失败边界
 
-有 artifact 时，Definition 必须声明 artifactSchema。Reconciler 校验并冻结 JSON 产物，和最终绘图分别返回；领域数据不应编码成隐藏图元让调用者反向读取。allocationBounds 和 alignmentGuides 也由输出契约明确提供，不替代 Scene 的视觉边界。
+有 artifact 时，Definition 必须声明 artifactSchema。当前 Reconciler 检查 artifactSchema 已声明，并检查产物的 JSON 可序列化形态后冻结；它不会调用 artifactSchema.parse 再校验值。产物和最终绘图分别返回；领域数据不应编码成隐藏图元让调用者反向读取。allocationBounds 和 alignmentGuides 也由输出契约明确提供，不替代 Scene 的视觉边界。
 
 普通编译遇到未注册 Composite 会警告并跳过；隔离试算中则形成可处理的失败。超过展开深度、返回不合法数据、跨回调句柄或重复 replay 属于各自的契约 / 执行失败，不能靠静默降级掩盖。
 

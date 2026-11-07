@@ -31,7 +31,7 @@ This separate comparison uses circles: the left path connects center coordinates
 
 ## Semantic Resolution and Target Binding
 
-`resolvePath` selects a Path Definition by kind, defaulting to stroke. Its full Schema parses the declaration before effective inheritance, style, text and shared configuration are determined. PathResolution retains canon, the definition and required provider bindings; it is not yet a command list.
+`resolvePath` first merges inheritance and processes contextual colors, then selects a Path Definition by kind and parses the effective input through its full Schema. An omitted kind selects stroke. Resolution then completes the remaining Canonical fields, text, resources and capability bindings. PathResolution retains canon, the definition and required provider bindings; it is not yet a command list.
 
 `bindPathTargets` reads local points and world references under the current Scope chain, preserving geometry and boundary information. Relative and accumulating-relative targets update their bases differently. Expressions after axis-aligned or smooth steps may need the geometry cursor and cannot all be expanded during binding.
 

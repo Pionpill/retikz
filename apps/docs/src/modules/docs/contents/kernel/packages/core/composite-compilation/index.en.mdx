@@ -80,7 +80,7 @@ Domain capabilities requiring functions or host objects use runtime input bindin
 
 ## Artifacts and Failure Boundaries
 
-A Definition returning an artifact must declare artifactSchema. Reconciler validates and freezes JSON artifacts separately from drawing. Domain data should not be hidden in primitives for consumers to reverse-engineer. Explicit allocationBounds and alignmentGuides also have their own output contracts rather than replacing visual bounds.
+A Definition returning an artifact must declare artifactSchema. Reconciler currently checks that artifactSchema exists, then checks JSON serializability and freezes the value; it does not call artifactSchema.parse to validate the value. Artifacts are delivered separately from drawing. Domain data should not be hidden in primitives for consumers to reverse-engineer. Explicit allocationBounds and alignmentGuides also have their own output contracts rather than replacing visual bounds.
 
 An unregistered Composite warns and is skipped in ordinary compilation; isolated probing returns a handleable failure. Excess expansion depth, invalid output, cross-callback handles and duplicate replay follow their contract or execution failure rules rather than silent fallback.
 

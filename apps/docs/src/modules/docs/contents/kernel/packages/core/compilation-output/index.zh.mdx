@@ -85,7 +85,7 @@ Composite artifact 保存 namespace、type、结构化 occurrence 和 JSON value
 
 diagnostics 保存本次成功编译可提交的警告，含 code、message 及来源信息；未选中试算的 warning 不应泄漏。按需捕获的 provenance 用于把图元关联回编译来源，不是 renderer 的必需输入。输出事务失败时如何回滚属于 Reconciler，不由 Core 在某个 emit 函数内处理。
 
-快照、结果和数组的只读外壳不意味着整棵 Scene 在运行时递归冻结。消费者应遵守结果所有权，不能修改已发布快照来替代一次声明更新。
+快照、结果及 artifacts / diagnostics 数组的只读外壳不意味着整棵 Scene 在运行时递归冻结。消费者应遵守结果所有权，不能修改已发布快照来替代一次声明更新。
 
 <SourceLinks
   sources={[

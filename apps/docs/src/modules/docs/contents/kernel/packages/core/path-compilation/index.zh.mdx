@@ -31,7 +31,7 @@ const path = {
 
 ## 语义解析与目标绑定
 
-`resolvePath` 按 kind 查找 Path Definition；省略 kind 选择 stroke。定义的完整 Schema 解析路径声明，随后确定继承、样式、文本与共享配置。PathResolution 同时保留 canon、定义及必要的 provider 绑定；它还不是最终命令。
+`resolvePath` 先合并继承并处理上下文颜色，再按 kind 选择 Path Definition，用其完整 Schema 解析有效输入；省略 kind 时选择 stroke。之后继续补齐其余 Canonical 字段、文本、资源与能力绑定。PathResolution 同时保留 canon、定义及必要的 provider 绑定；它还不是最终命令。
 
 `bindPathTargets` 使用当前 Scope 链读取位置与世界参考点，记录目标的几何和连接面。普通相对目标和累积相对目标采用不同基点更新规则；轴向线或平滑步骤后的表达可能要留给几何游标，不能一律在绑定阶段展开。
 
