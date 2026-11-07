@@ -1,23 +1,17 @@
-import type { Lang } from '@/i18n';
-
-/** 复合编译流程文案 */
-export const compositeOverviewI18n: Record<Lang, { stages: Array<string>; compileGroup: string }> = {
+/** Core 按 namespace / type 绑定并解析流程图的双语文案 */
+export const compositeOverviewI18n = {
   zh: {
-    compileGroup: '按需试算与放置',
-    stages: [
-      '绑定复合定义\n校验父项输入',
-      '试算子布局\n保留候选结果',
-      '选择并放置\n返回输出子项',
-      '提交到 Scene\n图元、引用与资源',
-    ],
+    bind: 'Core 按 namespace / type 绑定并解析',
+    callback: '传入有效主题、提案与子布局服务',
+    children: '输出预检后继续普通实体编译',
+    output: '图元归 Scene，领域数据独立返回',
+    probe: 'measureChild / layoutChild / query',
   },
   en: {
-    compileGroup: 'Optional layout',
-    stages: [
-      'Bind Definition\nValidate parent input',
-      'Probe children\nRetain candidates',
-      'Select and place\nReturn output children',
-      'Commit to Scene\nPrimitives, references, resources',
-    ],
+    bind: 'Core binds and parses the domain input',
+    callback: 'Supply theme, proposal and child services',
+    children: 'Preflight and process selected output',
+    output: 'Drawing and domain data stay separate',
+    probe: 'measureChild / layoutChild / query',
   },
 };

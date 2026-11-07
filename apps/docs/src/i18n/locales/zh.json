@@ -136,7 +136,7 @@
     "pkgCoreCoordinates": "坐标与引用求值",
     "pkgCoreNodeCompilation": "Node 编译",
     "pkgCorePathCompilation": "Path 编译",
-    "pkgCoreCompositeCompilation": "复合编译",
+    "pkgCoreCompositeCompilation": "Composite 编译",
     "pkgCoreCompilationOutput": "编译产物",
     "pkgOverview": "概览",
     "pkgFoundationUtilities": "通用工具",

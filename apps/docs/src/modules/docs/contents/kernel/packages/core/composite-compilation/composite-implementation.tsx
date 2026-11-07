@@ -7,89 +7,74 @@ import { logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
 
 import { compositeImplementationI18n } from './composite-implementation.i18n';
 
-/** 复合编译图的语言 */
+/** 绑定完整键，解析领域 Schema流程图的语言 */
 export type CompositeImplementationProps = { lang?: Lang };
-/** 展示回调内的可选查询与输出树的分类提交 */
-const Figure: FC<CompositeImplementationProps> = props => {
+
+/** 展示本页追踪的阶段、产物与必要输入 */
+const CompositeImplementation: FC<CompositeImplementationProps> = props => {
   const { lang = 'zh' } = props;
-  const labels = compositeImplementationI18n[lang];
-  const items = (ids: Array<number>) =>
-    ids.map(id => ({
-      id: `s${id}`,
-      role: 'activity' as const,
-      ...([3, 5, 8, 12, 16].includes(id) ? { kind: 'docs.logic.important' } : {}),
-      text: labels[id]
-        .split('\n')
-        .map((text, line) => ({ text, ...(line ? { font: { size: 12 }, fill: 'gray' } : {}) })),
-    }));
-  const edge = (source: number, target: number) => ({
-    source: { id: `s${source}`, side: 'bottom' as const },
-    target: { id: `s${target}`, side: 'top' as const },
-    routing: { kind: 'orthogonal' as const, cornerRadius: 0 },
-  });
+  const text = compositeImplementationI18n[lang];
+  const stages = [
+    { id: 'resolve', name: 'bindComposite → resolveComposite', state: false },
+    { id: 'context', name: 'createCompositeCallbackContext', state: false },
+    { id: 'call', name: 'CompositeCompiler.compile', state: false },
+    { id: 'preflight', name: 'preflightCompositeOutputs', state: false },
+    { id: 'commit', name: 'compileCompositeOutput', state: true },
+  ] as const;
+  const inputs = [{ id: 'core', name: 'Core contracts', target: 'context' }] as const;
   return (
     <PreviewFlowDiagram {...logicFigureGraphProps()} style={{ maxWidth: '100%', height: 'auto' }}>
-      <FlowLayout id="main" kind="linear" direction="down" gap={36} align="center">
-        <FlowEntities items={items([0])} />
-        <FlowLayout id="queries" kind="linear" direction="right" gap={32} align="start">
-          {[
-            [1, 2],
-            [3, 4],
-            [5, 6],
-            [16, 17],
-          ].map((ids, index) => (
-            <FlowLayout
-              key={index}
-              id={`query-${index}`}
-              kind="linear"
-              direction="down"
-              gap={36}
-              itemWidth="match-largest"
-            >
-              <FlowEntities items={items(ids)} />
-            </FlowLayout>
-          ))}
-        </FlowLayout>
-        <FlowLayout id="return" kind="linear" direction="right" gap={32}>
-          <FlowEntities items={items([7, 8])} />
-        </FlowLayout>
-        <FlowLayout id="outputs" kind="linear" direction="right" gap={32} align="start">
-          {[
-            [9, 10],
-            [11, 12],
-            [13, 14],
-          ].map((ids, index) => (
-            <FlowLayout
-              key={index}
-              id={`output-${index}`}
-              kind="linear"
-              direction="down"
-              gap={36}
-              itemWidth="match-largest"
-            >
-              <FlowEntities items={items(ids)} />
-            </FlowLayout>
-          ))}
-        </FlowLayout>
-        <FlowEntities items={items([15])} />
+      <FlowLayout
+        id="composite-implementation"
+        kind="grid"
+        gap={{ row: 20, column: 28 }}
+        placements={[
+          [null, 'resolve'],
+          ['core', 'context'],
+          [null, 'call'],
+          [null, 'preflight'],
+          [null, 'commit'],
+        ]}
+      >
+        <FlowEntities
+          items={stages.map(item => ({
+            id: item.id,
+            role: item.state ? 'state' : 'activity',
+            layout: { width: 290 },
+            text: [
+              { text: item.name, font: { size: 12 } },
+              { text: text[item.id], font: { size: 12 }, fill: 'gray' },
+            ],
+          }))}
+        />
+        <FlowEntities
+          items={inputs.map(item => ({
+            id: item.id,
+            role: 'state',
+            kind: 'docs.logic.secondary',
+            layout: { width: 230 },
+            text: [
+              { text: item.name, font: { size: 12 } },
+              { text: text[item.id], font: { size: 12 }, fill: 'gray' },
+            ],
+          }))}
+        />
       </FlowLayout>
       <FlowRelations
         items={[
-          ...[1, 3, 5, 16].map(id => edge(0, id)),
-          edge(1, 2),
-          edge(3, 4),
-          edge(5, 6),
-          edge(16, 17),
-          ...[2, 4, 6, 17].map(id => edge(id, 7)),
-          { source: 's7', target: 's8' },
-          ...[9, 11, 13].map(id => edge(8, id)),
-          edge(9, 10),
-          edge(11, 12),
-          edge(13, 14),
-          ...[10, 12, 14].map(id => edge(id, 15)),
+          ...stages
+            .slice(1)
+            .map((item, index) => ({
+              source: { id: stages[index].id, anchor: 'bottom' as const },
+              target: { id: item.id, anchor: 'top' as const },
+            })),
+          ...inputs.map(item => ({
+            source: { id: item.id, anchor: 'right' as const },
+            target: { id: item.target, anchor: 'left' as const },
+          })),
         ]}
       />
     </PreviewFlowDiagram>
   );
 };
-export default Figure;
+export default CompositeImplementation;

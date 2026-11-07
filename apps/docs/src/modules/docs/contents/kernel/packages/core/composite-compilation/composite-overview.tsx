@@ -1,4 +1,4 @@
-import { FlowEntities, FlowGroup, FlowLayout, FlowRelations } from '@retikz/diagram-react/flow';
+import { FlowEntities, FlowLayout, FlowRelations } from '@retikz/diagram-react/flow';
 import type { FC } from 'react';
 
 import type { Lang } from '@/i18n';
@@ -7,42 +7,72 @@ import { logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
 
 import { compositeOverviewI18n } from './composite-overview.i18n';
 
-/** 复合编译图的语言 */
+/** Core 按 namespace / type 绑定并解析流程图的语言 */
 export type CompositeOverviewProps = { lang?: Lang };
-/** 单行展示复合编译主线，并分组标记布局编译步骤 */
-const Figure: FC<CompositeOverviewProps> = props => {
+
+/** 展示本页追踪的阶段、产物与必要输入 */
+const CompositeOverview: FC<CompositeOverviewProps> = props => {
   const { lang = 'zh' } = props;
-  const { stages, compileGroup } = compositeOverviewI18n[lang];
-  const items = stages.map((label, index) => ({
-    id: `s${index}`,
-    role: 'activity' as const,
-    ...([1, 3].includes(index) ? { kind: 'docs.logic.important' } : {}),
-    ...([0, 3].includes(index) ? { layout: { margin: { bottom: 8 } } } : {}),
-    text: label.split('\n').map((text, line) => ({ text, ...(line ? { font: { size: 12 }, fill: 'gray' } : {}) })),
-  }));
+  const text = compositeOverviewI18n[lang];
+  const stages = [
+    { id: 'bind', name: 'IRComposite → definition', state: false },
+    { id: 'callback', name: 'Reconciler · compile callback', state: false },
+    { id: 'children', name: 'Children / selected replay', state: false },
+    { id: 'output', name: 'Scene contribution + artifact', state: true },
+  ] as const;
+  const inputs = [{ id: 'probe', name: 'Isolated child evaluation', target: 'callback' }] as const;
   return (
     <PreviewFlowDiagram {...logicFigureGraphProps()} style={{ maxWidth: '100%', height: 'auto' }}>
-      <FlowLayout id="main" kind="linear" direction="right" align="end" gap={24}>
-        <FlowEntities items={items.slice(0, 1)} />
-        <FlowGroup
-          id="compile-group"
-          caption={{ title: { text: compileGroup, textColor: 'gray', font: { size: 12 } } }}
-          border={{ stroke: 'gray', dashPattern: [4, 3] }}
-          padding={16}
-          cornerRadius={4}
-        >
-          <FlowLayout id="compile-steps" kind="linear" direction="right" gap={32}>
-            <FlowEntities items={items.slice(1, 3)} />
-          </FlowLayout>
-        </FlowGroup>
-        <FlowEntities items={items.slice(3)} />
+      <FlowLayout
+        id="composite-overview"
+        kind="grid"
+        gap={{ row: 20, column: 28 }}
+        placements={[
+          [null, 'bind'],
+          ['probe', 'callback'],
+          [null, 'children'],
+          [null, 'output'],
+        ]}
+      >
+        <FlowEntities
+          items={stages.map(item => ({
+            id: item.id,
+            role: item.state ? 'state' : 'activity',
+            layout: { width: 290 },
+            text: [
+              { text: item.name, font: { size: 12 } },
+              { text: text[item.id], font: { size: 12 }, fill: 'gray' },
+            ],
+          }))}
+        />
+        <FlowEntities
+          items={inputs.map(item => ({
+            id: item.id,
+            role: 'state',
+            kind: 'docs.logic.secondary',
+            layout: { width: 230 },
+            text: [
+              { text: item.name, font: { size: 12 } },
+              { text: text[item.id], font: { size: 12 }, fill: 'gray' },
+            ],
+          }))}
+        />
       </FlowLayout>
       <FlowRelations
-        items={stages
-          .slice(1)
-          .map((_, i) => ({ source: { id: `s${i}`, side: 'right' }, target: { id: `s${i + 1}`, side: 'left' } }))}
+        items={[
+          ...stages
+            .slice(1)
+            .map((item, index) => ({
+              source: { id: stages[index].id, anchor: 'bottom' as const },
+              target: { id: item.id, anchor: 'top' as const },
+            })),
+          ...inputs.map(item => ({
+            source: { id: item.id, anchor: 'right' as const },
+            target: { id: item.target, anchor: 'left' as const },
+          })),
+        ]}
       />
     </PreviewFlowDiagram>
   );
 };
-export default Figure;
+export default CompositeOverview;
