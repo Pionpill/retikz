@@ -22,6 +22,12 @@ const corePage: Page = {
       meta: { pageType: 'architecture', audience: 'maintainer', sourceOfTruth: 'runtime' },
     },
     {
+      id: 'definitions',
+      label: 'kernel.pkgCoreDefinitions',
+      difficulty: DocDifficulty.Internals,
+      meta: { pageType: 'architecture', audience: 'extension-author', sourceOfTruth: 'runtime' },
+    },
+    {
       id: 'compilation',
       label: 'kernel.pkgCoreCompilation',
       difficulty: DocDifficulty.Internals,

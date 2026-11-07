@@ -1,0 +1,143 @@
+---
+title: 能力定义与注册
+description: 理解 Core 图形实体与可扩展能力的关系，以及 Definition 如何通过注册表参与语义解析和编译
+---
+
+[语义解析](/kernel/packages/core/resolution)解释了声明如何得到确定形态。遇到 `shape: 'rectangle'` 时，解析还需要回答：这个名称代表什么能力，由谁计算尺寸、连接点和绘制图元？Definition 定义这些行为，registry 将名称与实现关联起来。
+
+本页从图形实体需要的能力出发，追踪“定义 → 注册 → 引用 → 消费”。定义中可以有函数和 Schema；IR 仍只保存可序列化的名称、参数与领域声明。
+
+## 整体流程
+
+Reconciler 接收编译选项，调用 Core 提供的注册表解析能力。随后，各 resolver 按当前 IR 查询定义，确定参数并把结果交给布局、几何或编译回调。注册发生在运行时环境装配中，使用某个 define helper 并不会把能力写入全局状态。
+
+<ComponentPreview files="definition-overview" size="lg" hideCode type="flow" />
+
+图中的共同点是“通过契约查找并消费实现”。不同能力的输入和输出并不相同：形状负责几何与图元，路径定义拥有一条路径的编译，Composite 则生成可以继续执行的子项。
+
+## 实体与扩展能力
+
+Scope、Node、Path、Composite 是声明组织或处理的对象。扩展点按它们所需的能力划分，不能把每个实体都理解为一种可任意替换的编译器。
+
+| 实体      | 扩展切入点                       | 核心仍负责什么                           |
+| --------- | -------------------------------- | ---------------------------------------- |
+| Scope     | Clip 等引用能力                  | 继承语义、局部空间与分组产物             |
+| Node      | Shape、Boundary                  | 正文度量、节点布局、标签与统一输出       |
+| Path      | Path Definition、Arrow、Mark     | 共享目标求值、资源与宿主服务             |
+| Composite | 按 namespace / type 注册领域定义 | 提供子布局契约，交由 Reconciler 执行子项 |
+
+Pattern 是填充或描边使用的绘制能力，不专属于某一种实体。Theme 也有自己的定义与注册契约，用于解析有效主题；它与下面介绍的图形 provider 依赖图并非同一张注册表。
+
+一个普通节点换个填充色，不需要新增 Definition。要增加形状的内容包络、命名锚点或绘制方式时，才由 Shape Definition 表达。布局算法或领域组合则更适合 Composite；能力应进入拥有该职责的契约。
+
+## Definition 的输入与输出
+
+Definition 让实现者与消费方共享可检查的边界，而不是只有名称相同的回调集合。
+
+- **Shape** 使用 `paramsSchema` 解析实例参数；几何方法计算内容包络、边界与锚点，emit 返回后端中立图元。视觉形状与连线使用的 Boundary 可以分别选择。
+- **Path** 的 Schema 描述完整路径声明。compile 可以复用标准描边，也可以提供自身几何，再通过宿主服务处理共享标签和输出外壳。
+- **Composite** 使用领域 Schema 解析声明，compile 返回子项及可选领域产物；需要布局时调用受限的子项求值接口。
+
+因此，Shape 的参数对象、Path 的完整声明与 Composite 的领域输入，不能机械套用同一种 parse 位置或同一种返回类型。具体使用时，Schema 的解析结果和回调类型由同一定义关联。
+
+<SourceLinks
+  sources={[
+    { label: 'Shape 参数、几何和绘制契约', path: 'packages/kernel/core/src/contract/node/shape.ts' },
+    { label: 'Path 的完整声明与宿主服务', path: 'packages/kernel/core/src/contract/path/path.ts' },
+    { label: 'Composite 的声明与编译回调', path: 'packages/kernel/core/src/contract/composite/definition.ts' },
+    { label: 'Composite 子项与求值结果', path: 'packages/kernel/core/src/contract/composite/layout.ts' },
+  ]}
+/>
+
+## 注册键与实例引用
+
+普通能力按能力类别及名称定位。例如 `node.shape` 选择 shape registry，而不是在所有定义中搜索同名对象。Composite 使用独立的 `namespace` 和 `type` 两级键；它们不是通过拼接字符串获得身份的。
+
+以下字段摘录展示定义接线与实例引用的对应关系，不是完整编译选项：
+
+| 运行时接线                     | IR 中的选择                          | 消费方               |
+| ------------------------------ | ------------------------------------ | -------------------- |
+| `shapes: [shapeDefinition]`    | `shape: { type: name, params }`      | 节点形状解析与布局   |
+| `paths: [pathDefinition]`      | `type: 'path', kind: name`           | 路径解析与编译       |
+| `composites: [pairDefinition]` | `namespace: 'example', type: 'pair'` | Composite 绑定与求值 |
+
+以内置形状为例，注册表保存 rectangle、ellipse、polygon 的定义；circle、diamond 则是声明侧的形状预设，由节点解析映射到相应定义与参数。列在 IR 名称集合中，不意味着每个名称都有一份独立 provider。
+
+## 一个定义如何参与编译
+
+下面是一个最小的领域组合：pair 声明只保存间距，定义展开成两个节点。例子用于追踪注册与消费关系，完整的布局协作留给 Composite 编译专题。
+
+```ts
+import { defineComposite } from '@retikz/core';
+import { SceneReconciler } from '@retikz/reconciler';
+import { z } from 'zod';
+
+const pair = defineComposite({
+  namespace: 'example',
+  type: 'pair',
+  schema: z.strictObject({
+    namespace: z.literal('example'),
+    type: z.literal('pair'),
+    gap: z.number().positive().default(180),
+  }),
+  compile: input => ({
+    children: [
+      { type: 'node', position: [0, 0], text: 'A' },
+      { type: 'node', position: [input.gap, 0], text: 'B' },
+    ],
+  }),
+});
+
+const reconciler = new SceneReconciler({ composites: [pair] }, { incremental: false });
+try {
+  const output = reconciler.mount({
+    type: 'scene',
+    version: 1,
+    children: [{ namespace: 'example', type: 'pair', gap: 180 }],
+  });
+  console.log(output.compilation.result.scene);
+} finally {
+  reconciler.dispose();
+}
+```
+
+这里先创建定义对象，再把它显式传给 Reconciler。遇到对应声明时，Core 按完整键找到定义，以其 Schema 确定 gap，再调用 compile。返回的节点还要经过普通节点处理；定义本身没有直接生成 DOM，也没有取得整个编译工作区。
+
+## 内置与自定义的边界
+
+普通注册表先加入内置定义，再加入显式提供的定义。同类别的同名键会报错，自定义项不能靠顺序覆盖内置项。Composite 注册表不预设官方 namespace 白名单，同一 namespace 中重复 type 同样报错。
+
+未找到 shape 或 path 定义时会发生对应的编译失败；未注册 Composite 当前会发出 warning 并跳过该项。它们的失败策略不同，不能统一描述成“所有未知名称都忽略”或“都抛错”。用户回调异常也要在其 owner 边界保留诊断与原因。
+
+内置实现没有额外的身份捷径。它们与扩展实现共享 Definition、解析和消费契约。注册表负责名称与冲突，调用方负责实例引用，具体定义负责自己的领域语义。
+
+## 完整实现流程
+
+下面把概念图对应到运行环境与源码。注册表建立在 Reconciler 的共享编译上下文中，Core resolver 只接收所需能力。不要把文件夹名 providers 理解成每个模块都能发现或导入的全局插件系统。
+
+<ComponentPreview files="definition-implementation" size="xxl" hideCode type="flow" />
+
+从编译选项进入共享上下文，再读各 registry resolver 的键规则和内置项。最后沿具体领域的 resolve 和 compile 看定义如何被消费。提供者依赖图如何生成这些选项，见下一篇。
+
+<SourceLinks
+  sources={[
+    { label: '共享编译上下文与注册表', path: 'packages/kernel/reconciler/src/compile/runtime/context.ts' },
+    { label: '普通注册表的创建与查询', path: 'packages/kernel/core/src/providers/registry.ts' },
+    { label: 'Composite 的两级注册表', path: 'packages/kernel/core/src/providers/composite.ts' },
+    { label: 'Composite 精确 Schema 解析', path: 'packages/kernel/core/src/resolve/composite/resolve.ts' },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '语义解析', description: '回看声明与编译消费形态的交接', url: '/kernel/packages/core/resolution' },
+    {
+      title: 'Composite 编译',
+      description: '继续追踪子项生成与布局协作',
+      url: '/kernel/packages/core/composite-compilation',
+    },
+    { title: '节点编译', description: '查看形状定义如何参与节点处理', url: '/kernel/packages/core/node-compilation' },
+  ]}
+/>

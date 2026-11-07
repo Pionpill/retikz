@@ -1,0 +1,154 @@
+---
+title: Capability Definitions and Registration
+description: Understand Core entities, extension contracts and how registered definitions participate in resolution and compilation
+---
+
+[Semantic Resolution](/kernel/packages/core/resolution) explains how declarations become determined inputs. When a node says `shape: 'rectangle'`, resolution also needs to know which implementation computes dimensions, attachment points and primitives. A Definition describes that capability; a registry associates its name with the implementation.
+
+This page follows definition, registration, reference and consumption. A definition can contain functions and Schemas. IR continues to store serializable names, parameters and domain declarations.
+
+## Overall flow
+
+Reconciler accepts compilation options and calls Core's registry resolvers. Domain resolvers then select definitions from IR, determine parameters and pass the results to layout, geometry or compilation callbacks. Registration belongs to runtime environment assembly. Calling a define helper does not register anything globally.
+
+<ComponentPreview files="definition-overview" size="lg" hideCode type="flow" />
+
+The shared pattern is lookup and consumption through a contract. The contracts differ: shapes supply geometry and primitives, path definitions own path compilation, and composites produce children that require further execution.
+
+## Entities and capabilities
+
+Scope, Node, Path and Composite organize declarations or define processing subjects. Their extension points follow the capabilities they need; they are not four interchangeable compiler registries.
+
+| Entity    | Extension points                                 | What remains with the core mechanism                    |
+| --------- | ------------------------------------------------ | ------------------------------------------------------- |
+| Scope     | Referenced capabilities such as Clip             | Inheritance, local space and grouping products          |
+| Node      | Shape and Boundary                               | Text measurement, node layout, labels and shared output |
+| Path      | Path Definition, Arrow and Mark                  | Shared target evaluation, resources and host services   |
+| Composite | Domain definition identified by namespace / type | Child-layout contracts and Reconciler execution         |
+
+Pattern supplies paint for fills and strokes across entities. Theme has its own definition and registry contract for resolving the effective theme. It is separate from the drawing-provider dependency graph described next.
+
+A different fill color does not require a new Definition. New content envelopes, named anchors or shape drawing behavior belong to Shape Definition. Layout algorithms and domain compositions generally belong to Composite. Choose the contract that owns the behavior.
+
+## Definition inputs and outputs
+
+A Definition gives authors and consumers a checkable boundary, beyond a collection of callbacks with matching names.
+
+- **Shape** parses instance parameters with `paramsSchema`. Geometry methods determine content envelopes, boundaries and anchors; emit returns backend-independent primitives. Visual Shape and connection Boundary can be selected independently.
+- **Path** uses a Schema for the complete path declaration. Its compile callback can reuse standard stroke emission or supply its own geometry, using host services for shared labels and output wrapping.
+- **Composite** parses its domain declaration and returns children with optional domain artifacts. Layout-aware definitions call the restricted child-evaluation interface.
+
+Shape parameters, full Path declarations and Composite inputs therefore have different parse locations and result contracts. Each definition connects its Schema output to its callback's input type.
+
+<SourceLinks
+  sources={[
+    { label: 'Shape parameters, geometry and emission', path: 'packages/kernel/core/src/contract/node/shape.ts' },
+    { label: 'Path declarations and host services', path: 'packages/kernel/core/src/contract/path/path.ts' },
+    { label: 'Composite declaration and callback', path: 'packages/kernel/core/src/contract/composite/definition.ts' },
+    {
+      label: 'Composite children and evaluation results',
+      path: 'packages/kernel/core/src/contract/composite/layout.ts',
+    },
+  ]}
+/>
+
+## Registration keys and instance references
+
+Named capabilities are identified by capability category and name. For example, `node.shape` selects the shape registry rather than searching every definition. Composite uses separate `namespace` and `type` keys; its identity is not a concatenated string.
+
+These excerpts show how runtime wiring corresponds to instance references; they are not complete compilation options:
+
+| Runtime wiring                 | IR selection                         | Consumer                         |
+| ------------------------------ | ------------------------------------ | -------------------------------- |
+| `shapes: [shapeDefinition]`    | `shape: { type: name, params }`      | Node resolution and layout       |
+| `paths: [pathDefinition]`      | `type: 'path', kind: name`           | Path resolution and compilation  |
+| `composites: [pairDefinition]` | `namespace: 'example', type: 'pair'` | Composite binding and evaluation |
+
+The built-in shape registry contains rectangle, ellipse and polygon definitions. Circle and diamond are declaration-side presets that node resolution maps to definitions and parameters. An IR name need not correspond to a separate provider implementation.
+
+## Following one definition
+
+The following small domain composition declares a gap and expands into two nodes. It illustrates registration and consumption; the Composite compilation topic covers layout cooperation.
+
+```ts
+import { defineComposite } from '@retikz/core';
+import { SceneReconciler } from '@retikz/reconciler';
+import { z } from 'zod';
+
+const pair = defineComposite({
+  namespace: 'example',
+  type: 'pair',
+  schema: z.strictObject({
+    namespace: z.literal('example'),
+    type: z.literal('pair'),
+    gap: z.number().positive().default(180),
+  }),
+  compile: input => ({
+    children: [
+      { type: 'node', position: [0, 0], text: 'A' },
+      { type: 'node', position: [input.gap, 0], text: 'B' },
+    ],
+  }),
+});
+
+const reconciler = new SceneReconciler({ composites: [pair] }, { incremental: false });
+try {
+  const output = reconciler.mount({
+    type: 'scene',
+    version: 1,
+    children: [{ namespace: 'example', type: 'pair', gap: 180 }],
+  });
+  console.log(output.compilation.result.scene);
+} finally {
+  reconciler.dispose();
+}
+```
+
+First a definition object is created, then explicitly supplied to Reconciler. Core matches the declaration's full key, uses the definition's Schema to determine gap, and invokes compile. Its returned nodes continue through normal node processing. The callback neither produces DOM nor receives the entire compiler workspace.
+
+## Built-ins and custom definitions
+
+Ordinary registries add built-ins before explicitly supplied definitions. Duplicate keys within a capability are errors; order cannot be used to override a built-in. Composite has no reserved official namespace list, and duplicate types within a namespace are also errors.
+
+Unknown shapes and paths fail through their compilation error paths. An unregistered Composite currently warns and skips that item. These are different policies: neither silent omission nor throwing describes every missing capability. Callback failures also preserve diagnostics and causes at the owning boundary.
+
+Built-ins use the same Definition, resolution and consumption contracts as extensions. Registries own keys and conflicts, callers own references, and each definition owns its domain semantics.
+
+## Complete implementation flow
+
+The implementation diagram locates environment assembly and consumption. Registries live in Reconciler's shared compilation context; Core resolvers receive only their required capabilities. The providers directory is not a global plugin discovery system.
+
+<ComponentPreview files="definition-implementation" size="xxl" hideCode type="flow" />
+
+Start with compilation options and shared context, inspect each registry's keys and built-ins, then follow the domain resolver and compiler. The next topic explains how dependency providers generate these option collections.
+
+<SourceLinks
+  sources={[
+    { label: 'Shared context and registries', path: 'packages/kernel/reconciler/src/compile/runtime/context.ts' },
+    { label: 'Registry construction and lookup', path: 'packages/kernel/core/src/providers/registry.ts' },
+    { label: 'Composite two-level registry', path: 'packages/kernel/core/src/providers/composite.ts' },
+    { label: 'Precise Composite Schema parsing', path: 'packages/kernel/core/src/resolve/composite/resolve.ts' },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Semantic Resolution',
+      description: 'Review declarations and compilation inputs',
+      url: '/kernel/packages/core/resolution',
+    },
+    {
+      title: 'Composite Compilation',
+      description: 'Follow child generation and layout cooperation',
+      url: '/kernel/packages/core/composite-compilation',
+    },
+    {
+      title: 'Node Compilation',
+      description: 'See shape definitions in node processing',
+      url: '/kernel/packages/core/node-compilation',
+    },
+  ]}
+/>

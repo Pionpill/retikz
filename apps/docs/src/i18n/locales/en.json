@@ -181,7 +181,8 @@
     "visualApiReference": "API reference",
     "visualCustomPattern": "Custom patterns",
     "visualCustomShadow": "Custom shadows",
-    "visualExtendedUsage": "Extended usage"
+    "visualExtendedUsage": "Extended usage",
+    "pkgCoreDefinitions": "Capability Definitions and Registration"
   },
   "library": {
     "components": "Components",
