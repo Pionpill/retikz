@@ -104,7 +104,7 @@ try {
 }
 ```
 
-First a definition object is created, then explicitly supplied to Reconciler. Core matches the declaration's full key, uses the definition's Schema to determine gap, and invokes compile. Its returned nodes continue through normal node processing. The callback neither produces DOM nor receives the entire compiler workspace.
+First a definition object is created, then explicitly supplied to Reconciler. Core binds the definition by its full key and uses its Schema to determine gap. Reconciler invokes the definition's compile callback at the Composite execution point and continues processing the returned children. Its returned nodes go through normal node processing. The callback neither produces DOM nor receives the entire compiler workspace.
 
 ## Built-ins and custom definitions
 
