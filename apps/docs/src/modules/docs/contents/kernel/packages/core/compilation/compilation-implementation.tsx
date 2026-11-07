@@ -1,6 +1,5 @@
 import { FlowEntities, FlowLayout, FlowRelations } from '@retikz/diagram-react/flow';
 import type { FC } from 'react';
-import { useTranslation } from 'react-i18next';
 
 import type { Lang } from '@/i18n';
 import { PreviewFlowDiagram } from '@/modules/docs/components/component-preview/theme';
@@ -8,91 +7,71 @@ import { logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
 
 import { compilationImplementationI18n } from './compilation-implementation.i18n';
 
-/** 编译源码导览图的语言 */
+/** 启动根子树执行流程图的语言 */
 export type CompilationImplementationProps = { lang?: Lang };
 
-/** 纵向展示主执行顺序，两侧展示各阶段消费和产生的数据 */
+/** 展示本页追踪的阶段、产物与必要输入 */
 const CompilationImplementation: FC<CompilationImplementationProps> = props => {
-  const { i18n } = useTranslation();
-  const lang = props.lang ?? ((i18n.resolvedLanguage ?? 'zh').startsWith('zh') ? 'zh' : 'en');
+  const { lang = 'zh' } = props;
   const text = compilationImplementationI18n[lang];
   const stages = [
-    { id: 'entry', name: 'SceneReconciler', detail: text.entry },
-    { id: 'context', name: 'createCompileRuntime', detail: text.context },
-    { id: 'visit', name: 'compileChildrenToPrimitives', detail: text.visit },
-    { id: 'flush', name: 'flushPendingPathEmissions', detail: text.flush },
-    { id: 'sort', name: 'stableSortByZIndex', detail: text.sort },
-    { id: 'result', name: 'CompileResult', detail: text.result },
-  ];
-  const products = [
-    { id: 'input', name: 'IRScene + CompileOptions', detail: text.input },
-    { id: 'dependencies', name: 'CompileContext', detail: text.dependencies },
-    { id: 'layouts', name: 'CompiledNodeLayout', detail: text.layouts },
-    { id: 'pending', name: 'PendingPathEmission', detail: text.pending },
-    { id: 'paths', name: 'PathPrimitive / GroupPrimitive', detail: text.paths },
-    { id: 'primitives', name: 'ScenePrimitive[]', detail: text.primitives },
-    { id: 'scene', name: 'Scene', detail: text.scene },
-    { id: 'extras', name: 'artifacts', detail: text.extras },
-  ];
+    { id: 'manager', name: 'CompileManager.compileScene', state: false },
+    { id: 'dispatch', name: 'SubtreeCompiler.compileChild', state: false },
+    { id: 'flush', name: 'flushPendingPathEmissions', state: false },
+    { id: 'collect', name: 'SubtreeCompiler.run', state: false },
+    { id: 'assemble', name: 'assembleSceneCompilationSnapshot', state: true },
+  ] as const;
+  const inputs = [{ id: 'registry', name: 'CompileRuntime', target: 'manager' }] as const;
   return (
     <PreviewFlowDiagram {...logicFigureGraphProps()} style={{ maxWidth: '100%', height: 'auto' }}>
       <FlowLayout
-        id="implementation"
+        id="compilation-implementation"
         kind="grid"
-        gap={{ row: 20, column: 24 }}
+        gap={{ row: 20, column: 28 }}
         placements={[
-          ['input', 'entry', null],
-          [null, 'context', 'dependencies'],
-          ['layouts', 'visit', 'pending'],
-          [null, 'flush', 'paths'],
-          [null, 'sort', 'primitives'],
-          ['scene', 'result', 'extras'],
+          ['registry', 'manager'],
+          [null, 'dispatch'],
+          [null, 'flush'],
+          [null, 'collect'],
+          [null, 'assemble'],
         ]}
       >
         <FlowEntities
           items={stages.map(item => ({
             id: item.id,
-            role: item.id === 'result' ? 'state' : 'activity',
-            ...(item.id === 'visit' || item.id === 'flush'
-              ? { kind: 'docs.logic.important' }
-              : item.id === 'result'
-                ? { kind: 'docs.logic.importantData' }
-                : {}),
-            layout: { width: 224 },
+            role: item.state ? 'state' : 'activity',
+            layout: { width: 290 },
             text: [
-              { text: item.name, font: { size: 14 } },
-              { text: item.detail, font: { size: 12 }, fill: 'gray' },
+              { text: item.name, font: { size: 12 } },
+              { text: text[item.id], font: { size: 12 }, fill: 'gray' },
             ],
           }))}
         />
         <FlowEntities
-          items={products.map(item => ({
+          items={inputs.map(item => ({
             id: item.id,
             role: 'state',
             kind: 'docs.logic.secondary',
-            layout: { width: 184 },
+            layout: { width: 230 },
             text: [
               { text: item.name, font: { size: 12 } },
-              { text: item.detail, font: { size: 12 }, fill: 'gray' },
+              { text: text[item.id], font: { size: 12 }, fill: 'gray' },
             ],
           }))}
         />
       </FlowLayout>
       <FlowRelations
         items={[
-          { source: 'input', target: 'entry' },
-          { source: 'entry', target: 'context' },
-          { source: 'context', target: 'visit' },
-          { source: 'visit', target: 'flush' },
-          { source: 'flush', target: 'sort' },
-          { source: 'sort', target: 'result' },
-          { source: 'context', target: 'dependencies' },
-          { source: 'visit', target: 'layouts' },
-          { source: 'visit', target: 'pending' },
-          { source: 'flush', target: 'paths' },
-          { source: 'sort', target: 'primitives' },
-          { source: 'result', target: 'scene' },
-          { source: 'result', target: 'extras' },
+          ...stages
+            .slice(1)
+            .map((item, index) => ({
+              source: { id: stages[index].id, anchor: 'bottom' as const },
+              target: { id: item.id, anchor: 'top' as const },
+            })),
+          ...inputs.map(item => ({
+            source: { id: item.id, anchor: 'right' as const },
+            target: { id: item.target, anchor: 'left' as const },
+          })),
         ]}
       />
     </PreviewFlowDiagram>

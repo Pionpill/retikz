@@ -1,44 +1,31 @@
 ---
 title: 编译流程
-description: 沿一次完整编译追踪 IR、节点布局和延迟路径，理解 Reconciler 怎样汇总 Scene、资源与附属产物。
+description: 从 IR 的声明追踪到 Core 原子计算、依赖就绪和 Scene 汇总，理解 Reconciler 怎样调度各阶段
 ---
 
-本页从 Reconciler 接收 Core IR 开始，追踪一次同步编译，直到返回可交给渲染器的 Scene。React / Vanilla 怎样产生 IR、渲染器怎样绘制，以及后续更新怎样复用结果，分别属于这条主线的上游、下游和另一轮执行。
+Core 定义“一个对象怎样解析、布局和输出”；Reconciler 决定“何时执行它、哪些依赖已就绪、结果怎样汇总”。本页沿 A、B 两节点及连线追踪这条协作链，后续各篇再展开实体内部阶段。
 
-一次性编译从 `@retikz/vanilla` 导入 `compileToScene`，由 Vanilla 管理内部协调器的生命周期。产物冻结、子路径组装、资源导入和重名诊断组装属于内部执行细节；本页沿源码解释它们如何协作。
+## 整体流程
 
-## 输入与案例
+入口接收符合契约的 IRScene 与编译选项。Reconciler 装配运行环境、遍历子项，在需要的上下文就绪时调用 Core。最终收集 Scene、资源、领域产物与诊断。这里没有整棵树先统一变成 Canonical Scene 的前置 pass。
 
-IR 是可保存的图形声明，例如“在这里放一个节点”“连接 A 和 B”。Scene 则记录已经确定几何和样式的图元，例如矩形、文字和路径指令。Vanilla 的 `compileToScene` 在内部通过协调器完成转换，返回包含 Scene 的处理结果：
+<ComponentPreview files="compilation-overview" size="lg" hideCode type="flow" />
 
-```ts
-import { compileToScene } from '@retikz/vanilla';
+外部 JSON 应先在 Schema 入口解析。已类型化 IR 不在每个包边界重复整树 parse；需要 Definition、命名引用或布局结果才能判断的约束，在相应阶段检查。
 
-const result = compileToScene(ir, { compile: options });
-```
+## 用同一张图追踪数据变化
 
-| 输入 / 输出        | 本页追踪的含义                                   |
-| ------------------ | ------------------------------------------------ |
-| `ir`               | 完整、符合 Core 契约的图形声明                   |
-| `options`          | 本次使用的测量能力、扩展定义和输出设置；可以省略 |
-| `result.scene`     | 已布局的图元、画布范围与绘制资源                 |
-| `result.artifacts` | 复合组件产物及显式请求的节点布局数据             |
-
-`SceneReconciler` 接收已类型化的 IR；它不会在入口对整棵树调用 `SceneSchema.parse`。来自 JSON 等外部输入的数据应先经过 schema 入口校验。编译过程中仍会检查需要 Definition 或布局上下文才能判断的约束。
-
-贯穿案例有两个宽 60、高 40 的矩形节点，中心分别位于 `[0, 0]` 和 `[180, 0]`，连线声明刻意放在节点前面。节点文字只用 A、B，保证本例的最小尺寸足以容纳正文。
+下面两节点的最小外框均为 60 × 40，中心在 [0, 0] 和 [180, 0]。padding 与 margin 均为零。路径声明刻意放在节点前；最终连线仍从 A 的右边界 [30, 0] 到 B 的左边界 [150, 0]。
 
 <ComponentPreview files={['compilation-example', 'compilation-example.data']} size="xs" hideCode type="illustration" />
 
-下面是这个案例的 Core 输入。`minimumSize` 限制节点外框，`padding` 和 `margin` 分别是内间距与连接边界外侧间距；设为零后，本例的连线直接落在矩形边上。
-
 ```ts
-import { compileToScene } from '@retikz/vanilla';
-import { type IRScene } from '@retikz/core';
+import { SceneReconciler } from '@retikz/reconciler';
+import type { IRScene } from '@retikz/core';
 
 const ir: IRScene = {
-  version: 1,
   type: 'scene',
+  version: 1,
   children: [
     {
       type: 'path',
@@ -63,319 +50,61 @@ const ir: IRScene = {
     },
   ],
 };
-
-const result = compileToScene(ir, { compile: { padding: 10 } });
-```
-
-图中只展示最终几何效果。接下来跟踪同一条路径怎样从 `{ id: 'A' }`、`{ id: 'B' }` 变成 `[30, 0]` 到 `[150, 0]` 的线段。
-
-<SourceLinks
-  sources={[
-    { label: '同步入口与返回值', path: 'packages/kernel/reconciler/src/reconciler.ts' },
-    { label: 'CompileOptions / CompileResult', path: 'packages/kernel/reconciler/src/compile/types.ts' },
-    { label: '外部场景校验', path: 'packages/kernel/core/src/schemas/scene/scene.ts' },
-  ]}
-/>
-
-## 整体流程
-
-第一次遇到 Path 时，A 和 B 还没有布局结果。Reconciler 先记住这条路径，继续处理节点；节点的中心和连接边界确定后，再计算路径端点，最后汇总画布范围。
-
-<ComponentPreview files="compilation-overview" size="sm" hideCode type="flow" />
-
-图中表示根层的一次完整编译。Scope 会在递归处理中完成自己的布局与路径回填，所以“遍历与布局”和“回填延迟路径”也会出现在局部分组内部。各元素按需要解析并生成图元，整棵树不必先变成一份统一的 Canonical Scene。
-
-<SourceLinks sources={[{ label: '完整编译的编排顺序', path: 'packages/kernel/reconciler/src/reconciler.ts' }]} />
-
-## 编译上下文
-
-Reconciler 使用 Foundation 的 `createIdAllocator(prefix)` 分配树内唯一的运行时 Scope ID，匿名 Scope 同样参与分配。Scope 前缀和树根身份由调用方维护。每棵树持有独立分配器，试编译分支共享该分配器；已分配编号不因删除、回滚或丢弃试编译而复用。需要跨树寻址时，宿主必须提供互不重叠的前缀命名域。Reconciler 负责在元素实例存续期间保留其身份。运行时 ID 不回写作者的 `id` 或 Scene，也不改变局部名称的遮蔽规则。
-
-进入编译前，Reconciler 需要知道怎样量文字、按什么规则解析形状，以及把共享的绘制资源放在哪里。这里涉及两个概念：
-
-- Definition：一种形状、路径或复合组件的具体能力定义。
-- registry：本次编译按名称查找 Definition 的注册表。
-
-`createSharedCompileContext` 把内置能力与调用方注入的定义整理到只读注册表，并保存测量服务和数值配置。内部的 `createCompileRuntime` 基于这个环境准备单次工作区，解析根主题，建立独占的几何状态、paint / clip 资源表和警告收集入口。没有注入文字测量时，使用内置近似度量；Core 自身不读取 DOM。
-
-`CompileRuntime` 将稳定输入 `context` 与可变状态 `state` 分开。`CompileContext` 在 `SharedCompileContext` 上直接扩展入口主题 `theme`、组件输入 `compositeInputs` 和最终 Scene 自动视口留白 `padding`，保留 `registries`、`host`、`layout`、`limits` 功能分组。试编译复用这些分组，覆盖入口主题与组件输入，并清空 `padding`，避免最终视口配置参与子树测量。输入配置仍使用 `shapes`、`clips` 等定义数组字段。
-
-`state` 按隔离范围分为三组：
-
-| 分组        | 持有内容                                  | 试编译时                    |
-| ----------- | ----------------------------------------- | --------------------------- |
-| `workspace` | 连接面缓存、paint / clip 资源、诊断收集器 | 独立创建                    |
-| `execution` | 名称栈、来源记录、变换缓存、诊断来源绑定  | fork 名称环境，其余独立创建 |
-| `composite` | 组件句柄、测量缓存与重放凭证              | 与所属根编译共享            |
-
-全量编译、单元素编译和探测计算通过 `createWorkspaceCompileState` 创建独立工作区。`createCompileEnvironment` 为树执行建立状态，并将诊断收集绑定到当前来源，不修改传入的基础工作区。诊断通过 `diagnosticCollector.collect` 追加，通过 `diagnosticCollector.warnings` 查看；对外的 `CompileOptions.onWarn` 仍在成功后接收诊断。
-
-递归子树使用 `SubtreeCompileRuntime`：`context` 保存有效样式、累计变换、布局约束和声明位置；`state` 收集当前子树的图元、布局、边界、延迟路径和产物。进入子 Scope 时派生新的继承环境，输出容器按所属子树隔离或显式共享。Reconciler 自己创建候选工作区，将引用查询、测量、资源登记和诊断收集适配为各阶段需要的窄上下文；一次性入口、非增量会话和 Weave 更新都由同一个 CompileManager / SubtreeCompiler 调用这些阶段。
-
-同一命名空间内重复声明的 ID 在编译成功后汇总为一条 `DUPLICATE_NODE_ID` 诊断。消息按声明顺序列出全部位置，`path` 指向最后一次声明；名称绑定仍由最后一次声明覆盖。独立命名空间中的同名 ID 分别处理。试编译的声明仅在选中重放后计入实际目标命名空间，未选中的试编译不发布诊断。
-
-Reconciler 的 `compile/runtime` 管理稳定环境与单次工作区，包括名称栈、变换缓存及组件状态。Core 的 `compile` 按 node、path、scope 等领域组织原子计算，节点布局类型归 `compile/node/types.ts`；共享的连接面、锚点、几何投影和消费状态归 `compile/boundary`，通用输出及边界贡献类型归 `compile/scene/types.ts`。`compile/reference` 负责名称引用与位置表达式求值，直接消费共享边界能力。树遍历与阶段调度属于 Reconciler。
-
-相对定位距离和节点标签净距由 Reconciler 在创建共享上下文时补齐，默认分别为 `24` 和 `12`。Core 阶段只消费上下文中的有效值，不再次兜底；这两个默认距离常量属于 Reconciler 的内部配置，不再从 Core 导出。
-
-环境按职责分为四组：
-
-| 分组         | 内容                                 |
-| ------------ | ------------------------------------ |
-| `registries` | 已合并内置与外部定义的注册表         |
-| `host`       | 文字测量和 TeX lowering 服务         |
-| `layout`     | 节点和标签距离、根字号及输出 rounder |
-| `limits`     | 复合展开和裁剪转换的深度限制         |
-
-共享配置的 `shared.host.measureText` 保留原始宿主测量服务。每次根 Runtime 创建时，将其包装为 `runtime.context.host.measureText`，按文本与字体值缓存本次编译的度量；节点、标签、路径和 Composite 试算共享该服务，消费结果时仍统一规范化指标。全量编译与增量更新共用此入口，下一次执行重新创建缓存。Weave 可在同一实例的增量更新中复用环境，资源工作区仍按计算调用隔离。输入侧 `CompileOptions` 的字段保持扁平，环境侧按分组保存已补齐的配置。
-
-创建共享上下文时会校验数值配置，即使场景为空也不跳过：`labelDistance` 必须非负且有限，`fontSize` 必须大于零且有限；`nodeDistance` 必须有限，允许负值表示反方向偏移。`precision` 必须是非负整数且 `10 ** precision` 有限；这不保证任意极大坐标参与运算时都不会溢出。`maxCompositeDepth` 和 `maxClipDepth` 必须是非负安全整数，其中 `maxCompositeDepth: 0` 禁止展开复合组件。
-
-Scene 组装时单独校验 `padding` 非负且有限，显式提供 viewBox 时也会校验。
-
-本例没有额外定义，因此使用内置矩形和路径能力。编译直接遍历传入的 IR，复合组件会在遍历遇到时处理。
-
-遍历还会建立本轮执行状态，包括已生成的图元、累计边界和命名空间。命名空间按 id 保存可查询的布局结果，使路径能由 A、B 找到对应几何。这些状态属于本次完整编译，不负责跨调用保留更新结果。
-
-<SourceLinks
-  sources={[
-    { label: '依赖与资源上下文', path: 'packages/kernel/reconciler/src/compile/runtime/runtime.ts' },
-    { label: '内置与外部定义的注册', path: 'packages/kernel/core/src/providers/registry.ts' },
-    { label: '子树执行与输出收集', path: 'packages/kernel/reconciler/src/compile/tree/runtime.ts' },
-  ]}
-/>
-
-## 节点解析
-
-`compileChildrenToPrimitives` 按 `children` 的声明顺序分派子项。本例先把 Path 放入待处理列表，再处理 A、B。一个节点的内部过程可以用三个结果理解：
-
-- CanonicalNode：完整的布局意图、正文、标签、绘制属性和能力绑定，paint 解析结果位于 `style.fill` / `style.stroke`。
-- CompiledNodeLayout：测量、定位和标签排版的计算结果，不携带能力绑定。
-- CompiledNode：最终几何、占用、文字、标签、外观与查询绑定，供输出、连接查询与增量复用。
-
-以下为这三个内部类型的源码定义，省略注释，不展开它们引用的其他类型。
-
-<DocTabs defaultValue="canonical-node">
-
-<DocTab value="canonical-node" label="CanonicalNode">
-
-```ts
-export type CanonicalNode = Readonly<{
-  id?: string;
-  aliasIds: Array<string>;
-  meta?: JsonObject;
-  zIndex?: number;
-  layout: CanonicalNodeLayout;
-  shape: CanonicalNodeShape;
-  boundary: CanonicalNodeBoundary;
-  style: CanonicalNodeStyle;
-  text?: CanonicalNodeText;
-  labels: Array<CanonicalNodeLabel>;
-  animations: NonNullable<IRNode['animations']>;
-}>;
-```
-
-</DocTab>
-
-<DocTab value="node-layout" label="CompiledNodeLayout">
-
-`irPath` 属于本次执行的诊断和来源记录，不进入最终 compiled 几何。Node 的 canon 与 compiled 分开保存；连接查询直接读取 compiled 持有的形状、连接面绑定和几何，不再从 canon 拼装中间对象。
-
-```ts
-export type CompiledNodeLayout = {
-  geometry: NodeLayoutGeometry;
-  text?: CompiledNodeTextLayout;
-  labels?: Array<NodeLabelLayout>;
-};
-
-export type NodeLayoutGeometry = {
-  rect: CenteredBox;
-  margin: BoundsInsets;
-  contentCenter: Position;
-  contentSize: { width: number; height: number };
-};
-
-export type CompiledNode = {
-  shape: CanonicalNode['shape'];
-  boundary: CanonicalNode['boundary'];
-  layout: WithRequiredProperties<PreparedNodeLayout, 'overall'>;
-  emit: WithRequiredProperties<PreparedNodeEmit, 'overall'>;
-  alignmentGuides?: Array<LayoutAlignmentGuide>;
-};
-
-export type CompiledNodeTextLayout = {
-  font: TextFont;
-  align: 'start' | 'middle' | 'end';
-  lineHeight: number;
-  baselineOffsets?: Array<number>;
-} & (
-  { kind: 'plain'; lines: Array<CompiledNodeTextLineLayout> } | { kind: 'inline'; lines: Array<CompiledTextBlockLine> }
-);
-```
-
-</DocTab>
-
-</DocTabs>
-
-`resolveNode` 根据根字号、相对距离和公式开关确定完整的 `CanonicalNode`。内部函数 `layoutNode(canon, context, prepared?)` 返回 `WithRequiredProperties<PreparedNodeLayout, 'overall'>`：`overall` 是完整布局，`content` 是最终宽度预算下的正文排版，`shape` 是形状尺寸与偏移，`placement` 是节点放置结果，`labels` 按当前标签顺序保存各自的 `measurement` 和 `placement`。
-
-标签测量结果仅保存 `lineLayout` 文本块布局，尺寸从 `lineLayout.width`、`lineLayout.height` 读取；各物理行的基线与字体度量保留在文本块内部，不重复保存标签宽高或上伸、下伸字段。
-
-`compileNode(canon, context, prepared?)` 接受 `prepared.layout` 和 `prepared.emit`。布局整体命中时跳过布局计算，不反推缺失的局部结果。只有正文命中时，Core 按已确认有效的最终正文计算形状；只有形状命中时，按形状记录的 `contentWidthBudget` 重排正文而不调用形状尺寸 provider。正文产物的 `widthBudget` 记录其实际排版输入，允许重新计算形状后继续独立复用。两项都缺失时，仍执行最多 32 次有界宽度反馈。调用方负责保证各产物适用于本轮最终约束，Core 不重新判断缓存有效性。
-
-绘制准备结果平铺 `content`、`shape`、`labels` 和 `overall`，不重复保存 placement。正文和形状直接保存 `Array<ScenePrimitive>`；标签项为 `{ overall?: Array<ScenePrimitive> }`，`{}` 表示需要绘制，空图元数组则是有效的空输出。缺少局部绘制产物时，Core 从本轮布局和外观补算，正文图元也在编译阶段生成。
-
-`emit.overall` 保存已完成分组、旋转、身份和动画绑定的 `primitives` 及完整 `bounds`。命中时不执行正文、形状或标签绘制，也不反推局部图元；仍按布局契约提供引用查询所需结果。`CompiledNode` 保留 `layout` 和 `emit` 的整体及已知局部结果；两组 `overall` 始终可用。整体命中时保留传入的有效局部产物，但不重算未提供的局部产物。Reconciler 从结果中选择仍有效的部分，通过 prepared 传回 `compileNode`。
-
-局部图元完整保留文本、分组、箭头和外观，不再拆分结构与样式。组装节点输出时独立写入宿主元数据，不修改复用的局部图元。`layout.overall` 保存完整几何、正文与标签布局；顶层 `shape`、`boundary` 直接携带当前 canon 的查询绑定，`alignmentGuides` 提供父布局所需的对齐线；正文外观投影只在生成图元时使用。
-
-调用方负责将标签缓存与当前标签顺序对齐，并在跨工作区复用绘制结果时导入其配套资源。命中的绘制单元不会再调用 `registerPaint`，仅保留 `resourceRef` 不能替代资源恢复。Core 不修改 prepared，不持有跨调用缓存。
-
-Reconciler 比较有效配置、编译上下文及实际引用几何，并由 Weave 维护阶段缓存；布局满足复用条件时，重新读取定位依赖，再通过 `prepared.layout` 传给同一个 `compileNode`。当前自动复用仍使用完整布局，局部产物入口供调用方显式组合，不表示 Reconciler 已按这些粒度自动缓存。Core 不比较历史版本，也不判断缓存是否有效。正文通过作者行索引将物理行与当前外观对应；Reconciler 通过 `projectNodeGeometry(compiled)` 按需读取绑定与布局几何，并直接收集 `emit.overall`，不调度内部布局或绘制阶段。
-
-元素编译入口统一按 `compileXxx(canon, context, prepared?)` 组织：Node 接受已准备的布局与绘制产物，Scope 直接接受子树执行前冻结的 `ScopePlacementPreparation`；Scope 的子布局和已解析裁剪路径放在当前上下文中，动画仍在延迟路径输出收敛后完成。`compilePath(canon, context, prepared)` 接收目标绑定、完整绘制结果和当前源路径的描边原子产物，详见[路径编译](/kernel/packages/core/path-compilation#阶段复用)。`compileCoordinate(canon, context)` 没有独立的部分复用阶段，不设置空的第三参数。调用方保证准备数据适用于本轮输入和上下文，Core 只计算缺失步骤。
-
-<ComponentPreview files="compilation-node" size="lg" hideCode type="illustration" />
-
-本例中，A 的外框中心为 `[0, 0]`、尺寸为 `60 × 40`；B 的中心为 `[180, 0]`，尺寸相同。Reconciler 把布局登记到命名空间，同时生成两个具名 Group，各自包含矩形与文字。因此，一个 IR Node 可以对应多个绘制图元。
-
-| 同一个 A   | 字段摘录或几何结果                                  |
-| ---------- | --------------------------------------------------- |
-| Source IR  | `position: [0, 0]`，`text: 'A'`，最小尺寸 `60 × 40` |
-| 节点布局   | 外框中心 `[0, 0]`，宽 60、高 40                     |
-| Scene 矩形 | 左上角 `[-30, -20]`，宽 60、高 40                   |
-
-布局外框用中心表示位置，Scene 矩形使用左上角。数值不同来自表示方式的转换，节点没有发生移动。
-
-<SourceLinks
-  sources={[
-    { label: 'resolveNode：有效配置与能力绑定', path: 'packages/kernel/core/src/resolve/node/resolve.ts' },
-    { label: '节点布局', path: 'packages/kernel/core/src/compile/node/layout.ts' },
-    { label: '节点图元生成', path: 'packages/kernel/core/src/compile/node/emit.ts' },
-  ]}
-/>
-
-## 路径解析
-
-节点布局先完成，依赖节点的路径随后解析。遍历按子项声明顺序推进：
-
-1. 遇到 Node，立即解析配置、测量定位、注册布局并生成节点图元。
-2. 遇到 Path，先记录待处理任务并插入占位，暂不解析节点引用和生成路径图元。
-3. 到当前容器的收尾阶段，再查询已注册的节点布局，解析并生成待处理路径。
-
-这个顺序以当前容器为范围：Scope 会递归处理子项，在自身收尾时处理内部待处理路径；根层则在根子项遍历完成后处理根层路径。因此，并非整棵树的所有 Node 都处理完，才开始处理任何 Path。
-
-路径可能引用稍后才出现的节点。`queuePathChild` 会同时保存两样东西：待处理路径记录，以及插入当前图元数组的占位项。记录保留路径输入、样式与坐标环境，还持有占位项及其所属数组的引用。
-
-下图逐行展示本例的数组状态。Group A、Group B 分别包含对应节点的矩形和文字；槽位内的文字是结构摘要。
-
-<ComponentPreview files="compilation-slots" size="xl" hideCode type="illustration" />
-
-A、B 登记完成后，`flushPendingPathEmissions` 查询目标布局，解析路径并生成图元。只指定节点 id 时，本例会按连接边界裁剪端点，所以 A 的右边界 `[30, 0]` 和 B 的左边界 `[150, 0]` 成为可见线段的起止点。
-
-随后，Reconciler 在原数组中找到占位项，用实际 PathPrimitive 替换它。虽然路径比节点晚计算，它仍位于数组第 0 项。回填完成后再按 `zIndex` 稳定排序；相同 `zIndex` 保持声明顺序。所有占位必须在返回 Scene 前消失。
-
-本例的最终路径字段摘录如下：
-
-```ts
-{
-  type: 'path',
-  commands: [
-    { kind: 'move', to: [30, 0] },
-    { kind: 'line', to: [150, 0] },
-  ],
+const reconciler = new SceneReconciler({}, { incremental: false });
+try {
+  const result = reconciler.mount(ir).compilation.result;
+  console.log(result.scene);
+} finally {
+  reconciler.dispose();
 }
 ```
 
-这种等待发生在对应分组的收尾阶段。它支持本例同组 Path 对后续节点的引用，但节点自己的相对定位在布局时就需要目标，不能由此推断所有位置表达都支持前向引用。
+沿这份输入，节点先得到包含确定样式与能力绑定的 CanonicalNode，再得到几何与 emit 产物。路径暂存命名目标，等节点发布几何后，才选择边界交点并生成路径指令。IR 中的引用与作者顺序都不必被改写。
+
+## 每种实体需要什么就绪条件
+
+| 对象       | 进入 Core 前需要                   | 交回调度方的结果                 |
+| ---------- | ---------------------------------- | -------------------------------- |
+| Node       | 继承、定义、测量服务、定位引用     | 节点布局、查询几何、图元与边界   |
+| Coordinate | 位置上下文与已可查引用             | 可发布的坐标几何，不绘制图元     |
+| Scope      | 先确定继承；自身包络等待子布局     | 分组属性、包络与投影所需结果     |
+| Path       | 命名目标与所属空间可查             | 路径输出、布局边界与共享资源引用 |
+| Composite  | 已匹配的定义、提案与受限子布局服务 | 子项或布局贡献、可选领域产物     |
+
+Scope 包含递归子树，所以这些阶段也会在局部出现。Composite 回调可以请求子布局试算；试算的隔离和选中结果的重放由 Reconciler 负责。不能把所有对象画成相同的“IR → Primitive”函数。
+
+## 声明、求值与绘制顺序
+
+Reconciler 按 children 声明顺序分派。遇到路径时保留原位置的输出槽位，节点和 Scope 等完成必要几何后再回填路径，因此“晚求值”不会自动变成“最后绘制”。最终同层输出按 zIndex 稳定排序；同值维持原有次序。
+
+这个就绪机制不等于任意对象都支持前向引用。Node 定位和 Coordinate 在访问时求值，其目标应当可查；路径有专门的延迟机制。无法满足的引用、试算失败与诊断应按所属契约处理，不能用 [0, 0] 代替未知值。
 
 <SourceLinks
   sources={[
-    { label: '路径入队与回填', path: 'packages/kernel/reconciler/src/compile/tree/path/deferred.ts' },
-    { label: '占位与稳定排序', path: 'packages/kernel/reconciler/src/compile/tree/shared/output.ts' },
-    { label: '绘制顺序与失败路径的功能测试', path: 'packages/kernel/reconciler/tests/core/compile/z-order.test.ts' },
+    { label: '子树分派与稳定排序', path: 'packages/kernel/reconciler/src/compile/tree/subtree.ts' },
+    { label: '路径占位与原位回填', path: 'packages/kernel/reconciler/src/compile/tree/path/deferred.ts' },
   ]}
 />
 
-## 作用域处理
+## 环境与复用由谁持有
 
-遇到 Scope 时，父级遍历先进入它的子树。Reconciler 为子项准备样式、主题、变换链和独立的结果容器，再按声明顺序处理 `children`：Node 立即布局，Path 先排队，嵌套 Scope 则递归执行同一流程。
+Reconciler 的共享环境按 registries、host、layout、limits 提供定义表、测量与 TeX 服务、有效数值配置及执行限制。每次执行还需要资源、命名、诊断与试算工作区。Core 只接收当前阶段必需的窄上下文，不拥有整个会话。
 
-下面按进入、递归处理与返回的顺序展示 Scope 的编译过程；嵌套 Scope 会完整执行同一流程，再返回父级继续遍历：
-
-<ComponentPreview files="compilation-scope" size="md" hideCode type="flow" />
-
-例如 S 的子项依次是 Node A、Scope T、Node B：先处理 A，再进入 T，等 T 的子项、布局和待处理路径都完成后，返回 S 继续处理 B。S 的所有子项完成后，才确定 S 的包络和最终定位、更新可查询布局、处理 S 的待处理路径，最后向父级交付 Group。
-
-每层 Scope 都有自己的子遍历上下文，但默认共享当前命名帧。假设外层已注册节点 A，Scope 内又声明节点 A 和 B，两种模式的区别如下：
-
-| 操作          | `localNamespace: false`（默认）         | `localNamespace: true`                             |
-| ------------- | --------------------------------------- | -------------------------------------------------- |
-| 进入 Scope    | 复用当前命名帧                          | 压入一个新的局部命名帧                             |
-| 注册内部 A、B | 写入当前帧；同帧 A 被覆盖并发出重名警告 | 写入局部帧；内部 A 遮蔽外层 A                      |
-| 组内查找名称  | 从当前帧向外查找                        | 优先查局部帧，未命中再向外查找                     |
-| 返回父级后    | 内部 A、B 仍可按名称查到                | 局部帧已弹出；再次查 A 得到外层 A，内部 B 不再可查 |
-
-组内待处理路径在局部帧弹出前解析，因此仍能引用内部节点。出栈只移除这层名称的可见性，已经生成的图元仍保留在 Scene 中。Scope 自身若有 id，会在入栈前登记到父命名帧，并在收尾时更新为最终布局，所以外部仍能通过该 id 引用整个分组。
-
-Scene 输出可以保留局部几何和 Group 变换。命名查询使用所需的坐标投影，并不要求最终输出把每个点都展开为世界坐标。
-
-复合项通过注册的 Definition 接入编译编排，产出的基础 IR 继续走上述处理流程，详见[复合组件实现原理](/kernel/packages/core/composite-compilation)。
-
-<SourceLinks
-  sources={[
-    { label: 'Scope 的递归遍历与收尾', path: 'packages/kernel/reconciler/src/compile/tree/scope/visit.ts' },
-    { label: '命名帧的注册、查找与出栈', path: 'packages/kernel/reconciler/src/compile/runtime/namespace.ts' },
-  ]}
-/>
-
-### Scope 阶段复用
-
-`compileScope(canon, context, prepared)` 返回 `layout` 和 `emit`，调用方可以从结果中选取仍有效的产物，再通过 `PreparedScopeCompilation` 传回。Core 只补算缺项，缓存失效判断由调用方负责。
-
-- `layout.overall` 保存包络几何和最终变换；局部产物包括子布局聚合得到的 `envelope`、子树执行前冻结的 `preparation`，以及最终变换 `placement`。
-- `emit.overall` 保存不含 `children` 的分组属性；`clip` 保存裁剪登记结果，空对象表示已确认无裁剪。复用裁剪前，调用方须恢复相应资源。
-- 整体命中直接复用对应结果，保留已提供的局部产物，不反推缺失项。当前 shape / boundary 绑定从 canonical 输入取得，由消费方按需与缓存几何组合。
-
-Reconciler 仍在进入子树前调用 `prepareScopePlacement` 冻结引用；子布局完成后确定包络、最终变换并发布几何，再处理待定路径。真实子输出确定后才解析动画，通过 context 传给 `compileScope`；此时可复用布局和裁剪，仅重组分组属性。最后将实际子图元附加到分组，缓存不持有子树。
-
-## 汇总编译结果
-
-子项编译完成后，`SceneReconciler` 收集有序图元、paint 与 clip 资源，以及可用于根场景的动画配置。画布范围分两种情况：指定 `viewBox` 时直接使用该范围；否则根据累计布局边界加上 `padding` 计算。
-
-本例的内容范围从 `[-30, -20]` 到 `[210, 20]`。四周增加 10 后，`result.scene.layout` 为：
-
-```ts
-{ x: -40, y: -30, width: 260, height: 60 }
-```
-
-这一步决定最终画布范围，不会再次移动 A、B。输出中的 `primitives` 依次为路径、Group A、Group B；本例没有渐变或裁剪资源，因此不产生 `resources` 字段。
-
-Scene 之外，`artifacts` 保存 Composite 返回的领域产物；没有产物时为空数组。结果只包含 `scene` 与 `artifacts`，两者对应同次编译。完整字段与领域坐标约定见[编译产物](/kernel/packages/core/compilation-output)。
-
-警告与致命错误也有不同结果：可恢复情况按对应能力的规则降级，例如路径目标不存在时可发出警告并移除该路径占位；完整编译成功后，同步入口才派发收集的警告。致命错误会终止调用，不返回半成品 Scene。
-
-<SourceLinks
-  sources={[
-    { label: 'Scene 汇总与警告派发', path: 'packages/kernel/reconciler/src/reconciler.ts' },
-    { label: '编译结果与产物类型', path: 'packages/kernel/reconciler/src/compile/types.ts' },
-    { label: '自动画布范围', path: 'packages/kernel/core/src/compile/scene/layout.ts' },
-    { label: 'Scene 的渲染中立契约', path: 'packages/kernel/core/src/contract/scene/scene.ts' },
-  ]}
-/>
+Core 的 prepared 参数允许消费调用方已确认有效的阶段产物，并补算缺项；它不自行判断跨次缓存是否仍有效。全量和增量执行都能调用这些原子阶段，依赖记录、复用裁决及输出事务由 Reconciler 管理。
 
 ## 完整实现流程
 
-下面用实际成员名对照前面的阶段。同步入口 `SceneReconciler` 调用 `SceneReconciler`；图中路径回填和排序位于遍历内部，最后回到外层汇总 `CompileResult`。
+从 Reconciler 的 CompileManager 进入 SubtreeCompiler，再到各 visit / deferred 文件，才能看到 Core 阶段的真实调用点。根子树完成后，CompileManager 把图元、布局、资源和产物交给快照组装函数；renderer 在其后消费 Scene。
 
 <ComponentPreview files="compilation-implementation" size="xxl" hideCode type="flow" />
 
-阅读源码时，先在 `SceneReconciler` 看清上下文、遍历与汇总的调用关系，再进入 `compileChildrenToPrimitives`：从末尾的根层 `compileChildren` 调用出发，回查 `compileChild` 的分派，沿 Node 的 resolve、layout、emit 三步读下去，最后追踪 Path 的入队与回填。Scope 和 Composite 是这条主线上的递归分支，可以在理解本例后继续深入。
-
 <SourceLinks
   sources={[
-    { label: '从同步入口进入完整编译', path: 'packages/kernel/reconciler/src/reconciler.ts' },
-    { label: '子项分派、递归与收尾', path: 'packages/kernel/reconciler/src/compile/tree/subtree.ts' },
+    { label: '根编译管理', path: 'packages/kernel/reconciler/src/compile/tree/manager.ts' },
+    { label: '共享运行环境', path: 'packages/kernel/reconciler/src/compile/runtime/runtime.ts' },
+    { label: '节点调用 Core 的位置', path: 'packages/kernel/reconciler/src/compile/tree/node/visit.ts' },
+    { label: 'Scene 快照组装', path: 'packages/kernel/reconciler/src/compile/scene/output.ts' },
+    { label: 'Core 原子阶段入口', path: 'packages/kernel/core/src/compile/index.ts' },
   ]}
 />
 
@@ -383,95 +112,13 @@ Scene 之外，`artifacts` 保存 Composite 返回的领域产物；没有产物
 
 <LinkedSections
   items={[
-    { title: '语义解析', description: '追踪默认值、样式和能力绑定', url: '/kernel/packages/core/resolution' },
+    { title: 'Node 编译', description: '追踪度量、形状布局和图元输出', url: '/kernel/packages/core/node-compilation' },
+    { title: '坐标与引用求值', description: '理解可查几何和所属坐标空间', url: '/kernel/packages/core/coordinates' },
     {
-      title: '坐标解析',
-      description: '追踪引用可见性、坐标转换与 Scope 定位',
-      url: '/kernel/packages/core/coordinates',
-    },
-    {
-      title: '节点编译',
-      description: '追踪文字测量、节点尺寸与连接边界',
-      url: '/kernel/packages/core/node-compilation',
-    },
-    {
-      title: '路径编译',
-      description: '追踪路径目标、几何步骤与图元输出',
+      title: 'Path 编译',
+      description: '理解依赖就绪后的目标与路径处理',
       url: '/kernel/packages/core/path-compilation',
     },
-    {
-      title: '复合编译',
-      description: '追踪子项查询、隔离试算与结果重放',
-      url: '/kernel/packages/core/composite-compilation',
-    },
-  ]}
-/>
-
-## 独立编译与可复用状态
-
-Core 提供可组合的领域阶段。Reconciler 统一管理遍历、依赖等待与工作区，完整和增量执行都调用同一套解析、布局和输出规则。
-
-| 元素       | 共享阶段                                                | 驱动保存的事实                       |
-| ---------- | ------------------------------------------------------- | ------------------------------------ |
-| Node       | `resolveNode` → `compileNode`                           | 有效属性、布局，以及配套的输出和资源 |
-| Coordinate | `evaluatePosition` → `compileCoordinate`                | `CompiledCoordinate.position`        |
-| Path       | `resolvePathAnimations` → `compilePath`                 | kind 宿主产生的输出、资源和边界      |
-| Scope      | `resolveScope`、`prepareScopePlacement`、`compileScope` | 包络、自身分组属性和输出             |
-
-`resolve` 可使用注册表和位置查询等语义上下文，不读取编译执行状态。布局和输出阶段分别要求测量、位置解析、资源登记等能力；完整 `SharedCompileContext` 和工作区由调用方持有。下面通过 Vanilla 编译一个无引用节点；阶段组合和工作区由内部协调器管理，调用方直接消费配套的图元与资源。
-
-```ts
-import { compileToScene } from '@retikz/vanilla';
-
-const { scene } = compileToScene({
-  type: 'scene',
-  version: 1,
-  children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
-});
-const { primitives, resources } = scene;
-```
-
-`primitives` 的资源引用需要与 `resources` 一起保存。名称发布、诊断派发和最终 Scene 组装由内部驱动完成。`CanonicalNode` 保存完整配置，`CompiledNode` 保存最终结果，`compileNode` 内部完成图元与边界组装。阶段复用还必须检查输入、上下文和实际引用。
-
-Reconciler 的名称栈管理声明可见性与 Scope 未完成状态，路径在依赖就绪后统一计算。各阶段通过窄查询能力消费名称；失败的候选工作区不会发布资源或半成品，真实错误保留 cause。
-
-Scope 在子元素之前解析有效样式并准备放置，子布局就绪后计算包络与最终变换，准备不含动画的自身分组属性。真实子输出就绪后，输出组装才统一裁去空分组、解析动画；被裁掉的 Scope 不产生动画诊断。子元素接收已确定的祖先变换；包络相关的后置放置由驱动在完成后投影。
-
-资源 id 在生成时由内容确定。`assembleCompileOutputs` 合并去重资源，保留图元引用，按同层 zIndex 稳定排序；Scope visitor 统一处理分组包装、裁剪与边界。调用方选择本次有效的输出贡献，使用 `calculateCompileOutputBounds` 汇总可见边界，再交给 `assembleSceneCompilationSnapshot` 完成 viewBox、padding、根动画、诊断与 provenance 收尾。传入的 Composite artifacts 应已按最终声明顺序整理，并与本次结果配对；组装不重新编译元素，也不推断增量复用策略。
-
-只需从已有轴对齐边界计算布局矩形时，可调用 Core 公开的 `calculateLayoutFromBounds(bounds, padding, round)`。它应用留白和输出精度；`bounds` 为 `undefined` 时返回位于原点的 100×100 兜底框。持有点集的调用方先用 `@retikz/math` 的 `boundsOf` 求边界。
-
-领域算法来自 Core，完整输出组装入口属于 Reconciler。Reconciler 负责名称映射、依赖失效、版本隔离和提交；本接口不自动构建或更新 Weave 树。调用方不得修改已发布的 compiled 可达数据，环境定义或测量服务改变时也必须使相关缓存失效。Node 和 Scope 的 compiled 直接保留后续几何查询必需的 Definition 与参数；Path 和 Coordinate 不保留无后续消费者的绑定。Reconciler 按实际读取粒度比较结果，连接面比较中的 Definition 使用身份比较。compiled 不保证可序列化；Scene 输出不携带 Definition，传输时应包含其引用的资源。
-
-<SourceLinks
-  sources={[
-    { label: '节点阶段组合', path: 'packages/kernel/reconciler/src/compile/tree/node/visit.ts' },
-    { label: '候选工作区与等待', path: 'packages/kernel/reconciler/src/compile/runtime/cache.ts' },
-    { label: 'Weave 阶段组合', path: 'packages/kernel/reconciler/src/compile/tree/subtree.ts' },
-    { label: '稳定编译环境', path: 'packages/kernel/reconciler/src/compile/runtime/context.ts' },
-    { label: '局部输出组装', path: 'packages/kernel/reconciler/src/compile/output.ts' },
-    { label: 'Scene 与附属产物组装', path: 'packages/kernel/reconciler/src/compile/scene/output.ts' },
-  ]}
-/>
-
-## Weave 接入
-
-一次性 `SceneReconciler`、`SceneReconciler` 和 `SceneReconciler` 共用 Reconciler 的执行器。`incremental` 默认为 `true`：首轮编译建立作者 Weave 树，保存 Core 实际返回的阶段产物；设为 `false` 时执行相同编译主线，但不保留 Weave，也不允许 `update` 或配置 `updateStrategy`。两种模式均支持 `replace`。
-
-增量更新先按顺序应用 `WeaveBatch`，再从候选输入执行统一遍历。输入、声明路径和实际名称读取仍有效时，阶段可以复用；资源随产物一起导入本次工作区，来源记录按当前执行重新建立。有诊断的阶段重新计算，避免遗漏本轮诊断。布局查询仍遵守声明可见性、局部名称遮蔽和延迟 Path 规则。
-
-Weave 为 Node、Coordinate、Path、Scope 分别保存 input、canon、compiled。稀疏输入和上下文相同则复用 canon；否则先 resolve，canon 等价且编译上下文与依赖未变时仍复用 compiled。位置、连接边界和明确锚点按实际读取粒度比较，查询结果相同则停止该分支重算。候选状态共享未变化的产物，修改集合时复制；提交后到最终确认前仍可回滚。
-
-含 Composite 的输入也走同一执行器，并可批次更新其中的作者基础元素。Composite 的生成子树不进入可编辑 Weave 地址空间；修改 Composite 作者输入使用 `replace`。probe、重放凭证和测量工作区属于单轮执行，跨轮重新计算。`captureProvenance` 默认关闭，与是否增量无关。
-
-`replace` 接收完整 IR 并重新编译，`update` 接收绑定当前会话结果的基础元素操作。React 和 Vanilla 的普通输入更新仍使用完整替换。编译输出和目标一起成功提交后才发布新结果；Render 当前使用 `replaceScene`，并不由编译缓存推导细粒度后端 Patch。名称索引、遍历和输出汇总仍可能覆盖整树。
-
-<SourceLinks
-  sources={[
-    { label: '统一执行器', path: 'packages/kernel/reconciler/src/compile/tree/manager.ts' },
-    { label: '阶段复用与资源', path: 'packages/kernel/reconciler/src/compile/runtime/cache.ts' },
-    { label: 'Weave 接入', path: 'packages/kernel/reconciler/src/weave/manager.ts' },
-    { label: '共享产物与候选状态', path: 'packages/kernel/reconciler/src/weave/types.ts' },
-    { label: '会话模式与发布', path: 'packages/kernel/reconciler/src/reconciler.ts' },
+    { title: '编译输出', description: '区分 Scene、资源和领域产物', url: '/kernel/packages/core/compilation-output' },
   ]}
 />

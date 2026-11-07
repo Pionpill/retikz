@@ -1,11 +1,11 @@
----
+﻿---
 title: Compilation Output
 description: Follow how Core assembles Scene, resources and canvas bounds, then delivers artifacts, spatial handles, observer outputs and diagnostics.
 ---
 
 [Node Compilation](/kernel/packages/core/node-compilation), [Path Compilation](/kernel/packages/core/path-compilation) and [Composite Compilation](/kernel/packages/core/composite-compilation) explain how primitives are produced. This page follows those local results through the end of a full compile and explains what the caller receives. Read the traversal and deferred path emission sections of [Compilation](/kernel/packages/core/compilation) first.
 
-This page follows the output of one full compile. Core owns drawing semantics and atomic stages; Reconciler owns full and incremental compilation, cache reuse, and output transactions. See [Independent compilation and reusable state](/kernel/packages/core/compilation#independent-compilation-and-reusable-state) for cached output assembly. SVG / Canvas update strategies belong to rendering.
+This page follows the output of one full compile. Core owns drawing semantics and atomic stages; Reconciler owns full and incremental compilation, cache reuse, and output transactions. See [Independent compilation and reusable state](/kernel/packages/core/compilation#environment-and-reuse-ownership) for cached output assembly. SVG / Canvas update strategies belong to rendering.
 
 ## Overall flow
 

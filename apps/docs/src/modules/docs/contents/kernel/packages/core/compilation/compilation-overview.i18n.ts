@@ -1,24 +1,17 @@
-import type { Lang } from '@/i18n';
-
-/** 编译主线的双语文案 */
-export const compilationOverviewI18n: Record<
-  Lang,
-  Record<'input' | 'context' | 'visit' | 'pending' | 'assemble' | 'output', string>
-> = {
+/** 声明、测量服务与有效配置流程图的双语文案 */
+export const compilationOverviewI18n = {
   zh: {
-    input: '输入 IR',
-    context: '建立上下文',
-    visit: '遍历与布局',
-    pending: '回填延迟路径',
-    assemble: '汇总编译结果',
-    output: 'Scene 与附属产物',
+    input: '声明、测量服务与有效配置',
+    visit: '按实体调度 Core 原子阶段',
+    paths: '引用可查后编译路径并回填',
+    scene: '汇总图元、资源、布局与诊断',
+    core: 'resolve / layout / emit',
   },
   en: {
-    input: 'Input IR',
-    context: 'Create context',
-    visit: 'Traverse and lay out',
-    pending: 'Fill deferred paths',
-    assemble: 'Assemble result',
-    output: 'Scene and artifacts',
+    input: 'Declarations, measurement and options',
+    visit: 'Schedule Core stages by entity',
+    paths: 'Compile paths when references are ready',
+    scene: 'Assemble primitives and resources',
+    core: 'resolve / layout / emit',
   },
 };
