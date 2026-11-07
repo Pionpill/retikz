@@ -373,5 +373,6 @@ export type {
   InputAnchor,
   InputDirectionalAnchor,
   NonEmptyReadonlyArray,
+  SharedPolarPosition,
   ThemeName,
 } from './shared';

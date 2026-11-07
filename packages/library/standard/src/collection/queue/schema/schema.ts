@@ -1,5 +1,6 @@
 import { CompositeBaseSchema, NodeSchema, ScopePropsSchema } from '@retikz/core';
 import { JsonValueSchema, NonNegativeNumberSchema } from '@retikz/foundation';
+import type { ZodUnion } from 'zod';
 import { array, boolean, enum as zodEnum, literal, never, strictObject, string, union } from 'zod';
 
 import { SurfaceSchema } from '../../../presentation/surface/schema';
@@ -41,27 +42,34 @@ const QueueBaseSchema = CompositeBaseSchema.extend({
   defaultCell: CellDefaultSchema.optional(),
 });
 
-/** 有序单元、JSON 数据与骨架互斥的静态队列 Source */
-export const QueueSchema = union([
-  QueueBaseSchema.extend({
-    items: array(union([string(), CellSchema])).describe('Cells ordered from front to back.'),
-    data: never().optional(),
-    skeleton: never().optional(),
-    dataExpand: never().optional(),
-  }),
-  QueueBaseSchema.extend({
-    data: array(JsonValueSchema).readonly().describe('JSON values ordered from front to back.'),
-    items: never().optional(),
-    skeleton: never().optional(),
-    dataExpand: DataExpandSchema,
-  }),
-  QueueBaseSchema.extend({
-    skeleton: QueueSkeletonSchema,
-    items: never().optional(),
-    data: never().optional(),
-    dataExpand: never().optional(),
-  }),
-])
+/** 显式单元入口 */
+const QueueItemsSchema = QueueBaseSchema.extend({
+  items: array(union([string(), CellSchema])).describe('Cells ordered from front to back.'),
+  data: never().optional(),
+  skeleton: never().optional(),
+  dataExpand: never().optional(),
+});
+
+/** JSON 数据入口 */
+const QueueDataSchema = QueueBaseSchema.extend({
+  data: array(JsonValueSchema).readonly().describe('JSON values ordered from front to back.'),
+  items: never().optional(),
+  skeleton: never().optional(),
+  dataExpand: DataExpandSchema,
+});
+
+/** 骨架入口 */
+const QueueSkeletonInputSchema = QueueBaseSchema.extend({
+  skeleton: QueueSkeletonSchema,
+  items: never().optional(),
+  data: never().optional(),
+  dataExpand: never().optional(),
+});
+
+/** 有序单元、JSON 数据与骨架互斥的静态输入 */
+export const QueueSchema: ZodUnion<
+  readonly [typeof QueueItemsSchema, typeof QueueDataSchema, typeof QueueSkeletonInputSchema]
+> = union([QueueItemsSchema, QueueDataSchema, QueueSkeletonInputSchema])
   .superRefine((node, context) => {
     const ids = new Set<string>();
     node.items?.forEach((cell, index) => {
