@@ -260,23 +260,15 @@ export type InputCoordinate = IRCoordinate & {
 
 <DocTabs defaultValue="members">
 
-<DocTab value="members" label="属性">
+<DocTab value="members" label="直接属性">
+
+其余属性继承自 `IRNodeLabel`，并移除 `'position'`。完整组合关系见“类型定义”
 
 <ApiTable>
 
-| 成员           | 类型                                                                                                                                                                                  | 默认值 | 说明                                                                         |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------- |
-| `align?`       | `"start" \| "middle" \| "end"`                                                                                                                                                        | —      | 标签视觉框沿附着点切线的对齐方式，缺省 middle                                |
-| `distance?`    | `number`                                                                                                                                                                              | —      | 节点边框到旋转后标签视觉框的净距；省略时使用编译配置 labelDistance           |
-| `font?`        | `{ family?: string \| undefined; size?: string \| number \| undefined; weight?: number \| "normal" \| "bold" \| undefined; style?: "normal" \| "italic" \| "oblique" \| undefined; }` | —      | 标签字体覆盖，缺省字段继承节点字体                                           |
-| `keepUpright?` | `false \| true`                                                                                                                                                                       | —      | 为 true 时将倒置文字翻转 180 度；缺省 false                                  |
-| `opacity?`     | `number`                                                                                                                                                                              | —      | 标签不透明度覆盖；省略时继承节点整体不透明度                                 |
-| `pin?`         | `IRNodeLabel['pin']`                                                                                                                                                                  | —      | 外侧标签引线；true 使用默认值，对象覆盖引线样式，不能与 inside 同用          |
-| `placement?`   | `"outside" \| "inside"`                                                                                                                                                               | —      | 标签位于附着点的外侧或内侧，缺省 outside                                     |
-| `position?`    | `InputNodeLabelPosition`                                                                                                                                                              | —      | 标签位置；省略时位于节点上方，支持方向、角度或边界比例                       |
-| `rotate?`      | `number \| "none" \| "radial" \| "tangent"`                                                                                                                                           | —      | 标签自身旋转：none、radial、tangent 或角度；边界比例位置以所选边的外法向为准 |
-| `text`         | `IRNodeLabel['text']`                                                                                                                                                                 | —      | 标签文本块：字符串支持换行，非空行数组支持逐行样式与混排片段                 |
-| `textColor?`   | `string \| number`                                                                                                                                                                    | —      | 标签文字颜色，缺省沿继承链求值                                               |
+| 成员        | 类型                     | 默认值 | 说明                                                   |
+| ----------- | ------------------------ | ------ | ------------------------------------------------------ |
+| `position?` | `InputNodeLabelPosition` | —      | 标签位置；省略时位于节点上方，支持方向、角度或边界比例 |
 
 </ApiTable>
 
@@ -348,7 +340,7 @@ export type InputNodeLabelPosition =
 
 ## 执行与辅助契约
 
-#### <ApiSourceLink label={"BoundaryFitContext"} path={"packages/kernel/core/src/contract/node/boundary.ts"} startLine={10}>BoundaryFitContext</ApiSourceLink>
+#### <ApiSourceLink label={"BoundaryFitContext"} path={"packages/kernel/core/src/contract/node/boundary.ts"} startLine={9}>BoundaryFitContext</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -390,7 +382,7 @@ export type NodeTextColor = ValueOf<typeof NodeTextColor>;
 
 ## 扩展定义与注册
 
-#### <ApiSourceLink label={"BoundaryDefinition"} path={"packages/kernel/core/src/contract/node/boundary.ts"} startLine={49}>BoundaryDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"BoundaryDefinition"} path={"packages/kernel/core/src/contract/node/boundary.ts"} startLine={42}>BoundaryDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -398,14 +390,13 @@ export type NodeTextColor = ValueOf<typeof NodeTextColor>;
 
 <ApiTable>
 
-| 成员                   | 类型                                                                                                        | 默认值               | 说明                                                                                                                                                                                                                                     |
-| ---------------------- | ----------------------------------------------------------------------------------------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `computeBoundaryPoint` | `(rect: CenteredBox, toward: Position, params: Record<string, JsonValue>) => Position`                      | —                    | 从中心指向 toward 的射线与连接面的交点                                                                                                                                                                                                   |
-| `computeOutline?`      | `(rect: CenteredBox, params: Record<string, JsonValue>) => ReadonlyArray<PathCommand>`                      | `undefined`          | 返回与解析后 rect 同坐标系的精确闭合连接面轮廓；空数组表示合法空几何<br />可选，主要供 Inspect 调试时显示连接面轮廓，通常可以省略。省略不影响连接点或锚点计算，但 Inspect 无法显示精确连接面轮廓；提供此方法不会让连接面在正常绘制中显示 |
-| `name`                 | `string`                                                                                                    | —                    | 注册表 key，由 IR `boundary` 引用                                                                                                                                                                                                        |
-| `paramsSchema`         | `BoundaryDefinition["paramsSchema"]`                                                                        | —                    | 运行时连接面参数的 schema                                                                                                                                                                                                                |
-| `resolveAnchor?`       | `(rect: CenteredBox, name: OpenString<Anchor>, params: Record<string, JsonValue>) => Position \| undefined` | `undefined`          | 可选的标准方位 anchor 支持；Node 引用中的中心与形状专属名称不调用此回调<br />未提供时由调用方回退或报告不支持该 anchor                                                                                                                   |
-| `resolveRect?`         | `(context: BoundaryFitContext, params: Record<string, JsonValue>) => CenteredBox`                           | `context.visualRect` | 根据视觉 shape 和实例 params 解析本连接面使用的矩形<br />未提供时使用视觉矩形                                                                                                                                                            |
+| 成员                   | 类型                                                                                                        | 默认值               | 说明                                                                                                                   |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `computeBoundaryPoint` | `(rect: CenteredBox, toward: Position, params: Record<string, JsonValue>) => Position`                      | —                    | 从中心指向 toward 的射线与连接面的交点                                                                                 |
+| `name`                 | `string`                                                                                                    | —                    | 注册表 key，由 IR `boundary` 引用                                                                                      |
+| `paramsSchema`         | `BoundaryDefinition["paramsSchema"]`                                                                        | —                    | 运行时连接面参数的 schema                                                                                              |
+| `resolveAnchor?`       | `(rect: CenteredBox, name: OpenString<Anchor>, params: Record<string, JsonValue>) => Position \| undefined` | `undefined`          | 可选的标准方位 anchor 支持；Node 引用中的中心与形状专属名称不调用此回调<br />未提供时由调用方回退或报告不支持该 anchor |
+| `resolveRect?`         | `(context: BoundaryFitContext, params: Record<string, JsonValue>) => CenteredBox`                           | `context.visualRect` | 根据视觉 shape 和实例 params 解析本连接面使用的矩形<br />未提供时使用视觉矩形                                          |
 
 </ApiTable>
 
@@ -421,7 +412,7 @@ export type BoundaryDefinition = InputBoundaryDefinition<JsonObject>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InputBoundaryDefinition"} path={"packages/kernel/core/src/contract/node/boundary.ts"} startLine={21}>InputBoundaryDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"InputBoundaryDefinition"} path={"packages/kernel/core/src/contract/node/boundary.ts"} startLine={20}>InputBoundaryDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -429,15 +420,14 @@ export type BoundaryDefinition = InputBoundaryDefinition<JsonObject>;
 
 <ApiTable>
 
-| 成员                   | 类型                                                                                      | 默认值               | 说明                                                                                                                                                                                                                                     |
-| ---------------------- | ----------------------------------------------------------------------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `TParams` (泛型)       | `extends JsonObject`                                                                      | —                    | 由 paramsSchema 解析得到的 JSON 对象类型，各连接面回调接收同一参数类型                                                                                                                                                                   |
-| `computeBoundaryPoint` | `(rect: CenteredBox, toward: Position, params: TParams) => Position`                      | —                    | 从中心指向 toward 的射线与连接面的交点                                                                                                                                                                                                   |
-| `computeOutline?`      | `(rect: CenteredBox, params: TParams) => ReadonlyArray<PathCommand>`                      | `undefined`          | 返回与解析后 rect 同坐标系的精确闭合连接面轮廓；空数组表示合法空几何<br />可选，主要供 Inspect 调试时显示连接面轮廓，通常可以省略。省略不影响连接点或锚点计算，但 Inspect 无法显示精确连接面轮廓；提供此方法不会让连接面在正常绘制中显示 |
-| `name`                 | `string`                                                                                  | —                    | 注册表 key，由 IR `boundary` 引用                                                                                                                                                                                                        |
-| `paramsSchema`         | `ZodType<TParams>`                                                                        | —                    | 运行时连接面参数的 schema                                                                                                                                                                                                                |
-| `resolveAnchor?`       | `(rect: CenteredBox, name: OpenString<Anchor>, params: TParams) => Position \| undefined` | `undefined`          | 可选的标准方位 anchor 支持；Node 引用中的中心与形状专属名称不调用此回调<br />未提供时由调用方回退或报告不支持该 anchor                                                                                                                   |
-| `resolveRect?`         | `(context: BoundaryFitContext, params: TParams) => CenteredBox`                           | `context.visualRect` | 根据视觉 shape 和实例 params 解析本连接面使用的矩形<br />未提供时使用视觉矩形                                                                                                                                                            |
+| 成员                   | 类型                                                                                      | 默认值               | 说明                                                                                                                   |
+| ---------------------- | ----------------------------------------------------------------------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `TParams` (泛型)       | `extends JsonObject`                                                                      | —                    | 由 paramsSchema 解析得到的 JSON 对象类型，各连接面回调接收同一参数类型                                                 |
+| `computeBoundaryPoint` | `(rect: CenteredBox, toward: Position, params: TParams) => Position`                      | —                    | 从中心指向 toward 的射线与连接面的交点                                                                                 |
+| `name`                 | `string`                                                                                  | —                    | 注册表 key，由 IR `boundary` 引用                                                                                      |
+| `paramsSchema`         | `ZodType<TParams>`                                                                        | —                    | 运行时连接面参数的 schema                                                                                              |
+| `resolveAnchor?`       | `(rect: CenteredBox, name: OpenString<Anchor>, params: TParams) => Position \| undefined` | `undefined`          | 可选的标准方位 anchor 支持；Node 引用中的中心与形状专属名称不调用此回调<br />未提供时由调用方回退或报告不支持该 anchor |
+| `resolveRect?`         | `(context: BoundaryFitContext, params: TParams) => CenteredBox`                           | `context.visualRect` | 根据视觉 shape 和实例 params 解析本连接面使用的矩形<br />未提供时使用视觉矩形                                          |
 
 </ApiTable>
 
@@ -450,7 +440,6 @@ export type InputBoundaryDefinition<TParams extends JsonObject> = {
   name: string;
   paramsSchema: ZodType<TParams>;
   resolveRect?: (context: BoundaryFitContext, params: TParams) => CenteredBox;
-  computeOutline?: (rect: CenteredBox, params: TParams) => ReadonlyArray<PathCommand>;
   computeBoundaryPoint: (rect: CenteredBox, toward: Position, params: TParams) => Position;
   resolveAnchor?: (rect: CenteredBox, name: OpenString<Anchor>, params: TParams) => Position | undefined;
 };
@@ -460,7 +449,7 @@ export type InputBoundaryDefinition<TParams extends JsonObject> = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ShapeDefinition"} path={"packages/kernel/core/src/contract/node/shape.ts"} startLine={192}>ShapeDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"ShapeDefinition"} path={"packages/kernel/core/src/contract/node/shape.ts"} startLine={179}>ShapeDefinition</ApiSourceLink>
 
 所有函数收 `JsonObject`（实际类型由 `paramsSchema.parse` 在编译期保证）；registry 同构
 不泛型化（避免逆变 / 落 any）。定义点用 `defineShape<TParams>` 拿类型安全
@@ -477,8 +466,6 @@ export type InputBoundaryDefinition<TParams extends JsonObject> = {
 | `computeCircumscribedGeometry` | `(innerHalfWidth: number, innerHalfHeight: number, params: Record<string, JsonValue>) => ShapeCircumscribedGeometry`                          | —                        | 根据包含 padding 的内容半轴和 params，计算完整形状的未旋转外接盒半轴及中心偏移                                                                                                  |
 | `computeConnectionEnvelope?`   | `(rect: CenteredBox, kind: ConnectionEnvelopeKind, params: Record<string, JsonValue>) => ConnectionEnvelope \| undefined`                     | `undefined`              | 返回安全包含视觉几何轮廓的规则连接面半轴<br />结果与 `rect` 同心、同旋转；不含 stroke、shadow、filter 或 label 的视觉外扩。未提供时 tight boundary 回退到 bounds 并发出 warning |
 | `computeEdgePoint?`            | `(rect: CenteredBox, side: Side, t: number, params: Record<string, JsonValue>) => Position`                                                   | `undefined`              | 解析标准 side 上 `t ∈ [0, 1]` 的比例点<br />`rect` 可包含旋转；未实现表示该 shape 不支持 side anchor                                                                            |
-| `computeKeyPoints?`            | `(rect: CenteredBox, params: Record<string, JsonValue>) => ReadonlyArray<Readonly<{ name: string; position: Position; }>>`                    | —                        | 返回 provider 命名的稳定结构关键点；名称在同一实例内必须唯一                                                                                                                    |
-| `computeOutline?`              | `(rect: CenteredBox, params: Record<string, JsonValue>) => ReadonlyArray<PathCommand>`                                                        | —                        | 返回与 rect 同坐标系的精确闭合视觉轮廓；空数组表示合法空几何                                                                                                                    |
 | `emit`                         | `(rect: CenteredBox, style: CompiledShapeStyle, round: (n: number) => number, params: Record<string, JsonValue>) => Iterable<ScenePrimitive>` | —                        | 生成轴对齐 rect 内的视觉 primitive                                                                                                                                              |
 | `name`                         | `string`                                                                                                                                      | —                        | shape 名称，由 IR `node.shape` 引用                                                                                                                                             |
 | `paramsSchema`                 | `ShapeDefinition["paramsSchema"]`                                                                                                             | —                        | 实例参数 schema<br />解析结果必须是 JSON object；无参 shape 使用 `z.strictObject({})`                                                                                           |
@@ -499,7 +486,7 @@ export type ShapeDefinition = InputShapeDefinition<JsonObject>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InputShapeDefinition"} path={"packages/kernel/core/src/contract/node/shape.ts"} startLine={124}>InputShapeDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"InputShapeDefinition"} path={"packages/kernel/core/src/contract/node/shape.ts"} startLine={116}>InputShapeDefinition</ApiSourceLink>
 
 描述第三方作者和内置 shape 共同实现的运行时能力契约；定义本身不进入 IR。
 每个能力函数都以实例级 `params` 作为末位参数
@@ -517,8 +504,6 @@ export type ShapeDefinition = InputShapeDefinition<JsonObject>;
 | `computeCircumscribedGeometry` | `(innerHalfWidth: number, innerHalfHeight: number, params: TParams) => ShapeCircumscribedGeometry`                          | —                        | 根据包含 padding 的内容半轴和 params，计算完整形状的未旋转外接盒半轴及中心偏移                                                                                                  |
 | `computeConnectionEnvelope?`   | `(rect: CenteredBox, kind: ConnectionEnvelopeKind, params: TParams) => ConnectionEnvelope \| undefined`                     | `undefined`              | 返回安全包含视觉几何轮廓的规则连接面半轴<br />结果与 `rect` 同心、同旋转；不含 stroke、shadow、filter 或 label 的视觉外扩。未提供时 tight boundary 回退到 bounds 并发出 warning |
 | `computeEdgePoint?`            | `(rect: CenteredBox, side: Side, t: number, params: TParams) => Position`                                                   | `undefined`              | 解析标准 side 上 `t ∈ [0, 1]` 的比例点<br />`rect` 可包含旋转；未实现表示该 shape 不支持 side anchor                                                                            |
-| `computeKeyPoints?`            | `(rect: CenteredBox, params: TParams) => ReadonlyArray<GeometryKeyPoint>`                                                   | —                        | 返回 provider 命名的稳定结构关键点；名称在同一实例内必须唯一                                                                                                                    |
-| `computeOutline?`              | `(rect: CenteredBox, params: TParams) => ReadonlyArray<PathCommand>`                                                        | —                        | 返回与 rect 同坐标系的精确闭合视觉轮廓；空数组表示合法空几何                                                                                                                    |
 | `emit`                         | `(rect: CenteredBox, style: CompiledShapeStyle, round: (n: number) => number, params: TParams) => Iterable<ScenePrimitive>` | —                        | 生成轴对齐 rect 内的视觉 primitive                                                                                                                                              |
 | `name`                         | `string`                                                                                                                    | —                        | shape 名称，由 IR `node.shape` 引用                                                                                                                                             |
 | `paramsSchema`                 | `ZodType<TParams>`                                                                                                          | —                        | 实例参数 schema<br />解析结果必须是 JSON object；无参 shape 使用 `z.strictObject({})`                                                                                           |
@@ -547,8 +532,6 @@ export type InputShapeDefinition<TParams extends JsonObject> = {
     kind: ConnectionEnvelopeKind,
     params: TParams,
   ) => ConnectionEnvelope | undefined;
-  computeOutline?: (rect: CenteredBox, params: TParams) => ReadonlyArray<PathCommand>;
-  computeKeyPoints?: (rect: CenteredBox, params: TParams) => ReadonlyArray<GeometryKeyPoint>;
   computeEdgePoint?: (rect: CenteredBox, side: Side, t: number, params: TParams) => Position;
   emit: (
     rect: CenteredBox,
@@ -564,7 +547,7 @@ export type InputShapeDefinition<TParams extends JsonObject> = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ShapeCircumscribedGeometry"} path={"packages/kernel/core/src/contract/node/shape.ts"} startLine={106}>ShapeCircumscribedGeometry</ApiSourceLink>
+#### <ApiSourceLink label={"ShapeCircumscribedGeometry"} path={"packages/kernel/core/src/contract/node/shape.ts"} startLine={98}>ShapeCircumscribedGeometry</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -596,27 +579,7 @@ export type ShapeCircumscribedGeometry = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"BUILTIN_BOUNDARIES"} path={"packages/kernel/core/src/providers/boundary.ts"} startLine={120}>BUILTIN_BOUNDARIES</ApiSourceLink>
-
-```ts
-export const BUILTIN_BOUNDARIES: ReadonlyMap<string, BoundaryDefinition> = new Map([
-  [circleBoundary.name, circleBoundary],
-  [rectangleBoundary.name, rectangleBoundary],
-  [ellipseBoundary.name, ellipseBoundary],
-]);
-```
-
-#### <ApiSourceLink label={"BUILTIN_SHAPES"} path={"packages/kernel/core/src/providers/shape/shape.ts"} startLine={8}>BUILTIN_SHAPES</ApiSourceLink>
-
-```ts
-export const BUILTIN_SHAPES: ReadonlyMap<string, ShapeDefinition> = new Map([
-  [rectangle.name, rectangle],
-  [ellipseShape.name, ellipseShape],
-  [polygon.name, polygon],
-]);
-```
-
-#### <ApiSourceLink label={"defineBoundary"} path={"packages/kernel/core/src/contract/node/boundary.ts"} startLine={58}>defineBoundary</ApiSourceLink>
+#### <ApiSourceLink label={"defineBoundary"} path={"packages/kernel/core/src/contract/node/boundary.ts"} startLine={51}>defineBoundary</ApiSourceLink>
 
 将返回值加入 CompileOptions.boundaries 后，节点或路径端点可通过 boundary 引用其 name。此函数不注册连接面，也不解析实例参数
 
@@ -648,7 +611,7 @@ export declare const defineBoundary: <TParams extends JsonObject>(
 
 </DocTabs>
 
-#### <ApiSourceLink label={"defineShape"} path={"packages/kernel/core/src/contract/node/shape.ts"} startLine={201}>defineShape</ApiSourceLink>
+#### <ApiSourceLink label={"defineShape"} path={"packages/kernel/core/src/contract/node/shape.ts"} startLine={188}>defineShape</ApiSourceLink>
 
 将返回值加入 CompileOptions.shapes 后，节点可通过 shape 引用其 name。此函数不注册形状，也不解析实例参数
 
@@ -773,19 +736,22 @@ export type IRNode = Omit<ZodInput<typeof NodeSchema>, 'position'> & {
 
 <ApiTable>
 
-| 成员           | 类型                                                                                                                                                                                                                    | 默认值 | 说明                                                                         |
-| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------- |
-| `align?`       | `"start" \| "middle" \| "end"`                                                                                                                                                                                          | —      | 标签视觉框沿附着点切线的对齐方式，缺省 middle                                |
-| `distance?`    | `number`                                                                                                                                                                                                                | —      | 节点边框到旋转后标签视觉框的净距；省略时使用编译配置 labelDistance           |
-| `font?`        | `{ family?: string \| undefined; size?: string \| number \| undefined; weight?: number \| "normal" \| "bold" \| undefined; style?: "normal" \| "italic" \| "oblique" \| undefined; }`                                   | —      | 标签字体覆盖，缺省字段继承节点字体                                           |
-| `keepUpright?` | `false \| true`                                                                                                                                                                                                         | —      | 为 true 时将倒置文字翻转 180 度；缺省 false                                  |
-| `opacity?`     | `number`                                                                                                                                                                                                                | —      | 标签不透明度覆盖；省略时继承节点整体不透明度                                 |
-| `pin?`         | `ZodInfer<typeof NodeLabelSchema.shape["pin"]>`                                                                                                                                                                         | —      | 外侧标签引线；true 使用默认值，对象覆盖引线样式，不能与 inside 同用          |
-| `placement?`   | `"outside" \| "inside"`                                                                                                                                                                                                 | —      | 标签位于附着点的外侧或内侧，缺省 outside                                     |
-| `position?`    | `number \| "top" \| "right" \| "bottom" \| "left" \| "top-right" \| "top-left" \| "bottom-right" \| "bottom-left" \| "center" \| { boundary: "top" \| "right" \| "bottom" \| "left"; fraction?: number \| undefined; }` | —      | 命名方向、center、角度或边界比例位置，缺省 top                               |
-| `rotate?`      | `number \| "none" \| "radial" \| "tangent"`                                                                                                                                                                             | —      | 标签自身旋转：none、radial、tangent 或角度；边界比例位置以所选边的外法向为准 |
-| `text`         | `ZodInfer<typeof NodeLabelSchema.shape["text"]>`                                                                                                                                                                        | —      | 标签文本块：字符串支持换行，非空行数组支持逐行样式与混排片段                 |
-| `textColor?`   | `string \| number`                                                                                                                                                                                                      | —      | 标签文字颜色，缺省沿继承链求值                                               |
+| 成员            | 类型                                                                                                                                                                                                                    | 默认值 | 说明                                                                         |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------- |
+| `align?`        | `"start" \| "middle" \| "end"`                                                                                                                                                                                          | —      | 标签视觉框沿附着点切线的对齐方式，缺省 middle                                |
+| `distance?`     | `number`                                                                                                                                                                                                                | —      | 节点边框到旋转后标签视觉框的净距；省略时使用编译配置 labelDistance           |
+| `font?`         | `{ family?: string \| undefined; size?: string \| number \| undefined; weight?: number \| "normal" \| "bold" \| undefined; style?: "normal" \| "italic" \| "oblique" \| undefined; }`                                   | —      | 标签字体覆盖，缺省字段继承节点字体                                           |
+| `keepUpright?`  | `false \| true`                                                                                                                                                                                                         | —      | 为 true 时将倒置文字翻转 180 度；缺省 false                                  |
+| `lineHeight?`   | `number`                                                                                                                                                                                                                | —      | 最小行槽高度，缺省为有效字号的 1.2 倍，实际内容更高时扩展                    |
+| `maxTextWidth?` | `number`                                                                                                                                                                                                                | —      | 自动折行宽度；过长文字按字素拆分，公式保持完整                               |
+| `opacity?`      | `number`                                                                                                                                                                                                                | —      | 与节点整体透明度相乘的标签因子；省略为 1，显式 0 保留                        |
+| `pin?`          | `ZodInfer<typeof NodeLabelSchema.shape["pin"]>`                                                                                                                                                                         | —      | 外侧标签引线；true 使用默认值，对象覆盖引线样式，不能与 inside 同用          |
+| `placement?`    | `"outside" \| "inside"`                                                                                                                                                                                                 | —      | 标签位于附着点的外侧或内侧，缺省 outside                                     |
+| `position?`     | `number \| "center" \| "top" \| "right" \| "bottom" \| "left" \| "top-right" \| "top-left" \| "bottom-right" \| "bottom-left" \| { boundary: "top" \| "right" \| "bottom" \| "left"; fraction?: number \| undefined; }` | —      | 命名方向、center、角度或边界比例位置，缺省 top                               |
+| `rotate?`       | `number \| "none" \| "radial" \| "tangent"`                                                                                                                                                                             | —      | 标签自身旋转：none、radial、tangent 或角度；边界比例位置以所选边的外法向为准 |
+| `text`          | `ZodInfer<typeof NodeLabelSchema.shape["text"]>`                                                                                                                                                                        | —      | 标签文本块：字符串支持换行，非空行数组支持逐行样式与混排片段                 |
+| `textAlign?`    | `"start" \| "middle" \| "end"`                                                                                                                                                                                          | —      | 文本块内部行对齐，缺省 middle；独立于边界附着 align                          |
+| `textColor?`    | `string \| number`                                                                                                                                                                                                      | —      | 标签文字颜色，缺省沿继承链求值                                               |
 
 </ApiTable>
 
@@ -807,7 +773,10 @@ export type IRNodeLabel = ZodInfer<typeof NodeLabelSchema>;
   descriptions={{
     text: '标签文本块：字符串支持换行，非空行数组支持逐行样式与混排片段',
     textColor: '标签文字颜色，缺省沿继承链求值',
-    opacity: '标签不透明度覆盖；省略时继承节点整体不透明度',
+    opacity: '与节点整体透明度相乘的标签因子；省略为 1，显式 0 保留',
+    textAlign: '文本块内部行对齐，缺省 middle；独立于边界附着 align',
+    lineHeight: '最小行槽高度，缺省为有效字号的 1.2 倍，实际内容更高时扩展',
+    maxTextWidth: '自动折行宽度；过长文字按字素拆分，公式保持完整',
     font: '标签字体覆盖，缺省字段继承节点字体',
     align: '标签视觉框沿附着点切线的对齐方式，缺省 middle',
     position: '命名方向、center、角度或边界比例位置，缺省 top',
@@ -833,12 +802,12 @@ export type IRNodeLabel = ZodInfer<typeof NodeLabelSchema>;
 
 | 成员            | 类型                                                                                                                                                                                                               | 默认值 | 说明                                                                    |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ | ----------------------------------------------------------------------- |
-| `align?`        | `"start" \| "middle" \| "end"`                                                                                                                                                                                     | —      | 多行文字块内的水平对齐，缺省为 middle                                   |
 | `lineHeight?`   | `number`                                                                                                                                                                                                           | —      | 行高，单位为用户单位；省略时使用字号的 1.2 倍                           |
 | `margin?`       | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —      | 连接面外间距；数字应用于各边，对象按单边、轴、default 的顺序取值        |
 | `maxTextWidth?` | `number`                                                                                                                                                                                                           | —      | 自动折行阈值，单位为用户单位；省略时不自动折行                          |
 | `minimumSize?`  | `number \| { default?: number \| undefined; width?: number \| undefined; height?: number \| undefined; }`                                                                                                          | —      | 可见边框最小尺寸；数字同时指定宽高，对象的 width、height 优先于 default |
 | `padding?`      | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —      | 正文到边框的内间距；数字应用于各边，对象按单边、轴、default 的顺序取值  |
+| `textAlign?`    | `"start" \| "middle" \| "end"`                                                                                                                                                                                     | —      | 多行文字块内的水平对齐，缺省为 middle                                   |
 | `width?`        | `number`                                                                                                                                                                                                           | —      | 缩放前可见边框的精确宽度，不含 margin，不能小于有效最小宽度             |
 
 </ApiTable>
@@ -859,7 +828,7 @@ export type IRNodeLayout = ZodInfer<typeof NodeLayoutSchema>;
   name="NodeLayoutSchema"
   description="节点的尺寸、内外间距和文字排布"
   descriptions={{
-    align: '多行文字块内的水平对齐，缺省为 middle',
+    textAlign: '多行文字块内的水平对齐，缺省为 middle',
     lineHeight: '行高，单位为用户单位；省略时使用字号的 1.2 倍',
     maxTextWidth: '自动折行阈值，单位为用户单位；省略时不自动折行',
     width: '缩放前可见边框的精确宽度，不含 margin，不能小于有效最小宽度',
@@ -881,23 +850,23 @@ export type IRNodeLayout = ZodInfer<typeof NodeLayoutSchema>;
 
 <ApiTable>
 
-| 成员           | 类型                                                                                                                                                                                                                                                                                  | 默认值 | 说明                                                                   |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------- |
-| `blendMode?`   | `"color" \| "normal" \| "multiply" \| "screen" \| "overlay" \| "darken" \| "lighten" \| "color-dodge" \| "color-burn" \| "hard-light" \| "soft-light" \| "difference" \| "exclusion" \| "hue" \| "saturation" \| "luminosity"`                                                        | —      | 图元与背景的混合模式                                                   |
-| `color?`       | `string`                                                                                                                                                                                                                                                                              | —      | 图元主色，未单独覆盖的描边、填充和标签可由它派生                       |
-| `dashed?`      | `false \| true`                                                                                                                                                                                                                                                                       | —      | 虚线预设，被显式 dashPattern 覆盖                                      |
-| `dashOffset?`  | `number`                                                                                                                                                                                                                                                                              | —      | 虚线起点偏移，允许正数、零或负数                                       |
-| `dashPattern?` | `Array<number>`                                                                                                                                                                                                                                                                       | —      | 显式虚线段与间隔长度，优先于 dashed 和 dotted                          |
-| `dotted?`      | `false \| true`                                                                                                                                                                                                                                                                       | —      | 点线预设，被 dashPattern 或 dashed 覆盖                                |
-| `fill?`        | `ZodInfer<typeof NodeStyleSchema.shape["fill"]>`                                                                                                                                                                                                                                      | —      | 填充：精确颜色、主色权重或 Paint                                       |
-| `font?`        | `{ family?: string \| undefined; size?: string \| number \| undefined; weight?: number \| "normal" \| "bold" \| undefined; style?: "normal" \| "italic" \| "oblique" \| undefined; }`                                                                                                 | —      | 正文字体覆盖，缺省字段沿用文字默认值                                   |
-| `lineCap?`     | `"butt" \| "round" \| "square"`                                                                                                                                                                                                                                                       | —      | 描边端帽形状                                                           |
-| `lineJoin?`    | `"round" \| "miter" \| "bevel"`                                                                                                                                                                                                                                                       | —      | 描边拐角连接形状                                                       |
-| `opacity?`     | `number \| { overall?: number \| undefined; fill?: number \| undefined; stroke?: number \| undefined; }`                                                                                                                                                                              | —      | 整体透明度或独立的 overall、fill、stroke 因子                          |
-| `shadow?`      | `"none" \| "sm" \| "md" \| "lg" \| "xl" \| "2xl" \| { preset?: "none" \| "sm" \| "md" \| "lg" \| "xl" \| "2xl" \| undefined; offsetX?: number \| undefined; offsetY?: number \| undefined; blur?: number \| undefined; color?: string \| undefined; opacity?: number \| undefined; }` | —      | 投影预设或投影配置，不影响节点形状尺寸                                 |
-| `stroke?`      | `ZodInfer<typeof NodeStyleSchema.shape["stroke"]>`                                                                                                                                                                                                                                    | —      | 描边：精确颜色、主色权重或 Paint                                       |
-| `strokeWidth?` | `number`                                                                                                                                                                                                                                                                              | —      | 边框宽度，单位为用户单位；省略时默认 1                                 |
-| `textColor?`   | `string \| number`                                                                                                                                                                                                                                                                    | —      | 文字颜色或主色权重；contrast 根据静态填充选择黑白，缺省为 currentColor |
+| 成员           | 类型                                                                                                                                                                                                                                                                                  | 默认值 | 说明                                                                           |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------ |
+| `blendMode?`   | `"normal" \| "color" \| "multiply" \| "screen" \| "overlay" \| "darken" \| "lighten" \| "color-dodge" \| "color-burn" \| "hard-light" \| "soft-light" \| "difference" \| "exclusion" \| "hue" \| "saturation" \| "luminosity"`                                                        | —      | 图元与背景的混合模式                                                           |
+| `color?`       | `string`                                                                                                                                                                                                                                                                              | —      | 主色，描边、填充、标签与箭头可继承，独立设置优先                               |
+| `dashed?`      | `false \| true`                                                                                                                                                                                                                                                                       | —      | 虚线预设，被显式 dashPattern 覆盖                                              |
+| `dashOffset?`  | `number`                                                                                                                                                                                                                                                                              | —      | 虚线起点偏移，允许正数、零或负数                                               |
+| `dashPattern?` | `Array<number>`                                                                                                                                                                                                                                                                       | —      | 显式虚线段与间隔长度，优先于 dashed 和 dotted                                  |
+| `dotted?`      | `false \| true`                                                                                                                                                                                                                                                                       | —      | 点线预设，被 dashPattern 或 dashed 覆盖                                        |
+| `fill?`        | `ZodInfer<typeof NodeStyleSchema.shape["fill"]>`                                                                                                                                                                                                                                      | —      | 填充颜色或绘制对象                                                             |
+| `font?`        | `{ family?: string \| undefined; size?: string \| number \| undefined; weight?: number \| "normal" \| "bold" \| undefined; style?: "normal" \| "italic" \| "oblique" \| undefined; }`                                                                                                 | —      | 内容文字的字体设置，省略字段沿用文字默认                                       |
+| `lineCap?`     | `"butt" \| "round" \| "square"`                                                                                                                                                                                                                                                       | —      | 描边端帽形状                                                                   |
+| `lineJoin?`    | `"round" \| "miter" \| "bevel"`                                                                                                                                                                                                                                                       | —      | 描边拐角连接形状                                                               |
+| `opacity?`     | `number \| { overall?: number \| undefined; fill?: number \| undefined; stroke?: number \| undefined; }`                                                                                                                                                                              | —      | 单元格整体透明度                                                               |
+| `shadow?`      | `"none" \| "sm" \| "lg" \| "xl" \| "2xl" \| "md" \| { preset?: "none" \| "sm" \| "lg" \| "xl" \| "2xl" \| "md" \| undefined; offsetX?: number \| undefined; offsetY?: number \| undefined; blur?: number \| undefined; color?: string \| undefined; opacity?: number \| undefined; }` | —      | 投影预设或投影配置，不影响节点形状尺寸                                         |
+| `stroke?`      | `ZodInfer<typeof NodeStyleSchema.shape["stroke"]>`                                                                                                                                                                                                                                    | —      | 描边颜色或绘制对象                                                             |
+| `strokeWidth?` | `number`                                                                                                                                                                                                                                                                              | —      | 边框宽度，单位为用户单位；省略时默认 1                                         |
+| `textColor?`   | `string \| number`                                                                                                                                                                                                                                                                    | —      | 文字颜色；数字由有效主色派生，contrast 根据静态填充选黑或白，默认 currentColor |
 
 </ApiTable>
 
@@ -966,33 +935,6 @@ export type IRNodeStyle = ZodInfer<typeof NodeStyleSchema>;
   }}
 />
 
-#### <ApiSourceLink label={"NodeLabelBoundaryPositionSchema"} path={"packages/kernel/core/src/schemas/node/label.ts"} startLine={41}>NodeLabelBoundaryPositionSchema</ApiSourceLink>
-
-<ZodSchema
-  name="NodeLabelBoundaryPositionSchema"
-  description="标签在盒状节点某条边界上的附着位置"
-  descriptions={{
-    boundary: '用于附着标签的标准边界方向',
-    fraction: '沿所选边的 0–1 比例位置，缺省 0.5',
-  }}
-/>
-
-#### <ApiSourceLink label={"NodeLabelPinSchema"} path={"packages/kernel/core/src/schemas/node/label.ts"} startLine={49}>NodeLabelPinSchema</ApiSourceLink>
-
-<ZodSchema
-  name="NodeLabelPinSchema"
-  description="外侧节点标签的引线样式"
-  descriptions={{
-    opacity: '引线独立透明度；省略时使用标签的有效透明度',
-    stroke: '引线颜色或由标签主色派生的权重',
-    strokeWidth: '引线宽度，单位为用户单位；默认 1',
-    dashPattern: '引线虚线段与间隔长度',
-    dashOffset: '虚线起点偏移，允许正数、零或负数',
-    lineCap: '描边端帽形状',
-    lineJoin: '描边拐角连接形状',
-  }}
-/>
-
 #### <ApiSourceLink label={"BoundarySchema"} path={"packages/kernel/core/src/schemas/node/boundary.ts"} startLine={31}>BoundarySchema</ApiSourceLink>
 
 <ZodSchema
@@ -1001,7 +943,7 @@ export type IRNodeStyle = ZodInfer<typeof NodeStyleSchema>;
   descriptions={{}}
 />
 
-#### <ApiSourceLink label={"BoundaryLabelSchema"} path={"packages/kernel/core/src/schemas/text/label.ts"} startLine={31}>BoundaryLabelSchema</ApiSourceLink>
+#### <ApiSourceLink label={"BoundaryLabelSchema"} path={"packages/kernel/core/src/schemas/text/label.ts"} startLine={32}>BoundaryLabelSchema</ApiSourceLink>
 
 Kernel 共享的边界标签契约。Node 复用其中的旋转、放置和对齐字段，同时保留自己的位置、引线、文本块及默认值；Ribbon 端点直接使用此 Schema。
 

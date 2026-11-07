@@ -187,7 +187,7 @@ export const previewControlContract = {
     'LegendTick.children',
     'Legend.titleGap',
     'Node.style.font',
-    'Node.layout.align',
+    'Node.layout.textAlign',
     'Legend.contentAlign',
     'Legend.direction',
     'Legend.wrap',

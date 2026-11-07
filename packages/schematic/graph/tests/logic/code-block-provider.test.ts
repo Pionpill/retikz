@@ -1,4 +1,5 @@
-import { compileToScene, DEFAULT_RESOLVED_THEME, defineTheme, resolveCoreProviderDependencies } from '@retikz/core';
+import { DEFAULT_RESOLVED_THEME, defineTheme, resolveCoreProviderDependencies } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 

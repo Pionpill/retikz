@@ -1,4 +1,5 @@
-import { compileToScene, SceneSchema } from '@retikz/core';
+import { SceneSchema } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { scoreL2 } from '../../src/score/l2';

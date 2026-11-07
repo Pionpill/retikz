@@ -173,7 +173,7 @@ Linear 左右方向默认 `gap=48`，上下方向默认 `gap=32`。固定间距�
 <ComponentPreview
   files="flow-bounds"
   size="md"
-  caption="灰色虚线框围出 canvas-output 向父级报告的占位范围。切换是否排除 formats：PNG、JPEG 始终绘制，框随占位范围变化。"
+  caption="切换是否排除 formats，观察 SVG 与 Canvas 输出的排列变化。PNG、JPEG 始终绘制，但可不计入父级布局占位。"
 />
 
 React 的 `<FlowLayout excludeFromBounds={['formats']}>` 与 Vanilla `layouts` 中的 `{ excludeFromBounds: ['formats'] }` 表达相同配置，预览源码可切换查看。只允许引用当前 Layout 的直接子项 id；缺省或空数组保持原行为，重复 id、后代、其它容器的 id 或排除全部子项都会报错。名单不向子布局继承。

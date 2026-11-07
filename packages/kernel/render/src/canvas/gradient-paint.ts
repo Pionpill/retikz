@@ -201,7 +201,7 @@ const textureSize = (width: number, height: number): { width: number; height: nu
 
 /** 构建保持 objectBoundingBox 映射且不缩放描边几何的 Canvas stroke style */
 export const buildGradientStrokeStyle = (input: InputGradientStroke): CanvasGradient | CanvasPattern | undefined => {
-  const { ctx, spec, bbox, resolveStopColor, warn } = input;
+  const { ctx, spec, bbox, resolveStopColor, warn, outset: configuredOutset, cacheKey, cache } = input;
   if (!validBBox(bbox)) {
     warnInvalidBBox(warn);
     return undefined;
@@ -220,7 +220,7 @@ export const buildGradientStrokeStyle = (input: InputGradientStroke): CanvasGrad
 
   if (deviceScaleX <= DEFAULT_EPSILON || deviceScaleY <= DEFAULT_EPSILON) return undefined;
 
-  const outset = Math.max(0, Number.isFinite(input.outset) ? input.outset : 0);
+  const outset = Math.max(0, Number.isFinite(configuredOutset) ? configuredOutset : 0);
   const coverageX = outset + GUTTER_PIXELS / deviceScaleX;
   const coverageY = outset + GUTTER_PIXELS / deviceScaleY;
   const domainX = -coverageX / bbox.w;
@@ -237,7 +237,7 @@ export const buildGradientStrokeStyle = (input: InputGradientStroke): CanvasGrad
 
   const resolvedStops = spec.stops.map(stop => resolveStopColor(stop.color, stop.opacity));
   const patternKey = JSON.stringify([
-    input.cacheKey,
+    cacheKey,
     spec,
     resolvedStops,
     bbox.x,
@@ -252,7 +252,7 @@ export const buildGradientStrokeStyle = (input: InputGradientStroke): CanvasGrad
     domainWidth,
     domainHeight,
   ]);
-  const cached = input.cache.get(patternKey);
+  const cached = cache.get(patternKey);
   if (cached !== undefined) return cached;
 
   const offscreen = input.createOffscreen?.(size.width, size.height) ?? null;
@@ -293,7 +293,7 @@ export const buildGradientStrokeStyle = (input: InputGradientStroke): CanvasGrad
     e: bbox.x + domainX * bbox.w,
     f: bbox.y + domainY * bbox.h,
   });
-  input.cache.set(patternKey, pattern);
+  cache.set(patternKey, pattern);
 
   return pattern;
 };

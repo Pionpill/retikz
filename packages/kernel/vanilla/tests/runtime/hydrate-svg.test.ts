@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import type { IRScene } from '@retikz/core';
-import { compileToScene } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import type { HydrationContext } from '@retikz/render/hydration';
 import { describe, expect, it, vi } from 'vitest';
 

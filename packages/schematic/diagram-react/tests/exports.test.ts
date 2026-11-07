@@ -15,8 +15,12 @@ describe('@retikz/diagram-react 封装外壳', () => {
     });
   });
 
-  it('在编写设计之前将公共根保留为空', () => {
-    expect(Object.keys(diagramReactExports)).toEqual([]);
+  it('从公共根导出统一错误契约', () => {
+    expect(diagramReactExports.RetikzDiagramReactError).toBeDefined();
+    expect(diagramReactExports.RetikzDiagramReactErrorCode.BranchChildInvalid).toBe(
+      'DIAGRAM_REACT_BRANCH_CHILD_INVALID',
+    );
+    expect(diagramReactExports.RetikzDiagramReactErrorCode.FlowChildInvalid).toBe('DIAGRAM_REACT_FLOW_CHILD_INVALID');
   });
 
   it('仅从显式对称子路径发布 Flow 编写', () => {

@@ -1,9 +1,9 @@
 export const pathDeferredI18n = {
   zh: {
-    queue: 'pathSink：待处理任务',
+    queue: 'paths：待处理任务',
     record: 'PendingPathEmission（字段摘录）',
     slot: 'placeholderSlot（引用字段）',
-    before: 'primitiveSink：回填前',
+    before: 'primitives：回填前',
     after: '同一输出容器：回填后',
     task: '任务 P',
     path: 'Path(a → b)',
@@ -14,10 +14,10 @@ export const pathDeferredI18n = {
     note: '图中均为默认 zIndex；Node 图元以省略项表示',
   },
   en: {
-    queue: 'pathSink: pending tasks',
+    queue: 'paths: pending tasks',
     record: 'PendingPathEmission (excerpt)',
     slot: 'placeholderSlot (references)',
-    before: 'primitiveSink: before filling',
+    before: 'primitives: before filling',
     after: 'Same output container: after filling',
     task: 'Task P',
     path: 'Path(a → b)',

@@ -44,14 +44,14 @@ describe('Runtime 运行时验证', () => {
         computations,
         initialSnapshots: [createRuntimeSourceInput(first, 1)],
       }),
-    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.InitialSourceMismatch }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.TransactionInitialSourceMismatch }));
     expect(() =>
       createRuntime({
         sources,
         computations,
         initialSnapshots: [createRuntimeSourceInput(first, 1), createRuntimeSourceInput(first, 2)],
       }),
-    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.InitialSourceMismatch }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.TransactionInitialSourceMismatch }));
   });
 
   it('按固定顺序拒绝 stale base、伪 command 与 mismatched ChangeSet base', () => {
@@ -71,7 +71,7 @@ describe('Runtime 运行时验证', () => {
         baseRevision: 1 as ReturnType<typeof runtime.revision>,
         sources: [forged],
       }),
-    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.RevisionStale }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.TransactionRevisionStale }));
     expect(() =>
       runtime.update({
         baseRevision: runtime.revision(),
@@ -102,7 +102,7 @@ describe('Runtime 运行时验证', () => {
         baseRevision: runtime.revision(),
         sources: [mismatched],
       }),
-    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.ChangeSetRevisionMismatch }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.TransactionChangeSetRevisionMismatch }));
     expect(capture).toHaveBeenCalledTimes(1);
   });
 
@@ -126,7 +126,7 @@ describe('Runtime 运行时验证', () => {
         computations,
         initialSnapshots: [createRuntimeSourceInput(declared, 1), createRuntimeSourceInput(hidden, 2)],
       }),
-    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.UndeclaredDependency }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.DependencyUndeclared }));
   });
 
   it('CandidateView 拒绝读取已注册但未声明的 Computation result', () => {
@@ -156,7 +156,7 @@ describe('Runtime 运行时验证', () => {
         computations,
         initialSnapshots: [createRuntimeSourceInput(owner, 1)],
       }),
-    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.UndeclaredDependency }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.DependencyUndeclared }));
   });
 
   it('重复 dispose no-op，并在 disposed 后拒绝 read/update', () => {

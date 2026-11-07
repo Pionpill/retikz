@@ -1,9 +1,11 @@
-﻿import { BUILTIN_ARROWS, BUILTIN_PATTERNS, BUILTIN_CLIPS } from '@retikz/core';
-import type { MarkEmitContext, PatternEmitContext, ScenePrimitive } from '@retikz/core';
+﻿import type { MarkEmitContext, PatternEmitContext, ScenePrimitive } from '@retikz/core';
 import { expect } from 'vitest';
 
 import { defineBenchmark } from '../../../../../scripts/benchmarks/scenario';
+import { BUILTIN_ARROWS } from '../../src/providers/arrow';
+import { BUILTIN_CLIPS } from '../../src/providers/clip';
 import { resolveMarkRegistry } from '../../src/providers/mark';
+import { BUILTIN_PATTERNS } from '../../src/providers/pattern';
 
 /** 每个内置外观保留一个带显式描边的代表输入 */
 const markContexts: Array<MarkEmitContext> = [

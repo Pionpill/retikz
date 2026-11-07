@@ -46,8 +46,7 @@ The responsibilities in one compile are:
     },
     {
       label: 'Core path materialization and host-label orchestration',
-      path: 'packages/kernel/core/src/compile/path/compile.ts',
-      startLine: 89,
+      path: 'packages/kernel/core/src/compile/path/host/context.ts',
     },
     {
       label: 'Ribbon outline and label output',
@@ -252,10 +251,9 @@ Core then uses the text rotation to compute the layout box's projected half-exte
     },
     {
       label: 'Rotated text-box projection and offset',
-      path: 'packages/kernel/core/src/compile/text/boundary-label-geometry.ts',
-      startLine: 28,
-      endLine: 78,
+      path: 'packages/kernel/core/src/compile/text/layout.ts',
     },
+    { label: 'Rotated label projection algorithm', path: 'packages/kernel/core/src/compile/text/helpers.ts' },
     {
       label: 'Label sampling and final output',
       path: 'packages/library/extension/src/ribbon/geometry/emit.ts',

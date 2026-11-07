@@ -57,6 +57,7 @@ describe('边界几何帮助器', () => {
   it('合并空和非空边界', () => {
     const bounds = { minX: -4, minY: -3, maxX: 8, maxY: 5 };
 
+    expect(mergeBounds()).toBeUndefined();
     expect(mergeBounds(undefined, undefined)).toBeUndefined();
     expect(mergeBounds(undefined, bounds)).toEqual(bounds);
     expect(mergeBounds(bounds, undefined)).toEqual(bounds);
@@ -66,6 +67,21 @@ describe('边界几何帮助器', () => {
       maxX: 8,
       maxY: 9,
     });
+  });
+
+  it('合并多个范围并跳过中间空值，不修改输入', () => {
+    const first = Object.freeze({ minX: -4, minY: -3, maxX: 8, maxY: 5 });
+    const second = Object.freeze({ minX: -10, minY: 0, maxX: 2, maxY: 9 });
+    const third = Object.freeze({ minX: 1, minY: -8, maxX: 12, maxY: 2 });
+
+    expect(mergeBounds(undefined, first, undefined, second, third, undefined)).toEqual({
+      minX: -10,
+      minY: -8,
+      maxX: 12,
+      maxY: 9,
+    });
+    expect(mergeBounds(first)).toEqual(first);
+    expect(mergeBounds(first)).not.toBe(first);
   });
 
   it('当一侧为空时返回副本', () => {

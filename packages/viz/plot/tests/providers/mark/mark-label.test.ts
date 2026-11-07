@@ -1,6 +1,6 @@
-import { compileToScene } from '@retikz/core';
 import type { IRNode, IRPath, IRScope } from '@retikz/core';
 import { resolveFieldPath } from '@retikz/data';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { defineLabelChannel } from '../../../src/contract';

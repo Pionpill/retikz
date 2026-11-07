@@ -1,5 +1,5 @@
-import { compileToScene } from '@retikz/core';
 import { DataFieldType } from '@retikz/data';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { lowerPlots } from '../../../src/pipeline/expand';

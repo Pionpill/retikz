@@ -1,5 +1,5 @@
 import type { CompileWarning, IRChild, IRPath, IRScope, ScenePrimitive } from '@retikz/core';
-import { compileToScene } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it, vi } from 'vitest';
 
 import { lowerPlotWithDataArtifact } from '../../src/pipeline/expand/lower';

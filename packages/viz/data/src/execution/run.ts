@@ -29,8 +29,8 @@ export class TransformExecution<TSource> implements DataTransformExecution {
   /** 按固定阶段推进当前输入，事件累积只属于本次执行 */
   private async run(): Promise<DataTransformResult> {
     const input = this.input;
-    const { resolution, selected, localStages, materialize } = this.plan;
-    const lineageOptions = this.plan.requirements.lineage;
+    const { resolution, selected, localStages, materialize, requirements, signal } = this.plan;
+    const lineageOptions = requirements.lineage;
     let current = input;
     const events = input.kind === 'result' ? [...(input.result.lineage?.events ?? [])] : [];
     if (lineageOptions !== undefined && input.kind === 'result') {
@@ -40,7 +40,7 @@ export class TransformExecution<TSource> implements DataTransformExecution {
     }
 
     for (const [operationIndex, implementation] of selected.entries()) {
-      assertDataExecutionActive(this.plan.signal);
+      assertDataExecutionActive(signal);
       let result: DataTransformResult;
 
       try {
@@ -52,7 +52,7 @@ export class TransformExecution<TSource> implements DataTransformExecution {
         });
       }
 
-      assertDataExecutionActive(this.plan.signal);
+      assertDataExecutionActive(signal);
       try {
         assertDataTransformResult(resolution.stages[operationIndex].outputModel, result);
       } catch (cause) {
@@ -107,7 +107,7 @@ export class TransformExecution<TSource> implements DataTransformExecution {
     }
 
     const result = current.result;
-    assertDataExecutionActive(this.plan.signal);
+    assertDataExecutionActive(signal);
     assertDataTransformResult(resolution.stages.at(-1)?.outputModel ?? resolution.inputModel, result);
 
     return {

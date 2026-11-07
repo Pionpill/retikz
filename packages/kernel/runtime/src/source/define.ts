@@ -45,16 +45,16 @@ export type RuntimeSourceErasedExecutor = Readonly<{
  * @template TChange 领域变更提示的单项类型，由消费它的计算校验并用于增量处理
  * @param input 来源键及值的捕获、读取、比较和释放契约
  * @returns 冻结的来源凭证；回调由运行时私有保存
- * @throws {RetikzRuntimeError} 来源键为空时抛出 TokenInvalid
+ * @throws {RetikzRuntimeError} 来源键为空时抛出 SourceTokenInvalid
  */
 export const defineRuntimeSource = <TInput, TValue, TRead, TChange>(
   input: InputRuntimeSourceDefinition<TInput, TValue, TRead>,
 ): RuntimeSourceDefinition<TInput, TValue, TRead, TChange> => {
   if (input.key.length === 0) {
     throw new RetikzRuntimeError({
-      code: RetikzRuntimeErrorCode.TokenInvalid,
+      code: RetikzRuntimeErrorCode.SourceTokenInvalid,
       phase: 'source-registry',
-      message: `${RetikzRuntimeErrorCode.TokenInvalid}: invalid runtime source "${input.key}"`,
+      message: `${RetikzRuntimeErrorCode.SourceTokenInvalid}: invalid runtime source "${input.key}"`,
       owner: input.key,
       cause: input,
     });

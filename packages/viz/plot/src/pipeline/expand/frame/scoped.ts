@@ -3,22 +3,21 @@ import type { DataView, FieldOrderDefinition } from '@retikz/data';
 import type { JsonObject } from '@retikz/foundation';
 import type { BoundsRect } from '@retikz/math';
 
-import type { AnyScaleDefinition, CoordinateFrame, DimensionRole } from '../../../contract';
-import type { ProvenanceContext } from '../../../contract';
+import type { AnyScaleDefinition, CoordinateFrame, DimensionRole, ProvenanceContext } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
-import { MARK_REGISTRY } from '../../../providers';
-import { resolveCoordinateRegistry } from '../../../providers';
+import { MARK_REGISTRY, resolveCoordinateRegistry } from '../../../providers';
 import type {
   CompositionAxisPolicy,
   CompositionLayout,
   CompositionResolve,
   CoordinateArrangement,
+  CoordinateScopeRegistry,
+  CoordinateScopeRegistryEntry,
   FacetGrid,
   GridTargetSelector,
   ScaffoldTrack,
   SharedScaffold,
 } from '../../../resolve/composition';
-import type { CoordinateScopeRegistry, CoordinateScopeRegistryEntry } from '../../../resolve/composition';
 import {
   axisGridApplyToOf,
   axisGridSelectorOf,
@@ -39,7 +38,7 @@ import type { IRPlot, IRPlotAxisGuide, IRPlotCoordinateOperation, IRPlotGuide } 
 import { AxisGridApplyTo, CoordinateViewPlacementKind, PlotGuide, ScaffoldFrameMode } from '../../../schemas';
 import { DEFAULT_FONT_SIZE } from '../../../shared';
 import { lowerCustomAxis, lowerGuide } from '../../guide';
-import { withEnabledAxisGrid, withoutAxisGrid, withScopeContext } from '../composition';
+import { withEnabledAxisGrid, withScopeContext, withoutAxisGrid } from '../composition';
 import { legendReserveOf } from '../legend';
 import type { PlotLayoutOptions } from '../types';
 
@@ -134,6 +133,8 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
     allGuides,
     allGuidesWithCompositionGap,
     placementRoleRangeOverridesByScope,
+    markPadding,
+    fieldOrderRegistry,
   } = context;
 
   const coordinateRegistry = resolveCoordinateRegistry(options.definitions?.coordinates);
@@ -144,7 +145,7 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
     overrides: Partial<CoordinateResolveContext> = {},
   ): CoordinateResolveContext => ({
     coordinate: source.coordinate,
-    markPadding: context.markPadding,
+    markPadding,
     rows: dataView.rows,
     model: dataView.model,
     width,
@@ -155,7 +156,7 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
     provenance,
     coordinateRegistry,
     markRegistry: MARK_REGISTRY,
-    fieldOrderRegistry: context.fieldOrderRegistry,
+    fieldOrderRegistry,
     scaleRegistry,
     legendReserve: legendReserveOf(guides.flatMap(guide => (guide.type === PlotGuide.Legend ? [guide] : []))),
     lowerGuide: (guide, ctx, guideProvenance) =>
@@ -197,7 +198,7 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
   ): CompositionAxisPolicy => compositionAxisPolicyOf(resolve, compositionState, dimension);
 
   const rolesOf = (coordinate: IRPlotCoordinateOperation): ReadonlySet<DimensionRole> => {
-    return new Set(resolveCoordinateDefinition(coordinate, { coordinateRegistry }).roles);
+    return new Set(resolveCoordinateDefinition(coordinate, coordinateRegistry).roles);
   };
 
   const assertScaffoldRole = (role: DimensionRole, roles: ReadonlySet<DimensionRole>, scaffoldId: string): void => {

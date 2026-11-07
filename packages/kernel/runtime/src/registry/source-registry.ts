@@ -13,9 +13,9 @@ const runtimeSourceRegistries = new WeakSet<object>();
 /** 创建 source registry contract 错误 */
 const sourceRegistryError = (
   code:
-    | typeof RetikzRuntimeErrorCode.Duplicate
-    | typeof RetikzRuntimeErrorCode.Unknown
-    | typeof RetikzRuntimeErrorCode.TokenInvalid,
+    | typeof RetikzRuntimeErrorCode.SourceDuplicate
+    | typeof RetikzRuntimeErrorCode.SourceUnknown
+    | typeof RetikzRuntimeErrorCode.SourceTokenInvalid,
   source: string,
   cause?: unknown,
 ): RetikzRuntimeError =>
@@ -43,11 +43,11 @@ export const createRuntimeSourceRegistry = (tokens: Array<RuntimeSourceToken>): 
 
   for (const candidate of tokens) {
     if (!hasRuntimeSourceToken(candidate)) {
-      throw sourceRegistryError(RetikzRuntimeErrorCode.TokenInvalid, candidate.key, candidate);
+      throw sourceRegistryError(RetikzRuntimeErrorCode.SourceTokenInvalid, candidate.key, candidate);
     }
 
     if (definitions.has(candidate.key)) {
-      throw sourceRegistryError(RetikzRuntimeErrorCode.Duplicate, candidate.key, candidate);
+      throw sourceRegistryError(RetikzRuntimeErrorCode.SourceDuplicate, candidate.key, candidate);
     }
 
     definitions.set(candidate.key, candidate);
@@ -66,11 +66,11 @@ export const createRuntimeSourceRegistry = (tokens: Array<RuntimeSourceToken>): 
       definition: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
     ): RuntimeSourceDefinition<TInput, TValue, TRead, TChange> => {
       if (!hasRuntimeSourceToken(definition)) {
-        throw sourceRegistryError(RetikzRuntimeErrorCode.TokenInvalid, definition.key, definition);
+        throw sourceRegistryError(RetikzRuntimeErrorCode.SourceTokenInvalid, definition.key, definition);
       }
 
       if (definitions.get(definition.key) !== definition) {
-        throw sourceRegistryError(RetikzRuntimeErrorCode.Unknown, definition.key, definition);
+        throw sourceRegistryError(RetikzRuntimeErrorCode.SourceUnknown, definition.key, definition);
       }
 
       return definition;
@@ -90,7 +90,7 @@ export const getRuntimeSourceRegistryExecutor = (
   definition: RuntimeSourceToken,
 ): RuntimeSourceErasedExecutor => {
   if (registry.find(definition.key) !== definition) {
-    throw sourceRegistryError(RetikzRuntimeErrorCode.Unknown, definition.key, definition);
+    throw sourceRegistryError(RetikzRuntimeErrorCode.SourceUnknown, definition.key, definition);
   }
 
   const executor = runtimeSourceRegistryExecutors.get(registry)?.get(definition);

@@ -49,7 +49,7 @@ export type InputRenderRuntimeConfig = Readonly<{
 export type RenderRuntimeConfig = RuntimeDeepReadonly<InputRenderRuntimeConfig>;
 
 const invalidRuntimeInput = (cause: unknown): never => {
-  throw new RetikzRenderError({ code: RetikzRenderErrorCode.RetainedRuntimeInputInvalid, cause });
+  throw new RetikzRenderError({ code: RetikzRenderErrorCode.RuntimeInputInvalid, cause });
 };
 
 /** 捕获一次配置快照，并检查数值范围和本次注册关系 */
@@ -81,7 +81,7 @@ export const captureRuntimeConfig = (input: InputRenderRuntimeConfig): RenderRun
       ...(cachePolicy === undefined ? {} : { cachePolicy }),
     });
   } catch (cause) {
-    if (isRetikzRenderError(cause) && cause.code === RetikzRenderErrorCode.RetainedRuntimeInputInvalid) throw cause;
+    if (isRetikzRenderError(cause) && cause.code === RetikzRenderErrorCode.RuntimeInputInvalid) throw cause;
     return invalidRuntimeInput(cause);
   }
 };

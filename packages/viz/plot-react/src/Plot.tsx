@@ -238,21 +238,32 @@ const EmbeddablePlotContent = Object.assign(PlotContent, {
 });
 
 const PlotComponent: FC<PlotProps<unknown>> = props => {
-  const { className, style, renderer, themeDefinitions, onLineage } = props;
+  const {
+    className,
+    style,
+    renderer,
+    themeDefinitions,
+    onLineage,
+    definitions,
+    signal,
+    dataTransformExecutor,
+    lineage,
+    hostLineageMetadata,
+  } = props;
   const ambientPlotThemeDefinitions = usePlotThemeDefinitions();
   const lineageDriver = useMemo(() => createPlotLineageCompileDriver(), []);
   const effectiveProps = useMemo(() => {
     if (ambientPlotThemeDefinitions === undefined) return props;
-    const explicit = props.definitions?.plotThemeDefinitions;
+    const explicit = definitions?.plotThemeDefinitions;
     return {
       ...props,
       definitions: {
-        ...props.definitions,
+        ...definitions,
         plotThemeDefinitions:
           explicit === undefined ? ambientPlotThemeDefinitions : [...ambientPlotThemeDefinitions, ...explicit],
       },
     };
-  }, [ambientPlotThemeDefinitions, props]);
+  }, [ambientPlotThemeDefinitions, definitions, props]);
   const contentProps = plotContentPropsOf(effectiveProps);
   const authored = resolvePlotAuthoring(contentProps);
   const panel = createPlotPanelInput(contentProps);
@@ -263,16 +274,16 @@ const PlotComponent: FC<PlotProps<unknown>> = props => {
       style={style}
       renderer={renderer}
       extensions={{ themeDefinitions }}
-      runtime={{ preparation: 'async', signal: props.signal }}
+      runtime={{ preparation: 'async', signal }}
       compileDriver={lineageDriver}
     >
       <EmbeddablePlotContent
         {...authored}
         {...(panel === undefined ? {} : { panel })}
-        dataTransformExecutor={props.dataTransformExecutor}
-        signal={props.signal}
-        lineage={props.lineage}
-        hostLineageMetadata={props.hostLineageMetadata}
+        dataTransformExecutor={dataTransformExecutor}
+        signal={signal}
+        lineage={lineage}
+        hostLineageMetadata={hostLineageMetadata}
         onLineage={onLineage}
       />
     </Layout>

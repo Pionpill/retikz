@@ -44,11 +44,11 @@ describe('<ComponentProps>', () => {
             description: '在一次完整编译后收到结果。',
           },
           {
-            name: 'DEFAULT_NODE_DISTANCE',
+            name: 'DEFAULT_FONT_SIZE',
             kind: 'constant',
             type: 'number',
-            value: '24',
-            description: '节点相对定位的默认距离。',
+            value: '16',
+            description: '默认字号。',
           },
           {
             name: 'children',
@@ -64,7 +64,7 @@ describe('<ComponentProps>', () => {
     expect(html).toContain('data-component-props');
     expect(html).toContain('viewBox');
     expect(html).toContain('Property');
-    expect(html).toContain('DEFAULT_NODE_DISTANCE');
+    expect(html).toContain('DEFAULT_FONT_SIZE');
     expect(html).toContain('Value');
     expect(html).toContain('自动取景');
     expect(html).not.toContain('font-mono">自动取景');

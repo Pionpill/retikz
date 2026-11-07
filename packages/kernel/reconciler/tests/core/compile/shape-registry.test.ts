@@ -1,0 +1,497 @@
+import { localToWorld, worldToLocal } from '@retikz/math';
+import { describe, expect, it } from 'vitest';
+import { number, strictObject } from 'zod';
+
+import type { ScenePrimitive, ShapeDefinition } from '../../../../core/src/contract';
+import { defineShape } from '../../../../core/src/contract';
+import { BUILTIN_SHAPES } from '../../../../core/src/providers/shape/shape';
+import type { IRScene } from '../../../../core/src/schemas';
+import { NodeSchema } from '../../../../core/src/schemas';
+import { compileToScene } from '../../../src/compile';
+import { flattenPrims } from '../../helpers/flatten';
+
+const findByType = <T extends ScenePrimitive['type']>(
+  prims: Array<ScenePrimitive>,
+  type: T,
+): Extract<ScenePrimitive, { type: T }> | undefined =>
+  flattenPrims(prims).find((p): p is Extract<ScenePrimitive, { type: T }> => p.type === type);
+
+/** 径向自定义 shape（外接圆 + 投影 boundaryPoint + 仅 center anchor + ellipse emit） */
+const radialShape = (): ShapeDefinition =>
+  defineShape({
+    name: 'hexagon',
+    paramsSchema: strictObject({}),
+    computeCircumscribedGeometry: (hw, hh) => {
+      const r = Math.hypot(hw, hh);
+      return { halfWidth: r, halfHeight: r };
+    },
+    computeBoundaryPoint: (rect, toward) => {
+      const [lx, ly] = worldToLocal(rect, toward);
+      const len = Math.hypot(lx, ly) || 1;
+      const r = rect.width / 2;
+
+      return localToWorld(rect, [(lx / len) * r, (ly / len) * r]);
+    },
+    resolveAnchor: (rect, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
+    *emit(rect, style): Iterable<ScenePrimitive> {
+      yield {
+        type: 'ellipse',
+        cx: rect.x,
+        cy: rect.y,
+        rx: rect.width / 2,
+        ry: rect.height / 2,
+        fill: style.fill ?? 'transparent',
+        stroke: style.stroke ?? 'currentColor',
+        strokeWidth: style.strokeWidth ?? 1,
+      };
+    },
+  });
+
+/** 多 primitive shape：body rect + 左右各一根 pin 短线（验证 emit Iterable 的 factory 价值） */
+const chipShape = (): ShapeDefinition =>
+  defineShape({
+    name: 'chip',
+    paramsSchema: strictObject({}),
+    computeCircumscribedGeometry: (hw, hh) => ({ halfWidth: hw, halfHeight: hh }),
+    computeBoundaryPoint: BUILTIN_SHAPES.get('rectangle')!.computeBoundaryPoint,
+    resolveAnchor: BUILTIN_SHAPES.get('rectangle')!.resolveAnchor,
+    *emit(rect): Iterable<ScenePrimitive> {
+      const hw = rect.width / 2;
+      yield {
+        type: 'rect',
+        x: rect.x - hw,
+        y: rect.y - rect.height / 2,
+        width: rect.width,
+        height: rect.height,
+        stroke: 'currentColor',
+        strokeWidth: 1,
+      };
+      yield {
+        type: 'path',
+        commands: [
+          { kind: 'move', to: [rect.x - hw - 4, rect.y] },
+          { kind: 'line', to: [rect.x - hw, rect.y] },
+        ],
+        stroke: 'currentColor',
+        strokeWidth: 1,
+      };
+      yield {
+        type: 'path',
+        commands: [
+          { kind: 'move', to: [rect.x + hw, rect.y] },
+          { kind: 'line', to: [rect.x + hw + 4, rect.y] },
+        ],
+        stroke: 'currentColor',
+        strokeWidth: 1,
+      };
+    },
+  });
+
+describe('形状注册表 - 注入（快乐路径）', () => {
+  it('固定宽度折行后使用与最终内容尺寸一致的包围偏移', () => {
+    const rectangle = BUILTIN_SHAPES.get('rectangle')!;
+    const shape = defineShape({
+      name: 'contentOffset',
+      paramsSchema: strictObject({}),
+      computeCircumscribedGeometry: (halfWidth, halfHeight) => ({
+        halfWidth,
+        halfHeight,
+        offset: [halfWidth, halfHeight],
+      }),
+      computeBoundaryPoint: rectangle.computeBoundaryPoint,
+      resolveAnchor: rectangle.resolveAnchor,
+      emit: rectangle.emit,
+    });
+    const result = compileToScene(
+      {
+        version: 1,
+        type: 'scene',
+        children: [
+          {
+            type: 'node',
+            position: [10, 20],
+            shape: 'contentOffset',
+            text: 'aa aa aa',
+            layout: { width: 40, padding: 0, margin: 0, lineHeight: 10 },
+            style: { font: { size: 10 } },
+          },
+        ],
+      },
+      {
+        shapes: [shape],
+        measureText: text => ({ width: text.length * 10, height: 10, ascent: 8, descent: 2 }),
+      },
+    );
+    const rect = findByType(result.scene.primitives, 'rect');
+    expect(rect).toBeDefined();
+    expect(rect!.x + rect!.width / 2).toBe(20);
+    expect(rect!.y).toBe(20);
+    expect(rect!.width).toBe(40);
+    expect(rect!.height).toBeGreaterThan(10);
+  });
+
+  it('注入 hexagon 自定义形状后编译产生自定义图元', () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [{ type: 'node', id: 'A', shape: 'hexagon', position: [0, 0] }],
+    };
+    const scene = compileToScene(ir, { shapes: [{ ...radialShape(), name: 'hexagon' }] }).scene;
+
+    expect(findByType(scene.primitives, 'ellipse')).toBeDefined();
+  });
+
+  it('仅实现 boundaryPoint 的自定义形状也支持 `.30` 数值角度锚点', () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        { type: 'node', id: 'A', shape: 'hexagon', position: [0, 0] },
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: { id: 'A', anchor: 30 } },
+            { type: 'step', kind: 'line', to: [100, 50] },
+          ],
+        },
+      ],
+    };
+    const scene = compileToScene(ir, { shapes: [{ ...radialShape(), name: 'hexagon' }] }).scene;
+    const linePath = scene.primitives.find(p => p.type === 'path');
+
+    // r = √(8²+8²) = 11.31; 30° → (9.8, 5.66)
+    if (linePath?.type === 'path') expect(linePath.commands[0]).toEqual({ kind: 'move', to: [9.8, 5.66] });
+  });
+
+  it('形状 emit 返回主体和两个 pin 时所有图元均进入 Scene', () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [{ type: 'node', id: 'A', shape: 'chip', position: [0, 0] }],
+    };
+    const scene = compileToScene(ir, { shapes: [{ ...chipShape(), name: 'chip' }] }).scene;
+
+    expect(scene.primitives.filter(p => p.type === 'rect' || p.type === 'path')).toHaveLength(3);
+  });
+
+  it('shape_emit_reused_primitive_is_cloned: 两个 node 不共享 shape 返回的同一 primitive', () => {
+    const cachedPrim: Extract<ScenePrimitive, { type: 'rect' }> = {
+      type: 'rect',
+      x: 0,
+      y: 0,
+      width: 10,
+      height: 10,
+    };
+    const cachedShape: ShapeDefinition = {
+      ...BUILTIN_SHAPES.get('rectangle')!,
+      name: 'cachedShape',
+      *emit(): Iterable<ScenePrimitive> {
+        yield cachedPrim;
+      },
+    };
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        { type: 'node', id: 'A', shape: 'cached', position: [0, 0] },
+        { type: 'node', id: 'B', shape: 'cached', position: [20, 0] },
+      ],
+    };
+    const scene = compileToScene(ir, { shapes: [{ ...cachedShape, name: 'cached' }] }).scene;
+    const rects = scene.primitives.filter((p): p is Extract<ScenePrimitive, { type: 'rect' }> => p.type === 'rect');
+
+    expect(rects).toHaveLength(2);
+    expect(rects[0]).not.toBe(rects[1]);
+    expect(rects.map(p => p.id)).toEqual(['A', 'B']);
+  });
+});
+
+describe('形状注册表 - 边界', () => {
+  it('空 shapes 配置与未提供选项的基线深度相等', () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        { type: 'node', id: 'a', shape: 'circle', position: [0, 0], text: 'a' },
+        { type: 'node', id: 'b', shape: 'diamond', position: [60, 0], rotate: 20 },
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: { id: 'a' } },
+            { type: 'step', kind: 'line', to: { id: 'b' } },
+          ],
+        },
+      ],
+    };
+
+    expect(compileToScene(ir, { shapes: [] }).scene).toEqual(compileToScene(ir).scene);
+  });
+
+  it('未指定形状时默认生成 RectPrimitive', () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
+    };
+
+    expect(findByType(compileToScene(ir).scene.primitives, 'rect')).toBeDefined();
+  });
+
+  it('Coordinate 和带 id 的 Scope 通过矩形几何解析合成布局', () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        { type: 'coordinate', id: 'co', position: [50, 50] },
+        {
+          type: 'scope',
+          id: 's',
+          transforms: [],
+          children: [{ type: 'node', id: 'inner', position: [0, 0], text: 'x' }],
+        },
+        // coordinate center (0×0 rect → boundary == center) and scope.id.top must not crash
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: { id: 'co' } },
+            { type: 'step', kind: 'line', to: { id: 's', anchor: 'top' } },
+          ],
+        },
+      ],
+    };
+    const scene = compileToScene(ir).scene;
+    const linePath = scene.primitives.find(
+      (p): p is Extract<ScenePrimitive, { type: 'path' }> =>
+        p.type === 'path' && !p.commands.some(c => c.kind === 'close'),
+    );
+
+    expect(linePath).toBeDefined();
+
+    if (linePath?.type === 'path' && linePath.commands[0].kind === 'move') {
+      expect(linePath.commands[0].to).toEqual([50, 50]);
+    }
+  });
+
+  it('synthetic_layouts_use_effective_rectangle_shape: scope.id 自定义 anchor 走注入后的 rectangle', () => {
+    const sentinelRect: ShapeDefinition = {
+      ...BUILTIN_SHAPES.get('rectangle')!,
+      name: 'sentinelRect',
+      resolveAnchor: (rect, name) =>
+        name === 'sentinel'
+          ? [rect.x + 77, rect.y + 88]
+          : BUILTIN_SHAPES.get('rectangle')!.resolveAnchor(rect, name, {}),
+    };
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        { type: 'scope', id: 's', children: [{ type: 'node', id: 'inner', position: [0, 0], text: 'x' }] },
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: { id: 's', anchor: 'sentinel' } },
+          ],
+        },
+      ],
+    };
+
+    expect(
+      () =>
+        compileToScene(ir, {
+          shapes: [{ ...sentinelRect, name: 'rectangle' }],
+        }).scene,
+    ).toThrow(/duplicate shape registration: "rectangle"/);
+  });
+});
+
+describe('形状注册表 - 错误路径', () => {
+  it('未注册形状报错时列出排序后的可用名称', () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [{ type: 'node', id: 'A', shape: 'cloud', position: [0, 0] }],
+    };
+
+    expect(() => compileToScene(ir).scene).toThrow(/Unknown provider 'cloud'/);
+
+    // circle 是内置 shape preset，不在 provider 注册表（裸 'circle' 由 compile 解析到 ellipse，不走查表）
+    // 注册表含 polygon：排序后落在 ellipse 与 rectangle 之间。
+    expect(() => compileToScene(ir).scene).toThrow(/ellipse, polygon, rectangle/);
+  });
+
+  it('schema 接受非空白字符串形式的未知形状名', () => {
+    expect(NodeSchema.safeParse({ type: 'node', shape: 'cloud', position: [0, 0] }).success).toBe(true);
+    expect(NodeSchema.safeParse({ type: 'node', shape: '', position: [0, 0] }).success).toBe(false);
+  });
+
+  it('自定义形状参数错误包含提供者和 ir 路径', () => {
+    const strictShape = defineShape({
+      name: 'scaledBox',
+      paramsSchema: strictObject({ scale: number().positive() }),
+      computeCircumscribedGeometry: (hw, hh, params) => ({
+        halfWidth: hw * params.scale,
+        halfHeight: hh * params.scale,
+      }),
+      computeBoundaryPoint: BUILTIN_SHAPES.get('rectangle')!.computeBoundaryPoint,
+      resolveAnchor: BUILTIN_SHAPES.get('rectangle')!.resolveAnchor,
+      *emit(rect, style): Iterable<ScenePrimitive> {
+        yield {
+          type: 'rect',
+          x: rect.x - rect.width / 2,
+          y: rect.y - rect.height / 2,
+          width: rect.width,
+          height: rect.height,
+          stroke: style.stroke ?? 'currentColor',
+        };
+      },
+    });
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [{ type: 'node', shape: { type: 'scaledBox', params: { scale: 'wide' } }, position: [0, 0] }],
+    };
+
+    expect(() => compileToScene(ir, { shapes: [strictShape] }).scene).toThrow(/shape 'scaledBox'/);
+    expect(() => compileToScene(ir, { shapes: [strictShape] }).scene).toThrow(/children\[0\]\.shape\.params/);
+  });
+
+  it('custom_shape_anchor_only_center: canonical anchor (top) 通过 AABB 上提不再 throw', () => {
+    // canonical 名（top / bottom / right / left / center / top-right / top-left / bottom-right / bottom-left）
+    // 在 evaluateNamedBoundaryAnchor 内上提为 rectangle AABB，所有自定义 shape 自动获得 canonical anchor。
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        { type: 'node', id: 'A', shape: 'dot', position: [0, 0] },
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: { id: 'A', anchor: 'top' } },
+            { type: 'step', kind: 'line', to: [0, -100] },
+          ],
+        },
+      ],
+    };
+
+    // top 是 canonical 名，上提后走 AABB rectangle，不再 throw
+    expect(() => compileToScene(ir, { shapes: [{ ...radialShape(), name: 'dot' }] }).scene).not.toThrow();
+  });
+
+  it('custom_shape_anchor_only_center: 非 canonical 专属 anchor (tip) 仍然 throw', () => {
+    // 非 canonical 的自定义 anchor 名（不在 9 个 rect 方位名集合内）：走视觉 shapeDef.anchor，返回 undefined → throw
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        { type: 'node', id: 'A', shape: 'dot', position: [0, 0] },
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: { id: 'A', anchor: 'tip' } },
+            { type: 'step', kind: 'line', to: [0, -100] },
+          ],
+        },
+      ],
+    };
+
+    expect(() => compileToScene(ir, { shapes: [{ ...radialShape(), name: 'dot' }] }).scene).toThrow(
+      /Unknown anchor 'tip' for shape 'dot'/,
+    );
+  });
+});
+
+describe('形状注册表——交互', () => {
+  it('覆盖内置 rectangle 时报告重复定义错误', () => {
+    const ovalRect: ShapeDefinition = {
+      ...BUILTIN_SHAPES.get('rectangle')!,
+      name: 'ovalRect',
+      *emit(rect, style): Iterable<ScenePrimitive> {
+        yield {
+          type: 'ellipse',
+          cx: rect.x,
+          cy: rect.y,
+          rx: rect.width / 2,
+          ry: rect.height / 2,
+          fill: style.fill ?? 'transparent',
+          stroke: style.stroke ?? 'currentColor',
+          strokeWidth: style.strokeWidth ?? 1,
+        };
+      },
+    };
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
+    };
+
+    expect(() => compileToScene(ir, { shapes: [{ ...ovalRect, name: 'rectangle' }] }).scene).toThrow(
+      /duplicate shape registration: "rectangle"/,
+    );
+  });
+
+  it('生产环境仍拒绝重复的内置形状定义', () => {
+    const prev = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'production';
+
+    try {
+      const ovalRect: ShapeDefinition = {
+        ...BUILTIN_SHAPES.get('rectangle')!,
+        name: 'ovalRect',
+        *emit(rect): Iterable<ScenePrimitive> {
+          yield { type: 'ellipse', cx: rect.x, cy: rect.y, rx: rect.width / 2, ry: rect.height / 2 };
+        },
+      };
+      const ir: IRScene = { version: 1, type: 'scene', children: [{ type: 'node', id: 'A', position: [0, 0] }] };
+
+      expect(() => compileToScene(ir, { shapes: [{ ...ovalRect, name: 'rectangle' }] }).scene).toThrow(
+        /duplicate shape registration: "rectangle"/,
+      );
+    } finally {
+      process.env.NODE_ENV = prev;
+    }
+  });
+
+  it('旋转菱形通过外层旋转分组包裹轴对齐路径', () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [{ type: 'node', id: 'A', shape: 'diamond', position: [0, 0], text: 'D', rotate: 45 }],
+    };
+    const group = findByType(compileToScene(ir).scene.primitives, 'group');
+
+    expect(group).toBeDefined();
+    expect(group?.transforms?.[0]).toMatchObject({ kind: 'rotate', degrees: 45 });
+    expect(group?.children.some(c => c.type === 'path')).toBe(true);
+  });
+
+  it('自定义形状的 margin 扩大传给 boundaryPoint 的矩形', () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'node',
+          id: 'A',
+          shape: 'hexagon',
+          position: [0, 0],
+          layout: { margin: 10 },
+        },
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: { id: 'A' } },
+            { type: 'step', kind: 'line', to: [100, 0] },
+          ],
+        },
+      ],
+    };
+    const scene = compileToScene(ir, { shapes: [{ ...radialShape(), name: 'hexagon' }] }).scene;
+    const linePath = scene.primitives.find(p => p.type === 'path');
+
+    // r = √(8²+8²)=11.31, + margin 10 → 21.31
+    if (linePath?.type === 'path' && linePath.commands[0].kind === 'move') {
+      expect(linePath.commands[0].to).toEqual([21.31, 0]);
+    }
+  });
+});

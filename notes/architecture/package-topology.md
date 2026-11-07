@@ -27,15 +27,15 @@ Schematic 领域的 Graph package family 当前位于 `packages/schematic/*`，�
 
 `scripts/release-groups.config.mjs` 是机器可读的发布组真源。
 
-| 发布组   | 包                                                                                                                                                              | 版本策略                    |
-| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
-| standard | `@retikz/standard`, `@retikz/standard-react`, `@retikz/standard-vanilla`                                                                                        | Standard 组 lockstep        |
-| graph    | `@retikz/graph`, `@retikz/graph-react`, `@retikz/graph-vanilla`                                                                                                 | Schematic Graph 组 lockstep |
-| kernel   | `@retikz/foundation`, `@retikz/math`, `@retikz/runtime`, `@retikz/core`, `@retikz/inspect`, `@retikz/render`, `@retikz/react`, `@retikz/vanilla`, `@retikz/tex` | kernel 组 lockstep          |
-| data     | `@retikz/data`                                                                                                                                                  | 独立底座包                  |
-| plot     | `@retikz/plot`, `@retikz/plot-react`, `@retikz/plot-vanilla`                                                                                                    | Plot 组 lockstep            |
-| chart    | `@retikz/chart`, `@retikz/chart-react`, `@retikz/chart-vanilla`                                                                                                 | Chart 组 lockstep           |
-| table    | `@retikz/table`, `@retikz/table-react`, `@retikz/table-vanilla`                                                                                                 | Table 组 lockstep           |
+| 发布组   | 包                                                                                                                                                                 | 版本策略                    |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------- |
+| standard | `@retikz/standard`, `@retikz/standard-react`, `@retikz/standard-vanilla`                                                                                           | Standard 组 lockstep        |
+| graph    | `@retikz/graph`, `@retikz/graph-react`, `@retikz/graph-vanilla`                                                                                                    | Schematic Graph 组 lockstep |
+| kernel   | `@retikz/foundation`, `@retikz/math`, `@retikz/reconciler`, `@retikz/core`, `@retikz/inspect`, `@retikz/render`, `@retikz/react`, `@retikz/vanilla`, `@retikz/tex` | kernel 组 lockstep          |
+| data     | `@retikz/data`                                                                                                                                                     | 独立底座包                  |
+| plot     | `@retikz/plot`, `@retikz/plot-react`, `@retikz/plot-vanilla`                                                                                                       | Plot 组 lockstep            |
+| chart    | `@retikz/chart`, `@retikz/chart-react`, `@retikz/chart-vanilla`                                                                                                    | Chart 组 lockstep           |
+| table    | `@retikz/table`, `@retikz/table-react`, `@retikz/table-vanilla`                                                                                                    | Table 组 lockstep           |
 
 未来 Geo 等功能家族即使放在 `packages/viz/*` 下，也只有在具体能力 ADR 确认 package manifest 后才进入 release group 真源；领域目录不能替未存在的包预留发布配置。
 
@@ -68,3 +68,7 @@ Schematic 领域的 Graph package family 当前位于 `packages/schematic/*`，�
 ```bash
 pnpm run check:release-groups
 ```
+
+## 编译执行归属
+
+Core 拥有绘图语义、原子解析 / layout / emit 与共享阶段产物。Reconciler 拥有完整编译 API、遍历、Composite 试算与重放、资源工作区及输出事务；完整与增量首轮共用执行器，Weave 只保留增量所需的实际产物与执行记录。参见 [ADR-080](../../packages/kernel/_notes/decisions/v0/v0.5/080-unified-reconciler-compilation.md)。

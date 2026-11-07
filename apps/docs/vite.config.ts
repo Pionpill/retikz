@@ -6,6 +6,7 @@ import { loadEnv } from 'vite';
 import type { Plugin } from 'vitest/config';
 import { defineConfig } from 'vitest/config';
 
+import { createRetikzDevPlugin } from '../../config/vite/dev-plugin';
 import { resolveDocsPort } from '../dev-port';
 import { writeLlmsTxt } from './scripts/gen-llms-txt';
 
@@ -39,7 +40,7 @@ const llmsTxtPlugin = (): Plugin => ({
  */
 export default defineConfig(({ command, mode }) => ({
   base: command === 'build' ? '/retikz/' : '/',
-  plugins: [react(), tailwindcss(), ...(mode === 'test' ? [] : [llmsTxtPlugin()])],
+  plugins: [createRetikzDevPlugin(), react(), tailwindcss(), ...(mode === 'test' ? [] : [llmsTxtPlugin()])],
   build: {
     rollupOptions: {
       output: {

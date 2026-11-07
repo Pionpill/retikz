@@ -1,0 +1,312 @@
+import { describe, expect, it } from 'vitest';
+
+import type { PathPrimitive, ScenePrimitive } from '../../../../../core/src/contract';
+import type { IRScene } from '../../../../../core/src/schemas';
+import { compileToScene } from '../../../../src/compile';
+import { flattenPrims } from '../../../helpers/flatten';
+import { pathArrows } from '../../../helpers/path-arrows';
+import { line, move } from '../../../helpers/path-command-factory';
+import { findPathPrim } from './helpers';
+
+describe('compile path: arrow 箭头', () => {
+  it("arrow: '->' → PathPrimitive arrowEnd shape='stealth'，arrowStart 不写", () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          arrow: pathArrows('->'),
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+          ],
+        },
+      ],
+    };
+    const scene = compileToScene(ir).scene;
+    const path = findPathPrim(scene.primitives);
+
+    expect(path.arrowEnd?.shape).toBe('stealth');
+    expect(path.arrowStart).toBeUndefined();
+  });
+
+  it("箭头：'<-' → arrowStart 形状='stealth'", () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          arrow: pathArrows('<-'),
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+          ],
+        },
+      ],
+    };
+    const path = findPathPrim(compileToScene(ir).scene.primitives);
+
+    expect(path.arrowStart?.shape).toBe('stealth');
+    expect(path.arrowEnd).toBeUndefined();
+  });
+
+  it("arrow: '<->' → 两端都 shape='stealth'", () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          arrow: pathArrows('<->'),
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+          ],
+        },
+      ],
+    };
+    const path = findPathPrim(compileToScene(ir).scene.primitives);
+
+    expect(path.arrowStart?.shape).toBe('stealth');
+    expect(path.arrowEnd?.shape).toBe('stealth');
+  });
+
+  it("arrow: 'none' / 缺省 → 两端都不挂 marker", () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+          ],
+        },
+      ],
+    };
+    const path = findPathPrim(compileToScene(ir).scene.primitives);
+
+    expect(path.arrowStart).toBeUndefined();
+    expect(path.arrowEnd).toBeUndefined();
+  });
+
+  it('多 sub-path + arrow → 拆成 GroupPrimitive：首段独占 arrowStart，末段独占 arrowEnd', () => {
+    // A → B → C 多节点路径，'->'。期望产出 GroupPrimitive 内 2 个 PathPrimitive：
+    //   首段 d="M ... L ..."（无 arrow）
+    //   末段 d="M ... L ..."（arrowEnd shape='stealth'）
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        { type: 'node', id: 'A', position: [0, 0] },
+        { type: 'node', id: 'B', position: [60, 0] },
+        { type: 'node', id: 'C', position: [60, 60] },
+        {
+          type: 'path',
+          arrow: pathArrows('->'),
+          children: [
+            { type: 'step', kind: 'move', to: { id: 'A' } },
+            { type: 'step', kind: 'line', to: { id: 'B' } },
+            { type: 'step', kind: 'line', to: { id: 'C' } },
+          ],
+        },
+      ],
+    };
+    const scene = compileToScene(ir).scene;
+    const group = scene.primitives.find((p): p is Extract<ScenePrimitive, { type: 'group' }> => p.type === 'group');
+
+    expect(group).toBeDefined();
+    expect(group?.children).toHaveLength(2);
+
+    const [first, last] = group!.children as Array<PathPrimitive>;
+
+    expect(first.arrowStart).toBeUndefined();
+    expect(first.arrowEnd).toBeUndefined();
+    expect(last.arrowStart).toBeUndefined();
+    expect(last.arrowEnd?.shape).toBe('stealth');
+  });
+
+  it('Core 内置 arrowDetail.shape 透传到 PathPrimitive 作为 arrowEnd / arrowStart 的 shape', () => {
+    for (const shape of ['normal', 'stealth'] as const) {
+      const ir: IRScene = {
+        version: 1,
+        type: 'scene',
+        children: [
+          {
+            type: 'path',
+            arrow: pathArrows('->', { shape }),
+            children: [
+              { type: 'step', kind: 'move', to: [0, 0] },
+              { type: 'step', kind: 'line', to: [10, 0] },
+            ],
+          },
+        ],
+      };
+      const path = findPathPrim(compileToScene(ir).scene.primitives);
+
+      expect(path.arrowEnd?.shape).toBe(shape);
+    }
+  });
+
+  it.each([
+    ['normal', 92.5],
+    ['open', 93.5],
+    ['stealth', 94.9],
+    ['openStealth', 95.1],
+    ['circle', 92.5],
+    ['openCircle', 92.5],
+  ] as const)('Core 内置 shape %s 会让路径覆盖 marker 接触边半个描边宽度', (shape, expectedEndX) => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          arrow: pathArrows('->', { shape }),
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [100, 0] },
+          ],
+        },
+      ],
+    };
+
+    expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([move([0, 0]), line([expectedEndX, 0])]);
+  });
+
+  it('主路径描边变宽时仍向 marker 内覆盖半个自身描边宽度', () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          arrow: pathArrows('->', { shape: 'normal' }),
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [100, 0] },
+          ],
+          style: { strokeWidth: 4 },
+        },
+      ],
+    };
+
+    expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([move([0, 0]), line([70, 0])]);
+  });
+
+  it("arrowDetail 缺省时 shape 回退 'stealth'", () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          arrow: pathArrows('->'),
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+          ],
+        },
+      ],
+    };
+
+    expect(findPathPrim(compileToScene(ir).scene.primitives).arrowEnd?.shape).toBe('stealth');
+  });
+
+  it('单 sub-path + arrow → 不拆 group，直接一个 PathPrimitive 挂 marker', () => {
+    // 直接坐标，无 boundary clip 差异，单 sub-path
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          arrow: pathArrows('->'),
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+            { type: 'step', kind: 'line', to: [10, 10] },
+          ],
+        },
+      ],
+    };
+    const scene = compileToScene(ir).scene;
+
+    expect(scene.primitives.find(p => p.type === 'group')).toBeUndefined();
+
+    const path = findPathPrim(scene.primitives);
+
+    expect(path.arrowEnd?.shape).toBe('stealth');
+  });
+
+  it('居中标签中断将箭头保留在逻辑端点上，而不是间隙边缘上', () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          arrow: pathArrows('<->'),
+          label: { text: 'gap', sloped: true },
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [100, 0] },
+          ],
+          style: { stroke: '#13579b' },
+        },
+      ],
+    };
+    const fragments = flattenPrims(
+      compileToScene(ir, { measureText: () => ({ width: 20, height: 10 }) }).scene.primitives,
+    ).filter((primitive): primitive is PathPrimitive => primitive.type === 'path' && primitive.stroke === '#13579b');
+
+    expect(fragments).toHaveLength(2);
+    expect(fragments.filter(fragment => fragment.arrowStart !== undefined)).toHaveLength(1);
+    expect(fragments.filter(fragment => fragment.arrowEnd !== undefined)).toHaveLength(1);
+
+    const startFragment = fragments.find(fragment => fragment.arrowStart !== undefined);
+    const endFragment = fragments.find(fragment => fragment.arrowEnd !== undefined);
+    const startTerminal = [...(startFragment?.commands ?? [])].reverse().find(command => command.kind === 'line');
+    const endMove = endFragment?.commands.find(command => command.kind === 'move');
+
+    expect(startTerminal).toMatchObject({ kind: 'line', to: [35.5, 0] });
+    expect(endMove).toMatchObject({ kind: 'move', to: [64.5, 0] });
+  });
+
+  it('端点标签中断将两个端点箭头保留在其原始锚点上', () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          arrow: pathArrows('<->'),
+          label: [
+            { text: 'start', position: 0, sloped: true },
+            { text: 'end', position: 1, sloped: true },
+          ],
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [100, 0] },
+          ],
+          style: { stroke: '#13579b' },
+        },
+      ],
+    };
+    const fragments = flattenPrims(
+      compileToScene(ir, { measureText: () => ({ width: 20, height: 10 }) }).scene.primitives,
+    ).filter((primitive): primitive is PathPrimitive => primitive.type === 'path' && primitive.stroke === '#13579b');
+    const startFragment = fragments.find(fragment => fragment.arrowStart !== undefined);
+    const endFragment = fragments.find(fragment => fragment.arrowEnd !== undefined);
+    const startMove = startFragment?.commands.find(command => command.kind === 'move');
+    const endTerminal = [...(endFragment?.commands ?? [])].reverse().find(command => command.kind === 'line');
+
+    expect(startFragment?.arrowStart?.shape).toBe('stealth');
+    expect(endFragment?.arrowEnd?.shape).toBe('stealth');
+    expect(startMove).toMatchObject({ kind: 'move', to: [5.1, 0] });
+    expect(endTerminal).toMatchObject({ kind: 'line', to: [94.9, 0] });
+  });
+});

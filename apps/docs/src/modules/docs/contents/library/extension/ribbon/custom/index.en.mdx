@@ -181,7 +181,8 @@ export const svg = renderToSvgString(ir, { compile: { paths: [pulseRibbonDefinit
 When an adapter or toolchain must collect runtime datasets before compilation, use `createRibbonProviderContribution`. It merges the built-in `bulge` profile and caller profiles into one `path/ribbon` provider, then hands that contribution to Core's generic resolver:
 
 ```ts
-import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
+import { resolveCoreProviderDependencies } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { createRibbonProviderContribution } from '@retikz/extension';
 
 import { pulseProfile } from './pulse-profile';

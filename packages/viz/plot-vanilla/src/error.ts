@@ -6,11 +6,11 @@ export const RetikzPlotVanillaErrorCode = {
   /** 未被更精确分类覆盖的 Plot Vanilla 错误 */
   Default: 'PLOT_VANILLA_ERROR',
   /** Extension 包含不可序列化声明 */
-  NonSerializableExtension: 'PLOT_VANILLA_NON_SERIALIZABLE_EXTENSION',
+  NormalizeExtensionNonSerializable: 'PLOT_VANILLA_NORMALIZE_EXTENSION_NON_SERIALIZABLE',
   /** Chart extension child 不受支持 */
-  UnsupportedChartChild: 'PLOT_VANILLA_UNSUPPORTED_CHART_CHILD',
+  NormalizeChartChildUnsupported: 'PLOT_VANILLA_NORMALIZE_CHART_CHILD_UNSUPPORTED',
   /** 声明来源重复 */
-  DuplicateDeclarationSource: 'PLOT_VANILLA_DUPLICATE_DECLARATION_SOURCE',
+  NormalizeDeclarationSourceDuplicate: 'PLOT_VANILLA_NORMALIZE_DECLARATION_SOURCE_DUPLICATE',
 } as const;
 
 /** Plot Vanilla 包稳定错误码取值 */

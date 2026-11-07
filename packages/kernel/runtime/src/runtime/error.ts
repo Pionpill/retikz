@@ -8,13 +8,13 @@ import { RetikzRuntimeError } from '../error';
 export const createRuntimeContractError = (
   code:
     | typeof RetikzRuntimeErrorCode.RegistryMismatch
-    | typeof RetikzRuntimeErrorCode.UpdateStrategyInvalid
-    | typeof RetikzRuntimeErrorCode.InitialSourceMismatch
+    | typeof RetikzRuntimeErrorCode.TransactionUpdateStrategyInvalid
+    | typeof RetikzRuntimeErrorCode.TransactionInitialSourceMismatch
     | typeof RetikzRuntimeErrorCode.SourceCommandInvalid
-    | typeof RetikzRuntimeErrorCode.RevisionInvalid
-    | typeof RetikzRuntimeErrorCode.RevisionStale
-    | typeof RetikzRuntimeErrorCode.ChangeSetRevisionMismatch
-    | typeof RetikzRuntimeErrorCode.UndeclaredDependency
+    | typeof RetikzRuntimeErrorCode.TransactionRevisionInvalid
+    | typeof RetikzRuntimeErrorCode.TransactionRevisionStale
+    | typeof RetikzRuntimeErrorCode.TransactionChangeSetRevisionMismatch
+    | typeof RetikzRuntimeErrorCode.DependencyUndeclared
     | typeof RetikzRuntimeErrorCode.Reentrant
     | typeof RetikzRuntimeErrorCode.Disposed
     | typeof RetikzRuntimeErrorCode.ParticipantTokenInvalid

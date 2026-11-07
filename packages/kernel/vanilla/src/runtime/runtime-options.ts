@@ -5,7 +5,7 @@ import type { VanillaRetainedRuntimeOptions, VanillaRuntimeOptions } from './typ
 
 const invalidRuntimeOptions = (cause: unknown): never => {
   throw new RetikzRenderError({
-    code: RetikzRenderErrorCode.RetainedRuntimeInputInvalid,
+    code: RetikzRenderErrorCode.RuntimeInputInvalid,
     cause,
     message: 'Vanilla raw-input mount runtime options are invalid',
   });

@@ -1,5 +1,6 @@
-import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
+import { resolveCoreProviderDependencies } from '@retikz/core';
 import type { CompileWarning } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { createFlowDiagramProviderContribution, FlowDiagramSchema } from '../../src/flow';
@@ -303,5 +304,5 @@ it.each([false, true])('保留可绘制的阻塞路线，并在 aligned=%s 时�
   expect(result.scene.primitives.length).toBeGreaterThan(0);
   expect(warnings).toHaveLength(aligned ? 0 : 1);
 
-  if (!aligned) expect(JSON.stringify(warnings[0])).toContain('relations[0]');
+  if (!aligned) expect(warnings[0]).toMatchObject({ path: ['children', 0, 'relations', 0] });
 });

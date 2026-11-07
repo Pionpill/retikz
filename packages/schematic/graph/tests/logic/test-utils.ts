@@ -8,13 +8,13 @@ import type {
 } from '@retikz/core';
 import {
   ChildSchema,
-  compileToScene,
   CompositeBaseSchema,
   defineComposite,
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
 } from '@retikz/core';
 import { NonBlankStringSchema } from '@retikz/foundation';
+import { compileToScene } from '@retikz/reconciler';
 import type { infer as ZodInfer } from 'zod';
 import { boolean, custom, literal, number } from 'zod';
 
@@ -166,10 +166,8 @@ export const compileInHarness = (
 
 /** 读取指定类型的 Graph 产物；缺失时使测试失败 */
 export const compositeArtifact = (output: LogicCompileOutput, type: string): Readonly<{ value: unknown }> => {
-  const artifact = output.artifacts.find(
-    candidate => candidate.kind === 'composite' && candidate.namespace === 'graph' && candidate.type === type,
-  );
-  if (artifact === undefined || artifact.kind !== 'composite') {
+  const artifact = output.artifacts.find(candidate => candidate.namespace === 'graph' && candidate.type === type);
+  if (artifact === undefined) {
     throw new Error(`Expected Graph composite artifact '${type}'`);
   }
 

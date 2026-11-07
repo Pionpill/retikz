@@ -1,5 +1,17 @@
 import type { ValueOf } from '@retikz/foundation';
 
+/** Weave 声明树的内容操作种类 */
+export const WeaveOperationKind = {
+  /** 在容器指定位置插入一个或多个声明 */
+  Insert: 'insert',
+  /** 替换已有元素的自身输入，不改变类别或 Scope children */
+  Update: 'update',
+  /** 删除元素；Scope 连同其声明子树删除 */
+  Remove: 'remove',
+} as const;
+
+export type WeaveOperationKind = ValueOf<typeof WeaveOperationKind>;
+
 /** 节点待处理变化的来源 */
 export const WeaveChangeSource = {
   /** 自身输入变化 */

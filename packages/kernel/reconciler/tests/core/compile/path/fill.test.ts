@@ -1,0 +1,69 @@
+import { describe, expect, it } from 'vitest';
+
+import type { IRScene } from '../../../../../core/src/schemas';
+import { compileToScene } from '../../../../src/compile';
+import { findPathPrim } from './helpers';
+
+describe('编译路径：填写/fillRule', () => {
+  it('缺省 fill = none（仅描边，向后兼容）', () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+          ],
+        },
+      ],
+    };
+    const path = findPathPrim(compileToScene(ir).scene.primitives);
+
+    expect(path.fill).toBe('none');
+    expect(path.fillRule).toBeUndefined();
+  });
+
+  it('显式 fill 透传到 PathPrimitive', () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+            { type: 'step', kind: 'line', to: [10, 10] },
+            { type: 'step', kind: 'cycle' },
+          ],
+          style: { fill: '#3b82f6' },
+        },
+      ],
+    };
+    const path = findPathPrim(compileToScene(ir).scene.primitives);
+
+    expect(path.fill).toBe('#3b82f6');
+  });
+
+  it("fillRule 'evenodd' 透传", () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 10] },
+          ],
+          style: { fill: 'red', fillRule: 'evenodd' },
+        },
+      ],
+    };
+    const path = findPathPrim(compileToScene(ir).scene.primitives);
+
+    expect(path.fillRule).toBe('evenodd');
+  });
+});

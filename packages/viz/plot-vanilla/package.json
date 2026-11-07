@@ -72,7 +72,8 @@
     "@retikz/data": "workspace:^",
     "@retikz/foundation": "workspace:^",
     "@retikz/plot": "workspace:*",
-    "@retikz/vanilla": "workspace:^"
+    "@retikz/vanilla": "workspace:^",
+    "@retikz/reconciler": "workspace:^"
   },
   "devDependencies": {
     "@types/node": "catalog:",

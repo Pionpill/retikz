@@ -22,6 +22,7 @@ type CanonicalQueue = Omit<IRQueue, 'items' | 'data' | 'skeleton' | 'dataExpand'
 /** 展开三入口，合并单格继承并物化框的静态默认 */
 export const resolveQueue = (source: IRQueue): CanonicalQueue => {
   const { items, data, dataExpand, skeleton, layout, border, padding, ...common } = source;
+  const { defaultCell } = common;
   const cells = items ?? expandLinearCells(data !== undefined ? { data, dataExpand } : { skeleton });
   const path = typeof border === 'object' ? border : {};
   const styleSchema = QueueBorderSchema.shape.style.unwrap().shape;
@@ -34,7 +35,7 @@ export const resolveQueue = (source: IRQueue): CanonicalQueue => {
   return {
     ...common,
     items: cells.map(cell =>
-      resolveCell(cell, { overallStyle: source.defaultCell?.style, overallLayout: source.defaultCell?.layout }),
+      resolveCell(cell, { overallStyle: defaultCell?.style, overallLayout: defaultCell?.layout }),
     ),
     layout: {
       direction: layout?.direction ?? QueueLayoutSchema.shape.direction.parse(undefined),

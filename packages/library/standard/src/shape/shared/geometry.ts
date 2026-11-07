@@ -47,7 +47,7 @@ export const shapeBoxGeometry = (input: {
   inset?: number;
   outset?: number;
 }): { center: [number, number]; width: number; height: number } => {
-  const { box, corner1 = [0, 0], corner2 = [0, 0] } = input;
+  const { box, corner1 = [0, 0], corner2 = [0, 0], outset, inset } = input;
   const origin = box
     ? 'origin' in box
       ? box.origin
@@ -55,7 +55,7 @@ export const shapeBoxGeometry = (input: {
     : [Math.min(corner1[0], corner2[0]), Math.min(corner1[1], corner2[1])];
   const width = box?.width ?? Math.abs(corner2[0] - corner1[0]);
   const height = box?.height ?? Math.abs(corner2[1] - corner1[1]);
-  const delta = input.outset ?? -(input.inset ?? 0);
+  const delta = outset ?? -(inset ?? 0);
 
   return {
     center: [origin[0] + width / 2, origin[1] + height / 2],

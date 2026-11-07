@@ -9,7 +9,9 @@ Foundation keeps generic scalar validation and error shape together: assertions 
 
 `RetikzErrorOptions`, `RetikzError`, and `isRetikzError` provide the smallest shared error shape. The domain package that owns a failure should extend `RetikzError` and define its own error codes, details, and recovery semantics. `RetikzFoundationError` carries only Foundation-owned atomic failures.
 
-Error-code members in Retikz packages use PascalCase. Their string values use UPPER_SNAKE_CASE with a package or domain prefix, for example `InvalidChartIR: 'CHART_INVALID_CHART_IR'`. Compare `code` against the error-code constants exported by the owning package.
+Error codes in Retikz packages are grouped by module. Members use PascalCase in the form `ModuleReason`, and values use UPPER_SNAKE_CASE in the form `PACKAGE_MODULE_REASON`, for example `ResolveInputInvalid: 'CHART_RESOLVE_INPUT_INVALID'`. Shared errors omit the module segment, for example `ContractViolation: 'CORE_CONTRACT_VIOLATION'`. Compare `code` against the error-code constants exported by the owning package.
+
+A package usually exposes one error class and distinguishes modules through error codes. For example, the `@retikz/diagram-react` root entry exports `RetikzDiagramReactError` and `RetikzDiagramReactErrorCode`; Branch and Flow authoring errors use codes such as `BranchChildInvalid` and `FlowChildInvalid`.
 
 ```ts
 import { assertPositiveNumber, RetikzError, type ValueOf } from '@retikz/foundation';

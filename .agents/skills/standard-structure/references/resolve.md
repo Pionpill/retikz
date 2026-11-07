@@ -31,6 +31,7 @@ schema 已覆盖或 TypeScript 已保证的结构不得在 resolve 重复校验�
 
 - compile / pipeline 拥有 context 生命周期与动态状态，按当前阶段投影为窄 `XxxResolveContext`
 - `resolve/<domain>/types.ts` 定义 `XxxResolveContext`；resolver 不反向 import compile / pipeline 私有类型
+- 不依赖编译执行状态的领域确定化逻辑归 `resolve/`；查询回调由编译器提供不改变其归属。不得接收整份编译工作区、遍历器或候选事务；“不依赖编译执行状态”不等于“不需要语义上下文”
 - context 可以包含 registry、effective parent state、data view、host、reference lookup、measurement 或显式 diagnostics collector，但所有输入必须显式传递并保持确定性
 - 动态上下文不能提前获得时，在上下文就绪点调用 resolver；不要因此把结构处理留在 traversal、layout 或 emit
 - 真正依赖 layout 结果的几何计算仍属于 layout；它可以形成准确命名的 layout / compile 消费态，不伪装成 Canonical 默认

@@ -38,7 +38,7 @@ Use `defineScopeChannel`, `defineNodeChannel`, `definePathChannel`, or the gener
 
 | Field     | Purpose                                                                                                    |
 | --------- | ---------------------------------------------------------------------------------------------------------- |
-| `channel` | Unique registry name used by `encodings.<name>`                                                    |
+| `channel` | Unique registry name used by `encodings.<name>`                                                            |
 | `output`  | Declares output type and optional range / palette / clamp metadata; it does not map or clamp values itself |
 | `legend?` | Declares the legend form                                                                                   |
 | `resolve` | Reads a field or constant binding, performs mapping and clamp, and returns a resolver plus descriptor      |
@@ -109,7 +109,7 @@ Inject the definition on `Plot`, then reference its registered name in the child
 
 ```tsx
 <Plot data={customChannelPoints} definitions={{ channels: [intensityChannel] }}>
-  <PointMark encodings={{ intensity: 'score', position: { x: "x", y: "y" } }} />
+  <PointMark encodings={{ intensity: 'score', position: { x: 'x', y: 'y' } }} />
 </Plot>
 ```
 

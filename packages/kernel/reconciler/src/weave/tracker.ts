@@ -1,26 +1,20 @@
-import type { CompileRead, CompileWarning, ElementCompileOptions } from '@retikz/core';
+import type { CompileWarning } from '@retikz/core';
 
+import type { WeaveCompileRead } from './compile';
 import { readWeaveCurrent } from './transaction';
 import type { WeaveTransaction } from './transaction';
 import type { WeaveNode, WeaveRoot, WeaveScopeNode } from './types';
 
 /** 维护编译读取、双向依赖与批次失效，不编辑声明结构或执行编译 */
 export class WeaveTracker {
-  /** Core binding 对象到稳定节点的映射，跨批保留，确认或回滚时清理失效绑定 */
-  private readonly bindings = new Map<object, WeaveNode>();
   /** 本批已失效节点，用于传播去重与阻止缓存复用，不是待执行队列 */
   private readonly dirtyNodes = new Set<WeaveNode>();
 
   constructor(
     private readonly root: WeaveRoot,
-    private transaction: WeaveTransaction,
+    private readonly transaction: WeaveTransaction,
+    private readonly bindings: Map<object, WeaveNode>,
   ) {}
-
-  /** 开始新批次，切换事务并清空上批失效标记 */
-  beginBatch(transaction: WeaveTransaction): void {
-    this.transaction = transaction;
-    this.dirtyNodes.clear();
-  }
 
   /** 将节点登记为可被 Core 读取记录引用的生产者 */
   registerNodeBinding(node: WeaveNode): void {
@@ -55,28 +49,10 @@ export class WeaveTracker {
     }
   }
 
-  /** 把复用产物的读取记录关联到本批名称 frame，避免保留旧工作区 */
-  refreshCompileReads(reads: ReadonlyArray<CompileRead>, compileOptions: ElementCompileOptions): Array<CompileRead> {
-    const refreshed: Array<CompileRead> = [];
-    for (const name of new Set(reads.map(read => read.name))) {
-      for (let namespace = compileOptions.namespace; namespace !== undefined; namespace = namespace.parent) {
-        const binding = namespace.bindings.get(name);
-        refreshed.push({
-          namespace,
-          name,
-          state: binding?.state ?? 'missing',
-          ...(binding === undefined ? {} : { binding: binding.binding }),
-        });
-        if (binding !== undefined) break;
-      }
-    }
-    return refreshed;
-  }
-
   /** 保存读取与诊断，并以最新读取事实重建节点的双向计算依赖 */
   recordNodeReads(
     node: WeaveNode,
-    compileReads: ReadonlyArray<CompileRead>,
+    compileReads: ReadonlyArray<WeaveCompileRead>,
     diagnostics: ReadonlyArray<CompileWarning>,
     append = false,
   ): void {
@@ -94,7 +70,9 @@ export class WeaveTracker {
     for (const read of reads) {
       const producer = read.binding === undefined ? undefined : this.bindings.get(read.binding);
       if (producer === undefined) continue;
-      this.transaction.editNodeAttribute(node, 'dependencies').set(producer, [null]);
+      const dependencies = this.transaction.editNodeAttribute(node, 'dependencies');
+      const kinds = dependencies.get(producer) ?? [];
+      if (!kinds.includes(read.kind)) dependencies.set(producer, [...kinds, read.kind]);
       this.transaction.editNodeAttribute(producer, 'consumers').add(node);
     }
   }
@@ -103,7 +81,9 @@ export class WeaveTracker {
   recordScopeLayoutDependencies(node: WeaveScopeNode): void {
     for (const dependency of this.transaction.readNode(node).children) {
       if (dependency.type === 'path') continue;
-      this.transaction.editNodeAttribute(node, 'dependencies').set(dependency, [null]);
+      const dependencies = this.transaction.editNodeAttribute(node, 'dependencies');
+      const kinds = dependencies.get(dependency) ?? [];
+      if (!kinds.includes('layout')) dependencies.set(dependency, [...kinds, 'layout']);
       this.transaction.editNodeAttribute(dependency, 'consumers').add(node);
     }
   }

@@ -337,7 +337,7 @@ export declare const definePattern: (def: PatternDefinition) => PatternDefinitio
 | `offsetX?` | `number`                                          | —      | —    |
 | `offsetY?` | `number`                                          | —      | —    |
 | `opacity?` | `number`                                          | —      | —    |
-| `preset?`  | `"none" \| "sm" \| "md" \| "lg" \| "xl" \| "2xl"` | —      | —    |
+| `preset?`  | `"none" \| "sm" \| "lg" \| "xl" \| "2xl" \| "md"` | —      | —    |
 
 </ApiTable>
 
@@ -372,7 +372,7 @@ export type IRDropShadow = ZodInfer<typeof DropShadowSchema>;
 
 #### <ApiSourceLink label={"ShadowPreset"} path={"packages/kernel/core/src/schemas/style/effects.ts"} startLine={13}>ShadowPreset</ApiSourceLink>
 
-预设字符串 `shadow="md"` 等价于对象 `{ preset:'md' }`；`SHADOW_PRESETS` 表为档位展开单一真源。
+预设字符串 `shadow="md"` 等价于对象 `{ preset:'md' }`。
 `none` = 显式无阴影（当前等价省略，为将来 scope 级联预留）
 
 ```ts

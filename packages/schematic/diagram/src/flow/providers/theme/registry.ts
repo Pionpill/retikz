@@ -12,7 +12,7 @@ export const resolveFlowThemeRegistry = (
     if (existing === definition) continue;
     if (existing !== undefined) {
       throw new RetikzDiagramError({
-        code: RetikzDiagramErrorCode.DefinitionDuplicate,
+        code: RetikzDiagramErrorCode.ProviderDefinitionDuplicate,
         message: `Flow theme '${definition.name}' is already registered.`,
         details: {
           capability: 'flow-theme',

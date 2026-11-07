@@ -1,5 +1,4 @@
 import { OverlayLayout, OverlayLayoutItem } from '@retikz/layout-react';
-import { OVERLAY_LAYOUT_INSPECTOR_KEY } from '@retikz/layout/inspect';
 import { Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
@@ -13,52 +12,31 @@ export { createPreviewControlContract } from './overlay-participation.controls';
 export const previewControls = previewControlContract.controls;
 
 const createPreview = (lang: Lang) =>
-  defineOverlayPreview(
-    createPreviewControlContract(lang),
-    values => (
-      <Layout>
-        <OverlayLayout padding={12} justifyItems="start" alignItems="start">
-          <OverlayLayoutItem itemKey="first">
-            <Node
-              text={[{ segments: [{ text: `${demoI18n[lang].first} · z:0`, fill: '#153b60' }] }]}
-              layout={{ minimumSize: { width: 140, height: 60 } }}
-              style={{ stroke: 'dodgerblue', fill: '#dceeff' }}
-            />
-          </OverlayLayoutItem>
-          <OverlayLayoutItem
-            itemKey="second"
-            sizeParticipation={values.participation}
-            zIndex={values.zIndex}
-            offset={{ x: values.offsetX, y: values.offsetY }}
-          >
-            <Node
-              text={[{ segments: [{ text: `${demoI18n[lang].second} · z:${values.zIndex}`, fill: '#653b0c' }] }]}
-              layout={{ minimumSize: { width: 220, height: 100 } }}
-              style={{ stroke: 'darkorange', fill: '#ffe4bd' }}
-            />
-          </OverlayLayoutItem>
-        </OverlayLayout>
-      </Layout>
-    ),
-    () => ({
-      rules: [
-        {
-          kind: 'request',
-          inspector: OVERLAY_LAYOUT_INSPECTOR_KEY,
-          target: { kind: 'scene' },
-          options: {
-            bounds: { container: true, content: false, slot: false, allocation: false, visual: false },
-            spacing: false,
-            overflow: false,
-            anchors: false,
-            placements: false,
-            stacking: false,
-            alignmentGuides: false,
-          },
-        },
-      ],
-    }),
-  );
+  defineOverlayPreview(createPreviewControlContract(lang), values => (
+    <Layout>
+      <OverlayLayout padding={12} justifyItems="start" alignItems="start">
+        <OverlayLayoutItem itemKey="first">
+          <Node
+            text={[{ segments: [{ text: `${demoI18n[lang].first} · z:0`, fill: '#153b60' }] }]}
+            layout={{ minimumSize: { width: 140, height: 60 } }}
+            style={{ stroke: 'dodgerblue', fill: '#dceeff' }}
+          />
+        </OverlayLayoutItem>
+        <OverlayLayoutItem
+          itemKey="second"
+          sizeParticipation={values.participation}
+          zIndex={values.zIndex}
+          offset={{ x: values.offsetX, y: values.offsetY }}
+        >
+          <Node
+            text={[{ segments: [{ text: `${demoI18n[lang].second} · z:${values.zIndex}`, fill: '#653b0c' }] }]}
+            layout={{ minimumSize: { width: 220, height: 100 } }}
+            style={{ stroke: 'darkorange', fill: '#ffe4bd' }}
+          />
+        </OverlayLayoutItem>
+      </OverlayLayout>
+    </Layout>
+  ));
 
 const previews = { zh: createPreview('zh'), en: createPreview('en') };
 

@@ -160,7 +160,7 @@ describe('Entity 定义注册表', () => {
     );
     expect(() => Graph.resolveGraphDefinitionOptions({ entityKinds: [kind, { ...kind }] })).toThrowError(
       expect.objectContaining({
-        code: Graph.RetikzGraphErrorCode.DefinitionDuplicate,
+        code: Graph.RetikzGraphErrorCode.ProviderDefinitionDuplicate,
         details: { capability: 'entity-kind', key: 'workflow.start', reason: "role 'event'" },
       }),
     );

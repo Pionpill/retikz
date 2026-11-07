@@ -70,11 +70,15 @@ export const isRuntimeRevision = (value: unknown): value is RuntimeRevision =>
  * 把已验证 safe integer 转成 Runtime 内部 revision
  * @param value 非负安全整数
  * @returns 带 RuntimeRevision 类型品牌的原数值
- * @throws {RetikzRuntimeError} 数值不是非负安全整数时抛出 RevisionInvalid
+ * @throws {RetikzRuntimeError} 数值不是非负安全整数时抛出 TransactionRevisionInvalid
  */
 export const createRuntimeRevision = (value: number): RuntimeRevision => {
   if (!isRuntimeRevision(value)) {
-    throw new RetikzRuntimeError({ code: RetikzRuntimeErrorCode.RevisionInvalid, phase: 'revision', cause: value });
+    throw new RetikzRuntimeError({
+      code: RetikzRuntimeErrorCode.TransactionRevisionInvalid,
+      phase: 'revision',
+      cause: value,
+    });
   }
 
   return value;
@@ -83,11 +87,19 @@ export const createRuntimeRevision = (value: number): RuntimeRevision => {
 /** 为非空 transaction 创建下一 revision，并在 safe integer 上界前 fail-loud */
 export const createNextRuntimeRevision = (current: RuntimeRevision): RuntimeRevision => {
   if (!isRuntimeRevision(current)) {
-    throw new RetikzRuntimeError({ code: RetikzRuntimeErrorCode.RevisionInvalid, phase: 'revision', cause: current });
+    throw new RetikzRuntimeError({
+      code: RetikzRuntimeErrorCode.TransactionRevisionInvalid,
+      phase: 'revision',
+      cause: current,
+    });
   }
 
   if (current === Number.MAX_SAFE_INTEGER) {
-    throw new RetikzRuntimeError({ code: RetikzRuntimeErrorCode.RevisionExhausted, phase: 'revision', cause: current });
+    throw new RetikzRuntimeError({
+      code: RetikzRuntimeErrorCode.TransactionRevisionExhausted,
+      phase: 'revision',
+      cause: current,
+    });
   }
 
   return createRuntimeRevision(current + 1);
@@ -103,7 +115,7 @@ const isRuntimeChangeSet = (value: unknown): value is RuntimeChangeSet<unknown> 
  * @param baseRevision 变更提示所基于的已发布版本
  * @param changes 领域变更提示；仅复制并冻结数组，不克隆其中的元素
  * @returns 绑定版本并由当前工厂标记的变更提示
- * @throws {RetikzRuntimeError} baseRevision 无效时抛出 RevisionInvalid
+ * @throws {RetikzRuntimeError} baseRevision 无效时抛出 TransactionRevisionInvalid
  */
 export const createRuntimeChangeSet = <TChange>(
   baseRevision: RuntimeRevision,
@@ -111,7 +123,7 @@ export const createRuntimeChangeSet = <TChange>(
 ): RuntimeChangeSet<TChange> => {
   if (!isRuntimeRevision(baseRevision)) {
     throw new RetikzRuntimeError({
-      code: RetikzRuntimeErrorCode.RevisionInvalid,
+      code: RetikzRuntimeErrorCode.TransactionRevisionInvalid,
       phase: 'revision',
       cause: baseRevision,
     });
@@ -210,7 +222,7 @@ export const createRuntimeSourceInput = <TInput, TValue, TRead, TChange>(
  * @param value 完整下一份输入；capture 在 Runtime 更新时执行
  * @param changeSet 可选增量提示；不替代完整输入
  * @returns 供 RuntimeUpdate.sources 使用的不透明更新命令
- * @throws {RetikzRuntimeError} changeSet 不是由当前工厂创建时抛出 ChangeSetInvalid
+ * @throws {RetikzRuntimeError} changeSet 不是由当前工厂创建时抛出 TransactionChangeSetInvalid
  */
 export const createRuntimeSourceUpdate = <TInput, TValue, TRead, TChange>(
   source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
@@ -219,7 +231,7 @@ export const createRuntimeSourceUpdate = <TInput, TValue, TRead, TChange>(
 ): RuntimeSourceUpdate => {
   if (changeSet !== undefined && !isRuntimeChangeSet(changeSet)) {
     throw new RetikzRuntimeError({
-      code: RetikzRuntimeErrorCode.ChangeSetInvalid,
+      code: RetikzRuntimeErrorCode.TransactionChangeSetInvalid,
       phase: 'change-set',
       owner: source.key,
       cause: changeSet,

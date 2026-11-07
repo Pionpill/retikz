@@ -3,11 +3,14 @@ import type { WayDSL } from '@retikz/vanilla';
 
 const wayOf = (values: DrawLabelPreviewValues): WayDSL => {
   const label = {
-    text: `t = ${values.position.toFixed(2)}`,
+    text: `t = ${values.position.toFixed(2)}\npath label`,
     position: values.position,
     side: values.side,
     sloped: values.sloped,
     textColor: values.textColor,
+    textAlign: values.textAlign,
+    lineHeight: values.lineHeight,
+    maxTextWidth: values.maxTextWidth,
   } as const;
   if (values.segmentKind === 'line') return ['A', { label }, 'B'];
   if (values.segmentKind === 'curve') return ['A', { label }, { curve: [180, -110] }, 'B'];
@@ -22,6 +25,12 @@ export type DrawLabelPreviewValues = {
   side: 'top' | 'bottom' | 'left' | 'right' | 'center';
   sloped: boolean;
   textColor: string;
+  /** 文本块内部对齐 */
+  textAlign: 'start' | 'middle' | 'end';
+  /** 最小行槽高度 */
+  lineHeight: number;
+  /** 自动折行宽度 */
+  maxTextWidth: number;
 };
 
 /** 绘制示例图形 */

@@ -83,7 +83,7 @@ const view = mount(document.getElementById('diagram')!, input, {
 IR stores only names and JSON parameters. Pass the definition function through compile options. The resulting `scene` can be consumed by an SVG or Canvas renderer.
 
 ```ts
-import { compileToScene } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { ringMark } from './ring-mark';
 
 const { scene } = compileToScene(
@@ -110,15 +110,15 @@ const { scene } = compileToScene(
 
 ## Errors and limits
 
-| Situation                                                                | Result                                                    |
-| ------------------------------------------------------------------------ | --------------------------------------------------------- |
-| Name collides with a built-in mark, registered arrow, or another mark    | Registration fails without overriding the definition      |
-| An unregistered `shape` is referenced                                    | Compilation reports the mark location and available names |
-| An ordinary mark is used in `arrow.start` / `end`                        | The arrow registry cannot resolve its name                |
-| `emit` throws                                                            | Core wraps the error and preserves its original `cause`   |
-| The path has no locatable length, or output references missing resources | Compilation rejects the invalid result                    |
+| Situation                                                                              | Result                                                    |
+| -------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| Name collides with a built-in mark, registered arrow, or another mark                  | Registration fails without overriding the definition      |
+| An unregistered `shape` is referenced                                                  | Compilation reports the mark location and available names |
+| An ordinary mark is used in `arrow.start` / `end`                                      | The arrow registry cannot resolve its name                |
+| `emit` throws                                                                          | Core wraps the error and preserves its original `cause`   |
+| The path has no locatable length, or output references resources not supplied as input | Compilation rejects the invalid result                    |
 
-Emit basic Scene primitives, not DOM, ReactNode, or unmeasured text. Existing scene paints and clipping resources may be referenced, but references must resolve to provided resources. Definitions stay outside IR. Generate content for each instance to avoid sharing mutable primitives.
+Emit basic Scene primitives, not DOM, ReactNode, or unmeasured text. Resource references may only pass through this invocation's `fill` / `stroke`; `contextStroke` is also supported. Do not invent other resource IDs, declare `resources`, or set `clipRef`. These rules also apply to nested primitives; violations fail at the provider output boundary. Select gradients or registered Patterns through input properties. Definitions stay outside IR. Generate content for each instance to avoid sharing mutable primitives.
 
 ## Related properties
 

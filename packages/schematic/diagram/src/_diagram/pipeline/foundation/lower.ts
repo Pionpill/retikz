@@ -43,7 +43,7 @@ const createDiagramPresentationTextNode = (
     padding: 0,
     margin: 0,
     minimumSize: 0,
-    align: appearance.align,
+    textAlign: appearance.textAlign,
     lineHeight: appearance.lineHeight,
     ...(appearance.maxTextWidth === undefined ? {} : { maxTextWidth: appearance.maxTextWidth }),
   },

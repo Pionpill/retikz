@@ -9,6 +9,8 @@ keywords: Node、aliasIds、命名引用、SpatialHandle、id、key、别名、i
 - 决策日期：2026-09-23
 - 关联：[roadmap](./roadmap.md) · [ADR-028](./028-qualified-spatial-handles.md) · [Standard ADR-034](../../../../../library/_notes/decisions/standard/v0/v0.1/034-array-cell-identities.md)
 
+> 空间句柄别名部分已由 [077](./077-compile-output-contract.md) 替代并删除；Node 引用别名决策继续有效。
+
 ## 背景与目标
 
 一个绘图区域可能同时具有作者给定的稳定名称和由容器位置推导的名称。当前 Node 只有一个 `id`，qualified spatial handle 只有一个 `id`。为同一区域分别建立多个不可见节点或多条空间记录，会重复表达几何，使别名之间可能在布局、变换、replay 或 inspection 中产生差异。

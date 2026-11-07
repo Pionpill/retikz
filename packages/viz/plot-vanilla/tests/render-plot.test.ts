@@ -1,8 +1,8 @@
-import { compileToScene } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import { defineFieldOrder } from '@retikz/data';
 import type { IRPlot } from '@retikz/plot';
 import { definePositionAdjustment, lowerPlots } from '@retikz/plot';
+import { compileToScene } from '@retikz/reconciler';
 import { renderToSvgString } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 import { literal, number, strictObject } from 'zod';

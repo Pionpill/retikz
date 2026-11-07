@@ -8,7 +8,7 @@ describe('运行时修订耗尽', () => {
     expect(createNextRuntimeRevision(createRuntimeRevision(0))).toBe(1);
     expect(() => createNextRuntimeRevision(createRuntimeRevision(Number.MAX_SAFE_INTEGER))).toThrowError(
       expect.objectContaining({
-        code: RetikzRuntimeErrorCode.RevisionExhausted,
+        code: RetikzRuntimeErrorCode.TransactionRevisionExhausted,
         phase: 'revision',
         cause: Number.MAX_SAFE_INTEGER,
       }),

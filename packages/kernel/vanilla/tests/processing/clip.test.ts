@@ -1,15 +1,12 @@
 import type { ClipDefinition } from '@retikz/core';
-import { compileToScene, defineClip } from '@retikz/core';
+import { defineClip } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject } from 'zod';
 
 import type { InputEmbedAdapter, InputScene } from '../../src';
-import {
-  createProcessingController,
-  normalizeScene,
-  prepareProcessingInput,
-  processToStaticInputResult,
-} from '../../src';
+import { createProcessingController, normalizeScene, processToStaticInputResult } from '../../src';
+import { prepareProcessingInput } from '../../src/processing/prepare';
 
 const customClip = (): ClipDefinition =>
   defineClip({

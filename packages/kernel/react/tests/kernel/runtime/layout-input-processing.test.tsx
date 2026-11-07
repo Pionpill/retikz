@@ -37,10 +37,8 @@ const createCommitTrackingCompileDriver = (): Readonly<{
       if (existing !== undefined) return existing;
 
       const session: VanillaCompileDriverSession = {
-        observers: [],
         resolve: output => ({
           primary: output.result,
-          observerOutputs: output.observerOutputs,
           layers: [],
           diagnostics: [],
         }),
@@ -176,10 +174,8 @@ describe('<Layout> 的 Vanilla Input processing', () => {
         if (existing !== undefined) return existing;
 
         const session: VanillaCompileDriverSession = {
-          observers: [],
           resolve: output => ({
             primary: output.result,
-            observerOutputs: output.observerOutputs,
             layers: [],
             diagnostics: [],
           }),

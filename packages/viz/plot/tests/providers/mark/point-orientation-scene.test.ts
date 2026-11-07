@@ -1,4 +1,4 @@
-import { compileToScene } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { expect, it } from 'vitest';
 
 import { lowerPlots } from '../../../src/pipeline/expand';

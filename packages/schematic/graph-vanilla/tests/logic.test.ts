@@ -304,7 +304,7 @@ describe('normalizeGraph', () => {
     const input: InputGraph = {
       id: 'parity',
       defaultGraph: {
-        entity: { style: { fill: '#111111' }, layout: { align: 'middle' } },
+        entity: { style: { fill: '#111111' }, layout: { textAlign: 'middle' } },
         relation: { style: { stroke: '#222222' } },
       },
       graphRules: [{ type: 'entity', selector: { role: 'activity' }, style: { fill: '#ff0000' } }],

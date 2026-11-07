@@ -37,6 +37,7 @@ describe('@retikz/table-react 封装边界', () => {
       '@retikz/data',
       '@retikz/foundation',
       '@retikz/react',
+      '@retikz/reconciler',
       '@retikz/table',
       '@retikz/table-vanilla',
       '@retikz/vanilla',

@@ -7,6 +7,8 @@ description: 把渲染目标无关的 Scene 落到 SVG / Canvas，并以 retaine
 
 这一组讲 retikz 怎么把图真正画到屏幕上。你写的图会先被编译成一份**与渲染器无关的 Scene**，再交给某个后端落地：**SVG** 产出矢量 DOM，每个图元都是页面上能被 CSS 命中的真实元素；**Canvas** 把同一份 Scene 画成像素位图，适合图元很多或高频重绘的场景。两个后端共享 Scene 语义，在各自支持的能力范围内对齐输出；切换前仍需确认目标宿主和交互需求。**水合**是两个后端共用的机制：先静态出图，客户端再按 id 把事件 handler 绑回图元。
 
+只读图层通过静态帧或 retained 提交入口随主图一起物化。`drawReadonlyLayer` 与 `buildSvgReadonlyLayer` 是内部组装函数，不由 Canvas／SVG 公开子入口导出；公开的细粒度 SVG builder 仍可使用。
+
 ## 职责一览
 
 | 主题          | 职责                                                  | 何时查阅                               |
@@ -49,7 +51,7 @@ Static API 使用 `StaticRenderFrame { primary: Scene, layers }`，retained rend
   sources={[
     { label: 'Retained config', path: 'packages/kernel/render/src/runtime/config.ts' },
     { label: 'Reconciler commit target', path: 'packages/kernel/render/src/runtime/target.ts' },
-    { label: 'Session publication and recovery', path: 'packages/kernel/reconciler/src/session.ts' },
+    { label: 'Session publication and recovery', path: 'packages/kernel/reconciler/src/reconciler.ts' },
     {
       label: 'SVG WAAPI 独立资源 cleanup',
       path: 'packages/kernel/render/src/animation/retained/binding.ts',
@@ -71,14 +73,14 @@ Static API 使用 `StaticRenderFrame { primary: Scene, layers }`，retained rend
     {
       label: 'SVG aggregate controls cleanup',
       path: 'packages/kernel/render/src/runtime/svg-renderer.ts',
-      startLine: 81,
-      endLine: 118,
+      startLine: 83,
+      endLine: 120,
     },
     {
       label: 'SVG animation retry queue',
       path: 'packages/kernel/render/src/runtime/svg-renderer.ts',
-      startLine: 120,
-      endLine: 151,
+      startLine: 122,
+      endLine: 153,
     },
     {
       label: '共享 rAF frame continuation gate',
@@ -95,44 +97,44 @@ Static API 使用 `StaticRenderFrame { primary: Scene, layers }`，retained rend
     {
       label: 'Canvas animation retry queue',
       path: 'packages/kernel/render/src/runtime/canvas-renderer.ts',
-      startLine: 227,
-      endLine: 249,
+      startLine: 213,
+      endLine: 235,
     },
     {
       label: 'Canvas visibility cleanup',
       path: 'packages/kernel/render/src/runtime/canvas-renderer.ts',
-      startLine: 1054,
-      endLine: 1196,
+      startLine: 1043,
+      endLine: 1185,
     },
     {
       label: 'Canvas clock replacement gate',
       path: 'packages/kernel/render/src/runtime/canvas-renderer.ts',
-      startLine: 1211,
-      endLine: 1236,
+      startLine: 1200,
+      endLine: 1225,
     },
     {
       label: 'Canvas controls final cleanup',
       path: 'packages/kernel/render/src/runtime/canvas-renderer.ts',
-      startLine: 1278,
-      endLine: 1301,
+      startLine: 1267,
+      endLine: 1290,
     },
     {
       label: 'Canvas candidate cleanup retention',
       path: 'packages/kernel/render/src/runtime/canvas-renderer.ts',
-      startLine: 1654,
-      endLine: 1662,
+      startLine: 1643,
+      endLine: 1651,
     },
     {
       label: 'Canvas animation rollback cleanup',
       path: 'packages/kernel/render/src/runtime/canvas-renderer.ts',
-      startLine: 1756,
-      endLine: 1780,
+      startLine: 1745,
+      endLine: 1769,
     },
     {
       label: 'Canvas renderer final dispose',
       path: 'packages/kernel/render/src/runtime/canvas-renderer.ts',
-      startLine: 1876,
-      endLine: 1901,
+      startLine: 1865,
+      endLine: 1890,
     },
     {
       label: 'Renderer capability 与公开 read',

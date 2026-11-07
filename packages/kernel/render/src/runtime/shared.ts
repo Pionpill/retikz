@@ -1,3 +1,4 @@
+import type { PropertyPath } from '@retikz/foundation';
 import type { SceneIdentity } from '@retikz/reconciler';
 import { createSceneIdentityLookup, sceneIdentityEquals } from '@retikz/reconciler';
 
@@ -140,12 +141,10 @@ export const createSemanticOwnerPublicIdMap = (
 
 /** 按 effective public id 聚合完整 topology primitive paths */
 export const createPublicIdPrimitivePathMap = (
-  topology: ReadonlyArray<
-    Readonly<{ semanticOwner: SceneIdentity; primitivePath: ReadonlyArray<number>; publicId?: string }>
-  >,
-): ReadonlyMap<string, ReadonlyArray<ReadonlyArray<number>>> => {
+  topology: ReadonlyArray<Readonly<{ semanticOwner: SceneIdentity; primitivePath: PropertyPath; publicId?: string }>>,
+): ReadonlyMap<string, ReadonlyArray<PropertyPath>> => {
   const publicIdByOwner = createSemanticOwnerPublicIdMap(topology);
-  const pathsByPublicId = new Map<string, Array<ReadonlyArray<number>>>();
+  const pathsByPublicId = new Map<string, Array<PropertyPath>>();
 
   for (const node of topology) {
     const publicId = node.publicId ?? publicIdByOwner.get(node.semanticOwner);

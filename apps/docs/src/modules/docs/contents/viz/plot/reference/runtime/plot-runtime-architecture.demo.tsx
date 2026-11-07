@@ -13,7 +13,7 @@ const Demo: FC = () => (
         position={[-250, 10]}
         cornerRadius={4}
         style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
-        layout={{ minimumSize: { width: 174, height: 58 }, align: 'middle', lineHeight: 17 }}
+        layout={{ minimumSize: { width: 174, height: 58 }, textAlign: 'middle', lineHeight: 17 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>Host adapters</Text>
         <Text fill="gray" font={{ size: 12 }}>
@@ -29,7 +29,7 @@ const Demo: FC = () => (
         position={[-60, 10]}
         cornerRadius={4}
         style={{ stroke: 'dimgray', fill: 'dimgray', opacity: { fill: 0.08 } }}
-        layout={{ minimumSize: { width: 132, height: 58 }, align: 'middle', lineHeight: 17 }}
+        layout={{ minimumSize: { width: 132, height: 58 }, textAlign: 'middle', lineHeight: 17 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>lowerPlots</Text>
         <Text fill="gray" font={{ size: 12 }}>
@@ -45,7 +45,7 @@ const Demo: FC = () => (
         position={[110, 10]}
         cornerRadius={4}
         style={{ stroke: 'dimgray', fill: 'dimgray', opacity: { fill: 0.08 } }}
-        layout={{ minimumSize: { width: 144, height: 58 }, align: 'middle', lineHeight: 17 }}
+        layout={{ minimumSize: { width: 144, height: 58 }, textAlign: 'middle', lineHeight: 17 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>compileToScene</Text>
         <Text fill="gray" font={{ size: 12 }}>
@@ -59,7 +59,7 @@ const Demo: FC = () => (
       position={[280, 10]}
       cornerRadius={4}
       style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
-      layout={{ minimumSize: { width: 146, height: 58 }, align: 'middle', lineHeight: 17 }}
+      layout={{ minimumSize: { width: 146, height: 58 }, textAlign: 'middle', lineHeight: 17 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Outputs</Text>
       <Text fill="gray" font={{ size: 12 }}>

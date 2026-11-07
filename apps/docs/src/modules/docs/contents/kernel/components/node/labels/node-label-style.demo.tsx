@@ -11,6 +11,9 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     fontSize: values.fontSize,
     opacity: values.opacity,
     multiline: values.multiline,
+    textAlign: values.textAlign,
+    lineHeight: values.lineHeight,
+    maxTextWidth: values.maxTextWidth,
   }),
 );
 

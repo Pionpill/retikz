@@ -1,5 +1,5 @@
 import type { IRChartSource } from '@retikz/chart';
-import type { CompileResult } from '@retikz/core';
+import type { CompileResult } from '@retikz/reconciler';
 import type { RenderToStringOptions, AsyncProcessingOptions } from '@retikz/vanilla';
 import { renderToSvgString, scene, toSceneResult, processToStaticInputResultAsync } from '@retikz/vanilla';
 import type { InputEmbed } from '@retikz/vanilla';

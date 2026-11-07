@@ -1,3 +1,6 @@
+import type { PropertyPath } from '@retikz/foundation';
+import { formatPropertyPath } from '@retikz/foundation';
+
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { getProviderDefinition } from '../../providers';
 import type { IRArrowStyle, IRPathBase } from '../../schemas';
@@ -6,14 +9,14 @@ import { createCompositeContractError } from '../diagnostics';
 import { parseProviderPayload } from '../provider';
 import { resolveMarkStyle } from './mark';
 import type {
-  ArrowMarkGeometry,
-  ArrowMarkResolution,
-  MarkResolution,
+  CanonicalPathArrowGeometry,
+  CanonicalPathArrow,
+  MarkColorSource,
+  CanonicalPathMark,
+  PathColorSource,
   PathDefinitionResolution,
   PathResolution,
   PathResolveContext,
-  MarkColorSource,
-  PathColorSource,
   StrokePathResolution,
 } from './types';
 
@@ -24,7 +27,7 @@ const ARROW_PATH_CONTACT_OVERLAP = 0.5;
 export const resolvePathDefinition = (
   path: PathColorSource,
   context: PathResolveContext,
-  irPath: string,
+  irPath: PropertyPath,
 ): PathDefinitionResolution => {
   const kind = path.kind ?? 'stroke';
   const definition = getProviderDefinition(context.pathRegistry, kind);
@@ -37,19 +40,19 @@ export const resolvePathDefinition = (
     value: path,
   });
 
-  return { name: kind, definition, path: parsed as IRPathBase };
+  return { kind, definition, path: parsed as IRPathBase };
 };
 
 /** 绑定箭头定义，确定外观、有效尺寸及端点接触与收缩参数 */
-export const resolveArrowMark = (mark: MarkColorSource, context: PathResolveContext): ArrowMarkResolution => {
+const resolveArrowMark = (mark: MarkColorSource, context: PathResolveContext): CanonicalPathArrow => {
   const shape = mark.shape ?? DEFAULT_ARROW_SHAPE;
   const definition = getProviderDefinition(context.arrowRegistry, shape);
   const shared = resolveMarkStyle(mark, definition, context);
-  const { visual } = shared;
-  const { baseSize, resolvedLength, resolvedWidth } = shared.geometry;
+  const { mark: canonicalMark, geometry: sharedGeometry } = shared;
+  const { baseSize, resolvedLength, resolvedWidth } = sharedGeometry;
   const tipX = definition.tipX ?? baseSize;
-  const contactX = definition.hollow ? definition.lineContactX - visual.lineWidth / 2 : definition.lineContactX;
-  const rawOuterInset = definition.outerInset ?? (definition.hollow ? visual.lineWidth / 2 : 0);
+  const contactX = definition.hollow ? definition.lineContactX - canonicalMark.lineWidth / 2 : definition.lineContactX;
+  const rawOuterInset = definition.outerInset ?? (definition.hollow ? canonicalMark.lineWidth / 2 : 0);
   const visualBackX = definition.backX - rawOuterInset;
   const boundaryOuterInset = (rawOuterInset * resolvedLength) / baseSize;
   if (!Number.isFinite(boundaryOuterInset)) {
@@ -66,7 +69,7 @@ export const resolveArrowMark = (mark: MarkColorSource, context: PathResolveCont
     );
   }
 
-  const geometry: ArrowMarkGeometry = {
+  const geometry: CanonicalPathArrowGeometry = {
     baseSize,
     tipX,
     visualBackX,
@@ -83,16 +86,16 @@ export const resolveArrowMark = (mark: MarkColorSource, context: PathResolveCont
     );
   }
 
-  return { mark, definition, visual, geometry };
+  return { definition, mark: canonicalMark, geometry };
 };
 
 /** 解析已声明的起点、终点箭头，并以声明对象为键保存结果 */
 const resolveEndpointArrowProviders = (
   arrow: PathColorSource['arrow'],
   context: PathResolveContext,
-): ReadonlyMap<IRArrowStyle, ArrowMarkResolution> => {
+): ReadonlyMap<IRArrowStyle, CanonicalPathArrow> => {
   /** 按端点声明对象索引的箭头解析结果 */
-  const resolutionMap = new Map<IRArrowStyle, ArrowMarkResolution>();
+  const resolutionMap = new Map<IRArrowStyle, CanonicalPathArrow>();
   for (const endpoint of [arrow?.start, arrow?.end])
     if (endpoint !== undefined) resolutionMap.set(endpoint, resolveArrowMark(endpoint, context));
   return resolutionMap;
@@ -102,36 +105,36 @@ const resolveEndpointArrowProviders = (
  * 为 Stroke 路径补齐缺省填充和描边，并绑定箭头与沿线标记定义
  * @description 不足以绘制的步骤序列返回空绑定表，单个矩形步骤除外
  */
-export const resolveStrokePathProviders = (
-  resolution: PathResolution,
+export const resolveStrokePathProviders = <TResolution extends PathResolution>(
+  resolution: TResolution,
   context: PathResolveContext,
-): StrokePathResolution => {
+): TResolution & StrokePathResolution => {
   const path = {
-    ...resolution.path,
-    fill: resolution.path.fill ?? 'none',
-    stroke: resolution.path.stroke ?? 'currentColor',
+    ...resolution.canon,
+    fill: resolution.canon.fill ?? 'none',
+    stroke: resolution.canon.stroke ?? 'currentColor',
   };
   const children = path.children;
   const strokeTooShort = children === undefined || (children.length < 2 && children[0]?.kind !== 'rectangle');
   if (strokeTooShort) {
-    return { ...resolution, path, arrows: new Map(), marks: new Map() };
+    return { ...resolution, canon: path, arrows: new Map(), marks: new Map() };
   }
 
   /** 按标记声明对象索引的解析结果 */
-  const marks = new Map<NonNullable<typeof path.marks>[number], MarkResolution>();
+  const marks = new Map<NonNullable<typeof path.marks>[number], CanonicalPathMark>();
   for (const [index, placement] of (path.marks ?? []).entries()) {
     const shape = placement.shape ?? DEFAULT_ARROW_SHAPE;
     const definition = context.markRegistry?.get(shape);
     if (definition === undefined)
       throw new RetikzCoreError(
         RetikzCoreErrorCode.Provider,
-        `Unknown provider '${shape}' at ${context.irPath}.marks[${index}].shape; available: ${[...(context.markRegistry?.keys() ?? [])].sort().join(', ') || '(none registered)'}.`,
+        `Unknown provider '${shape}' at ${formatPropertyPath(context.irPath ?? [])}.marks[${index}].shape; available: ${[...(context.markRegistry?.keys() ?? [])].sort().join(', ') || '(none registered)'}.`,
       );
     marks.set(placement, resolveMarkStyle(placement, definition, context));
   }
   return {
     ...resolution,
-    path,
+    canon: path,
     arrows: resolveEndpointArrowProviders(path.arrow, context),
     marks,
   };

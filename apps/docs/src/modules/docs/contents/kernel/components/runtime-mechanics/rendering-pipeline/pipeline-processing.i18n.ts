@@ -7,13 +7,13 @@ export const pipelineProcessingI18n: Record<Lang, Record<string, [string, string
     prepare: ['输入准备', '统一 IR 与编译选项'],
     static: ['static', '单次处理'],
     retained: ['retained', '构建 Runtime 并维护更新'],
-    core: ['Core', '执行编译'],
+    core: ['Reconciler', '组合 Core 原子阶段'],
   },
   en: {
     input: ['Input', 'InputScene / IRScene'],
     prepare: ['Prepare input', 'IR + compile options'],
     static: ['static', 'Single pass'],
     retained: ['retained', 'Runtime + updates'],
-    core: ['Core', 'Compile drawing'],
+    core: ['Reconciler', 'Compose Core stages'],
   },
 };

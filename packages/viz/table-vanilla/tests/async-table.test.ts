@@ -2,7 +2,7 @@ import { createDataTransformExecutor } from '@retikz/data';
 import { processToStaticInputResultAsync, renderToSvgString, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
-import { tableInputEmbedAdapter, detailTable, embedTable, renderTable, renderTableAsync } from '../src';
+import { detailTable, embedTable, renderTable, renderTableAsync, tableInputEmbedAdapter } from '../src';
 
 const table = () =>
   detailTable({
@@ -64,10 +64,6 @@ describe('异步 Table 编写', () => {
     expect(svg).toContain('0.75');
     expect(svg).toContain('0.5');
     expect(executions).toBe(2);
-    expect(
-      result.compileResult.artifacts.filter(
-        artifact => artifact.kind === 'composite' && artifact.namespace === 'table',
-      ),
-    ).toHaveLength(2);
+    expect(result.compileResult.artifacts.filter(artifact => artifact.namespace === 'table')).toHaveLength(2);
   });
 });

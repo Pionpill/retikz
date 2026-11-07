@@ -8,8 +8,8 @@ export const positionFlowI18n: Record<
   zh: {
     local: '坐标、极坐标、局部偏移',
     world: '节点目标、两点插值',
-    calculate: 'resolvePosition\n在当前局部空间计算',
-    lookup: 'resolvePositionTargetWorld\n查世界几何与锚点',
+    calculate: 'evaluatePosition\n在当前局部空间计算',
+    lookup: 'evaluatePositionTargetWorld\n查世界几何与锚点',
     project: 'toWorld\n应用当前变换链',
     inverse: 'toLocal\n反投影到当前空间',
     result: '局部点与世界参考点\n交给布局或路径编译',
@@ -17,8 +17,8 @@ export const positionFlowI18n: Record<
   en: {
     local: 'Tuple, polar, local offset',
     world: 'Node target, interpolation',
-    calculate: 'resolvePosition\nCompute in the local frame',
-    lookup: 'resolvePositionTargetWorld\nRead world geometry and anchors',
+    calculate: 'evaluatePosition\nCompute in the local frame',
+    lookup: 'evaluatePositionTargetWorld\nRead world geometry and anchors',
     project: 'toWorld\nApply current transform chain',
     inverse: 'toLocal\nInvert into the current frame',
     result: 'Local and world reference points\nFor layout or path compilation',

@@ -164,16 +164,7 @@ export type RetainedRendererFactory = {
 };
 
 /** Render 私有 renderer executor */
-type RetainedRendererExecutor = Readonly<{
-  /** 准备首次场景挂载，返回可提交和回滚的事务 */
-  prepareMount: RetainedRendererDefinitionBase['prepareMount'];
-  /** 准备场景补丁与运行时配置的原子更新 */
-  prepare: RetainedRendererDefinitionBase['prepare'];
-  /** 读取已提交的渲染帧与动画状态 */
-  read: RetainedRendererDefinitionBase['read'];
-  /** 释放渲染器持有的宿主资源 */
-  dispose: RetainedRendererDefinitionBase['dispose'];
-}>;
+type RetainedRendererExecutor = Pick<RetainedRendererDefinitionBase, 'prepareMount' | 'prepare' | 'read' | 'dispose'>;
 
 const retainedRenderers = new WeakSet<object>();
 
@@ -220,7 +211,7 @@ const defineRetainedRendererUnsafe = (input: InputRetainedRendererDefinition): R
   const runtimeBackend: unknown = backend;
   const validHost = runtimeBackend === 'svg' ? isSvgHost(host) : runtimeBackend === 'canvas' && isCanvasHost(host);
   if (!validHost) {
-    throw new RetikzRenderError({ code: RetikzRenderErrorCode.RetainedRendererInvalid, cause: input });
+    throw new RetikzRenderError({ code: RetikzRenderErrorCode.RuntimeRendererInvalid, cause: input });
   }
 
   const token = Object.freeze({
@@ -232,7 +223,7 @@ const defineRetainedRendererUnsafe = (input: InputRetainedRendererDefinition): R
   let state: 'live' | 'disposing' | 'disposed' = 'live';
 
   const assertLive = (): void => {
-    if (state !== 'live') throw new RetikzRenderError({ code: RetikzRenderErrorCode.RetainedRendererDisposed });
+    if (state !== 'live') throw new RetikzRenderError({ code: RetikzRenderErrorCode.RuntimeRendererDisposed });
   };
 
   retainedRendererExecutors.set(
@@ -269,7 +260,7 @@ const defineRetainedRendererImplementation = (input: InputRetainedRendererDefini
     return defineRetainedRendererUnsafe(input);
   } catch (cause) {
     if (isRetikzRenderError(cause)) throw cause;
-    throw new RetikzRenderError({ code: RetikzRenderErrorCode.RetainedRendererInvalid, cause });
+    throw new RetikzRenderError({ code: RetikzRenderErrorCode.RuntimeRendererInvalid, cause });
   }
 };
 

@@ -25,7 +25,7 @@ describe('Layout 测量接线', () => {
       await act(() => render(first, 'serif'));
       const initial = container.querySelector('svg')?.getAttribute('viewBox');
       await act(() => render(second, 'monospace'));
-      expect(second).toHaveBeenCalledWith('Alpha', expect.objectContaining({ family: 'monospace' }));
+      expect(second).toHaveBeenCalledWith('Alpha', expect.objectContaining({ family: 'monospace' }), false);
       expect(container.querySelector('svg')?.getAttribute('viewBox')).not.toBe(initial);
       expect(container.querySelector('svg')?.style.fontFamily).toBe('monospace');
     } finally {
@@ -39,7 +39,7 @@ describe('Layout 测量接线', () => {
         <Node position={[0, 0]}>Alpha</Node>
       </Layout>,
     );
-    expect(measureText).toHaveBeenCalledWith('Alpha', expect.objectContaining({ family: 'serif' }));
+    expect(measureText).toHaveBeenCalledWith('Alpha', expect.objectContaining({ family: 'serif' }), false);
     expect(html).toContain('font-family:serif');
   });
 });

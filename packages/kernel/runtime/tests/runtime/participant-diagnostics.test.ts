@@ -207,9 +207,9 @@ describe('Runtime 运行时参与者诊断', () => {
         initialSnapshots: [createRuntimeSourceInput(owner, 1), createRuntimeSourceInput(foreign, 1)],
         participants: [undeclared],
       }),
-    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.UndeclaredDependency }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.DependencyUndeclared }));
 
-    const spoofed = new RetikzRuntimeError({ code: RetikzRuntimeErrorCode.UndeclaredDependency, phase: 'spoofed' });
+    const spoofed = new RetikzRuntimeError({ code: RetikzRuntimeErrorCode.DependencyUndeclared, phase: 'spoofed' });
     const malicious = defineRuntimeCommitParticipant({
       key: 'malicious',
       sources: [owner],

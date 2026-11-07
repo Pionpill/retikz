@@ -1,5 +1,6 @@
-import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
+import { resolveCoreProviderDependencies } from '@retikz/core';
 import { BranchDiagramSchema, createBranchDiagramProviderContribution } from '@retikz/diagram/branch';
+import { compileToScene } from '@retikz/reconciler';
 import { expect, it } from 'vitest';
 
 import { buildPreviewIR } from '../../src/modules/docs/components/component-preview/utils';

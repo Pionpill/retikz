@@ -1,5 +1,5 @@
 import type { IRNode, IRPath, ScenePrimitive } from '@retikz/core';
-import { compileToScene } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { axesDefinition, createAxes, lowerAxes } from '../../../src/presentation';

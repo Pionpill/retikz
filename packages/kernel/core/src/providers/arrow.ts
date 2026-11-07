@@ -161,35 +161,35 @@ const ARROW_GEOMETRY_BASE_SIZE = 10;
 const assertFiniteArrowGeometry = (shape: string, definition: ArrowDefinition): void => {
   if (!Number.isFinite(definition.backX)) {
     throw new RetikzCoreError(
-      RetikzCoreErrorCode.CompositeContractViolation,
+      RetikzCoreErrorCode.ContractViolation,
       `Arrow '${shape}' has a non-finite backX (${String(definition.backX)}); it must be a finite number.`,
     );
   }
 
   if (!Number.isFinite(definition.lineContactX)) {
     throw new RetikzCoreError(
-      RetikzCoreErrorCode.CompositeContractViolation,
+      RetikzCoreErrorCode.ContractViolation,
       `Arrow '${shape}' has a non-finite lineContactX (${String(definition.lineContactX)}); it must be a finite number.`,
     );
   }
 
   if (definition.baseSize !== undefined && (!Number.isFinite(definition.baseSize) || definition.baseSize <= 0)) {
     throw new RetikzCoreError(
-      RetikzCoreErrorCode.CompositeContractViolation,
+      RetikzCoreErrorCode.ContractViolation,
       `Arrow '${shape}' has an invalid baseSize (${String(definition.baseSize)}); it must be a finite number greater than 0.`,
     );
   }
 
   if (definition.tipX !== undefined && !Number.isFinite(definition.tipX)) {
     throw new RetikzCoreError(
-      RetikzCoreErrorCode.CompositeContractViolation,
+      RetikzCoreErrorCode.ContractViolation,
       `Arrow '${shape}' has a non-finite tipX (${String(definition.tipX)}); it must be a finite number.`,
     );
   }
 
   if (definition.outerInset !== undefined && !Number.isFinite(definition.outerInset)) {
     throw new RetikzCoreError(
-      RetikzCoreErrorCode.CompositeContractViolation,
+      RetikzCoreErrorCode.ContractViolation,
       `Arrow '${shape}' has a non-finite outerInset (${String(definition.outerInset)}); it must be a finite number.`,
     );
   }
@@ -197,7 +197,7 @@ const assertFiniteArrowGeometry = (shape: string, definition: ArrowDefinition): 
   const tipX = definition.tipX ?? definition.baseSize ?? ARROW_GEOMETRY_BASE_SIZE;
   if (definition.backX > definition.lineContactX || definition.lineContactX > tipX) {
     throw new RetikzCoreError(
-      RetikzCoreErrorCode.CompositeContractViolation,
+      RetikzCoreErrorCode.ContractViolation,
       `Arrow '${shape}' geometry must satisfy backX <= lineContactX <= tipX; received ${String(definition.backX)} <= ${String(definition.lineContactX)} <= ${String(tipX)}.`,
     );
   }

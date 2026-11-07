@@ -69,7 +69,7 @@ These 12 are the result of repeated trimming — TikZ has dozens of native path 
 
 ## The Scene compiler: what the two passes do
 
-`compileToScene(ir, options)` is core's heaviest asset (`packages/kernel/core/src/compile/compile.ts`), and it's a two-pass design:
+`compileToScene(ir, options)` is core's heaviest asset (`packages/kernel/reconciler/src/compile/compile.ts`), and it's a two-pass design:
 
 - **Pass 1**: Walk every Node, resolve relative placement (e.g. `{ direction: 'right', of: 'A', distance: 2 }`), register into `nodeIndex` — a map from node id to known coordinates plus anchor table.
 - **Pass 2**: Emit primitives in JSX source order. Steps in a Path resolve their `to` here — node references like `"A.right"` / `"A.45"` look up `nodeIndex`; relative / accumulated-relative targets track cursor position.

@@ -38,7 +38,7 @@ description: 用 ChannelDefinition 把字段解析为既有 Core 属性，并通
 
 | 字段      | 作用                                                                            |
 | --------- | ------------------------------------------------------------------------------- |
-| `channel` | 唯一注册名，对应 `encodings.<name>`                                     |
+| `channel` | 唯一注册名，对应 `encodings.<name>`                                             |
 | `output`  | 声明输出类型及可选的 range / palette / clamp 元数据；不会自动映射或截断值       |
 | `legend?` | 声明图例形态                                                                    |
 | `resolve` | 读取字段或常量绑定，自行完成映射与 clamp，并返回逐行 resolver 和可选 descriptor |
@@ -109,7 +109,7 @@ React 和 Vanilla 共用前面的 definition，选择与你的项目一致的宿
 
 ```tsx
 <Plot data={customChannelPoints} definitions={{ channels: [intensityChannel] }}>
-  <PointMark encodings={{ intensity: 'score', position: { x: "x", y: "y" } }} />
+  <PointMark encodings={{ intensity: 'score', position: { x: 'x', y: 'y' } }} />
 </Plot>
 ```
 

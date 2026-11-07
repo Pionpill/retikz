@@ -1,6 +1,12 @@
 import type { IRScene } from '@retikz/core';
-import { prepareSceneCompilation } from '@retikz/core';
-import type { ScenePatch, SceneRuntimeSnapshot } from '@retikz/reconciler';
+import { compileSceneSnapshot } from '@retikz/reconciler';
+import type {
+  RuntimeScenePrimitive,
+  RuntimeSceneResource,
+  ScenePatch,
+  SceneRuntimeNode,
+  SceneRuntimeSnapshot,
+} from '@retikz/reconciler';
 import { createFullSceneRuntimeSnapshot, createSceneIdentity } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
@@ -31,7 +37,7 @@ const source = (fill: string): IRScene => ({
 
 const createIncrementalPair = () => {
   const snapshots = ['#ef4444', '#22c55e'].map((fill, revision) => {
-    const compiled = prepareSceneCompilation(source(fill), {}, { captureProvenance: true });
+    const compiled = compileSceneSnapshot(source(fill), {}, { captureProvenance: true });
     return createFullSceneRuntimeSnapshot(compiled.result.scene, revision, compiled.provenance!);
   });
   const [current, next] = snapshots;
@@ -68,7 +74,7 @@ const createRectSnapshot = (revision: number, identifiers: ReadonlyArray<string>
         semanticOwner: identity,
         parent: root,
         order: index,
-        primitivePath: [index],
+        primitivePath: ['primitives', index],
         publicId: identifier,
       };
     }),
@@ -76,6 +82,19 @@ const createRectSnapshot = (revision: number, identifiers: ReadonlyArray<string>
 };
 
 describe('Scene 补丁验证器', () => {
+  it('要求完整 Scene 属性路径，拒绝数字链、字符串下标与错误根属性', () => {
+    const snapshot = createRectSnapshot(0, ['a']);
+    expect(() => assertSceneRuntimeSnapshot(snapshot)).not.toThrow();
+    for (const primitivePath of [[0], ['primitives', '0'], ['children', 0], ['primitives', 0, 'children', 0]]) {
+      expect(() =>
+        assertSceneRuntimeSnapshot({
+          ...snapshot,
+          topology: [{ ...snapshot.topology[0], primitivePath }],
+        }),
+      ).toThrow();
+    }
+  });
+
   it('接受 canonical clip path，并在 full snapshot 拒绝旧 shape 与 malformed path', () => {
     const valid = createRectSnapshot(0, ['a']);
     const canonical: SceneRuntimeSnapshot = {
@@ -134,7 +153,7 @@ describe('Scene 补丁验证器', () => {
         } as unknown as ScenePatch,
         next,
       ),
-    ).toThrowError(expect.objectContaining({ code: RetikzRenderErrorCode.ScenePatchInvalid }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRenderErrorCode.RuntimeScenePatchInvalid }));
 
     const invalidReplacement = {
       ...next,
@@ -196,12 +215,12 @@ describe('Scene 补丁验证器', () => {
     const { current, next, patch } = createIncrementalPair();
 
     expect(() => assertScenePatch(current, { ...patch, nextRevision: next.revision + 1 }, next)).toThrowError(
-      expect.objectContaining({ code: RetikzRenderErrorCode.ScenePatchRevisionMismatch }),
+      expect.objectContaining({ code: RetikzRenderErrorCode.RuntimeScenePatchRevisionMismatch }),
     );
 
     expect(() =>
       assertScenePatch(current, { ...patch, operations: [{ kind: 'unknown' }] } as unknown as ScenePatch, next),
-    ).toThrowError(expect.objectContaining({ code: RetikzRenderErrorCode.ScenePatchInvalid }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRenderErrorCode.RuntimeScenePatchInvalid }));
 
     expect(() =>
       assertScenePatch(
@@ -215,7 +234,7 @@ describe('Scene 补丁验证器', () => {
         },
         next,
       ),
-    ).toThrowError(expect.objectContaining({ code: RetikzRenderErrorCode.ScenePatchInvalid }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRenderErrorCode.RuntimeScenePatchInvalid }));
   });
 
   it('拒绝 operation 固定顺序错误与 Patch/next coherence 漏项', () => {
@@ -234,7 +253,7 @@ describe('Scene 补丁验证器', () => {
         },
         next,
       ),
-    ).toThrowError(expect.objectContaining({ code: RetikzRenderErrorCode.ScenePatchInvalid }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRenderErrorCode.RuntimeScenePatchInvalid }));
 
     const mismatchingNext: SceneRuntimeSnapshot = {
       ...next,
@@ -245,7 +264,7 @@ describe('Scene 补丁验证器', () => {
     };
 
     expect(() => assertScenePatch(current, patch, mismatchingNext)).toThrowError(
-      expect.objectContaining({ code: RetikzRenderErrorCode.ScenePatchSnapshotMismatch }),
+      expect.objectContaining({ code: RetikzRenderErrorCode.RuntimeScenePatchSnapshotMismatch }),
     );
   });
 
@@ -311,19 +330,19 @@ describe('Scene 补丁验证器', () => {
       ...createRectSnapshot(0, []),
       root: { owner: 'validator', path: [] },
     } as unknown as SceneRuntimeSnapshot;
-    const sparseTopology = Array<SceneRuntimeSnapshot['topology'][number]>(1);
+    const sparseTopology = Array<SceneRuntimeNode>(1);
     const invalidTopology = { ...valid, topology: sparseTopology } as SceneRuntimeSnapshot;
     const nullTopology = { ...valid, topology: [null] } as unknown as SceneRuntimeSnapshot;
     const malformedGroup = {
       ...valid,
       scene: { ...valid.scene, primitives: [{ type: 'group', children: undefined }] },
     } as unknown as SceneRuntimeSnapshot;
-    const sparsePrimitives = Array<SceneRuntimeSnapshot['scene']['primitives'][number]>(1);
+    const sparsePrimitives = Array<RuntimeScenePrimitive>(1);
     const sparsePrimitiveSnapshot = {
       ...valid,
       scene: { ...valid.scene, primitives: sparsePrimitives },
     } as SceneRuntimeSnapshot;
-    const sparseChildren = Array<SceneRuntimeSnapshot['scene']['primitives'][number]>(1);
+    const sparseChildren = Array<RuntimeScenePrimitive>(1);
     const sparseGroupSnapshot = {
       ...valid,
       scene: { ...valid.scene, primitives: [{ type: 'group', children: sparseChildren }] },
@@ -343,11 +362,11 @@ describe('Scene 补丁验证器', () => {
     }
 
     expect(() => assertScenePatch(valid, null as unknown as ScenePatch, valid)).toThrowError(
-      expect.objectContaining({ code: RetikzRenderErrorCode.ScenePatchInvalid }),
+      expect.objectContaining({ code: RetikzRenderErrorCode.RuntimeScenePatchInvalid }),
     );
 
     const next = { ...valid, revision: 1 as SceneRuntimeSnapshot['revision'] };
-    const sparseResources = Array<SceneRuntimeSnapshot['scene']['resources'][number]>(1);
+    const sparseResources = Array<RuntimeSceneResource>(1);
 
     expect(() =>
       assertScenePatch(
@@ -359,7 +378,7 @@ describe('Scene 补丁验证器', () => {
         },
         next,
       ),
-    ).toThrowError(expect.objectContaining({ code: RetikzRenderErrorCode.ScenePatchInvalid }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRenderErrorCode.RuntimeScenePatchInvalid }));
     expect(runtimeStructuralEquals(Array(1), [undefined])).toBe(false);
   });
 

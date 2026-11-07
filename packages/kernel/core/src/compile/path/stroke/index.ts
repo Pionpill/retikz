@@ -1,11 +1,19 @@
-export * from './commands';
-export * from './decorations';
-export * from './emit';
-
-export * from './marks';
+export * from './compile';
+export { lowerStrokePathGeometry, samplePathRoute } from './geometry';
 export * from './output';
-export * from './rounded-corners';
-export * from './route-sampling';
-export * from './shrink';
-export * from './split';
-export * from './transform';
+export type {
+  CompiledStrokePath,
+  LoweredStrokeBody,
+  LoweredStrokePathGeometry,
+  PreparedStrokeArrowEmit,
+  PreparedStrokeLabelEmit,
+  PreparedStrokeLabelLayout,
+  PreparedStrokeMarkEmit,
+  PreparedStrokeMarkLayout,
+  PreparedStrokePathCompilation,
+  PreparedStrokePathEmit,
+  PreparedStrokePathLayout,
+  StrokeLabelPlacement,
+  StrokeMarkPlacement,
+  StrokePathLayout,
+} from './types';

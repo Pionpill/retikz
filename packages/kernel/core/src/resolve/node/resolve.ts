@@ -1,39 +1,33 @@
+import { formatPropertyPath } from '@retikz/foundation';
+import type { PropertyPath } from '@retikz/foundation';
+import type { BoundsInsets } from '@retikz/math';
+
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import type {
-  IRAxisScale,
-  IRBoxSize,
-  IRLine,
-  IRMathSegment,
-  IRNode,
-  IRNodeLabel,
-  IRPaintValue,
-  IRTextSegment,
-} from '../../schemas';
+import type { IRAxisScale, IRBoxSize, IRNode, IRPaintValue } from '../../schemas';
 import { NodeSchema } from '../../schemas';
-import type { IRNodeLabelDefault } from '../../schemas';
+import { resolveAnimations } from '../animation';
+import { resolvePosition } from '../position';
 import { resolvePaint } from '../resource';
 import { resolveBoxSpacing } from '../spacing';
-import { resolveGraphicOpacity, mergeNodeLabelDefaults } from '../style';
+import { resolveGraphicOpacity } from '../style';
 import { resolveContextualColor, resolveDashPattern, resolveDropShadow, mergeNodeStyle } from '../style';
-import type { InlineSegmentColorSource, ColorResolvedTextLine } from '../text';
-import { resolveBoundaryReference } from './boundary';
+import { resolveNodeBoundary } from './boundary';
+import { resolveNodeContent } from './content';
 import { resolveNodeShape } from './shape';
-import { resolveNodeTextColor } from './text-color';
+import { expandNodeText, expandNodeLabels, resolveNodeDependentColors, resolveNodeTextColor } from './text';
 import type {
   CanonicalNode,
-  CanonicalNodeLabel,
-  NodeResolution,
   NodeResolveContext,
-  NodePrimaryColorSource,
-  CanonicalNodeLabelPin,
   NodeColorSource,
+  NodeLabelSource,
+  NodeLabelPrimaryColorSource,
 } from './types';
 
 /** 节点缺省内边距 */
 const DEFAULT_NODE_PADDING = 8;
 
 /** 将节点缩放展开为 x、y 两轴系数，未指定时为 1 */
-const expandAxisScale = (value: number | IRAxisScale | undefined): CanonicalNode['scale'] => {
+const expandAxisScale = (value: number | IRAxisScale | undefined): { x: number; y: number } => {
   if (typeof value === 'number') return { x: value, y: value };
 
   const base = value?.default ?? 1;
@@ -45,7 +39,7 @@ const expandAxisScale = (value: number | IRAxisScale | undefined): CanonicalNode
 };
 
 /** 将最小尺寸展开为宽和高，未指定时为 0 */
-const expandBoxSize = (value: number | IRBoxSize | undefined): CanonicalNode['minimumSize'] => {
+const expandBoxSize = (value: number | IRBoxSize | undefined): { width: number; height: number } => {
   if (typeof value === 'number') return { width: value, height: value };
 
   const base = value?.default ?? 0;
@@ -56,72 +50,10 @@ const expandBoxSize = (value: number | IRBoxSize | undefined): CanonicalNode['mi
   };
 };
 
-/** 展开正文单字符串为单行数组 */
-const expandNodeText = (text: NodeColorSource['text']): CanonicalNode['text'] =>
-  text === undefined ? undefined : typeof text === 'string' ? [text] : text;
-
-/** 补齐标签位置：缺省为 top，边界位置对象缺省比例为 0.5 */
-const expandNodeLabelPosition = (position: IRNodeLabel['position']): CanonicalNodeLabel['position'] => {
-  if (position === undefined) return 'top';
-  if (typeof position === 'object') return { ...position, fraction: position.fraction ?? 0.5 };
-  return position;
-};
-
-type NodeLabelPlacementSource = Omit<IRNodeLabel, 'align' | 'position' | 'placement' | 'distance'> & {
-  align: CanonicalNodeLabel['align'];
-  position: CanonicalNodeLabel['position'];
-  placement: CanonicalNodeLabel['placement'];
-  distance: number;
-};
-
-type NodeLabelSource = Omit<IRNode, 'label'> & {
-  label?: Array<NodeLabelPlacementSource>;
-};
-
-type NodeLabelPrimaryColorSource = Omit<NodePrimaryColorSource, 'label'> & {
-  label?: Array<NodeLabelPlacementSource>;
-};
-
-/** 用标签默认配置补齐单个标签，并拒绝内部标签使用引线 */
-const expandNodeLabel = (
-  label: IRNodeLabel,
-  labelDefault: IRNodeLabelDefault,
-  labelDistance: number,
-): NodeLabelPlacementSource => {
-  const { color, ...configuration } = mergeNodeLabelDefaults(labelDefault, label);
-  const normalized: NodeLabelPlacementSource = {
-    ...configuration,
-    text: label.text,
-    align: configuration.align ?? 'middle',
-    position: expandNodeLabelPosition(configuration.position),
-    placement: configuration.placement ?? 'outside',
-    distance: configuration.distance ?? labelDistance,
-  };
-  if (normalized.textColor === undefined && color !== undefined) normalized.textColor = color;
-  if (normalized.placement === 'inside' && normalized.pin) {
-    throw new RetikzCoreError(RetikzCoreErrorCode.Resolve, 'Node label pin is only supported for outside placement');
-  }
-
-  return normalized;
-};
-
-/** 展开单标签与标签数组为等价数组写法 */
-const expandNodeLabels = (
-  label: IRNode['label'],
-  labelDefault: IRNodeLabelDefault,
-  labelDistance: number,
-): Array<NodeLabelPlacementSource> | undefined =>
-  label === undefined
-    ? undefined
-    : Array.isArray(label)
-      ? label.map(item => expandNodeLabel(item, labelDefault, labelDistance))
-      : [expandNodeLabel(label, labelDefault, labelDistance)];
-
 /** 展开节点简写与默认值，将样式、布局字段合入节点结果，绘制资源随后解析 */
-const expandNodeFields = (
-  node: NodeColorSource,
-): Omit<CanonicalNode, 'fill' | 'stroke'> & Pick<NonNullable<NodeColorSource['style']>, 'fill' | 'stroke'> => {
+const expandNodeFields = (node: NodeColorSource) => {
   const { style, layout, ...structure } = node;
+  const { scale, text, label, rotate } = structure;
   const { dashed, dotted, opacity, ...visual } = style ?? {};
   const source = { ...structure, ...visual, ...resolveGraphicOpacity(opacity), ...layout };
 
@@ -131,11 +63,11 @@ const expandNodeFields = (
     padding: resolveBoxSpacing(source.padding, DEFAULT_NODE_PADDING),
     margin: resolveBoxSpacing(source.margin, 0),
     minimumSize: expandBoxSize(source.minimumSize),
-    scale: expandAxisScale(node.scale),
-    text: expandNodeText(node.text),
-    label: node.label,
-    align: source.align ?? 'middle',
-    rotate: node.rotate ?? 0,
+    scale: expandAxisScale(scale),
+    text: expandNodeText(text),
+    label,
+    textAlign: source.textAlign ?? ('middle' as const),
+    rotate: rotate ?? 0,
     dashPattern: resolveDashPattern(source.dashPattern, dashed, dotted),
     shadow: resolveDropShadow(source.shadow),
   };
@@ -146,7 +78,7 @@ type NodeColorContext = Readonly<{
   /** 当前主题明暗模式 */
   mode: NodeResolveContext['mode'];
   /** 当前节点的 IR 路径 */
-  irPath: string;
+  irPath: PropertyPath;
 }>;
 
 /** 将数值颜色按节点主色与主题混色，字符串和绘制资源配置保持不变 */
@@ -160,7 +92,7 @@ const resolveNodePaint = (
     ? resolveContextualColor(value, {
         masterColor,
         mode: context.mode,
-        fieldPath: `${context.irPath}.style.${field}`,
+        fieldPath: [...context.irPath, 'style', field],
       })
     : value;
 
@@ -173,166 +105,26 @@ const resolveNodePrimaryColors = (node: NodeLabelSource, context: NodeColorConte
     ...source,
     style: {
       ...visual,
-      ...(fill === undefined ? {} : { fill: resolveNodePaint(fill, node.style?.color, context, 'fill') }),
-      ...(stroke === undefined ? {} : { stroke: resolveNodePaint(stroke, node.style?.color, context, 'stroke') }),
+      ...(fill === undefined ? {} : { fill: resolveNodePaint(fill, style?.color, context, 'fill') }),
+      ...(stroke === undefined ? {} : { stroke: resolveNodePaint(stroke, style?.color, context, 'stroke') }),
       ...(textColor === undefined
         ? {}
         : {
             textColor: resolveContextualColor(textColor, {
-              masterColor: node.style?.color,
+              masterColor: style?.color,
               mode: context.mode,
-              fieldPath: `${context.irPath}.style.textColor`,
+              fieldPath: [...context.irPath, 'style', 'textColor'],
             }),
           }),
     },
   };
 };
 
-/** 解析单个文字或公式片段的数值颜色 */
-const resolveInlineSegmentColor = (
-  segment: IRTextSegment | IRMathSegment,
-  masterColor: string | undefined,
-  mode: NodeResolveContext['mode'],
-  fieldPath: string,
-): InlineSegmentColorSource => {
-  const { fill, ...source } = segment;
-  return {
-    ...source,
-    ...(fill === undefined
-      ? {}
-      : { fill: resolveContextualColor(fill, { masterColor, mode, fieldPath: `${fieldPath}.fill` }) }),
-  };
-};
-
-/** 解析正文行及其片段的数值颜色 */
-const resolveNodeLineColors = (
-  line: IRLine,
-  masterColor: string | undefined,
-  mode: NodeResolveContext['mode'],
-  fieldPath: string,
-): ColorResolvedTextLine => {
-  if (typeof line === 'string') return line;
-  if ('segments' in line) {
-    return {
-      ...line,
-      fill:
-        line.fill === undefined
-          ? undefined
-          : resolveContextualColor(line.fill, { masterColor, mode, fieldPath: `${fieldPath}.fill` }),
-      segments: line.segments.map((segment, index) =>
-        resolveInlineSegmentColor(segment, masterColor, mode, `${fieldPath}.segments[${index}]`),
-      ),
-    };
-  }
-
-  const { fill, ...source } = line;
-
-  return {
-    ...source,
-    ...(fill === undefined
-      ? {}
-      : { fill: resolveContextualColor(fill, { masterColor, mode, fieldPath: `${fieldPath}.fill` }) }),
-  };
-};
-
-/** 解析节点标签的文字主色、行内片段颜色与引线绘制配置 */
-const resolveNodeLabelColors = (
-  label: NodeLabelPlacementSource,
-  labelMasterColor: string | undefined,
-  inheritedTextColor: string | undefined,
-  context: NodeResolveContext,
-  fieldPath: string,
-): CanonicalNodeLabel => {
-  const { textColor, text, pin, ...source } = label;
-  const resolvedTextColor =
-    textColor === undefined
-      ? inheritedTextColor
-      : resolveContextualColor(textColor, {
-          masterColor: labelMasterColor,
-          mode: context.mode,
-          fieldPath: `${fieldPath}.textColor`,
-        });
-  const textMaster = resolvedTextColor ?? inheritedTextColor;
-  let resolvedPin: boolean | CanonicalNodeLabelPin | undefined;
-  if (typeof pin === 'object') {
-    const { stroke, ...pinSource } = pin;
-    resolvedPin = {
-      ...pinSource,
-      ...(stroke === undefined
-        ? {}
-        : {
-            stroke: resolvePaint(
-              typeof stroke === 'object'
-                ? stroke
-                : resolveContextualColor(stroke, {
-                    masterColor: textMaster,
-                    mode: context.mode,
-                    fieldPath: `${fieldPath}.pin.stroke`,
-                  }),
-              { patternRegistry: context.patternRegistry, round: context.round, irPath: `${fieldPath}.pin.stroke` },
-            ),
-          }),
-    };
-  } else {
-    resolvedPin = pin;
-  }
-
-  return {
-    ...source,
-    ...(resolvedTextColor === undefined ? {} : { textColor: resolvedTextColor }),
-    text:
-      typeof text === 'string'
-        ? text
-        : text.map((line, index) =>
-            resolveNodeLineColors(line, textMaster, context.mode, `${fieldPath}.text[${index}]`),
-          ),
-    ...(resolvedPin === undefined ? {} : { pin: resolvedPin }),
-  };
-};
-
-/** 用自动对比色计算后的文字主色，解析正文、标签片段和引线的数值颜色 */
-const resolveNodeDependentColors = (
-  node: NodeLabelPrimaryColorSource,
-  labelDefault: IRNodeLabelDefault,
-  context: NodeResolveContext,
-  labelWasArray: boolean,
-): NodeColorSource => {
-  const { text, label, ...source } = node;
-  const textMaster = node.style?.textColor;
-
-  return {
-    ...source,
-    ...(text === undefined
-      ? {}
-      : {
-          text:
-            typeof text === 'string'
-              ? text
-              : text.map((line, index) =>
-                  resolveNodeLineColors(line, textMaster, context.mode, `${context.irPath}.text[${index}]`),
-                ),
-        }),
-    ...(label === undefined
-      ? {}
-      : {
-          label: (Array.isArray(label) ? label : [label]).map((item, index) =>
-            resolveNodeLabelColors(
-              item,
-              labelDefault.color ?? node.style?.color,
-              textMaster,
-              context,
-              labelWasArray ? `${context.irPath}.label[${index}]` : `${context.irPath}.label`,
-            ),
-          ),
-        }),
-  };
-};
-
 /**
- * 合并节点默认配置并解析颜色、形状、连接面和绘制资源，得到待布局的节点
- * @description 补齐静态默认值并展开简写；位置引用、文本测量与最终尺寸由布局阶段处理
+ * 合并节点默认配置并解析正文、标签、颜色、形状、连接面和绘制资源，得到待布局的节点
+ * @description 补齐静态默认值、展开简写并完成输入尺寸缩放；位置引用、文本测量与最终尺寸由布局阶段处理
  */
-export const resolveNode = (source: IRNode, context: NodeResolveContext): NodeResolution => {
+export const resolveNode = (source: IRNode, context: NodeResolveContext): CanonicalNode => {
   const mergedNode = mergeNodeStyle(source, context.scopeDefaults);
   const mergedLabelDefault = context.scopeDefaults.node?.label ?? {};
   const labelWasArray = Array.isArray(mergedNode.label);
@@ -352,7 +144,7 @@ export const resolveNode = (source: IRNode, context: NodeResolveContext): NodeRe
   if (node.width !== undefined && node.width < node.minimumSize.width) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Resolve,
-      `${context.irPath}.layout.width must not be smaller than the effective minimum width`,
+      `${formatPropertyPath(context.irPath)}.layout.width must not be smaller than the effective minimum width`,
     );
   }
 
@@ -363,7 +155,7 @@ export const resolveNode = (source: IRNode, context: NodeResolveContext): NodeRe
     scaleY: node.scale.y,
     irPath: context.irPath,
   });
-  const boundary = resolveBoundaryReference(node.boundary, {
+  const boundary = resolveNodeBoundary(node.boundary, {
     visualDef: shape.definition,
     visualParams: shape.params,
     shapeRegistry: context.shapeRegistry,
@@ -380,5 +172,57 @@ export const resolveNode = (source: IRNode, context: NodeResolveContext): NodeRe
     round: context.round,
     irPath: context.irPath,
   });
-  return { irPath: context.irPath, node: { ...node, fill, stroke }, shape, boundary };
+  const content = resolveNodeContent(node, context);
+  const { x: scaleX, y: scaleY } = node.scale;
+
+  /** 将完整四边间距转换为节点缩放后的有效值 */
+  const scaleSpacing = ({ top, right, bottom, left }: BoundsInsets): BoundsInsets => ({
+    top: top * scaleY,
+    right: right * scaleX,
+    bottom: bottom * scaleY,
+    left: left * scaleX,
+  });
+
+  return {
+    id: node.id,
+    aliasIds: node.aliasIds ?? [],
+    meta: node.meta,
+    zIndex: node.zIndex,
+    layout: {
+      position:
+        !Array.isArray(node.position) && 'kind' in node.position
+          ? { ...node.position, selfAnchor: node.position.selfAnchor ?? 'center' }
+          : resolvePosition(node.position, context),
+      padding: scaleSpacing(node.padding),
+      margin: scaleSpacing(node.margin),
+      minimumSize: { width: node.minimumSize.width * scaleX, height: node.minimumSize.height * scaleY },
+      rotate: node.rotate,
+      width: node.width === undefined ? undefined : node.width * scaleX,
+    },
+    shape,
+    boundary,
+    style: {
+      fill: fill ?? 'transparent',
+      stroke: stroke ?? 'currentColor',
+      fillOpacity: node.fillOpacity ?? 1,
+      strokeOpacity: node.strokeOpacity ?? 1,
+      opacity: node.opacity ?? 1,
+      strokeWidth: node.strokeWidth ?? 1,
+      dashPattern: node.dashPattern ?? [],
+      dashOffset: node.dashOffset ?? 0,
+      lineCap: node.lineCap ?? 'butt',
+      lineJoin: node.lineJoin ?? 'miter',
+      cornerRadius: node.cornerRadius ?? 0,
+      shadow: node.shadow,
+      blendMode: node.blendMode ?? 'normal',
+    },
+    text: content.text,
+    labels: content.label ?? [],
+    animations:
+      resolveAnimations(node.animations, {
+        target: 'element',
+        irPath: context.irPath,
+        onWarn: warning => context.warn(warning.code, warning.message, warning.path),
+      }) ?? [],
+  };
 };

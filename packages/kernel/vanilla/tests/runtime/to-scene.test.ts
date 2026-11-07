@@ -1,7 +1,7 @@
 import type { IRNode, IRScene, Scene } from '@retikz/core';
 import { CompositeBaseSchema, defineComposite, defineTheme, ThemeMode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { literal } from 'zod';
+import { literal, string } from 'zod';
 
 import { scene as inputScene, toSceneResult } from '../../src';
 
@@ -81,22 +81,19 @@ describe('toSceneResult 运行时元数据', () => {
     expect(first.runtimeMeta.parentIndex).not.toBe(second.runtimeMeta.parentIndex);
   });
 
-  it('同次返回 compile artifacts，Scene 输入固定为空 immutable 数组', () => {
-    const ir: IRScene = {
-      version: 1,
-      type: 'scene',
-      children: [{ type: 'node', id: 'a', position: [0, 0], text: 'A' }],
-    };
-
-    const compiled = toSceneResult(ir, { compile: { artifacts: { nodeLayouts: true } } });
-    const passedScene = toSceneResult(scene, { compile: { artifacts: { nodeLayouts: true } } });
-
+  it('同次返回 Composite artifacts，Scene 输入固定为空 immutable 数组', () => {
+    const marker = defineComposite({
+      namespace: 'test',
+      type: 'marker',
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('marker'), label: string() }),
+      artifactSchema: string(),
+      compile: input => ({ children: [{ type: 'node', id: input.label, position: [0, 0] }], artifact: input.label }),
+    });
+    const ir: IRScene = { version: 1, type: 'scene', children: [{ namespace: 'test', type: 'marker', label: 'a' }] };
+    const compiled = toSceneResult(ir, { compile: { composites: [marker] } });
+    const passedScene = toSceneResult(scene, { compile: {} });
     expect(compiled.artifacts).toMatchObject([
-      {
-        kind: 'nodeLayout',
-        occurrence: { sourcePath: 'children[0].node', expansionPath: [] },
-        value: { id: 'a' },
-      },
+      { namespace: 'test', type: 'marker', occurrence: { sourcePath: ['children', 0], expansionPath: [] }, value: 'a' },
     ]);
     expect(Object.isFrozen(compiled.artifacts)).toBe(true);
     expect(passedScene.artifacts).toEqual([]);
@@ -107,7 +104,7 @@ describe('toSceneResult 运行时元数据', () => {
     expect(() =>
       toSceneResult(scene, {
         compileDriver: {
-          create: () => ({ observers: [], resolve: output => output as never }),
+          create: () => ({ resolve: output => output as never }),
         },
       }),
     ).toThrow('Vanilla compile drivers require authored IR or an InputScene');

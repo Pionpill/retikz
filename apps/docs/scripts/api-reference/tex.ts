@@ -2120,6 +2120,25 @@ const renderExpandedSignature = (symbol: ApiReferenceSymbol, lang: ApiReferenceL
       ].join('\n\n')
     : '';
 
+/** 按字符串字面量集合比较判别联合，避免 checker 的联合显示顺序影响分支匹配 */
+const matchesApiBranchType = (actual: string, expected: string): boolean => {
+  if (actual === expected) return true;
+  const literals = (source: string): string | undefined => {
+    const file = ts.createSourceFile('branch.ts', 'type Branch = ' + source, ts.ScriptTarget.Latest, true);
+    const declaration = file.statements[0];
+    if (!ts.isTypeAliasDeclaration(declaration)) return undefined;
+    const types = ts.isUnionTypeNode(declaration.type) ? declaration.type.types : [declaration.type];
+    const values = new Set<string>();
+    for (const type of types) {
+      if (!ts.isLiteralTypeNode(type) || !ts.isStringLiteral(type.literal)) return undefined;
+      values.add(type.literal.text);
+    }
+    return JSON.stringify([...values].sort());
+  };
+  const values = literals(actual);
+  return values !== undefined && values === literals(expected);
+};
+
 /** 从公开入口、签名与 JSDoc 生成可由 MDX include 直接展开的 API 内容 */
 export const createApiReferenceMdx = async (
   config: ApiReferencePackageConfig,
@@ -2269,7 +2288,7 @@ export const createApiReferenceMdx = async (
                           branchMembers.some(
                             member =>
                               member.name === condition.field &&
-                              (condition.type === undefined || member.type === condition.type) &&
+                              (condition.type === undefined || matchesApiBranchType(member.type, condition.type)) &&
                               (condition.required === undefined || condition.required === !member.optional),
                           ),
                         ),

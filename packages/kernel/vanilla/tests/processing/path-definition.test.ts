@@ -1,15 +1,16 @@
 import type { AnyPathDefinition, IRScene } from '@retikz/core';
-import { compileToScene, PathSchema } from '@retikz/core';
+import { PathSchema } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { expect, it } from 'vitest';
 import { literal } from 'zod';
 
-import { createProcessingController, prepareProcessingInput, processToStaticInputResult } from '../../src';
+import { createProcessingController, processToStaticInputResult } from '../../src';
+import { prepareProcessingInput } from '../../src/processing/prepare';
 
 it('保留完整 Path definition，并在 static 与 retained processing 中执行相同 compile 分支', () => {
   const definition: AnyPathDefinition = {
     name: 'retained-fixture',
     schema: PathSchema.extend({ kind: literal('retained-fixture') }),
-    ownerOutput: true,
     compile: () => ({
       primitives: [{ type: 'ellipse', cx: 3, cy: 5, rx: 2, ry: 4 }],
       boundsPoints: [

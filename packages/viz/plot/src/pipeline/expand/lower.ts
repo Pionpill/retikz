@@ -941,7 +941,7 @@ export const lowerPlotWithDataArtifact = (
           ? { font: { ...(resolvedTheme.typography.font ?? {}), ...(localStyle?.font ?? {}) } }
           : {}),
       };
-      const { align, lineHeight, maxTextWidth: authoredMaxTextWidth, ...nodeStyle } = style;
+      const { textAlign, lineHeight, maxTextWidth: authoredMaxTextWidth, ...nodeStyle } = style;
       const rotate = facetHeaderLabelRotateOf(facet, dimension);
       const maxTextWidth = authoredMaxTextWidth ?? Math.max(1, ((rotate ?? 0) === 0 ? rect.width : rect.height) - 8);
       const position: [number, number] = [rect.x + rect.width / 2, rect.y + rect.height / 2];
@@ -967,7 +967,7 @@ export const lowerPlotWithDataArtifact = (
             style: nodeStyle,
             ...(rotate !== undefined ? { rotate } : {}),
             layout: {
-              ...(align === undefined ? {} : { align }),
+              ...(textAlign === undefined ? {} : { textAlign }),
               ...(lineHeight === undefined ? {} : { lineHeight }),
               maxTextWidth,
             },

@@ -77,7 +77,7 @@ export const TableCellAppearanceTracePath = {
   /** Node 默认旋转角度 */
   ContentNodeDefaultRotate: '/content/defaults/node/rotate',
   /** Node 默认对齐方式 */
-  ContentNodeDefaultAlign: '/content/defaults/node/layout/align',
+  ContentNodeDefaultTextAlign: '/content/defaults/node/layout/textAlign',
   /** Node 默认行高 */
   ContentNodeDefaultLineHeight: '/content/defaults/node/layout/lineHeight',
   /** Node 默认文本最大宽度 */
@@ -150,6 +150,12 @@ export const TableCellAppearanceTracePath = {
   ContentNodeLabelDefaultColor: '/content/defaults/node/label/color',
   /** node 标签默认 textColor */
   ContentNodeLabelDefaultTextColor: '/content/defaults/node/label/textColor',
+  /** node 标签默认文本对齐 */
+  ContentNodeLabelDefaultTextAlign: '/content/defaults/node/label/textAlign',
+  /** node 标签默认行高 */
+  ContentNodeLabelDefaultLineHeight: '/content/defaults/node/label/lineHeight',
+  /** node 标签默认折行宽度 */
+  ContentNodeLabelDefaultMaxTextWidth: '/content/defaults/node/label/maxTextWidth',
   /** node 标签默认 opacity */
   ContentNodeLabelDefaultOpacity: '/content/defaults/node/label/opacity',
   /** node 标签默认 position */
@@ -178,6 +184,12 @@ export const TableCellAppearanceTracePath = {
   ContentPathLabelDefaultColor: '/content/defaults/path/label/color',
   /** path 标签默认 textColor */
   ContentPathLabelDefaultTextColor: '/content/defaults/path/label/textColor',
+  /** path 标签默认文本对齐 */
+  ContentPathLabelDefaultTextAlign: '/content/defaults/path/label/textAlign',
+  /** path 标签默认行高 */
+  ContentPathLabelDefaultLineHeight: '/content/defaults/path/label/lineHeight',
+  /** path 标签默认折行宽度 */
+  ContentPathLabelDefaultMaxTextWidth: '/content/defaults/path/label/maxTextWidth',
   /** path 标签默认 opacity */
   ContentPathLabelDefaultOpacity: '/content/defaults/path/label/opacity',
   /** path 标签默认 position */

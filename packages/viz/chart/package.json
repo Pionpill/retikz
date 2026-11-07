@@ -90,6 +90,7 @@
     "vite": "catalog:",
     "vite-plugin-dts": "catalog:",
     "vitest": "catalog:",
-    "@retikz/extension": "workspace:^"
+    "@retikz/extension": "workspace:^",
+    "@retikz/reconciler": "workspace:^"
   }
 }

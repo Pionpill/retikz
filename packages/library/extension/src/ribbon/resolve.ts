@@ -35,7 +35,7 @@ export const resolveRibbonWidth = (
   const definition = profiles.get(width.name);
   if (definition === undefined) {
     throw new RetikzExtensionError({
-      code: RetikzExtensionErrorCode.ResolutionInvalid,
+      code: RetikzExtensionErrorCode.ResolveInvalid,
       message: `Unknown Ribbon width profile '${width.name}' at ${irPath}.`,
       details: { name: width.name, path: irPath },
     });
@@ -49,7 +49,7 @@ export const resolveRibbonWidth = (
     params = definition.paramsSchema?.parse(rawParams) ?? rawParams;
   } catch (cause) {
     throw new RetikzExtensionError({
-      code: RetikzExtensionErrorCode.ResolutionInvalid,
+      code: RetikzExtensionErrorCode.ResolveInvalid,
       message: `Ribbon width profile '${width.name}' params are invalid at ${paramsPath}.`,
       details: { name: width.name, path: paramsPath },
       cause,

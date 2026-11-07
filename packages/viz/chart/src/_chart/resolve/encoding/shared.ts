@@ -9,7 +9,7 @@ export const invalidEncoding = (
   cause?: unknown,
 ): RetikzChartError =>
   new RetikzChartError({
-    code: RetikzChartErrorCode.InvalidChartIR,
+    code: RetikzChartErrorCode.ResolveInputInvalid,
     message,
     details: { path },
     ...(cause === undefined ? {} : { cause }),

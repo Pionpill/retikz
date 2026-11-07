@@ -1,6 +1,6 @@
-import { compileToScene } from '@retikz/core';
 import { coerceValue, inferFieldType, resolveDataRows, assertBoundData } from '@retikz/data';
 import { DataFieldType, ScalarValueSchema } from '@retikz/data';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import type { PlotsLoweringOptions } from '../../../src/pipeline/expand';

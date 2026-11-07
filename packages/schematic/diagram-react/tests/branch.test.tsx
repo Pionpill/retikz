@@ -5,6 +5,7 @@ import { normalizeScene } from '@retikz/vanilla';
 import { createElement } from 'react';
 import { expect, it } from 'vitest';
 
+import { RetikzDiagramReactError, RetikzDiagramReactErrorCode } from '../src';
 import { Branch, BranchDiagram, BranchNode } from '../src/branch';
 import { collectBranchDiagramInput } from '../src/branch/authoring';
 
@@ -52,7 +53,12 @@ it('拒绝任意子内容和嵌入的宿主属性', () => {
         <div />
       </BranchDiagram>,
     ),
-  ).toThrow();
+  ).toThrowError(
+    expect.objectContaining({
+      constructor: RetikzDiagramReactError,
+      code: RetikzDiagramReactErrorCode.BranchChildInvalid,
+    }),
+  );
   expect(() =>
     createInputScene(
       <BranchDiagram width={600}>
@@ -60,5 +66,10 @@ it('拒绝任意子内容和嵌入的宿主属性', () => {
         <Branch id="main" nodes={['a']} />
       </BranchDiagram>,
     ),
-  ).toThrow();
+  ).toThrowError(
+    expect.objectContaining({
+      constructor: RetikzDiagramReactError,
+      code: RetikzDiagramReactErrorCode.BranchHostPropsInvalid,
+    }),
+  );
 });

@@ -1,12 +1,11 @@
 import type {
   CompositeCompileChild,
+  CompositeCompileContext,
+  CompositeCompileResult,
   CompositeCompileScopeProps,
   IRChild,
   IRNode,
   LayoutChildResult,
-  CompositeCompileContext,
-  CompositeCompileResult,
-  SpatialHandleDeclaration,
 } from '@retikz/core';
 import { intrinsicLayoutProposal, requiredLayoutProbe, resolveLayoutAxisSize } from '@retikz/layout/compose';
 
@@ -92,19 +91,13 @@ export const measureCell = (
           occurrence,
           scope,
         );
-  const { padding } = cell.layout;
+  const { padding, width, height } = cell.layout;
 
   return {
     cell,
     result,
-    width:
-      typeof cell.layout.width === 'number'
-        ? cell.layout.width
-        : (result?.slotSize.width ?? 0) + padding.left + padding.right,
-    height:
-      typeof cell.layout.height === 'number'
-        ? cell.layout.height
-        : (result?.slotSize.height ?? 0) + padding.top + padding.bottom,
+    width: typeof width === 'number' ? width : (result?.slotSize.width ?? 0) + padding.left + padding.right,
+    height: typeof height === 'number' ? height : (result?.slotSize.height ?? 0) + padding.top + padding.bottom,
   };
 };
 
@@ -137,7 +130,7 @@ const emitCell = (placed: CellPlacement, context: CompositeCompileContext): Comp
   void font;
   void textColor;
   const radius = Math.min(cornerRadius, width / 2, height / 2);
-  const { padding } = cell.layout;
+  const { padding, overflow } = cell.layout;
   const cx = Math.max(0, Math.min(width, (width + padding.left - padding.right) / 2));
   const cy = Math.max(0, Math.min(height, (height + padding.top - padding.bottom) / 2));
 
@@ -160,7 +153,7 @@ const emitCell = (placed: CellPlacement, context: CompositeCompileContext): Comp
         ? []
         : [
             context.createScope(
-              { zIndex: 0, ...(cell.layout.overflow === 'clip' ? { clip: surfaceClip(width, height, radius) } : {}) },
+              { zIndex: 0, ...(overflow === 'clip' ? { clip: surfaceClip(width, height, radius) } : {}) },
               [
                 context.replay(result, {
                   transforms: [
@@ -216,7 +209,6 @@ export const compileCells = (
       details: { width, height, allocation: allocationBounds },
     });
 
-  const handles: Array<SpatialHandleDeclaration> = [{ id: 'container', role: 'container', bounds: allocationBounds }];
   const children: Array<IRChild | CompositeCompileChild> = cells.map(cell => emitCell(cell, context));
   children.push(...extra);
   if (decoration.label !== undefined || scope.id !== undefined) {
@@ -257,7 +249,6 @@ export const compileCells = (
 
   for (const {
     measured: { cell },
-    role,
     x,
     y,
     width: cellWidth,
@@ -266,12 +257,6 @@ export const compileCells = (
     if (cell.id === undefined) continue;
 
     const bounds = { x, y, width: cellWidth, height: cellHeight };
-    handles.push({
-      id: `cell:${cell.id}`,
-      ...(cell.aliasIds === undefined ? {} : { aliasIds: cell.aliasIds.map(id => `cell:${id}`) }),
-      role,
-      bounds,
-    });
     children.push({
       type: 'scope',
       defaults: { reset: ['node'] },
@@ -279,5 +264,5 @@ export const compileCells = (
     });
   }
 
-  return { allocationBounds, children: [context.createScope(scope, children, handles)] };
+  return { allocationBounds, children: [context.createScope(scope, children)] };
 };

@@ -67,7 +67,6 @@ const collectGraphInput = (props: GraphProps, embedId: string, rejectHostProps: 
     composites: _composites,
     themeDefinitions: _themeDefinitions,
     lowerTex: _lowerTex,
-    artifacts: _artifacts,
     onArtifacts: _onArtifacts,
     onCompileResult: _onCompileResult,
     ...input
@@ -97,7 +96,6 @@ const collectGraphInput = (props: GraphProps, embedId: string, rejectHostProps: 
   void _composites;
   void _themeDefinitions;
   void _lowerTex;
-  void _artifacts;
   void _onArtifacts;
   void _onCompileResult;
 

@@ -1,3 +1,4 @@
+import type { PathDefinitionConfig } from '@retikz/core';
 import type { PathCommand, PathCompileResult, PathLabel, ScenePrimitive } from '@retikz/core';
 
 import { RetikzExtensionError, RetikzExtensionErrorCode } from '../../errors';
@@ -19,29 +20,7 @@ import { widthFunction, resolveSampleCount } from './width';
 /** ribbon path emit 所需的 Extension 编排上下文 */
 type EmitRibbonPrimitiveContext = RibbonEmitOptions;
 
-const LABEL_POSITION: Record<string, number> = {
-  'at-start': 0,
-  'very-near-start': 0.125,
-  'near-start': 0.25,
-  midway: 0.5,
-  'near-end': 0.75,
-  'very-near-end': 0.875,
-  'at-end': 1,
-};
-
 type CompiledRibbonLabel = PathLabel & Pick<IRRibbonLabel, 'placement'>;
-
-const canonicalizeLabel = (label: IRRibbonLabel): CompiledRibbonLabel => ({
-  ...label,
-  position:
-    label.position === undefined
-      ? 0.5
-      : typeof label.position === 'number'
-        ? label.position
-        : (LABEL_POSITION[label.position] ?? 0.5),
-  side: label.side ?? (label.sloped === true || label.placement === 'inside' ? 'center' : 'top'),
-  distance: label.distance ?? 4,
-});
 
 const labelsOf = (
   label: IRRibbonLabel | Array<IRRibbonLabel> | undefined,
@@ -49,9 +28,13 @@ const labelsOf = (
 ): Array<CompiledRibbonLabel> => {
   if (label === undefined) return [];
   const labels = Array.isArray(label) ? label : [label];
-  return labels.map(({ placement, ...source }) =>
-    canonicalizeLabel({ ...context.resolveHostLabel(source), placement }),
-  );
+  return labels.map(({ placement, ...source }) => ({
+    ...context.resolveHostLabel({
+      ...source,
+      side: source.side ?? (source.sloped === true || placement === 'inside' ? 'center' : 'top'),
+    }),
+    placement,
+  }));
 };
 
 const materializedSamples = (
@@ -103,9 +86,9 @@ const resultOf = (
   samples: ReadonlyArray<Readonly<{ point: [number, number]; tangent: [number, number]; sideOffset?: number }>> = [],
 ): PathCompileResult => {
   const labelPrimitives: ReadonlyArray<ScenePrimitive> =
-    labels.length === 0 ? [] : context.emitHostLabels({ labels, samples, sourcePath: 'kindOptions.label' });
+    labels.length === 0 ? [] : context.emitHostLabels({ labels, samples, sourcePath: ['kindOptions', 'label'] });
   return {
-    primitives: [styledPrimitiveFromOutline(ribbon, outline, context.appearance), ...labelPrimitives],
+    primitives: [styledPrimitiveFromOutline(outline, context.appearance), ...labelPrimitives],
     boundsPoints: [...outline.points, ...samples.map(sample => sample.point)],
   };
 };
@@ -115,7 +98,7 @@ const resultOf = (
  * @description boundary 模式保留 upper/lower 两条曲线并闭合轮廓；centerline 模式复用 Core materializePath 的已结算 commands，再按宽度函数生成左右边界
  */
 export const emitRibbonPrimitive = (
-  path: IRRibbonPath,
+  path: PathDefinitionConfig<IRRibbonPath>,
   context: EmitRibbonPrimitiveContext,
   profileRegistry: ReadonlyMap<string, RibbonWidthProfileDefinition>,
   capRegistry: ReadonlyMap<string, RibbonCapDefinition>,
@@ -140,7 +123,7 @@ export const emitRibbonPrimitive = (
     });
   }
 
-  const commands = context.materializePath({ children: ribbon.children });
+  const commands = context.materializePath();
   const segmentInputs = commandsToSegmentInputs(commands, 'centerline');
   const rawSegments = segmentInputsToSegments(segmentInputs);
   const rawTotalLength = rawSegments.reduce((sum, segment) => sum + segment.length, 0);

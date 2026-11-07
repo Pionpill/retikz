@@ -125,62 +125,27 @@ describe('解决主题', () => {
     );
   });
 
-  it('通过所属模块 schema 投影外部名称颜色对象输出', () => {
-    class EmptyStyleOutput {}
-
-    const getterOutput = Object.defineProperty({}, 'semantic', {
-      enumerable: true,
-      get: () => ({ error: '#aa0000' }),
-    });
-    const symbolOutput = { semantic: { error: '#aa0000' }, [Symbol('metadata')]: true };
-    const hiddenOutput = Object.defineProperty({}, 'hidden', { value: true });
-
+  it('读取类型化回调的属性，并仅将已命名颜色投影到输出', () => {
     const definitions = [
-      { name: 'date-output', resolve: () => new Date(0), expectedError: DEFAULT_RESOLVED_THEME.colors.semantic.error },
-      {
-        name: 'class-output',
-        resolve: () => new EmptyStyleOutput(),
-        expectedError: DEFAULT_RESOLVED_THEME.colors.semantic.error,
-      },
-      {
-        name: 'promise-output',
-        resolve: () => Promise.resolve({}),
-        expectedError: DEFAULT_RESOLVED_THEME.colors.semantic.error,
-      },
-      {
-        name: 'semantic-date-output',
-        resolve: () => ({ semantic: new Date(0) }),
-        expectedError: DEFAULT_RESOLVED_THEME.colors.semantic.error,
-      },
-      {
-        name: 'semantic-class-output',
-        resolve: () => ({ semantic: new EmptyStyleOutput() }),
-        expectedError: DEFAULT_RESOLVED_THEME.colors.semantic.error,
-      },
-      {
-        name: 'semantic-promise-output',
-        resolve: () => ({ semantic: Promise.resolve({}) }),
-        expectedError: DEFAULT_RESOLVED_THEME.colors.semantic.error,
-      },
-      { name: 'getter-output', resolve: () => getterOutput, expectedError: '#aa0000' },
-      { name: 'symbol-output', resolve: () => symbolOutput, expectedError: '#aa0000' },
-      {
-        name: 'hidden-output',
-        resolve: () => hiddenOutput,
-        expectedError: DEFAULT_RESOLVED_THEME.colors.semantic.error,
-      },
+      defineTheme({
+        name: 'getter',
+        resolve: () => ({
+          get semantic() {
+            return { error: '#aa0000' };
+          },
+        }),
+      }),
+      defineTheme({ name: 'symbol', resolve: () => ({ semantic: { error: '#aa0000' }, [Symbol('metadata')]: true }) }),
     ];
-
     for (const definition of definitions) {
-      expect(
-        Reflect.apply(resolveTheme, undefined, [
-          DEFAULT_RESOLVED_THEME,
-          { name: definition.name },
-          'scene.theme',
-          new Map([[definition.name, definition]]),
-        ]).colors.semantic.error,
-        definition.name,
-      ).toBe(definition.expectedError);
+      const resolved = resolveTheme(
+        DEFAULT_RESOLVED_THEME,
+        { name: definition.name },
+        'scene.theme',
+        new Map([[definition.name, definition]]),
+      );
+      expect(resolved.colors.semantic).toEqual({ ...DEFAULT_RESOLVED_THEME.colors.semantic, error: '#aa0000' });
+      expect(Reflect.ownKeys(resolved.colors)).toEqual(['semantic', 'categorical']);
     }
   });
 

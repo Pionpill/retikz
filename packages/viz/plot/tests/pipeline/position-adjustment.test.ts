@@ -1,4 +1,4 @@
-import type { IRNode, IRScope } from '@retikz/core';
+import type { IRChild, IRNode, IRScope } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 import { literal, number, strictObject } from 'zod';
@@ -36,11 +36,9 @@ const specOf = (adjustments?: Array<Record<string, unknown>>): IRPlot =>
     ],
   });
 
-const isNodeChild = (child: IRScope['children'][number]): child is IRNode =>
-  child.type === 'node' && 'position' in child;
+const isNodeChild = (child: IRChild): child is IRNode => child.type === 'node' && 'position' in child;
 
-const isScopeChild = (child: IRScope['children'][number]): child is IRScope =>
-  child.type === 'scope' && 'children' in child;
+const isScopeChild = (child: IRChild): child is IRScope => child.type === 'scope' && 'children' in child;
 
 const loweredOf = (
   spec: IRPlot,

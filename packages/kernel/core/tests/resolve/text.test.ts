@@ -1,13 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { BuiltinCompileWarningCode } from '../../src/compile/constants';
-import {
-  parseInlineSegments,
-  resolveFont,
-  resolveFontSize,
-  resolveTextLine,
-  resolveTextLineHeight,
-} from '../../src/resolve/text';
+import { BuiltinCompileWarningCode } from '../../src/compile/shared';
+import { resolveFont, resolveTextBlock } from '../../src/resolve/text';
+import { resolveFontSize, resolveTextLineHeight } from '../../src/resolve/text/font';
+
+/** 经文本块解析消费单个作者行 */
+const resolveTestLine = (
+  source: Parameters<typeof resolveTextBlock>[0]['text'][number],
+  context: Parameters<typeof resolveTextBlock>[1],
+) => resolveTextBlock({ text: [source] }, context).lines[0];
 
 describe('解析文本', () => {
   it('解析字体预设和相对单位', () => {
@@ -25,14 +26,23 @@ describe('解析文本', () => {
           inheritedFont: { size: 20, family: 'Inter', weight: 400, style: 'italic' },
         },
       ),
-    ).toEqual({ size: 10, family: 'Inter', weight: 'bold', style: 'italic' });
+    ).toEqual({ size: 10, family: 'Inter', weight: 700, style: 'italic' });
+  });
+
+  it('字重关键字转为数值，缺省继承且数值不取整', () => {
+    const context = { rootFontSize: 16, inheritedFont: { size: 16, weight: 700 } };
+    expect(resolveFont({ weight: 'normal' }, context).weight).toBe(400);
+    expect(resolveFont({ weight: 'bold' }, context).weight).toBe(700);
+    expect(resolveFont({ weight: 462.5 }, context).weight).toBe(462.5);
+    expect(resolveFont(undefined, context).weight).toBe(700);
+    expect(resolveFont(undefined, { rootFontSize: 16, inheritedFont: { size: 16 } }).weight).toBeUndefined();
   });
 
   it('解析字符串简写和 TeX 门控', () => {
     const inheritedFont = { size: 16, family: 'serif' } as const;
 
     expect(
-      resolveTextLine('a $x$ b', {
+      resolveTestLine('a $x$ b', {
         rootFontSize: 16,
         inheritedFont,
         gatingOn: false,
@@ -44,7 +54,7 @@ describe('解析文本', () => {
       mixed: false,
     });
     expect(
-      resolveTextLine('a $x$ b', {
+      resolveTestLine('a $x$ b', {
         rootFontSize: 16,
         inheritedFont,
         gatingOn: true,
@@ -58,7 +68,7 @@ describe('解析文本', () => {
   });
 
   it('折叠样式线绘制并解析其字体而不发出继承的样式', () => {
-    const resolved = resolveTextLine(
+    const resolved = resolveTestLine(
       { text: 'styled', fill: 'red', opacity: 0.5, font: { size: '0.5em', weight: 'bold' } },
       {
         rootFontSize: 16,
@@ -72,28 +82,28 @@ describe('解析文本', () => {
         text: 'styled',
         fill: 'red',
         opacity: 0.5,
-        font: { size: 10, family: 'Inter', weight: 'bold', style: 'italic' },
+        font: { size: 10, family: 'Inter', weight: 700, style: 'italic' },
       },
     ]);
     expect(resolved.style).toEqual({
       fill: 'red',
       opacity: 0.5,
-      font: { size: 10, weight: 'bold' },
+      font: { size: 10, weight: 700 },
     });
     expect(resolved.mixed).toBe(false);
   });
 
   it('行级字体省略时不物化继承值，仅覆盖字重时不补入字号', () => {
     const context = { rootFontSize: 16, inheritedFont: { size: 20, family: 'Inter' }, gatingOn: false };
-    const omitted = resolveTextLine({ text: 'plain' }, context);
+    const omitted = resolveTestLine({ text: 'plain' }, context);
     expect(omitted.style?.font).toBeUndefined();
-    const overridden = resolveTextLine({ text: 'bold', font: { weight: 'bold' } }, context);
-    expect(overridden.style?.font).toEqual({ weight: 'bold' });
-    expect(overridden.segments).toMatchObject([{ text: 'bold', font: { size: 20, family: 'Inter', weight: 'bold' } }]);
+    const overridden = resolveTestLine({ text: 'bold', font: { weight: 'bold' } }, context);
+    expect(overridden.style?.font).toEqual({ weight: 700 });
+    expect(overridden.segments).toMatchObject([{ text: 'bold', font: { size: 20, family: 'Inter', weight: 700 } }]);
   });
 
   it.each([false, true])('显式混排共享行级相对字体并保留片段覆盖，公式简写开关=%s', gatingOn => {
-    const resolved = resolveTextLine(
+    const resolved = resolveTestLine(
       {
         segments: [
           { text: 'a', font: { family: 'mono', size: '2em' } },
@@ -119,7 +129,7 @@ describe('解析文本', () => {
   });
 
   it('保留空的显式片段列表及行级样式', () => {
-    const resolved = resolveTextLine(
+    const resolved = resolveTestLine(
       { segments: [], font: { size: '0.5em' } },
       { rootFontSize: 16, inheritedFont: { size: 20 }, gatingOn: false },
     );
@@ -134,7 +144,7 @@ describe('解析文本', () => {
 
   it('报告不平衡的 TeX，同时保留尾随字面量', () => {
     const warn = vi.fn();
-    const resolved = resolveTextLine('a $b', {
+    const resolved = resolveTestLine('a $b', {
       rootFontSize: 16,
       inheritedFont: { size: 16 },
       gatingOn: true,
@@ -149,9 +159,5 @@ describe('解析文本', () => {
   it('使用继承的字体大小来省略行高', () => {
     expect(resolveTextLineHeight(undefined, 20)).toBe(24);
     expect(resolveTextLineHeight(30, 20)).toBe(30);
-  });
-
-  it('保持内联解析器对文本解析器所属模块可用', () => {
-    expect(parseInlineSegments('$x$', true)).toEqual({ segments: [{ tex: 'x' }], hasMath: true, warn: false });
   });
 });

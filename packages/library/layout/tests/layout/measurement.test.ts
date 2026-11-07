@@ -1,5 +1,6 @@
-import { ChildSchema, compileToScene, CompositeBaseSchema, defineComposite } from '@retikz/core';
+import { ChildSchema, CompositeBaseSchema, defineComposite } from '@retikz/core';
 import type { CompositeEvaluationResult, IRChild, LayoutProposal } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { expect, it } from 'vitest';
 import { literal } from 'zod';
 

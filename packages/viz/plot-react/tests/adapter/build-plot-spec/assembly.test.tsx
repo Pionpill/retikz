@@ -1,6 +1,6 @@
-import { compileToScene } from '@retikz/core';
 import type { IRPlot } from '@retikz/plot';
 import { lowerPlots, PlotSchema } from '@retikz/plot';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { buildPlotIR } from '../../../src/adapter';

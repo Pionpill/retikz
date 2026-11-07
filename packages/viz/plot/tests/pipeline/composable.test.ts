@@ -1,5 +1,5 @@
 import type { IRNode, IRScene, IRScope, IRTarget, ScenePrimitive } from '@retikz/core';
-import { compileToScene } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import type { PlotsLoweringOptions } from '../../src/pipeline/expand';

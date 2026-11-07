@@ -41,5 +41,5 @@ export const createTextMeasurer = (
   const measurer = measureText ?? createDefaultTextMeasurer();
   const family = defaultFontFamily?.trim();
   if (!family) return measurer;
-  return (text, font) => measurer(text, font.family?.trim() ? font : { ...font, family });
+  return (text, font, disableCache) => measurer(text, font.family?.trim() ? font : { ...font, family }, disableCache);
 };

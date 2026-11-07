@@ -1,15 +1,15 @@
 import type {
+  CompositeCompileContext,
+  CompositeCompileResult,
+  CompositeEvaluationResult,
   LayoutAlignmentGuide,
   LayoutAxisProposal,
   LayoutChildResult,
-  CompositeCompileContext,
-  CompositeEvaluationResult,
-  CompositeCompileResult,
   LayoutProposal,
 } from '@retikz/core';
 import {
-  LayoutAlignmentGuideDimension,
   BuiltinLayoutAlignmentGuideName,
+  LayoutAlignmentGuideDimension,
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
   LayoutIntrinsicMode,
@@ -30,12 +30,12 @@ import {
   createLayoutArtifactAlignmentGuide,
   createLayoutArtifactContainer,
   createLayoutArtifactItem,
+  createLayoutContributionResult,
   layoutClipOf,
   layoutEpsilon,
-  resolveLayoutAxisSize,
-  resolveKnownLayoutContribution,
-  createLayoutContributionResult,
   measureLayoutAxis,
+  resolveKnownLayoutContribution,
+  resolveLayoutAxisSize,
   sortLayoutSpacing,
 } from '../internal';
 import type { LayoutSpacingArtifact } from '../shared';
@@ -52,8 +52,7 @@ import {
 } from './solve';
 import type { GridTrackConstraint } from './tracks';
 import { solveGridTracks } from './tracks';
-import type { GridLayoutArtifact } from './types';
-import type { IRGridLayout } from './types';
+import type { GridLayoutArtifact, IRGridLayout, IRGridTrack } from './types';
 
 type MeasuredGridItem = Readonly<{
   authored: KeyedLayoutItem<CanonicalGridLayoutItem>;
@@ -79,7 +78,7 @@ type PlacedGridItem = Readonly<{
 }>;
 
 /** 把 Grid track 定义归一为公开 artifact 的稳定来源类别 */
-const trackSourceKindOf = (track: CanonicalGridLayout['columns'][number]): LayoutTrackSourceKind => {
+const trackSourceKindOf = (track: IRGridTrack): LayoutTrackSourceKind => {
   if (track.kind === 'fixed') return LayoutTrackSourceKind.Fixed;
   if (track.kind === 'fraction') return LayoutTrackSourceKind.Fraction;
   if (track.kind === 'minmax') return LayoutTrackSourceKind.Minmax;

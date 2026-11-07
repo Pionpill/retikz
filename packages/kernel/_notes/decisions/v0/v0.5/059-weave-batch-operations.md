@@ -107,7 +107,7 @@ root 提供同等容器定位入口。Scope 运行时定位与子元素的名称
 ```ts
 type WeaveInput<TInput> = {
   own: TInput;
-  context: ElementCompileContext;
+  context: CompileStyle;
 };
 
 type WeavePendingInput =

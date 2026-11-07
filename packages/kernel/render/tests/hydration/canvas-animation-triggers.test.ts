@@ -4,7 +4,6 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { HydrationContext, HydrationHandlers } from '../../src/hydration';
 import {
-  collectCanvasAnimationEventTriggers,
   collectCanvasVisibleAnimationIds,
   isCanvasAnimationIdVisible,
   withCanvasAnimationEventHandlers,
@@ -63,9 +62,9 @@ const context = (restart: (id?: string) => void): HydrationContext => ({
 
 describe('Canvas 动画触发助手', () => {
   it('从 Scene 原语收集 onEvent 和可见触发器 id', () => {
-    const events = collectCanvasAnimationEventTriggers(scene);
+    const handlers = withCanvasAnimationEventHandlers(scene, undefined);
 
-    expect(events.get('box')?.has('click')).toBe(true);
+    expect(handlers.box.click).toBeTypeOf('function');
     expect(collectCanvasVisibleAnimationIds(scene).has('box')).toBe(true);
   });
 

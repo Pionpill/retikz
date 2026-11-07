@@ -1,4 +1,5 @@
-import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
+import { resolveCoreProviderDependencies } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import type { FlowLayoutDefinition, IRFlowDiagram } from '../../src/flow';
@@ -48,9 +49,7 @@ const compile = (input: IRFlowDiagram, definition = layeredFlowLayoutDefinition)
       measureText: text => ({ width: text.length * 8, height: 12, ascent: 9, descent: 3 }),
     },
   );
-  const artifact = FlowDiagramArtifactSchema.parse(
-    result.artifacts.find(item => item.kind === 'composite' && item.namespace === 'diagram')?.value,
-  );
+  const artifact = FlowDiagramArtifactSchema.parse(result.artifacts.find(item => item.namespace === 'diagram')?.value);
   const row = artifact.elements[0];
   if (row.kind !== 'layout') throw new Error('Expected row');
   return { result, artifact, row };

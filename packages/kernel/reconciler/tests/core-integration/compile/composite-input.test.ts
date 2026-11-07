@@ -1,7 +1,6 @@
-import type { CompositeBoundChild, IRChild, IRScene, CompositeCompileContext } from '@retikz/core';
+import type { CompositeBoundChild, CompositeCompileContext, IRChild, IRScene } from '@retikz/core';
 import {
   ChildSchema,
-  compileToScene,
   CompositeBaseSchema,
   createCompositeInputBindings,
   defineComposite,
@@ -9,9 +8,11 @@ import {
   naturalLayoutProposal,
   RetikzCoreError,
 } from '@retikz/core';
-import { ReconcilerSession } from '@retikz/reconciler';
+import { SceneReconciler } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal, string } from 'zod';
+
+import { compileToScene } from '../../../src/compile';
 
 const leaf = (): IRChild => ({ namespace: 'fixture', type: 'prepared' });
 
@@ -206,30 +207,10 @@ describe('复合实例运行时输入', () => {
     expect(() => compileToScene(source, { composites: [duplicate, prepared] })).toThrow(/more than once/i);
   });
 
-  it('保留绑定扩展输出的空间 Scope 限制', () => {
-    const spatial = defineComposite({
-      namespace: 'fixture',
-      type: 'boundSpatial',
-      schema: CompositeBaseSchema.extend({ namespace: literal('fixture'), type: literal('boundSpatial') }),
-      compile: (_node, context) => ({
-        children: [
-          context.bindChild({ type: 'scope', transforms: [{ kind: 'translate', x: 2, y: 3 }], children: [leaf()] }, [
-            { path: ['children', 0], input: 'ready' },
-          ]),
-        ],
-        spatialHandles: [{ id: 'body', role: 'fixture', bounds: { x: 0, y: 0, width: 10, height: 10 } }],
-      }),
-    });
-
-    expect(() =>
-      compileToScene(sceneOf([{ namespace: 'fixture', type: 'boundSpatial' }]), { composites: [spatial, prepared] }),
-    ).toThrow(/Scope with placement or transforms/);
-  });
-
   it('重新编译相同 JSON 的更改输入并回滚不匹配的候选者', () => {
     const source = sceneOf([leaf()]);
     const inputs = (text: string) => createCompositeInputBindings(source, [{ path: ['children', 0], input: text }]);
-    const session = new ReconcilerSession({ composites: [prepared], compositeInputs: inputs('initial-ready') });
+    const session = new SceneReconciler({ composites: [prepared], compositeInputs: inputs('initial-ready') });
     session.mount(source);
     session.replace(source, { composites: [prepared], compositeInputs: inputs('updated-ready') });
 

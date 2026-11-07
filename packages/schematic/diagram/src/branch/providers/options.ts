@@ -18,7 +18,7 @@ export const resolveBranchDefinitionOptions = (optionSets: ReadonlyArray<BranchD
       const previous = registry.get(definition.name);
       if (previous !== undefined && previous !== definition)
         throw new RetikzDiagramError({
-          code: RetikzDiagramErrorCode.DefinitionDuplicate,
+          code: RetikzDiagramErrorCode.ProviderDefinitionDuplicate,
           message: `Duplicate Branch layout '${definition.name}'.`,
           details: { key: definition.name },
         });
@@ -29,7 +29,7 @@ export const resolveBranchDefinitionOptions = (optionSets: ReadonlyArray<BranchD
 
   if (names.size > 1)
     throw new RetikzDiagramError({
-      code: RetikzDiagramErrorCode.DefinitionInvalid,
+      code: RetikzDiagramErrorCode.ProviderDefinitionInvalid,
       message: 'Conflicting default Branch layouts.',
       details: { availableKeys: [...names] },
     });
@@ -38,7 +38,7 @@ export const resolveBranchDefinitionOptions = (optionSets: ReadonlyArray<BranchD
   const definition = registry.get(name);
   if (definition === undefined)
     throw new RetikzDiagramError({
-      code: RetikzDiagramErrorCode.DefinitionNotRegistered,
+      code: RetikzDiagramErrorCode.ProviderDefinitionNotRegistered,
       message: `Unknown Branch layout '${name}'.`,
       details: { key: name, availableKeys: [...registry.keys()] },
     });
