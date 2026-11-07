@@ -7,7 +7,7 @@ import { logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
 
 import { coordinateImplementationI18n } from './coordinate-implementation.i18n';
 
-/** Reconciler 投影名称与变换服务流程图的语言 */
+/** 确定默认距离与嵌套表达流程图的语言 */
 export type CoordinateImplementationProps = { lang?: Lang };
 
 /** 展示本页追踪的阶段、产物与必要输入 */
@@ -15,8 +15,8 @@ const CoordinateImplementation: FC<CoordinateImplementationProps> = props => {
   const { lang = 'zh' } = props;
   const text = coordinateImplementationI18n[lang];
   const stages = [
-    { id: 'context', name: 'createTreePositionContext', state: false },
     { id: 'resolve', name: 'resolveCoordinate / resolvePosition', state: false },
+    { id: 'context', name: 'createTreePositionContext', state: false },
     { id: 'compile', name: 'compileCoordinate → evaluatePosition', state: false },
     { id: 'publish', name: 'visitCoordinate', state: true },
   ] as const;
@@ -28,8 +28,8 @@ const CoordinateImplementation: FC<CoordinateImplementationProps> = props => {
         kind="grid"
         gap={{ row: 20, column: 28 }}
         placements={[
-          ['names', 'context'],
           [null, 'resolve'],
+          ['names', 'context'],
           [null, 'compile'],
           [null, 'publish'],
         ]}

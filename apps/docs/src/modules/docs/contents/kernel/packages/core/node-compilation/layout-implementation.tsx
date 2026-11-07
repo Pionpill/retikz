@@ -16,7 +16,7 @@ const LayoutImplementation: FC<LayoutImplementationProps> = props => {
   const text = layoutImplementationI18n[lang];
   const stages = [
     { id: 'resolve', name: 'visitNode → resolveNode', state: false },
-    { id: 'measure', name: 'measureNodeBody', state: false },
+    { id: 'measure', name: 'compileNode → layoutNode', state: false },
     { id: 'layout', name: 'layoutNode', state: false },
     { id: 'emit', name: 'emitNode', state: false },
     { id: 'publish', name: 'visitNode', state: true },

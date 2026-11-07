@@ -16,9 +16,9 @@ const CompilationImplementation: FC<CompilationImplementationProps> = props => {
   const text = compilationImplementationI18n[lang];
   const stages = [
     { id: 'manager', name: 'CompileManager.compileScene', state: false },
+    { id: 'run', name: 'SubtreeCompiler.run', state: false },
     { id: 'dispatch', name: 'SubtreeCompiler.compileChild', state: false },
     { id: 'flush', name: 'flushPendingPathEmissions', state: false },
-    { id: 'collect', name: 'SubtreeCompiler.run', state: false },
     { id: 'assemble', name: 'assembleSceneCompilationSnapshot', state: true },
   ] as const;
   const inputs = [{ id: 'registry', name: 'CompileRuntime', target: 'manager' }] as const;
@@ -30,9 +30,9 @@ const CompilationImplementation: FC<CompilationImplementationProps> = props => {
         gap={{ row: 20, column: 28 }}
         placements={[
           ['registry', 'manager'],
+          [null, 'run'],
           [null, 'dispatch'],
           [null, 'flush'],
-          [null, 'collect'],
           [null, 'assemble'],
         ]}
       >
