@@ -16,26 +16,26 @@ const corePage: Page = {
   sidebarGroup: 'kernel.pkgGroupCore',
   children: [
     {
-      id: 'compilation',
-      label: 'kernel.pkgCoreCompilation',
-      difficulty: DocDifficulty.Internals,
-      meta: { pageType: 'architecture', audience: 'maintainer', sourceOfTruth: 'runtime' },
-    },
-    {
       id: 'resolution',
       label: 'kernel.pkgCoreResolution',
       difficulty: DocDifficulty.Internals,
       meta: { pageType: 'architecture', audience: 'maintainer', sourceOfTruth: 'runtime' },
     },
     {
-      id: 'coordinates',
-      label: 'kernel.pkgCoreCoordinates',
+      id: 'compilation',
+      label: 'kernel.pkgCoreCompilation',
       difficulty: DocDifficulty.Internals,
       meta: { pageType: 'architecture', audience: 'maintainer', sourceOfTruth: 'runtime' },
     },
     {
       id: 'node-compilation',
       label: 'kernel.pkgCoreNodeCompilation',
+      difficulty: DocDifficulty.Internals,
+      meta: { pageType: 'architecture', audience: 'maintainer', sourceOfTruth: 'runtime' },
+    },
+    {
+      id: 'coordinates',
+      label: 'kernel.pkgCoreCoordinates',
       difficulty: DocDifficulty.Internals,
       meta: { pageType: 'architecture', audience: 'maintainer', sourceOfTruth: 'runtime' },
     },

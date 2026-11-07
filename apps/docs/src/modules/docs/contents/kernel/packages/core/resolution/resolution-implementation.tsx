@@ -24,7 +24,6 @@ const ResolutionImplementation: FC<ResolutionImplementationProps> = props => {
   ] as const;
   const inputs = [
     { id: 'defaults', name: 'scopeDefaults' },
-    { id: 'shadow', name: 'resolveDropShadow' },
     { id: 'registry', name: 'registries' },
   ] as const;
 
@@ -35,12 +34,12 @@ const ResolutionImplementation: FC<ResolutionImplementationProps> = props => {
         kind="grid"
         gap={{ row: 20, column: 24 }}
         placements={[
-          [null, 'source', null],
-          ['defaults', 'merge', null],
-          [null, 'fields', 'shadow'],
-          ['registry', 'bind', null],
-          [null, 'result', null],
-          [null, 'next', null],
+          [null, 'source'],
+          ['defaults', 'merge'],
+          [null, 'fields'],
+          ['registry', 'bind'],
+          [null, 'result'],
+          [null, 'next'],
         ]}
       >
         <FlowEntities
@@ -58,7 +57,7 @@ const ResolutionImplementation: FC<ResolutionImplementationProps> = props => {
         <FlowEntities
           items={inputs.map(item => ({
             id: item.id,
-            role: item.id === 'shadow' ? 'activity' : 'state',
+            role: 'state',
             kind: 'docs.logic.secondary',
             layout: { width: 210 },
             text: [
@@ -72,7 +71,6 @@ const ResolutionImplementation: FC<ResolutionImplementationProps> = props => {
         items={[
           ...steps.slice(1).map((item, index) => ({ source: steps[index].id, target: item.id })),
           { source: 'defaults', target: 'merge' },
-          { source: 'fields', target: 'shadow' },
           { source: 'registry', target: 'bind' },
         ]}
       />

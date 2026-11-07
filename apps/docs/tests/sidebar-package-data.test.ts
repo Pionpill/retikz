@@ -43,10 +43,10 @@ describe('Kernel 包侧栏数据', () => {
         'core',
         'kernel.pkgCore',
         [
-          ['compilation', 'kernel.pkgCoreCompilation'],
           ['resolution', 'kernel.pkgCoreResolution'],
-          ['coordinates', 'kernel.pkgCoreCoordinates'],
+          ['compilation', 'kernel.pkgCoreCompilation'],
           ['node-compilation', 'kernel.pkgCoreNodeCompilation'],
+          ['coordinates', 'kernel.pkgCoreCoordinates'],
           ['path-compilation', 'kernel.pkgCorePathCompilation'],
           ['composite-compilation', 'kernel.pkgCoreCompositeCompilation'],
           ['compilation-output', 'kernel.pkgCoreCompilationOutput'],
