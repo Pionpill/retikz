@@ -133,7 +133,7 @@
     "pkgHydration": "水合",
     "pkgCoreCompilation": "编译流程",
     "pkgCoreResolution": "语义解析",
-    "pkgCoreCoordinates": "坐标解析",
+    "pkgCoreCoordinates": "坐标与引用求值",
     "pkgCoreNodeCompilation": "Node 编译",
     "pkgCorePathCompilation": "路径编译",
     "pkgCoreCompositeCompilation": "复合编译",

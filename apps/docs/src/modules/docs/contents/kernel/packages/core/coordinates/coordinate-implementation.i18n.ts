@@ -1,44 +1,17 @@
-import type { Lang } from '@/i18n';
-
-/** Scope 定位与引用交付的源码流程 */
-export const coordinateImplementationI18n: Record<
-  Lang,
-  Record<
-    | 'target'
-    | 'placeholder'
-    | 'children'
-    | 'envelope'
-    | 'transforms'
-    | 'publish'
-    | 'paths'
-    | 'group'
-    | 'entry'
-    | 'geometry',
-    string
-  >
-> = {
+/** Reconciler 投影名称与变换服务流程图的双语文案 */
+export const coordinateImplementationI18n = {
   zh: {
-    target: 'evaluateScopePositionTarget\n先冻结父空间目标',
-    placeholder: 'registerScopeLayoutPlaceholder\n再进入局部命名空间',
-    children: 'compileChildren\n布局节点、注册坐标、暂存路径',
-    envelope: 'createIntrinsicScopeLayout\n汇总子布局包络',
-    transforms: 'lowerScopePlacementTransforms\n解析 pivot 与自身锚点对齐',
-    publish: 'applyOwnTransformsToPublishedLayout\n更新引用并 replaceCompiled',
-    paths: 'flushPendingPathEmissions\n绑定引用，回填路径',
-    group: 'emitScopeGroup\n出栈后输出局部图元与变换',
-    entry: 'state: scope-placeholder',
-    geometry: 'state: resolved\n最终世界坐标几何',
+    context: 'Reconciler 投影名称与变换服务',
+    resolve: '确定默认距离与嵌套表达',
+    compile: '求当前 Scope 局部点',
+    publish: '投影世界位置并发布名称',
+    names: '可见性与就绪状态归调度方',
   },
   en: {
-    target: 'evaluateScopePositionTarget\nFreeze the parent-frame target',
-    placeholder: 'registerScopeLayoutPlaceholder\nThen enter the local namespace',
-    children: 'compileChildren\nLayout, coordinates, deferred paths',
-    envelope: 'createIntrinsicScopeLayout\nCollect child layout envelope',
-    transforms: 'lowerScopePlacementTransforms\nResolve pivot and self alignment',
-    publish: 'applyOwnTransformsToPublishedLayout\nUpdate references and replaceCompiled',
-    paths: 'flushPendingPathEmissions\nBind references and fill paths',
-    group: 'emitScopeGroup\nAfter pop: local primitives and transforms',
-    entry: 'state: scope-placeholder',
-    geometry: 'state: resolved\nFinal world-space geometry',
+    context: 'Adapt naming and transform services',
+    resolve: 'Resolve distance and nested expressions',
+    compile: 'Evaluate the current local point',
+    publish: 'Project to world and publish the name',
+    names: 'Scheduler owns visibility and readiness',
   },
 };

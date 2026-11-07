@@ -133,7 +133,7 @@
     "pkgHydration": "render · Hydration",
     "pkgCoreCompilation": "Compilation Flow",
     "pkgCoreResolution": "Semantic Resolution",
-    "pkgCoreCoordinates": "Coordinate resolution",
+    "pkgCoreCoordinates": "Coordinate and Reference Evaluation",
     "pkgCoreNodeCompilation": "Node Compilation",
     "pkgCorePathCompilation": "Path Compilation",
     "pkgCoreCompositeCompilation": "Composite Compilation",
