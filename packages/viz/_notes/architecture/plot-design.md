@@ -63,7 +63,7 @@ Plot 拥有 guide 的领域解析，但不独占已经去除数据与坐标语�
 这套「配置 / 数据 / 函数」三分正是 core 处理所有 Tier 2 与扩展点的既定模式——shapes / arrows / patterns / pathGenerators / composites **无一例外**都是「含函数与数据、不进 IR、经 `CompileOptions` 运行时注入」。plot 据此实现：
 
 - **IR 只持数据引用**：`data = { ref, model? }`——具名数据集名 `ref` + 可选数据模型 `model`（字段名 + 类型声明）。`ref` / `model` 是 JSON-safe 的 IR 内容；**数据值从不进 IR**。
-- **数据经闭包注入**：编译期 `compileToScene(plotIR, { composites: lowerPlots(datasets) })`，`datasets` 是 `Record<string, Array<Row>>`，`Row` 为任意 JS（可嵌套）；`data.ref` 按名查 `datasets`。
+- **数据经闭包注入**：SceneReconciler 编译配置使用 `composites: lowerPlots(datasets)`，`datasets` 是 `Record<string, Array<Row>>`，`Row` 为任意 JS（可嵌套）；`data.ref` 按名查 `datasets`。
 - **字段经路径 accessor 取值**：encoding 的 `field` 是 `'a.b.c'` 路径，对 `Row` 解析，**解析后须落到标量**才能喂 scale；只有抽出的标量进 lowered core IR。
 - **外部数据不受 IR 的 JSON 约束**（它不进 IR），可直接喂 API 返回的嵌套 JSON；但 **lowered 后的 core IR 仍 100% JSON-safe**（全是算好的标量 / 几何）。
 - **共享**：同一 Plot Scene 内多个 coordinate scope 可按同一 `ref` 共享数据集。
@@ -559,7 +559,7 @@ core 的「连接」本质是 id 驱动的：`Path` 的 step target 用 `{ id, a
 承 §3.1「数据不进 IR」：Plot IR 是 Tier 2 **composite 节点**（`namespace: 'plot'`），数据外置，绑定逻辑是写死的函数——三者经 core 既有 `CompileOptions.composites` 通道汇合，**无需 core 新增钩子**。
 
 - **注册**：plot 包提供 `lowerPlots(datasets)`，返回 `CompositeDefinition[]`（`{ schema, expand }`），其 `expand` **闭包 `datasets`**。数据随函数从 `CompileOptions` 进来，不进 IR。
-- **展开**：`compileToScene(plotIR, { composites: lowerPlots(datasets) })` 第一步 `lowerComposites` 按 `plot.plot` 路由调 `expand(plotNode)`：`data.ref` 按名查 `datasets` → encoding `field` 路径对每行取值 → 抽标量 → 过 `scale` → 经 `coordinate` 投影 → 产 Tier 1 `Scope` / `Node` / `Path` / `Step` / `Coordinate`。
+- **展开**：SceneReconciler 通过 `composites: lowerPlots(datasets)` 接入定义，编译时 `lowerComposites` 按 `plot.plot` 路由调 `expand(plotNode)`：`data.ref` 按名查 `datasets` → encoding `field` 路径对每行取值 → 抽标量 → 过 `scale` → 经 `coordinate` 投影 → 产 Tier 1 `Scope` / `Node` / `Path` / `Step` / `Coordinate`。
 - **id 绑定**：`expand` 产出的 `Scope` / `Node` / `Coordinate` 按 §8.1 绑 id（root → 外层 `Scope.id`、series/datum → 对应元素 id + `<plotId>.` 前缀）。
 - **后端无感**：renderer 后端只见 lowered 后含具体数字的 core IR，碰不到 plot 原始数据；数据访问全发生在 `expand` 期。
 - **数据模型**：`data.model`（可选，在 IR）给了则校验 encoding 字段引用 + 推 scale 类型；缺省则 `expand` 从 `datasets` 推断。

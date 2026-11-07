@@ -2,7 +2,7 @@
 
 `pipeline/` 和 `compile/` 是编排与消费层。公开编译入口接收已类型化的 Source IR 后，创建并维护 registry、引用、host、data、theme、measurement 等 context，在依赖就绪点调度纵向领域 `resolveXxx`，再执行 lowering / layout / emit，输出 Kernel IR 或 Scene primitive。默认、优先级、lookup、领域值转换和 Canonical 数据结构属于 `resolve/`；不要散落到 pipeline / compile。
 
-`compileToScene` 是 Reconciler 完整 Scene 编译的主入口，接收 `IRScene`；允许职责明确的编译准备、单元素计算及产物组装契约，不新增同义的 `compileIRToScene`，各入口必须复用同一绘图语义。`InputXxx -> IRXxx` 的 authoring normalize 属于 Vanilla，`unknown -> IRXxx` 的 parse 属于 parse / schema 边界。
+`SceneReconciler` 是完整与增量 Scene 编译的唯一底层执行入口，通过 `mount` / `replace` 接收完整 `IRScene`；Vanilla 的一次性便捷入口管理临时非增量实例。单元素计算及产物组装契约按实际职责保留，不另建独立完整编译驱动。`InputXxx -> IRXxx` 的 authoring normalize 属于 Vanilla，`unknown -> IRXxx` 的 parse 属于 parse / schema 边界。
 
 ## 分工
 
@@ -27,7 +27,7 @@ Core 不持有完整编译入口或反向依赖 Reconciler。全量与增量首�
 
 ## 确定性
 
-`compileToScene` 必须保持纯函数：相同 IR + 相同 options 得到相同 Scene。不要用 `Math.random()`、`Date.now()` 或 module-level mutable state 影响输出。
+编译结果必须保持确定性：相同 IR + 相同 options 得到相同 Scene。不要用 `Math.random()`、`Date.now()` 或 module-level mutable state 影响输出。
 
 ## Public options
 
@@ -56,7 +56,7 @@ compile / pipeline 阶段的类型，**前缀表示数据处理阶段，主体�
 
 ## Pipeline / Compile 文件结构
 
-- Reconciler 的完整编译入口与执行配置由其 compile owner 维护；Core 领域 `compile.ts` 组合本领域原子阶段与产物，不持有完整 Scene 执行生命周期。文件位置遵循各自 owner 规则，不把完整驱动模板套到领域阶段。
+- SceneReconciler 持有完整编译入口及会话执行配置，compile owner 提供内部计算与组装；Core 领域 `compile.ts` 组合本领域原子阶段与产物，不持有完整 Scene 执行生命周期。文件位置遵循各自 owner 规则，不把完整驱动模板套到领域阶段。
 - 目录级 `index.ts` 只做稳定入口导出，不承载业务逻辑；按 [导入导出](imports.md) 的可见性规则选择全部或精选导出。
 - 大型 compile domain 按 `types.ts` / `lower.ts` / `layout.ts` / `emit.ts` / `decorations.ts` / `output.ts` 拆分；领域 `resolve.ts` 位于顶层 `resolve/<domain>/`。缺哪个阶段就省略对应文件，不为了模板机械建空文件。
 - `compile/<domain>/types.ts` 只放 compile / pipeline 私有消费态类型；`CanonicalXxx`、`XxxResolveContext` 与必要的 `XxxResolution` 定义在 `resolve/<domain>/types.ts`。orchestration 创建并维护 broad context，在调用点投影为窄 resolve context；`lower.ts` 输出低层 IR / command / geometry input；`layout.ts` 度量或计算中间模型；`emit.ts` 输出 primitive / resource；`decorations.ts` 输出附属 primitive；`output.ts` 做 group wrapping、bounds result、transform 等输出包装。

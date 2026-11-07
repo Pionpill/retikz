@@ -12,15 +12,15 @@
 
 使用当前公开 API，执行前核对入口与参数。以下名称描述本次确立的调用方式，API 演进时跟随实际契约调整并记录：
 
-| 阶段     | Core 全量                   | Weave                                                    |
-| -------- | --------------------------- | -------------------------------------------------------- |
-| 首次编译 | `compileToScene(scene)`     | 创建 `ReconcilerSession` 并 `mount(scene)`               |
-| 更新     | `compileToScene(nextScene)` | 持久会话 `update(WeaveBatch)`，分别测量 `auto` 与 `full` |
+| 阶段     | 非增量会话                                                     | Weave                                                    |
+| -------- | -------------------------------------------------------------- | -------------------------------------------------------- |
+| 首次编译 | 创建 `incremental: false` 的 SceneReconciler 并 `mount(scene)` | 创建 SceneReconciler 并 `mount(scene)`                   |
+| 更新     | 创建临时非增量会话并 `mount(nextScene)`                        | 持久会话 `update(WeaveBatch)`，分别测量 `auto` 与 `full` |
 
 - “首屏”仅指首次编译到完整 Scene 就绪，不是浏览器首次绘制；预热后的首次编译不代表冷启动
-- 区分 Core 无状态全量编译与 Weave 强制全量批次更新，两者不能统称同一个 full 基线；不得用 `replace(nextScene)` 冒充增量更新
+- 区分临时非增量会话的完整编译与 Weave 强制全量批次更新，两者不能统称同一个 full 基线；不得用 `replace(nextScene)` 冒充增量更新
 - 只含 Kernel Node、Scope、Path，不含 Composite、文本测量、异步加载、React / Vanilla adapter、宿主 target、DOM 或 SVG / Canvas 渲染
-- 首次 Weave 计时包含会话创建与 mount，dispose 在计时外；更新各模式保持独立持久会话
+- 首次计时包含会话创建与 mount，dispose 在计时外；Weave 更新各模式保持独立持久会话
 - 输入、批次、预期结果构造与断言在计时外，保留并消费返回结果；计入各实现正常的内部计算与分配
 - 记录实际 observers、trace、captureProvenance 等选项；未显式开启来源捕获不等于 Weave 内部没有来源信息构建成本
 - 实际元素编译次数通过独立、计时外的 trace 验证；先核对计数字段语义，不将 `visited` 当遍历总数或将复用次数当未触及节点数

@@ -10,6 +10,8 @@ keywords: Core、Reconciler、Weave、原子编译、阶段产物、全量编译
 - 接受日期：2026-11-03
 - 关联：[Roadmap](./roadmap.md)、[055](./055-reconciler-extraction.md)、[058](./058-weave-foundation.md)、[060](./060-core-element-compilation.md)、[061](./061-weave-core-integration.md)、[064](./064-remove-runtime.md)、[065](./065-compiled-layout-paint.md)、[077](./077-compile-output-contract.md)、[Drawing Complete](../../../architecture/core-drawing-complete.md)、[包职能设计](../../../../../../notes/architecture/package-responsibility-design.md)
 
+> 独立完整编译函数的公开入口由 [ADR-082](./082-scene-reconciler-entry.md) 替代：完整与增量编译统一通过现有 SceneReconciler，一次性调用使用临时非增量实例
+
 ## 背景与目标
 
 共享元素解析和几何函数仍不足以保证全量与增量行为一致。两套执行链路可以分别决定阶段顺序、包装不同的中间结果、收集资源和组装输出；增量缓存还可能只保存位置等简化信息，消费时重新生成全量流程已经产出的布局。Composite 若继续走另一条完整编译路径，统一仅覆盖基础元素。
