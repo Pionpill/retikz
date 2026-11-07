@@ -1,29 +1,31 @@
 ---
 title: Compilation Core · core
-description: Understand @retikz/core atomic compilation stages, drawing contracts, and collaboration with Reconciler
+description: Understand drawing semantics, extensible capabilities and atomic compilation stages in @retikz/core, and their boundaries with Reconciler and Render
 ---
 
-A drawing declaration can say “connect A to B”, while a renderer needs the exact start and end points. `@retikz/core` resolves these declarations, computes node layout, coordinates and paths, and returns shared stage products for Reconciler to assemble into a renderer-independent Scene.
+`@retikz/core` defines the drawings retikz can express and the operations that produce their layout and drawing data. It provides serializable IR, capability extension contracts, and atomic stages for semantic resolution, coordinate evaluation, layout and primitive generation.
 
-This package is for developers building domain components, extending drawing capabilities or integrating the compiler. Most drawing applications start with React or Vanilla, whose adapters prepare Core input and pass compiled results to a renderer.
+`@retikz/reconciler` schedules the compilation lifecycle: it accepts drawing declarations, maintains compilation context, calls Core stages as their dependencies become available, and assembles their products into a Scene. Reconciler also owns cache reuse and output transactions for subsequent updates. `@retikz/render` draws the Scene through SVG, Canvas and other backends.
+
+This series is for developers who need to understand drawing semantics, implement extensions or integrate compilation. Everyday drawing can start with React or Vanilla, which use the same Core contracts.
 
 ## Responsibilities at a glance
 
-Consider two nodes, A and B, joined by a line. The input records their positions, text and connection targets. Core computes node boundaries and connection endpoints, then emits drawable primitives.
+IR is the data representation of a drawing declaration: a node's position, shape and text, for example, or the targets a path connects. Scene is the compiled drawing data, containing laid-out primitives and resources. The following parts supply the semantics and computation between them:
 
-| Object                | Responsibility                                                              | Two-node example                                                |
-| --------------------- | --------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| IR                    | Store serializable drawing declarations                                     | Declare A, B and a path referencing them                        |
-| Definition / registry | Define and bind shapes, path definitions, composites and other capabilities | Look up the node shape and path processing capabilities         |
-| Compiler              | Resolve configuration, layout, coordinates and paths                        | Determine endpoints from node boundaries                        |
-| Scene                 | Store resolved primitives, resources, canvas and other drawing information  | Drawing data for rectangles, text and the connecting line       |
-| CompileResult         | Reconciler collects the Scene and Composite artifacts                       | Deliver the Scene to a renderer and other data to its consumers |
+| Part                      | Responsibility                                                                                                             | When to read                                              |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| IR / Schema               | Define drawing declarations that can be stored and exchanged, including field meanings, constraints and defaults           | To understand what an author can express                  |
+| Resolve                   | Use the current context to expand shorthand, apply inheritance and determine values and capabilities for downstream stages | To trace declarations into an internal, determined form   |
+| Definition / registry     | Define extension capabilities and look up implementations by name; built-ins and custom implementations share contracts    | To understand how shapes, paths or composites participate |
+| Atomic compilation stages | Compute layout and geometry, producing primitives and intermediate products                                                | To understand node, path and scope processing             |
+| Scene / Primitive         | Define backend-independent scene, primitive and resource contracts                                                         | To understand what renderers consume                      |
 
-IR describes what the author wants to draw; Scene records how to draw the compiled result. A Definition describes a capability, and a registry looks up definitions by name. Built-in and custom capabilities participate in compilation through their respective contracts.
+A Definition describes an implementation contract, such as how a shape participates in sizing and drawing. A registry indexes definitions by name. IR stores serializable declarations; extension implementations are supplied through runtime wiring such as compilation options.
 
-## From declarations to drawing data
+## From declarations to primitives
 
-The two nodes below have centers at `[0, 0]` and `[180, 0]`. The line references A and B. Core uses their shapes and connection boundaries to calculate endpoints on the facing edges.
+The scene below contains two nodes, A and B, centered at `[0, 0]` and `[180, 0]`. Its path declaration references the nodes by name. Connection points depend on their shapes and layout. Observe the line's endpoints: they meet the node edges.
 
 <ComponentPreview
   files={[
@@ -35,34 +37,28 @@ The two nodes below have centers at `[0, 0]` and `[180, 0]`. The line references
   type="illustration"
 />
 
-Core resolves each node's style and shape, uses text metrics to determine its size, then resolves paths referencing the nodes. A path declared before its target nodes can have its endpoints filled in after node layout. SVG and Canvas renderers consume the same Scene contract.
+Reconciler schedules stages according to their dependencies. Core resolves node configuration and combines text measurements with shape definitions to compute layout. Once node boundaries are available, the path stage can determine connection endpoints and emit primitives. The figure specifies minimum node sizes to make this relationship visible.
 
-The figure specifies minimum node sizes to make the connection boundaries clear. See [Compilation](/kernel/packages/core/compilation) for its full input and processing order.
+Reconciler assembles these products into a Scene for Render to consume. Primitives are structured drawing data, such as rectangles, text and path commands. Different rendering backends can consume the same Scene. See [Compilation Flow](/kernel/packages/core/compilation) for the stage relationships.
 
 ## Installation and usage
 
-<PackageManagerInstall packages={['@retikz/core', '@retikz/reconciler']} />
+To declare IR and compile it directly, use Core's types and Reconciler's execution entry:
 
-`PathTransformSchema` contains only whole-path `rotate` and `scale`; `cornerRadius` belongs to `PathGeometrySchema` and rounds line-to-line joints.
+<PackageManagerInstall packages="@retikz/core @retikz/reconciler" />
 
-For stroke schema composition, `GraphicStrokeSchema` provides width, dash lengths, dash offset, and the `stroke` color or paint resource. `NodeStrokeSchema` adds the `dashed` and `dotted` presets, with precedence `dashPattern > dashed > dotted`; `PathStrokeSchema` adds `lineCap` and `lineJoin`. Their inferred types are `IRGraphicStroke`, `IRNodeStroke`, and `IRPathStroke`, respectively. The general `GraphicStyleSchema` and `CascadingGraphicStyleSchema` compose the complete stroke contract, including dash patterns and offsets.
-
-Use `BuiltinBoundary` for built-in connection surface names and register custom surfaces through the `boundaries` compile option. `IRBoundary` accepts built-in names, custom boundary or shape names, and `{ type, params }` references. Use `BuiltinCompileWarningCode` for built-in compilation warning codes; the open `CompileWarningCode` type also accepts custom codes.
-
-`CompileOptions.onWarn` receives a `CompileWarning` with three fields: `code` identifies the warning, `message` describes it in English, and `path` locates it relative to the input root. These are the only fields included when enumerating the warning object or serializing it to JSON.
-
-Use Core IR types such as `IRScene` to declare drawings, and Core's `PathCommand` for compiled path commands. Import the plain coordinate and vector types `Position` and `Vector2` from `@retikz/math`.
-
-Core provides a framework-independent TypeScript compilation API. This example uses the same A-to-B connection with default node layout:
+Import `IRScene` from Core to declare the scene, and `SceneReconciler` from Reconciler to execute it. This example performs one full compilation, using `incremental: false` to disable state retention for later incremental updates. `mount(ir)` establishes the session's first result; `compilation.result.scene` is the Scene that can be passed to a renderer.
 
 ```ts
-import { compileToScene } from '@retikz/vanilla';
-import { type IRScene } from '@retikz/core';
+import type { IRScene } from '@retikz/core';
+import { SceneReconciler } from '@retikz/reconciler';
 
 const ir: IRScene = {
   type: 'scene',
   version: 1,
   children: [
+    { type: 'node', id: 'A', position: [0, 0], text: 'A' },
+    { type: 'node', id: 'B', position: [180, 0], text: 'B' },
     {
       type: 'path',
       children: [
@@ -70,32 +66,43 @@ const ir: IRScene = {
         { type: 'step', kind: 'line', to: { id: 'B' } },
       ],
     },
-    { type: 'node', id: 'A', position: [0, 0], text: 'A' },
-    { type: 'node', id: 'B', position: [180, 0], text: 'B' },
   ],
 };
 
-const result = compileToScene(ir);
-console.log(result.scene);
+const reconciler = new SceneReconciler({}, { incremental: false });
+
+try {
+  const { compilation } = reconciler.mount(ir);
+  console.log(compilation.result.scene);
+} finally {
+  reconciler.dispose();
+}
 ```
 
-`SceneReconciler` synchronously returns a `CompileResult`. Its `scene` can be passed to a renderer; `artifacts` carries domain values returned by composites. See [Compilation Output](/kernel/packages/core/compilation-output) for details. This call compiles the drawing; Render or an adapter handles its display.
+This code logs drawing data; displaying it requires a renderer. The nodes use default layout, while the illustration above specifies minimum sizes.
 
-The entry accepts typed IR. External input such as JSON should first pass through the appropriate schema validation. Compile options can supply text measurement, formula handling and extension definitions.
-
-Authors of TypeScript extensions are responsible for names and callback results satisfying their declared contracts; registries still check name collisions. Open parameters are parsed against the selected Definition’s precise schema. Data that is already typed does not need to be parsed again at every internal stage. Compilation still checks references, geometry values and output ownership, and preserves the required snapshot isolation.
+External input such as JSON should first pass through the appropriate Schema validation. Typed TypeScript declarations can be passed directly. Compilation options supply capabilities such as text measurement and extension definitions. The semantic resolution part of this series explains field meanings and how declarations become internal, determined values.
 
 ## Package boundaries
 
-| Core owns                                                          | Collaborators own                                                                        |
-| ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
-| Core IR, Definitions and extension contracts                       | React / Vanilla provide authoring APIs and prepare input                                 |
-| Configuration resolution, node layout, coordinate and path solving | Math provides basic computation; the host supplies capabilities such as text measurement |
-| Scene compilation, resource and output assembly                    | Render draws the Scene through SVG, Canvas and other backends                            |
-| Single-compilation output and optional provenance                  | Reconciler owns full and incremental execution, caching, and consistent publication      |
-| Compilation observation outputs                                    | Inspect consumes observations and creates inspection helpers                             |
+Choose an extension point according to whether the change concerns drawing expression, execution or backend presentation:
 
-This series follows one compilation from input to final outputs. Reconciler executes full and incremental compilation and coordinates output transactions; Render presents the committed Scene to the host. See [Compilation Pipeline](/kernel/packages/core/compilation) for compilation after input changes.
+| Concern                                                                                              | Owner                                                              |
+| ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| IR fields, drawing semantics, capability definitions, layout and primitive computation               | Core                                                               |
+| Full and incremental compilation, tree traversal, context lifecycle, caching and output transactions | Reconciler                                                         |
+| SVG / Canvas drawing and backend resources                                                           | Render                                                             |
+| React components or Vanilla authoring APIs, input assembly and host wiring                           | React / Vanilla                                                    |
+| General computational geometry and basic mathematics                                                 | Math                                                               |
+| Domain declarations and logic for Plot, Table and similar capabilities                               | The domain package, integrated through contracts such as Composite |
+
+Each Core stage accepts the inputs and capability context needed for its operation and returns the corresponding products. Reconciler decides when to execute a stage, whether a product can be reused across updates, and when to commit to an output target.
+
+## Reading order
+
+The series begins with semantic resolution: how IR is defined, how field descriptions express meaning, and how resolve turns declarations into an internal form. Capability definitions and registration then explain how built-in and custom implementations participate. Compilation topics follow Scope, Node, coordinate references, Path and Composite through to the output contracts.
+
+The existing topic pages are listed below. Within each process, execution order depends on the context and dependencies it requires.
 
 ## Contents
 
@@ -103,37 +110,37 @@ This series follows one compilation from input to final outputs. Reconciler exec
   items={[
     {
       title: 'Compilation Flow',
-      description: 'Follow input, layout, and output in a full compilation',
+      description: 'Understand stage calls, dependencies and final output',
       url: '/kernel/packages/core/compilation',
     },
     {
       title: 'Configuration resolution',
-      description: 'Follow style overrides, theme colors, and capability binding',
+      description: 'Trace style inheritance, overrides, themes and capability binding',
       url: '/kernel/packages/core/resolution',
     },
     {
       title: 'Coordinate resolution',
-      description: 'Follow reference lookup, coordinate transforms, and final Scope placement',
+      description: 'Understand reference lookup, coordinate transforms and Scope placement',
       url: '/kernel/packages/core/coordinates',
     },
     {
       title: 'Node Compilation',
-      description: 'Follow text measurement, shape sizing, baselines, and connection boundaries',
+      description: 'Trace text measurement, shape layout and connection boundaries',
       url: '/kernel/packages/core/node-compilation',
     },
     {
       title: 'Path Compilation',
-      description: 'Trace targets, segments, boundary intersections, arrows, and label output',
+      description: 'Trace target binding, path geometry and decoration output',
       url: '/kernel/packages/core/path-compilation',
     },
     {
       title: 'Composite Compilation',
-      description: 'Follow Definition assembly, isolated child probes, and replay',
+      description: 'Understand Definition calls, child layout probes and domain artifacts',
       url: '/kernel/packages/core/composite-compilation',
     },
     {
       title: 'Compilation Output',
-      description: 'Follow Scene, resources, canvas and additional results',
+      description: 'Understand the delivery of Scene, resources and additional artifacts',
       url: '/kernel/packages/core/compilation-output',
     },
   ]}
