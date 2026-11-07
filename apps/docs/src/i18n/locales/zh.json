@@ -137,7 +137,7 @@
     "pkgCoreNodeCompilation": "Node 编译",
     "pkgCorePathCompilation": "Path 编译",
     "pkgCoreCompositeCompilation": "Composite 编译",
-    "pkgCoreCompilationOutput": "编译产物",
+    "pkgCoreCompilationOutput": "编译输出",
     "pkgOverview": "概览",
     "pkgFoundationUtilities": "通用工具",
     "pkgFoundationTypesSchemas": "类型与契约",
