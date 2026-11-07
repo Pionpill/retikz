@@ -182,7 +182,8 @@
     "visualCustomPattern": "自定义图案",
     "visualCustomShadow": "自定义阴影",
     "visualExtendedUsage": "扩展用法",
-    "pkgCoreDefinitions": "能力定义与注册"
+    "pkgCoreDefinitions": "能力定义与注册",
+    "pkgCoreProviders": "提供者与依赖"
   },
   "library": {
     "components": "组件",

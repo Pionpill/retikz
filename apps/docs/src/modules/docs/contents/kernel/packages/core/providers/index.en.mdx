@@ -1,0 +1,132 @@
+---
+title: Providers and Dependencies
+description: Follow authoring contributions through an ordered dependency graph into Core definitions, and distinguish providers from registries and built-ins
+---
+
+[Capability Definitions and Registration](/kernel/packages/core/definitions) explains how a Definition is consumed. A domain component may need its own Composite, an extension shape and a clip. A dependency provider records these requirements so callers can assemble the necessary definitions without remembering each one.
+
+A Definition implements a capability. A `CoreDependencyProvider` declares how to create one Definition. A registry looks up Definitions during compilation. IR references capabilities; it contains no providers, factories or dependency graphs.
+
+## Overall Flow
+
+Each contribution supplies the `roots` it needs and an explicit `providers` catalog. The resolver checks the reachable closure, invokes its factories, and groups their results into shapes, paths, composites and other collections. Reconciler then uses those definitions to build the compilation environment.
+
+<ComponentPreview files="provider-overview" size="lg" hideCode type="flow" />
+
+Being present in the catalog does not execute a factory: it must be reachable from a root. Resolution does not scan packages, import modules or infer dependencies from an existing registry.
+
+## From Requirements to Complete Keys
+
+Named capabilities use `{ capability, name }`, such as `{ capability: 'clip', name: 'path' }`. Composite keys use `{ capability: 'composite', namespace, type }`, with separate namespace and type dimensions.
+
+A provider's `dependencies` is an ordered list of complete keys. Standard's Surface provider depends on Extension's path clip provider because Surface can generate children using that clip. The dependency ensures its definition is also supplied. Dependency order establishes stable materialization order, not drawing order.
+
+<SourceLinks
+  sources={[
+    { label: 'Surface dependency', path: 'packages/library/standard/src/presentation/surface/composite.ts' },
+    { label: 'Extension Clip providers', path: 'packages/library/extension/src/clip/providers.ts' },
+  ]}
+/>
+
+Using `pair` from the preceding page, the following fragment wraps that Composite in a provider. Its definitions can be passed as `SceneReconciler` compilation options. A small static setup can still pass `composites: [pair]` directly.
+
+```ts
+import type { CoreProviderKey } from '@retikz/core';
+import { ProviderCapability, resolveCoreProviderDependencies } from '@retikz/core';
+
+const pairKey = {
+  capability: ProviderCapability.Composite,
+  namespace: 'example',
+  type: 'pair',
+} satisfies CoreProviderKey;
+const pairProvider = { key: pairKey, makeDefinition: () => pair };
+const definitions = resolveCoreProviderDependencies({
+  contributions: [{ roots: [pairKey], providers: [pairProvider] }],
+});
+```
+
+Every dependency key must exist in the contributed catalog. A built-in capability or a final explicit `definitions` entry cannot satisfy a missing provider key: these are separate assembly stages.
+
+## Parameters from Multiple Instances
+
+Repeated keys must have the same `makeDefinition` function reference and the same ordered dependency list. Non-undefined `params` values are collected in contribution order. The factory receives a frozen array and produces one Definition for that key. Its owner decides how to combine parameters; Core does not deep-merge arbitrary objects.
+
+Extension's Ribbon provider, for example, collects width profiles and caps contributed by multiple instances, deduplicates definition references, and creates one Ribbon Path Definition. Constructing a fresh factory for each instance causes a conflict even if their function bodies are identical.
+
+<SourceLinks
+  sources={[{ label: 'Ribbon parameter aggregation', path: 'packages/library/extension/src/ribbon/provider.ts' }]}
+/>
+
+## Failure Boundaries and Explicit Definitions
+
+Declaration consistency, missing reachable keys and cycles are checked before any factory runs. Conflicting declarations in unreachable catalog entries still fail during indexing; unreachable factories are never invoked. Factory exceptions are wrapped in a Core error preserving the cause, and returned definitions must match their provider identity.
+
+Explicit `definitions` are appended after generated definitions. The same definition object under the same key is deduplicated; different objects with that key conflict rather than replacing one another. The result object and collection arrays are frozen, without deep-freezing parameter or Definition objects.
+
+## Current Core Built-ins
+
+Core registries already supply built-in definitions. They normally need no same-name provider contribution. Extension-package capabilities remain owned by their packages.
+
+| Capability | Built-in registry keys                                 | Notes                                                           |
+| ---------- | ------------------------------------------------------ | --------------------------------------------------------------- |
+| Shape      | rectangle, ellipse, polygon                            | circle and diamond are configuration presets, not separate keys |
+| Boundary   | circle, rectangle, ellipse                             | Connection geometry                                             |
+| Clip       | rect                                                   | Other definitions can come from extensions                      |
+| Path       | stroke                                                 | Standard stroked path                                           |
+| Arrow      | normal, open, stealth, openStealth, circle, openCircle | Also projected into the Mark registry                           |
+| Mark       | times, plus, check, star                               | Plus registered Arrow projections, including custom arrows      |
+| Pattern    | lines, grid, dots                                      | Backend-neutral pattern descriptions                            |
+| Composite  | None                                                   | Registered by domain packages or callers                        |
+
+Theme has a separate `resolveThemeRegistry` and default light/dark colors. It is not a `ProviderCapability` graph node. Built-in registries are not an implicit provider catalog either.
+
+<SourceLinks
+  sources={[
+    { label: 'Shape registry', path: 'packages/kernel/core/src/providers/shape/index.ts' },
+    { label: 'Boundary registry', path: 'packages/kernel/core/src/providers/boundary.ts' },
+    { label: 'Clip registry', path: 'packages/kernel/core/src/providers/clip.ts' },
+    { label: 'Path registry', path: 'packages/kernel/core/src/providers/path.ts' },
+    { label: 'Arrow registry', path: 'packages/kernel/core/src/providers/arrow.ts' },
+    { label: 'Mark and Arrow projection', path: 'packages/kernel/core/src/providers/mark.ts' },
+    { label: 'Pattern registry', path: 'packages/kernel/core/src/providers/pattern.ts' },
+    { label: 'Theme registry', path: 'packages/kernel/core/src/providers/theme.ts' },
+  ]}
+/>
+
+## Complete Implementation Flow
+
+For Vanilla's typed InputScene path, normalize produces IR and contributions. Preparation calls Core's dependency resolver and merges the result into compilation options. The typed IRScene path does not discover providers from IR: callers supply required definitions explicitly.
+
+<ComponentPreview files="provider-implementation" size="xxl" hideCode type="flow" />
+
+Read the key, contribution and definitions types first, then follow `buildProviderIndex → collectReachableProviders → makeDefinition → appendExplicitDefinitions → freezeResolvedDefinitions`. Dependencies materialize before consumers, but each factory receives only its own parameter contributions, not dependency return values.
+
+<SourceLinks
+  sources={[
+    { label: 'Provider contract', path: 'packages/kernel/core/src/contract/provider/types.ts' },
+    { label: 'Dependency resolver', path: 'packages/kernel/core/src/contract/provider/resolve.ts' },
+    { label: 'Vanilla preparation', path: 'packages/kernel/vanilla/src/processing/prepare.ts' },
+  ]}
+/>
+
+## Further Reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Capability Definitions and Registration',
+      description: 'Review Definition and registry boundaries',
+      url: '/kernel/packages/core/definitions',
+    },
+    {
+      title: 'Compilation Flow',
+      description: 'Follow assembled definitions into atomic stages',
+      url: '/kernel/packages/core/compilation',
+    },
+    {
+      title: 'Composite Compilation',
+      description: 'See how domain definitions generate and lay out children',
+      url: '/kernel/packages/core/composite-compilation',
+    },
+  ]}
+/>

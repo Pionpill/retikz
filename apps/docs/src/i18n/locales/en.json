@@ -182,7 +182,8 @@
     "visualCustomPattern": "Custom patterns",
     "visualCustomShadow": "Custom shadows",
     "visualExtendedUsage": "Extended usage",
-    "pkgCoreDefinitions": "Capability Definitions and Registration"
+    "pkgCoreDefinitions": "Capability Definitions and Registration",
+    "pkgCoreProviders": "Providers and Dependencies"
   },
   "library": {
     "components": "Components",

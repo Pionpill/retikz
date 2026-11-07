@@ -45,6 +45,7 @@ describe('Kernel 包侧栏数据', () => {
         [
           ['resolution', 'kernel.pkgCoreResolution'],
           ['definitions', 'kernel.pkgCoreDefinitions'],
+          ['providers', 'kernel.pkgCoreProviders'],
           ['compilation', 'kernel.pkgCoreCompilation'],
           ['node-compilation', 'kernel.pkgCoreNodeCompilation'],
           ['coordinates', 'kernel.pkgCoreCoordinates'],
