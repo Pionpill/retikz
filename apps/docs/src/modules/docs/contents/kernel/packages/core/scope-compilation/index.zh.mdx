@@ -1,0 +1,102 @@
+---
+title: Scope 编译
+description: 理解 Scope 的继承、局部空间、子布局包络及分组输出，以及 Core 与 Reconciler 的分工
+---
+
+Scope 把子项放进共同的继承与空间环境。它的尺寸来自子布局，而不是一个带 children 的 Node。Core 计算 Scope 的有效语义、包络、放置和分组属性；Reconciler 负责进入 Scope、执行子项、发布引用并组装 GroupPrimitive。
+
+## 整体流程
+
+子树执行前可以确定默认样式与主题；子树完成后才能得到自身包络。放置计算因此分为可提前准备和依赖包络的部分，不能把 Scope 简化为“先把所有坐标整体加一个偏移”。
+
+<ComponentPreview files="scope-overview" size="lg" hideCode type="flow" />
+
+## 先确定继承与局部环境
+
+`resolveScope` 产生 CanonicalScope：inheritance 保存有效 defaults 与 theme，envelope 保存包络能力，transform 保存放置意图，此外还有 clip、动画及分组元数据。它不会递归 children，也不会先计算子项尺寸。
+
+继承按父配置与当前声明合并，再由各子项 resolver 应用自身默认。Scope 的 position 和 transforms 改变所属空间，defaults 改变子项语义；二者不应混成同一种坐标或样式改写。
+
+例如下面把 A、B 放进一个局部分组。两节点仍使用局部 [0, 0] 和 [180, 0]，输出 Group 上的平移负责把分组放到 [100, 60]。
+
+```ts
+const scope = {
+  type: 'scope',
+  id: 'pair',
+  position: [100, 60],
+  defaults: { style: { color: 'blue' } },
+  children: [
+    {
+      type: 'node',
+      id: 'A',
+      position: [0, 0],
+      text: 'A',
+      layout: { minimumSize: { width: 60, height: 40 }, padding: 0, margin: 0 },
+    },
+    {
+      type: 'node',
+      id: 'B',
+      position: [180, 0],
+      text: 'B',
+      layout: { minimumSize: { width: 60, height: 40 }, padding: 0, margin: 0 },
+    },
+  ],
+} satisfies import('@retikz/core').IRScope;
+```
+
+这里的 blue 是 CSS 主色，经共享样式通道继承；resolver 再确定各绘制通道的有效颜色。作者声明不会被改成世界坐标；可查询几何与最终图元分别按其消费空间投影。
+
+## 命名与几何就绪
+
+`id` 让 Scope 的包络可以被引用，不自动创建局部名称帧。`localNamespace: true` 才会为子项建立局部名称环境；Reconciler 负责进入、退出与名称发布。内部运行时 Scope 身份与作者 id 分离，不能用运行时编号解释公开名称。
+
+具名 Scope 在子树执行前先注册位置占位，子布局完成后替换为真实包络。占位尚不能提供完整的形状边界；引用求值必须区分所需的是位置还是完整几何。Scope 内延迟路径在该 Scope 收尾时处理，不能假定其可以引用后面才声明的外部节点。
+
+## 子布局怎样形成包络
+
+矩形包络聚合子节点外边界的角点及 Coordinate 位置；圆形包络根据这些点求最小包围圆。空子布局得到零尺寸包络。这个过程直接消费布局几何，不经节点解析或文字测量，也不会把路径绘制范围当成 Scope 自身的几何包络。
+
+以上例为例，未平移的矩形包络中心是 [90, 0]，宽 240、高 40。Scope 平移后中心是 [190, 60]。这份可连接几何与 Scene 最终画布边界不是同一个概念：后者还要收集路径、标签、阴影等输出贡献。
+
+向父层贡献布局时，具名 Scope 贡献自身包络，匿名 Scope 透传子布局；两者都需要应用 Scope 自身变换。
+
+## 放置、裁剪与分组输出
+
+不依赖自身包络的变换先由 `prepareScopePlacement` 准备。使用自身包络锚点的旋转或缩放中心，以及相对目标的 selfAnchor 对齐，需要等待包络。最终变换既用于投影发布几何，也保留在 GroupPrimitive 上，让渲染后端按组解释局部图元。
+
+Core 的 `compileScope` 只生成包络、放置与不含 children 的分组属性。Reconciler 回填延迟路径、绑定动画并挂载实际 children。只要存在子图元、变换、id 或裁剪，就保留分组；没有这些内容的空匿名分组可以省去。
+
+裁剪通过 clipRef 引用共享资源。`projectScopeOutputBounds` 对布局贡献应用变换，对装饰贡献另外考虑裁剪；不要将可见裁剪范围等同于布局分配范围。
+
+## 完整实现流程
+
+<ComponentPreview files="scope-implementation" size="xxl" hideCode type="flow" />
+
+读 `visitScope` 可以看到 resolve、提前放置、递归、Core 编译、引用投影、路径回填和分组输出的先后。`compileScope` 本身不遍历，也不拥有名称栈。prepared 只复用调用方确认有效的局部产物，其跨次有效性仍由调度方判断。
+
+<SourceLinks
+  sources={[
+    { label: 'Scope resolution', path: 'packages/kernel/core/src/resolve/scope/resolve.ts' },
+    { label: 'Scope atomic compilation', path: 'packages/kernel/core/src/compile/scope/compile.ts' },
+    { label: 'Envelope geometry', path: 'packages/kernel/core/src/compile/scope/envelope/layout.ts' },
+    { label: 'Placement preparation', path: 'packages/kernel/core/src/compile/scope/placement/layout.ts' },
+    { label: 'Tree scheduling', path: 'packages/kernel/reconciler/src/compile/tree/scope/visit.ts' },
+    { label: 'Group assembly', path: 'packages/kernel/reconciler/src/compile/tree/scope/group.ts' },
+    { label: 'Output projection', path: 'packages/kernel/core/src/compile/scope/output.ts' },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '编译流程', description: '把 Scope 放回整体调度链', url: '/kernel/packages/core/compilation' },
+    { title: 'Node 编译', description: '查看子节点怎样提供布局几何', url: '/kernel/packages/core/node-compilation' },
+    { title: '坐标与引用求值', description: '区分位置占位、边界和空间投影', url: '/kernel/packages/core/coordinates' },
+    {
+      title: '编译输出',
+      description: '区分几何包络、布局贡献与最终 Scene',
+      url: '/kernel/packages/core/compilation-output',
+    },
+  ]}
+/>

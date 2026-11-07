@@ -1,0 +1,114 @@
+---
+title: Scope Compilation
+description: Understand inheritance, local space, child layout envelopes and group output across Core and Reconciler
+---
+
+A Scope gives children a shared inheritance and coordinate environment. Its dimensions come from child layouts; it is not a Node with children. Core computes effective semantics, envelope, placement and group attributes. Reconciler enters the scope, runs children, publishes references and assembles the GroupPrimitive.
+
+## Overall Flow
+
+Defaults and theme are available before children run; the Scope envelope is available afterward. Placement therefore has an early part and an envelope-dependent part. Scope processing cannot be reduced to adding an offset to every coordinate.
+
+<ComponentPreview files="scope-overview" size="lg" hideCode type="flow" />
+
+## Resolve Inheritance and Local Context
+
+`resolveScope` returns CanonicalScope: inheritance contains effective defaults and theme, envelope binds its shape capability, and transform retains placement intent. Clip, animations and group metadata are also carried. Resolution neither visits children nor determines their dimensions.
+
+Parent and local configuration are combined before child resolvers apply their defaults. Position and transforms affect space; defaults affect child semantics. They are distinct operations.
+
+This example places A and B in one local group. Their positions remain [0, 0] and [180, 0]; the output Group translation places the group at [100, 60].
+
+```ts
+const scope = {
+  type: 'scope',
+  id: 'pair',
+  position: [100, 60],
+  defaults: { style: { color: 'blue' } },
+  children: [
+    {
+      type: 'node',
+      id: 'A',
+      position: [0, 0],
+      text: 'A',
+      layout: { minimumSize: { width: 60, height: 40 }, padding: 0, margin: 0 },
+    },
+    {
+      type: 'node',
+      id: 'B',
+      position: [180, 0],
+      text: 'B',
+      layout: { minimumSize: { width: 60, height: 40 }, padding: 0, margin: 0 },
+    },
+  ],
+} satisfies import('@retikz/core').IRScope;
+```
+
+Blue is a CSS master color inherited through the shared style channel; the resolver determines effective colors for drawing channels. Author declarations are not rewritten into world coordinates. Query geometry and primitives are projected for their respective consumers.
+
+## Naming and Geometry Readiness
+
+An `id` makes the Scope envelope referenceable; it does not automatically create a local name frame. `localNamespace: true` creates that environment for children. Reconciler owns entry, exit and publication. Runtime Scope identity is separate from author ids.
+
+A named Scope first publishes a position placeholder, replaced by its real envelope after child layouts complete. A placeholder cannot answer every boundary query; reference evaluation distinguishes position from full geometry. Deferred paths inside a Scope run when that Scope closes, so they cannot assume access to external nodes declared later.
+
+## Building the Envelope
+
+A rectangular envelope aggregates corners of child outer boundaries and Coordinate positions. A circular envelope computes their minimal enclosing circle. Empty layouts produce a zero-size envelope. This consumes geometry directly, without node resolution or text measurement. Path drawing extents do not define the Scope's geometric envelope.
+
+Before translation, the example's rectangular envelope is centered at [90, 0], with width 240 and height 40. After translation its center is [190, 60]. This connection geometry differs from final Scene layout bounds, which also collect paths, labels, shadows and other output contributions.
+
+A named Scope contributes its envelope to its parent; an anonymous Scope passes through child layouts. Both apply the Scope's own transforms.
+
+## Placement, Clipping and Group Output
+
+`prepareScopePlacement` prepares transforms that do not require the Scope envelope. Rotation or scaling about an envelope anchor, and selfAnchor alignment against a target, wait for that geometry. Final transforms project published references and remain on GroupPrimitive so backends can interpret local primitives as a group.
+
+Core's `compileScope` produces envelope, placement and group attributes without children. Reconciler fills deferred paths, binds animations and attaches children. A group is retained when it has children, transforms, an id or clipping; an empty anonymous group with none of these can be omitted.
+
+Clipping uses a shared resource through clipRef. `projectScopeOutputBounds` transforms layout contributions and also accounts for clipping on decoration contributions. Visible clipping extents and layout allocation are different quantities.
+
+## Complete Implementation Flow
+
+<ComponentPreview files="scope-implementation" size="xxl" hideCode type="flow" />
+
+Follow `visitScope` through resolution, preliminary placement, recursion, Core compilation, reference projection, path flushing and group emission. `compileScope` owns neither traversal nor the name stack. Prepared products are reused only when the caller has established their validity.
+
+<SourceLinks
+  sources={[
+    { label: 'Scope resolution', path: 'packages/kernel/core/src/resolve/scope/resolve.ts' },
+    { label: 'Scope atomic compilation', path: 'packages/kernel/core/src/compile/scope/compile.ts' },
+    { label: 'Envelope geometry', path: 'packages/kernel/core/src/compile/scope/envelope/layout.ts' },
+    { label: 'Placement preparation', path: 'packages/kernel/core/src/compile/scope/placement/layout.ts' },
+    { label: 'Tree scheduling', path: 'packages/kernel/reconciler/src/compile/tree/scope/visit.ts' },
+    { label: 'Group assembly', path: 'packages/kernel/reconciler/src/compile/tree/scope/group.ts' },
+    { label: 'Output projection', path: 'packages/kernel/core/src/compile/scope/output.ts' },
+  ]}
+/>
+
+## Further Reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Compilation Flow',
+      description: 'Locate Scope within overall scheduling',
+      url: '/kernel/packages/core/compilation',
+    },
+    {
+      title: 'Node Compilation',
+      description: 'See how children provide layout geometry',
+      url: '/kernel/packages/core/node-compilation',
+    },
+    {
+      title: 'Coordinate and Reference Evaluation',
+      description: 'Distinguish position placeholders, boundaries and projection',
+      url: '/kernel/packages/core/coordinates',
+    },
+    {
+      title: 'Compilation Output',
+      description: 'Separate envelopes, layout contributions and Scene output',
+      url: '/kernel/packages/core/compilation-output',
+    },
+  ]}
+/>

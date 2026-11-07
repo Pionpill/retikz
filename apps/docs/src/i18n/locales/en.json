@@ -183,7 +183,8 @@
     "visualCustomShadow": "Custom shadows",
     "visualExtendedUsage": "Extended usage",
     "pkgCoreDefinitions": "Capability Definitions and Registration",
-    "pkgCoreProviders": "Providers and Dependencies"
+    "pkgCoreProviders": "Providers and Dependencies",
+    "pkgCoreScopeCompilation": "Scope Compilation"
   },
   "library": {
     "components": "Components",

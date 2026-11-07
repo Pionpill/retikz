@@ -40,6 +40,12 @@ const corePage: Page = {
       meta: { pageType: 'architecture', audience: 'maintainer', sourceOfTruth: 'runtime' },
     },
     {
+      id: 'scope-compilation',
+      label: 'kernel.pkgCoreScopeCompilation',
+      difficulty: DocDifficulty.Internals,
+      meta: { pageType: 'architecture', audience: 'maintainer', sourceOfTruth: 'runtime' },
+    },
+    {
       id: 'node-compilation',
       label: 'kernel.pkgCoreNodeCompilation',
       difficulty: DocDifficulty.Internals,
