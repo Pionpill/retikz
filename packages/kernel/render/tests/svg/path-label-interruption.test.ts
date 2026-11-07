@@ -1,15 +1,15 @@
 import type { IRPath, IRScene } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { renderToSvgString } from '../../src/svg/serialize/to-string';
+import { compileTestResult } from '../helpers/compilation';
 
 const STROKE = '#13579b';
 
 const measuredLabel = () => ({ width: 20, height: 10 });
 
 const render = (ir: IRScene): string =>
-  renderToSvgString(compileToScene(ir, { measureText: measuredLabel }).scene, { idPrefix: 'label-interruption' });
+  renderToSvgString(compileTestResult(ir, { measureText: measuredLabel }).scene, { idPrefix: 'label-interruption' });
 
 const closedPath = (extra: Partial<IRPath> = {}): IRScene => ({
   version: 1,

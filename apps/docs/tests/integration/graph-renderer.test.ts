@@ -6,7 +6,6 @@ import { Entity, Graph, Relation } from '@retikz/graph-react';
 import type { InputGraph } from '@retikz/graph-vanilla';
 import { createGraphVanillaAdapters, graph, graphInputEmbedAdapter, normalizeGraph } from '@retikz/graph-vanilla';
 import { Node } from '@retikz/react';
-import { compileToScene } from '@retikz/reconciler';
 import { drawScene } from '@retikz/render/canvas';
 import { renderToSvgString } from '@retikz/render/svg';
 import { normalizeScene, renderToSvgString as renderVanillaToSvgString, scene } from '@retikz/vanilla';
@@ -16,6 +15,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { buildPreviewIR } from '../../src/modules/docs/components/component-preview/utils';
 import { buildVanillaPreview } from '../../src/modules/docs/components/component-preview/vanilla-preview';
+import { compileTestResult } from '../helpers/compilation';
 
 const graphInput: InputGraph = {
   id: 'workflow',
@@ -65,7 +65,7 @@ const ReactGraph: FC = () =>
   );
 
 const sceneOf = (graphSource: IRGraph, theme?: IRScene['theme']): Scene =>
-  compileToScene(
+  compileTestResult(
     {
       type: 'scene',
       version: 1,

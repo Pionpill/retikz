@@ -1,6 +1,5 @@
 import type { IRChild, IRNode, IRScope } from '@retikz/core';
 import { SOURCE_INDEX } from '@retikz/data';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import type { PlotsLoweringOptions } from '../../src/pipeline/expand';
@@ -8,6 +7,7 @@ import { lowerPlots } from '../../src/pipeline/expand';
 import { lowerPlotWithDataArtifact } from '../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../src/schemas';
 import { PlotSchema } from '../../src/schemas';
+import { compileTestResult } from '../helpers/compilation';
 import { measureLabel } from '../helpers/text-measurement';
 
 /**
@@ -523,9 +523,9 @@ describe('范围 id/元 — 交互', () => {
   });
 
   it('编译元到达场景', () => {
-    // 含 meta 的 lowering 产物 → compileToScene → Scene 图元保留同款 meta
+    // 含 meta 的 lowering 产物 → SceneReconciler → Scene 图元保留同款 meta
     const spec = barSpec({ id: 'sales' });
-    const scene = compileToScene(
+    const scene = compileTestResult(
       { version: 1, type: 'scene', children: [spec] },
       { composites: lowerPlots({ sales: SALES }, { ...opts, provenance: true, datumProvenance: true }) },
     ).scene;
@@ -546,11 +546,11 @@ describe('范围 id/元 — 交互', () => {
   it('编译元渲染中性', () => {
     // meta 渲染中立：开 provenance 与关 provenance 的 Scene 图元几何不变（除 id/meta key 外结构等价）
     const spec = () => barSpec({ id: 'sales' });
-    const sceneOff = compileToScene(
+    const sceneOff = compileTestResult(
       { version: 1, type: 'scene', children: [spec()] },
       { composites: lowerPlots({ sales: SALES }, opts) },
     ).scene;
-    const sceneOn = compileToScene(
+    const sceneOn = compileTestResult(
       { version: 1, type: 'scene', children: [spec()] },
       { composites: lowerPlots({ sales: SALES }, { ...opts, provenance: true, datumProvenance: true }) },
     ).scene;
@@ -573,7 +573,7 @@ describe('范围 id/元 — 交互', () => {
     expect(layer.meta).toBeTruthy();
 
     // compile 后 scope group 同时带 id（hit-test 挂点）与 meta
-    const scene = compileToScene(
+    const scene = compileTestResult(
       { version: 1, type: 'scene', children: [barSpec({ id: 'sales' })] },
       { composites: lowerPlots({ sales: SALES }, { ...opts, provenance: true }) },
     ).scene;
@@ -666,7 +666,7 @@ describe('范围 id/元 — 交互', () => {
       'left-data': [{ x: 0, y: 1, series: 'A' }],
       'right-data': [{ x: 1, y: 0, series: 'B' }],
     };
-    const scene = compileToScene(
+    const scene = compileTestResult(
       { version: 1, type: 'scene', children: [left, right] },
       { composites: lowerPlots(datasets, { ...opts, provenance: true }) },
     ).scene;

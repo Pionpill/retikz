@@ -1,19 +1,20 @@
-// @vitest-environment jsdom
 import type { IRScene, Scene } from '@retikz/core';
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it, vi } from 'vitest';
 import { literal, string } from 'zod';
 
 import { renderToSvgString } from '../../src';
 import { mountSvg } from '../../src/dom';
 
+// @vitest-environment jsdom
+import { compileTestResult } from '../helpers/compilation';
+
 /*
  * @retikz/vanilla mountSvg（无框架浏览器 DOM，jsdom 环境）
  */
-const sceneOf = (text = 'A'): ReturnType<typeof compileToScene>['scene'] => {
+const sceneOf = (text = 'A'): ReturnType<typeof compileTestResult>['scene'] => {
   const ir: IRScene = { version: 1, type: 'scene', children: [{ type: 'node', id: 'a', position: [0, 0], text }] };
-  return compileToScene(ir).scene;
+  return compileTestResult(ir).scene;
 };
 
 describe('@retikz/vanilla mountSvg', () => {
@@ -124,7 +125,7 @@ describe('@retikz/vanilla mountSvg', () => {
         },
       ],
     };
-    const scene = compileToScene(ir).scene;
+    const scene = compileTestResult(ir).scene;
     const str = renderToSvgString(scene, { output: { idPrefix: 'fig' } });
     const c = document.createElement('div');
     mountSvg(c, scene, { output: { idPrefix: 'fig' } });

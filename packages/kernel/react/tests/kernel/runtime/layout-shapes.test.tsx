@@ -9,7 +9,7 @@ import { Layout, Node, Path, Step } from '../../../src/kernel';
 
 /**
  * <Layout shapes={...}> 自定义 shape 注入透传
- * @description React 把 shapes prop 透传给 compileToScene 的 CompileOptions.shapes；
+ * @description React 把 shapes prop 透传给 SceneReconciler 的 CompileOptions.shapes；
  *   IR 里 <Node shape="..."> 仍只写字符串名，定义在此注入。无参形状用 `z.strictObject({})`
  */
 const radialShape = (): ShapeDefinition =>
@@ -102,7 +102,7 @@ describe('<Layout shapes> 自定义 shape 注入', () => {
 });
 
 describe('<Layout 边界> 自定义边界直通', () => {
-  it('将边界提供者传递给 compileToScene', () => {
+  it('将边界提供者传递给 SceneReconciler', () => {
     expect(() =>
       renderToStaticMarkup(
         <Layout width={120} height={80} extensions={{ boundaries: [fixedBoundary()] }}>

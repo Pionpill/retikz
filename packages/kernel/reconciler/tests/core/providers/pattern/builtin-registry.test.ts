@@ -16,7 +16,7 @@ import { BUILTIN_PATTERNS } from '../../../../../core/src/providers/pattern';
 import type { IRPaint, IRScene } from '../../../../../core/src/schemas';
 import { PaintSchema } from '../../../../../core/src/schemas';
 import type { CompileOptions } from '../../../../src/compile';
-import { compileToScene } from '../../../../src/compile';
+import { compileTestResult } from '../../../helpers/compilation';
 
 /** 含一个 pattern fill node 的 IR 工厂 */
 const patternNodeIR = (spec: IRPaint, second?: IRPaint): IRScene => ({
@@ -50,7 +50,7 @@ const firstPatternResource = (resources: Array<SceneResource> | undefined): Patt
 
 /** 从 Scene.resources 取首个 pattern 资源的 tile（已解析 motif） */
 const tileOf = (spec: IRPaint, opts?: CompileOptions): CompiledPatternTile | undefined =>
-  firstPatternResource(compileToScene(patternNodeIR(spec), opts).scene.resources)?.tile;
+  firstPatternResource(compileTestResult(patternNodeIR(spec), opts).scene.resources)?.tile;
 
 /** 取 tile.motif 里首个 path 原语 */
 const firstMotifPath = (tile: CompiledPatternTile | undefined): PathPrimitive | undefined =>
@@ -116,7 +116,7 @@ const multiPrimPattern = (): PatternDefinition =>
   });
 
 describe('模式注册表——正常流程', () => {
-  it('builtin_3_via_registry：内置 lines/dots/grid 经 compileToScene → tile motif 等价旧 switch（golden）', () => {
+  it('builtin_3_via_registry：内置 lines/dots/grid 经 SceneReconciler → tile motif 等价旧 switch（golden）', () => {
     // lines：一个 path 横线居中 d "M0,4 L8,4"（size 缺省 8，中线 y=size/2=4，避免边缘半宽裁切）
     const linesTile = tileOf({ kind: 'pattern', shape: 'lines' });
     const linesPath = firstMotifPath(linesTile);
@@ -139,9 +139,9 @@ describe('模式注册表——正常流程', () => {
     const opts: CompileOptions = { patterns: [{ ...customPattern(), name: 'cross' }] };
     const ir = patternNodeIR({ kind: 'pattern', shape: 'cross' });
 
-    expect(() => compileToScene(ir, opts).scene).not.toThrow();
+    expect(() => compileTestResult(ir, opts).scene).not.toThrow();
 
-    const tile = firstPatternResource(compileToScene(ir, opts).scene.resources)?.tile;
+    const tile = firstPatternResource(compileTestResult(ir, opts).scene.resources)?.tile;
 
     // 自定义 def.emit 几何进 tile.motif（size 缺省 = defaultSize 10）
     const mp = firstMotifPath(tile);
@@ -151,14 +151,14 @@ describe('模式注册表——正常流程', () => {
 
   it('shape_open_string：pattern.shape=myMotif（已注册）合法编译', () => {
     const ir = patternNodeIR({ kind: 'pattern', shape: 'myMotif' });
-    const scene = compileToScene(ir, { patterns: [{ ...customPattern(), name: 'myMotif' }] }).scene;
+    const scene = compileTestResult(ir, { patterns: [{ ...customPattern(), name: 'myMotif' }] }).scene;
 
     expect(firstPatternResource(scene.resources)).toBeDefined();
   });
 
   it('pattern_dedup：同 pattern spec 多处 → 1 资源 1 tile', () => {
     const spec: IRPaint = { kind: 'pattern', shape: 'lines', size: 6 };
-    const scene = compileToScene(patternNodeIR(spec, spec)).scene;
+    const scene = compileTestResult(patternNodeIR(spec, spec)).scene;
     const patternResources = (scene.resources ?? []).filter(
       (r): r is PatternResource => r.kind === 'paint' && r.spec.kind === 'pattern',
     );
@@ -461,7 +461,7 @@ describe('模式注册表-边界', () => {
       ],
     };
     const pat: IRPaint = { kind: 'pattern', shape: 'grid' };
-    const scene = compileToScene(patternNodeIR(grad, pat)).scene;
+    const scene = compileTestResult(patternNodeIR(grad, pat)).scene;
 
     expect(scene.resources).toHaveLength(2);
 
@@ -486,10 +486,10 @@ describe('模式注册表 - 错误路径', () => {
   it('unregistered_pattern_throws：未注册 pattern 名 → 编译期 throw（带可用名）', () => {
     const ir = patternNodeIR({ kind: 'pattern', shape: 'nope' });
 
-    expect(() => compileToScene(ir).scene).toThrow(/nope/);
+    expect(() => compileTestResult(ir).scene).toThrow(/nope/);
 
     // 可用名（内置 3 字母序）出现在错误消息里
-    expect(() => compileToScene(ir).scene).toThrow(/dots, grid, lines/);
+    expect(() => compileTestResult(ir).scene).toThrow(/dots, grid, lines/);
   });
 
   it('same_name_duplicate_rejected：patterns 覆盖内置名 → duplicate error（不静默）', () => {
@@ -497,7 +497,7 @@ describe('模式注册表 - 错误路径', () => {
 
     expect(
       () =>
-        compileToScene(ir, {
+        compileTestResult(ir, {
           patterns: [{ ...customPattern(), name: 'lines' }],
         }).scene,
     ).toThrow(/duplicate pattern shape registration: "lines"/);
@@ -516,7 +516,7 @@ describe('模式注册表——交互', () => {
   it('custom_motif_multiple_prims：emit 产多 ScenePrimitive（背景 rect + 多 motif 元素）', () => {
     const opts: CompileOptions = { patterns: [{ ...multiPrimPattern(), name: 'multi' }] };
     const tile = firstPatternResource(
-      compileToScene(patternNodeIR({ kind: 'pattern', shape: 'multi', background: '#fff' }), opts).scene.resources,
+      compileTestResult(patternNodeIR({ kind: 'pattern', shape: 'multi', background: '#fff' }), opts).scene.resources,
     )?.tile;
 
     // 背景 rect + ellipse + path = 3 个 motif 元素
@@ -544,7 +544,7 @@ describe('模式注册表——交互', () => {
   });
 
   it('round_trip_scene：Scene 的 pattern tile 纯 JSON 无函数（序列化往返不丢）', () => {
-    const scene = compileToScene(patternNodeIR({ kind: 'pattern', shape: 'grid' })).scene;
+    const scene = compileTestResult(patternNodeIR({ kind: 'pattern', shape: 'grid' })).scene;
     const tile = firstPatternResource(scene.resources)?.tile;
 
     expect(tile).toBeDefined();

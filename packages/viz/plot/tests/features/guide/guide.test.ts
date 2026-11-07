@@ -1,5 +1,4 @@
 import type { IRNode, IRPath, IRScope } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import type { CoordinateFrame, PositionScale } from '../../../src/contract';
@@ -10,6 +9,7 @@ import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import { lowerCustomAxis, lowerGuide } from '../../../src/pipeline/guide';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
+import { compileTestResult } from '../../helpers/compilation';
 import { measureLabel } from '../../helpers/text-measurement';
 
 /** 测试用最小 PositionScale：guide 只调 coordinate，其余成员给占位 */
@@ -1383,7 +1383,7 @@ describe('lowerPlots 指导编排（契约）', () => {
       { type: 'axis', dimension: 'x' },
       { type: 'axis', dimension: 'y', grid: true },
     ]);
-    const scene = compileToScene(
+    const scene = compileTestResult(
       { version: 1, type: 'scene', children: [spec] },
       { composites: lowerPlots({ sales: SALES }, { layout: { width: 480, height: 300 } }) },
     ).scene;

@@ -2,7 +2,9 @@ import type { AnyCompositeDefinition, IRScene } from '@retikz/core';
 import { RetikzError } from '@retikz/foundation';
 
 import type { CompileOptions } from './compile';
-import { compileSceneSnapshot, formatCompileWarning } from './compile';
+import { formatCompileWarning } from './compile';
+import { createCompileRuntime } from './compile/runtime';
+import { CompileManager } from './compile/tree';
 import {
   ReconcilerMode,
   ReconcilerLifecyclePhase,
@@ -16,38 +18,40 @@ import type { WeaveBatch, WeavePreparedUpdate } from './weave';
 import { WeaveManager } from './weave';
 
 /** 同步协调编译与一个输出目标，不依赖 DOM 或 Runtime 注册图 */
-export class SceneReconciler {
+export class SceneReconciler<const TComposites extends ReadonlyArray<AnyCompositeDefinition> = readonly []> {
   private targetDisposed = false;
-  private current: ReconcilerResult | undefined;
-  private weave: WeaveManager | undefined;
+  private current: ReconcilerResult<TComposites> | undefined;
+  private weave: WeaveManager<TComposites> | undefined;
   private status: ReconcilerStatus = ReconcilerStatus.Idle;
   /** 已隔离的观察或资源释放异常，读取后清空 */
   private readonly diagnosticQueue: Array<unknown> = [];
 
   constructor(
-    private options: CompileOptions<ReadonlyArray<AnyCompositeDefinition>> = {},
-    private readonly execution: SceneReconcilerOptions = {},
+    private options: CompileOptions<TComposites> = {},
+    private readonly execution: SceneReconcilerOptions<TComposites> = {},
   ) {
     if (this.mode === ReconcilerMode.Full && execution.updateStrategy !== undefined)
       throw this.contractError('A non-incremental session cannot configure an update strategy');
   }
 
   /** 首次建立计算状态并发布完整结果 */
-  mount(source: IRScene): ReconcilerResult {
+  mount(source: IRScene): ReconcilerResult<TComposites> {
     this.assertIdle();
     if (this.current !== undefined) throw this.contractError('Session is already mounted');
     return this.replace(source);
   }
 
   /** 显式完整重建，准备失败仍保留原计算状态 */
-  replace(source: IRScene, options = this.options): ReconcilerResult {
+  replace(source: IRScene, options = this.options): ReconcilerResult<TComposites> {
     this.assertIdle();
     this.status = ReconcilerStatus.Preparing;
     try {
       const weave = this.mode === ReconcilerMode.Full ? undefined : new WeaveManager(source, options, this.execution);
       const prepared = weave?.mount();
-      const compilation = prepared?.compilation ?? compileSceneSnapshot(source, options, this.execution);
-      const candidate: ReconcilerResult = {
+      const compilation =
+        prepared?.compilation ??
+        new CompileManager(createCompileRuntime(source, options, this.execution)).compileScene<TComposites>(source);
+      const candidate: ReconcilerResult<TComposites> = {
         revision: this.nextRevision(),
         compilation,
         ...(prepared === undefined ? {} : { root: prepared.root }),
@@ -73,7 +77,7 @@ export class SceneReconciler {
   }
 
   /** 使用权威基础元素批次更新；期望结果按对象身份绑定会话与版本 */
-  update(batch: WeaveBatch, expected: ReconcilerResult = this.read()): ReconcilerResult {
+  update(batch: WeaveBatch, expected: ReconcilerResult<TComposites> = this.read()): ReconcilerResult<TComposites> {
     this.assertIdle();
     if (expected !== this.current) throw this.contractError('The update belongs to a stale session result');
     if (this.weave === undefined) throw this.contractError('Non-incremental sessions do not support Weave batches');
@@ -98,7 +102,7 @@ export class SceneReconciler {
   }
 
   /** 复用编译结果，仅准备并提交输出目标的新配置 */
-  updateTarget(): ReconcilerResult {
+  updateTarget(): ReconcilerResult<TComposites> {
     this.assertIdle();
     const current = this.read();
     this.status = ReconcilerStatus.Preparing;
@@ -110,7 +114,7 @@ export class SceneReconciler {
   }
 
   /** 读取已发布结果；准备期间仍返回旧结果，提交期间拒绝重入 */
-  read(): ReconcilerResult {
+  read(): ReconcilerResult<TComposites> {
     if (
       this.status === ReconcilerStatus.Committing ||
       this.status === ReconcilerStatus.Broken ||
@@ -150,11 +154,11 @@ export class SceneReconciler {
 
   /** 保留两侧恢复依据，直到双方均提交成功 */
   private publish(
-    candidate: ReconcilerResult,
-    weave: WeaveManager | undefined,
-    prepared?: WeavePreparedUpdate,
+    candidate: ReconcilerResult<TComposites>,
+    weave: WeaveManager<TComposites> | undefined,
+    prepared?: WeavePreparedUpdate<TComposites>,
     options = this.options,
-  ): ReconcilerResult {
+  ): ReconcilerResult<TComposites> {
     let target: ReconcilerPreparedCommit | undefined;
     try {
       target = this.execution.target?.prepare(candidate, this.current);

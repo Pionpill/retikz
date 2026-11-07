@@ -3,7 +3,7 @@ import { expect, it } from 'vitest';
 import { defineArrow, SceneSchema, ArrowStyleSchema, TextLineSchema, SegmentedLineSchema } from '../../../../core/src';
 import type { ScenePrimitive } from '../../../../core/src';
 import { NodeLabelPinSchema } from '../../../../core/src/schemas/node/label';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 
 const leaves = (items: Array<ScenePrimitive>): Array<ScenePrimitive> =>
   items.flatMap(item => (item.type === 'group' ? leaves(item.children) : [item]));
@@ -24,7 +24,7 @@ it('行字体和数学公式覆盖传递至 TeX 下沉器', () => {
       },
     ],
   });
-  compileToScene(source, {
+  compileTestResult(source, {
     lowerTex: (_content, style) => {
       sizes.push(style.fontSize);
       return { paths: [], width: style.fontSize, height: style.fontSize, depth: 0 };
@@ -54,7 +54,7 @@ it('分段线默认保留部分字体和视觉覆盖', () => {
       },
     ],
   });
-  const text = leaves(compileToScene(source).scene.primitives).filter(item => item.type === 'text');
+  const text = leaves(compileTestResult(source).scene.primitives).filter(item => item.type === 'text');
   expect(text[0]).toMatchObject({ fontSize: 24, fontFamily: 'serif', fontWeight: 700, fill: 'red', opacity: 0.5 });
   expect(text[1]).toMatchObject({ fontSize: 24, fontFamily: 'serif', fill: 'blue', opacity: 0.5 * 0.8 });
 });
@@ -71,7 +71,7 @@ it('共享效果和描边几何体到达范围节点', () => {
       },
     ],
   });
-  const output = leaves(compileToScene(source).scene.primitives);
+  const output = leaves(compileTestResult(source).scene.primitives);
   expect(output).toHaveLength(1);
   expect(output[0]).toMatchObject({ lineCap: 'round', lineJoin: 'bevel', blendMode: 'multiply' });
   expect(output[0]).toHaveProperty('shadow');
@@ -111,7 +111,7 @@ it('pin 解析绘画资源并使用其自己的不透明度和描边几何形状
       },
     ],
   });
-  const scene = compileToScene(source).scene;
+  const scene = compileTestResult(source).scene;
   const pin = leaves(scene.primitives).find(item => item.type === 'path');
   expect(pin).toMatchObject({
     stroke: { kind: 'resourceRef' },
@@ -160,7 +160,7 @@ it('端点和内联箭头保留显式绘画和描边覆盖', () => {
       },
     ],
   });
-  const scene = compileToScene(source).scene;
+  const scene = compileTestResult(source).scene;
   const paths = leaves(scene.primitives).filter(item => item.type === 'path');
   const expected = {
     stroke: { kind: 'resourceRef' },
@@ -216,7 +216,9 @@ it('提供箭头选项时，自定义箭头输出保留固定的嵌套样式', (
       },
     ],
   });
-  const path = leaves(compileToScene(source, { arrows: [custom] }).scene.primitives).find(item => item.type === 'path');
+  const path = leaves(compileTestResult(source, { arrows: [custom] }).scene.primitives).find(
+    item => item.type === 'path',
+  );
   expect(leaves(path?.arrowStart?.marker ?? [])[0]).toMatchObject({
     fill: 'green',
     stroke: 'blue',
@@ -243,7 +245,7 @@ it('新的视觉字段可通过 JSON 往返且拒绝拼写错误的属性', () =
 });
 
 it('共享效果到达路径，同时显式节点重置获胜', () => {
-  const scene = compileToScene(
+  const scene = compileTestResult(
     SceneSchema.parse({
       type: 'scene',
       version: 1,

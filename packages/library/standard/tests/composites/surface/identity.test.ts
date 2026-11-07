@@ -1,10 +1,10 @@
 import type { GroupPrimitive, IRChild, PathPrimitive, ScenePrimitive } from '@retikz/core';
 import { resolveCoreProviderDependencies } from '@retikz/core';
 import { pathClipDefinition, pathClipProvider } from '@retikz/extension';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { createSurface, surfaceDefinition, surfaceProvider } from '../../../src/presentation';
+import { compileTestResult } from '../../helpers/compilation';
 
 const node: IRChild = {
   type: 'node',
@@ -39,7 +39,7 @@ describe('Surface 外观与 Scope', () => {
     expect(definitions.clips?.map(definition => definition.kind)).toEqual(['path']);
     expect(definitions).toEqual({ composites: [surfaceDefinition], clips: [pathClipDefinition] });
     expect(() =>
-      compileToScene({ type: 'scene', version: 1, children: [surface] }, { ...definitions, padding: 0 }),
+      compileTestResult({ type: 'scene', version: 1, children: [surface] }, { ...definitions, padding: 0 }),
     ).not.toThrow();
   });
 
@@ -54,7 +54,7 @@ describe('Surface 外观与 Scope', () => {
       border: { stroke: '#0f172a', strokeWidth: 4 },
       cornerRadius: 99,
     });
-    const result = compileToScene(
+    const result = compileTestResult(
       { type: 'scene', version: 1, children: [surface] },
       {
         composites: [surfaceDefinition],
@@ -90,7 +90,7 @@ describe('Surface 外观与 Scope', () => {
       border: { stroke: '#000' },
       clip: { kind: 'rect', params: { x: 1, y: 1, width: 18, height: 8 } },
     });
-    const result = compileToScene(
+    const result = compileTestResult(
       { type: 'scene', version: 1, children: [surface] },
       {
         composites: [surfaceDefinition],
@@ -138,7 +138,7 @@ describe('Surface 外观与 Scope', () => {
         },
       },
     });
-    const result = compileToScene(
+    const result = compileTestResult(
       { type: 'scene', version: 1, children: [surface] },
       {
         composites: [surfaceDefinition],
@@ -168,7 +168,7 @@ describe('Surface 外观与 Scope', () => {
       background: { fill: '#fff' },
       border: { stroke: '#000' },
     });
-    const result = compileToScene(
+    const result = compileTestResult(
       { type: 'scene', version: 1, children: [surface] },
       { composites: [surfaceDefinition], padding: 0 },
     );
@@ -192,7 +192,7 @@ describe('Surface 外观与 Scope', () => {
       overflow: 'clip',
       cornerRadius: 10,
     });
-    const result = compileToScene(
+    const result = compileTestResult(
       { type: 'scene', version: 1, children: [surface] },
       {
         composites: [surfaceDefinition],

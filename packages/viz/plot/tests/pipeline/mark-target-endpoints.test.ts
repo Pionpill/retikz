@@ -1,9 +1,9 @@
 import type { CompileWarning, IRChild, IRPath, IRScope, ScenePrimitive } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it, vi } from 'vitest';
 
 import { lowerPlotWithDataArtifact } from '../../src/pipeline/expand/lower';
 import { PlotSchema } from '../../src/schemas';
+import { compileTestResult } from '../helpers/compilation';
 import { measureLabel } from '../helpers/text-measurement';
 
 const lower = (
@@ -65,7 +65,7 @@ describe('标记目标连接', () => {
       { kind: 'move', to: { id: 'custom.a' } },
       { kind: 'bend', to: { id: 'custom.b' }, outAngle: 30, inAngle: 150 },
     ]);
-    expect(() => compileToScene({ version: 1, type: 'scene', children: [lowered] })).not.toThrow();
+    expect(() => compileTestResult({ version: 1, type: 'scene', children: [lowered] })).not.toThrow();
     expect(() => lower(plot([stepped, nodes]), { data: [] })).toThrow(/declared before/);
   });
   it('解析目标标识并编译实际几何图形', () => {
@@ -77,7 +77,7 @@ describe('标记目标连接', () => {
       { kind: 'line', to: { id: 'custom.b' } },
     ]);
     const warnings: Array<CompileWarning> = [];
-    const result = compileToScene(
+    const result = compileTestResult(
       { version: 1, type: 'scene', children: [lowered] },
       { onWarn: warning => warnings.push(warning) },
     );
@@ -116,7 +116,7 @@ describe('标记目标连接', () => {
     const inferred = { ...spec, scales: spec.scales.map(scale => ({ ...scale, domain: undefined })) };
     const compile = (data: typeof rows) =>
       flatten(
-        compileToScene({ type: 'scene', version: 1, children: [lower(inferred, { data })] }).scene.primitives,
+        compileTestResult({ type: 'scene', version: 1, children: [lower(inferred, { data })] }).scene.primitives,
       ).filter(item => item.type === 'path');
     const renamed = rows.map(row => ({
       ...row,
@@ -160,7 +160,7 @@ describe('标记目标连接', () => {
     };
     const compile = (data: typeof rows) =>
       flatten(
-        compileToScene({ type: 'scene', version: 1, children: [lower(plot([nodes, fixed]), { data })] }).scene
+        compileTestResult({ type: 'scene', version: 1, children: [lower(plot([nodes, fixed]), { data })] }).scene
           .primitives,
       ).filter(item => item.type === 'path');
     expect(compile(rows)).toEqual(compile([...rows].reverse()));
@@ -238,7 +238,10 @@ describe('标记目标连接', () => {
     };
     const lowered = lower(plot([intervals, connection]), { data: rows });
     const warnings: Array<CompileWarning> = [];
-    compileToScene({ type: 'scene', version: 1, children: [lowered] }, { onWarn: warning => warnings.push(warning) });
+    compileTestResult(
+      { type: 'scene', version: 1, children: [lowered] },
+      { onWarn: warning => warnings.push(warning) },
+    );
     expect(warnings).toEqual([]);
     expect(paths(lowered)).toHaveLength(2);
   });

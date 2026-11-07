@@ -12,7 +12,7 @@ import { defineClip, definePattern } from '../../../../core/src/contract';
 import { resolveClipRegistry, resolvePatternRegistry } from '../../../../core/src/providers';
 import { resolveClip, resolvePaint } from '../../../../core/src/resolve/resource';
 import type { IRClip, IRPaint, IRScene } from '../../../../core/src/schemas';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 
 const round = createRound(3);
 
@@ -86,7 +86,7 @@ describe('解析/资源绘制', () => {
         { offset: 1, color: '#fff' },
       ],
     };
-    const scene = compileToScene({
+    const scene = compileTestResult({
       ...sceneWithPaint(paint),
       children: [
         {
@@ -108,7 +108,7 @@ describe('解析/资源绘制', () => {
   it('发出一次去重模式资源', () => {
     const emit = vi.fn((): Array<ScenePrimitive> => []);
     const pattern = definePattern({ name: 'dedupe-pattern', emit });
-    const scene = compileToScene(
+    const scene = compileTestResult(
       {
         version: 1,
         type: 'scene',
@@ -225,7 +225,7 @@ describe('解析/资源裁剪', () => {
     expect(nested.kind).toBe('leaf');
     expect(nested.definition).toBe(leaf);
 
-    const scene = compileToScene(
+    const scene = compileTestResult(
       {
         version: 1,
         type: 'scene',

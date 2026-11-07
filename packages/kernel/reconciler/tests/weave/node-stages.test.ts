@@ -3,8 +3,8 @@ import { definePath, PathSchema } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
-import { compileToScene } from '../../src/compile';
 import { WeaveManager } from '../../src/weave';
+import { compileTestResult } from '../helpers/compilation';
 
 describe('Node 阶段复用', () => {
   it('尺寸变化只重算边界消费者，中心锚点结果不变则复用路径', () => {
@@ -53,7 +53,7 @@ describe('Node 阶段复用', () => {
     expect(calls.center).toBe(before.center);
     expect(calls.boundary).toBe(before.boundary + 1);
     expect(update.compilation.result).toEqual(
-      compileToScene({ ...source, children: [resized, ...source.children.slice(1)] }, { paths }),
+      compileTestResult({ ...source, children: [resized, ...source.children.slice(1)] }, { paths }),
     );
     update.rollback();
   });
@@ -86,7 +86,7 @@ describe('Node 阶段复用', () => {
     });
     expect(measurements).toBe(before);
     expect(paint.compilation.result).toEqual(
-      compileToScene({ ...source, children: [source.children[0], repainted] }, { measureText }),
+      compileTestResult({ ...source, children: [source.children[0], repainted] }, { measureText }),
     );
     paint.commit();
     paint.finish();
@@ -97,7 +97,7 @@ describe('Node 阶段复用', () => {
       ],
     });
     expect(moved.compilation.result).toEqual(
-      compileToScene({ ...source, children: [origin, repainted] }, { measureText }),
+      compileTestResult({ ...source, children: [origin, repainted] }, { measureText }),
     );
     moved.rollback();
   });

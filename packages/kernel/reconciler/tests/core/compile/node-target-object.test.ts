@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { PathPrimitive, ScenePrimitive } from '../../../../core/src/contract';
 import type { IRScene, IRTarget } from '../../../../core/src/schemas';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 
 const findPathPrim = (prims: Array<ScenePrimitive>): PathPrimitive | undefined =>
   prims.find((x): x is PathPrimitive => x.type === 'path');
@@ -32,7 +32,7 @@ const endOf = (target: IRTarget): [number, number] => {
       },
     ],
   };
-  const scene = compileToScene(ir).scene;
+  const scene = compileTestResult(ir).scene;
   const prim = findPathPrim(scene.primitives);
   if (!prim) throw new Error('expected PathPrimitive');
 
@@ -112,7 +112,7 @@ describe('错误路径', () => {
         },
       ],
     };
-    const scene = compileToScene(ir).scene;
+    const scene = compileTestResult(ir).scene;
 
     expect(scene.primitives.find(p => p.type === 'path')).toBeUndefined();
   });
@@ -135,7 +135,7 @@ describe('Coordinate（零尺寸）anchor 退化', () => {
         },
       ],
     };
-    const scene = compileToScene(ir).scene;
+    const scene = compileTestResult(ir).scene;
     const prim = findPathPrim(scene.primitives);
     if (!prim) throw new Error('expected PathPrimitive');
 

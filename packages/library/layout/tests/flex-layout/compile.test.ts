@@ -8,7 +8,6 @@ import {
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
 } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { boolean, literal, number, string } from 'zod';
 
@@ -23,6 +22,7 @@ import {
   LayoutItemKind,
   LayoutOverflow,
 } from '../../src';
+import { compileTestResult } from '../helpers/compilation';
 
 const LeafSchema = CompositeBaseSchema.extend({
   namespace: literal('flex-test'),
@@ -146,7 +146,7 @@ const compileFlex = (child: IRChild, proposal: LayoutProposal) => {
       return { children: [context.replay(probe.result)] };
     },
   });
-  const output = compileToScene(
+  const output = compileTestResult(
     {
       version: 1,
       type: 'scene',
@@ -194,7 +194,7 @@ const translationOf = (primitives: ReadonlyArray<ScenePrimitive>, id: string): R
   return result;
 };
 
-const flexArtifactOf = (output: ReturnType<typeof compileToScene>): FlexLayoutCompileArtifact => {
+const flexArtifactOf = (output: ReturnType<typeof compileTestResult>): FlexLayoutCompileArtifact => {
   const artifact = output.artifacts.find(value => value.type === 'flexLayout');
   if (artifact === undefined) throw new Error('Expected FlexLayout compile artifact');
   return artifact as FlexLayoutCompileArtifact;

@@ -1,7 +1,6 @@
 import type { IRNode, IRScope } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
 import { contourShapeDefinition } from '@retikz/extension';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal, object } from 'zod';
 
@@ -22,6 +21,7 @@ import { createCartesianCoordinate, createPolarCoordinate } from '../../../src/p
 import { datumAnchor as resolveDatumAnchor, resolveMarkOperation } from '../../../src/resolve/mark';
 import type { IRPlot, IRPlotIntervalMark } from '../../../src/schemas';
 import { PlotSchema, PolarInterpolation } from '../../../src/schemas';
+import { compileTestResult } from '../../helpers/compilation';
 import { measureLabel } from '../../helpers/text-measurement';
 
 /**
@@ -399,7 +399,7 @@ describe('cartesian interval → rect 产物（byte-equal 回归基线）', () =
     ];
     const layer = firstLayer(cartesianBarSpec(), { d: rows }, cartOpts);
 
-    expect(() => compileToScene({ version: 1, type: 'scene', children: [layer] }).scene).not.toThrow();
+    expect(() => compileTestResult({ version: 1, type: 'scene', children: [layer] }).scene).not.toThrow();
   });
 });
 
@@ -664,7 +664,7 @@ describe('densifyCellContour + 曲线 frame → contour 全链路', () => {
         },
       ],
     };
-    const compiled = compileToScene(scene, { shapes: [contourShapeDefinition] }).scene;
+    const compiled = compileTestResult(scene, { shapes: [contourShapeDefinition] }).scene;
 
     expect(compiled).toBeTruthy();
   });
@@ -835,7 +835,7 @@ describe('interval x0Field / x1Field → 连续 x 区间柱（histogram）', () 
 
     // step 2、域 [0,5] → 箱 [0,2),[2,4),[4,6] → 3 箱（含空箱可能）；至少有柱、且可编译
     expect(nodes.length).toBeGreaterThanOrEqual(1);
-    expect(() => compileToScene({ version: 1, type: 'scene', children: [layer] }).scene).not.toThrow();
+    expect(() => compileTestResult({ version: 1, type: 'scene', children: [layer] }).scene).not.toThrow();
   });
 });
 

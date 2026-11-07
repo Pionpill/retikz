@@ -22,10 +22,9 @@ import type { SceneIdentity, SceneRevision } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
-import { compileToScene } from '../../src/compile';
-import { compileSceneSnapshot } from '../../src/compile';
 import type { CompileOptions } from '../../src/compile';
 import { createFullSceneRuntimeSnapshot } from '../../src/scene';
+import { compileTestResult, compileTestSnapshot } from '../helpers/compilation';
 
 type PrimitiveRecords = WeakMap<ScenePrimitive, Readonly<{ identity: SceneIdentity; semanticOwner: SceneIdentity }>>;
 const compileWithTopology = <const T extends ReadonlyArray<AnyCompositeDefinition>>(
@@ -33,7 +32,7 @@ const compileWithTopology = <const T extends ReadonlyArray<AnyCompositeDefinitio
   options: CompileOptions<T>,
   execution: { candidateRevision: SceneRevision },
 ) => {
-  const compiled = compileSceneSnapshot(ir, options, { captureProvenance: true });
+  const compiled = compileTestSnapshot(ir, options, { captureProvenance: true });
   if (compiled.provenance === undefined) throw new Error('Missing provenance');
   const snapshot = createFullSceneRuntimeSnapshot(
     compiled.result.scene,
@@ -594,7 +593,7 @@ describe('Core 编译警告集合', () => {
     });
     const warnings: Array<CompileWarning> = [];
 
-    compileToScene(
+    compileTestResult(
       {
         version: 1,
         type: 'scene',
@@ -635,7 +634,7 @@ describe('Core 编译警告集合', () => {
     });
     const warnings: Array<CompileWarning> = [];
 
-    compileToScene(
+    compileTestResult(
       {
         version: 1,
         type: 'scene',
@@ -676,7 +675,7 @@ describe('Core 编译警告集合', () => {
     });
     const warnings: Array<CompileWarning> = [];
 
-    compileToScene(
+    compileTestResult(
       {
         version: 1,
         type: 'scene',
@@ -720,7 +719,7 @@ describe('Core 编译警告集合', () => {
     });
     const warnings: Array<CompileWarning> = [];
 
-    compileToScene(
+    compileTestResult(
       {
         version: 1,
         type: 'scene',
@@ -759,7 +758,7 @@ describe('Core 编译警告集合', () => {
     });
     const warnings: Array<CompileWarning> = [];
 
-    compileToScene(
+    compileTestResult(
       {
         version: 1,
         type: 'scene',
@@ -792,7 +791,7 @@ describe('Core 编译警告集合', () => {
       ] as IRScene['children'],
     };
 
-    compileToScene(ir, { composites: [], onWarn: warning => warnings.push(warning) });
+    compileTestResult(ir, { composites: [], onWarn: warning => warnings.push(warning) });
 
     expect(warnings.map(warning => warning.path)).toEqual([
       ['children', 0, 'children', 0, 'to'],
@@ -813,7 +812,7 @@ describe('Core 编译警告集合', () => {
       ],
     };
 
-    expect(() => compileToScene(ir, { onWarn: warning => warnings.push(warning) })).toThrow();
+    expect(() => compileTestResult(ir, { onWarn: warning => warnings.push(warning) })).toThrow();
     expect(warnings).toEqual([]);
   });
 });

@@ -14,7 +14,7 @@ import {
   LayoutChildProbeKind,
   naturalLayoutProposal,
 } from '../../../../core/src';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 
 type MutableGuide = {
   name: string;
@@ -63,7 +63,7 @@ const probeGuidesOf = (
     },
   });
 
-  compileToScene(sceneOf({ namespace: 'test', type: 'guideInspector' }), {
+  compileTestResult(sceneOf({ namespace: 'test', type: 'guideInspector' }), {
     composites: [...composites, inspector],
     padding: 0,
   });
@@ -367,7 +367,7 @@ describe('布局对齐辅助线所有权', () => {
       },
     });
 
-    compileToScene(sceneOf({ namespace: 'test', type: 'doubleInspector' }), {
+    compileTestResult(sceneOf({ namespace: 'test', type: 'doubleInspector' }), {
       composites: [explicit, inspector],
       padding: 0,
     });

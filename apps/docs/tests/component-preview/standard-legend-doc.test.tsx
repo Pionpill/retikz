@@ -1,7 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-import { compileToScene } from '@retikz/reconciler';
 import { LegendArtifactSchema, legendDefinition, LegendSchema } from '@retikz/standard/presentation';
 import type { FC } from 'react';
 import { describe, expect, it } from 'vitest';
@@ -22,6 +21,8 @@ import { LegendPlaygroundPreview } from '@/modules/docs/contents/library/standar
 import LegendRampEnDemo from '@/modules/docs/contents/library/standard/presentation/legend/legend-ramp.en.demo';
 import LegendRampZhDemo from '@/modules/docs/contents/library/standard/presentation/legend/legend-ramp.zh.demo';
 import type { PreviewControlsDefinition } from '@/modules/docs/preview';
+
+import { compileTestResult } from '../helpers/compilation';
 
 const legendRoot = resolve(process.cwd(), 'src/modules/docs/contents/library/standard/presentation/legend');
 
@@ -48,7 +49,7 @@ const legendOf = (values: Parameters<typeof LegendPlaygroundPreview>[0]) => {
 
 const legendHorizontalCenterDelta = (Preview: FC): number => {
   const preview = buildPreviewIR(Preview);
-  const output = compileToScene(preview.ir, { composites: [legendDefinition], padding: 0 });
+  const output = compileTestResult(preview.ir, { composites: [legendDefinition], padding: 0 });
   const viewBox = output.scene.layout;
   const envelope = output.artifacts.at(0);
   if (envelope === undefined) throw new Error('Expected a Legend compile artifact');

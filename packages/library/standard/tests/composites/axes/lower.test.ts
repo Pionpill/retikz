@@ -1,8 +1,8 @@
 import type { IRNode, IRPath, ScenePrimitive } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { axesDefinition, createAxes, lowerAxes } from '../../../src/presentation';
+import { compileTestResult } from '../../helpers/compilation';
 import { fullScopeProps } from '../presentation/scope-props';
 
 const endpoints = (path: IRPath) => path.children.map(step => ('to' in step ? step.to : undefined));
@@ -419,7 +419,7 @@ describe('lowerAxes', () => {
 
   it('通过注册的 Axes 定义进行编译，无需诊断', () => {
     const warnings: Array<string> = [];
-    const scene = compileToScene(
+    const scene = compileTestResult(
       {
         type: 'scene',
         version: 1,
@@ -439,7 +439,7 @@ describe('lowerAxes', () => {
 
   it('保留直接 Axes IR 的 Core 诊断，而无需其定义', () => {
     const warnings: Array<string> = [];
-    compileToScene(
+    compileTestResult(
       {
         type: 'scene',
         version: 1,

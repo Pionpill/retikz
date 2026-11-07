@@ -1,6 +1,5 @@
 import { ChildSchema, CompositeBaseSchema, defineComposite } from '@retikz/core';
 import type { CompositeEvaluationResult, IRChild, LayoutProposal } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { expect, it } from 'vitest';
 import { literal } from 'zod';
 
@@ -12,6 +11,7 @@ import {
   gridLayoutDefinition,
   overlayLayoutDefinition,
 } from '../../src';
+import { compileTestResult } from '../helpers/compilation';
 
 it('匹配内容、固定和约束布局下请求的轴的完整布局槽', () => {
   const leaf: IRChild = { type: 'node', position: [0, 0], text: 'alpha beta gamma delta', layout: { padding: 0 } };
@@ -138,7 +138,7 @@ it('匹配内容、固定和约束布局下请求的轴的完整布局槽', () =
             return { children: [context.replay(full.result)] };
           },
         });
-        compileToScene(
+        compileTestResult(
           { version: 1, type: 'scene', children: [{ namespace: 'measure-spec', type: 'host', child }] },
           {
             composites: [host, custom, flexLayoutDefinition, gridLayoutDefinition, overlayLayoutDefinition],

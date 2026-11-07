@@ -4,7 +4,7 @@ import { SceneReconciler } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
-import { compileToScene } from '../../src/compile';
+import { compileTestResult } from '../helpers/compilation';
 
 const themedComposite = defineComposite({
   namespace: 'theme-test',
@@ -31,7 +31,7 @@ const runUpdate = (initial: IRScene, next: IRScene) => {
   session.mount(initial);
   const result = session.replace(next);
 
-  return { result, actual: session.read().compilation.result, expected: compileToScene(next, options) };
+  return { result, actual: session.read().compilation.result, expected: compileTestResult(next, options) };
 };
 
 describe('主题保留失效', () => {
@@ -69,7 +69,7 @@ describe('主题保留失效', () => {
     session.mount(source('red', false));
     for (const next of [source('blue', false), source('blue', true)]) {
       session.replace(next);
-      expect(session.read().compilation.result).toEqual(compileToScene(next));
+      expect(session.read().compilation.result).toEqual(compileTestResult(next));
     }
   });
 

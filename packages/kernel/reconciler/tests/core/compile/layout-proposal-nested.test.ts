@@ -21,7 +21,7 @@ import {
   LayoutIntrinsicMode,
 } from '../../../../core/src';
 import type { CompileResult } from '../../../src/compile';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 
 const fixedMeasurer: TextMeasurer = text => ({
   width: [...text].length * 10,
@@ -241,7 +241,7 @@ const runNestedFixture = (): FixtureRun => {
       },
     ],
   };
-  const result = compileToScene(scene, {
+  const result = compileTestResult(scene, {
     composites: [failing, nested, parent],
     measureText: fixedMeasurer,
     padding: 0,
@@ -374,7 +374,7 @@ describe('三层布局提案关闭', () => {
     let thrown: unknown;
 
     try {
-      compileToScene(
+      compileTestResult(
         {
           version: 1,
           type: 'scene',

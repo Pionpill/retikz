@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { literal, strictObject, string } from 'zod';
 
 import { BUILTIN_SHAPES } from '../../../core/src/providers/shape/shape';
-import { compileToScene } from '../../src/compile';
+import { compileTestResult } from '../helpers/compilation';
 
 const sceneWithText = (text: string): IRScene => ({
   version: 1,
@@ -97,7 +97,7 @@ describe('Core Runtime 计算初始完整运行', () => {
       children: [{ type: 'path', children: [{ type: 'step', kind: 'move', to: [0, 0] }] }],
     };
     const expectedWarnings: Array<CompileWarning> = [];
-    const expected = compileToScene(ir, { onWarn: warning => expectedWarnings.push(warning) });
+    const expected = compileTestResult(ir, { onWarn: warning => expectedWarnings.push(warning) });
     const observedWarnings: Array<CompileWarning> = [];
     const session = new SceneReconciler({ onWarn: warning => observedWarnings.push(warning) });
 
@@ -148,7 +148,7 @@ describe('Core Runtime 领域产物事务', () => {
     const before = session.read();
     session.replace(source('B'));
     const after = session.read();
-    expect(after.compilation.result).toEqual(compileToScene(source('B'), { composites: [definition] }));
+    expect(after.compilation.result).toEqual(compileTestResult(source('B'), { composites: [definition] }));
     expect(after.compilation.result.artifacts[0].value).toEqual({ label: 'B' });
     expect(before.compilation.result.artifacts[0].value).toEqual({ label: 'A' });
     expect(after.revision).not.toBe(before.revision);
@@ -179,7 +179,7 @@ describe('Core Runtime 计算完整回退更新', () => {
     session.replace(next);
 
     expect(session.read().compilation.diagnostics).toEqual([]);
-    expect(session.read().compilation.result).toEqual(compileToScene(next, { onWarn: () => {} }));
+    expect(session.read().compilation.result).toEqual(compileTestResult(next, { onWarn: () => {} }));
   });
 
   it('完整输入编译失败时不发布诊断或替换已提交结果', () => {
@@ -217,7 +217,7 @@ describe('Core Runtime 计算替换样式更新', () => {
     session.mount(initial);
     session.replace(next);
 
-    expect(session.read().compilation.result).toEqual(compileToScene(next, { onWarn: () => {} }));
+    expect(session.read().compilation.result).toEqual(compileTestResult(next, { onWarn: () => {} }));
   });
 
   it('root Node 存在引用 position 时保守 full fallback', () => {
@@ -245,7 +245,7 @@ describe('Core Runtime 计算替换样式更新', () => {
 
     session.replace(next);
 
-    expect(session.read().compilation.result).toEqual(compileToScene(next, { onWarn: () => {} }));
+    expect(session.read().compilation.result).toEqual(compileTestResult(next, { onWarn: () => {} }));
 
     const changedReferenceNode: IRScene = {
       ...next,
@@ -253,7 +253,7 @@ describe('Core Runtime 计算替换样式更新', () => {
     };
     session.replace(changedReferenceNode);
 
-    expect(session.read().compilation.result).toEqual(compileToScene(changedReferenceNode, { onWarn: () => {} }));
+    expect(session.read().compilation.result).toEqual(compileTestResult(changedReferenceNode, { onWarn: () => {} }));
   });
 
   it('自定义 ShapeDefinition 可读取 fill 时保守 full fallback', () => {
@@ -291,7 +291,7 @@ describe('Core Runtime 计算替换样式更新', () => {
 
     session.replace(next);
 
-    expect(session.read().compilation.result).toEqual(compileToScene(next, options));
+    expect(session.read().compilation.result).toEqual(compileTestResult(next, options));
   });
 });
 
@@ -328,7 +328,7 @@ it('Scope 子内容更新、资源撤销和匿名组删除与全量编译等价'
   for (const ir of states) {
     session.replace(ir);
 
-    expect(session.read().compilation.result.scene).toEqual(compileToScene(ir).scene);
+    expect(session.read().compilation.result.scene).toEqual(compileTestResult(ir).scene);
   }
 });
 
@@ -353,7 +353,7 @@ it('宿主提交失败保留旧编译结果，重试发布完整新树', () => {
   expect(() => session.replace(sceneWithText('after'))).toThrow();
   expect(session.read()).toBe(previous);
   failing = false;
-  expect(session.replace(sceneWithText('after')).compilation.result).toEqual(compileToScene(sceneWithText('after')));
+  expect(session.replace(sceneWithText('after')).compilation.result).toEqual(compileTestResult(sceneWithText('after')));
   session.dispose();
 });
 

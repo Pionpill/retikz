@@ -1,5 +1,4 @@
 import type { IRNode, IRScene, IRScope, IRTarget, ScenePrimitive } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import type { PlotsLoweringOptions } from '../../src/pipeline/expand';
@@ -7,6 +6,7 @@ import { lowerPlots } from '../../src/pipeline/expand';
 import { lowerPlotWithDataArtifact } from '../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../src/schemas';
 import { PlotSchema } from '../../src/schemas';
+import { compileTestResult } from '../helpers/compilation';
 import { measureLabel } from '../helpers/text-measurement';
 
 // contract：plot 可被组合 —— 自描述尺寸（L1-a）+ 外部可见面板 anchor（L1-b）
@@ -155,7 +155,7 @@ describe('contract L1-b · 外部可见面板 anchor（gated on id）', () => {
         },
       ],
     };
-    const compiled = compileToScene(scene, { composites: lowerPlots({ sales: SALES }, opts) }).scene;
+    const compiled = compileTestResult(scene, { composites: lowerPlots({ sales: SALES }, opts) }).scene;
     const path = compiled.primitives.find((p): p is Extract<ScenePrimitive, { type: 'path' }> => p.type === 'path');
     if (!path) return undefined;
 

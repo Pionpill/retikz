@@ -1,8 +1,8 @@
 import type { IRScene } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { createGrid, createLegend, gridDefinition, legendDefinition } from '../src/presentation';
+import { compileTestResult } from './helpers/compilation';
 
 const gridScene: IRScene = {
   type: 'scene',
@@ -12,7 +12,7 @@ const gridScene: IRScene = {
 
 describe('Standard 直接定义加载', () => {
   it('通过 Core 编译选项编译选定的 Standard 复合组件', () => {
-    const direct = compileToScene(gridScene, { composites: [gridDefinition] });
+    const direct = compileTestResult(gridScene, { composites: [gridDefinition] });
 
     expect(direct.scene.primitives).not.toHaveLength(0);
   });
@@ -20,7 +20,7 @@ describe('Standard 直接定义加载', () => {
   it('省略定义时保留 Core 警告', () => {
     const warningCodes: Array<string> = [];
 
-    compileToScene(gridScene, {
+    compileTestResult(gridScene, {
       onWarn: warning => warningCodes.push(warning.code),
     });
 
@@ -28,7 +28,7 @@ describe('Standard 直接定义加载', () => {
   });
 
   it('留下重复的复合键以供 Core 注册表进行诊断', () => {
-    expect(() => compileToScene(gridScene, { composites: [gridDefinition, gridDefinition] })).toThrow(
+    expect(() => compileTestResult(gridScene, { composites: [gridDefinition, gridDefinition] })).toThrow(
       /duplicate composite registration.*standard\.grid/i,
     );
   });
@@ -47,7 +47,7 @@ describe('Standard 直接定义加载', () => {
     });
 
     expect(() =>
-      compileToScene({ type: 'scene', version: 1, children: [legend] }, { composites: [legendDefinition] }),
+      compileTestResult({ type: 'scene', version: 1, children: [legend] }, { composites: [legendDefinition] }),
     ).toThrow(/standard\.grid|composite.*not registered/i);
   });
 });

@@ -1,5 +1,4 @@
 import type { IRScene } from '@retikz/core';
-import { compileSceneSnapshot } from '@retikz/reconciler';
 import type {
   RuntimeScenePrimitive,
   RuntimeSceneResource,
@@ -13,6 +12,7 @@ import { describe, expect, it } from 'vitest';
 import { RetikzRenderErrorCode } from '../../src/runtime';
 import { runtimeStructuralEquals } from '../../src/runtime/shared';
 import { assertScenePatch, assertSceneRuntimeSnapshot } from '../../src/runtime/validator';
+import { compileTestSnapshot } from '../helpers/compilation';
 
 const source = (fill: string): IRScene => ({
   version: 1,
@@ -37,7 +37,7 @@ const source = (fill: string): IRScene => ({
 
 const createIncrementalPair = () => {
   const snapshots = ['#ef4444', '#22c55e'].map((fill, revision) => {
-    const compiled = compileSceneSnapshot(source(fill), {}, { captureProvenance: true });
+    const compiled = compileTestSnapshot(source(fill), {}, { captureProvenance: true });
     return createFullSceneRuntimeSnapshot(compiled.result.scene, revision, compiled.provenance!);
   });
   const [current, next] = snapshots;

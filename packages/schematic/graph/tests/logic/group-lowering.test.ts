@@ -1,9 +1,9 @@
 import type { CompileWarning, IRNode, ScenePrimitive } from '@retikz/core';
 import { defineTheme, resolveCoreProviderDependencies } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import * as Graph from '../../src';
+import { compileTestResult } from '../helpers/compilation';
 import { compileInHarness, naturalProposal, pathPrimitivesOf, primitivesOf } from './test-utils';
 
 describe('Group 布局感知下沉', () => {
@@ -57,7 +57,7 @@ describe('Group 布局感知下沉', () => {
         },
       }),
     });
-    const output = compileToScene(
+    const output = compileTestResult(
       {
         type: 'scene',
         version: 1,
@@ -99,7 +99,7 @@ describe('Group 布局感知下沉', () => {
         },
       }),
     });
-    const output = compileToScene(
+    const output = compileTestResult(
       {
         type: 'scene',
         version: 1,
@@ -284,7 +284,7 @@ describe('Group 布局感知下沉', () => {
     const definitions = resolveCoreProviderDependencies({
       contributions: [{ roots: [Graph.GraphProviderKey], providers: Graph.createGraphProviders() }],
     });
-    const output = compileToScene(
+    const output = compileTestResult(
       {
         type: 'scene',
         version: 1,

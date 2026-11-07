@@ -1,11 +1,11 @@
 import type { IRChild, IRNode, IRPath, IRScope, ScenePrimitive } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { lowerPlotWithDataArtifact } from '../../src/pipeline/expand/lower';
 import { preparePlotData } from '../../src/pipeline/expand/preparation';
 import { createPlotLineageLocator, lowerPlotWithLineage } from '../../src/pipeline/lineage';
 import { MarkSchema, PlotSchema } from '../../src/schemas';
+import { compileTestResult } from '../helpers/compilation';
 import { measureLabel } from '../helpers/text-measurement';
 
 const leaves = (child: IRChild): Array<IRNode | IRPath> =>
@@ -58,7 +58,7 @@ describe('数据绑定注释', () => {
       { rows: [] },
       options,
     ).child;
-    const { scene } = compileToScene({ type: 'scene', version: 1, children: [output] });
+    const { scene } = compileTestResult({ type: 'scene', version: 1, children: [output] });
     const flatten = (items: Array<ScenePrimitive>): Array<ScenePrimitive> =>
       items.flatMap(item => (item.type === 'group' ? flatten(item.children) : [item]));
     const ellipses = flatten(scene.primitives).filter(item => item.type === 'ellipse');
@@ -74,7 +74,7 @@ describe('数据绑定注释', () => {
       options,
     ).child;
     const expected = flatten(
-      compileToScene({ type: 'scene', version: 1, children: [dataOutput] }).scene.primitives,
+      compileTestResult({ type: 'scene', version: 1, children: [dataOutput] }).scene.primitives,
     ).filter(item => item.type === 'ellipse');
     expect(ellipses).toHaveLength(1);
     expect(expected).toHaveLength(1);
@@ -160,7 +160,7 @@ describe('数据绑定注释', () => {
     expect(leaves(output).map(({ id: _id, ...geometry }) => geometry)).toEqual(
       leaves(lowerPlotWithDataArtifact(constant, { rows: [] }, options).child),
     );
-    expect(() => compileToScene({ type: 'scene', version: 1, children: [output] })).not.toThrow();
+    expect(() => compileTestResult({ type: 'scene', version: 1, children: [output] })).not.toThrow();
   });
 
   it('计算局部平均值而不改变同级数据视图', () => {

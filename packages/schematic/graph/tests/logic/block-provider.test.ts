@@ -1,10 +1,10 @@
 import type { CoreDependencyProvider } from '@retikz/core';
 import { CompositeBaseSchema, defineComposite, resolveCoreProviderDependencies } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
 import * as Graph from '../../src';
+import { compileTestResult } from '../helpers/compilation';
 
 describe('Block 提供者关闭', () => {
   it('解析 Block、公共结构、Entity、Relation、FlexLayout 和 Surface', () => {
@@ -62,7 +62,7 @@ describe('Block 提供者关闭', () => {
     const definitions = resolveCoreProviderDependencies({
       contributions: [{ roots: [provider.key], providers: [provider, ...Graph.createGraphProviders()] }],
     });
-    const output = compileToScene(
+    const output = compileTestResult(
       { type: 'scene', version: 1, children: [{ namespace: 'test', type: 'serviceBlock' }] },
       { ...definitions, padding: 0 },
     );

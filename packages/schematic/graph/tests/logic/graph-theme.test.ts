@@ -7,10 +7,10 @@ import {
   RetikzCoreErrorCode,
   ThemeMode,
 } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import * as Graph from '../../src';
+import { compileTestResult } from '../helpers/compilation';
 
 const themeWithName = (name: string): CanonicalTheme => ({ ...DEFAULT_RESOLVED_THEME, name });
 
@@ -53,7 +53,7 @@ describe('Graph Scope 和 Theme 编译语义', () => {
       contributions: [{ roots: [Graph.entityProviderKey], providers: Graph.createGraphProviders() }],
     });
     const warnings: Array<CompileWarning> = [];
-    const output = compileToScene(
+    const output = compileTestResult(
       {
         type: 'scene',
         version: 1,
@@ -93,7 +93,7 @@ describe('Graph Scope 和 Theme 编译语义', () => {
     } as const;
 
     expect(() =>
-      compileToScene(
+      compileTestResult(
         { type: 'scene', version: 1, children: [Graph.EntitySchema.parse(source)] },
         { ...definitions, padding: 0 },
       ),
@@ -105,7 +105,7 @@ describe('Graph Scope 和 Theme 编译语义', () => {
     );
 
     const warnings: Array<CompileWarning> = [];
-    const output = compileToScene(
+    const output = compileTestResult(
       {
         type: 'scene',
         version: 1,
@@ -134,7 +134,7 @@ describe('Graph Scope 和 Theme 编译语义', () => {
       ],
     });
     const coreStyle = defineTheme({ name: definition.name, resolve: () => ({}) });
-    const output = compileToScene(
+    const output = compileTestResult(
       {
         type: 'scene',
         version: 1,
@@ -181,7 +181,7 @@ describe('Graph Scope 和 Theme 编译语义', () => {
       ],
     });
     const coreStyle = defineTheme({ name: definition.name, resolve: () => ({}) });
-    const output = compileToScene(
+    const output = compileTestResult(
       {
         type: 'scene',
         version: 1,
@@ -213,7 +213,7 @@ describe('Graph Scope 和 Theme 编译语义', () => {
       contributions: [{ roots: [Graph.GraphProviderKey], providers: Graph.createGraphProviders() }],
     });
     const warnings: Array<CompileWarning> = [];
-    const output = compileToScene(
+    const output = compileTestResult(
       {
         type: 'scene',
         version: 1,
@@ -271,7 +271,7 @@ describe('Graph Scope 和 Theme 编译语义', () => {
     const definitions = resolveCoreProviderDependencies({
       contributions: [{ roots: [Graph.GraphProviderKey], providers: Graph.createGraphProviders() }],
     });
-    const output = compileToScene(
+    const output = compileTestResult(
       {
         type: 'scene',
         version: 1,

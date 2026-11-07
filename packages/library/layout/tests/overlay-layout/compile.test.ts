@@ -8,7 +8,6 @@ import {
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
 } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { boolean, literal, number, string } from 'zod';
 
@@ -21,6 +20,7 @@ import {
   overlayLayoutDefinition,
   OverlayPlacementKind,
 } from '../../src';
+import { compileTestResult } from '../helpers/compilation';
 
 const LeafSchema = CompositeBaseSchema.extend({
   namespace: literal('overlay-test'),
@@ -140,7 +140,7 @@ const compileOverlay = (child: IRChild, proposal: LayoutProposal) => {
       return { children: [context.replay(probe.result)] };
     },
   });
-  const output = compileToScene(
+  const output = compileTestResult(
     {
       version: 1,
       type: 'scene',

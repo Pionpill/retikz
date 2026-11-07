@@ -9,10 +9,10 @@ import type {
 } from '@retikz/core';
 import { PathLabelSchema } from '@retikz/core';
 import { curve } from '@retikz/math';
-import { compileToScene as compileCoreToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { RibbonLabelSchema, ribbonPathDefinition, RibbonPathSchema } from '../../src/ribbon';
+import { compileTestResult } from '../helpers/compilation';
 
 const scene = (children: IRScene['children']): IRScene => ({
   version: 1,
@@ -52,11 +52,11 @@ const ribbon = (overrides: Record<string, unknown> = {}): IRPathBase =>
     ...overrides,
   });
 
-const compileToScene = (input: IRScene, options: Parameters<typeof compileCoreToScene>[1] = {}) => {
+const compileRibbonResult = (input: IRScene, options: Parameters<typeof compileTestResult>[1] = {}) => {
   const supplied = options.paths ?? [];
   const ribbonDefinition = supplied.find(definition => definition.name === 'ribbon') ?? ribbonPathDefinition;
 
-  return compileCoreToScene(input, {
+  return compileTestResult(input, {
     ...options,
     paths: [ribbonDefinition, ...supplied.filter(definition => definition.name !== 'ribbon')],
   });
@@ -129,7 +129,7 @@ describe('功能区标签 schema', () => {
 
 describe('功能区标签编译', () => {
   it('嵌套标签继承宿主位置与字体默认，并逐项覆盖样式和内外位置', () => {
-    const compiled = compileToScene(
+    const compiled = compileRibbonResult(
       scene([
         {
           type: 'scope',
@@ -154,7 +154,7 @@ describe('功能区标签编译', () => {
     expect(visualBottom(outside!)).toBeCloseTo(-9);
   });
   it('在 centerline midpoint 发出 label，并保留 ribbon path 作为第一个 primitive', () => {
-    const compiled = compileToScene(scene([ribbon({ label: { text: 'mid', position: 'midway' } })]), {
+    const compiled = compileRibbonResult(scene([ribbon({ label: { text: 'mid', position: 'midway' } })]), {
       padding: 0,
     }).scene;
 
@@ -167,7 +167,7 @@ describe('功能区标签编译', () => {
   });
 
   it('把 scope 内的长 host label 纳入 layout bounds', () => {
-    const compiled = compileToScene(
+    const compiled = compileRibbonResult(
       scene([
         {
           type: 'scope',
@@ -184,7 +184,7 @@ describe('功能区标签编译', () => {
   });
 
   it('position keyword 与数字端点沿 centerline 采样', () => {
-    const compiled = compileToScene(
+    const compiled = compileRibbonResult(
       scene([
         ribbon({
           label: [
@@ -203,7 +203,7 @@ describe('功能区标签编译', () => {
   });
 
   it('side=top/bottom 与 path label 一样沿切线法线偏移', () => {
-    const compiled = compileToScene(
+    const compiled = compileRibbonResult(
       scene([
         ribbon({
           label: [
@@ -220,7 +220,7 @@ describe('功能区标签编译', () => {
   });
 
   it('side=top 使用 Path label 默认距离加 ribbon 半宽，distance 可覆盖', () => {
-    const compiled = compileToScene(
+    const compiled = compileRibbonResult(
       scene([
         ribbon({
           label: [
@@ -240,7 +240,7 @@ describe('功能区标签编译', () => {
     { align: 'left', top: -14 },
     { align: 'right', top: -4 },
   ])('外侧标签跟随 $align 对齐的实际边界', ({ align, top }) => {
-    const compiled = compileToScene(scene([ribbon({ align, label: { text: 'outside', side: 'top' } })]), {
+    const compiled = compileRibbonResult(scene([ribbon({ align, label: { text: 'outside', side: 'top' } })]), {
       padding: 0,
     }).scene;
     const label = textOf(compiled.primitives, 'outside');
@@ -250,7 +250,7 @@ describe('功能区标签编译', () => {
   });
 
   it('placement=inside 且未显式 side 时居中落在 ribbon 内部', () => {
-    const compiled = compileToScene(
+    const compiled = compileRibbonResult(
       scene([
         ribbon({
           label: { text: 'inside', position: 'midway', placement: 'inside', sloped: true },
@@ -263,7 +263,7 @@ describe('功能区标签编译', () => {
   });
 
   it('sloped=true 复用 path label 的 rotate group 行为', () => {
-    const compiled = compileToScene(
+    const compiled = compileRibbonResult(
       scene([
         ribbon({
           children: [
@@ -282,7 +282,7 @@ describe('功能区标签编译', () => {
   });
 
   it('近起点的 sloped 标签沿中心线局部切线旋转', () => {
-    const compiled = compileToScene(
+    const compiled = compileRibbonResult(
       scene([
         ribbon({
           sampling: { kind: 'fixed', samples: 32 },
@@ -323,7 +323,7 @@ describe('功能区标签编译', () => {
   });
 
   it('sloped=true 仍保持无偏移 rotate 行为', () => {
-    const compiled = compileToScene(
+    const compiled = compileRibbonResult(
       scene([
         ribbon({
           children: [
@@ -342,7 +342,7 @@ describe('功能区标签编译', () => {
   });
 
   it('style 与 opacity 落到 label，opacity 与 host ribbon opacity 相乘', () => {
-    const compiled = compileToScene(
+    const compiled = compileRibbonResult(
       scene([
         ribbon({
           label: {

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { ThemeMode } from '../../../../core/src';
 import type { PathPrimitive, RectPrimitive, ScenePrimitive, TextPrimitive } from '../../../../core/src/contract';
 import type { IRScene } from '../../../../core/src/schemas';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 import { flattenPrims } from '../../helpers/flatten';
 
 const sceneOf = (children: IRScene['children'], mode: ThemeMode = ThemeMode.Light): IRScene => ({
@@ -13,7 +13,7 @@ const sceneOf = (children: IRScene['children'], mode: ThemeMode = ThemeMode.Ligh
   children,
 });
 
-const primitivesOf = (scene: IRScene): Array<ScenePrimitive> => flattenPrims(compileToScene(scene).scene.primitives);
+const primitivesOf = (scene: IRScene): Array<ScenePrimitive> => flattenPrims(compileTestResult(scene).scene.primitives);
 
 const rectOf = (scene: IRScene): RectPrimitive =>
   primitivesOf(scene).find((primitive): primitive is RectPrimitive => primitive.type === 'rect')!;
@@ -164,7 +164,7 @@ describe('Core 上下文颜色编译', () => {
   });
 
   it('延迟 Path 捕获其所在 nested Theme mode，且 Scene 颜色槽位不残留 number', () => {
-    const compiled = compileToScene(
+    const compiled = compileTestResult(
       sceneOf([
         {
           type: 'scope',

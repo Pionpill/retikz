@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { IRScene } from '../../../../../core/src/schemas';
-import { compileToScene } from '../../../../src/compile';
+import { compileTestResult } from '../../../helpers/compilation';
 import { line, move } from '../../../helpers/path-command-factory';
 import { findPathPrim } from './helpers';
 
@@ -20,7 +20,7 @@ describe('编译路径：行基线', () => {
         },
       ],
     };
-    const scene = compileToScene(ir).scene;
+    const scene = compileTestResult(ir).scene;
 
     expect(findPathPrim(scene.primitives).commands).toEqual([move([0, 0]), line([10, 5])]);
   });

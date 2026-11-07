@@ -1,7 +1,5 @@
-// @vitest-environment jsdom
 import type { Canvas as NapiCanvas } from '@napi-rs/canvas';
 import type { IRScene, Scene } from '@retikz/core';
-import { compileSceneSnapshot } from '@retikz/reconciler';
 import type { RuntimeScenePrimitive, ScenePatch, ScenePatchOperation, SceneRuntimeSnapshot } from '@retikz/reconciler';
 import {
   SceneReconciler,
@@ -20,6 +18,9 @@ import type { HydrationAnimationControls, HydrationContext } from '../../src/hyd
 import type { RenderFrameSnapshot, RenderReadonlyLayer, InputRenderRuntimeConfig } from '../../src/runtime';
 import { builtinRetainedRendererFactory, createRetainedRenderTarget } from '../../src/runtime';
 import { getRetainedRendererExecutor } from '../../src/runtime/renderer';
+
+// @vitest-environment jsdom
+import { compileTestSnapshot } from '../helpers/compilation';
 
 const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
 
@@ -236,7 +237,7 @@ const createSession = (
 /** 编译一对固定 Runtime snapshot 与 canonical Patch，供内置 renderer 黑盒测试 */
 const createCorePair = (currentSource: IRScene, nextSource: IRScene) => {
   const [current, next] = [currentSource, nextSource].map((source, revision) => {
-    const compiled = compileSceneSnapshot(source, {}, { captureProvenance: true });
+    const compiled = compileTestSnapshot(source, {}, { captureProvenance: true });
     return createFullSceneRuntimeSnapshot(compiled.result.scene, revision, compiled.provenance!);
   });
   // Renderer 的 entity patch 测试显式构造固定拓扑更新，不依赖编译器 diff 策略

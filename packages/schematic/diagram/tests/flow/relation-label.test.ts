@@ -1,11 +1,11 @@
 import type { IRPathLabel, ScenePrimitive } from '@retikz/core';
 import { resolveCoreProviderDependencies } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { createFlowDiagramProviderContribution, FlowDiagramSchema, layeredFlowLayoutDefinition } from '../../src/flow';
 import type { InputFlowLayoutComputation, FlowLayoutRoute } from '../../src/flow';
 import { flowRouteLabelBounds } from '../../src/flow/providers';
+import { compileTestResult } from '../helpers/compilation';
 
 describe('Flow 关系路径标签', () => {
   it('将中断和间隙转发到实际立方行程', () => {
@@ -33,7 +33,7 @@ describe('Flow 关系路径标签', () => {
         ],
       });
       return flatten(
-        compileToScene(
+        compileTestResult(
           { type: 'scene', version: 1, children: [source] },
           resolveCoreProviderDependencies({ contributions: [createFlowDiagramProviderContribution()] }),
         ).scene.primitives,
@@ -76,7 +76,7 @@ describe('Flow 关系路径标签', () => {
         },
       ],
     });
-    const result = compileToScene(
+    const result = compileTestResult(
       { type: 'scene', version: 1, children: [source] },
       {
         ...resolveCoreProviderDependencies({
@@ -126,7 +126,7 @@ describe('Flow 关系路径标签', () => {
         { source: 'a', target: 'b', label: { text: 'full' } },
       ],
     });
-    compileToScene(
+    compileTestResult(
       { type: 'scene', version: 1, children: [source] },
       resolveCoreProviderDependencies({
         contributions: [
@@ -201,7 +201,7 @@ describe('Flow 关系路径标签', () => {
       children: ['a', 'b'],
       relations: [{ source: 'a', target: 'b', label, labelFont: { family: 'serif', size: 10 }, routing: { kind } }],
     });
-    const result = compileToScene(
+    const result = compileTestResult(
       { type: 'scene', version: 1, children: [source] },
       resolveCoreProviderDependencies({ contributions: [createFlowDiagramProviderContribution()] }),
     );

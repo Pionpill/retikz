@@ -4,7 +4,7 @@ import { literal, number, strictObject } from 'zod';
 
 import type { ClipDefinition, IRClip, IRScene, PathCommand } from '../../../../core/src';
 import { defineClip, resolveCoreProviderDependencies } from '../../../../core/src';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 
 const clippedIr = (clip: IRClip): IRScene => ({
   version: 1,
@@ -76,7 +76,7 @@ const roundedRectClip = (): ClipDefinition =>
 
 describe('裁剪提供者', () => {
   it('仅通过 options.clips 编译一个同类自定义', () => {
-    const scene = compileToScene(
+    const scene = compileTestResult(
       clippedIr({ kind: 'roundedRect', params: { x: 0, y: 0, width: 40, height: 30, r: 5 } }),
       {
         clips: [roundedRectClip()],
@@ -100,7 +100,8 @@ describe('裁剪提供者', () => {
   it('当没有注册提供者时，自定义裁剪类型在编译时被拒绝', () => {
     expect(
       () =>
-        compileToScene(clippedIr({ kind: 'roundedRect', params: { x: 0, y: 0, width: 40, height: 30, r: 5 } })).scene,
+        compileTestResult(clippedIr({ kind: 'roundedRect', params: { x: 0, y: 0, width: 40, height: 30, r: 5 } }))
+          .scene,
     ).toThrow(/Unknown provider .*available: rect/i);
   });
 
@@ -122,7 +123,7 @@ describe('裁剪提供者', () => {
 
     expect(
       () =>
-        compileToScene(clippedIr({ kind: 'rect', params: { x: 0, y: 0, width: 10, height: 10 } }), {
+        compileTestResult(clippedIr({ kind: 'rect', params: { x: 0, y: 0, width: 10, height: 10 } }), {
           clips: [rectOverride],
         }).scene,
     ).toThrow(/duplicate clip registration/i);
@@ -178,9 +179,9 @@ describe('裁剪提供者', () => {
       lower,
     });
 
-    expect(() => compileToScene(clippedIr({ kind: 'schemaTransform', params: {} }), { clips: [definition] })).toThrow(
-      /clip:schemaTransform.*kind.*other/i,
-    );
+    expect(() =>
+      compileTestResult(clippedIr({ kind: 'schemaTransform', params: {} }), { clips: [definition] }),
+    ).toThrow(/clip:schemaTransform.*kind.*other/i);
     expect(lower).not.toHaveBeenCalled();
   });
 
@@ -203,7 +204,9 @@ describe('裁剪提供者', () => {
       },
     });
 
-    const { scene } = compileToScene(clippedIr({ kind: 'scaledClip', params: { size: 6 } }), { clips: [definition] });
+    const { scene } = compileTestResult(clippedIr({ kind: 'scaledClip', params: { size: 6 } }), {
+      clips: [definition],
+    });
     expect(scene.resources).toMatchObject([
       {
         kind: 'clip',

@@ -5,7 +5,6 @@ import {
   defineComposite,
   LayoutAlignmentGuideDimension,
 } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal, number, string } from 'zod';
 
@@ -26,6 +25,7 @@ import {
   OverlayPlacementKind,
 } from '../../src';
 import { createLayoutArtifactItem, sortLayoutSpacing } from '../../src/composites/internal';
+import { compileTestResult } from '../helpers/compilation';
 
 const ArtifactLeafSchema = CompositeBaseSchema.extend({
   namespace: literal('layout-artifact-test'),
@@ -123,7 +123,7 @@ const definitions = [
 
 const compileWithWarnings = (children: IRScene['children']) => {
   const warnings: Array<string> = [];
-  const output = compileToScene(
+  const output = compileTestResult(
     { type: 'scene', version: 1, children },
     { composites: definitions, padding: 0, onWarn: warning => warnings.push(warning.code) },
   );

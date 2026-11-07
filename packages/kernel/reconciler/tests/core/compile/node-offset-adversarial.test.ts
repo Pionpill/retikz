@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { PathPrimitive, RectPrimitive, ScenePrimitive } from '../../../../core/src/contract';
 import type { IRScene } from '../../../../core/src/schemas';
 import { OffsetPositionSchema, PolarPositionSchema, TargetSchema } from '../../../../core/src/schemas';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 import { flattenPrims } from '../../helpers/flatten';
 
 const rects = (prims: Array<ScenePrimitive>): Array<RectPrimitive> =>
@@ -86,7 +86,7 @@ describe('OffsetPosition adversarial: 循环 / 自引用', () => {
       children: [{ type: 'node', id: 'X', position: { of: 'X', offset: [10, 0] } }],
     };
 
-    expect(() => compileToScene(ir).scene).toThrow(/Cannot resolve position/);
+    expect(() => compileTestResult(ir).scene).toThrow(/Cannot resolve position/);
   });
 
   it('Coordinate 自引用自身 id → 抛错', () => {
@@ -96,7 +96,7 @@ describe('OffsetPosition adversarial: 循环 / 自引用', () => {
       children: [{ type: 'coordinate', id: 'a', position: { of: 'a', offset: [0, 0] } }],
     };
 
-    expect(() => compileToScene(ir).scene).toThrow(/Cannot resolve position/);
+    expect(() => compileTestResult(ir).scene).toThrow(/Cannot resolve position/);
   });
 
   it('A → B → A 互引用：B 先出现 → 抛（前向引用拒绝）', () => {
@@ -109,7 +109,7 @@ describe('OffsetPosition adversarial: 循环 / 自引用', () => {
       ],
     };
 
-    expect(() => compileToScene(ir).scene).toThrow(/Cannot resolve position/);
+    expect(() => compileTestResult(ir).scene).toThrow(/Cannot resolve position/);
   });
 });
 
@@ -127,7 +127,7 @@ describe('OffsetPosition adversarial: 数值极端', () => {
         },
       ],
     };
-    const [, b] = rects(compileToScene(ir).scene.primitives).map(rectCenter);
+    const [, b] = rects(compileTestResult(ir).scene.primitives).map(rectCenter);
 
     expect(b[0]).toBeCloseTo(0.6);
     expect(b[1]).toBeCloseTo(0.45);
@@ -142,7 +142,7 @@ describe('OffsetPosition adversarial: 数值极端', () => {
         { type: 'node', id: 'B', position: { of: 'A', offset: [1e6, 1e6] } },
       ],
     };
-    const scene = compileToScene(ir).scene;
+    const scene = compileTestResult(ir).scene;
     const [, b] = rects(scene.primitives).map(rectCenter);
 
     expect(b[0]).toBeCloseTo(1e6, 0);
@@ -164,7 +164,7 @@ describe('OffsetPosition adversarial: 数值极端', () => {
         { type: 'node', id: 'E', position: { of: 'D', offset: [10, 0] }, text: 'E' },
       ],
     };
-    const cs = rects(compileToScene(ir).scene.primitives).map(rectCenter);
+    const cs = rects(compileTestResult(ir).scene.primitives).map(rectCenter);
 
     expect(cs[4][0]).toBeCloseTo(40);
     expect(cs[4][1]).toBeCloseTo(0);
@@ -190,7 +190,7 @@ describe('OffsetPosition adversarial: step.to 首步 / 极端', () => {
         },
       ],
     };
-    const scene = compileToScene(ir).scene;
+    const scene = compileTestResult(ir).scene;
     const path = findPath(scene.primitives);
 
     expect(path).toBeDefined();
@@ -225,7 +225,7 @@ describe('OffsetPosition adversarial: step.to 首步 / 极端', () => {
         },
       ],
     };
-    const scene = compileToScene(ir).scene;
+    const scene = compileTestResult(ir).scene;
     const path = findPath(scene.primitives);
 
     expect(path).toBeDefined();
@@ -255,7 +255,7 @@ describe('OffsetPosition adversarial: step.to 首步 / 极端', () => {
         },
       ],
     };
-    const scene = compileToScene(ir).scene;
+    const scene = compileTestResult(ir).scene;
 
     expect(findPath(scene.primitives)).toBeUndefined();
   });
@@ -277,8 +277,8 @@ describe('OffsetPosition adversarial: JSON 序列化往返', () => {
       ],
     };
     const restored = JSON.parse(JSON.stringify(ir)) as IRScene;
-    const before = rects(compileToScene(ir).scene.primitives).map(rectCenter);
-    const after = rects(compileToScene(restored).scene.primitives).map(rectCenter);
+    const before = rects(compileTestResult(ir).scene.primitives).map(rectCenter);
+    const after = rects(compileTestResult(restored).scene.primitives).map(rectCenter);
 
     expect(after).toEqual(before);
   });

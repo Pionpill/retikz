@@ -1,8 +1,8 @@
 import type { IRScene } from '@retikz/core';
 import { describe, expect, it, vi } from 'vitest';
 
-import { compileToScene } from '../../src/compile';
 import { SceneReconciler } from '../../src/reconciler';
+import { compileTestResult } from '../helpers/compilation';
 
 const scene: IRScene = { type: 'scene', version: 1, children: [{ type: 'node', id: 'a', position: [0, 0] }] };
 
@@ -21,13 +21,13 @@ describe('独立编译会话', () => {
       ],
     });
     expect(first.compilation.result).toEqual(
-      compileToScene({ ...scene, children: [{ type: 'node', id: 'a', position: [10, 0] }] }),
+      compileTestResult({ ...scene, children: [{ type: 'node', id: 'a', position: [10, 0] }] }),
     );
     expect(first.revision).toBe(1);
     expect(session.update({ operations: [] })).toBe(first);
     expect(
       session.update({ operations: [{ kind: 'remove', target: { kind: 'id', scopeId, id: 'a' } }] }).compilation.result,
-    ).toEqual(compileToScene({ ...scene, children: [] }));
+    ).toEqual(compileTestResult({ ...scene, children: [] }));
   });
 
   it('无效批次不推进结果且后续合法批次仍可提交', () => {
@@ -105,7 +105,7 @@ describe('独立编译会话', () => {
         ],
       });
       expect(result.compilation.result).toEqual(
-        compileToScene({ ...input, children: [{ type: 'node', id: 'a', position: [10, 0] }, input.children[1]] }),
+        compileTestResult({ ...input, children: [{ type: 'node', id: 'a', position: [10, 0] }, input.children[1]] }),
       );
       counts.push(trace.mock.calls.at(-1)![0].visited);
       expect(trace.mock.calls.at(-1)![0]).toMatchObject({

@@ -1,12 +1,12 @@
 import { coerceValue, inferFieldType, resolveDataRows, assertBoundData } from '@retikz/data';
 import { DataFieldType, ScalarValueSchema } from '@retikz/data';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import type { PlotsLoweringOptions } from '../../../src/pipeline/expand';
 import { lowerPlots, prepareRows } from '../../../src/pipeline/expand';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
+import { compileTestResult } from '../../helpers/compilation';
 
 /**
  * contract 待实现字段的本地类型扩展：`PlotsLoweringOptions.invalid` 现在还不存在（实现 Agent 的活），
@@ -17,7 +17,8 @@ type RobustOptions = PlotsLoweringOptions & { invalid?: 'skip' | 'error' };
 
 /** 跑一次完整下沉（抛错路径用 expect(fn).toThrow） */
 const compile = (spec: IRPlot, datasets: Record<string, Array<Record<string, unknown>>>, options?: RobustOptions) =>
-  compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots(datasets, options) }).scene;
+  compileTestResult({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots(datasets, options) })
+    .scene;
 
 /** 无 model：纯推断路径（point mark，x/y 绑 a/b） */
 const specNoModel = (): IRPlot =>

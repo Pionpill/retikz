@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
 import { SceneReconciler, ReconcilerLifecyclePhase, ReconcilerTraceUnit } from '../../src';
-import { compileToScene } from '../../src/compile';
+import { compileTestResult } from '../helpers/compilation';
 
 const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: 'scene', children });
 
@@ -48,7 +48,7 @@ describe('协调器编译跟踪', () => {
     const mounted = session.mount(input);
     const traced = mounted.compilation.result;
     expect(session.update({ operations: [] })).toBe(mounted);
-    const plain = compileToScene(input);
+    const plain = compileTestResult(input);
 
     expect(traced).toEqual(plain);
     expect(records).toEqual([

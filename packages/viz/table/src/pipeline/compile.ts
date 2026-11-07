@@ -1,8 +1,8 @@
 import type { AnyCompositeDefinition } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import { isPropertyPathEqual } from '@retikz/foundation';
+import { SceneReconciler } from '@retikz/reconciler';
 import type { CompositeArtifact } from '@retikz/reconciler';
-import { compileToScene } from '@retikz/reconciler';
 
 import { RetikzTableError } from '../error';
 import type { IRTable } from '../schemas';
@@ -28,18 +28,25 @@ export const compileTable = <const TComposites extends ReadonlyArray<AnyComposit
   const compileOptions = options.compile ?? {};
   const tableDefinitions = lowerTables(datasets, options.lower);
   const composites = [...tableDefinitions, ...(compileOptions.composites ?? [])];
-  const result = compileToScene(
-    {
-      type: 'scene',
-      version: 1,
-      ...(options.theme === undefined ? {} : { theme: options.theme }),
-      children: [spec],
-    },
-    {
-      ...compileOptions,
-      composites,
-    },
-  );
+  const result = (() => {
+    const reconciler = new SceneReconciler(
+      {
+        ...compileOptions,
+        composites,
+      },
+      { incremental: false },
+    );
+    try {
+      return reconciler.mount({
+        type: 'scene',
+        version: 1,
+        ...(options.theme === undefined ? {} : { theme: options.theme }),
+        children: [spec],
+      }).compilation.result;
+    } finally {
+      reconciler.dispose();
+    }
+  })();
   const matches = result.artifacts.filter(isRootTableArtifact);
   if (matches.length !== 1) {
     throw new RetikzTableError(

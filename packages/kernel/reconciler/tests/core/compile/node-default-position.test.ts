@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { IRNode, IRScene } from '../../../../core/src';
 import { CoordinateSchema, NodeSchema, SceneSchema } from '../../../../core/src';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 
 /** 比较根级与嵌套局部坐标的节点输出 */
 const sceneWith = (node: IRNode, nested: boolean): IRScene => ({
@@ -31,8 +31,8 @@ describe('Node 默认位置', () => {
   it.each([false, true])('省略位置与显式局部原点输出等价，nested=%s', nested => {
     const node: IRNode = { type: 'node', id: 'a', text: 'A', rotate: 15, scale: 2 };
 
-    expect(compileToScene(sceneWith(node, nested)).scene).toEqual(
-      compileToScene(sceneWith({ ...node, position: [0, 0] }, nested)).scene,
+    expect(compileTestResult(sceneWith(node, nested)).scene).toEqual(
+      compileTestResult(sceneWith({ ...node, position: [0, 0] }, nested)).scene,
     );
     expect(node).not.toHaveProperty('position');
   });
@@ -46,8 +46,8 @@ describe('Node 默认位置', () => {
     ];
     const scene: IRScene = { type: 'scene', version: 1, children };
 
-    expect(compileToScene(scene).scene).toEqual(
-      compileToScene({ ...scene, children: [{ ...source, position: [0, 0] }, ...children.slice(1)] }).scene,
+    expect(compileTestResult(scene).scene).toEqual(
+      compileTestResult({ ...scene, children: [{ ...source, position: [0, 0] }, ...children.slice(1)] }).scene,
     );
   });
 });

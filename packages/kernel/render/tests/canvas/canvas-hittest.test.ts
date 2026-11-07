@@ -1,9 +1,9 @@
 import type { Scene, ScenePrimitive } from '@retikz/core';
 import { defineArrow } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { hitTest } from '../../src/canvas';
+import { compileTestResult } from '../helpers/compilation';
 
 /**
  * Canvas 水合 hitTest：逆 z-order + fill/stroke 区分 + group 祖先 id
@@ -341,7 +341,7 @@ describe('Canvas 命中测试', () => {
   });
 
   it('居中标签中断使真实描边间隙不可命中，而可见片段保留其所属模块 ID', () => {
-    const scene = compileToScene(
+    const scene = compileTestResult(
       {
         version: 1,
         type: 'scene',
@@ -376,7 +376,7 @@ describe('Canvas 命中测试', () => {
       emit: () => [],
     });
     const compile = (endpointOverlap: number): Scene =>
-      compileToScene(
+      compileTestResult(
         {
           version: 1,
           type: 'scene',
@@ -473,7 +473,7 @@ it.each<ScenePrimitive>([
 
 it('普通标记命中宿主，局部 id 不创建独立目标，禁用内容可穿透', () => {
   const compile = (disabled: boolean) =>
-    compileToScene(
+    compileTestResult(
       {
         type: 'scene',
         version: 1,

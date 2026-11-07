@@ -1,11 +1,11 @@
 import type { ScenePrimitive } from '@retikz/core';
 import { DEFAULT_RESOLVED_THEME, resolveCoreProviderDependencies } from '@retikz/core';
 import { GroupCaptionSchema } from '@retikz/graph';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import * as Flow from '../../src/flow';
 import { resolveFlowDiagram } from '../../src/flow/resolve';
+import { compileTestResult } from '../helpers/compilation';
 
 const flow = (group: Omit<Flow.IRFlowGroup, 'id' | 'children'>): Flow.IRFlowDiagram => ({
   namespace: 'diagram',
@@ -20,7 +20,7 @@ const resolve = (source: Flow.IRFlowDiagram) =>
   resolveFlowDiagram(source, { theme: DEFAULT_RESOLVED_THEME, flowThemeDefinitions: new Map() });
 
 const compile = (source: Flow.IRFlowDiagram, options: Flow.FlowDiagramDefinitionOptions = {}) =>
-  compileToScene(
+  compileTestResult(
     { type: 'scene', version: 1, children: [source] },
     {
       ...resolveCoreProviderDependencies({ contributions: [Flow.createFlowDiagramProviderContribution(options)] }),

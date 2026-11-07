@@ -1,9 +1,9 @@
 import type { CompileWarning } from '@retikz/core';
 import { resolveCoreProviderDependencies, resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import * as Graph from '../../src';
+import { compileTestResult } from '../helpers/compilation';
 import { pathPrimitivesOf, primitivesOf } from './test-utils';
 
 const theme = {
@@ -203,7 +203,7 @@ describe('Relation 下沉', () => {
     const definitions = resolveCoreProviderDependencies({
       contributions: [{ roots: [Graph.relationProviderKey], providers: Graph.createGraphProviders() }],
     });
-    const output = compileToScene(
+    const output = compileTestResult(
       {
         type: 'scene',
         version: 1,
@@ -238,7 +238,7 @@ describe('Relation 下沉', () => {
     const definitions = resolveCoreProviderDependencies({
       contributions: [{ roots: [Graph.relationProviderKey], providers: Graph.createGraphProviders() }],
     });
-    const output = compileToScene(
+    const output = compileTestResult(
       {
         type: 'scene',
         version: 1,
@@ -323,7 +323,7 @@ describe('Relation 下沉', () => {
     });
 
     const warnings: Array<CompileWarning> = [];
-    compileToScene(
+    compileTestResult(
       {
         type: 'scene',
         version: 1,

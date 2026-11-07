@@ -1,6 +1,5 @@
 import type { IRNode, IRScope } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import type { CoordinateFrame, IntervalContext, PositionScale } from '../../../src/contract';
@@ -13,6 +12,7 @@ import { createCartesianCoordinate, createPolarCoordinate } from '../../../src/p
 import { datumAnchor as resolveDatumAnchor, resolveMarkOperation } from '../../../src/resolve/mark';
 import type { IRPlot, IRPlotIntervalMark } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
+import { compileTestResult } from '../../helpers/compilation';
 import { measureLabel } from '../../helpers/text-measurement';
 
 /**
@@ -333,7 +333,7 @@ describe('rect 缺 color', () => {
     const rows = [{ rk: 'r0', ck: 'c0' }];
     const layer = firstLayer(heatmapSpec(), { d: rows }, cartOpts);
 
-    expect(() => compileToScene({ version: 1, type: 'scene', children: [layer] }).scene).not.toThrow();
+    expect(() => compileTestResult({ version: 1, type: 'scene', children: [layer] }).scene).not.toThrow();
   });
 });
 

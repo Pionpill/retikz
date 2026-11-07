@@ -1,4 +1,3 @@
-export { compileSceneSnapshot, compileToScene } from './compile';
 export * from './options';
 export * from './output';
 export * from './provenance';

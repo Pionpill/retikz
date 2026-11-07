@@ -10,7 +10,7 @@ import type {
 } from '../../../../core/src';
 import { defineArrow } from '../../../../core/src';
 import { calculateBoundsOfPrimitives } from '../../../../core/src/compile/scene/bounds';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 
 const boundsOf = (primitives: ReadonlyArray<ScenePrimitive>, resources: ReadonlyArray<SceneResource> = []) =>
   calculateBoundsOfPrimitives(primitives, resources);
@@ -309,7 +309,7 @@ describe('规范的视觉边界', () => {
           },
         ],
       };
-      const scene = compileToScene(ir, { arrows: [arrow], padding: 0 }).scene;
+      const scene = compileTestResult(ir, { arrows: [arrow], padding: 0 }).scene;
       const bounds = boundsOf(scene.primitives, scene.resources);
 
       assert(bounds !== undefined);

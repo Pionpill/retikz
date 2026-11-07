@@ -16,7 +16,6 @@ import {
   LayoutChildProbeKind,
 } from '@retikz/core';
 import { LayoutAlignment } from '@retikz/layout';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { boolean, literal, number, strictObject, string } from 'zod';
 
@@ -30,6 +29,7 @@ import {
 } from '../../src/presentation/legend/constants';
 import type { InputLegendConfig, LegendItemsArtifact } from '../../src/presentation/legend/types';
 import { fullScopeProps } from '../composites/presentation/scope-props';
+import { compileTestResult } from '../helpers/compilation';
 
 const LeafSchema = CompositeBaseSchema.extend({
   namespace: literal('legend-test'),
@@ -138,7 +138,7 @@ const compileLegend = (child: IRChild, proposal: LayoutProposal = naturalProposa
       return { children: [context.replay(probe.result)] };
     },
   });
-  const output = compileToScene(
+  const output = compileTestResult(
     {
       version: 1,
       type: 'scene',
@@ -151,7 +151,7 @@ const compileLegend = (child: IRChild, proposal: LayoutProposal = naturalProposa
   return { logs, observed, output };
 };
 
-const legendArtifactOf = (output: ReturnType<typeof compileToScene>): LegendItemsArtifact => {
+const legendArtifactOf = (output: ReturnType<typeof compileTestResult>): LegendItemsArtifact => {
   const artifact = output.artifacts.find(value => value.type === 'legend');
   if (artifact === undefined) throw new Error('Expected Legend compile artifact');
 
@@ -251,7 +251,7 @@ describe('Legend 项目编译契约', () => {
   });
 
   it('订购完整的 Legend 组时，使用编写的根 zIndex', () => {
-    const output = compileToScene(
+    const output = compileTestResult(
       {
         type: 'scene',
         version: 1,
@@ -562,7 +562,7 @@ describe('Legend 项目编译契约', () => {
   });
 
   it('保留 Legend 示例中编写的 Core Path 描边和破折号语义', () => {
-    const output = compileToScene(
+    const output = compileTestResult(
       {
         type: 'scene',
         version: 1,
@@ -595,7 +595,7 @@ describe('Legend 项目编译契约', () => {
   });
 
   it('通过相同的探测和回放链接受 Core Scope 作为 Legend 样本', () => {
-    const output = compileToScene(
+    const output = compileTestResult(
       {
         type: 'scene',
         version: 1,
@@ -635,7 +635,7 @@ describe('Legend 项目编译契约', () => {
 
   it('解析来自祖先编译环境的 Legend Path 示例引用', () => {
     const warnings: Array<CompileWarning> = [];
-    const output = compileToScene(
+    const output = compileTestResult(
       {
         type: 'scene',
         version: 1,
@@ -674,7 +674,7 @@ describe('Legend 项目编译契约', () => {
     let thrown: unknown;
 
     try {
-      compileToScene(
+      compileTestResult(
         {
           type: 'scene',
           version: 1,
@@ -725,7 +725,7 @@ describe('Legend 项目编译契约', () => {
         artifact: { role: 'sample' },
       }),
     });
-    const output = compileToScene(
+    const output = compileTestResult(
       {
         type: 'scene',
         version: 1,
@@ -778,7 +778,7 @@ describe('Legend 项目编译契约', () => {
 
   it('提交回放重复 ID，并带有一个 Core 警告和后写优先查找', () => {
     const warnings: Array<CompileWarning> = [];
-    const output = compileToScene(
+    const output = compileTestResult(
       {
         type: 'scene',
         version: 1,

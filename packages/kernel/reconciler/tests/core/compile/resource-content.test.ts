@@ -5,9 +5,10 @@ import { defineMark, definePath, definePattern, PathSchema, visitSceneContent } 
 import type { TextPrimitive, Scene, GroupPrimitive, ScenePrimitive, IRScene } from '../../../../core/src';
 import { createClipRegistry, createPaintRegistry } from '../../../../core/src/compile/resource';
 import { BUILTIN_SHAPES } from '../../../../core/src/providers/shape/shape';
-import { createSharedCompileContext, compileToScene } from '../../../src/compile';
+import { createSharedCompileContext } from '../../../src/compile';
 import { assembleCompileOutputs } from '../../../src/compile/index';
 import { importSceneResources } from '../../../src/compile/resource';
+import { compileTestResult } from '../../helpers/compilation';
 
 describe('资源内容复用基础图元', () => {
   it('自定义 Pattern 保留已度量文本和基础图元样式', () => {
@@ -25,7 +26,7 @@ describe('资源内容复用基础图元', () => {
       fill: 'red',
     };
     const pattern = definePattern({ name: 'textTile', emit: () => [text] });
-    const result = compileToScene(
+    const result = compileTestResult(
       {
         type: 'scene',
         version: 1,
@@ -67,11 +68,11 @@ describe('Scene 资源依赖关闭', () => {
       ],
     };
     const patterns = [definePattern({ name: 'first', emit: () => [rectangle] })];
-    const result = compileToScene(input, { shapes: [valid], patterns }).scene;
+    const result = compileTestResult(input, { shapes: [valid], patterns }).scene;
     expect(() => visitSceneContent(result)).not.toThrow();
     expect(result.resources).toHaveLength(1);
     expect(() =>
-      compileToScene(
+      compileTestResult(
         { ...input, children: [...input.children, { type: 'node', shape: 'foreign', position: [2, 0] }] },
         {
           patterns,
@@ -100,20 +101,20 @@ describe('Scene 资源依赖关闭', () => {
       ],
     };
     const patterns = [definePattern({ name: 'first', emit: () => [rectangle] })];
-    const result = compileToScene(input, {
+    const result = compileTestResult(input, {
       patterns,
       marks: [defineMark({ name: 'custom', emit: context => [{ ...rectangle, fill: context.fill }] })],
     }).scene;
     expect(result.resources).toHaveLength(1);
     expect(() => visitSceneContent(result)).not.toThrow();
     expect(() =>
-      compileToScene(input, {
+      compileTestResult(input, {
         patterns,
         marks: [defineMark({ name: 'custom', emit: () => Object.assign([rectangle], { resources: [] }) })],
       }),
     ).toThrow(/cannot declare resources/);
     expect(() =>
-      compileToScene(input, {
+      compileTestResult(input, {
         patterns,
         marks: [
           defineMark({ name: 'custom', emit: () => [{ ...rectangle, fill: { kind: 'resourceRef', id: 'foreign' } }] }),
@@ -151,16 +152,16 @@ describe('Scene 资源依赖关闭', () => {
           style: { stroke: { kind: 'pattern', shape: 'first' } },
         }),
     });
-    const result = compileToScene(input, { patterns, paths: [path] }).scene;
+    const result = compileTestResult(input, { patterns, paths: [path] }).scene;
     expect(result.resources).toHaveLength(1);
     expect(() => visitSceneContent(result)).not.toThrow();
     expect(() =>
-      compileToScene(input, {
+      compileTestResult(input, {
         paths: [{ ...path, compile: () => ({ primitives: [rectangle], boundsPoints: [], resources: [] }) }],
       }),
     ).toThrow(/cannot declare resources/);
     expect(() =>
-      compileToScene(input, {
+      compileTestResult(input, {
         paths: [
           {
             ...path,
@@ -177,7 +178,7 @@ describe('Scene 资源依赖关闭', () => {
   it('在 Pattern 输出时拒绝手写引用，不等待后续资源注册', () => {
     let secondCalled = false;
     expect(() =>
-      compileToScene(patternScene, {
+      compileTestResult(patternScene, {
         patterns: [
           definePattern({
             name: 'first',
@@ -215,7 +216,7 @@ describe('Scene 资源依赖关闭', () => {
     ];
     for (const primitive of primitives) {
       expect(() =>
-        compileToScene(patternScene, {
+        compileTestResult(patternScene, {
           patterns: [definePattern({ name: 'first', emit: () => [primitive] })],
         }),
       ).toThrow(/Pattern 'first'.*(clipRef|not supplied)/);
@@ -226,7 +227,7 @@ describe('Scene 资源依赖关闭', () => {
     const outputs = [{ tileSize: 10, motif: [rectangle], resources: [] }, [{ ...rectangle, resources: [] }]];
     for (const output of outputs) {
       expect(() =>
-        compileToScene(patternScene, {
+        compileTestResult(patternScene, {
           patterns: [definePattern({ name: 'first', emit: () => output })],
         }),
       ).toThrow(/cannot declare resources/);
@@ -235,7 +236,7 @@ describe('Scene 资源依赖关闭', () => {
 
   it('元数据中的同名字段不属于渲染资源', () => {
     const meta = { resources: [], clipRef: 'user-value', example: { kind: 'resourceRef', id: 'user-value' } };
-    const scene = compileToScene(
+    const scene = compileTestResult(
       { ...patternScene, children: patternScene.children.slice(0, 1) },
       {
         patterns: [definePattern({ name: 'first', emit: () => [{ ...rectangle, meta }] })],
@@ -301,7 +302,7 @@ describe('Scene 资源依赖关闭', () => {
   it('相同声明采用不同 Pattern 输出时资源独立，合并保留图元和资源引用', () => {
     const input: IRScene = { ...patternScene, children: patternScene.children.slice(0, 1) };
     const compile = (fill: string) =>
-      compileToScene(input, {
+      compileTestResult(input, {
         patterns: [definePattern({ name: 'first', emit: () => [{ ...rectangle, fill }] })],
       }).scene;
     const red = compile('red');

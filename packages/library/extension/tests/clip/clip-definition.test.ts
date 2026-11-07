@@ -1,6 +1,5 @@
 import type { ClipDefinition, CoreDependencyProvider, IRClip, IRScene, PathCommand } from '@retikz/core';
 import { resolveCoreProviderDependencies } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -17,6 +16,7 @@ import {
   extensionClipDefinitions,
   extensionClipProviders,
 } from '../../src/clip';
+import { compileTestResult } from '../helpers/compilation';
 
 const sceneOf = (clip: IRClip): IRScene => ({
   type: 'scene',
@@ -146,7 +146,7 @@ describe('扩展裁剪定义公共契约', () => {
   });
 
   it.each(cases)('通过仅作为裁剪传递的完整定义来编译 $kind', testCase => {
-    const scene = compileToScene(sceneOf(testCase.clip), { clips: testCase.definitions }).scene;
+    const scene = compileTestResult(sceneOf(testCase.clip), { clips: testCase.definitions }).scene;
 
     expect(scene.resources).toEqual([
       {

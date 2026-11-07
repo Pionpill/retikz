@@ -1,11 +1,11 @@
 import type { AnyPathDefinition, IRScene } from '@retikz/core';
 import { PathSchema } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { expect, it } from 'vitest';
 import { literal } from 'zod';
 
 import { createProcessingController, processToStaticInputResult } from '../../src';
 import { prepareProcessingInput } from '../../src/processing/prepare';
+import { compileTestResult } from '../helpers/compilation';
 
 it('保留完整 Path definition，并在 static 与 retained processing 中执行相同 compile 分支', () => {
   const definition: AnyPathDefinition = {
@@ -27,7 +27,7 @@ it('保留完整 Path definition，并在 static 与 retained processing 中执�
   const options = { compile: { paths: [definition] } };
   const prepared = prepareProcessingInput(input, options);
   expect(prepared.coreOptions.paths?.[0]).toBe(definition);
-  const direct = compileToScene(input, options.compile).scene;
+  const direct = compileTestResult(input, options.compile).scene;
   const retained = createProcessingController(input, options);
   try {
     expect(processToStaticInputResult(input, options).scene).toEqual(direct);

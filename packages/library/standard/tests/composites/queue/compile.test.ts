@@ -2,12 +2,12 @@ import type { IRChild, Scene, LayoutChildResult, LayoutProposal, ScenePrimitive 
 import { ChildSchema, CompositeBaseSchema, defineComposite, LayoutChildProbeKind } from '@retikz/core';
 import { pathClipDefinition } from '@retikz/extension';
 import type { BoundsRect } from '@retikz/math';
-import { compileToScene } from '@retikz/reconciler';
 import { expect, it } from 'vitest';
 import { literal } from 'zod';
 
 import { arrayDefinition, mapDefinition } from '../../../src/collection';
 import { queueDefinition } from '../../../src/collection/queue';
+import { compileTestResult } from '../../helpers/compilation';
 import { compileMeasured } from '../../helpers/compile-measured';
 import { sceneCellBounds } from '../../helpers/scene-geometry';
 
@@ -20,7 +20,7 @@ const compile = (child: IRChild) => {
   };
   return 'namespace' in child
     ? compileMeasured(child, options)
-    : compileToScene({ version: 1, type: 'scene', children: [child] }, options);
+    : compileTestResult({ version: 1, type: 'scene', children: [child] }, options);
 };
 const flat = (nodes: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
   nodes.flatMap(n => (n.type === 'group' ? flat(n.children) : [n]));
@@ -181,7 +181,7 @@ it('父布局额外空间不拉伸单元或开放边框，过小的proposal失�
         return { children: [context.replay(result.result)] };
       },
     });
-    const result = compileToScene(
+    const result = compileTestResult(
       {
         type: 'scene',
         version: 1,

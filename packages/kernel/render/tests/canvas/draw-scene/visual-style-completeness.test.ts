@@ -1,10 +1,10 @@
 import type { Scene } from '@retikz/core';
 import { SceneSchema } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { expect, it } from 'vitest';
 
 import { drawScene } from '../../../src/canvas';
 import { renderToSvgString } from '../../../src/svg';
+import { compileTestResult } from '../../helpers/compilation';
 import { createSpyCanvasContext } from './helpers';
 
 it('箭头绘制资源渲染为范围 SVG 引用和 Canvas 渐变', () => {
@@ -37,7 +37,7 @@ it('箭头绘制资源渲染为范围 SVG 引用和 Canvas 渐变', () => {
       },
     ],
   });
-  const scene = compileToScene(source).scene;
+  const scene = compileTestResult(source).scene;
   const resource = scene.resources?.[0];
   expect(resource).toBeDefined();
   const svg = renderToSvgString(scene, { idPrefix: 'style-test' });

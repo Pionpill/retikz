@@ -1,10 +1,10 @@
 import type { ScenePrimitive } from '@retikz/core';
 import { resolveCoreProviderDependencies } from '@retikz/core';
 import { GraphSchema, resolveGraph, resolveGraphDefinitionOptions } from '@retikz/graph';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import * as Flow from '../../src/flow';
+import { compileTestResult } from '../helpers/compilation';
 
 const compileFlow = (source: unknown, options: Flow.FlowDiagramDefinitionOptions = {}) => {
   const flow = Flow.FlowDiagramSchema.parse(source);
@@ -12,7 +12,7 @@ const compileFlow = (source: unknown, options: Flow.FlowDiagramDefinitionOptions
     contributions: [Flow.createFlowDiagramProviderContribution(options)],
   });
 
-  return compileToScene(
+  return compileTestResult(
     { type: 'scene', version: 1, children: [flow] },
     {
       ...definitions,

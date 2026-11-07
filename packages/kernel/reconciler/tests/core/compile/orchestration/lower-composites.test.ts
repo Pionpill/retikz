@@ -3,7 +3,7 @@ import { literal, number, string, union } from 'zod';
 
 import type { CompileWarning, IRScene, ScenePrimitive } from '../../../../../core/src';
 import { BuiltinCompileWarningCode, CompositeBaseSchema, defineComposite } from '../../../../../core/src';
-import { compileToScene } from '../../../../src/compile';
+import { compileTestResult } from '../../../helpers/compilation';
 import { flattenPrims } from '../../../helpers/flatten';
 
 const findByType = <T extends ScenePrimitive['type']>(
@@ -82,7 +82,7 @@ describe('lowerComposites — 正常流程', () => {
       children: [{ namespace: 'example', type: 'labeledBox', text: 'Hi' }],
     };
 
-    expect(findByType(compileToScene(ir, { composites: [labeledBox] }).scene.primitives, 'rect')).toBeDefined();
+    expect(findByType(compileTestResult(ir, { composites: [labeledBox] }).scene.primitives, 'rect')).toBeDefined();
   });
 
   it('compile-output-equivalence: 展开后与手写等价 tier1 IR 同 Scene', () => {
@@ -97,7 +97,9 @@ describe('lowerComposites — 正常流程', () => {
       children: [{ type: 'node', id: 'lb', position: [0, 0], shape: 'rectangle', text: 'Hi' }],
     };
 
-    expect(compileToScene(irComposite, { composites: [labeledBox] }).scene).toEqual(compileToScene(irManual).scene);
+    expect(compileTestResult(irComposite, { composites: [labeledBox] }).scene).toEqual(
+      compileTestResult(irManual).scene,
+    );
   });
 
   it('object-union-schema: 相同 composite key 的变体共用一次注册与展开', () => {
@@ -130,7 +132,7 @@ describe('lowerComposites — 正常流程', () => {
       ],
     };
 
-    expect(() => compileToScene(ir, { composites: [variantBox] }).scene).not.toThrow();
+    expect(() => compileTestResult(ir, { composites: [variantBox] }).scene).not.toThrow();
   });
 });
 
@@ -143,7 +145,7 @@ describe('lowerComposites — 边界', () => {
       children: [{ type: 'node', id: 'lb', position: [0, 0], shape: 'rectangle', text: 'inner' }],
     };
 
-    expect(compileToScene(ir, { composites: [panel, labeledBox] }).scene).toEqual(compileToScene(irDirect).scene);
+    expect(compileTestResult(ir, { composites: [panel, labeledBox] }).scene).toEqual(compileTestResult(irDirect).scene);
   });
 
   it('empty-compile: compile 返回空 children → 节点消失、不抛、与无该节点等价', () => {
@@ -161,8 +163,8 @@ describe('lowerComposites — 边界', () => {
       children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
     };
 
-    expect(() => compileToScene(ir, { composites: [vanishing] }).scene).not.toThrow();
-    expect(compileToScene(ir, { composites: [vanishing] }).scene).toEqual(compileToScene(irOnlyA).scene);
+    expect(() => compileTestResult(ir, { composites: [vanishing] }).scene).not.toThrow();
+    expect(compileTestResult(ir, { composites: [vanishing] }).scene).toEqual(compileTestResult(irOnlyA).scene);
   });
 
   it('namespace-discriminates: 无 namespace 走 tier1（core4 不受影响）；有 namespace 走 tier2', () => {
@@ -173,7 +175,7 @@ describe('lowerComposites — 边界', () => {
     };
 
     // tier1 IR 不传 composites 也正常（不受 lowering 影响）
-    expect(compileToScene(tier1Ir).scene).toEqual(compileToScene(tier1Ir, { composites: [labeledBox] }).scene);
+    expect(compileTestResult(tier1Ir).scene).toEqual(compileTestResult(tier1Ir, { composites: [labeledBox] }).scene);
 
     // 有 namespace 的节点被当 tier2 展开
     const tier2Ir: IRScene = {
@@ -182,7 +184,7 @@ describe('lowerComposites — 边界', () => {
       children: [{ namespace: 'example', type: 'labeledBox', text: 'x' }],
     };
 
-    expect(findByType(compileToScene(tier2Ir, { composites: [labeledBox] }).scene.primitives, 'rect')).toBeDefined();
+    expect(findByType(compileTestResult(tier2Ir, { composites: [labeledBox] }).scene.primitives, 'rect')).toBeDefined();
   });
 });
 
@@ -197,7 +199,7 @@ describe('lowerComposites — 错误路径', () => {
         { type: 'node', id: 'A', position: [0, 0], text: 'A' },
       ],
     };
-    const scene = compileToScene(ir, { composites: [], onWarn: w => warnings.push(w) }).scene;
+    const scene = compileTestResult(ir, { composites: [], onWarn: w => warnings.push(w) }).scene;
 
     expect(warnings.some(w => w.code === BuiltinCompileWarningCode.CompositeNotRegistered)).toBe(true);
     expect(findByType(scene.primitives, 'rect')).toBeDefined(); // node A 照常
@@ -206,7 +208,7 @@ describe('lowerComposites — 错误路径', () => {
   it('cycle-guard: tier2 展开出自身 → 深度守卫 throw、非死循环', () => {
     const ir: IRScene = { version: 1, type: 'scene', children: [{ namespace: 'example', type: 'loop' }] };
 
-    expect(() => compileToScene(ir, { composites: [loop] }).scene).toThrow(/COMPOSITE_NEST_TOO_DEEP/);
+    expect(() => compileTestResult(ir, { composites: [loop] }).scene).toThrow(/COMPOSITE_NEST_TOO_DEEP/);
   });
 
   it('bad-node-throws: 字段不过注册 schema → 展开时 schema.parse throw', () => {
@@ -216,8 +218,8 @@ describe('lowerComposites — 错误路径', () => {
       children: [{ namespace: 'example', type: 'labeledBox', text: 123 as unknown as string }],
     };
 
-    expect(() => compileToScene(ir, { composites: [labeledBox] }).scene).toThrow(/composite 'example\.labeledBox'/);
-    expect(() => compileToScene(ir, { composites: [labeledBox] }).scene).toThrow(/children\[0\]/);
+    expect(() => compileTestResult(ir, { composites: [labeledBox] }).scene).toThrow(/composite 'example\.labeledBox'/);
+    expect(() => compileTestResult(ir, { composites: [labeledBox] }).scene).toThrow(/children\[0\]/);
   });
 });
 
@@ -240,7 +242,7 @@ describe('lowerComposites — 交互', () => {
       ],
     };
 
-    expect(compileToScene(irComposite, { composites: [zbox] }).scene).toEqual(compileToScene(irManual).scene);
+    expect(compileTestResult(irComposite, { composites: [zbox] }).scene).toEqual(compileTestResult(irManual).scene);
   });
 
   it('anchor-into-tier2-output: kernel 引用 tier2 展开产物的 anchor → 解析成功（展开在 anchor 之前）', () => {
@@ -259,7 +261,7 @@ describe('lowerComposites — 交互', () => {
       ],
     };
 
-    expect(() => compileToScene(ir, { composites: [boxWithId] }).scene).not.toThrow();
-    expect(compileToScene(ir, { composites: [boxWithId] }).scene.primitives.some(p => p.type === 'path')).toBe(true);
+    expect(() => compileTestResult(ir, { composites: [boxWithId] }).scene).not.toThrow();
+    expect(compileTestResult(ir, { composites: [boxWithId] }).scene.primitives.some(p => p.type === 'path')).toBe(true);
   });
 });

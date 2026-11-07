@@ -16,8 +16,7 @@ const source = (path: string): string => readFileSync(resolve(root, path), 'utf8
 describe('编译源结构', () => {
   it('Reconciler 根入口保留编译契约，隐藏内部产物与诊断组装', () => {
     for (const name of [
-      'compileToScene',
-      'compileSceneSnapshot',
+      'SceneReconciler',
       'createSharedCompileContext',
       'createWorkspaceCompileState',
       'formatCompileWarning',

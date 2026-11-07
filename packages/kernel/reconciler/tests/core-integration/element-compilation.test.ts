@@ -12,11 +12,12 @@ import { describe, expect, it } from 'vitest';
 import { calculateCompileOutputBounds } from '../../../core/src/compile/scene/bounds';
 import { BUILTIN_SHAPES } from '../../../core/src/providers/shape/shape';
 import type { SharedCompileContext } from '../../src/compile';
-import { assembleSceneCompilationSnapshot, compileToScene, createSharedCompileContext } from '../../src/compile';
+import { assembleSceneCompilationSnapshot, createSharedCompileContext } from '../../src/compile';
 import { compareReferenceGeometry } from '../../src/compile/compare';
 import { assembleCompileOutputs } from '../../src/compile/index';
 import { RetikzReconcilerError } from '../../src/error';
 import type { WeaveBinding } from '../helpers/atomic-runtime';
+import { compileTestResult } from '../helpers/compilation';
 import {
   testCompileNode,
   testCompileCoordinate,
@@ -149,7 +150,7 @@ describe('独立元素编译', () => {
         outputs: [path.compiled.output, ...outputs],
         shared,
       }).result.scene,
-    ).toEqual(compileToScene({ type: 'scene', version: 1, children: [pathInput, ...scopes] }).scene);
+    ).toEqual(compileTestResult({ type: 'scene', version: 1, children: [pathInput, ...scopes] }).scene);
     expect(new Set(path.reads.map(read => read.name))).toEqual(new Set(['a', 'b']));
   });
 
@@ -261,7 +262,7 @@ describe('独立元素编译', () => {
       [assembleTestScopeOutput(child.compiled, [node.compiled.output], shared)],
       shared,
     );
-    const full = compileToScene({
+    const full = compileTestResult({
       type: 'scene',
       version: 1,
       children: [{ ...outer, children: [{ ...inner, children: [input] }] }],
@@ -330,7 +331,7 @@ describe('独立元素编译', () => {
         outputs: [first.compiled.output, second.compiled.output],
         shared,
       }).result.scene,
-    ).toEqual(compileToScene({ type: 'scene', version: 1, children: [a, b] }).scene);
+    ).toEqual(compileTestResult({ type: 'scene', version: 1, children: [a, b] }).scene);
     expect(
       finalizeOutputs({
         root: {},
@@ -367,7 +368,7 @@ describe('独立元素编译', () => {
       outputs: [output],
       shared,
     });
-    const full = compileToScene({ version: 1, type: 'scene', children: [{ ...scopeInput, children: [input] }] });
+    const full = compileTestResult({ version: 1, type: 'scene', children: [{ ...scopeInput, children: [input] }] });
     expect(assembled.result.scene).toEqual(full.scene);
   });
 
@@ -474,7 +475,7 @@ describe('独立元素编译', () => {
     });
     if (result.status !== 'compiled') throw new Error('expected compiled');
     expect(result.compiled.output.primitives).toEqual(
-      compileToScene({
+      compileTestResult({
         version: 1,
         type: 'scene',
         children: [input],
@@ -494,7 +495,7 @@ describe('独立元素编译', () => {
     expect(projectNodeGeometry(result.compiled.compiled).geometry.rect.x).toBe(12);
     expect(projectNodeGeometry(result.compiled.compiled).geometry.rect.y).toBe(24);
     expect(result.compiled.output.primitives).toEqual(
-      compileToScene({ version: 1, type: 'scene', children: [input] }).scene.primitives,
+      compileTestResult({ version: 1, type: 'scene', children: [input] }).scene.primitives,
     );
   });
 
@@ -508,7 +509,7 @@ describe('独立元素编译', () => {
       irPath: ['scene', 'children', 0, 'children', 0],
     });
     if (result.status !== 'compiled') throw new Error('expected compiled');
-    const full = compileToScene({
+    const full = compileTestResult({
       version: 1,
       type: 'scene',
       children: [{ type: 'scope', ...scope, children: [input] }],

@@ -3,7 +3,7 @@
 import type { EllipsePrimitive, RectPrimitive, ScenePrimitive } from '../../../../core/src/contract';
 import type { IROffsetPosition, IRScene } from '../../../../core/src/schemas';
 import { OffsetPositionSchema } from '../../../../core/src/schemas';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 import { flattenPrims } from '../../helpers/flatten';
 
 /** 取所有 RectPrimitive（默认 rectangle 节点；带文本节点包 group，flatten 穿透） */
@@ -89,7 +89,7 @@ describe('OffsetPosition: 编译解析（Node.position）', () => {
           { type: 'node', id: 'B', position: { of: 'A', offset: [30, 10] } },
         ],
       };
-      const [, b] = rects(compileToScene(ir).scene.primitives).map(rectCenter);
+      const [, b] = rects(compileTestResult(ir).scene.primitives).map(rectCenter);
 
       expect(b[0]).toBeCloseTo(30);
       expect(b[1]).toBeCloseTo(10);
@@ -101,7 +101,7 @@ describe('OffsetPosition: 编译解析（Node.position）', () => {
         type: 'scene',
         children: [{ type: 'node', position: { of: [50, 50], offset: [10, 0] }, text: 'X' }],
       };
-      const [x] = rects(compileToScene(ir).scene.primitives).map(rectCenter);
+      const [x] = rects(compileTestResult(ir).scene.primitives).map(rectCenter);
 
       expect(x[0]).toBeCloseTo(60);
       expect(x[1]).toBeCloseTo(50);
@@ -123,7 +123,7 @@ describe('OffsetPosition: 编译解析（Node.position）', () => {
           },
         ],
       };
-      const [, b] = rects(compileToScene(ir).scene.primitives).map(rectCenter);
+      const [, b] = rects(compileTestResult(ir).scene.primitives).map(rectCenter);
 
       // polar(A=(0,0), angle=0, r=50) = (50, 0)，+offset(0, 20) = (50, 20)
       expect(b[0]).toBeCloseTo(50);
@@ -150,7 +150,7 @@ describe('OffsetPosition: 编译解析（Node.position）', () => {
           },
         ],
       };
-      const [, b] = rects(compileToScene(ir).scene.primitives).map(rectCenter);
+      const [, b] = rects(compileTestResult(ir).scene.primitives).map(rectCenter);
 
       // inner polar = (30, 0); outer polar from (30,0) angle=90 r=20 = (30, 20); + offset(5, 0) = (35, 20)
       expect(b[0]).toBeCloseTo(35);
@@ -166,7 +166,7 @@ describe('OffsetPosition: 编译解析（Node.position）', () => {
           { type: 'node', id: 'B', position: { of: 'A', offset: [-20, -10] } },
         ],
       };
-      const [, b] = rects(compileToScene(ir).scene.primitives).map(rectCenter);
+      const [, b] = rects(compileTestResult(ir).scene.primitives).map(rectCenter);
 
       expect(b[0]).toBeCloseTo(30);
       expect(b[1]).toBeCloseTo(40);
@@ -182,7 +182,7 @@ describe('OffsetPosition: 编译解析（Node.position）', () => {
           { type: 'node', id: 'C', position: { of: 'B', offset: [5, 5] } },
         ],
       };
-      const [, b, c] = rects(compileToScene(ir).scene.primitives).map(rectCenter);
+      const [, b, c] = rects(compileTestResult(ir).scene.primitives).map(rectCenter);
 
       expect(b[0]).toBeCloseTo(10);
       expect(b[1]).toBeCloseTo(0);
@@ -201,7 +201,7 @@ describe('OffsetPosition: 编译解析（Node.position）', () => {
           { type: 'node', id: 'B', position: { of: 'A', offset: [0, 0] } },
         ],
       };
-      const [a, b] = rects(compileToScene(ir).scene.primitives).map(rectCenter);
+      const [a, b] = rects(compileTestResult(ir).scene.primitives).map(rectCenter);
 
       expect(b[0]).toBeCloseTo(a[0]);
       expect(b[1]).toBeCloseTo(a[1]);
@@ -213,7 +213,7 @@ describe('OffsetPosition: 编译解析（Node.position）', () => {
         type: 'scene',
         children: [{ type: 'node', position: { of: [0, 0], offset: [10, 0] }, text: 'X' }],
       };
-      const [x] = rects(compileToScene(ir).scene.primitives).map(rectCenter);
+      const [x] = rects(compileTestResult(ir).scene.primitives).map(rectCenter);
 
       expect(x[0]).toBeCloseTo(10);
       expect(x[1]).toBeCloseTo(0);
@@ -231,7 +231,7 @@ describe('OffsetPosition: 编译解析（Node.position）', () => {
           { type: 'node', id: 'C', position: { of: 'B', offset: [5, 5] } },
         ],
       };
-      const [, , c] = rects(compileToScene(ir).scene.primitives).map(rectCenter);
+      const [, , c] = rects(compileTestResult(ir).scene.primitives).map(rectCenter);
 
       expect(c[0]).toBeCloseTo(35);
       expect(c[1]).toBeCloseTo(5);
@@ -254,7 +254,7 @@ describe('OffsetPosition: 编译解析（Node.position）', () => {
           { type: 'node', id: 'C', position: { of: 'B', offset: [2, -3] } },
         ],
       };
-      const [, , c] = rects(compileToScene(ir).scene.primitives).map(rectCenter);
+      const [, , c] = rects(compileTestResult(ir).scene.primitives).map(rectCenter);
 
       expect(c[0]).toBeCloseTo(12);
       expect(c[1]).toBeCloseTo(-3);
@@ -272,7 +272,7 @@ describe('OffsetPosition: 编译解析（Node.position）', () => {
         ],
       };
 
-      expect(() => compileToScene(ir).scene).toThrow(/Cannot resolve position/);
+      expect(() => compileTestResult(ir).scene).toThrow(/Cannot resolve position/);
     });
 
     it('offset_of_nested_polar_string_forward_ref_rejected：嵌套 polar 内 origin 字符串后定义 → 抛错', () => {
@@ -292,7 +292,7 @@ describe('OffsetPosition: 编译解析（Node.position）', () => {
         ],
       };
 
-      expect(() => compileToScene(ir).scene).toThrow(/Cannot resolve position/);
+      expect(() => compileTestResult(ir).scene).toThrow(/Cannot resolve position/);
     });
 
     it('offset_of_unknown_id_rejected：of 引用未定义 id → 抛错', () => {
@@ -302,7 +302,7 @@ describe('OffsetPosition: 编译解析（Node.position）', () => {
         children: [{ type: 'node', id: 'B', position: { of: 'nonexistent', offset: [0, 0] } }],
       };
 
-      expect(() => compileToScene(ir).scene).toThrow(/Cannot resolve position/);
+      expect(() => compileTestResult(ir).scene).toThrow(/Cannot resolve position/);
     });
   });
 
@@ -323,7 +323,7 @@ describe('OffsetPosition: 编译解析（Node.position）', () => {
           },
         ],
       };
-      const scene = compileToScene(ir).scene;
+      const scene = compileTestResult(ir).scene;
       const pathPrim = scene.primitives.find(p => p.type === 'path');
 
       expect(pathPrim).toBeDefined();
@@ -366,7 +366,7 @@ describe('OffsetPosition: 编译解析（Node.position）', () => {
           },
         ],
       };
-      const cs = rects(compileToScene(ir).scene.primitives).map(rectCenter);
+      const cs = rects(compileTestResult(ir).scene.primitives).map(rectCenter);
       const [a, b, c, d, e, f] = cs;
 
       expect(a[0]).toBeCloseTo(0);
@@ -410,7 +410,7 @@ describe('OffsetPosition: 编译解析（Node.position）', () => {
           },
         ],
       };
-      const [c] = ellipses(compileToScene(ir).scene.primitives).map(ellipseCenter);
+      const [c] = ellipses(compileTestResult(ir).scene.primitives).map(ellipseCenter);
 
       expect(c[0]).toBeCloseTo(40);
       expect(c[1]).toBeCloseTo(5);
@@ -431,7 +431,7 @@ describe('OffsetPosition: Coordinate.position', () => {
         { type: 'node', id: 'N', position: { of: 'b', offset: [0, 30] }, text: 'N' },
       ],
     };
-    const [n] = rects(compileToScene(ir).scene.primitives).map(rectCenter);
+    const [n] = rects(compileTestResult(ir).scene.primitives).map(rectCenter);
 
     expect(n[0]).toBeCloseTo(50);
     expect(n[1]).toBeCloseTo(30);

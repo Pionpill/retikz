@@ -8,7 +8,6 @@ import {
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
 } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { boolean, literal, number, string } from 'zod';
 
@@ -21,6 +20,7 @@ import {
   LayoutItemKind,
   LayoutOverflow,
 } from '../../src';
+import { compileTestResult } from '../helpers/compilation';
 
 const LeafSchema = CompositeBaseSchema.extend({
   namespace: literal('grid-test'),
@@ -134,7 +134,7 @@ const compileGrid = (child: IRChild, proposal: LayoutProposal) => {
       return { children: [context.replay(probe.result)] };
     },
   });
-  const output = compileToScene(
+  const output = compileTestResult(
     {
       version: 1,
       type: 'scene',
@@ -182,7 +182,7 @@ const translationOf = (primitives: ReadonlyArray<ScenePrimitive>, id: string): R
   return result;
 };
 
-const gridArtifactOf = (output: ReturnType<typeof compileToScene>): GridLayoutCompileArtifact => {
+const gridArtifactOf = (output: ReturnType<typeof compileTestResult>): GridLayoutCompileArtifact => {
   const artifact = output.artifacts.find(value => value.type === 'gridLayout');
   if (artifact === undefined) throw new Error('Expected GridLayout compile artifact');
   return artifact as GridLayoutCompileArtifact;

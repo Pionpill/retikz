@@ -11,7 +11,7 @@ import { definePattern } from '../../../../../core/src/contract';
 import { PatternPaintSchema } from '../../../../../core/src/schemas';
 import type { IRPaint, IRScene } from '../../../../../core/src/schemas';
 import type { CompileOptions } from '../../../../src/compile';
-import { compileToScene } from '../../../../src/compile';
+import { compileTestResult } from '../../../helpers/compilation';
 
 /** 验证图案输入边界、生成几何约束及资源行为 */
 
@@ -44,10 +44,10 @@ const firstPatternResource = (resources: Array<SceneResource> | undefined): Patt
   (resources ?? []).find((r): r is PatternResource => r.kind === 'paint' && r.spec.kind === 'pattern');
 
 const tileOf = (spec: IRPaint, opts?: CompileOptions): CompiledPatternTile | undefined =>
-  firstPatternResource(compileToScene(patternNodeIR(spec), opts).scene.resources)?.tile;
+  firstPatternResource(compileTestResult(patternNodeIR(spec), opts).scene.resources)?.tile;
 
 const compilePattern = (spec: IRPaint, opts?: CompileOptions): void => {
-  compileToScene(patternNodeIR(spec), opts);
+  compileTestResult(patternNodeIR(spec), opts);
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -93,7 +93,7 @@ describe('ADV — motif 非有限线宽与半径', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 describe('ADV — JSON 往返', () => {
   it('clean_pattern_scene_roundtrip：合法 pattern Scene round-trip 等价 + 全 finite', () => {
-    const scene = compileToScene(patternNodeIR({ kind: 'pattern', shape: 'dots', size: 10 })).scene;
+    const scene = compileTestResult(patternNodeIR({ kind: 'pattern', shape: 'dots', size: 10 })).scene;
 
     expect(JSON.parse(JSON.stringify(scene))).toEqual(scene);
     expect(JSON.stringify(scene)).not.toMatch(/:null/);
@@ -237,7 +237,7 @@ describe('ADV — 未注册名错误质量', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 describe('ADV — dedup / override / 交叉', () => {
   it('dedup_different_size：同 motif 不同 size → 2 资源、tile.size 各异', () => {
-    const scene = compileToScene(
+    const scene = compileTestResult(
       patternNodeIR({ kind: 'pattern', shape: 'lines', size: 6 }, { kind: 'pattern', shape: 'lines', size: 10 }),
     ).scene;
     const pats = (scene.resources ?? []).filter(
@@ -306,7 +306,7 @@ describe('ADV — dedup / override / 交叉', () => {
         },
       ],
     };
-    const scene = compileToScene(ir).scene;
+    const scene = compileTestResult(ir).scene;
     const ids = (scene.resources ?? []).map(r => r.id);
 
     expect(new Set(ids).size).toBe(ids.length);
@@ -335,7 +335,7 @@ describe('ADV — dedup / override / 交叉', () => {
         },
       ],
     } as unknown as IRScene;
-    const tile = firstPatternResource(compileToScene(ir).scene.resources)?.tile;
+    const tile = firstPatternResource(compileTestResult(ir).scene.resources)?.tile;
 
     expect(tile?.motif.some(m => m.type === 'ellipse')).toBe(true);
   });
@@ -350,7 +350,7 @@ describe('ADV — 重复注册/背景', () => {
 
     expect(
       () =>
-        compileToScene(patternNodeIR({ kind: 'pattern', shape: 'grid' }), {
+        compileTestResult(patternNodeIR({ kind: 'pattern', shape: 'grid' }), {
           patterns: [{ ...customLines, name: 'lines' }],
         }).scene,
     ).toThrow(/duplicate pattern shape registration: "lines"/);

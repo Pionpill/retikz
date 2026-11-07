@@ -3,7 +3,6 @@ import { resolve } from 'node:path';
 
 import type { IRScene, ScenePrimitive, TextMeasurer, TextPrimitive } from '@retikz/core';
 import { fallbackMeasurer } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
@@ -43,6 +42,7 @@ import {
 } from '../../src/modules/docs/components/component-preview/utils';
 import { nodeGeometryFrame } from '../../src/modules/docs/contents/kernel/components/node/usage/node-geometry.controls';
 import { textRows } from '../../src/modules/docs/contents/viz/plot/channel/builtin/builtin-text.data';
+import { compileTestResult } from '../helpers/compilation';
 import { sceneNodes } from '../helpers/scene-geometry';
 import { controlModules, demoModules, demoSources, localSourceFiles } from './load-preview-registry';
 
@@ -188,7 +188,7 @@ type NodeGeometryValues = {
 
 /** 通过 Core 的真实布局链路编译几何 playground 可调节点 */
 const compileGeometryNode = (values: NodeGeometryValues, measureText: TextMeasurer = fallbackMeasurer) => {
-  const result = compileToScene(
+  const result = compileTestResult(
     {
       type: 'scene',
       version: 1,
@@ -240,7 +240,7 @@ const compileBuiltinText = (
   text: string,
   values: { align: 'start' | 'middle' | 'end'; fontSize: number; lineHeight: number; maxTextWidth: number },
 ) => {
-  const result = compileToScene(
+  const result = compileTestResult(
     {
       type: 'scene',
       version: 1,
@@ -1402,7 +1402,7 @@ describe('预览控制注册表', () => {
       if (padding?.kind !== 'range' || minimumSize?.kind !== 'range') continue;
 
       const compileGlyph = (paddingValue: number) => {
-        const result = compileToScene(
+        const result = compileTestResult(
           {
             type: 'scene',
             version: 1,

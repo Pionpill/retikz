@@ -16,7 +16,6 @@ import { NonBlankStringSchema } from '@retikz/foundation';
 import { FlexLayoutArtifactSchema } from '@retikz/layout';
 import type { PlotsLoweringOptions } from '@retikz/plot';
 import { PointMarkSchema, createPlotProviderContribution } from '@retikz/plot';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { array, boolean, literal, number, strictObject, string } from 'zod';
 
@@ -33,6 +32,7 @@ import { RangedDotChartSchema, createRangedDotChartProviderContribution } from '
 import { RegressionChartSchema, createRegressionChartProviderContribution } from '../../src/point/regression';
 import { ScatterChartSchema, createScatterChartProviderContribution } from '../../src/point/scatter';
 import { StripChartSchema, createStripChartProviderContribution } from '../../src/point/strip';
+import { compileTestResult } from '../helpers/compilation';
 
 const resolveDirectEncodings = (context: { encodings: Readonly<Record<string, unknown>> }) => ({
   encodings: context.encodings as JsonObject,
@@ -130,8 +130,8 @@ describe('Chart 提供者通过 Core 编译', () => {
       ],
     });
 
-    const first = compileToScene(sceneOf(source), definitions);
-    const second = compileToScene(sceneOf(source), definitions);
+    const first = compileTestResult(sceneOf(source), definitions);
+    const second = compileTestResult(sceneOf(source), definitions);
     const points = scenePrimitivesOfType(first.scene.primitives, 'ellipse');
     const centers = points
       .map(point => (point.cx === undefined || point.cy === undefined ? undefined : ([point.cx, point.cy] as const)))
@@ -186,7 +186,7 @@ describe('Chart 提供者通过 Core 编译', () => {
       ],
     });
 
-    const result = compileToScene(sceneOf(source), definitions);
+    const result = compileTestResult(sceneOf(source), definitions);
     const points = scenePrimitivesOfType(result.scene.primitives, 'ellipse');
 
     expect(points).toHaveLength(stripRows.length);
@@ -214,9 +214,11 @@ describe('Chart 提供者通过 Core 编译', () => {
       ],
     });
 
-    expect(scenePrimitivesOfType(compileToScene(sceneOf(source), definitions).scene.primitives, 'ellipse')).toEqual([]);
+    expect(scenePrimitivesOfType(compileTestResult(sceneOf(source), definitions).scene.primitives, 'ellipse')).toEqual(
+      [],
+    );
     expect(() =>
-      compileToScene(
+      compileTestResult(
         sceneOf(source),
         compileDefinitionsOf([createScatterChartProviderContribution()], { definitions: { positionAdjustments: [] } }),
       ),
@@ -279,7 +281,7 @@ describe('Chart 提供者通过 Core 编译', () => {
           { roots: [pathClipProvider.key], providers: [pathClipProvider] },
         ],
       });
-      const result = compileToScene(sceneOf(fixture.source), definitions);
+      const result = compileTestResult(sceneOf(fixture.source), definitions);
       const paths = scenePrimitivesOfType(result.scene.primitives, 'path').filter(
         primitive => primitive.strokeWidth === 7,
       );
@@ -317,7 +319,7 @@ describe('Chart 提供者通过 Core 编译', () => {
         { roots: [pathClipProvider.key], providers: [pathClipProvider] },
       ],
     });
-    const result = compileToScene(sceneOf(source), definitions);
+    const result = compileTestResult(sceneOf(source), definitions);
     const trendPaths = scenePrimitivesOfType(result.scene.primitives, 'path').filter(
       primitive => primitive.strokeWidth === 7,
     );
@@ -353,7 +355,7 @@ describe('Chart 提供者通过 Core 编译', () => {
         { roots: [pathClipProvider.key], providers: [pathClipProvider] },
       ],
     });
-    const result = compileToScene(sceneOf(source), definitions);
+    const result = compileTestResult(sceneOf(source), definitions);
     const trajectories = scenePrimitivesOfType(result.scene.primitives, 'path').filter(
       primitive => primitive.stroke === '#0f766e' && primitive.strokeWidth === 5,
     );
@@ -397,7 +399,7 @@ describe('Chart 提供者通过 Core 编译', () => {
         { roots: [pathClipProvider.key], providers: [pathClipProvider] },
       ],
     });
-    const result = compileToScene(sceneOf(source), definitions);
+    const result = compileTestResult(sceneOf(source), definitions);
     const connectors = scenePrimitivesOfType(result.scene.primitives, 'path').filter(
       primitive => primitive.strokeWidth === 7,
     );
@@ -444,7 +446,7 @@ describe('Chart 提供者通过 Core 编译', () => {
         { roots: [pathClipProvider.key], providers: [pathClipProvider] },
       ],
     });
-    expect(() => compileToScene(sceneOf(source), definitions)).toThrow(/Path endpoint cannot map role x/);
+    expect(() => compileTestResult(sceneOf(source), definitions)).toThrow(/Path endpoint cannot map role x/);
   });
 
   it('compiles grouped Regression through Point + mark-local Smooth Path with finite Scene output', () => {
@@ -474,7 +476,7 @@ describe('Chart 提供者通过 Core 编译', () => {
         { roots: [pathClipProvider.key], providers: [pathClipProvider] },
       ],
     });
-    const result = compileToScene(sceneOf(source), definitions);
+    const result = compileTestResult(sceneOf(source), definitions);
     const serialized = JSON.stringify(result.scene.primitives);
 
     expect(sceneIdsOf(result.scene.primitives)).toContain('regression');
@@ -522,7 +524,7 @@ describe('Chart 提供者通过 Core 编译', () => {
         { roots: [pathClipProvider.key], providers: [pathClipProvider] },
       ],
     });
-    const result = compileToScene(sceneOf(source), definitions);
+    const result = compileTestResult(sceneOf(source), definitions);
     const serialized = JSON.stringify(result.scene.primitives);
 
     expect(sceneIdsOf(result.scene.primitives)).toContain('regression');
@@ -567,7 +569,7 @@ describe('Chart 提供者通过 Core 编译', () => {
       ],
     });
 
-    expect(() => compileToScene(sceneOf(source), definitions)).toThrow(/smooth|regression|series.*B|pairs/i);
+    expect(() => compileTestResult(sceneOf(source), definitions)).toThrow(/smooth|regression|series.*B|pairs/i);
   });
 
   it('当附加方法无法适应其他有效观察结果时中止', () => {
@@ -594,7 +596,7 @@ describe('Chart 提供者通过 Core 编译', () => {
       ],
     });
 
-    expect(() => compileToScene(sceneOf(source), definitions)).toThrow(/smooth|regression|pairs|points/i);
+    expect(() => compileTestResult(sceneOf(source), definitions)).toThrow(/smooth|regression|pairs|points/i);
   });
 
   it('当回归 Source 在没有具体提供者的情况下编译时，会失败', () => {
@@ -606,7 +608,7 @@ describe('Chart 提供者通过 Core 编译', () => {
     });
 
     expect(() =>
-      compileToScene(sceneOf(source), compileDefinitionsOf([createScatterChartProviderContribution()])),
+      compileTestResult(sceneOf(source), compileDefinitionsOf([createScatterChartProviderContribution()])),
     ).toThrow(/chartType|scatter|regression/i);
   });
 
@@ -636,7 +638,7 @@ describe('Chart 提供者通过 Core 编译', () => {
         { roots: [pathClipProvider.key], providers: [pathClipProvider] },
       ],
     });
-    const primitives = compileToScene(sceneOf(source), definitions).scene.primitives;
+    const primitives = compileTestResult(sceneOf(source), definitions).scene.primitives;
     const ids = sceneIdsOf(primitives);
 
     expect(scenePrimitivesOfType(primitives, 'ellipse')).toHaveLength(4);
@@ -660,7 +662,7 @@ describe('Chart 提供者通过 Core 编译', () => {
       },
     });
 
-    const result = compileToScene(
+    const result = compileTestResult(
       sceneOf(source),
       compileDefinitionsOf([createScatterChartProviderContribution(), createBubbleChartProviderContribution()]),
     );
@@ -691,7 +693,7 @@ describe('Chart 提供者通过 Core 编译', () => {
       },
     });
 
-    const result = compileToScene(sceneOf(source), compileDefinitionsOf([createBubbleChartProviderContribution()]));
+    const result = compileTestResult(sceneOf(source), compileDefinitionsOf([createBubbleChartProviderContribution()]));
     const ids = sceneIdsOf(result.scene.primitives);
 
     expect(ids).toContain('__chart.bubble.composition.facet.panel._.3');
@@ -721,7 +723,7 @@ describe('Chart 提供者通过 Core 编译', () => {
           { roots: [pathClipProvider.key], providers: [pathClipProvider] },
         ],
       });
-      const result = compileToScene(sceneOf(source), definitions);
+      const result = compileTestResult(sceneOf(source), definitions);
       const serializedScene = JSON.stringify(result.scene.primitives);
 
       expect(serializedScene).not.toContain('NaN');
@@ -744,7 +746,7 @@ describe('Chart 提供者通过 Core 编译', () => {
       ],
     });
 
-    expect(() => compileToScene(sceneOf(negativeSource), negativeDefinitions)).toThrow(/size|sqrt|negative|domain/i);
+    expect(() => compileTestResult(sceneOf(negativeSource), negativeDefinitions)).toThrow(/size|sqrt|negative|domain/i);
 
     const linearSource = BubbleChartSchema.parse({
       namespace: 'chart',
@@ -764,7 +766,7 @@ describe('Chart 提供者通过 Core 编译', () => {
       ],
     });
 
-    expect(() => compileToScene(sceneOf(linearSource), linearDefinitions)).toThrow(/size|sqrt|linear|scale/i);
+    expect(() => compileTestResult(sceneOf(linearSource), linearDefinitions)).toThrow(/size|sqrt|linear|scale/i);
   });
 
   it('当仅安装了 Scatter 配方的情况下编译 Bubble Source 时，会明确报错', () => {
@@ -780,7 +782,7 @@ describe('Chart 提供者通过 Core 编译', () => {
     });
 
     expect(() =>
-      compileToScene(sceneOf(source), compileDefinitionsOf([createScatterChartProviderContribution()])),
+      compileTestResult(sceneOf(source), compileDefinitionsOf([createScatterChartProviderContribution()])),
     ).toThrow(/chartType|scatter|bubble/i);
   });
 
@@ -800,11 +802,11 @@ describe('Chart 提供者通过 Core 编译', () => {
 
     const definitions = compileDefinitionsOf([createScatterChartProviderContribution()]);
     if (height === 120) {
-      expect(() => compileToScene(sceneOf(source), definitions)).toThrow(/margins.*exceed.*canvas/);
+      expect(() => compileTestResult(sceneOf(source), definitions)).toThrow(/margins.*exceed.*canvas/);
       return;
     }
 
-    const result = compileToScene(sceneOf(source), definitions);
+    const result = compileTestResult(sceneOf(source), definitions);
     const artifact = result.artifacts.find(value => value.type === 'flexLayout');
     if (artifact === undefined) throw new Error('Expected Chart presentation FlexLayout compile artifact');
 
@@ -850,7 +852,7 @@ describe('Chart 提供者通过 Core 编译', () => {
     };
 
     const warnings: Array<{ code: string }> = [];
-    const result = compileToScene(scene, {
+    const result = compileTestResult(scene, {
       ...compileDefinitionsOf([createScatterChartProviderContribution()]),
       onWarn: warning => warnings.push({ code: warning.code }),
     });
@@ -870,7 +872,7 @@ describe('Chart 提供者通过 Core 编译', () => {
       recipe: { chartType: 'scatter', encodings: { x: 'x', y: 'y' } },
     };
     const source = ScatterChartSchema.parse(unknownJson);
-    const result = compileToScene(sceneOf(source), compileDefinitionsOf([createScatterChartProviderContribution()]));
+    const result = compileTestResult(sceneOf(source), compileDefinitionsOf([createScatterChartProviderContribution()]));
 
     expect(source.recipe.chartType).toBe('scatter');
     expect(sceneIdsOf(result.scene.primitives)).toContain('scatter-json');
@@ -888,7 +890,7 @@ describe('Chart 提供者通过 Core 编译', () => {
       },
     });
 
-    const result = compileToScene(sceneOf(source), compileDefinitionsOf([createScatterChartProviderContribution()]));
+    const result = compileTestResult(sceneOf(source), compileDefinitionsOf([createScatterChartProviderContribution()]));
     const ids = sceneIdsOf(result.scene.primitives);
 
     expect(ids).toContain('__chart.scatter.composition.facet.panel._.3');
@@ -936,7 +938,7 @@ describe('Chart 提供者通过 Core 编译', () => {
       },
     });
 
-    const result = compileToScene(
+    const result = compileTestResult(
       sceneOf(source),
       compileDefinitionsOf([createScatterChartProviderContribution([], lowerOptions)], lowerOptions),
     );
@@ -954,7 +956,7 @@ describe('Chart 提供者通过 Core 编译', () => {
     });
 
     const warnings: Array<{ code: string; message: string }> = [];
-    const result = compileToScene(sceneOf(source), {
+    const result = compileTestResult(sceneOf(source), {
       ...compileDefinitionsOf([]),
       onWarn: warning => warnings.push({ code: warning.code, message: warning.message }),
     });
@@ -1028,7 +1030,7 @@ describe('Chart 提供者通过 Core 编译', () => {
     });
     const warnings: Array<{ code: string; path: PropertyPath }> = [];
 
-    const result = compileToScene(sceneOf(source), {
+    const result = compileTestResult(sceneOf(source), {
       ...compileDefinitionsOf([createChartProviderContribution({ family: 'fixture', recipe })]),
       onWarn: warning => warnings.push({ code: warning.code, path: warning.path }),
     });
@@ -1073,8 +1075,8 @@ describe('点感知编译边界', () => {
       ],
     });
 
-    expect(compileToScene(sceneOf(sourceOf()), definitions).scene.primitives.length).toBeGreaterThan(0);
-    expect(compileToScene(sceneOf(sourceOf(0)), definitions).scene.primitives.length).toBeGreaterThan(0);
+    expect(compileTestResult(sceneOf(sourceOf()), definitions).scene.primitives.length).toBeGreaterThan(0);
+    expect(compileTestResult(sceneOf(sourceOf(0)), definitions).scene.primitives.length).toBeGreaterThan(0);
   });
 });
 
@@ -1106,7 +1108,7 @@ describe('注册回归编译', () => {
       ],
     });
 
-    return compileToScene(sceneOf(source), definitions);
+    return compileTestResult(sceneOf(source), definitions);
   };
 
   it('使用继承或覆盖曲线的主要趋势和额外趋势的自定义方法', () => {

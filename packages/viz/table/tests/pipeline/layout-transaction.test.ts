@@ -9,7 +9,6 @@ import {
 } from '@retikz/core';
 import { isPropertyPathEqual } from '@retikz/foundation';
 import { RetikzError } from '@retikz/foundation';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal, number, strictObject, enum as zodEnum } from 'zod';
 
@@ -25,6 +24,7 @@ import {
 } from '../../src';
 import { resolveTableTransaction } from '../../src/pipeline/layout';
 import { CLEAN_TABLE_DEFAULTS } from '../fixtures/clean-table-defaults';
+import { compileTestResult } from '../helpers/compilation';
 
 const tableArtifactsOf = (artifacts: ReturnType<typeof compileTable>['artifacts']): Array<TableCompileArtifact> =>
   artifacts.filter(
@@ -299,7 +299,7 @@ describe('Table 布局事务', () => {
         columnGap: 4,
       },
     };
-    const result = compileToScene(
+    const result = compileTestResult(
       {
         type: 'scene',
         version: 1,
@@ -360,7 +360,7 @@ describe('Table 布局事务', () => {
         rowSize: { kind: 'fixed', value: 10 },
       },
     };
-    const result = compileToScene(
+    const result = compileTestResult(
       {
         type: 'scene',
         version: 1,
@@ -489,7 +489,7 @@ describe('Table 布局事务', () => {
     };
 
     expect(() =>
-      compileToScene(
+      compileTestResult(
         {
           version: 1,
           type: 'scene',
@@ -618,7 +618,7 @@ describe('Table 布局事务', () => {
     let thrown: unknown;
 
     try {
-      compileToScene(
+      compileTestResult(
         {
           version: 1,
           type: 'scene',
@@ -815,7 +815,7 @@ describe('Table 布局事务', () => {
     let thrown: unknown;
 
     try {
-      compileToScene(
+      compileTestResult(
         {
           version: 1,
           type: 'scene',

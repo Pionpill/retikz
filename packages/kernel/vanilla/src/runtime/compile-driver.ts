@@ -1,6 +1,6 @@
 import type { AnyCompositeDefinition, IRScene } from '@retikz/core';
 import type { CompileOptions } from '@retikz/reconciler';
-import { compileToScene } from '@retikz/reconciler';
+import { SceneReconciler } from '@retikz/reconciler';
 import type { ReconcilerOutput } from '@retikz/reconciler';
 import type { RenderReadonlyLayer } from '@retikz/render/runtime';
 import { EMPTY_READONLY_LAYERS, snapshotReadonlyLayers } from '@retikz/render/runtime';
@@ -39,7 +39,7 @@ export type VanillaCompileOutput = Readonly<{
   primary: VanillaReconcilerOutput['result'];
   /** 在 primary 后执行的领域中立只读图层 */
   layers: ReadonlyArray<RenderReadonlyLayer>;
-  /** 驱动拥有并在成功提交后发布的诊断 */
+  /** 驱动诊断与一次性执行期间收集的非致命异常 */
   diagnostics: ReadonlyArray<unknown>;
 }>;
 
@@ -130,11 +130,19 @@ export const compileVanillaWithDriver = (
   input: InputVanillaCompileDriver,
   session: VanillaCompileDriverSession,
 ): VanillaCompileOutput => {
-  const coreOutput: VanillaReconcilerOutput = Object.freeze({
-    result: compileToScene(input.source, input.coreOptions),
-    diagnostics: EMPTY_DIAGNOSTICS,
-  });
-  return resolveVanillaCompileOutput(session, coreOutput);
+  const reconciler = new SceneReconciler(input.coreOptions, { incremental: false });
+  try {
+    const output = resolveVanillaCompileOutput(session, reconciler.mount(input.source).compilation);
+    const diagnostics = reconciler.diagnostics();
+    return diagnostics.length === 0
+      ? output
+      : Object.freeze({
+          ...output,
+          diagnostics: Object.freeze([...output.diagnostics, ...diagnostics]),
+        });
+  } finally {
+    reconciler.dispose();
+  }
 };
 
 /** 在编译结果提交后隔离通知失败，避免回滚已经提交的宿主帧 */

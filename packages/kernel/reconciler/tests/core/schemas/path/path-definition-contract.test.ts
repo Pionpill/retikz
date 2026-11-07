@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
 import { definePath, PathSchema, resolvePathRegistry, StrokePathSchema } from '../../../../../core/src';
-import { compileToScene } from '../../../../src/compile';
+import { compileTestResult } from '../../../helpers/compilation';
 
 const steps = [
   { type: 'step' as const, kind: 'move' as const, to: [0, 0] as [number, number] },
@@ -42,7 +42,7 @@ describe('Path 全标的契约', () => {
 
   it('在编译查找期间解析选定的完整主题 schema', () => {
     expect(() =>
-      compileToScene({
+      compileTestResult({
         version: 1,
         type: 'scene',
         children: [{ type: 'path', kind: 'stroke' }],
@@ -74,7 +74,7 @@ describe('Path 全标的契约', () => {
       },
     });
 
-    compileToScene(
+    compileTestResult(
       {
         version: 1,
         type: 'scene',
@@ -96,7 +96,7 @@ describe('Path 全标的契约', () => {
   });
 
   it('保持内置描边的有效颜色，直到描边发射', () => {
-    const compiled = compileToScene({
+    const compiled = compileTestResult({
       version: 1,
       type: 'scene',
       children: [

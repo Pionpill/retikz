@@ -3,7 +3,8 @@ import { CompositeBaseSchema, defineComposite, naturalLayoutProposal, LayoutChil
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
-import { compileSceneSnapshot, compileToScene, SceneReconciler } from '../../src';
+import { SceneReconciler } from '../../src';
+import { compileTestResult, compileTestSnapshot } from '../helpers/compilation';
 
 const input: IRScene = {
   version: 1,
@@ -15,8 +16,8 @@ const input: IRScene = {
 };
 
 describe('统一编译模式', () => {
-  it('两种模式与一次性入口产生相同的完整结果和诊断', () => {
-    const expected = compileSceneSnapshot(input);
+  it('两种会话模式产生相同的完整结果和诊断', () => {
+    const expected = compileTestSnapshot(input);
     for (const incremental of [false, true]) {
       const session = new SceneReconciler({}, { incremental });
       const actual = session.mount(input);
@@ -25,7 +26,7 @@ describe('统一编译模式', () => {
       expect(actual.root !== undefined).toBe(incremental);
       session.dispose();
     }
-    expect(compileToScene(input)).toEqual(expected.result);
+    expect(compileTestResult(input)).toEqual(expected.result);
   });
 
   it('非增量会话支持完整替换但拒绝批次更新，拒绝后仍保留已发布结果', () => {
@@ -34,7 +35,7 @@ describe('统一编译模式', () => {
     expect(() => session.update({ operations: [] })).toThrow();
     expect(session.read()).toBe(initial);
     const replacement: IRScene = { version: 1, type: 'scene', children: [] };
-    expect(session.replace(replacement).compilation.result).toEqual(compileToScene(replacement));
+    expect(session.replace(replacement).compilation.result).toEqual(compileTestResult(replacement));
     session.dispose();
   });
 
@@ -56,7 +57,7 @@ describe('统一编译模式', () => {
     const options = { composites: [definition] };
     const session = new SceneReconciler(options, { incremental: true });
     const first = session.mount(source);
-    expect(first.compilation.result).toEqual(compileToScene(source, options));
+    expect(first.compilation.result).toEqual(compileTestResult(source, options));
     expect(first.root).toBeDefined();
     const changed: IRScene = {
       ...source,
@@ -71,7 +72,7 @@ describe('统一编译模式', () => {
         },
       ],
     });
-    expect(updated.compilation.result).toEqual(compileToScene(changed, options));
+    expect(updated.compilation.result).toEqual(compileTestResult(changed, options));
     expect(updated.compilation.result.artifacts).toHaveLength(1);
     session.dispose();
   });
@@ -100,7 +101,7 @@ describe('统一编译模式', () => {
       operations: [{ kind: 'update', target: { kind: 'id', scopeId: root.scopeId, id: 'anchor' }, input: replacement }],
     });
     expect(next.compilation.result).toEqual(
-      compileToScene({ ...source, children: [replacement, ...source.children.slice(1)] }),
+      compileTestResult({ ...source, children: [replacement, ...source.children.slice(1)] }),
     );
     expect(stable.current!.compiled).toBe(product);
     expect(root.current!.children[1].current!.dependencies.has(root.current!.children[0])).toBe(true);
@@ -115,7 +116,7 @@ describe('统一编译模式', () => {
       ],
     });
     expect(moved.compilation).toEqual(
-      compileSceneSnapshot(
+      compileTestSnapshot(
         {
           ...source,
           children: [{ type: 'coordinate', id: 'new', position: [0, 0] }, replacement, ...source.children.slice(1)],
@@ -152,7 +153,7 @@ describe('统一编译模式', () => {
       operations: [{ kind: 'remove', target: { kind: 'id', scopeId: first.root!.scopeId, id: 'remove' } }],
     });
     expect(keep.current!.compiled).toBe(product);
-    expect(updated.compilation.result).toEqual(compileToScene({ ...source, children: source.children.slice(0, 1) }));
+    expect(updated.compilation.result).toEqual(compileTestResult({ ...source, children: source.children.slice(0, 1) }));
     expect(updated.compilation.result.scene.resources).toHaveLength(1);
     session.dispose();
   });
@@ -200,7 +201,7 @@ describe('统一编译模式', () => {
         ],
       });
       expect(next.compilation).toEqual(
-        compileSceneSnapshot({ ...source, children: [replacement, source.children[1]] }, options, {
+        compileTestSnapshot({ ...source, children: [replacement, source.children[1]] }, options, {
           captureProvenance: true,
         }),
       );

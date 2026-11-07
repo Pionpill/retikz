@@ -3,9 +3,9 @@ import { CompositeBaseSchema, defineComposite, naturalLayoutProposal } from '@re
 import { describe, expect, it, vi } from 'vitest';
 import { literal } from 'zod';
 
-import { compileToScene } from '../../../src/compile';
 import { createCompileRuntime } from '../../../src/compile/runtime';
 import { WeaveManager } from '../../../src/weave';
+import { compileTestResult } from '../../helpers/compilation';
 
 const emptyScene: IRScene = { type: 'scene', version: 1, children: [] };
 
@@ -23,7 +23,7 @@ describe('单次编译文字测量', () => {
       },
     });
     const measureText = vi.fn<TextMeasurer>(() => ({ width: 20, height: 10 }));
-    const result = compileToScene(
+    const result = compileTestResult(
       { ...emptyScene, children: [{ namespace: 'test', type: 'measure' }] },
       {
         composites: [parent],
@@ -91,9 +91,9 @@ describe('单次编译文字测量', () => {
     };
     const measureText = vi.fn<TextMeasurer>(() => ({ width: 20, height: 10, ascent: 8, descent: 2 }));
     const options = { measureText, fontSize: 10 };
-    const first = compileToScene(source, options);
+    const first = compileTestResult(source, options);
     expect(measureText).toHaveBeenCalledTimes(1);
-    expect(compileToScene(source, options)).toEqual(first);
+    expect(compileTestResult(source, options)).toEqual(first);
     expect(measureText).toHaveBeenCalledTimes(2);
   });
 

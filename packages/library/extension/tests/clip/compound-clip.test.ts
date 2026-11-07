@@ -1,6 +1,5 @@
 import type { ClipDefinition, IRScene, PathCommand } from '@retikz/core';
 import { defineClip } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal, number, strictObject } from 'zod';
 
@@ -13,6 +12,7 @@ import {
   pathClipDefinition,
   polygonClipDefinition,
 } from '../../src/clip';
+import { compileTestResult } from '../helpers/compilation';
 
 const roundedRectClip = (): ClipDefinition =>
   defineClip({
@@ -68,7 +68,7 @@ describe('扩展复合裁剪定义', () => {
       ],
     };
 
-    expect(() => compileToScene(scene, { clips: [polygonClipDefinition] })).not.toThrow();
+    expect(() => compileTestResult(scene, { clips: [polygonClipDefinition] })).not.toThrow();
   });
 
   it('解析递归复合子项并将自定义子项委托给 Core 注册表解析', () => {
@@ -89,7 +89,7 @@ describe('扩展复合裁剪定义', () => {
       children: [{ type: 'scope', clip, children: [] }],
     };
 
-    const compiled = compileToScene(scene, {
+    const compiled = compileTestResult(scene, {
       clips: [compoundClipDefinition, circleClipDefinition, ellipseClipDefinition, roundedRectClip()],
     }).scene;
     const resource = compiled.resources?.[0];
@@ -136,12 +136,12 @@ describe('扩展复合裁剪定义', () => {
     };
 
     expect(() =>
-      compileToScene(scene, {
+      compileTestResult(scene, {
         clips: [compoundClipDefinition, roundedRectClip()],
       }),
     ).not.toThrow();
 
-    expect(() => compileToScene(scene, { clips: [compoundClipDefinition] })).toThrow(
+    expect(() => compileTestResult(scene, { clips: [compoundClipDefinition] })).toThrow(
       /Unknown provider 'roundedRect'.*available:/i,
     );
   });
@@ -163,6 +163,6 @@ describe('扩展复合裁剪定义', () => {
       ],
     };
 
-    expect(() => compileToScene(scene)).toThrow(/Unknown provider 'compound'.*available:/i);
+    expect(() => compileTestResult(scene)).toThrow(/Unknown provider 'compound'.*available:/i);
   });
 });

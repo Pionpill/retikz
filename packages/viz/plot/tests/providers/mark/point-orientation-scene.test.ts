@@ -1,8 +1,8 @@
-import { compileToScene } from '@retikz/reconciler';
 import { expect, it } from 'vitest';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { PlotSchema } from '../../../src/schemas';
+import { compileTestResult } from '../../helpers/compilation';
 
 it('坐标对齐共享旋转节点几何形状、连接端点和来源追溯', () => {
   const compile = (aligned: boolean) => {
@@ -41,7 +41,7 @@ it('坐标对齐共享旋转节点几何形状、连接端点和来源追溯', (
       ],
       guides: [],
     });
-    return compileToScene(
+    return compileTestResult(
       { version: 1, type: 'scene', children: [spec] },
       {
         composites: lowerPlots(

@@ -1,6 +1,5 @@
 import { resolveCoreProviderDependencies } from '@retikz/core';
 import { GRID_LAYOUT_MAX_TRACKS_PER_AXIS } from '@retikz/layout';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import type { FlowDiagramDefinitionOptions } from '../../src/flow';
@@ -13,6 +12,7 @@ import {
   getFlowLayoutCatalog,
   layeredFlowLayoutDefinition,
 } from '../../src/flow';
+import { compileTestResult } from '../helpers/compilation';
 
 const layout = {
   kind: 'grid',
@@ -53,7 +53,7 @@ const compile = (
     children: ['grid'],
     relations,
   });
-  const result = compileToScene(
+  const result = compileTestResult(
     { type: 'scene', version: 1, children: [source] },
     {
       ...resolveCoreProviderDependencies({ contributions: [createFlowDiagramProviderContribution(options)] }),

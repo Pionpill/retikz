@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { bindWaapiDescriptors } from '../../src/animation';
 import { renderToSvgString } from '../../src/svg';
+import { compileTestResult } from '../helpers/compilation';
 
 describe('资源中的基础图元', () => {
   it('带箭头的路径绘制动画只在宿主容器应用一次透明度', () => {
@@ -223,7 +224,6 @@ it('单击一台宿主仅重新启动其图案动画', () => {
 
 it('普通标记的动画沿宿主事件上下文绑定且实例隔离', async () => {
   const { defineMark } = await import('@retikz/core');
-  const { compileToScene } = await import('@retikz/reconciler');
   const mark = defineMark({
     name: 'animated',
     emit: () => [
@@ -249,7 +249,7 @@ it('普通标记的动画沿宿主事件上下文绑定且实例隔离', async (
       },
     ],
   });
-  const scene = compileToScene(
+  const scene = compileTestResult(
     {
       type: 'scene',
       version: 1,

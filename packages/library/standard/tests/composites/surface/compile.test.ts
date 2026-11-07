@@ -6,12 +6,12 @@ import {
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
 } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { boolean, literal, number, string } from 'zod';
 
 import type { InputSurfaceConfig } from '../../../src/presentation';
 import { createSurface, surfaceDefinition } from '../../../src/presentation';
+import { compileTestResult } from '../../helpers/compilation';
 import { sceneNodeBounds } from '../../helpers/scene-geometry';
 
 type ProbeLog = Readonly<{ id: string; proposal: LayoutProposal }>;
@@ -108,7 +108,7 @@ const compileSurface = (
     padding,
     ...appearance,
   });
-  const output = compileToScene(
+  const output = compileTestResult(
     {
       type: 'scene',
       version: 1,
@@ -209,7 +209,7 @@ describe('Surface 布局编译', () => {
     });
 
     expect(() =>
-      compileToScene(
+      compileTestResult(
         {
           type: 'scene',
           version: 1,
@@ -244,7 +244,7 @@ it('Surface 完整 Scope 属性透传独立外框', () => {
     meta: { owner: 'surface' },
     child: { type: 'node', position: [0, 0], text: 'A' },
   });
-  const { scene } = compileToScene(
+  const { scene } = compileTestResult(
     { version: 1, type: 'scene', children: [surface] },
     { composites: [surfaceDefinition] },
   );

@@ -13,11 +13,11 @@ import {
 } from '@retikz/core';
 import { formatCompileOccurrence } from '@retikz/reconciler';
 import type { CompileOptions } from '@retikz/reconciler';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject, enum as zodEnum } from 'zod';
 
 import { BUILTIN_SHAPES } from '../../../../kernel/core/src/providers/shape/shape';
+import { compileTestResult } from '../helpers/compilation';
 
 const fixedMeasurer: TextMeasurer = text => ({
   width: [...text].length * 10,
@@ -85,7 +85,7 @@ const probeChild = (
     },
   });
 
-  compileToScene(
+  compileTestResult(
     sceneOf({
       namespace: 'layout-core-gate',
       type: 'probe',
@@ -248,7 +248,7 @@ describe('Layout Core 布局能力门', () => {
       },
     });
 
-    compileToScene(sceneOf({ namespace: 'layout-core-gate', type: 'guide-parent' }), {
+    compileTestResult(sceneOf({ namespace: 'layout-core-gate', type: 'guide-parent' }), {
       composites: [explicit, implicit, parent],
     });
 
@@ -377,7 +377,7 @@ describe('Layout Core 布局能力门', () => {
       },
     });
 
-    const result = compileToScene(sceneOf({ namespace: 'layout-core-gate', type: 'nested-parent' }), {
+    const result = compileTestResult(sceneOf({ namespace: 'layout-core-gate', type: 'nested-parent' }), {
       composites: [nested, parent],
       shapes: [customShape],
       lowerTex,
@@ -507,7 +507,7 @@ describe('Layout Core 布局能力门', () => {
     });
 
     const warnings: Array<string> = [];
-    const discarded = compileToScene(sceneOf({ namespace: 'layout-core-gate', type: 'discard-failure' }), {
+    const discarded = compileTestResult(sceneOf({ namespace: 'layout-core-gate', type: 'discard-failure' }), {
       composites: [failure, discard],
       onWarn: warning => warnings.push(warning.code),
     });
@@ -517,12 +517,12 @@ describe('Layout Core 布局能力门', () => {
     expect(discarded.artifacts).toEqual([]);
     expect(warnings).toEqual([]);
     expect(() =>
-      compileToScene(sceneOf({ namespace: 'layout-core-gate', type: 'raise-failure' }), {
+      compileTestResult(sceneOf({ namespace: 'layout-core-gate', type: 'raise-failure' }), {
         composites: [failure, raise],
       }),
     ).toThrow(/layout-core-gate\.failure.*gate child failure/i);
     expect(() =>
-      compileToScene(sceneOf({ namespace: 'layout-core-gate', type: 'duplicate-replay' }), {
+      compileTestResult(sceneOf({ namespace: 'layout-core-gate', type: 'duplicate-replay' }), {
         composites: [duplicate],
       }),
     ).toThrow(/already replayed|at most once/i);
@@ -569,7 +569,7 @@ describe('Layout Core 布局能力门', () => {
     });
 
     expect(() =>
-      compileToScene(
+      compileTestResult(
         {
           version: 1,
           type: 'scene',
@@ -582,17 +582,17 @@ describe('Layout Core 布局能力门', () => {
       ),
     ).toThrow(/does not belong to this composite callback|callback owner/i);
 
-    compileToScene(sceneOf({ namespace: 'layout-core-gate', type: 'result-producer' }), {
+    compileTestResult(sceneOf({ namespace: 'layout-core-gate', type: 'result-producer' }), {
       composites: [producer],
     });
 
     expect(() =>
-      compileToScene(sceneOf({ namespace: 'layout-core-gate', type: 'result-consumer' }), {
+      compileTestResult(sceneOf({ namespace: 'layout-core-gate', type: 'result-consumer' }), {
         composites: [consumer],
       }),
     ).toThrow(/compile|session|forged|belong/i);
     expect(() =>
-      compileToScene(sceneOf({ namespace: 'layout-core-gate', type: 'forged-result' }), {
+      compileTestResult(sceneOf({ namespace: 'layout-core-gate', type: 'forged-result' }), {
         composites: [forged],
       }),
     ).toThrow(/layout|replay|forged|belong/i);
@@ -632,12 +632,12 @@ describe('Layout Core 布局能力门', () => {
       });
 
       expect(() =>
-        compileToScene(sceneOf({ namespace: 'layout-core-gate', type: fixture.name }), {
+        compileTestResult(sceneOf({ namespace: 'layout-core-gate', type: fixture.name }), {
           composites: [invalid],
         }),
       ).toThrow(fixture.message);
       expect(() =>
-        compileToScene(sceneOf({ namespace: 'layout-core-gate', type: fixture.name }), {
+        compileTestResult(sceneOf({ namespace: 'layout-core-gate', type: fixture.name }), {
           composites: [invalid],
         }),
       ).toThrow(new RegExp(`layout-core-gate\\.${fixture.name}.*children\\[0\\].*proposal`, 'i'));

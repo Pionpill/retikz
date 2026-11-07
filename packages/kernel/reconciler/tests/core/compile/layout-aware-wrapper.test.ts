@@ -24,9 +24,9 @@ import {
   LayoutIntrinsicMode,
   naturalLayoutProposal,
 } from '../../../../core/src';
-import { compileToScene } from '../../../src/compile';
 import { createCompileRuntime } from '../../../src/compile/runtime';
 import { CompileManager } from '../../../src/compile/tree';
+import { compileTestResult } from '../../helpers/compilation';
 import { sceneRectangles } from '../../helpers/scene-rectangles';
 
 const scene = (children: IRScene['children']): IRScene => ({
@@ -109,7 +109,7 @@ describe('布局感知复合运行时包装树', () => {
       },
     });
 
-    compileToScene(scene([{ namespace: 'test', type: 'proposalWrapper' }]), {
+    compileTestResult(scene([{ namespace: 'test', type: 'proposalWrapper' }]), {
       composites: [leaf, wrapper],
       padding: 0,
     });
@@ -160,10 +160,13 @@ describe('布局感知复合运行时包装树', () => {
       },
     });
 
-    const result = compileToScene(scene([{ namespace: 'test', type: 'wrappedNode', child: node('content', [2, 3]) }]), {
-      composites: [definition],
-      padding: 0,
-    });
+    const result = compileTestResult(
+      scene([{ namespace: 'test', type: 'wrappedNode', child: node('content', [2, 3]) }]),
+      {
+        composites: [definition],
+        padding: 0,
+      },
+    );
     const outer = result.scene.primitives[0];
 
     expect(outer).toMatchObject({
@@ -227,7 +230,7 @@ describe('布局感知复合运行时包装树', () => {
       },
     });
 
-    const result = compileToScene(scene([{ namespace: 'test', type: 'referencedWrapper' }]), {
+    const result = compileTestResult(scene([{ namespace: 'test', type: 'referencedWrapper' }]), {
       composites: [definition],
 
       padding: 0,
@@ -264,7 +267,7 @@ describe('布局感知复合运行时包装树', () => {
       }),
     });
 
-    const result = compileToScene(scene([{ namespace: 'test', type: 'emptyAndSorted' }]), {
+    const result = compileTestResult(scene([{ namespace: 'test', type: 'emptyAndSorted' }]), {
       composites: [definition],
     });
 
@@ -307,7 +310,7 @@ describe('布局感知复合运行时包装树', () => {
       }),
     });
 
-    const result = compileToScene(scene([{ namespace: 'test', type: 'allFields' }]), {
+    const result = compileTestResult(scene([{ namespace: 'test', type: 'allFields' }]), {
       composites: [definition],
     });
 
@@ -352,7 +355,7 @@ describe('布局感知复合运行时包装树', () => {
       },
     });
 
-    const result = compileToScene(
+    const result = compileTestResult(
       scene([
         {
           type: 'scope',
@@ -401,7 +404,7 @@ describe('布局感知复合运行时包装树', () => {
       },
     });
 
-    const result = compileToScene(scene([{ namespace: 'test', type: 'styledReplayOwner' }]), {
+    const result = compileTestResult(scene([{ namespace: 'test', type: 'styledReplayOwner' }]), {
       composites: [leaf, owner],
       padding: 0,
     });
@@ -436,7 +439,7 @@ describe('布局感知复合运行时包装树', () => {
     });
 
     expect(() =>
-      compileToScene(scene([{ namespace: 'test', type: 'duplicateWrappedReplay' }]), {
+      compileTestResult(scene([{ namespace: 'test', type: 'duplicateWrappedReplay' }]), {
         composites: [definition],
       }),
     ).toThrow(/replay.*once|already.*replay/i);
@@ -464,7 +467,7 @@ describe('布局感知复合运行时包装树', () => {
     });
 
     expect(() =>
-      compileToScene(scene([node('same'), { namespace: 'test', type: 'wholeTreePreflight' }]), {
+      compileTestResult(scene([node('same'), { namespace: 'test', type: 'wholeTreePreflight' }]), {
         composites: [definition],
         onWarn: warning => warnings.push(warning),
       }),
@@ -599,7 +602,7 @@ describe('布局感知复合运行时包装树', () => {
     expect(transaction?.namespaceChanges.length).toBeGreaterThan(0);
     expect(transaction?.provenance?.ownerMap.size).toBeGreaterThan(0);
 
-    const committed = compileToScene(
+    const committed = compileTestResult(
       scene([{ namespace: 'test', type: 'nestedScopeClipPreflight', fail: false }]),
       options,
     );
@@ -622,7 +625,7 @@ describe('布局感知复合运行时包装树', () => {
     });
 
     expect(() =>
-      compileToScene(scene([{ namespace: 'test', type: 'repeatedScopeHandle' }]), { composites: [definition] }),
+      compileTestResult(scene([{ namespace: 'test', type: 'repeatedScopeHandle' }]), { composites: [definition] }),
     ).toThrow(/same output child|more than once|consum/i);
   });
 
@@ -648,10 +651,10 @@ describe('布局感知复合运行时包装树', () => {
       },
     });
 
-    compileToScene(scene([{ namespace: 'test', type: 'retained' }]), { composites: [definition] });
+    compileTestResult(scene([{ namespace: 'test', type: 'retained' }]), { composites: [definition] });
 
     expect(() =>
-      compileToScene(scene([{ namespace: 'test', type: 'retained' }]), { composites: [definition] }),
+      compileTestResult(scene([{ namespace: 'test', type: 'retained' }]), { composites: [definition] }),
     ).toThrow(/compile|session|forged|belong/i);
   });
 
@@ -678,7 +681,7 @@ describe('布局感知复合运行时包装树', () => {
     });
 
     expect(() =>
-      compileToScene(
+      compileTestResult(
         scene([
           { namespace: 'test', type: 'producer' },
           { namespace: 'test', type: 'consumer' },
@@ -707,7 +710,7 @@ describe('布局感知复合运行时包装树', () => {
     });
 
     expect(() =>
-      compileToScene(
+      compileTestResult(
         scene([
           { namespace: 'test', type: 'resultProducer' },
           { namespace: 'test', type: 'resultConsumer' },
@@ -736,10 +739,10 @@ describe('布局感知复合运行时包装树', () => {
     });
 
     expect(() =>
-      compileToScene(scene([{ namespace: 'test', type: 'forgedChild' }]), { composites: [forgedChild] }),
+      compileTestResult(scene([{ namespace: 'test', type: 'forgedChild' }]), { composites: [forgedChild] }),
     ).toThrow(/forged|output child|belong/i);
     expect(() =>
-      compileToScene(scene([{ namespace: 'test', type: 'forgedResult' }]), { composites: [forgedResult] }),
+      compileTestResult(scene([{ namespace: 'test', type: 'forgedResult' }]), { composites: [forgedResult] }),
     ).toThrow(/layout|replay|forged|belong/i);
   });
 
@@ -771,7 +774,7 @@ describe('布局感知复合运行时包装树', () => {
       },
     });
 
-    const result = compileToScene(scene([{ namespace: 'test', type: 'resourceWrapper' }]), {
+    const result = compileTestResult(scene([{ namespace: 'test', type: 'resourceWrapper' }]), {
       composites: [definition],
     });
     const resources = result.scene.resources ?? [];
@@ -812,7 +815,7 @@ describe('布局感知复合运行时包装树', () => {
       },
     });
 
-    const result = compileToScene(scene([{ namespace: 'test', type: 'artifactParent' }]), {
+    const result = compileTestResult(scene([{ namespace: 'test', type: 'artifactParent' }]), {
       composites: [leaf, parent],
     });
     const leafArtifact = result.artifacts.find(artifact => artifact.type === 'artifactLeaf');
@@ -851,7 +854,7 @@ describe('布局感知复合运行时包装树', () => {
       },
     });
 
-    compileToScene(scene([{ namespace: 'test', type: 'localWrapper' }]), {
+    compileTestResult(scene([{ namespace: 'test', type: 'localWrapper' }]), {
       composites: [definition],
       onWarn: warning => warnings.push(warning),
     });
@@ -875,7 +878,7 @@ describe('布局感知复合运行时包装树', () => {
       },
     });
 
-    const result = compileToScene(scene([node('shared'), { namespace: 'test', type: 'localShadowWrapper' }]), {
+    const result = compileTestResult(scene([node('shared'), { namespace: 'test', type: 'localShadowWrapper' }]), {
       composites: [definition],
       onWarn: warning => warnings.push(warning),
     });
@@ -899,7 +902,7 @@ describe('布局感知复合运行时包装树', () => {
         return { children: [context.replay(laid)] };
       },
     });
-    compileToScene(scene([node('shared'), { namespace: 'test', type: 'duplicateGroup' }, node('shared', [40, 0])]), {
+    compileTestResult(scene([node('shared'), { namespace: 'test', type: 'duplicateGroup' }, node('shared', [40, 0])]), {
       composites: [definition],
       onWarn: warning => warnings.push(warning),
     });
@@ -934,7 +937,7 @@ describe('布局感知复合运行时包装树', () => {
       },
     });
 
-    compileToScene(scene([node('shared'), { namespace: 'test', type: 'orderedDuplicateWrapper' }]), {
+    compileTestResult(scene([node('shared'), { namespace: 'test', type: 'orderedDuplicateWrapper' }]), {
       composites: [definition],
       onWarn: warning => warnings.push(warning),
     });
@@ -970,7 +973,7 @@ describe('布局感知复合运行时包装树', () => {
       },
     });
 
-    const result = compileToScene(scene([{ namespace: 'test', type: 'detachedWrapper' }]), {
+    const result = compileTestResult(scene([{ namespace: 'test', type: 'detachedWrapper' }]), {
       composites: [definition],
     });
 
@@ -1002,7 +1005,7 @@ describe('布局感知复合运行时包装树', () => {
       },
     });
 
-    const result = compileToScene(scene([{ namespace: 'test', type: 'optionalWrapperFields' }]), {
+    const result = compileTestResult(scene([{ namespace: 'test', type: 'optionalWrapperFields' }]), {
       composites: [definition],
     });
     expect(JSON.stringify(result.scene.primitives).match(/optional-fields/g)).toHaveLength(1);
@@ -1027,7 +1030,7 @@ describe('布局感知复合运行时包装树', () => {
       },
     });
 
-    const result = compileToScene(scene([{ namespace: 'test', type: 'replayCoordinateOrder' }]), {
+    const result = compileTestResult(scene([{ namespace: 'test', type: 'replayCoordinateOrder' }]), {
       composites: [definition],
       padding: 0,
     });
@@ -1064,7 +1067,7 @@ describe('布局感知复合运行时包装树', () => {
     });
 
     expect(() =>
-      compileToScene(scene([{ namespace: 'test', type: 'discardedResultScope' }]), { composites: [definition] }),
+      compileTestResult(scene([{ namespace: 'test', type: 'discardedResultScope' }]), { composites: [definition] }),
     ).toThrow(/invalid|forged|output child/i);
   });
 
@@ -1119,7 +1122,7 @@ describe('布局感知复合运行时包装树', () => {
       },
     });
 
-    const result = compileToScene(scene([{ namespace: 'test', type: 'tableLike' }]), {
+    const result = compileTestResult(scene([{ namespace: 'test', type: 'tableLike' }]), {
       composites: [borderLeaf, definition],
     });
     const root = result.scene.primitives[0];

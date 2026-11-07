@@ -3,11 +3,12 @@ import { resolveScopeInheritance } from '@retikz/core';
 import type { CompileWarning } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { compileToScene, createSharedCompileContext } from '../../src/compile';
+import { createSharedCompileContext } from '../../src/compile';
 import { compileWeaveNode, compileWeaveCoordinate } from '../helpers/atomic-elements';
 import { createWeaveNamespaceRegistry } from '../helpers/atomic-namespace';
 import { lookupWeaveBinding, runWeaveCompilation } from '../helpers/atomic-runtime';
 import type { WeaveCompileRead, WeaveBinding } from '../helpers/atomic-runtime';
+import { compileTestResult } from '../helpers/compilation';
 
 describe('版本内名称与读取', () => {
   it('保留未命中 frame，pending 就绪后使用新结果，祖先引用不放宽', () => {
@@ -113,7 +114,7 @@ describe('版本内名称与读取', () => {
       });
     }
     const expected: Array<CompileWarning> = [];
-    compileToScene(
+    compileTestResult(
       {
         type: 'scene',
         version: 1,

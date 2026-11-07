@@ -5,7 +5,7 @@ import type { CompileProvenanceSnapshot } from './provenance';
 import type { CompositeArtifact, CompositeArtifactOf } from './shared';
 
 /**
- * `compileToScene()` 的显式 Scene + artifact 结果
+ * 编译的显式 Scene + artifact 结果
  * @template TCompositeArtifact 本次编译可返回的复合组件产物联合
  */
 export type CompileResult<TCompositeArtifact extends CompositeArtifact = CompositeArtifact> = Readonly<{
@@ -39,7 +39,7 @@ export type CompileCompositeOptions<
 };
 
 /**
- * compileToScene 的可选参数
+ * SceneReconciler 的绘图编译参数
  * @template TComposites 本次编译使用的复合组件定义集合，用于保留输出产物的精确类型
  */
 export type CompileOptions<

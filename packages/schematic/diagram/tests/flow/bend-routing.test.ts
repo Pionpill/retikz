@@ -1,6 +1,5 @@
 import type { CompileWarning, ScenePrimitive } from '@retikz/core';
 import { resolveCoreProviderDependencies } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import type { FlowLayoutOutput, FlowLayoutRoute, InputFlowLayoutComputation } from '../../src/flow';
@@ -16,6 +15,7 @@ import { createFlowBendCurve, flowRelationObstacles, scoreFlowBendNodes } from '
 import { routeFlowRelations } from '../../src/flow/providers/layout/routing';
 import { resolveEffectiveFlowLayout } from '../../src/flow/resolve';
 import { findFlowCurveObstacleIntervals } from '../../src/flow/shared/geometry';
+import { compileTestResult } from '../helpers/compilation';
 
 const routingInput = (): InputFlowLayoutComputation => ({
   layout: { direction: 'right', nodeGap: 48, rankGap: 48, routing: { kind: 'bend', bendAngle: 60 } },
@@ -251,7 +251,7 @@ describe('Flow 弯曲布线', () => {
         },
       ],
     });
-    const result = compileToScene(
+    const result = compileTestResult(
       { type: 'scene', version: 1, children: [source] },
       resolveCoreProviderDependencies({
         contributions: [
@@ -309,7 +309,7 @@ describe('Flow 弯曲布线', () => {
     });
 
     expect(() =>
-      compileToScene(
+      compileTestResult(
         { type: 'scene', version: 1, children: [source] },
         resolveCoreProviderDependencies({
           contributions: [
@@ -536,7 +536,7 @@ describe('Flow 弯曲布线', () => {
       relations: [{ source: 'a', target: 'b', routing: { kind: 'bend', bendDirection: 'left', bendAngle: 60 } }],
     });
     const warnings: Array<CompileWarning> = [];
-    const result = compileToScene(
+    const result = compileTestResult(
       { type: 'scene', version: 1, children: [source] },
       {
         ...resolveCoreProviderDependencies({
@@ -735,7 +735,7 @@ describe('Flow 弯曲布线', () => {
       children: ['a', 'b'],
       relations: [{ source: 'a', target: 'b', routing: { kind: 'bend', bendDirection: 'right', bendAngle: 60 } }],
     });
-    const result = compileToScene(
+    const result = compileTestResult(
       { type: 'scene', version: 1, children: [source] },
       resolveCoreProviderDependencies({ contributions: [createFlowDiagramProviderContribution()] }),
     );

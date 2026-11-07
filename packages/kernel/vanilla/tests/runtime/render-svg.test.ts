@@ -1,11 +1,11 @@
 import type { BoundaryDefinition, ClipDefinition, IRScene } from '@retikz/core';
 import { defineBoundary, defineClip } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { renderToSvgString as svgRenderToString } from '@retikz/render/svg';
 import { describe, expect, it, vi } from 'vitest';
 import { literal, number, strictObject } from 'zod';
 
 import { renderToSvgString } from '../../src';
+import { compileTestResult } from '../helpers/compilation';
 
 /*
  * @retikz/vanilla renderToSvgString（SSR / 构建期，node 环境，无 DOM）
@@ -24,7 +24,7 @@ it('SSR 自定义测量与 SVG 输出共享宿主默认字体', () => {
 });
 
 it('预编译 Scene 只改变显示字体，不调用测量器或改变几何', () => {
-  const scene = compileToScene(nodeIr).scene;
+  const scene = compileTestResult(nodeIr).scene;
   const snapshot = JSON.stringify(scene);
   const measureText = vi.fn(() => ({ width: 999, height: 16 }));
   expect(renderToSvgString(scene, { defaultFontFamily: 'serif', compile: { measureText } })).toContain(
@@ -122,7 +122,7 @@ const clipIr: IRScene = {
 
 describe('@retikz/vanilla renderToSvgString', () => {
   it('render-string-matches-svg：与 @retikz/render/svg 输出逐字一致（薄包、未另写序列化）', () => {
-    const scene = compileToScene(nodeIr).scene;
+    const scene = compileTestResult(nodeIr).scene;
 
     // vanilla 缺省 idPrefix='r'，与显式 'r' 的 svg 输出应逐字相同
     expect(renderToSvgString(scene)).toBe(svgRenderToString(scene, { idPrefix: 'r' }));
@@ -147,7 +147,7 @@ describe('@retikz/vanilla renderToSvgString', () => {
   });
 
   it('显示尺寸显式覆盖，缺省跟随内容边界', () => {
-    const scene = compileToScene(nodeIr).scene;
+    const scene = compileTestResult(nodeIr).scene;
 
     // render 侧直接接受 width/height（vanilla 不做正则注入）
     const sized = svgRenderToString(scene, { idPrefix: 'r', width: 200, height: 100 });

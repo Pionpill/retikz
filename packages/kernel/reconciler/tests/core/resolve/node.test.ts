@@ -7,7 +7,7 @@ import { resolveNode } from '../../../../core/src/resolve/node';
 import type { MergedScopeDefaults } from '../../../../core/src/resolve/style';
 import { resolveScopeDefaults } from '../../../../core/src/resolve/style';
 import type { IRNode, IRScene } from '../../../../core/src/schemas';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 
 const node = (overrides: Partial<IRNode> = {}): IRNode => ({
   type: 'node',
@@ -207,7 +207,7 @@ describe('resolveNode', () => {
         lineHeight: 36,
       },
     });
-    expect(compileToScene(sceneWith(scaled)).scene).toEqual(compileToScene(sceneWith(effective)).scene);
+    expect(compileTestResult(sceneWith(scaled)).scene).toEqual(compileTestResult(sceneWith(effective)).scene);
   });
 
   it('拒绝低于有效最小可见宽度的 layout.width', () => {
@@ -433,7 +433,7 @@ describe('resolveNode', () => {
       },
     });
 
-    expect(compileToScene(sceneWith(compact)).scene).toEqual(compileToScene(sceneWith(expanded)).scene);
+    expect(compileTestResult(sceneWith(compact)).scene).toEqual(compileTestResult(sceneWith(expanded)).scene);
   });
 
   it('将紧凑的 Node 静态形式编译为与规范 IR 等效项相同的 Scene', () => {
@@ -450,6 +450,6 @@ describe('resolveNode', () => {
       layout: { textAlign: 'middle' },
     });
 
-    expect(compileToScene(sceneWith(compact)).scene).toEqual(compileToScene(sceneWith(expanded)).scene);
+    expect(compileTestResult(sceneWith(compact)).scene).toEqual(compileTestResult(sceneWith(expanded)).scene);
   });
 });

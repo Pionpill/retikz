@@ -21,7 +21,7 @@ import { SceneReconciler } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal, number, strictObject, string } from 'zod';
 
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 
 const fixedMeasurer: TextMeasurer = text => ({
   width: text.length * 10,
@@ -89,7 +89,7 @@ describe('盒子 Layout 综合契约', () => {
       },
     });
 
-    const result = compileToScene(sceneOf({ namespace: 'test', type: 'slotProbe', child: boxNode() }), {
+    const result = compileTestResult(sceneOf({ namespace: 'test', type: 'slotProbe', child: boxNode() }), {
       composites: [definition],
       measureText: fixedMeasurer,
       padding: 0,
@@ -133,7 +133,7 @@ describe('盒子 Layout 综合契约', () => {
       },
     });
 
-    const result = compileToScene(sceneOf({ namespace: 'test', type: 'intrinsicSlot' }), {
+    const result = compileTestResult(sceneOf({ namespace: 'test', type: 'intrinsicSlot' }), {
       composites: [definition],
     });
 
@@ -179,7 +179,7 @@ describe('盒子 Layout 综合契约', () => {
       },
     });
 
-    const result = compileToScene(sceneOf({ namespace: 'test', type: 'zeroProbe' }), {
+    const result = compileTestResult(sceneOf({ namespace: 'test', type: 'zeroProbe' }), {
       composites: [definition],
       measureText: fixedMeasurer,
     });
@@ -249,7 +249,7 @@ describe('盒子 Layout 综合契约', () => {
       },
     });
 
-    const result = compileToScene(sceneOf({ namespace: 'test', type: 'nestedParent' }), {
+    const result = compileTestResult(sceneOf({ namespace: 'test', type: 'nestedParent' }), {
       composites: [nested, parent],
       padding: 0,
     });
@@ -307,7 +307,7 @@ describe('盒子 Layout 综合契约', () => {
       },
     });
 
-    const result = compileToScene(sceneOf({ namespace: 'test', type: 'emptyBoxParent' }), {
+    const result = compileTestResult(sceneOf({ namespace: 'test', type: 'emptyBoxParent' }), {
       composites: [empty, parent],
     });
 
@@ -347,7 +347,7 @@ describe('盒子 Layout 综合契约', () => {
       },
     });
 
-    const result = compileToScene(sceneOf({ namespace: 'test', type: 'visibleOverflowParent' }), {
+    const result = compileTestResult(sceneOf({ namespace: 'test', type: 'visibleOverflowParent' }), {
       composites: [leaf, parent],
       padding: 0,
     });
@@ -393,7 +393,7 @@ describe('盒子 Layout 综合契约', () => {
       },
     });
 
-    const result = compileToScene(sceneOf({ namespace: 'test', type: 'exactWidthReflow' }), {
+    const result = compileTestResult(sceneOf({ namespace: 'test', type: 'exactWidthReflow' }), {
       composites: [definition],
       measureText: fixedMeasurer,
       padding: 0,
@@ -446,7 +446,7 @@ describe('盒子 Layout 综合契约', () => {
       },
     });
 
-    const result = compileToScene(sceneOf({ namespace: 'test', type: 'constraintOwner' }), {
+    const result = compileTestResult(sceneOf({ namespace: 'test', type: 'constraintOwner' }), {
       composites: [nested, parent],
     });
 
@@ -475,7 +475,7 @@ describe('盒子 Layout 综合契约', () => {
       },
     });
 
-    compileToScene(sceneOf({ namespace: 'test', type: 'negativeZeroSlot' }), { composites: [definition] });
+    compileTestResult(sceneOf({ namespace: 'test', type: 'negativeZeroSlot' }), { composites: [definition] });
 
     expect(slotWidth).toBe(0);
     expect(Object.is(slotWidth, -0)).toBe(false);
@@ -518,7 +518,7 @@ describe('盒子 Layout 综合契约', () => {
       },
     });
 
-    const result = compileToScene(sceneOf({ namespace: 'test', type: 'clippedReplayParent' }), {
+    const result = compileTestResult(sceneOf({ namespace: 'test', type: 'clippedReplayParent' }), {
       composites: [definition, parent],
       padding: 0,
     });
@@ -582,7 +582,7 @@ describe('盒子 Layout 综合契约', () => {
       },
     });
 
-    const result = compileToScene(sceneOf({ namespace: 'test', type: 'invisibleReplayWrappers' }), {
+    const result = compileTestResult(sceneOf({ namespace: 'test', type: 'invisibleReplayWrappers' }), {
       composites: [definition],
       padding: 0,
     });
@@ -610,7 +610,7 @@ describe('盒子 Layout 综合契约', () => {
       },
     });
 
-    const result = compileToScene(sceneOf({ namespace: 'test', type: 'detachedReplayWrapper' }), {
+    const result = compileTestResult(sceneOf({ namespace: 'test', type: 'detachedReplayWrapper' }), {
       composites: [definition],
       padding: 0,
     });
@@ -661,7 +661,7 @@ describe('盒子 Layout 综合契约', () => {
     });
 
     expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'invalidReplayWrapper' }), {
+      compileTestResult(sceneOf({ namespace: 'test', type: 'invalidReplayWrapper' }), {
         composites: [definition],
       }),
     ).toThrow(/(non-finite bounds|clip.*failed schema validation)/i);
@@ -688,7 +688,7 @@ describe('盒子 Layout 综合契约', () => {
     });
 
     expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'invalidBoxConstraint' }), { composites: [definition] }),
+      compileTestResult(sceneOf({ namespace: 'test', type: 'invalidBoxConstraint' }), { composites: [definition] }),
     ).toThrow(/test\.invalidBoxConstraint.*children\[0\].*(proposal|axis|finite|min|max)/i);
   });
 
@@ -707,7 +707,7 @@ describe('盒子 Layout 综合契约', () => {
     });
 
     expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'invalidAllocation' }), { composites: [definition] }),
+      compileTestResult(sceneOf({ namespace: 'test', type: 'invalidAllocation' }), { composites: [definition] }),
     ).toThrow(/test\.invalidAllocation.*children\[0\].*allocation/i);
   });
 
@@ -749,7 +749,7 @@ describe('盒子 Layout 综合契约', () => {
       },
     });
 
-    const result = compileToScene(sceneOf({ namespace: 'test', type: 'dynamicAllocationParent' }), {
+    const result = compileTestResult(sceneOf({ namespace: 'test', type: 'dynamicAllocationParent' }), {
       composites: [child, parent],
     });
 
@@ -796,7 +796,7 @@ describe('盒子 Layout 综合契约', () => {
     const result = session.replace(next);
     const artifact = session.read();
     const freshDiagnostics: Array<CompileWarning> = [];
-    const freshResult = compileToScene(next, {
+    const freshResult = compileTestResult(next, {
       composites: [definition],
       onWarn: warning => freshDiagnostics.push(warning),
     });

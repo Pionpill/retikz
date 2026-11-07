@@ -14,7 +14,7 @@ import { RetikzCoreError } from '../../../../core/src/error';
 import { resolveTextMetrics } from '../../../../core/src/resolve';
 import type { IRNode, IRNodeLabel, IRScene } from '../../../../core/src/schemas';
 import { NodeLabelSchema } from '../../../../core/src/schemas';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 import { flattenPrims } from '../../helpers/flatten';
 import { sceneRectangles } from '../../helpers/scene-rectangles';
 
@@ -69,7 +69,7 @@ const pinLine = (primitives: Array<ScenePrimitive>): PathPrimitive => {
 
 describe('Node 标签视觉框间距', () => {
   it('附加多行块并将其 pin 终止于整个视觉框', () => {
-    const scene = compileToScene(
+    const scene = compileTestResult(
       sceneWithLabel({ text: ['first', 'second'], position: 'top', distance: 8, pin: true }),
       {
         measureText: fixedMeasure,
@@ -84,7 +84,7 @@ describe('Node 标签视觉框间距', () => {
     ]);
   });
   it('使用距离作为与测量的视觉框的右侧间隙', () => {
-    const scene = compileToScene(sceneWithLabel({ text: 'L', position: 'right', distance: 8 }), {
+    const scene = compileTestResult(sceneWithLabel({ text: 'L', position: 'right', distance: 8 }), {
       measureText: fixedMeasure,
       padding: 0,
     }).scene;
@@ -95,7 +95,7 @@ describe('Node 标签视觉框间距', () => {
   });
 
   it('将最终旋转的 OBB 投影到放置方向上', () => {
-    const scene = compileToScene(sceneWithLabel({ text: 'L', position: 'top', distance: 8, rotate: 90 }), {
+    const scene = compileTestResult(sceneWithLabel({ text: 'L', position: 'top', distance: 8, rotate: 90 }), {
       measureText: fixedMeasure,
       padding: 0,
     }).scene;
@@ -106,16 +106,19 @@ describe('Node 标签视觉框间距', () => {
   });
 
   it('在相同的视觉范围内放置内部标签，无需夹紧', () => {
-    const scene = compileToScene(sceneWithLabel({ text: 'L', position: 'right', placement: 'inside', distance: 0 }), {
-      measureText: fixedMeasure,
-      padding: 0,
-    }).scene;
+    const scene = compileTestResult(
+      sceneWithLabel({ text: 'L', position: 'right', placement: 'inside', distance: 0 }),
+      {
+        measureText: fixedMeasure,
+        padding: 0,
+      },
+    ).scene;
 
     expect(labelText(scene.primitives).x).toBeCloseTo(30);
   });
 
   it('将中心位置保持在最终的 Node 矩形中心并忽略距离', () => {
-    const scene = compileToScene(
+    const scene = compileTestResult(
       sceneWithLabel(
         { text: 'L', position: 'center', distance: 999 },
         {
@@ -131,7 +134,7 @@ describe('Node 标签视觉框间距', () => {
   });
 
   it('在非对称填充建立最终矩形后解析标签几何形状', () => {
-    const scene = compileToScene(
+    const scene = compileTestResult(
       sceneWithLabel(
         { text: 'L', position: 'right', distance: 8 },
         {
@@ -158,13 +161,13 @@ describe('Node 标签视觉框间距', () => {
         },
       ],
     };
-    const scene = compileToScene(ir, { measureText: fixedMeasure, padding: 0 }).scene;
+    const scene = compileTestResult(ir, { measureText: fixedMeasure, padding: 0 }).scene;
 
     expect(labelText(scene.primitives).x).toBeCloseTo(178);
   });
 
   it('以未缩放的用户单位保持 Node.scale 距离', () => {
-    const scene = compileToScene(
+    const scene = compileTestResult(
       sceneWithLabel({ text: 'L', position: 'right', distance: 8 }, { scale: { x: 2, y: 1 } }),
       { measureText: fixedMeasure, padding: 0 },
     ).scene;
@@ -184,7 +187,7 @@ describe('Node 标签视觉框间距', () => {
         },
       ],
     };
-    const scene = compileToScene(ir, { measureText: fixedMeasure, padding: 0 }).scene;
+    const scene = compileTestResult(ir, { measureText: fixedMeasure, padding: 0 }).scene;
 
     expect(scene.layout.width).toBeCloseTo(296);
     expect(scene.layout.height).toBeCloseTo(180);
@@ -223,7 +226,10 @@ describe('Node 标签解析指标', () => {
   it('对字母基线和 measuredHeight 使用归一化上升/下降', () => {
     const metrics: TextMetrics = { width: 40, height: 30, ascent: 8, descent: 2 };
     const measureText = vi.fn<TextMeasurer>(() => metrics);
-    const scene = compileToScene(sceneWithLabel({ text: 'L', position: 'center' }), { measureText, padding: 0 }).scene;
+    const scene = compileTestResult(sceneWithLabel({ text: 'L', position: 'center' }), {
+      measureText,
+      padding: 0,
+    }).scene;
     const label = labelText(scene.primitives);
 
     expect(measureText).toHaveBeenCalledTimes(1);
@@ -240,7 +246,7 @@ describe('Node 标签解析指标', () => {
   ] satisfies Array<[string, TextMetrics]>)('因无效的 %s 指标而失败', (_field, metrics) => {
     expect(
       () =>
-        compileToScene(sceneWithLabel({ text: 'L', position: 'center' }), { measureText: () => metrics, padding: 0 })
+        compileTestResult(sceneWithLabel({ text: 'L', position: 'center' }), { measureText: () => metrics, padding: 0 })
           .scene,
     ).toThrow(/resolveTextMetrics: invalid/);
   });
@@ -248,7 +254,7 @@ describe('Node 标签解析指标', () => {
   it('当单独有限的上升和下降合计溢出时，会失败', () => {
     expect(
       () =>
-        compileToScene(sceneWithLabel({ text: 'L', position: 'center' }), {
+        compileTestResult(sceneWithLabel({ text: 'L', position: 'center' }), {
           measureText: () => ({
             width: 1,
             height: 1,
@@ -268,10 +274,10 @@ describe('Node 标签解析指标', () => {
       children: [{ type: 'node', position: [0, 0], text: [{ segments: [{ text: 'body' }] }] }],
     };
 
-    expect(() => compileToScene(labelScene, { measureText: invalidHeight }).scene).toThrow(
+    expect(() => compileTestResult(labelScene, { measureText: invalidHeight }).scene).toThrow(
       /resolveTextMetrics: invalid/,
     );
-    expect(() => compileToScene(nodeTextScene, { measureText: invalidHeight }).scene).toThrow(
+    expect(() => compileTestResult(nodeTextScene, { measureText: invalidHeight }).scene).toThrow(
       /resolveTextMetrics: invalid/,
     );
   });
@@ -285,7 +291,7 @@ describe('Node 标签解析指标', () => {
     });
 
     expect(() =>
-      compileToScene(sceneWithLabel({ text: [{ segments: [{ tex: 'x' }] }], position: 'center' }), {
+      compileTestResult(sceneWithLabel({ text: [{ segments: [{ tex: 'x' }] }], position: 'center' }), {
         lowerTex,
         measureText: fixedMeasure,
       }),
@@ -294,7 +300,7 @@ describe('Node 标签解析指标', () => {
 
   it('将 lowerTex 保留为空，作为 Node 标签路径上基于警告的缺失', () => {
     const warnings: Array<CompileWarning> = [];
-    const scene = compileToScene(sceneWithLabel({ text: [{ segments: [{ tex: 'x' }] }], position: 'center' }), {
+    const scene = compileTestResult(sceneWithLabel({ text: [{ segments: [{ tex: 'x' }] }], position: 'center' }), {
       lowerTex: () => null,
       measureText: fixedMeasure,
       onWarn: warning => warnings.push(warning),
@@ -309,7 +315,7 @@ describe('Node 标签解析指标', () => {
 
 describe('Node 标签 pin 和边界', () => {
   it('在精确旋转的 OBB 边缘处结束 pin，无需传统填充', () => {
-    const scene = compileToScene(
+    const scene = compileTestResult(
       sceneWithLabel({ text: 'L', position: 'right', distance: 10, rotate: 45, pin: true }),
       { measureText: fixedMeasure, padding: 0, precision: 4 },
     ).scene;
@@ -325,7 +331,7 @@ describe('Node 标签 pin 和边界', () => {
   });
 
   it('包括自动 Scene 边界中的所有变换后的标签角', () => {
-    const scene = compileToScene(sceneWithLabel({ text: 'L', position: 'right', distance: 8, rotate: 45 }), {
+    const scene = compileTestResult(sceneWithLabel({ text: 'L', position: 'right', distance: 8, rotate: 45 }), {
       measureText: fixedMeasure,
       padding: 0,
       precision: 4,
@@ -360,7 +366,7 @@ describe('Node 标签 pin 和边界', () => {
         },
       ],
     };
-    const result = compileToScene(ir, {
+    const result = compileTestResult(ir, {
       measureText: fixedMeasure,
       padding: 0,
     });
@@ -379,10 +385,10 @@ describe('Node 标签距离契约', () => {
   it('在任何布局之前验证 CompileOptions.labelDistance', () => {
     const empty: IRScene = { version: 1, type: 'scene', children: [] };
 
-    expect(() => compileToScene(empty, { labelDistance: 0 }).scene).not.toThrow();
+    expect(() => compileTestResult(empty, { labelDistance: 0 }).scene).not.toThrow();
 
     for (const invalid of [-1, Number.NaN, Number.POSITIVE_INFINITY]) {
-      expect(() => compileToScene(empty, { labelDistance: invalid }).scene).toThrow(
+      expect(() => compileTestResult(empty, { labelDistance: invalid }).scene).toThrow(
         /labelDistance.*non-negative finite number/,
       );
     }

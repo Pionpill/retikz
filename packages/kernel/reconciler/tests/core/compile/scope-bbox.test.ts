@@ -11,7 +11,8 @@ import { composeScopeTransform } from '../../../../core/src/compile/shared';
 import type { TextMeasurer } from '../../../../core/src/contract';
 import { BUILTIN_SHAPES } from '../../../../core/src/providers/shape/shape';
 import { resolveScope, resolveScopeInheritance } from '../../../../core/src/resolve';
-import { compileToScene, createSharedCompileContext } from '../../../src/compile';
+import { createSharedCompileContext } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 
 const scopeLayout = (
   shape: 'rectangle' | 'circle',
@@ -153,7 +154,7 @@ describe('scope.id bbox 正常流程', () => {
       },
     ]);
     const warnings: Array<CompileWarning> = [];
-    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
+    const compiled = compileTestResult(ir, { onWarn: w => warnings.push(w) }).scene;
 
     expect(warnings.filter(w => w.code === BuiltinCompileWarningCode.UnresolvedNodeReference)).toHaveLength(0);
 
@@ -184,7 +185,7 @@ describe('scope.id bbox 正常流程', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileTestResult(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
 
     expect(end).toBeDefined();
@@ -212,7 +213,7 @@ describe('scope.id bbox 正常流程', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileTestResult(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
 
     expect(end).toBeDefined();
@@ -240,7 +241,7 @@ describe('scope.id bbox 正常流程', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileTestResult(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
 
     expect(end).toBeDefined();
@@ -268,7 +269,7 @@ describe('scope.id bbox 正常流程', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileTestResult(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
 
     expect(end).toBeDefined();
@@ -303,7 +304,7 @@ describe('scope.id bbox 正常流程', () => {
       },
     ]);
     const warnings: Array<CompileWarning> = [];
-    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
+    const compiled = compileTestResult(ir, { onWarn: w => warnings.push(w) }).scene;
 
     expect(warnings.filter(w => w.code === BuiltinCompileWarningCode.PolarOriginUnresolved)).toHaveLength(0);
 
@@ -339,7 +340,7 @@ describe('scope.id bbox 正常流程', () => {
       },
     ]);
     const warnings: Array<CompileWarning> = [];
-    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
+    const compiled = compileTestResult(ir, { onWarn: w => warnings.push(w) }).scene;
 
     expect(warnings.filter(w => w.code === BuiltinCompileWarningCode.AtTargetUnresolved)).toHaveLength(0);
 
@@ -374,7 +375,7 @@ describe('scope.id bbox 正常流程', () => {
       },
     ]);
     const warnings: Array<CompileWarning> = [];
-    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
+    const compiled = compileTestResult(ir, { onWarn: w => warnings.push(w) }).scene;
 
     expect(warnings.filter(w => w.code === BuiltinCompileWarningCode.OffsetBaseUnresolved)).toHaveLength(0);
 
@@ -403,7 +404,7 @@ describe('scope.id bbox 正常流程', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileTestResult(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
 
     expect(end).toBeDefined();
@@ -437,7 +438,7 @@ describe('scope.id bbox 边界', () => {
       },
     ]);
     const warnings: Array<CompileWarning> = [];
-    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
+    const compiled = compileTestResult(ir, { onWarn: w => warnings.push(w) }).scene;
 
     expect(warnings.filter(w => w.code === BuiltinCompileWarningCode.OffsetBaseUnresolved)).toHaveLength(0);
 
@@ -467,7 +468,7 @@ describe('scope.id bbox 边界', () => {
       },
     ]);
     const warnings: Array<CompileWarning> = [];
-    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
+    const compiled = compileTestResult(ir, { onWarn: w => warnings.push(w) }).scene;
 
     expect(warnings.filter(w => w.code === BuiltinCompileWarningCode.OffsetBaseUnresolved)).toHaveLength(0);
 
@@ -493,7 +494,7 @@ describe('scope.id bbox 边界', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileTestResult(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
 
     expect(end).toBeDefined();
@@ -520,7 +521,7 @@ describe('scope.id bbox 边界', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileTestResult(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
 
     expect(end).toBeDefined();
@@ -542,7 +543,7 @@ describe('scope.id bbox 错误路径', () => {
     ]);
     const warnings: Array<CompileWarning> = [];
 
-    expect(() => compileToScene(ir, { onWarn: w => warnings.push(w) }).scene).not.toThrow();
+    expect(() => compileTestResult(ir, { onWarn: w => warnings.push(w) }).scene).not.toThrow();
 
     const dups = warnings.filter(w => w.code === BuiltinCompileWarningCode.DuplicateNodeId);
 
@@ -568,7 +569,7 @@ describe('scope.id bbox 错误路径', () => {
       },
     ]);
     const warnings: Array<CompileWarning> = [];
-    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
+    const compiled = compileTestResult(ir, { onWarn: w => warnings.push(w) }).scene;
     const end = lineTo(topPath(compiled.primitives));
 
     expect(warnings.filter(w => w.code === BuiltinCompileWarningCode.DuplicateNodeId)).toHaveLength(1);
@@ -583,7 +584,7 @@ describe('scope.id bbox 错误路径', () => {
     ]);
     const warnings: Array<CompileWarning> = [];
 
-    expect(() => compileToScene(ir, { onWarn: w => warnings.push(w) }).scene).not.toThrow();
+    expect(() => compileTestResult(ir, { onWarn: w => warnings.push(w) }).scene).not.toThrow();
 
     const dups = warnings.filter(w => w.code === BuiltinCompileWarningCode.DuplicateNodeId);
 
@@ -607,7 +608,7 @@ describe('scope.id bbox 错误路径', () => {
     ]);
     const warnings: Array<CompileWarning> = [];
 
-    expect(() => compileToScene(ir, { onWarn: w => warnings.push(w) }).scene).not.toThrow();
+    expect(() => compileTestResult(ir, { onWarn: w => warnings.push(w) }).scene).not.toThrow();
 
     const dups = warnings.filter(w => w.code === BuiltinCompileWarningCode.DuplicateNodeId);
 
@@ -621,7 +622,7 @@ describe('scope.id bbox 错误路径', () => {
     ]);
     const warnings: Array<CompileWarning> = [];
 
-    expect(() => compileToScene(ir, { onWarn: w => warnings.push(w) }).scene).not.toThrow();
+    expect(() => compileTestResult(ir, { onWarn: w => warnings.push(w) }).scene).not.toThrow();
 
     const dups = warnings.filter(w => w.code === BuiltinCompileWarningCode.DuplicateNodeId);
 
@@ -643,7 +644,7 @@ describe('scope.id bbox 错误路径', () => {
       },
     ]);
 
-    expect(() => compileToScene(ir, { onWarn: () => {} }).scene).toThrow();
+    expect(() => compileTestResult(ir, { onWarn: () => {} }).scene).toThrow();
   });
 
   it('scope_id_unknown_anchor_name：path to={ id:"g", anchor:"invalid" } → compile 抛 Unknown anchor', () => {
@@ -663,7 +664,7 @@ describe('scope.id bbox 错误路径', () => {
       },
     ]);
 
-    expect(() => compileToScene(ir).scene).toThrow(/Unknown anchor/);
+    expect(() => compileTestResult(ir).scene).toThrow(/Unknown anchor/);
   });
 });
 
@@ -690,7 +691,7 @@ describe('scope.id bbox 交互', () => {
       },
     ]);
     const warnings: Array<CompileWarning> = [];
-    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
+    const compiled = compileTestResult(ir, { onWarn: w => warnings.push(w) }).scene;
 
     expect(warnings.filter(w => w.code === BuiltinCompileWarningCode.UnresolvedNodeReference)).toHaveLength(0);
 
@@ -738,7 +739,7 @@ describe('scope.id bbox 交互', () => {
       },
     ]);
     const warnings: Array<CompileWarning> = [];
-    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
+    const compiled = compileTestResult(ir, { onWarn: w => warnings.push(w) }).scene;
 
     expect(warnings.filter(w => w.code === BuiltinCompileWarningCode.UnresolvedNodeReference)).toHaveLength(0);
 
@@ -782,7 +783,7 @@ describe('scope.id bbox 交互', () => {
       },
     ]);
     const warnings: Array<CompileWarning> = [];
-    const compiled = compileToScene(ir, {
+    const compiled = compileTestResult(ir, {
       nodeDistance: 200,
       onWarn: w => warnings.push(w),
     }).scene;
@@ -812,7 +813,7 @@ describe('scope.id bbox 交互', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileTestResult(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
 
     expect(end).toBeDefined();
@@ -852,8 +853,8 @@ describe('scope.id bbox 交互', () => {
         ],
       },
     ]);
-    const eBase = lineTo(topPath(compileToScene(irBase, { measureText }).scene.primitives));
-    const eRot = lineTo(topPath(compileToScene(irRot, { measureText }).scene.primitives));
+    const eBase = lineTo(topPath(compileTestResult(irBase, { measureText }).scene.primitives));
+    const eRot = lineTo(topPath(compileTestResult(irRot, { measureText }).scene.primitives));
 
     expect(eBase).toBeDefined();
     expect(eRot).toBeDefined();
@@ -865,7 +866,7 @@ describe('scope.id bbox 交互', () => {
 
   it('拒绝针对其祖先 Scope 信封的内部 Path', () => {
     expect(() =>
-      compileToScene(
+      compileTestResult(
         scene([
           {
             type: 'scope',

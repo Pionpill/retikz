@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { CascadingGraphicStyleSchema, GraphicStyleSchema, ScopeSchema } from '../../../../core/src';
 import type { IRScope, ScenePrimitive } from '../../../../core/src';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 
 const leaves = (primitives: Array<ScenePrimitive>): Array<ScenePrimitive> =>
   primitives.flatMap(primitive => (primitive.type === 'group' ? leaves(primitive.children) : [primitive]));
@@ -20,7 +20,7 @@ const children: IRScope['children'] = [
 
 const compile = (scope: IRScope) =>
   leaves(
-    compileToScene({
+    compileTestResult({
       type: 'scene',
       version: 1,
       children: [ScopeSchema.parse(scope)],

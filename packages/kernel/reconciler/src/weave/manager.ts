@@ -1,4 +1,4 @@
-import type { IRChild, IRScene, CanonicalScopeInheritance } from '@retikz/core';
+import type { AnyCompositeDefinition, IRChild, IRScene, CanonicalScopeInheritance } from '@retikz/core';
 import { resolveScopeInheritance } from '@retikz/core';
 import type { PropertyPath } from '@retikz/foundation';
 import { createIdAllocator, isPropertyPathEqual } from '@retikz/foundation';
@@ -15,7 +15,9 @@ import type { WeaveBatchState, WeaveCompilation, WeaveCompileContext, WeaveCompi
 import type { WeaveBatch, WeaveNode, WeaveRoot, WeaveScopeNode } from './types';
 
 /** 已准备的批次结果，发布者负责提交、最终确认或恢复 */
-export type WeavePreparedUpdate = WeaveCompilation & {
+export type WeavePreparedUpdate<
+  TComposites extends ReadonlyArray<AnyCompositeDefinition> = ReadonlyArray<AnyCompositeDefinition>,
+> = WeaveCompilation<TComposites> & {
   /** 切换本批节点状态，仍保留恢复依据 */
   commit: () => void;
   /** 发布成功后释放恢复依据 */
@@ -28,15 +30,17 @@ export type WeavePreparedUpdate = WeaveCompilation & {
 let nextTreeId = 0;
 
 /** 管理 Weave 声明树、阶段缓存、依赖记录与候选事务；每次准备独占可变状态 */
-export class WeaveManager {
+export class WeaveManager<
+  TComposites extends ReadonlyArray<AnyCompositeDefinition> = ReadonlyArray<AnyCompositeDefinition>,
+> {
   /** 会话稳定配置，与可变批次分离 */
   private readonly context: WeaveCompileContext;
   /** 跨批次事实源与当前候选状态 */
-  private readonly state: WeaveCompileState;
+  private readonly state: WeaveCompileState<TComposites>;
 
   constructor(
     source: IRScene,
-    private readonly options: CompileOptions = {},
+    private readonly options: CompileOptions<TComposites> = {},
     execution: ExecuteOptions = {},
   ) {
     const shared = createSharedCompileContext(options);
@@ -67,7 +71,7 @@ export class WeaveManager {
   }
 
   /** 首次编译基础树并组装可提交产物 */
-  mount(): WeaveCompilation {
+  mount(): WeaveCompilation<TComposites> {
     const persistent = this.state.persistent;
     if (persistent.completed !== undefined)
       throw new RetikzReconcilerError(RetikzReconcilerErrorCode.Contract, 'Weave is already mounted');
@@ -89,7 +93,7 @@ export class WeaveManager {
   }
 
   /** 在既有树上准备一批更新；返回值与当前树在提交前互相隔离 */
-  update(input: WeaveBatch, forceFull = false): WeavePreparedUpdate {
+  update(input: WeaveBatch, forceFull = false): WeavePreparedUpdate<TComposites> {
     const persistent = this.state.persistent;
     const completed = persistent.completed;
     if (completed === undefined)
@@ -165,7 +169,7 @@ export class WeaveManager {
   }
 
   /** 以唯一执行器计算当前候选，Weave 仅提供阶段缓存与事务身份 */
-  private execute(): WeaveCompilation['compilation'] {
+  private execute(): WeaveCompilation<TComposites>['compilation'] {
     const batch = this.batch;
     const { transaction, editor, tracker } = batch;
     const root = this.state.persistent.root;
@@ -304,7 +308,7 @@ export class WeaveManager {
         tracker.recordNodeReads(node, reads, record.diagnostics);
       },
     };
-    const compilation = new CompileManager({ ...runtime, cache }).compileScene(batch.source);
+    const compilation = new CompileManager({ ...runtime, cache }).compileScene<TComposites>(batch.source);
     for (const node of nodes.values()) {
       if (node.type === 'scope') tracker.recordScopeLayoutDependencies(node);
       if (node.type === 'composite') batch.visited++;

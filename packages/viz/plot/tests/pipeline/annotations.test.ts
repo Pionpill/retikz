@@ -1,6 +1,5 @@
 import type { IRChild, IRNode, IRPath, IRScope } from '@retikz/core';
 import { createDataTransformExecutor } from '@retikz/data';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { MarkChannels } from '../../src/contract';
@@ -14,6 +13,7 @@ import { resolveMarkOperation, resolveMarkInstances } from '../../src/resolve/ma
 import type { IRPlotMark } from '../../src/schemas';
 import { PointMarkSchema } from '../../src/schemas';
 import { MarkSchema, PlotSchema } from '../../src/schemas';
+import { compileTestResult } from '../helpers/compilation';
 import { measureLabel } from '../helpers/text-measurement';
 
 const point = {
@@ -231,11 +231,11 @@ describe('独立注释', () => {
       { textMeasurer: measureLabel },
     ).child;
     expect(nodes(output).filter(node => node.text === 'target')).toHaveLength(2);
-    expect(() => compileToScene({ type: 'scene', version: 1, children: [output] })).not.toThrow();
+    expect(() => compileTestResult({ type: 'scene', version: 1, children: [output] })).not.toThrow();
   });
   it('发出 JSON 安全内核 IR，无需单独的渲染器即可编译', () => {
     const output = lowerPlotWithDataArtifact(plot(), { data: [] }, { textMeasurer: measureLabel }).child;
-    expect(() => compileToScene({ type: 'scene', version: 1, children: [output] })).not.toThrow();
+    expect(() => compileTestResult({ type: 'scene', version: 1, children: [output] })).not.toThrow();
   });
   it('仅执行仅注释图的根数据范围', async () => {
     const executor = createDataTransformExecutor();

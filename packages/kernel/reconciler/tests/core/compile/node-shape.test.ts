@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { ScenePrimitive } from '../../../../core/src/contract';
 import type { IRNode, IRScene } from '../../../../core/src/schemas';
 import { NodeSchema } from '../../../../core/src/schemas';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 import { flattenPrims } from '../../helpers/flatten';
 import { line, move } from '../../helpers/path-command-factory';
 
@@ -20,7 +20,7 @@ describe('Node 形状多态', () => {
       type: 'scene',
       children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
     };
-    const scene = compileToScene(ir).scene;
+    const scene = compileTestResult(ir).scene;
 
     expect(findByType(scene.primitives, 'rect')).toBeDefined();
     expect(findByType(scene.primitives, 'ellipse')).toBeUndefined();
@@ -32,7 +32,7 @@ describe('Node 形状多态', () => {
       type: 'scene',
       children: [{ type: 'node', id: 'A', shape: 'circle', position: [0, 0], text: 'A' }],
     };
-    const scene = compileToScene(ir).scene;
+    const scene = compileTestResult(ir).scene;
     const el = findByType(scene.primitives, 'ellipse');
 
     expect(el).toBeDefined();
@@ -48,7 +48,7 @@ describe('Node 形状多态', () => {
         { type: 'node', id: 'A', shape: 'ellipse', position: [0, 0], text: 'long text' },
       ],
     };
-    const scene = compileToScene(ir).scene;
+    const scene = compileTestResult(ir).scene;
     const el = findByType(scene.primitives, 'ellipse');
 
     expect(el).toBeDefined();
@@ -61,7 +61,7 @@ describe('Node 形状多态', () => {
       type: 'scene',
       children: [{ type: 'node', id: 'A', shape: 'diamond', position: [0, 0], text: 'A' }],
     };
-    const scene = compileToScene(ir).scene;
+    const scene = compileTestResult(ir).scene;
     const p = findByType(scene.primitives, 'path');
 
     expect(p).toBeDefined();
@@ -85,7 +85,7 @@ describe('Node 形状多态', () => {
       children: [{ type: 'node', id: 'A', shape: 'rectangle', position: [0, 0], text: 'A' }],
     };
 
-    expect(compileToScene(ir1).scene.primitives).toEqual(compileToScene(ir2).scene.primitives);
+    expect(compileTestResult(ir1).scene.primitives).toEqual(compileTestResult(ir2).scene.primitives);
   });
 });
 
@@ -106,7 +106,7 @@ describe('Target 字符串锚点扩展', () => {
         },
       ],
     };
-    const linePath = compileToScene(ir).scene.primitives.find(p => p.type === 'path');
+    const linePath = compileTestResult(ir).scene.primitives.find(p => p.type === 'path');
     if (linePath?.type === 'path') {
       // move(8, 0)：固定 right
       expect(linePath.commands[0]).toEqual(move([8, 0]));
@@ -130,7 +130,7 @@ describe('Target 字符串锚点扩展', () => {
         },
       ],
     };
-    const linePath = compileToScene(ir).scene.primitives.find(p => p.type === 'path');
+    const linePath = compileTestResult(ir).scene.primitives.find(p => p.type === 'path');
     if (linePath?.type === 'path') {
       // move 后第一个点 ≈ (r·cos(30°), r·sin(30°)) = (9.8, 5.66)
       expect(linePath.commands[0]).toEqual(move([9.8, 5.66]));
@@ -154,7 +154,7 @@ describe('Target 字符串锚点扩展', () => {
           },
         ],
       };
-      const linePath = compileToScene(ir).scene.primitives.find(
+      const linePath = compileTestResult(ir).scene.primitives.find(
         (p): p is Extract<ScenePrimitive, { type: 'path' }> =>
           p.type === 'path' && !p.commands.some(c => c.kind === 'close'),
       );
@@ -187,7 +187,7 @@ describe('Target 字符串锚点扩展', () => {
         },
       ],
     };
-    const linePath = compileToScene(ir).scene.primitives.find(p => p.type === 'path');
+    const linePath = compileTestResult(ir).scene.primitives.find(p => p.type === 'path');
     if (linePath?.type === 'path') {
       expect(linePath.commands[0]).toEqual(move([10, 20]));
     }
@@ -225,7 +225,7 @@ describe('椭圆嵌套参数 IR 往返', () => {
       ],
     };
 
-    expect(() => compileToScene(ir).scene).toThrow();
+    expect(() => compileTestResult(ir).scene).toThrow();
   });
 });
 
@@ -251,7 +251,7 @@ describe('circle 内置 shape preset 解析到 ellipse equal', () => {
       ],
     };
 
-    expect(compileToScene(bareIr).scene.primitives).toEqual(compileToScene(explicitIr).scene.primitives);
+    expect(compileTestResult(bareIr).scene.primitives).toEqual(compileTestResult(explicitIr).scene.primitives);
   });
 
   it('circle_emit_equivalent：circle 解析后 emit EllipsePrimitive 且 rx == ry（等轴）', () => {
@@ -261,7 +261,7 @@ describe('circle 内置 shape preset 解析到 ellipse equal', () => {
       // 非正方内框（宽文本）下仍须 rx == ry，验证走的是 equal（等轴）而非 proportional
       children: [{ type: 'node', id: 'A', shape: 'circle', position: [0, 0], text: 'long text' }],
     };
-    const el = findByType(compileToScene(ir).scene.primitives, 'ellipse');
+    const el = findByType(compileTestResult(ir).scene.primitives, 'ellipse');
 
     expect(el).toBeDefined();
     expect(el!.rx).toBe(el!.ry);
@@ -282,16 +282,16 @@ describe('circle 内置 shape preset 解析到 ellipse equal', () => {
       ],
     };
 
-    expect(() => compileToScene(ir).scene).toThrow();
+    expect(() => compileTestResult(ir).scene).toThrow();
   });
 
   it('circle_with_scale：circle 解析后 × scale → 尺寸协同放大、仍正圆（rx == ry）', () => {
-    const base = compileToScene({
+    const base = compileTestResult({
       version: 1,
       type: 'scene',
       children: [{ type: 'node', id: 'A', shape: 'circle', position: [0, 0], text: 'X' }],
     }).scene;
-    const scaled = compileToScene({
+    const scaled = compileTestResult({
       version: 1,
       type: 'scene',
       children: [{ type: 'node', id: 'A', shape: 'circle', position: [0, 0], text: 'X', scale: 2 }],
@@ -333,7 +333,7 @@ describe('circle 内置 shape preset 解析到 ellipse equal', () => {
         ],
       });
       const findLine = (ir: IRScene) =>
-        compileToScene(ir).scene.primitives.find(
+        compileTestResult(ir).scene.primitives.find(
           (p): p is Extract<ScenePrimitive, { type: 'path' }> =>
             p.type === 'path' && !p.commands.some(c => c.kind === 'close'),
         );
@@ -367,7 +367,7 @@ describe('diamond 内置 shape preset 解析到 polygon 4/0', () => {
       ],
     };
 
-    expect(compileToScene(bareIr).scene.primitives).toEqual(compileToScene(explicitIr).scene.primitives);
+    expect(compileTestResult(bareIr).scene.primitives).toEqual(compileTestResult(explicitIr).scene.primitives);
   });
 
   it('diamond_emit_topology：diamond preset 解析后 emit 闭合 path（4 顶点 + close）', () => {
@@ -376,7 +376,7 @@ describe('diamond 内置 shape preset 解析到 polygon 4/0', () => {
       type: 'scene',
       children: [{ type: 'node', id: 'A', shape: 'diamond', position: [0, 0], text: 'A' }],
     };
-    const p = findByType(compileToScene(ir).scene.primitives, 'path');
+    const p = findByType(compileTestResult(ir).scene.primitives, 'path');
 
     expect(p).toBeDefined();
 
@@ -413,7 +413,7 @@ describe('diamond 内置 shape preset 解析到 polygon 4/0', () => {
         ],
       });
       const findLine = (ir: IRScene) =>
-        compileToScene(ir).scene.primitives.find(
+        compileTestResult(ir).scene.primitives.find(
           (p): p is Extract<ScenePrimitive, { type: 'path' }> =>
             p.type === 'path' && !p.commands.some(c => c.kind === 'close'),
         );
@@ -444,7 +444,7 @@ describe('Node shape boundary clip 在 path 端点贴边时按 shape 多态', ()
         },
       ],
     };
-    const scene = compileToScene(ir).scene;
+    const scene = compileTestResult(ir).scene;
 
     // circle 走 EllipsePrimitive，不会和 line PathPrimitive 撞；直接拿 path
     const linePath = scene.primitives.find(p => p.type === 'path');
@@ -475,7 +475,7 @@ describe('Node shape boundary clip 在 path 端点贴边时按 shape 多态', ()
         },
       ],
     };
-    const scene = compileToScene(ir, { precision: 4 }).scene;
+    const scene = compileTestResult(ir, { precision: 4 }).scene;
 
     // 找连接 line（不带 close 的 path，diamond 形状自带 close）
     const linePath = scene.primitives.find(

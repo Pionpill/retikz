@@ -4,7 +4,7 @@ import type { ScenePrimitive } from '../../../../../core/src/contract';
 import { polygon } from '../../../../../core/src/providers/shape';
 import type { IRChild, IRScene } from '../../../../../core/src/schemas';
 import { NodeSchema, ShapeRefSchema } from '../../../../../core/src/schemas';
-import { compileToScene } from '../../../../src/compile';
+import { compileTestResult } from '../../../helpers/compilation';
 import { flattenPrims } from '../../../helpers/flatten';
 
 const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: 'scene', children });
@@ -67,7 +67,7 @@ describe('polygon — happy path 几何', () => {
     // 直接断言 emit 顶点：6 个顶点应在同一外接圆上（到中心等距），相邻夹角 60°。
     // rect 用精确 AABB（emit 收轴对齐 rect）；外接半径由 circumscribe 派生，此处只验「等半径 + 6 顶点」。
     // precision 高些避免默认 2 位小数 round 引入的微小半径抖动（属渲染量化、非几何误差）
-    const compiled = compileToScene(scene([polyNode({ sides: 6 })]), { precision: 6 }).scene;
+    const compiled = compileTestResult(scene([polyNode({ sides: 6 })]), { precision: 6 }).scene;
     const path = findByType(compiled.primitives, 'path');
 
     expect(path).toBeDefined();
@@ -87,7 +87,7 @@ describe('polygon — happy path 几何', () => {
   });
 
   it('polygon_emit_closed：emit 产闭合多边形（首 move、末 close、中间 line）', () => {
-    const compiled = compileToScene(scene([polyNode({ sides: 5 })])).scene;
+    const compiled = compileTestResult(scene([polyNode({ sides: 5 })])).scene;
     const path = findByType(compiled.primitives, 'path');
 
     expect(path).toBeDefined();
@@ -102,7 +102,7 @@ describe('polygon — happy path 几何', () => {
   });
 
   it('polygon_sides_3_minimum：sides:3 → 三角形（3 顶点 + close）', () => {
-    const compiled = compileToScene(scene([polyNode({ sides: 3 })])).scene;
+    const compiled = compileTestResult(scene([polyNode({ sides: 3 })])).scene;
     const path = findByType(compiled.primitives, 'path');
 
     expect(path).toBeDefined();
@@ -111,7 +111,7 @@ describe('polygon — happy path 几何', () => {
   });
 
   it('diamond_object_preset：对象 diamond preset 编译为扁菱形', () => {
-    const compiled = compileToScene(
+    const compiled = compileTestResult(
       scene([
         {
           type: 'node',
@@ -142,7 +142,7 @@ describe('polygon — happy path 几何', () => {
 
 describe('polygon — 边界（边数极值）', () => {
   it('polygon_large_sides_near_circle：sides:64 → 64 顶点近圆轮廓（相邻顶点间距远小于半径）', () => {
-    const compiled = compileToScene(scene([polyNode({ sides: 64 })])).scene;
+    const compiled = compileTestResult(scene([polyNode({ sides: 64 })])).scene;
     const path = findByType(compiled.primitives, 'path');
 
     expect(path).toBeDefined();
@@ -163,7 +163,7 @@ describe('polygon — 边界（边数极值）', () => {
 
   it('polygon_sides_3_explicit_rotate：sides:3 + rotate 仍 3 顶点、起始角随 rotate', () => {
     // rotate 改起始顶点方向、不改顶点数；验证 rotate 进入顶点角度（首顶点角 = rotate）。
-    const compiled = compileToScene(scene([polyNode({ sides: 3, rotate: 90 })])).scene;
+    const compiled = compileTestResult(scene([polyNode({ sides: 3, rotate: 90 })])).scene;
     const path = findByType(compiled.primitives, 'path');
 
     expect(path).toBeDefined();
@@ -178,7 +178,7 @@ describe('polygon — 错误路径（paramsSchema 拒绝）', () => {
     expect(() => polygon.paramsSchema.parse({ sides: 2 })).toThrow();
 
     // 端到端：compile 同样在 paramsSchema.parse 抛
-    expect(() => compileToScene(scene([polyNode({ sides: 2 })])).scene).toThrow();
+    expect(() => compileTestResult(scene([polyNode({ sides: 2 })])).scene).toThrow();
   });
 
   it('拒绝多边形非整数边数 sides:3.5', () => {
@@ -203,7 +203,7 @@ describe('polygon — 交互（self-rotate + Node.rotate）', () => {
     //   ① 外层 group 带 rotate 15° transform；
     //   ② emit 顶点（轴对齐空间，未含 group rotate）已含 self-rotate 30°——
     //      对 sides=4 取首顶点相对中心方向角应 ≈ 30°（mod 360）。
-    const compiled = compileToScene(scene([polyNode({ sides: 4, rotate: 30 }, { rotate: 15 })]), {
+    const compiled = compileTestResult(scene([polyNode({ sides: 4, rotate: 30 }, { rotate: 15 })]), {
       precision: 6,
     }).scene;
     const group = findByType(compiled.primitives, 'group');
@@ -230,8 +230,8 @@ describe('polygon — 交互（self-rotate + Node.rotate）', () => {
 
     expect(polygon.scaleParams!(params, 2, 2)).toEqual({ sides: 6, rotate: 10 });
 
-    const base = compileToScene(scene([polyNode({ sides: 6 }, { text: 'X' })])).scene;
-    const big = compileToScene(scene([polyNode({ sides: 6 }, { text: 'X', scale: 2 })])).scene;
+    const base = compileTestResult(scene([polyNode({ sides: 6 }, { text: 'X' })])).scene;
+    const big = compileTestResult(scene([polyNode({ sides: 6 }, { text: 'X', scale: 2 })])).scene;
     const basePath = findByType(base.primitives, 'path');
     const bigPath = findByType(big.primitives, 'path');
 

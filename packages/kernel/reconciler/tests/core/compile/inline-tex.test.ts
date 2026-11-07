@@ -5,7 +5,7 @@ import type { CompileWarning } from '../../../../core/src/compile/shared';
 import type { TexLowerer } from '../../../../core/src/compile/text';
 import type { PathPrimitive, ScenePrimitive, TextPrimitive } from '../../../../core/src/contract';
 import type { IRScene } from '../../../../core/src/schemas';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 import { flattenPrims } from '../../helpers/flatten';
 
 const lowerTexCalls: Array<{ tex: string; displayMode?: boolean }> = [];
@@ -44,7 +44,7 @@ const compile = (
 ): { primitives: Array<ScenePrimitive>; warnings: Array<CompileWarning>; width: number } => {
   const warnings: Array<CompileWarning> = [];
   lowerTexCalls.length = 0;
-  const out = compileToScene(scene(children), {
+  const out = compileTestResult(scene(children), {
     onWarn: w => warnings.push(w),
     ...(withTex ? { lowerTex: fakeLowerTex } : {}),
   }).scene;

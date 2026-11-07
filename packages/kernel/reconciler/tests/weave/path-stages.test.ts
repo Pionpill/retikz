@@ -3,8 +3,8 @@ import { definePath, PathSchema } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
-import { compileToScene } from '../../src/compile';
 import { readWeaveCurrent, WeaveManager } from '../../src/weave';
+import { compileTestResult } from '../helpers/compilation';
 
 describe('Path 三层复用', () => {
   it('省略与显式 stroke 种类复用同一最终结果', () => {
@@ -83,7 +83,7 @@ describe('Path 三层复用', () => {
     });
     expect(calls).toBe(before);
     expect(update.compilation.result).toEqual(
-      compileToScene({ ...source, children: [explicit] }, { paths: [definition] }),
+      compileTestResult({ ...source, children: [explicit] }, { paths: [definition] }),
     );
     update.commit();
     update.finish();

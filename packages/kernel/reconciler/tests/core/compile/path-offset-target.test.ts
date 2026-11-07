@@ -5,7 +5,7 @@ import type { PathPrimitive, ScenePrimitive } from '../../../../core/src/contrac
 import { defineBoundary, definePath } from '../../../../core/src/contract';
 import type { IRScene } from '../../../../core/src/schemas';
 import { PathSchema, TargetSchema } from '../../../../core/src/schemas';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 
 const findPathPrim = (prims: Array<ScenePrimitive>): PathPrimitive => {
   const p = prims.find((x): x is PathPrimitive => x.type === 'path');
@@ -72,7 +72,7 @@ describe('OffsetPosition: step.to 编译解析', () => {
           },
         ],
       };
-      const scene = compileToScene(ir).scene;
+      const scene = compileTestResult(ir).scene;
       const pathPrim = findPathPrim(scene.primitives);
 
       // 末端无 node 引用 → 直接落 (50, 0)
@@ -100,7 +100,7 @@ describe('OffsetPosition: step.to 编译解析', () => {
           },
         ],
       };
-      const scene = compileToScene(ir).scene;
+      const scene = compileTestResult(ir).scene;
       const pathPrim = findPathPrim(scene.primitives);
       const [mx, my] = firstMove(pathPrim);
 
@@ -135,7 +135,7 @@ describe('OffsetPosition: step.to 编译解析', () => {
           },
         ],
       };
-      const scene = compileToScene(ir).scene;
+      const scene = compileTestResult(ir).scene;
       const pathPrim = findPathPrim(scene.primitives);
 
       // polar(A=(0,0), 0, 30) = (30, 0); + (0, 5) = (30, 5)
@@ -177,7 +177,7 @@ describe('OffsetPosition: step.to 编译解析', () => {
           },
         ],
       };
-      const scene = compileToScene(ir).scene;
+      const scene = compileTestResult(ir).scene;
       const pathPrim = findPathPrim(scene.primitives);
       const [ex, ey] = lastLineEnd(pathPrim);
 
@@ -224,7 +224,9 @@ describe('OffsetPosition: step.to 编译解析', () => {
         ],
       };
 
-      expect(() => compileToScene(ir, { boundaries: [countedBoundary], paths: [countedStroke] }).scene).not.toThrow();
+      expect(
+        () => compileTestResult(ir, { boundaries: [countedBoundary], paths: [countedStroke] }).scene,
+      ).not.toThrow();
       expect(parseCount).toBe(2);
     });
   });
@@ -248,7 +250,7 @@ describe('OffsetPosition: step.to 编译解析', () => {
           },
         ],
       };
-      const scene = compileToScene(ir).scene;
+      const scene = compileTestResult(ir).scene;
 
       // 未定义 id 让 evaluatePosition 返回 null，compileStrokePath 返回 null
       const pathPrim = scene.primitives.find(p => p.type === 'path');

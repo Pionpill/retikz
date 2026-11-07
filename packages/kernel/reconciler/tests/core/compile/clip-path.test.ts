@@ -3,7 +3,7 @@ import { literal, strictObject } from 'zod';
 
 import type { ClipDefinition, ClipResource, IRClip, ClipFillRule, IRScene, PathCommand } from '../../../../core/src';
 import { defineClip } from '../../../../core/src';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 
 const clippedIr = (clip: IRClip): IRScene => ({
   version: 1,
@@ -24,7 +24,7 @@ const compilePath = (
   options: Readonly<{ fillRule?: ClipFillRule; precision?: number }> = {},
 ): ClipResource['path'] => {
   const kind = 'testPath';
-  const scene = compileToScene(clippedIr({ kind, params: {} }), {
+  const scene = compileTestResult(clippedIr({ kind, params: {} }), {
     clips: [pathOperation(kind, commands, options.fillRule)],
     ...(options.precision === undefined ? {} : { precision: options.precision }),
   }).scene;
@@ -76,7 +76,7 @@ describe('规范的 SceneClipPath', () => {
       ],
     };
 
-    const scene = compileToScene(ir, {
+    const scene = compileTestResult(ir, {
       clips: [pathOperation('pathA', commandsA), pathOperation('pathB', commandsB)],
     }).scene;
 
