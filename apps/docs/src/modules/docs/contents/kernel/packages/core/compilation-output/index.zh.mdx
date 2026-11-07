@@ -9,14 +9,14 @@ description: 追踪 Core 如何汇总 Scene、资源与画布，并交付领域�
 
 ## 整体流程
 
-普通入口 `compileToScene` 返回 Scene 与 Composite 领域产物：
+Vanilla 的 `compileToScene` 返回包含 Scene 与 Composite 领域产物的处理结果：
 
 - `scene`：交给渲染器的图元、画布和绘制资源。
 - `artifacts`：复合组件主动返回的领域结果，例如 Layout 的容器、分行与间距。
 
-`onWarn` 接收本次编译的警告。编译快照入口还可单独交付诊断与来源信息。
+`onWarn` 接收本次编译的警告。内部编译快照还保留诊断与按需捕获的来源信息。
 
-手动组装已编译片段时，资源导入函数 `importSceneResources` 从 `@retikz/reconciler` 导入；警告格式化函数 `formatCompileWarning` 也由该包提供。资源生成和警告类型仍由 Core 定义。
+便捷入口通过内部编译过程统一组装资源与诊断，调用方无需创建资源工作区。资源生成和警告类型仍由 Core 定义。
 
 `CompileResult` 的结构如下，产物泛型按默认类型简化：
 
@@ -35,7 +35,7 @@ type CompileResult = Readonly<{
 
 <SourceLinks
   sources={[
-    { label: '完整编译', path: 'packages/kernel/reconciler/src/compile/compile.ts' },
+    { label: '完整编译', path: 'packages/kernel/reconciler/src/reconciler.ts' },
     { label: '结果类型', path: 'packages/kernel/reconciler/src/compile/types.ts' },
   ]}
 />
@@ -310,7 +310,7 @@ Core 在编译时筛选轨道所属层级：根级的非 `viewBox` 轨道、元�
   sources={[
     { label: '动画轨道与关键帧', path: 'packages/kernel/core/src/schemas/scene/animation.ts' },
     { label: '根级与元素级轨道筛选', path: 'packages/kernel/core/src/resolve/animation.ts' },
-    { label: '场景动画装配', path: 'packages/kernel/reconciler/src/compile/compile.ts' },
+    { label: '场景动画装配', path: 'packages/kernel/reconciler/src/reconciler.ts' },
   ]}
 />
 
@@ -364,10 +364,11 @@ return {
 
 `children` 交回 Core 继续编译，`artifact` 则保留容器边界、各子项的布局与位移、分行和间距信息。Core 将它包装为领域产物记录，`namespace` 为 `layout`，`type` 为 `flexLayout`；内层 `value.kind: 'flex'` 是 Layout 包自己的产物分类。
 
-下面编译一个包含两个节点的 FlexLayout，并从返回数组中读取产物。注册的 Definition 同时让返回值保留具体的产物类型：
+下面编译一个包含两个节点的 FlexLayout，并从返回数组中读取产物。Definition 通过 `options.compile` 注册，返回值中的 `value` 保留该领域的产物数据：
 
 ```ts
-import { compileToScene } from '@retikz/reconciler';
+import { compileToScene } from '@retikz/vanilla';
+
 import { createFlexLayout, flexLayoutDefinition } from '@retikz/layout';
 
 const layout = createFlexLayout({
@@ -380,17 +381,14 @@ const layout = createFlexLayout({
 
 const result = compileToScene(
   { type: 'scene', version: 1, children: [layout] },
-  { composites: [flexLayoutDefinition] },
+  { compile: { composites: [flexLayoutDefinition] } },
 );
 
 for (const artifact of result.artifacts) {
   if (artifact.type !== 'flexLayout') continue;
   console.log(artifact.namespace); // 'layout'
   console.log(artifact.occurrence); // { sourcePath: ['children', 0], expansionPath: [] }
-  console.log(artifact.value.kind); // 'flex'
-  console.log(artifact.value.items.length); // 2
-  console.log(artifact.value.lines.length); // 1
-  console.log(artifact.value.container, artifact.value.items, artifact.value.spacing);
+  console.log(artifact.value);
 }
 ```
 
@@ -414,11 +412,11 @@ for (const artifact of result.artifacts) {
 
 选中的布局试算在重放时保留内部实体和图元的归属关系，并将来源树挂到所属 Composite 下。试算根命名空间接入重放位置，内部局部命名空间独立映射；新增的变换和裁剪包装图元归外层 Composite。未选中的试算不进入最终来源。重放实体属于生成内容，Reconciler 仍为其分配版本内身份，不承诺跨版本稳定。
 
-`compileSceneSnapshot(ir, compileOptions, executeOptions)` 返回 `result`、`diagnostics` 和按需收集的 `provenance`，不派发警告。`compileOptions` 不包含 `onWarn`；`executeOptions.captureProvenance` 控制是否收集来源。来源信息用于图元身份关联与提交，内部布局继续服务测量、引用和重放。
+`SceneReconciler(ir, compileOptions, executeOptions)` 返回 `result`、`diagnostics` 和按需收集的 `provenance`，不派发警告。`compileOptions` 不包含 `onWarn`；`executeOptions.captureProvenance` 控制是否收集来源。来源信息用于图元身份关联与提交，内部布局继续服务测量、引用和重放。
 
 <SourceLinks
   sources={[
-    { label: '编译快照入口', path: 'packages/kernel/reconciler/src/compile/compile.ts' },
+    { label: '编译快照入口', path: 'packages/kernel/reconciler/src/reconciler.ts' },
     { label: '来源契约', path: 'packages/kernel/reconciler/src/compile/provenance/types.ts' },
   ]}
 />
@@ -427,7 +425,7 @@ for (const artifact of result.artifacts) {
 
 来源中的 `primitivePath` 相对完整 Scene，例如 `['primitives', 2, 'children', 1]`。Reconciler 的完整 topology 沿用这个根；Patch 子树 topology 则相对根图元，根路径为 `[]`，其子图元路径为 `['children', 1]`。两者均可通过 `readPropertyPath` 读取，但必须传入各自对应的根对象。
 
-`compileChildrenToPrimitives` 完成遍历、延迟路径回填、布局汇总和最终领域产物排序。`assembleSceneCompilationSnapshot` 汇总图元、资源与画布；`compileSceneSnapshot` 返回完整快照；`compileToScene` 再派发警告并返回 `scene` 与 `artifacts`。
+`compileChildrenToPrimitives` 完成遍历、延迟路径回填、布局汇总和最终领域产物排序。`assembleSceneCompilationSnapshot` 汇总图元、资源与画布；`SceneReconciler` 返回完整快照；`SceneReconciler` 再派发警告并返回 `scene` 与 `artifacts`。
 
 <ComponentPreview files="output-implementation" size="sm" hideCode type="flow" />
 
@@ -435,7 +433,7 @@ for (const artifact of result.artifacts) {
 
 <SourceLinks
   sources={[
-    { label: '编译入口', path: 'packages/kernel/reconciler/src/compile/compile.ts' },
+    { label: '编译入口', path: 'packages/kernel/reconciler/src/reconciler.ts' },
     { label: '遍历与重放', path: 'packages/kernel/reconciler/src/compile/tree/subtree.ts' },
     { label: 'Scene 装配', path: 'packages/kernel/reconciler/src/compile/scene/output.ts' },
   ]}

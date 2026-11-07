@@ -75,9 +75,9 @@ const badge = defineShape({
 定义创建后，通过 core 的 `CompileOptions.shapes` 或 React 的 `<Layout extensions={{ shapes }}>` 注入。两种入口接收同一份 `ReadonlyArray<ShapeDefinition>`。
 
 ```ts
-import { compileToScene } from '@retikz/reconciler';
+import { compileToScene } from '@retikz/vanilla';
 
-const { scene } = compileToScene(ir, { shapes: [badge] });
+const { scene } = compileToScene(ir, { compile: { shapes: [badge] } });
 ```
 
 ```tsx

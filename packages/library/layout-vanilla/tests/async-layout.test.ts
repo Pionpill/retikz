@@ -1,6 +1,6 @@
 import { LayoutItemKind, gridLayoutDefinition, createGridLayout } from '@retikz/layout';
 import type { InputEmbedAdapter, InputEmbedContribution } from '@retikz/vanilla';
-import { processToStaticInputResult, processToStaticInputResultAsync } from '@retikz/vanilla';
+import { compileToScene, compileToSceneAsync } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
 import { flexLayout, gridLayout, overlayLayout, layoutInputEmbedAdapters } from '../src';
@@ -32,8 +32,8 @@ describe('Layout 异步编写', () => {
 
     for (const container of containers) {
       const input = { children: [container] };
-      const expected = processToStaticInputResult(input, options);
-      const actual = await processToStaticInputResultAsync(input, options);
+      const expected = compileToScene(input, options);
+      const actual = await compileToSceneAsync(input, options);
 
       expect(actual.scene).toEqual(expected.scene);
       expect(JSON.stringify(actual.scene)).toContain('prepared-child');
@@ -62,7 +62,7 @@ describe('Layout 异步编写', () => {
         }),
       }),
     };
-    const result = await processToStaticInputResultAsync(
+    const result = await compileToSceneAsync(
       {
         children: [
           flexLayout({

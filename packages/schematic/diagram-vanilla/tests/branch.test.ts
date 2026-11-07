@@ -1,10 +1,10 @@
-import { createProcessingController, processToStaticInputResult } from '@retikz/vanilla';
+import { createProcessingController, compileToScene } from '@retikz/vanilla';
 import { expect, it } from 'vitest';
 
 import { branchDiagram, branchDiagramInputEmbedAdapter } from '../src/branch';
 
 it('通过同步 Vanilla 嵌入编译 Branch', () => {
-  const result = processToStaticInputResult(
+  const result = compileToScene(
     {
       children: [
         branchDiagram({

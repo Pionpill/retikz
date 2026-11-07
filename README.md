@@ -1,4 +1,4 @@
-# retikz
+﻿# retikz
 
 [English](./README.md) | [简体中文](./README.zh.md)
 
@@ -132,7 +132,7 @@ Data-driven charts are handled by the emerging Tier 2 layer `@retikz/plot` (a st
 ```text
 React JSX / plain JS objects / future DSL / AI JSON
   -> retikz IR
-  -> compileToScene()
+  -> SceneReconciler.mount / replace
   -> Scene primitives
   -> @retikz/render: SVG / Canvas 2D (mounted via react / vanilla)
 ```

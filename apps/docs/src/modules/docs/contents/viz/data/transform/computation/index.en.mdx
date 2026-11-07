@@ -228,7 +228,7 @@ In React clients, standalone Plot, Chart and Table components automatically prep
 
 Layout preflights all inputs it manages before computation, then commits the results together as one update. If the current request fails, the existing view remains. Results from expired requests or unmounted components no longer update the view.
 
-For Vanilla, use `renderPlotAsync`, `renderChartAsync` or `renderTableAsync`. You can also use `processToStaticInputResultAsync` with the corresponding adapter. Synchronous entries and synchronous React SSR support only local synchronous computation. For SSR that needs external computation or awaits a Promise, use an asynchronous Vanilla entry.
+For Vanilla, use `renderPlotAsync`, `renderChartAsync` or `renderTableAsync`. You can also use `compileToSceneAsync` with the corresponding adapter. Synchronous entries and synchronous React SSR support only local synchronous computation. For SSR that needs external computation or awaits a Promise, use an asynchronous Vanilla entry.
 
 You can pass raw data directly or use `dataBindings` to supply inputs by data reference name. These options are mutually exclusive. Bindings accept three forms:
 

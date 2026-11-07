@@ -342,18 +342,17 @@ Source 的捕获、比较和释放故障由 Runtime 转换为结构化错误或�
 
 ## 编译与渲染观测
 
-编译工作量由 Reconciler 会话报告。把接收函数传给会话的第二个参数，即可记录成功提交的编译工作量：
+一次性作者编译使用 Vanilla 的 `compileToScene`，从处理结果读取已有诊断。编译工作量的 Trace 属于内部协调器接线，当前便捷入口不提供 Trace 接收配置：
 
 ```ts
-import type { PerformanceTraceRecord } from '@retikz/foundation';
-import { SceneReconciler } from '@retikz/reconciler';
+import { compileToScene } from '@retikz/vanilla';
 
-const records: Array<PerformanceTraceRecord> = [];
-const session = new SceneReconciler({}, { trace: record => records.push(record) });
-session.mount({ version: 1, type: 'scene', children: [{ type: 'node', id: 'a', position: [0, 0] }] });
-console.log(records.map(record => [record.owner, record.phase, record.unit, record.visited]));
-// [['kernel/reconciler', 'update', 'element-compile', 1]]
-session.dispose();
+const result = compileToScene({
+  version: 1,
+  type: 'scene',
+  children: [{ type: 'node', id: 'a', position: [0, 0] }],
+});
+console.log(result.scene, result.diagnostics);
 ```
 
 Trace 的 `owner` 按分组和模块命名：编译会话使用 `kernel/reconciler`，渲染提交使用 `kernel/render/svg` 或 `kernel/render/canvas`。
@@ -370,7 +369,7 @@ Trace 的 `owner` 按分组和模块命名：编译会话使用 `kernel/reconcil
 
 记录在成功发布后送达；提交失败不报告成功记录。接收函数抛错不会撤销已经发布的结果，异常可通过 `session.diagnostics()` 读取。Core 的领域诊断则保存在 `session.read().compilation.diagnostics`。
 
-直接调用 Reconciler 的 `compileToScene` 或 `compileSceneSnapshot` 不提供 trace 选项。编译 observer 和 provenance 仍可按各自契约使用。
+`compileToSceneAsync` 在异步作者准备后进入同一编译过程；两个便捷入口都不要求调用方持有或释放协调器。上表说明底层 Trace 记录的含义，不表示便捷入口具有相同配置。
 
 Render 的后端阶段和单位分别使用 `RenderTracePhase` 与 `RenderTraceUnit.ScenePrimitive`，从对应的 `@retikz/render/svg`、`@retikz/render/canvas` 或 `@retikz/render/runtime` 入口导入。SVG / Canvas 继续按 `scene-primitive` 计数。比较记录时同时使用 owner、phase 和 unit，不合并不同单位的工作量。
 

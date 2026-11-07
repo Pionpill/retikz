@@ -75,9 +75,9 @@ Some graphics cannot express their connection rules as “intersect a ray from t
 After creating the definition, inject it through core's `CompileOptions.shapes` or React's `<Layout extensions={{ shapes }}>`. Both entry points accept the same `ReadonlyArray<ShapeDefinition>`.
 
 ```ts
-import { compileToScene } from '@retikz/reconciler';
+import { compileToScene } from '@retikz/vanilla';
 
-const { scene } = compileToScene(ir, { shapes: [badge] });
+const { scene } = compileToScene(ir, { compile: { shapes: [badge] } });
 ```
 
 ```tsx

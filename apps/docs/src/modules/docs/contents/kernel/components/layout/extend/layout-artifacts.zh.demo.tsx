@@ -1,7 +1,7 @@
 import type { IRScene } from '@retikz/core';
 import { createFlexLayout, flexLayoutDefinition } from '@retikz/layout';
 import { Layout } from '@retikz/react';
-import type { CompositeArtifact } from '@retikz/reconciler';
+import type { ProcessingResult } from '@retikz/vanilla';
 import type { FC } from 'react';
 import { useState } from 'react';
 
@@ -24,7 +24,7 @@ const scene: IRScene = {
 };
 /** 展示 React commit 后收到的 Composite 领域产物 */
 const Demo: FC = () => {
-  const [artifacts, setArtifacts] = useState<ReadonlyArray<CompositeArtifact>>([]);
+  const [artifacts, setArtifacts] = useState<ProcessingResult['artifacts']>([]);
   const layout = artifacts.find(artifact => artifact.namespace === 'layout' && artifact.type === 'flexLayout');
   return (
     <div className="grid gap-3">

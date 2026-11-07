@@ -7,7 +7,23 @@ description: 用无框架 InputScene 组织图形，并在根入口处理归一�
 
 包根可安全用于 SSR、构建脚本或其它框架。默认文字测量器在实际测量时探测浏览器 Canvas；浏览器 SVG / Canvas 挂载位于 `@retikz/vanilla/dom` 子入口。IR、schema、几何与编译规则属于 `@retikz/core`，后端输出属于 `@retikz/render`。
 
-应用从包根调用 `createProcessingController`、`prepareStaticProcessing` 或 `processToStaticInputResult`。自定义编译驱动通过 `VanillaCompileDriver` 及其输入、会话和输出契约接入；输入准备、runtime metadata 快照和驱动执行／提交 helper 由包内处理，不作为包根 API。
+应用从包根调用 `createProcessingController`、`prepareStaticProcessing` 或 `compileToScene`。自定义编译驱动通过 `VanillaCompileDriver` 及其输入、会话和输出契约接入；输入准备、runtime metadata 快照和驱动执行／提交 helper 由包内处理，不作为包根 API。
+
+## 一次性编译
+
+将 Core IR 或 Vanilla InputScene 交给 `compileToScene` 即可取得 Scene 和 artifacts，无需创建或释放会话。配置继续使用 `options.compile`。需要异步作者准备时改用 `compileToSceneAsync`，并提供具备 prepare 能力的 adapter。
+
+```ts
+import { compileToScene, compileToSceneAsync } from '@retikz/vanilla';
+
+const result = compileToScene(ir);
+const configured = compileToScene(ir, { compile: { padding: 10 } });
+const prepared = await compileToSceneAsync(input, { adapters });
+
+console.log(result.scene, result.artifacts);
+```
+
+两个入口返回现有 ProcessingResult，静态 revision 为 0。需要后续更新与订阅时使用 controller；只想将 typed Input 组装成 Core IR 时使用 `normalizeXxx`。
 
 ## 默认文字测量
 
@@ -19,7 +35,7 @@ description: 用无框架 InputScene 组织图形，并在根入口处理归一�
 
 内部的 `prepareProcessingInputAsync` 先遍历完整作者树，调用 adapter.prepare 完成无计算预检，再运行各 preparation.execute 并归一化。嵌套输入由 context.prepareChildren 登记；不得在准备阶段提前执行 children。同步 adapter 明确提供 lower；异步 adapter 必须提供 prepare，宿主不会调用 lower 猜测支持。
 
-一次性编译使用 `processToStaticInputResultAsync(input, options?)`；需要控制发布时使用 `prepareStaticProcessingAsync` 的 commit / discard。交互宿主使用 `createProcessingControllerAsync`，等待 update 的 committed / discarded 结果。signal 取消与新请求使旧结果失效，失败保留已提交结果。Core 编译和 renderer 仍同步，Promise 只发生在作者准备边界。
+一次性编译使用 `compileToSceneAsync(input, options?)`；需要控制发布时使用 `prepareStaticProcessingAsync` 的 commit / discard。交互宿主使用 `createProcessingControllerAsync`，等待 update 的 committed / discarded 结果。signal 取消与新请求使旧结果失效，失败保留已提交结果。Core 编译和 renderer 仍同步，Promise 只发生在作者准备边界。
 
 prepared runtime input 通过 contribution.runtimeInputs 按真实 Source 位置绑定，不进入 JSON IR。转交复合 child 时使用共享 opaque child transport，不依赖 id、dataset 名称或对象引用猜测实例。常用领域宿主已接好此边界；应用通常只需使用相应 async 入口。
 
@@ -201,6 +217,8 @@ React 应用使用 [`@retikz/react`](/kernel/packages/react/overview) 收集 JSX
 | `ProcessingOptions`                  | type          | compile、adapter、driver 与 retained 更新策略            |
 | `ProcessingResult`                   | type          | 同 revision 的 Scene、artifacts、图层与 metadata         |
 | `createProcessingController`         | processing    | 无框架 retained processing controller                    |
+| `compileToScene`                     | processing    | 一次性同步编译 InputScene 或 Core IR                     |
+| `compileToSceneAsync`                | processing    | 异步准备作者输入后完成一次编译                           |
 | `prepareStaticProcessing`            | processing    | 一次无生命周期 processing                                |
 | `renderToSvgString`                  | SSR           | 渲染 InputScene、IRScene 或 Scene 为 SVG 字符串          |
 | `mount` / `mountSvg` / `mountCanvas` | DOM           | 从 `@retikz/vanilla/dom` 挂载浏览器 view                 |

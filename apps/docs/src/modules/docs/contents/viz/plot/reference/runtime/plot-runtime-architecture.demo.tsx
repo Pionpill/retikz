@@ -47,7 +47,7 @@ const Demo: FC = () => (
         style={{ stroke: 'dimgray', fill: 'dimgray', opacity: { fill: 0.08 } }}
         layout={{ minimumSize: { width: 144, height: 58 }, textAlign: 'middle', lineHeight: 17 }}
       >
-        <Text font={{ size: 14, weight: 'bold' }}>compileToScene</Text>
+        <Text font={{ size: 14, weight: 'bold' }}>SceneReconciler</Text>
         <Text fill="gray" font={{ size: 12 }}>
           Core IR → Scene
         </Text>

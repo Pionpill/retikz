@@ -40,7 +40,7 @@ React 中的 `Node`、`Path`、`Step` 只做声明。`Layout` 收集整棵声明
 
 Vanilla 在输入层统一处理配置：将 `InputScene` 归一化为 `IRScene`，整理编译选项，再安排 Core 执行。已有 IR 也从这里接入。本例经过输入准备后，IR 中仍保留 A、B 的名称引用，等待 Core 计算连接位置。
 
-Vanilla 还负责处理模式的装配。**static** 完成单次处理；默认的 **retained** 模式构建 Runtime，将数据源、Core 计算与结果提交连接起来，持续接收输入更新。
+Vanilla 还负责处理模式的装配。**static** 创建临时非增量 SceneReconciler，完成编译后释放；默认的 **retained** 模式由控制器持有协调器，持续接收完整输入并通过 replace 更新。两种模式复用同一执行器。
 
 <ComponentPreview files="pipeline-processing" size="sm" hideCode type="flow" />
 
@@ -56,7 +56,7 @@ React 的 Layout 调用 Vanilla 提供的处理能力，将控制器的创建、
 
 ## Core 编译
 
-Core 接收 IR 与编译选项，确定节点尺寸、位置、文字布局和连接边界，输出 Scene。此时，“连接 A 与 B”已经变成可以直接绘制的数值几何。
+SceneReconciler 接收 IR 与编译选项，调用 Core 原子阶段确定节点尺寸、位置、文字布局和连接边界，并组装 Scene。此时，“连接 A 与 B”已经变成可以直接绘制的数值几何。
 
 本例中，A 的中心是 `[0, 0]`，宽度为 60，右边界位于 `x = 30`；B 的中心是 `[180, 0]`，左边界位于 `x = 150`。因此，同一条路径在编译前后发生了这样的变化：
 
@@ -89,11 +89,11 @@ Core 接收 IR 与编译选项，确定节点尺寸、位置、文字布局和�
 </DocTab>
 </DocTabs>
 
-上面只摘录路径结构。完整 Scene 还包含两个节点的矩形、文字及画布信息。Core 将它与附加产物、空间句柄一起交付，Vanilla 再整理为宿主消费的 `ProcessingResult`。普通绘图从中取出 Scene，应用按需读取其他结果。
+上面只摘录路径结构。完整 Scene 还包含两个节点的矩形、文字及画布信息。Reconciler 将 Scene 与 Composite artifacts、诊断一起交付，Vanilla 再整理为宿主消费的 `ProcessingResult`。普通绘图从中取出 Scene，应用按需读取其他结果。
 
 <SourceLinks
   sources={[
-    { label: 'Core 编译与结果装配', path: 'packages/kernel/reconciler/src/compile/compile.ts' },
+    { label: '统一编译入口与结果发布', path: 'packages/kernel/reconciler/src/reconciler.ts' },
     { label: '节点连接边界', path: 'packages/kernel/core/src/compile/boundary/layout.ts' },
   ]}
 />
@@ -123,7 +123,7 @@ Render 消费 Scene 中已经确定的几何。选择 SVG 时，它生成描述�
 
 <ComponentPreview files="pipeline-implementation" size="lg" hideCode type="flow" />
 
-从 Layout 的 `createInputScene` 开始，进入 Vanilla 的 `prepareStaticProcessing`。其中，`prepareProcessingInput` 负责输入准备，默认驱动通过 `compileToScene` 调用 Core。结果返回 React 的 `ProcessingResultHost` 后，经 `buildSvgFrameDocument` 与 `svgToReact` 转成 React 元素，最终由 React 提交到页面。
+从 Layout 的 `createInputScene` 开始，进入 Vanilla 的 `prepareStaticProcessing`。其中，`prepareProcessingInput` 负责输入准备，静态驱动创建临时非增量 `SceneReconciler`，从 `mount` 结果读取同次编译产物与诊断，并在调用结束后释放。结果返回 React 的 `ProcessingResultHost` 后，经 `buildSvgFrameDocument` 与 `svgToReact` 转成 React 元素，最终由 React 提交到页面。
 
 <SourceLinks
   sources={[

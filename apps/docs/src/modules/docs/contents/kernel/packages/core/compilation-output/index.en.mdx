@@ -9,14 +9,14 @@ This page follows the output of one full compile. Core owns drawing semantics an
 
 ## Overall flow
 
-`compileToScene` returns a Scene and Composite domain artifacts:
+Vanilla’s `compileToScene` returns a processing result containing a Scene and Composite domain artifacts:
 
 - `scene`: primitives, canvas bounds, and drawing resources for a renderer.
 - `artifacts`: domain results explicitly returned by composites, such as Layout containers, lines, and spacing.
 
-`onWarn` receives compilation warnings. The preparation entry can also return diagnostics and provenance separately.
+`onWarn` receives compilation warnings. Internal compilation snapshots keep diagnostics and optional provenance; the Vanilla convenience entry returns the existing processing result.
 
-When assembling compiled fragments manually, import `importSceneResources` from `@retikz/reconciler`. That package also provides `formatCompileWarning` for readable diagnostics. Core continues to define resource generation and warning types.
+The convenience entry assembles resources and diagnostics through the internal compilation process; callers do not construct a resource workspace. Core continues to define resource generation and warning types.
 
 With the artifact generic simplified to its default, `CompileResult` has this shape:
 
@@ -35,7 +35,7 @@ The following sections use two rectangular cards sharing a gradient inside a tra
 
 <SourceLinks
   sources={[
-    { label: 'Full compilation', path: 'packages/kernel/reconciler/src/compile/compile.ts' },
+    { label: 'Full compilation', path: 'packages/kernel/reconciler/src/reconciler.ts' },
     { label: 'Result types', path: 'packages/kernel/reconciler/src/compile/types.ts' },
   ]}
 />
@@ -318,7 +318,7 @@ Core filters tracks by their target level during compilation. Non-`viewBox` trac
   sources={[
     { label: 'Animation tracks and keyframes', path: 'packages/kernel/core/src/schemas/scene/animation.ts' },
     { label: 'Root and element track filtering', path: 'packages/kernel/core/src/resolve/animation.ts' },
-    { label: 'Scene animation assembly', path: 'packages/kernel/reconciler/src/compile/compile.ts' },
+    { label: 'Scene animation assembly', path: 'packages/kernel/reconciler/src/reconciler.ts' },
   ]}
 />
 
@@ -372,10 +372,11 @@ return {
 
 Core continues compiling `children`, while `artifact` retains container bounds, child layouts and translations, lines and spacing. Core wraps it in a domain artifact record with namespace `layout` and type `flexLayout`. The inner `value.kind: 'flex'` is the Layout package's own artifact discriminator.
 
-The following example compiles a FlexLayout containing two nodes and reads its artifact from the returned array. Registering the Definition also preserves the specific artifact type in the result:
+The following example compiles a FlexLayout containing two nodes and reads its artifact from the returned array. Register the Definition through `options.compile`; each artifact’s `value` retains its domain data:
 
 ```ts
-import { compileToScene } from '@retikz/reconciler';
+import { compileToScene } from '@retikz/vanilla';
+
 import { createFlexLayout, flexLayoutDefinition } from '@retikz/layout';
 
 const layout = createFlexLayout({
@@ -388,17 +389,14 @@ const layout = createFlexLayout({
 
 const result = compileToScene(
   { type: 'scene', version: 1, children: [layout] },
-  { composites: [flexLayoutDefinition] },
+  { compile: { composites: [flexLayoutDefinition] } },
 );
 
 for (const artifact of result.artifacts) {
   if (artifact.type !== 'flexLayout') continue;
   console.log(artifact.namespace); // 'layout'
   console.log(artifact.occurrence); // { sourcePath: ['children', 0], expansionPath: [] }
-  console.log(artifact.value.kind); // 'flex'
-  console.log(artifact.value.items.length); // 2
-  console.log(artifact.value.lines.length); // 1
-  console.log(artifact.value.container, artifact.value.items, artifact.value.spacing);
+  console.log(artifact.value);
 }
 ```
 
@@ -422,11 +420,11 @@ A `CompileProvenanceTracker` instance manages mutable compilation state. Its `ca
 
 Replaying a selected layout probe preserves its internal entities and primitive ownership, attaching the source tree beneath the enclosing Composite. The probe's root namespace joins the placement namespace; internal local namespaces are mapped independently. Added transform and clip wrappers belong to the enclosing Composite. Unselected probes contribute no final provenance. Replayed entities remain generated content with candidate-local identities in Reconciler, without a cross-version stability guarantee.
 
-`compileSceneSnapshot(ir, compileOptions, executeOptions)` returns `result`, `diagnostics`, and optional `provenance` without dispatching warnings. `compileOptions` excludes `onWarn`; `executeOptions.captureProvenance` enables provenance collection. Provenance supports primitive identity and commits; internal layout still supports measurement, references, and replay.
+`SceneReconciler(ir, compileOptions, executeOptions)` returns `result`, `diagnostics`, and optional `provenance` without dispatching warnings. `compileOptions` excludes `onWarn`; `executeOptions.captureProvenance` enables provenance collection. Provenance supports primitive identity and commits; internal layout still supports measurement, references, and replay.
 
 <SourceLinks
   sources={[
-    { label: 'Snapshot compilation entry', path: 'packages/kernel/reconciler/src/compile/compile.ts' },
+    { label: 'Snapshot compilation entry', path: 'packages/kernel/reconciler/src/reconciler.ts' },
     { label: 'Provenance contract', path: 'packages/kernel/reconciler/src/compile/provenance/types.ts' },
   ]}
 />
@@ -435,7 +433,7 @@ Replaying a selected layout probe preserves its internal entities and primitive 
 
 Provenance `primitivePath` is relative to the complete Scene, for example `['primitives', 2, 'children', 1]`. Reconciler full topology uses the same root. Patch subtree topology is relative to its root primitive: `[]` selects that primitive, and `['children', 1]` selects a child. Both work with `readPropertyPath` when given the corresponding root object.
 
-`compileChildrenToPrimitives` completes traversal, deferred paths, layout aggregation, and final artifact ordering. `assembleSceneCompilationSnapshot` assembles primitives, resources, and canvas bounds. `compileSceneSnapshot` returns the snapshot; `compileToScene` dispatches warnings and returns `scene` and `artifacts`.
+`compileChildrenToPrimitives` completes traversal, deferred paths, layout aggregation, and final artifact ordering. `assembleSceneCompilationSnapshot` assembles primitives, resources, and canvas bounds. `SceneReconciler` returns the snapshot; `SceneReconciler` dispatches warnings and returns `scene` and `artifacts`.
 
 <ComponentPreview files="output-implementation" size="sm" hideCode type="flow" />
 
@@ -443,7 +441,7 @@ Start at the snapshot compilation entry, then follow traversal and Scene assembl
 
 <SourceLinks
   sources={[
-    { label: 'Compilation entry', path: 'packages/kernel/reconciler/src/compile/compile.ts' },
+    { label: 'Compilation entry', path: 'packages/kernel/reconciler/src/reconciler.ts' },
     { label: 'Traversal and replay', path: 'packages/kernel/reconciler/src/compile/tree/subtree.ts' },
     { label: 'Scene assembly', path: 'packages/kernel/reconciler/src/compile/scene/output.ts' },
   ]}

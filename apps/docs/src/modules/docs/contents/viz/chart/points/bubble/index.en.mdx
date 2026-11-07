@@ -98,8 +98,8 @@ import { BubbleChartSchema, createBubbleChartProviderContribution } from '@retik
 import { createPlotProviderContribution } from '@retikz/plot';
 import { pathClipProvider } from '@retikz/extension';
 import { bubbleMinimalData } from './bubble-minimal.data';
-import { compileToScene } from '@retikz/reconciler';
-import { renderToSvgString } from '@retikz/vanilla';
+
+import { compileToScene, renderToSvgString } from '@retikz/vanilla';
 
 const chart = BubbleChartSchema.parse({
   namespace: 'chart',
@@ -116,7 +116,7 @@ const definitions = resolveCoreProviderDependencies({
   ],
 });
 
-export const svg = renderToSvgString(compileToScene(ir, definitions).scene);
+export const svg = renderToSvgString(compileToScene(ir, { compile: definitions }).scene);
 ```
 
 </DocTab>

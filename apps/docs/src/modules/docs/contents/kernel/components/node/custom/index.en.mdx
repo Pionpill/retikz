@@ -128,7 +128,8 @@ Two common failures throw immediately during compilation:
 ```
 
 ```ts
-compileToScene(ir, { boundaries: [biasedPorts, biasedPorts] });
+import { compileToScene } from '@retikz/vanilla';
+compileToScene(ir, { compile: { boundaries: [biasedPorts, biasedPorts] } });
 ```
 
 The first violates `paramsSchema`; the second registers the same key twice.

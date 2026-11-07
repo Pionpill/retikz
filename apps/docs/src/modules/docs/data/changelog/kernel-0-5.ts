@@ -1076,6 +1076,24 @@ export const kernelV05: Release = {
       ],
     },
     {
+      pkg: '@retikz/reconciler',
+      version: 'v0.5',
+      description: {
+        zh: '完整与增量编译统一通过 SceneReconciler，复用现有执行器和内部提交。',
+        en: 'Full and incremental compilation use SceneReconciler with the existing executor and internal commit protocol.',
+      },
+      highlights: [
+        {
+          label: { zh: 'BREAKING：统一编译入口', en: 'BREAKING: unified compilation entry' },
+          content: {
+            zh: '删除 compileToScene 和 compileSceneSnapshot；直接 IR 消费者改用 SceneReconciler。一次性编译创建 incremental: false 的临时实例，读取 mount(source).compilation，并在 finally 中 dispose；Vanilla、SSR、Inspect 与领域独立编译同步接入，不增加公开准备阶段。',
+            en: 'Removes compileToScene and compileSceneSnapshot. Direct IR consumers use SceneReconciler: create a temporary instance with incremental: false, read mount(source).compilation, and dispose it in finally. Vanilla, SSR, Inspect, and standalone domain compilation use the same entry without adding a public preparation phase.',
+          },
+        },
+      ],
+      subVersions: [],
+    },
+    {
       pkg: '@retikz/render',
       version: 'v0.5',
       description: {
@@ -1349,6 +1367,13 @@ export const kernelV05: Release = {
         en: 'TypeScript integration supports ongoing updates or full static rendering; successful updates replace the drawing and compile artifacts together.',
       },
       highlights: [
+        {
+          label: { zh: 'BREAKING：一次性编译便捷入口', en: 'BREAKING: one-shot compilation entries' },
+          content: {
+            zh: '从 @retikz/vanilla 调用 compileToScene 或 compileToSceneAsync；它们替换 processToStaticInputResult 及其 Async 旧名，配置和 ProcessingResult 保持，内部统一通过临时非增量 SceneReconciler 执行并释放。',
+            en: 'Call compileToScene or compileToSceneAsync from @retikz/vanilla. They replace processToStaticInputResult and its Async name while retaining the options and ProcessingResult, and manage a temporary non-incremental SceneReconciler internally.',
+          },
+        },
         {
           label: { zh: '共享异步作者准备', en: 'shared async authoring preparation' },
           content: {

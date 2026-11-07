@@ -115,7 +115,7 @@ const definition = defineComposite({
 });
 ```
 
-Combining the child path and a text node needs no probe; use layout methods when their positions depend on actual occupancy. Compile input containing composites with `compileToScene`. React’s `convertIRToReactNode` only converts an `IRKernelScene` recursively containing Kernel nodes, without compiling composites.
+Combining the child path and a text node needs no probe; use layout methods when their positions depend on actual occupancy. Compile input containing composites with `SceneReconciler`. React’s `convertIRToReactNode` only converts an `IRKernelScene` recursively containing Kernel nodes, without compiling composites.
 
 <SourceLinks
   sources={[

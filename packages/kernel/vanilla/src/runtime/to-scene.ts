@@ -7,7 +7,7 @@ import { EMPTY_READONLY_LAYERS } from '@retikz/render/runtime';
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
 import type { InputRuntimeMeta } from '../normalize';
 import { createEmptyInputRuntimeMetaSnapshot } from '../normalize';
-import { processToStaticInputResult } from '../processing';
+import { compileToScene } from '../processing';
 import type { CommonOptions, InputRender } from './types';
 
 /** 为非 InputScene 输入创建独立的空 runtime metadata */
@@ -58,7 +58,7 @@ export const toSceneResult = (input: InputRender, options: CommonOptions): Scene
     };
   }
 
-  const result = processToStaticInputResult(input, options);
+  const result = compileToScene(input, options);
 
   return {
     scene: result.scene,

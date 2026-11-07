@@ -62,7 +62,7 @@ React DSL 只收集 JSX / props 并调度 Plot Vanilla；Vanilla 的 `plot()` �
 
 主 lowering 在 `prepareRows()` 内解析 transform、statistics、row selector、scale、mark 与 format registry，并按 data model、field map 和 resolver 归一化数据。随后执行 transform、推进包含字段类型证据的 DataView、解析 composition 与 frame，并建立 channel registry；channel 与 mark Definition 生成图元，guide、theme 与 layout 补齐辅助和空间关系，最终展开为 `Scope`、`Node`、`Path` 等 Core IR。
 
-`lowerPlots()` 返回供 Core composite 编译使用的 Definition；它不直接创建 DOM，也不直接选择 renderer。`compileToScene()` 消费下沉后的 Core IR 并产生 Scene，React `<Layout>` 或 Vanilla renderer 再决定 SVG、Canvas 或字符串输出。
+`lowerPlots()` 返回供 Core composite 编译使用的 Definition；它不直接创建 DOM，也不直接选择 renderer。`SceneReconciler` 消费下沉后的 Core IR 并产生 Scene，React `<Layout>` 或 Vanilla renderer 再决定 SVG、Canvas 或字符串输出。
 
 一次 lowering 会同时得到 Core IR 与本次执行的数据产物：root / mark DataView、composition resolution 和实际 frame。`lowerPlotWithLineage()` 从同一次执行生成 Core IR children 与 `PlotLineageRun`，因此 root 与 mark-local transform 在该请求各执行一次；lineage 不再重放第二条数据管线。
 

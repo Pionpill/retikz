@@ -2,7 +2,7 @@ import { isPropertyPathEqual } from '@retikz/foundation';
 import type { CompositeArtifact } from '@retikz/reconciler';
 import type { IRTable, TableCompileArtifact } from '@retikz/table';
 import { TABLE_NAMESPACE, TableComposite } from '@retikz/table';
-import { processToStaticInputResultAsync, renderToSvgString, scene } from '@retikz/vanilla';
+import { compileToSceneAsync, renderToSvgString, scene } from '@retikz/vanilla';
 
 import { tableInputEmbedAdapter } from '../adapter';
 import { RetikzTableVanillaError } from '../error';
@@ -28,7 +28,7 @@ const renderTableAsyncImpl = async <TSource = never>(
     lowerOptions: options.lowerOptions,
     signal: options.signal,
   });
-  const result = await processToStaticInputResultAsync(
+  const result = await compileToSceneAsync(
     scene({ ...(options.theme === undefined ? {} : { theme: options.theme }), children: [input] }),
     {
       adapters: [tableInputEmbedAdapter],

@@ -1,7 +1,7 @@
 import type { DataInputBindings, DataTransformExecutor } from '@retikz/data';
 import type { IRPlot, PreparedPlotData } from '@retikz/plot';
 import { lowerPlotWithLineage } from '@retikz/plot';
-import { embed, processToStaticInputResultAsync, renderToSvgString, scene } from '@retikz/vanilla';
+import { embed, compileToSceneAsync, renderToSvgString, scene } from '@retikz/vanilla';
 
 import { plotInputEmbedAdapter } from '../adapter';
 import { RetikzPlotVanillaError } from '../error';
@@ -78,7 +78,7 @@ const renderPlotAsyncImpl = async <TSource = never>(
     },
   };
 
-  const result = await processToStaticInputResultAsync(
+  const result = await compileToSceneAsync(
     scene({
       ...(theme === undefined ? {} : { theme }),
       children: [embed({ kind: adapter.kind, props })],

@@ -128,7 +128,8 @@ const view = mount(document.getElementById('diagram')!, input, { compile: { boun
 ```
 
 ```ts
-compileToScene(ir, { boundaries: [biasedPorts, biasedPorts] });
+import { compileToScene } from '@retikz/vanilla';
+compileToScene(ir, { compile: { boundaries: [biasedPorts, biasedPorts] } });
 ```
 
 第一段违反 `paramsSchema`；第二段重复注册同一个 key。

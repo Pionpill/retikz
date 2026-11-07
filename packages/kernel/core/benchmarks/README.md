@@ -180,7 +180,7 @@ pnpm --filter @retikz/core exec vitest bench --run --config vitest.bench.config.
 
 ## 测量边界
 
-当前覆盖 `src/providers`、`src/resolve`、`src/contract` 的代表操作，以及 `src/compile` 的资源注册表、文本、Scene、共享、Boundary、Reference、Node与Scope操作，不调用 `compileToScene`。shape / arrow / mark 的 iterable 在计时内完整消费，包含该操作自身的计算与分配。
+当前覆盖 `src/providers`、`src/resolve`、`src/contract` 的代表操作，以及 `src/compile` 的资源注册表、文本、Scene、共享、Boundary、Reference、Node与Scope操作，不调用 `SceneReconciler`。shape / arrow / mark 的 iterable 在计时内完整消费，包含该操作自身的计算与分配。
 
 - Scene 图元生成属于编译计算；SVG 字符串生成、Canvas 绘制、DOM 更新、浏览器布局与绘制均不计入。
 - 不接入 `@retikz/render`、React/Vanilla renderer 或浏览器。Runtime / Reconciler 调度、增量更新与生命周期不属于本目录。

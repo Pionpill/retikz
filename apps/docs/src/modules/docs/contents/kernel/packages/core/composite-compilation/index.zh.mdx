@@ -109,7 +109,7 @@ const definition = defineComposite({
 });
 ```
 
-只组合子路径与文字节点时无需试算；要根据子路径的真实占用决定位置时再使用布局方法。包含 Composite 的输入统一交给 `compileToScene`。React 的 `convertIRToReactNode` 只转换递归不含 Composite 的 `IRKernelScene`，不执行复合编译。
+只组合子路径与文字节点时无需试算；要根据子路径的真实占用决定位置时再使用布局方法。包含 Composite 的输入统一交给 `SceneReconciler`。React 的 `convertIRToReactNode` 只转换递归不含 Composite 的 `IRKernelScene`，不执行复合编译。
 
 <SourceLinks
   sources={[

@@ -181,7 +181,7 @@ Changing `updateStrategy` between `auto` and `full` on a retained host disposes 
 | `createInputScene()` | `@retikz/react`   | Walk the component tree, produce `InputScene`, and collect Tier 2 `InputEmbedAdapter`          |
 | `normalizeScene()`   | `@retikz/vanilla` | Normalize typed Input to `IRScene`, lower embeds, and aggregate composite dependencies         |
 | `IRScene`            | `@retikz/core`    | JSON-serializable drawing contract with no React element, hook, or DOM                         |
-| `compileToScene`     | `@retikz/core`    | Process composites; resolve registries, references, geometry, layout, resources, and animation |
+| `SceneReconciler`    | `@retikz/core`    | Process composites; resolve registries, references, geometry, layout, resources, and animation |
 | `ProcessingResult`   | `@retikz/vanilla` | Return same-revision Scene, artifacts, readonly layers, and runtime metadata                   |
 
 `Layout` injects host capabilities such as text measurement, Definition registries, and the TeX lowerer as processing compile options, but those options do not put React into IR or Scene. Passing the `ir` prop skips the JSX collector. The `artifacts` prop requests opt-in outputs, while `onArtifacts` receives immutable same-compile artifacts after the selected host publishes; notification does not trigger another compile.
@@ -212,7 +212,7 @@ A `VanillaCompileDriver` may inject observers for the same compile, then resolve
     },
     {
       label: 'Core IR to Scene compiler',
-      path: 'packages/kernel/reconciler/src/compile/compile.ts',
+      path: 'packages/kernel/reconciler/src/reconciler.ts',
     },
   ]}
 />

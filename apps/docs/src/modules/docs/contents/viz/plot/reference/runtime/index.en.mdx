@@ -62,7 +62,7 @@ For example, `renderPlot(spec, data, { layout: { width: 480, height: 300 } })`. 
 
 The main lowering path resolves transform, statistics, row-selector, scale, mark, and format registries inside `prepareRows()`, then normalizes data from the data model, field maps, and resolver. It next applies transforms, advances DataViews with field-type evidence, resolves composition and frames, and builds the channel registry. Channel and mark Definitions produce primitives; guides, themes, and layout add explanatory and spatial structure. The result expands into Core `Scope`, `Node`, and `Path` IR.
 
-`lowerPlots()` returns the Definition consumed by Core composite compilation. It does not create DOM and does not select a renderer. `compileToScene()` consumes the lowered Core IR and produces a Scene; React `<Layout>` or a Vanilla renderer then chooses SVG, Canvas, or string output.
+`lowerPlots()` returns the Definition consumed by Core composite compilation. It does not create DOM and does not select a renderer. `SceneReconciler` consumes the lowered Core IR and produces a Scene; React `<Layout>` or a Vanilla renderer then chooses SVG, Canvas, or string output.
 
 One lowering produces both Core IR and the execution's data artifact: root / mark DataViews, composition resolution, and actual frames. `lowerPlotWithLineage()` builds Core IR children and `PlotLineageRun` from that same execution, so root and mark-local transforms each run once in the request; lineage no longer replays a second data pipeline.
 

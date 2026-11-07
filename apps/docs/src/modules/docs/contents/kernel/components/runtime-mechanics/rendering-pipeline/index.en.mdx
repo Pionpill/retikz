@@ -43,7 +43,7 @@ Both entries deliver nodes A and B and their connecting path. Names, positions, 
 
 Vanilla handles configuration at the input layer: it normalizes `InputScene` into `IRScene`, assembles compile options and arranges Core execution. Existing IR enters here too. The prepared IR still contains references to A and B, ready for Core to calculate their connection points.
 
-Vanilla also assembles the processing mode. **static** performs a single pass. The default **retained** mode constructs Runtime, connects sources, the Core computation and result commits, and continues receiving input updates.
+Vanilla also assembles the processing mode. **static** creates a temporary non-incremental SceneReconciler and disposes it after compilation. In the default **retained** mode, the controller holds a reconciler and applies complete input updates through replace. Both modes share the executor.
 
 <ComponentPreview files="pipeline-processing" size="sm" hideCode type="flow" />
 
@@ -59,7 +59,7 @@ React Layout calls Vanilla's processing APIs and connects controller creation, u
 
 ## Core compilation
 
-Core receives IR and compile options, determines node dimensions, positions, text layout and connection boundaries, then produces Scene. The instruction to connect A and B becomes numeric drawing geometry.
+SceneReconciler receives IR and compile options, calls Core atomic stages to determine node dimensions, positions, text layout and connection boundaries, then assembles Scene. The instruction to connect A and B becomes numeric drawing geometry.
 
 A is centered at `[0, 0]` and has width 60, putting its right edge at `x = 30`. B is centered at `[180, 0]`, putting its left edge at `x = 150`. The same path changes as follows:
 
@@ -92,11 +92,11 @@ A is centered at `[0, 0]` and has width 60, putting its right edge at `x = 30`. 
 </DocTab>
 </DocTabs>
 
-These excerpts show the path structure. The complete Scene also contains rectangles, text and canvas information. Core delivers Scene alongside artifacts and spatial handles; Vanilla organizes the result into `ProcessingResult` for the host. Drawing uses Scene, while applications can read other outputs as needed.
+These excerpts show the path structure. The complete Scene also contains rectangles, text and canvas information. Reconciler delivers Scene with Composite artifacts and diagnostics; Vanilla organizes them into `ProcessingResult` for the host. Drawing uses Scene, while applications can read other outputs as needed.
 
 <SourceLinks
   sources={[
-    { label: 'Core compilation and result assembly', path: 'packages/kernel/reconciler/src/compile/compile.ts' },
+    { label: 'Unified compilation entry and publication', path: 'packages/kernel/reconciler/src/reconciler.ts' },
     { label: 'Node connection boundaries', path: 'packages/kernel/core/src/compile/boundary/layout.ts' },
   ]}
 />
@@ -126,7 +126,7 @@ Follow the example's React JSX, static, SVG branch through these entries. Arrows
 
 <ComponentPreview files="pipeline-implementation" size="lg" hideCode type="flow" />
 
-Start at Layout's `createInputScene`, then follow Vanilla's `prepareStaticProcessing`. Inside it, `prepareProcessingInput` prepares the input and the default driver calls Reconciler through `compileToScene`. The result returns to React's `ProcessingResultHost`; `buildSvgFrameDocument` and `svgToReact` produce React elements for React to commit to the page.
+Start at Layout's `createInputScene`, then follow Vanilla's `prepareStaticProcessing`. Inside it, `prepareProcessingInput` prepares the input and the static driver creates a temporary non-incremental `SceneReconciler`, reads artifacts and diagnostics from the mount result, and disposes the instance when the call ends. The result returns to React's `ProcessingResultHost`; `buildSvgFrameDocument` and `svgToReact` produce React elements for React to commit to the page.
 
 <SourceLinks
   sources={[

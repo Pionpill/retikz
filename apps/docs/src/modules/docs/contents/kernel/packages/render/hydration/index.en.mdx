@@ -93,11 +93,11 @@ const handle = view.hydrate({
 
 `handlers` is a `{ [id]: { eventName: handler } }` table; event names are `click` / `doubleClick` / `rightClick` / `pointerDown` / `pointerUp` / `pointerMove` / `pointerEnter` / `pointerLeave` / `wheel` (a one-to-one match with React's `on<Event>`, with the `on` prefix dropped and the first letter lowercased).
 
-After SSR, bind via the standalone `hydrate(svg, options)` entry. This entry only hydrates the `<svg>` root obtained from the injected SSR output; it does not support Canvas. Canvas callers must use `mountCanvas(...).hydrate()`, whose view supplies the Scene, hit query, and coordinate mapping. To give standalone SVG context its meta / geometry / animation controls, pass `scene` (compiled from the IR via `@retikz/core`'s `compileToScene(ir).scene`) in too; otherwise you get only the minimal context (bottom):
+After SSR, bind via the standalone `hydrate(svg, options)` entry. This entry only hydrates the `<svg>` root obtained from the injected SSR output; it does not support Canvas. Canvas callers must use `mountCanvas(...).hydrate()`, whose view supplies the Scene, hit query, and coordinate mapping. To give standalone SVG context its meta / geometry / animation controls, also pass the `scene` returned by Vanilla's `compileToScene(ir)`; otherwise you get only the minimal context (bottom):
 
 ```ts
-import { compileToScene } from '@retikz/reconciler';
-import { hydrate, mountSvg } from '@retikz/vanilla';
+import { compileToScene } from '@retikz/vanilla';
+import { hydrate, mountSvg } from '@retikz/vanilla/dom';
 
 // the view from mountSvg / mountCanvas carries view.hydrate; context uses this view's Scene automatically
 mountSvg(container, ir).hydrate({ handlers: { box: { click: (event, context) => context.animation.restart() } } });

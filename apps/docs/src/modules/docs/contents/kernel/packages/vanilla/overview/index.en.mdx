@@ -7,7 +7,23 @@ description: Organize graphics as framework-neutral InputScene data, normalize a
 
 The package root works safely in SSR, build scripts, and other frameworks. Its default text measurer probes browser Canvas when measurement is requested. Browser SVG and Canvas mounting live at `@retikz/vanilla/dom`. IR, schemas, geometry, and compile rules belong to `@retikz/core`; backend output belongs to `@retikz/render`.
 
-Applications use `createProcessingController`, `prepareStaticProcessing`, or `processToStaticInputResult` from the package root. Custom compile drivers implement `VanillaCompileDriver` with its input, session, and output contracts. Input preparation, runtime metadata snapshots, and driver execution/commit helpers remain internal.
+Applications use `createProcessingController`, `prepareStaticProcessing`, or `compileToScene` from the package root. Custom compile drivers implement `VanillaCompileDriver` with its input, session, and output contracts. Input preparation, runtime metadata snapshots, and driver execution/commit helpers remain internal.
+
+## One-shot compilation
+
+Pass Core IR or a Vanilla InputScene to `compileToScene` to obtain a Scene and artifacts without creating or disposing a session. Compile configuration stays under `options.compile`. Use `compileToSceneAsync` for asynchronous authoring preparation, with adapters that provide prepare.
+
+```ts
+import { compileToScene, compileToSceneAsync } from '@retikz/vanilla';
+
+const result = compileToScene(ir);
+const configured = compileToScene(ir, { compile: { padding: 10 } });
+const prepared = await compileToSceneAsync(input, { adapters });
+
+console.log(result.scene, result.artifacts);
+```
+
+Both entries return the existing ProcessingResult with static revision 0. Use a controller for subsequent updates and subscriptions, or `normalizeXxx` when only assembling typed Input into Core IR.
 
 ## Default text measurement
 
@@ -19,7 +35,7 @@ An explicit `compile.measureText` takes precedence. Otherwise, Vanilla lazily us
 
 The internal `prepareProcessingInputAsync` traverses the complete author tree and calls adapter.prepare for non-computing preflight, then runs preparation.execute and normalizes the contributions. Nested inputs register through context.prepareChildren; children cannot execute during preparation. Synchronous adapters provide lower; asynchronous adapters must provide prepare, without probing support by invoking lower.
 
-Use `processToStaticInputResultAsync(input, options?)` for one-shot compilation, or `prepareStaticProcessingAsync` for explicit commit/discard. Interactive hosts use `createProcessingControllerAsync` and await committed/discarded update outcomes. Signals and newer requests invalidate stale results; failure preserves committed output. Core compilation and renderers remain synchronous; Promises live at the authoring preparation boundary.
+Use `compileToSceneAsync(input, options?)` for one-shot compilation, or `prepareStaticProcessingAsync` for explicit commit/discard. Interactive hosts use `createProcessingControllerAsync` and await committed/discarded update outcomes. Signals and newer requests invalidate stale results; failure preserves committed output. Core compilation and renderers remain synchronous; Promises live at the authoring preparation boundary.
 
 Contributions bind prepared runtimeInputs to actual Source positions outside JSON IR. Composite children use opaque child transport rather than guessing instances from ids, dataset names or object references. Domain hosts already connect this boundary; applications normally use their async entry points.
 
@@ -201,6 +217,8 @@ React applications use [`@retikz/react`](/kernel/packages/react/overview) to col
 | `ProcessingOptions`                  | type          | Compile, adapters, driver, and retained update strategy                       |
 | `ProcessingResult`                   | type          | Same-revision Scene, artifacts, layers, and metadata                          |
 | `createProcessingController`         | processing    | Framework-neutral retained processing controller                              |
+| `compileToScene`                     | processing    | One-shot synchronous compilation of InputScene or Core IR                     |
+| `compileToSceneAsync`                | processing    | One-shot compilation after asynchronous authoring preparation                 |
 | `prepareStaticProcessing`            | processing    | One lifecycle-free processing result                                          |
 | `renderToSvgString`                  | SSR           | Render InputScene, IRScene, or Scene as an SVG string                         |
 | `mount` / `mountSvg` / `mountCanvas` | DOM           | Mount a browser view from `@retikz/vanilla/dom`                               |

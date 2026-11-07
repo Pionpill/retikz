@@ -181,7 +181,7 @@ Definition 数组按有序元素 identity 规范化，因此 render 时重新创
 | `createInputScene()` | `@retikz/react`   | 遍历组件树，生成 `InputScene`，并收集 Tier 2 `InputEmbedAdapter`       |
 | `normalizeScene()`   | `@retikz/vanilla` | 将 typed Input 归一为 `IRScene`，下沉 embeds 并汇总 composite 依赖     |
 | `IRScene`            | `@retikz/core`    | JSON 可序列化的绘图契约，不包含 React element、hook 或 DOM             |
-| `compileToScene`     | `@retikz/core`    | 处理 composite，解析 registry、引用、几何、布局、资源与动画            |
+| `SceneReconciler`    | `@retikz/core`    | 处理 composite，解析 registry、引用、几何、布局、资源与动画            |
 | `ProcessingResult`   | `@retikz/vanilla` | 以同一 revision 返回 Scene、artifacts、readonly layers 与 runtime meta |
 
 `Layout` 会把文本测量器、Definition registries、TeX lowerer 等宿主能力作为 processing 的 compile options 注入，但这些选项不会把 React 写进 IR 或 Scene。直接传 `ir` prop 时会跳过 JSX collector。`artifacts` prop 请求 opt-in 产物，`onArtifacts` 在所选 host 发布后接收同次 compile 的 immutable artifacts；不会为通知再编译一次。
@@ -212,7 +212,7 @@ Definition 数组按有序元素 identity 规范化，因此 render 时重新创
     },
     {
       label: 'Core IR 编译为 Scene',
-      path: 'packages/kernel/reconciler/src/compile/compile.ts',
+      path: 'packages/kernel/reconciler/src/reconciler.ts',
     },
   ]}
 />
