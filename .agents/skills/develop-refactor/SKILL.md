@@ -15,6 +15,7 @@ description: Use when retikz work is primarily refactoring, reorganization, rena
 
 ## Plan First
 
+- 性能作为目标或验收条件时，按 [test-performance](../test-performance/SKILL.md) 明确操作 owner、负载、预算、对照与运行授权范围，不以复杂度分析替代耗时收益证据。
 - 中大型先写 plan，通常使用 `superpowers:writing-plans`；小型不强制临时 plan。
 - plan 放 `.gitignore` 已覆盖的临时目录：`notes/plans/` 或就近 `**/_notes/plans/`，默认不 stage / commit。
 - plan 至少写清：目标、非目标、文件 scope、分步策略、行为等价性、验证命令、回滚点、预期提交粒度。
@@ -26,6 +27,8 @@ description: Use when retikz work is primarily refactoring, reorganization, rena
 
 - 是否混入新功能、公开行为变化或 schema/API 变化。
 - 文件 scope、分层边界和依赖方向是否合理。
+- 结构或阶段重构按 [standard-structure](../standard-structure/SKILL.md) 核对真实输入、产物、依赖就绪点和状态生命周期；名称与目录变化不能代替职责收敛，不为套模板新增阶段、类型或文件。
+- 操作 owner 或计时边界变化时，按 [test-performance](../test-performance/SKILL.md#模块与调用方的职责) 核对基准、fixture、预算和报告归属。
 - 是否有隐藏回归、测试弱化、public surface 漏迁移。
 - 新增或收敛测试时按 [单元测试编写与 Review 规范](../test-contract/references/unit-tests.md) 核对独立失效模式与保留去向；本轮重构对照 case 不自动转为永久回归。
 - 验证命令是否覆盖受影响模块。
@@ -55,6 +58,7 @@ pnpm --filter <pkg> exec vitest run [test-file]
 
 ### Learnings
 
+- 收敛公开导出、递归 schema 或公开签名关联类型时，按 [公开导出收敛](../standard-structure/references/imports.md#公开导出收敛) 验证受影响的源码消费与发布声明依赖闭包，不等到发布时才检查。
 - 启用 Vitest `fsModuleCache` 的 workspace 在移动或重命名源码后，验证时加 `--no-fsModuleCache`，避免旧模块解析缓存导致误报；例如 `pnpm --filter <pkg> exec vitest run <test-file> --no-fsModuleCache`。若测试仍指向旧路径，先禁用缓存复现，再判断是否为代码回归。
 
 ## 完成标志
@@ -62,4 +66,5 @@ pnpm --filter <pkg> exec vitest run [test-file]
 - 中大型 plan 已写入忽略目录并完成主 agent 自审或计划内单 reviewer 循环；小型任务已记录直接执行依据。
 - 实现未超出 scope；若超出，已有用户裁决。
 - 受影响验证通过或阻塞原因明确。
+- 性能目标按 [test-performance](../test-performance/SKILL.md) 汇报预算、累计收益与未解决项；职责或命名真源变化按 [规范同步](../develop-wrapup/SKILL.md#规范同步) 收尾。
 - Git 操作未超出任务开始时确认的权限；未经授权不 commit。

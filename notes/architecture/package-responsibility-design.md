@@ -125,6 +125,6 @@ Vanilla API `normalizeXxx` 是纯函数：只组装 authoring Input，不读取 
 修改任一包的职责、依赖方向、Source IR / Canonical 边界、Input builder、DOM 子入口或框架适配路径时，ADR 必须说明：
 
 - 能力属于 Core / Plot、API 基础包、DOM 子入口还是具体框架包
-- `InputXxx`、`IRXxx`、`CanonicalXxx` 的 owner、持久化边界和 Vanilla normalize / domain resolve 责任；若有额外上下文或解析结果，使用 `XxxResolveContext`、`EffectiveXxx`、`XxxResolution` 或准确领域名，不使用泛化 `ResolvedXxx`
+- 输入、持久化 IR、领域确定化结果的 owner 与 Vanilla normalize / domain resolve 责任；阶段、上下文和产物命名遵循 [standard-name](../../.agents/skills/standard-name/SKILL.md)，不在架构总则维护第二套词表
 - React / Vanilla 与其它框架能否通过同一 Vanilla 链路获得等价领域语义；不能等价时的 capability 差异和诊断
 - 是否引入反向依赖、平行 schema、纵向领域 normalize、平行 resolve、平行 session、平行 compile 或 renderer 路径

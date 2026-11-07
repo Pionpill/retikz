@@ -61,7 +61,7 @@ beta 允许调整既有契约的 breaking，不允许用 breaking 包装净新�
 
 - 不走 alpha red 的 Spec-First TDD，除非 TODO 本身是 bugfix 或风险足够高；visible / breaking、跨包契约或测试加固 TODO 必须先用 `test-contract` 补行为、不变量、反例与最低测试层。
 - 既有测试可跟随 rename / 类型迁移修改，但不得弱化断言语义。
-- bugfix 必加回归测试；性能优化应有基准或复杂度测试；纯内部搬迁可依赖既有测试。
+- bugfix 必加回归测试；性能优化按 [test-performance](../../test-performance/SKILL.md) 明确预算、对照与授权，复杂度分析不替代耗时收益证据；纯内部搬迁可依赖既有测试。
 - 只跑受影响模块验证，除非跨包契约、CI 复现、发布门禁或用户要求全量。
 
 ## Stage 2 TODO 评估
