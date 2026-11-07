@@ -133,7 +133,7 @@ Core 先按 Scene、外到内 Scope 确定环境与 shared colors。领域用共
 | renderer       | 执行统一 Scene                                                             | preset 选择、Theme 合并                    |
 | host / docs    | CSS、产品 UI、公开 definitions 组成的参考风格                              | 改写领域 Source 或静默 fallback            |
 
-无视觉职责的 Foundation、Math、Runtime、Data 不建立领域 Theme。Inspect 只消费有效 Core 颜色与已有 inspection 上下文，不复制 palette。
+无视觉职责的 Foundation、Math、Reconciler、Data 不建立领域 Theme。Inspect 只消费有效 Core 颜色与已有 inspection 上下文，不复制 palette。
 
 Core 保持 shared categorical 单一真源。受维护 palette 的长度、色相索引与 mode 连续性遵循主题公共契约；用户显式 palette 不重排、不补齐、不调色。
 

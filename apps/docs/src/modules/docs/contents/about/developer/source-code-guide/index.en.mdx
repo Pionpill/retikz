@@ -13,13 +13,13 @@ The table lists each published package's direct runtime or peer dependencies on 
 | --------- | -------------------------- | ----------------------------------------------------------------------------------------- |
 | Kernel    | `@retikz/foundation`       | —                                                                                         |
 |           | `@retikz/math`             | —                                                                                         |
-|           | `@retikz/core`             | `foundation`, `math`, `runtime`                                                           |
-|           | `@retikz/runtime`          | `foundation`                                                                              |
+|           | `@retikz/core`             | `foundation`, `math`                                                                      |
+|           | `@retikz/reconciler`       | `core`, `foundation`, `math`                                                              |
 |           | `@retikz/tex`              | `core`, `foundation`, `math`                                                              |
-|           | `@retikz/inspect`          | `core`, `foundation`, `math`, `react`, `render`<br />`vanilla`                            |
-|           | `@retikz/vanilla`          | `core`, `foundation`, `render`, `runtime`                                                 |
-|           | `@retikz/react`            | `core`, `foundation`, `render`, `runtime`, `vanilla`                                      |
-|           | `@retikz/render`           | `core`, `foundation`, `math`, `runtime`                                                   |
+|           | `@retikz/inspect`          | `core`, `foundation`, `math`, `react`, `reconciler`, `render`, `vanilla`                  |
+|           | `@retikz/vanilla`          | `core`, `foundation`, `reconciler`, `render`                                              |
+|           | `@retikz/react`            | `core`, `foundation`, `reconciler`, `render`, `vanilla`                                   |
+|           | `@retikz/render`           | `core`, `foundation`, `math`, `reconciler`                                                |
 | Library   | `@retikz/layout`           | `core`, `foundation`, `inspect`, `math`                                                   |
 |           | `@retikz/layout-vanilla`   | `inspect`, `layout`, `vanilla`                                                            |
 |           | `@retikz/layout-react`     | `inspect`, `layout`, `layout-vanilla`, `react`, `vanilla`                                 |

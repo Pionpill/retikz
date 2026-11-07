@@ -53,7 +53,10 @@ React Layout calls Vanilla's processing APIs and connects controller creation, u
   sources={[
     { label: 'Input preparation', path: 'packages/kernel/vanilla/src/processing/prepare.ts' },
     { label: 'Single-pass processing', path: 'packages/kernel/vanilla/src/processing/static.ts' },
-    { label: 'Runtime and controller assembly', path: 'packages/kernel/vanilla/src/processing/internal/controller.ts' },
+    {
+      label: 'Reconciler and controller assembly',
+      path: 'packages/kernel/vanilla/src/processing/internal/controller.ts',
+    },
   ]}
 />
 
@@ -150,11 +153,6 @@ Start at Layout's `createInputScene`, then follow Vanilla's `prepareStaticProces
       title: 'Compilation Output',
       description: 'Distinguish Scene, artifacts, spatial handles and diagnostics',
       url: '/kernel/packages/core/compilation-output',
-    },
-    {
-      title: 'Incremental Execution · runtime',
-      description: 'Understand sources, computations and transactions',
-      url: '/kernel/packages/runtime',
     },
     {
       title: 'Rendering Backends · render',

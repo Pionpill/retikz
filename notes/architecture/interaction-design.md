@@ -1,6 +1,8 @@
 # 交互与增量运行时设计
 
-> **状态：架构总则，运行时基础已部分实现，Headless Interaction 尚未实现。** `@retikz/runtime` 已承接 identity、ownership、program 与 transaction 基础；事件、behavior、presentation、intent 和交互 program 仍由后续 ADR 冻结。本文只维护统一方向、跨包契约和职责边界，不替代当前公开类型。
+> **当前边界：独立 Runtime 已由 [ADR-064](../../packages/kernel/_notes/decisions/v0/v0.5/064-remove-runtime.md) 决定移除。** Reconciler 只负责绘图编译会话与输出事务；下文的通用 program、跨领域 transaction 和 ownership routing 保留为候选设计，尚无当前实现或确定 owner，不能视为恢复 Runtime 包的要求。
+
+> **状态：架构方向草案，Headless Interaction 尚未实现。** 原 `@retikz/runtime` 方案已废止；事件、behavior、presentation、intent 和交互 program 仍由后续 ADR 冻结。本文只维护统一方向、跨包契约和职责边界，不替代当前公开类型。
 >
 > 关联：[`性能与增量运行时设计`](./performance-design.md) · [`Editor 编辑运行时架构设计`](./editor-design.md) · [`画板交互控件与状态持久化讨论记录`](./interactive-controls-design.md) · [`能力完备性与模块边界`](./capability-design.md) · [`包拓扑`](./package-topology.md) · [`Core 绘图完备设计`](../../packages/kernel/_notes/architecture/core-drawing-complete.md) · [`Kernel v0.5 路线`](../../packages/kernel/_notes/decisions/v0/v0.5/roadmap.md)
 >
@@ -153,9 +155,9 @@ Signal 解决“值如何响应变化”，dataflow 解决“变化沿哪些领�
 
 ## 6. 包职责
 
-### `@retikz/runtime` 基础契约
+### 历史 Runtime 基础契约（已废止）
 
-`@retikz/runtime` 提供 framework-neutral 的 identity、revision、change、program、transaction、contribution 和 ownership 契约。基础契约不理解 Plot、Table、DOM、React 或具体 renderer。
+原 `@retikz/runtime` 方案提供 framework-neutral 的 identity、revision、change、program、transaction、contribution 和 ownership 契约。基础契约不理解 Plot、Table、DOM、React 或具体 renderer。
 
 ### `@retikz/core`
 
@@ -164,7 +166,7 @@ Signal 解决“值如何响应变化”，dataflow 解决“变化沿哪些领�
 - 提供通用图形能力、manifest 与 ownership 基础。
 - 不拥有 Plot、Table 或 renderer 的领域依赖。
 
-### `@retikz/runtime`
+### 历史 Runtime 协调层（已废止）
 
 - 协调宿主通过通用契约注入的 Data、Tier 2、Core、Render 与 Interaction program，不静态识别或依赖具体 Tier 2。
 - 统一 transaction、调度、revision、提交和生命周期。

@@ -750,13 +750,13 @@ intent
 
 ## 13. 路线与版本边界
 
-`@retikz/plot` 有独立于 kernel 的版本演进，只消费公开 Data / Core / Runtime 能力，不反向改变底座所有权。当前 GoG 基座、独立 Data 层、Definition / registry、coordinate / scale / mark / guide、composition、theme、provenance / lineage 与 React / Vanilla 入口已经形成 v0.1 基线；具体完成状态以 [plot v0.1 roadmap](../decisions/plot/v0/v0.1/roadmap.md) 为准。
+`@retikz/plot` 有独立于 kernel 的版本演进，只消费公开 Data / Core / Reconciler 能力，不反向改变底座所有权。当前 GoG 基座、独立 Data 层、Definition / registry、coordinate / scale / mark / guide、composition、theme、provenance / lineage 与 React / Vanilla 入口已经形成 v0.1 基线；具体完成状态以 [plot v0.1 roadmap](../decisions/plot/v0/v0.1/roadmap.md) 为准。
 
 后续版本主题、Chart 候选、交互、layout transform、渐进生成与跨域组合只在各自 roadmap / ADR 中排期，本文不复制版本编号或承诺包名。长期设计只保留三条 gating 原则：
 
 1. Plot IR 保持 JSON-safe；runtime 函数、datasets 与宿主状态通过 options / program 注入，不进入 IR。
 2. semantic anchor、datum locator、provenance 与 scope-aware lowering 沿同一 Plot → Core 主链演进，不建立交互或组合旁路。
-3. 缺少通用图形、测量、增量执行或 renderer 能力时，先由 Core / Math / Runtime / Render owner 补齐；Plot 不自建平行底座。
+3. 缺少通用图形、测量、增量执行或 renderer 能力时，先由 Core / Math / Reconciler / Render owner 补齐；Plot 不自建平行底座。
 
 ## 14. 明确不做
 
@@ -828,7 +828,7 @@ intent
 | --- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | 1   | O(N) Node 物化     | 评估配置化稠密 primitive 或 renderer batching；不需独立连接时减少 N 个 Node 的物化                                                                     | 「可连接」与「独立物化」的取舍必须显式；若需要新 primitive，先证明其后端中立性并补 Core 契约。可达到的规模由 benchmark 决定，不在本文预设                                                                                                  |
 | 2   | JSON IR 物理代价   | typed-array 收益**跟随 #1**（稠密 primitive 的扁平数组即收益）；in-spec 函数**永不做**（自觉取舍），扩展点在创作层（§5.3 Plot API 组件 / 新 mark 包）  | 后续只增内置 mark/stat，不开放 spec 内函数                                                                                                                                                                                                 |
-| 3   | Plot 无响应式/增量 | 后续性能 milestone 接入 `@retikz/runtime` program                                                                                                      | 守住「纯函数 + 稳定 identity 可得」——provenance 的 `transformedIndex` / `sourceIndex` / id 是 diff 候选 key，后续不能破坏。**展示类交互（hover / tooltip / 高亮 / 选区）用 locator + overlay，不重 lower**；只有数据过滤型交互才需重 lower |
+| 3   | Plot 无响应式/增量 | 后续性能 milestone 另行定义领域增量协议，绘图更新复用 Reconciler                                                                                       | 守住「纯函数 + 稳定 identity 可得」——provenance 的 `transformedIndex` / `sourceIndex` / id 是 diff 候选 key，后续不能破坏。**展示类交互（hover / tooltip / 高亮 / 选区）用 locator + overlay，不重 lower**；只有数据过滤型交互才需重 lower |
 | 4   | 像素尺寸耦合       | 双机制：**viewBox 等比缩放兜底**（免费、纯 resize 不重 lower，代价文字等比缩放）+ **debounce 重 lower**（要文字不变、布局重排时）                      | API/文档讲清「resize 是等比缩放还是重排」                                                                                                                                                                                                  |
 | 5   | 无文字度量         | 迁移到 Core layout-aware composite 的约束测量与同次 replay；Legend 的通用视觉结构和内部布局消费 Standard Box Layout / Legend，Plot 保留 guide 领域解析 | metrics 永不进 IR；不走两遍渲染回灌，不长期停在「字符数×fontSize」或固定带宽估算，也不在 Plot 建立第二套容器 solver                                                                                                                        |
 | 6   | Tier1/Tier2 门控   | 不处理——这是设计原则（§1 / §9）                                                                                                                        | 守纪律：缺能力**下沉补 core**，不在 plot 绕开自造（AGENTS.md 已成硬规）                                                                                                                                                                    |

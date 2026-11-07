@@ -27,7 +27,7 @@ Retikz 将领域语义、无框架 API 和框架适配分为三组。右侧包�
 | 核心能力包 | `@retikz/plot`         | Plot Source IR、Canonical、数据可视化 grammar、Plot pipeline / lowering                   | 通用 Core 语义、DOM、框架 props / JSX、独立 session                          |
 | API 基础包 | `@retikz/vanilla`      | Core authoring API、Input normalize、framework-neutral processing / retained runtime、SSR | Core schema、Core IR-to-Canonical resolve、Core lowering / Scene 语义        |
 | API 基础包 | `@retikz/plot-vanilla` | Plot authoring API、Plot Input builder、Plot 与 Vanilla 的实例组合                        | Plot grammar / schema / IR-to-Canonical resolve、lowering、DOM、框架生命周期 |
-| 框架包     | `@retikz/react`        | React JSX / props、hook、ref、生命周期与 Vanilla 处理结果的宿主接线                       | Core IR builder、compile driver、Runtime、renderer 编排                      |
+| 框架包     | `@retikz/react`        | React JSX / props、hook、ref、生命周期与 Vanilla 处理结果的宿主接线                       | Core IR builder、compile driver、Reconciler 会话、renderer 编排              |
 | 框架包     | `@retikz/plot-react`   | Plot React JSX / props 与 Plot Vanilla 调度                                               | Plot IR builder、平行 Plot runtime、Plot pipeline                            |
 
 ## 2. 核心能力包
@@ -62,7 +62,7 @@ Inspect 从已有产物推导辅助内容，再通过普通 Core 编译与渲染
 
 ### 3.1 `@retikz/vanilla`
 
-Vanilla 是 Core 的无框架 API 基础包，面向 plain JavaScript、SSR、Worker 和全部框架包。它定义 TypeScript-only 的 `InputXxx`，用 `normalizeXxx` 将 authoring Input 组装为 Core Source IR，并组合 Runtime、Render 与 Core 的公开能力提供 framework-neutral processing、实例创建、更新、订阅、诊断和释放。框架包复用这条处理链，只适配自己的 authoring 语法和宿主模型。
+Vanilla 是 Core 的无框架 API 基础包，面向 plain JavaScript、SSR、Worker 和全部框架包。它定义 TypeScript-only 的 `InputXxx`，用 `normalizeXxx` 将 authoring Input 组装为 Core Source IR，并组合 Reconciler、Render 与 Core 的公开能力提供 framework-neutral processing、实例创建、更新、订阅、诊断和释放。框架包复用这条处理链，只适配自己的 authoring 语法和宿主模型。
 
 Vanilla 负责 retained rendering、增量更新、revision 和 session 生命周期的通用 API 接线，但不重新实现 Core 的 Source IR schema、`resolveXxx`、Definition / registry、lowering 或 Scene 语义。根入口必须保持 SSR 导入与调用安全，仅默认文字测量允许按需探测 Canvas 与读取默认字体；`@retikz/vanilla/dom` 才承载浏览器 mount、hydration、元素管理和浏览器事件。
 
@@ -78,7 +78,7 @@ Plot Vanilla 是 Plot 的无框架 API 基础包。它定义 Plot `InputXxx`，�
 
 React 是 Core API 的框架适配包，必须直接依赖 `@retikz/vanilla`。它将 JSX、props、children、hook、ref 与 React 生命周期映射为 Vanilla `InputXxx` 和 Vanilla 公开处理调用，并把订阅到的只读处理结果接到 React 宿主输出。
 
-React 不直接实现 Core Source IR builder、compile driver、Computation、Runtime、retained renderer 或图形更新协议。React 可以保留 JSX 解包、React 状态订阅和只读处理结果到 React 宿主的薄映射；这些接线不能成为通用处理逻辑的平行实现。React 不调用 Vanilla 的 DOM 挂载子入口，避免与 React 对宿主节点的所有权冲突。
+React 不直接实现 Core Source IR builder、compile driver、Reconciler 会话、retained renderer 或图形更新协议。React 可以保留 JSX 解包、React 状态订阅和只读处理结果到 React 宿主的薄映射；这些接线不能成为通用处理逻辑的平行实现。React 不调用 Vanilla 的 DOM 挂载子入口，避免与 React 对宿主节点的所有权冲突。
 
 ### 4.2 `@retikz/plot-react`
 
@@ -109,12 +109,12 @@ Canonical / Resolution (`CanonicalXxx` / `XxxResolution`, domain resolve types, 
 
 `parseXxx` 只接受 `unknown`、序列化 JSON、字符串或 provider payload 等外部数据；公开 compile 已接收 `IRXxx` 时不得重新 parse。Vanilla `normalizeXxx` 表示 `InputXxx` 到 Source IR 的组装。独立的 Core 文本 / DSL parser 继续由 Core 拥有；它的 grammar 类型不命名为 `InputXxx`，框架包只能经 Vanilla 调度该类 parser，不能各自复制或直接拼装其 IR 结果。被领域 compile consumer 复用的 closed value vocabulary / mapping 留在 Core；只服务 typed authoring 的 `*SugarInput` 与 Input-to-IR 字段组装留在 Vanilla。
 
-Vanilla API `normalizeXxx` 是纯函数：只组装 authoring Input，不读取 registry、data、host 或 DOM，也不 warning。Vanilla processing 组合 Source IR、Core compile、Runtime 与 Render 的公开能力，产出可订阅的只读处理结果；其根入口仅允许默认文字测量按需探测 Canvas 与读取默认字体。Core / Plot `resolveXxx` 消费当前 context，统一展开 IR 等价简写、补领域默认值、计算继承与覆盖优先级、执行 registry / reference / host lookup、校验 Canonical 化后才出现的领域不变量，并完成颜色等领域值转换。compile / pipeline 只负责 context 生命周期、依赖顺序与调度，不重复 resolver 的结构处理。不得重复 schema 已覆盖或明确 TypeScript 类型已保证的校验。Theme 的 style、mode 与颜色由 Core 解析；领域 resolve 组合 Theme definition 的生成片段、作者 xxxDefaults、独立规则与实例，保持 Source 同构及来源差异；可由 `CompileOptions.themeStyles` 注入的颜色必须在该阶段决定。
+Vanilla API `normalizeXxx` 是纯函数：只组装 authoring Input，不读取 registry、data、host 或 DOM，也不 warning。Vanilla processing 组合 Source IR、Core 原子阶段、Reconciler 与 Render 的公开能力，产出可订阅的只读处理结果；其根入口仅允许默认文字测量按需探测 Canvas 与读取默认字体。Core / Plot `resolveXxx` 消费当前 context，统一展开 IR 等价简写、补领域默认值、计算继承与覆盖优先级、执行 registry / reference / host lookup、校验 Canonical 化后才出现的领域不变量，并完成颜色等领域值转换。compile / pipeline 只负责 context 生命周期、依赖顺序与调度，不重复 resolver 的结构处理。不得重复 schema 已覆盖或明确 TypeScript 类型已保证的校验。Theme 的 style、mode 与颜色由 Core 解析；领域 resolve 组合 Theme definition 的生成片段、作者 xxxDefaults、独立规则与实例，保持 Source 同构及来源差异；可由 `CompileOptions.themeStyles` 注入的颜色必须在该阶段决定。
 
 ## 6. 跨包不变量
 
 1. 同一领域能力只能有一个 Source IR schema、一个 Vanilla API Input-to-IR normalize、一个 Core / Plot IR-and-context-to-Canonical resolve 与一个正式 compile / lowering 路径
-2. 所有框架包必须依赖相应 Vanilla 包，复用其 authoring 与 processing；框架包只能改变 authoring 语法、生命周期或宿主接线，订阅 Vanilla 只读处理结果，不能重建 Source IR、compile driver、Runtime、retained renderer 或 renderer 编排
+2. 所有框架包必须依赖相应 Vanilla 包，复用其 authoring 与 processing；框架包只能改变 authoring 语法、生命周期或宿主接线，订阅 Vanilla 只读处理结果，不能重建 Source IR、compile driver、Reconciler 会话、retained renderer 或 renderer 编排
 3. `InputXxx` 的便利写法与 TypeScript 类型属于 Vanilla API 包；持久化 compact 写法属于 Source IR；`CanonicalXxx` 由 `IRXxx` 派生、结合当前 context 确定并定义在 Core / Plot domain `resolve/`。三者不得混为同一 schema 或平行真源
 4. Vanilla 根入口、Core、Plot 都不得反向依赖 DOM 或框架包；除 Vanilla 默认文字测量的按需环境探测外，DOM 能力只进入明确子入口
 5. 领域默认值与 IR shorthand 由 Core / Plot resolve 决定，不得在 Vanilla、adapter 或每个下游 consumer 各自复制

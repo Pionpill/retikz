@@ -87,15 +87,15 @@ Authors of TypeScript extensions are responsible for names and callback results 
 
 ## Package boundaries
 
-| Core owns                                                          | Collaborators own                                                                             |
-| ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
-| Core IR, Definitions and extension contracts                       | React / Vanilla provide authoring APIs and prepare input                                      |
-| Configuration resolution, node layout, coordinate and path solving | Math provides basic computation; the host supplies capabilities such as text measurement      |
-| Scene compilation, resource and output assembly                    | Render draws the Scene through SVG, Canvas and other backends                                 |
-| Single-compilation output and optional provenance                  | Reconciler handles incremental reuse; Runtime manages transactions and consistent publication |
-| Compilation observation outputs                                    | Inspect consumes observations and creates inspection helpers                                  |
+| Core owns                                                          | Collaborators own                                                                        |
+| ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| Core IR, Definitions and extension contracts                       | React / Vanilla provide authoring APIs and prepare input                                 |
+| Configuration resolution, node layout, coordinate and path solving | Math provides basic computation; the host supplies capabilities such as text measurement |
+| Scene compilation, resource and output assembly                    | Render draws the Scene through SVG, Canvas and other backends                            |
+| Single-compilation output and optional provenance                  | Reconciler owns full and incremental execution, caching, and consistent publication      |
+| Compilation observation outputs                                    | Inspect consumes observations and creates inspection helpers                             |
 
-This series follows one compilation from input to final outputs. Subsequent updates across Runtime, Reconciler, Core and Render belong to the cross-package dynamic update topic. See [Incremental Execution](/kernel/packages/runtime) for Runtime state and transaction mechanisms.
+This series follows one compilation from input to final outputs. Reconciler executes full and incremental compilation and coordinates output transactions; Render presents the committed Scene to the host. See [Compilation Pipeline](/kernel/packages/core/compilation) for compilation after input changes.
 
 ## Contents
 
