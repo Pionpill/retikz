@@ -3,7 +3,7 @@ title: 坐标解析
 description: 追踪 Core 如何解析位置、查找名称与锚点，并在 Scope 布局完成后确定局部与世界坐标。
 ---
 
-[配置解析](/kernel/packages/core/resolution) 确定节点与路径的有效属性，但位置仍可能包含引用：一个节点放在另一个节点右侧，一条路径连接两个锚点，或整个 Scope 对齐到已有对象。本页接着追踪这些表达怎样变成可用于布局和绘制的坐标。
+[语义解析](/kernel/packages/core/resolution) 确定节点与路径的有效属性，但位置仍可能包含引用：一个节点放在另一个节点右侧，一条路径连接两个锚点，或整个 Scope 对齐到已有对象。本页接着追踪这些表达怎样变成可用于布局和绘制的坐标。
 
 阅读前可先了解 [Node 定位](/kernel/components/node/usage)、[Coordinate](/kernel/components/node/coordinate) 与 [Scope](/kernel/components/scope/usage) 的写法。本页止于位置、引用几何和分组变换的交付；文字测量、路径裁剪与渲染器内部绘制分别由后续主题承接。
 
@@ -343,7 +343,7 @@ $$
       url: '/kernel/packages/core/compilation',
     },
     {
-      title: '配置解析',
+      title: '语义解析',
       description: '查阅位置解析之前的默认值、主题与能力绑定',
       url: '/kernel/packages/core/resolution',
     },

@@ -3,7 +3,7 @@ title: Coordinate resolution
 description: Follow how Core resolves positions, names, and anchors, then determines local and world coordinates as Scope layout completes.
 ---
 
-[Configuration resolution](/kernel/packages/core/resolution) determines effective node and path properties, but positions may still contain references: a node placed beside another node, a path joining two anchors, or a whole Scope aligned to an existing object. This page follows how those expressions become coordinates for layout and drawing.
+[Semantic Resolution](/kernel/packages/core/resolution) determines effective node and path properties, but positions may still contain references: a node placed beside another node, a path joining two anchors, or a whole Scope aligned to an existing object. This page follows how those expressions become coordinates for layout and drawing.
 
 Start with the authoring forms in [Node positioning](/kernel/components/node/usage), [Coordinate](/kernel/components/node/coordinate), and [Scope](/kernel/components/scope/usage). This page stops at resolved positions, reference geometry, and group transforms. Text measurement, path clipping, and renderer internals belong to the following topics.
 
@@ -376,7 +376,7 @@ The overview's positioning and layout step, followed by world reference registra
       url: '/kernel/packages/core/compilation',
     },
     {
-      title: 'Configuration resolution',
+      title: 'Semantic Resolution',
       description: 'Defaults, themes, and capability binding before position resolution',
       url: '/kernel/packages/core/resolution',
     },

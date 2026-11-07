@@ -3,7 +3,7 @@ title: 节点编译
 description: 追踪 Core 如何把文字度量和形状约束转为节点尺寸、正文基线、标签位置与引用几何。
 ---
 
-[配置解析](/kernel/packages/core/resolution) 已经确定节点采用的字体、形状与样式，[坐标解析](/kernel/packages/core/coordinates) 说明它应放在哪里。本页接着回答：文字需要多大空间，形状如何包住正文，标签和连线又依据哪份几何定位？
+[语义解析](/kernel/packages/core/resolution) 已经确定节点采用的字体、形状与样式，[坐标解析](/kernel/packages/core/coordinates) 说明它应放在哪里。本页接着回答：文字需要多大空间，形状如何包住正文，标签和连线又依据哪份几何定位？
 
 阅读前可先了解 [Node 基础用法](/kernel/components/node/usage)与[文字写法](/kernel/components/node/text)。本页从已解析的 `CanonicalNode` 开始，到 `CompiledNode` 交给绘制与引用消费为止；不展开浏览器字体加载、TeX 引擎和路径裁剪算法。
 
