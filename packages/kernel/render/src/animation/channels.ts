@@ -88,7 +88,7 @@ export const resolveTransformOrigin = (
 };
 
 /** prim 是否带描边（pathDraw 揭示需描边） */
-export const primHasStroke = (prim: ScenePrimitive): boolean =>
+const primHasStroke = (prim: ScenePrimitive): boolean =>
   'stroke' in prim && prim.stroke !== undefined && prim.stroke !== 'none';
 
 /**

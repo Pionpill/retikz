@@ -13,7 +13,7 @@ const Demo: FC = () => (
         position={[-280, -55]}
         cornerRadius={4}
         style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
-        layout={{ minimumSize: { width: 176, height: 50 }, align: 'middle', lineHeight: 16 }}
+        layout={{ minimumSize: { width: 176, height: 50 }, textAlign: 'middle', lineHeight: 16 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>Axis tick 来源</Text>
         <Text fill="gray" font={{ size: 12 }}>
@@ -25,7 +25,7 @@ const Demo: FC = () => (
         position={[-75, -55]}
         cornerRadius={4}
         style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
-        layout={{ minimumSize: { width: 154, height: 50 }, align: 'middle', lineHeight: 16 }}
+        layout={{ minimumSize: { width: 154, height: 50 }, textAlign: 'middle', lineHeight: 16 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>候选 tick</Text>
         <Text fill="gray" font={{ size: 12 }}>
@@ -37,7 +37,7 @@ const Demo: FC = () => (
         position={[110, -55]}
         cornerRadius={4}
         style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
-        layout={{ minimumSize: { width: 146, height: 50 }, align: 'middle', lineHeight: 16 }}
+        layout={{ minimumSize: { width: 146, height: 50 }, textAlign: 'middle', lineHeight: 16 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>可见 tick</Text>
         <Text fill="gray" font={{ size: 12 }}>
@@ -53,7 +53,7 @@ const Demo: FC = () => (
         position={[285, -55]}
         cornerRadius={4}
         style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
-        layout={{ minimumSize: { width: 154, height: 50 }, align: 'middle', lineHeight: 16 }}
+        layout={{ minimumSize: { width: 154, height: 50 }, textAlign: 'middle', lineHeight: 16 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>主网格来源</Text>
         <Text fill="gray" font={{ size: 12 }}>
@@ -65,7 +65,7 @@ const Demo: FC = () => (
         position={[475, -55]}
         cornerRadius={4}
         style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
-        layout={{ minimumSize: { width: 154, height: 50 }, align: 'middle', lineHeight: 16 }}
+        layout={{ minimumSize: { width: 154, height: 50 }, textAlign: 'middle', lineHeight: 16 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>主网格位置</Text>
         <Text fill="gray" font={{ size: 12 }}>
@@ -77,7 +77,7 @@ const Demo: FC = () => (
         position={[285, 20]}
         cornerRadius={4}
         style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
-        layout={{ minimumSize: { width: 154, height: 50 }, align: 'middle', lineHeight: 16 }}
+        layout={{ minimumSize: { width: 154, height: 50 }, textAlign: 'middle', lineHeight: 16 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>次网格来源</Text>
         <Text fill="gray" font={{ size: 12 }}>
@@ -89,7 +89,7 @@ const Demo: FC = () => (
         position={[475, 20]}
         cornerRadius={4}
         style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
-        layout={{ minimumSize: { width: 154, height: 50 }, align: 'middle', lineHeight: 16 }}
+        layout={{ minimumSize: { width: 154, height: 50 }, textAlign: 'middle', lineHeight: 16 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>次网格位置</Text>
         <Text fill="gray" font={{ size: 12 }}>

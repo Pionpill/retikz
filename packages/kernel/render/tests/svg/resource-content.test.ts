@@ -222,7 +222,8 @@ it('单击一台宿主仅重新启动其图案动画', () => {
 });
 
 it('普通标记的动画沿宿主事件上下文绑定且实例隔离', async () => {
-  const { compileToScene, defineMark } = await import('@retikz/core');
+  const { defineMark } = await import('@retikz/core');
+  const { compileToScene } = await import('@retikz/reconciler');
   const mark = defineMark({
     name: 'animated',
     emit: () => [

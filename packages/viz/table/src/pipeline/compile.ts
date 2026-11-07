@@ -1,6 +1,8 @@
-import type { AnyCompositeDefinition, CompileArtifact } from '@retikz/core';
-import { compileToScene } from '@retikz/core';
+import type { AnyCompositeDefinition } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
+import { isPropertyPathEqual } from '@retikz/foundation';
+import type { CompositeArtifact } from '@retikz/reconciler';
+import { compileToScene } from '@retikz/reconciler';
 
 import { RetikzTableError } from '../error';
 import type { IRTable } from '../schemas';
@@ -8,11 +10,10 @@ import { TABLE_NAMESPACE, TableComposite } from '../schemas';
 import { lowerTables } from './resolve';
 import type { CompileTableOptions, CompileTableResult, TableCompileArtifact } from './types';
 
-const isRootTableArtifact = (artifact: CompileArtifact): artifact is TableCompileArtifact =>
-  artifact.kind === 'composite' &&
+const isRootTableArtifact = (artifact: CompositeArtifact): artifact is TableCompileArtifact =>
   artifact.namespace === TABLE_NAMESPACE &&
   artifact.type === TableComposite.Table &&
-  artifact.occurrence.sourcePath === 'children[0]' &&
+  isPropertyPathEqual(artifact.occurrence.sourcePath, ['children', 0]) &&
   artifact.occurrence.expansionPath.length === 0;
 
 /**

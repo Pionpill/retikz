@@ -176,7 +176,7 @@ export const previewControlContract = {
   relatedApis: [
     'Node.text',
     'Node.shape',
-    'Node.layout.align',
+    'Node.layout.textAlign',
     'Node.layout.maxTextWidth',
     'Node.layout.lineHeight',
     'IRLine',

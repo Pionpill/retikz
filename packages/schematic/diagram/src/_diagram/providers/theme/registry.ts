@@ -10,7 +10,7 @@ export const resolveDiagramThemeRegistry = (
   for (const definition of custom ?? []) {
     if (registry.has(definition.name)) {
       throw new RetikzDiagramError({
-        code: RetikzDiagramErrorCode.DefinitionDuplicate,
+        code: RetikzDiagramErrorCode.ProviderDefinitionDuplicate,
         message: `Diagram theme '${definition.name}' is already registered.`,
         details: {
           capability: 'diagram-theme',

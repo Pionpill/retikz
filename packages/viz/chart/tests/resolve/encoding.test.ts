@@ -4,11 +4,11 @@ import {
   DataTransformBindingClass,
   DataTransformFieldEffect,
   DataTransformPhase,
+  defineScale,
   defineStatisticsReducer,
   defineTransform,
 } from '@retikz/data';
 import { NonBlankStringSchema } from '@retikz/foundation';
-import { defineScale } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject } from 'zod';
 
@@ -369,19 +369,13 @@ describe('分散 Chart 编码解析结果', () => {
       outputs: operation => [{ field: operation.as, type: DataFieldType.Continuous }],
     });
     const mono = defineScale({
-      family: 'channel',
-      schema: strictObject({
-        type: literal('mono-chart'),
-        name: NonBlankStringSchema,
-        tone: literal('mono').default('mono'),
-      }),
+      type: 'mono-chart',
+      paramsSchema: strictObject({ tone: literal('mono').default('mono') }),
       isFieldCompatible: () => true,
       resolve: () => ({
-        of: () => '#111111',
-        legendForm: 'swatch',
+        map: () => '#111111',
         domain: [],
         range: ['#111111'],
-        scaleType: 'mono-chart',
       }),
     });
     const customRegistry = resolveChartProviderRegistry([
@@ -400,7 +394,7 @@ describe('分散 Chart 编码解析结果', () => {
           y: 'margin',
           color: {
             field: 'group',
-            scale: { operation: { type: 'mono-chart', name: 'groupMono' } },
+            scale: { operation: { type: 'mono-chart', name: 'groupMono', params: { tone: 'mono' } } },
           },
         },
       },
@@ -411,7 +405,7 @@ describe('分散 Chart 编码解析结果', () => {
     expect(transformed.plot.transform).toEqual([
       { operation: { kind: 'copy-chart-field', params: { field: 'amount', as: 'copiedAmount' } } },
     ]);
-    expect(transformed.plot.scales).toContainEqual({ type: 'mono-chart', name: 'groupMono', tone: 'mono' });
+    expect(transformed.plot.scales).toContainEqual({ type: 'mono-chart', name: 'groupMono', params: { tone: 'mono' } });
 
     const extended = resolveScatter(
       {
@@ -421,11 +415,15 @@ describe('分散 Chart 编码解析结果', () => {
           color: { field: 'group', scale: { reference: 'extensionMono' } },
         },
       },
-      { scales: [{ type: 'mono-chart', name: 'extensionMono' }] },
+      { scales: [{ type: 'mono-chart', name: 'extensionMono', params: { tone: 'mono' } }] },
       customRegistry.runtime,
     );
 
-    expect(extended.plot.scales).toContainEqual({ type: 'mono-chart', name: 'extensionMono', tone: 'mono' });
+    expect(extended.plot.scales).toContainEqual({
+      type: 'mono-chart',
+      name: 'extensionMono',
+      params: { tone: 'mono' },
+    });
 
     const aggregated = resolveScatter(
       {
@@ -450,61 +448,6 @@ describe('分散 Chart 编码解析结果', () => {
         },
       },
     ]);
-  });
-
-  it('拒绝重写已注册操作标识的 Scale Definition schema', () => {
-    const renamed = defineScale({
-      family: 'channel',
-      schema: strictObject({
-        type: literal('renamed-chart'),
-        name: NonBlankStringSchema.transform(name => `${name}.parsed`),
-      }),
-      isFieldCompatible: () => true,
-      resolve: () => ({
-        of: () => '#111111',
-        legendForm: 'swatch',
-        domain: [],
-        range: ['#111111'],
-        scaleType: 'renamed-chart',
-      }),
-    });
-    const customRegistry = resolveChartProviderRegistry([
-      {
-        family: 'point',
-        recipe: scatterChartDefinition,
-        chartThemeDefinitions: [],
-        runtimeDefinitions: { scales: [renamed] },
-      },
-    ]);
-
-    for (const [recipe, plotExtension, path] of [
-      [
-        {
-          encodings: {
-            x: 'amount',
-            y: 'margin',
-            color: { field: 'group', scale: { operation: { type: 'renamed-chart', name: 'direct' } } },
-          },
-        },
-        undefined,
-        ['recipe', 'encodings', 'color', 'scale'],
-      ],
-      [
-        {
-          encodings: {
-            x: 'amount',
-            y: 'margin',
-            color: { field: 'group', scale: { reference: 'extension' } },
-          },
-        },
-        { scales: [{ type: 'renamed-chart', name: 'extension' }] },
-        ['recipe', 'encodings', 'color', 'scale'],
-      ],
-    ] as const) {
-      expect(() => resolveScatter(recipe, plotExtension, customRegistry.runtime)).toThrowError(
-        expect.objectContaining({ details: expect.objectContaining({ path }) }),
-      );
-    }
   });
 
   it('在具体编码映射处定位未注册的自定义操作', () => {

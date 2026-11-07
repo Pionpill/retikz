@@ -8,7 +8,6 @@ import type {
 } from '@retikz/core';
 import {
   ChildSchema,
-  compileToScene,
   CompositeBaseSchema,
   defineComposite,
   LayoutChildProbeKind,
@@ -16,6 +15,7 @@ import {
 } from '@retikz/core';
 import { pathClipProvider } from '@retikz/extension';
 import { flexLayoutProvider } from '@retikz/layout';
+import { compileToScene } from '@retikz/reconciler';
 import { legendProvider, surfaceProvider } from '@retikz/standard/presentation';
 import { literal } from 'zod';
 

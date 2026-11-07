@@ -33,7 +33,7 @@ describe('运行时计算结果生命周期', () => {
   }> = [
     {
       name: 'capture',
-      expectedCode: RetikzRuntimeErrorCode.ResultCaptureFailed,
+      expectedCode: RetikzRuntimeErrorCode.ComputationResultCaptureFailed,
       expectedPhase: 'result-capture',
       result: (cause: Error, dispose: (result: Result) => void) => ({
         capture: () => {
@@ -47,7 +47,7 @@ describe('运行时计算结果生命周期', () => {
     },
     {
       name: 'private read',
-      expectedCode: RetikzRuntimeErrorCode.ResultComputationReadFailed,
+      expectedCode: RetikzRuntimeErrorCode.ComputationResultReadFailed,
       expectedPhase: 'result-computation-read',
       result: (cause: Error, dispose: (result: Result) => void) => ({
         capture: (value: number) => Object.freeze({ value }),
@@ -61,7 +61,7 @@ describe('运行时计算结果生命周期', () => {
     },
     {
       name: 'public read',
-      expectedCode: RetikzRuntimeErrorCode.ResultPublicReadFailed,
+      expectedCode: RetikzRuntimeErrorCode.ComputationResultPublicReadFailed,
       expectedPhase: 'result-public-read',
       result: (cause: Error, dispose: (result: Result) => void) => ({
         capture: (value: number) => Object.freeze({ value }),
@@ -205,7 +205,7 @@ describe('运行时计算结果生命周期', () => {
         baseRevision: runtime.revision(),
         sources: [createRuntimeSourceUpdate(owner, 2)],
       }),
-    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.ResultOwnershipAlias }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.ComputationResultOwnershipAlias }));
     expect(runtime.result(computation)).toEqual({ revision: 0, value: 1 });
     expect(resultDispose).not.toHaveBeenCalled();
   });
@@ -258,7 +258,7 @@ describe('运行时计算结果生命周期', () => {
         baseRevision: runtime.revision(),
         sources: [createRuntimeSourceUpdate(owner, 2)],
       }),
-    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.ResultOwnershipAlias }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.ComputationResultOwnershipAlias }));
     expect(computationReadCount).toBe(1);
     expect(publicReadCount).toBe(1);
     expect(resultDispose).not.toHaveBeenCalled();

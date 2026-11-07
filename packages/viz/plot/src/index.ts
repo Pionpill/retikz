@@ -41,9 +41,8 @@ export {
   BUILTIN_COLOR_SCHEMES,
   BUILTIN_COORDINATES,
   BUILTIN_POSITION_ADJUSTMENTS,
-  BUILTIN_SCALES,
+  BUILTIN_PLOT_SCALES,
   CARTESIAN_COORDINATES,
-  COLOR_SCALE_DEFINITIONS,
   DEFAULT_FILL,
   DEFAULT_PLOT_COLORS,
   DEFAULT_TICK_COUNT,
@@ -51,7 +50,6 @@ export {
   PLOT_SHAPE_PALETTE,
   POINT_DEFAULT_RADIUS,
   POLAR_COORDINATES,
-  POSITION_SCALE_DEFINITIONS,
   SCHEME_INTERPOLATORS,
   SIZE_MAX_RADIUS,
   applyNodeChannelDeliveries,
@@ -156,3 +154,5 @@ export { mergePlotDefaults, resolvePlotFacetComposition, resolvePlotTheme } from
 export * from './schemas';
 export {} from './schemas';
 export type {} from './schemas';
+
+export { resolvePositionScalePolicy, resolvePositionScaleContinuity } from './resolve/scale';

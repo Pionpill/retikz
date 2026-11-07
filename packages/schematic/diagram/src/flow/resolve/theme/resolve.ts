@@ -120,7 +120,7 @@ const resolveRegisteredDefaults = (
   const definition = registry.get(theme.name);
   if (definition === undefined) {
     throw new RetikzDiagramError({
-      code: RetikzDiagramErrorCode.DefinitionNotRegistered,
+      code: RetikzDiagramErrorCode.ProviderDefinitionNotRegistered,
       message: `Flow theme '${theme.name}' is not registered.`,
       details: { capability: 'flow-theme', key: theme.name, availableKeys: [...registry.keys()] },
     });
@@ -130,7 +130,7 @@ const resolveRegisteredDefaults = (
     return structuredClone(definition.resolve(theme));
   } catch (cause) {
     throw new RetikzDiagramError({
-      code: RetikzDiagramErrorCode.DefinitionCallbackFailed,
+      code: RetikzDiagramErrorCode.ProviderDefinitionCallbackFailed,
       message: `Flow theme '${theme.name}' resolution failed.`,
       details: { capability: 'flow-theme', key: theme.name },
       cause,

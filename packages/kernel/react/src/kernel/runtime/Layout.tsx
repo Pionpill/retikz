@@ -2,22 +2,20 @@ import type {
   AnyCompositeDefinition,
   AnyPathDefinition,
   ArrowDefinition,
-  MarkDefinition,
   BoundaryDefinition,
   ClipDefinition,
-  CompileArtifact,
-  CompileArtifactOptions,
-  CompileOptions,
-  CompileResult,
   IRAnimationTrack,
   IRScene,
   IRViewBox,
-  TexLowerer,
+  MarkDefinition,
   PatternDefinition,
   ShapeDefinition,
+  TexLowerer,
   TextMeasurer,
   ThemeDefinition,
 } from '@retikz/core';
+import type { CompositeArtifact } from '@retikz/reconciler';
+import type { CompileOptions, CompileResult } from '@retikz/reconciler';
 import type { ReconcilerDiagnostic } from '@retikz/reconciler';
 import type { AnimationControls } from '@retikz/render/animation';
 import { resolveAnimationEnabled } from '@retikz/render/animation';
@@ -139,7 +137,7 @@ const deliverProcessingDiagnostics = (
     try {
       callback(diagnostic);
     } catch (cause) {
-      if (process.env.NODE_ENV !== 'production') console.warn('[retikz] <Layout> onDiagnostic callback failed', cause);
+      if (__DEV__) console.warn('[retikz] <Layout> onDiagnostic callback failed', cause);
     }
   }
 };
@@ -181,34 +179,34 @@ const canonicalizeDefinitionArray = <TDefinition extends object>(
 export type LayoutExtensions = Readonly<{
   /**
    * 形状定义
-   * @default BUILTIN_SHAPES
+   * @default undefined
    */
   shapes?: ReadonlyArray<ShapeDefinition>;
   /**
    * 连接表面定义
-   * @default BUILTIN_BOUNDARIES
+   * @default undefined
    */
   boundaries?: ReadonlyArray<BoundaryDefinition>;
   /**
    * 裁剪定义
-   * @default BUILTIN_CLIPS
+   * @default undefined
    */
   clips?: ReadonlyArray<ClipDefinition>;
   /**
    * 箭头定义
-   * @default BUILTIN_ARROWS
+   * @default undefined
    */
   arrows?: ReadonlyArray<ArrowDefinition>;
   /** 沿路径放置的标记定义 */
   marks?: ReadonlyArray<MarkDefinition>;
   /**
    * 图案定义
-   * @default BUILTIN_PATTERNS
+   * @default undefined
    */
   patterns?: ReadonlyArray<PatternDefinition>;
   /**
    * 路径定义
-   * @default BUILTIN_PATHS
+   * @default undefined
    */
   paths?: ReadonlyArray<AnyPathDefinition>;
   /**
@@ -297,10 +295,8 @@ export type LayoutProps = {
   extensions?: LayoutExtensions;
   /** 公式下沉能力 */
   lowerTex?: TexLowerer;
-  /** 请求生成的编译附加产物 */
-  artifacts?: CompileArtifactOptions;
   /** 编译附加产物成功提交后的通知 */
-  onArtifacts?: (artifacts: ReadonlyArray<CompileArtifact>) => void;
+  onArtifacts?: (artifacts: ReadonlyArray<CompositeArtifact>) => void;
   /** Core 完整编译结果通知 */
   onCompileResult?: (result: CompileResult) => void;
 };
@@ -429,7 +425,6 @@ export const Layout: FC<LayoutProps> = props => {
     fontSize,
     extensions,
     lowerTex,
-    artifacts,
     onArtifacts,
     onCompileResult,
     rootScope,
@@ -471,9 +466,10 @@ export const Layout: FC<LayoutProps> = props => {
 
   const ambientTheme = useTheme();
   const scopeStyle = useMemo(() => rootScope ?? {}, [rootScope]);
-  const hasScopeStyle = Object.keys(pickScopeStyle(scopeStyle)).length > 0;
-  if (process.env.NODE_ENV !== 'production' && irFromProp !== undefined && hasScopeStyle) {
-    warnOnce('[retikz] <Layout>：同时提供 `ir` 与 `rootScope` 时，`rootScope` 被忽略，`ir` 已是完整 IR');
+  if (__DEV__) {
+    if (irFromProp !== undefined && Object.keys(pickScopeStyle(scopeStyle)).length > 0) {
+      warnOnce('[retikz] <Layout>：同时提供 `ir` 与 `rootScope` 时，`rootScope` 被忽略，`ir` 已是完整 IR');
+    }
   }
 
   const reactInput = useMemo(() => {
@@ -510,10 +506,6 @@ export const Layout: FC<LayoutProps> = props => {
   }, [ambientTheme, irFromProp, reactInput, rootAnimations, theme, viewBox]);
 
   const defaultFontFamily = styleFontFamily(style);
-  const compileArtifacts = useMemo<CompileArtifactOptions | undefined>(
-    () => (artifacts?.nodeLayouts === true ? { nodeLayouts: true } : undefined),
-    [artifacts?.nodeLayouts],
-  );
 
   const processingOptions = useMemo<ProcessingOptions | AsyncProcessingOptions>(
     () => ({
@@ -536,7 +528,6 @@ export const Layout: FC<LayoutProps> = props => {
         composites: stableComposites,
         themeDefinitions: stableThemeDefinitions,
         lowerTex,
-        artifacts: compileArtifacts,
       } satisfies CompileOptions,
     }),
     [
@@ -559,7 +550,6 @@ export const Layout: FC<LayoutProps> = props => {
       stableComposites,
       stableThemeDefinitions,
       lowerTex,
-      compileArtifacts,
     ],
   );
 

@@ -1,4 +1,8 @@
 export * from './resolve';
-export * from './target';
-export * from './transform';
-export * from './types';
+export type {
+  CanonicalBetweenPosition,
+  CanonicalOffsetPosition,
+  CanonicalPolarPosition,
+  CanonicalPosition,
+  PositionResolveContext,
+} from './types';

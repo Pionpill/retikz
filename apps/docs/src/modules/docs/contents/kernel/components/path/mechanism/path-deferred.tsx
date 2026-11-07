@@ -43,7 +43,7 @@ const PathDeferred: FC<PathDeferredProps> = props => {
         position={[340, 160]}
         label={{ text: t.slot, opacity: 0.8, font: { size: 12 } }}
         entries={[
-          { key: { id: 'sink-ref', content: 'primitiveSink' }, value: { content: 'Array' } },
+          { key: { id: 'sink-ref', content: 'primitives' }, value: { content: 'Array' } },
           {
             key: { id: 'placeholder-ref', content: 'placeholder' },
             value: { content: t.placeholder, style: { fill: 'dodgerblue' } },

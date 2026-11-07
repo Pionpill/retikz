@@ -60,7 +60,7 @@ describe('Flow 主题 Definition 和注册表', () => {
     } catch (error) {
       if (!(error instanceof RetikzDiagramError)) throw error;
 
-      expect(error.code).toBe(RetikzDiagramErrorCode.DefinitionNotRegistered);
+      expect(error.code).toBe(RetikzDiagramErrorCode.ProviderDefinitionNotRegistered);
       expect(error.details).toMatchObject({
         capability: 'flow-theme',
         key: 'missing',
@@ -97,7 +97,7 @@ describe('Flow 主题 Definition 和注册表', () => {
     } catch (error) {
       if (!(error instanceof RetikzDiagramError)) throw error;
 
-      expect(error.code).toBe(RetikzDiagramErrorCode.DefinitionCallbackFailed);
+      expect(error.code).toBe(RetikzDiagramErrorCode.ProviderDefinitionCallbackFailed);
       expect(error.details).toMatchObject({ capability: 'flow-theme', key: 'invalid' });
       expect(error.cause).toBeDefined();
     }

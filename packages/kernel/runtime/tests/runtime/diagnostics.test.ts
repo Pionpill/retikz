@@ -650,7 +650,7 @@ describe('Runtime 运行时诊断', () => {
 
     expect(thrown).toEqual(
       expect.objectContaining({
-        code: RetikzRuntimeErrorCode.CaptureFailed,
+        code: RetikzRuntimeErrorCode.SourceCaptureFailed,
         cause: captureCause,
         diagnostics: [
           expect.objectContaining({
@@ -743,7 +743,7 @@ describe('Runtime 运行时诊断', () => {
 
     expect(thrown).toEqual(
       expect.objectContaining({
-        code: RetikzRuntimeErrorCode.ResultCaptureFailed,
+        code: RetikzRuntimeErrorCode.ComputationResultCaptureFailed,
         cause: captureCause,
         diagnostics: [expect.objectContaining({ code: BuiltinRuntimeDiagnosticCode.TraceInvalidRecord })],
       }),
@@ -857,7 +857,7 @@ describe('Runtime 运行时诊断', () => {
     }
     expect(failure).toBeInstanceOf(RetikzRuntimeError);
     if (!(failure instanceof RetikzRuntimeError)) throw new Error('expected lifecycle error');
-    expect(failure.code).toBe(RetikzRuntimeErrorCode.ReadFailed);
+    expect(failure.code).toBe(RetikzRuntimeErrorCode.SourceReadFailed);
     expect(failure.cause).toBe(primary);
     expect(failure.diagnostics[0].cause).toBe(secondary);
   });

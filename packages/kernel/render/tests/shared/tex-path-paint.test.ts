@@ -1,5 +1,5 @@
-import { compileToScene } from '@retikz/core';
 import type { Scene } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { drawScene } from '../../src/canvas';

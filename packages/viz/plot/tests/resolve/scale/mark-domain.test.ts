@@ -1,10 +1,9 @@
 import type { IRNode, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { literal } from 'zod';
 
 import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import { resolveScaleRegistry } from '../../../src/providers/scale';
-import { LinearScaleSchema, PlotSchema } from '../../../src/schemas';
+import { PlotSchema } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
 
 const rows = [
@@ -79,9 +78,10 @@ describe('共享标记填充', () => {
   it.each(['linear', 'radial'])('在具有不同参考线的小平面面板上共享一个填充的 %s 域', type => {
     const base = plotOf({ kind: 'mark', marks: ['dots'], clearance: { lower: 8, upper: 15 } });
     const { coordinate, ...rest } = base;
+    const { scales } = rest;
     const spec = PlotSchema.parse({
       ...rest,
-      scales: base.scales.map(scale => (scale.name === 'x' ? { ...scale, type } : scale)),
+      scales: scales.map(scale => (scale.name === 'x' ? { ...scale, type } : scale)),
       width: 640,
       height: 300,
       guides: [
@@ -395,7 +395,7 @@ describe('标记填充最终几何形状', () => {
 describe('标记填充功能', () => {
   it('通过秤注册表调度带有内置标记的自定义秤', () => {
     const linear = resolveScaleRegistry().get('linear')!;
-    const customScale = { ...linear, schema: LinearScaleSchema.extend({ type: literal('custom-affine') }) };
+    const customScale = { ...linear, type: 'custom-affine' };
     const base = plotOf();
     const spec = PlotSchema.parse({
       ...base,
@@ -404,7 +404,21 @@ describe('标记填充功能', () => {
     const result = lowerPlotWithDataArtifact(
       spec,
       { rows },
-      { definitions: { scales: [customScale] }, textMeasurer: measureLabel },
+      {
+        definitions: {
+          scales: [customScale],
+          channels: [
+            {
+              kind: 'position',
+              channel: 'custom-x',
+              role: 'x',
+              pick: mark => (typeof mark.encodings?.position?.x === 'string' ? mark.encodings.position.x : undefined),
+              scales: { 'custom-affine': { continuity: 'continuous', allowsBaseline: true } },
+            },
+          ],
+        },
+        textMeasurer: measureLabel,
+      },
     );
     const frame = [...result.dataArtifact.frameByCoordinateScopeId.values()][0];
     const scale = frame.roleScales!.x!;
@@ -507,9 +521,10 @@ describe('标记填充共享坐标视图', () => {
   it('组合来自使用一个共享比例的覆盖视图的标记', () => {
     const base = plotOf();
     const { coordinate, ...rest } = base;
+    const { scales, marks } = rest;
     const spec = PlotSchema.parse({
       ...rest,
-      scales: base.scales.map(scale =>
+      scales: scales.map(scale =>
         scale.name === 'x' ? { ...scale, domainPadding: { kind: 'mark', marks: ['dots', 'overlay-dots'] } } : scale,
       ),
       composition: {
@@ -520,9 +535,9 @@ describe('标记填充共享坐标视图', () => {
         ],
       },
       marks: [
-        ...base.marks,
+        ...marks,
         {
-          ...base.marks[0],
+          ...marks[0],
           id: 'overlay-dots',
           coordinateView: 'overlay',
           encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },

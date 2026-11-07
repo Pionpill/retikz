@@ -5,6 +5,8 @@ import type {
   ExternalRow,
   IRDataFieldDefinition,
   IRDataScalarValue,
+  ScaleResolution,
+  ScaleResolveContext,
 } from '@retikz/data';
 import type { JsonValue, ValueOf, WithOptionalProperties } from '@retikz/foundation';
 
@@ -217,6 +219,8 @@ export type FieldCollector = {
  * @description lowering 内部类型，不进 IR。resolver 与 legend 共读同一 descriptor，保证图例与实绘同源
  */
 export type ScaleDescriptor = {
+  /** 图元实际使用的数学映射，图例按通道解释而不重建算法 */
+  mapping?: ScaleResolution;
   /** 描述的非位置通道（color / size / opacity / shape / 自定义通道） */
   channel: LegendChannelValue;
   /** 绑定 scale 的 type 串 */
@@ -288,8 +292,16 @@ export type ChannelOutputSpace =
       outputKind: 'json';
     };
 
+/** 通道提交给数学映射的输入与字段语义 */
+export type ChannelScaleMappingContext = Partial<ScaleResolveContext> & {
+  /** 消费方已确定的字段语义 */
+  fieldType?: DataFieldType;
+};
+
 /** 通道解析上下文：当前 Plot、有效数据行与完整字段模型 */
 export type ChannelDefinitionResolveContext = {
+  /** 解析数学映射；通道负责默认配置、输出校验和展示语义 */
+  resolveScaleMapping: (operation: IRPlotScaleOperation, context?: ChannelScaleMappingContext) => ScaleResolution;
   /** 当前通道所属的完整 Plot 源描述 */
   node: IRPlot;
   /** 当前解析作用域内的有效数据行 */
@@ -366,10 +378,24 @@ type BaseChannelDefinition<TKind extends ChannelDefinitionKind> = {
 
 /** 位置通道定义：角色由 CoordinateDefinition.roles 提供，本 definition 只承接统一命名和绑定读取 */
 export type PositionChannelDefinition = BaseChannelDefinition<typeof ChannelDefinitionKind.Position> & {
+  /** 该位置通道明确接受的数学映射及消费策略 */
+  scales?: Readonly<Partial<Record<string, PositionScalePolicy>>>;
   /** 坐标系 role 名 */
   role: DimensionRole;
   /** 从 mark 上读取该位置角色的 channel 绑定 */
   pick: ChannelBindingResolver;
+};
+
+/** 位置通道消费数学映射时必须确定的语义 */
+export type PositionScalePolicy = {
+  /** 映射在位置空间中的连续性 */
+  continuity: 'continuous' | 'discrete';
+  /** 是否允许 interval 或闭合面积使用零基线 */
+  allowsBaseline: boolean;
+  /** 轴刻度的展示类型 */
+  tickKind?: 'number' | 'time' | 'category';
+  /** 在半径平方空间处理留白 */
+  padding?: 'radial';
 };
 
 /**

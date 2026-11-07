@@ -110,22 +110,19 @@ Transform 属于 viz 数据 / 可视化能力域，不进 core。宿主无关的
 
 ### 3.4 Scale
 
-Scale 是单个数据维度到视觉通道的映射函数。
+Scale 按映射语义把数据输入域映射为输出范围，由通道根据输入、输出及附加能力选择和消费。位置、颜色、尺寸、透明度和形状是消费场景，不作为比例尺的顶层互斥家族。完整的重构目标与现行契约边界见 [Plot 比例尺设计](./plot-scale-design.md)。
 
-例子：
+- 映射规则包括连续数值、时间、分类对应、分类布局、离散化与插值；同一种规则可用于多个适用通道。
+- 输出兼容性由消费契约约束。band 的带宽、time 的日历刻度、quantile 的样本分布等专有能力不能被一个通用 map 函数抹平。
+- 比例尺提供映射事实，坐标系消费位置结果，Guide 解释同一次解析得到的类别、刻度或分档边界。
+- 共享映射类型、共享 domain 与共享完整映射是不同意图；布局产生的 range 不得在消费者之间串扰。
+- 默认选型、自动留白与能力诊断归 Plot；React / Vanilla 复用同一领域语义。
 
-- linear：`[min,max] -> [y0,y1]`。
-- log / pow / sqrt。
-- time。
-- band / point。
-- ordinal color。
-- quantize / threshold。
-
-Scale 不等于 coordinate system。Scale 处理单个维度的 domain / range / clamp / nice / ticks；coordinate system 负责把多个 scale 组合成空间。
+专项设计记录目标方向，具体公开 API、默认值及替代关系由后续 ADR 冻结，不表示当前实现已完成迁移。
 
 ### 3.5 CoordinateSystem
 
-CoordinateSystem 定义一组 scale 如何组合为局部坐标空间。**坐标系按空间几何命名（非 scale 类型）**——它是 scale-agnostic 的：任一坐标系的轴都可配任意 scale（linear / log / sqrt / time / band），命名只描述「空间是直线 / 平面 / 圆 / 三角」。
+CoordinateSystem 定义一组 scale 如何组合为局部坐标空间。**坐标系按空间几何命名（非 scale 类型）**——它是 scale-agnostic 的：坐标角色按输出与能力契约消费适用 scale（如 linear / log / sqrt / time / band），具体组合仍受合法域、带宽与基线等要求约束，命名只描述「空间是直线 / 平面 / 圆 / 三角」。
 
 首批可考虑：
 
@@ -256,7 +253,7 @@ Annotation 不应被 plot 黑盒吞掉。它应该能直接混用 retikz core �
 ```text
 1. 数据 + Transform   原始数据 -> 变换 -> 可绘制数据表
 2. 通道 (Encoding)    字段 / 常量 / 派生值 -> 通道；分「位置通道」与「非位置通道」
-3. Scale             每个通道一个 scale(domain -> range)；两类通道都要过
+3. Scale             需要映射的通道解析 domain -> range；绑定决定共享或独立
 4. 坐标系             选预提供坐标系，消费「位置通道(过 scale 后)」-> 绘图空间坐标
 5. Mark 构造          位置(4) + 视觉属性(3) + Relation(order/stack/group/dodge) -> 几何
 6. Guide             由 scale + 坐标系派生 axis / grid / tick / legend / reference line
@@ -268,7 +265,7 @@ Annotation 不应被 plot 黑盒吞掉。它应该能直接混用 retikz core �
 
 1. **数据 + Transform（§3.1 / §3.3）**：原始数据先过 transform——filter / sort、groupBy / aggregate、bin、stack、cumulative sum（饼图 value → 角度区间）、derive interval（甘特 start/end）。没有这步，饼图 / 堆叠 / 直方图无法表达。
 2. **通道 / Encoding（§3.6）**：把字段、常量或派生值绑定到通道，并区分由坐标系消费的 **位置通道**（x/y、angle/radius、a/b/c…）与直接作用于视觉属性的 **非位置通道**（color/size/shape/text…）。
-3. **Scale（§3.4）**：每个通道各有一个 scale 做 `domain → range`（linear/log/time/band/ordinal/color/size…）。位置通道与非位置通道 **都要过 scale**——位置 scale 喂坐标系，颜色 / 大小 scale 喂 mark 视觉属性。
+3. **Scale（§3.4）**：需要映射的通道通过绑定选择 scale 做 `domain → range`（linear/log/time/band/ordinal 等），常量直通、文本格式化及排序分组不强制生成 scale。位置结果交给坐标系，其他输出交给适用的图元属性；共享与独立由绑定和作用域确定。
 4. **坐标系（§3.5）**：选预提供的坐标系（cartesian / polar）或注册自定义坐标系，它只消费 **位置通道（已过 scale）**，把它们组合解析为绘图空间坐标。坐标系是位置通道的消费者，不是底座。
 5. **Mark 构造（§3.7 + §3.8）**：mark 几何 = 位置（来自 4）+ 视觉属性（来自 3）+ Relation（order / group / series / stack / dodge）。**注意**：折线 / 面积 / sector / ribbon 都是 **mark 本身**，由有序数据直接生成几何，**不是「先画点再事后连线」**；「怎么连 / 怎么堆 / 怎么分组」属 Relation，是 mark 构造的输入，而非后处理步骤。
 6. **Guide（§3.9）**：由 scale + 坐标系派生坐标轴 / 网格 / 刻度 / 图例 / 参考线。guide 是一等输出，与 mark 并列，不是某个 mark 的内部细节。
@@ -672,19 +669,19 @@ intent
 
 ### 11.1 模块清单
 
-| 管线阶段 | 模块              | 职责                                                                                                  |
-| -------- | ----------------- | ----------------------------------------------------------------------------------------------------- |
-| —        | `ir` / `schema`   | Plot IR 类型 + zod schema（JSON 可序列化），所有模块的输入输出契约                                    |
-| 1        | `transform`       | filter / sort、groupBy / aggregate、bin、stack、cumulative sum、dodge、derive interval                |
-| 2        | `encoding`        | 通道声明与解析；位置通道 / 非位置通道分流（§1）                                                       |
-| 3        | `scale`           | domain → range：linear / log / pow / time、band / point、ordinal / color / size；nice / clamp / ticks |
-| 4        | `coordinate`      | 默认 cartesian + polar，可注册自定义；coordinate definition 提供投影几何                              |
-| 5        | `mark`            | point / line / area / interval(bar) / rect / sector / rule / text / ribbon；曲线插值与 path 生成      |
-| 5        | `relation`        | order / group / series / stack / dodge / connect / facet                                              |
-| 6        | `guide`           | axis / grid / tick / tick-label / legend / reference line / band                                      |
-| 7        | `scope` / `layer` | z-order 分层、多坐标 scope、semantic anchor（bbox / plotArea / series / datum，见 §7）                |
-| 8        | `lowering`        | Plot IR → core IR（Scope / Node / Path / Step / Coordinate）；plot 不自带 renderer（§8）              |
-| 横切     | `theme`（可选）   | 调色板、默认样式（series 配色等）                                                                     |
+| 管线阶段 | 模块              | 职责                                                                                                            |
+| -------- | ----------------- | --------------------------------------------------------------------------------------------------------------- |
+| —        | `ir` / `schema`   | Plot IR 类型 + zod schema（JSON 可序列化），所有模块的输入输出契约                                              |
+| 1        | `transform`       | filter / sort、groupBy / aggregate、bin、stack、cumulative sum、dodge、derive interval                          |
+| 2        | `encoding`        | 通道声明与解析；位置通道 / 非位置通道分流（§1）                                                                 |
+| 3        | `scale`           | domain → range：linear / log / pow / time、band / point、ordinal、离散化与插值；按能力提供 nice / clamp / ticks |
+| 4        | `coordinate`      | 默认 cartesian + polar，可注册自定义；coordinate definition 提供投影几何                                        |
+| 5        | `mark`            | point / line / area / interval(bar) / rect / sector / rule / text / ribbon；曲线插值与 path 生成                |
+| 5        | `relation`        | order / group / series / stack / dodge / connect / facet                                                        |
+| 6        | `guide`           | axis / grid / tick / tick-label / legend / reference line / band                                                |
+| 7        | `scope` / `layer` | z-order 分层、多坐标 scope、semantic anchor（bbox / plotArea / series / datum，见 §7）                          |
+| 8        | `lowering`        | Plot IR → core IR（Scope / Node / Path / Step / Coordinate）；plot 不自带 renderer（§8）                        |
+| 横切     | `theme`（可选）   | 调色板、默认样式（series 配色等）                                                                               |
 
 `ir` / `scale` / `guide` / `lowering` 是常被忽略却必备的模块——没有 `guide` 画不出轴与图例，没有 `lowering` 图停在内存里无法渲染，没有 `scale` 位置与颜色都无从映射。「数学计算」不单列为模块：数据层聚合归 `transform`、通道映射与 ticks 归 `scale`、投影与曲线几何归 `coordinate` / `mark` 各自承担。
 

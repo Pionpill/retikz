@@ -1,10 +1,10 @@
 import { NonNegativeNumberSchema } from '@retikz/foundation';
-import { DEG_TO_RAD, localToWorld, rectOutline, verticesToSegments } from '@retikz/math';
 import type { CenteredBox, ContourSegment, Position } from '@retikz/math';
+import { DEFAULT_EPSILON, intersect, localToWorld, verticesToSegments, worldToLocal } from '@retikz/math';
 import type { infer as ZodInfer } from 'zod';
 import { strictObject } from 'zod';
 
-import type { PathCommand, ScenePrimitive } from '../../contract';
+import type { ScenePrimitive } from '../../contract';
 import { defineShape } from '../../contract';
 import { BuiltinShape } from '../../schemas';
 import { CenterAnchor, boundaryFromContour, boundsConnectionEnvelope, isDirectionalAnchor, rect } from '../../shared';
@@ -17,6 +17,17 @@ const rectangleParamsSchema = strictObject({
 });
 
 type RectangleParams = ZodInfer<typeof rectangleParamsSchema>;
+
+/** ⚡直角矩形复用固定的单位轮廓，避免每次求交重建四顶点与四线段 */
+const sharpRectangleContour = verticesToSegments([
+  [-1, -1],
+  [1, -1],
+  [1, 1],
+  [-1, 1],
+]);
+
+/** 单位轮廓的射线原点，不随几何查询变化 */
+const rectangleOrigin: Position = [0, 0];
 
 /** 轴对齐 / 旋转矩形的 4 个角（CW 绕向：左上 → 右上 → 右下 → 左下），局部系经 localToWorld 投世界 */
 const rectVertices = (bounds: CenteredBox): Array<Position> => {
@@ -31,39 +42,6 @@ const rectVertices = (bounds: CenteredBox): Array<Position> => {
   ];
 };
 
-/** 把带旋转的矩形轮廓算子转换为结构化 PathCommand */
-const computeRectangleOutlinePathCommands = (
-  bounds: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    rotate?: number;
-  },
-  cornerRadius?: number,
-): Array<PathCommand> => {
-  const from: Position = [bounds.x - bounds.width / 2, bounds.y - bounds.height / 2];
-  const to: Position = [bounds.x + bounds.width / 2, bounds.y + bounds.height / 2];
-  const rotation = (bounds.rotate ?? 0) / DEG_TO_RAD;
-  const toWorld = (point: Position): Position => localToWorld(bounds, [point[0] - bounds.x, point[1] - bounds.y]);
-
-  return rectOutline(from, to, cornerRadius).map(operation => {
-    if (operation.kind === 'move') return { kind: 'move', to: toWorld(operation.to) };
-    if (operation.kind === 'line') return { kind: 'line', to: toWorld(operation.to) };
-    if (operation.kind === 'close') return { kind: 'close' };
-
-    return {
-      kind: 'ellipseArc',
-      center: toWorld(operation.center),
-      radiusX: operation.radius,
-      radiusY: operation.radius,
-      startAngle: operation.startAngle,
-      endAngle: operation.endAngle,
-      ...(rotation === 0 ? {} : { rotation }),
-    };
-  });
-};
-
 /**
  * rectangle 注册项：文本容器矩形
  * @description anchor / edgePoint 走 rect 几何；cornerRadius 影响 boundaryPoint 和 emit。
@@ -74,6 +52,32 @@ export const rectangle = defineShape<RectangleParams>({
   paramsSchema: rectangleParamsSchema,
   computeCircumscribedGeometry: (hw, hh) => ({ halfWidth: hw, halfHeight: hh }),
   computeBoundaryPoint: (bounds: CenteredBox, toward: Position, params): Position => {
+    const halfWidth = bounds.width / 2;
+    const halfHeight = bounds.height / 2;
+    if (
+      (params.cornerRadius === undefined || params.cornerRadius === 0) &&
+      halfWidth > DEFAULT_EPSILON &&
+      halfHeight > DEFAULT_EPSILON
+    ) {
+      const localToward = worldToLocal(bounds, toward);
+      if (Math.hypot(localToward[0], localToward[1]) < 1e-12) return [bounds.x, bounds.y];
+      const directionX = localToward[0] / halfWidth;
+      const directionY = localToward[1] / halfHeight;
+      const absoluteX = Math.abs(directionX);
+      const absoluteY = Math.abs(directionY);
+      const directionScale = Math.max(absoluteX, absoluteY);
+      const edgeIndex = absoluteX > absoluteY ? (directionX > 0 ? 1 : 3) : directionY > 0 ? 2 : 0;
+      // ⚡射线命中边已由单位方向确定，复用直线求交，省去通用轮廓遍历与方向单位化
+      const edge = sharpRectangleContour[edgeIndex];
+      const hit = intersect.lineLine({
+        a1: rectangleOrigin,
+        a2: [directionX / directionScale, directionY / directionScale],
+        b1: edge.from,
+        b2: edge.to,
+      });
+      return hit === null ? [bounds.x, bounds.y] : localToWorld(bounds, [hit[0] * halfWidth, hit[1] * halfHeight]);
+    }
+
     const verts = rectVertices(bounds);
     const segments: Array<ContourSegment> = verticesToSegments(verts);
     const center: Position = [bounds.x, bounds.y];
@@ -87,16 +91,6 @@ export const rectangle = defineShape<RectangleParams>({
   },
   computeEdgePoint: (r, side, t) => rect.edgePoint(r, side, t),
   computeConnectionEnvelope: boundsConnectionEnvelope,
-  computeOutline: (bounds, params) => computeRectangleOutlinePathCommands(bounds, params.cornerRadius),
-  computeKeyPoints: bounds => {
-    const vertices = rectVertices(bounds);
-    return [
-      { name: 'top-left', position: vertices[0] },
-      { name: 'top-right', position: vertices[1] },
-      { name: 'bottom-right', position: vertices[2] },
-      { name: 'bottom-left', position: vertices[3] },
-    ];
-  },
   *emit(r, style, round, params): Iterable<ScenePrimitive> {
     const halfW = r.width / 2;
     const halfH = r.height / 2;

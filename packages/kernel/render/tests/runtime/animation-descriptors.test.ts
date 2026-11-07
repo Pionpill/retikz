@@ -57,13 +57,19 @@ it('共享 Pattern 的动画按使用处归属，资源更新和回滚不串用�
       ],
     },
     topology: [
-      { identity: groupIdentity, semanticOwner: groupIdentity, parent: root, order: 0, primitivePath: [0] },
+      {
+        identity: groupIdentity,
+        semanticOwner: groupIdentity,
+        parent: root,
+        order: 0,
+        primitivePath: ['primitives', 0],
+      },
       ...childIdentities.map((identity, index) => ({
         identity,
         semanticOwner: identity,
         parent: groupIdentity,
         order: index,
-        primitivePath: [0, index],
+        primitivePath: ['primitives', 0, 'children', index],
       })),
     ],
   });

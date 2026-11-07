@@ -48,8 +48,8 @@ type StarGeometry = {
 
 /** 计算 Star 顶点与 AABB */
 const starGeometry = (params: StarShapeParams): StarGeometry => {
-  const { points, innerRadius, outerRadius } = params;
-  const rotate = params.rotate ?? 0;
+  const { points, innerRadius, outerRadius, rotate: configuredRotate } = params;
+  const rotate = configuredRotate ?? 0;
   const step = 180 / points;
   const vertices: Array<Position> = [];
   let maxAbsX = 0;

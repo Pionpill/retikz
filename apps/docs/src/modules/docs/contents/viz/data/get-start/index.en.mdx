@@ -55,7 +55,20 @@ console.log(summary);
 
 `model` and `transforms` can be stored as JSON. `rows`, along with any custom parsers, Definitions, and registries, participates only at runtime.
 
-## Next
+## Use a scale independently
+
+To map values to another range, use a scale directly without creating a data view or running transformations:
+
+```ts
+import { resolveScale } from '@retikz/data';
+
+const score = resolveScale({ type: 'linear', domain: [0, 100], range: [0, 1] });
+score.map(75); // 0.75
+```
+
+See [Scales](/viz/data/scale) for other mapping rules and parameters.
+
+## Further reading
 
 When handing off canonical data with `createDataView(rows, model)`, the view contains only `rows` and the complete field `model`. Look up a field with `view.model.find(field => field.name === name)`: an `undefined` result means the field does not exist; an existing field with an `undefined` type has an undetermined type. Empty data preserves explicit types and category order without assigning default types to untyped fields.
 

@@ -1,5 +1,5 @@
 import type { IRScene, ThemeDefinition } from '@retikz/core';
-import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
+import { resolveCoreProviderDependencies } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import type {
   IRPlot,
@@ -9,6 +9,7 @@ import type {
   PlotLineageRun,
 } from '@retikz/plot';
 import { createPlotProviderContribution, lowerPlotWithLineage } from '@retikz/plot';
+import { compileToScene } from '@retikz/reconciler';
 import { renderToSvgString } from '@retikz/vanilla';
 
 /** renderPlot 两种返回模式共享的根 Scene Theme 输入 */

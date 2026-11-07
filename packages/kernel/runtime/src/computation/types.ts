@@ -1,5 +1,4 @@
 import type { RuntimeDiagnostic } from '../diagnostic';
-import type { RuntimeDiagnosticPhase } from '../diagnostic';
 import type { RuntimeComputationId } from '../identity';
 import type { RuntimeChangeSet, RuntimeSourceDefinition, RuntimeSourceToken, RuntimeRevision } from '../source';
 import type { RuntimeTracePhaseDefinition, RuntimeTraceReporter } from '../trace';
@@ -42,14 +41,7 @@ export type RuntimeComputationDefinition<
   }>;
 
 /** Computation callback 可提交的无归属 warning 输入 */
-export type InputRuntimeComputationWarning = Readonly<{
-  /** 稳定 warning 分类 */
-  code: string;
-  /** 产生 warning 的领域阶段 */
-  phase: RuntimeDiagnosticPhase;
-  /** 面向开发者的 warning 信息 */
-  message: string;
-}>;
+export type InputRuntimeComputationWarning = Pick<RuntimeDiagnostic, 'code' | 'phase' | 'message'>;
 
 /** Computation callback 只能写入、不能 drain 的 Source-bound trace facade */
 export type RuntimeComputationTraceReporter = Pick<RuntimeTraceReporter, 'owner' | 'report'>;

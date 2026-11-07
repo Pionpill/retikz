@@ -43,7 +43,7 @@ const completeFlow = {
         textColor: '#1e3a8a',
         font: { size: 14, weight: 600 },
       },
-      layout: { align: 'middle', minimumSize: { width: 96, height: 40 }, margin: { x: 4, y: 2 } },
+      layout: { textAlign: 'middle', minimumSize: { width: 96, height: 40 }, margin: { x: 4, y: 2 } },
     },
     {
       id: 'ir',
@@ -201,7 +201,7 @@ describe('Flow Source 的 schema', () => {
         {
           id: 'form',
           text,
-          layout: { align: 'start', lineHeight: 18, maxTextWidth: 160 },
+          layout: { textAlign: 'start', lineHeight: 18, maxTextWidth: 160 },
         },
       ],
       groups: [],
@@ -212,7 +212,7 @@ describe('Flow Source 的 schema', () => {
     expect(parsed.entities[0]).toMatchObject({
       id: 'form',
       text,
-      layout: { align: 'start', lineHeight: 18, maxTextWidth: 160 },
+      layout: { textAlign: 'start', lineHeight: 18, maxTextWidth: 160 },
     });
   });
 

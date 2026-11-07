@@ -1,5 +1,5 @@
 import type { IRScene, PathPrimitive, ScenePrimitive } from '@retikz/core';
-import { compileToScene } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import {

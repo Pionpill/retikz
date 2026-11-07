@@ -141,7 +141,7 @@ describe('Flow Layout Definition 契约', () => {
     } catch (error) {
       if (!(error instanceof RetikzDiagramError)) throw error;
 
-      expect(error.code).toBe(RetikzDiagramErrorCode.DefinitionInvalid);
+      expect(error.code).toBe(RetikzDiagramErrorCode.ProviderDefinitionInvalid);
       expect(error.details).toMatchObject({ capability: 'flow-layout', key: definition.name });
     }
   });

@@ -3,7 +3,6 @@ import type { CenteredBox, Position } from '@retikz/math';
 import type { ZodType } from 'zod';
 
 import type { Anchor } from '../../shared';
-import type { PathCommand } from '../scene';
 import type { ConnectionEnvelopeKind } from './shape';
 
 /** Boundary provider 解析实例连接矩形时可用的视觉几何上下文 */
@@ -29,12 +28,6 @@ export type InputBoundaryDefinition<TParams extends JsonObject> = {
    * @default context.visualRect
    */
   resolveRect?: (context: BoundaryFitContext, params: TParams) => CenteredBox;
-  /**
-   * 返回与解析后 rect 同坐标系的精确闭合连接面轮廓；空数组表示合法空几何
-   * @description 可选，主要供 Inspect 调试时显示连接面轮廓，通常可以省略。省略不影响连接点或锚点计算，但 Inspect 无法显示精确连接面轮廓；提供此方法不会让连接面在正常绘制中显示
-   * @default undefined
-   */
-  computeOutline?: (rect: CenteredBox, params: TParams) => ReadonlyArray<PathCommand>;
   /** 从中心指向 toward 的射线与连接面的交点 */
   computeBoundaryPoint: (rect: CenteredBox, toward: Position, params: TParams) => Position;
   /**

@@ -1,4 +1,4 @@
-import type { IRNode, IRScope } from '@retikz/core';
+import type { IRChild, IRNode, IRScope } from '@retikz/core';
 import type { BoundsInsets, BoundsRect, Position } from '@retikz/math';
 
 import type {
@@ -22,11 +22,11 @@ import type {
 } from '../../../../schemas';
 import {
   AxisPlacementKind,
+  BuiltinPlotCoordinate,
+  BuiltinPlotScale,
   Cartesian1DOrientation,
   Cartesian1DSchema,
   Cartesian2DSchema,
-  BuiltinPlotCoordinate,
-  BuiltinPlotScale,
 } from '../../../../schemas';
 import type { PlotLabelMeasure } from '../../../../shared';
 import { assertUniqueAxisPlacement } from '../../shared';
@@ -76,8 +76,8 @@ const textNodeBoundsOf = (
   const authoredFontSize = node.style?.font?.size;
   const fontSize = typeof authoredFontSize === 'number' ? authoredFontSize : fallbackFontSize;
   const { width, height } = measure(node, fontSize);
-  const localMinX = node.layout?.align === 'start' ? 0 : node.layout?.align === 'end' ? -width : -width / 2;
-  const localMaxX = node.layout?.align === 'start' ? width : node.layout?.align === 'end' ? 0 : width / 2;
+  const localMinX = node.layout?.textAlign === 'start' ? 0 : node.layout?.textAlign === 'end' ? -width : -width / 2;
+  const localMaxX = node.layout?.textAlign === 'start' ? width : node.layout?.textAlign === 'end' ? 0 : width / 2;
   const localMinY = -height / 2;
   const localMaxY = height / 2;
   const radians = ((node.rotate ?? 0) * Math.PI) / 180;
@@ -98,11 +98,9 @@ const textNodeBoundsOf = (
   };
 };
 
-const isNodeChild = (child: IRScope['children'][number]): child is IRNode =>
-  child.type === 'node' && 'position' in child;
+const isNodeChild = (child: IRChild): child is IRNode => child.type === 'node' && 'position' in child;
 
-const isScopeChild = (child: IRScope['children'][number]): child is IRScope =>
-  child.type === 'scope' && 'children' in child;
+const isScopeChild = (child: IRChild): child is IRScope => child.type === 'scope' && 'children' in child;
 
 /** 收集轴层中的文本节点；mark 与 grid 不参与坐标轴外延测量 */
 const collectAxisTextNodes = (scope: IRScope): Array<IRNode> =>
@@ -356,7 +354,7 @@ const cartesian2DCoordinateDefinition: CoordinateDefinition<Cartesian2DCoordinat
     const yValues = ctx.collectPositionValues('y', { axis: 'secondary', includeBaseline: true });
     const xScaleDef = ctx.resolveScaleForRole('x', coordinate.x, xValues);
     const yScaleDef = ctx.resolveScaleForRole('y', coordinate.y, yValues);
-    ctx.assertBaselineScaleCompatible(yScaleDef.type, ctx.marks);
+    ctx.assertBaselineScaleCompatible(yScaleDef.type, ctx.marks, 'y');
 
     const xScale = ctx.buildPositionScale(xScaleDef, xValues, [0, ctx.width]);
     const yScale = ctx.buildPositionScale(yScaleDef, yValues, [ctx.height, 0]);

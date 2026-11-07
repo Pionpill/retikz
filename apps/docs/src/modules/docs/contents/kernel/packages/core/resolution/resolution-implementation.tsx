@@ -17,14 +17,14 @@ const ResolutionImplementation: FC<ResolutionImplementationProps> = props => {
   const lang = props.lang ?? ((i18n.resolvedLanguage ?? 'zh').startsWith('zh') ? 'zh' : 'en');
   const text = resolutionImplementationI18n[lang];
   const stages = [
-    { id: 'setup', name: 'createCompileContext' },
+    { id: 'setup', name: 'createCompileRuntime' },
     { id: 'scope', name: 'resolveScopeDefaults' },
     { id: 'merge', name: 'mergeNodeStyle' },
     { id: 'colors', name: 'resolveNodePrimaryColors' },
     { id: 'fields', name: 'expandNodeFields' },
     { id: 'shape', name: 'resolveNodeShape' },
     { id: 'paint', name: 'resolvePaint' },
-    { id: 'result', name: 'NodeResolution' },
+    { id: 'result', name: 'CanonicalNode' },
   ] as const;
   const products = [
     { id: 'environment', name: 'registries' },
@@ -32,7 +32,7 @@ const ResolutionImplementation: FC<ResolutionImplementationProps> = props => {
     { id: 'effective', name: 'IRNode' },
     { id: 'concrete', name: 'NodePrimaryColorSource' },
     { id: 'expanded', name: 'Expanded fields' },
-    { id: 'bound', name: 'ShapeResolution' },
+    { id: 'bound', name: 'CanonicalNodeShape' },
     { id: 'resolved', name: 'paint' },
   ] as const;
   return (

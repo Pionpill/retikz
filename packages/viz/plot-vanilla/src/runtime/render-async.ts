@@ -60,9 +60,10 @@ const renderPlotAsyncImpl = async <TSource = never>(
   options: PlotRenderAsyncOptions<TSource> | PlotRenderAsyncLineageOptions<TSource> = {},
 ): Promise<string | PlotRenderLineageResult> => {
   const { dataTransformExecutor, signal, ...lowerOptions } = options;
+  const { lineage: optionsLineage, theme, themeDefinitions, layout } = lowerOptions;
   const props: InputPlotEmbed<TSource> = { spec, dataBindings, dataTransformExecutor, lowerOptions };
   let preparedData: PreparedPlotData | undefined;
-  const lineage = options.lineage === undefined || options.lineage === false ? undefined : (options.lineage.data ?? {});
+  const lineage = optionsLineage === undefined || optionsLineage === false ? undefined : (optionsLineage.data ?? {});
   const adapter = {
     kind: plotInputEmbedAdapter.kind,
     prepare: async (_props: never, context: Parameters<typeof plotInputEmbedAdapter.prepare>[1]) => {
@@ -79,20 +80,20 @@ const renderPlotAsyncImpl = async <TSource = never>(
 
   const result = await processToStaticInputResultAsync(
     scene({
-      ...(options.theme === undefined ? {} : { theme: options.theme }),
+      ...(theme === undefined ? {} : { theme }),
       children: [embed({ kind: adapter.kind, props })],
     }),
     {
       adapters: [adapter],
       signal,
-      compile: { themeDefinitions: options.themeDefinitions },
+      compile: { themeDefinitions },
     },
   );
 
   const svg = renderToSvgString(result.scene, {
-    output: { width: options.layout?.width, height: options.layout?.height },
+    output: { width: layout?.width, height: layout?.height },
   });
-  if (options.lineage === undefined || options.lineage === false) return svg;
+  if (optionsLineage === undefined || optionsLineage === false) return svg;
   if (preparedData === undefined) throw new RetikzPlotVanillaError('Plot async result is missing its prepared data');
 
   return {
@@ -100,7 +101,7 @@ const renderPlotAsyncImpl = async <TSource = never>(
     lineage: lowerPlotWithLineage(
       spec,
       {},
-      { ...options, environment: { theme: options.theme, compile: { themeDefinitions: options.themeDefinitions } } },
+      { ...options, environment: { theme, compile: { themeDefinitions } } },
       preparedData,
     ).lineage,
   };

@@ -1,2 +1,2 @@
-export * from './geometry';
-export * from './layout';
+export * from './emit';
+export { calculateNodeLabelExtentPoints, measureNodeLabel, placeNodeLabel } from './layout';

@@ -172,7 +172,7 @@ const Demo: FC = () => (
         { text: 'cot α = √3', fill: 'green' },
       ]}
       style={{ stroke: 'lightgray', dashed: true }}
-      layout={{ padding: { x: 10, y: 4 }, align: 'start' }}
+      layout={{ padding: { x: 10, y: 4 }, textAlign: 'start' }}
     />
   </Layout>
 );

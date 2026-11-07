@@ -1,3 +1,11 @@
+export {
+  allocationPointsOf,
+  calculateBoundsOfPrimitives,
+  canonicalizeBoundsRect,
+  createGroupBoundsProjector,
+  mergeLayoutBounds,
+} from './bounds';
 export * from './layout';
-export * from './precision';
-export * from './view-box';
+export { materializeMarkerPrimitive } from './marker';
+export type { MarkerPlacementContext } from './marker';
+export type * from './types';

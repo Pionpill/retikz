@@ -36,18 +36,14 @@ const maximumRadiusOf = (
   if (scaleName === undefined) return SIZE_MAX_RADIUS;
   const scale = scales.find(candidate => candidate.name === scaleName);
   if (scale === undefined) throw new RetikzPlotError(`size channel references unknown scale "${scaleName}"`);
-  if (scale.type !== 'sqrt') throw new RetikzPlotError(`size channel scale "${scaleName}" must be a sqrt scale`);
   const range = 'range' in scale ? scale.range : undefined;
   if (range === undefined) return SIZE_MAX_RADIUS;
-  if (
-    !Array.isArray(range) ||
-    range.length === 0 ||
-    range.some(value => typeof value !== 'number' || !Number.isFinite(value) || value < 0)
-  ) {
-    throw new RetikzPlotError(`size scale "${scaleName}" has no finite nonnegative radius upper bound`);
-  }
   let maximum = 0;
-  for (const radius of range) maximum = Math.max(maximum, radius);
+  for (const radius of range) {
+    if (typeof radius !== 'number' || !Number.isFinite(radius) || radius < 0)
+      throw new RetikzPlotError(`size scale "${scaleName}" has no finite nonnegative radius upper bound`);
+    maximum = Math.max(maximum, radius);
+  }
   return maximum;
 };
 
@@ -59,6 +55,7 @@ export const resolvePointPadding = (
   cartesian: boolean,
   increasing: boolean,
   continuous: boolean,
+  maximumRadius?: (view: MarkDataView) => number,
 ): PointPaddingResolution => {
   const result: PointPaddingResolution = { minimum: { lower: 0, upper: 0 }, points: [] };
   for (const view of views) {
@@ -87,7 +84,14 @@ export const resolvePointPadding = (
     const mark = view.mark;
 
     let radius = 0;
-    if (mark.type === 'point') radius = maximumRadiusOf(mark.encodings.size ?? mark.properties?.size, scales);
+    if (mark.type === 'point') {
+      radius =
+        mark.encodings.size !== undefined &&
+        channelScale(mark.encodings.size) !== undefined &&
+        maximumRadius !== undefined
+          ? maximumRadius(view)
+          : maximumRadiusOf(mark.encodings.size ?? mark.properties?.size, scales);
+    }
     result.minimum.lower = Math.max(result.minimum.lower, radius + clearance.lower);
     result.minimum.upper = Math.max(result.minimum.upper, radius + clearance.upper);
   }

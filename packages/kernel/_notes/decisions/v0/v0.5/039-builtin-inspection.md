@@ -10,6 +10,8 @@ keywords: 'Core、Inspector、outline、bounds、keyPoints、boundary'
 - 接受日期：2026-09-13
 - 关联：[当前 roadmap](./roadmap.md) · [Inspector 独立包](./021-extensible-inspector-content.md) · [Drawing Complete](../../../architecture/core-drawing-complete.md)
 
+> 输入、选择、上下文、内置能力与失败语义已由 [078](./078-inspect-compiled-output.md) 替代；Core 观测及检查专用出口由 [077](./077-compile-output-contract.md) 删除。仅保留可选包、统一扩展与普通只读层原则。
+
 ## 背景与目标
 
 原有 Inspect 内置辅助内容只解释 stroke Path 的二次、三次贝塞尔控制点。Core 虽然已经计算节点外框、文本排版、连接边界、裁切路径与 Scope 放置结果，但原有 observation owner 只支持 Path kind 和带 artifact 的 Composite。调用方无法通过统一选择规则检查这些 Core 元素，也无法区分节点外框、连接面和 Scene 坐标中的 AABB。

@@ -34,7 +34,7 @@ export const resolveEndpointCap = (input: {
   const definition = registry.get(cap.name);
   if (definition === undefined)
     throw new RetikzExtensionError({
-      code: RetikzExtensionErrorCode.ResolutionInvalid,
+      code: RetikzExtensionErrorCode.ResolveInvalid,
       message: `Unknown Ribbon cap '${cap.name}' at ${endpoint}.cap.`,
       details: { endpoint, name: cap.name },
     });

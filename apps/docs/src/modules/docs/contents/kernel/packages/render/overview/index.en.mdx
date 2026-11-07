@@ -7,6 +7,8 @@ description: Renders backend-neutral Scenes to SVG / Canvas and coordinates fram
 
 This group covers how retikz actually paints a figure to the screen. Your figure is first compiled into a **renderer-agnostic Scene**, then handed to a backend: **SVG** emits a vector DOM where every primitive is a real, CSS-targetable element; **Canvas** paints the same Scene as a raster bitmap, suited to many primitives or frequent repaints. The backends share Scene semantics and align their output where each backend supports the required feature; check host capabilities and interaction needs before switching. **Hydration** is the mechanism both backends share: render statically first, then bind event handlers back to primitives by id on the client.
 
+Readonly layers are materialized with the primary figure through static-frame or retained commit APIs. `drawReadonlyLayer` and `buildSvgReadonlyLayer` are internal assembly helpers, excluded from the public Canvas/SVG subpaths. Public granular SVG builders remain available.
+
 ## Responsibilities
 
 | Topic            | Responsibility                                                                               | Reach for it when                                                   |
@@ -49,7 +51,7 @@ Import `StaticRenderFrame` from `@retikz/render/runtime`; import each materializ
   sources={[
     { label: 'Retained config', path: 'packages/kernel/render/src/runtime/config.ts' },
     { label: 'Reconciler commit target', path: 'packages/kernel/render/src/runtime/target.ts' },
-    { label: 'Session publication and recovery', path: 'packages/kernel/reconciler/src/session.ts' },
+    { label: 'Session publication and recovery', path: 'packages/kernel/reconciler/src/reconciler.ts' },
     {
       label: 'SVG WAAPI independent resource cleanup',
       path: 'packages/kernel/render/src/animation/retained/binding.ts',
@@ -71,14 +73,14 @@ Import `StaticRenderFrame` from `@retikz/render/runtime`; import each materializ
     {
       label: 'SVG aggregate controls cleanup',
       path: 'packages/kernel/render/src/runtime/svg-renderer.ts',
-      startLine: 81,
-      endLine: 118,
+      startLine: 83,
+      endLine: 120,
     },
     {
       label: 'SVG animation retry queue',
       path: 'packages/kernel/render/src/runtime/svg-renderer.ts',
-      startLine: 120,
-      endLine: 151,
+      startLine: 122,
+      endLine: 153,
     },
     {
       label: 'Shared rAF frame continuation gate',
@@ -95,44 +97,44 @@ Import `StaticRenderFrame` from `@retikz/render/runtime`; import each materializ
     {
       label: 'Canvas animation retry queue',
       path: 'packages/kernel/render/src/runtime/canvas-renderer.ts',
-      startLine: 227,
-      endLine: 249,
+      startLine: 213,
+      endLine: 235,
     },
     {
       label: 'Canvas visibility cleanup',
       path: 'packages/kernel/render/src/runtime/canvas-renderer.ts',
-      startLine: 1054,
-      endLine: 1196,
+      startLine: 1043,
+      endLine: 1185,
     },
     {
       label: 'Canvas clock replacement gate',
       path: 'packages/kernel/render/src/runtime/canvas-renderer.ts',
-      startLine: 1211,
-      endLine: 1236,
+      startLine: 1200,
+      endLine: 1225,
     },
     {
       label: 'Canvas controls final cleanup',
       path: 'packages/kernel/render/src/runtime/canvas-renderer.ts',
-      startLine: 1278,
-      endLine: 1301,
+      startLine: 1267,
+      endLine: 1290,
     },
     {
       label: 'Canvas candidate cleanup retention',
       path: 'packages/kernel/render/src/runtime/canvas-renderer.ts',
-      startLine: 1654,
-      endLine: 1662,
+      startLine: 1643,
+      endLine: 1651,
     },
     {
       label: 'Canvas animation rollback cleanup',
       path: 'packages/kernel/render/src/runtime/canvas-renderer.ts',
-      startLine: 1756,
-      endLine: 1780,
+      startLine: 1745,
+      endLine: 1769,
     },
     {
       label: 'Canvas renderer final dispose',
       path: 'packages/kernel/render/src/runtime/canvas-renderer.ts',
-      startLine: 1876,
-      endLine: 1901,
+      startLine: 1865,
+      endLine: 1890,
     },
     {
       label: 'Renderer capability and public read',

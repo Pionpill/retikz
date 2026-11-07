@@ -46,7 +46,7 @@ export const createChartDefinition = (
 ): CompositeDefinition<IRChartSource, typeof CHART_NAMESPACE, string> => {
   if (registry.recipes.size === 0) {
     throw new RetikzChartError({
-      code: RetikzChartErrorCode.InvalidRegistry,
+      code: RetikzChartErrorCode.ProviderRegistryInvalid,
       message: `Chart provider family "${registry.family}" requires at least one active recipe`,
       details: { path: ['recipes'] },
     });

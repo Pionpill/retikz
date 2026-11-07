@@ -17,7 +17,7 @@ import { GroupCaptionDirection } from './constants';
 /** Group caption 文本可复用的 Core Node 文字字段 */
 export const GroupCaptionTextSchema = strictObject({
   text: NodeSchema.shape.text.unwrap().describe('Required Core Node text content for this caption item.'),
-  align: NodeSchema.shape.layout.unwrap().shape.align.describe('Text alignment within the caption item.'),
+  align: NodeSchema.shape.layout.unwrap().shape.textAlign.describe('Text alignment within the caption item.'),
   lineHeight: NodeSchema.shape.layout.unwrap().shape.lineHeight.describe('Text line height.'),
   maxTextWidth: NodeSchema.shape.layout.unwrap().shape.maxTextWidth.describe('Maximum text width before wrapping.'),
   textColor: NodeSchema.shape.style.unwrap().shape.textColor.describe('Local text color override.'),

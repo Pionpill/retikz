@@ -7,7 +7,7 @@ import type {
   IRPlotMark,
   IRPlotScaleOperation,
 } from '@retikz/plot';
-import { BuiltinPlotCoordinate, PlotGuide, BuiltinPlotScale, resolvePlotFacetComposition } from '@retikz/plot';
+import { BuiltinPlotCoordinate, BuiltinPlotScale, PlotGuide, resolvePlotFacetComposition } from '@retikz/plot';
 
 import { RetikzPlotVanillaError } from '../../error';
 import type {
@@ -15,9 +15,10 @@ import type {
   InputPlotGuide,
   InputPlotMark,
   InputPlotScaffold,
-  PlotBindingsNormalizationResult,
   PlotBindingsNormalizationContext,
+  PlotBindingsNormalizationResult,
 } from './input';
+import type { InputPlotTrack } from './input-composition';
 import { normalizePlotPathMark } from './path';
 
 type Composition = NonNullable<IRPlot['composition']>;
@@ -309,7 +310,7 @@ const normalizeScaffold = (scaffold: InputPlotScaffold, coordinate: IRPlotCoordi
   /** 按显式 view、scaffold 模板或 authoring 默认解析 track view id */
   const scaffoldTrackViewIdOf = (
     sourceScaffold: Pick<InputPlotScaffold, 'id' | 'viewIdTemplate'>,
-    track: InputPlotScaffold['tracks'][number],
+    track: InputPlotTrack,
   ): string => {
     if (track.view !== undefined) return track.view;
     if (sourceScaffold.viewIdTemplate === undefined) return track.id;
@@ -317,11 +318,12 @@ const normalizeScaffold = (scaffold: InputPlotScaffold, coordinate: IRPlotCoordi
   };
 
   const { coordinate: scaffoldCoordinate, spacing, resolve, ...rest } = scaffold;
+  const { tracks } = rest;
   return {
     ...rest,
     kind: 'tracks',
     coordinate: fillCoordinateScaleBindings(scaffoldCoordinate ?? coordinate, coordinate),
-    tracks: scaffold.tracks.map(track => ({ ...track, view: scaffoldTrackViewIdOf(scaffold, track) })),
+    tracks: tracks.map(track => ({ ...track, view: scaffoldTrackViewIdOf(scaffold, track) })),
     ...(spacing !== undefined ? { spacing } : {}),
     ...(resolve !== undefined ? { resolve } : {}),
   };

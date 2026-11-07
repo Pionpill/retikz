@@ -131,20 +131,21 @@ Node 的 anchor 定位先完成当前 Node 的文本测量、shape、padding、m
   sources={[
     {
       label: '解析关系型与极坐标位置',
-      path: 'packages/kernel/core/src/resolve/position/resolve.ts',
-      startLine: 43,
-      endLine: 89,
+      path: 'packages/kernel/core/src/compile/reference/position.ts',
     },
     {
       label: '按真实布局锚点平移 Node',
       path: 'packages/kernel/core/src/compile/node/layout.ts',
-      startLine: 54,
-      endLine: 109,
     },
     {
-      label: '登记 Node 与 Coordinate 命名引用',
-      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 438,
+      label: '登记 Node 命名引用',
+      path: 'packages/kernel/reconciler/src/compile/tree/node/visit.ts',
+      startLine: 49,
+    },
+    {
+      label: '登记 Coordinate 命名引用',
+      path: 'packages/kernel/reconciler/src/compile/tree/coordinate/visit.ts',
+      startLine: 14,
     },
     {
       label: '定义 path target 的完整 union',

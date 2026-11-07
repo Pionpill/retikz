@@ -5,10 +5,10 @@
 ## 包职责契约
 
 - **解决的问题**：为所有上层 DSL、Tier 2 能力和 renderer 提供后端中立、可序列化、可扩展的二维绘图表达与确定性编译
-- **拥有的契约**：Core IR / Zod schema、Drawing definitions / registries、Composite dependency provider graph、纯 parser、IR / composite lowering、`compileToScene`、qualified spatial handle sidecar、Scene / Scope Theme selector、Core style definition / registry 与 shared colors、Scene / manifest 语义与绘图诊断
-- **不拥有的能力**：跨次身份、增量复用与 Runtime 事务接线、通用计算几何算法、SVG / Canvas 执行、React / Vanilla authoring Input 或 framework-neutral processing、数据处理与可视化语法、TeX 引擎或应用交互状态
-- **输入与输出**：接收 JSON-safe Core IR、compile options 与运行时 definitions（包括 `themeStyles`），输出 renderer-agnostic Scene、artifact / spatial sidecar、manifest 和 diagnostics；不直接输出 DOM、SVG 字符串或 Canvas 像素
-- **缺口流向**：通用纯几何下沉 `@retikz/math`；后端实现进入 `@retikz/render`；增量编译接线进入 `@retikz/reconciler`，authoring 接线上移 adapter；数据可视化与领域 theme token / preset / style definition 具体值进入对应 viz 能力域；可选公式集成进入 `@retikz/tex`
+- **拥有的契约**：Core IR / Zod schema、Drawing definitions / registries、Composite dependency provider graph、纯 parser、IR / composite lowering、原子解析 / layout / emit 阶段及其产物、Composite 领域契约、Scene / Scope Theme selector、Core style definition / registry 与 shared colors、Scene / manifest 语义与绘图诊断
+- **不拥有的能力**：完整编译入口、遍历与执行生命周期、跨次身份、增量缓存与输出事务、通用计算几何算法、SVG / Canvas 执行、React / Vanilla authoring Input 或 framework-neutral processing、数据处理与可视化语法、TeX 引擎或应用交互状态
+- **输入与输出**：接收 Core IR 片段与阶段所需的窄能力上下文，返回解析、布局、几何或图元产物；完整 Scene 与 artifacts 由 Reconciler 组织；不直接输出 DOM、SVG 字符串或 Canvas 像素
+- **缺口流向**：通用纯几何下沉 `@retikz/math`；后端实现进入 `@retikz/render`；完整与增量编译执行进入 `@retikz/reconciler`，authoring 接线上移 adapter；数据可视化与领域 theme token / preset / style definition 具体值进入对应 viz 能力域；可选公式集成进入 `@retikz/tex`
 
 新增或改变图形能力前，先按 [`core-drawing-complete.md`](../_notes/architecture/core-drawing-complete.md) 确认 Drawing Complete 的能力面、主责 / 协作包和端到端闭环。
 
@@ -18,9 +18,8 @@
 - 不准依赖 DOM API（`document` / `window` / `canvas` / `HTMLElement` 等）；浏览器能力由 adapter 或 render 包注入。
 - 运行时依赖只允许 `@retikz/foundation`、`@retikz/math` 与 `zod`；新增依赖必须先说明理由。
 - 任何可能进入 IR 的数据都必须 JSON 可序列化，禁止函数、ref、closure、class 实例。
-- `compileToScene` 必须保持纯函数：相同 IR + options 产生相同 Scene；禁止 `Math.random()`、`Date.now()`、module-level mutable state。
+- 原子阶段保持确定性：相同输入与能力产生相同产物；禁止 `Math.random()`、`Date.now()`、module-level mutable state。
 - Composite provider graph 只解析当前调用显式提供的 roots / providers；不得做动态 import、包发现、全局注册或 adapter 专用 conflict fallback。
-- qualified spatial handle index 与 Scene 同 revision 生成，但不得进入 Scene、renderer descriptor、DOM attribute 或 Canvas 私有表。
 
 ## 目录分层
 
@@ -30,7 +29,7 @@ schemas/     Zod schema 与 IR 类型真源
 contract/    第三方作者实现的 Definition、defineXxx、Scene 输出契约、能力无关 helper
 providers/   内置 definition、BUILTIN_*、registry resolver
 resolve/     Source IR 与当前 context 的默认、优先级、lookup 和值形态确定化，输出 Canonical / Resolution
-compile/     context 生命周期、IR 到 Scene 的调度、layout、lowering 与 emit
+compile/     原子 layout、lowering、emit 与共享阶段产物；不持有树遍历或工作区生命周期
 parse/       字符串 / DSL / Sugar parser，输出 IR 节点或 IR 片段
 ```
 
@@ -51,7 +50,7 @@ parse/       字符串 / DSL / Sugar parser，输出 IR 节点或 IR 片段
 - `PathPrimitive.commands` 与 `GroupPrimitive.transforms` 必须是结构化数组，不输出 SVG `d` / `transform` 字符串。
 - `circlePath` / `ellipsePath` 可在 IR 编译为结构化 `ellipseArc`；后端自行映射为原生 API。
 - 文本在 Scene 编译完成时必须已有度量结果；度量函数通过 `CompileOptions.measureText` 注入，缺省走 fallback。
-- Composite 声明的 local spatial bounds 只由 Core 根据最终 Scope / placement / replay transform 发布 world-space sidecar；renderer 不做二次变换或语义推断。
+- Composite artifacts 的字段与坐标语义由领域包定义；Core 仅随最终输出收集，不提供通用空间索引或检查专用输出。
 
 ## Registry 与 Shape
 
@@ -78,11 +77,11 @@ parse/       字符串 / DSL / Sugar parser，输出 IR 节点或 IR 片段
 ## 公开 API
 
 - 只通过 `src/index.ts` 暴露公开 API；adapter 不 import core 内部子路径。
-- 顶层 `src/index.ts` 默认只从 owner barrel `export *`；owner barrel 负责定义稳定公共面。
-- 新增或调整顶层 `export *` 前必须跑类型检查，确认不存在同名 / 重复导出冲突。只有存在无法通过 owner barrel 消除的冲突时，顶层才允许最小 named re-export，并在代码注释说明原因。
+- 顶层 `src/index.ts` 只从 owner barrel 聚合；各级入口按可见性选择全部或精选导出，遵循根规范与 `standard-structure` 的导入导出规则。
+- 新增或调整顶层导出前须逐项审查公开必要性、契约稳定性及消费方影响，并跑类型检查确认无同名 / 重复导出冲突；不将仅供 Core 内部复用的成员转为公共 API。
 
 ## 测试
 
-- schema / IR 改动：补 schema 行为测试，并按 [schema](../../../.agents/skills/standard-structure/references/schema.md) 同步描述、类型和 docs。
+- schema / IR 改动：按 [单元测试规范](../../../.agents/skills/test-contract/references/unit-tests.md) 复用或补齐自定义校验、组合及消费语义的测试，不机械复测 Zod 声明；按 [schema](../../../.agents/skills/standard-structure/references/schema.md) 同步描述、类型和 docs。
 - compile / lowering 改动：补 compile 输出和边界输入测试。
 - 几何 / shape / path 改动：补几何或 snapshot 回归，避免只靠视觉 demo。

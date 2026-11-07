@@ -27,6 +27,7 @@ description: Use when retikz work is primarily refactoring, reorganization, rena
 - 是否混入新功能、公开行为变化或 schema/API 变化。
 - 文件 scope、分层边界和依赖方向是否合理。
 - 是否有隐藏回归、测试弱化、public surface 漏迁移。
+- 新增或收敛测试时按 [单元测试编写与 Review 规范](../test-contract/references/unit-tests.md) 核对独立失效模式与保留去向；本轮重构对照 case 不自动转为永久回归。
 - 验证命令是否覆盖受影响模块。
 - 大重构的提交切分是否便于 review。
 - 涉及命名或重命名时，按 [`standard-name`](../standard-name/SKILL.md) 做命名语义专项检查：函数采用动宾短语，导出函数使用完整领域语义，私有 helper 仅在上下文明确时简化；变量、参数和属性使用形容词或分类限定词 + 类别名，并检查名称能否直接推断用途。

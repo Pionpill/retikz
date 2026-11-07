@@ -7,6 +7,8 @@ description: 区分整条路径与单步标签，控制位置、朝向、多行�
 
 ## 接入方式
 
+Path 与 Node 标签、Node 正文共用文本能力。标签直接设置 `textAlign`、`lineHeight` 和 `maxTextWidth`；正文对应字段位于 `Node.layout`。内部对齐默认 `middle`，行高默认有效字号的 1.2 倍，实际内容更高时扩展行槽。自动折行优先词边界，过长单词按字素拆分，公式不拆分；空行保留。宿主、标签、行和片段的透明度逐层相乘，省略的因子为 1，显式 0 保留。
+
 下面四种写法都在同一条线段上附加 `status` 标签；Vanilla 示例需要页面已有 `<div id="diagram"></div>`。
 
 <ComponentPreview files="draw-label-basic" size="xs" hideCode />

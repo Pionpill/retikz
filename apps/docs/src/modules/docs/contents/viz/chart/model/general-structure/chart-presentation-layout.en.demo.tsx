@@ -16,7 +16,6 @@ const copy = {
 const controlledPreview = defineControlledPreview(previewControlContract, (values, dimensions) => (
   <ChartPresentationLayoutPreview
     copy={copy}
-    inspect={values[CHART_PRESENTATION_CONTROL_IDS.inspect] === true}
     visibility={{
       title: values[CHART_PRESENTATION_CONTROL_IDS.showTitle] === true,
       subtitle: values[CHART_PRESENTATION_CONTROL_IDS.showSubtitle] === true,
@@ -28,7 +27,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, (value
 ));
 
 const canonicalPreview = defineControlledPreview(previewControlContract, () => (
-  <ChartPresentationLayoutPreview copy={copy} inspect={false} />
+  <ChartPresentationLayoutPreview copy={copy} />
 ));
 
 export const previewSource = canonicalPreview.source;

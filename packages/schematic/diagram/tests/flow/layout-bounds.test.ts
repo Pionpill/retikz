@@ -1,4 +1,5 @@
-import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
+import { resolveCoreProviderDependencies } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import type { FlowDiagramArtifact, FlowDiagramDefinitionOptions } from '../../src/flow';
@@ -21,8 +22,7 @@ const compile = (source: unknown, options: FlowDiagramDefinitionOptions = {}) =>
     },
   );
   return FlowDiagramArtifactSchema.parse(
-    result.artifacts.find(item => item.kind === 'composite' && item.namespace === 'diagram' && item.type === 'flow')
-      ?.value,
+    result.artifacts.find(item => item.namespace === 'diagram' && item.type === 'flow')?.value,
   );
 };
 

@@ -36,8 +36,7 @@ description: Use when editing apps/docs React components, shared components, lay
 ## 导入与导出
 
 - 跨 owner 消费走目标目录 barrel，不 deep import 到私有子文件。
-- `index.ts` 默认使用 `export * from './xxx'`。
-- 只有需要裁剪公共面、避免冲突或显式重命名时才用 named re-export。
+- `index.ts` 按可见性选择全部或精选导出，遵循 [导入导出](../standard-structure/references/imports.md)；不向外转发纯内部复用成员。
 - 尽量避免 import/export `as` 重命名；优先在定义源头给出准确命名。
 
 ## 验证

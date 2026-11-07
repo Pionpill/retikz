@@ -30,7 +30,7 @@ export const lowerGrid = (grid: IRGrid): IRScope => {
   void _namespace;
   void _type;
   const canonical = bounds;
-  const { minX, minY, maxX, maxY } = canonical;
+  const { minX, minY, maxX, maxY, position } = canonical;
   const canonicalLines = line;
   const borderPadding = border?.padding ?? 0;
   const lineBounds: GridLineBounds = {
@@ -59,12 +59,12 @@ export const lowerGrid = (grid: IRGrid): IRScope => {
   }
 
   const children: Array<IRPath | IRScope> =
-    canonical.position === undefined
+    position === undefined
       ? paths
       : [
           {
             type: 'scope',
-            transforms: [{ kind: 'offset-translate', of: canonical.position }],
+            transforms: [{ kind: 'offset-translate', of: position }],
             children: paths,
           },
         ];

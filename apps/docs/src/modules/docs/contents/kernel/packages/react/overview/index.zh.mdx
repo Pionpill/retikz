@@ -7,6 +7,8 @@ description: 用 JSX 组织 Kernel 与 Sugar 组件，构造 Vanilla InputScene�
 
 它负责 React 写法和结果宿主，不另造图形语义：IR、schema、几何与编译规则属于 `@retikz/core`；Input 归一、composite 依赖解析、Core Computation 与 retained processing 状态属于 `@retikz/vanilla`。
 
+包根提供组件、Props 和作者协议；样式筛选、组件名称读取与事件收集由 `Layout` 内部完成。`pickScopeStyle`、`getDisplayName` 和 `collectHydrationHandlers` 是源码中的内部助手，不从包根导出。
+
 ## 安装与使用
 
 `react` 与 `react-dom` 是 peer dependencies，版本不低于 18：
@@ -184,7 +186,7 @@ Definition 数组按有序元素 identity 规范化，因此 render 时重新创
 
 `Layout` 会把文本测量器、Definition registries、TeX lowerer 等宿主能力作为 processing 的 compile options 注入，但这些选项不会把 React 写进 IR 或 Scene。直接传 `ir` prop 时会跳过 JSX collector。`artifacts` prop 请求 opt-in 产物，`onArtifacts` 在所选 host 发布后接收同次 compile 的 immutable artifacts；不会为通知再编译一次。
 
-基础包只提供领域中立的 `VanillaCompileDriver` 与不解释的 `authoring` site。默认 driver 由 Vanilla processing 执行普通 Core 编译，observer 与只读图层都为空。可选的 `@retikz/inspect/react` 通过 `InspectLayout`、`InspectScope` 和 `InspectPath` 解释运行时选择，并把检查 observer 接入同一 static 或 retained processing；这些选择不进入 `IRScene`、`IRScope` 或 `IRPath`。
+可选的 `@retikz/inspect/react` 提供 `InspectionOverlay`，消费主图已完成的普通编译结果并独立呈现辅助层。检查请求不进入主图 IR，也不参与主图的编译与提交。
 
 `VanillaCompileDriver` 可为同一次编译注入 observers，再从 Core primary 与 observer outputs 解析有序只读图层和扩展诊断。static processing 直接物化完整 frame；retained processing 在同一 revision 原子提交主图与图层。检查包在这个通用边界上接线，基础 React 包不导入任何 Inspector definition、配色或选择逻辑。完整用法见 [`@retikz/inspect`](/kernel/packages/inspect)。
 
@@ -210,8 +212,7 @@ Definition 数组按有序元素 identity 规范化，因此 render 时重新创
     },
     {
       label: 'Core IR 编译为 Scene',
-      path: 'packages/kernel/core/src/compile/compile.ts',
-      startLine: 73,
+      path: 'packages/kernel/reconciler/src/compile/compile.ts',
     },
   ]}
 />
@@ -239,7 +240,7 @@ Scene 已经没有 React 组件语义。Vanilla processing 负责保留或静态
       label: 'React 将 processing result 映射为 SVG 或 Canvas 宿主',
       path: 'packages/kernel/react/src/render/processing-result.tsx',
       startLine: 106,
-      endLine: 184,
+      endLine: 183,
     },
     {
       label: 'JSX handler 运行时旁路',

@@ -14,6 +14,19 @@ export const nodeLabelStyleControls = definePreviewControls({
   sections: [
     {
       controls: [
+        {
+          kind: 'select',
+          id: 'textAlign',
+          label: '块内对齐',
+          defaultValue: 'middle',
+          options: [
+            { value: 'start', label: '起点' },
+            { value: 'middle', label: '居中' },
+            { value: 'end', label: '终点' },
+          ],
+        },
+        { kind: 'range', id: 'lineHeight', label: '行高', defaultValue: 20, min: 10, max: 40, step: 1 },
+        { kind: 'range', id: 'maxTextWidth', label: '折行宽度', defaultValue: 100, min: 40, max: 180, step: 5 },
         { kind: 'switch', id: NodeLabelStyleControlId.Multiline, label: '多行文本', defaultValue: true },
         { kind: 'color', id: NodeLabelStyleControlId.TextColor, label: '文字颜色', defaultValue: '#2563eb' },
         {
@@ -46,6 +59,9 @@ export const previewControlContract = {
     fontSize: 16,
     opacity: 1,
     multiline: true,
+    textAlign: 'middle',
+    lineHeight: 20,
+    maxTextWidth: 100,
   },
   relatedApis: ['Node.label'],
 } satisfies PreviewControlContract;

@@ -81,8 +81,8 @@ runtime/     Layout、hydration handler 收集、Vanilla processing 调度与 Re
 
 ## 公开 API
 
-- `src/index.ts` 默认用 `export *` 聚合允许公开的一级 owner barrel，不在根入口维护显式导出清单。
-- 一级 owner barrel 决定哪些子 owner 可以继续向上暴露；被选中的公共子 owner barrel 仍默认用 `export *`。
+- `src/index.ts` 聚合允许公开的一级 owner barrel；各级入口按根规范的可见性规则选择全部或精选导出。
+- 一级 owner barrel 决定哪些子 owner 及成员可以继续向上暴露；根入口逐项审查公开必要性、契约稳定性及消费方影响。
 - 不需要公开的模块不得进入一级 owner barrel；owner 内通过相邻路径或私有子 barrel 导入。
 - 不得为了测试入口或复用便利，把 renderer / internal helper 转发到 `@retikz/react` 顶层。
 - 导出所有用户可能派生 wrapper 的 prop 类型。

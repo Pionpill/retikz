@@ -10,6 +10,8 @@ keywords: 'Inspector、sourcePath、InspectorDefinition、inspect、IRChild'
 - 接受日期：2026-08-07
 - 关联：[Standard Layout Inspector ADR-012](../../../../../library/_notes/decisions/standard/v0/v0.1/012-layout-inspector.md) · [Standard Inspector 视觉语义 ADR-013](../../../../../library/_notes/decisions/standard/v0/v0.1/013-layout-inspector-visual-semantics.md)
 
+> 输入、选择、上下文、内置能力与失败语义已由 [078](./078-inspect-compiled-output.md) 替代；Core 观测及检查专用出口由 [077](./077-compile-output-contract.md) 删除。仅保留可选包、统一扩展与普通只读层原则。
+
 ## 背景与目标
 
 Inspector 观察一次确定编译的结果，再用普通绘图能力生成不影响主图的辅助内容。将定义、选择、选项和呈现放进 Core 或基础宿主，会使默认关闭的开发工具增加基础依赖，并让 Core 持续吸收领域语义

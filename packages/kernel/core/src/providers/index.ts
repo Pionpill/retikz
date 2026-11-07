@@ -1,10 +1,11 @@
-export * from './arrow';
-export * from './boundary';
-export * from './clip';
+export { resolveArrowRegistry } from './arrow';
+export { resolveBoundaryRegistry } from './boundary';
+export { resolveClipRegistry } from './clip';
 export * from './composite';
 export * from './mark';
-export * from './path';
-export * from './pattern';
-export * from './registry';
+export { resolvePathRegistry } from './path';
+export { resolvePatternRegistry } from './pattern';
+export { getProviderDefinition } from './registry';
+export type { ProviderRegistry } from './registry';
 export * from './shape';
 export * from './theme';

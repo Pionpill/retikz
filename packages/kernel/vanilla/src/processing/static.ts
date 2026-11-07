@@ -21,12 +21,7 @@ const EMPTY_LAYERS = Object.freeze([]);
 const EMPTY_DIAGNOSTICS = Object.freeze([]);
 
 /** 已完成编译、等待宿主确认提交的 static processing 候选结果 */
-export type PreparedStaticProcessing = Readonly<{
-  /** 不可变的同 revision processing result */
-  result: ProcessingResult;
-  /** 在宿主完成帧提交后通知 compile driver，重复调用无副作用 */
-  commit: () => void;
-}>;
+export type PreparedStaticProcessing = Pick<PreparedAsyncStaticProcessing, 'result' | 'commit'>;
 
 /** 准备一次 authored static processing，保留 compile driver 的提交时机给宿主 */
 export const prepareStaticProcessing = (

@@ -48,19 +48,15 @@ Scope 把里面的内容当作一组：可以一起放大、旋转，再一起�
   sources={[
     {
       label: '进入子树前冻结 position 目标',
-      path: 'packages/kernel/core/src/compile/scope/compile.ts',
-      startLine: 42,
+      path: 'packages/kernel/core/src/compile/scope/placement/layout.ts',
     },
     {
       label: '包络锚点、最终平移与预解析分支',
-      path: 'packages/kernel/core/src/compile/scope/compile.ts',
-      startLine: 121,
+      path: 'packages/kernel/core/src/compile/scope/placement/layout.ts',
     },
     {
       label: '变换收敛为平移、旋转与缩放',
-      path: 'packages/kernel/core/src/compile/scope/layout.ts',
-      startLine: 53,
-      endLine: 111,
+      path: 'packages/kernel/core/src/compile/scope/placement/transform.ts',
     },
   ]}
 />
@@ -95,26 +91,19 @@ Scope 把里面的内容当作一组：可以一起放大、旋转，再一起�
   sources={[
     {
       label: '局部偏移与全局结果解析',
-      path: 'packages/kernel/core/src/resolve/position/resolve.ts',
-      startLine: 35,
-      endLine: 90,
+      path: 'packages/kernel/core/src/compile/reference/position.ts',
     },
     {
       label: '绑定正向与逆向投影',
-      path: 'packages/kernel/core/src/compile/orchestration/position-context.ts',
-      startLine: 68,
-      endLine: 88,
+      path: 'packages/kernel/core/src/compile/reference/context.ts',
     },
     {
       label: '逆变换与零缩放错误',
-      path: 'packages/kernel/core/src/compile/transform.ts',
-      startLine: 36,
-      endLine: 69,
+      path: 'packages/kernel/core/src/compile/shared/transform.ts',
     },
     {
       label: '补入最终变换并同步延迟结果',
-      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 838,
+      path: 'packages/kernel/reconciler/src/compile/tree/scope/visit.ts',
     },
   ]}
 />
@@ -142,21 +131,16 @@ Scope 把里面的内容当作一组：可以一起放大、旋转，再一起�
   sources={[
     {
       label: 'frame 的压入与弹出',
-      path: 'packages/kernel/core/src/compile/namespace.ts',
-      startLine: 166,
-      endLine: 184,
+      path: 'packages/kernel/reconciler/src/compile/runtime/namespace.ts',
     },
     {
       label: '同层注册与覆盖诊断',
-      path: 'packages/kernel/core/src/compile/namespace.ts',
-      startLine: 197,
-      endLine: 229,
+      path: 'packages/kernel/reconciler/src/compile/runtime/namespace.ts',
     },
-    { label: '首次命中即返回', path: 'packages/kernel/core/src/compile/namespace.ts', startLine: 260, endLine: 273 },
+    { label: '首次命中即返回', path: 'packages/kernel/reconciler/src/compile/runtime/namespace.ts' },
     {
       label: '先登记整体 id，再进入局部 frame',
-      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 736,
+      path: 'packages/kernel/reconciler/src/compile/tree/scope/visit.ts',
     },
   ]}
 />
@@ -176,30 +160,25 @@ Scope 把里面的内容当作一组：可以一起放大、旋转，再一起�
 
 例如 Scope 内两节点之间的路径绕到很远处，Scope 的整体引用边界仍由布局决定，不会被这条路径撑大。这种引用包络也不能等同于整张图的最终绘制范围。
 
-子树完成后，`replaceLayout` 将占位更新为已解析条目。如果未启用局部命名空间，又给子节点设置了与 Scope 相同的 id，子节点会按“后定义覆盖”规则替换占位；收尾时不会再用 Scope 包络覆盖它。未设置 Scope `id` 时，不发布整体引用，而是把子布局传给父级继续汇总。
+子树完成后，`replaceCompiled` 将占位更新为已解析条目。如果未启用局部命名空间，又给子节点设置了与 Scope 相同的 id，子节点会按“后定义覆盖”规则替换占位；收尾时不会再用 Scope 包络覆盖它。未设置 Scope `id` 时，不发布整体引用，而是把子布局传给父级继续汇总。
 
 <SourceLinks
   sources={[
     {
       label: '按布局生成矩形或圆形包络',
-      path: 'packages/kernel/core/src/compile/scope/compile.ts',
-      startLine: 79,
+      path: 'packages/kernel/core/src/compile/scope/envelope/layout.ts',
     },
     {
       label: '父 frame 中的占位条目',
-      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 635,
+      path: 'packages/kernel/reconciler/src/compile/tree/scope/visit.ts',
     },
     {
       label: '最终包络发布与无 id 分支',
-      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 885,
+      path: 'packages/kernel/reconciler/src/compile/tree/scope/visit.ts',
     },
     {
       label: '原位更新与占位身份检查',
-      path: 'packages/kernel/core/src/compile/namespace.ts',
-      startLine: 232,
-      endLine: 257,
+      path: 'packages/kernel/reconciler/src/compile/runtime/namespace.ts',
     },
   ]}
 />
@@ -234,19 +213,14 @@ Scope 把里面的内容当作一组：可以一起放大、旋转，再一起�
     {
       label: 'Clip Definition 解析与路径降级',
       path: 'packages/kernel/core/src/compile/resource/clip.ts',
-      startLine: 231,
-      endLine: 259,
     },
     {
       label: '单次编译内的资源去重',
       path: 'packages/kernel/core/src/compile/resource/clip.ts',
-      startLine: 261,
-      endLine: 276,
     },
     {
       label: 'Group 剪枝、变换与 clipRef',
-      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 657,
+      path: 'packages/kernel/core/src/compile/scope/output.ts',
     },
     {
       label: 'SVG 生成裁剪路径',

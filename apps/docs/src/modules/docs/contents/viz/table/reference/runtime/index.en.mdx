@@ -257,7 +257,7 @@ Top-level `composites` has been removed; use `compile.composites`. `renderTable(
 | `compileTable()`       | Compiles one canonical root Table into Scene, all artifacts, and manifest |
 | `CompileTableOptions`  | Separates `lower` options from Core `compile` options                     |
 | `CompileTableResult`   | `CompileResult` plus the exact-root `manifest`                            |
-| `TableCompileArtifact` | `CompositeCompileArtifact<'table', 'table', TableLayoutManifest>`         |
+| `TableCompileArtifact` | `CompositeArtifact<'table', 'table', TableLayoutManifest>`                |
 
 `compileTable(spec, datasets, options?)` merges `lowerTables()` with `compile.composites`, then calls `compileToScene()` once. Its `manifest` is the same immutable reference as the exact root artifact's `value`; nested Tables, repeated table ids, and unrelated composite artifacts cannot be mistaken for the root.
 

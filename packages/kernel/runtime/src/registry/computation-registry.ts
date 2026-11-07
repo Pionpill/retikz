@@ -34,7 +34,7 @@ type RuntimeComputationRegistryErrorCode =
   | typeof RetikzRuntimeErrorCode.ComputationUnknown
   | typeof RetikzRuntimeErrorCode.ComputationTokenInvalid
   | typeof RetikzRuntimeErrorCode.ComputationCycle
-  | typeof RetikzRuntimeErrorCode.Unknown
+  | typeof RetikzRuntimeErrorCode.SourceUnknown
   | typeof RetikzRuntimeErrorCode.RegistryMismatch;
 
 /** 创建带 Computation context 的 registry contract 错误 */
@@ -121,12 +121,12 @@ export const createRuntimeComputationRegistry = (
 
     const executor = getRuntimeComputationDefinitionExecutor(definition);
     if (input.sources.find(definition.id.owner) === undefined) {
-      throw computationError(RetikzRuntimeErrorCode.Unknown, definition.id, definition.id.owner);
+      throw computationError(RetikzRuntimeErrorCode.SourceUnknown, definition.id, definition.id.owner);
     }
 
     for (const owner of executor.sources) {
       if (input.sources.find(owner.key) !== owner) {
-        throw computationError(RetikzRuntimeErrorCode.Unknown, definition.id, owner);
+        throw computationError(RetikzRuntimeErrorCode.SourceUnknown, definition.id, owner);
       }
     }
 

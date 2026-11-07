@@ -18,7 +18,7 @@ keywords: 'Node、position、Coordinate、OffsetPosition、offset、calc、Node.
 
 ## 决策：新建 `OffsetPositionSchema` 加入 position union
 
-`{ of, offset }`，加入 `Node.position` / `Coordinate.position` / `TargetSchema`（step.to 一并扩，避免"position 能写、target 不能写"的不对称），compile `resolvePosition` 加分支。`of` 接受三种基准点形态（**与 `PolarPosition.origin` 同形**，覆盖 TikZ `calc` 全部基准用法）：
+`{ of, offset }`，加入 `Node.position` / `Coordinate.position` / `TargetSchema`（step.to 一并扩，避免"position 能写、target 不能写"的不对称），compile `evaluatePosition` 加分支。`of` 接受三种基准点形态（**与 `PolarPosition.origin` 同形**，覆盖 TikZ `calc` 全部基准用法）：
 
 - `string`（节点 id）——前向引用拒绝；
 - `Position` 笛卡尔 `[x,y]`——直接坐标基准、无需预定义、无前向引用概念；

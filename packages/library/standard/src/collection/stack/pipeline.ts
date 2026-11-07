@@ -11,7 +11,7 @@ export const compileStack = (source: IRStack, context: CompositeCompileContext):
   const output = typeof arrow === 'object' ? arrow.output : arrow;
   void namespace;
   void type;
-  const { direction } = layout;
+  const { direction, reverseArrows } = layout;
   const { cells, width, height } = layoutLinearCells(items, { ...layout, padding, role: 'stack-cell' }, scope, context);
   const extra: Array<CompositeCompileChild> = [];
   if (border !== undefined) {
@@ -56,7 +56,7 @@ export const compileStack = (source: IRStack, context: CompositeCompileContext):
     const [dx, dy] = linearDirectionVector(direction);
     const half = dx === 0 ? height / 2 : width / 2;
     const separation = (dx === 0 ? width : height) / 4;
-    const sideSign = layout.reverseArrows ? -1 : 1;
+    const sideSign = reverseArrows ? -1 : 1;
     const point = (side: number, outward: number): [number, number] => [
       width / 2 + dx * (half + outward) - dy * side * sideSign,
       height / 2 + dy * (half + outward) + dx * side * sideSign,

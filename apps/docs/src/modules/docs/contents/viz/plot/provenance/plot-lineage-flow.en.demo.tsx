@@ -9,7 +9,7 @@ const Demo: FC = () => (
       position={[-230, 0]}
       cornerRadius={4}
       style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
-      layout={{ minimumSize: { width: 116, height: 64 }, align: 'middle', lineHeight: 17 }}
+      layout={{ minimumSize: { width: 116, height: 64 }, textAlign: 'middle', lineHeight: 17 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Data provenance</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -21,7 +21,7 @@ const Demo: FC = () => (
       position={[-70, 0]}
       cornerRadius={4}
       style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
-      layout={{ minimumSize: { width: 160, height: 76 }, align: 'middle', lineHeight: 16 }}
+      layout={{ minimumSize: { width: 160, height: 76 }, textAlign: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Plot semantics</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -36,7 +36,7 @@ const Demo: FC = () => (
       position={[100, 0]}
       cornerRadius={4}
       style={{ stroke: 'darkviolet', fill: 'darkviolet', opacity: { fill: 0.07 } }}
-      layout={{ minimumSize: { width: 145, height: 64 }, align: 'middle', lineHeight: 17 }}
+      layout={{ minimumSize: { width: 145, height: 64 }, textAlign: 'middle', lineHeight: 17 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>PlotLineageRun</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -48,7 +48,7 @@ const Demo: FC = () => (
       position={[240, 0]}
       cornerRadius={4}
       style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.06 } }}
-      layout={{ minimumSize: { width: 92, height: 64 }, align: 'middle', lineHeight: 17 }}
+      layout={{ minimumSize: { width: 92, height: 64 }, textAlign: 'middle', lineHeight: 17 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Host tools</Text>
       <Text fill="gray" font={{ size: 12 }}>

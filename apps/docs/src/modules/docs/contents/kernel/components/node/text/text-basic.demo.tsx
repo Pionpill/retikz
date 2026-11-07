@@ -4,7 +4,7 @@ import type { FC } from 'react';
 /** 最小 <Text> 用法：在 <Node> 里写一行带样式的行。 */
 const Demo: FC = () => (
   <Layout>
-    <Node id="a" position={[0, 0]} layout={{ align: 'start' }}>
+    <Node id="a" position={[0, 0]} layout={{ textAlign: 'start' }}>
       <Text fill="red" font={{ weight: 'bold' }}>
         Heading
       </Text>

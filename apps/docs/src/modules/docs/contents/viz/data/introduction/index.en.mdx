@@ -19,6 +19,7 @@ Start with Data when a preparation rule is shared by multiple views, or when fie
 | [Field Types](/viz/data/model/field-types) | Understand rows, fields, and field measurement types                   |
 | [Data Model](/viz/data/model)              | Declare field types, formats, category order, or source-field mappings |
 | [Data Transforms](/viz/data/transform)     | Sort, summarize, select representative rows, or annotate statistics    |
+| [Scales](/viz/data/scale)                  | Map inputs to numbers or strings                                       |
 | [Data Traceability](/viz/data/provenance)  | Trace source rows before and after processing into downstream marks    |
 
 ## How data flows
@@ -42,7 +43,7 @@ The pipeline first collects fields a consumer actually uses, then turns external
 
 ## Module boundary
 
-Data produces canonical rows and their field semantics, not primitives or rendered output. Plot owns channels, scales, marks, and layout; Table owns two-dimensional structure and cell presentation. They can read the same Data result without making Data depend on either visualization module.
+Data provides canonical rows, field semantics, and general value mappings without producing marks or rendered output. Scales accept scalar samples directly without generating rows. Plot owns channels, visual scale bindings, marks, and layout; Table owns two-dimensional structure and cell presentation. Both can reuse Data calculations without making Data depend on either visualization module.
 
 When rows only serve one specific chart, its host can still supply them directly at runtime. Put the work in a Data contract only when the field processing or transform semantics need independent reuse, auditing, or persistence.
 

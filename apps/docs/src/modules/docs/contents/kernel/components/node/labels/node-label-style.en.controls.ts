@@ -9,6 +9,19 @@ export const nodeLabelStyleControls = definePreviewControls({
   sections: [
     {
       controls: [
+        {
+          kind: 'select',
+          id: 'textAlign',
+          label: 'Text alignment',
+          defaultValue: 'middle',
+          options: [
+            { value: 'start', label: 'Start' },
+            { value: 'middle', label: 'Middle' },
+            { value: 'end', label: 'End' },
+          ],
+        },
+        { kind: 'range', id: 'lineHeight', label: 'Line height', defaultValue: 20, min: 10, max: 40, step: 1 },
+        { kind: 'range', id: 'maxTextWidth', label: 'Wrap width', defaultValue: 100, min: 40, max: 180, step: 5 },
         { kind: 'switch', id: NodeLabelStyleControlId.Multiline, label: 'Multiline text', defaultValue: true },
         { kind: 'color', id: NodeLabelStyleControlId.TextColor, label: 'Text color', defaultValue: '#2563eb' },
         {
@@ -41,6 +54,9 @@ export const previewControlContract = {
     fontSize: 16,
     opacity: 1,
     multiline: true,
+    textAlign: 'middle',
+    lineHeight: 20,
+    maxTextWidth: 100,
   },
   relatedApis: ['Node.label'],
 } satisfies PreviewControlContract;

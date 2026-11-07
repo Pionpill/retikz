@@ -1,3 +1,3 @@
 export * from './color';
-export * from './constants';
-export * from './types';
+export { ThemeMode } from './constants';
+export type * from './types';

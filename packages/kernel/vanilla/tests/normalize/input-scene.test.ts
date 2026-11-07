@@ -1,6 +1,5 @@
 import type { AnyCompositeDefinition, CompileWarning, IRPath } from '@retikz/core';
 import {
-  compileToScene,
   BuiltinCompileWarningCode,
   CompositeBaseSchema,
   DEFAULT_RESOLVED_THEME,
@@ -8,6 +7,7 @@ import {
   SceneSchema,
   ThemeMode,
 } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it, vi } from 'vitest';
 import { literal, string } from 'zod';
 
@@ -44,14 +44,12 @@ it('Node 与 Coordinate 的 opaque authoring 只进入来源站点，不进入�
       kind: 'node',
       type: 'node',
       sourcePath: 'children[0].scope.children[0].node',
-      owner: { kind: 'node' },
       authoring: marker,
     },
     {
       kind: 'coordinate',
       type: 'coordinate',
       sourcePath: 'children[0].scope.children[1].coordinate',
-      owner: { kind: 'coordinate' },
       authoring: marker,
     },
   ]);

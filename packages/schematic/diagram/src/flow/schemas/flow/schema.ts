@@ -176,7 +176,7 @@ const FlowEntityStyleFieldsSchema = EntitySchema.shape.style.unwrap().pick({
 });
 
 const FlowEntityLayoutFieldsSchema = EntitySchema.shape.layout.unwrap().pick({
-  align: true,
+  textAlign: true,
   lineHeight: true,
   maxTextWidth: true,
   width: true,

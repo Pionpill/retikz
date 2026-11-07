@@ -1,0 +1,192 @@
+import { describe, expect, it } from 'vitest';
+import { literal, number, object, string, union } from 'zod';
+
+import type { IRScene } from '../../../../core/src';
+import { CompositeBaseSchema, defineComposite, defineShape, resolveCompositeRegistry } from '../../../../core/src';
+import { BUILTIN_PATHS } from '../../../../core/src/providers/path';
+import { BUILTIN_SHAPES } from '../../../../core/src/providers/shape/shape';
+import { compileToScene } from '../../../src/compile';
+
+describe('提供者键契约', () => {
+  it('包含点号的命名空间与类型独立注册并编译到对应定义', () => {
+    const first = defineComposite({
+      namespace: 'a.b',
+      type: 'c',
+      schema: CompositeBaseSchema.extend({ namespace: literal('a.b'), type: literal('c') }),
+      compile: () => ({ children: [{ type: 'node', position: [0, 0], text: 'first' }] }),
+    });
+    const second = defineComposite({
+      namespace: 'a',
+      type: 'b.c',
+      schema: CompositeBaseSchema.extend({ namespace: literal('a'), type: literal('b.c') }),
+      compile: () => ({ children: [{ type: 'node', position: [40, 0], text: 'second' }] }),
+    });
+    const registry = resolveCompositeRegistry([first, second]);
+
+    expect(resolveCompositeRegistry().size).toBe(0);
+    expect(registry.get('a.b')?.get('c')).toBe(first);
+    expect(registry.get('a')?.get('b.c')).toBe(second);
+    expect(() => resolveCompositeRegistry([first, second, { ...first }])).toThrow(/duplicate composite registration/);
+    expect(
+      compileToScene(
+        {
+          version: 1,
+          type: 'scene',
+          children: [
+            { namespace: 'a.b', type: 'c' },
+            { namespace: 'a', type: 'b.c' },
+          ],
+        },
+        { composites: [first, second] },
+      ).scene,
+    ).toEqual(
+      compileToScene({
+        version: 1,
+        type: 'scene',
+        children: [
+          { type: 'node', position: [0, 0], text: 'first' },
+          { type: 'node', position: [40, 0], text: 'second' },
+        ],
+      }).scene,
+    );
+  });
+
+  it('形状定义声明其注册表名称', () => {
+    const shapeNames = [...BUILTIN_SHAPES.values()].map(def => def.name).sort();
+
+    expect(shapeNames).toContain('rectangle');
+    expect(shapeNames).toContain('ellipse');
+    expect(new Set(shapeNames).size).toBe(shapeNames.length);
+  });
+
+  it('自定义形状使用定义名称而不是记录键', () => {
+    const ring = defineShape({
+      name: 'ring',
+      paramsSchema: object({}),
+      computeCircumscribedGeometry: () => ({ halfWidth: 10, halfHeight: 10 }),
+      computeBoundaryPoint: rect => [rect.x + rect.width / 2, rect.y],
+      resolveAnchor: (rect, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
+      emit: () => [{ type: 'ellipse', cx: 0, cy: 0, rx: 10, ry: 10 }],
+    });
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [{ type: 'node', id: 'A', shape: 'ring', position: [0, 0], text: '' }],
+    };
+
+    expect(() => compileToScene(ir, { shapes: [ring] }).scene).not.toThrow();
+  });
+
+  it('自定义形状不能覆盖内置名称', () => {
+    const rectangle = defineShape({
+      name: 'rectangle',
+      paramsSchema: object({}),
+      computeCircumscribedGeometry: () => ({ halfWidth: 1, halfHeight: 1 }),
+      computeBoundaryPoint: rect => [rect.x + rect.width / 2, rect.y],
+      resolveAnchor: (rect, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
+      emit: () => [],
+    });
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [{ type: 'node', id: 'A', shape: 'rectangle', position: [0, 0], text: '' }],
+    };
+
+    expect(() => compileToScene(ir, { shapes: [rectangle] }).scene).toThrow(
+      /duplicate shape registration: "rectangle"/,
+    );
+  });
+
+  it('路径类型定义由定义名称作为键控', () => {
+    const pathNames = [...BUILTIN_PATHS.values()].map(def => def.name).sort();
+
+    expect(pathNames).toEqual(['stroke']);
+  });
+
+  it('复合定义将命名空间和类型声明为提供者键', () => {
+    const schema = CompositeBaseSchema.extend({
+      namespace: literal('demo'),
+      type: literal('badge'),
+    });
+    const badge = defineComposite({
+      namespace: 'demo',
+      type: 'badge',
+      schema,
+      compile: () => ({ children: [{ type: 'node', id: 'badge', position: [0, 0], text: 'B' }] }),
+    });
+    const ir: IRScene = { version: 1, type: 'scene', children: [{ namespace: 'demo', type: 'badge' }] };
+
+    expect(() => compileToScene(ir, { composites: [badge] }).scene).not.toThrow();
+  });
+
+  it('在解析组件输入时执行 schema 转换并编译转换结果', () => {
+    const badge = defineComposite({
+      namespace: 'demo',
+      type: 'badge',
+      schema: CompositeBaseSchema.extend({
+        namespace: literal('demo'),
+        type: literal('badge'),
+        text: string(),
+      }).transform(node => ({ ...node, text: node.text.toUpperCase() })),
+      compile: node => ({ children: [{ type: 'node', position: [0, 0], text: node.text }] }),
+    });
+    const scene = compileToScene(
+      { version: 1, type: 'scene', children: [{ namespace: 'demo', type: 'badge', text: 'hello' }] },
+      { composites: [badge] },
+    ).scene;
+    const expected = compileToScene({
+      version: 1,
+      type: 'scene',
+      children: [{ type: 'node', position: [0, 0], text: 'HELLO' }],
+    }).scene;
+
+    expect(scene).toEqual(expected);
+    expect(() =>
+      compileToScene(
+        { version: 1, type: 'scene', children: [{ namespace: 'demo', type: 'badge', text: 123 }] },
+        { composites: [badge] },
+      ),
+    ).toThrow(/payload validation/);
+  });
+
+  it('复合对象联合声明一个共享提供者键', () => {
+    const schema = union([
+      CompositeBaseSchema.extend({
+        namespace: literal('demo'),
+        type: literal('badge'),
+        variant: literal('text'),
+        text: string(),
+      }),
+      CompositeBaseSchema.extend({
+        namespace: literal('demo'),
+        type: literal('badge'),
+        variant: literal('count'),
+        count: number(),
+      }),
+    ]);
+    const badge = defineComposite({
+      namespace: 'demo',
+      type: 'badge',
+      schema,
+      compile: node => ({
+        children: [
+          {
+            type: 'node',
+            position: [0, 0],
+            text: node.variant === 'text' ? node.text : String(node.count),
+          },
+        ],
+      }),
+    });
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        { namespace: 'demo', type: 'badge', variant: 'text', text: 'A' },
+        { namespace: 'demo', type: 'badge', variant: 'count', count: 2 },
+      ],
+    };
+
+    expect(() => compileToScene(ir, { composites: [badge] }).scene).not.toThrow();
+  });
+});

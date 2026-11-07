@@ -1,6 +1,8 @@
 # Standard Shared
 
-`shared/` 是无依赖共享层，承载跨 schemas / contract / providers / resolve / pipeline / compile 复用的稳定词汇、纯函数、映射和工具类型。
+包级 `src/shared/` 是无依赖共享层，承载跨 schemas / contract / providers / resolve / pipeline / compile 复用的稳定词汇、纯函数、映射和工具类型。
+
+领域内可建立 `<domain>/shared/`，承载该领域已有多个消费方的基础类型与工具；可以依赖该领域允许的下层契约，不得反向依赖领域功能模块或整合入口，包括 type-only 导入。领域状态、调度与专属算法留在具体 owner，不因复用而整体搬入共享层。
 
 进入 `shared/` 的内容必须已有明确的跨 owner 或跨层复用；单一 owner 专用内容留在 owner 内，预期未来可能复用不构成 shared 所有权。
 
@@ -11,7 +13,7 @@
 - 无状态映射、索引和查表数据。
 - 通用类型工具：`ValueOf`、`AssertEqual` 等。
 
-不要放具体 IR schema 私有常量、provider definition、compile 状态、renderer primitive、业务 registry，也不要依赖 `schemas` 及以上层。
+包级共享层不要放具体 IR schema 私有常量、provider definition、compile 状态、renderer primitive、业务 registry，也不要依赖 `schemas` 及以上层。
 
 ## 组织
 

@@ -1,5 +1,6 @@
-import type { CompileProvenance, Scene } from '@retikz/core';
+import type { Scene } from '@retikz/core';
 
+import type { CompileProvenanceSnapshot } from '../compile/provenance';
 import { CORE_SOURCE_KEY } from '../constants';
 import { RetikzReconcilerError, RetikzReconcilerErrorCode } from '../error';
 import type { RuntimeScene, RuntimeScenePrimitive, SceneRuntimeNode, SceneRuntimeSnapshot } from '../scene';
@@ -31,18 +32,13 @@ const createFullTopology = (
 ): ReadonlyArray<SceneRuntimeNode> => {
   const topology: Array<SceneRuntimeNode> = [];
 
-  const visit = (
-    items: ReadonlyArray<RuntimeScenePrimitive>,
-    parent: SceneRuntimeNode['parent'],
-    parentPath: ReadonlyArray<number>,
-  ): void => {
+  const visit = (items: ReadonlyArray<RuntimeScenePrimitive>, parent: SceneRuntimeNode['parent']): void => {
     items.forEach((primitive, order) => {
-      const primitivePath = Object.freeze([...parentPath, order]);
-      const record = metadata.get(primitivePath.join('.'));
+      const record = metadata.get(primitive);
       if (record === undefined) {
         throw new RetikzReconcilerError(
           RetikzReconcilerErrorCode.Compile,
-          `createFullSceneRuntimeSnapshot: missing primitive identity at ${primitivePath.join('.')}`,
+          'createFullSceneRuntimeSnapshot: missing primitive identity',
         );
       }
 
@@ -52,15 +48,15 @@ const createFullTopology = (
           semanticOwner: record.semanticOwner,
           parent,
           order,
-          primitivePath,
+          primitivePath: record.primitivePath,
           ...(primitive.id === undefined ? {} : { publicId: primitive.id }),
         }),
       );
-      if (primitive.type === 'group') visit(primitive.children, record.identity, primitivePath);
+      if (primitive.type === 'group') visit(primitive.children, record.identity);
     });
   };
 
-  visit(primitives, rootIdentity, []);
+  visit(primitives, rootIdentity);
 
   return Object.freeze(topology);
 };
@@ -69,7 +65,7 @@ const createFullTopology = (
 export const createFullSceneRuntimeSnapshot = (
   scene: Scene,
   revision: SceneRevision,
-  provenance: CompileProvenance,
+  provenance: CompileProvenanceSnapshot,
 ): SceneRuntimeSnapshot => {
   const runtimeScene = freezeComputationOutput({
     ...scene,
@@ -81,6 +77,9 @@ export const createFullSceneRuntimeSnapshot = (
     revision,
     scene: runtimeScene,
     root: rootIdentity,
-    topology: createFullTopology(runtimeScene.primitives, createPrimitiveIdentityIndex(provenance, revision)),
+    topology: createFullTopology(
+      runtimeScene.primitives,
+      createPrimitiveIdentityIndex(runtimeScene.primitives, provenance, revision),
+    ),
   });
 };

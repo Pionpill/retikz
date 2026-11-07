@@ -124,6 +124,7 @@ const publishablePackageExpectations = {
       '@retikz/foundation': 'workspace:^',
       '@retikz/plot': 'workspace:^',
       '@retikz/plot-vanilla': 'workspace:^',
+      '@retikz/reconciler': 'workspace:^',
       '@retikz/vanilla': 'workspace:^',
     },
   },
@@ -149,7 +150,11 @@ describe('已发布的 Chart 发布组边界', () => {
     expect(manifest.dependencies).toEqual(publishablePackageExpectations.chart.dependencies);
     expect(manifest.files).toEqual(['LICENSE', 'README.md', 'dist/**/*']);
     expect(manifest.peerDependencies).toBeUndefined();
-    expect(manifest.devDependencies).toEqual({ ...commonDevDependencies, '@retikz/extension': 'workspace:^' });
+    expect(manifest.devDependencies).toEqual({
+      ...commonDevDependencies,
+      '@retikz/extension': 'workspace:^',
+      '@retikz/reconciler': 'workspace:^',
+    });
     expect(manifest.exports).toEqual({
       '.': { types: './src/index.ts', default: './src/index.ts' },
       './point': { types: './src/point/index.ts', default: './src/point/index.ts' },

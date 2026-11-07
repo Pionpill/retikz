@@ -1,5 +1,6 @@
 import type { IRScene, ScenePrimitive } from '@retikz/core';
-import { compileToScene, visitSceneContent } from '@retikz/core';
+import { visitSceneContent } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { ribbonPathDefinition } from '../../src/ribbon';

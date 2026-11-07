@@ -70,6 +70,7 @@
     "@retikz/core": "workspace:^",
     "@retikz/data": "workspace:^",
     "@retikz/foundation": "workspace:^",
+    "@retikz/reconciler": "workspace:^",
     "@retikz/table": "workspace:*",
     "@retikz/vanilla": "workspace:^"
   },

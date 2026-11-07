@@ -1,15 +1,54 @@
-import { resolveFont, resolveFontSize } from './font';
+import type { TextInlineSegment, TextFont, TextContentLineStyle } from '../../contract';
+import { combineOpacity } from '../style';
+import { resolveFont, resolveFontSize, resolveFontWeight, resolveTextLineHeight } from './font';
 import { isMathSegment, parseInlineSegments } from './inline';
 import type {
-  CanonicalInlineSegment,
-  CanonicalFont,
-  CanonicalTextLineStyle,
+  ParsedInlineSegments,
   TextSegmentColorSource,
   InlineSegmentColorSource,
-  TextLineResolution,
+  CanonicalTextLine,
   TextLineResolveContext,
   ColorResolvedTextLine,
+  CanonicalTextBlock,
+  InputTextBlockResolution,
+  TextBlockResolveContext,
 } from './types';
+
+/** 统一解析文本块的作者行，硬换行保留到共享布局阶段 */
+export const resolveTextBlock = (
+  source: InputTextBlockResolution,
+  context: TextBlockResolveContext,
+): CanonicalTextBlock => {
+  const { text, font: sourceFont, textColor, textAlign, lineHeight, maxTextWidth } = source;
+  const { scale = { x: 1, y: 1 } } = context;
+  const inheritedFont = resolveFont(sourceFont, context);
+  const fontScale = Math.min(scale.x, scale.y);
+  const font = { ...inheritedFont, size: inheritedFont.size * fontScale };
+  const lines = (typeof text === 'string' ? [text] : text).map(line => {
+    const resolved = resolveTextLine(line, { ...context, inheritedFont });
+    return {
+      ...resolved,
+      segments: resolved.segments.map(segment =>
+        isMathSegment(segment)
+          ? { ...segment, fontSize: segment.fontSize * fontScale }
+          : { ...segment, font: { ...segment.font, size: segment.font.size * fontScale } },
+      ),
+      ...(resolved.style?.font?.size === undefined
+        ? {}
+        : {
+            style: { ...resolved.style, font: { ...resolved.style.font, size: resolved.style.font.size * fontScale } },
+          }),
+    };
+  });
+  return {
+    font,
+    lines,
+    color: textColor,
+    textAlign: textAlign ?? 'middle',
+    lineHeight: lineHeight === undefined ? resolveTextLineHeight(undefined, font.size) : lineHeight * scale.y,
+    maxTextWidth: maxTextWidth === undefined ? undefined : maxTextWidth * scale.x,
+  };
+};
 
 const TEXT_TEX_PARSE_ERROR = 'TEXT_TEX_PARSE_ERROR';
 
@@ -17,7 +56,7 @@ const TEXT_TEX_PARSE_ERROR = 'TEXT_TEX_PARSE_ERROR';
 const resolveExplicitStyle = (
   source: Exclude<ColorResolvedTextLine, string>,
   context: TextLineResolveContext,
-): CanonicalTextLineStyle => ({
+): TextContentLineStyle => ({
   fill: source.fill,
   opacity: source.opacity,
   font:
@@ -25,6 +64,7 @@ const resolveExplicitStyle = (
       ? undefined
       : {
           ...source.font,
+          weight: resolveFontWeight(source.font.weight),
           size:
             source.font.size === undefined
               ? undefined
@@ -38,9 +78,9 @@ const resolveExplicitStyle = (
 /** 让文字或公式片段继承行级字体，并将字号换算为数值 */
 const resolveSegment = (
   segment: InlineSegmentColorSource,
-  inheritedFont: CanonicalFont,
+  inheritedFont: TextFont,
   context: TextLineResolveContext,
-): CanonicalInlineSegment => {
+): TextInlineSegment => {
   if (isMathSegment(segment))
     return {
       ...segment,
@@ -59,20 +99,25 @@ const resolveSegment = (
   return resolved;
 };
 
-/** 解析单行文字与公式片段，补齐片段字体和行级外观，并保留纯文本内容与混排标记 */
-export const resolveTextLine = (source: ColorResolvedTextLine, context: TextLineResolveContext): TextLineResolution => {
+/**
+ * 解析单行文字与公式片段，补齐片段字体和行级外观，并保留纯文本内容与混排标记
+ * @param parsed 调用方为确定块级字体策略已完成的分段结果；省略时在本函数内分段
+ */
+const resolveTextLine = (
+  source: ColorResolvedTextLine,
+  context: TextLineResolveContext,
+  parsed: ParsedInlineSegments = typeof source === 'string'
+    ? parseInlineSegments(source, context.gatingOn)
+    : 'segments' in source
+      ? { segments: source.segments, hasMath: source.segments.some(isMathSegment), warn: false }
+      : parseInlineSegments(source.text, context.gatingOn),
+): CanonicalTextLine => {
   const styled = typeof source === 'object' ? source : undefined;
-  const parsed =
-    typeof source === 'string'
-      ? parseInlineSegments(source, context.gatingOn)
-      : 'segments' in source
-        ? { segments: source.segments, hasMath: source.segments.some(isMathSegment), warn: false }
-        : parseInlineSegments(source.text, context.gatingOn);
   if (parsed.warn && context.warn !== undefined) {
     context.warn(TEXT_TEX_PARSE_ERROR, context.warningMessage ?? 'Unbalanced `$` in text.');
   }
 
-  const segments: Array<CanonicalInlineSegment> = [];
+  const segments: Array<TextInlineSegment> = [];
   let plainText = '';
   if (parsed.segments.length > 0) {
     const inheritedFont = resolveFont(styled?.font, context);
@@ -80,7 +125,7 @@ export const resolveTextLine = (source: ColorResolvedTextLine, context: TextLine
       const resolved = resolveSegment(segment, inheritedFont, context);
       if (styled !== undefined) {
         resolved.fill = segment.fill ?? styled.fill;
-        resolved.opacity = segment.opacity ?? styled.opacity;
+        resolved.opacity = combineOpacity(segment.opacity, styled.opacity);
       }
       segments.push(resolved);
       if (!isMathSegment(resolved)) plainText += resolved.text;

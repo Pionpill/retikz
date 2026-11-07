@@ -1,44 +1,7 @@
 import type { GroupPrimitive, ScenePrimitive } from '../../../contract';
 import type { CanonicalPath } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
-import type { PaintResolver } from '../../resource';
-import type { PathBaseProps } from './split';
-import { bboxCenter, buildPathTransforms, projectPathTransformPoints } from './transform';
-
-/** 已物化默认值后的 PathPrimitive 公共样式属性 */
-export type PathBasePropsWithStrokeWidth = PathBaseProps & {
-  /** 最终描边宽度 */
-  strokeWidth: number;
-};
-
-/** path 输出样式物化上下文 */
-type EmitPathBasePropsContext = {
-  /** IRPaint 物化器 */
-  resolvePaint: PaintResolver;
-};
-
-/** 将已解析 path 样式物化为 PathPrimitive 公共属性 */
-export const emitPathBaseProps = (
-  path: CanonicalPath,
-  context: EmitPathBasePropsContext,
-): PathBasePropsWithStrokeWidth => {
-  const { resolvePaint } = context;
-  return {
-    stroke: resolvePaint(path.stroke) ?? 'currentColor',
-    strokeWidth: path.strokeWidth,
-    fill: resolvePaint(path.fill) ?? 'none',
-    fillRule: path.fillRule,
-    dashPattern: path.dashPattern,
-    dashOffset: path.dashOffset,
-    lineCap: path.lineCap,
-    lineJoin: path.lineJoin,
-    opacity: path.opacity,
-    fillOpacity: path.fillOpacity,
-    strokeOpacity: path.strokeOpacity,
-    shadow: path.shadow,
-    blendMode: path.blendMode,
-  };
-};
+import { calculatePathBoundsCenter, lowerPathTransforms, applyPathTransforms } from './transform';
 
 /** path emit 最终输出包装输入 */
 type InputPathPrimitiveWrapping = {
@@ -55,14 +18,14 @@ type InputPathPrimitiveWrapping = {
 };
 
 /** 路径绘制进度保留在主体上，其余动画随整个宿主输出播放 */
-const assignPathAnimations = (owner: ScenePrimitive, primitive: ScenePrimitive, path: CanonicalPath): void => {
-  if (path.animations === undefined) return;
+const assignPathAnimations = (owner: ScenePrimitive, primitive: ScenePrimitive, canon: CanonicalPath): void => {
+  if (canon.animations === undefined) return;
   if (owner === primitive) {
-    owner.animations = path.animations;
+    owner.animations = canon.animations;
     return;
   }
-  const drawing = path.animations.filter(track => track.property === 'pathDraw');
-  const remaining = path.animations.filter(track => track.property !== 'pathDraw');
+  const drawing = canon.animations.filter(track => track.property === 'pathDraw');
+  const remaining = canon.animations.filter(track => track.property !== 'pathDraw');
   if (drawing.length > 0) primitive.animations = drawing;
   if (remaining.length > 0) owner.animations = remaining;
 };
@@ -78,16 +41,19 @@ export const wrapPathPrimitiveOutput = ({
   boundsPoints,
   round,
 }: InputPathPrimitiveWrapping) => {
+  const sourcePrimitive = primitive;
+  primitive = { ...primitive };
+  bodyPrims = bodyPrims.map(child => (child === sourcePrimitive ? primitive : child));
   if ((path.rotate !== undefined || path.scale !== undefined) && boundsPoints.length > 0) {
-    const center = bboxCenter(boundsPoints);
-    const transforms = buildPathTransforms({ rotate: path.rotate, scale: path.scale, center, round });
+    const center = calculatePathBoundsCenter(boundsPoints);
+    const transforms = lowerPathTransforms({ rotate: path.rotate, scale: path.scale, center, round });
     if (transforms.length > 0) {
       const group: GroupPrimitive = { type: 'group', transforms, children: bodyPrims };
       if (path.id !== undefined) group.id = path.id;
       if (path.meta !== undefined) group.meta = path.meta;
       assignPathAnimations(group, primitive, path);
 
-      return { primitives: [group], boundsPoints: projectPathTransformPoints(boundsPoints, transforms) };
+      return { primitives: [group], boundsPoints: applyPathTransforms(boundsPoints, transforms) };
     }
   }
 

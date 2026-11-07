@@ -154,7 +154,7 @@ const Demo: FC = () => {
         cornerRadius={6}
         text={LEGEND}
         style={{ stroke: 'lightgray', dashed: true }}
-        layout={{ padding: { x: 12, y: 8 }, align: 'start' }}
+        layout={{ padding: { x: 12, y: 8 }, textAlign: 'start' }}
       />
     </Layout>
   );

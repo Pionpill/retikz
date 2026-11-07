@@ -4,21 +4,21 @@ import { DEFAULT_EPSILON } from '@retikz/math';
 import type {
   CanonicalFlowLayoutOptions,
   FlowBendRoute,
-  InputFlowLayoutElement,
   FlowLayoutElementOutput,
-  InputFlowLayoutComputation,
   FlowLayoutExecutionContext,
-  InputFlowLayoutRelation,
   FlowLayoutRelationOutput,
   FlowLayoutRoute,
+  InputFlowLayoutComputation,
+  InputFlowLayoutElement,
+  InputFlowLayoutRelation,
 } from '../../contract';
 import { FlowRoutingKind } from '../../shared';
 import { FLOW_BEND_ANGLES, doFlowBoundsOverlap, findFlowCurveObstacleIntervals } from '../../shared/geometry';
 import {
   createFlowBezierBaseline,
-  selectFlowBezierRoute,
-  isFlowAutomaticRouting,
   flowPriorLabelReservations,
+  isFlowAutomaticRouting,
+  selectFlowBezierRoute,
 } from './bezier';
 import { allocateFlowEndpoints, resolveFlowEndpointPosition } from './endpoints';
 import {
@@ -212,7 +212,7 @@ export const routeFlowRelations = (
       const first = candidates[0];
       if (first.points.length === 2) continue;
 
-      const obstacles = flowRelationObstacles(input, { elements }, relation);
+      const obstacles = flowRelationObstacles(input, elements, relation);
       const labels = flowPriorLabelReservations(input.relations, routed, relationIndex);
       let best = { route: first, ...evaluateFlowOrthogonalConflicts(first, relation, obstacles, labels) };
 
@@ -240,7 +240,7 @@ export const routeFlowRelations = (
         initialBezier,
         relation,
         scopeLayout,
-        flowRelationObstacles(input, { elements }, relation),
+        flowRelationObstacles(input, elements, relation),
         flowPriorLabelReservations(input.relations, routed, relationIndex),
       );
       continue;
@@ -251,7 +251,7 @@ export const routeFlowRelations = (
     const initial = routed[relationIndex].route;
     if (initial.kind !== 'bend' || !('bendAngle' in initial)) continue;
 
-    const obstacles = flowRelationObstacles(input, { elements }, relation);
+    const obstacles = flowRelationObstacles(input, elements, relation);
     const otherOutputs = routed.filter(
       (other, otherIndex) =>
         other.labelBounds !== undefined &&

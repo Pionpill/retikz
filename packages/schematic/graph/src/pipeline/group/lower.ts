@@ -83,7 +83,7 @@ const captionNode = (text: IRGroupCaptionText, kind: 'title' | 'description'): I
       padding: 0,
       margin: 0,
       minimumSize: 0,
-      ...(text.align === undefined ? {} : { align: text.align }),
+      ...(text.align === undefined ? {} : { textAlign: text.align }),
       ...(text.lineHeight === undefined ? {} : { lineHeight: text.lineHeight }),
       ...(text.maxTextWidth === undefined ? {} : { maxTextWidth: text.maxTextWidth }),
     },

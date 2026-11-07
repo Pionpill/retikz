@@ -78,7 +78,8 @@ const registry = {
   ...SCHEMA_REGISTRY,
   ...Object.fromEntries(
     Object.entries(shared).flatMap(([name, localization]) => {
-      const schema = coreSchemas[name as keyof typeof coreSchemas];
+      const schema =
+        name in SCHEMA_REGISTRY ? SCHEMA_REGISTRY[name].schema : coreSchemas[name as keyof typeof coreSchemas];
       return schema instanceof z.ZodType ? [[name, { schema, localizations: { zh: localization } }]] : [];
     }),
   ),

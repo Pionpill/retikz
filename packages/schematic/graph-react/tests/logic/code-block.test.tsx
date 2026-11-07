@@ -6,15 +6,11 @@ import {
   defineGraphTheme,
 } from '@retikz/graph';
 import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
-import {
-  createProcessingController,
-  normalizeScene,
-  prepareProcessingInput,
-  processToStaticInputResult,
-} from '@retikz/vanilla';
+import { createProcessingController, normalizeScene, processToStaticInputResult } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
+import { prepareProcessingInput } from '../../../../kernel/vanilla/src/processing/prepare';
 import { synchronousAdapters } from '../helpers/synchronous-adapters';
 
 const schema = CodeBlockPropsSchema.safeExtend({ namespace: literal('test'), type: literal('service') });

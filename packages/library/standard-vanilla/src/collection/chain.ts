@@ -98,29 +98,26 @@ export const chainInputEmbedAdapter: SynchronousInputEmbedAdapter<InputChain> = 
       dataExpand,
       ...input
     } = props;
-    void sourceItems;
-    void sourceData;
-    void sourceSkeleton;
     const common = {
       namespace: 'standard',
       type: 'chain',
       ...input,
       ...(defaultConnection === undefined ? {} : { defaultConnection: normalizeConnection(defaultConnection) }),
     } as const;
-    if (props.items === undefined)
+    if (sourceItems === undefined)
       return {
         node: createChain({
           ...common,
-          ...(props.data !== undefined
-            ? { data: props.data, ...(dataExpand === undefined ? {} : { dataExpand }) }
-            : { skeleton: props.skeleton }),
+          ...(sourceData !== undefined
+            ? { data: sourceData, ...(dataExpand === undefined ? {} : { dataExpand }) }
+            : { skeleton: sourceSkeleton }),
         }),
         providerDependencies: {
-          roots: [chainProvider.key, ...(props.data !== undefined ? dataCellDependencies.roots : [])],
+          roots: [chainProvider.key, ...(sourceData !== undefined ? dataCellDependencies.roots : [])],
           providers: [
             chainProvider,
             pathClipProvider,
-            ...(props.data !== undefined ? dataCellDependencies.providers : []),
+            ...(sourceData !== undefined ? dataCellDependencies.providers : []),
           ],
         },
       };
@@ -138,7 +135,7 @@ export const chainInputEmbedAdapter: SynchronousInputEmbedAdapter<InputChain> = 
       }
     };
 
-    collect(props.items);
+    collect(sourceItems);
     const normalized = normalizeCells(cells, context, chainProvider);
     let cursor = 0;
     const rebuild = (items: Array<InputChainItem>): Array<IRChainItem> =>
@@ -151,16 +148,17 @@ export const chainInputEmbedAdapter: SynchronousInputEmbedAdapter<InputChain> = 
         if (item.kind === 'cell') return { kind: 'cell', ...normalized.cells[cursor++] };
 
         const { defaultConnection: blockConnection, ...block } = item;
+        const { branches } = block;
 
         return {
           ...block,
           ...(blockConnection === undefined ? {} : { defaultConnection: normalizeConnection(blockConnection) }),
-          branches: item.branches.map(branch => ({ items: rebuild(branch.items) })),
+          branches: branches.map(branch => ({ items: rebuild(branch.items) })),
         };
       });
 
     return {
-      node: createChain({ ...common, items: rebuild(props.items) }),
+      node: createChain({ ...common, items: rebuild(sourceItems) }),
       providerDependencies: normalized.providerDependencies,
       ...(normalized.authoringSites.length ? { authoringSites: normalized.authoringSites } : {}),
     };

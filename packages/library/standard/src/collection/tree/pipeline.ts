@@ -1,16 +1,16 @@
 import type {
+  CompositeCompileContext,
+  CompositeCompileResult,
   IRChild,
   IRPath,
   IRStep,
   LayoutChildResult,
-  CompositeCompileContext,
-  CompositeCompileResult,
 } from '@retikz/core';
 import { intrinsicLayoutProposal, requiredLayoutProbe, resolveLayoutAxisSize } from '@retikz/layout/compose';
 
 import { RetikzStandardError, RetikzStandardErrorCode } from '../../shared/errors';
-import { resolveTree } from './resolve';
 import type { CanonicalTreeItem } from './resolve';
+import { resolveTree } from './resolve';
 import type { IRTree } from './schema';
 
 /** 测量后的节点与所属子树包络 */
@@ -134,15 +134,15 @@ export const compileTree = (source: IRTree, context: CompositeCompileContext): C
   const paths: Array<IRPath> = [];
   for (const item of all) {
     if (item.item === null) continue;
-    const { result } = item;
-    const output = item.item.node.id === undefined ? anonymousNodes : nodes;
+    const { result, item: treeItem, x, y } = item;
+    const output = treeItem.node.id === undefined ? anonymousNodes : nodes;
     output.push(
       context.replay(result, {
         transforms: [
           {
             kind: 'translate',
-            x: item.x - result.slotSize.width / 2 - result.allocationBounds.x,
-            y: item.y - result.slotSize.height / 2 - result.allocationBounds.y,
+            x: x - result.slotSize.width / 2 - result.allocationBounds.x,
+            y: y - result.slotSize.height / 2 - result.allocationBounds.y,
           },
         ],
       }),
@@ -187,8 +187,6 @@ export const compileTree = (source: IRTree, context: CompositeCompileContext): C
     });
   return {
     allocationBounds,
-    children: [
-      context.createScope(scope, children, [{ id: 'container', role: 'container', bounds: allocationBounds }]),
-    ],
+    children: [context.createScope(scope, children)],
   };
 };

@@ -1,4 +1,23 @@
+import type { TextBlockContent, TextContentLine, TextFont } from '../../contract';
 import type { IRFont, IRLine, IRMathSegment, IRTextSegment, IRSegmentedLine } from '../../schemas';
+
+/** 文本解析结果，补充供节点编译选择输出形式的作者行信息 */
+export type CanonicalTextBlock = Omit<TextBlockContent, 'lines'> &
+  Readonly<{
+    /** 已解析并保留内部分类信息的作者行 */
+    lines: Array<CanonicalTextLine>;
+  }>;
+
+/** 公共行内容与解析阶段确定的内部分类信息 */
+export type CanonicalTextLine = TextContentLine &
+  Readonly<{
+    /** 拼接后的纯文本，不含公式 */
+    plainText: string;
+    /** 是否包含公式 */
+    hasMath: boolean;
+    /** 是否需要按片段输出 */
+    mixed: boolean;
+  }>;
 
 type WithStringFill<T> = T extends unknown ? Omit<T, 'fill'> & { fill?: string } : never;
 
@@ -32,6 +51,28 @@ export type ColorResolvedTextLine =
 /** 已解析颜色的单行或多行标签文本 */
 export type LabelTextColorSource = string | Array<ColorResolvedTextLine>;
 
+/** 共享文本块解析输入，颜色已由宿主确定 */
+export type InputTextBlockResolution = {
+  /** 作者文本内容 */
+  text: LabelTextColorSource;
+  /** 块字体覆盖 */
+  font?: IRFont;
+  /** 块文字主色 */
+  textColor?: string;
+  /** 块内行对齐 */
+  textAlign?: CanonicalTextBlock['textAlign'];
+  /** 作者行高 */
+  lineHeight?: number;
+  /** 作者宽度限制 */
+  maxTextWidth?: number;
+};
+
+/** 字体继承与宿主提供的文本缩放 */
+export type TextBlockResolveContext = TextLineResolveContext & {
+  /** 本阶段需要应用的轴向缩放，省略表示宿主在外层执行变换 */
+  scale?: { x: number; y: number };
+};
+
 /** 字号解析所需的根字号与继承字号 */
 export type FontSizeResolveContext = Readonly<{
   /** 字号预设与 rem 使用的基准字号 */
@@ -40,37 +81,13 @@ export type FontSizeResolveContext = Readonly<{
   inheritedFontSize: number;
 }>;
 
-/** 已确定为数值字号的字体 */
-export type CanonicalFont = Readonly<{
-  /** 数值字号 */
-  size: number;
-  /** 字体族 */
-  family?: IRFont['family'];
-  /** 字重 */
-  weight?: IRFont['weight'];
-  /** 字形 */
-  style?: IRFont['style'];
-}>;
-
 /** 字体继承解析上下文 */
 export type FontResolveContext = Readonly<{
   /** 字号预设与 rem 使用的基准字号 */
   rootFontSize: number;
   /** 缺省字段的继承字体 */
-  inheritedFont: CanonicalFont;
+  inheritedFont: TextFont;
 }>;
-
-/** 已完成字体继承并换算字号的文字片段 */
-type CanonicalTextSegment = Omit<TextSegmentColorSource, 'font'> &
-  Readonly<{
-    /** 当前文本片段完成继承与默认值补全的字体 */
-    font: CanonicalFont;
-  }>;
-
-/** 已完成字号解析的文字或公式片段 */
-export type CanonicalInlineSegment =
-  | CanonicalTextSegment
-  | (Omit<MathSegmentColorSource, 'fontSize'> & { /** 有效数学字号 */ fontSize: number });
 
 /** 字符串拆分后的文字与公式片段 */
 export type ParsedInlineSegments = Readonly<{
@@ -80,30 +97,6 @@ export type ParsedInlineSegments = Readonly<{
   hasMath: boolean;
   /** 是否遇到未闭合公式分隔符 */
   warn: boolean;
-}>;
-
-/** 纯文本布局所需的显式行样式 */
-export type CanonicalTextLineStyle = Readonly<{
-  /** 显式行填充色 */
-  fill?: string;
-  /** 显式行不透明度 */
-  opacity?: number;
-  /** 仅保留显式声明的字体字段，字号已换算为数值，不补入继承值 */
-  font?: Partial<CanonicalFont>;
-}>;
-
-/** 单行内容、字体与样式的解析结果 */
-export type TextLineResolution = Readonly<{
-  /** 已继承行级外观并确定字体的片段 */
-  segments: Array<CanonicalInlineSegment>;
-  /** 按顺序拼接文字片段的内容，不含公式 */
-  plainText: string;
-  /** 是否包含公式片段 */
-  hasMath: boolean;
-  /** 是否按片段布局；含公式或显式使用 segments 时为 true */
-  mixed: boolean;
-  /** 仅包含作者显式写出的行级样式 */
-  style?: CanonicalTextLineStyle;
 }>;
 
 /** 文本行解析所需的字体与诊断配置 */
@@ -116,3 +109,15 @@ export type TextLineResolveContext = FontResolveContext &
     /** 未闭合公式分隔符的自定义警告文案 */
     warningMessage?: string;
   }>;
+
+/** 已规范化的文字度量结果 */
+export type CanonicalTextMetrics = {
+  /** 文本宽度 */
+  width: number;
+  /** 文本视觉盒高度 */
+  height: number;
+  /** 规范化后的基线上伸 */
+  ascent: number;
+  /** 规范化后的基线下伸 */
+  descent: number;
+};

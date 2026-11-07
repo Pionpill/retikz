@@ -10,8 +10,8 @@
  */
 import type { IRScene } from '@retikz/core';
 import type { EllipsePrimitive, PathPrimitive, RectPrimitive, ScenePrimitive, TextPrimitive } from '@retikz/core';
-import { compileToScene } from '@retikz/core';
 import { SceneSchema } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import type { ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';

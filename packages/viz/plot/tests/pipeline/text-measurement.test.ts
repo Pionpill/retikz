@@ -1,5 +1,5 @@
 import type { ScenePrimitive, TextMeasurer } from '@retikz/core';
-import { compileToScene } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { createPlotLineageLocator, createPlotLocator, lowerPlotWithLineage } from '../../src';
@@ -222,7 +222,7 @@ describe('Plot 使用 Core 文字测量参与布局', () => {
 
   it('标签字体与字重参与测量并改变布局', () => {
     const measure: TextMeasurer = (text, font) => ({
-      width: text.length * (font.family === 'Wide' && font.weight === 'bold' ? 16 : 4),
+      width: text.length * (font.family === 'Wide' && font.weight === 700 ? 16 : 4),
       height: font.size,
     });
     const small = compile(measure).filter(p => p.type === 'ellipse');

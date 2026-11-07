@@ -1,3 +1,5 @@
+import { formatPropertyPath } from '@retikz/foundation';
+import type { PropertyPath } from '@retikz/foundation';
 import { compositeOpaqueColor } from '@retikz/foundation';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
@@ -11,7 +13,7 @@ type ContextualColorResolveContext = Readonly<{
   /** 用于选择混色背景的主题明暗模式 */
   mode: ThemeMode;
   /** 当前颜色字段的 IR 路径，用于错误定位 */
-  fieldPath: string;
+  fieldPath: PropertyPath;
 }>;
 
 /** 浅色模式使用白色背景，深色模式使用黑色背景 */
@@ -29,7 +31,7 @@ export const resolveContextualColor = (value: IRContextualColor, context: Contex
   if (masterColor === undefined) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Color,
-      `Cannot resolve contextual color at '${fieldPath}': master color is missing.`,
+      `Cannot resolve contextual color at '${formatPropertyPath(fieldPath)}': master color is missing.`,
       {
         details: { fieldPath, value, mode },
       },
@@ -41,7 +43,7 @@ export const resolveContextualColor = (value: IRContextualColor, context: Contex
   } catch (cause) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Color,
-      `Cannot resolve contextual color at '${fieldPath}' from master '${masterColor}'.`,
+      `Cannot resolve contextual color at '${formatPropertyPath(fieldPath)}' from master '${masterColor}'.`,
       {
         details: { fieldPath, value, masterColor, mode },
         cause,

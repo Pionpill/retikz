@@ -1,9 +1,3 @@
 export * from './clip';
 export * from './paint';
-export type {
-  ClipResolution,
-  PaintResolution,
-  InputPaintResolution,
-  PatternResolution,
-  PatternStyleResolution,
-} from './types';
+export type { ClipResolution, InputPaintResolution, PaintResolution, PatternResolution } from './types';

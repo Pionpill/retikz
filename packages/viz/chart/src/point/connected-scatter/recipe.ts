@@ -89,7 +89,7 @@ export const connectedScatterChartDefinition: ChartRecipeDefinition<IRConnectedS
     const original = scales.find(scale => scale.name === name);
     if (original === undefined || !isBuiltinScaleOperation(original) || original.type !== BuiltinPlotScale.Ordinal) {
       throw new RetikzChartError({
-        code: RetikzChartErrorCode.InvalidResolvedPlot,
+        code: RetikzChartErrorCode.ResolvePlotInvalid,
         message: 'Connected Scatter mark colors require an ordinal series scale',
       });
     }
@@ -99,7 +99,7 @@ export const connectedScatterChartDefinition: ChartRecipeDefinition<IRConnectedS
     for (const role of ['point', 'path']) {
       if (scales.some(scale => scale.name === `${name}.${role}`)) {
         throw new RetikzChartError({
-          code: RetikzChartErrorCode.InvalidResolvedPlot,
+          code: RetikzChartErrorCode.ResolvePlotInvalid,
           message: `Connected Scatter generated scale name is occupied: ${name}.${role}`,
         });
       }

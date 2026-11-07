@@ -757,32 +757,14 @@ export const apiReferenceBranchLabels: Readonly<
     },
     { value: 'malformed-svg', field: 'kind', type: "'malformed-svg'", label: { zh: '无效 SVG', en: 'Malformed SVG' } },
   ],
-  '@retikz/inspect#InspectionSelectionRule': [
-    { value: 'request', field: 'kind', type: "'request'", label: { zh: '请求', en: 'Request' } },
-    { value: 'barrier', field: 'kind', type: "'barrier'", label: { zh: '封锁', en: 'Barrier' } },
+  '@retikz/inspect#InspectionTarget': [
+    { value: 'primitive', field: 'kind', type: "'primitive'", label: { zh: '场景图元', en: 'Scene primitive' } },
+    { value: 'artifact', field: 'kind', type: "'artifact'", label: { zh: '复合产物', en: 'Composite artifact' } },
   ],
-  '@retikz/inspect#InspectionSelectionTarget': [
-    { value: 'scene', field: 'kind', type: "'scene'", label: { zh: '整图', en: 'Scene' } },
-    { value: 'subtree', field: 'kind', type: "'subtree'", label: { zh: '子树', en: 'Subtree' } },
-    { value: 'self', field: 'kind', type: "'self'", label: { zh: '实例', en: 'Occurrence' } },
+  '@retikz/inspect#InspectorSubject': [
+    { value: 'primitive', field: 'kind', type: "'primitive'", label: { zh: '场景图元', en: 'Scene primitive' } },
+    { value: 'artifact', field: 'kind', type: "'artifact'", label: { zh: '复合产物', en: 'Composite artifact' } },
   ],
-  '@retikz/inspect#InspectionDiagnosticOrigin': [
-    { value: 'selection', field: 'stage', type: "'selection'", label: { zh: '选择规则', en: 'Selection' } },
-    {
-      value: 'inspect',
-      field: 'stage',
-      type: "'subject' | 'inspect'",
-      label: { zh: '对象与回调', en: 'Subject and callback' },
-    },
-    {
-      value: 'output',
-      field: 'stage',
-      type: "'output' | 'fragment'",
-      label: { zh: '输出与片段', en: 'Output and fragment' },
-    },
-    { value: 'complete', field: 'stage', type: "'complete'", label: { zh: '结果汇总', en: 'Completion' } },
-  ],
-
   '@retikz/vanilla#InputScene': [
     { value: 'children', field: 'layers', type: 'never', label: { zh: '子节点', en: 'Children' } },
     { value: 'layers', field: 'layers', type: 'ReadonlyArray<InputLayer>', label: { zh: '分层', en: 'Layers' } },

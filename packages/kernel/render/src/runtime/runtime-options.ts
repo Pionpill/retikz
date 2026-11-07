@@ -1,5 +1,7 @@
 import type { IRAnimationTrack, Scene, ScenePrimitive } from '@retikz/core';
 import { visitSceneContent } from '@retikz/core';
+import { readPropertyPath } from '@retikz/foundation';
+import type { PropertyPath } from '@retikz/foundation';
 import type { ValueOf } from '@retikz/foundation';
 import type { RuntimeScenePrimitive, SceneRuntimeSnapshot } from '@retikz/reconciler';
 import type { SceneIdentity } from '@retikz/reconciler';
@@ -7,20 +9,8 @@ import type { SceneIdentity } from '@retikz/reconciler';
 import { createSceneIdentityMap, runtimeStructuralEquals } from './shared';
 
 /** 沿 canonical primitivePath 读取 occurrence 对应 primitive */
-const primitiveAtPath = (
-  snapshot: SceneRuntimeSnapshot,
-  path: ReadonlyArray<number>,
-): RuntimeScenePrimitive | undefined => {
-  let children = snapshot.scene.primitives;
-  let primitive: RuntimeScenePrimitive | undefined;
-
-  for (const index of path) {
-    primitive = Reflect.get(children, index);
-    children = primitive.type === 'group' ? primitive.children : [];
-  }
-
-  return primitive;
-};
+const primitiveAtPath = (snapshot: SceneRuntimeSnapshot, path: PropertyPath): RuntimeScenePrimitive | undefined =>
+  readPropertyPath(snapshot.scene, path) as RuntimeScenePrimitive | undefined;
 
 /** 按不可变 Runtime 快照复用图元动画索引，不跨快照保留派生状态 */
 const occurrenceAnimationCache = new WeakMap<SceneRuntimeSnapshot, Map<ScenePrimitive, Array<IRAnimationTrack>>>();

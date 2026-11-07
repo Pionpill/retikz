@@ -25,7 +25,10 @@ The example throughout this page uses a parent container and a child path. The p
       label: 'Composite callback and context contracts',
       path: 'packages/kernel/core/src/contract/composite/layout.ts',
     },
-    { label: 'Composite dispatch in traversal', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
+    {
+      label: 'Composite dispatch in traversal',
+      path: 'packages/kernel/reconciler/src/compile/tree/composite/compile.ts',
+    },
   ]}
 />
 
@@ -74,7 +77,7 @@ The diagram follows root `chart.point` to `layout.flexLayout`. Once the registry
     { label: 'Vanilla preparation entry', path: 'packages/kernel/vanilla/src/processing/prepare.ts' },
     { label: 'Chart layout dependency', path: 'packages/viz/chart/src/_chart/providers/provider.ts' },
     { label: 'Chart title and plot column layout', path: 'packages/viz/chart/src/_chart/resolve/presentation.ts' },
-    { label: 'Registries in the compile context', path: 'packages/kernel/core/src/compile/orchestration/context.ts' },
+    { label: 'Registries in the compile context', path: 'packages/kernel/reconciler/src/compile/runtime/runtime.ts' },
     { label: 'Definition binding and input parsing', path: 'packages/kernel/core/src/resolve/composite/resolve.ts' },
   ]}
 />
@@ -119,7 +122,7 @@ Combining the child path and a text node needs no probe; use layout methods when
     { label: 'Unified compile and context contracts', path: 'packages/kernel/core/src/contract/composite/layout.ts' },
     {
       label: 'Output children and runtime handles',
-      path: 'packages/kernel/core/src/compile/orchestration/composite-output.ts',
+      path: 'packages/kernel/reconciler/src/compile/tree/composite/handle.ts',
     },
   ]}
 />
@@ -206,12 +209,12 @@ Core resolves the slot from actual occupancy: `intrinsic` uses the actual size, 
   sources={[
     {
       label: 'Proposal validation and slot calculation',
-      path: 'packages/kernel/core/src/compile/orchestration/layout-proposal.ts',
+      path: 'packages/kernel/reconciler/src/compile/tree/composite/proposal.ts',
     },
     { label: 'Proposal, result, and guide contracts', path: 'packages/kernel/core/src/contract/composite/layout.ts' },
     {
       label: 'Node, Path, and Scope proposal behavior',
-      path: 'packages/kernel/core/tests/compile/layout-proposal-builtins.test.ts',
+      path: 'packages/kernel/reconciler/tests/core/compile/layout-proposal-builtins.test.ts',
     },
   ]}
 />
@@ -281,7 +284,7 @@ These measurements let the parent compare candidates. Core also needs to retain 
     },
     {
       label: 'Slot calculation from layout occupancy',
-      path: 'packages/kernel/core/src/compile/orchestration/layout-proposal.ts',
+      path: 'packages/kernel/reconciler/src/compile/tree/composite/proposal.ts',
     },
   ]}
 />
@@ -376,7 +379,7 @@ The lightweight path returns a `CompositeContributionResult`. Its `contribution`
 
 Within one compilation, Core reuses successful contributions for the same logical child, input, request, complete proposal, and effective environment. `selectSourceChild` preserves source identity across ancestor probes; children regenerated in separate callbacks are not merged merely because their content matches. Changes to style, theme, bindings, transforms, or visible references require reevaluation. The cache is bounded; eviction affects work only. Each compilation starts a new cache.
 
-Text measurement also shares successful metrics for identical text and font parameters within the compilation. Changed width still triggers wrapping, line-height, and baseline calculations. Neither cache contains a committable transaction: discarded candidates' resources, diagnostics, and artifacts do not enter the final Scene through a cache hit.
+Text measurement uses the host service wrapped by the current root Runtime, sharing metrics for identical text and font values across probes in that compilation. The next full compilation or incremental batch starts with a fresh cache. Changed width still triggers wrapping, line-height, and baseline calculations. The contribution cache contains no committable transaction: discarded candidates' resources, diagnostics, and artifacts do not enter the final Scene through a cache hit.
 
 A parent may also need the coordinates of an anchor inside a child drawing. `context.resolvePathTargets({ child, source, points })` resolves a source and an ordered sequence of targets against real child geometry. It returns coordinates, not a replayable candidate. For example, Flow queries endpoints while routing multiple relations and again when validating the routes. Different targets may depend on exactly the same node layout.
 
@@ -389,9 +392,9 @@ This cache is released when the callback ends and is not shared across callbacks
     { label: 'Contribution and full-output contracts', path: 'packages/kernel/core/src/contract/composite/layout.ts' },
     {
       label: 'Isolated evaluation and contribution reuse',
-      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      path: 'packages/kernel/reconciler/src/compile/tree/composite/measurement.ts',
     },
-    { label: 'Compile-local text metrics', path: 'packages/kernel/core/src/compile/orchestration/context.ts' },
+    { label: 'Host measurement service', path: 'packages/kernel/reconciler/src/compile/runtime/context.ts' },
     {
       label: 'Flow route and endpoint query reuse',
       path: 'packages/schematic/diagram/src/flow/pipeline/flow/compile.ts',
@@ -435,15 +438,16 @@ A probe returns `resolved` or `failed`. Recoverable errors become callback-owned
   sources={[
     {
       label: 'Probe environment and captured results',
-      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      path: 'packages/kernel/reconciler/src/compile/tree/composite/probe.ts',
     },
     {
       label: 'Contributions held by replay transactions',
-      path: 'packages/kernel/core/src/compile/orchestration/types.ts',
+      path: 'packages/kernel/reconciler/src/compile/runtime/composite.ts',
+      startLine: 35,
     },
     {
       label: 'Probe failure classification and propagation',
-      path: 'packages/kernel/core/src/compile/probe-failure.ts',
+      path: 'packages/kernel/reconciler/src/compile/tree/composite/failure.ts',
     },
   ]}
 />
@@ -477,11 +481,11 @@ The parent may itself be a child of an outer container, so it also reports layou
   sources={[
     {
       label: 'Replay handles and Scope output creation',
-      path: 'packages/kernel/core/src/compile/orchestration/composite-output.ts',
+      path: 'packages/kernel/reconciler/src/compile/tree/composite/handle.ts',
     },
     {
       label: 'Preflight, resource import, and replay commit',
-      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      path: 'packages/kernel/reconciler/src/compile/tree/composite/compile.ts',
     },
     {
       label: 'Placement wrapper and container output contracts',
@@ -545,10 +549,14 @@ Once the layout is settled, Core checks the final output tree returned by the ca
 
 <SourceLinks
   sources={[
-    { label: 'Composite dispatch and commit', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
+    {
+      label: 'Composite dispatch and commit',
+      path: 'packages/kernel/reconciler/src/compile/tree/composite/compile.ts',
+    },
     {
       label: 'Probe sessions and result associations',
-      path: 'packages/kernel/core/src/compile/orchestration/types.ts',
+      path: 'packages/kernel/reconciler/src/compile/runtime/composite.ts',
+      startLine: 35,
     },
   ]}
 />

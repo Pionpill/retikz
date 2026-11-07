@@ -29,6 +29,10 @@ description: 定义并注册整条 Path 的输出方式，复用公开的描边�
 
 ## 定义能力
 
+Definition 中的标签 `text` 是 `TextBlockContent`，包含已确定的字体、行高、折行宽度和行片段。将现有标签直接交给 `emitHostLabels`；动态创建的原始标签先通过 `resolveHostLabel` 补全，再与几何采样点一起输出。`emitBoundaryLabels` 接收原始边界标签与支撑点，内部使用同一文本解析和布局规则。不要把确定态文本转换回字符串或再次作为 Source 解析。
+
+`context.path` 是已补齐默认值的 `PathDefinitionConfig`，自定义字段保留 schema 推导的类型，标签位置已换算成数值。绘制属性从 `context.appearance` 读取。直接复用当前描边时调用 `context.emitStroke()`；传入参数表示一份新的 Source IR，应显式构造它，不能将 canonical 配置展开后当成原始输入。
+
 用 `definePath` 声明一个显式 registry key、完整 Path subject schema，以及整条路径的 compile 函数。schema 应在开放的 `PathSchema` 上组合该 kind 的 literal 与 `kindOptions`，从而让 definition 自己拥有完整的 payload 约束。
 
 ```tsx
@@ -49,19 +53,15 @@ const highlight = definePath<HighlightPath>({
   name: 'highlight',
   schema: HighlightPathSchema,
   compile: context => {
-    const { kindOptions, ...strokePath } = context.path;
-    const base = context.emitStroke({
-      ...strokePath,
-      kind: 'stroke',
-      style: { ...strokePath.style, strokeWidth: kindOptions.strokeWidth },
-    });
+    const { kindOptions } = context.path;
+    const base = context.emitStroke();
     if (base === null) return null;
     return {
       ...base,
       primitives: Array.from(base.primitives).flatMap<ScenePrimitive>(primitive =>
         primitive.type === 'path'
           ? [
-              { ...primitive, stroke: '#facc15' },
+              { ...primitive, stroke: '#facc15', strokeWidth: kindOptions.strokeWidth },
               { ...primitive, stroke: '#0f766e', strokeWidth: 1.5 },
             ]
           : [primitive],
@@ -125,6 +125,8 @@ const view = mount(document.getElementById('diagram')!, input, {
 </DocTabs>
 
 ## 错误与限制
+
+输出不得携带 `resources` 或 `clipRef`。资源引用只能透传本次 `appearance` 或 `emitStroke` 生成的值；通过输入属性选择渐变或已注册的图案，由 Core 负责注册资源。手写其他资源 ID 会在 provider 输出边界报错，嵌套图元遵循相同规则。
 
 | 情况                                            | 结果                                         |
 | ----------------------------------------------- | -------------------------------------------- |

@@ -42,7 +42,7 @@ const createWaapiBindingSetupError = (
   controls: AnimationControls,
 ): RetikzRenderError => {
   const error = new RetikzRenderError({
-    code: RetikzRenderErrorCode.WaapiBindingSetupFailed,
+    code: RetikzRenderErrorCode.AnimationWaapiBindingSetupFailed,
     message: 'WAAPI binding setup and cleanup failed',
     details: { cleanupCause, controls },
     cause,

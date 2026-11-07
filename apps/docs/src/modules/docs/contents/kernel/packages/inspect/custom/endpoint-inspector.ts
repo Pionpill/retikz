@@ -1,33 +1,29 @@
-import type { StrokePathOwnerOutput } from '@retikz/core';
 import { defineInspector } from '@retikz/inspect';
+import { number, strictObject } from 'zod';
 
-/** Registry key shared by both hosts. */
+/** 自定义端点检查器的注册键 */
 export const endpointInspectorKey = { namespace: 'docs', type: 'path-endpoints' };
 
-/** Mark explicit path endpoints using final owner geometry. */
-export const endpointInspector = defineInspector<StrokePathOwnerOutput>({
+/** 读取最终 Scene path，使用普通 Node 标记显式端点 */
+export const endpointInspector = defineInspector({
   ...endpointInspectorKey,
-  owner: { kind: 'path', name: 'stroke' },
-  inspect: (subject, context) => {
-    const markers = subject.commands.flatMap(command =>
+  subject: { kind: 'primitive', type: 'path' },
+  optionsSchema: strictObject({ size: number().positive().default(10) }),
+  inspect: (subject, context) =>
+    subject.commands.flatMap(command =>
       'to' in command
         ? [
             {
-              type: 'node' as const,
-              position: command.to,
-              shape: 'circle',
-              layout: { minimumSize: 10, padding: 0 },
-              style: {
-                fill: context.appearance.scopeColor,
-                stroke: context.appearance.scopeColor,
-                strokeWidth: 1,
+              coordinateSpace: 'local' as const,
+              child: {
+                type: 'node' as const,
+                position: [command.to[0], command.to[1]] as [number, number],
+                shape: 'circle',
+                layout: { minimumSize: context.options.size, padding: 0 },
+                style: { fill: context.appearance.scopeColor, stroke: 'none' },
               },
             },
           ]
         : [],
-    );
-    if (subject.transforms.length === 0) return markers;
-
-    return { type: 'scope' as const, transforms: subject.transforms, children: markers };
-  },
+    ),
 });

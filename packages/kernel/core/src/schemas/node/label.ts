@@ -49,7 +49,7 @@ export const NodeLabelBoundaryPositionSchema = strictObject({
 export const NodeLabelPinSchema = strictObject({
   ...GraphicStrokeSchema.shape,
   opacity: OpacitySchema.optional().describe(
-    'Independent leader opacity; otherwise inherits the effective label opacity.',
+    'Leader opacity factor multiplied by host opacity; omitted values use the effective label opacity.',
   ),
 }).describe('Leader line style overrides for an outside node label.');
 
@@ -57,7 +57,7 @@ export const NodeLabelPinSchema = strictObject({
 export const NodeLabelConfigSchema = object({
   ...createLabelVisualStyleShape({
     textColor: 'Label text color; falls back to currentColor.',
-    opacity: 'Label opacity override; omitted values inherit the node overall opacity.',
+    opacity: 'Label opacity factor multiplied by node opacity; omitted values use 1.',
     font: 'Label font overrides. Missing fields inherit from the parent node font.',
   }),
   align: BoundaryLabelSchema.shape.align

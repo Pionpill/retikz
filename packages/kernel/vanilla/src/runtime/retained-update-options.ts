@@ -4,7 +4,7 @@ import type { RetainedVanillaUpdateOptions } from './types';
 
 const invalidUpdateOptions = (cause: unknown): never => {
   throw new RetikzRenderError({
-    code: RetikzRenderErrorCode.RetainedRuntimeInputInvalid,
+    code: RetikzRenderErrorCode.RuntimeInputInvalid,
     cause,
     message:
       'Vanilla retained update options must match the renderer backend, use closed plain-data records, and cannot change Canvas DPR',

@@ -1,3 +1,4 @@
+import type { ScaleDefinition } from '@retikz/data';
 import type { AnyRegressionDefinition } from '@retikz/data';
 import type {
   AnyRowSelectorDefinition,
@@ -16,7 +17,6 @@ import type {
   AnyChannelDefinition,
   AnyCoordinateDefinition,
   AnyPositionAdjustmentDefinition,
-  AnyScaleDefinition,
   PlotThemeDefinition,
   LabelResolver,
 } from '../../contract';
@@ -56,7 +56,7 @@ export type PlotDefinitions = {
   /** 自定义 row selector definitions；内置项与自定义项通过同一个 registry 解析 */
   rowSelectors?: Array<AnyRowSelectorDefinition>;
   /** 自定义 scale definitions；position 与 channel scale 共用解析后的 registry */
-  scales?: Array<AnyScaleDefinition>;
+  scales?: Array<ScaleDefinition>;
   /** 自定义 channel definitions；position、mark、node 与 path channel 共用 registry */
   channels?: Array<AnyChannelDefinition>;
   /** 自定义 Position Adjustment definitions；内置与自定义按 kind 共用 registry */

@@ -1,4 +1,4 @@
-﻿import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { RetikzRuntimeErrorCode } from '../../src';
 import type {
@@ -191,7 +191,7 @@ describe('运行时计算定义和注册表', () => {
       expect.objectContaining({ code: RetikzRuntimeErrorCode.ComputationDuplicate }),
     );
     expect(() => createRuntimeComputationRegistry({ sources, computations: [missingSource] })).toThrowError(
-      expect.objectContaining({ code: RetikzRuntimeErrorCode.Unknown }),
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.SourceUnknown }),
     );
     expect(() => createRuntimeComputationRegistry({ sources, computations: [missingComputation] })).toThrowError(
       expect.objectContaining({ code: RetikzRuntimeErrorCode.ComputationUnknown }),
@@ -204,7 +204,7 @@ describe('运行时计算定义和注册表', () => {
     const wrongComputationSource = defineComputation(owner, { owner: 'missing', key: 'computation' });
 
     expect(() => createRuntimeComputationRegistry({ sources, computations: [wrongComputationSource] })).toThrowError(
-      expect.objectContaining({ code: RetikzRuntimeErrorCode.Unknown }),
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.SourceUnknown }),
     );
     expect(() =>
       createRuntimeComputationRegistry({

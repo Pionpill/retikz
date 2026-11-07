@@ -7,25 +7,30 @@ import type { FC } from 'react';
  */
 const Demo: FC = () => (
   <Layout>
-    <Node id="ext" position={[-245, -16]} style={{ stroke: 'none' }} layout={{ align: 'middle', lineHeight: 16 }}>
+    <Node id="ext" position={[-245, -16]} style={{ stroke: 'none' }} layout={{ textAlign: 'middle', lineHeight: 16 }}>
       <Text font={{ size: 15, weight: 'bold' }}>External dataset</Text>
       <Text fill="gray" font={{ size: 12 }}>
         passed at runtime
       </Text>
     </Node>
-    <Node id="layer" position={[-78, -16]} style={{ stroke: 'none' }} layout={{ align: 'middle', lineHeight: 16 }}>
+    <Node id="layer" position={[-78, -16]} style={{ stroke: 'none' }} layout={{ textAlign: 'middle', lineHeight: 16 }}>
       <Text font={{ size: 15, weight: 'bold' }}>Data layer</Text>
       <Text fill="gray" font={{ size: 12 }}>
         model · normalize
       </Text>
     </Node>
-    <Node id="channel" position={[92, -16]} style={{ stroke: 'none' }} layout={{ align: 'middle', lineHeight: 16 }}>
+    <Node id="channel" position={[92, -16]} style={{ stroke: 'none' }} layout={{ textAlign: 'middle', lineHeight: 16 }}>
       <Text font={{ size: 15, weight: 'bold' }}>Canonical rows</Text>
       <Text fill="gray" font={{ size: 12 }}>
         logical fields · values
       </Text>
     </Node>
-    <Node id="consume" position={[238, -16]} style={{ stroke: 'none' }} layout={{ align: 'middle', lineHeight: 16 }}>
+    <Node
+      id="consume"
+      position={[238, -16]}
+      style={{ stroke: 'none' }}
+      layout={{ textAlign: 'middle', lineHeight: 16 }}
+    >
       <Text font={{ size: 15, weight: 'bold' }}>Consumers</Text>
       <Text fill="gray" font={{ size: 12 }}>
         Plot · Table · other modules
@@ -36,7 +41,7 @@ const Demo: FC = () => (
     <Draw way={['layer', 'channel']} arrow="->" />
     <Draw way={['channel', 'consume']} arrow="->" />
 
-    <Node id="note" position={[-78, 70]} style={{ stroke: 'none' }} layout={{ align: 'middle' }}>
+    <Node id="note" position={[-78, 70]} style={{ stroke: 'none' }} layout={{ textAlign: 'middle' }}>
       <Text fill="gray" font={{ size: 12 }}>
         Rows arrive at runtime · contracts may persist
       </Text>

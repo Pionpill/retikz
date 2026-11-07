@@ -1,10 +1,9 @@
 import type {
-  CompileObservationOwner,
+  CanonicalTheme,
   CompositeInputBinding,
   CoreProviderContribution,
   IRChild,
   IRTheme,
-  CanonicalTheme,
   ThemeDefinition,
 } from '@retikz/core';
 
@@ -14,8 +13,6 @@ import type { InputChild } from '../scene';
 export type InputEmbedAuthoringSite = Readonly<{
   /** 内部作者来源的类别 */
   kind: 'scope' | 'path' | 'node' | 'coordinate' | 'embeddable';
-  /** 对应的 Core 编译观察所属者 */
-  owner?: CompileObservationOwner;
   /** 作者来源的稳定类型 */
   type: string;
   /** 由调用方提供且基础归一化不解释的载荷 */

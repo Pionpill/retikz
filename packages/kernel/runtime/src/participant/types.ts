@@ -1,13 +1,13 @@
 import type {
-  RuntimeComputationDefinition,
+  RuntimeCandidateLookup,
+  RuntimeComputationContext,
   RuntimeComputationPhase,
   RuntimeComputationToken,
   RuntimeComputationTraceReporter,
 } from '../computation';
-import type { RuntimeDiagnosticPhase } from '../diagnostic';
-import type { RuntimeSourceDefinition, RuntimeSourceToken, RuntimeRevision } from '../source';
+import type { RuntimeDiagnostic } from '../diagnostic';
+import type { RuntimeSourceToken, RuntimeRevision } from '../source';
 import type { RuntimeTracePhaseDefinition } from '../trace';
-import type { RuntimeSnapshot } from '../transaction';
 
 declare const runtimeCommitParticipantTokenBrand: unique symbol;
 
@@ -50,49 +50,16 @@ export type RuntimePreparedCommit = Readonly<{
 }>;
 
 /** participant callback 可提交的 warning 输入 */
-export type InputRuntimeParticipantWarning = Readonly<{
-  /** 稳定 warning 分类 */
-  code: string;
-  /** 产生 warning 的领域阶段 */
-  phase: RuntimeDiagnosticPhase;
-  /** 面向开发者的 warning 信息 */
-  message: string;
-}>;
+export type InputRuntimeParticipantWarning = Pick<RuntimeDiagnostic, 'code' | 'phase' | 'message'>;
 
 /** participant callback 只能写入、不能 drain 的 trace facade */
 export type RuntimeParticipantTraceReporter = RuntimeComputationTraceReporter;
 
 /** participant prepare callback 可用的 trace 与 warning context */
-export type RuntimeParticipantContext = Readonly<{
-  /** 固定绑定 participant key 的 trace reporter */
-  trace: RuntimeParticipantTraceReporter;
-  /** 追加由 Runtime 统一归属的 commit-safe warning */
-  diagnose: (warning: InputRuntimeParticipantWarning) => void;
-}>;
+export type RuntimeParticipantContext = Pick<RuntimeComputationContext, 'trace' | 'diagnose'>;
 
 /** participant candidate 只允许读取已声明依赖 */
-export type RuntimeParticipantCandidateLookup = Readonly<{
-  /**
-   * 读取 Source candidate Snapshot
-   * @template TInput Source 接收的完整作者输入，由 capture 转为运行时持有值
-   * @template TValue Source 经 capture 产生并由运行时持有、比较和释放的值
-   * @template TRead 提交参与者对宿主暴露的已提交只读视图类型
-   * @template TChange 领域变更提示的单项类型，由消费它的计算校验并用于增量处理
-   */
-  snapshot: <TInput, TValue, TRead, TChange>(
-    source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
-  ) => RuntimeSnapshot<TRead>;
-  /**
-   * 读取 Computation candidate public result Snapshot
-   * @template TResultInput run 或 update 产生、交给 result capture 的结果输入类型
-   * @template TResult capture 产生并由运行时持有和释放的计算结果类型
-   * @template TComputationRead 仅供当前计算的 update 读取旧结果的私有视图类型
-   * @template TPublicRead 依赖计算、提交观察者和宿主可读取的公开结果视图类型
-   */
-  result: <TResultInput, TResult, TComputationRead, TPublicRead>(
-    computation: RuntimeComputationDefinition<TResultInput, TResult, TComputationRead, TPublicRead>,
-  ) => RuntimeSnapshot<TPublicRead>;
-}>;
+export type RuntimeParticipantCandidateLookup = Pick<RuntimeCandidateLookup, 'snapshot' | 'result'>;
 
 /** participant prepare 期间只读且带 phase 的 candidate view */
 export type RuntimeParticipantCandidateView =

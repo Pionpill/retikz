@@ -1,14 +1,15 @@
 import type { IRScope } from '@retikz/core';
 import type { IRShapeValue } from '@retikz/core';
 import { categoricalColorAt } from '@retikz/core';
+import type { ScaleDefinition } from '@retikz/data';
 import { createDataView, DataFieldType } from '@retikz/data';
 import type { JsonValue } from '@retikz/foundation';
 import type { BoundsInsets, BoundsRect } from '@retikz/math';
 
-import type { AnyChannelDefinition, AnyScaleDefinition, PositionScale } from '../../contract';
+import type { AnyChannelDefinition, PositionScale } from '../../contract';
 import { RetikzPlotError } from '../../error';
 import type { ScaleDescriptor } from '../../providers';
-import { resolveLinearScale, resolveSqrtScale, scaleTicks } from '../../providers';
+import { resolveLinearScale, scaleTicks } from '../../providers';
 import type { ChannelResolveContext } from '../../resolve/channel';
 import { resolveChannelDefinition, resolveMarkChannels } from '../../resolve/channel';
 import { resolveGuideTicks } from '../../resolve/guide';
@@ -91,7 +92,7 @@ const selectLegendDescriptor = (
   guide: IRPlotLegendGuide,
   descriptors: ReadonlyArray<ScaleDescriptor>,
   scaleByName: ReadonlyMap<string, IRPlotScaleOperation>,
-  scaleRegistry: ReadonlyMap<string, AnyScaleDefinition>,
+  scaleRegistry: ReadonlyMap<string, ScaleDefinition>,
 ): ScaleDescriptor | undefined => {
   const matched = descriptors.filter(
     descriptor =>
@@ -117,12 +118,7 @@ const selectLegendDescriptor = (
       if (scale === undefined)
         throw new RetikzPlotError(`lowerPlots: legend references unknown scale "${guide.scale}"`);
 
-      const scaleDefinition = resolveScaleDefinition(scale, { registry: scaleRegistry });
-      if (scaleDefinition.family !== 'channel') {
-        throw new RetikzPlotError(
-          `lowerPlots: scale "${guide.scale}" is not a color scale (legend channel "${guide.channel}" can only bind channel scales)`,
-        );
-      }
+      resolveScaleDefinition(scale, { registry: scaleRegistry });
 
       throw new RetikzPlotError(
         `lowerPlots: legend channel "${guide.channel}" has no bound scale named "${guide.scale}"`,
@@ -204,24 +200,6 @@ const legendRampTicks = (
       label: ticks.labels[index],
     };
   });
-};
-
-/** legend 专用 sqrt 半径映射：domain [lo, hi]（sqrt 感知）→ range [rMin, rMax]，与 mark size resolver 同核 */
-const resolveSqrtForLegend = (
-  domain: readonly [number, number],
-  range: readonly [number, number],
-): ((value: number) => number) => {
-  const scale = resolveSqrtScale(
-    {
-      type: BuiltinPlotScale.Sqrt,
-      name: '__legend_size',
-      domain: [Math.max(0, domain[0]), domain[1]],
-      range: [range[0], range[1]],
-    },
-    [],
-    range,
-  );
-  return value => scale(value);
 };
 
 /** legend lowering 的固定公共字段（与具体形态和条目求值无关） */
@@ -402,12 +380,12 @@ export const buildLegendLayers = (
   fontSize: number,
   bands: Array<BoundsRect>,
   channelRegistry: ReadonlyMap<string, AnyChannelDefinition>,
-  scaleRegistry: ReadonlyMap<string, AnyScaleDefinition>,
+  scaleRegistry: ReadonlyMap<string, ScaleDefinition>,
   resolvedTheme: CanonicalPlotGuideTheme,
   measure: PlotLabelMeasure,
 ): Array<IRScope> => {
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
-  return legendGuides.map((guide, legendIndex): IRScope => {
+  return legendGuides.flatMap((guide, legendIndex): IRScope | Array<IRScope> => {
     const band = bands[legendIndex] ?? { x: 0, y: 0, width: 0, height: 0 };
     const orient =
       guide.orient ?? (guide.position === 'top' || guide.position === 'bottom' ? 'horizontal' : 'vertical');
@@ -472,6 +450,7 @@ export const buildLegendLayers = (
         }));
       }
 
+      if (descriptor.colorScale.scaleType === BuiltinPlotScale.Quantile && options.entries.length === 0) return [];
       return lowerLegend(options, measure);
     }
 
@@ -508,13 +487,74 @@ export const buildLegendLayers = (
         );
       }
 
-      const entries: Array<LegendEntry> = descriptor.domain.map((category, index) => ({
-        label: showLabels ? String(category) : '',
-        shape: descriptor.range[index] as IRShapeValue,
-        symbolSize: style.symbolSize,
-        color: descriptor.defaultColor ?? categoricalColorAt(resolvedTheme.palette.series, 0),
-      }));
+      if (descriptor.scaleType === 'quantile' && descriptor.mapping?.thresholds === undefined) return [];
+      const edges = descriptor.mapping?.thresholds;
+      const entries: Array<LegendEntry> = (edges === undefined ? descriptor.domain : descriptor.range).map(
+        (category, index) => ({
+          label: !showLabels
+            ? ''
+            : edges === undefined
+              ? String(category)
+              : edges.length === 0
+                ? 'All values'
+                : index === 0
+                  ? `< ${edges[0]}`
+                  : index === edges.length
+                    ? `≥ ${edges[index - 1]}`
+                    : `${edges[index - 1]} – < ${edges[index]}`,
+          shape: descriptor.range[index] as IRShapeValue,
+          symbolSize: style.symbolSize,
+          color: descriptor.defaultColor ?? categoricalColorAt(resolvedTheme.palette.series, 0),
+        }),
+      );
 
+      return lowerLegend({ ...base, form: 'swatch', title, entries }, measure);
+    }
+
+    if (descriptor.scaleType === 'quantile' && descriptor.mapping?.thresholds === undefined) return [];
+    const numericMapping = descriptor.mapping;
+    if (channelOutput?.outputKind === 'number' && numericMapping === undefined)
+      throw new RetikzPlotError(`legend for channel "${guide.channel}" requires the channel mapping`);
+    const numericValue = (value: string | number | boolean | null): number => {
+      const mapped = numericMapping?.map(value);
+      if (typeof mapped !== 'number' || !Number.isFinite(mapped) || mapped < 0 || (legendForm !== 'size' && mapped > 1))
+        throw new RetikzPlotError(`invalid numeric legend output for channel "${guide.channel}"`);
+      return mapped;
+    };
+    const radiusLimit = style.symbolSize / Math.SQRT2;
+    const maxRadius = descriptor.range.reduce<number>(
+      (maximum, value) => (typeof value === 'number' ? Math.max(maximum, value) : maximum),
+      0,
+    );
+    const fitRadius = (value: number): number =>
+      (style.symbolFit === LegendSymbolFit.Fit
+        ? Math.min(value * (maxRadius > 0 ? Math.min(1, radiusLimit / maxRadius) : 1), radiusLimit)
+        : value) * style.symbolScale;
+    if (
+      channelOutput?.outputKind === 'number' &&
+      (numericMapping?.thresholds !== undefined || descriptor.scaleType === 'ordinal')
+    ) {
+      const edges = numericMapping?.thresholds;
+      const entries: Array<LegendEntry> = (edges === undefined ? descriptor.domain : descriptor.range).map(
+        (value, index) => {
+          const mapped = edges === undefined ? numericValue(value as string | number) : Number(value);
+          const label =
+            edges === undefined
+              ? String(value)
+              : edges.length === 0
+                ? 'All values'
+                : index === 0
+                  ? `< ${edges[0]}`
+                  : index === edges.length
+                    ? `≥ ${edges[index - 1]}`
+                    : `${edges[index - 1]} – < ${edges[index]}`;
+          return {
+            label: showLabels ? label : '',
+            color: descriptor.defaultColor ?? categoricalColorAt(resolvedTheme.palette.series, 0),
+            ...(legendForm === 'size' ? { radius: fitRadius(mapped) } : { opacity: mapped }),
+          };
+        },
+      );
       return lowerLegend({ ...base, form: 'swatch', title, entries }, measure);
     }
 
@@ -530,8 +570,14 @@ export const buildLegendLayers = (
       const reps = ticks.length > 0 ? ticks : [{ value: hi, offset: 1, label: String(hi) }];
 
       // 半径据 descriptor range（与 mark 实绘同源）线性插值（sqrt domain→radius）
-      const [rMin, rMax] = [Number(descriptor.range[0]), Number(descriptor.range[descriptor.range.length - 1])];
-      const radiusScale = resolveSqrtForLegend([lo, hi], [rMin, rMax]);
+      const rMax = maxRadius;
+      const radiusScale = (value: number): number => {
+        if (descriptor.mapping === undefined) throw new RetikzPlotError('size legend requires the channel mapping');
+        const radius = descriptor.mapping.map(value);
+        if (typeof radius !== 'number' || !Number.isFinite(radius) || radius < 0)
+          throw new RetikzPlotError('invalid size legend mapping');
+        return radius;
+      };
       const symbolRadiusLimit = style.symbolSize / Math.SQRT2;
       const fitScale =
         style.symbolFit === LegendSymbolFit.Fit && Number.isFinite(rMax) && rMax > 0
@@ -563,11 +609,10 @@ export const buildLegendLayers = (
               offset: descriptor.range.length === 1 ? 0 : index / (descriptor.range.length - 1),
               color: String(color),
             }))
-          : descriptor.range.map((opacity, index) => ({
-              offset: descriptor.range.length === 1 ? 0 : index / (descriptor.range.length - 1),
-              color: 'currentColor',
-              opacity: Math.max(0, Math.min(1, Number(opacity))),
-            }));
+          : Array.from({ length: 33 }, (_, index) => {
+              const offset = index / 32;
+              return { offset, color: 'currentColor', opacity: numericValue(lo + (hi - lo) * offset) };
+            });
       const normalizedStops =
         stops.length === 1
           ? [
@@ -606,11 +651,8 @@ export const buildLegendLayers = (
     // number swatch 用透明度表达
     const [lo, hi] = [Number(descriptor.domain[0]), Number(descriptor.domain[descriptor.domain.length - 1])];
     const ticks = niceNumericTicks([lo, hi], guide.ticks?.count ?? 3);
-    const [oMin, oMax] = [Number(descriptor.range[0]), Number(descriptor.range[descriptor.range.length - 1])];
-    const span = hi - lo;
     const entries: Array<LegendEntry> = ticks.map(tick => {
-      const t = span === 0 ? 1 : (tick.value - lo) / span;
-      return { label: showLabels ? tick.label : '', opacity: oMin + (oMax - oMin) * Math.max(0, Math.min(1, t)) };
+      return { label: showLabels ? tick.label : '', opacity: numericValue(tick.value) };
     });
 
     return lowerLegend({ ...base, form: 'swatch', title, entries }, measure);

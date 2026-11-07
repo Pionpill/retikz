@@ -7,25 +7,25 @@ import { describe, expect, it } from 'vitest';
 import { getPreviewControlFields } from '../../src/modules/docs/components/component-preview/controls';
 import type { PreviewControlsDefinition } from '../../src/modules/docs/components/component-preview/types';
 import { buildPreviewIR } from '../../src/modules/docs/components/component-preview/utils';
+import { bridgeCoordinate } from '../../src/modules/docs/contents/viz/plot/coordinate/custom-coordinate/coordinate-custom-bridge.definition';
 import {
   coordinateCartesianControls,
   previewControlContract as cartesianContract,
-} from '../../src/modules/docs/contents/viz/plot/coordinate/2d/coordinate-cartesian.controls';
+} from '../../src/modules/docs/contents/viz/plot/coordinate/dimension/coordinate-cartesian.controls';
 import {
   coordinateCartesianControls as englishCoordinateCartesianControls,
   previewControlContract as englishCartesianContract,
-} from '../../src/modules/docs/contents/viz/plot/coordinate/2d/coordinate-cartesian.en.controls';
-import { renderCoordinateCartesian } from '../../src/modules/docs/contents/viz/plot/coordinate/2d/coordinate-cartesian.preview';
+} from '../../src/modules/docs/contents/viz/plot/coordinate/dimension/coordinate-cartesian.en.controls';
+import { renderCoordinateCartesian } from '../../src/modules/docs/contents/viz/plot/coordinate/dimension/coordinate-cartesian.preview';
 import {
   coordinatePolarControls,
   previewControlContract as polarContract,
-} from '../../src/modules/docs/contents/viz/plot/coordinate/2d/coordinate-polar.controls';
+} from '../../src/modules/docs/contents/viz/plot/coordinate/dimension/coordinate-polar.controls';
 import {
   coordinatePolarControls as englishCoordinatePolarControls,
   previewControlContract as englishPolarContract,
-} from '../../src/modules/docs/contents/viz/plot/coordinate/2d/coordinate-polar.en.controls';
-import { renderCoordinatePolar } from '../../src/modules/docs/contents/viz/plot/coordinate/2d/coordinate-polar.preview';
-import { bridgeCoordinate } from '../../src/modules/docs/contents/viz/plot/coordinate/custom-coordinate/coordinate-custom-bridge.definition';
+} from '../../src/modules/docs/contents/viz/plot/coordinate/dimension/coordinate-polar.en.controls';
+import { renderCoordinatePolar } from '../../src/modules/docs/contents/viz/plot/coordinate/dimension/coordinate-polar.preview';
 
 type PreviewRender<TValues extends object> = (values: TValues) => ReactNode;
 
