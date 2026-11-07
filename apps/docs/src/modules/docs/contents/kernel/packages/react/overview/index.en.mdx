@@ -7,6 +7,8 @@ description: Author Kernel and Sugar components in JSX, construct a Vanilla Inpu
 
 It owns React authoring and result hosting rather than new drawing semantics. IR, schemas, geometry, and compilation belong to `@retikz/core`; Input normalization, composite dependency resolution, the Core Computation, and retained processing state belong to `@retikz/vanilla`.
 
+The package root exposes components, Props, and authoring protocols. `Layout` handles style selection, component-name lookup, and event collection internally. The source helpers `pickScopeStyle`, `getDisplayName`, and `collectHydrationHandlers` are not package-root exports.
+
 ## Install and usage
 
 `react` and `react-dom` are peer dependencies at version 18 or newer:
@@ -184,7 +186,7 @@ Changing `updateStrategy` between `auto` and `full` on a retained host disposes 
 
 `Layout` injects host capabilities such as text measurement, Definition registries, and the TeX lowerer as processing compile options, but those options do not put React into IR or Scene. Passing the `ir` prop skips the JSX collector. The `artifacts` prop requests opt-in outputs, while `onArtifacts` receives immutable same-compile artifacts after the selected host publishes; notification does not trigger another compile.
 
-The base package provides only a domain-neutral `VanillaCompileDriver` and opaque authoring sites. The default driver is run by Vanilla processing for an ordinary Core compile with no observers or readonly layers. Optional `@retikz/inspect/react` wrappers—`InspectLayout`, `InspectScope`, and `InspectPath`—interpret runtime selection and connect inspection observers to the same static or retained processing. Selection never enters `IRScene`, `IRScope`, or `IRPath`.
+The optional `@retikz/inspect/react` entry provides `InspectionOverlay`, which consumes a completed ordinary result and presents auxiliary content independently. Inspection requests do not enter primary IR or participate in primary compilation and commits.
 
 A `VanillaCompileDriver` may inject observers for the same compile, then resolve ordered readonly layers and extension diagnostics from the Core primary result and observer outputs. Static processing materializes the complete frame directly, while retained processing commits the primary figure and layers in one revision. The Inspect package wires into this general boundary; the base React package imports no Inspector definitions, palette, or selection logic. See [`@retikz/inspect`](/kernel/packages/inspect) for the complete setup.
 
@@ -210,8 +212,7 @@ A `VanillaCompileDriver` may inject observers for the same compile, then resolve
     },
     {
       label: 'Core IR to Scene compiler',
-      path: 'packages/kernel/core/src/compile/compile.ts',
-      startLine: 73,
+      path: 'packages/kernel/reconciler/src/compile/compile.ts',
     },
   ]}
 />
@@ -239,7 +240,7 @@ Event handlers are functions and cannot enter JSON IR. In children mode, React s
       label: 'React mapping a processing result to SVG or Canvas',
       path: 'packages/kernel/react/src/render/processing-result.tsx',
       startLine: 106,
-      endLine: 184,
+      endLine: 183,
     },
     {
       label: 'JSX handler runtime side channel',

@@ -19,12 +19,12 @@ Drawing Complete 不表示 core 内置所有 shape、diagram preset 或视觉效
 | 角色         | 包                                | 责任                                                                                                | 不拥有                                                       |
 | ------------ | --------------------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
 | 计算底座     | `@retikz/math`                    | 零依赖纯几何、向量、仿射、求交和曲线计算                                                            | IR、Scene、layout 语义                                       |
-| 执行底座     | `@retikz/runtime`                 | identity、ownership、program、transaction、revision 与 trace；协调 Core 等领域 program              | Core IR、Scene、几何、renderer                               |
-| 主责包       | `@retikz/core`                    | Core IR、definition / registry、compile、Scene、Composite assembly 与 headless sidecar              | DOM、renderer 实例、框架状态                                 |
+| 执行底座     | `@retikz/reconciler`              | 完整与增量编译执行、Composite 试算/重放、Weave 缓存、transaction、revision 与 trace                 | Core IR、Scene、几何、renderer                               |
+| 主责包       | `@retikz/core`                    | Core IR、definition / registry、原子编译阶段、共享产物、Scene 与 Composite 契约                     | DOM、renderer 实例、框架状态                                 |
 | Scene 执行包 | `@retikz/render`                  | 把 Scene 映射到 SVG / Canvas 等后端，报告能力降级                                                   | 新图形 IR、上层领域语义                                      |
 | API 基础包   | `@retikz/vanilla`                 | `InputXxx -> Core IR`、编译 / runtime 选项与 framework-neutral processing session / readonly result | Core 图形语义、DOM 与框架生命周期                            |
 | 框架宿主     | `@retikz/react` 等                | 框架语法到 Vanilla Input、框架生命周期、订阅结果与宿主桥接                                          | Core IR builder、compile driver、Runtime、平行 renderer 编排 |
-| 上层消费方   | plot / table / standard 等 Tier 2 | lowering 到 Core IR，复用 Core contract；按需把领域 program 装配到 `@retikz/runtime`                | Core 的通用图形、几何和 renderer 语义                        |
+| 上层消费方   | plot / table / standard 等 Tier 2 | lowering 到 Core IR，复用 Core contract；由 `@retikz/reconciler` 统一执行生成内容                   | Core 的通用图形、几何和 renderer 语义                        |
 
 完整闭环可以跨包，但语义所有权不能漂移。比如 renderer 负责实现 blur，不等于 blur 可以只存在于 SVG descriptor；React 负责 JSX authoring，不等于 shape extension 可以只存在于组件映射。
 
@@ -36,7 +36,7 @@ Core IR / schema
   -> contribution / dependency provider graph assembly
   -> provider / registry
   -> Theme selector context / style registry resolution
-  -> compile / lowering
+  -> Reconciler execution + Core atomic compile / lowering
   -> Scene / headless manifest
   -> runtime coordination / render execution / adapter integration
 ```
@@ -45,26 +45,26 @@ Core IR / schema
 
 ## 4. 能力面
 
-| 能力面                | 目标                                                                                                                       | 主责交界                                                                                                                         | 不属于 Drawing Complete                       |
-| --------------------- | -------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
-| Primitive / Scene     | 定义后端中立的最小可渲染图元                                                                                               | core 定义，render 执行                                                                                                           | SVG-only / Canvas-only 快捷 API               |
-| Geometry              | 提供纯函数几何计算和图形构造基础                                                                                           | math 提供通用计算，core 赋予图形语义                                                                                             | 单一 domain layout、DOM 测量                  |
-| Target / Coordinate   | 支持节点、锚点、边界、局部坐标和命名引用                                                                                   | core                                                                                                                             | plot scale、geo projection                    |
-| Transform             | 表达结构化图形空间变换                                                                                                     | core 定义，render 执行                                                                                                           | 数据 transform、runtime 状态机                |
-| Constraint / Layout   | 承载跨图形通用定位和约束                                                                                                   | core；纯算法可下沉 math                                                                                                          | flow / graph / table 领域布局                 |
-| Style / Resource      | 表达 paint、marker、pattern、clip、effect，并为 Composite 提供可持久化的 Scene / Scope Theme selector 环境与 shared colors | core 定义 Theme IR、继承、style registry、shared colors 与 `InspectionAppearanceContext`，领域 owner 物化默认，render 实现或诊断 | 领域 defaults 片段、preset 具体值与私有效果   |
-| Composition           | 用 scope、group、zIndex、meta 组合复杂图形                                                                                 | core                                                                                                                             | 上层私有节点树、不可持久化组合                |
-| Capability Assembly   | 让嵌套 Tier 2 通过完整 composite key、roots 与显式依赖形成确定性 definition 闭包                                           | core 定义 provider graph 与 resolver，adapter 收集，领域 owner 发布 provider                                                     | 动态 import、package discovery、全局注册      |
-| Spatial Transparency  | 让 Composite 声明语义空间并在最终 transform 后发布 qualified、renderer-neutral 查询 sidecar                                | core 定义 declaration、owner path、world geometry、index 与 selector；领域 owner 定义 role / payload                             | renderer hit-test、DOM identity、领域查询词汇 |
-| Interaction Readiness | 提供 target、hit area、role、intent、provenance 与查询 manifest                                                            | core 定义 headless 契约，adapter / runtime 消费                                                                                  | UI、selection 状态机、DOM handler、键盘策略   |
+| 能力面                | 目标                                                                                                                       | 主责交界                                                                                             | 不属于 Drawing Complete                       |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| Primitive / Scene     | 定义后端中立的最小可渲染图元                                                                                               | core 定义，render 执行                                                                               | SVG-only / Canvas-only 快捷 API               |
+| Geometry              | 提供纯函数几何计算和图形构造基础                                                                                           | math 提供通用计算，core 赋予图形语义                                                                 | 单一 domain layout、DOM 测量                  |
+| Target / Coordinate   | 支持节点、锚点、边界、局部坐标和命名引用                                                                                   | core                                                                                                 | plot scale、geo projection                    |
+| Transform             | 表达结构化图形空间变换                                                                                                     | core 定义，render 执行                                                                               | 数据 transform、runtime 状态机                |
+| Constraint / Layout   | 承载跨图形通用定位和约束                                                                                                   | core；纯算法可下沉 math                                                                              | flow / graph / table 领域布局                 |
+| Style / Resource      | 表达 paint、marker、pattern、clip、effect，并为 Composite 提供可持久化的 Scene / Scope Theme selector 环境与 shared colors | core 定义 Theme IR、继承、style registry 与 shared colors，领域 owner 物化默认，render 实现或诊断    | 领域 defaults 片段、preset 具体值与私有效果   |
+| Composition           | 用 scope、group、zIndex、meta 组合复杂图形                                                                                 | core                                                                                                 | 上层私有节点树、不可持久化组合                |
+| Capability Assembly   | 让嵌套 Tier 2 通过完整 composite key、roots 与显式依赖形成确定性 definition 闭包                                           | core 定义 provider graph 与 resolver，adapter 收集，领域 owner 发布 provider                         | 动态 import、package discovery、全局注册      |
+| Spatial Transparency  | 让 Composite 声明语义空间并在最终 transform 后发布 qualified、renderer-neutral 查询 sidecar                                | core 定义 declaration、owner path、world geometry、index 与 selector；领域 owner 定义 role / payload | renderer hit-test、DOM identity、领域查询词汇 |
+| Interaction Readiness | 提供 target、hit area、role、intent、provenance 与查询 manifest                                                            | core 定义 headless 契约，adapter / runtime 消费                                                      | UI、selection 状态机、DOM handler、键盘策略   |
 
 Interaction Readiness 是横切闭环条件，不把 Drawing Complete 扩张成交互运行时。静态图形可以没有交互 intent；一旦声明交互语义，就必须可追踪、可定位且不依赖 adapter 从 primitive 反推。
 
-Composite assembly 与 composite registry 是相邻但不同的契约：registry 负责 compile dispatch，provider graph 负责从显式 roots 解析跨 namespace 的传递 definition / dataset 闭包。两者都由 Core 解释，React、Vanilla 与领域包不得建立内置白名单、私有 bundle 或不同的冲突规则。
+Composite assembly 与 composite registry 是相邻但不同的契约：registry 负责 compile dispatch，provider graph 负责从显式 roots 解析跨 namespace 的传递 definition / dataset 闭包。能力键与闭包规则由 Core 定义，Reconciler 负责按 registry 执行，React、Vanilla 与领域包不得建立内置白名单、私有 bundle 或不同的冲突规则。
 
 Spatial sidecar 与 Scene 也是相邻但不同的产物：Scene 只承载 renderer execution；qualified handles 与 Scene、artifacts、diagnostics provenance 在同一 compile revision 生成和提交，但由 Core query / tooling 消费。外层 Composite 只能为 descendant owner path 增加前缀，不能复制、重命名或丢弃内部 handle。
 
-Core shared colors 是跨包 value contract，不是领域 palette。Core Inspector 对 occurrence 使用 active `palette.categorical` 的稳定取余并从 `semantic.warning` 生成 warning appearance；Standard 只消费 Core 生成的 `InspectionAppearanceContext`，不读取 token bag、维护 categorical array 或重新实现颜色分配。
+Core shared colors 是跨包 value contract，不是领域 palette。Inspect 从普通编译结果独立生成辅助 IR，自行使用公共色板形成 `InspectionAppearanceContext`，不要求 Core 提供观测或对象主题。领域产物缺少可靠 Scene 坐标时不绘制叠加内容。
 
 ## 5. 准入原则
 
@@ -77,7 +77,7 @@ Core shared colors 是跨包 value contract，不是领域 palette。Core Inspec
 - 能编译成 renderer-agnostic Scene 或同步的 headless manifest。
 - 不依赖 React、DOM、Canvas / SVG 实例或 plot 数据语义。
 - 缺失时会迫使多个上层模块复制图形、几何、target 或 renderer 语义。
-- 跨领域视觉环境需要随 Scene / Scope 持久化并按绘图树继承；Core 负责 selector 传递、Core style registry、derived shared colors 与 Inspector appearance，具体 Source 同构 defaults 片段、Theme 生成器、resolver 与 rules 仍由领域 owner 拥有。Core 不传递领域 Theme bag；领域以同名 style definition 生成主题默认，再应用作者 xxxDefaults；条件规则独立，不能把作者默认放进 Core theme。Theme 与 Scope defaults 各自保持职责；共同协议不扩大 Core primitive 的自动主题化范围。
+- 跨领域视觉环境需要随 Scene / Scope 持久化并按绘图树继承；Core 负责 selector 传递、Core style registry 与 derived shared colors，具体 Source 同构 defaults 片段、Theme 生成器、resolver 与 rules 仍由领域 owner 拥有。Core 不传递领域 Theme bag；领域以同名 style definition 生成主题默认，再应用作者 xxxDefaults；条件规则独立，不能把作者默认放进 Core theme。Theme 与 Scope defaults 各自保持职责；共同协议不扩大 Core primitive 的自动主题化范围。
 
 不满足时优先放到 math、render、plot / domain 包或 adapter。
 
@@ -124,7 +124,7 @@ docs / notes 可解释
 - 是否需要新 IR / contract / registry：
 - Scene / manifest 如何承载：
 - Composite assembly 与跨 namespace 依赖如何闭环：
-- qualified spatial handle、owner path 与 Scene 边界是否适用：
+- Composite 领域产物的坐标语义及 Scene 消费边界是否明确：
 - renderer 实现或诊断降级：
 - Vanilla authoring / processing 与 React 等框架宿主如何等价暴露：
 - Interaction Readiness 是否适用：
@@ -141,3 +141,7 @@ docs / notes 可解释
 - `develop-completeness` 用本文能力面做阶段性横向审计。
 
 本文负责稳定边界，不负责维护具体功能清单。改变 Drawing Complete 的问题范围、主责包或 Scene / manifest 基本输出，需要先更新架构决策，不能由单个 renderer 或 adapter 实现倒推。
+
+## 编译执行归属
+
+Core 拥有绘图语义、原子解析 / layout / emit 与共享阶段产物。Reconciler 拥有完整编译 API、遍历、Composite 试算与重放、资源工作区及输出事务；完整与增量首轮共用执行器，Weave 只保留增量所需的实际产物与执行记录。参见 [ADR-080](../decisions/v0/v0.5/080-unified-reconciler-compilation.md)。

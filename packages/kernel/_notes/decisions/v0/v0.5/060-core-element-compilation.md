@@ -1,6 +1,6 @@
 ---
 description: 为 Weave 提供 Core 拥有的单元素编译状态、显式计算环境、依赖读取与产物组装契约，全量和增量编译复用同一语义
-keywords: Core、Weave、单元素编译、compiled、NodeLayout、注册表、上下文、依赖读取、产物组装
+keywords: Core、Weave、单元素编译、compiled、CompiledNodeLayout、注册表、上下文、依赖读取、产物组装
 ---
 
 # ADR-060：Core 单元素编译与 Weave 接入
@@ -8,6 +8,8 @@ keywords: Core、Weave、单元素编译、compiled、NodeLayout、注册表、�
 - 状态：Accepted
 - 决策日期：2026-10-20
 - 关联：[版本目标](./roadmap.md)、[055](./055-reconciler-extraction.md)、[057](./057-scope-acyclic-geometry-references.md)、[058](./058-weave-foundation.md)、[059](./059-weave-batch-operations.md)
+
+> 编译执行归属与中间产物决策由 [ADR-080](./080-unified-reconciler-compilation.md) 部分替代：完整入口、遍历、试算与输出生命周期归 Reconciler；Core 保留原子阶段及权威产物。本篇其余绘图语义与事务约束继续有效。
 
 ## 背景与目标
 
@@ -19,26 +21,28 @@ Core 提供可复用的单元素编译能力与只读状态；Reconciler 持有�
 
 每类基础元素均有 Core 定义的明确 compiled 类型，替换 Weave 的 unknown。编译状态是下游复用所需的独立事实，不是调试投影，也不要求所有元素使用相同字段。
 
-| 元素       | 编译状态必须承载的语义                                                       | 可独立调度的计算职责                                                              |
-| ---------- | ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| Node       | 以 NodeLayout 为核心，保存已解析的形状与边界、测量定位、正文与标签布局       | 从自身输入及有效上下文完成解析、测量、定位，生成 NodeLayout，并提供对应绘制贡献   |
-| Coordinate | 明确的坐标与引用几何，区分需要的局部坐标和变换后坐标                         | 解析位置与必要引用，生成可供其它元素读取的坐标状态；不强制产生可见图元            |
-| Path       | 完成路径解析、端点绑定、几何与装饰处理的状态，以及绘制和边界贡献             | 在所需引用结果就绪后编译完整 Path，保留现有延后引用能力                           |
-| Scope      | 有效继承上下文、子元素几何聚合后的包络及必要的变换、裁剪、外框与输出组织状态 | 分别提供上下文解析、几何聚合和 Scope 输出组织能力，不以整棵子树重编译代替这些计算 |
+| 元素       | 编译状态必须承载的语义                                                                  | 可独立调度的计算职责                                                              |
+| ---------- | --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| Node       | canon 保存配置与能力绑定，compiled 保存最终几何、占用、文字、标签、外观及查询必需的绑定 | 从稀疏输入确定完整 canon，再完成测量、定位和绘制计算；连接查询直接消费 compiled   |
+| Coordinate | 明确的坐标与引用几何，区分需要的局部坐标和变换后坐标                                    | 解析位置与必要引用，生成可供其它元素读取的坐标状态；不强制产生可见图元            |
+| Path       | 完成路径解析、端点绑定、几何与装饰处理的状态，以及绘制和边界贡献                        | 在所需引用结果就绪后编译完整 Path，保留现有延后引用能力                           |
+| Scope      | 有效继承上下文、子元素几何聚合后的包络及必要的变换、裁剪、外框与输出组织状态            | 分别提供上下文解析、几何聚合和 Scope 输出组织能力，不以整棵子树重编译代替这些计算 |
 
 Core 负责整理缺失的状态，不由 Reconciler 从 Scene 反推几何或拼装平行布局模型。
 
 ### 统一命名
 
-完整可缓存状态统一为 `CompiledNode`、`CompiledCoordinate`、`CompiledPath`、`CompiledScope`，对应完整单元素入口为 `compileNode`、`compileCoordinate`、`compilePath`、`compileScope`。这些是 Core 契约，不添加 Weave 前缀；WeaveNode 的 `compiled` 字段持有对应状态。
+完整可缓存状态使用 `CompiledNode`、`CompiledCoordinate`、`CompiledPath`、`CompiledScope`，只保存复用所需事实。Core 公开真实可组合的领域阶段，不要求每类元素都有完整单元素包装。
 
-内部继续按职责使用 `resolveXxx`、`layoutXxx`、`emitXxx`。仅在确有独立布局阶段产物时保留 `NodeLayout` 等类型；完整状态仅含布局时直接调整类型，不保留同义别名或单字段包装。不同元素不要求相同字段。
+`resolveXxx` 结合窄语义上下文确定配置、默认值及能力绑定，不依赖编译执行状态；`layoutXxx` 计算布局，`emitXxx` 从最终数据组装输出；`compileXxx` 用于确实跨阶段的领域编译。坐标表达式补全归 resolve，依赖已编译几何的位置求值归 compile；Node 解析、编译和输出可分别消费；Path 保留统一 kind 宿主语义；Scope 分别提供配置解析、前置放置、后置包络与输出组装。
 
-稳定环境使用 `CompileEnvironment` / `createCompileEnvironment`，元素调用上下文按需使用 `NodeCompileContext`、`CoordinateCompileContext`、`PathCompileContext`、`ScopeCompileContext`。`resolveScopeContext` 负责子上下文解析，不合并 Scope 的前置准备与后置聚合阶段。既有观察 DTO 与完整编译缓存须在名称和职责上明确区分。
+每个阶段声明最小上下文，复用注册表、测量、位置查询、资源登记和诊断等权威能力契约。稳定 `SharedCompileContext` 与可丢弃工作区由驱动持有，调用方自行适配；领域阶段不接收整个驱动 runtime，不要求共同的元素上下文基类。只有实际共享的领域状态才显式建模，局部临时变量留在阶段内。
+
+元素编译入口按 `compileXxx(canon, context, prepared?)` 组织。准备参数只承载已有独立消费者的阶段结果，未提供的步骤由 Core 计算；没有部分复用阶段时省略该参数。调用方负责准备结果对当前输入与上下文的适用性，跨次比较、缓存和复用决策归 Reconciler。Node 布局结果不回传 canon，允许保留下游查询需要的 Definition 与参数；Scope 的放置准备必须遵守子树执行前的引用可见性，最终动画仍等待子输出收敛。
 
 ### 状态与输出边界
 
-Node 保留解析、测量和定位状态及必要绘制贡献；Coordinate 保存局部坐标，通过 Core 投影供引用消费；Path 保存完整 kind 宿主编译产生的局部输出及资源，不能要求所有自定义 kind 都存在统一中心线；Scope 保存自身包络、变换和装饰组织状态，不复制声明子树。
+Node 分开保留 CanonicalNode 与 CompiledNode，后者不含完整输入，直接保留形状与连接面查询需要的 Definition 和参数；Scope 同样保留包络查询绑定及自身变换和分组结果，不复制声明子树。Coordinate 保存实际局部坐标，通过 Core 投影供引用消费；Path 保存 kind 宿主编译产生的最终几何、外观及布局贡献，不能要求所有自定义 kind 都存在统一中心线。没有后续消费者的 Path 或 Coordinate 绑定不进入 compiled。compiled 不要求可序列化，Scene 仍只含可序列化的绘制结果与资源引用。
 
 引用包络、可见边界和父布局 allocation 分别保留既有语义。Path 不因本次重构加入 Scope 的引用包络。增量定位 scopeId 不写回作者 IR 的 id，也不改变匿名 Scope 与具名 Scope 的包络贡献规则。
 
@@ -47,6 +51,8 @@ Node 保留解析、测量和定位状态及必要绘制贡献；Coordinate 保�
 Scope 上下文计算先于消费该上下文的子元素；包络聚合晚于所需子元素几何。几何相关的放置和变换按实际依赖就绪，不假定所有 Scope 状态都能在子元素之前完成，并遵守祖先几何引用约束。
 
 ## 编译环境与持有位置
+
+通用的前缀递增 ID 分配能力由 Foundation 提供，Core 与 Reconciler 负责 Scope 前缀、树根身份和实例归属。每棵树显式持有独立分配器；同一树的试编译分支共享分配器，删除、回滚和丢弃试编译不复用已分配编号。宿主负责跨树命名域唯一性；Reconciler 负责分配器生命周期、既有实例的身份保留及事务索引。该身份独立于可选的作者 id，不进入 IR 或 Scene，也不改变名称可见性与同名遮蔽规则。
 
 Core 提供环境准备契约，将编译配置、内置与自定义 Definition 合成的有效注册表、测量和公式服务等显式交给编译调用方。Reconciler 可以跨批次持有这些内容，Core 不依赖 Weave、Runtime identity 或候选版本。
 
@@ -63,9 +69,9 @@ Core 提供环境准备契约，将编译配置、内置与自定义 Definition 
 
 ## 单元素调用与依赖读取
 
-单元素计算接受自身输入、有效上下文、显式环境与必要依赖读取能力，返回该元素的编译状态及必要输出贡献。调用不得隐式依赖此前全量遍历遗留的可变上下文，不得为了单元素结果暗中重新编译整棵 Scene，也不得修改其它已提交元素。
+领域阶段接受自身输入与所需的窄上下文，返回解析、布局或输出结果；驱动组合这些阶段并保存必要编译状态。调用不得隐式依赖此前全量遍历遗留的可变上下文，不得为了单元素结果暗中重新编译整棵 Scene，也不得修改其它已提交元素。
 
-Core 保留默认值、名称可见性、Definition 查找、坐标变换、锚点、布局和绘制语义。Reconciler 提供候选版本中可读取的结果，并记录 Core 的语义读取事实，不自行复制这些解析规则。
+Core 保留默认值、名称可见性规则、Definition 查找、坐标变换、锚点、布局和绘制语义。Reconciler 按这些规则维护候选版本的名称 frame、绑定和读取记录，通过窄查询回调提供声明位置可见的引用结果；Core 不接收可变名称图或版本内节点身份。重复名称的诊断构造复用 Core 能力，几何解析不移入 Reconciler。
 
 依赖契约至少区分目标不存在与结果尚未就绪，并保留影响绑定的命名空间及未命中查找事实，使新增、删除、遮蔽或重新绑定可以正确失效。Core 不直接返回 WeaveNode；读取关联由 Reconciler 映射到对应版本的节点。前向引用、环检测以及尚未就绪结果的处理须明确，不能用旧缓存伪装已就绪。
 
@@ -77,7 +83,7 @@ Core 保留默认值、名称可见性、Definition 查找、坐标变换、锚�
 
 compile-local token、可变名称栈、资源序号及观察收集器不能直接当作跨次稳定状态。保留的绘制贡献必须在新结果组装时维持资源引用、声明顺序、变换、裁剪、provenance、artifacts、空间句柄与诊断的一致性；删除元素不能残留其贡献。
 
-Core 提供从完成状态到完整编译输出的组装能力。candidate 计算及输出准备成功后，Reconciler 才提交配对的树与输出版本。Render 消费绘制输出，不读取或修改 WeaveRoot；绘制层局部更新与 Patch 优化另行设计。
+Core 提供片段资源合并、可见边界汇总及 Scene 收尾能力。Reconciler 选择本批有效输出，组织合并与收尾调用；Core 统一处理资源重映射、zIndex、viewBox、padding、根动画及最终诊断与来源。candidate 计算及输出准备成功后，Reconciler 才提交配对的树与输出版本。Render 消费绘制输出，不读取或修改 WeaveRoot；绘制层局部更新与 Patch 优化另行设计。
 
 ## 全量复用、失败与兼容性
 
@@ -89,6 +95,8 @@ Core 提供从完成状态到完整编译输出的组装能力。candidate 计�
 
 完整编译与增量结果必须在绘图、资源、诊断和启用的附属产物上等价。无法安全拆分的能力须明确其最小重算边界，不以静默丢失能力换取局部更新。
 
-React、Vanilla 的作者输入与使用方式不因本次对接改变。完整元素状态通过 output 持有必要的局部输出贡献，不在 WeaveNode 维护平行贡献字段；无可见输出的 Coordinate 不强制持有空包装。
+React、Vanilla 的作者输入与使用方式不因本次对接改变。Weave 分别持有 canon 与 compiled；输出从最终结果按需组装，资源及诊断与编译记录一起保存，不在 WeaveNode 维护重复贡献字段；无可见输出的 Coordinate 不强制持有空包装。
 
-单元素调用返回 compiled / pending 判别结果。完成分支包含 compiled、reads 与 diagnostics；pending 分支只包含读取事实，不暴露半成品或发布诊断。真实输入及 provider 错误沿用 Core 错误边界。读取事实包含 namespace/name 与不透明 binding，Core 执行可见性规则，Reconciler 映射到对应版本节点；pending 不放宽声明顺序限制。
+Core 原子阶段返回领域结果，查询缺失由语义解析处理。Reconciler 的候选执行器区分 compiled / pending：完成分支包含 compiled 与 diagnostics；pending 保留驱动读取事实，不暴露半成品或发布诊断。等待中断由驱动注入并识别，穿过 Core 的 provider 与试算恢复边界时不得被吞掉或解释为缺失；真实错误保留所属包的错误边界与 cause。祖先包络约束由引用适配边界执行。
+
+读取事实由 Reconciler 在回调执行期间收集，包含实际经过的 namespace/name、missing/pending/ready 与命中的 binding；复用结果时通过同一名称查询逻辑刷新。Core 不返回 reads 或维护依赖边，pending 不放宽声明顺序限制。移除旧的 Core namespace registry、binding/read 公共类型与局部贡献编排入口，不保留兼容转发。

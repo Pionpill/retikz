@@ -1,7 +1,9 @@
 export * from './anchor';
 export * from './at';
-export * from './between';
-export * from './target';
+export { BetweenPositionSchema } from './between';
+export type { IRAbsoluteTarget, IRBetweenPosition } from './between';
+export { AnchorRefSchema, NodeTargetSchema } from './target';
+export type { IRAnchorRef, IRNodeTarget } from './target';
 export * from './offset';
 export * from './polar';
 export * from './position';

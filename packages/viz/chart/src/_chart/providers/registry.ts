@@ -24,7 +24,7 @@ import type {
 
 const invalidRegistry = (message: string, path: ReadonlyArray<string | number>, cause?: unknown): RetikzChartError =>
   new RetikzChartError({
-    code: RetikzChartErrorCode.InvalidRegistry,
+    code: RetikzChartErrorCode.ProviderRegistryInvalid,
     message,
     details: { path },
     ...(cause === undefined ? {} : { cause }),
@@ -181,6 +181,7 @@ const runtimeDefinitionKeys = [
   'regressions',
   'rowSelectors',
   'scales',
+  'channels',
 ] as const satisfies ReadonlyArray<keyof ChartRuntimeDefinitionOptions>;
 
 /** 确保同一Chart provider中的recipe共享同一组Plot lowering runtime Definition */
@@ -214,6 +215,7 @@ const resolveEncodingRuntime = (definitions: ChartRuntimeDefinitionOptions): Cha
       reducers: createReadonlyMap(resolveStatisticsReducerRegistry(definitions.statisticsReducers)),
       selectors: createReadonlyMap(resolveRowSelectorRegistry(definitions.rowSelectors)),
       scales: createReadonlyMap(resolveScaleRegistry(definitions.scales)),
+      channels: definitions.channels,
       coordinates: createReadonlyMap(resolveCoordinateRegistry(definitions.coordinates)),
     });
   } catch (error) {
@@ -238,7 +240,7 @@ export const resolveChartProviderRegistry = <TSource extends IRChartSource>(
 
   const duplicateDefinition = (label: string, key: string): RetikzChartError =>
     new RetikzChartError({
-      code: RetikzChartErrorCode.DuplicateDefinition,
+      code: RetikzChartErrorCode.ProviderDefinitionDuplicate,
       message: `${label} "${key}" is registered more than once`,
       details: { path: [label, key] },
     });

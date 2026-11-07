@@ -1,0 +1,21 @@
+---
+title: API Reference
+description: Inspect public Data scale definitions, resolution functions, and mathematical capabilities.
+---
+
+This runtime reference is generated from the public `@retikz/data` entry. See [Scales](/viz/data/scale) for basic usage and [Custom scales](/viz/data/scale/custom-scale) for registration.
+
+`ScaleOperationSchema` validates declarations; `IRDataScaleOperation` is its input type. `ScaleRangeSchema` requires a nonempty homogeneous array of numbers or strings. Common declarations contain type and optional domain/range/params. The definition's paramsSchema owns algorithm-specific constraints; use parseScaleOperation when reading external configuration.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Mapping operation and range schemas',
+      path: 'packages/viz/data/src/scale/schema.ts',
+      startLine: 1,
+      endLine: 20,
+    },
+  ]}
+/>
+
+{/* @include viz/data/scale/reference/generated */}

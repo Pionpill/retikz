@@ -18,6 +18,9 @@ export const drawLabelControlsI18n = {
     text: '文字',
     rotateAlongPath: '沿路径旋转',
     textColor: '文字颜色',
+    textAlign: '块内对齐',
+    lineHeight: '行高',
+    maxTextWidth: '折行宽度',
   },
   en: {
     drawEdgeLabel: 'Draw edge label',
@@ -37,5 +40,8 @@ export const drawLabelControlsI18n = {
     text: 'Text',
     rotateAlongPath: 'Rotate along path',
     textColor: 'Text color',
+    textAlign: 'Text alignment',
+    lineHeight: 'Line height',
+    maxTextWidth: 'Wrap width',
   },
 };

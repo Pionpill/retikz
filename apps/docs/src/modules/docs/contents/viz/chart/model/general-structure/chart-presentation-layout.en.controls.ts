@@ -15,17 +15,6 @@ export const chartPresentationLayoutControls = definePreviewControls({
       controls: [{ kind: 'table', id: 'chart-presentation-data', label: 'Point rows', rows: chartPresentationData }],
     },
     {
-      label: 'Layout inspection',
-      controls: [
-        {
-          kind: 'switch',
-          id: CHART_PRESENTATION_CONTROL_IDS.inspect,
-          label: 'Show Flex overlay',
-          defaultValue: true,
-        },
-      ],
-    },
-    {
       label: 'Presentation',
       controls: [
         { kind: 'switch', id: CHART_PRESENTATION_CONTROL_IDS.showTitle, label: 'Show title', defaultValue: true },
@@ -41,7 +30,6 @@ export const chartPresentationLayoutControls = definePreviewControls({
 export const previewControlContract = {
   controls: chartPresentationLayoutControls,
   canonicalValues: {
-    [CHART_PRESENTATION_CONTROL_IDS.inspect]: true,
     [CHART_PRESENTATION_CONTROL_IDS.showTitle]: true,
     [CHART_PRESENTATION_CONTROL_IDS.showSubtitle]: true,
     [CHART_PRESENTATION_CONTROL_IDS.showNote]: true,

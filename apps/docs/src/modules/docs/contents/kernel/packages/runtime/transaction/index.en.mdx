@@ -204,9 +204,9 @@ Runtime executes updates synchronously; interleaving happens between caller-side
   description={
     <>
       {' '}
-      A stale revision throws an error with code <code>RetikzRuntimeErrorCode.RevisionStale</code>. Catch it and either
-      discard the old result or read the latest snapshot, reapply the intended change and submit again. Do not simply
-      replace the revision and resend old data. Regenerate any accompanying ChangeSet as well.{' '}
+      A stale revision throws an error with code <code>RetikzRuntimeErrorCode.TransactionRevisionStale</code>. Catch it
+      and either discard the old result or read the latest snapshot, reapply the intended change and submit again. Do
+      not simply replace the revision and resend old data. Regenerate any accompanying ChangeSet as well.{' '}
     </>
   }
 />

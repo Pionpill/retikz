@@ -5,24 +5,26 @@ import { RetikzError } from '@retikz/foundation';
 export const RetikzChartErrorCode = {
   /** 未被更精确分类覆盖的 Chart 错误 */
   Default: 'CHART_ERROR',
+
   /** Chart type 未知 */
-  UnknownType: 'CHART_UNKNOWN_TYPE',
-  /** Chart Source IR 无效 */
-  InvalidChartIR: 'CHART_INVALID_CHART_IR',
-  /** Chart 解析后的 Plot 无效 */
-  InvalidResolvedPlot: 'CHART_INVALID_RESOLVED_PLOT',
+  ProviderTypeUnknown: 'CHART_PROVIDER_TYPE_UNKNOWN',
   /** Chart family / chartType / mark Definition registry 冲突 */
-  InvalidRegistry: 'CHART_INVALID_REGISTRY',
+  ProviderRegistryInvalid: 'CHART_PROVIDER_REGISTRY_INVALID',
   /** Definition key 重复 */
-  DuplicateDefinition: 'CHART_DUPLICATE_DEFINITION',
+  ProviderDefinitionDuplicate: 'CHART_PROVIDER_DEFINITION_DUPLICATE',
   /** Definition 依赖缺失 */
-  MissingDependency: 'CHART_MISSING_DEPENDENCY',
+  ProviderDependencyMissing: 'CHART_PROVIDER_DEPENDENCY_MISSING',
   /** Theme base 继承环 */
-  ThemeCycle: 'CHART_THEME_CYCLE',
+  ProviderThemeCycle: 'CHART_PROVIDER_THEME_CYCLE',
   /** Source family 与 recipe family 不匹配 */
-  FamilyMismatch: 'CHART_FAMILY_MISMATCH',
+  ProviderFamilyMismatch: 'CHART_PROVIDER_FAMILY_MISMATCH',
   /** Source 中未知 recipe / mark / theme key */
-  UnknownDefinition: 'CHART_UNKNOWN_DEFINITION',
+  ProviderDefinitionUnknown: 'CHART_PROVIDER_DEFINITION_UNKNOWN',
+
+  /** Chart Source IR 无效 */
+  ResolveInputInvalid: 'CHART_RESOLVE_INPUT_INVALID',
+  /** Chart 解析后的 Plot 无效 */
+  ResolvePlotInvalid: 'CHART_RESOLVE_PLOT_INVALID',
 } as const;
 
 /** Chart 包稳定错误码取值 */

@@ -1,0 +1,591 @@
+import { describe, expect, it } from 'vitest';
+
+import type {
+  EllipsePrimitive,
+  PaintValue,
+  ScenePrimitive,
+  PathPrimitive,
+  RectPrimitive,
+  CompiledArrowEnd,
+  TextPrimitive,
+} from '../../../../core/src/contract';
+import type { IRScene } from '../../../../core/src/schemas';
+import { compileToScene } from '../../../src/compile';
+import { pathArrows } from '../../helpers/path-arrows';
+
+/** 递归展开 GroupPrimitive，把所有叶子 primitive 拍平（scope 子元素在 GroupPrimitive 内） */
+const flatten = (prims: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> => {
+  const out: Array<ScenePrimitive> = [];
+
+  for (const p of prims) {
+    out.push(p);
+    if (p.type === 'group') out.push(...flatten(p.children));
+  }
+
+  return out;
+};
+
+const allPrims = (ir: IRScene): Array<ScenePrimitive> => flatten(compileToScene(ir).scene.primitives);
+
+const rectOf = (ir: IRScene): RectPrimitive | undefined =>
+  allPrims(ir).find((p): p is RectPrimitive => p.type === 'rect');
+
+const ellipseOf = (ir: IRScene): EllipsePrimitive | undefined =>
+  allPrims(ir).find((p): p is EllipsePrimitive => p.type === 'ellipse');
+
+const linePathOf = (ir: IRScene): PathPrimitive | undefined =>
+  allPrims(ir).find((p): p is PathPrimitive => p.type === 'path' && !p.commands.some(c => c.kind === 'close'));
+
+const textsOf = (ir: IRScene): Array<TextPrimitive> =>
+  allPrims(ir).filter((p): p is TextPrimitive => p.type === 'text');
+
+/** 取指定文字内容的 TextPrimitive（node 文本 vs step label 文本区分） */
+const textWith = (ir: IRScene, content: string): TextPrimitive | undefined =>
+  textsOf(ir).find(t => t.lines[0]?.text === content);
+
+/**
+ * 从已解析 `CompiledArrowEnd` 的 marker 几何里抽"主导箭头颜色"
+ * @description 新契约下视觉输入（color）在 compile 被消费、不再挂 `CompiledArrowEnd`——解析后的颜色物化进
+ *   `marker[]` 内部几何的 fill / stroke（实心走 fill、空心走 stroke；contextStroke 表示继承 path stroke）。
+ *   测断言箭头颜色优先级链时改读此处。递归穿 group 子原语，返回首个非 contextStroke 的纯色字符串；
+ *   全部 contextStroke / 无 paint 时返回 undefined（= 走继承，未冻结颜色）
+ */
+const markerPaintColor = (spec: CompiledArrowEnd | undefined): string | undefined => {
+  if (!spec) return undefined;
+
+  const pickFill = (f: PaintValue | undefined): string | undefined => (typeof f === 'string' ? f : undefined);
+
+  const walk = (prims: ReadonlyArray<ScenePrimitive>): string | undefined => {
+    for (const p of prims) {
+      if (p.type === 'group') {
+        const c = walk(p.children);
+        if (c !== undefined) return c;
+        continue;
+      }
+
+      const c = pickFill(p.fill) ?? (p.type !== 'text' && typeof p.stroke === 'string' ? p.stroke : undefined);
+      if (c !== undefined && c !== 'context-stroke') return c;
+    }
+
+    return undefined;
+  };
+
+  return walk(spec.marker);
+};
+
+// ===========================================================================
+// Happy path
+// ===========================================================================
+
+describe('Happy: 主色级联 / 四通道', () => {
+  it('scope_color_cascades_all：<Scope color="blue"> → node 边/文字/path stroke/arrow/label 全蓝', () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'scope',
+          children: [
+            { type: 'node', id: 'A', position: [0, 0], text: 'A' },
+            {
+              type: 'path',
+              arrow: pathArrows('->'),
+              children: [
+                { type: 'step', kind: 'move', to: { id: 'A' } },
+                { type: 'step', kind: 'line', to: [60, 0], label: { text: 'e' } },
+              ],
+            },
+          ],
+          defaults: { style: { color: 'blue' } },
+        },
+      ],
+    };
+    const rect = rectOf(ir);
+
+    expect(rect?.stroke).toBe('blue');
+    expect(rect?.fill).toBe('blue');
+    expect(textWith(ir, 'A')?.fill).toBe('blue');
+
+    const path = linePathOf(ir);
+
+    expect(path?.stroke).toBe('blue');
+
+    // 解析后的箭头颜色物化进 marker 几何（新契约：color 不再挂 CompiledArrowEnd）
+    expect(markerPaintColor(path?.arrowEnd)).toBe('blue');
+    expect(textWith(ir, 'e')?.fill).toBe('blue');
+  });
+
+  it('node_default_applies：nodeDefault={{shape:circle, fill:lightblue}} → 子 node 圆 + 浅蓝', () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'scope',
+          children: [{ type: 'node', position: [0, 0] }],
+          defaults: {
+            node: {
+              shape: 'circle',
+              style: { fill: 'lightblue' },
+            },
+          },
+        },
+      ],
+    };
+
+    expect(ellipseOf(ir)?.fill).toBe('lightblue');
+  });
+
+  it('path_color_follows_to_label_arrow：<Path color="crimson" arrow="->"> + label → label 与 arrow 均 crimson', () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          arrow: pathArrows('->'),
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [80, 40], label: { text: 'sin' } },
+          ],
+          style: { color: 'crimson' },
+        },
+      ],
+    };
+
+    expect(linePathOf(ir)?.stroke).toBe('crimson');
+    expect(markerPaintColor(linePathOf(ir)?.arrowEnd)).toBe('crimson');
+    expect(textWith(ir, 'sin')?.fill).toBe('crimson');
+  });
+
+  it('arrow_default_applies：arrowDefault={{shape:stealth, scale:1.5}} → 子 path 箭头 stealth 1.5×', () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'scope',
+          children: [
+            {
+              type: 'path',
+              arrow: pathArrows('->'),
+              children: [
+                { type: 'step', kind: 'move', to: [0, 0] },
+                { type: 'step', kind: 'line', to: [50, 0] },
+              ],
+            },
+          ],
+          defaults: { path: { arrow: { shape: 'stealth', scale: 1.5 } } },
+        },
+      ],
+    };
+
+    expect(linePathOf(ir)?.arrowEnd?.shape).toBe('stealth');
+
+    // scale 1.5 在 compile 被消费乘进 markerWidth（默认 length 8 × 1.5 = 12）；scale 不再挂 CompiledArrowEnd
+    expect(linePathOf(ir)?.arrowEnd?.markerWidth).toBeCloseTo(12, 5);
+  });
+});
+
+// ===========================================================================
+// 边界
+// ===========================================================================
+
+describe('边界: 缺省 / 显式 / 内置', () => {
+  it('同一来源的具体颜色覆盖通用颜色：描边为红色且填充和文本为蓝色', () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'node',
+          position: [0, 0],
+          text: 'x',
+          style: { color: 'blue', stroke: 'red' },
+        },
+      ],
+    };
+
+    expect(rectOf(ir)?.stroke).toBe('red');
+    expect(rectOf(ir)?.fill).toBe('blue');
+    expect(textWith(ir, 'x')?.fill).toBe('blue');
+  });
+
+  it('missing_falls_through_to_outer：外层 color=white ⊃ 内层无 → 继承 white', () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'scope',
+          children: [{ type: 'node', position: [0, 0], text: 'x' }],
+          defaults: { style: { color: 'white' } },
+        },
+      ],
+    };
+
+    expect(rectOf(ir)?.stroke).toBe('white');
+    expect(rectOf(ir)?.fill).toBe('white');
+    expect(textWith(ir, 'x')?.fill).toBe('white');
+  });
+
+  it('whole_chain_silent_builtin：全链无色 → 内置（currentColor / transparent，零破坏）', () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [{ type: 'node', position: [0, 0], text: 'x' }],
+    };
+
+    expect(rectOf(ir)?.stroke).toBe('currentColor');
+    expect(rectOf(ir)?.fill).toBe('transparent');
+    expect(textWith(ir, 'x')?.fill).toBe('currentColor');
+  });
+
+  it('empty_default_no_effect：nodeDefault={{}} → 无变化（内置）', () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'scope',
+          children: [{ type: 'node', position: [0, 0], text: 'x' }],
+          defaults: { node: {} },
+        },
+      ],
+    };
+
+    expect(rectOf(ir)?.stroke).toBe('currentColor');
+    expect(rectOf(ir)?.fill).toBe('transparent');
+  });
+});
+
+// ===========================================================================
+// 交互
+// ===========================================================================
+
+describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
+  it('explicit_none_overrides_outer：外 color=white ⊃ node stroke="none" → stroke none（显式截断），fill 仍 white', () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'scope',
+          children: [
+            {
+              type: 'node',
+              position: [0, 0],
+              text: 'x',
+              style: { stroke: 'none' },
+            },
+          ],
+          defaults: { style: { color: 'white' } },
+        },
+      ],
+    };
+
+    expect(rectOf(ir)?.stroke).toBe('none');
+    expect(rectOf(ir)?.fill).toBe('white');
+  });
+
+  it('nested_inner_color_beats_outer：S1 color=red ⊃ S2 color=blue ⊃ node → blue（就近）', () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'scope',
+          children: [
+            {
+              type: 'scope',
+              children: [{ type: 'node', position: [0, 0], text: 'x' }],
+              defaults: { style: { color: 'blue' } },
+            },
+          ],
+          defaults: { style: { color: 'red' } },
+        },
+      ],
+    };
+
+    expect(rectOf(ir)?.stroke).toBe('blue');
+  });
+
+  it('nodeDefault 的绿色描边优先于 Scope 级联的红色描边', () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'scope',
+          children: [{ type: 'node', position: [0, 0] }],
+
+          defaults: {
+            style: { stroke: 'red' },
+            node: {
+              style: { stroke: 'green' },
+            },
+          },
+        },
+      ],
+    };
+
+    expect(rectOf(ir)?.stroke).toBe('green');
+  });
+
+  it('reset_style_cuts_outer_keeps_own：S1 color=red ⊃ S2 resetStyle color=white → node white、其余回内置', () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'scope',
+          children: [
+            {
+              type: 'scope',
+              children: [{ type: 'node', position: [0, 0], text: 'x' }],
+
+              defaults: { style: { color: 'white' }, reset: true },
+            },
+          ],
+          defaults: { style: { color: 'red' } },
+        },
+      ],
+    };
+
+    expect(rectOf(ir)?.stroke).toBe('white');
+    expect(rectOf(ir)?.fill).toBe('white');
+  });
+
+  it('reset_style_arrow_keeps_host_color：resetStyle=[arrow] 切外层 arrowDefault，箭头仍跟宿主 path 主色', () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'scope',
+          children: [
+            {
+              type: 'scope',
+              children: [
+                {
+                  type: 'path',
+                  arrow: pathArrows('->'),
+                  children: [
+                    { type: 'step', kind: 'move', to: [0, 0] },
+                    { type: 'step', kind: 'line', to: [40, 0] },
+                  ],
+                  style: { color: 'red' },
+                },
+              ],
+              defaults: { reset: ['path'] },
+            },
+          ],
+          defaults: { path: { arrow: { shape: 'circle', scale: 2 } } },
+        },
+      ],
+    };
+
+    // 外层 arrowDefault circle 被切 → 回内置 stealth；但 color 仍跟宿主 path 红（host 轴不切）
+    expect(linePathOf(ir)?.arrowEnd?.shape).toBe('stealth');
+    expect(markerPaintColor(linePathOf(ir)?.arrowEnd)).toBe('red');
+  });
+
+  it('reset_style_label_keeps_host_color：resetStyle=[label] 切外层 labelDefault，label 仍跟宿主线红', () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'scope',
+          children: [
+            {
+              type: 'scope',
+              children: [
+                {
+                  type: 'path',
+                  children: [
+                    { type: 'step', kind: 'move', to: [0, 0] },
+                    { type: 'step', kind: 'line', to: [40, 0], label: { text: 'x' } },
+                  ],
+                  style: { color: 'red' },
+                },
+              ],
+              defaults: { reset: ['node', 'path'] },
+            },
+          ],
+          defaults: { node: { label: { textColor: 'gray' } }, path: { label: { textColor: 'gray' } } },
+        },
+      ],
+    };
+
+    expect(textWith(ir, 'x')?.fill).toBe('red');
+  });
+
+  it('opacity_per_element_no_compound：S1 opacity .5 ⊃ S2 opacity .5 ⊃ node → 0.5（不复合）', () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'scope',
+          children: [
+            {
+              type: 'scope',
+              children: [{ type: 'node', position: [0, 0], text: 'x' }],
+              defaults: { style: { opacity: 0.5 } },
+            },
+          ],
+          defaults: { style: { opacity: 0.5 } },
+        },
+      ],
+    };
+
+    expect(rectOf(ir)?.opacity).toBe(0.5);
+  });
+
+  it('style_orthogonal_to_transforms：scope scale + strokeWidth → strokeWidth 不随 scale 缩放', () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'scope',
+          transforms: [{ kind: 'scale', x: 2 }],
+          children: [{ type: 'node', position: [0, 0] }],
+          defaults: { style: { strokeWidth: 3 } },
+        },
+      ],
+    };
+
+    expect(rectOf(ir)?.strokeWidth).toBe(3);
+  });
+
+  it('style_orthogonal_to_local_namespace：<Scope localNamespace color="red"> → 样式照常级联', () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'scope',
+          localNamespace: true,
+          children: [{ type: 'node', position: [0, 0], text: 'x' }],
+          defaults: { style: { color: 'red' } },
+        },
+      ],
+    };
+
+    expect(rectOf(ir)?.stroke).toBe('red');
+  });
+
+  it('Path 主色覆盖箭头公共默认与实例主色', () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'scope',
+          children: [
+            {
+              type: 'path',
+              arrow: pathArrows('->'),
+              children: [
+                { type: 'step', kind: 'move', to: [0, 0] },
+                { type: 'step', kind: 'line', to: [40, 0] },
+              ],
+              style: { color: 'red' },
+            },
+            {
+              type: 'path',
+              arrow: pathArrows('->', { color: 'purple' }),
+              children: [
+                { type: 'step', kind: 'move', to: [0, 50] },
+                { type: 'step', kind: 'line', to: [40, 50] },
+              ],
+              style: { color: 'blue' },
+            },
+          ],
+          defaults: { path: { arrow: { color: 'green' } } },
+        },
+      ],
+    };
+    const arrowColors = allPrims(ir)
+      .filter((p): p is PathPrimitive => p.type === 'path' && !p.commands.some(c => c.kind === 'close'))
+      .map(p => markerPaintColor(p.arrowEnd));
+
+    // 宿主主色同时覆盖公共默认与实例上的宏颜色
+    expect(arrowColors).toEqual(['red', 'blue']);
+  });
+
+  it('Path 主色覆盖箭头端点默认与端点实例主色', () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'scope',
+          children: [
+            {
+              type: 'path',
+              arrow: pathArrows('->'),
+              children: [
+                { type: 'step', kind: 'move', to: [0, 0] },
+                { type: 'step', kind: 'line', to: [40, 0] },
+              ],
+              style: { color: 'red' },
+            },
+            {
+              type: 'path',
+              arrow: pathArrows('->', { end: { color: 'purple' } }),
+              children: [
+                { type: 'step', kind: 'move', to: [0, 50] },
+                { type: 'step', kind: 'line', to: [40, 50] },
+              ],
+              style: { color: 'blue' },
+            },
+          ],
+          defaults: { path: { arrow: { end: { color: 'green' } } } },
+        },
+      ],
+    };
+    const arrowColors = allPrims(ir)
+      .filter((p): p is PathPrimitive => p.type === 'path' && !p.commands.some(c => c.kind === 'close'))
+      .map(p => markerPaintColor(p.arrowEnd));
+
+    // 端点配置形成 mark 后仍由宿主主色覆盖宏颜色
+    expect(arrowColors).toEqual(['red', 'blue']);
+  });
+
+  it('arrow_default_nested_end_per_field_merge：内层 arrowDefault.end 只改 shape，保留外层 end.color（nested per-field 合并）', () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'scope',
+          children: [
+            {
+              type: 'scope',
+              children: [
+                {
+                  type: 'path',
+                  arrow: pathArrows('->'),
+                  children: [
+                    { type: 'step', kind: 'move', to: [0, 0] },
+                    { type: 'step', kind: 'line', to: [40, 0] },
+                  ],
+                },
+              ],
+              defaults: { path: { arrow: { end: { shape: 'stealth' } } } },
+            },
+          ],
+          defaults: { path: { arrow: { end: { color: 'red', shape: 'normal' } } } },
+        },
+      ],
+    };
+    const arrow = linePathOf(ir)?.arrowEnd;
+
+    // per-field merge：内层 shape=stealth 覆盖，外层 end.color=red 保留（path 无主色，arrowDefault 端点色生效）
+    expect(arrow?.shape).toBe('stealth');
+    expect(markerPaintColor(arrow)).toBe('red');
+  });
+});

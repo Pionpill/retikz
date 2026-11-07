@@ -1,21 +1,21 @@
 import type {
   CompositeCompileChild,
+  CompositeCompileContext,
   IRChild,
   LayoutAxisProposal,
   LayoutChildProbe,
   LayoutChildResult,
-  CompositeCompileContext,
 } from '@retikz/core';
 import {
   ChildSchema,
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
   LayoutIntrinsicMode,
+  ThemeMode,
   naturalLayoutProposal,
   resolveDefaultCoreThemeColors,
-  ThemeMode,
 } from '@retikz/core';
-import type { ExternalDatasets, DataTransformResult } from '@retikz/data';
+import type { DataTransformResult, ExternalDatasets } from '@retikz/data';
 import { ScalarValueSchema } from '@retikz/data';
 import type { JsonObject } from '@retikz/foundation';
 import { NonBlankStringSchema } from '@retikz/foundation';
@@ -41,8 +41,12 @@ import { emitTableBorderScope, emitTableBoundsSentinel, emitTableCellBackground 
 import { buildTableLayoutManifest } from '../manifest';
 import { resolveTableData } from '../preparation';
 import { presentTable } from '../presentation';
-import type { TableDefaultsResolution } from '../rule';
-import type { TablePlanResolution, TableCellAppearanceTrace } from '../rule';
+import type {
+  TableCellAppearanceTrace,
+  TableDefaultsLayer,
+  TableDefaultsResolution,
+  TablePlanResolution,
+} from '../rule';
 import { presentationInputsOfTableCellPlans, resolveTableCellPlans } from '../rule';
 import { resolveTableStructure } from '../structure';
 import type { TablesLoweringOptions } from '../types';
@@ -58,8 +62,8 @@ import type {
   CanonicalTableTrackSize,
   CompiledTableCellLayout,
   CompiledTableLayout,
-  TableTrackContribution,
   CompiledTableTrackLayout,
+  TableTrackContribution,
 } from './types';
 
 /** 同次 Table compile transaction 的输出 */
@@ -240,7 +244,7 @@ const resolveTableDefaults = (
   tableThemeDefinitions: TablesLoweringOptions['tableThemeDefinitions'] | undefined,
 ): TableDefaultsResolution => {
   const base = resolveTableThemeDefaults(theme, tableThemeDefinitions);
-  const layers: Array<TableDefaultsResolution['layers'][number]> = [...base.layers];
+  const layers: Array<TableDefaultsLayer> = [...base.layers];
 
   const append = (path: string, defaults: IRTableDefaults): void => {
     layers.push({ kind: 'source', path, defaults: structuredClone(defaults) });
@@ -494,17 +498,17 @@ const resolvePresentedTableTransaction = (
   input: InputPresentedTableTransaction,
   context: CompositeCompileContext,
 ): TableTransactionCompilation => {
-  const { tableId, meta, presented } = input;
+  const { tableId, meta, presented, layout: inputLayout, theme, defaultTable: configuredDefaultTable, plan } = input;
   assertPresentedAlignment(presented);
   const semantic = presented.semantic;
-  const resolved = resolveTableLayout(input.layout);
+  const resolved = resolveTableLayout(inputLayout);
   const manifestTheme =
-    input.theme ??
+    theme ??
     ({
       mode: ThemeMode.Light,
       colors: resolveDefaultCoreThemeColors(ThemeMode.Light),
     } as const);
-  const defaultTable = input.defaultTable ?? resolveTableDefaults(manifestTheme, undefined, undefined);
+  const defaultTable = configuredDefaultTable ?? resolveTableDefaults(manifestTheme, undefined, undefined);
   const manifestThemeName = defaultTable.name;
   const cellContentMasterColor = (index: number): string =>
     presented.cells[index].appearance.content?.defaults?.style?.color ??
@@ -714,7 +718,7 @@ const resolvePresentedTableTransaction = (
             borders: resolveCellBorders(
               presented.cells[index].appearance.borders,
               cellContentMasterColor(index),
-              input.plan?.cells[index].trace.appearance,
+              plan?.cells[index].trace.appearance,
             ),
           }),
     })),
@@ -761,7 +765,7 @@ const resolvePresentedTableTransaction = (
       ...(meta === undefined ? {} : { meta }),
     },
     [
-      emitTableBoundsSentinel(layout),
+      emitTableBoundsSentinel(layout.allocationBounds),
       ...backgroundOutputs,
       ...cellOutputs,
       ...(borderResult === undefined ? [] : [context.replay(borderResult)]),
@@ -775,8 +779,8 @@ const resolvePresentedTableTransaction = (
       themeMode: manifestTheme.mode,
       defaultTable,
       presented,
-      ...(input.plan === undefined ? {} : { plans: input.plan.cells, encodings: input.plan.encodings }),
-      legendDescriptors: input.plan?.legendDescriptors ?? [],
+      ...(plan === undefined ? {} : { plans: plan.cells, encodings: plan.encodings }),
+      legendDescriptors: plan?.legendDescriptors ?? [],
     }),
   };
 };

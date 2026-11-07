@@ -1,5 +1,6 @@
 import type { IRScene, IRPath } from '@retikz/core';
-import { compileToScene, SceneSchema } from '@retikz/core';
+import { SceneSchema } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { normalizeScene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
@@ -47,14 +48,16 @@ describe('React JSX Input 场景', () => {
   });
   it('通过 JSX、Vanilla 和 IR 往返保留多行节点标签', () => {
     const text = ['first', { text: 'second', fill: '#ff0000' }];
-    const input = createInputScene(<Node label={{ text }} />);
+    const label = { text, textAlign: 'end' as const, lineHeight: 24, maxTextWidth: 30, opacity: 0.5 };
+    const input = createInputScene(<Node label={label} />);
     const ir = normalizeScene(input.scene).ir;
-    expect(ir.children[0]).toMatchObject({ label: { text } });
-    expect(SceneSchema.parse(ir).children[0]).toMatchObject({ label: { text } });
+    expect(ir.children[0]).toMatchObject({ label });
+    expect(SceneSchema.parse(ir).children[0]).toMatchObject({ label });
     const child = ir.children[0];
     if ('namespace' in child || child.type !== 'node') throw new Error('expected Kernel node');
     const rebuilt = createInputScene(convertIRToReactNode({ ...ir, children: [child] }));
     expect(normalizeScene(rebuilt.scene).ir).toEqual(ir);
+    expect(compileToScene(normalizeScene(rebuilt.scene).ir).scene).toEqual(compileToScene(ir).scene);
   });
   it('通过 JSX、Vanilla 标准化和 IR 往返保留 Node 别名', () => {
     const input = createInputScene(<Node id="primary" aliasIds={['alternate']} position={[0, 0]} text="A" />);

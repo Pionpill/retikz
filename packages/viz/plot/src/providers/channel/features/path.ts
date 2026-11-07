@@ -13,10 +13,9 @@ import { JsonValueSchema } from '@retikz/foundation';
 import { isFiniteNumber } from '@retikz/math';
 
 import type { AnyChannelDefinition, PathChannelDefinition } from '../../../contract';
-import { ChannelDefinitionKind, markChannelEncoding, definePathChannel } from '../../../contract';
+import { ChannelDefinitionKind, markChannelEncoding, channelScale, definePathChannel } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
 import type { IRPlotMark, IRPlotChannel } from '../../../schemas';
-import {} from '../../../schemas';
 import { createMarkValueResolver, resolveNumericChannel } from '../shared';
 import { OPACITY_MIN, STROKE_WIDTH_MAX, STROKE_WIDTH_MIN } from './node';
 
@@ -44,11 +43,27 @@ const defineSimplePathChannel = <T extends JsonValue>(
   definePathChannel<T>({
     channel,
     output,
-    resolve: (ctx, mark) =>
-      createMarkValueResolver<T>(markChannelEncoding(mark, channel), ctx.model, {
+    resolve: (ctx, mark) => {
+      const encoding = markChannelEncoding(mark, channel);
+      if (encoding !== undefined && channelScale(encoding) !== undefined && output.outputKind === 'number') {
+        const resolution = resolveNumericChannel(ctx, encoding, channel);
+        if (resolution === undefined) return undefined;
+        return {
+          ...resolution,
+          resolver: row => {
+            const value = resolution.resolver(row);
+            if (value === undefined) return undefined;
+            const parsed = parse(value);
+            if (parsed === undefined) throw new RetikzPlotError(`${channel} scale produced an invalid value`);
+            return parsed;
+          },
+        };
+      }
+      return createMarkValueResolver<T>(encoding, ctx.model, {
         channelName: channel,
         parse,
-      }),
+      });
+    },
     deliver,
   });
 
@@ -68,7 +83,7 @@ const pathNumericChannels: {
     channel: 'strokeWidth',
     output: { outputKind: 'number', range: [STROKE_WIDTH_MIN, STROKE_WIDTH_MAX], clamp: true },
     resolve: (ctx, mark) =>
-      resolveNumericChannel(ctx.node, ctx.rows, ctx.model, pickPathStrokeWidth(mark), 'strokeWidth', {
+      resolveNumericChannel(ctx, pickPathStrokeWidth(mark), 'strokeWidth', {
         range: [STROKE_WIDTH_MIN, STROKE_WIDTH_MAX],
         clamp: true,
       }),
@@ -81,7 +96,7 @@ const pathNumericChannels: {
     output: { outputKind: 'number', range: [OPACITY_MIN, 1], clamp: true },
     legend: 'ramp',
     resolve: (ctx, mark) =>
-      resolveNumericChannel(ctx.node, ctx.rows, ctx.model, pickPathOpacity(mark), 'opacity', {
+      resolveNumericChannel(ctx, pickPathOpacity(mark), 'opacity', {
         range: [OPACITY_MIN, 1],
         clamp: true,
       }),
@@ -99,7 +114,7 @@ const pathNumericChannels: {
     channel: 'fillOpacity',
     output: { outputKind: 'number', range: [0.2, 1], clamp: true },
     resolve: (ctx, mark) =>
-      resolveNumericChannel(ctx.node, ctx.rows, ctx.model, pickPathFillOpacity(mark), 'fillOpacity', {
+      resolveNumericChannel(ctx, pickPathFillOpacity(mark), 'fillOpacity', {
         range: [0.2, 1],
         clamp: true,
       }),
@@ -116,8 +131,7 @@ const pathNumericChannels: {
   cornerRadius: definePathChannel<number>({
     channel: 'cornerRadius',
     output: { outputKind: 'number', range: [0, 0] },
-    resolve: (ctx, mark) =>
-      resolveNumericChannel(ctx.node, ctx.rows, ctx.model, markChannelEncoding(mark, 'cornerRadius'), 'cornerRadius'),
+    resolve: (ctx, mark) => resolveNumericChannel(ctx, markChannelEncoding(mark, 'cornerRadius'), 'cornerRadius'),
     deliver: (path, value) => {
       path.cornerRadius = value;
     },
@@ -265,7 +279,7 @@ export const PATH_CHANNELS: ReadonlyArray<AnyChannelDefinition> = [
       if (mark.type !== 'path' || mark.properties?.kind !== 'ribbon') return undefined;
       const binding = mark.encodings.ribbon?.[target];
       if (binding === undefined) return undefined;
-      const resolution = resolveNumericChannel(context.node, context.rows, context.model, binding, `ribbon.${target}`);
+      const resolution = resolveNumericChannel(context, binding, `ribbon.${target}`);
       if (resolution === undefined) throw new RetikzPlotError(`Path ribbon.${target} cannot resolve its field`);
       return {
         ...resolution,

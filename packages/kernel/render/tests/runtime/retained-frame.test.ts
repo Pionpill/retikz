@@ -1,6 +1,6 @@
 import type { IRScene, Scene } from '@retikz/core';
 import type { ReconcilerOutput } from '@retikz/reconciler';
-import { ReconcilerSession } from '@retikz/reconciler';
+import { SceneReconciler } from '@retikz/reconciler';
 import { describe, expect, it, vi } from 'vitest';
 
 import type {
@@ -91,10 +91,7 @@ const createHarness = (
     ...(options.expectedInitialFrame === undefined ? {} : { expectedInitialFrame: options.expectedInitialFrame }),
     ...(options.resolveReadonlyLayers === undefined ? {} : { resolveReadonlyLayers: options.resolveReadonlyLayers }),
   });
-  const session = new ReconcilerSession(
-    { onWarn: () => undefined },
-    { target: handle.target, captureProvenance: true },
-  );
+  const session = new SceneReconciler({ onWarn: () => undefined }, { target: handle.target, captureProvenance: true });
   session.mount(source('initial'));
   return { handle, prepare, prepareMount, renderer, session };
 };
@@ -124,7 +121,7 @@ describe('保留渲染帧契约', () => {
 
     expect(() => createHarness('unsupported', { onPrepareMount, resolveReadonlyLayers: layersFrom })).toThrowError(
       expect.objectContaining({
-        code: RetikzRenderErrorCode.RetainedRendererReadonlyLayerUnsupported,
+        code: RetikzRenderErrorCode.RuntimeRendererReadonlyLayerUnsupported,
       }),
     );
     expect(onPrepareMount).not.toHaveBeenCalled();
@@ -175,7 +172,7 @@ describe('保留渲染帧契约', () => {
 
     expect(() => harness.session.replace(source('rejected'))).toThrowError(
       expect.objectContaining({
-        code: RetikzRenderErrorCode.RetainedRendererPrepareFailed,
+        code: RetikzRenderErrorCode.RuntimeRendererPrepareFailed,
         cause: expect.objectContaining({ message: 'layer resolver failed' }),
       }),
     );
@@ -196,7 +193,7 @@ describe('保留渲染帧契约', () => {
       }),
     ).toThrowError(
       expect.objectContaining({
-        code: RetikzRenderErrorCode.RetainedRendererInitialFrameMismatch,
+        code: RetikzRenderErrorCode.RuntimeRendererInitialFrameMismatch,
       }),
     );
   });

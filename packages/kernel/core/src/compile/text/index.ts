@@ -1,6 +1,5 @@
-export * from './baseline';
+export * from './emit';
+export { DEFAULT_FONT_SIZE, calculateAlphabeticBaselineY, calculateLabelRotation, fallbackMeasurer } from './helpers';
 export * from './layout';
-export * from './metrics';
-export * from './tex';
-export * from './boundary-label-geometry';
-export * from './measurement';
+export type { LoweredTex, LoweredTexPaint, LoweredTexPath, TexLowerer } from './tex';
+export type { CompiledTextBlockLayout, CompiledTextBlockLine, TextLayoutContext } from './types';

@@ -1,6 +1,6 @@
 ---
 description: Path-level shape sugar 跨组件约定（点位契约 / 命名 / 几何下沉 / 等价性）
-keywords: 'Path-level、shape、sugar、resolvePosition、center、TargetSchema、position'
+keywords: 'Path-level、shape、sugar、evaluatePosition、center、TargetSchema、position'
 ---
 
 # ADR-015：Path-level shape sugar 跨组件约定（点位契约 / 命名 / 几何下沉 / 等价性）
@@ -15,7 +15,7 @@ keywords: 'Path-level、shape、sugar、resolvePosition、center、TargetSchema�
 
 ### 1. 点位契约：可计算形态限 literal 笛卡尔
 
-sugar 在 React 期**没有编译期坐标**（`resolvePosition` 是 compile 期工作）。故分两类：
+sugar 在 React 期**没有编译期坐标**（`evaluatePosition` 是 compile 期工作）。故分两类：
 
 - **透传形态**（点位原样塞 `<Step>`，可接任意 Target = 笛卡尔 / 极坐标 / node id / relative / offset）：Circle / Ellipse / Arc / Sector 的 `center`、Rectangle `{ corner1, corner2 }`。
 - **可计算形态**（sugar 要算 midpoint / bbox / 宽高 / arcStart，点位**只接 literal `[x, y]`**，传 node id / 极坐标 / 相对坐标**明确抛 Error、不静默兜底**）：Circle `{ from, to }` / `{ corner1, corner2 }`、Ellipse `{ corner1, corner2 }`、Rectangle `{ center, width, height }` / `{ center, side }` / `{ corner1, width, height }`、Sector（算 arcStart 画 wedge 边，[ADR-012](./012-arc-center-and-elliptical.md)）、Grid 全部形态。

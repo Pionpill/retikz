@@ -1,78 +1,33 @@
-这里展示 `@retikz/inspect` 公开的配置 schema。它们约束观测选项，不是完整的观测请求或 Scene schema；运行时的选择规则、注册表与回调类型见 [API 参考](/kernel/packages/inspect/reference)。
-
-以下默认值只在明确选择相应 Inspector 后生效。输入字段均可省略：先逐字段合并原始选项，再由 schema 补齐默认值；注册检查器不会自动开启检查。下表展示解析后的结构：“必填”标记补齐默认值后必定存在的字段，不表示调用时必须填写。
+﻿这里列出内置检查器的选项。只有请求明确启用检查器时，默认值才会生效；省略选项等价于空对象。每条请求独立解析选项，不继承其他请求的配置。
 
 ## PathInspectOptionsSchema
 
-检查最终 Path 命令的控制柄、顶点与弧线构造；标签序号对应最终命令，而不是 authored step。
+读取最终 Scene path 的控制柄与端点。命令索引对应编译后的路径命令。
 
 <ZodSchema
   name="PathInspectOptionsSchema"
-  description="stroke Path 观测选项；在原始选项合并后应用默认值。"
   descriptions={{
-    controlPoints: '是否显示控制柄与控制点，默认 true',
-    vertices: '是否显示子路径端点与闭合起点，默认 false',
-    ellipseAxes: '是否独立显示椭圆十字轴线，默认 false',
-    arcGeometry: '是否显示弧心、端点与起终半径，默认 true',
-    labels: '是否显示已选几何的标签，默认 false；也可单独显示贝塞尔控制点标签',
+    controlPoints: '显示二次和三次曲线的控制柄与控制点，默认 true',
+    vertices: '显示路径端点，默认 false',
+    labels: '显示辅助标记标签，默认 false',
   }}
 />
 
-## NodeInspectOptionsSchema
+## GroupInspectOptionsSchema
 
-检查 Node 的局部几何与正文排版；正文盒和基线不包含外置 label。
+显示实际 Scene group 的局部坐标系。
 
 <ZodSchema
-  name="NodeInspectOptionsSchema"
-  description="Node 几何检查选项；先合并原始选项，再应用默认值。"
+  name="GroupInspectOptionsSchema"
   descriptions={{
-    outline: '是否显示 Shape 的精确轮廓，默认 true',
-    boundary: '是否显示已解析连接边界，默认 true',
-    bounds: '是否显示最终 Scene 坐标中的轴向包围盒，默认 true',
-    box: '是否显示经过 Node 自身旋转的外框，默认 true',
-    content: '是否显示同次排版的正文占用盒，默认 true',
-    baselines: '是否显示正文物理行基线，默认 true',
-    keyPoints: '是否显示 Shape provider 命名的结构关键点，默认 true',
-    labels: '是否显示几何标签，默认 true',
+    origin: '显示局部原点，默认 true',
+    axes: '显示局部正向坐标轴，默认 false',
+    labels: '显示当前快照中的图元路径，默认 false',
   }}
 />
 
 ## ClipInspectOptionsSchema
 
-检查每次裁切应用的完整边缘，包括孔洞；不计算嵌套裁切的布尔交集。
+显示 group 引用的完整裁剪边缘，包括孔洞；不计算裁剪交集。
 
-<ZodSchema
-  name="ClipInspectOptionsSchema"
-  description="Clip 应用检查选项；先合并原始选项，再应用默认值。"
-  descriptions={{
-    outline: '是否显示最终 lowering 路径的全部边缘，默认 true',
-    labels: '是否显示裁切应用标签，默认 false',
-  }}
-/>
-
-## ScopeInspectOptionsSchema
-
-检查 Scope 固有包络和局部坐标系；没有参与包络的子布局时只绘制已开启的原点、轴和标签。
-
-<ZodSchema
-  name="ScopeInspectOptionsSchema"
-  description="Scope 检查选项；先合并原始选项，再应用默认值。"
-  descriptions={{
-    envelope: '是否显示固有包络，默认 true',
-    origin: '是否显示局部原点，默认 true',
-    axes: '是否显示局部正向坐标轴，默认 false',
-    labels: '是否显示逻辑层级标签，默认 false',
-  }}
-/>
-
-## CoordinateInspectOptionsSchema
-
-检查已解析的坐标点。
-
-<ZodSchema
-  name="CoordinateInspectOptionsSchema"
-  description="Coordinate 检查选项。"
-  descriptions={{ labels: '是否显示 authored id 标签，默认 false' }}
-/>
-
-内置用法见 [内置观测](/kernel/packages/inspect/builtins)，自定义 Inspector 的选项契约见 [自定义用法](/kernel/packages/inspect/custom)。
+<ZodSchema name="ClipInspectOptionsSchema" descriptions={{ outline: '显示完整裁剪边缘，默认 true' }} />

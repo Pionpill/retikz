@@ -2,8 +2,9 @@ import type { FC } from 'react';
 import { forwardRef, Fragment, memo } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { collectHydrationHandlers, Node, Path, Scope, Step } from '../../../src';
+import { Node, Path, Scope, Step } from '../../../src';
 import type { PathProps } from '../../../src';
+import { collectHydrationHandlers } from '../../../src/kernel/runtime/collect-hydration-handlers';
 
 /**
  * 水合：collectHydrationHandlers（与 InputScene 遍历同源，按 id 收 handler）

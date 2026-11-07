@@ -92,7 +92,7 @@ export const TextVisualSchema = strictObject({
 
 /** 校验文本块对齐、行高与自动折行宽度约束 */
 export const TextLayoutSchema = strictObject({
-  align: TextAlignSchema.optional().describe(
+  textAlign: TextAlignSchema.optional().describe(
     'Multi-line text alignment within the text block. Omitted fields use middle.',
   ),
   lineHeight: LineHeightSchema.optional().describe(

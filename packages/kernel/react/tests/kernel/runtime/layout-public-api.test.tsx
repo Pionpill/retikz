@@ -32,7 +32,7 @@ describe('Layout 公共 API', () => {
     const definition = definePath<ZodInfer<typeof schema>>({
       name: 'precise-options',
       schema,
-      compile: context => context.emitStroke(context.path),
+      compile: context => context.emitStroke(),
     });
     const paths: NonNullable<LayoutExtensions['paths']> = [definition];
 

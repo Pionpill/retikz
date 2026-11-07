@@ -9,6 +9,8 @@ keywords: 'qualified、spatial、handle、sidecar、Composite、ownerPath、inst
 - 决策日期：2026-08-11
 - 关联：[Chart ADR-003](../../../../../viz/_notes/decisions/chart/v0/v0.1/003-presentation-standard-layout.md)
 
+> 本篇空间句柄声明、发布、投影、索引与查询机制已整体由 [077](./077-compile-output-contract.md) 替代并删除。领域产物不承担通用世界坐标索引，正常 Scope 变换和引用继续有效。
+
 ## 背景与目标
 
 Core 已有 compile occurrence、runtime semantic owner、primitive topology、layout probe / replay 与 observation origin / final provenance。这些能力可以解释“谁生成了哪些 primitive”以及一次 compile 内的展开路径，却没有公开、JSON-safe、renderer-neutral 的语义空间索引。Plot 当前可以用透明 Node carrier 让部分 plotArea 几何进入既有 Core target 路径，但这种绘制辅助物不能成为 view、track、facet panel、axis region、series、datum 等工具链空间的唯一真源。

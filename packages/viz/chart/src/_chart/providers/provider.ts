@@ -39,7 +39,7 @@ export const createChartProviderContribution = <TSource extends IRChartSource>(
 ): ChartProviderContribution => {
   if (input.family.length === 0) {
     throw new RetikzChartError({
-      code: RetikzChartErrorCode.InvalidRegistry,
+      code: RetikzChartErrorCode.ProviderRegistryInvalid,
       message: 'Chart provider family must be non-empty',
       details: { path: ['family'] },
     });

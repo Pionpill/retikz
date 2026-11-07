@@ -96,7 +96,7 @@ const handle = view.hydrate({
 SSR 后用独立的 `hydrate(svg, options)` 入口绑定。这个入口只水合 SSR 注入后得到的 `<svg>` 根，不支持 Canvas；Canvas 必须使用 `mountCanvas(...).hydrate()`，由 view 提供 Scene、命中查询和坐标映射。要让 standalone SVG 的 context 拿到 meta / 几何 / 动画控制，把 `scene`（用 `@retikz/core` 的 `compileToScene(ir).scene` 从 IR 编译得到）一并传入；不传则只给最小 context（见下）：
 
 ```ts
-import { compileToScene } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { hydrate, mountSvg } from '@retikz/vanilla';
 
 // mountSvg / mountCanvas 的 view 自带 view.hydrate，context 自动用本 view 的 Scene

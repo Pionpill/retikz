@@ -9,7 +9,7 @@ const Demo: FC = () => (
       position={[-310, 10]}
       cornerRadius={4}
       style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
-      layout={{ minimumSize: { width: 126, height: 58 }, align: 'middle', lineHeight: 17 }}
+      layout={{ minimumSize: { width: 126, height: 58 }, textAlign: 'middle', lineHeight: 17 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>DSL inputs</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -21,7 +21,7 @@ const Demo: FC = () => (
       position={[-145, 10]}
       cornerRadius={4}
       style={{ stroke: 'dimgray', fill: 'dimgray', opacity: { fill: 0.08 } }}
-      layout={{ minimumSize: { width: 142, height: 58 }, align: 'middle', lineHeight: 17 }}
+      layout={{ minimumSize: { width: 142, height: 58 }, textAlign: 'middle', lineHeight: 17 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>normalization</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -33,7 +33,7 @@ const Demo: FC = () => (
       position={[20, 10]}
       cornerRadius={4}
       style={{ stroke: 'dimgray', fill: 'dimgray', opacity: { fill: 0.08 } }}
-      layout={{ minimumSize: { width: 132, height: 58 }, align: 'middle', lineHeight: 17 }}
+      layout={{ minimumSize: { width: 132, height: 58 }, textAlign: 'middle', lineHeight: 17 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>validation</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -45,7 +45,7 @@ const Demo: FC = () => (
       position={[175, 10]}
       cornerRadius={4}
       style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
-      layout={{ minimumSize: { width: 124, height: 58 }, align: 'middle', lineHeight: 17 }}
+      layout={{ minimumSize: { width: 124, height: 58 }, textAlign: 'middle', lineHeight: 17 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>IRPlot</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -57,7 +57,7 @@ const Demo: FC = () => (
       position={[330, 10]}
       cornerRadius={4}
       style={{ stroke: 'dimgray', fill: 'dimgray', opacity: { fill: 0.08 } }}
-      layout={{ minimumSize: { width: 126, height: 58 }, align: 'middle', lineHeight: 17 }}
+      layout={{ minimumSize: { width: 126, height: 58 }, textAlign: 'middle', lineHeight: 17 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>execution</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -70,7 +70,7 @@ const Demo: FC = () => (
       position={[20, -90]}
       cornerRadius={4}
       style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
-      layout={{ minimumSize: { width: 142, height: 50 }, align: 'middle', lineHeight: 16 }}
+      layout={{ minimumSize: { width: 142, height: 50 }, textAlign: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>complete spec</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -82,7 +82,7 @@ const Demo: FC = () => (
       position={[330, 110]}
       cornerRadius={4}
       style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
-      layout={{ minimumSize: { width: 142, height: 50 }, align: 'middle', lineHeight: 16 }}
+      layout={{ minimumSize: { width: 142, height: 50 }, textAlign: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>runtime inputs</Text>
       <Text fill="gray" font={{ size: 12 }}>

@@ -22,6 +22,20 @@ import {
 const color = compositeOpaqueColor('#336699', '#ffffff', 0.2); // '#d6e0eb'
 ```
 
+## ID 分配器
+
+`createIdAllocator(prefix)` 返回 `IdAllocator`，通过 `next()` 用 `-` 连接固定前缀与从 0 开始的递增序号。空前缀生成 `-0`、`-1` 等 ID。每个实例独立计数，不回收已分配编号，也不使用全局状态。
+
+```ts
+import { createIdAllocator } from '@retikz/foundation';
+
+const ids = createIdAllocator('tree-1/scope');
+ids.next(); // 'tree-1/scope-0'
+ids.next(); // 'tree-1/scope-1'
+```
+
+分配器不保证不同实例之间的唯一性；需要跨实例唯一性时，调用方负责提供互不重叠的前缀命名域，并维护分配器生命周期和既有 ID。Scope、事务和树根等领域语义留在调用方。
+
 ## 只读集合快照
 
 `createReadonlyMap(entries)` 将输入条目复制为独立的浅快照。结果保持原生 Map 的查询、迭代和插入顺序，但不暴露 `set`、`delete` 或 `clear`；entry value 保持原对象身份，不会被深拷贝或冻结。

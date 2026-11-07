@@ -1,7 +1,7 @@
-import { compileToScene } from '@retikz/core';
 import type { ParsedFieldValue, FieldResolver } from '@retikz/data';
 import { applyFieldResolver, resolveDataRows } from '@retikz/data';
 import { DataFieldType } from '@retikz/data';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { createPlotLocator } from '../../../src/pipeline';

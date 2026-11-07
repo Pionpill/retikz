@@ -1,4 +1,4 @@
-import type { IRChild, IRScope, CanonicalTheme, ScenePrimitive } from '@retikz/core';
+import type { CanonicalTheme, IRChild, IRScope, ScenePrimitive } from '@retikz/core';
 import { DEFAULT_RESOLVED_THEME, defineTheme, LayoutAxisProposalKind, ThemeMode } from '@retikz/core';
 import type { IRFlexLayout } from '@retikz/layout';
 import { FlexLayoutArtifactSchema, FlexLayoutDirection, FlexLayoutSchema, LayoutAlignment } from '@retikz/layout';
@@ -365,16 +365,14 @@ describe('Diagram Foundation 提供者集成', () => {
       drawing: { ...drawing, meta: { secret: 'drawing-source-only' } },
     });
     const compositeTypes = output.artifacts
-      .filter(artifact => artifact.kind === 'composite')
+
       .map(artifact => artifact.type);
     const flexArtifacts = output.artifacts
-      .filter(
-        artifact => artifact.kind === 'composite' && artifact.namespace === 'layout' && artifact.type === 'flexLayout',
-      )
+      .filter(artifact => artifact.namespace === 'layout' && artifact.type === 'flexLayout')
       .map(artifact => FlexLayoutArtifactSchema.parse(artifact.value));
     const flexItems = flexArtifacts.flatMap(artifact => artifact.items);
     const legendArtifactValue = output.artifacts.find(
-      artifact => artifact.kind === 'composite' && artifact.namespace === 'standard' && artifact.type === 'legend',
+      artifact => artifact.namespace === 'standard' && artifact.type === 'legend',
     )?.value;
     const legendArtifact = LegendArtifactSchema.parse(legendArtifactValue);
     const textLines = primitivesOf(output.scene.primitives).flatMap(primitive =>
@@ -383,9 +381,7 @@ describe('Diagram Foundation 提供者集成', () => {
 
     expect(compositeTypes).toEqual(expect.arrayContaining(['flexLayout', 'legend']));
     expect(compositeTypes).not.toContain('foundation');
-    expect(output.artifacts.some(artifact => artifact.kind === 'composite' && artifact.namespace === 'diagram')).toBe(
-      false,
-    );
+    expect(output.artifacts.some(artifact => artifact.namespace === 'diagram')).toBe(false);
     expect(flexItems.map(item => item.key)).toEqual(
       expect.arrayContaining(['heading', 'main', 'title', 'description', 'drawing', 'legend']),
     );
@@ -413,7 +409,7 @@ describe('Diagram Foundation 提供者集成', () => {
       drawing,
     });
     const value = output.artifacts.find(
-      artifact => artifact.kind === 'composite' && artifact.namespace === 'standard' && artifact.type === 'legend',
+      artifact => artifact.namespace === 'standard' && artifact.type === 'legend',
     )?.value;
     const artifact = LegendArtifactSchema.parse(value);
 

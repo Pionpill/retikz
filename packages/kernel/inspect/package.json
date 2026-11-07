@@ -87,7 +87,8 @@
     "@retikz/core": "workspace:*",
     "@retikz/foundation": "workspace:*",
     "@retikz/math": "workspace:*",
-    "zod": "catalog:"
+    "zod": "catalog:",
+    "@retikz/reconciler": "workspace:*"
   },
   "peerDependencies": {
     "@retikz/react": "workspace:*",

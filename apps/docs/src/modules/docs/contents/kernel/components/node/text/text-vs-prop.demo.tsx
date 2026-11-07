@@ -7,7 +7,7 @@ import type { FC } from 'react';
  */
 const Demo: FC = () => (
   <Layout>
-    <Node id="sugar" position={[-100, 0]} layout={{ align: 'start' }}>
+    <Node id="sugar" position={[-100, 0]} layout={{ textAlign: 'start' }}>
       <Text fill="red" font={{ weight: 'bold', size: 16 }}>
         Heading
       </Text>
@@ -25,7 +25,7 @@ const Demo: FC = () => (
         'body line 1',
         { text: 'note', font: { style: 'italic' }, opacity: 0.6 },
       ]}
-      layout={{ align: 'start' }}
+      layout={{ textAlign: 'start' }}
     />
   </Layout>
 );

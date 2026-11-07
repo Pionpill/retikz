@@ -257,7 +257,7 @@ result.manifest;
 | `compileTable()`       | 编译 canonical 单根 Table，返回 Scene、完整 artifacts 与根 manifest  |
 | `CompileTableOptions`  | 分开承载 `lower` 与 `compile` 选项                                   |
 | `CompileTableResult`   | `CompileResult` 加 exact root `manifest`                             |
-| `TableCompileArtifact` | `CompositeCompileArtifact<'table', 'table', TableLayoutManifest>`    |
+| `TableCompileArtifact` | `CompositeArtifact<'table', 'table', TableLayoutManifest>`           |
 
 `compileTable(spec, datasets, options?)` 合并 `lowerTables()` 与 `compile.composites` 后只调用一次 `compileToScene()`。返回的 `manifest` 与 exact root artifact 的 `value` 是同一 immutable 引用；nested Table、重复 table id 或其它 composite artifacts 不会误选。
 

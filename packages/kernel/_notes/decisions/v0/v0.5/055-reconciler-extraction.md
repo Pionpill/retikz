@@ -1,5 +1,5 @@
 ---
-description: 将 Core 专属增量执行与 Scene 更新协议迁入 Reconciler，以无 Runtime 依赖的静态编译准备和来源契约连接两包，保持既有执行行为
+description: 将 Core 专属增量执行与 Scene 更新协议迁入 Reconciler，以无 Runtime 依赖的静态编译快照和来源契约连接两包，保持既有执行行为
 keywords: Reconciler、Core、Runtime、迁移、编译来源、ScenePatch、静态编译、trace
 ---
 
@@ -11,6 +11,8 @@ keywords: Reconciler、Core、Runtime、迁移、编译来源、ScenePatch、静
 - 关联：[v0.5 Roadmap](./roadmap.md)、[013](./013-incremental-core-compile.md)、[014](./014-scene-patch-retained-renderer.md)、[016](./016-runtime-execution-policy.md)、[050](./050-runtime-trace-owner-declarations.md)、[Drawing Complete](../../../architecture/core-drawing-complete.md)
 
 > 后续调整：[061](./061-weave-core-integration.md) 已替代本文的 CoreChange 提示、快照 diff 索引与 mismatch 诊断约定；完整输入和 Scene 提交边界继续保留。
+
+> 编译执行归属与中间产物决策由 [ADR-080](./080-unified-reconciler-compilation.md) 部分替代：完整入口、遍历、试算与输出生命周期归 Reconciler；Core 保留原子阶段及权威产物。本篇其余绘图语义与事务约束继续有效。
 
 ## 背景与目标
 
@@ -30,38 +32,41 @@ Render 的 retained 能力消费 Reconciler 的公开输出契约，静态能力
 
 ## 基础数据结构与公开契约
 
-### Core 静态编译准备
+### Core 静态编译快照
 
-Core 保留 `compileToScene`、`observeCompileToScene` 及现有结果语义，新增 `prepareSceneCompilation` 作为需要延后派发 warning、读取编译来源的静态能力。它同步完成一次编译，不创建持续实例，不接收 revision、Runtime Source 或事务对象。
+Core 保留 `compileToScene`、`observeCompileToScene` 及现有结果语义，新增 `compileSceneSnapshot` 作为需要延后派发 warning、读取编译来源的静态能力。它同步完成一次编译，不创建持续实例，不接收 revision、Runtime Source 或事务对象。
 
-该入口接收 `IRScene`、不含 `onWarn` 的编译选项，以及包含 `observers` 与 `captureProvenance` 的准备选项；两者分别默认空列表和 `false`。返回 `PreparedSceneCompilation`：
+该入口接收 `IRScene`、不含 `onWarn` 的编译选项，以及包含 `observers` 与 `captureProvenance` 的快照收集选项；两者分别默认空列表和 `false`。返回 `SceneCompilationSnapshot`：
 
 | 字段              | 契约                                                                                        |
 | ----------------- | ------------------------------------------------------------------------------------------- |
 | `result`          | 完整 `CompileResult`，保留 Composite artifact 的泛型关联                                    |
 | `diagnostics`     | 本次成功编译产生、按 canonical 顺序排列的完整 warnings；不派发 warning 回调或默认控制台警告 |
 | `observerOutputs` | 本次显式观察器输出；未提供观察器时为空                                                      |
-| `provenance`      | 仅在请求收集时存在的 `CompileProvenance`；只关联本次结果，不承诺跨次身份                    |
+| `provenance`      | 仅在请求收集时存在的 `CompileProvenanceSnapshot`；只关联本次结果，不承诺跨次身份            |
 
-普通完整入口与准备入口消费同一绘图编译语义。普通入口保持成功后派发 warning 的行为；Reconciler 在候选内使用准备入口，成功提交后才派发 warning。观察器仍按已有编译观察语义执行，不因准备入口而获得宿主事务回滚能力。
+普通完整入口与快照入口消费同一绘图编译语义。普通入口保持成功后派发 warning 的行为；Reconciler 在候选内使用快照入口，成功提交后才派发 warning。观察器仍按已有编译观察语义执行，不因快照入口而获得宿主事务回滚能力。
 
-准备入口不是任意子树的脱离上下文编译器。现有孤立 Node 快路径只能在既有安全条件下构造独立输入；任意子树复用所需的上下文与依赖契约不由此自动成立。
+快照入口不是任意子树的脱离上下文编译器。现有孤立 Node 快路径只能在既有安全条件下构造独立输入；任意子树复用所需的上下文与依赖契约不由此自动成立。
 
 ### 编译来源与运行时身份分离
 
 Core 公开 `validateCompositeInputBindings(source: IRScene, inputs: CompositeInputBindings | undefined): void`，验证 opaque bindings 与完整输入的配对关系。未提供 bindings 时通过；无效来源或不匹配时沿用 `RetikzCoreError` 的 `CompositeContractViolation`。该能力不执行编译、不产生 warning、不返回私有 scope；静态编译与 Reconciler 复用同一校验语义。
 
-Core 提供只读 `CompileProvenance`，描述本次编译的来源事实，不提供 Runtime identity 或稳定性结论。其跨包数据由以下集合组成：
+Core 提供只读 `CompileProvenanceSnapshot`，描述本次编译的来源事实，不提供 Runtime identity 或稳定性结论。其跨包数据由以下集合组成：
 
-| 集合        | 必需信息                                                                                                                                |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `owners`    | 编译内唯一的 `key`、可选父 `parent`、实体 `kind`、可选作者 `id`、输入位置 `index`、是否属于生成内容的 `generated`；文档根由 `root` 指定 |
-| `bindings`  | 名称注册所在的编译内 `namespace` 标识、名称 `name` 和来源 `owner`；保留注册顺序及重复注册，不提前去重                                   |
-| `emissions` | 最终 Scene 中图元 occurrence 的 `primitivePath`、来源 `owner`、发射 `role` 与同 owner/role 下的 `ordinal`                               |
+| 集合              | 必需信息                                                                                                                                                                                             |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ownerMap`        | 以编译内实体键索引来源记录；包含可选父 `parent`、实体 `kind`、可选作者 `id`、所属命名空间 `namespace`、输入位置 `index`、是否属于生成内容的 `generated` 和直接输出 `emissions`；文档根由 `root` 指定 |
+| `owner.emissions` | 最终 Scene 中该实体直接产生的图元 occurrence 的 `primitivePath`、发射 `role` 与同 owner/role 下的 `ordinal`；归属由所在实体记录表达                                                                  |
 
 编译内标识为不透明键，只能在同一份来源结果内关联。每个最终图元 occurrence 恰有一条 emission；provider 复用同一对象不会合并不同出现位置。最终顺序包含编译产生的排序和包装效果，嵌套贡献保留原来源。试算中未选中的输出不进入最终 emission；选中 replay 的名称注册与来源仍须准确记录。此 sidecar 不进入持久 IR 或 Scene schema，也不替代空间句柄和诊断 locator。
 
 Core 负责准确记录内置及自定义绘图能力的来源。Reconciler 根据这些事实及 candidate revision，沿用既有稳定身份和 candidate-local 身份规则，生成运行时拓扑。Render 不从 Scene 的 public id 或对象引用反推运行时身份。
+
+来源契约只保存根实体键与实体映射，不另存名称绑定或平行的全局发射表。名称归属由实体的 `id` 与 `namespace` 表达，同名实体分别保留；无图元输出的实体仍有来源记录。根及匿名实体保留所在命名空间，使来源迁移不依赖额外上下文。
+
+选中 replay 保留试算内部的实体父子关系与图元归属，导入时分配独立实体键并挂到所属 Composite。试算根命名空间映射到重放位置，内部局部命名空间保持隔离；外层新增包装图元归所属 Composite。内部实体作为生成内容使用版本内身份，不因保留细粒度来源获得跨版本稳定保证。未选中的试算不进入最终来源，重放继续只使用已选中的绘图结果。
 
 ### Reconciler 公开表面
 
@@ -81,9 +86,9 @@ Core 删除这些旧出口，不 re-export Reconciler，不保留兼容别名。
 
 Core 不提供 trace 选项、reporter 或工作量计数；编译工作量由持有执行策略与提交边界的 Reconciler 报告。Foundation 保留通用 `PerformanceTraceRecord` 与 `PerformanceTraceSink` 契约。
 
-Reconciler 在成功提交后报告 `update` 阶段：Weave 使用 `element-compile` 记录实际元素编译次数，包含 Composite 的完整 Core 编译使用 `scene-compile`，每次计 1，不统计内部展开、布局探测或 replay。完整编译报告 `full`，增量批次报告 `incremental`；`reused` 为 0，`changed` 等于 `visited`。
+Reconciler 在成功提交后报告 `update` 阶段：Weave 使用 `element-compile` 记录实际元素编译次数，非增量模式的整场景编译使用 `scene-compile`，每次计 1，不统计内部展开、布局探测或 replay。完整编译报告 `full`，增量批次报告 `incremental`；`reused` 为 0，`changed` 等于 `visited`。
 
-Reconciler 通过 `ReconcilerTracePhase`、`ReconcilerTraceUnit` 公开自己的观测词汇，隔离接收函数异常并提供诊断；观测失败不撤销已发布结果，失败事务不报告成功记录。空批次与只更新输出目标的调用不报告编译工作量。
+Reconciler 通过 `ReconcilerLifecyclePhase`、`ReconcilerTraceUnit` 公开自己的观测词汇，隔离接收函数异常并提供诊断；观测失败不撤销已发布结果，失败事务不报告成功记录。空批次与只更新输出目标的调用不报告编译工作量。
 
 Render 自行拥有 `RenderTracePhase` 与 `RenderTraceUnit.ScenePrimitive`，SVG / Canvas 的图元计数保持原语义。Core 旧 trace 出口直接删除，不保留别名；编译 observer 与 provenance 契约不受影响。
 

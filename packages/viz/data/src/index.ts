@@ -185,6 +185,25 @@ export type {
   DataValueSampleOptions,
 } from './provenance';
 export { mergeExternalDatasets } from './shared';
+export {
+  BUILTIN_SCALES,
+  BuiltinDataScale,
+  defineScale,
+  parseScaleOperation,
+  resolveScale,
+  resolveScaleRegistry,
+  ScaleOperationSchema,
+  ScaleRangeSchema,
+} from './scale';
+export type {
+  InputScaleDefinition,
+  IRDataScaleOperation,
+  ScaleDefinition,
+  ScaleResolution,
+  ScaleResolveContext,
+  ScaleRebuildOptions,
+  ScaleValue,
+} from './scale';
 export type { ExternalDatasets, ExternalRow } from './shared';
 export {
   AnnotateParamsSchema,

@@ -1,9 +1,9 @@
-import { compileToScene, prepareSceneCompilation } from '@retikz/core';
-import type { IRPath, ScenePrimitive, IRScene, CompileObservation, CompileObserverDefinition } from '@retikz/core';
-import type { MarkEmitContext } from '@retikz/core';
+import type { IRPath, IRScene, MarkEmitContext, ScenePrimitive } from '@retikz/core';
+import { BuiltinCompileWarningCode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { readWeaveCurrent, WeaveReconciler } from '../../src/weave';
+import { compileToScene, compileSceneSnapshot } from '../../src/compile';
+import { readWeaveCurrent, WeaveManager } from '../../src/weave';
 
 const scene: IRScene = {
   type: 'scene',
@@ -24,6 +24,105 @@ const scene: IRScene = {
 };
 
 describe('Weave 批次更新', () => {
+  it('父级字体更新重新解析正文和标签，增量结果与全量一致', () => {
+    const child = {
+      type: 'node',
+      id: 'text',
+      text: 'body',
+      label: { text: 'label', font: { size: '0.5em' } },
+    } as const;
+    const input: IRScene = {
+      type: 'scene',
+      version: 1,
+      children: [
+        {
+          type: 'scope',
+          defaults: { node: { style: { font: { size: '1em', weight: 'normal' } } } },
+          children: [child],
+        },
+      ],
+    };
+    const options = { fontSize: 20 };
+    const session = new WeaveManager(input, options);
+    const mounted = session.mount();
+    const scope = readWeaveCurrent(mounted.root).children[0];
+    if (scope.type !== 'scope') throw new Error('Expected scope');
+    const defaults = { node: { style: { font: { size: '2em', weight: 'bold' } } } } as const;
+    const prepared = session.update({
+      operations: [
+        {
+          kind: 'update',
+          target: { kind: 'scope', scopeId: scope.scopeId },
+          input: { type: 'scope', defaults },
+        },
+      ],
+    });
+    const expected = compileToScene({ ...input, children: [{ type: 'scope', defaults, children: [child] }] }, options);
+    expect(prepared.compilation.result).toEqual(expected);
+    expect(prepared.compilation.result).not.toEqual(mounted.compilation.result);
+    prepared.rollback();
+  });
+
+  it('重名诊断在删除后重新汇总，与全量一致且不修改已发布快照', () => {
+    const input: IRScene = {
+      type: 'scene',
+      version: 1,
+      children: [0, 10, 20].map(x => ({ type: 'node', id: 'same', position: [x, 0] })),
+    };
+    const session = new WeaveManager(input);
+    const mounted = session.mount();
+    const before = mounted.compilation.diagnostics;
+    expect(before).toEqual(compileSceneSnapshot(input).diagnostics);
+    expect(before.filter(warning => warning.code === BuiltinCompileWarningCode.DuplicateNodeId)).toHaveLength(1);
+    expect(before[0].path).toEqual(['children', 2, 'id']);
+    const remove = () =>
+      session.update({
+        operations: [{ kind: 'remove', target: { kind: 'child', scopeId: mounted.root.scopeId, index: 0 } }],
+      });
+    const first = remove();
+    expect(first.compilation.diagnostics).toEqual(
+      compileSceneSnapshot({ ...input, children: input.children.slice(1) }).diagnostics,
+    );
+    expect(first.compilation.diagnostics[0].path).toEqual(['children', 1, 'id']);
+    first.commit();
+    first.finish();
+    const second = remove();
+    expect(second.compilation.diagnostics).toEqual([]);
+    expect(before[0].path).toEqual(['children', 2, 'id']);
+    expect(before[0].message.match(/\.id/g)).toHaveLength(3);
+    second.rollback();
+  });
+
+  it('匿名 Scope 身份跨更新保留，回滚不复用编号，不同会话使用不同根身份', () => {
+    const input: IRScene = { type: 'scene', version: 1, children: [{ type: 'scope', children: [] }] };
+    const session = new WeaveManager(input);
+    const { root } = session.mount();
+    const initial = readWeaveCurrent(root).children[0];
+    if (initial.type !== 'scope') throw new Error('Expected scope');
+    const initialId = initial.scopeId;
+    const insert = () =>
+      session.update({
+        operations: [{ kind: 'insert', parentId: root.scopeId, index: 0, elements: [{ type: 'scope', children: [] }] }],
+      });
+    const first = insert();
+    first.commit();
+    const discarded = readWeaveCurrent(root).children[0];
+    if (discarded.type !== 'scope') throw new Error('Expected scope');
+    first.rollback();
+    const second = insert();
+    second.commit();
+    const current = readWeaveCurrent(root).children;
+    const inserted = current[0];
+    if (inserted.type !== 'scope') throw new Error('Expected scope');
+    expect(inserted.scopeId).not.toBe(discarded.scopeId);
+    expect(current[1]).toBe(initial);
+    expect(initial.scopeId).toBe(initialId);
+    expect(new WeaveManager(input).mount().root.scopeId).not.toBe(root.scopeId);
+    expect(second.compilation.result).toEqual(
+      compileToScene({ ...input, children: [{ type: 'scope', children: [] }, ...input.children] }),
+    );
+  });
+
   it('删除已编译子树不发布其新状态，提交后回滚恢复原结构与依赖', () => {
     const input: IRScene = {
       type: 'scene',
@@ -39,7 +138,7 @@ describe('Weave 批次更新', () => {
         { type: 'node', id: 'retained' },
       ],
     };
-    const session = new WeaveReconciler(input);
+    const session = new WeaveManager(input);
     const { root } = session.mount();
     const originalRoot = readWeaveCurrent(root);
     const scope = originalRoot.children[0];
@@ -62,44 +161,8 @@ describe('Weave 批次更新', () => {
     expect(readWeaveCurrent(scope).dependencies.has(nestedScope)).toBe(true);
     expect(readWeaveCurrent(nestedScope).consumers.has(scope)).toBe(true);
   });
-
-  it('结构变化后的来源、布局产物与新观察会话和全量编译一致', () => {
-    const events: Array<CompileObservation> = [];
-    const observer: CompileObserverDefinition = {
-      key: 'update-observer',
-      createSession: () => ({
-        select: () => true,
-        observe: event => {
-          events.push(event);
-        },
-        complete: () => null,
-      }),
-    };
-    const options = { artifacts: { nodeLayouts: true } };
-    const session = new WeaveReconciler(scene, options, { observers: [observer] });
-    const mounted = session.mount();
-    const previous = JSON.stringify(mounted.compilation.result);
-    events.length = 0;
-    const added = { type: 'node' as const, id: 'prefix', text: 'new' };
-    const prepared = session.update({
-      operations: [{ kind: 'insert', parentId: mounted.root.scopeId, index: 0, elements: [added] }],
-    });
-    const actualEvents = [...events];
-    events.length = 0;
-    const full = prepareSceneCompilation({ ...scene, children: [added, ...scene.children] }, options, {
-      observers: [observer],
-      captureProvenance: true,
-    });
-    expect(prepared.compilation.result).toEqual(full.result);
-    expect(prepared.compilation.provenance?.emissions.map(entry => entry.primitivePath)).toEqual(
-      full.provenance?.emissions.map(entry => entry.primitivePath),
-    );
-    expect(actualEvents).toEqual(events);
-    prepared.rollback();
-    expect(JSON.stringify(mounted.compilation.result)).toBe(previous);
-  });
   it('插入后同批删除不提交未编译节点，空插入仍验证位置', () => {
-    const session = new WeaveReconciler(scene);
+    const session = new WeaveManager(scene);
     const { root } = session.mount();
     const prepared = session.update({
       operations: [
@@ -138,7 +201,7 @@ describe('Weave 批次更新', () => {
         },
       ],
     };
-    const session = new WeaveReconciler(input);
+    const session = new WeaveManager(input);
     const { root } = session.mount();
     const scope = readWeaveCurrent(root).children[1];
     if (scope.type !== 'scope') throw new Error('Expected scope');
@@ -186,7 +249,7 @@ describe('Weave 批次更新', () => {
         { type: 'scope', children: [{ type: 'node', id: 'b', position: [100, 0] }] },
       ],
     };
-    const session = new WeaveReconciler(input);
+    const session = new WeaveManager(input);
     const { root } = session.mount();
     const scope = readWeaveCurrent(root).children[1];
     if (scope.type !== 'scope') throw new Error('Expected scope');
@@ -237,7 +300,7 @@ describe('Weave 批次更新', () => {
   });
 
   it('最终确认后的旧回滚不会覆盖后续批次；候选存续时拒绝新批次', () => {
-    const session = new WeaveReconciler(scene);
+    const session = new WeaveManager(scene);
     const { root } = session.mount();
     const first = session.update({
       operations: [
@@ -268,7 +331,7 @@ describe('Weave 批次更新', () => {
     );
   });
   it('依赖消费者使用最终输入，独立分支复用，提交前保留旧树和输出', () => {
-    const session = new WeaveReconciler(scene);
+    const session = new WeaveManager(scene);
     const mounted = session.mount();
     const root = mounted.root;
     const [a, b, independent] = readWeaveCurrent(root).children;
@@ -292,7 +355,7 @@ describe('Weave 批次更新', () => {
   });
 
   it('按候选位置连续插入、修改和删除，并可在提交后回滚', () => {
-    const session = new WeaveReconciler(scene);
+    const session = new WeaveManager(scene);
     const mounted = session.mount();
     const root = mounted.root;
     const before = readWeaveCurrent(root);
@@ -331,7 +394,7 @@ describe('Weave 批次更新', () => {
         { type: 'scope', children: [{ type: 'scope', children: [{ type: 'node', id: 'child', text: 'old' }] }] },
       ],
     };
-    const session = new WeaveReconciler(input);
+    const session = new WeaveManager(input);
     const { root } = session.mount();
     const outer = readWeaveCurrent(root).children[0];
     if (outer.type !== 'scope') throw new Error('Expected scope');
@@ -367,7 +430,7 @@ describe('Weave 批次更新', () => {
   });
 
   it('删除后同名新增重新绑定，缺失引用失败不发布部分状态', () => {
-    const session = new WeaveReconciler(scene);
+    const session = new WeaveManager(scene);
     const { root } = session.mount();
     const original = readWeaveCurrent(root);
     expect(() =>
@@ -407,7 +470,7 @@ it('宿主装饰默认更新与完整编译一致，并保留提交前结果', (
     },
   ];
   const input: IRScene = { type: 'scene', version: 1, children: [{ type: 'scope', id: 'host', children }] };
-  const session = new WeaveReconciler(input);
+  const session = new WeaveManager(input);
   const mounted = session.mount();
   const before = structuredClone(mounted.compilation.result);
   const scope = readWeaveCurrent(mounted.root).children[0];
@@ -451,7 +514,7 @@ it('普通标记参数和路径更新与完整编译保持一致', () => {
     ],
   };
   const options = { marks: [definition] };
-  const session = new WeaveReconciler(input, options);
+  const session = new WeaveManager(input, options);
   const mounted = session.mount();
   const before = structuredClone(mounted.compilation.result);
   const path: IRPath = {

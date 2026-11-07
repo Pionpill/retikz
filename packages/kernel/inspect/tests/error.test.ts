@@ -14,7 +14,7 @@ describe('RetikzInspectError', () => {
     const error = new RetikzInspectError(RetikzInspectErrorCode.Compile, 'explicit failure');
 
     expect(error.code).toBe(RetikzInspectErrorCode.Compile);
-    expect(error.code).toBe('INSPECTION_COMPILE_ERROR');
+    expect(error.code).toBe('INSPECT_COMPILE_ERROR');
     expect(error.message).toBe('explicit failure');
   });
 });

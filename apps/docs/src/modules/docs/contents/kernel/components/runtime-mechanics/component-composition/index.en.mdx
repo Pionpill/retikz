@@ -46,7 +46,7 @@ Providers declare dependencies between capabilities and create Definitions. In t
 | ----------- | -------------------------------------------------- | -------------------- |
 | Source IR   | Chart configuration, field mappings, and title     | Chart Definition     |
 | Datasets    | The three records shown in the chart               | Plot data processing |
-| Definitions | Chart, Surface, FlexLayout, Plot, and dependencies | Core traversal       |
+| Definitions | Chart, Surface, FlexLayout, Plot, and dependencies | Reconciler traversal |
 
 With these definitions ready, Core can invoke compilation capabilities through the component structure. Size allocation and geometry generation happen during the compilation that follows.
 
@@ -126,14 +126,14 @@ Each layer submits its selected child result through `replay`. FlexLayout adds c
 
 Allocation bounds guide parent layout, while visible bounds describe drawn content. They can differ: Plot reports its entire allocated region to its parent, but the line path covers only part of it. This distinction helps explain whether empty space was reserved by layout or simply contains no data points.
 
-Core provides recursive compilation, measurement, and result submission. Chart, Surface, FlexLayout, and Plot choose their own structures and layout policies. New high-level components can use a composite Definition in the same way.
+Reconciler provides recursive execution, probes, and replay; Core provides measurement and drawing stages. Chart, Surface, FlexLayout, and Plot choose their own structures and layout policies. New high-level components can use a composite Definition in the same way.
 
 <SourceLinks
   sources={[
     { label: 'Plot conversion to Core child declarations', path: 'packages/viz/plot/src/pipeline/expand/lower.ts' },
     {
-      label: 'Core traversal and composite result submission',
-      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      label: 'Reconciler traversal and composite result submission',
+      path: 'packages/kernel/reconciler/src/compile/tree/subtree.ts',
     },
     {
       label: 'Child layout results and replay contract',
@@ -144,11 +144,11 @@ Core provides recursive compilation, measurement, and result submission. Chart, 
 
 ## Complete implementation flow
 
-The figure maps the main flow to source entry points. The middle row happens recursively as Core invokes each component's compilation callback: Chart enters Surface, Surface enters FlexLayout, and FlexLayout queries and compiles the title and Plot. Arrows summarize the main call direction; size results return through the call stack.
+The figure maps the main flow to source entry points. The middle row happens recursively as Reconciler invokes each component's compilation callback: Chart enters Surface, Surface enters FlexLayout, and FlexLayout queries and compiles the title and Plot. Arrows summarize the main call direction; size results return through the call stack.
 
 <ComponentPreview files="composition-implementation" hideCode type="flow" size="lg" />
 
-Start at `connectedScatterChartInputEmbedAdapter` to see how input becomes Source IR and dependencies. Then read `createChartDefinition` for presentation structure and layout entry. Follow `compileSurface`, `compileFlexLayout`, and `lowerPlots` for child proposals and outputs, then return to Core traversal to see the results combined. These names locate implementation code; applications do not need to call those internal entries directly.
+Start at `connectedScatterChartInputEmbedAdapter` to see how input becomes Source IR and dependencies. Then read `createChartDefinition` for presentation structure and layout entry. Follow `compileSurface`, `compileFlexLayout`, and `lowerPlots` for child proposals and outputs, then return to Reconciler traversal to see the results combined. These names locate implementation code; applications do not need to call those internal entries directly.
 
 ## Further reading
 
@@ -156,7 +156,7 @@ Start at `connectedScatterChartInputEmbedAdapter` to see how input becomes Sourc
   items={[
     {
       title: 'Composite Compilation',
-      description: 'Follow Core probe isolation, result replay, and resource merging',
+      description: 'Follow Reconciler probe isolation, result replay, and resource merging',
       url: '/kernel/packages/core/composite-compilation',
     },
     {

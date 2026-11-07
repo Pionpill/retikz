@@ -1,44 +1,44 @@
-export { formatCompileChildPath, formatCompileOccurrence, isNodeLayoutCompileArtifact } from './artifact';
-export { compileToScene, observeCompileToScene, prepareSceneCompilation } from './compile';
-export { BuiltinCompileWarningCode, type CompileWarningCode } from './constants';
-export { samplePathRoute } from './path';
-export { computeLayout } from './scene';
+export { createBoundaryStore, evaluateAnchorReference, projectLayoutWithTransform } from './boundary';
+export type { BoundaryStore, CompiledBoundaryGeometry } from './boundary';
+export * from './coordinate';
+export * from './node';
+export * from './path';
+export {
+  createPositionEvaluateContext,
+  evaluatePosition,
+  evaluatePositionTargetWorld,
+  projectPublishedReference,
+  projectReferenceGeometry,
+  referencePositionOf,
+} from './reference';
 export type {
-  LoweredTex,
-  LoweredTexPaint,
-  LoweredTexPath,
-  TexLowerer,
-  TextFont,
-  TextMeasurer,
-  TextMetrics,
-} from './text';
-export { fallbackMeasurer } from './text';
-export type {
-  CompileArtifact,
-  CompileArtifactOptions,
-  CompileCompositeOptions,
-  NodeLayoutObservation,
-  CompileHostOptions,
-  CompileLayoutOptions,
-  CompileOptions,
-  CompileProviderOptions,
-  CompileResult,
-  CompositeArtifactOf,
-  CompositeCompileArtifact,
-  NodeLayoutCompileArtifact,
-  ObservedCompileResult,
-} from './types';
-export type { CompileWarning } from './warning';
-
-export { formatCompileWarning } from './warning';
-
-export type { PreparedSceneCompilation, SceneCompilationPreparationOptions } from './compile';
-export * from './provenance';
-export * from './element';
-export * from './environment';
-export { assembleSceneCompilation } from './output';
-export type { SceneCompilationMetadata } from './output';
-
-export { createCompileObservationRuntime, createCompileProvenanceTracker } from './orchestration';
-export type { CompileObservationRuntime, CompileProvenanceTracker } from './orchestration';
-export type { NodeCompilation, NodeLabelResolution, CompiledNodeLayout, NodeResolvedProperties } from './node';
+  CompiledReferenceGeometry,
+  EvaluablePosition,
+  InputPositionEvaluateContext,
+  PositionEvaluateContext,
+  PositionEvaluation,
+  PositionReferenceState,
+  PositionReferenceView,
+  PositionTargetEvaluateContext,
+  PositionTargetEvaluation,
+  PositionTargetWorldEvaluation,
+  ReferenceReadKind,
+} from './reference';
+export { DEFAULT_MAX_CLIP_DEPTH, createClipRegistry, createPaintRegistry } from './resource';
+export type { ClipRegistry, PaintRegistry } from './resource';
+export {
+  DEFAULT_PRECISION,
+  allocationPointsOf,
+  calculateBoundsOfPrimitives,
+  calculateLayoutFromBounds,
+  canonicalizeBoundsRect,
+  createRound,
+  mergeLayoutBounds,
+  viewBoxToLayout,
+} from './scene';
+export type { CompileBounds, CompileOutput, LayoutBoundsContribution } from './scene';
+export * from './scope';
+export { BuiltinCompileWarningCode, applyScopeTransform, composeScopeTransform, inverseScopeTransform } from './shared';
+export type { CompileWarning, CompileWarningCode, ComposedScopeTransform } from './shared';
+export { DEFAULT_FONT_SIZE, fallbackMeasurer } from './text';
+export type { LoweredTex, LoweredTexPaint, LoweredTexPath, TexLowerer } from './text';

@@ -195,7 +195,7 @@ describe('lowerPlots 极轴 — 角度轴（契约）', () => {
 
     for (const label of labels) {
       expect(label.layout).toMatchObject({ lineHeight: 24, maxTextWidth: 80 });
-      expect(label.layout?.align).toBeDefined();
+      expect(label.layout?.textAlign).toBeDefined();
     }
   });
 

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { ChannelDefinitionKind } from '../../../src/contract';
+import { resolveScaleRegistry } from '../../../src/providers';
 import {
   OPACITY_MIN,
   PLOT_SHAPE_PALETTE,
@@ -9,6 +10,7 @@ import {
   STROKE_WIDTH_MAX,
   STROKE_WIDTH_MIN,
 } from '../../../src/providers';
+import { resolveAttributeMapping } from '../../../src/resolve/scale';
 
 /**
  * 内置 Node 通道（size / opacity / strokeWidth / shape）收敛为 NodeChannelDefinition 内部 registry。
@@ -87,6 +89,8 @@ describe('节点通道注册表', () => {
         },
         rows: [],
         model: [],
+        resolveScaleMapping: (operation, context = {}) =>
+          resolveAttributeMapping(operation, context, { registry: resolveScaleRegistry() }),
         resolveChannelScale: () => ({
           of: () => undefined,
           legendForm: 'swatch',

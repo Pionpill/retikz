@@ -34,7 +34,7 @@ import type { RuntimeOptions } from './types';
 
 /** 创建当前 participant candidate 读取产生的依赖错误 */
 const createParticipantDependencyError = (
-  code: typeof RetikzRuntimeErrorCode.UndeclaredDependency,
+  code: typeof RetikzRuntimeErrorCode.DependencyUndeclared,
   phase: string,
   cause: unknown,
   owner: string,
@@ -391,7 +391,7 @@ export class RuntimeParticipantManager {
       ): RuntimeSnapshot<TRead> => {
         if (!declaredSources.has(source)) {
           const error = createParticipantDependencyError(
-            RetikzRuntimeErrorCode.UndeclaredDependency,
+            RetikzRuntimeErrorCode.DependencyUndeclared,
             'participant-snapshot',
             source,
             participant.key,
@@ -403,7 +403,7 @@ export class RuntimeParticipantManager {
         const sourceState = sourceStates.get(source);
         if (sourceState === undefined) {
           const error = createParticipantDependencyError(
-            RetikzRuntimeErrorCode.UndeclaredDependency,
+            RetikzRuntimeErrorCode.DependencyUndeclared,
             'participant-snapshot',
             source,
             participant.key,
@@ -419,7 +419,7 @@ export class RuntimeParticipantManager {
       ): RuntimeSnapshot<TPublicRead> => {
         if (!declaredComputations.has(computation)) {
           const error = createParticipantDependencyError(
-            RetikzRuntimeErrorCode.UndeclaredDependency,
+            RetikzRuntimeErrorCode.DependencyUndeclared,
             'participant-result',
             computation,
             participant.key,
@@ -431,7 +431,7 @@ export class RuntimeParticipantManager {
         const computationState = computationStates.get(computation);
         if (computationState === undefined) {
           const error = createParticipantDependencyError(
-            RetikzRuntimeErrorCode.UndeclaredDependency,
+            RetikzRuntimeErrorCode.DependencyUndeclared,
             'participant-result',
             computation,
             participant.key,

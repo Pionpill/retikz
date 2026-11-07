@@ -1,20 +1,14 @@
 import { FlexLayout, FlexLayoutItem } from '@retikz/layout-react';
-import { InspectFlexLayout, LayoutInspectLayout } from '@retikz/layout-react/inspect';
 import { Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { resolveLayoutInspectionValues } from '../../layout-inspection-controls';
-import {
-  flexLayoutInspectionFamilyControls,
-  flexLayoutPlaygroundControls,
-  previewControlContract,
-} from './flex-layout-playground.controls';
+import { flexLayoutPlaygroundControls, previewControlContract } from './flex-layout-playground.controls';
 
 export const previewControls = flexLayoutPlaygroundControls;
 
-const createPreview = (inspecting: boolean) =>
+const createPreview = () =>
   defineControlledPreview(previewControlContract, values => {
     const children = (
       <>
@@ -63,27 +57,16 @@ const createPreview = (inspecting: boolean) =>
       viewBox: { x: 0, y: 0, width: 440, height: 250 },
     } as const;
 
-    return inspecting ? (
-      <LayoutInspectLayout {...hostProps}>
-        <InspectFlexLayout
-          {...layoutProps}
-          inspect={resolveLayoutInspectionValues(values, flexLayoutInspectionFamilyControls)}
-        >
-          {children}
-        </InspectFlexLayout>
-      </LayoutInspectLayout>
-    ) : (
+    return (
       <Layout {...hostProps}>
         <FlexLayout {...layoutProps}>{children}</FlexLayout>
       </Layout>
     );
   });
 
-const controlledPreview = createPreview(true);
+const controlledPreview = createPreview();
 
-const canonicalPreview = createPreview(false);
-
-export const previewSource = canonicalPreview.source;
+export const previewSource = controlledPreview.source;
 
 /** FlexLayout direction、wrap、alignment 与 grow/shrink playground */
 const Demo: FC = controlledPreview.Component;

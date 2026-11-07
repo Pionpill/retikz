@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
 import type { Canvas as NapiCanvas } from '@napi-rs/canvas';
 import type { IRScene, Scene } from '@retikz/core';
-import { prepareSceneCompilation } from '@retikz/core';
+import { compileSceneSnapshot } from '@retikz/reconciler';
 import type { RuntimeScenePrimitive, ScenePatch, ScenePatchOperation, SceneRuntimeSnapshot } from '@retikz/reconciler';
 import {
-  ReconcilerSession,
+  SceneReconciler,
   createSceneIdentity,
   createFullSceneRuntimeSnapshot,
   RetikzReconcilerErrorCode,
@@ -216,21 +216,18 @@ const createSession = (
     },
     dispose: () => handle.target.dispose?.(),
   };
-  const session = Object.assign(
-    new ReconcilerSession({ onWarn: () => undefined }, { captureProvenance: true, target }),
-    {
-      updateConfig: (next: InputRenderRuntimeConfig) => {
-        const previous = config;
-        config = next;
-        try {
-          return session.updateTarget();
-        } catch (cause) {
-          config = previous;
-          throw cause;
-        }
-      },
+  const session = Object.assign(new SceneReconciler({ onWarn: () => undefined }, { captureProvenance: true, target }), {
+    updateConfig: (next: InputRenderRuntimeConfig) => {
+      const previous = config;
+      config = next;
+      try {
+        return session.updateTarget();
+      } catch (cause) {
+        config = previous;
+        throw cause;
+      }
     },
-  );
+  });
   session.mount(options.ir ?? scene('#ef4444'));
 
   return { handle, session };
@@ -239,7 +236,7 @@ const createSession = (
 /** 编译一对固定 Runtime snapshot 与 canonical Patch，供内置 renderer 黑盒测试 */
 const createCorePair = (currentSource: IRScene, nextSource: IRScene) => {
   const [current, next] = [currentSource, nextSource].map((source, revision) => {
-    const compiled = prepareSceneCompilation(source, {}, { captureProvenance: true });
+    const compiled = compileSceneSnapshot(source, {}, { captureProvenance: true });
     return createFullSceneRuntimeSnapshot(compiled.result.scene, revision, compiled.provenance!);
   });
   // Renderer 的 entity patch 测试显式构造固定拓扑更新，不依赖编译器 diff 策略
@@ -249,8 +246,8 @@ const createCorePair = (currentSource: IRScene, nextSource: IRScene) => {
   } else {
     for (const [index, primitive] of next.scene.primitives.entries()) {
       if (JSON.stringify(primitive) === JSON.stringify(current.scene.primitives[index])) continue;
-      const nodes = next.topology.filter(node => node.primitivePath[0] === index);
-      const root = nodes.find(node => node.primitivePath.length === 1)!;
+      const nodes = next.topology.filter(node => node.primitivePath[1] === index);
+      const root = nodes.find(node => node.primitivePath.length === 2)!;
       operations.push({
         kind: 'update',
         identity: root.identity,
@@ -260,7 +257,7 @@ const createCorePair = (currentSource: IRScene, nextSource: IRScene) => {
           topology: nodes.map(node => ({
             ...node,
             parent: node === root ? undefined : node.parent,
-            primitivePath: node.primitivePath.slice(1),
+            primitivePath: node.primitivePath.slice(2),
           })),
         },
       });
@@ -823,7 +820,7 @@ describe('内置保留渲染器', () => {
           semanticOwner: owner,
           parent: root,
           order: 0,
-          primitivePath: [0],
+          primitivePath: ['primitives', 0],
           publicId: 'owner',
         },
         {
@@ -831,7 +828,7 @@ describe('内置保留渲染器', () => {
           semanticOwner: owner,
           parent: root,
           order: 1,
-          primitivePath: [1],
+          primitivePath: ['primitives', 1],
           publicId: 'owner',
         },
         {
@@ -839,7 +836,7 @@ describe('内置保留渲染器', () => {
           semanticOwner: owner,
           parent: root,
           order: 2,
-          primitivePath: [2],
+          primitivePath: ['primitives', 2],
         },
       ],
     };
@@ -1019,7 +1016,7 @@ describe('内置保留渲染器', () => {
         semanticOwner: identity,
         parent: root,
         order: index,
-        primitivePath: [index],
+        primitivePath: ['primitives', index],
         publicId: index === 0 ? 'a' : 'b',
       })),
     };
@@ -2464,7 +2461,16 @@ describe('内置保留渲染器', () => {
         animations: [rootAnimation(duration)],
         primitives: [primitive],
       },
-      topology: [{ identity, semanticOwner: identity, parent: root, order: 0, primitivePath: [0], publicId: 'node' }],
+      topology: [
+        {
+          identity,
+          semanticOwner: identity,
+          parent: root,
+          order: 0,
+          primitivePath: ['primitives', 0],
+          publicId: 'node',
+        },
+      ],
     });
     const current = snapshot(0, 300);
     const next = snapshot(1, 600);
@@ -3048,7 +3054,7 @@ describe('内置保留渲染器', () => {
 
     expect(failure).toMatchObject({
       name: 'RetikzRenderError',
-      code: RetikzRenderErrorCode.WaapiBindingSetupFailed,
+      code: RetikzRenderErrorCode.AnimationWaapiBindingSetupFailed,
       cause: expect.objectContaining({ message: 'binding setup rejected' }),
       details: expect.objectContaining({
         cleanupCause: expect.objectContaining({ message: 'setup cleanup rejected' }),
@@ -3107,7 +3113,7 @@ describe('内置保留渲染器', () => {
 
     expect(failure).toMatchObject({
       name: 'RetikzRenderError',
-      code: RetikzRenderErrorCode.WaapiBindingSetupFailed,
+      code: RetikzRenderErrorCode.AnimationWaapiBindingSetupFailed,
       cause: expect.objectContaining({ message: 'manual pause rejected' }),
       details: expect.objectContaining({
         cleanupCause: expect.objectContaining({ message: 'pause cleanup rejected' }),
@@ -3218,7 +3224,7 @@ describe('内置保留渲染器', () => {
         semanticOwner: identities[index],
         parent: root,
         order: index,
-        primitivePath: [index],
+        primitivePath: ['primitives', index],
         publicId: item.id,
       })),
     });
@@ -3377,7 +3383,16 @@ describe('内置保留渲染器', () => {
         animations: [],
         primitives: [primitive],
       },
-      topology: [{ identity, semanticOwner: identity, parent: root, order: 0, primitivePath: [0], publicId: 'node' }],
+      topology: [
+        {
+          identity,
+          semanticOwner: identity,
+          parent: root,
+          order: 0,
+          primitivePath: ['primitives', 0],
+          publicId: 'node',
+        },
+      ],
     });
     const current = snapshot(0, currentPrimitive);
     const next = snapshot(1, nextPrimitive);
@@ -3721,7 +3736,16 @@ describe('内置保留渲染器', () => {
         animations: [],
         primitives: [primitive],
       },
-      topology: [{ identity, semanticOwner: identity, parent: root, order: 0, primitivePath: [0], publicId: 'node' }],
+      topology: [
+        {
+          identity,
+          semanticOwner: identity,
+          parent: root,
+          order: 0,
+          primitivePath: ['primitives', 0],
+          publicId: 'node',
+        },
+      ],
     });
     const current = snapshot(0, 100);
     const next = snapshot(1, 120);
@@ -3815,7 +3839,7 @@ describe('内置保留渲染器', () => {
         semanticOwner: identities[index],
         parent: root,
         order: index,
-        primitivePath: [index],
+        primitivePath: ['primitives', index],
         publicId: primitive.id,
       })),
     };
@@ -4654,7 +4678,7 @@ describe('内置保留渲染器', () => {
         semanticOwner: identities[index],
         parent: root,
         order: index,
-        primitivePath: [index],
+        primitivePath: ['primitives', index],
         ...(primitive.id === undefined ? {} : { publicId: primitive.id }),
       })),
     });
@@ -5138,7 +5162,7 @@ describe('内置保留渲染器', () => {
         semanticOwner: identities[index],
         parent: root,
         order: index,
-        primitivePath: [index],
+        primitivePath: ['primitives', index],
         publicId: item.id,
       })),
     });
@@ -5271,7 +5295,7 @@ describe('内置保留渲染器', () => {
         semanticOwner: identities[index],
         parent: root,
         order: index,
-        primitivePath: [index],
+        primitivePath: ['primitives', index],
       })),
     });
     const current = snapshot(0, currentPrimitives);
@@ -5366,7 +5390,7 @@ describe('内置保留渲染器', () => {
         animations: [],
         primitives: [primitive(duration)],
       },
-      topology: [{ identity, semanticOwner: identity, parent: root, order: 0, primitivePath: [0] }],
+      topology: [{ identity, semanticOwner: identity, parent: root, order: 0, primitivePath: ['primitives', 0] }],
     });
     const current = snapshot(0, 300);
     const next = snapshot(1, 600);
@@ -5461,7 +5485,7 @@ describe('内置保留渲染器', () => {
         animations: [],
         primitives: [primitive(duration)],
       },
-      topology: [{ identity, semanticOwner: identity, parent: root, order: 0, primitivePath: [0] }],
+      topology: [{ identity, semanticOwner: identity, parent: root, order: 0, primitivePath: ['primitives', 0] }],
     });
     const current = snapshot(0, 300);
     const next = snapshot(1, 600);
@@ -5562,7 +5586,16 @@ describe('内置保留渲染器', () => {
           },
         ],
       },
-      topology: [{ identity, semanticOwner: identity, parent: root, order: 0, primitivePath: [0], publicId: 'node' }],
+      topology: [
+        {
+          identity,
+          semanticOwner: identity,
+          parent: root,
+          order: 0,
+          primitivePath: ['primitives', 0],
+          publicId: 'node',
+        },
+      ],
     });
     const current = snapshot(0, 'manual');
     const next = snapshot(1, 'visible');
@@ -5652,7 +5685,16 @@ describe('内置保留渲染器', () => {
         animations: [],
         primitives: [primitive(fill)],
       },
-      topology: [{ identity, semanticOwner: identity, parent: root, order: 0, primitivePath: [0], publicId: 'node' }],
+      topology: [
+        {
+          identity,
+          semanticOwner: identity,
+          parent: root,
+          order: 0,
+          primitivePath: ['primitives', 0],
+          publicId: 'node',
+        },
+      ],
     });
     const current = snapshot(0, '#ef4444');
     const next = snapshot(1, '#22c55e');

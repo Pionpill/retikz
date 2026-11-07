@@ -117,10 +117,11 @@ export const resolveMarkRegistry = (
   const arrowMarks = new Map<string, MarkDefinition>();
   for (const [name, arrow] of arrows) {
     const { backX, lineContactX, outerInset, tipX, ...visual } = arrow;
+    const { baseSize: arrowBaseSize } = visual;
     void backX;
     void lineContactX;
     void outerInset;
-    const baseSize = arrow.baseSize ?? 10;
+    const baseSize = arrowBaseSize ?? 10;
     arrowMarks.set(name, { ...visual, anchor: [tipX ?? baseSize, baseSize / 2] });
   }
   return createProviderRegistry({

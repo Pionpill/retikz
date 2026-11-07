@@ -14,8 +14,7 @@ import type {
   RetainedRenderer,
   RetainedRendererFactory,
   RetainedRendererRead,
-  RetainedSvgRendererImmutableOptions,
-  RetainedCanvasRendererImmutableOptions,
+  InputRetainedRendererFactory,
 } from './renderer';
 import { runtimeStructuralEquals } from './shared';
 import { assertSceneRuntimeSnapshot, sceneRuntimeSnapshotEquals, assertScenePatch } from './validator';
@@ -39,13 +38,12 @@ export type RetainedRenderTargetOptions = Readonly<{
   mountMode?: 'create' | 'adopt';
 }> &
   (
-    | Readonly<{
-        backend: 'svg';
-        host: SVGSVGElement;
-        immutableOptions: RetainedSvgRendererImmutableOptions;
-        expectedInitialFrame?: StaticRenderFrame;
-      }>
-    | Readonly<{ backend: 'canvas'; host: HTMLCanvasElement; immutableOptions: RetainedCanvasRendererImmutableOptions }>
+    | (Extract<InputRetainedRendererFactory, { backend: 'svg' }> &
+        Readonly<{
+          /** 接管 SVG 宿主时预期的首帧 */
+          expectedInitialFrame?: StaticRenderFrame;
+        }>)
+    | Extract<InputRetainedRendererFactory, { backend: 'canvas' }>
   );
 /** Render 对外的读取及单目标提交能力 */
 export type RetainedRenderTarget = Readonly<{
@@ -64,10 +62,10 @@ export const createRetainedRenderTarget = (input: RetainedRenderTargetOptions): 
     if (input.backend === 'svg') options = { ...input };
     else options = { ...input };
   } catch (cause) {
-    throw new RetikzRenderError({ code: RetikzRenderErrorCode.RetainedRenderParticipantInputInvalid, cause });
+    throw new RetikzRenderError({ code: RetikzRenderErrorCode.RuntimeParticipantInputInvalid, cause });
   }
   if (!(options.backend === 'svg' ? isSvgHost(options.host) : isCanvasHost(options.host)))
-    throw new RetikzRenderError({ code: RetikzRenderErrorCode.RetainedRenderParticipantInputInvalid, cause: options });
+    throw new RetikzRenderError({ code: RetikzRenderErrorCode.RuntimeParticipantInputInvalid, cause: options });
   const owner = {};
   const renderer =
     options.rendererLease?.renderer ??
@@ -84,12 +82,12 @@ export const createRetainedRenderTarget = (input: RetainedRenderTargetOptions): 
       }
     }
     throw new RetikzRenderError({
-      code: RetikzRenderErrorCode.RetainedRendererInvalid,
+      code: RetikzRenderErrorCode.RuntimeRendererInvalid,
       cause: { renderer, disposeFailure },
     });
   }
   const executor = getRetainedRendererExecutor(renderer);
-  if (executor === undefined) throw new RetikzRenderError({ code: RetikzRenderErrorCode.RetainedRendererInvalid });
+  if (executor === undefined) throw new RetikzRenderError({ code: RetikzRenderErrorCode.RuntimeRendererInvalid });
   const lease = options.rendererLease ?? Object.freeze({ renderer });
   if (options.rendererLease === undefined) leaseOwners.set(lease, owner);
   let committedRead: RetainedRendererRead | undefined;
@@ -107,7 +105,7 @@ export const createRetainedRenderTarget = (input: RetainedRenderTargetOptions): 
         const sameCompilation = previous !== undefined && candidate.compilation === previous.compilation;
         const provenance = candidate.compilation.provenance;
         if (!sameCompilation && provenance === undefined)
-          throw new RetikzRenderError({ code: RetikzRenderErrorCode.ScenePatchSnapshotMismatch });
+          throw new RetikzRenderError({ code: RetikzRenderErrorCode.RuntimeScenePatchSnapshotMismatch });
         const primary =
           sameCompilation && prior !== undefined
             ? { ...prior.primary, revision }
@@ -119,7 +117,7 @@ export const createRetainedRenderTarget = (input: RetainedRenderTargetOptions): 
           ),
         });
         if (frame.layers.length > 0 && renderer.readonlyLayerCapability !== 'supported')
-          throw new RetikzRenderError({ code: RetikzRenderErrorCode.RetainedRendererReadonlyLayerUnsupported });
+          throw new RetikzRenderError({ code: RetikzRenderErrorCode.RuntimeRendererReadonlyLayerUnsupported });
         if (previous === undefined && options.backend === 'svg' && options.expectedInitialFrame !== undefined) {
           const expected = options.expectedInitialFrame;
           const normalized = {
@@ -131,7 +129,7 @@ export const createRetainedRenderTarget = (input: RetainedRenderTargetOptions): 
             !runtimeStructuralEquals(normalized, primary.scene) ||
             !runtimeStructuralEquals(snapshotReadonlyLayers(expected.layers), frame.layers)
           )
-            throw new RetikzRenderError({ code: RetikzRenderErrorCode.RetainedRendererInitialFrameMismatch });
+            throw new RetikzRenderError({ code: RetikzRenderErrorCode.RuntimeRendererInitialFrameMismatch });
         }
         const config = captureRuntimeConfig(options.configuration());
         const patch: ScenePatch | undefined =
@@ -171,7 +169,7 @@ export const createRetainedRenderTarget = (input: RetainedRenderTargetOptions): 
               if (committed) {
                 try {
                   options.trace?.({
-                    owner: `@retikz/render:${options.backend}`,
+                    owner: `kernel/render/${options.backend}`,
                     phase: prior === undefined ? 'commit' : 'update',
                     unit: 'scene-change',
                     outcome: 'full',
@@ -188,7 +186,7 @@ export const createRetainedRenderTarget = (input: RetainedRenderTargetOptions): 
         };
       } catch (cause) {
         if (isRetikzRenderError(cause)) throw cause;
-        throw new RetikzRenderError({ code: RetikzRenderErrorCode.RetainedRendererPrepareFailed, cause });
+        throw new RetikzRenderError({ code: RetikzRenderErrorCode.RuntimeRendererPrepareFailed, cause });
       }
     },
     dispose: () => {
@@ -209,7 +207,7 @@ export const createRetainedRenderTarget = (input: RetainedRenderTargetOptions): 
     lease,
     read: () => {
       if (disposed || committedRead === undefined)
-        throw new RetikzRenderError({ code: RetikzRenderErrorCode.ScenePatchSnapshotMismatch });
+        throw new RetikzRenderError({ code: RetikzRenderErrorCode.RuntimeScenePatchSnapshotMismatch });
       return committedRead;
     },
   };
@@ -220,7 +218,7 @@ const isRetikzRendererForHost = (renderer: RetainedRenderer, options: RetainedRe
   isRetainedRenderer(renderer) && renderer.backend === options.backend && renderer.host === options.host;
 
 const invalidRendererRead = (cause: unknown): never => {
-  throw new RetikzRenderError({ code: RetikzRenderErrorCode.RetainedRendererInvalid, cause });
+  throw new RetikzRenderError({ code: RetikzRenderErrorCode.RuntimeRendererInvalid, cause });
 };
 
 const findPropertyDescriptor = (value: object, key: PropertyKey): PropertyDescriptor | undefined => {
@@ -328,7 +326,7 @@ const snapshotRendererReadUnsafe = (
   const candidate: unknown = value;
   if (lineage === undefined || typeof candidate !== 'object' || candidate === null) {
     throw new RetikzRenderError({
-      code: RetikzRenderErrorCode.ScenePatchSnapshotMismatch,
+      code: RetikzRenderErrorCode.RuntimeScenePatchSnapshotMismatch,
       cause: value,
     });
   }
@@ -337,7 +335,7 @@ const snapshotRendererReadUnsafe = (
   const animation = Reflect.get(candidate, 'animation') as AnimationControls | undefined;
   if (typeof rawFrame !== 'object' || rawFrame === null) {
     throw new RetikzRenderError({
-      code: RetikzRenderErrorCode.ScenePatchSnapshotMismatch,
+      code: RetikzRenderErrorCode.RuntimeScenePatchSnapshotMismatch,
       cause: value,
     });
   }
@@ -349,7 +347,7 @@ const snapshotRendererReadUnsafe = (
     !runtimeStructuralEquals(frame.layers, lineage.layers)
   ) {
     throw new RetikzRenderError({
-      code: RetikzRenderErrorCode.ScenePatchSnapshotMismatch,
+      code: RetikzRenderErrorCode.RuntimeScenePatchSnapshotMismatch,
       cause: { expected: lineage, received: frame },
     });
   }
@@ -369,6 +367,6 @@ const snapshotRendererRead = (
     return snapshotRendererReadUnsafe(value, lineage, animationControlsCache);
   } catch (cause) {
     if (isRetikzRenderError(cause)) throw cause;
-    throw new RetikzRenderError({ code: RetikzRenderErrorCode.ScenePatchSnapshotMismatch, cause });
+    throw new RetikzRenderError({ code: RetikzRenderErrorCode.RuntimeScenePatchSnapshotMismatch, cause });
   }
 };

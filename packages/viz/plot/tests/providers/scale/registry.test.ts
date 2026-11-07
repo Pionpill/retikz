@@ -1,20 +1,20 @@
 import type { IRNode, IRScope } from '@retikz/core';
-import { DataFieldType } from '@retikz/data';
-import { NonBlankStringSchema } from '@retikz/foundation';
+import { DataFieldType, resolveScale } from '@retikz/data';
+import { defineScale } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
-import { literal, object, string } from 'zod';
+import { strictObject } from 'zod';
 
 import * as plot from '../../../src';
-import type { AnyScaleDefinition, ChannelScaleResolveContext } from '../../../src/contract';
-import { defineScale, extractScaleType } from '../../../src/contract';
+import type { ChannelScaleResolveContext } from '../../../src/contract';
 import type { PlotsLoweringOptions } from '../../../src/pipeline/expand';
 import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
-import { BUILTIN_SCALES, linearPositionScale, resolveLinearScale, resolveScaleRegistry } from '../../../src/providers';
+import { BUILTIN_PLOT_SCALES, resolveScaleRegistry } from '../../../src/providers';
 import {
   assertBaselineScaleCompatible,
   assertScaleFieldCompatible,
   resolveChannelScale,
   resolvePositionScale,
+  resolvePositionScalePolicy,
 } from '../../../src/resolve/scale';
 import type { IRPlot } from '../../../src/schemas';
 import { BUILTIN_SCALE_TYPES, PlotSchema } from '../../../src/schemas';
@@ -22,44 +22,28 @@ import { measureLabel } from '../../helpers/text-measurement';
 
 /** 自定义 position scale：把内置 linear 包一层，仅验证 registry 分派（type 'unit'，固定 domain [0,1]） */
 const unitScale = defineScale({
-  family: 'position',
-  continuity: 'continuous',
-  schema: object({ type: literal('unit'), name: NonBlankStringSchema }),
+  type: 'unit',
+  paramsSchema: strictObject({}),
   isFieldCompatible: fieldType => fieldType !== DataFieldType.Categorical,
-  allowsBaseline: true,
-  resolve: (_def, values, range) =>
-    linearPositionScale(
-      resolveLinearScale(
-        { type: 'linear', name: 'unit', domain: [0, 1] },
-        values.filter((value): value is number => typeof value === 'number'),
-        range,
-      ),
-    ),
-}) as AnyScaleDefinition;
+  resolve: context => resolveScale({ type: 'linear', domain: [0, 1] }, context),
+});
 
-/** 自定义 channel scale：分类值 → 黑白两色轮转，legendForm swatch（type 'mono'） */
-const monoScale = defineScale({
-  family: 'channel',
-  schema: object({ type: literal('mono'), name: NonBlankStringSchema }),
-  isFieldCompatible: fieldType => fieldType === undefined || fieldType === DataFieldType.Categorical,
-  resolve: (_def, values) => {
-    const domain = [
-      ...new Set(
-        values.filter((value): value is string | number => typeof value === 'string' || typeof value === 'number'),
-      ),
-    ];
-    const colors = domain.map((_category, index) => (index % 2 === 0 ? '#111111' : '#eeeeee'));
-    const colorByCategory = new Map(domain.map((category, index) => [category, colors[index]] as const));
-
-    return {
-      of: value => (typeof value === 'string' || typeof value === 'number' ? colorByCategory.get(value) : undefined),
-      legendForm: 'swatch',
-      domain,
-      range: colors,
-      scaleType: 'mono',
-    };
+const channels = [
+  {
+    kind: 'position' as const,
+    channel: 'unit-position',
+    role: 'x',
+    pick: () => undefined,
+    scales: { unit: { continuity: 'continuous' as const, allowsBaseline: true } },
   },
-}) as AnyScaleDefinition;
+];
+
+const monoScale = defineScale({
+  type: 'mono',
+  paramsSchema: strictObject({}),
+  isFieldCompatible: fieldType => fieldType === undefined || fieldType === DataFieldType.Categorical,
+  resolve: context => resolveScale({ type: 'ordinal', range: ['#111111', '#eeeeee'] }, context),
+});
 
 const channelCtx = (over: Partial<ChannelScaleResolveContext> = {}): ChannelScaleResolveContext => ({
   toNumber: value => (typeof value === 'number' && Number.isFinite(value) ? value : null),
@@ -94,47 +78,25 @@ const expandOf = (
 
 describe('比例尺登记（契约规格）', () => {
   it('defineScale 保留 schema 推导出的注册 type 与 family', () => {
-    expect(extractScaleType(unitScale.schema)).toBe('unit');
-    expect(unitScale.family).toBe('position');
-    expect(monoScale.family).toBe('channel');
+    expect(unitScale.type).toBe('unit');
+    expect(unitScale.isFieldCompatible(DataFieldType.Continuous)).toBe(true);
+    expect(monoScale.isFieldCompatible(DataFieldType.Categorical)).toBe(true);
   });
 
   it('公共聚合入口导出比例定义助手', () => {
-    expect(plot.defineScale).toBe(defineScale);
-    expect(plot.extractScaleType).toBe(extractScaleType);
+    expect('definePlotScale' in plot).toBe(false);
+    expect('defineScale' in plot).toBe(false);
     expect(plot.resolveScaleRegistry).toBe(resolveScaleRegistry);
     expect('createCustomScale' in plot).toBe(false);
   });
 
   it('内置秤覆盖公共内置类型', () => {
-    expect(BUILTIN_SCALES.map(def => extractScaleType(def.schema)).sort()).toEqual([...BUILTIN_SCALE_TYPES].sort());
+    expect(BUILTIN_PLOT_SCALES.map(def => def.type).sort()).toEqual([...BUILTIN_SCALE_TYPES].sort());
   });
 
   it('位置比例尺定义声明封闭的连续性元数据', () => {
-    const positionDefinitions = BUILTIN_SCALES.filter(definition => definition.family === 'position');
-
-    expect(positionDefinitions.map(definition => definition.continuity).sort()).toEqual([
-      'continuous',
-      'continuous',
-      'continuous',
-      'continuous',
-      'continuous',
-      'continuous',
-      'continuous',
-      'discrete',
-      'discrete',
-    ]);
-
-    if (unitScale.family !== 'position') throw new TypeError('unitScale must remain a position definition');
-
-    expect(unitScale.continuity).toBe('continuous');
-  });
-
-  it('位置比例尺定义缺少连续性声明时明确报错', () => {
-    const malformed = { ...unitScale } as AnyScaleDefinition & { continuity?: unknown };
-    delete malformed.continuity;
-
-    expect(() => resolveScaleRegistry([malformed])).toThrow(/position.*continuity/i);
+    expect(resolvePositionScalePolicy('linear', { registry: resolveScaleRegistry() })?.continuity).toBe('continuous');
+    expect(resolvePositionScalePolicy('band', { registry: resolveScaleRegistry() })?.continuity).toBe('discrete');
   });
 
   it('resolveScaleRegistry 注册内置 + 自定义', () => {
@@ -148,33 +110,27 @@ describe('比例尺登记（契约规格）', () => {
   it('duplicate_scale_type_throws（自定义撞内置）', () => {
     const collide = {
       ...unitScale,
-      schema: object({ type: literal('linear'), name: NonBlankStringSchema }),
-    } as AnyScaleDefinition;
+      type: 'linear',
+    };
 
-    expect(() => resolveScaleRegistry([collide])).toThrow(/duplicate scale registration: "linear"/);
+    expect(() => resolveScaleRegistry([collide])).toThrow(/invalid scale registry/);
   });
 
   it('duplicate_scale_type_throws（两自定义同 type）', () => {
-    expect(() => resolveScaleRegistry([unitScale, unitScale])).toThrow(/duplicate scale registration: "unit"/);
-  });
-
-  it('malformed_scale_schema_throws（type 非 literal）', () => {
-    const malformed = { ...unitScale, schema: object({ type: string(), name: string() }) } as AnyScaleDefinition;
-
-    expect(() => resolveScaleRegistry([malformed])).toThrow(/must declare type as a non-empty z.literal string/);
+    expect(() => resolveScaleRegistry([unitScale, unitScale])).toThrow(/invalid scale registry/);
   });
 
   it('未知的比例尺类型抛出', () => {
     const registry = resolveScaleRegistry();
 
-    expect(() => resolvePositionScale({ type: 'nope', name: 'x' }, [], [0, 1], { registry })).toThrow(
+    expect(() => resolvePositionScale({ type: 'nope', name: 'x' }, [], [0, 1], { registry, channels })).toThrow(
       /scale type "nope" is not registered/,
     );
   });
 
   it('自定义位置比例尺项目', () => {
     const registry = resolveScaleRegistry([unitScale]);
-    const scale = resolvePositionScale({ type: 'unit', name: 'x' }, [0, 0.5, 1], [0, 100], { registry });
+    const scale = resolvePositionScale({ type: 'unit', name: 'x' }, [0, 0.5, 1], [0, 100], { registry, channels });
 
     expect(scale.coordinate(0)).toBe(0);
     expect(scale.coordinate(1)).toBe(100);
@@ -183,9 +139,12 @@ describe('比例尺登记（契约规格）', () => {
 
   it('报告反转带和点范围的正离散步长，同时连续保持为零', () => {
     const registry = resolveScaleRegistry();
-    const band = resolvePositionScale({ type: 'band', name: 'band' }, ['A', 'B'], [100, 0], { registry });
-    const point = resolvePositionScale({ type: 'point', name: 'point' }, ['A', 'B'], [100, 0], { registry });
-    const continuous = resolvePositionScale({ type: 'linear', name: 'linear' }, [0, 1], [100, 0], { registry });
+    const band = resolvePositionScale({ type: 'band', name: 'band' }, ['A', 'B'], [100, 0], { registry, channels });
+    const point = resolvePositionScale({ type: 'point', name: 'point' }, ['A', 'B'], [100, 0], { registry, channels });
+    const continuous = resolvePositionScale({ type: 'linear', name: 'linear' }, [0, 1], [100, 0], {
+      registry,
+      channels,
+    });
 
     expect(band.step).toBeGreaterThan(0);
     expect(point.step).toBeGreaterThan(0);
@@ -195,7 +154,7 @@ describe('比例尺登记（契约规格）', () => {
   it('将通道比例尺用作位置比例尺时明确报错', () => {
     const registry = resolveScaleRegistry();
 
-    expect(() => resolvePositionScale({ type: 'ordinal', name: 'c' }, [], [0, 1], { registry })).toThrow(
+    expect(() => resolvePositionScale({ type: 'ordinal', name: 'c' }, [], [0, 1], { registry, channels })).toThrow(
       /cannot drive a positional/,
     );
   });
@@ -203,7 +162,7 @@ describe('比例尺登记（契约规格）', () => {
   it('颜色失败时的位置比例', () => {
     const registry = resolveScaleRegistry();
 
-    expect(() => resolveChannelScale({ type: 'linear', name: 'x' }, [], channelCtx(), { registry })).toThrow(
+    expect(() => resolveChannelScale({ type: 'linear', name: 'x' }, [], channelCtx(), { registry, channels })).toThrow(
       /is not a color scale/,
     );
   });
@@ -214,7 +173,7 @@ describe('比例尺登记（契约规格）', () => {
       { type: 'mono', name: 'c' },
       ['a', 'b', 'a'],
       channelCtx({ fieldType: DataFieldType.Categorical }),
-      { registry },
+      { registry, channels },
     );
 
     expect(resolution.legendForm).toBe('swatch');
@@ -249,19 +208,21 @@ describe('比例尺登记（契约规格）', () => {
   it('isFieldCompatible 谓词驱动 position compat', () => {
     const registry = resolveScaleRegistry();
 
-    expect(() => assertScaleFieldCompatible('x', 'linear', DataFieldType.Categorical, 'xs', { registry })).toThrow(
-      /incompatible/i,
-    );
-    expect(() => assertScaleFieldCompatible('x', 'band', DataFieldType.Continuous, 'xs', { registry })).not.toThrow();
+    expect(() =>
+      assertScaleFieldCompatible('x', 'linear', DataFieldType.Categorical, 'xs', { registry, channels }),
+    ).toThrow(/incompatible/i);
+    expect(() =>
+      assertScaleFieldCompatible('x', 'band', DataFieldType.Continuous, 'xs', { registry, channels }),
+    ).not.toThrow();
   });
 
   it('allowsBaseline 谓词驱动 baseline guard', () => {
     const registry = resolveScaleRegistry();
 
-    expect(() => assertBaselineScaleCompatible('log', [{ type: 'interval' }], { registry })).toThrow(
+    expect(() => assertBaselineScaleCompatible('log', [{ type: 'interval' }], { registry, channels })).toThrow(
       /cannot be used with interval\/area/,
     );
-    expect(() => assertBaselineScaleCompatible('linear', [{ type: 'interval' }], { registry })).not.toThrow();
+    expect(() => assertBaselineScaleCompatible('linear', [{ type: 'interval' }], { registry, channels })).not.toThrow();
   });
 
   it('绘图中的自定义位置比例下沉', () => {
@@ -290,7 +251,7 @@ describe('比例尺登记（契约规格）', () => {
           { x: 1, y: 1 },
         ],
       },
-      { layout: { width: 200, height: 200 }, definitions: { scales: [unitScale] } },
+      { layout: { width: 200, height: 200 }, definitions: { channels, scales: [unitScale] } },
     ).children[0] as IRScope;
     const nodes = collectNodes(layer);
 
@@ -343,7 +304,7 @@ describe('比例尺登记（契约规格）', () => {
       type: 'plot',
       data: { reference: 'd' },
       scales: [
-        { type: 'unit', name: 'x', foo: 7 },
+        { type: 'unit', name: 'x', params: { foo: 7 } },
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
@@ -351,6 +312,6 @@ describe('比例尺登记（契约规格）', () => {
     };
     const roundtrip = PlotSchema.parse(JSON.parse(JSON.stringify(spec)));
 
-    expect(roundtrip.scales[0]).toMatchObject({ type: 'unit', name: 'x', foo: 7 });
+    expect(roundtrip.scales[0]).toMatchObject({ type: 'unit', name: 'x', params: { foo: 7 } });
   });
 });

@@ -5,6 +5,8 @@ description: Coordinate composition organizes dual axes, data facets, and shared
 
 A chart sometimes needs different units in one plot area, small multiples split by category, or several metric tracks aligned to one time axis. Coordinate composition provides three direct structures: extra axes, `<PlotFacet>`, and `<PlotScaffold>` with shared tracks.
 
+First choose how marks are positioned with [dimensional coordinates](/viz/plot/coordinate/dimension), then choose how multiple layers or regions relate to one another.
+
 ## Choose a Structure First
 
 | Relationship in your data                  | Recommended structure | Why it fits                                           |
@@ -25,6 +27,7 @@ This axis-id shortcut only supports `cartesian2D`. Polar angle and radius are no
 Temperature uses the default y-axis, while rainfall uses the right-side `rainfall` axis. Use the data panel to compare their different magnitudes.
 
 <ComponentPreview
+  mode="showcase"
   files={[
     'coordinate-composition-scopes',
     'coordinate-composition-scopes.preview.tsx',
@@ -46,6 +49,7 @@ Temperature uses the default y-axis, while rainfall uses the right-side `rainfal
 The completion line uses elapsed days at the bottom, while the forecast line uses calendar days at the top. Both still share the completion y-axis.
 
 <ComponentPreview
+  mode="showcase"
   files={[
     'coordinate-composition-x-axis',
     'coordinate-composition-x-axis.preview.tsx',
@@ -65,6 +69,7 @@ A facet splits data into panels by field values. Put axes and marks inside `<Plo
 Start with a single row of facets, then switch to a row-column grid. In grid mode, you can keep missing combinations and compare a shared y range with independent panel ranges.
 
 <ComponentPreview
+  mode="showcase"
   files={[
     'coordinate-composition-facet',
     'coordinate-composition-facet.preview.tsx',
@@ -90,6 +95,7 @@ By default, combinations without rows are hidden and the same direction shares o
 `row` and `column` can also receive arrays of field configurations. Array order defines the hierarchy from outer to inner, which fits nested dimensions such as region then channel.
 
 <ComponentPreview
+  mode="showcase"
   files={[
     'coordinate-composition-facet-multilevel',
     'coordinate-composition-facet-multilevel.preview.tsx',
@@ -111,6 +117,7 @@ Tracks are authored explicitly. Every `<PlotTrack>` has a stable `id`, a defined
 Three metrics share the trading-day x-axis and draw in separate vertical spaces, which fits operational metrics that must stay time-aligned.
 
 <ComponentPreview
+  mode="showcase"
   files={[
     'coordinate-composition-tracks',
     'coordinate-composition-tracks.preview.tsx',
@@ -128,6 +135,7 @@ The key declaration is `<PlotScaffold sharedRoles={['x']}>`. Put the shared x-ax
 Shared tracks also work with `polar2D`. Several radial tracks then share angular categories, while each track occupies a different radius band.
 
 <ComponentPreview
+  mode="showcase"
   files={[
     'coordinate-composition-tracks-polar',
     'coordinate-composition-tracks-polar.preview.tsx',

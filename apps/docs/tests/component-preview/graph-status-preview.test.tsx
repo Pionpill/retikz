@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { resolveCoreThemeColors, ThemeMode } from '@retikz/core';
+import { ThemeMode } from '@retikz/core';
 import { compositeOpaqueColor } from '@retikz/foundation';
 import { GraphStatus } from '@retikz/graph';
 import type { FC } from 'react';
@@ -9,6 +9,7 @@ import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { resolveCoreThemeColors } from '../../../../packages/kernel/core/src/providers';
 import type { PreviewControlState } from '../../src/modules/docs/components/component-preview';
 import { PreviewPanel, usePreviewPanelState } from '../../src/modules/docs/components/component-preview/preview-panel';
 import type { PreviewTheme } from '../../src/modules/docs/components/component-preview/theme';

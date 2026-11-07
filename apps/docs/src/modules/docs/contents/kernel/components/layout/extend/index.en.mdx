@@ -29,11 +29,11 @@ This section demonstrates shape injection only; later custom-usage guides for ea
 
 ## Reading compile artifacts
 
-To display node layout measurements outside a figure, request node-layout snapshots with `artifacts={{ nodeLayouts: true }}` and read them through `onArtifacts`. The callback reports the corresponding compilation result after React commits; later updates do not mutate a prior snapshot.
+Use `onArtifacts` to read domain artifacts returned by composites, such as the container and item layout of FlexLayout. Artifacts are collected automatically. The callback runs after React commits, and later updates leave previous snapshots unchanged.
 
 <ComponentPreview files="layout-artifacts" size="xs" />
 
-The example displays the node count and text width outside the drawing. These snapshots describe compiled geometry, not live DOM measurements, and cannot modify drawing input.
+The example displays the artifact count and the FlexLayout domain value outside the drawing. Each component defines its fields and coordinate semantics; ordinary nodes do not produce separate layout artifacts.
 
 ## Execution modes and update strategies
 
@@ -79,15 +79,9 @@ These are the props most relevant to this page. See the [API reference](/kernel/
       description: 'Injects custom definitions into React Layout, including clips, boundaries, and path capabilities',
     },
     {
-      name: 'artifacts',
-      kind: 'property',
-      type: 'CompileArtifactOptions',
-      description: 'Declares which artifact types to collect from compilation',
-    },
-    {
       name: 'onArtifacts',
       kind: 'property',
-      type: '(artifacts: ReadonlyArray<CompileArtifact>) => void',
+      type: '(artifacts: ReadonlyArray<CompositeArtifact>) => void',
       description: 'Receives the result after artifact collection completes',
     },
     {

@@ -1,7 +1,7 @@
 import type { CompositeCompileContext } from '@retikz/core';
 
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
-import type { InputFlowLayoutElement, InputFlowLayoutComputation } from '../../contract';
+import type { InputFlowLayoutComputation, InputFlowLayoutElement } from '../../contract';
 import { measureFlowLayoutElement } from '../../providers';
 import type { CanonicalFlowDiagram, CanonicalFlowElement } from '../../resolve';
 import { createFlowLayoutExecutionContext } from './layout-placement';
@@ -18,13 +18,13 @@ export const allocateFlowGroupHeights = (
     if (element.kind !== 'layout' || element.placement.kind !== 'linear' || element.placement.excludeFromBounds?.length)
       return element;
 
-    const natural = measureFlowLayoutElement(element, input, placement).height;
+    const natural = measureFlowLayoutElement(element, input, placement.placeLayout).height;
     const extra = Math.max(0, height - natural);
     if (extra === 0) return element;
 
     if (element.elements.length === 1) {
       const child = element.elements[0];
-      const childHeight = measureFlowLayoutElement(child, input, placement).height;
+      const childHeight = measureFlowLayoutElement(child, input, placement.placeLayout).height;
       return { ...element, elements: [distributeHeight(child, childHeight + extra)] };
     }
     if (!['down', 'up'].includes(element.placement.direction) || element.elements.length < 2) return element;
@@ -62,7 +62,9 @@ export const allocateFlowGroupHeights = (
         });
       }
 
-      const height = Math.max(...children.map(child => measureFlowLayoutElement(child, input, placement).height));
+      const height = Math.max(
+        ...children.map(child => measureFlowLayoutElement(child, input, placement.placeLayout).height),
+      );
       return {
         ...element,
         elements: children.map(child => {

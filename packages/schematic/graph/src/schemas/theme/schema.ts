@@ -106,7 +106,7 @@ export const GraphEntityRuleStyleSchema = GraphEntityDefaultsStyleSchema.omit({ 
 export const GraphEntityDefaultsLayoutSchema = EntitySchema.shape.layout
   .unwrap()
   .pick({
-    align: true,
+    textAlign: true,
     lineHeight: true,
     maxTextWidth: true,
     minimumSize: true,

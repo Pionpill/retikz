@@ -447,7 +447,7 @@ export declare const stagger: (
 | `easing?`     | `"linear" \| "ease" \| "ease-in" \| "ease-out" \| "ease-in-out" \| [number, number, number, number]`                                     | —      | —    |
 | `fill?`       | `"none" \| "forwards" \| "backwards" \| "both"`                                                                                          | —      | —    |
 | `iterations?` | `number \| "infinite"`                                                                                                                   | —      | —    |
-| `origin?`     | `"top" \| "right" \| "bottom" \| "left" \| "top-right" \| "top-left" \| "bottom-right" \| "bottom-left" \| [number, number] \| "center"` | —      | —    |
+| `origin?`     | `[number, number] \| "center" \| "top" \| "right" \| "bottom" \| "left" \| "top-right" \| "top-left" \| "bottom-right" \| "bottom-left"` | —      | —    |
 | `trigger?`    | `"load" \| "visible" \| "manual" \| { onEvent: string; }`                                                                                | —      | —    |
 
 </ApiTable>
@@ -502,7 +502,7 @@ export declare const stagger: (
 | 成员        | 类型                                                                                                                                                              | 默认值 | 说明 |
 | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ---- |
 | `keyframes` | `Array<{ at: number; value: string; easing?: "linear" \| "ease" \| "ease-in" \| "ease-out" \| "ease-in-out" \| [number, number, number, number] \| undefined; }>` | —      | —    |
-| `property`  | `"fill" \| "stroke"`                                                                                                                                              | —      | —    |
+| `property`  | `"stroke" \| "fill"`                                                                                                                                              | —      | —    |
 
 </ApiTable>
 
@@ -574,7 +574,7 @@ export type IRAnimationTrack = ZodInfer<typeof AnimationTrackSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRKeyframe"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={198}>IRKeyframe</ApiSourceLink> / <ApiSourceLink label={"KeyframeSchema"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={94}>KeyframeSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRKeyframe"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={198}>IRKeyframe</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -597,20 +597,6 @@ export type IRAnimationTrack = ZodInfer<typeof AnimationTrackSchema>;
 ```ts
 export type IRKeyframe = ZodInfer<typeof KeyframeSchema>;
 ```
-
-</DocTab>
-
-<DocTab value="schema" label="Schema">
-
-<ZodSchema
-  name="KeyframeSchema"
-  description="归一化时间点、绝对属性值与可选分段缓动。"
-  descriptions={{
-    at: '归一化时间 0..1；同一 track 内必须升序排列',
-    value: '数值、非空颜色字符串或镜头四元组；所属轨道进一步限定属性值域',
-    easing: '从本帧到下一帧的缓动；覆盖 track 级 easing',
-  }}
-/>
 
 </DocTab>
 
@@ -732,37 +718,3 @@ export type AnimationControls = {
 </DocTab>
 
 </DocTabs>
-
-## 配置与校验
-
-#### <ApiSourceLink label={"EasingSchema"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={83}>EasingSchema</ApiSourceLink>
-
-`EasingSchema` 接受内置缓动名称，或 cubic-bezier 四元组 `[x1, y1, x2, y2]`。
-
-`x1`、`x2` 必须在 0..1，`y1`、`y2` 可以越界，以表达回弹。
-
-<ZodSchema name="EasingSchema" description="缓动名称或 cubic-bezier 四元组。" />
-
-#### <ApiSourceLink label={"TriggerSchema"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={112}>TriggerSchema</ApiSourceLink>
-
-`TriggerSchema` 接受 `load`、`visible`、`manual`，或带事件名的对象。IR 只保存事件名，不保存回调函数。
-
-<ZodSchema name="TriggerSchema" description="内置播放触发器或事件触发描述。" />
-
-#### <ApiSourceLink label={"EventTriggerSchema"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={107}>EventTriggerSchema</ApiSourceLink>
-
-<ZodSchema
-  name="EventTriggerSchema"
-  description="由 runtime 事件名启动播放的触发描述。"
-  descriptions={{
-    onEvent: '启动播放的 runtime 事件名',
-  }}
-/>
-
-#### <ApiSourceLink label={"OriginSchema"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={117}>OriginSchema</ApiSourceLink>
-
-`OriginSchema` 接受 canonical anchor 名，或元素局部坐标 `[x, y]`。它只影响 scale、scaleX、scaleY 与 rotate。
-
-<ZodSchema name="OriginSchema" description="变换类动画的 anchor 名或局部坐标原点。" />
-
-组件层的 preset、触发与降级行为见 [动画](/kernel/visual/animation/usage)。

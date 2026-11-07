@@ -1511,7 +1511,7 @@ export declare const boundsOf: (points: ReadonlyArray<Position>) => AxisAlignedB
 
 </DocTabs>
 
-#### <ApiSourceLink label={"boundsToRect"} path={"packages/kernel/math/src/primitives/bounds.ts"} startLine={93}>boundsToRect</ApiSourceLink>
+#### <ApiSourceLink label={"boundsToRect"} path={"packages/kernel/math/src/primitives/bounds.ts"} startLine={96}>boundsToRect</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1538,7 +1538,7 @@ export declare const boundsToRect: ({ maxX, maxY, minX, minY }: AxisAlignedBound
 
 </DocTabs>
 
-#### <ApiSourceLink label={"centerOfBounds"} path={"packages/kernel/math/src/primitives/bounds.ts"} startLine={129}>centerOfBounds</ApiSourceLink>
+#### <ApiSourceLink label={"centerOfBounds"} path={"packages/kernel/math/src/primitives/bounds.ts"} startLine={132}>centerOfBounds</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1565,7 +1565,7 @@ export declare const centerOfBounds: ({ maxX, maxY, minX, minY }: AxisAlignedBou
 
 </DocTabs>
 
-#### <ApiSourceLink label={"cornersOfBounds"} path={"packages/kernel/math/src/primitives/bounds.ts"} startLine={163}>cornersOfBounds</ApiSourceLink>
+#### <ApiSourceLink label={"cornersOfBounds"} path={"packages/kernel/math/src/primitives/bounds.ts"} startLine={166}>cornersOfBounds</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1592,7 +1592,7 @@ export declare const cornersOfBounds: ({ maxX, maxY, minX, minY }: AxisAlignedBo
 
 </DocTabs>
 
-#### <ApiSourceLink label={"expandBounds"} path={"packages/kernel/math/src/primitives/bounds.ts"} startLine={148}>expandBounds</ApiSourceLink>
+#### <ApiSourceLink label={"expandBounds"} path={"packages/kernel/math/src/primitives/bounds.ts"} startLine={151}>expandBounds</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1623,7 +1623,7 @@ export declare const expandBounds: (
 
 </DocTabs>
 
-#### <ApiSourceLink label={"halfAxesOfBounds"} path={"packages/kernel/math/src/primitives/bounds.ts"} startLine={138}>halfAxesOfBounds</ApiSourceLink>
+#### <ApiSourceLink label={"halfAxesOfBounds"} path={"packages/kernel/math/src/primitives/bounds.ts"} startLine={141}>halfAxesOfBounds</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1650,7 +1650,7 @@ export declare const halfAxesOfBounds: ({ maxX, maxY, minX, minY }: AxisAlignedB
 
 </DocTabs>
 
-#### <ApiSourceLink label={"isFiniteBoundsRect"} path={"packages/kernel/math/src/primitives/bounds.ts"} startLine={115}>isFiniteBoundsRect</ApiSourceLink>
+#### <ApiSourceLink label={"isFiniteBoundsRect"} path={"packages/kernel/math/src/primitives/bounds.ts"} startLine={118}>isFiniteBoundsRect</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1677,7 +1677,7 @@ export declare const isFiniteBoundsRect: ({ height, width, x, y }: BoundsRect) =
 
 </DocTabs>
 
-#### <ApiSourceLink label={"isPositiveBoundsRect"} path={"packages/kernel/math/src/primitives/bounds.ts"} startLine={122}>isPositiveBoundsRect</ApiSourceLink>
+#### <ApiSourceLink label={"isPositiveBoundsRect"} path={"packages/kernel/math/src/primitives/bounds.ts"} startLine={125}>isPositiveBoundsRect</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1704,7 +1704,7 @@ export declare const isPositiveBoundsRect: (rect: BoundsRect) => boolean;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"mergeBounds"} path={"packages/kernel/math/src/primitives/bounds.ts"} startLine={77}>mergeBounds</ApiSourceLink>
+#### <ApiSourceLink label={"mergeBounds"} path={"packages/kernel/math/src/primitives/bounds.ts"} startLine={76}>mergeBounds</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1712,11 +1712,10 @@ export declare const isPositiveBoundsRect: (rect: BoundsRect) => boolean;
 
 <ApiTable variant="parameters">
 
-| Category   | Name | Type / signature                 | Description                                                  |
-| ---------- | ---- | -------------------------------- | ------------------------------------------------------------ |
-| Parameters | `a?` | `AxisAlignedBounds`              | First bounds, which may be omitted                           |
-|            | `b?` | `AxisAlignedBounds`              | Second bounds, which may be omitted                          |
-| Returns    | —    | `AxisAlignedBounds \| undefined` | New merged bounds, or undefined when both inputs are omitted |
+| Category   | Name        | Type / signature                        | Description                                                         |
+| ---------- | ----------- | --------------------------------------- | ------------------------------------------------------------------- |
+| Parameters | `...bounds` | `Array<AxisAlignedBounds \| undefined>` | Bounds to merge, skipping undefined                                 |
+| Returns    | —           | `AxisAlignedBounds \| undefined`        | New merged bounds, or undefined when no defined bounds are provided |
 
 </ApiTable>
 
@@ -1725,14 +1724,14 @@ export declare const isPositiveBoundsRect: (rect: BoundsRect) => boolean;
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export declare const mergeBounds: (a?: AxisAlignedBounds, b?: AxisAlignedBounds) => AxisAlignedBounds | undefined;
+export declare const mergeBounds: (...bounds: Array<AxisAlignedBounds | undefined>) => AxisAlignedBounds | undefined;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"rectToBounds"} path={"packages/kernel/math/src/primitives/bounds.ts"} startLine={104}>rectToBounds</ApiSourceLink>
+#### <ApiSourceLink label={"rectToBounds"} path={"packages/kernel/math/src/primitives/bounds.ts"} startLine={107}>rectToBounds</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 

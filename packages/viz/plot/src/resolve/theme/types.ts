@@ -5,7 +5,7 @@ import type { IRPlotAxisDefaults, IRPlotDefaults, IRPlotLegendGuide } from '../.
 type GuideTextStyle = Partial<
   Pick<
     NonNullable<IRNode['style']> & NonNullable<IRNode['layout']> & Pick<IRNode, 'rotate'>,
-    'font' | 'textColor' | 'opacity' | 'align' | 'lineHeight' | 'maxTextWidth' | 'rotate'
+    'font' | 'textColor' | 'opacity' | 'textAlign' | 'lineHeight' | 'maxTextWidth' | 'rotate'
   >
 >;
 

@@ -186,7 +186,7 @@ const svg = renderToSvgString(input, { compile: { clips: [roundedRectClip] } });
 IR 面板中的 JSON 可直接作为 `ir` 传给 Core；仍要在编译时传入 Definition：
 
 ```ts
-import { compileToScene } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { roundedRectClip } from './rounded-rect-clip';
 
 const { scene } = compileToScene(ir, { clips: [roundedRectClip] });

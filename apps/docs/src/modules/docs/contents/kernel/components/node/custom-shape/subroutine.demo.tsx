@@ -1,5 +1,5 @@
 import type { ShapeDefinition } from '@retikz/core';
-import { BUILTIN_SHAPES, defineShape } from '@retikz/core';
+import { rectangle, defineShape } from '@retikz/core';
 import { Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 import { z } from 'zod';
@@ -12,9 +12,9 @@ import { z } from 'zod';
 const subroutine: ShapeDefinition = defineShape({
   name: 'subroutine',
   paramsSchema: z.strictObject({}),
-  computeCircumscribedGeometry: BUILTIN_SHAPES.get('rectangle')!.computeCircumscribedGeometry,
-  computeBoundaryPoint: BUILTIN_SHAPES.get('rectangle')!.computeBoundaryPoint,
-  resolveAnchor: BUILTIN_SHAPES.get('rectangle')!.resolveAnchor,
+  computeCircumscribedGeometry: rectangle.computeCircumscribedGeometry,
+  computeBoundaryPoint: rectangle.computeBoundaryPoint,
+  resolveAnchor: rectangle.resolveAnchor,
   *emit(rect, style, round) {
     const hw = rect.width / 2;
     const hh = rect.height / 2;

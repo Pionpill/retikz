@@ -12,10 +12,13 @@
 
 ## 硬约束
 
+通用 ID 分配属于 Foundation 的原子工具契约：输入字符串前缀，输出实例级递增字符串 ID；不拥有领域身份、跨实例唯一性或宿主状态
+
 - 唯一允许的生产依赖是 `zod`；不得依赖其它外部运行时库、peer dependency 或 Retikz 上层包
 - 只提供根入口；`./types`、`./assert`、`./error` 与其它 subpath 不属于公开 API
-- `src/` 固定为 `types.ts`、`schema.ts`、`assert.ts`、`collections.ts`、`objects.ts`、`color.ts`、`trace.ts`、`error.ts`、`json.ts`、`index.ts`；不得新增 `shared`、`utils`、`helpers` 或领域目录
-- `index.ts` 只用 `export *` 聚合 owner 文件，不写业务逻辑、包装或重命名
+- `src/` 固定为 `types.ts`、`schema.ts`、`assert.ts`、`collections.ts`、`objects.ts`、`color.ts`、`trace.ts`、`error.ts`、`id.ts`、`json.ts`、`index.ts`；不得新增 `shared`、`utils`、`helpers` 或领域目录
+- `id.ts` 只提供固定前缀与实例级递增序号的通用 ID 分配器，不使用全局状态；前缀命名域、实例身份与生命周期由调用方负责
+- `index.ts` 按根规范的可见性规则聚合 owner 文件，不写业务逻辑、包装或重命名
 - `objects.ts` 只承载无领域的自身可枚举属性浅合并；写入策略由调用方配置，不递归合并、不处理领域继承、重置或默认值
 - `types.ts` 只承载无领域、无运行时代码的 TypeScript 类型投影；递归 `JsonValue` 同时作为 Zod JSON schema 的输出类型，`JsonObject` 由对象 schema 推导，不得引入领域模型、运行时 helper 或重复上层 owner 语义
 - `schema.ts` 只承载无领域 string / number 原子、Zod 原生递归 JSON value / object schema，以及唯一受限的 `createOpenStringSchema(values)`；除通用 JSON 契约外禁止对象、数组、coercion、transform、default、catch、参数化 range factory、颜色 schema、几何或领域 refinement

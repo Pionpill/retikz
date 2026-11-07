@@ -1,17 +1,17 @@
-import type { GroupPrimitive, IRChild, LayoutChildResult, LayoutProposal, ScenePrimitive } from '@retikz/core';
+﻿import type { GroupPrimitive, IRChild, LayoutChildResult, LayoutProposal, ScenePrimitive } from '@retikz/core';
 import {
   ChildSchema,
-  compileToScene,
   CompositeBaseSchema,
   defineComposite,
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
 } from '@retikz/core';
 import { LayoutAlignment } from '@retikz/layout';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal, number, string } from 'zod';
 
-import { legendDefinition, createLegend } from '../../src/presentation/legend/composite';
+import { createLegend, legendDefinition } from '../../src/presentation/legend/composite';
 import { LegendContentKind, LegendDirection } from '../../src/presentation/legend/constants';
 import { fullScopeProps } from '../composites/presentation/scope-props';
 
@@ -87,7 +87,7 @@ const compileRamp = (child: IRChild, proposal?: LayoutProposal) => {
   );
   if (observed === undefined) throw new Error('Expected Legend ramp probe to resolve');
 
-  const envelope = output.artifacts.find(value => value.kind === 'composite');
+  const envelope = output.artifacts.at(0);
   if (envelope === undefined) throw new Error('Expected Legend ramp artifact');
 
   return { observed, output, artifact: envelope.value };

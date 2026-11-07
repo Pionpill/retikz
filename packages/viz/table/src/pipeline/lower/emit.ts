@@ -1,23 +1,19 @@
-import type { IRNode, IRPath, IRPaintValue } from '@retikz/core';
+import type { IRNode, IRPaintValue, IRPath } from '@retikz/core';
 import type { BoundsRect } from '@retikz/math';
 
 import type { IRTableCellBackground } from '../../schemas';
 import type { DeepReadonly } from '../../shared';
-import type { TableBorderEdge } from '../layout';
-import type { CompiledTableLayout } from '../layout';
+import type { CompiledTableLayout, TableBorderEdge } from '../layout';
 import { tableBorderPathMetaOf } from './meta';
 
 /** 让 Table allocation bounds 参与 Core Scene AABB */
-export const emitTableBoundsSentinel = (layout: Pick<CompiledTableLayout, 'allocationBounds'>): IRNode => ({
+export const emitTableBoundsSentinel = (bounds: CompiledTableLayout['allocationBounds']): IRNode => ({
   type: 'node',
-  position: [
-    layout.allocationBounds.x + layout.allocationBounds.width / 2,
-    layout.allocationBounds.y + layout.allocationBounds.height / 2,
-  ],
+  position: [bounds.x + bounds.width / 2, bounds.y + bounds.height / 2],
   shape: 'rectangle',
   meta: { role: 'tableBounds' },
   style: { fill: 'none', stroke: 'none', opacity: 0 },
-  layout: { minimumSize: { width: layout.allocationBounds.width, height: layout.allocationBounds.height }, padding: 0 },
+  layout: { minimumSize: { width: bounds.width, height: bounds.height }, padding: 0 },
 });
 
 /** 把可见 Cell box 背景下沉为无描边的闭合 Core Path */

@@ -1,9 +1,5 @@
-import {
-  compileToScene,
-  resolveCoreProviderDependencies,
-  resolveDefaultCoreThemeColors,
-  ThemeMode,
-} from '@retikz/core';
+import { resolveCoreProviderDependencies, resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import * as Graph from '../../src';

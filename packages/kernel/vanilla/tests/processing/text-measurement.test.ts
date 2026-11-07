@@ -2,7 +2,8 @@
 import { fallbackMeasurer } from '@retikz/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { prepareProcessingInput, processToStaticInputResult, processToStaticInputResultAsync } from '../../src';
+import { processToStaticInputResult, processToStaticInputResultAsync } from '../../src';
+import { prepareProcessingInput } from '../../src/processing/prepare';
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -18,9 +19,11 @@ describe('默认文字测量', () => {
     const prepared = prepareProcessingInput(source, { compile: { measureText: custom }, defaultFontFamily: 'serif' });
     const font = { size: 16 };
     expect(prepared.coreOptions.measureText?.('Alpha', font)).toEqual({ width: 80, height: 16 });
-    expect(custom).toHaveBeenLastCalledWith('Alpha', { size: 16, family: 'serif' });
+    expect(custom).toHaveBeenLastCalledWith('Alpha', { size: 16, family: 'serif' }, undefined);
     prepared.coreOptions.measureText?.('Alpha', { size: 16, family: 'monospace' });
-    expect(custom).toHaveBeenLastCalledWith('Alpha', { size: 16, family: 'monospace' });
+    expect(custom).toHaveBeenLastCalledWith('Alpha', { size: 16, family: 'monospace' }, undefined);
+    prepared.coreOptions.measureText?.('Alpha', font, true);
+    expect(custom).toHaveBeenLastCalledWith('Alpha', { size: 16, family: 'serif' }, true);
     expect(font).toEqual({ size: 16 });
     expect(getContext).not.toHaveBeenCalled();
   });

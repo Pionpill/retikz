@@ -10,6 +10,7 @@ description: Use when implementing a retikz alpha ADR or beta TODO after design 
 ## 必读
 
 - 根 `AGENTS.md` 与就近 `AGENTS.md`。
+- 编写测试前读 [单元测试编写与 Review 规范](../test-contract/references/unit-tests.md)，先区分正式契约与当轮临时验证，Spec-First 不自动要求永久保留所有 case。
 - Alpha 必须阅读全文 ADR、镜像 `PLAN.md`、`TEST_CONTRACT.md` 与适用 `TASK_STATE.md` / `REVIEW.md`。
 - 涉及 schema / contract / providers / pipeline / compile 时，按 `standard-structure` 分流读取对应层级 references。
 - beta TODO 由 [beta](../flow-development/references/beta.md) 调用本 skill 时，以 [beta](../flow-development/references/beta.md) 的简化规则覆盖本阶段的 Spec-First 要求。
@@ -37,11 +38,11 @@ Alpha 按 reviewed `PLAN.md` 的文件 scope 使用 [alpha](../flow-development/
 产物要求：
 
 - 公开字段、类型、默认值与 ADR 的基础契约一致；文件位置、Zod 拼装和 describe 等实施细节与 plan 一致。发现 ADR、plan 或当前权威契约冲突时 halt。
-- 测试覆盖测试契约矩阵，并至少包含适用的 JSON round-trip、zod parse 错误路径、adapter parity、跨层组合或 docs 用户路径。
+- 测试复用或补齐矩阵中的独立失效模式；JSON 往返、自定义校验、adapter parity、跨层组合或 docs 路径按真实语义选择，不机械复测第三方声明。
 - 不读或改 compile / adapter 实现。
 - 测试此时可以失败；这是实现未完成的预期。
 
-主 AI 审查 spec 产物后，再进入实现。未经用户授权不 commit；若授权，spec commit 可作为预期失败的测试提交。
+主 AI 审查 spec 产物后，再进入实现。未经用户授权不 commit；若授权，spec commit 可包含预期失败的正式测试，临时 case 仍留在 ignored scratch。
 
 ### Implementer
 

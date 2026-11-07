@@ -19,7 +19,7 @@ type LayoutProbeErrorDetails = Readonly<{
 
 /** 布局试算中某个候选方案的失败，求解器可以放弃该候选并继续尝试 */
 export type LayoutProbeRecoverableError = RetikzCoreError<
-  typeof RetikzCoreErrorCode.LayoutProbeRecoverable,
+  typeof RetikzCoreErrorCode.CompileLayoutProbeRecoverable,
   LayoutProbeErrorDetails
 >;
 
@@ -30,7 +30,7 @@ export const createLayoutProbeRecoverableError = (
     Readonly<{ detail?: string; providerKey?: string; occurrence?: CompileOccurrenceLocator }> = {},
 ): LayoutProbeRecoverableError => {
   const error = new RetikzCoreError({
-    code: RetikzCoreErrorCode.LayoutProbeRecoverable,
+    code: RetikzCoreErrorCode.CompileLayoutProbeRecoverable,
     message,
     details: {
       detail: options.detail ?? message,
@@ -47,7 +47,7 @@ export const createLayoutProbeRecoverableError = (
 /** 创建扩展契约违规错误；布局试算遇到此错误时必须中止 */
 export const createCompositeContractError = (message: string, options?: ErrorOptions): RetikzCoreError => {
   const error = new RetikzCoreError({
-    code: RetikzCoreErrorCode.CompositeContractViolation,
+    code: RetikzCoreErrorCode.ContractViolation,
     message,
     details: Object.freeze({}),
     cause: options?.cause,

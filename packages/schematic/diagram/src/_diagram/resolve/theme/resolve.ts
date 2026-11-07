@@ -88,7 +88,7 @@ const resolveRegisteredDefaults = (
   const definition = registry.get(theme.name);
   if (definition === undefined) {
     throw new RetikzDiagramError({
-      code: RetikzDiagramErrorCode.DefinitionNotRegistered,
+      code: RetikzDiagramErrorCode.ProviderDefinitionNotRegistered,
       message: `Diagram theme '${theme.name}' is not registered.`,
       details: { capability: 'diagram-theme', key: theme.name, availableKeys: [...registry.keys()] },
     });
@@ -98,7 +98,7 @@ const resolveRegisteredDefaults = (
     return structuredClone(definition.resolve(theme));
   } catch (cause) {
     throw new RetikzDiagramError({
-      code: RetikzDiagramErrorCode.DefinitionCallbackFailed,
+      code: RetikzDiagramErrorCode.ProviderDefinitionCallbackFailed,
       message: `Diagram theme '${theme.name}' resolution failed.`,
       details: { capability: 'diagram-theme', key: theme.name },
       cause,
@@ -120,7 +120,7 @@ const completeText = (slice: IRDiagramDefaultsPresentationText | undefined): Can
   textColor: slice?.style?.textColor ?? '#000000',
   opacity: slice?.style?.opacity ?? 1,
   font: slice?.style?.font ?? {},
-  align: slice?.layout?.align ?? 'start',
+  textAlign: slice?.layout?.textAlign ?? 'start',
   lineHeight: slice?.layout?.lineHeight ?? 20,
   ...(slice?.layout?.maxTextWidth === undefined ? {} : { maxTextWidth: slice.layout.maxTextWidth }),
 });
@@ -158,7 +158,7 @@ const mergePresentationTextOverride = (
     ...(style?.textColor === undefined ? {} : { textColor: style.textColor }),
     ...(style?.opacity === undefined ? {} : { opacity: style.opacity }),
     ...(font === undefined ? {} : { font }),
-    ...(layout?.align === undefined ? {} : { align: layout.align }),
+    ...(layout?.textAlign === undefined ? {} : { textAlign: layout.textAlign }),
     ...(layout?.lineHeight === undefined ? {} : { lineHeight: layout.lineHeight }),
     ...(layout?.maxTextWidth === undefined ? {} : { maxTextWidth: layout.maxTextWidth }),
   };

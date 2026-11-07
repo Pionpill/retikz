@@ -63,9 +63,8 @@ const translations: Readonly<Record<string, string>> = {
   '几何输入参数，字段含义见对应类型': 'Geometry input parameters; see the corresponding type for field semantics',
   形状中心与可选旋转弧度: 'Shape center and optional rotation in radians',
   '点集外接范围；空集返回 undefined': 'Bounds of the point set, or undefined for empty input',
-  '第一个范围，可省略': 'First bounds, which may be omitted',
-  '第二个范围，可省略': 'Second bounds, which may be omitted',
-  '新建的合并范围；两者均缺省时返回 undefined': 'New merged bounds, or undefined when both inputs are omitted',
+  '待合并的范围，忽略 undefined': 'Bounds to merge, skipping undefined',
+  '新建的合并范围；没有有效范围时返回 undefined': 'New merged bounds, or undefined when no defined bounds are provided',
   '依次返回左上、右上、左下、右下角点':
     'Returns top-left, top-right, bottom-left, and bottom-right corners in that order',
   '各边外扩距离；负值表示内缩': 'Expansion for each side; negative values shrink the bounds',
@@ -281,7 +280,7 @@ const translations: Readonly<Record<string, string>> = {
   有限二维点守卫: 'Finite two-dimensional point guard',
   '无限数值守卫，仅接受正负 Infinity': 'Infinite-number guard that accepts only positive or negative Infinity',
   '线性插值：a + (b - a) * t': 'Linear interpolation: `a + (b - a) * t`',
-  合并两个轴对齐外接范围: 'Merges two axis-aligned bounds',
+  合并任意数量的轴对齐外接范围: 'Merges any number of axis-aligned bounds',
   复合二维仿射矩阵: 'Composes two-dimensional affine matrices',
   '返回 `outer × inner`，即对点先应用 `inner`，再应用 `outer`':
     'Returns `outer × inner`: apply `inner` to a point first, then `outer`.',

@@ -5,12 +5,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { literal } from 'zod';
 
 import type { InputEmbedAdapter, InputScene, VanillaCompileDriver, VanillaCompileDriverSession } from '../../src';
-import {
-  createProcessingController,
-  prepareProcessingInput,
-  processToStaticInputResult,
-  processToStaticResult,
-} from '../../src';
+import { createProcessingController, processToStaticInputResult, processToStaticResult } from '../../src';
+import { prepareProcessingInput } from '../../src/processing/prepare';
 
 describe('Vanilla 处理', () => {
   it('只在 processing prepare 中解析 InputEmbed 的 Composite contribution', () => {
@@ -309,10 +305,8 @@ describe('Vanilla 处理', () => {
         if (existing !== undefined) return existing;
 
         const session = {
-          observers: [],
           resolve: (output: Parameters<VanillaCompileDriverSession['resolve']>[0]) => ({
             primary: output.result,
-            observerOutputs: output.observerOutputs,
             layers: [],
             diagnostics: [],
           }),
@@ -348,10 +342,9 @@ describe('Vanilla 处理', () => {
   it('compile driver 解析失败时不发布 retained candidate，并恢复上一份 driver 输入', () => {
     let reject = false;
     const session: VanillaCompileDriverSession = {
-      observers: [],
       resolve: output => {
         if (reject) throw new Error('expected driver resolution failure');
-        return { primary: output.result, observerOutputs: output.observerOutputs, layers: [], diagnostics: [] };
+        return { primary: output.result, layers: [], diagnostics: [] };
       },
     };
     const driver: VanillaCompileDriver = {
@@ -369,7 +362,7 @@ describe('Vanilla 处理', () => {
     controller.subscribe(listener);
 
     expect(() => controller.update({ children: [{ id: 'broken', position: [20, 0] }] })).toThrow(
-      /Failed to publish the compilation|RETAINED_RENDERER_PREPARE_FAILED|Vanilla compile driver resolve failed/,
+      /Failed to publish the compilation|RENDER_RUNTIME_RENDERER_PREPARE_FAILED|Vanilla compile driver resolve failed/,
     );
 
     expect(controller.read()).toBe(stable);

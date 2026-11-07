@@ -23,6 +23,7 @@ package-public / owner-visible 名称必须独立表达领域与角色；文件�
 - 路径名标明所属模型与表示，如 `irPath`、`scenePath`、`primitivePath`；不得把 IR 地址、Scene 内容地址、几何路径和文件路径混用同一含义
 - 几何集合说明内容或坐标角色，如 `boundsPoints`、`localPoints`、`pathCommands`，不只用 `geometry` 或 `data`
 - 布尔状态使用谓词名，如 `isResourceContent`；策略字段使用明确的策略名，如 `pointerEvents`，不使用容易被误认为操作函数的名称
+- 对对象采用解构时，尽量一次解构当前作用域实际使用的字段，避免与同一对象的属性访问混用；不解构未使用字段，确需动态读取最新属性或保留方法接收者时保留属性访问
 
 ## 数据结构与后缀
 

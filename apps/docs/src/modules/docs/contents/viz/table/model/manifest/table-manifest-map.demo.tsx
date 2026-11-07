@@ -9,7 +9,7 @@ const Demo: FC = () => (
       position={[-220, -46]}
       cornerRadius={4}
       style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
-      layout={{ minimumSize: { width: 142, height: 42 }, align: 'middle', lineHeight: 14 }}
+      layout={{ minimumSize: { width: 142, height: 42 }, textAlign: 'middle', lineHeight: 14 }}
     >
       <Text font={{ size: 13, weight: 'bold' }}>Semantic model</Text>
       <Text fill="gray" font={{ size: 10 }}>
@@ -21,7 +21,7 @@ const Demo: FC = () => (
       position={[-220, 46]}
       cornerRadius={4}
       style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
-      layout={{ minimumSize: { width: 142, height: 42 }, align: 'middle', lineHeight: 14 }}
+      layout={{ minimumSize: { width: 142, height: 42 }, textAlign: 'middle', lineHeight: 14 }}
     >
       <Text font={{ size: 13, weight: 'bold' }}>Resolved layout</Text>
       <Text fill="gray" font={{ size: 10 }}>
@@ -33,7 +33,7 @@ const Demo: FC = () => (
       position={[0, 0]}
       cornerRadius={4}
       style={{ stroke: 'gray', fill: 'lightgray', opacity: { fill: 0.16 } }}
-      layout={{ minimumSize: { width: 132, height: 52 }, align: 'middle', lineHeight: 15 }}
+      layout={{ minimumSize: { width: 132, height: 52 }, textAlign: 'middle', lineHeight: 15 }}
     >
       <Text font={{ size: 13, weight: 'bold' }}>Table transaction</Text>
       <Text fill="gray" font={{ size: 10 }}>
@@ -45,7 +45,7 @@ const Demo: FC = () => (
       position={[220, -46]}
       cornerRadius={4}
       style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
-      layout={{ minimumSize: { width: 136, height: 42 }, align: 'middle', lineHeight: 14 }}
+      layout={{ minimumSize: { width: 136, height: 42 }, textAlign: 'middle', lineHeight: 14 }}
     >
       <Text font={{ size: 13, weight: 'bold' }}>Scene</Text>
       <Text fill="gray" font={{ size: 10 }}>
@@ -57,7 +57,7 @@ const Demo: FC = () => (
       position={[220, 46]}
       cornerRadius={4}
       style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
-      layout={{ minimumSize: { width: 136, height: 42 }, align: 'middle', lineHeight: 14 }}
+      layout={{ minimumSize: { width: 136, height: 42 }, textAlign: 'middle', lineHeight: 14 }}
     >
       <Text font={{ size: 13, weight: 'bold' }}>Manifest</Text>
       <Text fill="gray" font={{ size: 10 }}>

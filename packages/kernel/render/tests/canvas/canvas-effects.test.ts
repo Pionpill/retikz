@@ -1,6 +1,6 @@
 import { createCanvas } from '@napi-rs/canvas';
 import type { PathPrimitive, RectPrimitive, CompiledArrowEnd, Scene } from '@retikz/core';
-import { compileToScene } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { drawScene } from '../../src/canvas/draw-scene';

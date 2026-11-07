@@ -1,0 +1,144 @@
+import { localToWorld, worldToLocal } from '@retikz/math';
+import type { CenteredBox, Position } from '@retikz/math';
+import { describe, expect, it } from 'vitest';
+
+import { rectangle } from '../../src/providers/shape';
+
+const round2 = (n: number): number => Math.round(n * 100) / 100;
+
+const identity = (n: number): number => n;
+
+const aaRect = (width = 120, height = 80): CenteredBox => ({ x: 0, y: 0, width, height, rotate: 0 });
+
+describe('rectangle cornerRadius — emit 仍 RectPrimitive', () => {
+  it('rect_emit_stays_rectprim：emit 出 RectPrimitive（含 cornerRadius），非 path', () => {
+    const rect = aaRect();
+    const prims = [...rectangle.emit(rect, { cornerRadius: 10 }, round2, { cornerRadius: 8 })];
+
+    expect(prims.length).toBe(1);
+
+    const prim = prims[0];
+
+    expect(prim.type).toBe('rect');
+
+    if (prim.type !== 'rect') throw new Error('expected rect');
+
+    // 圆角由形状参数决定，绘制样式不改变几何
+    expect(prim.cornerRadius).toBe(8);
+  });
+
+  it('rect_emit_no_cornerRadius：省略 → cornerRadius 字段 undefined（仍 RectPrimitive）', () => {
+    const rect = aaRect();
+    const prims = [...rectangle.emit(rect, {}, round2, {})];
+    const prim = prims[0];
+
+    expect(prim.type).toBe('rect');
+
+    if (prim.type !== 'rect') throw new Error('expected rect');
+
+    expect(prim.cornerRadius).toBeUndefined();
+  });
+
+  it('矩形发射将 cornerRadius 钳位到矩形边界', () => {
+    const rect = aaRect(120, 80);
+    const prims = [...rectangle.emit(rect, {}, round2, { cornerRadius: 1_000_000 })];
+    const prim = prims[0];
+    if (prim.type !== 'rect') throw new Error('expected rect');
+
+    expect(prim.cornerRadius).toBe(40);
+  });
+});
+
+describe('矩形 cornerRadius — 边界感知', () => {
+  it('rect_boundary_aware：朝角方向 r>0 落 fillet 弧（≠ 直角顶点），r=0 = 直角顶点', () => {
+    const rect = aaRect(120, 120); // 正方形：朝 [1,1] 方向命中右下角
+    const toward: Position = [1000, 1000];
+    const sharp = rectangle.computeBoundaryPoint(rect, toward, {});
+    const rounded = rectangle.computeBoundaryPoint(rect, toward, { cornerRadius: 24 });
+
+    // 直角顶点离中心最远（半对角线）；倒角后该方向边界更靠近中心
+    const distSharp = Math.hypot(sharp[0], sharp[1]);
+    const distRounded = Math.hypot(rounded[0], rounded[1]);
+
+    expect(distRounded).toBeLessThan(distSharp - 1e-6);
+
+    // r=0 命中正方形右下角 (60, 60)
+    expect(sharp[0]).toBeCloseTo(60, 6);
+    expect(sharp[1]).toBeCloseTo(60, 6);
+  });
+
+  it('rect_boundary_aware_edge_unchanged：朝边中点方向（非角）r>0 与 r=0 相同（边未被倒角影响）', () => {
+    const rect = aaRect(120, 80);
+    const toward: Position = [1000, 0]; // 朝 +x 边中点
+    const sharp = rectangle.computeBoundaryPoint(rect, toward, {});
+    const rounded = rectangle.computeBoundaryPoint(rect, toward, { cornerRadius: 10 });
+
+    expect(rounded[0]).toBeCloseTo(sharp[0], 6);
+    expect(rounded[1]).toBeCloseTo(sharp[1], 6);
+    expect(sharp[0]).toBeCloseTo(60, 6); // 右边 x = halfWidth
+  });
+});
+
+describe('rectangle cornerRadius — r=0 等价于现状矩形边求交', () => {
+  // 现状参考：geometry/rect.boundaryPoint（中心 → toward 射线 ∩ 矩形边，含旋转）。
+  const towards: Array<Position> = [
+    [1000, 0],
+    [0, 1000],
+    [-1000, 0],
+    [0, -1000],
+    [300, 130],
+    [-220, 410],
+    [137, -512],
+    [-640, -90],
+  ];
+
+  it.each([
+    { name: '轴对齐', bounds: aaRect(120, 80) },
+    { name: '旋转与平移', bounds: { x: 10, y: -5, width: 120, height: 80, rotate: 0.6 } },
+  ])('$name 下省略与零圆角均保持尖角矩形交点', ({ bounds }) => {
+    const sharpParameterVariants: Array<Parameters<typeof rectangle.computeBoundaryPoint>[2]> = [
+      {},
+      { cornerRadius: 0 },
+    ];
+    for (const toward of towards) {
+      const expected = sharpRectangleBoundary(bounds, toward);
+      for (const params of sharpParameterVariants) {
+        const got = rectangle.computeBoundaryPoint(bounds, toward, params);
+        expect(got[0]).toBeCloseTo(expected[0], 9);
+        expect(got[1]).toBeCloseTo(expected[1], 9);
+      }
+    }
+  });
+
+  it('中心同点和零尺寸矩形没有正向交点时返回中心', () => {
+    const bounds = { x: 10, y: 20, width: 80, height: 60, rotate: 0.6 };
+    expect(rectangle.computeBoundaryPoint(bounds, [10, 20], {})).toEqual([10, 20]);
+    expect(rectangle.computeBoundaryPoint({ ...bounds, width: 0 }, [200, 100], {})).toEqual([10, 20]);
+    expect(rectangle.computeBoundaryPoint({ ...bounds, height: 0 }, [200, 100], { cornerRadius: 0 })).toEqual([10, 20]);
+  });
+});
+
+describe('矩形圆角参数的缩放与输出', () => {
+  it('矩形 scaleParams 在 scale=2 时将 cornerRadius 乘以 2', () => {
+    expect(rectangle.scaleParams!({ cornerRadius: 6 }, 2, 2)).toEqual({ cornerRadius: 12 });
+    expect(rectangle.scaleParams!({}, 2, 2)).toEqual({});
+  });
+
+  // round 时机：identity round 下 emit cornerRadius 原样
+  it('rect_emit_round_identity：identity round 下 emit cornerRadius 原样', () => {
+    const prims = [...rectangle.emit(aaRect(), {}, identity, { cornerRadius: 7.5 })];
+    const prim = prims[0];
+    if (prim.type !== 'rect') throw new Error('expected rect');
+
+    expect(prim.cornerRadius).toBe(7.5);
+  });
+});
+
+const sharpRectangleBoundary = (
+  rect: { x: number; y: number; width: number; height: number; rotate?: number },
+  toward: [number, number],
+): [number, number] => {
+  const local = worldToLocal(rect, toward);
+  const ratio = Math.max(Math.abs(local[0]) / (rect.width / 2), Math.abs(local[1]) / (rect.height / 2));
+  return localToWorld(rect, ratio === 0 ? [0, 0] : [local[0] / ratio, local[1] / ratio]);
+};

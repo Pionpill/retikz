@@ -1,13 +1,9 @@
-import type {
-  CanonicalInlineSegment,
-  ParsedInlineSegments,
-  MathSegmentColorSource,
-  InlineSegmentColorSource,
-} from './types';
+import type { TextInlineSegment } from '../../contract';
+import type { ParsedInlineSegments, MathSegmentColorSource, InlineSegmentColorSource } from './types';
 
 /** 判断行内片段是否为公式 */
 export const isMathSegment = (
-  segment: InlineSegmentColorSource | CanonicalInlineSegment,
+  segment: InlineSegmentColorSource | TextInlineSegment,
 ): segment is MathSegmentColorSource => 'tex' in segment;
 
 /** 从指定位置查找下一个未转义的公式闭合符，未找到时返回 -1 */

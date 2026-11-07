@@ -28,7 +28,7 @@ export type CanonicalDiagramTextAppearance = Readonly<{
   /** 文字排版使用的字体属性 */
   font: NonNullable<NonNullable<IRNode['style']>['font']>;
   /** 文字行在内容框中的水平对齐方式 */
-  align: NonNullable<NonNullable<IRNode['layout']>['align']>;
+  textAlign: NonNullable<NonNullable<IRNode['layout']>['textAlign']>;
   /** 文字排版使用的行高 */
   lineHeight: NonNullable<NonNullable<IRNode['layout']>['lineHeight']>;
   /** 文字排版的最大宽度约束 */

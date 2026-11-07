@@ -125,7 +125,7 @@ describe('计算结果默认', () => {
     try {
       expect(() =>
         runtime.update({ baseRevision: runtime.revision(), sources: [createRuntimeSourceUpdate(counter, 2)] }),
-      ).toThrow(expect.objectContaining({ code: RetikzRuntimeErrorCode.ResultOwnershipAlias }));
+      ).toThrow(expect.objectContaining({ code: RetikzRuntimeErrorCode.ComputationResultOwnershipAlias }));
       expect(runtime.result(computation)).toEqual({ revision: 0, value: first });
       expect(disposed).toEqual([]);
 

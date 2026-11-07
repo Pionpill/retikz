@@ -25,6 +25,67 @@ Foundation schemas do not fill defaults: `parse()` validates input and returns t
   ]}
 />
 
+## ID allocation
+
+#### <ApiSourceLink label={"IdAllocator"} path={"packages/kernel/foundation/src/id.ts"} startLine={2}>IdAllocator</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member          | Type           | Default | Description                                                                                                          |
+| --------------- | -------------- | ------- | -------------------------------------------------------------------------------------------------------------------- |
+| `readonly next` | `() => string` | —       | Joins the prefix and an incrementing sequence number starting at 0 with a hyphen; allocated numbers are never reused |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IdAllocator = Readonly<{
+  next: () => string;
+}>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"createIdAllocator"} path={"packages/kernel/foundation/src/id.ts"} startLine={14}>createIdAllocator</ApiSourceLink>
+
+Each instance counts independently without global state; callers requiring uniqueness across instances must provide non-overlapping prefix namespaces
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name     | Type / signature | Description                                                                           |
+| ---------- | -------- | ---------------- | ------------------------------------------------------------------------------------- |
+| Parameters | `prefix` | `string`         | ID prefix followed by an automatic hyphen; an empty prefix produces -0, -1, and so on |
+| Returns    | —        | `IdAllocator`    | Independent allocator instance starting at sequence number 0                          |
+
+</ApiTable>
+
+> **Notes:** Callers manage allocator lifetimes and retain allocated IDs
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export declare const createIdAllocator: (prefix: string) => IdAllocator;
+```
+
+</DocTab>
+
+</DocTabs>
+
 ## Error contracts
 
 #### <ApiSourceLink label={"RetikzError"} path={"packages/kernel/foundation/src/error.ts"} startLine={29}>RetikzError</ApiSourceLink>
@@ -421,7 +482,7 @@ export type JsonValue =
     };
 ```
 
-#### <ApiSourceLink label={"assertPlainDataContainers"} path={"packages/kernel/foundation/src/json.ts"} startLine={136}>assertPlainDataContainers</ApiSourceLink>
+#### <ApiSourceLink label={"assertPlainDataContainers"} path={"packages/kernel/foundation/src/json.ts"} startLine={186}>assertPlainDataContainers</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -451,7 +512,7 @@ export declare const assertPlainDataContainers: (value: unknown, path?: string) 
 
 </DocTabs>
 
-#### <ApiSourceLink label={"cloneAndFreezeJson"} path={"packages/kernel/foundation/src/json.ts"} startLine={148}>cloneAndFreezeJson</ApiSourceLink>
+#### <ApiSourceLink label={"cloneAndFreezeJson"} path={"packages/kernel/foundation/src/json.ts"} startLine={198}>cloneAndFreezeJson</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -480,7 +541,7 @@ export declare const cloneAndFreezeJson: <T>(value: T, path?: string) => T;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"jsonStructuralEquals"} path={"packages/kernel/foundation/src/json.ts"} startLine={160}>jsonStructuralEquals</ApiSourceLink>
+#### <ApiSourceLink label={"jsonStructuralEquals"} path={"packages/kernel/foundation/src/json.ts"} startLine={210}>jsonStructuralEquals</ApiSourceLink>
 
 Ignores object property order, compares arrays in order, and uses Object.is for scalars, so 0 and -0 differ; does not mutate inputs
 

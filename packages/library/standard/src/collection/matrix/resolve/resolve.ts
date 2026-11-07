@@ -9,6 +9,7 @@ import type { CanonicalMatrix } from './types';
 /** 将三种矩形输入解析为共享单格，不改变 Source */
 export const resolveMatrix = (source: IRMatrix): CanonicalMatrix => {
   const { items, data, skeleton, dataExpand, cellIdMode, index, layout, ...input } = source;
+  const { defaultCell, id: sourceId } = input;
   const expansion = dataExpand ?? DataExpandSchema.parse(undefined);
   const rows: Array<Array<string | IRCell>> =
     skeleton !== undefined
@@ -29,12 +30,12 @@ export const resolveMatrix = (source: IRMatrix): CanonicalMatrix => {
     items: rows.map((row, r) =>
       row.map((cell, c) => {
         const resolved = resolveCell(cell, {
-          overallStyle: source.defaultCell?.style,
-          overallLayout: source.defaultCell?.layout,
+          overallStyle: defaultCell?.style,
+          overallLayout: defaultCell?.layout,
         });
         if (cellIdMode !== 'index') return resolved;
 
-        const id = `${source.id}-${r}-${c}`;
+        const id = `${sourceId}-${r}-${c}`;
 
         return {
           ...resolved,
@@ -45,8 +46,8 @@ export const resolveMatrix = (source: IRMatrix): CanonicalMatrix => {
     ),
     layout: { ...layout, gap: typeof gap === 'number' ? { row: gap, column: gap } : gap },
     index: {
-      row: resolveCollectionIndex(axes.row, source.defaultCell?.style),
-      column: resolveCollectionIndex(axes.column, source.defaultCell?.style),
+      row: resolveCollectionIndex(axes.row, defaultCell?.style),
+      column: resolveCollectionIndex(axes.column, defaultCell?.style),
     },
   };
 };

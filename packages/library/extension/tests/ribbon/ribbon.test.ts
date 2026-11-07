@@ -1,13 +1,13 @@
-import type { IRPathBase, IRScene, IRStep, PathPrimitive, ScenePrimitive } from '@retikz/core';
-import { compileToScene as compileCoreToScene } from '@retikz/core';
+import type { IRPathBase, IRScene, IRStep, PathCommand, PathPrimitive, ScenePrimitive } from '@retikz/core';
+import { compileToScene as compileCoreToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import type { IRRibbonPathOptions } from '../../src/ribbon';
 import {
+  RibbonPathSchema,
   createRibbonPathDefinition,
   defineRibbonWidthProfile,
   ribbonPathDefinition,
-  RibbonPathSchema,
 } from '../../src/ribbon';
 
 const scene = (children: IRScene['children']): IRScene => ({
@@ -21,7 +21,7 @@ const pathPrim = (primitive: ScenePrimitive): PathPrimitive => {
   return primitive as PathPrimitive;
 };
 
-const commandPoint = (command: PathPrimitive['commands'][number]): [number, number] => {
+const commandPoint = (command: PathCommand): [number, number] => {
   if (!('to' in command)) throw new Error(`Expected a point command, got ${command.kind}.`);
   return command.to;
 };

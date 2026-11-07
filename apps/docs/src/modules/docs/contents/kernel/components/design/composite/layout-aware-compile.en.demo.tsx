@@ -13,7 +13,7 @@ const Demo: FC = () => (
         position={[0, -145]}
         cornerRadius={4}
         style={{ stroke: 'dimgray', fill: 'dimgray', opacity: { fill: 0.08 } }}
-        layout={{ minimumSize: { width: 260, height: 54 }, align: 'middle', lineHeight: 16 }}
+        layout={{ minimumSize: { width: 260, height: 54 }, textAlign: 'middle', lineHeight: 16 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>Tier 2 compile</Text>
         <Text fill="gray" font={{ size: 12 }}>
@@ -25,7 +25,7 @@ const Demo: FC = () => (
         position={[0, -70]}
         cornerRadius={4}
         style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
-        layout={{ minimumSize: { width: 260, height: 54 }, align: 'middle', lineHeight: 16 }}
+        layout={{ minimumSize: { width: 260, height: 54 }, textAlign: 'middle', lineHeight: 16 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>Minimum / natural probe</Text>
         <Text fill="gray" font={{ size: 12 }}>
@@ -37,7 +37,7 @@ const Demo: FC = () => (
         position={[0, 5]}
         cornerRadius={4}
         style={{ stroke: 'dimgray', fill: 'dimgray', opacity: { fill: 0.08 } }}
-        layout={{ minimumSize: { width: 260, height: 54 }, align: 'middle', lineHeight: 16 }}
+        layout={{ minimumSize: { width: 260, height: 54 }, textAlign: 'middle', lineHeight: 16 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>Parent solver</Text>
         <Text fill="gray" font={{ size: 12 }}>
@@ -49,7 +49,7 @@ const Demo: FC = () => (
         position={[0, 80]}
         cornerRadius={4}
         style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
-        layout={{ minimumSize: { width: 260, height: 54 }, align: 'middle', lineHeight: 16 }}
+        layout={{ minimumSize: { width: 260, height: 54 }, textAlign: 'middle', lineHeight: 16 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>Range / exact probe</Text>
         <Text fill="gray" font={{ size: 12 }}>
@@ -61,7 +61,7 @@ const Demo: FC = () => (
         position={[0, 155]}
         cornerRadius={4}
         style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
-        layout={{ minimumSize: { width: 260, height: 54 }, align: 'middle', lineHeight: 16 }}
+        layout={{ minimumSize: { width: 260, height: 54 }, textAlign: 'middle', lineHeight: 16 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>Choose replay or raise</Text>
         <Text fill="gray" font={{ size: 12 }}>

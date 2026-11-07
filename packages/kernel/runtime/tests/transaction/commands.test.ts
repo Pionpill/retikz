@@ -30,7 +30,7 @@ describe('运行时修订和源命令', () => {
     'change set 拒绝无效 revision：%s',
     revision => {
       expect(() => createRuntimeChangeSet(revision as RuntimeRevision, [])).toThrowError(
-        expect.objectContaining({ code: RetikzRuntimeErrorCode.RevisionInvalid }),
+        expect.objectContaining({ code: RetikzRuntimeErrorCode.TransactionRevisionInvalid }),
       );
     },
   );
@@ -54,7 +54,7 @@ describe('运行时修订和源命令', () => {
     const foreignInput = createForeignSourceInput(source, 1);
 
     expect(() => createRuntimeSourceUpdate(source, 2, foreignChangeSet)).toThrowError(
-      expect.objectContaining({ code: RetikzRuntimeErrorCode.ChangeSetInvalid }),
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.TransactionChangeSetInvalid }),
     );
     expect(() => getRuntimeSourceCommandExecutor(foreignInput)).toThrowError(
       expect.objectContaining({ code: RetikzRuntimeErrorCode.SourceCommandInvalid }),

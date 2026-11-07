@@ -47,7 +47,7 @@ export const BuiltinTextPreview = (
         encodings={{ text: 'word', position: { x: { field: 'x' }, y: { field: 'y' } } }}
         properties={{
           textColor: values.textColor,
-          align: values.align,
+          textAlign: values.align,
           font: { size: values.fontSize, weight: 'bold' },
           lineHeight: values.lineHeight,
           maxTextWidth: values.maxTextWidth,

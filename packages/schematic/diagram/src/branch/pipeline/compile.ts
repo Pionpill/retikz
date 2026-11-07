@@ -1,4 +1,4 @@
-import type { IRChild, IRScope, CompositeCompileContext, CompositeCompileResult } from '@retikz/core';
+import type { CompositeCompileContext, CompositeCompileResult, IRChild, IRScope } from '@retikz/core';
 import type { IRGraphRelation } from '@retikz/graph';
 import { resolveGraphDefinitionOptions, resolveRelation, resolveRelationAppearance } from '@retikz/graph';
 import { createOverlayLayout } from '@retikz/layout';
@@ -167,18 +167,7 @@ export const compileBranchDiagram = (
 
     return {
       allocationBounds: foundation.frame.allocationBounds,
-      children: [
-        context.createScope(
-          scope,
-          [context.replay(foundation.frame)],
-          artifact.nodes.map(node => ({
-            id: `node:${node.id}`,
-            role: 'node',
-            bounds: node.visualBounds,
-            payload: { id: node.id },
-          })),
-        ),
-      ],
+      children: [context.createScope(scope, [context.replay(foundation.frame)])],
       artifact,
     };
   } catch (cause) {

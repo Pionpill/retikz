@@ -1,3 +1,5 @@
+import type { PropertyPath } from '@retikz/foundation';
+
 import type { IRComposite } from '../../schemas';
 import { parseProviderPayload } from '../provider';
 import type { CompositeBinding, CompositeRegistry, CompositeResolution, RegisteredCompositeBinding } from './types';
@@ -27,7 +29,7 @@ export const bindComposite = (source: IRComposite, composites: CompositeRegistry
  */
 export const resolveComposite = <TBinding extends RegisteredCompositeBinding>(
   binding: TBinding,
-  irPath: string,
+  irPath: PropertyPath,
 ): CompositeResolution<TBinding> => ({
   ...binding,
   node: parseProviderPayload({

@@ -28,6 +28,7 @@ Plot 默认直接使用数据推断出的连续 domain，不额外增加边界�
 裸数字与省略 `kind` 的对象使用 scale range 输出单位，因此 x / y 能得到相同的实际留白距离；例如 `10` 表示两端各预留 10 个 user units。只有 `{ kind: 'ratio', lower?, upper? }` 明确使用原始 domain 跨度比例，比例必须落在 `0 <= value < 1`。对象可以只设置一端，未设置的一端为 `0`。
 
 <ComponentPreview
+  mode="showcase"
   size="lg"
   files={['scale-continuous', 'scale-continuous.preview.tsx', 'scale-continuous.data.ts']}
   caption="切换正值与跨零数据，比较四种连续位置 scale；log 可调底数，symlog 可调线性区，domain padding 控制数据与边界的留白。"
@@ -47,6 +48,7 @@ Plot 默认直接使用数据推断出的连续 domain，不额外增加边界�
 `radial` 把值映射成半径，并让扇形或圆环的**面积**正比于值。它从零基线起算，专门服务极坐标径向值轴，因此可以配 interval 或 path closure；同为开方型映射的 `sqrt` 不允许这样使用。
 
 <ComponentPreview
+  mode="showcase"
   size="lg"
   files={['scale-radial', 'scale-radial.preview.tsx', 'scale-radial.data.ts']}
   caption="选择数据分布，并排比较同一数值在 linear 下的半径线性与 radial 下的面积线性；两图共用最大半径。"
@@ -71,22 +73,23 @@ mark 分支的 `clearance` 是图元外缘到自动边界的最小净空，使�
 
 `clearance` 支持数值或 `{ lower?: number, upper?: number }`；数值同时用于两端，对象未指定端为 `0`。这里的 lower / upper 对应 domain 起止端，跟随 range 方向，不固定对应视觉左右；Chart 负责将四边净空转换为各轴的这两个端。
 
-内置支持 Cartesian2D 与 Polar2D 的全部连续位置尺度、band/point 分类尺度，以及 Point 和投影 Relation 端点。role-space placement 使用调整后的实际位置。分类域保持不变，通过压缩输出范围补齐留白；极坐标保护圆形、环形与扇形边界，整圆角轴不产生接缝。空数据不产生自动留白；基准 domain 外的点不参与约束，但绘制裁切语义不变。共享尺度使用同一最终 domain，无法满足的固定端或不支持的能力会报错。Chart 的 `point-aware` 策略自动生成这一配置。
+内置支持 Cartesian2D 与 Polar2D 的全部连续位置尺度、band/point 分类尺度，以及 Point 图元。role-space placement 使用调整后的实际位置。分类域保持不变，通过压缩输出范围补齐留白；极坐标保护圆形、环形与扇形边界，整圆角轴不产生接缝。空数据不产生自动留白；基准 domain 外的点不参与约束，但绘制裁切语义不变。共享尺度使用同一最终 domain，无法满足的固定端或不支持的能力会报错。Chart 的 `point-aware` 策略自动生成这一配置。
 
-内置 Mark 提供 targets/extent；自定义 position Scale 和 Coordinate 可在各自 Definition 的 `domainPadding` capability 中提供基准归一化与最终映射、坐标边界度量。它们使用既有 registry；尺寸求值不得依赖待求解的位置留白。参见 [点图留白策略对比](/viz/plot/mark/point#边缘留白)。
+内置 Mark 提供 targets/extent。自定义数学比例尺通过 `invert` 与 `rebuild` 支持位置留白，位置通道声明连续性和零基线策略；Coordinate 的 `domainPadding` 提供坐标边界度量。尺寸求值不得依赖待求解的位置留白。参见 [点图留白策略对比](/viz/plot/mark/point#边缘留白)。
 
 ## 时间
 
 `temporal` 字段的位置通道默认使用 `time`。它仍是连续映射，但刻度会落在月初、季度、整点等时间边界，标签也按时间格式化；把字段在 model 中声明为 `temporal` 后无需手写 `<PlotScale>`。
 
 <ComponentPreview
+  mode="showcase"
   size="lg"
   files={['scale-time', 'scale-time.preview.tsx', 'scale-time.data.ts']}
   defaultSourceFile="scale-time.preview.tsx"
   caption="横轴没有显式声明 PlotScale；model 中的 temporal 字段会自动派生 time scale，并把季度日期格式化到可读的时间边界。"
 />
 
-日期值可以是 ISO 字符串或时间戳，解析规则见[数据接入](/viz/data/model/intake)。时间字段绑定 `color` 时会自动派生连续的 `sequential` 色带，见[颜色比例尺](/viz/plot/scale/color)。
+日期值可以是 ISO 字符串或时间戳，解析规则见[数据接入](/viz/data/model/intake)。时间字段绑定 `color` 时会自动派生连续的 `sequential` 色带，见[颜色比例尺](/viz/plot/scale/mark-attributes)。
 
 ## 分类：band 与 point
 
@@ -98,6 +101,7 @@ mark 分支的 `clearance` 是图元外缘到自动边界的最小净空，使�
 | `point` | 每类一个等距点，不提供格宽 | 分类折线、分类散点 |
 
 <ComponentPreview
+  mode="showcase"
   size="lg"
   files={['scale-band', 'scale-band.preview.tsx', 'scale-band.data.ts']}
   caption="切换比例尺：band 为 interval 提供格宽，point 只为折线和散点提供等距点位；面板只显示当前类型对应的 padding。"
@@ -120,7 +124,7 @@ mark 分支的 `clearance` 是图元外缘到自动边界的最小净空，使�
 
 位置 scale 在 lowering 时才拥有完整上下文。图中的 `derive` 先结合字段类型、图元结构与显式 `<PlotScale>` 选择类型；`validate` 检查字段兼容性、合法值域和基线约束；随后从绑定数据或显式配置解析 domain，并把坐标系提供的可用范围作为 range。
 
-<ComponentPreview files="scale-position-flow" size="xs" hideCode />
+<ComponentPreview mode="showcase" files="scale-position-flow" size="xs" hideCode />
 
 最后得到的 scale 同时服务图元和 guide：连续 scale 产出数值坐标，`band` 额外提供格宽，`point` 只提供离散点位；Axis 再从同一个已解析 scale 生成 tick。这样图元位置、格宽和坐标轴不会各自维护一套映射。
 
@@ -191,7 +195,7 @@ React `<PlotScale>` 是常用位置类型的声明入口；`band` 可以由 inte
     {
       title: '颜色比例尺',
       description: '把分类、连续与时间字段映射成颜色',
-      url: '/viz/plot/scale/color',
+      url: '/viz/plot/scale/mark-attributes',
     },
     {
       title: '坐标轴',
@@ -206,7 +210,7 @@ React `<PlotScale>` 是常用位置类型的声明入口；`band` 可以由 inte
     {
       title: '自定义比例尺',
       description: '为领域专用映射注册新的 scale definition',
-      url: '/viz/plot/scale/custom-scale',
+      url: '/viz/plot/channel/custom-channel',
     },
   ]}
 />

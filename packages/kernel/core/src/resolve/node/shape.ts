@@ -1,3 +1,4 @@
+import type { PropertyPath } from '@retikz/foundation';
 import type { JsonObject, JsonValue } from '@retikz/foundation';
 
 import type { ShapeDefinition } from '../../contract';
@@ -6,8 +7,8 @@ import type { ProviderRegistry } from '../../providers';
 import { getProviderDefinition } from '../../providers';
 import type { IRNode, IRShapeRef } from '../../schemas';
 import { BuiltinShape } from '../../schemas';
-import { parseProviderPayload, withProviderOutputValidationBoundary } from '../provider';
-import type { ShapeResolution } from './types';
+import { parseProviderPayload, guardProviderOutput } from '../provider';
+import type { CanonicalNodeShape } from './types';
 
 /** 节点形状解析所需的输入与缩放参数 */
 type InputNodeShapeResolve = {
@@ -20,7 +21,7 @@ type InputNodeShapeResolve = {
   /** y 轴缩放 */
   scaleY: number;
   /** 当前节点的 IR 路径，用于形状参数校验错误定位 */
-  irPath?: string;
+  irPath?: PropertyPath;
 };
 
 /** 形状简写展开后的定义名称与参数 */
@@ -76,10 +77,10 @@ const scaleJsonObjectNumbers = (value: JsonObject, factor: number): JsonObject =
  * 查找节点形状定义，解析参数并应用节点缩放
  * @description 优先使用定义提供的 scaleParams；未提供时，将参数中的所有数值乘以两轴缩放系数的几何平均值
  */
-export const resolveNodeShape = (input: InputNodeShapeResolve): ShapeResolution => {
-  const { node, shapeRegistry, scaleX, scaleY, irPath = 'node' } = input;
+export const resolveNodeShape = (input: InputNodeShapeResolve): CanonicalNodeShape => {
+  const { node, shapeRegistry, scaleX, scaleY, irPath = [] } = input;
   const { type: shapeName, params: rawShapeParams } = resolveNodeShapePreset(node.shape);
-  const shapeParamsPath = `${irPath}.shape.params`;
+  const shapeParamsPath = [...irPath, 'shape', 'params'];
   const shapeDefinition = getProviderDefinition(shapeRegistry, shapeName);
   const parsedShapeParams: JsonObject = parseProviderPayload({
     capability: 'shape',
@@ -103,7 +104,7 @@ export const resolveNodeShape = (input: InputNodeShapeResolve): ShapeResolution 
     shapeParams = scaleJsonObjectNumbers(mergedShapeParams, shapeScale);
   } else {
     const rawScaledParams = shapeDefinition.scaleParams(mergedShapeParams, scaleX, scaleY);
-    shapeParams = withProviderOutputValidationBoundary(`Shape '${shapeName}' scaleParams`, () =>
+    shapeParams = guardProviderOutput(`Shape '${shapeName}' scaleParams`, () =>
       shapeDefinition.paramsSchema.parse(rawScaledParams),
     );
   }

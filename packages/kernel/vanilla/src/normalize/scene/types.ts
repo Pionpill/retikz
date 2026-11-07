@@ -1,5 +1,4 @@
 import type {
-  CompileObservationOwner,
   CompositeInputBinding,
   CoreProviderContribution,
   IRChild,
@@ -10,7 +9,7 @@ import type {
 import type { ValueOf } from '@retikz/foundation';
 
 import type { InputCoordinate } from '../coordinate';
-import type { AnyInputEmbed, SynchronousInputEmbedAdapter, InputEmbedThemeContextResolver } from '../embed';
+import type { AnyInputEmbed, InputEmbedThemeContextResolver, SynchronousInputEmbedAdapter } from '../embed';
 import type { InputNode } from '../node';
 import type { InputPath } from '../path';
 import type { InputScope } from '../scope';
@@ -98,8 +97,6 @@ export type InputAuthoringSite = Readonly<{
   kind: InputAuthoringSiteKind;
   /** 该作者位置对应的 Source 路径 */
   sourcePath: string;
-  /** 对应的 Core 编译观察所属者 */
-  owner?: CompileObservationOwner;
   /** 当前输入的具体类型标识 */
   type: string;
   /** 由编译驱动解释的原始作者载荷，不进入 Core IR */

@@ -1,5 +1,6 @@
-import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
+import { resolveCoreProviderDependencies } from '@retikz/core';
 import { GRID_LAYOUT_MAX_TRACKS_PER_AXIS } from '@retikz/layout';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import type { FlowDiagramDefinitionOptions } from '../../src/flow';
@@ -61,8 +62,7 @@ const compile = (
     },
   );
   const artifact = FlowDiagramArtifactSchema.parse(
-    result.artifacts.find(item => item.kind === 'composite' && item.namespace === 'diagram' && item.type === 'flow')
-      ?.value,
+    result.artifacts.find(item => item.namespace === 'diagram' && item.type === 'flow')?.value,
   );
   const gridArtifact = artifact.elements[0];
   if (gridArtifact.kind !== 'layout') throw new Error('Expected Layout artifact');

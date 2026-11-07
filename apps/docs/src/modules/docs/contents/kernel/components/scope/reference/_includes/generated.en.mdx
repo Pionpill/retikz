@@ -130,7 +130,7 @@ export type ScopeStyleProps = {
 | Runtime   | `authoring?`           | `unknown`                                                                                                                                     | —       | Optional runtime payload interpreted by a compile driver; excluded from Core IR                                                                |
 |           | `meta?`                | `Record<string, JsonValue>`                                                                                                                   | —       | Opaque JSON metadata carried by this scope. Preserved into emitted Scene primitives and ignored by the compiler.                               |
 |           | `config` (Parameter)   | `Omit<InputScope, 'type' \| 'children'>`                                                                                                      | —       | Local transforms, styles, clipping, and reference configuration                                                                                |
-|           | `children` (Parameter) | `ReadonlyArray<InputScope['children'][number]>`                                                                                               | —       | Children retained in declaration order; the array is not copied                                                                                |
+|           | `children` (Parameter) | `ReadonlyArray<InputChild>`                                                                                                                   | —       | Children retained in declaration order; the array is not copied                                                                                |
 |           | Returns                | `InputScope`                                                                                                                                  | —       | Scope input retaining options and child references, before normalization or compilation                                                        |
 
 </ApiTable>
@@ -142,7 +142,7 @@ export type ScopeStyleProps = {
 ```ts
 export declare const scope: (
   config: Omit<InputScope, 'type' | 'children'>,
-  children: ReadonlyArray<InputScope['children'][number]>,
+  children: ReadonlyArray<InputChild>,
 ) => InputScope;
 
 export type InputScope = InputScopeBase & {
@@ -209,7 +209,7 @@ export type IRScope = IRScopeProps & {
 | Member        | Type                                                                                                                                                                                                                                                 | Default | Description                                                                           |
 | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------- |
 | `kind`        | `"anchor"`                                                                                                                                                                                                                                           | —       | Anchor alignment position discriminator.                                              |
-| `selfAnchor?` | `number \| "origin" \| "top" \| "right" \| "bottom" \| "left" \| "top-right" \| "top-left" \| "bottom-right" \| "bottom-left" \| [number, number] \| string & {} \| "center" \| { side: "top" \| "right" \| "bottom" \| "left"; fraction: number; }` | —       | Point on the transformed Scope envelope aligned to target. Omitted fields use center. |
+| `selfAnchor?` | `number \| [number, number] \| "origin" \| string & {} \| "center" \| "top" \| "right" \| "bottom" \| "left" \| "top-right" \| "top-left" \| "bottom-right" \| "bottom-left" \| { side: "top" \| "right" \| "bottom" \| "left"; fraction: number; }` | —       | Point on the transformed Scope envelope aligned to target. Omitted fields use center. |
 | `target`      | `ZodInput<typeof ScopeAnchorPositionSchema.shape["target"]>`                                                                                                                                                                                         | —       | Alignment target resolved in the parent coordinate frame.                             |
 
 </ApiTable>
@@ -287,25 +287,11 @@ export type IRScopePosition = ZodInput<typeof ScopePositionSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRScopePositionTarget"} path={"packages/kernel/core/src/schemas/scope/scope.ts"} startLine={109}>IRScopePositionTarget</ApiSourceLink> / <ApiSourceLink label={"ScopePositionTargetSchema"} path={"packages/kernel/core/src/schemas/scope/scope.ts"} startLine={37}>ScopePositionTargetSchema</ApiSourceLink>
-
-<DocTabs defaultValue="definition">
-
-<DocTab value="definition" label="Type definition">
+#### <ApiSourceLink label={"IRScopePositionTarget"} path={"packages/kernel/core/src/schemas/scope/scope.ts"} startLine={109}>IRScopePositionTarget</ApiSourceLink>
 
 ```ts
 export type IRScopePositionTarget = ZodInput<typeof ScopePositionTargetSchema>;
 ```
-
-</DocTab>
-
-<DocTab value="schema" label="Schema">
-
-<ZodSchema shallow name="ScopePositionTargetSchema" />
-
-</DocTab>
-
-</DocTabs>
 
 #### <ApiSourceLink label={"IRScopeProps"} path={"packages/kernel/core/src/schemas/scope/scope.ts"} startLine={118}>IRScopeProps</ApiSourceLink>
 

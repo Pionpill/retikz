@@ -40,7 +40,7 @@ describe('运行时源注册表', () => {
 
   it('拒绝来源数组中的重复 key，不采用覆盖优先级', () => {
     expect(() => createRuntimeSourceRegistry([defineNumberSource('same'), defineNumberSource('same')])).toThrowError(
-      expect.objectContaining({ code: RetikzRuntimeErrorCode.Duplicate, owner: 'same' }),
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.SourceDuplicate, owner: 'same' }),
     );
   });
 
@@ -50,7 +50,7 @@ describe('运行时源注册表', () => {
     const registry = createRuntimeSourceRegistry([registered]);
 
     expect(() => registry.resolve(unknown)).toThrowError(
-      expect.objectContaining({ code: RetikzRuntimeErrorCode.Unknown, owner: 'unknown' }),
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.SourceUnknown, owner: 'unknown' }),
     );
     expect(registry.find('unknown')).toBeUndefined();
   });
@@ -67,10 +67,10 @@ describe('运行时源注册表', () => {
     >;
 
     expect(() => registry.resolve(forged)).toThrowError(
-      expect.objectContaining({ code: RetikzRuntimeErrorCode.TokenInvalid, owner: 'owner' }),
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.SourceTokenInvalid, owner: 'owner' }),
     );
     expect(() => registry.resolve(cloned)).toThrowError(
-      expect.objectContaining({ code: RetikzRuntimeErrorCode.TokenInvalid, owner: 'owner' }),
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.SourceTokenInvalid, owner: 'owner' }),
     );
   });
 
@@ -83,7 +83,7 @@ describe('运行时源注册表', () => {
     });
 
     expect(() => createRuntimeSourceRegistry([foreign])).toThrowError(
-      expect.objectContaining({ code: RetikzRuntimeErrorCode.TokenInvalid, owner: 'foreign' }),
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.SourceTokenInvalid, owner: 'foreign' }),
     );
   });
 
@@ -115,7 +115,7 @@ describe('运行时源注册表', () => {
 
   it('define 拒绝空 owner key', () => {
     expect(() => defineNumberSource('')).toThrowError(
-      expect.objectContaining({ code: RetikzRuntimeErrorCode.TokenInvalid }),
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.SourceTokenInvalid }),
     );
   });
 });

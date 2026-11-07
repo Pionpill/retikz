@@ -1,12 +1,12 @@
 import type { CompileWarning, IRNode, LayoutProposal } from '@retikz/core';
 import {
-  compileToScene,
   BuiltinCompileWarningCode,
   defineTheme,
   LayoutAxisProposalKind,
   resolveCoreProviderDependencies,
 } from '@retikz/core';
 import type { FlexLayoutCompileArtifact } from '@retikz/layout';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import * as Graph from '../../src';
@@ -34,7 +34,7 @@ const flexArtifactWithKeys = (
   keys: ReadonlyArray<string>,
 ): FlexLayoutCompileArtifact => {
   const artifact = output.artifacts
-    .filter(candidate => candidate.kind === 'composite' && candidate.type === 'flexLayout')
+    .filter(candidate => candidate.type === 'flexLayout')
     .map(candidate => candidate as FlexLayoutCompileArtifact)
     .find(candidate => candidate.value.items.map(item => item.key).join('|') === keys.join('|'));
   if (artifact === undefined) throw new Error(`Expected FlexLayout artifact for keys '${keys.join(', ')}'`);
@@ -176,7 +176,7 @@ describe('Block 系列布局感知下沉', () => {
         expect.objectContaining({ lines: expect.any(Array), opacity: 0.7 }),
       ]),
     );
-    expect(texts[1]).toEqual(expect.objectContaining({ fontSize: 16, fontWeight: 'bold', opacity: 1 }));
+    expect(texts[1]).toEqual(expect.objectContaining({ fontSize: 16, fontWeight: 700, opacity: 1 }));
     expect(texts[2]).toEqual(expect.objectContaining({ fontSize: 12, opacity: 0.7 }));
 
     const overridden = compileInHarness(
@@ -191,7 +191,7 @@ describe('Block 系列布局感知下沉', () => {
       primitive => primitive.type === 'text',
     );
 
-    expect(overriddenTexts[0]).toEqual(expect.objectContaining({ fontWeight: 'normal' }));
+    expect(overriddenTexts[0]).toEqual(expect.objectContaining({ fontWeight: 400 }));
     expect(overriddenTexts[1]).toEqual(expect.objectContaining({ fontSize: 16 }));
 
     const titleOnly = compileInHarness(
@@ -215,7 +215,7 @@ describe('Block 系列布局感知下沉', () => {
     const texts = primitivesOf(output.scene.primitives).filter(primitive => primitive.type === 'text');
 
     expect(textValues(texts)).toEqual(['Service', 'Public API']);
-    expect(texts[0]).toEqual(expect.objectContaining({ fontSize: 16, fontWeight: 'bold', opacity: 1 }));
+    expect(texts[0]).toEqual(expect.objectContaining({ fontSize: 16, fontWeight: 700, opacity: 1 }));
     expect(texts[1]).toEqual(expect.objectContaining({ fontSize: 12, opacity: 0.7 }));
   });
 
@@ -377,7 +377,7 @@ describe('Block 系列布局感知下沉', () => {
         Graph.createGraphDefinitions(),
       );
       const artifact = compiled.output.artifacts
-        .filter(candidate => candidate.kind === 'composite' && candidate.type === 'flexLayout')
+        .filter(candidate => candidate.type === 'flexLayout')
         .map(candidate => candidate as FlexLayoutCompileArtifact)
         .find(candidate => candidate.value.items.length === labels.length);
       if (artifact === undefined) throw new Error(`Expected Row FlexLayout artifact with ${labels.length} items`);
@@ -437,9 +437,7 @@ describe('Block 系列布局感知下沉', () => {
 
     expect(textValues(texts)).toEqual(['name', 'string']);
     expect(texts[0]).toEqual(expect.objectContaining({ fontSize: 14 }));
-    expect(texts[1]).toEqual(
-      expect.objectContaining({ fill: '#64748b', fontSize: 20, fontWeight: 'bold', opacity: 0.4 }),
-    );
+    expect(texts[1]).toEqual(expect.objectContaining({ fill: '#64748b', fontSize: 20, fontWeight: 700, opacity: 0.4 }));
     expect(flexArtifactWithKeys(output, ['item:0', 'item:1']).value.items.map(item => item.slotBounds.width)).toEqual([
       120, 120,
     ]);
@@ -474,7 +472,7 @@ describe('Block 系列布局感知下沉', () => {
 
     const rowHeights = (output: ReturnType<typeof compileToScene>, keys: ReadonlyArray<string>) =>
       output.artifacts
-        .filter(candidate => candidate.kind === 'composite' && candidate.type === 'flexLayout')
+        .filter(candidate => candidate.type === 'flexLayout')
         .map(candidate => candidate as FlexLayoutCompileArtifact)
         .filter(candidate => candidate.value.items.map(item => item.key).join('|') === keys.join('|'))
         .map(candidate => candidate.value.container.allocationBounds.height);

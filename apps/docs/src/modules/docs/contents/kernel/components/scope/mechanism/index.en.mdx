@@ -48,19 +48,15 @@ For the coordinate calculations, see Math's [Coordinate transforms](/kernel/pack
   sources={[
     {
       label: 'Freeze the position target before children',
-      path: 'packages/kernel/core/src/compile/scope/compile.ts',
-      startLine: 42,
+      path: 'packages/kernel/core/src/compile/scope/placement/layout.ts',
     },
     {
       label: 'Envelope anchors, final translation, and early resolution',
-      path: 'packages/kernel/core/src/compile/scope/compile.ts',
-      startLine: 121,
+      path: 'packages/kernel/core/src/compile/scope/placement/layout.ts',
     },
     {
       label: 'Lower to translation, rotation, and scaling',
-      path: 'packages/kernel/core/src/compile/scope/layout.ts',
-      startLine: 53,
-      endLine: 111,
+      path: 'packages/kernel/core/src/compile/scope/placement/transform.ts',
     },
   ]}
 />
@@ -95,26 +91,19 @@ A scale of `0` can flatten a drawing, but then a canvas position cannot be conve
   sources={[
     {
       label: 'Resolve local offsets and world results',
-      path: 'packages/kernel/core/src/resolve/position/resolve.ts',
-      startLine: 35,
-      endLine: 90,
+      path: 'packages/kernel/core/src/compile/reference/position.ts',
     },
     {
       label: 'Bind forward and inverse projection',
-      path: 'packages/kernel/core/src/compile/orchestration/position-context.ts',
-      startLine: 68,
-      endLine: 88,
+      path: 'packages/kernel/core/src/compile/reference/context.ts',
     },
     {
       label: 'Inverse transforms and zero-scale failure',
-      path: 'packages/kernel/core/src/compile/transform.ts',
-      startLine: 36,
-      endLine: 69,
+      path: 'packages/kernel/core/src/compile/shared/transform.ts',
     },
     {
       label: 'Apply final transforms to deferred results',
-      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 838,
+      path: 'packages/kernel/reconciler/src/compile/tree/scope/visit.ts',
     },
   ]}
 />
@@ -142,26 +131,19 @@ Replacing a lookup entry does not delete the earlier element's drawing output. A
   sources={[
     {
       label: 'Push and pop namespace frames',
-      path: 'packages/kernel/core/src/compile/namespace.ts',
-      startLine: 166,
-      endLine: 184,
+      path: 'packages/kernel/reconciler/src/compile/runtime/namespace.ts',
     },
     {
       label: 'Register and diagnose same-frame repositions',
-      path: 'packages/kernel/core/src/compile/namespace.ts',
-      startLine: 197,
-      endLine: 229,
+      path: 'packages/kernel/reconciler/src/compile/runtime/namespace.ts',
     },
     {
       label: 'Return immediately on a match',
-      path: 'packages/kernel/core/src/compile/namespace.ts',
-      startLine: 260,
-      endLine: 273,
+      path: 'packages/kernel/reconciler/src/compile/runtime/namespace.ts',
     },
     {
       label: 'Register the group id before entering its local frame',
-      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 736,
+      path: 'packages/kernel/reconciler/src/compile/tree/scope/visit.ts',
     },
   ]}
 />
@@ -181,30 +163,25 @@ The envelope collects Node, Coordinate, and nested Scope layouts, excluding Path
 
 For example, a path between two child nodes may take a large detour without expanding the Scope's reference boundary. The reference envelope is therefore not the same as the final drawing bounds of the whole diagram.
 
-Once the children finish, `replaceLayout` updates the placeholder to a resolved entry. If a child shares the Scope's id without a local namespace, that child replaces the placeholder under the later-entry-wins rule; finalization does not overwrite it with the Scope envelope. Without a Scope `id`, no group reference is published, and child layouts pass upward for further aggregation.
+Once the children finish, `replaceCompiled` updates the placeholder to a resolved entry. If a child shares the Scope's id without a local namespace, that child replaces the placeholder under the later-entry-wins rule; finalization does not overwrite it with the Scope envelope. Without a Scope `id`, no group reference is published, and child layouts pass upward for further aggregation.
 
 <SourceLinks
   sources={[
     {
       label: 'Build rectangular or circular bounds from layouts',
-      path: 'packages/kernel/core/src/compile/scope/compile.ts',
-      startLine: 79,
+      path: 'packages/kernel/core/src/compile/scope/envelope/layout.ts',
     },
     {
       label: 'Reserve a placeholder in the parent frame',
-      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 635,
+      path: 'packages/kernel/reconciler/src/compile/tree/scope/visit.ts',
     },
     {
       label: 'Publish the final envelope or pass child layouts upward',
-      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 885,
+      path: 'packages/kernel/reconciler/src/compile/tree/scope/visit.ts',
     },
     {
       label: 'Update in place and check placeholder identity',
-      path: 'packages/kernel/core/src/compile/namespace.ts',
-      startLine: 232,
-      endLine: 257,
+      path: 'packages/kernel/reconciler/src/compile/runtime/namespace.ts',
     },
   ]}
 />
@@ -239,19 +216,14 @@ A group is emitted when there are child primitives, effective transforms, an id,
     {
       label: 'Resolve Clip Definitions and lower paths',
       path: 'packages/kernel/core/src/compile/resource/clip.ts',
-      startLine: 231,
-      endLine: 259,
     },
     {
       label: 'Deduplicate resources within a compilation',
       path: 'packages/kernel/core/src/compile/resource/clip.ts',
-      startLine: 261,
-      endLine: 276,
     },
     {
       label: 'Group pruning, transforms, and clipRef',
-      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 657,
+      path: 'packages/kernel/core/src/compile/scope/output.ts',
     },
     {
       label: 'Build the SVG clipPath',

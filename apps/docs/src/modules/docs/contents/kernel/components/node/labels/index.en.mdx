@@ -80,7 +80,10 @@ Each label's `text` uses the same Core text block as path labels: `\n` in a stri
 - It also accepts the center `'center'`, an angle such as `30`, or a boundary fraction such as `{ boundary: 'right', fraction: 0.25 }`; centered labels have no collision avoidance
 - `placement` defaults to `'outside'`; use `'inside'` to place the label inside the border
 - `font` / `textColor` use explicit label values first, then `Scope.defaults.node.label`, and finally inherit missing values from the node
-- `opacity` is 0..1. An explicit value overrides the node's overall opacity; omitting it inherits that value. Plain and mixed text follow the same rule, with segment opacity multiplying the effective label opacity
+- `opacity` is 0..1 and multiplies the node opacity. Omitted factors count as 1; line and segment opacity multiply further, and an explicit 0 is preserved
+- `textAlign` aligns lines within the text block and defaults to `middle`. It is independent of attachment `align`. `lineHeight` defaults to 1.2 times the effective font size; taller content expands its line slot. `maxTextWidth` enables wrapping; omitting it preserves only explicit line breaks
+
+Node body text and both label hosts share wrapping rules: prefer word boundaries, split oversized words at grapheme boundaries, and keep formulas intact. An oversized formula occupies its own overflowing line. Empty lines still occupy a line slot.
 
 <ComponentPreview
   files={['node-label-list', 'node-label-list.preview.tsx']}
@@ -140,7 +143,7 @@ Leader lines share the same width and dash constraints as Path: `strokeWidth` is
   defaultSourceFile="node-label-rotate-pin.preview.tsx"
 />
 
-`pin.stroke` accepts a color, gradient, or pattern. `lineCap` and `lineJoin` set the cap and join styles. Explicit `pin.opacity` controls the leader independently; when omitted, it follows the effective label opacity.
+`pin.stroke` accepts a color, gradient, or pattern. `lineCap` and `lineJoin` set the cap and join styles. Explicit `pin.opacity` multiplies the node opacity; when omitted, it follows the effective label opacity. Line and segment opacity do not affect the leader.
 
 <Comparison target="tikz" title="Node Label Syntax">
 

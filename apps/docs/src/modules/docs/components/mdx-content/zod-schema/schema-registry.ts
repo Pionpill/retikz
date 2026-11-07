@@ -130,15 +130,8 @@ import {
   PositiveNumberSchema,
 } from '@retikz/foundation';
 import * as GraphIR from '@retikz/graph';
-import {
-  ClipInspectOptionsSchema,
-  CoordinateInspectOptionsSchema,
-  NodeInspectOptionsSchema,
-  PathInspectOptionsSchema,
-  ScopeInspectOptionsSchema,
-} from '@retikz/inspect';
+import { ClipInspectOptionsSchema, PathInspectOptionsSchema, GroupInspectOptionsSchema } from '@retikz/inspect';
 import * as LayoutIR from '@retikz/layout';
-import * as LayoutInspectIR from '@retikz/layout/inspect';
 import * as IRPlot from '@retikz/plot';
 import * as StandardCollectionIR from '@retikz/standard/collection';
 import * as StandardPresentationIR from '@retikz/standard/presentation';
@@ -479,25 +472,15 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   AxisScaleSchema: { schema: IR.AxisScaleSchema, label: 'AxisScaleSchema' },
   BoxSizeSchema: { schema: IR.BoxSizeSchema, label: 'BoxSizeSchema' },
   BoxSpacingSchema: { schema: IR.BoxSpacingSchema, label: 'BoxSpacingSchema' },
-  NodeInspectOptionsSchema: {
-    schema: NodeInspectOptionsSchema,
-    label: 'NodeInspectOptions',
-    url: '/kernel/packages/inspect/reference#nodeinspectoptionsschema',
-  },
-  ScopeInspectOptionsSchema: {
-    schema: ScopeInspectOptionsSchema,
-    label: 'ScopeInspectOptions',
-    url: '/kernel/packages/inspect/reference#scopeinspectoptionsschema',
+  GroupInspectOptionsSchema: {
+    schema: GroupInspectOptionsSchema,
+    label: 'GroupInspectOptions',
+    url: '/kernel/packages/inspect/reference#groupinspectoptionsschema',
   },
   ClipInspectOptionsSchema: {
     schema: ClipInspectOptionsSchema,
     label: 'ClipInspectOptions',
     url: '/kernel/packages/inspect/reference#clipinspectoptionsschema',
-  },
-  CoordinateInspectOptionsSchema: {
-    schema: CoordinateInspectOptionsSchema,
-    label: 'CoordinateInspectOptions',
-    url: '/kernel/packages/inspect/reference#coordinateinspectoptionsschema',
   },
   PathInspectOptionsSchema: {
     schema: PathInspectOptionsSchema,
@@ -581,14 +564,12 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     url: '/kernel/components/scope/reference#scopeschema',
   },
   BoundaryAnchorRefSchema: {
-    schema: IR.BoundaryAnchorRefSchema,
+    schema: IR.AnchorRefSchema.options[2],
     label: 'BoundaryAnchorRefSchema',
-    url: '/kernel/components/scope/reference#scopeschema',
   },
   ScopePositionTargetSchema: {
     schema: IR.ScopeAnchorPositionSchema.shape.target,
     label: 'ScopePositionTargetSchema',
-    url: '/kernel/components/scope/reference#irscopepositiontarget--scopepositiontargetschema',
   },
   TranslateSchema: {
     schema: IR.TransformSchema.options[0],
@@ -699,14 +680,12 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     url: '/kernel/components/node/reference#irnodelayout--nodelayoutschema',
   },
   NodeLabelBoundaryPositionSchema: {
-    schema: IR.NodeLabelBoundaryPositionSchema,
+    schema: IR.NodeLabelSchema.shape.position.unwrap().options[2],
     label: 'NodeLabelBoundaryPositionSchema',
-    url: '/kernel/components/node/reference#nodelabelboundarypositionschema',
   },
   NodeLabelPinSchema: {
-    schema: IR.NodeLabelPinSchema,
+    schema: IR.NodeLabelSchema.shape.pin.unwrap().options[1],
     label: 'NodeLabelPinSchema',
-    url: '/kernel/components/node/reference#nodelabelpinschema',
   },
   NodeSchema: {
     schema: IR.NodeSchema,
@@ -725,23 +704,23 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   },
   FontSchema: { schema: IR.FontSchema, label: 'Font' },
   FontFamilySchema: {
-    schema: IR.FontFamilySchema,
+    schema: IR.FontSchema.shape.family.unwrap(),
     label: 'FontFamily',
   },
   FontWeightSchema: {
-    schema: IR.FontWeightSchema,
+    schema: IR.FontSchema.shape.weight.unwrap(),
     label: 'FontWeight',
   },
   FontStyleSchema: {
-    schema: IR.FontStyleSchema,
+    schema: IR.FontSchema.shape.style.unwrap(),
     label: 'FontStyle',
   },
   TextAlignSchema: {
-    schema: IR.TextAlignSchema,
+    schema: IR.TextLayoutSchema.shape.textAlign.unwrap(),
     label: 'TextAlign',
   },
   LineHeightSchema: {
-    schema: IR.LineHeightSchema,
+    schema: IR.TextLayoutSchema.shape.lineHeight.unwrap(),
     label: 'LineHeight',
   },
   TextBlockSchema: { schema: IR.TextBlockSchema, label: 'TextBlock' },
@@ -779,10 +758,7 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     schema: IR.PathDecorationSchema,
     label: 'PathDecoration',
   },
-  PathStructureSchema: {
-    schema: IR.PathStructureSchema,
-    label: 'PathStructure',
-  },
+
   PathSchema: { schema: IR.PathSchema, label: 'Path', url: '/kernel/components/path/reference#pathschema' },
   DrawableInstanceSchema: {
     schema: IR.DrawableInstanceSchema,
@@ -918,9 +894,8 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     url: '/kernel/components/path/reference#patharrowschema',
   },
   PathArrowEndSchema: {
-    schema: IR.PathArrowEndSchema,
+    schema: IR.PathArrowSchema.shape.start.unwrap(),
     label: 'PathArrowEnd',
-    url: '/kernel/components/path/reference#patharrowendschema',
   },
   StepSchema: { schema: IR.StepSchema, label: 'Step', url: '/kernel/components/path/reference#stepschema' },
   PathLabelSchema: {
@@ -951,7 +926,7 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'AnchorPosition',
   },
   AbsoluteTargetSchema: {
-    schema: IR.AbsoluteTargetSchema,
+    schema: IR.BetweenPositionSchema.shape.between._zod.def.items[0],
     label: 'AbsoluteTarget',
   },
   NodeTargetSchema: {
@@ -963,14 +938,11 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   GraphicElementOpacitySchema: { schema: IR.GraphicElementOpacitySchema, label: 'GraphicElementOpacity' },
   GraphicFillSchema: { schema: IR.GraphicFillSchema, label: 'GraphicFill' },
   GraphicStrokeSchema: { schema: IR.GraphicStrokeSchema, label: 'GraphicStroke' },
-  StrokeCapJoinSchema: { schema: IR.StrokeCapJoinSchema, label: 'StrokeCapJoin' },
+
   TextVisualSchema: { schema: IR.TextVisualSchema, label: 'TextVisual' },
   TextLayoutSchema: { schema: IR.TextLayoutSchema, label: 'TextLayout' },
   PathTransformSchema: { schema: IR.PathTransformSchema, label: 'PathTransform' },
-  GraphicPaintSchema: {
-    schema: IR.GraphicPaintSchema,
-    label: 'GraphicPaint',
-  },
+
   GraphicOpacitySchema: {
     schema: IR.GraphicOpacitySchema,
     label: 'GraphicOpacity',
@@ -1005,7 +977,7 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     url: '/kernel/visual/style/reference#irdropshadow--dropshadowschema',
   },
   GradientStopSchema: {
-    schema: IR.GradientStopSchema,
+    schema: IR.LinearGradientPaintSchema.shape.stops.element,
     label: 'GradientStop',
   },
   PaintSchema: { schema: IR.PaintSchema, label: 'Paint' },
@@ -1056,30 +1028,22 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'AnimationTrack',
     url: '/kernel/visual/animation/reference#iranimationtrack--animationtrackschema',
   },
-  KeyframeSchema: {
-    schema: IR.KeyframeSchema,
-    label: 'Keyframe',
-    url: '/kernel/visual/animation/reference#irkeyframe--keyframeschema',
-  },
+
   EasingSchema: {
-    schema: IR.EasingSchema,
+    schema: IR.AnimationTrackSchema.options[0].shape.easing.unwrap(),
     label: 'Easing',
-    url: '/kernel/visual/animation/reference#easingschema',
   },
   TriggerSchema: {
-    schema: IR.TriggerSchema,
+    schema: IR.AnimationTrackSchema.options[0].shape.trigger.unwrap(),
     label: 'Trigger',
-    url: '/kernel/visual/animation/reference#triggerschema',
   },
   EventTriggerSchema: {
-    schema: IR.EventTriggerSchema,
+    schema: IR.AnimationTrackSchema.options[0].shape.trigger.unwrap().options[1],
     label: 'EventTrigger',
-    url: '/kernel/visual/animation/reference#eventtriggerschema',
   },
   OriginSchema: {
-    schema: IR.OriginSchema,
+    schema: IR.AnimationTrackSchema.options[0].shape.origin.unwrap(),
     label: 'Origin',
-    url: '/kernel/visual/animation/reference#originschema',
   },
 
   MoveStepSchema: {
@@ -1168,11 +1132,11 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   },
 
   RelativeTargetSchema: {
-    schema: IR.RelativeTargetSchema,
+    schema: IR.TargetSchema.options[3],
     label: 'RelativeTarget',
   },
   RelativeAccumulateTargetSchema: {
-    schema: IR.RelativeAccumulateTargetSchema,
+    schema: IR.TargetSchema.options[4],
     label: 'RelativeAccumulateTarget',
   },
 
@@ -1190,37 +1154,6 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     schema: IR.ArrowStyleSchema,
     label: 'ArrowStyle',
     url: '/kernel/components/path/reference#arrowenddetailschema',
-  },
-
-  LayoutInspectBoundsOptionsSchema: {
-    schema: LayoutInspectIR.LayoutInspectBoundsOptionsSchema,
-    label: 'LayoutInspectBoundsOptions',
-    url: '/library/layout/flex-layout/reference#layoutinspectboundsoptionsschema',
-  },
-  LayoutInspectSpacingOptionsSchema: {
-    schema: LayoutInspectIR.LayoutInspectSpacingOptionsSchema,
-    label: 'LayoutInspectSpacingOptions',
-    url: '/library/layout/flex-layout/reference#layoutinspectspacingoptionsschema',
-  },
-  BaseLayoutInspectOptionsSchema: {
-    schema: LayoutInspectIR.BaseLayoutInspectOptionsSchema,
-    label: 'BaseLayoutInspectOptions',
-    url: '/library/layout/flex-layout/reference#baselayoutinspectoptionsschema',
-  },
-  FlexLayoutInspectOptionsSchema: {
-    schema: LayoutInspectIR.FlexLayoutInspectOptionsSchema,
-    label: 'FlexLayoutInspectOptions',
-    url: '/library/layout/flex-layout/reference#flexlayoutinspectoptionsschema',
-  },
-  GridLayoutInspectOptionsSchema: {
-    schema: LayoutInspectIR.GridLayoutInspectOptionsSchema,
-    label: 'GridLayoutInspectOptions',
-    url: '/library/layout/grid-layout/reference#gridlayoutinspectoptionsschema',
-  },
-  OverlayLayoutInspectOptionsSchema: {
-    schema: LayoutInspectIR.OverlayLayoutInspectOptionsSchema,
-    label: 'OverlayLayoutInspectOptions',
-    url: '/library/layout/overlay-layout/reference#overlaylayoutinspectoptionsschema',
   },
 
   FlexLayoutSchema: {

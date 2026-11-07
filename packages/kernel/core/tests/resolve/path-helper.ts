@@ -1,13 +1,19 @@
 import { resolveArrowRegistry, resolvePathRegistry, resolvePatternRegistry } from '../../src';
-import type { PathResolution, PathResolveContext, StrokePathResolution } from '../../src/resolve/path';
+import type { BoundPathResolution, PathCompileContext } from '../../src/compile/path';
+import { bindPathTargets } from '../../src/compile/path';
+import type { StrokePathResolution } from '../../src/resolve/path';
 import { resolvePath, resolveStrokePathProviders } from '../../src/resolve/path';
+import type { PathResolveContext } from '../../src/resolve/path/types';
 import type { IRPathBase } from '../../src/schemas';
 
-type BuiltinProviderContext = Omit<Partial<PathResolveContext>, 'pathRegistry' | 'arrowRegistry'> &
+type BuiltinProviderContext = Partial<Pick<PathCompileContext, 'scopeChain' | 'targetResolver'>> &
+  Omit<Partial<PathResolveContext>, 'pathRegistry' | 'arrowRegistry'> &
   Partial<Pick<PathResolveContext, 'pathRegistry' | 'arrowRegistry' | 'patternRegistry' | 'round'>>;
 
 const contextWithBuiltinProviders = (context: BuiltinProviderContext): PathResolveContext => ({
   mode: 'light',
+  rootFontSize: 16,
+  gatingOn: false,
   pathRegistry: resolvePathRegistry(),
   arrowRegistry: resolveArrowRegistry(),
   patternRegistry: resolvePatternRegistry(),
@@ -19,13 +25,13 @@ const contextWithBuiltinProviders = (context: BuiltinProviderContext): PathResol
 export const resolvePathWithBuiltinProviders = (
   path: IRPathBase,
   context: BuiltinProviderContext = {},
-): PathResolution => resolvePath(path, contextWithBuiltinProviders(context));
+): BoundPathResolution => bindPathTargets(resolvePath(path, contextWithBuiltinProviders(context)), context);
 
 /** resolve/path 测试统一绑定 stroke emitter 所需的 provider */
 export const resolveStrokePathWithBuiltinProviders = (
   path: IRPathBase,
   context: BuiltinProviderContext = {},
-): StrokePathResolution => {
+): BoundPathResolution & StrokePathResolution => {
   const providerContext = contextWithBuiltinProviders(context);
-  return resolveStrokePathProviders(resolvePath(path, providerContext), providerContext);
+  return resolveStrokePathProviders(bindPathTargets(resolvePath(path, providerContext), context), providerContext);
 };

@@ -1,0 +1,192 @@
+---
+title: Mark Attribute Mapping
+description: Bind scales to color, size, opacity, stroke width, and shape; each channel owns defaults and output constraints.
+---
+
+A scale can drive several mark attributes. Data supplies the algorithm; Plot channels choose defaults, validate outputs, and determine how legends explain them. Color is one application.
+
+Fixed properties use their target values directly. Field strings use channel defaults; `{ field, scale }` references a named mapping. Opacity retains separate bindings at `encodings.opacity.overall / fill / stroke`.
+
+| Attribute                         | Default field mapping                                   | Explicit mapping output    |
+| --------------------------------- | ------------------------------------------------------- | -------------------------- |
+| `color / fill / stroke`           | ordinal for categories; sequential for numbers and time | Valid colors               |
+| `size`                            | sqrt radii, range 2–20                                  | Finite nonnegative numbers |
+| `strokeWidth`                     | linear, range 0.5–4                                     | Finite nonnegative numbers |
+| `opacity.overall / fill / stroke` | linear, range 0.2–1                                     | Finite numbers within 0–1  |
+| `shape`                           | Categories to the theme's shape sequence                | Supported shape names      |
+
+The same algorithm can produce different outputs: threshold with `range: [4, 8, 12]` drives size, while a color range drives fill. Built-in and custom mappings pass through the consuming channel's checks. Numeric output does not grant position compatibility. Text, ordering, and object attributes do not automatically gain scale support.
+
+The examples below cover color mappings. See [custom channels](/viz/plot/channel/custom-channel) for numeric mapping and custom consumption.
+
+| Data and task                              | Recommended scale                     | Legend form  |
+| ------------------------------------------ | ------------------------------------- | ------------ |
+| Categorical field                          | `ordinal`                             | swatches     |
+| Continuous / temporal field                | `sequential`                          | ramp         |
+| Continuous number with a meaningful center | `diverging`                           | ramp         |
+| Continuous quantity that needs bins        | `quantize` / `threshold` / `quantile` | bin swatches |
+
+## Categorical color: ordinal
+
+Bind `color` to a categorical field and `<Plot>` derives `ordinal`, assigning one discrete color per category. A categorical color field also splits path data into multiple series when no explicit series is present.
+
+<ComponentPreview
+  mode="showcase"
+  size="lg"
+  files={['scale-ordinal', 'scale-ordinal.preview.tsx', 'scale-ordinal.data.ts']}
+  caption="Switch discrete palettes and show or hide the legend to inspect the separate responsibilities of color mapping and legend explanation."
+  defaultSourceFile="scale-ordinal.preview.tsx"
+/>
+
+`ordinal` does not interpolate between categories. For stable domain colors, provide an explicit `domain` and same-order `range` in the full spec. With an inferred domain, category order comes from the data.
+
+## Continuous color: sequential and diverging
+
+`sequential` uses one low-to-high ramp for a continuous quantity. `diverging` uses a three-value domain for the low end, center, and high end, which suits profit/loss, deviation, temperature delta, and other data centered on a reference value.
+
+<ComponentPreview
+  mode="showcase"
+  size="lg"
+  files={['scale-continuous', 'scale-continuous.preview.tsx', 'scale-continuous.data.ts']}
+  caption="Switch between sequential and diverging, choose a scheme, and move the midpoint. The same -50 to 50 values reveal the mapping difference immediately."
+  defaultSourceFile="scale-continuous.preview.tsx"
+/>
+
+Both scale types accept serializable named schemes. Common sequential schemes include `viridis`, `blues`, `greens`, and `magma`; common diverging schemes include `rdbu`, `brbg`, and `spectral`. Use `range` when custom colors should replace the scheme.
+
+Continuous color works only on marks colored independently per datum, such as point, interval, rect, and sector. A path or area is colored as one mark, so it cannot bind a continuous color field that changes along the path.
+
+<ComponentAlert
+  title="Auto-derivation needs a field contract"
+  description="React derives sequential only when the model declares the color field as continuous or temporal; an unknown field type still follows ordinal behavior. Diverging must be declared explicitly through a full IRPlot."
+/>
+
+## Discretization: quantize / threshold / quantile
+
+A discretization scale still consumes continuous data, but returns only a finite set of colors. The three types differ in how they choose boundaries:
+
+| Type        | Boundaries                                       | Suited task                                  |
+| ----------- | ------------------------------------------------ | -------------------------------------------- |
+| `quantize`  | split an explicit domain into `count` equal bins | equal numeric intervals, graded statistics   |
+| `threshold` | use domain-specific `breakpoints`                | alert lines, policy lines, rating standards  |
+| `quantile`  | derive quantiles with roughly equal sample count | skewed distributions, reduced outlier impact |
+
+<ComponentPreview
+  mode="showcase"
+  size="lg"
+  files={['scale-discretization', 'scale-discretization.preview.tsx', 'scale-discretization.data.ts']}
+  caption="Switch among quantize, threshold, and quantile. Tune the bin count, business thresholds, and palette to compare how the same skewed data falls into different color bins."
+  defaultSourceFile="scale-discretization.preview.tsx"
+/>
+
+Configuration constraints:
+
+- `threshold.breakpoints` must be strictly ascending; bin count is one more than the breakpoint count, and an explicit `range` must match
+- `count` defaults to `5` for `quantize` / `quantile`; when only `range` is given, its length becomes the bin count
+- when both `count` and `range` are present, their lengths must agree
+- `quantile` derives boundaries from the actual data and does not use an explicit numeric domain; without valid samples, neither the bin legend nor its title is generated
+
+## How it works
+
+React auto-derivation covers two common paths:
+
+- a categorical color field derives `ordinal`
+- a color field declared as `continuous` or `temporal` derives `sequential`
+
+Configure `diverging`, the three discretization scales, and explicit scheme / range / domain options in `IRPlot.scales`, then reference the scale name from the mark's color field binding. `<PlotLegend channel="color" />` or a full-spec legend guide only displays the resolved mapping.
+
+Auto-derivation and explicit configuration are only two entry points: both are resolved by the same scale definition and resolver path, rather than creating separate color semantics.
+
+<ComponentPreview mode="showcase" files="scale-color-flow" size="xs" hideCode />
+
+The resolver derives the domain, bin boundaries, and scheme / range for the selected scale type, producing one resolved scale with its color mapping and required boundary metadata. Marks use it to color data, while Legend reads that same result to generate a ramp or bin swatches, so adding a legend does not change the mapping.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Plot Vanilla derives a color scale from field type',
+      path: 'packages/viz/plot-vanilla/src/normalize/plot/scale-coordinate.ts',
+      startLine: 26,
+      endLine: 37,
+    },
+    {
+      label: 'Resolve ordinal, sequential, and diverging color',
+      path: 'packages/viz/plot/src/resolve/scale/mapping.ts',
+      startLine: 188,
+      endLine: 246,
+    },
+    {
+      label: 'Resolve quantize, threshold, and quantile color',
+      path: 'packages/viz/data/src/scale/builtins.ts',
+      startLine: 394,
+      endLine: 437,
+    },
+  ]}
+/>
+
+`ordinal.rangeIndex` controls palette indexing: `{ step: 2, offset: 0 }` maps category i to `(2i) % length`; offset 1 selects `(2i + 1) % length`. Step defaults to 1 and must be a positive integer; offset defaults to 0 and must be a nonnegative integer. Indexing applies to an explicit range or the effective theme palette, including odd-length palettes.
+
+## API Reference
+
+Every color scale in a full spec needs a `name`, which a mark's color field binding references through `scale`. Auto-derivation covers only `ordinal` and `sequential`; other types and explicit domain / scheme / range options belong in `IRPlot.scales`.
+
+| `type`       | Input and boundaries                         | Palette and defaults                              |
+| ------------ | -------------------------------------------- | ------------------------------------------------- |
+| `ordinal`    | categorical `domain`, inferred in order      | discrete `range`; Plot palette when omitted       |
+| `sequential` | two-value `domain`, inferred from data       | `scheme` defaults to `viridis`; two-color `range` |
+| `diverging`  | three-value low / mid / high `domain`        | `scheme` defaults to `rdbu`; three-color `range`  |
+| `quantize`   | two-value `domain`; `count` defaults `5`     | sampled scheme or explicit discrete `range`       |
+| `threshold`  | required ascending `breakpoints`             | one more color than breakpoints                   |
+| `quantile`   | data-derived quantiles; `count` defaults `5` | sampled scheme or explicit discrete `range`       |
+
+An explicit `range` overrides `scheme`. When `quantize` / `quantile` provide both `count` and `range`, their lengths must agree. Custom scale operations follow the same public IR contract.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Ordinal color scale schema',
+      path: 'packages/viz/plot/src/schemas/scale/schema.ts',
+      startLine: 173,
+      endLine: 192,
+    },
+    {
+      label: 'Sequential and diverging schemas',
+      path: 'packages/viz/plot/src/schemas/scale/schema.ts',
+      startLine: 324,
+      endLine: 371,
+    },
+    {
+      label: 'Discretization schemas',
+      path: 'packages/viz/plot/src/schemas/scale/schema.ts',
+      startLine: 374,
+      endLine: 449,
+    },
+  ]}
+/>
+
+## Related
+
+<LinkedSections
+  items={[
+    {
+      title: 'Positional Scales',
+      description: 'Choose positional mappings for numeric, temporal, and categorical fields',
+      url: '/viz/plot/scale/position',
+    },
+    {
+      title: 'Legend',
+      description: 'Explain a color mapping with swatches or a ramp',
+      url: '/viz/plot/guide/legend',
+    },
+    {
+      title: 'Field Types',
+      description: 'Declare categorical, continuous, and temporal field types',
+      url: '/viz/data/model/field-types',
+    },
+    {
+      title: 'Custom scales',
+      description: 'Register a scale definition for domain-specific mappings',
+      url: '/viz/plot/channel/custom-channel',
+    },
+  ]}
+/>

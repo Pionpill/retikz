@@ -266,7 +266,7 @@ The five-pointed star below has no node `boundary`. The panel starts on the circ
 
 ### Control-point inspection
 
-After installing `@retikz/inspect`, use `InspectLayout` and `InspectPath` to display Bezier control points and handles; `labels` adds their identifiers. These helpers do not change the original path geometry or interaction. See [`@retikz/inspect`](/kernel/packages/inspect) for setup.
+Pass an ordinary compilation result to the path inspector in `@retikz/inspect` to display final Bézier control points and handles; `labels` adds command indices. Auxiliary content is compiled and presented independently. See [`@retikz/inspect`](/kernel/packages/inspect) for setup.
 
 <ComponentPreview files="path-inspector" size="sm" />
 

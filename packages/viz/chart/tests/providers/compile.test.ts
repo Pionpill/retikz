@@ -1,22 +1,24 @@
-import type { CoreProviderContribution, IRScene } from '@retikz/core';
-import {
-  compileToScene,
-  resolveCoreProviderDependencies,
-  resolveDefaultCoreThemeColors,
-  ThemeMode,
-} from '@retikz/core';
-import { defineTransformImplementation, defineRegressionImplementation, defineRegression } from '@retikz/data';
+import type { CoreProviderContribution, IRChild, IRScene } from '@retikz/core';
+import { ThemeMode, resolveCoreProviderDependencies, resolveDefaultCoreThemeColors } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
-import { DataTransformBindingClass, DataTransformFieldEffect, DataTransformPhase, defineTransform } from '@retikz/data';
+import {
+  DataTransformBindingClass,
+  DataTransformFieldEffect,
+  DataTransformPhase,
+  defineRegression,
+  defineRegressionImplementation,
+  defineTransform,
+  defineTransformImplementation,
+} from '@retikz/data';
 import { pathClipProvider } from '@retikz/extension';
-import type { JsonObject } from '@retikz/foundation';
+import type { JsonObject, PropertyPath } from '@retikz/foundation';
 import { NonBlankStringSchema } from '@retikz/foundation';
 import { FlexLayoutArtifactSchema } from '@retikz/layout';
 import type { PlotsLoweringOptions } from '@retikz/plot';
-import { createPlotProviderContribution, PointMarkSchema } from '@retikz/plot';
+import { PointMarkSchema, createPlotProviderContribution } from '@retikz/plot';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
-import { number } from 'zod';
-import { array, boolean, literal, strictObject, string } from 'zod';
+import { array, boolean, literal, number, strictObject, string } from 'zod';
 
 import { ChartWarningCode } from '../../src';
 import { defineChartMark, defineChartRecipe } from '../../src/_chart/contract';
@@ -27,10 +29,10 @@ import {
   ConnectedScatterChartSchema,
   createConnectedScatterChartProviderContribution,
 } from '../../src/point/connected-scatter';
-import { createRangedDotChartProviderContribution, RangedDotChartSchema } from '../../src/point/ranged-dot';
-import { createRegressionChartProviderContribution, RegressionChartSchema } from '../../src/point/regression';
-import { createScatterChartProviderContribution, ScatterChartSchema } from '../../src/point/scatter';
-import { createStripChartProviderContribution, StripChartSchema } from '../../src/point/strip';
+import { RangedDotChartSchema, createRangedDotChartProviderContribution } from '../../src/point/ranged-dot';
+import { RegressionChartSchema, createRegressionChartProviderContribution } from '../../src/point/regression';
+import { ScatterChartSchema, createScatterChartProviderContribution } from '../../src/point/scatter';
+import { StripChartSchema, createStripChartProviderContribution } from '../../src/point/strip';
 
 const resolveDirectEncodings = (context: { encodings: Readonly<Record<string, unknown>> }) => ({
   encodings: context.encodings as JsonObject,
@@ -90,7 +92,7 @@ const compileDefinitionsOf = (
   });
 };
 
-const sceneOf = (source: IRScene['children'][number]): IRScene => ({
+const sceneOf = (source: IRChild): IRScene => ({
   version: 1,
   type: 'scene',
   children: [source],
@@ -224,7 +226,7 @@ describe('Chart 提供者通过 Core 编译', () => {
   it('对未分组的点复合标记中的每个图元使用第一个系列调色板颜色', () => {
     const defaultColor = resolveDefaultCoreThemeColors(ThemeMode.Light).categorical[0];
     const fixtures: ReadonlyArray<{
-      source: IRScene['children'][number];
+      source: IRChild;
       contribution: CoreProviderContribution;
       datasets: ExternalDatasets;
     }> = [
@@ -803,7 +805,7 @@ describe('Chart 提供者通过 Core 编译', () => {
     }
 
     const result = compileToScene(sceneOf(source), definitions);
-    const artifact = result.artifacts.find(value => value.kind === 'composite' && value.type === 'flexLayout');
+    const artifact = result.artifacts.find(value => value.type === 'flexLayout');
     if (artifact === undefined) throw new Error('Expected Chart presentation FlexLayout compile artifact');
 
     const flex = FlexLayoutArtifactSchema.parse(artifact.value);
@@ -1024,7 +1026,7 @@ describe('Chart 提供者通过 Core 编译', () => {
         marks: [{ kind: 'annotation', override: true }],
       },
     });
-    const warnings: Array<{ code: string; path: string }> = [];
+    const warnings: Array<{ code: string; path: PropertyPath }> = [];
 
     const result = compileToScene(sceneOf(source), {
       ...compileDefinitionsOf([createChartProviderContribution({ family: 'fixture', recipe })]),
@@ -1035,7 +1037,7 @@ describe('Chart 提供者通过 Core 编译', () => {
     expect(warnings).toEqual([
       {
         code: ChartWarningCode.MarkOverrideTargetNotFound,
-        path: 'children[0].recipe.marks[0].override',
+        path: ['children', 0, 'recipe', 'marks', 0, 'override'],
       },
     ]);
   });

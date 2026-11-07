@@ -95,10 +95,10 @@ const disposeValue = <TInput, TValue, TRead, TChange>(
 const createLifecycleError = (
   code: Extract<
     RetikzRuntimeErrorCode,
-    | typeof RetikzRuntimeErrorCode.CaptureFailed
-    | typeof RetikzRuntimeErrorCode.CollectIdentitiesFailed
-    | typeof RetikzRuntimeErrorCode.ReadFailed
-    | typeof RetikzRuntimeErrorCode.CompareFailed
+    | typeof RetikzRuntimeErrorCode.SourceCaptureFailed
+    | typeof RetikzRuntimeErrorCode.SourceCollectIdentitiesFailed
+    | typeof RetikzRuntimeErrorCode.SourceReadFailed
+    | typeof RetikzRuntimeErrorCode.SourceCompareFailed
   >,
   source: string,
   phase: RuntimeSourcePhase,
@@ -169,7 +169,7 @@ export const createRuntimeSourceExecutor = (registry: RuntimeSourceRegistry): Ru
         value = executor.capture<TInput, TValue>(source);
       } catch (cause) {
         throw createLifecycleError(
-          RetikzRuntimeErrorCode.CaptureFailed,
+          RetikzRuntimeErrorCode.SourceCaptureFailed,
           definition.key,
           RuntimeSourcePhase.Capture,
           cause,
@@ -193,7 +193,7 @@ export const createRuntimeSourceExecutor = (registry: RuntimeSourceRegistry): Ru
         } catch (cause) {
           const diagnostics = disposeValue(definition, executor, value);
           throw createLifecycleError(
-            RetikzRuntimeErrorCode.CollectIdentitiesFailed,
+            RetikzRuntimeErrorCode.SourceCollectIdentitiesFailed,
             definition.key,
             RuntimeSourcePhase.CollectIdentities,
             cause,
@@ -209,7 +209,7 @@ export const createRuntimeSourceExecutor = (registry: RuntimeSourceRegistry): Ru
       } catch (cause) {
         const diagnostics = disposeValue(definition, executor, value);
         throw createLifecycleError(
-          RetikzRuntimeErrorCode.ReadFailed,
+          RetikzRuntimeErrorCode.SourceReadFailed,
           definition.key,
           RuntimeSourcePhase.Read,
           cause,
@@ -237,7 +237,7 @@ export const createRuntimeSourceExecutor = (registry: RuntimeSourceRegistry): Ru
         return Object.freeze({ value: executor.equals(left.value, right.value), diagnostics: Object.freeze([]) });
       } catch (cause) {
         throw createLifecycleError(
-          RetikzRuntimeErrorCode.CompareFailed,
+          RetikzRuntimeErrorCode.SourceCompareFailed,
           definition.key,
           RuntimeSourcePhase.Compare,
           cause,

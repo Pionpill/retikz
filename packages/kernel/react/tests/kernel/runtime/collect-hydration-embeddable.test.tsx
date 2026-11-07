@@ -2,7 +2,8 @@ import type { InputEmbedAdapter } from '@retikz/vanilla';
 import type { FC } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
-import { collectHydrationHandlers, Node, Scope } from '../../../src';
+import { Node, Scope } from '../../../src';
+import { collectHydrationHandlers } from '../../../src/kernel/runtime/collect-hydration-handlers';
 
 /*
  * 水合：collectHydrationHandlers 对可嵌入 Tier2 子组件的处理

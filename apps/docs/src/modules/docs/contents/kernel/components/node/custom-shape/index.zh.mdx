@@ -31,7 +31,7 @@ Core 默认 `rectangle` / `ellipse` / `polygon` 与自定义项经过同一套 r
 用 `defineShape()` 声明注册名、参数 schema 和几何职责。注册名使用开放的 `string`；需要标注名称类型时，可直接使用 `ShapeDefinition['name']`，无需另建内置名称联合类型。无参形状使用 `z.strictObject({})`；下面的最小定义复用矩形几何，只改变注册名和占位大小。
 
 ```ts
-import { BUILTIN_SHAPES, defineShape } from '@retikz/core';
+import { rectangle, defineShape } from '@retikz/core';
 import { z } from 'zod';
 
 const badge = defineShape({
@@ -41,10 +41,10 @@ const badge = defineShape({
     halfWidth: halfWidth + 8,
     halfHeight: halfHeight + 4,
   }),
-  computeBoundaryPoint: BUILTIN_SHAPES.get('rectangle')!.computeBoundaryPoint,
-  resolveAnchor: BUILTIN_SHAPES.get('rectangle')!.resolveAnchor,
-  computeConnectionEnvelope: BUILTIN_SHAPES.get('rectangle')!.computeConnectionEnvelope,
-  emit: BUILTIN_SHAPES.get('rectangle')!.emit,
+  computeBoundaryPoint: rectangle.computeBoundaryPoint,
+  resolveAnchor: rectangle.resolveAnchor,
+  computeConnectionEnvelope: rectangle.computeConnectionEnvelope,
+  emit: rectangle.emit,
 });
 ```
 
@@ -75,7 +75,7 @@ const badge = defineShape({
 定义创建后，通过 core 的 `CompileOptions.shapes` 或 React 的 `<Layout extensions={{ shapes }}>` 注入。两种入口接收同一份 `ReadonlyArray<ShapeDefinition>`。
 
 ```ts
-import { compileToScene } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 
 const { scene } = compileToScene(ir, { shapes: [badge] });
 ```
@@ -91,6 +91,8 @@ import { Layout, Node } from '@retikz/react';
 IR 只写注册名或带参引用；宿主负责在每次编译时提供相同定义。若需要持久化文档，应同时持久化 IR 与“应加载哪个扩展包”的宿主配置，而不是序列化 definition 函数。
 
 ## 错误与限制
+
+输出不得携带 `resources` 或 `clipRef`；绘制资源引用只能透传本次 `style.fill` / `style.stroke`。用户通过输入属性选择渐变或已注册的图案，由编译器创建资源。手写其他资源 ID 会在 provider 输出边界报错，嵌套图元遵循相同规则。
 
 | 情况                               | 结果与排查入口                                                    |
 | ---------------------------------- | ----------------------------------------------------------------- |

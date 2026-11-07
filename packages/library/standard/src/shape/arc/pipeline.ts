@@ -9,19 +9,19 @@ export const lowerArc = (source: IRArc): IRPath => {
   const close = source.close ?? ShapeArcCloseSchema.parse(undefined);
   const { label: _hostLabel, ...properties } = shapePathProperties(source);
   void _hostLabel;
-  const { label } = source;
+  const { label, center, radius } = source;
   const arcLabel = label === undefined ? {} : { label };
 
   return {
     ...properties,
     type: 'path',
     children: [
-      { type: 'step', kind: 'move', to: source.center },
+      { type: 'step', kind: 'move', to: center },
       close === 'open'
-        ? { type: 'step', kind: 'arc', center: source.center, radius: source.radius, ...angles, ...arcLabel }
-        : typeof source.radius === 'number'
-          ? { type: 'step', kind: 'circlePath', radius: source.radius, ...angles, closed: close, ...arcLabel }
-          : { type: 'step', kind: 'ellipsePath', radius: source.radius, ...angles, closed: close, ...arcLabel },
+        ? { type: 'step', kind: 'arc', center, radius, ...angles, ...arcLabel }
+        : typeof radius === 'number'
+          ? { type: 'step', kind: 'circlePath', radius, ...angles, closed: close, ...arcLabel }
+          : { type: 'step', kind: 'ellipsePath', radius, ...angles, closed: close, ...arcLabel },
     ],
   };
 };

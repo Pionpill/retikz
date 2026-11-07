@@ -56,8 +56,8 @@ describe('Plot 图表扩展声明规范化', () => {
     const path = ['children', 0] as const;
     const conflictingPath = ['props', 'guides'] as const;
     const error = new RetikzPlotVanillaError({
-      code: RetikzPlotVanillaErrorCode.DuplicateDeclarationSource,
-      message: 'Plot declaration PLOT_VANILLA_DUPLICATE_DECLARATION_SOURCE at ["children",0]',
+      code: RetikzPlotVanillaErrorCode.NormalizeDeclarationSourceDuplicate,
+      message: 'Plot declaration PLOT_VANILLA_NORMALIZE_DECLARATION_SOURCE_DUPLICATE at ["children",0]',
       details: { path, conflictingPath },
     });
 
@@ -65,15 +65,17 @@ describe('Plot 图表扩展声明规范化', () => {
     expect(error).toBeInstanceOf(RetikzError);
     expect(isRetikzError(error)).toBe(true);
     expect(error.name).toBe('RetikzPlotVanillaError');
-    expect(error.message).toBe('Plot declaration PLOT_VANILLA_DUPLICATE_DECLARATION_SOURCE at ["children",0]');
-    expect(error.code).toBe(RetikzPlotVanillaErrorCode.DuplicateDeclarationSource);
+    expect(error.message).toBe(
+      'Plot declaration PLOT_VANILLA_NORMALIZE_DECLARATION_SOURCE_DUPLICATE at ["children",0]',
+    );
+    expect(error.code).toBe(RetikzPlotVanillaErrorCode.NormalizeDeclarationSourceDuplicate);
     expect(error.details).toEqual({ path, conflictingPath });
     expect(error.details.path).toBe(path);
     expect(error.details.conflictingPath).toBe(conflictingPath);
     expect(Object.isFrozen(error.details)).toBe(false);
 
     const omittedConflict = new RetikzPlotVanillaError({
-      code: RetikzPlotVanillaErrorCode.UnsupportedChartChild,
+      code: RetikzPlotVanillaErrorCode.NormalizeChartChildUnsupported,
       details: { path },
     });
 
@@ -181,7 +183,7 @@ describe('Plot 图表扩展声明规范化', () => {
         normalizeExtension(<PointMark encodings={{ position: { x: { field: 'amount' }, y: { field: 'margin' } } }} />, {
           marks,
         }),
-      'PLOT_VANILLA_DUPLICATE_DECLARATION_SOURCE',
+      'PLOT_VANILLA_NORMALIZE_DECLARATION_SOURCE_DUPLICATE',
       ['children', 0],
       ['props', 'marks'],
     );
@@ -191,7 +193,7 @@ describe('Plot 图表扩展声明规范化', () => {
     {
       name: 'raw function child',
       children: (() => 'runtime') as unknown as ReactNode,
-      code: 'PLOT_VANILLA_NON_SERIALIZABLE_EXTENSION' as const,
+      code: 'PLOT_VANILLA_NORMALIZE_EXTENSION_NON_SERIALIZABLE' as const,
       path: ['children', 0] as const,
     },
     {
@@ -208,19 +210,19 @@ describe('Plot 图表扩展声明规范化', () => {
           data={{ nested: [] }}
         />
       ),
-      code: 'PLOT_VANILLA_UNSUPPORTED_CHART_CHILD' as const,
+      code: 'PLOT_VANILLA_NORMALIZE_CHART_CHILD_UNSUPPORTED' as const,
       path: ['children', 0] as const,
     },
     {
       name: 'string child',
       children: 'caption',
-      code: 'PLOT_VANILLA_UNSUPPORTED_CHART_CHILD' as const,
+      code: 'PLOT_VANILLA_NORMALIZE_CHART_CHILD_UNSUPPORTED' as const,
       path: ['children', 0] as const,
     },
     {
       name: 'number child',
       children: 42,
-      code: 'PLOT_VANILLA_UNSUPPORTED_CHART_CHILD' as const,
+      code: 'PLOT_VANILLA_NORMALIZE_CHART_CHILD_UNSUPPORTED' as const,
       path: ['children', 0] as const,
     },
   ])('使用规范代码和原始路径拒绝 $name', ({ children, code, path }) => {
@@ -249,7 +251,7 @@ describe('Plot 图表扩展声明规范化', () => {
             path: ['props', 'composition'],
           },
         }),
-      'PLOT_VANILLA_DUPLICATE_DECLARATION_SOURCE',
+      'PLOT_VANILLA_NORMALIZE_DECLARATION_SOURCE_DUPLICATE',
       ['children', 1, 'children', 1],
       ['props', 'composition'],
     );
@@ -269,7 +271,7 @@ describe('Plot 图表扩展声明规范化', () => {
             },
           },
         ),
-      'PLOT_VANILLA_DUPLICATE_DECLARATION_SOURCE',
+      'PLOT_VANILLA_NORMALIZE_DECLARATION_SOURCE_DUPLICATE',
       ['children', 0],
       ['props', 'coordinate'],
     );
@@ -284,7 +286,7 @@ describe('Plot 图表扩展声明规范化', () => {
             path: ['spec', 'guides'],
           },
         }),
-      'PLOT_VANILLA_DUPLICATE_DECLARATION_SOURCE',
+      'PLOT_VANILLA_NORMALIZE_DECLARATION_SOURCE_DUPLICATE',
       ['children', 0],
       ['spec', 'guides'],
     );
@@ -297,7 +299,7 @@ describe('Plot 图表扩展声明规范化', () => {
             path: ['props', 'scales'],
           },
         }),
-      'PLOT_VANILLA_DUPLICATE_DECLARATION_SOURCE',
+      'PLOT_VANILLA_NORMALIZE_DECLARATION_SOURCE_DUPLICATE',
       ['children', 0],
       ['props', 'scales'],
     );
@@ -310,7 +312,7 @@ describe('Plot 图表扩展声明规范化', () => {
             path: ['spec', 'scales'],
           },
         }),
-      'PLOT_VANILLA_DUPLICATE_DECLARATION_SOURCE',
+      'PLOT_VANILLA_NORMALIZE_DECLARATION_SOURCE_DUPLICATE',
       ['children', 0],
       ['spec', 'scales'],
     );

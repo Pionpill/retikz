@@ -1,10 +1,10 @@
 import type { CompositeCompileContext } from '@retikz/core';
 import { createGroupBodyAllocation } from '@retikz/graph';
-import { createFlexLayout, LayoutItemKind } from '@retikz/layout';
+import { LayoutItemKind, createFlexLayout } from '@retikz/layout';
 import { compileFlexLayout, intrinsicLayoutProposal } from '@retikz/layout/compose';
 
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
-import type { InputFlowLayoutElement, InputFlowLayoutComputation, InputFlowLayoutLeaf } from '../../contract';
+import type { InputFlowLayoutComputation, InputFlowLayoutElement, InputFlowLayoutLeaf } from '../../contract';
 import { measureFlowLayoutElement } from '../../providers';
 import type { CanonicalFlowDiagram, CanonicalFlowElement, CanonicalFlowEntity } from '../../resolve';
 import { createFlowLayoutExecutionContext } from './layout-placement';
@@ -48,7 +48,8 @@ export const allocateFlowContainerWidths = (
   collect(diagram.elements);
   const allocatedRows = new Set<string>();
   const placement = createFlowLayoutExecutionContext(context, input);
-  const naturalSize = (element: InputFlowLayoutElement) => measureFlowLayoutElement(element, input, placement);
+  const naturalSize = (element: InputFlowLayoutElement) =>
+    measureFlowLayoutElement(element, input, placement.placeLayout);
 
   const rowOf = (element: InputFlowLayoutElement): Extract<InputFlowLayoutElement, { kind: 'layout' }> => {
     const row = element.kind === 'group' && element.elements.length === 1 ? element.elements[0] : element;

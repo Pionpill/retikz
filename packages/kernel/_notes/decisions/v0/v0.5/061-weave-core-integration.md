@@ -1,6 +1,6 @@
 ---
 description: 将 Core 单元素编译契约接入 Weave，确定节点缓存、树级环境、版本内绑定、声明树构建与完整输出准备边界
-keywords: Weave、Core、编译接入、compiled、CompileEnvironment、上下文、命名空间、Scope、候选隔离
+keywords: Weave、Core、编译接入、compiled、SharedCompileContext、上下文、命名空间、Scope、候选隔离
 ---
 
 # ADR-061：Weave 编译构建与 Core 接入
@@ -8,6 +8,8 @@ keywords: Weave、Core、编译接入、compiled、CompileEnvironment、上下�
 - 状态：Accepted
 - 决策日期：2026-10-20
 - 关联：[版本目标](./roadmap.md)、[057](./057-scope-acyclic-geometry-references.md)、[058](./058-weave-foundation.md)、[059](./059-weave-batch-operations.md)、[060](./060-core-element-compilation.md)
+
+> 编译执行归属与中间产物决策由 [ADR-080](./080-unified-reconciler-compilation.md) 部分替代：完整入口、遍历、试算与输出生命周期归 Reconciler；Core 保留原子阶段及权威产物。本篇其余绘图语义与事务约束继续有效。
 
 ## 背景与目标
 
@@ -17,36 +19,38 @@ Reconciler 负责声明结构、状态生命周期、名称绑定关联与计算
 
 ## 节点编译状态
 
-| Weave 类别 | compiled 类型        | 持有内容                                         | Core 调用                                 |
-| ---------- | -------------------- | ------------------------------------------------ | ----------------------------------------- |
-| Node       | `CompiledNode`       | `layout: NodeLayout` 与局部 `output`             | `compileNode`                             |
-| Coordinate | `CompiledCoordinate` | id、局部 position，以及按需观察 output           | `compileCoordinate`                       |
-| Path       | `CompiledPath`       | 完整 Path kind 编译后的 output                   | `compilePath`                             |
-| Scope      | `CompiledScope`      | envelope、无 children 的 group 属性及自身 output | `prepareScopeCompilation`、`compileScope` |
+| Weave 类别 | compiled 类型        | 持有内容                                        | Core 调用                                               |
+| ---------- | -------------------- | ----------------------------------------------- | ------------------------------------------------------- |
+| Node       | `CompiledNode`       | 顶层查询绑定、layout 与 emit 的阶段产物及对齐线 | `resolveNode`、`compileNode`                            |
+| Coordinate | `CompiledCoordinate` | 最终局部 position                               | `resolveCoordinate`、`compileCoordinate`                |
+| Path       | `CompiledPath`       | kind 宿主最终图元、布局边界与阴影               | `resolvePath`、`compilePath`                            |
+| Scope      | `CompiledScope`      | 实际包络、最终变换、分组属性、裁剪引用与动画    | `resolveScope`、`prepareScopePlacement`、`compileScope` |
 
-NodeLayout 保留现有名称，是 CompiledNode 的核心布局对象，不替代完整编译状态。Path 不预设统一中心线结构；Coordinate 不强制产生可见图元；Scope 不在 compiled 中重复保存子树。
+各基础元素分别持有稀疏 input、补齐有效默认值及能力绑定的 canon、保存计算结果与下游必需绑定的 compiled。Node 与 Scope 的形状、连接面 Definition 和参数直接供查询消费，不再拼装 canon 与 compiled 的中间对象。Node 的 layout.overall 仅保留完整布局计算结果，shape 和 boundary 绑定直接来自当前 canon 并保留在 compiled 顶层；几何查询按需组合顶层绑定与布局几何，对齐线供父布局消费；emit.overall 保留最终图元与边界。Node 的 emit 同时保留完整输出和已知的正文、形状与标签局部图元，局部绘制与 Path 均直接保存包含外观的完整图元数组，不拆分结构与样式；组装输出不修改复用产物，几何查询不依赖图元结构。Path 不预设统一中心线结构，也不保留无后续消费者的 Definition；Coordinate 只保存位置；Scope 不重复保存子树。Reconciler 只调用 compileNode，并从返回的 layout、emit 中选择仍有效的产物作为 prepared 传回；整体命中保留传入的局部产物，不补算缺失局部产物。Scene 输出仍可序列化，资源与诊断由对应编译记录维护。
+
+节点布局准备产物分别表达正文排版、形状尺寸、放置与标签布局；绘制准备产物分别表达正文、形状与逐标签绘制，并允许完整输出命中。正文与形状各自记录独立复用所需的实际正文宽度预算，缺少两者时由 Core 协调有界宽度反馈。调用方保证最终约束下的有效性与标签顺序，并在绘制复用时恢复配套资源；Core 只执行缺失阶段，不推导整体命中中缺失的局部结果，也不重复登记已命中图元的资源。正文图元在编译时生成，正文排版继续供布局复用消费。整体绘制命中不替代引用查询所需的布局。
 
 已完成节点只读持有 Core 产物，不复制其内部几何。新建或失效候选节点的 `compiled` 允许为 `null`，表示当前候选输入尚无有效结果；不得用伪造空结果或旧 compiled 表示就绪。提交条件要求所有参与输出的节点完成计算。旧版本结果只作为复用候选，满足有效性条件后才可成为新版本的有效 compiled。
 
-Core 的 `ElementCompileResult` 区分 compiled 与 pending。pending 只记录读取事实并等待依赖，不发布诊断或半成品；错误不解释为 pending。节点的计算完成与待处理通知是不同事实，不能仅凭 pendingInputs 为空判断就绪。
+Reconciler 的 `WeaveCompileResult` 区分 compiled 与 pending。pending 只记录读取事实并等待依赖，不发布诊断或半成品；错误不解释为 pending。节点的计算完成与待处理通知是不同事实，不能仅凭 pendingInputs 为空判断就绪。
 
 ## 状态持有位置
 
-| 内容                                                      | 持有位置与生命周期                                                                                          |
-| --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| Core 编译配置、有效 Definition 注册表、文字测量与公式服务 | Root 状态的 environment 持有 `CompileEnvironment`；配置稳定时可共享只读环境                                 |
-| Scene 自身配置                                            | Root 持有排除 children 的 Scene 输入；保留默认上下文、viewBox、animations 等最终编译所需事实                |
-| 元素自身输入、有效父级继承上下文                          | 节点 input.own 与 input.context；Scope own 不含 children                                                    |
-| Scope 子上下文与前置准备结果                              | 候选计算工作区持有 `ScopeCompilationPreparation`；子节点 input.context 接收其有效上下文，不再造一套合并配置 |
-| 编译结果                                                  | 对应节点 compiled；局部资源与输出一起保留                                                                   |
-| 名称索引与绑定关联                                        | 所属版本的 Root / 局部命名空间 Scope 及编译工作区；不得跨版本混用                                           |
-| Scope 定位索引                                            | Root 状态持有对应视图的 Scope / root 容器索引，与用户名称索引分离                                           |
-| 元素读取事实与已完成诊断                                  | 归属对应版本、对应元素的编译记录；复用、失效或删除时一同处理                                                |
-| 资源导入、观察会话、输出收集与等待队列                    | 本次候选工作区；成功或失败后结束，不作为跨批可变缓存复用                                                    |
+| 内容                                                      | 持有位置与生命周期                                                                                                   |
+| --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Core 编译配置、有效 Definition 注册表、文字测量与公式服务 | Root 状态的 shared 持有 `SharedCompileContext`；配置稳定时可共享只读上下文                                           |
+| Scene 自身配置                                            | Root 持有排除 children 的 Scene 输入；保留默认上下文、viewBox、animations 等最终编译所需事实                         |
+| 元素自身输入、有效父级继承上下文                          | 节点 input.own 与 input.context；Scope own 不含 children                                                             |
+| Scope 子上下文与前置准备结果                              | 候选计算工作区持有 样式解析与 `ScopePlacementPreparation`；子节点 input.context 接收其有效上下文，不再造一套合并配置 |
+| 编译结果                                                  | 对应节点 compiled；局部资源与输出一起保留                                                                            |
+| 名称索引与绑定关联                                        | 所属版本的 Root / 局部命名空间 Scope 及编译工作区；不得跨版本混用                                                    |
+| Scope 定位索引                                            | Root 状态持有对应视图的 Scope / root 容器索引，与用户名称索引分离                                                    |
+| 元素读取事实与已完成诊断                                  | 归属对应版本、对应元素的编译记录；复用、失效或删除时一同处理                                                         |
+| 资源导入、观察会话、输出收集与等待队列                    | 本次候选工作区；成功或失败后结束，不作为跨批可变缓存复用                                                             |
 
-环境由 `createCompileEnvironment` 准备，包含 shapes、boundaries、clips、arrows、patterns、pathGenerators、pathKinds、composites 和 themeStyles 等 Core 注册表。Weave 不逐节点复制注册表，不维护内置能力白名单。Definition 或服务行为改变必须显式替换环境；无法证明缓存仍有效时重新计算。
+环境由 `createSharedCompileContext` 准备，包含 shapes、boundaries、clips、arrows、patterns、pathGenerators、pathKinds、composites 和 themeStyles 等 Core 注册表。Weave 不逐节点复制注册表，不维护内置能力白名单。Definition 或服务行为改变必须显式替换环境；无法证明缓存仍有效时重新计算。
 
-input.context 表示元素消费的有效继承上下文，Scope 为其 children 解析出的上下文由 Core 产生。根上下文通过 `resolveScopeContext` 从 Scene 默认配置与主题建立。布局 proposal、祖先 Scope 约束、调用位置、坐标变换和 observation 不是该样式上下文的一部分，由调用工作区按 `ElementCompileOptions` 显式传入。
+input.context 表示元素消费的有效继承上下文，Scope 为其 children 解析出的上下文由 Core 产生。根上下文通过 `resolveScopeInheritance` 从 Scene 默认配置与主题建立。布局 proposal、祖先 Scope 约束、调用位置、坐标变换和 observation 不是该样式上下文的一部分，由 Weave 驱动持有，并按各 Core 阶段的窄上下文显式适配。
 
 ## 声明结构与定位
 
@@ -58,21 +62,29 @@ Root 的容器索引覆盖自身与全部 Scope；Root / 局部命名空间 Scop
 
 ## 名称绑定与依赖读取
 
-用户查询索引、Core 名称可见性和计算依赖是不同关系。Weave 的 ids 不能直接作为无差别的编译名称表；调用方必须提供符合 Core 声明顺序、局部命名空间和遮蔽规则的 `CompileNamespace` 视图，不能因预先构建整树而放宽引用规则。
+用户查询索引、Core 名称可见性和计算依赖是不同关系。Weave 的 ids 不能直接作为无差别的编译名称表；调用方必须提供符合 Core 声明顺序、局部命名空间和遮蔽规则的 `WeaveNamespace` 视图，不能因预先构建整树而放宽引用规则。
 
-每个可引用绑定使用版本内不透明 token，工作区维护 token 到对应 WeaveNode 的映射。未完成绑定登记为 pending；完成后通过 `projectCompileReference` 投影可供读取的布局，再登记 ready。该投影由 Core 生成，不修改原 compiled；Path 不因此获得几何被引用能力。
+每个可引用绑定使用版本内不透明 token，工作区维护 token 到对应 WeaveNode 的映射。未完成绑定登记为 pending；完成后通过 `composeScopeTransform` 与 `projectLayoutWithTransform` 投影可供读取的布局，再登记 ready。该投影由 Core 生成，不修改原 compiled；Path 不因此获得几何被引用能力。
 
-每次调用返回的 `CompileRead` 均需保留，包括 namespace/name、missing、pending 和 ready。命中绑定映射到当前候选的节点关联；未命中记录保留在名称读取索引中，不能伪造生产者节点。一次编译成功后，以本次读取替换旧读取关系；等待计算保留本次已发现的阻塞信息，继续计算时可以发现更多依赖。
+每次调用由驱动收集的 `WeaveCompileRead` 均需保留，包括 namespace/name、missing、pending 和 ready。命中绑定映射到当前候选的节点关联；未命中记录保留在名称读取索引中，不能伪造生产者节点。一次编译成功后，以本次读取替换旧读取关系；等待计算保留本次已发现的阻塞信息，继续计算时可以发现更多依赖。
 
-依赖边关联生产者与消费者，读取需求保存为分类数组，暂以 [null] 占位，不表示无依赖；反向 consumers 供后续传播使用。完整 CompileRead 保留在编译记录中，用于名称绑定、缺失名称和遮蔽失效，不作为依赖边的读取需求。分类明确前，传播默认使消费者失效，不根据占位值过滤更新；后续再确定 style / layout 等需求标识及变化匹配算法。细粒度分类与调度算法继续沿 [059](./059-weave-batch-operations.md) 细化。
+依赖边关联生产者与消费者，保留位置、指定锚点、连接边界及父布局等实际读取需求。完整 WeaveCompileRead 保留在编译记录中，用于名称绑定、缺失名称和遮蔽失效。调度标记变化可能影响的消费者，Reconciler 按实际读取的结果比较是否需要重新计算；指定锚点不变时不因无关尺寸变化重算，边界读取按身份比较 Definition，并检查参数及几何。阶段复用同时检查输入、上下文、canon 与引用，资源和诊断随候选事务保持一致。
+
+Path 的 compiled 保存已知目标绑定、完整绘制结果及实际使用的标准描边产物，通过 PreparedPathCompilation 接收有效结果。顶层 emit 直接保存已校验的图元与边界点数组，合法空结果 null 与未计算分开表达；整体命中跳过目标绑定和 Definition 调用，不反推缺失局部产物。目标复用只替换当前步骤中的绑定目标，不保留旧外观与标签。
+
+标准描边产物按 layout 与 emit 分别保存整体及原子结果。布局可复用基础几何、逻辑度量、逐标签排版与放置、逐标记放置，以及断口和端点接触截取后的可见主线；绘制可复用主线图元、标签与标记的局部内容及已放置结果、首末端箭头局部内容。参数模型不持有旧标签、运行中收集器或采样闭包；箭头与标记已解析的尺寸和锚点仍以 canon 为真源。普通分段参数、圆角路径弧长定位与截断前标记定位保持原有语义。
+
+调用方只通过 compilePath 交接阶段产物，不直接调度内部布局与绘制，负责步骤及标签顺序、目标、字段路径、坐标环境、Definition 和绘制依赖的有效性，并恢复配套资源与诊断。自定义 kind 不要求中心线，也不绕过 Definition；标准描边缓存只对应明确使用当前源路径的宿主能力调用，显式派生路径独立计算。Core 维护本次宿主实际返回图元的资源引用许可，输出组装与 Definition 取得的可修改图元均不得改写复用产物。
 
 ## Scope 分阶段消费
 
+Scope 的 compiled 保存 layout 与 emit 阶段结果，并通过 PreparedScopeCompilation 接收调用方确认有效的产物。layout 支持整体结果、包络、前置准备与最终放置复用；emit 支持不含 children 的整体分组属性与裁剪登记结果复用。整体命中保留已知局部产物，不反推缺失项；shape / boundary 绑定来自当前 canon，按需与布局几何组合。调用方负责缓存失效与配套资源恢复。
+
 Scope 上下文下传与包络上收是独立的计算职责：
 
-- `resolveScopeContext` 解析有效继承上下文；`prepareScopeCompilation` 准备 Scope 放置目标与可提前确定的变换，可能等待外部引用
+- `resolveScopeInheritance` 解析有效继承上下文；`prepareScopePlacement` 准备 Scope 放置目标与可提前确定的变换，可能等待外部引用
 - 子元素在自身实际依赖就绪后调用对应 Core 编译入口，不把父 Scope 包络完成作为所有子元素的前置条件
-- `compileScope` 消费 Core 语义要求的局部子布局，生成 Scope 包络、最终变换与自身装饰；不递归编译 children
+- `compileScope` 消费 Core 语义要求的局部子布局，生成 Scope 包络与最终变换；发布几何并完成待定路径后，调用方依据真实子输出解析动画，再通过 context 交给 compileScope 重组分组属性，此时可复用布局与裁剪。最终输出组装负责附加 children 和空分组裁剪；Core 不递归编译 children
 - 引用布局由 Core 投影到正确坐标系；最终子输出通过 `assembleScopeOutput` 包装，不能重复应用变换
 
 Scope 引用包络、可见边界与布局 allocation 不混为同一对象。Path 不加入现有 Scope 引用包络；匿名与具名 Scope 的几何贡献继续遵循 Core 规则，运行时容器 id 不改变这些规则。若接线仍需解释聚合规则，缺少的选择或投影能力应由 Core 提供，不能由 Weave 复制。
