@@ -7,8 +7,8 @@ import foundationPackage from '../../../packages/kernel/foundation/package.json'
 import inspectPackage from '../../../packages/kernel/inspect/package.json';
 import mathPackage from '../../../packages/kernel/math/package.json';
 import reactPackage from '../../../packages/kernel/react/package.json';
+import reconcilerPackage from '../../../packages/kernel/reconciler/package.json';
 import renderPackage from '../../../packages/kernel/render/package.json';
-import runtimePackage from '../../../packages/kernel/runtime/package.json';
 import texPackage from '../../../packages/kernel/tex/package.json';
 import vanillaPackage from '../../../packages/kernel/vanilla/package.json';
 import extensionPackage from '../../../packages/library/extension/package.json';
@@ -19,7 +19,7 @@ describe('包版本注册表', () => {
     const kernelVersions = [
       foundationPackage.version,
       mathPackage.version,
-      runtimePackage.version,
+      reconcilerPackage.version,
       corePackage.version,
       inspectPackage.version,
       renderPackage.version,

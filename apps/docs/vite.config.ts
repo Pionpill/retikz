@@ -58,7 +58,6 @@ export default defineConfig(({ command, mode }) => ({
   optimizeDeps: {
     exclude: [
       '@retikz/core',
-      '@retikz/runtime',
       '@retikz/reconciler',
       '@retikz/react',
       '@retikz/vanilla',

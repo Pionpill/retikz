@@ -168,7 +168,7 @@ export type Release = {
   packages: Array<PackageBlock>;
 };
 
-/** 全部可能的包标识(筛选 chips 由数据中实际出现者派生) */
+/** 更新日志的包标识，包含已停用的历史包；筛选 chips 由日志实际出现者派生 */
 export const PACKAGE_IDS = [
   '@retikz/foundation',
   '@retikz/math',
@@ -246,7 +246,7 @@ export const PACKAGE_LABEL: Record<PackageId, Localized> = {
   docs: { zh: '文档站', en: 'Docs' },
 };
 
-/** 包的类别分组：kernel 基础设施 / library 能力包 / schematic 图式 / viz 可视化层 / other；用于映射模块 changelog 切片 */
+/** 更新日志的历史包分组，包含已停用包，用于映射模块 changelog 切片 */
 export type PackageGroup = {
   id: 'kernel' | 'standard' | 'extension' | 'layout' | 'schematic' | 'viz' | 'other';
   /** 该组按序包含的包标识 */

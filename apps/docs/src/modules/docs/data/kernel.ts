@@ -587,61 +587,6 @@ export const kernelSection: Array<Section> = [
           },
         ],
       },
-      {
-        id: 'runtime',
-        label: 'kernel.pkgRuntime',
-        sidebarGroup: 'kernel.pkgGroupCore',
-        children: [
-          { id: 'usage', label: 'kernel.pkgRuntimeUsage', difficulty: DocDifficulty.Internals },
-          {
-            id: 'source',
-            label: 'kernel.pkgRuntimeSource',
-            difficulty: DocDifficulty.Internals,
-            meta: { pageType: 'guide', audience: 'maintainer', sourceOfTruth: 'runtime' },
-          },
-          {
-            id: 'identity',
-            label: 'kernel.pkgRuntimeIdentity',
-            difficulty: DocDifficulty.Internals,
-            meta: { pageType: 'guide', audience: 'maintainer', sourceOfTruth: 'runtime' },
-          },
-          {
-            id: 'computation',
-            label: 'kernel.pkgRuntimeComputation',
-            difficulty: DocDifficulty.Internals,
-            meta: { pageType: 'guide', audience: 'maintainer', sourceOfTruth: 'runtime' },
-          },
-          {
-            id: 'transaction',
-            label: 'kernel.pkgRuntimeTransaction',
-            difficulty: DocDifficulty.Internals,
-            meta: { pageType: 'guide', audience: 'maintainer', sourceOfTruth: 'runtime' },
-          },
-          {
-            id: 'participant',
-            label: 'kernel.pkgRuntimeParticipant',
-            difficulty: DocDifficulty.Internals,
-            meta: { pageType: 'guide', audience: 'maintainer', sourceOfTruth: 'runtime' },
-          },
-          {
-            id: 'trace',
-            label: 'kernel.pkgRuntimeTrace',
-            difficulty: DocDifficulty.Internals,
-            meta: { pageType: 'guide', audience: 'maintainer', sourceOfTruth: 'runtime' },
-          },
-          {
-            id: 'lifecycle',
-            label: 'kernel.pkgRuntimeLifecycle',
-            difficulty: DocDifficulty.Internals,
-            meta: { pageType: 'guide', audience: 'maintainer', sourceOfTruth: 'runtime' },
-          },
-          {
-            id: 'reference',
-            label: 'kernel.pkgRuntimeApiReference',
-            meta: { pageType: 'reference', audience: 'integrator', sourceOfTruth: 'runtime' },
-          },
-        ],
-      },
       corePage,
       {
         id: 'tex',

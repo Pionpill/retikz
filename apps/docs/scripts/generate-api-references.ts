@@ -24,7 +24,6 @@ import { writePlotPathApiReferenceMdx } from './api-reference/plot-path';
 import { writePlotPointApiReferenceMdx } from './api-reference/plot-point';
 import { writeRelationApiReferenceMdx } from './api-reference/relation';
 import { writeRibbonApiReferenceMdx } from './api-reference/ribbon';
-import { writeRuntimeApiReferenceMdx } from './api-reference/runtime';
 import { writeScopeApiReferenceMdx } from './api-reference/scope';
 import { writeStandardCollectionApiReferences } from './api-reference/standard-collections';
 import { writeStandardPresentationApiReferences } from './api-reference/standard-presentation';
@@ -33,9 +32,6 @@ import { writeTexApiReferenceMdx } from './api-reference/tex';
 import { writeAnimationApiReference, writeStyleApiReference } from './api-reference/visual';
 
 const docsRoot = path.resolve(import.meta.dirname, '..');
-await writeRuntimeApiReferenceMdx(
-  path.resolve(docsRoot, 'src/modules/docs/contents/kernel/packages/runtime/reference/_includes'),
-);
 await writeBranchApiReferenceMdx(
   path.resolve(docsRoot, 'src/modules/docs/contents/schematic/diagram/branch/reference/_includes'),
 );
