@@ -13,7 +13,7 @@ Beta 流程负责 beta 期 plan TODO 编排。beta 只做修改类工作：重�
 
 发现需要新功能时立即 halt，登记到下个 alpha 窗口，改走 [alpha](alpha.md)。
 
-Beta 优化通常是中型任务；执行前按根规则一次确认 scope、步骤、验证和是否使用一个常规 reviewer。长重构或 scope 不清时先走 `develop-refactor` 写 plan；不在 plan 与代码完成后分别追加询问。
+Beta 优化通常是中型任务；执行前按根规则一次确认 scope、步骤、验证和整体与专项 reviewer 的角色授权，代码范式默认纳入计划、性能按需裁决。长重构或 scope 不清时先走 `develop-refactor` 写 plan；不在 plan 与代码完成后分别追加询问。
 
 ## 阶段
 

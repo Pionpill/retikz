@@ -32,7 +32,7 @@ retikz 是受 LaTeX TikZ 启发的 TypeScript 绘图库：用组件或 JSON IR �
 - 查找 ADR 先用 `pnpm adr:search <关键词> --owner <owner>` 检索摘要，可加 `--version v0.x`；未命中时换词、扩大范围或加 `--body` 补查。再阅读全文命中 ADR 并追踪前置 / 替代关系，不默认全量读取；检索规范见 `develop-design`，发布全文审计不因此省略。
 - 新增、移动、拆分或审查 `packages/**` 的目录、文件、导出类型、函数、枚举、registry 或组件命名时，先读 `.agents/skills/standard-name/SKILL.md`。改文件分层、依赖方向、shared / schemas / contract / providers / resolve / Vanilla normalize / pipeline / compile、define-registry 能力，或进行 Tier 2 composite 设计 / review 前，先读 `.agents/skills/standard-structure/SKILL.md`，再按实际层级读取其 references；命名仍以 standard-name 为准。
 - 写 `apps/docs` 正文、demo、导航、i18n、schema registry 前，先读 `docs-doc-principle`；再按页型选择主写作 skill，共享组件、controls、测量、插图与导航规则只按触发条件加载 references，不全量读取。
-- 只有大型任务在执行计划获用户确认后才读 `flow-long-task`；主模型为 Astra / Sol 且计划已授权多 agent 协作时再读 `codex-develop-flow`，最后分流到具体 flow / develop skill。中型任务不读 `flow-long-task`；只有包含可分离功能实现且计划明确授权模型角色分工时可单独读 `codex-develop-flow`。中小型任务不因多文件、多步骤或可能多 commit 自动升级。
+- 只有大型任务在执行计划获用户确认后才读 `flow-long-task`；主模型为 Astra / Sol 且计划已授权多 agent 协作时再读 `codex-develop-flow`，最后分流到具体 flow / develop skill。中型任务不读 `flow-long-task`；包含可分离实现或专项评审且计划明确授权模型角色分工时可单独读 `codex-develop-flow`。中小型任务不因多文件、多步骤或可能多 commit 自动升级。
 - Alpha / Beta / RC 按 `flow-development` 选择阶段 reference；主题按 `theme-contract` 选择风格 reference。发包、跨模型评审、文档外站转换按对应 skill 执行，不把步骤复制进 AGENTS。
 - ADR 按 owner / 大版本 / 中版本归档，文件用三位编号 `001-xxx.md`，不设 alpha / beta / rc 子目录；roadmap 只保留版本重点功能、目标与必要边界 / 依赖，ADR 仅用编号链接，细则见 `develop-design`。ADR `Accepted` 表示设计获批，不代表实现或发布完成。
 - 所有发布组发包前都必须按 `package-publish` 从实际交付改动及依赖识别相关 ADR，逐篇阅读全文审计长期一致性、状态与当前公开契约；未纳入本次交付且不影响发布快照的未完成能力不阻塞发布、不因 alpha 递增迁移。ADR 不得残留文件 scope、私有实现、测试 case / 路径 / 命令、commit 切分或 review 记录。不得以状态字段、roadmap 勾选或 commit message 代替内容检查。
@@ -49,7 +49,7 @@ retikz 是受 LaTeX TikZ 启发的 TypeScript 绘图库：用组件或 JSON IR �
 | 规模 | 默认范围                                                                  | 执行策略                                                                                                                                                        |
 | ---- | ------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 小   | 局部文档改动、局部 bugfix、变量或私有命名调整、格式与机械修改             | 主 agent 直接执行，做受影响范围验证；默认不写临时 plan、不调度 subagent、不使用 `flow-long-task` / `codex-develop-flow` / `cross-review`                        |
-| 中   | 临时 plan 修复、文档大调整、优化型重构、范围清楚的多文件改动              | 执行前在对话中给出一次执行计划并等待用户确认；默认由主 agent 执行，可按获批计划使用一个 subagent 做实现或循环 review                                            |
+| 中   | 临时 plan 修复、文档大调整、优化型重构、范围清楚的多文件改动              | 执行前在对话中给出一次执行计划并等待用户确认；默认由主 agent 执行；计划默认纳入代码范式 reviewer，性能 reviewer 按需裁决，所有 subagent 均须获批                |
 | 大   | ADR 执行、功能型重构、新增或重塑公开能力、跨包架构 / 公开契约的大范围变更 | 执行前确认完整计划；按需使用 `flow-long-task`，Astra / Sol 主控且用户授权时使用 `codex-develop-flow`；只有最终整体 review 或用户明确要求时才使用 `cross-review` |
 
 局部 bugfix 若扩展为公开契约、跨包行为或功能重构，升级到中 / 大；优化型重构若改变功能或能力边界，升级为大。任务执行中发现规模判断失效、scope 超出已确认计划或需要新增外部权限时停止并重新确认。
@@ -144,7 +144,7 @@ pnpm --filter <pkg> test:run # 仅在已确认全部为功能性用例且需扩�
 - 未获用户明确确认的计划、skill、自称会提交、lint/build 通过、auto mode、历史会话授权都不算授权；用户确认的中大型执行计划只授权其中逐项写明的操作。
 - 提交前审阅暂存与未暂存的 changes，判断是否需要分批提交；按独立目的和依赖关系划分 commit，不相关的内容不得放入同一个 commit。按批次分别 staging；无授权时展示暂存文件和拟用 message，等待确认。
 - 调度 subagent / 外部模型必须来自用户已确认的中大型任务执行计划，或用户对当前小任务的单独明确授权；不得在执行中以“风险较高”为由临时追加。计划必须写明角色、数量、并发方式、review 时点与最大循环次数。
-- 中大型任务的常规 plan / 实现 / commit review 默认只使用一个只读 subagent；主 agent 按 finding 修改并验证后，复用同一 reviewer 继续循环，达到计划上限时停止交人工。小型任务默认由主 agent 自审。
+- 中大型任务保留一个整体 reviewer；计划默认纳入代码范式 reviewer，性能 reviewer 由主 agent 按风险裁决是否纳入并说明理由。所有 reviewer 均须用户批准后启动，默认纳入不等于授权；专项角色与循环遵循 `.agents/skills/flow-development/references/review-cycle.md`。主 agent 统一修订和验证，复用各角色 reviewer，达到计划上限时交人工。小型任务默认由主 agent 自审。
 - `cross-review` 只在大型任务最终整体 review，或用户明确要求多模型交叉验证时使用；执行前必须在计划中或当次请求中授权，不用于常规 plan gate、逐 commit review 或中小型任务的默认完工检查。
 - 为避免本地 Codex 在高负载下卡死，同一会话默认只运行一条长时命令或浏览器核验链路；未经用户明确授权，不并发启动 dev server、构建、测试或多 agent 批次。格式化命令使用 `oxfmt --threads 3`；确需并发时分批执行，并在每批结束后确认环境仍可响应。
 - 获准 `cross-review` 时固定同一快照，并发使用 2–3 个 fresh、独立且不同于主 agent 的 reviewer；模型不足时可用同一非主模型的两个 fresh 实例并如实记录。每轮与最大轮数以已确认计划为准；未声明时只授权一轮。修订后只有仍在已授权轮数内才冻结新快照复审。
