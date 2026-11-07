@@ -1,5 +1,13 @@
-export * from './animation';
+export {
+  AnimationDirection,
+  AnimationEasing,
+  AnimationFill,
+  AnimationProperty,
+  AnimationTrackSchema,
+  AnimationTrigger,
+} from './animation';
+export type { IRAnimationOrigin, IRAnimationTrack, IRKeyframe } from './animation';
 export * from './scene';
 export * from './composite';
 export * from './drawable';
-export * from './kernel';
+export type * from './kernel';

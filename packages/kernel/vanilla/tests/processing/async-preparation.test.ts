@@ -36,12 +36,10 @@ describe('共享异步编写准备', () => {
             create: () => {
               abort.abort();
               return {
-                observers: [],
                 resolve: output => {
                   resolutions++;
                   return {
                     primary: output.result,
-                    observerOutputs: output.observerOutputs,
                     layers: [],
                     diagnostics: [],
                   };
@@ -63,10 +61,9 @@ describe('共享异步编写准备', () => {
         create: () => {
           if (phase === 'create') abort.abort();
           return {
-            observers: [],
             resolve: (output: Parameters<VanillaCompileDriverSession['resolve']>[0]) => {
               if (phase === 'resolve') abort.abort();
-              return { primary: output.result, observerOutputs: output.observerOutputs, layers: [], diagnostics: [] };
+              return { primary: output.result, layers: [], diagnostics: [] };
             },
             commit: () => {
               commits++;
@@ -86,13 +83,12 @@ describe('共享异步编写准备', () => {
     let invalidate: (() => void) | undefined;
     let commits = 0;
     const session: VanillaCompileDriverSession = {
-      observers: [],
       resolve: output => {
         const callback = invalidate;
         invalidate = undefined;
         callback?.();
 
-        return { primary: output.result, observerOutputs: output.observerOutputs, layers: [], diagnostics: [] };
+        return { primary: output.result, layers: [], diagnostics: [] };
       },
       commit: () => {
         commits++;
@@ -391,10 +387,8 @@ describe('共享异步编写准备', () => {
       {
         compileDriver: {
           create: () => ({
-            observers: [],
             resolve: output => ({
               primary: output.result,
-              observerOutputs: output.observerOutputs,
               layers: [],
               diagnostics: [],
             }),

@@ -131,20 +131,21 @@ A path reference may appear first:
   sources={[
     {
       label: 'Resolve relational and polar positions',
-      path: 'packages/kernel/core/src/resolve/position/resolve.ts',
-      startLine: 43,
-      endLine: 89,
+      path: 'packages/kernel/core/src/compile/reference/position.ts',
     },
     {
       label: 'Translate a Node using anchors from actual layout',
       path: 'packages/kernel/core/src/compile/node/layout.ts',
-      startLine: 54,
-      endLine: 109,
     },
     {
-      label: 'Register named Node and Coordinate references',
-      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 438,
+      label: 'Register named Node references',
+      path: 'packages/kernel/reconciler/src/compile/tree/node/visit.ts',
+      startLine: 49,
+    },
+    {
+      label: 'Register named Coordinate references',
+      path: 'packages/kernel/reconciler/src/compile/tree/coordinate/visit.ts',
+      startLine: 14,
     },
     {
       label: 'Define the complete path-target union',

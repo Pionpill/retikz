@@ -221,6 +221,10 @@ export const createTypedChartInput = <
     panel,
     chartThemeDefinitions,
     lowerOptions,
+    dataBindings,
+    dataExecution,
+    dataTransformExecutor,
+    signal,
   } = props;
   const rootRecipe = recipe as TypedChartRootRecipe<TInput> | undefined;
   const hasRootData =
@@ -266,7 +270,7 @@ export const createTypedChartInput = <
   }
 
   const rows = hasRootData ? rootRows : declarations.data?.props.data;
-  if (rows === undefined && props.dataBindings === undefined) {
+  if (rows === undefined && dataBindings === undefined) {
     throw new RetikzChartReactError(
       'chart react: runtime rows are required from the concrete Chart root or <ChartData>',
     );
@@ -318,10 +322,10 @@ export const createTypedChartInput = <
   const effectiveCoordinate = hasRootCoordinate ? rootCoordinate : declarations.coordinate?.props.coordinate;
 
   const input = {
-    ...(props.dataBindings === undefined ? { data: data.data } : { dataBindings: props.dataBindings }),
-    ...(props.dataExecution === undefined ? {} : { dataExecution: props.dataExecution }),
-    ...(props.dataTransformExecutor === undefined ? {} : { dataTransformExecutor: props.dataTransformExecutor }),
-    ...(props.signal === undefined ? {} : { signal: props.signal }),
+    ...(dataBindings === undefined ? { data: data.data } : { dataBindings }),
+    ...(dataExecution === undefined ? {} : { dataExecution }),
+    ...(dataTransformExecutor === undefined ? {} : { dataTransformExecutor }),
+    ...(signal === undefined ? {} : { signal }),
     ...(data.reference === undefined ? {} : { dataRef: data.reference }),
     ...(data.model === undefined ? {} : { dataModel: data.model }),
     ...(effectiveLayout === undefined ? {} : { layout: effectiveLayout }),
@@ -363,7 +367,7 @@ export const createTypedChartComponent = <
   adapter: SynchronousInputEmbedAdapter<TInput>,
 ): InputEmbeddableChartComponent<TProps, TInput, SynchronousInputEmbedAdapter<TInput>> => {
   const Component: FC<TProps> = props => {
-    const { children, layout, lowerOptions, chartThemeDefinitions } = props;
+    const { children, layout, lowerOptions, chartThemeDefinitions, signal } = props;
     const ambientThemeDefinitions = useChartThemeDefinitions();
     const ambientPlotThemeDefinitions = usePlotThemeDefinitions();
     const effectiveProps = useMemo<TProps>(() => {
@@ -381,7 +385,7 @@ export const createTypedChartComponent = <
 
     return createElement(
       Layout,
-      { ...standalone.host, runtime: { preparation: 'async', signal: props.signal } },
+      { ...standalone.host, runtime: { preparation: 'async', signal } },
       createElement(Component, embeddedProps),
     );
   };

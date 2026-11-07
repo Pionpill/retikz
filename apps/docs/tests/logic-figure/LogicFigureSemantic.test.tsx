@@ -18,7 +18,6 @@ import {
   LogicFigureRelationKind,
 } from '@/modules/docs/components/logic-figure';
 import OpaqueColorFlow from '@/modules/docs/contents/kernel/packages/foundation/utilities/opaque-color-flow';
-import InspectCompileFlow from '@/modules/docs/contents/kernel/packages/inspect/mechanism/inspect-compile-flow';
 import AffineCompositionFlow from '@/modules/docs/contents/kernel/packages/math/transforms/affine-composition-flow';
 import CoordinateConversionFlow from '@/modules/docs/contents/kernel/packages/math/transforms/coordinate-conversion-flow';
 import { synchronousInputAdaptersOf } from '@/modules/docs/lib';
@@ -67,17 +66,6 @@ describe('LogicFigure 语义词汇', () => {
       expect(svg).toContain('fill="red"');
       expect(svg).toContain('stroke="blue"');
     }
-  });
-
-  it('Inspect 总览使用普通实体，通过 group 区分主图与观测支路', () => {
-    const figure = FlowDiagramSchema.parse(buildPreviewIR(InspectCompileFlow).sourceIr.children[0]);
-
-    expect(figure.entities.every(entity => entity.kind === undefined)).toBe(true);
-    expect(figure.entities.filter(entity => entity.group === 'inspection').map(entity => entity.id)).toEqual([
-      'observation',
-      'inspect',
-      'fragment',
-    ]);
   });
 
   it('定义站点 Entity 类型为重要、重要数据、次要和算法内容', () => {

@@ -57,7 +57,10 @@ describe('运行时结构化错误', () => {
   });
 
   it('在保留诊断的同时，省略 Runtime 详细信息中的可选所属模块和计算', () => {
-    const error = new RetikzRuntimeError({ code: RetikzRuntimeErrorCode.RevisionInvalid, phase: 'revision' });
+    const error = new RetikzRuntimeError({
+      code: RetikzRuntimeErrorCode.TransactionRevisionInvalid,
+      phase: 'revision',
+    });
 
     expect(error.owner).toBeUndefined();
     expect(error.computation).toBeUndefined();
@@ -102,7 +105,7 @@ describe('运行时结构化错误', () => {
       },
     ] as const;
     const error = new RetikzRuntimeError({
-      code: RetikzRuntimeErrorCode.CaptureFailed,
+      code: RetikzRuntimeErrorCode.SourceCaptureFailed,
       owner: 'owner',
       phase: RuntimeSourcePhase.Capture,
       message: 'RUNTIME_SOURCE_CAPTURE_FAILED: owner "owner" failed during capture',
@@ -112,7 +115,7 @@ describe('运行时结构化错误', () => {
 
     expect(error).toBeInstanceOf(RetikzRuntimeError);
     expect(error.name).toBe('RetikzRuntimeError');
-    expect(error.code).toBe(RetikzRuntimeErrorCode.CaptureFailed);
+    expect(error.code).toBe(RetikzRuntimeErrorCode.SourceCaptureFailed);
     expect(error.message).toBe('RUNTIME_SOURCE_CAPTURE_FAILED: owner "owner" failed during capture');
     expect(error.owner).toBe('owner');
     expect(error.phase).toBe('capture');
@@ -129,7 +132,7 @@ describe('运行时结构化错误', () => {
 
   it('使用 RetikzRuntimeError 来处理源注册表故障', () => {
     const error = new RetikzRuntimeError({
-      code: RetikzRuntimeErrorCode.Unknown,
+      code: RetikzRuntimeErrorCode.SourceUnknown,
       phase: 'source-registry',
       message: 'RUNTIME_SOURCE_UNKNOWN: invalid runtime owner "owner"',
       owner: 'owner',
@@ -137,7 +140,7 @@ describe('运行时结构化错误', () => {
 
     expect(error).toBeInstanceOf(RetikzRuntimeError);
     expect(error.name).toBe('RetikzRuntimeError');
-    expect(error.code).toBe(RetikzRuntimeErrorCode.Unknown);
+    expect(error.code).toBe(RetikzRuntimeErrorCode.SourceUnknown);
     expect(error.message).toBe('RUNTIME_SOURCE_UNKNOWN: invalid runtime owner "owner"');
     expect(error.owner).toBe('owner');
     expect(error.details).toEqual({ owner: 'owner', phase: 'source-registry', diagnostics: [] });

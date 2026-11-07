@@ -1,134 +1,44 @@
-import type { GroupPrimitive, PathPrimitive, ScenePrimitive, TextPrimitive } from '../../contract';
-import type { CanonicalInlineSegment } from '../../resolve';
-import { BuiltinCompileWarningCode } from '../constants';
-import type { CompileWarningCode } from '../constants';
-import { ASCENT_FACTOR, DESCENT_FACTOR } from './baseline';
-import type { TextFont, TextMeasurer } from './metrics';
-import { resolveTextMetrics } from './metrics';
-import type { LoweredTexPaint, LoweredTexPath, TexLowerer } from './tex';
-import { snapshotLoweredTex } from './tex';
+import type { Position } from '@retikz/math';
 
-/** 行高近似系数 */
-const LINE_HEIGHT_FACTOR = 1.2;
-
-type Round = (n: number) => number;
-
-/** 布局阶段消费的文字或公式输入，不含宿主外观 */
-type InputInlineSegmentLayout =
-  | Omit<Extract<CanonicalInlineSegment, { text: string }>, 'fill' | 'opacity'>
-  | Omit<Extract<CanonicalInlineSegment, { tex: string }>, 'fill' | 'opacity'>;
-
-/** 按原始 segment 顺序保存的外观覆盖 */
-type InlineSegmentPaint = {
-  /** 显式文字或公式宿主颜色 */
-  fill?: string;
-  /** 与块透明度相乘的 segment 透明度 */
-  opacity?: number;
-};
-
-/** 混排行当前外观，独立于测量结果 */
-type InlineLinePaint = {
-  /** 块继承色 */
-  color?: string;
-  /** 块透明度 */
-  opacity?: number;
-  /** 原始 segment 顺序，包含未能降解的公式 */
-  segments: Array<InlineSegmentPaint>;
-};
-
-/** 从已解析的行提取独立外观，不复制文字和字体 */
-export const inlineSegmentPaintsOf = (segments: Array<CanonicalInlineSegment>): Array<InlineSegmentPaint> =>
-  segments.map(segment => ({ fill: segment.fill, opacity: segment.opacity }));
-
-/** 混排行布局服务与块级字体，不接收宿主外观 */
-export type LineLayoutContext = {
-  /** 测量每个文本片段在指定字体下的尺寸 */
-  measureText: TextMeasurer;
-  /** TeX 降解能力 */
-  lowerTex?: TexLowerer;
-  /** 块级字体 */
-  font: TextFont;
-  /** 接收混排行布局与公式降解产生的诊断 */
-  warn: (code: CompileWarningCode, message: string) => void;
-};
-
-/** segment 自身 opacity 与宿主 opacity 相乘（任一缺省取另一个） */
-export const combineOpacity = (segment?: number, host?: number): number | undefined =>
-  segment !== undefined ? (host !== undefined ? segment * host : segment) : host;
-
-/** 一行混排的布局结果 */
-export type InlineLineLayout = {
-  /** 行宽 = Σ segment 宽 */
-  width: number;
-  /** 基线之上最大上伸（文字 ascent / 公式 height-depth） */
-  ascent: number;
-  /** 基线之下最大下伸（文字 descent / 公式 depth） */
-  descent: number;
-  /** 无 math segment（纯文本，可与既有 TextPrimitive 路径等价） */
-  isPlain: boolean;
-  /** 按原始 segment 索引定位外观的纯数据片段 */
-  pieces: Array<Piece>;
-};
-
-type TextPiece = {
-  kind: 'text';
-  segmentIndex: number;
-  x: number;
-  text: string;
-  font: TextFont;
-  width: number;
-  measuredHeight: number;
-};
-
-type MathPiece = {
-  kind: 'math';
-  segmentIndex: number;
-  x: number;
-  paths: Array<LoweredTexPath>;
-  width: number;
-  height: number;
-  depth: number;
-};
-
-type Piece = TextPiece | MathPiece;
-
-/** 把 TeX paint 三态解析为 Scene paint */
-const resolveTexPaint = (paint: LoweredTexPaint, hostColor: string | undefined): string | undefined => {
-  if (paint.kind === 'none') return undefined;
-  if (paint.kind === 'color') return paint.value;
-  return hostColor ?? 'currentColor';
-};
+import type { TextContentLine } from '../../contract';
+import { resolveTextMetrics } from '../../resolve';
+import {
+  ASCENT_FACTOR,
+  DESCENT_FACTOR,
+  calculateLabelProjectedHalfExtent,
+  calculateLabelRotation,
+  tokenizeText,
+} from './helpers';
+import { lowerTexSegment } from './tex';
+import type {
+  CompiledTextBlockLayout,
+  CompiledTextBlockLine,
+  CompiledTextLineLayout,
+  InputInlineSegmentLayout,
+  InputLabelBox,
+  TextLayoutContext,
+  TextBlockLayoutOptions,
+} from './types';
 
 /** 度量一行 inline segment，并返回可 emit 的行布局 */
-export const layoutInlineLine = (
+const layoutTextLine = (
   segments: Array<InputInlineSegmentLayout>,
-  ctx: LineLayoutContext,
-): InlineLineLayout => {
+  context: TextLayoutContext,
+): CompiledTextLineLayout => {
   let x = 0;
   let ascent = 0;
   let descent = 0;
-  const pieces: Array<Piece> = [];
+  const pieces: CompiledTextLineLayout['pieces'] = [];
 
   for (const [segmentIndex, segment] of segments.entries()) {
     if ('tex' in segment) {
-      if (!ctx.lowerTex) {
-        ctx.warn(
-          BuiltinCompileWarningCode.TexLowererMissing,
-          `Inline math "${segment.tex}" has no lowerTex injected; provide CompileOptions.lowerTex (from @retikz/tex). Segment skipped.`,
-        );
-        continue;
-      }
-
-      const rawLowered = ctx.lowerTex(
+      const lowered = lowerTexSegment(
         { tex: segment.tex, displayMode: segment.displayMode },
-        { fontSize: segment.fontSize },
+        segment.fontSize,
+        context,
       );
-      if (rawLowered === null) {
-        ctx.warn(BuiltinCompileWarningCode.TexInvalid, `Failed to render inline tex: ${segment.tex}`);
-        continue;
-      }
+      if (lowered === undefined) continue;
 
-      const lowered = snapshotLoweredTex(rawLowered);
       const above = lowered.height - lowered.depth;
       ascent = Math.max(ascent, above);
       descent = Math.max(descent, lowered.depth);
@@ -144,107 +54,228 @@ export const layoutInlineLine = (
       x += lowered.width;
     } else {
       const font = segment.font;
-      const m = resolveTextMetrics(ctx.measureText(segment.text, font));
-      ascent = Math.max(ascent, m.ascent);
-      descent = Math.max(descent, m.descent);
+      const metrics = resolveTextMetrics(context.measureText(segment.text, font));
+      ascent = Math.max(ascent, metrics.ascent);
+      descent = Math.max(descent, metrics.descent);
       pieces.push({
         kind: 'text',
         segmentIndex,
         x,
         text: segment.text,
         font,
-        width: m.width,
-        measuredHeight: m.height,
+        width: metrics.width,
+        measuredHeight: metrics.height,
       });
-      x += m.width;
+      x += metrics.width;
     }
   }
 
   // 全部 segment 被跳过 / 空行：给一个 fontSize 高度的空盒，避免 0 高行
   if (ascent === 0 && descent === 0) {
-    ascent = ctx.font.size * ASCENT_FACTOR;
-    descent = ctx.font.size * DESCENT_FACTOR;
+    ascent = context.font.size * ASCENT_FACTOR;
+    descent = context.font.size * DESCENT_FACTOR;
   }
-
-  const isPlain = pieces.every((p): p is TextPiece => p.kind === 'text');
 
   return {
     width: x,
     ascent,
     descent,
-    isPlain,
     pieces,
   };
 };
 
-/** 用当前外观绘制既有布局，不调用测量或公式降解服务 */
-export const emitInlineLine = (
-  layout: InlineLineLayout,
-  paint: InlineLinePaint,
-  originX: number,
-  baselineY: number,
-  round: Round,
-): Array<ScenePrimitive> => {
-  const out: Array<ScenePrimitive> = [];
+/** 按同一规则布局普通文字与公式混排，并保留折行前的外观索引 */
+export const layoutTextBlock = (
+  sourceLines: ReadonlyArray<TextContentLine>,
+  options: TextBlockLayoutOptions,
+  context: TextLayoutContext,
+): CompiledTextBlockLayout => {
+  const { lineHeight, maxTextWidth } = options;
+  const lines: Array<CompiledTextBlockLine> = [];
+  let width = 0;
+  let height = 0;
+  let words: Intl.Segmenter | undefined;
+  let graphemes: Intl.Segmenter | undefined;
 
-  for (const p of layout.pieces) {
-    const segmentPaint = paint.segments[p.segmentIndex];
-    if (p.kind === 'text') {
-      const tp: TextPrimitive = {
-        type: 'text',
-        x: round(originX + p.x),
-        y: round(baselineY),
-        lines: [{ text: p.text }],
-        fontSize: p.font.size,
-        align: 'start',
-        baseline: 'alphabetic',
-        lineHeight: round(p.font.size * LINE_HEIGHT_FACTOR),
-        measuredWidth: round(p.width),
-        measuredHeight: round(p.measuredHeight),
-        fill: segmentPaint.fill ?? paint.color ?? 'currentColor',
-      };
-      if (p.font.family !== undefined) tp.fontFamily = p.font.family;
-      if (p.font.weight !== undefined) tp.fontWeight = p.font.weight;
-      if (p.font.style !== undefined) tp.fontStyle = p.font.style;
-      const op = combineOpacity(segmentPaint.opacity, paint.opacity);
-      if (op !== undefined) tp.opacity = op;
-      out.push(tp);
-    } else {
-      const hostColor = segmentPaint.fill ?? paint.color;
-      const children = p.paths.map((path): PathPrimitive => {
-        const glyph: PathPrimitive = {
-          type: 'path',
-          commands: path.commands,
-          fillRule: path.fillRule ?? 'evenodd',
-        };
-        const fill = resolveTexPaint(path.fill, hostColor);
-        if (fill !== undefined) {
-          glyph.fill = fill;
-          if (path.fillOpacity !== undefined) glyph.fillOpacity = path.fillOpacity;
-        }
+  for (const [sourceLineIndex, source] of sourceLines.entries()) {
+    let pieces: CompiledTextLineLayout['pieces'] = [];
+    let lineWidth = 0;
+    let ascent = 0;
+    let descent = 0;
 
-        const stroke = resolveTexPaint(path.stroke, hostColor);
-        if (stroke !== undefined) {
-          glyph.stroke = stroke;
-          if (path.strokeWidth !== undefined) glyph.strokeWidth = path.strokeWidth;
-          if (path.strokeOpacity !== undefined) glyph.strokeOpacity = path.strokeOpacity;
-        }
-
-        const hostOpacity = combineOpacity(segmentPaint.opacity, paint.opacity);
-        const opacity = combineOpacity(path.opacity, hostOpacity);
-        if (opacity !== undefined) glyph.opacity = opacity;
-
-        return glyph;
+    /** 保存当前物理行并重置下一行的尺寸累积 */
+    const flushLine = () => {
+      if (pieces.length === 0) {
+        const empty = layoutTextLine([], {
+          ...context,
+          font: { ...context.font, size: source.style?.font?.size ?? context.font.size },
+        });
+        ascent = empty.ascent;
+        descent = empty.descent;
+      }
+      const slot = Math.max(lineHeight, ascent + descent);
+      lines.push({
+        sourceLineIndex,
+        lineLayout: { pieces, width: lineWidth, ascent, descent },
+        baselineOffset: height + (slot - ascent - descent) / 2 + ascent,
       });
+      width = Math.max(width, lineWidth);
+      height += slot;
+      pieces = [];
+      lineWidth = 0;
+      ascent = 0;
+      descent = 0;
+    };
 
-      const group: GroupPrimitive = {
-        type: 'group',
-        transforms: [{ kind: 'translate', x: round(originX + p.x), y: round(baselineY - (p.height - p.depth)) }],
-        children,
-      };
-      out.push(group);
+    // 在完整作者行上确定断点，样式片段边界不产生额外断词位置
+    let sourceText = '';
+    const spans = source.segments.map((segment, segmentIndex) => {
+      const start = sourceText.length;
+      sourceText += 'tex' in segment ? '\ufffc' : segment.text;
+      return { segment, segmentIndex, start, end: sourceText.length };
+    });
+    /** 当前作者行按片段索引缓存公式布局，避免折行候选重复降解 */
+    const texLayoutCache = new Map<number, CompiledTextLineLayout>();
+    /** 布局作者行的指定范围，复用本行已降解的公式 */
+    const measureRange = (start: number, end: number): CompiledTextLineLayout => {
+      const result: CompiledTextLineLayout = { pieces: [], width: 0, ascent: 0, descent: 0 };
+      // end 按作者顺序单调不减，范围内部的零长片段也参与行高计算
+      let lower = 0;
+      let upper = spans.length;
+      while (lower < upper) {
+        const middle = Math.floor((lower + upper) / 2);
+        if (spans[middle].end <= start) lower = middle + 1;
+        else upper = middle;
+      }
+
+      for (let spanIndex = lower; spanIndex < spans.length; spanIndex++) {
+        const span = spans[spanIndex];
+        if (span.start >= end) break;
+        const segment =
+          'tex' in span.segment
+            ? span.segment
+            : {
+                ...span.segment,
+                text: sourceText.slice(Math.max(start, span.start), Math.min(end, span.end)),
+              };
+        let lineLayout = 'tex' in segment ? texLayoutCache.get(span.segmentIndex) : undefined;
+        if (lineLayout === undefined) {
+          lineLayout = layoutTextLine([segment], context);
+          if ('tex' in segment) texLayoutCache.set(span.segmentIndex, lineLayout);
+        }
+        for (const piece of lineLayout.pieces)
+          result.pieces.push({ ...piece, segmentIndex: span.segmentIndex, x: piece.x + result.width });
+        result.width += lineLayout.width;
+        result.ascent = Math.max(result.ascent, lineLayout.ascent);
+        result.descent = Math.max(result.descent, lineLayout.descent);
+      }
+      return result;
+    };
+    let lineStart = 0;
+    let lineEnd = 0;
+    /** 用指定范围替换当前物理行布局 */
+    const setRange = (start: number, end: number, lineLayout = measureRange(start, end)) => {
+      lineStart = start;
+      lineEnd = end;
+      pieces = lineLayout.pieces;
+      lineWidth = lineLayout.width;
+      ascent = lineLayout.ascent;
+      descent = lineLayout.descent;
+    };
+
+    // 无自动折行时每个硬换行范围只求值一次，不重复测量逐片段增长的前缀
+    if (maxTextWidth === undefined) {
+      for (const match of sourceText.matchAll(/\r\n|[\r\n]/g)) {
+        setRange(lineStart, match.index);
+        flushLine();
+        lineStart = match.index + match[0].length;
+      }
+      setRange(lineStart, sourceText.length);
+      flushLine();
+      continue;
     }
-  }
 
-  return out;
+    /** 尝试追加文本范围，超出宽度时先提交上一行 */
+    const appendRange = (start: number, end: number) => {
+      const candidateStart = pieces.length === 0 ? start : lineStart;
+      const candidate = measureRange(candidateStart, end);
+      if (pieces.length > 0 && candidate.width > maxTextWidth && /\S/u.test(sourceText.slice(start, end))) {
+        const trimmedEnd = sourceText.slice(lineStart, lineEnd).trimEnd().length + lineStart;
+        setRange(lineStart, trimmedEnd);
+        flushLine();
+        lineStart = start;
+        while (lineStart < end && /[^\S\r\n]/u.test(sourceText[lineStart])) lineStart++;
+        if (lineStart === end) return;
+        setRange(lineStart, end);
+      } else {
+        setRange(candidateStart, end, candidate);
+      }
+    };
+    for (const match of sourceText.matchAll(/\r\n|[\r\n]|\ufffc|[^\r\n\ufffc]+/g)) {
+      const text = match[0];
+      const start = match.index;
+      if (/^[\r\n]/.test(text)) {
+        flushLine();
+        lineStart = start + text.length;
+        lineEnd = lineStart;
+        continue;
+      }
+      if (text === '\ufffc') {
+        appendRange(start, start + 1);
+        continue;
+      }
+      if (words === undefined) words = new Intl.Segmenter(undefined, { granularity: 'word' });
+      const tokens = words.segment(text);
+      for (const token of tokens) {
+        const offset = start + token.index;
+        const lineLayout = measureRange(offset, offset + token.segment.length);
+        if (lineLayout.width > maxTextWidth) {
+          if (graphemes === undefined) graphemes = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
+          for (const grapheme of graphemes.segment(token.segment)) {
+            appendRange(offset + grapheme.index, offset + grapheme.index + grapheme.segment.length);
+          }
+        } else appendRange(offset, offset + token.segment.length);
+      }
+    }
+    flushLine();
+  }
+  return { width, height, lines };
+};
+
+/** 测量按空白和 CJK 字符切分后的最宽文本单元，不代表字素折行的最小宽度 */
+export const measureMaxTextTokenWidth = (
+  text: string,
+  context: Pick<TextLayoutContext, 'font' | 'measureText'>,
+): number => {
+  const { font, measureText } = context;
+  return tokenizeText(text).reduce(
+    (width, unit) => (unit === ' ' ? width : Math.max(width, measureText(unit, font).width)),
+    0,
+  );
+};
+
+/** 将已测量文字框放在边界内外，位置和旋转独立计算 */
+export const placeLabelBox = ({
+  label,
+  point,
+  outward,
+  tangent,
+  width,
+  height,
+  distance,
+}: InputLabelBox): { center: Position; rotateDeg: number } => {
+  const rotateDeg = calculateLabelRotation(label.rotate, label.keepUpright, outward);
+  const extent = calculateLabelProjectedHalfExtent(outward, width, height, rotateDeg);
+  const offset = (label.placement === 'inside' ? -1 : 1) * (distance + extent);
+  const alignment =
+    (label.align === 'start' ? 1 : label.align === 'end' ? -1 : 0) *
+    calculateLabelProjectedHalfExtent(tangent, width, height, rotateDeg);
+
+  return {
+    center: [
+      point[0] + outward[0] * offset + tangent[0] * alignment,
+      point[1] + outward[1] * offset + tangent[1] * alignment,
+    ],
+    rotateDeg,
+  };
 };

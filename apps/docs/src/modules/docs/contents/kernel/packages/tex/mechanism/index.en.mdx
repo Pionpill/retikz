@@ -25,12 +25,12 @@ Callers can also declare a formula segment directly in structured text: this is 
 
 Core passes the source, `displayMode`, and font size to synchronous `TexLowerer`. Host color is resolved when painting and does not participate in lowering. This separates text layout from formula typesetting: Core does not need to know how MathJax lays out the formula.
 
-This page follows the inline example. Display mode also calls the lowerer through `layoutInlineLine()`, forwarding `displayMode` to the engine rather than using a separate SVG conversion pipeline.
+This page follows the inline example. Display mode also calls the lowerer through `layoutTextLine()`, forwarding `displayMode` to the engine rather than using a separate SVG conversion pipeline.
 
 <SourceLinks
   sources={[
     { label: 'String formula recognition and gating', path: 'packages/kernel/core/src/resolve/text/inline.ts' },
-    { label: 'Lowering calls for formula segments', path: 'packages/kernel/core/src/compile/text/layout.ts' },
+    { label: 'Lowering calls for formula segments', path: 'packages/kernel/core/src/compile/text/tex.ts' },
   ]}
 />
 
@@ -84,13 +84,16 @@ This is not a general SVG importer. Supported drawables include `path`, `rect`, 
 
 The baseline aligns text and formulas on a line; it is not the bottom of their bounds. `height` is the total height from the bottom to the top of the formula, including the portion below the baseline, while `depth` is the portion below the baseline, leaving `height - depth` above it. A formula with height 12 and depth 3 needs 9 units above and 3 below the baseline. These are illustrative metrics, not fixed dimensions for `x^2`.
 
-`layoutInlineLine()` validates and freezes the lowered result, using `height - depth` above the baseline and `depth` below it. The superscript in this example therefore participates in line layout instead of receiving special positioning in the renderer.
+`layoutTextLine()` validates and freezes the lowered result, using `height - depth` above the baseline and `depth` below it. The superscript in this example therefore participates in line layout instead of receiving special positioning in the renderer.
 
 Core emits each glyph path as a `PathPrimitive` inside a baseline-translated `GroupPrimitive`. Paint is resolved with host styling at this boundary. Renderers receive ordinary Scene primitives and need no TeX, MathJax, or SVG knowledge.
 
 <SourceLinks
   sources={[
-    { label: 'Baseline metrics and PathPrimitive emission', path: 'packages/kernel/core/src/compile/text/layout.ts' },
+    {
+      label: 'Formula baseline translation and PathPrimitive emission',
+      path: 'packages/kernel/core/src/compile/text/tex.ts',
+    },
   ]}
 />
 
@@ -148,17 +151,17 @@ When the extension set changes, the hook immediately enters `loading` and clears
 
 ## Complete implementation flow
 
-This expands the four stages for one successful request with a ready engine and a cache miss. A hit returns an existing `LoweredTex` and skips engine typesetting and SVG conversion; failures are covered above. The two appearances of `layoutInlineLine()` show the call and return sides of the same line-layout invocation.
+This expands the four stages for one successful request with a ready engine and a cache miss. A hit returns an existing `LoweredTex` and skips engine typesetting and SVG conversion; failures are covered above. The two appearances of `layoutTextLine()` show the call and return sides of the same line-layout invocation.
 
 <ComponentPreview files="tex-conversion-flow" size="sm" type="flow" hideCode />
 
-Start with `createLowerTex()` for orchestration and caching, follow `lowerMathJaxSvg()` into the path parser, and return to Core's `layoutInlineLine()` to see metrics become primitives. Read `useLowerTex` separately for asynchronous initialization.
+Start with `createLowerTex()` for orchestration and caching, follow `lowerMathJaxSvg()` into the path parser, and return to Core's `layoutTextLine()` to see metrics become primitives. Read `useLowerTex` separately for asynchronous initialization.
 
 <SourceLinks
   sources={[
     { label: '1. Request orchestration', path: 'packages/kernel/tex/src/lower/lower-tex.ts' },
     { label: '2. SVG lowering', path: 'packages/kernel/tex/src/svg/lower-mathjax-svg.ts' },
-    { label: '3. Core output', path: 'packages/kernel/core/src/compile/text/layout.ts' },
+    { label: '3. Core output', path: 'packages/kernel/core/src/compile/text/tex.ts' },
   ]}
 />
 

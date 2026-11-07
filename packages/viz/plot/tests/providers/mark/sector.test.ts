@@ -239,7 +239,7 @@ describe('lowerPlots 区间→polar2D 下的扇区（契约）', () => {
   });
 
   it('rose 编译为具有明确标准扇区定义的场景', async () => {
-    const { compileToScene } = await import('@retikz/core');
+    const { compileToScene } = await import('@retikz/reconciler');
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [roseSpec()] },
       { composites: lowerPlots({ sales: SALES }, opts), shapes: [sectorShapeDefinition] },
@@ -370,7 +370,7 @@ describe('lowerPlots 扇区标记饼图/甜甜圈（契约）', () => {
   });
 
   it('饼图编译为具有显式标准扇区定义的场景', async () => {
-    const { compileToScene } = await import('@retikz/core');
+    const { compileToScene } = await import('@retikz/reconciler');
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [pieSpec()] },
       { composites: lowerPlots({ share: SHARE }, opts), shapes: [sectorShapeDefinition] },

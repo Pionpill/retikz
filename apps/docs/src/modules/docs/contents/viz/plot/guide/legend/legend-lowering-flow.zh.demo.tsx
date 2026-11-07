@@ -11,7 +11,7 @@ const Demo: FC = () => (
       position={[-275, -50]}
       cornerRadius={4}
       style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
-      layout={{ minimumSize: { width: 170, height: 50 }, align: 'middle', lineHeight: 16 }}
+      layout={{ minimumSize: { width: 170, height: 50 }, textAlign: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Legend guide</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -23,7 +23,7 @@ const Demo: FC = () => (
       position={[-275, 50]}
       cornerRadius={4}
       style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
-      layout={{ minimumSize: { width: 170, height: 50 }, align: 'middle', lineHeight: 16 }}
+      layout={{ minimumSize: { width: 170, height: 50 }, textAlign: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>通道描述</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -36,7 +36,7 @@ const Demo: FC = () => (
       position={[-80, 0]}
       cornerRadius={4}
       style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
-      layout={{ minimumSize: { width: 160, height: 50 }, align: 'middle', lineHeight: 16 }}
+      layout={{ minimumSize: { width: 160, height: 50 }, textAlign: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>解析图例</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -49,7 +49,7 @@ const Demo: FC = () => (
       position={[-80, 95]}
       cornerRadius={4}
       style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.06 } }}
-      layout={{ minimumSize: { width: 180, height: 50 }, align: 'middle', lineHeight: 16 }}
+      layout={{ minimumSize: { width: 180, height: 50 }, textAlign: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>主题 + style</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -64,7 +64,7 @@ const Demo: FC = () => (
         position={[120, -65]}
         cornerRadius={4}
         style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.06 } }}
-        layout={{ minimumSize: { width: 160, height: 50 }, align: 'middle', lineHeight: 16 }}
+        layout={{ minimumSize: { width: 160, height: 50 }, textAlign: 'middle', lineHeight: 16 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>色块</Text>
         <Text fill="gray" font={{ size: 12 }}>
@@ -76,7 +76,7 @@ const Demo: FC = () => (
         position={[120, 0]}
         cornerRadius={4}
         style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.06 } }}
-        layout={{ minimumSize: { width: 160, height: 50 }, align: 'middle', lineHeight: 16 }}
+        layout={{ minimumSize: { width: 160, height: 50 }, textAlign: 'middle', lineHeight: 16 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>色带</Text>
         <Text fill="gray" font={{ size: 12 }}>
@@ -88,7 +88,7 @@ const Demo: FC = () => (
         position={[120, 65]}
         cornerRadius={4}
         style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.06 } }}
-        layout={{ minimumSize: { width: 160, height: 50 }, align: 'middle', lineHeight: 16 }}
+        layout={{ minimumSize: { width: 160, height: 50 }, textAlign: 'middle', lineHeight: 16 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>符号条目</Text>
         <Text fill="gray" font={{ size: 12 }}>
@@ -102,7 +102,7 @@ const Demo: FC = () => (
       position={[330, 0]}
       cornerRadius={4}
       style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
-      layout={{ minimumSize: { width: 180, height: 50 }, align: 'middle', lineHeight: 16 }}
+      layout={{ minimumSize: { width: 180, height: 50 }, textAlign: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Legend scope</Text>
       <Text fill="gray" font={{ size: 12 }}>

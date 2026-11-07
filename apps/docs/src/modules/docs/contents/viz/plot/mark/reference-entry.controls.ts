@@ -2,7 +2,7 @@ import type { Lang } from '@/i18n';
 import { definePreviewControls } from '@/modules/docs/preview';
 import type { PreviewControlContract } from '@/modules/docs/preview';
 
-import { referenceCoordinateControl } from './shared/reference-coordinate.controls';
+import { referenceCoordinateControl } from './shared/reference-coordinate-fields';
 import { referenceCoordinateI18n } from './shared/reference-coordinate.i18n';
 
 /** 概览中的坐标切换 */

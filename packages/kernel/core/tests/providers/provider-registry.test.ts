@@ -8,7 +8,6 @@ import {
   resolveArrowRegistry,
   resolveThemeRegistry,
 } from '../../src';
-import { BUILTIN_CLIPS } from '../../src/providers/clip';
 import { resolveMarkRegistry } from '../../src/providers/mark';
 import { getProviderDefinition, createProviderRegistry } from '../../src/providers/registry';
 
@@ -83,24 +82,42 @@ describe('提供者注册契约', () => {
     const registry = createProviderRegistry<MockProvider>({ capability: 'mock provider', keyOf: def => def.name });
     expect(registry.size).toBe(0);
   });
-
-  it('按类型索引保留的内置裁剪', () => {
-    expect(BUILTIN_CLIPS.get('rect')!.kind).toBe('rect');
-  });
 });
 
 describe('静态标记几何注册准入', () => {
   it.each([0, -1, Number.NaN, Number.POSITIVE_INFINITY])('未被使用的箭头也拒绝无效基准尺寸 %s', baseSize => {
     const arrow = { name: 'invalid-base', baseSize, backX: 0, lineContactX: 0, emit: () => [] };
     expect(() => resolveArrowRegistry([arrow])).toThrow(
-      expect.objectContaining({ code: RetikzCoreErrorCode.CompositeContractViolation }),
+      expect.objectContaining({ code: RetikzCoreErrorCode.ContractViolation }),
     );
   });
 
-  it('经 define 或直接构造的箭头使用同一注册约束', () => {
-    const arrow = { name: 'invalid-order', backX: 4, lineContactX: 2, emit: () => [] };
-    expect(() => resolveArrowRegistry([arrow])).toThrow(/backX.*lineContactX.*tipX/);
-    expect(() => resolveArrowRegistry([defineArrow(arrow)])).toThrow(/backX.*lineContactX.*tipX/);
+  it.each([
+    {
+      name: 'non-finite back',
+      geometry: { backX: Number.NaN, lineContactX: 2, tipX: 8 },
+      message: /non-finite backX/i,
+    },
+    {
+      name: 'back after contact',
+      geometry: { backX: 3, lineContactX: 2, tipX: 8 },
+      message: /backX.*lineContactX.*tipX/i,
+    },
+    {
+      name: 'contact after tip',
+      geometry: { backX: 1, lineContactX: 9, tipX: 8 },
+      message: /backX.*lineContactX.*tipX/i,
+    },
+  ])('直接构造与 define 的箭头均在注册时拒绝：$name', ({ geometry, message }) => {
+    const arrow = { name: 'invalid-geometry', ...geometry, emit: () => [] };
+    for (const definition of [arrow, defineArrow(arrow)]) {
+      expect(() => resolveArrowRegistry([definition])).toThrow(
+        expect.objectContaining({
+          code: RetikzCoreErrorCode.ContractViolation,
+          message: expect.stringMatching(message),
+        }),
+      );
+    }
   });
 
   it('再次注册会检查已变更的定义', () => {

@@ -224,7 +224,7 @@ export const assertGraphThemeSelector = (
     for (const key of keys) {
       if (!registry.has(key)) {
         throw new RetikzGraphError({
-          code: RetikzGraphErrorCode.DefinitionNotRegistered,
+          code: RetikzGraphErrorCode.ProviderDefinitionNotRegistered,
           message: `${capability} selector key '${key}' is not registered.`,
           details: { capability, key, availableKeys: [...registry.keys()] },
         });
@@ -255,7 +255,7 @@ export const resolveGraphTheme = (
   const definition = styles.get(theme.name);
   if (definition === undefined) {
     throw new RetikzGraphError({
-      code: RetikzGraphErrorCode.DefinitionNotRegistered,
+      code: RetikzGraphErrorCode.ProviderDefinitionNotRegistered,
       message: `Graph theme '${theme.name}' is not registered.`,
       details: { capability: 'graph-theme', key: theme.name, availableKeys: [...styles.keys()] },
     });
@@ -272,7 +272,7 @@ export const resolveGraphTheme = (
     };
   } catch (cause) {
     throw new RetikzGraphError({
-      code: RetikzGraphErrorCode.DefinitionCallbackFailed,
+      code: RetikzGraphErrorCode.ProviderDefinitionCallbackFailed,
       message: `Graph theme '${theme.name}' resolution failed.`,
       details: { capability: 'graph-theme', key: theme.name },
       cause,

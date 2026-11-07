@@ -1,12 +1,14 @@
 import { normalizeFlowDiagram } from '@retikz/diagram-vanilla/flow';
 import { FlowDiagramSchema } from '@retikz/diagram/flow';
 import { createInputScene } from '@retikz/react';
-import { normalizeScene, prepareProcessingInput, processToStaticInputResult } from '@retikz/vanilla';
+import { normalizeScene, processToStaticInputResult } from '@retikz/vanilla';
 import type { FC, ReactNode } from 'react';
 import { createElement, Fragment } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
+import { prepareProcessingInput } from '../../../kernel/vanilla/src/processing/prepare';
+import { RetikzDiagramReactError, RetikzDiagramReactErrorCode } from '../src';
 import * as FlowReact from '../src/flow';
 
 /** 本组验证同步 Flow authoring；遇到异步 adapter 时显式失败 */
@@ -489,7 +491,7 @@ describe('@retikz/diagram-react/flow', () => {
       }),
     ).toThrowError(
       expect.objectContaining({
-        code: 'CORE_LAYOUT_PROBE_RECOVERABLE',
+        code: 'CORE_COMPILE_LAYOUT_PROBE_RECOVERABLE',
         cause: expect.objectContaining({ code: 'DIAGRAM_FLOW_DUPLICATE_ID' }),
       }),
     );
@@ -690,7 +692,7 @@ describe('@retikz/diagram-react/flow', () => {
         createElement(FlowEntity, {
           id: 'form',
           text: ['Frontend form', { text: 'Complete user details', fill: 'gray', font: { size: 'sm' } }],
-          layout: { align: 'start', lineHeight: 18, maxTextWidth: 160 },
+          layout: { textAlign: 'start', lineHeight: 18, maxTextWidth: 160 },
         }),
       ),
     );
@@ -704,7 +706,7 @@ describe('@retikz/diagram-react/flow', () => {
           {
             id: 'form',
             text: ['Frontend form', { text: 'Complete user details', fill: 'gray', font: { size: 'sm' } }],
-            layout: { align: 'start', lineHeight: 18, maxTextWidth: 160 },
+            layout: { textAlign: 'start', lineHeight: 18, maxTextWidth: 160 },
           },
         ],
         children: ['form'],
@@ -731,13 +733,23 @@ describe('@retikz/diagram-react/flow', () => {
           createElement(FlowGroup, { id: 'group' }, createElement(FlowRelation, { source: 'a', target: 'b' })),
         ),
       ),
-    ).toThrowError(expect.objectContaining({ code: 'DIAGRAM_REACT_FLOW_CHILD_INVALID' }));
+    ).toThrowError(
+      expect.objectContaining({
+        constructor: RetikzDiagramReactError,
+        code: RetikzDiagramReactErrorCode.FlowChildInvalid,
+      }),
+    );
 
     expect(() =>
       createInputScene(
         createElement(FlowDiagram, { width: undefined }, createElement(FlowEntity, { id: 'only', text: 'Only' })),
       ),
-    ).toThrowError(expect.objectContaining({ code: 'DIAGRAM_REACT_FLOW_HOST_PROPS_INVALID' }));
+    ).toThrowError(
+      expect.objectContaining({
+        constructor: RetikzDiagramReactError,
+        code: RetikzDiagramReactErrorCode.FlowHostPropsInvalid,
+      }),
+    );
   });
 
   it('将 Layout 重用于独立 SSR，而不触发宿主生命周期回调', () => {
@@ -786,9 +798,7 @@ describe('@retikz/diagram-react/flow', () => {
         measureText: text => ({ width: text.length * 8, height: 12, ascent: 9, descent: 3 }),
       },
     });
-    const artifact = result.artifacts.find(
-      entry => entry.kind === 'composite' && entry.namespace === 'diagram' && entry.type === 'flow',
-    );
+    const artifact = result.artifacts.find(entry => entry.namespace === 'diagram' && entry.type === 'flow');
 
     expect(artifact?.value).toMatchObject({ elements: [{ id: 'only', kind: 'entity' }] });
   });

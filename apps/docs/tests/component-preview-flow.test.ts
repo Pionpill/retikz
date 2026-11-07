@@ -1,10 +1,11 @@
 import type { IRScene } from '@retikz/core';
-import { resolveCoreThemeColors, ThemeMode } from '@retikz/core';
+import { ThemeMode } from '@retikz/core';
 import { createFlowDiagramProviderContribution, FlowDiagramSchema } from '@retikz/diagram/flow';
 import { compositeOpaqueColor } from '@retikz/foundation';
 import type { FC } from 'react';
 import { describe, expect, it } from 'vitest';
 
+import { resolveCoreThemeColors } from '../../../packages/kernel/core/src/providers';
 import { getPreviewControlFields } from '../src/modules/docs/components/component-preview/controls';
 import { PreviewThemeDefinitionBundle } from '../src/modules/docs/components/component-preview/theme';
 import type { PreviewIR } from '../src/modules/docs/components/component-preview/utils';
@@ -280,7 +281,7 @@ describe('Flow Diagram 的 ComponentPreview 预览', () => {
         text: ['前端', '表单', { text: '补充说明', fill: 'darkorange', font: { size: 'lg' } }],
         role: 'resource',
         status: 'success',
-        layout: { align: 'start', lineHeight: 24, maxTextWidth: 120 },
+        layout: { textAlign: 'start', lineHeight: 24, maxTextWidth: 120 },
       },
       { id: 'backend-validation', text: '后端服务', role: 'activity' },
       { id: 'database-input', text: '数据库输入', role: 'resource' },

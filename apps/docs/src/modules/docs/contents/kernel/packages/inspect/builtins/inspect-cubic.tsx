@@ -1,7 +1,7 @@
 import { createDefaultInspectorRegistry, PATH_INSPECTOR_KEY } from '@retikz/inspect';
-import { InspectLayout, InspectPath } from '@retikz/inspect/react';
-import { Scope, Step } from '@retikz/react';
+import { Scope, Step, Path } from '@retikz/react';
 
+import { InspectionResultPreview } from '@/modules/docs/preview';
 import { defineControlledBuiltinInspectPreview } from '@/modules/docs/preview';
 
 import { createPreviewControlContract } from './inspect-cubic.controls';
@@ -14,20 +14,23 @@ const preview = defineControlledBuiltinInspectPreview(
   createPreviewControlContract,
   values => {
     return (
-      <InspectLayout registry={registry} viewBox={{ x: -120, y: -115, width: 240, height: 230 }}>
+      <InspectionResultPreview
+        requests={[
+          {
+            inspector: PATH_INSPECTOR_KEY,
+            options: { controlPoints: values.controlPoints, vertices: values.vertices, labels: values.labels },
+          },
+        ]}
+        registry={registry}
+        viewBox={{ x: -120, y: -115, width: 240, height: 230 }}
+      >
         <Scope position={[values.position[0], values.position[1]]}>
-          <InspectPath
-            request={{
-              inspector: PATH_INSPECTOR_KEY,
-              options: { controlPoints: values.controlPoints, vertices: values.vertices, labels: values.labels },
-            }}
-            style={{ stroke: 'dimgray', strokeWidth: 3, fill: 'none' }}
-          >
+          <Path style={{ stroke: 'dimgray', strokeWidth: 3, fill: 'none' }}>
             <Step kind="move" to={values.start} />
             <Step kind="cubic" control1={values.control1} control2={values.control2} to={values.end} />
-          </InspectPath>
+          </Path>
         </Scope>
-      </InspectLayout>
+      </InspectionResultPreview>
     );
   },
   'inspect-cubic',

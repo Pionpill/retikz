@@ -25,12 +25,12 @@ math segment 是文本行中的一个公式片段，与普通文字片段相区�
 
 Core 将公式内容、`displayMode` 和字号传入同步 `TexLowerer`。宿主颜色留到绘制时解析，不参与公式降解。这一步把文本布局与公式引擎隔开，Core 不需要知道 MathJax 如何排版。
 
-本文沿 inline 例子展开；display 模式同样通过 `layoutInlineLine()` 调用 lowerer，并把 `displayMode` 传给引擎，不是另一套 SVG 转换链路。
+本文沿 inline 例子展开；display 模式同样通过 `layoutTextLine()` 调用 lowerer，并把 `displayMode` 传给引擎，不是另一套 SVG 转换链路。
 
 <SourceLinks
   sources={[
     { label: '字符串公式识别与 gating', path: 'packages/kernel/core/src/resolve/text/inline.ts' },
-    { label: '公式片段的 lowering 调用', path: 'packages/kernel/core/src/compile/text/layout.ts' },
+    { label: '公式片段的 lowering 调用', path: 'packages/kernel/core/src/compile/text/tex.ts' },
   ]}
 />
 
@@ -84,12 +84,12 @@ type TexLowerer = (content: { tex: string; displayMode?: boolean }, style: { fon
 
 基线是同一行文字和公式对齐的参考线，不是包围框底边。`height` 表示从公式底部到顶部的总高度，包含基线以下部分，`depth` 表示基线以下的部分，所以基线上方空间是 `height - depth`。例如某个公式总高 12、下探 3，就需要基线上方 9、下方 3 的空间；这只是度量示例，不是 `x^2` 的固定尺寸。
 
-`layoutInlineLine()` 校验并冻结 lowering 结果，将 `height - depth` 作为基线上方高度，并将 `depth` 纳入基线下方空间。例子中的上标因此参与整行布局，而不是在 renderer 中额外定位。
+`layoutTextLine()` 校验并冻结 lowering 结果，将 `height - depth` 作为基线上方高度，并将 `depth` 纳入基线下方空间。例子中的上标因此参与整行布局，而不是在 renderer 中额外定位。
 
 Core 把每条字形路径发为 `PathPrimitive`，用带基线平移的 `GroupPrimitive` 放入文本行。公式颜色等 paint 在这个边界结合宿主样式处理；renderer 最终只看到普通 Scene 图元，无需理解 TeX、MathJax 或 SVG。
 
 <SourceLinks
-  sources={[{ label: '基线度量与 PathPrimitive 发出', path: 'packages/kernel/core/src/compile/text/layout.ts' }]}
+  sources={[{ label: '公式基线平移与 PathPrimitive 发出', path: 'packages/kernel/core/src/compile/text/tex.ts' }]}
 />
 
 ## 缓存、失败与重试
@@ -146,17 +146,17 @@ Core 把每条字形路径发为 `PathPrimitive`，用带基线平移的 `GroupP
 
 ## 完整实现流程
 
-下图展开前面的四个阶段，表示引擎就绪且缓存未命中的一次成功请求。缓存命中直接返回已有 `LoweredTex`，跳过引擎排版与 SVG 转换；失败分支见前文。图中的 `layoutInlineLine()` 在调用 lowerer 和接收结果两个位置出现，属于同一次文本布局调用。
+下图展开前面的四个阶段，表示引擎就绪且缓存未命中的一次成功请求。缓存命中直接返回已有 `LoweredTex`，跳过引擎排版与 SVG 转换；失败分支见前文。图中的 `layoutTextLine()` 在调用 lowerer 和接收结果两个位置出现，属于同一次文本布局调用。
 
 <ComponentPreview files="tex-conversion-flow" size="sm" type="flow" hideCode />
 
-建议先读 `createLowerTex()` 看请求编排与缓存，再进入 `lowerMathJaxSvg()` 和 path parser，最后回到 Core 的 `layoutInlineLine()` 看度量如何变成图元。异步初始化单独从 `useLowerTex` 阅读。
+建议先读 `createLowerTex()` 看请求编排与缓存，再进入 `lowerMathJaxSvg()` 和 path parser，最后回到 Core 的 `layoutTextLine()` 看度量如何变成图元。异步初始化单独从 `useLowerTex` 阅读。
 
 <SourceLinks
   sources={[
     { label: '1. 请求编排', path: 'packages/kernel/tex/src/lower/lower-tex.ts' },
     { label: '2. SVG lowering', path: 'packages/kernel/tex/src/svg/lower-mathjax-svg.ts' },
-    { label: '3. Core 输出', path: 'packages/kernel/core/src/compile/text/layout.ts' },
+    { label: '3. Core 输出', path: 'packages/kernel/core/src/compile/text/tex.ts' },
   ]}
 />
 

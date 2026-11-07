@@ -183,3 +183,15 @@ describe('isAngleWithinArcSweep', () => {
     expect(isAngleWithinArcSweep({ startAngleDeg: 0, endAngleDeg: 360, angleDeg: 200 })).toBe(true); // 整圆
   });
 });
+
+describe('角度扫描的方向和跨周边界', () => {
+  it('CCW 区间（end<start）', () => {
+    expect(isAngleWithinArcSweep({ startAngleDeg: 90, endAngleDeg: 0, angleDeg: 45 })).toBe(true);
+    expect(isAngleWithinArcSweep({ startAngleDeg: 90, endAngleDeg: 0, angleDeg: -45 })).toBe(false);
+  });
+  it('跨 360°', () => {
+    expect(isAngleWithinArcSweep({ startAngleDeg: 270, endAngleDeg: 450, angleDeg: 360 })).toBe(true);
+    expect(isAngleWithinArcSweep({ startAngleDeg: 270, endAngleDeg: 450, angleDeg: 0 })).toBe(true);
+    expect(isAngleWithinArcSweep({ startAngleDeg: 270, endAngleDeg: 450, angleDeg: 180 })).toBe(false);
+  });
+});

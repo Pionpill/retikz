@@ -12,7 +12,7 @@ export const executeBranchLayout = (
     output = structuredClone(definition.layout(structuredClone(input)));
   } catch (cause) {
     throw new RetikzDiagramError({
-      code: RetikzDiagramErrorCode.DefinitionCallbackFailed,
+      code: RetikzDiagramErrorCode.ProviderDefinitionCallbackFailed,
       message: `Branch layout '${definition.name}' failed.`,
       details: { stage: 'layout', definition: definition.name },
       cause,

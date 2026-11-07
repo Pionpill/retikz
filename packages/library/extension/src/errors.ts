@@ -7,7 +7,8 @@ export const RetikzExtensionErrorCode = {
   GeometryInvalid: 'EXTENSION_GEOMETRY_INVALID',
   PipelineInvariant: 'EXTENSION_PIPELINE_INVARIANT',
   RegistryConflict: 'EXTENSION_REGISTRY_CONFLICT',
-  ResolutionInvalid: 'EXTENSION_RESOLUTION_INVALID',
+  /** 解析输入不满足领域约束 */
+  ResolveInvalid: 'EXTENSION_RESOLVE_INVALID',
   SchemaInvariant: 'EXTENSION_SCHEMA_INVARIANT',
 } as const;
 

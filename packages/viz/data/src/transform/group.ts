@@ -68,13 +68,13 @@ type ReducerOutputConstraints = {
 /** 在执行 reducer 前校验 definition 声明的动态输出字段 */
 export const assertReducerMetrics = (
   metrics: ReadonlyArray<IRDataReducerOperation>,
-  context: Pick<TransformSemanticContext, 'statisticsReducerRegistry'>,
+  registry: TransformSemanticContext['statisticsReducerRegistry'],
   constraints: ReducerOutputConstraints,
 ): void => {
   const seen = new Set<string>();
 
   for (const metric of metrics) {
-    for (const field of reducerOutputFields(metric, context.statisticsReducerRegistry)) {
+    for (const field of reducerOutputFields(metric, registry)) {
       if (constraints.reservedFields?.has(field) === true) {
         throw new RetikzDataError(
           `data: reducer output field "${field}" must not collide with ${constraints.reservedLabel ?? 'a reserved output field'}`,
@@ -143,7 +143,7 @@ export function* computeSummarize(
 
   for (const group of groupRowsByFields(rows, operation.params.groupBy)) {
     if (!validated) {
-      assertReducerMetrics(operation.params.metrics, context, {
+      assertReducerMetrics(operation.params.metrics, context.statisticsReducerRegistry, {
         reservedFields: new Set(operation.params.groupBy ?? []),
         reservedLabel: 'a groupBy field',
       });
@@ -215,7 +215,7 @@ export function* computeAnnotate(
 
   for (const group of groupRowsByFields(rows, operation.params.groupBy)) {
     if (!validated) {
-      assertReducerMetrics(operation.params.metrics ?? [], context, {
+      assertReducerMetrics(operation.params.metrics ?? [], context.statisticsReducerRegistry, {
         reservedFields: new Set((operation.params.selectors ?? []).map(selector => selector.as)),
         reservedLabel: 'an annotate selector output field',
       });
@@ -316,7 +316,7 @@ const binEdges = (operation: IRDataBinTransform, values: Array<number>): Array<n
 /** 合并分桶内的 reducer 结果，保持分桶操作的字段覆盖语义 */
 function* computeBinMetrics(
   rows: Array<ExternalRow>,
-  metrics: ReadonlyArray<NonNullable<IRDataBinTransform['params']['metrics']>[number]>,
+  metrics: ReadonlyArray<IRDataReducerOperation>,
   computation: GroupComputation,
 ): TransformComputation<ExternalRow> {
   const out: ExternalRow = {};

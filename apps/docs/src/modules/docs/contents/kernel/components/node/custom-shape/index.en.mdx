@@ -31,7 +31,7 @@ Core-default `rectangle` / `ellipse` / `polygon` definitions and custom definiti
 Use `defineShape()` to declare the registry name, parameter schema, and geometry responsibilities. Registry names have type `string`; use `ShapeDefinition['name']` when annotating a name instead of maintaining a separate union of built-in names. Parameterless shapes use `z.strictObject({})`. This minimal definition reuses rectangle geometry while changing the registry name and layout footprint.
 
 ```ts
-import { BUILTIN_SHAPES, defineShape } from '@retikz/core';
+import { rectangle, defineShape } from '@retikz/core';
 import { z } from 'zod';
 
 const badge = defineShape({
@@ -41,10 +41,10 @@ const badge = defineShape({
     halfWidth: halfWidth + 8,
     halfHeight: halfHeight + 4,
   }),
-  computeBoundaryPoint: BUILTIN_SHAPES.get('rectangle')!.computeBoundaryPoint,
-  resolveAnchor: BUILTIN_SHAPES.get('rectangle')!.resolveAnchor,
-  computeConnectionEnvelope: BUILTIN_SHAPES.get('rectangle')!.computeConnectionEnvelope,
-  emit: BUILTIN_SHAPES.get('rectangle')!.emit,
+  computeBoundaryPoint: rectangle.computeBoundaryPoint,
+  resolveAnchor: rectangle.resolveAnchor,
+  computeConnectionEnvelope: rectangle.computeConnectionEnvelope,
+  emit: rectangle.emit,
 });
 ```
 
@@ -75,7 +75,7 @@ Some graphics cannot express their connection rules as “intersect a ray from t
 After creating the definition, inject it through core's `CompileOptions.shapes` or React's `<Layout extensions={{ shapes }}>`. Both entry points accept the same `ReadonlyArray<ShapeDefinition>`.
 
 ```ts
-import { compileToScene } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 
 const { scene } = compileToScene(ir, { shapes: [badge] });
 ```
@@ -91,6 +91,8 @@ import { Layout, Node } from '@retikz/react';
 The IR stores only the registry name or parametric reference; the host must provide the same definition for every compile. If the document is persisted, persist the IR plus host configuration that identifies the extension package, not serialized definition functions.
 
 ## Errors and limitations
+
+Output must not carry `resources` or `clipRef`. Paint references may only pass through this invocation's `style.fill` / `style.stroke`. Select gradients or registered Patterns through input properties so the compiler creates the resources. Other handwritten resource IDs fail at the provider output boundary; nested primitives follow the same rules.
 
 | Case                                             | Result and diagnostic                                                               |
 | ------------------------------------------------ | ----------------------------------------------------------------------------------- |

@@ -4,6 +4,7 @@ import path from 'node:path';
 import { nodeSchemas } from '../schema-reference/node';
 import { writeReferenceFile } from './merged-reference';
 import { translateNodeApiReference } from './node.en';
+import { resolveStandardSchemaLocalization } from './standard-schema';
 import type { ApiReferenceEntry, ApiReferenceLanguage, ApiReferencePackageConfig } from './tex';
 import { createApiReferenceMdx } from './tex';
 
@@ -73,12 +74,10 @@ const nodeEntries: ReadonlyArray<{ owner: string } & Omit<ApiReferenceEntry, 'so
       'ShapeDefinition',
       'InputShapeDefinition',
       'ShapeCircumscribedGeometry',
-      'BUILTIN_SHAPES',
       'defineBoundary',
       'BoundaryDefinition',
       'InputBoundaryDefinition',
       'BoundaryFitContext',
-      'BUILTIN_BOUNDARIES',
     ],
   },
 ];
@@ -97,6 +96,7 @@ export const nodeApiConfigs: ReadonlyArray<ApiReferencePackageConfig> = nodeEntr
   ],
   translate: translateNodeApiReference,
   schemaLocalizations: nodeSchemas,
+  resolveSchemaLocalization: resolveStandardSchemaLocalization,
 }));
 
 /** 按真实 package 入口分别解析，再合并为组件参考 */

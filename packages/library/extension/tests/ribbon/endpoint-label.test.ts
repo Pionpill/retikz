@@ -1,5 +1,5 @@
 import type { AnyPathDefinition, IRBoundaryLabel, IRScene, ScenePrimitive } from '@retikz/core';
-import { compileToScene } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { strictObject } from 'zod';
 
@@ -216,7 +216,7 @@ it('继承内核标签字体和颜色，倍增不透明度，并保留宿主元�
   const primitives = allPrimitives(scene.primitives);
   const text = primitives.find(p => p.type === 'text');
 
-  expect(text).toMatchObject({ fill: 'blue', fontSize: 18, fontWeight: 'bold', opacity: 0.2 });
+  expect(text).toMatchObject({ fill: 'blue', fontSize: 18, fontWeight: 700, opacity: 0.2 });
   expect(primitives.some(p => p.type === 'group' && p.meta?.source === 'connection')).toBe(true);
 });
 it('使用指定的端点截面进行径向旋转和切线对齐', () => {

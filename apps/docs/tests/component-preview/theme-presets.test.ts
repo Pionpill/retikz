@@ -2,7 +2,7 @@ import { globSync, readFileSync } from 'node:fs';
 import { relative } from 'node:path';
 
 import * as corePackage from '@retikz/core';
-import { resolveCoreThemeColors, ThemeMode } from '@retikz/core';
+import { ThemeMode } from '@retikz/core';
 import { resolvePlotTheme } from '@retikz/plot';
 import { resolveTableThemeDefaults } from '@retikz/table';
 import { describe, expect, it } from 'vitest';
@@ -16,6 +16,8 @@ import {
   PreviewTheme,
   PreviewThemeOptions,
 } from '@/modules/docs/components/component-preview/theme';
+
+import { resolveCoreThemeColors } from '../../../../packages/kernel/core/src/providers';
 
 describe('文档拥有的主题预设', () => {
   it('发布包不公开命名 Theme，docs 维持四个闭合选择项', () => {

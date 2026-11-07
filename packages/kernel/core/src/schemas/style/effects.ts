@@ -7,7 +7,7 @@ import { CssColorSchema, OpacitySchema } from './graphic';
 
 /**
  * 阴影预设档位关键字（Tailwind 风格刻度）
- * @description 预设字符串 `shadow="md"` 等价于对象 `{ preset:'md' }`；`SHADOW_PRESETS` 表为档位展开单一真源。
+ * @description 预设字符串 `shadow="md"` 等价于对象 `{ preset:'md' }`。
  *   `none` = 显式无阴影（当前等价省略，为将来 scope 级联预留）
  */
 export const ShadowPreset = {

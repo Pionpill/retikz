@@ -181,7 +181,8 @@ export const svg = renderToSvgString(ir, { compile: { paths: [pulseRibbonDefinit
 需要由 adapter 或工具链在编译前汇总 runtime datasets 时，使用 `createRibbonProviderContribution`。它把官方 `bulge` 和调用方 profiles 合并到同一个 `path/ribbon` provider，再交给 Core 的通用 resolver：
 
 ```ts
-import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
+import { resolveCoreProviderDependencies } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { createRibbonProviderContribution } from '@retikz/extension';
 
 import { pulseProfile } from './pulse-profile';

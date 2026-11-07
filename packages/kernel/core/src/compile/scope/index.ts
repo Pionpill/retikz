@@ -1,2 +1,4 @@
 export * from './compile';
-export * from './layout';
+export * from './output';
+export { prepareScopePlacement } from './placement';
+export type * from './types';

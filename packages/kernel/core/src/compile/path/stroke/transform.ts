@@ -2,11 +2,11 @@ import { boundsOf, centerOfBounds, isFinitePoint } from '@retikz/math';
 
 import type { Transform } from '../../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
-import type { IRPathScale, IRPosition, IRTransform } from '../../../schemas';
-import { applyTransformChain } from '../../transform';
+import type { IRPathScale, IRPosition } from '../../../schemas';
+import { applyTransformChain } from '../../shared';
 
 /** 一组点的 axis-aligned 包围盒中心 */
-export const bboxCenter = (pts: ReadonlyArray<IRPosition>): IRPosition => {
+export const calculatePathBoundsCenter = (pts: ReadonlyArray<IRPosition>): IRPosition => {
   const bounds = boundsOf(pts);
   if (bounds === undefined) return [Number.NaN, Number.NaN];
   return centerOfBounds(bounds);
@@ -25,7 +25,7 @@ type InputPathTransforms = {
 };
 
 /** 把 path 的 rotate / scale 编译为绕 bbox 中心的 transforms */
-export const buildPathTransforms = ({ rotate, scale, center, round }: InputPathTransforms): Array<Transform> => {
+export const lowerPathTransforms = ({ rotate, scale, center, round }: InputPathTransforms): Array<Transform> => {
   const out: Array<Transform> = [];
   if (rotate !== undefined) {
     out.push({ kind: 'rotate', degrees: rotate, cx: round(center[0]), cy: round(center[1]) });
@@ -48,27 +48,8 @@ export const buildPathTransforms = ({ rotate, scale, center, round }: InputPathT
   return out;
 };
 
-/** 构造可由所属者产物复用的 Path 自身变换 */
-export const buildPathOwnerOutputTransforms = ({
-  rotate,
-  scale,
-  center,
-  round,
-}: InputPathTransforms): Array<IRTransform> => {
-  const pivot: IRPosition = [round(center[0]), round(center[1])];
-  const out: Array<IRTransform> = [];
-  if (rotate !== undefined) out.push({ kind: 'rotate', degrees: rotate, pivot });
-  if (scale !== undefined) {
-    out.push(
-      typeof scale === 'number' ? { kind: 'scale', x: scale, pivot } : { kind: 'scale', x: scale.x, y: scale.y, pivot },
-    );
-  }
-
-  return out;
-};
-
 /** 将 path bbox 点投影到整体 transform 后的坐标，并保留非有限坐标守卫 */
-export const projectPathTransformPoints = (
+export const applyPathTransforms = (
   points: ReadonlyArray<IRPosition>,
   transforms: ReadonlyArray<Transform>,
 ): Array<IRPosition> => {

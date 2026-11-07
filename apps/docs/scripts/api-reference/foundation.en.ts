@@ -1,5 +1,15 @@
 /** @retikz/foundation 中文 JSDoc 的审阅后英文投影 */
 const translations: Readonly<Record<string, string>> = {
+  'ID 前缀，其后自动添加连字符；空前缀生成 -0、-1 等 ID':
+    'ID prefix followed by an automatic hyphen; an empty prefix produces -0, -1, and so on',
+  '从序号 0 开始分配 ID 的独立实例': 'Independent allocator instance starting at sequence number 0',
+  '独立持有递增序号的 ID 分配器': 'ID allocator with an independent incrementing sequence',
+  '用连字符连接前缀与从 0 开始的递增序号，不回收已分配编号':
+    'Joins the prefix and an incrementing sequence number starting at 0 with a hyphen; allocated numbers are never reused',
+  '创建使用固定前缀的实例级 ID 分配器': 'Creates an instance-level ID allocator with a fixed prefix',
+  '每个实例独立计数，不使用全局状态；需要跨实例唯一性时，由调用方提供互不重叠的前缀命名域':
+    'Each instance counts independently without global state; callers requiring uniqueness across instances must provide non-overlapping prefix namespaces',
+  '分配器生命周期及已分配 ID 的保留由调用方负责': 'Callers manage allocator lifetimes and retain allocated IDs',
   '从左到右浅合并非 undefined 属性，返回新对象':
     'Shallowly merges non-undefined properties from left to right into a new object',
   '跳过 undefined 源和属性值，保留 null、false、0 和空字符串；后面的有效值优先，不递归合并或修改输入':

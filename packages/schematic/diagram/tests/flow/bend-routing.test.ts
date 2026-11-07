@@ -1,15 +1,16 @@
-import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
 import type { CompileWarning, ScenePrimitive } from '@retikz/core';
+import { resolveCoreProviderDependencies } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
+import type { FlowLayoutOutput, FlowLayoutRoute, InputFlowLayoutComputation } from '../../src/flow';
 import {
-  createFlowDiagramProviderContribution,
   FlowDiagramArtifactSchema,
   FlowDiagramSchema,
+  FlowRouteArtifactSchema,
+  createFlowDiagramProviderContribution,
   layeredFlowLayoutDefinition,
 } from '../../src/flow';
-import type { InputFlowLayoutComputation, FlowLayoutRoute, FlowLayoutOutput } from '../../src/flow';
-import { FlowRouteArtifactSchema } from '../../src/flow';
 import { executeFlowLayout } from '../../src/flow/pipeline';
 import { createFlowBendCurve, flowRelationObstacles, scoreFlowBendNodes } from '../../src/flow/providers';
 import { routeFlowRelations } from '../../src/flow/providers/layout/routing';
@@ -259,8 +260,7 @@ describe('Flow 弯曲布线', () => {
       }),
     );
     const artifact = FlowDiagramArtifactSchema.parse(
-      result.artifacts.find(item => item.kind === 'composite' && item.namespace === 'diagram' && item.type === 'flow')
-        ?.value,
+      result.artifacts.find(item => item.namespace === 'diagram' && item.type === 'flow')?.value,
     );
     if (output === undefined) throw new Error('expected layout output');
 
@@ -400,7 +400,7 @@ describe('Flow 弯曲布线', () => {
       scoreFlowBendNodes(
         output[0].route,
         input.relations[0],
-        flowRelationObstacles(input, { elements: blocked }, input.relations[0]),
+        flowRelationObstacles(input, blocked, input.relations[0]),
       )[0],
     ).toBe(1);
 
@@ -482,7 +482,7 @@ describe('Flow 弯曲布线', () => {
     };
     const obstacles = flowRelationObstacles(
       grouped,
-      { elements: [{ id: 'g', bounds: { x: -10, y: -80, width: 220, height: 100 } }, ...routingElements] },
+      [{ id: 'g', bounds: { x: -10, y: -80, width: 220, height: 100 } }, ...routingElements],
       input.relations[0],
     );
 
@@ -551,7 +551,7 @@ describe('Flow 弯曲布线', () => {
     );
 
     expect(warnings).toHaveLength(1);
-    expect(JSON.stringify(warnings[0])).toContain('relations[0]');
+    expect(warnings[0]).toMatchObject({ path: ['children', 0, 'relations', 0] });
     expect(
       flatten(result.scene.primitives).some(
         item => item.type === 'path' && item.commands.some(command => command.kind === 'cubic'),
@@ -740,8 +740,7 @@ describe('Flow 弯曲布线', () => {
       resolveCoreProviderDependencies({ contributions: [createFlowDiagramProviderContribution()] }),
     );
     const artifact = FlowDiagramArtifactSchema.parse(
-      result.artifacts.find(item => item.kind === 'composite' && item.namespace === 'diagram' && item.type === 'flow')
-        ?.value,
+      result.artifacts.find(item => item.namespace === 'diagram' && item.type === 'flow')?.value,
     );
 
     expect(artifact.relations[0].route).toMatchObject({ kind: 'bend', bendDirection: 'right', bendAngle: 60 });

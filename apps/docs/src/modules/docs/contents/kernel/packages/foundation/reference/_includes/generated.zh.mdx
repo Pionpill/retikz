@@ -21,6 +21,67 @@
   ]}
 />
 
+## ID 分配
+
+#### <ApiSourceLink label={"IdAllocator"} path={"packages/kernel/foundation/src/id.ts"} startLine={2}>IdAllocator</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员            | 类型           | 默认值 | 说明                                                    |
+| --------------- | -------------- | ------ | ------------------------------------------------------- |
+| `readonly next` | `() => string` | —      | 用连字符连接前缀与从 0 开始的递增序号，不回收已分配编号 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IdAllocator = Readonly<{
+  next: () => string;
+}>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"createIdAllocator"} path={"packages/kernel/foundation/src/id.ts"} startLine={14}>createIdAllocator</ApiSourceLink>
+
+每个实例独立计数，不使用全局状态；需要跨实例唯一性时，由调用方提供互不重叠的前缀命名域
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称     | 类型 / 签名   | 说明                                                 |
+| ------ | -------- | ------------- | ---------------------------------------------------- |
+| 参数   | `prefix` | `string`      | ID 前缀，其后自动添加连字符；空前缀生成 -0、-1 等 ID |
+| 返回值 | —        | `IdAllocator` | 从序号 0 开始分配 ID 的独立实例                      |
+
+</ApiTable>
+
+> **备注：** 分配器生命周期及已分配 ID 的保留由调用方负责
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export declare const createIdAllocator: (prefix: string) => IdAllocator;
+```
+
+</DocTab>
+
+</DocTabs>
+
 ## 错误契约
 
 #### <ApiSourceLink label={"RetikzError"} path={"packages/kernel/foundation/src/error.ts"} startLine={29}>RetikzError</ApiSourceLink>
@@ -417,7 +478,7 @@ export type JsonValue =
     };
 ```
 
-#### <ApiSourceLink label={"assertPlainDataContainers"} path={"packages/kernel/foundation/src/json.ts"} startLine={136}>assertPlainDataContainers</ApiSourceLink>
+#### <ApiSourceLink label={"assertPlainDataContainers"} path={"packages/kernel/foundation/src/json.ts"} startLine={186}>assertPlainDataContainers</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -447,7 +508,7 @@ export declare const assertPlainDataContainers: (value: unknown, path?: string) 
 
 </DocTabs>
 
-#### <ApiSourceLink label={"cloneAndFreezeJson"} path={"packages/kernel/foundation/src/json.ts"} startLine={148}>cloneAndFreezeJson</ApiSourceLink>
+#### <ApiSourceLink label={"cloneAndFreezeJson"} path={"packages/kernel/foundation/src/json.ts"} startLine={198}>cloneAndFreezeJson</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -476,7 +537,7 @@ export declare const cloneAndFreezeJson: <T>(value: T, path?: string) => T;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"jsonStructuralEquals"} path={"packages/kernel/foundation/src/json.ts"} startLine={160}>jsonStructuralEquals</ApiSourceLink>
+#### <ApiSourceLink label={"jsonStructuralEquals"} path={"packages/kernel/foundation/src/json.ts"} startLine={210}>jsonStructuralEquals</ApiSourceLink>
 
 对象属性顺序不影响结果，数组按顺序比较，标量使用 Object.is，因此 0 与 -0 不相等；不修改输入
 

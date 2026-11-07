@@ -7,6 +7,8 @@ Start with [Basic usage](/kernel/components/path/usage). A label can belong to a
 
 ## Using this topic
 
+Path labels, Node labels, and Node body text share text capabilities. Set `textAlign`, `lineHeight`, and `maxTextWidth` directly on labels; body text uses the corresponding fields in `Node.layout`. Internal alignment defaults to `middle`, and line height defaults to 1.2 times the effective font size, expanding for taller content. Wrapping prefers word boundaries, splits oversized words at grapheme boundaries, and keeps formulas intact. Blank lines remain. Host, label, line, and segment opacity multiply; omitted factors are 1 and explicit 0 is preserved.
+
 The four forms below attach the `status` label to the same segment; Vanilla needs an existing `<div id="diagram"></div>`.
 
 <ComponentPreview files="draw-label-basic" size="xs" hideCode />

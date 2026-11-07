@@ -19,7 +19,7 @@ const requiredDefinition = <T>(registry: ReadonlyMap<string, T>, key: string, ca
   if (definition !== undefined) return definition;
 
   throw new RetikzGraphError({
-    code: RetikzGraphErrorCode.DefinitionNotRegistered,
+    code: RetikzGraphErrorCode.ProviderDefinitionNotRegistered,
     message: `${capability} '${key}' is not registered.`,
     details: { capability, key, availableKeys: [...registry.keys()] },
   });
@@ -30,7 +30,7 @@ const requiredEntityKindDefinition = (registry: EntityKindRegistry, role: string
   if (definition !== undefined) return definition;
 
   throw new RetikzGraphError({
-    code: RetikzGraphErrorCode.DefinitionNotRegistered,
+    code: RetikzGraphErrorCode.ProviderDefinitionNotRegistered,
     message: `${capability} '${kind}' is not registered for role '${role}'.`,
     details: {
       capability: 'entity-kind',

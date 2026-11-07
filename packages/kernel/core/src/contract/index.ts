@@ -1,20 +1,11 @@
-export * from './composite/definition';
-export { createCompositeInputBindings } from './composite/input';
-export type {
-  CompositeBoundChild,
-  CompositeInputBinding,
-  CompositeInputBindings,
-  CompositeInputPath,
-  CompositeRuntimeInputContext,
-} from './composite/input';
-export * from './composite/layout';
+export * from './composite';
 export * from './node';
-export * from './observation';
-export * from './occurrence';
+export { CompileExpansionKind, compareCompileOccurrences } from './occurrence';
+export type { CompileExpansionSegment, CompileOccurrenceLocator } from './occurrence';
 export * from './path';
 export * from './provider';
 export * from './scene';
 export * from './scope';
-export * from './spatial-handle';
 export * from './style';
+export type * from './text';
 export * from './theme';

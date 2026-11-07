@@ -9,20 +9,25 @@ description: 追踪 Core 如何合并作用域样式、解析主题颜色，并�
 
 ## 整体流程
 
-一次编译先准备注册表与根主题。遍历进入 Scope 时，合并父级与当前层的后代默认值，并解析局部主题。Node 和 Path 各自读取当前环境，合并属性、解析颜色、绑定定义并补齐字段，分别产出 `NodeResolution` 与 `PathResolution`。
+一次编译先准备注册表与根主题。遍历进入 Scope 时，合并父级与当前层的后代默认值，并解析局部主题。Node 和 Path 各自读取当前环境，合并属性、解析颜色、绑定定义并补齐字段，分别产出 `CanonicalNode` 与 `PathResolution`。
 
-以下为两个返回类型的源码定义，省略注释；引用的类型在后文说明。
+以下摘录两个返回类型的主要字段；引用的类型在后文说明。
 
 <DocTabs defaultValue="node-resolution">
-<DocTab value="node-resolution" label="NodeResolution">
+<DocTab value="node-resolution" label="CanonicalNode">
 
 ```ts
-export type NodeResolution = Readonly<{
-  irPath: string;
-  node: CanonicalNode;
-  shape: ShapeResolution;
-  boundary: BoundaryReferenceResolution;
-}>;
+type CanonicalNode = {
+  id?: string;
+  aliasIds: Array<string>;
+  layout: CanonicalNodeLayout;
+  shape: CanonicalNodeShape;
+  boundary: CanonicalNodeBoundary;
+  style: CanonicalNodeStyle;
+  text?: CanonicalNodeText;
+  labels: Array<CanonicalNodeLabel>;
+  animations: Array<IRAnimationTrack>;
+};
 ```
 
 </DocTab>
@@ -30,10 +35,10 @@ export type NodeResolution = Readonly<{
 
 ```ts
 export type PathResolution = Readonly<{
-  irPath: string;
-  path: CanonicalPath;
-  targets: ReadonlyMap<string, TargetResolution>;
-  kind: PathDefinitionResolution;
+  irPath: ReadonlyArray<string | number>;
+  canon: CanonicalPath;
+  definition: AnyPathDefinition;
+  stroke?: Pick<StrokePathResolution, 'arrows' | 'marks'>;
 }>;
 ```
 
@@ -54,7 +59,7 @@ export type PathResolution = Readonly<{
 
 Definition 保存一种能力的实现与参数契约。IR 中的 `shape: 'rectangle'` 只是名称，布局需要的是矩形定义及其已解析参数。registry 是两者之间的查询表。
 
-`createCompileContext` 按能力建立各自的注册表，先加入内置定义，再加入 `CompileOptions` 提供的外部定义。同一个注册表中的名称必须唯一，外部定义与内置定义重名也会报错。
+`createCompileRuntime` 按能力建立各自的注册表，先加入内置定义，再加入 `CompileOptions` 提供的外部定义。同一个注册表中的名称必须唯一，外部定义与内置定义重名也会报错。
 
 | 注册表                  | 提供的能力         | 何时消费                        |
 | ----------------------- | ------------------ | ------------------------------- |
@@ -68,11 +73,11 @@ Node 在样式与默认值合并后，由 `resolveNodeShape` 按有效的 `shape
 
 Path 按 `kind` 查找路径类型，省略该字段时使用内置 `stroke`。箭头也从注册表查询；它们的绑定时机见后面的 Path 分支。
 
-Node 的连接边界随后通过 `resolveBoundaryReference` 解析。它可以使用视觉形状，也可以绑定独立边界。布局拿到这些结果后，直接调用已选定的能力。未注册的名称或不符合定义契约的参数会使本次编译失败。
+Node 的连接边界随后通过 `resolveNodeBoundary` 解析。它可以使用视觉形状，也可以绑定独立边界。布局拿到这些结果后，直接调用已选定的能力。未注册的名称或不符合定义契约的参数会使本次编译失败。
 
 <SourceLinks
   sources={[
-    { label: '上下文与注册表装配', path: 'packages/kernel/core/src/compile/orchestration/context.ts' },
+    { label: '上下文与注册表装配', path: 'packages/kernel/reconciler/src/compile/runtime/runtime.ts' },
     { label: '重名检查与名称查询', path: 'packages/kernel/core/src/providers/registry.ts' },
     { label: '形状名称、参数与能力绑定', path: 'packages/kernel/core/src/resolve/node/shape.ts' },
     { label: '连接边界解析', path: 'packages/kernel/core/src/resolve/node/boundary.ts' },
@@ -163,7 +168,7 @@ Scope 的 `defaults.reset` 可以切断选定的样式通道。设为 `['node']`
   sources={[
     { label: '主题继承与风格选择', path: 'packages/kernel/core/src/resolve/theme.ts' },
     { label: '数值颜色预合成', path: 'packages/kernel/core/src/resolve/style/contextual-color.ts' },
-    { label: '节点自动对比文字色', path: 'packages/kernel/core/src/resolve/node/text-color.ts' },
+    { label: '节点自动对比文字色', path: 'packages/kernel/core/src/resolve/node/text.ts' },
   ]}
 />
 
@@ -203,41 +208,36 @@ Node 与 Path 都将稀疏声明整理为后续编译可用的结果，但它们
 
 默认值在相应阶段落实，例如位置使用 schema 字段的默认值，节点内边距在字段展开时补齐，形状参数由 Definition 的 schema 处理。先合并稀疏声明再补缺省值，才能保留父级未被覆盖的配置。若输入已经经过 schema parse 并物化了默认字段，这些字段会作为已有值参与后续合并。
 
-形状和边界绑定完成后，`resolvePaint` 的结果写入 `CanonicalNode` 的 `fill` 与 `stroke`。
+形状和边界绑定完成后，`resolvePaint` 的结果写入 `CanonicalNode.style` 的 `fill` 与 `stroke`。
 
-本例的 `NodeResolution` 有四个字段：
+本例的 `CanonicalNode` 按消费职责组织属性：
 
-| 字段       | 内容                                        | 下游用途               |
-| ---------- | ------------------------------------------- | ---------------------- |
-| `irPath`   | 当前节点的来源路径                          | 诊断与定位             |
-| `node`     | 已合并、展开并解析 paint 的 `CanonicalNode` | 布局和图元生成所需属性 |
-| `shape`    | 形状名称、Definition 与参数                 | 测量外框和生成形状     |
-| `boundary` | 已解析的连接边界                            | 锚点与路径连接处理     |
+| 字段              | 内容                        | 下游用途           |
+| ----------------- | --------------------------- | ------------------ |
+| `layout`          | 完整位置、尺寸与间距意图    | 测量与放置         |
+| `style`           | 已解析 paint 与完整绘制配置 | 图元生成           |
+| `text` / `labels` | 字体、正文及附属标签配置    | 文字与标签排版     |
+| `shape`           | 形状名称、Definition 与参数 | 测量外框和生成形状 |
+| `boundary`        | 已解析的连接边界            | 锚点与路径连接处理 |
 
 ```ts
 // CanonicalNode 的字段摘录
 {
   id: 'A',
-  position: [0, 0],
-  text: ['A'],
-  color: '#204060',
-  fill: '#90a0b0',
-  stroke: '#204060',
-  strokeWidth: 3,
-  textColor: '#ffffff',
-  minimumSize: { width: 100, height: 48 },
-  scale: { x: 1, y: 1 },
-  align: 'middle',
-  rotate: 0,
+  layout: { position: [0, 0], minimumSize: { width: 100, height: 48 }, scale: { x: 1, y: 1 }, rotate: 0 },
+  style: { fill: '#90a0b0', stroke: '#204060', strokeWidth: 3 },
+  text: { color: '#ffffff', align: 'middle' },
 }
 ```
 
-`CanonicalNode` 是解析后的内部结果，可以携带已绑定的 paint 能力。它仍保留供布局解析的位置表达，也尚未包含最终文字尺寸和外框。`compileNodeResolution` 接过 `NodeResolution`，再结合测量能力与位置上下文产生分开的布局、外观与身份元数据。
+`CanonicalNode` 是解析后的内部结果，可以携带已绑定的 paint 能力。它仍保留供编译求值的位置表达，也尚未包含最终文字尺寸和外框。`compileNode` 接过 `CanonicalNode`，再结合测量能力与位置上下文产生最终几何、布局与外观。
+
+canon 补齐固定默认值，例如 Node 与 Path 的透明度、线帽和虚线相位。缺失本身仍有意义的字段继续保持可选：无正文、无裁剪、未提供的名称、扩展定义专属选项，以及依赖宿主的标记颜色。Scope 的 inheritance 表示向后代提供的覆盖，允许稀疏；实际消费该覆盖的元素才补齐自己的配置。输出可省略中性值，不能据此判断 canon 是否已补全。
 
 <SourceLinks
   sources={[
     { label: '节点解析与字段展开', path: 'packages/kernel/core/src/resolve/node/resolve.ts' },
-    { label: 'CanonicalNode / NodeResolution', path: 'packages/kernel/core/src/resolve/node/types.ts' },
+    { label: 'CanonicalNode', path: 'packages/kernel/core/src/resolve/node/types.ts' },
   ]}
 />
 
@@ -247,19 +247,20 @@ Node 与 Path 都将稀疏声明整理为后续编译可用的结果，但它们
 
 定义的 schema 可能补充字段，因此返回后会再次确定上下文颜色，再由 `canonicalizePath` 展开路径字段：将 `style` 字段合入路径、标签统一为数组，并补齐标签位置、距离及 bend、smooth 等步骤的静态默认值。它尚不是最终的路径指令。
 
-本例 P 的主色继承为 `'#204060'`，描边在 Light 下变成 `'#90a0b0'`，线宽为 3。两个绝对坐标步骤保持原有位置。`resolvePath` 还处理目标绑定，保存 `irPath`，并将已解析 paint 与有效线宽写入 `CanonicalPath`；变换链由编译上下文传递。目标引用和相对坐标的细节留给路径几何专题。
+本例 P 的主色继承为 `'#204060'`，描边在 Light 下变成 `'#90a0b0'`，线宽为 3。两个绝对坐标步骤保持原有位置。`resolvePath` 保存来源路径与定义解析后的输入，并将已解析 paint 与有效线宽写入 `PathResolution`。随后 compile 中的 `bindPathTargets` 使用变换链和节点布局绑定目标，产出 `BoundPathResolution`。目标引用和相对坐标的细节留给路径几何专题。
 
-| 字段                 | 内容                                                    | 后续用途               |
-| -------------------- | ------------------------------------------------------- | ---------------------- |
-| `path`               | `CanonicalPath`，包含已解析 paint、有效样式、步骤和标签 | 路径编译的主体输入     |
-| `kind`               | 路径类型名称、Definition 及其 schema 解析结果           | 调用对应类型的处理能力 |
-| `irPath` / `targets` | 来源路径与目标绑定                                      | 诊断定位与后续几何计算 |
+| 字段         | 内容                                                    | 后续用途               |
+| ------------ | ------------------------------------------------------- | ---------------------- |
+| `canon`      | `CanonicalPath`，包含已解析 paint、有效样式、步骤和标签 | 路径编译的主体输入     |
+| `definition` | 当前路径类型的 Definition                               | 调用对应类型的处理能力 |
+| `irPath`     | 声明来源路径                                            | 诊断定位               |
+| `stroke`     | 内置描边实际使用的箭头与标记绑定                        | 描边编译               |
 
 ```ts
 // PathResolution 的字段摘录
 {
-  path: { id: 'P', color: '#204060', stroke: '#90a0b0', strokeWidth: 3 },
-  kind: { name: 'stroke' },
+  canon: { id: 'P', color: '#204060', stroke: '#90a0b0', strokeWidth: 3 },
+  definition: { name: 'stroke' },
 }
 ```
 
@@ -271,7 +272,7 @@ Node 与 Path 都将稀疏声明整理为后续编译可用的结果，但它们
 
 Path 的 paint 解析结果同样保存在 Canonical 对象中，对应 `path.fill` 与 `path.stroke`。
 
-Label 的默认外观来自 Label 通道，标签位置等静态配置在路径确定化时补齐。Arrow 的默认配置来自 Arrow 通道，先确定箭头主色，再以该主色解析填充。内置 Stroke 输出链随后调用 `resolveStrokePathProviders`，将缺省填充与描边分别补为 `none` 和 `currentColor`，为实际消费的 arrow marks 绑定 Definition，得到带 `arrows` 映射的 `StrokePathResolution`。这些绑定不在基础 `resolvePath` 的返回值中；本例没有箭头，该映射为空。
+Label 的默认外观来自 Label 通道，标签位置等静态配置在路径确定化时补齐。内置 Stroke 在 `resolvePath` 中补齐填充与描边，并绑定实际使用的箭头和沿线标记，保存到 `stroke`。本例没有箭头，绑定表为空。自定义 Path 可以完全接管输出，只有请求 `emitStroke()` 时才解析它选用的描边能力。
 
 <SourceLinks
   sources={[
@@ -283,7 +284,7 @@ Label 的默认外观来自 Label 通道，标签位置等静态配置在路径�
 
 ## 完整实现流程
 
-两个页签分别展示 Node 与 Path 的关键调用。Node 图从环境准备到节点返回：主题在上下文和 Scope 处理中由 `resolveTheme` 解析；颜色主步骤之后还有 `resolveNodeTextColor` 与 `resolveNodeDependentColors`，形状绑定之后还有 `resolveBoundaryReference`。图中省略这些支步，保留各主步骤直接产生的数据。
+两个页签分别展示 Node 与 Path 的关键调用。Node 图从环境准备到节点返回：主题在上下文和 Scope 处理中由 `resolveTheme` 解析；颜色主步骤之后还有 `resolveNodeTextColor` 与 `resolveNodeDependentColors`，形状绑定之后还有 `resolveNodeBoundary`。图中省略这些支步，保留各主步骤直接产生的数据。
 
 <DocTabs defaultValue="node-flow">
   <DocTab value="node-flow" label="Node">
@@ -294,11 +295,11 @@ Label 的默认外观来自 Label 通道，标签位置等静态配置在路径�
   </DocTab>
 </DocTabs>
 
-阅读时先看 `createCompileContext` 的注册表与根主题。Node 从遍历中的 `emitNodeChild` 进入 `resolveNode`；Path 从延迟任务处理进入 `resolvePath`，再按输出类型继续绑定次级能力。Path 图将颜色解析的两次调用合在同一说明中，目标绑定只标出交接点。本页重点到配置结果为止，测量、边界求交和最终图元分别见[节点编译](/kernel/packages/core/node-compilation)与[路径编译](/kernel/packages/core/path-compilation)。
+阅读时先看 `createCompileRuntime` 的注册表与根主题。Node 从遍历中的 `emitNodeChild` 进入 `resolveNode`；Path 从延迟任务处理进入 `resolvePath`，再按输出类型继续绑定次级能力。Path 图将颜色解析的两次调用合在同一说明中，目标绑定只标出交接点。本页重点到配置结果为止，测量、边界求交和最终图元分别见[节点编译](/kernel/packages/core/node-compilation)与[路径编译](/kernel/packages/core/path-compilation)。
 
 <SourceLinks
   sources={[
-    { label: 'Scope 环境与节点解析入口', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
+    { label: 'Scope 环境与节点解析入口', path: 'packages/kernel/reconciler/src/compile/tree/node/visit.ts' },
     { label: 'resolveNode 主链', path: 'packages/kernel/core/src/resolve/node/resolve.ts' },
   ]}
 />

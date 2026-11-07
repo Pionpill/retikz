@@ -1,9 +1,9 @@
 ---
 title: Compilation Core · core
-description: Compile drawing declarations into a Scene with resolved geometry and styles using @retikz/core, and understand its contracts, pipeline and package boundaries
+description: Understand @retikz/core atomic compilation stages, drawing contracts, and collaboration with Reconciler
 ---
 
-A drawing declaration can say “connect A to B”, while a renderer needs the exact start and end points. `@retikz/core` resolves these declarations, computes node layout, coordinates and paths, and assembles a renderer-independent Scene.
+A drawing declaration can say “connect A to B”, while a renderer needs the exact start and end points. `@retikz/core` resolves these declarations, computes node layout, coordinates and paths, and returns shared stage products for Reconciler to assemble into a renderer-independent Scene.
 
 This package is for developers building domain components, extending drawing capabilities or integrating the compiler. Most drawing applications start with React or Vanilla, whose adapters prepare Core input and pass compiled results to a renderer.
 
@@ -17,7 +17,7 @@ Consider two nodes, A and B, joined by a line. The input records their positions
 | Definition / registry | Define and bind shapes, path definitions, composites and other capabilities | Look up the node shape and path processing capabilities         |
 | Compiler              | Resolve configuration, layout, coordinates and paths                        | Determine endpoints from node boundaries                        |
 | Scene                 | Store resolved primitives, resources, canvas and other drawing information  | Drawing data for rectangles, text and the connecting line       |
-| CompileResult         | Collect the Scene, artifacts and spatial handles                            | Deliver the Scene to a renderer and other data to its consumers |
+| CompileResult         | Reconciler collects the Scene and Composite artifacts                       | Deliver the Scene to a renderer and other data to its consumers |
 
 IR describes what the author wants to draw; Scene records how to draw the compiled result. A Definition describes a capability, and a registry looks up definitions by name. Built-in and custom capabilities participate in compilation through their respective contracts.
 
@@ -41,7 +41,7 @@ The figure specifies minimum node sizes to make the connection boundaries clear.
 
 ## Installation and usage
 
-<PackageManagerInstall packages="@retikz/core" />
+<PackageManagerInstall packages={['@retikz/core', '@retikz/reconciler']} />
 
 `PathTransformSchema` contains only whole-path `rotate` and `scale`; `cornerRadius` belongs to `PathGeometrySchema` and rounds line-to-line joints.
 
@@ -49,12 +49,15 @@ For stroke schema composition, `GraphicStrokeSchema` provides width, dash length
 
 Use `BuiltinBoundary` for built-in connection surface names and register custom surfaces through the `boundaries` compile option. `IRBoundary` accepts built-in names, custom boundary or shape names, and `{ type, params }` references. Use `BuiltinCompileWarningCode` for built-in compilation warning codes; the open `CompileWarningCode` type also accepts custom codes.
 
+`CompileOptions.onWarn` receives a `CompileWarning` with three fields: `code` identifies the warning, `message` describes it in English, and `path` locates it relative to the input root. These are the only fields included when enumerating the warning object or serializing it to JSON.
+
 Use Core IR types such as `IRScene` to declare drawings, and Core's `PathCommand` for compiled path commands. Import the plain coordinate and vector types `Position` and `Vector2` from `@retikz/math`.
 
 Core provides a framework-independent TypeScript compilation API. This example uses the same A-to-B connection with default node layout:
 
 ```ts
-import { compileToScene, type IRScene } from '@retikz/core';
+import { type IRScene } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 
 const ir: IRScene = {
   type: 'scene',
@@ -76,7 +79,7 @@ const result = compileToScene(ir);
 console.log(result.scene);
 ```
 
-`compileToScene` synchronously returns a `CompileResult`. Its `scene` can be passed to a renderer; `artifacts` and `spatialHandles` carry additional artifacts and spatial handles. See [Compilation Output](/kernel/packages/core/compilation-output) for details. This call compiles the drawing; Render or an adapter handles its display.
+`compileToScene` synchronously returns a `CompileResult`. Its `scene` can be passed to a renderer; `artifacts` carries domain values returned by composites. See [Compilation Output](/kernel/packages/core/compilation-output) for details. This call compiles the drawing; Render or an adapter handles its display.
 
 The entry accepts typed IR. External input such as JSON should first pass through the appropriate schema validation. Compile options can supply text measurement, formula handling and extension definitions.
 

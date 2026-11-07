@@ -19,7 +19,7 @@ export const TextAttrsPreview = (values: TextAttrsPreviewValues, lang: Lang) => 
   const i18n = textAttrsI18n[lang];
   return (
     <Layout>
-      <Node id="text" position={[0, 0]} style={{ textColor: '#64748b' }} layout={{ align: 'start', padding: 18 }}>
+      <Node id="text" position={[0, 0]} style={{ textColor: '#64748b' }} layout={{ textAlign: 'start', padding: 18 }}>
         {i18n.inheritNodeStyle}
         <Text
           fill={values.fill}

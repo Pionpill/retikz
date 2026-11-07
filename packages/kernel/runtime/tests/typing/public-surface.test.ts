@@ -7,7 +7,7 @@ const { RetikzRuntimeErrorCode, RuntimeDiagnosticPhase, RuntimeSourcePhase } = r
 describe('运行时公开接口', () => {
   it('公开稳定的 diagnostic 与 error const object', () => {
     expect(RuntimeDiagnosticPhase.Run).toBe('run');
-    expect(RetikzRuntimeErrorCode.CaptureFailed).toBe('RUNTIME_SOURCE_CAPTURE_FAILED');
+    expect(RetikzRuntimeErrorCode.SourceCaptureFailed).toBe('RUNTIME_SOURCE_CAPTURE_FAILED');
     expect(RuntimeSourcePhase.Capture).toBe('capture');
     expect(runtime).not.toHaveProperty('RetikzRuntimeSourceError');
     expect(runtime).not.toHaveProperty('RetikzRuntimeSourceRegistryError');

@@ -17,10 +17,14 @@ description: 追踪 Core 如何把路径目标和步骤转为几何命令，再�
 
 本页以内置描边路径为主线。自定义 Path 通过自己的 Definition 输出图元。
 
+`compileStrokePath` 组织布局与绘制：布局计算基础路径、标签和标记放置，再处理断口与端点接触；绘制生成或复用局部图元，最后应用宿主包装。只有存在标签断口时才生成切分片段。
+
+目录按这些阶段组织：`geometry/` 管理基础几何和采样，`layout.ts` 协调布局，`emit.ts` 应用外观并协调图元输出，`decoration/` 计算标签与修饰，`body.ts` 生成可见路径，`output.ts` 包装最终输出。Definition 能力组装和通用标签回调分别保留在 `host/context.ts` 与 `label/callbacks.ts`。
+
 <SourceLinks
   sources={[
     { label: '路径解析入口', path: 'packages/kernel/core/src/resolve/path/resolve.ts' },
-    { label: '描边路径输出入口', path: 'packages/kernel/core/src/compile/path/stroke/emit.ts' },
+    { label: '描边路径编译入口', path: 'packages/kernel/core/src/compile/path/stroke/compile.ts' },
   ]}
 />
 
@@ -34,13 +38,13 @@ description: 追踪 Core 如何把路径目标和步骤转为几何命令，再�
 
 第二列新增 B 的几何与图元，P 仍占据原来的数组位置；第三列将该占位替换为 Path P。为突出数组变化，这里用一条无标签直线表示 P，用 A、B 表示对应节点图元。
 
-解析后的目标保留后续计算需要的点与引用几何。编译阶段通过 `PathTargetView` 查询局部参考点及边界交点。对 A 到 B 的连线，先取得两个参考点，再由连线方向求出实际端点。
+`bindPathTargets` 在编译阶段绑定目标，保留计算后的点并直接引用完整节点布局；引用来源与布局分别保存。后续通过 `PathTargetView` 查询局部参考点及边界交点。对 A 到 B 的连线，先取得两个参考点，再由连线方向求出实际端点。
 
 <SourceLinks
   sources={[
-    { label: '延迟队列及占位回填', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
-    { label: '目标绑定与确定化路径', path: 'packages/kernel/core/src/resolve/path/resolve.ts' },
-    { label: '编译阶段的目标查询', path: 'packages/kernel/core/src/compile/path/host/target.ts' },
+    { label: '延迟队列及占位回填', path: 'packages/kernel/reconciler/src/compile/tree/path/deferred.ts' },
+    { label: '目标绑定与确定化路径', path: 'packages/kernel/core/src/compile/path/target/bind.ts' },
+    { label: '编译阶段的目标查询', path: 'packages/kernel/core/src/compile/path/target/helpers.ts' },
   ]}
 />
 
@@ -57,7 +61,7 @@ description: 追踪 Core 如何把路径目标和步骤转为几何命令，再�
 
 <ComponentPreview files="path-relative" size="md" hideCode type="illustration" />
 
-能提前确定的相对目标在解析阶段转为局部坐标；依赖 axis-line 投影等运行结果的后续目标，在消费步骤时继续计算。`move` 开启新的笔位，普通直线、折线和曲线逐段转为命令；圆弧、闭合形状、平滑曲线由各自分支处理，并交接后续笔位。
+能提前确定的相对目标在编译阶段绑定为局部坐标；依赖 axis-line 投影等运行结果的后续目标，在消费步骤时继续计算。`move` 开启新的笔位，普通直线、折线和曲线逐段转为命令；圆弧、闭合形状、平滑曲线由各自分支处理，并交接后续笔位。
 
 | 输入步骤                                   | 几何变化                                             |
 | ------------------------------------------ | ---------------------------------------------------- |
@@ -70,9 +74,9 @@ description: 追踪 Core 如何把路径目标和步骤转为几何命令，再�
 
 <SourceLinks
   sources={[
-    { label: '游标状态与推进', path: 'packages/kernel/core/src/compile/path/stroke/cursor.ts' },
-    { label: '直线、折线与曲线', path: 'packages/kernel/core/src/compile/path/stroke/segments.ts' },
-    { label: '形状步骤与笔位交接', path: 'packages/kernel/core/src/compile/path/stroke/shapes.ts' },
+    { label: '游标状态与推进', path: 'packages/kernel/core/src/compile/path/stroke/geometry/cursor.ts' },
+    { label: '直线、折线与曲线', path: 'packages/kernel/core/src/compile/path/stroke/geometry/segments.ts' },
+    { label: '形状步骤与笔位交接', path: 'packages/kernel/core/src/compile/path/stroke/geometry/shapes.ts' },
   ]}
 />
 
@@ -112,12 +116,12 @@ description: 追踪 Core 如何把路径目标和步骤转为几何命令，再�
 
 <SourceLinks
   sources={[
-    { label: '目标查询与坐标转换', path: 'packages/kernel/core/src/compile/orchestration/path-target.ts' },
-    { label: '边界点与折线出界点计算', path: 'packages/kernel/core/src/compile/node/anchors.ts' },
-    { label: '连接边界几何', path: 'packages/kernel/core/src/compile/node/boundary.ts' },
-    { label: '各类路径段的方向与命令', path: 'packages/kernel/core/src/compile/path/stroke/segments.ts' },
-    { label: '命令及来源记录', path: 'packages/kernel/core/src/compile/path/stroke/commands.ts' },
-    { label: '折线接缝圆角', path: 'packages/kernel/core/src/compile/path/stroke/rounded-corners.ts' },
+    { label: '目标查询与坐标转换', path: 'packages/kernel/core/src/compile/path/target/view.ts' },
+    { label: '边界点与折线出界点计算', path: 'packages/kernel/core/src/compile/boundary/layout.ts' },
+    { label: '连接边界几何', path: 'packages/kernel/core/src/compile/boundary/layout.ts' },
+    { label: '各类路径段的方向与命令', path: 'packages/kernel/core/src/compile/path/stroke/geometry/segments.ts' },
+    { label: '命令及来源记录', path: 'packages/kernel/core/src/compile/path/stroke/geometry/commands.ts' },
+    { label: '折线接缝圆角', path: 'packages/kernel/core/src/compile/path/stroke/geometry/rounded-corners.ts' },
   ]}
 />
 
@@ -131,11 +135,11 @@ description: 追踪 Core 如何把路径目标和步骤转为几何命令，再�
 
 <SourceLinks
   sources={[
-    { label: '步骤与路径级标签采样', path: 'packages/kernel/core/src/compile/path/stroke/sampling.ts' },
-    { label: '标签文字与方向', path: 'packages/kernel/core/src/compile/path/host/label.ts' },
-    { label: '留白区间与线条拆分', path: 'packages/kernel/core/src/compile/path/stroke/interruption.ts' },
-    { label: '箭头与沿线标记', path: 'packages/kernel/core/src/compile/path/stroke/decorations.ts' },
-    { label: '首尾线段缩短', path: 'packages/kernel/core/src/compile/path/stroke/shrink.ts' },
+    { label: '步骤与路径级标签采样', path: 'packages/kernel/core/src/compile/path/stroke/geometry/sampling.ts' },
+    { label: '标签文字与方向', path: 'packages/kernel/core/src/compile/path/label/layout.ts' },
+    { label: '留白区间与线条拆分', path: 'packages/kernel/core/src/compile/path/stroke/decoration/interruption.ts' },
+    { label: '箭头与沿线标记', path: 'packages/kernel/core/src/compile/path/stroke/decoration/decorations.ts' },
+    { label: '首尾线段缩短', path: 'packages/kernel/core/src/compile/path/stroke/decoration/shrink.ts' },
   ]}
 />
 
@@ -158,16 +162,50 @@ description: 追踪 Core 如何把路径目标和步骤转为几何命令，再�
 
 <SourceLinks
   sources={[
-    { label: '箭头接合系数与接缝重叠', path: 'packages/kernel/core/src/compile/path/stroke/shrink.ts' },
-    { label: '原曲线接合点与箭头朝向', path: 'packages/kernel/core/src/compile/path/stroke/endpoint-contact.ts' },
-    { label: '保形曲线切片', path: 'packages/kernel/core/src/compile/path/stroke/interruption.ts' },
-    { label: '标签断口与端点接合顺序', path: 'packages/kernel/core/src/compile/path/stroke/emit.ts' },
+    { label: '箭头接合系数与接缝重叠', path: 'packages/kernel/core/src/compile/path/stroke/decoration/shrink.ts' },
+    {
+      label: '原曲线接合点与箭头朝向',
+      path: 'packages/kernel/core/src/compile/path/stroke/decoration/endpoint-contact.ts',
+    },
+    { label: '保形曲线切片', path: 'packages/kernel/core/src/compile/path/stroke/decoration/interruption.ts' },
+    { label: '标签断口与端点接合顺序', path: 'packages/kernel/core/src/compile/path/stroke/compile.ts' },
+  ]}
+/>
+
+## 阶段复用
+
+`compilePath(canon, context, prepared)` 返回目标绑定 `targets`、完整绘制结果 `emit`、当前阴影声明，以及本次实际使用的源路径描边产物 `stroke`。调用方从结果中选择仍有效的部分，通过 `PreparedPathCompilation` 传回；Core 只补算缺项，跨次有效性由调用方判断。
+
+- `targets` 命中后跳过目标查询，将已转换的相对目标应用到当前步骤，同时保留当前样式和标签。有效性涉及步骤、目标、诊断字段路径、引用几何及坐标环境；空 Map 也是已计算结果。
+- 顶层 `emit` 直接保存已校验、快照化的图元与边界点数组。命中后跳过目标绑定和 Definition 调用；`undefined` 表示缺项，`null` 表示合法空结果，空数组输出仍有独立语义。
+- `stroke.layout` 和 `stroke.emit` 各自保留 `overall` 与已知局部产物。整体命中不会反推缺失局部结果；只传顶层 `emit` 也不会重建目标或描边产物。
+
+描边缓存按实际计算边界划分：
+
+| 产物                          | 可以复用的计算                                                            |
+| ----------------------------- | ------------------------------------------------------------------------- |
+| `layout.geometry` / `metrics` | 基础命令与原始参数模型；按需建立的逻辑路径度量                            |
+| `layout.labels`               | 逐标签 `measurement` 与 `placement`，分别保存文字排版和路径放置、断线定位 |
+| `layout.marks` / `body`       | 截断前的逐标记放置；标签断口与箭头接触截取后的可见主线                    |
+| `emit.labels` / `marks`       | 逐项局部 `content` 与已放置 `overall`                                     |
+| `emit.arrows` / `body`        | 首末端箭头局部 `content`；尚未绑定宿主身份与整体变换的主线图元            |
+
+例如，路径位置变化而文字不变时，可回传标签的 `measurement` 和 `content`，重新计算放置与断口。只改绘制颜色时，可复用完整布局。标签内容已包含文字外观和宿主透明度，复用时也要保证这些依赖有效。步骤标签按 `children` 下标对齐，非标签步骤保留空槽；宿主标签和 marks 分别按声明顺序对齐。
+
+自定义 kind 可以生成任意图元。宿主只将无参数 `emitStroke()` 对应的当前源路径产物交接给 `stroke`；显式传入其他路径的调用独立计算，多次无参数调用复用同次结果。几何缓存保存纯参数数据，当前标签仍从本轮声明读取，普通分段参数与圆角路径的弧长定位规则保持不变。
+
+调用方负责恢复配套资源、重放诊断，并保证 Definition、输入与宿主环境有效。Core 为实际返回的缓存图元恢复本次宿主资源引用许可；放置、包装和 Definition 取得的可修改输出均不改写保留的缓存。
+
+<SourceLinks
+  sources={[
+    { label: '阶段命中与缺项计算', path: 'packages/kernel/core/src/compile/path/compile.ts' },
+    { label: '缓存输入与编译产物', path: 'packages/kernel/core/src/compile/path/types.ts' },
   ]}
 />
 
 ## 完整实现流程
 
-从 `resolvePath` 读起，跟随确定化结果进入 `emitPathPrimitive`。下图先沿左列向下，再沿右列向上：步骤消费产生几何命令，随后处理圆角、标签与装饰，再把路径主体和附属图元交给遍历器回填。
+从 `resolvePath` 读起，再进入 `compilePath` 查看目标绑定和 Definition 调用；内置描边经宿主进入 `compileStrokePath`。下图先沿左列向下，再沿右列向上：步骤消费产生几何命令，随后处理圆角、标签与装饰，再把路径主体和附属图元交给遍历器回填。
 
 <ComponentPreview files="path-implementation" size="lg" hideCode type="flow" />
 
@@ -177,8 +215,8 @@ description: 追踪 Core 如何把路径目标和步骤转为几何命令，再�
 
 <SourceLinks
   sources={[
-    { label: '步骤循环与后处理顺序', path: 'packages/kernel/core/src/compile/path/stroke/emit.ts' },
-    { label: '子路径拆分与端点箭头归属', path: 'packages/kernel/core/src/compile/path/stroke/split.ts' },
+    { label: '步骤循环与后处理顺序', path: 'packages/kernel/core/src/compile/path/stroke/geometry/lower.ts' },
+    { label: '子路径拆分与端点箭头归属', path: 'packages/kernel/core/src/compile/path/stroke/decoration/split.ts' },
     { label: '图元组合与路径变换', path: 'packages/kernel/core/src/compile/path/stroke/output.ts' },
     { label: '输出契约', path: 'packages/kernel/core/src/compile/path/types.ts' },
   ]}

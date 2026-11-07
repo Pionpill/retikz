@@ -37,7 +37,7 @@ export const path = (config: Omit<InputPath, 'type'>): InputPath => ({ ...config
  */
 export const scope = (
   config: Omit<InputScope, 'type' | 'children'>,
-  children: ReadonlyArray<InputScope['children'][number]>,
+  children: ReadonlyArray<InputChild>,
 ): InputScope => ({ ...config, children });
 
 /**
@@ -93,15 +93,17 @@ const createInputScene = (
   if (Array.isArray(input)) return { type: 'scene', children: input };
   if ('layers' in input && input.layers !== undefined) {
     const { children: _children, ...config } = input;
+    const { layers } = config;
     void _children;
-    return { type: 'scene', ...config, layers: input.layers };
+    return { type: 'scene', ...config, layers };
   }
 
   const childrenInput = input as InputSceneChildrenOptions;
   const { layers: _layers, ...config } = childrenInput;
+  const { children } = config;
   void _layers;
 
-  return { type: 'scene', ...config, children: childrenInput.children };
+  return { type: 'scene', ...config, children };
 };
 
 /** 创建作者侧 Scene 输入 */

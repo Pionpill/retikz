@@ -32,7 +32,7 @@ const stripPropertySlots = [...pointPropertySlots, 'jitter', 'domainPadding'] as
 
 const invalidStripTopology = (message: string, path: ReadonlyArray<string | number>): RetikzChartError =>
   new RetikzChartError({
-    code: RetikzChartErrorCode.InvalidResolvedPlot,
+    code: RetikzChartErrorCode.ResolvePlotInvalid,
     message,
     details: { path },
   });
@@ -126,8 +126,9 @@ const resolveStripGuideDefaults = (context: ChartGuideDefaultsResolveContext): R
     if (guide.type !== PlotGuide.Axis || (guide.dimension !== 'x' && guide.dimension !== 'y')) return guide;
 
     const { grid: previousGrid, ...guideWithoutGrid } = guide;
+    const { dimension } = guideWithoutGrid;
     void previousGrid;
-    if (guide.dimension !== continuousRole) return { ...guideWithoutGrid, grid: false };
+    if (dimension !== continuousRole) return { ...guideWithoutGrid, grid: false };
 
     return grid === undefined ? guideWithoutGrid : { ...guideWithoutGrid, grid };
   });

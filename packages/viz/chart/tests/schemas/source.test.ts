@@ -36,7 +36,7 @@ describe('Chart Source schema 基元', () => {
       ...minimalSource,
       background: { fill: '#f8fafc' },
       layout: { width: 640, height: 360, padding: 0, gap: 0 },
-      presentation: { title: { text: 'Revenue', style: { font: { size: 20 } }, layout: { align: 'start' } } },
+      presentation: { title: { text: 'Revenue', style: { font: { size: 20 } }, layout: { textAlign: 'start' } } },
       defaultChart: {
         layout: { padding: 12, gap: 4 },
         presentation: { title: { style: { textColor: '#0f172a' }, layout: { lineHeight: 24 } } },

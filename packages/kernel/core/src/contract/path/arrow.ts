@@ -1,4 +1,4 @@
-﻿import type { MarkDefinition } from './mark';
+import type { MarkDefinition } from './mark';
 
 /** 增加端点接触与截断几何的箭头定义 */
 export type ArrowDefinition = Omit<MarkDefinition, 'anchor'> & {

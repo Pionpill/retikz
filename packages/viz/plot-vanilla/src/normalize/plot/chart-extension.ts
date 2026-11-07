@@ -33,9 +33,9 @@ type Collected = NormalizationState;
 /** 创建携带稳定来源路径的 Plot declaration 错误 */
 const plotDeclarationError = (
   code:
-    | typeof RetikzPlotVanillaErrorCode.NonSerializableExtension
-    | typeof RetikzPlotVanillaErrorCode.UnsupportedChartChild
-    | typeof RetikzPlotVanillaErrorCode.DuplicateDeclarationSource,
+    | typeof RetikzPlotVanillaErrorCode.NormalizeExtensionNonSerializable
+    | typeof RetikzPlotVanillaErrorCode.NormalizeChartChildUnsupported
+    | typeof RetikzPlotVanillaErrorCode.NormalizeDeclarationSourceDuplicate,
   path: PlotDeclarationPath,
   conflictingPath?: PlotDeclarationPath,
 ): RetikzPlotVanillaError =>
@@ -65,7 +65,11 @@ const throwDuplicateDeclarationSource = (
   declaration: PlotAuthoringDeclaration,
   conflictingPath: PlotDeclarationPath,
 ): never => {
-  throw plotDeclarationError(RetikzPlotVanillaErrorCode.DuplicateDeclarationSource, declaration.path, conflictingPath);
+  throw plotDeclarationError(
+    RetikzPlotVanillaErrorCode.NormalizeDeclarationSourceDuplicate,
+    declaration.path,
+    conflictingPath,
+  );
 };
 
 /** 校验 Chart extension 只能包含可序列化且来源唯一的显式声明 */
@@ -77,8 +81,8 @@ export const assertChartExtensionCollection = (
     if (declaration.kind === 'unsupported') {
       const code =
         declaration.props.valueKind === 'function'
-          ? RetikzPlotVanillaErrorCode.NonSerializableExtension
-          : RetikzPlotVanillaErrorCode.UnsupportedChartChild;
+          ? RetikzPlotVanillaErrorCode.NormalizeExtensionNonSerializable
+          : RetikzPlotVanillaErrorCode.NormalizeChartChildUnsupported;
       throw plotDeclarationError(code, declaration.path);
     }
   }
@@ -112,7 +116,7 @@ export const assertChartExtensionCollection = (
 
   if (context.coordinate !== undefined && context.composition !== undefined) {
     throw plotDeclarationError(
-      RetikzPlotVanillaErrorCode.DuplicateDeclarationSource,
+      RetikzPlotVanillaErrorCode.NormalizeDeclarationSourceDuplicate,
       context.composition.path,
       context.coordinate.path,
     );

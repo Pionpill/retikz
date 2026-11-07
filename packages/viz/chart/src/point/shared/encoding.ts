@@ -9,7 +9,7 @@ import { pointRecipeId } from './plot';
 
 const invalidPoint = (message: string, path: ReadonlyArray<string | number>): RetikzChartError =>
   new RetikzChartError({
-    code: RetikzChartErrorCode.InvalidChartIR,
+    code: RetikzChartErrorCode.ResolveInputInvalid,
     message,
     details: { path },
   });

@@ -30,7 +30,7 @@ keywords: 'Scope、compile、GroupPrim、IRScope、transforms、ChildSchema'
 - `offset-translate {of, offset?}`（镜像 `OffsetPosition`）
 - `rotate {degrees, cx?, cy?}` / `scale {x, y?}`（与 Scene 层一致）
 
-kind 字面量限定词在前（`'polar-translate'` / `'at-translate'` / `'offset-translate'`，与对应 Position 命名风格对齐）。4 个 translate 在 compile 阶段全部**复用 `compile/position.ts` 的 `resolvePosition`** 展平为 Cartesian translate（把 translate "shift 量"当对应 Position 字面量解析拿到 `(x, y)`），下沉到 `GroupPrim.transforms` 时 Scene 层只剩 3 变体（Cartesian translate + rotate + scale），不污染底层渲染契约。前向引用规则与 PolarPosition / AtPosition / OffsetPosition 一致（referent 须在 scope 进入前已定义）。
+kind 字面量限定词在前（`'polar-translate'` / `'at-translate'` / `'offset-translate'`，与对应 Position 命名风格对齐）。4 个 translate 在 compile 阶段全部**复用 `compile/position.ts` 的 `evaluatePosition`** 展平为 Cartesian translate（把 translate "shift 量"当对应 Position 字面量解析拿到 `(x, y)`），下沉到 `GroupPrim.transforms` 时 Scene 层只剩 3 变体（Cartesian translate + rotate + scale），不污染底层渲染契约。前向引用规则与 PolarPosition / AtPosition / OffsetPosition 一致（referent 须在 scope 进入前已定义）。
 
 `<Scope>` 是 **kernel 而非 sugar**（IR 一等基元，与 Node / Path / Coordinate 同层），落 。
 

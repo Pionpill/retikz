@@ -1,6 +1,7 @@
 import type { ScenePrimitive } from '@retikz/core';
-import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
+import { resolveCoreProviderDependencies } from '@retikz/core';
 import { GraphSchema, resolveGraph, resolveGraphDefinitionOptions } from '@retikz/graph';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import * as Flow from '../../src/flow';
@@ -22,9 +23,7 @@ const compileFlow = (source: unknown, options: Flow.FlowDiagramDefinitionOptions
 };
 
 const artifactOf = (output: ReturnType<typeof compileFlow>) => {
-  const envelope = output.artifacts.find(
-    artifact => artifact.kind === 'composite' && artifact.namespace === 'diagram' && artifact.type === 'flow',
-  );
+  const envelope = output.artifacts.find(artifact => artifact.namespace === 'diagram' && artifact.type === 'flow');
   return Flow.FlowDiagramArtifactSchema.parse(envelope?.value);
 };
 
@@ -189,7 +188,7 @@ describe('Flow 默认值和正式的 Source 片段', () => {
         title: {
           text: 'Pipeline',
           style: { textColor: '#0f172a', font: { size: 18 } },
-          layout: { align: 'start', maxTextWidth: 320 },
+          layout: { textAlign: 'start', maxTextWidth: 320 },
         },
         description: { text: 'Service graph', style: { opacity: 0 }, layout: { lineHeight: 14 } },
       },

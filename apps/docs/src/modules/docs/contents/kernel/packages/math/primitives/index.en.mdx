@@ -160,7 +160,7 @@ $$
 \operatorname{AABB}(P)=(\min_{p\in P}p_x,\ \min_{p\in P}p_y,\ \max_{p\in P}p_x,\ \max_{p\in P}p_y)
 $$
 
-`mergeBounds` repeats the same min / max operation for two results, while `expandBounds` applies directional insets afterward.
+`mergeBounds` accepts any number of bounds, combining their min / max values and skipping `undefined`. It returns `undefined` when no bounds are provided, or a new object otherwise. `expandBounds` applies directional insets afterward.
 
 <SourceLinks
   sources={[

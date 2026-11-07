@@ -22,6 +22,20 @@ import {
 const color = compositeOpaqueColor('#336699', '#ffffff', 0.2); // '#d6e0eb'
 ```
 
+## ID allocator
+
+`createIdAllocator(prefix)` returns an `IdAllocator` whose `next()` method joins the fixed prefix and a sequence number starting at 0 with `-`. An empty prefix produces `-0`, `-1`, and so on. Each instance counts independently, never reuses allocated numbers, and uses no global state.
+
+```ts
+import { createIdAllocator } from '@retikz/foundation';
+
+const ids = createIdAllocator('tree-1/scope');
+ids.next(); // 'tree-1/scope-0'
+ids.next(); // 'tree-1/scope-1'
+```
+
+The allocator does not guarantee uniqueness across instances. Callers requiring that guarantee must provide non-overlapping prefix namespaces and manage allocator lifetimes and existing IDs. Domain concepts such as Scopes, transactions, and tree roots remain with callers.
+
 ## Readonly collection snapshots
 
 `createReadonlyMap(entries)` copies input entries into an independent shallow snapshot. The result preserves native Map lookup, iteration, and insertion order without exposing `set`, `delete`, or `clear`; entry values retain their original identity and are not deep-copied or frozen.

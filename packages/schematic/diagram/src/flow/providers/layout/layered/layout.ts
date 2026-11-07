@@ -3,11 +3,11 @@ import { boundsToRect, mergeBounds, rectToBounds } from '@retikz/math';
 
 import type {
   CanonicalFlowLayoutOptions,
-  InputFlowLayoutElement,
   FlowLayoutElementOutput,
   FlowLayoutExecutionContext,
-  InputFlowLayoutComputation,
   FlowLayoutOutput,
+  InputFlowLayoutComputation,
+  InputFlowLayoutElement,
   InputFlowLayoutRelation,
 } from '../../../contract';
 import type { FlowDirection } from '../../../shared';
@@ -202,19 +202,19 @@ const sizeElement = (
   input: InputFlowLayoutElement,
   relations: ReadonlyArray<InputFlowLayoutRelation>,
   index: LayeredInputIndex,
-  context: Pick<FlowLayoutExecutionContext, 'placeLayout'>,
+  placeLayout: FlowLayoutExecutionContext['placeLayout'],
 ): SizedElement => {
   if (input.kind === 'leaf') {
     return { input, width: input.size.width, height: input.size.height, margin: input.margin };
   }
 
   if (input.kind === 'layout') {
-    const sizedChildren = input.elements.map(element => sizeElement(element, relations, index, context));
+    const sizedChildren = input.elements.map(element => sizeElement(element, relations, index, placeLayout));
     const childrenWithLabelMargins =
       input.placement.kind === 'linear'
         ? withLayoutLabelMargins(sizedChildren, input.layout, relations, index, input.id)
         : sizedChildren;
-    const placement = context.placeLayout({
+    const placement = placeLayout({
       layout: {
         ...input.placement,
         id: input.id,
@@ -245,7 +245,9 @@ const sizeElement = (
     };
   }
 
-  const children = encloseGroupContent(layoutScope(input.elements, input.layout, relations, index, input.id, context));
+  const children = encloseGroupContent(
+    layoutScope(input.elements, input.layout, relations, index, input.id, placeLayout),
+  );
 
   return {
     input,
@@ -354,10 +356,10 @@ const layoutScope = (
   relations: ReadonlyArray<InputFlowLayoutRelation>,
   index: LayeredInputIndex,
   scopeId: string | undefined,
-  context: Pick<FlowLayoutExecutionContext, 'placeLayout'>,
+  placeLayout: FlowLayoutExecutionContext['placeLayout'],
 ): ScopeLayoutResult => {
   const sized = inputs.map(input =>
-    projectSizedElementToCanonicalAxes(sizeElement(input, relations, index, context), layout.direction),
+    projectSizedElementToCanonicalAxes(sizeElement(input, relations, index, placeLayout), layout.direction),
   );
   const ranks = resolveLayeredRanks(
     sized.map(element => ({
@@ -472,7 +474,7 @@ export const layoutLayeredFlow = (
   context: FlowLayoutExecutionContext,
 ): FlowLayoutOutput => {
   const index = buildInputIndex(input.elements);
-  const root = layoutScope(input.elements, input.layout, input.relations, index, undefined, context);
+  const root = layoutScope(input.elements, input.layout, input.relations, index, undefined, context.placeLayout);
   const elements: Array<FlowLayoutElementOutput> = [];
   flattenElements(root.elements, 0, 0, elements);
   const byId = new Map(elements.map(element => [element.id, element]));
@@ -487,8 +489,8 @@ export const layoutLayeredFlow = (
 export const measureFlowLayoutElement = (
   element: InputFlowLayoutElement,
   input: InputFlowLayoutComputation,
-  context: Pick<FlowLayoutExecutionContext, 'placeLayout'>,
+  placeLayout: FlowLayoutExecutionContext['placeLayout'],
 ): Readonly<{ width: number; height: number }> => {
-  const measured = sizeElement(element, input.relations, buildInputIndex(input.elements), context);
+  const measured = sizeElement(element, input.relations, buildInputIndex(input.elements), placeLayout);
   return { width: measured.width, height: measured.height };
 };

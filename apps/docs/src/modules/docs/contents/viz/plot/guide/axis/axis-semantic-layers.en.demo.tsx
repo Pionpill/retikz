@@ -11,7 +11,7 @@ const Demo: FC = () => (
       position={[-290, 20]}
       cornerRadius={4}
       style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
-      layout={{ minimumSize: { width: 158, height: 50 }, align: 'middle', lineHeight: 16 }}
+      layout={{ minimumSize: { width: 158, height: 50 }, textAlign: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Axis guide</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -26,7 +26,7 @@ const Demo: FC = () => (
         position={[-80, -20]}
         cornerRadius={4}
         style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
-        layout={{ minimumSize: { width: 166, height: 50 }, align: 'middle', lineHeight: 16 }}
+        layout={{ minimumSize: { width: 166, height: 50 }, textAlign: 'middle', lineHeight: 16 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>axis scope</Text>
         <Text fill="gray" font={{ size: 12 }}>
@@ -38,7 +38,7 @@ const Demo: FC = () => (
         position={[-80, 60]}
         cornerRadius={4}
         style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
-        layout={{ minimumSize: { width: 166, height: 50 }, align: 'middle', lineHeight: 16 }}
+        layout={{ minimumSize: { width: 166, height: 50 }, textAlign: 'middle', lineHeight: 16 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>grid scope</Text>
         <Text fill="gray" font={{ size: 12 }}>
@@ -52,7 +52,7 @@ const Demo: FC = () => (
       position={[-80, -120]}
       cornerRadius={4}
       style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
-      layout={{ minimumSize: { width: 166, height: 50 }, align: 'middle', lineHeight: 16 }}
+      layout={{ minimumSize: { width: 166, height: 50 }, textAlign: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>layer.zIndex</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -67,7 +67,7 @@ const Demo: FC = () => (
         position={[270, -66]}
         cornerRadius={4}
         style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.06 } }}
-        layout={{ minimumSize: { width: 164, height: 30 }, align: 'middle', lineHeight: 15 }}
+        layout={{ minimumSize: { width: 164, height: 30 }, textAlign: 'middle', lineHeight: 15 }}
       >
         <Text font={{ size: 13, weight: 'bold' }}>legend · zIndex 500</Text>
       </Node>
@@ -76,7 +76,7 @@ const Demo: FC = () => (
         position={[270, -22]}
         cornerRadius={4}
         style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.06 } }}
-        layout={{ minimumSize: { width: 164, height: 30 }, align: 'middle', lineHeight: 15 }}
+        layout={{ minimumSize: { width: 164, height: 30 }, textAlign: 'middle', lineHeight: 15 }}
       >
         <Text font={{ size: 13, weight: 'bold' }}>axis · zIndex 200</Text>
       </Node>
@@ -85,7 +85,7 @@ const Demo: FC = () => (
         position={[270, 22]}
         cornerRadius={4}
         style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.06 } }}
-        layout={{ minimumSize: { width: 164, height: 30 }, align: 'middle', lineHeight: 15 }}
+        layout={{ minimumSize: { width: 164, height: 30 }, textAlign: 'middle', lineHeight: 15 }}
       >
         <Text font={{ size: 13, weight: 'bold' }}>mark · zIndex 0</Text>
       </Node>
@@ -94,7 +94,7 @@ const Demo: FC = () => (
         position={[270, 66]}
         cornerRadius={4}
         style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.06 } }}
-        layout={{ minimumSize: { width: 164, height: 30 }, align: 'middle', lineHeight: 15 }}
+        layout={{ minimumSize: { width: 164, height: 30 }, textAlign: 'middle', lineHeight: 15 }}
       >
         <Text font={{ size: 13, weight: 'bold' }}>grid · zIndex -300</Text>
       </Node>

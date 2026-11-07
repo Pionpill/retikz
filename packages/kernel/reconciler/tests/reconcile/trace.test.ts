@@ -1,16 +1,11 @@
 import type { IRScene } from '@retikz/core';
-import {
-  compileToScene,
-  CompositeBaseSchema,
-  defineComposite,
-  LayoutChildProbeKind,
-  naturalLayoutProposal,
-} from '@retikz/core';
+import { CompositeBaseSchema, defineComposite, LayoutChildProbeKind, naturalLayoutProposal } from '@retikz/core';
 import type { PerformanceTraceRecord } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
-import { ReconcilerSession, ReconcilerTracePhase, ReconcilerTraceUnit } from '../../src';
+import { SceneReconciler, ReconcilerLifecyclePhase, ReconcilerTraceUnit } from '../../src';
+import { compileToScene } from '../../src/compile';
 
 const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: 'scene', children });
 
@@ -19,7 +14,7 @@ describe('协调器编译跟踪', () => {
     const records: Array<PerformanceTraceRecord> = [];
     const trace = (record: PerformanceTraceRecord) => records.push(record);
 
-    const session = new ReconcilerSession({}, { trace });
+    const session = new SceneReconciler({}, { trace });
     session.mount(
       scene([
         { type: 'node', id: 'outside', position: [0, 0] },
@@ -32,8 +27,8 @@ describe('协调器编译跟踪', () => {
 
     expect(records).toEqual([
       {
-        owner: '@retikz/reconciler',
-        phase: ReconcilerTracePhase.Update,
+        owner: 'kernel/reconciler',
+        phase: ReconcilerLifecyclePhase.Update,
         unit: ReconcilerTraceUnit.ElementCompile,
         outcome: 'full',
         visited: 3,
@@ -49,7 +44,7 @@ describe('协调器编译跟踪', () => {
     const trace = (record: PerformanceTraceRecord) => records.push(record);
     const input = scene([]);
 
-    const session = new ReconcilerSession({}, { trace });
+    const session = new SceneReconciler({}, { trace });
     const mounted = session.mount(input);
     const traced = mounted.compilation.result;
     expect(session.update({ operations: [] })).toBe(mounted);
@@ -58,8 +53,8 @@ describe('协调器编译跟踪', () => {
     expect(traced).toEqual(plain);
     expect(records).toEqual([
       {
-        owner: '@retikz/reconciler',
-        phase: ReconcilerTracePhase.Update,
+        owner: 'kernel/reconciler',
+        phase: ReconcilerLifecyclePhase.Update,
         unit: ReconcilerTraceUnit.ElementCompile,
         outcome: 'full',
         visited: 0,
@@ -70,7 +65,7 @@ describe('协调器编译跟踪', () => {
     session.dispose();
   });
 
-  it('Composite 整场景编译始终计一次，不按展开子节点计数', () => {
+  it('Composite 按作者声明计数，不按生成子节点计数', () => {
     const records: Array<PerformanceTraceRecord> = [];
     const trace = (record: PerformanceTraceRecord) => records.push(record);
     const composite = defineComposite({
@@ -87,7 +82,7 @@ describe('协调器编译跟踪', () => {
       },
     });
 
-    const session = new ReconcilerSession({ composites: [composite] }, { trace });
+    const session = new SceneReconciler({ composites: [composite] }, { trace });
     session.mount(scene([{ namespace: 'trace', type: 'replay' }]));
     session.replace(
       scene([
@@ -97,15 +92,15 @@ describe('协调器编译跟踪', () => {
     );
 
     expect(records).toHaveLength(2);
-    for (const record of records) {
+    for (const [index, record] of records.entries()) {
       expect(record).toEqual({
-        owner: '@retikz/reconciler',
-        phase: ReconcilerTracePhase.Update,
-        unit: ReconcilerTraceUnit.SceneCompile,
+        owner: 'kernel/reconciler',
+        phase: ReconcilerLifecyclePhase.Update,
+        unit: ReconcilerTraceUnit.ElementCompile,
         outcome: 'full',
-        visited: 1,
+        visited: index + 1,
         reused: 0,
-        changed: 1,
+        changed: index + 1,
       });
     }
     session.dispose();

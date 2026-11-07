@@ -78,9 +78,10 @@ describe('共享标记填充', () => {
   it.each(['linear', 'radial'])('在具有不同参考线的小平面面板上共享一个填充的 %s 域', type => {
     const base = plotOf({ kind: 'mark', marks: ['dots'], clearance: { lower: 8, upper: 15 } });
     const { coordinate, ...rest } = base;
+    const { scales } = rest;
     const spec = PlotSchema.parse({
       ...rest,
-      scales: base.scales.map(scale => (scale.name === 'x' ? { ...scale, type } : scale)),
+      scales: scales.map(scale => (scale.name === 'x' ? { ...scale, type } : scale)),
       width: 640,
       height: 300,
       guides: [
@@ -520,9 +521,10 @@ describe('标记填充共享坐标视图', () => {
   it('组合来自使用一个共享比例的覆盖视图的标记', () => {
     const base = plotOf();
     const { coordinate, ...rest } = base;
+    const { scales, marks } = rest;
     const spec = PlotSchema.parse({
       ...rest,
-      scales: base.scales.map(scale =>
+      scales: scales.map(scale =>
         scale.name === 'x' ? { ...scale, domainPadding: { kind: 'mark', marks: ['dots', 'overlay-dots'] } } : scale,
       ),
       composition: {
@@ -533,9 +535,9 @@ describe('标记填充共享坐标视图', () => {
         ],
       },
       marks: [
-        ...base.marks,
+        ...marks,
         {
-          ...base.marks[0],
+          ...marks[0],
           id: 'overlay-dots',
           coordinateView: 'overlay',
           encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },

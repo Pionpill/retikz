@@ -10,7 +10,7 @@ export const layoutImplementationI18n: Record<
     shape: 'circumscribe\n结合 padding 与尺寸约束',
     labels: 'layoutNodeLabels\n基于可见形状放置标签',
     layout: 'CompiledNodeLayout\n局部几何、正文与标签',
-    emit: 'emitNodePrimitives\n形状、正文与标签图元',
+    emit: 'emitNode\n形状、正文与标签图元',
     reference: 'nodeReferenceViewOf\n投影后供世界空间引用查询',
   },
   en: {
@@ -18,7 +18,7 @@ export const layoutImplementationI18n: Record<
     shape: 'circumscribe\nPadding and size constraints',
     labels: 'layoutNodeLabels\nPlace labels against the visible shape',
     layout: 'CompiledNodeLayout\nLocal geometry, text, and labels',
-    emit: 'emitNodePrimitives\nShape, body, and label primitives',
+    emit: 'emitNode\nShape, body, and label primitives',
     reference: 'nodeReferenceViewOf\nWorld-space queries after projection',
   },
 };

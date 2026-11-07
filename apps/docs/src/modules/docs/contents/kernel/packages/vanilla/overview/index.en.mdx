@@ -7,6 +7,8 @@ description: Organize graphics as framework-neutral InputScene data, normalize a
 
 The package root works safely in SSR, build scripts, and other frameworks. Its default text measurer probes browser Canvas when measurement is requested. Browser SVG and Canvas mounting live at `@retikz/vanilla/dom`. IR, schemas, geometry, and compile rules belong to `@retikz/core`; backend output belongs to `@retikz/render`.
 
+Applications use `createProcessingController`, `prepareStaticProcessing`, or `processToStaticInputResult` from the package root. Custom compile drivers implement `VanillaCompileDriver` with its input, session, and output contracts. Input preparation, runtime metadata snapshots, and driver execution/commit helpers remain internal.
+
 ## Default text measurement
 
 An explicit `compile.measureText` takes precedence. Otherwise, Vanilla lazily uses Canvas 2D, falling back to the Core estimator when the environment or context is unavailable. Measurement failures and invalid metrics still fail. React's `Layout` uses the same default path.
@@ -15,7 +17,7 @@ An explicit `compile.measureText` takes precedence. Otherwise, Vanilla lazily us
 
 ## Async authoring preparation
 
-`prepareProcessingInputAsync` traverses the complete author tree and calls adapter.prepare for non-computing preflight, then runs preparation.execute and normalizes the contributions. Nested inputs register through context.prepareChildren; children cannot execute during preparation. Synchronous adapters provide lower; asynchronous adapters must provide prepare, without probing support by invoking lower.
+The internal `prepareProcessingInputAsync` traverses the complete author tree and calls adapter.prepare for non-computing preflight, then runs preparation.execute and normalizes the contributions. Nested inputs register through context.prepareChildren; children cannot execute during preparation. Synchronous adapters provide lower; asynchronous adapters must provide prepare, without probing support by invoking lower.
 
 Use `processToStaticInputResultAsync(input, options?)` for one-shot compilation, or `prepareStaticProcessingAsync` for explicit commit/discard. Interactive hosts use `createProcessingControllerAsync` and await committed/discarded update outcomes. Signals and newer requests invalidate stale results; failure preserves committed output. Core compilation and renderers remain synchronous; Promises live at the authoring preparation boundary.
 
@@ -81,7 +83,7 @@ Blue nodes in this diagram belong to Vanilla input and processing; orange nodes 
 | Core `IRScene`   | `@retikz/core`    | Skips Input normalization and prepares Core compilation                |
 | Compiled `Scene` | `@retikz/core`    | Skips normalization and compilation; DOM can only redraw it statically |
 
-`normalizeScene()` produces Core Source IR, Composite dependency contributions, authoring provenance, and metadata. `prepareProcessingInput()` then combines the only Core resolver options. `createProcessingController()` keeps a Core Computation and Runtime in retained mode, while `prepareStaticProcessing()` returns one successful result with no lifecycle.
+`normalizeScene()` produces Core Source IR, Composite dependency contributions, authoring provenance, and metadata. The internal `prepareProcessingInput()` then combines the only Core resolver options. `createProcessingController()` keeps a Core Computation and Runtime in retained mode, while `prepareStaticProcessing()` returns one successful result with no lifecycle.
 
 <SourceLinks
   sources={[

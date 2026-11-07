@@ -1,5 +1,6 @@
 import type { Scene, ScenePrimitive } from '@retikz/core';
-import { compileToScene, defineArrow } from '@retikz/core';
+import { defineArrow } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { hitTest } from '../../src/canvas';

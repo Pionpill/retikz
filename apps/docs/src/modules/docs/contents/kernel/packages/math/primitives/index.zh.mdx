@@ -160,7 +160,7 @@ $$
 \operatorname{AABB}(P)=(\min_{p\in P}p_x,\ \min_{p\in P}p_y,\ \max_{p\in P}p_x,\ \max_{p\in P}p_y)
 $$
 
-`mergeBounds` 对两个结果重复这组 min / max；`expandBounds` 再按四个方向的 inset 外扩边界。
+`mergeBounds` 接受任意数量的边界，逐项合并 min / max，忽略 `undefined`；没有有效边界时返回 `undefined`，否则返回新对象。`expandBounds` 再按四个方向的 inset 外扩边界。
 
 <SourceLinks
   sources={[
@@ -190,7 +190,7 @@ $$
 | 类别 | API                                                                 | 作用                         |
 | ---- | ------------------------------------------------------------------- | ---------------------------- |
 | 类型 | `AxisAlignedBounds`、`BoundsRect`、`BoundsHalfAxes`、`BoundsInsets` | 边界、矩形、半轴和内边距类型 |
-| 方法 | `boundsOf`、`mergeBounds`                                           | 从点集构造边界或合并两个边界 |
+| 方法 | `boundsOf`、`mergeBounds`                                           | 从点集构造边界或合并多个边界 |
 |      | `boundsToRect`、`rectToBounds`                                      | 在边界与矩形表示之间转换     |
 |      | `isFiniteBoundsRect`、`isPositiveBoundsRect`                        | 检查矩形范围是否合法         |
 |      | `centerOfBounds`、`halfAxesOfBounds`                                | 取得边界中心和半轴           |

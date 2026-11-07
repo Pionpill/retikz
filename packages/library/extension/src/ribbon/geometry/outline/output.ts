@@ -1,17 +1,14 @@
 import type { IRPosition, PathCommand, PathPrimitive, CompiledPathAppearance } from '@retikz/core';
 
-import type { RibbonLike } from '../types';
-
 /**
  * 将闭合轮廓命令写成最终 PathPrimitive
  * @description 仅当用户显式请求 stroke / strokeWidth 时写描边字段
  */
 export const styledPrimitiveFromOutline = (
-  ribbon: RibbonLike,
   outline: { commands: Array<PathCommand>; points: Array<IRPosition> },
   appearance: CompiledPathAppearance,
 ): PathPrimitive => {
-  const strokeRequested = ribbon.style?.stroke !== undefined || ribbon.style?.strokeWidth !== undefined;
+  const strokeRequested = appearance.strokeEnabled;
   const primitive: PathPrimitive = {
     type: 'path',
     commands: outline.commands,

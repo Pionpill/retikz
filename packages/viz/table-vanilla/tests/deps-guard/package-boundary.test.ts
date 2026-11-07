@@ -35,6 +35,7 @@ describe('@retikz/table-vanilla 封装边界', () => {
       '@retikz/core',
       '@retikz/data',
       '@retikz/foundation',
+      '@retikz/reconciler',
       '@retikz/table',
       '@retikz/vanilla',
     ]);

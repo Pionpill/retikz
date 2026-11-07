@@ -79,7 +79,8 @@
     "d3-scale-chromatic": "catalog:",
     "d3-time-format": "catalog:",
     "zod": "catalog:",
-    "@retikz/extension": "workspace:^"
+    "@retikz/extension": "workspace:^",
+    "@retikz/reconciler": "workspace:^"
   },
   "devDependencies": {
     "@types/d3-array": "catalog:",

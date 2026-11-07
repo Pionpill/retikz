@@ -106,7 +106,7 @@ import { ScatterChartSchema, createScatterChartProviderContribution } from '@ret
 import { createPlotProviderContribution } from '@retikz/plot';
 import { pathClipProvider } from '@retikz/extension';
 import { scatterMinimalData } from './scatter-minimal.data';
-import { compileToScene } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { renderToSvgString } from '@retikz/vanilla';
 
 const chart = ScatterChartSchema.parse({

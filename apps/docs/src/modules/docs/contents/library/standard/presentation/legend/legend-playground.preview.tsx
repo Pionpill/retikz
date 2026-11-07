@@ -53,7 +53,7 @@ const title = (values: LegendPlaygroundValues) =>
           stroke: 'none',
           fill: 'none',
         }}
-        layout={{ align: values.titleAlign, padding: 0 }}
+        layout={{ textAlign: values.titleAlign, padding: 0 }}
       />
     </LegendTitle>
   );

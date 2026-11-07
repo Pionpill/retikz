@@ -1,8 +1,9 @@
-﻿import { resolveCoreThemeColors, resolveDefaultCoreThemeColors } from '@retikz/core';
+﻿import { resolveDefaultCoreThemeColors } from '@retikz/core';
 import type { ThemeColorOverrides } from '@retikz/core';
 import { expect } from 'vitest';
 
 import { defineBenchmark } from '../../../../../scripts/benchmarks/scenario';
+import { resolveCoreThemeColors } from '../../src/providers';
 
 for (const mode of ['light', 'dark'] as const) {
   defineBenchmark({ id: `providers/theme/default/${mode}`, dimensions: ['Theme colors', mode, '默认16色'] }, () => ({

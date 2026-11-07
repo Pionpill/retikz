@@ -1,6 +1,6 @@
 import type { IRChild, Scene } from '@retikz/core';
-import { compileToScene } from '@retikz/core';
 import { createInputScene, Node } from '@retikz/react';
+import { compileToScene } from '@retikz/reconciler';
 import { drawScene } from '@retikz/render/canvas';
 import { renderToSvgString } from '@retikz/render/svg';
 import { Legend, LegendItem, LegendTitle } from '@retikz/standard-react/presentation';

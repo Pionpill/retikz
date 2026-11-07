@@ -1,61 +1,72 @@
-﻿import type { ExternalRow, DataFieldType, IRDataFieldDefinition } from '@retikz/data';
+import type { ExternalRow, DataFieldType, IRDataFieldDefinition } from '@retikz/data';
 import {
-  createDataView,
   BuiltinFieldOrderMode,
-  resolveFieldPath,
-  resolveCategoryDomain,
   assertFieldOrders,
+  createDataView,
+  resolveCategoryDomain,
+  resolveFieldPath,
 } from '@retikz/data';
 
-import type { CoordinateFrame, DomainPaddingScale, PositionScale } from '../../contract';
-import type { AnyCoordinateDefinition, DimensionRole, TickSet } from '../../contract';
-import { isBuiltinScaleOperation, readCoordinateScaleNames } from '../../contract';
-import { markPositionInputs, positionValue, positionField } from '../../contract';
+import type {
+  AnyCoordinateDefinition,
+  CoordinateFrame,
+  DimensionRole,
+  DomainPaddingScale,
+  PositionScale,
+  TickSet,
+} from '../../contract';
+import {
+  isBuiltinScaleOperation,
+  markPositionInputs,
+  positionField,
+  positionValue,
+  readCoordinateScaleNames,
+} from '../../contract';
 import { RetikzPlotError } from '../../error';
 import {
   buildProportionalIntervals,
   createPositionChannelDefinitions,
-  proportionalIntervalDomainValues,
-  resolveIntervalBound,
+  fixedRoleValue,
   intervalBoundField,
   intervalBoundInput,
   pathBaselineField,
-  fixedRoleValue,
+  proportionalIntervalDomainValues,
+  resolveIntervalBound,
 } from '../../providers';
 import type {
-  IRPlotPositionInput,
   IRPlot,
   IRPlotAxisGuide,
   IRPlotChannel,
   IRPlotCoordinateOperation,
   IRPlotIntervalMark,
   IRPlotMark,
+  IRPlotPositionInput,
   IRPlotScaleOperation,
 } from '../../schemas';
-import { IntervalBoundKind, PathClosureKind, PlotGuide, BuiltinPlotMark, BuiltinPlotScale } from '../../schemas';
+import { BuiltinPlotMark, BuiltinPlotScale, IntervalBoundKind, PathClosureKind, PlotGuide } from '../../schemas';
 import { isSingleMark } from '../mark';
+import type { PointPaddingResolution } from '../scale';
 import {
   assertBaselineScaleCompatible,
   assertScaleFieldCompatible,
   derivePositionScale,
+  markDomainPaddingOf,
+  resolveBuiltinPositionOperation,
+  resolvePointPadding,
   resolvePositionScale,
   resolvePositionScaleContinuity,
   resolvePositionScalePolicy,
   resolvePositionMapping,
   domainPaddingScaleOf,
-  resolveBuiltinPositionOperation,
-  markDomainPaddingOf,
-  resolvePointPadding,
 } from '../scale';
-import type { PointPaddingResolution } from '../scale';
 import type { CoordinateFrameResolution, CoordinateResolveContext, MarkDataView } from './types';
 
 /** 查找当前 coordinate operation 对应的 definition，并集中报告未注册坐标系 */
 export const resolveCoordinateDefinition = (
   operation: IRPlotCoordinateOperation,
-  context: Pick<CoordinateResolveContext, 'coordinateRegistry'>,
+  registry: CoordinateResolveContext['coordinateRegistry'],
 ): AnyCoordinateDefinition => {
-  const definition = context.coordinateRegistry.get(operation.type);
+  const definition = registry.get(operation.type);
   if (definition === undefined) {
     throw new RetikzPlotError(
       `lowerPlots: coordinate type "${operation.type}" is not registered; pass a CoordinateDefinition via options.definitions.coordinates`,
@@ -225,21 +236,32 @@ export const resolveCoordinateFrame = (
     coordinateRegistry,
     lowerGuide,
     lowerCustomAxis,
+    markDataViews: providedMarkDataViews,
+    fieldOrderRegistry,
+    roleMarkDataViews,
+    coordinate,
+    markRegistry,
+    markPadding,
+    paddingMarkDataViews,
+    domainPaddingScope,
+    legendReserve,
+    textMeasurer,
+    resolveGuideTicks,
+    resolveVisibleGuideTicks,
   } = context;
   const node = source;
   const rootDataView = createDataView(rows, model);
   const markDataViews =
-    context.markDataViews ?? node.marks.map((mark, markIndex) => ({ markIndex, mark, dataView: rootDataView }));
-  assertFieldOrders(model, context.fieldOrderRegistry);
-  for (const entry of markDataViews) assertFieldOrders(entry.dataView.model, context.fieldOrderRegistry);
-  const markDataViewsForRole = (role: DimensionRole): Array<MarkDataView> =>
-    context.roleMarkDataViews?.[role] ?? markDataViews;
-  const coordinateOperation = context.coordinate ?? node.coordinate;
+    providedMarkDataViews ?? node.marks.map((mark, markIndex) => ({ markIndex, mark, dataView: rootDataView }));
+  assertFieldOrders(model, fieldOrderRegistry);
+  for (const entry of markDataViews) assertFieldOrders(entry.dataView.model, fieldOrderRegistry);
+  const markDataViewsForRole = (role: DimensionRole): Array<MarkDataView> => roleMarkDataViews?.[role] ?? markDataViews;
+  const coordinateOperation = coordinate ?? node.coordinate;
   if (coordinateOperation === undefined) {
     throw new RetikzPlotError('lowerPlots: default coordinate view is not registered');
   }
 
-  const coordinateDefinition = resolveCoordinateDefinition(coordinateOperation, { coordinateRegistry });
+  const coordinateDefinition = resolveCoordinateDefinition(coordinateOperation, coordinateRegistry);
   const roles = coordinateDefinition.roles;
   const axisGuides = (node.guides ?? []).filter((guide): guide is IRPlotAxisGuide => guide.type === PlotGuide.Axis);
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
@@ -264,7 +286,7 @@ export const resolveCoordinateFrame = (
 
     for (const { mark, dataView } of sourceViews) {
       if (mark.contributeToDomain === false) continue;
-      const inputs: Array<ExternalRow | undefined> = isSingleMark(mark, { registry: context.markRegistry })
+      const inputs: Array<ExternalRow | undefined> = isSingleMark(mark, { registry: markRegistry })
         ? [undefined]
         : dataView.rows;
       if (mark.type === BuiltinPlotMark.Interval) {
@@ -434,7 +456,7 @@ export const resolveCoordinateFrame = (
       (def.type === BuiltinPlotScale.Band || def.type === BuiltinPlotScale.Point) &&
       def.domain === undefined
     ) {
-      return { ...def, domain: resolveCategoryDomain(values, order, context.fieldOrderRegistry) };
+      return { ...def, domain: resolveCategoryDomain(values, order, fieldOrderRegistry) };
     }
 
     return def;
@@ -540,7 +562,7 @@ export const resolveCoordinateFrame = (
   });
   const mappingsByRole = new Map<string, DomainPaddingScale>();
   if (hasMarkPadding) {
-    if (context.markPadding === undefined || coordinateDefinition.domainPadding === undefined) {
+    if (markPadding === undefined || coordinateDefinition.domainPadding === undefined) {
       throw new RetikzPlotError(`coordinate "${coordinateOperation.type}" has no mark domainPadding capability`);
     }
 
@@ -565,10 +587,10 @@ export const resolveCoordinateFrame = (
       }
 
       const positionPolicy = definition;
-      const group = context.markPadding.groupOf(operation.name, role, markDataViewsForRole(role));
+      const group = markPadding.groupOf(operation.name, role, markDataViewsForRole(role));
       mappingsByRole.set(
         role,
-        context.markPadding.mappingOf(group, () => {
+        markPadding.mappingOf(group, () => {
           const effective = resolveBuiltinPositionOperation({ ...operation, domainPadding: undefined }, values, [0, 1]);
           return domainPaddingScaleOf(
             resolvePositionMapping(effective, values, [0, 1], {
@@ -602,14 +624,14 @@ export const resolveCoordinateFrame = (
     if (existing !== undefined) return existing;
 
     const mapping = role === undefined ? undefined : mappingsByRole.get(role);
-    if (role === undefined || mapping === undefined || context.markPadding === undefined)
+    if (role === undefined || mapping === undefined || markPadding === undefined)
       throw new RetikzPlotError(`scale "${operation.name}" has no padding role`);
 
     const roleIndex = roles.indexOf(role);
-    const localViews = context.paddingMarkDataViews ?? markDataViews;
-    const paddingContext = context.markPadding;
+    const localViews = paddingMarkDataViews ?? markDataViews;
+    const paddingContext = markPadding;
     const automatic = automaticPadding.get(role);
-    const group = context.markPadding.groupOf(operation.name, role, markDataViewsForRole(role));
+    const group = markPadding.groupOf(operation.name, role, markDataViewsForRole(role));
 
     const samples = () => {
       const constraints = [];
@@ -716,9 +738,9 @@ export const resolveCoordinateFrame = (
       return constraints;
     };
 
-    const scale = context.markPadding.scaleOf(
+    const scale = markPadding.scaleOf(
       group,
-      context.domainPaddingScope ?? 'root',
+      domainPaddingScope ?? 'root',
       padding,
       samples,
       mapping,
@@ -739,8 +761,8 @@ export const resolveCoordinateFrame = (
     ...(labelGap !== undefined ? { labelGap } : {}),
     ...(margin !== undefined ? { margin } : {}),
     ...(layoutReserve !== undefined ? { layoutReserve } : {}),
-    legendReserve: context.legendReserve ?? {},
-    textMeasurer: context.textMeasurer,
+    legendReserve: legendReserve ?? {},
+    textMeasurer,
     ...(plotAreaOverride !== undefined ? { plotAreaOverride } : {}),
     ...(roleRangeOverrides !== undefined ? { roleRangeOverrides } : {}),
     ...(guideRoleRangeOverrides !== undefined ? { guideRoleRangeOverrides } : {}),
@@ -750,8 +772,8 @@ export const resolveCoordinateFrame = (
     collectPositionValues: (role, opts) =>
       collectValues(role, opts?.axis, roleChannelOf(role), opts?.includeBaseline ?? false),
     collectAxisTicks,
-    resolveGuideTicks: context.resolveGuideTicks,
-    resolveVisibleGuideTicks: context.resolveVisibleGuideTicks,
+    resolveGuideTicks,
+    resolveVisibleGuideTicks,
     resolveScaleForRole: resolveScaleForDefinitionRole,
     resolvePositionScaleContinuity: operation =>
       resolvePositionScaleContinuity(operation, {

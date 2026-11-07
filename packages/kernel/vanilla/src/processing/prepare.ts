@@ -1,4 +1,4 @@
-import type { AnyCompositeDefinition, CompileOptions } from '@retikz/core';
+import type { AnyCompositeDefinition } from '@retikz/core';
 import {
   DEFAULT_RESOLVED_THEME,
   createCompositeInputBindings,
@@ -6,6 +6,7 @@ import {
   resolveTheme,
   resolveThemeRegistry,
 } from '@retikz/core';
+import type { CompileOptions } from '@retikz/reconciler';
 
 import type {
   InputAuthoringSite,

@@ -80,16 +80,13 @@ $$
     },
     {
       label: 'Core：选择显式视窗或自动边界',
-      path: 'packages/kernel/core/src/compile/output.ts',
-      startLine: 51,
+      path: 'packages/kernel/reconciler/src/compile/scene/output.ts',
     },
     {
       label: '自动留白与无内容时的范围',
       path: 'packages/kernel/core/src/compile/scene/layout.ts',
-      startLine: 27,
-      endLine: 36,
     },
-    { label: '默认布局留白', path: 'packages/kernel/core/src/compile/constants.ts', startLine: 3, endLine: 7 },
+    { label: '默认布局留白', path: 'packages/kernel/reconciler/src/compile/scene/output.ts' },
   ]}
 />
 
@@ -134,7 +131,7 @@ SVG 和 Canvas 共用这套显示尺寸计算。CSS 字符串不会被当作绘�
       label: 'SVG：将尺寸应用到根元素',
       path: 'packages/kernel/react/src/render/processing-result.tsx',
       startLine: 180,
-      endLine: 184,
+      endLine: 183,
     },
     {
       label: 'Canvas：复用显示尺寸计算',
@@ -195,8 +192,7 @@ Layout 把主题写入输入场景，供后续处理读取；它不会把主题�
     },
     {
       label: 'Composite 输出继续使用当前作用域',
-      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 2361,
+      path: 'packages/kernel/reconciler/src/compile/tree/composite/compile.ts',
     },
     {
       label: 'Node 显式样式覆盖继承样式',

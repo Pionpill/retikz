@@ -1,40 +1,17 @@
-import type { JsonObject } from '@retikz/foundation';
-
-import type { BoundaryDefinition, ShapeDefinition } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { ProviderRegistry } from '../../providers';
 import type { IRBoundary } from '../../schemas';
 import { parseProviderPayload } from '../provider';
-import type { BoundaryReferenceResolution } from './types';
-
-/** 解析连接面所需的节点形状与定义注册表 */
-type BoundaryReferenceResolveContext = {
-  /** 节点视觉形状定义 */
-  visualDef: ShapeDefinition;
-  /** 节点视觉形状参数 */
-  visualParams: JsonObject;
-  /** 形状定义注册表 */
-  shapeRegistry: ProviderRegistry<ShapeDefinition>;
-  /** 连接面定义注册表 */
-  boundaryRegistry: ProviderRegistry<BoundaryDefinition>;
-  /** 当前节点的 IR 路径，用于参数校验错误定位 */
-  irPath?: string;
-};
-
-/** 按名称排序列出已注册定义，供未知连接面的错误信息使用 */
-const registeredNames = <TDefinition>(registry: ProviderRegistry<TDefinition>): string => {
-  const names = [...registry.keys()];
-  return names.sort().join(', ') || '(none registered)';
-};
+import type { CanonicalNodeBoundary, NodeBoundaryResolveContext } from './types';
 
 /**
  * 为连接面选择定义并解析参数，几何计算留到节点尺寸确定之后
  * @description 未指定或指定 shape 时沿用节点自身形状；其余名称先查询连接面注册表，再查询形状注册表
  */
-export const resolveBoundaryReference = (
+export const resolveNodeBoundary = (
   boundary: IRBoundary | undefined,
-  context: BoundaryReferenceResolveContext,
-): BoundaryReferenceResolution => {
+  context: NodeBoundaryResolveContext,
+): CanonicalNodeBoundary => {
   if (boundary === undefined || boundary === 'shape') {
     return {
       name: context.visualDef.name,
@@ -46,7 +23,7 @@ export const resolveBoundaryReference = (
 
   const type = typeof boundary === 'string' ? boundary : boundary.type;
   const rawParams = typeof boundary === 'string' ? {} : (boundary.params ?? {});
-  const paramsPath = `${context.irPath ?? 'node'}.boundary.params`;
+  const paramsPath = [...(context.irPath ?? []), 'boundary', 'params'];
   const boundaryDef = context.boundaryRegistry.get(type);
   if (boundaryDef !== undefined) {
     return {
@@ -80,6 +57,12 @@ export const resolveBoundaryReference = (
       isShape: true,
     };
   }
+
+  /** 按名称排序列出已注册定义，供未知连接面的错误信息使用 */
+  const registeredNames = <TDefinition>(registry: ProviderRegistry<TDefinition>): string => {
+    const names = [...registry.keys()];
+    return names.sort().join(', ') || '(none registered)';
+  };
 
   throw new RetikzCoreError(
     RetikzCoreErrorCode.Resolve,

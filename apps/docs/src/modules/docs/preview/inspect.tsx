@@ -1,10 +1,10 @@
-import type { InspectionSelection } from '@retikz/inspect';
-import type { InspectLayoutProps } from '@retikz/inspect/react';
-import { InspectLayout } from '@retikz/inspect/react';
-import { createInspectionVanillaAuthoring, createInspectionVanillaDriver } from '@retikz/inspect/vanilla';
+import type { IRScene } from '@retikz/core';
+import type { InspectionRequest, InspectorRegistry } from '@retikz/inspect';
+import { createDefaultInspectorRegistry } from '@retikz/inspect';
+import { prepareInspectionPresentation, renderInspectionToSvgString } from '@retikz/inspect/vanilla';
+import type { LayoutProps } from '@retikz/react';
 import { createInputScene } from '@retikz/react';
-import type { InputScene } from '@retikz/vanilla';
-import { renderToSvgString } from '@retikz/vanilla';
+import { toSceneResult, renderToSvgString } from '@retikz/vanilla';
 import type { FC, ReactNode } from 'react';
 import { isValidElement } from 'react';
 
@@ -23,79 +23,88 @@ import { RawSvgFrame } from '../components/component-preview/source-panel';
 import { PreviewThemeDefinitionBundle } from '../components/component-preview/theme';
 import { browserMeasurer } from '../components/component-preview/vanilla-preview';
 
-/** 从内置 Inspect demo 的同一 JSX 派生 Vanilla 输入及可重放的运行时配置 */
+/** 文档示例显式提供普通绘图输入与独立检查请求 */
+export type InspectionResultPreviewProps = Pick<LayoutProps, 'children' | 'ir' | 'viewBox' | 'extensions'> & {
+  registry?: InspectorRegistry;
+  requests: ReadonlyArray<InspectionRequest>;
+};
+
+/** 先完成普通绘图，再独立生成辅助层 */
+export const buildInspectionPreview = (
+  props: InspectionResultPreviewProps,
+  idPrefix: string,
+  theme?: IRScene['theme'],
+) => {
+  const authored = createInputScene(props.children);
+  const input = {
+    ...(props.ir ?? authored.scene),
+    viewBox: props.viewBox ?? props.ir?.viewBox,
+    ...(theme === undefined ? {} : { theme }),
+  };
+  const compile = {
+    ...props.extensions,
+    themeDefinitions: PreviewThemeDefinitionBundle.core,
+    measureText: browserMeasurer,
+  };
+  const output = toSceneResult(input, { adapters: synchronousInputAdaptersOf(authored.adapters), compile });
+  const result = output.compileResult ?? { scene: output.scene, artifacts: [] };
+  const options = {
+    registry: props.registry ?? createDefaultInspectorRegistry(),
+    requests: props.requests,
+    compileOptions: compile,
+    idPrefix: idPrefix + '-inspection',
+  };
+  const primary = renderToSvgString(result.scene, {
+    output: { idPrefix: idPrefix + '-primary' },
+    animation: { enabled: false },
+  });
+  const presentation = prepareInspectionPresentation(result, options);
+  const auxiliary = renderInspectionToSvgString(presentation, options);
+  return { primary, auxiliary, input };
+};
+
+/** 以结果消费为例生成文档源码视图 */
 export const createBuiltinInspectPreviewSource = (
   Component: FC<{ lang?: Lang; values?: Readonly<PreviewControlValues> }>,
   name: string,
 ): PreviewSourceConfig => ({
   deriveIR: false,
-  buildViews: ({ lang, theme, values }) => {
+  buildViews: ({ lang, values, theme }) => {
     const element = Component({ lang, values });
-    if (!isValidElement<InspectLayoutProps>(element) || element.type !== InspectLayout) {
-      throw new Error('An Inspect preview must return InspectLayout directly.');
-    }
-
-    const props = element.props;
-    const authoring = createInputScene(props.children);
-    const input: InputScene = {
-      ...authoring.scene,
-      viewBox: props.viewBox,
-      ...(theme === undefined ? {} : { theme }),
-      ...(props.request === undefined ? {} : { authoring: createInspectionVanillaAuthoring(props.request) }),
-    };
-
-    // 本入口只消费内置 Inspect demo；序列化公开 request 参数，不序列化 opaque token
-    const configCode = JSON.stringify(
-      { input, selection: props.selection ?? { rules: [] } },
-      (key, value: unknown) =>
-        key === 'authoring' && value !== undefined
-          ? (value as ReturnType<typeof createInspectionVanillaAuthoring>).input
-          : value,
-      2,
+    if (!isValidElement<InspectionResultPreviewProps>(element)) throw new Error('Expected a result inspection preview');
+    const output = buildInspectionPreview(element.props, name, theme);
+    const config = JSON.stringify({ input: output.input, requests: element.props.requests }, null, 2);
+    const render = () => (
+      <div style={{ position: 'relative' }}>
+        <RawSvgFrame svg={output.primary} />
+        <div aria-hidden="true" style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+          <RawSvgFrame svg={output.auxiliary} />
+        </div>
+      </div>
     );
-    const config = JSON.parse(configCode) as { input: unknown; selection: InspectionSelection };
-    const restoredInput: InputScene = JSON.parse(JSON.stringify(config.input), (key, value) =>
-      key === 'authoring' ? createInspectionVanillaAuthoring(value) : value,
-    );
-    const svg = renderToSvgString(restoredInput, {
-      adapters: synchronousInputAdaptersOf(authoring.adapters),
-      compile: {
-        clips: props.extensions?.clips,
-        themeDefinitions: PreviewThemeDefinitionBundle.core,
-        measureText: browserMeasurer,
-      },
-      compileDriver: createInspectionVanillaDriver({ registry: props.registry, selection: config.selection }),
-    });
-
-    const configFile = { filename: `${name}.config.json`, code: configCode, lang: 'json' as const };
-    const hasClip = (props.extensions?.clips?.length ?? 0) > 0;
-    const vanillaCode = `import type { InputScene } from '@retikz/vanilla';
-import type { InspectionSelection } from '@retikz/inspect';
+    const code = `import { toSceneResult, renderToSvgString } from '@retikz/vanilla';
+import type { InputScene } from '@retikz/vanilla';
+import { createDefaultInspectorRegistry } from '@retikz/inspect';
+import type { InspectionRequest } from '@retikz/inspect';
+import { prepareInspectionPresentation, renderInspectionToSvgString } from '@retikz/inspect/vanilla';
+import { pathClipDefinition } from '@retikz/extension';
 import { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';
 import { browserMeasurer } from '@/modules/docs/components/component-preview/vanilla-preview';
-import { renderToSvgString } from '@retikz/vanilla';
-import { createDefaultInspectorRegistry } from '@retikz/inspect';
-import { createInspectionVanillaAuthoring, createInspectionVanillaDriver } from '@retikz/inspect/vanilla';
-${hasClip ? "import { pathClipDefinition } from '@retikz/extension';\n" : ''}import config from './${name}.config.json';
 
-// Restore runtime authoring markers; they are not persisted Core IR fields.
-const input: InputScene = JSON.parse(JSON.stringify(config.input), (key, value) =>
-  key === 'authoring' ? createInspectionVanillaAuthoring(value) : value,
-);
-
-export const svg = renderToSvgString(input, {
-  compile: { ${hasClip ? 'clips: [pathClipDefinition], ' : ''}themeDefinitions: PreviewThemeDefinitionBundle.core, measureText: browserMeasurer },
-  compileDriver: createInspectionVanillaDriver({
-    registry: createDefaultInspectorRegistry(),
-    selection: config.selection as InspectionSelection,
-  }),
-});`;
-
-    const render = () => <RawSvgFrame svg={svg} />;
-
+const input: InputScene = ${JSON.stringify(output.input, null, 2)};
+const requests: ReadonlyArray<InspectionRequest> = ${JSON.stringify(element.props.requests, null, 2)};
+const compile = { clips: [pathClipDefinition], themeDefinitions: PreviewThemeDefinitionBundle.core, measureText: browserMeasurer };
+const primary = toSceneResult(input, { compile });
+const result = primary.compileResult ?? { scene: primary.scene, artifacts: [] };
+const options = { registry: createDefaultInspectorRegistry(), requests, compileOptions: compile, idPrefix: '${name}-inspection' };
+const auxiliary = prepareInspectionPresentation(result, options);
+export const primarySvg = renderToSvgString(result.scene, { output: { idPrefix: '${name}-primary' }, animation: { enabled: false } });
+export const overlay = renderInspectionToSvgString(auxiliary, options);
+// 将 primarySvg 和 overlay 放入两个使用相同视口的独立容器`;
+    const configFile = { filename: name + '.config.json', code: config, lang: 'json' as const };
     return {
       vanilla: {
-        files: [{ filename: `${name}.vanilla.ts`, code: vanillaCode, lang: 'ts' }, configFile],
+        files: [{ filename: name + '.vanilla.ts', code, lang: 'ts' }, configFile],
         rendererMode: 'svg',
         render,
       },
@@ -104,7 +113,7 @@ export const svg = renderToSvgString(input, {
   },
 });
 
-/** 为内置 Inspect demo 复用实时绘图、稳定基线和三种源码视图 */
+/** controls 与各源码视图共用同一当前输入 */
 export const defineControlledBuiltinInspectPreview = <const TDefinition extends PreviewControlsDefinition>(
   contractFor: (lang: Lang) => { controls: TDefinition; canonicalValues: Readonly<PreviewControlValues> },
   render: (values: PreviewControlValuesFor<TDefinition>, lang: Lang) => ReactNode,
@@ -114,19 +123,18 @@ export const defineControlledBuiltinInspectPreview = <const TDefinition extends 
     const lang = props.lang ?? 'zh';
     return render(usePreviewControls(contractFor(lang).controls), lang);
   };
-
   const sourceRender: FC<{ lang?: Lang; values?: Readonly<PreviewControlValues> }> = props => {
     const lang = props.lang ?? 'zh';
     const contract = contractFor(lang);
-    const values = {
-      ...buildPreviewControlDefaults(contract.controls),
-      ...contract.canonicalValues,
-      ...props.values,
-    } as PreviewControlValuesFor<TDefinition>;
-
-    return render(values, lang);
+    return render(
+      {
+        ...buildPreviewControlDefaults(contract.controls),
+        ...contract.canonicalValues,
+        ...props.values,
+      } as PreviewControlValuesFor<TDefinition>,
+      lang,
+    );
   };
-
   return {
     Component,
     source: {

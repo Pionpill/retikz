@@ -1,5 +1,5 @@
 import type { IRScene } from '@retikz/core';
-import { compileToScene } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { createGrid, createLegend, gridDefinition, legendDefinition } from '../src/presentation';

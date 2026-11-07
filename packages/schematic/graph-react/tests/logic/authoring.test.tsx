@@ -246,7 +246,6 @@ const hostPropKeys = [
   'composites',
   'themeDefinitions',
   'lowerTex',
-  'artifacts',
   'onArtifacts',
   'onCompileResult',
 ] as const;
@@ -459,7 +458,7 @@ describe('Graph Source 和儿童编写', () => {
       id: 'parity',
       position: [0, 0],
       defaultGraph: {
-        entity: { style: { fill: '#111111' }, layout: { align: 'middle' } },
+        entity: { style: { fill: '#111111' }, layout: { textAlign: 'middle' } },
         relation: { style: { stroke: '#222222' } },
       },
       graphRules: [{ type: 'entity' as const, selector: { role: 'activity' }, style: { fill: '#ff0000' } }],
@@ -692,7 +691,6 @@ describe('Graph 独立式和嵌入式宿主分类', () => {
       composites: undefined,
       themeDefinitions: undefined,
       lowerTex: undefined,
-      artifacts: undefined,
       onArtifacts: undefined,
       onCompileResult: undefined,
       theme: { mode: 'dark' as const },

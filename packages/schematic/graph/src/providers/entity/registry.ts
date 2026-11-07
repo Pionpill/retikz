@@ -7,14 +7,14 @@ export type EntityKindRegistry = ReadonlyMap<string, ReadonlyMap<string, EntityK
 
 const duplicateDefinition = (capability: string, key: string): RetikzGraphError =>
   new RetikzGraphError({
-    code: RetikzGraphErrorCode.DefinitionDuplicate,
+    code: RetikzGraphErrorCode.ProviderDefinitionDuplicate,
     message: `${capability} '${key}' is already registered.`,
     details: { capability, key },
   });
 
 const missingDefinition = (capability: string, key: string, availableKeys: Iterable<string>): RetikzGraphError =>
   new RetikzGraphError({
-    code: RetikzGraphErrorCode.DefinitionNotRegistered,
+    code: RetikzGraphErrorCode.ProviderDefinitionNotRegistered,
     message: `${capability} '${key}' is not registered.`,
     details: { capability, key, availableKeys: [...availableKeys] },
   });
@@ -67,7 +67,7 @@ export const resolveEntityKindRegistry = (
     const kinds = registry.get(definition.role) ?? new Map<string, EntityKindDefinition>();
     if (kinds.has(definition.kind)) {
       throw new RetikzGraphError({
-        code: RetikzGraphErrorCode.DefinitionDuplicate,
+        code: RetikzGraphErrorCode.ProviderDefinitionDuplicate,
         message: `Entity kind '${definition.kind}' is already registered for role '${definition.role}'.`,
         details: { capability: 'entity-kind', key: definition.kind, reason: `role '${definition.role}'` },
       });

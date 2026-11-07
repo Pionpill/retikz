@@ -1,50 +1,22 @@
-import { createInspectorRegistry } from '@retikz/inspect';
-import { InspectLayout, InspectPath } from '@retikz/inspect/react';
-import { Layout, Path, Step } from '@retikz/react';
-import type { FC } from 'react';
+﻿import type { FC } from 'react';
 
+import type { Lang } from '@/i18n';
+import { usePreviewControls } from '@/modules/docs/components/component-preview/context';
 import type { PreviewSourceConfig } from '@/modules/docs/preview';
 
-import { endpointInspector, endpointInspectorKey } from './endpoint-inspector';
+import { createPreviewControlContract } from './inspect-custom.controls';
+import { EndpointInspection } from './inspect-custom.preview';
 
-const registry = createInspectorRegistry([endpointInspector]);
+export { createPreviewControlContract, previewControlContract, previewControls } from './inspect-custom.controls';
 
-const Curve: FC<{ inspect?: boolean }> = props => {
-  const { inspect = false } = props;
-  const steps = (
-    <>
-      <Step kind="move" to={[-150, 42]} />
-      <Step kind="cubic" control1={[-78, -88]} control2={[82, 88]} to={[150, -42]} />
-    </>
-  );
-
-  return inspect ? (
-    <InspectPath
-      request={{ inspector: endpointInspectorKey, options: true }}
-      style={{ stroke: 'dimgray', strokeWidth: 3 }}
-    >
-      {steps}
-    </InspectPath>
-  ) : (
-    <Path style={{ stroke: 'dimgray', strokeWidth: 3 }}>{steps}</Path>
-  );
+/** 控件直接更新检查器 options，主图几何保持不变 */
+const Demo: FC<{ lang?: Lang }> = props => {
+  const { lang = 'zh' } = props;
+  const values = usePreviewControls(createPreviewControlContract(lang).controls);
+  return <EndpointInspection size={values.size} />;
 };
-
-/** Register and request the custom endpoint Inspector. */
-const Demo: FC = () => (
-  <InspectLayout registry={registry}>
-    <Curve inspect />
-  </InspectLayout>
-);
-
-/** Keep Inspector selection outside the persistent drawing IR. */
 export const previewSource = {
   deriveIR: false,
-  canonicalRender: () => (
-    <Layout>
-      <Curve />
-    </Layout>
-  ),
+  canonicalRender: () => <EndpointInspection size={10} />,
 } satisfies PreviewSourceConfig;
-
 export default Demo;

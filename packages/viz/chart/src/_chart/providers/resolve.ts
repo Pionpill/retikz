@@ -13,7 +13,7 @@ export const resolveChartFromProvider = (
   const recipe = context.registry.recipes.get(source.recipe.chartType);
   if (recipe === undefined) {
     throw new RetikzChartError({
-      code: RetikzChartErrorCode.UnknownDefinition,
+      code: RetikzChartErrorCode.ProviderDefinitionUnknown,
       message: `Chart recipe "${source.recipe.chartType}" is not active in this Chart provider`,
       details: { path: ['recipe', 'chartType'], chartType: source.recipe.chartType },
     });
@@ -21,7 +21,7 @@ export const resolveChartFromProvider = (
 
   if (source.type !== context.registry.family) {
     throw new RetikzChartError({
-      code: RetikzChartErrorCode.FamilyMismatch,
+      code: RetikzChartErrorCode.ProviderFamilyMismatch,
       message: `Chart family "${source.type}" does not match provider family "${context.registry.family}"`,
       details: { path: ['type'], family: source.type, expected: context.registry.family },
     });

@@ -17,10 +17,14 @@ Both examples connect A to B. The left uses center coordinates; the right uses n
 
 This page follows the built-in stroke path. Custom Path definitions emit primitives through their own Definitions.
 
+`compileStrokePath` coordinates layout and emission. Layout computes the base path, label and mark placement, gaps, and endpoint contacts. Emission creates or reuses local primitives, then applies host wrapping. Fragments are created only when label gaps exist.
+
+Files follow these stages: `geometry/` owns base geometry and sampling, `layout.ts` coordinates layout, `emit.ts` applies appearance and coordinates primitive emission, `decoration/` compiles labels and decorations, `body.ts` computes the visible path, and `output.ts` wraps the result. Definition capabilities and shared label callbacks remain in `host/context.ts` and `label/callbacks.ts` respectively.
+
 <SourceLinks
   sources={[
     { label: 'Path resolution entry', path: 'packages/kernel/core/src/resolve/path/resolve.ts' },
-    { label: 'Stroke emission entry', path: 'packages/kernel/core/src/compile/path/stroke/emit.ts' },
+    { label: 'Stroke compilation entry', path: 'packages/kernel/core/src/compile/path/stroke/compile.ts' },
   ]}
 />
 
@@ -34,16 +38,16 @@ These snapshots follow declarations `Node A → Path P(A, B) → Node B` within 
 
 The second column adds B geometry and primitives while retaining the slot for P. The third replaces that slot with Path P. Here P is a plain line without labels, and A and B stand for the node primitives.
 
-Resolved targets retain the points and reference geometry needed by subsequent calculations. During compilation, `PathTargetView` provides local reference points and boundary intersections. For A to B, Core first obtains the reference points, then uses the connection direction to find the actual endpoints.
+`bindPathTargets` binds targets during compilation, retaining computed points and direct references to complete node layouts. Reference provenance is stored separately from the layout. `PathTargetView` provides local reference points and boundary intersections. For A to B, Core first obtains the reference points, then uses the connection direction to find the actual endpoints.
 
 <SourceLinks
   sources={[
     {
       label: 'Deferred queue and placeholder replacement',
-      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      path: 'packages/kernel/reconciler/src/compile/tree/path/deferred.ts',
     },
-    { label: 'Target binding and canonical paths', path: 'packages/kernel/core/src/resolve/path/resolve.ts' },
-    { label: 'Target queries during compilation', path: 'packages/kernel/core/src/compile/path/host/target.ts' },
+    { label: 'Target binding and canonical paths', path: 'packages/kernel/core/src/compile/path/target/bind.ts' },
+    { label: 'Target queries during compilation', path: 'packages/kernel/core/src/compile/path/target/helpers.ts' },
   ]}
 />
 
@@ -60,7 +64,7 @@ Both paths below start at `[0, 0]` and apply `[60, 30]` twice. `relative` keeps 
 
 <ComponentPreview files="path-relative" size="md" hideCode type="illustration" />
 
-Relative targets that can be determined early become local coordinates during resolution. Targets that depend on runtime results, such as axis-line projection, are calculated while consuming steps. A `move` starts a new pen position. Lines, folds, and curves become commands segment by segment; arcs, closed shapes, and smooth curves use dedicated branches and pass on their pen positions.
+Relative targets that can be determined early become local coordinates during compile-stage target binding. Targets that depend on runtime results, such as axis-line projection, are calculated while consuming steps. A `move` starts a new pen position. Lines, folds, and curves become commands segment by segment; arcs, closed shapes, and smooth curves use dedicated branches and pass on their pen positions.
 
 | Input step                                 | Geometry change                                                                               |
 | ------------------------------------------ | --------------------------------------------------------------------------------------------- |
@@ -73,9 +77,9 @@ Relative targets that can be determined early become local coordinates during re
 
 <SourceLinks
   sources={[
-    { label: 'Cursor state and advancement', path: 'packages/kernel/core/src/compile/path/stroke/cursor.ts' },
-    { label: 'Lines, folds, and curves', path: 'packages/kernel/core/src/compile/path/stroke/segments.ts' },
-    { label: 'Shape steps and pen handoff', path: 'packages/kernel/core/src/compile/path/stroke/shapes.ts' },
+    { label: 'Cursor state and advancement', path: 'packages/kernel/core/src/compile/path/stroke/geometry/cursor.ts' },
+    { label: 'Lines, folds, and curves', path: 'packages/kernel/core/src/compile/path/stroke/geometry/segments.ts' },
+    { label: 'Shape steps and pen handoff', path: 'packages/kernel/core/src/compile/path/stroke/geometry/shapes.ts' },
   ]}
 />
 
@@ -117,16 +121,16 @@ Segment construction also records commands, bounds samples, and source steps. Wi
   sources={[
     {
       label: 'Target queries and coordinate conversion',
-      path: 'packages/kernel/core/src/compile/orchestration/path-target.ts',
+      path: 'packages/kernel/core/src/compile/path/target/view.ts',
     },
-    { label: 'Boundary points and polyline crossings', path: 'packages/kernel/core/src/compile/node/anchors.ts' },
-    { label: 'Connection boundary geometry', path: 'packages/kernel/core/src/compile/node/boundary.ts' },
+    { label: 'Boundary points and polyline crossings', path: 'packages/kernel/core/src/compile/boundary/layout.ts' },
+    { label: 'Connection boundary geometry', path: 'packages/kernel/core/src/compile/boundary/layout.ts' },
     {
       label: 'Segment directions and commands',
-      path: 'packages/kernel/core/src/compile/path/stroke/segments.ts',
+      path: 'packages/kernel/core/src/compile/path/stroke/geometry/segments.ts',
     },
-    { label: 'Commands and source records', path: 'packages/kernel/core/src/compile/path/stroke/commands.ts' },
-    { label: 'Rounded line joins', path: 'packages/kernel/core/src/compile/path/stroke/rounded-corners.ts' },
+    { label: 'Commands and source records', path: 'packages/kernel/core/src/compile/path/stroke/geometry/commands.ts' },
+    { label: 'Rounded line joins', path: 'packages/kernel/core/src/compile/path/stroke/geometry/rounded-corners.ts' },
   ]}
 />
 
@@ -140,14 +144,20 @@ In the opening example, node boundaries determine the contact points, the label 
 
 <SourceLinks
   sources={[
-    { label: 'Step and path-level label sampling', path: 'packages/kernel/core/src/compile/path/stroke/sampling.ts' },
-    { label: 'Label text and orientation', path: 'packages/kernel/core/src/compile/path/host/label.ts' },
+    {
+      label: 'Step and path-level label sampling',
+      path: 'packages/kernel/core/src/compile/path/stroke/geometry/sampling.ts',
+    },
+    { label: 'Label text and orientation', path: 'packages/kernel/core/src/compile/path/label/emit.ts' },
     {
       label: 'Gap intervals and stroke splitting',
-      path: 'packages/kernel/core/src/compile/path/stroke/interruption.ts',
+      path: 'packages/kernel/core/src/compile/path/stroke/decoration/interruption.ts',
     },
-    { label: 'Arrows and inline marks', path: 'packages/kernel/core/src/compile/path/stroke/decorations.ts' },
-    { label: 'Terminal segment shortening', path: 'packages/kernel/core/src/compile/path/stroke/shrink.ts' },
+    {
+      label: 'Arrows and inline marks',
+      path: 'packages/kernel/core/src/compile/path/stroke/decoration/decorations.ts',
+    },
+    { label: 'Terminal segment shortening', path: 'packages/kernel/core/src/compile/path/stroke/decoration/shrink.ts' },
   ]}
 />
 
@@ -170,19 +180,59 @@ Gray shows the original path below; blue is the actual compiled Path with an end
 
 <SourceLinks
   sources={[
-    { label: 'Contact coefficients and seam overlap', path: 'packages/kernel/core/src/compile/path/stroke/shrink.ts' },
+    {
+      label: 'Contact coefficients and seam overlap',
+      path: 'packages/kernel/core/src/compile/path/stroke/decoration/shrink.ts',
+    },
     {
       label: 'Curve contacts and arrow orientation',
-      path: 'packages/kernel/core/src/compile/path/stroke/endpoint-contact.ts',
+      path: 'packages/kernel/core/src/compile/path/stroke/decoration/endpoint-contact.ts',
     },
-    { label: 'Shape-preserving curve slices', path: 'packages/kernel/core/src/compile/path/stroke/interruption.ts' },
-    { label: 'Label gaps and endpoint contact order', path: 'packages/kernel/core/src/compile/path/stroke/emit.ts' },
+    {
+      label: 'Shape-preserving curve slices',
+      path: 'packages/kernel/core/src/compile/path/stroke/decoration/interruption.ts',
+    },
+    {
+      label: 'Label gaps and endpoint contact order',
+      path: 'packages/kernel/core/src/compile/path/stroke/compile.ts',
+    },
+  ]}
+/>
+
+## Stage reuse
+
+`compilePath(canon, context, prepared)` returns target bindings in `targets`, complete drawing output in `emit`, the current shadow declaration, and `stroke` products when the Definition uses stroke emission for the current source path. Callers select valid products and pass them back through `PreparedPathCompilation`. Core computes missing products; callers determine validity across compilations.
+
+- A `targets` hit skips target queries and applies converted relative targets to the current steps while retaining current styles and labels. Validity covers steps, targets, diagnostic field paths, referenced geometry, and coordinate context. An empty Map is also a computed result.
+- Top-level `emit` directly stores validated snapshots of primitives and bounds points as arrays. A hit skips binding and the Definition call. `undefined` means missing; `null` means a valid empty result. Output with empty arrays remains distinct.
+- `stroke.layout` and `stroke.emit` each retain `overall` and known local products. An overall hit does not reconstruct missing local products. Supplying only top-level `emit` does not reconstruct target bindings or stroke products.
+
+Stroke products follow the computation boundaries:
+
+| Product                       | Reusable computation                                                                              |
+| ----------------------------- | ------------------------------------------------------------------------------------------------- |
+| `layout.geometry` / `metrics` | Base commands and original parameter models; logical path metrics built as needed                 |
+| `layout.labels`               | Per-label `measurement` and `placement`: text layout, path placement, and gap location            |
+| `layout.marks` / `body`       | Mark placement on the uncut path; visible commands after label gaps and arrow contact cuts        |
+| `emit.labels` / `marks`       | Per-item local `content` and placed `overall`                                                     |
+| `emit.arrows` / `body`        | Local `content` for start/end arrows; body primitives before host identity and overall transforms |
+
+For example, when path positions change but text stays the same, callers can retain label `measurement` and `content` while recomputing placement and gaps. A paint-color change can reuse complete layout. Label content already includes text appearance and host opacity, so these dependencies must also remain valid. Step-label slots match `children` indexes, with empty slots for steps without labels. Host labels and marks each follow declaration order.
+
+Custom kinds can emit arbitrary primitives. The host hands off `stroke` products only for a parameterless `emitStroke()` call on the current source path. Calls with an explicit alternative path compute independently; repeated parameterless calls reuse the result within that invocation. Geometry caches contain plain parameter data, while labels come from the current declarations. Existing segment-parameter rules and arc-length placement on rounded paths remain unchanged.
+
+Callers restore paired resources, replay diagnostics, and ensure that the Definition, input, and host environment remain valid. Core authorizes resource references from cached primitives actually returned by the host. Placement, wrapping, and mutable outputs handed to the Definition leave retained caches unchanged.
+
+<SourceLinks
+  sources={[
+    { label: 'Stage reuse and missing computations', path: 'packages/kernel/core/src/compile/path/compile.ts' },
+    { label: 'Prepared inputs and compiled products', path: 'packages/kernel/core/src/compile/path/types.ts' },
   ]}
 />
 
 ## Full implementation flow
 
-Start at `resolvePath` and follow its canonical result into `emitPathPrimitive`. Read down the left column, then up the right: step consumption produces geometry commands; corner rounding, labels, and decorations follow. Traversal then replaces the placeholder with the path body and attached primitives.
+Start at `resolvePath` and follow its canonical result into `compileStrokePath`. Read down the left column, then up the right: step consumption produces geometry commands; corner rounding, labels, and decorations follow. Traversal then replaces the placeholder with the path body and attached primitives.
 
 <ComponentPreview files="path-implementation" size="lg" hideCode type="flow" />
 
@@ -192,9 +242,18 @@ An unresolved ordinary target or a missing required predecessor produces a warni
 
 <SourceLinks
   sources={[
-    { label: 'Step loop and post-processing order', path: 'packages/kernel/core/src/compile/path/stroke/emit.ts' },
-    { label: 'Subpaths and endpoint-arrow ownership', path: 'packages/kernel/core/src/compile/path/stroke/split.ts' },
-    { label: 'Primitive grouping and path transforms', path: 'packages/kernel/core/src/compile/path/stroke/output.ts' },
+    {
+      label: 'Step loop and post-processing order',
+      path: 'packages/kernel/core/src/compile/path/stroke/geometry/lower.ts',
+    },
+    {
+      label: 'Subpaths and endpoint-arrow ownership',
+      path: 'packages/kernel/core/src/compile/path/stroke/decoration/split.ts',
+    },
+    {
+      label: 'Primitive grouping and path transforms',
+      path: 'packages/kernel/core/src/compile/path/stroke/output.ts',
+    },
     { label: 'Output contract', path: 'packages/kernel/core/src/compile/path/types.ts' },
   ]}
 />

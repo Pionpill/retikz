@@ -52,7 +52,7 @@ describe('Runtime 运行时回滚', () => {
           createRuntimeSourceInput(third, 3),
         ],
       }),
-    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.CaptureFailed, cause }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.SourceCaptureFailed, cause }));
     expect(retired).toEqual(['b:2', 'a:1']);
   });
 
@@ -92,7 +92,7 @@ describe('Runtime 运行时回滚', () => {
         baseRevision: runtime.revision(),
         sources: [createRuntimeSourceUpdate(first, 2), createRuntimeSourceUpdate(second, 2)],
       }),
-    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.CaptureFailed, cause }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.SourceCaptureFailed, cause }));
     expect(retired).toEqual(['a:2']);
     expect(runtime.revision()).toBe(0);
     expect(runtime.snapshot(first)).toEqual({ revision: 0, value: 1 });

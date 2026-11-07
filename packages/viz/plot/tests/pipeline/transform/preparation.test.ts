@@ -1,7 +1,8 @@
-import { compileToScene, createCompositeInputBindings } from '@retikz/core';
+import { createCompositeInputBindings } from '@retikz/core';
 import type { IRScene } from '@retikz/core';
 import { applyTransforms, createDataTransformExecutor, readSourceIndex, tagSourceIndex } from '@retikz/data';
 import type { DataTransformImplementationProvider } from '@retikz/data';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { lowerPlots, preparePlotData, PlotSchema, MarkSchema } from '../../../src';

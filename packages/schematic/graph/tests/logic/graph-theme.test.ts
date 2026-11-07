@@ -1,6 +1,5 @@
 import type { CompileWarning, CanonicalTheme } from '@retikz/core';
 import {
-  compileToScene,
   DEFAULT_RESOLVED_THEME,
   defineTheme,
   resolveCoreProviderDependencies,
@@ -8,6 +7,7 @@ import {
   RetikzCoreErrorCode,
   ThemeMode,
 } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import * as Graph from '../../src';
@@ -99,7 +99,7 @@ describe('Graph Scope 和 Theme 编译语义', () => {
       ),
     ).toThrowError(
       expect.objectContaining({
-        code: RetikzCoreErrorCode.LayoutProbeRecoverable,
+        code: RetikzCoreErrorCode.CompileLayoutProbeRecoverable,
         cause: expect.objectContaining({ code: RetikzCoreErrorCode.Color }),
       }),
     );
@@ -442,7 +442,7 @@ describe('Graph Scope 和 Theme 编译语义', () => {
       throw new Error('Expected Graph Theme callback to fail.');
     } catch (error) {
       expect(error).toMatchObject({
-        code: Graph.RetikzGraphErrorCode.DefinitionCallbackFailed,
+        code: Graph.RetikzGraphErrorCode.ProviderDefinitionCallbackFailed,
         details: { capability: 'graph-theme', key: definition.name },
         cause,
       });
@@ -503,7 +503,7 @@ describe('Graph Scope 和 Theme 编译语义', () => {
       throw new Error('Expected Graph Theme lookup to fail.');
     } catch (error) {
       expect(error).toMatchObject({
-        code: Graph.RetikzGraphErrorCode.DefinitionNotRegistered,
+        code: Graph.RetikzGraphErrorCode.ProviderDefinitionNotRegistered,
         details: { capability: 'graph-theme', key: 'missing-style' },
       });
     }

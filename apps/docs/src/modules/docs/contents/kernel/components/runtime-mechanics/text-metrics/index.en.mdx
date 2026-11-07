@@ -22,6 +22,8 @@ Node sizes and path endpoints are already determined when Render receives the Sc
 
 ## Metric providers
 
+Measurers receive the public `TextFont` contract, whose `size` and optional `weight` are numeric. Source weights such as `normal` and `bold` are converted during resolution; use values such as `400` and `700` when calling a measurer directly.
+
 Vanilla selects its default measurer when `compile.measureText` is absent and acquires a Canvas 2D context only when measurement is requested. React's `Layout` uses this default path, or forwards an explicit `measureText` to Vanilla. Browser measurement uses Canvas 2D `measureText` for width and glyph ascent and descent, including when SVG is the selected output backend. It does not need to mount an SVG text element first.
 
 Font family comes from the text's explicit configuration, then Vanilla's `defaultFontFamily`. React forwards `Layout`'s `style.fontFamily` through this option. If the family is still absent, the default browser measurer reads the computed font on the page's `body`, falling back to `sans-serif`. The font used for measurement should match the displayed font. Changing surrounding CSS inheritance alone does not guarantee that existing geometry updates.
@@ -41,7 +43,9 @@ The fallback estimates width as `text.length × font.size × 0.55` and height as
       path: 'packages/kernel/vanilla/src/processing/text-measurement.ts',
     },
     { label: 'Vanilla compile option forwarding', path: 'packages/kernel/vanilla/src/processing/prepare.ts' },
-    { label: 'Text metric contract and fallback', path: 'packages/kernel/core/src/compile/text/metrics.ts' },
+    { label: 'Fallback text measurer', path: 'packages/kernel/core/src/compile/text/helpers.ts' },
+    { label: 'TextMetrics', path: 'packages/kernel/core/src/contract/text.ts' },
+    { label: 'resolveTextMetrics', path: 'packages/kernel/core/src/resolve/text/metrics.ts' },
   ]}
 />
 
@@ -59,17 +63,19 @@ Consider an unscaled rectangular node with one line, automatic width, padding of
 
 With another node fixed to the right, a horizontal connection and no arrow or extra endpoint offset, the A endpoint moves from 12.4 to 30. The path references the node by name, and Core consumes its new connection boundary. The application does not have to write the text width into the path.
 
-A width constraint may instead increase the line count. The plain-text branch wraps using measured width, finding breaks between Western words or CJK characters. An indivisible segment wider than the limit may overflow. The actual line count and line height determine content height, which then participates in node sizing. Shape geometry, explicit sizes and layout proposals still affect the final boundary; the rectangular calculation above does not apply to every node.
+A width constraint may instead increase the line count. Shared text layout uses measured width and prefers word boundaries, splitting oversized words at grapheme boundaries. An indivisible formula wider than the limit may overflow. The sum of physical line slots determines content height, which then participates in node sizing. Shape geometry, explicit sizes and layout proposals still affect the final boundary; the rectangular calculation above does not apply to every node.
 
-Within a compile context, metrics for identical text and font combinations are reused. This cache avoids repeated measurer calls. It does not watch fonts for changes, and its lifetime differs from incremental computation across updates.
+Reconciler creates a text metric cache for each full compilation or incremental update, keyed by text, font size, family, weight, and style. Content, labels, paths, and probes within that execution share the cache. It does not survive into another execution, and Core layout has no additional local cache. When calling a Core atomic layout function directly, caching is the responsibility of the supplied measurer.
+
+The third argument of `TextMeasurer(text, font, disableCache?)` defaults to `false`. Passing `true` delegates directly to the underlying measurer without reading or writing the cache; existing entries remain unchanged. A custom measurer without caching may ignore the argument; one with its own cache should honor it. Thrown measurement errors are not cached. This argument controls a measurement call, not whether incremental compilation reruns a reused layout, and it does not watch fonts for changes.
 
 <SourceLinks
   sources={[
     { label: 'Content layout and baselines', path: 'packages/kernel/core/src/compile/node/content/layout.ts' },
-    { label: 'Plain-text wrapping', path: 'packages/kernel/core/src/compile/node/content/text.ts' },
+    { label: 'Shared text layout', path: 'packages/kernel/core/src/compile/text/layout.ts' },
     { label: 'Content dimensions enter node sizing', path: 'packages/kernel/core/src/compile/node/layout.ts' },
-    { label: 'Node connection boundaries', path: 'packages/kernel/core/src/compile/node/boundary.ts' },
-    { label: 'Compile-context metric cache', path: 'packages/kernel/core/src/compile/orchestration/context.ts' },
+    { label: 'Node connection boundaries', path: 'packages/kernel/core/src/compile/boundary/layout.ts' },
+    { label: 'Host measurement service', path: 'packages/kernel/reconciler/src/compile/runtime/text-measurement.ts' },
   ]}
 />
 
@@ -81,7 +87,7 @@ Formulas follow TeX → MathJax SVG → `LoweredTex` paths and metrics → Core 
 
 The lowered result's `width` determines horizontal space. `height - depth` is the height above the baseline, and `depth` is the depth below it. Core adds segment widths and takes the maximum ascent and descent separately to form the line's baseline box. The mixed line's slot height is the greater of the configured line height and this box height, giving tall formulas enough room between lines.
 
-Text segments then become Scene text primitives. Formula paths enter translated groups positioned against the same baseline. The backend still draws ordinary text glyphs; formulas are already paths. The mixed-content branch lays out the resolved lines and does not apply the plain-text branch's `maxTextWidth` automatic wrapping.
+Text segments then become Scene text primitives. Formula paths enter translated groups positioned against the same baseline. The backend still draws ordinary text glyphs; formulas are already paths. Body text and Node / Path labels share block layout: both plain text and mixed content wrap at `maxTextWidth`. Formulas remain intact and occupy their own line when oversized.
 
 Without a lowerer, `$...$` inside a string stays literal text, while an explicit math segment produces a warning and is skipped. If an installed lowerer returns `null`, Core also warns and skips that formula, continuing with the remaining segments. Applications that do not want an intermediate result should wait for initialization to succeed before displaying the formula scene.
 
@@ -89,9 +95,11 @@ Without a lowerer, `$...$` inside a string stays literal text, while an explicit
   sources={[
     { label: 'Text and formula resolution', path: 'packages/kernel/core/src/resolve/text/resolve.ts' },
     {
-      label: 'Mixed metrics, baselines and primitive emission',
+      label: 'Mixed metrics and baselines',
       path: 'packages/kernel/core/src/compile/text/layout.ts',
     },
+    { label: 'Mixed-line primitive emission', path: 'packages/kernel/core/src/compile/text/emit.ts' },
+    { label: 'Formula lowering and emission', path: 'packages/kernel/core/src/compile/text/tex.ts' },
     { label: 'Async initialization and synchronous lowering', path: 'packages/kernel/tex/src/lower/create-mathjax.ts' },
     { label: 'TeX conversion and instance cache', path: 'packages/kernel/tex/src/lower/lower-tex.ts' },
   ]}
@@ -130,17 +138,17 @@ The formula lowerer has its own instance cache, keyed by formula source, display
 
 ## Complete implementation flow
 
-The diagram follows metric sources through to node geometry. The top row lists plain-text measurers in priority order; only one is selected. Formulas supply dimensions, baseline metrics and paths through `lowerTex`. `layoutInlineLine` aligns them with ordinary text before returning to node sizing. Blue nodes highlight the core measurement and layout methods.
+The diagram follows metric sources through to node geometry. The top row lists plain-text measurers in priority order; only one is selected. Formulas supply dimensions, baseline metrics and paths through `lowerTex`. `layoutTextLine` aligns them with ordinary text before returning to node sizing. Blue nodes highlight the core measurement and layout methods.
 
 <ComponentPreview files="metrics-implementation" size="xxl" hideCode type="flow" />
 
-Start with `Layout`'s compile options to identify the measurer, then read `createCompileContext`, `layoutNodeContent` and `compileNodeResolution`. Finally, inspect how Render consumes text primitives. The full node-solving and baseline algorithms belong to the Core documentation.
+Start with `Layout`'s compile options to identify the measurer, then read `createCompileRuntime`, `layoutNodeContent` and `layoutNode`. Finally, inspect how Render consumes text primitives. The full node-solving and baseline algorithms belong to the Core documentation.
 
 <SourceLinks
   sources={[
     {
       label: 'Measurement enters the compile context',
-      path: 'packages/kernel/core/src/compile/orchestration/context.ts',
+      path: 'packages/kernel/reconciler/src/compile/runtime/runtime.ts',
     },
     { label: 'Content measurement and branches', path: 'packages/kernel/core/src/compile/node/content/layout.ts' },
     { label: 'Node sizing', path: 'packages/kernel/core/src/compile/node/layout.ts' },

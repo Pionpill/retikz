@@ -1,6 +1,7 @@
-import type { CompileArtifact } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
+import { isPropertyPathEqual } from '@retikz/foundation';
 import { Layout } from '@retikz/react';
+import type { CompositeArtifact } from '@retikz/reconciler';
 import type { TableCompileArtifact } from '@retikz/table';
 import { TABLE_NAMESPACE, TableComposite } from '@retikz/table';
 import type { InputTable, InputTableVariant } from '@retikz/table-vanilla';
@@ -27,20 +28,30 @@ TableRuntimeEmbed.displayName = 'TableRuntimeEmbed';
 TableRuntimeEmbed.isTier2Embeddable = true;
 TableRuntimeEmbed.inputEmbedAdapter = tableInputEmbedAdapter;
 
-const isRootTableArtifact = (artifact: CompileArtifact): artifact is TableCompileArtifact =>
-  artifact.kind === 'composite' &&
+const isRootTableArtifact = (artifact: CompositeArtifact): artifact is TableCompileArtifact =>
   artifact.namespace === TABLE_NAMESPACE &&
   artifact.type === TableComposite.Table &&
-  artifact.occurrence.sourcePath === 'children[0]' &&
+  isPropertyPathEqual(artifact.occurrence.sourcePath, ['children', 0]) &&
   artifact.occurrence.expansionPath.length === 0;
 
 /** 共享 standalone Table runtime view，不作为公开组件导出 */
 export const TableRuntimeView: FC<Readonly<{ runtime: ReactTableRuntime }>> = ({ runtime }) => {
-  const { table, lowerOptions, composites, onManifest, display } = runtime;
+  const {
+    table,
+    lowerOptions,
+    composites,
+    onManifest,
+    display,
+    datasetReference,
+    datasetSource,
+    dataBindings,
+    dataTransformExecutor,
+    signal,
+  } = runtime;
   const { shapes, boundaries, clips, arrows, patterns, paths, themeDefinitions, ...hostProps } = display;
   const tableKey = JSON.stringify(table);
   const stableTable = useMemo<InputTableVariant>(() => JSON.parse(tableKey) as InputTableVariant, [tableKey]);
-  const { datasetReference, datasetSource } = runtime;
+
   const stableDatasets = useMemo<ExternalDatasets>(
     () =>
       datasetReference === undefined
@@ -116,27 +127,19 @@ export const TableRuntimeView: FC<Readonly<{ runtime: ReactTableRuntime }>> = ({
   const input = useMemo<InputTable<unknown>>(
     () => ({
       table: stableTable,
-      ...(runtime.dataBindings === undefined ? { data: stableDatasets } : { dataBindings: runtime.dataBindings }),
-      dataTransformExecutor: runtime.dataTransformExecutor,
-      signal: runtime.signal,
+      ...(dataBindings === undefined ? { data: stableDatasets } : { dataBindings }),
+      dataTransformExecutor,
+      signal,
       lowerOptions: stableLowerOptions,
       composites,
     }),
-    [
-      composites,
-      stableDatasets,
-      stableLowerOptions,
-      stableTable,
-      runtime.dataBindings,
-      runtime.dataTransformExecutor,
-      runtime.signal,
-    ],
+    [composites, stableDatasets, stableLowerOptions, stableTable, dataBindings, dataTransformExecutor, signal],
   );
   const inputChild = useMemo(() => <TableRuntimeEmbed {...input} />, [input]);
 
   const notifiedManifestKey = useRef<string>();
   const handleArtifacts = useCallback(
-    (artifacts: ReadonlyArray<CompileArtifact>): void => {
+    (artifacts: ReadonlyArray<CompositeArtifact>): void => {
       const matches = artifacts.filter(isRootTableArtifact);
       if (matches.length !== 1) {
         throw new RetikzTableReactError(
@@ -156,7 +159,7 @@ export const TableRuntimeView: FC<Readonly<{ runtime: ReactTableRuntime }>> = ({
 
   return (
     <Layout
-      runtime={{ preparation: 'async', signal: runtime.signal }}
+      runtime={{ preparation: 'async', signal }}
       onArtifacts={onManifest === undefined ? undefined : handleArtifacts}
       {...hostProps}
       extensions={{ shapes, boundaries, clips, arrows, patterns, paths, themeDefinitions }}

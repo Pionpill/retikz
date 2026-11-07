@@ -38,7 +38,7 @@ export const resolvePlotTheme = (
   input: Pick<IRPlot, 'defaultPlot' | 'plotRules'> = {},
   plotThemeDefinitions: ReadonlyArray<PlotThemeDefinition> | undefined = undefined,
 ): IRPlotThemeResolution => {
-  const { name, mode } = effectiveTheme;
+  const { name, mode, colors } = effectiveTheme;
   const definitions = resolvePlotThemeRegistry(plotThemeDefinitions);
   const definition = name === undefined ? undefined : definitions.get(name);
   if (name !== undefined && definition === undefined) {
@@ -49,7 +49,7 @@ export const resolvePlotTheme = (
     {
       kind: PlotThemeLayerKind.Neutral,
       path: '$default/' + mode,
-      defaults: getNeutralPlotDefaults(mode, effectiveTheme.colors.categorical),
+      defaults: getNeutralPlotDefaults(mode, colors.categorical),
       rules: getNeutralAxisRules(),
     },
   ];

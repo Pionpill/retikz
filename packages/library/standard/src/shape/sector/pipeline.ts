@@ -10,20 +10,20 @@ export const lowerSector = (source: IRSector): IRPath => {
   const { label: _hostLabel, ...properties } = shapePathProperties(source);
   void _hostLabel;
 
-  const { label } = source;
+  const { label, innerRadius: inner, radius: sourceRadius, center: sourceCenter } = source;
   const arcLabel = label === undefined ? {} : { label };
-  const inner = source.innerRadius;
+
   if (inner === undefined || inner === 0 || (typeof inner === 'object' && inner.x === 0))
     return {
       ...properties,
       type: 'path',
       children: [
-        { type: 'step', kind: 'move', to: source.center },
-        typeof source.radius === 'number'
+        { type: 'step', kind: 'move', to: sourceCenter },
+        typeof sourceRadius === 'number'
           ? {
               type: 'step',
               kind: 'circlePath',
-              radius: source.radius,
+              radius: sourceRadius,
               startAngle,
               endAngle,
               closed: 'sector',
@@ -32,7 +32,7 @@ export const lowerSector = (source: IRSector): IRPath => {
           : {
               type: 'step',
               kind: 'ellipsePath',
-              radius: source.radius,
+              radius: sourceRadius,
               startAngle,
               endAngle,
               closed: 'sector',
@@ -42,8 +42,8 @@ export const lowerSector = (source: IRSector): IRPath => {
     };
 
   // 正内半径的 schema 分支只接受字面笛卡尔中心
-  const center = source.center as [number, number];
-  const radius = source.radius;
+  const center = sourceCenter as [number, number];
+  const radius = sourceRadius;
   const outerStart = pointAtEllipseArcAngle({
     center,
     radiusX: typeof radius === 'number' ? radius : radius.x,

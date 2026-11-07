@@ -1,25 +1,13 @@
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
-
 import { FlexLayout, FlexLayoutItem } from '@retikz/layout-react';
 import { Layout, Node } from '@retikz/react';
 import { Legend, LegendItem, LegendTitle } from '@retikz/standard-react/presentation';
 import { createGrid, LegendContentKind } from '@retikz/standard/presentation';
 import type { FC } from 'react';
-import { renderToString } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
-import type { PreviewControlSection } from '../../src/modules/docs/components/component-preview';
 import { resolvePreviewControlContract } from '../../src/modules/docs/components/component-preview/registry';
 import { buildPreviewIR } from '../../src/modules/docs/components/component-preview/utils';
 import { buildVanillaPreview } from '../../src/modules/docs/components/component-preview/vanilla-preview';
-import ScopeInspectionEnDemo, {
-  previewSource as scopeInspectionEnSource,
-} from '../../src/modules/docs/contents/kernel/components/scope/usage/scope-layout-inspection.en.demo';
-import { svg as scopeInspectionVanillaSvg } from '../../src/modules/docs/contents/kernel/components/scope/usage/scope-layout-inspection.vanilla';
-import ScopeInspectionZhDemo, {
-  previewSource as scopeInspectionZhSource,
-} from '../../src/modules/docs/contents/kernel/components/scope/usage/scope-layout-inspection.zh.demo';
 import OverflowEnDemo from '../../src/modules/docs/contents/library/layout/flex-layout/extended/flex-layout-overflow.en.demo';
 import OverflowZhDemo from '../../src/modules/docs/contents/library/layout/flex-layout/extended/flex-layout-overflow.zh.demo';
 import { previewControlContract as flexZhContract } from '../../src/modules/docs/contents/library/layout/flex-layout/extended/flex-layout-playground.controls';
@@ -39,15 +27,6 @@ const FlexPlaygroundCanonical: FC = () => flexPlaygroundSource.canonicalRender!(
 const NestedEnCanonical: FC = () => nestedEnSource.canonicalRender();
 
 const NestedZhCanonical: FC = () => nestedZhSource.canonicalRender();
-
-const ScopeInspectionEnCanonical: FC = () => scopeInspectionEnSource.canonicalRender();
-
-const ScopeInspectionZhCanonical: FC = () => scopeInspectionZhSource.canonicalRender();
-
-const scopeInspectionVanillaSource = readFileSync(
-  resolve('src/modules/docs/contents/kernel/components/scope/usage/scope-layout-inspection.vanilla.ts'),
-  'utf8',
-);
 
 const LegendWithNestedStandardDemo: FC = () => (
   <Layout width={220} height={140}>
@@ -99,23 +78,11 @@ describe('Layout 文档演示', () => {
   it.each([['flex', flexZhContract, flexEnContract]])(
     '保持 %s 控件在跨语言结构上保持一致',
     (_name, chinese, english) => {
-      expect(english.stateOnlyIds).toEqual(chinese.stateOnlyIds);
       expect(english.canonicalValues).toEqual(chinese.canonicalValues);
-      expect(
-        english.presets.map(preset => ({ id: preset.id, values: preset.values, applyMode: preset.applyMode })),
-      ).toEqual(chinese.presets.map(preset => ({ id: preset.id, values: preset.values, applyMode: preset.applyMode })));
       expect(english.relatedApis).toEqual(chinese.relatedApis);
       expect(english.controls.sections.map(section => section.controls.map(control => control.id))).toEqual(
         chinese.controls.sections.map(section => section.controls.map(control => control.id)),
       );
-    },
-  );
-
-  it.each([['flex', flexEnContract, 'Inspection details', 'Inspection preset']])(
-    '为 %s 使用与组件系列匹配的英文检查标签',
-    (_name, contract, detailsLabel, presetLabel) => {
-      expect(contract.controls.sections[0].label).toBe(detailsLabel);
-      expect(contract.presetSelector.label).toBe(presetLabel);
     },
   );
 
@@ -124,54 +91,6 @@ describe('Layout 文档演示', () => {
     ['flex en', flexEnContract],
   ])('解析 %s 仅由预设指定的检查状态', (_name, contract) => {
     expect(resolvePreviewControlContract({ previewControlContract: contract })).toBe(contract);
-  });
-
-  it.each([
-    [
-      'flex',
-      flexZhContract,
-      {
-        inspectLines: true,
-        inspectGaps: true,
-        inspectDistributedSpace: false,
-      },
-    ],
-  ])('为 %s 提供可复用的推荐、全部和关闭检查配置', (_name, contract, familyValues) => {
-    const recommendedValues = {
-      ...contract.canonicalValues,
-      inspect: true,
-      inspectContainer: false,
-      inspectContent: true,
-      inspectPadding: false,
-      inspectSlot: false,
-      inspectMargin: false,
-      inspectAllocation: false,
-      inspectVisual: false,
-      inspectOverflow: false,
-      inspectAlignmentGuides: false,
-      inspectLabels: false,
-      ...familyValues,
-    };
-    const detailIds = Object.keys(recommendedValues).filter(id => id.startsWith('inspect') && id !== 'inspect');
-    const inspectionDetailSection: PreviewControlSection = contract.controls.sections[0];
-    const controlIds = contract.controls.sections.flatMap(section => section.controls.map(control => control.id));
-
-    expect(inspectionDetailSection.defaultCollapsed).toBe(true);
-    expect(inspectionDetailSection.visibleWhen).toBeUndefined();
-    expect(inspectionDetailSection.controls.map(control => control.id)).toEqual(detailIds);
-    expect(controlIds).not.toContain('inspect');
-    expect(contract.stateOnlyIds).toEqual(['inspect']);
-    expect(contract.canonicalValues).toEqual(recommendedValues);
-    expect(contract.presets.map(preset => preset.id)).toEqual(['recommended', 'all', 'off']);
-    expect(contract.presets[0]?.values).toEqual(recommendedValues);
-    expect(contract.presets[1]?.values).toEqual({
-      ...recommendedValues,
-      ...Object.fromEntries(detailIds.map(id => [id, true])),
-    });
-    expect(contract.presets[2]).toMatchObject({
-      values: { inspect: false },
-      applyMode: 'merge-current',
-    });
   });
 
   it.each(demos)('为 $name 派生规范的 IR 和真实的 Vanilla SVG', ({ Component }) => {
@@ -218,42 +137,5 @@ describe('Layout 文档演示', () => {
     expect(preview).not.toHaveProperty('inspect');
     expect(vanilla.code).not.toMatch(/\binspect\b/);
     expect(vanilla.svg).not.toContain('data-retikz-readonly-layer');
-  });
-
-  it.each([
-    ['zh', ScopeInspectionZhDemo, ScopeInspectionZhCanonical],
-    ['en', ScopeInspectionEnDemo, ScopeInspectionEnCanonical],
-  ])('渲染可选的 Scope 检查 %s 演示，同时保持预览 IR 纯净', (_language, Component, Canonical) => {
-    const preview = buildPreviewIR(Canonical);
-    const vanilla = buildVanillaPreview(preview);
-    const html = renderToString(<Component />);
-
-    expect(preview).not.toHaveProperty('inspectionRoots');
-    expect(preview).not.toHaveProperty('inspect');
-    expect(vanilla.code).toContain('flexLayout({');
-    expect(vanilla.code).not.toMatch(/\binspect\b/);
-    expect(vanilla.svg).not.toContain('data-retikz-readonly-layer');
-    expect(html).toContain('data-retikz-readonly-layer');
-
-    for (const label of ['A1', 'A2', 'B1', 'B2']) expect(vanilla.svg).toContain(label);
-
-    for (const color of ['#dbeafe', '#2563eb', '#dcfce7', '#16a34a']) expect(vanilla.svg).toContain(color);
-  });
-
-  it('显式 Vanilla Scope 演示与对应 React 演示等价', () => {
-    expect(scopeInspectionVanillaSource).toContain('createLayoutInspectionBarrier()');
-    expect(scopeInspectionVanillaSource).toContain('createLayoutInspectionVanillaDriver()');
-    expect(scopeInspectionVanillaSvg).toContain('<svg');
-    expect(scopeInspectionVanillaSvg).toContain('data-retikz-readonly-layer');
-
-    for (const label of ['A1', 'A2', 'B1', 'B2']) {
-      expect(scopeInspectionVanillaSource).toContain(label);
-      expect(scopeInspectionVanillaSvg).toContain(label);
-    }
-
-    for (const color of ['#dbeafe', '#2563eb', '#dcfce7', '#16a34a']) {
-      expect(scopeInspectionVanillaSource).toContain(color);
-      expect(scopeInspectionVanillaSvg).toContain(color);
-    }
   });
 });

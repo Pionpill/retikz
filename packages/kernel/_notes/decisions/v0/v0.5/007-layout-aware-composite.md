@@ -11,6 +11,8 @@ keywords: 'Composite、expand、IRChild、onNodeLayout、defineComposite'
 
 > 双回调契约已由 [ADR-052](./052-unified-composite-compilation.md) 替代，当前统一使用 compile；本篇其余布局、隔离试算与产物语义继续有效。
 
+> 节点布局公共产物及旧 artifact envelope 已由 [077](./077-compile-output-contract.md) 替代：仅收集 CompositeArtifact，删除固定 kind。正常子项测量、布局与候选重放继续有效。
+
 ## 背景
 
 Tier 2 layout composite 需要在完整 Core compile 环境中测量任意 `IRChild`，求解真实尺寸后反馈约束并复用选中结果。结构化 `expand()` 无法访问 provider、namespace、reference、文字 / TeX 测量或父级约束；事后 `onNodeLayout` 也不能布局任意 child 或表达 replay

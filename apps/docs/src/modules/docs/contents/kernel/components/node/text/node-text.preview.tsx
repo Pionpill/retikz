@@ -48,7 +48,7 @@ export const NodeTextPreview = (values: NodeTextPreviewValues) => {
         text={text}
         style={{ fill: 'lightgray', stroke: 'gray' }}
         layout={{
-          align: values.align,
+          textAlign: values.align,
           maxTextWidth: values.maxTextWidth,
           lineHeight: values.lineHeight,
           minimumSize: { width: 80, height: 48 },

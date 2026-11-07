@@ -200,7 +200,7 @@ const resolveShapeChannel = (
   ctx: NodeChannelDefinitionResolveContext,
   mark: IRPlotMark,
 ): ChannelResolution<JsonValue> | undefined => {
-  const { rows, model } = ctx;
+  const { rows, model, palette: channelPalette } = ctx;
   const channel = markChannelEncoding(mark, 'shape');
   if (!channel) return undefined;
   const field = channelField(channel);
@@ -251,7 +251,7 @@ const resolveShapeChannel = (
 
   const values = rows.map(row => resolveFieldPath(row, field));
   const domain = inferCategoryDomain(values);
-  const palette = ctx.palette?.shape ?? PLOT_SHAPE_PALETTE;
+  const palette = channelPalette?.shape ?? PLOT_SHAPE_PALETTE;
   const shapes = domain.map((_, index) => structuredClone(palette[index % palette.length]));
   const shapeByCategory = new Map(domain.map((category, index) => [category, shapes[index]] as const));
 
@@ -405,7 +405,7 @@ const directNodeChannels = {
     value =>
       typeof value === 'string' && textAlignValues.has(value) ? (value as 'start' | 'middle' | 'end') : undefined,
     (node, value) => {
-      node.layout = { ...node.layout, align: value };
+      node.layout = { ...node.layout, textAlign: value };
     },
   ),
   lineHeight: defineSimpleNodeChannel<number>(

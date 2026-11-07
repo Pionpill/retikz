@@ -1,5 +1,5 @@
 import type { IRScene } from '@retikz/core';
-import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
+import { resolveCoreProviderDependencies } from '@retikz/core';
 import {
   diamondArrowDefinition,
   circleClipDefinition,
@@ -9,6 +9,7 @@ import {
   ribbonPathDefinition,
 } from '@retikz/extension';
 import { Layout } from '@retikz/react';
+import { compileToScene } from '@retikz/reconciler';
 import { renderToSvgString, scene, toSceneResult } from '@retikz/vanilla';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';

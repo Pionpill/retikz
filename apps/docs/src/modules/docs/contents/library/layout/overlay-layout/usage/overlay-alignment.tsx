@@ -1,5 +1,4 @@
 import { OverlayLayout, OverlayLayoutItem } from '@retikz/layout-react';
-import { OVERLAY_LAYOUT_INSPECTOR_KEY } from '@retikz/layout/inspect';
 import { Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
@@ -13,48 +12,28 @@ export { createPreviewControlContract } from './overlay-alignment.controls';
 export const previewControls = previewControlContract.controls;
 
 const createPreview = (lang: Lang) =>
-  defineOverlayPreview(
-    createPreviewControlContract(lang),
-    values => (
-      <Layout>
-        <OverlayLayout
-          size={{ x: { kind: 'fixed', value: 300 }, y: { kind: 'fixed', value: 150 } }}
-          padding={12}
-          justifyItems={values.justifyItems}
+  defineOverlayPreview(createPreviewControlContract(lang), values => (
+    <Layout>
+      <OverlayLayout
+        size={{ x: { kind: 'fixed', value: 300 }, y: { kind: 'fixed', value: 150 } }}
+        padding={12}
+        justifyItems={values.justifyItems}
+      >
+        <OverlayLayoutItem alignSelf="start">
+          <Node text={demoI18n[lang].follower} style={{ stroke: 'dodgerblue' }} />
+        </OverlayLayoutItem>
+        <OverlayLayoutItem
+          alignSelf="end"
+          {...(values.justifySelf === 'auto' ? {} : { justifySelf: values.justifySelf })}
         >
-          <OverlayLayoutItem alignSelf="start">
-            <Node text={demoI18n[lang].follower} style={{ stroke: 'dodgerblue' }} />
-          </OverlayLayoutItem>
-          <OverlayLayoutItem
-            alignSelf="end"
-            {...(values.justifySelf === 'auto' ? {} : { justifySelf: values.justifySelf })}
-          >
-            <Node
-              text={values.justifySelf === 'auto' ? demoI18n[lang].follower : demoI18n[lang].overridden}
-              style={{ stroke: 'darkorange' }}
-            />
-          </OverlayLayoutItem>
-        </OverlayLayout>
-      </Layout>
-    ),
-    () => ({
-      rules: [
-        {
-          kind: 'request',
-          inspector: OVERLAY_LAYOUT_INSPECTOR_KEY,
-          target: { kind: 'scene' },
-          options: {
-            bounds: { container: true, content: false, slot: false, allocation: false, visual: false },
-            spacing: false,
-            anchors: false,
-            placements: false,
-            stacking: false,
-            alignmentGuides: false,
-          },
-        },
-      ],
-    }),
-  );
+          <Node
+            text={values.justifySelf === 'auto' ? demoI18n[lang].follower : demoI18n[lang].overridden}
+            style={{ stroke: 'darkorange' }}
+          />
+        </OverlayLayoutItem>
+      </OverlayLayout>
+    </Layout>
+  ));
 
 const previews = { zh: createPreview('zh'), en: createPreview('en') };
 

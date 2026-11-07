@@ -17,7 +17,7 @@ const pathOf = (prefix: ReadonlyArray<string | number>, error: ZodError): Readon
 
 const invalidThemeDefinition = (error: ZodError): RetikzChartError =>
   new RetikzChartError({
-    code: RetikzChartErrorCode.InvalidRegistry,
+    code: RetikzChartErrorCode.ProviderRegistryInvalid,
     message: 'Chart theme definition has an invalid declaration',
     details: { path: pathOf(['themes'], error) },
     cause: error,
@@ -47,7 +47,7 @@ export const assertChartThemeBases = (themes: ReadonlyMap<string, ChartThemeDefi
     while (current !== undefined) {
       if (visiting.has(current)) {
         throw new RetikzChartError({
-          code: RetikzChartErrorCode.ThemeCycle,
+          code: RetikzChartErrorCode.ProviderThemeCycle,
           message: `Chart theme inheritance cycle detected at "${current}"`,
           details: { path: ['themes', theme.name, 'base'], theme: current },
         });
@@ -57,7 +57,7 @@ export const assertChartThemeBases = (themes: ReadonlyMap<string, ChartThemeDefi
       const definition = themes.get(current);
       if (definition === undefined) {
         throw new RetikzChartError({
-          code: RetikzChartErrorCode.MissingDependency,
+          code: RetikzChartErrorCode.ProviderDependencyMissing,
           message: `Chart theme "${theme.name}" references unknown base "${current}"`,
           details: { path: ['themes', theme.name, 'base'], base: current },
         });
@@ -80,7 +80,7 @@ const chartThemeChainOf = (
   while (current !== undefined) {
     if (visiting.has(current)) {
       throw new RetikzChartError({
-        code: RetikzChartErrorCode.ThemeCycle,
+        code: RetikzChartErrorCode.ProviderThemeCycle,
         message: `Chart theme inheritance cycle detected at "${current}"`,
         details: { path },
       });
@@ -90,7 +90,7 @@ const chartThemeChainOf = (
     const definition = themes.get(current);
     if (definition === undefined) {
       throw new RetikzChartError({
-        code: RetikzChartErrorCode.UnknownDefinition,
+        code: RetikzChartErrorCode.ProviderDefinitionUnknown,
         message: `Chart theme "${current}" is not registered`,
         details: { path },
       });

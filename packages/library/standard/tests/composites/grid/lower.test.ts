@@ -1,5 +1,5 @@
 import type { GroupPrimitive, IRPath, IRScope, ScenePrimitive } from '@retikz/core';
-import { compileToScene } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { createGrid, gridDefinition, lowerGrid } from '../../../src/presentation';

@@ -307,7 +307,7 @@ export declare const definePattern: (def: PatternDefinition) => PatternDefinitio
 | `offsetX?` | `number`                                          | —       | —           |
 | `offsetY?` | `number`                                          | —       | —           |
 | `opacity?` | `number`                                          | —       | —           |
-| `preset?`  | `"none" \| "sm" \| "md" \| "lg" \| "xl" \| "2xl"` | —       | —           |
+| `preset?`  | `"none" \| "sm" \| "lg" \| "xl" \| "2xl" \| "md"` | —       | —           |
 
 </ApiTable>
 
@@ -331,7 +331,7 @@ export type IRDropShadow = ZodInfer<typeof DropShadowSchema>;
 
 #### <ApiSourceLink label={"ShadowPreset"} path={"packages/kernel/core/src/schemas/style/effects.ts"} startLine={13}>ShadowPreset</ApiSourceLink>
 
-The preset string `shadow="md"` is equivalent to `{ preset: 'md' }`; SHADOW_PRESETS is the source for preset expansion. `none` explicitly disables shadow (described here as equivalent to omission, reserving scope cascading).
+The preset string `shadow="md"` is equivalent to `{ preset: 'md' }`. `none` explicitly disables shadow (described here as equivalent to omission, reserving scope cascading).
 
 ```ts
 export const ShadowPreset = {

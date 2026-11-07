@@ -41,7 +41,7 @@ export const interpolate = ({ from, to, t, mode }: InputRibbonWidthInterpolation
  * @description fixed 取常量；taper 插值首尾宽度；stops 消费已排序节点；profile 消费已解析的 Definition 与参数
  */
 export const widthFunction = (resolution: RibbonWidthResolution, totalLength: number): ((offset: number) => number) => {
-  const { width } = resolution;
+  const { width, definition: profile, params } = resolution;
   if (width.kind === 'fixed') return () => width.value;
   if (width.kind === 'taper')
     return offset => interpolate({ from: width.start, to: width.end, t: offset, mode: width.interpolation });
@@ -73,11 +73,9 @@ export const widthFunction = (resolution: RibbonWidthResolution, totalLength: nu
     };
   }
 
-  const profile = resolution.definition;
-  const params = resolution.params;
   if (profile === undefined || params === undefined) {
     throw new RetikzExtensionError({
-      code: RetikzExtensionErrorCode.ResolutionInvalid,
+      code: RetikzExtensionErrorCode.ResolveInvalid,
       message: `Ribbon width profile '${width.name}' has no resolving-phase provider binding.`,
       details: { profile: width.name },
     });
@@ -92,7 +90,7 @@ export const widthFunction = (resolution: RibbonWidthResolution, totalLength: nu
       if (cause instanceof RetikzExtensionError) throw cause;
 
       throw new RetikzExtensionError({
-        code: RetikzExtensionErrorCode.ResolutionInvalid,
+        code: RetikzExtensionErrorCode.ResolveInvalid,
         message: `Ribbon width profile '${width.name}' widthAt failed at offset ${String(offset)}.`,
         details: { length: totalLength, offset, profile: width.name },
         cause,

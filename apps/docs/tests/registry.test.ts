@@ -1,14 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-import {
-  AxisLineStepSchema,
-  ContextualColorSchema,
-  CoordinateSchema,
-  MoveStepSchema,
-  RelativeTargetSchema,
-  SceneSchema,
-} from '@retikz/core';
+import { AxisLineStepSchema, ContextualColorSchema, CoordinateSchema, MoveStepSchema, SceneSchema } from '@retikz/core';
 import { TransformSchema } from '@retikz/data';
 import {
   BlockHeaderSchema,
@@ -18,7 +11,6 @@ import {
   EntitySchema,
   RelationSchema,
 } from '@retikz/graph';
-import { LayoutInspectSpacingOptionsSchema } from '@retikz/layout/inspect';
 import {
   CoordinateSchema as PlotCoordinateSchema,
   VisualEncodingSchema,
@@ -39,6 +31,8 @@ import { z } from 'zod';
 import { lookupSchema, SCHEMA_REGISTRY } from '@/modules/docs/components';
 import { expandMdxIncludes } from '@/modules/docs/lib';
 
+import { RelativeTargetSchema } from '../../../packages/kernel/core/src/schemas/path/target';
+
 describe('SCHEMA_REGISTRY', () => {
   it('包含文档中声明的 Kernel、Data、Table 和 Plot schema 接口', () => {
     const expected = {
@@ -46,7 +40,6 @@ describe('SCHEMA_REGISTRY', () => {
       ContextualColorSchema: {
         schema: ContextualColorSchema,
       },
-      LayoutInspectSpacingOptionsSchema: { schema: LayoutInspectSpacingOptionsSchema },
       TableSchema: { schema: TableSchema },
       PlotSchema: { schema: PlotSchema },
       VisualEncodingSchema: { schema: VisualEncodingSchema },
@@ -100,24 +93,10 @@ describe('SCHEMA_REGISTRY', () => {
     expect(lookupSchema(MoveStepSchema)?.url).toBe('/kernel/components/path/reference#movestepschema');
     expect(lookupSchema(AxisLineStepSchema)?.url).toBe('/kernel/components/path/reference#axislinestepschema');
     expect(lookupSchema(RelativeTargetSchema)?.url).toBeUndefined();
-    expect(lookupSchema(LayoutInspectSpacingOptionsSchema)?.url).toBe(
-      '/library/layout/flex-layout/reference#layoutinspectspacingoptionsschema',
-    );
     expect(lookupSchema(TableSchema)?.url).toBe('/viz/table/reference/contract-table#tableschema');
     expect(lookupSchema(LegendSchema)?.url).toBe('/library/standard/presentation/legend#legendschema');
     expect(lookupSchema(LegendArtifactSchema)?.url).toBe('/library/standard/presentation/legend#legendartifact');
     expect(lookupSchema(SurfaceSchema)?.url).toBe('/library/standard/presentation/surface#surfaceschema');
-  });
-
-  it('将 Layout Inspector 选项链接到双语合并参考', async () => {
-    const referenceRoot = resolve(process.cwd(), 'src/modules/docs/contents/library/layout/flex-layout/reference');
-
-    for (const lang of ['zh', 'en'] as const) {
-      const source = await expandMdxIncludes(readFileSync(resolve(referenceRoot, `index.${lang}.mdx`), 'utf8'), lang);
-
-      expect(source).toContain('>LayoutInspectSpacingOptionsSchema</ApiSourceLink>');
-      expect(source).toContain('name="LayoutInspectSpacingOptionsSchema"');
-    }
   });
 
   it.each(['data', 'table', 'plot'] as const)('将每个 Viz %s 契约注册表 URL 保留在记录的英文标题上', async moduleId => {
