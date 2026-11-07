@@ -7,41 +7,71 @@ import { logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
 
 import { pathImplementationI18n } from './path-implementation.i18n';
 
-/** 路径实现流程的语言 */
+/** Reconciler 调度 resolvePath / compilePath流程图的语言 */
 export type PathImplementationProps = { lang?: Lang };
-/** 两列展示消费步骤及其后处理 */
+
+/** 展示本页追踪的阶段、产物与必要输入 */
 const PathImplementation: FC<PathImplementationProps> = props => {
   const { lang = 'zh' } = props;
-  const labels = pathImplementationI18n[lang];
+  const text = pathImplementationI18n[lang];
+  const stages = [
+    { id: 'flush', name: 'flushPendingPathEmissions', state: false },
+    { id: 'bind', name: 'bindPathTargets', state: false },
+    { id: 'host', name: 'emitDefinedPath', state: false },
+    { id: 'stroke', name: 'PathDefinition.compile', state: false },
+    { id: 'snapshot', name: 'snapshotPathCompileResult', state: true },
+  ] as const;
+  const inputs = [{ id: 'builtin', name: 'Custom definition', target: 'stroke' }] as const;
   return (
     <PreviewFlowDiagram {...logicFigureGraphProps()} style={{ maxWidth: '100%', height: 'auto' }}>
       <FlowLayout
-        id="implementation"
+        id="path-implementation"
         kind="grid"
-        gap={{ row: 22, column: 36 }}
+        gap={{ row: 20, column: 28 }}
         placements={[
-          ['s0', 's7'],
-          ['s1', 's6'],
-          ['s2', 's5'],
-          ['s3', 's4'],
+          [null, 'flush'],
+          [null, 'bind'],
+          [null, 'host'],
+          ['builtin', 'stroke'],
+          [null, 'snapshot'],
         ]}
       >
         <FlowEntities
-          items={labels.map((text, i) => ({
-            id: `s${i}`,
-            text: text
-              .split('\n')
-              .map((line, n) => ({ text: line, ...(n ? { font: { size: 12 }, fill: 'gray' } : {}) })),
-            role: 'activity',
-            ...(i === 2 || i === 7 ? { kind: 'docs.logic.important' } : {}),
-            layout: { width: 300 },
+          items={stages.map(item => ({
+            id: item.id,
+            role: item.state ? 'state' : 'activity',
+            layout: { width: 290 },
+            text: [
+              { text: item.name, font: { size: 12 } },
+              { text: text[item.id], font: { size: 12 }, fill: 'gray' },
+            ],
+          }))}
+        />
+        <FlowEntities
+          items={inputs.map(item => ({
+            id: item.id,
+            role: 'state',
+            kind: 'docs.logic.secondary',
+            layout: { width: 230 },
+            text: [
+              { text: item.name, font: { size: 12 } },
+              { text: text[item.id], font: { size: 12 }, fill: 'gray' },
+            ],
           }))}
         />
       </FlowLayout>
       <FlowRelations
         items={[
-          ...labels.slice(1).flatMap((_, i) => (i === 3 ? [] : [{ source: `s${i}`, target: `s${i + 1}` }])),
-          { source: 's3', target: 's4' },
+          ...stages
+            .slice(1)
+            .map((item, index) => ({
+              source: { id: stages[index].id, anchor: 'bottom' as const },
+              target: { id: item.id, anchor: 'top' as const },
+            })),
+          ...inputs.map(item => ({
+            source: { id: item.id, anchor: 'right' as const },
+            target: { id: item.target, anchor: 'left' as const },
+          })),
         ]}
       />
     </PreviewFlowDiagram>
