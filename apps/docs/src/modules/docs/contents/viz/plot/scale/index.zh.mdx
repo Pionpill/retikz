@@ -1,49 +1,41 @@
+﻿---
+title: scale · 比例尺
+description: Data 定义数学映射，Plot 通道决定默认选型、属性约束以及坐标轴和图例的消费方式。
 ---
-title: 比例尺
-description: 比例尺连接字段语义与视觉输出：位置与颜色是主要选型入口，size、opacity 可自动合成或显式引用映射，shape 当前只自动生成 ordinal glyph 映射。
----
 
-比例尺决定「一个数据值最终画成什么」。位置通道把字段变成坐标、长度或半径，颜色和其它视觉通道把字段变成颜色、大小、透明度或形状；`<Plot>` 会先按字段类型和图元结构选择常用默认，特殊语义再显式指定。
+比例尺把数据域映射到输出范围。数学算法由 [Data 比例尺](/viz/data/scale)提供；Plot 根据通道选择默认配置，并将结果用于位置、颜色、尺寸、透明度或形状。
 
-scale 只负责映射，不负责把映射解释给读者：位置刻度由[坐标轴](/viz/plot/guide/axis)显示，颜色、大小、透明度和形状可由[图例](/viz/plot/guide/legend)解释。内置映射以外的品牌色阶或领域规则走[自定义比例尺](/viz/plot/scale/custom-scale)。
+## 位置与图元属性
 
-## 职责一览
+| 消费入口                                        | 负责什么                           | 配置方式                                                       |
+| ----------------------------------------------- | ---------------------------------- | -------------------------------------------------------------- |
+| [位置比例尺](/viz/plot/scale/position)          | 坐标投影、坐标轴、网格和布局范围   | coordinate role 引用命名比例尺；React 可用 PlotScale dimension |
+| [图元属性映射](/viz/plot/scale/mark-attributes) | 颜色、尺寸、透明度、描边宽度和形状 | encodings 中使用字段字符串或 `{ field, scale }`                |
 
-| 家族         | 负责的映射                            | 配置入口                              |
-| ------------ | ------------------------------------- | ------------------------------------- |
-| 位置比例尺   | 数值 / 时间 / 分类 → 坐标、长度、半径 | 本组的位置页；`<PlotScale dimension>` |
-| 颜色比例尺   | 分类 / 连续 / 时间 → 离散色或色带     | 本组的颜色页；color field binding     |
-| 其它视觉通道 | 数值 / 分类 → 大小、透明度、形状      | [内置通道](/viz/plot/channel/builtin) |
+位置单独说明，因为它还参与坐标轴和布局。颜色属于图元属性映射的一种应用，不是独立的数学比例尺家族。同一分档算法可以输出颜色，也可以输出尺寸；不同通道分别检查结果是否适用。
 
-三类入口共享同一条思路：先确认字段的测量类型，再决定默认映射是否足够；scale 的产物随后交给坐标投影、图元通道和 guide。React 的 `<PlotScale dimension>` 只配置位置维度；`size` 可引用 `sqrt`、`opacity` 可引用 `linear`，二者也可由 mark 通道自动合成。`shape` 当前只使用通道自动生成的 `ordinal` glyph 映射，不开放显式 scale 引用。
+固定视觉属性直接使用目标值，不参与比例尺训练。字段字符串采用通道默认处理；显式 scale 引用优先，名称不存在时报错。透明度的三个因子分别绑定在 `encodings.opacity.overall / fill / stroke`。
 
-常用自动默认如下：
+## 默认选择
 
-| 字段类型      | 位置自动默认 | 颜色自动默认（按 datum 着色） |
-| ------------- | ------------ | ----------------------------- |
-| `continuous`  | `linear`     | `sequential`                  |
-| `temporal`    | `time`       | `sequential`                  |
-| `categorical` | `band`       | `ordinal`                     |
+| 字段类型    | 位置        | 颜色       |
+| ----------- | ----------- | ---------- |
+| continuous  | linear      | sequential |
+| temporal    | time（UTC） | sequential |
+| categorical | band        | ordinal    |
 
-自动默认只覆盖最常见的路径。分类折线或散点需要把位置换成 `point`；跨数量级、跨零或面积感知的位置映射分别选择 `log`、`symlog`、`sqrt` / `radial`。带意义中点的颜色使用 `diverging`，业务断点或数据分位使用 `threshold` / `quantile` 等显式色阶。
+尺寸默认使用 sqrt，将非负数映射为半径；透明度和描边宽度使用各自范围的 linear。形状默认按分类分配主题形状序列。旋转等原本直接取数值的属性不会因为存在比例尺机制而自动归一化。
 
-其它视觉通道中，连续 `size` 默认使用面积感知的 `sqrt`，连续 `opacity` 使用 `linear`，分类 `shape` 使用 `ordinal`。这些映射属于通道解析，不表示 `<PlotScale dimension>` 可以配置大小、透明度或形状。
+通道支持的映射由输入语义与输出约束共同决定。数值结果不能直接证明它能作为位置：位置连续性、零基线许可和布局能力仍需消费方明确声明。图元、轴和图例使用实际解析结果，隐藏图例不改变映射。
 
-React DSL 的 polar 维度仍写 `x` / `y`：`x` 在极坐标中解释为角向，`y` 解释为径向。完整选型、合法输入和 React / full spec 的能力边界分别见下面两页；字段类型声明见[字段类型](/viz/data/model/field-types)。
+## 扩展与阅读顺序
 
-## 章节内容
+新算法使用 Data 的 `defineScale`，通过 `definitions.scales` 注入 Plot；不需要再定义一套 Plot 数学比例尺。已有通道可直接消费适用的新算法。新增属性交付或位置消费语义时，在[自定义通道](/viz/plot/channel/custom-channel)中声明策略。
 
 <LinkedSections
   items={[
-    {
-      title: '位置比例尺',
-      description: '数值、时间与分类字段如何映射成坐标、长度和半径',
-      url: '/viz/plot/scale/position',
-    },
-    {
-      title: '颜色比例尺',
-      description: '分类色、连续色带、发散色与离散化分箱怎么选择',
-      url: '/viz/plot/scale/color',
-    },
+    { title: '位置比例尺', description: '位置映射、坐标轴和布局约束', url: '/viz/plot/scale/position' },
+    { title: '图元属性映射', description: '颜色、尺寸等属性的默认与显式映射', url: '/viz/plot/scale/mark-attributes' },
+    { title: 'Data 比例尺', description: '数学类型、参数与自定义算法', url: '/viz/data/scale' },
   ]}
 />

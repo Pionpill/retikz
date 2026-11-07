@@ -92,7 +92,7 @@ Plot 下沉时先建立通道注册表，收集内置的颜色、大小、形状
 
 以 `size` 为例，解析时先确定字段、domain 和平方根比例尺，再返回 `resolver(row)`。绘制每个点时，只需用这个函数读取该行的数值并换算半径。两层职责分别是“为当前图元准备映射”和“用映射计算每行的值”；逐行计算时不必重复准备比例尺。
 
-`resolveSizeChannel` 从图元的 `size` 属性读取绑定。字段模式要求连续、非负的数据：没有显式比例尺时，自动建立 domain 为 `[0, 最大正值]`、range 为 `[2, 20]` 的平方根比例尺；显式引用的比例尺也必须是 sqrt 类型。常量模式则直接返回给定半径，绕过比例尺。
+`resolveSizeChannel` 从图元的 `size` 属性读取绑定。没有显式比例尺时，字段要求连续、非负，自动建立 domain 为 `[0, 最大正值]`、range 为 `[2, 20]` 的平方根比例尺。显式引用可使用适用的数学定义，只要输出有限非负半径。常量模式直接使用给定半径，绕过比例尺。
 
 字段模式同时返回逐行 resolver 和图例 descriptor；后者记录字段、比例尺名、domain 与 range。没有显式 domain 且数据中没有正值时，映射固定为 range 下界；单行值缺失或不是有限数时，resolver 返回 `undefined`。检测到负数或非连续字段则报错。
 
@@ -161,8 +161,8 @@ Plot 下沉时先建立通道注册表，收集内置的颜色、大小、形状
     {
       label: 'size 半径到节点布局的换算',
       path: 'packages/viz/plot/src/providers/channel/features/node.ts',
-      startLine: 634,
-      endLine: 642,
+      startLine: 536,
+      endLine: 546,
     },
     {
       label: '点的逐行求值与节点交付',
@@ -190,7 +190,7 @@ Plot 下沉时先建立通道注册表，收集内置的颜色、大小、形状
 
 Plot 的位置编码使用 `x / y / z`；极坐标改变这些角色的解释方式，不增加 `angle / radius` 别名。`size` 负责大小，不参与位置角色投影。
 
-图例走另一条路径：`collectChannelDescriptors` 针对各图元的数据视图收集 descriptor，`buildLegendLayers` 再按通道和可选比例尺名选择映射。对 `size` 而言，descriptor 携带平方根比例尺的 domain 与半径 range，图例据此生成大小不同的符号，而不是从节点尺寸反推原始数据。一个通道对应多个不同映射时，需要通过图例的 `scale` 消歧；同一 size 比例尺对应的重复描述还必须一致。
+图例走另一条路径：`collectChannelDescriptors` 针对各图元的数据视图收集 descriptor，`buildLegendLayers` 再按通道和可选比例尺名选择映射。对 `size` 而言，descriptor 携带实际数学映射，图例调用同一映射生成半径。一个通道对应多个不同映射时，需要通过图例的 `scale` 消歧；同一 size 比例尺对应的重复描述还必须一致。
 
 `size` 的字段绑定返回 descriptor，因此可以生成大小图例；常量绑定只返回固定半径，不产生 descriptor，也就没有数据范围可供图例使用。若仍显式请求缺少 descriptor 的 size 图例，下沉会报错。
 

@@ -94,6 +94,7 @@ export const resolveMarkChannels = (mark: IRPlotMark, context: ChannelResolveCon
   };
 
   const definitionContext: ChannelDefinitionResolveContext = {
+    resolveScaleMapping: context.resolveScaleMapping,
     node: context.node,
     rows: context.rows,
     model: context.model,

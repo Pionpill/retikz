@@ -7,7 +7,9 @@ import { number, strictObject, string, union } from 'zod';
 
 import type { PlotsLoweringOptions } from '../../../src/pipeline/expand';
 import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
+import { resolveScaleRegistry } from '../../../src/providers';
 import { BUILTIN_NODE_CHANNELS, SIZE_MAX_RADIUS } from '../../../src/providers';
+import { resolveAttributeMapping } from '../../../src/resolve/scale';
 import type { IRPlot, IRPlotChannel } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
@@ -138,6 +140,8 @@ const sizeResolutionOf = (
           ...(options.fieldType === undefined ? {} : { type: options.fieldType }),
         },
       ],
+      resolveScaleMapping: (operation, context = {}) =>
+        resolveAttributeMapping(operation, context, { registry: resolveScaleRegistry() }),
       resolveChannelScale: () => ({
         of: () => undefined,
         legendForm: 'swatch',
@@ -425,6 +429,8 @@ describe('size channel 错误输入', () => {
         node,
         rows: [{ derivedSize: 4 }],
         model: [],
+        resolveScaleMapping: (operation, context = {}) =>
+          resolveAttributeMapping(operation, context, { registry: resolveScaleRegistry() }),
         resolveChannelScale: () => ({
           of: () => undefined,
           legendForm: 'swatch',
@@ -590,23 +596,24 @@ describe('size channel 错误输入', () => {
     expect(() => sizeResolutionOf({ field: 'p', scale: 'nope' }, rows)).toThrow(/unknown scale/);
   });
 
-  it('非 sqrt 尺寸比例尺明确报错', () => {
+  it('显式线性尺寸比例尺参与默认自动留白', () => {
     const data = [
       { x: 0, y: 0, p: 1 },
       { x: 1, y: 1, p: 4 },
     ];
     const spec = pointSpec({ field: 'p', scale: 'mySize' }, [{ type: 'linear', name: 'mySize' }]);
 
-    expect(() => expandOf(spec, { d: data }, cartOpts)).toThrow(/must be a sqrt scale/);
+    expect(() => expandOf(spec, { d: data }, cartOpts)).not.toThrow();
   });
 
   it.each([
     ['empty', []],
     ['all-zero', [{ p: 0 }, { p: 0 }]],
-  ])('对于 %s 行，非 sqrt 大小比例失败', (_label, rows) => {
-    expect(() => sizeResolutionOf({ field: 'p', scale: 'mySize' }, rows, [{ type: 'linear', name: 'mySize' }])).toThrow(
-      /must be a sqrt scale/,
-    );
+  ])('对于 %s 行，显式线性尺寸映射保留输出范围', (_label, rows) => {
+    expect(
+      sizeResolutionOf({ field: 'p', scale: 'mySize' }, rows, [{ type: 'linear', name: 'mySize', range: [2, 20] }])
+        .descriptor?.range,
+    ).toEqual([2, 20]);
   });
 
   it.each([
@@ -617,7 +624,7 @@ describe('size channel 错误输入', () => {
       sizeResolutionOf({ field: 'p', scale: 'sizeScale' }, rows, [
         { type: 'sqrt', name: 'sizeScale', domain: [-1, -1] },
       ]),
-    ).toThrow(/domain must be non-negative/);
+    ).toThrow(/failed to resolve/);
   });
 
   it('字段大小描述符使用显式比例标识', () => {

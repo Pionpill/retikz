@@ -1,49 +1,53 @@
----
+﻿---
 title: Scales
-description: 'Scales connect field semantics to visual output: position and color are the main choice points; size and opacity can synthesize or reference scales, while shape currently synthesizes an ordinal glyph mapping only.'
+description: Data defines mathematical mappings; Plot channels own defaults, attribute constraints, axes, and legends.
 ---
 
-A scale decides what a data value becomes on the canvas. Position channels turn fields into coordinates, lengths, or radii, while color and other visual channels turn fields into color, size, opacity, or shape. `<Plot>` first picks common defaults from the field type and mark structure; specialized semantics remain explicit.
+A scale maps a data domain to an output range. [Data scales](/viz/data/scale) supply the algorithms. Plot channels select defaults and consume the results as positions, colors, sizes, opacity, or shapes.
 
-A scale maps values but does not explain the mapping to the reader. [Axes](/viz/plot/guide/axis) display positional ticks, while [legends](/viz/plot/guide/legend) can explain color, size, opacity, and shape. Brand palettes and domain-specific mappings beyond the built-ins go through [custom scales](/viz/plot/scale/custom-scale).
+## Positions and mark attributes
 
-## Responsibilities
+| Consumer                                                  | Responsibility                                        | Configuration                                                                    |
+| --------------------------------------------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------------- |
+| [Position scales](/viz/plot/scale/position)               | Coordinate projection, axes, grids, and layout ranges | Coordinate roles reference named scales; React also provides PlotScale dimension |
+| [Mark attribute mapping](/viz/plot/scale/mark-attributes) | Color, size, opacity, stroke width, and shape         | A field string or `{ field, scale }` in encodings                                |
 
-| Family                | Mapping it owns                                               | Configuration entry                                   |
-| --------------------- | ------------------------------------------------------------- | ----------------------------------------------------- |
-| Positional            | numeric / temporal / categorical → coordinate, length, radius | this section's position page; `<PlotScale dimension>` |
-| Color                 | categorical / continuous / temporal → discrete color or band  | this section's color page; color field binding        |
-| Other visual channels | numeric / categorical → size, opacity, shape                  | [Built-in Channels](/viz/plot/channel/builtin)        |
+Positions have a separate page because they also affect axes and layout. Color is one use of mark attribute mapping, not a separate mathematical scale family. The same binning algorithm can output colors or sizes; each channel checks whether those outputs are suitable.
 
-All three entry points follow the same path: establish the field's measurement type, decide whether the default mapping is enough, then hand the scale output to coordinate projection, mark channels, and guides. React's `<PlotScale dimension>` configures positional dimensions only. `size` can reference `sqrt` and `opacity` can reference `linear`; mark channels can also synthesize both. `shape` currently uses only the channel-generated `ordinal` glyph mapping and does not accept an explicit scale reference.
+Fixed visual properties bypass scales. Field strings use channel defaults. An explicit scale reference takes precedence, and an unknown name is an error. Opacity factors bind separately through `encodings.opacity.overall / fill / stroke`.
 
-Common automatic defaults are:
+## Defaults
 
-| Field type    | Positional default | Color default (per-datum marks) |
-| ------------- | ------------------ | ------------------------------- |
-| `continuous`  | `linear`           | `sequential`                    |
-| `temporal`    | `time`             | `sequential`                    |
-| `categorical` | `band`             | `ordinal`                       |
+| Field type  | Position   | Color      |
+| ----------- | ---------- | ---------- |
+| continuous  | linear     | sequential |
+| temporal    | time (UTC) | sequential |
+| categorical | band       | ordinal    |
 
-Automatic defaults cover the common path only. Categorical lines and scatter switch position to `point`; position data spanning magnitudes, crossing zero, or encoding area calls for `log`, `symlog`, `sqrt`, or `radial`. Color with a meaningful midpoint uses `diverging`, while business thresholds and data quantiles use explicit scales such as `threshold` and `quantile`.
+Size uses sqrt to map nonnegative magnitudes to radii. Opacity and stroke width use linear mappings with their own ranges. Shape assigns the theme's shapes to categories. Attributes that directly consume numbers, such as rotation, do not start normalizing values automatically.
 
-For other visual channels, continuous `size` defaults to the area-aware `sqrt`, continuous `opacity` uses `linear`, and categorical `shape` uses `ordinal`. These mappings belong to channel resolution; they do not make size, opacity, or shape valid targets for `<PlotScale dimension>`.
+Supported mappings depend on both input semantics and output constraints. Numeric output alone does not grant position compatibility: continuity, baseline permission, and layout requirements must be declared by the consumer. Marks and guides use the resolved mapping; hiding a legend does not change it.
 
-The React DSL still writes polar dimensions as `x` / `y`: `x` means angular and `y` means radial under a polar coordinate. The two pages below cover the full choice set, valid inputs, and the React / full-spec boundary. See the [Field Types](/viz/data/model/field-types) for declaring measurement types.
+## Extensions and next steps
 
-## In this section
+Define new algorithms with Data's `defineScale` and pass them through `definitions.scales`. Plot has no second mathematical definition API. Existing channels can consume suitable new algorithms directly. Define a [custom channel](/viz/plot/channel/custom-channel) when adding attribute delivery or position consumption semantics.
 
 <LinkedSections
   items={[
     {
-      title: 'Positional Scales',
-      description: 'Map numeric, temporal, and categorical fields to coordinates, lengths, and radii',
+      title: 'Position scales',
+      description: 'Position mappings, axes, and layout constraints',
       url: '/viz/plot/scale/position',
     },
     {
-      title: 'Color Scales',
-      description: 'Choose categorical colors, continuous bands, diverging color, and discrete bins',
-      url: '/viz/plot/scale/color',
+      title: 'Mark attribute mapping',
+      description: 'Default and explicit mappings for visual attributes',
+      url: '/viz/plot/scale/mark-attributes',
+    },
+    {
+      title: 'Data scales',
+      description: 'Mathematical types, parameters, and custom algorithms',
+      url: '/viz/data/scale',
     },
   ]}
 />

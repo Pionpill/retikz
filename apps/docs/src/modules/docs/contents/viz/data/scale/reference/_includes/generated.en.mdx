@@ -1,0 +1,356 @@
+{/* Generated reference. Do not edit manually. */}
+
+## Definitions and registration
+
+#### <ApiSourceLink label={"BuiltinDataScale"} path={"packages/viz/data/src/scale/constants.ts"} startLine={4}>BuiltinDataScale</ApiSourceLink>
+
+```ts
+export const BuiltinDataScale = {
+  Linear: 'linear',
+  Log: 'log',
+  Pow: 'pow',
+  Sqrt: 'sqrt',
+  Symlog: 'symlog',
+  Radial: 'radial',
+  Time: 'time',
+  Band: 'band',
+  Point: 'point',
+  Ordinal: 'ordinal',
+  Quantize: 'quantize',
+  Quantile: 'quantile',
+  Threshold: 'threshold',
+  Sequential: 'sequential',
+  Diverging: 'diverging',
+} as const;
+
+export type BuiltinDataScale = ValueOf<typeof BuiltinDataScale>;
+```
+
+#### <ApiSourceLink label={"BUILTIN_SCALES"} path={"packages/viz/data/src/scale/builtins.ts"} startLine={503}>BUILTIN_SCALES</ApiSourceLink>
+
+```ts
+export const BUILTIN_SCALES: ReadonlyArray<ScaleDefinition> = [
+  linearDefinition,
+  logDefinition,
+  powDefinition,
+  sqrtDefinition,
+  symlogDefinition,
+  radialDefinition,
+  timeDefinition,
+  ordinalDefinition,
+  bandDefinition,
+  pointDefinition,
+  quantizeDefinition,
+  quantileDefinition,
+  thresholdDefinition,
+  sequentialDefinition,
+  divergingDefinition,
+];
+```
+
+#### <ApiSourceLink label={"InputScaleDefinition"} path={"packages/viz/data/src/scale/contract.ts"} startLine={60}>InputScaleDefinition</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member                     | Type                                                                 | Default | Description                                                              |
+| -------------------------- | -------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------ |
+| `TParams` (Type parameter) | `extends JsonObject`                                                 | —       | JSON object type of instance parameters                                  |
+| `isFieldCompatible`        | `(fieldType: DataFieldType \| undefined) => boolean`                 | —       | Checks compatibility with declared field semantics                       |
+| `paramsSchema`             | `ZodType<TParams, TParams>`                                          | —       | External parsing contract for algorithm-specific parameters              |
+| `resolve`                  | `(context: ScaleResolveContext, params: TParams) => ScaleResolution` | —       | Builds an independent mapping from common inputs and instance parameters |
+| `type`                     | `string`                                                             | —       | Unique registered mapping type                                           |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type InputScaleDefinition<TParams extends JsonObject> = {
+  type: string;
+  paramsSchema: ZodType<TParams, TParams>;
+  isFieldCompatible: (fieldType: DataFieldType | undefined) => boolean;
+  resolve: (context: ScaleResolveContext, params: TParams) => ScaleResolution;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"ScaleDefinition"} path={"packages/viz/data/src/scale/contract.ts"} startLine={72}>ScaleDefinition</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member              | Type                                                                                   | Default | Description                                                              |
+| ------------------- | -------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------ |
+| `isFieldCompatible` | `(fieldType: DataFieldType \| undefined) => boolean`                                   | —       | Checks compatibility with declared field semantics                       |
+| `paramsSchema`      | `ScaleDefinition["paramsSchema"]`                                                      | —       | External parsing contract for algorithm-specific parameters              |
+| `resolve`           | `(context: ScaleResolveContext, params: Record<string, JsonValue>) => ScaleResolution` | —       | Builds an independent mapping from common inputs and instance parameters |
+| `type`              | `string`                                                                               | —       | Unique registered mapping type                                           |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type ScaleDefinition = InputScaleDefinition<JsonObject>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"defineScale"} path={"packages/viz/data/src/scale/contract.ts"} startLine={78}>defineScale</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category        | Name         | Type / signature                | Description                             |
+| --------------- | ------------ | ------------------------------- | --------------------------------------- |
+| Type parameters | `TParams`    | `extends JsonObject`            | JSON object type of instance parameters |
+| Parameters      | `definition` | `InputScaleDefinition<TParams>` | —                                       |
+| Returns         | —            | `ScaleDefinition`               | —                                       |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export declare const defineScale: <TParams extends JsonObject>(
+  definition: InputScaleDefinition<TParams>,
+) => ScaleDefinition;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"resolveScaleRegistry"} path={"packages/viz/data/src/scale/resolve.ts"} startLine={8}>resolveScaleRegistry</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name           | Type / signature                       | Description |
+| ---------- | -------------- | -------------------------------------- | ----------- |
+| Parameters | `definitions?` | `ReadonlyArray<ScaleDefinition>`       | —           |
+| Returns    | —              | `ReadonlyMap<string, ScaleDefinition>` | —           |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export declare const resolveScaleRegistry: (
+  definitions?: ReadonlyArray<ScaleDefinition>,
+) => ReadonlyMap<string, ScaleDefinition>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+## Resolution and evaluation
+
+#### <ApiSourceLink label={"parseScaleOperation"} path={"packages/viz/data/src/scale/resolve.ts"} startLine={59}>parseScaleOperation</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name        | Type / signature                       | Description |
+| ---------- | ----------- | -------------------------------------- | ----------- |
+| Parameters | `input`     | `unknown`                              | —           |
+|            | `registry?` | `ReadonlyMap<string, ScaleDefinition>` | —           |
+| Returns    | —           | `IRDataScaleOperation`                 | —           |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export declare const parseScaleOperation: (
+  input: unknown,
+  registry?: ReadonlyMap<string, ScaleDefinition>,
+) => IRDataScaleOperation;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"resolveScale"} path={"packages/viz/data/src/scale/resolve.ts"} startLine={81}>resolveScale</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name        | Type / signature                       | Description                                                                                                   |
+| ---------- | ----------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Parameters | `operation` | `IRDataScaleOperation`                 | Mapping declaration                                                                                           |
+|            | `context?`  | `Partial<ScaleResolveContext>`         | Optional runtime inputs; omitting values means no samples, while definition callbacks always receive an array |
+|            | `registry?` | `ReadonlyMap<string, ScaleDefinition>` | Mapping definition registry; defaults to built-in definitions                                                 |
+| Returns    | —           | `ScaleResolution`                      | Independent mathematical mapping and algorithm results                                                        |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export declare const resolveScale: (
+  operation: IRDataScaleOperation,
+  context?: Partial<ScaleResolveContext>,
+  registry?: ReadonlyMap<string, ScaleDefinition>,
+) => ScaleResolution;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"ScaleResolveContext"} path={"packages/viz/data/src/scale/contract.ts"} startLine={43}>ScaleResolveContext</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member           | Type                                                | Default | Description                                                         |
+| ---------------- | --------------------------------------------------- | ------- | ------------------------------------------------------------------- |
+| `defaultRange?`  | `IRDataScaleOperation['range']`                     | —       | Default range selected by the host                                  |
+| `domain?`        | `IRDataScaleOperation['domain']`                    | —       | An explicit domain takes precedence over sample inference           |
+| `interpolators?` | `ReadonlyMap<string, (fraction: number) => string>` | —       | Named string interpolators without theme objects                    |
+| `range?`         | `IRDataScaleOperation['range']`                     | —       | Explicit range                                                      |
+| `values`         | `ReadonlyArray<IRDataScalarValue>`                  | —       | Samples used to train the mapping, preserving repeated observations |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type ScaleResolveContext = {
+  values: ReadonlyArray<IRDataScalarValue>;
+  domain?: IRDataScaleOperation['domain'];
+  range?: IRDataScaleOperation['range'];
+  defaultRange?: IRDataScaleOperation['range'];
+  interpolators?: ReadonlyMap<string, (fraction: number) => string>;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"ScaleResolution"} path={"packages/viz/data/src/scale/contract.ts"} startLine={21}>ScaleResolution</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member        | Type                                                    | Default | Description                                                                                   |
+| ------------- | ------------------------------------------------------- | ------- | --------------------------------------------------------------------------------------------- |
+| `bandwidth?`  | `number`                                                | —       | Category interval width, provided only by interval mappings                                   |
+| `domain`      | `ReadonlyArray<IRDataScalarValue>`                      | —       | Effective input domain                                                                        |
+| `invert?`     | `(value: number) => number \| undefined`                | —       | Inverse numeric mapping; returns undefined outside the algorithm input constraints            |
+| `map`         | `(value: IRDataScalarValue) => ScaleValue \| undefined` | —       | Maps input scalars to outputs; missing values return undefined                                |
+| `range`       | `ReadonlyArray<ScaleValue>`                             | —       | Effective output range                                                                        |
+| `rebuild?`    | `(options: ScaleRebuildOptions) => ScaleResolution`     | —       | Creates an independent mapping with replacement settings without changing the current mapping |
+| `step?`       | `number`                                                | —       | Spacing between adjacent category positions                                                   |
+| `thresholds?` | `ReadonlyArray<number>`                                 | —       | Internal bin boundaries; omitted when there are no valid samples                              |
+| `ticks?`      | `(count?: number) => ReadonlyArray<number>`             | —       | Representative input values computed by the algorithm, without labels or axis semantics       |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type ScaleResolution = {
+  map: (value: IRDataScalarValue) => ScaleValue | undefined;
+  domain: ReadonlyArray<IRDataScalarValue>;
+  range: ReadonlyArray<ScaleValue>;
+  ticks?: (count?: number) => ReadonlyArray<number>;
+  invert?: (value: number) => number | undefined;
+  rebuild?: (options: ScaleRebuildOptions) => ScaleResolution;
+  bandwidth?: number;
+  step?: number;
+  thresholds?: ReadonlyArray<number>;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"ScaleValue"} path={"packages/viz/data/src/scale/contract.ts"} startLine={8}>ScaleValue</ApiSourceLink>
+
+```ts
+export type ScaleValue = number | string;
+```
+
+#### <ApiSourceLink label={"ScaleRebuildOptions"} path={"packages/viz/data/src/scale/contract.ts"} startLine={11}>ScaleRebuildOptions</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member    | Type                                               | Default | Description                                                     |
+| --------- | -------------------------------------------------- | ------- | --------------------------------------------------------------- |
+| `clamp?`  | `boolean`                                          | —       | Replacement clamping; omitted values retain the current setting |
+| `domain?` | `readonly [`<br />`number,`<br />`number`<br />`]` | —       | Replacement domain; omitted values retain the current domain    |
+| `range?`  | `readonly [`<br />`number,`<br />`number`<br />`]` | —       | Replacement range; omitted values retain the current range      |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type ScaleRebuildOptions = {
+  domain?: readonly [number, number];
+  range?: readonly [number, number];
+  clamp?: boolean;
+};
+```
+
+</DocTab>
+
+</DocTabs>

@@ -1,4 +1,5 @@
 import type { JsonObject } from '@retikz/foundation';
+import { resolvePositionScalePolicy } from '@retikz/plot';
 import type { IRPlotScaleOperation } from '@retikz/plot';
 
 import type { ChartEncodingResolveContext, ChartResolvedFieldMapping } from '../../contract/recipe';
@@ -21,21 +22,11 @@ const resolveScaleSource = (
     throw invalidEncoding(`Chart scale type "${operation.type}" is not registered`, path);
   }
 
-  let parsedOperation: IRPlotScaleOperation;
-
-  try {
-    parsedOperation = definition.schema.parse(operation) as IRPlotScaleOperation;
-  } catch (error) {
-    throw invalidEncoding(`Chart scale "${operation.name}" is invalid`, path, error);
-  }
-
-  if (parsedOperation.type !== operation.type || parsedOperation.name !== operation.name) {
-    throw invalidEncoding(`Chart scale "${operation.name}" Definition schema must preserve type and name`, path);
-  }
-
   return {
-    operation: parsedOperation,
-    source: { family: definition.family, type: parsedOperation.type },
+    operation,
+    source: {
+      type: operation.type,
+    },
   };
 };
 
@@ -72,7 +63,16 @@ export const resolveChartEncodingScales = <
     const expected = consumer.scale;
     if (expected === undefined)
       throw invalidEncoding(`Chart encoding "${consumer.slot}" does not support named scales`, path);
-    if (source.family !== expected.family || (expected.type !== undefined && source.type !== expected.type)) {
+    if (expected.type !== undefined && source.type !== expected.type)
+      throw invalidEncoding(`Chart scale is incompatible with encoding "${consumer.slot}"`, path);
+    if (
+      expected.family === 'position' &&
+      resolvePositionScalePolicy(source.type, {
+        registry: context.runtime.scales,
+        channels: context.runtime.channels,
+        role: expected.positionRole,
+      }) === undefined
+    ) {
       throw invalidEncoding(`Chart scale is incompatible with encoding "${consumer.slot}"`, path);
     }
   };
@@ -101,7 +101,7 @@ export const resolveChartEncodingScales = <
       const fallback = scale.recipeFallback;
       fallbackByName.set(fallback.name, {
         slot: consumer.slot,
-        source: { family: scale.family, type: fallback.type },
+        source: { type: fallback.type },
       });
     }
   }

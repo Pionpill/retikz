@@ -1,5 +1,5 @@
 import { CssColorSchema } from '@retikz/core';
-import { ScalarValueSchema } from '@retikz/data';
+import { resolveScale, ScalarValueSchema } from '@retikz/data';
 import { array, strictObject } from 'zod';
 
 import { defineCellVisualScale } from '../../contract';
@@ -45,10 +45,13 @@ export const ORDINAL_COLOR_CELL_VISUAL_SCALE = defineCellVisualScale({
     }
 
     const range = availableRange.slice(0, domain.length);
-    const colors = new Map(domain.map((value, index) => [value, range[index]]));
+    const mapping = resolveScale({ type: 'ordinal', domain, range, params: { unknown: 'missing' } }, { values });
 
     return {
-      of: value => (value === null ? undefined : colors.get(value)),
+      of: value => {
+        const mapped = mapping.map(value);
+        return typeof mapped === 'string' ? mapped : undefined;
+      },
       legendForm: 'swatch',
       domain,
       range,

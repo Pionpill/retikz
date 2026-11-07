@@ -181,6 +181,7 @@ const runtimeDefinitionKeys = [
   'regressions',
   'rowSelectors',
   'scales',
+  'channels',
 ] as const satisfies ReadonlyArray<keyof ChartRuntimeDefinitionOptions>;
 
 /** 确保同一Chart provider中的recipe共享同一组Plot lowering runtime Definition */
@@ -214,6 +215,7 @@ const resolveEncodingRuntime = (definitions: ChartRuntimeDefinitionOptions): Cha
       reducers: createReadonlyMap(resolveStatisticsReducerRegistry(definitions.statisticsReducers)),
       selectors: createReadonlyMap(resolveRowSelectorRegistry(definitions.rowSelectors)),
       scales: createReadonlyMap(resolveScaleRegistry(definitions.scales)),
+      channels: definitions.channels,
       coordinates: createReadonlyMap(resolveCoordinateRegistry(definitions.coordinates)),
     });
   } catch (error) {

@@ -1,5 +1,7 @@
 # data v0.2 Roadmap
 
+通用比例尺映射作为与 transform 并列的数据能力，由 Plot/Table 共同消费，宿主保留视觉选型、绑定与布局策略，设计见 [006](./006-scale-mapping.md)。
+
 ## 版本目标
 
 统一通用数据能力的所有权，以精确的可序列化声明和开放 Definition 支持多宿主一致消费。

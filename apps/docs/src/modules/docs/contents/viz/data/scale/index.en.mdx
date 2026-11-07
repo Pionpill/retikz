@@ -1,0 +1,62 @@
+---
+title: Scales
+description: Map numbers, time, or categories to output values shared by plots, tables, and other consumers.
+---
+
+A scale relates input values to output values. Mapping a score from `0–100` to `0–1`, for example, turns `75` into `0.75`. The input range is the **domain** and the output range is the **range**.
+
+`@retikz/data` owns the mathematical mapping. Its caller decides whether `0.75` represents a position, opacity, or another numeric property. Scales work independently of marks and do not require a data transformation first.
+
+## Responsibilities at a glance
+
+| Chapter                                       | Responsibility                                       | When to read                                       |
+| --------------------------------------------- | ---------------------------------------------------- | -------------------------------------------------- |
+| [Built-in scales](/viz/data/scale/builtins)   | Choose continuous, categorical, or binned mappings   | Use an existing algorithm                          |
+| [Custom scales](/viz/data/scale/custom-scale) | Define, register, and reference a mapping            | Implement a new calculation rule                   |
+| [API Reference](/viz/data/scale/reference)    | Inspect public declarations and runtime capabilities | Check parameters, results, and extension contracts |
+
+## From declaration to evaluation
+
+A declaration selects an algorithm and supplies its domain, range, and parameters. Runtime samples are used to resolve a mapping that can evaluate multiple values.
+
+```ts
+import { resolveScale } from '@retikz/data';
+
+const scale = resolveScale({ type: 'linear', domain: [0, 100], range: [0, 1] }, { values: [25, 75] });
+
+scale.map(75); // 0.75
+```
+
+`type` selects the rule. An explicit domain takes precedence; otherwise, built-ins determine the domain from samples and their own rules. A range can come from the declaration or the caller's runtime context. Algorithm-specific parameters belong in `params`, such as `params.exponent` for a power mapping.
+
+## Declarations and runtime
+
+When samples are unnecessary, call `resolveScale(operation)` without runtime arguments. Supplying a range or interpolator also does not require an extra `values: []`. Omitting values is equivalent to an empty array and preserves each algorithm's empty-sample rules; custom definition callbacks still receive an array.
+
+Declarations contain only JSON values and can be persisted. Definition functions, registries, and resolved mappings remain at runtime. Use `parseScaleOperation` for external JSON to validate the common structure and registered parameters. Use `resolveScale` for typed internal calls without reparsing the whole object.
+
+A result includes `map` and the effective domain/range. Algorithms may also expose mathematical operations or results through `ticks`, `invert`, `rebuild`, `bandwidth`, `step`, and `thresholds`. Read categories directly from the domain and bin outputs from the range. Consumers decide axis labels, legend forms, property suitability, and automatic padding; Data does not define those consumption protocols.
+
+Data does not select default chart channel mappings or create axes, legends, or layouts. See [Plot scales](/viz/plot/scale) for naming, bindings, and visual policies. Table can also consume the mappings while retaining its own cell rules.
+
+## Chapters
+
+<LinkedSections
+  items={[
+    {
+      title: 'Built-in scales',
+      description: 'Compare continuous, categorical, and binned mappings.',
+      url: '/viz/data/scale/builtins',
+    },
+    {
+      title: 'Custom scales',
+      description: 'Define and register calculation rules with params.',
+      url: '/viz/data/scale/custom-scale',
+    },
+    {
+      title: 'API Reference',
+      description: 'Inspect public types, functions, and capabilities.',
+      url: '/viz/data/scale/reference',
+    },
+  ]}
+/>

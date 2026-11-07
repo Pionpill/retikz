@@ -1,20 +1,45 @@
+import type { ScaleDefinition } from '@retikz/data';
 import { coerceTimestamp, DataFieldType } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
 
 import type {
-  AnyScaleDefinition,
   ChannelScaleResolution,
   ChannelScaleResolveContext,
   PositionScale,
   PositionScaleContinuity,
+  PositionScalePolicy,
 } from '../../contract';
 import { isBuiltinScaleOperation } from '../../contract';
 import { RetikzPlotError } from '../../error';
-import { safeExtent } from '../../providers';
+import { safeExtent, POSITION_SCALE_POLICIES } from '../../providers';
 import type { IRPlotMark, IRPlotScale, IRPlotScaleOperation } from '../../schemas';
 import { PathClosureKind, BuiltinPlotMark, BuiltinPlotScale } from '../../schemas';
 import { resolvePaddedDomain } from './domain';
+import { positionScaleOf, resolvePositionMapping, domainPaddingScaleOf, resolveColorMapping } from './mapping';
 import type { ScaleResolveContext } from './types';
+
+/** 读取位置消费者的显式策略；数学定义不携带视觉许可 */
+export const resolvePositionScalePolicy = (
+  type: string,
+  context: ScaleResolveContext,
+): PositionScalePolicy | undefined => {
+  let policy = POSITION_SCALE_POLICIES[type];
+  for (const channel of context.channels ?? []) {
+    if (channel.kind !== 'position' || (context.role !== undefined && channel.role !== context.role)) continue;
+    const candidate = channel.scales?.[type];
+    if (candidate === undefined) continue;
+    if (
+      policy !== undefined &&
+      (policy.continuity !== candidate.continuity ||
+        policy.allowsBaseline !== candidate.allowsBaseline ||
+        policy.tickKind !== candidate.tickKind ||
+        policy.padding !== candidate.padding)
+    )
+      throw new RetikzPlotError(`conflicting position channel policies for scale type "${type}"`);
+    policy = candidate;
+  }
+  return policy;
+};
 
 /**
  * 查找并校验 scale definition
@@ -23,7 +48,7 @@ import type { ScaleResolveContext } from './types';
 export const resolveScaleDefinition = (
   operation: IRPlotScaleOperation,
   context: ScaleResolveContext,
-): AnyScaleDefinition => {
+): ScaleDefinition => {
   const def = context.registry.get(operation.type);
   if (def === undefined) {
     throw new RetikzPlotError(
@@ -32,11 +57,6 @@ export const resolveScaleDefinition = (
   }
 
   return def;
-};
-
-const parseScaleOperation = (def: AnyScaleDefinition, operation: IRPlotScaleOperation): never => {
-  if (isBuiltinScaleOperation(operation)) return operation as never;
-  return def.schema.parse(operation) as never;
 };
 
 /**
@@ -170,8 +190,9 @@ export const resolvePositionScale = (
   fallbackRange: readonly [number, number],
   context: ScaleResolveContext,
 ): PositionScale => {
-  const def = resolveScaleDefinition(operation, context);
-  if (def.family !== 'position') {
+  resolveScaleDefinition(operation, context);
+  const policy = resolvePositionScalePolicy(operation.type, context);
+  if (policy === undefined) {
     throw new RetikzPlotError(
       `resolvePositionScale: ${operation.type} scale "${operation.name}" cannot drive a positional (x/y) channel; color scales bind the color channel only`,
     );
@@ -179,7 +200,29 @@ export const resolvePositionScale = (
 
   const effectiveOperation = resolveBuiltinPositionOperation(operation, values, fallbackRange);
 
-  return def.resolve(parseScaleOperation(def, effectiveOperation), values, fallbackRange);
+  const mapping = resolvePositionMapping(effectiveOperation, values, fallbackRange, context);
+  if (
+    isBuiltinScaleOperation(operation) &&
+    (operation.type === 'band' || operation.type === 'point') &&
+    operation.domainPadding !== undefined
+  ) {
+    const padding = operation.domainPadding;
+    if (typeof padding === 'object' && padding.kind === 'mark')
+      throw new RetikzPlotError('mark domainPadding requires a coordinate padding context');
+    const lower = typeof padding === 'number' ? padding : (padding.lower ?? 0);
+    const upper = typeof padding === 'number' ? padding : (padding.upper ?? 0);
+    const divisor =
+      typeof padding === 'object' && padding.kind === 'ratio'
+        ? 1 + lower + upper
+        : Math.abs(fallbackRange[1] - fallbackRange[0]);
+    if (divisor <= 0 || lower + upper >= divisor)
+      throw new RetikzPlotError('categorical domainPadding leaves no positive range');
+    return domainPaddingScaleOf(mapping, operation.name, policy).createScale(
+      { lower: lower / divisor, upper: upper / divisor },
+      fallbackRange,
+    );
+  }
+  return positionScaleOf(mapping, operation.type, policy);
 };
 
 /**
@@ -190,14 +233,15 @@ export const resolvePositionScaleContinuity = (
   operation: IRPlotScaleOperation,
   context: ScaleResolveContext,
 ): PositionScaleContinuity => {
-  const def = resolveScaleDefinition(operation, context);
-  if (def.family !== 'position') {
+  resolveScaleDefinition(operation, context);
+  const policy = resolvePositionScalePolicy(operation.type, context);
+  if (policy === undefined) {
     throw new RetikzPlotError(
       `resolvePositionScaleContinuity: ${operation.type} scale "${operation.name}" cannot drive a positional (x/y) channel; color scales do not declare position continuity`,
     );
   }
 
-  return def.continuity;
+  return policy.continuity;
 };
 
 /**
@@ -212,7 +256,7 @@ export const resolveChannelScale = (
   options: { checkFieldCompatible?: boolean } = {},
 ): ChannelScaleResolution => {
   const def = resolveScaleDefinition(operation, scaleContext);
-  if (def.family !== 'channel') {
+  if (POSITION_SCALE_POLICIES[operation.type] !== undefined) {
     throw new RetikzPlotError(
       `lowerPlots: scale "${operation.name}" of type "${operation.type}" is not a color scale (color channels bind ordinal / sequential / diverging / quantize / threshold / quantile)`,
     );
@@ -224,7 +268,7 @@ export const resolveChannelScale = (
     );
   }
 
-  return def.resolve(parseScaleOperation(def, operation), values, context);
+  return resolveColorMapping(operation, values, context, scaleContext);
 };
 
 /**
@@ -239,7 +283,7 @@ export const assertScaleFieldCompatible = (
   context: ScaleResolveContext,
 ): void => {
   const def = context.registry.get(scaleType);
-  if (def === undefined || def.family !== 'position') return;
+  if (def === undefined || resolvePositionScalePolicy(scaleType, context) === undefined) return;
   if (!def.isFieldCompatible(fieldType)) {
     throw new RetikzPlotError(
       `lowerPlots: coordinate.${role} scale "${scaleName}" (${scaleType}) is incompatible with ${fieldType} field`,
@@ -257,7 +301,7 @@ export const assertBaselineScaleCompatible = (
   context: ScaleResolveContext,
 ): void => {
   const def = context.registry.get(valueScaleType);
-  if (def === undefined || def.family !== 'position' || def.allowsBaseline !== false) return;
+  if (def === undefined || resolvePositionScalePolicy(valueScaleType, context)?.allowsBaseline !== false) return;
 
   const hasBaselineMark = marks.some(
     mark =>

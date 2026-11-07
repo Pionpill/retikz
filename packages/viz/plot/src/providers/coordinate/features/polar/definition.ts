@@ -799,7 +799,7 @@ const polar2DCoordinateDefinition: CoordinateDefinition<Polar2DCoordinate> = {
     const radiusValues = ctx.collectPositionValues('y', { axis: 'secondary', includeBaseline: true });
     const angleScaleDef = ctx.resolveScaleForRole('x', coordinate.angle, angleValues);
     const radiusScaleDef = ctx.resolveScaleForRole('y', coordinate.radius, radiusValues);
-    ctx.assertBaselineScaleCompatible(radiusScaleDef.type, ctx.marks);
+    ctx.assertBaselineScaleCompatible(radiusScaleDef.type, ctx.marks, 'y');
 
     assertUniqueAxisPlacement(ctx.axisGuides, axisRole);
     const angularAxis = ctx.axisGuides.find(guide => guide.dimension === 'x');
