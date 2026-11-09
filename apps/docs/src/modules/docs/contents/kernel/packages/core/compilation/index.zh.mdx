@@ -1,17 +1,30 @@
 ---
 title: 编译流程
-description: 从 IR 的声明追踪到 Core 原子计算、依赖就绪和 Scene 汇总，理解 Reconciler 怎样调度各阶段
+description: 衔接 resolve 与 compile，理解 canon、compiled 及各实体从声明到 Scene 输出的过程
 ---
 
-Core 定义“一个对象怎样解析、布局和输出”；Reconciler 决定“何时执行它、哪些依赖已就绪、结果怎样汇总”。本页沿 A、B 两节点及连线追踪这条协作链，后续各篇再展开实体内部阶段。
+前面的[语义解析](/kernel/packages/core/resolution)、[能力注册](/kernel/packages/core/definitions)和[能力依赖](/kernel/packages/core/providers)围绕 resolve 与编译准备展开：声明如何获得确定的语义，所需定义如何注册和装配。本页把这些准备接到 compile，说明解析后的数据怎样变成布局、几何和绘制结果。后续各篇再分别展开 Scope、Node、Coordinate、Path 与 Composite 的编译过程，最后说明编译输出。
+
+Node 提供形状与内容，Coordinate 提供命名位置，Scope 组织局部空间，Path 连接几何目标。下面沿 A、B 两节点及连线追踪这些实体。Core 提供实体的解析与计算，Reconciler 按依赖就绪情况调用它们。
 
 ## 整体流程
 
-入口接收符合契约的 IRScene 与编译选项。Reconciler 装配运行环境、遍历子项，在需要的上下文就绪时调用 Core。最终收集 Scene、资源、领域产物与诊断。这里没有整棵树先统一变成 Canonical Scene 的前置 pass。
+对一个实体来说，resolve 负责确定“这份声明是什么意思”，compile 负责计算“它的位置、尺寸和输出是什么”。两者之间传递的解析结果，以及编译后得到的计算结果，在源码中常用 canon 和 compiled 命名：
+
+| 概念     | 含义                                                                | 以 Node 为例                                                          |
+| -------- | ------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| resolve  | 结合继承与定义，将默认值、简写和能力参数解析为当前实体可消费的形式  | 确定样式、绑定形状定义、解析布局配置，产出 CanonicalNode              |
+| canon    | canonical 的简称，表示已解析的实体数据，类型通常命名为 CanonicalXxx | 包含有效样式、形状绑定与布局要求；尺寸和引用位置继续交给 compile 计算 |
+| compile  | 消费解析结果与测量、定位等上下文，完成实体所需的计算和输出          | 测量内容、布局形状、求值位置，再生成形状与文字图元                    |
+| compiled | 编译结果，类型通常命名为 CompiledXxx，保存该实体的计算产物          | CompiledNode 包含布局与绘制结果，供几何查询、父布局和 Scene 组装使用  |
+
+因此，Node 的数据变化是 **IRNode → resolveNode → CanonicalNode → compileNode → CompiledNode**。canon 中确定的是语义与配置；compiled 中得到的是本次上下文下的计算结果。不同实体按需组织产物：Path 的解析结果 PathResolution 将 canon 与定义等信息一起传给 compilePath；CompiledCoordinate 只提供求值后的位置。各实体的绘制产物汇总后形成 Scene，再由渲染后端消费。
+
+编译从 IRScene 的子项开始。每个实体先确定当前阶段所需的样式、定义和位置上下文，再计算布局或几何。Node 和 Coordinate 提供可查询的位置；Scope 根据子布局形成包络并确定空间变换；Path 在目标几何就绪后计算连线。各实体的绘制结果最终组成 Scene。
 
 <ComponentPreview files="compilation-overview" size="lg" hideCode type="flow" />
 
-外部 JSON 应先在 Schema 入口解析。已类型化 IR 不在每个包边界重复整树 parse；需要 Definition、命名引用或布局结果才能判断的约束，在相应阶段检查。
+图中箭头表示处理依赖。Scope 的子树可以继续包含这些实体，局部重复同样的过程。Composite 展开出的子项也进入这条处理链，具体展开机制见[复合编译](/kernel/packages/core/composite-compilation)。
 
 ## 用同一张图追踪数据变化
 
@@ -59,52 +72,47 @@ try {
 }
 ```
 
-沿这份输入，节点先得到包含确定样式与能力绑定的 CanonicalNode，再得到几何与 emit 产物。路径暂存命名目标，等节点发布几何后，才选择边界交点并生成路径指令。IR 中的引用与作者顺序都不必被改写。
+沿这份输入，节点先得到包含确定样式与能力绑定的 CanonicalNode，再得到几何与 emit 产物。路径暂存命名目标，等节点发布几何后，才选择边界交点并生成路径指令。
 
-## 每种实体需要什么就绪条件
+## 实体之间的依赖与执行顺序
 
-| 对象       | 进入 Core 前需要                   | 交回调度方的结果                 |
-| ---------- | ---------------------------------- | -------------------------------- |
-| Node       | 继承、定义、测量服务、定位引用     | 节点布局、查询几何、图元与边界   |
-| Coordinate | 位置上下文与已可查引用             | 可发布的坐标几何，不绘制图元     |
-| Scope      | 先确定继承；自身包络等待子布局     | 分组属性、包络与投影所需结果     |
-| Path       | 命名目标与所属空间可查             | 路径输出、布局边界与共享资源引用 |
-| Composite  | 已匹配的定义、提案与受限子布局服务 | 子项或布局贡献、可选领域产物     |
+四类实体需要的上下文和产物不同，处理时机取决于它们要读取什么：
 
-Scope 包含递归子树，所以这些阶段也会在局部出现。Composite 回调可以请求子布局试算；试算的隔离和选中结果的重放由 Reconciler 负责。不能把所有对象画成相同的“IR → Primitive”函数。
+| 实体       | 处理过程                                                       | 后续使用的结果                           |
+| ---------- | -------------------------------------------------------------- | ---------------------------------------- |
+| Node       | 根据继承样式和形状定义解析属性，测量内容，确定形状尺寸与位置   | 锚点、边界等查询几何，以及形状和内容图元 |
+| Coordinate | 在当前坐标空间中求值位置表达式，读取已有命名引用               | 命名位置，可供后续定位和路径引用         |
+| Scope      | 向子项传递继承配置与空间上下文，再根据子布局确定包络和放置变换 | 分组几何、空间变换、裁剪和分组属性       |
+| Path       | 读取目标几何，换算到所属空间，计算端点、路径和装饰             | 路径图元、布局边界与资源引用             |
 
-## 声明、求值与绘制顺序
+在上例中，访问 Path 声明时先保留输出槽位。A、B 完成布局并发布几何后，Path 才能查询它们的边界，确定 [30, 0] 与 [150, 0] 两个端点。若把节点放入 Scope，路径查询还要使用该 Scope 确定后的空间变换；Scope 的包络则依赖子项提供的布局结果。
 
-Reconciler 按 children 声明顺序分派。遇到路径时保留原位置的输出槽位，节点和 Scope 等完成必要几何后再回填路径，因此“晚求值”不会自动变成“最后绘制”。最终同层输出按 zIndex 稳定排序；同值维持原有次序。
+Node 的定位和 Coordinate 的位置在访问时求值，引用目标需要已经可查。Path 有专门的延迟处理，因此支持示例中的前向引用。引用无法求值时，按对应契约报告失败。
 
-这个就绪机制不等于任意对象都支持前向引用。Node 定位和 Coordinate 在访问时求值，其目标应当可查；路径有专门的延迟机制。无法满足的引用、试算失败与诊断应按所属契约处理，不能用 [0, 0] 代替未知值。
+求值顺序与绘制顺序分别保留：延迟 Path 完成后回填原声明位置的槽位，同层输出再按 zIndex 稳定排序，同值维持原有次序。因此本例虽然先计算节点，路径仍处于节点之前的绘制位置。
 
 <SourceLinks
   sources={[
-    { label: '子树分派与稳定排序', path: 'packages/kernel/reconciler/src/compile/tree/subtree.ts' },
-    { label: '路径占位与原位回填', path: 'packages/kernel/reconciler/src/compile/tree/path/deferred.ts' },
+    { label: 'Coordinate', path: 'packages/kernel/reconciler/src/compile/tree/coordinate/visit.ts' },
+    { label: 'Path', path: 'packages/kernel/reconciler/src/compile/tree/path/deferred.ts' },
+    { label: 'zIndex', path: 'packages/kernel/reconciler/src/compile/tree/subtree.ts' },
   ]}
 />
 
-## 环境与复用由谁持有
-
-Reconciler 的共享环境按 registries、host、layout、limits 提供定义表、测量与 TeX 服务、有效数值配置及执行限制。每次执行还需要资源、命名、诊断与试算工作区。Core 只接收当前阶段必需的窄上下文，不拥有整个会话。
-
-Core 的 prepared 参数允许消费调用方已确认有效的阶段产物，并补算缺项；它不自行判断跨次缓存是否仍有效。全量和增量执行都能调用这些原子阶段，依赖记录、复用裁决及输出事务由 Reconciler 管理。
-
 ## 完整实现流程
 
-从 Reconciler 的 CompileManager 进入 SubtreeCompiler，再到各 visit / deferred 文件，才能看到 Core 阶段的真实调用点。根子树完成后，CompileManager 把图元、布局、资源和产物交给快照组装函数；renderer 在其后消费 Scene。
+下图把实体处理过程对应到 Core 的实现入口。Node 的布局与 Coordinate 的位置求值各自产出几何；Scope 消费子布局计算包络与变换；Path 绑定就绪的目标几何，再生成绘制结果。图中的两处 Scope 表示进入子树与汇总子布局两个阶段。
 
 <ComponentPreview files="compilation-implementation" size="xxl" hideCode type="flow" />
 
+阅读源码时，可以先看 compileNode 中的 layoutNode 与 emitNode，再看 compileCoordinate 如何调用 evaluatePosition。随后沿 compileScope 查看子布局怎样形成包络，最后看 compilePath 如何通过 bindPathTargets 绑定目标并生成输出。执行环境、缓存与输出事务见 [Reconciler](/kernel/components/runtime-mechanics/incremental-updates)。
+
 <SourceLinks
   sources={[
-    { label: '根编译管理', path: 'packages/kernel/reconciler/src/compile/tree/manager.ts' },
-    { label: '共享运行环境', path: 'packages/kernel/reconciler/src/compile/runtime/runtime.ts' },
-    { label: '节点调用 Core 的位置', path: 'packages/kernel/reconciler/src/compile/tree/node/visit.ts' },
-    { label: 'Scene 快照组装', path: 'packages/kernel/reconciler/src/compile/scene/output.ts' },
-    { label: 'Core 原子阶段入口', path: 'packages/kernel/core/src/compile/index.ts' },
+    { label: 'Node', path: 'packages/kernel/core/src/compile/node/compile.ts' },
+    { label: 'Coordinate', path: 'packages/kernel/core/src/compile/coordinate/compile.ts' },
+    { label: 'Scope', path: 'packages/kernel/core/src/compile/scope/compile.ts' },
+    { label: 'Path', path: 'packages/kernel/core/src/compile/path/compile.ts' },
   ]}
 />
 
@@ -112,6 +120,7 @@ Core 的 prepared 参数允许消费调用方已确认有效的阶段产物，�
 
 <LinkedSections
   items={[
+    { title: 'Scope 编译', description: '理解子布局、包络与坐标空间', url: '/kernel/packages/core/scope-compilation' },
     { title: 'Node 编译', description: '追踪度量、形状布局和图元输出', url: '/kernel/packages/core/node-compilation' },
     { title: '坐标与引用求值', description: '理解可查几何和所属坐标空间', url: '/kernel/packages/core/coordinates' },
     {

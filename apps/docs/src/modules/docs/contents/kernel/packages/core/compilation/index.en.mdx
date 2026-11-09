@@ -1,17 +1,30 @@
 ---
 title: Compilation Flow
-description: Trace IR declarations through Core stages, dependency readiness and Scene assembly under Reconciler scheduling
+description: Connect resolve and compile, explaining canon, compiled and the path from entity declarations to Scene output
 ---
 
-Core defines how an object is resolved, laid out and emitted. Reconciler decides when it runs, which dependencies are ready, and how results are assembled. This page follows nodes A and B and their connecting path; later pages expand each entity's stages.
+The preceding pages on [Resolution](/kernel/packages/core/resolution), [Capability Registration](/kernel/packages/core/definitions) and [Capability Dependencies](/kernel/packages/core/providers) cover resolve and compilation preparation: how declarations acquire concrete semantics and how their definitions are registered and assembled. This page connects that preparation to compile, where resolved data becomes layout, geometry and emitted output. The following pages expand Scope, Node, Coordinate, Path and Composite compilation, then explain compilation output.
+
+Nodes provide shapes and content, Coordinates provide named positions, Scopes organize local spaces, and Paths connect geometric targets. We follow nodes A and B and their connecting path. Core supplies entity resolution and computation; Reconciler calls these stages as dependencies become ready.
 
 ## Overall Flow
 
-Reconciler accepts a contracted IRScene and compilation options, prepares the environment and visits children. It calls Core where the required context is available, then assembles Scene, resources, artifacts and diagnostics. There is no mandatory whole-tree Canonical Scene pass.
+For an entity, resolve establishes what its declaration means; compile computes its position, dimensions and output. Source code often names the resolved data canon and the computed result compiled:
+
+| Concept  | Meaning                                                                                                           | Node example                                                                                                             |
+| -------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| resolve  | Apply inheritance and definitions to resolve defaults, shorthand and capability parameters into a consumable form | Resolve style, bind the shape definition and prepare layout configuration, producing CanonicalNode                       |
+| canon    | Short for canonical: resolved entity data, usually typed as CanonicalXxx                                          | Effective style, shape bindings and layout requirements; dimensions and referenced positions are computed during compile |
+| compile  | Consume resolved data and context such as measurement and positioning to compute the entity's results             | Measure content, lay out the shape, evaluate position, then emit shape and text primitives                               |
+| compiled | An entity's computed results, usually typed as CompiledXxx                                                        | CompiledNode contains layout and emission results for geometry queries, parent layout and Scene assembly                 |
+
+For Node, the data flow is **IRNode → resolveNode → CanonicalNode → compileNode → CompiledNode**. canon establishes semantics and configuration; compiled contains results computed in the current context. Each entity organizes its products as needed: PathResolution passes canon together with its definition and other resolution data to compilePath; CompiledCoordinate provides only the evaluated position. Emitted products are assembled into a Scene for a rendering backend to consume.
+
+Compilation starts with the children of an IRScene. Each entity resolves the style, definitions and position context needed for its current stage, then computes layout or geometry. Nodes and Coordinates provide queryable positions. Scopes use child layouts to establish envelopes and transforms. Paths compute connections once target geometry is ready. The emitted results form the Scene.
 
 <ComponentPreview files="compilation-overview" size="lg" hideCode type="flow" />
 
-External JSON is parsed at a Schema entry point. Typed IR is not reparsed at every package boundary. Constraints requiring a Definition, reference or layout result are checked where that information becomes available.
+Arrows show processing dependencies. A Scope can contain the same entities, repeating the process locally. Children expanded from a Composite enter this chain too; see [Composite Compilation](/kernel/packages/core/composite-compilation) for details.
 
 ## Follow One Diagram Through the Stages
 
@@ -59,52 +72,47 @@ try {
 }
 ```
 
-A node first becomes a CanonicalNode with effective style and capability bindings, then geometry and emitted output. The path retains named targets until node geometry is published; it can then select boundary intersections and produce commands. Neither author references nor declaration order need rewriting.
+A node first becomes a CanonicalNode with effective style and capability bindings, then geometry and emitted output. The path retains named targets until node geometry is published; it can then select boundary intersections and produce commands.
 
-## Readiness by Entity
+## Entity Dependencies and Execution Order
 
-| Entity     | Required context                                           | Result returned to the scheduler                    |
-| ---------- | ---------------------------------------------------------- | --------------------------------------------------- |
-| Node       | Inheritance, definitions, measurement, position references | Layout, query geometry, primitives and bounds       |
-| Coordinate | Position context and readable references                   | Published coordinate geometry, no visible primitive |
-| Scope      | Inheritance first; envelope waits for child layouts        | Group attributes, envelope and projection data      |
-| Path       | Readable named targets and owning space                    | Path output, bounds and shared resource references  |
-| Composite  | Matched definition, proposal and child layout services     | Children or contribution, optional domain artifact  |
+Each entity runs when the context it needs to read is available:
 
-Scopes recursively contain these stages. Composite callbacks can request isolated child layout probes; Reconciler owns isolation and replay of selected results. These objects do not share one uniform IR-to-Primitive function.
+| Entity     | Processing                                                                                                            | Results used downstream                                                          |
+| ---------- | --------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Node       | Resolve inherited style and shape definitions, measure content, determine shape size and position                     | Query geometry such as anchors and boundaries, plus shape and content primitives |
+| Coordinate | Evaluate a position expression in the current space using existing named references                                   | A named position for subsequent placement and paths                              |
+| Scope      | Pass inheritance and spatial context to children, then derive an envelope and placement transforms from child layouts | Group geometry, transforms, clipping and group attributes                        |
+| Path       | Read target geometry, convert it to the owning space, compute endpoints, route and decorations                        | Path primitives, layout bounds and resource references                           |
 
-## Declaration, Evaluation and Drawing Order
+In the example, visiting the Path declaration reserves an output slot. Once A and B finish layout and publish geometry, the Path can query their boundaries and determine the endpoints [30, 0] and [150, 0]. If the nodes belong to a Scope, path queries also need its established transforms; the Scope envelope in turn depends on child layout results.
 
-Children are dispatched in declaration order. A path reserves an output slot and is filled in after required geometry becomes available. Later evaluation therefore preserves its original drawing position. Final siblings are stably sorted by zIndex, retaining order for equal values.
+Node placement and Coordinate positions are evaluated during their visit, so referenced targets must already be readable. Paths have dedicated deferred processing, which supports the forward references in this example. Unresolvable references report failure according to the relevant contract.
 
-This does not grant arbitrary forward references to every entity. Node placement and Coordinates evaluate during their visit and require readable targets. Paths have a dedicated deferral mechanism. Failed references and probes follow their own contracts; an unknown value must not be replaced with [0, 0].
+Evaluation and drawing order are tracked separately. A completed deferred Path fills its original declaration slot. Sibling output is then stably sorted by zIndex, preserving order for equal values. Thus the example computes node geometry first while retaining the path's drawing position before the nodes.
 
 <SourceLinks
   sources={[
-    { label: 'Dispatch and stable sorting', path: 'packages/kernel/reconciler/src/compile/tree/subtree.ts' },
-    { label: 'Deferred path slots', path: 'packages/kernel/reconciler/src/compile/tree/path/deferred.ts' },
+    { label: 'Coordinate', path: 'packages/kernel/reconciler/src/compile/tree/coordinate/visit.ts' },
+    { label: 'Path', path: 'packages/kernel/reconciler/src/compile/tree/path/deferred.ts' },
+    { label: 'zIndex', path: 'packages/kernel/reconciler/src/compile/tree/subtree.ts' },
   ]}
 />
 
-## Environment and Reuse Ownership
-
-Reconciler groups its stable environment into registries, host, layout and limits: definitions, measurement and TeX services, effective numerical options and execution limits. An execution also needs resource, naming, diagnostic and probe state. Core receives the narrow context required by a stage, rather than owning the session.
-
-Core's prepared parameters consume stage products that the caller has established are valid and compute missing parts. They do not decide cache validity across executions. Full and incremental execution use these atomic stages; Reconciler owns dependency tracking, reuse decisions and output transactions.
-
 ## Complete Implementation Flow
 
-Read from CompileManager through SubtreeCompiler into each visit or deferred handler to find actual Core calls. Once the root subtree finishes, CompileManager sends primitives, layout, resources and artifacts to snapshot assembly. Rendering consumes the resulting Scene afterward.
+The diagram maps entity processing to Core entry points. Node layout and Coordinate evaluation each produce geometry. Scope consumes child layouts to compute its envelope and transforms. Path binds targets to ready geometry and emits its result. The two Scope stages show entry into the subtree and subsequent collection of child layouts.
 
 <ComponentPreview files="compilation-implementation" size="xxl" hideCode type="flow" />
 
+Start with layoutNode and emitNode inside compileNode, then see how compileCoordinate calls evaluatePosition. Follow compileScope to see child layouts become an envelope, and compilePath to see bindPathTargets bind targets before output is generated. [Reconciler](/kernel/components/runtime-mechanics/incremental-updates) covers the execution environment, caching and output transactions.
+
 <SourceLinks
   sources={[
-    { label: 'Root compilation manager', path: 'packages/kernel/reconciler/src/compile/tree/manager.ts' },
-    { label: 'Runtime environment', path: 'packages/kernel/reconciler/src/compile/runtime/runtime.ts' },
-    { label: 'Node stage call site', path: 'packages/kernel/reconciler/src/compile/tree/node/visit.ts' },
-    { label: 'Scene snapshot assembly', path: 'packages/kernel/reconciler/src/compile/scene/output.ts' },
-    { label: 'Core atomic stage exports', path: 'packages/kernel/core/src/compile/index.ts' },
+    { label: 'Node', path: 'packages/kernel/core/src/compile/node/compile.ts' },
+    { label: 'Coordinate', path: 'packages/kernel/core/src/compile/coordinate/compile.ts' },
+    { label: 'Scope', path: 'packages/kernel/core/src/compile/scope/compile.ts' },
+    { label: 'Path', path: 'packages/kernel/core/src/compile/path/compile.ts' },
   ]}
 />
 
@@ -112,6 +120,11 @@ Read from CompileManager through SubtreeCompiler into each visit or deferred han
 
 <LinkedSections
   items={[
+    {
+      title: 'Scope Compilation',
+      description: 'Follow child layouts, envelopes and spaces',
+      url: '/kernel/packages/core/scope-compilation',
+    },
     {
       title: 'Node Compilation',
       description: 'Follow measurement, shape layout and emission',

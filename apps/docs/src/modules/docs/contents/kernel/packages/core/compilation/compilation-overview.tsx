@@ -7,30 +7,41 @@ import { logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
 
 import { compilationOverviewI18n } from './compilation-overview.i18n';
 
-/** 声明、测量服务与有效配置流程图的语言 */
+/** 实体编译依赖图的语言 */
 export type CompilationOverviewProps = { lang?: Lang };
 
-/** 展示本页追踪的阶段、产物与必要输入 */
+/** 展示实体处理、子布局与目标几何的依赖 */
 const CompilationOverview: FC<CompilationOverviewProps> = props => {
   const { lang = 'zh' } = props;
   const text = compilationOverviewI18n[lang];
   const stages = [
-    { id: 'input', name: 'IRScene + definitions', state: true },
-    { id: 'visit', name: 'Reconciler · subtree', state: false },
-    { id: 'paths', name: 'References ready → paths', state: false },
-    { id: 'scene', name: 'Scene + artifacts', state: true },
+    { id: 'input', name: 'IRScene', state: true },
+    { id: 'scope', name: 'Scope', state: false },
+    { id: 'node', name: 'Node', state: false },
+    { id: 'coordinate', name: 'Coordinate', state: false },
+    { id: 'envelope', name: 'Scope', state: false },
+    { id: 'path', name: 'Path', state: false },
+    { id: 'scene', name: 'Scene', state: true },
   ] as const;
-  const inputs = [{ id: 'core', name: 'Core', target: 'visit' }] as const;
+  const dependencies = [
+    ['input', 'scope'],
+    ['scope', 'node'],
+    ['scope', 'coordinate'],
+    ['node', 'envelope'],
+    ['coordinate', 'envelope'],
+    ['envelope', 'path'],
+    ['path', 'scene'],
+  ] as const;
   return (
     <PreviewFlowDiagram {...logicFigureGraphProps()} style={{ maxWidth: '100%', height: 'auto' }}>
       <FlowLayout
         id="compilation-overview"
         kind="grid"
-        gap={{ row: 20, column: 28 }}
+        gap={{ row: 24, column: 32 }}
         placements={[
-          [null, 'input'],
-          ['core', 'visit'],
-          [null, 'paths'],
+          ['input', 'scope'],
+          ['node', 'coordinate'],
+          ['envelope', 'path'],
           [null, 'scene'],
         ]}
       >
@@ -38,19 +49,7 @@ const CompilationOverview: FC<CompilationOverviewProps> = props => {
           items={stages.map(item => ({
             id: item.id,
             role: item.state ? 'state' : 'activity',
-            layout: { width: 290 },
-            text: [
-              { text: item.name, font: { size: 12 } },
-              { text: text[item.id], font: { size: 12 }, fill: 'gray' },
-            ],
-          }))}
-        />
-        <FlowEntities
-          items={inputs.map(item => ({
-            id: item.id,
-            role: 'state',
-            kind: 'docs.logic.secondary',
-            layout: { width: 230 },
+            layout: { width: 250 },
             text: [
               { text: item.name, font: { size: 12 } },
               { text: text[item.id], font: { size: 12 }, fill: 'gray' },
@@ -59,18 +58,10 @@ const CompilationOverview: FC<CompilationOverviewProps> = props => {
         />
       </FlowLayout>
       <FlowRelations
-        items={[
-          ...stages
-            .slice(1)
-            .map((item, index) => ({
-              source: { id: stages[index].id, anchor: 'bottom' as const },
-              target: { id: item.id, anchor: 'top' as const },
-            })),
-          ...inputs.map(item => ({
-            source: { id: item.id, anchor: 'right' as const },
-            target: { id: item.target, anchor: 'left' as const },
-          })),
-        ]}
+        items={dependencies.map(([source, target]) => ({
+          source: { id: source },
+          target: { id: target },
+        }))}
       />
     </PreviewFlowDiagram>
   );
