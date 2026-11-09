@@ -57,7 +57,7 @@ export type SceneReconcilerOptions<
      * @default ReconcilerUpdateStrategy.Auto
      */
     updateStrategy?: ReconcilerUpdateStrategy;
-    /** 已提交编译的工作量；增量模式按元素编译计数，非增量模式按整场景编译计数 */
+    /** 首次发布与后续更新的编译工作量，以及成功清理的已挂载会话数；失败操作不报告成功记录 */
     trace?: PerformanceTraceSink;
   }>;
 

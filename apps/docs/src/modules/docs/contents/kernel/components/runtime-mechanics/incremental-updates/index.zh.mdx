@@ -1,4 +1,4 @@
-﻿---
+---
 title: 增量更新
 description: 沿一次节点改色，追踪输入准备、Reconciler 会话、Weave 编译与 Render 提交，区分完整替换和基础元素批次。
 ---
@@ -46,6 +46,8 @@ React 将组件声明转换为 `InputScene`，Vanilla 再归一化为 `IRScene`�
 Weave 保存输入、上下文、编译状态和依赖。`SceneReconciler.update(batch, expected)` 可在已有基础元素树上应用 `WeaveBatch`；`expected` 必须是当前会话结果，旧结果会被拒绝。含 Composite 的场景可以更新作者基础元素；生成节点不可寻址，修改 Composite 作者输入需 replace。增量模式下空批次保留当前结果。
 
 生命周期由 `ReconcilerLifecyclePhase` 定义，包含挂载、更新和卸载；一批内容变化发生在更新阶段，其中 `WeaveOperationKind.Insert`、`Update` 和 `Remove` 分别表示插入、修改和删除。两个常量均可从 `@retikz/reconciler` 导入，内容操作的 payload 保持原有契约。
+
+通过 `SceneReconciler` 的 `trace` 选项可观察这些阶段：首次成功发布结果报告 `mount`，包括直接调用 `replace()` 建立会话；已有结果后的完整替换和非空批次更新报告 `update`。编译工作量仍按 `element-compile` 或 `scene-compile` 计数，空批次与仅更新输出目标不报告编译记录。已挂载会话成功清理后报告一次 `unmount`，使用 `ReconcilerTraceUnit.Session`（`session`）和 `outcome: 'dispose'`，计数为 `visited: 1`、`reused: 0`、`changed: 1`。清理失败时不报告成功，重试成功后补报；重复清理和未挂载会话的清理不报告卸载记录。trace 回调异常记录为诊断，不影响已完成的发布或清理。
 
 批次更新按最终输入重算受影响元素，复用仍有效的产物。上下文沿声明结构传递，失效沿依赖传播；Scope 变化可能使整个子树重算。名称索引和输出组装仍可能遍历整树，因此局部编译不等于整次更新只有局部成本。普通 React／Vanilla 输入更新尚未接入此批次入口。
 

@@ -6,8 +6,8 @@ import { formatCompileWarning } from './compile';
 import { createCompileRuntime } from './compile/runtime';
 import { CompileManager } from './compile/tree';
 import {
-  ReconcilerMode,
   ReconcilerLifecyclePhase,
+  ReconcilerMode,
   ReconcilerStatus,
   ReconcilerTraceUnit,
   ReconcilerUpdateStrategy,
@@ -20,6 +20,8 @@ import { WeaveManager } from './weave';
 /** 同步协调编译与一个输出目标，不依赖 DOM 或 Runtime 注册图 */
 export class SceneReconciler<const TComposites extends ReadonlyArray<AnyCompositeDefinition> = readonly []> {
   private targetDisposed = false;
+  /** 已挂载会话等待成功清理的观测记录，清理失败时保留以供重试 */
+  private pendingUnmount = false;
   private current: ReconcilerResult<TComposites> | undefined;
   private weave: WeaveManager<TComposites> | undefined;
   private status: ReconcilerStatus = ReconcilerStatus.Idle;
@@ -44,6 +46,7 @@ export class SceneReconciler<const TComposites extends ReadonlyArray<AnyComposit
   /** 显式完整重建，准备失败仍保留原计算状态 */
   replace(source: IRScene, options = this.options): ReconcilerResult<TComposites> {
     this.assertIdle();
+    const phase = this.current === undefined ? ReconcilerLifecyclePhase.Mount : ReconcilerLifecyclePhase.Update;
     this.status = ReconcilerStatus.Preparing;
     try {
       const weave = this.mode === ReconcilerMode.Full ? undefined : new WeaveManager(source, options, this.execution);
@@ -59,6 +62,7 @@ export class SceneReconciler<const TComposites extends ReadonlyArray<AnyComposit
       const published = this.publish(candidate, weave, undefined, options);
       this.options = options;
       this.reportTrace(
+        phase,
         'full',
         prepared === undefined ? ReconcilerTraceUnit.SceneCompile : ReconcilerTraceUnit.ElementCompile,
         prepared?.visited ?? 1,
@@ -91,6 +95,7 @@ export class SceneReconciler<const TComposites extends ReadonlyArray<AnyComposit
         prepared,
       );
       this.reportTrace(
+        ReconcilerLifecyclePhase.Update,
         this.execution.updateStrategy === ReconcilerUpdateStrategy.Full ? 'full' : 'incremental',
         ReconcilerTraceUnit.ElementCompile,
         prepared.visited,
@@ -136,11 +141,16 @@ export class SceneReconciler<const TComposites extends ReadonlyArray<AnyComposit
     if (this.status === ReconcilerStatus.Preparing || this.status === ReconcilerStatus.Committing)
       throw this.contractError('Cannot dispose an active update');
     this.status = ReconcilerStatus.Disposed;
+    this.pendingUnmount ||= this.current !== undefined;
     this.current = undefined;
     this.weave = undefined;
     try {
       this.execution.target?.dispose?.();
       this.targetDisposed = true;
+      if (this.pendingUnmount) {
+        this.pendingUnmount = false;
+        this.reportTrace(ReconcilerLifecyclePhase.Unmount, 'dispose', ReconcilerTraceUnit.Session, 1);
+      }
     } catch (cause) {
       this.diagnosticQueue.push({
         code: 'RECONCILER_CLEANUP_FAILED',
@@ -213,11 +223,16 @@ export class SceneReconciler<const TComposites extends ReadonlyArray<AnyComposit
   }
 
   /** 观测失败不能改变已经发布的编译结果 */
-  private reportTrace(outcome: 'full' | 'incremental', unit: ReconcilerTraceUnit, visited: number): void {
+  private reportTrace(
+    phase: ReconcilerLifecyclePhase,
+    outcome: 'full' | 'incremental' | 'dispose',
+    unit: ReconcilerTraceUnit,
+    visited: number,
+  ): void {
     try {
       this.execution.trace?.({
         owner: 'kernel/reconciler',
-        phase: ReconcilerLifecyclePhase.Update,
+        phase,
         unit,
         outcome,
         visited,

@@ -1,4 +1,4 @@
-ï»¿---
+---
 title: Incremental updates
 description: Follow a node color change through input preparation, the Reconciler session, Weave compilation and Render commits, distinguishing full replacement from basic-element batches.
 ---
@@ -49,6 +49,8 @@ One-shot compilation, complete replacement, and batch updates share Reconcilerâ€
 Weave retains input, context, compiled state and dependencies. `SceneReconciler.update(batch, expected)` applies a `WeaveBatch` to an existing basic-element tree. `expected` must be the current session result; stale results are rejected. Scenes containing Composites support edits to authored basic elements. Generated children cannot be addressed; use replace to change Composite author input. Empty incremental batches retain the current result.
 
 `ReconcilerLifecyclePhase` defines mount, update, and unmount. A content batch runs during the update phase; `WeaveOperationKind.Insert`, `Update`, and `Remove` identify insertion, modification, and removal. Both constants are available from `@retikz/reconciler`, and operation payloads keep their existing contracts.
+
+The `SceneReconciler` `trace` option reports these phases: the first successful publication reports `mount`, including a direct `replace()` that establishes the session; subsequent complete replacements and non-empty batch updates report `update`. Compilation work retains the `element-compile` or `scene-compile` unit. Empty batches and output-target-only updates emit no compilation record. Successful cleanup of a mounted session reports `unmount` once, with `ReconcilerTraceUnit.Session` (`session`), `outcome: 'dispose'`, and counts of `visited: 1`, `reused: 0`, and `changed: 1`. Failed cleanup emits no success record; a successful retry emits it. Repeated cleanup and cleanup of a session that was never mounted emit no unmount record. Trace callback exceptions become diagnostics without affecting completed publication or cleanup.
 
 Batches recompute affected elements from final inputs and reuse valid products. Context follows declaration structure and invalidation follows dependencies; a Scope change can recompute its whole subtree. Name indexing and output assembly can still traverse the tree, so local compilation does not imply local total update cost. Ordinary React and Vanilla input updates do not yet use this batch entry.
 

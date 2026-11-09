@@ -57,6 +57,8 @@ export const ReconcilerTraceUnit = {
   ElementCompile: 'element-compile',
   /** 非增量模式下的整场景编译次数 */
   SceneCompile: 'scene-compile',
+  /** 成功完成清理的已挂载会话数 */
+  Session: 'session',
 } as const;
 
 export type ReconcilerTraceUnit = ValueOf<typeof ReconcilerTraceUnit>;
