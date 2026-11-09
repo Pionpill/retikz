@@ -2,7 +2,7 @@
 import type { CompileResult } from '@retikz/reconciler';
 import { expect } from 'vitest';
 
-/** 固定配方的流程图；每组十个节点、十二条边、两层作用域 */
+/** 本组基准使用的固定流程图；每组十个节点、十二条边、两层作用域 */
 export const createCompileWorkload = (nodeCount: number) => {
   const groupCount = nodeCount / 10;
   const children: IRScene['children'] = [];

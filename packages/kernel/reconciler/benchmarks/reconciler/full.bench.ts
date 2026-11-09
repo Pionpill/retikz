@@ -2,12 +2,12 @@
 import { expect } from 'vitest';
 
 import { defineBenchmark } from '../../../../../scripts/benchmarks/scenario';
-import { createCompileWorkload } from '../_compile-workload';
+import { createCompileWorkload } from './_workload';
 
 for (const count of [100, 500, 1000]) {
   defineBenchmark(
     {
-      id: `compile/full/mixed/${count}`,
+      id: `reconciler/full/mixed/${count}`,
       dimensions: [
         '完整 SceneReconciler，无 provenance',
         '两层流程图，固定形状与路径比例',
