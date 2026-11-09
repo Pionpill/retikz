@@ -34,9 +34,7 @@ export type ProcessingTransactionParticipantFactory = (
     /** runtime 创建时的初始 processing 输入 */
     initial: InputPreparedProcessing;
     /** 从同一 Core candidate 读取 compile-driver readonly layers */
-    resolveReadonlyLayers: (
-      output: ReconcilerOutput<ReadonlyArray<AnyCompositeDefinition>>,
-    ) => ReadonlyArray<RenderReadonlyLayer>;
+    resolveReadonlyLayers: (output: ReconcilerOutput<AnyCompositeDefinition>) => ReadonlyArray<RenderReadonlyLayer>;
   }>,
 ) => ProcessingTransactionParticipant;
 

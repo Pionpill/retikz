@@ -14,7 +14,7 @@ vi.mock('@retikz/reconciler', async importOriginal => {
   const actual = await importOriginal<typeof RetikzReconciler>();
   return {
     ...actual,
-    SceneReconciler: class extends actual.SceneReconciler<ReadonlyArray<AnyCompositeDefinition>> {
+    SceneReconciler: class extends actual.SceneReconciler<AnyCompositeDefinition> {
       constructor(options: CompileOptions = {}, execution: SceneReconcilerOptions = {}) {
         super(options, execution);
         compileCalls.push(options);

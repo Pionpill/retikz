@@ -46,11 +46,9 @@ export type InputSceneCompilationSnapshot = Readonly<{
 }>;
 
 /** 完成 Scene 组装的共同底层，不执行元素编译 */
-export const assembleSceneCompilationSnapshot = <
-  const TComposites extends ReadonlyArray<AnyCompositeDefinition> = readonly [],
->(
+export const assembleSceneCompilationSnapshot = <const TComposite extends AnyCompositeDefinition = never>(
   input: InputSceneCompilationSnapshot,
-): SceneCompilationSnapshot<TComposites> => {
+): SceneCompilationSnapshot<TComposite> => {
   const {
     root,
     primitives,
@@ -92,7 +90,7 @@ export const assembleSceneCompilationSnapshot = <
     result: Object.freeze({
       scene,
       artifacts: Object.freeze([...(artifacts ?? [])]),
-    }) as CompileResult<CompositeArtifactOf<TComposites[number]>>,
+    }) as CompileResult<CompositeArtifactOf<TComposite>>,
     diagnostics: Object.freeze(orderCompileWarnings(diagnostics)),
     ...(provenance === undefined ? {} : { provenance }),
   });

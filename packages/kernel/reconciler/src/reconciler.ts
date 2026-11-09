@@ -18,33 +18,33 @@ import type { WeaveBatch, WeavePreparedUpdate } from './weave';
 import { WeaveManager } from './weave';
 
 /** 同步协调编译与一个输出目标，不依赖 DOM 或 Runtime 注册图 */
-export class SceneReconciler<const TComposites extends ReadonlyArray<AnyCompositeDefinition> = readonly []> {
+export class SceneReconciler<const TComposite extends AnyCompositeDefinition = never> {
   private targetDisposed = false;
   /** 已挂载会话等待成功清理的观测记录，清理失败时保留以供重试 */
   private pendingUnmount = false;
-  private current: ReconcilerResult<TComposites> | undefined;
-  private weave: WeaveManager<TComposites> | undefined;
+  private current: ReconcilerResult<TComposite> | undefined;
+  private weave: WeaveManager<TComposite> | undefined;
   private status: ReconcilerStatus = ReconcilerStatus.Idle;
   /** 已隔离的观察或资源释放异常，读取后清空 */
   private readonly diagnosticQueue: Array<unknown> = [];
 
   constructor(
-    private options: CompileOptions<TComposites> = {},
-    private readonly execution: SceneReconcilerOptions<TComposites> = {},
+    private options: CompileOptions<TComposite> = {},
+    private readonly execution: SceneReconcilerOptions<TComposite> = {},
   ) {
     if (this.mode === ReconcilerMode.Full && execution.updateStrategy !== undefined)
       throw this.contractError('A non-incremental session cannot configure an update strategy');
   }
 
   /** 首次建立计算状态并发布完整结果 */
-  mount(source: IRScene): ReconcilerResult<TComposites> {
+  mount(source: IRScene): ReconcilerResult<TComposite> {
     this.assertIdle();
     if (this.current !== undefined) throw this.contractError('Session is already mounted');
     return this.replace(source);
   }
 
   /** 显式完整重建，准备失败仍保留原计算状态 */
-  replace(source: IRScene, options = this.options): ReconcilerResult<TComposites> {
+  replace(source: IRScene, options = this.options): ReconcilerResult<TComposite> {
     this.assertIdle();
     const phase = this.current === undefined ? ReconcilerLifecyclePhase.Mount : ReconcilerLifecyclePhase.Update;
     this.status = ReconcilerStatus.Preparing;
@@ -53,8 +53,8 @@ export class SceneReconciler<const TComposites extends ReadonlyArray<AnyComposit
       const prepared = weave?.mount();
       const compilation =
         prepared?.compilation ??
-        new CompileManager(createCompileRuntime(source, options, this.execution)).compileScene<TComposites>(source);
-      const candidate: ReconcilerResult<TComposites> = {
+        new CompileManager(createCompileRuntime(source, options, this.execution)).compileScene<TComposite>(source);
+      const candidate: ReconcilerResult<TComposite> = {
         revision: this.nextRevision(),
         compilation,
         ...(prepared === undefined ? {} : { root: prepared.root }),
@@ -81,7 +81,7 @@ export class SceneReconciler<const TComposites extends ReadonlyArray<AnyComposit
   }
 
   /** 使用权威基础元素批次更新；期望结果按对象身份绑定会话与版本 */
-  update(batch: WeaveBatch, expected: ReconcilerResult<TComposites> = this.read()): ReconcilerResult<TComposites> {
+  update(batch: WeaveBatch, expected: ReconcilerResult<TComposite> = this.read()): ReconcilerResult<TComposite> {
     this.assertIdle();
     if (expected !== this.current) throw this.contractError('The update belongs to a stale session result');
     if (this.weave === undefined) throw this.contractError('Non-incremental sessions do not support Weave batches');
@@ -107,7 +107,7 @@ export class SceneReconciler<const TComposites extends ReadonlyArray<AnyComposit
   }
 
   /** 复用编译结果，仅准备并提交输出目标的新配置 */
-  updateTarget(): ReconcilerResult<TComposites> {
+  updateTarget(): ReconcilerResult<TComposite> {
     this.assertIdle();
     const current = this.read();
     this.status = ReconcilerStatus.Preparing;
@@ -119,7 +119,7 @@ export class SceneReconciler<const TComposites extends ReadonlyArray<AnyComposit
   }
 
   /** 读取已发布结果；准备期间仍返回旧结果，提交期间拒绝重入 */
-  read(): ReconcilerResult<TComposites> {
+  read(): ReconcilerResult<TComposite> {
     if (
       this.status === ReconcilerStatus.Committing ||
       this.status === ReconcilerStatus.Broken ||
@@ -164,11 +164,11 @@ export class SceneReconciler<const TComposites extends ReadonlyArray<AnyComposit
 
   /** 保留两侧恢复依据，直到双方均提交成功 */
   private publish(
-    candidate: ReconcilerResult<TComposites>,
-    weave: WeaveManager<TComposites> | undefined,
-    prepared?: WeavePreparedUpdate<TComposites>,
+    candidate: ReconcilerResult<TComposite>,
+    weave: WeaveManager<TComposite> | undefined,
+    prepared?: WeavePreparedUpdate<TComposite>,
     options = this.options,
-  ): ReconcilerResult<TComposites> {
+  ): ReconcilerResult<TComposite> {
     let target: ReconcilerPreparedCommit | undefined;
     try {
       target = this.execution.target?.prepare(candidate, this.current);

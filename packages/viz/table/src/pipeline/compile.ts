@@ -18,13 +18,13 @@ const isRootTableArtifact = (artifact: CompositeArtifact): artifact is TableComp
 
 /**
  * 编译 canonical 单根 Table Scene，并返回同次 compile 的精确根 manifest
- * @template TComposites 额外注册的组合定义集合，决定编译结果中可出现的扩展产物类型；默认 readonly []
+ * @template TComposite 额外注册的组合定义类型联合，决定编译结果中可出现的扩展产物类型；默认 never
  */
-export const compileTable = <const TComposites extends ReadonlyArray<AnyCompositeDefinition> = readonly []>(
+export const compileTable = <const TComposite extends AnyCompositeDefinition = never>(
   spec: IRTable,
   datasets: ExternalDatasets,
-  options: CompileTableOptions<TComposites> = {},
-): CompileTableResult<TComposites> => {
+  options: CompileTableOptions<TComposite> = {},
+): CompileTableResult<TComposite> => {
   const compileOptions = options.compile ?? {};
   const tableDefinitions = lowerTables(datasets, options.lower);
   const composites = [...tableDefinitions, ...(compileOptions.composites ?? [])];

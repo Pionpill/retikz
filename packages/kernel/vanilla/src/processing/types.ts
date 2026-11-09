@@ -35,7 +35,7 @@ export type InputPreparedProcessing = Readonly<{
   /** 直接交给 Core compile 的 Source IR */
   source: IRScene;
   /** 与 Source IR 同次确定的 Core compile options */
-  coreOptions: CompileOptions<ReadonlyArray<AnyCompositeDefinition>>;
+  coreOptions: CompileOptions<AnyCompositeDefinition>;
   /** 归一化时收集的作者来源 */
   authoringSites: ReadonlyArray<InputAuthoringSite>;
   /** 归一化时生成的 runtime metadata */

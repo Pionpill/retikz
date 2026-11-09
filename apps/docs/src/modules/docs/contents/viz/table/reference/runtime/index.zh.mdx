@@ -251,6 +251,8 @@ result.manifest;
 
 ## Table compile API
 
+`compileTable<TComposite>`、`CompileTableOptions<TComposite>` 与 `CompileTableResult<TComposite>` 使用额外 Composite 定义的元素类型联合，默认 `never` 表示未额外注册定义。定义数组仍通过 `compile.composites` 传入，通常无需显式填写泛型。返回的 `artifacts` 保留 Table 产物与额外定义产物的联合类型，根 `manifest` 始终保持 Table 的精确类型。
+
 | 导出                   | 作用                                                                 |
 | ---------------------- | -------------------------------------------------------------------- |
 | `lowerTables()`        | 创建 layout-aware `table.table` composite definition，供宿主 compile |

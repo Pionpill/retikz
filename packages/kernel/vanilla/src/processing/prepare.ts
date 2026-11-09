@@ -46,7 +46,7 @@ const resolveCoreOptions = (
   compile: CompileOptions | undefined,
   contributions: Parameters<typeof resolveCoreProviderDependencies>[0]['contributions'],
   defaultFontFamily?: string,
-): CompileOptions<ReadonlyArray<AnyCompositeDefinition>> => {
+): CompileOptions<AnyCompositeDefinition> => {
   const resolved = resolveCoreProviderDependencies({
     contributions,
     definitions:

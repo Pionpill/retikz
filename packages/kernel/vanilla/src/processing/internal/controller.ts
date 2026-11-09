@@ -58,7 +58,7 @@ const restoreVanillaCompileDriverSession = (
 const createProcessingResult = (
   revision: number,
   prepared: InputPreparedProcessing,
-  output: ReconcilerOutput<ReadonlyArray<AnyCompositeDefinition>>,
+  output: ReconcilerOutput<AnyCompositeDefinition>,
   compileSession: VanillaCompileDriverSession,
 ): ProcessingResult => {
   const resolved = resolveVanillaCompileOutput(compileSession, output);
@@ -113,7 +113,7 @@ const createRetainedProcessingState = (
   let participantPrepared = initial;
   let participantRevision = initialRevision;
   let current: ProcessingResult | undefined;
-  const resolveReadonlyLayers = (output: ReconcilerOutput<ReadonlyArray<AnyCompositeDefinition>>) =>
+  const resolveReadonlyLayers = (output: ReconcilerOutput<AnyCompositeDefinition>) =>
     resolveVanillaCompileOutput(compileSession, output).layers;
   const participant = transactionParticipantFactory?.({ initial, resolveReadonlyLayers });
   const target: ReconcilerCommitTarget = {

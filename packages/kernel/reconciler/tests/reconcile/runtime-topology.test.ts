@@ -27,9 +27,9 @@ import { createFullSceneRuntimeSnapshot } from '../../src/scene';
 import { compileTestResult, compileTestSnapshot } from '../helpers/compilation';
 
 type PrimitiveRecords = WeakMap<ScenePrimitive, Readonly<{ identity: SceneIdentity; semanticOwner: SceneIdentity }>>;
-const compileWithTopology = <const T extends ReadonlyArray<AnyCompositeDefinition>>(
+const compileWithTopology = <const TComposite extends AnyCompositeDefinition>(
   ir: IRScene,
-  options: CompileOptions<T>,
+  options: CompileOptions<TComposite>,
   execution: { candidateRevision: SceneRevision },
 ) => {
   const compiled = compileTestSnapshot(ir, options, { captureProvenance: true });

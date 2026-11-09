@@ -73,7 +73,7 @@ describe('Vanilla 编译驱动程序', () => {
   });
 
   it('同 revision output 保留 Core primary 并校验 readonly layers', () => {
-    const coreOutput: ReconcilerOutput<ReadonlyArray<AnyCompositeDefinition>> = Object.freeze({
+    const coreOutput: ReconcilerOutput<AnyCompositeDefinition> = Object.freeze({
       result: compileTestResult(source, {}),
       diagnostics: Object.freeze([]),
     });
@@ -135,7 +135,7 @@ describe('Vanilla 编译驱动程序', () => {
   });
 
   it('非法 resolver output 统一抛出可由 retained host 回滚的结构化错误', () => {
-    const coreOutput: ReconcilerOutput<ReadonlyArray<AnyCompositeDefinition>> = Object.freeze({
+    const coreOutput: ReconcilerOutput<AnyCompositeDefinition> = Object.freeze({
       result: compileTestResult(source, {}),
       diagnostics: Object.freeze([]),
     });

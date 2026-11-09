@@ -251,6 +251,8 @@ Top-level `composites` has been removed; use `compile.composites`. `renderTable(
 
 ## Table compile API
 
+`compileTable<TComposite>`, `CompileTableOptions<TComposite>`, and `CompileTableResult<TComposite>` use the union of additional Composite Definition element types. The default `never` means no additional definitions are registered. The definitions array is still passed through `compile.composites`, and its type is usually inferred. Returned `artifacts` retain the union of Table artifacts and artifacts from those definitions, while the root `manifest` keeps its precise Table type.
+
 | Export                 | Purpose                                                                   |
 | ---------------------- | ------------------------------------------------------------------------- |
 | `lowerTables()`        | Creates the layout-aware `table.table` definition for a host compile      |

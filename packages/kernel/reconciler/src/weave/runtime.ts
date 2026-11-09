@@ -8,13 +8,11 @@ import { WeaveTransaction } from './transaction';
 import type { WeaveNode, WeaveRoot } from './types';
 
 /** 完成基础树编译后可提交的完整结果 */
-export type WeaveCompilation<
-  TComposites extends ReadonlyArray<AnyCompositeDefinition> = ReadonlyArray<AnyCompositeDefinition>,
-> = {
+export type WeaveCompilation<TComposite extends AnyCompositeDefinition = AnyCompositeDefinition> = {
   /** 保持身份稳定的声明根 */
   root: WeaveRoot;
   /** 可交给输出事务提交的完整快照 */
-  compilation: SceneCompilationSnapshot<TComposites>;
+  compilation: SceneCompilationSnapshot<TComposite>;
   /** 本次实际编译的元素数，不含缓存复用 */
   visited: number;
 };
@@ -30,9 +28,7 @@ export type WeaveCompileContext = Readonly<{
 }>;
 
 /** 跨批次保留的声明身份与已完成结果 */
-type WeavePersistentState<
-  TComposites extends ReadonlyArray<AnyCompositeDefinition> = ReadonlyArray<AnyCompositeDefinition>,
-> = {
+type WeavePersistentState<TComposite extends AnyCompositeDefinition = AnyCompositeDefinition> = {
   /** 稳定节点与已提交、候选版本槽 */
   readonly root: WeaveRoot;
   /** Scope 身份分配器，回滚不复用编号 */
@@ -42,7 +38,7 @@ type WeavePersistentState<
   /** 最近完成的声明输入 */
   source: IRScene;
   /** 最近完成发布的编译结果，准备与 commit 不替换 */
-  completed?: WeaveCompilation<TComposites>;
+  completed?: WeaveCompilation<TComposite>;
 };
 
 /** 单个候选批次的隔离计算状态 */
@@ -66,11 +62,9 @@ export type WeaveBatchState = {
 };
 
 /** 会话可变状态，批次关闭后释放临时计算环境 */
-export type WeaveCompileState<
-  TComposites extends ReadonlyArray<AnyCompositeDefinition> = ReadonlyArray<AnyCompositeDefinition>,
-> = {
+export type WeaveCompileState<TComposite extends AnyCompositeDefinition = AnyCompositeDefinition> = {
   /** 跨批次的独立事实源 */
-  readonly persistent: WeavePersistentState<TComposites>;
+  readonly persistent: WeavePersistentState<TComposite>;
   /** 当前候选批次；完成或放弃后为空 */
   batch: WeaveBatchState | undefined;
 };

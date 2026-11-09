@@ -17,11 +17,9 @@ export type CompileResult<TCompositeArtifact extends CompositeArtifact = Composi
 
 /**
  * Tier 2 composite 展开选项
- * @template TComposites 本次编译使用的复合组件定义集合，用于保留输出产物的精确类型
+ * @template TComposite 本次编译使用的复合组件定义类型联合，用于保留输出产物的精确类型
  */
-export type CompileCompositeOptions<
-  TComposites extends ReadonlyArray<AnyCompositeDefinition> = ReadonlyArray<AnyCompositeDefinition>,
-> = {
+export type CompileCompositeOptions<TComposite extends AnyCompositeDefinition = AnyCompositeDefinition> = {
   /** 与本次完整 Source 配对的 composite 实例运行时输入 */
   compositeInputs?: CompositeInputBindings;
   /**
@@ -29,7 +27,7 @@ export type CompileCompositeOptions<
    * @description Core 不预留官方 namespace 名称；未注册的 namespace/type 会触发 warning，并跳过该 composite 节点，重复的完整 namespace/type 键在注册期报错
    * @default []
    */
-  composites?: TComposites;
+  composites?: ReadonlyArray<TComposite>;
   /**
    * composite 嵌套展开的最大深度
    * @description 必须是非负安全整数；零禁止展开 composite，超限或环会 throw
@@ -40,14 +38,12 @@ export type CompileCompositeOptions<
 
 /**
  * SceneReconciler 的绘图编译参数
- * @template TComposites 本次编译使用的复合组件定义集合，用于保留输出产物的精确类型
+ * @template TComposite 本次编译使用的复合组件定义类型联合，用于保留输出产物的精确类型
  */
-export type CompileOptions<
-  TComposites extends ReadonlyArray<AnyCompositeDefinition> = ReadonlyArray<AnyCompositeDefinition>,
-> = CompileHostOptions &
+export type CompileOptions<TComposite extends AnyCompositeDefinition = AnyCompositeDefinition> = CompileHostOptions &
   CompileLayoutOptions &
   CompileProviderOptions &
-  CompileCompositeOptions<TComposites> & {
+  CompileCompositeOptions<TComposite> & {
     /**
      * 单次裁剪转换允许访问的声明数量，包含根声明及递归子声明
      * @default 32
@@ -57,11 +53,11 @@ export type CompileOptions<
 
 /**
  * 单次静态编译的产物、诊断与可选来源信息
- * @template TComposites 本次编译使用的复合组件定义集合，用于保留输出产物的精确类型
+ * @template TComposite 本次编译使用的复合组件定义类型联合，用于保留输出产物的精确类型
  */
-export type SceneCompilationSnapshot<TComposites extends ReadonlyArray<AnyCompositeDefinition>> = Readonly<{
+export type SceneCompilationSnapshot<TComposite extends AnyCompositeDefinition> = Readonly<{
   /** 完整 compile result */
-  result: CompileResult<CompositeArtifactOf<TComposites[number]>>;
+  result: CompileResult<CompositeArtifactOf<TComposite>>;
   /** 仅在完整 compile 成功后可提交的 canonical warnings */
   diagnostics: ReadonlyArray<CompileWarning>;
   /** 按需收集的编译来源信息 */

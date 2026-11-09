@@ -11,12 +11,10 @@ export class CompileManager {
   constructor(private readonly runtime: CompileRuntime) {}
 
   /** 完成根子树并组装 Scene；padding 只在最终组装时使用 */
-  compileScene<TComposites extends ReadonlyArray<AnyCompositeDefinition>>(
-    root: IRScene,
-  ): SceneCompilationSnapshot<TComposites> {
+  compileScene<TComposite extends AnyCompositeDefinition>(root: IRScene): SceneCompilationSnapshot<TComposite> {
     const { primitives, layoutBounds, artifacts } = this.compileSubtree(root.children);
     const { paintRegistry, clipRegistry, diagnosticCollector } = this.runtime.state.workspace;
-    return assembleSceneCompilationSnapshot<TComposites>({
+    return assembleSceneCompilationSnapshot<TComposite>({
       root,
       primitives,
       resources: [...paintRegistry.getResources(), ...clipRegistry.getResources()],

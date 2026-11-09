@@ -8,7 +8,7 @@ import { EMPTY_READONLY_LAYERS, snapshotReadonlyLayers } from '@retikz/render/ru
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
 import type { InputAuthoringSite } from '../normalize';
 
-type VanillaReconcilerOutput = ReconcilerOutput<ReadonlyArray<AnyCompositeDefinition>>;
+type VanillaReconcilerOutput = ReconcilerOutput<AnyCompositeDefinition>;
 
 const EMPTY_DIAGNOSTICS: ReadonlyArray<never> = Object.freeze([]);
 
