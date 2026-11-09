@@ -3,7 +3,6 @@ import type { PerformanceTraceSink } from '@retikz/foundation';
 
 import type { ExecuteOptions, SceneCompilationSnapshot } from './compile';
 import type { ReconcilerUpdateStrategy } from './constants';
-import type { WeaveRoot } from './weave';
 
 /** 同一会话发布的完整编译结果 */
 export type ReconcilerResult<TComposite extends AnyCompositeDefinition = AnyCompositeDefinition> = Readonly<{
@@ -11,8 +10,6 @@ export type ReconcilerResult<TComposite extends AnyCompositeDefinition = AnyComp
   revision: number;
   /** 统一执行器的完整编译产物，不强制生成渲染快照 */
   compilation: SceneCompilationSnapshot<TComposite>;
-  /** 增量模式的稳定作者声明根，非增量模式不保留此字段 */
-  root?: WeaveRoot;
 }>;
 
 /** 宿主准备完成后的修改与恢复能力 */
@@ -36,25 +33,45 @@ export type ReconcilerCommitTarget<TComposite extends AnyCompositeDefinition = A
   dispose?: () => void;
 }>;
 
-/** 编译会话的输出接线 */
-export type SceneReconcilerOptions<TComposite extends AnyCompositeDefinition = AnyCompositeDefinition> =
-  ExecuteOptions &
+/** 两种编译模式共用的执行与输出接线 */
+type SceneReconcilerBaseOptions<TComposite extends AnyCompositeDefinition> = ExecuteOptions &
+  Readonly<{
+    /** 可选宿主目标；省略时仅提交计算状态 */
+    target?: ReconcilerCommitTarget<TComposite>;
+    /** 首次发布与后续更新的编译工作量，以及成功清理的已挂载会话数；失败操作不报告成功记录 */
+    trace?: PerformanceTraceSink;
+  }>;
+
+/** 不保留 Weave 缓存的完整编译模式 */
+export type FullSceneReconcilerOptions<TComposite extends AnyCompositeDefinition = AnyCompositeDefinition> =
+  SceneReconcilerBaseOptions<TComposite> &
+    Readonly<{
+      /** 关闭用于后续更新的 Weave 阶段缓存 */
+      incremental: false;
+      /** 完整编译模式不接受批次更新策略 */
+      updateStrategy?: never;
+    }>;
+
+/** 保留 Weave 缓存并支持批次更新的增量编译模式 */
+export type IncrementalSceneReconcilerOptions<TComposite extends AnyCompositeDefinition = AnyCompositeDefinition> =
+  SceneReconcilerBaseOptions<TComposite> &
     Readonly<{
       /**
-       * 是否保留用于后续更新的 Weave 阶段缓存，不表示当前调用只执行局部计算
+       * 保留用于后续更新的 Weave 阶段缓存，不表示当前调用只执行局部计算
        * @default true
        */
-      incremental?: boolean;
-      /** 可选宿主目标；省略时仅提交计算状态 */
-      target?: ReconcilerCommitTarget<TComposite>;
+      incremental?: true;
       /**
        * 增量会话的批次计算策略，完整输入替换始终完整编译
        * @default ReconcilerUpdateStrategy.Auto
        */
       updateStrategy?: ReconcilerUpdateStrategy;
-      /** 首次发布与后续更新的编译工作量，以及成功清理的已挂载会话数；失败操作不报告成功记录 */
-      trace?: PerformanceTraceSink;
     }>;
+
+/** 编译会话的输出接线；仅增量模式允许配置批次更新策略 */
+export type SceneReconcilerOptions<TComposite extends AnyCompositeDefinition = AnyCompositeDefinition> =
+  | FullSceneReconcilerOptions<TComposite>
+  | IncrementalSceneReconcilerOptions<TComposite>;
 
 /** 执行层非致命诊断 */
 export type ReconcilerDiagnostic = Readonly<{
@@ -71,9 +88,3 @@ export type ReconcilerDiagnostic = Readonly<{
   /** 可供排查的原始异常 */
   cause?: unknown;
 }>;
-
-/** 下游消费的完整编译输出 */
-export type ReconcilerOutput<TComposite extends AnyCompositeDefinition = AnyCompositeDefinition> = Pick<
-  SceneCompilationSnapshot<TComposite>,
-  'result' | 'diagnostics'
->;

@@ -1,8 +1,8 @@
-import type { AnyCompositeDefinition } from '@retikz/core';
-import type { ReconcilerCommitTarget, ReconcilerOutput } from '@retikz/reconciler';
+import type { ReconcilerCommitTarget } from '@retikz/reconciler';
 import { SceneReconciler } from '@retikz/reconciler';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../error';
+import type { VanillaReconcilerOutput } from '../../runtime';
 import type {
   InputVanillaCompileDriver,
   VanillaCompileDriver,
@@ -58,7 +58,7 @@ const restoreVanillaCompileDriverSession = (
 const createProcessingResult = (
   revision: number,
   prepared: InputPreparedProcessing,
-  output: ReconcilerOutput<AnyCompositeDefinition>,
+  output: VanillaReconcilerOutput,
   compileSession: VanillaCompileDriverSession,
 ): ProcessingResult => {
   const resolved = resolveVanillaCompileOutput(compileSession, output);
@@ -113,7 +113,7 @@ const createRetainedProcessingState = (
   let participantPrepared = initial;
   let participantRevision = initialRevision;
   let current: ProcessingResult | undefined;
-  const resolveReadonlyLayers = (output: ReconcilerOutput<AnyCompositeDefinition>) =>
+  const resolveReadonlyLayers = (output: VanillaReconcilerOutput) =>
     resolveVanillaCompileOutput(compileSession, output).layers;
   const participant = transactionParticipantFactory?.({ initial, resolveReadonlyLayers });
   const target: ReconcilerCommitTarget = {

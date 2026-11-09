@@ -1,14 +1,14 @@
 import type { AnyCompositeDefinition, IRScene } from '@retikz/core';
-import type { CompileOptions } from '@retikz/reconciler';
+import type { CompileOptions, SceneCompilationSnapshot } from '@retikz/reconciler';
 import { SceneReconciler } from '@retikz/reconciler';
-import type { ReconcilerOutput } from '@retikz/reconciler';
 import type { RenderReadonlyLayer } from '@retikz/render/runtime';
 import { EMPTY_READONLY_LAYERS, snapshotReadonlyLayers } from '@retikz/render/runtime';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
 import type { InputAuthoringSite } from '../normalize';
 
-type VanillaReconcilerOutput = ReconcilerOutput<AnyCompositeDefinition>;
+/** Vanilla 编译驱动消费的产物与诊断，不要求编译来源信息 */
+export type VanillaReconcilerOutput = Pick<SceneCompilationSnapshot<AnyCompositeDefinition>, 'result' | 'diagnostics'>;
 
 const EMPTY_DIAGNOSTICS: ReadonlyArray<never> = Object.freeze([]);
 

@@ -31,10 +31,7 @@ export class SceneReconciler<const TComposite extends AnyCompositeDefinition = n
   constructor(
     private options: CompileOptions<TComposite> = {},
     private readonly execution: SceneReconcilerOptions<TComposite> = {},
-  ) {
-    if (this.mode === ReconcilerMode.Full && execution.updateStrategy !== undefined)
-      throw this.contractError('A non-incremental session cannot configure an update strategy');
-  }
+  ) {}
 
   /** 首次建立计算状态并发布完整结果 */
   mount(source: IRScene): ReconcilerResult<TComposite> {
@@ -57,7 +54,6 @@ export class SceneReconciler<const TComposite extends AnyCompositeDefinition = n
       const candidate: ReconcilerResult<TComposite> = {
         revision: this.nextRevision(),
         compilation,
-        ...(prepared === undefined ? {} : { root: prepared.root }),
       };
       const published = this.publish(candidate, weave, undefined, options);
       this.options = options;
@@ -90,7 +86,7 @@ export class SceneReconciler<const TComposite extends AnyCompositeDefinition = n
     try {
       const prepared = this.weave.update(batch, this.execution.updateStrategy === ReconcilerUpdateStrategy.Full);
       const published = this.publish(
-        { revision: this.nextRevision(), compilation: prepared.compilation, root: prepared.root },
+        { revision: this.nextRevision(), compilation: prepared.compilation },
         this.weave,
         prepared,
       );
@@ -128,6 +124,19 @@ export class SceneReconciler<const TComposite extends AnyCompositeDefinition = n
       throw this.contractError(`Cannot read a ${this.status} session`);
     if (this.current === undefined) throw this.contractError('Session is not mounted');
     return this.current;
+  }
+
+  /**
+   * 查询当前已发布作者树中的作用域标识，仅允许空闲的增量会话调用
+   * @param path 从根开始逐层选择 children 的下标；空路径表示根，每一步必须指向作者 Scope
+   * @param expected 路径所属的当前结果，旧结果或其它会话的结果会被拒绝
+   * @returns 容器存续期间稳定的标识，可用于批次的 scopeId 或 parentId；完整替换后需重新查询
+   */
+  getScopeId(path: ReadonlyArray<number> = [], expected: ReconcilerResult<TComposite> = this.read()): string {
+    this.assertIdle();
+    if (expected !== this.current) throw this.contractError('The scope query belongs to a stale session result');
+    if (this.weave === undefined) throw this.contractError('Non-incremental sessions do not expose scope addresses');
+    return this.weave.getScopeId(path);
   }
 
   /** 读取并清空非致命诊断 */

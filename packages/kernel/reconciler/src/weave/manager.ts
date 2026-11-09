@@ -89,6 +89,22 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
     }
   }
 
+  /** 按已提交作者树的逐层子元素下标查询 Scope；空路径返回根标识，不进入 Composite 生成树 */
+  getScopeId(path: ReadonlyArray<number>): string {
+    let scope: WeaveRoot | WeaveScopeNode = this.state.persistent.root;
+    for (const index of path) {
+      const child: WeaveNode | undefined = scope.current?.children[index];
+      if (child?.type !== 'scope')
+        throw new RetikzReconcilerError({
+          code: RetikzReconcilerErrorCode.Contract,
+          message: 'The scope path must address authored Scope elements',
+          details: { path },
+        });
+      scope = child;
+    }
+    return scope.scopeId;
+  }
+
   /** 在既有树上准备一批更新；返回值与当前树在提交前互相隔离 */
   update(input: WeaveBatch, forceFull = false): WeavePreparedUpdate<TComposite> {
     const persistent = this.state.persistent;

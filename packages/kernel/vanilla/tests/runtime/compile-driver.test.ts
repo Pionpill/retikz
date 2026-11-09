@@ -1,11 +1,11 @@
-import type { AnyCompositeDefinition, CompileWarning, IRScene } from '@retikz/core';
+import type { CompileWarning, IRScene } from '@retikz/core';
 import { RetikzError } from '@retikz/foundation';
-import type { ReconcilerOutput } from '@retikz/reconciler';
 import type { RenderReadonlyLayer } from '@retikz/render/runtime';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { VanillaCompileDriver, VanillaCompileOutput } from '../../src';
 import { defaultVanillaCompileDriver, RetikzVanillaError, RetikzVanillaErrorCode } from '../../src';
+import type { VanillaReconcilerOutput } from '../../src/runtime';
 import { createVanillaCompileDriverSession } from '../../src/runtime/compile-driver';
 import { resolveVanillaCompileOutput } from '../../src/runtime/compile-driver';
 import { compileVanillaWithDriver } from '../../src/runtime/compile-driver';
@@ -73,7 +73,7 @@ describe('Vanilla 编译驱动程序', () => {
   });
 
   it('同 revision output 保留 Core primary 并校验 readonly layers', () => {
-    const coreOutput: ReconcilerOutput<AnyCompositeDefinition> = Object.freeze({
+    const coreOutput: VanillaReconcilerOutput = Object.freeze({
       result: compileTestResult(source, {}),
       diagnostics: Object.freeze([]),
     });
@@ -135,7 +135,7 @@ describe('Vanilla 编译驱动程序', () => {
   });
 
   it('非法 resolver output 统一抛出可由 retained host 回滚的结构化错误', () => {
-    const coreOutput: ReconcilerOutput<AnyCompositeDefinition> = Object.freeze({
+    const coreOutput: VanillaReconcilerOutput = Object.freeze({
       result: compileTestResult(source, {}),
       diagnostics: Object.freeze([]),
     });

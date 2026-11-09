@@ -7,10 +7,120 @@ import { compileTestResult } from '../helpers/compilation';
 const scene: IRScene = { type: 'scene', version: 1, children: [{ type: 'node', id: 'a', position: [0, 0] }] };
 
 describe('独立编译会话', () => {
+  it('嵌套 Scope 的查询标识支持三种定位和插入，移动后保持稳定', () => {
+    const session = new SceneReconciler();
+    const source: IRScene = {
+      type: 'scene',
+      version: 1,
+      children: [
+        { type: 'scope', children: [{ type: 'scope', children: [{ type: 'node', id: 'a', position: [0, 0] }] }] },
+      ],
+    };
+    const initial = session.mount(source);
+    const rootId = session.getScopeId([], initial);
+    const scopeId = session.getScopeId([0, 0], initial);
+    const changed = session.update(
+      {
+        operations: [
+          { kind: 'update', target: { kind: 'scope', scopeId }, input: { type: 'scope', position: [20, 10] } },
+          {
+            kind: 'update',
+            target: { kind: 'id', scopeId, id: 'a' },
+            input: { type: 'node', id: 'a', position: [5, 0] },
+          },
+          { kind: 'insert', parentId: scopeId, index: 1, elements: [{ type: 'node', id: 'b', position: [10, 0] }] },
+          { kind: 'remove', target: { kind: 'child', scopeId, index: 1 } },
+        ],
+      },
+      initial,
+    );
+    expect(changed.compilation.result).toEqual(
+      compileTestResult({
+        type: 'scene',
+        version: 1,
+        children: [
+          {
+            type: 'scope',
+            children: [{ type: 'scope', position: [20, 10], children: [{ type: 'node', id: 'a', position: [5, 0] }] }],
+          },
+        ],
+      }),
+    );
+    expect(session.getScopeId([0, 0])).toBe(scopeId);
+    expect(() => session.getScopeId([0, 0], initial)).toThrow('stale');
+    session.update({
+      operations: [
+        {
+          kind: 'insert',
+          parentId: rootId,
+          index: 0,
+          elements: [{ type: 'coordinate', id: 'leading', position: [0, 0] }],
+        },
+      ],
+    });
+    expect(session.getScopeId([1, 0])).toBe(scopeId);
+    expect(() => session.getScopeId([0])).toThrow('authored Scope');
+    session.update({ operations: [{ kind: 'remove', target: { kind: 'scope', scopeId } }] });
+    expect(() => session.getScopeId([1, 0])).toThrow('authored Scope');
+    session.replace(source);
+    expect(session.getScopeId()).not.toBe(rootId);
+    expect(session.getScopeId([0, 0])).not.toBe(scopeId);
+    expect(() => session.update({ operations: [{ kind: 'remove', target: { kind: 'scope', scopeId } }] })).toThrow();
+    session.dispose();
+  });
+
+  it('作用域查询拒绝无效路径、其它会话结果及不可用会话', () => {
+    const session = new SceneReconciler();
+    expect(() => session.getScopeId()).toThrow('not mounted');
+    const initial = session.mount(scene);
+    for (const path of [[0], [5], [-1], [0.5]]) expect(() => session.getScopeId(path)).toThrow('authored Scope');
+    expect(session.read()).toBe(initial);
+    const other = new SceneReconciler();
+    expect(() => session.getScopeId([], other.mount(scene))).toThrow('stale');
+    other.dispose();
+    session.dispose();
+    expect(() => session.getScopeId()).toThrow('disposed');
+    const full = new SceneReconciler({}, { incremental: false });
+    full.mount(scene);
+    expect(() => full.getScopeId()).toThrow('Non-incremental');
+    full.dispose();
+  });
+
+  it('候选提交期间拒绝查询，回滚后保持原作用域标识', () => {
+    let reject = false;
+    const session = new SceneReconciler(
+      {},
+      {
+        target: {
+          prepare: () => {
+            if (reject) expect(() => session.getScopeId()).toThrow('preparing');
+            return {
+              commit: () => {
+                expect(() => session.getScopeId()).toThrow('committing');
+                if (reject) throw new Error('host commit');
+              },
+              rollback: () => undefined,
+              dispose: () => undefined,
+            };
+          },
+        },
+      },
+    );
+    const source: IRScene = { type: 'scene', version: 1, children: [{ type: 'scope', children: [] }] };
+    const initial = session.mount(source);
+    const scopeId = session.getScopeId([0]);
+    reject = true;
+    expect(() => session.update({ operations: [{ kind: 'remove', target: { kind: 'scope', scopeId } }] })).toThrow();
+    expect(session.getScopeId([0], initial)).toBe(scopeId);
+    expect(() => session.replace(scene)).toThrow();
+    expect(session.getScopeId([0], initial)).toBe(scopeId);
+    session.dispose();
+  });
+
   it('不接入渲染端也能连续提交基础元素批次', () => {
     const session = new SceneReconciler();
     const initial = session.mount(scene);
-    const scopeId = initial.root!.scopeId;
+    const scopeId = session.getScopeId([], initial);
     const first = session.update({
       operations: [
         {
@@ -35,7 +145,7 @@ describe('独立编译会话', () => {
     const initial = session.mount(scene);
     expect(() =>
       session.update({
-        operations: [{ kind: 'remove', target: { kind: 'id', scopeId: initial.root!.scopeId, id: 'missing' } }],
+        operations: [{ kind: 'remove', target: { kind: 'id', scopeId: session.getScopeId(), id: 'missing' } }],
       }),
     ).toThrow();
     expect(session.read()).toBe(initial);
@@ -69,7 +179,7 @@ describe('独立编译会话', () => {
     fail = true;
     expect(() =>
       session.update({
-        operations: [{ kind: 'remove', target: { kind: 'id', scopeId: initial.root!.scopeId, id: 'a' } }],
+        operations: [{ kind: 'remove', target: { kind: 'id', scopeId: session.getScopeId(), id: 'a' } }],
       }),
     ).toThrow();
     expect(visible).toBe(0);
@@ -99,7 +209,7 @@ describe('独立编译会话', () => {
         operations: [
           {
             kind: 'update',
-            target: { kind: 'id', scopeId: initial.root!.scopeId, id: 'a' },
+            target: { kind: 'id', scopeId: session.getScopeId([], initial), id: 'a' },
             input: { type: 'node', id: 'a', position: [10, 0] },
           },
         ],

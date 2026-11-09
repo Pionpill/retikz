@@ -42,11 +42,15 @@ This path does not use the generic Runtime package's Source / Computation regist
 
 ## Compilation and reuse
 
-One-shot compilation, complete replacement, and batch updates share Reconciler’s executor for both basic elements and Composites. `incremental` defaults to `true`, retaining authored Weave nodes and actual stage products. With `false`, mount and replace run without retained caches; update and updateStrategy are rejected. Probes, instance inputs, and artifacts keep the same semantics in both modes.
+One-shot compilation, complete replacement, and batch updates share Reconciler’s executor for both basic elements and Composites. `incremental` defaults to `true`, retaining authored Weave nodes and actual stage products. With `false`, mount and replace run without retained caches, and calling update throws. The options type uses `incremental` as its discriminant: `updateStrategy` is available only in incremental mode, and TypeScript rejects invalid combinations. `@retikz/reconciler` also exports `FullSceneReconcilerOptions` and `IncrementalSceneReconcilerOptions` for declaring the options of each mode separately. Probes, instance inputs, and artifacts keep the same semantics in both modes.
 
 <ComponentPreview files="update-reuse" size="md" hideCode type="flow" />
 
 Weave retains input, context, compiled state and dependencies. `SceneReconciler.update(batch, expected)` applies a `WeaveBatch` to an existing basic-element tree. `expected` must be the current session result; stale results are rejected. Scenes containing Composites support edits to authored basic elements. Generated children cannot be addressed; use replace to change Composite author input. Empty incremental batches retain the current result.
+
+Session results contain only the revision and compilation output. Query scope identifiers for batches with `session.getScopeId(path, expected)`: omit the path or pass `[]` for the root; `[1, 0]` selects the second root child and then the first child of that Scope. Every step must select an authored Scope. The returned string can be used as `scopeId` for `scope`, `id`, and `child` targets, or as `parentId` for insertions.
+
+Queries require a mounted, idle incremental session. `expected` defaults to the current result; an older result or one from another session is rejected. Paths refer to the currently published structure and cannot enter Composite-generated content. An identifier stays stable for the lifetime of its Scope, although inserting siblings can change the query path. Removing the Scope or replacing the complete scene invalidates its identifier. A failed transaction that rolls back successfully preserves the original identifiers.
 
 `ReconcilerLifecyclePhase` defines mount, update, and unmount. A content batch runs during the update phase; `WeaveOperationKind.Insert`, `Update`, and `Remove` identify insertion, modification, and removal. Both constants are available from `@retikz/reconciler`, and operation payloads keep their existing contracts.
 

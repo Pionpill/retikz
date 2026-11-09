@@ -1,5 +1,5 @@
 import type { IRScene, Scene } from '@retikz/core';
-import type { ReconcilerOutput } from '@retikz/reconciler';
+import type { ReconcilerResult } from '@retikz/reconciler';
 import { SceneReconciler } from '@retikz/reconciler';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -24,7 +24,7 @@ const layerScene = (width: number): Scene => ({
   primitives: [{ type: 'rect', x: 0, y: 0, width, height: 10, stroke: '#2563eb' }],
 });
 
-const layersFrom = (output: ReconcilerOutput): ReadonlyArray<RenderReadonlyLayer> =>
+const layersFrom = (output: ReconcilerResult['compilation']): ReadonlyArray<RenderReadonlyLayer> =>
   Object.freeze([
     Object.freeze({
       key: 'guide',
@@ -38,7 +38,7 @@ const createHarness = (
   options: Readonly<{
     expectedInitialFrame?: StaticRenderFrame;
     onPrepareMount?: (frame: RenderFrameSnapshot) => void;
-    resolveReadonlyLayers?: (output: ReconcilerOutput) => ReadonlyArray<RenderReadonlyLayer>;
+    resolveReadonlyLayers?: (output: ReconcilerResult['compilation']) => ReadonlyArray<RenderReadonlyLayer>;
   }> = {},
 ) => {
   let current: RenderFrameSnapshot | undefined;
@@ -128,7 +128,7 @@ describe('保留渲染帧契约', () => {
   });
 
   it('从可用的 Core 输出中解析初始、Core 更新和仅配置候选', () => {
-    const outputs: Array<ReconcilerOutput> = [];
+    const outputs: Array<ReconcilerResult['compilation']> = [];
     const harness = createHarness('supported', {
       resolveReadonlyLayers: output => {
         outputs.push(output);

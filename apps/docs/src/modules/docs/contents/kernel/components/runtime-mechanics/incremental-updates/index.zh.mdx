@@ -39,11 +39,15 @@ React 将组件声明转换为 `InputScene`，Vanilla 再归一化为 `IRScene`�
 
 ## 编译与复用
 
-一次性编译、完整替换和批次更新共用 Reconciler 执行器，基础元素与 Composite 都经过同一条遍历链路。`incremental` 默认为 `true`，保留作者 Weave 树和实际阶段产物；设为 `false` 时不保留缓存，只允许 mount / replace，拒绝 update 和 updateStrategy。probe、实例输入和 artifacts 在两种模式下保持相同语义。
+一次性编译、完整替换和批次更新共用 Reconciler 执行器，基础元素与 Composite 都经过同一条遍历链路。`incremental` 默认为 `true`，保留作者 Weave 树和实际阶段产物；设为 `false` 时不保留缓存，只允许 mount / replace，调用 update 会报错。配置类型以 `incremental` 为判别字段，`updateStrategy` 仅在增量模式下可配置，非法组合由 TypeScript 拒绝。`@retikz/reconciler` 同时导出 `FullSceneReconcilerOptions` 和 `IncrementalSceneReconcilerOptions`，可分别声明两种模式的配置。probe、实例输入和 artifacts 在两种模式下保持相同语义。
 
 <ComponentPreview files="update-reuse" size="md" hideCode type="flow" />
 
 Weave 保存输入、上下文、编译状态和依赖。`SceneReconciler.update(batch, expected)` 可在已有基础元素树上应用 `WeaveBatch`；`expected` 必须是当前会话结果，旧结果会被拒绝。含 Composite 的场景可以更新作者基础元素；生成节点不可寻址，修改 Composite 作者输入需 replace。增量模式下空批次保留当前结果。
+
+会话结果只返回版本和编译产物。批次需要的作用域标识通过 `session.getScopeId(path, expected)` 查询：省略路径或传入 `[]` 获取根标识，`[1, 0]` 表示依次选择根的第二个子元素、该 Scope 的第一个子元素，每一步都必须是作者声明的 Scope。查询返回字符串，可用于 `scope`、`id`、`child` 三种目标的 `scopeId`，也可用于插入操作的 `parentId`。
+
+查询仅允许在已挂载、空闲的增量会话中进行；`expected` 默认为当前结果，传入旧结果或其它会话的结果会报错。路径按当前已发布结构解释，不进入 Composite 生成内容。Scope 存续期间标识稳定，插入兄弟元素可能改变查询路径；删除 Scope 或完整替换场景后，旧标识失效。失败事务成功回滚后，原标识仍可使用。
 
 生命周期由 `ReconcilerLifecyclePhase` 定义，包含挂载、更新和卸载；一批内容变化发生在更新阶段，其中 `WeaveOperationKind.Insert`、`Update` 和 `Remove` 分别表示插入、修改和删除。两个常量均可从 `@retikz/reconciler` 导入，内容操作的 payload 保持原有契约。
 
