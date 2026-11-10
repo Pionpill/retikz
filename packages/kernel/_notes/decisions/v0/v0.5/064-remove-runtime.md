@@ -5,6 +5,8 @@ keywords: Runtime、Reconciler、Weave、事务、Render、依赖移除
 
 # ADR-064：移除 Runtime 并收敛增量执行职责
 
+> 运行时 Scene 归属修订：本文原定归 Reconciler 的渲染身份、拓扑、快照和 Scene 更新输出契约改归 Render，覆盖下文对应约定。编译来源、计算会话 revision 和单目标提交协议仍归 Reconciler；Render 根据编译来源和候选版本构造渲染快照，身份及拓扑构造错误归 Render
+
 - 状态：Accepted
 - 决策日期：2026-10-21
 - 接受日期：2026-10-21

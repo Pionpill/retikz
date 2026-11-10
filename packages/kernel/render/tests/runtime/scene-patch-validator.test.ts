@@ -1,17 +1,17 @@
 import type { IRScene } from '@retikz/core';
+import { describe, expect, it } from 'vitest';
+
+import { RetikzRenderErrorCode } from '../../src/runtime';
+import { runtimeStructuralEquals } from '../../src/runtime/shared';
+import { assertScenePatch, assertSceneRuntimeSnapshot } from '../../src/runtime/validator';
 import type {
   RuntimeScenePrimitive,
   RuntimeSceneResource,
   ScenePatch,
   SceneRuntimeNode,
   SceneRuntimeSnapshot,
-} from '@retikz/reconciler';
-import { createFullSceneRuntimeSnapshot, createSceneIdentity } from '@retikz/reconciler';
-import { describe, expect, it } from 'vitest';
-
-import { RetikzRenderErrorCode } from '../../src/runtime';
-import { runtimeStructuralEquals } from '../../src/runtime/shared';
-import { assertScenePatch, assertSceneRuntimeSnapshot } from '../../src/runtime/validator';
+} from '../../src/scene';
+import { createFullSceneRuntimeSnapshot, createSceneIdentity } from '../../src/scene';
 import { compileTestSnapshot } from '../helpers/compilation';
 
 const source = (fill: string): IRScene => ({

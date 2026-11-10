@@ -1,12 +1,6 @@
 import type { Canvas as NapiCanvas } from '@napi-rs/canvas';
 import type { IRScene, Scene } from '@retikz/core';
-import type { RuntimeScenePrimitive, ScenePatch, ScenePatchOperation, SceneRuntimeSnapshot } from '@retikz/reconciler';
-import {
-  SceneReconciler,
-  createSceneIdentity,
-  createFullSceneRuntimeSnapshot,
-  RetikzReconcilerErrorCode,
-} from '@retikz/reconciler';
+import { SceneReconciler, RetikzReconcilerErrorCode } from '@retikz/reconciler';
 import type { ReconcilerCommitTarget } from '@retikz/reconciler';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -18,6 +12,8 @@ import type { HydrationAnimationControls, HydrationContext } from '../../src/hyd
 import type { RenderFrameSnapshot, RenderReadonlyLayer, InputRenderRuntimeConfig } from '../../src/runtime';
 import { builtinRetainedRendererFactory, createRetainedRenderTarget } from '../../src/runtime';
 import { getRetainedRendererExecutor } from '../../src/runtime/renderer';
+import type { RuntimeScenePrimitive, ScenePatch, ScenePatchOperation, SceneRuntimeSnapshot } from '../../src/scene';
+import { createSceneIdentity, createFullSceneRuntimeSnapshot } from '../../src/scene';
 
 // @vitest-environment jsdom
 import { compileTestSnapshot } from '../helpers/compilation';

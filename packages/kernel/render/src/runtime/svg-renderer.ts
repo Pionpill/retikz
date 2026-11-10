@@ -1,16 +1,7 @@
 import type { IRAnimationTrack, Scene, ScenePrimitive } from '@retikz/core';
 import type { PropertyPath } from '@retikz/foundation';
 import { encodePropertyPath } from '@retikz/foundation';
-import type {
-  ReconcilerPreparedCommit,
-  RuntimeScenePrimitive,
-  SceneIdentity,
-  ScenePatch,
-  ScenePatchOperation,
-  SceneRuntimeNode,
-  SceneRuntimeSnapshot,
-  SceneRuntimeSubtree,
-} from '@retikz/reconciler';
+import type { ReconcilerPreparedCommit } from '@retikz/reconciler';
 
 import type { AnimationControls } from '../animation';
 import { classifyProperty, evaluateTrack, isAutoplayTrigger, sceneHasAnimations } from '../animation';
@@ -27,6 +18,15 @@ import {
   createSvgAnimationControls,
   resolvePointViaLayout,
 } from '../hydration';
+import type {
+  RuntimeScenePrimitive,
+  SceneIdentity,
+  ScenePatch,
+  ScenePatchOperation,
+  SceneRuntimeNode,
+  SceneRuntimeSnapshot,
+  SceneRuntimeSubtree,
+} from '../scene';
 import { prepareRuntimeSceneContent } from '../shared';
 import type { SvgNode } from '../svg';
 import { buildSvgDocument, buildSvgFragment } from '../svg';

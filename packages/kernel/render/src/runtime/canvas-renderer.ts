@@ -1,14 +1,7 @@
 import type { Scene, ScenePrimitive } from '@retikz/core';
 import type { PropertyPath } from '@retikz/foundation';
 import { encodePropertyPath, readPropertyPath } from '@retikz/foundation';
-import type {
-  ReconcilerPreparedCommit,
-  RuntimeScenePrimitive,
-  SceneIdentity,
-  ScenePatch,
-  SceneRuntimeSnapshot,
-} from '@retikz/reconciler';
-import { sceneIdentityEquals } from '@retikz/reconciler';
+import type { ReconcilerPreparedCommit } from '@retikz/reconciler';
 
 import type { AnimationControls, IdClockRegistry } from '../animation';
 import {
@@ -31,6 +24,8 @@ import {
   isCanvasAnimationIdVisible,
   withCanvasAnimationEventHandlers,
 } from '../hydration';
+import type { RuntimeScenePrimitive, SceneIdentity, ScenePatch, SceneRuntimeSnapshot } from '../scene';
+import { sceneIdentityEquals } from '../scene';
 import { computeDisplaySize, pathBounds, prepareRuntimeSceneContent } from '../shared';
 import type { RenderRuntimeConfig } from './config';
 import type { RenderFrameSnapshot } from './frame';

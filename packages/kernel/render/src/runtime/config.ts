@@ -1,8 +1,8 @@
 import type { ValueOf } from '@retikz/foundation';
-import type { RuntimeDeepReadonly } from '@retikz/reconciler';
 
 import { isRetikzRenderError, RetikzRenderError, RetikzRenderErrorCode } from '../error';
 import type { HydrationHandlers } from '../hydration';
+import type { RuntimeDeepReadonly } from '../scene';
 import { cloneAndFreezeRuntimeValue } from './shared';
 
 /** Retained renderer layer cache 策略 */

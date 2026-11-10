@@ -3,9 +3,9 @@ import { visitSceneContent } from '@retikz/core';
 import { readPropertyPath } from '@retikz/foundation';
 import type { PropertyPath } from '@retikz/foundation';
 import type { ValueOf } from '@retikz/foundation';
-import type { RuntimeScenePrimitive, SceneRuntimeSnapshot } from '@retikz/reconciler';
-import type { SceneIdentity } from '@retikz/reconciler';
 
+import type { RuntimeScenePrimitive, SceneRuntimeSnapshot } from '../scene';
+import type { SceneIdentity } from '../scene';
 import { createSceneIdentityMap, runtimeStructuralEquals } from './shared';
 
 /** 沿 canonical primitivePath 读取 occurrence 对应 primitive */

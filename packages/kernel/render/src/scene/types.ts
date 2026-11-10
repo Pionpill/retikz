@@ -1,7 +1,7 @@
 import type { Scene, ScenePrimitive, SceneResource } from '@retikz/core';
 import type { PropertyPath } from '@retikz/foundation';
 
-import type { SceneIdentity, SceneRevision } from './identity-value';
+import type { SceneIdentity } from './identity';
 
 /**
  * 把 Runtime 公开 DTO 递归收窄为只读结构，同时保留 callback identity
@@ -65,7 +65,7 @@ export type SceneRuntimeSubtreeNode = Readonly<{
 /** Runtime participant 消费的完整 Scene 与 identity topology */
 export type SceneRuntimeSnapshot = Readonly<{
   /** snapshot 所属 session revision */
-  revision: SceneRevision;
+  revision: number;
   /** deeply immutable 完整 Scene */
   scene: RuntimeScene;
   /** 不对应 Scene primitive 的 document root identity */
@@ -148,9 +148,9 @@ export type ScenePatchOperation =
 /** 从 current revision 原子转换到 candidate revision 的 Scene Patch */
 export type ScenePatch = Readonly<{
   /** Patch 所基于的 current revision */
-  baseRevision: SceneRevision;
+  baseRevision: number;
   /** Patch 应发布的 candidate revision */
-  nextRevision: SceneRevision;
+  nextRevision: number;
   /** 按规范化顺序执行的 operations */
   operations: ReadonlyArray<ScenePatchOperation>;
 }>;

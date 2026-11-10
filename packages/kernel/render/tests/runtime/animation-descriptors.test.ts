@@ -1,9 +1,9 @@
 import type { IRAnimationTrack } from '@retikz/core';
-import type { RuntimeScenePrimitive, SceneRuntimeSnapshot } from '@retikz/reconciler';
-import { createSceneIdentity } from '@retikz/reconciler';
 import { expect, it } from 'vitest';
 
 import { diffSceneAnimationDescriptors, occurrenceAnimationTracks } from '../../src/runtime/runtime-options';
+import type { RuntimeScenePrimitive, SceneRuntimeSnapshot } from '../../src/scene';
+import { createSceneIdentity } from '../../src/scene';
 
 it('共享 Pattern 的动画按使用处归属，资源更新和回滚不串用快照', () => {
   const track = (duration: number): IRAnimationTrack => ({

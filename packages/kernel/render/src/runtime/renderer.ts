@@ -1,9 +1,9 @@
 import type { ValueOf } from '@retikz/foundation';
-import type { ScenePatch } from '@retikz/reconciler';
 import type { ReconcilerPreparedCommit } from '@retikz/reconciler';
 
 import type { AnimationControls } from '../animation';
 import { isRetikzRenderError, RetikzRenderError, RetikzRenderErrorCode } from '../error';
+import type { ScenePatch } from '../scene';
 import type { RenderRuntimeConfig } from './config';
 import type { RenderFrameSnapshot } from './frame';
 

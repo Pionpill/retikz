@@ -1,12 +1,10 @@
 import type { Scene } from '@retikz/core';
+import type { CompileProvenanceSnapshot } from '@retikz/reconciler';
 
-import type { CompileProvenanceSnapshot } from '../compile/provenance';
-import { RetikzReconcilerError, RetikzReconcilerErrorCode } from '../error';
-import type { RuntimeScene, RuntimeScenePrimitive, SceneRuntimeNode, SceneRuntimeSnapshot } from '../scene';
+import { RetikzRenderError, RetikzRenderErrorCode } from '../error';
 import { CORE_SOURCE_KEY } from './constants';
-import { createPrimitiveIdentityIndex } from './identity';
-import { createSceneIdentity } from './identity-value';
-import type { SceneRevision } from './identity-value';
+import { createPrimitiveIdentityIndex, createSceneIdentity } from './identity';
+import type { RuntimeScene, RuntimeScenePrimitive, SceneRuntimeNode, SceneRuntimeSnapshot } from './types';
 
 /**
  * 递归冻结 Computation 新创建且尚未对外暴露的 plain output
@@ -36,8 +34,8 @@ const createFullTopology = (
     items.forEach((primitive, order) => {
       const record = metadata.get(primitive);
       if (record === undefined) {
-        throw new RetikzReconcilerError(
-          RetikzReconcilerErrorCode.Compile,
+        throw new RetikzRenderError(
+          RetikzRenderErrorCode.SceneTopologyInvalid,
           'createFullSceneRuntimeSnapshot: missing primitive identity',
         );
       }
@@ -64,7 +62,7 @@ const createFullTopology = (
 /** 把 full compile Scene 规范化为 Runtime snapshot */
 export const createFullSceneRuntimeSnapshot = (
   scene: Scene,
-  revision: SceneRevision,
+  revision: number,
   provenance: CompileProvenanceSnapshot,
 ): SceneRuntimeSnapshot => {
   const runtimeScene = freezeComputationOutput({

@@ -1,6 +1,83 @@
-import { assertNonEmptyString } from '@retikz/foundation';
+import { assertNonEmptyString, formatPropertyPath, readPropertyPath } from '@retikz/foundation';
+import type { PropertyPath } from '@retikz/foundation';
+import type { CompileNamespaceKey, CompileOwnerKey, CompileProvenanceSnapshot } from '@retikz/reconciler';
 
-import { RetikzReconcilerError, RetikzReconcilerErrorCode } from '../error';
+import { RetikzRenderError, RetikzRenderErrorCode } from '../error';
+import { CORE_SOURCE_KEY } from './constants';
+import type { RuntimeScenePrimitive } from './types';
+
+/** 从单次编译来源计算当前候选版本的图元身份 */
+export const createPrimitiveIdentityIndex = (
+  primitives: ReadonlyArray<RuntimeScenePrimitive>,
+  provenance: CompileProvenanceSnapshot,
+  revision: number,
+): WeakMap<
+  RuntimeScenePrimitive,
+  Readonly<{ identity: SceneIdentity; semanticOwner: SceneIdentity; primitivePath: PropertyPath }>
+> => {
+  const candidates = new Set<CompileOwnerKey>();
+  /** 每个作用域只记录名称的首次出现，遇到重复时将双方标为候选身份 */
+  const namespaces = new Map<CompileNamespaceKey, Map<string, CompileOwnerKey>>();
+  for (const [ownerKey, owner] of provenance.ownerMap) {
+    if (owner.id === undefined) continue;
+    let names = namespaces.get(owner.namespace);
+    if (names === undefined) {
+      names = new Map();
+      namespaces.set(owner.namespace, names);
+    }
+    const firstOwner = names.get(owner.id);
+    if (firstOwner === undefined) names.set(owner.id, ownerKey);
+    else {
+      candidates.add(firstOwner);
+      candidates.add(ownerKey);
+    }
+  }
+  const identities = new Map<CompileOwnerKey, SceneIdentity>();
+  const identityOf = (key: CompileOwnerKey): SceneIdentity => {
+    const cached = identities.get(key);
+    if (cached !== undefined) return cached;
+    const owner = provenance.ownerMap.get(key)!;
+    const parent = owner.parent === undefined ? undefined : identityOf(owner.parent);
+    const path =
+      parent === undefined
+        ? ['root']
+        : owner.generated || owner.id === undefined || candidates.has(key)
+          ? [...parent.path, 'candidate', String(revision), owner.kind, String(owner.index)]
+          : [...parent.path, owner.kind, owner.id];
+    const identity = createSceneIdentity(CORE_SOURCE_KEY, path);
+    identities.set(key, identity);
+    return identity;
+  };
+  const result = new WeakMap<
+    RuntimeScenePrimitive,
+    Readonly<{ identity: SceneIdentity; semanticOwner: SceneIdentity; primitivePath: PropertyPath }>
+  >();
+  const source = { primitives };
+  for (const [key, owner] of provenance.ownerMap) {
+    if (owner.emissions.length === 0) continue;
+    const semanticOwner = identityOf(key);
+    for (const emission of owner.emissions) {
+      const primitive = readPropertyPath(source, emission.primitivePath) as RuntimeScenePrimitive | undefined;
+      if (primitive === undefined) {
+        throw new RetikzRenderError(
+          RetikzRenderErrorCode.SceneTopologyInvalid,
+          `Missing provenance primitive at ${formatPropertyPath(emission.primitivePath)}`,
+        );
+      }
+      result.set(primitive, {
+        primitivePath: emission.primitivePath,
+        semanticOwner,
+        identity: createSceneIdentity(CORE_SOURCE_KEY, [
+          ...semanticOwner.path,
+          'emission',
+          emission.role,
+          String(emission.ordinal),
+        ]),
+      });
+    }
+  }
+  return result;
+};
 
 type IdentityTrieNode = Readonly<{
   terminal: boolean;
@@ -26,10 +103,10 @@ const assertValidIdentity = (owner: string, path: ReadonlyArray<string>): void =
 };
 
 /** 创建 Runtime identity contract 错误 */
-const identityError = (owner: string, cause?: unknown): RetikzReconcilerError =>
-  new RetikzReconcilerError({
-    code: RetikzReconcilerErrorCode.Contract,
-    message: `${RetikzReconcilerErrorCode.Contract}: invalid runtime identity for owner "${owner}"`,
+const identityError = (owner: string, cause?: unknown): RetikzRenderError =>
+  new RetikzRenderError({
+    code: RetikzRenderErrorCode.SceneIdentityInvalid,
+    message: `${RetikzRenderErrorCode.SceneIdentityInvalid}: invalid runtime identity for owner "${owner}"`,
     details: { owner },
     cause,
   });
@@ -67,7 +144,7 @@ const findTrieNode = (root: IdentityTrieNode, path: ReadonlyArray<string>): Iden
  * @param owner 所属来源的非空键
  * @param path 至少含一个非空字符串的路径；保留原始大小写与空白
  * @returns 复制并冻结路径后的身份对象
- * @throws {RetikzReconcilerError} owner 或路径不符合身份契约时抛出 IdentityInvalid
+ * @throws {RetikzRenderError} owner 或路径不符合身份契约时抛出 SceneIdentityInvalid
  */
 export const createSceneIdentity = (owner: string, path: ReadonlyArray<string>): SceneIdentity => {
   assertValidIdentity(owner, path);
@@ -90,7 +167,7 @@ export const sceneIdentityEquals = (left: SceneIdentity, right: SceneIdentity): 
  * @param owner 该查询表绑定的非空来源键
  * @param identities 属于同一来源且不重复的合法身份
  * @returns 复制并冻结身份后的查询表；values 按路径顺序返回副本
- * @throws {RetikzReconcilerError} owner 为空、身份归属不匹配或路径重复时抛出 IdentityInvalid
+ * @throws {RetikzRenderError} owner 为空、身份归属不匹配或路径重复时抛出 SceneIdentityInvalid
  */
 export const createSceneIdentityLookup = (
   owner: string,
@@ -139,6 +216,7 @@ export const createSceneIdentityLookup = (
 
 /** 跨提交稳定的 Scene 图元身份 */
 export type SceneIdentity = Readonly<{ owner: string; path: ReadonlyArray<string> }>;
+
 /** 经过唯一性校验的图元身份查询 */
 export type SceneIdentityLookup = Readonly<{
   owner: string;
@@ -146,5 +224,3 @@ export type SceneIdentityLookup = Readonly<{
   has: (identity: SceneIdentity) => boolean;
   values: () => ReadonlyArray<SceneIdentity>;
 }>;
-/** Scene 输出的会话内版本 */
-export type SceneRevision = number;

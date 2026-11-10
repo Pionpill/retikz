@@ -2,6 +2,8 @@ import type { SceneClipPath } from '@retikz/core';
 import { comparePropertyPaths, encodePropertyPath } from '@retikz/foundation';
 import { readPropertyPath } from '@retikz/foundation';
 import type { PropertyPath } from '@retikz/foundation';
+
+import { isRetikzRenderError, RetikzRenderError, RetikzRenderErrorCode } from '../error';
 import type {
   RuntimeScene,
   RuntimeScenePrimitive,
@@ -11,11 +13,9 @@ import type {
   SceneRuntimeSnapshot,
   SceneRuntimeSubtree,
   SceneRuntimeSubtreeNode,
-} from '@retikz/reconciler';
-import type { SceneIdentity } from '@retikz/reconciler';
-import { sceneIdentityEquals } from '@retikz/reconciler';
-
-import { isRetikzRenderError, RetikzRenderError, RetikzRenderErrorCode } from '../error';
+} from '../scene';
+import type { SceneIdentity } from '../scene';
+import { sceneIdentityEquals } from '../scene';
 import type { SceneIdentityMap } from './shared';
 import { createSceneIdentityMap, runtimeStructuralEquals } from './shared';
 

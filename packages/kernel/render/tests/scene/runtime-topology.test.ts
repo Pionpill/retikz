@@ -18,11 +18,11 @@ import {
 } from '@retikz/core';
 import type { AnyCompositeDefinition } from '@retikz/core';
 import { readPropertyPath } from '@retikz/foundation';
-import type { SceneIdentity, SceneRevision } from '@retikz/reconciler';
+import type { CompileOptions } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
-import type { CompileOptions } from '../../src/compile';
+import type { SceneIdentity } from '../../src/scene';
 import { createFullSceneRuntimeSnapshot } from '../../src/scene';
 import { compileTestResult, compileTestSnapshot } from '../helpers/compilation';
 
@@ -30,7 +30,7 @@ type PrimitiveRecords = WeakMap<ScenePrimitive, Readonly<{ identity: SceneIdenti
 const compileWithTopology = <const TComposite extends AnyCompositeDefinition>(
   ir: IRScene,
   options: CompileOptions<TComposite>,
-  execution: { candidateRevision: SceneRevision },
+  execution: { candidateRevision: number },
 ) => {
   const compiled = compileTestSnapshot(ir, options, { captureProvenance: true });
   if (compiled.provenance === undefined) throw new Error('Missing provenance');

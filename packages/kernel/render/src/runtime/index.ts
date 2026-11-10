@@ -1,9 +1,21 @@
 export * from '../error';
+export type {
+  RuntimeDeepReadonly,
+  RuntimeScene,
+  RuntimeScenePrimitive,
+  RuntimeSceneResource,
+  SceneIdentity,
+  ScenePatch,
+  ScenePatchOperation,
+  SceneRuntimeNode,
+  SceneRuntimeSnapshot,
+  SceneRuntimeSubtree,
+  SceneRuntimeSubtreeNode,
+} from '../scene';
 export * from '../trace';
 export * from './builtin';
 export * from './config';
 export * from './frame';
-
 export * from './readonly-layer';
 export type {
   DefineRetainedRenderer,
