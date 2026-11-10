@@ -1,3 +1,4 @@
+import { readFile, realpath } from 'node:fs/promises';
 import path from 'node:path';
 
 import tailwindcss from '@tailwindcss/vite';
@@ -11,6 +12,52 @@ import { resolveDocsPort } from '../dev-port';
 import { writeLlmsTxt } from './scripts/gen-llms-txt';
 
 const repoRoot = path.resolve(__dirname, '../..');
+
+/** 开发时按仓库相对路径提供源码文本，限制在包与应用的 src 目录 */
+const localSourcePlugin = (): Plugin => ({
+  name: 'docs-local-source',
+  apply: 'serve',
+  configureServer(server) {
+    server.middlewares.use('/__docs-source', (request, response) => {
+      const serveSource = async (): Promise<void> => {
+        response.setHeader('Cache-Control', 'no-store');
+        response.setHeader('Content-Type', 'text/plain; charset=utf-8');
+        if (request.method !== 'GET') {
+          response.statusCode = 405;
+          response.end('Method not allowed');
+          return;
+        }
+
+        const sourcePath = new URL(request.url ?? '/', 'http://localhost').searchParams.get('path') ?? '';
+        const isSourcePath = (value: string): boolean =>
+          /^(?:packages\/[^/]+\/[^/]+|apps\/[^/]+)\/src\/.+\.(?:ts|tsx|js|jsx|mjs|css|json|mdx?)$/.test(value) &&
+          value.split('/').every(part => !part.startsWith('.') && part !== 'node_modules') &&
+          !value.includes('\\');
+
+        if (!isSourcePath(sourcePath)) {
+          response.statusCode = 403;
+          response.end('Source path not allowed');
+          return;
+        }
+
+        try {
+          const root = await realpath(repoRoot);
+          const file = await realpath(path.resolve(root, sourcePath));
+          if (!isSourcePath(path.relative(root, file).split(path.sep).join('/'))) {
+            response.statusCode = 403;
+            response.end('Source path not allowed');
+            return;
+          }
+          response.end(await readFile(file, 'utf8'));
+        } catch {
+          response.statusCode = 404;
+          response.end('Source file unavailable');
+        }
+      };
+      void serveSource();
+    });
+  },
+});
 
 /** 读取当前工作区的 Docs 开发服务端口 */
 const readDocsPort = (mode: string): number => {
@@ -40,7 +87,13 @@ const llmsTxtPlugin = (): Plugin => ({
  */
 export default defineConfig(({ command, mode }) => ({
   base: command === 'build' ? '/retikz/' : '/',
-  plugins: [createRetikzDevPlugin(), react(), tailwindcss(), ...(mode === 'test' ? [] : [llmsTxtPlugin()])],
+  plugins: [
+    createRetikzDevPlugin(),
+    localSourcePlugin(),
+    react(),
+    tailwindcss(),
+    ...(mode === 'test' ? [] : [llmsTxtPlugin()]),
+  ],
   build: {
     rollupOptions: {
       output: {

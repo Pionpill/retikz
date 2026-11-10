@@ -133,7 +133,7 @@
     "pkgHydration": "水合",
     "pkgCoreCompilation": "编译流程",
     "pkgCoreResolution": "语义解析",
-    "pkgCoreCoordinates": "坐标与引用求值",
+    "pkgCoreCoordinates": "坐标求值",
     "pkgCoreNodeCompilation": "Node 编译",
     "pkgCorePathCompilation": "Path 编译",
     "pkgCoreCompositeCompilation": "Composite 编译",
@@ -182,8 +182,8 @@
     "visualCustomPattern": "自定义图案",
     "visualCustomShadow": "自定义阴影",
     "visualExtendedUsage": "扩展用法",
-    "pkgCoreDefinitions": "能力定义与注册",
-    "pkgCoreProviders": "提供者与依赖",
+    "pkgCoreDefinitions": "能力注册",
+    "pkgCoreProviders": "能力依赖",
     "pkgCoreScopeCompilation": "Scope 编译"
   },
   "library": {
@@ -543,9 +543,9 @@
   },
   "sourceViewer": {
     "title": "查看源码",
-    "description": "查看当前文档引用的 GitHub 源码",
-    "loading": "正在获取 GitHub 源码…",
-    "loadFailed": "源码暂时无法获取，请检查网络后重试。",
+    "description": "查看当前文档引用的源码",
+    "loading": "正在获取源码…",
+    "loadFailed": "源码加载失败，文件可能不存在或服务暂时不可用。",
     "retry": "重试",
     "showLineHighlight": "显示定位条",
     "hideLineHighlight": "隐藏定位条",

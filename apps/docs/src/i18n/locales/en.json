@@ -133,7 +133,7 @@
     "pkgHydration": "render · Hydration",
     "pkgCoreCompilation": "Compilation Flow",
     "pkgCoreResolution": "Semantic Resolution",
-    "pkgCoreCoordinates": "Coordinate and Reference Evaluation",
+    "pkgCoreCoordinates": "Coordinate Evaluation",
     "pkgCoreNodeCompilation": "Node Compilation",
     "pkgCorePathCompilation": "Path Compilation",
     "pkgCoreCompositeCompilation": "Composite Compilation",
@@ -182,8 +182,8 @@
     "visualCustomPattern": "Custom patterns",
     "visualCustomShadow": "Custom shadows",
     "visualExtendedUsage": "Extended usage",
-    "pkgCoreDefinitions": "Capability Definitions and Registration",
-    "pkgCoreProviders": "Providers and Dependencies",
+    "pkgCoreDefinitions": "Capability Registration",
+    "pkgCoreProviders": "Capability Dependencies",
     "pkgCoreScopeCompilation": "Scope Compilation"
   },
   "library": {
@@ -543,9 +543,9 @@
   },
   "sourceViewer": {
     "title": "View source",
-    "description": "View the GitHub source cited by this document",
-    "loading": "Loading GitHub source…",
-    "loadFailed": "The source is temporarily unavailable. Check your connection and try again.",
+    "description": "View the source cited by this document",
+    "loading": "Loading source…",
+    "loadFailed": "Could not load the source. The file may not exist or the service may be unavailable.",
     "retry": "Retry",
     "showLineHighlight": "Show line highlight",
     "hideLineHighlight": "Hide line highlight",
