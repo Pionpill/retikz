@@ -1,8 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
 
-/** Kernel 编译产物的 Runtime owner key */
-export const CORE_SOURCE_KEY = 'kernel' as const;
-
 /** 会话是否保留可供后续批次复用的编译状态，不表示当前调用的实际计算量 */
 export const ReconcilerMode = {
   /** 完整编译，不跨次保留 Weave 缓存 */

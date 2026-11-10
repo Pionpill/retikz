@@ -1,7 +1,7 @@
 import type { IRScene } from '@retikz/core';
 import { describe, expect, it, vi } from 'vitest';
 
-import { SceneReconciler } from '../../src/reconciler';
+import { SceneReconciler } from '../../src/reconcile';
 import { compileTestResult } from '../helpers/compilation';
 
 const scene: IRScene = { type: 'scene', version: 1, children: [{ type: 'node', id: 'a', position: [0, 0] }] };

@@ -1,7 +1,7 @@
 import type { AnyCompositeDefinition } from '@retikz/core';
 import type { PerformanceTraceSink } from '@retikz/foundation';
 
-import type { ExecuteOptions, SceneCompilationSnapshot } from './compile';
+import type { ExecuteOptions, SceneCompilationSnapshot } from '../compile';
 import type { ReconcilerUpdateStrategy } from './constants';
 
 /** 同一会话发布的完整编译结果 */

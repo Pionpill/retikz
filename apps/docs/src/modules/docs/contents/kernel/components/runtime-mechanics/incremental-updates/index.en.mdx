@@ -36,7 +36,7 @@ This path does not use the generic Runtime package's Source / Computation regist
       label: 'Controller and session integration',
       path: 'packages/kernel/vanilla/src/processing/internal/controller.ts',
     },
-    { label: 'Replacement and configuration updates', path: 'packages/kernel/reconciler/src/reconciler.ts' },
+    { label: 'Replacement and configuration updates', path: 'packages/kernel/reconciler/src/reconcile/reconciler.ts' },
   ]}
 />
 
@@ -60,7 +60,7 @@ Batches recompute affected elements from final inputs and reuse valid products. 
 
 <SourceLinks
   sources={[
-    { label: 'Session batches and version constraints', path: 'packages/kernel/reconciler/src/reconciler.ts' },
+    { label: 'Session batches and version constraints', path: 'packages/kernel/reconciler/src/reconcile/reconciler.ts' },
     {
       label: 'Element scheduling and dependency invalidation',
       path: 'packages/kernel/reconciler/src/weave/manager.ts',
@@ -98,7 +98,7 @@ Warning callbacks, tracing and commit-token cleanup failures after publication a
 
 <SourceLinks
   sources={[
-    { label: 'Publication, rollback and broken state', path: 'packages/kernel/reconciler/src/reconciler.ts' },
+    { label: 'Publication, rollback and broken state', path: 'packages/kernel/reconciler/src/reconcile/reconciler.ts' },
     { label: 'Host state recovery', path: 'packages/kernel/render/src/runtime/target.ts' },
     { label: 'React retains successful results', path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx' },
   ]}

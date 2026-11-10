@@ -1,10 +1,13 @@
 import type { AnyCompositeDefinition, IRScene } from '@retikz/core';
 import { RetikzError } from '@retikz/foundation';
 
-import type { CompileOptions } from './compile';
-import { formatCompileWarning } from './compile';
-import { createCompileRuntime } from './compile/runtime';
-import { CompileManager } from './compile/tree';
+import type { CompileOptions } from '../compile';
+import { formatCompileWarning } from '../compile';
+import { createCompileRuntime } from '../compile/runtime';
+import { CompileManager } from '../compile/tree';
+import { RetikzReconcilerError, RetikzReconcilerErrorCode } from '../error';
+import type { WeaveBatch, WeavePreparedUpdate } from '../weave';
+import { WeaveManager } from '../weave';
 import {
   ReconcilerLifecyclePhase,
   ReconcilerMode,
@@ -12,21 +15,24 @@ import {
   ReconcilerTraceUnit,
   ReconcilerUpdateStrategy,
 } from './constants';
-import { RetikzReconcilerError, RetikzReconcilerErrorCode } from './error';
 import type { ReconcilerPreparedCommit, ReconcilerResult, SceneReconcilerOptions } from './types';
-import type { WeaveBatch, WeavePreparedUpdate } from './weave';
-import { WeaveManager } from './weave';
 
 /** 同步协调编译与一个输出目标，不依赖 DOM 或 Runtime 注册图 */
 export class SceneReconciler<const TComposite extends AnyCompositeDefinition = never> {
-  private targetDisposed = false;
-  /** 已挂载会话等待成功清理的观测记录，清理失败时保留以供重试 */
-  private pendingUnmount = false;
   private current: ReconcilerResult<TComposite> | undefined;
   private weave: WeaveManager<TComposite> | undefined;
   private status: ReconcilerStatus = ReconcilerStatus.Idle;
+  /** 输出目标清理是否已成功完成；无清理回调也视为完成，失败时保持 false 以允许重试 */
+  private targetDisposed = false;
+  /** 已挂载会话等待成功清理的观测记录，清理失败时保留以供重试 */
+  private pendingUnmount = false;
   /** 已隔离的观察或资源释放异常，读取后清空 */
   private readonly diagnosticQueue: Array<unknown> = [];
+
+  /** 从当前执行选项读取模式，不重复保存派生状态 */
+  private get mode(): ReconcilerMode {
+    return this.execution.incremental === false ? ReconcilerMode.Full : ReconcilerMode.Incremental;
+  }
 
   constructor(
     private options: CompileOptions<TComposite> = {},
@@ -46,23 +52,30 @@ export class SceneReconciler<const TComposite extends AnyCompositeDefinition = n
     const phase = this.current === undefined ? ReconcilerLifecyclePhase.Mount : ReconcilerLifecyclePhase.Update;
     this.status = ReconcilerStatus.Preparing;
     try {
-      const weave = this.mode === ReconcilerMode.Full ? undefined : new WeaveManager(source, options, this.execution);
-      const prepared = weave?.mount();
-      const compilation =
-        prepared?.compilation ??
-        new CompileManager(createCompileRuntime(source, options, this.execution)).compileScene<TComposite>(source);
+      let weave: WeaveManager<TComposite> | undefined;
+      let compilation: ReconcilerResult<TComposite>['compilation'];
+      let traceUnit: ReconcilerTraceUnit;
+      let visited: number;
+      if (this.mode === ReconcilerMode.Full) {
+        compilation = new CompileManager(
+          createCompileRuntime(source, options, this.execution),
+        ).compileScene<TComposite>(source);
+        traceUnit = ReconcilerTraceUnit.SceneCompile;
+        visited = 1;
+      } else {
+        weave = new WeaveManager(source, options, this.execution);
+        const prepared = weave.mount();
+        compilation = prepared.compilation;
+        traceUnit = ReconcilerTraceUnit.ElementCompile;
+        visited = prepared.visited;
+      }
       const candidate: ReconcilerResult<TComposite> = {
         revision: this.nextRevision(),
         compilation,
       };
       const published = this.publish(candidate, weave, undefined, options);
       this.options = options;
-      this.reportTrace(
-        phase,
-        'full',
-        prepared === undefined ? ReconcilerTraceUnit.SceneCompile : ReconcilerTraceUnit.ElementCompile,
-        prepared?.visited ?? 1,
-      );
+      this.reportTrace(phase, 'full', traceUnit, visited);
       return published;
     } catch (cause) {
       if (cause instanceof RetikzError) throw cause;
@@ -286,10 +299,5 @@ export class SceneReconciler<const TComposite extends AnyCompositeDefinition = n
 
   private contractError(message: string): RetikzReconcilerError {
     return new RetikzReconcilerError(RetikzReconcilerErrorCode.Contract, message);
-  }
-
-  /** 从当前执行选项读取模式，不重复保存派生状态 */
-  private get mode(): ReconcilerMode {
-    return this.execution.incremental === false ? ReconcilerMode.Full : ReconcilerMode.Incremental;
   }
 }

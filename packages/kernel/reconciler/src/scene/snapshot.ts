@@ -1,9 +1,9 @@
 import type { Scene } from '@retikz/core';
 
 import type { CompileProvenanceSnapshot } from '../compile/provenance';
-import { CORE_SOURCE_KEY } from '../constants';
 import { RetikzReconcilerError, RetikzReconcilerErrorCode } from '../error';
 import type { RuntimeScene, RuntimeScenePrimitive, SceneRuntimeNode, SceneRuntimeSnapshot } from '../scene';
+import { CORE_SOURCE_KEY } from './constants';
 import { createPrimitiveIdentityIndex } from './identity';
 import { createSceneIdentity } from './identity-value';
 import type { SceneRevision } from './identity-value';

@@ -1,8 +1,8 @@
 export * from './compile';
-export { CORE_SOURCE_KEY, ReconcilerLifecyclePhase, ReconcilerTraceUnit, ReconcilerUpdateStrategy } from './constants';
 export * from './error';
-export * from './reconciler';
+export * from './reconcile';
 export {
+  CORE_SOURCE_KEY,
   createFullSceneRuntimeSnapshot,
   createSceneIdentity,
   createSceneIdentityLookup,
@@ -23,6 +23,5 @@ export type {
   SceneRuntimeSubtree,
   SceneRuntimeSubtreeNode,
 } from './scene';
-export type * from './types';
 export { WeaveOperationKind } from './weave';
 export type { WeaveBatch, WeaveOperation, WeaveTarget } from './weave';

@@ -33,7 +33,7 @@ React 将组件声明转换为 `InputScene`，Vanilla 再归一化为 `IRScene`�
   sources={[
     { label: '输入准备', path: 'packages/kernel/vanilla/src/processing/prepare.ts' },
     { label: '控制器与会话接线', path: 'packages/kernel/vanilla/src/processing/internal/controller.ts' },
-    { label: '完整替换与配置更新', path: 'packages/kernel/reconciler/src/reconciler.ts' },
+    { label: '完整替换与配置更新', path: 'packages/kernel/reconciler/src/reconcile/reconciler.ts' },
   ]}
 />
 
@@ -57,7 +57,7 @@ Weave 保存输入、上下文、编译状态和依赖。`SceneReconciler.update
 
 <SourceLinks
   sources={[
-    { label: '会话批次与版本约束', path: 'packages/kernel/reconciler/src/reconciler.ts' },
+    { label: '会话批次与版本约束', path: 'packages/kernel/reconciler/src/reconcile/reconciler.ts' },
     { label: '元素调度与依赖失效', path: 'packages/kernel/reconciler/src/weave/manager.ts' },
     { label: '候选状态隔离与恢复', path: 'packages/kernel/reconciler/src/weave/transaction.ts' },
   ]}
@@ -92,7 +92,7 @@ React Layout 先订阅成功发布的 `ProcessingResult`，再构建宿主输出
 
 <SourceLinks
   sources={[
-    { label: '发布、回滚与 broken 边界', path: 'packages/kernel/reconciler/src/reconciler.ts' },
+    { label: '发布、回滚与 broken 边界', path: 'packages/kernel/reconciler/src/reconcile/reconciler.ts' },
     { label: '宿主状态恢复', path: 'packages/kernel/render/src/runtime/target.ts' },
     { label: 'React 保留成功结果', path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx' },
   ]}
