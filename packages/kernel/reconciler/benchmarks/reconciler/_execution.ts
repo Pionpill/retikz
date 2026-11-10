@@ -3,6 +3,8 @@ import type { CompileOptions, CompileResult } from '@retikz/reconciler';
 import { SceneReconciler } from '@retikz/reconciler';
 import { expect } from 'vitest';
 
+import type { BenchmarkExecution } from '../../../../../scripts/benchmarks/scenario';
+
 /** 真实协调器输入及独立的计时外输出断言 */
 export type ReconcilerBenchmarkWorkload = {
   ir: IRScene;
@@ -67,32 +69,44 @@ export const createBenchmarkWorkload = (
   };
 };
 
-/** 创建一次完整执行的采样回调；每个样本新建协调器，不跨样本保存缓存 */
-export const createReconcilerBenchmark = (workload: ReconcilerBenchmarkWorkload) => {
+/** 专项使用固定字体度量，避免宿主字体和异步资源影响比较 */
+export const benchmarkCompileOptions: CompileOptions<never> = {
+  measureText: (text, font) => ({
+    width: (text.length * font.size) / 2,
+    height: font.size,
+    ascent: font.size * 0.8,
+    descent: font.size * 0.2,
+  }),
+};
+
+/** 首次编译计时包含创建与 mount；每个样本之后在计时外释放 */
+export const createReconcilerBenchmark = (
+  workload: ReconcilerBenchmarkWorkload,
+  incremental: boolean,
+  compileOptions: CompileOptions<never> = benchmarkCompileOptions,
+): BenchmarkExecution<CompileResult> => {
   let warningCount = 0;
-  const options: CompileOptions = {
-    measureText: (text, font) => ({
-      width: (text.length * font.size) / 2,
-      height: font.size,
-      ascent: font.size * 0.8,
-      descent: font.size * 0.2,
-    }),
+  const options: CompileOptions<never> = {
+    ...compileOptions,
     onWarn: () => {
       warningCount++;
     },
   };
+  let reconciler: SceneReconciler | undefined;
+  const dispose = () => {
+    reconciler?.dispose();
+    reconciler = undefined;
+  };
   return {
     run: (): CompileResult => {
-      const reconciler = new SceneReconciler(options, { incremental: false });
-      try {
-        return reconciler.mount(workload.ir).compilation.result;
-      } finally {
-        reconciler.dispose();
-      }
+      reconciler = new SceneReconciler(options, incremental ? { incremental: true } : { incremental: false });
+      return reconciler.mount(workload.ir).compilation.result;
     },
     verify: (result: CompileResult): void => {
       expect(warningCount).toBe(0);
       workload.verify(result);
     },
+    afterEach: dispose,
+    dispose,
   };
 };

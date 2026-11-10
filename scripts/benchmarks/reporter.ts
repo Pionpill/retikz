@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises';
+import { appendFile, readFile } from 'node:fs/promises';
 import { basename, join, resolve } from 'node:path';
 
 import type { SerializedError } from 'vitest';
@@ -105,6 +105,7 @@ export class BenchmarkReporter implements Reporter {
       })),
     };
     const directory = await writeReport(join(this.root, '_notes', 'reports', 'benchmarks'), report, this.options.title);
+    if (this.options.appendix) await appendFile(join(directory, 'report.md'), this.options.appendix(report), 'utf8');
     console.log(`Benchmark reports: ${directory}`);
     for (const { id, assessment } of report.scenarios) {
       if (assessment.status === 'exceeded' || assessment.status === 'not-comparable') {

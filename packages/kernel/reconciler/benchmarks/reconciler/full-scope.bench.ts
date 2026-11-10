@@ -6,10 +6,13 @@ for (const { kind, label } of scopeBenchmarkCases) {
   for (const count of [100, 1000]) {
     const size =
       kind === 'empty'
-        ? `${count} 空 Scope，无叶元素`
+        ? `${count} 空 Scope`
         : `${kind === 'paths' ? 0 : count} 节点＋${kind === 'paths' || kind === 'mixed' ? count : 0} 路径`;
-    defineBenchmark({ id: `reconciler/scope/${kind}/${count}`, dimensions: ['Scope 完整编译', label, size] }, () =>
-      createReconcilerBenchmark(createScopeWorkload(kind, count)),
+    defineBenchmark(
+      { id: `reconciler/full/scope/${kind}/${count}`, dimensions: ['非增量全量', 'scope', label, size, '首次编译'] },
+      () => createReconcilerBenchmark(createScopeWorkload(kind, count), false),
+      false,
+      600_000,
     );
   }
 }
