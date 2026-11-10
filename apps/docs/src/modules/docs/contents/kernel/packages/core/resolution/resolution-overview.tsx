@@ -45,7 +45,7 @@ const ResolutionOverview: FC<ResolutionOverviewProps> = props => {
             id,
             role: 'state',
             text: text[id],
-            layout: { width: 180 },
+            layout: { width: id === 'source' || id === 'canonical' ? 200 : 180 },
             ...(id === 'canonical' ? { kind: 'docs.logic.importantData' } : {}),
           }))}
         />

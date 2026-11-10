@@ -15,12 +15,12 @@ const CompositeOverview: FC<CompositeOverviewProps> = props => {
   const { lang = 'zh' } = props;
   const text = compositeOverviewI18n[lang];
   const stages = [
-    { id: 'bind', name: 'IRComposite → definition', state: false },
-    { id: 'callback', name: 'Reconciler · compile callback', state: false },
-    { id: 'children', name: 'Children / selected replay', state: false },
+    { id: 'bind', name: 'CompositeResolution', state: true },
+    { id: 'callback', name: 'CompositeDefinition.compile', state: false },
+    { id: 'children', name: 'CompositeCompileResult', state: true },
     { id: 'output', name: 'Scene contribution + artifact', state: true },
   ] as const;
-  const inputs = [{ id: 'probe', name: 'Isolated child evaluation', target: 'callback' }] as const;
+  const inputs = [{ id: 'probe', name: 'CompositeCompileContext', target: 'callback' }] as const;
   return (
     <PreviewFlowDiagram {...logicFigureGraphProps()} style={{ maxWidth: '100%', height: 'auto' }}>
       <FlowLayout
@@ -60,12 +60,10 @@ const CompositeOverview: FC<CompositeOverviewProps> = props => {
       </FlowLayout>
       <FlowRelations
         items={[
-          ...stages
-            .slice(1)
-            .map((item, index) => ({
-              source: { id: stages[index].id, anchor: 'bottom' as const },
-              target: { id: item.id, anchor: 'top' as const },
-            })),
+          ...stages.slice(1).map((item, index) => ({
+            source: { id: stages[index].id, anchor: 'bottom' as const },
+            target: { id: item.id, anchor: 'top' as const },
+          })),
           ...inputs.map(item => ({
             source: { id: item.id, anchor: 'right' as const },
             target: { id: item.target, anchor: 'left' as const },

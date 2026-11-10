@@ -100,7 +100,7 @@ Core 的阶段接收当前操作需要的输入与能力上下文，返回对应
 
 ## 阅读顺序
 
-本系列先从语义解析讲起：IR 如何定义、字段描述如何表达含义，以及 resolve 如何将声明确定为内部消费形态。接着介绍能力定义与注册，说明内置和自定义实现如何参与。最后沿 Scope、Node、坐标引用、Path 与 Composite 展开编译过程，追踪到输出契约。
+本系列先从语义解析讲起：IR 如何定义、字段描述如何表达含义，以及 resolve 如何将声明确定为内部消费形态。接着介绍能力注册，说明内置和自定义实现如何参与。最后沿坐标求值、Node、Path、Scope 与 Composite 展开编译过程，追踪到输出契约。
 
 下面列出当前已有的专题入口；各页的内部处理顺序由其所需的上下文和依赖决定。
 
@@ -110,24 +110,24 @@ Core 的阶段接收当前操作需要的输入与能力上下文，返回对应
   items={[
     { title: '语义解析', description: '理解 IR、Schema 与声明确定化', url: '/kernel/packages/core/resolution' },
     {
-      title: '能力定义与注册',
+      title: '能力注册',
       description: '理解能力契约、注册键与统一消费',
       url: '/kernel/packages/core/definitions',
     },
     {
-      title: '提供者与依赖',
+      title: '能力依赖',
       description: '理解提供者贡献、依赖闭包与内置能力',
       url: '/kernel/packages/core/providers',
     },
-    { title: '编译流程', description: '追踪阶段依赖与 Reconciler 调度', url: '/kernel/packages/core/compilation' },
+    { title: '编译流程', description: '衔接 resolve、compile 与实体依赖', url: '/kernel/packages/core/compilation' },
+    { title: '坐标求值', description: '追踪引用读取与空间求值', url: '/kernel/packages/core/coordinates' },
+    { title: 'Node 编译', description: '追踪文字度量、形状布局与图元', url: '/kernel/packages/core/node-compilation' },
+    { title: 'Path 编译', description: '追踪目标绑定、路径几何与装饰', url: '/kernel/packages/core/path-compilation' },
     {
       title: 'Scope 编译',
       description: '追踪继承、子项布局与局部变换',
       url: '/kernel/packages/core/scope-compilation',
     },
-    { title: 'Node 编译', description: '追踪文字度量、形状布局与图元', url: '/kernel/packages/core/node-compilation' },
-    { title: '坐标与引用求值', description: '追踪引用读取与空间求值', url: '/kernel/packages/core/coordinates' },
-    { title: 'Path 编译', description: '追踪目标绑定、路径几何与装饰', url: '/kernel/packages/core/path-compilation' },
     {
       title: 'Composite 编译',
       description: '追踪子项生成、布局协作与领域产物',

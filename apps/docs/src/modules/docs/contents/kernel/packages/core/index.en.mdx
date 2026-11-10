@@ -100,7 +100,7 @@ Each Core stage accepts the inputs and capability context needed for its operati
 
 ## Reading order
 
-The series begins with semantic resolution: how IR is defined, how field descriptions express meaning, and how resolve turns declarations into an internal form. Capability definitions and registration then explain how built-in and custom implementations participate. Compilation topics follow Scope, Node, coordinate references, Path and Composite through to the output contracts.
+The series begins with semantic resolution: how IR is defined, how field descriptions express meaning, and how resolve turns declarations into an internal form. Capability definitions and registration then explain how built-in and custom implementations participate. Compilation topics follow coordinate evaluation, Node, Path, Scope and Composite through to the output contracts.
 
 The existing topic pages are listed below. Within each process, execution order depends on the context and dependencies it requires.
 
@@ -114,24 +114,24 @@ The existing topic pages are listed below. Within each process, execution order 
       url: '/kernel/packages/core/resolution',
     },
     {
-      title: 'Capability Definitions and Registration',
+      title: 'Capability Registration',
       description: 'Follow capability contracts, keys and consumers',
       url: '/kernel/packages/core/definitions',
     },
     {
-      title: 'Providers and Dependencies',
+      title: 'Capability Dependencies',
       description: 'Follow provider contributions, dependencies and built-ins',
       url: '/kernel/packages/core/providers',
     },
     {
       title: 'Compilation Flow',
-      description: 'Follow stage dependencies and Reconciler scheduling',
+      description: 'Connect resolve, compile and entity dependencies',
       url: '/kernel/packages/core/compilation',
     },
     {
-      title: 'Scope Compilation',
-      description: 'Follow inheritance, child layout and local transforms',
-      url: '/kernel/packages/core/scope-compilation',
+      title: 'Coordinate Evaluation',
+      description: 'Follow reference reads and spatial evaluation',
+      url: '/kernel/packages/core/coordinates',
     },
     {
       title: 'Node Compilation',
@@ -139,14 +139,14 @@ The existing topic pages are listed below. Within each process, execution order 
       url: '/kernel/packages/core/node-compilation',
     },
     {
-      title: 'Coordinate and Reference Evaluation',
-      description: 'Follow reference reads and spatial evaluation',
-      url: '/kernel/packages/core/coordinates',
-    },
-    {
       title: 'Path Compilation',
       description: 'Follow target binding, path geometry and decorations',
       url: '/kernel/packages/core/path-compilation',
+    },
+    {
+      title: 'Scope Compilation',
+      description: 'Follow inheritance, child layout and local transforms',
+      url: '/kernel/packages/core/scope-compilation',
     },
     {
       title: 'Composite Compilation',

@@ -3,7 +3,7 @@ title: Compilation Output
 description: Separate Core drawing contracts, Reconciler snapshot assembly, domain artifacts and renderer consumption
 ---
 
-Atomic stage results are not arbitrary objects to hand directly to a renderer. Core defines primitives, resources and bounds calculations. Reconciler collects subtree contributions, finishes deferred paths and sorting, assembles Scene and associated results, then publishes through the session commit protocol.
+Core defines primitives, resources and bounds calculations. Reconciler collects subtree contributions, finishes deferred paths and sorting, assembles Scene and associated results, then publishes through the session commit protocol.
 
 ## Overall Flow
 
@@ -33,7 +33,7 @@ try {
 }
 ```
 
-This is Reconciler's public result, not a separate global compile API in Core. Vanilla convenience processing can manage an internal coordinator's lifetime. Read each entry's return value through its owning package contract.
+This is Reconciler's public result. Vanilla convenience processing can manage an internal coordinator's lifetime. Read each entry's return value through its owning package contract.
 
 ## Scene Is Laid-Out, Backend-Neutral Drawing
 
@@ -47,7 +47,7 @@ Scene.primitives is ordered for drawing. Layout contains x / y / width / height;
 | PathPrimitive    | Structured commands, paint and decoration data                 |
 | GroupPrimitive   | Children, shared transforms, clipping, identity and animations |
 
-These contracts hold drawing semantics for multiple backends, not DOM, Canvas contexts or SVG-only callbacks. Structured marker data can still carry endpoint decoration; the renderer does not re-resolve an authored Arrow Definition.
+These contracts hold drawing semantics for multiple backends, not DOM, Canvas contexts or SVG-only callbacks. Structured marker data can still carry endpoint decoration.
 
 ## Group Coordinates and Query Geometry
 
@@ -73,11 +73,11 @@ Resource ids associate references and definitions in a Scene rather than providi
 
 ## Layout and the Different Bounds
 
-A Scope envelope serves connection and placement. Composite allocationBounds serves parent layout. VisualBounds conservatively encloses the static primitive tree. Scene.layout applies viewport policy to compilation output bounds. These are not interchangeable dimensions.
+A Scope envelope serves connection and placement. Composite allocationBounds serves parent layout. VisualBounds conservatively encloses the static primitive tree. Scene.layout applies viewport policy to compilation output bounds.
 
 Without viewBox, collected layout contributions are processed by Core bounds helpers, expanded by padding and rounded. Padding defaults to 10. No bounds produces the default canvas x=0, y=0, width=100, height=100. An explicit viewBox directly determines layout and must retain finite coordinates and positive dimensions after rounding.
 
-The A/B example contributes x=-30 through 210 and y=-20 through 20. Default padding gives `{ x: -40, y: -30, width: 260, height: 60 }`. Labels, shadows and decorations can affect output contributions, so node centers alone cannot determine the canvas.
+The A/B example contributes x=-30 through 210 and y=-20 through 20. Default padding gives `{ x: -40, y: -30, width: 260, height: 60 }`. Labels, shadows and decorations can affect output contributions.
 
 ## Artifacts, Diagnostics and Provenance
 

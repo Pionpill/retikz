@@ -3,15 +3,28 @@ title: Path Compilation
 description: Follow target binding, Path Definitions and built-in stroke through geometry, arrows, marks, labels and output
 ---
 
-A Path declares how to generate a route, rather than merely storing an SVG d string. Core resolves its definition and semantics, binds targets when references are ready, then calls the selected Definition. Built-in stroke uses standard geometry and decoration stages; custom kinds use the same host contract.
+Positions from [Coordinate Evaluation](/kernel/packages/core/coordinates) and boundaries from [Node Compilation](/kernel/packages/core/node-compilation) let a Path determine its targets and connection points. Core resolves the path definition and semantics, binds targets when references are ready, then calls the selected Definition. Built-in stroke uses standard geometry, decoration and output stages; custom kinds use the same host contract.
 
 ## Overall Flow
 
-Reconciler saves a path and its context during traversal, deferring execution until references are readable. Core's compilePath binds targets and invokes the Definition. Reconciler fills its output slot with the returned primitives and bounds.
+A path resolves to <ApiSourceLink label="PathResolution" path="packages/kernel/core/src/resolve/path/types.ts" startLine={275}>`PathResolution`</ApiSourceLink>, containing <ApiSourceLink label="CanonicalPath" path="packages/kernel/core/src/resolve/path/types.ts" startLine={149}>`CanonicalPath`</ApiSourceLink>. Compilation binds targets and invokes the definition to produce <ApiSourceLink label="CompiledPath" path="packages/kernel/core/src/compile/path/types.ts" startLine={37}>`CompiledPath`</ApiSourceLink>. Built-in stroke computes geometry and decorations within that invocation.
 
-<ComponentPreview files="path-overview" size="lg" hideCode type="flow" />
+<ComponentPreview files="path-flow" size="lg" hideCode type="flow" />
 
-## Following A to B
+## Input Contract
+
+The type <ApiSourceLink label="PathSchema" path="packages/kernel/core/src/schemas/path/path.ts" startLine={121}>`PathSchema`</ApiSourceLink> defines common fields. `kind` selects a <ApiSourceLink label="PathDefinition" path="packages/kernel/core/src/contract/path/path.ts" startLine={153}>`PathDefinition`</ApiSourceLink>, defaulting to `stroke`. The selected definition's schema describes the complete input; the built-in <ApiSourceLink label="StrokePathSchema" path="packages/kernel/core/src/schemas/path/path.ts" startLine={132}>`StrokePathSchema`</ApiSourceLink> requires `children`, whose steps produce the geometry.
+
+| Schema / field                                                                                                                                                         | Input forms                                                                                             | Effect on later processing                                                                                                               |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `StepSchema` / `children`                                                                                                                                              | move, line, fold, curve, bend, smooth, arc, rectangle, circlePath, ellipsePath, cycle and related steps | Branches update cursors, control points or subpaths; labels and marks sample the resulting geometry                                      |
+| <ApiSourceLink label="TargetSchema" path="packages/kernel/core/src/schemas/path/target.ts" startLine={21}>`TargetSchema`</ApiSourceLink>                               | Cartesian, polar, node, relative, relativeAccumulate, offset and between: seven forms                   | Numeric targets yield points; node targets need references and boundaries; the relative forms update the reference cursor differently    |
+| `arrow` / <ApiSourceLink label="PathArrowSchema" path="packages/kernel/core/src/schemas/path/arrow.ts" startLine={47}>`PathArrowSchema`</ApiSourceLink>                | `start` and `end` arrow configurations                                                                  | Resolution binds arrow definitions and contact dimensions; compilation shortens the line body                                            |
+| `marks` / <ApiSourceLink label="PathMarkPlacementSchema" path="packages/kernel/core/src/schemas/path/mark.ts" startLine={54}>`PathMarkPlacementSchema`</ApiSourceLink> | Along-path mark array                                                                                   | Resolution binds mark capabilities and sizes; compilation places them using position, tangent and rotation                               |
+| `label` / <ApiSourceLink label="PathLabelSchema" path="packages/kernel/core/src/schemas/path/label.ts" startLine={32}>`PathLabelSchema`</ApiSourceLink>                | One or more host labels, plus step labels                                                               | Resolution determines text and placement defaults; compilation samples the relevant path or step, producing gaps for interrupting labels |
+| `kindOptions`                                                                                                                                                          | Custom definition JSON options                                                                          | The selected schema interprets them for its compile callback; built-in stroke consumes steps                                             |
+
+The following stroke from A to B provides a concrete example.
 
 The running example has 60 × 40 rectangular nodes centered at [0, 0] and [180, 0], with zero margin. A move to A and line to B first read centers and geometry. Stroke then intersects connection surfaces in the segment direction, producing [30, 0] → [150, 0].
 
@@ -29,30 +42,98 @@ This separate comparison uses circles: the left path connects center coordinates
 
 <ComponentPreview files="path-example" size="lg" hideCode type="illustration" />
 
-## Semantic Resolution and Target Binding
+## Resolution
 
-`resolvePath` first merges inheritance and processes contextual colors, then selects a Path Definition by kind and parses the effective input through its full Schema. An omitted kind selects stroke. Resolution then completes the remaining Canonical fields, text, resources and capability bindings. PathResolution retains canon, the definition and required provider bindings; it is not yet a command list.
+The function <ApiSourceLink label="resolvePath" path="packages/kernel/core/src/resolve/path/resolve.ts" startLine={417}>`resolvePath`</ApiSourceLink> returns <ApiSourceLink label="PathResolution" path="packages/kernel/core/src/resolve/path/types.ts" startLine={275}>`PathResolution`</ApiSourceLink>: `canon` is a <ApiSourceLink label="CanonicalPath" path="packages/kernel/core/src/resolve/path/types.ts" startLine={149}>`CanonicalPath`</ApiSourceLink>, `definition` is the selected path capability, and `stroke` optionally retains arrow and mark bindings. These are the complete declarations, with source comments omitted.
 
-`bindPathTargets` reads local points and world references under the current Scope chain, preserving geometry and boundary information. Relative and accumulating-relative targets update their bases differently. Expressions after axis-aligned or smooth steps may need the geometry cursor and cannot all be expanded during binding.
+```ts
+export type CanonicalPath = Omit<
+  Omit<PathColorSource, 'style'> & NonNullable<PathColorSource['style']>,
+  'children' | 'label' | 'shadow' | 'fill' | 'stroke' | 'strokeWidth' | 'opacity'
+> &
+  Required<GraphicOpacityResolution> &
+  Required<
+    Pick<
+      NonNullable<PathColorSource['style']>,
+      'fillRule' | 'dashPattern' | 'dashOffset' | 'lineCap' | 'lineJoin' | 'blendMode'
+    >
+  > & {
+    strokeEnabled: boolean;
+    kind: string;
+    strokeWidth: number;
+    fill?: InputPaintResolution;
+    stroke?: InputPaintResolution;
+    children?: Array<CanonicalPathStep>;
+    label?: Array<CanonicalPathLabel>;
+    shadow?: CanonicalDropShadow;
+  };
+
+export type PathResolution = Readonly<{
+  stroke?: Pick<StrokePathResolution, 'arrows' | 'marks'>;
+  irPath: PropertyPath;
+  canon: CanonicalPath;
+  definition: AnyPathDefinition;
+}>;
+```
+
+Resolution merges `scopeDefaults` and resolves contextual colors. <ApiSourceLink label="resolvePathDefinition" path="packages/kernel/core/src/resolve/path/provider.ts" startLine={27}>`resolvePathDefinition`</ApiSourceLink> then selects the definition by `kind` and parses its complete input. The resolver flattens style into <ApiSourceLink label="CanonicalPath" path="packages/kernel/core/src/resolve/path/types.ts" startLine={149}>`CanonicalPath`</ApiSourceLink>, fills stroke, opacity, step and label defaults, and resolves paints and text blocks. Built-in stroke also calls <ApiSourceLink label="resolveStrokePathProviders" path="packages/kernel/core/src/resolve/path/provider.ts" startLine={108}>`resolveStrokePathProviders`</ApiSourceLink> to bind endpoint arrows and along-path marks.
+
+The type <ApiSourceLink label="PathResolveContext" path="packages/kernel/core/src/resolve/path/types.ts" startLine={249}>`PathResolveContext`</ApiSourceLink> provides path, arrow, mark and pattern registries, theme mode, root font size, math gating and diagnostics. Label presets become numeric positions and a single label becomes an array. Step defaults such as tension, bendAngle and fraction are determined here. Compilation later reads target references.
+
+For A → B, resolution sets `canon.kind` to `stroke` and retains `{ id: 'A' }` and `{ id: 'B' }` in the steps. The connection points [30, 0] and [150, 0] require node geometry during compilation.
+
+<ComponentPreview files="path-resolution" size="lg" hideCode type="flow" />
+
+## Compilation
+
+The function <ApiSourceLink label="compilePath" path="packages/kernel/core/src/compile/path/compile.ts" startLine={7}>`compilePath`</ApiSourceLink> consumes <ApiSourceLink label="PathResolution" path="packages/kernel/core/src/resolve/path/types.ts" startLine={275}>`PathResolution`</ApiSourceLink> and <ApiSourceLink label="PathCompileContext" path="packages/kernel/core/src/compile/path/types.ts" startLine={126}>`PathCompileContext`</ApiSourceLink>. It first calls <ApiSourceLink label="bindPathTargets" path="packages/kernel/core/src/compile/path/target/bind.ts" startLine={163}>`bindPathTargets`</ApiSourceLink> to obtain `BoundPathResolution`, then invokes the selected definition's compiler. <ApiSourceLink label="CompiledPath" path="packages/kernel/core/src/compile/path/types.ts" startLine={37}>`CompiledPath`</ApiSourceLink> retains targets, output and reusable stroke products; `null` represents an empty drawing result. The complete fields follow, with source comments omitted.
+
+```ts
+export type BoundPathResolution = PathResolution & {
+  targets: ReadonlyMap<string, TargetResolution>;
+};
+
+export type CompiledPath = Pick<PreparedPathCompilation, 'targets'> &
+  Readonly<{
+    emit: PathEmitOutput | null;
+    stroke?: PreparedStrokePathCompilation;
+    style: { shadow?: CanonicalDropShadow };
+  }>;
+
+export type PathEmitOutput = {
+  primitives: Array<ScenePrimitive>;
+  boundsPoints: Array<IRPosition>;
+};
+```
+
+| <ApiSourceLink label="PathCompileContext" path="packages/kernel/core/src/compile/path/types.ts" startLine={126}>`PathCompileContext`</ApiSourceLink> member | What compilation receives                                            |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `targetResolver`, `boundaryStore`                                                                                                                           | Target points, world reference points and connection-surface binding |
+| `scopeChain`, `resolveTransform`                                                                                                                            | The path's coordinate space and conversion                           |
+| `registries`, `scopeDefaults`, `theme`                                                                                                                      | Extension capabilities and effective configuration                   |
+| `measureText`, `lowerTex`, `rootFontSize`                                                                                                                   | Label measurement and math processing                                |
+| `registerPaint`, `resources`                                                                                                                                | Paint registration and output resource-reference checks              |
+| `round`, `irPath`, `onWarn`                                                                                                                                 | Numeric rounding, source location and diagnostics                    |
+
+The definition callback selects the concrete algorithm. The diagram introduces target binding and host invocation before the following sections explain built-in stroke geometry and decorations.
+
+<ComponentPreview files="path-overview" size="lg" hideCode type="flow" />
+
+### Target Binding
+
+The function <ApiSourceLink label="bindPathTargets" path="packages/kernel/core/src/compile/path/target/bind.ts" startLine={163}>`bindPathTargets`</ApiSourceLink> reads local points and world references under the current Scope chain, preserving geometry and boundary information. Relative and accumulating-relative targets update their bases differently. Expressions after axis-aligned or smooth steps may need the geometry cursor and cannot all be expanded during binding.
 
 <ComponentPreview files="path-relative" size="md" hideCode type="illustration" />
 
-## The General Host and Built-in Stroke
+### The General Host and Built-in Stroke
 
-PathDefinition.compile receives a bounded context: effective path / appearance, structured path materialization, emitStroke, label services and output wrapping. A custom kind can reuse standard stroke or generate its own geometry without receiving mutable whole-tree state.
+The type <ApiSourceLink label="PathDefinition" path="packages/kernel/core/src/contract/path/path.ts" startLine={153}>`PathDefinition.compile`</ApiSourceLink> receives a bounded context: effective path / appearance, structured path materialization, emitStroke, label services and output wrapping. A custom kind can reuse standard stroke or generate its own geometry.
 
 Built-in stroke simply calls `context.emitStroke()`. Internally it lowers geometry, lays out labels and marks, prepares endpoint contact and interruption intervals, then emits. Custom kinds do not have to run every stroke-specific stage; that branch applies to the built-in or an implementation explicitly reusing it.
 
 `emitStroke()` already returns host-wrapped output, so wrapOutput must not be applied again. Custom output follows the wrapping contract and returns primitives and bounds in path-local space. Definitions cannot declare resources themselves; the host registers paints.
 
-<SourceLinks
-  sources={[
-    { label: 'Path Definition contract', path: 'packages/kernel/core/src/contract/path/path.ts' },
-    { label: 'Built-in stroke definition', path: 'packages/kernel/core/src/providers/path.ts' },
-  ]}
-/>
-
-## Geometry, Boundaries and Cursor State
+### Geometry, Boundaries and Cursor State
 
 Stroke consumes step cursor state and produces structured move / line / curve / arc commands with source records. Bare node references select connection points using segment direction; explicit anchors select fixed points. Offsets are added in world space before conversion to the owning space. Fold paths also trim portions inside endpoint nodes.
 
@@ -60,9 +141,19 @@ Stroke consumes step cursor state and produces structured move / line / curve / 
 
 Curves choose attachment points using control-point directions before creating their geometry; they do not solve the exact intersection of the entire Bézier and node outline. Applicable corners are rounded before decorations consume the route. Missing targets follow segment and host failure or diagnostic rules rather than becoming origin points.
 
-## Labels, Marks and Endpoint Arrows
+### Labels and Along-path Marks
+
+The functions <ApiSourceLink label="layoutStrokeLabels" path="packages/kernel/core/src/compile/path/stroke/decoration/labels.ts" startLine={19}>`layoutStrokeLabels`</ApiSourceLink> and <ApiSourceLink label="layoutStrokeMarks" path="packages/kernel/core/src/compile/path/stroke/decoration/decorations.ts" startLine={54}>`layoutStrokeMarks`</ApiSourceLink> consume geometry and sampling data to place labels and marks.
 
 Labels and along-path Marks use route samples and directions. Step and host labels sample different ranges; a parameter position is not always an arc-length fraction. Stroke interruption turns label bounds and gap into blank intervals. Explicit interruption is restricted to unfilled built-in stroke, not arbitrary kinds.
+
+<ComponentPreview files="path-label-marks" size="lg" hideCode type="illustration" />
+
+The straight path runs from [0, 0] to [240, 0]. Its label sits at the midpoint, with marks at 0.2 and 0.8. The label adds 8 units of clearance on each side; the marks follow the sampled tangent.
+
+### Endpoint Arrows and Body Shortening
+
+The function <ApiSourceLink label="calculateStrokeEndpointContact" path="packages/kernel/core/src/compile/path/stroke/decoration/decorations.ts" startLine={36}>`calculateStrokeEndpointContact`</ApiSourceLink> determines endpoint contact; <ApiSourceLink label="lowerStrokeBody" path="packages/kernel/core/src/compile/path/stroke/body.ts" startLine={7}>`lowerStrokeBody`</ApiSourceLink> applies shortening and label gaps.
 
 Arrow definitions supply tip, contact geometry and dimensions. Core searches inward for contact points and retains subcurves so arrow tips stay at their targets while the stroke meets their backs. Label intervals and arrow protection determine the visible body.
 
@@ -70,56 +161,36 @@ Arrow definitions supply tip, contact geometry and dimensions. Core searches inw
 
 Short paths can shrink endpoint arrows; zero effective length emits no endpoint arrow. Arrow and Mark definitions can share visual geometry, but along-path marks do not shorten endpoints.
 
-<SourceLinks
-  sources={[
-    { label: 'Geometry lowering', path: 'packages/kernel/core/src/compile/path/stroke/geometry/lower.ts' },
-    { label: 'Stroke layout orchestration', path: 'packages/kernel/core/src/compile/path/stroke/layout.ts' },
-    { label: 'Endpoint contact', path: 'packages/kernel/core/src/compile/path/stroke/decoration/endpoint-contact.ts' },
-    { label: 'Stroke emission and wrapping', path: 'packages/kernel/core/src/compile/path/stroke/emit.ts' },
-  ]}
-/>
+### Output and Prepared Products
 
-## Output and Prepared Products
+The type <ApiSourceLink label="CompiledPath" path="packages/kernel/core/src/compile/path/types.ts" startLine={37}>`CompiledPath`</ApiSourceLink> emit can be the valid empty result null. An undefined prepared field means no product was supplied. Targets, complete emission and source-stroke products actually used can be passed separately. Core consumes valid supplied products and computes missing parts; Reconciler manages dependency, resource and diagnostic reuse.
 
-CompiledPath emit can be the valid empty result null. An undefined prepared field means no product was supplied. Targets, complete emission and source-stroke products actually used can be passed separately. Core consumes valid supplied products and computes missing parts; Reconciler manages dependency, resource and diagnostic reuse.
+The host materializes iterable primitives and bounds, snapshots output and checks resource permissions. One Path may emit groups, labels and marks rather than one <ApiSourceLink label="PathPrimitive" path="packages/kernel/core/src/contract/scene/path.ts" startLine={160}>`PathPrimitive`</ApiSourceLink>. Deferral changes evaluation timing; slot replacement and stable sibling zIndex sorting preserve drawing semantics.
 
-The host materializes iterable primitives and bounds, snapshots output and checks resource permissions. One Path may emit groups, labels and marks rather than one PathPrimitive. Deferral changes evaluation timing; slot replacement and stable sibling zIndex sorting preserve drawing semantics.
-
-## Complete Implementation Flow
+## Complete Flow
 
 <ComponentPreview files="path-implementation" size="xxl" hideCode type="flow" />
 
-Enter resolvePath / compilePath from Reconciler's deferred handler, then follow target and host. Continue into stroke layout / emit only when emitStroke is used. This separates the general extension contract from built-in algorithms.
-
-<SourceLinks
-  sources={[
-    { label: 'Path resolution and defaults', path: 'packages/kernel/core/src/resolve/path/resolve.ts' },
-    { label: 'Definition and decoration bindings', path: 'packages/kernel/core/src/resolve/path/provider.ts' },
-    { label: 'Atomic path compilation', path: 'packages/kernel/core/src/compile/path/compile.ts' },
-    { label: 'Definition host context', path: 'packages/kernel/core/src/compile/path/host/context.ts' },
-    { label: 'Definition output snapshot', path: 'packages/kernel/core/src/compile/path/host/emit.ts' },
-    { label: 'Deferred path execution', path: 'packages/kernel/reconciler/src/compile/tree/path/deferred.ts' },
-  ]}
-/>
+Enter <ApiSourceLink label="resolvePath" path="packages/kernel/core/src/resolve/path/resolve.ts" startLine={417}>`resolvePath`</ApiSourceLink> / <ApiSourceLink label="compilePath" path="packages/kernel/core/src/compile/path/compile.ts" startLine={7}>`compilePath`</ApiSourceLink> from Reconciler's deferred handler, then follow target and host. Continue into stroke layout / emit only when emitStroke is used. This separates the general extension contract from built-in algorithms.
 
 ## Further Reading
 
 <LinkedSections
   items={[
     {
-      title: 'Coordinate and Reference Evaluation',
+      title: 'Coordinate Evaluation',
       description: 'Target spaces and readiness',
       url: '/kernel/packages/core/coordinates',
-    },
-    {
-      title: 'Capability Definitions and Registration',
-      description: 'Path Definition extension boundaries',
-      url: '/kernel/packages/core/definitions',
     },
     {
       title: 'Composite Compilation',
       description: 'Domain path queries and child layout',
       url: '/kernel/packages/core/composite-compilation',
+    },
+    {
+      title: 'Capability Registration',
+      description: 'Path Definition extension boundaries',
+      url: '/kernel/packages/core/definitions',
     },
     {
       title: 'Compilation Output',

@@ -3,7 +3,7 @@ title: 编译流程
 description: 衔接 resolve 与 compile，理解 canon、compiled 及各实体从声明到 Scene 输出的过程
 ---
 
-前面的[语义解析](/kernel/packages/core/resolution)、[能力注册](/kernel/packages/core/definitions)和[能力依赖](/kernel/packages/core/providers)围绕 resolve 与编译准备展开：声明如何获得确定的语义，所需定义如何注册和装配。本页把这些准备接到 compile，说明解析后的数据怎样变成布局、几何和绘制结果。后续各篇再分别展开 Scope、Node、Coordinate、Path 与 Composite 的编译过程，最后说明编译输出。
+前面的[语义解析](/kernel/packages/core/resolution)、[能力注册](/kernel/packages/core/definitions)和[能力依赖](/kernel/packages/core/providers)围绕 resolve 与编译准备展开：声明如何获得确定的语义，所需定义如何注册和装配。本页把这些准备接到 compile，说明解析后的数据怎样变成布局、几何和绘制结果。后续各篇再分别展开坐标求值、Node、Path、Scope 与 Composite 的编译过程，最后说明编译输出。
 
 Node 提供形状与内容，Coordinate 提供命名位置，Scope 组织局部空间，Path 连接几何目标。下面沿 A、B 两节点及连线追踪这些实体。Core 提供实体的解析与计算，Reconciler 按依赖就绪情况调用它们。
 
@@ -120,14 +120,14 @@ Node 的定位和 Coordinate 的位置在访问时求值，引用目标需要已
 
 <LinkedSections
   items={[
-    { title: 'Scope 编译', description: '理解子布局、包络与坐标空间', url: '/kernel/packages/core/scope-compilation' },
+    { title: '坐标求值', description: '理解可查几何和所属坐标空间', url: '/kernel/packages/core/coordinates' },
     { title: 'Node 编译', description: '追踪度量、形状布局和图元输出', url: '/kernel/packages/core/node-compilation' },
-    { title: '坐标与引用求值', description: '理解可查几何和所属坐标空间', url: '/kernel/packages/core/coordinates' },
     {
       title: 'Path 编译',
       description: '理解依赖就绪后的目标与路径处理',
       url: '/kernel/packages/core/path-compilation',
     },
+    { title: 'Scope 编译', description: '理解子布局、包络与坐标空间', url: '/kernel/packages/core/scope-compilation' },
     { title: '编译输出', description: '区分 Scene、资源和领域产物', url: '/kernel/packages/core/compilation-output' },
   ]}
 />

@@ -19,7 +19,7 @@ Reconciler 负责准备上下文和安排调用，Core 提供对应领域的 res
 
 ## IR 与 Schema
 
-下面是一份节点声明。它只保存绘图意图：节点 A 使用中等阴影预设，文字是 A。没有记录形状实现函数、测量结果或渲染器对象。
+下面是一份节点声明。它只保存绘图意图：节点 A 使用中等阴影预设，文字是 A。
 
 ```json
 {
@@ -30,11 +30,17 @@ Reconciler 负责准备上下文和安排调用，Core 提供对应领域的 res
 }
 ```
 
-Core 的 IR 必须可以完整地用 JSON 表达。节点、作用域、路径等声明由各自的 Zod Schema 组合；字段约束、联合分支和可在声明中检查的字段关系，归 Schema 所有。公开 IR 类型从同一份契约派生，避免类型与运行时结构各维护一套。
+IR 是所有 DSL 最终遵循的统一规范，100% 可用 JSON 表达，由 Zod Schema 定义和管理。
 
-例如 `NodeSchema` 将 `position` 定义为带默认值的字段，而作者侧 `IRNode` 允许省略它；字段是否允许省略与解析完成后是否存在，是两个不同的问题。外部输入调用 Schema 的 `parse` 或 `safeParse` 后，默认字段可能已经物化。
+Schema 允许省略部分字段，并定义输入的校验规则。外部数据在 Schema 入口完成结构校验；进入 resolve 后，再结合上下文补全默认值并检查语义约束。
 
-Schema 校验成功仍不意味着节点已经完成语义解析。上面的 `shadow` 会保留为 `'md'`；Schema 不会因为识别了这个预设名称，就调用形状实现或算出节点尺寸。
+为简化声明，Schema 保留了一部分语法糖，例如 `shadow: 'md'`。resolve 会将它展开为包含偏移、模糊和颜色的内部数据结构，供后续编译使用。
+
+<ComponentAlert
+  type="tip"
+  title="API 输入适配"
+  description="Vanilla、React 等 API 还会按各自的调用方式简化输入，例如 Vanilla 的简写和 React 的 JSX 组合。这些输入经适配与 normalize 转换为 IR，再进入 resolve。"
+/>
 
 <SourceLinks
   sources={[
@@ -67,7 +73,7 @@ offsetY: number()
 | 字段如何组合   | 显式字段覆盖预设中的对应值                       |
 | 省略意味着什么 | 阴影整体省略时不投影；对象没有预设时需要显式偏移 |
 
-`.describe()` 是可供人和工具读取的语义元数据，不执行上述行为。允许的结构由 Schema 约束，预设展开和覆盖由 resolver 实现，最终效果还需要编译与渲染支持。三者一致，描述才足以指导生成与调用；不能仅在描述中承诺实现尚未支持的行为。
+`.describe()` 是可供人和工具读取的语义元数据，不执行上述行为。允许的结构由 Schema 约束，预设展开和覆盖由 resolver 实现，最终效果还需要编译与渲染支持。三者一致，描述才足以指导生成与调用。
 
 ## 从简写到确定值
 
@@ -112,6 +118,8 @@ offsetY: number()
 
 “作者侧语义表达”和“编译消费形态”各自是所在阶段的一等内容：IR 用适合描述意图的形式，Canonical 用适合计算的形式。阴影简写是正式 IR 能力；它进入绘制阶段前展开，目的是让每个下游消费者都遵循同一套解释。
 
+这种分工遵循一个原则：IR 面向人类编写与 LLM 生成，表达应尽量简单，降低心智负担；Canonical 值则直接供编译流程消费，需要保证结构严谨、语义明确，满足所属阶段的不变量。
+
 <SourceLinks
   sources={[
     { label: '预设数值与 CanonicalDropShadow', path: 'packages/kernel/core/src/schemas/style/effects.ts' },
@@ -127,7 +135,7 @@ offsetY: number()
 
 `undefined` 不覆盖继承值，但已经由 Schema 物化的默认字段会作为实际值参与合并。因此，外部输入的解析结果与作者保留省略字段的声明，不一定具有相同的后续继承行为。不能在每一层重新 parse 完整对象，期待它仍保留原先的省略意图。
 
-合并也不是对所有对象无限递归。阴影配置作为一个样式字段覆盖；节点自己指定阴影对象时，不会自动拼入父级阴影对象的各个属性。节点想沿用某个预设并修改一项，应在自己的对象中明确写出 `preset`。字体、不透明度等有专门的合并规则，不能从阴影推断所有字段都相同。
+合并也不是对所有对象无限递归。阴影配置作为一个样式字段覆盖；节点自己指定阴影对象时，不会自动拼入父级阴影对象的各个属性。节点想沿用某个预设并修改一项，应在自己的对象中明确写出 `preset`。字体、不透明度等有各自的合并规则。
 
 <SourceLinks
   sources={[
@@ -165,7 +173,7 @@ Schema 与 resolve 的校验边界也不同。外部输入的结构在 Schema �
 
 先读 `NodeSchema` 确认声明允许的写法，再从 Reconciler 的节点入口看到 `resolveNode` 如何接收上下文。进入 resolver 后，依次追踪样式合并、字段展开、形状和绘制能力绑定，最后看返回的 `CanonicalNode` 如何交给节点编译。
 
-`expandNodeFields` 与 `resolveDropShadow` 是这里的内部实现定位，不是建议调用者绕过节点解析去独立装配 Canonical 的公开入口。
+`expandNodeFields` 与 `resolveDropShadow` 是阅读节点解析源码时的内部实现入口。
 
 <SourceLinks
   sources={[

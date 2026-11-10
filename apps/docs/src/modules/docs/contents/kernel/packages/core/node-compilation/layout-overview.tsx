@@ -60,12 +60,10 @@ const LayoutOverview: FC<LayoutOverviewProps> = props => {
       </FlowLayout>
       <FlowRelations
         items={[
-          ...stages
-            .slice(1)
-            .map((item, index) => ({
-              source: { id: stages[index].id, anchor: 'bottom' as const },
-              target: { id: item.id, anchor: 'top' as const },
-            })),
+          ...stages.slice(1).map((item, index) => ({
+            source: { id: stages[index].id, anchor: 'bottom' as const },
+            target: { id: item.id, anchor: 'top' as const },
+          })),
           ...inputs.map(item => ({
             source: { id: item.id, anchor: 'right' as const },
             target: { id: item.target, anchor: 'left' as const },

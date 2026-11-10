@@ -1,5 +1,5 @@
 ---
-title: 能力定义与注册
+title: 能力注册
 description: 理解 Core 图形实体与可扩展能力的关系，以及 Definition 如何通过注册表参与语义解析和编译
 ---
 
@@ -9,15 +9,15 @@ description: 理解 Core 图形实体与可扩展能力的关系，以及 Defini
 
 ## 整体流程
 
-Reconciler 接收编译选项，调用 Core 提供的注册表解析能力。随后，各 resolver 按当前 IR 查询定义，确定参数并把结果交给布局、几何或编译回调。注册发生在运行时环境装配中，使用某个 define helper 并不会把能力写入全局状态。
+Reconciler 接收编译选项，调用 Core 提供的注册表解析能力。随后，各 resolver 按当前 IR 查询定义，确定参数并把结果交给布局、几何或编译回调。
 
 <ComponentPreview files="definition-overview" size="lg" hideCode type="flow" />
 
 图中的共同点是“通过契约查找并消费实现”。不同能力的输入和输出并不相同：形状负责几何与图元，路径定义拥有一条路径的编译，Composite 则生成可以继续执行的子项。
 
-## 实体与扩展能力
+## 扩展能力与注册
 
-Scope、Node、Path、Composite 是声明组织或处理的对象。扩展点按它们所需的能力划分，不能把每个实体都理解为一种可任意替换的编译器。
+Scope、Node、Path、Composite 是声明组织或处理的对象。扩展点按它们所需的能力划分。
 
 | 实体      | 扩展切入点                       | 核心仍负责什么                           |
 | --------- | -------------------------------- | ---------------------------------------- |
@@ -30,28 +30,7 @@ Pattern 是填充或描边使用的绘制能力，不专属于某一种实体。
 
 一个普通节点换个填充色，不需要新增 Definition。要增加形状的内容包络、命名锚点或绘制方式时，才由 Shape Definition 表达。布局算法或领域组合则更适合 Composite；能力应进入拥有该职责的契约。
 
-## Definition 的输入与输出
-
-Definition 让实现者与消费方共享可检查的边界，而不是只有名称相同的回调集合。
-
-- **Shape** 使用 `paramsSchema` 解析实例参数；几何方法计算内容包络、边界与锚点，emit 返回后端中立图元。视觉形状与连线使用的 Boundary 可以分别选择。
-- **Path** 的 Schema 描述完整路径声明。compile 可以复用标准描边，也可以提供自身几何，再通过宿主服务处理共享标签和输出外壳。
-- **Composite** 使用领域 Schema 解析声明，compile 返回子项及可选领域产物；需要布局时调用受限的子项求值接口。
-
-因此，Shape 的参数对象、Path 的完整声明与 Composite 的领域输入，不能机械套用同一种 parse 位置或同一种返回类型。具体使用时，Schema 的解析结果和回调类型由同一定义关联。
-
-<SourceLinks
-  sources={[
-    { label: 'Shape 参数、几何和绘制契约', path: 'packages/kernel/core/src/contract/node/shape.ts' },
-    { label: 'Path 的完整声明与宿主服务', path: 'packages/kernel/core/src/contract/path/path.ts' },
-    { label: 'Composite 的声明与编译回调', path: 'packages/kernel/core/src/contract/composite/definition.ts' },
-    { label: 'Composite 子项与求值结果', path: 'packages/kernel/core/src/contract/composite/layout.ts' },
-  ]}
-/>
-
-## 注册键与实例引用
-
-普通能力按能力类别及名称定位。例如 `node.shape` 选择 shape registry，而不是在所有定义中搜索同名对象。Composite 使用独立的 `namespace` 和 `type` 两级键；它们不是通过拼接字符串获得身份的。
+确定能力类别后，通过注册键将定义与 IR 引用关联起来。普通能力按能力类别及名称定位，例如 `node.shape` 从 shape registry 中按名称查找定义。Composite 使用独立的 `namespace` 和 `type` 两级键。
 
 以下字段摘录展示定义接线与实例引用的对应关系，不是完整编译选项：
 
@@ -61,7 +40,7 @@ Definition 让实现者与消费方共享可检查的边界，而不是只有名
 | `paths: [pathDefinition]`      | `type: 'path', kind: name`           | 路径解析与编译       |
 | `composites: [pairDefinition]` | `namespace: 'example', type: 'pair'` | Composite 绑定与求值 |
 
-以内置形状为例，注册表保存 rectangle、ellipse、polygon 的定义；circle、diamond 则是声明侧的形状预设，由节点解析映射到相应定义与参数。列在 IR 名称集合中，不意味着每个名称都有一份独立 provider。
+以内置形状为例，注册表保存 rectangle、ellipse、polygon 的定义；circle、diamond 则是声明侧的形状预设，由节点解析映射到相应定义与参数。
 
 ## 一个定义如何参与编译
 
@@ -101,19 +80,19 @@ try {
 }
 ```
 
-这里先创建定义对象，再把它显式传给 Reconciler。Core 按完整键绑定定义，以其 Schema 确定 gap；Reconciler 在 Composite 执行点调用定义的 compile，并继续处理返回的子项。返回的节点还要经过普通节点处理；定义本身没有直接生成 DOM，也没有取得整个编译工作区。
+这里先创建定义对象，再把它显式传给 Reconciler。Core 按完整键找到定义，通过定义的 Schema 校验输入：传入的 `gap` 必须是正数，省略时补上默认值 `180`。Reconciler 在 Composite 执行点调用定义的 `compile`，并继续处理返回的子项。返回的节点还要经过普通节点处理。
 
 ## 内置与自定义的边界
 
 普通注册表先加入内置定义，再加入显式提供的定义。同类别的同名键会报错，自定义项不能靠顺序覆盖内置项。Composite 注册表不预设官方 namespace 白名单，同一 namespace 中重复 type 同样报错。
 
-未找到 shape 或 path 定义时会发生对应的编译失败；未注册 Composite 当前会发出 warning 并跳过该项。它们的失败策略不同，不能统一描述成“所有未知名称都忽略”或“都抛错”。用户回调异常也要在其 owner 边界保留诊断与原因。
+未找到 shape 或 path 定义时会发生对应的编译失败；未注册 Composite 当前会发出 warning 并跳过该项。用户回调异常也要在其 owner 边界保留诊断与原因。
 
-内置实现没有额外的身份捷径。它们与扩展实现共享 Definition、解析和消费契约。注册表负责名称与冲突，调用方负责实例引用，具体定义负责自己的领域语义。
+内置实现与扩展实现共享 Definition、解析和消费契约。注册表负责名称与冲突，调用方负责实例引用，具体定义负责自己的领域语义。
 
 ## 完整实现流程
 
-下面把概念图对应到运行环境与源码。注册表建立在 Reconciler 的共享编译上下文中，Core resolver 只接收所需能力。不要把文件夹名 providers 理解成每个模块都能发现或导入的全局插件系统。
+下面把概念图对应到运行环境与源码。注册表建立在 Reconciler 的共享编译上下文中，Core resolver 只接收所需能力。
 
 <ComponentPreview files="definition-implementation" size="xxl" hideCode type="flow" />
 

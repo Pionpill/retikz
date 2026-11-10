@@ -3,7 +3,7 @@ title: Compilation Flow
 description: Connect resolve and compile, explaining canon, compiled and the path from entity declarations to Scene output
 ---
 
-The preceding pages on [Resolution](/kernel/packages/core/resolution), [Capability Registration](/kernel/packages/core/definitions) and [Capability Dependencies](/kernel/packages/core/providers) cover resolve and compilation preparation: how declarations acquire concrete semantics and how their definitions are registered and assembled. This page connects that preparation to compile, where resolved data becomes layout, geometry and emitted output. The following pages expand Scope, Node, Coordinate, Path and Composite compilation, then explain compilation output.
+The preceding pages on [Resolution](/kernel/packages/core/resolution), [Capability Registration](/kernel/packages/core/definitions) and [Capability Dependencies](/kernel/packages/core/providers) cover resolve and compilation preparation: how declarations acquire concrete semantics and how their definitions are registered and assembled. This page connects that preparation to compile, where resolved data becomes layout, geometry and emitted output. The following pages expand coordinate evaluation and Node, Path, Scope and Composite compilation, then explain compilation output.
 
 Nodes provide shapes and content, Coordinates provide named positions, Scopes organize local spaces, and Paths connect geometric targets. We follow nodes A and B and their connecting path. Core supplies entity resolution and computation; Reconciler calls these stages as dependencies become ready.
 
@@ -121,9 +121,9 @@ Start with layoutNode and emitNode inside compileNode, then see how compileCoord
 <LinkedSections
   items={[
     {
-      title: 'Scope Compilation',
-      description: 'Follow child layouts, envelopes and spaces',
-      url: '/kernel/packages/core/scope-compilation',
+      title: 'Coordinate Evaluation',
+      description: 'Understand readable geometry and coordinate spaces',
+      url: '/kernel/packages/core/coordinates',
     },
     {
       title: 'Node Compilation',
@@ -131,14 +131,14 @@ Start with layoutNode and emitNode inside compileNode, then see how compileCoord
       url: '/kernel/packages/core/node-compilation',
     },
     {
-      title: 'Coordinate and Reference Evaluation',
-      description: 'Understand readable geometry and coordinate spaces',
-      url: '/kernel/packages/core/coordinates',
-    },
-    {
       title: 'Path Compilation',
       description: 'Follow ready targets through path processing',
       url: '/kernel/packages/core/path-compilation',
+    },
+    {
+      title: 'Scope Compilation',
+      description: 'Follow child layouts, envelopes and spaces',
+      url: '/kernel/packages/core/scope-compilation',
     },
     {
       title: 'Compilation Output',

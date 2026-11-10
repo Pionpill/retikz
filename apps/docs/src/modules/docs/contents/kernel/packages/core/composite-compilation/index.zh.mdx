@@ -3,21 +3,102 @@ title: Composite 编译
 description: 理解领域定义怎样通过子项生成、布局提案、隔离试算和重放参与普通 Core 编译
 ---
 
-Composite 让领域包拥有高层声明，同时复用 Core 的节点、路径、Scope 与坐标机制。它不是另一套 renderer：Definition 返回可继续执行的子项，Reconciler 将它们接入同一编译链。Core 拥有绑定、Schema 与布局协作契约，回调执行和结果提交由 Reconciler 调度。
+前面几篇介绍了坐标、节点、路径与 Scope 的编译。Composite 在这些能力之上接入领域声明：Definition 生成普通子项，或借助布局提案与试算选择布局结果，再接回同一编译链。本篇重点说明子项生成、布局协作和结果提交。
 
 ## 整体流程
 
-IRComposite 通过 namespace / type 匹配定义，Core 按该定义的 Schema 解析输入。Reconciler 创建受限上下文，调用 compile，预检返回值，再编译普通子项或提交选中的试算结果。领域 artifact 与图元分别汇总。
+领域声明先绑定定义并解析为 <ApiSourceLink label="CompositeResolution" path="packages/kernel/core/src/resolve/composite/types.ts" startLine={41}>`CompositeResolution`</ApiSourceLink>。回调返回 <ApiSourceLink label="CompositeEvaluationResult" path="packages/kernel/core/src/contract/composite/layout.ts" startLine={247}>`CompositeEvaluationResult`</ApiSourceLink>，完整布局的 <ApiSourceLink label="CompositeCompileResult" path="packages/kernel/core/src/contract/composite/layout.ts" startLine={309}>`CompositeCompileResult`</ApiSourceLink> 再交给子项编译或选中结果提交。
+
+<ComponentPreview files="composite-flow" size="lg" hideCode type="flow" />
+
+## 输入契约
+
+Composite 的公共 IR 由 <ApiSourceLink label="CompositeNodeSchema" path="packages/kernel/core/src/schemas/scene/composite.ts" startLine={14}>`CompositeNodeSchema`</ApiSourceLink> 接收：`namespace` 与 `type` 都是非空字符串，其余字段必须是 JSON 值。选中定义后，再用 `CompositeDefinition.schema` 解释该领域的完整输入，所以输入形式由定义自身决定。
+
+| 输入层      | 形式                                                                                                                                                                                    | 对后续处理的影响                                                    |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| 公共声明    | `{ namespace, type, ...领域字段 }`                                                                                                                                                      | 先按 namespace / type 查找定义，确定该用哪份 Schema 和 compile 回调 |
+| 领域 Schema | 定义提供的对象、字段和分支                                                                                                                                                              | 解析默认值及领域参数，产物作为回调的首个参数                        |
+| 运行时绑定  | <ApiSourceLink label="CompositeBoundChild" path="packages/kernel/core/src/contract/composite/input.ts" startLine={27}>`CompositeBoundChild`</ApiSourceLink> 与绑定输入契约              | 函数或宿主对象通过回调上下文传入，与持久化 JSON 声明分开            |
+| 编译请求    | <ApiSourceLink label="CompositeEvaluation" path="packages/kernel/core/src/contract/composite/layout.ts" startLine={226}>`CompositeEvaluation`</ApiSourceLink> 的 layout 或 contribution | layout 请求完整子项；contribution 请求指定轴的布局尺寸              |
+
+例如 pair 定义可接收 `{ namespace: 'example', type: 'pair', gap: 24 }`，Schema 给 `gap` 设置默认值后，回调用该值生成两个节点。需要先知道子项尺寸的定义则使用编译上下文提供的布局服务。
+
+## 解析过程
+
+函数 <ApiSourceLink label="bindComposite" path="packages/kernel/core/src/resolve/composite/resolve.ts" startLine={8}>`bindComposite`</ApiSourceLink> 按完整键选择定义，返回 <ApiSourceLink label="CompositeBinding" path="packages/kernel/core/src/resolve/composite/types.ts" startLine={8}>`CompositeBinding`</ApiSourceLink>。注册成功的分支交给 <ApiSourceLink label="resolveComposite" path="packages/kernel/core/src/resolve/composite/resolve.ts" startLine={30}>`resolveComposite`</ApiSourceLink>，用该定义的 Schema 解析 source，得到 <ApiSourceLink label="CompositeResolution" path="packages/kernel/core/src/resolve/composite/types.ts" startLine={41}>`CompositeResolution`</ApiSourceLink>。这是 Composite 在本阶段的真实产物名称；领域解析结果保存在 `node` 中。下面保留完整字段，省略源码注释。
+
+```ts
+export type CompositeBinding =
+  | Readonly<{
+      kind: 'unregistered';
+      key: string;
+    }>
+  | Readonly<{
+      kind: 'compile';
+      key: string;
+      namespace: string;
+      type: string;
+      source: IRComposite;
+      schema: ZodType;
+      compile: (node: unknown, context: CompositeCompileContext) => CompositeEvaluationResult<JsonValue>;
+      artifactSchema?: ZodType<JsonValue>;
+    }>;
+
+export type RegisteredCompositeBinding = Exclude<CompositeBinding, { kind: 'unregistered' }>;
+
+export type CompositeResolution<TBinding extends RegisteredCompositeBinding = RegisteredCompositeBinding> = TBinding &
+  Readonly<{
+    node: unknown;
+  }>;
+```
+
+解析需要 <ApiSourceLink label="CompositeRegistry" path="packages/kernel/core/src/resolve/composite/types.ts" startLine={48}>`CompositeRegistry`</ApiSourceLink> 与当前 `irPath`，而领域输入的补全规则来自定义的 Schema。绑定保存 source、schema 与 compile 的对应关系，解析后将同一份领域值交给同一定义的回调。
+
+未注册时，绑定结果是 `kind: 'unregistered'`；普通编译收集 warning 并跳过，隔离试算则将它作为可处理的布局失败。下图展示注册成功的解析主线。
+
+<ComponentPreview files="composite-resolution" size="lg" hideCode type="flow" />
+
+## 编译过程
+
+类型 <ApiSourceLink label="CompositeCompiler" path="packages/kernel/reconciler/src/compile/tree/composite/compile.ts" startLine={57}>`CompositeCompiler`</ApiSourceLink> 创建 <ApiSourceLink label="CompositeCompileContext" path="packages/kernel/core/src/contract/composite/layout.ts" startLine={252}>`CompositeCompileContext`</ApiSourceLink>，调用解析结果携带的 compile 回调。回调的真实返回类型是 <ApiSourceLink label="CompositeEvaluationResult" path="packages/kernel/core/src/contract/composite/layout.ts" startLine={247}>`CompositeEvaluationResult`</ApiSourceLink>：完整布局返回 <ApiSourceLink label="CompositeCompileResult" path="packages/kernel/core/src/contract/composite/layout.ts" startLine={309}>`CompositeCompileResult`</ApiSourceLink>，按轴测量可以返回 <ApiSourceLink label="CompositeContributionResult" path="packages/kernel/core/src/contract/composite/layout.ts" startLine={231}>`CompositeContributionResult`</ApiSourceLink>。其中普通 children 继续编译，运行时句柄交给预检与提交；领域 artifact 单独汇总。下面是完整字段，省略源码注释。
+
+```ts
+export type CompositeEvaluationResult<TArtifact extends JsonValue = never> =
+  CompositeCompileResult<TArtifact> | CompositeContributionResult;
+
+export type CompositeCompileResult<TArtifact extends JsonValue = never> = Readonly<{
+  children: ReadonlyArray<IRChild | CompositeCompileChild | CompositeBoundChild>;
+  allocationBounds?: Readonly<BoundsRect>;
+  alignmentGuides?: ReadonlyArray<LayoutAlignmentGuide>;
+}> &
+  ([TArtifact] extends [never] ? { artifact?: never } : { artifact?: TArtifact });
+
+export type CompositeContributionResult = Readonly<{
+  kind: 'contribution';
+  contribution: LayoutContribution;
+}>;
+```
+
+| <ApiSourceLink label="CompositeCompileContext" path="packages/kernel/core/src/contract/composite/layout.ts" startLine={252}>`CompositeCompileContext`</ApiSourceLink> 成员 | 编译时提供什么                                               |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `evaluation`、`proposal`                                                                                                                                                   | 当前是完整布局还是按轴测量，以及父级槽位要求                 |
+| `measureChild`、`layoutChild`                                                                                                                                              | 查询子项尺寸，或获取完整隔离布局与可重放令牌                 |
+| `replay`、`createScope`                                                                                                                                                    | 选中布局结果，或构造带完整 Scope 属性的输出子项              |
+| `resolvePathTargets`                                                                                                                                                       | 在指定 child 环境中查询 source 与有序目标点                  |
+| `theme`、`withTheme`                                                                                                                                                       | 当前有效主题及局部主题下的测量、查询上下文                   |
+| `runtimeInput`、`selectSourceChild`、`bindChild`                                                                                                                           | 读取当前运行时输入，转交作者子项绑定，或为生成的子项提供绑定 |
+| `warn`、`raise`                                                                                                                                                            | 报告诊断，或重新抛出无法采用的布局失败                       |
+
+图中重点是回调产物的交接：返回子项和选中试算结果后，调度器才预检并形成最终绘图贡献。
 
 <ComponentPreview files="composite-overview" size="lg" hideCode type="flow" />
 
-最简单的 Composite 直接返回 children，如[能力定义与注册](/kernel/packages/core/definitions)中的 pair。只有父布局需要知道子项真实尺寸时，才使用下面的布局服务，不必给每个组合添加试算。
-
-## 布局提案表达父级需要什么
+### 布局提案表达父级需要什么
 
 proposal 的 x / y 分别使用 intrinsic、range 或 exact。intrinsic 查询 minimum / natural，range 给出允许的槽位范围，exact 要求固定槽位。提案描述布局分配，不能把“分配了 60”理解成“所有可见几何都被缩成 60”。
 
-<ComponentPreview files="composite-proposal" size="md" hideCode type="illustration" />
+<ComponentPreview files="composite-proposal" size="lg" hideCode type="illustration" />
 
 图中固定路径的实际 allocationBounds.width 为 100。exact 60 可产生宽 60 的 slotSize，但路径几何仍为 100；父级需要自行处理溢出、裁剪或其他排布。子项没有可行布局时，试算也可能失败。
 
@@ -29,7 +110,7 @@ proposal 的 x / y 分别使用 intrinsic、range 或 exact。intrinsic 查询 m
 | alignmentGuides  | 基线等可选对齐参考                     |
 | replay           | 当前回调中可选中一次的完整布局结果令牌 |
 
-## 先测量，还是完成布局
+### 先测量，还是完成布局
 
 `measureChild(child, proposal, axis)` 只查询所需轴的尺寸贡献，没有 replay。上下文 evaluation 指明当前请求完整 layout 还是某个轴的 contribution；能直接计算尺寸的 Composite 可返回对应 contribution，避免为纯查询生成完整子树。
 
@@ -62,7 +143,7 @@ const shiftedNode = defineComposite({
 });
 ```
 
-## 隔离试算与选中重放
+### 隔离试算与选中重放
 
 试算使用独立的名称写入、资源、图元和诊断工作区，不把候选绘图立即写进父输出。Reconciler 保存完整事务；回调只得到不透明令牌。未选中的方案不会发布图元、名称或 warning。
 
@@ -70,48 +151,32 @@ const shiftedNode = defineComposite({
 
 普通 children 会继续编译；重放子项消费已保存的事务。外层 replay wrapper 只接收已 lowering 的数值变换和裁剪。需要完整 authored Scope 语义时使用 `createScope(props, children)`，继续经过 Scope 调度。
 
-## 目标查询、主题和运行时输入
+### 目标查询、主题和运行时输入
 
 `resolvePathTargets` 在隔离的真实 child 环境中解析 source 与有序 points，返回局部坐标。它不提交绘图，不执行最终路径边界裁剪或插值，也不修改作者点列，适合领域路径在 lowering 前读取既有引用能力。
 
 `withTheme` 创建局部有效主题上下文，供测量和查询使用；最终 children 仍要通过 createScope 声明相同主题边界，不能只改试算环境却让正式输出继承另一套主题。
 
-需要函数、宿主对象等运行时输入的领域能力使用绑定输入契约，而不是把它们塞进 JSON IR。CompositeBoundChild 和 replay / Scope 输出句柄是当前回调的运行时值，不是新的持久化实体类型。
+需要函数、宿主对象等运行时输入的领域能力使用绑定输入契约，而不是把它们塞进 JSON IR。<ApiSourceLink label="CompositeBoundChild" path="packages/kernel/core/src/contract/composite/input.ts" startLine={27}>`CompositeBoundChild`</ApiSourceLink> 和 replay / Scope 输出句柄是当前回调的运行时值，不是新的持久化实体类型。
 
-## 领域产物与失败边界
+### 领域产物与失败边界
 
 有 artifact 时，Definition 必须声明 artifactSchema。当前 Reconciler 检查 artifactSchema 已声明，并检查产物的 JSON 可序列化形态后冻结；它不会调用 artifactSchema.parse 再校验值。产物和最终绘图分别返回；领域数据不应编码成隐藏图元让调用者反向读取。allocationBounds 和 alignmentGuides 也由输出契约明确提供，不替代 Scene 的视觉边界。
 
-普通编译遇到未注册 Composite 会警告并跳过；隔离试算中则形成可处理的失败。超过展开深度、返回不合法数据、跨回调句柄或重复 replay 属于各自的契约 / 执行失败，不能靠静默降级掩盖。
+普通编译遇到未注册 Composite 会警告并跳过；隔离试算中则形成可处理的失败。超过展开深度、返回不合法数据、跨回调句柄或重复 replay 属于各自的契约 / 执行失败。
 
-## 完整实现流程
+## 完整流程
 
 <ComponentPreview files="composite-implementation" size="xxl" hideCode type="flow" />
 
-先阅读 Core 的 bindComposite / resolveComposite，再到 Reconciler 的 CompositeCompiler 与 callback context。measurement、probe、preflight、replay 分别负责查询、隔离、验证与提交。这里的同次查询复用由 Reconciler 会话维护，不是 Core 在 Definition 内保存跨次状态。
-
-<SourceLinks
-  sources={[
-    { label: 'Definition contract', path: 'packages/kernel/core/src/contract/composite/definition.ts' },
-    { label: 'Layout and evaluation contract', path: 'packages/kernel/core/src/contract/composite/layout.ts' },
-    { label: 'Core binding and resolution', path: 'packages/kernel/core/src/resolve/composite/resolve.ts' },
-    {
-      label: 'Reconciler callback scheduling',
-      path: 'packages/kernel/reconciler/src/compile/tree/composite/compile.ts',
-    },
-    { label: 'Callback services', path: 'packages/kernel/reconciler/src/compile/tree/composite/context.ts' },
-    { label: 'Probe isolation', path: 'packages/kernel/reconciler/src/compile/tree/composite/probe.ts' },
-    { label: 'Preflight', path: 'packages/kernel/reconciler/src/compile/tree/composite/preflight.ts' },
-    { label: 'Replay commit', path: 'packages/kernel/reconciler/src/compile/tree/composite/replay.ts' },
-  ]}
-/>
+先阅读 Core 的 <ApiSourceLink label="bindComposite" path="packages/kernel/core/src/resolve/composite/resolve.ts" startLine={8}>`bindComposite`</ApiSourceLink> / <ApiSourceLink label="resolveComposite" path="packages/kernel/core/src/resolve/composite/resolve.ts" startLine={30}>`resolveComposite`</ApiSourceLink>，再到 Reconciler 的 <ApiSourceLink label="CompositeCompiler" path="packages/kernel/reconciler/src/compile/tree/composite/compile.ts" startLine={57}>`CompositeCompiler`</ApiSourceLink> 与 callback context。measurement、probe、preflight、replay 分别负责查询、隔离、验证与提交。这里的同次查询复用由 Reconciler 会话维护，不是 Core 在 Definition 内保存跨次状态。
 
 ## 延伸阅读
 
 <LinkedSections
   items={[
-    { title: '能力定义与注册', description: '回顾最小 Composite 与完整键', url: '/kernel/packages/core/definitions' },
-    { title: '提供者与依赖', description: '查看领域定义依赖如何装配', url: '/kernel/packages/core/providers' },
+    { title: '能力注册', description: '回顾最小 Composite 与完整键', url: '/kernel/packages/core/definitions' },
+    { title: '能力依赖', description: '查看领域定义依赖如何装配', url: '/kernel/packages/core/providers' },
     { title: 'Scope 编译', description: '查看分组继承与放置怎样执行', url: '/kernel/packages/core/scope-compilation' },
     {
       title: '编译输出',

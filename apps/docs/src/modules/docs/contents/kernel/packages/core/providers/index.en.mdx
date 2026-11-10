@@ -1,9 +1,9 @@
 ---
-title: Providers and Dependencies
+title: Capability Dependencies
 description: Follow authoring contributions through an ordered dependency graph into Core definitions, and distinguish providers from registries and built-ins
 ---
 
-[Capability Definitions and Registration](/kernel/packages/core/definitions) explains how a Definition is consumed. A domain component may need its own Composite, an extension shape and a clip. A dependency provider records these requirements so callers can assemble the necessary definitions without remembering each one.
+[Capability Registration](/kernel/packages/core/definitions) explains how a Definition is consumed. A domain component may need its own Composite, an extension shape and a clip. A dependency provider records these requirements and assembles them into compilation options.
 
 A Definition implements a capability. A `CoreDependencyProvider` declares how to create one Definition. A registry looks up Definitions during compilation. IR references capabilities; it contains no providers, factories or dependency graphs.
 
@@ -13,7 +13,7 @@ Each contribution supplies the `roots` it needs and an explicit `providers` cata
 
 <ComponentPreview files="provider-overview" size="lg" hideCode type="flow" />
 
-Being present in the catalog does not execute a factory: it must be reachable from a root. Resolution does not scan packages, import modules or infer dependencies from an existing registry.
+The resolver materializes only providers reachable from a root, using dependencies explicitly supplied in the contribution catalogs.
 
 ## From Requirements to Complete Keys
 
@@ -51,6 +51,12 @@ Every dependency key must exist in the contributed catalog. A built-in capabilit
 
 Repeated keys must have the same `makeDefinition` function reference and the same ordered dependency list. Non-undefined `params` values are collected in contribution order. The factory receives a frozen array and produces one Definition for that key. Its owner decides how to combine parameters; Core does not deep-merge arbitrary objects.
 
+<ComponentAlert
+  type="tip"
+  title="Reuse providers supplied by the package"
+  description="Consumers should generally import the owning package's provider or call its contribution factory. Official packages already offer such entry points, including Standard's surfaceProvider and Extension's pathClipProvider and createRibbonProviderContribution. These keep factory references and dependency declarations consistent, avoiding conflicts from duplicate declarations. Project and extension authors should also provide shared entry points for consumers to reuse directly."
+/>
+
 Extension's Ribbon provider, for example, collects width profiles and caps contributed by multiple instances, deduplicates definition references, and creates one Ribbon Path Definition. Constructing a fresh factory for each instance causes a conflict even if their function bodies are identical.
 
 <SourceLinks
@@ -78,7 +84,7 @@ Core registries already supply built-in definitions. They normally need no same-
 | Pattern    | lines, grid, dots                                      | Backend-neutral pattern descriptions                            |
 | Composite  | None                                                   | Registered by domain packages or callers                        |
 
-Theme has a separate `resolveThemeRegistry` and default light/dark colors. It is not a `ProviderCapability` graph node. Built-in registries are not an implicit provider catalog either.
+Theme has a separate `resolveThemeRegistry` and default light/dark colors. It is not a `ProviderCapability` graph node.
 
 <SourceLinks
   sources={[
@@ -114,7 +120,7 @@ Read the key, contribution and definitions types first, then follow `buildProvid
 <LinkedSections
   items={[
     {
-      title: 'Capability Definitions and Registration',
+      title: 'Capability Registration',
       description: 'Review Definition and registry boundaries',
       url: '/kernel/packages/core/definitions',
     },

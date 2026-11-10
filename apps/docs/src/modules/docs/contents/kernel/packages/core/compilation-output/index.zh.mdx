@@ -3,7 +3,7 @@ title: 编译输出
 description: 区分 Core 图元与资源契约、Reconciler 快照汇总、领域产物和渲染消费边界
 ---
 
-各原子阶段结束后，还不能把它们的任意返回值直接交给 renderer。Core 定义图元、资源与边界计算；Reconciler 收集子树贡献、完成延迟路径和排序，组装完整 Scene 及附属结果，再按会话提交协议发布。
+Core 定义图元、资源与边界计算；Reconciler 收集子树贡献、完成延迟路径和排序，组装完整 Scene 及附属结果，再按会话提交协议发布。
 
 ## 整体流程
 
@@ -33,7 +33,7 @@ try {
 }
 ```
 
-这是 Reconciler 的公开结果，不是 Core 另设的全局 compile API。Vanilla 的便捷处理入口可以管理内部协调器生命周期；这里保留同一个底层结果模型，具体入口返回值应按所属包契约读取。
+这是 Reconciler 的公开结果。Vanilla 的便捷处理入口可以管理内部协调器生命周期；这里保留同一个底层结果模型，具体入口返回值应按所属包契约读取。
 
 ## Scene 是已布局的后端中立绘图
 
@@ -47,7 +47,7 @@ Scene.primitives 按绘制顺序排列，layout 保存 x / y / width / height；
 | PathPrimitive    | 结构化路径命令、描边、填充及装饰数据 |
 | GroupPrimitive   | 子图元及共享变换、裁剪、身份与动画   |
 
-这些契约描述可供不同后端解释的绘图语义，不存 DOM、Canvas context 或 SVG-only 回调。Path 的端点装饰仍可以通过结构化 marker 数据交付，不能把它误认为 renderer 要重新解析作者 Arrow Definition。
+这些契约描述可供不同后端解释的绘图语义，不存 DOM、Canvas context 或 SVG-only 回调。Path 的端点装饰仍可以通过结构化 marker 数据交付。
 
 ## 分组坐标与查询几何
 
@@ -71,13 +71,13 @@ Pattern Definition 可以生成 tile 的图元，但不能另带一份资源表�
   ]}
 />
 
-## layout 与几种边界不要混用
+## layout 与边界
 
-Scope 几何包络供连接与放置，Composite allocationBounds 供父布局，visualBounds 是静态图元树的保守视觉包络。最终 Scene.layout 则是编译输出边界经视口策略处理的结果，不能把它们视为同一个尺寸。
+Scope 几何包络供连接与放置，Composite allocationBounds 供父布局，visualBounds 是静态图元树的保守视觉包络。最终 Scene.layout 则是编译输出边界经视口策略处理的结果。
 
 没有显式 viewBox 时，Reconciler 汇总的布局贡献经 Core 边界计算，再加 padding 并舍入。默认 padding 为 10；完全没有边界时返回 [0, 0, 100, 100] 所表示的默认画布，而不是从未知几何推导尺寸。显式 viewBox 直接决定 layout，仍需满足取整后的有限坐标和正宽高要求。
 
-例如贯穿 A/B 示例的布局贡献范围为 x=-30 到 210、y=-20 到 20。默认留白后 layout 是 `{ x: -40, y: -30, width: 260, height: 60 }`。标签、阴影或装饰会改变相关输出贡献，不能只根据两节点中心计算画布。
+例如贯穿 A/B 示例的布局贡献范围为 x=-30 到 210、y=-20 到 20。默认留白后 layout 是 `{ x: -40, y: -30, width: 260, height: 60 }`。标签、阴影或装饰会改变相关输出贡献。
 
 ## artifacts、诊断与来源
 

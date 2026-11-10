@@ -15,12 +15,12 @@ const PathOverview: FC<PathOverviewProps> = props => {
   const { lang = 'zh' } = props;
   const text = pathOverviewI18n[lang];
   const stages = [
-    { id: 'resolve', name: 'IRPath → PathResolution', state: false },
+    { id: 'resolve', name: 'PathResolution', state: true },
     { id: 'targets', name: 'bindPathTargets', state: false },
     { id: 'definition', name: 'PathDefinition.compile', state: false },
-    { id: 'output', name: 'Primitives + bounds', state: true },
+    { id: 'output', name: 'CompiledPath', state: true },
   ] as const;
-  const inputs = [{ id: 'ready', name: 'Reconciler · flush paths', target: 'resolve' }] as const;
+  const inputs = [{ id: 'ready', name: 'PathCompileContext', target: 'targets' }] as const;
   return (
     <PreviewFlowDiagram {...logicFigureGraphProps()} style={{ maxWidth: '100%', height: 'auto' }}>
       <FlowLayout
@@ -28,8 +28,8 @@ const PathOverview: FC<PathOverviewProps> = props => {
         kind="grid"
         gap={{ row: 20, column: 28 }}
         placements={[
-          ['ready', 'resolve'],
-          [null, 'targets'],
+          [null, 'resolve'],
+          ['ready', 'targets'],
           [null, 'definition'],
           [null, 'output'],
         ]}
@@ -60,12 +60,10 @@ const PathOverview: FC<PathOverviewProps> = props => {
       </FlowLayout>
       <FlowRelations
         items={[
-          ...stages
-            .slice(1)
-            .map((item, index) => ({
-              source: { id: stages[index].id, anchor: 'bottom' as const },
-              target: { id: item.id, anchor: 'top' as const },
-            })),
+          ...stages.slice(1).map((item, index) => ({
+            source: { id: stages[index].id, anchor: 'bottom' as const },
+            target: { id: item.id, anchor: 'top' as const },
+          })),
           ...inputs.map(item => ({
             source: { id: item.id, anchor: 'right' as const },
             target: { id: item.target, anchor: 'left' as const },

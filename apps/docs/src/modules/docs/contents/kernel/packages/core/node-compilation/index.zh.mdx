@@ -3,17 +3,28 @@ title: Node 编译
 description: 追踪节点从确定语义到文字度量、形状布局、连接几何和后端中立图元的过程
 ---
 
-节点声明同时包含正文、形状、定位和样式意图。`resolveNode` 先确定这些意图，`compileNode` 再完成布局与绘制。Reconciler 提供测量、引用、资源和提案上下文，并把结果接回名称环境与子树输出。
+在[坐标求值](/kernel/packages/core/coordinates)的基础上，Node 编译还要确定形状与内容的尺寸，才能完成自身锚点对齐，并为 Path 提供可查询的边界。<ApiSourceLink label="resolveNode" path="packages/kernel/core/src/resolve/node/resolve.ts" startLine={127}>`resolveNode`</ApiSourceLink> 确定正文、形状、定位和样式意图，<ApiSourceLink label="compileNode" path="packages/kernel/core/src/compile/node/compile.ts" startLine={8}>`compileNode`</ApiSourceLink> 再完成测量、布局与绘制。
 
 ## 整体流程
 
-CanonicalNode 保存有效配置与能力绑定；CompiledNodeLayout 保存测量和定位结果；CompiledNode 将当前 Shape / Boundary 绑定与 layout、emit 产物关联。查询几何按需组合，绘制消费 emit.overall，不需要复制一份可持久化的“完整节点模型”。
+节点声明先解析为 <ApiSourceLink label="CanonicalNode" path="packages/kernel/core/src/resolve/node/types.ts" startLine={149}>`CanonicalNode`</ApiSourceLink>，再经测量、形状布局与绘制成为 <ApiSourceLink label="CompiledNode" path="packages/kernel/core/src/compile/node/types.ts" startLine={23}>`CompiledNode`</ApiSourceLink>。布局几何供定位与连接查询，图元供渲染。
 
-<ComponentPreview files="layout-overview" size="lg" hideCode type="flow" />
+<ComponentPreview files="node-flow" size="lg" hideCode type="flow" />
 
-## 解析后还剩下什么
+## 输入契约
 
-语义解析已完成继承、默认、颜色与阴影展开，并把 Shape、Boundary 和参数绑定到定义。节点 scale 也已折入相应尺寸、字号与参数；编译不再重复乘一次。位置引用仍可能依赖当前几何，文字尺寸也取决于测量服务，因此 Canonical 不等于最终布局。
+输入由 <ApiSourceLink label="NodeSchema" path="packages/kernel/core/src/schemas/node/node.ts" startLine={190}>`NodeSchema`</ApiSourceLink> 描述。会改变后续处理分支的形式集中在位置、正文、形状和标签；布局中的尺寸与间距还会在解析时展开为确定值。
+
+| 字段与 Schema                                                                                                                                                   | 输入形式                                                                    | 对后续处理的影响                                                       |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `position` / <ApiSourceLink label="NodePositionSchema" path="packages/kernel/core/src/schemas/node/node.ts" startLine={79}>`NodePositionSchema`</ApiSourceLink> | 坐标对、极坐标、方向定位、基点偏移、两点插值、`kind: 'anchor'` 对齐，共六种 | 前五种先确定中心位置；锚点对齐要先得到自身尺寸与锚点，再计算整体平移   |
+| `shape` / <ApiSourceLink label="ShapeValueSchema" path="packages/kernel/core/src/schemas/node/shape.ts" startLine={34}>`ShapeValueSchema`</ApiSourceLink>       | 名称或 `{ type, params }`                                                   | 解析时绑定同一套形状定义与参数，编译时调用该定义计算外框与图元         |
+| `boundary` / <ApiSourceLink label="BoundarySchema" path="packages/kernel/core/src/schemas/node/boundary.ts" startLine={31}>`BoundarySchema`</ApiSourceLink>     | 省略或显式连接面配置                                                        | 省略时沿用视觉形状；显式值改变自动连线与边界查询所消费的能力           |
+| `text` / <ApiSourceLink label="TextBlockSchema" path="packages/kernel/core/src/schemas/text/text.ts" startLine={81}>`TextBlockSchema`</ApiSourceLink>           | 字符串、文字行数组；行内可含文本与公式片段                                  | 解析时确定字体和颜色，编译时选择普通行或混排测量，保留硬换行与基线信息 |
+| `label` / <ApiSourceLink label="NodeLabelSchema" path="packages/kernel/core/src/schemas/node/label.ts" startLine={106}>`NodeLabelSchema`</ApiSourceLink>        | 单个标签或标签数组                                                          | 解析为标签列表，编译时逐个独立测量并附着到主体边界                     |
+| `scale`、`padding`、`margin`、`minimumSize`                                                                                                                     | 数值简写或轴向、四边、宽高对象                                              | 解析时展开并应用节点缩放，编译使用展开后的尺寸约束                     |
+
+锚点对齐的输入由 <ApiSourceLink label="AnchorPositionSchema" path="packages/kernel/core/src/schemas/position/anchor.ts" startLine={7}>`AnchorPositionSchema`</ApiSourceLink> 描述；它的目标位置与自身 `selfAnchor` 分别决定“对齐到哪里”和“拿自身哪个点去对齐”。标签位置可用方位、角度或 `{ boundary, fraction }`，随后按边界求附着点；`placement` 决定内外放置，`pin` 为外侧标签增加引线。
 
 下面是贯穿示例中 A 的完整声明片段。普通文字 A 能放入给定最小尺寸；最终视觉矩形为 60 × 40，中心 [0, 0]，默认无额外旋转。
 
@@ -27,9 +38,95 @@ const node = {
 } satisfies import('@retikz/core').IRNode;
 ```
 
-## 内容测量与形状约束
+## 解析过程
 
-Core 调用注入的 measureText，不读取 DOM。宽度、高度以及 ascent / descent 由宿主提供；缺少上下基线指标时，各取高度的一半。Reconciler 未收到宿主测量器时使用近似估算，同次执行的测量复用也由它负责。
+函数 <ApiSourceLink label="resolveNode" path="packages/kernel/core/src/resolve/node/resolve.ts" startLine={127}>`resolveNode`</ApiSourceLink> 产生 <ApiSourceLink label="CanonicalNode" path="packages/kernel/core/src/resolve/node/types.ts" startLine={149}>`CanonicalNode`</ApiSourceLink>。下面保留完整顶层字段及布局字段，省略源码注释；正文和标签通过 <ApiSourceLink label="CanonicalTextBlock" path="packages/kernel/core/src/resolve/text/types.ts" startLine={5}>`CanonicalTextBlock`</ApiSourceLink> 继续描述文字内容。
+
+```ts
+export type CanonicalNode = Readonly<{
+  id?: string;
+  aliasIds: Array<string>;
+  meta?: JsonObject;
+  zIndex?: number;
+  layout: CanonicalNodeLayout;
+  shape: CanonicalNodeShape;
+  boundary: CanonicalNodeBoundary;
+  style: CanonicalNodeStyle;
+  text?: CanonicalTextBlock;
+  labels: Array<CanonicalNodeLabel>;
+  animations: NonNullable<IRNode['animations']>;
+}>;
+
+export type CanonicalNodeLayout = {
+  position: CanonicalPosition | Required<Extract<NonNullable<IRNode['position']>, { kind: 'anchor' }>>;
+  padding: BoundsInsets;
+  margin: BoundsInsets;
+  minimumSize: {
+    width: number;
+    height: number;
+  };
+  rotate: number;
+  width?: number;
+};
+```
+
+解析先用 <ApiSourceLink label="mergeNodeStyle" path="packages/kernel/core/src/resolve/style/node.ts" startLine={9}>`mergeNodeStyle`</ApiSourceLink> 合并当前声明与作用域默认值，再展开标签、主色及依赖颜色。随后补位置与布局默认值，解析填充、描边和阴影，并用 <ApiSourceLink label="resolveNodeShape" path="packages/kernel/core/src/resolve/node/shape.ts" startLine={80}>`resolveNodeShape`</ApiSourceLink>、<ApiSourceLink label="resolveNodeBoundary" path="packages/kernel/core/src/resolve/node/boundary.ts" startLine={11}>`resolveNodeBoundary`</ApiSourceLink> 绑定定义与参数。<ApiSourceLink label="resolveNodeContent" path="packages/kernel/core/src/resolve/node/content.ts" startLine={27}>`resolveNodeContent`</ApiSourceLink> 确定正文和标签的文本块。
+
+类型 <ApiSourceLink label="NodeResolveContext" path="packages/kernel/core/src/resolve/node/types.ts" startLine={226}>`NodeResolveContext`</ApiSourceLink> 提供 `scopeDefaults`、主题模式、根字号、公式开关，以及 shape、boundary、pattern 注册表；`nodeDistance` 与 `labelDistance` 分别补定位距离和标签距离。未知形状在绑定时失败。`scale` 折入布局尺寸、字号与形状参数后，编译直接消费这些有效值。锚点对齐保留目标表达式，并补齐 `selfAnchor`。
+
+图中区分配置展开与能力绑定：只有两者完成后，布局阶段才有足够信息调用形状能力。
+
+对前面的 A，解析后 `layout.minimumSize` 为 `{ width: 60, height: 40 }`，padding 与 margin 都展开为四边零值；默认形状绑定到 rectangle，`labels` 为 `[]`。这些字段给出尺寸约束，实际正文盒与视觉外框由下一阶段测量。
+
+<ComponentPreview files="node-resolution" size="lg" hideCode type="flow" />
+
+## 编译过程
+
+函数 <ApiSourceLink label="compileNode" path="packages/kernel/core/src/compile/node/compile.ts" startLine={8}>`compileNode`</ApiSourceLink> 将 <ApiSourceLink label="CanonicalNode" path="packages/kernel/core/src/resolve/node/types.ts" startLine={149}>`CanonicalNode`</ApiSourceLink> 与 <ApiSourceLink label="NodeCompileContext" path="packages/kernel/core/src/compile/node/types.ts" startLine={148}>`NodeCompileContext`</ApiSourceLink> 交给 <ApiSourceLink label="layoutNode" path="packages/kernel/core/src/compile/node/layout.ts" startLine={30}>`layoutNode`</ApiSourceLink>，再用 <ApiSourceLink label="emitNode" path="packages/kernel/core/src/compile/node/emit.ts" startLine={15}>`emitNode`</ApiSourceLink> 输出局部图元。<ApiSourceLink label="CompiledNode" path="packages/kernel/core/src/compile/node/types.ts" startLine={23}>`CompiledNode`</ApiSourceLink> 保留当前形状和连接面绑定；`layout.overall` 是完整布局，`emit.overall` 是图元与边界贡献。下面列出这些产物的完整字段，省略源码注释。
+
+```ts
+export type CompiledNode = {
+  shape: CanonicalNode['shape'];
+  boundary: CanonicalNode['boundary'];
+  layout: WithRequiredProperties<PreparedNodeLayout, 'overall'>;
+  emit: WithRequiredProperties<PreparedNodeEmit, 'overall'>;
+  alignmentGuides?: Array<LayoutAlignmentGuide>;
+};
+
+export type CompiledNodeLayout = {
+  geometry: NodeLayoutGeometry;
+  text?: CompiledNodeTextLayout;
+  labels?: Array<NodeLabelLayout>;
+};
+
+export type NodeLayoutGeometry = {
+  rect: CenteredBox;
+  margin: BoundsInsets;
+  contentCenter: Position;
+  contentSize: { width: number; height: number };
+};
+
+export type NodeEmitOutput = {
+  primitives: Array<ScenePrimitive>;
+  bounds: Array<{ boundsPoints: Array<Position>; shadow?: CanonicalDropShadow }>;
+};
+```
+
+| <ApiSourceLink label="NodeCompileContext" path="packages/kernel/core/src/compile/node/types.ts" startLine={148}>`NodeCompileContext`</ApiSourceLink> 成员 | 编译时提供什么                                         |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| `measureText`、`texLowering`                                                                                                                              | 正文与标签的文字度量、公式展开及其诊断                 |
+| `positionContext`、`boundaryState`                                                                                                                        | 读取目标引用、转换局部与世界坐标、查询自身及目标连接面 |
+| `allocationWidthProposal`                                                                                                                                 | 父级给出的宽度提案，用于正文和形状之间的尺寸反馈       |
+| `scopeChain`、`composedTransform`                                                                                                                         | 当前所属空间及已组合变换                               |
+| `registerPaint`、`round`、`warn`                                                                                                                          | 登记绘制资源、圆整输出数值、报告编译问题               |
+
+编译按正文测量、形状尺寸、位置对齐、标签放置、图元生成推进。以下图先看每份产物在哪里形成，再展开具体算法。
+
+<ComponentPreview files="layout-overview" size="lg" hideCode type="flow" />
+
+### 内容测量与形状约束
+
+Core 调用注入的 measureText 获取文字尺寸。宽度、高度以及 ascent / descent 由宿主提供；缺少上下基线指标时，各取高度的一半。Reconciler 未收到宿主测量器时使用近似估算，同次执行的测量复用也由它负责。
 
 普通文本保留显式换行，按预算折成物理行。混排片段在同一行共享基线；不可拆的公式超宽时可能溢出。正文盒加入 padding 后，交给 Shape 的 computeCircumscribedGeometry；最小尺寸和固定视觉宽度再参与最终尺寸选择。
 
@@ -44,9 +141,9 @@ Core 调用注入的 measureText，不读取 DOM。宽度、高度以及 ascent 
 | width        | 固定视觉宽度，仍放不下时失败         |
 | 父级宽度提案 | 布局占位预算，需要考虑 margin 与旋转 |
 
-`measureNodeBody` 在正文宽度与自定义形状尺寸之间执行有界反馈。父级提案不是保证能满足的硬裁剪；父级必须消费实际返回的布局贡献。固定 width 的语义与提案不同，不能用二者互相替换。
+函数 <ApiSourceLink label="measureNodeBody" path="packages/kernel/core/src/compile/node/measure.ts" startLine={15}>`measureNodeBody`</ApiSourceLink> 在正文宽度与自定义形状尺寸之间执行有界反馈。父级需要消费实际返回的布局贡献；固定 width 则约束视觉宽度，放不下内容时失败。
 
-## 正文盒、视觉外框与布局占位
+### 正文盒、视觉外框与布局占位
 
 以下图为例，正文 40 × 24、padding 8 先得到 56 × 40；minimumSize 80 × 48 再扩大视觉外框；margin 6 使布局占位成为 92 × 60。margin 不会把可见矩形也画大，标签也不反向撑大形状。
 
@@ -54,55 +151,38 @@ Core 调用注入的 measureText，不读取 DOM。宽度、高度以及 ascent 
 
 不对称 padding 和形状 offset 可能使正文中心与视觉外框中心不同。布局分别保存它们；自身锚点定位还需要先做临时布局，求出自身锚点后再整体平移。
 
-## 基线、标签与连接几何
+### 正文基线
 
 行槽必须容纳实际 ascent + descent。行高 24、ascent 14、descent 4 时，上下各留 3，基线距槽顶 17。绘制沿用布局确定的基线，不重新猜测文字中心。
 
 <ComponentPreview files="layout-baseline" size="lg" hideCode type="illustration" />
 
-标签独立测量，依靠形状上的附着点和 direction / distance 等配置放置；最终视框包含标签，但连线不会自动连到标签边缘。Shape 是视觉轮廓，Boundary 是自动连接所用表面，二者可分别选择。
+### 标签与连接几何
+
+函数 <ApiSourceLink label="measureNodeLabel" path="packages/kernel/core/src/compile/node/label/layout.ts" startLine={202}>`measureNodeLabel`</ApiSourceLink> 度量标签文本块，<ApiSourceLink label="placeNodeLabel" path="packages/kernel/core/src/compile/node/label/layout.ts" startLine={128}>`placeNodeLabel`</ApiSourceLink> 根据附着位置、旋转和视觉盒计算放置。标签独立测量，依靠形状上的附着点和 position / placement / distance 等配置放置；最终视框包含标签，但连线不会自动连到标签边缘。Shape 是视觉轮廓，Boundary 是自动连接所用表面，二者可分别选择。
 
 <ComponentPreview files="layout-boundaries" size="lg" hideCode type="illustration" />
 
-标准方位与数字角度锚点使用连接面及 margin；形状专属锚点和边上比例点使用视觉形状。Reconciler 管理 boundaryStore，为当前绑定关联查询状态；Core 的节点阶段不创建跨节点 store。
+标准方位与数字角度锚点使用连接面及 margin；形状专属锚点和边上比例点使用视觉形状。boundaryState 为当前绑定提供边界查询状态。
 
-<SourceLinks
-  sources={[
-    { label: '正文排版与基线', path: 'packages/kernel/core/src/compile/node/content/layout.ts' },
-    { label: '标签布局', path: 'packages/kernel/core/src/compile/node/label/layout.ts' },
-    { label: '连接几何与锚点', path: 'packages/kernel/core/src/compile/boundary/layout.ts' },
-  ]}
-/>
+### 图元与查询几何的交接
 
-## 图元与查询几何的交接
+函数 <ApiSourceLink label="emitNode" path="packages/kernel/core/src/compile/node/emit.ts" startLine={15}>`emitNode`</ApiSourceLink> 分别处理 shape、content、label，并组装局部图元与边界贡献。文字节点或有旋转的节点使用 GroupPrimitive 统一承载元数据和变换。
 
-emitNode 分别处理 shape、content、label，并组装局部图元与边界贡献。文字节点或有旋转的节点使用 GroupPrimitive 统一承载元数据和变换；不能假定一个 Node 恰好对应一个矩形图元。
+Reconciler 用 <ApiSourceLink label="projectNodeGeometry" path="packages/kernel/core/src/compile/node/layout.ts" startLine={21}>`projectNodeGeometry`</ApiSourceLink> 组合当前能力绑定与布局，按 Scope 变换投影后发布到名称环境；Scene 中的图元仍保留所属空间。prepared 可以提供完整或局部 layout / emit 产物，Core 只补缺项，跨次复用裁决由 Reconciler 完成。
 
-Reconciler 用 projectNodeGeometry 组合当前能力绑定与布局，按 Scope 变换投影后发布到名称环境；Scene 中的图元仍保留所属空间。prepared 可以提供完整或局部 layout / emit 产物，Core 只补缺项，跨次复用裁决由 Reconciler 完成。
-
-## 完整实现流程
+## 完整流程
 
 <ComponentPreview files="layout-implementation" size="xxl" hideCode type="flow" />
 
-源码先看 resolveNode 和 compileNode 的边界，再进入 measureNodeBody、layoutNode、emitNode。content、shape、label 子目录分别拥有自身 layout / emit；根布局只协调它们。宽度反馈位于 measure.ts，不应从旧版布局入口推断所有计算都在 layout.ts 中。
-
-<SourceLinks
-  sources={[
-    { label: 'CanonicalNode', path: 'packages/kernel/core/src/resolve/node/types.ts' },
-    { label: 'Compilation entry', path: 'packages/kernel/core/src/compile/node/compile.ts' },
-    { label: 'Content budget and shape feedback', path: 'packages/kernel/core/src/compile/node/measure.ts' },
-    { label: 'Node layout', path: 'packages/kernel/core/src/compile/node/layout.ts' },
-    { label: 'Node output', path: 'packages/kernel/core/src/compile/node/emit.ts' },
-    { label: 'Reconciler call site', path: 'packages/kernel/reconciler/src/compile/tree/node/visit.ts' },
-  ]}
-/>
+源码先看 <ApiSourceLink label="resolveNode" path="packages/kernel/core/src/resolve/node/resolve.ts" startLine={127}>`resolveNode`</ApiSourceLink> 和 <ApiSourceLink label="compileNode" path="packages/kernel/core/src/compile/node/compile.ts" startLine={8}>`compileNode`</ApiSourceLink> 的边界，再进入 <ApiSourceLink label="measureNodeBody" path="packages/kernel/core/src/compile/node/measure.ts" startLine={15}>`measureNodeBody`</ApiSourceLink>、<ApiSourceLink label="layoutNode" path="packages/kernel/core/src/compile/node/layout.ts" startLine={30}>`layoutNode`</ApiSourceLink>、<ApiSourceLink label="emitNode" path="packages/kernel/core/src/compile/node/emit.ts" startLine={15}>`emitNode`</ApiSourceLink>。content、shape、label 子目录分别拥有自身 layout / emit；根布局只协调它们。宽度反馈位于 measure.ts。
 
 ## 延伸阅读
 
 <LinkedSections
   items={[
     { title: '语义解析', description: '查看节点编译前确定了哪些语义', url: '/kernel/packages/core/resolution' },
-    { title: '坐标与引用求值', description: '查看定位与边界读取的空间规则', url: '/kernel/packages/core/coordinates' },
+    { title: '坐标求值', description: '查看定位与边界读取的空间规则', url: '/kernel/packages/core/coordinates' },
     { title: 'Path 编译', description: '跟踪节点几何怎样被连线消费', url: '/kernel/packages/core/path-compilation' },
     {
       title: 'Composite 编译',

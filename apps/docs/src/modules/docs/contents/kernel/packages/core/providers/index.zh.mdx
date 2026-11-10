@@ -1,9 +1,9 @@
 ---
-title: 提供者与依赖
+title: 能力依赖
 description: 追踪编写贡献如何通过有序依赖图物化 Core 定义，并区分 provider、注册表和内置能力
 ---
 
-[能力定义与注册](/kernel/packages/core/definitions)说明了 Definition 如何被消费。当一个领域组件同时需要自己的 Composite、扩展形状和裁剪能力时，调用者不应靠记忆逐个收集定义。依赖 provider 描述“这项能力需要哪些定义”，将多个编写实例的需求汇总为一组编译选项。
+[能力注册](/kernel/packages/core/definitions)说明了 Definition 如何被消费。一个领域组件可能同时需要自己的 Composite、扩展形状和裁剪能力。依赖 provider 描述“这项能力需要哪些定义”，将多个编写实例的需求汇总为一组编译选项。
 
 Definition 是可执行的能力实现；`CoreDependencyProvider` 是生成一个 Definition 的声明；registry 是编译时按键查找 Definition 的表。三者处于不同阶段。IR 只引用能力，不保存 provider、工厂或依赖图。
 
@@ -13,7 +13,7 @@ Definition 是可执行的能力实现；`CoreDependencyProvider` 是生成一�
 
 <ComponentPreview files="provider-overview" size="lg" hideCode type="flow" />
 
-目录中存在一个 provider，并不意味着它的工厂会执行；只有根与其依赖可达的条目会被物化。这个过程也不会扫描 npm 包、自动 import 模块，或从已有 registry 反推依赖。
+解析器只物化从根可达的 provider，所需依赖由 contributions 中的目录显式提供。
 
 ## 从需求到完整标识
 
@@ -51,6 +51,12 @@ const definitions = resolveCoreProviderDependencies({
 
 同键多次出现时，解析器要求 `makeDefinition` 是同一个函数引用，且有序依赖列表逐项相同。每次提供的非 undefined `params` 按贡献顺序收集，工厂收到一个冻结的参数数组，并为该键生成唯一定义。参数如何合并由 provider 所属方决定，Core 不做任意对象深合并。
 
+<ComponentAlert
+  type="tip"
+  title="优先复用包提供的 provider"
+  description="使用者通常直接导入所属包提供的 provider，或调用其贡献项创建函数。官方包已有这样的入口，例如 Standard 的 surfaceProvider、Extension 的 pathClipProvider 和 createRibbonProviderContribution，可保持工厂引用与依赖声明一致，避免重复声明导致的冲突。项目和扩展包作者也应尽量提供统一入口，让使用者直接复用。"
+/>
+
 例如 Extension 的 Ribbon provider 会汇总多个实例贡献的宽度函数和端帽，按定义对象引用去重，再创建一个 Ribbon Path Definition。每次调用若重新构造不同的工厂函数，即使函数体相同，也会触发同键冲突。
 
 <SourceLinks sources={[{ label: 'Ribbon 参数聚合', path: 'packages/library/extension/src/ribbon/provider.ts' }]} />
@@ -76,7 +82,7 @@ const definitions = resolveCoreProviderDependencies({
 | Pattern   | lines、grid、dots                                      | 后端中立的图案描述                             |
 | Composite | 无                                                     | 由领域包或调用者注册                           |
 
-Theme 有独立的 `resolveThemeRegistry` 与默认明暗主题色，不属于 `ProviderCapability` 的依赖图。内置能力的注册表也不是依赖 provider 的隐式目录；不要把这两份索引混为一体。
+Theme 有独立的 `resolveThemeRegistry` 与默认明暗主题色，不属于 `ProviderCapability` 的依赖图。
 
 <SourceLinks
   sources={[
@@ -112,7 +118,7 @@ Theme 有独立的 `resolveThemeRegistry` 与默认明暗主题色，不属于 `
 <LinkedSections
   items={[
     {
-      title: '能力定义与注册',
+      title: '能力注册',
       description: '回顾 Definition 与各类 registry 的消费边界',
       url: '/kernel/packages/core/definitions',
     },

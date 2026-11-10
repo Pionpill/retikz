@@ -5,13 +5,13 @@ export const scopeOverviewI18n = {
     children: '在派生环境中执行子树',
     compile: '子布局 → 包络与最终放置',
     output: '路径回填后组装分组和边界',
-    parent: '默认值、主题与所属空间',
+    parent: '子布局、引用查询与裁剪资源',
   },
   en: {
     resolve: 'Inheritance, theme, envelope, group',
     children: 'Run children in the derived context',
     compile: 'Child layouts → envelope and placement',
     output: 'Assemble group after path resolution',
-    parent: 'Defaults, theme and owning space',
+    parent: 'Child layouts, references and clip resources',
   },
 };

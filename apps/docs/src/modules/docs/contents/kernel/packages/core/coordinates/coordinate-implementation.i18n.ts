@@ -1,17 +1,19 @@
-/** 确定默认距离与嵌套表达流程图的双语文案 */
+/** 坐标阶段图的双语文案 */
 export const coordinateImplementationI18n = {
   zh: {
-    resolve: '确定默认距离与嵌套表达',
-    context: 'Reconciler 投影名称与变换服务',
-    compile: '求当前 Scope 局部点',
-    publish: '投影世界位置并发布名称',
-    names: '可见性与就绪状态归调度方',
+    canon: 'P: of A + offset [40, 0]',
+    evaluate: '查询 A → 转局部 → 加偏移 → 转世界',
+    points: 'local [40, 0] · world [180, 50]',
+    compiled: 'compileCoordinate 取 position [40, 0]',
+    publish: '发布 P 世界位置；收集局部布局',
+    context: 'lookupReference / toLocal / toWorld',
   },
   en: {
-    resolve: 'Resolve distance and nested expressions',
-    context: 'Adapt naming and transform services',
-    compile: 'Evaluate the current local point',
-    publish: 'Project to world and publish the name',
-    names: 'Scheduler owns visibility and readiness',
+    canon: 'P: of A + offset [40, 0]',
+    evaluate: 'Read A → local → offset → world',
+    points: 'local [40, 0] · world [180, 50]',
+    compiled: 'compileCoordinate keeps [40, 0]',
+    publish: 'Publish P globally; collect local layout',
+    context: 'lookupReference / toLocal / toWorld',
   },
 };

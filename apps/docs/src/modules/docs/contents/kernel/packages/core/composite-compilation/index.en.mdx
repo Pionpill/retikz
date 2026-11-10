@@ -3,21 +3,102 @@ title: Composite Compilation
 description: Understand domain definitions through child generation, layout proposals, isolated probes and replay within ordinary Core compilation
 ---
 
-Composite lets a domain package own high-level declarations while reusing nodes, paths, Scopes and Coordinates. It returns children for the same compilation pipeline rather than implementing another renderer. Core owns binding, Schema and layout contracts; Reconciler invokes callbacks and commits results.
+The preceding pages cover coordinate, node, path and Scope compilation. Composite builds on these capabilities to support domain declarations: a Definition generates ordinary children or uses layout proposals and probes to select a layout result, then joins the same compilation chain. This page focuses on child generation, layout collaboration and result submission. Core supplies binding, Schema and layout contracts; Reconciler invokes callbacks and commits results.
 
 ## Overall Flow
 
-Core matches namespace / type and parses input with the definition's Schema. Reconciler creates a bounded context, invokes compile, preflights output, then compiles authored children or commits chosen probe results. Domain artifacts are collected separately from primitives.
+A domain declaration binds a definition and resolves to <ApiSourceLink label="CompositeResolution" path="packages/kernel/core/src/resolve/composite/types.ts" startLine={41}>`CompositeResolution`</ApiSourceLink>. Its callback returns <ApiSourceLink label="CompositeEvaluationResult" path="packages/kernel/core/src/contract/composite/layout.ts" startLine={247}>`CompositeEvaluationResult`</ApiSourceLink>; a full-layout <ApiSourceLink label="CompositeCompileResult" path="packages/kernel/core/src/contract/composite/layout.ts" startLine={309}>`CompositeCompileResult`</ApiSourceLink> then feeds child compilation or selected-result commit.
+
+<ComponentPreview files="composite-flow" size="lg" hideCode type="flow" />
+
+## Input Contract
+
+The type <ApiSourceLink label="CompositeNodeSchema" path="packages/kernel/core/src/schemas/scene/composite.ts" startLine={14}>`CompositeNodeSchema`</ApiSourceLink> accepts the shared IR envelope: nonblank `namespace` and `type`, with JSON values for domain fields. The selected `CompositeDefinition.schema` then interprets the complete domain input, so each definition determines its supported forms.
+
+| Input layer        | Form                                                                                                                                                                                    | Effect on later processing                                                                |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Shared declaration | `{ namespace, type, ...domainFields }`                                                                                                                                                  | Selects the definition, schema and compile callback by namespace and type                 |
+| Domain schema      | Definition-owned fields and branches                                                                                                                                                    | Resolves domain parameters and defaults; the result becomes the callback's first argument |
+| Runtime binding    | <ApiSourceLink label="CompositeBoundChild" path="packages/kernel/core/src/contract/composite/input.ts" startLine={27}>`CompositeBoundChild`</ApiSourceLink> and its input contract      | Supplies functions or host objects through context, separately from persistent JSON       |
+| Evaluation request | layout or contribution in <ApiSourceLink label="CompositeEvaluation" path="packages/kernel/core/src/contract/composite/layout.ts" startLine={226}>`CompositeEvaluation`</ApiSourceLink> | layout requests children; contribution requests sizes on selected axes                    |
+
+For example, a pair definition can accept `{ namespace: 'example', type: 'pair', gap: 24 }`. Its schema supplies a default gap, which the callback uses when generating two nodes. Definitions that need child sizes use the layout services provided by the compile context.
+
+## Resolution
+
+The function <ApiSourceLink label="bindComposite" path="packages/kernel/core/src/resolve/composite/resolve.ts" startLine={8}>`bindComposite`</ApiSourceLink> selects a definition by its full key and returns <ApiSourceLink label="CompositeBinding" path="packages/kernel/core/src/resolve/composite/types.ts" startLine={8}>`CompositeBinding`</ApiSourceLink>. A registered binding goes to <ApiSourceLink label="resolveComposite" path="packages/kernel/core/src/resolve/composite/resolve.ts" startLine={30}>`resolveComposite`</ApiSourceLink>, which parses source with that definition's schema and produces <ApiSourceLink label="CompositeResolution" path="packages/kernel/core/src/resolve/composite/types.ts" startLine={41}>`CompositeResolution`</ApiSourceLink>. This is the actual resolution product: its `node` holds the parsed domain value. The full declarations follow, with source comments omitted.
+
+```ts
+export type CompositeBinding =
+  | Readonly<{
+      kind: 'unregistered';
+      key: string;
+    }>
+  | Readonly<{
+      kind: 'compile';
+      key: string;
+      namespace: string;
+      type: string;
+      source: IRComposite;
+      schema: ZodType;
+      compile: (node: unknown, context: CompositeCompileContext) => CompositeEvaluationResult<JsonValue>;
+      artifactSchema?: ZodType<JsonValue>;
+    }>;
+
+export type RegisteredCompositeBinding = Exclude<CompositeBinding, { kind: 'unregistered' }>;
+
+export type CompositeResolution<TBinding extends RegisteredCompositeBinding = RegisteredCompositeBinding> = TBinding &
+  Readonly<{
+    node: unknown;
+  }>;
+```
+
+Resolution needs <ApiSourceLink label="CompositeRegistry" path="packages/kernel/core/src/resolve/composite/types.ts" startLine={48}>`CompositeRegistry`</ApiSourceLink> and the current `irPath`; the definition's schema owns domain defaults. Binding preserves the relationship between source, schema and compile, so the parsed value reaches the matching callback.
+
+An unknown key produces `kind: 'unregistered'`. Normal compilation collects a warning and skips it; an isolated probe treats it as a recoverable layout failure. The diagram shows resolution for a registered definition.
+
+<ComponentPreview files="composite-resolution" size="lg" hideCode type="flow" />
+
+## Compilation
+
+The type <ApiSourceLink label="CompositeCompiler" path="packages/kernel/reconciler/src/compile/tree/composite/compile.ts" startLine={57}>`CompositeCompiler`</ApiSourceLink> creates <ApiSourceLink label="CompositeCompileContext" path="packages/kernel/core/src/contract/composite/layout.ts" startLine={252}>`CompositeCompileContext`</ApiSourceLink> and invokes the resolved compile callback. Its actual return type is <ApiSourceLink label="CompositeEvaluationResult" path="packages/kernel/core/src/contract/composite/layout.ts" startLine={247}>`CompositeEvaluationResult`</ApiSourceLink>: full layout returns <ApiSourceLink label="CompositeCompileResult" path="packages/kernel/core/src/contract/composite/layout.ts" startLine={309}>`CompositeCompileResult`</ApiSourceLink>, while axis measurement can return <ApiSourceLink label="CompositeContributionResult" path="packages/kernel/core/src/contract/composite/layout.ts" startLine={231}>`CompositeContributionResult`</ApiSourceLink>. Ordinary children continue through compilation; runtime handles go through preflight and commit. Domain artifacts are collected separately. The complete fields follow, with source comments omitted.
+
+```ts
+export type CompositeEvaluationResult<TArtifact extends JsonValue = never> =
+  CompositeCompileResult<TArtifact> | CompositeContributionResult;
+
+export type CompositeCompileResult<TArtifact extends JsonValue = never> = Readonly<{
+  children: ReadonlyArray<IRChild | CompositeCompileChild | CompositeBoundChild>;
+  allocationBounds?: Readonly<BoundsRect>;
+  alignmentGuides?: ReadonlyArray<LayoutAlignmentGuide>;
+}> &
+  ([TArtifact] extends [never] ? { artifact?: never } : { artifact?: TArtifact });
+
+export type CompositeContributionResult = Readonly<{
+  kind: 'contribution';
+  contribution: LayoutContribution;
+}>;
+```
+
+| <ApiSourceLink label="CompositeCompileContext" path="packages/kernel/core/src/contract/composite/layout.ts" startLine={252}>`CompositeCompileContext`</ApiSourceLink> member | What compilation receives                                                                              |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `evaluation`, `proposal`                                                                                                                                                     | Full-layout or axis-measurement request and parent slot constraints                                    |
+| `measureChild`, `layoutChild`                                                                                                                                                | Size queries or a complete isolated layout with a replay token                                         |
+| `replay`, `createScope`                                                                                                                                                      | Selection of a layout result or an output child carrying authored Scope properties                     |
+| `resolvePathTargets`                                                                                                                                                         | Queries for source and ordered target points in a child environment                                    |
+| `theme`, `withTheme`                                                                                                                                                         | Effective theme and a themed measurement/query context                                                 |
+| `runtimeInput`, `selectSourceChild`, `bindChild`                                                                                                                             | Current runtime input, transfer of authored child bindings and explicit binding for generated children |
+| `warn`, `raise`                                                                                                                                                              | Diagnostics or propagation of an unusable layout failure                                               |
+
+The diagram follows the callback result: after it returns children and selected probe results, the scheduler preflights and commits the final drawing contributions.
 
 <ComponentPreview files="composite-overview" size="lg" hideCode type="flow" />
 
-A simple Composite returns children directly, as pair does in [Capability Definitions and Registration](/kernel/packages/core/definitions). Child layout services are needed when an algorithm must know actual child dimensions, not for every composition.
-
-## Proposals Describe Parent Requirements
+### Proposals Describe Parent Requirements
 
 The x / y proposals independently use intrinsic, range or exact. Intrinsic queries minimum / natural size; range describes a slot interval; exact requests a fixed slot. Allocation does not imply scaling all visible geometry to that width.
 
-<ComponentPreview files="composite-proposal" size="md" hideCode type="illustration" />
+<ComponentPreview files="composite-proposal" size="lg" hideCode type="illustration" />
 
 The fixed path has allocationBounds.width 100. An exact 60 proposal can return a 60-wide slotSize while its geometry remains 100. The parent handles overflow, clipping or another arrangement. Some child layouts can fail under a proposal.
 
@@ -29,7 +110,7 @@ The fixed path has allocationBounds.width 100. An exact 60 proposal can return a
 | alignmentGuides  | Optional baseline and other alignment references                |
 | replay           | Token for selecting one complete result in the current callback |
 
-## Measurement or Complete Layout
+### Measurement or Complete Layout
 
 `measureChild(child, proposal, axis)` queries only the requested size contribution and returns no replay token. Context evaluation distinguishes layout from an axis contribution request. A Composite that can compute that contribution directly may avoid generating a full subtree for measurement.
 
@@ -62,7 +143,7 @@ const shiftedNode = defineComposite({
 });
 ```
 
-## Isolation and Selected Replay
+### Isolation and Selected Replay
 
 Probes use isolated name writes, resources, primitives and diagnostics. A candidate does not immediately draw into the parent. Reconciler stores the full transaction; the callback receives an opaque token. Unselected candidates publish no primitives, names or warnings.
 
@@ -70,53 +151,37 @@ Probes use isolated name writes, resources, primitives and diagnostics. A candid
 
 Ordinary children continue through compilation; replay children consume saved transactions. A replay wrapper accepts lowered numerical transforms and clipping. Use `createScope(props, children)` for full authored Scope semantics and ordinary Scope scheduling.
 
-## Queries, Theme and Runtime Input
+### Queries, Theme and Runtime Input
 
 `resolvePathTargets` evaluates source and ordered points inside an isolated real child environment and returns local coordinates. It commits no drawing, performs no final endpoint clipping or interpolation, and does not mutate author points. Domain paths can use it before lowering.
 
 `withTheme` creates effective local theme context for queries and measurements. Final children must still declare the matching theme boundary through createScope, so selected output does not accidentally inherit a different theme.
 
-Domain capabilities requiring functions or host objects use runtime input bindings instead of inserting them into JSON IR. CompositeBoundChild and replay / Scope handles are callback-local runtime values, not new persistent entity types.
+Domain capabilities requiring functions or host objects use runtime input bindings instead of inserting them into JSON IR. <ApiSourceLink label="CompositeBoundChild" path="packages/kernel/core/src/contract/composite/input.ts" startLine={27}>`CompositeBoundChild`</ApiSourceLink> and replay / Scope handles are callback-local runtime values, not new persistent entity types.
 
-## Artifacts and Failure Boundaries
+### Artifacts and Failure Boundaries
 
 A Definition returning an artifact must declare artifactSchema. Reconciler currently checks that artifactSchema exists, then checks JSON serializability and freezes the value; it does not call artifactSchema.parse to validate the value. Artifacts are delivered separately from drawing. Domain data should not be hidden in primitives for consumers to reverse-engineer. Explicit allocationBounds and alignmentGuides also have their own output contracts rather than replacing visual bounds.
 
-An unregistered Composite warns and is skipped in ordinary compilation; isolated probing returns a handleable failure. Excess expansion depth, invalid output, cross-callback handles and duplicate replay follow their contract or execution failure rules rather than silent fallback.
+An unregistered Composite warns and is skipped in ordinary compilation; isolated probing returns a handleable failure. Excess expansion depth, invalid output, cross-callback handles and duplicate replay follow their contract or execution failure rules.
 
-## Complete Implementation Flow
+## Complete Flow
 
 <ComponentPreview files="composite-implementation" size="xxl" hideCode type="flow" />
 
-Read Core's bindComposite / resolveComposite first, then Reconciler's CompositeCompiler and callback context. Measurement, probe, preflight and replay own query, isolation, validation and commit respectively. Reconciler owns same-session query reuse; Core Definitions do not retain cross-execution state.
-
-<SourceLinks
-  sources={[
-    { label: 'Definition contract', path: 'packages/kernel/core/src/contract/composite/definition.ts' },
-    { label: 'Layout and evaluation contract', path: 'packages/kernel/core/src/contract/composite/layout.ts' },
-    { label: 'Core binding and resolution', path: 'packages/kernel/core/src/resolve/composite/resolve.ts' },
-    {
-      label: 'Reconciler callback scheduling',
-      path: 'packages/kernel/reconciler/src/compile/tree/composite/compile.ts',
-    },
-    { label: 'Callback services', path: 'packages/kernel/reconciler/src/compile/tree/composite/context.ts' },
-    { label: 'Probe isolation', path: 'packages/kernel/reconciler/src/compile/tree/composite/probe.ts' },
-    { label: 'Preflight', path: 'packages/kernel/reconciler/src/compile/tree/composite/preflight.ts' },
-    { label: 'Replay commit', path: 'packages/kernel/reconciler/src/compile/tree/composite/replay.ts' },
-  ]}
-/>
+Read Core's <ApiSourceLink label="bindComposite" path="packages/kernel/core/src/resolve/composite/resolve.ts" startLine={8}>`bindComposite`</ApiSourceLink> / <ApiSourceLink label="resolveComposite" path="packages/kernel/core/src/resolve/composite/resolve.ts" startLine={30}>`resolveComposite`</ApiSourceLink> first, then Reconciler's <ApiSourceLink label="CompositeCompiler" path="packages/kernel/reconciler/src/compile/tree/composite/compile.ts" startLine={57}>`CompositeCompiler`</ApiSourceLink> and callback context. Measurement, probe, preflight and replay own query, isolation, validation and commit respectively. Reconciler owns same-session query reuse; Core Definitions do not retain cross-execution state.
 
 ## Further Reading
 
 <LinkedSections
   items={[
     {
-      title: 'Capability Definitions and Registration',
+      title: 'Capability Registration',
       description: 'Minimal Composite and complete keys',
       url: '/kernel/packages/core/definitions',
     },
     {
-      title: 'Providers and Dependencies',
+      title: 'Capability Dependencies',
       description: 'Assembling domain dependencies',
       url: '/kernel/packages/core/providers',
     },

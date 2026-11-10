@@ -3,15 +3,28 @@ title: Path 编译
 description: 沿目标绑定、路径定义与内置 stroke 追踪几何、箭头、标记、标签和最终输出
 ---
 
-Path 声明描述一条路径怎样生成，不只是一个待转换成 SVG d 的字符串。Core 先确定路径定义与有效语义，在引用就绪后绑定目标，再调用所选 Definition。内置 stroke 复用标准几何、装饰与输出链，自定义 kind 也通过同一宿主契约接入。
+有了[坐标求值](/kernel/packages/core/coordinates)得到的位置和[Node 编译](/kernel/packages/core/node-compilation)提供的边界，Path 就能确定目标点与连接位置。Core 先解析路径定义与有效语义，在引用就绪后绑定目标，再调用所选 Definition。内置 stroke 复用标准几何、装饰与输出链，自定义 kind 也通过同一宿主契约接入。
 
 ## 整体流程
 
-Reconciler 遍历时保存路径及所属环境，延迟到引用可查时执行。Core 的 compilePath 负责目标绑定与 Definition 调用；返回的图元、边界点由调度方回填到原输出位置。
+路径声明先得到包含 <ApiSourceLink label="CanonicalPath" path="packages/kernel/core/src/resolve/path/types.ts" startLine={149}>`CanonicalPath`</ApiSourceLink> 的 <ApiSourceLink label="PathResolution" path="packages/kernel/core/src/resolve/path/types.ts" startLine={275}>`PathResolution`</ApiSourceLink>，编译绑定目标并调用定义，得到 <ApiSourceLink label="CompiledPath" path="packages/kernel/core/src/compile/path/types.ts" startLine={37}>`CompiledPath`</ApiSourceLink>。内置 stroke 在定义调用内完成几何与装饰计算。
 
-<ComponentPreview files="path-overview" size="lg" hideCode type="flow" />
+<ComponentPreview files="path-flow" size="lg" hideCode type="flow" />
 
-## 从 A 到 B 的声明怎样变化
+## 输入契约
+
+类型 <ApiSourceLink label="PathSchema" path="packages/kernel/core/src/schemas/path/path.ts" startLine={121}>`PathSchema`</ApiSourceLink> 定义共同字段，`kind` 选择 <ApiSourceLink label="PathDefinition" path="packages/kernel/core/src/contract/path/path.ts" startLine={153}>`PathDefinition`</ApiSourceLink>，省略时为 `stroke`。所选定义的 Schema 决定完整路径输入；内置 <ApiSourceLink label="StrokePathSchema" path="packages/kernel/core/src/schemas/path/path.ts" startLine={132}>`StrokePathSchema`</ApiSourceLink> 要求 `children`，几何由这些步骤生成。
+
+| Schema / 字段                                                                                                                                                          | 输入形式                                                                                     | 对后续处理的影响                                                                   |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `StepSchema` / `children`                                                                                                                                              | move、line、fold、curve、bend、smooth、arc、rectangle、circlePath、ellipsePath、cycle 等步骤 | 不同分支更新游标、控制点或子路径；标签与标记随后沿生成的几何采样                   |
+| <ApiSourceLink label="TargetSchema" path="packages/kernel/core/src/schemas/path/target.ts" startLine={21}>`TargetSchema`</ApiSourceLink>                               | 坐标、极坐标、节点目标、relative、relativeAccumulate、offset、between，共七种                | 数值目标可直接求点；节点目标需要引用与边界；两种相对目标采用不同的参考游标更新规则 |
+| `arrow` / <ApiSourceLink label="PathArrowSchema" path="packages/kernel/core/src/schemas/path/arrow.ts" startLine={47}>`PathArrowSchema`</ApiSourceLink>                | `start`、`end` 的箭头配置                                                                    | 绑定箭头定义并计算接合尺寸，在编译阶段收缩线身端点                                 |
+| `marks` / <ApiSourceLink label="PathMarkPlacementSchema" path="packages/kernel/core/src/schemas/path/mark.ts" startLine={54}>`PathMarkPlacementSchema`</ApiSourceLink> | 沿线标记数组                                                                                 | 解析标记能力与尺寸，编译时按位置、切线和旋转放置                                   |
+| `label` / <ApiSourceLink label="PathLabelSchema" path="packages/kernel/core/src/schemas/path/label.ts" startLine={32}>`PathLabelSchema`</ApiSourceLink>                | 路径级单项或数组，以及步骤级标签                                                             | 解析文字与放置默认值，编译时在对应路径或步骤范围内采样；断线标签还生成留白区间     |
+| `kindOptions`                                                                                                                                                          | 所选自定义定义的 JSON 参数                                                                   | 由定义的 Schema 解释，影响其 compile 回调；内置 stroke 使用步骤输入                |
+
+下面沿一条从 A 到 B 的 stroke 路径追踪这些阶段。
 
 贯穿示例的 A、B 中心为 [0, 0]、[180, 0]，矩形外框为 60 × 40、margin 为零。路径写 move 到 A、line 到 B。目标查询先知道中心与绑定几何，stroke 再沿连线方向求边界交点，得到 [30, 0] → [150, 0]。
 
@@ -29,30 +42,98 @@ const path = {
 
 <ComponentPreview files="path-example" size="lg" hideCode type="illustration" />
 
-## 语义解析与目标绑定
+## 解析过程
 
-`resolvePath` 先合并继承并处理上下文颜色，再按 kind 选择 Path Definition，用其完整 Schema 解析有效输入；省略 kind 时选择 stroke。之后继续补齐其余 Canonical 字段、文本、资源与能力绑定。PathResolution 同时保留 canon、定义及必要的 provider 绑定；它还不是最终命令。
+函数 <ApiSourceLink label="resolvePath" path="packages/kernel/core/src/resolve/path/resolve.ts" startLine={417}>`resolvePath`</ApiSourceLink> 返回 <ApiSourceLink label="PathResolution" path="packages/kernel/core/src/resolve/path/types.ts" startLine={275}>`PathResolution`</ApiSourceLink>，其中 `canon` 是 <ApiSourceLink label="CanonicalPath" path="packages/kernel/core/src/resolve/path/types.ts" startLine={149}>`CanonicalPath`</ApiSourceLink>，`definition` 是选中的路径能力，`stroke` 按需保存箭头与标记绑定。下面是完整类型声明，省略源码注释。
 
-`bindPathTargets` 使用当前 Scope 链读取位置与世界参考点，记录目标的几何和连接面。普通相对目标和累积相对目标采用不同基点更新规则；轴向线或平滑步骤后的表达可能要留给几何游标，不能一律在绑定阶段展开。
+```ts
+export type CanonicalPath = Omit<
+  Omit<PathColorSource, 'style'> & NonNullable<PathColorSource['style']>,
+  'children' | 'label' | 'shadow' | 'fill' | 'stroke' | 'strokeWidth' | 'opacity'
+> &
+  Required<GraphicOpacityResolution> &
+  Required<
+    Pick<
+      NonNullable<PathColorSource['style']>,
+      'fillRule' | 'dashPattern' | 'dashOffset' | 'lineCap' | 'lineJoin' | 'blendMode'
+    >
+  > & {
+    strokeEnabled: boolean;
+    kind: string;
+    strokeWidth: number;
+    fill?: InputPaintResolution;
+    stroke?: InputPaintResolution;
+    children?: Array<CanonicalPathStep>;
+    label?: Array<CanonicalPathLabel>;
+    shadow?: CanonicalDropShadow;
+  };
+
+export type PathResolution = Readonly<{
+  stroke?: Pick<StrokePathResolution, 'arrows' | 'marks'>;
+  irPath: PropertyPath;
+  canon: CanonicalPath;
+  definition: AnyPathDefinition;
+}>;
+```
+
+解析先合并 `scopeDefaults` 并确定上下文颜色，再由 <ApiSourceLink label="resolvePathDefinition" path="packages/kernel/core/src/resolve/path/provider.ts" startLine={27}>`resolvePathDefinition`</ApiSourceLink> 按 `kind` 查注册表、解析该定义的完整输入。随后将样式展开到 <ApiSourceLink label="CanonicalPath" path="packages/kernel/core/src/resolve/path/types.ts" startLine={149}>`CanonicalPath`</ApiSourceLink>，补描边、透明度、步骤参数和标签放置值，解析绘制资源与文本块。内置 stroke 通过 <ApiSourceLink label="resolveStrokePathProviders" path="packages/kernel/core/src/resolve/path/provider.ts" startLine={108}>`resolveStrokePathProviders`</ApiSourceLink> 继续绑定端点箭头和沿线标记。
+
+类型 <ApiSourceLink label="PathResolveContext" path="packages/kernel/core/src/resolve/path/types.ts" startLine={249}>`PathResolveContext`</ApiSourceLink> 提供路径、箭头、标记、图案注册表，以及主题模式、根字号、公式开关和诊断信息。标签的方位预设变成数值位置，单个标签变成数组；步骤的 tension、bendAngle、fraction 等默认值也在这里确定。目标引用仍由后续编译读取。
+
+对 A → B 的示例，解析后 `canon.kind` 是 `stroke`，两个步骤仍保留 `{ id: 'A' }` 与 `{ id: 'B' }` 目标。边界连接点 [30, 0] 与 [150, 0] 需要下一阶段读取节点几何后才能确定。
+
+<ComponentPreview files="path-resolution" size="lg" hideCode type="flow" />
+
+## 编译过程
+
+函数 <ApiSourceLink label="compilePath" path="packages/kernel/core/src/compile/path/compile.ts" startLine={7}>`compilePath`</ApiSourceLink> 消费 <ApiSourceLink label="PathResolution" path="packages/kernel/core/src/resolve/path/types.ts" startLine={275}>`PathResolution`</ApiSourceLink> 和 <ApiSourceLink label="PathCompileContext" path="packages/kernel/core/src/compile/path/types.ts" startLine={126}>`PathCompileContext`</ApiSourceLink>。它先用 <ApiSourceLink label="bindPathTargets" path="packages/kernel/core/src/compile/path/target/bind.ts" startLine={163}>`bindPathTargets`</ApiSourceLink> 得到带目标绑定的 `BoundPathResolution`，再调用所选定义的编译回调。最终 <ApiSourceLink label="CompiledPath" path="packages/kernel/core/src/compile/path/types.ts" startLine={37}>`CompiledPath`</ApiSourceLink> 保存目标、输出及可供复用的 stroke 阶段产物；空绘制结果以 `null` 表示。下面列出完整字段，省略源码注释。
+
+```ts
+export type BoundPathResolution = PathResolution & {
+  targets: ReadonlyMap<string, TargetResolution>;
+};
+
+export type CompiledPath = Pick<PreparedPathCompilation, 'targets'> &
+  Readonly<{
+    emit: PathEmitOutput | null;
+    stroke?: PreparedStrokePathCompilation;
+    style: { shadow?: CanonicalDropShadow };
+  }>;
+
+export type PathEmitOutput = {
+  primitives: Array<ScenePrimitive>;
+  boundsPoints: Array<IRPosition>;
+};
+```
+
+| <ApiSourceLink label="PathCompileContext" path="packages/kernel/core/src/compile/path/types.ts" startLine={126}>`PathCompileContext`</ApiSourceLink> 成员 | 编译时提供什么                         |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| `targetResolver`、`boundaryStore`                                                                                                                         | 目标点、世界参考点和连接面的查询与绑定 |
+| `scopeChain`、`resolveTransform`                                                                                                                          | 路径所属空间及其坐标转换               |
+| `registries`、`scopeDefaults`、`theme`                                                                                                                    | 路径扩展能力和当前有效配置             |
+| `measureText`、`lowerTex`、`rootFontSize`                                                                                                                 | 标签的测量与公式处理                   |
+| `registerPaint`、`resources`                                                                                                                              | 绘制资源登记与输出资源引用检查         |
+| `round`、`irPath`、`onWarn`                                                                                                                               | 数值圆整、来源定位与诊断               |
+
+通用编译链在定义回调处选择具体算法。下面先看目标绑定与宿主调用，再展开内置 stroke 的几何和装饰。
+
+<ComponentPreview files="path-overview" size="lg" hideCode type="flow" />
+
+### 目标绑定
+
+函数 <ApiSourceLink label="bindPathTargets" path="packages/kernel/core/src/compile/path/target/bind.ts" startLine={163}>`bindPathTargets`</ApiSourceLink> 使用当前 Scope 链读取位置与世界参考点，记录目标的几何和连接面。普通相对目标和累积相对目标采用不同基点更新规则；轴向线或平滑步骤后的表达可能要留给几何游标，不能一律在绑定阶段展开。
 
 <ComponentPreview files="path-relative" size="md" hideCode type="illustration" />
 
-## 通用 Path 宿主与内置 stroke
+### 通用 Path 宿主与内置 stroke
 
-PathDefinition.compile 接收受控宿主上下文：有效 path / appearance、结构化路径物化、标准 emitStroke、标签服务与输出包装。自定义路径可以选择复用标准描边或生成自身几何，不能据此取得整棵树的可变工作区。
+类型 <ApiSourceLink label="PathDefinition" path="packages/kernel/core/src/contract/path/path.ts" startLine={153}>`PathDefinition.compile`</ApiSourceLink> 接收受控宿主上下文：有效 path / appearance、结构化路径物化、标准 emitStroke、标签服务与输出包装。自定义路径可以选择复用标准描边或生成自身几何。
 
 内置 stroke 的 compile 就是 `context.emitStroke()`。其内部先 lower 几何，再 layout 标签和标记、准备端点接触与断线区间，最后 emit。自定义 kind 不必经过所有 stroke 专属阶段；图中的 stroke 分支只代表这条内置路径或显式复用它的实现。
 
 `emitStroke()` 的输出已完成宿主包装，不应再调用 wrapOutput 包装一次。自定义输出需要按契约应用包装并返回所属路径局部空间中的图元和边界点；Definition 不得自己声明 resources，绘制资源经宿主登记。
 
-<SourceLinks
-  sources={[
-    { label: 'Path Definition 契约', path: 'packages/kernel/core/src/contract/path/path.ts' },
-    { label: '内置 stroke 定义', path: 'packages/kernel/core/src/providers/path.ts' },
-  ]}
-/>
-
-## 几何、边界与游标
+### 几何、边界与游标
 
 stroke 几何阶段消费步骤游标，生成 move / line / curve / arc 等结构化命令及来源记录。裸节点引用按段方向求连接表面；显式 anchor 直接选择锚点，offset 在世界空间叠加后转回所属空间。折线还需要去掉节点内部的前后缀。
 
@@ -60,62 +141,48 @@ stroke 几何阶段消费步骤游标，生成 move / line / curve / arc 等结�
 
 曲线使用控制点方向确定附着点，再生成曲线；这里不是求整条贝塞尔与节点轮廓的精确交集。圆角在适用直线接缝处插入几何，后续装饰消费这份路径。找不到目标不会自动连到原点，应由该段及宿主的失败 / 诊断规则处理。
 
-## 标签、标记与端点箭头
+### 标签与沿线标记
 
-标签和沿线 Mark 根据路径采样点及方向放置。步骤级与路径级标签的采样范围不同，参数位置也不总等于弧长比例。支持断线的 stroke 标签把视觉范围和 gap 转为留白区间；显式断线仅允许无填充的内置 stroke，不能推广到任意 kind。
+函数 <ApiSourceLink label="layoutStrokeLabels" path="packages/kernel/core/src/compile/path/stroke/decoration/labels.ts" startLine={19}>`layoutStrokeLabels`</ApiSourceLink> 与 <ApiSourceLink label="layoutStrokeMarks" path="packages/kernel/core/src/compile/path/stroke/decoration/decorations.ts" startLine={54}>`layoutStrokeMarks`</ApiSourceLink> 分别布局标签和沿线标记。它们消费几何及其采样信息，根据路径点和方向放置。步骤级与路径级标签的采样范围不同，参数位置也不总等于弧长比例。支持断线的 stroke 标签把视觉范围和 gap 转为留白区间；显式断线适用于无填充的内置 stroke。
 
-箭头定义提供尖端、接合位置和尺寸。Core 从原路径向内寻找接合点，保留原曲线的子段，使尖端仍落在目标，线条与箭头尾部接合。标签留白与箭头保护区共同决定可见主线。
+<ComponentPreview files="path-label-marks" size="lg" hideCode type="illustration" />
+
+图中使用一条从 [0, 0] 到 [240, 0] 的直线：标签位于中点，两个标记位于 0.2 与 0.8。标签两侧的额外留白为 8，标记方向沿用采样点的切线。
+
+### 端点箭头与线身收缩
+
+函数 <ApiSourceLink label="calculateStrokeEndpointContact" path="packages/kernel/core/src/compile/path/stroke/decoration/decorations.ts" startLine={36}>`calculateStrokeEndpointContact`</ApiSourceLink> 根据箭头定义提供的尖端、接合位置和尺寸确定端点接触，<ApiSourceLink label="lowerStrokeBody" path="packages/kernel/core/src/compile/path/stroke/body.ts" startLine={7}>`lowerStrokeBody`</ApiSourceLink> 处理线身收缩与标签留白。Core 从原路径向内寻找接合点，保留原曲线的子段，使尖端仍落在目标，线条与箭头尾部接合。标签留白与箭头保护区共同决定可见主线。
 
 <ComponentPreview files="path-shortening" size="lg" hideCode type="illustration" />
 
 短路径可能需要缩小端点箭头；没有有效长度时不会输出该端点箭头。Arrow 与沿线 Mark 的视觉定义可共享，但沿线标记不执行端点收缩逻辑。
 
-<SourceLinks
-  sources={[
-    { label: '几何与步骤 lowering', path: 'packages/kernel/core/src/compile/path/stroke/geometry/lower.ts' },
-    { label: '描边布局协调', path: 'packages/kernel/core/src/compile/path/stroke/layout.ts' },
-    { label: '断线与端点接触', path: 'packages/kernel/core/src/compile/path/stroke/decoration/endpoint-contact.ts' },
-    { label: '描边绘制与包装', path: 'packages/kernel/core/src/compile/path/stroke/emit.ts' },
-  ]}
-/>
+### 输出与阶段复用
 
-## 输出与阶段复用
+类型 <ApiSourceLink label="CompiledPath" path="packages/kernel/core/src/compile/path/types.ts" startLine={37}>`CompiledPath`</ApiSourceLink> 的 emit 可以是合法空结果 null；undefined 的 prepared 字段才表示尚未提供。targets、完整 emit，以及实际使用的源路径 stroke 局部产物可分别交接。Core 消费已确认有效的部分，补算其余部分；引用依赖、配套资源和诊断的复用由 Reconciler 管理。
 
-CompiledPath 的 emit 可以是合法空结果 null；undefined 的 prepared 字段才表示尚未提供。targets、完整 emit，以及实际使用的源路径 stroke 局部产物可分别交接。Core 消费已确认有效的部分，补算其余部分；引用依赖、配套资源和诊断的复用由 Reconciler 管理。
+最终宿主会物化可迭代图元与边界点、快照化输出并检查资源引用许可。图元可能包含分组、标签和标记，不保证“一条 Path 对应一个 <ApiSourceLink label="PathPrimitive" path="packages/kernel/core/src/contract/scene/path.ts" startLine={160}>`PathPrimitive`</ApiSourceLink>”。延迟只改变求值时机，原槽位回填和同层 zIndex 排序保留绘制语义。
 
-最终宿主会物化可迭代图元与边界点、快照化输出并检查资源引用许可。图元可能包含分组、标签和标记，不保证“一条 Path 对应一个 PathPrimitive”。延迟只改变求值时机，原槽位回填和同层 zIndex 排序保留绘制语义。
-
-## 完整实现流程
+## 完整流程
 
 <ComponentPreview files="path-implementation" size="xxl" hideCode type="flow" />
 
-先从 Reconciler deferred 调用点进入 resolvePath / compilePath，再沿 target → host 阅读。只有进入 emitStroke 时才继续到 stroke 的 layout / emit；这样能分清通用扩展边界与内置算法。
-
-<SourceLinks
-  sources={[
-    { label: 'Path resolution and defaults', path: 'packages/kernel/core/src/resolve/path/resolve.ts' },
-    { label: 'Definition and decoration bindings', path: 'packages/kernel/core/src/resolve/path/provider.ts' },
-    { label: 'Atomic path compilation', path: 'packages/kernel/core/src/compile/path/compile.ts' },
-    { label: 'Definition host context', path: 'packages/kernel/core/src/compile/path/host/context.ts' },
-    { label: 'Definition output snapshot', path: 'packages/kernel/core/src/compile/path/host/emit.ts' },
-    { label: 'Deferred path execution', path: 'packages/kernel/reconciler/src/compile/tree/path/deferred.ts' },
-  ]}
-/>
+先从 Reconciler deferred 调用点进入 <ApiSourceLink label="resolvePath" path="packages/kernel/core/src/resolve/path/resolve.ts" startLine={417}>`resolvePath`</ApiSourceLink> / <ApiSourceLink label="compilePath" path="packages/kernel/core/src/compile/path/compile.ts" startLine={7}>`compilePath`</ApiSourceLink>，再沿 target → host 阅读。只有进入 emitStroke 时才继续到 stroke 的 layout / emit；这样能分清通用扩展边界与内置算法。
 
 ## 延伸阅读
 
 <LinkedSections
   items={[
-    { title: '坐标与引用求值', description: '查看目标空间与引用就绪规则', url: '/kernel/packages/core/coordinates' },
-    {
-      title: '能力定义与注册',
-      description: '查看 Path Definition 的扩展边界',
-      url: '/kernel/packages/core/definitions',
-    },
+    { title: '坐标求值', description: '查看目标空间与引用就绪规则', url: '/kernel/packages/core/coordinates' },
     {
       title: 'Composite 编译',
       description: '查看领域路径查询与子布局',
       url: '/kernel/packages/core/composite-compilation',
+    },
+    {
+      title: '能力注册',
+      description: '查看 Path Definition 的扩展边界',
+      url: '/kernel/packages/core/definitions',
     },
     { title: '编译输出', description: '查看图元、资源与 Scene 汇总', url: '/kernel/packages/core/compilation-output' },
   ]}

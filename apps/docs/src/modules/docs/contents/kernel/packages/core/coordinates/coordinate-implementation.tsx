@@ -7,20 +7,20 @@ import { logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
 
 import { coordinateImplementationI18n } from './coordinate-implementation.i18n';
 
-/** 确定默认距离与嵌套表达流程图的语言 */
+/** 坐标阶段图的语言 */
 export type CoordinateImplementationProps = { lang?: Lang };
 
-/** 展示本页追踪的阶段、产物与必要输入 */
+/** 展示位置表达的阶段产物与上下文输入 */
 const CoordinateImplementation: FC<CoordinateImplementationProps> = props => {
   const { lang = 'zh' } = props;
   const text = coordinateImplementationI18n[lang];
   const stages = [
-    { id: 'resolve', name: 'resolveCoordinate / resolvePosition', state: false },
-    { id: 'context', name: 'createTreePositionContext', state: false },
-    { id: 'compile', name: 'compileCoordinate → evaluatePosition', state: false },
-    { id: 'publish', name: 'visitCoordinate', state: true },
+    { id: 'canon', name: 'CanonicalCoordinate', state: true },
+    { id: 'evaluate', name: 'evaluatePosition', state: false },
+    { id: 'points', name: 'PositionEvaluation', state: true },
+    { id: 'compiled', name: 'CompiledCoordinate', state: true },
+    { id: 'publish', name: 'visitCoordinate', state: false },
   ] as const;
-  const inputs = [{ id: 'names', name: 'NamespaceStack', target: 'context' }] as const;
   return (
     <PreviewFlowDiagram {...logicFigureGraphProps()} style={{ maxWidth: '100%', height: 'auto' }}>
       <FlowLayout
@@ -28,9 +28,10 @@ const CoordinateImplementation: FC<CoordinateImplementationProps> = props => {
         kind="grid"
         gap={{ row: 20, column: 28 }}
         placements={[
-          [null, 'resolve'],
-          ['names', 'context'],
-          [null, 'compile'],
+          [null, 'canon'],
+          ['context', 'evaluate'],
+          [null, 'points'],
+          [null, 'compiled'],
           [null, 'publish'],
         ]}
       >
@@ -38,7 +39,7 @@ const CoordinateImplementation: FC<CoordinateImplementationProps> = props => {
           items={stages.map(item => ({
             id: item.id,
             role: item.state ? 'state' : 'activity',
-            layout: { width: 290 },
+            layout: { width: 300 },
             text: [
               { text: item.name, font: { size: 12 } },
               { text: text[item.id], font: { size: 12 }, fill: 'gray' },
@@ -46,16 +47,18 @@ const CoordinateImplementation: FC<CoordinateImplementationProps> = props => {
           }))}
         />
         <FlowEntities
-          items={inputs.map(item => ({
-            id: item.id,
-            role: 'state',
-            kind: 'docs.logic.secondary',
-            layout: { width: 230 },
-            text: [
-              { text: item.name, font: { size: 12 } },
-              { text: text[item.id], font: { size: 12 }, fill: 'gray' },
-            ],
-          }))}
+          items={[
+            {
+              id: 'context',
+              role: 'state',
+              kind: 'docs.logic.secondary',
+              layout: { width: 260 },
+              text: [
+                { text: 'PositionEvaluateContext', font: { size: 12 } },
+                { text: text.context, font: { size: 12 }, fill: 'gray' },
+              ],
+            },
+          ]}
         />
       </FlowLayout>
       <FlowRelations
@@ -66,10 +69,7 @@ const CoordinateImplementation: FC<CoordinateImplementationProps> = props => {
               source: { id: stages[index].id, anchor: 'bottom' as const },
               target: { id: item.id, anchor: 'top' as const },
             })),
-          ...inputs.map(item => ({
-            source: { id: item.id, anchor: 'right' as const },
-            target: { id: item.target, anchor: 'left' as const },
-          })),
+          { source: { id: 'context', anchor: 'right' }, target: { id: 'evaluate', anchor: 'left' } },
         ]}
       />
     </PreviewFlowDiagram>

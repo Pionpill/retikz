@@ -1,82 +1,163 @@
 ---
-title: Coordinate and Reference Evaluation
-description: Separate position resolution from geometric evaluation, including named references, readiness and local/world projection
+title: Coordinate Evaluation
+description: Follow five position forms through CanonicalCoordinate, evaluation context and CompiledCoordinate to a published named position
 ---
 
-Semantic resolution can complete a position expression without knowing which geometry a name currently denotes. Core's resolvers retain intent; compile/reference evaluates it using naming and transform services supplied by the scheduler. Reconciler owns visibility and name lifetimes.
+A Coordinate declares a named point for subsequent placement and path references. This page follows its input contract, resolution and compilation. Node placement and Path target handling reuse the same position evaluation capabilities.
+
+We use one example throughout. A Scope is a container for children and their coordinate space. The current Scope is positioned at world [100, 50] with scale 2, and an existing A is at world [100, 50]. Coordinate P declares an offset of 40 to the right of A:
+
+```ts
+const coordinate = {
+  type: 'coordinate',
+  id: 'P',
+  position: { of: 'A', offset: [40, 0] },
+} satisfies import('@retikz/core').IRCoordinate;
+```
+
+P ends up at local [40, 0] and world [180, 50]. The sections below explain when these values become available and which information produces them.
 
 ## Overall Flow
 
-A local point belongs to the current Scope. A world point includes current and ancestor Scope transforms. Ordinary positions are computed locally and projected; named targets read published world geometry and convert it for local consumers. The spaces coincide without transforms.
+A Coordinate accepts a position declaration with an id. <ApiSourceLink label="resolveCoordinate" path="packages/kernel/core/src/resolve/coordinate/resolve.ts" startLine={6}>`resolveCoordinate`</ApiSourceLink> produces <ApiSourceLink label="CanonicalCoordinate" path="packages/kernel/core/src/resolve/coordinate/types.ts" startLine={5}>`CanonicalCoordinate`</ApiSourceLink>; <ApiSourceLink label="compileCoordinate" path="packages/kernel/core/src/compile/coordinate/compile.ts" startLine={15}>`compileCoordinate`</ApiSourceLink> combines it with reference and spatial context to produce <ApiSourceLink label="CompiledCoordinate" path="packages/kernel/core/src/compile/coordinate/compile.ts" startLine={9}>`CompiledCoordinate`</ApiSourceLink>. The input describes a positional relationship, resolution retains the completed expression, and compilation provides a local point in the current Scope. The caller projects and publishes it as a named position for subsequent nodes, paths and parent layout.
+
+<ComponentPreview files="coordinate-flow" size="lg" hideCode type="flow" />
+
+The sections below explain the five input forms, expand resolution and compilation, then connect the stages in a complete flow.
+
+## Input Contract
+
+The schema <ApiSourceLink label="CoordinateSchema" path="packages/kernel/core/src/schemas/node/coordinate.ts" startLine={12}>`CoordinateSchema`</ApiSourceLink>
+requires `type: 'coordinate'`, a nonblank id and position. The id publishes a named position; position accepts five
+Schema forms:
+
+| Schema / form                          | Example                                                  | Effect on subsequent processing                                                                                                                                                   |
+| -------------------------------------- | -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PositionSchema: Cartesian pair         | `[20, 10]`                                               | Use as a local point, then project to world space                                                                                                                                 |
+| PolarPositionSchema: polar             | `{ angle: 90, radius: 40 }`                              | Resolve supplies the origin; compile evaluates it and computes a local point from angle and radius. Angles are degrees with positive rotation following screen y-down coordinates |
+| AtPositionSchema: directional          | `{ of: 'A', direction: 'right' }`                        | Resolve fills distance; compile reads A's center, converts it to local space and moves in the specified direction                                                                 |
+| OffsetPositionSchema: base plus offset | `{ of: 'A', offset: [40, 0] }`                           | Evaluate the base locally, then add a local offset. The base can also be Cartesian or polar                                                                                       |
+| BetweenPositionSchema: interpolation   | `{ between: [{ id: 'A' }, { id: 'B' }], fraction: 0.5 }` | Resolve recursively prepares the endpoints; compile interpolates their world target points, then converts to local space                                                          |
+
+A polar origin accepts a name, Cartesian pair or nested polar expression. Between endpoints use <ApiSourceLink label="AbsoluteTargetSchema" path="packages/kernel/core/src/schemas/position/between.ts" startLine={15}>`AbsoluteTargetSchema`</ApiSourceLink>: Cartesian, polar, `{ id, anchor?, offset?, boundary? }` references, offsets or nested interpolation. These forms determine whether compilation needs a center, anchor or connection boundary. Coordinate's top-level position accepts the five forms above; name strings occur in base fields such as origin and of.
+
+External JSON is structurally checked at the Schema entry point. Resolve and compile consume contracted IR, handling effective configuration and contextual geometry respectively.
+
+## Resolution
+
+The function <ApiSourceLink label="resolveCoordinate" path="packages/kernel/core/src/resolve/coordinate/resolve.ts" startLine={6}>`resolveCoordinate`</ApiSourceLink>
+preserves id and passes position to
+The function <ApiSourceLink label="resolvePosition" path="packages/kernel/core/src/resolve/position/resolve.ts" startLine={43}>`resolvePosition`</ApiSourceLink>
+. The result types below omit source comments.
+The type <ApiSourceLink label="CanonicalPosition" path="packages/kernel/core/src/resolve/position/types.ts" startLine={31}>`CanonicalPosition`</ApiSourceLink>
+retains the corresponding expression forms:
+
+```ts
+export type CanonicalCoordinate = {
+  id: IRCoordinate['id'];
+  position: CanonicalPosition;
+};
+
+export type CanonicalPosition =
+  IRPosition | CanonicalPolarPosition | CanonicalOffsetPosition | CanonicalBetweenPosition | Required<IRAtPosition>;
+```
+
+The type <ApiSourceLink label="PositionResolveContext" path="packages/kernel/core/src/resolve/position/types.ts" startLine={39}>`PositionResolveContext`</ApiSourceLink>
+contains only nodeDistance, used when directional placement omits distance. Resolution handles each branch as follows:
+
+- Copy a Cartesian pair as local position configuration.
+- Fill an omitted polar origin with [0, 0], recursively resolving nested polar origins.
+- Use an explicit directional distance or the context's nodeDistance, producing a required distance.
+- Preserve an offset and prepare any polar expression in its base.
+- Preserve an interpolation fraction and recursively prepare both absolute targets, retaining named target fields such as id, anchor and boundary.
 
 <ComponentPreview files="coordinate-overview" size="lg" hideCode type="flow" />
 
-## Expression Resolution and Geometric Evaluation
+P resolves to `{ id: 'P', position: { of: 'A', offset: [40, 0] } }`. Its offset form and value are established; A's geometry and the current Scope transform come from compilation context. For `{ of: 'A', direction: 'right' }` with nodeDistance 40, canon would instead gain `distance: 40`.
 
-`resolvePosition` completes direction distance, polar origins and nested expressions without name lookup. For `{ of: 'A', direction: 'right' }`, it can determine distance but still needs readable A geometry to determine a point. Canonicalization does not discard references prematurely.
+## Compilation
 
-| Expression                                               | Evaluation                                                                                |
-| -------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| [20, 10]                                                 | Current Scope local point                                                                 |
-| `{ angle: 90, radius: 40 }`                              | From a local origin; positive screen-space angles turn downward                           |
-| `{ of: 'A', direction: 'right', distance: 40 }`          | Convert A's center to local, then move in a local direction; distance is center-to-center |
-| `{ of: 'A', offset: [40, 0] }`                           | Evaluate the local base, then add a local offset                                          |
-| `{ between: [{ id: 'A' }, { id: 'B' }], fraction: 0.5 }` | Interpolate two world targets, then convert to local                                      |
+### Products and Context
 
-These represent shared mechanisms, not a union accepted everywhere. Each consumer's Schema defines valid forms. Node supports self-anchor alignment; Scope placement involves its envelope; path-relative cursor expressions belong to path compilation.
+The function <ApiSourceLink label="compileCoordinate" path="packages/kernel/core/src/compile/coordinate/compile.ts" startLine={15}>`compileCoordinate`</ApiSourceLink> consumes <ApiSourceLink label="CanonicalCoordinate" path="packages/kernel/core/src/resolve/coordinate/types.ts" startLine={5}>`CanonicalCoordinate`</ApiSourceLink> and <ApiSourceLink label="PositionEvaluateContext" path="packages/kernel/core/src/compile/reference/types.ts" startLine={44} >`PositionEvaluateContext`</ApiSourceLink>. It calls <ApiSourceLink label="evaluatePosition" path="packages/kernel/core/src/compile/reference/position.ts" startLine={47}>`evaluatePosition`</ApiSourceLink> and uses the returned `localPoint` as <ApiSourceLink label="CompiledCoordinate" path="packages/kernel/core/src/compile/coordinate/compile.ts" startLine={9}>`CompiledCoordinate.position`</ApiSourceLink>. These are the complete fields of the two products, with source comments omitted:
 
-## Local Offsets and Target Offsets
+```ts
+export type CompiledCoordinate = {
+  position: Position;
+};
 
-The offset in `{ of: 'A', offset: [40, 0] }` belongs to current local space. The offset in node target `{ id: 'A', offset: [40, 0] }` is added in world space. Scaling exposes the difference.
+export type PositionEvaluation = Readonly<{
+  localPoint: IRPosition;
+  worldPoint: IRPosition;
+}>;
+```
+
+The type <ApiSourceLink label="PositionEvaluation" path="packages/kernel/core/src/compile/reference/types.ts" startLine={58}>`PositionEvaluation`</ApiSourceLink>
+describes one point in two spaces: localPoint serves layout within the current Scope, while worldPoint supports
+references across spaces.
+The type <ApiSourceLink label="CompiledCoordinate" path="packages/kernel/core/src/compile/coordinate/compile.ts" startLine={9}>`CompiledCoordinate`</ApiSourceLink>
+stores the local position; its caller then publishes the name.
+
+Evaluation receives the following context:
+
+```ts
+export type PositionEvaluateContext = Readonly<{
+  nodeDistance: number;
+  lookupReference: (id: string, kind?: ReferenceReadKind) => PositionReferenceView | undefined;
+  toLocal: (world: IRPosition) => IRPosition;
+  toWorld: (local: IRPosition) => IRPosition;
+  evaluateBetweenWorld?: (between: IRBetweenPosition) => IRPosition | null;
+}>;
+```
+
+| Context member       | Capability                                                 | Where it is used                                                                                   |
+| -------------------- | ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| lookupReference      | Query visible named geometry and readiness                 | Named bases such as of and origin; target evaluation also reads anchor geometry through it         |
+| toLocal / toWorld    | Convert between the current Scope and world space          | Convert published geometry to a local base, then project the result                                |
+| nodeDistance         | Default directional distance                               | Shared evaluation of expressions without explicit distance; Coordinate resolution already fills it |
+| evaluateBetweenWorld | Evaluate a world-space interpolation point between targets | The between branch, using target evaluation for anchors when needed                                |
+
+Reconciler's <ApiSourceLink label="createTreePositionContext" path="packages/kernel/reconciler/src/compile/tree/reference/tree-context.ts" startLine={7}>`createTreePositionContext`</ApiSourceLink> connects the naming environment, current Scope transform chain and boundary services. Core's <ApiSourceLink label="createPositionEvaluateContext" path="packages/kernel/core/src/compile/reference/context.ts" startLine={53}>`createPositionEvaluateContext`</ApiSourceLink> builds coordinate conversions and connects target interpolation.
+
+### From Expression to Named Position
+
+P moves through the following steps:
+
+1. lookupReference reads A's world position [100, 50].
+2. toLocal converts it to [0, 0] in the current Scope.
+3. Calling <ApiSourceLink label="evaluatePosition" path="packages/kernel/core/src/compile/reference/position.ts" startLine={47}>`evaluatePosition`</ApiSourceLink>
+   adds the local offset [40, 0], producing localPoint [40, 0]; toWorld produces worldPoint [180, 50].
+4. <ApiSourceLink label="compileCoordinate" path="packages/kernel/core/src/compile/coordinate/compile.ts" startLine={15}>`compileCoordinate`</ApiSourceLink> returns `{ position: [40, 0] }`.
+5. <ApiSourceLink label="visitCoordinate" path="packages/kernel/reconciler/src/compile/tree/coordinate/visit.ts" startLine={12}>`visitCoordinate`</ApiSourceLink> projects the compiled position to world space and registers P with `{ position: [180, 50] }`. It also contributes the local position to Scope layout collection.
+
+The result is position geometry. Subsequent Nodes can reference P for placement, and Paths can use it as a target. <ApiSourceLink label="evaluatePosition" path="packages/kernel/core/src/compile/reference/position.ts" startLine={47}>`evaluatePosition`</ApiSourceLink> is the shared point-evaluation step: Node combines it with its own dimensions and anchors for placement; Path uses target boundaries to continue computing connection endpoints.
+
+### Targets, Anchors and Offset Spaces
+
+A between endpoint or Path target such as `{ id: 'A', anchor: 'right' }` also needs boundary and anchor queries. <ApiSourceLink label="PositionTargetEvaluateContext" path="packages/kernel/core/src/compile/reference/types.ts" startLine={66}>`PositionTargetEvaluateContext`</ApiSourceLink> extends the base context with boundary binding and node target evaluation.
+
+The function <ApiSourceLink label="evaluatePositionTargetWorld" path="packages/kernel/core/src/compile/reference/target.ts" startLine={9} >`evaluatePositionTargetWorld`</ApiSourceLink>
+computes the world referencePoint. For direct named targets, it also retains reference and optional canonicalBoundary
+for subsequent connection geometry. <ApiSourceLink label="evaluatePositionTarget" path="packages/kernel/core/src/compile/reference/target.ts" startLine={66} >`evaluatePositionTarget`</ApiSourceLink> then uses toLocal to add the local point. Path compilation can therefore obtain a target point and continue querying its
+boundary; ordinary position evaluation needs localPoint and worldPoint.
+
+The input form determines the offset space. P's `{ of: 'A', offset: [40, 0] }` adds a local offset and yields world [180, 50]. The target form `{ id: 'A', offset: [40, 0] }` adds its offset to the world reference point and yields [140, 50].
 
 <ComponentPreview files="coordinate-spaces" size="lg" hideCode type="illustration" />
 
-The base is world [100, 50] with Scope scale 2. A local offset of 40 gives world [180, 50]; a world target offset of 40 gives [140, 50]. This follows the two contracts' coordinate spaces.
+### Readiness and Failure
 
-## Names, Targets and Anchors
+Coordinates evaluate during their visit, so referenced targets must already be readable. <ApiSourceLink label="evaluatePosition" path="packages/kernel/core/src/compile/reference/position.ts" startLine={47}>`evaluatePosition`</ApiSourceLink> returns null for a missing reference or an unresolved between expression; <ApiSourceLink label="compileCoordinate" path="packages/kernel/core/src/compile/coordinate/compile.ts" startLine={15}>`compileCoordinate`</ApiSourceLink> turns this into an error recognized by the layout-probe boundary. Target evaluation uses a null referencePoint for an unresolved target, leaving failure handling to its consumer.
 
-Lookup first returns a PositionReferenceView with geometry, state and source location. Anchor evaluation follows. Nodes and named Scopes provide boundary geometry; Coordinates provide only position and emit no visible primitive.
+A named Scope may publish a position placeholder before its envelope is complete. Position and full-boundary reads have different readiness requirements, checked through the context's reference state and query capabilities. Unknown anchors fail; point geometry also cannot provide proportional anchors that require an actual edge length. See [Path Compilation](/kernel/packages/core/path-compilation) for deferred evaluation timing and [Scope Compilation](/kernel/packages/core/scope-compilation) for publication stages.
 
-`evaluatePosition` returns localPoint / worldPoint. `evaluatePositionTargetWorld` returns referencePoint and retains a direct reference and optional boundary binding when appropriate. `evaluatePositionTarget` adds local point. An interpolated result is not presented as a direct node reference.
+## Complete Flow
 
-A position target without an anchor normally reads the center; path compilation may subsequently clip an endpoint to its boundary. Capabilities interpret standard and shape-specific anchors. Unknown anchors fail, and zero-size Coordinates cannot support proportional edge points requiring a real edge.
+Connecting the stages, P enters resolution as `{ of: 'A', offset: [40, 0] }`. Compilation reads A's world geometry, converts it to a local base using the current Scope context, then adds the offset. <ApiSourceLink label="compileCoordinate" path="packages/kernel/core/src/compile/coordinate/compile.ts" startLine={15}>`compileCoordinate`</ApiSourceLink> returns local [40, 0]; <ApiSourceLink label="visitCoordinate" path="packages/kernel/reconciler/src/compile/tree/coordinate/visit.ts" startLine={12}>`visitCoordinate`</ApiSourceLink> publishes world [180, 50] as P and collects the local layout contribution.
 
-## Reference Timing
+<ComponentPreview files="coordinate-implementation" size="xxl" hideCode type="flow" />
 
-Node and Coordinate evaluate when visited and require readable targets. Node self-anchor alignment first needs provisional layout, then computes a world-space delta and projects it back to local space. Self-reference, undefined targets and a Scope still being laid out fail.
-
-Paths have dedicated deferral: root paths wait for the root subtree, while Scope paths run when that Scope closes. Later siblings can become path targets, but this does not grant a Scope path access to external objects declared after the Scope.
-
-A named Scope may initially publish a position placeholder. `scope-placeholder` differs from `resolved`; a position placeholder is not a ready envelope. Missing references yield null or an empty referencePoint at the evaluator boundary. Consumers then fail or diagnose according to their contract rather than inventing an origin.
-
-<SourceLinks
-  sources={[
-    { label: 'Name frames and lifecycle', path: 'packages/kernel/reconciler/src/compile/runtime/namespace.ts' },
-    { label: 'Self-anchor placement and errors', path: 'packages/kernel/core/src/compile/node/placement.ts' },
-    { label: 'Deferred path execution', path: 'packages/kernel/reconciler/src/compile/tree/path/deferred.ts' },
-  ]}
-/>
-
-## Complete Implementation Flow
-
-A Coordinate goes through semantic resolution and local evaluation. Reconciler projects its world position, publishes its name and records its allocation. It emits no visible ScenePrimitive. Node and Path use the same position services while owning their final placement and endpoint handling.
-
-<ComponentPreview files="coordinate-implementation" size="lg" hideCode type="flow" />
-
-Core's createPositionEvaluateContext adapts geometry queries and coordinate conversion. Reconciler's createTreePositionContext supplies its name stack, Scope transforms and shared boundary state through this narrow interface, keeping Core independent of a particular tree or incremental engine.
-
-<SourceLinks
-  sources={[
-    { label: 'Position resolution', path: 'packages/kernel/core/src/resolve/position/resolve.ts' },
-    { label: 'Reference contracts', path: 'packages/kernel/core/src/compile/reference/types.ts' },
-    { label: 'Position evaluation', path: 'packages/kernel/core/src/compile/reference/position.ts' },
-    { label: 'Target evaluation', path: 'packages/kernel/core/src/compile/reference/target.ts' },
-    { label: 'Context and transforms', path: 'packages/kernel/core/src/compile/reference/context.ts' },
-    { label: 'Coordinate compilation', path: 'packages/kernel/core/src/compile/coordinate/compile.ts' },
-    { label: 'Coordinate publication', path: 'packages/kernel/reconciler/src/compile/tree/coordinate/visit.ts' },
-    { label: 'Tree context adapter', path: 'packages/kernel/reconciler/src/compile/tree/reference/tree-context.ts' },
-  ]}
-/>
+Read <ApiSourceLink label="resolveCoordinate" path="packages/kernel/core/src/resolve/coordinate/resolve.ts" startLine={6}>`resolveCoordinate`</ApiSourceLink> → <ApiSourceLink label="resolvePosition" path="packages/kernel/core/src/resolve/position/resolve.ts" startLine={43}>`resolvePosition`</ApiSourceLink> → <ApiSourceLink label="compileCoordinate" path="packages/kernel/core/src/compile/coordinate/compile.ts" startLine={15}>`compileCoordinate`</ApiSourceLink> → <ApiSourceLink label="evaluatePosition" path="packages/kernel/core/src/compile/reference/position.ts" startLine={47}>`evaluatePosition`</ApiSourceLink>, then <ApiSourceLink label="visitCoordinate" path="packages/kernel/reconciler/src/compile/tree/coordinate/visit.ts" startLine={12}>`visitCoordinate`</ApiSourceLink> to see how the result reaches the naming environment and parent layout.
 
 ## Further Reading
 
@@ -88,11 +169,6 @@ Core's createPositionEvaluateContext adapts geometry queries and coordinate conv
       url: '/kernel/packages/core/resolution',
     },
     {
-      title: 'Scope Compilation',
-      description: 'Follow envelope readiness and publication',
-      url: '/kernel/packages/core/scope-compilation',
-    },
-    {
       title: 'Node Compilation',
       description: 'Follow self anchors and node layout',
       url: '/kernel/packages/core/node-compilation',
@@ -101,6 +177,11 @@ Core's createPositionEvaluateContext adapts geometry queries and coordinate conv
       title: 'Path Compilation',
       description: 'See reference points become final endpoints',
       url: '/kernel/packages/core/path-compilation',
+    },
+    {
+      title: 'Scope Compilation',
+      description: 'Follow envelope readiness and publication',
+      url: '/kernel/packages/core/scope-compilation',
     },
   ]}
 />

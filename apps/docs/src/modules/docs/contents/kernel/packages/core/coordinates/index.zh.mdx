@@ -1,93 +1,164 @@
 ---
-title: 坐标与引用求值
-description: 区分位置语义解析与几何求值，理解命名引用、就绪状态和局部与世界空间的转换
+title: 坐标求值
+description: 从五种位置输入追踪 CanonicalCoordinate、求值上下文与 CompiledCoordinate，理解命名位置如何生成和使用
 ---
 
-语义解析能够补全位置表达，却不一定知道某个名称现在指向哪份几何。Core 的 resolve 保留表达意图，compile/reference 再利用调度方提供的名称与变换上下文求点。名称生命周期和可见性由 Reconciler 维护。
+Coordinate 声明一个可供后续定位和路径引用的命名点。本篇沿输入契约、解析过程、编译过程，追踪位置表达式怎样变成具体坐标。Node 的定位和 Path 的目标处理也会复用这里的位置求值能力。
+
+下面贯穿使用一个例子：Scope 是组织子项及其坐标空间的容器。当前 Scope 在世界位置 [100, 50]，缩放为 2；已存在的 A 位于世界 [100, 50]。坐标 P 声明为相对 A 向右偏移 40：
+
+```ts
+const coordinate = {
+  type: 'coordinate',
+  id: 'P',
+  position: { of: 'A', offset: [40, 0] },
+} satisfies import('@retikz/core').IRCoordinate;
+```
+
+P 的最终局部位置是 [40, 0]，世界位置是 [180, 50]。下面分别说明这两个结果在何时、依靠什么信息产生。
 
 ## 整体流程
 
-局部点属于当前 Scope，世界点包含当前及祖先 Scope 的变换。普通坐标先在局部计算再投影；命名目标先读取已发布的世界几何，再转换给局部消费者。没有变换时两个空间重合。
+Coordinate 接收带 id 的位置声明，经 <ApiSourceLink label="resolveCoordinate" path="packages/kernel/core/src/resolve/coordinate/resolve.ts" startLine={6}>`resolveCoordinate`</ApiSourceLink> 得到 <ApiSourceLink label="CanonicalCoordinate" path="packages/kernel/core/src/resolve/coordinate/types.ts" startLine={5}>`CanonicalCoordinate`</ApiSourceLink>，再由 <ApiSourceLink label="compileCoordinate" path="packages/kernel/core/src/compile/coordinate/compile.ts" startLine={15}>`compileCoordinate`</ApiSourceLink> 结合引用与空间上下文生成 <ApiSourceLink label="CompiledCoordinate" path="packages/kernel/core/src/compile/coordinate/compile.ts" startLine={9}>`CompiledCoordinate`</ApiSourceLink>。输入描述位置关系，解析结果保留确定后的表达式，编译结果提供当前 Scope 的局部点；调用方将它投影并发布为命名位置，供后续节点、路径和父布局消费。
+
+<ComponentPreview files="coordinate-flow" size="lg" hideCode type="flow" />
+
+下面先解释五种输入形式，再分别展开解析与编译，最后用完整流程串起这些阶段。
+
+## 输入契约
+
+输入契约 <ApiSourceLink label="CoordinateSchema" path="packages/kernel/core/src/schemas/node/coordinate.ts" startLine={12}>`CoordinateSchema`</ApiSourceLink>
+要求 `type: 'coordinate'`、非空 id 和 position。id 用于发布命名位置，position 接受五种 Schema 形式：
+
+| Schema / 形式                   | 输入示例                                                 | 对后续处理的影响                                                                                        |
+| ------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| PositionSchema：坐标对          | `[20, 10]`                                               | 直接作为当前 Scope 的局部点，再投影到世界空间                                                           |
+| PolarPositionSchema：极坐标     | `{ angle: 90, radius: 40 }`                              | resolve 补原点，compile 求原点位置，再按角度与半径计算局部点；角度单位为度，正方向遵循屏幕 y 轴向下约定 |
+| AtPositionSchema：方向定位      | `{ of: 'A', direction: 'right' }`                        | resolve 补 distance；compile 读取 A 的中心，转为局部点后沿指定方向移动                                  |
+| OffsetPositionSchema：基点偏移  | `{ of: 'A', offset: [40, 0] }`                           | compile 先求基点的局部位置，再叠加局部 offset；基点也可以是坐标对或极坐标                               |
+| BetweenPositionSchema：两点插值 | `{ between: [{ id: 'A' }, { id: 'B' }], fraction: 0.5 }` | resolve 递归整理两端表达；compile 求两个世界目标并插值，再转换为局部点                                  |
+
+极坐标的 origin 可用名称、坐标对或嵌套极坐标。between 的两端使用 <ApiSourceLink label="AbsoluteTargetSchema" path="packages/kernel/core/src/schemas/position/between.ts" startLine={15}>`AbsoluteTargetSchema`</ApiSourceLink>，可包含坐标、极坐标、`{ id, anchor?, offset?, boundary? }` 引用、偏移或嵌套插值。这决定了编译时需要读取中心、锚点还是连接面。Coordinate 的顶层 position 使用上表五种形式，名称字符串用于 origin、of 等基点字段。
+
+外部 JSON 在 Schema 入口完成结构校验；下面的 resolve 和 compile 消费符合契约的 IR，分别完成默认配置确定和上下文几何计算。
+
+## 解析过程
+
+函数 <ApiSourceLink label="resolveCoordinate" path="packages/kernel/core/src/resolve/coordinate/resolve.ts" startLine={6}>`resolveCoordinate`</ApiSourceLink>
+保留 id，将 position 交给
+函数 <ApiSourceLink label="resolvePosition" path="packages/kernel/core/src/resolve/position/resolve.ts" startLine={43}>`resolvePosition`</ApiSourceLink>
+。解析结果类型如下，省略了源码注释；
+类型 <ApiSourceLink label="CanonicalPosition" path="packages/kernel/core/src/resolve/position/types.ts" startLine={31}>`CanonicalPosition`</ApiSourceLink>
+的各分支保留相应位置形式：
+
+```ts
+export type CanonicalCoordinate = {
+  id: IRCoordinate['id'];
+  position: CanonicalPosition;
+};
+
+export type CanonicalPosition =
+  IRPosition | CanonicalPolarPosition | CanonicalOffsetPosition | CanonicalBetweenPosition | Required<IRAtPosition>;
+```
+
+resolve 使用的 <ApiSourceLink label="PositionResolveContext" path="packages/kernel/core/src/resolve/position/types.ts" startLine={39}>`PositionResolveContext`</ApiSourceLink> 只有 nodeDistance，用来补全方向定位中省略的 distance。各分支的处理如下：
+
+- 坐标对复制为局部坐标配置。
+- 极坐标省略 origin 时补为 [0, 0]，嵌套极坐标递归处理。
+- 方向定位使用显式 distance，或读取上下文的 nodeDistance，得到必填 distance。
+- 偏移保留 offset，并整理 of 中嵌套的极坐标。
+- 插值保留 fraction，递归整理两端的绝对目标；命名目标保留 id、anchor 与 boundary 等配置。
 
 <ComponentPreview files="coordinate-overview" size="lg" hideCode type="flow" />
 
-## 表达确定化与几何求值
+对于 P，解析结果仍是 `{ id: 'P', position: { of: 'A', offset: [40, 0] } }`。此时已经确定偏移形式和数值，但 A 在哪里、当前 Scope 怎样变换，要等编译上下文提供。若输入改成 `{ of: 'A', direction: 'right' }` 且 nodeDistance 为 40，canon 则会补上 `distance: 40`。
 
-`resolvePosition` 补全方向距离、极坐标原点及嵌套表达，不查询名称。例如 `{ of: 'A', direction: 'right' }` 可以确定有效 distance，却仍要等 A 的几何可查，才能知道放置位置。不能因为进入 Canonical 就提前丢弃引用。
+## 编译过程
 
-| 表达                                                     | 求值规则                                                  |
-| -------------------------------------------------------- | --------------------------------------------------------- |
-| [20, 10]                                                 | 当前 Scope 的局部点                                       |
-| `{ angle: 90, radius: 40 }`                              | 从局部原点计算；屏幕坐标中正角度朝下旋转                  |
-| `{ of: 'A', direction: 'right', distance: 40 }`          | A 的世界中心转局部，再按局部方向移动；distance 是中心间距 |
-| `{ of: 'A', offset: [40, 0] }`                           | 求局部基点后叠加局部偏移                                  |
-| `{ between: [{ id: 'A' }, { id: 'B' }], fraction: 0.5 }` | 两个世界目标插值，再转回当前局部空间                      |
+### 产物与上下文
 
-这些是共享机制的代表，各消费方的 Schema 决定允许哪些形式。Node 支持自身锚点对齐；Scope 的位置还涉及包络；路径相对游标不是这里的通用位置表达。
+函数 <ApiSourceLink label="compileCoordinate" path="packages/kernel/core/src/compile/coordinate/compile.ts" startLine={15}>`compileCoordinate`</ApiSourceLink> 消费 <ApiSourceLink label="CanonicalCoordinate" path="packages/kernel/core/src/resolve/coordinate/types.ts" startLine={5}>`CanonicalCoordinate`</ApiSourceLink> 和 <ApiSourceLink label="PositionEvaluateContext" path="packages/kernel/core/src/compile/reference/types.ts" startLine={44} >`PositionEvaluateContext`</ApiSourceLink>。它调用 <ApiSourceLink label="evaluatePosition" path="packages/kernel/core/src/compile/reference/position.ts" startLine={47}>`evaluatePosition`</ApiSourceLink>，取返回值的 `localPoint` 作为 <ApiSourceLink label="CompiledCoordinate" path="packages/kernel/core/src/compile/coordinate/compile.ts" startLine={9}>`CompiledCoordinate.position`</ApiSourceLink>。下面是这两个产物的完整字段，省略源码注释：
 
-## 局部偏移与目标偏移
+```ts
+export type CompiledCoordinate = {
+  position: Position;
+};
 
-`{ of: 'A', offset: [40, 0] }` 的位移属于当前局部空间；节点目标 `{ id: 'A', offset: [40, 0] }` 的 offset 在世界空间叠加。缩放存在时，两者会产生不同结果。
+export type PositionEvaluation = Readonly<{
+  localPoint: IRPosition;
+  worldPoint: IRPosition;
+}>;
+```
+
+类型 <ApiSourceLink label="PositionEvaluation" path="packages/kernel/core/src/compile/reference/types.ts" startLine={58}>`PositionEvaluation`</ApiSourceLink>
+表示同一个点的两种空间坐标：localPoint 供当前 Scope 内布局使用，worldPoint 供跨空间引用计算使用。
+类型 <ApiSourceLink label="CompiledCoordinate" path="packages/kernel/core/src/compile/coordinate/compile.ts" startLine={9}>`CompiledCoordinate`</ApiSourceLink>
+保存当前 Scope 的局部位置；名称发布由调用方接着完成。
+
+求值所需能力通过以下上下文传入：
+
+```ts
+export type PositionEvaluateContext = Readonly<{
+  nodeDistance: number;
+  lookupReference: (id: string, kind?: ReferenceReadKind) => PositionReferenceView | undefined;
+  toLocal: (world: IRPosition) => IRPosition;
+  toWorld: (local: IRPosition) => IRPosition;
+  evaluateBetweenWorld?: (between: IRBetweenPosition) => IRPosition | null;
+}>;
+```
+
+| 上下文成员           | 提供的能力                          | 使用位置                                                                         |
+| -------------------- | ----------------------------------- | -------------------------------------------------------------------------------- |
+| lookupReference      | 查询当前可见名称的几何与就绪状态    | of、origin 等命名基点；目标求值也通过它读取锚点所需几何                          |
+| toLocal / toWorld    | 当前 Scope 与世界空间之间的坐标转换 | 将已发布的世界几何转为局部计算基点，再投影结果                                   |
+| nodeDistance         | 方向定位的缺省距离                  | 共享求值器处理尚未带显式 distance 的位置时使用；Coordinate 的 resolve 已补齐此值 |
+| evaluateBetweenWorld | 求两端目标在世界空间中的插值点      | between 分支；涉及锚点时由目标求值能力完成                                       |
+
+Reconciler 的 <ApiSourceLink label="createTreePositionContext" path="packages/kernel/reconciler/src/compile/tree/reference/tree-context.ts" startLine={7}>`createTreePositionContext`</ApiSourceLink> 将名称环境、当前 Scope 的变换链及边界查询服务接入这些能力。Core 的 <ApiSourceLink label="createPositionEvaluateContext" path="packages/kernel/core/src/compile/reference/context.ts" startLine={53}>`createPositionEvaluateContext`</ApiSourceLink> 建立坐标转换，并连接两端目标的插值求值。
+
+### 从表达式到命名位置
+
+对 P 的编译可以沿以下数据变化理解：
+
+1. lookupReference 取得 A 的世界位置 [100, 50]。
+2. toLocal 将它转换为当前 Scope 的局部 [0, 0]。
+3. 调用 <ApiSourceLink label="evaluatePosition" path="packages/kernel/core/src/compile/reference/position.ts" startLine={47}>`evaluatePosition`</ApiSourceLink>
+   叠加局部偏移 [40, 0]，得到 localPoint [40, 0]；toWorld 得到 worldPoint [180, 50]。
+4. <ApiSourceLink label="compileCoordinate" path="packages/kernel/core/src/compile/coordinate/compile.ts" startLine={15}>`compileCoordinate`</ApiSourceLink> 返回 `{ position: [40, 0] }`。
+5. <ApiSourceLink label="visitCoordinate" path="packages/kernel/reconciler/src/compile/tree/coordinate/visit.ts" startLine={12}>`visitCoordinate`</ApiSourceLink> 将编译结果投影到世界空间，以 P 注册 `{ position: [180, 50] }`，同时把局部位置提供给 Scope 的布局收集。
+
+这条流程生成的是位置几何。后续 Node 定位可以引用 P，Path 也可以将 P 作为目标点。<ApiSourceLink label="evaluatePosition" path="packages/kernel/core/src/compile/reference/position.ts" startLine={47}>`evaluatePosition`</ApiSourceLink> 是共享的求点步骤：Node 在此基础上结合自身尺寸和锚点完成放置，Path 则结合目标边界继续计算连接端点。
+
+### 目标、锚点与偏移空间
+
+当输入是 between 的端点或 Path 目标时，`{ id: 'A', anchor: 'right' }` 还需要读取边界与锚点。<ApiSourceLink label="PositionTargetEvaluateContext" path="packages/kernel/core/src/compile/reference/types.ts" startLine={66}>`PositionTargetEvaluateContext`</ApiSourceLink> 在基础位置上下文上增加连接面绑定和节点目标求点能力。
+
+函数 <ApiSourceLink label="evaluatePositionTargetWorld" path="packages/kernel/core/src/compile/reference/target.ts" startLine={9} >`evaluatePositionTargetWorld`</ApiSourceLink> 先求世界参考点 referencePoint；直接命名目标还保留 reference 及可选 canonicalBoundary，供后续连接几何使用。 <ApiSourceLink label="evaluatePositionTarget" path="packages/kernel/core/src/compile/reference/target.ts" startLine={66} >`evaluatePositionTarget`</ApiSourceLink> 再用 toLocal 补局部 point。因此后续 Path 编译既能取得目标点，也能继续查询目标的边界；普通位置求值只需 localPoint 与
+worldPoint。
+
+偏移所属空间由输入形式决定：P 的 `{ of: 'A', offset: [40, 0] }` 在局部空间叠加偏移，得到世界 [180, 50]；目标形式 `{ id: 'A', offset: [40, 0] }` 在世界参考点上叠加偏移，得到 [140, 50]。
 
 <ComponentPreview files="coordinate-spaces" size="lg" hideCode type="illustration" />
 
-图中基点为世界 [100, 50]，所属 Scope 缩放为 2。局部偏移 40 得到世界 [180, 50]；世界目标偏移 40 得到 [140, 50]。这不是默认值差异，而是两种契约选择了不同空间。
+### 引用就绪与失败
 
-## 名称、目标与锚点
+Coordinate 在访问时求值，所引用的目标需要已经可查。<ApiSourceLink label="evaluatePosition" path="packages/kernel/core/src/compile/reference/position.ts" startLine={47}>`evaluatePosition`</ApiSourceLink> 在引用缺失或 between 无法求值时返回 null；<ApiSourceLink label="compileCoordinate" path="packages/kernel/core/src/compile/coordinate/compile.ts" startLine={15}>`compileCoordinate`</ApiSourceLink> 将其转为可由布局试算边界识别的错误。目标求值以 null 的 referencePoint 表示无法定位，由消费方处理。
 
-名称查找先取得 PositionReferenceView，包含 geometry、state 和来源；随后才求锚点。Node 和具名 Scope 提供边界几何，Coordinate 只提供位置，不绘制图元。
+具名 Scope 在包络完成前可能发布位置占位。读取位置与读取完整边界有不同的就绪要求，由上下文中的引用状态与查询能力检查。未知锚点会失败，Coordinate 的点几何也无法提供要求实际边长的比例锚点。Path 的延迟求值时机见 [Path 编译](/kernel/packages/core/path-compilation)，Scope 的发布阶段见 [Scope 编译](/kernel/packages/core/scope-compilation)。
 
-`evaluatePosition` 返回 localPoint / worldPoint。`evaluatePositionTargetWorld` 先返回 referencePoint，并在直接目标时保留 reference 与可选连接面绑定；`evaluatePositionTarget` 再补当前局部 point。插值结果不伪装成一个直接节点引用。
+## 完整流程
 
-未指定 anchor 的位置目标通常读取中心，路径还可能继续执行自动边界裁剪。标准锚点与自定义形状锚点由能力契约解释，不能把字符串名称都当作通用坐标。未知锚点会失败；Coordinate 的零尺寸几何也不能支持有实际边长含义的比例点。
+将前面的阶段连起来，P 先以 `{ of: 'A', offset: [40, 0] }` 进入解析；编译时读取 A 的世界几何，通过当前 Scope 的转换能力得到局部基点，再叠加偏移。<ApiSourceLink label="compileCoordinate" path="packages/kernel/core/src/compile/coordinate/compile.ts" startLine={15}>`compileCoordinate`</ApiSourceLink> 返回局部 [40, 0]，<ApiSourceLink label="visitCoordinate" path="packages/kernel/reconciler/src/compile/tree/coordinate/visit.ts" startLine={12}>`visitCoordinate`</ApiSourceLink> 将世界 [180, 50] 发布为 P，并收集局部布局贡献。
 
-## 引用时机
+<ComponentPreview files="coordinate-implementation" size="xxl" hideCode type="flow" />
 
-Node 与 Coordinate 在访问时求值，引用对象需要可查。Node 自身锚点对齐必须先有临时自身布局，再计算目标与自身锚点的世界位移，反投影到局部空间；引用自身、未定义对象或仍在布局的 Scope 会失败。
-
-Path 有独立的延迟机制：根路径等根子树完成，Scope 内路径等该 Scope 收尾。因此本层后续节点可以成为路径目标，但 Scope 内路径不能据此引用 Scope 之外更晚才声明的对象。
-
-具名 Scope 在子项执行前可能只发布 position 占位。`scope-placeholder` 与 `resolved` 是不同状态；需要完整包络的读取不能把位置占位当成就绪边界。找不到引用时，底层求值返回 null 或空 referencePoint，由消费阶段决定失败或诊断，不补一个假原点。
-
-<SourceLinks
-  sources={[
-    { label: '名称帧与生命周期', path: 'packages/kernel/reconciler/src/compile/runtime/namespace.ts' },
-    { label: '自身锚点定位与失败边界', path: 'packages/kernel/core/src/compile/node/placement.ts' },
-    { label: '延迟路径执行点', path: 'packages/kernel/reconciler/src/compile/tree/path/deferred.ts' },
-  ]}
-/>
-
-## 完整实现流程
-
-以下以 Coordinate 为主线：它经过语义解析和局部点求值，Reconciler 再投影世界点、发布名称并提供布局占位。它不会产生可见 ScenePrimitive。Node 与 Path 使用同一位置服务，但各自拥有最终定位或端点处理。
-
-<ComponentPreview files="coordinate-implementation" size="lg" hideCode type="flow" />
-
-Core 的 createPositionEvaluateContext 适配几何查询与坐标转换；Reconciler 的 createTreePositionContext 将名称栈、Scope 变换和共享边界状态投影为这个窄接口。把这些服务注入 Core，可以让原子计算不依赖某种树或增量引擎。
-
-<SourceLinks
-  sources={[
-    { label: 'Position resolution', path: 'packages/kernel/core/src/resolve/position/resolve.ts' },
-    { label: 'Reference contracts', path: 'packages/kernel/core/src/compile/reference/types.ts' },
-    { label: 'Position evaluation', path: 'packages/kernel/core/src/compile/reference/position.ts' },
-    { label: 'Target evaluation', path: 'packages/kernel/core/src/compile/reference/target.ts' },
-    { label: 'Context and transforms', path: 'packages/kernel/core/src/compile/reference/context.ts' },
-    { label: 'Coordinate compilation', path: 'packages/kernel/core/src/compile/coordinate/compile.ts' },
-    { label: 'Coordinate publication', path: 'packages/kernel/reconciler/src/compile/tree/coordinate/visit.ts' },
-    { label: 'Tree context adapter', path: 'packages/kernel/reconciler/src/compile/tree/reference/tree-context.ts' },
-  ]}
-/>
+源码阅读顺序是 <ApiSourceLink label="resolveCoordinate" path="packages/kernel/core/src/resolve/coordinate/resolve.ts" startLine={6}>`resolveCoordinate`</ApiSourceLink> → <ApiSourceLink label="resolvePosition" path="packages/kernel/core/src/resolve/position/resolve.ts" startLine={43}>`resolvePosition`</ApiSourceLink> → <ApiSourceLink label="compileCoordinate" path="packages/kernel/core/src/compile/coordinate/compile.ts" startLine={15}>`compileCoordinate`</ApiSourceLink> → <ApiSourceLink label="evaluatePosition" path="packages/kernel/core/src/compile/reference/position.ts" startLine={47}>`evaluatePosition`</ApiSourceLink>，最后看 <ApiSourceLink label="visitCoordinate" path="packages/kernel/reconciler/src/compile/tree/coordinate/visit.ts" startLine={12}>`visitCoordinate`</ApiSourceLink> 怎样把结果交给名称环境与父布局。
 
 ## 延伸阅读
 
 <LinkedSections
   items={[
     { title: '语义解析', description: '回顾 Canonical 为何仍可保留引用', url: '/kernel/packages/core/resolution' },
-    {
-      title: 'Scope 编译',
-      description: '查看包络就绪与发布几何的阶段',
-      url: '/kernel/packages/core/scope-compilation',
-    },
     {
       title: 'Node 编译',
       description: '查看自身锚点、正文与布局的协作',
@@ -97,6 +168,11 @@ Core 的 createPositionEvaluateContext 适配几何查询与坐标转换；Recon
       title: 'Path 编译',
       description: '查看目标参考点怎样成为最终路径端点',
       url: '/kernel/packages/core/path-compilation',
+    },
+    {
+      title: 'Scope 编译',
+      description: '查看包络就绪与发布几何的阶段',
+      url: '/kernel/packages/core/scope-compilation',
     },
   ]}
 />

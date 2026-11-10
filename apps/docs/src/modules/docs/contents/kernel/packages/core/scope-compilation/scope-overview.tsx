@@ -15,12 +15,12 @@ const ScopeOverview: FC<ScopeOverviewProps> = props => {
   const { lang = 'zh' } = props;
   const text = scopeOverviewI18n[lang];
   const stages = [
-    { id: 'resolve', name: 'IRScope → CanonicalScope', state: false },
+    { id: 'resolve', name: 'CanonicalScope', state: true },
     { id: 'children', name: 'Reconciler · children', state: false },
-    { id: 'compile', name: 'Core · compileScope', state: false },
-    { id: 'output', name: 'Group + projected contributions', state: true },
+    { id: 'compile', name: 'compileScope → CompiledScope', state: false },
+    { id: 'output', name: 'GroupPrimitive', state: true },
   ] as const;
-  const inputs = [{ id: 'parent', name: 'Parent context', target: 'resolve' }] as const;
+  const inputs = [{ id: 'parent', name: 'ScopeCompileContext', target: 'compile' }] as const;
   return (
     <PreviewFlowDiagram {...logicFigureGraphProps()} style={{ maxWidth: '100%', height: 'auto' }}>
       <FlowLayout
@@ -28,9 +28,9 @@ const ScopeOverview: FC<ScopeOverviewProps> = props => {
         kind="grid"
         gap={{ row: 20, column: 28 }}
         placements={[
-          ['parent', 'resolve'],
+          [null, 'resolve'],
           [null, 'children'],
-          [null, 'compile'],
+          ['parent', 'compile'],
           [null, 'output'],
         ]}
       >
@@ -60,12 +60,10 @@ const ScopeOverview: FC<ScopeOverviewProps> = props => {
       </FlowLayout>
       <FlowRelations
         items={[
-          ...stages
-            .slice(1)
-            .map((item, index) => ({
-              source: { id: stages[index].id, anchor: 'bottom' as const },
-              target: { id: item.id, anchor: 'top' as const },
-            })),
+          ...stages.slice(1).map((item, index) => ({
+            source: { id: stages[index].id, anchor: 'bottom' as const },
+            target: { id: item.id, anchor: 'top' as const },
+          })),
           ...inputs.map(item => ({
             source: { id: item.id, anchor: 'right' as const },
             target: { id: item.target, anchor: 'left' as const },
