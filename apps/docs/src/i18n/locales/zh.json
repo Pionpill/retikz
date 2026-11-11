@@ -389,13 +389,13 @@
     "grammarCoordinateComposition": "坐标组合",
     "grammarCoordinateCustom": "自定义坐标系",
     "grammarMark": "mark · 图元",
-    "grammarGuide": "辅助",
+    "grammarGuide": "guide · 辅助",
     "compMark": "图元",
     "compPathMark": "path · 路径图元",
     "compPointMark": "point · 点图元",
     "compIntervalMark": "interval · 区间图元",
-    "compAxis": "坐标轴",
-    "compLegend": "图例"
+    "compAxis": "axis · 坐标轴",
+    "compLegend": "legend · 图例"
   },
   "blog": {
     "notTranslatedYet": "本文尚未提供英文版，以下为中文原文",

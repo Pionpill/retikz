@@ -173,6 +173,36 @@ export const referenceGroups: Readonly<Partial<Record<string, ReadonlyArray<Refe
       schemas: ['PathMarkSchema'],
     },
   ],
+  'viz/plot/guide/axis': [
+    {
+      title: { zh: '声明属性与配置', en: 'Declaration and configuration' },
+      members: ['PlotAxisProps', 'IRPlotAxisGuide'],
+      schemas: [
+        'AxisGuideSchema',
+        'AxisPlacementSchema',
+        'AxisLineSchema',
+        'AxisTicksSchema',
+        'AxisTickDensitySchema',
+        'AxisTickMarkSchema',
+        'AxisTickLabelsSchema',
+        'AxisTickLabelLayoutSchema',
+        'AxisTickLabelAutoRotateSchema',
+        'AxisTickLabelAutoHideSchema',
+        'AxisTickLabelBoundsSchema',
+        'AxisTitleSchema',
+        'AxisGridSchema',
+        'AxisGridComponentSchema',
+        'GuideTargetSelectorSchema',
+      ],
+    },
+  ],
+  'viz/plot/guide/legend': [
+    {
+      title: { zh: '声明属性与配置', en: 'Declaration and configuration' },
+      members: ['PlotLegendProps', 'IRPlotLegendGuide'],
+      schemas: ['LegendGuideSchema', 'LegendGuideStyleSchema'],
+    },
+  ],
   'viz/plot/mark/point': [
     {
       title: { zh: '组件属性', en: 'Component properties' },

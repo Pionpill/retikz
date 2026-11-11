@@ -1,5 +1,5 @@
 ---
-title: 图例
+title: legend · 图例
 description: 用 <PlotLegend> 解释颜色、大小、透明度、形状和自定义非位置通道；颜色 scale 或通道定义决定图例形态。
 ---
 
@@ -9,27 +9,199 @@ description: 用 <PlotLegend> 解释颜色、大小、透明度、形状和自�
 
 图例只解释已有的数据映射。先在 mark 上把字段绑定到通道，再声明 `<PlotLegend>`；连续字段还应通过 `model` 标成 `continuous`，避免被按分类值处理。坐标轴与图例彼此独立，仍需用 `<PlotAxis>` 显式声明位置 guide。
 
-## 用法
+## 接入方式
 
-```tsx
-import { PlotLegend, Plot, PointMark } from '@retikz/plot-react';
+下面按 region 字段给三个点着色，颜色图例复用同一比例尺的分类域和颜色范围。
+
+<ComponentPreview mode="showcase" files="legend-entry" size="md" hideCode />
+
+在 HTML 中准备 `<div id="plot"></div>`。React JSX 中各声明作为 Plot 的子组件：
+
+```text
+Plot
+├── PointMark
+├── PlotScale
+├── PlotAxis
+└── PlotLegend
 ```
 
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+从 `@retikz/plot-react` 导入组件，用子组件声明图元、比例尺与辅助。
+
 ```tsx
-<Plot data={cities}>
-  <PointMark encodings={{ color: 'region', size: 'pop', position: { x: 'lng', y: 'lat' } }} />
-  <PlotLegend channel="color" />
-  <PlotLegend channel="size" position="bottom" />
-</Plot>
+import { Plot, PlotAxis, PlotLegend, PlotScale, PointMark } from '@retikz/plot-react';
+import { createRoot } from 'react-dom/client';
+
+const rows = [
+  { gdp: 400, life: 76, region: 'A' },
+  { gdp: 900, life: 81, region: 'B' },
+  { gdp: 1600, life: 84, region: 'A' },
+];
+
+createRoot(document.getElementById('plot')!).render(
+  <Plot data={rows} width={360} height={220}>
+    <PlotScale dimension="x" type="linear" domainPadding={{ kind: 'ratio', lower: 0.15, upper: 0.15 }} />
+    <PlotScale dimension="y" type="linear" domainPadding={{ kind: 'ratio', lower: 0.15, upper: 0.15 }} />
+    <PointMark
+      encodings={{
+        position: { x: { field: 'gdp' }, y: { field: 'life' } },
+        color: 'region',
+      }}
+      properties={{ size: 6 }}
+    />
+    <PlotAxis dimension="x" />
+    <PlotAxis dimension="y" />
+    <PlotLegend channel="color" />
+  </Plot>,
+);
 ```
 
-## 例子
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+从 `@retikz/plot` 导入配置类型，将完整 IR 传给 React `Plot` 的 `spec`。
+
+```tsx
+import { Plot } from '@retikz/plot-react';
+import type { IRPlot } from '@retikz/plot';
+import { createRoot } from 'react-dom/client';
+
+const rows = [
+  { gdp: 400, life: 76, region: 'A' },
+  { gdp: 900, life: 81, region: 'B' },
+  { gdp: 1600, life: 84, region: 'A' },
+];
+
+const spec: IRPlot = {
+  namespace: 'plot',
+  type: 'plot',
+  data: { reference: 'rows' },
+  scales: [
+    { type: 'ordinal', name: 'color' },
+    { type: 'linear', name: 'x', domainPadding: { kind: 'ratio', lower: 0.15, upper: 0.15 } },
+    { type: 'linear', name: 'y', domainPadding: { kind: 'ratio', lower: 0.15, upper: 0.15 } },
+  ],
+  coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+  marks: [
+    {
+      type: 'point',
+      encodings: {
+        position: { x: { field: 'gdp' }, y: { field: 'life' } },
+        color: { field: 'region', scale: 'color' },
+      },
+      properties: { size: 6 },
+    },
+  ],
+  guides: [
+    { type: 'legend', channel: 'color' },
+    { type: 'axis', dimension: 'x' },
+    { type: 'axis', dimension: 'y' },
+  ],
+};
+
+createRoot(document.getElementById('plot')!).render(<Plot spec={spec} data={{ rows }} width={360} height={220} />);
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+从 `@retikz/plot-vanilla` 导入 `plot` 创建配置，再用 `renderPlot` 输出 SVG。
+
+```ts
+import { plot, renderPlot } from '@retikz/plot-vanilla';
+
+const rows = [
+  { gdp: 400, life: 76, region: 'A' },
+  { gdp: 900, life: 81, region: 'B' },
+  { gdp: 1600, life: 84, region: 'A' },
+];
+
+const spec = plot({
+  data: { reference: 'rows' },
+  scales: [
+    { type: 'ordinal', name: 'color' },
+    { type: 'linear', name: 'x', domainPadding: { kind: 'ratio', lower: 0.15, upper: 0.15 } },
+    { type: 'linear', name: 'y', domainPadding: { kind: 'ratio', lower: 0.15, upper: 0.15 } },
+  ],
+  coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+  marks: [
+    {
+      type: 'point',
+      encodings: {
+        position: { x: { field: 'gdp' }, y: { field: 'life' } },
+        color: { field: 'region', scale: 'color' },
+      },
+      properties: { size: 6 },
+    },
+  ],
+  guides: [
+    { type: 'legend', channel: 'color' },
+    { type: 'axis', dimension: 'x' },
+    { type: 'axis', dimension: 'y' },
+  ],
+});
+
+document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout: { width: 360, height: 220 } });
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+直接声明 `IRPlot`，交给 `renderPlot` 和命名数据集渲染。
+
+```ts
+import type { IRPlot } from '@retikz/plot';
+import { renderPlot } from '@retikz/plot-vanilla';
+
+const rows = [
+  { gdp: 400, life: 76, region: 'A' },
+  { gdp: 900, life: 81, region: 'B' },
+  { gdp: 1600, life: 84, region: 'A' },
+];
+
+const spec: IRPlot = {
+  namespace: 'plot',
+  type: 'plot',
+  data: { reference: 'rows' },
+  scales: [
+    { type: 'ordinal', name: 'color' },
+    { type: 'linear', name: 'x', domainPadding: { kind: 'ratio', lower: 0.15, upper: 0.15 } },
+    { type: 'linear', name: 'y', domainPadding: { kind: 'ratio', lower: 0.15, upper: 0.15 } },
+  ],
+  coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+  marks: [
+    {
+      type: 'point',
+      encodings: {
+        position: { x: { field: 'gdp' }, y: { field: 'life' } },
+        color: { field: 'region', scale: 'color' },
+      },
+      properties: { size: 6 },
+    },
+  ],
+  guides: [
+    { type: 'legend', channel: 'color' },
+    { type: 'axis', dimension: 'x' },
+    { type: 'axis', dimension: 'y' },
+  ],
+};
+
+document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout: { width: 360, height: 220 } });
+```
+
+</DocTab>
+</DocTabs>
+
+## 基础用法
 
 ### 色彩形态
 
 分类字段使用 ordinal 色阶并生成逐项色块；连续数值使用 sequential 色阶并生成平滑色带；quantize 等离散化 scale 则把连续数值切成区间色块。切换形态后，控件只显示当前图例适用的参数。
 
 <ComponentPreview
+  mode="showcase"
   files={['legend-color-forms', 'legend-color-forms.preview.tsx', 'legend-color-forms.i18n.ts', 'legend.data.ts']}
   size="lg"
   caption="切换图例形态并调整当前分支参数，观察绑定 scale 如何决定颜色图例结构。"
@@ -43,6 +215,7 @@ import { PlotLegend, Plot, PointMark } from '@retikz/plot-react';
 `size` 绑定连续字段时会通过平方根 scale 映射半径，图例选取代表值生成渐变符号。`position="bottom"` 可以把图例移到底部。
 
 <ComponentPreview
+  mode="showcase"
   files={['legend-size', 'legend-size.preview.tsx', 'legend-size.i18n.ts', 'legend.data.ts']}
   size="lg"
   caption="改变位置、排列方向、目标尺寸和适配方式，比较代表符号的布局与实绘大小。"
@@ -56,13 +229,18 @@ import { PlotLegend, Plot, PointMark } from '@retikz/plot-react';
 透明度图例的色带和色块沿用关联 mark 的单一颜色，包括默认主题色。mark 使用多色、渐变填充，或共享该透明度比例尺的多个 mark 颜色不一致时，图例使用中性色，只表达透明度变化。
 
 <ComponentPreview
+  mode="showcase"
   files={['legend-shape-opacity', 'legend-shape-opacity.preview.tsx', 'legend-shape-opacity.i18n.ts', 'legend.data.ts']}
   size="lg"
   caption="分别显隐和移动 shape / opacity 图例，再调整透明度刻度数，观察两个 guide 独立工作。"
   defaultSourceFile="legend-shape-opacity.preview.tsx"
 />
 
-## 技术原理
+## 错误与限制
+
+先绑定数据驱动的通道，再声明对应图例。同一通道绑定多个比例尺时，需用 `scale` 指定名称。ramp 接受完整刻度来源；size 仅使用 `ticks.count`，分类色块、分箱和 shape 不读取该配置。
+
+## 实现原理
 
 <ComponentAlert
   type="tip"
@@ -72,7 +250,7 @@ import { PlotLegend, Plot, PointMark } from '@retikz/plot-react';
 
 PlotLegend 会按 `channel` 和可选 `scale` 找到通道描述与 scale。颜色形态来自 scale，其它通道形态来自同一 registry 中的 `ChannelDefinition.legend`，因此自定义通道不需要单独的 PlotLegend 分支。样式由 `Plot.defaultPlot.legend` 提供默认值，单个图例可以用 `style` 局部覆盖。
 
-<ComponentPreview files="legend-lowering-flow" size="sm" hideCode />
+<ComponentPreview files="legend-lowering-flow" size="lg" hideCode type="flow" />
 
 选择出的形态会在 `position` 对应的预留带中下沉为独立 PlotLegend scope。图例默认使用 `500` 层级，位于坐标轴、Facet 标签和 mark 之上；`layer={{ zIndex }}` 只移动整个 scope，不改变内部条目的顺序。
 
@@ -81,68 +259,25 @@ PlotLegend 会按 `channel` 和可选 `scale` 找到通道描述与 scale。颜�
     {
       label: '描述选择与图例形态分流',
       path: 'packages/viz/plot/src/pipeline/expand/legend.ts',
-      startLine: 396,
-      endLine: 612,
     },
     {
       label: '图例形态下沉为 core scope',
       path: 'packages/viz/plot/src/pipeline/guide/guide.ts',
-      startLine: 1891,
-      endLine: 2030,
     },
     {
       label: 'Plot 语义图层默认值',
       path: 'packages/viz/plot/src/schemas/plot/layer.ts',
-      startLine: 5,
-      endLine: 24,
     },
   ]}
 />
 
-分类颜色图例可通过 `symbols` 叠加点和线。例如 `symbols={[{ kind: 'line', scale: 'pathColor' }, { kind: 'point', scale: 'pointColor' }]}` 会使用两个已绑定色标的实际颜色。两个色标必须具有相同且顺序一致的分类域。每项也可设置 `paint` 常量，优先于 `scale`；连续和分箱图例不支持此配置。
-
 ## API 参考
 
-#### PlotLegendProps
+公开属性复用 React / Vanilla 的共享输入。Source IR 及嵌套约束使用下列 Schema；`—` 表示声明未记录字段级默认值。共享的线条、文字和刻度来源见[辅助契约参考](/viz/plot/reference/guide)。
 
-| 属性          | 类型                                | 默认值        | 描述                                                                                                                                               |
-| ------------- | ----------------------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `channel`     | `PlotLegendProps['channel']`        | —             | 要解释的非位置通道；内置为 color / size / opacity / shape，注册的自定义通道同样可用                                                                |
-| `scale?`      | `PlotLegendProps['scale']`          | 唯一 scale    | 同一通道存在多个 scale 时用名称消歧；无法唯一确定时会报错                                                                                          |
-| `symbols?`    | `PlotLegendProps['symbols']`        | —             | 分类图例叠加符号；每项的 kind 为 point / line，paint 或 scale 指定颜色                                                                             |
-| `title?`      | `PlotLegendProps['title']`          | 无            | 图例标题；支持字符串、多行文本和结构化文本                                                                                                         |
-| `position?`   | <ApiValues name="LegendPosition" /> | `'right'`     | 图例所在边；布局会在对应边预留图例带                                                                                                               |
-| `orient?`     | <ApiValues name="LegendOrient" />   | 按 `position` | 条目排布方向；左右默认 vertical，上下默认 horizontal                                                                                               |
-| `ticks?`      | `PlotLegendProps['ticks']`          | 按形态        | ramp 支持完整刻度来源；size 当前只读取 `count`；离散色块和 shape 忽略                                                                              |
-| `tickLabels?` | `PlotLegendProps['tickLabels']`     | `true`        | 用 `false` 隐藏标签；`format` 用于 ramp 的刻度标签                                                                                                 |
-| `name?`       | `PlotLegendProps['style']`          | theme legend  | 本地图例视觉 token；控制色块 / 色带尺寸、间距与文字样式。size 符号默认用 `symbolFit:'fit'` 收进 `symbolSize` 盒子，需保留实绘半径时用 `'preserve'` |
-| `layer?`      | `PlotLegendProps['layer']`          | 图例层        | 覆盖整个图例 scope 的语义层级                                                                                                                      |
+{/* @include viz/plot/guide/legend/generated */}
 
-`PlotLegendProps['ticks']` 在各图例形态中的支持范围：
-
-| 图例形态                           | `ticks` 支持                | `tickLabels.format` |
-| ---------------------------------- | --------------------------- | ------------------- |
-| 连续 color / opacity / 自定义 ramp | `values > interval > count` | 支持                |
-| size                               | 仅 `count`，默认 3 个代表值 | 忽略                |
-| 分类色块、分箱色块、shape          | 忽略                        | 忽略                |
-
-`PlotLegendProps` 的嵌套字段如下：
-
-| 对象字段              | 类型                                             | 默认值           | 作用                                   |
-| --------------------- | ------------------------------------------------ | ---------------- | -------------------------------------- |
-| `ticks.values`        | `Array<string \| number>`                        | —                | ramp 的显式刻度值                      |
-| `ticks.interval`      | `{ kind:'number' \| 'time' \| 'category'; ... }` | —                | ramp 的固定数值、时间或分类间隔        |
-| `ticks.count`         | `number`                                         | scale / 形态默认 | ramp 目标刻度数；size 代表符号数       |
-| `tickLabels.format`   | `string`                                         | 自动格式         | ramp 数值或 UTC 时间格式               |
-| `style.swatchSize`    | `number`                                         | `14`             | 色块基准边长                           |
-| `style.rampLength`    | `number`                                         | `100`            | 色带长边                               |
-| `style.rampThickness` | `number`                                         | `12`             | 色带短边                               |
-| `style.symbolSize`    | `number`                                         | `14`             | shape / size 图例的目标视觉盒          |
-| `style.symbolFit`     | <ApiValues name="LegendSymbolFit" />             | `'fit'`          | 把 size 半径收进视觉盒，或保留原始半径 |
-| `style.symbolScale`   | `number`                                         | `1`              | 适配后额外缩放图例符号                 |
-| `layer.zIndex`        | `number`                                         | `500`            | 覆盖整个图例 scope 的层级              |
-
-## 相关
+## 延伸阅读
 
 - [坐标轴](/viz/plot/guide/axis)：解释 x / y 位置通道
 - [比例尺](/viz/plot/scale)：提供图例的 domain / range，并决定颜色图例形态

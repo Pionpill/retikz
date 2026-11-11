@@ -5,6 +5,14 @@ description: Guides explain scale and coordinate results; Axis explains position
 
 Guides are the explanatory layer of the graphic grammar. Marks draw the data; Axis and Legend tell readers what those positions, colors, sizes, or shapes mean.
 
+## Reading path
+
+Bind fields to channels first, then declare guides to explain the mappings. Plot does not add axes or legends automatically. Guides reuse the resolved scales and coordinates when updating ticks, grids and legend entries.
+
+The axis page starts with x / y declarations, compares Cartesian and polar dimensions, then covers tick sources, grids, label layout and origin axes. The legend page explains how color scales select swatches, ramps or bins, followed by size, shape and opacity legends and their placement.
+
+Both pages include interactive examples, implementation diagrams and their own API reference. Shared line, text and tick-source contracts remain in the [guide contract reference](/viz/plot/reference/guide).
+
 ## Responsibilities
 
 | Component | Responsibility                                                 | When to use it                                     |
