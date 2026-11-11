@@ -208,5 +208,22 @@ export const resolveMarkChannels = (mark: IRPlotMark, context: ChannelResolveCon
     registerDescriptor(resolution.descriptor);
   }
 
+  if (descriptors.some(descriptor => descriptor.channel === 'opacity')) {
+    // 等待所有 paint 通道解析完成，避免 registry 顺序影响图例取色
+    const colors = new Set<string>();
+    for (const channel of ['color', 'fill', 'stroke']) {
+      if (!Object.hasOwn(values, channel)) continue;
+      const paintDescriptor = descriptors.find(descriptor => descriptor.channel === channel);
+      for (const paint of paintDescriptor?.range ?? [defaults[channel]]) {
+        if (paint === 'none') continue;
+        colors.add(typeof paint === 'string' ? paint : 'currentColor');
+      }
+    }
+    const color = colors.size === 0 ? context.defaultColor : colors.size === 1 ? [...colors][0] : 'currentColor';
+    for (const [index, descriptor] of descriptors.entries()) {
+      if (descriptor.channel === 'opacity') descriptors[index] = { ...descriptor, defaultColor: color };
+    }
+  }
+
   return { values, defaults, scopeDeliveries, nodeDeliveries, pathDeliveries, descriptors, labelDeliveries };
 };

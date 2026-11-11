@@ -53,6 +53,8 @@ Binding `size` to a continuous field maps radius through a square-root scale. Th
 
 `shape` suits categorical fields, while `opacity` suits continuous fields. Each `<PlotLegend>` explains one channel, so a plot can contain several independent legends.
 
+Opacity ramps and swatches inherit the associated marks' single color, including the default theme color. When a mark uses multiple colors or a gradient fill, or marks sharing the opacity scale have different colors, the legend uses a neutral color to show opacity changes.
+
 <ComponentPreview
   files={['legend-shape-opacity', 'legend-shape-opacity.preview.tsx', 'legend-shape-opacity.i18n.ts', 'legend.data.ts']}
   size="lg"

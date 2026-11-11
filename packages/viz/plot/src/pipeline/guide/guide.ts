@@ -2043,7 +2043,7 @@ export const lowerLegend = (options: LegendLoweringOptions, measure: PlotLabelMe
         const swatch = rectNode(cursorX + swatchOffset, symbolCenter[1] - swatchSize / 2, swatchSize, swatchSize);
         if (entry.color !== undefined) swatch.style = { ...swatch.style, fill: entry.color };
         if (entry.opacity !== undefined) {
-          swatch.style = { ...swatch.style, fill: 'currentColor' };
+          swatch.style = { ...swatch.style, fill: entry.color ?? 'currentColor' };
           swatch.style = { ...swatch.style, opacity: { fill: entry.opacity } };
         }
 

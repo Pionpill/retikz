@@ -53,6 +53,8 @@ import { PlotLegend, Plot, PointMark } from '@retikz/plot-react';
 
 `shape` 适合分类字段，`opacity` 适合连续字段。每个 `<PlotLegend>` 只解释一个通道，因此同一张图可以同时放置多个图例。
 
+透明度图例的色带和色块沿用关联 mark 的单一颜色，包括默认主题色。mark 使用多色、渐变填充，或共享该透明度比例尺的多个 mark 颜色不一致时，图例使用中性色，只表达透明度变化。
+
 <ComponentPreview
   files={['legend-shape-opacity', 'legend-shape-opacity.preview.tsx', 'legend-shape-opacity.i18n.ts', 'legend.data.ts']}
   size="lg"
