@@ -120,7 +120,7 @@ export type IRRegressionChartProperties = ZodInfer<typeof RegressionChartPropert
 | 属性         | 类型                                | 说明                                                                                                              |
 | ------------ | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | `override`   | `boolean`                           | 替换完整观测＋趋势组合，否则追加                                                                                  |
-| `hidePoints` | `boolean`                           | 默认 `false`；为 `true` 时不生成当前图元的散点，保留主趋势和额外趋势。                                            |
+| `showPoints` | `boolean`                           | 默认 `false`；为 `true` 时生成当前图元的散点，保留主趋势和额外趋势。                                              |
 | `encodings`  | `RegressionChartMark['encodings']`  | 覆盖同一数据中的直接字段；不覆盖 series                                                                           |
 | `properties` | `RegressionChartMark['properties']` | method、sampleCount、extent 按字段覆盖，point / trend 内逐项合并；extraMethods 整体替换，空数组清空；不含留白策略 |
 
@@ -145,7 +145,7 @@ export type IRRegressionMark = ZodInfer<typeof RegressionChartMarkSchema>;
   descriptions={{
     kind: '固定为 regression',
     override: '为 true 时替换内置同类图元；省略时追加',
-    hidePoints: '默认 false；为 true 时不生成当前图元的散点，保留主趋势与额外趋势',
+    showPoints: '默认 false；为 true 时生成当前图元的散点，保留主趋势与额外趋势',
     encodings: '参照上方映射说明；仅接受上述可选字段名覆盖',
     properties: '参照上方属性说明；不包含 domainPadding；autoPadding 可覆盖图表策略',
   }}

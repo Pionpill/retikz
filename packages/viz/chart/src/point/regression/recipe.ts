@@ -81,11 +81,11 @@ export const regressionChartDefinition: ChartRecipeDefinition<IRRegressionChart>
   resolve: (context: ChartRecipeResolveContext) => {
     const slots = pointSlotsOf(context);
     const hasSeries = Object.hasOwn(slots.encodings, 'series');
-    const guides: Array<IRPlotGuide> = hasSeries ? [{ type: PlotGuide.Legend, channel: 'color' }] : [];
+    const guides: Array<IRPlotGuide> = hasSeries ? [{ type: PlotGuide.Legend, channel: 'stroke' }] : [];
 
     return pointResolutionOf(
       ChartType.Regression,
-      [{ kind: ChartType.Regression, plotMarks: resolveRegressionMarkGroup(slots.encodings, slots.properties) }],
+      [{ kind: ChartType.Regression, plotMarks: resolveRegressionMarkGroup(slots.encodings, slots.properties, true) }],
       {
         scales: hasSeries ? [{ type: BuiltinPlotScale.Ordinal, name: seriesScaleName }] : [],
         guides,

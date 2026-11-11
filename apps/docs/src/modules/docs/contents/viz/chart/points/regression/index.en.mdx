@@ -250,7 +250,7 @@ For complete properties and constraints, see [API reference: RegressionPropertie
 
 ### Regression marks
 
-Each mark contains observations and trends; replacing or appending affects the complete group. Use `extraMethods` to compare several fits of the same observations, as shown below.
+The built-in group of `RegressionChart` shows observations by default. `RegressionMark` shows only trends unless `showPoints: true` is set. Replacement affects the complete group; appending does not hide the built-in observations. Use `extraMethods` to compare several fits of the same observations, as shown below.
 
 <DocTabs defaultValue="react-jsx">
 <DocTab value="react-jsx" label="React + JSX">
@@ -302,9 +302,10 @@ recipe: {
 </DocTab>
 </DocTabs>
 
-This replaces each species’ default linear group with a quadratic group. Observations remain; a more curved trend is another model description, not automatically a better explanation.
+This replaces each species’ default linear group with a quadratic group. Only trends are shown by default; enable “Show observations” to display the original samples. A more curved trend is another model description, not automatically a better explanation.
 
 - `override`: Replace the primary regression group.
+- `showPoints`: Defaults to `false`; enable it to show this mark’s observations.
 - `properties.method`: Select quadratic.
 - `properties.trend.strokeWidth`: Make the trend easier to identify.
 
@@ -317,7 +318,7 @@ RegressionMark inherits series and cannot introduce a different grouping rule.
   files={['regression-marks', 'regression-marks.preview.tsx', 'regression-basic.data.ts']}
   size="xl"
   controls={{ name: 'regression-marks' }}
-  caption="Switch fitting methods and adjust trend width to compare the same observations."
+  caption="Switch fitting methods, adjust trend width, or show observations to compare with the original samples."
   defaultSourceFile="regression-marks.preview.tsx"
 />
 
@@ -400,12 +401,12 @@ In React, supplying the same configuration field through both the root `recipe` 
 
 Chart resolves a regression mark to a trend Plot Path and, when enabled, an observation Plot Point mark. The table lists conversions specific to fitting.
 
-| Group      | `@retikz/chart`                   | `@retikz/plot`                           | Description                                                             |
-| ---------- | --------------------------------- | ---------------------------------------- | ----------------------------------------------------------------------- |
-| Encodings  | `x`, `y`, `series`                | `smooth.x`, `smooth.y`, `smooth.groupBy` | Fits observation coordinates separately for each series                 |
-| Properties | `method`, `sampleCount`, `extent` | `smooth` transform options               | Passes the fitting method, sample count, and extent to the transform    |
-|            | `trend`, `extraMethods`           | Path appearance and additional Paths     | Styles the primary trend and adds one trend Path per extra method       |
-| Mark       | `IRRegressionMark`                | `IRPlotPathMark`, `IRPlotPointMark`      | Always creates a trend Path; creates Points unless `hidePoints` is true |
+| Group      | `@retikz/chart`                   | `@retikz/plot`                           | Description                                                                |
+| ---------- | --------------------------------- | ---------------------------------------- | -------------------------------------------------------------------------- |
+| Encodings  | `x`, `y`, `series`                | `smooth.x`, `smooth.y`, `smooth.groupBy` | Fits observation coordinates separately for each series                    |
+| Properties | `method`, `sampleCount`, `extent` | `smooth` transform options               | Passes the fitting method, sample count, and extent to the transform       |
+|            | `trend`, `extraMethods`           | Path appearance and additional Paths     | Styles the primary trend and adds one trend Path per extra method          |
+| Mark       | `IRRegressionMark`                | `IRPlotPathMark`, `IRPlotPointMark`      | Always creates a trend Path; creates Points only when `showPoints` is true |
 
 <SourceLinks
   sources={[{ path: 'packages/viz/chart/src/point/regression/mark.ts', label: 'Trend and observation marks' }]}

@@ -70,7 +70,7 @@ const constantPathPropertiesOf = (properties: IRRegressionChartProperties): Json
 export const resolveRegressionMarkGroup = (
   encodings: JsonObject,
   properties: IRRegressionChartProperties,
-  hidePoints?: boolean,
+  showPoints: boolean | undefined,
 ): readonly [IRPlotMark, ...Array<IRPlotMark>] => {
   const x = requiredFieldOf(encodings, 'x', ['recipe', 'encodings', 'x']);
   const y = requiredFieldOf(encodings, 'y', ['recipe', 'encodings', 'y']);
@@ -125,7 +125,7 @@ export const resolveRegressionMarkGroup = (
     return series === undefined ? { ...resolved, defaultColorGroup: 'trend' } : resolved;
   };
 
-  const point = hidePoints ? undefined : resolvePointMark(pointEncodings, pointProperties);
+  const point = showPoints ? resolvePointMark(pointEncodings, pointProperties) : undefined;
   const trends: [IRPlotMark, ...Array<IRPlotMark>] = [
     createTrend(properties),
     ...(properties.extraMethods ?? []).map(extra =>
@@ -152,6 +152,8 @@ export const regressionMarkDefinition: ChartMarkDefinition = defineChartMark({
   resolve: context => {
     const source = context.source as IRRegressionMark;
     const encodings: JsonObject = { ...context.inherited.encodings, ...(source.encodings ?? {}) };
-    return { marks: resolveRegressionMarkGroup(encodings, regressionPropertiesOf(context, source), source.hidePoints) };
+    return {
+      marks: resolveRegressionMarkGroup(encodings, regressionPropertiesOf(context, source), source.showPoints),
+    };
   },
 });

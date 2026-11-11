@@ -4,6 +4,8 @@ import { irisRegressionData } from './regression-basic.data';
 
 /** 图形参数 */
 export type RegressionMarksPreviewValues = {
+  /** 是否显示当前图元的观测点 */
+  showPoints: boolean;
   coordinateSystem: 'cartesian2D' | 'polar2D';
   size: number;
   opacity: number;
@@ -31,6 +33,7 @@ export const renderRegressionMarksPreview = (
     >
       <RegressionMark
         override
+        showPoints={values.showPoints}
         properties={{ method: { kind: values.method }, trend: { strokeWidth: values.strokeWidth } }}
       />
     </RegressionChart>

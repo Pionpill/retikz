@@ -56,6 +56,7 @@ const sceneIdsOf = (primitives: ReadonlyArray<{ id?: string; children?: Readonly
 /** 测试中递归检查 Scene 图元所需的最小结构 */
 type ScenePrimitiveLike = {
   type: string;
+  lines?: ReadonlyArray<{ text: string }>;
   children?: ReadonlyArray<ScenePrimitiveLike>;
   commands?: ReadonlyArray<{ kind?: string; to?: [number, number] }>;
   fill?: unknown;
@@ -447,7 +448,12 @@ describe('Chart 提供者通过 Core 编译', () => {
     expect(() => compileToScene(sceneOf(source), definitions)).toThrow(/Path endpoint cannot map role x/);
   });
 
-  it('compiles grouped Regression through Point + mark-local Smooth Path with finite Scene output', () => {
+  it.each([
+    { authored: false, showPoints: undefined, customScale: false },
+    { authored: true, showPoints: undefined, customScale: false },
+    { authored: true, showPoints: false, customScale: true },
+    { authored: true, showPoints: true, customScale: false },
+  ])('分组回归按观测点开关编译趋势与分类图例：%j', ({ authored, showPoints, customScale }) => {
     const regressionRows = [
       { series: 'A', x: 1, y: 2 },
       { series: 'A', x: 2, y: 4 },
@@ -463,7 +469,16 @@ describe('Chart 提供者通过 Core 编译', () => {
       data: { reference: 'regression.rows' },
       recipe: {
         chartType: 'regression',
-        encodings: { x: 'x', y: 'y', series: 'series' },
+        encodings: {
+          x: 'x',
+          y: 'y',
+          series: customScale
+            ? { field: 'series', scale: { operation: { type: 'ordinal', name: 'customSeries' } } }
+            : 'series',
+        },
+        ...(authored
+          ? { marks: [{ kind: 'regression', override: true, ...(showPoints === undefined ? {} : { showPoints }) }] }
+          : {}),
         properties: { sampleCount: 3, trend: { strokeWidth: 7 } },
       },
     });
@@ -486,9 +501,15 @@ describe('Chart 提供者通过 Core 编译', () => {
       primitive => primitive.strokeWidth === 7,
     );
 
-    expect(observationPoints).toHaveLength(regressionRows.length);
+    expect(observationPoints).toHaveLength(!authored || showPoints ? regressionRows.length : 0);
     expect(trendPaths).toHaveLength(2);
-    expect(new Set(observationPoints.map(point => point.fill))).toEqual(new Set(trendPaths.map(path => path.stroke)));
+    expect(new Set(trendPaths.map(path => path.stroke)).size).toBe(2);
+    const labels = scenePrimitivesOfType(result.scene.primitives, 'text').flatMap(
+      primitive => primitive.lines?.map(line => line.text) ?? [],
+    );
+    expect(labels).toEqual(expect.arrayContaining(['A', 'B']));
+    if (!authored || showPoints)
+      expect(new Set(observationPoints.map(point => point.fill))).toEqual(new Set(trendPaths.map(path => path.stroke)));
   });
 
   it('编译具有唯一 ID 和一个观察层的分组额外方法', () => {

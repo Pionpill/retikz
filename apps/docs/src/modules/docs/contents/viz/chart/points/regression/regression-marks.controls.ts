@@ -32,6 +32,7 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
         {
           label: text.settings,
           controls: [
+            { kind: 'switch', id: 'showPoints', label: text.showPoints, defaultValue: false },
             {
               kind: 'select',
               id: 'method',
@@ -43,20 +44,39 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
               ],
             },
             { kind: 'range', id: 'strokeWidth', label: text.strokeWidth, defaultValue: 3, min: 0.5, max: 5, step: 0.5 },
-            { kind: 'range', id: 'size', label: text.size, defaultValue: 4, min: 1, max: 12, step: 1 },
-            { kind: 'range', id: 'opacity', label: text.opacity, defaultValue: 0.45, min: 0.1, max: 1, step: 0.05 },
+            {
+              kind: 'range',
+              id: 'size',
+              label: text.size,
+              defaultValue: 4,
+              min: 1,
+              max: 12,
+              step: 1,
+              visibleWhen: { controlId: 'showPoints', oneOf: [true] },
+            },
+            {
+              kind: 'range',
+              id: 'opacity',
+              label: text.opacity,
+              defaultValue: 0.45,
+              min: 0.1,
+              max: 1,
+              step: 0.05,
+              visibleWhen: { controlId: 'showPoints', oneOf: [true] },
+            },
           ],
         },
       ],
     }),
     canonicalValues: {
+      showPoints: false,
       coordinateSystem: 'cartesian2D',
       method: 'quadratic',
       strokeWidth: 3,
       size: 4,
       opacity: 0.45,
     } as const,
-    relatedApis: ['RegressionChart.coordinate', 'RegressionMark.properties'],
+    relatedApis: ['RegressionChart.coordinate', 'RegressionMark.showPoints', 'RegressionMark.properties'],
   } satisfies PreviewControlContract;
 };
 

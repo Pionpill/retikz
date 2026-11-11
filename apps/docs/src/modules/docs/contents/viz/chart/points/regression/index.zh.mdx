@@ -250,7 +250,7 @@ recipe: {
 
 ### 回归图元
 
-每个图元包含观测点与趋势；替换或追加作用于完整组合。同一观测的多方法比较使用 `extraMethods`，见下方扩展用法。
+`RegressionChart` 的内置组默认显示观测点；`RegressionMark` 默认只显示趋势，设置 `showPoints: true` 才显示当前图元的观测点。替换作用于完整组合，追加不会隐藏内置组的点。同一观测的多方法比较使用 `extraMethods`，见下方扩展用法。
 
 <DocTabs defaultValue="react-jsx">
 <DocTab value="react-jsx" label="React + JSX">
@@ -302,9 +302,10 @@ recipe: {
 </DocTab>
 </DocTabs>
 
-下面将每个物种的默认线性组合替换为二次组合。观测点仍然存在；更弯的趋势只是另一种模型描述，并不自动意味着解释更好。
+下面将每个物种的默认线性组合替换为二次组合。默认只显示趋势，可开启“显示观测点”查看原始样本；更弯的趋势只是另一种模型描述，并不自动意味着解释更好。
 
 - `override`：替换主回归组合。
+- `showPoints`：默认 `false`，开启后显示当前图元的观测点。
 - `properties.method`：设为 quadratic。
 - `properties.trend.strokeWidth`：加粗趋势方便辨认。
 
@@ -317,7 +318,7 @@ RegressionMark 始终继承 series，不能在同一个图元里改成另一套�
   files={['regression-marks', 'regression-marks.preview.tsx', 'regression-basic.data.ts']}
   size="xl"
   controls={{ name: 'regression-marks' }}
-  caption="切换拟合方法并调整趋势线宽，比较同一组观测点的趋势。"
+  caption="切换拟合方法、调整趋势线宽，或开启观测点对照原始样本。"
   defaultSourceFile="regression-marks.preview.tsx"
 />
 
@@ -396,12 +397,12 @@ React 中，同一项配置不能同时通过根 `recipe` 与子组件声明，�
 
 Chart 将回归图元解析为趋势 Plot Path，并按需加入观测 Plot Point。下表只列拟合图元特有的转换。
 
-| 分组 | `@retikz/chart`                   | `@retikz/plot`                           | 描述                                                    |
-| ---- | --------------------------------- | ---------------------------------------- | ------------------------------------------------------- |
-| 映射 | `x`、`y`、`series`                | `smooth.x`、`smooth.y`、`smooth.groupBy` | 使用观测坐标拟合，并按序列分别计算趋势                  |
-| 属性 | `method`、`sampleCount`、`extent` | `smooth` 变换参数                        | 将拟合方法、采样数量和值域传给趋势变换                  |
-|      | `trend`、`extraMethods`           | `Path` 外观与额外 `Path`                 | 设置主趋势外观，并为每个额外方法增加一条趋势路径        |
-| 图元 | `IRRegressionMark`                | `IRPlotPathMark`、`IRPlotPointMark`      | 始终创建趋势 Path；`hidePoints` 为 false 时再创建 Point |
+| 分组 | `@retikz/chart`                   | `@retikz/plot`                           | 描述                                                   |
+| ---- | --------------------------------- | ---------------------------------------- | ------------------------------------------------------ |
+| 映射 | `x`、`y`、`series`                | `smooth.x`、`smooth.y`、`smooth.groupBy` | 使用观测坐标拟合，并按序列分别计算趋势                 |
+| 属性 | `method`、`sampleCount`、`extent` | `smooth` 变换参数                        | 将拟合方法、采样数量和值域传给趋势变换                 |
+|      | `trend`、`extraMethods`           | `Path` 外观与额外 `Path`                 | 设置主趋势外观，并为每个额外方法增加一条趋势路径       |
+| 图元 | `IRRegressionMark`                | `IRPlotPathMark`、`IRPlotPointMark`      | 始终创建趋势 Path；`showPoints` 为 true 时再创建 Point |
 
 <SourceLinks sources={[{ path: 'packages/viz/chart/src/point/regression/mark.ts', label: '趋势与观测图元构建' }]} />
 

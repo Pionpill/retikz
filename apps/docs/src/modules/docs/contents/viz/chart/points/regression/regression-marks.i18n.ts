@@ -2,10 +2,10 @@ import type { Lang } from '@/i18n';
 
 /** 示例的双语标题与读图说明 */
 export const regressionMarksI18n: Record<Lang, { title: string; subtitle: string }> = {
-  zh: { title: '替换为分组二次拟合', subtitle: 'UCI Iris；同时保留原始观测点与每组二次趋势' },
+  zh: { title: '替换为分组二次拟合', subtitle: 'UCI Iris；默认展示每组二次趋势，可开启原始观测点' },
   en: {
     title: 'Replace each group with a quadratic fit',
-    subtitle: 'UCI Iris; retain observations alongside each quadratic trend',
+    subtitle: 'UCI Iris; show each quadratic trend with optional observations',
   },
 };
 
@@ -14,6 +14,7 @@ export const controlI18n = {
   zh: {
     data: '数据',
     settings: '配置',
+    showPoints: '显示观测点',
     samples: '输入数据',
     method: '拟合方法',
     method_linear: '线性',
@@ -25,6 +26,7 @@ export const controlI18n = {
   en: {
     data: 'Data',
     settings: 'Settings',
+    showPoints: 'Show observations',
     samples: 'Input rows',
     method: 'Fit method',
     method_linear: 'Linear',
