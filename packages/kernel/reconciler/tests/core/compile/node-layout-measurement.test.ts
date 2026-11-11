@@ -10,7 +10,7 @@ import type { IRScene } from '../../../../core/src/schemas';
 import { createSharedCompileContext } from '../../../src/compile';
 import { createCompileRuntime } from '../../../src/compile/runtime';
 import { CompileManager } from '../../../src/compile/tree';
-import { SubtreeCompiler } from '../../../src/compile/tree/subtree';
+import { SubtreeCompiler } from '../../../src/compile/execution/subtree';
 import { flattenPrims } from '../../helpers/flatten';
 
 const measureText: TextMeasurer = (text, font) => ({

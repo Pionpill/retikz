@@ -94,7 +94,8 @@ export class SceneReconciler<const TComposite extends AnyCompositeDefinition = n
     this.assertIdle();
     if (expected !== this.current) throw this.contractError('The update belongs to a stale session result');
     if (this.weave === undefined) throw this.contractError('Non-incremental sessions do not support Weave batches');
-    if (batch.operations.length === 0) return expected;
+    if (batch.operations.length === 0 && this.execution.updateStrategy !== ReconcilerUpdateStrategy.Full)
+      return expected;
     this.status = ReconcilerStatus.Preparing;
     try {
       const prepared = this.weave.update(batch, this.execution.updateStrategy === ReconcilerUpdateStrategy.Full);

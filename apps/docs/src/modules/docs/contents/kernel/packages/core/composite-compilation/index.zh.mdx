@@ -61,7 +61,7 @@ export type CompositeResolution<TBinding extends RegisteredCompositeBinding = Re
 
 ## 编译过程
 
-类型 <ApiSourceLink label="CompositeCompiler" path="packages/kernel/reconciler/src/compile/tree/composite/compile.ts" startLine={57}>`CompositeCompiler`</ApiSourceLink> 创建 <ApiSourceLink label="CompositeCompileContext" path="packages/kernel/core/src/contract/composite/layout.ts" startLine={252}>`CompositeCompileContext`</ApiSourceLink>，调用解析结果携带的 compile 回调。回调的真实返回类型是 <ApiSourceLink label="CompositeEvaluationResult" path="packages/kernel/core/src/contract/composite/layout.ts" startLine={247}>`CompositeEvaluationResult`</ApiSourceLink>：完整布局返回 <ApiSourceLink label="CompositeCompileResult" path="packages/kernel/core/src/contract/composite/layout.ts" startLine={309}>`CompositeCompileResult`</ApiSourceLink>，按轴测量可以返回 <ApiSourceLink label="CompositeContributionResult" path="packages/kernel/core/src/contract/composite/layout.ts" startLine={231}>`CompositeContributionResult`</ApiSourceLink>。其中普通 children 继续编译，运行时句柄交给预检与提交；领域 artifact 单独汇总。下面是完整字段，省略源码注释。
+类型 <ApiSourceLink label="CompositeCompiler" path="packages/kernel/reconciler/src/compile/execution/composite/compile.ts" startLine={57}>`CompositeCompiler`</ApiSourceLink> 创建 <ApiSourceLink label="CompositeCompileContext" path="packages/kernel/core/src/contract/composite/layout.ts" startLine={252}>`CompositeCompileContext`</ApiSourceLink>，调用解析结果携带的 compile 回调。回调的真实返回类型是 <ApiSourceLink label="CompositeEvaluationResult" path="packages/kernel/core/src/contract/composite/layout.ts" startLine={247}>`CompositeEvaluationResult`</ApiSourceLink>：完整布局返回 <ApiSourceLink label="CompositeCompileResult" path="packages/kernel/core/src/contract/composite/layout.ts" startLine={309}>`CompositeCompileResult`</ApiSourceLink>，按轴测量可以返回 <ApiSourceLink label="CompositeContributionResult" path="packages/kernel/core/src/contract/composite/layout.ts" startLine={231}>`CompositeContributionResult`</ApiSourceLink>。其中普通 children 继续编译，运行时句柄交给预检与提交；领域 artifact 单独汇总。下面是完整字段，省略源码注释。
 
 ```ts
 export type CompositeEvaluationResult<TArtifact extends JsonValue = never> =
@@ -169,7 +169,7 @@ const shiftedNode = defineComposite({
 
 <ComponentPreview files="composite-implementation" size="xxl" hideCode type="flow" />
 
-先阅读 Core 的 <ApiSourceLink label="bindComposite" path="packages/kernel/core/src/resolve/composite/resolve.ts" startLine={8}>`bindComposite`</ApiSourceLink> / <ApiSourceLink label="resolveComposite" path="packages/kernel/core/src/resolve/composite/resolve.ts" startLine={30}>`resolveComposite`</ApiSourceLink>，再到 Reconciler 的 <ApiSourceLink label="CompositeCompiler" path="packages/kernel/reconciler/src/compile/tree/composite/compile.ts" startLine={57}>`CompositeCompiler`</ApiSourceLink> 与 callback context。measurement、probe、preflight、replay 分别负责查询、隔离、验证与提交。这里的同次查询复用由 Reconciler 会话维护，不是 Core 在 Definition 内保存跨次状态。
+先阅读 Core 的 <ApiSourceLink label="bindComposite" path="packages/kernel/core/src/resolve/composite/resolve.ts" startLine={8}>`bindComposite`</ApiSourceLink> / <ApiSourceLink label="resolveComposite" path="packages/kernel/core/src/resolve/composite/resolve.ts" startLine={30}>`resolveComposite`</ApiSourceLink>，再到 Reconciler 的 <ApiSourceLink label="CompositeCompiler" path="packages/kernel/reconciler/src/compile/execution/composite/compile.ts" startLine={57}>`CompositeCompiler`</ApiSourceLink> 与 callback context。measurement、probe、preflight、replay 分别负责查询、隔离、验证与提交。这里的同次查询复用由 Reconciler 会话维护，不是 Core 在 Definition 内保存跨次状态。
 
 ## 延伸阅读
 

@@ -15,6 +15,8 @@ type NamespaceEntryState = 'resolved' | 'scope-placeholder';
 
 /** namespace 中带生命周期状态的内部条目 */
 export type NamespaceEntry = {
+  /** 驱动提供的稳定作者身份，生成内容沿用其作者实例 */
+  producer?: object;
   /** 当前名称绑定的来源路径 */
   irPath: PropertyPath;
   /** 当前名称绑定的几何编译产物 */
@@ -72,6 +74,9 @@ type NamespaceFrame = {
  * @description register 写入栈顶，lookup 按 inside-out 查找；同 frame 重名 last-wins 并触发诊断
  */
 export class NamespaceStack {
+  /** 当前发布几何的作者身份，嵌套执行退出时恢复 */
+  private producer: object | undefined;
+
   /** 当前阶段读取观察器，嵌套阶段退出时恢复 */
   private readonly referenceObservers: Array<
     (name: string, entry: NamespaceEntry | undefined, kind: ReferenceReadKind) => void
@@ -107,6 +112,11 @@ export class NamespaceStack {
   /** 当前阶段；registering 允许写入，resolving 只允许 lookup */
   private currentPhase: NamespacePhase = 'registering';
 
+  /** 当前生成内容继承的作者实体 */
+  get currentProducer(): object | undefined {
+    return this.producer;
+  }
+
   constructor(
     options: NamespaceStackOptions = {},
     private readonly scopeIds = createIdAllocator('compile/scope'),
@@ -120,6 +130,17 @@ export class NamespaceStack {
     ];
     this.onDuplicate = options.onDuplicate;
     this.onRegister = options.onRegister;
+  }
+
+  /** 将名称发布关联到当前驱动的作者实体 */
+  withProducer<T>(producer: object | undefined, execute: () => T): T {
+    const previous = this.producer;
+    this.producer = producer;
+    try {
+      return execute();
+    } finally {
+      this.producer = previous;
+    }
   }
 
   /**
@@ -140,6 +161,8 @@ export class NamespaceStack {
     fork.scopeAncestorStack.push(...this.scopeAncestorStack);
     fork.currentPhase = this.currentPhase;
     fork.snapshotIdentity = this.snapshotIdentity;
+    fork.producer = this.producer;
+    fork.referenceObservers.push(...this.referenceObservers);
 
     return fork;
   }
@@ -238,7 +261,13 @@ export class NamespaceStack {
     }
 
     this.snapshotIdentity = {};
-    topFrame.set(id, { geometry: layout, irPath, state, ...(scopeId === undefined ? {} : { scopeId }) });
+    topFrame.set(id, {
+      geometry: layout,
+      irPath,
+      state,
+      producer: entry.producer ?? this.producer,
+      ...(scopeId === undefined ? {} : { scopeId }),
+    });
     this.onRegister?.({
       id,
       frameDepth: this.frameStack.length - 1,
@@ -303,6 +332,11 @@ export class NamespaceStack {
     return scopeId;
   }
 
+  /** 为已物化贡献分配本次执行的 Scope 身份，不进入求值栈 */
+  allocateScopeId(): string {
+    return this.scopeIds.next();
+  }
+
   /** 离开当前 Scope 的后代求值区间 */
   leaveScope(): void {
     this.scopeAncestorStack.pop();
@@ -310,8 +344,13 @@ export class NamespaceStack {
 
   /** 解析作者几何引用，拒绝实际绑定到祖先 Scope 的目标 */
   lookupReference(id: string, kind: ReferenceReadKind = 'boundary'): NamespaceEntry | undefined {
-    const entry = this.lookupEntry(id);
-    for (const observe of this.referenceObservers) observe(id, entry, kind);
+    let entry = this.lookupEntry(id);
+    for (const observe of this.referenceObservers) {
+      const snapshot = this.snapshotIdentity;
+      observe(id, entry, kind);
+      // 驱动可在读取点同步完成依赖；后续记录与消费者必须取得本批新发布的条目
+      if (snapshot !== this.snapshotIdentity) entry = this.lookupEntry(id);
+    }
     if (entry?.scopeId !== undefined && this.scopeAncestorStack.some(ancestor => ancestor.scopeId === entry.scopeId)) {
       const source = this.scopeAncestorStack.findLast(ancestor => ancestor.id !== undefined)?.id;
       const error = new RetikzCoreError({

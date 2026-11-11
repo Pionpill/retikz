@@ -11,9 +11,9 @@ import { describe, expect, it } from 'vitest';
 
 import { BUILTIN_SHAPES } from '../../../core/src/providers/shape/shape';
 import { createSharedCompileContext } from '../../src/compile';
-import { compareReferenceGeometry } from '../../src/compile/compare';
 import { RetikzReconcilerError } from '../../src/error';
 import { WeaveManager } from '../../src/weave';
+import { compareReferenceGeometry } from '../../src/weave/shared/reference';
 import type { WeaveBinding } from '../helpers/atomic-runtime';
 import { compileTestResult } from '../helpers/compilation';
 import { testCompileNode, testCompileCoordinate, testCompilePath } from '../helpers/element';

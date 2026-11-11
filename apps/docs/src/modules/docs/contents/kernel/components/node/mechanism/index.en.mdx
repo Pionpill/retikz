@@ -128,7 +128,7 @@ When traversal reaches a Node, compilation completes text and shape layout and p
     },
     {
       label: 'Layout projection and id registration',
-      path: 'packages/kernel/reconciler/src/compile/tree/node/visit.ts',
+      path: 'packages/kernel/reconciler/src/compile/execution/node/visit.ts',
     },
   ]}
 />
@@ -155,11 +155,11 @@ For example, placing `Node b` before `Node a` while making `b.position` refer to
     },
     {
       label: 'Enqueue paths and reserve drawing order',
-      path: 'packages/kernel/reconciler/src/compile/tree/path/deferred.ts',
+      path: 'packages/kernel/reconciler/src/compile/execution/path/deferred.ts',
     },
     {
       label: 'Resolve paths and fill reserved slots',
-      path: 'packages/kernel/reconciler/src/compile/tree/path/deferred.ts',
+      path: 'packages/kernel/reconciler/src/compile/execution/path/deferred.ts',
     },
   ]}
 />
@@ -184,15 +184,15 @@ Registering a duplicate id in the same frame replaces the old entry and emits a 
     },
     {
       label: 'Register the Scope placeholder in its parent',
-      path: 'packages/kernel/reconciler/src/compile/tree/scope/visit.ts',
+      path: 'packages/kernel/reconciler/src/compile/execution/scope/visit.ts',
     },
     {
       label: 'Push a frame only for localNamespace',
-      path: 'packages/kernel/reconciler/src/compile/tree/scope/visit.ts',
+      path: 'packages/kernel/reconciler/src/compile/execution/scope/visit.ts',
     },
     {
       label: 'Publish bounds, consume paths, then pop',
-      path: 'packages/kernel/reconciler/src/compile/tree/scope/visit.ts',
+      path: 'packages/kernel/reconciler/src/compile/execution/scope/visit.ts',
     },
   ]}
 />
@@ -250,7 +250,7 @@ A per-line `font` still participates in that line's width measurement; wrapping,
   sources={[
     {
       label: 'Resolve after style cascading',
-      path: 'packages/kernel/reconciler/src/compile/tree/node/visit.ts',
+      path: 'packages/kernel/reconciler/src/compile/execution/node/visit.ts',
     },
     {
       label: 'Node contrast resolution',
@@ -281,7 +281,7 @@ The compiler resolves `position`, applies the current Scope transform to obtain 
   sources={[
     {
       label: 'Coordinate position resolution and registration',
-      path: 'packages/kernel/reconciler/src/compile/tree/coordinate/visit.ts',
+      path: 'packages/kernel/reconciler/src/compile/execution/coordinate/visit.ts',
     },
     {
       label: 'position reference resolution',

@@ -70,6 +70,7 @@ export class CompileProvenanceTracker {
     parent: CompileOwnerKey,
     index: number,
     targetNamespace: CompileNamespaceKey,
+    includeRootEmissions = false,
   ): void {
     /** 仅在此次导入中映射实体键；试算根由提交位置的父实体替代 */
     const ownerKeyMap = new Map<CompileOwnerKey, CompileOwnerKey>([[provenance.root, parent]]);
@@ -77,6 +78,15 @@ export class CompileProvenanceTracker {
     const namespaceKeyMap = new Map<CompileNamespaceKey, CompileNamespaceKey>([
       [provenance.ownerMap.get(provenance.root)!.namespace, targetNamespace],
     ]);
+    if (includeRootEmissions) {
+      for (const emission of provenance.ownerMap.get(provenance.root)!.emissions) {
+        const primitive = readPropertyPath({ primitives }, emission.primitivePath) as ScenePrimitive;
+        this.primitiveRecordMap.set(primitive, { owner: parent, role: emission.role, ordinal: emission.ordinal });
+        let ordinals = this.ordinalMap.get(parent);
+        if (ordinals === undefined) this.ordinalMap.set(parent, (ordinals = new Map()));
+        ordinals.set(emission.role, Math.max(ordinals.get(emission.role) ?? 0, emission.ordinal + 1));
+      }
+    }
     for (const key of provenance.ownerMap.keys()) {
       if (key !== provenance.root) ownerKeyMap.set(key, Object.freeze({}) as CompileOwnerKey);
     }
@@ -95,7 +105,7 @@ export class CompileProvenanceTracker {
         ...owner,
         parent: ownerKeyMap.get(sourceOwnerParent!)!,
         namespace,
-        index: sourceOwnerParent === provenance.root ? index : sourceOwnerIndex,
+        index: sourceOwnerParent === provenance.root && !includeRootEmissions ? index : sourceOwnerIndex,
         generated: true,
       });
 
@@ -145,6 +155,17 @@ export class CompileProvenanceTracker {
     }
 
     return Object.freeze({ root: this.root, ownerMap });
+  }
+
+  /** 捕获单个作者实体的已物化贡献，不保存其它分支的来源 */
+  captureContribution(primitives: ReadonlyArray<ScenePrimitive>, owner: CompileOwnerKey): CompileProvenanceSnapshot {
+    const snapshot = this.capture(primitives);
+    const owners = new Map<CompileOwnerKey, CompileProvenanceOwner>();
+    owners.set(owner, snapshot.ownerMap.get(owner)!);
+    for (const [key, entry] of snapshot.ownerMap) {
+      if (entry.parent !== undefined && owners.has(entry.parent)) owners.set(key, entry);
+    }
+    return { root: owner, ownerMap: owners };
   }
 
   /** 记录单次输入出现的来源，重复 IR 引用仍分配独立键 */

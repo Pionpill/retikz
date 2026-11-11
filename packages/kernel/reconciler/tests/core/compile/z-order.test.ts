@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { CompileWarning, IRChild, IRScene } from '../../../../core/src';
 import { BuiltinCompileWarningCode } from '../../../../core/src';
 import type { GroupPrimitive, ScenePrimitive } from '../../../../core/src/contract';
-import { PATH_PLACEHOLDER } from '../../../src/compile/tree/shared';
+import { PATH_PLACEHOLDER } from '../../../src/compile/execution/shared';
 import { compileTestResult } from '../../helpers/compilation';
 
 // ---------------------------------------------------------------------------

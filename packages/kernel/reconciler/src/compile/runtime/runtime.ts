@@ -1,11 +1,13 @@
 import { DEFAULT_RESOLVED_THEME, resolveCompositeInputScope, resolveTheme } from '@retikz/core';
 import type { IRScene } from '@retikz/core';
+import type { PropertyPath } from '@retikz/foundation';
 
+import type { CompileContributionController } from '../execution';
 import { CompileProvenanceTracker } from '../provenance';
 import type { CompileOptions, ExecuteOptions } from '../types';
-import type { CompileStageCache } from './cache';
 import { createSharedCompileContext } from './context';
 import type { CompileContext } from './context';
+import type { CompileStageController } from './stage';
 import { CompositeCompileState, createCompileEnvironment, createWorkspaceCompileState } from './state';
 import type { CompileState } from './state';
 import { createCachedTextMeasurer } from './text-cache';
@@ -15,7 +17,11 @@ export type CompileRuntime = Readonly<{
   /** 编译期间不修改的输入环境 */
   context: CompileContext;
   /** 当前候选可选的跨次阶段缓存 */
-  cache?: CompileStageCache;
+  stages?: CompileStageController;
+  /** 将已完成的作者输出贡献交给当前候选保存 */
+  contributions?: CompileContributionController;
+  /** 将作者声明位置映射到驱动的稳定生产者，不参与绘图语义 */
+  producer?: (path: PropertyPath) => object | undefined;
   /** 当前编译拥有的状态 */
   state: CompileState;
 }>;

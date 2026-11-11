@@ -4,15 +4,19 @@ import type { PropertyPath } from '@retikz/foundation';
 import { createIdAllocator, isPropertyPathEqual } from '@retikz/foundation';
 
 import type { CompileOptions, ExecuteOptions } from '../compile';
+import type { CompileContribution } from '../compile/execution';
 import { createSharedCompileContext, createCompileRuntime } from '../compile/runtime';
-import type { CompileStageCache } from '../compile/runtime';
+import type { TypedCompileStageRecord } from '../compile/runtime';
 import { createCompileChildPath } from '../compile/shared';
 import { CompileManager } from '../compile/tree';
 import { RetikzReconcilerError, RetikzReconcilerErrorCode } from '../error';
-import type { WeaveCompileRead } from './compile';
-import { createWeaveBatchState } from './runtime';
-import type { WeaveBatchState, WeaveCompilation, WeaveCompileContext, WeaveCompileState } from './runtime';
-import type { WeaveBatch, WeaveNode, WeaveRoot, WeaveScopeNode } from './types';
+import type { CompileStageCache } from './cache';
+import { executeWeaveUpdate } from './scheduler';
+import type { WeaveUpdateRequest } from './scheduler';
+import type { WeaveCompileRead } from './shared';
+import type { WeaveBatch, WeaveNode, WeaveRoot, WeaveScopeNode } from './shared';
+import { createWeaveBatchState } from './state';
+import type { WeaveBatchState, WeaveCompilation, WeaveCompileContext, WeaveCompileState } from './state';
 
 /** 已准备的批次结果，发布者负责提交、最终确认或恢复 */
 export type WeavePreparedUpdate<TComposite extends AnyCompositeDefinition = AnyCompositeDefinition> =
@@ -34,6 +38,14 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
   private readonly context: WeaveCompileContext;
   /** 跨批次事实源与当前候选状态 */
   private readonly state: WeaveCompileState<TComposite>;
+
+  /** 内部编译操作只能在活动候选批次中执行 */
+  private get batch(): WeaveBatchState {
+    const batch = this.state.batch;
+    if (batch === undefined)
+      throw new RetikzReconcilerError(RetikzReconcilerErrorCode.Contract, 'Weave has no active compilation batch');
+    return batch;
+  }
 
   constructor(
     source: IRScene,
@@ -126,7 +138,23 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
         );
         if (changes === undefined) continue;
         for (const node of changes.insertedNodes) tracker.registerNodeBinding(node);
-        for (const node of changes.changedNodes) tracker.invalidateNode(node);
+        const changedNames = new Set<string>();
+        for (const node of [...changes.changedNodes, ...changes.insertedNodes, ...changes.removedNodes]) {
+          tracker.invalidateNode(node);
+          if (node.type === 'composite') continue;
+          for (const state of [node.current, node.pending]) {
+            if (state === null) continue;
+            const own = state.input.own;
+            if (own.id !== undefined) changedNames.add(own.id);
+            if (own.type === 'node') for (const alias of own.aliasIds ?? []) changedNames.add(alias);
+          }
+          if (
+            node.type === 'scope' &&
+            node.current?.input.own.localNamespace !== node.pending?.input.own.localNamespace
+          )
+            tracker.invalidateBindings();
+        }
+        tracker.invalidateBindings(changedNames);
         // 子节点先解绑，避免清理子节点时重新编辑已丢弃的父 Scope
         for (let index = changes.removedNodes.length - 1; index >= 0; index--) {
           const node = changes.removedNodes[index];
@@ -137,7 +165,7 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
       }
 
       let prepared = { ...completed, visited: 0 };
-      if (modified) {
+      if (modified || forceFull) {
         batch.source = {
           ...transaction.readNode(persistent.root).input,
           children: transaction.readNode(persistent.root).children.map(node => editor.serializeNodeDeclaration(node)),
@@ -173,20 +201,13 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
     }
   }
 
-  /** 内部编译操作只能在活动候选批次中执行 */
-  private get batch(): WeaveBatchState {
-    const batch = this.state.batch;
-    if (batch === undefined)
-      throw new RetikzReconcilerError(RetikzReconcilerErrorCode.Contract, 'Weave has no active compilation batch');
-    return batch;
-  }
-
   /** 以唯一执行器计算当前候选，Weave 仅提供阶段缓存与事务身份 */
   private execute(): WeaveCompilation<TComposite>['compilation'] {
     const batch = this.batch;
     const { transaction, editor, tracker } = batch;
     const root = this.state.persistent.root;
     const nodes = new Map<string, WeaveNode>();
+    const paths = new Map<WeaveNode, PropertyPath>();
     const keyOf = (path: PropertyPath) => JSON.stringify(path);
     const visit = (
       children: ReadonlyArray<IRChild>,
@@ -207,9 +228,12 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
         const node = batch.updating ? parentState.children[index] : editor.createNode(child, parent, style);
         if (!batch.updating) tracker.registerNodeBinding(node);
         nodes.set(keyOf(path), node);
+        paths.set(node, path);
+        if (batch.updating && !isPropertyPathEqual(batch.previousNodeIrPaths.get(node) ?? [], path))
+          tracker.invalidateNode(node);
         const state = transaction.editNode(node);
         state.input = { ...state.input, context: style };
-        state.pendingInputs = [];
+
         if (!('namespace' in child) && child.id !== undefined) ids.set(child.id, node);
         if (!('namespace' in child) && child.type === 'node') for (const id of child.aliasIds ?? []) ids.set(id, node);
         if (node.type === 'scope' && !('namespace' in child) && child.type === 'scope')
@@ -217,7 +241,9 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
             child.children,
             node,
             path,
-            resolveScopeInheritance(child, this.context.shared.registries.themeRegistry, style, path),
+            batch.updating && !tracker.isNodeDirty(node) && transaction.readNode(node).canon !== null
+              ? transaction.readNode(node).canon!.inheritance
+              : resolveScopeInheritance(child, this.context.shared.registries.themeRegistry, style, path),
             ids,
           );
       }
@@ -306,7 +332,12 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
         }
         const reads: Array<WeaveCompileRead> = record.reads.map(read => {
           const sourcePath = read.entry?.irPath;
-          const producer = sourcePath === undefined ? undefined : findProducer(sourcePath);
+          const producer =
+            read.entry?.producer === undefined
+              ? sourcePath === undefined
+                ? undefined
+                : findProducer(sourcePath)
+              : this.state.persistent.bindings.get(read.entry.producer);
           return {
             name: read.name,
             kind: read.kind,
@@ -317,10 +348,71 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
         tracker.recordNodeReads(node, reads, record.diagnostics);
       },
     };
-    const compilation = new CompileManager({ ...runtime, cache }).compileScene<TComposite>(batch.source);
+    const contributions = {
+      write: (path: PropertyPath, contribution: CompileContribution) => {
+        const node = nodes.get(keyOf(path));
+        if (node === undefined || node.type === 'scope') return;
+        transaction.editNode(node).contribution = contribution;
+        if (node.type !== 'composite') return;
+        batch.visited++;
+        tracker.recordNodeReads(
+          node,
+          contribution.reads.map(read => ({
+            name: read.name,
+            kind: read.kind,
+            state: read.entry === undefined ? 'missing' : read.entry.state === 'resolved' ? 'ready' : 'pending',
+            binding:
+              read.entry === undefined
+                ? undefined
+                : read.entry.producer === undefined
+                  ? findProducer(read.entry.irPath)
+                  : this.state.persistent.bindings.get(read.entry.producer),
+          })),
+          contribution.diagnostics,
+        );
+      },
+    };
+    const retained = new Map<string, CompileContribution>();
+    const scopeOutputs = new Map<string, TypedCompileStageRecord<'scope'>>();
+    const pending = new Map<string, WeaveUpdateRequest>();
+    for (const [path, node] of nodes) {
+      const state = transaction.readNode(node);
+      const affected =
+        batch.forceFull || tracker.isNodeDirty(node) || state.pendingInputs.some(input => input.changes.size > 0);
+      const request: WeaveUpdateRequest = {
+        inputs: state.pendingInputs,
+        producerPath: producer => paths.get(producer),
+        consume: () => {
+          transaction.editNode(node).pendingInputs = [];
+        },
+      };
+      const contribution = state.contribution;
+      if (node.type === 'scope') {
+        const scope = transaction.readNode(node);
+        if (
+          !affected &&
+          scope.cache?.phase === 'scope' &&
+          scope.cache.diagnostics.length === 0 &&
+          scope.canon !== null &&
+          scope.compiled !== null
+        ) {
+          scopeOutputs.set(path, {
+            ...scope.cache,
+            phase: 'scope',
+            value: { canon: scope.canon, compiled: scope.compiled },
+          });
+        }
+        pending.set(path, request);
+      } else if (!affected && contribution !== undefined && contribution.diagnostics.length === 0)
+        retained.set(path, contribution);
+      else pending.set(path, request);
+    }
+    const candidate = { ...runtime, contributions, producer: (path: PropertyPath) => nodes.get(keyOf(path)) };
+    const compilation = batch.updating
+      ? executeWeaveUpdate<TComposite>(batch.source, candidate, cache, retained, pending, scopeOutputs)
+      : new CompileManager({ ...candidate, stages: { write: cache.write } }).compileScene<TComposite>(batch.source);
     for (const node of nodes.values()) {
       if (node.type === 'scope') tracker.recordScopeLayoutDependencies(node);
-      if (node.type === 'composite') batch.visited++;
     }
     return compilation;
   }
