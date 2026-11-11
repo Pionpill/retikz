@@ -1,2 +1,2 @@
 export * from './resolve';
-export * from './types';
+export type { CompositeRegistry } from './types';

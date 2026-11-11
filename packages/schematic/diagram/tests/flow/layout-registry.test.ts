@@ -53,11 +53,11 @@ describe('Flow Layout 注册表和目录', () => {
     for (const [run, code] of [
       [
         () => resolveFlowLayoutRegistry({ flowLayouts: [custom, customDefinition()] }),
-        RetikzDiagramErrorCode.DefinitionDuplicate,
+        RetikzDiagramErrorCode.ProviderDefinitionDuplicate,
       ],
       [
         () => resolveFlowLayoutRegistry({ flowLayouts: [custom], defaultFlowLayout: 'missing' }),
-        RetikzDiagramErrorCode.DefinitionNotRegistered,
+        RetikzDiagramErrorCode.ProviderDefinitionNotRegistered,
       ],
     ] as const) {
       try {

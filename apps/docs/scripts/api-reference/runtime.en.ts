@@ -9,7 +9,7 @@ const translations: Record<string, string> = {
     'No return value; the reporter isolates exceptions as sink-threw diagnostics',
   '来源键及值的捕获、读取、比较和释放契约': 'Source key and value capture, read, equality, and disposal contract',
   '冻结的来源凭证；回调由运行时私有保存': 'Frozen Source token; callbacks are stored privately by Runtime',
-  '来源键为空时抛出 TokenInvalid': 'TokenInvalid when the Source key is empty',
+  '来源键为空时抛出 SourceTokenInvalid': 'SourceTokenInvalid when the Source key is empty',
   '计算身份、依赖、执行回调与结果生命周期': 'Computation identity, dependencies, callbacks, and result lifecycle',
   '冻结的计算凭证；回调由运行时私有保存': 'Frozen Computation token; callbacks are stored privately by Runtime',
   '参与者依赖、选择策略与事务回调': 'Participant dependencies, selection policy, and transaction callbacks',
@@ -39,12 +39,13 @@ const translations: Record<string, string> = {
     'IdentityInvalid for an empty owner, mismatched ownership, or duplicate path',
   非负安全整数: 'Non-negative safe integer',
   '带 RuntimeRevision 类型品牌的原数值': 'Original number branded as RuntimeRevision',
-  '数值不是非负安全整数时抛出 RevisionInvalid': 'RevisionInvalid when the number is not a non-negative safe integer',
+  '数值不是非负安全整数时抛出 TransactionRevisionInvalid':
+    'TransactionRevisionInvalid when the number is not a non-negative safe integer',
   变更提示所基于的已发布版本: 'Published revision on which the change hint is based',
   '领域变更提示；仅复制并冻结数组，不克隆其中的元素':
     'Domain change hints; only the array is copied and frozen, not its elements',
   绑定版本并由当前工厂标记的变更提示: 'Revision-bound change hint branded by this factory',
-  'baseRevision 无效时抛出 RevisionInvalid': 'RevisionInvalid when baseRevision is invalid',
+  'baseRevision 无效时抛出 TransactionRevisionInvalid': 'TransactionRevisionInvalid when baseRevision is invalid',
   待初始化的来源定义: 'Source definition to initialize',
   '完整初始输入；capture 在 Runtime 初始化时执行': 'Complete initial input; capture runs during Runtime initialization',
   '供 initialSnapshots 使用的不透明初始化命令': 'Opaque initialization command for initialSnapshots',
@@ -52,8 +53,8 @@ const translations: Record<string, string> = {
   '完整下一份输入；capture 在 Runtime 更新时执行': 'Complete next input; capture runs during a Runtime update',
   '可选增量提示；不替代完整输入': 'Optional incremental hint; does not replace the complete input',
   '供 RuntimeUpdate.sources 使用的不透明更新命令': 'Opaque update command for RuntimeUpdate.sources',
-  'changeSet 不是由当前工厂创建时抛出 ChangeSetInvalid':
-    'ChangeSetInvalid when changeSet was not created by this factory',
+  'changeSet 不是由当前工厂创建时抛出 TransactionChangeSetInvalid':
+    'TransactionChangeSetInvalid when changeSet was not created by this factory',
   '固定归属、允许的阶段与同步接收函数': 'Fixed owner, allowed phases, and synchronous sink',
   '隔离非法记录、接收函数异常与重入的报告器':
     'Reporter isolating invalid records, sink failures, and reentrant reports',

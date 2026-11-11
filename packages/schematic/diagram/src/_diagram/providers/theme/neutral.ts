@@ -19,7 +19,7 @@ export const getDefaultDiagramTheme = (theme: CanonicalTheme): IRDiagramDefaults
         opacity: 1,
         font: { size: 18, weight: 600 },
       },
-      layout: { align: 'start', lineHeight: 22 },
+      layout: { textAlign: 'start', lineHeight: 22 },
     },
     description: {
       style: {
@@ -27,7 +27,7 @@ export const getDefaultDiagramTheme = (theme: CanonicalTheme): IRDiagramDefaults
         opacity: 1,
         font: { size: 14, weight: 400 },
       },
-      layout: { align: 'start', lineHeight: 20 },
+      layout: { textAlign: 'start', lineHeight: 20 },
     },
   },
 });

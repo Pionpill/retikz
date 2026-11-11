@@ -30,6 +30,7 @@ import {
   applyRelate,
   applySelect,
   applySummarize,
+  assertReducerMetrics,
   binMetricOperations,
   binOutputFields,
   computeAnnotate,
@@ -38,20 +39,19 @@ import {
   computeSelect,
   computeSummarize,
   relationEndpointOutputField,
-  assertReducerMetrics,
 } from './group';
 import {
-  applyDeriveInterval,
-  applyJitter,
-  applyNormalize,
-  applySort,
-  applyStack,
   DEFAULT_DERIVE_END_FIELD,
   DEFAULT_DERIVE_START_FIELD,
   DEFAULT_END_FIELD,
   DEFAULT_JITTER_X_FIELD,
   DEFAULT_JITTER_Y_FIELD,
   DEFAULT_START_FIELD,
+  applyDeriveInterval,
+  applyJitter,
+  applyNormalize,
+  applySort,
+  applyStack,
 } from './row';
 import {
   AnnotateParamsSchema,
@@ -140,7 +140,7 @@ const summarizeTransformDefinition = defineTransform({
   kind: 'summarize',
   paramsSchema: SummarizeParamsSchema,
   validate: (operation, context) =>
-    assertReducerMetrics(operation.params.metrics, context, {
+    assertReducerMetrics(operation.params.metrics, context.statisticsReducerRegistry, {
       reservedFields: new Set(operation.params.groupBy ?? []),
       reservedLabel: 'a groupBy field',
     }),
@@ -199,7 +199,7 @@ const annotateTransformDefinition = defineTransform({
   kind: 'annotate',
   paramsSchema: AnnotateParamsSchema,
   validate: (operation, context) =>
-    assertReducerMetrics(operation.params.metrics ?? [], context, {
+    assertReducerMetrics(operation.params.metrics ?? [], context.statisticsReducerRegistry, {
       reservedFields: new Set((operation.params.selectors ?? []).map(selector => selector.as)),
       reservedLabel: 'an annotate selector output field',
     }),

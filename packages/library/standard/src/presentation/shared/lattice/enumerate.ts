@@ -37,7 +37,7 @@ export const enumerateLattice = (options: LatticeOptions): Array<LatticeValue> =
     throw new RetikzStandardError({
       code: RetikzStandardErrorCode.SchemaInvariant,
       message: rangeError,
-      details: { max: options.max, min: options.min, origin: options.origin, spacing: options.spacing },
+      details: { max, min, origin, spacing },
     });
   }
 

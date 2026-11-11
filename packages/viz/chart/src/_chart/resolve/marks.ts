@@ -39,7 +39,7 @@ const withDefaultColorGroup = (marks: ReadonlyArray<IRPlotMark>, groupIndex: num
 
 const invalidMark = (message: string, path: ReadonlyArray<string | number>, cause?: unknown): RetikzChartError =>
   new RetikzChartError({
-    code: RetikzChartErrorCode.InvalidChartIR,
+    code: RetikzChartErrorCode.ResolveInputInvalid,
     message,
     details: { path },
     ...(cause === undefined ? {} : { cause }),
@@ -98,7 +98,7 @@ export const resolveChartMarks = (
     const binding = recipe.marks.find(candidate => candidate.definition.kind === kind);
     if (binding === undefined) {
       throw new RetikzChartError({
-        code: RetikzChartErrorCode.UnknownDefinition,
+        code: RetikzChartErrorCode.ProviderDefinitionUnknown,
         message: `Chart recipe "${recipe.chartType}" does not allow mark "${kind}"`,
         details: { path: ['recipe', 'marks', index, 'kind'], kind },
       });
@@ -148,7 +148,7 @@ export const resolveChartSemanticMarks = (
 
     if (semanticIndices.has(group.kind)) {
       throw new RetikzChartError({
-        code: RetikzChartErrorCode.InvalidResolvedPlot,
+        code: RetikzChartErrorCode.ResolvePlotInvalid,
         message: `Chart recipe produced duplicate semantic mark kind "${group.kind}"`,
         details: { path: ['recipe', 'semanticMarks', index, 'kind'], kind: group.kind },
       });
@@ -173,7 +173,7 @@ export const resolveChartSemanticMarks = (
       warnings.push({
         code: ChartWarningCode.MarkOverrideTargetNotFound,
         message: `Chart mark "${mark.kind}" requested override, but the recipe produced no semantic mark group with that kind; the authored mark was appended.`,
-        subPath: `recipe.marks[${mark.index}].override`,
+        subPath: ['recipe', 'marks', mark.index, 'override'],
       });
       continue;
     }

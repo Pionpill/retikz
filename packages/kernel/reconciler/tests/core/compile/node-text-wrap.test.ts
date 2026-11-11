@@ -1,0 +1,85 @@
+import { describe, expect, it } from 'vitest';
+
+import type { ScenePrimitive, TextPrimitive } from '../../../../core/src/contract';
+import type { IRScene } from '../../../../core/src/schemas';
+import type { CompileOptions } from '../../../src/compile';
+import { compileToScene } from '../../../src/compile';
+import { flattenPrims } from '../../helpers/flatten';
+
+const findText = (prims: Array<ScenePrimitive>): TextPrimitive | undefined =>
+  flattenPrims(prims).find((p): p is TextPrimitive => p.type === 'text');
+
+/** width = 字符数（与字号无关），便于精确断言折行 */
+const opts: CompileOptions = { measureText: text => ({ width: [...text].length, height: 14 }) };
+
+const compileNode = (node: Record<string, unknown>): TextPrimitive => {
+  const ir: IRScene = {
+    version: 1,
+    type: 'scene',
+    children: [{ type: 'node', id: 'A', position: [0, 0], ...node }] as never,
+  };
+  const t = findText(compileToScene(ir, opts).scene.primitives);
+  if (!t) throw new Error('expected TextPrimitive');
+
+  return t;
+};
+
+describe('maxTextWidth 西文按词折行', () => {
+  it('maxTextWidth=7 时将 "aaa bbb ccc" 换行为 ["aaa bbb", "ccc"]', () => {
+    const t = compileNode({ text: 'aaa bbb ccc', maxTextWidth: 7 });
+
+    expect(t.lines.map(l => l.text)).toEqual(['aaa bbb', 'ccc']);
+  });
+});
+
+describe('maxTextWidth CJK 按字折行', () => {
+  it('"中文换行测试" + maxTextWidth=3 → ["中文换", "行测试"]', () => {
+    const t = compileNode({ text: '中文换行测试', maxTextWidth: 3 });
+
+    expect(t.lines.map(l => l.text)).toEqual(['中文换', '行测试']);
+  });
+});
+
+describe('maxTextWidth 短文本盒收缩', () => {
+  it('"ab" + maxTextWidth=100 → 单行、measuredWidth=2（不撑满）', () => {
+    const t = compileNode({ text: 'ab', maxTextWidth: 100 });
+
+    expect(t.lines.map(l => l.text)).toEqual(['ab']);
+    expect(t.measuredWidth).toBe(2);
+  });
+});
+
+describe('未给 maxTextWidth 行为不变', () => {
+  it('"aaa bbb ccc" 无 maxTextWidth → 单行', () => {
+    const t = compileNode({ text: 'aaa bbb ccc' });
+
+    expect(t.lines.map(l => l.text)).toEqual(['aaa bbb ccc']);
+  });
+});
+
+describe('layout.width 固定可见外框时正文自动折行', () => {
+  it('"aaa bbb ccc" + 宽度=7 + 填充=0 → ["aaa bbb"，"ccc"]', () => {
+    const t = compileNode({ text: 'aaa bbb ccc', layout: { width: 7, padding: 0 } });
+
+    expect(t.lines.map(line => line.text)).toEqual(['aaa bbb', 'ccc']);
+  });
+});
+
+describe('折出物理行继承 IRLine 样式', () => {
+  it('[{text:"aaa bbb", fill:"red"}] + maxTextWidth=3 → ["aaa","bbb"] 均 fill red', () => {
+    const t = compileNode({ text: [{ text: 'aaa bbb', fill: 'red' }], maxTextWidth: 3 });
+
+    expect(t.lines.map(l => ({ text: l.text, fill: l.fill }))).toEqual([
+      { text: 'aaa', fill: 'red' },
+      { text: 'bbb', fill: 'red' },
+    ]);
+  });
+});
+
+describe('长单词按字素折行', () => {
+  it('八个字符在三字符宽度内折成三行', () => {
+    const t = compileNode({ text: 'abcdefgh', maxTextWidth: 3 });
+
+    expect(t.lines.map(l => l.text)).toEqual(['abc', 'def', 'gh']);
+  });
+});

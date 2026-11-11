@@ -34,17 +34,29 @@ Retikz 将领域语义、无框架 API 和框架适配分为三组。右侧包�
 
 ### 2.1 `@retikz/core`
 
-Core 是通用绘图领域的唯一 owner。它定义 JSON-safe 的 Core Source IR schema 与 `IRXxx` 类型，维护通用 Definition / registry，负责将 Core Source IR 编译为 renderer-agnostic Scene。
+Core 是通用绘图领域的唯一 owner。它定义 JSON-safe 的 Core Source IR schema 与 `IRXxx` 类型，维护通用 Definition / registry，提供将 Core IR 片段解析、布局并生成 renderer-agnostic 图元的原子阶段。
 
-Core 还拥有 `IRXxx + XxxResolveContext -> CanonicalXxx / XxxResolution` 的领域 resolve：统一处理 IR 等价简写、领域默认、继承与覆盖优先级、registry / reference / host lookup、Canonical 化后出现的领域不变量及颜色等领域值转换，使所有 compile 内部消费收敛到唯一结构。`CanonicalXxx`、`XxxResolveContext` 与必要的 `XxxResolution` 定义在领域 `resolve/<domain>/types.ts`，由同目录 `resolveXxx` 产出。compile 创建和维护 context、决定 traversal 与阶段顺序，并在上下文就绪点调度 resolver；它不重复数据结构确定化。只有 `IRXxx` 由 Zod schema 派生。Core 对外的编译入口保持为接收 `IRScene` 的 `compileToScene`；不新增同义的 `compileIRToScene`。
+Core 还拥有 `IRXxx + XxxResolveContext -> CanonicalXxx / XxxResolution` 的领域 resolve：统一处理 IR 等价简写、领域默认、继承与覆盖优先级、registry / reference / host lookup、Canonical 化后出现的领域不变量及颜色等领域值转换，使所有 compile 内部消费收敛到唯一结构。`CanonicalXxx`、`XxxResolveContext` 与必要的 `XxxResolution` 定义在领域 `resolve/<domain>/types.ts`，由同目录 `resolveXxx` 产出。Reconciler 创建和维护执行 context、决定 traversal 与阶段顺序，并在上下文就绪点调度 resolver；它不重复数据结构确定化。只有 `IRXxx` 由 Zod schema 派生。Reconciler 对外的完整编译入口为接收 `IRScene` 的 `compileToScene`；不新增同义的 `compileIRToScene`。
 
 Core 不提供框架通用 authoring Input，不持有 JSX、DOM、框架调度或浏览器挂载能力。它也不因上层 API 的便利需求扩展持久化 IR 以外的平行输入模型。
+
+### Reconciler 的执行边界
+
+Reconciler 组合 Core 的原子阶段，拥有完整编译入口、遍历、Composite 试算与重放、资源工作区、来源记录和输出事务。全量与增量首轮共用执行器；增量模式的 Weave 保存实际阶段产物及其复用依据，非增量模式不保留缓存。Core 不反向依赖 Reconciler，绘图语义与产物结构仍由 Core 定义。
 
 ### 2.2 `@retikz/plot`
 
 Plot 是数据可视化领域的唯一 owner。它定义 Plot Source IR schema 与 `IRXxx` 类型，拥有 data、scale、coordinate、mark、guide 等领域语义，以及 Plot Source IR 的 Canonical resolve、pipeline 和到 Core IR 的 lowering。
 
 Plot 只通过 Core 的公开能力输出 Core IR，不复制 Core compile、Scene 或 renderer 语义。它不维护框架 authoring Input、DOM mount、React props / JSX 或独立 retained session。
+
+### 2.3 `@retikz/inspect`：可选的次级观测功能
+
+Inspect 是可有可无的次级功能，只读消费主体 compile / pipeline 已有的公开产物，例如 Scene 与 Composite artifacts；其能力边界由这些产物中可确定的事实决定。Core、Reconciler 与领域 pipeline 不感知 Inspect，不为它注册观测内容、保留中间状态，或增加专用字段、回调、空间句柄与执行分支。产物字段必须有主体功能的独立需求，不能以 Inspect 的需要为理由扩充。
+
+Inspect 从已有产物推导辅助内容，再通过普通 Core 编译与渲染能力独立生成观测层。辅助编译不重新执行主图的作者输入或领域 pipeline。启用、关闭或检查失败均不得改变主体编译结果、布局、资源、命中、交互与提交语义；辅助层不成为主图提交的前置条件，失败只影响辅助层及其独立诊断。
+
+缺少可靠事实或坐标映射时，Inspect 应明确不支持相应能力，不猜测作者语义，也不要求主体补充仅供观测的数据。圆弧构造辅助线、Layout 产物检查等被收缩的能力后续单独设计；恢复能力仍须遵守上述边界，不以恢复旧功能完整度为由重新侵入主体。当前结果消费架构保持不变，具体契约见 [ADR-078](../../packages/kernel/_notes/decisions/v0/v0.5/078-inspect-compiled-output.md)。
 
 ## 3. API 基础包
 

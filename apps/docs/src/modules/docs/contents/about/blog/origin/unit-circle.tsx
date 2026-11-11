@@ -159,7 +159,7 @@ const Demo: FC<UnitCircleProps> = props => {
           i18n.tanHint,
         ]}
         style={{ stroke: 'lightgray', dashed: true }}
-        layout={{ padding: { x: 10, y: 4 }, align: 'start' }}
+        layout={{ padding: { x: 10, y: 4 }, textAlign: 'start' }}
       />
     </Layout>
   );

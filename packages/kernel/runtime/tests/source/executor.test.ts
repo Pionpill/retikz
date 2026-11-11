@@ -88,7 +88,7 @@ describe('运行时所属模块执行器', () => {
 
     expect(() => createExecutor(definition).prepare(definition, { values: [1] })).toThrowError(
       expect.objectContaining({
-        code: RetikzRuntimeErrorCode.CollectIdentitiesFailed,
+        code: RetikzRuntimeErrorCode.SourceCollectIdentitiesFailed,
         owner: 'fixture',
         phase: 'collect-identities',
       }),
@@ -117,7 +117,11 @@ describe('运行时所属模块执行器', () => {
     const readExecutor = createExecutor(readDefinition);
 
     expect(() => captureExecutor.prepare(captureDefinition, { values: [] })).toThrowError(
-      expect.objectContaining({ code: RetikzRuntimeErrorCode.CaptureFailed, phase: 'capture', cause: captureCause }),
+      expect.objectContaining({
+        code: RetikzRuntimeErrorCode.SourceCaptureFailed,
+        phase: 'capture',
+        cause: captureCause,
+      }),
     );
 
     try {
@@ -125,7 +129,7 @@ describe('运行时所属模块执行器', () => {
       throw new Error('expected read failure');
     } catch (error) {
       expect(error).toBeInstanceOf(RetikzRuntimeError);
-      expect(error).toMatchObject({ code: RetikzRuntimeErrorCode.ReadFailed, phase: 'read', cause: readCause });
+      expect(error).toMatchObject({ code: RetikzRuntimeErrorCode.SourceReadFailed, phase: 'read', cause: readCause });
       expect((error as RetikzRuntimeError).diagnostics).toEqual([
         expect.objectContaining({ code: BuiltinRuntimeDiagnosticCode.SourceDisposeFailed, cause: disposeCause }),
       ]);
@@ -153,7 +157,11 @@ describe('运行时所属模块执行器', () => {
     const failingRight = failingExecutor.prepare(failingDefinition, { values: [2] }).value;
 
     expect(() => failingExecutor.compare(failingDefinition, failingLeft, failingRight)).toThrowError(
-      expect.objectContaining({ code: RetikzRuntimeErrorCode.CompareFailed, phase: 'compare', cause: compareCause }),
+      expect.objectContaining({
+        code: RetikzRuntimeErrorCode.SourceCompareFailed,
+        phase: 'compare',
+        cause: compareCause,
+      }),
     );
   });
 
@@ -166,7 +174,7 @@ describe('运行时所属模块执行器', () => {
     const executor = createExecutor(registered);
 
     expect(() => executor.prepare(unknown, 1)).toThrowError(
-      expect.objectContaining({ code: RetikzRuntimeErrorCode.Unknown, owner: 'unknown' }),
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.SourceUnknown, owner: 'unknown' }),
     );
   });
 
@@ -242,7 +250,7 @@ describe('运行时所属模块执行器', () => {
     });
     expect(() => createExecutor(definition).prepare(definition, { values: [1] })).toThrowError(
       expect.objectContaining({
-        code: RetikzRuntimeErrorCode.CollectIdentitiesFailed,
+        code: RetikzRuntimeErrorCode.SourceCollectIdentitiesFailed,
         cause: expect.objectContaining({ code: RetikzRuntimeErrorCode.IdentityInvalid }),
       }),
     );

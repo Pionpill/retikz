@@ -1,5 +1,5 @@
-import { compileToScene } from '@retikz/core';
 import { ribbonPathDefinition } from '@retikz/extension';
+import { compileToScene } from '@retikz/reconciler';
 import { normalizeScene, path, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 

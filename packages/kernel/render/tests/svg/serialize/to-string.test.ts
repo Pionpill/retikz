@@ -1,4 +1,4 @@
-import type { RectPrimitive, Scene } from '@retikz/core';
+import type { RectPrimitive, Scene, ScenePrimitive } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import { renderToSvgString } from '../../../src/svg/serialize/to-string';
@@ -74,7 +74,7 @@ describe('renderToSvgString —— SvgNode → 字符串', () => {
   });
 
   it('文本内容里的 XML 特殊字符被转义', () => {
-    const text: Scene['primitives'][number] = {
+    const text: ScenePrimitive = {
       type: 'text',
       x: 0,
       y: 0,

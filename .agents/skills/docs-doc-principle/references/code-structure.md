@@ -19,7 +19,7 @@
 - `utils.ts` 或 `utils/`：纯函数 helper；不放 React 状态、副作用、组件。
 - `types.ts`：导出类型、局部复杂类型、由 constants 派生的类型。
 - `constants.ts`：稳定常量、const object enum、关键字集合、查表数据。
-- `index.ts`：barrel；默认 `export *`，不写业务逻辑。
+- `index.ts`：barrel；按可见性选择全部或精选导出，不写业务逻辑。
 
 简单场景可以先单文件；当一个文件同时承担工具、类型、常量、组件或状态时，再拆成上面的职责文件 / 文件夹。
 
@@ -41,7 +41,7 @@ React 相关文件按职责分目录，文件名保持可搜索：
 - 场景内部可相邻导入或从本场景 barrel 导入。
 - `components/`、`utils/`、`hooks/`、`context/`、`store/`、`commands/` 等职责子目录必须提供 `index.ts`；目录外消费只从目录 barrel 导入，不 deep import 子文件。
 - 模块外消费优先走拥有者 barrel；避免 deep import 到 `utils/`、`constants.ts`、`types.ts` 等私有文件。
-- barrel 默认 `export * from './xxx'`；需要裁剪公共面、避免冲突或显式重命名时才用 named re-export。
+- barrel 的导出形式与可见性遵循 [导入导出](../../standard-structure/references/imports.md)。
 - 不从 `components/shared` 转手 export docs-only 模块内容。
 
 ## 整理检查清单
@@ -52,5 +52,5 @@ React 相关文件按职责分目录，文件名保持可搜索：
 - docs-only 代码是否留在 `modules/docs/` 内。
 - React context/store/hooks 是否按目录和 `useXxx...` 命名。
 - 工具、类型、常量是否按 `utils` / `types` / `constants` 拆分，且无 JSX 混入 `utils`。
-- barrel 是否只导出稳定 API，且默认使用 `export *`。
+- barrel 是否按可见性选择导出形式，且只暴露模块外需要的稳定 API。
 - 移动文件后是否更新 tests、scripts、MDX imports、glob key、README / AGENTS 中的路径说明。

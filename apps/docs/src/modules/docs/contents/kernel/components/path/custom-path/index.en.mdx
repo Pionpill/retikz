@@ -29,6 +29,10 @@ The `highlight` kind below reuses Core stroke emission and emits a wide underlay
 
 ## Define the capability
 
+Label `text` in a Definition is a `TextBlockContent` containing resolved fonts, line height, wrapping width, and line segments. Pass existing labels directly to `emitHostLabels`. Resolve dynamically created source labels with `resolveHostLabel` before emitting them with geometry samples. `emitBoundaryLabels` accepts source boundary labels and support points, using the same text resolution and layout rules internally. Do not convert canonical text back to strings or parse it again as Source.
+
+`context.path` is a `PathDefinitionConfig` with defaults applied. Custom fields retain their schema-inferred types, and label positions are numeric. Read drawing properties from `context.appearance`. Call `context.emitStroke()` to reuse the current stroke. An argument represents new Source IR: construct it explicitly instead of spreading canonical configuration into a source object.
+
 Use `definePath` to declare an explicit registry key, a complete Path subject schema, and a compile function that owns the whole path. Compose the schema from the open `PathSchema` host plus the kind literal and `kindOptions`, so the definition owns the complete payload contract.
 
 ```tsx
@@ -49,19 +53,15 @@ const highlight = definePath<HighlightPath>({
   name: 'highlight',
   schema: HighlightPathSchema,
   compile: context => {
-    const { kindOptions, ...strokePath } = context.path;
-    const base = context.emitStroke({
-      ...strokePath,
-      kind: 'stroke',
-      style: { ...strokePath.style, strokeWidth: kindOptions.strokeWidth },
-    });
+    const { kindOptions } = context.path;
+    const base = context.emitStroke();
     if (base === null) return null;
     return {
       ...base,
       primitives: Array.from(base.primitives).flatMap<ScenePrimitive>(primitive =>
         primitive.type === 'path'
           ? [
-              { ...primitive, stroke: '#facc15' },
+              { ...primitive, stroke: '#facc15', strokeWidth: kindOptions.strokeWidth },
               { ...primitive, stroke: '#0f766e', strokeWidth: 1.5 },
             ]
           : [primitive],
@@ -125,6 +125,8 @@ const view = mount(document.getElementById('diagram')!, input, {
 </DocTabs>
 
 ## Errors and limitations
+
+Output must not carry `resources` or `clipRef`. Resource references may only pass through this invocation's `appearance` or values produced by `emitStroke`. Select gradients or registered Patterns through input properties; Core registers the resources. Other handwritten resource IDs fail at the provider output boundary, including in nested primitives.
 
 | Case                                            | Result                                                    |
 | ----------------------------------------------- | --------------------------------------------------------- |

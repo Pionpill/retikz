@@ -7,6 +7,7 @@
  *   Scene-派生字段（meta / geometry / scene）在无 scene 时缺省、animation 在无 runtime 时 no-op
  */
 import type { Scene, ScenePrimitive } from '@retikz/core';
+import type { PropertyPath } from '@retikz/foundation';
 import type { JsonObject } from '@retikz/foundation';
 import type { AffineMatrix, BoundsRect } from '@retikz/math';
 import { AFFINE_IDENTITY, applyAffine, multiplyAffine } from '@retikz/math';
@@ -281,12 +282,12 @@ export const geometryOf = (scene: Scene, id: string): HydrationGeometry | undefi
 /** 沿 Scene primitive path 定位图元及其父级累积变换 */
 const primitiveAtPath = (
   scene: Scene,
-  path: ReadonlyArray<number>,
+  path: PropertyPath,
 ): Readonly<{ primitive: ScenePrimitive; matrix: AffineMatrix }> | undefined => {
   let primitives = scene.primitives;
   let matrix = AFFINE_IDENTITY;
 
-  for (let depth = 0; depth < path.length; depth += 1) {
+  for (let depth = 1; depth < path.length; depth += 2) {
     const candidate: unknown = Reflect.get(primitives, path[depth]);
     if (typeof candidate !== 'object' || candidate === null) return undefined;
 
@@ -304,7 +305,7 @@ const primitiveAtPath = (
 };
 
 /** 按 topology 选定的 occurrence paths 读取首个 provenance */
-const metaAtPaths = (scene: Scene, paths: ReadonlyArray<ReadonlyArray<number>>): JsonObject | undefined => {
+const metaAtPaths = (scene: Scene, paths: ReadonlyArray<PropertyPath>): JsonObject | undefined => {
   for (const path of paths) {
     const meta = primitiveAtPath(scene, path)?.primitive.meta;
     if (meta !== undefined) return meta;
@@ -314,7 +315,7 @@ const metaAtPaths = (scene: Scene, paths: ReadonlyArray<ReadonlyArray<number>>):
 };
 
 /** 按 topology 选定的 occurrence paths 聚合语义 owner 几何 */
-const geometryAtPaths = (scene: Scene, paths: ReadonlyArray<ReadonlyArray<number>>): HydrationGeometry | undefined => {
+const geometryAtPaths = (scene: Scene, paths: ReadonlyArray<PropertyPath>): HydrationGeometry | undefined => {
   let bbox: BBox | undefined;
 
   for (const path of paths) {
@@ -486,7 +487,7 @@ export const createCanvasIdAnimationControls = (deps: CanvasIdControlsDeps): Hyd
  */
 export const resolvePointViaLayout =
   (root: Element, layout: BoundsRect) =>
-  (event: Event): { x: number; y: number } | null => {
+  (event: Event): HydrationContext['point'] => {
     const mouse = event as MouseEvent;
     if (typeof mouse.clientX !== 'number') return null;
 
@@ -510,7 +511,7 @@ export const resolvePointViaLayout =
  */
 export const resolveSvgPointViaCtm =
   (root: Element) =>
-  (event: Event): { x: number; y: number } | null => {
+  (event: Event): HydrationContext['point'] => {
     const mouse = event as MouseEvent;
     if (typeof mouse.clientX !== 'number') return null;
 
@@ -547,11 +548,11 @@ export type HydrationContextDependencies = {
    */
   scene?: Scene | (() => Scene | undefined);
   /** retained topology 按 public id 聚合的 occurrence paths；缺省继续按持久 Scene id 查询 */
-  resolvePrimitivePaths?: (id: string) => ReadonlyArray<ReadonlyArray<number>> | undefined;
+  resolvePrimitivePaths?: (id: string) => ReadonlyArray<PropertyPath> | undefined;
   /** 命中 DOM 元素定位（svg = closest；canvas = () => null） */
   resolveElement: (event: Event, id: string) => Element | null;
   /** 指针逆映射到 scene user units（非指针事件 → null） */
-  resolvePoint: (event: Event) => { x: number; y: number } | null;
+  resolvePoint: (event: Event) => HydrationContext['point'];
   /** 据命中 id 与事件造动画控制（缺省作用于命中 occurrence）；无 runtime → noopAnimationControls */
   makeAnimation: (defaultId: string, event: Event) => HydrationAnimationControls;
 };

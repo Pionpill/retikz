@@ -5,12 +5,13 @@ import type {
 } from '@retikz/layout';
 import { RetikzLayoutError, RetikzLayoutErrorCode } from '@retikz/layout';
 import type {
+  EmbedChildrenNormalizationResult,
   InputChild,
+  InputEmbedAuthoringSite,
+  InputEmbedChildrenPreparation,
   InputEmbedContext,
   InputEmbedContribution,
   InputEmbedPreparationContext,
-  InputEmbedChildrenPreparation,
-  EmbedChildrenNormalizationResult,
 } from '@retikz/vanilla';
 
 type LayoutItem = InputFlexLayoutItemConfig | InputGridLayoutItemConfig | InputOverlayLayoutItemConfig;
@@ -32,7 +33,7 @@ const collectLayoutItems = <TItem extends LayoutItem>(
   const items: Array<TItem> = [];
   const roots: Array<CoreProviderContribution['roots'][number]> = [];
   const providers: Array<CoreProviderContribution['providers'][number]> = [];
-  const authoringSites: Array<InputEmbedAuthoringSites[number]> = [];
+  const authoringSites: Array<InputEmbedAuthoringSite> = [];
   const runtimeInputs: Array<NonNullable<InputEmbedContribution['runtimeInputs']>[number]> = [];
 
   for (const [index, input] of inputs.entries()) {

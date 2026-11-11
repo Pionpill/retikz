@@ -34,7 +34,7 @@ export const createPlotTextMeasurer =
 export type GuideTextStyle = Partial<
   Pick<
     NonNullable<IRNode['style']> & NonNullable<IRNode['layout']> & Pick<IRNode, 'rotate'>,
-    'font' | 'textColor' | 'opacity' | 'align' | 'lineHeight' | 'maxTextWidth' | 'rotate'
+    'font' | 'textColor' | 'opacity' | 'textAlign' | 'lineHeight' | 'maxTextWidth' | 'rotate'
   >
 >;
 
@@ -43,11 +43,11 @@ export const guideTextSourceProps = (
   value: GuideTextStyle,
   fontSize?: number,
 ): Pick<IRNode, 'style' | 'layout' | 'rotate'> => {
-  const { rotate, align, lineHeight, maxTextWidth, ...style } = value;
+  const { rotate, textAlign, lineHeight, maxTextWidth, ...style } = value;
   return {
     style: { ...style, font: { ...style.font, size: style.font?.size ?? fontSize } },
     layout: {
-      ...(align === undefined ? {} : { align }),
+      ...(textAlign === undefined ? {} : { textAlign }),
       ...(lineHeight === undefined ? {} : { lineHeight }),
       ...(maxTextWidth === undefined ? {} : { maxTextWidth }),
     },

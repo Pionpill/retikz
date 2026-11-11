@@ -1,4 +1,4 @@
-import type { IRScope, CompositeCompileContext, CompositeCompileResult } from '@retikz/core';
+import type { CompositeCompileContext, CompositeCompileResult, IRScope } from '@retikz/core';
 import { RetikzCoreError } from '@retikz/core';
 import { intrinsicLayoutProposal, requiredLayoutProbe } from '@retikz/layout/compose';
 import type { Position } from '@retikz/math';
@@ -10,20 +10,20 @@ import type { FlowDiagramDefinitionRegistries } from '../../providers';
 import {
   evaluateFlowBezierConflicts,
   evaluateFlowOrthogonalConflicts,
-  flowPriorLabelReservations,
-  isFlowAutomaticRouting,
   flowBendGeometryFailure,
+  flowPriorLabelReservations,
   flowRelationObstacles,
-  scoreFlowBendNodes,
   flowSmoothConflicts,
+  isFlowAutomaticRouting,
+  scoreFlowBendNodes,
 } from '../../providers';
-import type { CanonicalFlowDiagram } from '../../resolve';
+import type { CanonicalFlowDiagram, CanonicalFlowElement } from '../../resolve';
 import { assertFlowLayoutCapabilities, resolveFlowDiagram } from '../../resolve';
 import type { FlowDiagramArtifact, IRFlowDiagram } from '../../schemas';
-import { createFlowDiagramArtifact, createFlowSpatialHandles } from './artifact';
+import { createFlowDiagramArtifact } from './artifact';
 import { executeFlowLayout } from './layout-output';
 import { createFlowLayoutExecutionContext } from './layout-placement';
-import { materializeFlowGraph, materializeFlowElements } from './materialize';
+import { materializeFlowElements, materializeFlowGraph } from './materialize';
 import { measureFlowDiagram } from './measure';
 
 const flowScopeProps = (source: IRFlowDiagram): Omit<IRScope, 'type' | 'children'> => {
@@ -96,9 +96,7 @@ const drawingFailureContext = (
     };
   }
 
-  const elements = (
-    values: CanonicalFlowDiagram['elements'],
-  ): ReadonlyArray<CanonicalFlowDiagram['elements'][number]> =>
+  const elements = (values: CanonicalFlowDiagram['elements']): ReadonlyArray<CanonicalFlowElement> =>
     values.flatMap(element => [element, ...(element.type === 'entity' ? [] : elements(element.elements))]);
   const authoredElements = elements(diagram.elements);
 
@@ -203,13 +201,13 @@ export const createCompileFlowDiagram =
         const conflicts = flowSmoothConflicts(
           geometry.route,
           relation,
-          flowRelationObstacles(measurement.input, output, relation),
+          flowRelationObstacles(measurement.input, output.elements, relation),
         );
         if (conflicts.length > 0)
           context.warn(
             'FlowSmoothObstacleConflict',
             `Smooth reference curve conflicts with ${conflicts.join(', ')}; keep authored waypoints and inspect the final drawing.`,
-            `relations[${index}].routing.points`,
+            ['relations', index, 'routing', 'points'],
           );
         continue;
       }
@@ -219,14 +217,14 @@ export const createCompileFlowDiagram =
         const conflicts = evaluateFlowBezierConflicts(
           geometry.route,
           relation,
-          flowRelationObstacles(measurement.input, output, relation),
+          flowRelationObstacles(measurement.input, output.elements, relation),
           flowPriorLabelReservations(measurement.input.relations, output.relations, index),
         );
         if (conflicts.nodes > 0 || conflicts.labelConflicts > 0)
           context.warn(
             isFlowAutomaticRouting(relation.routing) ? 'FlowBezierSearchExhausted' : 'FlowBezierObstacleConflict',
             `Bezier reference geometry conflicts with ${conflicts.relatedIds.join(', ')}; inspect the final drawing.`,
-            `relations[${index}]`,
+            ['relations', index],
           );
         continue;
       }
@@ -238,14 +236,14 @@ export const createCompileFlowDiagram =
         const { score } = evaluateFlowOrthogonalConflicts(
           geometry.route,
           relation,
-          flowRelationObstacles(measurement.input, output, relation),
+          flowRelationObstacles(measurement.input, output.elements, relation),
           flowPriorLabelReservations(measurement.input.relations, output.relations, index),
         );
         if (score[0] > 0 || score[2] > 0)
           context.warn(
             'FlowOrthogonalObstacleConflict',
             'Orthogonal reference route conflicts with nodes or labels; the best available route is retained.',
-            `relations[${index}]`,
+            ['relations', index],
           );
         continue;
       }
@@ -259,7 +257,7 @@ export const createCompileFlowDiagram =
         [conflictCount] = scoreFlowBendNodes(
           geometry.route,
           relation,
-          flowRelationObstacles(measurement.input, output, relation),
+          flowRelationObstacles(measurement.input, output.elements, relation),
         );
       } catch (cause) {
         return flowBendGeometryFailure(index, relation, cause);
@@ -269,10 +267,7 @@ export const createCompileFlowDiagram =
         context.warn(
           'FlowBendObstacleConflict',
           'Bend reference curve may intersect node bounds; inspect the drawing and adjust routing if needed.',
-          diagram.relations[index].path
-            .map(part => (typeof part === 'number' ? `[${part}]` : `.${part}`))
-            .join('')
-            .replace(/^\./, ''),
+          diagram.relations[index].path,
         );
     }
 
@@ -319,15 +314,9 @@ export const createCompileFlowDiagram =
       relations: diagram.relations,
       output,
     });
-    const spatialHandles = createFlowSpatialHandles(
-      foundation.frame.allocationBounds,
-      artifact.regions,
-      artifact.elements,
-    );
-
     return {
       allocationBounds: foundation.frame.allocationBounds,
-      children: [context.createScope(flowScopeProps(source), [context.replay(foundation.frame)], spatialHandles)],
+      children: [context.createScope(flowScopeProps(source), [context.replay(foundation.frame)])],
       artifact,
     };
   };

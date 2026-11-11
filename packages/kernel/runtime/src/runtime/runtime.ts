@@ -51,11 +51,11 @@ const assertRuntimeRegistryBinding = (
 /** 断言更新基于有效且仍为当前版本的 revision */
 const assertRuntimeUpdateRevision = (baseRevision: RuntimeRevision, currentRevision: RuntimeRevision): void => {
   if (!isRuntimeRevision(baseRevision)) {
-    throw createRuntimeContractError(RetikzRuntimeErrorCode.RevisionInvalid, 'update', baseRevision);
+    throw createRuntimeContractError(RetikzRuntimeErrorCode.TransactionRevisionInvalid, 'update', baseRevision);
   }
 
   if (baseRevision !== currentRevision) {
-    throw createRuntimeContractError(RetikzRuntimeErrorCode.RevisionStale, 'update', baseRevision);
+    throw createRuntimeContractError(RetikzRuntimeErrorCode.TransactionRevisionStale, 'update', baseRevision);
   }
 };
 
@@ -103,11 +103,18 @@ class RuntimeManager {
   private hasRetiredResources = false;
   /** 固定注册表并接管宿主，初始化成功前不暴露实例 */
   constructor(options: RuntimeOptions) {
-    const { sources, computations, trace, initialSnapshots } = options;
+    const {
+      sources,
+      computations,
+      trace,
+      initialSnapshots,
+      updateStrategy: configuredUpdateStrategy,
+      participants,
+    } = options;
     assertRuntimeRegistryBinding(sources, computations);
 
-    const updateStrategy = options.updateStrategy ?? RuntimeUpdateStrategy.Auto;
-    this.participantManager = new RuntimeParticipantManager(options.participants ?? [], sources, computations, trace);
+    const updateStrategy = configuredUpdateStrategy ?? RuntimeUpdateStrategy.Auto;
+    this.participantManager = new RuntimeParticipantManager(participants ?? [], sources, computations, trace);
 
     this.sources = sources;
     this.computations = computations;
@@ -262,7 +269,7 @@ class RuntimeManager {
     this.computations.resolve(computation);
     const computationState = this.computationStates.get(computation);
     if (computationState === undefined)
-      throw createRuntimeContractError(RetikzRuntimeErrorCode.UndeclaredDependency, 'result', computation);
+      throw createRuntimeContractError(RetikzRuntimeErrorCode.DependencyUndeclared, 'result', computation);
 
     return computationState.executor.snapshot(computation, computationState.prepared, this.currentRevision);
   };

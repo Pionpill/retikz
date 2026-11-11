@@ -7,7 +7,7 @@
 retikz 是受 LaTeX TikZ 启发的 TypeScript 绘图库：用组件或 JSON IR 描述节点、路径、箭头、图表等图元，编译成 renderer-agnostic 的 Scene，再交给 SVG / Canvas 等后端渲染。
 
 - Monorepo：pnpm workspace，glob 为 `packages/*/*` + `apps/*`
-- Kernel 组：`packages/kernel/{foundation,math,core,reconciler,inspect,render,react,vanilla,tex}`，其中 `foundation` 是仅依赖 Zod 的跨包原子契约与基础 schema 底座，`math` 是零依赖计算底座，`reconciler` 持有 Weave 编译状态与输出事务，`tex` 是可选 LaTeX 公式接入包
+- Kernel 组：`packages/kernel/{foundation,math,core,reconciler,inspect,render,react,vanilla,tex}`，其中 `foundation` 是仅依赖 Zod 的跨包原子契约与基础 schema 底座，`math` 是零依赖计算底座，`reconciler` 持有完整与增量编译执行、Weave 缓存与输出事务，`tex` 是可选 LaTeX 公式接入包
 - Viz 组：`packages/viz/{plot,plot-react,plot-vanilla}`，通过 core 的 composite / lowering 能力接入
 - Apps：`apps/docs` 文档站，`apps/eval` 评测工具
 
@@ -85,9 +85,9 @@ retikz 是受 LaTeX TikZ 启发的 TypeScript 绘图库：用组件或 JSON IR �
 
 - AI / superpower / plugin 为长任务保上下文、做临时决策、审计或计划而生成的报告和计划默认不入库。
 - 这类文件放到 `.gitignore` 已覆盖的本地目录：`notes/reports/`、`notes/plans/`、任意 `**/_notes/reports/`、`**/_notes/plans/`；不要 stage / commit。
-- 正式测试只保留 tracked runtime case `tests/**/*.test.ts(x)`；TypeScript 可直接判断的类型关系由生产代码与 `tsc --noEmit` 负责，不编写独立测试；一次性探索 case 使用 ignored `tests/_scratch/*.test.ts(x)`。
+- 正式测试只保留 tracked runtime case `tests/**/*.test.ts(x)`；TypeScript 可直接判断的类型关系由生产代码与 `tsc --noEmit` 负责，不编写独立测试；仅服务当次流程、排查或对照的 case 使用 ignored `tests/_scratch/*.test.ts(x)`，不因先写或跑绿而永久保留。准入与转正按 [单元测试规范](.agents/skills/test-contract/references/unit-tests.md)。
 - 不得新增 `*.typecheck.ts(x)`，也不得在 runtime 测试中使用强转、`expectTypeOf` 或 `@ts-expect-error` 触发 TypeScript 已拒绝的字段、互斥 union、必填项或封闭判别分支。
-- 临时 Vitest case 只放受影响 workspace 的 `tests/_scratch/`。用 `pnpm temp:test -- --workspace <workspace-directory> --file <tests/_scratch/*.test.ts>` 运行；默认完成后自动删除，只有人工显式传 `--keep` 才保留。不要 `git add -f` 此目录。
+- 临时 Vitest case 只放受影响 workspace 的 `tests/_scratch/`。用 `pnpm temp:test -- --workspace <workspace-directory> --file tests/_scratch/<case>.test.ts` 指定单个文件运行；默认完成后自动删除，只有人工显式传 `--keep` 才保留，异常终止后仍须核对残留。不要 `git add -f` 此目录。
 - 如果新流程需要新的临时产物目录，先征求用户确认并补 `.gitignore`，再写入该目录。
 
 常用命令：
@@ -175,11 +175,13 @@ Control: <human-directed|llm-autonomous>
 
 ## 代码风格
 
+- 仅用于开发调试的代码及其专属计算统一放入 `if (__DEV__)`；生产必需的校验、异常和用户诊断回调不得受此开关控制。Vite 入口接入共享 DEV 插件，仓库内 Node/tsx 源码入口预加载 `config/dev-runtime.mjs`；库产物保留环境判断，由消费方生产构建裁剪。业务源码不自行读取 `NODE_ENV` 或定义运行时 DEV 常量。
 - TypeScript ESM；目录、文件、符号、enum、registry 和组件命名统一遵循 `standard-name`。
 - 内部代码依赖明确的 TypeScript 类型契约，不为纯 JavaScript 调用额外维护 `unknown`、`typeof`、`Array.isArray`、对象结构探测、重复 `throw` 或错误分支；纯 JavaScript 调用方自行负责类型校验。
 - `packages/**/src` 由 Retikz 主动创建的错误必须是 `RetikzError` 或其子类，自定义错误类统一命名为 `RetikzXxxError`；每个发布包一般只保留一个统一的 `Retikz<Package>Error`，通过 code、message、details 与 cause 区分失败。只有错误边界独立且调用方确实需要按 class 分支，或存在额外稳定结构字段时，才允许增加专用错误类型。生产源码不得创建原生 `Error`；第三方或用户回调异常在 Retikz API 边界包装为 owner 错误并原样保留为 `cause`，测试可用原生 `Error` 模拟外部失败。
 - JSON、持久化配置和其他类型不明确的外部输入只在 parse / schema 入口完成一次解析和校验；adapter 只将已类型化的 `InputXxx` 调度至 Vanilla API `normalizeXxx`。纵向领域 `resolveXxx` 只校验补全后才出现的领域不变量与真实上下文错误；不得在 normalize、resolve、lower 或 emit 重复 schema 已覆盖或明确 TypeScript 类型已保证的校验。已类型化的 Tier 2 封装和扩展回调由作者负责满足契约，不强制 Schema 解析；用户编写的代码不等同于外部数据。校验边界按数据来源判断，不按包边界判断；内部调用、跨包传递和官方编译产物消费不得重复执行 schema 结构校验。Schema 仍可用于类型派生与权威默认值复用，不得借此重新解析完整内部对象。
-- barrel 默认 `export * from './xxx'`，不要用 `export { ... } from './xxx'` 聚合；需要裁剪公共面、避免冲突或显式重命名时才用 named re-export。公共入口可按包内 AGENTS 要求显式导出。
+- barrel 按当前入口的可见性选择导出形式：转导出与来源模块的全部导出完全一致时，直接用 `export *`，不重复列举成员；仅部分 API 需要暴露、其余仅供内部复用时用 `export { ... }` 精选导出，类型使用对应的 `export type` 形式。
+- 包根 `index.ts` 的每项导出都须审查公开必要性、契约稳定性及消费方影响；内部复用不构成包外公开依据，避免将实现细节变为公共 API，使后续内部调整迫使消费方修改代码或升级适配。
 - 跨 owner 导入必须走目标 owner 的目录 barrel；带独立 barrel 的稳定子域可作为二级 owner（如 `shared/geometry`）；同 owner 内部可相邻导入，不从其它 owner deep import 到子文件。
 - 尽量避免 import / export `as` 重命名；命名冲突优先在定义源头改成准确名称，或由 owner barrel 调整公共面。
 - 数组类型写 `Array<T>`，不用 `T[]`；函数优先箭头形式，确需 hoisting / class 方法时例外。

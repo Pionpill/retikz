@@ -12,7 +12,7 @@ import { createRuntimeSourceInput, createRuntimeSourceUpdate } from '../../src/t
 describe('Runtime 运行时故障隔离', () => {
   it('initial Computation run throw 即使伪造 RetikzRuntimeError 仍固定映射，并反向释放已捕获 owner', () => {
     const cause = new RetikzRuntimeError({
-      code: RetikzRuntimeErrorCode.RevisionStale,
+      code: RetikzRuntimeErrorCode.TransactionRevisionStale,
       phase: 'forged-run',
       diagnostics: [
         {
@@ -76,7 +76,7 @@ describe('Runtime 运行时故障隔离', () => {
 
   it('update callback throw 即使伪造 RetikzRuntimeError 仍固定映射并回滚 candidate', () => {
     const cause = new RetikzRuntimeError({
-      code: RetikzRuntimeErrorCode.RevisionStale,
+      code: RetikzRuntimeErrorCode.TransactionRevisionStale,
       phase: 'forged-update',
       diagnostics: [
         {

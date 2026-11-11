@@ -1,4 +1,4 @@
-import { compileToScene } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 
 import type { PlotLabelMeasure } from '../../src/shared';
 

@@ -71,11 +71,24 @@ export const outlineCommands = (
   start: RibbonEndpointGeometry;
   end: RibbonEndpointGeometry;
 } => {
-  const { segments, totalLength, sampleCount, widthAt, endpointAxes, align, round } = input;
-  const offsets = new Set<number>([0, 1, ...input.featureOffsets]);
+  const {
+    segments,
+    totalLength,
+    sampleCount,
+    widthAt,
+    endpointAxes,
+    align,
+    round,
+    featureOffsets,
+    jumpOffsets,
+    startEndpointCap,
+    capRegistry,
+    endEndpointCap,
+  } = input;
+  const offsets = new Set<number>([0, 1, ...featureOffsets]);
 
   for (let index = 0; index < sampleCount; index++) offsets.add(index / (sampleCount - 1));
-  const breaks = new Set<number>([0, 1, ...input.jumpOffsets]);
+  const breaks = new Set<number>([0, 1, ...jumpOffsets]);
   let lengthBefore = 0;
 
   for (let index = 0; index < segments.length - 1; index++) {
@@ -121,15 +134,15 @@ export const outlineCommands = (
   const start = resolveEndpointCap({
     endpoint: 'start',
     section: first,
-    cap: input.startEndpointCap,
-    registry: input.capRegistry,
+    cap: startEndpointCap,
+    registry: capRegistry,
     round,
   });
   const end = resolveEndpointCap({
     endpoint: 'end',
     section: last,
-    cap: input.endEndpointCap,
-    registry: input.capRegistry,
+    cap: endEndpointCap,
+    registry: capRegistry,
     round,
   });
 

@@ -14,7 +14,6 @@ describe('@retikz/vanilla 入口边界', () => {
       'scope',
       'embed',
       'InputLayerCache',
-      'prepareProcessingInput',
       'processToStaticResult',
       'createProcessingController',
       'DrawWay',
@@ -38,6 +37,13 @@ describe('@retikz/vanilla 入口边界', () => {
       'VanillaViewMode',
       'createDomProcessingController',
       'updateParticipant',
+      'prepareProcessingInput',
+      'createInputRuntimeMetaSnapshot',
+      'createEmptyInputRuntimeMetaSnapshot',
+      'createVanillaCompileDriverSession',
+      'resolveVanillaCompileOutput',
+      'compileVanillaWithDriver',
+      'commitVanillaCompileOutput',
     ]) {
       expect(namespace[name]).toBeUndefined();
     }

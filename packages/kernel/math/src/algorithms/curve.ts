@@ -207,8 +207,8 @@ const resolveBisectionSteps = (bisectionSteps: number | undefined): number =>
   Math.max(1, Math.floor(bisectionSteps ?? DEFAULT_CURVE_BISECTION_STEPS));
 
 const resolveArcSweep = (segment: CurveArcSegment): { startAngleDeg: number; endAngleDeg: number } => {
-  const { startAngleDeg, endAngleDeg } = segment;
-  const counterClockwise = segment.counterClockwise ?? endAngleDeg < startAngleDeg;
+  const { startAngleDeg, endAngleDeg, counterClockwise: configuredCounterClockwise } = segment;
+  const counterClockwise = configuredCounterClockwise ?? endAngleDeg < startAngleDeg;
   const aligned = alignAngleSweep(startAngleDeg, endAngleDeg, counterClockwise);
   return { startAngleDeg: aligned.start, endAngleDeg: aligned.end };
 };

@@ -1,4 +1,5 @@
 import type { IRChild, CanonicalTheme } from '@retikz/core';
+import type { PropertyPath } from '@retikz/foundation';
 import type { JsonObject } from '@retikz/foundation';
 import type { IRPlot } from '@retikz/plot';
 import type { IRSurface } from '@retikz/standard/presentation';
@@ -48,7 +49,7 @@ export type ChartResolveWarning = Readonly<{
   /** 面向调用方的英文消息 */
   message: string;
   /** 相对当前 Chart Source occurrence 的 jq-like 路径 */
-  subPath?: string;
+  subPath?: PropertyPath;
 }>;
 
 /**

@@ -1093,7 +1093,7 @@ describe('类型化点 Chart React 声明', () => {
           </ChartExtension>
         </>,
       ),
-    ).toThrow(/PLOT_VANILLA_DUPLICATE_DECLARATION_SOURCE/i);
+    ).toThrow(/PLOT_VANILLA_NORMALIZE_DECLARATION_SOURCE_DUPLICATE/i);
   });
 
   it('拒绝根 ChartCoordinate 与子组合的组合', () => {
@@ -1158,7 +1158,7 @@ describe('类型化点 Chart React 声明', () => {
           </ChartExtension>
         </>,
       ),
-    ).toThrow(/PLOT_VANILLA_UNSUPPORTED_CHART_CHILD/i);
+    ).toThrow(/PLOT_VANILLA_NORMALIZE_CHART_CHILD_UNSUPPORTED/i);
   });
 
   it('拒绝普通的迭代和自定义包装器，而不是扩大直接子语义', () => {

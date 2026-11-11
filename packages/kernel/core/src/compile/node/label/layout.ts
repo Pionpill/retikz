@@ -1,104 +1,219 @@
-import type { CanonicalFont } from '../../../resolve';
-import { resolveFont, resolveTextLine } from '../../../resolve';
-import type { TextMeasurer } from '../../text';
-import { layoutInlineLine, resolveTextMetrics } from '../../text';
-import { DEFAULT_LINE_HEIGHT_FACTOR } from '../content/text';
+import type { Position } from '@retikz/math';
+import { DEG_TO_RAD } from '@retikz/math';
+
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
+import type { CanonicalNodeLabel, CanonicalNodeLabelBoundaryPosition } from '../../../resolve';
+import { anchorUnitVectorByAnchor } from '../../../shared';
+import { evaluateNamedBoundaryAnchor, evaluateAngleBoundaryPoint } from '../../boundary';
+import type { CompiledBoundaryGeometry } from '../../boundary';
+import { placeLabelBox, calculateLabelRotation, layoutTextBlock } from '../../text';
 import type {
-  MeasuredNodeLabel,
-  NodeLabelResolution,
-  NodeLabelLayout,
   CompiledNodeLayout,
-  NodeTextLayoutContext,
+  MeasuredNodeLabel,
+  NodeLabelLayout,
+  CompiledNodeLabelPlacement,
+  NodeCompileContext,
 } from '../types';
-import { resolveNodeLabelGeometry } from './geometry';
 
-/** 节点附属 label 布局输入 */
-type InputNodeLabelsLayout = NodeTextLayoutContext & {
-  /** 基准字体大小 */
-  baseFontSize: number;
-  /** preset 与 rem 字号解析的根字号 */
-  rootFontSize: number;
+const isLabelBoundaryPosition = (
+  position: CanonicalNodeLabel['position'],
+): position is CanonicalNodeLabelBoundaryPosition => typeof position === 'object';
+
+const assertBoxLikeLabelBoundary = (layout: CompiledBoundaryGeometry): void => {
+  if (layout.shape.name !== 'rectangle') {
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Compile,
+      `Node label boundary position requires a box-like boundary; shape '${layout.shape.name}' is not supported.`,
+    );
+  }
 };
 
-/** 只为 Node label 包装规范化文字度量 */
-const nodeLabelMeasurer =
-  (measureText: TextMeasurer): TextMeasurer =>
-  (text, font) =>
-    resolveTextMetrics(measureText(text, font));
+const calculateLabelBoundaryPoint = (
+  layout: CompiledBoundaryGeometry,
+  canon: CanonicalNodeLabelBoundaryPosition,
+): Position => {
+  assertBoxLikeLabelBoundary(layout);
+  const fraction = canon.fraction;
+  const left = layout.geometry.rect.x - layout.geometry.rect.width / 2;
+  const right = layout.geometry.rect.x + layout.geometry.rect.width / 2;
+  const top = layout.geometry.rect.y - layout.geometry.rect.height / 2;
+  const bottom = layout.geometry.rect.y + layout.geometry.rect.height / 2;
+  if (canon.boundary === 'top') return [left + layout.geometry.rect.width * fraction, top];
+  if (canon.boundary === 'right') return [right, top + layout.geometry.rect.height * fraction];
+  if (canon.boundary === 'bottom') return [left + layout.geometry.rect.width * fraction, bottom];
 
-/** 测量节点附属 label，不读取 Node rect */
-export const measureNodeLabels = (
-  input: InputNodeLabelsLayout,
-): Array<{ layout: MeasuredNodeLabel; properties: NodeLabelResolution }> | undefined => {
-  const { node, measureText, texLowering, baseFontSize, rootFontSize, fontScale, fontFamily, fontWeight, fontStyle } =
-    input;
-  const rawLabels = node.label;
-  const texGatingOn = texLowering?.lowerTex !== undefined;
-  const inlineWarn = texLowering?.warn ?? ((): void => {});
-  const measureLabelText = nodeLabelMeasurer(measureText);
+  return [left, top + layout.geometry.rect.height * fraction];
+};
 
-  return rawLabels?.map(lab => {
-    const resolvedLabelFont = resolveFont(lab.font, {
-      rootFontSize,
-      inheritedFont: { size: baseFontSize, family: fontFamily, weight: fontWeight, style: fontStyle },
-    });
-    const labFontSize = resolvedLabelFont.size * fontScale;
-    const labFamily = resolvedLabelFont.family;
-    const labWeight = resolvedLabelFont.weight;
-    const labStyle = resolvedLabelFont.style;
-    const labTextColor = lab.textColor ?? node.textColor;
-    const labTextFont: CanonicalFont = { size: labFontSize, family: labFamily, weight: labWeight, style: labStyle };
+const getLabelBoundaryDirection = (canon: CanonicalNodeLabelBoundaryPosition): Position => {
+  if (canon.boundary === 'top') return [0, -1];
+  if (canon.boundary === 'right') return [1, 0];
+  if (canon.boundary === 'bottom') return [0, 1];
 
-    const sourceLines = typeof lab.text === 'string' ? lab.text.split('\n') : lab.text;
-    const resolved = sourceLines.map(line =>
-      resolveTextLine(line, {
-        rootFontSize,
-        inheritedFont: labTextFont,
-        gatingOn: texGatingOn,
-        warn: inlineWarn,
-        warningMessage: 'Unbalanced `$` in node label; the trailing fragment is kept literal.',
-      }),
-    );
-    const laid =
-      resolved.length > 1 || resolved[0].mixed || resolved[0].style !== undefined
-        ? resolved.map(line =>
-            layoutInlineLine(line.segments, {
-              measureText: measureLabelText,
-              lowerTex: texLowering?.lowerTex,
-              font: labTextFont,
-              warn: inlineWarn,
-            }),
-          )
-        : undefined;
-    const height = laid?.reduce(
-      (total, line) =>
-        total +
-        (laid.length > 1
-          ? Math.max(labFontSize * DEFAULT_LINE_HEIGHT_FACTOR, line.ascent + line.descent)
-          : line.ascent + line.descent),
-      0,
-    );
-    const metrics =
-      laid && height !== undefined
-        ? { width: Math.max(...laid.map(line => line.width)), height, ascent: height / 2, descent: height / 2 }
-        : resolveTextMetrics(measureText(resolved[0].plainText, labTextFont));
+  return [-1, 0];
+};
 
-    return {
-      properties: { ...lab, text: resolved, font: labTextFont, textColor: labTextColor },
-      layout: {
-        laid,
-        measuredWidth: metrics.width,
-        measuredHeight: metrics.height,
-        ascent: metrics.ascent,
-        descent: metrics.descent,
-      },
-    };
+/** 从 attachment 直接解析 label 放置单位向量 */
+const calculateLabelPlacementVector = (position: CanonicalNodeLabel['position']): Position => {
+  if (position === 'center') return [1, 0];
+  if (isLabelBoundaryPosition(position)) return getLabelBoundaryDirection(position);
+  if (typeof position === 'number') {
+    const rad = position * DEG_TO_RAD;
+    return [Math.cos(rad), Math.sin(rad)];
+  }
+
+  return anchorUnitVectorByAnchor[position];
+};
+
+/** 从 label 附着方向取得稳定的切线正向 */
+const calculateLabelTangentVector = (position: CanonicalNodeLabel['position']): Position => {
+  if (isLabelBoundaryPosition(position)) {
+    if (position.boundary === 'top' || position.boundary === 'bottom') return [1, 0];
+    return [0, 1];
+  }
+
+  if (position === 'top' || position === 'bottom') return [1, 0];
+  if (position === 'left' || position === 'right') return [0, 1];
+  if (position === 'center') return [1, 0];
+
+  const radial = calculateLabelPlacementVector(position);
+
+  return [-radial[1], radial[0]];
+};
+
+/** label 在 node 边界上的附着点 */
+export const calculateNodeLabelBorderPoint = (
+  layout: CompiledBoundaryGeometry,
+  position: CanonicalNodeLabel['position'],
+): Position => {
+  if (position === 'center') return [layout.geometry.rect.x, layout.geometry.rect.y];
+
+  // ⚡旋转已为规范化零值时直接消费布局，省去附着点查询的三层对象复制
+  const aaLayout: CompiledBoundaryGeometry = Object.is(layout.geometry.rect.rotate, 0)
+    ? layout
+    : {
+        ...layout,
+        geometry: { ...layout.geometry, rect: { ...layout.geometry.rect, rotate: 0 } },
+      };
+  if (isLabelBoundaryPosition(position)) {
+    return calculateLabelBoundaryPoint(aaLayout, position);
+  }
+
+  if (typeof position === 'number') {
+    return evaluateAngleBoundaryPoint(aaLayout, position);
+  }
+
+  return evaluateNamedBoundaryAnchor(aaLayout, position);
+};
+
+/** 将标签相对节点中心的偏移换算为当前布局坐标中的中心点 */
+export const calculateNodeLabelCenter = (
+  layout: Pick<CompiledNodeLayout, 'geometry'>,
+  label: Pick<NodeLabelLayout, 'centerOffset'>,
+): Position => {
+  return [layout.geometry.rect.x + label.centerOffset[0], layout.geometry.rect.y + label.centerOffset[1]];
+};
+
+/**
+ * 算 label 文本自旋角度
+ * @description keepUpright 会翻转倒置文本
+ */
+const calculateLabelRotationDegrees = (
+  label: Pick<CanonicalNodeLabel, 'position' | 'rotate' | 'keepUpright'>,
+): number => {
+  return calculateLabelRotation(label.rotate, label.keepUpright, calculateLabelPlacementVector(label.position));
+};
+
+/** 把已测量 label 解析为相对最终 Node rect 的局部几何 */
+export const placeNodeLabel = (
+  layout: CompiledBoundaryGeometry,
+  label: MeasuredNodeLabel,
+  canon: CanonicalNodeLabel,
+): CompiledNodeLabelPlacement => {
+  if (canon.position === 'center') {
+    return { rotateDeg: calculateLabelRotationDegrees(canon), centerOffset: [0, 0] };
+  }
+
+  const placed = placeLabelBox({
+    label: {
+      rotate: canon.rotate,
+      keepUpright: canon.keepUpright,
+      placement: canon.placement,
+      align: canon.align,
+    },
+    point: calculateNodeLabelBorderPoint(layout, canon.position),
+    outward: calculateLabelPlacementVector(canon.position),
+    tangent: calculateLabelTangentVector(canon.position),
+    width: label.lineLayout.width,
+    height: label.lineLayout.height,
+    distance: canon.distance,
   });
+
+  return {
+    rotateDeg: placed.rotateDeg,
+    centerOffset: [placed.center[0] - layout.geometry.rect.x, placed.center[1] - layout.geometry.rect.y],
+  };
 };
 
-/** 把已测量 label 绑定到最终 Node rect */
-export const layoutNodeLabels = (
-  layout: CompiledNodeLayout,
-  labels: Array<{ layout: MeasuredNodeLabel; properties: NodeLabelResolution }> | undefined,
-): Array<NodeLabelLayout> | undefined =>
-  labels?.map(label => resolveNodeLabelGeometry(layout, label.layout, label.properties));
+/**
+ * 节点 label 的外接点
+ * @description 用于顶层 bbox / viewBox 计算
+ */
+export const calculateNodeLabelExtentPoints = (
+  layout: Pick<CompiledNodeLayout, 'geometry' | 'labels'>,
+): Array<Position> => {
+  if (!layout.labels || layout.labels.length === 0) return [];
+
+  const cx = layout.geometry.rect.x;
+  const cy = layout.geometry.rect.y;
+  const rad = layout.geometry.rect.rotate ?? 0;
+  const cos = Math.cos(rad);
+  const sin = Math.sin(rad);
+  const pts: Array<Position> = [];
+
+  for (const lab of layout.labels) {
+    // ⚡以标量中心和角点符号直接生成包络，省去中心坐标与四角偏移的临时数组
+    const lx = cx + lab.centerOffset[0];
+    const ly = cy + lab.centerOffset[1];
+    const halfW = lab.lineLayout.width / 2;
+    const halfH = lab.lineLayout.height / 2;
+    const labelRad = lab.rotateDeg * DEG_TO_RAD;
+    const labelCos = Math.cos(labelRad);
+    const labelSin = Math.sin(labelRad);
+    for (let corner = 0; corner < 4; corner++) {
+      const offsetX = (corner & 1) === 0 ? -halfW : halfW;
+      const offsetY = (corner & 2) === 0 ? -halfH : halfH;
+      const px = lx + offsetX * labelCos - offsetY * labelSin;
+      const py = ly + offsetX * labelSin + offsetY * labelCos;
+      if (rad === 0) {
+        pts.push([px, py]);
+      } else {
+        const dx = px - cx;
+        const dy = py - cy;
+        pts.push([cx + dx * cos - dy * sin, cy + dx * sin + dy * cos]);
+      }
+    }
+  }
+
+  return pts;
+};
+
+/** 测量单个节点附属标签，不读取主体几何或附着配置 */
+export const measureNodeLabel = (
+  canon: CanonicalNodeLabel,
+  context: Pick<NodeCompileContext, 'measureText' | 'texLowering'>,
+): MeasuredNodeLabel => {
+  const { measureText, texLowering } = context;
+  const inlineWarn = texLowering?.warn ?? ((): void => {});
+  const lineLayout = layoutTextBlock(
+    canon.text.lines,
+    {
+      lineHeight: canon.text.lineHeight,
+      maxTextWidth: canon.text.maxTextWidth,
+    },
+    { measureText, lowerTex: texLowering?.lowerTex, font: canon.text.font, warn: inlineWarn },
+  );
+  return {
+    lineLayout,
+  };
+};

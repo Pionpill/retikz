@@ -21,12 +21,8 @@ description: Use when adding or changing retikz unit, integration, or regression
 
 ## 单测写入规范
 
-- 新增 case 前先检索同一行为的现有测试，明确生产入口、可观察结果与新增的独立失效模式；同一失效模式优先修改已有 case，不按每次改动追加测试。小任务在对话或测试名称中说明即可，不强制新建矩阵。
-- 断言保护稳定行为，不锁定私有源码、调用形式、历史迁移、文档整句或 demo 的偶然配色与排版。源码生成器的产物属于公开输出；需要静态约束时由对应 lint / integrity 检查统一负责。
-- 具体颜色、坐标或特殊输入只有在区分契约、边界或真实回归时才保留；颜色透传、主题覆盖优先级、退化几何与失败事务不是展示细节。真实缺陷的唯一回归守卫不得因场景特殊而删除。
-- 同一规则选择代表性成功输入、关键边界和必要错误分支，不枚举视觉变体或无新增失效模式的组合。参数化用于表达等价类；性质测试用于稳定不变量，限定输入域与运行预算并保留可复现反例，不替代必要的具名回归。
-- 核心规则在拥有契约的最低层验证；adapter 只补接入、转换和差异，跨层只补必要闭环，不重复底层全套 case。通用测试须断言实际结果，不能仅检查不报错、存在或快照未变。
-- Snapshot 必须小而聚焦且逐项审阅；不以自动更新快照、测试数量或覆盖率增长证明有效性。完成时核对核心失效模式仍有守卫，未覆盖风险显式记录。
+- 新增、修改、迁移或收敛单测时必读 [单元测试编写与 Review 规范](references/unit-tests.md)，统一一级 owner 分类与文件命名、正式测试准入、低价值 case 判定、schema 例外及临时测试生命周期。
+- 测试可访问范围遵循 [导入导出的测试例外](../standard-structure/references/imports.md#测试访问例外)：私有实现经消费方验证，已有内部导出可深层导入，不因功能或性能测试扩大导出范围。
 
 ## 输入与产物
 
@@ -47,13 +43,14 @@ packages/viz/_notes/decisions/chart/v0/v0.1/001-example.md
 
 ## 选择最低测试层
 
-| 行为边界                   | 最低层                | 必要时追加     |
-| -------------------------- | --------------------- | -------------- |
-| schema、默认值、JSON、错误 | schema / parser       | compile        |
-| IR 到 Scene、引用、几何    | compile contract      | renderer       |
-| React / Vanilla 同能力     | adapter parity        | compile        |
-| Scene 到 SVG / Canvas      | renderer contract     | 小型 golden    |
-| docs 示例、控件、错误展示  | component integration | page / browser |
+| 行为边界                     | 最低层                | 必要时追加     |
+| ---------------------------- | --------------------- | -------------- |
+| 自定义校验、解析与持久化语义 | schema / parser       | compile        |
+| 继承优先级与默认应用时机     | resolve               | compile        |
+| IR 到 Scene、引用、几何      | compile contract      | renderer       |
+| React / Vanilla 同能力       | adapter parity        | compile        |
+| Scene 到 SVG / Canvas        | renderer contract     | 小型 golden    |
+| docs 示例、控件、错误展示    | component integration | page / browser |
 
 优先在最低能证明行为的层测试；只有用户路径、跨层组合或真实 DOM / 路由才提升到 docs 或页面测试。Snapshot 只在它能表达用户可见语义时作为证据。
 
@@ -61,7 +58,7 @@ packages/viz/_notes/decisions/chart/v0/v0.1/001-example.md
 
 1. 从 ADR / TODO 抽取用户可观察行为、默认值与失败语义；从 `PLAN.md` 读取跨包边界、非目标和测试策略，并核对 plan 没有重定义 ADR 契约。
 2. 为每条行为写一个不变量和至少一个能推翻它的反例；无法写反例时，回到设计澄清。
-3. 指定最低测试层、需要的 adapter / renderer / docs 上层证据，以及现有测试能否复用。
+3. 指定最低测试层、需要的 adapter / renderer / docs 上层证据、既有测试复用与新增 case 的正式 / 临时去向；不因矩阵存在就为声明或每行机械追加永久测试。
 4. 实现前将矩阵交给 `develop-implement`；实现后为每行填写正式测试证据、验证命令或页面路径，以及已覆盖 / 接受风险状态。
 5. 收尾时核对每行仍有证据；缺失、被弱化或只能靠私有实现断言的行不得关闭。
 
@@ -71,9 +68,10 @@ packages/viz/_notes/decisions/chart/v0/v0.1/001-example.md
 - 文件、测试位置、fixture、命令或证据映射不清：更新 `PLAN.md` / `TEST_CONTRACT.md`；物质性改变计划后重新执行 Plan Gate。
 - 不得为了让测试可写而把具体 case、内部 helper 或测试路径反向塞进 ADR。
 
-## 跨包验证缓存
+## 验证缓存
 
 - 修改 workspace 依赖包源码后，在消费包运行 Vitest 验证时显式加 `--fsModuleCache=false`，确保结果来自当前依赖源码，例如 `pnpm --filter @retikz/render exec vitest run --fsModuleCache=false <test-file>`；不以可能复用旧模块的缓存结果作为跨包验收证据，不为单次验证修改全仓缓存配置。
+- 源码目录重排、文件移动或删除后，受影响的 Vitest 功能测试与性能基准显式加 `--fsModuleCache=false`，避免模块缓存继续解析旧路径；不为单次验证修改全仓缓存配置。
 
 ## 常见错误
 

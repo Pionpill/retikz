@@ -1,10 +1,11 @@
-import { FlexLayoutItem, GridLayoutItem, OverlayLayoutItem } from '@retikz/layout-react';
 import {
-  InspectFlexLayout,
-  InspectGridLayout,
-  InspectOverlayLayout,
-  LayoutInspectLayout,
-} from '@retikz/layout-react/inspect';
+  FlexLayoutItem,
+  GridLayoutItem,
+  OverlayLayoutItem,
+  FlexLayout,
+  GridLayout,
+  OverlayLayout,
+} from '@retikz/layout-react';
 import { Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
@@ -12,7 +13,7 @@ import type { PreviewSourceConfig } from '@/modules/docs/preview';
 
 /** Demonstrates recursive composition because every layout container is an ordinary IRChild */
 const NestedContent: FC = () => (
-  <InspectFlexLayout
+  <FlexLayout
     size={{ x: { kind: 'fixed', value: 430 }, y: { kind: 'fixed', value: 190 } }}
     direction="column"
     padding={12}
@@ -22,7 +23,7 @@ const NestedContent: FC = () => (
       <Node text="Layout containers compose recursively" style={{ fill: '#e0f2fe', stroke: '#0284c7' }} />
     </FlexLayoutItem>
     <FlexLayoutItem itemKey="body" grow={1} min={90}>
-      <InspectGridLayout
+      <GridLayout
         columns={[
           { kind: 'fraction', factor: 1 },
           { kind: 'fraction', factor: 1 },
@@ -33,7 +34,7 @@ const NestedContent: FC = () => (
           <Node text="Grid cell" style={{ fill: '#dcfce7', stroke: '#16a34a' }} />
         </GridLayoutItem>
         <GridLayoutItem itemKey="right">
-          <InspectOverlayLayout size={{ y: { kind: 'fixed', value: 86 } }}>
+          <OverlayLayout size={{ y: { kind: 'fixed', value: 86 } }}>
             <OverlayLayoutItem itemKey="base">
               <Node
                 text="Overlay"
@@ -54,18 +55,18 @@ const NestedContent: FC = () => (
                 layout={{ minimumSize: 26 }}
               />
             </OverlayLayoutItem>
-          </InspectOverlayLayout>
+          </OverlayLayout>
         </GridLayoutItem>
-      </InspectGridLayout>
+      </GridLayout>
     </FlexLayoutItem>
-  </InspectFlexLayout>
+  </FlexLayout>
 );
 
 /** Demonstrates recursive composition because every layout container is an ordinary IRChild */
 const Demo: FC = () => (
-  <LayoutInspectLayout>
+  <Layout>
     <NestedContent />
-  </LayoutInspectLayout>
+  </Layout>
 );
 
 /** canonical IR keeps layout inputs and excludes runtime Inspector selection */

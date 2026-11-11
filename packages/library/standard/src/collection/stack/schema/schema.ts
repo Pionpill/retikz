@@ -1,5 +1,6 @@
 import { CompositeBaseSchema, NodeSchema, ScopePropsSchema } from '@retikz/core';
 import { JsonValueSchema, NonNegativeNumberSchema } from '@retikz/foundation';
+import type { ZodUnion } from 'zod';
 import { array, boolean, enum as zodEnum, literal, never, strictObject, string, union } from 'zod';
 
 import { SurfaceSchema } from '../../../presentation/surface/schema';
@@ -42,27 +43,34 @@ const StackBaseSchema = CompositeBaseSchema.extend({
   defaultCell: CellDefaultSchema.optional(),
 });
 
-/** 有序单元、JSON 数据与骨架互斥的静态栈 Source */
-export const StackSchema = union([
-  StackBaseSchema.extend({
-    items: array(union([string(), CellSchema])).describe('Cells ordered from bottom to top.'),
-    data: never().optional(),
-    skeleton: never().optional(),
-    dataExpand: never().optional(),
-  }),
-  StackBaseSchema.extend({
-    data: array(JsonValueSchema).readonly().describe('JSON values ordered from bottom to top.'),
-    items: never().optional(),
-    skeleton: never().optional(),
-    dataExpand: DataExpandSchema,
-  }),
-  StackBaseSchema.extend({
-    skeleton: StackSkeletonSchema,
-    items: never().optional(),
-    data: never().optional(),
-    dataExpand: never().optional(),
-  }),
-])
+/** 显式单元入口 */
+const StackItemsSchema = StackBaseSchema.extend({
+  items: array(union([string(), CellSchema])).describe('Cells ordered from bottom to top.'),
+  data: never().optional(),
+  skeleton: never().optional(),
+  dataExpand: never().optional(),
+});
+
+/** JSON 数据入口 */
+const StackDataSchema = StackBaseSchema.extend({
+  data: array(JsonValueSchema).readonly().describe('JSON values ordered from bottom to top.'),
+  items: never().optional(),
+  skeleton: never().optional(),
+  dataExpand: DataExpandSchema,
+});
+
+/** 骨架入口 */
+const StackSkeletonInputSchema = StackBaseSchema.extend({
+  skeleton: StackSkeletonSchema,
+  items: never().optional(),
+  data: never().optional(),
+  dataExpand: never().optional(),
+});
+
+/** 有序单元、JSON 数据与骨架互斥的静态输入 */
+export const StackSchema: ZodUnion<
+  readonly [typeof StackItemsSchema, typeof StackDataSchema, typeof StackSkeletonInputSchema]
+> = union([StackItemsSchema, StackDataSchema, StackSkeletonInputSchema])
   .superRefine((node, context) => {
     const ids = new Set<string>();
     node.items?.forEach((cell, index) => {

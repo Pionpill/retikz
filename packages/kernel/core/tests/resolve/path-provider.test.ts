@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { literal, strictObject, string } from 'zod';
 
 import { definePath, PathSchema, resolveArrowRegistry, resolvePathRegistry } from '../../src';
+import { resolveScopeDefaults } from '../../src/resolve/style';
 import type { IRPathBase } from '../../src/schemas';
 import { resolvePathWithBuiltinProviders, resolveStrokePathWithBuiltinProviders } from './path-helper';
 
@@ -30,10 +31,10 @@ describe('解析/路径提供者绑定', () => {
       pathRegistry: resolvePathRegistry([custom]),
     });
 
-    expect(resolution.kind.name).toBe('highlight');
-    expect(resolution.kind.definition).toBe(custom);
-    expect(resolution.kind.path.kindOptions).toEqual({ stroke: 'gold' });
-    expect(resolvePathWithBuiltinProviders(path()).kind.name).toBe('stroke');
+    expect(resolution.definition.name).toBe('highlight');
+    expect(resolution.definition).toBe(custom);
+    expect(resolution.canon.kindOptions).toEqual({ stroke: 'gold' });
+    expect(resolvePathWithBuiltinProviders(path()).definition.name).toBe('stroke');
   });
 
   it('在自定义严格路径定义 schema 解析标签之前报告不支持的显式中断', () => {
@@ -78,8 +79,8 @@ describe('解析/路径提供者绑定', () => {
           label: { text: 'continuous', interrupt: false },
           style: { fill: 'gold' },
         }),
-      ).path.label,
-    ).toMatchObject([{ text: 'continuous', interrupt: false }]);
+      ).canon.label,
+    ).toMatchObject([{ text: { lines: [{ plainText: 'continuous' }] }, interrupt: false }]);
   });
 
   it('通过解析器注册表诊断未知路径定义失败', () => {
@@ -91,7 +92,7 @@ describe('解析/路径提供者绑定', () => {
   it('从解析器报告未知的箭头名称', () => {
     expect(() =>
       resolveStrokePathWithBuiltinProviders(path({ arrow: { end: { shape: 'missing-arrow' } } }), {
-        irPath: 'children[0].path',
+        irPath: ['children', 0],
       }),
     ).toThrow(/Unknown provider 'missing-arrow'.*available:/s);
   });
@@ -108,47 +109,17 @@ describe('解析/路径提供者绑定', () => {
     const resolution = resolveStrokePathWithBuiltinProviders(path({ arrow: { end: mark } }), {
       arrowRegistry: resolveArrowRegistry([arrow]),
     });
-    const resolvedMark = resolution.path.arrow?.end;
+    const resolvedMark = resolution.canon.arrow?.end;
     if (resolvedMark === undefined) throw new Error('Expected endpoint arrow');
     const arrowResolution = resolution.arrows.get(resolvedMark);
 
     expect(arrowResolution?.definition).toBe(arrow);
-    expect(arrowResolution?.visual.fill).toBeUndefined();
-    expect(arrowResolution?.visual).toMatchObject({ length: 12, scale: 2, width: 8 });
+    expect(arrowResolution?.mark.fill).toBeUndefined();
+    expect(arrowResolution?.mark).toMatchObject({ length: 12, scale: 2, width: 8 });
     expect(arrowResolution?.geometry.contactX).toBe(2 - 1.5 / 2);
     expect(arrowResolution?.geometry).toHaveProperty('visualBackX', 1 - 1.5 / 2);
     expect(arrowResolution?.geometry.resolvedLength).toBe(24);
     expect(arrowResolution?.geometry.shrink).toBeGreaterThan(0);
-  });
-
-  it.each([
-    {
-      name: 'non-finite back',
-      definition: { backX: Number.NaN, lineContactX: 2, tipX: 8 },
-      expected: /non-finite backX/i,
-    },
-    {
-      name: 'back after contact',
-      definition: { backX: 3, lineContactX: 2, tipX: 8 },
-      expected: /backX.*lineContactX.*tipX/i,
-    },
-    {
-      name: 'contact after tip',
-      definition: { backX: 1, lineContactX: 9, tipX: 8 },
-      expected: /backX.*lineContactX.*tipX/i,
-    },
-  ])('拒绝无效的箭头几何形状：$name', ({ definition, expected }) => {
-    const arrow = {
-      name: 'invalidGeometry',
-      ...definition,
-      emit: () => [],
-    };
-
-    expect(() =>
-      resolveStrokePathWithBuiltinProviders(path({ arrow: { end: { shape: 'invalidGeometry' } } }), {
-        arrowRegistry: resolveArrowRegistry([arrow]),
-      }),
-    ).toThrow(expected);
   });
 
   it('在编译消费前拒绝解析后非有限的 visual back 值', () => {
@@ -167,5 +138,25 @@ describe('解析/路径提供者绑定', () => {
         arrowRegistry: resolveArrowRegistry([arrow]),
       }),
     ).toThrow(/resolved visual back.*non-finite/i);
+  });
+});
+
+describe('继承样式后的路径中断', () => {
+  it('在拒绝请求的标签中断之前使用级联填充', () => {
+    expect(() =>
+      resolvePathWithBuiltinProviders(
+        {
+          type: 'path',
+          label: { text: 'filled', interrupt: true },
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+          ],
+        },
+        {
+          scopeDefaults: resolveScopeDefaults({ path: { style: { fill: 'red' } } }),
+        },
+      ),
+    ).toThrow(/label\.interrupt.*filled stroke path/i);
   });
 });

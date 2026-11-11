@@ -10,7 +10,7 @@ import { refineBlockSize } from './refine';
 
 const BlockTextObjectSchema = strictObject({
   text: NodeSchema.shape.text.unwrap().describe('Required Core Node text content for this Block text item.'),
-  align: NodeSchema.shape.layout.unwrap().shape.align.describe('Text alignment within the text block.'),
+  align: NodeSchema.shape.layout.unwrap().shape.textAlign.describe('Text alignment within the text block.'),
   lineHeight: NodeSchema.shape.layout.unwrap().shape.lineHeight.describe('Text line height.'),
   maxTextWidth: NodeSchema.shape.layout.unwrap().shape.maxTextWidth.describe('Maximum text width before wrapping.'),
   textColor: NodeSchema.shape.style.unwrap().shape.textColor.describe('Local text color override.'),

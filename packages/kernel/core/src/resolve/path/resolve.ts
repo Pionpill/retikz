@@ -1,39 +1,26 @@
-import { pointAtArcAngle } from '@retikz/math';
+import type { PropertyPath } from '@retikz/foundation';
+import { formatPropertyPath } from '@retikz/foundation';
 
-import type { Transform } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import type {
-  IRLine,
-  IRMarkStyle,
-  IRMathSegment,
-  IRPaintValue,
-  IRPathBase,
-  IRPathLabel,
-  IRPosition,
-  IRStep,
-  IRTarget,
-  IRTextSegment,
-} from '../../schemas';
+import type { IRMarkStyle, IRPaintValue, IRPathBase, IRPathLabel, IRStep } from '../../schemas';
 import { BendAngleSchema, BuiltinPath, SmoothTensionSchema } from '../../schemas';
-import { isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../shared';
 import { resolvePaint } from '../resource';
-import { resolveContextualColor, resolveDropShadow, mergePathStyle, resolveGraphicOpacity } from '../style';
-import type { InlineSegmentColorSource, LabelTextColorSource, ColorResolvedTextLine } from '../text';
-import { resolvePathDefinition } from './provider';
+import { mergePathStyle, resolveContextualColor, resolveDropShadow, resolveGraphicOpacity } from '../style';
+import { resolveTextBlock, resolveTextLineColors } from '../text';
+import type { LabelTextColorSource } from '../text';
+import { resolvePathDefinition, resolveStrokePathProviders } from './provider';
 import type {
   CanonicalPath,
   CanonicalPathLabel,
   CanonicalPathLabelPlacement,
-  CanonicalStep,
+  CanonicalPathStep,
+  MarkColorSource,
+  PathColorSource,
+  PathLabelColorSource,
   PathLabelGeometryOptions,
   PathResolution,
   PathResolveContext,
-  PathTargetResolver,
-  MarkColorSource,
-  PathLabelColorSource,
-  PathColorSource,
   StepColorSource,
-  TargetResolution,
 } from './types';
 
 const LABEL_POSITION: Record<string, number> = {
@@ -55,44 +42,48 @@ const hasNoEffectivePathFill = (path: PathColorSource): boolean =>
   path.style?.fill === undefined || path.style.fill === 'none';
 
 /** 检查标签断线配置：显式设置仅限内置 Stroke 路径，开启时要求路径无填充 */
-const assertPathLabelInterruption = (label: PathLabelColorSource, path: PathColorSource, labelPath: string): void => {
+const assertPathLabelInterruption = (
+  label: PathLabelColorSource,
+  path: PathColorSource,
+  labelPath: PropertyPath,
+): void => {
   if (label.interrupt === undefined) return;
   if (!isBuiltinStrokePath(path)) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Resolve,
-      `Path label interruption at ${labelPath}.interrupt is only supported by an unfilled built-in Stroke path.`,
+      `Path label interruption at ${formatPropertyPath(labelPath)}.interrupt is only supported by an unfilled built-in Stroke path.`,
     );
   }
 
   if (label.interrupt && !hasNoEffectivePathFill(path)) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Resolve,
-      `Path label interruption at ${labelPath}.interrupt cannot be used on a filled Stroke path.`,
+      `Path label interruption at ${formatPropertyPath(labelPath)}.interrupt cannot be used on a filled Stroke path.`,
     );
   }
 };
 
 /** 检查路径和步骤标签是否满足断线条件 */
-const assertPathLabelInterruptionPolicy = (path: PathColorSource, irPath: string): void => {
+const assertPathLabelInterruptionPolicy = (path: PathColorSource, irPath: PropertyPath): void => {
   if (path.label !== undefined) {
     if (Array.isArray(path.label)) {
       for (const [index, label] of path.label.entries()) {
-        assertPathLabelInterruption(label, path, `${irPath}.label[${index}]`);
+        assertPathLabelInterruption(label, path, [...irPath, 'label', index]);
       }
     } else {
-      assertPathLabelInterruption(path.label, path, `${irPath}.label`);
+      assertPathLabelInterruption(path.label, path, [...irPath, 'label']);
     }
   }
 
   for (const [index, step] of (path.children ?? []).entries()) {
     if ('label' in step && step.label !== undefined) {
-      assertPathLabelInterruption(step.label, path, `${irPath}.children[${index}].label`);
+      assertPathLabelInterruption(step.label, path, [...irPath, 'children', index, 'label']);
     }
   }
 };
 
 /** 检查端点箭头重叠配置是否用于内置 Stroke 路径 */
-const assertPathEndpointOverlapHost = (path: PathColorSource, irPath: string): void => {
+const assertPathEndpointOverlapHost = (path: PathColorSource, irPath: PropertyPath): void => {
   if (isBuiltinStrokePath(path)) return;
 
   for (const [index, placement] of Object.entries(path.arrow ?? {})) {
@@ -100,20 +91,16 @@ const assertPathEndpointOverlapHost = (path: PathColorSource, irPath: string): v
 
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Resolve,
-      `Path endpoint arrow overlap at ${irPath}.arrow.${index}.endpointOverlap is only supported by a built-in Stroke path.`,
+      `Path endpoint arrow overlap at ${formatPropertyPath(irPath)}.arrow.${index}.endpointOverlap is only supported by a built-in Stroke path.`,
     );
   }
 };
 
-/**
- * 将标签位置简写换算为比例，并补齐方向、距离和断线配置
- * @description 默认位置为 0.5，距离和断口每侧留白均为 4；未指定 side 时，随线倾斜的标签居中，其余位于上方
- * @param canAutomaticallyInterrupt 宿主是否允许自动断线；为 true 且标签居中时，缺省的 interrupt 取 true，显式值始终优先
- */
-export const resolvePathLabelPlacement = (
-  label: PathLabelGeometryOptions,
+/** 一次复制补齐标签几何字段，并保留调用方携带的文本与外观类型 */
+const canonicalizeLabelPlacement = <TLabel extends PathLabelGeometryOptions>(
+  label: TLabel,
   canAutomaticallyInterrupt: boolean,
-): CanonicalPathLabelPlacement => {
+): Omit<TLabel, 'position' | 'side' | 'distance' | 'interrupt' | 'gap'> & CanonicalPathLabelPlacement => {
   const side = label.side ?? (label.sloped === true ? 'center' : 'top');
   return {
     ...label,
@@ -130,17 +117,45 @@ export const resolvePathLabelPlacement = (
   };
 };
 
+/**
+ * 将标签位置简写换算为比例，并补齐方向、距离和断线配置
+ * @description 默认位置为 0.5，距离和断口每侧留白均为 4；未指定 side 时，随线倾斜的标签居中，其余位于上方
+ * @param canAutomaticallyInterrupt 宿主是否允许自动断线；为 true 且标签居中时，缺省的 interrupt 取 true，显式值始终优先
+ */
+export const resolvePathLabelPlacement = (
+  label: PathLabelGeometryOptions,
+  canAutomaticallyInterrupt: boolean,
+): CanonicalPathLabelPlacement => canonicalizeLabelPlacement(label, canAutomaticallyInterrupt);
+
 /** 为已解析颜色的标签补齐放置与断线默认值 */
-const canonicalizeLabel = (label: PathLabelColorSource, canAutomaticallyInterrupt: boolean): CanonicalPathLabel => ({
-  ...label,
-  ...resolvePathLabelPlacement(label, canAutomaticallyInterrupt),
-});
+export const resolvePathLabelContent = (
+  label: PathLabelColorSource,
+  canAutomaticallyInterrupt: boolean,
+  context: Pick<PathResolveContext, 'rootFontSize' | 'gatingOn' | 'warn'>,
+): CanonicalPathLabel => {
+  const { text, font, textColor, textAlign, lineHeight, maxTextWidth, ...host } = label;
+  return {
+    ...canonicalizeLabelPlacement(host, canAutomaticallyInterrupt),
+    text: resolveTextBlock(
+      { text, font, textColor, textAlign, lineHeight, maxTextWidth },
+      {
+        ...context,
+        inheritedFont: { size: context.rootFontSize },
+      },
+    ),
+  };
+};
 
 /** 为路径步骤及其标签补齐静态默认值，保留目标引用供后续解析 */
-const canonicalizeStep = (step: StepColorSource, canAutomaticallyInterrupt: boolean): CanonicalStep => {
+const canonicalizeStep = (
+  step: StepColorSource,
+  canAutomaticallyInterrupt: boolean,
+  context: PathResolveContext,
+): CanonicalPathStep => {
   if (step.kind === 'move' || step.kind === 'cycle' || step.kind === 'rectangle') return step;
 
-  const label = step.label === undefined ? undefined : canonicalizeLabel(step.label, canAutomaticallyInterrupt);
+  const label =
+    step.label === undefined ? undefined : resolvePathLabelContent(step.label, canAutomaticallyInterrupt, context);
   if (step.kind === 'fold') {
     switch (step.via) {
       case '-|-':
@@ -173,26 +188,41 @@ const canonicalizeStep = (step: StepColorSource, canAutomaticallyInterrupt: bool
 const canonicalizeSteps = (
   steps: ReadonlyArray<StepColorSource> | undefined,
   canAutomaticallyInterrupt: boolean,
-): Array<CanonicalStep> | undefined => steps?.map(step => canonicalizeStep(step, canAutomaticallyInterrupt));
+  context: PathResolveContext,
+): Array<CanonicalPathStep> | undefined =>
+  steps?.map(step => canonicalizeStep(step, canAutomaticallyInterrupt, context));
 
 /** 合入路径样式并展开步骤、标签与阴影默认值，填充和描边资源随后解析 */
 const canonicalizePath = (
   path: PathColorSource,
   canAutomaticallyInterrupt: boolean,
+  context: PathResolveContext,
 ): Omit<CanonicalPath, 'fill' | 'stroke' | 'strokeWidth'> &
   Pick<NonNullable<PathColorSource['style']>, 'fill' | 'stroke' | 'strokeWidth'> => {
   const { style, ...source } = path;
+  const { children, label: pathLabel } = source;
   const { opacity, ...visual } = style ?? {};
   return {
     ...source,
     ...visual,
+    kind: source.kind ?? BuiltinPath.Stroke,
+    fillRule: visual.fillRule ?? 'nonzero',
+    dashPattern: visual.dashPattern ?? [],
+    dashOffset: visual.dashOffset ?? 0,
+    lineCap: visual.lineCap ?? 'butt',
+    lineJoin: visual.lineJoin ?? 'miter',
+    blendMode: visual.blendMode ?? 'normal',
+    strokeEnabled: visual.stroke !== undefined || visual.strokeWidth !== undefined,
+    opacity: 1,
+    fillOpacity: 1,
+    strokeOpacity: 1,
     ...resolveGraphicOpacity(opacity),
-    children: canonicalizeSteps(path.children, canAutomaticallyInterrupt),
+    children: canonicalizeSteps(children, canAutomaticallyInterrupt, context),
     label:
-      path.label === undefined
+      pathLabel === undefined
         ? undefined
-        : (Array.isArray(path.label) ? path.label : [path.label]).map(label =>
-            canonicalizeLabel(label, canAutomaticallyInterrupt),
+        : (Array.isArray(pathLabel) ? pathLabel : [pathLabel]).map(label =>
+            resolvePathLabelContent(label, canAutomaticallyInterrupt, context),
           ),
     shadow: resolveDropShadow(style?.shadow),
   };
@@ -203,80 +233,27 @@ const resolvePathPaint = (
   value: IRPaintValue | undefined,
   masterColor: string | undefined,
   context: PathResolveContext,
-  fieldPath: string,
+  fieldPath: PropertyPath,
 ): Exclude<IRPaintValue, number> | undefined =>
   typeof value === 'number' ? resolveContextualColor(value, { masterColor, mode: context.mode, fieldPath }) : value;
-
-/** 解析路径标签中单个文字或公式片段的数值颜色 */
-const resolveLabelSegmentColor = (
-  segment: IRTextSegment | IRMathSegment,
-  masterColor: string | undefined,
-  context: Pick<PathResolveContext, 'mode'>,
-  fieldPath: string,
-): InlineSegmentColorSource => {
-  const { fill, ...source } = segment;
-  return {
-    ...source,
-    ...(fill === undefined
-      ? {}
-      : {
-          fill: resolveContextualColor(fill, {
-            masterColor,
-            mode: context.mode,
-            fieldPath: `${fieldPath}.fill`,
-          }),
-        }),
-  };
-};
-
-/** 解析路径标签的行级与片段数值颜色 */
-const resolvePathLabelTextLine = (
-  text: IRLine,
-  masterColor: string | undefined,
-  context: Pick<PathResolveContext, 'mode'>,
-  fieldPath: string,
-): ColorResolvedTextLine => {
-  if (typeof text === 'string') return text;
-  if ('segments' in text) {
-    return {
-      ...text,
-      fill:
-        text.fill === undefined
-          ? undefined
-          : resolveContextualColor(text.fill, { masterColor, mode: context.mode, fieldPath: `${fieldPath}.fill` }),
-      segments: text.segments.map((segment, index) =>
-        resolveLabelSegmentColor(segment, masterColor, context, `${fieldPath}.segments[${index}]`),
-      ),
-    };
-  }
-
-  const { fill, ...style } = text;
-
-  return {
-    ...style,
-    ...(fill === undefined
-      ? {}
-      : { fill: resolveContextualColor(fill, { masterColor, mode: context.mode, fieldPath: `${fieldPath}.fill` }) }),
-  };
-};
 
 /** 逐行解析路径标签的数值颜色 */
 const resolvePathLabelText = (
   text: IRPathLabel['text'],
   masterColor: string | undefined,
-  context: Pick<PathResolveContext, 'mode'>,
-  fieldPath: string,
+  mode: PathResolveContext['mode'],
+  fieldPath: PropertyPath,
 ): LabelTextColorSource =>
   Array.isArray(text)
-    ? text.map((line, index) => resolvePathLabelTextLine(line, masterColor, context, `${fieldPath}[${index}]`))
+    ? text.map((line, index) => resolveTextLineColors(line, masterColor, mode, [...fieldPath, index]))
     : text;
 
 /** 确定路径标签的文字主色，并据此解析行级与片段颜色 */
 export const resolvePathLabelColors = (
   label: IRPathLabel,
   masterColor: string | undefined,
-  context: Pick<PathResolveContext, 'mode'>,
-  fieldPath: string,
+  mode: PathResolveContext['mode'],
+  fieldPath: PropertyPath,
 ): PathLabelColorSource => {
   const { textColor, text, ...source } = label;
   const resolvedTextColor =
@@ -284,15 +261,15 @@ export const resolvePathLabelColors = (
       ? masterColor
       : resolveContextualColor(textColor, {
           masterColor,
-          mode: context.mode,
-          fieldPath: `${fieldPath}.textColor`,
+          mode,
+          fieldPath: [...fieldPath, 'textColor'],
         });
   const textMaster = resolvedTextColor ?? masterColor;
 
   return {
     ...source,
     ...(resolvedTextColor === undefined ? {} : { textColor: resolvedTextColor }),
-    text: resolvePathLabelText(text, textMaster, context, `${fieldPath}.text`),
+    text: resolvePathLabelText(text, textMaster, mode, [...fieldPath, 'text']),
   };
 };
 
@@ -301,7 +278,7 @@ const resolveStepLabelColors = (
   step: IRStep,
   masterColor: string | undefined,
   context: PathResolveContext,
-  fieldPath: string,
+  fieldPath: PropertyPath,
 ): StepColorSource => {
   if (!('label' in step)) return step as StepColorSource;
 
@@ -310,7 +287,7 @@ const resolveStepLabelColors = (
 
   return {
     ...source,
-    label: resolvePathLabelColors(label, masterColor, context, `${fieldPath}.label`),
+    label: resolvePathLabelColors(label, masterColor, context.mode, [...fieldPath, 'label']),
   };
 };
 
@@ -319,7 +296,7 @@ const resolveMarkColors = (
   mark: IRMarkStyle,
   masterColor: string | undefined,
   context: PathResolveContext,
-  fieldPath: string,
+  fieldPath: PropertyPath,
 ): MarkColorSource => {
   const { color, fill, stroke, ...source } = mark;
   const resolvedColor =
@@ -328,7 +305,7 @@ const resolveMarkColors = (
       : resolveContextualColor(color, {
           masterColor,
           mode: context.mode,
-          fieldPath: `${fieldPath}.color`,
+          fieldPath: [...fieldPath, 'color'],
         });
 
   return {
@@ -342,7 +319,7 @@ const resolveMarkColors = (
               : resolveContextualColor(stroke, {
                   masterColor: resolvedColor,
                   mode: context.mode,
-                  fieldPath: `${fieldPath}.stroke`,
+                  fieldPath: [...fieldPath, 'stroke'],
                 }),
         }),
     ...(resolvedColor === undefined ? {} : { color: resolvedColor }),
@@ -355,7 +332,7 @@ const resolveMarkColors = (
               : resolveContextualColor(fill, {
                   masterColor: resolvedColor,
                   mode: context.mode,
-                  fieldPath: `${fieldPath}.fill`,
+                  fieldPath: [...fieldPath, 'fill'],
                 }),
         }),
   };
@@ -365,20 +342,20 @@ const resolveMarkColors = (
 const resolvePathContextualColors = (
   path: IRPathBase,
   context: PathResolveContext,
-  irPath: string,
+  irPath: PropertyPath,
   labelMasterColor: string | undefined,
 ): PathColorSource => {
   const { style, children, label, marks, arrow, ...source } = path;
   const { fill, stroke, ...visual } = style ?? {};
-  const masterColor = path.style?.color;
+  const masterColor = style?.color;
   const resolvedHostLabel =
     label === undefined
       ? undefined
       : Array.isArray(label)
         ? label.map((item, index) =>
-            resolvePathLabelColors(item, labelMasterColor, context, `${irPath}.label[${index}]`),
+            resolvePathLabelColors(item, labelMasterColor, context.mode, [...irPath, 'label', index]),
           )
-        : resolvePathLabelColors(label, labelMasterColor, context, `${irPath}.label`);
+        : resolvePathLabelColors(label, labelMasterColor, context.mode, [...irPath, 'label']);
 
   return {
     ...source,
@@ -390,7 +367,7 @@ const resolvePathContextualColors = (
               ? {}
               : {
                   start: {
-                    ...resolveMarkColors(arrow.start, masterColor, context, `${irPath}.arrow.start`),
+                    ...resolveMarkColors(arrow.start, masterColor, context, [...irPath, 'arrow', 'start']),
                     endpointOverlap: arrow.start.endpointOverlap,
                   },
                 }),
@@ -398,7 +375,7 @@ const resolvePathContextualColors = (
               ? {}
               : {
                   end: {
-                    ...resolveMarkColors(arrow.end, masterColor, context, `${irPath}.arrow.end`),
+                    ...resolveMarkColors(arrow.end, masterColor, context, [...irPath, 'arrow', 'end']),
                     endpointOverlap: arrow.end.endpointOverlap,
                   },
                 }),
@@ -406,16 +383,18 @@ const resolvePathContextualColors = (
         }),
     style: {
       ...visual,
-      ...(fill === undefined ? {} : { fill: resolvePathPaint(fill, masterColor, context, `${irPath}.style.fill`) }),
+      ...(fill === undefined
+        ? {}
+        : { fill: resolvePathPaint(fill, masterColor, context, [...irPath, 'style', 'fill']) }),
       ...(stroke === undefined && masterColor === undefined
         ? {}
-        : { stroke: resolvePathPaint(stroke ?? masterColor, masterColor, context, `${irPath}.style.stroke`) }),
+        : { stroke: resolvePathPaint(stroke ?? masterColor, masterColor, context, [...irPath, 'style', 'stroke']) }),
     },
     ...(children === undefined
       ? {}
       : {
           children: children.map((step, index) =>
-            resolveStepLabelColors(step, labelMasterColor, context, `${irPath}.children[${index}]`),
+            resolveStepLabelColors(step, labelMasterColor, context, [...irPath, 'children', index]),
           ),
         }),
     ...(resolvedHostLabel === undefined ? {} : { label: resolvedHostLabel }),
@@ -423,7 +402,7 @@ const resolvePathContextualColors = (
       ? {}
       : {
           marks: marks.map((item, index) => ({
-            ...resolveMarkColors(item, masterColor, context, `${irPath}.marks[${index}]`),
+            ...resolveMarkColors(item, masterColor, context, [...irPath, 'marks', index]),
             pos: item.pos,
             rotate: item.rotate,
           })),
@@ -431,163 +410,46 @@ const resolvePathContextualColors = (
   };
 };
 
-/** 通过调用方提供的解析器读取目标的局部坐标，无法解析时返回 null */
-const pointOfTarget = (
-  target: IRTarget,
-  resolver: PathTargetResolver | undefined,
-  scopeChain: ReadonlyArray<Transform>,
-): IRPosition | null => resolver?.pointOfTarget(target, scopeChain) ?? null;
-
-/** 优先获取目标的完整绑定；未提供绑定时读取坐标，参考点缺省时沿用局部点 */
-const bindTarget = (
-  target: IRTarget,
-  context: PathResolveContext,
-  scopeChain: ReadonlyArray<Transform>,
-): TargetResolution => {
-  const bound = context.targetResolver?.bindTarget?.(target, scopeChain);
-  if (bound !== null && bound !== undefined) return bound;
-
-  const point = pointOfTarget(target, context.targetResolver, scopeChain);
-  const referencePoint = context.targetResolver?.refPointOfTarget?.(target, scopeChain) ?? point;
-
-  return { target, point, referencePoint };
-};
-
 /**
- * 解析路径步骤中可确定的目标坐标，并按字段路径登记绑定结果
- * @description 普通相对目标不更新后续偏移的基点，累积相对目标会更新；经过轴向线或平滑步骤后，后续相对目标保留给编译游标处理
- */
-const resolveSteps = (
-  steps: ReadonlyArray<CanonicalStep>,
-  context: PathResolveContext,
-  targets: Map<string, TargetResolution>,
-  prefix: string,
-): Array<CanonicalStep> => {
-  const resolver = context.targetResolver;
-  const scopeChain = context.scopeChain ?? [];
-  let previous: IRPosition | null = null;
-  let deferRelative = false;
-  const out: Array<CanonicalStep> = [];
-
-  const resolve = (target: IRTarget, key: string): IRTarget => {
-    let value = target;
-    if (isRelativeTargetLike(target) && !deferRelative) {
-      const base = previous ?? [0, 0];
-      value = [base[0] + target.relative[0], base[1] + target.relative[1]];
-    } else if (isRelativeAccumulateTargetLike(target) && !deferRelative) {
-      const base = previous ?? [0, 0];
-      value = [base[0] + target.relativeAccumulate[0], base[1] + target.relativeAccumulate[1]];
-    }
-
-    targets.set(key, bindTarget(value, context, scopeChain));
-
-    return value;
-  };
-
-  for (let index = 0; index < steps.length; index += 1) {
-    const step = steps[index];
-    if (step.kind === 'cycle' || step.kind === 'circlePath' || step.kind === 'ellipsePath') {
-      out.push(step);
-      continue;
-    }
-
-    if (step.kind === 'axis-line') {
-      deferRelative = true;
-      const value = resolve(step.to, `${prefix}.children[${index}].to`) as typeof step.to;
-      out.push({ ...step, to: value });
-      continue;
-    }
-
-    if (step.kind === 'arc') {
-      const center =
-        step.center === undefined ? undefined : resolve(step.center, `${prefix}.children[${index}].center`);
-      out.push(center === undefined ? step : { ...step, center });
-      if (previous && typeof step.radius === 'number' && step.center === undefined) {
-        previous = pointAtArcAngle(previous, step.radius, step.endAngle);
-      }
-      continue;
-    }
-
-    if (step.kind === 'smooth') {
-      let smoothPrevious: IRPosition | null = previous;
-      const points = step.points.map((target, pointIndex) => {
-        const key = `${prefix}.children[${index}].points[${pointIndex}]`;
-        let value: IRTarget = target;
-        if (isRelativeTargetLike(target) && !deferRelative) {
-          const base = smoothPrevious ?? [0, 0];
-          value = [base[0] + target.relative[0], base[1] + target.relative[1]];
-        } else if (isRelativeAccumulateTargetLike(target) && !deferRelative) {
-          const base = smoothPrevious ?? [0, 0];
-          value = [base[0] + target.relativeAccumulate[0], base[1] + target.relativeAccumulate[1]];
-        }
-
-        const binding = bindTarget(value, context, scopeChain);
-        targets.set(key, binding);
-        const point = binding.point;
-        if (point && !isRelativeTargetLike(target)) smoothPrevious = point;
-        if (point && isRelativeAccumulateTargetLike(target)) smoothPrevious = point;
-
-        return value;
-      });
-      previous = smoothPrevious;
-      deferRelative = true;
-      out.push({ ...step, points });
-      continue;
-    }
-
-    if (step.kind === 'rectangle') {
-      const from = resolve(step.from, `${prefix}.children[${index}].from`);
-      const to = resolve(step.to, `${prefix}.children[${index}].to`);
-      out.push({ ...step, from, to });
-      continue;
-    }
-
-    const value = resolve(step.to, `${prefix}.children[${index}].to`);
-    out.push({ ...step, to: value });
-    if (!isRelativeTargetLike(step.to)) {
-      const point = pointOfTarget(value, resolver, scopeChain);
-      if (point) previous = point;
-    }
-  }
-
-  return out;
-};
-
-/**
- * 解析路径默认配置、定义、颜色和目标引用，得到待编译的路径
- * @description 补齐静态默认值并绑定可确定的目标；箭头与沿线标记定义在实际编译 Stroke 时另行解析
+ * 解析路径默认配置、定义与颜色，得到待绑定目标的路径
+ * @description 补齐静态默认值与绘制配置，内置 Stroke 同时绑定箭头与标记；自定义路径仅在请求描边能力时绑定
  */
 export const resolvePath = (path: IRPathBase, context: PathResolveContext): PathResolution => {
   const styled = context.scopeDefaults === undefined ? path : mergePathStyle(path, context.scopeDefaults);
-  const irPath = context.irPath ?? 'path';
+  const irPath = context.irPath ?? [];
   const labelDefault = context.scopeDefaults?.path?.label ?? {};
   const labelMasterColor = labelDefault.color ?? styled.style?.color;
   const colorsResolved = resolvePathContextualColors(styled, context, irPath, labelMasterColor);
   const canAutomaticallyInterrupt = isBuiltinStrokePath(colorsResolved) && hasNoEffectivePathFill(colorsResolved);
   assertPathEndpointOverlapHost(colorsResolved, irPath);
   assertPathLabelInterruptionPolicy(colorsResolved, irPath);
-  const kind = resolvePathDefinition(colorsResolved, context, irPath);
-  const providerColorsResolved = resolvePathContextualColors(kind.path, context, irPath, labelMasterColor);
-  const canonicalPath = canonicalizePath(providerColorsResolved, canAutomaticallyInterrupt);
-  const targets = new Map<string, TargetResolution>();
-  const canonicalSteps =
-    canonicalPath.children === undefined ? undefined : resolveSteps(canonicalPath.children, context, targets, irPath);
-  const resolvedPath: ReturnType<typeof canonicalizePath> = {
-    ...canonicalPath,
-    ...(canonicalSteps === undefined ? {} : { children: canonicalSteps }),
-  };
+  const pathDefinition = resolvePathDefinition(colorsResolved, context, irPath);
+  const providerColorsResolved = resolvePathContextualColors(pathDefinition.path, context, irPath, labelMasterColor);
+  const canonicalPath = canonicalizePath(providerColorsResolved, canAutomaticallyInterrupt, context);
   const paintContext = {
     patternRegistry: context.patternRegistry,
     round: context.round,
     irPath,
   };
-  const fill = resolvePaint(resolvedPath.fill, paintContext);
-  const stroke = resolvePaint(resolvedPath.stroke, paintContext);
+  const fill = resolvePaint(canonicalPath.fill, paintContext);
+  const stroke = resolvePaint(canonicalPath.stroke, paintContext);
 
-  return {
+  const result: PathResolution = {
     irPath,
-    path: { ...resolvedPath, fill, stroke, strokeWidth: resolvedPath.strokeWidth ?? 1 },
-    targets,
-    kind,
+    canon: {
+      ...canonicalPath,
+      kind: pathDefinition.kind,
+      fill,
+      stroke,
+      strokeWidth: canonicalPath.strokeWidth ?? 1,
+    },
+    definition: pathDefinition.definition,
+  };
+  if (pathDefinition.kind !== BuiltinPath.Stroke) return result;
+  const resolvedStroke = resolveStrokePathProviders(result, context);
+  return {
+    ...result,
+    canon: resolvedStroke.canon,
+    stroke: { arrows: resolvedStroke.arrows, marks: resolvedStroke.marks },
   };
 };

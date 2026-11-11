@@ -1,4 +1,5 @@
-import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
+import { resolveCoreProviderDependencies } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { createProcessingController, normalizeScene, scene } from '@retikz/vanilla';
 import { expect, it } from 'vitest';
 

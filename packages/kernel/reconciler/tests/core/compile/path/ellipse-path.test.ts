@@ -1,0 +1,62 @@
+import { describe, expect, it } from 'vitest';
+
+import type { IRScene } from '../../../../../core/src/schemas';
+import { compileToScene } from '../../../../src/compile';
+import { ellipseArc, move } from '../../../helpers/path-command-factory';
+import { findPathPrim } from './helpers';
+
+describe("编译路径：'ellipsePath'", () => {
+  it('ellipsePath rx=15 / ry=10 → 两段半弧', () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'ellipsePath', radius: { x: 15, y: 10 } },
+          ],
+        },
+      ],
+    };
+
+    expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([
+      move([15, 0]),
+      ellipseArc([0, 0], 15, 10, 0, 360),
+    ]);
+  });
+
+  it('ellipse rx == ry 时与 circle 等价输出', () => {
+    const fromEllipse: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'ellipsePath', radius: { x: 7, y: 7 } },
+          ],
+        },
+      ],
+    };
+    const fromCircle: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'circlePath', radius: 7 },
+          ],
+        },
+      ],
+    };
+
+    expect(findPathPrim(compileToScene(fromEllipse).scene.primitives).commands).toEqual(
+      findPathPrim(compileToScene(fromCircle).scene.primitives).commands,
+    );
+  });
+});

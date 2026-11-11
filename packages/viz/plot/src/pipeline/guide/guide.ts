@@ -72,7 +72,7 @@ const textStyleProps = (style: GuideTextStyle | undefined): GuideTextStyle => ({
   ...(style?.font !== undefined ? { font: style.font } : {}),
   ...(style?.textColor !== undefined ? { textColor: style.textColor } : {}),
   ...(style?.opacity !== undefined ? { opacity: style.opacity } : {}),
-  ...(style?.align !== undefined ? { align: style.align } : {}),
+  ...(style?.textAlign !== undefined ? { textAlign: style.textAlign } : {}),
   ...(style?.lineHeight !== undefined ? { lineHeight: style.lineHeight } : {}),
   ...(style?.maxTextWidth !== undefined ? { maxTextWidth: style.maxTextWidth } : {}),
   ...(style?.rotate !== undefined ? { rotate: style.rotate } : {}),
@@ -316,7 +316,7 @@ const axisTitleAnchorAlignTokenOf = (
 const axisTitleAlignOf = (
   title: NonNullable<ReturnType<typeof axisTitleOf>>,
   tangent: readonly [number, number],
-): GuideTextStyle['align'] | undefined => {
+): GuideTextStyle['textAlign'] | undefined => {
   const align = axisTitleAnchorAlignTokenOf(title.anchor);
   if (align === undefined) return undefined;
   if (align === AxisTitleAnchor.Center) return 'middle';
@@ -333,7 +333,7 @@ const axisTitleTextStyleOf = (
   tangent: readonly [number, number],
 ): GuideTextStyle => {
   const anchorAlign = axisTitleAlignOf(title, tangent);
-  return { ...textStyleProps(title), ...(anchorAlign !== undefined ? { align: anchorAlign } : {}) };
+  return { ...textStyleProps(title), ...(anchorAlign !== undefined ? { textAlign: anchorAlign } : {}) };
 };
 
 type TickShapePlacement = {
@@ -906,8 +906,8 @@ const lowerCartesianGuide = (
 ): LoweredGuide => {
   const measure = ctx.textMeasurer;
 
-  const { plotArea, fontSize } = ctx;
-  const labelGap = ctx.labelGap ?? DEFAULT_AXIS_LABEL_GAP;
+  const { plotArea, fontSize, labelGap: configuredLabelGap, axisOrientation, xTicks, yTicks, projectX, projectY } = ctx;
+  const labelGap = configuredLabelGap ?? DEFAULT_AXIS_LABEL_GAP;
   const left = plotArea.x;
   const right = plotArea.x + plotArea.width;
   const top = plotArea.y;
@@ -918,22 +918,22 @@ const lowerCartesianGuide = (
   const showLabels = tickLabelStyle !== false;
 
   // cartesian1D 给 axisOrientation 覆盖（单维角色恒 x，但轴可竖排）；cartesian2D 按 dimension 判
-  const isX = ctx.axisOrientation !== undefined ? ctx.axisOrientation === 'horizontal' : guide.dimension === 'x';
-  const ticks = isX ? ctx.xTicks : ctx.yTicks;
-  const project = isX ? ctx.projectX : ctx.projectY;
+  const isX = axisOrientation !== undefined ? axisOrientation === 'horizontal' : guide.dimension === 'x';
+  const ticks = isX ? xTicks : yTicks;
+  const project = isX ? projectX : projectY;
   const side = cartesianAxisSideOf(guide, isX);
   const offset = axisPlacementOffsetOf(guide);
   const originPlacement = guide.placement?.kind === AxisPlacementKind.Origin ? guide.placement : undefined;
   const originValue = originPlacement?.origin ?? 0;
   const axisY =
     originPlacement !== undefined && isX
-      ? ctx.projectY.coordinate(originValue) + (side === AxisCardinalSide.Top ? -offset : offset)
+      ? projectY.coordinate(originValue) + (side === AxisCardinalSide.Top ? -offset : offset)
       : side === AxisCardinalSide.Top
         ? top - offset
         : bottom + offset;
   const axisX =
     originPlacement !== undefined && !isX
-      ? ctx.projectX.coordinate(originValue) + (side === AxisCardinalSide.Left ? -offset : offset)
+      ? projectX.coordinate(originValue) + (side === AxisCardinalSide.Left ? -offset : offset)
       : side === AxisCardinalSide.Right
         ? right + offset
         : left - offset;
@@ -1230,9 +1230,9 @@ const lowerAngularAxis = (
 ): LoweredGuide => {
   const measure = ctx.textMeasurer;
 
-  const { fontSize } = ctx;
-  const labelGap = ctx.labelGap ?? DEFAULT_AXIS_LABEL_GAP;
-  const ticks = ctx.angularTicks ?? { values: [], labels: [] };
+  const { fontSize, labelGap: configuredLabelGap, angularTicks } = ctx;
+  const labelGap = configuredLabelGap ?? DEFAULT_AXIS_LABEL_GAP;
+  const ticks = angularTicks ?? { values: [], labels: [] };
   const scale = frame.primary;
   const outer = frame.outerRadius;
   const tickLength = axisTickLengthOf(guide);
@@ -1285,7 +1285,10 @@ const lowerAngularAxis = (
             type: 'node',
             position: labelLayout.position,
             text,
-            ...guideTextSourceProps({ ...tickLabelStyle, align: tickLabelStyle.align ?? labelLayout.align }, fontSize),
+            ...guideTextSourceProps(
+              { ...tickLabelStyle, textAlign: tickLabelStyle.textAlign ?? labelLayout.align },
+              fontSize,
+            ),
           };
         }),
         { fontSize, textMeasurer: measure, mode: 'generic', axis: 'both' },
@@ -1415,9 +1418,9 @@ const lowerRadialAxis = (
 ): LoweredGuide => {
   const measure = ctx.textMeasurer;
 
-  const { fontSize } = ctx;
-  const labelGap = ctx.labelGap ?? DEFAULT_AXIS_LABEL_GAP;
-  const ticks = ctx.radialTicks ?? { values: [], labels: [] };
+  const { fontSize, labelGap: configuredLabelGap, radialTicks } = ctx;
+  const labelGap = configuredLabelGap ?? DEFAULT_AXIS_LABEL_GAP;
+  const ticks = radialTicks ?? { values: [], labels: [] };
   const scale = frame.secondary;
   const baseAngle = frame.startAngle;
   /** 与 mark / 多边形网格共用映射后投影；无效 scale 输出沿用显性非有限坐标 */
@@ -1933,7 +1936,19 @@ const legendTextNode = (node: IRNode): IRNode => ({
  *   下沉目标统一是 core Node（标签 / swatch / ramp 矩形 / size 圆点），纯 JSON
  */
 export const lowerLegend = (options: LegendLoweringOptions, measure: PlotLabelMeasure): IRScope => {
-  const { fontSize, band, orient } = options;
+  const {
+    fontSize,
+    band,
+    orient,
+    style,
+    title: optionsTitle,
+    form,
+    ramp: legendRamp,
+    entries,
+    id,
+    zIndex,
+    channel,
+  } = options;
   const {
     swatchSize,
     swatchGap,
@@ -1943,28 +1958,28 @@ export const lowerLegend = (options: LegendLoweringOptions, measure: PlotLabelMe
     rampThickness,
     title: titleStyle,
     label: labelStyle,
-  } = options.style;
+  } = style;
   const children: Array<IRNode> = [];
 
   // 标题占一行（顶部），条目区从标题下方起
   let cursorY = band.y;
-  if (options.title !== undefined) {
+  if (optionsTitle !== undefined) {
     const titleSize = measure(
-      { type: 'node', text: options.title, ...guideTextSourceProps(titleStyle, fontSize) },
+      { type: 'node', text: optionsTitle, ...guideTextSourceProps(titleStyle, fontSize) },
       fontSize,
     );
     children.push(
       legendTextNode({
         type: 'node',
         position: [band.x + titleSize.width / 2, cursorY + titleSize.height / 2],
-        text: options.title,
+        text: optionsTitle,
         ...guideTextSourceProps(titleStyle, fontSize),
       }),
     );
     cursorY += titleSize.height + titleGap;
   }
 
-  if (options.form === 'ramp' && options.ramp) {
+  if (form === 'ramp' && legendRamp) {
     // 连续色带：一个矩形 Node 填 linearGradient（vertical → 自上而下、horizontal → 自左而右）
     const vertical = orient === 'vertical';
     const rampX = band.x;
@@ -1975,11 +1990,11 @@ export const lowerLegend = (options: LegendLoweringOptions, measure: PlotLabelMe
 
     // 垂直色带：offset 0 在顶（小值上 / 大值下，与轴一致需翻转）；这里 0 在带起点，stops 直接用
     const angle = vertical ? 90 : 0;
-    ramp.style = { ...ramp.style, fill: { kind: 'linearGradient', stops: options.ramp.stops, angle } };
+    ramp.style = { ...ramp.style, fill: { kind: 'linearGradient', stops: legendRamp.stops, angle } };
     children.push(ramp);
 
     // 沿带刻度标签
-    for (const tick of options.ramp.ticks) {
+    for (const tick of legendRamp.ticks) {
       const size = measure({ type: 'node', text: tick.label, ...guideTextSourceProps(labelStyle, fontSize) }, fontSize);
       const position: [number, number] = vertical
         ? [rampX + rampThickness + swatchGap + size.width / 2, rampY + tick.offset * rampLength]
@@ -1994,7 +2009,7 @@ export const lowerLegend = (options: LegendLoweringOptions, measure: PlotLabelMe
     let cursorX = band.x;
     let rowY = cursorY;
 
-    for (const entry of options.entries) {
+    for (const entry of entries) {
       const size = measure(
         { type: 'node', text: entry.label, ...guideTextSourceProps(labelStyle, fontSize) },
         fontSize,
@@ -2071,9 +2086,9 @@ export const lowerLegend = (options: LegendLoweringOptions, measure: PlotLabelMe
 
   return {
     type: 'scope',
-    ...(options.id !== undefined ? { id: options.id } : {}),
-    zIndex: options.zIndex ?? PlotLayerZIndex.Legend,
-    meta: { source: 'plot', layer: 'legend', channel: options.channel },
+    ...(id !== undefined ? { id } : {}),
+    zIndex: zIndex ?? PlotLayerZIndex.Legend,
+    meta: { source: 'plot', layer: 'legend', channel },
     children,
     defaults: {
       node: {

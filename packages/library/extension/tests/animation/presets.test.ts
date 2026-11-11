@@ -1,5 +1,6 @@
 import type { AnimationPresetOptions } from '@retikz/core';
-import { AnimationTrackSchema, compileToScene, loop, stagger } from '@retikz/core';
+import { AnimationTrackSchema, loop, stagger } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { grow, growUp, pulse, spin, flash, blink, wiggle } from '../../src';

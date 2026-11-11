@@ -2,7 +2,6 @@ export type { AnimationMode } from './animation-context';
 export { AnimationModeContext, useAnimationMode } from './animation-context';
 export type { AnimationModeProviderProps } from './AnimationModeProvider';
 export { AnimationModeProvider } from './AnimationModeProvider';
-export { collectHydrationHandlers } from './collect-hydration-handlers';
 export * from './Layout';
 export type { RendererMode } from './renderer-context';
 export { RendererModeContext, useRendererMode } from './renderer-context';

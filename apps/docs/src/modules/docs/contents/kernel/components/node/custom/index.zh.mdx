@@ -28,8 +28,6 @@ description: 定义、注册并使用独立于节点外观的连接面
 
 用 `defineBoundary` 声明稳定的 registry key、参数 schema 和射线交点。无参数时仍提供 `z.strictObject({})`，让所有 payload 都经过同一校验路径。
 
-`computeOutline` 是可选方法，主要供 Inspect 调试时显示连接面轮廓，一般可以省略。省略它不影响普通连线的连接点或锚点计算，只是 Inspect 无法显示精确连接面轮廓；实现它也不会让连接面在正常绘制中显示。
-
 ```ts
 import { defineBoundary } from '@retikz/core';
 import { z } from 'zod';

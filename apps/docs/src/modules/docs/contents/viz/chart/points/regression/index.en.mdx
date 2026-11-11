@@ -98,7 +98,7 @@ import { RegressionChartSchema, createRegressionChartProviderContribution } from
 import { createPlotProviderContribution } from '@retikz/plot';
 import { pathClipProvider } from '@retikz/extension';
 import { regressionMinimalData } from './regression-minimal.data';
-import { compileToScene } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { renderToSvgString } from '@retikz/vanilla';
 
 const chart = RegressionChartSchema.parse({

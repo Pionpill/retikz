@@ -7,6 +7,7 @@ import type { CanonicalMap } from './types';
 /** 解析 Map 的间距简写和键值角色，不改写稀疏 Source */
 export const resolveMap = (source: IRMap): CanonicalMap => {
   const { data, entries, skeleton, dataExpand, ...input } = source;
+  const { defaultCell, layout: sourceLayout } = input;
   const expansion = dataExpand ?? DataExpandSchema.parse(undefined);
   const cells =
     skeleton !== undefined
@@ -17,8 +18,8 @@ export const resolveMap = (source: IRMap): CanonicalMap => {
             key,
             value: createDataCell(value, expansion),
           }));
-  const { style, layout, key, value } = source.defaultCell ?? {};
-  const gap = source.layout?.gap ?? MapLayoutSchema.shape.gap.parse(undefined);
+  const { style, layout, key, value } = defaultCell ?? {};
+  const gap = sourceLayout?.gap ?? MapLayoutSchema.shape.gap.parse(undefined);
 
   return {
     ...input,
@@ -37,6 +38,6 @@ export const resolveMap = (source: IRMap): CanonicalMap => {
         roleLayout: value?.layout,
       }),
     })),
-    layout: { ...source.layout, gap: typeof gap === 'number' ? { row: gap, column: gap } : gap },
+    layout: { ...sourceLayout, gap: typeof gap === 'number' ? { row: gap, column: gap } : gap },
   };
 };

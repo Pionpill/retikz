@@ -1,4 +1,3 @@
-import { compileToScene } from '@retikz/core';
 import { defineTransformImplementation } from '@retikz/data';
 import type { AnyTransformDefinition, ExternalRow } from '@retikz/data';
 import {
@@ -14,6 +13,7 @@ import {
   resolveTransformRegistry,
 } from '@retikz/data';
 import { NonBlankStringSchema } from '@retikz/foundation';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { object, string } from 'zod';
 

@@ -292,32 +292,29 @@ const resolveGroupRecord = (source: IRFlowGroup, path: FlowSourcePath, state: Fl
     ...(source.overflow === undefined ? {} : { overflow: source.overflow }),
   };
 
-  const { rank: _rank, layout: _layout, routing: _routing, children: _children, ...group } = source;
-  void _rank;
-  void _layout;
-  void _routing;
-  void _children;
+  const { rank, layout: sourceLayout, routing, children, ...group } = source;
+  const { id } = group;
   const graph: IRGroup = {
     ...group,
     namespace: 'graph',
     type: GraphType.Group,
-    id: source.id,
+    id,
     ...surface,
     ...(caption === undefined ? {} : { caption }),
     children: [],
   };
 
-  const layout = mergeFlowLayoutIntent(undefined, source.layout);
-  const elements = source.children.map(childId => resolveElementRecord(childId, state));
+  const layout = mergeFlowLayoutIntent(undefined, sourceLayout);
+  const elements = children.map(childId => resolveElementRecord(childId, state));
 
   return {
     type: 'group',
-    id: source.id,
+    id,
     source,
     graph,
-    ...(source.rank === undefined ? {} : { rank: source.rank }),
+    ...(rank === undefined ? {} : { rank }),
     layout,
-    ...(source.routing === undefined ? {} : { routing: source.routing }),
+    ...(routing === undefined ? {} : { routing }),
     elements,
     path,
   };

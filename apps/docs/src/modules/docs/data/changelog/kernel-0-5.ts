@@ -373,10 +373,37 @@ export const kernelV05: Release = {
       pkg: '@retikz/core',
       version: 'v0.5',
       description: {
-        zh: '节点与分组更容易对齐，连线和标签获得更精细的控制；Core 专注静态编译，增量复用由 Reconciler 承担。',
-        en: 'Makes nodes and groups easier to align and adds finer path and label control. Core focuses on static compilation; Reconciler owns incremental reuse.',
+        zh: '节点与分组更容易对齐，连线和标签获得更精细的控制；Core 提供原子阶段，Reconciler 统一完整与增量编译。',
+        en: 'Makes nodes and groups easier to align and adds finer path and label control. Core supplies atomic stages; Reconciler unifies complete and incremental compilation.',
       },
       highlights: [
+        {
+          label: {
+            zh: '待发布：BREAKING 正文与标签共享文本能力',
+            en: 'Unreleased: BREAKING shared text capabilities for body text and labels',
+          },
+          content: {
+            zh: 'Node 正文、Node 标签与 Path 标签统一支持硬换行、混排折行、textAlign、lineHeight 和 maxTextWidth。Node layout.align 改为 layout.textAlign，标签附着 align 保留。过长单词按字素拆分，公式保持完整；行槽至少容纳实际度量。标签透明度与宿主、行和片段透明度相乘，可能改变已有标签外观与包络。Path Definition 的标签 text 改为 TextBlockContent；动态原始标签先调用 resolveHostLabel，再交给 emitHostLabels。',
+            en: 'Node body text, Node labels, and Path labels share hard breaks, mixed-content wrapping, textAlign, lineHeight, and maxTextWidth. Rename Node layout.align to layout.textAlign; attachment align remains. Oversized words split at grapheme boundaries while formulas stay intact, and line slots accommodate measured content. Label opacity multiplies host, line, and segment factors, which can change existing appearance and bounds. Path Definition label text is now TextBlockContent; resolve dynamic source labels with resolveHostLabel before passing them to emitHostLabels.',
+          },
+        },
+        {
+          label: {
+            zh: '待发布：BREAKING 编译入口迁至 Reconciler',
+            en: 'Unreleased: BREAKING compilation APIs move to Reconciler',
+          },
+          content: {
+            zh: 'compileToScene、compileSceneSnapshot、CompileOptions、CompileResult、ExecuteOptions 与 SceneCompilationSnapshot 改从 @retikz/reconciler 导入，Core 不保留转发出口。Core 保留原子阶段与共享产物；全量、增量首轮及 Composite 使用同一执行器。SceneReconciler 的 incremental 默认 true；false 不保留 Weave，支持 mount/replace，拒绝 update 与 updateStrategy。含 Composite 场景可批次更新作者基础元素，生成内容不可直接编辑。',
+            en: 'Import compileToScene, compileSceneSnapshot, CompileOptions, CompileResult, ExecuteOptions, SceneCompilationSnapshot, CompileProvenanceSnapshot, CompositeArtifact / CompositeArtifactOf, and compilation option groups from @retikz/reconciler; Core keeps no forwarding exports. Core supplies atomic stages and shared products. Complete compilation, incremental initialization, and Composites share one executor. SceneReconciler incremental defaults to true; false retains no Weave, supports mount/replace, and rejects update and updateStrategy. Composite scenes allow batch edits to authored basic elements, excluding generated content.',
+          },
+        },
+        {
+          label: { zh: '待发布：BREAKING 三层编译产物', en: 'Unreleased: BREAKING three-stage compilation products' },
+          content: {
+            zh: 'Node、Coordinate、Path、Scope 分别保存稀疏输入、Canonical 配置与纯数据 Compiled 结果；连接查询显式结合 canon 能力与最终几何。自定义 Path 回调的 context.path 改为确定化配置，标签位置已展开，外观改从 context.appearance 读取；委托新路径时向 emitStroke 显式传入 IR，不能将 canonical 配置当作原始输入回传。旧 NodeResolution、PathResolution 和虚拟 Node 坐标工具删除，原子阶段消费者需迁移到对应 Canonical/Compiled 类型。',
+            en: 'Node, Coordinate, Path, and Scope retain sparse input, Canonical configuration, and data-only Compiled results separately. Connection queries explicitly combine canon capabilities with final geometry. Custom Path callbacks receive canonical context.path with resolved label placement; read drawing styles from context.appearance. Pass explicit IR when delegating a new path to emitStroke instead of passing canonical configuration back as source input. NodeResolution, PathResolution, and synthetic Node coordinate helpers are removed; atomic-stage consumers must migrate to the corresponding Canonical/Compiled types.',
+          },
+        },
         {
           label: { zh: '待发布：BREAKING 冗余 API 清理', en: 'Unreleased: BREAKING unused API cleanup' },
           content: {
@@ -502,8 +529,8 @@ export const kernelV05: Release = {
         {
           label: { zh: '单元素编译与可复用状态', en: 'Element compilation and reusable state' },
           content: {
-            zh: 'Core 新增 compileNode / compileCoordinate / compilePath / compileScope 与对应 CompiledXxx 状态、显式 CompileEnvironment、引用读取和输出组装能力，供 Reconciler 持有与调度。Scope 保留准备与包络完成两个阶段；本次不实现 Weave 调度算法。',
-            en: 'Core adds compileNode / compileCoordinate / compilePath / compileScope, matching CompiledXxx states, explicit CompileEnvironment, reference reads and output assembly for Reconciler. Scope retains separate preparation and envelope completion phases; Weave scheduling is not implemented in this change.',
+            zh: 'Core 提供共享的 resolve、layout、emit 与 Path 宿主编译阶段，各阶段使用窄上下文。全量驱动与 Reconciler 自行组合并持有工作区，等待重试和提交归 Reconciler；Scope 保留前置准备与后置包络。',
+            en: 'Core provides shared resolution, layout, emission, and Path-host compilation stages with narrow contexts. Full and Reconciler drivers compose them and own workspace lifetime; Reconciler owns waiting, retries, and commits. Scope retains preparation and envelope completion phases.',
           },
         },
         {
@@ -526,8 +553,8 @@ export const kernelV05: Release = {
             en: 'Unreleased: BREAKING incremental APIs move to Reconciler',
           },
           content: {
-            zh: 'CoreSourceDefinition、CoreCompositeInputSourceDefinition、createCoreComputation、CoreChange、SceneRuntimeSnapshot、ScenePatch 及相关类型改从 @retikz/reconciler 导入，Core 不保留转发。Core 新增 prepareSceneCompilation 与 validateCompositeInputBindings，不再依赖 Runtime。增量输入捕获与装配错误改为 RetikzReconcilerError；更新 trace 常量改为 ReconcilerTracePhase / ReconcilerTraceUnit，ChangeSetMismatch 改由 CoreComputationDiagnosticCode 提供，原诊断码字符串与身份 owner 值保持不变。',
-            en: 'Import CoreSourceDefinition, CoreCompositeInputSourceDefinition, createCoreComputation, CoreChange, SceneRuntimeSnapshot, ScenePatch and related types from @retikz/reconciler; Core no longer forwards them. Core adds prepareSceneCompilation and validateCompositeInputBindings and drops its Runtime dependency. Incremental capture and assembly failures use RetikzReconcilerError. Update trace constants move to ReconcilerTracePhase / ReconcilerTraceUnit, and CoreComputationDiagnosticCode provides ChangeSetMismatch. Diagnostic strings and identity owner values remain unchanged.',
+            zh: 'CoreSourceDefinition、CoreCompositeInputSourceDefinition、createCoreComputation、CoreChange、SceneRuntimeSnapshot、ScenePatch 及相关类型改从 @retikz/reconciler 导入，Core 不保留转发。Core 新增 compileSceneSnapshot 与 validateCompositeInputBindings，不再依赖 Runtime。增量输入捕获与装配错误改为 RetikzReconcilerError；更新 trace 常量改为 ReconcilerLifecyclePhase / ReconcilerTraceUnit，ChangeSetMismatch 改由 CoreComputationDiagnosticCode 提供，原诊断码字符串与身份 owner 值保持不变。',
+            en: 'Import CoreSourceDefinition, CoreCompositeInputSourceDefinition, createCoreComputation, CoreChange, SceneRuntimeSnapshot, ScenePatch and related types from @retikz/reconciler; Core no longer forwards them. Core adds compileSceneSnapshot and validateCompositeInputBindings and drops its Runtime dependency. Incremental capture and assembly failures use RetikzReconcilerError. Update trace constants move to ReconcilerLifecyclePhase / ReconcilerTraceUnit, and CoreComputationDiagnosticCode provides ChangeSetMismatch. Diagnostic strings and identity owner values remain unchanged.',
           },
         },
         {
@@ -908,22 +935,30 @@ export const kernelV05: Release = {
       pkg: '@retikz/inspect',
       version: 'v0.5',
       description: {
-        zh: '通过可选检查工具查看几何边界与布局辅助信息；检查内容与主图隔离，不接入时不执行检查逻辑。',
-        en: 'Use optional inspection tools to view geometry boundaries and layout guides. Inspection stays separate from the main figure and does not run when unused.',
+        zh: '通过可选检查工具查看最终路径、分组坐标系与裁剪边缘；检查内容与主图隔离，不接入时不执行检查逻辑。',
+        en: 'Use optional inspection tools to view final paths, group coordinate systems, and clip boundaries. Inspection stays separate from the main figure and does not run when unused.',
       },
       highlights: [
         {
+          label: { zh: 'BREAKING：独立消费编译结果', en: 'BREAKING: independent compilation-result consumption' },
+          content: {
+            zh: 'Inspect 接收普通 CompileResult，只对生成的辅助 IR 独立编译。内置能力收敛为最终 Path、Group 与 Clip；React 使用 InspectionOverlay，Vanilla 使用独立呈现 helper。删除旧 authoring wrapper 与 observed compile driver，检查失败不回滚主图。',
+            en: 'Inspect consumes ordinary CompileResult values and independently compiles only generated auxiliary IR. Built-ins cover final Path, Group, and Clip. React uses InspectionOverlay and Vanilla uses independent presentation helpers. Old authoring wrappers and observed compilation drivers are removed; inspection failures never roll back the primary view.',
+          },
+        },
+
+        {
           label: { zh: '独立 Inspector 注册表', en: 'Independent Inspector registry' },
           content: {
-            zh: '`defineInspector()`、显式注册表、运行时 selection、选项合并、诊断与辅助平面全部位于可选包；五类内置 Inspector 与第三方定义使用同一条注册和编译路径。',
-            en: '`defineInspector()`, explicit registries, runtime selection, option merging, diagnostics, and inspection planes all live in the optional package. The five built-in Inspectors and third-party definitions share the same registration and compile path.',
+            zh: '`defineInspector()`、显式注册表、运行时 requests、选项解析、诊断与辅助平面全部位于可选包；三类内置 Inspector 与第三方定义使用同一条注册和编译路径。',
+            en: '`defineInspector()`, explicit registries, runtime requests, option parsing, diagnostics, and inspection planes all live in the optional package. The three built-in Inspectors and third-party definitions share the same registration and compile path.',
           },
         },
         {
           label: { zh: '按宿主选择入口', en: 'Host-specific optional entries' },
           content: {
-            zh: '根入口保持宿主无关；`/react` 与 `/vanilla` 接入只读图层和通用编译驱动，Render 适配由包内宿主使用，不公开 `/render` 子入口。未使用 Inspect 时，基础 Core、Render、React 与 Vanilla 不执行 Inspector 逻辑。',
-            en: 'The root entry remains host-independent. `/react` and `/vanilla` integrate readonly layers and generic compile drivers; internal host wiring uses Render adapters without a public `/render` subpath. Core, Render, React, and Vanilla run no Inspector logic when Inspect is unused.',
+            zh: '根入口保持宿主无关；`/react` 与 `/vanilla` 消费已完成结果并独立呈现只读图层，Render 适配由包内宿主使用，不公开 `/render` 子入口。未使用 Inspect 时，基础 Core、Render、React 与 Vanilla 不执行 Inspector 逻辑。',
+            en: 'The root entry remains host-independent. `/react` and `/vanilla` consume completed results and independently present readonly layers; internal host wiring uses Render adapters without a public `/render` subpath. Core, Render, React, and Vanilla run no Inspector logic when Inspect is unused.',
           },
         },
       ],

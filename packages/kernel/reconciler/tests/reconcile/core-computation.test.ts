@@ -1,10 +1,12 @@
-import type { CompileObserverDefinition, CompileWarning, IRScene } from '@retikz/core';
-import { BUILTIN_SHAPES, compileToScene, CompositeBaseSchema, defineComposite, defineShape } from '@retikz/core';
-import type { RuntimeScenePrimitive } from '@retikz/reconciler';
-import { ReconcilerSession, createFullSceneRuntimeSnapshot } from '@retikz/reconciler';
-import type { ReconcilerResult } from '@retikz/reconciler';
+import type { CompileWarning, IRScene } from '@retikz/core';
+import { CompositeBaseSchema, defineComposite, defineShape } from '@retikz/core';
+import type { ReconcilerResult, RuntimeScenePrimitive } from '@retikz/reconciler';
+import { createFullSceneRuntimeSnapshot, SceneReconciler } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject, string } from 'zod';
+
+import { BUILTIN_SHAPES } from '../../../core/src/providers/shape/shape';
+import { compileToScene } from '../../src/compile';
 
 const sceneWithText = (text: string): IRScene => ({
   version: 1,
@@ -17,13 +19,13 @@ const identityKey = (identity: { owner: string; path: ReadonlyArray<string> }): 
 
 const primitivePaths = (
   primitives: ReadonlyArray<RuntimeScenePrimitive>,
-  prefix: ReadonlyArray<number> = [],
-): Array<ReadonlyArray<number>> => {
-  const paths: Array<ReadonlyArray<number>> = [];
+  prefix: ReadonlyArray<string | number> = ['primitives'],
+): Array<ReadonlyArray<string | number>> => {
+  const paths: Array<ReadonlyArray<string | number>> = [];
   primitives.forEach((primitive, index) => {
     const path = [...prefix, index];
     paths.push(path);
-    if (primitive.type === 'group') paths.push(...primitivePaths(primitive.children, path));
+    if (primitive.type === 'group') paths.push(...primitivePaths(primitive.children, [...path, 'children']));
   });
 
   return paths;
@@ -51,7 +53,7 @@ describe('Core Runtime 计算初始完整运行', () => {
         },
       ],
     };
-    const session = new ReconcilerSession({ onWarn: () => {} }, { captureProvenance: true });
+    const session = new SceneReconciler({ onWarn: () => {} }, { captureProvenance: true });
 
     session.mount(ir);
     const snapshot = snapshotOf(session.read());
@@ -74,14 +76,14 @@ describe('Core Runtime 计算初始完整运行', () => {
       expect(node.identity.path.slice(0, node.semanticOwner.path.length)).toEqual(node.semanticOwner.path);
       expect(node.identity.path[node.semanticOwner.path.length]).toBe('emission');
 
-      const parentPath = node.primitivePath.slice(0, -1).join('.');
+      const parentPath = node.primitivePath.slice(0, -2).join('.');
       const parentNode = topologyByPath.get(parentPath);
       let expectedParent = snapshot.root;
-      if (node.primitivePath.length > 1 && parentNode === undefined) {
+      if (node.primitivePath.length > 2 && parentNode === undefined) {
         throw new Error(`missing topology parent at ${parentPath}`);
       }
 
-      if (node.primitivePath.length > 1 && parentNode !== undefined) expectedParent = parentNode.identity;
+      if (node.primitivePath.length > 2 && parentNode !== undefined) expectedParent = parentNode.identity;
 
       expect(identityKey(node.parent)).toBe(identityKey(expectedParent));
       expect(node.order).toBe(node.primitivePath.at(-1));
@@ -97,7 +99,7 @@ describe('Core Runtime 计算初始完整运行', () => {
     const expectedWarnings: Array<CompileWarning> = [];
     const expected = compileToScene(ir, { onWarn: warning => expectedWarnings.push(warning) });
     const observedWarnings: Array<CompileWarning> = [];
-    const session = new ReconcilerSession({ onWarn: warning => observedWarnings.push(warning) });
+    const session = new SceneReconciler({ onWarn: warning => observedWarnings.push(warning) });
 
     session.mount(ir);
 
@@ -117,118 +119,47 @@ describe('Core Runtime 计算初始完整运行', () => {
       ],
     };
     const observedWarnings: Array<CompileWarning> = [];
-    const session = new ReconcilerSession({ onWarn: warning => observedWarnings.push(warning) });
+    const session = new SceneReconciler({ onWarn: warning => observedWarnings.push(warning) });
 
     expect(() => session.mount(ir)).toThrow();
     expect(observedWarnings).toEqual([]);
   });
 });
 
-describe('Core Runtime 计算观测输出', () => {
-  const observedComposite = defineComposite({
+describe('Core Runtime 领域产物事务', () => {
+  const definition = defineComposite({
     namespace: 'test',
-    type: 'program-observed',
-    schema: CompositeBaseSchema.extend({
-      namespace: literal('test'),
-      type: literal('program-observed'),
-      label: string(),
-    }),
+    type: 'artifact',
+    schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('artifact'), label: string() }),
     artifactSchema: strictObject({ label: string() }),
-    compile: node => ({
-      artifact: { label: node.label },
-      children: [{ type: 'node', position: [0, 0], text: node.label }],
-    }),
+    compile: node => {
+      if (node.label === 'fail') throw new Error('domain compilation failed');
+      return { artifact: { label: node.label }, children: [{ type: 'node', text: node.label }] };
+    },
   });
-
-  const sourceWithLabel = (label: string): IRScene => ({
+  const source = (label: string): IRScene => ({
     version: 1,
     type: 'scene',
-    children: [{ namespace: 'test', type: 'program-observed', label }],
+    children: [{ namespace: 'test', type: 'artifact', label }],
   });
-
-  const observer: CompileObserverDefinition = {
-    key: 'program-observer',
-    createSession: () => {
-      const labels: Array<string> = [];
-      return {
-        select: site => site.owner.kind === 'composite',
-        observe: observation => {
-          const value = observation.value as { label: string };
-          labels.push(value.label);
-        },
-        complete: () => labels,
-      };
-    },
-  };
-
-  it('提交来自一个完整候选修订版的主要和观察者输出', () => {
-    const session = new ReconcilerSession(
-      { composites: [observedComposite], onWarn: () => {} },
-      { observers: [observer] },
-    );
-
-    session.mount(sourceWithLabel('A'));
+  it('Scene 和领域产物同次提交，失败保留上一 revision', () => {
+    const session = new SceneReconciler({ composites: [definition] });
+    session.mount(source('A'));
     const before = session.read();
-    session.replace(sourceWithLabel('B'));
+    session.replace(source('B'));
     const after = session.read();
-
-    expect(after.compilation.observerOutputs).toEqual([{ key: 'program-observer', value: ['B'] }]);
-    expect(after.compilation.result.scene).toEqual(
-      compileToScene(sourceWithLabel('B'), { composites: [observedComposite], onWarn: () => {} }).scene,
-    );
-    expect(after.revision).toBe(session.read().revision);
-
-    expect(after.compilation.result).not.toBe(before.compilation.result);
-  });
-
-  it('当观察者完成失败时回滚整个候选者', () => {
-    let shouldFail = false;
-    const failingObserver: CompileObserverDefinition = {
-      key: 'failing-program-observer',
-      createSession: () => ({
-        select: () => false,
-        observe: () => undefined,
-        complete: () => {
-          if (shouldFail) throw new Error('observer completion failed');
-          return null;
-        },
-      }),
-    };
-    const session = new ReconcilerSession(
-      { composites: [observedComposite], onWarn: () => {} },
-      { observers: [failingObserver] },
-    );
-
-    session.mount(sourceWithLabel('A'));
-    const before = session.read();
-    const baseRevision = session.read().revision;
-    shouldFail = true;
-
-    expect(() => session.replace(sourceWithLabel('B'))).toThrowError(
-      expect.objectContaining({
-        cause: expect.objectContaining({ message: 'observer completion failed' }),
-      }),
-    );
-    expect(session.read().revision).toBe(baseRevision);
-    expect(session.read()).toBe(before);
-  });
-
-  it('当观察者为空时准备一致的替换', () => {
-    const session = new ReconcilerSession({ onWarn: () => {} }, { observers: [] });
-
-    const initial = sceneWithText('A');
-    const next: IRScene = { ...initial, children: [{ ...initial.children[0], style: { fill: '#22c55e' } }] };
-    session.mount(initial);
-
-    session.replace(next);
-
-    expect(session.read().compilation.observerOutputs).toEqual([]);
+    expect(after.compilation.result).toEqual(compileToScene(source('B'), { composites: [definition] }));
+    expect(after.compilation.result.artifacts[0].value).toEqual({ label: 'B' });
+    expect(before.compilation.result.artifacts[0].value).toEqual({ label: 'A' });
+    expect(after.revision).not.toBe(before.revision);
+    expect(() => session.replace(source('fail'))).toThrow();
+    expect(session.read()).toBe(after);
   });
 });
 
 describe('Core Runtime 计算完整回退更新', () => {
   it('完整输入替换同时更新根配置与子元素', () => {
-    const session = new ReconcilerSession({ onWarn: () => {} }, { captureProvenance: true });
+    const session = new SceneReconciler({ onWarn: () => {} }, { captureProvenance: true });
 
     session.mount(sceneWithText('A'));
     const next: IRScene = {
@@ -252,7 +183,7 @@ describe('Core Runtime 计算完整回退更新', () => {
   });
 
   it('完整输入编译失败时不发布诊断或替换已提交结果', () => {
-    const session = new ReconcilerSession({ onWarn: () => {} }, { captureProvenance: true });
+    const session = new SceneReconciler({ onWarn: () => {} }, { captureProvenance: true });
 
     session.mount(sceneWithText('A'));
     const before = session.read();
@@ -281,7 +212,7 @@ describe('Core Runtime 计算替换样式更新', () => {
       ...initial,
       children: [{ type: 'node', id: 'a', position: [0, 0], style: { fill: 'blue', stroke: 'green', strokeWidth: 4 } }],
     };
-    const session = new ReconcilerSession({ onWarn: () => {} }, { captureProvenance: true });
+    const session = new SceneReconciler({ onWarn: () => {} }, { captureProvenance: true });
 
     session.mount(initial);
     session.replace(next);
@@ -308,7 +239,7 @@ describe('Core Runtime 计算替换样式更新', () => {
       ...initial,
       children: [{ ...initial.children[0], style: { fill: '#22c55e' } }, initial.children[1]],
     };
-    const session = new ReconcilerSession({ onWarn: () => {} }, { captureProvenance: true });
+    const session = new SceneReconciler({ onWarn: () => {} }, { captureProvenance: true });
 
     session.mount(initial);
 
@@ -354,7 +285,7 @@ describe('Core Runtime 计算替换样式更新', () => {
     };
     const next: IRScene = { ...initial, children: [{ ...initial.children[0], style: { fill: '#22c55e' } }] };
     const options = { shapes: [fillSensitiveShape], onWarn: () => {} } as const;
-    const session = new ReconcilerSession(options, { captureProvenance: true });
+    const session = new SceneReconciler(options, { captureProvenance: true });
 
     session.mount(initial);
 
@@ -365,7 +296,7 @@ describe('Core Runtime 计算替换样式更新', () => {
 });
 
 it('Scope 子内容更新、资源撤销和匿名组删除与全量编译等价', () => {
-  const session = new ReconcilerSession({});
+  const session = new SceneReconciler({});
 
   const initial: IRScene = { version: 1, type: 'scene', children: [] };
   session.mount(initial);
@@ -403,7 +334,7 @@ it('Scope 子内容更新、资源撤销和匿名组删除与全量编译等价'
 
 it('宿主提交失败保留旧编译结果，重试发布完整新树', () => {
   let failing = false;
-  const session = new ReconcilerSession(
+  const session = new SceneReconciler(
     { onWarn: () => {} },
     {
       target: {

@@ -1,18 +1,18 @@
 import type { PathCommand } from '@retikz/core';
 import { bendControlPoints, outInControlPoints, resolvePathLabelPlacement, samplePathRoute } from '@retikz/core';
 import type { BoundsRect, CurveSegment, Position } from '@retikz/math';
-import { applyAffine, boundsOf, boundsToRect, cornersOfBounds, rectToBounds, curve } from '@retikz/math';
+import { applyAffine, boundsOf, boundsToRect, cornersOfBounds, curve, rectToBounds } from '@retikz/math';
 
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
 import type {
   FlowBendRoute,
-  FlowSmoothRoute,
   FlowBezierRoute,
-  InputFlowLayoutElement,
-  InputFlowLayoutComputation,
   FlowLayoutOutput,
-  InputFlowLayoutRelation,
   FlowLayoutRoute,
+  FlowSmoothRoute,
+  InputFlowLayoutComputation,
+  InputFlowLayoutElement,
+  InputFlowLayoutRelation,
 } from '../../contract';
 import { doFlowBoundsOverlap, findFlowCurveObstacleIntervals, getFlowCurveBounds } from '../../shared/geometry';
 
@@ -139,10 +139,10 @@ export const flowRouteLabelBounds = (
 /** 每条关系独立的障碍盒，相关祖先外壳不作为实心障碍 */
 export const flowRelationObstacles = (
   input: InputFlowLayoutComputation,
-  output: Pick<FlowLayoutOutput, 'elements'>,
+  elementLayouts: FlowLayoutOutput['elements'],
   relation: InputFlowLayoutRelation,
 ): Array<Readonly<{ id: string; bounds: BoundsRect }>> => {
-  const bounds = new Map(output.elements.map(element => [element.id, element.bounds]));
+  const bounds = new Map(elementLayouts.map(element => [element.id, element.bounds]));
   const ancestors = new Set<string>();
 
   const visitAncestors = (elements: ReadonlyArray<InputFlowLayoutElement>, path: ReadonlyArray<string>): void => {

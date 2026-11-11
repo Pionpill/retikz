@@ -72,7 +72,8 @@
     "@retikz/math": "workspace:^",
     "d3-format": "catalog:",
     "d3-scale": "catalog:",
-    "zod": "catalog:"
+    "zod": "catalog:",
+    "@retikz/reconciler": "workspace:^"
   },
   "devDependencies": {
     "@retikz/standard": "workspace:^",

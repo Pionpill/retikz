@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-import { compileToScene } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { LegendArtifactSchema, legendDefinition, LegendSchema } from '@retikz/standard/presentation';
 import type { FC } from 'react';
 import { describe, expect, it } from 'vitest';
@@ -11,12 +11,12 @@ import { buildPreviewIR } from '@/modules/docs/components/component-preview/util
 import LegendBasicEnDemo from '@/modules/docs/contents/library/standard/presentation/legend/legend-basic.en.demo';
 import LegendBasicZhDemo from '@/modules/docs/contents/library/standard/presentation/legend/legend-basic.zh.demo';
 import {
-  legendPlaygroundControls,
   previewControlContract as legendPlaygroundContract,
+  legendPlaygroundControls,
 } from '@/modules/docs/contents/library/standard/presentation/legend/legend-playground.controls';
 import {
-  legendPlaygroundEnControls,
   previewControlContract as legendPlaygroundEnContract,
+  legendPlaygroundEnControls,
 } from '@/modules/docs/contents/library/standard/presentation/legend/legend-playground.en.controls';
 import { LegendPlaygroundPreview } from '@/modules/docs/contents/library/standard/presentation/legend/legend-playground.preview';
 import LegendRampEnDemo from '@/modules/docs/contents/library/standard/presentation/legend/legend-ramp.en.demo';
@@ -50,7 +50,7 @@ const legendHorizontalCenterDelta = (Preview: FC): number => {
   const preview = buildPreviewIR(Preview);
   const output = compileToScene(preview.ir, { composites: [legendDefinition], padding: 0 });
   const viewBox = output.scene.layout;
-  const envelope = output.artifacts.find(artifact => artifact.kind === 'composite');
+  const envelope = output.artifacts.at(0);
   if (envelope === undefined) throw new Error('Expected a Legend compile artifact');
 
   const artifact = LegendArtifactSchema.parse(envelope.value);
@@ -68,10 +68,14 @@ describe('Standard Legend 文档', () => {
 
     expect(headings(zh).map(heading => heading.replace(/^## /, ''))).toHaveLength(headings(en).length);
 
-    for (const source of [zh, en]) {
+    for (const language of ['zh', 'en'] as const) {
+      const source = readPage(language);
+      expect(source).toContain('@include library/standard/presentation/legend/generated');
+      const generated = readLegendFile(`_includes/generated.${language}.mdx`);
+      expect(source).toMatch(/^### LegendArtifactSchema$/m);
+      expect(generated).toMatch(/^#### <ApiSourceLink[^\n]+>LegendSchema<\/ApiSourceLink>$/m);
       for (const schema of ['LegendSchema', 'LegendArtifactSchema']) {
-        expect(source).toMatch(new RegExp(`^#{3,4} ${schema}$`, 'm'));
-        expect(source).toMatch(new RegExp(`<ZodSchema\\s+name="${schema}"\\s+expandNested`));
+        expect(source + generated).toContain(`<ZodSchema name="${schema}" expandNested />`);
       }
     }
   });
@@ -262,7 +266,7 @@ describe('Standard Legend 文档', () => {
       'LegendTick.children',
       'Legend.titleGap',
       'Node.style.font',
-      'Node.layout.align',
+      'Node.layout.textAlign',
       'Legend.contentAlign',
       'Legend.direction',
       'Legend.wrap',
@@ -283,7 +287,7 @@ describe('Standard Legend 文档', () => {
       title: {
         text: 'A–D',
         style: { font: { size: 16, weight: 'bold', style: 'normal' }, stroke: 'none', fill: 'none' },
-        layout: { align: 'start', padding: 0 },
+        layout: { textAlign: 'start', padding: 0 },
       },
       content: { kind: 'items' },
     });
@@ -303,7 +307,7 @@ describe('Standard Legend 文档', () => {
       }),
     ).toMatchObject({
       title: {
-        layout: { align: 'end' },
+        layout: { textAlign: 'end' },
         style: { font: { size: 22, weight: 'normal', style: 'italic' } },
       },
       titleGap: 20,

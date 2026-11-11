@@ -9,6 +9,8 @@ keywords: Weave、WeaveNode、WeaveRoot、compiled、pendingInputs、依赖、�
 - 决策日期：2026-10-20
 - 关联：[版本目标](./roadmap.md)、[Reconciler 包归属](./055-reconciler-extraction.md)、[Scope 无环几何引用](./057-scope-acyclic-geometry-references.md)
 
+> 编译执行归属与中间产物决策由 [ADR-080](./080-unified-reconciler-compilation.md) 部分替代：完整入口、遍历、试算与输出生命周期归 Reconciler；Core 保留原子阶段及权威产物。本篇其余绘图语义与事务约束继续有效。
+
 ## 目标与职责
 
 以单一 Weave 节点体系承载输入、编译状态和关联，区分声明层级与计算依赖，不重复维护同构的输入树和编译树。Core 拥有绘图解析与编译产物；Reconciler 只读持有产物并管理关联，不建立平行布局模型。
@@ -19,7 +21,7 @@ keywords: Weave、WeaveNode、WeaveRoot、compiled、pendingInputs、依赖、�
 
 按 [062](./062-weave-node-state-isolation.md)，节点对象保留稳定 type 与 Scope 定位地址，以下输入、编译、声明及关联字段由 current / pending 状态持有。
 
-Scope、Node、Coordinate、Path 组成按 `type` 区分的联合，复用 Core 对应输入类型；Composite 展开后的基础元素进入该模型。Root 仅作声明入口，不承担 Layout 计算；Root 状态持有 Core 的 `CompileEnvironment`，节点不重复保存环境注册表。
+Scope、Node、Coordinate、Path 组成按 `type` 区分的联合，复用 Core 对应输入类型；Composite 展开后的基础元素进入该模型。Root 仅作声明入口，不承担 Layout 计算；Root 状态持有 Core 的 `SharedCompileContext`，节点不重复保存环境注册表。
 
 | 字段            | 形态与职责                                                                                 |
 | --------------- | ------------------------------------------------------------------------------------------ |
@@ -33,7 +35,7 @@ Scope、Node、Coordinate、Path 组成按 `type` 区分的联合，复用 Core 
 
 `input` 不重复保存合并后的输入，默认与覆盖语义由 Core 决定；Scope 的 own 不携带递归 children。输入相同不能掩盖依赖变化。`compiled` 仅持有和传递，不强转或探测内部结构；由 [060](./060-core-element-compilation.md) 定义 Core 完整状态及输出贡献，按元素区分明确类型，消费者只读访问其可达状态。
 
-`pendingInputs` 不是完整 props 数组：自身修改保持命令顺序，通知按来源与影响范围合并，不统一采用后来者覆盖，也不入队即编译。有效上下文采用 Core 的 `ElementCompileContext`，依赖读取需求仍由后续调度契约确定；待处理条目由 [059](./059-weave-batch-operations.md) 定义为固定来源与影响范围的联合，不再保留任意条目的泛型参数。
+`pendingInputs` 不是完整 props 数组：自身修改保持命令顺序，通知按来源与影响范围合并，不统一采用后来者覆盖，也不入队即编译。有效上下文采用 Core 的 `CompileStyle`，依赖读取需求仍由后续调度契约确定；待处理条目由 [059](./059-weave-batch-operations.md) 定义为固定来源与影响范围的联合，不再保留任意条目的泛型参数。
 
 ## 声明结构与索引
 

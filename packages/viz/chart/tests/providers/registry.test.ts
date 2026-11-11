@@ -132,7 +132,7 @@ describe('活动的 Chart 提供者注册表', () => {
     expect(() =>
       resolveChartProviderRegistry([{ family: 'point', recipe, chartThemeDefinitions: [invalid] }]),
     ).toThrowError(
-      expect.objectContaining({ code: RetikzChartErrorCode.InvalidRegistry, cause: expect.any(ZodError) }),
+      expect.objectContaining({ code: RetikzChartErrorCode.ProviderRegistryInvalid, cause: expect.any(ZodError) }),
     );
   });
 });

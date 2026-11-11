@@ -43,7 +43,7 @@ const mergeDefinitionCollection = <TDefinition>(
 
       if (!Object.is(existing, definition)) {
         throw new RetikzGraphError({
-          code: RetikzGraphErrorCode.DefinitionConflict,
+          code: RetikzGraphErrorCode.ProviderDefinitionConflict,
           message: `${label} '${key}' received a different definition object in one provider assembly.`,
           details: { capability, key },
         });

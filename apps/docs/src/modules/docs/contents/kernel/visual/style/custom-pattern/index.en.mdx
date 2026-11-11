@@ -28,7 +28,7 @@ Returning a geometry iterable keeps context.size as the period. Return `{ tileSi
 
 ## Errors and limitations
 
-Names must exist in the active compile registry. Tiles use the full ScenePrimitive contract, including measured text, clipping, animation, and finite nested content. DOM objects, functions, and unmeasured text are not valid primitives. References use the owning Scene resource namespace; missing, wrong-kind, or cyclic references fail. Typed definition authors are responsible for the primitive contract, and emit failures preserve their original cause.
+Names must exist in the active compile registry. Tiles reuse ScenePrimitive geometry, measured text, animation, and finite nested content. DOM objects, functions, and unmeasured text are not valid primitives. Pattern output must not carry `resources`, `clipRef`, or `resourceRef`; violations fail at the output boundary. Register the Pattern and select it through input `fill` / `stroke`; the compiler creates the resource. Typed definition authors are responsible for the primitive contract, and emit failures preserve their original cause.
 
 Resource animations share the scene clock with independent playback origins per host. Tiles within one host share playback state. Local ids do not create independent update nodes, and tiles do not create separate hit targets. Custom definitions consume background, directional styles, and cycles explicitly; receiving these fields does not make the compiler draw them automatically.
 

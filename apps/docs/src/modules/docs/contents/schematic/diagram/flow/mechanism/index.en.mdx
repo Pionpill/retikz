@@ -3,7 +3,7 @@ title: Implementation
 description: Trace one Flow Source through semantic resolution, measurement, layout, Scene assembly, and artifact creation.
 ---
 
-This page assumes [Basic usage](/schematic/diagram/flow/usage) and follows one Flow compilation. Input is a serializable Source plus the host's Definitions and Theme. Output is a renderable Diagram Scene, a `FlowDiagramArtifact`, and spatial handles. A failure in any stage stops this compilation without delivering partial geometry.
+This page assumes [Basic usage](/schematic/diagram/flow/usage) and follows one Flow compilation. Input is a serializable Source plus the host's Definitions and Theme. Output is a renderable Diagram Scene and a `FlowDiagramArtifact`. A failure in any stage stops this compilation without delivering partial geometry.
 
 ## Overall flow
 
@@ -317,7 +317,7 @@ Custom layouts use `context.resolveRoutePoints`. After the callback returns, Flo
 
 <SourceLinks
   sources={[
-    { label: 'Real Target query', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
+    { label: 'Real Target query', path: 'packages/kernel/reconciler/src/compile/tree/composite/target-query.ts' },
     { label: 'Spline checks and labels', path: 'packages/schematic/diagram/src/flow/providers/layout/geometry.ts' },
     { label: 'Output validation', path: 'packages/schematic/diagram/src/flow/pipeline/flow/layout-output.ts' },
   ]}

@@ -5,7 +5,7 @@
   "type": "module",
   "description": "retikz eval: LLM-generated IR accuracy harness (L1 structural validity baseline).",
   "scripts": {
-    "eval": "tsx --env-file-if-exists=.env src/index.ts",
+    "eval": "tsx --import ../../config/dev-runtime.mjs --env-file-if-exists=.env src/index.ts",
     "lint": "oxlint .",
     "test": "vitest",
     "test:run": "vitest run",
@@ -17,7 +17,8 @@
     "@ai-sdk/openai": "catalog:",
     "@retikz/core": "workspace:*",
     "ai": "catalog:",
-    "zod": "catalog:"
+    "zod": "catalog:",
+    "@retikz/reconciler": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "catalog:",

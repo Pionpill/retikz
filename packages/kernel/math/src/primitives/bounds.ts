@@ -69,21 +69,24 @@ export const boundsOf = (points: ReadonlyArray<Position>): AxisAlignedBounds | u
 };
 
 /**
- * 合并两个轴对齐外接范围
- * @param a 第一个范围，可省略
- * @param b 第二个范围，可省略
- * @returns 新建的合并范围；两者均缺省时返回 undefined
+ * 合并任意数量的轴对齐外接范围
+ * @param bounds 待合并的范围，忽略 undefined
+ * @returns 新建的合并范围；没有有效范围时返回 undefined
  */
-export const mergeBounds = (a?: AxisAlignedBounds, b?: AxisAlignedBounds): AxisAlignedBounds | undefined => {
-  if (a === undefined) return b === undefined ? undefined : { ...b };
-  if (b === undefined) return { ...a };
-
-  return {
-    minX: Math.min(a.minX, b.minX),
-    minY: Math.min(a.minY, b.minY),
-    maxX: Math.max(a.maxX, b.maxX),
-    maxY: Math.max(a.maxY, b.maxY),
-  };
+export const mergeBounds = (...bounds: Array<AxisAlignedBounds | undefined>): AxisAlignedBounds | undefined => {
+  let merged: AxisAlignedBounds | undefined;
+  for (const current of bounds) {
+    if (current === undefined) continue;
+    if (merged === undefined) {
+      merged = { ...current };
+    } else {
+      merged.minX = Math.min(merged.minX, current.minX);
+      merged.minY = Math.min(merged.minY, current.minY);
+      merged.maxX = Math.max(merged.maxX, current.maxX);
+      merged.maxY = Math.max(merged.maxY, current.maxY);
+    }
+  }
+  return merged;
 };
 
 /**

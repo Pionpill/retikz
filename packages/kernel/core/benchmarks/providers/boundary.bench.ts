@@ -1,7 +1,7 @@
-﻿import { BUILTIN_BOUNDARIES } from '@retikz/core';
-import { expect } from 'vitest';
+﻿import { expect } from 'vitest';
 
 import { defineBenchmark } from '../../../../../scripts/benchmarks/scenario';
+import { BUILTIN_BOUNDARIES } from '../../src/providers/boundary';
 
 for (const boundary of BUILTIN_BOUNDARIES.values()) {
   for (const fit of boundary.name === 'rectangle' ? ['tight'] : ['tight', 'bounds']) {

@@ -66,7 +66,7 @@ const Stage: FC<StageProps> = props => {
       position={[x, y]}
       cornerRadius={4}
       style={{ stroke: color, fill: color, opacity: { fill: 0.08 } }}
-      layout={{ minimumSize: { width, height: 48 }, align: 'middle', lineHeight: 16 }}
+      layout={{ minimumSize: { width, height: 48 }, textAlign: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 13, weight: 'bold' }}>{label.title}</Text>
       <Text fill="gray" font={{ size: 12 }}>

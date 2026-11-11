@@ -80,12 +80,6 @@ export const drawApiReferenceConfigs: ReadonlyArray<ApiReferencePackageConfig> =
       {
         source: path.resolve(repositoryRoot, 'packages/kernel/core/src/index.ts'),
         title: { zh: '`@retikz/core`', en: '`@retikz/core`' },
-        overloadTabs: {
-          definePath: [
-            { value: 'without-owner-output', label: { zh: '无所属者产物', en: 'Without owner output' } },
-            { value: 'with-owner-output', label: { zh: '发布所属者产物', en: 'With owner output' } },
-          ],
-        },
         symbols: [
           'samplePathRoute',
           'resolvePathLabelPlacement',
@@ -93,7 +87,7 @@ export const drawApiReferenceConfigs: ReadonlyArray<ApiReferencePackageConfig> =
           'CanonicalPathLabelPlacement',
           'definePath',
           'PathDefinition',
-          'PathCompileContext',
+          'PathDefinitionCompileContext',
           'InputPathBoundaryLabel',
           'PathCompileResult',
           'defineArrow',

@@ -266,7 +266,7 @@ const view = mount(document.getElementById('diagram')!, ir);
 
 ### 控制点检查
 
-安装 `@retikz/inspect` 后，用 `InspectLayout` 和 `InspectPath` 显示路径的贝塞尔控制点与控制柄；`labels` 可额外显示编号。辅助标记不改变原路径的几何与交互。接入方式见 [`@retikz/inspect`](/kernel/packages/inspect)。
+安装 `@retikz/inspect` 后，将普通编译结果交给路径检查器，即可显示最终贝塞尔曲线的控制点与控制柄；`labels` 可额外显示命令编号。辅助图单独编译和呈现。接入方式见 [`@retikz/inspect`](/kernel/packages/inspect)。
 
 <ComponentPreview files="path-inspector" size="sm" />
 

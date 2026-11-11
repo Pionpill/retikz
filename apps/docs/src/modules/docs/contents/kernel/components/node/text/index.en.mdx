@@ -21,7 +21,7 @@ import { Layout, Node, Text } from '@retikz/react';
 
 export default () => (
   <Layout>
-    <Node position={[0, 0]} layout={{ align: 'start' }}>
+    <Node position={[0, 0]} layout={{ textAlign: 'start' }}>
       <Text font={{ weight: 'bold' }}>A</Text>B
     </Node>
   </Layout>
@@ -42,7 +42,7 @@ const ir: IRScene = {
     {
       type: 'node',
       position: [0, 0],
-      layout: { align: 'start' },
+      layout: { textAlign: 'start' },
       text: [{ text: 'A', font: { weight: 'bold' } }, 'B'],
     },
   ],
@@ -59,7 +59,7 @@ import { mount } from '@retikz/vanilla/dom';
 
 const input = scene({
   children: [
-    node({ position: [0, 0], layout: { align: 'start' }, text: [{ text: 'A', font: { weight: 'bold' } }, 'B'] }),
+    node({ position: [0, 0], layout: { textAlign: 'start' }, text: [{ text: 'A', font: { weight: 'bold' } }, 'B'] }),
   ],
 });
 const view = mount(document.getElementById('diagram')!, input);
@@ -79,7 +79,7 @@ const ir: IRScene = {
     {
       type: 'node',
       position: [0, 0],
-      layout: { align: 'start' },
+      layout: { textAlign: 'start' },
       text: [{ text: 'A', font: { weight: 'bold' } }, 'B'],
     },
   ],
@@ -99,8 +99,8 @@ Select “Wrapping a long sentence”, then adjust `maxTextWidth` to compare the
 <ComponentPreview files={['node-text', 'node-text.preview.tsx']} size="md" defaultSourceFile="node-text.preview.tsx" />
 
 - `text` accepts a string or a IRLine array; `'\n'` creates hard breaks, while the array form gives each line independent styles
-- `layout.align` controls horizontal alignment within the block and `layout.lineHeight` controls spacing; both are block-level properties
-- `layout.maxTextWidth` is a plain-text wrap threshold, not a fixed paragraph width; Western text wraps by word, CJK by character, and unbreakable tokens overflow as a whole
+- `layout.textAlign` controls horizontal alignment within the block and `layout.lineHeight` controls spacing; both are block-level properties
+- `layout.maxTextWidth` is a wrapping threshold, not a fixed paragraph width; wrapping prefers word boundaries, oversized words split at grapheme boundaries, and indivisible formulas may overflow on their own line
 - Each line can override `fill` / `opacity` / `font`; [`<Text>` children](/kernel/components/node/text) express the same structure in JSX
 - Changing `shape` keeps the shape-specific circumscription rules around the multiline content
 
@@ -136,7 +136,7 @@ These two nodes compile to identical output:
 
 ## Mixed segments within a line
 
-Both segments below remain on one line. Vanilla API and IR use the same `text` data structure. If any line contains `{ segments }` or a resolved formula, the whole text block uses mixed layout and does not wrap automatically at `maxTextWidth`. Split the content into separate line-array items when a break is needed. For formulas, see [TeX](/kernel/packages/tex).
+Both segments below remain on one line. Vanilla API and IR use the same `text` data structure. Mixed content and plain text share `maxTextWidth` wrapping rules and retain segment styles after wrapping; formulas stay intact. Use newline characters or separate line-array items for hard breaks. For formulas, see [TeX](/kernel/packages/tex).
 
 ```tsx
 <Node position={[0, 0]} text={[{ segments: [{ text: 'Status: ' }, { text: 'ready', fill: 'green' }] }]} />
@@ -162,11 +162,13 @@ import { NodeTextColor } from '@retikz/core';
 
 Both text lines and segmented lines accept `fill`, `opacity`, and `font`. Segmented lines inherit the block font, then apply line defaults and segment overrides. A segment that changes only weight keeps the line size and family. Math uses the effective line size unless its `fontSize` overrides it; `em` is relative to that line and `rem` to the root size. The TeX integration controls math fonts.
 
+Font resolution converts `normal` to `400` and `bold` to `700`, while preserving numeric weights. Core passes numeric weights to text measurers and generated text primitives; custom `measureText` callbacks should compare numeric weights. An omitted weight inherits first; if no inherited value exists, the host default remains in effect.
+
 ## Errors and limitations
 
-Text only works inside Node and takes string or number children. Block alignment, line height, and wrapping width belong to `Node.layout.align`, `lineHeight`, and `maxTextWidth`; per-line fonts belong to Text `font`.
+Text only works inside Node and takes string or number children. Block alignment, line height, and wrapping width belong to `Node.layout.textAlign`, `lineHeight`, and `maxTextWidth`; per-line fonts belong to Text `font`.
 
-Automatic wrapping applies only to plain-text blocks; mixed segments and formulas do not wrap automatically. A fixed `layout.width` does not clip text: compilation fails if the content cannot fit.
+Plain text and mixed content both support automatic wrapping; formulas themselves remain indivisible. A fixed `layout.width` does not clip text: compilation fails if the content cannot fit.
 
 ## Related props
 
@@ -194,7 +196,7 @@ These members provide body text, wrapping, and per-line overrides. See the [API 
     'Supplies React body text in JSX order. Strings and `<Text>`may mix, unless explicit`text`is present.',
 },
 {
-  name: 'layout.align',
+  name: 'layout.textAlign',
   kind: 'property',
   type: "'start' | 'middle' | 'end'",
   defaultValue: "'middle'",

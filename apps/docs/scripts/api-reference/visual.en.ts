@@ -52,8 +52,8 @@ const translations: Partial<Record<string, string>> = {
     'IR shadow object with an optional preset and explicit field overrides',
   阴影预设档位值联合: 'Union of shadow preset values',
   '阴影预设档位关键字（Tailwind 风格刻度）': 'Shadow preset names using a Tailwind-style size scale',
-  '预设字符串 `shadow="md"` 等价于对象 `{ preset:\'md\' }`；`SHADOW_PRESETS` 表为档位展开单一真源。\n  `none` = 显式无阴影（当前等价省略，为将来 scope 级联预留）':
-    'The preset string `shadow="md"` is equivalent to `{ preset: \'md\' }`; SHADOW_PRESETS is the source for preset expansion. `none` explicitly disables shadow (described here as equivalent to omission, reserving scope cascading).',
+  '预设字符串 `shadow="md"` 等价于对象 `{ preset:\'md\' }`。\n  `none` = 显式无阴影（当前等价省略，为将来 scope 级联预留）':
+    'The preset string `shadow="md"` is equivalent to `{ preset: \'md\' }`. `none` explicitly disables shadow (described here as equivalent to omission, reserving scope cascading).',
   混合模式值联合: 'Union of blend-mode values',
   'W3C 分离式混合模式集（16 个）': 'The set of 16 W3C blend modes',
   '三端共有交集（SVG `mix-blend-mode` / Canvas `globalCompositeOperation`）；混合数学按 W3C 规范两端逐式相同。\n  `normal` 保留为显式值（= 省略，便于显式覆盖）':

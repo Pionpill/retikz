@@ -1,6 +1,6 @@
 import type { Position } from '@retikz/math';
 
-import type { BranchLayoutOutput } from '../contract';
+import type { BranchLayoutSegmentOutput } from '../contract';
 import { defineBranchLayout } from '../contract';
 
 /** 保持主线、共享节点与稳定推进的内置轨道布局 */
@@ -61,7 +61,7 @@ export const lanesBranchLayoutDefinition = defineBranchLayout({
     });
     const byId = new Map(nodes.map(node => [node.id, node]));
     const seen = new Set<string>();
-    const segments: Array<BranchLayoutOutput['segments'][number]> = [];
+    const segments: Array<BranchLayoutSegmentOutput> = [];
 
     for (const branch of input.branches)
       for (let index = 1; index < branch.nodes.length; index += 1) {

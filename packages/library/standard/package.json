@@ -92,11 +92,12 @@
   },
   "dependencies": {
     "@retikz/core": "workspace:^",
+    "@retikz/extension": "workspace:^",
     "@retikz/foundation": "workspace:^",
     "@retikz/layout": "workspace:^",
     "@retikz/math": "workspace:^",
-    "zod": "catalog:",
-    "@retikz/extension": "workspace:^"
+    "@retikz/reconciler": "workspace:^",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@types/node": "catalog:",

@@ -28,7 +28,7 @@ type RetainedCompositeDefinitions = Readonly<{
 
 const invalidDefinitions = (cause: unknown): never => {
   throw new RetikzRenderError({
-    code: RetikzRenderErrorCode.RetainedRuntimeInputInvalid,
+    code: RetikzRenderErrorCode.RuntimeInputInvalid,
     cause,
     message: 'Vanilla retained processing must preserve composite definition keys, schemas, and execution branches',
   });

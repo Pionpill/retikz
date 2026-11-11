@@ -202,10 +202,8 @@ type Offset =
  *   凹角（反向转）圆心在外侧（弧仍嵌入凹槽）。故偏移侧 = 行进方向左手 (-dy, dx) 乘 turnSign 符号。
  *   arc 同心偏移返回 radius−r 主候选；±r 两候选由 offsetSegmentAlt 补齐、求交后按真实距离校验择优
  */
-const offsetSegment = (seg: ContourSegment, r: number, turnSign: number, atEnd: boolean): Offset => {
+const offsetSegment = (seg: ContourSegment, r: number, turnSign: number, atEnd: boolean, dir: Position): Offset => {
   if (seg.kind === 'line') {
-    const dir = tangentAt(seg, true);
-
     // 圆心侧法向 = 行进方向左手 (-dy, dx) × turnSign 符号（凸角内侧 / 凹角外侧）
     const sign = turnSign >= 0 ? 1 : -1;
     const normal: Position = [-dir[1] * sign, dir[0] * sign];
@@ -252,8 +250,8 @@ const solveFillet = (segA: ContourSegment, segB: ContourSegment, r: number): Fil
     if (radius <= EPSILON) return undefined;
 
     // 收集 fillet 圆心候选
-    const offA = offsetSegment(segA, radius, turnSign, true);
-    const offB = offsetSegment(segB, radius, turnSign, false);
+    const offA = offsetSegment(segA, radius, turnSign, true, tIn);
+    const offB = offsetSegment(segB, radius, turnSign, false, tOut);
     const candidates: Array<Position> = [];
 
     const pushIntersections = (oa: Offset, ob: Offset): void => {
@@ -288,14 +286,14 @@ const solveFillet = (segA: ContourSegment, segB: ContourSegment, r: number): Fil
     let bestDist = Infinity;
 
     for (const cand of candidates) {
-      const tInPt = tangentPointOn(segA, cand, radius);
-      const tOutPt = tangentPointOn(segB, cand, radius);
+      const tInPt = tangentPointOn(segA, cand, radius, tIn);
+      const tOutPt = tangentPointOn(segB, cand, radius, tOut);
       if (!tInPt || !tOutPt) continue;
 
       // 圆心须真实距两段 == radius；相对容差（按 radius / 坐标量级缩放），避免大坐标（1e5+）下浮点抵消误差超固定 1e-6 而误拒合法候选
       const tol = 1e-6 * Math.max(1, radius, Math.abs(corner[0]), Math.abs(corner[1]));
-      const dA = distanceToAny(segA, cand);
-      const dB = distanceToAny(segB, cand);
+      const dA = distanceToAny(segA, cand, tInPt);
+      const dB = distanceToAny(segB, cand, tOutPt);
       if (Math.abs(dA - radius) > tol || Math.abs(dB - radius) > tol) continue;
 
       const inFrac = fractionAlong(segA, tInPt, false); // 从 segA 终点反向量（剩余比例）
@@ -371,11 +369,9 @@ const solveFillet = (segA: ContourSegment, segB: ContourSegment, r: number): Fil
   };
 };
 
-/** 点到段（line / arc 所在直线 / 圆）的距离 */
-const distanceToAny = (seg: ContourSegment, p: Position): number => {
+/** 点到段所在直线或圆的距离；直线复用本次候选已求出的垂足 */
+const distanceToAny = (seg: ContourSegment, p: Position, foot: Position): number => {
   if (seg.kind === 'line') {
-    const dir = tangentAt(seg, true);
-    const foot = footOnLine(p, seg.from, dir);
     return Math.hypot(p[0] - foot[0], p[1] - foot[1]);
   }
 
@@ -389,10 +385,14 @@ const distanceToAny = (seg: ContourSegment, p: Position): number => {
  * @description line：圆心在直线上的垂足。arc：圆心与 arc 圆心连线 ∩ arc 圆周（朝 fillet 圆心一侧）。
  *   切点须落在段几何上（line 在线上、arc 在弧角度区间内）才有效，否则返回 undefined
  */
-const tangentPointOn = (seg: ContourSegment, filletCenter: Position, radius: number): Position | undefined => {
+const tangentPointOn = (
+  seg: ContourSegment,
+  filletCenter: Position,
+  radius: number,
+  direction: Position,
+): Position | undefined => {
   if (seg.kind === 'line') {
-    const dir = tangentAt(seg, true);
-    return footOnLine(filletCenter, seg.from, dir);
+    return footOnLine(filletCenter, seg.from, direction);
   }
 
   // arc：切点在 arc 圆周上、位于 arc 圆心 → fillet 圆心 方向（或反向，取较近 fillet 圆心者）

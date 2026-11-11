@@ -53,7 +53,7 @@ const defaultsOf = (style: ReferenceStyle): IRChartDefaults => {
         slot,
         {
           style: { font: { family: preset.fontFamily, size, weight } },
-          layout: { align: TextAlign.Start, lineHeight },
+          layout: { textAlign: TextAlign.Start, lineHeight },
         },
       ];
     }),
@@ -61,7 +61,7 @@ const defaultsOf = (style: ReferenceStyle): IRChartDefaults => {
     (typeof slots)[number],
     {
       style: { font: { family: string; size: number; weight: number } };
-      layout: { align: NodeTextAlign; lineHeight: number };
+      layout: { textAlign: NodeTextAlign; lineHeight: number };
     }
   >;
 

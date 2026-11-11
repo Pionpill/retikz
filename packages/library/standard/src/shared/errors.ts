@@ -7,7 +7,8 @@ export const RetikzStandardErrorCode = {
   GeometryInvalid: 'STANDARD_GEOMETRY_INVALID',
   PipelineInvariant: 'STANDARD_PIPELINE_INVARIANT',
   RegistryConflict: 'STANDARD_REGISTRY_CONFLICT',
-  ResolutionInvalid: 'STANDARD_RESOLUTION_INVALID',
+  /** 解析输入不满足领域约束 */
+  ResolveInvalid: 'STANDARD_RESOLVE_INVALID',
   SchemaInvariant: 'STANDARD_SCHEMA_INVARIANT',
 } as const;
 

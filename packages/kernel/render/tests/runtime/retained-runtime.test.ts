@@ -1,7 +1,8 @@
 import type { IRScene } from '@retikz/core';
+import type { PerformanceTraceSink } from '@retikz/foundation';
 import { isRetikzError } from '@retikz/foundation';
 import type { ScenePatch } from '@retikz/reconciler';
-import { ReconcilerSession } from '@retikz/reconciler';
+import { SceneReconciler } from '@retikz/reconciler';
 import type { ReconcilerPreparedCommit } from '@retikz/reconciler';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -84,11 +85,16 @@ const createRendererHarness = (capability: 'none' | 'group' | 'entity' = 'entity
   return { renderer, prepareMount, prepare, read, patches };
 };
 
-const createHarness = (capability: 'none' | 'group' | 'entity' = 'entity', initialScene: IRScene = scene('A')) => {
+const createHarness = (
+  capability: 'none' | 'group' | 'entity' = 'entity',
+  initialScene: IRScene = scene('A'),
+  trace?: PerformanceTraceSink,
+) => {
   const renderer = createRendererHarness(capability);
   let config: InputRenderRuntimeConfig = {};
   const factory = vi.fn(() => renderer.renderer) as unknown as RetainedRendererFactory;
   const handle = createRetainedRenderTarget({
+    trace,
     backend: 'svg',
     host: svgHost,
     rendererFactory: factory,
@@ -96,7 +102,7 @@ const createHarness = (capability: 'none' | 'group' | 'entity' = 'entity', initi
     configuration: () => config,
   });
   const session = Object.assign(
-    new ReconcilerSession({ onWarn: () => undefined }, { target: handle.target, captureProvenance: true }),
+    new SceneReconciler({ onWarn: () => undefined }, { target: handle.target, captureProvenance: true }),
     {
       updateConfig: (next: InputRenderRuntimeConfig) => {
         const previous = config;
@@ -119,14 +125,14 @@ describe('@retikz/render/runtime 公共契约', () => {
     const cause = new Error('invalid patch');
     const details = { source: 'test' };
     const error = new RetikzRenderError({
-      code: RetikzRenderErrorCode.ScenePatchInvalid,
+      code: RetikzRenderErrorCode.RuntimeScenePatchInvalid,
       cause,
       details,
     });
 
     expect(error).toBeInstanceOf(Error);
     expect(error.name).toBe('RetikzRenderError');
-    expect(error.code).toBe(RetikzRenderErrorCode.ScenePatchInvalid);
+    expect(error.code).toBe(RetikzRenderErrorCode.RuntimeScenePatchInvalid);
     expect(error.cause).toBe(cause);
     expect(error.details).toBe(details);
     expect(Object.isFrozen(error.details)).toBe(false);
@@ -134,16 +140,16 @@ describe('@retikz/render/runtime 公共契约', () => {
     expect(Object.hasOwn(error, 'cause')).toBe(true);
     expect(Object.getOwnPropertyNames(error)).toContain('cause');
     expect(isRetikzRenderError(error)).toBe(true);
-    expect(isRetikzRenderError({ code: RetikzRenderErrorCode.ScenePatchInvalid })).toBe(false);
+    expect(isRetikzRenderError({ code: RetikzRenderErrorCode.RuntimeScenePatchInvalid })).toBe(false);
   });
 
   it('省略时保留自己的 undefined 原因', () => {
-    const error = new RetikzRenderError({ code: RetikzRenderErrorCode.RetainedRendererDisposed });
+    const error = new RetikzRenderError({ code: RetikzRenderErrorCode.RuntimeRendererDisposed });
 
     expect(error).toBeInstanceOf(RetikzRenderError);
     expect(error.name).toBe('RetikzRenderError');
-    expect(error.message).toBe(RetikzRenderErrorCode.RetainedRendererDisposed);
-    expect(error.details).toEqual({ code: RetikzRenderErrorCode.RetainedRendererDisposed });
+    expect(error.message).toBe(RetikzRenderErrorCode.RuntimeRendererDisposed);
+    expect(error.details).toEqual({ code: RetikzRenderErrorCode.RuntimeRendererDisposed });
     expect(Object.isFrozen(error.details)).toBe(true);
     expect(Object.hasOwn(error, 'cause')).toBe(true);
     expect(error.cause).toBeUndefined();
@@ -191,7 +197,7 @@ describe('@retikz/render/runtime 公共契约', () => {
         },
         dispose: () => undefined,
       } as unknown as Parameters<typeof defineRetainedRenderer>[0]),
-    ).toThrowError(expect.objectContaining({ code: RetikzRenderErrorCode.RetainedRendererInvalid }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRenderErrorCode.RuntimeRendererInvalid }));
   });
 
   it('把 renderer Proxy getter throw 收敛为稳定 renderer error', () => {
@@ -204,7 +210,7 @@ describe('@retikz/render/runtime 公共契约', () => {
 
     expect(() => defineRetainedRenderer(input)).toThrowError(
       expect.objectContaining({
-        code: RetikzRenderErrorCode.RetainedRendererInvalid,
+        code: RetikzRenderErrorCode.RuntimeRendererInvalid,
         cause: getterFailure,
       }),
     );
@@ -271,7 +277,7 @@ describe('captureRuntimeConfig', () => {
       } catch (error) {
         expect(error).toEqual(
           expect.objectContaining({
-            code: RetikzRenderErrorCode.RetainedRuntimeInputInvalid,
+            code: RetikzRenderErrorCode.RuntimeInputInvalid,
           }),
         );
       }
@@ -287,7 +293,7 @@ describe('captureRuntimeConfig', () => {
 
     expect(() => captureRuntimeConfig({ animation })).toThrow(
       expect.objectContaining({
-        code: RetikzRenderErrorCode.RetainedRuntimeInputInvalid,
+        code: RetikzRenderErrorCode.RuntimeInputInvalid,
       }),
     );
     expect(getter).not.toHaveBeenCalled();
@@ -301,7 +307,7 @@ describe('captureRuntimeConfig', () => {
       }),
     ).toThrow(
       expect.objectContaining({
-        code: RetikzRenderErrorCode.RetainedRuntimeInputInvalid,
+        code: RetikzRenderErrorCode.RuntimeInputInvalid,
       }),
     );
 
@@ -344,7 +350,7 @@ describe('createRetainedRenderTarget', () => {
       immutableOptions: { backend: 'svg', idPrefix: 'failed' },
       configuration: () => ({}),
     });
-    const session = new ReconcilerSession({}, { target: handle.target, captureProvenance: true });
+    const session = new SceneReconciler({}, { target: handle.target, captureProvenance: true });
     expect(() => session.mount(scene('A'))).toThrow();
     session.dispose();
     session.dispose();
@@ -366,11 +372,12 @@ describe('createRetainedRenderTarget', () => {
   });
 
   it('Core update 原子提交 Patch 与 next snapshot', () => {
+    const trace = vi.fn();
     const initial = {
       ...scene('A'),
       children: [{ ...scene('A').children[0], style: { fill: '#ef4444' } }],
     };
-    const { renderer, handle, session } = createHarness('entity', initial);
+    const { renderer, handle, session } = createHarness('entity', initial, trace);
     const previous = handle.read();
 
     session.replace({
@@ -382,6 +389,11 @@ describe('createRetainedRenderTarget', () => {
 
     expect(next).not.toBe(previous);
     expect(next.frame.primary.revision).toBe(1);
+    expect(next.frame.primary.root).toEqual({ owner: 'kernel', path: ['root'] });
+    expect(trace.mock.calls.map(([record]) => [record.owner, record.phase])).toEqual([
+      ['kernel/render/svg', 'commit'],
+      ['kernel/render/svg', 'update'],
+    ]);
     expect(renderer.prepare).toHaveBeenCalledTimes(1);
     expect(renderer.read).toHaveBeenCalledTimes(2);
     expect(renderer.patches[0]).toMatchObject({ baseRevision: 0, nextRevision: 1 });
@@ -436,7 +448,7 @@ describe('createRetainedRenderTarget', () => {
       configuration: () => ({}),
     });
 
-    const session = new ReconcilerSession(
+    const session = new SceneReconciler(
       { onWarn: () => undefined },
       { target: handle.target, captureProvenance: true },
     );
@@ -479,7 +491,7 @@ describe('createRetainedRenderTarget', () => {
       configuration: () => ({}),
     });
 
-    const session = new ReconcilerSession(
+    const session = new SceneReconciler(
       { onWarn: () => undefined },
       { target: handle.target, captureProvenance: true },
     );
@@ -523,7 +535,7 @@ describe('createRetainedRenderTarget', () => {
     } catch (error) {
       expect(error).toEqual(
         expect.objectContaining({
-          code: RetikzRenderErrorCode.RetainedRendererInvalid,
+          code: RetikzRenderErrorCode.RuntimeRendererInvalid,
           cause: expect.objectContaining({ renderer: mismatching, disposeFailure }),
         }),
       );
@@ -576,7 +588,7 @@ describe('createRetainedRenderTarget', () => {
       configuration: () => ({}),
     });
 
-    const session = new ReconcilerSession(
+    const session = new SceneReconciler(
       { onWarn: () => undefined },
       { target: handle.target, captureProvenance: true },
     );
@@ -588,7 +600,7 @@ describe('createRetainedRenderTarget', () => {
       expect.objectContaining({ code: 'RECONCILER_CLEANUP_FAILED', cause: disposeFailure }),
     ]);
     expect(() => handle.read()).toThrowError(
-      expect.objectContaining({ code: RetikzRenderErrorCode.ScenePatchSnapshotMismatch }),
+      expect.objectContaining({ code: RetikzRenderErrorCode.RuntimeScenePatchSnapshotMismatch }),
     );
 
     expect(() => session.dispose()).not.toThrow();
@@ -607,7 +619,7 @@ describe('createRetainedRenderTarget', () => {
         immutableOptions: { backend: 'svg', idPrefix: 'invalid' },
         configuration: () => ({}),
       }),
-    ).toThrowError(expect.objectContaining({ code: RetikzRenderErrorCode.RetainedRenderParticipantInputInvalid }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRenderErrorCode.RuntimeParticipantInputInvalid }));
     expect(factory).not.toHaveBeenCalled();
   });
 
@@ -621,7 +633,7 @@ describe('createRetainedRenderTarget', () => {
 
     expect(() => createRetainedRenderTarget(options)).toThrowError(
       expect.objectContaining({
-        code: RetikzRenderErrorCode.RetainedRenderParticipantInputInvalid,
+        code: RetikzRenderErrorCode.RuntimeParticipantInputInvalid,
         cause: getterFailure,
       }),
     );
@@ -651,7 +663,7 @@ describe('createRetainedRenderTarget', () => {
     });
 
     try {
-      new ReconcilerSession({ onWarn: () => undefined }, { target: handle.target, captureProvenance: true }).mount(
+      new SceneReconciler({ onWarn: () => undefined }, { target: handle.target, captureProvenance: true }).mount(
         scene('A'),
       );
       throw new Error('expected create to fail');
@@ -660,14 +672,14 @@ describe('createRetainedRenderTarget', () => {
 
       const runtime = error as RetikzRenderError;
 
-      expect(runtime.code).toBe(RetikzRenderErrorCode.RetainedRendererPrepareFailed);
+      expect(runtime.code).toBe(RetikzRenderErrorCode.RuntimeRendererPrepareFailed);
       expect(runtime.cause).toEqual(expect.objectContaining({ message: 'renderer failed' }));
     }
   });
 
   it('保留 renderer prepare 已抛出的 RetikzRenderError identity 与 code', () => {
     const expected = new RetikzRenderError({
-      code: RetikzRenderErrorCode.ScenePatchInvalid,
+      code: RetikzRenderErrorCode.RuntimeScenePatchInvalid,
       cause: Object.freeze({ fixture: true }),
     });
 
@@ -694,7 +706,7 @@ describe('createRetainedRenderTarget', () => {
     });
 
     try {
-      new ReconcilerSession({ onWarn: () => undefined }, { target: handle.target, captureProvenance: true }).mount(
+      new SceneReconciler({ onWarn: () => undefined }, { target: handle.target, captureProvenance: true }).mount(
         scene('A'),
       );
       throw new Error('expected create to fail');
@@ -731,7 +743,7 @@ describe('createRetainedRenderTarget', () => {
     });
 
     try {
-      new ReconcilerSession({ onWarn: () => undefined }, { target: handle.target, captureProvenance: true }).mount(
+      new SceneReconciler({ onWarn: () => undefined }, { target: handle.target, captureProvenance: true }).mount(
         scene('A'),
       );
       throw new Error('expected create to fail');
@@ -740,7 +752,7 @@ describe('createRetainedRenderTarget', () => {
 
       const runtime = error as RetikzRenderError;
 
-      expect(runtime.code).toBe(RetikzRenderErrorCode.ScenePatchSnapshotMismatch);
+      expect(runtime.code).toBe(RetikzRenderErrorCode.RuntimeScenePatchSnapshotMismatch);
       expect(runtime.cause).toBe(getterFailure);
     }
   });
@@ -772,12 +784,12 @@ describe('createRetainedRenderTarget', () => {
     });
 
     expect(() =>
-      new ReconcilerSession({ onWarn: () => undefined }, { target: handle.target, captureProvenance: true }).mount(
+      new SceneReconciler({ onWarn: () => undefined }, { target: handle.target, captureProvenance: true }).mount(
         scene('A'),
       ),
     ).toThrowError(
       expect.objectContaining({
-        code: RetikzRenderErrorCode.RetainedRendererInvalid,
+        code: RetikzRenderErrorCode.RuntimeRendererInvalid,
       }),
     );
   });
@@ -818,7 +830,7 @@ describe('createRetainedRenderTarget', () => {
       configuration: () => ({}),
     });
 
-    const session = new ReconcilerSession(
+    const session = new SceneReconciler(
       { onWarn: () => undefined },
       { target: handle.target, captureProvenance: true },
     );

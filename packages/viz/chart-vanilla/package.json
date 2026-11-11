@@ -83,7 +83,8 @@
     "@retikz/plot": "workspace:^",
     "@retikz/plot-vanilla": "workspace:^",
     "@retikz/vanilla": "workspace:^",
-    "@retikz/extension": "workspace:^"
+    "@retikz/extension": "workspace:^",
+    "@retikz/reconciler": "workspace:^"
   },
   "devDependencies": {
     "@types/node": "catalog:",

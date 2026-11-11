@@ -10,6 +10,8 @@ description: 新增、移动、拆分或审查 Retikz 源码目录、文件、�
 ## 通用形式
 
 - 错误码 const object enum 的成员名使用 PascalCase，字符串值使用 UPPER_SNAKE_CASE，并包含明确的包或领域前缀
+- 模块专属错误码按职责归属命名：成员为 `<Module><Reason>`，值为 `<PACKAGE>_<MODULE>_<REASON>`；通用错误省略模块段。归属按错误语义判断，不按抛错文件目录或单个消费方判断
+- 包内错误码集中在统一对象中按模块分组；无必要细分时保留模块兜底码，如 `Compile` / `CORE_COMPILE_ERROR`，不为命名整齐新增分类或拆分错误码对象
 
 - 泛型参数使用 `T` 或 `T` 开头的 PascalCase 语义名，匹配 `^(T|T[A-Z][A-Za-z]+)$`，禁止首尾下划线；由 LLM 自审
 - 同组 re-export 按来源路径排序，具名导出成员按名称排序；存在初始化副作用依赖时保留执行次序，不为排序改变语义；由 LLM 自审
@@ -45,13 +47,20 @@ description: 新增、移动、拆分或审查 Retikz 源码目录、文件、�
 - 仅为实际存在且需要区分的形态命名，不为凑齐命名结构新增类型、包装或状态；既有 `IRXxx`、`InputXxx`、`BuiltinXxx` 等专用角色按分层规则使用，不堆叠同义限定词
 - 函数仍用“动作 + 对象”，如 `mergeNodeStyle`；变量按实际内容命名，如 `mergedNodeStyle`，局部上下文明确时可简化。枚举成员、常量、目录和文件继续遵循各自形式，不机械套用类型组合
 
+## 类型引用与参数形态
+
+- 表达独立领域概念时优先直接引用已有具名类型；集合元素已有类型时，用 `Array<CompileBounds>`，不绕写 `Array<CompileOutput['bounds'][number]>`
+- 表达“某契约字段的类型”且需要随字段声明同步时，用 `T['field']`；泛型关联或字段没有独立具名类型时也可使用，数组元素可进一步取 `[number]`，不为消除索引访问另造纯别名
+- 函数只消费单个字段值时，优先直接接收该值，如参数用 `CompileOutput['bounds']`、调用传 `output.bounds`；确实以原对象的字段子集协作时才用 `Pick<T, K>`，不为类型关联额外保留对象层
+- 选择写法时保留实际需要的可选性、只读性与泛型关系；局部可变收集数组用 `Array<元素类型>`，完整字段契约用索引访问，不因简写擅自使用 `NonNullable` 或改变容器约束
+
 ## 按需读取
 
-| 修改对象                                                       | 必读 reference                          |
-| -------------------------------------------------------------- | --------------------------------------- |
-| Source IR 一级属性或 defaults 通道                             | [字段语义](references/source-fields.md) |
-| 函数、谓词、阶段动词                                           | [函数](references/functions.md)         |
-| 变量、属性、参数、具名结构角色                                 | [变量与角色](references/variables.md)   |
-| schema / Input / Canonical / Definition / registry、目录或文件 | [分层命名](references/layers.md)        |
+| 修改对象                                                                                  | 必读 reference                          |
+| ----------------------------------------------------------------------------------------- | --------------------------------------- |
+| Source IR 一级属性或 defaults 通道                                                        | [字段语义](references/source-fields.md) |
+| 函数、谓词、阶段动词                                                                      | [函数](references/functions.md)         |
+| 变量、属性、参数、具名结构角色                                                            | [变量与角色](references/variables.md)   |
+| schema / Input / Canonical / Definition / registry、Context / State / Runtime、目录或文件 | [分层命名](references/layers.md)        |
 
 按真实输入、输出、副作用和 owner 判断名称；检查 get 是否隐藏创建、parse/normalize/resolve 是否混用、局部简称是否泄漏到公共面。通用短名只在相邻类型与表达式已唯一限定时使用，不为缩短名字牺牲语义。

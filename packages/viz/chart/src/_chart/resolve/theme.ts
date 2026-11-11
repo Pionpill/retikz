@@ -18,28 +18,28 @@ const neutralChartDefaultsOf = (mode: ThemeMode): IRChartDefaults => {
           textColor: isDark ? '#FAFAFA' : '#09090B',
           font: { family: 'system-ui, Segoe UI, sans-serif', size: 18, weight: 600 },
         },
-        layout: { align: 'start', lineHeight: 22 },
+        layout: { textAlign: 'start', lineHeight: 22 },
       },
       subtitle: {
         style: {
           textColor: isDark ? '#D4D4D8' : '#3F3F46',
           font: { family: 'system-ui, Segoe UI, sans-serif', size: 13, weight: 400 },
         },
-        layout: { align: 'start', lineHeight: 18 },
+        layout: { textAlign: 'start', lineHeight: 18 },
       },
       note: {
         style: {
           textColor: isDark ? '#A1A1AA' : '#71717A',
           font: { family: 'system-ui, Segoe UI, sans-serif', size: 11, weight: 400 },
         },
-        layout: { align: 'start', lineHeight: 15 },
+        layout: { textAlign: 'start', lineHeight: 15 },
       },
       source: {
         style: {
           textColor: isDark ? '#A1A1AA' : '#71717A',
           font: { family: 'system-ui, Segoe UI, sans-serif', size: 11, weight: 500 },
         },
-        layout: { align: 'start', lineHeight: 15 },
+        layout: { textAlign: 'start', lineHeight: 15 },
       },
     },
   };

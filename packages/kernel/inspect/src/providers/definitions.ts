@@ -1,15 +1,11 @@
 import type { InputAnyInspectorDefinition } from '../contract';
 import { CLIP_INSPECTOR } from './clip';
-import { COORDINATE_INSPECTOR } from './coordinate';
-import { NODE_INSPECTOR } from './node';
+import { GROUP_INSPECTOR } from './group';
 import { PATH_INSPECTOR } from './path';
-import { SCOPE_INSPECTOR } from './scope';
 
-/** 默认 registry 使用的内置 Inspector definitions */
+/** 内置与第三方共用的默认定义集合 */
 export const BUILTIN_INSPECTORS: ReadonlyArray<InputAnyInspectorDefinition> = Object.freeze([
   PATH_INSPECTOR,
-  NODE_INSPECTOR,
+  GROUP_INSPECTOR,
   CLIP_INSPECTOR,
-  SCOPE_INSPECTOR,
-  COORDINATE_INSPECTOR,
 ]);

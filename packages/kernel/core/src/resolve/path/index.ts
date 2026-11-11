@@ -1,3 +1,14 @@
-export * from './provider';
+export * from './prepare';
+export { resolveStrokePathProviders } from './provider';
 export * from './resolve';
-export * from './types';
+export type {
+  CanonicalPath,
+  CanonicalPathArrow,
+  CanonicalPathLabel,
+  CanonicalPathLabelPlacement,
+  CanonicalPathMark,
+  CanonicalPathStep,
+  PathLabelGeometryOptions,
+  PathResolution,
+  StrokePathResolution,
+} from './types';

@@ -10,7 +10,7 @@ export const resolveGraphThemeRegistry = (
   for (const definition of custom ?? []) {
     if (registry.has(definition.name)) {
       throw new RetikzGraphError({
-        code: RetikzGraphErrorCode.DefinitionDuplicate,
+        code: RetikzGraphErrorCode.ProviderDefinitionDuplicate,
         message: `Graph theme '${definition.name}' is already registered.`,
         details: { capability: 'graph-theme', key: definition.name },
       });

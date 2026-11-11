@@ -17,6 +17,9 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         textColor: values.textColor,
         font: { size: values.fontSize },
         opacity: values.opacity,
+        textAlign: values.textAlign,
+        lineHeight: values.lineHeight,
+        maxTextWidth: values.maxTextWidth,
       }}
       style={{ fill: 'lightgray', stroke: 'gray' }}
       layout={{ minimumSize: { width: 120, height: 76 } }}

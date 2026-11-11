@@ -1,16 +1,17 @@
 // @vitest-environment jsdom
 import type { AnyCompositeDefinition, IRScene } from '@retikz/core';
-import { compileToScene, CompositeBaseSchema, defineComposite } from '@retikz/core';
+import { CompositeBaseSchema, defineComposite } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import type { ReconcilerPreparedCommit } from '@retikz/reconciler';
 import type {
+  InputRetainedRendererFactory,
   RenderFrameSnapshot,
   RenderRuntimeConfig,
   RetainedRendererFactory,
-  InputRetainedRendererFactory,
 } from '@retikz/render/runtime';
 import { defineRetainedRenderer, RetikzRenderErrorCode } from '@retikz/render/runtime';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { enum as zodEnum, literal, strictObject, string } from 'zod';
+import { literal, strictObject, string, enum as zodEnum } from 'zod';
 
 import type { InputEmbedAdapter, InputScene, VanillaCompileDriver } from '../../src';
 import { InputLayerCache } from '../../src';
@@ -201,13 +202,11 @@ const createLayerDriver = (): VanillaCompileDriver => {
 
       let currentAuthoring = authoring;
       const session = Object.freeze({
-        observers: Object.freeze([]),
         resolve: (coreOutput: Parameters<ReturnType<VanillaCompileDriver['create']>['resolve']>[0]) => {
           if (currentAuthoring === 'fail') throw new Error('expected compile driver failure');
 
           return Object.freeze({
             primary: coreOutput.result,
-            observerOutputs: coreOutput.observerOutputs,
             layers:
               currentAuthoring === true
                 ? Object.freeze([
@@ -298,7 +297,7 @@ describe('@retikz/vanilla 保留安装座', () => {
     const committedFrame = frames.at(-1);
 
     expect(() => view.update(layerScene('fail'))).toThrow(
-      /Failed to publish the compilation|RETAINED_RENDERER_PREPARE_FAILED|Vanilla compile driver resolve failed/,
+      /Failed to publish the compilation|RENDER_RUNTIME_RENDERER_PREPARE_FAILED|Vanilla compile driver resolve failed/,
     );
     expect(frames.at(-1)).toBe(committedFrame);
     expect(view.artifacts).toBe(artifacts);
@@ -432,7 +431,7 @@ describe('@retikz/vanilla 保留安装座', () => {
     });
 
     expect(() => view.update(cachedDatasetScene('#22c55e'))).toThrow(
-      /Failed to publish the compilation|RETAINED_RENDERER_PREPARE_FAILED|Vanilla compile driver resolve failed/,
+      /Failed to publish the compilation|RENDER_RUNTIME_RENDERER_PREPARE_FAILED|Vanilla compile driver resolve failed/,
     );
     expect(greenCompile).toHaveBeenCalledTimes(1);
 
@@ -478,7 +477,7 @@ describe('@retikz/vanilla 保留安装座', () => {
       compile: () => ({ children: [] }),
     });
     const retained = createRetainedCompositeDefinitions([first, second]);
-    const invalid = expect.objectContaining({ code: RetikzRenderErrorCode.RetainedRuntimeInputInvalid });
+    const invalid = expect.objectContaining({ code: RetikzRenderErrorCode.RuntimeInputInvalid });
 
     expect(() => retained.prepare([first])).toThrow(invalid);
     expect(() => retained.prepare([second, first])).toThrow(invalid);
@@ -508,7 +507,7 @@ describe('@retikz/vanilla 保留安装座', () => {
     const retained = createRetainedCompositeDefinitions([initial]);
 
     expect(() => retained.prepare([candidate])).toThrow(
-      expect.objectContaining({ code: RetikzRenderErrorCode.RetainedRuntimeInputInvalid }),
+      expect.objectContaining({ code: RetikzRenderErrorCode.RuntimeInputInvalid }),
     );
   });
 
@@ -561,14 +560,14 @@ describe('@retikz/vanilla 保留安装座', () => {
     rejectNextPrepare = true;
 
     expect(() => view.update(source('#3b82f6'))).toThrowError(
-      expect.objectContaining({ code: RetikzRenderErrorCode.RetainedRendererPrepareFailed }),
+      expect.objectContaining({ code: RetikzRenderErrorCode.RuntimeRendererPrepareFailed }),
     );
 
     expect(frames.at(-1)).toBe(committedFrame);
     expect(view.compileResult).toBe(committedCompileResult);
     expect(view.root.innerHTML).toBe(committedHtml);
     expect(view.diagnostics()).toEqual([
-      expect.objectContaining({ code: RetikzRenderErrorCode.RetainedRendererPrepareFailed }),
+      expect.objectContaining({ code: RetikzRenderErrorCode.RuntimeRendererPrepareFailed }),
     ]);
 
     view.dispose();
@@ -690,7 +689,7 @@ describe('@retikz/vanilla 保留安装座', () => {
     const view = mountCanvas(container, source('#ef4444'));
 
     expect(() => view.update(source('#22c55e'), { canvas: { devicePixelRatio: 2 } })).toThrow(
-      expect.objectContaining({ code: RetikzRenderErrorCode.RetainedRuntimeInputInvalid }),
+      expect.objectContaining({ code: RetikzRenderErrorCode.RuntimeInputInvalid }),
     );
   });
 
@@ -705,7 +704,7 @@ describe('@retikz/vanilla 保留安装座', () => {
     });
 
     expect(() => view.update(source('#22c55e'), { animation })).toThrow(
-      expect.objectContaining({ code: RetikzRenderErrorCode.RetainedRuntimeInputInvalid }),
+      expect.objectContaining({ code: RetikzRenderErrorCode.RuntimeInputInvalid }),
     );
     expect(configGetter).not.toHaveBeenCalled();
 
@@ -773,7 +772,7 @@ describe('@retikz/vanilla 保留安装座', () => {
     const container = document.createElement('div');
     const view = mountSvg(container, source('#ef4444'), {
       runtime: { mode: 'static' },
-      compile: { artifacts: { nodeLayouts: true } },
+      compile: {},
     });
     const root = view.root;
 
@@ -783,7 +782,7 @@ describe('@retikz/vanilla 保留安装座', () => {
     expect(view.root).toBe(root);
     expect(view.root.querySelector('[data-retikz-id="changed"]')?.getAttribute('fill')).toBe('#22c55e');
     expect(view.runtimeMeta.layers).toHaveLength(1);
-    expect(view.artifacts.length).toBeGreaterThan(0);
+    expect(view.artifacts).toEqual([]);
   });
 
   it('IR/InputScene Canvas static view 完整重绘并复用 root', () => {
@@ -826,7 +825,7 @@ describe('@retikz/vanilla 保留安装座', () => {
     const container = document.createElement('div');
 
     expect(() => mountSvg(container, source('#ef4444'), { runtime } as never)).toThrowError(
-      expect.objectContaining({ code: RetikzRenderErrorCode.RetainedRuntimeInputInvalid }),
+      expect.objectContaining({ code: RetikzRenderErrorCode.RuntimeInputInvalid }),
     );
     expect(getter).not.toHaveBeenCalled();
     expect(container.children).toHaveLength(0);
@@ -835,7 +834,7 @@ describe('@retikz/vanilla 保留安装座', () => {
     const options = Object.defineProperty({}, 'runtime', { enumerable: true, get: runtimeGetter });
 
     expect(() => mountSvg(container, source('#ef4444'), options as never)).toThrowError(
-      expect.objectContaining({ code: RetikzRenderErrorCode.RetainedRuntimeInputInvalid }),
+      expect.objectContaining({ code: RetikzRenderErrorCode.RuntimeInputInvalid }),
     );
     expect(runtimeGetter).not.toHaveBeenCalled();
     expect(container.children).toHaveLength(0);
@@ -844,7 +843,7 @@ describe('@retikz/vanilla 保留安装座', () => {
   it('raw static compile 失败保留旧 view，materialization 失败同步抛出', () => {
     const view = mountSvg(document.createElement('div'), source('#ef4444'), {
       runtime: { mode: 'static' },
-      compile: { artifacts: { nodeLayouts: true } },
+      compile: {},
     });
     const html = view.root.innerHTML;
     const artifacts = view.artifacts;
@@ -899,7 +898,7 @@ describe('@retikz/vanilla 保留安装座', () => {
     const accepted = vi.fn();
 
     expect(() => view.hydrate({ handlers: { changed: { click: rejected } } })).toThrow(
-      /Failed to publish the compilation|RETAINED_RENDERER_PREPARE_FAILED|Vanilla compile driver resolve failed/,
+      /Failed to publish the compilation|RENDER_RUNTIME_RENDERER_PREPARE_FAILED|Vanilla compile driver resolve failed/,
     );
 
     view.hydrate({ handlers: { changed: { click: accepted } } });
@@ -929,7 +928,7 @@ describe('@retikz/vanilla 保留安装座', () => {
     rejectNextUpdate = true;
 
     expect(() => hydration.dispose()).toThrow(
-      /Failed to publish the compilation|RETAINED_RENDERER_PREPARE_FAILED|Vanilla compile driver resolve failed/,
+      /Failed to publish the compilation|RENDER_RUNTIME_RENDERER_PREPARE_FAILED|Vanilla compile driver resolve failed/,
     );
 
     hydration.dispose();
@@ -991,7 +990,7 @@ describe('@retikz/vanilla 保留安装座', () => {
   it('renderer update 失败时保留 committed artifacts 与 runtimeMeta identity', () => {
     const container = document.createElement('div');
     const view = mountSvg(container, source('#ef4444'), {
-      compile: { artifacts: { nodeLayouts: true } },
+      compile: {},
       runtime: { rendererFactory: createMemoryRendererFactory('entity', true) },
     });
     const artifacts = view.artifacts;
@@ -1000,7 +999,7 @@ describe('@retikz/vanilla 保留安装座', () => {
     const committedHtml = view.root.innerHTML;
 
     expect(() => view.update(source('#22c55e'))).toThrow(
-      /Failed to publish the compilation|RETAINED_RENDERER_PREPARE_FAILED|Vanilla compile driver resolve failed/,
+      /Failed to publish the compilation|RENDER_RUNTIME_RENDERER_PREPARE_FAILED|Vanilla compile driver resolve failed/,
     );
     expect(view.artifacts).toBe(artifacts);
     expect(view.runtimeMeta).toBe(runtimeMeta);

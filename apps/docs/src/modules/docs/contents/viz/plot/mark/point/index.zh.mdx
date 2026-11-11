@@ -298,7 +298,7 @@ document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout
 | `displayFormat` | 文本格式       | 仅与 `text` 字段同用，直接指定数值或时间格式串，不是通道绑定                                                                                          |
 | `textColor`     | 文字颜色       | 支持常量或字段通道，作用于文本节点；附属标签的颜色在 `label` 中设置                                                                                   |
 | `font`          | 字体           | 支持字体配置对象或字段通道，可设置字号、字重、字体族等；附属标签使用 `label.font`                                                                     |
-| `align`         | 多行文字对齐   | 支持 `start`、`middle`、`end`，作用于多行文本块内部                                                                                                   |
+| `textAlign`     | 多行文字对齐   | 支持 `start`、`middle`、`end`，作用于多行文本块内部                                                                                                   |
 | `lineHeight`    | 文字行高       | 正数，输出单位；作用于多行文本节点                                                                                                                    |
 | `maxTextWidth`  | 文字宽度上限   | 正数，超过宽度时换行；与行高、对齐结合使用                                                                                                            |
 | `dx`、`dy`      | 文本位置偏移   | 直接指定数值，不支持字段通道；正值分别向右和屏幕下方移动，仅作用于文本节点                                                                            |

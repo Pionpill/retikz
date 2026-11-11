@@ -6,7 +6,7 @@ import {
   referenceCoordinateControl,
   referenceCategoryControl,
   referenceContinuousCondition,
-} from '../shared/reference-coordinate.controls';
+} from '../shared/reference-coordinate-fields';
 import { referencePathI18n } from './reference-path.i18n';
 
 /** 图元位置试验场的控件与稳定状态 */

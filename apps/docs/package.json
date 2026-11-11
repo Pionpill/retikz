@@ -105,6 +105,7 @@
     "typedoc": "catalog:",
     "vite": "catalog:",
     "vitest": "catalog:",
-    "oxfmt": "catalog:"
+    "oxfmt": "catalog:",
+    "@retikz/reconciler": "workspace:*"
   }
 }

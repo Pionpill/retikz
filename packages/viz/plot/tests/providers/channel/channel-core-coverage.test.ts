@@ -309,7 +309,7 @@ describe('通道核心覆盖（契约）', () => {
       scale: { default: 1.1, x: 1.2, y: 0.9 },
       style: { shadow: 'md', blendMode: 'multiply' },
       layout: {
-        align: 'start',
+        textAlign: 'start',
         lineHeight: 18,
         maxTextWidth: 72,
         minimumSize: { default: 14, width: 16 },

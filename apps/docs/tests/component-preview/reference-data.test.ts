@@ -1,4 +1,5 @@
-import { compileToScene, fallbackMeasurer, resolveCoreProviderDependencies } from '@retikz/core';
+import { fallbackMeasurer, resolveCoreProviderDependencies } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { expect, it } from 'vitest';
 
 import { getPreviewControlFields } from '../../src/modules/docs/components/component-preview/controls';

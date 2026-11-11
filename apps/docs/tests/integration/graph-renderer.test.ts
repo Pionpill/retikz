@@ -1,11 +1,12 @@
 import type { IRScene, Scene, ScenePrimitive } from '@retikz/core';
-import { compileToScene, ThemeMode } from '@retikz/core';
+import { ThemeMode } from '@retikz/core';
 import type { IRGraph } from '@retikz/graph';
 import { createGraphDefinitions } from '@retikz/graph';
 import { Entity, Graph, Relation } from '@retikz/graph-react';
 import type { InputGraph } from '@retikz/graph-vanilla';
 import { createGraphVanillaAdapters, graph, graphInputEmbedAdapter, normalizeGraph } from '@retikz/graph-vanilla';
 import { Node } from '@retikz/react';
+import { compileToScene } from '@retikz/reconciler';
 import { drawScene } from '@retikz/render/canvas';
 import { renderToSvgString } from '@retikz/render/svg';
 import { normalizeScene, renderToSvgString as renderVanillaToSvgString, scene } from '@retikz/vanilla';

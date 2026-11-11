@@ -447,7 +447,7 @@ export declare const stagger: (
 | `easing?`     | `"linear" \| "ease" \| "ease-in" \| "ease-out" \| "ease-in-out" \| [number, number, number, number]`                                     | —       | —           |
 | `fill?`       | `"none" \| "forwards" \| "backwards" \| "both"`                                                                                          | —       | —           |
 | `iterations?` | `number \| "infinite"`                                                                                                                   | —       | —           |
-| `origin?`     | `"top" \| "right" \| "bottom" \| "left" \| "top-right" \| "top-left" \| "bottom-right" \| "bottom-left" \| [number, number] \| "center"` | —       | —           |
+| `origin?`     | `[number, number] \| "center" \| "top" \| "right" \| "bottom" \| "left" \| "top-right" \| "top-left" \| "bottom-right" \| "bottom-left"` | —       | —           |
 | `trigger?`    | `"load" \| "visible" \| "manual" \| { onEvent: string; }`                                                                                | —       | —           |
 
 </ApiTable>
@@ -502,7 +502,7 @@ Common members apply to every branch; a value must also satisfy at least one bra
 | Member      | Type                                                                                                                                                              | Default | Description |
 | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
 | `keyframes` | `Array<{ at: number; value: string; easing?: "linear" \| "ease" \| "ease-in" \| "ease-out" \| "ease-in-out" \| [number, number, number, number] \| undefined; }>` | —       | —           |
-| `property`  | `"fill" \| "stroke"`                                                                                                                                              | —       | —           |
+| `property`  | `"stroke" \| "fill"`                                                                                                                                              | —       | —           |
 
 </ApiTable>
 
@@ -559,7 +559,7 @@ Property names use `AnimationProperty`; easing presets use `AnimationEasing`. Un
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRKeyframe"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={198}>IRKeyframe</ApiSourceLink> / <ApiSourceLink label={"KeyframeSchema"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={94}>KeyframeSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRKeyframe"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={198}>IRKeyframe</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -582,12 +582,6 @@ Property names use `AnimationProperty`; easing presets use `AnimationEasing`. Un
 ```ts
 export type IRKeyframe = ZodInfer<typeof KeyframeSchema>;
 ```
-
-</DocTab>
-
-<DocTab value="schema" label="Schema">
-
-<ZodSchema name="KeyframeSchema" />
 
 </DocTab>
 
@@ -706,31 +700,3 @@ export type AnimationControls = {
 </DocTab>
 
 </DocTabs>
-
-## Configuration and validation
-
-#### <ApiSourceLink label={"EasingSchema"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={83}>EasingSchema</ApiSourceLink>
-
-`EasingSchema` accepts a built-in easing name or a cubic-bezier tuple `[x1, y1, x2, y2]`.
-
-`x1` and `x2` must be between 0 and 1. `y1` and `y2` may exceed that range to express overshoot.
-
-<ZodSchema name="EasingSchema" />
-
-#### <ApiSourceLink label={"TriggerSchema"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={112}>TriggerSchema</ApiSourceLink>
-
-`TriggerSchema` accepts `load`, `visible`, `manual`, or an object carrying an event name. The IR stores the name, never a callback function.
-
-<ZodSchema name="TriggerSchema" />
-
-#### <ApiSourceLink label={"EventTriggerSchema"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={107}>EventTriggerSchema</ApiSourceLink>
-
-<ZodSchema name="EventTriggerSchema" />
-
-#### <ApiSourceLink label={"OriginSchema"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={117}>OriginSchema</ApiSourceLink>
-
-`OriginSchema` accepts a canonical anchor name or element-local `[x, y]` coordinates. It affects scale, scaleX, scaleY, and rotate only.
-
-<ZodSchema name="OriginSchema" />
-
-For presets, triggers, and fallback behavior at the component layer, see [Animation](/kernel/visual/animation/usage).

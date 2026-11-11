@@ -16,24 +16,43 @@ export const RuntimeSourcePhase = {
 
 /** Runtime transaction、Computation、registry、Source 与 participant 的稳定错误码 */
 export const RetikzRuntimeErrorCode = {
-  /** Source definition 重复 */
-  Duplicate: 'RUNTIME_SOURCE_DUPLICATE',
-  /** Source 不存在 */
-  Unknown: 'RUNTIME_SOURCE_UNKNOWN',
-  /** Source token 无效 */
-  TokenInvalid: 'RUNTIME_SOURCE_TOKEN_INVALID',
   /** identity 无效 */
   IdentityInvalid: 'RUNTIME_IDENTITY_INVALID',
-  /** Source capture 失败 */
-  CaptureFailed: 'RUNTIME_SOURCE_CAPTURE_FAILED',
-  /** Source identity 收集失败 */
-  CollectIdentitiesFailed: 'RUNTIME_SOURCE_COLLECT_IDENTITIES_FAILED',
-  /** Source read 失败 */
-  ReadFailed: 'RUNTIME_SOURCE_READ_FAILED',
-  /** Source compare 失败 */
-  CompareFailed: 'RUNTIME_SOURCE_COMPARE_FAILED',
+
   /** Runtime 内部不变量被破坏 */
   InternalInvariant: 'RUNTIME_INTERNAL_INVARIANT',
+
+  /** registry 不匹配 */
+  RegistryMismatch: 'RUNTIME_REGISTRY_MISMATCH',
+
+  /** Computation 或 participant 使用了未声明依赖 */
+  DependencyUndeclared: 'RUNTIME_DEPENDENCY_UNDECLARED',
+
+  /** runtime 重入 */
+  Reentrant: 'RUNTIME_REENTRANT',
+
+  /** runtime 已释放 */
+  Disposed: 'RUNTIME_DISPOSED',
+
+  /** Source definition 重复 */
+  SourceDuplicate: 'RUNTIME_SOURCE_DUPLICATE',
+  /** Source 不存在 */
+  SourceUnknown: 'RUNTIME_SOURCE_UNKNOWN',
+  /** Source token 无效 */
+  SourceTokenInvalid: 'RUNTIME_SOURCE_TOKEN_INVALID',
+  /** Source capture 失败 */
+  SourceCaptureFailed: 'RUNTIME_SOURCE_CAPTURE_FAILED',
+  /** Source identity 收集失败 */
+  SourceCollectIdentitiesFailed: 'RUNTIME_SOURCE_COLLECT_IDENTITIES_FAILED',
+  /** Source read 失败 */
+  SourceReadFailed: 'RUNTIME_SOURCE_READ_FAILED',
+  /** Source compare 失败 */
+  SourceCompareFailed: 'RUNTIME_SOURCE_COMPARE_FAILED',
+  /** 数据源持有值的所有权别名 */
+  SourceOwnershipAlias: 'RUNTIME_SOURCE_OWNERSHIP_ALIAS',
+  /** Source command 无效 */
+  SourceCommandInvalid: 'RUNTIME_SOURCE_COMMAND_INVALID',
+
   /** Computation identity 无效 */
   ComputationIdInvalid: 'RUNTIME_COMPUTATION_ID_INVALID',
   /** Computation definition 重复 */
@@ -44,46 +63,34 @@ export const RetikzRuntimeErrorCode = {
   ComputationTokenInvalid: 'RUNTIME_COMPUTATION_TOKEN_INVALID',
   /** Computation graph 存在环 */
   ComputationCycle: 'RUNTIME_COMPUTATION_CYCLE',
-  /** trace definition 无效 */
-  TraceDefinitionInvalid: 'RUNTIME_TRACE_DEFINITION_INVALID',
-  /** registry 不匹配 */
-  RegistryMismatch: 'RUNTIME_REGISTRY_MISMATCH',
-  /** update strategy 无效 */
-  UpdateStrategyInvalid: 'RUNTIME_UPDATE_STRATEGY_INVALID',
-  /** initial Source 不匹配 */
-  InitialSourceMismatch: 'RUNTIME_INITIAL_SOURCE_MISMATCH',
-  /** revision 已过期 */
-  RevisionStale: 'RUNTIME_REVISION_STALE',
-  /** revision 已耗尽 */
-  RevisionExhausted: 'RUNTIME_REVISION_EXHAUSTED',
-  /** change set base revision 不匹配 */
-  ChangeSetRevisionMismatch: 'RUNTIME_CHANGESET_REVISION_MISMATCH',
-  /** Computation 使用了未声明依赖 */
-  UndeclaredDependency: 'RUNTIME_UNDECLARED_DEPENDENCY',
   /** Computation full 执行失败 */
   ComputationRunFailed: 'RUNTIME_COMPUTATION_RUN_FAILED',
   /** Computation update 执行失败 */
   ComputationUpdateFailed: 'RUNTIME_COMPUTATION_UPDATE_FAILED',
   /** result capture 失败 */
-  ResultCaptureFailed: 'RUNTIME_RESULT_CAPTURE_FAILED',
+  ComputationResultCaptureFailed: 'RUNTIME_COMPUTATION_RESULT_CAPTURE_FAILED',
   /** result private read 失败 */
-  ResultComputationReadFailed: 'RUNTIME_RESULT_COMPUTATION_READ_FAILED',
+  ComputationResultReadFailed: 'RUNTIME_COMPUTATION_RESULT_READ_FAILED',
   /** result public read 失败 */
-  ResultPublicReadFailed: 'RUNTIME_RESULT_PUBLIC_READ_FAILED',
-  /** 数据源持有值的所有权别名 */
-  SourceOwnershipAlias: 'RUNTIME_SOURCE_OWNERSHIP_ALIAS',
+  ComputationResultPublicReadFailed: 'RUNTIME_COMPUTATION_RESULT_PUBLIC_READ_FAILED',
   /** 计算结果的所有权别名 */
-  ResultOwnershipAlias: 'RUNTIME_RESULT_OWNERSHIP_ALIAS',
-  /** runtime 重入 */
-  Reentrant: 'RUNTIME_REENTRANT',
-  /** runtime 已释放 */
-  Disposed: 'RUNTIME_DISPOSED',
+  ComputationResultOwnershipAlias: 'RUNTIME_COMPUTATION_RESULT_OWNERSHIP_ALIAS',
+
+  /** update strategy 无效 */
+  TransactionUpdateStrategyInvalid: 'RUNTIME_TRANSACTION_UPDATE_STRATEGY_INVALID',
+  /** initial Source 不匹配 */
+  TransactionInitialSourceMismatch: 'RUNTIME_TRANSACTION_INITIAL_SOURCE_MISMATCH',
+  /** revision 已过期 */
+  TransactionRevisionStale: 'RUNTIME_TRANSACTION_REVISION_STALE',
+  /** revision 已耗尽 */
+  TransactionRevisionExhausted: 'RUNTIME_TRANSACTION_REVISION_EXHAUSTED',
+  /** change set base revision 不匹配 */
+  TransactionChangeSetRevisionMismatch: 'RUNTIME_TRANSACTION_CHANGE_SET_REVISION_MISMATCH',
   /** revision 无效 */
-  RevisionInvalid: 'RUNTIME_REVISION_INVALID',
+  TransactionRevisionInvalid: 'RUNTIME_TRANSACTION_REVISION_INVALID',
   /** change set 无效 */
-  ChangeSetInvalid: 'RUNTIME_CHANGESET_INVALID',
-  /** Source command 无效 */
-  SourceCommandInvalid: 'RUNTIME_SOURCE_COMMAND_INVALID',
+  TransactionChangeSetInvalid: 'RUNTIME_TRANSACTION_CHANGE_SET_INVALID',
+
   /** participant token 无效 */
   ParticipantTokenInvalid: 'RUNTIME_PARTICIPANT_TOKEN_INVALID',
   /** participant definition 重复 */
@@ -106,6 +113,9 @@ export const RetikzRuntimeErrorCode = {
   ParticipantTokenDisposeFailed: 'RUNTIME_PARTICIPANT_TOKEN_DISPOSE_FAILED',
   /** participant dispose 失败 */
   ParticipantDisposeFailed: 'RUNTIME_PARTICIPANT_DISPOSE_FAILED',
+
+  /** trace definition 无效 */
+  TraceDefinitionInvalid: 'RUNTIME_TRACE_DEFINITION_INVALID',
 } as const;
 
 /** Runtime Source 执行阶段 */

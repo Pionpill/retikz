@@ -17,4 +17,4 @@ description: Use when probing existing Retikz behavior with adversarial or regre
 
 先列出当前行为、已有守卫和本轮新增失效模式，复用既有 helper/case。所有失败应有可复现输入与预期依据；不把体验偏好写成 bug。
 
-运行顺序按根 AGENTS：Oxfmt → 受影响 Oxlint → tsc --noEmit 与必要测试。临时探索仅写目标 workspace 的 tests/_scratch，使用 pnpm temp:test 自动清理；不在脚本外保留临时 case。静态类型已排除的输入不靠强转伪造 runtime case。
+运行顺序按根 AGENTS：Oxfmt → 受影响 Oxlint → tsc --noEmit 与必要测试。创建探索 case 或决定转正前必读 [单元测试编写与 Review 规范](../test-contract/references/unit-tests.md)，统一 scratch 运行、清理和正式准入；不因对抗流程要求写测试而永久保留。

@@ -5,11 +5,16 @@ export * from './normalize/helpers';
 export * from './normalize/node';
 export * from './normalize/path';
 export { isInputScene, normalizeScene } from './normalize/scene';
-export * from './normalize/scene/runtime-meta';
 export * from './normalize/scene/types';
 export * from './normalize/scope';
 export * from './processing';
-export * from './runtime/compile-driver';
+export type {
+  InputVanillaCompileDriver,
+  VanillaCompileDriver,
+  VanillaCompileDriverSession,
+  VanillaCompileOutput,
+} from './runtime/compile-driver';
+export { defaultVanillaCompileDriver } from './runtime/compile-driver';
 export * from './runtime/render-svg';
 export type { SceneResult } from './runtime/to-scene';
 export { toSceneResult } from './runtime/to-scene';

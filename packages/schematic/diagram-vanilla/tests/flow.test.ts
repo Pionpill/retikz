@@ -187,7 +187,7 @@ describe('@retikz/diagram-vanilla/flow', () => {
         {
           id: 'form',
           text: ['Frontend form', { text: 'Complete user details', fill: 'gray', font: { size: 'sm' } }],
-          layout: { align: 'start' as const, lineHeight: 18, maxTextWidth: 160 },
+          layout: { textAlign: 'start' as const, lineHeight: 18, maxTextWidth: 160 },
         },
       ],
       children: ['form'],

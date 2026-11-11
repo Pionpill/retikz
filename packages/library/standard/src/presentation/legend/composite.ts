@@ -1,5 +1,6 @@
-import type { CompositeArtifactOf, CompositeDefinition, CoreDependencyProvider } from '@retikz/core';
+import type { CompositeDefinition, CoreDependencyProvider } from '@retikz/core';
 import { defineComposite } from '@retikz/core';
+import type { CompositeArtifactOf } from '@retikz/reconciler';
 
 import { STANDARD_NAMESPACE } from '../../shared';
 import { compileLegend } from './pipeline';

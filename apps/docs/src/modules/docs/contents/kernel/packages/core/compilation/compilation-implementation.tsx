@@ -1,4 +1,4 @@
-﻿import { FlowEntities, FlowLayout, FlowRelations } from '@retikz/diagram-react/flow';
+import { FlowEntities, FlowLayout, FlowRelations } from '@retikz/diagram-react/flow';
 import type { FC } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -17,8 +17,8 @@ const CompilationImplementation: FC<CompilationImplementationProps> = props => {
   const lang = props.lang ?? ((i18n.resolvedLanguage ?? 'zh').startsWith('zh') ? 'zh' : 'en');
   const text = compilationImplementationI18n[lang];
   const stages = [
-    { id: 'entry', name: 'prepareSceneCompilation', detail: text.entry },
-    { id: 'context', name: 'createCompileContext', detail: text.context },
+    { id: 'entry', name: 'compileSceneSnapshot', detail: text.entry },
+    { id: 'context', name: 'createCompileRuntime', detail: text.context },
     { id: 'visit', name: 'compileChildrenToPrimitives', detail: text.visit },
     { id: 'flush', name: 'flushPendingPathEmissions', detail: text.flush },
     { id: 'sort', name: 'stableSortByZIndex', detail: text.sort },
@@ -32,7 +32,7 @@ const CompilationImplementation: FC<CompilationImplementationProps> = props => {
     { id: 'paths', name: 'PathPrimitive / GroupPrimitive', detail: text.paths },
     { id: 'primitives', name: 'ScenePrimitive[]', detail: text.primitives },
     { id: 'scene', name: 'Scene', detail: text.scene },
-    { id: 'extras', name: 'artifacts / spatialHandles', detail: text.extras },
+    { id: 'extras', name: 'artifacts', detail: text.extras },
   ];
   return (
     <PreviewFlowDiagram {...logicFigureGraphProps()} style={{ maxWidth: '100%', height: 'auto' }}>
