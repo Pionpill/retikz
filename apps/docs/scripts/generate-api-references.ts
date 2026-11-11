@@ -22,6 +22,7 @@ import { writePlotChannelApiReferenceMdx } from './api-reference/plot-channel';
 import { writePlotIntervalApiReferenceMdx } from './api-reference/plot-interval';
 import { writePlotPathApiReferenceMdx } from './api-reference/plot-path';
 import { writePlotPointApiReferenceMdx } from './api-reference/plot-point';
+import { writePlotSpatialApiReferenceMdx } from './api-reference/plot-spatial';
 import { writeRelationApiReferenceMdx } from './api-reference/relation';
 import { writeRibbonApiReferenceMdx } from './api-reference/ribbon';
 import { writeRuntimeApiReferenceMdx } from './api-reference/runtime';
@@ -120,3 +121,5 @@ await writePlotPointApiReferenceMdx();
 await writePlotPathApiReferenceMdx();
 
 await writePlotIntervalApiReferenceMdx();
+
+await writePlotSpatialApiReferenceMdx();

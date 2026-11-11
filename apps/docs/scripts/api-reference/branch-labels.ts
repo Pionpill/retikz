@@ -14,6 +14,41 @@ export const apiReferenceBranchLabels: Readonly<
     >
   >
 > = {
+  '@retikz/plot-react#PlotScaleProps': [
+    { value: 'log', field: 'type', type: "'log'", label: { zh: '对数', en: 'Logarithmic' } },
+    { value: 'symlog', field: 'type', type: "'symlog'", label: { zh: '对称对数', en: 'Symmetric logarithmic' } },
+    {
+      value: 'continuous',
+      field: 'singleValueSpan',
+      label: { zh: '连续映射', en: 'Continuous mapping' },
+      and: [
+        { field: 'base', type: 'never' },
+        { field: 'constant', type: 'never' },
+      ],
+    },
+    { value: 'band', field: 'type', type: "'band'", label: { zh: '分类带宽', en: 'Category bands' } },
+    { value: 'point', field: 'type', type: "'point'", label: { zh: '分类点位', en: 'Category points' } },
+  ],
+  '@retikz/plot-vanilla#InputPlotScale': [
+    { value: 'log', field: 'type', type: "'log'", label: { zh: '对数', en: 'Logarithmic' } },
+    { value: 'symlog', field: 'type', type: "'symlog'", label: { zh: '对称对数', en: 'Symmetric logarithmic' } },
+    {
+      value: 'continuous',
+      field: 'singleValueSpan',
+      label: { zh: '连续映射', en: 'Continuous mapping' },
+      and: [
+        { field: 'base', type: 'never' },
+        { field: 'constant', type: 'never' },
+      ],
+    },
+    { value: 'band', field: 'type', type: "'band'", label: { zh: '分类带宽', en: 'Category bands' } },
+    { value: 'point', field: 'type', type: "'point'", label: { zh: '分类点位', en: 'Category points' } },
+  ],
+  '@retikz/plot#CellGeometry': [
+    { value: 'rect', field: 'kind', type: "'rect'", label: { zh: '矩形', en: 'Rectangle' } },
+    { value: 'sector', field: 'kind', type: "'sector'", label: { zh: '环形扇区', en: 'Annular sector' } },
+    { value: 'contour', field: 'kind', type: "'contour'", label: { zh: '轮廓', en: 'Contour' } },
+  ],
   '@retikz/core#IRAnimationTrack': [
     {
       value: 'opacity',

@@ -111,13 +111,18 @@ describe('布局实用程序', () => {
     const plot = vizSection.find(section => section.id === 'plot');
     expect(plot?.pages.slice(0, 3).every(page => page.sidebarGroup === undefined)).toBe(true);
     expect(plot?.pages.slice(3).every(page => page.sidebarGroup === 'viz.plotGrammar')).toBe(true);
-    expect(plotPaths.slice(-11)).toEqual([
+    for (const id of ['scale', 'coordinate']) {
+      const group = plot?.pages.find(page => page.id === id);
+      const reference = group?.children?.at(-1);
+      expect(reference?.id).toBe('reference');
+      expect(reference?.difficulty).toBeUndefined();
+      expect(plotPaths).toContain(`/viz/plot/${id}/reference`);
+    }
+    expect(plotPaths.slice(-9)).toEqual([
       '/viz/plot/reference/plot',
       '/viz/plot/reference/encoding',
       '/viz/plot/reference/transform',
       '/viz/plot/reference/mark',
-      '/viz/plot/reference/scale',
-      '/viz/plot/reference/coordinate',
       '/viz/plot/reference/guide',
       '/viz/plot/reference/layout',
       '/viz/plot/reference/layer',

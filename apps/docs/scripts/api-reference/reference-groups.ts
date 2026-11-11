@@ -9,6 +9,132 @@ export type ReferenceGroup = {
 
 /** 显式分组清单，生成时拒绝成员遗漏、未知或重复 */
 export const referenceGroups: Readonly<Partial<Record<string, ReadonlyArray<ReferenceGroup>>>> = {
+  'viz/plot/scale': [
+    {
+      title: { zh: '声明输入', en: 'Authoring inputs' },
+      members: [
+        'PlotScale / PlotScaleProps',
+        'InputPlotScale',
+        'InputPlotScaleDimension',
+        'InputPlotPositionScaleType',
+      ],
+    },
+    {
+      title: { zh: '比例尺配置', en: 'Scale configuration' },
+      members: ['IRPlotScale', 'IRPlotScaleOperation', 'IRPlotCustomScale'],
+      schemas: ['ScaleSchema', 'ScaleOperationSchema', 'CustomScaleSchema'],
+    },
+    {
+      title: { zh: '位置映射', en: 'Position mapping' },
+      members: ['PositionScale', 'PositionScaleContinuity', 'PositionTickKind', 'TickSet'],
+    },
+    {
+      title: { zh: '连续位置比例尺', en: 'Continuous position scales' },
+      members: [
+        'IRPlotLinearScale',
+        'IRPlotTimeScale',
+        'IRPlotLogScale',
+        'IRPlotPowScale',
+        'IRPlotSqrtScale',
+        'IRPlotSymlogScale',
+        'IRPlotRadialScale',
+      ],
+      schemas: [
+        'LinearScaleSchema',
+        'TimeScaleSchema',
+        'LogScaleSchema',
+        'PowScaleSchema',
+        'SqrtScaleSchema',
+        'SymlogScaleSchema',
+        'RadialScaleSchema',
+      ],
+    },
+    {
+      title: { zh: '离散比例尺', en: 'Discrete scales' },
+      members: ['IRPlotBandScale', 'IRPlotPointScale', 'IRPlotOrdinalScale'],
+      schemas: ['BandScaleSchema', 'PointScaleSchema', 'OrdinalScaleSchema'],
+    },
+    {
+      title: { zh: '颜色比例尺', en: 'Color scales' },
+      members: [
+        'IRPlotSequentialColorScale',
+        'IRPlotDivergingColorScale',
+        'IRPlotQuantizeColorScale',
+        'IRPlotThresholdColorScale',
+        'IRPlotQuantileColorScale',
+      ],
+      schemas: [
+        'SequentialColorScaleSchema',
+        'DivergingColorScaleSchema',
+        'QuantizeColorScaleSchema',
+        'ThresholdColorScaleSchema',
+        'QuantileColorScaleSchema',
+      ],
+    },
+    {
+      title: { zh: '域留白与辅助值', en: 'Domain padding and supporting values' },
+      members: ['IRPlotDomainPadding', 'IRPlotCategoryValue'],
+      schemas: ['DomainPaddingSchema', 'CategoryValueSchema', 'ColorSchemeNameSchema'],
+    },
+  ],
+  'viz/plot/coordinate': [
+    {
+      title: { zh: '坐标配置', en: 'Coordinate configuration' },
+      members: [
+        'InputPlotCoordinate',
+        'IRPlotCoordinate',
+        'IRPlotCoordinateOperation',
+        'IRPlotCartesian1DCoordinate',
+        'IRPlotPolar1DCoordinate',
+        'IRPlotPolar2DCoordinate',
+        'IRPlotCustomCoordinate',
+      ],
+      schemas: [
+        'CoordinateSchema',
+        'CoordinateOperationSchema',
+        'Cartesian2DSchema',
+        'Cartesian1DSchema',
+        'Polar1DSchema',
+        'Polar2DSchema',
+        'CustomCoordinateSchema',
+      ],
+    },
+    {
+      title: { zh: '定义与注册', en: 'Definitions and registration' },
+      members: [
+        'CoordinateDefinition',
+        'AnyCoordinateDefinition',
+        'defineCoordinate',
+        'resolveCoordinateRegistry',
+        'CoordinateDefinitionResolveContext',
+        'CoordinateResolution',
+        'CoordinatePlotArea',
+      ],
+    },
+    {
+      title: { zh: '比例尺绑定', en: 'Scale bindings' },
+      members: [
+        'DimensionRole',
+        'CoordinateScaleNames',
+        'CoordinateScaleBinding',
+        'readCoordinateScaleNames',
+        'bindCoordinateScaleNames',
+      ],
+    },
+    {
+      title: { zh: '位置投影', en: 'Position projection' },
+      members: [
+        'CoordinateFrame',
+        'CoordinateFrameOptions',
+        'createCoordinateFrame',
+        'CoordinateDomainPaddingCapability',
+      ],
+    },
+    {
+      title: { zh: '单元投影', en: 'Cell projection' },
+      members: ['Cell', 'CellGeometry', 'CellProjectionOptions', 'CellProjectableCoordinate', 'hasProjectCell'],
+    },
+  ],
   'viz/data/scale': [
     {
       title: { zh: '定义与注册', en: 'Definitions and registration' },

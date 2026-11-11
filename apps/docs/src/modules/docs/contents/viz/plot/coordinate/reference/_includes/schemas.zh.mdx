@@ -1,8 +1,3 @@
----
-title: 契约 - 坐标系
-description: 查询 Plot 的直角、极坐标、一维与自定义坐标操作 schema。
----
-
 坐标操作定义位置角色及其比例尺归属：二维坐标需要 `x / y`，一维坐标只使用 `x`，具体角色再由坐标 Definition 映射到几何空间。
 
 React / Vanilla authoring 保留省略字段。`polar2D` 的起始角 `0`、终止角 `360`、内半径比例 `0` 由唯一坐标 schema 声明；直接 `parse()` 会物化这些默认值。Plot 坐标解析复用同一默认值，不回写作者原始配置。
@@ -77,7 +72,7 @@ React / Vanilla authoring 保留省略字段。`polar2D` 的起始角 `0`、终�
 
 <ZodSchema name="PlotCoordinateOperationSchema" description="内置坐标配置或自定义坐标操作的联合。" />
 
-## CoordinateFrame 位置投影
+## 位置投影约束
 
 支持 Position Adjustment 的 frame 把位置处理拆成两个同源能力：`mapRoles(values)` 只完成 position scale 映射，`projectMappedRoles(values)` 再把已映射 role tuple 投到屏幕。`projectRoles(values)` 保留为两者组合的普通投影入口。
 

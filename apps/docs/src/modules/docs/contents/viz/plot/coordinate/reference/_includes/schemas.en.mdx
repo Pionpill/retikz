@@ -1,8 +1,3 @@
----
-title: Contract - Coordinate
-description: Query the Plot schemas for Cartesian, polar, one-dimensional, and custom coordinate operations.
----
-
 Coordinate operations define positional roles and scale ownership. Two-dimensional coordinates consume `x / y`; one-dimensional coordinates consume only `x`; the selected coordinate Definition maps those roles into geometry.
 
 React / Vanilla authoring preserves omitted fields. The single coordinate schema declares the `polar2D` defaults: start angle `0`, end angle `360`, and inner-radius fraction `0`. Calling `parse()` materializes these defaults; Plot coordinate resolution reuses them without rewriting authored configuration.
@@ -35,7 +30,7 @@ React / Vanilla authoring preserves omitted fields. The single coordinate schema
 
 <ZodSchema name="PlotCoordinateOperationSchema" />
 
-## CoordinateFrame Position Projection
+## Position projection constraints
 
 A frame that supports Position Adjustment splits placement into two capabilities from the same projection model. `mapRoles(values)` performs position-scale mapping only, and `projectMappedRoles(values)` projects that mapped role tuple to screen space. `projectRoles(values)` remains the ordinary composed entry.
 

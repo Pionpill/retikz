@@ -1,0 +1,1035 @@
+{/* Generated reference. Do not edit manually. */}
+
+Coordinate operations define positional roles and scale ownership. Two-dimensional coordinates consume `x / y`; one-dimensional coordinates consume only `x`; the selected coordinate Definition maps those roles into geometry.
+
+React / Vanilla authoring preserves omitted fields. The single coordinate schema declares the `polar2D` defaults: start angle `0`, end angle `360`, and inner-radius fraction `0`. Calling `parse()` materializes these defaults; Plot coordinate resolution reuses them without rewriting authored configuration.
+
+**Position projection constraints**
+
+A frame that supports Position Adjustment splits placement into two capabilities from the same projection model. `mapRoles(values)` performs position-scale mapping only, and `projectMappedRoles(values)` projects that mapped role tuple to screen space. `projectRoles(values)` remains the ordinary composed entry.
+
+| Capability           | Purpose                                                        |
+| -------------------- | -------------------------------------------------------------- |
+| `roleScales`         | Read final `PositionScale`, range, bandwidth, and step by role |
+| `mapRoles`           | Raw role values → scale-output tuple                           |
+| `projectMappedRoles` | Scale-output tuple → screen position                           |
+| `projectRoles`       | One-step composed projection without adjustments               |
+| `placementBoundary`  | Cyclic roles, boundary normals, and glyph-to-role conversion   |
+
+A custom coordinate can keep only `projectRoles` when placement is unused. Point placement requires both split projection functions; automatic containment additionally requires `roleScales` and `placementBoundary`, and missing capabilities fail loudly.
+
+## Coordinate configuration
+
+#### <ApiSourceLink label={"InputPlotCoordinate"} path={"packages/viz/plot-vanilla/src/normalize/plot/contracts.ts"} startLine={22}>InputPlotCoordinate</ApiSourceLink>
+
+```ts
+export type InputPlotCoordinate =
+  | 'polar2D'
+  | 'cartesian1D'
+  | 'polar1D'
+  | {
+      type: 'polar2D';
+      innerRadius?: number;
+      startAngle?: number;
+      endAngle?: number;
+      interpolation?: PolarInterpolation;
+    }
+  | {
+      type: 'cartesian1D';
+      orientation?: 'horizontal' | 'vertical';
+    }
+  | {
+      type: 'polar1D';
+      radius?: number;
+      startAngle?: number;
+      endAngle?: number;
+    }
+  | ({
+      type: string;
+    } & JsonObject)
+  | IRPlotCoordinateOperation;
+```
+
+#### <ApiSourceLink label={"IRPlotCoordinate"} path={"packages/viz/plot/src/schemas/coordinate/types.ts"} startLine={17}>IRPlotCoordinate</ApiSourceLink> / <ApiSourceLink label={"CoordinateSchema"} path={"packages/viz/plot/src/schemas/coordinate/schema.ts"} startLine={115}>CoordinateSchema</ApiSourceLink>
+
+<DocTabs defaultValue="definition">
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRPlotCoordinate = ZodInput<typeof CoordinateSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+<ZodSchema name="PlotCoordinateSchema" />
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"IRPlotCoordinateOperation"} path={"packages/viz/plot/src/schemas/coordinate/types.ts"} startLine={20}>IRPlotCoordinateOperation</ApiSourceLink>
+
+```ts
+export type IRPlotCoordinateOperation = IRPlotCoordinate | IRPlotCustomCoordinate;
+```
+
+#### <ApiSourceLink label={"IRPlotCartesian1DCoordinate"} path={"packages/viz/plot/src/schemas/coordinate/types.ts"} startLine={23}>IRPlotCartesian1DCoordinate</ApiSourceLink> / <ApiSourceLink label={"Cartesian1DSchema"} path={"packages/viz/plot/src/schemas/coordinate/schema.ts"} startLine={56}>Cartesian1DSchema</ApiSourceLink>
+
+<DocTabs defaultValue="definition">
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRPlotCartesian1DCoordinate = ZodInfer<typeof Cartesian1DSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+<ZodSchema name="Cartesian1DSchema" />
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"IRPlotPolar1DCoordinate"} path={"packages/viz/plot/src/schemas/coordinate/types.ts"} startLine={26}>IRPlotPolar1DCoordinate</ApiSourceLink> / <ApiSourceLink label={"Polar1DSchema"} path={"packages/viz/plot/src/schemas/coordinate/schema.ts"} startLine={73}>Polar1DSchema</ApiSourceLink>
+
+<DocTabs defaultValue="definition">
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRPlotPolar1DCoordinate = ZodInfer<typeof Polar1DSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+<ZodSchema name="Polar1DSchema" />
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"IRPlotPolar2DCoordinate"} path={"packages/viz/plot/src/schemas/coordinate/types.ts"} startLine={29}>IRPlotPolar2DCoordinate</ApiSourceLink> / <ApiSourceLink label={"Polar2DSchema"} path={"packages/viz/plot/src/schemas/coordinate/schema.ts"} startLine={25}>Polar2DSchema</ApiSourceLink>
+
+<DocTabs defaultValue="definition">
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRPlotPolar2DCoordinate = ZodInput<typeof Polar2DSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+<ZodSchema name="Polar2DSchema" />
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"IRPlotCustomCoordinate"} path={"packages/viz/plot/src/schemas/coordinate/types.ts"} startLine={32}>IRPlotCustomCoordinate</ApiSourceLink> / <ApiSourceLink label={"CustomCoordinateSchema"} path={"packages/viz/plot/src/schemas/coordinate/schema.ts"} startLine={110}>CustomCoordinateSchema</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member          | Type                                                    | Default | Description |
+| --------------- | ------------------------------------------------------- | ------- | ----------- |
+| Index signature | `[key: string]: import("@retikz/foundation").JsonValue` | —       | —           |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRPlotCustomCoordinate = ZodInfer<typeof CustomCoordinateSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+<ZodSchema name="CustomCoordinateSchema" />
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"CoordinateOperationSchema"} path={"packages/viz/plot/src/schemas/coordinate/schema.ts"} startLine={123}>CoordinateOperationSchema</ApiSourceLink>
+
+<ZodSchema name="PlotCoordinateOperationSchema" />
+
+#### <ApiSourceLink label={"Cartesian2DSchema"} path={"packages/viz/plot/src/schemas/coordinate/schema.ts"} startLine={12}>Cartesian2DSchema</ApiSourceLink>
+
+<ZodSchema name="Cartesian2DSchema" />
+
+## Definitions and registration
+
+#### <ApiSourceLink label={"CoordinateDefinition"} path={"packages/viz/plot/src/contract/coordinate/define.ts"} startLine={148}>CoordinateDefinition</ApiSourceLink>
+
+A definition is a runtime object containing functions and is not stored in JSON IR; IR stores only the coordinate operation as `{ type, ...config }`
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member                                  | Type                                                                                                 | Default | Description                                                                                                       |
+| --------------------------------------- | ---------------------------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------- |
+| `TCoordinateOperation` (Type parameter) | `extends IRPlotCoordinateOperation = IRPlotCoordinateOperation`                                      | —       | Operation type parsed by the coordinate schema, connecting scale bindings with coordinate resolution              |
+| `domainPadding?`                        | `CoordinateDomainPaddingCapability`                                                                  | —       | Output-space boundary metrics for position roles                                                                  |
+| `resolve`                               | `(operation: TCoordinateOperation, ctx: CoordinateDefinitionResolveContext) => CoordinateResolution` | —       | Resolves a coordinate operation into a runtime frame and guide layers                                             |
+| `roles`                                 | `ReadonlyArray<DimensionRole>`                                                                       | —       | Position roles consumed by the coordinate, used to validate required channels and guide dimensions                |
+| `scaleBinding?`                         | `CoordinateScaleBinding<TCoordinateOperation>`                                                       | —       | Optional binding between operation fields and position roles; defaults to fields with the same names as the roles |
+| `schema`                                | `ZodType<TCoordinateOperation>`                                                                      | —       | Complete coordinate operation schema with a nonempty literal type field used as the registry key                  |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type CoordinateDefinition<TCoordinateOperation extends IRPlotCoordinateOperation = IRPlotCoordinateOperation> = {
+  domainPadding?: CoordinateDomainPaddingCapability;
+  schema: ZodType<TCoordinateOperation>;
+  roles: ReadonlyArray<DimensionRole>;
+  scaleBinding?: CoordinateScaleBinding<TCoordinateOperation>;
+  resolve: (operation: TCoordinateOperation, ctx: CoordinateDefinitionResolveContext) => CoordinateResolution;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"AnyCoordinateDefinition"} path={"packages/viz/plot/src/contract/coordinate/define.ts"} startLine={294}>AnyCoordinateDefinition</ApiSourceLink>
+
+The registry stores definitions with different operation types. Each schema narrows its operation before invocation; never prevents calling resolve directly through the wide registry type.
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Direct members">
+
+The remaining members are inherited from `CoordinateDefinition<IRPlotCoordinateOperation>`, with `'scaleBinding'`, `'schema'`, `'resolve'` removed. See “Type definition” for the complete composition.
+
+<ApiTable>
+
+| Member          | Type                                                                                                                                                                            | Default | Description                                                                                                 |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------- |
+| `resolve`       | `(operation: never, ctx: CoordinateDefinitionResolveContext) => CoordinateResolution`                                                                                           | —       | Wide internal placeholder; parse the operation with this definition.schema before invocation                |
+| `scaleBinding?` | `Readonly<{`<br />`read: (operation: never) => CoordinateScaleNames;`<br />`bind: (operation: never, scaleNames: CoordinateScaleNames) => IRPlotCoordinateOperation;`<br />`}>` | —       | Optional scale binding with its generic type erased; narrow the operation with the schema before invocation |
+| `schema`        | `ZodType`                                                                                                                                                                       | —       | Definitions have different schema types; the registry only needs to extract type and parse operations       |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type AnyCoordinateDefinition = Omit<
+  CoordinateDefinition<IRPlotCoordinateOperation>,
+  'scaleBinding' | 'schema' | 'resolve'
+> & {
+  schema: ZodType;
+  scaleBinding?: Readonly<{
+    read: (operation: never) => CoordinateScaleNames;
+    bind: (operation: never, scaleNames: CoordinateScaleNames) => IRPlotCoordinateOperation;
+  }>;
+  resolve: (operation: never, ctx: CoordinateDefinitionResolveContext) => CoordinateResolution;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"defineCoordinate"} path={"packages/viz/plot/src/contract/coordinate/define.ts"} startLine={231}>defineCoordinate</ApiSourceLink>
+
+The shared registration unit for built-in and custom coordinates. schema defines permitted IR operations, roles defines required position channels, and resolve produces the runtime frame and guide layers.
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category        | Name                   | Type / signature                             | Description                                                                                          |
+| --------------- | ---------------------- | -------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Type parameters | `TCoordinateOperation` | `extends IRPlotCoordinateOperation`          | Operation type parsed by the coordinate schema, connecting scale bindings with coordinate resolution |
+| Parameters      | `def`                  | `CoordinateDefinition<TCoordinateOperation>` | Coordinate configuration schema, position roles, and resolution capability                           |
+| Returns         | —                      | `CoordinateDefinition<TCoordinateOperation>` | The supplied definition object, unchanged                                                            |
+
+</ApiTable>
+
+> **Notes:** This helper currently enforces the CoordinateDefinition type and returns the object unchanged. Its stable entry aligns with other registry APIs and leaves room for future validation, normalization, or generic constraints.
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export declare const defineCoordinate: <TCoordinateOperation extends IRPlotCoordinateOperation>(
+  def: CoordinateDefinition<TCoordinateOperation>,
+) => CoordinateDefinition<TCoordinateOperation>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"resolveCoordinateRegistry"} path={"packages/viz/plot/src/providers/coordinate/registry.ts"} startLine={15}>resolveCoordinateRegistry</ApiSourceLink>
+
+Built-ins are registered first. Custom definitions cannot replace built-in types or duplicate each other. The returned registry is used for one lowering pass: coordinate.type selects a definition, its schema parses the operation, and resolve produces the runtime frame.
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name      | Type / signature                         | Description                                                                                           |
+| ---------- | --------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Parameters | `custom?` | `ReadonlyArray<AnyCoordinateDefinition>` | Custom coordinate definitions; omitted to register only built-ins                                     |
+| Returns    | —         | `Map<string, AnyCoordinateDefinition>`   | Complete definition registry indexed by coordinate type                                               |
+| Throws     | —         | —                                        | The schema lacks a nonempty literal type, position roles are duplicated, or registered types conflict |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export declare const resolveCoordinateRegistry: (
+  custom?: ReadonlyArray<AnyCoordinateDefinition>,
+) => Map<string, AnyCoordinateDefinition>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"CoordinateDefinitionResolveContext"} path={"packages/viz/plot/src/contract/coordinate/define.ts"} startLine={64}>CoordinateDefinitionResolveContext</ApiSourceLink>
+
+Provides coordinate-independent capabilities: canvas dimensions, data access, scale resolution, guide lowering, and provenance. Definitions should use these helpers to preserve shared data and scale semantics.
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member                           | Type                                                                                                                                                          | Default | Description                                                                                                                                               |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `assertBaselineScaleCompatible`  | `(scaleType: string, marks: ReadonlyArray<IRPlotMark>, role?: DimensionRole) => void`                                                                         | —       | Checks whether baseline-dependent marks such as intervals and areas can safely use the scale type, including custom types                                 |
+| `axisGuides`                     | `ReadonlyArray<IRPlotAxisGuide>`                                                                                                                              | —       | All axis guides in the current plot; the definition controls lowering into grid and axis layers                                                           |
+| `buildPositionScale`             | `(def: IRPlotScaleOperation, values: Array<unknown>, range: readonly [`<br />`number,`<br />`number`<br />`]) => PositionScale`                               | —       | Combines a scale operation, data domain, and screen range into a position scale                                                                           |
+| `collectAxisTicks`               | `(role: DimensionRole) => TickSet \| undefined`                                                                                                               | —       | Overrides axis ticks for marks whose role positions are derived from interval bounds                                                                      |
+| `collectPositionValues`          | `(role: DimensionRole, opts?: {`<br />`axis?: 'primary' \| 'secondary';`<br />`includeBaseline?: boolean;`<br />`}) => Array<unknown>`                        | —       | Collects position values using built-in coordinate semantics, preserving interval-bound and baseline contributions to the domain                          |
+| `collectRoleValues`              | `(role: DimensionRole, opts?: {`<br />`includeBaseline?: boolean;`<br />`}) => Array<unknown>`                                                                | —       | Collects raw mark channel values by position role; includeBaseline adds the baseline to continuous value-axis domains                                     |
+| `fontSize`                       | `number`                                                                                                                                                      | —       | Base font size for guides and labels                                                                                                                      |
+| `guideRoleRangeOverrides?`       | `Partial<Record<DimensionRole, readonly [`<br />`number,`<br />`number`<br />`]>>`                                                                            | —       | Role boundary overrides for axes and grids; an empty object uses layout bounds, omission uses the final role range, and ticks still use the mapping scale |
+| `height`                         | `number`                                                                                                                                                      | —       | Canvas height                                                                                                                                             |
+| `labelGap?`                      | `number`                                                                                                                                                      | —       | Fixed spacing for guide titles and composition labels                                                                                                     |
+| `layoutReserve?`                 | `Partial<BoundsInsets>`                                                                                                                                       | —       | Automatic space reserved by plot layout or decorations; built-in coordinates add it to automatic plot-area margins                                        |
+| `legendReserve`                  | `Partial<BoundsInsets>`                                                                                                                                       | —       | Legend reservation; built-in coordinates narrow the plot area while custom coordinates generally retain the full canvas                                   |
+| `lowerCustomAxis`                | `(frame: CoordinateFrame, guide: IRPlotAxisGuide, fontSize: number, provenance?: ProvenanceContext) => LoweredGuide`                                          | —       | Curved-axis lowering using frame.roleScales and frame.projectRoles                                                                                        |
+| `lowerGuide`                     | `(guide: IRPlotAxisGuide, ctx: GuideContext, provenance?: ProvenanceContext) => LoweredGuide`                                                                 | —       | Shared lowering entry for straight and built-in guides                                                                                                    |
+| `margin?`                        | `Partial<BoundsInsets>`                                                                                                                                       | —       | User margin overrides; custom coordinates may choose whether to consume them                                                                              |
+| `marks`                          | `ReadonlyArray<IRPlotMark>`                                                                                                                                   | —       | Marks in the current plot, primarily for scale compatibility and coordinate-specific validation                                                           |
+| `plotAreaOverride?`              | `CoordinatePlotArea`                                                                                                                                          | —       | Target plot area shared by overlay scopes; coordinates still train scales independently but use this rectangle as their range                             |
+| `provenance?`                    | `ProvenanceContext`                                                                                                                                           | —       | Provenance context passed into guide lowering to retain diagnostic sources                                                                                |
+| `resolveGuideTicks`              | `(scale: PositionScale, source?: NonNullable<IRPlotAxisGuide['ticks']>, labelFormat?: Exclude<IRPlotAxisGuide['tickLabels'], false \| undefined>) => TickSet` | —       | Resolves candidate axis and grid ticks; injected by the resolve layer so providers do not depend directly on guide resolvers                              |
+| `resolvePositionScaleContinuity` | `(operation: IRPlotScaleOperation) => PositionScaleContinuity`                                                                                                | —       | Reads the continuity of a registered position scale definition; channel scales and unregistered types fail explicitly                                     |
+| `resolveScaleForRole`            | `(role: DimensionRole, scaleName: string \| undefined, values: Array<unknown>) => IRPlotScaleOperation`                                                       | —       | Resolves the scale operation for a position role; an omitted scaleName derives a default from the data, including custom types                            |
+| `resolveVisibleGuideTicks`       | `(ticks: TickSet, source: NonNullable<IRPlotAxisGuide['ticks']> \| undefined, coordinate: (value: IRDataScalarValue) => number) => TickSet`                   | —       | Filters candidate ticks by guide density; injected by the resolve layer                                                                                   |
+| `roleRangeOverrides?`            | `Partial<Record<DimensionRole, readonly [`<br />`number,`<br />`number`<br />`]>>`                                                                            | —       | Final range for a role, allowing scaffold tracks to map local roles into their track band                                                                 |
+| `rows`                           | `Array<ExternalRow>`                                                                                                                                          | —       | Resolved external data rows available to advanced coordinates                                                                                             |
+| `textMeasurer`                   | `PlotLabelMeasure`                                                                                                                                            | —       | Label measurement from the current Core compile environment                                                                                               |
+| `width`                          | `number`                                                                                                                                                      | —       | Canvas width                                                                                                                                              |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type CoordinateDefinitionResolveContext = {
+  textMeasurer: PlotLabelMeasure;
+  width: number;
+  height: number;
+  fontSize: number;
+  labelGap?: number;
+  margin?: Partial<BoundsInsets>;
+  layoutReserve?: Partial<BoundsInsets>;
+  legendReserve: Partial<BoundsInsets>;
+  plotAreaOverride?: CoordinatePlotArea;
+  roleRangeOverrides?: Partial<Record<DimensionRole, readonly [number, number]>>;
+  guideRoleRangeOverrides?: Partial<Record<DimensionRole, readonly [number, number]>>;
+  provenance?: ProvenanceContext;
+  collectRoleValues: (
+    role: DimensionRole,
+    opts?: {
+      includeBaseline?: boolean;
+    },
+  ) => Array<unknown>;
+  collectPositionValues: (
+    role: DimensionRole,
+    opts?: {
+      axis?: 'primary' | 'secondary';
+      includeBaseline?: boolean;
+    },
+  ) => Array<unknown>;
+  collectAxisTicks: (role: DimensionRole) => TickSet | undefined;
+  resolveGuideTicks: (
+    scale: PositionScale,
+    source?: NonNullable<IRPlotAxisGuide['ticks']>,
+    labelFormat?: Exclude<IRPlotAxisGuide['tickLabels'], false | undefined>,
+  ) => TickSet;
+  resolveVisibleGuideTicks: (
+    ticks: TickSet,
+    source: NonNullable<IRPlotAxisGuide['ticks']> | undefined,
+    coordinate: (value: IRDataScalarValue) => number,
+  ) => TickSet;
+  resolveScaleForRole: (
+    role: DimensionRole,
+    scaleName: string | undefined,
+    values: Array<unknown>,
+  ) => IRPlotScaleOperation;
+  resolvePositionScaleContinuity: (operation: IRPlotScaleOperation) => PositionScaleContinuity;
+  buildPositionScale: (
+    def: IRPlotScaleOperation,
+    values: Array<unknown>,
+    range: readonly [number, number],
+  ) => PositionScale;
+  assertBaselineScaleCompatible: (scaleType: string, marks: ReadonlyArray<IRPlotMark>, role?: DimensionRole) => void;
+  axisGuides: ReadonlyArray<IRPlotAxisGuide>;
+  lowerGuide: (guide: IRPlotAxisGuide, ctx: GuideContext, provenance?: ProvenanceContext) => LoweredGuide;
+  lowerCustomAxis: (
+    frame: CoordinateFrame,
+    guide: IRPlotAxisGuide,
+    fontSize: number,
+    provenance?: ProvenanceContext,
+  ) => LoweredGuide;
+  rows: Array<ExternalRow>;
+  marks: ReadonlyArray<IRPlotMark>;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"CoordinateResolution"} path={"packages/viz/plot/src/contract/coordinate/define.ts"} startLine={31}>CoordinateResolution</ApiSourceLink>
+
+frame projects marks; plotArea supports layout, clipping, and locators. gridLayers and axisLayers are guide layers lowered during coordinate resolution, keeping marks and guides on the same projection state.
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member       | Type                 | Default | Description                                                    |
+| ------------ | -------------------- | ------- | -------------------------------------------------------------- |
+| `axisLayers` | `Array<IRScope>`     | —       | IR scopes produced by axis-guide lowering                      |
+| `frame`      | `CoordinateFrame`    | —       | Runtime coordinate frame shared by marks, guides, and locators |
+| `gridLayers` | `Array<IRScope>`     | —       | IR scopes produced by grid-guide lowering                      |
+| `plotArea`   | `CoordinatePlotArea` | —       | Plot area computed by the current coordinate                   |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type CoordinateResolution = {
+  frame: CoordinateFrame;
+  plotArea: CoordinatePlotArea;
+  gridLayers: Array<IRScope>;
+  axisLayers: Array<IRScope>;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"CoordinatePlotArea"} path={"packages/viz/plot/src/contract/coordinate/define.ts"} startLine={15}>CoordinatePlotArea</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member   | Type     | Default | Description                                     |
+| -------- | -------- | ------- | ----------------------------------------------- |
+| `height` | `number` | —       | Plot-area height                                |
+| `width`  | `number` | —       | Plot-area width                                 |
+| `x`      | `number` | —       | x coordinate of the plot area's top-left corner |
+| `y`      | `number` | —       | y coordinate of the plot area's top-left corner |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type CoordinatePlotArea = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+## Scale bindings
+
+#### <ApiSourceLink label={"DimensionRole"} path={"packages/viz/plot/src/contract/coordinate/types.ts"} startLine={12}>DimensionRole</ApiSourceLink>
+
+Built-in coordinates use x and y; custom definitions may declare any nonempty role strings. Schemas retain JSON structure, while definition.roles validates supported roles during lowering.
+
+```ts
+export type DimensionRole = string;
+```
+
+#### <ApiSourceLink label={"CoordinateScaleNames"} path={"packages/viz/plot/src/contract/coordinate/define.ts"} startLine={43}>CoordinateScaleNames</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member          | Type                                          | Default | Description |
+| --------------- | --------------------------------------------- | ------- | ----------- |
+| Index signature | `readonly [key: string]: string \| undefined` | —       | —           |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type CoordinateScaleNames = Readonly<Partial<Record<DimensionRole, string>>>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"CoordinateScaleBinding"} path={"packages/viz/plot/src/contract/coordinate/define.ts"} startLine={51}>CoordinateScaleBinding</ApiSourceLink>
+
+read maps operation-specific fields to position roles; bind writes roles back to those fields. When omitted, Plot reads and writes operation fields with the same names as the roles.
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member                                  | Type                                                                                          | Default | Description                                                                                          |
+| --------------------------------------- | --------------------------------------------------------------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------- |
+| `TCoordinateOperation` (Type parameter) | `extends IRPlotCoordinateOperation`                                                           | —       | Operation type parsed by the coordinate schema, connecting scale bindings with coordinate resolution |
+| `readonly bind`                         | `(operation: TCoordinateOperation, scaleNames: CoordinateScaleNames) => TCoordinateOperation` | —       | Writes role-indexed scale names into the coordinate operation while preserving other configuration   |
+| `readonly read`                         | `(operation: TCoordinateOperation) => CoordinateScaleNames`                                   | —       | Reads role-indexed scale names from a coordinate operation                                           |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type CoordinateScaleBinding<TCoordinateOperation extends IRPlotCoordinateOperation> = Readonly<{
+  read: (operation: TCoordinateOperation) => CoordinateScaleNames;
+  bind: (operation: TCoordinateOperation, scaleNames: CoordinateScaleNames) => TCoordinateOperation;
+}>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"readCoordinateScaleNames"} path={"packages/viz/plot/src/contract/coordinate/define.ts"} startLine={177}>readCoordinateScaleNames</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category        | Name                   | Type / signature                    | Description                                                                                          |
+| --------------- | ---------------------- | ----------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Type parameters | `TCoordinateOperation` | `extends IRPlotCoordinateOperation` | Operation type parsed by the coordinate schema, connecting scale bindings with coordinate resolution |
+| Parameters      | `definition`           | `CoordinateScaleBindingDefinition`  | Coordinate definition with its roles and optional binding hooks                                      |
+|                 | `operation`            | `TCoordinateOperation`              | Coordinate operation already parsed by this definition                                               |
+| Returns         | —                      | `CoordinateScaleNames`              | Named scale bindings for the roles of the current definition                                         |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export declare const readCoordinateScaleNames: <TCoordinateOperation extends IRPlotCoordinateOperation>(
+  definition: CoordinateScaleBindingDefinition,
+  operation: TCoordinateOperation,
+) => CoordinateScaleNames;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"bindCoordinateScaleNames"} path={"packages/viz/plot/src/contract/coordinate/define.ts"} startLine={201}>bindCoordinateScaleNames</ApiSourceLink>
+
+Consumes an already parsed operation. Custom hooks and the default same-name field path return typed bindings directly without reparsing.
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category        | Name                   | Type / signature                    | Description                                                                                          |
+| --------------- | ---------------------- | ----------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Type parameters | `TCoordinateOperation` | `extends IRPlotCoordinateOperation` | Operation type parsed by the coordinate schema, connecting scale bindings with coordinate resolution |
+| Parameters      | `definition`           | `CoordinateScaleBindingDefinition`  | Coordinate definition with its roles and optional binding hooks                                      |
+|                 | `operation`            | `TCoordinateOperation`              | Coordinate operation already parsed by this definition                                               |
+|                 | `scaleNames`           | `CoordinateScaleNames`              | Position roles and scale names to write                                                              |
+| Returns         | —                      | `TCoordinateOperation`              | Coordinate operation with applicable bindings written and other configuration preserved              |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export declare const bindCoordinateScaleNames: <TCoordinateOperation extends IRPlotCoordinateOperation>(
+  definition: CoordinateScaleBindingDefinition,
+  operation: TCoordinateOperation,
+  scaleNames: CoordinateScaleNames,
+) => TCoordinateOperation;
+```
+
+</DocTab>
+
+</DocTabs>
+
+## Position projection
+
+#### <ApiSourceLink label={"CoordinateFrame"} path={"packages/viz/plot/src/contract/coordinate/types.ts"} startLine={28}>CoordinateFrame</ApiSourceLink>
+
+The coordinate layer projects scale outputs to 2D points. Built-in Cartesian and polar frames and registered custom frames share this contract. Built-in frames add specialized fields and can be narrowed using provider guards. Lowering computes one frame shared by marks, guides, and locators; projection functions remain runtime capabilities outside JSON IR. The registered type discriminator is preserved, and non-finite values return null to skip the point.
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member                | Type                                                                                  | Default | Description                                                                                                                                                                                                                                                                                                                         |
+| --------------------- | ------------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mapRoles?`           | `(values: ReadonlyArray<unknown>) => ReadonlyArray<number> \| null`                   | —       | Maps raw role values through their position scales; required for role-space placement                                                                                                                                                                                                                                               |
+| `placementBoundary?`  | `CoordinateFrame["placementBoundary"]`                                                | —       | Coordinate boundary metrics for role-space containment; required by adjustments requesting automatic containment                                                                                                                                                                                                                    |
+| `project`             | `(primaryValue: unknown, secondaryValue: unknown) => Position \| null`                | —       | Convenient two-channel projection delegating to projectRoles; returns null when inapplicable                                                                                                                                                                                                                                        |
+| `projectCell?`        | `(cell: Cell, options?: CellProjectionOptions) => CellGeometry`                       | —       | Optional orthogonal cell-to-CellGeometry projection; required by interval, sector, and rectangle marks<br />Curved or custom frames sample cell edges using their own projection and densifyCellContour. Without this capability, cell marks fail explicitly; the engine cannot supply the frame-specific output-to-screen mapping. |
+| `projectMappedRoles?` | `(values: ReadonlyArray<number>) => Position \| null`                                 | —       | Projects mapped role values to the screen; required for role-space placement                                                                                                                                                                                                                                                        |
+| `projectRoles`        | `(values: ReadonlyArray<unknown>) => Position \| null`                                | —       | Projects values in roles order to a screen point; non-finite inputs return null and are skipped                                                                                                                                                                                                                                     |
+| `projectSegment?`     | `(from: ReadonlyArray<number>, to: ReadonlyArray<number>) => Array<Position> \| null` | —       | Connects mapped role endpoints along coordinate geometry; returns null when projection is impossible                                                                                                                                                                                                                                |
+| `roles`               | `ReadonlyArray<DimensionRole>`                                                        | —       | Position role order determining which mark channels feed projectRoles                                                                                                                                                                                                                                                               |
+| `roleScales?`         | `Partial<Record<DimensionRole, PositionScale>>`                                       | —       | Optional position scales by role for guides. Guides take each role's ticks, anchor other roles at their domain starts, and sample projectRoles to form curved axes and tick positions. Omitted scales disable axes.                                                                                                                 |
+| `supportsPlotArea?`   | `boolean`                                                                             | `true`  | Whether plot-area backgrounds, borders, and region anchors are supported                                                                                                                                                                                                                                                            |
+| `tangentAt?`          | `(role: DimensionRole, mappedRoles: ReadonlyArray<number>) => Position \| null`       | —       | Screen tangent as a mapped role parameter increases; shares the split projection model<br />Returns a finite nonzero vector, or null at a singularity or cusp. Explicit node orientation requires this capability; guides can otherwise estimate tangents numerically.                                                              |
+| `type`                | `string`                                                                              | —       | Registered coordinate type: a built-in discriminator such as cartesian2D or a custom name such as bridge or sine                                                                                                                                                                                                                    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type CoordinateFrame = {
+  supportsPlotArea?: boolean;
+  type: string;
+  roles: ReadonlyArray<DimensionRole>;
+  project: (primaryValue: unknown, secondaryValue: unknown) => Position | null;
+  projectRoles: (values: ReadonlyArray<unknown>) => Position | null;
+  mapRoles?: (values: ReadonlyArray<unknown>) => ReadonlyArray<number> | null;
+  projectMappedRoles?: (values: ReadonlyArray<number>) => Position | null;
+  placementBoundary?: {
+    isCyclic: (role: DimensionRole) => boolean;
+    unitNormal: (role: DimensionRole, mappedRoles: ReadonlyArray<number>) => readonly [number, number] | null;
+    glyphExtentInRoleUnits: (
+      role: DimensionRole,
+      mappedRoles: ReadonlyArray<number>,
+      screenExtent: number,
+    ) => number | null;
+  };
+  roleScales?: Partial<Record<DimensionRole, PositionScale>>;
+  tangentAt?: (role: DimensionRole, mappedRoles: ReadonlyArray<number>) => Position | null;
+  projectCell?: (cell: Cell, options?: CellProjectionOptions) => CellGeometry;
+  projectSegment?: (from: ReadonlyArray<number>, to: ReadonlyArray<number>) => Array<Position> | null;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"CoordinateFrameOptions"} path={"packages/viz/plot/src/contract/coordinate/define.ts"} startLine={236}>CoordinateFrameOptions</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member                | Type                                                                | Default | Description                                                                                                                                 |
+| --------------------- | ------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mapRoles?`           | `(values: ReadonlyArray<unknown>) => ReadonlyArray<number> \| null` | —       | Maps raw role values through position scales; provide with projectMappedRoles for role-space placement                                      |
+| `placementBoundary?`  | `NonNullable<CoordinateFrame['placementBoundary']>`                 | —       | Coordinate boundary metrics for role-space placement containment                                                                            |
+| `projectCell?`        | `CoordinateFrame['projectCell']`                                    | —       | Projects an orthogonal cell to CellGeometry; required by cell marks such as intervals and sectors, which fail explicitly when it is omitted |
+| `projectMappedRoles?` | `(values: ReadonlyArray<number>) => Position \| null`               | —       | Projects mapped role values to the screen; provide with mapRoles for role-space placement                                                   |
+| `projectSegment?`     | `CoordinateFrame['projectSegment']`                                 | —       | Connects mapped role endpoints along coordinate geometry                                                                                    |
+| `roleScales?`         | `Partial<Record<DimensionRole, PositionScale>>`                     | —       | Position scales by role for drawing axes; omission disables axes                                                                            |
+| `supportsPlotArea?`   | `boolean`                                                           | `true`  | Whether plot-area backgrounds, borders, and region anchors are supported                                                                    |
+| `tangentAt?`          | `CoordinateFrame['tangentAt']`                                      | —       | Screen tangent as a mapped role increases; requires both split projection functions                                                         |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type CoordinateFrameOptions = {
+  supportsPlotArea?: boolean;
+  roleScales?: Partial<Record<DimensionRole, PositionScale>>;
+  tangentAt?: CoordinateFrame['tangentAt'];
+  projectCell?: CoordinateFrame['projectCell'];
+  projectSegment?: CoordinateFrame['projectSegment'];
+  mapRoles?: (values: ReadonlyArray<unknown>) => ReadonlyArray<number> | null;
+  projectMappedRoles?: (values: ReadonlyArray<number>) => Position | null;
+  placementBoundary?: NonNullable<CoordinateFrame['placementBoundary']>;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"createCoordinateFrame"} path={"packages/viz/plot/src/contract/coordinate/define.ts"} startLine={270}>createCoordinateFrame</ApiSourceLink>
+
+Wraps the registered type, roles, and projectRoles into a CoordinateFrame, preserving the actual type rather than replacing it with custom. Marks project through projectRoles. Options declare role scales, split projection, placement boundaries, tangents, coordinate paths, and cell projection. Plot-area support defaults to enabled and can be disabled explicitly; undeclared capabilities remain unavailable and consumers fail explicitly when they require them.
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name           | Type / signature                                       | Description                                                      |
+| ---------- | -------------- | ------------------------------------------------------ | ---------------------------------------------------------------- |
+| Parameters | `type`         | `string`                                               | Registered coordinate type name                                  |
+|            | `roles`        | `ReadonlyArray<DimensionRole>`                         | Order of position roles accepted by the projection function      |
+|            | `projectRoles` | `(values: ReadonlyArray<unknown>) => Position \| null` | Projection from raw role values to a screen position             |
+|            | `options?`     | `CoordinateFrameOptions`                               | Optional scale, split projection, and cell geometry capabilities |
+| Returns    | —              | `CoordinateFrame`                                      | Coordinate frame shared by marks, axes, and locators             |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export declare const createCoordinateFrame: (
+  type: string,
+  roles: ReadonlyArray<DimensionRole>,
+  projectRoles: (values: ReadonlyArray<unknown>) => Position | null,
+  options?: CoordinateFrameOptions,
+) => CoordinateFrame;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"CoordinateDomainPaddingCapability"} path={"packages/viz/plot/src/contract/domain-padding.ts"} startLine={38}>CoordinateDomainPaddingCapability</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member     | Type                                           | Default | Description                                                                                                                              |
+| ---------- | ---------------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `measure?` | `CoordinateDomainPaddingCapability["measure"]` | —       | Converts glyph extents and clearance into distances at both ends of the role range; cyclic roles return null to avoid introducing a seam |
+| `roles`    | `ReadonlyArray<string>`                        | —       | Axis roles supporting per-point padding                                                                                                  |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type CoordinateDomainPaddingCapability = {
+  roles: ReadonlyArray<string>;
+  measure?: (context: {
+    frame: CoordinateFrame;
+    role: string;
+    mappedRoles: ReadonlyArray<number>;
+    extent: number;
+    clearance: {
+      lower: number;
+      upper: number;
+    };
+  }) => {
+    lower: number;
+    upper: number;
+  } | null;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+## Cell projection
+
+#### <ApiSourceLink label={"Cell"} path={"packages/viz/plot/src/contract/coordinate/cell.ts"} startLine={16}>Cell</ApiSourceLink>
+
+Coordinate-independent input for interval, sector, and rectangle marks. Cartesian primary is an x pixel band and secondary a y interval; polar primary is an angular band in degrees and secondary a radial interval. frame.projectCell projects it to CellGeometry. Endpoints need not be ordered; each projection handles direction.
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member      | Type                                                                      | Default | Description                                                                              |
+| ----------- | ------------------------------------------------------------------------- | ------- | ---------------------------------------------------------------------------------------- |
+| `intervals` | `Partial<Record<DimensionRole, [`<br />`number,`<br />`number`<br />`]>>` | —       | Output intervals indexed by position role; each coordinate reads only its declared roles |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type Cell = {
+  intervals: Partial<Record<DimensionRole, [number, number]>>;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"CellGeometry"} path={"packages/viz/plot/src/contract/coordinate/cell.ts"} startLine={27}>CellGeometry</ApiSourceLink>
+
+Cartesian coordinates produce axis-aligned rectangles and polar coordinates annular sectors using constant-time parameters. Curved or custom frames sample cell edges into a contour. Marks assemble Core nodes by geometry kind: rectangle, sector, or contour, without branching on coordinate type.
+
+<DocTabs defaultValue="rect">
+
+<DocTab value="rect" label="Members · Rectangle">
+
+<ApiTable>
+
+| Member     | Type       | Default | Description                                                              |
+| ---------- | ---------- | ------- | ------------------------------------------------------------------------ |
+| `height`   | `number`   | —       | Full height of the projected rectangle                                   |
+| `kind`     | `'rect'`   | —       | Distinguishes rectangle, annular sector, and general contour projections |
+| `position` | `Position` | —       | Screen coordinates of the projected rectangle center                     |
+| `width`    | `number`   | —       | Full width of the projected rectangle                                    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="sector" label="Members · Annular sector">
+
+<ApiTable>
+
+| Member        | Type       | Default | Description                                                              |
+| ------------- | ---------- | ------- | ------------------------------------------------------------------------ |
+| `center`      | `Position` | —       | Screen coordinates of the annular sector center                          |
+| `endAngle`    | `number`   | —       | Sector end angle in degrees                                              |
+| `innerRadius` | `number`   | —       | Inner radius of the annular sector                                       |
+| `kind`        | `'sector'` | —       | Distinguishes rectangle, annular sector, and general contour projections |
+| `outerRadius` | `number`   | —       | Outer radius of the annular sector                                       |
+| `startAngle`  | `number`   | —       | Sector start angle in degrees                                            |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="contour" label="Members · Contour">
+
+<ApiTable>
+
+| Member   | Type              | Default | Description                                                              |
+| -------- | ----------------- | ------- | ------------------------------------------------------------------------ |
+| `kind`   | `'contour'`       | —       | Distinguishes rectangle, annular sector, and general contour projections |
+| `points` | `Array<Position>` | —       | Screen-coordinate vertices in boundary order                             |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type CellGeometry =
+  | {
+      kind: 'rect';
+      position: Position;
+      width: number;
+      height: number;
+    }
+  | {
+      kind: 'sector';
+      center: Position;
+      innerRadius: number;
+      outerRadius: number;
+      startAngle: number;
+      endAngle: number;
+    }
+  | {
+      kind: 'contour';
+      points: Array<Position>;
+    };
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"CellProjectionOptions"} path={"packages/viz/plot/src/contract/coordinate/types.ts"} startLine={15}>CellProjectionOptions</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member        | Type                   | Default | Description                                                                          |
+| ------------- | ---------------------- | ------- | ------------------------------------------------------------------------------------ |
+| `connection?` | `CoordinateConnection` | —       | Follows coordinate geometry by default; straight connects projected corners directly |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type CellProjectionOptions = {
+  connection?: CoordinateConnection;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"CellProjectableCoordinate"} path={"packages/viz/plot/src/contract/coordinate/types.ts"} startLine={132}>CellProjectableCoordinate</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member                | Type                                                                                                                                | Default | Description                                                                                                                                                                                                                                                                                                                                                                               |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mapRoles?`           | `(values: ReadonlyArray<unknown>) => ReadonlyArray<number> \| null`                                                                 | —       | Maps raw role values through their position scales; required for role-space placement                                                                                                                                                                                                                                                                                                     |
+| `placementBoundary?`  | `CoordinateFrame['placementBoundary']`                                                                                              | —       | Coordinate boundary metrics for role-space containment; required by adjustments requesting automatic containment                                                                                                                                                                                                                                                                          |
+| `project`             | `(primaryValue: unknown, secondaryValue: unknown) => Position \| null`                                                              | —       | Convenient two-channel projection delegating to projectRoles; returns null when inapplicable                                                                                                                                                                                                                                                                                              |
+| `projectCell`         | `((cell: Cell, options?: CellProjectionOptions) => CellGeometry) & ((cell: Cell, options?: CellProjectionOptions) => CellGeometry)` | —       | Optional orthogonal cell-to-CellGeometry projection for interval, sector, and rectangle marks. Projects role output intervals into renderable cell geometry.<br />Curved or custom frames sample cell edges using their own projection and densifyCellContour. Without this capability, cell marks fail explicitly; the engine cannot supply the frame-specific output-to-screen mapping. |
+| `projectMappedRoles?` | `(values: ReadonlyArray<number>) => Position \| null`                                                                               | —       | Projects mapped role values to the screen; required for role-space placement                                                                                                                                                                                                                                                                                                              |
+| `projectRoles`        | `(values: ReadonlyArray<unknown>) => Position \| null`                                                                              | —       | Projects values in roles order to a screen point; non-finite inputs return null and are skipped                                                                                                                                                                                                                                                                                           |
+| `projectSegment?`     | `(from: ReadonlyArray<number>, to: ReadonlyArray<number>) => Array<Position> \| null`                                               | —       | Connects mapped role endpoints along coordinate geometry; returns null when projection is impossible                                                                                                                                                                                                                                                                                      |
+| `roles`               | `ReadonlyArray<DimensionRole>`                                                                                                      | —       | Position role order determining which mark channels feed projectRoles                                                                                                                                                                                                                                                                                                                     |
+| `roleScales?`         | `Partial<Record<DimensionRole, PositionScale>>`                                                                                     | —       | Optional position scales by role for guides. Guides take each role's ticks, anchor other roles at their domain starts, and sample projectRoles to form curved axes and tick positions. Omitted scales disable axes.                                                                                                                                                                       |
+| `supportsPlotArea?`   | `boolean`                                                                                                                           | `true`  | Whether plot-area backgrounds, borders, and region anchors are supported                                                                                                                                                                                                                                                                                                                  |
+| `tangentAt?`          | `(role: DimensionRole, mappedRoles: ReadonlyArray<number>) => Position \| null`                                                     | —       | Screen tangent as a mapped role parameter increases; shares the split projection model<br />Returns a finite nonzero vector, or null at a singularity or cusp. Explicit node orientation requires this capability; guides can otherwise estimate tangents numerically.                                                                                                                    |
+| `type`                | `string`                                                                                                                            | —       | Registered coordinate type: a built-in discriminator such as cartesian2D or a custom name such as bridge or sine                                                                                                                                                                                                                                                                          |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type CellProjectableCoordinate = CoordinateFrame & {
+  projectCell: (cell: Cell, options?: CellProjectionOptions) => CellGeometry;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"hasProjectCell"} path={"packages/viz/plot/src/contract/coordinate/utils.ts"} startLine={14}>hasProjectCell</ApiSourceLink>
+
+Interval and reference-band marks construct a logical Cell and require frame.projectCell to produce a rectangle, sector, or contour. This guard confirms projection support only; custom intervals still need roleScales to construct cells.
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name         | Type / signature                          | Description                                            |
+| ---------- | ------------ | ----------------------------------------- | ------------------------------------------------------ |
+| Parameters | `coordinate` | `CoordinateFrame`                         | Runtime coordinate frame to check                      |
+| Returns    | —            | `coordinate is CellProjectableCoordinate` | Whether a callable projectCell capability is available |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export declare const hasProjectCell: (coordinate: CoordinateFrame) => coordinate is CellProjectableCoordinate;
+```
+
+</DocTab>
+
+</DocTabs>

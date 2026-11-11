@@ -549,6 +549,7 @@ export const vizSection: Array<Section> = [
         children: [
           { id: 'position', label: 'viz.grammarScalePosition', difficulty: DocDifficulty.Advanced },
           { id: 'mark-attributes', label: 'viz.grammarScaleAttributes', difficulty: DocDifficulty.Advanced },
+          { id: 'reference', label: 'viz.grammarScaleReference' },
         ],
       },
       {
@@ -564,6 +565,7 @@ export const vizSection: Array<Section> = [
             difficulty: DocDifficulty.Advanced,
             meta: extensionGuide('plot.coordinate.extensions'),
           },
+          { id: 'reference', label: 'viz.grammarCoordinateReference' },
         ],
       },
       {
@@ -591,8 +593,6 @@ export const vizSection: Array<Section> = [
           { id: 'encoding', label: 'viz.plotReferenceContractEncoding' },
           { id: 'transform', label: 'viz.plotReferenceContractTransform' },
           { id: 'mark', label: 'viz.plotReferenceContractMark' },
-          { id: 'scale', label: 'viz.plotReferenceContractScale' },
-          { id: 'coordinate', label: 'viz.plotReferenceContractCoordinate' },
           { id: 'guide', label: 'viz.plotReferenceContractGuide' },
           { id: 'layout', label: 'viz.plotReferenceContractLayout' },
           { id: 'layer', label: 'viz.plotReferenceContractLayer' },

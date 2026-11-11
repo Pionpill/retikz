@@ -1,8 +1,3 @@
----
-title: 契约 - 比例尺
-description: 查询 Plot 的连续、离散、径向、颜色与自定义比例尺 schema。
----
-
 比例尺是数据值到位置或视觉值的具名映射。坐标角色通过坐标操作引用位置比例尺，颜色等非位置通道通过编码的 `scale` 字段引用。
 
 ## ScaleSchema
@@ -13,17 +8,7 @@ description: 查询 Plot 的连续、离散、径向、颜色与自定义比例�
 
 <ZodSchema name="ScaleOperationSchema" description="内置比例尺或运行时注册自定义比例尺的联合。" />
 
-## 连续位置比例尺
-
-连续位置比例尺共用 `domainPadding` 和 `singleValueSpan`。`domainPadding` 的裸数字与省略 kind 的对象使用 range 单位；`kind: 'ratio'` 才使用原始 domain 跨度比例。两种 domain 来源默认都不扩展。
-
-`kind: 'mark'` 引用具名图元按外缘求解自动端，可选 `lower` / `upper` 固定一端。内置支持 linear/time 与无 placement 的 Cartesian2D；能力和失败边界见 [按图元外缘留白](/viz/plot/scale/position#按图元外缘留白)。
-
-mark 分支的 `clearance` 是图元外缘到自动边界的最小净空，使用非负 range 单位，默认 `0`。例如 `{ kind: 'mark', marks: ['dots'], clearance: 8 }`。固定端不叠加净空；空有效点集不扩域，净空过大导致无解时会报错。
-
-`clearance` 支持数值或 `{ lower?: number, upper?: number }`；数值同时用于两端，对象未指定端为 `0`。这里的 lower / upper 对应 domain 起止端，跟随 range 方向，不固定对应视觉左右；Chart 负责将四边净空转换为各轴的这两个端。
-
-### LinearScaleSchema
+## LinearScaleSchema
 
 <ZodSchema
   name="LinearScaleSchema"
@@ -40,7 +25,7 @@ mark 分支的 `clearance` 是图元外缘到自动边界的最小净空，使�
   }}
 />
 
-### TimeScaleSchema
+## TimeScaleSchema
 
 <ZodSchema
   name="TimeScaleSchema"
@@ -56,7 +41,7 @@ mark 分支的 `clearance` 是图元外缘到自动边界的最小净空，使�
   }}
 />
 
-### LogScaleSchema
+## LogScaleSchema
 
 <ZodSchema
   name="LogScaleSchema"
@@ -74,7 +59,7 @@ mark 分支的 `clearance` 是图元外缘到自动边界的最小净空，使�
   }}
 />
 
-### PowScaleSchema
+## PowScaleSchema
 
 <ZodSchema
   name="PowScaleSchema"
@@ -92,7 +77,7 @@ mark 分支的 `clearance` 是图元外缘到自动边界的最小净空，使�
   }}
 />
 
-### SqrtScaleSchema
+## SqrtScaleSchema
 
 <ZodSchema
   name="SqrtScaleSchema"
@@ -109,7 +94,7 @@ mark 分支的 `clearance` 是图元外缘到自动边界的最小净空，使�
   }}
 />
 
-### SymlogScaleSchema
+## SymlogScaleSchema
 
 <ZodSchema
   name="SymlogScaleSchema"
@@ -127,7 +112,7 @@ mark 分支的 `clearance` 是图元外缘到自动边界的最小净空，使�
   }}
 />
 
-### RadialScaleSchema
+## RadialScaleSchema
 
 <ZodSchema
   name="RadialScaleSchema"
@@ -144,9 +129,7 @@ mark 分支的 `clearance` 是图元外缘到自动边界的最小净空，使�
   }}
 />
 
-## 离散比例尺
-
-### BandScaleSchema
+## BandScaleSchema
 
 <ZodSchema
   name="BandScaleSchema"
@@ -162,7 +145,7 @@ mark 分支的 `clearance` 是图元外缘到自动边界的最小净空，使�
   }}
 />
 
-### PointScaleSchema
+## PointScaleSchema
 
 <ZodSchema
   name="PointScaleSchema"
@@ -179,7 +162,7 @@ mark 分支的 `clearance` 是图元外缘到自动边界的最小净空，使�
 
 `PositionScale` 运行时契约同时暴露 `bandwidth` 与最终 range 下的只读 `step`。`band` / `point` 的 `step` 是正离散刻度间距，连续位置 scale 固定为 `0`；Position Adjustment 的 ratio span 只消费这个实时值，不用零宽的 point `bandwidth` 代替。
 
-### OrdinalScaleSchema
+## OrdinalScaleSchema
 
 <ZodSchema
   name="OrdinalScaleSchema"
@@ -195,9 +178,7 @@ mark 分支的 `clearance` 是图元外缘到自动边界的最小净空，使�
   }}
 />
 
-## 连续颜色比例尺
-
-### SequentialColorScaleSchema
+## SequentialColorScaleSchema
 
 <ZodSchema
   name="SequentialColorScaleSchema"
@@ -213,7 +194,7 @@ mark 分支的 `clearance` 是图元外缘到自动边界的最小净空，使�
   }}
 />
 
-### DivergingColorScaleSchema
+## DivergingColorScaleSchema
 
 <ZodSchema
   name="DivergingColorScaleSchema"
@@ -229,9 +210,7 @@ mark 分支的 `clearance` 是图元外缘到自动边界的最小净空，使�
   }}
 />
 
-## 分箱颜色比例尺
-
-### QuantizeColorScaleSchema
+## QuantizeColorScaleSchema
 
 <ZodSchema
   name="QuantizeColorScaleSchema"
@@ -246,7 +225,7 @@ mark 分支的 `clearance` 是图元外缘到自动边界的最小净空，使�
   }}
 />
 
-### ThresholdColorScaleSchema
+## ThresholdColorScaleSchema
 
 <ZodSchema
   name="ThresholdColorScaleSchema"
@@ -260,7 +239,7 @@ mark 分支的 `clearance` 是图元外缘到自动边界的最小净空，使�
   }}
 />
 
-### QuantileColorScaleSchema
+## QuantileColorScaleSchema
 
 <ZodSchema
   name="QuantileColorScaleSchema"
@@ -285,9 +264,15 @@ mark 分支的 `clearance` 是图元外缘到自动边界的最小净空，使�
   }}
 />
 
-## 辅助值
+## DomainPaddingSchema
 
-### DomainPaddingSchema
+连续位置比例尺共用 `domainPadding` 和 `singleValueSpan`。`domainPadding` 的裸数字与省略 kind 的对象使用 range 单位；`kind: 'ratio'` 才使用原始 domain 跨度比例。两种 domain 来源默认都不扩展。
+
+`kind: 'mark'` 引用具名图元按外缘求解自动端，可选 `lower` / `upper` 固定一端。内置支持 linear/time 与无 placement 的 Cartesian2D；能力和失败边界见 [按图元外缘留白](/viz/plot/scale/position#按图元外缘留白)。
+
+mark 分支的 `clearance` 是图元外缘到自动边界的最小净空，使用非负 range 单位，默认 `0`。例如 `{ kind: 'mark', marks: ['dots'], clearance: 8 }`。固定端不叠加净空；空有效点集不扩域，净空过大导致无解时会报错。
+
+`clearance` 支持数值或 `{ lower?: number, upper?: number }`；数值同时用于两端，对象未指定端为 `0`。这里的 lower / upper 对应 domain 起止端，跟随 range 方向，不固定对应视觉左右；Chart 负责将四边净空转换为各轴的这两个端。
 
 <ZodSchema
   name="DomainPaddingSchema"
@@ -299,10 +284,10 @@ mark 分支的 `clearance` 是图元外缘到自动边界的最小净空，使�
   }}
 />
 
-### CategoryValueSchema
+## CategoryValueSchema
 
 <ZodSchema name="CategoryValueSchema" description="Band / Point domain 中的字符串或数值分类值。" />
 
-### ColorSchemeNameSchema
+## ColorSchemeNameSchema
 
 <ZodSchema name="ColorSchemeNameSchema" description="内置色方案名，或通过 options.colorSchemes 注册的名称。" />
