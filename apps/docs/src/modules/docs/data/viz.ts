@@ -561,7 +561,7 @@ export const vizSection: Array<Section> = [
           {
             id: 'custom-coordinate',
             label: 'viz.grammarCoordinateCustom',
-            difficulty: DocDifficulty.Internals,
+            difficulty: DocDifficulty.Advanced,
             meta: extensionGuide('plot.coordinate.extensions'),
           },
         ],

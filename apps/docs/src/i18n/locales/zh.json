@@ -384,7 +384,7 @@
     "grammarScale": "scale · 比例尺",
     "grammarScalePosition": "位置比例尺",
     "grammarScaleAttributes": "图元属性映射",
-    "grammarCoordinate": "坐标系",
+    "grammarCoordinate": "coordinate · 坐标系",
     "grammarCoordinateDimension": "维度坐标系",
     "grammarCoordinateComposition": "坐标组合",
     "grammarCoordinateCustom": "自定义坐标系",

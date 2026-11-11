@@ -1,14 +1,10 @@
-import { IntervalMark, PathMark, Plot, PlotAxis, PlotScale, PointMark } from '@retikz/plot-react';
+﻿import { IntervalMark, PathMark, Plot, PlotAxis, PlotScale, PointMark } from '@retikz/plot-react';
 
 import { coordinate2DRows } from './coordinate-2d.data';
 
 /** 图形参数 */
 export type CoordinateCartesianValues = {
   markType: 'point' | 'line' | 'interval';
-  marginTop: number;
-  marginRight: number;
-  marginBottom: number;
-  marginLeft: number;
   showGrid: boolean;
 };
 
@@ -18,14 +14,7 @@ export const renderCoordinateCartesian = (values: CoordinateCartesianValues) => 
     data={coordinate2DRows}
     width={380}
     height={280}
-    layout={{
-      margin: {
-        top: values.marginTop,
-        right: values.marginRight,
-        bottom: values.marginBottom,
-        left: values.marginLeft,
-      },
-    }}
+    layout={{ margin: { top: 24, right: 24, bottom: 24, left: 24 } }}
   >
     <PlotScale dimension="y" type="linear" domainPadding={0} />
     {values.markType === 'point' ? (

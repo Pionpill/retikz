@@ -5,15 +5,29 @@ description: 'Coordinates place data on a line, plane, or circle and can combine
 
 Coordinates determine the spatial shape of a chart. Scales first convert field values into drawable positions; the coordinate system then projects those positions onto a line, plane, or circle.
 
-If you only need to adjust ticks, labels, or grid lines, see [Axis](/viz/plot/guide/axis). To add a new projection, see [Custom Coordinates](/viz/plot/coordinate/custom-coordinate).
+This section covers three questions: how to position one or two positional fields, how to organize multiple layers or plot regions, and how to extend the built-in projections. Start by choosing a projection, then decide whether the chart needs coordinate composition.
 
-## Responsibilities
+## Responsibilities at a glance
 
 | Topic                   | Responsibility                                           | Use it for                               |
 | ----------------------- | -------------------------------------------------------- | ---------------------------------------- |
 | Dimensional coordinates | Project one or two positional dimensions onto the canvas | Points, lines, intervals, and events     |
 | Coordinate composition  | Organize several coordinate regions in one Plot          | Dual axes, facets, and shared tracks     |
 | Custom coordinates      | Register new roles, projections, and capabilities        | Spatial mappings beyond built-in systems |
+
+## Projection and composition
+
+Dimensional coordinates determine positions within one plot region. A 2D Cartesian coordinate maps two positional dimensions to horizontal and vertical positions; a 2D polar coordinate maps them to angle and radius. A 1D coordinate needs only one positional field and arranges events along a line or circle. Choose a projection that suits the spatial relationship you want to show.
+
+Coordinate composition determines how layers or regions relate to each other. Dual axes let layers use different units within one plot region. Facets split data into small multiples by a field. Shared tracks align several metrics along one direction. [Marks](/viz/plot/mark) still express the points, paths, and intervals within each region.
+
+For example, to show temperature and rainfall over a day, start with Cartesian coordinates to arrange data over time, then use dual axes for the two units. To compare cities, facet by city. To place temperature and rainfall in separate regions above and below each other while aligning their times, use shared tracks.
+
+## Choosing a starting point
+
+Start with [Dimensional coordinates](/viz/plot/coordinate/dimension) to learn the four built-in projections and their parameters. Continue to [Coordinate Composition](/viz/plot/coordinate/composition) when you need dual axes, facets, or shared tracks. Use [Custom Coordinates](/viz/plot/coordinate/custom-coordinate) when the built-in projections cannot express the target space; it explains how to declare positional roles, define a projection, and register it with Plot.
+
+[Scales](/viz/plot/scale) map data values to positional values, while [Axis](/viz/plot/guide/axis) controls ticks, labels, and grid lines. Start with those sections when adjusting domains or guides; these changes do not require a new coordinate definition.
 
 ## In This Section
 
