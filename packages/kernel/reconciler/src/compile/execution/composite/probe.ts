@@ -203,7 +203,7 @@ export const probeCompositeLayout = (
     slotSize: resolveLayoutSlotSize(allocationBounds, clonedProposal),
     visualBounds:
       calculateBoundsOfPrimitives(laid.primitives, resources) ?? Object.freeze({ x: 0, y: 0, width: 0, height: 0 }),
-    ...(laid.alignmentGuides === undefined ? {} : { alignmentGuides: laid.alignmentGuides }),
+    ...(laid.layout.alignmentGuides === undefined ? {} : { alignmentGuides: laid.layout.alignmentGuides }),
     replay: token,
   });
 
@@ -215,7 +215,7 @@ export const probeCompositeLayout = (
     primitiveZIndices: laid.primitiveZIndices,
     geometries: laid.geometries,
     bounds: laid.bounds,
-    allocations: laid.allocations,
+    allocations: laid.layout.allocations,
     namespaceChanges,
     namespaceChangeOccurrences: namespaceChanges.map(
       change => registrationOccurrences.get(registrationKey(probeFrameDepth, change.id)) ?? probeOccurrence,

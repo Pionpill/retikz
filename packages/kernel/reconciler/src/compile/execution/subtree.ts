@@ -90,9 +90,9 @@ export class SubtreeCompiler {
     flushPendingPathEmissions(this.runtime, this.output, state.paths);
     for (const finalize of this.finalizers) finalize();
 
-    let layoutBounds: SubtreeCompilation['layoutBounds'];
+    let visualBounds: SubtreeCompilation['visualBounds'];
     for (const contribution of state.bounds) {
-      layoutBounds = mergeLayoutBounds(layoutBounds, contribution.boundsPoints, contribution.shadow);
+      visualBounds = mergeLayoutBounds(visualBounds, contribution.boundsPoints, contribution.shadow);
     }
 
     if (this.output.pendingPathCount !== 0) {
@@ -110,15 +110,17 @@ export class SubtreeCompiler {
     return {
       primitives,
       primitiveZIndices: primitives.map(primitive => this.output.zIndexOf.get(primitive)),
-      ...(this.compositeCompiler?.rootContribution === undefined
-        ? {}
-        : { contribution: this.compositeCompiler.rootContribution }),
-      layoutBounds,
+      layout: {
+        ...(this.compositeCompiler?.rootContribution === undefined
+          ? {}
+          : { contribution: this.compositeCompiler.rootContribution }),
+        allocations: state.allocations.filter(allocation => allocation.skipAllocation !== true),
+        ...(alignmentGuides === undefined ? {} : { alignmentGuides }),
+      },
+      visualBounds,
       geometries: state.geometries,
       bounds: state.bounds,
-      allocations: state.allocations.filter(allocation => allocation.skipAllocation !== true),
       artifacts: orderCompileArtifacts(state.artifacts),
-      ...(alignmentGuides === undefined ? {} : { alignmentGuides }),
     };
   }
 

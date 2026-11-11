@@ -24,7 +24,7 @@ export const finalizeSceneCompilation = <TComposite extends AnyCompositeDefiniti
     root,
     primitives: subtree.primitives,
     resources: [...paintRegistry.getResources(), ...clipRegistry.getResources()],
-    layoutBounds: subtree.layoutBounds,
+    layoutBounds: subtree.visualBounds,
     round: runtime.context.layout.round,
     artifacts: subtree.artifacts,
     diagnostics: diagnosticCollector.warnings,

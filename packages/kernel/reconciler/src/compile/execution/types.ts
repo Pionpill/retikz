@@ -32,26 +32,32 @@ export type CompileChildTask = {
   publish: (contribution: CompileContribution) => void;
 };
 
-/** child 遍历编译后的 primitive 与自动 layout bbox */
-export type SubtreeCompilation = {
-  /** 根组件按需产生的 allocation 贡献 */
+/** 子树向父布局提供的尺寸、占位与对齐信息 */
+export type LayoutCompilation = {
+  /** 根组件按请求轴直接返回的尺寸贡献 */
   contribution?: LayoutContribution;
+  /** 顶层子项参与父布局的占位几何贡献 */
+  allocations: Array<LayoutBoundsContribution>;
+  /** 顶层子项向父布局提供的无歧义对齐参考 */
+  alignmentGuides?: ReadonlyArray<LayoutAlignmentGuide>;
+};
+
+/** 子树编译后的绘制输出、可见边界与父布局信息 */
+export type SubtreeCompilation = {
+  /** 供父布局测量和排列子树的信息 */
+  layout: LayoutCompilation;
   /** 已完成排序和占位回填的 Scene primitive */
   primitives: Array<ScenePrimitive>;
   /** 与 primitives 对齐的父层 zIndex，仅供同一次 compile 内 replay 复用 */
   primitiveZIndices: Array<number | undefined>;
-  /** 自动 layout 使用的全局 bbox */
-  layoutBounds: AxisAlignedBounds | undefined;
+  /** 用于自动 viewBox 的可见内容轴对齐包围盒 */
+  visualBounds: AxisAlignedBounds | undefined;
   /** 顶层 child 对父 Scope 的 allocation layout 贡献 */
   geometries: Array<CompiledReferenceGeometry>;
   /** 顶层自动 layout 几何贡献 */
   bounds: Array<LayoutBoundsContribution>;
-  /** 顶层父布局 allocation 几何贡献 */
-  allocations: Array<LayoutBoundsContribution>;
   /** 当前子树最终逻辑树的 artifacts */
   artifacts: Array<CompositeArtifact>;
-  /** 顶层 child 向父布局暴露的无歧义 alignment guides */
-  alignmentGuides?: ReadonlyArray<LayoutAlignmentGuide>;
 };
 
 /** 子树调度继承的初始位置和执行策略，不持有工作区或会话 */

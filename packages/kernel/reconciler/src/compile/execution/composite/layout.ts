@@ -30,8 +30,8 @@ export const projectContribution = (contribution: LayoutContribution, proposal: 
 
 /** 汇总对父布局可见的分配贡献；空内容保留零尺寸边界 */
 export const boundsRectOf = (result: SubtreeCompilation): Readonly<BoundsRect> => {
-  let allocation: SubtreeCompilation['layoutBounds'];
-  for (const contribution of result.allocations) {
+  let allocation: SubtreeCompilation['visualBounds'];
+  for (const contribution of result.layout.allocations) {
     if (contribution.skipAllocation !== true) allocation = mergeLayoutBounds(allocation, contribution.boundsPoints);
   }
   return canonicalizeBoundsRect(

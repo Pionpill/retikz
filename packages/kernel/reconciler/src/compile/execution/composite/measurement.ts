@@ -80,7 +80,7 @@ export const createCompositeMeasurementMethods = (
           undefined,
           axis,
         );
-        const allocation = laid.contribution ?? contributionOfBounds(axis, boundsRectOf(laid));
+        const allocation = laid.layout.contribution ?? contributionOfBounds(axis, boundsRectOf(laid));
         const result = projectContribution(allocation, clonedProposal);
         runtime.state.composite.setMeasurement(cacheKey, result);
         return { kind: 'resolved', result };
