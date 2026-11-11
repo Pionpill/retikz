@@ -27,6 +27,8 @@ import { PlotAxis, PathMark, Plot } from '@retikz/plot-react';
 
 先从同一份数据和同一个 `<PathMark>` 出发。切换 `cartesian2D` / `polar2D` 时，`dimension="x"` 分别解释横向 / 角向位置，`dimension="y"` 分别解释纵向 / 径向位置；`grid` 仍属于生成它的 PlotAxis。
 
+极坐标的角向维度为离散分类时，默认采用直弦连接，等值网格呈多边形。径向轴的轴线、刻度和标签使用相同投影，因此刻度对齐多边形边，而不是按外接圆半径继续延伸。显式使用 `interpolation: 'polar'` 时，仍按圆形投影。
+
 <ComponentPreview
   files={['axis-coordinate-basics', 'axis-coordinate-basics.preview.tsx', 'axis-coordinate-basics.data.ts']}
   size="lg"

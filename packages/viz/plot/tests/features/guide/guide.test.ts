@@ -1,5 +1,6 @@
 import type { IRNode, IRPath, IRScope } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
+import { pointAtArcAngle } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
 import type { CoordinateFrame, PositionScale } from '../../../src/contract';
@@ -401,7 +402,7 @@ describe('lowerGuide（契约）', () => {
           project: () => null,
           projectRoles: () => null,
           mapRoles: () => null,
-          projectMappedRoles: () => null,
+          projectMappedRoles: ([angle, radius]) => pointAtArcAngle([100, 100], radius, angle),
           placementBoundary: fakePolarPlacementBoundary,
           projectPolar: () => null,
           projectCell: () => ({
@@ -418,7 +419,7 @@ describe('lowerGuide（契约）', () => {
     );
     const title = nodeByText(axisLayer as IRScope, 'radius');
 
-    expect((title.position as [number, number])[0]).toBeGreaterThan(170);
+    expect((title.position as [number, number])[0]).toBeCloseTo(180, 6);
   });
 
   it('自定义轴标题放置样本数字轴范围', () => {
