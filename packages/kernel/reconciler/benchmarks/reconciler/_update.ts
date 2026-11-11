@@ -72,7 +72,7 @@ export const createUpdateBenchmark = (
     let selectedBatch = batches[0];
     const verify = () => {
       verifyOutput(result.compilation.result, direction === 0 ? 1 : 0);
-      expect(result.revision).toBe(workload.change === 'empty' ? 0 : iteration);
+      expect(result.revision).toBe(workload.change === 'empty' && strategy !== 'full' ? 0 : iteration);
       expect(JSON.stringify(workload.states)).toBe(sourceBefore);
       expect(JSON.stringify(batches)).toBe(batchesBefore);
     };

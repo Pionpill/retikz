@@ -74,6 +74,9 @@ type NamespaceFrame = {
  * @description register 写入栈顶，lookup 按 inside-out 查找；同 frame 重名 last-wins 并触发诊断
  */
 export class NamespaceStack {
+  /** 当前捕获区间的 frame 写入观察器；fork 不继承，区间退出即移除 */
+  private readonly frameObservers = new WeakMap<NamespaceFrame, Set<(id: string) => void>>();
+
   /** 当前发布几何的作者身份，嵌套执行退出时恢复 */
   private producer: object | undefined;
 
@@ -167,6 +170,52 @@ export class NamespaceStack {
     return fork;
   }
 
+  /** 捕获执行期间当前 frame 的绑定变化；子 frame 与未提交 fork 的写入不进入结果 */
+  captureFrameChanges(execute: () => void): Array<NamespaceFrameChange> {
+    const frame = this.frameStack[this.frameStack.length - 1];
+    /** ⚡仅在名称首次写入前保存旧绑定与声明长度，避免逐元素复制全部命名空间 */
+    const baselines = new Map<string, { entry: NamespaceEntry | undefined; pathCount: number }>();
+    const observe = (id: string) => {
+      if (!baselines.has(id)) {
+        baselines.set(id, { entry: frame.entryMap.get(id), pathCount: frame.pathMap.get(id)?.length ?? 0 });
+      }
+    };
+    let observers = this.frameObservers.get(frame);
+    if (observers === undefined) {
+      observers = new Set();
+      this.frameObservers.set(frame, observers);
+    }
+    observers.add(observe);
+    try {
+      execute();
+      if (this.frameStack[this.frameStack.length - 1] !== frame) {
+        throw createExecutionInvariantError('NamespaceStack.captureFrameChanges: frame mismatch after compilation');
+      }
+      /** 既有名称保持原 frame 顺序；新名称按首次发布顺序追加 */
+      const overwritten = new Map<string, NamespaceFrameChange>();
+      const added: Array<NamespaceFrameChange> = [];
+      for (const [id, baseline] of baselines) {
+        const entry = frame.entryMap.get(id)!;
+        if (entry === baseline.entry) continue;
+        const change = { id, entry, irPaths: frame.pathMap.get(id)!.slice(baseline.pathCount) };
+        if (baseline.entry === undefined) added.push(change);
+        else overwritten.set(id, change);
+      }
+      // ⚡常见的新增或单名称覆盖不扫描 frame；多名称覆盖保留既有重放与诊断顺序
+      if (overwritten.size <= 1) return [...overwritten.values(), ...added];
+      const ordered: Array<NamespaceFrameChange> = [];
+      for (const id of frame.entryMap.keys()) {
+        const change = overwritten.get(id);
+        if (change !== undefined) ordered.push(change);
+        if (ordered.length === overwritten.size) break;
+      }
+      return [...ordered, ...added];
+    } finally {
+      observers.delete(observe);
+      if (observers.size === 0) this.frameObservers.delete(frame);
+    }
+  }
+
   /** 返回当前顶层 frame 相对 base 的新增或覆盖项 */
   diffTopFrame(base: NamespaceStack): Array<NamespaceFrameChange> {
     if (this.frameStack.length !== base.frameStack.length) {
@@ -246,8 +295,10 @@ export class NamespaceStack {
       );
     }
 
-    const topFrame = this.frameStack[this.frameStack.length - 1].entryMap;
-    const paths = this.frameStack[this.frameStack.length - 1].pathMap;
+    const frame = this.frameStack[this.frameStack.length - 1];
+    const topFrame = frame.entryMap;
+    const paths = frame.pathMap;
+    this.recordFrameChange(frame, id);
     const isOverwrite = topFrame.has(id);
     const duplicateIrPaths = [...(paths.get(id) ?? []), irPath];
     paths.set(id, duplicateIrPaths);
@@ -307,6 +358,7 @@ export class NamespaceStack {
     const current = targetFrame.get(id)!;
     if (expectedScopeId !== undefined && current.scopeId !== expectedScopeId) return false;
 
+    this.recordFrameChange(this.frameStack[frameDepth], id);
     this.snapshotIdentity = {};
     targetFrame.set(id, { ...current, geometry: layout, state: 'resolved' });
 
@@ -316,9 +368,11 @@ export class NamespaceStack {
   /** 用新的投影替换本次名称绑定，不原位修改上下文或 fork 共享的条目 */
   replacePublishedGeometry(previous: CompiledReferenceGeometry, next: CompiledReferenceGeometry): void {
     if (previous === next) return;
-    for (const { entryMap: frame } of this.frameStack) {
+    for (const namespaceFrame of this.frameStack) {
+      const frame = namespaceFrame.entryMap;
       for (const [id, entry] of frame) {
         if (entry.geometry !== previous) continue;
+        this.recordFrameChange(namespaceFrame, id);
         frame.set(id, { ...entry, geometry: next });
         this.snapshotIdentity = {};
       }
@@ -362,6 +416,12 @@ export class NamespaceStack {
       throw error;
     }
     return entry;
+  }
+
+  /** 在绑定或声明历史变更前通知该 frame 的所有嵌套捕获区间 */
+  private recordFrameChange(frame: NamespaceFrame, id: string): void {
+    const observers = this.frameObservers.get(frame);
+    if (observers !== undefined) for (const observe of observers) observe(id);
   }
 
   /** 按 inside-out 规则查找 id 对应的 layout 与生命周期状态 */

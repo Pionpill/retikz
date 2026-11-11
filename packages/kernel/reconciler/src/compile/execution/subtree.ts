@@ -234,19 +234,20 @@ export class SubtreeCompiler {
               kind: CompileReferenceRead['kind'],
             ) => reads.push({ name, entry, kind });
             const namespace = this.runtime.state.execution.namespaceStack;
-            const baseline = namespace.fork();
-            namespace.observeReferences(observeRead, () =>
-              this.compileElement(
-                child,
-                index,
-                { context: frame.context, state },
-                occurrence,
-                compositeDepth,
-                generated,
-                semanticOwner,
+            // ⚡按实际发布捕获贡献，避免每个元素复制全栈并扫描全部绑定
+            const bindings = namespace.captureFrameChanges(() =>
+              namespace.observeReferences(observeRead, () =>
+                this.compileElement(
+                  child,
+                  index,
+                  { context: frame.context, state },
+                  occurrence,
+                  compositeDepth,
+                  generated,
+                  semanticOwner,
+                ),
               ),
             );
-            const bindings = namespace.diffTopFrame(baseline);
             for (const pendingPath of state.paths) pendingPath.observeRead = observeRead;
             const captured = state;
             this.finalizers.push(() => {
