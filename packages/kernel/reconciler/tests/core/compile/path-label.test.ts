@@ -108,7 +108,7 @@ describe('path.label：stroke host label 几何', () => {
     expect(findLabelGroupPrim(scene.primitives)).toBeUndefined();
     expect(resolvePathLabelPlacement({ side: 'center', sloped: false }, true).interrupt).toBe(true);
   });
-  it('公共路由采样与宿主标签采样匹配', () => {
+  it('公共圆角路由采样与显式长度宿主标签采样匹配', () => {
     const commands = [
       { kind: 'move' as const, to: [0, 0] as [number, number] },
       { kind: 'line' as const, to: [100, 0] as [number, number] },
@@ -125,7 +125,7 @@ describe('path.label：stroke host label 几何', () => {
         {
           type: 'path',
           cornerRadius: 10,
-          label: { text: 'label', position: 0.5, side: 'top', distance: 0, interrupt: false },
+          label: { text: 'label', position: 0.5, positionMode: 'length', side: 'top', distance: 0, interrupt: false },
           children: commands.map(command => ({ type: 'step' as const, ...command })),
         },
       ],
@@ -727,7 +727,7 @@ describe('label on fold (step kind="fold")：N=2 段等 t 拼接、拐角恒在 
     );
   });
 
-  it('折线路径的倾斜标签使用实际采样线段的切线', () => {
+  it('折线接缝的倾斜标签使用前进段切线', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -750,7 +750,7 @@ describe('label on fold (step kind="fold")：N=2 段等 t 拼接、拐角恒在 
     const scene = compileTestResult(ir).scene;
     const group = findLabelGroupPrim(scene.primitives);
 
-    expect(group!.transforms).toEqual([{ kind: 'rotate', degrees: 0, cx: 40, cy: 0 }]);
+    expect(group!.transforms).toEqual([{ kind: 'rotate', degrees: 90, cx: 40, cy: 0 }]);
   });
 
   it('label_fold_t_0_5_at_corner：position=0.5 落在拐角 (40, 0)', () => {

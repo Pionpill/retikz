@@ -317,7 +317,12 @@ describe('cornerRadius 交互', () => {
         style: { stroke: '#13579b' },
       },
       { type: 'step', kind: 'move', to: [0, 0] },
-      { type: 'step', kind: 'line', to: [100, 0], label: { text: 'turn', position: 0.9, sloped: true } },
+      {
+        type: 'step',
+        kind: 'line',
+        to: [100, 0],
+        label: { text: 'turn', position: 0.9, positionGeometry: 'rounded', sloped: true },
+      },
       { type: 'step', kind: 'line', to: [100, 100] },
     );
     const fragments = flattenPrims(
@@ -352,7 +357,7 @@ describe('cornerRadius 交互', () => {
       pathWith(
         {
           cornerRadius: 30,
-          label,
+          label: { ...label, positionGeometry: 'rounded' },
           style: { stroke: '#13579b' },
         },
         { type: 'step', kind: 'move', to: [0, 0] },

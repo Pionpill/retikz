@@ -38,7 +38,8 @@
     cornerRadius: '线段相交处的几何圆角半径；与只改变描边外观的 `lineJoin` 不同',
     label: '附着在 Path 或其它 path-like 宿主上的路径标签',
     arrow: '起末端箭头配置；start / end 分别声明外观与 endpointOverlap，并根据接触几何截断主线',
-    marks: '沿整条路径弧长放置内容；每项包含 pos、rotate、scale 和 mark，不改变宿主路径几何',
+    marks:
+      '沿整条路径按步骤参数或累计长度放置内容；每项包含 pos、positionMode、positionGeometry、shape 及外观字段，不截断宿主路径',
   }}
 />
 
@@ -260,6 +261,9 @@
     lineHeight: '最小行槽高度；缺省为有效字号的 1.2 倍，内容更高时扩展',
     maxTextWidth: '自动折行宽度；省略时只按硬换行分行',
     position: '沿段归一化位置：7 个 keyword 或 0..1 数字；默认 midway',
+    positionMode: '比例解释方式：step 按有效绘制段等分并使用段内参数，length 按累计长度；标签默认 step',
+    positionGeometry:
+      '定位几何：original 为圆角前，rounded 为圆角后；继承合并后省略时，step 使用 original，length 使用 rounded',
     side: '标签相对锚点的方位：top / bottom / left / right / center。center 放在线上，是否沿切线旋转由 sloped 独立控制',
     sloped: '是否沿采样点切线旋转标签；为 true 且省略 side 时 canonicalize 为 center，显式 side 仍控制方位',
     interrupt:
@@ -309,7 +313,9 @@
   name="PathMarkPlacementSchema"
   description="沿路径放置的标记，直接组合位置、形状、尺寸与外观字段。"
   descriptions={{
-    pos: '整条路径累计弧长的比例 0..1，在箭头截断和标签断线之前采样',
+    pos: '整条路径的比例位置 0..1，由 positionMode 和 positionGeometry 解释，在箭头截断和标签断线之前采样',
+    positionMode: '比例解释方式：step 按有效绘制段等分并使用段内参数，length 按累计长度；标记默认 length',
+    positionGeometry: '定位几何：original 为圆角前，rounded 为圆角后；省略时，step 使用 original，length 使用 rounded',
     rotate: '缺省或 auto 沿切线定向；数字为路径局部坐标中的固定角度',
     scale: '长度和宽度的统一缩放，默认 1',
     shape: '已注册标记或箭头名称',

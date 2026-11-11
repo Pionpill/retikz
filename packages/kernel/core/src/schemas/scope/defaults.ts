@@ -23,6 +23,7 @@ export const NodeLabelDefaultSchema = NodeLabelConfigSchema.safeExtend({
 
 /** 路径与步骤已有标签的稀疏配置 */
 export const PathLabelDefaultSchema = PathLabelSchema.omit({ text: true }).extend({
+  positionMode: PathLabelSchema.shape.positionMode.unwrap().unwrap().optional(),
   color: CssColorSchema.optional().describe('Master color for path and step labels; textColor falls back to it.'),
 });
 

@@ -6,6 +6,7 @@ import type {
   CompiledScope,
   CompileWarning,
   SceneResource,
+  ScenePrimitive,
   PaintRegistry,
   ClipRegistry,
   CanonicalNode,
@@ -13,6 +14,7 @@ import type {
   CanonicalScope,
   ReferenceReadKind,
 } from '@retikz/core';
+import { visitSceneContent } from '@retikz/core';
 import type { PropertyPath } from '@retikz/foundation';
 import { jsonStructuralEquals } from '@retikz/foundation';
 
@@ -60,6 +62,7 @@ type CompileStageComputation<TPhase extends keyof CompileStageProducts> = {
     runtime: CompileRuntime,
     canon: CompileStageCanons[TPhase],
     previous?: CompileStageProducts[TPhase],
+    restoreResources?: (primitives: Array<ScenePrimitive>) => void,
   ) => CompileStageProducts[TPhase];
 };
 
@@ -262,8 +265,29 @@ export const runCompileStage = <TPhase extends keyof CompileStageProducts>(
       : undefined;
   const value = namespace.observeReferences(
     (name, entry, kind) => reads.push({ name, entry, kind }),
-    () => (typeof compute === 'function' ? compute(local) : compute.compile(local, canon!, reusablePrevious)),
+    () =>
+      typeof compute === 'function' ? compute(local) : compute.compile(local, canon!, reusablePrevious, primitives => {
+        if (reusablePrevious === undefined || previous === undefined) return;
+        const retained = new Set<string>();
+        visitSceneContent({ primitives, resources: [...previous.resources] }, primitive => {
+          if (primitive.type === 'group') {
+            if (primitive.clipRef !== undefined) retained.add(primitive.clipRef);
+          } else if (primitive.type !== 'text') {
+            for (const paint of [primitive.fill, primitive.stroke])
+              if (typeof paint === 'object' && paint.kind === 'resourceRef') retained.add(paint.id);
+          }
+        });
+        importSceneResources(
+          previous.resources.filter(resource => retained.has(resource.id)),
+          paintRegistry,
+          clipRegistry,
+        );
+      }),
   );
+  // 部分复用 targets/geometry 时不再触发 lookup，仍需保留已验证的引用依赖
+  if (reusablePrevious !== undefined && previous !== undefined)
+    for (const read of previous.reads)
+      if (!reads.some(current => current.name === read.name && current.kind === read.kind)) reads.push(read);
   const resources = [...paintRegistry.getResources(), ...clipRegistry.getResources()];
   runtime.cache?.write(
     path,

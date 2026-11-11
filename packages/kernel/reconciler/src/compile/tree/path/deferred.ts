@@ -7,7 +7,7 @@ import type {
 } from '@retikz/core';
 import { compilePath, createPathTargetResolver, resolvePathAnimations, resolvePath } from '@retikz/core';
 
-import { comparePathResolutions } from '../../compare';
+import { comparePathResolutions, preparePathCompilation } from '../../compare';
 import type { CompileOwnerKey } from '../../provenance';
 import { createExecutionInvariantError, runCompileStage } from '../../runtime';
 import type { CompileRuntime } from '../../runtime';
@@ -122,25 +122,33 @@ export const flushPendingPathEmissions = (
                 irPath: pendingPath.irPath,
               }),
             equals: comparePathResolutions,
-            compile: (stageRuntime, resolution) => ({
-              canon: resolution,
-              compiled: compilePath(resolution, {
-                ...pendingPath,
-                // ⚡只有阶段实际执行时才创建解析器，整条缓存命中不承担准备成本
-                targetResolver: createPathTargetResolver(chain => createTreePositionContext(runtime, chain)),
-                registries: stageRuntime.context.registries,
-                ...stageRuntime.context.layout,
-                ...stageRuntime.context.host,
-                boundaryStore: stageRuntime.state.workspace.boundaryStore,
-                registerPaint: stageRuntime.state.workspace.paintRegistry.register,
-                resources: () => [
-                  ...stageRuntime.state.workspace.paintRegistry.getResources(),
-                  ...stageRuntime.state.workspace.clipRegistry.getResources(),
-                ],
-                onWarn: stageRuntime.state.workspace.diagnosticCollector.collect,
-                resolveTransform: stageRuntime.state.execution.scopeTransformComposer.resolve,
-              }),
-            }),
+            compile: (stageRuntime, resolution, previous, restoreResources) => {
+              const selected = previous === undefined ? undefined : preparePathCompilation(previous, resolution);
+              if (selected !== undefined) restoreResources?.(selected.primitives);
+              return {
+                canon: resolution,
+                compiled: compilePath(
+                  resolution,
+                  {
+                    ...pendingPath,
+                    // ⚡只有阶段实际执行时才创建解析器，整条缓存命中不承担准备成本
+                    targetResolver: createPathTargetResolver(chain => createTreePositionContext(runtime, chain)),
+                    registries: stageRuntime.context.registries,
+                    ...stageRuntime.context.layout,
+                    ...stageRuntime.context.host,
+                    boundaryStore: stageRuntime.state.workspace.boundaryStore,
+                    registerPaint: stageRuntime.state.workspace.paintRegistry.register,
+                    resources: () => [
+                      ...stageRuntime.state.workspace.paintRegistry.getResources(),
+                      ...stageRuntime.state.workspace.clipRegistry.getResources(),
+                    ],
+                    onWarn: stageRuntime.state.workspace.diagnosticCollector.collect,
+                    resolveTransform: stageRuntime.state.execution.scopeTransformComposer.resolve,
+                  },
+                  selected?.prepared,
+                ),
+              };
+            },
           },
         ),
       );

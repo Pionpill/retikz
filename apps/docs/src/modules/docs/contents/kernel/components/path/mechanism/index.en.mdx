@@ -17,7 +17,7 @@ The diagram separates normalization from coordinate calculation. Creating steps 
 
 <ComponentPreview files="draw-compilation" size="sm" hideCode type="flow" />
 
-`arrow.start` / `arrow.end` and `marks` retain the same structure in React, Vanilla, and IR. Endpoint arrows shorten the stroke according to contact geometry. Marks place content along the entire path's arc length, even at either endpoint, without becoming endpoint arrows.
+`arrow.start` / `arrow.end` and `marks` retain the same structure in React, Vanilla, and IR. Endpoint arrows shorten the stroke according to contact geometry. Marks default to arc-length positioning; `positionMode` also supports step positioning and `positionGeometry` selects geometry before or after rounding. Marks only place content, even at either endpoint, without becoming endpoint arrows.
 
 <SourceLinks
   sources={[

@@ -378,6 +378,13 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
+          label: { zh: '待发布：路径双模式定位', en: 'Unreleased: dual path positioning modes' },
+          content: {
+            zh: 'Path、Step 标签及 marks 支持 positionMode: step / length，并可独立选择 positionGeometry: original / rounded。标签默认按步骤定位，标记默认按长度定位；省略几何时分别采用原始与圆角路径。增量位置更新复用几何度量与未变化的局部内容。',
+            en: 'Path and Step labels and marks support positionMode: step / length and an independent positionGeometry: original / rounded. Labels default to step positioning and marks to length positioning, using original and rounded geometry respectively when geometry is omitted. Incremental position updates reuse geometry metrics and unchanged local content.',
+          },
+        },
+        {
           label: {
             zh: '待发布：BREAKING 正文与标签共享文本能力',
             en: 'Unreleased: BREAKING shared text capabilities for body text and labels',
