@@ -391,9 +391,9 @@
     "grammarMark": "mark · 图元",
     "grammarGuide": "辅助",
     "compMark": "图元",
-    "compPathMark": "PathMark · 路径图元",
-    "compPointMark": "PointMark · 点图元",
-    "compIntervalMark": "IntervalMark · 区间图元",
+    "compPathMark": "path · 路径图元",
+    "compPointMark": "point · 点图元",
+    "compIntervalMark": "interval · 区间图元",
     "compAxis": "坐标轴",
     "compLegend": "图例"
   },

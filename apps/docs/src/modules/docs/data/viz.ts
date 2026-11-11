@@ -537,9 +537,9 @@ export const vizSection: Array<Section> = [
         label: 'viz.grammarMark',
         sidebarGroup: 'viz.plotGrammar',
         children: [
-          { id: 'point', label: 'viz.compPointMark', difficulty: DocDifficulty.Beginner },
-          { id: 'path', label: 'viz.compPathMark', difficulty: DocDifficulty.Beginner },
-          { id: 'interval', label: 'viz.compIntervalMark', difficulty: DocDifficulty.Beginner },
+          { id: 'point', label: 'viz.compPointMark', difficulty: DocDifficulty.Advanced },
+          { id: 'path', label: 'viz.compPathMark', difficulty: DocDifficulty.Advanced },
+          { id: 'interval', label: 'viz.compIntervalMark', difficulty: DocDifficulty.Advanced },
         ],
       },
       {
