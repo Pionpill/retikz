@@ -2,7 +2,7 @@ import type { TextMeasurer, TextMetrics } from '@retikz/core';
 import { guardProviderOutput } from '@retikz/core';
 
 /** 为一次编译执行缓存文字度量，子树及试算共享，下一次执行重新创建 */
-export const createCompileTextMeasurer = (measureText: TextMeasurer): TextMeasurer => {
+export const createCachedTextMeasurer = (measureText: TextMeasurer): TextMeasurer => {
   const measurements = new Map<string, TextMetrics>();
 
   return (text, font, disableCache = false) => {

@@ -1,7 +1,7 @@
 import type { ClipRegistry, CompileWarning, BoundaryStore, PaintRegistry } from '@retikz/core';
 import { createClipRegistry, createBoundaryStore, createPaintRegistry } from '@retikz/core';
 
-import type { SharedCompileContext } from './context';
+import type { SharedCompileContext } from '../context';
 
 /** 单次计算独占的几何、资源与诊断工作区 */
 export type WorkspaceCompileState = Readonly<{

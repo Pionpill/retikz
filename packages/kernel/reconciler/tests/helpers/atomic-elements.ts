@@ -14,6 +14,7 @@ import {
   compileScope,
 } from '@retikz/core';
 import type {
+  GroupPrimitive,
   CanonicalScope,
   CompiledBoundaryGeometry,
   CompiledNode,
@@ -31,7 +32,6 @@ import type {
 } from '@retikz/core';
 import type { PropertyPath } from '@retikz/foundation';
 
-import type { ScopeOutput } from '../helpers/scope-output';
 import type { WeaveElementRuntime } from './atomic-runtime';
 
 /** 节点阶段产物与当前工作区绘制输出，分别交给执行器保存 */
@@ -155,7 +155,11 @@ export const prepareWeaveScope = (input: InputScopeCompile, runtime: WeaveElemen
 };
 
 /** Scope 独立阶段结果，由执行器分别保存 */
-export type WeaveScopeCompilation = ScopeOutput & {
+export type WeaveScopeCompilation = {
+  /** 不含后代的分组包装属性 */
+  group: Omit<GroupPrimitive, 'children' | 'animations'>;
+  /** 自身图元、资源及绘制顺序 */
+  output: CompileOutput;
   /** Core 产生的包络与自身变换 */
   compiled: CompiledScope;
   canon: CanonicalScope;

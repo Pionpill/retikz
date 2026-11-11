@@ -19,8 +19,8 @@ import type {
 } from '@retikz/core';
 import type { PropertyPath } from '@retikz/foundation';
 
-import type { CompileProvenanceSnapshot } from '../provenance';
-import type { CompositeArtifact } from '../shared';
+import type { CompileProvenanceSnapshot } from '../../provenance';
+import type { CompositeArtifact } from '../../shared';
 import type { NamespaceFrameChange } from './namespace';
 
 /** layout-aware child probe 保存的全部可提交贡献 */

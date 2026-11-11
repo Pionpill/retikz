@@ -22,6 +22,7 @@ describe('基础公共面', () => {
         'assertPositiveNumber',
         'cloneAndFreezeJson',
         'comparePropertyPaths',
+        'compareProperties',
         'compositeOpaqueColor',
         'createIdAllocator',
         'createOpenStringSchema',

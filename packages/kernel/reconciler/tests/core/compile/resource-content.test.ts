@@ -5,9 +5,7 @@ import { defineMark, definePath, definePattern, PathSchema, visitSceneContent } 
 import type { TextPrimitive, Scene, GroupPrimitive, ScenePrimitive, IRScene } from '../../../../core/src';
 import { createClipRegistry, createPaintRegistry } from '../../../../core/src/compile/resource';
 import { BUILTIN_SHAPES } from '../../../../core/src/providers/shape/shape';
-import { createSharedCompileContext } from '../../../src/compile';
-import { assembleCompileOutputs } from '../../../src/compile/index';
-import { importSceneResources } from '../../../src/compile/resource';
+import { importSceneResources } from '../../../src/compile/shared';
 import { compileTestResult } from '../../helpers/compilation';
 
 describe('资源内容复用基础图元', () => {
@@ -299,7 +297,7 @@ describe('Scene 资源依赖关闭', () => {
     expect(source.clipRef).toBe(windowId);
     expect(resources[0].id).toBe('first');
   });
-  it('相同声明采用不同 Pattern 输出时资源独立，合并保留图元和资源引用', () => {
+  it('Pattern 资源身份由输出内容决定，编译结果中的资源引用完整', () => {
     const input: IRScene = { ...patternScene, children: patternScene.children.slice(0, 1) };
     const compile = (fill: string) =>
       compileTestResult(input, {
@@ -311,22 +309,8 @@ describe('Scene 资源依赖关闭', () => {
     expect(red.resources![0].id).toBe(repeated.resources![0].id);
     expect(red.resources![0].id).not.toBe(blue.resources![0].id);
 
-    const shared = createSharedCompileContext();
-    const outputs = [red, blue, repeated].map(scene => ({
-      primitives: scene.primitives,
-      resources: scene.resources!,
-      bounds: [],
-    }));
-    const context = { round: shared.layout.round, maxClipDepth: shared.limits.maxClipDepth };
-    const merged = assembleCompileOutputs(outputs, context);
-    expect(merged.resources).toHaveLength(2);
-    expect(merged.primitives[0]).toBe(red.primitives[0]);
-    expect(merged.primitives[1]).toBe(blue.primitives[0]);
-    expect(merged.primitives[2]).toBe(repeated.primitives[0]);
-    expect(() => visitSceneContent(merged)).not.toThrow();
-    const reversed = assembleCompileOutputs([...outputs].reverse(), context);
-    expect(new Set(reversed.resources.map(resource => resource.id))).toEqual(
-      new Set(merged.resources.map(resource => resource.id)),
-    );
+    for (const scene of [red, blue, repeated]) {
+      expect(() => visitSceneContent(scene)).not.toThrow();
+    }
   });
 });

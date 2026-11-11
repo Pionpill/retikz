@@ -575,7 +575,7 @@ export declare const jsonStructuralEquals: (left: unknown, right: unknown) => bo
 
 ## Validation and collection utilities
 
-#### <ApiSourceLink label={"MergePropertiesOptions"} path={"packages/kernel/foundation/src/objects.ts"} startLine={19}>MergePropertiesOptions</ApiSourceLink>
+#### <ApiSourceLink label={"MergePropertiesOptions"} path={"packages/kernel/foundation/src/objects.ts"} startLine={87}>MergePropertiesOptions</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -598,6 +598,72 @@ export declare const jsonStructuralEquals: (left: unknown, right: unknown) => bo
 export type MergePropertiesOptions<T extends object> = Readonly<{
   shouldOverride?: (value: T[keyof T], key: PropertyKey) => boolean;
 }>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"ComparePropertiesOptions"} path={"packages/kernel/foundation/src/objects.ts"} startLine={4}>ComparePropertiesOptions</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member            | Type     | Default | Description                                                                                                 |
+| ----------------- | -------- | ------- | ----------------------------------------------------------------------------------------------------------- |
+| `readonly depth?` | `number` | `1`     | Maximum levels of plain objects or arrays to expand; a non-negative safe integer. Zero uses only Object.is. |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type ComparePropertiesOptions = Readonly<{
+  depth?: number;
+}>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"compareProperties"} path={"packages/kernel/foundation/src/objects.ts"} startLine={18}>compareProperties</ApiSourceLink>
+
+Expands one level when options are omitted. Uses Object.is at the depth limit and for other object types. Includes string and symbol keys, array length and holes; ignores the difference between Object.prototype and null prototypes on plain objects. Does not mutate inputs.
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name       | Type / signature           | Description                                                                                                               |
+| ---------- | ---------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Parameters | `previous` | `unknown`                  | —                                                                                                                         |
+|            | `current`  | `unknown`                  | —                                                                                                                         |
+|            | `options?` | `ComparePropertiesOptions` | —                                                                                                                         |
+| Returns    | —          | `boolean`                  | —                                                                                                                         |
+| Throws     | —          | —                          | Throws RetikzFoundationError for invalid depth or failed property inspection or access, preserving access errors as cause |
+
+</ApiTable>
+
+> **Notes:** Cycles also stop at the depth limit; no unbounded recursion or cyclic structural equivalence is provided. Accessors are read when reached; property order does not affect equality.
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export declare const compareProperties: (
+  previous: unknown,
+  current: unknown,
+  options?: ComparePropertiesOptions,
+) => boolean;
 ```
 
 </DocTab>
@@ -697,7 +763,7 @@ export declare const createReadonlyMap: <TKey, TValue>(
 
 </DocTabs>
 
-#### <ApiSourceLink label={"mergeDefinedProperties"} path={"packages/kernel/foundation/src/objects.ts"} startLine={11}>mergeDefinedProperties</ApiSourceLink>
+#### <ApiSourceLink label={"mergeDefinedProperties"} path={"packages/kernel/foundation/src/objects.ts"} startLine={79}>mergeDefinedProperties</ApiSourceLink>
 
 Skips undefined sources and property values while retaining null, false, 0, and empty strings; later defined values win, without recursive merging or input mutation
 
@@ -730,7 +796,7 @@ export declare const mergeDefinedProperties: <T extends object>(
 
 </DocTabs>
 
-#### <ApiSourceLink label={"mergeProperties"} path={"packages/kernel/foundation/src/objects.ts"} startLine={35}>mergeProperties</ApiSourceLink>
+#### <ApiSourceLink label={"mergeProperties"} path={"packages/kernel/foundation/src/objects.ts"} startLine={103}>mergeProperties</ApiSourceLink>
 
 Includes string and symbol keys and skips undefined sources; preserves all property values by default without recursively merging or mutating inputs
 

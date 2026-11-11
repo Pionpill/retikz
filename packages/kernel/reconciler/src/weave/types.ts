@@ -19,7 +19,7 @@ import type {
 } from '@retikz/core';
 
 import type { SharedCompileContext } from '../compile';
-import type { CompileStageRecord } from '../compile/runtime';
+import type { CompileStageMetadata } from '../compile/runtime';
 import type { WeaveCompileRead } from './compile';
 import type { WeaveChangeKind, WeaveChangeSource, WeaveOperationKind } from './constants';
 
@@ -37,9 +37,7 @@ type InputWeave<TInput> = {
 /** 节点的可替换逻辑状态，集合写入由候选工作区隔离 */
 type WeaveNodeStateBase<TInput> = {
   /** 阶段复用依据与资源诊断；实际产物分别保存在 canon / compiled */
-  cache?: {
-    [TPhase in CompileStageRecord['phase']]: Omit<Extract<CompileStageRecord, { phase: TPhase }>, 'value' | 'canon'>;
-  }[CompileStageRecord['phase']];
+  cache?: CompileStageMetadata;
   /** 所属声明容器，引用稳定对象 */
   parent: WeaveRoot | WeaveScopeNode;
   /** 自身输入与有效上下文，替换对象而非修改共享内容 */

@@ -1,8 +1,8 @@
 import type { AnyCompositeDefinition, IRChild, IRScene } from '@retikz/core';
 
 import type { CompileRuntime } from '../runtime';
-import { assembleSceneCompilationSnapshot } from '../scene';
 import type { SceneCompilationSnapshot } from '../types';
+import { assembleSceneCompilationSnapshot } from './output';
 import { SubtreeCompiler } from './subtree';
 import type { SubtreeCompilation, SubtreeCompileOptions } from './types';
 

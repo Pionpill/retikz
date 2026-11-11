@@ -3,9 +3,9 @@ import type { CompiledReferenceGeometry, ReferenceReadKind } from '@retikz/core'
 import type { PropertyPath, WithOptionalProperties } from '@retikz/foundation';
 import { createIdAllocator } from '@retikz/foundation';
 
-import type { CompileNamespaceKey } from '../provenance';
-import type { DuplicateRegisterInfo } from '../shared';
-import { createExecutionInvariantError } from './errors';
+import type { CompileNamespaceKey } from '../../provenance';
+import type { DuplicateRegisterInfo } from '../../shared';
+import { createExecutionInvariantError } from '../errors';
 
 /** namespace 栈当前写入/解析阶段 */
 type NamespacePhase = 'registering' | 'resolving';

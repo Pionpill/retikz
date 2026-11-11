@@ -250,34 +250,31 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
           case 'node': {
             if (node.type !== 'node') return;
             const { canon, compiled } = transaction.readNode(node);
-            if (canon !== null && compiled !== null)
-              return { ...metadata, canon, phase: 'node', value: { canon, compiled } };
+            if (canon !== null && compiled !== null) return { ...metadata, phase: 'node', value: { canon, compiled } };
             break;
           }
           case 'coordinate': {
             if (node.type !== 'coordinate') return;
             const { canon, compiled } = transaction.readNode(node);
             if (canon !== null && compiled !== null)
-              return { ...metadata, canon, phase: 'coordinate', value: { canon, compiled } };
+              return { ...metadata, phase: 'coordinate', value: { canon, compiled } };
             break;
           }
           case 'path': {
             if (node.type !== 'path') return;
             const { canon, compiled } = transaction.readNode(node);
-            if (canon !== null && compiled !== null)
-              return { ...metadata, canon, phase: 'path', value: { canon, compiled } };
+            if (canon !== null && compiled !== null) return { ...metadata, phase: 'path', value: { canon, compiled } };
             break;
           }
           case 'scope': {
             if (node.type !== 'scope') return;
             const { canon, compiled } = transaction.readNode(node);
-            if (canon !== null && compiled !== null)
-              return { ...metadata, canon, phase: 'scope', value: { canon, compiled } };
+            if (canon !== null && compiled !== null) return { ...metadata, phase: 'scope', value: { canon, compiled } };
             break;
           }
         }
       },
-      write: (path, _phase, record, reused) => {
+      write: (path, record, reused) => {
         const node = nodes.get(keyOf(path));
         if (node === undefined) return;
         if (!reused && !counted.has(node)) {
@@ -285,8 +282,7 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
           batch.visited++;
         }
         const state = transaction.editNode(node);
-        const { value: product, canon, ...metadata } = record;
-        void canon;
+        const { value: product, ...metadata } = record;
         void product;
         state.cache = metadata;
         // phase 由唯一遍历器固定，对应值直接保存为 Core 阶段产物

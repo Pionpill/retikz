@@ -4,13 +4,11 @@ import type { IRScene } from '@retikz/core';
 import { CompileProvenanceTracker } from '../provenance';
 import type { CompileOptions, ExecuteOptions } from '../types';
 import type { CompileStageCache } from './cache';
-import { CompositeCompileState } from './composite';
 import { createSharedCompileContext } from './context';
 import type { CompileContext } from './context';
-import { createCompileEnvironment } from './state';
+import { CompositeCompileState, createCompileEnvironment, createWorkspaceCompileState } from './state';
 import type { CompileState } from './state';
-import { createCompileTextMeasurer } from './text-measurement';
-import { createWorkspaceCompileState } from './workspace';
+import { createCachedTextMeasurer } from './text-cache';
 
 /** 一次树编译的稳定环境与可变执行状态 */
 export type CompileRuntime = Readonly<{
@@ -31,7 +29,7 @@ export const createCompileRuntime = (
 ): CompileRuntime => ({
   context: {
     ...shared,
-    host: { ...shared.host, measureText: createCompileTextMeasurer(shared.host.measureText) },
+    host: { ...shared.host, measureText: createCachedTextMeasurer(shared.host.measureText) },
     compositeInputs: resolveCompositeInputScope(ir, options.compositeInputs),
     theme: resolveTheme(DEFAULT_RESOLVED_THEME, ir.theme, 'scene.theme', shared.registries.themeRegistry),
     padding: options.padding,

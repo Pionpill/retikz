@@ -19,7 +19,7 @@
 - `src/` 固定为 `types.ts`、`schema.ts`、`assert.ts`、`collections.ts`、`objects.ts`、`color.ts`、`trace.ts`、`error.ts`、`id.ts`、`json.ts`、`index.ts`；不得新增 `shared`、`utils`、`helpers` 或领域目录
 - `id.ts` 只提供固定前缀与实例级递增序号的通用 ID 分配器，不使用全局状态；前缀命名域、实例身份与生命周期由调用方负责
 - `index.ts` 按根规范的可见性规则聚合 owner 文件，不写业务逻辑、包装或重命名
-- `objects.ts` 只承载无领域的自身可枚举属性浅合并；写入策略由调用方配置，不递归合并、不处理领域继承、重置或默认值
+- `objects.ts` 承载无领域的自身可枚举属性浅合并与有限深度比较；包含字符串和 symbol 键。比较只展开普通对象与数组，其他实例按引用比较；不处理领域继承、重置或默认值，不递归合并
 - `types.ts` 只承载无领域、无运行时代码的 TypeScript 类型投影；递归 `JsonValue` 同时作为 Zod JSON schema 的输出类型，`JsonObject` 由对象 schema 推导，不得引入领域模型、运行时 helper 或重复上层 owner 语义
 - `schema.ts` 只承载无领域 string / number 原子、Zod 原生递归 JSON value / object schema，以及唯一受限的 `createOpenStringSchema(values)`；除通用 JSON 契约外禁止对象、数组、coercion、transform、default、catch、参数化 range factory、颜色 schema、几何或领域 refinement
 - 通用 JSON schema 直接使用 Zod 递归 JSON 能力；不得增加手写 walker、`parseJsonValue`、字段过滤、结构优化、克隆、冻结或第二次 schema 复核

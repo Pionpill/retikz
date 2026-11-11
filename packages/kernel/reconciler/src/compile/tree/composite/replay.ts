@@ -15,9 +15,13 @@ import {
 } from '@retikz/core';
 
 import type { CompileOwnerKey } from '../../provenance';
-import { importSceneResources } from '../../resource';
 import { createExecutionInvariantError } from '../../runtime';
-import { compileWarningOccurrenceOf, freezeCompileArtifact, replaceCompileWarningOccurrence } from '../../shared';
+import {
+  compileWarningOccurrenceOf,
+  freezeCompileArtifact,
+  importSceneResources,
+  replaceCompileWarningOccurrence,
+} from '../../shared';
 import type { SubtreeCompileRuntime } from '../runtime';
 import type { SubtreeOutputContribution } from '../types';
 import type { CompositeExecutionContext, PreparedReplay } from './types';

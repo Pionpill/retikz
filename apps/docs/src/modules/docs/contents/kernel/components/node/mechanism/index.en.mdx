@@ -119,7 +119,7 @@ When traversal reaches a Node, compilation completes text and shape layout and p
   sources={[
     {
       label: 'Namespace stack and entry structure',
-      path: 'packages/kernel/reconciler/src/compile/runtime/namespace.ts',
+      path: 'packages/kernel/reconciler/src/compile/runtime/state/namespace.ts',
     },
     {
       label: 'CompiledNodeLayout geometry fields',
@@ -148,7 +148,7 @@ For example, placing `Node b` before `Node a` while making `b.position` refer to
 
 <SourceLinks
   sources={[
-    { label: 'Inside-out lookup', path: 'packages/kernel/reconciler/src/compile/runtime/namespace.ts' },
+    { label: 'Inside-out lookup', path: 'packages/kernel/reconciler/src/compile/runtime/state/namespace.ts' },
     {
       label: 'Project layout into a position reference view',
       path: 'packages/kernel/core/src/compile/reference/context.ts',
@@ -180,7 +180,7 @@ Registering a duplicate id in the same frame replaces the old entry and emits a 
   sources={[
     {
       label: 'Registration, replacement, and entry states',
-      path: 'packages/kernel/reconciler/src/compile/runtime/namespace.ts',
+      path: 'packages/kernel/reconciler/src/compile/runtime/state/namespace.ts',
     },
     {
       label: 'Register the Scope placeholder in its parent',

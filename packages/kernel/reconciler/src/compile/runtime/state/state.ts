@@ -1,7 +1,7 @@
 import type { CompileOccurrenceLocator, CompileWarning } from '@retikz/core';
 
-import type { CompileProvenanceTracker } from '../provenance';
-import { createDuplicateWarning, withCompileWarningOccurrence } from '../shared';
+import type { CompileProvenanceTracker } from '../../provenance';
+import { createDuplicateWarning, withCompileWarningOccurrence } from '../../shared';
 import type { CompositeCompileState } from './composite';
 import { NamespaceStack } from './namespace';
 import { ScopeTransformComposer } from './transform';

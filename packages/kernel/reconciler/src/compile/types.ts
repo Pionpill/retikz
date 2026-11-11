@@ -1,19 +1,77 @@
-import type { AnyCompositeDefinition, CompileWarning, CompositeInputBindings, Scene } from '@retikz/core';
+import type {
+  AnyCompositeDefinition,
+  CompileWarning,
+  CompositeInputBindings,
+  Scene,
+  TextMeasurer,
+  CoreProviderDefinitions,
+  ThemeDefinition,
+  TexLowerer,
+} from '@retikz/core';
 
-import type { CompileHostOptions, CompileLayoutOptions, CompileProviderOptions } from './options';
 import type { CompileProvenanceSnapshot } from './provenance';
 import type { CompositeArtifact, CompositeArtifactOf } from './shared';
 
-/**
- * 编译的显式 Scene + artifact 结果
- * @template TCompositeArtifact 本次编译可返回的复合组件产物联合
- */
-export type CompileResult<TCompositeArtifact extends CompositeArtifact = CompositeArtifact> = Readonly<{
-  /** 可由渲染器直接消费的完整场景 */
-  scene: Scene;
-  /** 本次编译收集的复合组件产物 */
-  artifacts: ReadonlyArray<TCompositeArtifact>;
-}>;
+/** 宿主环境注入的 compile 能力 */
+export type CompileHostOptions = {
+  /**
+   * 注入文字度量函数
+   * @description 每次编译执行统一缓存相同文本与字体的度量；测量调用传入 disableCache=true 时绕过缓存
+   * @default fallbackMeasurer
+   */
+  measureText?: TextMeasurer;
+  /**
+   * 运行时注入的公式渲染能力
+   * @description 带 tex 内容但未注入或解析失败时会 warning 并降级
+   */
+  lowerTex?: TexLowerer;
+  /**
+   * 编译期警告收集器
+   * @description path / position 解析失败时按 IR locator + code + message 同步触发
+   * @default defaultWarnDispatcher
+   */
+  onWarn?: (warning: CompileWarning) => void;
+};
+
+/** 自动布局与 Scene 输出口径 */
+export type CompileLayoutOptions = {
+  /**
+   * layout 周围的留白
+   * @description 必须是非负有限数值
+   * @default DEFAULT_LAYOUT_PADDING (10)
+   */
+  padding?: number;
+  /**
+   * 输出坐标的小数位精度
+   * @description 仅作用于 Scene 输出；内部几何保持 double 精度。必须是非负整数，且 10 的对应次幂为有限数值
+   * @default DEFAULT_PRECISION (2)
+   */
+  precision?: number;
+  /**
+   * 相对定位距离
+   * @description `Node.position` 为 `{ direction, of }` 且未自带 `distance` 时取此值。必须是有限数值，负值表示反方向偏移
+   * @default 24
+   */
+  nodeDistance?: number;
+  /**
+   * 节点 label 视觉盒与节点边界的默认净距
+   * @description `Node.label.distance` 未设置时取此值，必须是 finite nonnegative number
+   * @default 12
+   */
+  labelDistance?: number;
+  /**
+   * 默认字号
+   * @description `font.size` 缺省时使用此值；同时作为字号 preset 与 `rem` 的根字号。不改变显式数字字号
+   * @default DEFAULT_FONT_SIZE (16)
+   */
+  fontSize?: number;
+};
+
+/** 运行时注入的 provider 注册表 */
+export type CompileProviderOptions = Omit<CoreProviderDefinitions, 'composites'> & {
+  /** 运行时注入的 Core Theme definitions */
+  themeDefinitions?: ReadonlyArray<ThemeDefinition>;
+};
 
 /**
  * Tier 2 composite 展开选项
@@ -50,6 +108,17 @@ export type CompileOptions<TComposite extends AnyCompositeDefinition = AnyCompos
      */
     maxClipDepth?: number;
   };
+
+/**
+ * 编译的显式 Scene + artifact 结果
+ * @template TCompositeArtifact 本次编译可返回的复合组件产物联合
+ */
+export type CompileResult<TCompositeArtifact extends CompositeArtifact = CompositeArtifact> = Readonly<{
+  /** 可由渲染器直接消费的完整场景 */
+  scene: Scene;
+  /** 本次编译收集的复合组件产物 */
+  artifacts: ReadonlyArray<TCompositeArtifact>;
+}>;
 
 /**
  * 单次静态编译的产物、诊断与可选来源信息

@@ -147,7 +147,7 @@ export const visitScope = (
         ? undefined
         : {
             read: runtime.cache.read,
-            write: (_path, _phase, record, reused) => {
+            write: (_path, record, reused) => {
               pendingRecord = { record, reused };
             },
           },
@@ -331,7 +331,6 @@ export const visitScope = (
     const { record, reused } = pendingRecord;
     runtime.cache?.write(
       scopeGeometryContext.irPath,
-      'scope',
       {
         ...record,
         value: { canon, compiled: compiledScope },
