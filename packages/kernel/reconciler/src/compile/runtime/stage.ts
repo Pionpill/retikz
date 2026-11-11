@@ -24,6 +24,8 @@ import type { NamespaceEntry } from './state';
 
 /** 一次阶段计算的名称读取事实 */
 export type CompileReferenceRead = Readonly<{
+  /** 实例贡献区分生成名称准备与延迟输出；原子阶段记录不需要此标记 */
+  readiness?: 'prepare' | 'output';
   /** 实际请求的名称 */
   name: string;
   /** 读取时的候选绑定，未命中时省略 */
@@ -60,6 +62,8 @@ export type CompileStageComputation<TPhase extends keyof CompileStageProducts> =
     canon: CompileStageProducts[TPhase]['canon'],
     previous?: CompileStageProducts[TPhase],
     restoreResources?: (primitives: Array<ScenePrimitive>) => void,
+    /** 旧引用结果是否仍有效；无效时仅可复用不消费引用的局部产物 */
+    referencesValid?: boolean,
   ) => CompileStageProducts[TPhase];
 };
 
@@ -186,18 +190,18 @@ export const executeCompileStage = <TPhase extends keyof CompileStageProducts>(
 
 /** 驱动提供的阶段执行与记录能力；完整构建只提供写入端 */
 export type CompileStageController = {
-  /** 已由增量驱动选定的 Scope 产物，仅用于子贡献组装 */
-  scopeOutput?: (path: PropertyPath) => TypedCompileStageRecord<'scope'> | undefined;
   /** Node 局部布局复用策略 */
   compileNode?: (
     canon: CanonicalNode,
     context: NodeCompileContext,
     previous?: CompileStageProducts['node'],
+    referencesValid?: boolean,
   ) => CompiledNode;
   /** Path 的目标、度量与绘制复用策略 */
   preparePath?: (
     previous: CompileStageProducts['path'],
     current: CompileStageProducts['path']['canon'],
+    referencesValid?: boolean,
   ) => { prepared: PreparedPathCompilation; primitives: Array<ScenePrimitive> };
   /** 将阶段记录写入候选事务 */
   write: (path: PropertyPath, record: CompileStageRecord, reused: boolean) => void;

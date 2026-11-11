@@ -2,6 +2,24 @@ import { referencePositionOf, evaluateAnchorReference } from '@retikz/core';
 import type { CompiledReferenceGeometry, ReferenceReadKind } from '@retikz/core';
 import { jsonStructuralEquals } from '@retikz/foundation';
 
+import type { CompileReferenceRead, NamespaceStack } from '../../compile/runtime';
+
+/** 在当前查询环境核对已消费的绑定与结果，不把生产者外观变化当作几何失效 */
+export const matchWeaveReferences = (
+  reads: ReadonlyArray<CompileReferenceRead>,
+  namespace: Pick<NamespaceStack, 'lookupReference'>,
+): boolean =>
+  reads.every(read => {
+    const current = namespace.lookupReference(read.name, read.kind);
+    if (current === undefined || read.entry === undefined) return current === read.entry;
+    return (
+      current.state === read.entry.state &&
+      current.producer === read.entry.producer &&
+      jsonStructuralEquals(current.irPath, read.entry.irPath) &&
+      compareReferenceGeometry(read.entry.geometry, current.geometry, read.kind)
+    );
+  });
+
 /** 按实际引用能力比较结果；Definition 使用绑定身份，正文及绘制属性不参与连接比较 */
 export const compareReferenceGeometry = (
   previous: CompiledReferenceGeometry,

@@ -5,10 +5,9 @@ import { createIdAllocator, isPropertyPathEqual } from '@retikz/foundation';
 
 import type { CompileOptions, ExecuteOptions } from '../compile';
 import type { CompileContribution } from '../compile/execution';
+import { compileScene } from '../compile/execution';
 import { createSharedCompileContext, createCompileRuntime } from '../compile/runtime';
-import type { TypedCompileStageRecord } from '../compile/runtime';
 import { createCompileChildPath } from '../compile/shared';
-import { CompileManager } from '../compile/tree';
 import { RetikzReconcilerError, RetikzReconcilerErrorCode } from '../error';
 import type { CompileStageCache } from './cache';
 import { executeWeaveUpdate } from './scheduler';
@@ -231,8 +230,10 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
         paths.set(node, path);
         if (batch.updating && !isPropertyPathEqual(batch.previousNodeIrPaths.get(node) ?? [], path))
           tracker.invalidateNode(node);
-        const state = transaction.editNode(node);
-        state.input = { ...state.input, context: style };
+        if (!batch.updating) {
+          const state = transaction.editNode(node);
+          state.input = { ...state.input, context: style };
+        }
 
         if (!('namespace' in child) && child.id !== undefined) ids.set(child.id, node);
         if (!('namespace' in child) && child.type === 'node') for (const id of child.aliasIds ?? []) ids.set(id, node);
@@ -241,8 +242,8 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
             child.children,
             node,
             path,
-            batch.updating && !tracker.isNodeDirty(node) && transaction.readNode(node).canon !== null
-              ? transaction.readNode(node).canon!.inheritance
+            batch.updating
+              ? transaction.readNode(node).input.context
               : resolveScopeInheritance(child, this.context.shared.registries.themeRegistry, style, path),
             ids,
           );
@@ -373,35 +374,23 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
       },
     };
     const retained = new Map<string, CompileContribution>();
-    const scopeOutputs = new Map<string, TypedCompileStageRecord<'scope'>>();
     const pending = new Map<string, WeaveUpdateRequest>();
     for (const [path, node] of nodes) {
       const state = transaction.readNode(node);
       const affected =
         batch.forceFull || tracker.isNodeDirty(node) || state.pendingInputs.some(input => input.changes.size > 0);
       const request: WeaveUpdateRequest = {
+        check:
+          !batch.forceFull && tracker.canCheckNode(node) && state.contribution?.diagnostics.length === 0
+            ? state.contribution
+            : undefined,
         inputs: state.pendingInputs,
-        producerPath: producer => paths.get(producer),
         consume: () => {
           transaction.editNode(node).pendingInputs = [];
         },
       };
       const contribution = state.contribution;
       if (node.type === 'scope') {
-        const scope = transaction.readNode(node);
-        if (
-          !affected &&
-          scope.cache?.phase === 'scope' &&
-          scope.cache.diagnostics.length === 0 &&
-          scope.canon !== null &&
-          scope.compiled !== null
-        ) {
-          scopeOutputs.set(path, {
-            ...scope.cache,
-            phase: 'scope',
-            value: { canon: scope.canon, compiled: scope.compiled },
-          });
-        }
         pending.set(path, request);
       } else if (!affected && contribution !== undefined && contribution.diagnostics.length === 0)
         retained.set(path, contribution);
@@ -409,8 +398,8 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
     }
     const candidate = { ...runtime, contributions, producer: (path: PropertyPath) => nodes.get(keyOf(path)) };
     const compilation = batch.updating
-      ? executeWeaveUpdate<TComposite>(batch.source, candidate, cache, retained, pending, scopeOutputs)
-      : new CompileManager({ ...candidate, stages: { write: cache.write } }).compileScene<TComposite>(batch.source);
+      ? executeWeaveUpdate<TComposite>(batch.source, candidate, cache, retained, pending, root, transaction, paths)
+      : compileScene<TComposite>(batch.source, { ...candidate, stages: { write: cache.write } });
     for (const node of nodes.values()) {
       if (node.type === 'scope') tracker.recordScopeLayoutDependencies(node);
     }

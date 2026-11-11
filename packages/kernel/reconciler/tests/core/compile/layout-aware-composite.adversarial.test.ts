@@ -39,10 +39,10 @@ import { RetikzCoreError, RetikzCoreErrorCode } from '../../../../core/src/error
 import { BUILTIN_SHAPES } from '../../../../core/src/providers/shape/shape';
 import { isLayoutProbeRecoverableError } from '../../../../core/src/resolve';
 import { cloneAndFreezeJson } from '../../../../core/src/shared';
+import { compileScene } from '../../../src/compile/execution';
 import * as compileProvenance from '../../../src/compile/provenance/tracker';
 import { createExecutionInvariantError, createCompileRuntime, NamespaceStack } from '../../../src/compile/runtime';
 import { wrapLayoutProbeError } from '../../../src/compile/shared';
-import { CompileManager } from '../../../src/compile/tree';
 import { compileTestResult } from '../../helpers/compilation';
 import { pathArrows } from '../../helpers/path-arrows';
 
@@ -960,7 +960,7 @@ describe('布局感知的复契约束和边界', () => {
       });
     const context = createCompileRuntime(ir, { composites: [parent] }, { captureProvenance: true });
 
-    expect(() => new CompileManager(context).compileScene(ir)).toThrow(invariant);
+    expect(() => compileScene(ir, context)).toThrow(invariant);
 
     captureProbe.mockRestore();
   });

@@ -1,5 +1,4 @@
-import type { CompileOccurrenceLocator, IRChild } from '@retikz/core';
-import type { PropertyPath } from '@retikz/foundation';
+import type { CompiledScope, CompileOccurrenceLocator, IRChild, Transform, prepareScopePlacement } from '@retikz/core';
 
 import type { CompileOwnerKey } from '../../provenance';
 import type { SubtreeCompileRuntime } from '../runtime';
@@ -33,8 +32,6 @@ export type EmitScopeGroupContext = {
 
 /** Scope 后代递归所需的窄调度入口 */
 export type ScopeVisitHost = {
-  /** 将实际阶段操作交给增量驱动，完整构建按固定语义顺序执行 */
-  scheduleScope?: (path: PropertyPath, prepare: () => ScopeExecutionSteps) => void;
   /** 按当前帧遍历后代，来源和深度沿用当前编译 */
   compileChildren: (
     children: ReadonlyArray<IRChild>,
@@ -48,6 +45,14 @@ export type ScopeVisitHost = {
 
 /** Scope 准备后的候选操作；依赖与推进顺序由驱动持有 */
 export type ScopeExecutionSteps = {
+  /** 本次准备直接产出的子级输入与收集容器，不依赖后代遍历 */
+  childFrame: SubtreeCompileRuntime;
+  /** 包络计算完成后的当前变换 */
+  readonly transforms: ReadonlyArray<Transform>;
+  /** 包络阶段完成后的 Core 产物 */
+  readonly compiled: CompiledScope;
+  /** Core 的放置准备结果 */
+  preparation: ReturnType<typeof prepareScopePlacement>;
   /** 在已准备的继承与局部变换下构建子布局 */
   children: () => void;
   /** 从已完成的子布局计算自身包络 */

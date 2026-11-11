@@ -16,7 +16,7 @@ import { compareCanonicalCoordinates } from '../coordinate';
 import { compileWeaveNode, compareCanonicalNodes } from '../node';
 import { preparePathCompilation, comparePathResolutions } from '../path';
 import { compareCanonicalScopes } from '../scope';
-import { compareReferenceGeometry } from '../shared';
+import { matchWeaveReferences } from '../shared';
 
 const comparators: {
   [TPhase in keyof CompileStageProducts]: (
@@ -87,18 +87,7 @@ export const createWeaveStageController = (
   ): CompileStageProducts[TPhase] => {
     const namespace = runtime.state.execution.namespaceStack;
     const previous = readStageRecord(path, phase);
-    const referencesMatch = () =>
-      previous?.reads.every(read => {
-        const current = namespace.lookupReference(read.name, read.kind);
-        if (current === undefined || read.entry === undefined) return current === read.entry;
-        return (
-          current.state === read.entry.state &&
-          current.producer === read.entry.producer &&
-          current.scopeId === read.entry.scopeId &&
-          jsonStructuralEquals(current.irPath, read.entry.irPath) &&
-          compareReferenceGeometry(read.entry.geometry, current.geometry, read.kind)
-        );
-      }) === true;
+    const referencesMatch = () => previous !== undefined && matchWeaveReferences(previous.reads, namespace);
     if (
       previous !== undefined &&
       previous.diagnostics.length === 0 &&
@@ -151,36 +140,42 @@ export const createWeaveStageController = (
       );
       return value;
     }
+    const referencesValid = referencesMatch();
     const reusablePrevious =
       previous !== undefined &&
       previous.diagnostics.length === 0 &&
-      jsonStructuralEquals(previous.compileInputs, compute.compileInputs) &&
-      referencesMatch()
+      jsonStructuralEquals(previous.compileInputs, compute.compileInputs)
         ? previous.value
         : undefined;
     const value = namespace.observeReferences(
       (name, entry, kind) => reads.push({ name, entry, kind }),
       () =>
-        compute.compile(local, canon, reusablePrevious, primitives => {
-          if (reusablePrevious === undefined || previous === undefined) return;
-          const retained = new Set<string>();
-          visitSceneContent({ primitives, resources: [...previous.resources] }, primitive => {
-            if (primitive.type === 'group') {
-              if (primitive.clipRef !== undefined) retained.add(primitive.clipRef);
-            } else if (primitive.type !== 'text') {
-              for (const paint of [primitive.fill, primitive.stroke])
-                if (typeof paint === 'object' && paint.kind === 'resourceRef') retained.add(paint.id);
-            }
-          });
-          importSceneResources(
-            previous.resources.filter(resource => retained.has(resource.id)),
-            paintRegistry,
-            clipRegistry,
-          );
-        }),
+        compute.compile(
+          local,
+          canon,
+          reusablePrevious,
+          primitives => {
+            if (reusablePrevious === undefined || previous === undefined) return;
+            const retained = new Set<string>();
+            visitSceneContent({ primitives, resources: [...previous.resources] }, primitive => {
+              if (primitive.type === 'group') {
+                if (primitive.clipRef !== undefined) retained.add(primitive.clipRef);
+              } else if (primitive.type !== 'text') {
+                for (const paint of [primitive.fill, primitive.stroke])
+                  if (typeof paint === 'object' && paint.kind === 'resourceRef') retained.add(paint.id);
+              }
+            });
+            importSceneResources(
+              previous.resources.filter(resource => retained.has(resource.id)),
+              paintRegistry,
+              clipRegistry,
+            );
+          },
+          referencesValid,
+        ),
     );
     // 部分复用 targets/geometry 时不再触发 lookup，仍需保留已验证的引用依赖
-    if (reusablePrevious !== undefined && previous !== undefined)
+    if (referencesValid && reusablePrevious !== undefined && previous !== undefined)
       for (const read of previous.reads)
         if (!reads.some(current => current.name === read.name && current.kind === read.kind)) reads.push(read);
     const resources = [...paintRegistry.getResources(), ...clipRegistry.getResources()];

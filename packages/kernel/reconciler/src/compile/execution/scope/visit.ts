@@ -14,7 +14,7 @@ import { formatPropertyPath, jsonStructuralEquals } from '@retikz/foundation';
 import type { CompileOwnerKey } from '../../provenance';
 import { runCompileStage, readCompileStageCanon } from '../../runtime';
 import type { CompileRuntime, CompileReferenceRead, CompileStageRecord, CompileStageProducts } from '../../runtime';
-import { createCompileChildPath, formatCompileOccurrence, importSceneResources } from '../../shared';
+import { createCompileChildPath, formatCompileOccurrence } from '../../shared';
 import { flushPendingPathEmissions } from '../path/deferred';
 import { createTreePositionContext } from '../reference';
 import type { SubtreeCompileRuntime, SubtreeCompileState } from '../runtime';
@@ -59,7 +59,7 @@ const registerScopeLayoutPlaceholder = (
 };
 
 /** 编排单个 scope 子树，处理命名空间、局部输出容器、延迟 path 和 scope group 输出 */
-const prepareScopeExecution = (
+export const prepareScopeExecution = (
   runtime: CompileRuntime,
   output: TreeOutputState,
   host: ScopeVisitHost,
@@ -91,17 +91,9 @@ const prepareScopeExecution = (
     generatedOccurrence === undefined
       ? formatPropertyPath([...createCompileChildPath(locatorPrefix, index), 'theme'])
       : `${formatCompileOccurrence(generatedOccurrence)}.scope.theme`;
-  const retained = runtime.stages?.scopeOutput?.(createCompileChildPath(locatorPrefix, index));
-  if (retained !== undefined)
-    importSceneResources(
-      retained.resources,
-      runtime.state.workspace.paintRegistry,
-      runtime.state.workspace.clipRegistry,
-    );
   const resolveInputs = { child: { ...child, children: undefined }, inheritedStyle };
   const warningCount = runtime.state.workspace.diagnosticCollector.warnings.length;
   const canon =
-    retained?.value.canon ??
     readCompileStageCanon(runtime, createCompileChildPath(locatorPrefix, index), 'scope', resolveInputs) ??
     resolveScope(child, {
       nodeDistance: runtime.context.layout.nodeDistance,
@@ -117,12 +109,10 @@ const prepareScopeExecution = (
     onWarn: runtime.state.workspace.diagnosticCollector.collect,
   };
   const preparedReads: Array<CompileReferenceRead> = [];
-  const preparation =
-    retained?.scopePreparation ??
-    runtime.state.execution.namespaceStack.observeReferences(
-      (name, entry, kind) => preparedReads.push({ name, entry, kind }),
-      () => prepareScopePlacement({ type: 'scope', id: canon.style.id, ...canon.transform }, scopeGeometryContext),
-    );
+  const preparation = runtime.state.execution.namespaceStack.observeReferences(
+    (name, entry, kind) => preparedReads.push({ name, entry, kind }),
+    () => prepareScopePlacement({ type: 'scope', id: canon.style.id, ...canon.transform }, scopeGeometryContext),
+  );
   const preparedDiagnostics = runtime.state.workspace.diagnosticCollector.warnings.slice(warningCount);
 
   // runtime Scope 可能包住在当前 frame 外完成的 replay probe，因此它的数值 transform
@@ -189,48 +179,46 @@ const prepareScopeExecution = (
 
   let geometry: CompileStageProducts['scope'];
   const envelope = () => {
-    geometry =
-      retained?.value ??
-      runCompileStage(
-        scopeRuntime,
-        scopeGeometryContext.irPath,
-        'scope',
-        {
-          child: { ...child, children: undefined },
+    geometry = runCompileStage(
+      scopeRuntime,
+      scopeGeometryContext.irPath,
+      'scope',
+      {
+        child: { ...child, children: undefined },
+        preparation,
+        layouts: state.geometries,
+        scopeChain: transformChains,
+      },
+      {
+        resolveInputs,
+        preparedReads,
+        preparedDiagnostics,
+        scopePreparation: preparation,
+        compileInputs: {
           preparation,
           layouts: state.geometries,
           scopeChain: transformChains,
+          childCount: state.primitives.length,
+          preResolvedClipPath,
         },
-        {
-          resolveInputs,
-          preparedReads,
-          preparedDiagnostics,
-          scopePreparation: preparation,
-          compileInputs: {
-            preparation,
-            layouts: state.geometries,
-            scopeChain: transformChains,
-            childCount: state.primitives.length,
-            preResolvedClipPath,
-          },
-          resolve: () => canon,
-          compile: (stageRuntime, resolved) => ({
-            canon: resolved,
-            compiled: compileScope(
-              resolved,
-              {
-                ...scopeGeometryContext,
-                layouts: state.geometries,
-                resolvedClipPath: preResolvedClipPath,
-                registerClip: stageRuntime.state.workspace.clipRegistry.register,
-                registerClipPath: stageRuntime.state.workspace.clipRegistry.registerPath,
-                onWarn: stageRuntime.state.workspace.diagnosticCollector.collect,
-              },
-              { layout: { preparation } },
-            ),
-          }),
-        },
-      );
+        resolve: () => canon,
+        compile: (stageRuntime, resolved) => ({
+          canon: resolved,
+          compiled: compileScope(
+            resolved,
+            {
+              ...scopeGeometryContext,
+              layouts: state.geometries,
+              resolvedClipPath: preResolvedClipPath,
+              registerClip: stageRuntime.state.workspace.clipRegistry.register,
+              registerClipPath: stageRuntime.state.workspace.clipRegistry.registerPath,
+              onWarn: stageRuntime.state.workspace.diagnosticCollector.collect,
+            },
+            { layout: { preparation } },
+          ),
+        }),
+      },
+    );
   };
 
   const project = () => {
@@ -320,7 +308,6 @@ const prepareScopeExecution = (
 
   /** 延迟路径输出收敛后绑定分组动画，裁空分组不产生动画诊断 */
   const bindScopeAnimations = (compiled: CompiledScope): CompiledScope => {
-    if (retained !== undefined) return compiled;
     const animations = shouldEmitScopeGroup(
       state.primitives.length,
       compiled.layout.overall.transforms,
@@ -385,18 +372,37 @@ const prepareScopeExecution = (
     );
   };
 
-  return { children, envelope, project, paths, publish, dispose };
+  return {
+    children,
+    envelope,
+    project,
+    paths,
+    publish,
+    dispose,
+    childFrame: {
+      context: {
+        compositeInput,
+        layout: layoutContext,
+        transformChains: preliminaryScopeChain,
+        pathPrefix: scopeGeometryContext.irPath,
+        compileOwner: semanticOwner,
+        inheritance: style,
+      },
+      state,
+    },
+    get transforms() {
+      return scopeTransforms;
+    },
+    get compiled() {
+      return compiledScope;
+    },
+    preparation,
+  };
 };
 
 /** 完整构建按语义顺序执行 Scope，增量更新将实际阶段操作交给驱动 */
 export const visitScope = (...args: Parameters<typeof prepareScopeExecution>): void => {
-  const [, , host, , , index, frame] = args;
-  const prepare = () => prepareScopeExecution(...args);
-  if (host.scheduleScope !== undefined) {
-    host.scheduleScope(createCompileChildPath(frame.context.pathPrefix, index), prepare);
-    return;
-  }
-  const steps = prepare();
+  const steps = prepareScopeExecution(...args);
   try {
     steps.children();
     steps.envelope();

@@ -3,8 +3,8 @@ import { RetikzError } from '@retikz/foundation';
 
 import type { CompileOptions } from '../compile';
 import { formatCompileWarning } from '../compile';
+import { compileScene } from '../compile/execution';
 import { createCompileRuntime } from '../compile/runtime';
-import { CompileManager } from '../compile/tree';
 import { RetikzReconcilerError, RetikzReconcilerErrorCode } from '../error';
 import type { WeaveBatch, WeavePreparedUpdate } from '../weave';
 import { WeaveManager } from '../weave';
@@ -57,9 +57,7 @@ export class SceneReconciler<const TComposite extends AnyCompositeDefinition = n
       let traceUnit: ReconcilerTraceUnit;
       let visited: number;
       if (this.mode === ReconcilerMode.Full) {
-        compilation = new CompileManager(
-          createCompileRuntime(source, options, this.execution),
-        ).compileScene<TComposite>(source);
+        compilation = compileScene<TComposite>(source, createCompileRuntime(source, options, this.execution));
         traceUnit = ReconcilerTraceUnit.SceneCompile;
         visited = 1;
       } else {

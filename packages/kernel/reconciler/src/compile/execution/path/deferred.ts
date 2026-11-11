@@ -131,9 +131,11 @@ export const flushPendingPathEmissions = (
                   mode: pendingPath.theme.mode,
                   irPath: pendingPath.irPath,
                 }),
-              compile: (stageRuntime, resolution, previous, restoreResources) => {
+              compile: (stageRuntime, resolution, previous, restoreResources, referencesValid) => {
                 const selected =
-                  previous === undefined ? undefined : stageRuntime.stages?.preparePath?.(previous, resolution);
+                  previous === undefined
+                    ? undefined
+                    : stageRuntime.stages?.preparePath?.(previous, resolution, referencesValid);
                 if (selected !== undefined) restoreResources?.(selected.primitives);
                 return {
                   canon: resolution,

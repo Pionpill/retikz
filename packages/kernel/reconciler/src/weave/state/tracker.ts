@@ -9,6 +9,8 @@ import type { WeaveTransaction } from './transaction';
 export class WeaveTracker {
   /** 本批已失效节点，用于传播去重与阻止缓存复用，不是待执行队列 */
   private readonly dirtyNodes = new Set<WeaveNode>();
+  /** 仅可能受上游影响的节点；读取结果未变时不进入领域计算 */
+  private readonly checkedNodes = new Set<WeaveNode>();
 
   constructor(
     private readonly root: WeaveRoot,
@@ -23,37 +25,32 @@ export class WeaveTracker {
 
   /** 判断节点是否已被本批次失效传播覆盖 */
   isNodeDirty(node: WeaveNode): boolean {
-    return this.dirtyNodes.has(node);
+    return this.dirtyNodes.has(node) || this.checkedNodes.has(node);
+  }
+
+  /** 没有自身输入或继承变化，可以通过实际读取结果确认旧贡献 */
+  canCheckNode(node: WeaveNode): boolean {
+    return !this.dirtyNodes.has(node) && this.checkedNodes.has(node);
   }
 
   /** 名称声明变化同时唤醒未命中读取，不能只沿已有生产者边传播 */
   invalidateBindings(names?: ReadonlySet<string>): void {
     for (const [node, record] of this.transaction.readNode(this.root).records) {
-      if (record.reads.some(read => names === undefined || names.has(read.name))) this.invalidateNode(node);
+      if (record.reads.some(read => names === undefined || names.has(read.name))) this.checkNode(node);
     }
   }
 
-  /** 标记计算关联闭包；Scope 的最终变换也可能改变后代引用投影 */
+  /** 仅登记自身输入变化，后代环境与引用结果由读取点核对 */
   invalidateNode(node: WeaveNode): void {
     if (this.dirtyNodes.has(node)) return;
     this.dirtyNodes.add(node);
-    const state = this.transaction.readNode(node);
-    for (const consumer of state.consumers) {
-      if (!this.dirtyNodes.has(consumer))
-        this.transaction
-          .editNodeAttribute(consumer, 'pendingInputs')
-          .push({ source: 'dependency', producer: node, changes: new Set(['style', 'layout']) });
-      this.invalidateNode(consumer);
-    }
-    if (node.type === 'scope') {
-      for (const child of this.transaction.readNode(node).children) {
-        if (!this.dirtyNodes.has(child))
-          this.transaction
-            .editNodeAttribute(child, 'pendingInputs')
-            .push({ source: 'dependency', producer: node, changes: new Set(['style', 'layout']) });
-        this.invalidateNode(child);
-      }
-    }
+    this.checkNode(node);
+  }
+
+  /** 登记名称变化，不提前扩散消费闭包 */
+  private checkNode(node: WeaveNode): void {
+    if (this.checkedNodes.has(node)) return;
+    this.checkedNodes.add(node);
   }
 
   /** 保存读取与诊断，并以最新读取事实重建节点的双向计算依赖 */
@@ -76,7 +73,8 @@ export class WeaveTracker {
     this.transaction.editNodeAttribute(node, 'dependencies').clear();
     for (const read of reads) {
       const producer = read.binding === undefined ? undefined : this.bindings.get(read.binding);
-      if (producer === undefined) continue;
+      // Composite 内部生成名称由实例自身完成，不建立实例级自依赖
+      if (producer === undefined || producer === node) continue;
       const dependencies = this.transaction.editNodeAttribute(node, 'dependencies');
       const kinds = dependencies.get(producer) ?? [];
       if (!kinds.includes(read.kind)) dependencies.set(producer, [...kinds, read.kind]);

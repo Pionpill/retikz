@@ -24,8 +24,8 @@ import {
   LayoutIntrinsicMode,
   naturalLayoutProposal,
 } from '../../../../core/src';
+import { compileScene } from '../../../src/compile/execution';
 import { createCompileRuntime } from '../../../src/compile/runtime';
-import { CompileManager } from '../../../src/compile/tree';
 import { compileTestResult } from '../../helpers/compilation';
 import { sceneRectangles } from '../../helpers/scene-rectangles';
 
@@ -580,7 +580,7 @@ describe('布局感知复合运行时包装树', () => {
       state: { composite, execution, workspace },
     } = context;
     const { namespaceStack, provenanceTracker } = execution;
-    expect(() => new CompileManager(context).compileScene(failingIr)).toThrow(/runtime Scope clip failed/i);
+    expect(() => compileScene(failingIr, context)).toThrow(/runtime Scope clip failed/i);
     expect(provenanceTracker).toBeDefined();
     expect(warnings).toEqual([]);
     expect(clipLowerCalls).toBe(1);

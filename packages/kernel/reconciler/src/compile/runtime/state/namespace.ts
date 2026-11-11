@@ -41,6 +41,8 @@ type NamespaceRegisterInfo = {
 
 /** NamespaceStack 构造选项 */
 type NamespaceStackOptions = {
+  /** 独立元素环境从候选声明索引读取外部名称；本地生成声明优先 */
+  lookupExternal?: (id: string, kind: ReferenceReadKind) => NamespaceEntry | undefined;
   /** 根 frame 身份，可与调用方的来源根共享 */
   rootIdentity?: CompileNamespaceKey;
   /** 同 frame 重复 register 时的回调 */
@@ -104,6 +106,7 @@ export class NamespaceStack {
   private readonly frameStack: Array<NamespaceFrame>;
   private readonly onDuplicate?: (info: DuplicateRegisterInfo) => void;
   private readonly onRegister?: (info: NamespaceRegisterInfo) => void;
+  private readonly lookupExternal?: NamespaceStackOptions['lookupExternal'];
   /** 引用环境的不可变快照身份，fork 未写入时保持一致 */
   private snapshotIdentity: object = {};
 
@@ -120,6 +123,16 @@ export class NamespaceStack {
     return this.producer;
   }
 
+  /** 当前是否已经进入路径查询阶段 */
+  get isResolving(): boolean {
+    return this.currentPhase === 'resolving';
+  }
+
+  /** 当前实例内部尚未闭合的生成 Scope 数量 */
+  get scopeDepth(): number {
+    return this.scopeAncestorStack.length;
+  }
+
   constructor(
     options: NamespaceStackOptions = {},
     private readonly scopeIds = createIdAllocator('compile/scope'),
@@ -133,6 +146,7 @@ export class NamespaceStack {
     ];
     this.onDuplicate = options.onDuplicate;
     this.onRegister = options.onRegister;
+    this.lookupExternal = options.lookupExternal;
   }
 
   /** 将名称发布关联到当前驱动的作者实体 */
@@ -151,7 +165,10 @@ export class NamespaceStack {
    * @description frame 容器会复制，既有 layout 只共享读取；后续 register / replace 不回写父栈
    */
   fork(options: NamespaceStackOptions = {}): NamespaceStack {
-    const fork = new NamespaceStack(options, this.scopeIds);
+    const fork = new NamespaceStack(
+      { ...options, lookupExternal: options.lookupExternal ?? this.lookupExternal },
+      this.scopeIds,
+    );
     fork.frameStack.splice(
       0,
       fork.frameStack.length,
@@ -398,12 +415,13 @@ export class NamespaceStack {
 
   /** 解析作者几何引用，拒绝实际绑定到祖先 Scope 的目标 */
   lookupReference(id: string, kind: ReferenceReadKind = 'boundary'): NamespaceEntry | undefined {
-    let entry = this.lookupEntry(id);
+    const lookup = () => this.lookupEntry(id) ?? this.lookupExternal?.(id, kind);
+    let entry = lookup();
     for (const observe of this.referenceObservers) {
       const snapshot = this.snapshotIdentity;
       observe(id, entry, kind);
       // 驱动可在读取点同步完成依赖；后续记录与消费者必须取得本批新发布的条目
-      if (snapshot !== this.snapshotIdentity) entry = this.lookupEntry(id);
+      if (snapshot !== this.snapshotIdentity) entry = lookup();
     }
     if (entry?.scopeId !== undefined && this.scopeAncestorStack.some(ancestor => ancestor.scopeId === entry.scopeId)) {
       const source = this.scopeAncestorStack.findLast(ancestor => ancestor.id !== undefined)?.id;

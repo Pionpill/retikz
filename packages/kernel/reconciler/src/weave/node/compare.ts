@@ -3,6 +3,20 @@ import { jsonStructuralEquals } from '@retikz/foundation';
 
 import { comparePaintResolutions } from '../shared';
 
+/** 比较正文与形状测量条件；位置不参与测量，旋转和边距仍可能改变 allocation 宽度 */
+export const compareNodeMeasurementInputs = (previous: CanonicalNode, current: CanonicalNode): boolean => {
+  const { position: previousPosition, ...previousLayout } = previous.layout;
+  const { position: currentPosition, ...currentLayout } = current.layout;
+  void previousPosition;
+  void currentPosition;
+  return (
+    previous.shape.definition === current.shape.definition &&
+    jsonStructuralEquals(previous.shape.params, current.shape.params) &&
+    jsonStructuralEquals(previousLayout, currentLayout) &&
+    jsonStructuralEquals(previous.text, current.text)
+  );
+};
+
 /** 比较节点的有效语义，能力绑定按身份参与失效判断 */
 export const compareCanonicalNodes = (previous: CanonicalNode, current: CanonicalNode): boolean => {
   if (previous === current) return true;

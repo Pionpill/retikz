@@ -15,7 +15,7 @@ const OutputImplementation: FC<OutputImplementationProps> = props => {
   const { lang = 'zh' } = props;
   const text = outputImplementationI18n[lang];
   const stages = [
-    { id: 'manager', name: 'CompileManager.compileScene', state: false },
+    { id: 'manager', name: 'compileScene', state: false },
     { id: 'subtree', name: 'SubtreeCompiler.run', state: false },
     { id: 'assemble', name: 'assembleSceneCompilationSnapshot', state: false },
     { id: 'publish', name: 'SceneReconciler', state: true },
@@ -60,12 +60,10 @@ const OutputImplementation: FC<OutputImplementationProps> = props => {
       </FlowLayout>
       <FlowRelations
         items={[
-          ...stages
-            .slice(1)
-            .map((item, index) => ({
-              source: { id: stages[index].id, anchor: 'bottom' as const },
-              target: { id: item.id, anchor: 'top' as const },
-            })),
+          ...stages.slice(1).map((item, index) => ({
+            source: { id: stages[index].id, anchor: 'bottom' as const },
+            target: { id: item.id, anchor: 'top' as const },
+          })),
           ...inputs.map(item => ({
             source: { id: item.id, anchor: 'right' as const },
             target: { id: item.target, anchor: 'left' as const },

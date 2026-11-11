@@ -12,25 +12,10 @@ import type {
   ScenePrimitive,
   Transform,
 } from '@retikz/core';
-import type { PropertyPath } from '@retikz/foundation';
 import type { AxisAlignedBounds } from '@retikz/math';
 
 import type { CompileRuntime, NamespaceStack } from '../runtime';
 import type { CompositeArtifact } from '../shared';
-import type { CompileContribution } from './contribution';
-import type { ScopeVisitHost } from './scope/visit-types';
-
-/** 已绑定当前名称空间和输出位置的作者任务，仅在本次候选内有效 */
-export type CompileChildTask = {
-  /** 只有 Path 将几何计算延迟到当前名称环境闭合后 */
-  deferred: boolean;
-  /** 作者声明位置 */
-  path: PropertyPath;
-  /** 计算当前元素，其子布局和延迟路径按就绪边界继续调度 */
-  compute: () => void;
-  /** 直接物化已完成的贡献，不进入元素阶段 */
-  publish: (contribution: CompileContribution) => void;
-};
 
 /** 子树向父布局提供的尺寸、占位与对齐信息 */
 export type LayoutCompilation = {
@@ -109,10 +94,6 @@ type CompileSubtree = (
 
 /** 子树编译器所需的宿主调度能力，不暴露具体管理器 */
 export type SubtreeCompileHost = {
-  /** 由更新驱动管理 Scope 的阶段依赖 */
-  scheduleScope?: ScopeVisitHost['scheduleScope'];
-  /** 增量驱动选择当前就绪任务；完整执行无需调度策略 */
-  scheduleChildren?: (tasks: ReadonlyArray<CompileChildTask>) => void;
   /** 在同一会话内执行隔离子树 */
   compileSubtree: CompileSubtree;
 };

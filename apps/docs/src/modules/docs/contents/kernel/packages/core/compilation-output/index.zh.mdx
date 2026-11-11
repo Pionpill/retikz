@@ -98,14 +98,14 @@ diagnostics 保存本次成功编译可提交的警告，含 code、message 及�
 
 <ComponentPreview files="output-implementation" size="lg" hideCode type="flow" />
 
-SubtreeCompiler 先把延迟路径与子项贡献收敛，CompileManager 再收集资源并调用 assembleSceneCompilationSnapshot。后者负责 layout、根动画、结果与诊断快照，不再执行实体编译；SceneReconciler 负责把完整候选结果提交给消费者。
+SubtreeCompiler 先把延迟路径与子项贡献收敛，compileScene 再收集资源并调用 assembleSceneCompilationSnapshot。后者负责 layout、根动画、结果与诊断快照，不再执行实体编译；SceneReconciler 负责把完整候选结果提交给消费者。
 
 <SourceLinks
   sources={[
     { label: 'Scene and primitive contract', path: 'packages/kernel/core/src/contract/scene/scene.ts' },
     { label: 'Layout bounds helpers', path: 'packages/kernel/core/src/compile/scene/bounds.ts' },
     { label: 'Scene layout calculation', path: 'packages/kernel/core/src/compile/scene/layout.ts' },
-    { label: 'Compilation manager', path: 'packages/kernel/reconciler/src/compile/tree/manager.ts' },
+    { label: 'Complete compilation entry', path: 'packages/kernel/reconciler/src/compile/execution/compile.ts' },
     { label: 'Snapshot assembly', path: 'packages/kernel/reconciler/src/compile/execution/output.ts' },
     { label: 'Snapshot and result types', path: 'packages/kernel/reconciler/src/compile/types.ts' },
     { label: 'Reconciler result and commit target', path: 'packages/kernel/reconciler/src/reconcile/types.ts' },

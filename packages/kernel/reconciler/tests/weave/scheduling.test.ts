@@ -6,6 +6,138 @@ import { WeaveManager } from '../../src/weave';
 import { compileTestSnapshot } from '../helpers/compilation';
 
 describe('Weave 更新调度', () => {
+  it('局部遮蔽保留 Node 声明时与 Path 闭合时的不同名称可见性', () => {
+    const other: IRNode = { type: 'node', id: 'other', position: [300, 0] };
+    const source: IRScene = {
+      type: 'scene',
+      version: 1,
+      children: [
+        { type: 'coordinate', id: 'anchor', position: [0, 0] },
+        {
+          type: 'scope',
+          localNamespace: true,
+          children: [
+            { type: 'node', id: 'before', position: { direction: 'right', of: 'anchor' } },
+            {
+              type: 'path',
+              children: [
+                { type: 'step', kind: 'move', to: { id: 'before' } },
+                { type: 'step', kind: 'line', to: { id: 'anchor' } },
+              ],
+            },
+            { type: 'coordinate', id: 'anchor', position: [100, 0] },
+            { type: 'node', id: 'after', position: { direction: 'right', of: 'anchor' } },
+          ],
+        },
+        { type: 'coordinate', id: 'anchor', position: [200, 0] },
+        other,
+      ],
+    };
+    const manager = new WeaveManager(source, {}, { captureProvenance: true });
+    const mounted = manager.mount();
+    const changed: IRNode = { ...other, position: [350, 0] };
+    const candidate = manager.update({
+      operations: [
+        { kind: 'update', target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'other' }, input: changed },
+      ],
+    });
+    expect(candidate.compilation).toEqual(
+      compileTestSnapshot(
+        { ...source, children: [...source.children.slice(0, 3), changed] },
+        {},
+        { captureProvenance: true },
+      ),
+    );
+    candidate.rollback();
+  });
+
+  it('子节点尺寸改变父级锚定包络时，内部路径与外部消费者同时使用新的世界投影', () => {
+    const child: IRNode = { type: 'node', id: 'inner', position: [20, 0], layout: { width: 40 } };
+    const scope: IRScope = {
+      type: 'scope',
+      id: 'box',
+      position: { kind: 'anchor', target: [100, 50], selfAnchor: 'left' },
+      children: [
+        child,
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: { id: 'inner' } },
+            { type: 'step', kind: 'line', to: { id: 'outside' } },
+          ],
+        },
+      ],
+    };
+    const source: IRScene = {
+      type: 'scene',
+      version: 1,
+      children: [
+        { type: 'coordinate', id: 'outside', position: [250, 0] },
+        scope,
+        { type: 'node', id: 'consumer', position: { direction: 'right', of: 'inner' } },
+      ],
+    };
+    const execution = { captureProvenance: true };
+    const manager = new WeaveManager(source, {}, execution);
+    manager.mount();
+    const changed: IRNode = { ...child, layout: { width: 90 } };
+    const candidate = manager.update({
+      operations: [
+        { kind: 'update', target: { kind: 'child', scopeId: manager.getScopeId([1]), index: 0 }, input: changed },
+      ],
+    });
+    expect(candidate.compilation).toEqual(
+      compileTestSnapshot(
+        {
+          ...source,
+          children: [source.children[0], { ...scope, children: [changed, scope.children[1]] }, source.children[2]],
+        },
+        {},
+        execution,
+      ),
+    );
+    candidate.rollback();
+  });
+
+  it('同批多源变化在菱形引用的末端合流，不混读旧候选结果', () => {
+    const first: IRNode = { type: 'node', id: 'a', position: [0, 0] };
+    const second: IRNode = { type: 'node', id: 'b', position: [100, 0] };
+    const source: IRScene = {
+      type: 'scene',
+      version: 1,
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: { id: 'left' } },
+            { type: 'step', kind: 'line', to: { id: 'right' } },
+          ],
+        },
+        first,
+        second,
+        { type: 'node', id: 'left', position: { direction: 'right', of: 'a', distance: 20 } },
+        { type: 'node', id: 'right', position: { direction: 'left', of: 'b', distance: 20 } },
+      ],
+    };
+    const manager = new WeaveManager(source);
+    const mounted = manager.mount();
+    const movedFirst: IRNode = { ...first, position: [20, 10] };
+    const movedSecond: IRNode = { ...second, position: [180, 40] };
+    const candidate = manager.update({
+      operations: [
+        { kind: 'update', target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'b' }, input: movedSecond },
+        { kind: 'update', target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'a' }, input: movedFirst },
+      ],
+    });
+    expect(candidate.compilation).toEqual(
+      compileTestSnapshot({
+        ...source,
+        children: [source.children[0], movedFirst, movedSecond, ...source.children.slice(3)],
+      }),
+    );
+    candidate.rollback();
+  });
+
   it('同批切换 Path 读取并更新新生产者，失败批次不污染后续求值', () => {
     const a: IRNode = { type: 'node', id: 'a', position: [0, 0] };
     const b: IRNode = { type: 'node', id: 'b', position: [40, 0] };

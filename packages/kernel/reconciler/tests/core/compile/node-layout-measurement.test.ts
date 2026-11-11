@@ -8,9 +8,9 @@ import type { CompileWarning } from '../../../../core/src/compile/shared';
 import type { TextMeasurer, TextPrimitive } from '../../../../core/src/contract';
 import type { IRScene } from '../../../../core/src/schemas';
 import { createSharedCompileContext } from '../../../src/compile';
-import { createCompileRuntime } from '../../../src/compile/runtime';
-import { CompileManager } from '../../../src/compile/tree';
+import { compileScene } from '../../../src/compile/execution';
 import { SubtreeCompiler } from '../../../src/compile/execution/subtree';
+import { createCompileRuntime } from '../../../src/compile/runtime';
 import { flattenPrims } from '../../helpers/flatten';
 
 const measureText: TextMeasurer = (text, font) => ({
@@ -82,7 +82,7 @@ const collectLayouts = (
       return out;
     });
   try {
-    const { result } = new CompileManager(context).compileScene(ir);
+    const { result } = compileScene(ir, context);
     const textPrims = flattenPrims(result.scene.primitives).filter(
       (prim): prim is TextPrimitive => prim.type === 'text',
     );
@@ -104,9 +104,9 @@ describe('Node 内容测量', () => {
     const ir = scene([{ type: 'node', position: [0, 0], text: 'shared context' }]);
     const firstContext = createCompileRuntime(ir, {}, {}, shared);
     const secondContext = createCompileRuntime(ir, {}, {}, shared);
-    const first = new CompileManager(firstContext).compileScene(ir);
+    const first = compileScene(ir, firstContext);
     const firstCalls = calls;
-    const second = new CompileManager(secondContext).compileScene(ir);
+    const second = compileScene(ir, secondContext);
 
     expect(firstCalls).toBeGreaterThan(0);
     expect(calls).toBe(firstCalls * 2);

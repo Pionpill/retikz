@@ -55,7 +55,7 @@ export const visitNode = (
           warn: (code, message, path = nodeIrPath) =>
             stageRuntime.state.workspace.diagnosticCollector.collect({ code, message, path }),
         }),
-      compile: (stageRuntime, resolution, previous) => {
+      compile: (stageRuntime, resolution, previous, _restoreResources, referencesValid) => {
         const warn = (code: string, message: string, path: PropertyPath = nodeIrPath): void =>
           stageRuntime.state.workspace.diagnosticCollector.collect({ code, message, path });
         const boundaryState = stageRuntime.state.workspace.boundaryStore.getOrCreateState(resolution.shape);
@@ -77,7 +77,7 @@ export const visitNode = (
         const compilation =
           stageRuntime.stages?.compileNode === undefined
             ? compileNode(resolution, context)
-            : stageRuntime.stages.compileNode(resolution, context, previous);
+            : stageRuntime.stages.compileNode(resolution, context, previous, referencesValid);
 
         return {
           canon: resolution,

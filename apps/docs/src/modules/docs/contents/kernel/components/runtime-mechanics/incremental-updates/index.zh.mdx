@@ -53,9 +53,11 @@ Weave 保存输入、上下文、编译状态和依赖。`SceneReconciler.update
 
 通过 `SceneReconciler` 的 `trace` 选项可观察这些阶段：首次成功发布结果报告 `mount`，包括直接调用 `replace()` 建立会话；已有结果后的完整替换、非空批次和强制全量更新报告 `update`。编译工作量仍按 `element-compile` 或 `scene-compile` 计数，auto 策略的空批次与仅更新输出目标不报告编译记录。已挂载会话成功清理后报告一次 `unmount`，使用 `ReconcilerTraceUnit.Session`（`session`）和 `outcome: 'dispose'`，计数为 `visited: 1`、`reused: 0`、`changed: 1`。清理失败时不报告成功，重试成功后补报；重复清理和未挂载会话的清理不报告卸载记录。trace 回调异常记录为诊断，不影响已完成的发布或清理。
 
-批次更新按最终输入重算受影响元素，未变化的 Node、Coordinate、Path 和 Composite 直接提供已完成的输出贡献。Scope 消费自身阶段产物与子贡献完成投影和分组，不重复保存完整子树输出。上下文沿声明结构传递，失效沿依赖传播；Scope 变化可能使整个子树重算。名称索引和输出组装仍可能遍历整树，因此局部编译不等于整次更新只有局部成本。普通 React／Vanilla 输入更新尚未接入此批次入口。
+批次更新从直接变化进入 Weave 的同步队列。计算完成后先比较实际产物，再通知直接消费者；消费者按自己读取的位置、锚点或边界确认是否需要重算。例如，节点改色不会使只读取连接几何的路径重算；文字改变但连接几何相同时，也能停止这条依赖分支。需要计算时，Weave 将仍有效的 Core 局部产物通过 prepared 传入，保留正文测量等独立结果。
 
-Scope 的准备、子布局、包络、世界投影、延迟 Path 和输出分别作为本批任务，由 Weave 登记依赖后推进。读取点需要生产者时，先完成其候选阶段，再继续消费者；已完成阶段在同批内不重复执行。这不放宽名称可见性：Node、Coordinate 仍不能引用后声明的目标，Path 仍在所属名称环境闭合后求值。
+内部的 <ApiSourceLink path="packages/kernel/reconciler/src/weave/schedule/queue.ts">`WeaveTaskQueue`</ApiSourceLink> 按稳定元素身份和就绪阶段合并任务。执行环境从候选节点及父 Scope 的准备结果取得，不靠遍历作者子树捕获。读取点需要生产者时，先完成其候选阶段，再继续消费者。Node、Coordinate 保留声明时的名称可见性，Path 使用所属环境闭合时的名称；调度顺序不会放宽前向引用。
+
+Scope 先准备继承环境，再从子布局计算包络和最终投影，最后组装路径与分组输出。Composite 保留现有生成子树与隔离试算，生成名称先就绪，延迟 Path 随后完成。未变化元素复用输出贡献，Scope 不另存完整后代输出。名称索引和完整输出组装仍可扫描整树，因此局部计算不代表整次更新只有局部成本。普通 React／Vanilla 输入更新尚未接入此批次入口。
 
 <SourceLinks
   sources={[

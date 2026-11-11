@@ -16,6 +16,7 @@ import { compareStrokeBindings } from './compare';
 export const preparePathCompilation = (
   previous: { canon: PathResolution; compiled: CompiledPath },
   current: PathResolution,
+  referencesValid = true,
 ): { prepared: PreparedPathCompilation; primitives: Array<ScenePrimitive> } => {
   const prepared: PreparedPathCompilation = {};
   const primitives: Array<ScenePrimitive> = [];
@@ -28,7 +29,7 @@ export const preparePathCompilation = (
       const { label: _label, ...geometry } = step;
       return geometry;
     });
-  const targetsEqual = jsonStructuralEquals(stepsOf(old), stepsOf(current));
+  const targetsEqual = referencesValid && jsonStructuralEquals(stepsOf(old), stepsOf(current));
   if (targetsEqual) prepared.targets = previous.compiled.targets;
   const geometryEqual = targetsEqual && old.canon.cornerRadius === current.canon.cornerRadius;
   const layout = cached.layout;
