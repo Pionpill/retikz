@@ -43,3 +43,31 @@ A frame that supports Position Adjustment splits placement into two capabilities
 | `placementBoundary`  | Cyclic roles, boundary normals, and glyph-to-role conversion   |
 
 A custom coordinate can keep only `projectRoles` when placement is unused. Point placement requires both split projection functions; automatic containment additionally requires `roleScales` and `placementBoundary`, and missing capabilities fail loudly.
+
+## CoordinateCompositionSchema
+
+<ZodSchema name="CoordinateCompositionSchema" />
+
+## CoordinateViewSchema
+
+<ZodSchema name="CoordinateViewSchema" />
+
+## PlotFacetConfigurationSchema
+
+<ZodSchema name="PlotFacetConfigurationSchema" />
+
+At least one of `row` and `column` must be declared. This shared authoring configuration does not include a template view, coordinate, or panel-id template; those low-level controls belong to the complete `FacetArrangementSchema`.
+
+## FacetArrangementSchema
+
+<ZodSchema name="FacetArrangementSchema" />
+
+At least one of `row` and `column` must be declared.
+
+## TrackArrangementSchema
+
+<ZodSchema name="TrackArrangementSchema" />
+
+## BoxPaddingSchema
+
+<ZodSchema name="BoxPaddingSchema" />

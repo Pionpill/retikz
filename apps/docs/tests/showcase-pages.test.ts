@@ -258,7 +258,7 @@ describe('collectShowcasePages', () => {
       expect(source, method).toContain(`\`${method}\``);
     }
 
-    expect(source).toContain('/viz/plot/reference/transform');
+    expect(source).toContain('/viz/plot/transform');
     expect(source).toContain('/viz/plot/mark/path');
 
     const compiled = String(await compile(source, compileOptions));

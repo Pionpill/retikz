@@ -1,5 +1,11 @@
 /** 已审阅的通道公开契约英文说明 */
 const translations: Partial<Record<string, string>> = {
+  该位置通道明确接受的数学映射及消费策略:
+    'Mathematical mappings and consumption policies explicitly accepted by this position channel',
+  '解析数学映射；通道负责默认配置、输出校验和展示语义':
+    'Resolves the mathematical mapping; the channel owns defaults, output validation, and presentation semantics',
+  '图元实际使用的数学映射，图例按通道解释而不重建算法':
+    'Mathematical mapping used by marks; legends interpret it through the channel without rebuilding the algorithm',
   附属标签的字段外观通道: 'Field-driven visual channel for an attached label',
   按原始标签索引投递的字段样式: 'Field styles delivered by the original label index',
   '标签几何宿主，沿用 Core 的两个标签消费面': 'Label geometry host using the two Core label surfaces',

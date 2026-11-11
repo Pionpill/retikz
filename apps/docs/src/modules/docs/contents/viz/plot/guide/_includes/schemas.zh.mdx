@@ -1,0 +1,86 @@
+## GuideSchema
+
+<ZodSchema name="GuideSchema" description="AxisGuide 与 LegendGuide 的判别联合。" />
+
+## GuideLineStyleSchema
+
+<ZodSchema
+  name="GuideLineStyleSchema"
+  description="映射到 Core Path 的共享 guide 线样式。"
+  descriptions={{
+    stroke: '线描边 paint。',
+    strokeWidth: '线宽。',
+    drawOpacity: '描边不透明度。',
+    dashPattern: '虚线长度数组。',
+    dashOffset: '虚线偏移。',
+  }}
+/>
+
+## AxisLineStyleSchema
+
+<ZodSchema
+  name="AxisLineStyleSchema"
+  description="坐标轴基线的纯线视觉字段。"
+  descriptions={{
+    stroke: '基线描边 paint。',
+    strokeWidth: '基线线宽。',
+    drawOpacity: '基线不透明度。',
+    dashPattern: '基线虚线数组。',
+    dashOffset: '基线虚线偏移。',
+    lineCap: '基线端点样式。',
+  }}
+/>
+
+## AxisGridLineStyleSchema
+
+<ZodSchema
+  name="AxisGridLineStyleSchema"
+  description="坐标网格的纯线视觉字段。"
+  descriptions={{
+    stroke: '网格描边 paint。',
+    strokeWidth: '网格线宽。',
+    drawOpacity: '网格不透明度。',
+    dashPattern: '网格虚线数组。',
+    dashOffset: '网格虚线偏移。',
+    lineCap: '网格线端点样式。',
+  }}
+/>
+
+## GuideTextStyleSchema
+
+<ZodSchema
+  name="GuideTextStyleSchema"
+  description="映射到 Core Node 文本词汇的共享 guide 文本样式。"
+  descriptions={{
+    font: '文本字体，未指定字段继承 Plot 文本默认值。',
+    textColor: '文本颜色，省略时继承 currentColor。',
+    opacity: '文本不透明度。',
+    textAlign: '多行文本对齐。',
+    lineHeight: '文本行高。',
+    maxTextWidth: '换行前的最大文本行宽。',
+  }}
+/>
+
+## GuideTickSourceSchema
+
+<ZodSchema
+  name="GuideTickSourceSchema"
+  description="显式 values、固定 interval 或 count 提示的共享刻度源。"
+  descriptions={{ count: '目标刻度数。', values: '显式刻度值。', interval: '固定数值、时间或分类间隔。' }}
+/>
+
+## GuideTickIntervalSchema
+
+<ZodSchema name="GuideTickIntervalSchema" description="数值步长、UTC 时间单位或分类步长刻度间隔联合。" />
+
+## GuideTickLabelFormatSchema
+
+<ZodSchema
+  name="GuideTickLabelFormatSchema"
+  description="数值或 UTC 时间刻度的显示格式。"
+  descriptions={{ format: 'd3-format 数值格式或 UTC d3-time-format 时间格式。' }}
+/>
+
+## AxisGuideValueSchema
+
+<ZodSchema name="AxisGuideValueSchema" description="坐标轴刻度、原点或 extent 中使用的 JSON-safe 字符串 / 数值。" />

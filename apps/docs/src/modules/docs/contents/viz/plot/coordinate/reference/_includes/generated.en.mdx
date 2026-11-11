@@ -18,6 +18,36 @@ A frame that supports Position Adjustment splits placement into two capabilities
 
 A custom coordinate can keep only `projectRoles` when placement is unused. Point placement requires both split projection functions; automatic containment additionally requires `roleScales` and `placementBoundary`, and missing capabilities fail loudly.
 
+## Composition and facets
+
+#### <ApiSourceLink label={"CoordinateCompositionSchema"} path={"packages/viz/plot/src/schemas/plot/schema.ts"} startLine={219}>CoordinateCompositionSchema</ApiSourceLink>
+
+<ZodSchema name="CoordinateCompositionSchema" />
+
+#### <ApiSourceLink label={"CoordinateViewSchema"} path={"packages/viz/plot/src/schemas/plot/schema.ts"} startLine={95}>CoordinateViewSchema</ApiSourceLink>
+
+<ZodSchema name="CoordinateViewSchema" />
+
+#### <ApiSourceLink label={"PlotFacetConfigurationSchema"} path={"packages/viz/plot/src/schemas/plot/schema.ts"} startLine={153}>PlotFacetConfigurationSchema</ApiSourceLink>
+
+<ZodSchema name="PlotFacetConfigurationSchema" />
+
+At least one of `row` and `column` must be declared. This shared authoring configuration does not include a template view, coordinate, or panel-id template; those low-level controls belong to the complete `FacetArrangementSchema`.
+
+#### <ApiSourceLink label={"FacetArrangementSchema"} path={"packages/viz/plot/src/schemas/plot/schema.ts"} startLine={158}>FacetArrangementSchema</ApiSourceLink>
+
+<ZodSchema name="FacetArrangementSchema" />
+
+At least one of `row` and `column` must be declared.
+
+#### <ApiSourceLink label={"TrackArrangementSchema"} path={"packages/viz/plot/src/schemas/plot/schema.ts"} startLine={193}>TrackArrangementSchema</ApiSourceLink>
+
+<ZodSchema name="TrackArrangementSchema" />
+
+#### <ApiSourceLink label={"BoxPaddingSchema"} path={"packages/viz/plot/src/schemas/layout/schema.ts"} startLine={5}>BoxPaddingSchema</ApiSourceLink>
+
+<ZodSchema name="BoxPaddingSchema" />
+
 ## Coordinate configuration
 
 #### <ApiSourceLink label={"InputPlotCoordinate"} path={"packages/viz/plot-vanilla/src/normalize/plot/contracts.ts"} startLine={22}>InputPlotCoordinate</ApiSourceLink>

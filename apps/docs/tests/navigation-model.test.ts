@@ -118,17 +118,9 @@ describe('布局实用程序', () => {
       expect(reference?.difficulty).toBeUndefined();
       expect(plotPaths).toContain(`/viz/plot/${id}/reference`);
     }
-    expect(plotPaths.slice(-9)).toEqual([
-      '/viz/plot/reference/plot',
-      '/viz/plot/reference/encoding',
-      '/viz/plot/reference/transform',
-      '/viz/plot/reference/mark',
-      '/viz/plot/reference/guide',
-      '/viz/plot/reference/layout',
-      '/viz/plot/reference/layer',
-      '/viz/plot/reference/theme',
-      '/viz/plot/reference/runtime',
-    ]);
+    expect(plotPaths).not.toContain('/viz/plot/theme');
+    expect(plotPaths).not.toContain('/viz/plot/reference');
+    expect(plotPaths.some(path => path.startsWith('/viz/plot/reference/'))).toBe(false);
   });
 
   it('Data 与 Table 分别在模块末尾注册更新日志，并删除 Viz 发布分区', () => {

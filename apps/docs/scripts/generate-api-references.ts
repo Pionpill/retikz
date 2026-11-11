@@ -19,6 +19,7 @@ import { writeManualReferences } from './api-reference/manual-reference';
 import { writeMathApiReferenceMdx } from './api-reference/math';
 import { writeNodeApiReferenceMdx } from './api-reference/node';
 import { writePlotChannelApiReferenceMdx } from './api-reference/plot-channel';
+import { writePlotContractApiReferenceMdx } from './api-reference/plot-contract';
 import { writePlotGuideApiReferenceMdx } from './api-reference/plot-guide';
 import { writePlotIntervalApiReferenceMdx } from './api-reference/plot-interval';
 import { writePlotPathApiReferenceMdx } from './api-reference/plot-path';
@@ -126,3 +127,5 @@ await writePlotIntervalApiReferenceMdx();
 await writePlotSpatialApiReferenceMdx();
 
 await writePlotGuideApiReferenceMdx();
+
+writePlotContractApiReferenceMdx();

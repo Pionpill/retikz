@@ -25,6 +25,12 @@ Marks work with the other parts of the grammar: [channel bindings](/viz/plot/cha
 
 The same mark can produce different shapes in different coordinate systems. Interval can express bars or rectangular cells in Cartesian coordinates, and radial bars or sectors in polar coordinates.
 
+## Mark labels
+
+Fixed labels use an optional `text` field. When omitted, `encodings.label.text` at the same index can provide the content. A label is omitted if neither source supplies valid text. String shorthand follows the same rules.
+
+Node and path labels both use the Core text block: a string with line breaks or a non-empty array of lines. Per-line styles and mixed segments belong inside that array. One text block still represents one label.
+
 ## Contents
 
 <LinkedSections
@@ -47,3 +53,7 @@ The same mark can produce different shapes in different coordinate systems. Inte
     },
   ]}
 />
+
+## API Reference
+
+{/* @include viz/plot/mark/generated */}

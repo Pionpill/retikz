@@ -79,6 +79,18 @@ export const referenceGroups: Readonly<Partial<Record<string, ReadonlyArray<Refe
   ],
   'viz/plot/coordinate': [
     {
+      title: { zh: '坐标组合与分面', en: 'Composition and facets' },
+      members: [],
+      schemas: [
+        'CoordinateCompositionSchema',
+        'CoordinateViewSchema',
+        'PlotFacetConfigurationSchema',
+        'FacetArrangementSchema',
+        'TrackArrangementSchema',
+        'BoxPaddingSchema',
+      ],
+    },
+    {
       title: { zh: '坐标配置', en: 'Coordinate configuration' },
       members: [
         'InputPlotCoordinate',
@@ -159,18 +171,53 @@ export const referenceGroups: Readonly<Partial<Record<string, ReadonlyArray<Refe
       ],
     },
   ],
+  'viz/plot/mark': [
+    {
+      title: { zh: '共享图元配置', en: 'Shared mark configuration' },
+      members: [],
+      schemas: [
+        'MarkSchema',
+        'MarkPlacementSchema',
+        'PositionAdjustmentOperationSchema',
+        'JitterPositionAdjustmentSchema',
+        'PlotRandomDistributionSchema',
+        'JitterRatioSpanSchema',
+        'CustomPositionAdjustmentSchema',
+        'MarkTransformSchema',
+        'AnchorIdSchema',
+        'PlotLayerSchema',
+      ],
+    },
+  ],
+  'viz/plot/guide': [
+    {
+      title: { zh: '共享样式与刻度', en: 'Shared styles and ticks' },
+      members: [],
+      schemas: [
+        'GuideSchema',
+        'GuideLineStyleSchema',
+        'AxisLineStyleSchema',
+        'AxisGridLineStyleSchema',
+        'GuideTextStyleSchema',
+        'GuideTickSourceSchema',
+        'GuideTickIntervalSchema',
+        'GuideTickLabelFormatSchema',
+        'AxisGuideValueSchema',
+      ],
+    },
+  ],
   'viz/plot/mark/interval': [
     {
       title: { zh: '组件属性', en: 'Component properties' },
       members: ['IntervalMarkProps', 'IRPlotIntervalMark'],
-      schemas: ['IntervalMarkSchema'],
+      schemas: ['IntervalMarkSchema', 'IntervalBoundsSchema', 'IntervalBoundSchema'],
     },
   ],
   'viz/plot/mark/path': [
     {
       title: { zh: '组件属性', en: 'Component properties' },
       members: ['PathMarkProps', 'IRPlotPathMark'],
-      schemas: ['PathMarkSchema'],
+      schemas: ['PathMarkSchema', 'PlotPathStepSchema', 'PathClosureSchema', 'MarkPathLabelSchema'],
     },
   ],
   'viz/plot/guide/axis': [
@@ -207,10 +254,32 @@ export const referenceGroups: Readonly<Partial<Record<string, ReadonlyArray<Refe
     {
       title: { zh: '组件属性', en: 'Component properties' },
       members: ['PointMarkProps', 'IRPlotPointMark'],
-      schemas: ['PointMarkSchema'],
+      schemas: ['PointMarkSchema', 'MarkNodeLabelSchema'],
     },
   ],
   'viz/plot/channel': [
+    {
+      title: { zh: '编码输入', en: 'Encoding inputs' },
+      members: [],
+      schemas: [
+        'ChannelSchema',
+        'PositionEncodingSchema',
+        'Position1DEncodingSchema',
+        'Position2DEncodingSchema',
+        'Position3DEncodingSchema',
+        'VisualEncodingSchema',
+        'NodeEncodingSchema',
+        'PathEncodingSchema',
+        'PointMarkEncodingSchema',
+        'PathMarkEncodingSchema',
+        'IntervalMarkEncodingSchema',
+        'OpacityEncodingSchema',
+        'LabelEncodingSchema',
+        'LabelFontEncodingSchema',
+        'NodeLabelEncodingSchema',
+        'PathLabelEncodingSchema',
+      ],
+    },
     {
       title: { zh: '通道定义', en: 'Channel definitions' },
       members: [
