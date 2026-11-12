@@ -536,7 +536,7 @@ export const resolveCoreBudget = (scenario: BenchmarkScenario): BenchmarkBudget 
             'compile/node/compile、synthetic 逐节点解析；假设100个节点编辑更新，解析阶段约5/20ms，单节点50/200μs。含16标签的节点仍保持同一交互目标，不含字体测量和布局',
         };
         break;
-      case 'text': {
+      case 'text-block': {
         const count = Number(identity.split('/').at(-1));
         const large = variant === 'plain' ? count > 1_024 : count > 128;
         policy = large
@@ -544,13 +544,13 @@ export const resolveCoreBudget = (scenario: BenchmarkScenario): BenchmarkBudget 
               warningMs: 0.5,
               errorMs: 2,
               rationale:
-                'compile/node/content/layout、node/label/layout、path/host/label 共用行解析；假设单个长行编辑（16384字符或2048混排片段），给分段及字体确定化0.5/2ms，字体测量和TeX排版另计',
+                'compile/node/content/layout、node/label/layout、path/host/label 共用文本块解析；假设单个长行块编辑（16384字符或2048混排片段），给块配置、分段及字体确定化0.5/2ms，字体测量和TeX排版另计',
             }
           : {
               warningMs: 0.05,
               errorMs: 0.2,
               rationale:
-                'compile 的节点正文与标签逐行消费；假设100行可见内容更新，单行分段与字体解析50/200μs，阶段约5/20ms。普通行最多1024字符或256片段；公式开关不放宽预算',
+                'compile 的节点正文与标签消费文本块；假设100个单行块更新，每块配置、分段与字体解析50/200μs，阶段约5/20ms。普通块最多1024字符或256片段；公式开关不放宽预算',
             };
         break;
       }
