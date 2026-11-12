@@ -1,10 +1,17 @@
-import type { CompileOccurrenceLocator, IRNode, NodeCompileContext } from '@retikz/core';
+import type {
+  CompileOccurrenceLocator,
+  IRNode,
+  CanonicalNode,
+  CompiledNode,
+  NodeCompileContext,
+  NodeResolveContext,
+} from '@retikz/core';
 import { compileNode, projectLayoutWithTransform, projectNodeGeometry, resolveNode } from '@retikz/core';
 import type { PropertyPath } from '@retikz/foundation';
 
 import type { CompileOwnerKey } from '../../provenance';
 import type { CompileRuntime } from '../../runtime';
-import { runCompileStage } from '../../runtime';
+import { createCompileObservation } from '../../runtime';
 import { createCompileChildPath } from '../../shared';
 import type { TreeOutputState } from '../shared';
 import { createTreePositionContext } from '../shared';
@@ -20,8 +27,31 @@ export const visitNode = (
   occurrence?: CompileOccurrenceLocator,
   semanticOwner?: CompileOwnerKey,
 ): void => {
+  const nodeIrPath = createCompileChildPath(frame.context.pathPrefix, index);
+  const observation = runtime.onCompiled === undefined ? undefined : createCompileObservation(runtime);
+  const local = observation?.runtime ?? runtime;
+  const canon = resolveNode(child, createNodeResolveContext(local, nodeIrPath, frame.context));
+  const context = createNodeCompileContext(local, canon, nodeIrPath, frame.context);
+  const compiled =
+    observation === undefined
+      ? compileNode(canon, context)
+      : runtime.state.execution.namespaceStack.observeReferences(observation.read, () => compileNode(canon, context));
+  runtime.onCompiled?.(nodeIrPath, frame.context, { kind: 'node', canon, compiled }, observation!.facts());
+  assembleNodeOutput(runtime, outputState, child, nodeIrPath, frame, compiled, semanticOwner);
+};
+
+/** 发布已完成的 Node 产物，不选择计算或缓存 */
+export const assembleNodeOutput = (
+  runtime: CompileRuntime,
+  outputState: TreeOutputState,
+  child: IRNode,
+  nodeIrPath: PropertyPath,
+  frame: SubtreeCompileRuntime,
+  compilation: CompiledNode,
+  semanticOwner?: CompileOwnerKey,
+): void => {
   const {
-    context: { transformChains: scopeChain, pathPrefix: locatorPrefix, inheritance: style, layout: layoutContext },
+    context: { transformChains: scopeChain, layout: layoutContext },
     state: {
       primitives,
       geometries: layouts,
@@ -31,61 +61,6 @@ export const visitNode = (
       alignmentGuides: frameAlignmentGuides,
     },
   } = frame;
-  const { defaults: scopeDefaults, theme } = style;
-  const nodeIrPath = createCompileChildPath(locatorPrefix, index);
-
-  const staged = runCompileStage(
-    runtime,
-    nodeIrPath,
-    'node',
-    { child, style, scopeChain, proposal: layoutContext?.childProposal },
-    {
-      resolveInputs: { child, style },
-      compileInputs: { scopeChain, proposal: layoutContext?.childProposal },
-      resolve: stageRuntime =>
-        resolveNode(child, {
-          ...stageRuntime.context.registries,
-          ...stageRuntime.context.layout,
-          gatingOn: stageRuntime.context.host.lowerTex !== undefined,
-          scopeDefaults,
-          mode: theme.mode,
-          irPath: nodeIrPath,
-          warn: (code, message, path = nodeIrPath) =>
-            stageRuntime.state.workspace.diagnosticCollector.collect({ code, message, path }),
-        }),
-      compile: (stageRuntime, resolution, previous, _restoreResources, referencesValid) => {
-        const warn = (code: string, message: string, path: PropertyPath = nodeIrPath): void =>
-          stageRuntime.state.workspace.diagnosticCollector.collect({ code, message, path });
-        const boundaryState = stageRuntime.state.workspace.boundaryStore.getOrCreateState(resolution.shape);
-        boundaryState.warn = warn;
-        boundaryState.irPath = nodeIrPath;
-        const context: NodeCompileContext = {
-          round: stageRuntime.context.layout.round,
-          registerPaint: stageRuntime.state.workspace.paintRegistry.register,
-          irPath: nodeIrPath,
-          measureText: stageRuntime.context.host.measureText,
-          boundaryState,
-          positionContext: createTreePositionContext(stageRuntime, scopeChain),
-          composedTransform: stageRuntime.state.execution.scopeTransformComposer.resolve(scopeChain),
-          scopeChain,
-          allocationWidthProposal: layoutContext?.childProposal?.x,
-          texLowering: { lowerTex: stageRuntime.context.host.lowerTex, warn },
-          warn,
-        };
-        const compilation =
-          stageRuntime.stages?.compileNode === undefined
-            ? compileNode(resolution, context)
-            : stageRuntime.stages.compileNode(resolution, context, previous, referencesValid);
-
-        return {
-          canon: resolution,
-          compiled: compilation,
-        };
-      },
-    },
-  );
-  const compilation = staged.compiled;
-
   const layout = projectNodeGeometry(compilation);
   const boundaryState = runtime.state.workspace.boundaryStore.getOrCreateState(layout.shape);
   boundaryState.irPath = nodeIrPath;
@@ -132,4 +107,46 @@ export const visitNode = (
   }
 
   layouts.push(layout);
+};
+
+/** 创建全量与增量共用的 Node 确定化上下文 */
+export const createNodeResolveContext = (
+  runtime: CompileRuntime,
+  irPath: PropertyPath,
+  context: SubtreeCompileRuntime['context'],
+): NodeResolveContext => ({
+  ...runtime.context.registries,
+  ...runtime.context.layout,
+  gatingOn: runtime.context.host.lowerTex !== undefined,
+  scopeDefaults: context.inheritance.defaults,
+  mode: context.inheritance.theme.mode,
+  irPath,
+  warn: (code, message, path = irPath) => runtime.state.workspace.diagnosticCollector.collect({ code, message, path }),
+});
+
+/** 创建 Node 计算上下文，不选择缓存 */
+export const createNodeCompileContext = (
+  runtime: CompileRuntime,
+  canon: CanonicalNode,
+  irPath: PropertyPath,
+  context: SubtreeCompileRuntime['context'],
+): NodeCompileContext => {
+  const warn = (code: string, message: string, path: PropertyPath = irPath): void =>
+    runtime.state.workspace.diagnosticCollector.collect({ code, message, path });
+  const boundaryState = runtime.state.workspace.boundaryStore.getOrCreateState(canon.shape);
+  boundaryState.warn = warn;
+  boundaryState.irPath = irPath;
+  return {
+    round: runtime.context.layout.round,
+    registerPaint: runtime.state.workspace.paintRegistry.register,
+    irPath,
+    measureText: runtime.context.host.measureText,
+    boundaryState,
+    positionContext: createTreePositionContext(runtime, context.transformChains),
+    composedTransform: runtime.state.execution.scopeTransformComposer.resolve(context.transformChains),
+    scopeChain: context.transformChains,
+    allocationWidthProposal: context.layout?.childProposal?.x,
+    texLowering: { lowerTex: runtime.context.host.lowerTex, warn },
+    warn,
+  };
 };

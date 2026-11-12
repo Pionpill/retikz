@@ -16,11 +16,13 @@ import type {
   IRPathBase,
   IRScope,
   IRScene,
+  SceneResource,
+  prepareScopePlacement,
 } from '@retikz/core';
 
 import type { SharedCompileContext } from '../../compile';
 import type { CompileContribution } from '../../compile/execution';
-import type { CompileStageMetadata } from '../../compile/runtime';
+import type { CompileReferenceRead } from '../../compile/runtime';
 import type { WeaveChangeKind, WeaveChangeSource, WeaveOperationKind } from './constants';
 import type { WeaveCompileRead } from './read';
 
@@ -35,10 +37,28 @@ type InputWeave<TInput> = {
   context: CanonicalScopeInheritance;
 };
 
+/** Weave 独有的跨批有效性依据，不包装或重复保存 Core 产物 */
+export type WeaveCacheMetadata = Readonly<{
+  /** 确定化依赖的输入与环境 */
+  resolveInputs: unknown;
+  /** 计算所需的额外上下文 */
+  compileInputs: unknown;
+  /** 实际读取事实 */
+  reads: ReadonlyArray<CompileReferenceRead>;
+  /** 配套资源 */
+  resources: ReadonlyArray<SceneResource>;
+  /** 有诊断时重新计算并派发 */
+  diagnostics: ReadonlyArray<CompileWarning>;
+  /** Scope 在后代计算前产出的放置准备 */
+  scopePreparation?: ReturnType<typeof prepareScopePlacement>;
+  /** Scope 最终可见输出的诊断 */
+  outputDiagnostics?: ReadonlyArray<CompileWarning>;
+}>;
+
 /** 节点的可替换逻辑状态，集合写入由候选工作区隔离 */
 type WeaveNodeStateBase<TInput> = {
   /** 阶段复用依据与资源诊断；实际产物分别保存在 canon / compiled */
-  cache?: CompileStageMetadata;
+  cache?: WeaveCacheMetadata;
   /** 作者元素的局部输出；Scope 不保存后代的完整输出 */
   contribution?: CompileContribution;
   /** 所属声明容器，引用稳定对象 */

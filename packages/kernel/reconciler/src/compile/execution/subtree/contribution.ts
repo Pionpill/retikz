@@ -1,10 +1,11 @@
-import type { CompileWarning, ScenePrimitive, SceneResource } from '@retikz/core';
+import type { CompileOccurrenceLocator, CompileWarning, ScenePrimitive, SceneResource } from '@retikz/core';
 import { visitSceneContent } from '@retikz/core';
 import type { PropertyPath } from '@retikz/foundation';
+import { isPropertyPathEqual } from '@retikz/foundation';
 
 import type { CompileOwnerKey, CompileNamespaceKey, CompileProvenanceSnapshot } from '../../provenance';
 import type { CompileReferenceRead, CompileRuntime, NamespaceFrameChange } from '../../runtime';
-import { importSceneResources } from '../../shared';
+import { importSceneResources, compileWarningOccurrenceOf } from '../../shared';
 import type { TreeOutputState } from '../shared';
 import type { SubtreeCompileState } from './compile';
 
@@ -46,6 +47,45 @@ export const collectContributionResources = (
     }
   });
   return resources.filter(resource => retained.has(resource.id));
+};
+
+/** 从已完成的局部输出捕获可复用贡献，不执行领域计算 */
+export const captureCompileContribution = (
+  runtime: CompileRuntime,
+  output: TreeOutputState,
+  state: SubtreeCompileState,
+  bindings: Array<NamespaceFrameChange>,
+  reads: Array<CompileReferenceRead>,
+  occurrence: CompileOccurrenceLocator,
+  semanticOwner?: CompileOwnerKey,
+): CompileContribution => {
+  const primitives = state.primitives as Array<ScenePrimitive>;
+  const workspace = runtime.state.workspace;
+  return {
+    output: {
+      primitives,
+      geometries: state.geometries,
+      publications: state.publications,
+      bounds: state.bounds,
+      allocations: state.allocations,
+      alignmentGuides: state.alignmentGuides,
+      artifacts: state.artifacts,
+    },
+    zIndices: primitives.map(primitive => output.zIndexOf.get(primitive)),
+    bindings,
+    reads,
+    resources: collectContributionResources(primitives, [
+      ...workspace.paintRegistry.getResources(),
+      ...workspace.clipRegistry.getResources(),
+    ]),
+    diagnostics: workspace.diagnosticCollector.warnings.filter(warning =>
+      isPropertyPathEqual(compileWarningOccurrenceOf(warning).sourcePath, occurrence.sourcePath),
+    ),
+    provenance:
+      semanticOwner === undefined
+        ? undefined
+        : runtime.state.execution.provenanceTracker?.captureContribution(primitives, semanticOwner),
+  };
 };
 
 /** 只物化绘制、资源与来源，不建立计算环境或重新发布名称 */

@@ -1,3 +1,4 @@
+import { compilePath, resolvePath } from '@retikz/core';
 import type {
   PathResolution,
   CompiledPath,
@@ -7,10 +8,15 @@ import type {
   PreparedStrokeLabelLayout,
   PreparedStrokeLabelEmit,
 } from '@retikz/core';
-import { jsonStructuralEquals } from '@retikz/foundation';
+import { compareProperties, jsonStructuralEquals } from '@retikz/foundation';
 
-import { comparePaintResolutions } from '../shared';
-import { compareStrokeBindings } from './compare';
+import { createPathResolveContext, createPathCompileContext } from '../../compile/execution';
+import type { PendingPathEmission } from '../../compile/execution';
+import { createCompileObservation } from '../../compile/runtime';
+import type { CompileRuntime } from '../../compile/runtime';
+import { comparePaintResolutions, matchWeaveReferences, restoreWeaveResources, retainWeaveReads } from '../shared';
+import type { WeaveNode, WeaveCacheMetadata } from '../shared';
+import { comparePathResolutions, compareStrokeBindings } from './compare';
 
 /** 选择仍有效的标准描边原子产物；Definition 回调始终由 Core 执行 */
 export const preparePathCompilation = (
@@ -131,4 +137,47 @@ export const preparePathCompilation = (
     primitives.length = 0;
   }
   return { prepared, primitives };
+};
+
+/** 选择有效 Path prepared 槽位并直接计算缺失产物 */
+export const executeWeavePath = (
+  runtime: CompileRuntime,
+  pending: PendingPathEmission,
+  previous?: NonNullable<Extract<WeaveNode, { type: 'path' }>['current']>,
+): { canon: PathResolution; compiled: CompiledPath; cache: WeaveCacheMetadata; reused: boolean } => {
+  const resolveInputs = { path: pending.path, defaults: pending.scopeDefaults, theme: pending.theme };
+  const compileInputs = { scopeChain: pending.scopeChain };
+  const cache = previous?.cache;
+  const before = previous?.canon;
+  const observation = createCompileObservation(runtime);
+  const canon =
+    before != null &&
+    cache?.diagnostics.length === 0 &&
+    compareProperties(cache.resolveInputs, resolveInputs, { depth: 2 })
+      ? before
+      : resolvePath(pending.path, createPathResolveContext(observation.runtime, pending));
+  const referencesValid =
+    cache !== undefined && matchWeaveReferences(cache.reads, runtime.state.execution.namespaceStack);
+  const canRetain = cache?.diagnostics.length === 0 && jsonStructuralEquals(cache.compileInputs, compileInputs);
+  if (
+    before != null &&
+    previous?.compiled != null &&
+    canRetain &&
+    referencesValid &&
+    observation.diagnostics.length === 0 &&
+    comparePathResolutions(before, canon)
+  ) {
+    restoreWeaveResources(runtime, cache);
+    return { canon, compiled: previous.compiled, cache: { ...cache, resolveInputs, compileInputs }, reused: true };
+  }
+  const selected =
+    before != null && previous?.compiled != null && canRetain
+      ? preparePathCompilation({ canon: before, compiled: previous.compiled }, canon, referencesValid)
+      : undefined;
+  if (selected !== undefined) restoreWeaveResources(observation.runtime, cache!, selected.primitives);
+  const compiled = runtime.state.execution.namespaceStack.observeReferences(observation.read, () =>
+    compilePath(canon, createPathCompileContext(observation.runtime, pending), selected?.prepared),
+  );
+  if (referencesValid && selected !== undefined) retainWeaveReads(observation.reads, cache.reads);
+  return { canon, compiled, cache: { ...observation.facts(), resolveInputs, compileInputs }, reused: false };
 };

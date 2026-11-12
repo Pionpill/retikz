@@ -1,6 +1,16 @@
-import type { CompiledScope, CompileOccurrenceLocator, IRChild, Transform, prepareScopePlacement } from '@retikz/core';
+import type {
+  CanonicalScope,
+  ScopeCompileContext,
+  CompileWarning,
+  CompiledScope,
+  CompileOccurrenceLocator,
+  IRChild,
+  Transform,
+  prepareScopePlacement,
+} from '@retikz/core';
 
 import type { CompileOwnerKey } from '../../provenance';
+import type { CompileReferenceRead } from '../../runtime';
 import type { InternalScenePrimitive } from '../shared';
 import type { SubtreeCompileRuntime } from '../subtree';
 
@@ -55,13 +65,21 @@ export type ScopeExecutionSteps = {
   preparation: ReturnType<typeof prepareScopePlacement>;
   /** 在已准备的继承与局部变换下构建子布局 */
   children: () => void;
-  /** 从已完成的子布局计算自身包络 */
-  envelope: () => void;
+  /** 子级继承前已确定的自身配置 */
+  canon: CanonicalScope;
+  /** 子布局就绪后供 Core 计算包络的上下文 */
+  readonly compileContext: ScopeCompileContext;
+  /** 后代计算前消费的引用 */
+  preparedReads: ReadonlyArray<CompileReferenceRead>;
+  /** 后代计算前产生的诊断 */
+  preparedDiagnostics: ReadonlyArray<CompileWarning>;
+  /** 依赖最终可见输出的诊断 */
+  readonly outputDiagnostics: ReadonlyArray<CompileWarning>;
   /** 发布最终包络并投影后代几何 */
-  project: () => void;
+  project: (compiled: CompiledScope) => void;
   /** 计算当前名称环境中的路径与输出分配 */
   paths: () => void;
-  /** 绑定动画、写入记录及组装输出 */
+  /** 绑定动画并组装最终输出 */
   publish: () => void;
   /** 无论成功或失败都释放本次作用域栈 */
   dispose: () => void;

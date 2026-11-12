@@ -7,11 +7,12 @@ import type { CompileOptions, ExecuteOptions } from '../compile';
 import type { CompileContribution } from '../compile/execution';
 import { compileScene } from '../compile/execution';
 import { createSharedCompileContext, createCompileRuntime } from '../compile/runtime';
+import type { CompileObserver } from '../compile/runtime';
 import { createCompileChildPath } from '../compile/shared';
 import { RetikzReconcilerError, RetikzReconcilerErrorCode } from '../error';
-import type { CompileStageCache } from './cache';
 import { executeWeaveUpdate } from './scheduler';
 import type { WeaveUpdateRequest } from './scheduler';
+import type { WeaveCacheMetadata } from './shared';
 import type { WeaveCompileRead } from './shared';
 import type { WeaveBatch, WeaveNode, WeaveRoot, WeaveScopeNode } from './shared';
 import { createWeaveBatchState, WeaveAddressIndex, WeaveLookup } from './state';
@@ -307,88 +308,83 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
     };
     const counted = new Set<WeaveNode>();
     const runtime = createCompileRuntime(batch.source, this.options, this.context.execution, this.context.shared);
-    const cache: CompileStageCache = {
-      read: (path, phase) => {
-        const node = nodes.get(keyOf(path));
-        if (node === undefined || batch.forceFull || !batch.updating) return;
-        if (!isPropertyPathEqual(batch.previousNodeIrPaths.get(node) ?? [], path)) return;
-        const metadata = transaction.readNode(node).cache;
-        if (metadata === undefined || metadata.phase !== phase) return;
-        switch (metadata.phase) {
-          case 'node': {
-            if (node.type !== 'node') return;
-            const { canon, compiled } = transaction.readNode(node);
-            if (canon !== null && compiled !== null) return { ...metadata, phase: 'node', value: { canon, compiled } };
-            break;
-          }
-          case 'coordinate': {
-            if (node.type !== 'coordinate') return;
-            const { canon, compiled } = transaction.readNode(node);
-            if (canon !== null && compiled !== null)
-              return { ...metadata, phase: 'coordinate', value: { canon, compiled } };
-            break;
-          }
-          case 'path': {
-            if (node.type !== 'path') return;
-            const { canon, compiled } = transaction.readNode(node);
-            if (canon !== null && compiled !== null) return { ...metadata, phase: 'path', value: { canon, compiled } };
-            break;
-          }
-          case 'scope': {
-            if (node.type !== 'scope') return;
-            const { canon, compiled } = transaction.readNode(node);
-            if (canon !== null && compiled !== null) return { ...metadata, phase: 'scope', value: { canon, compiled } };
-            break;
-          }
-        }
-      },
-      write: (path, record, reused) => {
-        const node = nodes.get(keyOf(path));
-        if (node === undefined) return;
-        if (!reused && !counted.has(node)) {
-          counted.add(node);
-          batch.visited++;
-        }
+    const recordComputed = (node: WeaveNode, metadata: WeaveCacheMetadata, reused: boolean): void => {
+      if (!reused && !counted.has(node)) {
+        counted.add(node);
+        batch.visited++;
+      }
+      transaction.editNode(node).cache = metadata;
+      const reads: Array<WeaveCompileRead> = metadata.reads.map(read => {
+        const sourcePath = read.entry?.irPath;
+        const producer =
+          read.entry?.producer === undefined
+            ? sourcePath === undefined
+              ? undefined
+              : findProducer(sourcePath)
+            : this.state.persistent.bindings.get(read.entry.producer);
+        return {
+          name: read.name,
+          kind: read.kind,
+          state: read.entry === undefined ? 'missing' : read.entry.state === 'resolved' ? 'ready' : 'pending',
+          binding: producer,
+        };
+      });
+      tracker.recordNodeReads(node, reads, metadata.diagnostics);
+    };
+    const onCompiled: CompileObserver = (path, context, element, facts) => {
+      const node = nodes.get(keyOf(path));
+      if (node === undefined) return;
+      let metadata: WeaveCacheMetadata;
+      if (node.type === 'node' && element.kind === 'node') {
         const state = transaction.editNode(node);
-        const { value: product, ...metadata } = record;
-        void product;
-        state.cache = metadata;
-        // 阶段判别与节点类别一致，直接保存 Core 产物
-        if (node.type === 'node' && record.phase === 'node') {
-          const value = record.value;
-          const shape = transaction.editNode(node);
-          shape.canon = value.canon;
-          shape.compiled = value.compiled;
-        } else if (node.type === 'coordinate' && record.phase === 'coordinate') {
-          const coordinate = transaction.editNode(node);
-          coordinate.canon = record.value.canon;
-          coordinate.compiled = record.value.compiled;
-        } else if (node.type === 'path' && record.phase === 'path') {
-          const pathState = transaction.editNode(node);
-          pathState.canon = record.value.canon;
-          pathState.compiled = record.value.compiled;
-        } else if (node.type === 'scope' && record.phase === 'scope') {
-          const scope = transaction.editNode(node);
-          scope.canon = record.value.canon;
-          scope.compiled = record.value.compiled;
-        }
-        const reads: Array<WeaveCompileRead> = record.reads.map(read => {
-          const sourcePath = read.entry?.irPath;
-          const producer =
-            read.entry?.producer === undefined
-              ? sourcePath === undefined
-                ? undefined
-                : findProducer(sourcePath)
-              : this.state.persistent.bindings.get(read.entry.producer);
-          return {
-            name: read.name,
-            kind: read.kind,
-            state: read.entry === undefined ? 'missing' : read.entry.state === 'resolved' ? 'ready' : 'pending',
-            binding: producer,
-          };
-        });
-        tracker.recordNodeReads(node, reads, record.diagnostics);
-      },
+        state.canon = element.canon;
+        state.compiled = element.compiled;
+        metadata = {
+          ...facts,
+          resolveInputs: { child: state.input.own, style: context.inheritance },
+          compileInputs: { scopeChain: context.transformChains, proposal: context.layout?.childProposal },
+        };
+      } else if (node.type === 'coordinate' && element.kind === 'coordinate') {
+        const state = transaction.editNode(node);
+        state.canon = element.canon;
+        state.compiled = element.compiled;
+        metadata = {
+          ...facts,
+          resolveInputs: { child: state.input.own, nodeDistance: runtime.context.layout.nodeDistance },
+          compileInputs: { scopeChain: context.transformChains },
+        };
+      } else if (node.type === 'path' && element.kind === 'path') {
+        const state = transaction.editNode(node);
+        state.canon = element.canon;
+        state.compiled = element.compiled;
+        metadata = {
+          ...facts,
+          resolveInputs: {
+            path: element.path,
+            defaults: context.inheritance.defaults,
+            theme: context.inheritance.theme,
+          },
+          compileInputs: { scopeChain: context.transformChains },
+        };
+      } else if (node.type === 'scope' && element.kind === 'scope') {
+        const state = transaction.editNode(node);
+        state.canon = element.canon;
+        state.compiled = element.compiled;
+        metadata = {
+          ...facts,
+          resolveInputs: { child: { ...state.input.own, children: undefined }, inheritedStyle: context.inheritance },
+          compileInputs: {
+            preparation: element.preparation,
+            layouts: element.layouts,
+            scopeChain: context.transformChains,
+            childCount: element.childCount,
+            preResolvedClipPath: element.resolvedClipPath,
+          },
+          scopePreparation: element.preparation,
+          outputDiagnostics: element.outputDiagnostics,
+        };
+      } else return;
+      recordComputed(node, metadata, false);
     };
     const contributions = {
       write: (path: PropertyPath, contribution: CompileContribution) => {
@@ -445,7 +441,8 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
       ? executeWeaveUpdate<TComposite>(
           batch.source,
           candidate,
-          cache,
+          node => !batch.forceFull && isPropertyPathEqual(batch.previousNodeIrPaths.get(node) ?? [], paths.get(node)!),
+          recordComputed,
           retained,
           pending,
           root,
@@ -453,7 +450,7 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
           paths,
           batch.addresses.names,
         )
-      : compileScene<TComposite>(batch.source, { ...candidate, stages: { write: cache.write } });
+      : compileScene<TComposite>(batch.source, { ...candidate, onCompiled });
     if (!batch.updating || batch.indexesChanged)
       for (const node of batch.updating ? tracker.requests : nodes.values()) {
         if (node.type === 'scope') tracker.recordScopeLayoutDependencies(node);

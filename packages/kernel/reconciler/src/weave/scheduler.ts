@@ -1,4 +1,4 @@
-import type { AnyCompositeDefinition, IRScene, IRChild } from '@retikz/core';
+import type { AnyCompositeDefinition, IRScene, IRChild, CompileWarning } from '@retikz/core';
 import {
   projectLayoutWithTransform,
   projectScopeCompileLayouts,
@@ -22,6 +22,12 @@ import {
   createTreePositionContext,
   shouldEmitScopeGroup,
   materializeCompileOutput,
+  materializeCompileContribution,
+  captureCompileContribution,
+  assembleCoordinateOutput,
+  assembleNodeOutput,
+  assemblePathOutputs,
+  queuePathChild,
 } from '../compile/execution';
 import type {
   CompileContribution,
@@ -33,11 +39,13 @@ import type { CompileNamespaceKey, CompileOwnerKey } from '../compile/provenance
 import type { CompileRuntime, NamespaceFrameChange, NamespaceEntry } from '../compile/runtime';
 import { NamespaceStack, createExecutionInvariantError } from '../compile/runtime';
 import { importSceneResources, createDuplicateWarning } from '../compile/shared';
-import { createWeaveStageController } from './cache';
-import type { CompileStageCache } from './cache';
+import { executeWeaveCoordinate } from './coordinate';
+import { executeWeaveNode } from './node';
+import { executeWeavePath } from './path';
 import { WeaveTaskQueue } from './schedule';
 import type { WeaveTaskAddress } from './schedule';
-import type { WeaveNode, WeaveRoot, WeaveScopeNode } from './shared';
+import { executeWeaveScope, resolveWeaveScope } from './scope';
+import type { WeaveNode, WeaveRoot, WeaveScopeNode, WeaveCacheMetadata } from './shared';
 import { compareReferenceGeometry, matchWeaveReferences } from './shared';
 import type { WeaveNameIndex } from './state';
 import type { WeaveTransaction } from './state';
@@ -65,13 +73,20 @@ type WeaveElementExecution = {
   /** 只确认准备读取的 Composite 旧结果，输出读取在输出边界核对 */
   retained?: CompileContribution;
   scope?: ScopeExecutionSteps;
+  /** 包络已就绪但尚未与最终输出一起提交的 Scope 结果 */
+  scopeResult?: ReturnType<typeof executeWeaveScope>;
+  /** 后代计算前的确定化与准备诊断 */
+  scopeDiagnostics?: ReadonlyArray<CompileWarning>;
+  /** 当前基础元素输出的来源归属 */
+  semanticOwner?: CompileOwnerKey;
 };
 
 /** 从稳定候选事实按需建立环境，读取点完成生产者，最后只聚合完成的输出 */
 export const executeWeaveUpdate = <TComposite extends AnyCompositeDefinition>(
   source: IRScene,
   runtime: CompileRuntime,
-  cache: CompileStageCache,
+  canReuse: (node: WeaveNode) => boolean,
+  recordComputed: (node: WeaveNode, metadata: WeaveCacheMetadata, reused: boolean) => void,
   retained: ReadonlyMap<string, CompileContribution>,
   pending: Map<string, WeaveUpdateRequest>,
   root: WeaveRoot,
@@ -80,7 +95,6 @@ export const executeWeaveUpdate = <TComposite extends AnyCompositeDefinition>(
   names: WeaveNameIndex,
 ) => {
   const keyOf = (node: WeaveNode) => JSON.stringify(paths.get(node));
-  const controller = createWeaveStageController(cache.read, cache.write);
   const executions = new Map<WeaveNode, WeaveElementExecution>();
   const namespaces = new Map<WeaveRoot | WeaveScopeNode, CompileNamespaceKey>();
   const owners = new Map<WeaveScopeNode, CompileOwnerKey>();
@@ -301,16 +315,8 @@ export const executeWeaveUpdate = <TComposite extends AnyCompositeDefinition>(
         registerClipPath: runtime.state.workspace.clipRegistry.registerPath,
       });
       if (bound.compiled !== compiled || !jsonStructuralEquals(outputDiagnostics, bound.diagnostics)) {
-        cache.write(
-          paths.get(node)!,
-          {
-            ...scope.cache!,
-            phase: 'scope',
-            value: { canon: scope.canon!, compiled: bound.compiled },
-            outputDiagnostics: bound.diagnostics,
-          },
-          bound.compiled === compiled,
-        );
+        transaction.editNode(node).compiled = bound.compiled;
+        recordComputed(node, { ...scope.cache!, outputDiagnostics: bound.diagnostics }, bound.compiled === compiled);
       }
       compiled = bound.compiled;
       outputDiagnostics = bound.diagnostics;
@@ -503,7 +509,6 @@ export const executeWeaveUpdate = <TComposite extends AnyCompositeDefinition>(
     );
     const candidate: CompileRuntime = {
       ...runtime,
-      stages: controller,
       state: { ...runtime.state, execution: { ...runtime.state.execution, namespaceStack: namespace } },
     };
     const executor = new CompileElementExecutor([], candidate, { compileSubtree: assembleCompileSubtree });
@@ -611,8 +616,49 @@ export const executeWeaveUpdate = <TComposite extends AnyCompositeDefinition>(
           steps.paths();
           steps.dispose();
           steps.publish();
+          const result = execution.scopeResult!;
+          const state = transaction.editNode(node);
+          state.canon = result.canon;
+          state.compiled = steps.compiled;
+          recordComputed(node, { ...result.cache, outputDiagnostics: steps.outputDiagnostics }, result.reused);
+        }
+        if (node.type === 'path' && execution.retained === undefined) {
+          const namespace = execution.runtime.state.execution.namespaceStack;
+          namespace.setPhase('resolving');
+          try {
+            const state = transaction.readNode(node);
+            const pendingPath = execution.frame.state.paths[0];
+            execution.runtime.state.execution.withWarningOccurrence(pendingPath.occurrence, () =>
+              namespace.withProducer(node, () => {
+                const result = executeWeavePath(execution.runtime, pendingPath, canReuse(node) ? state : undefined);
+                const target = transaction.editNode(node);
+                target.canon = result.canon;
+                target.compiled = result.compiled;
+                recordComputed(node, result.cache, result.reused);
+                assemblePathOutputs(execution.runtime, execution.executor.output, [pendingPath], [result.compiled]);
+              }),
+            );
+            execution.frame.state.paths.length = 0;
+          } finally {
+            namespace.setPhase('registering');
+          }
         }
         execution.executor.finish(execution.frame.state);
+        if (node.type !== 'scope' && node.type !== 'composite' && execution.retained === undefined) {
+          const metadata = transaction.readNode(node).cache!;
+          execution.runtime.contributions?.write(
+            path,
+            captureCompileContribution(
+              execution.runtime,
+              execution.executor.output,
+              execution.frame.state,
+              execution.bindings,
+              metadata.reads.map(read => ({ ...read, readiness: node.type === 'path' ? 'output' : 'prepare' })),
+              { sourcePath: path, expansionPath: [] },
+              execution.semanticOwner,
+            ),
+          );
+        }
         consume(node);
         return;
       }
@@ -627,8 +673,17 @@ export const executeWeaveUpdate = <TComposite extends AnyCompositeDefinition>(
           if (executions.has(child)) append(steps.childFrame.state, executions.get(child)!, execution.executor.output);
           else appendState(steps.childFrame.state, layoutOf(child));
         }
-        steps.envelope();
-        steps.project();
+        const state = transaction.readNode(node);
+        const result = executeWeaveScope(
+          execution.runtime,
+          state.input.own,
+          execution.frame.context,
+          steps,
+          execution.scopeDiagnostics ?? [],
+          canReuse(node) ? state : undefined,
+        );
+        execution.scopeResult = result;
+        steps.project(result.compiled);
         return;
       }
       ensureDependencies(node);
@@ -648,6 +703,14 @@ export const executeWeaveUpdate = <TComposite extends AnyCompositeDefinition>(
                 : selectCompositeInputScope(frame.context.compositeInput, ['children', index]),
           },
         };
+        const warningCount = runtime.state.workspace.diagnosticCollector.warnings.length;
+        const canon = resolveWeaveScope(
+          execution.runtime,
+          { ...own, children: [] },
+          path,
+          scopeFrame.context,
+          canReuse(node) ? transaction.readNode(node) : undefined,
+        );
         execution.scope = prepareScopeExecution(
           execution.runtime,
           executor.output,
@@ -663,7 +726,11 @@ export const executeWeaveUpdate = <TComposite extends AnyCompositeDefinition>(
           undefined,
           0,
           owner,
+          undefined,
+          undefined,
+          canon,
         );
+        execution.scopeDiagnostics = runtime.state.workspace.diagnosticCollector.warnings.slice(warningCount);
         if (
           !contextMatches(node, false, false) ||
           !compareProperties(node.current?.canon?.inheritance, execution.scope.childFrame.context.inheritance, {
@@ -704,17 +771,96 @@ export const executeWeaveUpdate = <TComposite extends AnyCompositeDefinition>(
             contribution = undefined;
         } else contribution = undefined;
       }
-      execution.bindings = namespace.captureFrameChanges(() =>
-        executor.executeChild(
-          state.input.own as IRChild,
-          index,
-          frame,
-          state.parent.type === 'root',
-          undefined,
-          0,
-          contribution,
-        ),
-      );
+      if (node.type === 'composite') {
+        execution.bindings = namespace.captureFrameChanges(() =>
+          executor.executeChild(
+            state.input.own as IRChild,
+            index,
+            frame,
+            state.parent.type === 'root',
+            undefined,
+            0,
+            contribution,
+          ),
+        );
+      } else {
+        const occurrence = { sourcePath: path, expansionPath: [] };
+        execution.semanticOwner =
+          frame.context.compileOwner === undefined
+            ? undefined
+            : tracker?.createOwner(
+                state.input.own as IRChild,
+                index,
+                frame.context.compileOwner,
+                false,
+                namespace.identity,
+              );
+        execution.bindings = namespace.captureFrameChanges(() =>
+          namespace.withProducer(node, () =>
+            execution.runtime.state.execution.withWarningOccurrence(occurrence, () => {
+              if (contribution !== undefined) {
+                execution.retained = contribution;
+                appendState(
+                  frame.state,
+                  materializeCompileContribution(
+                    execution.runtime,
+                    executor.output,
+                    contribution,
+                    execution.semanticOwner,
+                  ),
+                );
+                return;
+              }
+              if (node.type === 'coordinate') {
+                const own = transaction.readNode(node).input.own;
+                const result = executeWeaveCoordinate(
+                  execution.runtime,
+                  own,
+                  frame.context,
+                  canReuse(node) ? transaction.readNode(node) : undefined,
+                );
+                const target = transaction.editNode(node);
+                target.canon = result.canon;
+                target.compiled = result.compiled;
+                recordComputed(node, result.cache, result.reused);
+                assembleCoordinateOutput(execution.runtime, own, path, frame, result.compiled);
+              } else if (node.type === 'node') {
+                const own = transaction.readNode(node).input.own;
+                const result = executeWeaveNode(
+                  execution.runtime,
+                  own,
+                  path,
+                  frame.context,
+                  canReuse(node) ? transaction.readNode(node) : undefined,
+                );
+                const target = transaction.editNode(node);
+                target.canon = result.canon;
+                target.compiled = result.compiled;
+                recordComputed(node, result.cache, result.reused);
+                assembleNodeOutput(
+                  execution.runtime,
+                  executor.output,
+                  own,
+                  path,
+                  frame,
+                  result.compiled,
+                  execution.semanticOwner,
+                );
+              } else {
+                queuePathChild(
+                  execution.runtime,
+                  executor.output,
+                  transaction.readNode(node).input.own,
+                  index,
+                  frame,
+                  occurrence,
+                  execution.semanticOwner,
+                );
+              }
+            }),
+          ),
+        );
+      }
       execution.bindingsReady = true;
     },
     task => {

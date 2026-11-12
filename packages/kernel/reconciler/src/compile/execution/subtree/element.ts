@@ -9,17 +9,11 @@ import {
   safeErrorMessage,
   selectCompositeInputScope,
 } from '@retikz/core';
-import { isPropertyPathEqual } from '@retikz/foundation';
 
 import type { CompileOwnerKey } from '../../provenance';
 import type { CompileReferenceRead, CompileRuntime } from '../../runtime';
 import { createExecutionInvariantError } from '../../runtime';
-import {
-  createCompileChildPath,
-  enrichLayoutProbeError,
-  orderCompileArtifacts,
-  compileWarningOccurrenceOf,
-} from '../../shared';
+import { createCompileChildPath, enrichLayoutProbeError, orderCompileArtifacts } from '../../shared';
 import { CompositeCompiler } from '../composite';
 import { visitCoordinate, visitNode, queuePathChild, flushPendingPathEmissions } from '../leaf';
 import { visitScope } from '../scope';
@@ -33,7 +27,7 @@ import type {
   SubtreeCompilation,
   SubtreeOutputContribution,
 } from './compile';
-import { collectContributionResources, materializeCompileContribution } from './contribution';
+import { captureCompileContribution, materializeCompileContribution } from './contribution';
 import type { CompileContribution } from './contribution';
 
 /** 共享元素执行、贡献捕获与输出工作区；计算顺序由所属驱动选择 */
@@ -249,35 +243,20 @@ export class CompileElementExecutor {
             for (const pendingPath of state.paths)
               pendingPath.observeRead = (name, entry, kind) => reads.push({ name, entry, kind, readiness: 'output' });
             const captured = state;
-            this.finalizers.push(() => {
-              const primitives = captured.primitives as Array<ScenePrimitive>;
-              const workspace = this.runtime.state.workspace;
-              contributions.write(path, {
-                output: {
-                  primitives,
-                  geometries: captured.geometries,
-                  publications: captured.publications,
-                  bounds: captured.bounds,
-                  allocations: captured.allocations,
-                  alignmentGuides: captured.alignmentGuides,
-                  artifacts: captured.artifacts,
-                },
-                zIndices: primitives.map(primitive => this.output.zIndexOf.get(primitive)),
-                bindings,
-                reads,
-                resources: collectContributionResources(primitives, [
-                  ...workspace.paintRegistry.getResources(),
-                  ...workspace.clipRegistry.getResources(),
-                ]),
-                diagnostics: workspace.diagnosticCollector.warnings.filter(warning =>
-                  isPropertyPathEqual(compileWarningOccurrenceOf(warning).sourcePath, occurrence.sourcePath),
+            this.finalizers.push(() =>
+              contributions.write(
+                path,
+                captureCompileContribution(
+                  this.runtime,
+                  this.output,
+                  captured,
+                  bindings,
+                  reads,
+                  occurrence,
+                  semanticOwner,
                 ),
-                provenance:
-                  semanticOwner === undefined
-                    ? undefined
-                    : this.runtime.state.execution.provenanceTracker?.captureContribution(primitives, semanticOwner),
-              });
-            });
+              ),
+            );
           }
           for (const pendingPath of state.paths) {
             pendingPath.mirror = { primitives: state.primitives, bounds: state.bounds, allocations: state.allocations };
@@ -325,7 +304,7 @@ export class CompileElementExecutor {
       this.getCompositeCompiler().compile(child, index, frame, occurrence, compositeDepth, semanticOwner);
       return;
     }
-    const elementRuntime = generated ? { ...this.runtime, stages: undefined } : this.runtime;
+    const elementRuntime = generated ? { ...this.runtime, onCompiled: undefined } : this.runtime;
     switch (child.type) {
       case 'node':
         visitNode(elementRuntime, this.output, child, index, frame, occurrence, semanticOwner);
@@ -400,7 +379,7 @@ export class CompileElementExecutor {
         compileChild: (...args) => this.compileChild(...args),
         compileScopeChild: (...args) =>
           visitScope(
-            { ...this.runtime, stages: undefined },
+            { ...this.runtime, onCompiled: undefined },
             this.output,
             { compileChildren: this.compileChildren.bind(this) },
             this.options,

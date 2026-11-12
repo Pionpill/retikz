@@ -1,7 +1,8 @@
 import { resolveCoordinate, compileCoordinate } from '@retikz/core';
-import type { IRCoordinate } from '@retikz/core';
+import type { IRCoordinate, CompiledCoordinate } from '@retikz/core';
+import type { PropertyPath } from '@retikz/foundation';
 
-import { runCompileStage } from '../../runtime';
+import { createCompileObservation } from '../../runtime';
 import type { CompileRuntime } from '../../runtime';
 import { createCompileChildPath } from '../../shared';
 import { createTreePositionContext } from '../shared';
@@ -14,26 +15,32 @@ export const visitCoordinate = (
   index: number,
   frame: SubtreeCompileRuntime,
 ): void => {
+  const path = createCompileChildPath(frame.context.pathPrefix, index);
+  const observation = runtime.onCompiled === undefined ? undefined : createCompileObservation(runtime);
+  const canon = resolveCoordinate(child, runtime.context.layout);
+  const context = createTreePositionContext(runtime, frame.context.transformChains);
+  const compiled =
+    observation === undefined
+      ? compileCoordinate(canon, context)
+      : runtime.state.execution.namespaceStack.observeReferences(observation.read, () =>
+          compileCoordinate(canon, context),
+        );
+  runtime.onCompiled?.(path, frame.context, { kind: 'coordinate', canon, compiled }, observation!.facts());
+  assembleCoordinateOutput(runtime, child, path, frame, compiled);
+};
+
+/** 发布已完成的坐标，不重新计算 */
+export const assembleCoordinateOutput = (
+  runtime: CompileRuntime,
+  child: IRCoordinate,
+  coordinateIrPath: PropertyPath,
+  frame: SubtreeCompileRuntime,
+  compiled: CompiledCoordinate,
+): void => {
   const {
-    context: { transformChains: scopeChain, pathPrefix: locatorPrefix, layout },
+    context: { transformChains: scopeChain, layout },
     state: { geometries: layouts, publications, allocations },
   } = frame;
-  const coordinateIrPath = createCompileChildPath(locatorPrefix, index);
-  const { compiled } = runCompileStage(
-    runtime,
-    coordinateIrPath,
-    'coordinate',
-    { child, scopeChain },
-    {
-      resolveInputs: { child, nodeDistance: runtime.context.layout.nodeDistance },
-      compileInputs: { scopeChain },
-      resolve: stageRuntime => resolveCoordinate(child, stageRuntime.context.layout),
-      compile: (stageRuntime, canon) => ({
-        canon,
-        compiled: compileCoordinate(canon, createTreePositionContext(stageRuntime, scopeChain)),
-      }),
-    },
-  );
   const localCenter = compiled.position;
 
   const globalCenter =

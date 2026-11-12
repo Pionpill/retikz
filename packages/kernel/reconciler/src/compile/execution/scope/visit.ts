@@ -1,4 +1,11 @@
-import type { CompiledScope, CompileOccurrenceLocator, IRScope, SceneClipPath, Transform } from '@retikz/core';
+import type {
+  CompiledScope,
+  CanonicalScope,
+  CompileOccurrenceLocator,
+  IRScope,
+  SceneClipPath,
+  Transform,
+} from '@retikz/core';
 import {
   compileScope,
   prepareScopePlacement,
@@ -11,8 +18,8 @@ import {
 import { formatPropertyPath } from '@retikz/foundation';
 
 import type { CompileOwnerKey } from '../../provenance';
-import { runCompileStage, readCompileStageCanon } from '../../runtime';
-import type { CompileRuntime, CompileReferenceRead, CompileStageRecord, CompileStageProducts } from '../../runtime';
+import { createCompileObservation } from '../../runtime';
+import type { CompileRuntime, CompileReferenceRead, CompileObservationFacts } from '../../runtime';
 import { createCompileChildPath, formatCompileOccurrence } from '../../shared';
 import { flushPendingPathEmissions } from '../leaf';
 import { createTreePositionContext, resolveStructuralAlignmentGuides, transformAlignmentGuides } from '../shared';
@@ -73,6 +80,7 @@ export const prepareScopeExecution = (
     preliminaryTransforms: ReadonlyArray<Transform> | undefined,
   ) => void,
   preResolvedClipPath?: SceneClipPath,
+  resolvedScope?: CanonicalScope,
 ): ScopeExecutionSteps => {
   const {
     context: {
@@ -89,10 +97,9 @@ export const prepareScopeExecution = (
     generatedOccurrence === undefined
       ? formatPropertyPath([...createCompileChildPath(locatorPrefix, index), 'theme'])
       : `${formatCompileOccurrence(generatedOccurrence)}.scope.theme`;
-  const resolveInputs = { child: { ...child, children: undefined }, inheritedStyle };
   const warningCount = runtime.state.workspace.diagnosticCollector.warnings.length;
   const canon =
-    readCompileStageCanon(runtime, createCompileChildPath(locatorPrefix, index), 'scope', resolveInputs) ??
+    resolvedScope ??
     resolveScope(child, {
       nodeDistance: runtime.context.layout.nodeDistance,
       parent: inheritedStyle,
@@ -140,20 +147,7 @@ export const prepareScopeExecution = (
   };
   let scopeTransforms: Array<Transform> = [];
   let compiledScope: CompiledScope;
-  // Scope 必须等延迟路径裁空后才能完成动画与诊断；缓存只发布完整产物
-  let pendingRecord: { record: CompileStageRecord; reused: boolean } | undefined;
-  const scopeRuntime: CompileRuntime = {
-    ...runtime,
-    stages:
-      runtime.stages === undefined
-        ? undefined
-        : {
-            ...runtime.stages,
-            write: (_path, record, reused) => {
-              pendingRecord = { record, reused };
-            },
-          },
-  };
+  let outputDiagnostics: ScopeExecutionSteps['outputDiagnostics'] = [];
 
   const children = () => {
     const scopeFrame: SubtreeCompileRuntime = {
@@ -175,58 +169,22 @@ export const prepareScopeExecution = (
     }
   };
 
-  let geometry: CompileStageProducts['scope'];
-  const envelope = () => {
-    geometry = runCompileStage(
-      scopeRuntime,
-      scopeGeometryContext.irPath,
-      'scope',
-      {
-        child: { ...child, children: undefined },
-        preparation,
-        layouts: state.geometries,
-        scopeChain: transformChains,
-      },
-      {
-        resolveInputs,
-        preparedReads,
-        preparedDiagnostics,
-        scopePreparation: preparation,
-        compileInputs: {
-          preparation,
-          layouts: state.geometries,
-          scopeChain: transformChains,
-          childCount: state.primitives.length,
-          preResolvedClipPath,
-        },
-        resolve: () => canon,
-        compile: (stageRuntime, resolved) => ({
-          canon: resolved,
-          compiled: compileScope(
-            resolved,
-            {
-              ...scopeGeometryContext,
-              layouts: state.geometries,
-              resolvedClipPath: preResolvedClipPath,
-              registerClip: stageRuntime.state.workspace.clipRegistry.register,
-              registerClipPath: stageRuntime.state.workspace.clipRegistry.registerPath,
-              onWarn: stageRuntime.state.workspace.diagnosticCollector.collect,
-            },
-            { layout: { preparation } },
-          ),
-        }),
-      },
-    );
+  const compileContext = {
+    ...scopeGeometryContext,
+    layouts: state.geometries,
+    resolvedClipPath: preResolvedClipPath,
+    registerClip: runtime.state.workspace.clipRegistry.register,
+    registerClipPath: runtime.state.workspace.clipRegistry.registerPath,
   };
 
-  const project = () => {
+  const project = (compiled: CompiledScope) => {
     const intrinsicLayout = {
-      shape: geometry.compiled.shape,
-      boundary: geometry.compiled.boundary,
-      geometry: geometry.compiled.layout.overall.geometry,
+      shape: compiled.shape,
+      boundary: compiled.boundary,
+      geometry: compiled.layout.overall.geometry,
     };
-    compiledScope = geometry.compiled;
-    scopeTransforms = geometry.compiled.layout.overall.transforms;
+    compiledScope = compiled;
+    scopeTransforms = compiled.layout.overall.transforms;
 
     const postTransforms =
       preliminaryTransforms === undefined
@@ -318,18 +276,7 @@ export const prepareScopeExecution = (
     });
     compiledScope = bound.compiled;
     for (const warning of bound.diagnostics) runtime.state.workspace.diagnosticCollector.collect(warning);
-    if (pendingRecord?.record.phase === 'scope') {
-      const { record, reused } = pendingRecord;
-      runtime.stages?.write(
-        scopeGeometryContext.irPath,
-        {
-          ...record,
-          value: { canon, compiled: compiledScope },
-          outputDiagnostics: bound.diagnostics,
-        },
-        reused,
-      );
-    }
+    outputDiagnostics = bound.diagnostics;
     const clipRef = emitScopeGroup(runtime, output, compiledScope, {
       scopePrimitives: state.primitives,
       frame,
@@ -347,7 +294,6 @@ export const prepareScopeExecution = (
 
   return {
     children,
-    envelope,
     project,
     paths,
     publish,
@@ -370,19 +316,63 @@ export const prepareScopeExecution = (
       return compiledScope;
     },
     preparation,
+    canon,
+    preparedReads,
+    preparedDiagnostics,
+    compileContext,
+    get outputDiagnostics() {
+      return outputDiagnostics;
+    },
   };
 };
 
 /** 完整构建按语义顺序执行 Scope，增量更新将实际阶段操作交给驱动 */
 export const visitScope = (...args: Parameters<typeof prepareScopeExecution>): void => {
+  const [runtime, , , , , index, frame] = args;
   const steps = prepareScopeExecution(...args);
+  let facts: CompileObservationFacts | undefined;
+  let childCount = 0;
   try {
     steps.children();
-    steps.envelope();
-    steps.project();
+    childCount = steps.childFrame.state.primitives.length;
+    const observation = runtime.onCompiled === undefined ? undefined : createCompileObservation(runtime);
+    const local = observation?.runtime ?? runtime;
+    const context = {
+      ...steps.compileContext,
+      registerClip: local.state.workspace.clipRegistry.register,
+      registerClipPath: local.state.workspace.clipRegistry.registerPath,
+      onWarn: local.state.workspace.diagnosticCollector.collect,
+    };
+    const compile = () => compileScope(steps.canon, context, { layout: { preparation: steps.preparation } });
+    const compiled =
+      observation === undefined
+        ? compile()
+        : runtime.state.execution.namespaceStack.observeReferences(observation.read, compile);
+    facts = observation?.facts();
+    steps.project(compiled);
     steps.paths();
   } finally {
     steps.dispose();
   }
   steps.publish();
+  if (facts !== undefined)
+    runtime.onCompiled?.(
+      createCompileChildPath(frame.context.pathPrefix, index),
+      frame.context,
+      {
+        kind: 'scope',
+        canon: steps.canon,
+        compiled: steps.compiled,
+        preparation: steps.preparation,
+        layouts: steps.compileContext.layouts,
+        childCount,
+        resolvedClipPath: steps.compileContext.resolvedClipPath,
+        outputDiagnostics: steps.outputDiagnostics,
+      },
+      {
+        ...facts,
+        reads: [...steps.preparedReads, ...facts.reads],
+        diagnostics: [...steps.preparedDiagnostics, ...facts.diagnostics],
+      },
+    );
 };
