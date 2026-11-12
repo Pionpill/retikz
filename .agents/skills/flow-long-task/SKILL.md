@@ -1,15 +1,15 @@
 ---
 name: flow-long-task
-description: Use when an approved large Retikz task needs durable execution state and recovery across long-running phases or context compaction.
+description: Use when an approved large Retikz task or explicitly authorized automatic performance optimization needs durable execution state and recovery across phases or context compaction.
 ---
 
 # 长任务状态与恢复
 
-只用于已判为大型且执行计划获批的任务；多文件、多步骤或多个 commit 本身不构成触发理由。规模、授权与 Git 边界以根 AGENTS 为准，阶段流程读 flow-development；本入口只负责执行状态。
+用于执行计划获批的大型任务，或按 [test-performance](../test-performance/SKILL.md) 明确获准的自动性能优化；后者不因此升级任务规模或获得多 agent / Git 授权。多文件、多步骤或多个 commit 本身不构成触发理由。规模、授权与 Git 边界以根 AGENTS 为准，开发阶段流程读 flow-development；本入口只负责执行状态。
 
 ## 状态
 
-Alpha 使用 ADR 对应的 ignored 镜像 plan 目录，其他大型任务使用 notes/plans/<task>/ 或就近 _notes/plans/。维护 TASK_STATE.md，记录：
+Alpha 使用 ADR 对应的 ignored 镜像 plan 目录，其他长任务使用 notes/plans/<task>/ 或就近 _notes/plans/。维护 TASK_STATE.md，记录：
 
 - 目标/非目标、source docs、获批范围与操作权限。
 - 当前阶段、任务依赖、文件所有权、已完成与下一步。

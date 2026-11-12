@@ -7,7 +7,8 @@ import { NodeSchema } from '../node/node';
 import { ArrowDetailSchema } from '../path/arrow';
 import { PathLabelSchema } from '../path/label';
 import { PathSchema, PathGeometrySchema, PathTransformSchema } from '../path/path';
-import { CssColorSchema, CascadingGraphicStyleSchema } from '../style/graphic';
+import { CssColorSchema } from '../style/color';
+import { CascadingGraphicStyleSchema } from '../style/graphic';
 
 const ScopeStyleChannel = {
   /** node 默认样式通道 */

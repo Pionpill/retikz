@@ -21,12 +21,12 @@ export const resolveCoreBudget = (scenario: BenchmarkScenario): BenchmarkBudget 
   let policy: CoreBudgetPolicy;
   if (layer === 'compile' && family === 'resource') {
     const count = Number(scale);
-    if (![10, 100, 1000].includes(count)) throw new Error(`Missing Core resource scale budget: ${identity}`);
+    if (![16, 64, 256].includes(count)) throw new Error(`Missing Core resource scale budget: ${identity}`);
     policy = {
-      warningMs: count === 10 ? 1 : count === 100 ? 4 : 8,
-      errorMs: count === 10 ? 4 : count === 100 ? 8 : 16.6,
+      warningMs: count === 16 ? 1 : count === 64 ? 2 : 4,
+      errorMs: count === 16 ? 2 : count === 64 ? 4 : 8,
       rationale:
-        '一次工作区或结果组装中的完整注册表生命周期，包含创建及N次登记/导入；假设10次为局部编辑（1/4ms），100次为普通更新（4/8ms），1000次为大批资源处理（8/16.6ms）。该阶段接近一帧即有同步阻塞风险，复杂Pattern不放宽预算；不含输入解析和renderer，不代表整帧保证或稳定回归上限',
+        '一次工作区或结果组装中的完整注册表生命周期，包含创建及N次登记/导入；用户指定16/64/256档、256为本测试上限，非产品硬限制。按消费预算假设为16次局部使用分配1/2ms、64次较多资源分配2/4ms、256次上限分配4/8ms（警告/错误）；上限错误预算不超过约半个60Hz帧，为其它编译与渲染阶段留出时间。重复登记只有1个资源，不同内容或导入有N个资源；复杂Pattern不放宽预算，不含输入解析和renderer，不代表实际资源分布、整帧保证或稳定回归上限',
     };
   } else if (layer === 'compile' && family === 'path') {
     const count = Number(scale);
@@ -536,7 +536,7 @@ export const resolveCoreBudget = (scenario: BenchmarkScenario): BenchmarkBudget 
             'compile/node/compile、synthetic 逐节点解析；假设100个节点编辑更新，解析阶段约5/20ms，单节点50/200μs。含16标签的节点仍保持同一交互目标，不含字体测量和布局',
         };
         break;
-      case 'text': {
+      case 'text-block': {
         const count = Number(identity.split('/').at(-1));
         const large = variant === 'plain' ? count > 1_024 : count > 128;
         policy = large
@@ -544,13 +544,13 @@ export const resolveCoreBudget = (scenario: BenchmarkScenario): BenchmarkBudget 
               warningMs: 0.5,
               errorMs: 2,
               rationale:
-                'compile/node/content/layout、node/label/layout、path/host/label 共用行解析；假设单个长行编辑（16384字符或2048混排片段），给分段及字体确定化0.5/2ms，字体测量和TeX排版另计',
+                'compile/node/content/layout、node/label/layout、path/host/label 共用文本块解析；假设单个长行块编辑（16384字符或2048混排片段），给块配置、分段及字体确定化0.5/2ms，字体测量和TeX排版另计',
             }
           : {
               warningMs: 0.05,
               errorMs: 0.2,
               rationale:
-                'compile 的节点正文与标签逐行消费；假设100行可见内容更新，单行分段与字体解析50/200μs，阶段约5/20ms。普通行最多1024字符或256片段；公式开关不放宽预算',
+                'compile 的节点正文与标签消费文本块；假设100个单行块更新，每块配置、分段与字体解析50/200μs，阶段约5/20ms。普通块最多1024字符或256片段；公式开关不放宽预算',
             };
         break;
       }

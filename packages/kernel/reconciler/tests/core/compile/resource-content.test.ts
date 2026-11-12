@@ -2,13 +2,173 @@ import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
 import { defineMark, definePath, definePattern, PathSchema, visitSceneContent } from '../../../../core/src';
-import type { TextPrimitive, Scene, GroupPrimitive, ScenePrimitive, IRScene } from '../../../../core/src';
+import type {
+  TextPrimitive,
+  Scene,
+  GroupPrimitive,
+  ScenePrimitive,
+  IRScene,
+  PatternResource,
+  PathPrimitive,
+} from '../../../../core/src';
 import { createClipRegistry, createPaintRegistry } from '../../../../core/src/compile/resource';
+import { formatResourceId, serializeResourceContent } from '../../../../core/src/compile/resource/identity';
 import { BUILTIN_SHAPES } from '../../../../core/src/providers/shape/shape';
 import { importSceneResources } from '../../../src/compile/shared';
 import { compileTestResult } from '../../helpers/compilation';
 
 describe('资源内容复用基础图元', () => {
+  it('Pattern 路径的稀疏描边、转义文本与附加字段保持完整摘要内容', () => {
+    const paths: Array<PathPrimitive> = [
+      {
+        type: 'path',
+        commands: [
+          { kind: 'move', to: [0, 0] },
+          { kind: 'line', to: [2, 3] },
+        ],
+      },
+      {
+        type: 'path',
+        commands: [
+          { kind: 'move', to: [0, 0] },
+          { kind: 'line', to: [2, 3] },
+        ],
+        stroke: 'var(--颜色-"\\)',
+        strokeWidth: -0,
+      },
+      {
+        type: 'path',
+        commands: [
+          { kind: 'move', to: [0, 0] },
+          { kind: 'line', to: [2, 3] },
+        ],
+        stroke: '#123456',
+        strokeWidth: 1,
+        opacity: 0.5,
+        dashPattern: [1, 2],
+        meta: { nested: { z: 1, a: '保留' } },
+      },
+    ];
+    for (const path of paths) {
+      const pattern = definePattern({ name: 'path-content', emit: () => [path] });
+      const result = compileTestResult(
+        {
+          type: 'scene',
+          version: 1,
+          children: [
+            { type: 'node', position: [0, 0], style: { fill: { kind: 'pattern', shape: 'path-content', size: 8 } } },
+          ],
+        },
+        { patterns: [pattern] },
+      );
+      const resource = result.scene.resources?.[0];
+      if (resource?.kind !== 'paint' || !('tile' in resource)) throw new Error('Expected pattern resource');
+      expect(resource.tile.motif).toEqual([path]);
+      expect(resource.id).toBe(
+        formatResourceId(
+          'paint',
+          serializeResourceContent({
+            spec: resource.spec,
+            tile: {
+              size: 8,
+              motif: [
+                {
+                  ...path,
+                  commands: [
+                    ['m', 0, 0],
+                    ['l', 2, 3],
+                  ],
+                },
+              ],
+            },
+          }),
+        ),
+      );
+    }
+  });
+
+  it('Pattern 线型覆盖与周期保持内容身份，声明字段顺序不影响复用', () => {
+    const spec: PatternResource['spec'] = {
+      verticalStyle: { lineWidth: 2, color: '#abcdef' },
+      size: 16,
+      shape: 'identity-pattern',
+      rotation: -0,
+      lineWidth: 1,
+      lineStyleCycle: { period: 2, overrides: [{ style: { dotted: false, dashPattern: [1, 2] }, index: 1 }] },
+      lineJoin: 'round',
+      lineCap: 'square',
+      kind: 'pattern',
+      horizontalStyle: {
+        lineWidth: 3,
+        lineJoin: 'bevel',
+        lineCap: 'butt',
+        dotted: true,
+        dashed: false,
+        dashPattern: [2, 1],
+        dashOffset: -0,
+        color: '#123456',
+      },
+      dotted: false,
+      dashed: true,
+      dashPattern: [3, 2],
+      dashOffset: 0,
+      color: '#123456',
+      background: '#ffffff',
+    };
+    const pattern = definePattern({
+      name: spec.shape,
+      emit: () => [
+        { type: 'rect', x: 0, y: 0, width: 2, height: 3, fill: '#123456' },
+        {
+          type: 'path',
+          strokeWidth: 2,
+          stroke: '#123456',
+          commands: [
+            { kind: 'move', to: [-0, 1e-7] },
+            { kind: 'quad', control: [1, 2], to: [3, 4] },
+          ],
+        },
+      ],
+    });
+    const { kind, shape, ...parameters } = spec;
+    const compiled = compileTestResult(
+      {
+        type: 'scene',
+        version: 1,
+        children: [spec, { kind, shape, ...parameters }].map(fill => ({
+          type: 'node',
+          position: [0, 0],
+          style: { fill },
+        })),
+      },
+      { patterns: [pattern] },
+    ).scene;
+    expect(compiled.resources).toHaveLength(1);
+    const resource = compiled.resources?.[0];
+    if (resource?.kind !== 'paint' || !('tile' in resource)) throw new Error('Expected pattern resource');
+    expect(resource.spec).toEqual(spec);
+    const content = {
+      spec,
+      tile: {
+        ...resource.tile,
+        motif: [
+          resource.tile.motif[0],
+          {
+            type: 'path',
+            strokeWidth: 2,
+            stroke: '#123456',
+            commands: [
+              ['m', 0, 1e-7],
+              ['q', 1, 2, 3, 4],
+            ],
+          },
+        ],
+      },
+    };
+    expect(resource.id).toBe(formatResourceId('paint', serializeResourceContent(content)));
+    expect(resource.tile).toMatchObject({ size: 16, rotation: -0, background: '#ffffff' });
+  });
+
   it('自定义 Pattern 保留已度量文本和基础图元样式', () => {
     const text: TextPrimitive = {
       type: 'text',

@@ -9,7 +9,8 @@ import type { ValueOf } from '@retikz/foundation';
 import { strictObject, literal, union, number } from 'zod';
 import type { infer as ZodInfer } from 'zod';
 
-import { GraphicStrokeSchema, ContextualColorSchema, PaintValueSchema, OpacitySchema } from '../style/graphic';
+import { OpacitySchema } from '../style/color';
+import { GraphicStrokeSchema, ContextualColorSchema, PaintValueSchema } from '../style/graphic';
 import { PathPositionGeometrySchema, PathPositionModeSchema } from './position';
 
 /** 内置普通标记形状名称 */

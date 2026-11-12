@@ -62,7 +62,7 @@ for (const kind of ['simple', 'inherited', 'contrast', 'pattern', 'labels'] as c
           if (kind === 'labels') {
             expect(result.labels).toHaveLength(16);
             expect(result.labels.at(-1)).toMatchObject({
-              text: [{ plainText: 'L15' }],
+              text: { lines: [{ plainText: 'L15' }] },
               position: 'top',
               distance: 12,
             });
