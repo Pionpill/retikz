@@ -32,7 +32,7 @@ retikz 是受 LaTeX TikZ 启发的 TypeScript 绘图库：用组件或 JSON IR �
 - 查找 ADR 先用 `pnpm adr:search <关键词> --owner <owner>` 检索摘要，可加 `--version v0.x`；未命中时换词、扩大范围或加 `--body` 补查。再阅读全文命中 ADR 并追踪前置 / 替代关系，不默认全量读取；检索规范见 `develop-design`，发布全文审计不因此省略。
 - 新增、移动、拆分或审查 `packages/**` 的目录、文件、导出类型、函数、枚举、registry 或组件命名时，先读 `.agents/skills/standard-name/SKILL.md`。改文件分层、依赖方向、shared / schemas / contract / providers / resolve / Vanilla normalize / pipeline / compile、define-registry 能力，或进行 Tier 2 composite 设计 / review 前，先读 `.agents/skills/standard-structure/SKILL.md`，再按实际层级读取其 references；命名仍以 standard-name 为准。
 - 写 `apps/docs` 正文、demo、导航、i18n、schema registry 前，先读 `docs-doc-principle`；再按页型选择主写作 skill，共享组件、controls、测量、插图与导航规则只按触发条件加载 references，不全量读取。
-- 只有大型任务在执行计划获用户确认后才读 `flow-long-task`；主模型为 Astra / Sol 且计划已授权多 agent 协作时再读 `codex-develop-flow`，最后分流到具体 flow / develop skill。中型任务不读 `flow-long-task`；只有包含可分离功能实现且计划明确授权模型角色分工时可单独读 `codex-develop-flow`。中小型任务不因多文件、多步骤或可能多 commit 自动升级。
+- 大型任务在执行计划获用户确认后读 `flow-long-task`；性能测试明确获准结果后自动优化时，也按 `test-performance` 使用其状态管理，不因此升级任务规模。其余中小型任务不读 `flow-long-task`。主模型为 Astra / Sol 且计划已授权多 agent 协作时再读 `codex-develop-flow`；中型仅在包含可分离功能实现且计划明确授权模型角色分工时可用。中小型任务不因多文件、多步骤或可能多 commit 自动升级。
 - Alpha / Beta / RC 按 `flow-development` 选择阶段 reference；主题按 `theme-contract` 选择风格 reference。发包、跨模型评审、文档外站转换按对应 skill 执行，不把步骤复制进 AGENTS。
 - ADR 按 owner / 大版本 / 中版本归档，文件用三位编号 `001-xxx.md`，不设 alpha / beta / rc 子目录；roadmap 只保留版本重点功能、目标与必要边界 / 依赖，ADR 仅用编号链接，细则见 `develop-design`。ADR `Accepted` 表示设计获批，不代表实现或发布完成。
 - 所有发布组发包前都必须按 `package-publish` 从实际交付改动及依赖识别相关 ADR，逐篇阅读全文审计长期一致性、状态与当前公开契约；未纳入本次交付且不影响发布快照的未完成能力不阻塞发布、不因 alpha 递增迁移。ADR 不得残留文件 scope、私有实现、测试 case / 路径 / 命令、commit 切分或 review 记录。不得以状态字段、roadmap 勾选或 commit message 代替内容检查。
