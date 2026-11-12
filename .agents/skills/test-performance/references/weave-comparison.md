@@ -2,6 +2,8 @@
 
 ## 触发与产物
 
+全流程遵循 [主 skill 的 Worktree 隔离与合回规则](../SKILL.md#worktree-隔离与合回)：在任务专用隔离 worktree 中处理，交付结果后等待用户确认完成，再合回有效改动、保存报告并清理 worktree；仅报告的任务也不在原工作区运行。
+
 仅在用户主动要求比较 Weave 编译性能、生成临时对比报告时执行。目标是评估 Kernel 元素首次编译成本与更新复用收益；暂不生成正式性能单测或 `*.bench.ts`，不新增 package scripts、CI、预算、基线或集成性能应用。
 
 脚本、原始 JSON、报告生成器、中文 Markdown 报告及必要的临时配置，放入已有 gitignore 覆盖的新目录，例如 `notes/reports/<task>/`。先用 `git check-ignore` 确认，不 stage / commit。优先复用现有采样与统计工具；不为一次实验扩展公共测试框架。
