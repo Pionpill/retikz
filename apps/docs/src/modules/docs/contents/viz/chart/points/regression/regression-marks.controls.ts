@@ -41,9 +41,10 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
               options: [
                 { value: 'linear', label: text.method_linear },
                 { value: 'quadratic', label: text.method_quadratic },
+                { value: 'auto', label: text.method_auto },
               ],
             },
-            { kind: 'range', id: 'strokeWidth', label: text.strokeWidth, defaultValue: 3, min: 0.5, max: 5, step: 0.5 },
+            { kind: 'range', id: 'strokeWidth', label: text.strokeWidth, defaultValue: 2, min: 0.5, max: 5, step: 0.5 },
             {
               kind: 'range',
               id: 'size',
@@ -72,7 +73,7 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
       showPoints: false,
       coordinateSystem: 'cartesian2D',
       method: 'quadratic',
-      strokeWidth: 3,
+      strokeWidth: 2,
       size: 4,
       opacity: 0.45,
     } as const,

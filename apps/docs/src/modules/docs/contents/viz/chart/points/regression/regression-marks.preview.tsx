@@ -9,7 +9,7 @@ export type RegressionMarksPreviewValues = {
   coordinateSystem: 'cartesian2D' | 'polar2D';
   size: number;
   opacity: number;
-  method: 'linear' | 'quadratic';
+  method: 'linear' | 'quadratic' | 'auto';
   strokeWidth: number;
 };
 
