@@ -20,6 +20,40 @@ const referenceId = (content: string): string => {
 };
 
 describe('资源内容身份', () => {
+  it('Clip 全部路径命令保持规范内容身份，字段顺序不影响去重', () => {
+    const path: SceneClipPath = {
+      fillRule: 'evenodd',
+      commands: [
+        { to: [-0, 1e-7], kind: 'move' },
+        { to: [1e21, -2.5], kind: 'line' },
+        { to: [2, 3], kind: 'quad', control: [4, 5] },
+        { to: [6, 7], kind: 'cubic', control2: [8, 9], control1: [10, 11] },
+        { startAngle: -90, radius: 2, kind: 'arc', endAngle: 180, counterClockwise: false, center: [12, 13] },
+        { startAngle: 0, radius: 3, kind: 'arc', endAngle: 90, counterClockwise: undefined, center: [14, 15] },
+        {
+          startAngle: 30,
+          rotation: -45,
+          radiusY: 4,
+          radiusX: 5,
+          kind: 'ellipseArc',
+          endAngle: 270,
+          counterClockwise: true,
+          center: [16, 17],
+        },
+        { startAngle: 0, radiusY: 6, radiusX: 7, kind: 'ellipseArc', endAngle: 90, center: [18, 19] },
+        { kind: 'close' },
+      ],
+    };
+    const registry = createClipRegistry(value => value);
+    const content = serializeResourceContent(path);
+    expect(registry.registerPath(path)).toBe(referenceId(content));
+    expect(registry.registerPath({ commands: path.commands, fillRule: path.fillRule })).toBe(referenceId(content));
+    expect(registry.getResources()).toHaveLength(1);
+    expect(registry.getResources()[0].path).toBe(path);
+    const changed: SceneClipPath = { ...path, commands: [...path.commands, { kind: 'move', to: [1, 2] }] };
+    expect(registry.registerPath(changed)).not.toBe(referenceId(content));
+  });
+
   it('冲突比较保持 JSON 对负零、可选字段和数组顺序的语义', () => {
     const resource: ClipResource = {
       kind: 'clip',

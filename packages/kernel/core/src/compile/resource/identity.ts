@@ -25,6 +25,7 @@ export const serializeResourceContent = (value: unknown): string =>
     }
     return sorted;
   });
+
 /** 对规范内容的 UTF-16LE 字节计算 FNV-1a 128 位摘要，生成与注册顺序无关的资源 ID */
 export const formatResourceId = (kind: SceneResource['kind'], content: string): string => {
   // ⚡用八个16位字保持128位状态，乘积小于2^26，以位运算传播进位，避免逐字节浮点除法
