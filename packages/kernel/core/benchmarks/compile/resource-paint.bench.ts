@@ -13,7 +13,7 @@ const modeLabels = {
   import: '导入不同资源',
 };
 
-for (const count of [10, 100, 1000]) {
+for (const count of [16, 64, 256]) {
   for (const pattern of [false, true]) {
     for (const mode of modes) {
       defineBenchmark(
@@ -22,7 +22,7 @@ for (const count of [10, 100, 1000]) {
           dimensions: [
             'Paint 注册表完整生命周期',
             `${pattern ? '8图元Pattern' : '2色渐变'} · ${modeLabels[mode]}`,
-            `${count}次登记`,
+            `${count}次登记 · ${mode === 'unique' || mode === 'import' ? count : 1}个资源`,
           ],
         },
         () => {
