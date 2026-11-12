@@ -27,28 +27,41 @@ export const serializeResourceContent = (value: unknown): string =>
   });
 /** 对规范内容的 UTF-16LE 字节计算 FNV-1a 128 位摘要，生成与注册顺序无关的资源 ID */
 export const formatResourceId = (kind: SceneResource['kind'], content: string): string => {
-  // 四个小端 32 位字保存状态；素数为 2^88 + 315，乘积与进位均处于精确整数范围
-  let low = 0x6295c58d;
-  let middleLow = 0x62b82175;
-  let middleHigh = 0x07bb0142;
-  let high = 0x6c62272e;
+  // ⚡用八个16位字保持128位状态，乘积小于2^26，以位运算传播进位，避免逐字节浮点除法
+  let word0 = 0xc58d;
+  let word1 = 0x6295;
+  let word2 = 0x2175;
+  let word3 = 0x62b8;
+  let word4 = 0x0142;
+  let word5 = 0x07bb;
+  let word6 = 0x272e;
+  let word7 = 0x6c62;
   for (let index = 0; index < content.length; index++) {
     const code = content.charCodeAt(index);
     for (let shift = 0; shift <= 8; shift += 8) {
-      const mixed = (low ^ ((code >>> shift) & 255)) >>> 0;
-      const productLow = mixed * 315;
-      const productMiddleLow = middleLow * 315 + Math.floor(productLow / 0x100000000);
-      const productMiddleHigh =
-        middleHigh * 315 + Math.floor(productMiddleLow / 0x100000000) + (mixed & 255) * 0x1000000;
-      high =
-        (high * 315 + Math.floor(productMiddleHigh / 0x100000000) + (mixed >>> 8) + (middleLow & 255) * 0x1000000) >>>
-        0;
-      low = productLow >>> 0;
-      middleLow = productMiddleLow >>> 0;
-      middleHigh = productMiddleHigh >>> 0;
+      const mixed = word0 ^ ((code >>> shift) & 255);
+      const previousWord1 = word1;
+      const previousWord2 = word2;
+      let product = mixed * 315;
+      word0 = product & 65535;
+      product = word1 * 315 + (product >>> 16);
+      word1 = product & 65535;
+      product = word2 * 315 + (product >>> 16);
+      word2 = product & 65535;
+      product = word3 * 315 + (product >>> 16);
+      word3 = product & 65535;
+      product = word4 * 315 + (product >>> 16);
+      word4 = product & 65535;
+      // 素数的2^88项从第5字的第8位开始叠加，读取异或后的原始低三字
+      product = word5 * 315 + (product >>> 16) + mixed * 256;
+      word5 = product & 65535;
+      product = word6 * 315 + (product >>> 16) + previousWord1 * 256;
+      word6 = product & 65535;
+      product = word7 * 315 + (product >>> 16) + previousWord2 * 256;
+      word7 = product & 65535;
     }
   }
-  return `${kind}-${high.toString(16).padStart(8, '0')}${middleHigh.toString(16).padStart(8, '0')}${middleLow.toString(16).padStart(8, '0')}${low.toString(16).padStart(8, '0')}`;
+  return `${kind}-${word7.toString(16).padStart(4, '0')}${word6.toString(16).padStart(4, '0')}${word5.toString(16).padStart(4, '0')}${word4.toString(16).padStart(4, '0')}${word3.toString(16).padStart(4, '0')}${word2.toString(16).padStart(4, '0')}${word1.toString(16).padStart(4, '0')}${word0.toString(16).padStart(4, '0')}`;
 };
 
 /** 保留资源身份并去重；摘要冲突不能静默覆盖已有内容 */
