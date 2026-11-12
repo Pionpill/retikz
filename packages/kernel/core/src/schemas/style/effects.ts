@@ -3,7 +3,7 @@ import { NonNegativeNumberSchema } from '@retikz/foundation';
 import { object, enum as zodEnum, number, lazy } from 'zod';
 import type { infer as ZodInfer } from 'zod';
 
-import { CssColorSchema, OpacitySchema } from './graphic';
+import { CssColorSchema, OpacitySchema } from './color';
 
 /**
  * 阴影预设档位关键字（Tailwind 风格刻度）

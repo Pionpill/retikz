@@ -3,7 +3,8 @@ import { PositiveNumberSchema } from '@retikz/foundation';
 import { enum as zodEnum, strictObject, string, boolean, array, union } from 'zod';
 import type { infer as ZodInfer } from 'zod';
 
-import { ContextualColorSchema, OpacitySchema } from '../style/graphic';
+import { OpacitySchema } from '../style/color';
+import { ContextualColorSchema } from '../style/graphic';
 import { FontSchema, FontSizeSchema } from './font';
 
 /** 节点与多行文本共享的文字对齐关键字 */

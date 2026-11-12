@@ -9,7 +9,8 @@ import { union, tuple, number, strictObject, discriminatedUnion, enum as zodEnum
 import type { infer as ZodInfer, ZodType } from 'zod';
 
 import { CenterAnchor, Anchor } from '../../shared';
-import { OpacitySchema, StrokeWidthSchema, CssColorSchema, StrokeDashOffsetSchema } from '../style/graphic';
+import { OpacitySchema, CssColorSchema } from '../style/color';
+import { StrokeWidthSchema, StrokeDashOffsetSchema } from '../style/graphic';
 
 /**
  * 可动画属性通道（renderer 无关；DrawWay 风格 const + 派生类型，裸字面量 'opacity' 仍第一形态）

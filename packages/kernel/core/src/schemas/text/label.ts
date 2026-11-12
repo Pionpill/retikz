@@ -2,7 +2,8 @@ import { NonNegativeNumberSchema } from '@retikz/foundation';
 import { union, strictObject, enum as zodEnum, number, boolean } from 'zod';
 import type { input as ZodInput } from 'zod';
 
-import { ContextualColorSchema, OpacitySchema } from '../style/graphic';
+import { OpacitySchema } from '../style/color';
+import { ContextualColorSchema } from '../style/graphic';
 import { FontSchema } from './font';
 import { TextBlockSchema, TextAlignSchema, TextLayoutSchema } from './text';
 

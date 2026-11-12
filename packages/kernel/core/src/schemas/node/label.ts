@@ -4,7 +4,8 @@ import { strictObject, enum as zodEnum, object, union, number, boolean } from 'z
 import type { infer as ZodInfer } from 'zod';
 
 import { Anchor, Side } from '../../shared';
-import { GraphicStrokeSchema, OpacitySchema } from '../style/graphic';
+import { OpacitySchema } from '../style/color';
+import { GraphicStrokeSchema } from '../style/graphic';
 import { createLabelVisualStyleShape, BoundaryLabelSchema } from '../text/label';
 import { TextBlockSchema } from '../text/text';
 
