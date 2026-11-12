@@ -12,19 +12,27 @@ import type { InputPaintResolution, PaintResolution, PatternResolution } from '.
 import type { IRPatternLineStyle } from '../../schemas';
 import { materializeScenePrimitives } from '../shared';
 import { formatResourceId, serializeResourceContent, storeSceneResource } from './identity';
-import { serializePathCommandSequence } from './path';
+import { encodePathCommandSequence } from './path';
 
 /** 路径图元复用命令专用序列化，其余字段保留完整 JSON 内容语义 */
 const serializePatternPrimitive = (primitive: ScenePrimitive): string => {
   if (primitive.type !== 'path') return serializeResourceContent(primitive);
+  const keys = Object.keys(primitive);
+  // ⚡常用描边路径直接输出有序字段；任何其它字段都进入完整序列化，避免遗漏扩展内容
+  if (
+    (primitive.stroke === undefined || typeof primitive.stroke === 'string') &&
+    keys.every(key => key === 'commands' || key === 'stroke' || key === 'strokeWidth' || key === 'type')
+  ) {
+    return `{"commands":[${encodePathCommandSequence(primitive.commands)}]${primitive.stroke === undefined ? '' : `,"stroke":${JSON.stringify(primitive.stroke)}`}${primitive.strokeWidth === undefined ? '' : `,"strokeWidth":${JSON.stringify(primitive.strokeWidth)}`},"type":"path"}`;
+  }
   const fields: Array<string> = [];
   // ⚡路径通常包含大量坐标，命令走定制序列化，样式和扩展字段仍按原内容完整处理
-  for (const key of Object.keys(primitive).sort()) {
+  for (const key of keys.sort()) {
     const value: unknown = Reflect.get(primitive, key);
     if (value === undefined) continue;
     const content =
       key === 'commands'
-        ? `[${serializePathCommandSequence(primitive.commands)}]`
+        ? `[${encodePathCommandSequence(primitive.commands)}]`
         : value !== null && typeof value === 'object'
           ? serializeResourceContent(value)
           : JSON.stringify(value);

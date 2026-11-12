@@ -45,13 +45,58 @@ describe('资源内容身份', () => {
       ],
     };
     const registry = createClipRegistry(value => value);
-    const content = serializeResourceContent(path);
+    const content = JSON.stringify({
+      commands: [
+        ['m', 0, 1e-7],
+        ['l', 1e21, -2.5],
+        ['q', 4, 5, 2, 3],
+        ['c', 10, 11, 8, 9, 6, 7],
+        ['a', 12, 13, 2, -90, 180, false],
+        ['a', 14, 15, 3, 0, 90, null],
+        ['e', 16, 17, 5, 4, -45, 30, 270, true],
+        ['e', 18, 19, 7, 6, null, 0, 90, null],
+        ['z'],
+      ],
+      fillRule: 'evenodd',
+    });
     expect(registry.registerPath(path)).toBe(referenceId(content));
     expect(registry.registerPath({ commands: path.commands, fillRule: path.fillRule })).toBe(referenceId(content));
     expect(registry.getResources()).toHaveLength(1);
     expect(registry.getResources()[0].path).toBe(path);
     const changed: SceneClipPath = { ...path, commands: [...path.commands, { kind: 'move', to: [1, 2] }] };
     expect(registry.registerPath(changed)).not.toBe(referenceId(content));
+  });
+
+  it('命令标签、坐标顺序与可选默认值不能合并不同内容身份', () => {
+    const registry = createClipRegistry(value => value);
+    const paths: Array<SceneClipPath> = [
+      { fillRule: 'nonzero', commands: [{ kind: 'move', to: [1, 2] }] },
+      { fillRule: 'nonzero', commands: [{ kind: 'line', to: [1, 2] }] },
+      { fillRule: 'nonzero', commands: [{ kind: 'move', to: [2, 1] }] },
+      { fillRule: 'evenodd', commands: [{ kind: 'move', to: [1, 2] }] },
+    ];
+    for (const counterClockwise of [undefined, false, true]) {
+      for (const rotation of [undefined, 0, 30]) {
+        paths.push({
+          fillRule: 'nonzero',
+          commands: [
+            {
+              kind: 'ellipseArc',
+              center: [1, 2],
+              radiusX: 3,
+              radiusY: 4,
+              startAngle: 5,
+              endAngle: 6,
+              rotation,
+              counterClockwise,
+            },
+          ],
+        });
+      }
+    }
+    const ids = paths.map(path => registry.registerPath(path));
+    expect(new Set(ids).size).toBe(paths.length);
+    expect(registry.getResources()).toHaveLength(paths.length);
   });
 
   it('冲突比较保持 JSON 对负零、可选字段和数组顺序的语义', () => {

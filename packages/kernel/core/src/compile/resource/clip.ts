@@ -9,7 +9,7 @@ import {
 } from '../../resolve';
 import type { ClipResolution } from '../../resolve';
 import { formatResourceId, storeSceneResource } from './identity';
-import { serializePathCommandSequence } from './path';
+import { encodePathCommandSequence } from './path';
 
 /** 生成裁剪路径并登记可复用资源 */
 export type ClipRegistry = {
@@ -211,7 +211,7 @@ export const createClipRegistry = (
   const registerPath = (path: SceneClipPath): string => {
     const id = formatResourceId(
       'clip',
-      `{"commands":[${serializePathCommandSequence(path.commands)}],"fillRule":${JSON.stringify(path.fillRule)}}`,
+      `{"commands":[${encodePathCommandSequence(path.commands)}],"fillRule":${JSON.stringify(path.fillRule)}}`,
     );
     return importResource({ kind: 'clip', id, path });
   };
