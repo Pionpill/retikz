@@ -7,10 +7,9 @@ import type { CompileOwnerKey } from '../../provenance';
 import type { CompileRuntime } from '../../runtime';
 import { runCompileStage } from '../../runtime';
 import { createCompileChildPath } from '../../shared';
-import { createTreePositionContext } from '../reference';
-import type { SubtreeCompileRuntime } from '../runtime';
 import type { TreeOutputState } from '../shared';
-import { cloneAlignmentGuides } from '../shared';
+import { cloneAlignmentGuides, createTreePositionContext } from '../shared';
+import type { SubtreeCompileRuntime } from '../subtree';
 
 /** 布局并 emit node，同时注册 id、收集边界点和父 scope layout 输入 */
 export const visitNode = (

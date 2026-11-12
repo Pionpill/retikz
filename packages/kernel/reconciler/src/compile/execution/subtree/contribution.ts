@@ -2,11 +2,11 @@ import type { CompileWarning, ScenePrimitive, SceneResource } from '@retikz/core
 import { visitSceneContent } from '@retikz/core';
 import type { PropertyPath } from '@retikz/foundation';
 
-import type { CompileOwnerKey, CompileNamespaceKey, CompileProvenanceSnapshot } from '../provenance';
-import type { CompileReferenceRead, CompileRuntime, NamespaceFrameChange } from '../runtime';
-import { importSceneResources } from '../shared';
-import type { SubtreeCompileState } from './runtime';
-import type { TreeOutputState } from './shared';
+import type { CompileOwnerKey, CompileNamespaceKey, CompileProvenanceSnapshot } from '../../provenance';
+import type { CompileReferenceRead, CompileRuntime, NamespaceFrameChange } from '../../runtime';
+import { importSceneResources } from '../../shared';
+import type { TreeOutputState } from '../shared';
+import type { SubtreeCompileState } from './compile';
 
 /** 作者实例已经完成的输出贡献，不包含 probe token、回调或可写工作区 */
 export type CompileContribution = {

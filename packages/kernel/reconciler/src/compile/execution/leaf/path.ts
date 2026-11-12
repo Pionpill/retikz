@@ -11,10 +11,9 @@ import type { CompileOwnerKey } from '../../provenance';
 import { createExecutionInvariantError, runCompileStage } from '../../runtime';
 import type { CompileRuntime, CompileReferenceRead } from '../../runtime';
 import { createCompileChildPath } from '../../shared';
-import { createTreePositionContext } from '../reference';
-import type { SubtreeCompileRuntime } from '../runtime';
 import type { TreeOutputState, InternalScenePrimitive } from '../shared';
-import { PATH_PLACEHOLDER } from '../shared/constants';
+import { PATH_PLACEHOLDER, createTreePositionContext } from '../shared';
+import type { SubtreeCompileRuntime } from '../subtree';
 
 /** 等待命名引用完成注册后再 emit 的 path 任务 */
 export type PendingPathEmission = InputPathCompilation & {

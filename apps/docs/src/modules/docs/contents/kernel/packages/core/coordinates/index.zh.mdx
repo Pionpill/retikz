@@ -1,4 +1,4 @@
----
+﻿---
 title: 坐标求值
 description: 从五种位置输入追踪 CanonicalCoordinate、求值上下文与 CompiledCoordinate，理解命名位置如何生成和使用
 ---
@@ -114,7 +114,7 @@ export type PositionEvaluateContext = Readonly<{
 | nodeDistance         | 方向定位的缺省距离                  | 共享求值器处理尚未带显式 distance 的位置时使用；Coordinate 的 resolve 已补齐此值 |
 | evaluateBetweenWorld | 求两端目标在世界空间中的插值点      | between 分支；涉及锚点时由目标求值能力完成                                       |
 
-Reconciler 的 <ApiSourceLink label="createTreePositionContext" path="packages/kernel/reconciler/src/compile/execution/reference/tree-context.ts" startLine={7}>`createTreePositionContext`</ApiSourceLink> 将名称环境、当前 Scope 的变换链及边界查询服务接入这些能力。Core 的 <ApiSourceLink label="createPositionEvaluateContext" path="packages/kernel/core/src/compile/reference/context.ts" startLine={53}>`createPositionEvaluateContext`</ApiSourceLink> 建立坐标转换，并连接两端目标的插值求值。
+Reconciler 的 <ApiSourceLink label="createTreePositionContext" path="packages/kernel/reconciler/src/compile/execution/shared/position.ts" startLine={7}>`createTreePositionContext`</ApiSourceLink> 将名称环境、当前 Scope 的变换链及边界查询服务接入这些能力。Core 的 <ApiSourceLink label="createPositionEvaluateContext" path="packages/kernel/core/src/compile/reference/context.ts" startLine={53}>`createPositionEvaluateContext`</ApiSourceLink> 建立坐标转换，并连接两端目标的插值求值。
 
 ### 从表达式到命名位置
 
@@ -125,7 +125,7 @@ Reconciler 的 <ApiSourceLink label="createTreePositionContext" path="packages/k
 3. 调用 <ApiSourceLink label="evaluatePosition" path="packages/kernel/core/src/compile/reference/position.ts" startLine={47}>`evaluatePosition`</ApiSourceLink>
    叠加局部偏移 [40, 0]，得到 localPoint [40, 0]；toWorld 得到 worldPoint [180, 50]。
 4. <ApiSourceLink label="compileCoordinate" path="packages/kernel/core/src/compile/coordinate/compile.ts" startLine={15}>`compileCoordinate`</ApiSourceLink> 返回 `{ position: [40, 0] }`。
-5. <ApiSourceLink label="visitCoordinate" path="packages/kernel/reconciler/src/compile/execution/coordinate/visit.ts" startLine={12}>`visitCoordinate`</ApiSourceLink> 将编译结果投影到世界空间，以 P 注册 `{ position: [180, 50] }`，同时把局部位置提供给 Scope 的布局收集。
+5. <ApiSourceLink label="visitCoordinate" path="packages/kernel/reconciler/src/compile/execution/leaf/coordinate.ts" startLine={12}>`visitCoordinate`</ApiSourceLink> 将编译结果投影到世界空间，以 P 注册 `{ position: [180, 50] }`，同时把局部位置提供给 Scope 的布局收集。
 
 这条流程生成的是位置几何。后续 Node 定位可以引用 P，Path 也可以将 P 作为目标点。<ApiSourceLink label="evaluatePosition" path="packages/kernel/core/src/compile/reference/position.ts" startLine={47}>`evaluatePosition`</ApiSourceLink> 是共享的求点步骤：Node 在此基础上结合自身尺寸和锚点完成放置，Path 则结合目标边界继续计算连接端点。
 
@@ -148,11 +148,11 @@ Coordinate 在访问时求值，所引用的目标需要已经可查。<ApiSourc
 
 ## 完整流程
 
-将前面的阶段连起来，P 先以 `{ of: 'A', offset: [40, 0] }` 进入解析；编译时读取 A 的世界几何，通过当前 Scope 的转换能力得到局部基点，再叠加偏移。<ApiSourceLink label="compileCoordinate" path="packages/kernel/core/src/compile/coordinate/compile.ts" startLine={15}>`compileCoordinate`</ApiSourceLink> 返回局部 [40, 0]，<ApiSourceLink label="visitCoordinate" path="packages/kernel/reconciler/src/compile/execution/coordinate/visit.ts" startLine={12}>`visitCoordinate`</ApiSourceLink> 将世界 [180, 50] 发布为 P，并收集局部布局贡献。
+将前面的阶段连起来，P 先以 `{ of: 'A', offset: [40, 0] }` 进入解析；编译时读取 A 的世界几何，通过当前 Scope 的转换能力得到局部基点，再叠加偏移。<ApiSourceLink label="compileCoordinate" path="packages/kernel/core/src/compile/coordinate/compile.ts" startLine={15}>`compileCoordinate`</ApiSourceLink> 返回局部 [40, 0]，<ApiSourceLink label="visitCoordinate" path="packages/kernel/reconciler/src/compile/execution/leaf/coordinate.ts" startLine={12}>`visitCoordinate`</ApiSourceLink> 将世界 [180, 50] 发布为 P，并收集局部布局贡献。
 
 <ComponentPreview files="coordinate-implementation" size="xxl" hideCode type="flow" />
 
-源码阅读顺序是 <ApiSourceLink label="resolveCoordinate" path="packages/kernel/core/src/resolve/coordinate/resolve.ts" startLine={6}>`resolveCoordinate`</ApiSourceLink> → <ApiSourceLink label="resolvePosition" path="packages/kernel/core/src/resolve/position/resolve.ts" startLine={43}>`resolvePosition`</ApiSourceLink> → <ApiSourceLink label="compileCoordinate" path="packages/kernel/core/src/compile/coordinate/compile.ts" startLine={15}>`compileCoordinate`</ApiSourceLink> → <ApiSourceLink label="evaluatePosition" path="packages/kernel/core/src/compile/reference/position.ts" startLine={47}>`evaluatePosition`</ApiSourceLink>，最后看 <ApiSourceLink label="visitCoordinate" path="packages/kernel/reconciler/src/compile/execution/coordinate/visit.ts" startLine={12}>`visitCoordinate`</ApiSourceLink> 怎样把结果交给名称环境与父布局。
+源码阅读顺序是 <ApiSourceLink label="resolveCoordinate" path="packages/kernel/core/src/resolve/coordinate/resolve.ts" startLine={6}>`resolveCoordinate`</ApiSourceLink> → <ApiSourceLink label="resolvePosition" path="packages/kernel/core/src/resolve/position/resolve.ts" startLine={43}>`resolvePosition`</ApiSourceLink> → <ApiSourceLink label="compileCoordinate" path="packages/kernel/core/src/compile/coordinate/compile.ts" startLine={15}>`compileCoordinate`</ApiSourceLink> → <ApiSourceLink label="evaluatePosition" path="packages/kernel/core/src/compile/reference/position.ts" startLine={47}>`evaluatePosition`</ApiSourceLink>，最后看 <ApiSourceLink label="visitCoordinate" path="packages/kernel/reconciler/src/compile/execution/leaf/coordinate.ts" startLine={12}>`visitCoordinate`</ApiSourceLink> 怎样把结果交给名称环境与父布局。
 
 ## 延伸阅读
 

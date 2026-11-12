@@ -11,29 +11,30 @@ import {
 } from '@retikz/core';
 import { isPropertyPathEqual } from '@retikz/foundation';
 
-import type { CompileOwnerKey } from '../provenance';
-import type { CompileReferenceRead } from '../runtime';
-import { createExecutionInvariantError } from '../runtime';
-import type { CompileRuntime } from '../runtime';
+import type { CompileOwnerKey } from '../../provenance';
+import type { CompileReferenceRead, CompileRuntime } from '../../runtime';
+import { createExecutionInvariantError } from '../../runtime';
 import {
   createCompileChildPath,
   enrichLayoutProbeError,
   orderCompileArtifacts,
   compileWarningOccurrenceOf,
-} from '../shared';
-import { CompositeCompiler } from './composite/compile';
+} from '../../shared';
+import { CompositeCompiler } from '../composite';
+import { visitCoordinate, visitNode, queuePathChild, flushPendingPathEmissions } from '../leaf';
+import { visitScope } from '../scope';
+import { resolveStructuralAlignmentGuides, PATH_PLACEHOLDER, stableSortByZIndex } from '../shared';
+import type { InternalScenePrimitive, TreeOutputState } from '../shared';
+import type {
+  SubtreeCompileRuntime,
+  SubtreeCompileState,
+  SubtreeCompileHost,
+  SubtreeCompileOptions,
+  SubtreeCompilation,
+  SubtreeOutputContribution,
+} from './compile';
 import { collectContributionResources, materializeCompileContribution } from './contribution';
 import type { CompileContribution } from './contribution';
-import { visitCoordinate } from './coordinate/visit';
-import { visitNode } from './node/visit';
-import { queuePathChild, flushPendingPathEmissions } from './path/deferred';
-import type { SubtreeCompileRuntime, SubtreeCompileState } from './runtime';
-import { visitScope } from './scope/visit';
-import { resolveStructuralAlignmentGuides } from './shared';
-import { PATH_PLACEHOLDER } from './shared/constants';
-import { stableSortByZIndex } from './shared/output';
-import type { InternalScenePrimitive, TreeOutputState } from './shared/output';
-import type { SubtreeCompileHost, SubtreeCompileOptions, SubtreeCompilation, SubtreeOutputContribution } from './types';
 
 /** 共享元素执行、贡献捕获与输出工作区；计算顺序由所属驱动选择 */
 export class CompileElementExecutor {

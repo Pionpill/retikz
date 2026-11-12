@@ -9,7 +9,7 @@ import {
 
 import type { CompositeReplayMaterializeContext } from '../../runtime';
 import { freezeOccurrence, wrapLayoutProbeError } from '../../shared';
-import type { SubtreeCompileRuntime } from '../runtime';
+import type { SubtreeCompileRuntime } from '../subtree';
 import { createLayoutChildFailure } from './failure';
 import { snapshotCompositeLayoutChild } from './handle';
 import { boundsRectOf, contributionOfBounds, projectContribution } from './layout';

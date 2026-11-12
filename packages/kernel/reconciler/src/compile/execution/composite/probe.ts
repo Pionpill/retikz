@@ -26,8 +26,7 @@ import {
   freezeOccurrence,
   withCompileWarningOccurrence,
 } from '../../shared';
-import type { SubtreeCompileRuntime } from '../runtime';
-import type { SubtreeCompileHost, SubtreeCompileOptions } from '../types';
+import type { SubtreeCompileRuntime, SubtreeCompileHost, SubtreeCompileOptions } from '../subtree';
 import { boundsRectOf, snapshotAllocationBounds } from './layout';
 import { resolveLayoutSlotSize } from './proposal';
 import { replayStyleFingerprint, replayThemeFingerprint } from './replay';

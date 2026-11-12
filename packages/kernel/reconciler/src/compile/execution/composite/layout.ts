@@ -4,7 +4,7 @@ import type { BoundsRect } from '@retikz/math';
 import { boundsToRect } from '@retikz/math';
 
 import { formatCompileOccurrence } from '../../shared';
-import type { SubtreeCompilation } from '../types';
+import type { SubtreeCompilation } from '../subtree';
 import { resolveLayoutAxisSlotSize } from './proposal';
 
 /** 从真实边界提取指定轴，不补齐未查询的尺寸 */

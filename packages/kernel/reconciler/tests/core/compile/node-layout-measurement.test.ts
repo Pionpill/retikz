@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import type { CompiledBoundaryGeometry } from '../../../../core/src';
 import type { TexLowerer } from '../../../../core/src/compile';
@@ -8,8 +8,7 @@ import type { CompileWarning } from '../../../../core/src/compile/shared';
 import type { TextMeasurer, TextPrimitive } from '../../../../core/src/contract';
 import type { IRScene } from '../../../../core/src/schemas';
 import { createSharedCompileContext } from '../../../src/compile';
-import { compileScene } from '../../../src/compile/execution';
-import { SubtreeCompiler } from '../../../src/compile/execution/subtree';
+import { assembleCompileSubtree, compileScene, finalizeSceneCompilation } from '../../../src/compile/execution';
 import { createCompileRuntime } from '../../../src/compile/runtime';
 import { flattenPrims } from '../../helpers/flatten';
 
@@ -69,27 +68,14 @@ const collectLayouts = (
 
     ...(options.withTex === true ? { lowerTex } : {}),
   });
-  let layouts: Array<CompiledBoundaryGeometry & Pick<CompiledNodeLayout, 'geometry'>> = [];
-  const run = SubtreeCompiler.prototype.run;
-  const observeLayouts = vi
-    .spyOn(SubtreeCompiler.prototype, 'run')
-    .mockImplementation(function (this: SubtreeCompiler) {
-      const out = run.call(this);
-      layouts = out.geometries.filter(
-        (layout): layout is CompiledBoundaryGeometry & Pick<CompiledNodeLayout, 'geometry'> =>
-          'geometry' in layout && 'contentSize' in layout.geometry,
-      );
-      return out;
-    });
-  try {
-    const { result } = compileScene(ir, context);
-    const textPrims = flattenPrims(result.scene.primitives).filter(
-      (prim): prim is TextPrimitive => prim.type === 'text',
-    );
-    return { layouts, warnings: context.state.workspace.diagnosticCollector.warnings, textPrims };
-  } finally {
-    observeLayouts.mockRestore();
-  }
+  const subtree = assembleCompileSubtree(ir.children, context);
+  const layouts = subtree.geometries.filter(
+    (layout): layout is CompiledBoundaryGeometry & Pick<CompiledNodeLayout, 'geometry'> =>
+      'geometry' in layout && 'contentSize' in layout.geometry,
+  );
+  const { result } = finalizeSceneCompilation(ir, context, subtree);
+  const textPrims = flattenPrims(result.scene.primitives).filter((prim): prim is TextPrimitive => prim.type === 'text');
+  return { layouts, warnings: context.state.workspace.diagnosticCollector.warnings, textPrims };
 };
 
 describe('Node 内容测量', () => {

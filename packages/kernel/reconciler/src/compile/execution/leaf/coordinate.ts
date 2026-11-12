@@ -4,8 +4,8 @@ import type { IRCoordinate } from '@retikz/core';
 import { runCompileStage } from '../../runtime';
 import type { CompileRuntime } from '../../runtime';
 import { createCompileChildPath } from '../../shared';
-import { createTreePositionContext } from '../reference';
-import type { SubtreeCompileRuntime } from '../runtime';
+import { createTreePositionContext } from '../shared';
+import type { SubtreeCompileRuntime } from '../subtree';
 
 /** 编译坐标并直接发布位置，供后续命名引用与 Scope 包络使用 */
 export const visitCoordinate = (

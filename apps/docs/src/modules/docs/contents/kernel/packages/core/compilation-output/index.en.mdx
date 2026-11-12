@@ -98,7 +98,7 @@ Readonly snapshot, result and artifacts / diagnostics array shells do not imply 
 
 <ComponentPreview files="output-implementation" size="lg" hideCode type="flow" />
 
-SubtreeCompiler finishes paths and child contributions. compileScene collects resources and calls assembleSceneCompilationSnapshot. That function determines layout, root tracks, result and diagnostics without compiling entities again. SceneReconciler commits the complete candidate for consumers.
+compileScene first calls assembleCompileSubtree to finish paths and child contributions, then calls finalizeSceneCompilation to collect resources and assemble the snapshot. That function determines layout, root tracks, result and diagnostics without compiling entities again. SceneReconciler commits the complete candidate for consumers.
 
 <SourceLinks
   sources={[
@@ -106,7 +106,7 @@ SubtreeCompiler finishes paths and child contributions. compileScene collects re
     { label: 'Layout bounds helpers', path: 'packages/kernel/core/src/compile/scene/bounds.ts' },
     { label: 'Scene layout calculation', path: 'packages/kernel/core/src/compile/scene/layout.ts' },
     { label: 'Complete compilation entry', path: 'packages/kernel/reconciler/src/compile/execution/compile.ts' },
-    { label: 'Snapshot assembly', path: 'packages/kernel/reconciler/src/compile/execution/output.ts' },
+    { label: 'Snapshot assembly', path: 'packages/kernel/reconciler/src/compile/execution/compile.ts' },
     { label: 'Snapshot and result types', path: 'packages/kernel/reconciler/src/compile/types.ts' },
     { label: 'Reconciler result and commit target', path: 'packages/kernel/reconciler/src/reconcile/types.ts' },
   ]}

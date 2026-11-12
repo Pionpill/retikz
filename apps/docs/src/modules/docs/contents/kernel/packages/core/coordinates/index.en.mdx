@@ -1,4 +1,4 @@
----
+﻿---
 title: Coordinate Evaluation
 description: Follow five position forms through CanonicalCoordinate, evaluation context and CompiledCoordinate to a published named position
 ---
@@ -117,7 +117,7 @@ export type PositionEvaluateContext = Readonly<{
 | nodeDistance         | Default directional distance                               | Shared evaluation of expressions without explicit distance; Coordinate resolution already fills it |
 | evaluateBetweenWorld | Evaluate a world-space interpolation point between targets | The between branch, using target evaluation for anchors when needed                                |
 
-Reconciler's <ApiSourceLink label="createTreePositionContext" path="packages/kernel/reconciler/src/compile/execution/reference/tree-context.ts" startLine={7}>`createTreePositionContext`</ApiSourceLink> connects the naming environment, current Scope transform chain and boundary services. Core's <ApiSourceLink label="createPositionEvaluateContext" path="packages/kernel/core/src/compile/reference/context.ts" startLine={53}>`createPositionEvaluateContext`</ApiSourceLink> builds coordinate conversions and connects target interpolation.
+Reconciler's <ApiSourceLink label="createTreePositionContext" path="packages/kernel/reconciler/src/compile/execution/shared/position.ts" startLine={7}>`createTreePositionContext`</ApiSourceLink> connects the naming environment, current Scope transform chain and boundary services. Core's <ApiSourceLink label="createPositionEvaluateContext" path="packages/kernel/core/src/compile/reference/context.ts" startLine={53}>`createPositionEvaluateContext`</ApiSourceLink> builds coordinate conversions and connects target interpolation.
 
 ### From Expression to Named Position
 
@@ -128,7 +128,7 @@ P moves through the following steps:
 3. Calling <ApiSourceLink label="evaluatePosition" path="packages/kernel/core/src/compile/reference/position.ts" startLine={47}>`evaluatePosition`</ApiSourceLink>
    adds the local offset [40, 0], producing localPoint [40, 0]; toWorld produces worldPoint [180, 50].
 4. <ApiSourceLink label="compileCoordinate" path="packages/kernel/core/src/compile/coordinate/compile.ts" startLine={15}>`compileCoordinate`</ApiSourceLink> returns `{ position: [40, 0] }`.
-5. <ApiSourceLink label="visitCoordinate" path="packages/kernel/reconciler/src/compile/execution/coordinate/visit.ts" startLine={12}>`visitCoordinate`</ApiSourceLink> projects the compiled position to world space and registers P with `{ position: [180, 50] }`. It also contributes the local position to Scope layout collection.
+5. <ApiSourceLink label="visitCoordinate" path="packages/kernel/reconciler/src/compile/execution/leaf/coordinate.ts" startLine={12}>`visitCoordinate`</ApiSourceLink> projects the compiled position to world space and registers P with `{ position: [180, 50] }`. It also contributes the local position to Scope layout collection.
 
 The result is position geometry. Subsequent Nodes can reference P for placement, and Paths can use it as a target. <ApiSourceLink label="evaluatePosition" path="packages/kernel/core/src/compile/reference/position.ts" startLine={47}>`evaluatePosition`</ApiSourceLink> is the shared point-evaluation step: Node combines it with its own dimensions and anchors for placement; Path uses target boundaries to continue computing connection endpoints.
 
@@ -153,11 +153,11 @@ A named Scope may publish a position placeholder before its envelope is complete
 
 ## Complete Flow
 
-Connecting the stages, P enters resolution as `{ of: 'A', offset: [40, 0] }`. Compilation reads A's world geometry, converts it to a local base using the current Scope context, then adds the offset. <ApiSourceLink label="compileCoordinate" path="packages/kernel/core/src/compile/coordinate/compile.ts" startLine={15}>`compileCoordinate`</ApiSourceLink> returns local [40, 0]; <ApiSourceLink label="visitCoordinate" path="packages/kernel/reconciler/src/compile/execution/coordinate/visit.ts" startLine={12}>`visitCoordinate`</ApiSourceLink> publishes world [180, 50] as P and collects the local layout contribution.
+Connecting the stages, P enters resolution as `{ of: 'A', offset: [40, 0] }`. Compilation reads A's world geometry, converts it to a local base using the current Scope context, then adds the offset. <ApiSourceLink label="compileCoordinate" path="packages/kernel/core/src/compile/coordinate/compile.ts" startLine={15}>`compileCoordinate`</ApiSourceLink> returns local [40, 0]; <ApiSourceLink label="visitCoordinate" path="packages/kernel/reconciler/src/compile/execution/leaf/coordinate.ts" startLine={12}>`visitCoordinate`</ApiSourceLink> publishes world [180, 50] as P and collects the local layout contribution.
 
 <ComponentPreview files="coordinate-implementation" size="xxl" hideCode type="flow" />
 
-Read <ApiSourceLink label="resolveCoordinate" path="packages/kernel/core/src/resolve/coordinate/resolve.ts" startLine={6}>`resolveCoordinate`</ApiSourceLink> → <ApiSourceLink label="resolvePosition" path="packages/kernel/core/src/resolve/position/resolve.ts" startLine={43}>`resolvePosition`</ApiSourceLink> → <ApiSourceLink label="compileCoordinate" path="packages/kernel/core/src/compile/coordinate/compile.ts" startLine={15}>`compileCoordinate`</ApiSourceLink> → <ApiSourceLink label="evaluatePosition" path="packages/kernel/core/src/compile/reference/position.ts" startLine={47}>`evaluatePosition`</ApiSourceLink>, then <ApiSourceLink label="visitCoordinate" path="packages/kernel/reconciler/src/compile/execution/coordinate/visit.ts" startLine={12}>`visitCoordinate`</ApiSourceLink> to see how the result reaches the naming environment and parent layout.
+Read <ApiSourceLink label="resolveCoordinate" path="packages/kernel/core/src/resolve/coordinate/resolve.ts" startLine={6}>`resolveCoordinate`</ApiSourceLink> → <ApiSourceLink label="resolvePosition" path="packages/kernel/core/src/resolve/position/resolve.ts" startLine={43}>`resolvePosition`</ApiSourceLink> → <ApiSourceLink label="compileCoordinate" path="packages/kernel/core/src/compile/coordinate/compile.ts" startLine={15}>`compileCoordinate`</ApiSourceLink> → <ApiSourceLink label="evaluatePosition" path="packages/kernel/core/src/compile/reference/position.ts" startLine={47}>`evaluatePosition`</ApiSourceLink>, then <ApiSourceLink label="visitCoordinate" path="packages/kernel/reconciler/src/compile/execution/leaf/coordinate.ts" startLine={12}>`visitCoordinate`</ApiSourceLink> to see how the result reaches the naming environment and parent layout.
 
 ## Further Reading
 

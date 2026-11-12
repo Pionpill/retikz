@@ -1,8 +1,8 @@
 import type { CompiledScope, CompileOccurrenceLocator, IRChild, Transform, prepareScopePlacement } from '@retikz/core';
 
 import type { CompileOwnerKey } from '../../provenance';
-import type { SubtreeCompileRuntime } from '../runtime';
 import type { InternalScenePrimitive } from '../shared';
+import type { SubtreeCompileRuntime } from '../subtree';
 
 /** scope.id layout 占位注册结果 */
 export type ScopeLayoutPlaceholder = {

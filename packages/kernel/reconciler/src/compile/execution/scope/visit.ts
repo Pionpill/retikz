@@ -14,12 +14,10 @@ import type { CompileOwnerKey } from '../../provenance';
 import { runCompileStage, readCompileStageCanon } from '../../runtime';
 import type { CompileRuntime, CompileReferenceRead, CompileStageRecord, CompileStageProducts } from '../../runtime';
 import { createCompileChildPath, formatCompileOccurrence } from '../../shared';
-import { flushPendingPathEmissions } from '../path/deferred';
-import { createTreePositionContext } from '../reference';
-import type { SubtreeCompileRuntime, SubtreeCompileState } from '../runtime';
-import { resolveStructuralAlignmentGuides, transformAlignmentGuides } from '../shared';
+import { flushPendingPathEmissions } from '../leaf';
+import { createTreePositionContext, resolveStructuralAlignmentGuides, transformAlignmentGuides } from '../shared';
 import type { TreeOutputState } from '../shared';
-import type { SubtreeCompileOptions } from '../types';
+import type { SubtreeCompileRuntime, SubtreeCompileState, SubtreeCompileOptions } from '../subtree';
 import { emitScopeGroup } from './group';
 import { bindScopeOutputAnimations } from './output';
 import type {

@@ -4,9 +4,9 @@ import { jsonStructuralEquals } from '@retikz/foundation';
 
 import type { CompileOwnerKey } from '../../provenance';
 import type { CompileRuntime } from '../../runtime';
-import type { SubtreeCompileRuntime, SubtreeCompileState } from '../runtime';
 import { resolveStructuralAlignmentGuides, transformAlignmentGuides } from '../shared';
 import type { TreeOutputState } from '../shared';
+import type { SubtreeCompileRuntime, SubtreeCompileState } from '../subtree';
 import { emitScopeGroup, shouldEmitScopeGroup } from './group';
 
 /** 按最终子输出绑定分组动画；布局与裁剪继续使用已完成的 Core 产物 */

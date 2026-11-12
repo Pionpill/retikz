@@ -9,8 +9,7 @@ import type {
 
 import type { CompileOwnerKey } from '../../provenance';
 import type { CompileRuntime, CompositeReplayTransaction, CompositeRuntimeOutputChild } from '../../runtime';
-import type { SubtreeCompileRuntime } from '../runtime';
-import type { SubtreeOutputContribution, SubtreeCompileHost } from '../types';
+import type { SubtreeCompileRuntime, SubtreeOutputContribution, SubtreeCompileHost } from '../subtree';
 
 /** 完成预检的重放事务及外层裁剪 */
 export type PreparedReplay = Readonly<{

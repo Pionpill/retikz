@@ -14,7 +14,7 @@ import type { PropertyPath } from '@retikz/foundation';
 import { encodePropertyPath } from '@retikz/foundation';
 
 import type { NamespaceStack } from '../../runtime';
-import type { SubtreeCompileRuntime } from '../runtime';
+import type { SubtreeCompileRuntime } from '../subtree';
 import { snapshotCompositeLayoutChild } from './handle';
 import type { CompositeProbeSequence } from './measurement';
 import type { CompositeProbeContext } from './probe';

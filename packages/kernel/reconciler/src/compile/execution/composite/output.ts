@@ -10,7 +10,7 @@ import { CompileExpansionKind } from '@retikz/core';
 import type { CompileOwnerKey } from '../../provenance';
 import { createExecutionInvariantError } from '../../runtime';
 import type { CompositeCompileOwner, CompositeRuntimeOutputChild } from '../../runtime';
-import type { SubtreeCompileRuntime } from '../runtime';
+import type { SubtreeCompileRuntime } from '../subtree';
 import { isCompositeOutputHandle } from './handle';
 import { commitCompositeReplay } from './replay';
 import type { CompositeExecutionContext, PreparedCompositeOutputs } from './types';

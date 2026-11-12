@@ -16,8 +16,8 @@ const OutputImplementation: FC<OutputImplementationProps> = props => {
   const text = outputImplementationI18n[lang];
   const stages = [
     { id: 'manager', name: 'compileScene', state: false },
-    { id: 'subtree', name: 'SubtreeCompiler.run', state: false },
-    { id: 'assemble', name: 'assembleSceneCompilationSnapshot', state: false },
+    { id: 'subtree', name: 'assembleCompileSubtree', state: false },
+    { id: 'assemble', name: 'finalizeSceneCompilation', state: false },
     { id: 'publish', name: 'SceneReconciler', state: true },
   ] as const;
   const inputs = [{ id: 'options', name: 'IRScene + options', target: 'manager' }] as const;

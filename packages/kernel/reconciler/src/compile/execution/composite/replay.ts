@@ -22,8 +22,7 @@ import {
   importSceneResources,
   replaceCompileWarningOccurrence,
 } from '../../shared';
-import type { SubtreeCompileRuntime } from '../runtime';
-import type { SubtreeOutputContribution } from '../types';
+import type { SubtreeCompileRuntime, SubtreeOutputContribution } from '../subtree';
 import type { CompositeExecutionContext, PreparedReplay } from './types';
 
 /** 将选中试编译的全部贡献提交到当前输出帧 */

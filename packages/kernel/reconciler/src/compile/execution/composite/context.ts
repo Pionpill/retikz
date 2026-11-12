@@ -8,7 +8,7 @@ import {
 import type { PropertyPath } from '@retikz/foundation';
 import { formatPropertyPath } from '@retikz/foundation';
 
-import type { SubtreeCompileRuntime } from '../runtime';
+import type { SubtreeCompileRuntime } from '../subtree';
 import { raiseLayoutChildFailure } from './failure';
 import { createCompositeBoundChild, createCompositeReplayChild, createCompositeScopeChild } from './handle';
 import { createCompositeMeasurementMethods } from './measurement';
