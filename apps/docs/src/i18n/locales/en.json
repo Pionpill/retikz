@@ -384,7 +384,9 @@
     "compPointMark": "PointMark",
     "compIntervalMark": "IntervalMark",
     "compAxis": "Axis",
-    "compLegend": "Legend"
+    "compLegend": "Legend",
+    "chartLines": "paths · Line charts",
+    "chartLine": "Line"
   },
   "blog": {
     "notTranslatedYet": "This article is not yet translated; the Chinese version is shown below",

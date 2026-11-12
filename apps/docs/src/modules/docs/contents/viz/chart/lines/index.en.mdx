@@ -1,0 +1,19 @@
+---
+title: paths · Line charts
+description: Show change through connections within ordered series.
+---
+
+Line charts show change across time, numeric positions, or ordered categories. Keep input row order, connection order, and axis order distinct.
+
+## Choosing a chart
+
+| Chart                                                    | When to use it                                          | Required data                                          |
+| -------------------------------------------------------- | ------------------------------------------------------- | ------------------------------------------------------ |
+| [Line](/viz/chart/lines/line)                            | Follow a measure across one or more series              | Position and measure; optional series and order fields |
+| [Connected Scatter](/viz/chart/points/connected-scatter) | Trace a trajectory through two-dimensional observations | Two coordinates and an explicit connection order       |
+
+<ComponentPreviews
+  items={[{ title: 'Line', url: '/viz/chart/lines/line', files: '/viz/chart/lines/line/line-minimal' }]}
+/>
+
+Smooth, stepped, marked, and compact lines are configurations, not separate chart types. A sparkline uses a compact layout with axes and grids hidden. Slope, Bump, and area charts remain planned; this section documents the implemented Line chart.

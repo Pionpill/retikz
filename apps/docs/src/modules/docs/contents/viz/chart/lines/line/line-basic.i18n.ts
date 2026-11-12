@@ -1,0 +1,41 @@
+import type { Lang } from '@/i18n';
+
+/** 折线示例与交互面板的双语文案 */
+export const lineBasicI18n = {
+  zh: {
+    settings: '折线配置',
+    point: '显示观测点',
+    pointSize: '点半径',
+    connectNulls: '连接缺口',
+    curve: '连接方式',
+    linear: '直线',
+    step: '阶梯',
+    stepBefore: '前置阶梯',
+    stepAfter: '后置阶梯',
+    basis: 'B 样条',
+    cardinal: 'Cardinal 样条',
+    catmullRom: 'Catmull–Rom 样条',
+    monotoneX: 'X 单调插值',
+    monotoneY: 'Y 单调插值',
+    natural: '自然三次样条',
+    width: '线宽',
+  },
+  en: {
+    settings: 'Line settings',
+    point: 'Show points',
+    pointSize: 'Point radius',
+    connectNulls: 'Connect gaps',
+    curve: 'Connection',
+    linear: 'Linear',
+    step: 'Step',
+    stepBefore: 'Step before',
+    stepAfter: 'Step after',
+    basis: 'Basis spline',
+    cardinal: 'Cardinal spline',
+    catmullRom: 'Catmull–Rom spline',
+    monotoneX: 'Monotone X',
+    monotoneY: 'Monotone Y',
+    natural: 'Natural cubic spline',
+    width: 'Stroke width',
+  },
+} satisfies Record<Lang, Record<string, string>>;

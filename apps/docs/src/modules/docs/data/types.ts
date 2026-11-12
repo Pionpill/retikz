@@ -54,6 +54,8 @@ export type ShowcaseMetadata = {
 
 /** 文档侧栏图标标识 */
 export type DocSidebarIcon =
+  | 'chart-paths'
+  | 'chart-line'
   | 'chart-scatter'
   | 'chart-bubble'
   | 'chart-regression'

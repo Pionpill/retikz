@@ -4,3 +4,5 @@ export * from './RangedDotChartIcon';
 export * from './RegressionChartIcon';
 export * from './ScatterChartIcon';
 export * from './StripChartIcon';
+export * from './LineChartIcon';
+export * from './PathsChartIcon';

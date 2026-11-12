@@ -190,6 +190,14 @@ export const vizV01: Release = {
       },
       highlights: [
         {
+          label: { zh: '待发布：Line 折线图', en: 'Unreleased: Line charts' },
+          content: {
+            zh: '新增三个 Chart 包的 /line 入口，提供 LineChart、LineMark、精确 Source 与 Vanilla InputEmbed。默认只画线、线宽 2；支持系列、可选观测点、曲线／阶梯、缺值桥接和分面。省略 order 保留数据顺序，不按坐标轴 domain 自动排序。',
+            en: 'Adds /line entries to all three Chart packages with LineChart, LineMark, exact Source, and Vanilla InputEmbed. Defaults to lines only at width 2, with series, optional markers, curves/steps, gap bridges, and facets. Omitting order preserves row order rather than sorting by axis domain.',
+          },
+        },
+
+        {
           label: { zh: '待发布：BREAKING Chart locator API', en: 'Unreleased: BREAKING Chart locator API' },
           content: {
             zh: 'Point 入口移除 qualifyBubbleChartLocatorOptions、qualifyConnectedScatterChartLocatorOptions、qualifyRangedDotChartLocatorOptions、qualifyRegressionChartLocatorOptions 和 qualifyScatterChartLocatorOptions。具体图表的精确 schema 与 provider contribution 入口保持。',

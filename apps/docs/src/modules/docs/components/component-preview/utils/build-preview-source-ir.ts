@@ -1,5 +1,7 @@
 import type { IRChartSource } from '@retikz/chart';
 import { CHART_NAMESPACE } from '@retikz/chart';
+import { LineChart } from '@retikz/chart-react/line';
+import type { LineChartProps } from '@retikz/chart-react/line';
 import type {
   BubbleChartProps,
   ConnectedScatterChartProps,
@@ -16,6 +18,7 @@ import {
   ScatterChart,
   StripChart,
 } from '@retikz/chart-react/point';
+import type { IRLineChart } from '@retikz/chart/line';
 import type {
   IRBubbleChart,
   IRConnectedScatterChart,
@@ -63,6 +66,7 @@ import { Fragment, isValidElement } from 'react';
 import { previewEmbedPropsOf } from './preview-embed';
 
 type TypedChartSource =
+  | IRLineChart
   | IRScatterChart
   | IRBubbleChart
   | IRConnectedScatterChart
@@ -302,7 +306,7 @@ const sourceGraphChildOf = (
 ): IRChild => {
   if (isInputGraphEmbed(input)) {
     if (
-      [ScatterChart, BubbleChart, ConnectedScatterChart, RangedDotChart, RegressionChart, StripChart].some(
+      [LineChart, ScatterChart, BubbleChart, ConnectedScatterChart, RangedDotChart, RegressionChart, StripChart].some(
         component => input.kind === component.inputEmbedAdapter.kind,
       )
     ) {
@@ -368,6 +372,7 @@ const sourceOf = (value: ReactNode): TypedChartSource | undefined => {
     return typedChartSourceOf(BubbleChart, value.props as BubbleChartProps);
   }
 
+  if (value.type === LineChart) return typedChartSourceOf(LineChart, value.props as LineChartProps);
   if (value.type === ConnectedScatterChart) {
     return typedChartSourceOf(ConnectedScatterChart, value.props as ConnectedScatterChartProps);
   }
@@ -438,6 +443,6 @@ export const buildPreviewSourceIR = (
 
 /** Narrow chart source guard for callers that need to inspect the Source IR union */
 export const isPreviewChartSource = (value: IRChild): value is TypedChartSource =>
-  'namespace' in value && value.namespace === CHART_NAMESPACE && value.type === 'point';
+  'namespace' in value && value.namespace === CHART_NAMESPACE && (value.type === 'point' || value.type === 'line');
 
 export type PreviewChartSource = IRChartSource;

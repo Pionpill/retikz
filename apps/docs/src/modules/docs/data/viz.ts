@@ -443,6 +443,28 @@ export const vizSection: Array<Section> = [
         },
       },
       {
+        id: 'lines',
+        label: 'viz.chartLines',
+        icon: 'chart-paths',
+        sidebarGroup: 'viz.chartComponents',
+        children: [
+          {
+            id: 'line',
+            label: 'viz.chartLine',
+            icon: 'chart-line',
+            difficulty: DocDifficulty.Beginner,
+            meta: {
+              pageType: 'component',
+              audience: 'user',
+              capability: 'chart.line',
+              sourceOfTruth: 'docs',
+              layout: 'article',
+            },
+          },
+        ],
+        meta: { pageType: 'group', audience: 'user', capability: 'chart.lines', sourceOfTruth: 'architecture' },
+      },
+      {
         id: 'model',
         label: 'viz.chartModel',
         sidebarGroup: 'viz.chartInternals',

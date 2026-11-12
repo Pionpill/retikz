@@ -384,7 +384,9 @@
     "compPointMark": "point · 点图元",
     "compIntervalMark": "interval · 区间图元",
     "compAxis": "axis · 坐标轴",
-    "compLegend": "legend · 图例"
+    "compLegend": "legend · 图例",
+    "chartLines": "paths · 线图",
+    "chartLine": "line · 折线图"
   },
   "blog": {
     "notTranslatedYet": "本文尚未提供英文版，以下为中文原文",

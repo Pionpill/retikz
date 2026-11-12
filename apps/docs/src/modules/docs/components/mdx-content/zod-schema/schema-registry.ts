@@ -5,6 +5,16 @@ import {
   ChartPlotExtensionSchema,
 } from '@retikz/chart';
 import {
+  LineChartSchema,
+  LineChartRecipeSchema,
+  LineChartEncodingsSchema,
+  LineChartPropertiesSchema,
+  LineChartMarkSchema,
+  LinePointPropertiesSchema,
+  LinePathPropertiesSchema,
+  LineMarkEncodingsSchema,
+} from '@retikz/chart/line';
+import {
   ScatterPositionScaleBindingSchema,
   ScatterColorScaleBindingSchema,
   BubbleChartSchema,
@@ -170,6 +180,15 @@ export type SchemaRegistryEntry = {
 };
 
 export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
+  LineChartSchema: { schema: LineChartSchema, label: 'LineChartSchema' },
+  LineChartRecipeSchema: { schema: LineChartRecipeSchema, label: 'LineChartRecipeSchema' },
+  LineChartEncodingsSchema: { schema: LineChartEncodingsSchema, label: 'LineChartEncodingsSchema' },
+  LineChartPropertiesSchema: { schema: LineChartPropertiesSchema, label: 'LineChartPropertiesSchema' },
+  LineChartMarkSchema: { schema: LineChartMarkSchema, label: 'LineChartMarkSchema' },
+  LinePointPropertiesSchema: { schema: LinePointPropertiesSchema, label: 'LinePointPropertiesSchema' },
+  LinePathPropertiesSchema: { schema: LinePathPropertiesSchema, label: 'LinePathPropertiesSchema' },
+  LineMarkEncodingsSchema: { schema: LineMarkEncodingsSchema, label: 'LineMarkEncodingsSchema' },
+
   ScatterPositionScaleBindingSchema: {
     schema: ScatterPositionScaleBindingSchema,
     label: 'ScatterPositionScaleBindingSchema',
