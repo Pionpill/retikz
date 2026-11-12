@@ -5,3 +5,4 @@ export * from './presentation';
 export * from './resolve';
 export * from './theme';
 export * from './types';
+export * from './scaffold';

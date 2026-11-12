@@ -3,11 +3,11 @@ import type { IRScene, ThemeDefinition } from '@retikz/core';
 import type { ExternalRow, DataInputBindings, DataTransformExecutor } from '@retikz/data';
 import type { PlotsLoweringOptions } from '@retikz/plot';
 
-import type { InputChartCoordinate, InputChartPresentation } from '../../normalize/chart';
-import type { InputChartPanel } from '../../shared';
+import type { InputChartCoordinate, InputChartPresentation } from '../normalize/chart';
+import type { InputChartPanel } from '../shared';
 
 /**
- * Point family 各 concrete chartType 共用的 Vanilla 输入字段
+ * Chart 各 concrete chartType 共用的 Vanilla 输入字段
  * @template TNative 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
  * @template TSource 当前 chartType 的精确 Chart 输入声明类型，关联 recipe 与运行时组装
  */

@@ -3,9 +3,9 @@ import type { JsonObject, JsonValue } from '@retikz/foundation';
 import type { IRPlotGuide } from '@retikz/plot';
 import { PlotGuide, BuiltinPlotScale } from '@retikz/plot';
 
+import { chartRecipeId } from '../../_chart/resolve';
 import type { ChartEncodingFieldConsumer } from '../../_chart/resolve';
 import { RetikzChartError, RetikzChartErrorCode } from '../../error';
-import { pointRecipeId } from './plot';
 
 const invalidPoint = (message: string, path: ReadonlyArray<string | number>): RetikzChartError =>
   new RetikzChartError({
@@ -59,7 +59,7 @@ export const pointPositionFieldConsumersOf = (
     scale: {
       family: 'position',
       positionRole: 'x',
-      recipeFallback: { name: pointRecipeId(chartType, 'scale.x'), type: BuiltinPlotScale.Linear },
+      recipeFallback: { name: chartRecipeId(chartType, 'scale.x'), type: BuiltinPlotScale.Linear },
     },
   },
   {
@@ -67,7 +67,7 @@ export const pointPositionFieldConsumersOf = (
     scale: {
       family: 'position',
       positionRole: 'y',
-      recipeFallback: { name: pointRecipeId(chartType, 'scale.y'), type: BuiltinPlotScale.Linear },
+      recipeFallback: { name: chartRecipeId(chartType, 'scale.y'), type: BuiltinPlotScale.Linear },
     },
   },
 ];

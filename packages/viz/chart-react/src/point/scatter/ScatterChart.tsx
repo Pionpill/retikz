@@ -2,8 +2,8 @@ import type { ScatterChartInputEmbedProps } from '@retikz/chart-vanilla/point';
 import { scatterChart, scatterChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';
 import type { IRScatterChart } from '@retikz/chart/point';
 
-import type { TypedChartCommonProps } from '../shared';
-import { createTypedChartComponent, createTypedChartInput } from '../shared';
+import type { TypedChartCommonProps } from '../../authoring';
+import { createTypedChartComponent, createTypedChartInput } from '../../authoring';
 import { collectScatterChartDeclarations } from './declaration-collection';
 
 /**

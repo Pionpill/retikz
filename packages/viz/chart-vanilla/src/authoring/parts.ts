@@ -3,8 +3,8 @@ import type { CoreProviderContribution } from '@retikz/core';
 import type { ExternalRow, DataInputBindings, DataTransformExecutor } from '@retikz/data';
 import type { PlotsLoweringOptions } from '@retikz/plot';
 
-import type { InputChartCoordinate } from '../../normalize/chart';
-import type { InputChartRuntime, InputChartPanel } from '../../shared';
+import type { InputChartCoordinate } from '../normalize/chart';
+import type { InputChartRuntime, InputChartPanel } from '../shared';
 import type { InputChartCommon } from './types';
 
 /** 未显式提供 dataRef 时使用的稳定数据引用 */
@@ -108,7 +108,7 @@ export const typedChartPartsOf = <TSource extends IRChartSource, TNative>(
  * @template TNative 原生数据源句柄类型，关联数据绑定与执行器支持的源
  * @template TSource 当前 chartType 的精确 Chart 输入声明类型，关联 recipe 与运行时组装
  */
-export const buildPointChartRuntime = <TSource extends IRChartSource, TNative>(
+export const buildChartRuntime = <TSource extends IRChartSource, TNative>(
   source: TSource,
   parts: TypedChartParts<TSource, TNative>,
   provider: CoreProviderContribution,

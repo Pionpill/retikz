@@ -16,14 +16,9 @@ import { PathCurve, PathPropertiesSchema } from '@retikz/plot';
 import type { infer as ZodInfer, RefinementCtx } from 'zod';
 import { array, boolean, enum as zodEnum, literal, number, strictObject, union } from 'zod';
 
-import { createChartSourceSchema } from '../../_chart/schemas';
+import { ChartRecipeGuidesSchema, createChartSourceSchema } from '../../_chart/schemas';
 import { ChartFamily, ChartType } from '../constants';
-import {
-  PointAutoPaddingSchema,
-  PointPositionDomainPaddingSchema,
-  PointPropertiesSchema,
-  PointRecipeGuidesSchema,
-} from '../shared';
+import { PointAutoPaddingSchema, PointPositionDomainPaddingSchema, PointPropertiesSchema } from '../shared';
 import { RegressionChartEncodingsSchema } from './encoding-schema';
 
 /** Regression 原始观测点的完整常量 properties */
@@ -120,7 +115,7 @@ export const RegressionChartRecipeSchema = strictObject({
   chartType: literal(ChartType.Regression).describe('Globally unique Regression recipe key'),
   encodings: RegressionChartEncodingsSchema,
   properties: RegressionChartPropertiesSchema.optional(),
-  guides: PointRecipeGuidesSchema.optional(),
+  guides: ChartRecipeGuidesSchema.optional(),
   marks: array(RegressionChartMarkSchema).optional(),
 }).describe('Regression Chart recipe payload');
 

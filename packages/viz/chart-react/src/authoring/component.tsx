@@ -8,7 +8,7 @@ import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 import type { FC, ReactNode } from 'react';
 import { createElement, useMemo } from 'react';
 
-import { RetikzChartReactError } from '../../error';
+import { RetikzChartReactError } from '../error';
 import type {
   ChartDataProps,
   ChartDataRuntimeProps,
@@ -20,17 +20,17 @@ import type {
   CollectedChartDeclaration,
   CollectedChartDeclarations,
   InputEmbeddableChartComponent,
-} from '../../shared';
+} from '../shared';
 import {
   assertChartExtensionChildren,
   mergeThemeDefinitions,
   prepareStandaloneChartDeclarations,
   useChartThemeDefinitions,
-} from '../../shared';
+} from '../shared';
 import { lowerOptionsWithAmbientThemeOf, lowerOptionsWithPlotRuntimeOf } from './helpers';
 
 /**
- * Point family concrete Chart 共用的 React 根属性
+ * Chart concrete Chart 共用的 React 根属性
  * @template TNative 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
  * @template TSource 当前 chartType 的精确 Chart 输入声明类型，关联 recipe 与运行时组装
  */
@@ -57,7 +57,7 @@ export type TypedChartCommonProps<TSource extends IRChartSource, TNative = never
     children?: ReactNode;
   }>;
 
-type InputPointFactory = Readonly<{
+type InputChartFactory = Readonly<{
   data?: Array<ExternalRow>;
   dataBindings?: DataInputBindings<unknown>;
   coordinate?: InputChartCoordinate;
@@ -69,7 +69,7 @@ type InputPointFactory = Readonly<{
 
 type PlotExtensionAuthoringContext = Parameters<typeof resolvePlotExtensionAuthoring>[1];
 
-type TypedPointChartDeclarations<TInput extends InputPointFactory> = CollectedChartDeclarations &
+type TypedChartDeclarations<TInput extends InputChartFactory> = CollectedChartDeclarations &
   Readonly<{
     encodings?: CollectedChartDeclaration<TInput['encodings']>;
     properties?: CollectedChartDeclaration<NonNullable<TInput['properties']>>;
@@ -77,7 +77,7 @@ type TypedPointChartDeclarations<TInput extends InputPointFactory> = CollectedCh
     presentation: Partial<Record<'title' | 'subtitle' | 'note' | 'source', unknown>>;
   }>;
 
-type TypedChartRootRecipe<TInput extends InputPointFactory> = Readonly<{
+type TypedChartRootRecipe<TInput extends InputChartFactory> = Readonly<{
   encodings?: TInput['encodings'];
   properties?: TInput['properties'];
   guides?: TInput['guides'];
@@ -143,7 +143,7 @@ const rootDeclarationConflictError = (slot: string, declaration: string): Retikz
 
 const presentationOf = (
   rootPresentation: IRChartSource['presentation'] | undefined,
-  declarationPresentation: TypedPointChartDeclarations<InputPointFactory>['presentation'],
+  declarationPresentation: TypedChartDeclarations<InputChartFactory>['presentation'],
 ): Partial<Record<'title' | 'subtitle' | 'note' | 'source', unknown>> => {
   const presentation: Partial<Record<'title' | 'subtitle' | 'note' | 'source', unknown>> = {};
 
@@ -170,10 +170,10 @@ const presentationOf = (
 export const createTypedChartInput = <
   TProps extends TypedChartCommonProps<TSource, unknown>,
   TSource extends IRChartSource,
-  TInput extends InputPointFactory,
+  TInput extends InputChartFactory,
 >(
   props: TProps,
-  declarations: TypedPointChartDeclarations<TInput>,
+  declarations: TypedChartDeclarations<TInput>,
   factory: (input: TInput) => InputEmbed<TInput>,
   encodingsDeclarationName: string,
 ): TInput => {

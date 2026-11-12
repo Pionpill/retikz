@@ -15,9 +15,9 @@ import { NonBlankStringSchema, NonNegativeNumberSchema } from '@retikz/foundatio
 import type { infer as ZodInfer } from 'zod';
 import { array, boolean, enum as zodEnum, literal, number, strictObject, union } from 'zod';
 
-import { createChartSourceSchema } from '../../_chart/schemas';
+import { ChartRecipeGuidesSchema, createChartSourceSchema } from '../../_chart/schemas';
 import { ChartFamily, ChartType } from '../constants';
-import { PointAutoPaddingSchema, PointPositionDomainPaddingSchema, PointRecipeGuidesSchema } from '../shared';
+import { PointAutoPaddingSchema, PointPositionDomainPaddingSchema } from '../shared';
 import { RangedDotChartEncodingsSchema } from './encoding-schema';
 
 /** Ranged Dot endpoint 允许的常量 Point 表现 */
@@ -80,7 +80,7 @@ export const RangedDotChartRecipeSchema = strictObject({
   chartType: literal(ChartType.RangedDot),
   encodings: RangedDotChartEncodingsSchema,
   properties: RangedDotChartPropertiesSchema.optional(),
-  guides: PointRecipeGuidesSchema.optional(),
+  guides: ChartRecipeGuidesSchema.optional(),
   marks: array(RangedDotChartMarkSchema).optional(),
 }).describe('Ranged Dot Chart recipe payload');
 

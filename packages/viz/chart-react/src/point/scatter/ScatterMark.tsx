@@ -1,7 +1,7 @@
 import type { IRScatterChart } from '@retikz/chart/point';
 import type { FC } from 'react';
 
-import type { ChartMarkOf } from '../shared';
+import type { ChartMarkOf } from '../../authoring';
 
 /** Scatter Chart mark 的精确 Source payload */
 export type ScatterChartMark = Extract<ChartMarkOf<IRScatterChart>, { kind: 'scatter' }>;

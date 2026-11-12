@@ -1,14 +1,16 @@
-import type { ChartRecipeDefinition, ChartRecipeResolveContext } from '../../_chart/contract';
 import { defineChartRecipe } from '../../_chart/contract';
-import { resolveChartEncodingMappings } from '../../_chart/resolve';
+import type { ChartRecipeDefinition, ChartRecipeResolveContext } from '../../_chart/contract';
+import {
+  chartResolutionOf,
+  chartSlotsOf,
+  chartSpatialResolutionOf,
+  resolveChartGuideDefaults,
+  resolveChartEncodingMappings,
+} from '../../_chart/resolve';
 import { ChartType } from '../constants';
 import {
   pointFieldConsumersOf,
   pointPropertySlots,
-  pointResolutionOf,
-  pointSlotsOf,
-  pointSpatialResolutionOf,
-  resolvePointGuideDefaults,
   resolvePointMark,
   resolvePointScaleDefaults,
   sizeGuideOf,
@@ -46,19 +48,19 @@ export const scatterChartDefinition: ChartRecipeDefinition<IRScatterChart> = def
       scatterChartEncodingSlots,
       pointFieldConsumersOf(ChartType.Scatter),
     );
-    const spatial = pointSpatialResolutionOf(ChartType.Scatter, context.encodings);
+    const spatial = chartSpatialResolutionOf(ChartType.Scatter, context.encodings);
 
     return spatial === undefined ? resolution : { ...resolution, spatial };
   },
   resolve: (context: ChartRecipeResolveContext) => {
-    const slots = pointSlotsOf(context);
+    const slots = chartSlotsOf(context);
     const mark = resolvePointMark(slots.encodings, slots.properties);
     const sizeGuide = sizeGuideOf(slots.encodings);
 
-    return pointResolutionOf(ChartType.Scatter, [{ kind: ChartType.Scatter, plotMarks: [mark] }], {
+    return chartResolutionOf(ChartType.Scatter, [{ kind: ChartType.Scatter, plotMarks: [mark] }], {
       guides: sizeGuide === undefined ? [] : [sizeGuide],
     });
   },
   resolveScaleDefaults: resolvePointScaleDefaults,
-  resolveGuideDefaults: resolvePointGuideDefaults,
+  resolveGuideDefaults: resolveChartGuideDefaults,
 });

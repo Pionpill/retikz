@@ -3,21 +3,21 @@ import type { infer as ZodInfer } from 'zod';
 import { strictObject } from 'zod';
 
 import {
-  createPointPositionEncodingSchema,
-  PointColorEncodingSchema,
-  PointPartitionEncodingSchema,
-  PointPositionScaleBindingSchema,
-  refinePointFacetEncodings,
-} from '../shared';
+  ChartPositionScaleBindingSchema,
+  ChartPartitionEncodingSchema,
+  createChartPositionEncodingSchema,
+  refineChartFacetEncodings,
+} from '../../_chart/schemas';
+import { PointColorEncodingSchema } from '../shared';
 
 /** Ranged Dot category 字段映射 */
-export const RangedDotCategoryEncodingSchema = createPointPositionEncodingSchema('y', 'Ranged Dot');
+export const RangedDotCategoryEncodingSchema = createChartPositionEncodingSchema('y', 'Ranged Dot');
 
 /** Ranged Dot start 字段映射 */
-export const RangedDotStartEncodingSchema = createPointPositionEncodingSchema('x', 'Ranged Dot');
+export const RangedDotStartEncodingSchema = createChartPositionEncodingSchema('x', 'Ranged Dot');
 
 /** Ranged Dot end 字段映射 */
-export const RangedDotEndEncodingSchema = createPointPositionEncodingSchema('x', 'Ranged Dot');
+export const RangedDotEndEncodingSchema = createChartPositionEncodingSchema('x', 'Ranged Dot');
 
 type RangedDotPositionEncoding = ZodInfer<typeof RangedDotStartEncodingSchema>;
 
@@ -25,7 +25,7 @@ type RangedDotPositionEncoding = ZodInfer<typeof RangedDotStartEncodingSchema>;
 const authoredScaleNameOf = (mapping: RangedDotPositionEncoding): string | undefined => {
   if (typeof mapping === 'string') return undefined;
 
-  const parsed = PointPositionScaleBindingSchema.safeParse(mapping.scale);
+  const parsed = ChartPositionScaleBindingSchema.safeParse(mapping.scale);
   if (!parsed.success) return undefined;
 
   return 'reference' in parsed.data ? parsed.data.reference : parsed.data.operation.name;
@@ -40,12 +40,12 @@ export const RangedDotChartEncodingsSchema = strictObject({
   start: RangedDotStartEncodingSchema,
   end: RangedDotEndEncodingSchema,
   color: RangedDotColorEncodingSchema.optional(),
-  row: PointPartitionEncodingSchema.optional(),
-  column: PointPartitionEncodingSchema.optional(),
+  row: ChartPartitionEncodingSchema.optional(),
+  column: ChartPartitionEncodingSchema.optional(),
   facet: PlotFacetOptionsSchema.optional(),
 })
   .superRefine((encodings, context) => {
-    refinePointFacetEncodings({ ...encodings, x: encodings.start, y: encodings.category }, context, 'Ranged Dot');
+    refineChartFacetEncodings({ ...encodings, x: encodings.start, y: encodings.category }, context, 'Ranged Dot');
     const startScale = authoredScaleNameOf(encodings.start);
     const endScale = authoredScaleNameOf(encodings.end);
     if (startScale !== undefined && endScale !== undefined && startScale !== endScale) {

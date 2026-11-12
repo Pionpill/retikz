@@ -1,18 +1,18 @@
 import { CHART_NAMESPACE } from '@retikz/chart';
 
-import type { InputChartCoordinate, InputChartPresentation } from '../../normalize/chart';
-import { normalizeChartCoordinate, normalizeChartPresentation } from '../../normalize/chart';
+import type { InputChartCoordinate, InputChartPresentation } from '../normalize/chart';
+import { normalizeChartCoordinate, normalizeChartPresentation } from '../normalize/chart';
 
-type PointPartitionEncodings = Readonly<{
+type ChartPartitionEncodings = Readonly<{
   row?: unknown;
   column?: unknown;
 }>;
 
 /**
- * 展开 Point chartType 共用的 row / column 字段名 shorthand
+ * 展开 Chart chartType 共用的 row / column 字段名 shorthand
  * @template TEncodings 当前图表的精确字段映射结构类型
  */
-export const normalizePointPartitionEncodings = <TEncodings extends PointPartitionEncodings>(
+export const normalizeChartPartitionEncodings = <TEncodings extends ChartPartitionEncodings>(
   encodings: TEncodings,
 ) => ({
   ...encodings,

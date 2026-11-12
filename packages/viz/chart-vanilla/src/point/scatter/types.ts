@@ -1,6 +1,6 @@
 import type { IRScatterChart } from '@retikz/chart/point';
 
-import type { InputTypedChart, InputChartCommon } from '../shared';
+import type { InputTypedChart, InputChartCommon } from '../../authoring';
 
 /** Scatter Chart 的精确 Vanilla Source 组装输入 */
 export type InputScatterChart = InputTypedChart<IRScatterChart>;

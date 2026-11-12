@@ -2,19 +2,18 @@ import type { JsonObject } from '@retikz/foundation';
 import type { IRPlotGuide } from '@retikz/plot';
 import { PlotGuide, BuiltinPlotScale } from '@retikz/plot';
 
-import type { ChartRecipeDefinition, ChartRecipeResolveContext } from '../../_chart/contract';
 import { defineChartRecipe } from '../../_chart/contract';
-import { resolveChartEncodingMappings } from '../../_chart/resolve';
-import { ChartType } from '../constants';
+import type { ChartRecipeDefinition, ChartRecipeResolveContext } from '../../_chart/contract';
 import {
-  pointPositionFieldConsumersOf,
-  pointResolutionOf,
-  pointSlotsOf,
-  pointSpatialResolutionOf,
-  resolvePointGuideDefaults,
-  resolvePointScaleDefaults,
-} from '../shared';
-import { pointRecipeId } from '../shared/plot';
+  chartRecipeId,
+  chartResolutionOf,
+  chartSlotsOf,
+  chartSpatialResolutionOf,
+  resolveChartGuideDefaults,
+  resolveChartEncodingMappings,
+} from '../../_chart/resolve';
+import { ChartType } from '../constants';
+import { pointPositionFieldConsumersOf, resolvePointScaleDefaults } from '../shared';
 import { regressionMarkDefinition, resolveRegressionMarkGroup } from './mark';
 import type { IRRegressionChart } from './schema';
 import { RegressionChartSchema } from './schema';
@@ -26,7 +25,7 @@ const regressionMarkPropertySlots = ['method', 'sampleCount', 'extent', 'point',
 
 const regressionPropertySlots = [...regressionMarkPropertySlots, 'domainPadding', 'autoPadding'] as const;
 
-const seriesScaleName = pointRecipeId(ChartType.Regression, 'scale.series');
+const seriesScaleName = chartRecipeId(ChartType.Regression, 'scale.series');
 
 const regressionFieldConsumers = [
   ...pointPositionFieldConsumersOf(ChartType.Regression),
@@ -70,7 +69,7 @@ export const regressionChartDefinition: ChartRecipeDefinition<IRRegressionChart>
   ],
   resolveEncodings: context => {
     const resolution = resolveChartEncodingMappings(context, regressionChartEncodingSlots, regressionFieldConsumers);
-    const spatial = pointSpatialResolutionOf(ChartType.Regression, context.encodings);
+    const spatial = chartSpatialResolutionOf(ChartType.Regression, context.encodings);
 
     return {
       ...resolution,
@@ -79,11 +78,11 @@ export const regressionChartDefinition: ChartRecipeDefinition<IRRegressionChart>
     };
   },
   resolve: (context: ChartRecipeResolveContext) => {
-    const slots = pointSlotsOf(context);
+    const slots = chartSlotsOf(context);
     const hasSeries = Object.hasOwn(slots.encodings, 'series');
     const guides: Array<IRPlotGuide> = hasSeries ? [{ type: PlotGuide.Legend, channel: 'stroke' }] : [];
 
-    return pointResolutionOf(
+    return chartResolutionOf(
       ChartType.Regression,
       [{ kind: ChartType.Regression, plotMarks: resolveRegressionMarkGroup(slots.encodings, slots.properties, true) }],
       {
@@ -93,5 +92,5 @@ export const regressionChartDefinition: ChartRecipeDefinition<IRRegressionChart>
     );
   },
   resolveScaleDefaults: resolvePointScaleDefaults,
-  resolveGuideDefaults: resolvePointGuideDefaults,
+  resolveGuideDefaults: resolveChartGuideDefaults,
 });

@@ -6,14 +6,14 @@ import { BuiltinPlotMark } from '@retikz/plot';
 
 import type { ChartMarkDefinition, ChartMarkResolveContext } from '../../_chart/contract';
 import { defineChartMark } from '../../_chart/contract';
+import { chartRecipeId } from '../../_chart/resolve';
 import { markOpacityOf, mergeMarkProperties, requiredFieldOf, resolvePointMark } from '../shared';
-import { pointRecipeId } from '../shared/plot';
 import type { IRRegressionChartProperties, IRRegressionMark } from './schema';
 import { RegressionChartMarkSchema, RegressionTrendCurveSchema } from './schema';
 
-const trendXField = pointRecipeId('regression', 'trend.x');
+const trendXField = chartRecipeId('regression', 'trend.x');
 
-const trendYField = pointRecipeId('regression', 'trend.y');
+const trendYField = chartRecipeId('regression', 'trend.y');
 
 type RegressionSeriesMapping = Readonly<{
   field: string;
@@ -24,7 +24,7 @@ const seriesMappingOf = (encodings: JsonObject): RegressionSeriesMapping | undef
   if (!Object.hasOwn(encodings, 'series')) return undefined;
 
   const value = encodings.series;
-  const fallbackScale = pointRecipeId('regression', 'scale.series');
+  const fallbackScale = chartRecipeId('regression', 'scale.series');
   if (typeof value === 'string') return { field: value, scale: fallbackScale };
 
   const mapping = value as JsonObject;

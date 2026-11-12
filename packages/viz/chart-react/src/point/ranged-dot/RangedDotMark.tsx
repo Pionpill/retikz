@@ -1,7 +1,7 @@
 import type { IRRangedDotChart } from '@retikz/chart/point';
 import type { FC } from 'react';
 
-import type { ChartMarkOf } from '../shared';
+import type { ChartMarkOf } from '../../authoring';
 
 /** Ranged Dot Chart mark 的精确 Source payload */
 export type RangedDotChartMark = Extract<ChartMarkOf<IRRangedDotChart>, { kind: 'ranged-dot' }>;
