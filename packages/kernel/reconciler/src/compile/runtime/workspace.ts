@@ -1,6 +1,7 @@
 import type { ClipRegistry, CompileWarning, BoundaryStore, PaintRegistry } from '@retikz/core';
 import { createClipRegistry, createBoundaryStore, createPaintRegistry } from '@retikz/core';
 
+import { createWorkspaceClipRegistry } from './clip-cache';
 import type { SharedCompileContext } from './context';
 
 /** 单次计算独占的几何、资源与诊断工作区 */
@@ -27,7 +28,7 @@ type CompileDiagnosticCollector = Readonly<{
 export const createWorkspaceCompileState = (shared: SharedCompileContext): WorkspaceCompileState => {
   const warnings: Array<CompileWarning> = [];
   const paintRegistry = createPaintRegistry(shared.layout.round);
-  const clipRegistry = createClipRegistry(shared.layout.round, shared.limits.maxClipDepth);
+  const clipRegistry = createWorkspaceClipRegistry(createClipRegistry(shared.layout.round, shared.limits.maxClipDepth));
   return {
     boundaryStore: createBoundaryStore(),
     paintRegistry,
