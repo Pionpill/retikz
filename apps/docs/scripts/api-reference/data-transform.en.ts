@@ -502,6 +502,53 @@ const translations: Partial<Record<string, string>> = {
   '解析 transform registry': 'Resolves the transform Definition registry',
   '内置 transform 总是先注册；用户自定义 definition 不能覆盖内置 kind，也不能彼此重复':
     'Built-ins are registered first; custom Definitions cannot override built-in kinds or duplicate one another',
+  已解析参数对应的有序依赖: 'Ordered dependencies derived from parsed parameters',
+  '异构拟合计算注册项；调用前必须精确解析参数':
+    'Heterogeneous regression registration; parameters must be parsed before invocation',
+  '同步入口；整个依赖树必须具有同步能力':
+    'Synchronous entry; every transitive dependency must support synchronous fitting',
+  '异步入口；省略时异步执行器复用完整同步依赖树':
+    'Asynchronous entry; when omitted, async execution reuses a fully synchronous dependency tree',
+  未提供同步能力时不可进入同步执行集合:
+    'Without synchronous capability, this implementation cannot enter the synchronous execution set',
+  '异步入口；依赖可以是同步或异步实现': 'Asynchronous entry supporting synchronous or asynchronous dependencies',
+  '同步拟合入口要求显式提供 fit，不接受仅有 fitAsync 的实现':
+    'Synchronous fitting requires fit; implementations providing only fitAsync are excluded',
+  '可选异步能力；同步执行不会调用此入口':
+    'Optional asynchronous capability; synchronous execution never calls this entry',
+  本次请求的语义身份: 'Definition identity for this request',
+  保留候选顺序的传递依赖: 'Transitive dependencies preserving candidate order',
+  精确解析后的方法声明: 'Precisely parsed method declaration',
+  'Data 计算依赖类别': 'Data computation dependency category',
+  '从精确参数声明有序拟合依赖，不读取观测':
+    'Declares ordered regression dependencies from parsed parameters without reading observations',
+  不含执行状态的拟合依赖树: 'Regression dependency tree without execution state',
+  '已准备的组合拟合依赖；同步入口只注入同步回调':
+    'Prepared composite fitting dependencies; synchronous entries receive synchronous callbacks only',
+  当前组最终预测域: 'Final prediction extent for the current group',
+  '按 Definition 声明顺序拟合一个依赖，继承当前预测域':
+    'Fits a dependency by its declared index, inheriting the current prediction extent',
+  '当前组拟合请求；预测域不进入持久化模型':
+    'Current group fitting request; prediction extent is not persisted in the model',
+  '拟合的独立计算实现，显式声明同步与异步能力':
+    'Independent regression implementation with explicit synchronous and asynchronous capabilities',
+  '方法 schema 接受的声明类型': 'Declaration type accepted by the method schema',
+  精确解析后的参数类型: 'Precisely parsed parameter type',
+  原始因变量空间中的样本内拟合优度: 'In-sample goodness of fit in the original response space',
+  同一批观测的均方误差: 'Mean squared error on the same observations',
+  '决定系数；常量响应时未定义': 'Coefficient of determination; undefined for constant responses',
+  当前阶段已精确解析的拟合依赖: 'Precisely parsed regression dependencies for the current stage',
+  保留同步入口与精确方法参数的关联: 'Preserves the association between synchronous fitting and exact method parameters',
+  '具备同步能力的计算实现；不会自动注册': 'Synchronous-capable implementation; does not register automatically',
+  '原样返回实现，保留必有同步入口的类型':
+    'Returns the implementation unchanged, retaining its required synchronous entry',
+  保留异步入口与精确方法参数的关联:
+    'Preserves the association between asynchronous fitting and exact method parameters',
+  '具备异步能力的计算实现；不会自动注册': 'Asynchronous-capable implementation; does not register automatically',
+  '原样返回实现，不推断或探测同步能力':
+    'Returns the implementation unchanged without inferring or probing synchronous capability',
+  '在原始观测位置评价模型，不使用绘制采样点或丢弃观测':
+    'Evaluates predictions at original observations without using drawing samples or dropping observations',
 };
 const missing = new Set<string>();
 

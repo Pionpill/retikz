@@ -453,7 +453,9 @@ describe('Chart 提供者通过 Core 编译', () => {
     { authored: true, showPoints: undefined, customScale: false },
     { authored: true, showPoints: false, customScale: true },
     { authored: true, showPoints: true, customScale: false },
-  ])('分组回归按观测点开关编译趋势与分类图例：%j', ({ authored, showPoints, customScale }) => {
+    { authored: true, showPoints: false, customScale: false, method: { kind: 'auto' } },
+    { authored: false, showPoints: undefined, customScale: false, method: { kind: 'auto' } },
+  ])('分组回归按观测点开关编译趋势与分类图例：%j', ({ authored, showPoints, customScale, method }) => {
     const regressionRows = [
       { series: 'A', x: 1, y: 2 },
       { series: 'A', x: 2, y: 4 },
@@ -479,7 +481,7 @@ describe('Chart 提供者通过 Core 编译', () => {
         ...(authored
           ? { marks: [{ kind: 'regression', override: true, ...(showPoints === undefined ? {} : { showPoints }) }] }
           : {}),
-        properties: { sampleCount: 3, trend: { strokeWidth: 7 } },
+        properties: { ...(method === undefined ? {} : { method }), sampleCount: 3, trend: { strokeWidth: 7 } },
       },
     });
     const definitions = resolveCoreProviderDependencies({
@@ -1130,13 +1132,17 @@ describe('注册回归编译', () => {
     return compileToScene(sceneOf(source), definitions);
   };
 
-  it('使用继承或覆盖曲线的主要趋势和额外趋势的自定义方法', () => {
+  it.each([false, true])('使用继承或覆盖曲线的主要趋势和额外趋势的自定义方法 auto=%s', auto => {
     const result = compile({
-      method: { kind: 'custom-polynomial' },
+      method: auto ? { kind: 'auto', candidates: ['linear', 'custom-polynomial'] } : { kind: 'custom-polynomial' },
       sampleCount: 6,
       trend: { strokeWidth: 7 },
       extraMethods: [
-        { method: { kind: 'custom-polynomial', degree: 1 } },
+        {
+          method: auto
+            ? { kind: 'auto', candidates: [{ kind: 'custom-polynomial', degree: 1 }] }
+            : { kind: 'custom-polynomial', degree: 1 },
+        },
         { method: { kind: 'custom-polynomial' }, trend: { curve: 'linear' } },
       ],
     });

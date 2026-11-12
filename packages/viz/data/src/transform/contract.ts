@@ -8,7 +8,11 @@ import type {
   AnyStatisticsReducerDefinition,
   AnySynchronousStatisticsReducerImplementation,
 } from '../operators/reducer';
-import type { AnyRegressionDefinition, AnySynchronousRegressionImplementation } from '../operators/regression';
+import type {
+  AnyRegressionDefinition,
+  AnySynchronousRegressionImplementation,
+  RegressionDependency,
+} from '../operators/regression';
 import type { AnyRowSelectorDefinition, AnySynchronousRowSelectorImplementation } from '../operators/selector';
 import type { DataLineageRecorder } from '../provenance';
 import type { ExternalRow } from '../shared';
@@ -102,6 +106,8 @@ export type DataTransformOutputModel =
  *   生成行没有源行时可自然降级
  */
 export type TransformContext = {
+  /** 当前阶段已精确解析的拟合依赖 */
+  regressionDependencies?: ReadonlyArray<RegressionDependency>;
   /** 读单行源序标记；未开启 provenance 或行未打标记时返回 undefined */
   readSourceIndex: (row: ExternalRow) => number | undefined;
   /** 读组级源序标记；bin / summarize 或自定义改行数 transform 输出行可能携带 */

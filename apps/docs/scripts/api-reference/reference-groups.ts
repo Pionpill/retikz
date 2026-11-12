@@ -1971,6 +1971,11 @@ export const referenceGroups: Readonly<Partial<Record<string, ReadonlyArray<Refe
       members: [
         'IRRegressionMethod',
         'RegressionPair',
+        'RegressionScore',
+        'evaluateRegression',
+        'RegressionFitOptions',
+        'RegressionFitContext',
+        'RegressionDependency',
         'RegressionModel',
         'RegressionResolution',
         'RegressionDefinition',

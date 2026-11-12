@@ -1,4 +1,5 @@
-import { RetikzDataError } from '../../error';
+import { RetikzDataError, RetikzDataErrorCode } from '../../error';
+import { autoRegressionDefinition, autoRegressionImplementation } from './auto';
 import type { AnyRegressionDefinition, AnySynchronousRegressionImplementation, RegressionPair } from './contract';
 import { defineRegression, defineRegressionImplementation } from './contract';
 import { assertPositiveDomain, fitPolynomial, linearModel } from './models';
@@ -7,7 +8,10 @@ import { BUILTIN_REGRESSION_METHOD_SCHEMAS } from './schema';
 
 /** 正自变量方法共用的预测域约束 */
 const assertPositiveExtent = (_operation: IRRegressionMethod, extent: readonly [number, number]): void => {
-  if (extent[0] <= 0) throw new RetikzDataError('data: regression sampling extent requires positive x values');
+  if (extent[0] <= 0)
+    throw new RetikzDataError('data: regression sampling extent requires positive x values', {
+      code: RetikzDataErrorCode.RegressionNotApplicable,
+    });
 };
 
 /** 对观测作对数变换；模型预测仍处于原数据空间 */
@@ -93,6 +97,7 @@ const powerRegressionImplementation = defineRegressionImplementation({
 
 /** 内置拟合均遵守同一 Definition 契约 */
 export const BUILTIN_REGRESSIONS: ReadonlyArray<AnyRegressionDefinition> = [
+  autoRegressionDefinition,
   linearRegressionDefinition,
   quadraticRegressionDefinition,
   polynomialRegressionDefinition,
@@ -103,6 +108,7 @@ export const BUILTIN_REGRESSIONS: ReadonlyArray<AnyRegressionDefinition> = [
 
 /** 内置同步拟合计算集合 */
 export const BUILTIN_REGRESSION_IMPLEMENTATIONS: ReadonlyArray<AnySynchronousRegressionImplementation> = [
+  autoRegressionImplementation,
   linearRegressionImplementation,
   quadraticRegressionImplementation,
   polynomialRegressionImplementation,

@@ -1,5 +1,5 @@
 ﻿import { describe, expect, it } from 'vitest';
-import { literal, strictObject, string } from 'zod';
+import { literal, number, strictObject, string } from 'zod';
 
 import type { DataTransformImplementationProvider, DataTransformModel, InputDataTransformStage } from '../../src';
 import {
@@ -474,7 +474,7 @@ it('在前进之前等待本地归约器、选择器和回归依赖项', async (
   const regression = defineRegression({ schema: strictObject({ kind: literal('async-fit') }) });
   const regressionImplementation = defineRegressionImplementation({
     definition: regression,
-    fit: async () => {
+    fitAsync: async () => {
       await Promise.resolve();
       calls.push('fit');
       return { predict: (x: number) => x * 2 };
@@ -964,4 +964,176 @@ it('使用异步自定义指标和存储聚合入口本地来源执行分层排�
   ]);
   expect(actual.rows.map(readSourceIndices)).toEqual([[3], [0], [2], undefined, [1], undefined]);
   expect(calls).toEqual([[0], [10], [1], [], [2], []]);
+});
+
+it('自动拟合在异步组合依赖中保留候选顺序与完整外部预检', async () => {
+  const calls: Array<number> = [];
+  const leaf = defineRegression({ schema: strictObject({ kind: literal('delayed-fit'), offset: number() }) });
+  const composite = defineRegression({
+    schema: strictObject({ kind: literal('delegated-fit'), offset: number() }),
+    dependencies: operation => [{ kind: 'delayed-fit', offset: operation.offset }],
+  });
+  const leafImplementation = defineRegressionImplementation({
+    definition: leaf,
+    fitAsync: async (_pairs, operation) => {
+      await Promise.resolve();
+      calls.push(operation.offset);
+      return { predict: (x: number) => (x === 0 || x === 1 ? 2 : operation.offset) };
+    },
+  });
+  const compositeImplementation = defineRegressionImplementation({
+    definition: composite,
+    fitAsync: async (pairs, _operation, context) => context.fitRegression(0, pairs),
+  });
+  const regressionRegistry = resolveRegressionRegistry([leaf, composite]);
+  const observationModel: DataTransformModel = [
+    { name: 'x', type: 'continuous' },
+    { name: 'y', type: 'continuous' },
+  ];
+  const resolution = resolveDataTransforms(
+    [
+      {
+        operation: {
+          kind: 'smooth',
+          params: {
+            x: 'x',
+            y: 'y',
+            xAs: 'tx',
+            yAs: 'ty',
+            extent: [0, 3],
+            sampleCount: 2,
+            method: {
+              kind: 'auto',
+              candidates: [
+                { kind: 'delegated-fit', offset: 7 },
+                { kind: 'delayed-fit', offset: 9 },
+              ],
+            },
+          },
+        },
+      },
+    ],
+    observationModel,
+    { regressionRegistry },
+  );
+  const current: InputDataTransformStage<never> = {
+    kind: 'result',
+    result: {
+      model: observationModel,
+      rows: [
+        { x: 0, y: 2 },
+        { x: 1, y: 2 },
+      ],
+    },
+  };
+  const executor = createDataTransformExecutor({
+    regressionImplementations: [leafImplementation, compositeImplementation],
+  });
+  expect((await executeDataTransforms(current, resolution, executor)).rows).toEqual([
+    { tx: 0, ty: 2 },
+    { tx: 3, ty: 7 },
+  ]);
+  expect(calls).toEqual([7, 9]);
+  calls.length = 0;
+  const external = createDataTransformExecutor({
+    dataExecution: { mode: 'hybrid', external: 'incomplete' },
+    regressionImplementations: [compositeImplementation],
+    externalProviders: [
+      {
+        name: 'incomplete',
+        provider: {
+          resolve: stage => {
+            const dependency = stage.dependencies[0];
+            expect(dependency.type).toBe('regression');
+            if (dependency.type === 'regression')
+              expect(dependency.dependencies[0].dependencies[0].operation.kind).toBe('delayed-fit');
+            return {
+              kind: 'unsupported',
+              diagnostics: [{ code: 'MISSING_CANDIDATE', message: 'missing nested candidate' }],
+            };
+          },
+        },
+      },
+    ],
+  });
+  await expect(executeDataTransforms(current, resolution, external)).rejects.toThrow();
+  expect(calls).toEqual([]);
+});
+
+it.each([false, true])('异步执行器预检同步组合的完整依赖能力 asyncLeaf=%s', async asyncLeaf => {
+  let calls = 0;
+  const leaf = defineRegression({ schema: strictObject({ kind: literal('capability-leaf') }) });
+  const parent = defineRegression({
+    schema: strictObject({ kind: literal('sync-parent') }),
+    dependencies: () => [{ kind: 'capability-leaf' }],
+  });
+  const parentImplementation = defineRegressionImplementation({
+    definition: parent,
+    fit: (pairs, _operation, context) => {
+      calls += 1;
+      return context.fitRegression(0, pairs);
+    },
+  });
+  const leafImplementation = asyncLeaf
+    ? defineRegressionImplementation({
+        definition: leaf,
+        fitAsync: async () => {
+          await Promise.resolve();
+          calls += 1;
+          return { predict: (x: number) => x * 2 };
+        },
+      })
+    : defineRegressionImplementation({
+        definition: leaf,
+        fit: () => {
+          calls += 1;
+          return { predict: (x: number) => x * 2 };
+        },
+      });
+  const observationModel: DataTransformModel = [
+    { name: 'x', type: 'continuous' },
+    { name: 'y', type: 'continuous' },
+  ];
+  const resolution = resolveDataTransforms(
+    [
+      {
+        operation: {
+          kind: 'smooth',
+          params: {
+            x: 'x',
+            y: 'y',
+            xAs: 'tx',
+            yAs: 'ty',
+            sampleCount: 2,
+            method: { kind: 'auto', candidates: ['linear', 'sync-parent'] },
+          },
+        },
+      },
+    ],
+    observationModel,
+    { regressionRegistry: resolveRegressionRegistry([leaf, parent]) },
+  );
+  const current: InputDataTransformStage<never> = {
+    kind: 'result',
+    result: {
+      model: observationModel,
+      rows: [
+        { x: 0, y: 0 },
+        { x: 1, y: 2 },
+      ],
+    },
+  };
+  const executor = createDataTransformExecutor({
+    regressionImplementations: [parentImplementation, leafImplementation],
+  });
+  if (asyncLeaf) {
+    await expect(executeDataTransforms(current, resolution, executor)).rejects.toThrow();
+    expect(calls).toBe(0);
+  } else {
+    expect((await executeDataTransforms(current, resolution, executor)).rows).toEqual([
+      { tx: 0, ty: 0 },
+      { tx: 1, ty: 2 },
+    ]);
+    expect(calls).toBe(2);
+  }
 });

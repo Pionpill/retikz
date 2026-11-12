@@ -1,11 +1,14 @@
 import { RetikzDataError } from '../../error';
 import { resolveImplementationRegistry } from '../../shared';
-import type { DataTransformDependency } from '../../transform';
 import type {
   AnyRegressionDefinition,
   AnyRegressionImplementation,
   AnySynchronousRegressionImplementation,
   RegressionResolution,
+  RegressionDependency,
+  RegressionFitOptions,
+  RegressionModel,
+  RegressionPair,
 } from './contract';
 import { extractRegressionKind } from './contract';
 import { BUILTIN_REGRESSION_IMPLEMENTATIONS, BUILTIN_REGRESSIONS } from './definitions';
@@ -31,15 +34,20 @@ export const resolveRegressionImplementationRegistry = <
 export const resolveRegressionDependency = (
   operation: IRRegressionMethod,
   registry: ReadonlyMap<string, AnyRegressionDefinition> = resolveRegressionRegistry(),
-): DataTransformDependency => {
-  return regressionBoundary(operation, () => {
-    const definition = registry.get(operation.kind);
-    if (definition === undefined) throw new RetikzDataError(`data: regression "${operation.kind}" is not registered`);
-
-    const parsed = definition.schema.parse(operation) as IRRegressionMethod;
-
-    return { type: 'regression', operation: parsed, definition };
-  });
+): RegressionDependency => {
+  const prepare = (method: IRRegressionMethod, ancestors: ReadonlyArray<string>): RegressionDependency =>
+    regressionBoundary(method, () => {
+      if (ancestors.includes(method.kind))
+        throw new RetikzDataError(`data: cyclic regression dependency: ${[...ancestors, method.kind].join(' -> ')}`);
+      const definition = registry.get(method.kind);
+      if (definition === undefined) throw new RetikzDataError(`data: regression "${method.kind}" is not registered`);
+      const parsed = definition.schema.parse(method) as IRRegressionMethod;
+      const dependencies = (definition.dependencies?.(parsed as never) ?? []).map(child =>
+        prepare(child, [...ancestors, method.kind]),
+      );
+      return { type: 'regression', operation: parsed, definition, dependencies };
+    });
+  return prepare(operation, []);
 };
 
 /**
@@ -71,7 +79,7 @@ const regressionBoundary = <T>(method: IRRegressionMethod, action: () => T): T =
 
     throw new RetikzDataError(
       `data: regression "${method.kind}" failed${cause instanceof RetikzDataError ? `: ${cause.message}` : ''}`,
-      { cause, regressionMethod: method },
+      { cause, regressionMethod: method, ...(cause instanceof RetikzDataError ? { code: cause.code } : {}) },
     );
   }
 };
@@ -92,35 +100,98 @@ export const resolveRegression = (
     AnySynchronousRegressionImplementation
   > = resolveRegressionImplementationRegistry<AnySynchronousRegressionImplementation>(registry),
 ): RegressionResolution => {
-  const definition = registry.get(method.kind);
-  if (definition === undefined)
-    throw new RetikzDataError(`data: regression "${method.kind}" is not registered; pass regressionDefinitions`, {
-      regressionMethod: method,
+  return resolvePreparedRegression(resolveRegressionDependency(method, registry), implementations);
+};
+
+/** 检查完整依赖树的实现身份；不调用拟合回调 */
+export const hasRegressionImplementations = (
+  dependency: RegressionDependency,
+  implementations: ReadonlyMap<string, AnyRegressionImplementation>,
+  mode: 'sync' | 'async' = 'async',
+): boolean => {
+  const implementation = implementations.get(dependency.operation.kind);
+  if (implementation === undefined) return false;
+  if (implementation.definition !== dependency.definition)
+    throw new RetikzDataError(`data: regression "${dependency.operation.kind}" references a different Definition`);
+  const dependencyMode = mode === 'async' && implementation.fitAsync !== undefined ? 'async' : 'sync';
+  if (dependencyMode === 'sync' && implementation.fit === undefined) return false;
+  return dependency.dependencies.every(child => hasRegressionImplementations(child, implementations, dependencyMode));
+};
+
+/** 为预测保留方法诊断与用户异常 */
+const wrapRegressionModel = (method: IRRegressionMethod, model: RegressionModel): RegressionModel => ({
+  predict: x =>
+    regressionBoundary(method, () => {
+      const value = model.predict(x);
+      if (!Number.isFinite(value)) throw new RetikzDataError('data: regression produced a non-finite prediction');
+      return value;
+    }),
+});
+
+/** 在已预检的依赖树上同步执行，不探测 Promise 或重新解析参数 */
+const fitPreparedRegression = (
+  node: RegressionDependency,
+  implementations: ReadonlyMap<string, AnyRegressionImplementation>,
+  pairs: ReadonlyArray<RegressionPair>,
+  options: RegressionFitOptions,
+): RegressionModel =>
+  regressionBoundary(node.operation, () => {
+    const implementation = implementations.get(node.operation.kind);
+    if (implementation?.fit === undefined) throw new RetikzDataError('data: missing prepared synchronous regression');
+    if (options.extent !== undefined) node.definition.validateExtent?.(node.operation as never, options.extent);
+    const model = implementation.fit(pairs, node.operation as never, {
+      ...options,
+      fitRegression: (index, observations) => {
+        const child = node.dependencies.at(index);
+        if (child === undefined || index < 0) throw new RetikzDataError('data: undeclared regression dependency');
+        return fitPreparedRegression(child, implementations, observations, options);
+      },
     });
-
-  return regressionBoundary(method, () => {
-    const operation = definition.schema.parse(method) as never;
-    return {
-      validateExtent: extent => regressionBoundary(method, () => definition.validateExtent?.(operation, extent)),
-      fit: pairs =>
-        regressionBoundary(method, () => {
-          const implementation = implementations.get(method.kind);
-          if (implementation === undefined)
-            throw new RetikzDataError(`data: regression "${method.kind}" has no local implementation`);
-
-          const model = implementation.fit(pairs, operation);
-
-          return {
-            predict: x =>
-              regressionBoundary(method, () => {
-                const prediction = model.predict(x);
-                if (!Number.isFinite(prediction))
-                  throw new RetikzDataError(`data: regression "${method.kind}" produced a non-finite prediction`);
-
-                return prediction;
-              }),
-          };
-        }),
-    };
+    return wrapRegressionModel(node.operation, model);
   });
+
+/** 绑定已解析的同步依赖树，不重复解析候选参数 */
+export const resolvePreparedRegression = (
+  dependency: RegressionDependency,
+  implementations: ReadonlyMap<string, AnySynchronousRegressionImplementation>,
+): RegressionResolution => {
+  if (!hasRegressionImplementations(dependency, implementations, 'sync'))
+    throw new RetikzDataError('data: regression dependency has no local implementation');
+  return {
+    fit: (pairs, options = {}) => fitPreparedRegression(dependency, implementations, pairs, options),
+    validateExtent: extent =>
+      regressionBoundary(dependency.operation, () =>
+        dependency.definition.validateExtent?.(dependency.operation as never, extent),
+      ),
+  };
+};
+
+/** 绑定异步依赖树；顺序与同步入口相同，异常保留原始原因 */
+export const fitPreparedRegressionAsync = async (
+  dependency: RegressionDependency,
+  implementations: ReadonlyMap<string, AnyRegressionImplementation>,
+  pairs: ReadonlyArray<RegressionPair>,
+  options: RegressionFitOptions = {},
+): Promise<RegressionModel> => {
+  try {
+    const implementation = implementations.get(dependency.operation.kind);
+    if (implementation === undefined) throw new RetikzDataError('data: missing prepared regression');
+    if (implementation.fitAsync === undefined)
+      return fitPreparedRegression(dependency, implementations, pairs, options);
+    if (options.extent !== undefined)
+      dependency.definition.validateExtent?.(dependency.operation as never, options.extent);
+    const model = await implementation.fitAsync(pairs, dependency.operation as never, {
+      ...options,
+      fitRegression: (index, observations) => {
+        const child = dependency.dependencies.at(index);
+        if (child === undefined || index < 0) throw new RetikzDataError('data: undeclared regression dependency');
+        return fitPreparedRegressionAsync(child, implementations, observations, options);
+      },
+    });
+    return wrapRegressionModel(dependency.operation, model);
+  } catch (cause) {
+    return regressionBoundary(dependency.operation, () => {
+      throw cause;
+    });
+  }
 };

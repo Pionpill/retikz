@@ -80,17 +80,17 @@ R² 越大越好，最高为 1，负值保留，不裁剪到 [0, 1]。自动选�
 
 沿用 Data 002 的 Definition 与 Implementation 分离。拟合 Definition 可声明由已解析参数导出的有序拟合依赖，auto 的依赖即其候选。依赖声明只描述方法，不读取观测或执行拟合；准备阶段解析所有候选的精确参数、注册身份及传递依赖。默认参数仅在对应 Definition 边界物化，不在 Chart 或 adapter 复制。
 
-拟合 Implementation 的运行时上下文可按依赖下标调用已准备的拟合能力，传入当前组观测和可选预测范围；不得自由查找未声明的方法。此能力对内置与自定义组合拟合实现一致开放，不为 auto 增加私有候选 registry。同步上下文仅包含同步依赖，异步上下文允许 Promise，二者共享候选顺序、评分和失败规则。异步完成顺序不影响胜者。
+拟合 Implementation 的运行时上下文可按依赖下标调用已准备的拟合能力，传入当前组观测和可选预测范围；不得自由查找未声明的方法。此能力对内置与自定义组合拟合实现一致开放，不为 auto 增加私有候选 registry。同一 Implementation 至少提供同步 `fit` 或异步 `fitAsync` 之一，也可同时提供两者。`fit` 的上下文仅包含同步依赖，`fitAsync` 的上下文允许 Promise，二者共享候选顺序、评分和失败规则。异步执行器优先使用 `fitAsync`；省略时复用 `fit`，但必须在计算前确认其完整传递依赖均提供同步能力。同步入口不调用 `fitAsync`，不通过执行回调探测 Promise，也不将异步依赖强转为同步。异步完成顺序不影响胜者。
 
 必要接口增量如下；已有 schema、validateExtent 和模型 predict 契约继续保留：
 
-| 契约                                                    | 增量语义                                                                                                  |
-| ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| RegressionDefinition.dependencies(operation)            | 可选回调，返回有序 ReadonlyArray<IRRegressionMethod>；省略表示无拟合依赖                                  |
-| RegressionImplementation.fit(pairs, operation, context) | 增加运行时上下文；具体拟合方法可不消费上下文                                                              |
-| RegressionFitContext.extent                             | 可选的只读预测范围，属于当前组请求                                                                        |
-| RegressionFitContext.fitRegression(index, pairs)        | 调用当前 Definition 已声明的候选依赖，继承当前 extent，返回模型或 Promise；同步 specialization 只返回模型 |
-| RegressionResolution.fit(pairs, options?)               | 同步独立拟合入口以 options.extent 接收同一预测域要求，不将异步实现放入同步集合                            |
+| 契约                                                               | 增量语义                                                                                                  |
+| ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- |
+| RegressionDefinition.dependencies(operation)                       | 可选回调，返回有序 ReadonlyArray<IRRegressionMethod>；省略表示无拟合依赖                                  |
+| RegressionImplementation.fit / fitAsync(pairs, operation, context) | 分别声明同步与异步能力，至少一个；具体拟合方法可不消费上下文                                              |
+| RegressionFitContext.extent                                        | 可选的只读预测范围，属于当前组请求                                                                        |
+| RegressionFitContext.fitRegression(index, pairs)                   | 调用当前 Definition 已声明的候选依赖，继承当前 extent，返回模型或 Promise；同步 specialization 只返回模型 |
+| RegressionResolution.fit(pairs, options?)                          | 同步独立拟合入口以 options.extent 接收同一预测域要求，不将异步实现放入同步集合                            |
 
 对依赖的调用沿统一适用性、异常与模型预测边界，不重新解析已经准备的参数。不存在的依赖下标或未声明依赖属于实现错误。
 

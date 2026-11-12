@@ -124,6 +124,38 @@ export const apiReferenceBranchLabels: Readonly<
     { value: 'result', field: 'kind', type: "'result'", label: { zh: '已计算结果', en: 'Computed result' } },
     { value: 'source', field: 'kind', type: "'source'", label: { zh: '原生数据源', en: 'Native source' } },
   ],
+  '@retikz/data#RegressionImplementation': [
+    {
+      value: 'sync',
+      field: 'fit',
+      required: true,
+      and: [{ field: 'fitAsync', required: false }],
+      label: { zh: '同步能力，可选异步入口', en: 'Synchronous, optional async entry' },
+    },
+    {
+      value: 'async',
+      field: 'fitAsync',
+      required: true,
+      and: [{ field: 'fit', required: false }],
+      label: { zh: '异步能力，可选同步入口', en: 'Asynchronous, optional sync entry' },
+    },
+  ],
+  '@retikz/data#AnyRegressionImplementation': [
+    {
+      value: 'sync',
+      field: 'fit',
+      required: true,
+      and: [{ field: 'fitAsync', required: false }],
+      label: { zh: '同步能力，可选异步入口', en: 'Synchronous, optional async entry' },
+    },
+    {
+      value: 'async',
+      field: 'fitAsync',
+      required: true,
+      and: [{ field: 'fit', required: false }],
+      label: { zh: '异步能力，可选同步入口', en: 'Asynchronous, optional sync entry' },
+    },
+  ],
   '@retikz/data#DataTransformDependency': [
     { value: 'reducer', field: 'type', type: "'reducer'", label: { zh: '归约依赖', en: 'Reducer' } },
     { value: 'selector', field: 'type', type: "'selector'", label: { zh: '行选择依赖', en: 'Selector' } },

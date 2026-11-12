@@ -9,8 +9,8 @@ import { BuiltinReducerOperationKind, reducerOutputFields, resolveReducerComputa
 import type { IRDataSelectorOperation, RowSelection } from '../operators/selector';
 import { resolveSelectorComputation } from '../operators/selector';
 import type { ExternalRow } from '../shared';
-import type { TransformComputation } from './computation';
-import { computeTransformValue, runTransformComputation } from './computation';
+import type { DataComputation } from '../shared';
+import { computeDataValue, runDataComputation } from '../shared';
 import type { TransformContext, TransformSemanticContext } from './contract';
 import { groupRowsByFields } from './shared';
 import type {
@@ -94,11 +94,10 @@ function* computeReducerMetrics(
   metrics: ReadonlyArray<IRDataReducerOperation>,
   context: TransformContext,
   computation: GroupComputation = synchronousGroupComputation(context),
-): TransformComputation<ExternalRow> {
+): DataComputation<ExternalRow> {
   const out: ExternalRow = {};
 
-  for (const metric of metrics)
-    Object.assign(out, yield* computeTransformValue(() => computation.reduce(rows, metric)));
+  for (const metric of metrics) Object.assign(out, yield* computeDataValue(() => computation.reduce(rows, metric)));
 
   return out;
 }
@@ -116,11 +115,11 @@ function* computeSelectorAnnotations(
   operation: IRDataAnnotateTransform,
   context: TransformContext,
   computation: GroupComputation,
-): TransformComputation<ExternalRow> {
+): DataComputation<ExternalRow> {
   const out: ExternalRow = {};
 
   for (const annotation of operation.params.selectors ?? []) {
-    const selections = yield* computeTransformValue(() => computation.select(rows, annotation.selector));
+    const selections = yield* computeDataValue(() => computation.select(rows, annotation.selector));
     if (selections.length === 0) continue;
 
     const selection = selections[0];
@@ -137,7 +136,7 @@ export function* computeSummarize(
   operation: IRDataSummarizeTransform,
   context: TransformContext,
   computation: GroupComputation,
-): TransformComputation<Array<ExternalRow>> {
+): DataComputation<Array<ExternalRow>> {
   const output: Array<ExternalRow> = [];
   let validated = false;
 
@@ -169,7 +168,7 @@ export const applySummarize = (
   operation: IRDataSummarizeTransform,
   context: TransformContext,
 ): Array<ExternalRow> =>
-  runTransformComputation(computeSummarize(rows, operation, context, synchronousGroupComputation(context)));
+  runDataComputation(computeSummarize(rows, operation, context, synchronousGroupComputation(context)));
 
 /** select transform：按 groupBy 分组并输出 selector 选中的原始行 */
 export function* computeSelect(
@@ -177,11 +176,11 @@ export function* computeSelect(
   operation: IRDataSelectTransform,
   context: TransformContext,
   computation: GroupComputation,
-): TransformComputation<Array<ExternalRow>> {
+): DataComputation<Array<ExternalRow>> {
   const output: Array<ExternalRow> = [];
 
   for (const group of groupRowsByFields(rows, operation.params.groupBy)) {
-    const selections = yield* computeTransformValue(() => computation.select(group.rows, operation.params.selector));
+    const selections = yield* computeDataValue(() => computation.select(group.rows, operation.params.selector));
     output.push(
       ...selections.map(selection => ({
         ...selection.row,
@@ -201,7 +200,7 @@ export const applySelect = (
   operation: IRDataSelectTransform,
   context: TransformContext,
 ): Array<ExternalRow> =>
-  runTransformComputation(computeSelect(rows, operation, context, synchronousGroupComputation(context)));
+  runDataComputation(computeSelect(rows, operation, context, synchronousGroupComputation(context)));
 
 /** annotate transform：按 groupBy 分组，把 reducer / selector 结果回填到组内每一行 */
 export function* computeAnnotate(
@@ -209,7 +208,7 @@ export function* computeAnnotate(
   operation: IRDataAnnotateTransform,
   context: TransformContext,
   computation: GroupComputation,
-): TransformComputation<Array<ExternalRow>> {
+): DataComputation<Array<ExternalRow>> {
   const output: Array<ExternalRow> = [];
   let validated = false;
 
@@ -241,7 +240,7 @@ export const applyAnnotate = (
   operation: IRDataAnnotateTransform,
   context: TransformContext,
 ): Array<ExternalRow> =>
-  runTransformComputation(computeAnnotate(rows, operation, context, synchronousGroupComputation(context)));
+  runDataComputation(computeAnnotate(rows, operation, context, synchronousGroupComputation(context)));
 
 /** bin 默认输出字段名 */
 const DEFAULT_BIN_START_FIELD = 'binStart';
@@ -318,11 +317,10 @@ function* computeBinMetrics(
   rows: Array<ExternalRow>,
   metrics: ReadonlyArray<IRDataReducerOperation>,
   computation: GroupComputation,
-): TransformComputation<ExternalRow> {
+): DataComputation<ExternalRow> {
   const out: ExternalRow = {};
 
-  for (const metric of metrics)
-    Object.assign(out, yield* computeTransformValue(() => computation.reduce(rows, metric)));
+  for (const metric of metrics) Object.assign(out, yield* computeDataValue(() => computation.reduce(rows, metric)));
 
   return out;
 }
@@ -336,7 +334,7 @@ export function* computeBin(
   operation: IRDataBinTransform,
   context: TransformContext,
   computation: GroupComputation,
-): TransformComputation<Array<ExternalRow>> {
+): DataComputation<Array<ExternalRow>> {
   if (rows.length === 0) return [];
 
   const { startField, endField } = binOutputFields(operation);
@@ -389,8 +387,7 @@ export const applyBin = (
   rows: Array<ExternalRow>,
   operation: IRDataBinTransform,
   context: TransformContext,
-): Array<ExternalRow> =>
-  runTransformComputation(computeBin(rows, operation, context, synchronousGroupComputation(context)));
+): Array<ExternalRow> => runDataComputation(computeBin(rows, operation, context, synchronousGroupComputation(context)));
 
 const capitalize = (value: string): string => `${value.charAt(0).toUpperCase()}${value.slice(1)}`;
 
@@ -439,16 +436,12 @@ export function* computeRelate(
   operation: IRDataRelateTransform,
   context: TransformContext,
   computation: GroupComputation,
-): TransformComputation<Array<ExternalRow>> {
+): DataComputation<Array<ExternalRow>> {
   const output: Array<ExternalRow> = [];
 
   for (const group of groupRowsByFields(rows, operation.params.groupBy)) {
-    const sources = yield* computeTransformValue(() =>
-      computation.select(group.rows, operation.params.source.selector),
-    );
-    const targets = yield* computeTransformValue(() =>
-      computation.select(group.rows, operation.params.target.selector),
-    );
+    const sources = yield* computeDataValue(() => computation.select(group.rows, operation.params.source.selector));
+    const targets = yield* computeDataValue(() => computation.select(group.rows, operation.params.target.selector));
     if (sources.length === 0 || targets.length === 0) continue;
 
     const source = sources[0].row;
@@ -475,4 +468,4 @@ export const applyRelate = (
   operation: IRDataRelateTransform,
   context: TransformContext,
 ): Array<ExternalRow> =>
-  runTransformComputation(computeRelate(rows, operation, context, synchronousGroupComputation(context)));
+  runDataComputation(computeRelate(rows, operation, context, synchronousGroupComputation(context)));
