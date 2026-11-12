@@ -60,7 +60,11 @@ Batches enter Weave's synchronous queue through direct changes. After computatio
 
 The internal <ApiSourceLink path="packages/kernel/reconciler/src/weave/schedule/queue.ts">`WeaveTaskQueue`</ApiSourceLink> deduplicates tasks by stable element identity and readiness phase. Execution environments come from candidate nodes and their parent Scope's preparation, without capturing them during an authored-subtree traversal. A read completes the producer's candidate stage before continuing the consumer. Nodes and Coordinates retain declaration-time name visibility, while Paths use names visible when their enclosing environment closes. Scheduling does not permit new forward references.
 
-A Scope prepares inheritance, computes its envelope and final projection from child layouts, then assembles Paths and grouped output. Composites retain their generated-subtree execution and isolated probes: generated names become ready before deferred Paths finish. Unchanged elements reuse output contributions; Scopes do not retain a second copy of all descendant output. Name indexing and complete output assembly can still scan the tree, so local computation does not imply local total update cost. Ordinary React and Vanilla input updates do not yet use this batch entry.
+A Scope prepares inheritance, computes its envelope and final projection from child layouts, then assembles Paths and grouped output. Composites retain their generated-subtree execution and isolated probes: generated names become ready before deferred Paths finish.
+
+Computation is separate from complete output assembly. Unrelated elements supply committed contributions without creating execution environments, checking reuse, or writing candidate state just for assembly. Clean Scopes assemble compiled results and child contributions without retaining another copy of all descendant output. Reads with multiple dependencies complete the relevant candidates first, avoiding a mix of old and new envelopes.
+
+Ordinary property updates retain address and name indexes. Insertions and removals refresh subsequent child addresses in the changed container; renaming and namespace changes maintain affected declarations and read subscriptions. Sorting, resources, diagnostics, and provenance for the complete Scene still require reading retained products, so total update cost is not necessarily local. Ordinary React and Vanilla input updates do not yet use this batch entry.
 
 <SourceLinks
   sources={[

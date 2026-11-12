@@ -2,7 +2,7 @@ import type { CompileWarning, ScenePrimitive, SceneResource } from '@retikz/core
 import { visitSceneContent } from '@retikz/core';
 import type { PropertyPath } from '@retikz/foundation';
 
-import type { CompileOwnerKey, CompileProvenanceSnapshot } from '../provenance';
+import type { CompileOwnerKey, CompileNamespaceKey, CompileProvenanceSnapshot } from '../provenance';
 import type { CompileReferenceRead, CompileRuntime, NamespaceFrameChange } from '../runtime';
 import { importSceneResources } from '../shared';
 import type { SubtreeCompileState } from './runtime';
@@ -48,41 +48,25 @@ export const collectContributionResources = (
   return resources.filter(resource => retained.has(resource.id));
 };
 
-/** 在当前候选重新物化贡献与名称，保持已提交状态只读 */
-export const materializeCompileContribution = (
+/** 只物化绘制、资源与来源，不建立计算环境或重新发布名称 */
+export const materializeCompileOutput = (
   runtime: CompileRuntime,
   output: TreeOutputState,
   contribution: CompileContribution,
   semanticOwner?: CompileOwnerKey,
+  namespace: CompileNamespaceKey = runtime.state.execution.namespaceStack.identity,
 ): SubtreeCompileState => {
-  const { namespaceStack, provenanceTracker } = runtime.state.execution;
+  const { provenanceTracker } = runtime.state.execution;
   const { paintRegistry, clipRegistry } = runtime.state.workspace;
   importSceneResources(contribution.resources, paintRegistry, clipRegistry);
   const primitives = provenanceTracker?.materializePrimitives(contribution.output.primitives) ?? [
     ...contribution.output.primitives,
   ];
   if (semanticOwner !== undefined && contribution.provenance !== undefined)
-    provenanceTracker?.importProvenance(
-      contribution.provenance,
-      primitives,
-      semanticOwner,
-      0,
-      namespaceStack.identity,
-      true,
-    );
+    provenanceTracker?.importProvenance(contribution.provenance, primitives, semanticOwner, 0, namespace, true);
   for (const [index, primitive] of primitives.entries()) {
     const zIndex = contribution.zIndices[index];
     if (zIndex !== undefined) output.zIndexOf.set(primitive, zIndex);
-  }
-  const scopeIds = new Map<string, string>();
-  for (const binding of contribution.bindings) {
-    const oldScopeId = binding.entry.scopeId;
-    let scopeId: string | undefined;
-    if (oldScopeId !== undefined) {
-      scopeId = scopeIds.get(oldScopeId);
-      if (scopeId === undefined) scopeIds.set(oldScopeId, (scopeId = namespaceStack.allocateScopeId()));
-    }
-    namespaceStack.commitForkChange({ ...binding, entry: { ...binding.entry, scopeId } });
   }
   return {
     primitives,
@@ -94,4 +78,26 @@ export const materializeCompileContribution = (
     alignmentGuides: [...contribution.output.alignmentGuides],
     artifacts: [...contribution.output.artifacts],
   };
+};
+
+/** 在计算工作区物化贡献并重放其已确认有效的名称 */
+export const materializeCompileContribution = (
+  runtime: CompileRuntime,
+  output: TreeOutputState,
+  contribution: CompileContribution,
+  semanticOwner?: CompileOwnerKey,
+): SubtreeCompileState => {
+  const state = materializeCompileOutput(runtime, output, contribution, semanticOwner);
+  const namespaceStack = runtime.state.execution.namespaceStack;
+  const scopeIds = new Map<string, string>();
+  for (const binding of contribution.bindings) {
+    const oldScopeId = binding.entry.scopeId;
+    let scopeId: string | undefined;
+    if (oldScopeId !== undefined) {
+      scopeId = scopeIds.get(oldScopeId);
+      if (scopeId === undefined) scopeIds.set(oldScopeId, (scopeId = namespaceStack.allocateScopeId()));
+    }
+    namespaceStack.commitForkChange({ ...binding, entry: { ...binding.entry, scopeId } });
+  }
+  return state;
 };

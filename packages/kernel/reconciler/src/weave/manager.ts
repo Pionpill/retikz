@@ -14,7 +14,7 @@ import { executeWeaveUpdate } from './scheduler';
 import type { WeaveUpdateRequest } from './scheduler';
 import type { WeaveCompileRead } from './shared';
 import type { WeaveBatch, WeaveNode, WeaveRoot, WeaveScopeNode } from './shared';
-import { createWeaveBatchState } from './state';
+import { createWeaveBatchState, WeaveAddressIndex, WeaveLookup } from './state';
 import type { WeaveBatchState, WeaveCompilation, WeaveCompileContext, WeaveCompileState } from './state';
 
 /** 已准备的批次结果，发布者负责提交、最终确认或恢复 */
@@ -65,9 +65,10 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
         input: own,
         children: [],
         shared,
-        ids: new Map(),
+        ids: new WeaveLookup(),
         scopeIds: new Map(),
         records: new Map(),
+        readers: new Map(),
       },
     };
     this.state = {
@@ -90,6 +91,7 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
       batch.transaction.commit();
       batch.transaction.finish();
       persistent.completed = { root: persistent.root, visited: batch.visited, compilation };
+      persistent.addresses = batch.addresses;
       this.state.batch = undefined;
       return persistent.completed;
     } catch (error) {
@@ -130,31 +132,44 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
 
     try {
       let modified = false;
+      const changedNames = new Set<string>();
       for (const operation of input.operations) {
         const changes = editor.applyOperation(
           operation,
           resolveScopeInheritance(batch.source, this.context.shared.registries.themeRegistry),
         );
         if (changes === undefined) continue;
+        batch.indexesChanged ||= changes.indexesChanged;
+        const addresses = batch.addresses!;
+        if (changes.structure !== undefined) {
+          const parent = changes.structure.parent;
+          const children = transaction
+            .readNode(parent)
+            .children.map(node => addresses.declaration(batch.source, node) ?? editor.serializeNodeDeclaration(node));
+          batch.source =
+            parent.type === 'root'
+              ? { ...batch.source, children }
+              : addresses.replaceDeclaration(batch.source, parent, transaction, children);
+        } else {
+          for (const node of changes.changedNodes)
+            batch.source = addresses.replaceDeclaration(batch.source, node, transaction);
+        }
+        if (changes.indexesChanged)
+          batch.addresses = new WeaveAddressIndex(
+            persistent.root,
+            transaction,
+            addresses,
+            new Set([...changes.changedNodes, ...changes.insertedNodes]),
+            new Set(changes.removedNodes),
+            changes.structure,
+            node => tracker.invalidateNode(node),
+          );
+        if (changes.indexesChanged) editor.refreshIndexes(changes, batch.addresses!);
+        for (const name of changes.names) changedNames.add(name);
         for (const node of changes.insertedNodes) tracker.registerNodeBinding(node);
-        const changedNames = new Set<string>();
         for (const node of [...changes.changedNodes, ...changes.insertedNodes, ...changes.removedNodes]) {
           tracker.invalidateNode(node);
-          if (node.type === 'composite') continue;
-          for (const state of [node.current, node.pending]) {
-            if (state === null) continue;
-            const own = state.input.own;
-            if (own.id !== undefined) changedNames.add(own.id);
-            if (own.type === 'node') for (const alias of own.aliasIds ?? []) changedNames.add(alias);
-          }
-          if (
-            node.type === 'scope' &&
-            node.current?.input.own.localNamespace !== node.pending?.input.own.localNamespace
-          )
-            tracker.invalidateBindings();
         }
-        tracker.invalidateBindings(changedNames);
-        // 子节点先解绑，避免清理子节点时重新编辑已丢弃的父 Scope
         for (let index = changes.removedNodes.length - 1; index >= 0; index--) {
           const node = changes.removedNodes[index];
           tracker.detachNodeDependencies(node);
@@ -163,12 +178,31 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
         modified = true;
       }
 
+      if (batch.indexesChanged)
+        tracker.invalidateBindings(changedNames, node => {
+          if (node.current === null || !batch.addresses!.paths.has(node)) return false;
+          const reads = transaction.readNode(persistent.root).records.get(node)?.reads ?? [];
+          const generated = (producer: Extract<WeaveNode, { type: 'composite' }>) =>
+            producer.current?.contribution?.bindings ?? [];
+          return reads.some(read => {
+            if (!changedNames.has(read.name)) return false;
+            const visibilities =
+              node.type === 'composite'
+                ? (['declaration', 'closed'] as const)
+                : node.type === 'path'
+                  ? (['closed'] as const)
+                  : (['declaration'] as const);
+            return visibilities.some(visibility => {
+              const query = { consumer: node, name: read.name, visibility };
+              const before = persistent.addresses!.names.lookup(query, generated, true);
+              const after = batch.addresses!.names.lookup(query, generated);
+              return before?.node !== after?.node || !isPropertyPathEqual(before?.path ?? [], after?.path ?? []);
+            });
+          });
+        });
+
       let prepared = { ...completed, visited: 0 };
       if (modified || forceFull) {
-        batch.source = {
-          ...transaction.readNode(persistent.root).input,
-          children: transaction.readNode(persistent.root).children.map(node => editor.serializeNodeDeclaration(node)),
-        };
         const compilation = this.execute();
         prepared = { root: persistent.root, visited: batch.visited, compilation };
       }
@@ -180,6 +214,7 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
           transaction.finish();
           persistent.completed = prepared;
           persistent.source = batch.source;
+          persistent.addresses = batch.addresses;
           closed = true;
           tracker.pruneRemovedBindings();
           this.state.batch = undefined;
@@ -200,13 +235,13 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
     }
   }
 
-  /** 以唯一执行器计算当前候选，Weave 仅提供阶段缓存与事务身份 */
+  /** 首次完整构建与后续受影响子图调度，共享阶段缓存及输出事务 */
   private execute(): WeaveCompilation<TComposite>['compilation'] {
     const batch = this.batch;
     const { transaction, editor, tracker } = batch;
     const root = this.state.persistent.root;
-    const nodes = new Map<string, WeaveNode>();
-    const paths = new Map<WeaveNode, PropertyPath>();
+    let nodes = batch.addresses?.nodes ?? new WeaveLookup<string, WeaveNode>();
+    let paths = batch.addresses?.paths ?? new Map<WeaveNode, PropertyPath>();
     const keyOf = (path: PropertyPath) => JSON.stringify(path);
     const visit = (
       children: ReadonlyArray<IRChild>,
@@ -218,7 +253,7 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
       const parentState = transaction.editNode(parent);
       const ids =
         parent.type === 'root' || transaction.readNode(parent).input.own.localNamespace
-          ? new Map<string, WeaveNode>()
+          ? new WeaveLookup<string, WeaveNode>()
           : inheritedIds;
       if (parent.type === 'root') transaction.editNode(parent).ids = ids;
       else if (transaction.readNode(parent).input.own.localNamespace) transaction.editNode(parent).ids = ids;
@@ -249,13 +284,19 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
           );
       }
     };
-    visit(
-      batch.source.children,
-      root,
-      [],
-      resolveScopeInheritance(batch.source, this.context.shared.registries.themeRegistry),
-      new Map(),
-    );
+    if (!batch.updating)
+      visit(
+        batch.source.children,
+        root,
+        [],
+        resolveScopeInheritance(batch.source, this.context.shared.registries.themeRegistry),
+        new Map(),
+      );
+    if (batch.addresses === undefined) {
+      batch.addresses = new WeaveAddressIndex(root, transaction);
+      nodes = batch.addresses.nodes;
+      paths = batch.addresses.paths;
+    }
     // 别名与生成内容路径归属最近的作者声明，不创建生成节点身份
     const findProducer = (path: PropertyPath): WeaveNode | undefined => {
       for (let length = path.length; length > 0; length--) {
@@ -312,7 +353,7 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
         const { value: product, ...metadata } = record;
         void product;
         state.cache = metadata;
-        // phase 由唯一遍历器固定，对应值直接保存为 Core 阶段产物
+        // 阶段判别与节点类别一致，直接保存 Core 产物
         if (node.type === 'node' && record.phase === 'node') {
           const value = record.value;
           const shape = transaction.editNode(node);
@@ -375,11 +416,14 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
     };
     const retained = new Map<string, CompileContribution>();
     const pending = new Map<string, WeaveUpdateRequest>();
-    for (const [path, node] of nodes) {
+    const requested = batch.forceFull || !batch.updating ? paths.keys() : tracker.requests;
+    for (const node of requested) {
+      const path = keyOf(paths.get(node)!);
       const state = transaction.readNode(node);
       const affected =
         batch.forceFull || tracker.isNodeDirty(node) || state.pendingInputs.some(input => input.changes.size > 0);
       const request: WeaveUpdateRequest = {
+        node,
         check:
           !batch.forceFull && tracker.canCheckNode(node) && state.contribution?.diagnostics.length === 0
             ? state.contribution
@@ -398,11 +442,22 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
     }
     const candidate = { ...runtime, contributions, producer: (path: PropertyPath) => nodes.get(keyOf(path)) };
     const compilation = batch.updating
-      ? executeWeaveUpdate<TComposite>(batch.source, candidate, cache, retained, pending, root, transaction, paths)
+      ? executeWeaveUpdate<TComposite>(
+          batch.source,
+          candidate,
+          cache,
+          retained,
+          pending,
+          root,
+          transaction,
+          paths,
+          batch.addresses.names,
+        )
       : compileScene<TComposite>(batch.source, { ...candidate, stages: { write: cache.write } });
-    for (const node of nodes.values()) {
-      if (node.type === 'scope') tracker.recordScopeLayoutDependencies(node);
-    }
+    if (!batch.updating || batch.indexesChanged)
+      for (const node of batch.updating ? tracker.requests : nodes.values()) {
+        if (node.type === 'scope') tracker.recordScopeLayoutDependencies(node);
+      }
     return compilation;
   }
 }

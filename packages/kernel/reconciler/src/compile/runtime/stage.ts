@@ -85,6 +85,8 @@ export type CompileStageMetadata = Readonly<{
   resources: ReadonlyArray<SceneResource>;
   /** 本阶段诊断，非空时禁止直接复用以便重新派发 */
   diagnostics: ReadonlyArray<CompileWarning>;
+  /** 依赖最终可见输出的诊断，独立于几何阶段更新 */
+  outputDiagnostics?: ReadonlyArray<CompileWarning>;
 }>;
 
 /** 保留阶段与 Core 产物的对应关系 */

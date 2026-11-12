@@ -153,6 +153,8 @@ type WeaveRootState = {
   ids: ReadonlyMap<string, WeaveNode>;
   /** 根自身及所有 Scope 的定位索引 */
   scopeIds: ReadonlyMap<string, WeaveRoot | WeaveScopeNode>;
+  /** 包含缺失读取的名称订阅，与候选节点同批隔离 */
+  readers: ReadonlyMap<string, ReadonlySet<WeaveNode>>;
   /** 元素读取事实及诊断，替换记录而非修改共享值 */
   records: ReadonlyMap<
     WeaveNode,

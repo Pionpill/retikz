@@ -1,7 +1,7 @@
 import type { CanonicalScopeInheritance, IRChild } from '@retikz/core';
-import type { IdAllocator, PropertyPath } from '@retikz/foundation';
+import type { IdAllocator } from '@retikz/foundation';
+import { jsonStructuralEquals } from '@retikz/foundation';
 
-import { createCompileChildPath } from '../../compile/shared';
 import { RetikzReconcilerError, RetikzReconcilerErrorCode } from '../../error';
 import { WeaveOperationKind } from '../shared';
 import type {
@@ -14,13 +14,21 @@ import type {
   WeaveScopeNode,
   WeaveTarget,
 } from '../shared';
-import { readWeaveCurrent } from './transaction';
+import type { WeaveAddressIndex } from './address';
+import { WeaveLookup } from './lookup';
 import type { WeaveTransaction } from './transaction';
 
 /** 单次声明编辑产生的变化，供协调器安排依赖传播与事务清理 */
 type WeaveEditResult = {
+  /** 本次声明变化涉及的名称与原/新空间，用于精确更新操作索引 */
+  names: Set<string>;
+  namespaces: Set<WeaveRoot | WeaveScopeNode>;
   /** 自身输入或声明成员发生变化的节点，不包含推导的消费者 */
   changedNodes: Array<WeaveNode>;
+  /** 名称声明或命名空间归属变化 */
+  indexesChanged: boolean;
+  /** 插删改变的容器；仅它的后续子地址需要刷新 */
+  structure?: { parent: WeaveRoot | WeaveScopeNode; index: number };
   /** 新建的全部节点，用于登记编译 binding */
   insertedNodes: Array<WeaveNode>;
   /** 已脱离候选树的节点，按父先子后排列，依赖断开前仍可读取其状态 */
@@ -37,13 +45,21 @@ export class WeaveEditor {
 
   /** 应用一条操作并刷新候选地址；空插入仍校验位置，但不产生变化 */
   applyOperation(operation: WeaveOperation, context: CanonicalScopeInheritance): WeaveEditResult | undefined {
-    const changes: WeaveEditResult = { changedNodes: [], insertedNodes: [], removedNodes: [] };
+    const changes: WeaveEditResult = {
+      names: new Set(),
+      namespaces: new Set(),
+      changedNodes: [],
+      insertedNodes: [],
+      removedNodes: [],
+      indexesChanged: operation.kind !== WeaveOperationKind.Update,
+    };
     if (operation.kind === WeaveOperationKind.Insert) {
       const parent = this.findScope(operation.parentId);
       const length = this.transaction.readNode(parent).children.length;
       if (!Number.isInteger(operation.index) || operation.index < 0 || operation.index > length)
         throw new RetikzReconcilerError(RetikzReconcilerErrorCode.Contract, 'Weave insertion index is out of bounds');
       if (operation.elements.length === 0) return;
+      changes.structure = { parent, index: operation.index };
       const inserted = operation.elements.map(input =>
         this.insertSubtree(input, parent, context, changes.insertedNodes),
       );
@@ -51,6 +67,7 @@ export class WeaveEditor {
       children.splice(length, inserted.length);
       children.splice(operation.index, 0, ...inserted);
       changes.changedNodes.push(...inserted);
+      for (const node of inserted) this.collectIndexChanges(node, changes);
       if (parent.type === 'scope') changes.changedNodes.push(parent);
     } else {
       const node = this.findTargetNode(operation.target);
@@ -60,31 +77,73 @@ export class WeaveEditor {
           'Replace the scene to edit a Composite declaration',
         );
       changes.changedNodes.push(node);
-      if (operation.kind === WeaveOperationKind.Update) this.replaceNodeInput(node, operation.input);
-      else {
+      if (operation.kind === WeaveOperationKind.Update) {
+        const before = this.transaction.readNode(node).input.own;
+        const after = operation.input;
+        const namespaceChanged =
+          node.type === 'scope' &&
+          ('localNamespace' in before ? before.localNamespace : undefined) !==
+            ('localNamespace' in after ? after.localNamespace : undefined);
+        changes.indexesChanged =
+          before.id !== after.id ||
+          !jsonStructuralEquals(
+            'aliasIds' in before ? before.aliasIds : undefined,
+            'aliasIds' in after ? after.aliasIds : undefined,
+          ) ||
+          namespaceChanged;
+        if (changes.indexesChanged) this.collectIndexChanges(node, changes, namespaceChanged);
+        this.replaceNodeInput(node, operation.input);
+        if (changes.indexesChanged) this.collectIndexChanges(node, changes, namespaceChanged);
+      } else {
+        this.collectIndexChanges(node, changes);
         const parent = this.transaction.readNode(node).parent;
         const children = this.transaction.editNodeAttribute(parent, 'children');
-        children.splice(children.indexOf(node), 1);
+        const index = children.indexOf(node);
+        changes.structure = { parent, index };
+        children.splice(index, 1);
         this.removeSubtreeAddresses(node, changes.removedNodes);
         if (parent.type === 'scope') changes.changedNodes.push(parent);
       }
     }
-    this.rebuildIdIndexes(this.root);
     return changes;
   }
 
-  /** 根据已提交声明结构记录旧路径，key 为稳定节点，value 为操作前的 irPath */
-  captureNodeIrPaths(): Map<WeaveNode, PropertyPath> {
-    const paths = new Map<WeaveNode, PropertyPath>();
-    const visit = (container: WeaveRoot | WeaveScopeNode, prefix: PropertyPath): void => {
-      for (const [index, child] of readWeaveCurrent(container).children.entries()) {
-        const path = createCompileChildPath(prefix, index);
-        paths.set(child, path);
-        if (child.type === 'scope') visit(child, path);
+  /** 只重算发生变化的名称，重名顺序由已更新的声明地址索引决定 */
+  refreshIndexes(changes: WeaveEditResult, addresses: WeaveAddressIndex): void {
+    for (const namespace of changes.namespaces) {
+      if (changes.removedNodes.includes(namespace as WeaveNode)) continue;
+      if (namespace.type === 'scope' && !this.transaction.readNode(namespace).input.own.localNamespace) {
+        if (this.transaction.readNode(namespace).ids !== undefined) delete this.transaction.editNode(namespace).ids;
+        continue;
       }
-    };
-    visit(this.root, []);
-    return paths;
+      if (this.transaction.readNode(namespace).ids === undefined)
+        this.transaction.editNode(namespace).ids = new WeaveLookup();
+      for (const name of changes.names) {
+        const next = addresses.names.lastDeclaration(namespace, name);
+        if (this.transaction.readNode(namespace).ids?.get(name) === next) continue;
+        const ids = this.transaction.editNodeAttribute(namespace, 'ids');
+        if (next === undefined) ids.delete(name);
+        else ids.set(name, next);
+      }
+    }
+  }
+
+  /** 空间切换只收集变动子树的名称；普通改名只访问该声明 */
+  private collectIndexChanges(node: WeaveNode, changes: WeaveEditResult, descendants = true): void {
+    const state = this.transaction.readNode(node);
+    let parent = state.parent;
+    while (parent.type !== 'root' && !this.transaction.readNode(parent).input.own.localNamespace)
+      parent = this.transaction.readNode(parent).parent;
+    changes.namespaces.add(parent);
+    const own = state.input.own;
+    if (!('namespace' in own)) {
+      if (own.id !== undefined) changes.names.add(own.id);
+      if (own.type === 'node') for (const name of own.aliasIds ?? []) changes.names.add(name);
+    }
+    if (node.type === 'scope' && descendants) {
+      changes.namespaces.add(node);
+      for (const child of this.transaction.readNode(node).children) this.collectIndexChanges(child, changes);
+    }
   }
 
   /** 创建声明节点并登记本次编译的节点与容器索引 */
@@ -132,7 +191,7 @@ export class WeaveEditor {
               canon: null,
               compiled: null,
               children: [],
-              ...(localNamespace ? { ids: new Map<string, WeaveNode>() } : {}),
+              ...(localNamespace ? { ids: new WeaveLookup<string, WeaveNode>() } : {}),
             },
           };
           this.transaction.editNodeAttribute(this.root, 'scopeIds').set(node.scopeId, node);
@@ -157,32 +216,6 @@ export class WeaveEditor {
       return { ...state.input.own, children: state.children.map(child => this.serializeNodeDeclaration(child)) };
     }
     return this.transaction.readNode(node).input.own;
-  }
-
-  /** 重建操作寻址索引；编译引用仍由 Core 按声明顺序建立 */
-  private rebuildIdIndexes(container: WeaveRoot | WeaveScopeNode, inherited?: Map<string, WeaveNode>): void {
-    const ids =
-      container.type === 'root' || this.transaction.readNode(container).input.own.localNamespace
-        ? new Map<string, WeaveNode>()
-        : inherited;
-    if (ids === undefined)
-      throw new RetikzReconcilerError(RetikzReconcilerErrorCode.Contract, 'Missing namespace owner');
-    if (container.type === 'root') this.transaction.editNode(container).ids = ids;
-    else {
-      const state = this.transaction.editNode(container);
-      if (state.input.own.localNamespace) state.ids = ids;
-      else delete state.ids;
-    }
-    for (const child of this.transaction.readNode(container).children) {
-      if (child.type !== 'composite') {
-        const own = this.transaction.readNode(child).input.own;
-        if (own.id !== undefined) ids.set(own.id, child);
-      }
-      if (child.type === 'node') {
-        for (const id of this.transaction.readNode(child).input.own.aliasIds ?? []) ids.set(id, child);
-      }
-      if (child.type === 'scope') this.rebuildIdIndexes(child, ids);
-    }
   }
 
   /** 解析批次容器，地址仅在当前候选结构内有效 */

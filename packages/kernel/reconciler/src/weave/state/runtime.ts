@@ -3,6 +3,7 @@ import type { IdAllocator, PropertyPath } from '@retikz/foundation';
 
 import type { CompileOptions, ExecuteOptions, SceneCompilationSnapshot, SharedCompileContext } from '../../compile';
 import type { WeaveNode, WeaveRoot } from '../shared';
+import type { WeaveAddressIndex } from './address';
 import { WeaveEditor } from './editor';
 import { WeaveTracker } from './tracker';
 import { WeaveTransaction } from './transaction';
@@ -37,6 +38,8 @@ type WeavePersistentState<TComposite extends AnyCompositeDefinition = AnyComposi
   readonly bindings: Map<object, WeaveNode>;
   /** 最近完成的声明输入 */
   source: IRScene;
+  /** 已提交声明的派生寻址结构 */
+  addresses?: WeaveAddressIndex;
   /** 最近完成发布的编译结果，准备与 commit 不替换 */
   completed?: WeaveCompilation<TComposite>;
 };
@@ -57,6 +60,10 @@ export type WeaveBatchState = {
   readonly forceFull: boolean;
   /** 操作前的声明路径，路径变化时禁止复用旧位置缓存 */
   readonly previousNodeIrPaths: ReadonlyMap<WeaveNode, PropertyPath>;
+  /** 本批选定的派生寻址索引，完成发布后才保存 */
+  addresses?: WeaveAddressIndex;
+  /** 结构或命名声明变化，需要重建派生索引 */
+  indexesChanged: boolean;
   /** 实际执行的元素编译次数 */
   visited: number;
 };
@@ -84,7 +91,9 @@ export const createWeaveBatchState = (
     tracker: new WeaveTracker(persistent.root, transaction, persistent.bindings),
     updating,
     forceFull,
-    previousNodeIrPaths: updating ? editor.captureNodeIrPaths() : new Map(),
+    previousNodeIrPaths: persistent.addresses?.paths ?? new Map(),
+    addresses: persistent.addresses,
+    indexesChanged: !updating,
     visited: 0,
   };
 };

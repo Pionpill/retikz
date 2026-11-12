@@ -1,4 +1,4 @@
-import type { IRScene, IRScope, ScenePrimitive } from '@retikz/core';
+import type { IRPathBase, IRScene, IRScope, ScenePrimitive } from '@retikz/core';
 import { definePath, PathSchema } from '@retikz/core';
 import { encodePropertyPath } from '@retikz/foundation';
 import type { CompileProvenanceSnapshot } from '@retikz/reconciler';
@@ -368,4 +368,47 @@ it.each(['empty', 'null-path', 'retained'] as const)('Scope 裁空与动画诊�
   expect(weave.diagnostics).toEqual(full.diagnostics);
   expect(weave.diagnostics).toHaveLength(variant === 'retained' ? 1 : 0);
   expect(weave.result.scene.primitives).toHaveLength(variant === 'retained' ? 1 : 0);
+});
+
+it.each(['opacity', 'viewBox'] as const)('Path 可见性变化更新 Scope 动画与诊断：%s', property => {
+  const empty: IRPathBase = { type: 'path', kind: 'empty-output' };
+  const scope: IRScope = {
+    type: 'scope',
+    animations:
+      property === 'opacity'
+        ? [{ property: 'opacity', duration: 100, keyframes: [{ at: 0, value: 0 }] }]
+        : [{ property: 'viewBox', duration: 100, keyframes: [{ at: 0, value: [0, 0, 10, 10] }] }],
+    children: [empty],
+  };
+  const source: IRScene = { type: 'scene', version: 1, children: [scope] };
+  const options = {
+    paths: [
+      definePath({
+        name: 'empty-output',
+        schema: PathSchema.extend({ kind: literal('empty-output') }),
+        compile: () => null,
+      }),
+    ],
+  };
+  const session = new WeaveManager(source, options);
+  session.mount();
+  const visible: IRPathBase = {
+    type: 'path',
+    children: [
+      { type: 'step', kind: 'move', to: [0, 0] },
+      { type: 'step', kind: 'line', to: [10, 0] },
+    ],
+  };
+  for (const path of [visible, empty, visible]) {
+    const candidate = session.update({
+      operations: [
+        { kind: 'update', target: { kind: 'child', scopeId: session.getScopeId([0]), index: 0 }, input: path },
+      ],
+    });
+    expect(candidate.compilation).toEqual(
+      compileTestSnapshot({ ...source, children: [{ ...scope, children: [path] }] }, options),
+    );
+    candidate.commit();
+    candidate.finish();
+  }
 });

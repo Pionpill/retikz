@@ -1,5 +1,6 @@
 import { RetikzReconcilerError, RetikzReconcilerErrorCode } from '../../error';
 import type { WeaveNode, WeaveRoot } from '../shared';
+import { WeaveLookup } from './lookup';
 
 /** 状态槽的稳定所有者 */
 type WeaveStateOwner = WeaveNode | WeaveRoot;
@@ -33,6 +34,13 @@ type EditableWeaveAttribute<TAttribute> =
       : TAttribute extends ReadonlyArray<infer TElement>
         ? Array<TElement>
         : never;
+
+/** 读取当前候选视图，供不持有事务对象的派生索引使用 */
+export const readWeaveCandidate = <TNode extends WeaveStateOwner>(node: TNode): Readonly<WeaveStateOf<TNode>> => {
+  const state = node.pending ?? node.current;
+  if (state === null) throw new RetikzReconcilerError(RetikzReconcilerErrorCode.Contract, 'Weave node has no state');
+  return state as Readonly<WeaveStateOf<TNode>>;
+};
 
 /** 读取已提交状态，不把候选当作当前结果 */
 export const readWeaveCurrent = <TNode extends WeaveStateOwner>(node: TNode): Readonly<WeaveStateOf<TNode>> => {
@@ -162,6 +170,7 @@ export class WeaveTransaction {
 
   /** 根据属性的容器类型浅拷贝，成员对象继续共享 */
   private copyAttribute(source: WeaveAttribute): WeaveAttribute {
+    if (source instanceof WeaveLookup) return source.fork();
     if (source instanceof Map) return new Map(source);
     if (source instanceof Set) return new Set(source);
     // 三种内置容器穷尽后只剩数组，ReadonlyArray 无法通过 instanceof 收窄

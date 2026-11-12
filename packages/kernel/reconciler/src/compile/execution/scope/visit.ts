@@ -7,9 +7,8 @@ import {
   projectScopeCompileLayouts,
   projectScopeOutputBounds,
   resolveScope,
-  resolveAnimations,
 } from '@retikz/core';
-import { formatPropertyPath, jsonStructuralEquals } from '@retikz/foundation';
+import { formatPropertyPath } from '@retikz/foundation';
 
 import type { CompileOwnerKey } from '../../provenance';
 import { runCompileStage, readCompileStageCanon } from '../../runtime';
@@ -21,7 +20,8 @@ import type { SubtreeCompileRuntime, SubtreeCompileState } from '../runtime';
 import { resolveStructuralAlignmentGuides, transformAlignmentGuides } from '../shared';
 import type { TreeOutputState } from '../shared';
 import type { SubtreeCompileOptions } from '../types';
-import { emitScopeGroup, shouldEmitScopeGroup } from './group';
+import { emitScopeGroup } from './group';
+import { bindScopeOutputAnimations } from './output';
 import type {
   ScopeLayoutPlaceholder,
   ScopeLayoutPlaceholderContext,
@@ -306,42 +306,16 @@ export const prepareScopeExecution = (
     }
   };
 
-  /** 延迟路径输出收敛后绑定分组动画，裁空分组不产生动画诊断 */
-  const bindScopeAnimations = (compiled: CompiledScope): CompiledScope => {
-    const animations = shouldEmitScopeGroup(
-      state.primitives.length,
-      compiled.layout.overall.transforms,
-      compiled.emit.overall.id,
-      compiled.emit.overall.clipRef !== undefined,
-    )
-      ? (resolveAnimations(canon.animations, {
-          target: 'element',
-          irPath: scopeGeometryContext.irPath,
-          onWarn: scopeGeometryContext.onWarn,
-        }) ?? [])
-      : [];
-    if (jsonStructuralEquals(compiled.emit.overall.animations ?? [], animations)) return compiled;
-    return compileScope(
-      canon,
-      {
-        ...scopeGeometryContext,
-        layouts: state.geometries,
-        resolvedClipPath: preResolvedClipPath,
-        registerClip: runtime.state.workspace.clipRegistry.register,
-        registerClipPath: runtime.state.workspace.clipRegistry.registerPath,
-        animations,
-      },
-      {
-        layout: compiled.layout,
-        emit: { clip: compiled.emit.clip ?? { clipRef: compiled.emit.overall.clipRef } },
-      },
-    );
-  };
-
   const publish = () => {
-    const finalWarningCount = runtime.state.workspace.diagnosticCollector.warnings.length;
-    const animatedScope = bindScopeAnimations(compiledScope!);
-    compiledScope = animatedScope;
+    const bound = bindScopeOutputAnimations(canon, compiledScope!, state.primitives.length, {
+      ...scopeGeometryContext,
+      layouts: state.geometries,
+      resolvedClipPath: preResolvedClipPath,
+      registerClip: runtime.state.workspace.clipRegistry.register,
+      registerClipPath: runtime.state.workspace.clipRegistry.registerPath,
+    });
+    compiledScope = bound.compiled;
+    for (const warning of bound.diagnostics) runtime.state.workspace.diagnosticCollector.collect(warning);
     if (pendingRecord?.record.phase === 'scope') {
       const { record, reused } = pendingRecord;
       runtime.stages?.write(
@@ -349,10 +323,7 @@ export const prepareScopeExecution = (
         {
           ...record,
           value: { canon, compiled: compiledScope },
-          diagnostics: [
-            ...record.diagnostics,
-            ...runtime.state.workspace.diagnosticCollector.warnings.slice(finalWarningCount),
-          ],
+          outputDiagnostics: bound.diagnostics,
         },
         reused,
       );

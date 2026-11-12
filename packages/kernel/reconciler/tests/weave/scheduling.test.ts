@@ -6,6 +6,58 @@ import { WeaveManager } from '../../src/weave';
 import { compileTestSnapshot } from '../helpers/compilation';
 
 describe('Weave 更新调度', () => {
+  it('先更新外部消费者时，读取同批尚未推进的 Scope 新包络', () => {
+    const child: IRNode = { type: 'node', id: 'inner', layout: { width: 30 } };
+    const scope: IRScope = { type: 'scope', id: 'box', children: [child] };
+    const consumer: IRNode = { type: 'node', id: 'consumer', position: { direction: 'right', of: 'box' } };
+    const source: IRScene = { type: 'scene', version: 1, children: [scope, consumer] };
+    const session = new WeaveManager(source);
+    const mounted = session.mount();
+    const nextChild: IRNode = { ...child, layout: { width: 90 } };
+    const nextConsumer: IRNode = { ...consumer, style: { fill: 'red' } };
+    const candidate = session.update({
+      operations: [
+        { kind: 'update', target: { kind: 'child', scopeId: mounted.root.scopeId, index: 1 }, input: nextConsumer },
+        { kind: 'update', target: { kind: 'child', scopeId: session.getScopeId([0]), index: 0 }, input: nextChild },
+      ],
+    });
+    expect(candidate.compilation).toEqual(
+      compileTestSnapshot({ ...source, children: [{ ...scope, children: [nextChild] }, nextConsumer] }),
+    );
+    candidate.rollback();
+  });
+
+  it('同批连续改名不遗留中间名称，回滚保留原绑定', () => {
+    const node: IRNode = { type: 'node', id: 'a' };
+    const source: IRScene = {
+      type: 'scene',
+      version: 1,
+      children: [
+        { type: 'coordinate', id: 'b', position: [100, 0] },
+        node,
+        { type: 'node', id: 'follower', position: { direction: 'right', of: 'b' } },
+      ],
+    };
+    const session = new WeaveManager(source);
+    const mounted = session.mount();
+    const candidate = session.update({
+      operations: [
+        {
+          kind: 'update',
+          target: { kind: 'child', scopeId: mounted.root.scopeId, index: 1 },
+          input: { ...node, id: 'b' },
+        },
+        { kind: 'update', target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'b' }, input: { ...node, id: 'c' } },
+      ],
+    });
+    expect(candidate.compilation).toEqual(
+      compileTestSnapshot({ ...source, children: [source.children[0], { ...node, id: 'c' }, source.children[2]] }),
+    );
+    candidate.rollback();
+    const unchanged = session.update({ operations: [] });
+    expect(unchanged.compilation).toBe(mounted.compilation);
+    unchanged.rollback();
+  });
   it('局部遮蔽保留 Node 声明时与 Path 闭合时的不同名称可见性', () => {
     const other: IRNode = { type: 'node', id: 'other', position: [300, 0] };
     const source: IRScene = {
