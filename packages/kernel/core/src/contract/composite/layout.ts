@@ -1,4 +1,4 @@
-import type { JsonValue, PropertyPath, ValueOf } from '@retikz/foundation';
+import type { JsonValue, OpenString, PropertyPath, ValueOf } from '@retikz/foundation';
 import type { BoundsRect } from '@retikz/math';
 
 import type { IRAnimationTrack, IRChild, IRClip, IRPosition, IRScopeProps, IRTarget, IRTransform } from '../../schemas';
@@ -108,8 +108,8 @@ export type LayoutProposal = Readonly<{
 
 /** 子项局部布局坐标中的一维对齐参考线 */
 export type LayoutAlignmentGuide = Readonly<{
-  /** 开放的对齐线名称 */
-  name: string;
+  /** 内置或自定义的对齐参考线名称 */
+  name: OpenString<BuiltinLayoutAlignmentGuideName>;
   /** 对齐线所属的一维坐标轴 */
   dimension: LayoutAlignmentGuideDimension;
   /** 子项局部布局坐标中的有限位置 */
