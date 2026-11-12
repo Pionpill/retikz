@@ -33,11 +33,10 @@ import { createExecutionInvariantError } from '../../runtime';
 import type { CompileRuntime, CompositeCompileOwner } from '../../runtime';
 import type { CompositeArtifact } from '../../shared';
 import { createCompileChildPath, formatCompileOccurrence, freezeCompileArtifact } from '../../shared';
-import { cloneAlignmentGuides } from '../shared';
 import type { SubtreeCompileRuntime } from '../subtree';
 import { createCompositeCallbackContext } from './context';
 import { isCompositeOutputHandle, snapshotCompositeOutputChild } from './handle';
-import { snapshotAllocationBounds } from './layout';
+import { snapshotAlignmentGuides, snapshotAllocationBounds } from './layout';
 import { compileCompositeOutput } from './output';
 import { preflightCompositeOutputs } from './preflight';
 import type { CompositeProbeContext } from './probe';
@@ -206,7 +205,10 @@ export class CompositeCompiler {
       const explicitAlignmentGuides =
         resultAlignmentGuides === undefined
           ? undefined
-          : cloneAlignmentGuides(resultAlignmentGuides, `Composite '${key}' at ${formatCompileOccurrence(occurrence)}`);
+          : snapshotAlignmentGuides(
+              resultAlignmentGuides,
+              `Composite '${key}' at ${formatCompileOccurrence(occurrence)}`,
+            );
 
       let compositeArtifact: CompositeArtifact | undefined;
       if (resultArtifact !== undefined) {

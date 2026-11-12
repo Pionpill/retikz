@@ -1,14 +1,13 @@
 import type { CompileOccurrenceLocator, IRNode, NodeCompileContext } from '@retikz/core';
 import { compileNode, projectLayoutWithTransform, projectNodeGeometry, resolveNode } from '@retikz/core';
 import type { PropertyPath } from '@retikz/foundation';
-import { formatPropertyPath } from '@retikz/foundation';
 
 import type { CompileOwnerKey } from '../../provenance';
 import type { CompileRuntime } from '../../runtime';
 import { runCompileStage } from '../../runtime';
 import { createCompileChildPath } from '../../shared';
 import type { TreeOutputState } from '../shared';
-import { cloneAlignmentGuides, createTreePositionContext } from '../shared';
+import { createTreePositionContext } from '../shared';
 import type { SubtreeCompileRuntime } from '../subtree';
 
 /** 布局并 emit node，同时注册 id、收集边界点和父 scope layout 输入 */
@@ -129,7 +128,7 @@ export const visitNode = (
   });
   const alignmentGuides = compilation.alignmentGuides;
   if (alignmentGuides !== undefined) {
-    frameAlignmentGuides.push(...cloneAlignmentGuides(alignmentGuides, `Node '${formatPropertyPath(nodeIrPath)}'`));
+    frameAlignmentGuides.push(...alignmentGuides);
   }
 
   layouts.push(layout);

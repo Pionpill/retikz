@@ -202,7 +202,9 @@ export const probeCompositeLayout = (
     slotSize: resolveLayoutSlotSize(allocationBounds, clonedProposal),
     visualBounds:
       calculateBoundsOfPrimitives(laid.primitives, resources) ?? Object.freeze({ x: 0, y: 0, width: 0, height: 0 }),
-    ...(laid.layout.alignmentGuides === undefined ? {} : { alignmentGuides: laid.layout.alignmentGuides }),
+    ...(laid.layout.alignmentGuides === undefined
+      ? {}
+      : { alignmentGuides: Object.freeze(laid.layout.alignmentGuides.map(guide => Object.freeze({ ...guide }))) }),
     replay: token,
   });
 

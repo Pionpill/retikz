@@ -1,4 +1,10 @@
-import type { CompileOccurrenceLocator, LayoutContribution, LayoutMeasurementAxis, LayoutProposal } from '@retikz/core';
+import type {
+  CompileOccurrenceLocator,
+  LayoutAlignmentGuide,
+  LayoutContribution,
+  LayoutMeasurementAxis,
+  LayoutProposal,
+} from '@retikz/core';
 import { canonicalizeBoundsRect, mergeLayoutBounds, createCompositeContractError } from '@retikz/core';
 import type { BoundsRect } from '@retikz/math';
 import { boundsToRect } from '@retikz/math';
@@ -6,6 +12,35 @@ import { boundsToRect } from '@retikz/math';
 import { formatCompileOccurrence } from '../../shared';
 import type { SubtreeCompilation } from '../subtree';
 import { resolveLayoutAxisSlotSize } from './proposal';
+
+/** 校验并复制组件返回的对齐参考线 */
+export const snapshotAlignmentGuides = (
+  guides: ReadonlyArray<LayoutAlignmentGuide>,
+  ownerLabel: string,
+): ReadonlyArray<LayoutAlignmentGuide> => {
+  const keys = new Set<string>();
+  const snapshot: Array<LayoutAlignmentGuide> = [];
+  const guideCount = guides.length;
+
+  for (let index = 0; index < guideCount; index += 1) {
+    const { name, dimension, position } = guides[index];
+    if (!Number.isFinite(position)) {
+      throw createCompositeContractError(
+        `${ownerLabel} returned invalid alignment guide position at index ${index}; expected finite number`,
+      );
+    }
+
+    const key = `${dimension}\u0000${name}`;
+    if (keys.has(key)) {
+      throw createCompositeContractError(`${ownerLabel} returned duplicate alignment guide '${dimension}:${name}'`);
+    }
+
+    keys.add(key);
+    snapshot.push({ name, dimension, position });
+  }
+
+  return snapshot;
+};
 
 /** 从真实边界提取指定轴，不补齐未查询的尺寸 */
 export const contributionOfBounds = (axis: LayoutMeasurementAxis, bounds: Readonly<BoundsRect>): LayoutContribution =>

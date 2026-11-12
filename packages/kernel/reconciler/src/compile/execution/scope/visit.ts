@@ -293,7 +293,11 @@ export const prepareScopeExecution = (
     }
 
     const structuralGuides = resolveStructuralAlignmentGuides(state.alignmentGuides);
-    const transformedGuides = transformAlignmentGuides(structuralGuides, scopeTransforms);
+    const transformedGuides = transformAlignmentGuides(
+      structuralGuides,
+      scopeTransforms,
+      runtime.state.execution.scopeTransformComposer.resolve,
+    );
     if (transformedGuides !== undefined) frameState.alignmentGuides.push(...transformedGuides);
   };
 

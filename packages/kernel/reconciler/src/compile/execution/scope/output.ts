@@ -63,7 +63,11 @@ export const assembleScopeOutput = (
       skipAllocation: frame.context.layout?.skipAllocation,
     });
   }
-  const guides = transformAlignmentGuides(resolveStructuralAlignmentGuides(children.alignmentGuides), transforms);
+  const guides = transformAlignmentGuides(
+    resolveStructuralAlignmentGuides(children.alignmentGuides),
+    transforms,
+    composer.resolve,
+  );
   if (guides !== undefined) frame.state.alignmentGuides.push(...guides);
   const clipRef = emitScopeGroup(runtime, output, compiled, {
     scopePrimitives: children.primitives,
