@@ -408,6 +408,8 @@ Sankey layout is separate from rendering. Without an explicit scale, width field
 
 ## Errors and limitations
 
+When a field in a complete `from` / `to` endpoint is missing or maps to a non-finite value, that row produces no path; independent Point marks can still display valid endpoints. Both ends are resolved, so missing data does not hide invalid constants, undeclared fields, or invalid target references. Invalid coordinate projections still raise errors.
+
 - Built-in Cartesian 2D and polar 2D coordinates support paths and closed regions. Generic coordinate frames support open paths with no `closure` and `closed` other than `true`.
 - Explicit `interpolation` is only valid in polar coordinates. Other coordinate systems reject it.
 - `color` requires a categorical field; continuous and temporal fields are rejected.
