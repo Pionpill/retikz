@@ -386,6 +386,7 @@
     "compAxis": "axis · 坐标轴",
     "compLegend": "legend · 图例",
     "chartLines": "paths · 线图",
+    "chartSlope": "slope · 坡度图",
     "chartLine": "line · 折线图"
   },
   "blog": {

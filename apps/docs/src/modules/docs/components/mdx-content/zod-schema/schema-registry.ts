@@ -6,6 +6,15 @@ import {
 } from '@retikz/chart';
 import {
   LineChartSchema,
+  SlopeChartSchema,
+  SlopeChartRecipeSchema,
+  SlopeChartEncodingsSchema,
+  SlopeChartPropertiesSchema,
+  SlopeChartMarkSchema,
+  SlopeMarkEncodingsSchema,
+  SlopePointPropertiesSchema,
+  SlopePathPropertiesSchema,
+  SlopeLabelPropertiesSchema,
   LineChartRecipeSchema,
   LineChartEncodingsSchema,
   LineChartPropertiesSchema,
@@ -181,6 +190,16 @@ export type SchemaRegistryEntry = {
 
 export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   LineChartSchema: { schema: LineChartSchema, label: 'LineChartSchema' },
+  SlopeChartSchema: { schema: SlopeChartSchema, label: 'SlopeChartSchema' },
+  SlopeChartRecipeSchema: { schema: SlopeChartRecipeSchema, label: 'SlopeChartRecipeSchema' },
+  SlopeChartEncodingsSchema: { schema: SlopeChartEncodingsSchema, label: 'SlopeChartEncodingsSchema' },
+  SlopeChartPropertiesSchema: { schema: SlopeChartPropertiesSchema, label: 'SlopeChartPropertiesSchema' },
+  SlopeChartMarkSchema: { schema: SlopeChartMarkSchema, label: 'SlopeChartMarkSchema' },
+  SlopeMarkEncodingsSchema: { schema: SlopeMarkEncodingsSchema, label: 'SlopeMarkEncodingsSchema' },
+  SlopePointPropertiesSchema: { schema: SlopePointPropertiesSchema, label: 'SlopePointPropertiesSchema' },
+  SlopePathPropertiesSchema: { schema: SlopePathPropertiesSchema, label: 'SlopePathPropertiesSchema' },
+  SlopeLabelPropertiesSchema: { schema: SlopeLabelPropertiesSchema, label: 'SlopeLabelPropertiesSchema' },
+
   LineChartRecipeSchema: { schema: LineChartRecipeSchema, label: 'LineChartRecipeSchema' },
   LineChartEncodingsSchema: { schema: LineChartEncodingsSchema, label: 'LineChartEncodingsSchema' },
   LineChartPropertiesSchema: { schema: LineChartPropertiesSchema, label: 'LineChartPropertiesSchema' },

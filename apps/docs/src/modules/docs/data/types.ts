@@ -56,6 +56,7 @@ export type ShowcaseMetadata = {
 export type DocSidebarIcon =
   | 'chart-paths'
   | 'chart-line'
+  | 'chart-slope'
   | 'chart-scatter'
   | 'chart-bubble'
   | 'chart-regression'

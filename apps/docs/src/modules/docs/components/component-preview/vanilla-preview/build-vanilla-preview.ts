@@ -1,7 +1,12 @@
 import type { IRChartSource } from '@retikz/chart';
 import { renderChart } from '@retikz/chart-vanilla';
-import { lineChart, lineChartInputEmbedAdapter } from '@retikz/chart-vanilla/line';
-import type { LineChartInputEmbedProps } from '@retikz/chart-vanilla/line';
+import {
+  lineChart,
+  lineChartInputEmbedAdapter,
+  slopeChart,
+  slopeChartInputEmbedAdapter,
+} from '@retikz/chart-vanilla/line';
+import type { LineChartInputEmbedProps, SlopeChartInputEmbedProps } from '@retikz/chart-vanilla/line';
 import {
   scatterChartInputEmbedAdapter,
   bubbleChartInputEmbedAdapter,
@@ -26,8 +31,8 @@ import {
   scatterChart,
   stripChart,
 } from '@retikz/chart-vanilla/point';
-import { LineChartSchema } from '@retikz/chart/line';
-import type { IRLineChart } from '@retikz/chart/line';
+import { LineChartSchema, SlopeChartSchema } from '@retikz/chart/line';
+import type { IRLineChart, IRSlopeChart } from '@retikz/chart/line';
 import type {
   IRBubbleChart,
   IRConnectedScatterChart,
@@ -1087,6 +1092,7 @@ const buildDatasetImportCode = (
 };
 
 type TypedChartSource =
+  | IRSlopeChart
   | IRLineChart
   | IRScatterChart
   | IRBubbleChart
@@ -1103,6 +1109,8 @@ const typedChartSourceOf = (source: CompositeChild): TypedChartSource | undefine
   const chartType = (source as IRChartSource).recipe.chartType;
 
   switch (chartType) {
+    case 'slope':
+      return SlopeChartSchema.parse(source);
     case 'line':
       return LineChartSchema.parse(source);
     case 'scatter':
@@ -1152,6 +1160,7 @@ const buildChartCode = (
   const typedSource = typedChartSourceOf(chart);
   if (typedSource !== undefined) {
     const factoryByChartType = {
+      slope: 'slopeChart',
       line: 'lineChart',
       bubble: 'bubbleChart',
       'connected-scatter': 'connectedScatterChart',
@@ -1218,6 +1227,8 @@ const buildChartPreview = (
 
   const runtime = (() => {
     switch (chart.recipe.chartType) {
+      case 'slope':
+        return slopeChart(input as SlopeChartInputEmbedProps);
       case 'line':
         return lineChart(input as LineChartInputEmbedProps);
       case 'bubble':
@@ -1244,6 +1255,7 @@ const buildChartPreview = (
       regressionChartInputEmbedAdapter,
       stripChartInputEmbedAdapter,
       lineChartInputEmbedAdapter,
+      slopeChartInputEmbedAdapter,
     ],
     ...(options.measureText === undefined ? {} : { compile: { measureText: options.measureText } }),
     ...(Object.keys(size).length === 0 ? {} : { output: size }),

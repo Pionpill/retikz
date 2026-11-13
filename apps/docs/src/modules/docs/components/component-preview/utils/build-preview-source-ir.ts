@@ -1,7 +1,7 @@
 import type { IRChartSource } from '@retikz/chart';
 import { CHART_NAMESPACE } from '@retikz/chart';
-import { LineChart } from '@retikz/chart-react/line';
-import type { LineChartProps } from '@retikz/chart-react/line';
+import { LineChart, SlopeChart } from '@retikz/chart-react/line';
+import type { LineChartProps, SlopeChartProps } from '@retikz/chart-react/line';
 import type {
   BubbleChartProps,
   ConnectedScatterChartProps,
@@ -18,7 +18,7 @@ import {
   ScatterChart,
   StripChart,
 } from '@retikz/chart-react/point';
-import type { IRLineChart } from '@retikz/chart/line';
+import type { IRLineChart, IRSlopeChart } from '@retikz/chart/line';
 import type {
   IRBubbleChart,
   IRConnectedScatterChart,
@@ -66,6 +66,7 @@ import { Fragment, isValidElement } from 'react';
 import { previewEmbedPropsOf } from './preview-embed';
 
 type TypedChartSource =
+  | IRSlopeChart
   | IRLineChart
   | IRScatterChart
   | IRBubbleChart
@@ -306,9 +307,16 @@ const sourceGraphChildOf = (
 ): IRChild => {
   if (isInputGraphEmbed(input)) {
     if (
-      [LineChart, ScatterChart, BubbleChart, ConnectedScatterChart, RangedDotChart, RegressionChart, StripChart].some(
-        component => input.kind === component.inputEmbedAdapter.kind,
-      )
+      [
+        SlopeChart,
+        LineChart,
+        ScatterChart,
+        BubbleChart,
+        ConnectedScatterChart,
+        RangedDotChart,
+        RegressionChart,
+        StripChart,
+      ].some(component => input.kind === component.inputEmbedAdapter.kind)
     ) {
       const source = chartSources.at(chartIndex.value);
       chartIndex.value += 1;
@@ -372,6 +380,7 @@ const sourceOf = (value: ReactNode): TypedChartSource | undefined => {
     return typedChartSourceOf(BubbleChart, value.props as BubbleChartProps);
   }
 
+  if (value.type === SlopeChart) return typedChartSourceOf(SlopeChart, value.props as SlopeChartProps);
   if (value.type === LineChart) return typedChartSourceOf(LineChart, value.props as LineChartProps);
   if (value.type === ConnectedScatterChart) {
     return typedChartSourceOf(ConnectedScatterChart, value.props as ConnectedScatterChartProps);

@@ -190,6 +190,13 @@ export const vizV01: Release = {
       },
       highlights: [
         {
+          label: { zh: '待发布：Slope 坡度图', en: 'Unreleased: Slope charts' },
+          content: {
+            zh: '通过 /line 入口提供 SlopeChart 与 SlopeMark，每行配对两个阶段，共用数值尺度。支持独立端点样式、单个实体标签、分面，默认数值尺度上下各留 32 个绘图单位；缺失一端时保留另一端，不补零或连线。',
+            en: 'Adds SlopeChart and SlopeMark through /line, pairing two stages per row on a shared value scale. Supports endpoint styles, single entity labels, and facets, with 32 drawing units of default value-scale padding at each end. Missing endpoints suppress the connection without zero-filling or hiding the valid end.',
+          },
+        },
+        {
           label: { zh: '待发布：Line 折线图', en: 'Unreleased: Line charts' },
           content: {
             zh: '新增三个 Chart 包的 /line 入口，提供 LineChart、LineMark、精确 Source 与 Vanilla InputEmbed。默认只画线、线宽 2；支持系列、可选观测点、曲线／阶梯、缺值桥接和分面。省略 order 保留数据顺序，不按坐标轴 domain 自动排序。',

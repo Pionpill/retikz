@@ -4,6 +4,7 @@ import type { ComponentType } from 'react';
 
 import {
   LineChartIcon,
+  SlopeChartIcon,
   PathsChartIcon,
   BubbleChartIcon,
   ConnectedScatterChartIcon,
@@ -30,6 +31,7 @@ const LIBRARY_CHANGELOG_SECTIONS = new Set(['standard', 'extension', 'layout']);
 const DOC_SIDEBAR_ICONS: Record<DocSidebarIcon, ComponentType<{ className?: string }>> = {
   'chart-paths': PathsChartIcon,
   'chart-line': LineChartIcon,
+  'chart-slope': SlopeChartIcon,
   'chart-scatter': ScatterChartIcon,
   'chart-bubble': BubbleChartIcon,
   'chart-regression': RegressionChartIcon,

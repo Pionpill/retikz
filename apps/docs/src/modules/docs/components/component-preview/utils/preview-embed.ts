@@ -1,6 +1,6 @@
 import type { ChartLayoutProps } from '@retikz/chart-react';
 import { ChartLayout } from '@retikz/chart-react';
-import { LineChart } from '@retikz/chart-react/line';
+import { LineChart, SlopeChart } from '@retikz/chart-react/line';
 import {
   BubbleChart,
   ConnectedScatterChart,
@@ -129,9 +129,16 @@ export const previewEmbedPropsOf = (
   const adapter = resolveInputEmbedAdapter(component);
   if (adapter === Plot.inputEmbedAdapter) return omitPreviewHostProps(props, plotStandalonePropKeys);
   if (
-    [LineChart, ScatterChart, BubbleChart, ConnectedScatterChart, RangedDotChart, RegressionChart, StripChart].some(
-      chart => adapter === chart.inputEmbedAdapter,
-    )
+    [
+      SlopeChart,
+      LineChart,
+      ScatterChart,
+      BubbleChart,
+      ConnectedScatterChart,
+      RangedDotChart,
+      RegressionChart,
+      StripChart,
+    ].some(chart => adapter === chart.inputEmbedAdapter)
   )
     return preparePreviewChartProps(props).props;
 
@@ -148,9 +155,16 @@ export const previewHostDimensionsOf = (
 ): PreviewHostDimensions => {
   const adapter = resolveInputEmbedAdapter(component);
   if (
-    [LineChart, ScatterChart, BubbleChart, ConnectedScatterChart, RangedDotChart, RegressionChart, StripChart].some(
-      chart => adapter === chart.inputEmbedAdapter,
-    )
+    [
+      SlopeChart,
+      LineChart,
+      ScatterChart,
+      BubbleChart,
+      ConnectedScatterChart,
+      RangedDotChart,
+      RegressionChart,
+      StripChart,
+    ].some(chart => adapter === chart.inputEmbedAdapter)
   )
     return preparePreviewChartProps(props).host;
 
