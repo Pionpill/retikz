@@ -29,11 +29,11 @@ description: 用独立代码实体 Source 与 Definition 封装 Block 内容，�
 
 `createCodeBlockContribution(definition, options)` 提供实体及完整下层依赖。三种入口复用同一个 contribution：
 
-| 入口      | 注入方式                                                                                                    |
-| --------- | ----------------------------------------------------------------------------------------------------------- |
-| Direct IR | `resolveCoreProviderDependencies({ contributions: [contribution] })` 的结果传给 Reconciler `compileToScene` |
-| Vanilla   | `InputEmbedAdapter.lower` 返回 `{ node: { ...source }, providerDependencies: contribution }`                |
-| React     | 带 `isTier2Embeddable` 与 `inputEmbedAdapter` 的组件标记复用 Vanilla adapter，见上方源码                    |
+| 入口      | 注入方式                                                                                                                      |
+| --------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Direct IR | `resolveCoreProviderDependencies({ contributions: [contribution] })` 的结果放入 Vanilla `compileToScene` 的 `options.compile` |
+| Vanilla   | `InputEmbedAdapter.lower` 返回 `{ node: { ...source }, providerDependencies: contribution }`                                  |
+| React     | 带 `isTier2Embeddable` 与 `inputEmbedAdapter` 的组件标记复用 Vanilla adapter，见上方源码                                      |
 
 adapter 构造普通 Source 对象，React 的 `key` 等宿主属性不进入持久化数据。自定义实体无需加入另一个实体白名单，也无需手工注册内部 provider。
 

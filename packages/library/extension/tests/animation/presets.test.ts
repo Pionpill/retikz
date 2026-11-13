@@ -1,9 +1,9 @@
 import type { AnimationPresetOptions } from '@retikz/core';
 import { AnimationTrackSchema, loop, stagger } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { grow, growUp, pulse, spin, flash, blink, wiggle } from '../../src';
+import { compileTestResult } from '../helpers/compilation';
 
 describe('动画效果的轨道契约', () => {
   it('grow 的默认轨道', () => {
@@ -114,14 +114,14 @@ describe('动画效果的轨道契约', () => {
 
     expect(decoded).toEqual(track);
 
-    const scene = compileToScene({
+    const scene = compileTestResult({
       type: 'scene',
       version: 1,
       children: [{ type: 'node', id: 'target', position: [0, 0], animations: [decoded] }],
     });
 
     expect(scene).toEqual(
-      compileToScene({
+      compileTestResult({
         type: 'scene',
         version: 1,
         children: [{ type: 'node', id: 'target', position: [0, 0], animations: [track] }],

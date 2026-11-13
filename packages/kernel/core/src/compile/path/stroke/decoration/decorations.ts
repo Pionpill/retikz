@@ -4,8 +4,8 @@ import type { ScenePrimitive } from '../../../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../../error';
 import type { StrokePathResolution } from '../../../../resolve';
 import type { RegisterPaint } from '../../../resource';
-import type { StrokePathGeometry } from '../geometry';
-import { sampleStrokeMarkGeometry } from '../geometry';
+import type { StrokePositionModel } from '../geometry';
+import { sampleStrokePosition } from '../geometry';
 import type {
   CompiledStrokeAppearance,
   LoweredStrokePathGeometry,
@@ -53,14 +53,17 @@ export const calculateStrokeEndpointContact = (
 /** 沿截断前路径计算逐标记的放置，可独立复用 */
 export const layoutStrokeMarks = (
   resolution: StrokePathResolution,
-  metrics: StrokePathGeometry | undefined,
+  positions: StrokePositionModel | undefined,
   context: StrokePathCompileContext,
   prepared?: Array<PreparedStrokeMarkLayout>,
 ): StrokePathLayout['marks'] =>
   (resolution.canon.marks ?? []).map((mark, index) => {
     const cached = prepared?.[index]?.placement;
     if (cached !== undefined) return { placement: cached };
-    const sample = metrics === undefined ? undefined : sampleStrokeMarkGeometry(metrics, mark.pos);
+    const sample =
+      positions === undefined
+        ? undefined
+        : sampleStrokePosition(positions, mark.pos, mark.positionMode, mark.positionGeometry)?.visual;
     if (sample === undefined)
       throw new RetikzCoreError(
         RetikzCoreErrorCode.Compile,

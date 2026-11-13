@@ -226,7 +226,7 @@ export const SortedTable: FC = () => (
 
 Layout 会先对其管理的全部输入完成预检，再执行计算，并将结果作为一次更新提交。当前请求失败时保留已有画面；请求已过期或组件已卸载时，计算结果不会再更新画面。
 
-使用 Vanilla 时，选择 `renderPlotAsync`、`renderChartAsync`、`renderTableAsync`，也可以使用配置了对应 adapter 的 `processToStaticInputResultAsync`。同步入口和 React 同步 SSR 只支持本地同步计算。SSR 如需外接计算或等待 Promise，应使用异步 Vanilla 入口。
+使用 Vanilla 时，选择 `renderPlotAsync`、`renderChartAsync`、`renderTableAsync`，也可以使用配置了对应 adapter 的 `compileToSceneAsync`。同步入口和 React 同步 SSR 只支持本地同步计算。SSR 如需外接计算或等待 Promise，应使用异步 Vanilla 入口。
 
 除了直接传入原始数据，还可以用 `dataBindings` 按数据引用名提供输入；两种方式不能同时使用。绑定支持以下三种形式：
 

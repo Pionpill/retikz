@@ -8,7 +8,7 @@ import type {
   PathCommand,
   PathPrimitive,
   ScenePrimitive,
-  SceneResource,
+  SceneResources,
 } from '../src/contract';
 import type { CanonicalDropShadow, IRPosition } from '../src/schemas';
 
@@ -20,7 +20,7 @@ export type SceneBoundsWorkload = {
   /** 最终Scene图元，不在采样中增长 */
   primitives: Array<ScenePrimitive>;
   /** 配套裁剪资源 */
-  resources: Array<SceneResource>;
+  resources: SceneResources;
   /** 按输入构造规则计算的独立轴对齐边界 */
   expectedBounds: BoundsRect;
 };
@@ -99,27 +99,30 @@ export const createSceneBoundsWorkload = (count: number, mode: SceneBoundsMode):
           children: [path],
         },
       ],
-      resources: [
-        {
-          kind: 'clip',
-          id: 'bounds-window',
-          path: {
-            fillRule: 'nonzero',
-            commands: [
-              { kind: 'move', to: [0, 0] },
-              { kind: 'line', to: [clipWidth, 0] },
-              { kind: 'line', to: [clipWidth, 5] },
-              { kind: 'line', to: [0, 5] },
-              { kind: 'close' },
-            ],
+      resources: {
+        paints: [],
+        clips: [
+          {
+            kind: 'clip',
+            id: 'bounds-window',
+            path: {
+              fillRule: 'nonzero',
+              commands: [
+                { kind: 'move', to: [0, 0] },
+                { kind: 'line', to: [clipWidth, 0] },
+                { kind: 'line', to: [clipWidth, 5] },
+                { kind: 'line', to: [0, 5] },
+                { kind: 'close' },
+              ],
+            },
           },
-        },
-      ],
+        ],
+      },
       expectedBounds: { x: 3, y: 7, width: clipWidth, height: 5 },
     };
   }
 
-  return { primitives: [path], resources: [], expectedBounds };
+  return { primitives: [path], resources: { paints: [], clips: [] }, expectedBounds };
 };
 
 /** 一次布局贡献合并的输入及独立min/max预期 */

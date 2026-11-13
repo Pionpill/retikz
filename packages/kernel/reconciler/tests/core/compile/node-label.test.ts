@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { ScenePrimitive, TextPrimitive } from '../../../../core/src/contract';
 import type { IRScene } from '../../../../core/src/schemas';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 
 // fallback measurer 不提供 ascent / descent，Node label 规范化为上下对称视觉盒
 const visualMiddle = (t: TextPrimitive): number => t.y;
@@ -24,7 +24,7 @@ const findLabel = (prims: Array<ScenePrimitive>, text: string): TextPrimitive | 
 
 describe('Node 标签', () => {
   it('保留多行标签中的每行和段样式', () => {
-    const scene = compileToScene({
+    const scene = compileTestResult({
       version: 1,
       type: 'scene',
       children: [
@@ -52,7 +52,7 @@ describe('Node 标签', () => {
     expect(inherited!.y).toBeGreaterThan(styled!.y);
   });
   it('将硬换行符布置为一个居中的标签块', () => {
-    const scene = compileToScene(
+    const scene = compileTestResult(
       {
         version: 1,
         type: 'scene',
@@ -68,7 +68,7 @@ describe('Node 标签', () => {
     expect(first!.x).toBeCloseTo(second!.x);
   });
   it.each([undefined, 0, 0.4])('普通、混排标签及默认引线使用标签透明度，省略时继承节点：%s', opacity => {
-    const scene = compileToScene({
+    const scene = compileTestResult({
       version: 1,
       type: 'scene',
       children: [
@@ -107,7 +107,7 @@ describe('Node 标签', () => {
           },
         ],
       };
-      const scene = compileToScene(ir).scene;
+      const scene = compileTestResult(ir).scene;
       const labelText = findLabel(scene.primitives, 'foo');
 
       expect(labelText).toBeDefined();
@@ -130,7 +130,7 @@ describe('Node 标签', () => {
           },
         ],
       };
-      const scene = compileToScene(ir).scene;
+      const scene = compileTestResult(ir).scene;
 
       expect(findLabel(scene.primitives, 'top')).toBeDefined();
       expect(findLabel(scene.primitives, 'bot')).toBeDefined();
@@ -152,7 +152,7 @@ describe('Node 标签', () => {
           },
         ],
       };
-      const scene = compileToScene(ir).scene;
+      const scene = compileTestResult(ir).scene;
       const labelText = findLabel(scene.primitives, 'L')!;
 
       // node center 是 [0, 0]；label 视觉盒与矩形 top 边界保持 10 units 净距
@@ -173,7 +173,7 @@ describe('Node 标签', () => {
           },
         ],
       };
-      const scene = compileToScene(ir).scene;
+      const scene = compileTestResult(ir).scene;
       const labelText = findLabel(scene.primitives, 'L')!;
 
       expect(labelText.y).toBeGreaterThan(10);
@@ -193,7 +193,7 @@ describe('Node 标签', () => {
           },
         ],
       };
-      const scene = compileToScene(ir).scene;
+      const scene = compileTestResult(ir).scene;
       const labelText = findLabel(scene.primitives, 'L')!;
 
       expect(labelText.x).toBeGreaterThan(10);
@@ -213,7 +213,7 @@ describe('Node 标签', () => {
           },
         ],
       };
-      const scene = compileToScene(ir).scene;
+      const scene = compileTestResult(ir).scene;
       const labelText = findLabel(scene.primitives, 'L')!;
 
       expect(labelText.x).toBeGreaterThan(10);
@@ -236,7 +236,7 @@ describe('Node 标签', () => {
           },
         ],
       };
-      const scene = compileToScene(ir).scene;
+      const scene = compileTestResult(ir).scene;
       const labelText = findLabel(scene.primitives, 'L')!;
 
       expect(labelText.y).toBeGreaterThan(10);
@@ -271,8 +271,8 @@ describe('Node 标签', () => {
           },
         ],
       };
-      const yExp = findLabel(compileToScene(irExplicit).scene.primitives, 'L')!.y;
-      const yDef = findLabel(compileToScene(irDefault).scene.primitives, 'L')!.y;
+      const yExp = findLabel(compileTestResult(irExplicit).scene.primitives, 'L')!.y;
+      const yDef = findLabel(compileTestResult(irDefault).scene.primitives, 'L')!.y;
 
       expect(yExp).toEqual(yDef);
     });
@@ -304,8 +304,8 @@ describe('Node 标签', () => {
           },
         ],
       };
-      const yExp = findLabel(compileToScene(irExplicit).scene.primitives, 'L')!.y;
-      const yDef = findLabel(compileToScene(irDefault).scene.primitives, 'L')!.y;
+      const yExp = findLabel(compileTestResult(irExplicit).scene.primitives, 'L')!.y;
+      const yDef = findLabel(compileTestResult(irDefault).scene.primitives, 'L')!.y;
 
       expect(yExp).toEqual(yDef);
     });
@@ -327,7 +327,7 @@ describe('Node 标签', () => {
           },
         ],
       };
-      const labelText = findLabel(compileToScene(ir).scene.primitives, 'L')!;
+      const labelText = findLabel(compileTestResult(ir).scene.primitives, 'L')!;
 
       expect(labelText.fontSize).toBeCloseTo(18);
       expect(labelText.fontFamily).toBe('Inter');
@@ -348,7 +348,7 @@ describe('Node 标签', () => {
           },
         ],
       };
-      const labelText = findLabel(compileToScene(ir).scene.primitives, 'L')!;
+      const labelText = findLabel(compileTestResult(ir).scene.primitives, 'L')!;
 
       expect(labelText.fontSize).toBeCloseTo(10);
 
@@ -370,7 +370,7 @@ describe('Node 标签', () => {
           },
         ],
       };
-      const labelText = findLabel(compileToScene(ir).scene.primitives, 'foo')!;
+      const labelText = findLabel(compileTestResult(ir).scene.primitives, 'foo')!;
 
       expect(labelText.measuredWidth).toBeCloseTo(33, 1);
     });
@@ -390,7 +390,7 @@ describe('Node 标签', () => {
           },
         ],
       };
-      const labelText = findLabel(compileToScene(ir).scene.primitives, 'L')!;
+      const labelText = findLabel(compileTestResult(ir).scene.primitives, 'L')!;
 
       expect(labelText.fill).toBe('red');
     });
@@ -412,7 +412,7 @@ describe('Node 标签', () => {
           },
         ],
       };
-      const scene = compileToScene(ir).scene;
+      const scene = compileTestResult(ir).scene;
 
       // rotate ≠ 0 时整组 wrap 进 group；label 应该在 group 内
       const top = scene.primitives;

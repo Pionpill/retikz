@@ -1,443 +1,118 @@
 ---
-title: 编译产物
-description: 追踪 Core 如何汇总 Scene、资源与画布，并交付领域产物和诊断。
+title: 编译输出
+description: 区分 Core 图元与资源契约、Reconciler 快照汇总、领域产物和渲染消费边界
 ---
 
-[节点编译](/kernel/packages/core/node-compilation)、[路径编译](/kernel/packages/core/path-compilation)和[复合编译](/kernel/packages/core/composite-compilation)解释了图元怎样产生。本页从这些局部结果出发，追踪一次完整编译怎样收尾，以及调用方最终拿到什么。阅读前需要了解[编译流程](/kernel/packages/core/compilation)中的遍历与延迟路径回填。
-
-本文追踪单次完整编译的输出。Core 负责绘图语义与原子阶段，Reconciler 负责完整与增量编译、缓存复用和输出事务。局部缓存怎样组装为完整输出见[独立编译与可复用状态](/kernel/packages/core/compilation#独立编译与可复用状态)。SVG / Canvas 的具体更新策略由渲染层处理。
+Core 定义图元、资源与边界计算；Reconciler 收集子树贡献、完成延迟路径和排序，组装完整 Scene 及附属结果，再按会话提交协议发布。
 
 ## 整体流程
 
-普通入口 `compileToScene` 返回 Scene 与 Composite 领域产物：
+绘图数据进入 Scene，领域结果进入 artifacts，编译诊断位于快照 diagnostics，可选来源信息位于 provenance。它们服务不同消费者；renderer 不需要理解 Composite 的业务输入或布局算法。
 
-- `scene`：交给渲染器的图元、画布和绘制资源。
-- `artifacts`：复合组件主动返回的领域结果，例如 Layout 的容器、分行与间距。
+<ComponentPreview files="output-overview" size="lg" hideCode type="flow" />
 
-`onWarn` 接收本次编译的警告。编译快照入口还可单独交付诊断与来源信息。
+## 调用者最终拿到什么
 
-手动组装已编译片段时，资源导入函数 `importSceneResources` 从 `@retikz/reconciler` 导入；警告格式化函数 `formatCompileWarning` 也由该包提供。资源生成和警告类型仍由 Core 定义。
-
-`CompileResult` 的结构如下，产物泛型按默认类型简化：
+SceneReconciler 的结果带 revision 和 compilation。绘图结果路径是 `output.compilation.result.scene`，领域产物是同层 result.artifacts；诊断属于 compilation.diagnostics，不在 Scene 里。
 
 ```ts
-type CompileResult = Readonly<{
-  scene: Scene;
-  artifacts: ReadonlyArray<CompositeArtifact>;
-}>;
-```
+import { SceneReconciler } from '@retikz/reconciler';
 
-遍历生成图元并登记资源，随后装配场景并交付结果。应用和可选检查工具消费已经完成的结果，不参与主图编译。
-
-<ComponentPreview files="output-overview" size="xs" hideCode type="flow" />
-
-后文以放在平移 Scope 中、共享同一渐变的两张矩形卡片说明 Scene 的组装。若卡片由复合组件生成，组件还可返回领域布局信息；这些信息的坐标含义由该组件定义。
-
-<SourceLinks
-  sources={[
-    { label: '完整编译', path: 'packages/kernel/reconciler/src/compile/compile.ts' },
-    { label: '结果类型', path: 'packages/kernel/reconciler/src/compile/types.ts' },
-  ]}
-/>
-
-## 场景
-
-`Scene` 汇集渲染所需的图元、画布边界、资源和根动画轨道，完整结构如下：
-
-```ts
-type Scene = {
-  primitives: Array<ScenePrimitive>;
-  layout: BoundsRect;
-  resources?: Array<SceneResource>;
-  animations?: Array<IRAnimationTrack>;
-};
-```
-
-`layout` 使用包含 `x`、`y`、`width`、`height` 的 `BoundsRect` 表示画布边界；`resources` 和 `animations` 分别保存可选资源与根动画轨道。
-
-### 图元
-
-`Scene.primitives` 是按绘制顺序排列的图元数组。矩形、椭圆、文字和路径描述已确定的几何；分组图元保存子图元，并可携带变换、裁剪引用等共同属性。
-
-```ts
-type ScenePrimitive = RectPrimitive | EllipsePrimitive | TextPrimitive | PathPrimitive | GroupPrimitive;
-```
-
-按职责可以分为三类：
-
-- 几何图元（`RectPrimitive`、`EllipsePrimitive`、`PathPrimitive`）：描述矩形、椭圆和路径。
-- 文本图元（`TextPrimitive`）：描述文本及其排版、样式。
-- 分组图元（`GroupPrimitive`）：组织子图元，统一应用变换和裁剪。
-
-<ComponentAlert
-  type="tip"
-  title="基础图元与渲染后端"
-  description={
-    <>
-      无论上层组件封装多么复杂，完成展开、解析与编译后，交给渲染器的基础图元都归入以上五种类型。Render
-      在图元层只需对接这些类型，并结合场景的画布、资源与动画信息完成绘制，无需理解上层的图表、布局或业务组件。
-      <table>
-        <thead>
-          <tr>
-            <th>场景图元</th>
-            <th>SVG</th>
-            <th>Canvas 2D</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>
-              <code>RectPrimitive</code>
-            </td>
-            <td>
-              <code>{'<rect>'}</code>
-            </td>
-            <td>
-              <code>rect()</code>, <code>arc()</code>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <code>EllipsePrimitive</code>
-            </td>
-            <td>
-              <code>{'<ellipse>'}</code>
-            </td>
-            <td>
-              <code>ellipse()</code>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <code>TextPrimitive</code>
-            </td>
-            <td>
-              <code>{'<text>'}</code>, <code>{'<tspan>'}</code>
-            </td>
-            <td>
-              <code>fillText()</code>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <code>PathPrimitive</code>
-            </td>
-            <td>
-              <code>{'<path>'}</code>
-            </td>
-            <td>
-              <code>moveTo()</code>, <code>lineTo()</code>, <code>bezierCurveTo()</code>,{' '}
-              <code>quadraticCurveTo()</code>, <code>ellipse()</code>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <code>GroupPrimitive</code>
-            </td>
-            <td>
-              <code>{'<g>'}</code>
-            </td>
-            <td>
-              <code>save()</code>, <code>translate()</code>, <code>rotate()</code>, <code>scale()</code>,{' '}
-              <code>clip()</code>, <code>restore()</code>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </>
-  }
-/>
-
-几何图元和文本图元描述具体内容，分组图元则组织这些内容。因此，场景虽然以图元数组作为入口，内部仍可以形成嵌套结构。下面以包含两个矩形的平移分组为例，展示 Scene 中的结构；省略样式等字段。
-
-```json
-{
-  "type": "group",
-  "transforms": [{ "kind": "translate", "x": 20, "y": 30 }],
-  "children": [
-    { "type": "rect", "x": 0, "y": 0, "width": 40, "height": 20 },
-    { "type": "rect", "x": 60, "y": 0, "width": 40, "height": 20 }
-  ]
+const reconciler = new SceneReconciler({}, { incremental: false });
+try {
+  const output = reconciler.mount({
+    type: 'scene',
+    version: 1,
+    children: [{ type: 'node', text: 'A' }],
+  });
+  const { scene, artifacts } = output.compilation.result;
+  const diagnostics = output.compilation.diagnostics;
+  console.log(scene, artifacts, diagnostics);
+} finally {
+  reconciler.dispose();
 }
 ```
 
-第一张矩形的局部左上角是 `[0, 0]`，经过分组平移后，世界位置为 `[20, 30]`。第二张矩形的局部左上角是 `[60, 0]`，应用相同变换后，世界位置为 `[80, 30]`。子图元保留局部坐标，渲染器沿分组层级应用变换，得到最终绘制位置。
+这是 Reconciler 的公开结果。Vanilla 的便捷处理入口可以管理内部协调器生命周期；这里保留同一个底层结果模型，具体入口返回值应按所属包契约读取。
+
+## Scene 是已布局的后端中立绘图
+
+Scene.primitives 按绘制顺序排列，layout 保存 x / y / width / height；resources 和根动画在需要时出现。没有 Node、Scope 或领域 Composite 留给 renderer 再做语义编译。
+
+| 图元             | 已经确定的内容                       |
+| ---------------- | ------------------------------------ |
+| RectPrimitive    | 矩形位置、尺寸与外观                 |
+| EllipsePrimitive | 椭圆几何与外观                       |
+| TextPrimitive    | 文字、行、基线和字体等排版结果       |
+| PathPrimitive    | 结构化路径命令、描边、填充及装饰数据 |
+| GroupPrimitive   | 子图元及共享变换、裁剪、身份与动画   |
+
+这些契约描述可供不同后端解释的绘图语义，不存 DOM、Canvas context 或 SVG-only 回调。Path 的端点装饰仍可以通过结构化 marker 数据交付。
+
+## 分组坐标与查询几何
+
+Scene 不要求所有图元摊平成世界坐标。Scope 或 Node 可以保留 Group 变换，其 children 使用所属局部空间。renderer 组合这些变换完成绘制；编译期查询几何则按需要投影为世界记录，用于跨 Scope 引用。
+
+因此，某个局部矩形 x 为 0、外组平移 20 时，其世界 x 为 20；不应把两者都写成 20 再叠加一次。Composite artifact 的坐标空间也由所属领域契约定义，不因 Scene 中存在分组就自动成为世界坐标。
+
+## 绘制资源怎样共享
+
+普通颜色可以直接出现在图元中。渐变、图案和图片保存在 `Scene.resources.paints`，由填充或描边的资源引用使用；裁剪路径保存在 `Scene.resources.clips`，由分组的 `clipRef` 引用。Core 的 paint / clip registry 物化后端中立资源并按内容身份复用；Reconciler 为每次工作区创建这些注册表，缓存、回放和最终 Scene 都保留相同分类。
+
+`resources` 存在时，`paints` 和 `clips` 都是数组，没有对应资源的类别使用空数组。编译结果没有资源时可以省略整个字段；Render 运行时快照则始终补齐两个集合。资源更新与引用它的图元在同一 revision 生效。
+
+Pattern Definition 可以生成 tile 的图元，但不能另带一份资源表。Path 等扩展回调的资源引用同样受宿主许可约束。隔离试算的资源只有选中 replay 才导入正式工作区，不能只复制图元而漏掉它引用的资源。
+
+资源 id 是关联同一份 Scene 内引用与定义的身份，不是要求调用者解析含义的业务 key。SVG、Canvas 等后端各自物化资源；Core 不在此阶段输出具体 DOM defs。
 
 <SourceLinks
   sources={[
-    { label: 'SVG 图元物化', path: 'packages/kernel/render/src/svg/builders/prim.ts' },
-    { label: 'Canvas 图元绘制', path: 'packages/kernel/render/src/canvas/draw-scene.ts' },
-    { label: 'Canvas 路径构建', path: 'packages/kernel/render/src/canvas/path-geometry.ts' },
-    { label: 'Scene 与图元联合', path: 'packages/kernel/core/src/contract/scene/scene.ts' },
-    { label: '分组、变换与裁剪引用', path: 'packages/kernel/core/src/contract/scene/group.ts' },
+    { label: 'Paint 物化与复用', path: 'packages/kernel/core/src/compile/resource/paint.ts' },
+    { label: 'Clip 物化与复用', path: 'packages/kernel/core/src/compile/resource/clip.ts' },
+    { label: '重放导入配套资源', path: 'packages/kernel/reconciler/src/compile/execution/composite/replay.ts' },
   ]}
 />
 
-### 资源
+## layout 与边界
 
-`Scene.resources` 保存绘制和裁剪资源，通过 `kind` 区分两类结构：
+Scope 几何包络供连接与放置，Composite allocationBounds 供父布局，visualBounds 是静态图元树的保守视觉包络。最终 Scene.layout 则是编译输出边界经视口策略处理的结果。
 
-```ts
-type SceneResource = PaintResource | ClipResource;
+没有显式 viewBox 时，Reconciler 汇总的布局贡献经 Core 边界计算，再加 padding 并舍入。默认 padding 为 10；完全没有边界时返回 [0, 0, 100, 100] 所表示的默认画布，而不是从未知几何推导尺寸。显式 viewBox 直接决定 layout，仍需满足取整后的有限坐标和正宽高要求。
 
-type PaintResource = GradientResource | PatternResource | ImageResource;
+例如贯穿 A/B 示例的布局贡献范围为 x=-30 到 210、y=-20 到 20。默认留白后 layout 是 `{ x: -40, y: -30, width: 260, height: 60 }`。标签、阴影或装饰会改变相关输出贡献。
 
-type GradientResource = {
-  kind: 'paint';
-  id: string;
-  spec: Extract<IRPaint, { kind: 'linearGradient' | 'radialGradient' | 'conicGradient' }>;
-};
+## artifacts、诊断与来源
 
-type PatternResource = {
-  kind: 'paint';
-  id: string;
-  spec: Extract<IRPaint, { kind: 'pattern' }>;
-  tile: CompiledPatternTile;
-};
+Composite artifact 保存 namespace、type、结构化 occurrence 和 JSON value。occurrence 区分作者来源与展开位置，不能靠字符串路径猜某个生成节点的归属。产物按最终逻辑树顺序整理，与像素绘制分开交付。
 
-type ImageResource = {
-  kind: 'paint';
-  id: string;
-  spec: Extract<IRPaint, { kind: 'image' }>;
-};
+diagnostics 保存本次成功编译可提交的警告，含 code、message 及来源信息；未选中试算的 warning 不应泄漏。按需捕获的 provenance 用于把图元关联回编译来源，不是 renderer 的必需输入。输出事务失败时如何回滚属于 Reconciler，不由 Core 在某个 emit 函数内处理。
 
-type ClipResource = {
-  kind: 'clip';
-  id: string;
-  path: SceneClipPath;
-};
-```
-
-Core 支持节点形状等多种自定义能力，其中许多会在编译过程中被消费，转换为基础图元，渲染器无需再理解原来的自定义定义。渐变、图案和裁剪则需要在渲染时继续使用：Core 负责解析和整理资源数据，Render 根据这些数据完成具体的绘制或裁剪。因此，这些资源会随 Scene 一并返回，保存在 `Scene.resources` 中，由图元引用。
-
-这里先区分两个对象：
-
-- 资源：描述如何绘制或裁剪的完整数据，带有本次 Scene 内的资源 id。
-- 引用：图元中的轻量标识，通过 id 找到相应资源。
-
-两张卡片使用相同的渐变时，paint 注册表按已经解析的绘制声明生成内容键。第一次登记创建资源，后续相同声明复用它。普通颜色字符串直接保留，无需创建资源。
-
-下图只展示填充引用与资源的关键字段。键值块是对象字段示意；`Scene.resources` 本身是数组，图中只展开它的第一项。
-
-<ComponentPreview files="output-resources" size="lg" hideCode type="illustration" />
-
-两个 `fill.id` 指向同一个资源，图中用 `paint-1` 简写其 id。实际 id 在资源生成时由规范内容确定，不受登记顺序影响；相同内容跨编译保持相同 id，内容改变则产生不同 id。应用应将它作为不透明的资源引用，不解析其格式或用作业务身份。图案资源的身份还包含 Definition 生成的 tile 几何，因此相同声明产生不同 tile 时不会混用；渲染时无需再次调用图案 Definition。
-
-裁剪采用对应的 clip 注册表：裁剪能力先生成形状，再降低为 Scene 裁剪路径，分组用 `clipRef` 引用它。编译末尾把 paint 与 clip 资源合并到 Scene；没有资源时省略 `resources` 字段。复合布局重放会导入选中结果的资源，保留原 id 与图元引用，并按内容身份去重，相关隔离过程见[复合编译](/kernel/packages/core/composite-compilation)。
+快照、结果及 artifacts / diagnostics 数组的只读外壳不意味着整棵 Scene 在运行时递归冻结。消费者应遵守结果所有权，不能修改已发布快照来替代一次声明更新。
 
 <SourceLinks
   sources={[
-    { label: 'paint 登记、去重与导入', path: 'packages/kernel/core/src/compile/resource/paint.ts' },
-    { label: '裁剪降低与资源登记', path: 'packages/kernel/core/src/compile/resource/clip.ts' },
-    { label: '资源与引用契约', path: 'packages/kernel/core/src/contract/scene/paint.ts' },
-    { label: '裁剪资源结构', path: 'packages/kernel/core/src/contract/scene/group.ts' },
-  ]}
-/>
-
-### 画布
-
-图元确定了画什么，`Scene.layout` 则给出整个场景的取景矩形。它包含 `x`、`y`、`width`、`height`，使用场景坐标；宿主元素的 CSS 宽高另由渲染接入决定。
-
-```ts
-type BoundsRect = {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-};
-```
-
-自动画布从遍历结果中的 `layoutBounds` 开始。各项布局贡献先汇总，阴影外溢按贡献扩展，再添加编译选项的 padding，最后应用输出精度。显式提供根 `viewBox` 时，Core 将它直接转换为 `Scene.layout`，不再用自动边界和 padding 推导画布。显式取景不会重新移动图元。
-
-继续看平移后的两张卡片。为单独说明画布计算，假设最终汇总边界是 `{ x: 20, y: 30, width: 100, height: 20 }`，且没有额外边界贡献。padding 为 10 时，自动画布为 `{ x: 10, y: 20, width: 120, height: 40 }`。下图保持卡片位置不变，对比自动留白与一个更宽的显式取景。
-
-<ComponentPreview files="output-canvas" size="lg" hideCode type="illustration" />
-
-蓝色实线是卡片几何，灰色点线是教学用取景边框。左图由边界加 padding 得到；右图直接使用 `{ x: 0, y: 10, width: 150, height: 60 }`。图中取景框只帮助读图，不属于卡片的编译输出。
-
-还要区分三种容易混淆的边界：
-
-| 数据           | 回答的问题                                   |
-| -------------- | -------------------------------------------- |
-| 布局贡献汇总   | 本次编译哪些区域参与自动画布计算？           |
-| 视觉边界       | 最终图元连同描边、变换、裁剪等占据多大范围？ |
-| `Scene.layout` | 交给渲染器的最终取景矩形是什么？             |
-
-复合布局可以分别查询分配范围、布局范围与视觉范围，因而不能用一次图元外框扫描替代所有布局语义。完整编译的自动画布消费的是遍历得到的布局汇总；视觉边界计算有自己的图元遍历逻辑。
-
-没有任何布局边界时，自动画布返回 `{ x: 0, y: 0, width: 100, height: 100 }`。显式 `viewBox` 要求有限坐标与正宽高，应用精度后的结果也会检查；不能形成有效画布时，本次编译抛错。
-
-<SourceLinks
-  sources={[
-    { label: '画布矩形结构', path: 'packages/kernel/math/src/primitives/bounds.ts' },
-    { label: '布局贡献与阴影外溢', path: 'packages/kernel/core/src/compile/scene/bounds.ts' },
-    { label: '自动画布与空场景', path: 'packages/kernel/core/src/compile/scene/layout.ts' },
-    { label: '显式 viewBox', path: 'packages/kernel/core/src/compile/scene/layout.ts' },
-    { label: '图元视觉边界', path: 'packages/kernel/core/src/compile/scene/bounds.ts' },
-  ]}
-/>
-
-### 动画
-
-`Scene.animations` 保存场景根级的动画轨道，图元自身的轨道则保存在对应图元的 `animations` 中。两者使用同一轨道结构，下面展示属性、关键帧与时间配置，省略部分播放选项：
-
-```ts
-type IRAnimationTrack = {
-  property: string;
-  keyframes: Array<{
-    at: number;
-    value: JsonValue;
-    easing?: string | [number, number, number, number];
-  }>;
-  duration: number;
-  delay?: number;
-  easing?: string | [number, number, number, number];
-  iterations?: number | 'infinite';
-  // 省略 direction、fill、trigger、origin
-};
-```
-
-每条轨道描述一个属性如何随时间变化。`at` 是 0 到 1 的归一化时间，关键帧按它升序排列；`value` 是该时刻的绝对属性值。`duration` 与 `delay` 的单位为毫秒，`easing` 控制关键帧之间的过渡。
-
-- 场景动画：根级只保留 `property: 'viewBox'` 的轨道，关键帧值为 `[x, y, width, height]`，用于改变整个场景的取景范围。
-- 图元动画：保存在各图元上，例如透明度、填充色、位移或路径绘制进度；它们不会汇总到 `Scene.animations` 中。
-
-Core 在编译时筛选轨道所属层级：根级的非 `viewBox` 轨道、元素级的 `viewBox` 轨道会被丢弃并产生警告，没有保留轨道时省略对应的 `animations` 字段。编译产物保留的是可序列化的动画声明，播放时钟、触发与逐帧更新由 Render 的运行时接入处理。
-
-静态画布仍由 `Scene.layout` 表达；根动画描述取景范围随时间的变化。具体播放方式与后端支持范围见[渲染后端](/kernel/packages/render)。
-
-<SourceLinks
-  sources={[
-    { label: '动画轨道与关键帧', path: 'packages/kernel/core/src/schemas/scene/animation.ts' },
-    { label: '根级与元素级轨道筛选', path: 'packages/kernel/core/src/resolve/animation.ts' },
-    { label: '场景动画装配', path: 'packages/kernel/reconciler/src/compile/compile.ts' },
-  ]}
-/>
-
-## 附加产物
-
-`artifacts` 只保存 Composite 领域结果，没有产物时返回空数组。同一组件的不同实例各自保留记录，按最终逻辑树的出现顺序排列。
-
-`occurrence` 由 Source 路径和结构化展开路径组成，用于区分本次编译中的出现位置，不保证跨 revision 的稳定身份。产物值与作者对象隔离并冻结；缺省 `artifact` 不生成记录，`null` 则是合法领域值。
-
-### 复合产物
-
-复合组件通过 `artifactSchema` 声明领域结果类型，回调作者负责满足该契约。Core 不对已类型化产物重新执行 Schema 解析，只保留 JSON 快照隔离，并将结果包装为以下记录；这里将泛型简化为默认类型：
-
-```ts
-type CompositeArtifact = Readonly<{
-  namespace: string;
-  type: string;
-  occurrence: CompileOccurrenceLocator;
-  value: JsonValue;
-}>;
-```
-
-以 Layout 包的 FlexLayout 为例，其定义通过 `artifactSchema` 声明布局产物。
-
-```ts
-const flexLayoutDefinition = defineComposite({
-  namespace: LAYOUT_NAMESPACE,
-  type: 'flexLayout',
-  schema: FlexLayoutSchema,
-  compile: compileFlexLayout,
-  artifactSchema: FlexLayoutArtifactSchema,
-});
-```
-
-`compileFlexLayout` 完成布局后，同时返回待编译的子图和布局产物。下面是函数末尾的返回结构，变量来自前面的布局计算：
-
-```ts
-return {
-  children: [scope],
-  allocationBounds: allocation,
-  ...(alignmentGuides === undefined ? {} : { alignmentGuides }),
-  artifact: Object.freeze({
-    kind: 'flex',
-    container: createLayoutArtifactContainer(allocation, content, items),
-    items,
-    lines,
-    spacing: sortLayoutSpacing(spacing),
-  }),
-};
-```
-
-`children` 交回 Core 继续编译，`artifact` 则保留容器边界、各子项的布局与位移、分行和间距信息。Core 将它包装为领域产物记录，`namespace` 为 `layout`，`type` 为 `flexLayout`；内层 `value.kind: 'flex'` 是 Layout 包自己的产物分类。
-
-下面编译一个包含两个节点的 FlexLayout，并从返回数组中读取产物。注册的 Definition 同时让返回值保留具体的产物类型：
-
-```ts
-import { compileToScene } from '@retikz/reconciler';
-import { createFlexLayout, flexLayoutDefinition } from '@retikz/layout';
-
-const layout = createFlexLayout({
-  gap: 12,
-  children: [
-    { kind: 'flex', child: { type: 'node', id: 'first', text: 'A' } },
-    { kind: 'flex', child: { type: 'node', id: 'second', text: 'B' } },
-  ],
-});
-
-const result = compileToScene(
-  { type: 'scene', version: 1, children: [layout] },
-  { composites: [flexLayoutDefinition] },
-);
-
-for (const artifact of result.artifacts) {
-  if (artifact.type !== 'flexLayout') continue;
-  console.log(artifact.namespace); // 'layout'
-  console.log(artifact.occurrence); // { sourcePath: ['children', 0], expansionPath: [] }
-  console.log(artifact.value.kind); // 'flex'
-  console.log(artifact.value.items.length); // 2
-  console.log(artifact.value.lines.length); // 1
-  console.log(artifact.value.container, artifact.value.items, artifact.value.spacing);
-}
-```
-
-这个例子返回两个子项和一行布局。`container` 描述容器的分配、内容和视觉等边界；`items` 保存各子项的边界、位移与溢出信息；`lines` 记录行与子项的对应关系；`spacing` 描述间距区域。几何数值由节点测量与布局配置决定，应用可直接读取这些结果，无需从 Scene 图元反推布局。
-
-复合产物始终收集；选中候选重放时才随最终放置提交，未采用候选的产物不会进入最终数组。
-
-## 诊断
-
-普通入口通过 `onWarn` 派发警告；没有自定义出口时沿用默认警告行为。绘图错误仍终止本次编译，失败候选不会交付部分资源或领域产物。
-
-警告的 `path`、输入定位的 `irPath` 与产物的 `occurrence.sourcePath` 使用 Foundation 的 `PropertyPath`：字符串表示属性名，数字表示数组下标，空数组表示根对象。例如 `['children', 0, 'style', 'fill']` 可相对输入 IR 读取颜色字段；路径不包含 `.node`、`.path` 等实体类型标记。生成内容的展开位置另存于 `expansionPath`，不伪装成原始输入属性。
-
-需要展示时使用 `formatPropertyPath`，比较路径使用 `isPropertyPathEqual`，以路径建立索引使用 `encodePropertyPath`；不要用数组引用比较或 `join('.')` 代替。
-
-## 编译快照与来源
-
-`provenance` 只包含根实体键 `root` 和来源表 `ownerMap`。来源表以同次编译的实体键关联记录，每条记录的 `emissions` 保存该实体直接产生的图元路径、角色和序号。父子来源通过 `parent` 关联，名称及其所属命名空间保存在实体的 `id` 和 `namespace` 中。同名实体各有独立记录；同一个 IR 对象出现在不同位置时也拥有不同的实体键。没有生成图元的实体仍保留来源记录，`emissions` 为空。
-
-`CompileProvenanceTracker` 实例管理编译中的可变状态，`capture` 根据最终 Scene 顺序生成独立快照。后续收集不会修改已交付快照；消费者通过只读 Map 查询实体，无需重新从数组构建索引。
-
-选中的布局试算在重放时保留内部实体和图元的归属关系，并将来源树挂到所属 Composite 下。试算根命名空间接入重放位置，内部局部命名空间独立映射；新增的变换和裁剪包装图元归外层 Composite。未选中的试算不进入最终来源。重放实体属于生成内容，Reconciler 仍为其分配版本内身份，不承诺跨版本稳定。
-
-`compileSceneSnapshot(ir, compileOptions, executeOptions)` 返回 `result`、`diagnostics` 和按需收集的 `provenance`，不派发警告。`compileOptions` 不包含 `onWarn`；`executeOptions.captureProvenance` 控制是否收集来源。来源信息用于图元身份关联与提交，内部布局继续服务测量、引用和重放。
-
-<SourceLinks
-  sources={[
-    { label: '编译快照入口', path: 'packages/kernel/reconciler/src/compile/compile.ts' },
-    { label: '来源契约', path: 'packages/kernel/reconciler/src/compile/provenance/types.ts' },
+    { label: 'Artifact envelope 与顺序', path: 'packages/kernel/reconciler/src/compile/shared/artifact.ts' },
+    { label: '诊断顺序与来源', path: 'packages/kernel/reconciler/src/compile/shared/diagnostics.ts' },
   ]}
 />
 
 ## 完整实现流程
 
-来源中的 `primitivePath` 相对完整 Scene，例如 `['primitives', 2, 'children', 1]`。Reconciler 的完整 topology 沿用这个根；Patch 子树 topology 则相对根图元，根路径为 `[]`，其子图元路径为 `['children', 1]`。两者均可通过 `readPropertyPath` 读取，但必须传入各自对应的根对象。
+下图展示非增量会话的完整遍历。增量会话的首次构建、完整替换与批次更新由 Weave 独立调度，两种驱动共享元素计算和快照组装语义。
 
-`compileChildrenToPrimitives` 完成遍历、延迟路径回填、布局汇总和最终领域产物排序。`assembleSceneCompilationSnapshot` 汇总图元、资源与画布；`compileSceneSnapshot` 返回完整快照；`compileToScene` 再派发警告并返回 `scene` 与 `artifacts`。
+<ComponentPreview files="output-implementation" size="lg" hideCode type="flow" />
 
-<ComponentPreview files="output-implementation" size="sm" hideCode type="flow" />
-
-从编译快照入口开始，沿遍历与 Scene 装配阅读即可追踪收尾流程。Core 不创建检查会话，不为检查工具捕获内部上下文或额外几何。
+compileScene 先调用 assembleCompileSubtree 收敛延迟路径与子项贡献，再调用 finalizeSceneCompilation 收集资源并组装快照。后者负责 layout、根动画、结果与诊断快照，不再执行实体编译；SceneReconciler 负责把完整候选结果提交给消费者。
 
 <SourceLinks
   sources={[
-    { label: '编译入口', path: 'packages/kernel/reconciler/src/compile/compile.ts' },
-    { label: '遍历与重放', path: 'packages/kernel/reconciler/src/compile/tree/subtree.ts' },
-    { label: 'Scene 装配', path: 'packages/kernel/reconciler/src/compile/scene/output.ts' },
+    { label: 'Scene and primitive contract', path: 'packages/kernel/core/src/contract/scene/scene.ts' },
+    { label: 'Layout bounds helpers', path: 'packages/kernel/core/src/compile/scene/bounds.ts' },
+    { label: 'Scene layout calculation', path: 'packages/kernel/core/src/compile/scene/layout.ts' },
+    { label: 'Complete compilation entry', path: 'packages/kernel/reconciler/src/full.ts' },
+    { label: 'Snapshot assembly', path: 'packages/kernel/reconciler/src/compile/execution/scene.ts' },
+    { label: 'Snapshot and result types', path: 'packages/kernel/reconciler/src/compile/types.ts' },
+    { label: 'Reconciler result and commit target', path: 'packages/kernel/reconciler/src/reconcile/types.ts' },
   ]}
 />
 
@@ -445,15 +120,13 @@ for (const artifact of result.artifacts) {
 
 <LinkedSections
   items={[
+    { title: '总览', description: '回顾 Core、Reconciler 与 Render 的职责', url: '/kernel/packages/core/' },
+    { title: '编译流程', description: '回到 IR 到 Scene 的阶段与就绪关系', url: '/kernel/packages/core/compilation' },
+    { title: 'Scope 编译', description: '查看分组、布局和输出投影', url: '/kernel/packages/core/scope-compilation' },
     {
-      title: '坐标解析',
-      description: '理解局部坐标、世界坐标与 Scope 的最终定位',
-      url: '/kernel/packages/core/coordinates',
-    },
-    {
-      title: '渲染后端 · render',
-      description: '了解 Scene 交付后的渲染入口与后端职责',
-      url: '/kernel/packages/render',
+      title: 'Composite 编译',
+      description: '查看领域产物与试算事务如何产生',
+      url: '/kernel/packages/core/composite-compilation',
     },
   ]}
 />

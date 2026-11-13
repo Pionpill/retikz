@@ -3,7 +3,7 @@ import { literal } from 'zod';
 
 import type { IRChild, IRScene, CanonicalTheme } from '../../../../core/src';
 import { CompositeBaseSchema, defineComposite, defineTheme, ThemeMode } from '../../../../core/src';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 
 const sceneOf = (children: Array<IRChild>, theme?: IRScene['theme']): IRScene => ({
   type: 'scene',
@@ -26,7 +26,7 @@ const createProbe = (observed: Array<CanonicalTheme>) =>
 describe('主题编译上下文', () => {
   it('从 selector 生成没有 token bag 的完整共享 Theme', () => {
     const observed: Array<CanonicalTheme> = [];
-    compileToScene(sceneOf([{ namespace: 'theme-test', type: 'probe' }], { mode: ThemeMode.Light }), {
+    compileTestResult(sceneOf([{ namespace: 'theme-test', type: 'probe' }], { mode: ThemeMode.Light }), {
       composites: [createProbe(observed)],
     });
 
@@ -43,7 +43,7 @@ describe('主题编译上下文', () => {
 
   it('按字段继承 Scene 和 Scope selector', () => {
     const observed: Array<CanonicalTheme> = [];
-    compileToScene(
+    compileTestResult(
       sceneOf(
         [{ type: 'scope', theme: { mode: ThemeMode.Light }, children: [{ namespace: 'theme-test', type: 'probe' }] }],
         { mode: ThemeMode.Dark },
@@ -70,7 +70,7 @@ describe('主题编译上下文', () => {
       }),
     });
 
-    compileToScene(sceneOf([{ namespace: 'theme-test', type: 'probe' }], { name: 'brand', mode: ThemeMode.Dark }), {
+    compileTestResult(sceneOf([{ namespace: 'theme-test', type: 'probe' }], { name: 'brand', mode: ThemeMode.Dark }), {
       composites: [createProbe(observed)],
       themeDefinitions: [brand],
     });

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { RectPrimitive, ScenePrimitive } from '../../../../core/src/contract';
 import type { IRPaint, IRScene } from '../../../../core/src/schemas';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 import { flattenPrims } from '../../helpers/flatten';
 
 const conicGrad: IRPaint = {
@@ -35,14 +35,15 @@ describe('conicGradient IRPaint 编译', () => {
       ],
     };
 
-    const scene = compileToScene(ir).scene;
+    const scene = compileTestResult(ir).scene;
 
     expect(rectsOf(scene.primitives)[0].fill).toEqual({
       kind: 'resourceRef',
-      id: scene.resources!.filter(resource => resource.kind === 'paint')[0].id,
+      id: (scene.resources?.paints ?? [])[0].id,
     });
-    expect(scene.resources).toEqual([
-      { kind: 'paint', id: scene.resources!.filter(resource => resource.kind === 'paint')[0].id, spec: conicGrad },
-    ]);
+    expect(scene.resources).toEqual({
+      paints: [{ kind: 'paint', id: (scene.resources?.paints ?? [])[0].id, spec: conicGrad }],
+      clips: [],
+    });
   });
 });

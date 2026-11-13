@@ -1,5 +1,4 @@
 import { fallbackMeasurer, resolveCoreProviderDependencies } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { expect, it } from 'vitest';
 
 import { getPreviewControlFields } from '../../src/modules/docs/components/component-preview/controls';
@@ -11,6 +10,7 @@ import {
   ReferenceDataPathPreview,
   ReferenceDataIntervalPreview,
 } from '../../src/modules/docs/contents/viz/plot/mark/shared/reference-data.preview';
+import { compileTestResult } from '../helpers/compilation';
 
 it('三类数据驱动图元的双语控件默认值只包含各自可写字段且完整', () => {
   for (const geometry of ['point', 'path', 'interval'] as const) {
@@ -36,7 +36,7 @@ it('三类数据驱动图元在坐标系、分组、统计量与边界组合下�
               const preview = buildPreviewIR(() => render({ coordinate, grouped, fullX, fullY, statistic }));
               expect(preview.ir.children.length).toBeGreaterThan(0);
               expect(() =>
-                compileToScene(preview.ir, {
+                compileTestResult(preview.ir, {
                   measureText: fallbackMeasurer,
                   ...resolveCoreProviderDependencies({ contributions: preview.contributions }),
                 }),

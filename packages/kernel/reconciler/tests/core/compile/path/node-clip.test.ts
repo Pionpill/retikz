@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { IRScene } from '../../../../../core/src/schemas';
-import { compileToScene } from '../../../../src/compile';
+import { compileTestResult } from '../../../helpers/compilation';
 import { line, move } from '../../../helpers/path-command-factory';
 import { findPathPrim } from './helpers';
 
@@ -30,7 +30,7 @@ describe('compile path: 多节点连线段独立 clip（bugfix tikz-from-ir.demo
         },
       ],
     };
-    const commands = findPathPrim(compileToScene(ir).scene.primitives).commands;
+    const commands = findPathPrim(compileTestResult(ir).scene.primitives).commands;
 
     // 关键：3 个 move（每段独立起点），共 3 个 line
     expect(commands.filter(c => c.kind === 'move')).toHaveLength(3);
@@ -57,7 +57,7 @@ describe('compile path: 多节点连线段独立 clip（bugfix tikz-from-ir.demo
         },
       ],
     };
-    const commands = findPathPrim(compileToScene(ir).scene.primitives).commands;
+    const commands = findPathPrim(compileTestResult(ir).scene.primitives).commands;
 
     // 期望单 sub-path：move 一次 + line 三次
     expect(commands.filter(c => c.kind === 'move')).toHaveLength(1);

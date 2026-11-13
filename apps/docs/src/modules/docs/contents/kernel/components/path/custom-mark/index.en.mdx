@@ -83,7 +83,8 @@ const view = mount(document.getElementById('diagram')!, input, {
 IR stores only names and JSON parameters. Pass the definition function through compile options. The resulting `scene` can be consumed by an SVG or Canvas renderer.
 
 ```ts
-import { compileToScene } from '@retikz/reconciler';
+import { compileToScene } from '@retikz/vanilla';
+
 import { ringMark } from './ring-mark';
 
 const { scene } = compileToScene(
@@ -101,7 +102,7 @@ const { scene } = compileToScene(
       },
     ],
   },
-  { marks: [ringMark] },
+  { compile: { marks: [ringMark] } },
 );
 ```
 

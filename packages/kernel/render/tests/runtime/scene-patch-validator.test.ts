@@ -1,18 +1,12 @@
 import type { IRScene } from '@retikz/core';
-import { compileSceneSnapshot } from '@retikz/reconciler';
-import type {
-  RuntimeScenePrimitive,
-  RuntimeSceneResource,
-  ScenePatch,
-  SceneRuntimeNode,
-  SceneRuntimeSnapshot,
-} from '@retikz/reconciler';
-import { createFullSceneRuntimeSnapshot, createSceneIdentity } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { RetikzRenderErrorCode } from '../../src/runtime';
 import { runtimeStructuralEquals } from '../../src/runtime/shared';
 import { assertScenePatch, assertSceneRuntimeSnapshot } from '../../src/runtime/validator';
+import type { RuntimeScenePrimitive, ScenePatch, SceneRuntimeNode, SceneRuntimeSnapshot } from '../../src/scene';
+import { createFullSceneRuntimeSnapshot, createSceneIdentity } from '../../src/scene';
+import { compileTestSnapshot } from '../helpers/compilation';
 
 const source = (fill: string): IRScene => ({
   version: 1,
@@ -37,7 +31,7 @@ const source = (fill: string): IRScene => ({
 
 const createIncrementalPair = () => {
   const snapshots = ['#ef4444', '#22c55e'].map((fill, revision) => {
-    const compiled = compileSceneSnapshot(source(fill), {}, { captureProvenance: true });
+    const compiled = compileTestSnapshot(source(fill), {}, { captureProvenance: true });
     return createFullSceneRuntimeSnapshot(compiled.result.scene, revision, compiled.provenance!);
   });
   const [current, next] = snapshots;
@@ -56,7 +50,7 @@ const createRectSnapshot = (revision: number, identifiers: ReadonlyArray<string>
     root,
     scene: {
       layout: { x: 0, y: 0, width: 100, height: 100 },
-      resources: [],
+      resources: { paints: [], clips: [] },
       animations: [],
       primitives: identifiers.map(identifier => ({
         type: 'rect',
@@ -101,19 +95,22 @@ describe('Scene 补丁验证器', () => {
       ...valid,
       scene: {
         ...valid.scene,
-        resources: [
-          {
-            kind: 'clip',
-            id: 'clip-1',
-            path: {
-              commands: [
-                { kind: 'move', to: [0, 0] },
-                { kind: 'line', to: [10, 10] },
-              ],
-              fillRule: 'nonzero',
+        resources: {
+          paints: [],
+          clips: [
+            {
+              kind: 'clip',
+              id: 'clip-1',
+              path: {
+                commands: [
+                  { kind: 'move', to: [0, 0] },
+                  { kind: 'line', to: [10, 10] },
+                ],
+                fillRule: 'nonzero',
+              },
             },
-          },
-        ],
+          ],
+        },
       },
     };
 
@@ -195,6 +192,62 @@ describe('Scene 补丁验证器', () => {
           operations: Object.freeze([]),
         }),
         configOnly,
+      ),
+    ).not.toThrow();
+  });
+
+  it('接受分类资源替换，并允许同一事务清空绘制和裁剪集合', () => {
+    const { current } = createIncrementalPair();
+    const resources: SceneRuntimeSnapshot['scene']['resources'] = {
+      paints: [{ kind: 'paint', id: 'paint-image', spec: { kind: 'image', href: 'tile.png' } }],
+      clips: [
+        {
+          kind: 'clip',
+          id: 'clip-window',
+          path: {
+            fillRule: 'nonzero',
+            commands: [
+              { kind: 'move', to: [0, 0] },
+              { kind: 'line', to: [20, 0] },
+              { kind: 'line', to: [20, 20] },
+              { kind: 'close' },
+            ],
+          },
+        },
+      ],
+    };
+    const populated: SceneRuntimeSnapshot = {
+      ...current,
+      revision: current.revision + 1,
+      scene: { ...current.scene, resources },
+    };
+    expect(() =>
+      assertScenePatch(
+        current,
+        {
+          baseRevision: current.revision,
+          nextRevision: populated.revision,
+          operations: [{ kind: 'setResources', resources }],
+        },
+        populated,
+      ),
+    ).not.toThrow();
+
+    const empty = { paints: [], clips: [] };
+    const cleared: SceneRuntimeSnapshot = {
+      ...populated,
+      revision: populated.revision + 1,
+      scene: { ...populated.scene, resources: empty },
+    };
+    expect(() =>
+      assertScenePatch(
+        populated,
+        {
+          baseRevision: populated.revision,
+          nextRevision: cleared.revision,
+          operations: [{ kind: 'setResources', resources: empty }],
+        },
+        cleared,
       ),
     ).not.toThrow();
   });
@@ -366,7 +419,10 @@ describe('Scene 补丁验证器', () => {
     );
 
     const next = { ...valid, revision: 1 as SceneRuntimeSnapshot['revision'] };
-    const sparseResources = Array<RuntimeSceneResource>(1);
+    const sparseResources = {
+      paints: Array<SceneRuntimeSnapshot['scene']['resources']['paints'][number]>(1),
+      clips: [],
+    };
 
     expect(() =>
       assertScenePatch(

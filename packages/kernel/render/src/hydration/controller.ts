@@ -1,5 +1,4 @@
-import { sceneIdentityEquals } from '@retikz/reconciler';
-
+import { sceneIdentityEquals } from '../scene';
 import type { HydrationContextBuilder, HydrationContext } from './context';
 import { noopAnimationControls } from './context';
 import type { ElementHandlers, HydrationHandlers, Locate } from './events';

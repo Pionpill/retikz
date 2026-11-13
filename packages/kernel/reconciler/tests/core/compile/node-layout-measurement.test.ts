@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import type { CompiledBoundaryGeometry } from '../../../../core/src';
 import type { TexLowerer } from '../../../../core/src/compile';
@@ -8,9 +8,9 @@ import type { CompileWarning } from '../../../../core/src/compile/shared';
 import type { TextMeasurer, TextPrimitive } from '../../../../core/src/contract';
 import type { IRScene } from '../../../../core/src/schemas';
 import { createSharedCompileContext } from '../../../src/compile';
+import { assembleCompileSubtree, finalizeSceneCompilation } from '../../../src/compile/execution';
 import { createCompileRuntime } from '../../../src/compile/runtime';
-import { CompileManager } from '../../../src/compile/tree';
-import { SubtreeCompiler } from '../../../src/compile/tree/subtree';
+import { compileScene } from '../../../src/full';
 import { flattenPrims } from '../../helpers/flatten';
 
 const measureText: TextMeasurer = (text, font) => ({
@@ -69,27 +69,14 @@ const collectLayouts = (
 
     ...(options.withTex === true ? { lowerTex } : {}),
   });
-  let layouts: Array<CompiledBoundaryGeometry & Pick<CompiledNodeLayout, 'geometry'>> = [];
-  const run = SubtreeCompiler.prototype.run;
-  const observeLayouts = vi
-    .spyOn(SubtreeCompiler.prototype, 'run')
-    .mockImplementation(function (this: SubtreeCompiler) {
-      const out = run.call(this);
-      layouts = out.geometries.filter(
-        (layout): layout is CompiledBoundaryGeometry & Pick<CompiledNodeLayout, 'geometry'> =>
-          'geometry' in layout && 'contentSize' in layout.geometry,
-      );
-      return out;
-    });
-  try {
-    const { result } = new CompileManager(context).compileScene(ir);
-    const textPrims = flattenPrims(result.scene.primitives).filter(
-      (prim): prim is TextPrimitive => prim.type === 'text',
-    );
-    return { layouts, warnings: context.state.workspace.diagnosticCollector.warnings, textPrims };
-  } finally {
-    observeLayouts.mockRestore();
-  }
+  const subtree = assembleCompileSubtree(ir.children, context);
+  const layouts = subtree.geometries.filter(
+    (layout): layout is CompiledBoundaryGeometry & Pick<CompiledNodeLayout, 'geometry'> =>
+      'geometry' in layout && 'contentSize' in layout.geometry,
+  );
+  const { result } = finalizeSceneCompilation(ir, context, subtree);
+  const textPrims = flattenPrims(result.scene.primitives).filter((prim): prim is TextPrimitive => prim.type === 'text');
+  return { layouts, warnings: context.state.workspace.diagnosticCollector.warnings, textPrims };
 };
 
 describe('Node 内容测量', () => {
@@ -104,9 +91,9 @@ describe('Node 内容测量', () => {
     const ir = scene([{ type: 'node', position: [0, 0], text: 'shared context' }]);
     const firstContext = createCompileRuntime(ir, {}, {}, shared);
     const secondContext = createCompileRuntime(ir, {}, {}, shared);
-    const first = new CompileManager(firstContext).compileScene(ir);
+    const first = compileScene(ir, firstContext);
     const firstCalls = calls;
-    const second = new CompileManager(secondContext).compileScene(ir);
+    const second = compileScene(ir, secondContext);
 
     expect(firstCalls).toBeGreaterThan(0);
     expect(calls).toBe(firstCalls * 2);

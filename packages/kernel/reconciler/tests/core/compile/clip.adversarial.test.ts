@@ -8,10 +8,10 @@ import type {
   IRPaint,
   IRScene,
   ScenePrimitive,
-  SceneResource,
+  SceneResources,
 } from '../../../../core/src';
 import { defineClip } from '../../../../core/src';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 
 const polygonClip = defineClip<{
   kind: 'polygon';
@@ -53,8 +53,7 @@ const firstGroup = (primitives: ReadonlyArray<ScenePrimitive>): GroupPrimitive |
 const allGroups = (primitives: ReadonlyArray<ScenePrimitive>): Array<GroupPrimitive> =>
   primitives.filter((p): p is GroupPrimitive => p.type === 'group');
 
-const clipResources = (resources: Array<SceneResource> | undefined): Array<ClipResource> =>
-  (resources ?? []).filter((r): r is ClipResource => r.kind === 'clip');
+const clipResources = (resources: SceneResources | undefined): ReadonlyArray<ClipResource> => resources?.clips ?? [];
 
 const grad: IRPaint = {
   kind: 'linearGradient',
@@ -65,7 +64,7 @@ const grad: IRPaint = {
   ],
 };
 
-/** 手搓非 finite / 非法字段：用 any cast 绕过 IR zod，直接喂 compileToScene */
+/** 手搓非 finite / 非法字段：用 any cast 绕过 IR zod，直接喂 SceneReconciler */
 const handcraftedScope = (
   clip: unknown,
   children: IRScene['children'] = [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
@@ -82,21 +81,22 @@ describe('clip 非 finite 守卫：必须编译期抛、绝不进 Scene', () => 
 
   for (const { name, clip } of cases) {
     it(`${name} → 编译期抛`, () => {
-      expect(() => compileToScene(handcraftedScope(clip)).scene).toThrow();
+      expect(() => compileTestResult(handcraftedScope(clip)).scene).toThrow();
     });
   }
 
   it('抛出的错误信息包含无效输入字段', () => {
     expect(
       () =>
-        compileToScene(handcraftedScope({ kind: 'rect', params: { x: 0, y: 0, width: Infinity, height: 10 } })).scene,
+        compileTestResult(handcraftedScope({ kind: 'rect', params: { x: 0, y: 0, width: Infinity, height: 10 } }))
+          .scene,
     ).toThrow(/width/i);
   });
 });
 
 describe('finite 守卫不误伤合法值', () => {
   it('rect 负坐标 + 正尺寸合法（取景窗可在第三象限）', () => {
-    const compiled = compileToScene(
+    const compiled = compileTestResult(
       handcraftedScope({ kind: 'rect', params: { x: -50, y: -40, width: 10, height: 10 } }),
     ).scene;
     const clips = clipResources(compiled.resources);
@@ -107,7 +107,7 @@ describe('finite 守卫不误伤合法值', () => {
   });
 
   it('rect 零尺寸合法并表示空裁剪区域', () => {
-    const compiled = compileToScene(
+    const compiled = compileTestResult(
       handcraftedScope({ kind: 'rect', params: { x: 0, y: 0, width: 0, height: 0 } }),
     ).scene;
 
@@ -118,7 +118,7 @@ describe('finite 守卫不误伤合法值', () => {
 describe('clip Scene JSON round-trip 不失真', () => {
   /** JSON 序列化 + 反序列化后 Scene 与原始等价（NaN/Infinity 会变 null，-0 会变 0） */
   const assertRoundTrip = (ir: IRScene): void => {
-    const compiled = compileToScene(ir, polygonOptions).scene;
+    const compiled = compileTestResult(ir, polygonOptions).scene;
     const roundTripped = JSON.parse(JSON.stringify(compiled));
 
     expect(roundTripped).toEqual(compiled);
@@ -151,7 +151,7 @@ describe('clip Scene JSON round-trip 不失真', () => {
     // 注：vitest toEqual 用 Object.is 区分 -0/0，故这里 round-trip 与原始的 strict 深比较会差一格
     //   （见报告：-0 量化是既有 quirk，渲染无影响，不 BLOCKING）。
     const ir = handcraftedScope({ kind: 'rect', params: { x: -0.001, y: -0.004, width: 10, height: 10 } });
-    const compiled = compileToScene(ir, polygonOptions).scene;
+    const compiled = compileTestResult(ir, polygonOptions).scene;
     const json = JSON.stringify(compiled);
 
     // 关键契约：序列化产物里没有 null（非 finite 会序列化成 null）
@@ -190,7 +190,7 @@ describe('clip dedup 边界', () => {
         children: [{ type: 'node', id: 'B', position: [80, 0], text: 'B' }],
       } as unknown as IRChild,
     ]);
-    const compiled = compileToScene(ir, polygonOptions).scene;
+    const compiled = compileTestResult(ir, polygonOptions).scene;
 
     expect(clipResources(compiled.resources)).toHaveLength(1);
 
@@ -230,7 +230,7 @@ describe('clip dedup 边界', () => {
         children: [{ type: 'node', id: 'B', position: [80, 0], text: 'B' }],
       },
     ]);
-    const compiled = compileToScene(ir, polygonOptions).scene;
+    const compiled = compileTestResult(ir, polygonOptions).scene;
 
     // 点序不同 → 不同 polygon → 2 条资源
     expect(clipResources(compiled.resources)).toHaveLength(2);
@@ -250,7 +250,7 @@ describe('clip dedup 边界', () => {
         children: [{ type: 'node', id: 'B', position: [80, 0], text: 'B' }],
       },
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileTestResult(ir).scene;
 
     expect(clipResources(compiled.resources)).toHaveLength(1);
   });
@@ -268,7 +268,7 @@ describe('clip dedup 边界', () => {
         children: [{ type: 'node', id: 'B', position: [80, 0], text: 'B' }],
       },
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileTestResult(ir).scene;
 
     expect(clipResources(compiled.resources)).toHaveLength(2);
   });
@@ -293,8 +293,8 @@ describe('clip 编译确定性：同 IR 编译两次产同 id', () => {
         children: [{ type: 'node', id: 'C', position: [80, 0], text: 'C' }],
       },
     ]);
-    const a = compileToScene(ir).scene;
-    const b = compileToScene(ir).scene;
+    const a = compileTestResult(ir).scene;
+    const b = compileTestResult(ir).scene;
 
     expect(clipResources(a.resources).map(c => c.id)).toEqual(clipResources(b.resources).map(c => c.id));
     expect(a.resources).toEqual(b.resources);
@@ -337,14 +337,14 @@ describe('clip + paint 资源命名空间：大量混合不撞、稳定', () => 
         children: [{ type: 'node', id: 'B', position: [120, 0], text: 'B' }],
       },
     ]);
-    const compiled = compileToScene(ir).scene;
-    const paints = (compiled.resources ?? []).filter(r => r.kind === 'paint');
+    const compiled = compileTestResult(ir).scene;
+    const paints = compiled.resources?.paints ?? [];
     const clips = clipResources(compiled.resources);
 
     expect(paints).toHaveLength(2);
     expect(clips).toHaveLength(2);
 
-    const allIds = (compiled.resources ?? []).map(r => r.id);
+    const allIds = [...(compiled.resources?.paints ?? []), ...(compiled.resources?.clips ?? [])].map(r => r.id);
 
     expect(new Set(allIds).size).toBe(allIds.length);
   });
@@ -362,7 +362,7 @@ describe('clip prune / 复合 scope', () => {
         children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
       },
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileTestResult(ir).scene;
     const group = firstGroup(compiled.primitives);
 
     expect(group).toBeDefined();
@@ -384,7 +384,7 @@ describe('clip prune / 复合 scope', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileTestResult(ir).scene;
     const clips = clipResources(compiled.resources);
 
     expect(clips).toHaveLength(2);
@@ -401,7 +401,7 @@ describe('clip prune / 复合 scope', () => {
   });
 
   it('空 children + 无 id + 无 transforms 但带 clip 的 scope 不被 prune', () => {
-    const compiled = compileToScene(
+    const compiled = compileTestResult(
       handcraftedScope({ kind: 'rect', params: { x: 0, y: 0, width: 20, height: 20 } }, []),
     ).scene;
     const group = firstGroup(compiled.primitives);
@@ -417,7 +417,7 @@ describe('clip 退化几何', () => {
       Math.round(50 * Math.cos((i / 500) * 2 * Math.PI)),
       Math.round(50 * Math.sin((i / 500) * 2 * Math.PI)),
     ]);
-    const compiled = compileToScene(handcraftedScope({ kind: 'polygon', params: { points } }), polygonOptions).scene;
+    const compiled = compileTestResult(handcraftedScope({ kind: 'polygon', params: { points } }), polygonOptions).scene;
     const clips = clipResources(compiled.resources);
 
     expect(clips).toHaveLength(1);
@@ -427,7 +427,7 @@ describe('clip 退化几何', () => {
   });
 
   it('polygon 全重复点（退化成一点）→ 不抛（finite 即接受）', () => {
-    const compiled = compileToScene(
+    const compiled = compileTestResult(
       handcraftedScope({
         kind: 'polygon',
         params: {
@@ -446,7 +446,7 @@ describe('clip 退化几何', () => {
 
   it('rect 极大坐标（finite 但巨大）→ 不抛、round-trip 等价', () => {
     const ir = handcraftedScope({ kind: 'rect', params: { x: 1e15, y: -1e15, width: 1e10, height: 1e10 } });
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileTestResult(ir).scene;
 
     expect(clipResources(compiled.resources)).toHaveLength(1);
     expect(JSON.parse(JSON.stringify(compiled))).toEqual(compiled);

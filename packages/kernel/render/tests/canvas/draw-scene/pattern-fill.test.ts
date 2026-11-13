@@ -19,14 +19,17 @@ describe('drawScene 图案填充', () => {
   ];
   const patternScene = (tileExtra: { background?: string; rotation?: number } = {}): Scene => ({
     layout: { x: 0, y: 0, width: 100, height: 100 },
-    resources: [
-      {
-        kind: 'paint',
-        id: 'pat',
-        spec: { kind: 'pattern', shape: 'lines', size: 8 },
-        tile: { size: 8, motif: tileMotif, ...tileExtra },
-      },
-    ],
+    resources: {
+      paints: [
+        {
+          kind: 'paint',
+          id: 'pat',
+          spec: { kind: 'pattern', shape: 'lines', size: 8 },
+          tile: { size: 8, motif: tileMotif, ...tileExtra },
+        },
+      ],
+      clips: [],
+    },
     primitives: [{ type: 'rect', x: 0, y: 0, width: 100, height: 100, fill: { kind: 'resourceRef', id: 'pat' } }],
   });
 

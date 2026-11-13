@@ -1,5 +1,13 @@
 /** 经核对的绘制 API 英文说明，源码标识符保持不变 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  路径定位比例的解释方式: 'Interpretation of a normalized path position',
+  按有效绘制段分配参数区间: 'Allocate equal parameter intervals to drawable segments',
+  按所选路径的累计长度定位: 'Locate by cumulative length of the selected path',
+  路径定位使用的圆角前后几何: 'Path geometry before or after corner rounding',
+  圆角前的原始步骤几何: 'Original step geometry before corner rounding',
+  圆角处理后的路径几何: 'Path geometry after corner rounding',
+  已确定的比例解释方式: 'Resolved position interpretation',
+  继承合并后确定的定位几何: 'Position geometry resolved after inheritance',
   '按绘制段均分参数采样参考路径；圆角路径按最终几何弧长采样':
     'Sample the reference path with equally divided segment parameters; rounded paths use arc length along the final geometry',
   注册路径定义的解析与编译契约: 'Parsing and compilation contract for a registered path definition',

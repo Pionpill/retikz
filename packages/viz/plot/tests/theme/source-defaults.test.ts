@@ -1,9 +1,9 @@
 import type { ScenePrimitive } from '@retikz/core';
 import { DEFAULT_RESOLVED_THEME } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { lowerPlots, PlotSchema, resolvePlotTheme } from '../../src';
+import { compileTestResult } from '../helpers/compilation';
 
 const rows = [
   { x: 0, y: 1 },
@@ -27,7 +27,7 @@ const basePlot = (overrides: Record<string, unknown> = {}) => ({
 
 const compilePlot = (source: unknown) => {
   const plot = PlotSchema.parse(source);
-  return compileToScene(
+  return compileTestResult(
     { version: 1, type: 'scene', children: [plot] },
     { composites: lowerPlots({ rows }), padding: 0 },
   ).scene;

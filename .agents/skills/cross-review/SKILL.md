@@ -9,7 +9,7 @@ description: Use when an approved large Retikz task reaches final whole-change r
 
 ## 启动条件
 
-仅在大型任务计划已明确授权最终 cross-review，或用户明确要求本次交叉验证时执行。确认范围、阵容与最大轮数；未声明只授权一轮。已有 subagent 权限、风险高或其他 skill 引用不等于 cross-review 授权。
+仅在大型任务计划已明确授权最终 cross-review，或用户明确要求本次交叉验证时执行。确认范围与阵容，只执行一轮；额外评审须用户单独要求。已有 subagent 权限、风险高或其他 skill 引用不等于 cross-review 授权。
 
 ## 不变量
 
@@ -26,7 +26,7 @@ description: Use when an approved large Retikz task reaches final whole-change r
 3. 优先会话内代理。确无此能力、且替代通道已授权时，读 [外部 CLI](references/cli.md)；不可用或未授权就报告阻塞。
 4. 逐份读取原始输出，记录失败/超时/空输出，不代写 finding。
 5. 按 [裁决与报告](references/report.md) 核实位置、成因与影响；主 agent 裁决和外部结论分开。
-6. 无 BLOCKING 且 WARNING 已处置则结束。有问题先报告；只有修复已授权时才修改和验证。复审还需在已授权轮数内，冻结新快照并使用 fresh reviewers；不对未修订快照凑轮次。
-7. 达到轮数上限、无法完成阵容、意见无法裁决或需扩大范围时停止交人工。核对评审前后工作区，保证 reviewer 未改文件。
+6. 无 BLOCKING 且 WARNING 已处置则结束。有问题先报告；只有修复已授权时才修改和验证。修订后由主 agent 自审和验证，不自动追加 reviewer 复审。
+7. 修订验证后仍有阻断、无法完成阵容、意见无法裁决或需扩大范围时停止交人工。核对评审前后工作区，保证 reviewer 未改文件。
 
 报告保留实际阵容与多样性局限，不要求赞扬项或虚构共识。需要留档时使用 ignored notes/reports 或调用方 REVIEW；不 stage/commit。

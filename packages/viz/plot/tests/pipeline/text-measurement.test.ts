@@ -1,10 +1,10 @@
 import type { ScenePrimitive, TextMeasurer } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { createPlotLineageLocator, createPlotLocator, lowerPlotWithLineage } from '../../src';
 import { lowerPlots } from '../../src/pipeline/expand';
 import { PlotSchema } from '../../src/schemas';
+import { compileTestResult } from '../helpers/compilation';
 
 /** 收集最终绘制的叶子图元，忽略分组层级 */
 const leaves = (primitives: Array<ScenePrimitive>): Array<ScenePrimitive> =>
@@ -42,7 +42,7 @@ const compile = (
     ...extra,
   });
   return leaves(
-    compileToScene(
+    compileTestResult(
       { version: 1, type: 'scene', children: [plot] },
       {
         composites: lowerPlots({
@@ -85,12 +85,12 @@ describe('Plot 使用 Core 文字测量参与布局', () => {
     };
     const measureText: TextMeasurer = (text, font) => ({ width: text.length * font.size, height: font.size });
     const environment = { compile: { measureText, fontSize: 20, padding: 0 } };
-    const normal = compileToScene(
+    const normal = compileTestResult(
       { version: 1, type: 'scene', children: [spec] },
       { ...environment.compile, composites: lowerPlots(data) },
     ).scene;
     const lowered = lowerPlotWithLineage(spec, data, { environment });
-    const standalone = compileToScene(
+    const standalone = compileTestResult(
       { version: 1, type: 'scene', children: lowered.children },
       environment.compile,
     ).scene;

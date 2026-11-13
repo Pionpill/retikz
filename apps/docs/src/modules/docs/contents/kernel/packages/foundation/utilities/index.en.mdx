@@ -99,6 +99,29 @@ The normal path validates the weight, parses foreground and backdrop, requires a
 
 Dynamic `currentColor`, CSS variables, system colors, and host colors such as P3 are outside this boundary. Foundation neither reads Theme modes nor interprets drawing fields.
 
+## Bounded-depth property comparison
+
+`compareProperties(previous, current, options)` compares own enumerable properties of plain objects and arrays. Omitting the third argument expands one level by default. Set `depth` to choose the maximum number of levels; values at the boundary are compared with `Object.is`.
+
+```ts
+import { compareProperties } from '@retikz/foundation';
+
+compareProperties({ value: 1 }, { value: 1 }); // true, default depth: 1
+compareProperties({ child: { value: 1 } }, { child: { value: 1 } }); // false
+compareProperties({ child: { value: 1 } }, { child: { value: 1 } }, { depth: 2 }); // true
+compareProperties({ value: 1 }, { value: 1 }, { depth: 0 }); // false, reference comparison only
+```
+
+| Option  | Type     | Default | Meaning                                                                           |
+| ------- | -------- | ------- | --------------------------------------------------------------------------------- |
+| `depth` | `number` | `1`     | A non-negative safe integer; `0` uses only `Object.is` without reading properties |
+
+Comparison includes string and symbol keys and ignores insertion order and non-enumerable properties. Array length, holes, and extra enumerable properties participate: a hole differs from an explicit `undefined`, and arrays differ from plain objects. The difference between `Object.prototype` and a null prototype does not affect plain-object comparison.
+
+Dates, Maps, Sets, class instances, and functions are compared only by reference. Numbers follow `Object.is`: `NaN` equals `NaN`, while `0` differs from `-0`. Cyclic references also stop at the depth boundary; the function does not determine cyclic structural equivalence.
+
+The function does not mutate inputs, but it reads enumerable accessors reached during traversal. Invalid depth or failed property inspection or access throws `RetikzFoundationError`; access errors are preserved as `cause`. Use `jsonStructuralEquals` above to compare complete JSON data trees.
+
 ## Shallow property merging
 
 Use `mergeProperties(sources, options)` to combine priority layers: sources are applied from left to right, with later properties taking precedence. It returns a new object without mutating inputs or recursively merging nested objects.

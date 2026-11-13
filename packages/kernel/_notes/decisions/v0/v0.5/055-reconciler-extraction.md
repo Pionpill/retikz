@@ -5,6 +5,8 @@ keywords: Reconciler、Core、Runtime、迁移、编译来源、ScenePatch、静
 
 # ADR-055：分离 Core 静态编译与 Reconciler 增量执行
 
+> 运行时 Scene 归属修订：本文原定由 Reconciler 拥有的渲染身份、拓扑、快照及 Scene Patch 改归 Render，覆盖下文相应归属与公开表面约定。Reconciler 保留编译来源、会话版本和输出事务协议；Render 消费这些事实生成渲染快照，公开配套类型从 `@retikz/render/runtime` 导入，构建与查询 helper 保持包内使用
+
 - 状态：Accepted
 - 决策日期：2026-10-18
 - 接受日期：2026-10-18

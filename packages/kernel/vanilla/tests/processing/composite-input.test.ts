@@ -9,11 +9,7 @@ import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
 import type { InputEmbedAdapter, InputEmbedContribution, InputSceneChildren } from '../../src';
-import {
-  createProcessingControllerAsync,
-  processToStaticInputResult,
-  processToStaticInputResultAsync,
-} from '../../src';
+import { createProcessingControllerAsync, compileToScene, compileToSceneAsync } from '../../src';
 
 const leafDefinition = defineComposite({
   namespace: 'fixture',
@@ -45,8 +41,8 @@ describe('预处理复合组件输入的消费', () => {
       children: [...source('left-ready').children, ...source('right-ready').children],
     };
     const options = { adapters: [adapter], compile: { composites: [leafDefinition] } };
-    const sync = processToStaticInputResult(input, options);
-    const async = await processToStaticInputResultAsync(input, options);
+    const sync = compileToScene(input, options);
+    const async = await compileToSceneAsync(input, options);
 
     expect(async.scene).toEqual(sync.scene);
     expect(JSON.stringify(async.scene)).toContain('left-ready');
@@ -100,7 +96,7 @@ describe('预处理复合组件输入的消费', () => {
         };
       },
     };
-    const result = await processToStaticInputResultAsync(
+    const result = await compileToSceneAsync(
       { children: [{ type: 'embed', kind: 'outer', props: {} }] },
       { adapters: [adapter, outer], compile: { composites: [leafDefinition, outerDefinition] } },
     );

@@ -30,7 +30,7 @@ export type SourcePanelProps = {
   source: SourceLinkItem;
 };
 
-/** 右侧远端源码查看器 */
+/** 右侧源码查看器 */
 export const SourcePanel: FC<SourcePanelProps> = props => {
   const { source } = props;
   const { t } = useTranslation();
@@ -40,7 +40,10 @@ export const SourcePanel: FC<SourcePanelProps> = props => {
   const [showLineHighlight, setShowLineHighlight] = useState(true);
   const [retryNonce, setRetryNonce] = useState(0);
   const sourceContentRef = useRef<HTMLDivElement>(null);
-  const rawUrl = buildRawUrl(source.path);
+  let rawUrl = buildRawUrl(source.path);
+  if (__DEV__) {
+    rawUrl = `/__docs-source?path=${encodeURIComponent(source.path)}`;
+  }
   const blobUrl = buildBlobUrl(source.path);
 
   useEffect(() => {

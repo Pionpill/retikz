@@ -110,8 +110,8 @@ import { StripChartSchema, createStripChartProviderContribution } from '@retikz/
 import { createPlotProviderContribution } from '@retikz/plot';
 import { pathClipProvider } from '@retikz/extension';
 import { stripPalmerPenguinsData } from './strip-palmer-penguins.data';
-import { compileToScene } from '@retikz/reconciler';
-import { renderToSvgString } from '@retikz/vanilla';
+
+import { compileToScene, renderToSvgString } from '@retikz/vanilla';
 
 const chart = StripChartSchema.parse({
   namespace: 'chart',
@@ -134,7 +134,7 @@ const definitions = resolveCoreProviderDependencies({
   ],
 });
 
-export const svg = renderToSvgString(compileToScene(ir, definitions).scene);
+export const svg = renderToSvgString(compileToScene(ir, { compile: definitions }).scene);
 ```
 
 </DocTab>

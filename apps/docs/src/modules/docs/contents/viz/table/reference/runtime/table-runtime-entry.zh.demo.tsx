@@ -108,7 +108,7 @@ const Demo: FC = () => (
         >
           <Text font={{ size: 14, weight: 'bold' }}>Core compile</Text>
           <Text fill="gray" font={{ size: 12 }}>
-            compileToScene × 1
+            SceneReconciler × 1
           </Text>
         </Node>
 
@@ -198,7 +198,7 @@ const Demo: FC = () => (
           id: 'mobile-core-compile',
           position: [0, 100],
           title: 'Core compile',
-          detail: 'compileToScene × 1',
+          detail: 'SceneReconciler × 1',
           width: 180,
           color: 'dodgerblue',
         })}

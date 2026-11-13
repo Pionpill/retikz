@@ -171,12 +171,13 @@ export type Release = {
   packages: Array<PackageBlock>;
 };
 
-/** 全部可能的包标识(筛选 chips 由数据中实际出现者派生) */
+/** 更新日志的包标识，包含已停用的历史包；筛选 chips 由日志实际出现者派生 */
 export const PACKAGE_IDS = [
   '@retikz/foundation',
   '@retikz/math',
   '@retikz/runtime',
   '@retikz/core',
+  '@retikz/reconciler',
   '@retikz/inspect',
   '@retikz/render',
   '@retikz/react',
@@ -216,6 +217,7 @@ export const PACKAGE_LABEL: Record<PackageId, Localized> = {
   '@retikz/math': { zh: '@retikz/math', en: '@retikz/math' },
   '@retikz/runtime': { zh: '@retikz/runtime', en: '@retikz/runtime' },
   '@retikz/core': { zh: '@retikz/core', en: '@retikz/core' },
+  '@retikz/reconciler': { zh: '@retikz/reconciler', en: '@retikz/reconciler' },
   '@retikz/inspect': { zh: '@retikz/inspect', en: '@retikz/inspect' },
   '@retikz/render': { zh: '@retikz/render', en: '@retikz/render' },
   '@retikz/react': { zh: '@retikz/react', en: '@retikz/react' },
@@ -247,7 +249,7 @@ export const PACKAGE_LABEL: Record<PackageId, Localized> = {
   docs: { zh: '文档站', en: 'Docs' },
 };
 
-/** 包的类别分组：kernel 基础设施 / library 能力包 / schematic 图式 / viz 可视化层 / other；用于映射模块 changelog 切片 */
+/** 更新日志的历史包分组，包含已停用包，用于映射模块 changelog 切片 */
 export type PackageGroup = {
   id: 'kernel' | 'standard' | 'extension' | 'layout' | 'schematic' | 'viz' | 'other';
   /** 该组按序包含的包标识 */
@@ -263,6 +265,7 @@ export const PACKAGE_GROUPS: ReadonlyArray<PackageGroup> = [
       '@retikz/math',
       '@retikz/runtime',
       '@retikz/core',
+      '@retikz/reconciler',
       '@retikz/inspect',
       '@retikz/render',
       '@retikz/react',

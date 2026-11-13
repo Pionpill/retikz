@@ -14,7 +14,7 @@
 
 | 档                | 测什么                                               | 客观性 / 成本          | 状态                                            |
 | ----------------- | ---------------------------------------------------- | ---------------------- | ----------------------------------------------- |
-| **L1 结构有效性** | 生成 IR 过 zod 校验？`compileToScene` 不报错？       | 全自动、客观、便宜     | ✅ **首切锚定**                                 |
+| **L1 结构有效性** | 生成 IR 过 zod 校验？`SceneReconciler` 不报错？      | 全自动、客观、便宜     | ✅ **首切锚定**                                 |
 | **L2 语义正确性** | 结果符合 prompt 意图？走**断言集**（查编译后 Scene） | 确定性、零额外成本、中 | ✅ **断言 baseline 落地（v1：4 类确定性断言）** |
 | **L3 视觉保真**   | 渲染成图 → 与 golden 图 diff / vision 评分           | 最贵                   | 后置                                            |
 
@@ -40,7 +40,7 @@ D1–D6 串成一条流水线：
 1. **语料**（D3）：手写自然语言种子 + 文档 demo 反推（改写成自然语言、不泄 IR 结构），按 core / plot × 难度档（单图元 / 组合 / 复杂图）组织，存 `apps/eval/corpus/`。
 2. **schema 契约**（D2）：core / plot 的 zod schema 转 JSON Schema 作 prompt 上下文——直接用 zod v4 内置 `z.toJSONSchema`（已随 beta.2 升级落地）。
 3. **生成**（D4 + D6）：经 Vercel AI SDK（薄 adapter 隔离）对 1–2 个 provider，**自由生成、单发、不带 self-repair**；每条 prompt 跑 **K 次**。
-4. **打分**（D1）：每个产出过 **zod 校验 + `compileToScene`**，得 **zod 通过率 / compile 通过率** 两层 + 失败归因（按错误类型聚合）。
+4. **打分**（D1）：每个产出过 **zod 校验 + `SceneReconciler`**，得 **zod 通过率 / compile 通过率** 两层 + 失败归因（按错误类型聚合）。
 5. **报告**（D5）：通过率按 类别 × 难度 × 模型 聚合，结果持久化到 `results/`，与基线 diff 标出回归。
 
 **后置**：L2 语义 / L3 视觉、structured output(B) 模式、self-repair、CI 门禁、多 provider 扩容。

@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { literal } from 'zod';
 
 import type { InputEmbedAdapter, InputScene, VanillaCompileDriver, VanillaCompileDriverSession } from '../../src';
-import { createProcessingController, processToStaticInputResult, processToStaticResult } from '../../src';
+import { createProcessingController, compileToScene, processToStaticResult } from '../../src';
 import { prepareProcessingInput } from '../../src/processing/prepare';
 
 describe('Vanilla 处理', () => {
@@ -325,7 +325,7 @@ describe('Vanilla 处理', () => {
     expect(instances).toHaveLength(2);
     expect(instances[1]).toBe(instances[0]);
 
-    const staticResult = processToStaticInputResult(second, { compileDriver: driver });
+    const staticResult = compileToScene(second, { compileDriver: driver });
     const retainedResult = controller.read();
 
     expect(retainedResult.revision).toBe(1);

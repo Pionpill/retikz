@@ -23,6 +23,82 @@ const makeLayout = (_id: string, x = 0, y = 0): CompiledBoundaryGeometry & Pick<
 });
 
 describe('NamespaceStack 基本 register / lookup', () => {
+  it('贡献保留最终绑定、新增声明与原有名称顺序，并可重放重复诊断', () => {
+    const stack = new NamespaceStack();
+    stack.register('a', { geometry: makeLayout('a'), irPath: ['children', 0] });
+    stack.register('b', { geometry: makeLayout('b'), irPath: ['children', 1] });
+    const duplicates: Array<DuplicateRegisterInfo> = [];
+    const replay = stack.fork({ onDuplicate: info => duplicates.push(info) });
+    const changes = stack.captureFrameChanges(() => {
+      stack.register('new', { geometry: makeLayout('new', 5), irPath: ['children', 2] });
+      stack.register('b', { geometry: makeLayout('b', 10), irPath: ['children', 3] });
+      stack.register('a', { geometry: makeLayout('a', 20), irPath: ['children', 4] });
+      stack.register('a', { geometry: makeLayout('a', 30), irPath: ['children', 5] });
+    });
+    expect(changes.map(change => change.id)).toEqual(['a', 'b', 'new']);
+    expect(changes[0].irPaths).toEqual([
+      ['children', 4],
+      ['children', 5],
+    ]);
+    for (const change of changes) replay.commitForkChange(change);
+    expect(duplicates.map(info => info.id)).toEqual(['a', 'a', 'b']);
+    expect(duplicates[1].duplicateIrPaths).toEqual([
+      ['children', 0],
+      ['children', 4],
+      ['children', 5],
+    ]);
+    expect(replay.lookupReference('a')).toEqual(stack.lookupReference('a'));
+    expect(replay.lookupReference('b')).toEqual(stack.lookupReference('b'));
+    expect(replay.lookupReference('new')).toEqual(stack.lookupReference('new'));
+  });
+
+  it('捕获隔离局部 frame 与未提交 probe，同层嵌套发布仍归入外层贡献', () => {
+    const stack = new NamespaceStack();
+    const changes = stack.captureFrameChanges(() => {
+      const nested = stack.captureFrameChanges(() => {
+        stack.register('shared', { geometry: makeLayout('shared'), irPath: ['children', 0] });
+      });
+      expect(nested.map(change => change.id)).toEqual(['shared']);
+      stack.pushFrame();
+      stack.register('local', { geometry: makeLayout('local'), irPath: ['children', 1] });
+      stack.popFrame();
+      const probe = stack.fork();
+      probe.register('discarded', { geometry: makeLayout('discarded'), irPath: ['children', 2] });
+    });
+    expect(changes.map(change => change.id)).toEqual(['shared']);
+    expect(stack.lookupReference('local')).toBeUndefined();
+    expect(stack.lookupReference('discarded')).toBeUndefined();
+  });
+
+  it('几何替换进入贡献但不伪造声明，异常捕获结束后可继续记录', () => {
+    const stack = new NamespaceStack();
+    const initial = makeLayout('a');
+    const replaced = makeLayout('a', 10);
+    const projected = makeLayout('a', 20);
+    stack.register('a', { geometry: initial, irPath: ['children', 0] });
+    const changes = stack.captureFrameChanges(() => {
+      stack.replaceGeometry('a', replaced, 0);
+      stack.replacePublishedGeometry(replaced, projected);
+    });
+    expect(changes).toHaveLength(1);
+    expect(changes[0].entry.geometry).toBe(projected);
+    expect(changes[0].irPaths).toEqual([]);
+    const failure = new Error('compile failed');
+    expect(() =>
+      stack.captureFrameChanges(() => {
+        throw failure;
+      }),
+    ).toThrow(failure);
+    expect(stack.captureFrameChanges(() => {})).toEqual([]);
+    expect(
+      stack
+        .captureFrameChanges(() => {
+          stack.register('next', { geometry: initial, irPath: ['children', 1] });
+        })
+        .map(change => change.id),
+    ).toEqual(['next']);
+  });
+
   it('作用域身份不随名称写入变化，fork 共享已有作用域并隔离新建作用域', () => {
     const stack = new NamespaceStack();
     const root = stack.identity;

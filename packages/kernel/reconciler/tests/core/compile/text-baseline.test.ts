@@ -19,7 +19,7 @@ import {
 import type { TexLowerer } from '../../../../core/src/compile/text';
 import { calculateAlphabeticBaselineY } from '../../../../core/src/compile/text';
 import { ASCENT_FACTOR, DESCENT_FACTOR } from '../../../../core/src/compile/text/helpers';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 
 const fixedMeasurer: TextMeasurer = text => ({
   width: text.length * 10,
@@ -53,7 +53,7 @@ const probeGuidesOf = (child: IRChild, measureText: TextMeasurer): ReadonlyArray
     },
   });
 
-  compileToScene(sceneOf({ namespace: 'test', type: 'baselineInspector' }), {
+  compileTestResult(sceneOf({ namespace: 'test', type: 'baselineInspector' }), {
     composites: [inspector],
     measureText,
     padding: 0,
@@ -84,7 +84,7 @@ const probeEmissionOf = (child: IRChild, measureText: TextMeasurer, precision?: 
       return { children: [context.replay(probe.result)] };
     },
   });
-  const result = compileToScene(sceneOf({ namespace: 'test', type: 'baselineEmissionInspector' }), {
+  const result = compileTestResult(sceneOf({ namespace: 'test', type: 'baselineEmissionInspector' }), {
     composites: [inspector],
     measureText,
     padding: 0,

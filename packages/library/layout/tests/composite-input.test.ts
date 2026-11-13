@@ -1,6 +1,5 @@
 import { CompositeBaseSchema, createCompositeInputBindings, defineComposite } from '@retikz/core';
 import type { IRScene } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
@@ -13,6 +12,7 @@ import {
   overlayLayoutDefinition,
   LayoutItemKind,
 } from '../src';
+import { compileTestResult } from './helpers/compilation';
 
 const leaf = defineComposite({
   namespace: 'fixture',
@@ -35,7 +35,7 @@ describe('Layout 准备子输入', () => {
 
     for (const container of containers) {
       const source: IRScene = { type: 'scene', version: 1, children: [container] };
-      const output = compileToScene(source, {
+      const output = compileTestResult(source, {
         composites: [leaf, flexLayoutDefinition, gridLayoutDefinition, overlayLayoutDefinition],
         compositeInputs: createCompositeInputBindings(source, [
           { path: ['children', 0, 'children', 0, 'child'], input: 'prepared-layout-child' },

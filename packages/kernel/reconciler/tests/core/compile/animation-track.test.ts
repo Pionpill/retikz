@@ -8,7 +8,7 @@ import {
   PathDefaultSchema,
   SceneSchema,
 } from '../../../../core/src';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 import { flattenPrims } from '../../helpers/flatten';
 
 const scene = (children: IRScene['children'], extra: Partial<IRScene> = {}): IRScene => ({
@@ -130,8 +130,8 @@ describe('Happy path：三载体与 scene 根动画', () => {
     ).toBe(true);
   });
   it('node track → 平铺 shape 图元带 animations', () => {
-    const prims = compileToScene(scene([{ type: 'node', id: 'a', position: [0, 0], animations: [FADE] }]), silent).scene
-      .primitives;
+    const prims = compileTestResult(scene([{ type: 'node', id: 'a', position: [0, 0], animations: [FADE] }]), silent)
+      .scene.primitives;
     const rects = allOfType(prims, 'rect');
 
     expect(rects.length).toBeGreaterThanOrEqual(1);
@@ -140,7 +140,7 @@ describe('Happy path：三载体与 scene 根动画', () => {
   });
 
   it('text node track → 单层 GroupPrimitive 带 animations，子图元不带', () => {
-    const prims = compileToScene(
+    const prims = compileTestResult(
       scene([{ type: 'node', id: 'n', position: [0, 0], text: 'A', animations: [FADE, SPIN] }]),
       silent,
     ).scene.primitives;
@@ -152,7 +152,7 @@ describe('Happy path：三载体与 scene 根动画', () => {
   });
 
   it('path track → PathPrimitive 带 animations', () => {
-    const prims = compileToScene(
+    const prims = compileTestResult(
       scene([
         {
           type: 'path',
@@ -174,7 +174,7 @@ describe('Happy path：三载体与 scene 根动画', () => {
   });
 
   it('scope track → GroupPrimitive 带 animations，子元素不继承', () => {
-    const prims = compileToScene(
+    const prims = compileTestResult(
       scene([{ type: 'scope', id: 's', animations: [FADE], children: [{ type: 'node', id: 'a', position: [0, 0] }] }]),
       silent,
     ).scene.primitives;
@@ -187,7 +187,7 @@ describe('Happy path：三载体与 scene 根动画', () => {
   });
 
   it('scene 根 viewBox track → Scene.animations', () => {
-    const built = compileToScene(
+    const built = compileTestResult(
       scene([{ type: 'node', id: 'a', position: [0, 0] }], { animations: [CAMERA] }),
       silent,
     ).scene;
@@ -198,8 +198,10 @@ describe('Happy path：三载体与 scene 根动画', () => {
 
 describe('非均匀缩放 scaleX / scaleY + origin 支点', () => {
   it('scaleY + origin:"bottom" track → 图元原样透传（含 origin）', () => {
-    const prims = compileToScene(scene([{ type: 'node', id: 'bar', position: [0, 0], animations: [GROW_UP] }]), silent)
-      .scene.primitives;
+    const prims = compileTestResult(
+      scene([{ type: 'node', id: 'bar', position: [0, 0], animations: [GROW_UP] }]),
+      silent,
+    ).scene.primitives;
     const rects = allOfType(prims, 'rect');
 
     expect(rects.length).toBeGreaterThanOrEqual(1);
@@ -235,7 +237,7 @@ describe('非均匀缩放 scaleX / scaleY + origin 支点', () => {
 describe('边界', () => {
   it('省略 animations → 图元无 animations 键（settled 等价现状）', () => {
     const rects = allOfType(
-      compileToScene(scene([{ type: 'node', id: 'a', position: [0, 0] }]), silent).scene.primitives,
+      compileTestResult(scene([{ type: 'node', id: 'a', position: [0, 0] }]), silent).scene.primitives,
       'rect',
     );
 
@@ -288,7 +290,7 @@ describe('错误路径：zod reject', () => {
 describe('compile 校验：viewBox ⇔ 根', () => {
   it('元素级 viewBox track → warn(ANIMATION_INVALID_PROPERTY) + drop', () => {
     const c = collector();
-    const prims = compileToScene(scene([{ type: 'node', id: 'a', position: [0, 0], animations: [CAMERA] }]), c).scene
+    const prims = compileTestResult(scene([{ type: 'node', id: 'a', position: [0, 0], animations: [CAMERA] }]), c).scene
       .primitives;
 
     expect(c.warnings).toContainEqual(
@@ -303,7 +305,7 @@ describe('compile 校验：viewBox ⇔ 根', () => {
 
   it('元素级混合：viewBox 被 drop、其余 track 保留', () => {
     const c = collector();
-    const prims = compileToScene(scene([{ type: 'node', id: 'a', position: [0, 0], animations: [CAMERA, FADE] }]), c)
+    const prims = compileTestResult(scene([{ type: 'node', id: 'a', position: [0, 0], animations: [CAMERA, FADE] }]), c)
       .scene.primitives;
 
     for (const rect of allOfType(prims, 'rect')) expect(rect.animations).toEqual([FADE]);
@@ -313,7 +315,7 @@ describe('compile 校验：viewBox ⇔ 根', () => {
 
   it('根级混合轨道只保留镜头，诊断沿用作者数组的原始下标', () => {
     const c = collector();
-    const built = compileToScene(
+    const built = compileTestResult(
       scene([{ type: 'node', id: 'a', position: [0, 0] }], { animations: [FADE, CAMERA, SPIN] }),
       c,
     ).scene;
@@ -325,13 +327,13 @@ describe('compile 校验：viewBox ⇔ 根', () => {
       ['animations', 0],
       ['animations', 2],
     ]);
-    expect(compileToScene(scene([], { animations: [FADE] }), silent).scene.animations).toBeUndefined();
+    expect(compileTestResult(scene([], { animations: [FADE] }), silent).scene.animations).toBeUndefined();
   });
 });
 
 describe('交互', () => {
   it('id + meta + animations 共存互不影响', () => {
-    const prims = compileToScene(
+    const prims = compileTestResult(
       scene([{ type: 'node', id: 'a', position: [0, 0], meta: { s: 'plot' }, animations: [FADE] }]),
       silent,
     ).scene.primitives;
@@ -344,8 +346,8 @@ describe('交互', () => {
   });
 
   it('layout 中立：加 / 删 animations 不改 layout / 几何', () => {
-    const without = compileToScene(scene([{ type: 'node', id: 'a', position: [0, 0], text: 'A' }]), silent).scene;
-    const withAnim = compileToScene(
+    const without = compileTestResult(scene([{ type: 'node', id: 'a', position: [0, 0], text: 'A' }]), silent).scene;
+    const withAnim = compileTestResult(
       scene([{ type: 'node', id: 'a', position: [0, 0], text: 'A', animations: [FADE, SPIN] }]),
       silent,
     ).scene;

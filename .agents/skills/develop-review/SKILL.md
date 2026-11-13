@@ -57,6 +57,9 @@ git status --short
 
 ## 按需执行检查
 
+- 结构或阶段重构按 [standard-structure](../standard-structure/SKILL.md) 核对输入、产物、依赖就绪点及状态生命周期，不以文件搬迁或命名合规代替职责收敛。
+- 涉及阶段缓存或 prepared 时，沿生产调用链核对有效性判定、实际传参与资源 / 诊断恢复；按 [原子阶段与驱动](../standard-structure/references/pipeline-compile.md#原子阶段与驱动) 区分底层支持、驱动接入和已验证收益，不以产物存在证明可复用。
+- 性能结论按 [test-performance](../test-performance/SKILL.md) 核对操作边界、预算、对照与退化证据；只读 review 不自动授权性能重跑。
 - 按 [实现规范](../develop-implement/SKILL.md#按需执行) 检查成功路径提前创建错误、未采用的回退计算、缓存命中前的无用工作及 React 昂贵初始化；追踪实参求值和被调函数的消费分支，不凭函数名或扫描命中判错。
 - finding 说明哪些路径未消费结果、调用频率依据及可安全后移的边界；区分确定的无用工作与未测量的耗时，不把必要校验、缓存键 / 快照或已在失败分支中的诊断误报为问题。
 

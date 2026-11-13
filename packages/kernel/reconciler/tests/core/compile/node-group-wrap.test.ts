@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { IRScene } from '../../../../core/src/schemas';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 
 const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: 'scene', children });
 
@@ -11,7 +11,7 @@ describe('节点绘制：带文本 Node 包 <g>', () => {
   // Happy path
   it('带文本 Node → 单个 GroupPrimitive（无旋转时无 transform）', () => {
     const ir = scene([{ type: 'node', position: [0, 0], text: 'A' }]);
-    const prims = compileToScene(ir, silent).scene.primitives;
+    const prims = compileTestResult(ir, silent).scene.primitives;
 
     expect(prims).toHaveLength(1);
     expect(prims[0].type).toBe('group');
@@ -25,12 +25,12 @@ describe('节点绘制：带文本 Node 包 <g>', () => {
   it('纯几何 Node（无文本）→ 平铺，不包 group', () => {
     const ir = scene([{ type: 'node', position: [0, 0] }]);
 
-    expect(compileToScene(ir, silent).scene.primitives.map(p => p.type)).toEqual(['rect']);
+    expect(compileTestResult(ir, silent).scene.primitives.map(p => p.type)).toEqual(['rect']);
   });
 
   it('带文本 + 旋转 Node → group 带 rotate transform', () => {
     const ir = scene([{ type: 'node', position: [0, 0], text: 'A', rotate: 45 }]);
-    const prims = compileToScene(ir, silent).scene.primitives;
+    const prims = compileTestResult(ir, silent).scene.primitives;
 
     expect(prims[0].type).toBe('group');
 
@@ -42,7 +42,7 @@ describe('节点绘制：带文本 Node 包 <g>', () => {
   // 边界
   it('多行文本 Node → 单个 group，children = rect + text', () => {
     const ir = scene([{ type: 'node', position: [0, 0], text: ['A', 'B'] }]);
-    const prims = compileToScene(ir, silent).scene.primitives;
+    const prims = compileTestResult(ir, silent).scene.primitives;
 
     expect(prims[0].type).toBe('group');
 
@@ -53,7 +53,7 @@ describe('节点绘制：带文本 Node 包 <g>', () => {
 
   it('circle 带文本 Node → group children = ellipse + text', () => {
     const ir = scene([{ type: 'node', position: [0, 0], shape: 'circle', text: 'A' }]);
-    const prims = compileToScene(ir, silent).scene.primitives;
+    const prims = compileTestResult(ir, silent).scene.primitives;
 
     expect(prims[0].type).toBe('group');
 
@@ -73,12 +73,12 @@ describe('节点绘制：带文本 Node 包 <g>', () => {
       },
     ]);
 
-    expect(compileToScene(ir, silent).scene.primitives.map(p => p.type)).toEqual(['rect']);
+    expect(compileTestResult(ir, silent).scene.primitives.map(p => p.type)).toEqual(['rect']);
   });
 
   it('空字符串 text 仍包 group（判据严格是 layout.lines !== undefined）', () => {
     const ir = scene([{ type: 'node', position: [0, 0], text: '' }]);
-    const prims = compileToScene(ir, silent).scene.primitives;
+    const prims = compileTestResult(ir, silent).scene.primitives;
 
     expect(prims[0].type).toBe('group');
 
@@ -90,7 +90,7 @@ describe('节点绘制：带文本 Node 包 <g>', () => {
   // 交互
   it('带文本 + label → label TextPrimitive 在该 node 的 group 内', () => {
     const ir = scene([{ type: 'node', position: [0, 0], text: 'A', label: { text: 'L' } }]);
-    const prims = compileToScene(ir, silent).scene.primitives;
+    const prims = compileTestResult(ir, silent).scene.primitives;
 
     expect(prims[0].type).toBe('group');
 
@@ -107,7 +107,7 @@ describe('节点绘制：带文本 Node 包 <g>', () => {
       { type: 'node', position: [0, 0], text: 'A', zIndex: 5 },
       { type: 'node', position: [20, 0] }, // 纯几何 rect，默认 0
     ]);
-    const prims = compileToScene(ir, silent).scene.primitives;
+    const prims = compileTestResult(ir, silent).scene.primitives;
 
     // 纯几何 rect（z=0）在前，带文本 group（z=5）在后
     expect(prims.map(p => p.type)).toEqual(['rect', 'group']);

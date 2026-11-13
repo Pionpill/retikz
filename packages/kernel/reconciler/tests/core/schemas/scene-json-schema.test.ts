@@ -3,7 +3,7 @@ import { toJSONSchema } from 'zod';
 
 import type { IRScene } from '../../../../core/src/schemas';
 import { SceneSchema } from '../../../../core/src/schemas';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 
 const toSceneJsonSchema = () => toJSONSchema(SceneSchema, { unrepresentable: 'any' });
 
@@ -34,7 +34,7 @@ describe('SceneSchema 可导出 JSON Schema（喂 LLM / 工具链的结构化 sc
         },
       ],
     });
-    const compiled = compileToScene(source).scene;
+    const compiled = compileTestResult(source).scene;
 
     expect(source.children[0]).toMatchObject({ style: { fill: 0.2, textColor: 0.8 } });
     expect(JSON.stringify(compiled)).toContain('#d6e0eb');

@@ -76,7 +76,7 @@
 - [`Schematic 制图能力域设计`](./schematic-design.md)
 - `packages/schematic/_notes/architecture/schematic-graph-complete.md`（随首个 Graph ADR 建立）
 
-`@retikz/math`、`@retikz/runtime`、`@retikz/render`、React / Vanilla adapters 当前不定义独立完备目标。它们的职责由就近 `AGENTS.md` 约束，并在所属能力域中分别承担纯计算、领域中立增量执行、Scene 执行、等价暴露或宿主接入义务。未来 geo 等成为独立核心能力域时，必须先定义自己的问题边界和 completeness 文档。
+`@retikz/math`、`@retikz/reconciler`、`@retikz/render`、React / Vanilla adapters 当前不定义独立完备目标。它们的职责由就近 `AGENTS.md` 约束，并在所属能力域中分别承担纯计算、完整与增量编译执行、Scene 执行、等价暴露或宿主接入义务。未来 geo 等成为独立核心能力域时，必须先定义自己的问题边界和 completeness 文档。
 
 `@retikz/standard` 是 Drawing Complete 在 Core 之上的官方通用 Tier 2 能力层。它相对 Core 保持可选安装，但 Plot、Table、Graph 等官方领域包可以把已经去除领域词汇的绘图能力作为声明依赖消费；依赖只能从领域包指向 Standard，Standard 不得读取领域 IR、scale、数据模型、pipeline 或 runtime。领域包仍拥有从自身语义解析到 Standard 输入的过程，以及 provenance、locator、交互意图和领域诊断。
 

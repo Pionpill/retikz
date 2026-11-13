@@ -1,4 +1,4 @@
-import type { Scene } from '@retikz/core';
+import type { ClipResource, Scene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import { drawScene } from '../../../src/canvas';
@@ -10,22 +10,25 @@ describe('drawScene clip 裁剪', () => {
     const warnings: Array<string> = [];
     const s: Scene = {
       layout: { x: 0, y: 0, width: 100, height: 100 },
-      resources: [
-        {
-          kind: 'clip',
-          id: 'clip-1',
-          path: {
-            commands: [
-              { kind: 'move', to: [0, 0] },
-              { kind: 'line', to: [50, 0] },
-              { kind: 'line', to: [50, 50] },
-              { kind: 'line', to: [0, 50] },
-              { kind: 'close' },
-            ],
-            fillRule: 'nonzero',
+      resources: {
+        paints: [],
+        clips: [
+          {
+            kind: 'clip',
+            id: 'clip-1',
+            path: {
+              commands: [
+                { kind: 'move', to: [0, 0] },
+                { kind: 'line', to: [50, 0] },
+                { kind: 'line', to: [50, 50] },
+                { kind: 'line', to: [0, 50] },
+                { kind: 'close' },
+              ],
+              fillRule: 'nonzero',
+            },
           },
-        },
-      ],
+        ],
+      },
       primitives: [
         {
           type: 'group',
@@ -52,20 +55,23 @@ describe('drawScene clip 裁剪', () => {
     const context = createSpyCanvasContext();
     const s: Scene = {
       layout: { x: 0, y: 0, width: 100, height: 100 },
-      resources: [
-        {
-          kind: 'clip',
-          id: 'c',
-          path: {
-            commands: [
-              { kind: 'move', to: [10, 0] },
-              { kind: 'arc', center: [0, 0], radius: 10, startAngle: 0, endAngle: 360 },
-              { kind: 'close' },
-            ],
-            fillRule: 'nonzero',
+      resources: {
+        paints: [],
+        clips: [
+          {
+            kind: 'clip',
+            id: 'c',
+            path: {
+              commands: [
+                { kind: 'move', to: [10, 0] },
+                { kind: 'arc', center: [0, 0], radius: 10, startAngle: 0, endAngle: 360 },
+                { kind: 'close' },
+              ],
+              fillRule: 'nonzero',
+            },
           },
-        },
-      ],
+        ],
+      },
       primitives: [
         {
           type: 'group',
@@ -93,21 +99,24 @@ describe('drawScene clip 裁剪', () => {
     const context = createSpyCanvasContext();
     const s: Scene = {
       layout: { x: 0, y: 0, width: 100, height: 100 },
-      resources: [
-        {
-          kind: 'clip',
-          id: 'poly',
-          path: {
-            commands: [
-              { kind: 'move', to: [0, 0] },
-              { kind: 'line', to: [50, 0] },
-              { kind: 'line', to: [25, 50] },
-              { kind: 'close' },
-            ],
-            fillRule: 'nonzero',
+      resources: {
+        paints: [],
+        clips: [
+          {
+            kind: 'clip',
+            id: 'poly',
+            path: {
+              commands: [
+                { kind: 'move', to: [0, 0] },
+                { kind: 'line', to: [50, 0] },
+                { kind: 'line', to: [25, 50] },
+                { kind: 'close' },
+              ],
+              fillRule: 'nonzero',
+            },
           },
-        },
-      ],
+        ],
+      },
       primitives: [{ type: 'group', clipRef: 'poly', children: [{ type: 'rect', x: 0, y: 0, width: 10, height: 10 }] }],
     };
 
@@ -128,16 +137,17 @@ describe('drawScene clip 裁剪', () => {
   });
 
   it('同一可变 Scene 修改资源后重新检查，失败时不绘制新图元', () => {
+    const clips: Array<ClipResource> = [{ kind: 'clip', id: 'window', path: { fillRule: 'nonzero', commands: [] } }];
     const scene: Scene = {
       layout: { x: 0, y: 0, width: 100, height: 100 },
-      resources: [{ kind: 'clip', id: 'window', path: { fillRule: 'nonzero', commands: [] } }],
+      resources: { paints: [], clips },
       primitives: [
         { type: 'group', clipRef: 'window', children: [{ type: 'rect', x: 0, y: 0, width: 10, height: 10 }] },
       ],
     };
     const firstContext = createSpyCanvasContext();
     drawScene(firstContext as unknown as CanvasRenderingContext2D, scene);
-    scene.resources?.splice(0);
+    clips.splice(0);
     const secondContext = createSpyCanvasContext();
     expect(() => drawScene(secondContext as unknown as CanvasRenderingContext2D, scene)).toThrow(
       /expected clip resource 'window'/,

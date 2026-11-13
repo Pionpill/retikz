@@ -12,7 +12,7 @@ export const scopeClipResourceI18n: Record<
     nodes: {
       schema: ['校验裁剪描述', 'clip · JSON', 'Clip Definition.schema'],
       lower: ['生成 Scene 路径', '已校验的裁剪声明 → 路径', 'Clip Definition.lower'],
-      store: ['登记裁剪资源', 'Scene.resources', '相同路径复用同一 id'],
+      store: ['登记裁剪资源', 'Scene.resources.clips', '相同路径复用同一 id'],
       assemble: ['组装 Scene 分组', 'clipRef + children + transforms', '子图元与裁剪共享变换'],
     },
   },
@@ -21,7 +21,7 @@ export const scopeClipResourceI18n: Record<
     nodes: {
       schema: ['Validate clip spec', 'clip · JSON', 'Clip Definition.schema'],
       lower: ['Produce Scene path', 'Validated clip spec → path', 'Clip Definition.lower'],
-      store: ['Register clip resource', 'Scene.resources', 'Identical paths share an id'],
+      store: ['Register clip resource', 'Scene.resources.clips', 'Identical paths share an id'],
       assemble: ['Assemble Scene group', 'clipRef + children + transforms', 'Children and clip share transforms'],
     },
   },

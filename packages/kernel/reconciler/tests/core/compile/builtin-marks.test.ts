@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { IRStep } from '../../../../core/src';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 import { flattenPrims } from '../../helpers/flatten';
 import { pathIr } from './path/helpers';
 
@@ -12,8 +12,8 @@ const steps: Array<IRStep> = [
 
 describe('内置路径标记', () => {
   it.each(['times', 'plus', 'check', 'star'])('%s 无需注册，居中放置且不截断宿主', shape => {
-    const baseline = compileToScene(pathIr(steps)).scene;
-    const scene = compileToScene(
+    const baseline = compileTestResult(pathIr(steps)).scene;
+    const scene = compileTestResult(
       pathIr(steps, {
         marks: [{ pos: 0.5, shape, rotate: 30, scale: 2, stroke: 'red', fill: 'blue', lineWidth: 2 }],
       }),
@@ -46,7 +46,7 @@ describe('内置路径标记', () => {
   });
 
   it('线条标记继承宿主描边，星形继承宿主主色', () => {
-    const scene = compileToScene(
+    const scene = compileTestResult(
       pathIr(steps, {
         style: { stroke: '#123456' },
         marks: [
@@ -62,10 +62,10 @@ describe('内置路径标记', () => {
 
   it.each(['times', 'plus', 'check', 'star'])('%s 拒绝普通定义或箭头覆盖，也不能用于端点', name => {
     const input = pathIr(steps);
-    expect(() => compileToScene(input, { marks: [{ name, emit: () => [] }] })).toThrow(/duplicate mark/);
-    expect(() => compileToScene(input, { arrows: [{ name, backX: 0, lineContactX: 0, emit: () => [] }] })).toThrow(
+    expect(() => compileTestResult(input, { marks: [{ name, emit: () => [] }] })).toThrow(/duplicate mark/);
+    expect(() => compileTestResult(input, { arrows: [{ name, backX: 0, lineContactX: 0, emit: () => [] }] })).toThrow(
       /duplicate mark/,
     );
-    expect(() => compileToScene(pathIr(steps, { arrow: { end: { shape: name } } }))).toThrow(name);
+    expect(() => compileTestResult(pathIr(steps, { arrow: { end: { shape: name } } }))).toThrow(name);
   });
 });

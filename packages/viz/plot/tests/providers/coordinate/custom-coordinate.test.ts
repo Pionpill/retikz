@@ -1,5 +1,4 @@
 import type { IRNode, IRPath, IRScope } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal, number, object } from 'zod';
 
@@ -9,6 +8,7 @@ import type { PlotsLoweringOptions } from '../../../src/pipeline/expand';
 import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
+import { compileTestResult } from '../../helpers/compilation';
 import { measureLabel } from '../../helpers/text-measurement';
 
 /**
@@ -247,10 +247,10 @@ describe('custom coordinate — 一维曲线（projectRoles 沿正弦）', () =>
     expect(new Set(positions.map(p => p[1].toFixed(2))).size).toBeGreaterThan(3);
   });
 
-  it('下沉产物是合法 core IR（compileToScene 不抛）', () => {
+  it('下沉产物是合法 core IR（SceneReconciler 不抛）', () => {
     const layer = firstLayer(sineSpec(), { d: [{ v: 0 }, { v: 6 }, { v: 12 }] }, opts([sineCoordinate]));
 
-    expect(() => compileToScene({ version: 1, type: 'scene', children: [layer] }).scene).not.toThrow();
+    expect(() => compileTestResult({ version: 1, type: 'scene', children: [layer] }).scene).not.toThrow();
   });
 
   it('custom 坐标系 IR JSON round-trip（投影函数不在 IR）', () => {

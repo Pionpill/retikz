@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { RectPrimitive, ScenePrimitive } from '../../../../core/src/contract';
 import type { IRScene } from '../../../../core/src/schemas';
 import { AtPositionSchema } from '../../../../core/src/schemas';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 import { flattenPrims } from '../../helpers/flatten';
 
 /** 取所有 RectPrimitive（节点 shape=rectangle 默认走 RectPrimitive；带文本节点包 group，flatten 穿透） */
@@ -12,7 +12,7 @@ const rects = (prims: Array<ScenePrimitive>): Array<RectPrimitive> =>
 
 /** 给定一组 IR Node + at，编译后取每个 rect 的几何中心 [cx, cy] */
 const centers = (ir: IRScene): Array<[number, number]> =>
-  rects(compileToScene(ir).scene.primitives).map(r => [r.x + r.width / 2, r.y + r.height / 2]);
+  rects(compileTestResult(ir).scene.primitives).map(r => [r.x + r.width / 2, r.y + r.height / 2]);
 
 describe('相对定位时的 Node', () => {
   describe('schema 别名', () => {
@@ -140,7 +140,7 @@ describe('相对定位时的 Node', () => {
       };
 
       // nodeDistance=99 但 node 自带 7，应该用 7
-      const scene = compileToScene(ir, { nodeDistance: 99 }).scene;
+      const scene = compileTestResult(ir, { nodeDistance: 99 }).scene;
       const [, b] = rects(scene.primitives).map(r => [r.x + r.width / 2, r.y + r.height / 2]);
 
       expect(b[0]).toBeCloseTo(7);
@@ -155,7 +155,7 @@ describe('相对定位时的 Node', () => {
           { type: 'node', id: 'B', position: { direction: 'right', of: 'A' } },
         ],
       };
-      const scene = compileToScene(ir, { nodeDistance: 12 }).scene;
+      const scene = compileTestResult(ir, { nodeDistance: 12 }).scene;
       const [, b] = rects(scene.primitives).map(r => [r.x + r.width / 2, r.y + r.height / 2]);
 
       expect(b[0]).toBeCloseTo(12);
@@ -170,7 +170,7 @@ describe('相对定位时的 Node', () => {
           { type: 'node', id: 'B', position: { direction: 'right', of: 'A' } },
         ],
       };
-      const scene = compileToScene(ir).scene;
+      const scene = compileTestResult(ir).scene;
       const [, b] = rects(scene.primitives).map(r => [r.x + r.width / 2, r.y + r.height / 2]);
 
       expect(b[0]).toBeCloseTo(24);
@@ -205,7 +205,7 @@ describe('相对定位时的 Node', () => {
         children: [{ type: 'node', id: 'B', position: { direction: 'right', of: 'A' } }],
       };
 
-      expect(() => compileToScene(ir).scene).toThrow(/Cannot resolve position/);
+      expect(() => compileTestResult(ir).scene).toThrow(/Cannot resolve position/);
     });
 
     it('前向引用同样不允许（B 在 A 前）→ 抛错', () => {
@@ -218,7 +218,7 @@ describe('相对定位时的 Node', () => {
         ],
       };
 
-      expect(() => compileToScene(ir).scene).toThrow(/Cannot resolve position/);
+      expect(() => compileTestResult(ir).scene).toThrow(/Cannot resolve position/);
     });
   });
 
@@ -239,7 +239,7 @@ describe('相对定位时的 Node', () => {
           },
         ],
       };
-      const scene = compileToScene(ir).scene;
+      const scene = compileTestResult(ir).scene;
       const path = scene.primitives.find(p => p.type === 'path');
 
       expect(path).toBeDefined();

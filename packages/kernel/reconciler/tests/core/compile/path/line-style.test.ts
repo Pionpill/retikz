@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { IRScene } from '../../../../../core/src/schemas';
-import { compileToScene } from '../../../../src/compile';
+import { compileTestResult } from '../../../helpers/compilation';
 import { findPathPrim } from './helpers';
 
 describe('lineCap / lineJoin', () => {
@@ -21,7 +21,7 @@ describe('lineCap / lineJoin', () => {
       ],
     };
 
-    expect(findPathPrim(compileToScene(ir).scene.primitives).lineCap).toBe('round');
+    expect(findPathPrim(compileTestResult(ir).scene.primitives).lineCap).toBe('round');
   });
 
   it('lineJoin 透传到 PathPrimitive.lineJoin', () => {
@@ -41,7 +41,7 @@ describe('lineCap / lineJoin', () => {
       ],
     };
 
-    expect(findPathPrim(compileToScene(ir).scene.primitives).lineJoin).toBe('bevel');
+    expect(findPathPrim(compileTestResult(ir).scene.primitives).lineJoin).toBe('bevel');
   });
 
   it('未指定时 PathPrimitive 字段为 undefined（不写 SVG 默认值）', () => {
@@ -58,7 +58,7 @@ describe('lineCap / lineJoin', () => {
         },
       ],
     };
-    const p = findPathPrim(compileToScene(ir).scene.primitives);
+    const p = findPathPrim(compileTestResult(ir).scene.primitives);
 
     expect(p.lineCap).toBeUndefined();
     expect(p.lineJoin).toBeUndefined();

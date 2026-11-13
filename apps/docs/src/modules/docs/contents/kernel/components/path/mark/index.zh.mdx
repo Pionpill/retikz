@@ -1,6 +1,6 @@
 ---
 title: mark · 标记
-description: 在路径任意弧长位置放置叉号、加号、对勾、星形或已注册的箭头
+description: 按路径长度或步骤比例放置叉号、加号、对勾、星形或已注册的箭头
 ---
 
 在 `Draw` 或 `Path` 的 `marks` 中声明形状和位置，就能给连线补上状态、重点或方向标记。每项直接写 `pos`、`shape` 和外观字段；自定义参数放在 `params` 中。首次绘图请先读[基础用法](/kernel/components/path/usage)。
@@ -48,13 +48,21 @@ React 的 `Draw` / `Path`、Vanilla 的 `path({ marks })` 和 JSON IR 的路径 
 
 名称只表示形状，不绑定状态或颜色。四种普通标记以局部基准正方形中心为锚点。已注册的箭头也能直接用作 `shape`，例如 `stealth`，它以尖端为锚点。
 
-`pos` 是整条路径累计弧长的比例，范围为 0～1：0 在起点，0.5 在半程，1 在终点。定位在端点箭头截断和标签断线之前完成，因此改变箭头大小或标签间隙不会移动标记。
+`pos` 的范围为 0～1，0 在起点，1 在终点。`positionMode` 决定如何解释比例：
+
+| 模式                   | `pos: 0.5` 的含义                        |
+| ---------------------- | ---------------------------------------- |
+| `'length'`（标记默认） | 所选几何累计长度的一半                   |
+| `'step'`               | 有效绘制段各占相同份额，再按段内参数定位 |
+
+`positionGeometry` 可独立选择 `'original'`（圆角前）或 `'rounded'`（圆角后）。省略时，`step` 使用原始路径，`length` 使用圆角路径。原生曲线在两种几何下都保持曲线；`original` 已包含连接面裁剪与路由结果。`step + rounded` 将原拐点放在圆弧中点，裁掉的相邻直线区间分别映射到圆弧前后半段。
+定位在端点箭头截断和标签断线之前完成，因此改变箭头大小或标签间隙不会移动标记。
 
 <ComponentPreview
   files={['mark-placement', 'mark-placement.preview.tsx']}
   defaultSourceFile="mark-placement.preview.tsx"
   size="lg"
-  caption="改变位置观察标记沿线移动；切换箭头形状可比较尖端锚点。示例将缩放设为 2，并用固定角度 0 保持对勾朝向。"
+  caption="改变位置观察标记沿线移动；切换箭头形状可比较尖端锚点。示例将缩放设为 2、圆角半径设为 25，并用固定角度 0 保持对勾朝向。"
 />
 
 `rotate` 省略或为 `'auto'` 时沿路径切线旋转；数值表示路径局部坐标中的固定角度，单位为度。状态对勾可用 `rotate: 0` 保持朝向，之后仍随整条路径或 Scope 的变换一起变化。
@@ -81,7 +89,7 @@ React 的 `Draw` / `Path`、Vanilla 的 `path({ marks })` 和 JSON IR 的路径 
       name: 'IRPathMark',
       kind: 'type',
       type: 'IRPathMark',
-      description: '包含 pos、shape、rotate、尺寸、外观及可选 params 的放置项。',
+      description: '包含 pos、positionMode、positionGeometry、shape、rotate、尺寸、外观及可选 params 的放置项。',
     },
     {
       name: 'BuiltinMarkShape',

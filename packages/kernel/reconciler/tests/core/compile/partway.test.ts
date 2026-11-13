@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { CompileWarning, IRScene, ScenePrimitive } from '../../../../core/src';
 import type { RectPrimitive } from '../../../../core/src/contract';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 import { flattenPrims } from '../../helpers/flatten';
 
 /** 取所有 RectPrimitive（默认 rectangle 节点；带文本节点包 group，flatten 穿透） */
@@ -45,7 +45,7 @@ describe('Node 中心落两端点之间', () => {
         text: 'mid',
       },
     ]);
-    const all = rects(compileToScene(ir).scene.primitives).map(rectCenter);
+    const all = rects(compileTestResult(ir).scene.primitives).map(rectCenter);
     const mid = all[2];
 
     expect(mid[0]).toBeCloseTo(0);
@@ -67,7 +67,7 @@ describe('Node 中心落两端点之间', () => {
         text: 'm',
       },
     ]);
-    const [mid] = rects(compileToScene(ir).scene.primitives).map(rectCenter);
+    const [mid] = rects(compileTestResult(ir).scene.primitives).map(rectCenter);
 
     expect(mid[0]).toBeCloseTo(0);
     expect(mid[1]).toBeCloseTo(0);
@@ -96,7 +96,7 @@ describe('Coordinate 注册位置落两端点之间', () => {
         ],
       },
     ]);
-    const end = firstLineTo(topPath(compileToScene(ir).scene.primitives));
+    const end = firstLineTo(topPath(compileTestResult(ir).scene.primitives));
 
     expect(end).toBeDefined();
     expect(end![0]).toBeCloseTo(30, 0);
@@ -121,7 +121,7 @@ describe('Path step 端点落两端点之间', () => {
         ],
       },
     ]);
-    const end = firstLineTo(topPath(compileToScene(ir).scene.primitives));
+    const end = firstLineTo(topPath(compileTestResult(ir).scene.primitives));
 
     expect(end).toBeDefined();
     expect(end![0]).toBeCloseTo(0);
@@ -141,7 +141,7 @@ describe('比例 t 边界命中端点', () => {
         text: 'p',
       },
     ]);
-    const all = rects(compileToScene(ir).scene.primitives).map(rectCenter);
+    const all = rects(compileTestResult(ir).scene.primitives).map(rectCenter);
     const p = all[2];
 
     expect(p[0]).toBeCloseTo(-120);
@@ -159,7 +159,7 @@ describe('比例 t 边界命中端点', () => {
         text: 'p',
       },
     ]);
-    const all = rects(compileToScene(ir).scene.primitives).map(rectCenter);
+    const all = rects(compileTestResult(ir).scene.primitives).map(rectCenter);
     const p = all[2];
 
     expect(p[0]).toBeCloseTo(120);
@@ -185,7 +185,7 @@ describe('嵌套 between 解析', () => {
         text: 'p',
       },
     ]);
-    const all = rects(compileToScene(ir).scene.primitives).map(rectCenter);
+    const all = rects(compileTestResult(ir).scene.primitives).map(rectCenter);
     const p = all[3];
 
     expect(p[0]).toBeCloseTo(50);
@@ -229,8 +229,8 @@ describe('端点带 anchor 时用对应 anchor 点插值', () => {
         text: 'm',
       },
     ]);
-    const withNorth = rects(compileToScene(baseIr).scene.primitives).map(rectCenter)[2];
-    const withCenter = rects(compileToScene(centerIr).scene.primitives).map(rectCenter)[2];
+    const withNorth = rects(compileTestResult(baseIr).scene.primitives).map(rectCenter)[2];
+    const withCenter = rects(compileTestResult(centerIr).scene.primitives).map(rectCenter)[2];
 
     // top anchor 比 center 在屏幕坐标里 y 更小（更靠上），两端同向偏移 → 中点 y 也更小
     expect(withNorth[1]).toBeLessThan(withCenter[1]);
@@ -269,7 +269,7 @@ describe('transforms scope 内 between 投影', () => {
         ],
       },
     ]);
-    const end = firstLineTo(topPath(compileToScene(ir).scene.primitives));
+    const end = firstLineTo(topPath(compileTestResult(ir).scene.primitives));
 
     expect(end).toBeDefined();
 
@@ -297,7 +297,7 @@ describe('端点引用未定义节点不崩', () => {
     ]);
     const warnings: Array<CompileWarning> = [];
 
-    expect(() => compileToScene(ir, { onWarn: w => warnings.push(w) }).scene).not.toThrow();
+    expect(() => compileTestResult(ir, { onWarn: w => warnings.push(w) }).scene).not.toThrow();
     expect(warnings.length).toBeGreaterThan(0);
   });
 });

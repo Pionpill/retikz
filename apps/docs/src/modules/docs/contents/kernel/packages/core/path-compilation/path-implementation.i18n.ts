@@ -1,25 +1,19 @@
-import type { Lang } from '@/i18n';
-
-/** 源码阅读主链 */
-export const pathImplementationI18n: Record<Lang, Array<string>> = {
-  zh: [
-    'resolvePath\n配置与目标绑定',
-    'compileStrokePath\n消费确定化路径',
-    'lowerSegmentStep / lowerShapeStep\n边界求交与几何命令',
-    'applyRoundedCorners\n处理直线接缝',
-    'createStrokePathGeometry\n标签采样与留白区间',
-    'applyArrowShrinks\n拆分后的端点缩短',
-    'wrapPathPrimitiveOutput\n组合图元与变换',
-    'flushPendingPathEmissions\n替换 Scene 占位',
-  ],
-  en: [
-    'resolvePath\nConfiguration and target binding',
-    'compileStrokePath\nConsume the canonical path',
-    'lowerSegmentStep / lowerShapeStep\nBoundary queries and geometry commands',
-    'applyRoundedCorners\nRound eligible line joins',
-    'createStrokePathGeometry\nLabel sampling and gap intervals',
-    'applyArrowShrinks\nShorten terminal fragments',
-    'wrapPathPrimitiveOutput\nGroup primitives and transforms',
-    'flushPendingPathEmissions\nReplace the Scene placeholder',
-  ],
+/** Reconciler 调度 resolvePath / compilePath流程图的双语文案 */
+export const pathImplementationI18n = {
+  zh: {
+    flush: 'Reconciler 调度 resolvePath / compilePath',
+    bind: '绑定目标，保留必要的游标表达',
+    host: '为 Definition 创建受控宿主上下文',
+    stroke: '内置 stroke：layout → emit',
+    snapshot: '物化可迭代产物与资源引用检查',
+    builtin: '也可自行生成图元与边界',
+  },
+  en: {
+    flush: 'Schedule resolution and compilation',
+    bind: 'Bind targets; retain cursor expressions',
+    host: 'Create a bounded host context',
+    stroke: 'Built-in stroke: layout → emit',
+    snapshot: 'Materialize and validate output',
+    builtin: 'May generate its own geometry',
+  },
 };

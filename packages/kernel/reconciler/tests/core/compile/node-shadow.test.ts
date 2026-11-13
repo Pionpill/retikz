@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { ScenePrimitive } from '../../../../core/src/contract';
 import type { IRScene } from '../../../../core/src/schemas';
 import { NodeSchema, SHADOW_PRESETS } from '../../../../core/src/schemas';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 import { flattenPrims } from '../../helpers/flatten';
 
 const silent = { onWarn: () => {} };
@@ -16,8 +16,8 @@ const findByType = <T extends ScenePrimitive['type']>(
 ): Extract<ScenePrimitive, { type: T }> | undefined =>
   flattenPrims(prims).find((p): p is Extract<ScenePrimitive, { type: T }> => p.type === type);
 
-const compileNode = (n: Record<string, unknown>): ReturnType<typeof compileToScene>['scene'] =>
-  compileToScene(scene([{ type: 'node', position: [0, 0], ...n }]), silent).scene;
+const compileNode = (n: Record<string, unknown>): ReturnType<typeof compileTestResult>['scene'] =>
+  compileTestResult(scene([{ type: 'node', position: [0, 0], ...n }]), silent).scene;
 
 const bottomOf = (layout: { y: number; height: number }): number => layout.y + layout.height;
 
@@ -191,7 +191,7 @@ describe('[shadow] 交互', () => {
   });
 
   it('explicit-viewbox-keeps-fixed-crop：显式 viewBox 不被 Node shadow 自动扩展', () => {
-    const compiled = compileToScene(
+    const compiled = compileTestResult(
       {
         version: 1,
         type: 'scene',

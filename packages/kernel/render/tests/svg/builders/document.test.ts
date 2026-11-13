@@ -92,7 +92,7 @@ describe('buildSvgDocument —— 交互', () => {
       height: 5,
       fill: { kind: 'resourceRef', id: 'paint-1' },
     };
-    const scene: Scene = { primitives: [rect], layout, resources: [gradient] };
+    const scene: Scene = { primitives: [rect], layout, resources: { paints: [gradient], clips: [] } };
 
     const a1 = renderToSvgString(scene, { idPrefix: 'a' });
     const a2 = renderToSvgString(scene, { idPrefix: 'a' });
@@ -130,7 +130,10 @@ describe('buildSvgDocument —— 交互', () => {
       fill: { kind: 'resourceRef', id: 'paint-1' },
     };
     const unsafePrefix = 'bad prefix:foo.bar)';
-    const out = renderToSvgString({ primitives: [rect], layout, resources: [gradient] }, { idPrefix: unsafePrefix });
+    const out = renderToSvgString(
+      { primitives: [rect], layout, resources: { paints: [gradient], clips: [] } },
+      { idPrefix: unsafePrefix },
+    );
     const id = out.match(/id="(retikz-paint-[^"]+)"/)?.[1];
 
     expect(id).toBeDefined();

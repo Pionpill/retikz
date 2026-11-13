@@ -1,4 +1,3 @@
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { circleDefinition, CircleSchema, createCircle, lowerCircle } from '../../../src/shape';
@@ -22,6 +21,7 @@ import {
   lowerArc,
   lowerSector,
 } from '../../../src/shape';
+import { compileTestResult } from '../../helpers/compilation';
 
 describe('Standard 形状系列', () => {
   it('仅将矩形角半径应用于矩形步骤', () => {
@@ -119,8 +119,8 @@ describe('圆形复合组件', () => {
   it('通过与手写 Core 步骤相同的路径几何进行编译', () => {
     const circle = createCircle({ center: [10, 20], radius: 30, style: { fill: 'red' } });
     const scene = { type: 'scene' as const, version: 1 as const, children: [circle] };
-    const actual = compileToScene(scene, { composites: [circleDefinition] });
-    const expected = compileToScene({ type: 'scene', version: 1, children: [lowerCircle(circle)] });
+    const actual = compileTestResult(scene, { composites: [circleDefinition] });
+    const expected = compileTestResult({ type: 'scene', version: 1, children: [lowerCircle(circle)] });
 
     expect(actual.scene).toEqual(expected.scene);
   });

@@ -9,7 +9,7 @@ import type {
   PlotLineageRun,
 } from '@retikz/plot';
 import { createPlotProviderContribution, lowerPlotWithLineage } from '@retikz/plot';
-import { compileToScene } from '@retikz/reconciler';
+import { SceneReconciler } from '@retikz/reconciler';
 import { renderToSvgString } from '@retikz/vanilla';
 
 /** renderPlot 两种返回模式共享的根 Scene Theme 输入 */
@@ -63,15 +63,22 @@ const renderPlotImpl = (
   const providerDefinitions = resolveCoreProviderDependencies({
     contributions: [createPlotProviderContribution(data, options)],
   });
-  const scene = compileToScene(
-    {
-      version: 1,
-      type: 'scene',
-      ...(options.theme !== undefined ? { theme: options.theme } : {}),
-      children: [spec],
-    },
-    { ...providerDefinitions, themeDefinitions: options.themeDefinitions },
-  ).scene;
+  const scene = (() => {
+    const reconciler = new SceneReconciler(
+      { ...providerDefinitions, themeDefinitions: options.themeDefinitions },
+      { incremental: false },
+    );
+    try {
+      return reconciler.mount({
+        version: 1,
+        type: 'scene',
+        ...(options.theme !== undefined ? { theme: options.theme } : {}),
+        children: [spec],
+      }).compilation.result;
+    } finally {
+      reconciler.dispose();
+    }
+  })().scene;
   const svg = renderToSvgString(scene, { output: { width: options.layout?.width, height: options.layout?.height } });
   if (!isLineageOptions(options)) return svg;
 

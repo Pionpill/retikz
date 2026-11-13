@@ -1,10 +1,9 @@
-import { compileToScene } from '@retikz/reconciler';
-
 import type { PlotLabelMeasure } from '../../src/shared';
+import { compileTestResult } from './compilation';
 
 /** 布局单元测试显式使用 Core 默认字体环境；宿主继承由编译集成测试覆盖 */
 export const measureLabel: PlotLabelMeasure = (node, fontSize) =>
-  compileToScene(
+  compileTestResult(
     {
       version: 1,
       type: 'scene',

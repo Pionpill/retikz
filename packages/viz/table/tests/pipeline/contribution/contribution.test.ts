@@ -7,7 +7,6 @@ import {
   RetikzCoreError,
   RetikzCoreErrorCode,
 } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject } from 'zod';
 
@@ -23,6 +22,7 @@ import {
   TableComposite,
   TableRowKind,
 } from '../../../src';
+import { compileTestResult } from '../../helpers/compilation';
 
 const outputOf = (kind: string): TableStructureOutput => ({
   rows: [{ id: 'row.0', kind: TableRowKind.Body }],
@@ -154,7 +154,7 @@ describe('Table 运行时贡献', () => {
       'fixture.badge',
     ]);
 
-    const result = compileToScene(
+    const result = compileTestResult(
       {
         version: 1,
         type: 'scene',
@@ -182,7 +182,7 @@ describe('Table 运行时贡献', () => {
     const contribution = createTableRuntimeContribution({
       lowerOptions: { tableThemeDefinitions: [tableStyle] },
     });
-    const result = compileToScene(
+    const result = compileTestResult(
       {
         version: 1,
         type: 'scene',

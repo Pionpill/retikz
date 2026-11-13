@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { PathPrimitive, ScenePrimitive } from '../../../../core/src/contract';
 import type { IRScene } from '../../../../core/src/schemas';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 import { arc, close, ellipseArc, line, move } from '../../helpers/path-command-factory';
 
 const silent = { onWarn: () => {} };
@@ -28,7 +28,7 @@ describe('arc 显式 center', () => {
     ]);
 
     // 圆心 = 显式 [5,5]，起点 = (5+10, 5) = (15,5)；不是游标 [0,0]
-    expect(findPathPrim(compileToScene(ir, silent).scene.primitives).commands).toEqual([
+    expect(findPathPrim(compileTestResult(ir, silent).scene.primitives).commands).toEqual([
       move([15, 5]),
       arc([5, 5], 10, 0, 90),
     ]);
@@ -46,7 +46,7 @@ describe('arc 显式 center', () => {
     ]);
 
     // 圆心 = 游标 [3,3]，起点 = (13,3)
-    expect(findPathPrim(compileToScene(ir, silent).scene.primitives).commands).toEqual([
+    expect(findPathPrim(compileTestResult(ir, silent).scene.primitives).commands).toEqual([
       move([13, 3]),
       arc([3, 3], 10, 0, 90),
     ]);
@@ -63,7 +63,7 @@ describe('arc 显式 center', () => {
       },
     ]);
 
-    expect(compileToScene(ir, silent).scene.primitives.find(p => p.type === 'path')).toBeUndefined();
+    expect(compileTestResult(ir, silent).scene.primitives.find(p => p.type === 'path')).toBeUndefined();
   });
 });
 
@@ -79,7 +79,7 @@ describe('arc 椭圆弧（radius: { x, y }）', () => {
       },
     ]);
 
-    expect(findPathPrim(compileToScene(ir, silent).scene.primitives).commands).toEqual([
+    expect(findPathPrim(compileTestResult(ir, silent).scene.primitives).commands).toEqual([
       move([15, 0]),
       ellipseArc([0, 0], 15, 10, 0, 90),
     ]);
@@ -97,7 +97,7 @@ describe('arc 椭圆弧（radius: { x, y }）', () => {
     ]);
 
     // 端点 (15,0) 与 (0,10)；bbox x∈[0,15] y∈[0,10]；padding=10 → [-10,-10,35,30]
-    expect(compileToScene(ir, { padding: 10, onWarn: () => {} }).scene.layout).toEqual({
+    expect(compileTestResult(ir, { padding: 10, onWarn: () => {} }).scene.layout).toEqual({
       x: -10,
       y: -10,
       width: 35,
@@ -126,8 +126,8 @@ describe('arc 椭圆弧（radius: { x, y }）', () => {
     ]);
 
     // 起点相同（都从 (7,0)）；命令类型不同（ellipseArc vs arc）但几何等价
-    const ellCmds = findPathPrim(compileToScene(ell, silent).scene.primitives).commands;
-    const cirCmds = findPathPrim(compileToScene(cir, silent).scene.primitives).commands;
+    const ellCmds = findPathPrim(compileTestResult(ell, silent).scene.primitives).commands;
+    const cirCmds = findPathPrim(compileTestResult(cir, silent).scene.primitives).commands;
 
     expect(ellCmds[0]).toEqual(move([7, 0]));
     expect(cirCmds[0]).toEqual(move([7, 0]));
@@ -150,7 +150,7 @@ describe('圆弧无效输入', () => {
       ],
     } as unknown as IRScene;
 
-    expect(compileToScene(ir, silent).scene.primitives.find(p => p.type === 'path')).toBeUndefined();
+    expect(compileTestResult(ir, silent).scene.primitives.find(p => p.type === 'path')).toBeUndefined();
   });
 });
 
@@ -166,7 +166,7 @@ describe('arc 圆弧回归（输出与改造前一致）', () => {
       },
     ]);
 
-    expect(findPathPrim(compileToScene(ir, silent).scene.primitives).commands).toEqual([
+    expect(findPathPrim(compileTestResult(ir, silent).scene.primitives).commands).toEqual([
       move([10, 0]),
       arc([0, 0], 10, 0, 90),
     ]);
@@ -190,7 +190,7 @@ describe('sugar 派发等价（手写 IR）', () => {
     ]);
 
     // M arcStart, arc(center), L center, Z —— 干净闭合扇形（用 close 收口）
-    expect(findPathPrim(compileToScene(ir, silent).scene.primitives).commands).toEqual([
+    expect(findPathPrim(compileTestResult(ir, silent).scene.primitives).commands).toEqual([
       move([10, 0]),
       arc([0, 0], 10, 0, 90),
       line([0, 0]),
@@ -210,7 +210,7 @@ describe('sugar 派发等价（手写 IR）', () => {
     ]);
 
     // move 步本身不发命令；arc 的 startSegment 发 M arcStart 再画弧
-    expect(findPathPrim(compileToScene(ir, silent).scene.primitives).commands).toEqual([
+    expect(findPathPrim(compileTestResult(ir, silent).scene.primitives).commands).toEqual([
       move([10, 0]),
       arc([0, 0], 10, 0, 90),
     ]);

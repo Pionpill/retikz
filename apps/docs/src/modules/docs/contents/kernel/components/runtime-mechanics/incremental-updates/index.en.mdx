@@ -1,4 +1,4 @@
-﻿---
+---
 title: Incremental updates
 description: Follow a node color change through input preparation, the Reconciler session, Weave compilation and Render commits, distinguishing full replacement from basic-element batches.
 ---
@@ -36,30 +36,47 @@ This path does not use the generic Runtime package's Source / Computation regist
       label: 'Controller and session integration',
       path: 'packages/kernel/vanilla/src/processing/internal/controller.ts',
     },
-    { label: 'Replacement and configuration updates', path: 'packages/kernel/reconciler/src/reconciler.ts' },
+    { label: 'Replacement and configuration updates', path: 'packages/kernel/reconciler/src/reconcile/reconciler.ts' },
   ]}
 />
 
 ## Compilation and reuse
 
-One-shot compilation, complete replacement, and batch updates share Reconciler’s executor for both basic elements and Composites. `incremental` defaults to `true`, retaining authored Weave nodes and actual stage products. With `false`, mount and replace run without retained caches; update and updateStrategy are rejected. Probes, instance inputs, and artifacts keep the same semantics in both modes.
+A non-incremental session uses the full traversal driver for mount and replace. Weave independently handles initial construction, complete replacement, and batch updates in incremental sessions. Initial construction computes all authored elements in a new candidate tree; updates select invalid stages. Both drivers share Core stages and output assembly. `incremental` defaults to `true`, retaining authored Weave nodes and actual stage products. With `false`, mount and replace run without retained caches, and calling update throws. The options type uses `incremental` as its discriminant: `updateStrategy` is available only in incremental mode, and TypeScript rejects invalid combinations. `@retikz/reconciler` also exports `FullSceneReconcilerOptions` and `IncrementalSceneReconcilerOptions` for declaring the options of each mode separately. Probes, instance inputs, and artifacts keep the same semantics in both modes.
 
 <ComponentPreview files="update-reuse" size="md" hideCode type="flow" />
 
-Weave retains input, context, compiled state and dependencies. `SceneReconciler.update(batch, expected)` applies a `WeaveBatch` to an existing basic-element tree. `expected` must be the current session result; stale results are rejected. Scenes containing Composites support edits to authored basic elements. Generated children cannot be addressed; use replace to change Composite author input. Empty incremental batches retain the current result.
+Each Weave node keeps committed and candidate states in current and pending, including input, stage products, dependencies, and completed local output contributions. Contributions are captured after deferred paths finish; reuse restores resources, ordering, and provenance. Scopes assemble child results without caching the complete descendant output at every level. `SceneReconciler.update(batch, expected)` applies a `WeaveBatch` to an existing basic-element tree. `expected` must be the current session result; stale results are rejected. Scenes containing Composites support edits to authored basic elements. Generated children cannot be addressed; use replace to change Composite author input. Empty batches retain the current result under the auto strategy. The full strategy forces recomputation, including for empty batches.
+
+Session results contain only the revision and compilation output. Query scope identifiers for batches with `session.getScopeId(path, expected)`: omit the path or pass `[]` for the root; `[1, 0]` selects the second root child and then the first child of that Scope. Every step must select an authored Scope. The returned string can be used as `scopeId` for `scope`, `id`, and `child` targets, or as `parentId` for insertions.
+
+Queries require a mounted, idle incremental session. `expected` defaults to the current result; an older result or one from another session is rejected. Paths refer to the currently published structure and cannot enter Composite-generated content. An identifier stays stable for the lifetime of its Scope, although inserting siblings can change the query path. Removing the Scope or replacing the complete scene invalidates its identifier. A failed transaction that rolls back successfully preserves the original identifiers.
 
 `ReconcilerLifecyclePhase` defines mount, update, and unmount. A content batch runs during the update phase; `WeaveOperationKind.Insert`, `Update`, and `Remove` identify insertion, modification, and removal. Both constants are available from `@retikz/reconciler`, and operation payloads keep their existing contracts.
 
-Batches recompute affected elements from final inputs and reuse valid products. Context follows declaration structure and invalidation follows dependencies; a Scope change can recompute its whole subtree. Name indexing and output assembly can still traverse the tree, so local compilation does not imply local total update cost. Ordinary React and Vanilla input updates do not yet use this batch entry.
+The `SceneReconciler` `trace` option reports these phases: the first successful publication reports `mount`, including a direct `replace()` that establishes the session; subsequent complete replacements, non-empty batch updates, and forced full updates report `update`. Compilation work retains the `element-compile` or `scene-compile` unit. Empty auto batches and output-target-only updates emit no compilation record. Successful cleanup of a mounted session reports `unmount` once, with `ReconcilerTraceUnit.Session` (`session`), `outcome: 'dispose'`, and counts of `visited: 1`, `reused: 0`, and `changed: 1`. Failed cleanup emits no success record; a successful retry emits it. Repeated cleanup and cleanup of a session that was never mounted emit no unmount record. Trace callback exceptions become diagnostics without affecting completed publication or cleanup.
+
+Batches enter Weave's synchronous queue through direct changes. After computation, Weave compares the actual products before notifying direct consumers. Each consumer checks the position, anchor, or boundary it reads. Changing a node's color does not recompile a path that reads only its connection geometry; changing text can also stop that dependency branch when the connection geometry stays equal. When computation is needed, Weave passes valid Core products through prepared inputs, preserving independent results such as text measurement.
+
+The internal <ApiSourceLink path="packages/kernel/reconciler/src/weave/schedule/queue.ts">`WeaveTaskQueue`</ApiSourceLink> deduplicates tasks by stable element identity and readiness phase. Execution environments come from candidate nodes and their parent Scope's preparation, without capturing them during an authored-subtree traversal. A read completes the producer's candidate stage before continuing the consumer. Nodes and Coordinates retain declaration-time name visibility, while Paths use names visible when their enclosing environment closes. Scheduling does not permit new forward references.
+
+A Scope prepares inheritance, computes its envelope and final projection from child layouts, then assembles Paths and grouped output. Composites retain their generated-subtree execution and isolated probes: generated names become ready before deferred Paths finish.
+
+Computation is separate from complete output assembly. Unrelated elements supply committed contributions without creating execution environments, checking reuse, or writing candidate state just for assembly. Clean Scopes assemble compiled results and child contributions without retaining another copy of all descendant output. Reads with multiple dependencies complete the relevant candidates first, avoiding a mix of old and new envelopes.
+
+Ordinary property updates retain address and name indexes. Insertions and removals refresh subsequent child addresses in the changed container; renaming and namespace changes maintain affected declarations and read subscriptions. Sorting, resources, diagnostics, and provenance for the complete Scene still require reading retained products, so total update cost is not necessarily local. Ordinary React and Vanilla input updates do not yet use this batch entry.
 
 <SourceLinks
   sources={[
-    { label: 'Session batches and version constraints', path: 'packages/kernel/reconciler/src/reconciler.ts' },
+    {
+      label: 'Session batches and version constraints',
+      path: 'packages/kernel/reconciler/src/reconcile/reconciler.ts',
+    },
     {
       label: 'Element scheduling and dependency invalidation',
       path: 'packages/kernel/reconciler/src/weave/manager.ts',
     },
-    { label: 'Candidate isolation and recovery', path: 'packages/kernel/reconciler/src/weave/transaction.ts' },
+    { label: 'Candidate isolation and recovery', path: 'packages/kernel/reconciler/src/weave/state/transaction.ts' },
   ]}
 />
 
@@ -75,7 +92,7 @@ React Layout subscribes to a successfully published `ProcessingResult` before co
   sources={[
     { label: 'Vanilla DOM target assembly', path: 'packages/kernel/vanilla/src/dom/retained.ts' },
     { label: 'Candidate frames, Patches and commits', path: 'packages/kernel/render/src/runtime/target.ts' },
-    { label: 'Scene snapshots and identities', path: 'packages/kernel/reconciler/src/scene/snapshot.ts' },
+    { label: 'Scene snapshots and identities', path: 'packages/kernel/render/src/scene/snapshot.ts' },
     { label: 'React displays processing results', path: 'packages/kernel/react/src/render/processing-result.tsx' },
   ]}
 />
@@ -92,7 +109,7 @@ Warning callbacks, tracing and commit-token cleanup failures after publication a
 
 <SourceLinks
   sources={[
-    { label: 'Publication, rollback and broken state', path: 'packages/kernel/reconciler/src/reconciler.ts' },
+    { label: 'Publication, rollback and broken state', path: 'packages/kernel/reconciler/src/reconcile/reconciler.ts' },
     { label: 'Host state recovery', path: 'packages/kernel/render/src/runtime/target.ts' },
     { label: 'React retains successful results', path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx' },
   ]}
@@ -104,7 +121,7 @@ This diagram locates an ordinary Vanilla DOM input replacement. Member names are
 
 <ComponentPreview files="update-implementation" size="lg" hideCode type="flow" />
 
-Start at `prepareProcessingInput` and the controller, then follow `SceneReconciler.replace` through the shared executor and optional Weave cache. `publish` prepares and commits the target; the Render target materializes candidate output as a host frame. The session then publishes its result and the controller notifies subscribers.
+Start at `prepareProcessingInput` and the controller, then follow mode dispatch in `SceneReconciler.replace`: non-incremental sessions use full traversal, while incremental sessions create a new Weave tree and call `executeWeaveMount`. `publish` prepares and commits the target; the Render target materializes candidate output as a host frame. The session then publishes its result and the controller notifies subscribers.
 
 ## Further reading
 

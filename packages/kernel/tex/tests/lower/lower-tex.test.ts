@@ -1,9 +1,9 @@
 import type { IRScene } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import type { MathJaxSvgEngine } from '../../src';
 import { createLowerTex, createMathJaxEngine } from '../../src';
+import { compileTestResult } from '../helpers/compilation';
 
 const MATHJAX_INTEGRATION_TIMEOUT = 15_000;
 
@@ -107,7 +107,7 @@ describe('[低特克斯] MathJax 集成', () => {
   );
 
   it(
-    '通过 compileToScene 端到端工作',
+    '通过 SceneReconciler 端到端工作',
     async () => {
       const lowerTex = createLowerTex(await createMathJaxEngine());
       const ir: IRScene = {
@@ -115,7 +115,7 @@ describe('[低特克斯] MathJax 集成', () => {
         type: 'scene',
         children: [{ type: 'node', id: 'eq', position: [0, 0], text: '$$\\frac{a}{b}$$' }],
       };
-      const scene = compileToScene(ir, { lowerTex }).scene;
+      const scene = compileTestResult(ir, { lowerTex }).scene;
 
       expect(JSON.stringify(scene.primitives)).toContain('"fillRule":"evenodd"');
     },

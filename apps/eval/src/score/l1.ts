@@ -1,6 +1,6 @@
 import type { Scene } from '@retikz/core';
 import { SceneSchema } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
+import { SceneReconciler } from '@retikz/reconciler';
 
 /** L1 打分结果：两层（zod / compile）布尔 + 首个失败的归因；compile 通过时带出 scene 供 L2 复用 */
 export type L1Result = {
@@ -13,7 +13,7 @@ export type L1Result = {
 /**
  * L1 结构有效性打分：
  *  1) 过 SceneSchema（zod safeParse）
- *  2) 过 compileToScene（默认回落 fallbackMeasurer，node 端无需 DOM）
+ *  2) 通过非增量 SceneReconciler 编译（默认回落 fallbackMeasurer，node 端无需 DOM）
  * 任一失败即记 stage + reason，后续层不再尝试；通过则带出编译好的 scene。
  */
 export const scoreL1 = (candidate: unknown): L1Result => {
@@ -27,7 +27,14 @@ export const scoreL1 = (candidate: unknown): L1Result => {
   }
 
   try {
-    const scene = compileToScene(parsed.data).scene;
+    const scene = (() => {
+      const reconciler = new SceneReconciler({}, { incremental: false });
+      try {
+        return reconciler.mount(parsed.data).compilation.result;
+      } finally {
+        reconciler.dispose();
+      }
+    })().scene;
     return { zodOk: true, compileOk: true, scene };
   } catch (err) {
     return {

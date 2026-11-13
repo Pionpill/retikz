@@ -1,11 +1,12 @@
-// @vitest-environment jsdom
 import type { IRScene } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import type { HydrationContext } from '@retikz/render/hydration';
 import { describe, expect, it, vi } from 'vitest';
 
 import { renderToSvgString } from '../../src';
 import { hydrate, mountSvg } from '../../src/dom';
+
+// @vitest-environment jsdom
+import { compileTestResult } from '../helpers/compilation';
 
 /*
  * @retikz/vanilla hydrate（SVG 水合，jsdom 环境）
@@ -140,7 +141,7 @@ describe('@retikz/vanilla hydrate（SVG 水合）', () => {
           },
         },
       },
-      scene: compileToScene(metaIr).scene,
+      scene: compileTestResult(metaIr).scene,
     });
     findById(richRoot, 'a')!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
 

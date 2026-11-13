@@ -2,8 +2,8 @@ import type { IRPath, IRScene, MarkEmitContext, ScenePrimitive } from '@retikz/c
 import { BuiltinCompileWarningCode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { compileToScene, compileSceneSnapshot } from '../../src/compile';
 import { readWeaveCurrent, WeaveManager } from '../../src/weave';
+import { compileTestResult, compileTestSnapshot } from '../helpers/compilation';
 
 const scene: IRScene = {
   type: 'scene',
@@ -57,7 +57,10 @@ describe('Weave 批次更新', () => {
         },
       ],
     });
-    const expected = compileToScene({ ...input, children: [{ type: 'scope', defaults, children: [child] }] }, options);
+    const expected = compileTestResult(
+      { ...input, children: [{ type: 'scope', defaults, children: [child] }] },
+      options,
+    );
     expect(prepared.compilation.result).toEqual(expected);
     expect(prepared.compilation.result).not.toEqual(mounted.compilation.result);
     prepared.rollback();
@@ -72,7 +75,7 @@ describe('Weave 批次更新', () => {
     const session = new WeaveManager(input);
     const mounted = session.mount();
     const before = mounted.compilation.diagnostics;
-    expect(before).toEqual(compileSceneSnapshot(input).diagnostics);
+    expect(before).toEqual(compileTestSnapshot(input).diagnostics);
     expect(before.filter(warning => warning.code === BuiltinCompileWarningCode.DuplicateNodeId)).toHaveLength(1);
     expect(before[0].path).toEqual(['children', 2, 'id']);
     const remove = () =>
@@ -81,7 +84,7 @@ describe('Weave 批次更新', () => {
       });
     const first = remove();
     expect(first.compilation.diagnostics).toEqual(
-      compileSceneSnapshot({ ...input, children: input.children.slice(1) }).diagnostics,
+      compileTestSnapshot({ ...input, children: input.children.slice(1) }).diagnostics,
     );
     expect(first.compilation.diagnostics[0].path).toEqual(['children', 1, 'id']);
     first.commit();
@@ -119,7 +122,7 @@ describe('Weave 批次更新', () => {
     expect(initial.scopeId).toBe(initialId);
     expect(new WeaveManager(input).mount().root.scopeId).not.toBe(root.scopeId);
     expect(second.compilation.result).toEqual(
-      compileToScene({ ...input, children: [{ type: 'scope', children: [] }, ...input.children] }),
+      compileTestResult({ ...input, children: [{ type: 'scope', children: [] }, ...input.children] }),
     );
   });
 
@@ -149,7 +152,7 @@ describe('Weave 批次更新', () => {
     const prepared = session.update({
       operations: [{ kind: 'remove', target: { kind: 'scope', scopeId: scope.scopeId } }],
     });
-    expect(prepared.compilation.result).toEqual(compileToScene({ ...input, children: [input.children[1]] }));
+    expect(prepared.compilation.result).toEqual(compileTestResult({ ...input, children: [input.children[1]] }));
     prepared.commit();
     expect(readWeaveCurrent(root).scopeIds.has(scope.scopeId)).toBe(false);
     expect(readWeaveCurrent(scope)).toBe(originalScope);
@@ -177,7 +180,7 @@ describe('Weave 批次更新', () => {
     });
     prepared.commit();
     prepared.finish();
-    expect(prepared.compilation.result).toEqual(compileToScene(scene));
+    expect(prepared.compilation.result).toEqual(compileTestResult(scene));
     expect(readWeaveCurrent(root).scopeIds.size).toBe(1);
     expect(() =>
       session.update({ operations: [{ kind: 'insert', parentId: root.scopeId, index: -1, elements: [] }] }),
@@ -221,7 +224,7 @@ describe('Weave 批次更新', () => {
       ],
     });
     expect(prepared.compilation.result).toEqual(
-      compileToScene({
+      compileTestResult({
         ...input,
         children: [
           input.children[0],
@@ -263,7 +266,7 @@ describe('Weave 批次更新', () => {
       ],
     });
     expect(prepared.compilation.result).toEqual(
-      compileToScene({
+      compileTestResult({
         ...input,
         children: [
           edge,
@@ -327,7 +330,7 @@ describe('Weave 批次更新', () => {
     second.commit();
     second.finish();
     expect(second.compilation.result).toEqual(
-      compileToScene({ ...scene, children: [{ type: 'node', id: 'a', text: 'two' }, ...scene.children.slice(1)] }),
+      compileTestResult({ ...scene, children: [{ type: 'node', id: 'a', text: 'two' }, ...scene.children.slice(1)] }),
     );
   });
   it('依赖消费者使用最终输入，独立分支复用，提交前保留旧树和输出', () => {
@@ -344,7 +347,7 @@ describe('Weave 批次更新', () => {
     });
     expect(readWeaveCurrent(a)).toBe(oldState);
     expect(prepared.compilation.result).toEqual(
-      compileToScene({ ...scene, children: [own, ...scene.children.slice(1)] }),
+      compileTestResult({ ...scene, children: [own, ...scene.children.slice(1)] }),
     );
     prepared.commit();
     expect(readWeaveCurrent(root).children[0]).toBe(a);
@@ -371,7 +374,7 @@ describe('Weave 批次更新', () => {
       ],
     });
     expect(prepared.compilation.result).toEqual(
-      compileToScene({
+      compileTestResult({
         ...scene,
         children: [{ type: 'node', id: 'new', text: 'final' }, scene.children[0], scene.children[1], scene.children[3]],
       }),
@@ -413,7 +416,7 @@ describe('Weave 批次更新', () => {
       ],
     });
     expect(prepared.compilation.result).toEqual(
-      compileToScene({
+      compileTestResult({
         type: 'scene',
         version: 1,
         children: [
@@ -445,7 +448,7 @@ describe('Weave 批次更新', () => {
       ],
     });
     expect(prepared.compilation.result).toEqual(
-      compileToScene({ ...scene, children: [replacement, ...scene.children.slice(1)] }),
+      compileTestResult({ ...scene, children: [replacement, ...scene.children.slice(1)] }),
     );
     prepared.commit();
     prepared.finish();
@@ -486,7 +489,7 @@ it('宿主装饰默认更新与完整编译一致，并保留提交前结果', (
   const updated = session.update({
     operations: [{ kind: 'update', target: { kind: 'scope', scopeId: scope.scopeId }, input: properties }],
   });
-  expect(updated.compilation.result).toEqual(compileToScene({ ...input, children: [{ ...properties, children }] }));
+  expect(updated.compilation.result).toEqual(compileTestResult({ ...input, children: [{ ...properties, children }] }));
   expect(mounted.compilation.result).toEqual(before);
   updated.commit();
 });
@@ -529,7 +532,7 @@ it('普通标记参数和路径更新与完整编译保持一致', () => {
   const update = session.update({
     operations: [{ kind: 'update', target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'host' }, input: path }],
   });
-  expect(update.compilation.result).toEqual(compileToScene({ ...input, children: [path] }, options));
+  expect(update.compilation.result).toEqual(compileTestResult({ ...input, children: [path] }, options));
   expect(mounted.compilation.result).toEqual(before);
   update.commit();
 });

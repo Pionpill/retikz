@@ -11,6 +11,17 @@ type MathBudgetPolicy = {
 // 固定规模算法没有独立单次预算时仅报告，不沿用调用方批量预算
 const policies: Partial<Record<string, MathBudgetPolicy>> = {};
 
+policies['curveMetrics.prepare'] = {
+  limits: () => [0.05, 0.2],
+  rationale:
+    'Core 路径逐段准备累计度量；假设首次计算约100段，准备分配5/20ms，单段黄/红为0.05/0.2ms。固定控制点与默认精度，不代表已验证业务上限',
+};
+policies['curveMetrics.parameterAt'] = {
+  limits: () => [0.01, 0.05],
+  rationale:
+    'Core 装饰沿曲线动画复用度量反解位置；假设每帧100次查询，为查询保留1/5ms，单次黄/红为0.01/0.05ms；不包含准备与调用方调度，短操作受计时噪声影响',
+};
+
 policies['curve.catmullRomToCubic'] = {
   limits: count => (count <= 1_000 ? [4, 16.6] : count <= 10_000 ? [16.6, 50] : [50, 200]),
   rationale:

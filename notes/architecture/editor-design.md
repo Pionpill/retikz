@@ -1,5 +1,7 @@
 # Editor 编辑运行时架构设计
 
+> **运行时前提更新：独立 Runtime 已退出当前包边界。** 本文涉及的跨 owner 原子事务仍需另行设计；Reconciler 的编译与单目标提交不能直接替代这些领域事务。下文 Runtime 指旧候选方案，不构成当前依赖或公开能力。
+
 > **状态：架构草案，`@retikz/editor` 名称与领域 sibling adapter 方向已确认，当前尚未实现。** 本文定义 `@retikz/editor`、Kernel Interaction、领域主包、领域 editor adapter 与宿主 UI 的长期边界。具体公开 API、包发布组、版本路线和首个实现范围仍需由 roadmap / ADR 确认。
 >
 > 关联：[`能力完备性与模块边界`](./capability-design.md) · [`交互与增量运行时设计`](./interaction-design.md) · [`性能与增量运行时设计`](./performance-design.md) · [`跨域空间贴附与复用设计`](./attached-space-composition.md) · [`Schematic 制图能力域设计`](./schematic-design.md) · [`包拓扑`](./package-topology.md)

@@ -1,12 +1,12 @@
 import type { ClipDefinition } from '@retikz/core';
 import { defineClip } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject } from 'zod';
 
 import type { InputEmbedAdapter, InputScene } from '../../src';
-import { createProcessingController, normalizeScene, processToStaticInputResult } from '../../src';
+import { createProcessingController, normalizeScene, compileToScene } from '../../src';
 import { prepareProcessingInput } from '../../src/processing/prepare';
+import { compileTestResult } from '../helpers/compilation';
 
 const customClip = (): ClipDefinition =>
   defineClip({
@@ -39,8 +39,8 @@ const input: InputScene = {
 describe('Vanilla 裁剪处理等价性', () => {
   it('通过 InputScene 静态和保留处理保留完整裁剪', () => {
     const compile = { clips: [customClip()] };
-    const direct = compileToScene(normalizeScene(input).ir, compile).scene;
-    const staticResult = processToStaticInputResult(input, { compile });
+    const direct = compileTestResult(normalizeScene(input).ir, compile).scene;
+    const staticResult = compileToScene(input, { compile });
     const retained = createProcessingController(input, { compile });
 
     expect(staticResult.scene).toEqual(direct);

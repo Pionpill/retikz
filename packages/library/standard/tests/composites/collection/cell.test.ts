@@ -1,6 +1,5 @@
 import type { IRChild } from '@retikz/core';
 import { pathClipDefinition } from '@retikz/extension';
-import { compileToScene } from '@retikz/reconciler';
 import { expect, it } from 'vitest';
 
 import {
@@ -12,6 +11,7 @@ import {
 } from '../../../src/collection';
 import { createDataCell } from '../../../src/collection/_cell/data';
 import { resolveCell } from '../../../src/collection/_cell/resolve';
+import { compileTestResult } from '../../helpers/compilation';
 import { compileMeasured } from '../../helpers/compile-measured';
 import { sceneNodeBounds } from '../../helpers/scene-geometry';
 
@@ -75,7 +75,7 @@ it('JSON 展开与手动嵌套采用同一默认值，未展开数据仍作为�
 
 it('嵌套集合的外层 Cell 保留身份，默认尺寸与子集合一致，显式 padding 扩大外层', () => {
   const compile = (content: IRChild, padding?: number) =>
-    compileToScene(
+    compileTestResult(
       {
         type: 'scene',
         version: 1,

@@ -1,8 +1,8 @@
 import { resolveCoreProviderDependencies } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import * as Graph from '../../src';
+import { compileTestResult } from '../helpers/compilation';
 
 describe('Graph 提供者关闭', () => {
   it('安装完整的 Graph 系列以及 Group 和 Block 组合依赖项', () => {
@@ -80,7 +80,7 @@ describe('Graph 提供者关闭', () => {
     ];
 
     expect(() =>
-      compileToScene(
+      compileTestResult(
         {
           type: 'scene',
           version: 1,
@@ -90,7 +90,7 @@ describe('Graph 提供者关闭', () => {
       ),
     ).not.toThrow();
     expect(() =>
-      compileToScene({ type: 'scene', version: 1, children: semanticChildren }, { ...definitions, padding: 0 }),
+      compileTestResult({ type: 'scene', version: 1, children: semanticChildren }, { ...definitions, padding: 0 }),
     ).not.toThrow();
   });
 });

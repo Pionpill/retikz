@@ -38,7 +38,7 @@ describe('布局实用程序', () => {
       ?.modules.find(item => item.value === 'compilation-mechanisms');
     expect(link?.linkTo).toBe('/kernel/packages/core');
     expect(link?.Icon).toBeDefined();
-    expect(link?.children).toHaveLength(7);
+    expect(link?.children).toHaveLength(10);
     expect(link?.children?.every(item => item.linkTo?.startsWith('/kernel/packages/core/') && item.Icon)).toBe(true);
     const paths = flattenLeaves('kernel', kernelSection).map(item => item.path);
     expect(paths.some(path => path.includes('/compilation-mechanisms'))).toBe(false);
@@ -177,6 +177,8 @@ describe('布局实用程序', () => {
       '/viz/chart/points/connected-scatter',
       '/viz/chart/points/ranged-dot',
       '/viz/chart/points/strip',
+      '/viz/chart/lines/line',
+      '/viz/chart/lines/slope',
       '/viz/chart/model/general-structure',
       '/viz/chart/model/core-structure',
     ]);

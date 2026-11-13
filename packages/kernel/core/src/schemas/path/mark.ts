@@ -9,7 +9,9 @@ import type { ValueOf } from '@retikz/foundation';
 import { strictObject, literal, union, number } from 'zod';
 import type { infer as ZodInfer } from 'zod';
 
-import { GraphicStrokeSchema, ContextualColorSchema, PaintValueSchema, OpacitySchema } from '../style/graphic';
+import { OpacitySchema } from '../style/color';
+import { GraphicStrokeSchema, ContextualColorSchema, PaintValueSchema } from '../style/graphic';
+import { PathPositionGeometrySchema, PathPositionModeSchema } from './position';
 
 /** 内置普通标记形状名称 */
 export const BuiltinMarkShape = {
@@ -52,8 +54,14 @@ export const MarkStyleSchema = strictObject({
 
 /** 沿路径放置的标记 */
 export const PathMarkPlacementSchema = MarkStyleSchema.extend({
+  positionMode: PathPositionModeSchema.default('length')
+    .optional()
+    .describe('Normalized position interpretation. Defaults to length.'),
+  positionGeometry: PathPositionGeometrySchema.optional().describe(
+    'Geometry before or after corner rounding. Defaults to original for step and rounded for length.',
+  ),
   pos: NormalizedFractionSchema.describe(
-    'Normalized arc-length position along the path before arrow shortening and label interruption.',
+    'Normalized position along the path before arrow shortening and label interruption, interpreted using positionMode and positionGeometry.',
   ),
   rotate: union([literal('auto'), number()])
     .optional()
@@ -62,5 +70,5 @@ export const PathMarkPlacementSchema = MarkStyleSchema.extend({
 
 /** 标记的形状、尺寸与视觉样式配置 */
 export type IRMarkStyle = ZodInfer<typeof MarkStyleSchema>;
-/** 沿路径放置的标记，包含弧长位置、朝向与视觉样式 */
+/** 沿路径放置的标记，包含比例位置、朝向与视觉样式 */
 export type IRPathMark = ZodInfer<typeof PathMarkPlacementSchema>;

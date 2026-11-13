@@ -103,7 +103,7 @@ A scale of `0` can flatten a drawing, but then a canvas position cannot be conve
     },
     {
       label: 'Apply final transforms to deferred results',
-      path: 'packages/kernel/reconciler/src/compile/tree/scope/visit.ts',
+      path: 'packages/kernel/reconciler/src/compile/execution/scope/visit.ts',
     },
   ]}
 />
@@ -131,19 +131,19 @@ Replacing a lookup entry does not delete the earlier element's drawing output. A
   sources={[
     {
       label: 'Push and pop namespace frames',
-      path: 'packages/kernel/reconciler/src/compile/runtime/namespace.ts',
+      path: 'packages/kernel/reconciler/src/compile/runtime/state/namespace.ts',
     },
     {
       label: 'Register and diagnose same-frame repositions',
-      path: 'packages/kernel/reconciler/src/compile/runtime/namespace.ts',
+      path: 'packages/kernel/reconciler/src/compile/runtime/state/namespace.ts',
     },
     {
       label: 'Return immediately on a match',
-      path: 'packages/kernel/reconciler/src/compile/runtime/namespace.ts',
+      path: 'packages/kernel/reconciler/src/compile/runtime/state/namespace.ts',
     },
     {
       label: 'Register the group id before entering its local frame',
-      path: 'packages/kernel/reconciler/src/compile/tree/scope/visit.ts',
+      path: 'packages/kernel/reconciler/src/compile/execution/scope/visit.ts',
     },
   ]}
 />
@@ -173,15 +173,15 @@ Once the children finish, `replaceCompiled` updates the placeholder to a resolve
     },
     {
       label: 'Reserve a placeholder in the parent frame',
-      path: 'packages/kernel/reconciler/src/compile/tree/scope/visit.ts',
+      path: 'packages/kernel/reconciler/src/compile/execution/scope/visit.ts',
     },
     {
       label: 'Publish the final envelope or pass child layouts upward',
-      path: 'packages/kernel/reconciler/src/compile/tree/scope/visit.ts',
+      path: 'packages/kernel/reconciler/src/compile/execution/scope/visit.ts',
     },
     {
       label: 'Update in place and check placeholder identity',
-      path: 'packages/kernel/reconciler/src/compile/runtime/namespace.ts',
+      path: 'packages/kernel/reconciler/src/compile/runtime/state/namespace.ts',
     },
   ]}
 />
@@ -200,7 +200,7 @@ Built-in and custom definitions enter the same resolution path. The resulting pa
 
 Built-in and custom clips both use Clip Definition's `lower`. The resource table deduplicates the resulting paths, and the returned id becomes `GroupPrimitive.clipRef`.
 
-**Core describes where to clip; Render performs the clipping.** Core stores the clipping path in `Scene.resources` and links it to the group through `clipRef`. It does not cut up or delete geometry outside the boundary in advance.
+**Core describes where to clip; Render performs the clipping.** Core stores the clipping path in `Scene.resources.clips` and links it to the group through `clipRef`. It does not cut up or delete geometry outside the boundary in advance.
 
 - **SVG Render**: generates a `<clipPath>` and applies it through the group's `clip-path` attribute. SVG uses that region to determine which content is visible.
 - **Canvas Render**: saves the drawing state, applies the group transforms, calls `ctx.clip()`, draws the children, and restores the state so later drawing is unaffected.

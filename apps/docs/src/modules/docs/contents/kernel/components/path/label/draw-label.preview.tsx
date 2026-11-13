@@ -5,6 +5,8 @@ const wayOf = (values: DrawLabelPreviewValues): WayDSL => {
   const label = {
     text: `t = ${values.position.toFixed(2)}\npath label`,
     position: values.position,
+    positionMode: values.positionMode,
+    positionGeometry: values.positionGeometry === 'default' ? undefined : values.positionGeometry,
     side: values.side,
     sloped: values.sloped,
     textColor: values.textColor,
@@ -12,6 +14,7 @@ const wayOf = (values: DrawLabelPreviewValues): WayDSL => {
     lineHeight: values.lineHeight,
     maxTextWidth: values.maxTextWidth,
   } as const;
+  if (values.segmentKind === 'corner') return ['A', { label }, [360, -60], 'B'];
   if (values.segmentKind === 'line') return ['A', { label }, 'B'];
   if (values.segmentKind === 'curve') return ['A', { label }, { curve: [180, -110] }, 'B'];
 
@@ -20,8 +23,11 @@ const wayOf = (values: DrawLabelPreviewValues): WayDSL => {
 
 /** 图形参数 */
 export type DrawLabelPreviewValues = {
-  segmentKind: 'line' | '-|' | '|-' | 'curve';
+  segmentKind: 'line' | '-|' | '|-' | 'curve' | 'corner';
   position: number;
+  positionMode: 'step' | 'length';
+  positionGeometry: 'default' | 'original' | 'rounded';
+  cornerRadius: number;
   side: 'top' | 'bottom' | 'left' | 'right' | 'center';
   sloped: boolean;
   textColor: string;
@@ -43,7 +49,7 @@ export const DrawLabelPreview = (values: DrawLabelPreviewValues) => {
       <Node id="B" position={[360, 60]} style={{ stroke: 'gray', dashed: true }}>
         b
       </Node>
-      <Draw way={wayOf(values)} arrow="->" />
+      <Draw cornerRadius={values.cornerRadius} way={wayOf(values)} arrow="->" />
     </Layout>
   );
 };

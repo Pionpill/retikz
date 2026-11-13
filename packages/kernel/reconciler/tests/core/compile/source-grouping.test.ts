@@ -4,13 +4,13 @@ import { SceneSchema } from '../../../../core/src';
 import { resolveScopeDefaults } from '../../../../core/src/resolve/style/defaults';
 import { mergeNodeStyle } from '../../../../core/src/resolve/style/node';
 import { NodeSchema, ScopeSchema } from '../../../../core/src/schemas';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 
 describe('分组 Source 解析与编译', () => {
   it('诊断区分样式路径与标签路径', () => {
     const node = { type: 'node', position: [0, 0], style: { color: 'var(--color)', fill: 0.5 } };
 
-    expect(() => compileToScene(SceneSchema.parse({ version: 1, type: 'scene', children: [node] }))).toThrow(
+    expect(() => compileTestResult(SceneSchema.parse({ version: 1, type: 'scene', children: [node] }))).toThrow(
       /children\[0\].*style\.fill/,
     );
 
@@ -21,7 +21,7 @@ describe('分组 Source 解析与编译', () => {
       label: { text: 'label', textColor: 0.5 },
     };
 
-    expect(() => compileToScene(SceneSchema.parse({ version: 1, type: 'scene', children: [labeled] }))).toThrow(
+    expect(() => compileTestResult(SceneSchema.parse({ version: 1, type: 'scene', children: [labeled] }))).toThrow(
       /children\[0\].*label\.textColor/,
     );
   });
@@ -73,9 +73,9 @@ describe('分组 Source 解析与编译', () => {
         },
       ],
     });
-    const output = compileToScene(source).scene;
+    const output = compileTestResult(source).scene;
 
-    expect(compileToScene(SceneSchema.parse(JSON.parse(JSON.stringify(source)))).scene).toEqual(output);
+    expect(compileTestResult(SceneSchema.parse(JSON.parse(JSON.stringify(source)))).scene).toEqual(output);
 
     const frame = resolveScopeDefaults(
       ScopeSchema.parse({ type: 'scope', children: [], defaults: { style: { fill: 'red' } } }).defaults,

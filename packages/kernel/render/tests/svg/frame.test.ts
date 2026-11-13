@@ -11,19 +11,22 @@ const primary: Scene = {
 
 const layerScene = (color: string): Scene => ({
   layout: { x: -100, y: -100, width: 500, height: 500 },
-  resources: [
-    {
-      kind: 'paint',
-      id: 'shared',
-      spec: {
-        kind: 'linearGradient',
-        stops: [
-          { offset: 0, color },
-          { offset: 1, color: '#ffffff' },
-        ],
+  resources: {
+    paints: [
+      {
+        kind: 'paint',
+        id: 'shared',
+        spec: {
+          kind: 'linearGradient',
+          stops: [
+            { offset: 0, color },
+            { offset: 1, color: '#ffffff' },
+          ],
+        },
       },
-    },
-  ],
+    ],
+    clips: [],
+  },
   primitives: [{ type: 'rect', x: 0, y: 0, width: 30, height: 20, fill: { kind: 'resourceRef', id: 'shared' } }],
 });
 

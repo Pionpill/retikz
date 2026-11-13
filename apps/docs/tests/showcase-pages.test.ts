@@ -244,18 +244,18 @@ describe('collectShowcasePages', () => {
       '@retikz/chart/point',
       '@retikz/chart-react/point',
       '@retikz/chart-vanilla/point',
-      '`RegressionChart`',
-      '`RegressionEncodings`',
-      '`RegressionProperties`',
-      '`RegressionMark`',
-      '`regressionChart`',
-      '`SmoothTransformSchema`',
+      'RegressionChart',
+      'RegressionEncodings',
+      'RegressionProperties',
+      'RegressionMark',
+      'regressionChart',
+      'SmoothTransformSchema',
     ]) {
       expect(source, publicName).toContain(publicName);
     }
 
     for (const method of ['linear', 'quadratic', 'polynomial', 'logarithmic', 'exponential', 'power']) {
-      expect(source, method).toContain(`\`${method}\``);
+      expect(source, method).toContain(method);
     }
 
     expect(source).toContain('/viz/plot/transform');
@@ -269,7 +269,7 @@ describe('collectShowcasePages', () => {
     expect(compiled).toContain('h2');
   });
 
-  it.each(['zh', 'en'] as const)('Scatter %s 提供类型示例，总纲承载公共原理图', lang => {
+  it.each(['zh', 'en'] as const)('Scatter %s 提供类型示例，总纲链接 PointMark 公共留白', lang => {
     const source = readFileSync(scatterContentPath(lang), 'utf8');
     const previews = [...source.matchAll(/<ComponentPreview[\s\S]*?\/>/g)].map(match => match[0]);
 
@@ -290,10 +290,14 @@ describe('collectShowcasePages', () => {
       resolve(process.cwd(), `src/modules/docs/contents/viz/chart/points/index.${lang}.mdx`),
       'utf8',
     );
+    const pointSource = readFileSync(pointContentPath(lang), 'utf8');
 
+    expect(groupSource).toContain(`/viz/plot/mark/point#${lang === 'zh' ? '边缘留白' : 'edge-padding'}`);
     for (const name of ['point-padding-figure', 'point-auto-padding']) {
-      expect(groupSource).toContain(`files="${name}"`);
-      expect(existsSync(resolve(process.cwd(), `src/modules/docs/contents/viz/chart/points/${name}.tsx`))).toBe(true);
+      expect(pointSource).toContain(name);
+      expect(existsSync(resolve(process.cwd(), `src/modules/docs/contents/viz/plot/mark/point/${name}.tsx`))).toBe(
+        true,
+      );
     }
 
     expect(previews[0]).not.toContain('controls=');
@@ -303,15 +307,14 @@ describe('collectShowcasePages', () => {
 
     expect(headings).toEqual(
       lang === 'zh'
-        ? ['接入方式', '基础用法', '扩展用法', '错误与限制', '实现原理', 'API 参考', 'Schema 参考', '延伸阅读']
+        ? ['接入方式', '基础用法', '扩展用法', '错误与限制', '实现原理', 'API 参考', '延伸阅读']
         : [
             'Using this topic',
             'Basic usage',
             'Extended usage',
             'Errors and limitations',
             'Implementation',
-            'API reference',
-            'Schema reference',
+            'API Reference',
             'Further reading',
           ],
     );
@@ -506,7 +509,7 @@ describe('collectShowcasePages', () => {
   });
 
   it.each([
-    ['zh', /负数.+报错/u],
+    ['zh', /负(?:数|尺寸).+报错/u],
     ['en', /negative.+error/iu],
   ] as const)('%s 点图文档覆盖负数错误与 descriptor 来源', (lang, negativePattern) => {
     const point = readFileSync(pointContentPath(lang), 'utf8');

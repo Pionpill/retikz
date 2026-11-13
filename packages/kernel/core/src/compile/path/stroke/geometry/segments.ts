@@ -13,10 +13,7 @@ type StrokeSegmentStep = Extract<
 >;
 
 /** 普通 segment step 降级所需的共享上下文 */
-type SegmentStepLoweringContext = Pick<
-  StrokeLoweringContext,
-  'targetView' | 'scopeChain' | 'commandEmitter' | 'sampling'
-> & {
+type SegmentStepLoweringContext = Pick<StrokeLoweringContext, 'targetView' | 'scopeChain' | 'commandEmitter'> & {
   /** 最近一个有效目标 step */
   previous: StrokePreviousTarget;
   /** 当前 step 预解析后的目标 anchor */
@@ -39,7 +36,7 @@ export const isStrokeSegmentStep = (canon: CanonicalPathStep): canon is StrokeSe
  * @returns `false` 表示 target clipping 失败，调用方应跳过整个 path
  */
 export const lowerSegmentStep = (step: StrokeSegmentStep, context: SegmentStepLoweringContext): boolean => {
-  const { targetView, scopeChain, previous, currentAnchor, penOverride, commandEmitter, sampling } = context;
+  const { targetView, scopeChain, previous, currentAnchor, penOverride, commandEmitter } = context;
   const targetContext = { targetView, scopeChain };
 
   if (step.kind === 'line') {
@@ -49,7 +46,6 @@ export const lowerSegmentStep = (step: StrokeSegmentStep, context: SegmentStepLo
 
     commandEmitter.startSegment(fromClip, penOverride === null && isAutoBoundaryTarget(previous.step.to));
     commandEmitter.emitLine(toClip, isAutoBoundaryTarget(step.to));
-    sampling.collect({ kind: 'line', from: fromClip, to: toClip });
 
     return true;
   }
@@ -60,7 +56,6 @@ export const lowerSegmentStep = (step: StrokeSegmentStep, context: SegmentStepLo
 
     commandEmitter.startSegment(fromClip, penOverride === null && isAutoBoundaryTarget(previous.step.to));
     commandEmitter.emitLine(currentAnchor);
-    sampling.collect({ kind: 'line', from: fromClip, to: currentAnchor });
 
     return true;
   }
@@ -72,7 +67,6 @@ export const lowerSegmentStep = (step: StrokeSegmentStep, context: SegmentStepLo
 
     commandEmitter.startSegment(fromClip, penOverride === null && isAutoBoundaryTarget(previous.step.to));
     commandEmitter.emitQuad(step.control, toClip, isAutoBoundaryTarget(step.to));
-    sampling.collect({ kind: 'quadraticBezier', from: fromClip, control: step.control, to: toClip });
 
     return true;
   }
@@ -88,13 +82,6 @@ export const lowerSegmentStep = (step: StrokeSegmentStep, context: SegmentStepLo
       control2: step.control2,
       to: toClip,
       sourceAutoBoundary: isAutoBoundaryTarget(step.to),
-    });
-    sampling.collect({
-      kind: 'cubicBezier',
-      from: fromClip,
-      control1: step.control1,
-      control2: step.control2,
-      to: toClip,
     });
 
     return true;
@@ -123,7 +110,6 @@ export const lowerSegmentStep = (step: StrokeSegmentStep, context: SegmentStepLo
       to: toClip,
       sourceAutoBoundary: isAutoBoundaryTarget(step.to),
     });
-    sampling.collect({ kind: 'cubicBezier', from: fromClip, control1, control2, to: toClip });
 
     return true;
   }
@@ -158,7 +144,6 @@ export const lowerSegmentStep = (step: StrokeSegmentStep, context: SegmentStepLo
   for (let index = 1; index < points.length; index += 1) {
     commandEmitter.emitLine(points[index], index === points.length - 1 && targetAutoBoundary);
   }
-  sampling.collect({ kind: 'fold', points }, points.length - 1);
 
   return true;
 };

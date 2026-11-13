@@ -25,6 +25,7 @@ for (const entry of cases) {
         dimensions: [`Shape ${operation}`, entry.name, params.sides === 1024 ? `${label}（极限规模，仅报告）` : label],
       },
       () => ({ run, verify }),
+      params.sides === 1024,
     );
 
   register(

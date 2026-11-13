@@ -68,6 +68,7 @@ Alpha 按 reviewed `PLAN.md` 的文件 scope 使用 [alpha](../flow-development/
 
 ## 按需执行
 
+- 性能目标按 [test-performance](../test-performance/SKILL.md) 执行已授权的测量与优化闭环；功能正确性、消费预算与相对收益分别举证，未测量时不宣称提速。
 - 仅供失败、回退或缓存未命中分支使用的错误对象、诊断序列化和昂贵计算，放进对应分支；函数实参会提前求值，`assert(valid, makeError())` 不会延迟创建错误。只有被调契约支持时才传 factory；React 昂贵初始状态使用惰性 initializer。
 - 调整执行顺序必须保留必要校验、异常语义、副作用顺序和资源 / 事务所有权；缓存键与输入快照是否可跳过须先核实失效契约，不机械包装所有函数或引入缓存。
 

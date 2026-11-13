@@ -1,7 +1,7 @@
 import { categoricalColorAt, DEFAULT_RESOLVED_THEME } from '@retikz/core';
 import { AFFINE_IDENTITY } from '@retikz/math';
+import { SceneReconciler } from '@retikz/reconciler';
 import type { CompileResult } from '@retikz/reconciler';
-import { compileToScene } from '@retikz/reconciler';
 
 import type { InspectorOutput } from '../contract';
 import { RetikzInspectError, RetikzInspectErrorCode } from '../error';
@@ -62,13 +62,21 @@ export const compileInspectionToScene = (
             'Artifact fragments must use scene coordinates',
           );
         }
-        const result = compileToScene(
-          { version: 1, type: 'scene', children: [structuredClone(fragment.child)] },
-          {
-            ...options.compileOptions,
-            onWarn: warning => diagnostics.push({ origin: fragmentOrigin, cause: warning }),
-          },
-        );
+        const result = (() => {
+          const reconciler = new SceneReconciler(
+            {
+              ...options.compileOptions,
+              onWarn: warning => diagnostics.push({ origin: fragmentOrigin, cause: warning }),
+            },
+            { incremental: false },
+          );
+          try {
+            return reconciler.mount({ version: 1, type: 'scene', children: [structuredClone(fragment.child)] })
+              .compilation.result;
+          } finally {
+            reconciler.dispose();
+          }
+        })();
         if (result.scene.primitives.length > 0)
           entries.push({
             inspector,

@@ -2,7 +2,8 @@
 import type { JsonValue } from '@retikz/foundation';
 import type { BoundsRect } from '@retikz/math';
 import type { CompileOptions } from '@retikz/reconciler';
-import { compileToScene } from '@retikz/reconciler';
+
+import { compileTestResult } from './compilation';
 
 /** 在正常编译回调中读取根组件声明的分配，不改变输入或增加布局试算 */
 export const compileMeasured = (child: IRChild, options: CompileOptions) => {
@@ -29,7 +30,7 @@ export const compileMeasured = (child: IRChild, options: CompileOptions) => {
     definition.artifactSchema === undefined
       ? { ...definition, compile: wrap(definition.compile) }
       : { ...definition, compile: wrap(definition.compile) };
-  const result = compileToScene(
+  const result = compileTestResult(
     { version: 1, type: 'scene', children: [child] },
     { ...options, composites: options.composites?.map(entry => (entry === definition ? measuredDefinition : entry)) },
   );

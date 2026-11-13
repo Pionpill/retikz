@@ -1,6 +1,5 @@
 ﻿import type { IRNode, IRScope } from '@retikz/core';
 import type { IRShapeValue } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import type { PlotsLoweringOptions } from '../../../src/pipeline/expand';
@@ -9,6 +8,7 @@ import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import { PLOT_SHAPE_PALETTE } from '../../../src/providers';
 import type { IRPlot, IRPlotChannel } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
+import { compileTestResult } from '../../helpers/compilation';
 import { measureLabel } from '../../helpers/text-measurement';
 
 const cartOpts: PlotsLoweringOptions = { layout: { width: 480, height: 300 } };
@@ -92,7 +92,8 @@ describe('shape channel 类别映射', () => {
 
     expect(
       () =>
-        compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: [definition], padding: 0 }).scene,
+        compileTestResult({ version: 1, type: 'scene', children: [spec] }, { composites: [definition], padding: 0 })
+          .scene,
     ).not.toThrow();
   });
 

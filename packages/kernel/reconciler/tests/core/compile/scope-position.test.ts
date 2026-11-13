@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { CompileWarning, IRPosition, IRScene, ScenePrimitive } from '../../../../core/src';
 import { BuiltinCompileWarningCode } from '../../../../core/src';
 import { applyTransformChain, inverseTransformChain } from '../../../../core/src/compile/shared';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 
 const scene = (children: IRScene['children']): IRScene => ({
   version: 1,
@@ -35,7 +35,7 @@ const lineTo = (prim: ScenePrimitive | undefined): [number, number] | undefined 
 
 describe('Scope 原点位置与局部变换', () => {
   it('中心 pivot 旋转后再应用点位置，外部引用保持最终中心', () => {
-    const compiled = compileToScene(
+    const compiled = compileTestResult(
       scene([
         {
           type: 'scope',
@@ -72,7 +72,7 @@ describe('Scope 原点位置与局部变换', () => {
       expected: [100, 50],
     },
   ])('原点位置保留附加平移，anchor 则精确对齐：$position', ({ position, expected }) => {
-    const compiled = compileToScene(
+    const compiled = compileTestResult(
       scene([
         {
           type: 'scope',
@@ -93,7 +93,7 @@ describe('Scope 原点位置与局部变换', () => {
   });
 
   it('自身缩放不缩放主位置，祖先变换作用于位置和内容', () => {
-    const compiled = compileToScene(
+    const compiled = compileTestResult(
       scene([
         {
           type: 'scope',
@@ -122,8 +122,8 @@ describe('Scope 原点位置与局部变换', () => {
 
   it('省略位置与显式零位置产生相同 Scene', () => {
     const children: IRScene['children'] = [{ type: 'node', position: [20, 30] }];
-    expect(compileToScene(scene([{ type: 'scope', position: [0, 0], children }])).scene).toEqual(
-      compileToScene(scene([{ type: 'scope', children }])).scene,
+    expect(compileTestResult(scene([{ type: 'scope', position: [0, 0], children }])).scene).toEqual(
+      compileTestResult(scene([{ type: 'scope', children }])).scene,
     );
   });
 });
@@ -223,7 +223,7 @@ describe('Happy path：scope rotate 下 polar / at / offset 同 scope referent',
         ],
       },
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileTestResult(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
 
     expect(end).toBeDefined();
@@ -256,7 +256,7 @@ describe('Happy path：scope rotate 下 polar / at / offset 同 scope referent',
         ],
       },
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileTestResult(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
 
     expect(end).toBeDefined();
@@ -287,7 +287,7 @@ describe('Happy path：scope rotate 下 polar / at / offset 同 scope referent',
         ],
       },
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileTestResult(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
 
     expect(end).toBeDefined();
@@ -322,7 +322,7 @@ describe('Happy path：跨 scope referent（hub 在 scope 外）', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileTestResult(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
 
     expect(end).toBeDefined();
@@ -356,7 +356,7 @@ describe('Happy path：跨 scope referent（hub 在 scope 外）', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileTestResult(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
 
     expect(end).toBeDefined();
@@ -390,7 +390,7 @@ describe('Happy path：跨 scope referent（hub 在 scope 外）', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileTestResult(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
 
     expect(end).toBeDefined();
@@ -432,7 +432,7 @@ describe('Happy path：跨 scope referent（hub 在 scope 外）', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileTestResult(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
 
     expect(end).toBeDefined();
@@ -473,7 +473,7 @@ describe('边界：scope transform 单变体对 relative 的影响', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileTestResult(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
 
     expect(end).toBeDefined();
@@ -506,7 +506,7 @@ describe('边界：scope transform 单变体对 relative 的影响', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileTestResult(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
 
     expect(end).toBeDefined();
@@ -539,7 +539,7 @@ describe('边界：scope transform 单变体对 relative 的影响', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileTestResult(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
 
     expect(end).toBeDefined();
@@ -576,7 +576,7 @@ describe('边界：scope transform 单变体对 relative 的影响', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileTestResult(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
 
     expect(end).toBeDefined();
@@ -607,7 +607,7 @@ describe('错误路径', () => {
       },
     ]);
 
-    expect(() => compileToScene(ir, { onWarn: () => {} }).scene).toThrow('non-invertible scope transform');
+    expect(() => compileTestResult(ir, { onWarn: () => {} }).scene).toThrow('non-invertible scope transform');
   });
 
   it('scope_polar_origin_forward_reference_within_scope：scope 内 polar.origin 引用同 scope 后定义 id → 抛错', () => {
@@ -621,7 +621,7 @@ describe('错误路径', () => {
       },
     ]);
 
-    expect(() => compileToScene(ir, { onWarn: () => {} }).scene).toThrow();
+    expect(() => compileTestResult(ir, { onWarn: () => {} }).scene).toThrow();
   });
 
   it('scope_at_of_unresolved_under_scope：scope 内 at.of 引用不存在 id → 抛错', () => {
@@ -641,7 +641,7 @@ describe('错误路径', () => {
     ]);
 
     // 与 v0.1 一致：position 解析失败 layoutNode 抛错
-    expect(() => compileToScene(ir, { onWarn: () => {} }).scene).toThrow();
+    expect(() => compileTestResult(ir, { onWarn: () => {} }).scene).toThrow();
   });
 });
 
@@ -675,7 +675,7 @@ describe('交互场景', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileTestResult(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
 
     expect(end).toBeDefined();
@@ -731,7 +731,7 @@ describe('交互场景', () => {
       },
     ]);
     const warnings: Array<CompileWarning> = [];
-    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
+    const compiled = compileTestResult(ir, { onWarn: w => warnings.push(w) }).scene;
 
     expect(warnings.filter(w => w.code === BuiltinCompileWarningCode.OffsetBaseUnresolved)).toHaveLength(0);
 
@@ -776,7 +776,7 @@ describe('交互场景', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileTestResult(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
 
     expect(end).toBeDefined();
@@ -810,7 +810,7 @@ describe('交互场景', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir, { nodeDistance: 30 }).scene;
+    const compiled = compileTestResult(ir, { nodeDistance: 30 }).scene;
     const end = lineTo(topPath(compiled.primitives));
 
     expect(end).toBeDefined();
@@ -838,7 +838,7 @@ describe('path step 在 scope 内（笛卡尔 / 相对 to）按 scope 局部度�
         ],
       },
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileTestResult(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
 
     expect(end).toBeDefined();
@@ -862,7 +862,7 @@ describe('path step 在 scope 内（笛卡尔 / 相对 to）按 scope 局部度�
         ],
       },
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileTestResult(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
 
     expect(end).toBeDefined();
@@ -891,7 +891,7 @@ describe('范围内的相对路径', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileTestResult(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
 
     expect(end).toBeDefined();
@@ -916,7 +916,7 @@ describe('范围内的相对路径', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileTestResult(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
 
     expect(end).toBeDefined();
@@ -945,7 +945,7 @@ describe('范围内的相对路径', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileTestResult(ir).scene;
     const prim = topPath(compiled.primitives);
 
     expect(prim).toBeDefined();

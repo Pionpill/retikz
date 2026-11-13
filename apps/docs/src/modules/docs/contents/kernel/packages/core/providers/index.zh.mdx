@@ -1,0 +1,132 @@
+---
+title: 能力依赖
+description: 追踪编写贡献如何通过有序依赖图物化 Core 定义，并区分 provider、注册表和内置能力
+---
+
+[能力注册](/kernel/packages/core/definitions)说明了 Definition 如何被消费。一个领域组件可能同时需要自己的 Composite、扩展形状和裁剪能力。依赖 provider 描述“这项能力需要哪些定义”，将多个编写实例的需求汇总为一组编译选项。
+
+Definition 是可执行的能力实现；`CoreDependencyProvider` 是生成一个 Definition 的声明；registry 是编译时按键查找 Definition 的表。三者处于不同阶段。IR 只引用能力，不保存 provider、工厂或依赖图。
+
+## 整体流程
+
+每个 contribution 提供实际需要的 `roots`，以及可供查找的 `providers` 目录。解析器先检查根的依赖闭包，再执行可达 provider 的工厂，最后将结果分到 shapes、paths、composites 等集合。Reconciler 随后用这些定义创建编译环境。
+
+<ComponentPreview files="provider-overview" size="lg" hideCode type="flow" />
+
+解析器只物化从根可达的 provider，所需依赖由 contributions 中的目录显式提供。
+
+## 从需求到完整标识
+
+普通键使用 `{ capability, name }`，例如 `{ capability: 'clip', name: 'path' }`。Composite 使用 `{ capability: 'composite', namespace, type }`；namespace 与 type 是两个独立标识维度。
+
+一个 provider 的 `dependencies` 是有序的完整键列表。Standard 的 Surface provider 就依赖 Extension 的 path clip provider：Surface 可以生成使用该裁剪能力的子项，因此接入 Surface 时也必须提供对应 Clip Definition。依赖顺序决定稳定的物化顺序，不代表绘图顺序。
+
+<SourceLinks
+  sources={[
+    { label: 'Surface 的真实依赖', path: 'packages/library/standard/src/presentation/surface/composite.ts' },
+    { label: 'Extension 的 Clip provider', path: 'packages/library/extension/src/clip/providers.ts' },
+  ]}
+/>
+
+假设上一页的 `pair` 已定义，以下代码将同一个 Composite 包装为依赖 provider。返回的 definitions 可以作为 `SceneReconciler` 的编译选项；如果只有少量静态定义，也可以继续直接传 `composites: [pair]`。
+
+```ts
+import type { CoreProviderKey } from '@retikz/core';
+import { ProviderCapability, resolveCoreProviderDependencies } from '@retikz/core';
+
+const pairKey = {
+  capability: ProviderCapability.Composite,
+  namespace: 'example',
+  type: 'pair',
+} satisfies CoreProviderKey;
+const pairProvider = { key: pairKey, makeDefinition: () => pair };
+const definitions = resolveCoreProviderDependencies({
+  contributions: [{ roots: [pairKey], providers: [pairProvider] }],
+});
+```
+
+依赖键必须能在 contributions 携带的目录中找到。即使某个能力已经内置，或放在最终 `definitions` 中，也不能据此满足图中一个缺失的 provider 键；两条路径的装配阶段不同。
+
+## 多个实例怎样贡献参数
+
+同键多次出现时，解析器要求 `makeDefinition` 是同一个函数引用，且有序依赖列表逐项相同。每次提供的非 undefined `params` 按贡献顺序收集，工厂收到一个冻结的参数数组，并为该键生成唯一定义。参数如何合并由 provider 所属方决定，Core 不做任意对象深合并。
+
+<ComponentAlert
+  type="tip"
+  title="优先复用包提供的 provider"
+  description="使用者通常直接导入所属包提供的 provider，或调用其贡献项创建函数。官方包已有这样的入口，例如 Standard 的 surfaceProvider、Extension 的 pathClipProvider 和 createRibbonProviderContribution，可保持工厂引用与依赖声明一致，避免重复声明导致的冲突。项目和扩展包作者也应尽量提供统一入口，让使用者直接复用。"
+/>
+
+例如 Extension 的 Ribbon provider 会汇总多个实例贡献的宽度函数和端帽，按定义对象引用去重，再创建一个 Ribbon Path Definition。每次调用若重新构造不同的工厂函数，即使函数体相同，也会触发同键冲突。
+
+<SourceLinks sources={[{ label: 'Ribbon 参数聚合', path: 'packages/library/extension/src/ribbon/provider.ts' }]} />
+
+## 失败边界与显式定义
+
+解析器在执行任何工厂前完成声明一致性、可达闭包缺项与环检查。不可达目录项的声明冲突仍会在索引阶段失败；不可达工厂不会执行。工厂异常会包装为带原始 cause 的 Core 错误，返回定义也必须匹配 provider 的标识。
+
+生成定义之后才追加显式 `definitions`。相同键引用同一个定义对象时去重；不同对象占用同一键时失败，不采用后写覆盖。最终对象与分类数组会被冻结，参数和 Definition 内部对象没有因此被深冻结。
+
+## Core 当前内置哪些能力
+
+内置定义已经由 Core 各注册表提供，通常不需要再贡献同名 provider。下表是当前实现的索引；扩展包里的能力仍由所属包提供。
+
+| 类别      | 内置注册键                                             | 说明                                           |
+| --------- | ------------------------------------------------------ | ---------------------------------------------- |
+| Shape     | rectangle、ellipse、polygon                            | circle、diamond 是形状配置预设，不是独立注册键 |
+| Boundary  | circle、rectangle、ellipse                             | 连线使用的几何表面                             |
+| Clip      | rect                                                   | 其他裁剪定义可由扩展包接入                     |
+| Path      | stroke                                                 | 标准描边路径                                   |
+| Arrow     | normal、open、stealth、openStealth、circle、openCircle | 箭头定义也会进入 Mark registry                 |
+| Mark      | times、plus、check、star                               | 加上已注册 Arrow 的标记投影，包括自定义 Arrow  |
+| Pattern   | lines、grid、dots                                      | 后端中立的图案描述                             |
+| Composite | 无                                                     | 由领域包或调用者注册                           |
+
+Theme 有独立的 `resolveThemeRegistry` 与默认明暗主题色，不属于 `ProviderCapability` 的依赖图。
+
+<SourceLinks
+  sources={[
+    { label: 'Shape 与 Boundary', path: 'packages/kernel/core/src/providers/shape/index.ts' },
+    { label: 'Boundary 注册表', path: 'packages/kernel/core/src/providers/boundary.ts' },
+    { label: 'Clip 注册表', path: 'packages/kernel/core/src/providers/clip.ts' },
+    { label: 'Path 注册表', path: 'packages/kernel/core/src/providers/path.ts' },
+    { label: 'Arrow 注册表', path: 'packages/kernel/core/src/providers/arrow.ts' },
+    { label: 'Mark 与 Arrow 投影', path: 'packages/kernel/core/src/providers/mark.ts' },
+    { label: 'Pattern 注册表', path: 'packages/kernel/core/src/providers/pattern.ts' },
+    { label: 'Theme 注册表', path: 'packages/kernel/core/src/providers/theme.ts' },
+  ]}
+/>
+
+## 完整实现流程
+
+在 Vanilla 的 typed InputScene 路径中，normalize 产生 IR 和 contributions；preparation 调用 Core 依赖解析器，将其结果合入编译选项。直接传入已类型化 IRScene 的路径不会从 IR 自动发现 provider，调用者应显式提供所需定义。
+
+<ComponentPreview files="provider-implementation" size="xxl" hideCode type="flow" />
+
+阅读源码时，先看类型中的 key / contribution / definitions，再沿 `buildProviderIndex → collectReachableProviders → makeDefinition → appendExplicitDefinitions → freezeResolvedDefinitions` 追踪。依赖先于消费方物化，但工厂只收到自身参数贡献，不会自动收到依赖的返回值。
+
+<SourceLinks
+  sources={[
+    { label: 'Provider contract', path: 'packages/kernel/core/src/contract/provider/types.ts' },
+    { label: 'Dependency resolver', path: 'packages/kernel/core/src/contract/provider/resolve.ts' },
+    { label: 'Vanilla preparation', path: 'packages/kernel/vanilla/src/processing/prepare.ts' },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    {
+      title: '能力注册',
+      description: '回顾 Definition 与各类 registry 的消费边界',
+      url: '/kernel/packages/core/definitions',
+    },
+    { title: '编译流程', description: '查看定义装配后怎样进入原子编译阶段', url: '/kernel/packages/core/compilation' },
+    {
+      title: 'Composite 编译',
+      description: '理解领域定义怎样生成与布局子项',
+      url: '/kernel/packages/core/composite-compilation',
+    },
+  ]}
+/>

@@ -2,12 +2,12 @@ import type { CompositeCompileContext, IRChild } from '@retikz/core';
 import { CompositeBaseSchema, defineComposite, defineTheme } from '@retikz/core';
 import { NonNegativeNumberSchema } from '@retikz/foundation';
 import type { BoundsInsets, BoundsRect } from '@retikz/math';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject } from 'zod';
 
 import type { GraphDefinitionOptions, IRGroup } from '../../src';
 import * as Graph from '../../src';
+import { compileTestResult } from '../helpers/compilation';
 import { compileInHarness, naturalProposal, primitivesOf } from './test-utils';
 
 type GroupShellMetrics = Readonly<{
@@ -58,7 +58,7 @@ const compileMeasurement = (
     artifactSchema: metricSchema,
     compile: (source, context) => ({ children: [], artifact: measureGroupShell(source.group, context, options) }),
   });
-  const output = compileToScene(
+  const output = compileTestResult(
     {
       type: 'scene',
       version: 1,

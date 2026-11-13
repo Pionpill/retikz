@@ -1,209 +1,207 @@
 ---
 title: Node Compilation
-description: Follow how Core turns text metrics and shape constraints into node dimensions, text baselines, label placement, and reference geometry.
+description: Follow effective node semantics through text measurement, shape layout, connection geometry and backend-neutral emission
 ---
 
-[Configuration resolution](/kernel/packages/core/resolution) determines the node's font, shape, and styles. [Coordinate resolution](/kernel/packages/core/coordinates) explains where it belongs. This page follows the next questions: how much space does the text need, how does the shape contain it, and which geometry positions labels and connections?
+Building on [Coordinate Evaluation](/kernel/packages/core/coordinates), Node compilation determines shape and content dimensions so it can align its own anchor and expose a queryable boundary to Paths. <ApiSourceLink label="resolveNode" path="packages/kernel/core/src/resolve/node/resolve.ts" startLine={127}>`resolveNode`</ApiSourceLink> determines content, shape, placement and style; <ApiSourceLink label="compileNode" path="packages/kernel/core/src/compile/node/compile.ts" startLine={8}>`compileNode`</ApiSourceLink> then measures, lays out and emits the node.
 
-Start with [Node basic usage](/kernel/components/node/usage) and [text syntax](/kernel/components/node/text). This page starts at the resolved `CanonicalNode` and ends at `CompiledNode` and its emission and reference consumers. Browser font loading, the TeX engine, and path clipping algorithms are outside its scope.
+## Overall Flow
 
-## Overall flow
+A node resolves to <ApiSourceLink label="CanonicalNode" path="packages/kernel/core/src/resolve/node/types.ts" startLine={149}>`CanonicalNode`</ApiSourceLink>, then becomes <ApiSourceLink label="CompiledNode" path="packages/kernel/core/src/compile/node/types.ts" startLine={23}>`CompiledNode`</ApiSourceLink> through measurement, shape layout and emission. Layout geometry supports placement and connections; primitives support rendering.
 
-Node layout determines the space needed by content, computes shape dimensions, and then places the body and attached labels. `CanonicalNode` contains effective node configuration and bound shape and boundary definitions. `CompiledNode` retains final geometry, layout, and drawing data. `CompiledNodeLayout` is the measured and positioned layout result. It contains calculation results and can be passed into compilation as prepared layout; `CompiledNode` carries query bindings at the top level.
+<ComponentPreview files="node-flow" size="lg" hideCode type="flow" />
 
-`resolveNode` applies input scaling: padding, margin, and minimum dimensions follow their respective axes; fixed width and maximum text width follow the horizontal axis. Font size, line height, and shape parameters are also handled during resolution. `CanonicalNode` stores these effective values without a pending `scale`, and compilation consumes them directly. Runtime width proposals from parent layouts are not multiplied by node scale; stroke width and label distance retain their existing semantics.
+## Input Contract
 
-<ComponentPreview files="layout-overview" size="xs" hideCode type="flow" />
+The type <ApiSourceLink label="NodeSchema" path="packages/kernel/core/src/schemas/node/node.ts" startLine={190}>`NodeSchema`</ApiSourceLink> describes the input. Position, content, shape and labels select different processing branches. Size and spacing shorthand also becomes explicit during resolution.
 
-The three nodes below use the same sentence. The middle node narrows the text width, so wrapping increases its height. The right node only adds an outside label; its shape has the same dimensions as the middle node.
+| Field and schema                                                                                                                                                | Input forms                                                                              | Effect on later processing                                                                                                  |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `position` / <ApiSourceLink label="NodePositionSchema" path="packages/kernel/core/src/schemas/node/node.ts" startLine={79}>`NodePositionSchema`</ApiSourceLink> | Cartesian, polar, directional, offset, between, or `kind: 'anchor'` alignment: six forms | The first five locate the center; anchor alignment needs the node's measured size and self anchor before translation        |
+| `shape` / <ApiSourceLink label="ShapeValueSchema" path="packages/kernel/core/src/schemas/node/shape.ts" startLine={34}>`ShapeValueSchema`</ApiSourceLink>       | Name or `{ type, params }`                                                               | Resolution binds the shape definition and parameters; compilation uses that definition for geometry and output              |
+| `boundary` / <ApiSourceLink label="BoundarySchema" path="packages/kernel/core/src/schemas/node/boundary.ts" startLine={31}>`BoundarySchema`</ApiSourceLink>     | Omitted or explicit connection surface                                                   | Omission uses the visual shape; an explicit value selects the capability used by automatic connections and boundary queries |
+| `text` / <ApiSourceLink label="TextBlockSchema" path="packages/kernel/core/src/schemas/text/text.ts" startLine={81}>`TextBlockSchema`</ApiSourceLink>           | String or lines, including text and math segments                                        | Resolution determines fonts and colors; compilation measures plain or mixed lines and preserves hard breaks and baselines   |
+| `label` / <ApiSourceLink label="NodeLabelSchema" path="packages/kernel/core/src/schemas/node/label.ts" startLine={106}>`NodeLabelSchema`</ApiSourceLink>        | One label or an array                                                                    | Resolution creates a list; compilation measures each label independently and attaches it to the body                        |
+| `scale`, `padding`, `margin`, `minimumSize`                                                                                                                     | Number or axis, inset and size objects                                                   | Resolution expands shorthand and applies node scaling; compilation consumes the resulting constraints                       |
+
+The type <ApiSourceLink label="AnchorPositionSchema" path="packages/kernel/core/src/schemas/position/anchor.ts" startLine={7}>`AnchorPositionSchema`</ApiSourceLink> separates the target from `selfAnchor`: they determine where to align and which point on the node to align. Label positions accept a direction, angle, or `{ boundary, fraction }`. Compilation finds that attachment point, applies inside/outside `placement`, and draws a leader when an outside label requests `pin`.
+
+Node A from the running example fits its text inside a minimum 60 × 40 visual rectangle centered at [0, 0], without additional rotation:
+
+```ts
+const node = {
+  type: 'node',
+  id: 'A',
+  position: [0, 0],
+  text: 'A',
+  layout: { minimumSize: { width: 60, height: 40 }, padding: 0, margin: 0 },
+} satisfies import('@retikz/core').IRNode;
+```
+
+## Resolution
+
+The function <ApiSourceLink label="resolveNode" path="packages/kernel/core/src/resolve/node/resolve.ts" startLine={127}>`resolveNode`</ApiSourceLink> produces <ApiSourceLink label="CanonicalNode" path="packages/kernel/core/src/resolve/node/types.ts" startLine={149}>`CanonicalNode`</ApiSourceLink>. The following declarations retain all top-level and layout fields, with source comments omitted. Content and labels use <ApiSourceLink label="CanonicalTextBlock" path="packages/kernel/core/src/resolve/text/types.ts" startLine={5}>`CanonicalTextBlock`</ApiSourceLink> for their text.
+
+```ts
+export type CanonicalNode = Readonly<{
+  id?: string;
+  aliasIds: Array<string>;
+  meta?: JsonObject;
+  zIndex?: number;
+  layout: CanonicalNodeLayout;
+  shape: CanonicalNodeShape;
+  boundary: CanonicalNodeBoundary;
+  style: CanonicalNodeStyle;
+  text?: CanonicalTextBlock;
+  labels: Array<CanonicalNodeLabel>;
+  animations: NonNullable<IRNode['animations']>;
+}>;
+
+export type CanonicalNodeLayout = {
+  position: CanonicalPosition | Required<Extract<NonNullable<IRNode['position']>, { kind: 'anchor' }>>;
+  padding: BoundsInsets;
+  margin: BoundsInsets;
+  minimumSize: {
+    width: number;
+    height: number;
+  };
+  rotate: number;
+  width?: number;
+};
+```
+
+Resolution starts with <ApiSourceLink label="mergeNodeStyle" path="packages/kernel/core/src/resolve/style/node.ts" startLine={9}>`mergeNodeStyle`</ApiSourceLink>, combining the declaration with scope defaults, then expands labels and resolves primary and dependent colors. It fills position and layout defaults, resolves paints and shadows, and binds definitions through <ApiSourceLink label="resolveNodeShape" path="packages/kernel/core/src/resolve/node/shape.ts" startLine={80}>`resolveNodeShape`</ApiSourceLink> and <ApiSourceLink label="resolveNodeBoundary" path="packages/kernel/core/src/resolve/node/boundary.ts" startLine={11}>`resolveNodeBoundary`</ApiSourceLink>. <ApiSourceLink label="resolveNodeContent" path="packages/kernel/core/src/resolve/node/content.ts" startLine={27}>`resolveNodeContent`</ApiSourceLink> determines the body and label text blocks.
+
+The type <ApiSourceLink label="NodeResolveContext" path="packages/kernel/core/src/resolve/node/types.ts" startLine={226}>`NodeResolveContext`</ApiSourceLink> supplies scope defaults, theme mode, root font size, math gating and shape, boundary and pattern registries. `nodeDistance` and `labelDistance` supply missing placement and label distances. Unknown shapes fail during binding. Scaling is folded into layout sizes, fonts and shape parameters. Anchor alignment retains its target expression and receives a default `selfAnchor`.
+
+The diagram separates configuration expansion from capability binding. Layout needs both before invoking the shape definition.
+
+For node A, resolution yields `layout.minimumSize: { width: 60, height: 40 }`, four zero padding and margin values, a rectangle shape binding and `labels: []`. These are sizing constraints; the next stage measures the actual content and visual boxes.
+
+<ComponentPreview files="node-resolution" size="lg" hideCode type="flow" />
+
+## Compilation
+
+The function <ApiSourceLink label="compileNode" path="packages/kernel/core/src/compile/node/compile.ts" startLine={8}>`compileNode`</ApiSourceLink> passes <ApiSourceLink label="CanonicalNode" path="packages/kernel/core/src/resolve/node/types.ts" startLine={149}>`CanonicalNode`</ApiSourceLink> and <ApiSourceLink label="NodeCompileContext" path="packages/kernel/core/src/compile/node/types.ts" startLine={148}>`NodeCompileContext`</ApiSourceLink> to <ApiSourceLink label="layoutNode" path="packages/kernel/core/src/compile/node/layout.ts" startLine={30}>`layoutNode`</ApiSourceLink>, then calls <ApiSourceLink label="emitNode" path="packages/kernel/core/src/compile/node/emit.ts" startLine={15}>`emitNode`</ApiSourceLink> for local primitives. <ApiSourceLink label="CompiledNode" path="packages/kernel/core/src/compile/node/types.ts" startLine={23}>`CompiledNode`</ApiSourceLink> retains the current shape and boundary bindings. `layout.overall` holds the full layout; `emit.overall` holds primitives and bounds contributions. These are the complete product fields, with source comments omitted.
+
+```ts
+export type CompiledNode = {
+  shape: CanonicalNode['shape'];
+  boundary: CanonicalNode['boundary'];
+  layout: WithRequiredProperties<PreparedNodeLayout, 'overall'>;
+  emit: WithRequiredProperties<PreparedNodeEmit, 'overall'>;
+  alignmentGuides?: Array<LayoutAlignmentGuide>;
+};
+
+export type CompiledNodeLayout = {
+  geometry: NodeLayoutGeometry;
+  text?: CompiledNodeTextLayout;
+  labels?: Array<NodeLabelLayout>;
+};
+
+export type NodeLayoutGeometry = {
+  rect: CenteredBox;
+  margin: BoundsInsets;
+  contentCenter: Position;
+  contentSize: { width: number; height: number };
+};
+
+export type NodeEmitOutput = {
+  primitives: Array<ScenePrimitive>;
+  bounds: Array<{ boundsPoints: Array<Position>; shadow?: CanonicalDropShadow }>;
+};
+```
+
+| <ApiSourceLink label="NodeCompileContext" path="packages/kernel/core/src/compile/node/types.ts" startLine={148}>`NodeCompileContext`</ApiSourceLink> member | What compilation receives                                               |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `measureText`, `texLowering`                                                                                                                                | Text measurement, math lowering and diagnostics for content and labels  |
+| `positionContext`, `boundaryState`                                                                                                                          | Reference lookup, local/world conversion and connection-surface queries |
+| `allocationWidthProposal`                                                                                                                                   | Parent width proposal used by content/shape size feedback               |
+| `scopeChain`, `composedTransform`                                                                                                                           | The current coordinate space and its composed transform                 |
+| `registerPaint`, `round`, `warn`                                                                                                                            | Paint registration, numeric rounding and compilation diagnostics        |
+
+Compilation proceeds through content measurement, shape sizing, placement, label layout and primitive emission. The diagram locates each product before the following sections explain the algorithms.
+
+<ComponentPreview files="layout-overview" size="lg" hideCode type="flow" />
+
+### Content Measurement and Shape Constraints
+
+Core calls the injected measureText service to obtain text metrics. The host supplies width, height and optional ascent / descent; missing baseline metrics each use half the height. Reconciler supplies approximate measurement when no host service exists and owns reuse within an execution.
+
+Plain text preserves explicit line breaks and wraps into physical lines under a width budget. Inline segments share a baseline; an indivisible formula can overflow. Padding is added to the content box before the Shape's computeCircumscribedGeometry runs. Minimum size and fixed visual width participate in the final size.
+
+These nodes share the same content: a narrower text budget increases line count; an external label leaves the body dimensions unchanged.
 
 <ComponentPreview files="layout-example" size="md" hideCode type="illustration" />
 
-The text is first split into the lines that will actually be displayed, called **physical lines**. Once their bounds are known, padding is added and the result is passed to the shape. A label needs the shape's position before it can be placed, so it does not enlarge the node shape in return.
+| Constraint            | Applies to                                                        |
+| --------------------- | ----------------------------------------------------------------- |
+| maxTextWidth          | Text wrapping budget, not an exact shape width                    |
+| minimumSize           | Minimum visual box, without compressing content                   |
+| width                 | Fixed visual width; compilation fails if content still cannot fit |
+| Parent width proposal | Allocation budget accounting for margin and rotation              |
 
-<SourceLinks
-  sources={[
-    {
-      label: 'layoutNode: layout entry point',
-      path: 'packages/kernel/core/src/compile/node/layout.ts',
-    },
-    { label: 'CanonicalNode: layout input', path: 'packages/kernel/core/src/resolve/node/types.ts' },
-    {
-      label: 'CompiledNode: final geometry, layout, and styles',
-      path: 'packages/kernel/core/src/compile/node/types.ts',
-      startLine: 42,
-    },
-  ]}
-/>
+The function <ApiSourceLink label="measureNodeBody" path="packages/kernel/core/src/compile/node/measure.ts" startLine={15}>`measureNodeBody`</ApiSourceLink> uses bounded feedback between text width and custom shape dimensions. A parent proposal is not a guaranteed clipping constraint: the parent consumes the actual contribution returned. Fixed width and a parent proposal have different contracts.
 
-## Content measurement
+### Content, Visual Shape and Allocation
 
-Core obtains metrics through the injected `measureText` function; it does not read the DOM. Inputs are text and font settings. Results contain width, height, and optional `ascent` and `descent`, the extents above and below the baseline. When both are absent, Core assigns half the height to each. Without an injected measurer, it estimates using average character width. Accuracy depends on the measurement provider.
-
-Text preserves explicit line breaks, then prefers word boundaries within the width limit; oversized words split at grapheme boundaries. Content width is the widest physical line, and height is the sum of line slots. Each slot is the larger of `lineHeight` and actual ascent + descent, with extra leading split equally above and below the content.
-
-Math or explicit `segments` content uses the same wrapping rules and aligns fragments to a shared baseline within each physical line. Widths are added; the required extents above and below the baseline are taken separately. Each line slot is tall enough for those fragments. Formulas remain indivisible and may overflow on their own line.
-
-Reconciler shares metrics by text and font values across nodes and probes within one compilation. Node layout calls the supplied measurer without maintaining a local cache. The measurement cache does not survive another full compilation or incremental batch, and a width change still requires layout to segment again. See [Query evaluation and caching](/kernel/packages/core/composite-compilation#query-evaluation-and-caching).
-
-<SourceLinks
-  sources={[
-    { label: 'Fallback text measurer', path: 'packages/kernel/core/src/compile/text/helpers.ts' },
-    { label: 'TextMetrics', path: 'packages/kernel/core/src/contract/text.ts' },
-    { label: 'resolveTextMetrics', path: 'packages/kernel/core/src/resolve/text/metrics.ts' },
-    {
-      label: 'Content branches and physical lines',
-      path: 'packages/kernel/core/src/compile/node/content/layout.ts',
-    },
-    { label: 'Shared text layout', path: 'packages/kernel/core/src/compile/text/layout.ts' },
-    { label: 'Mixed-line measurement and baseline alignment', path: 'packages/kernel/core/src/compile/text/layout.ts' },
-  ]}
-/>
-
-## Node dimensions
-
-Three bounds serve different purposes:
-
-- **Content box**: laid-out text width and the combined height of its line slots.
-- **Visual shape**: the outline that contains the content box plus padding, subject to size constraints.
-- **Layout allocation**: the space reserved by the parent layout, accounting for margin and rotation around the node's outer box.
-
-The shape's `computeCircumscribedGeometry` receives content half-width and half-height and returns an outer box that can contain them. A rectangle usually encloses the content directly; a circle needs a larger diameter to contain the same rectangular content area.
-
-The diagram assumes an already measured content box of `40 × 24`, an unrotated rectangle, `padding = 8` on all sides, `minimumSize = { width: 80, height: 48 }`, and `margin = 6`, with no fixed `width`. Geometry is enlarged uniformly for readability. Gray dotted lines show calculated bounds, not additional node borders.
+In this figure, 40 × 24 content plus padding 8 becomes 56 × 40. Minimum size expands the visual box to 80 × 48; margin 6 produces a 92 × 60 allocation. Margin does not enlarge the visible rectangle, and labels do not enlarge the shape.
 
 <ComponentPreview files="layout-boxes" size="lg" hideCode type="illustration" />
 
-Padding produces `56 × 40`. The minimum size expands the visual box to `80 × 48`. Margin gives an allocation of `92 × 60`. These dimensions do not replace each other: margin does not make the visible rectangle larger.
+Asymmetric padding and shape offsets can separate content and visual centers, so layout stores them separately. Self-anchor placement needs a provisional layout before translating the node to its target.
 
-Width constraints also have distinct roles:
+### Content Baselines
 
-| Constraint            | Effect                                                                                          |
-| --------------------- | ----------------------------------------------------------------------------------------------- |
-| `maxTextWidth`        | Limits text wrapping width without forcing the shape to that exact width                        |
-| `minimumSize`         | Sets a lower bound for the shape box without shrinking text                                     |
-| `width`               | Fixes the visual box width; plain text may reflow, and compilation fails if it still cannot fit |
-| Parent width proposal | Constrains allocation, accounting for shape, margin, and rotation                               |
-
-A fixed `width` determines the final visual width; horizontal `minimumSize` does not enlarge it. Height still follows content and minimum height. A parent proposal has a different contract: it cannot guarantee that every unbreakable segment fits, and the parent must handle the actual allocation returned. See [Composite Compilation](/kernel/packages/core/composite-compilation) for the full proposal and replay process.
-
-Asymmetric padding can also make the visual box center differ from the content center. Layout stores both so text emission does not accidentally use the outer box center.
-
-<SourceLinks
-  sources={[
-    {
-      label: 'Content budgets and size constraints',
-      path: 'packages/kernel/core/src/compile/node/layout.ts',
-    },
-    { label: 'Shape circumscribed geometry', path: 'packages/kernel/core/src/compile/node/shape/layout.ts' },
-    { label: 'Shape containment contract', path: 'packages/kernel/core/src/contract/node/shape.ts' },
-  ]}
-/>
-
-## Baselines and labels
-
-A baseline is the vertical reference used to place glyphs, not the center line of their box. For plain text, Core takes the first physical line's metrics, divides the remaining line height equally above and below the glyphs, and locates its baseline. Later baselines advance by `lineHeight`. Mixed content determines each line's baseline from its own fragment heights.
-
-For example, with line height `24`, normalized `ascent = 14`, and `descent = 4`, the extra space is `3` on each side. The baseline is `17` from the top of the line slot. The enlarged diagram below uses these metrics: blue marks the baseline, and gray marks the glyph metric box.
+A line slot must contain actual ascent + descent. With line height 24, ascent 14 and descent 4, each side gets 3 extra units, placing the baseline 17 units below the slot top. Emission reuses this baseline.
 
 <ComponentPreview files="layout-baseline" size="lg" hideCode type="illustration" />
 
-Attached labels are measured independently, then positioned using attachment points on the visible shape, attachment direction, label rotation, and `distance`. That distance is the clear gap between the shape edge and the label's visual box. The opening example shows the result: a label changes neither the body nor the shape dimensions, but the automatic viewBox still includes it so exported images do not crop it.
+### Labels and Connection Geometry
 
-When placement aligns a node's own anchor with a target, Core first needs a provisional layout to locate that anchor, then translates the layout as a whole. Labels retain offsets relative to the node and move with it. See [Coordinate resolution](/kernel/packages/core/coordinates) for reference timing.
+The function <ApiSourceLink label="measureNodeLabel" path="packages/kernel/core/src/compile/node/label/layout.ts" startLine={202}>`measureNodeLabel`</ApiSourceLink> measures the label text block. <ApiSourceLink label="placeNodeLabel" path="packages/kernel/core/src/compile/node/label/layout.ts" startLine={128}>`placeNodeLabel`</ApiSourceLink> uses attachment position, rotation and the visual box to place it.
 
-<SourceLinks
-  sources={[
-    { label: 'Line height and baseline offsets', path: 'packages/kernel/core/src/compile/node/content/layout.ts' },
-    { label: 'Label measurement and placement', path: 'packages/kernel/core/src/compile/node/label/layout.ts' },
-    {
-      label: 'Label clearance and visual extents',
-      path: 'packages/kernel/core/src/compile/node/label/layout.ts',
-    },
-    {
-      label: 'Physical baselines shared by emission and observation',
-      path: 'packages/kernel/core/src/compile/node/content/emit.ts',
-    },
-  ]}
-/>
-
-## Connection boundaries
-
-Completing node layout does not mean every connection ends on the visible outline. `shape` determines what is drawn; `boundary` selects the connection surface for automatic connections and standard border anchors. Only a resolved value of `'shape'` directly reuses the visual shape.
-
-The diagram keeps the same circle and connection direction while changing the boundary and margin. Gray dotted outlines show auxiliary connection bounds; compare the arrow endpoints.
+Labels are measured independently and placed using shape attachment points, direction and distance. Final bounds include labels, but paths do not automatically connect to label edges. Shape controls visible geometry; Boundary controls automatic connection geometry.
 
 <ComponentPreview files="layout-boundaries" size="lg" hideCode type="illustration" />
 
-Standard directional and numeric-angle anchors use the connection surface with margin. Shape-specific anchors and `{ side, fraction }` edge positions use the visual shape. Outside labels do not move connection endpoints to the label edges.
+Standard directional and numerical-angle anchors use the connection surface and margin. Shape-specific anchors and proportional edge points use the visual shape. Reconciler owns boundaryStore and associates query state with current bindings; a Core node stage does not create a multi-node store.
 
-When the same layout is referenced repeatedly, Core reuses calculated connection envelopes and anchors. These serve the current geometry; they are not another persistent node configuration. See [Node implementation](/kernel/components/node/mechanism#visual-shape-vs-connection-geometry) for the detailed reference rules.
+### Handing Off Output and Geometry
 
-Node layout accepts only the current node's `boundaryState`; it neither creates nor retains a multi-node store. Before layout, Reconciler obtains the state through `boundaryStore.getOrCreateState(canon.shape)` and supplies diagnostics. Later references reuse state through the same shape binding. Direct Core callers may omit the state: ordinary positioning needs no initialization, while self-anchor positioning carries only `warn` and `irPath`, without implicitly creating a connection-envelope cache.
+The function <ApiSourceLink label="emitNode" path="packages/kernel/core/src/compile/node/emit.ts" startLine={15}>`emitNode`</ApiSourceLink> handles shape, content and label emission separately, then assembles local primitives and bounds. A text-bearing or rotated node uses GroupPrimitive for metadata and transforms.
 
-<SourceLinks
-  sources={[
-    {
-      label: 'Binding connection surfaces to node geometry',
-      path: 'packages/kernel/core/src/compile/boundary/layout.ts',
-    },
-    { label: 'Standard versus shape-specific anchors', path: 'packages/kernel/core/src/compile/boundary/layout.ts' },
-    { label: 'Anchor reuse within a layout', path: 'packages/kernel/core/src/compile/boundary/store.ts' },
-  ]}
-/>
+Reconciler uses <ApiSourceLink label="projectNodeGeometry" path="packages/kernel/core/src/compile/node/layout.ts" startLine={21}>`projectNodeGeometry`</ApiSourceLink> to combine bindings and layout, projects it through Scope transforms and publishes it for references. Scene primitives remain in their owning space. Prepared inputs can supply complete or partial layout / emit products; Core computes missing parts, while Reconciler decides reuse validity.
 
-## Complete implementation flow
+## Complete Flow
 
-The flow below follows a plain-text node. The left side shows layout stages; the right side shows consumers of the result. Geometry queries segment when needed, without precomputing every anchor before emission.
+<ComponentPreview files="layout-implementation" size="xxl" hideCode type="flow" />
 
-<ComponentPreview files="layout-implementation" size="xl" hideCode type="flow" />
+Start with the <ApiSourceLink label="resolveNode" path="packages/kernel/core/src/resolve/node/resolve.ts" startLine={127}>`resolveNode`</ApiSourceLink> / <ApiSourceLink label="compileNode" path="packages/kernel/core/src/compile/node/compile.ts" startLine={8}>`compileNode`</ApiSourceLink> boundary, then read <ApiSourceLink label="measureNodeBody" path="packages/kernel/core/src/compile/node/measure.ts" startLine={15}>`measureNodeBody`</ApiSourceLink>, <ApiSourceLink label="layoutNode" path="packages/kernel/core/src/compile/node/layout.ts" startLine={30}>`layoutNode`</ApiSourceLink> and <ApiSourceLink label="emitNode" path="packages/kernel/core/src/compile/node/emit.ts" startLine={15}>`emitNode`</ApiSourceLink>. The content, shape and label directories own their layout / emit products. Width feedback lives in measure.ts.
 
-Start reading at `compileNode`. It consumes `CanonicalNode` and optional prepared results, using `layoutNode` and `emitNode` to consume prepared layout and drawing results respectively and calculate missing parts; Reconciler decides whether results can be reused. The `content/`, `label/`, and `shape/` directories group code by product, each with a `layout.ts` and an `emit.ts` for calculation and drawing. The node-level `layout.ts` coordinates these products, keeping feedback between text width and shape dimensions, anchor positioning, and overall layout in the same file. The top-level `emit.ts` assembles node primitives and bounds. Width feedback remains bounded to 32 attempts; the measurer injected for the current compilation handles measurement reuse. Content, shape, and label drawings can be reused separately, or complete output can be supplied. The final `CompiledNode` retains overall and known local products in `layout` and `emit`, allowing callers to select valid parts for the next prepared input. Top-level `shape` and `boundary` carry current canon bindings; `projectNodeGeometry` combines them with `layout.overall.geometry` for queries, and `emit.overall` already contains final primitives and bounds.
-
-Traversal then projects geometry into world space for named references. The visitor collects `emit.overall` returned by `compileNode` without calling internal emission stages. Reference geometry in the namespace and local primitives in Scene have different consumers; drawing coordinates do not all need to be expanded into world coordinates beforehand.
-
-<SourceLinks
-  sources={[
-    { label: 'Layout result structure', path: 'packages/kernel/core/src/compile/node/types.ts', startLine: 42 },
-    { label: 'From node layout to primitives', path: 'packages/kernel/core/src/compile/node/emit.ts' },
-    { label: 'Body-text primitives', path: 'packages/kernel/core/src/compile/node/content/emit.ts' },
-    { label: 'Label primitives and pins', path: 'packages/kernel/core/src/compile/node/label/emit.ts' },
-    { label: 'Shape provider output', path: 'packages/kernel/core/src/compile/node/shape/emit.ts' },
-    {
-      label: 'Layout, registration, and emission handoff',
-      path: 'packages/kernel/reconciler/src/compile/tree/node/visit.ts',
-    },
-  ]}
-/>
-
-## Further reading
+## Further Reading
 
 <LinkedSections
   items={[
     {
+      title: 'Semantic Resolution',
+      description: 'See what is determined before node compilation',
+      url: '/kernel/packages/core/resolution',
+    },
+    {
+      title: 'Coordinate Evaluation',
+      description: 'Read placement and boundary space rules',
+      url: '/kernel/packages/core/coordinates',
+    },
+    {
       title: 'Path Compilation',
-      description: 'Follow path targets, geometry steps and primitive output',
+      description: 'Follow node geometry into connecting paths',
       url: '/kernel/packages/core/path-compilation',
     },
     {
       title: 'Composite Compilation',
-      description: 'Follow child queries, isolated probes and replay',
+      description: 'Understand parent proposals and child layout',
       url: '/kernel/packages/core/composite-compilation',
-    },
-    {
-      title: 'Node basic usage',
-      description: 'Work with node dimensions, text width, and styles',
-      url: '/kernel/components/node/usage',
-    },
-    {
-      title: 'Node text',
-      description: 'Check body, mixed-content, and label syntax',
-      url: '/kernel/components/node/text',
-    },
-    {
-      title: 'Node implementation',
-      description: 'Look up local shape and connection-surface rules',
-      url: '/kernel/components/node/mechanism',
     },
   ]}
 />

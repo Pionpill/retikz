@@ -2113,6 +2113,70 @@ export type CurveApproximationOptions = {
 
 </DocTabs>
 
+#### <ApiSourceLink label={"CurveLengthModel"} path={"packages/kernel/math/src/algorithms/curve-metrics.ts"} startLine={5}>CurveLengthModel</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员                  | 类型                    | 默认值 | 说明                               |
+| --------------------- | ----------------------- | ------ | ---------------------------------- |
+| `readonly distances`  | `ReadonlyArray<number>` | —      | 对应参数边界的累计长度             |
+| `readonly length`     | `number`                | —      | 全曲线长度                         |
+| `readonly parameters` | `ReadonlyArray<number>` | —      | 自适应区间边界的参数               |
+| `readonly segment`    | `CurveSegment`          | —      | 原始曲线，不得在模型生命周期内修改 |
+| `readonly tolerance`  | `number`                | —      | 局部距离查询的绝对容差             |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type CurveLengthModel = Readonly<{
+  segment: CurveSegment;
+  parameters: ReadonlyArray<number>;
+  distances: ReadonlyArray<number>;
+  length: number;
+  tolerance: number;
+}>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"curveMetrics"} path={"packages/kernel/math/src/algorithms/curve-metrics.ts"} startLine={160}>curveMetrics</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="methods">
+
+| 成员          | 签名                                                                                                                                                                               | 说明                                                          |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `distanceAt`  | `(model: CurveLengthModel, parameter: number) => number`                                                                                                                           | 复用单调度量表，计算曲线参数对应的前缀长度                    |
+| `parameterAt` | `(model: CurveLengthModel, distance: number) => number`                                                                                                                            | 先二分累计表，再在命中区间内反解距离，不重新测量整条曲线      |
+| `prepare`     | `(segment: CurveSegment) => Readonly<{ distances: readonly Array<number>; length: number; parameters: readonly Array<number>; segment: CurveSegment; tolerance: number }> \| null` | 准备可反复查询的曲线长度模型；非有限或细分预算耗尽时返回 null |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export const curveMetrics = { prepare, distanceAt, parameterAt };
+```
+
+</DocTab>
+
+</DocTabs>
+
 #### <ApiSourceLink label={"CurveParameterAtDistanceOptions"} path={"packages/kernel/math/src/algorithms/curve.ts"} startLine={118}>CurveParameterAtDistanceOptions</ApiSourceLink>
 
 <DocTabs defaultValue="members">

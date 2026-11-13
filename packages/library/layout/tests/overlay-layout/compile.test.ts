@@ -8,7 +8,6 @@ import {
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
 } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { boolean, literal, number, string } from 'zod';
 
@@ -21,6 +20,7 @@ import {
   overlayLayoutDefinition,
   OverlayPlacementKind,
 } from '../../src';
+import { compileTestResult } from '../helpers/compilation';
 
 const LeafSchema = CompositeBaseSchema.extend({
   namespace: literal('overlay-test'),
@@ -140,7 +140,7 @@ const compileOverlay = (child: IRChild, proposal: LayoutProposal) => {
       return { children: [context.replay(probe.result)] };
     },
   });
-  const output = compileToScene(
+  const output = compileTestResult(
     {
       version: 1,
       type: 'scene',
@@ -528,11 +528,7 @@ describe('OverlayLayout 编译契约', () => {
     );
 
     expect(result.observed.allocationBounds).toEqual({ x: 0, y: 0, width: 0, height: 10 });
-    expect(
-      (result.output.scene.resources ?? []).some(
-        resource => resource.kind === 'clip' && resource.path.commands.length > 0,
-      ),
-    ).toBe(true);
+    expect(result.output.scene.resources?.clips.some(resource => resource.path.commands.length > 0)).toBe(true);
     expect(translationOf(result.output.scene.primitives, 'child')).toBeDefined();
   });
 

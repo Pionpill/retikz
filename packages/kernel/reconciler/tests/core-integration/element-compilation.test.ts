@@ -1,5 +1,5 @@
 import { projectNodeGeometry } from '@retikz/core';
-import type { CompileOutput, IRCoordinate, IRNode, IRPathBase, IRScope, ShapeDefinition } from '@retikz/core';
+import type { IRCoordinate, IRNode, IRScene, IRScope, ShapeDefinition } from '@retikz/core';
 import {
   projectReferenceGeometry,
   projectLayoutWithTransform,
@@ -9,49 +9,14 @@ import {
 } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { calculateCompileOutputBounds } from '../../../core/src/compile/scene/bounds';
 import { BUILTIN_SHAPES } from '../../../core/src/providers/shape/shape';
-import type { SharedCompileContext } from '../../src/compile';
-import { assembleSceneCompilationSnapshot, compileToScene, createSharedCompileContext } from '../../src/compile';
-import { compareReferenceGeometry } from '../../src/compile/compare';
-import { assembleCompileOutputs } from '../../src/compile/index';
+import { createSharedCompileContext } from '../../src/compile';
 import { RetikzReconcilerError } from '../../src/error';
+import { WeaveManager } from '../../src/weave';
+import { compareReferenceGeometry } from '../../src/weave/shared/reference';
 import type { WeaveBinding } from '../helpers/atomic-runtime';
-import {
-  testCompileNode,
-  testCompileCoordinate,
-  testCompilePath,
-  testCompileScope,
-  testPrepareScopeCompilation,
-} from '../helpers/element';
-import { assembleScopeOutput } from '../helpers/scope-output';
-import type { ScopeOutput } from '../helpers/scope-output';
-
-const assembleTestScopeOutput = (
-  scope: ScopeOutput,
-  children: ReadonlyArray<CompileOutput>,
-  shared: SharedCompileContext,
-) =>
-  assembleScopeOutput(
-    scope,
-    children,
-    { round: shared.layout.round, maxClipDepth: shared.limits.maxClipDepth, onWarn: () => {} },
-    {},
-  );
-
-const finalizeOutputs = (input: { root: {}; outputs: ReadonlyArray<CompileOutput>; shared: SharedCompileContext }) => {
-  const output = assembleCompileOutputs(input.outputs, {
-    round: input.shared.layout.round,
-    maxClipDepth: input.shared.limits.maxClipDepth,
-  });
-  return assembleSceneCompilationSnapshot({
-    root: input.root,
-    primitives: output.primitives,
-    resources: output.resources,
-    layoutBounds: calculateCompileOutputBounds(output.bounds),
-    round: input.shared.layout.round,
-  });
-};
+import { compileTestResult } from '../helpers/compilation';
+import { testCompileNode, testCompileCoordinate, testCompilePath } from '../helpers/element';
 
 const ancestor = {};
 
@@ -96,64 +61,7 @@ describe('独立元素编译', () => {
     expect(caught).toHaveProperty('cause', failure);
   });
 
-  it('顶层 Path 等待两个 Scope 的节点投影后编译，保持声明绘制顺序', () => {
-    const shared = createSharedCompileContext();
-    const context = { shared, style: resolveScopeInheritance({}, shared.registries.themeRegistry), irPath: ['root'] };
-    const bindings = new Map<string, WeaveBinding>();
-    const outputs: Array<CompileOutput> = [];
-    const scopes: Array<IRScope> = [];
-    for (const [index, id] of ['a', 'b'].entries()) {
-      const input: IRNode = { type: 'node', id, position: [0, 0], text: id };
-      const scopeInput: IRScope = { type: 'scope', position: [index * 100, index * 30], children: [input] };
-      scopes.push(scopeInput);
-      const prepared = testPrepareScopeCompilation(scopeInput, context);
-      if (prepared.status !== 'compiled') throw new Error('expected scope');
-      const node = testCompileNode(input, {
-        ...context,
-        style: prepared.compiled.scope,
-        transforms: prepared.compiled.preliminaryTransforms,
-      });
-      if (node.status !== 'compiled') throw new Error('expected node');
-      const scope = testCompileScope(
-        scopeInput,
-        prepared.compiled,
-        [projectNodeGeometry(node.compiled.compiled)],
-        context,
-      );
-      if (scope.status !== 'compiled') throw new Error('expected scope');
-      bindings.set(id, {
-        state: 'ready',
-        binding: {},
-        layout: projectLayoutWithTransform(
-          projectNodeGeometry(node.compiled.compiled),
-          composeScopeTransform(scope.compiled.group.transforms ?? []),
-        ),
-      });
-      outputs.push(assembleTestScopeOutput(scope.compiled, [node.compiled.output], shared));
-    }
-    const pathInput: IRPathBase = {
-      type: 'path',
-      children: [
-        { type: 'step', kind: 'move', to: { id: 'a' } },
-        { type: 'step', kind: 'line', to: { id: 'b' } },
-      ],
-    };
-    const path = testCompilePath(pathInput, {
-      ...context,
-      namespace: { bindings },
-    });
-    if (path.status !== 'compiled') throw new Error('expected path');
-    expect(
-      finalizeOutputs({
-        root: {},
-        outputs: [path.compiled.output, ...outputs],
-        shared,
-      }).result.scene,
-    ).toEqual(compileToScene({ type: 'scene', version: 1, children: [pathInput, ...scopes] }).scene);
-    expect(new Set(path.reads.map(read => read.name))).toEqual(new Set(['a', 'b']));
-  });
-
-  it('复用绘制片段不再次调用自定义 shape provider，引用投影不修改旧布局', () => {
+  it('引用投影保留自定义 shape 定义与锚点语义，不重新绘制或修改旧布局', () => {
     let emitted = 0;
     const definition: ShapeDefinition = {
       ...BUILTIN_SHAPES.get('rectangle')!,
@@ -194,35 +102,17 @@ describe('独立元素编译', () => {
       ),
     ).toBe(false);
     const count = emitted;
-    const first = finalizeOutputs({
-      root: {},
-      outputs: [result.compiled.output],
-      shared,
-    });
-    const next = finalizeOutputs({
-      root: {},
-      outputs: [result.compiled.output],
-      shared,
-    });
     const projected = projectLayoutWithTransform(
       projectNodeGeometry(result.compiled.compiled),
       composeScopeTransform([{ kind: 'translate', x: 20, y: 30 }]),
     );
     expect(projected.shape.definition).toBe(definition);
     expect(evaluateAnchorReference(projected, 'query')).toEqual([rectangle.x + 27, rectangle.y + 26]);
-    expect(structuredClone(first.result.scene)).toEqual(first.result.scene);
     expect(projectNodeGeometry(result.compiled.compiled).geometry.rect).toEqual(rectangle);
-    expect(next.result.scene).toEqual(first.result.scene);
     expect(emitted).toBe(count);
   });
 
   it('嵌套作用域经过祖先裁剪时保持全量可见边界和资源语义', () => {
-    const shared = createSharedCompileContext();
-    const context = {
-      shared,
-      style: resolveScopeInheritance({}, shared.registries.themeRegistry),
-      irPath: ['children', 0],
-    };
     const outer: Omit<IRScope, 'children'> = {
       type: 'scope',
       id: 'outer',
@@ -231,48 +121,17 @@ describe('独立元素编译', () => {
     };
     const inner: Omit<IRScope, 'children'> = { type: 'scope', id: 'inner', position: [5, 8] };
     const input: IRNode = { type: 'node', position: [0, 0], text: 'A' };
-    const a = testPrepareScopeCompilation(outer, context);
-    if (a.status !== 'compiled') throw new Error('expected outer');
-    const innerContext = { ...context, style: a.compiled.scope, irPath: ['children', 0, 'children', 0] };
-    const b = testPrepareScopeCompilation(inner, innerContext);
-    if (b.status !== 'compiled') throw new Error('expected inner');
-    const node = testCompileNode(input, { ...innerContext, style: b.compiled.scope });
-    if (node.status !== 'compiled') throw new Error('expected node');
-    const child = testCompileScope(inner, b.compiled, [projectNodeGeometry(node.compiled.compiled)], innerContext);
-    if (child.status !== 'compiled') throw new Error('expected inner compiled');
-    const parent = testCompileScope(
-      outer,
-      a.compiled,
-      [
-        projectLayoutWithTransform(
-          {
-            shape: child.compiled.compiled.shape,
-            boundary: child.compiled.compiled.boundary,
-            geometry: child.compiled.compiled.layout.overall.geometry,
-          },
-          composeScopeTransform(child.compiled.compiled.layout.overall.transforms),
-        ),
-      ],
-      context,
-    );
-    if (parent.status !== 'compiled') throw new Error('expected outer compiled');
-    const output = assembleTestScopeOutput(
-      parent.compiled,
-      [assembleTestScopeOutput(child.compiled, [node.compiled.output], shared)],
-      shared,
-    );
-    const full = compileToScene({
+    const source: IRScene = {
       type: 'scene',
       version: 1,
       children: [{ ...outer, children: [{ ...inner, children: [input] }] }],
-    });
-    expect(
-      finalizeOutputs({
-        root: {},
-        outputs: [output],
-        shared,
-      }).result.scene,
-    ).toEqual(full.scene);
+    };
+    const mounted = new WeaveManager(source).mount();
+    expect(mounted.compilation.result).toEqual(compileTestResult(source));
+    expect([
+      ...(mounted.compilation.result.scene.resources?.paints ?? []),
+      ...(mounted.compilation.result.scene.resources?.clips ?? []),
+    ]).toHaveLength(1);
   });
 
   it('引用从 pending 就绪后可重算，祖先包络引用仍报错', () => {
@@ -316,62 +175,7 @@ describe('独立元素编译', () => {
     expect(result.compiled.position[0]).toBeGreaterThan(30);
   });
 
-  it('同层 zIndex 排序与删除资源不重算旧状态', () => {
-    const shared = createSharedCompileContext();
-    const context = { shared, style: resolveScopeInheritance({}, shared.registries.themeRegistry), irPath: ['a'] };
-    const a: IRNode = { type: 'node', id: 'a', position: [0, 0], zIndex: 3 };
-    const b: IRNode = { type: 'node', id: 'b', position: [40, 0], zIndex: -1 };
-    const first = testCompileNode(a, context);
-    const second = testCompileNode(b, context);
-    if (first.status !== 'compiled' || second.status !== 'compiled') throw new Error('expected nodes');
-    expect(
-      finalizeOutputs({
-        root: {},
-        outputs: [first.compiled.output, second.compiled.output],
-        shared,
-      }).result.scene,
-    ).toEqual(compileToScene({ type: 'scene', version: 1, children: [a, b] }).scene);
-    expect(
-      finalizeOutputs({
-        root: {},
-        outputs: [],
-        shared,
-      }).result.scene.resources,
-    ).toBeUndefined();
-  });
-
-  it('已编译 Scope 与子节点组装后等价于全量输出', () => {
-    const shared = createSharedCompileContext();
-    const parent = resolveScopeInheritance({}, shared.registries.themeRegistry);
-    const scopeInput = { type: 'scope' as const, position: [30, 40] as [number, number] };
-    const context = { shared, style: parent, irPath: ['scene', 'children', 0] };
-    const prepared = testPrepareScopeCompilation(scopeInput, context);
-    if (prepared.status !== 'compiled') throw new Error('expected scope preparation');
-    const input: IRNode = { type: 'node', id: 'a', position: [12, 24], text: 'hello' };
-    const node = testCompileNode(input, {
-      ...context,
-      style: prepared.compiled.scope,
-      irPath: [...context.irPath, 'children', 0],
-    });
-    if (node.status !== 'compiled') throw new Error('expected node');
-    const scope = testCompileScope(
-      scopeInput,
-      prepared.compiled,
-      [projectNodeGeometry(node.compiled.compiled)],
-      context,
-    );
-    if (scope.status !== 'compiled') throw new Error('expected scope');
-    const output = assembleTestScopeOutput(scope.compiled, [node.compiled.output], shared);
-    const assembled = finalizeOutputs({
-      root: {},
-      outputs: [output],
-      shared,
-    });
-    const full = compileToScene({ version: 1, type: 'scene', children: [{ ...scopeInput, children: [input] }] });
-    expect(assembled.result.scene).toEqual(full.scene);
-  });
-
-  it('独立编译时区分资源身份，组装保留原资源及片段', () => {
+  it('独立编译的不同渐变内容具有不同资源身份', () => {
     const shared = createSharedCompileContext();
     const context = { shared, style: resolveScopeInheritance({}, shared.registries.themeRegistry), irPath: [] };
     const first = testCompileNode(
@@ -409,21 +213,7 @@ describe('独立元素编译', () => {
       context,
     );
     if (first.status !== 'compiled' || second.status !== 'compiled') throw new Error('expected nodes');
-    const before = structuredClone(first.compiled.output);
-    const output = finalizeOutputs({
-      root: {},
-      outputs: [first.compiled.output, second.compiled.output],
-      shared,
-    });
-    expect(output.result.scene.primitives).toHaveLength(2);
-    expect(output.result.scene.resources).toHaveLength(2);
-    expect(first.compiled.output.resources[0].id).not.toBe(second.compiled.output.resources[0].id);
-    expect(output.result.scene.resources).toEqual([
-      ...first.compiled.output.resources,
-      ...second.compiled.output.resources,
-    ]);
-    expect(new Set(output.result.scene.resources?.map(resource => resource.id)).size).toBe(2);
-    expect(first.compiled.output).toEqual(before);
+    expect(first.compiled.output.resources.paints[0].id).not.toBe(second.compiled.output.resources.paints[0].id);
   });
   it('未就绪引用返回 pending，不暴露半成品', () => {
     const shared = createSharedCompileContext();
@@ -474,7 +264,7 @@ describe('独立元素编译', () => {
     });
     if (result.status !== 'compiled') throw new Error('expected compiled');
     expect(result.compiled.output.primitives).toEqual(
-      compileToScene({
+      compileTestResult({
         version: 1,
         type: 'scene',
         children: [input],
@@ -494,7 +284,7 @@ describe('独立元素编译', () => {
     expect(projectNodeGeometry(result.compiled.compiled).geometry.rect.x).toBe(12);
     expect(projectNodeGeometry(result.compiled.compiled).geometry.rect.y).toBe(24);
     expect(result.compiled.output.primitives).toEqual(
-      compileToScene({ version: 1, type: 'scene', children: [input] }).scene.primitives,
+      compileTestResult({ version: 1, type: 'scene', children: [input] }).scene.primitives,
     );
   });
 
@@ -508,7 +298,7 @@ describe('独立元素编译', () => {
       irPath: ['scene', 'children', 0, 'children', 0],
     });
     if (result.status !== 'compiled') throw new Error('expected compiled');
-    const full = compileToScene({
+    const full = compileTestResult({
       version: 1,
       type: 'scene',
       children: [{ type: 'scope', ...scope, children: [input] }],

@@ -1,8 +1,8 @@
 import { resolveCoreProviderDependencies, resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import * as Graph from '../../src';
+import { compileTestResult } from '../helpers/compilation';
 import { primitivesOf } from './test-utils';
 
 const theme = {
@@ -25,8 +25,10 @@ describe('Entity 下降', () => {
       contributions: [{ roots: [Graph.entityProviderKey], providers: Graph.createGraphProviders() }],
     });
     const boundsOf = (role: string) =>
-      compileToScene({ type: 'scene', version: 1, children: [entity({ role, text })] }, { ...definitions, padding: 0 })
-        .scene.layout;
+      compileTestResult(
+        { type: 'scene', version: 1, children: [entity({ role, text })] },
+        { ...definitions, padding: 0 },
+      ).scene.layout;
     const activity = boundsOf('activity');
     const resource = boundsOf('resource');
 
@@ -84,7 +86,7 @@ describe('Entity 下降', () => {
     const definitions = resolveCoreProviderDependencies({
       contributions: [{ roots: [Graph.entityProviderKey], providers: Graph.createGraphProviders() }],
     });
-    const output = compileToScene(
+    const output = compileTestResult(
       { type: 'scene', version: 1, children: [entity({ role: 'activity', text: 'work' })] },
       { ...definitions, padding: 0 },
     );
@@ -119,7 +121,7 @@ describe('Entity 下降', () => {
     const definitions = resolveCoreProviderDependencies({
       contributions: [{ roots: [Graph.GraphProviderKey], providers: Graph.createGraphProviders() }],
     });
-    const output = compileToScene(
+    const output = compileTestResult(
       {
         type: 'scene',
         version: 1,
@@ -198,7 +200,7 @@ describe('Entity 下降', () => {
     });
 
     expect(() =>
-      compileToScene(
+      compileTestResult(
         { type: 'scene', version: 1, children: [entity({ id: 'custom', role: 'custom' })] },
         { ...definitions, padding: 0 },
       ),

@@ -39,6 +39,10 @@ export type PathDefinitionLabel<TLabel extends IRPathLabel = IRPathLabel> = Omit
   text: TextBlockContent;
   /** 归一化路径位置 */
   position: number;
+  /** 已确定的比例解释方式 */
+  positionMode: NonNullable<IRPathLabel['positionMode']>;
+  /** 继承合并后确定的定位几何 */
+  positionGeometry: NonNullable<IRPathLabel['positionGeometry']>;
   /** 路径相对放置方向 */
   side: NonNullable<IRPathLabel['side']>;
   /** 与路径的距离 */

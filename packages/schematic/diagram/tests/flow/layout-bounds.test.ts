@@ -1,5 +1,4 @@
 import { resolveCoreProviderDependencies } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import type { FlowDiagramArtifact, FlowDiagramDefinitionOptions } from '../../src/flow';
@@ -11,9 +10,10 @@ import {
   FlowLayoutSchema,
   layeredFlowLayoutDefinition,
 } from '../../src/flow';
+import { compileTestResult } from '../helpers/compilation';
 
 const compile = (source: unknown, options: FlowDiagramDefinitionOptions = {}) => {
-  const result = compileToScene(
+  const result = compileTestResult(
     { type: 'scene', version: 1, children: [FlowDiagramSchema.parse(source)] },
     {
       ...resolveCoreProviderDependencies({ contributions: [createFlowDiagramProviderContribution(options)] }),

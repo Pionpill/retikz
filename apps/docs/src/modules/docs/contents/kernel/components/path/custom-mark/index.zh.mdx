@@ -83,7 +83,8 @@ const view = mount(document.getElementById('diagram')!, input, {
 IR 只保存名称和 JSON 参数，定义函数通过编译选项传入。下面的 `scene` 可交给 SVG 或 Canvas renderer。
 
 ```ts
-import { compileToScene } from '@retikz/reconciler';
+import { compileToScene } from '@retikz/vanilla';
+
 import { ringMark } from './ring-mark';
 
 const { scene } = compileToScene(
@@ -101,7 +102,7 @@ const { scene } = compileToScene(
       },
     ],
   },
-  { marks: [ringMark] },
+  { compile: { marks: [ringMark] } },
 );
 ```
 

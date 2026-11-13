@@ -1,6 +1,5 @@
 import { resolveCoreProviderDependencies } from '@retikz/core';
 import { BranchDiagramSchema, createBranchDiagramProviderContribution } from '@retikz/diagram/branch';
-import { compileToScene } from '@retikz/reconciler';
 import { expect, it } from 'vitest';
 
 import { buildPreviewIR } from '../../src/modules/docs/components/component-preview/utils';
@@ -11,6 +10,7 @@ import BranchRoadmap from '../../src/modules/docs/contents/schematic/diagram/bra
 import { renderPreview as renderLayout } from '../../src/modules/docs/contents/schematic/diagram/branch/extended/branch-layout.preview';
 import { renderPreview as renderPresentation } from '../../src/modules/docs/contents/schematic/diagram/branch/extended/branch-presentation.preview';
 import { renderPreview as renderNodes } from '../../src/modules/docs/contents/schematic/diagram/branch/usage/branch-nodes.preview';
+import { compileTestResult } from '../helpers/compilation';
 
 it.each(['zh', 'en'] as const)('通过 %s 中的源 IR 和 Vanilla 渲染三个分支场景', lang => {
   for (const Demo of [BranchRoadmap, BranchHistory, BranchReading]) {
@@ -64,7 +64,7 @@ it.each(['zh', 'en'] as const)('独立删除 %s 中的每个呈现区域', lang 
 
     expect(source.presentation?.[hidden]).toBeUndefined();
 
-    compileToScene(
+    compileTestResult(
       { version: 1, type: 'scene', children: [source] },
       {
         ...resolveCoreProviderDependencies({ contributions: [createBranchDiagramProviderContribution()] }),

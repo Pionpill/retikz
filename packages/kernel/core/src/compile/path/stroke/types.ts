@@ -16,9 +16,9 @@ import type { StrokeCommandFragment, StrokeEndpointPlacements } from './decorati
 import type {
   PathCommandEmitter,
   StrokeCursor,
-  StrokeSamplingCollector,
   StrokeLabelSample,
   StrokePathGeometry,
+  StrokePositionModel,
   lowerStrokePathGeometry,
 } from './geometry';
 
@@ -38,8 +38,6 @@ export type StrokeLoweringContext = PathTargetContext & {
   commandEmitter: PathCommandEmitter;
   /** 当前步骤游标 */
   cursor: StrokeCursor;
-  /** 标签与标记的采样收集器 */
-  sampling: StrokeSamplingCollector;
 };
 
 /** 多个描边子路径共享的 Scene 基础属性与绘制外观 */
@@ -124,6 +122,8 @@ export type StrokePathLayout = {
   geometry: LoweredStrokePathGeometry;
   /** 按实际消费需求建立的逻辑长度模型 */
   metrics?: StrokePathGeometry;
+  /** 双模式定位索引 */
+  positions?: StrokePositionModel;
   /** 已处理的步骤和宿主标签 */
   labels: Required<StrokeLabelSlots<PreparedStrokeLabelLayout>>;
   /** 按 marks 声明排列的放置 */
@@ -133,7 +133,9 @@ export type StrokePathLayout = {
 };
 
 /** 调用方确认有效的标准描边布局原子产物 */
-export type PreparedStrokePathLayout = Partial<Pick<StrokePathLayout, 'metrics' | 'body'>> & {
+export type PreparedStrokePathLayout = Partial<Pick<StrokePathLayout, 'metrics' | 'positions' | 'body'>> & {
+  /** 仅圆角变化时可独立保留的原始度量，消费后并入 positions */
+  originalMetrics?: StrokePathGeometry;
   /** 完整布局；null 表示已计算且路径不可绘制 */
   overall?: StrokePathLayout | null;
   /** 基础几何；null 表示已确定不可绘制 */

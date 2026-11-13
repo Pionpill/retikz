@@ -5,7 +5,7 @@ import type { IRScene } from '../../../../core/src';
 import { CompositeBaseSchema, defineComposite, defineShape, resolveCompositeRegistry } from '../../../../core/src';
 import { BUILTIN_PATHS } from '../../../../core/src/providers/path';
 import { BUILTIN_SHAPES } from '../../../../core/src/providers/shape/shape';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 
 describe('提供者键契约', () => {
   it('包含点号的命名空间与类型独立注册并编译到对应定义', () => {
@@ -28,7 +28,7 @@ describe('提供者键契约', () => {
     expect(registry.get('a')?.get('b.c')).toBe(second);
     expect(() => resolveCompositeRegistry([first, second, { ...first }])).toThrow(/duplicate composite registration/);
     expect(
-      compileToScene(
+      compileTestResult(
         {
           version: 1,
           type: 'scene',
@@ -40,7 +40,7 @@ describe('提供者键契约', () => {
         { composites: [first, second] },
       ).scene,
     ).toEqual(
-      compileToScene({
+      compileTestResult({
         version: 1,
         type: 'scene',
         children: [
@@ -74,7 +74,7 @@ describe('提供者键契约', () => {
       children: [{ type: 'node', id: 'A', shape: 'ring', position: [0, 0], text: '' }],
     };
 
-    expect(() => compileToScene(ir, { shapes: [ring] }).scene).not.toThrow();
+    expect(() => compileTestResult(ir, { shapes: [ring] }).scene).not.toThrow();
   });
 
   it('自定义形状不能覆盖内置名称', () => {
@@ -92,7 +92,7 @@ describe('提供者键契约', () => {
       children: [{ type: 'node', id: 'A', shape: 'rectangle', position: [0, 0], text: '' }],
     };
 
-    expect(() => compileToScene(ir, { shapes: [rectangle] }).scene).toThrow(
+    expect(() => compileTestResult(ir, { shapes: [rectangle] }).scene).toThrow(
       /duplicate shape registration: "rectangle"/,
     );
   });
@@ -116,7 +116,7 @@ describe('提供者键契约', () => {
     });
     const ir: IRScene = { version: 1, type: 'scene', children: [{ namespace: 'demo', type: 'badge' }] };
 
-    expect(() => compileToScene(ir, { composites: [badge] }).scene).not.toThrow();
+    expect(() => compileTestResult(ir, { composites: [badge] }).scene).not.toThrow();
   });
 
   it('在解析组件输入时执行 schema 转换并编译转换结果', () => {
@@ -130,11 +130,11 @@ describe('提供者键契约', () => {
       }).transform(node => ({ ...node, text: node.text.toUpperCase() })),
       compile: node => ({ children: [{ type: 'node', position: [0, 0], text: node.text }] }),
     });
-    const scene = compileToScene(
+    const scene = compileTestResult(
       { version: 1, type: 'scene', children: [{ namespace: 'demo', type: 'badge', text: 'hello' }] },
       { composites: [badge] },
     ).scene;
-    const expected = compileToScene({
+    const expected = compileTestResult({
       version: 1,
       type: 'scene',
       children: [{ type: 'node', position: [0, 0], text: 'HELLO' }],
@@ -142,7 +142,7 @@ describe('提供者键契约', () => {
 
     expect(scene).toEqual(expected);
     expect(() =>
-      compileToScene(
+      compileTestResult(
         { version: 1, type: 'scene', children: [{ namespace: 'demo', type: 'badge', text: 123 }] },
         { composites: [badge] },
       ),
@@ -187,6 +187,6 @@ describe('提供者键契约', () => {
       ],
     };
 
-    expect(() => compileToScene(ir, { composites: [badge] }).scene).not.toThrow();
+    expect(() => compileTestResult(ir, { composites: [badge] }).scene).not.toThrow();
   });
 });

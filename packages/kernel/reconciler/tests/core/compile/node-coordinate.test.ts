@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { IRScene } from '../../../../core/src/schemas';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 import { flattenPrims } from '../../helpers/flatten';
 import { line, move } from '../../helpers/path-command-factory';
 
@@ -12,7 +12,7 @@ describe('Coordinate 占位符', () => {
       type: 'scene',
       children: [{ type: 'coordinate', id: 'm', position: [3, 2] }],
     };
-    const scene = compileToScene(ir).scene;
+    const scene = compileTestResult(ir).scene;
 
     expect(scene.primitives).toHaveLength(0);
   });
@@ -27,7 +27,7 @@ describe('Coordinate 占位符', () => {
     };
     const emptyIR: IRScene = { version: 1, type: 'scene', children: [] };
 
-    expect(compileToScene(farIR).scene.layout).toEqual(compileToScene(emptyIR).scene.layout);
+    expect(compileTestResult(farIR).scene.layout).toEqual(compileTestResult(emptyIR).scene.layout);
   });
 
   it('path target 字符串可命中 coordinate id', () => {
@@ -46,7 +46,7 @@ describe('Coordinate 占位符', () => {
         },
       ],
     };
-    const scene = compileToScene(ir).scene;
+    const scene = compileTestResult(ir).scene;
     const path = scene.primitives.find(p => p.type === 'path');
 
     expect(path).toBeDefined();
@@ -71,7 +71,7 @@ describe('Coordinate 占位符', () => {
         },
       ],
     };
-    const scene = compileToScene(ir).scene;
+    const scene = compileTestResult(ir).scene;
     const rect = flattenPrims(scene.primitives).find(p => p.type === 'rect');
 
     expect(rect).toBeDefined();
@@ -106,7 +106,7 @@ describe('Coordinate 占位符', () => {
         },
       ],
     };
-    const scene = compileToScene(ir).scene;
+    const scene = compileTestResult(ir).scene;
     const path = scene.primitives.find(p => p.type === 'path');
 
     expect(path).toBeDefined();
@@ -124,7 +124,7 @@ describe('Coordinate 占位符', () => {
       children: [{ type: 'coordinate', id: 'b', position: { direction: 'right', of: 'a' } }],
     };
 
-    expect(() => compileToScene(ir).scene).toThrow(/Cannot resolve position for coordinate/);
+    expect(() => compileTestResult(ir).scene).toThrow(/Cannot resolve position for coordinate/);
   });
 
   it('coordinate 在 IR children 顺序里——前向引用不允许', () => {
@@ -138,6 +138,6 @@ describe('Coordinate 占位符', () => {
       ],
     };
 
-    expect(() => compileToScene(ir).scene).toThrow(/Cannot resolve position for coordinate/);
+    expect(() => compileTestResult(ir).scene).toThrow(/Cannot resolve position for coordinate/);
   });
 });

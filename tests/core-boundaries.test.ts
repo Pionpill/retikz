@@ -82,7 +82,7 @@ test('副作用导入、动态 import 与 import type 查询都不能绕过边�
 test('Core 的外部依赖保持 Foundation、Math 与 Zod', () => {
   assert.deepEqual(inspect('shared/value.ts', 'import { lerp } from "@retikz/math";'), []);
   assert.ok(
-    inspect('compile/node/emit.ts', 'import { compileToScene } from "@retikz/reconciler";').some(
+    inspect('compile/node/emit.ts', 'import { SceneReconciler } from "@retikz/reconciler";').some(
       diagnostic => diagnostic.rule === 'external-dependency',
     ),
   );

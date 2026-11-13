@@ -7,7 +7,7 @@ import {
   surfaceProvider,
 } from '@retikz/standard/presentation';
 import type { InputEmbedAdapter } from '@retikz/vanilla';
-import { normalizeScene, processToStaticInputResultAsync, scene } from '@retikz/vanilla';
+import { normalizeScene, compileToSceneAsync, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
 import { frame, frameInputEmbedAdapter, surface, surfaceChild, surfaceInputEmbedAdapter } from '../src/presentation';
@@ -37,7 +37,7 @@ describe('表面（）', () => {
         },
       }),
     };
-    const result = await processToStaticInputResultAsync(
+    const result = await compileToSceneAsync(
       scene({ children: [surface({ padding: 4, child: { type: 'embed', kind: 'prepared', props: {} } })] }),
       {
         adapters: [surfaceInputEmbedAdapter, adapter],

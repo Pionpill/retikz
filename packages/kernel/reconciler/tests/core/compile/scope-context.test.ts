@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { ScopeSchema } from '../../../../core/src';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 
 describe('Scope 上下文边界', () => {
   it('通过 JSON 接受信封上下文并拒绝可绘制配置', () => {
@@ -11,7 +11,7 @@ describe('Scope 上下文边界', () => {
   });
 
   it('不绘制空信封', () => {
-    const result = compileToScene({
+    const result = compileTestResult({
       version: 1,
       type: 'scene',
       children: [{ type: 'scope', id: 'empty', children: [] }],

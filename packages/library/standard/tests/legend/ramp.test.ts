@@ -7,13 +7,13 @@ import {
   LayoutChildProbeKind,
 } from '@retikz/core';
 import { LayoutAlignment } from '@retikz/layout';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal, number, string } from 'zod';
 
 import { createLegend, legendDefinition } from '../../src/presentation/legend/composite';
 import { LegendContentKind, LegendDirection } from '../../src/presentation/legend/constants';
 import { fullScopeProps } from '../composites/presentation/scope-props';
+import { compileTestResult } from '../helpers/compilation';
 
 const LeafSchema = CompositeBaseSchema.extend({
   namespace: literal('legend-ramp-test'),
@@ -77,7 +77,7 @@ const compileRamp = (child: IRChild, proposal?: LayoutProposal) => {
       return { children: [context.replay(probe.result)] };
     },
   });
-  const output = compileToScene(
+  const output = compileTestResult(
     {
       type: 'scene',
       version: 1,

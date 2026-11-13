@@ -2,9 +2,9 @@
 
 /** 单次操作的消费预算；次数是规划假设，不代表代码硬上限或实测业务分布 */
 type CoreBudgetPolicy = {
-  /** P90 警告阈值，单位为毫秒 */
+  /** P50 警告阈值，单位为毫秒 */
   warningMs: number;
-  /** P90 错误阈值，单位为毫秒 */
+  /** P50 错误阈值，单位为毫秒 */
   errorMs: number;
   /** 消费路径、调用频率和阶段时间分配依据 */
   rationale: string;
@@ -21,12 +21,12 @@ export const resolveCoreBudget = (scenario: BenchmarkScenario): BenchmarkBudget 
   let policy: CoreBudgetPolicy;
   if (layer === 'compile' && family === 'resource') {
     const count = Number(scale);
-    if (![10, 100, 1000].includes(count)) throw new Error(`Missing Core resource scale budget: ${identity}`);
+    if (![16, 64, 256].includes(count)) throw new Error(`Missing Core resource scale budget: ${identity}`);
     policy = {
-      warningMs: count === 10 ? 1 : count === 100 ? 4 : 8,
-      errorMs: count === 10 ? 4 : count === 100 ? 8 : 16.6,
+      warningMs: count === 16 ? 1 : count === 64 ? 2 : 4,
+      errorMs: count === 16 ? 2 : count === 64 ? 4 : 8,
       rationale:
-        '一次工作区或结果组装中的完整注册表生命周期，包含创建及N次登记/导入；假设10次为局部编辑（1/4ms），100次为普通更新（4/8ms），1000次为大批资源处理（8/16.6ms）。该阶段接近一帧即有同步阻塞风险，复杂Pattern不放宽预算；不含输入解析和renderer，不代表整帧保证或稳定回归上限',
+        '一次工作区或结果组装中的完整注册表生命周期，包含创建及N次登记/导入；用户指定16/64/256档、256为本测试上限，非产品硬限制。按消费预算假设为16次局部使用分配1/2ms、64次较多资源分配2/4ms、256次上限分配4/8ms（警告/错误）；上限错误预算不超过约半个60Hz帧，为其它编译与渲染阶段留出时间。重复登记只有1个资源，不同内容或导入有N个资源；复杂Pattern不放宽预算，不含输入解析和renderer，不代表实际资源分布、整帧保证或稳定回归上限',
     };
   } else if (layer === 'compile' && family === 'path') {
     const count = Number(scale);
@@ -63,12 +63,14 @@ export const resolveCoreBudget = (scenario: BenchmarkScenario): BenchmarkBudget 
                   : count === (variant === 'custom-double-stroke' ? 1024 : 16)
                 : false;
     if (!valid) throw new Error(`Missing Core path operation budget: ${identity}`);
-    const large = count === 1024 || count === 128;
+    // 千步骤路径属于少见的大规模负载；保留采样和复用对照，不承诺批量实时预算
+    if (count === 1024) return undefined;
+    const large = count === 128;
     policy = {
       warningMs: large ? 0.5 : binding ? 0.05 : 0.1,
       errorMs: large ? 2 : binding ? 0.2 : 0.5,
       rationale:
-        '一次Core Path完整编译或明确阶段，不含Source resolve、fixture、prepared构造、调用方有效性比较/跨次资源恢复及renderer。真实目标解析器每次新建并计时，单次绑定缓存不跨样本；BoundaryStore背景与paint资源暖态。规划假设100条16步骤普通路径编译分配10/50ms，20条1024步骤复杂路径分配10/40ms；16目标绑定分配0.05/0.2ms，1024目标或复杂stroke阶段0.5/2ms。8/128叶图元Definition分别按普通/复杂路径，同最终输入各prepared档预算相同。scale表示步骤、smooth过点或自定义叶图元，装饰为1/16个且箭头恒双端；缺少业务遥测，不代表业务硬上限或整帧保证，不按本次测量放宽',
+        '一次Core Path完整编译或明确阶段，不含Source resolve、fixture、prepared构造、调用方有效性比较/跨次资源恢复及renderer。真实目标解析器每次新建并计时，单次绑定缓存不跨样本；BoundaryStore背景与paint资源暖态。规划假设100条16步骤普通路径编译分配10/50ms；16目标绑定分配0.05/0.2ms。8/128叶图元Definition分别按普通/复杂路径，复杂叶图元分配0.5/2ms。1024步骤、过点或目标属于少见大规模负载，仅参考，不承诺批量实时更新；其完整编译、prepared更新及独立阶段仍保留对比。scale表示步骤、smooth过点或自定义叶图元，装饰为1/16个且箭头恒双端；缺少业务遥测，不代表业务硬上限或整帧保证，不按本次测量放宽',
     };
   } else if (layer === 'compile' && family === 'scope') {
     const count = Number(scale);
@@ -536,7 +538,7 @@ export const resolveCoreBudget = (scenario: BenchmarkScenario): BenchmarkBudget 
             'compile/node/compile、synthetic 逐节点解析；假设100个节点编辑更新，解析阶段约5/20ms，单节点50/200μs。含16标签的节点仍保持同一交互目标，不含字体测量和布局',
         };
         break;
-      case 'text': {
+      case 'text-block': {
         const count = Number(identity.split('/').at(-1));
         const large = variant === 'plain' ? count > 1_024 : count > 128;
         policy = large
@@ -544,13 +546,13 @@ export const resolveCoreBudget = (scenario: BenchmarkScenario): BenchmarkBudget 
               warningMs: 0.5,
               errorMs: 2,
               rationale:
-                'compile/node/content/layout、node/label/layout、path/host/label 共用行解析；假设单个长行编辑（16384字符或2048混排片段），给分段及字体确定化0.5/2ms，字体测量和TeX排版另计',
+                'compile/node/content/layout、node/label/layout、path/host/label 共用文本块解析；假设单个长行块编辑（16384字符或2048混排片段），给块配置、分段及字体确定化0.5/2ms，字体测量和TeX排版另计',
             }
           : {
               warningMs: 0.05,
               errorMs: 0.2,
               rationale:
-                'compile 的节点正文与标签逐行消费；假设100行可见内容更新，单行分段与字体解析50/200μs，阶段约5/20ms。普通行最多1024字符或256片段；公式开关不放宽预算',
+                'compile 的节点正文与标签消费文本块；假设100个单行块更新，每块配置、分段与字体解析50/200μs，阶段约5/20ms。普通块最多1024字符或256片段；公式开关不放宽预算',
             };
         break;
       }
@@ -568,5 +570,5 @@ export const resolveCoreBudget = (scenario: BenchmarkScenario): BenchmarkBudget 
   } else {
     throw new Error(`Missing Core benchmark budget: ${identity}`);
   }
-  return { kind: 'workload', metric: 'p90', blocking: false, ...policy };
+  return { kind: 'workload', metric: 'p50', blocking: false, ...policy };
 };

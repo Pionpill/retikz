@@ -1,17 +1,6 @@
-/**
- * <Layout> 顶层级联样式 props 测试（隐式根 Scope）
- * @description Layout 设级联样式 props（color / stroke / nodeDefault / pathDefault / labelDefault / ...）时把
- *   children 包进合成根 `<Scope>`，编译产物 = 用户手写一层根 `<Scope>` 的同一 IR。覆盖：
- *   - happy：node / path / label 各通道继承 + 主色级联
- *   - 边界：无样式 prop 时 IR 形态逐字节不变（不包空 scope）/ 空 children / 单通道只进该通道
- *   - 错误路径：与 `ir` prop 并用 → dev warn + 样式忽略 / 非法 nodeDefault 不被 Layout 吞掉、走 schema 校验报错
- *   - 交互：内层 `<Scope>` 覆盖 / 图元显式属性胜出 / 内层 `<Scope resetStyle>` 屏障切断继承
- *   断言层：wrapRootScope（Layout 实际调用的合成函数）+ Vanilla normalize 出 IR 形态；compileToScene 出已解析 primitive 样式
- */
 import type { IRScene } from '@retikz/core';
 import type { EllipsePrimitive, PathPrimitive, RectPrimitive, ScenePrimitive, TextPrimitive } from '@retikz/core';
 import { SceneSchema } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import type { ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -20,6 +9,18 @@ import { Draw, EdgeLabel, Layout, Node, Scope, Step } from '../../../src';
 import { Path } from '../../../src/kernel';
 import { wrapRootScope } from '../../../src/kernel/adapter';
 import type { ScopeStyleProps } from '../../../src/kernel/protocol';
+
+/**
+ * <Layout> 顶层级联样式 props 测试（隐式根 Scope）
+ * @description Layout 设级联样式 props（color / stroke / nodeDefault / pathDefault / labelDefault / ...）时把
+ *   children 包进合成根 `<Scope>`，编译产物 = 用户手写一层根 `<Scope>` 的同一 IR。覆盖：
+ *   - happy：node / path / label 各通道继承 + 主色级联
+ *   - 边界：无样式 prop 时 IR 形态逐字节不变（不包空 scope）/ 空 children / 单通道只进该通道
+ *   - 错误路径：与 `ir` prop 并用 → dev warn + 样式忽略 / 非法 nodeDefault 不被 Layout 吞掉、走 schema 校验报错
+ *   - 交互：内层 `<Scope>` 覆盖 / 图元显式属性胜出 / 内层 `<Scope resetStyle>` 屏障切断继承
+ *   断言层：wrapRootScope（Layout 实际调用的合成函数）+ Vanilla normalize 出 IR 形态；SceneReconciler 出已解析 primitive 样式
+ */
+import { compileTestResult } from '../../helpers/compilation';
 import { normalizeReactInput } from '../../helpers/normalize-input';
 
 // --- helpers ---------------------------------------------------------------
@@ -42,7 +43,7 @@ const layoutIR = (style: ScopeStyleProps, children: ReactNode): IRScene =>
 
 /** Layout 流水线编译后的全部叶子 primitive */
 const layoutPrims = (style: ScopeStyleProps, children: ReactNode): Array<ScenePrimitive> =>
-  flatten(compileToScene(layoutIR(style, children)).scene.primitives);
+  flatten(compileTestResult(layoutIR(style, children)).scene.primitives);
 
 const rectOf = (prims: Array<ScenePrimitive>): RectPrimitive | undefined =>
   prims.find((p): p is RectPrimitive => p.type === 'rect');
@@ -242,7 +243,7 @@ describe('边界：无样式 / 空 children / 单通道', () => {
       children: [],
       defaults: { style: { stroke: 'red' } },
     });
-    expect(() => compileToScene(ir).scene).not.toThrow();
+    expect(() => compileTestResult(ir).scene).not.toThrow();
   });
 
   it('layout_empty_object_default_no_wrap：空对象 default（nodeDefault={{}}）不携带样式指令 → 不包合成 scope', () => {

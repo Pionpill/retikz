@@ -2,14 +2,94 @@ import type {
   CompiledPatternTile,
   PaintValue,
   PaintResource,
+  PatternResource,
   PatternEmitContext,
   PatternEmitOutput,
   ScenePrimitive,
 } from '../../contract';
 import { createCompositeContractError, createLayoutProbeRecoverableError, safeThrownDetail } from '../../resolve';
 import type { InputPaintResolution, PaintResolution, PatternResolution } from '../../resolve';
+import type { IRPatternLineStyle } from '../../schemas';
 import { materializeScenePrimitives } from '../shared';
 import { formatResourceId, serializeResourceContent, storeSceneResource } from './identity';
+import { encodePathCommandSequence } from './path';
+
+/** 路径图元复用命令专用序列化，其余字段保留完整 JSON 内容语义 */
+const serializePatternPrimitive = (primitive: ScenePrimitive): string => {
+  if (primitive.type !== 'path') return serializeResourceContent(primitive);
+  const keys = Object.keys(primitive);
+  // ⚡常用描边路径直接输出有序字段；任何其它字段都进入完整序列化，避免遗漏扩展内容
+  if (
+    (primitive.stroke === undefined || typeof primitive.stroke === 'string') &&
+    keys.every(key => key === 'commands' || key === 'stroke' || key === 'strokeWidth' || key === 'type')
+  ) {
+    return `{"commands":[${encodePathCommandSequence(primitive.commands)}]${primitive.stroke === undefined ? '' : `,"stroke":${JSON.stringify(primitive.stroke)}`}${primitive.strokeWidth === undefined ? '' : `,"strokeWidth":${JSON.stringify(primitive.strokeWidth)}`},"type":"path"}`;
+  }
+  const fields: Array<string> = [];
+  // ⚡路径通常包含大量坐标，命令走定制序列化，样式和扩展字段仍按原内容完整处理
+  for (const key of keys.sort()) {
+    const value: unknown = Reflect.get(primitive, key);
+    if (value === undefined) continue;
+    const content =
+      key === 'commands'
+        ? `[${encodePathCommandSequence(primitive.commands)}]`
+        : value !== null && typeof value === 'object'
+          ? serializeResourceContent(value)
+          : JSON.stringify(value);
+    fields.push(`${JSON.stringify(key)}:${content}`);
+  }
+  return `{${fields.join(',')}}`;
+};
+
+/** 图案外层字段固定，逐图元处理而不重复遍历完整声明 */
+const serializePatternTile = (tile: CompiledPatternTile): string =>
+  `{${tile.background === undefined ? '' : `"background":${JSON.stringify(tile.background)},`}"motif":[${tile.motif.map(serializePatternPrimitive).join(',')}]${tile.rotation === undefined ? '' : `,"rotation":${JSON.stringify(tile.rotation)}`},"size":${JSON.stringify(tile.size)}}`;
+
+/** 按字段字典序投影图案声明及其线型，保持原有内容缓存键 */
+const serializePatternSpec = (spec: PatternResource['spec']): string => {
+  /** 线型覆盖只包含标量与数值数组 */
+  const orderStyle = (style: IRPatternLineStyle | undefined): IRPatternLineStyle | undefined =>
+    style === undefined
+      ? undefined
+      : {
+          color: style.color,
+          dashOffset: style.dashOffset,
+          dashPattern: style.dashPattern,
+          dashed: style.dashed,
+          dotted: style.dotted,
+          lineCap: style.lineCap,
+          lineJoin: style.lineJoin,
+          lineWidth: style.lineWidth,
+        };
+  // ⚡图案声明字段固定，直接构造有序投影，避免通用 replacer 的递归回调和字段排序
+  return JSON.stringify({
+    background: spec.background,
+    color: spec.color,
+    dashOffset: spec.dashOffset,
+    dashPattern: spec.dashPattern,
+    dashed: spec.dashed,
+    dotted: spec.dotted,
+    horizontalStyle: orderStyle(spec.horizontalStyle),
+    kind: spec.kind,
+    lineCap: spec.lineCap,
+    lineJoin: spec.lineJoin,
+    lineStyleCycle:
+      spec.lineStyleCycle === undefined
+        ? undefined
+        : {
+            overrides: spec.lineStyleCycle.overrides.map(override => ({
+              index: override.index,
+              style: orderStyle(override.style),
+            })),
+            period: spec.lineStyleCycle.period,
+          },
+    lineWidth: spec.lineWidth,
+    rotation: spec.rotation,
+    shape: spec.shape,
+    size: spec.size,
+    verticalStyle: orderStyle(spec.verticalStyle),
+  });
+};
 
 /** 登记已解析的绘制资源，普通颜色直接返回 */
 export type RegisterPaint = (paint: InputPaintResolution | undefined) => PaintValue | undefined;
@@ -90,7 +170,10 @@ export const createPaintRegistry = (round: (n: number) => number): PaintRegistry
     if (paint === undefined || typeof paint === 'string') return paint;
 
     const resolution: PaintResolution = paint;
-    const specKey = serializeResourceContent(resolution.spec);
+    const specKey =
+      resolution.spec.kind === 'pattern'
+        ? serializePatternSpec(resolution.spec)
+        : serializeResourceContent(resolution.spec);
     const existingId = resourceIdBySpecMap.get(specKey);
     if (existingId !== undefined) return { kind: 'resourceRef', id: existingId };
 
@@ -102,10 +185,10 @@ export const createPaintRegistry = (round: (n: number) => number): PaintRegistry
           : { kind: 'paint', id: '', spec: resolution.spec };
     const id = formatResourceId(
       'paint',
-      serializeResourceContent({
-        spec: resource.spec,
-        tile: 'tile' in resource ? resource.tile : undefined,
-      }),
+      // ⚡复用登记缓存键的规范声明，图元仍走完整内容序列化，不改变字段或摘要语义
+      'tile' in resource
+        ? `{"spec":${specKey},"tile":${serializePatternTile(resource.tile)}}`
+        : serializeResourceContent({ spec: resource.spec }),
     );
     resource.id = id;
     const reference = importResource(resource);

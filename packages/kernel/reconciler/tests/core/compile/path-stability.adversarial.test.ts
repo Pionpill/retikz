@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { IRPath, IRScene, ScenePrimitive } from '../../../../core/src';
 import { BuiltinCompileWarningCode } from '../../../../core/src';
 import type { Scene } from '../../../../core/src/contract';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 
 /** 递归收集 Scene 里的数值坐标（commands / transforms / layout），用于检查是否有限 */
 const collectNumbers = (value: unknown, out: Array<number> = []): Array<number> => {
@@ -82,7 +82,7 @@ const firstCubic = (prims: ReadonlyArray<ScenePrimitive>) => {
 // =====================================================================
 describe('ATTACK 1: bendAngle 边角值（finite 守卫：schema number 校验 + emit 控制点守卫）', () => {
   it('bendAngle=180 → tan(90°) 巨大控制点；Scene 是否仍 finite', () => {
-    const scene = compileToScene(
+    const scene = compileTestResult(
       pathIR([
         { type: 'step', kind: 'move', to: [0, 0] },
         { type: 'step', kind: 'bend', to: [10, 0], bendDirection: 'left', bendAngle: 180 },
@@ -100,7 +100,7 @@ describe('ATTACK 1: bendAngle 边角值（finite 守卫：schema number 校验 +
       { type: 'step', kind: 'bend', to: [10, 0], bendDirection: 'left', bendAngle: Number.NaN },
     ]);
 
-    expect(() => compileToScene(ir).scene).toThrow(/non-finite control point/i);
+    expect(() => compileTestResult(ir).scene).toThrow(/non-finite control point/i);
   });
 
   it('bendAngle=Infinity → tan(Inf)=NaN → 控制点非 finite → 编译期抛', () => {
@@ -115,7 +115,7 @@ describe('ATTACK 1: bendAngle 边角值（finite 守卫：schema number 校验 +
       },
     ]);
 
-    expect(() => compileToScene(ir).scene).toThrow(/non-finite control point/i);
+    expect(() => compileTestResult(ir).scene).toThrow(/non-finite control point/i);
   });
 });
 
@@ -124,7 +124,7 @@ describe('ATTACK 1: bendAngle 边角值（finite 守卫：schema number 校验 +
 // =====================================================================
 describe('ATTACK 2: out/in 半侧 + looseness 极值', () => {
   it('只给 outAngle 不给 inAngle → inAngle 兜底 180（默认）；Scene finite', () => {
-    const scene = compileToScene(
+    const scene = compileTestResult(
       pathIR([
         { type: 'step', kind: 'move', to: [0, 0] },
         { type: 'step', kind: 'bend', to: [10, 0], outAngle: 45 },
@@ -142,7 +142,7 @@ describe('ATTACK 2: out/in 半侧 + looseness 极值', () => {
   });
 
   it('looseness=1e-9（趋 0）→ 控制点几乎贴端点；仍 finite，不退化为 NaN', () => {
-    const scene = compileToScene(
+    const scene = compileTestResult(
       pathIR([
         { type: 'step', kind: 'move', to: [0, 0] },
         { type: 'step', kind: 'bend', to: [10, 0], outAngle: 60, inAngle: 120, looseness: 1e-9 },
@@ -165,7 +165,7 @@ describe('ATTACK 2: out/in 半侧 + looseness 极值', () => {
       },
     ]);
 
-    expect(() => compileToScene(ir).scene).toThrow(/non-finite control point/i);
+    expect(() => compileTestResult(ir).scene).toThrow(/non-finite control point/i);
   });
 });
 
@@ -174,7 +174,7 @@ describe('ATTACK 2: out/in 半侧 + looseness 极值', () => {
 // =====================================================================
 describe('ATTACK 3: self-loop 退化几何', () => {
   it('from==to 坐标 + outAngle==inAngle（两控制点同方向）→ 退化为直线？', () => {
-    const scene = compileToScene(
+    const scene = compileTestResult(
       pathIR([
         { type: 'step', kind: 'move', to: [5, 5] },
         { type: 'step', kind: 'bend', to: [5, 5], outAngle: 90, inAngle: 90 },
@@ -196,7 +196,7 @@ describe('ATTACK 3: self-loop 退化几何', () => {
   it('self-loop 完全不给 out/in 也不给 bendDirection → 走 bendControlPoints chord=0 分支', () => {
     // bend 无 out/in → 走 bendControlPoints(prev, curr, 'left', 30)；from==to → chord=0 → 两控制点=from
     // 退化为点（自环画不出），但不应崩 / NaN
-    const scene = compileToScene(
+    const scene = compileTestResult(
       pathIR([
         { type: 'step', kind: 'move', to: [5, 5] },
         { type: 'step', kind: 'bend', to: [5, 5] },
@@ -214,7 +214,7 @@ describe('ATTACK 3: self-loop 退化几何', () => {
   });
 
   it('self-loop 同 node id（from==to 同节点中心）→ 成环 finite', () => {
-    const scene = compileToScene({
+    const scene = compileTestResult({
       version: 1,
       type: 'scene',
       children: [
@@ -239,7 +239,7 @@ describe('ATTACK 3: self-loop 退化几何', () => {
 describe('ATTACK 4: path scale 极值（schema 允许任意 finite positive）', () => {
   it('scale=1e300 → applyTransformChain 投影后坐标 Infinity → transformedPoints/layout 非 finite', () => {
     const ir = linePath({ scale: 1e300 });
-    const scene = compileToScene(ir).scene;
+    const scene = compileTestResult(ir).scene;
     const fin = expectAllFinite(scene);
 
     // scale=1e300 绕 bbox center [5,0]：translate(5,0)∘scale(1e300)∘translate(-5,0)
@@ -252,11 +252,11 @@ describe('ATTACK 4: path scale 极值（schema 允许任意 finite positive）',
   it('scale=Number.MAX_VALUE → (10-5)×MAX+5 溢出 Infinity 坐标 → 编译期抛', () => {
     const ir = linePath({ scale: Number.MAX_VALUE });
 
-    expect(() => compileToScene(ir).scene).toThrow(/non-finite coordinate/i);
+    expect(() => compileTestResult(ir).scene).toThrow(/non-finite coordinate/i);
   });
 
   it('scale=1e-300（极小）→ 坐标趋 0；round 后是否塌成 0 致信息丢失', () => {
-    const scene = compileToScene(linePath({ scale: 1e-300 })).scene;
+    const scene = compileTestResult(linePath({ scale: 1e-300 })).scene;
 
     expect(expectAllFinite(scene).ok).toBe(true);
     expect(jsonRoundTripLossless(scene)).toBe(true);
@@ -264,7 +264,7 @@ describe('ATTACK 4: path scale 极值（schema 允许任意 finite positive）',
 
   it('非等比 scale {x: 1e300, y: 1e308} → 任一轴溢出 Infinity', () => {
     const ir = linePath({ scale: { x: 1e300, y: Number.MAX_VALUE } });
-    const scene = compileToScene(ir).scene;
+    const scene = compileTestResult(ir).scene;
     const fin = expectAllFinite(scene);
 
     expect(fin.ok).toBe(true);
@@ -277,7 +277,7 @@ describe('ATTACK 4: path scale 极值（schema 允许任意 finite positive）',
 // =====================================================================
 describe('ATTACK 5: 退化 bbox + path transform', () => {
   it('单点退化 path（move + line 到同坐标）rotate → bbox center=该点；finite', () => {
-    const scene = compileToScene(
+    const scene = compileTestResult(
       pathIR(
         [
           { type: 'step', kind: 'move', to: [3, 3] },
@@ -292,7 +292,7 @@ describe('ATTACK 5: 退化 bbox + path transform', () => {
 
   it('path 只有 1 step（PATH_TOO_SHORT）+ rotate → 整 path skip，rotate 不致崩', () => {
     let warned = false;
-    const scene = compileToScene(
+    const scene = compileTestResult(
       pathIR([{ type: 'step', kind: 'move', to: [0, 0] }] as IRPath['children'], { rotate: 30 }),
       {
         onWarn: w => {
@@ -306,7 +306,7 @@ describe('ATTACK 5: 退化 bbox + path transform', () => {
   });
 
   it('全部 step 引用未定义 node（path 整体 skip 返回 null）+ rotate → 不崩，layout finite', () => {
-    const scene = compileToScene(
+    const scene = compileTestResult(
       pathIR(
         [
           { type: 'step', kind: 'move', to: { id: 'GHOST' } },
@@ -327,10 +327,10 @@ describe('ATTACK 5: 退化 bbox + path transform', () => {
 describe('ATTACK 6: marks + path transform 交互（二次变换 / 定向污染）', () => {
   it('marks + rotate 同给：mark marker 坐标进 group 还是裸坐标（二次旋转风险）', () => {
     // 无 transform 基准
-    const baseScene = compileToScene(linePath({ marks: [{ pos: 0.5, shape: 'stealth' }] })).scene;
+    const baseScene = compileTestResult(linePath({ marks: [{ pos: 0.5, shape: 'stealth' }] })).scene;
 
     // 加 rotate
-    const rotScene = compileToScene(linePath({ rotate: 90, marks: [{ pos: 0.5, shape: 'stealth' }] })).scene;
+    const rotScene = compileTestResult(linePath({ rotate: 90, marks: [{ pos: 0.5, shape: 'stealth' }] })).scene;
 
     expect(expectAllFinite(baseScene).ok).toBe(true);
     expect(expectAllFinite(rotScene).ok).toBe(true);
@@ -354,7 +354,7 @@ describe('ATTACK 6: marks + path transform 交互（二次变换 / 定向污染�
 describe('ATTACK 7: marks 落各段类型 + 零长段 tangent', () => {
   it('mark 位于整条零长度路径时报告无法定位', () => {
     expect(() =>
-      compileToScene(
+      compileTestResult(
         pathIR(
           [
             { type: 'step', kind: 'move', to: [2, 2] },
@@ -367,7 +367,7 @@ describe('ATTACK 7: marks 落各段类型 + 零长段 tangent', () => {
   });
 
   it('mark 落 arc 段 pos=0 / pos=1（段边界采样）→ finite', () => {
-    const scene = compileToScene(
+    const scene = compileTestResult(
       pathIR(
         [
           { type: 'step', kind: 'move', to: [0, 0] },
@@ -383,7 +383,7 @@ describe('ATTACK 7: marks 落各段类型 + 零长段 tangent', () => {
   });
 
   it('mark 落 self-loop cubic 段（from==to bend）→ finite tangent', () => {
-    const scene = compileToScene(
+    const scene = compileTestResult(
       pathIR(
         [
           { type: 'step', kind: 'move', to: [5, 5] },
@@ -397,7 +397,7 @@ describe('ATTACK 7: marks 落各段类型 + 零长段 tangent', () => {
   });
 
   it('多 mark 同 pos=0.5 → 多 marker 共点，finite，不互相干扰', () => {
-    const scene = compileToScene(
+    const scene = compileTestResult(
       linePath({
         marks: [
           { pos: 0.5, shape: 'stealth' },
@@ -418,7 +418,7 @@ describe('ATTACK 8: mark 未注册箭头名 / 错误信息清晰度', () => {
     let err: Error | undefined;
 
     try {
-      compileToScene(linePath({ marks: [{ pos: 0.5, shape: 'ghostArrow' }] }));
+      compileTestResult(linePath({ marks: [{ pos: 0.5, shape: 'ghostArrow' }] }));
     } catch (e) {
       err = e as Error;
     }
@@ -434,7 +434,7 @@ describe('ATTACK 8: mark 未注册箭头名 / 错误信息清晰度', () => {
     let err: Error | undefined;
 
     try {
-      compileToScene(linePath({ marks: [{ pos: 0.5, shape: '->' }] }));
+      compileTestResult(linePath({ marks: [{ pos: 0.5, shape: '->' }] }));
     } catch (e) {
       err = e as Error;
     }
@@ -449,7 +449,7 @@ describe('ATTACK 8: mark 未注册箭头名 / 错误信息清晰度', () => {
 // =====================================================================
 describe('ATTACK 9: out/in bend + rotate + marks 三合一 + arrow', () => {
   it('out/in self-loop + rotate=37 + scale=0.5 + marks + arrow="<->" 全开 → finite + 单层 group', () => {
-    const scene = compileToScene(
+    const scene = compileTestResult(
       pathIR(
         [
           { type: 'step', kind: 'move', to: [3, 3] },
@@ -475,7 +475,7 @@ describe('ATTACK 9: out/in bend + rotate + marks 三合一 + arrow', () => {
 // =====================================================================
 describe('ATTACK 10: path transform 嵌套 scope transform（双重变换）', () => {
   it('scope rotate + path rotate 嵌套 → 两层 GroupPrimitive 都保留且数值有限', () => {
-    const scene = compileToScene({
+    const scene = compileTestResult({
       version: 1,
       type: 'scene',
       children: [
@@ -522,7 +522,7 @@ describe('ATTACK 10: path transform 嵌套 scope transform（双重变换）', (
 // =====================================================================
 describe('ATTACK 11: mark 视觉极值（length / scale 极大）', () => {
   it('mark.length=1e300 → markerWidth/baseSize 巨大 scale；finite', () => {
-    const scene = compileToScene(linePath({ marks: [{ pos: 0.5, shape: 'stealth', length: 1e300 }] })).scene;
+    const scene = compileTestResult(linePath({ marks: [{ pos: 0.5, shape: 'stealth', length: 1e300 }] })).scene;
     const fin = expectAllFinite(scene);
 
     expect(fin.ok).toBe(true);
@@ -534,7 +534,7 @@ describe('ATTACK 11: mark 视觉极值（length / scale 极大）', () => {
       marks: [{ pos: 0.5, shape: 'stealth', scale: 1e308, length: 10 }],
     });
 
-    expect(() => compileToScene(ir).scene).toThrow(/resolved length\/width is non-finite/i);
+    expect(() => compileTestResult(ir).scene).toThrow(/resolved length\/width is non-finite/i);
   });
 });
 
@@ -543,19 +543,19 @@ describe('ATTACK 11: mark 视觉极值（length / scale 极大）', () => {
 // =====================================================================
 describe('ATTACK 12: rotate 边角值', () => {
   it('rotate=0 → 仍包 group（degrees=0 是 no-op 但产 transform）；finite', () => {
-    const scene = compileToScene(linePath({ rotate: 0 })).scene;
+    const scene = compileTestResult(linePath({ rotate: 0 })).scene;
 
     expect(expectAllFinite(scene).ok).toBe(true);
   });
 
   it('rotate=720（两整圈）→ finite，与 0 视觉等价', () => {
-    const scene = compileToScene(linePath({ rotate: 720 })).scene;
+    const scene = compileTestResult(linePath({ rotate: 720 })).scene;
 
     expect(expectAllFinite(scene).ok).toBe(true);
   });
 
   it('rotate=-1e7（巨大负角）→ finite', () => {
-    const scene = compileToScene(linePath({ rotate: -1e7 })).scene;
+    const scene = compileTestResult(linePath({ rotate: -1e7 })).scene;
 
     expect(expectAllFinite(scene).ok).toBe(true);
   });

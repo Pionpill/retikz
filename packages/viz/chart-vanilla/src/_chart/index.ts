@@ -1,7 +1,7 @@
 import type { IRChartSource } from '@retikz/chart';
 import type { CompileResult } from '@retikz/reconciler';
 import type { RenderToStringOptions, AsyncProcessingOptions } from '@retikz/vanilla';
-import { renderToSvgString, scene, toSceneResult, processToStaticInputResultAsync } from '@retikz/vanilla';
+import { renderToSvgString, scene, toSceneResult, compileToSceneAsync } from '@retikz/vanilla';
 import type { InputEmbed } from '@retikz/vanilla';
 
 import { RetikzChartVanillaError } from '../error';
@@ -75,7 +75,7 @@ export const renderChartAsync = async (
 ): Promise<ChartRenderResult> => {
   const { compile, adapters, signal, ...renderOptions } = options;
   const request = chartRenderRequest(input, compile);
-  const result = await processToStaticInputResultAsync(request.source, { adapters, signal, compile: request.compile });
+  const result = await compileToSceneAsync(request.source, { adapters, signal, compile: request.compile });
 
   return { svg: renderToSvgString(result.scene, renderOptions), compileResult: result.compileResult };
 };

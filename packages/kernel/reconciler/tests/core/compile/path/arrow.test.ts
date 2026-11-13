@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { PathPrimitive, ScenePrimitive } from '../../../../../core/src/contract';
 import type { IRScene } from '../../../../../core/src/schemas';
-import { compileToScene } from '../../../../src/compile';
+import { compileTestResult } from '../../../helpers/compilation';
 import { flattenPrims } from '../../../helpers/flatten';
 import { pathArrows } from '../../../helpers/path-arrows';
 import { line, move } from '../../../helpers/path-command-factory';
@@ -24,7 +24,7 @@ describe('compile path: arrow 箭头', () => {
         },
       ],
     };
-    const scene = compileToScene(ir).scene;
+    const scene = compileTestResult(ir).scene;
     const path = findPathPrim(scene.primitives);
 
     expect(path.arrowEnd?.shape).toBe('stealth');
@@ -46,7 +46,7 @@ describe('compile path: arrow 箭头', () => {
         },
       ],
     };
-    const path = findPathPrim(compileToScene(ir).scene.primitives);
+    const path = findPathPrim(compileTestResult(ir).scene.primitives);
 
     expect(path.arrowStart?.shape).toBe('stealth');
     expect(path.arrowEnd).toBeUndefined();
@@ -67,7 +67,7 @@ describe('compile path: arrow 箭头', () => {
         },
       ],
     };
-    const path = findPathPrim(compileToScene(ir).scene.primitives);
+    const path = findPathPrim(compileTestResult(ir).scene.primitives);
 
     expect(path.arrowStart?.shape).toBe('stealth');
     expect(path.arrowEnd?.shape).toBe('stealth');
@@ -87,7 +87,7 @@ describe('compile path: arrow 箭头', () => {
         },
       ],
     };
-    const path = findPathPrim(compileToScene(ir).scene.primitives);
+    const path = findPathPrim(compileTestResult(ir).scene.primitives);
 
     expect(path.arrowStart).toBeUndefined();
     expect(path.arrowEnd).toBeUndefined();
@@ -115,7 +115,7 @@ describe('compile path: arrow 箭头', () => {
         },
       ],
     };
-    const scene = compileToScene(ir).scene;
+    const scene = compileTestResult(ir).scene;
     const group = scene.primitives.find((p): p is Extract<ScenePrimitive, { type: 'group' }> => p.type === 'group');
 
     expect(group).toBeDefined();
@@ -145,7 +145,7 @@ describe('compile path: arrow 箭头', () => {
           },
         ],
       };
-      const path = findPathPrim(compileToScene(ir).scene.primitives);
+      const path = findPathPrim(compileTestResult(ir).scene.primitives);
 
       expect(path.arrowEnd?.shape).toBe(shape);
     }
@@ -174,7 +174,10 @@ describe('compile path: arrow 箭头', () => {
       ],
     };
 
-    expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([move([0, 0]), line([expectedEndX, 0])]);
+    expect(findPathPrim(compileTestResult(ir).scene.primitives).commands).toEqual([
+      move([0, 0]),
+      line([expectedEndX, 0]),
+    ]);
   });
 
   it('主路径描边变宽时仍向 marker 内覆盖半个自身描边宽度', () => {
@@ -194,7 +197,7 @@ describe('compile path: arrow 箭头', () => {
       ],
     };
 
-    expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([move([0, 0]), line([70, 0])]);
+    expect(findPathPrim(compileTestResult(ir).scene.primitives).commands).toEqual([move([0, 0]), line([70, 0])]);
   });
 
   it("arrowDetail 缺省时 shape 回退 'stealth'", () => {
@@ -213,7 +216,7 @@ describe('compile path: arrow 箭头', () => {
       ],
     };
 
-    expect(findPathPrim(compileToScene(ir).scene.primitives).arrowEnd?.shape).toBe('stealth');
+    expect(findPathPrim(compileTestResult(ir).scene.primitives).arrowEnd?.shape).toBe('stealth');
   });
 
   it('单 sub-path + arrow → 不拆 group，直接一个 PathPrimitive 挂 marker', () => {
@@ -233,7 +236,7 @@ describe('compile path: arrow 箭头', () => {
         },
       ],
     };
-    const scene = compileToScene(ir).scene;
+    const scene = compileTestResult(ir).scene;
 
     expect(scene.primitives.find(p => p.type === 'group')).toBeUndefined();
 
@@ -260,7 +263,7 @@ describe('compile path: arrow 箭头', () => {
       ],
     };
     const fragments = flattenPrims(
-      compileToScene(ir, { measureText: () => ({ width: 20, height: 10 }) }).scene.primitives,
+      compileTestResult(ir, { measureText: () => ({ width: 20, height: 10 }) }).scene.primitives,
     ).filter((primitive): primitive is PathPrimitive => primitive.type === 'path' && primitive.stroke === '#13579b');
 
     expect(fragments).toHaveLength(2);
@@ -297,7 +300,7 @@ describe('compile path: arrow 箭头', () => {
       ],
     };
     const fragments = flattenPrims(
-      compileToScene(ir, { measureText: () => ({ width: 20, height: 10 }) }).scene.primitives,
+      compileTestResult(ir, { measureText: () => ({ width: 20, height: 10 }) }).scene.primitives,
     ).filter((primitive): primitive is PathPrimitive => primitive.type === 'path' && primitive.stroke === '#13579b');
     const startFragment = fragments.find(fragment => fragment.arrowStart !== undefined);
     const endFragment = fragments.find(fragment => fragment.arrowEnd !== undefined);

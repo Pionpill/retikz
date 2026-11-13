@@ -84,6 +84,8 @@ export const drawApiReferenceConfigs: ReadonlyArray<ApiReferencePackageConfig> =
           'samplePathRoute',
           'resolvePathLabelPlacement',
           'PathLabelGeometryOptions',
+          'PathPositionMode',
+          'PathPositionGeometry',
           'CanonicalPathLabelPlacement',
           'definePath',
           'PathDefinition',

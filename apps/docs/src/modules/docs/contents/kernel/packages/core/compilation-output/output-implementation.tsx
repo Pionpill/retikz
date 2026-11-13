@@ -7,48 +7,70 @@ import { logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
 
 import { outputImplementationI18n } from './output-implementation.i18n';
 
-/** 编译产物示意图 */
+/** 以根 IR 启动子树编译与结果收集流程图的语言 */
 export type OutputImplementationProps = { lang?: Lang };
-/** 编译产物示意图 */
-const Figure: FC<OutputImplementationProps> = props => {
+
+/** 展示本页追踪的阶段、产物与必要输入 */
+const OutputImplementation: FC<OutputImplementationProps> = props => {
   const { lang = 'zh' } = props;
-  const labels = outputImplementationI18n[lang];
-  const items = labels.map((label, index) => ({
-    id: `s${index}`,
-    role: 'activity' as const,
-    ...(index === 1 || (index >= 4 && index <= 6) ? { kind: 'docs.logic.important' } : {}),
-    text: label.split('\n').map((text, line) => ({ text, ...(line ? { font: { size: 12 }, fill: 'gray' } : {}) })),
-  }));
+  const text = outputImplementationI18n[lang];
+  const stages = [
+    { id: 'manager', name: 'compileScene', state: false },
+    { id: 'subtree', name: 'assembleCompileSubtree', state: false },
+    { id: 'assemble', name: 'finalizeSceneCompilation', state: false },
+    { id: 'publish', name: 'SceneReconciler', state: true },
+  ] as const;
+  const inputs = [{ id: 'options', name: 'IRScene + options', target: 'manager' }] as const;
   return (
     <PreviewFlowDiagram {...logicFigureGraphProps()} style={{ maxWidth: '100%', height: 'auto' }}>
-      <FlowLayout id="main" kind="linear" direction="right" gap={48} align="center">
-        <FlowLayout id="stages" kind="linear" direction="down" gap={16} itemWidth="match-largest">
-          <FlowEntities items={items.slice(0, 3)} />
-        </FlowLayout>
-        <FlowEntities items={items.slice(3, 4)} />
-        <FlowLayout id="outputs" kind="linear" direction="down" gap={16} itemWidth="match-largest">
-          <FlowEntities items={items.slice(4)} />
-        </FlowLayout>
+      <FlowLayout
+        id="output-implementation"
+        kind="grid"
+        gap={{ row: 20, column: 28 }}
+        placements={[
+          ['options', 'manager'],
+          [null, 'subtree'],
+          [null, 'assemble'],
+          [null, 'publish'],
+        ]}
+      >
+        <FlowEntities
+          items={stages.map(item => ({
+            id: item.id,
+            role: item.state ? 'state' : 'activity',
+            layout: { width: 290 },
+            text: [
+              { text: item.name, font: { size: 12 } },
+              { text: text[item.id], font: { size: 12 }, fill: 'gray' },
+            ],
+          }))}
+        />
+        <FlowEntities
+          items={inputs.map(item => ({
+            id: item.id,
+            role: 'state',
+            kind: 'docs.logic.secondary',
+            layout: { width: 230 },
+            text: [
+              { text: item.name, font: { size: 12 } },
+              { text: text[item.id], font: { size: 12 }, fill: 'gray' },
+            ],
+          }))}
+        />
       </FlowLayout>
       <FlowRelations
         items={[
-          ...[0, 1].map(index => ({
-            source: { id: `s${index}`, side: 'bottom' as const },
-            target: { id: `s${index + 1}`, side: 'top' as const },
+          ...stages.slice(1).map((item, index) => ({
+            source: { id: stages[index].id, anchor: 'bottom' as const },
+            target: { id: item.id, anchor: 'top' as const },
           })),
-          {
-            source: { id: 's2', side: 'right' as const },
-            target: { id: 's3', side: 'left' as const },
-            routing: { kind: 'orthogonal' as const, cornerRadius: 0 },
-          },
-          ...items.slice(4).map(item => ({
-            source: { id: 's3', side: 'right' as const },
-            target: { id: item.id, side: 'left' as const },
-            routing: { kind: 'orthogonal' as const, cornerRadius: 0 },
+          ...inputs.map(item => ({
+            source: { id: item.id, anchor: 'right' as const },
+            target: { id: item.target, anchor: 'left' as const },
           })),
         ]}
       />
     </PreviewFlowDiagram>
   );
 };
-export default Figure;
+export default OutputImplementation;

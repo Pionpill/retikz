@@ -1,3 +1,4 @@
+export * from './color';
 export * from './effects';
 export {
   BuiltinPatternShape,
@@ -17,7 +18,6 @@ export type { IRGradientStop, IRPaint, IRPatternLineStyle, IRPatternLineStyleCyc
 export {
   CascadingGraphicStyleSchema,
   ContextualColorSchema,
-  CssColorSchema,
   GraphicColorSchema,
   GraphicEffectsSchema,
   GraphicElementOpacitySchema,
@@ -26,7 +26,6 @@ export {
   GraphicOpacityValueSchema,
   GraphicStrokeSchema,
   GraphicStyleSchema,
-  OpacitySchema,
   PaintValueSchema,
   PathLineCap,
   PathLineCapSchema,

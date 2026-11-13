@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { GroupPrimitive, IRScene, ScenePrimitive } from '../../../../core/src';
 import { applyTransformChain } from '../../../../core/src/compile/shared';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 import { sceneRectangles } from '../../helpers/scene-rectangles';
 
 const scene = (children: IRScene['children']): IRScene => ({
@@ -26,7 +26,7 @@ const node = (id: string, position: [number, number]) => ({
 
 describe('Scope anchor position 两阶段布局', () => {
   it('显式 parent-frame target + center selfAnchor 生成最外层 placement translate', () => {
-    const compiled = compileToScene(
+    const compiled = compileTestResult(
       scene([
         {
           type: 'scope',
@@ -41,7 +41,7 @@ describe('Scope anchor position 两阶段布局', () => {
   });
 
   it('placement.selfAnchor=top-left 使用包含 margin 的 intrinsic rectangle envelope', () => {
-    const compiled = compileToScene(
+    const compiled = compileTestResult(
       scene([
         {
           type: 'scope',
@@ -55,7 +55,7 @@ describe('Scope anchor position 两阶段布局', () => {
   });
 
   it('NodeTarget 在 children 之前解析，offset 按 world user-units 只应用一次', () => {
-    const compiled = compileToScene(
+    const compiled = compileTestResult(
       scene([
         { type: 'coordinate', id: 'target', position: [100, 80] },
         {
@@ -70,7 +70,7 @@ describe('Scope anchor position 两阶段布局', () => {
   });
 
   it('placement.target 可引用此前完成的 Node 与 Scope anchor', () => {
-    const compiled = compileToScene(
+    const compiled = compileTestResult(
       scene([
         node('node-target', [40, 10]),
         {
@@ -97,7 +97,7 @@ describe('Scope anchor position 两阶段布局', () => {
   });
 
   it('placement prepend 在 transform chain 第 0 项，pivot 仍由 placement 前 intrinsic envelope 求值', () => {
-    const compiled = compileToScene(
+    const compiled = compileTestResult(
       scene([
         {
           type: 'scope',
@@ -121,7 +121,7 @@ describe('Scope anchor position 两阶段布局', () => {
   });
 
   it('空 Scope 的 center 退化到 origin，并仍注册最终 resolved target', () => {
-    const compiled = compileToScene(
+    const compiled = compileTestResult(
       scene([
         {
           type: 'scope',
@@ -147,7 +147,7 @@ describe('Scope anchor position 两阶段布局', () => {
   });
 
   it('circle envelope 的 selfAnchor 复用 intrinsic corner points 的最小外接圆', () => {
-    const compiled = compileToScene(
+    const compiled = compileTestResult(
       scene([
         {
           type: 'scope',
@@ -198,7 +198,7 @@ describe('Scope anchor position 两阶段布局', () => {
       ],
     ],
   ] as const)('%s Scope target fail-loud，不读取未完成 placeholder', (name, children) => {
-    expect(() => compileToScene(scene(children as unknown as IRScene['children'])).scene).toThrow(
+    expect(() => compileTestResult(scene(children as unknown as IRScene['children'])).scene).toThrow(
       name === 'ancestor placeholder' ? /ancestor Scope.*outer/ : /scope position target/i,
     );
   });
@@ -206,7 +206,7 @@ describe('Scope anchor position 两阶段布局', () => {
   it('空 Scope 的 {side,fraction} selfAnchor 沿用零尺寸 fail-loud', () => {
     expect(
       () =>
-        compileToScene(
+        compileTestResult(
           scene([
             {
               type: 'scope',
@@ -219,7 +219,7 @@ describe('Scope anchor position 两阶段布局', () => {
   });
 
   it('Group、namespace target、observer 与 auto viewBox 只看到 own chain 应用一次后的最终几何', () => {
-    const result = compileToScene(
+    const result = compileTestResult(
       scene([
         {
           type: 'scope',
@@ -253,7 +253,7 @@ describe('Scope anchor position 两阶段布局', () => {
   });
 
   it('嵌套 Scope 各自完成 pivot / placement，descendant namespace 与 observer 不重复应用 ancestor chain', () => {
-    const result = compileToScene(
+    const result = compileTestResult(
       scene([
         {
           type: 'scope',
@@ -291,7 +291,7 @@ describe('Scope anchor position 两阶段布局', () => {
   });
 
   it('scaled parent 中 NodeTarget offset 保持 world user-units，只在投影前叠加一次', () => {
-    const compiled = compileToScene(
+    const compiled = compileTestResult(
       scene([
         { type: 'coordinate', id: 'target', position: [200, 100] },
         {
@@ -327,7 +327,7 @@ describe('Scope zero-scale 反投影契约', () => {
   it('纯视觉 zero scale 合法', () => {
     expect(
       () =>
-        compileToScene(
+        compileTestResult(
           scene([
             {
               type: 'scope',
@@ -342,7 +342,7 @@ describe('Scope zero-scale 反投影契约', () => {
   it('跨 zero-scale ancestor chain 解析外部 target 时稳定抛错', () => {
     expect(
       () =>
-        compileToScene(
+        compileTestResult(
           scene([
             { type: 'coordinate', id: 'outside', position: [20, 30] },
             {

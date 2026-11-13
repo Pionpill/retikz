@@ -7,29 +7,68 @@ import { logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
 
 import { coordinateOverviewI18n } from './coordinate-overview.i18n';
 
-/** 坐标解析总览的语言 */
+/** 坐标阶段图的语言 */
 export type CoordinateOverviewProps = { lang?: Lang };
 
-/** 从声明追踪到局部几何与分组变换 */
+/** 展示位置表达的阶段产物与上下文输入 */
 const CoordinateOverview: FC<CoordinateOverviewProps> = props => {
   const { lang = 'zh' } = props;
   const text = coordinateOverviewI18n[lang];
-  const stages = ['input', 'context', 'resolve', 'layout', 'close', 'output'] as const;
+  const stages = [
+    { id: 'source', name: 'IRCoordinate', state: true },
+    { id: 'resolve', name: 'resolveCoordinate → resolvePosition', state: false },
+    { id: 'canon', name: 'CanonicalCoordinate', state: true },
+  ] as const;
   return (
     <PreviewFlowDiagram {...logicFigureGraphProps()} style={{ maxWidth: '100%', height: 'auto' }}>
-      <FlowLayout id="coordinates" kind="linear" direction="down" itemWidth="match-largest" gap={32 * (2 / 3)}>
+      <FlowLayout
+        id="coordinate-overview"
+        kind="grid"
+        gap={{ row: 20, column: 28 }}
+        placements={[
+          [null, 'source'],
+          ['context', 'resolve'],
+          [null, 'canon'],
+        ]}
+      >
         <FlowEntities
-          items={stages.map(id => ({
-            id,
-            text: text[id],
-            role: id === 'input' || id === 'output' ? 'state' : 'activity',
-            ...(id === 'resolve' ? { kind: 'docs.logic.important' } : {}),
+          items={stages.map(item => ({
+            id: item.id,
+            role: item.state ? 'state' : 'activity',
+            layout: { width: 300 },
+            text: [
+              { text: item.name, font: { size: 12 } },
+              { text: text[item.id], font: { size: 12 }, fill: 'gray' },
+            ],
           }))}
         />
+        <FlowEntities
+          items={[
+            {
+              id: 'context',
+              role: 'state',
+              kind: 'docs.logic.secondary',
+              layout: { width: 260 },
+              text: [
+                { text: 'PositionResolveContext', font: { size: 12 } },
+                { text: text.context, font: { size: 12 }, fill: 'gray' },
+              ],
+            },
+          ]}
+        />
       </FlowLayout>
-      <FlowRelations items={stages.slice(1).map((id, index) => ({ source: stages[index], target: id }))} />
+      <FlowRelations
+        items={[
+          ...stages
+            .slice(1)
+            .map((item, index) => ({
+              source: { id: stages[index].id, anchor: 'bottom' as const },
+              target: { id: item.id, anchor: 'top' as const },
+            })),
+          { source: { id: 'context', anchor: 'right' }, target: { id: 'resolve', anchor: 'left' } },
+        ]}
+      />
     </PreviewFlowDiagram>
   );
 };
-
 export default CoordinateOverview;

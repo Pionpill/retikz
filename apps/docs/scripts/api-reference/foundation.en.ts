@@ -1,5 +1,16 @@
 /** @retikz/foundation 中文 JSDoc 的审阅后英文投影 */
 const translations: Readonly<Record<string, string>> = {
+  属性比较允许展开的容器深度: 'Maximum container depth for property comparison',
+  '展开普通对象或数组的最大层数，必须为非负安全整数；0 表示仅使用 Object.is':
+    'Maximum levels of plain objects or arrays to expand; a non-negative safe integer. Zero uses only Object.is.',
+  在有限深度内比较普通对象与数组的自身可枚举属性:
+    'Compares own enumerable properties of plain objects and arrays up to a finite depth',
+  '省略 options 时展开一层；到达深度上限及其他对象类型按 Object.is 比较。包含字符串与 symbol 键，数组长度和空位参与比较，不比较普通对象的 Object.prototype 与 null 原型差异，不修改输入':
+    'Expands one level when options are omitted. Uses Object.is at the depth limit and for other object types. Includes string and symbol keys, array length and holes; ignores the difference between Object.prototype and null prototypes on plain objects. Does not mutate inputs.',
+  '循环引用同样受深度限制，不提供无限递归或循环结构等价判断。访问器在遍历到对应属性时读取，属性顺序不参与比较':
+    'Cycles also stop at the depth limit; no unbounded recursion or cyclic structural equivalence is provided. Accessors are read when reached; property order does not affect equality.',
+  '深度无效或属性检查、读取失败时抛出 RetikzFoundationError，读取异常保留为 cause':
+    'Throws RetikzFoundationError for invalid depth or failed property inspection or access, preserving access errors as cause',
   'ID 前缀，其后自动添加连字符；空前缀生成 -0、-1 等 ID':
     'ID prefix followed by an automatic hyphen; an empty prefix produces -0, -1, and so on',
   '从序号 0 开始分配 ID 的独立实例': 'Independent allocator instance starting at sequence number 0',

@@ -19,7 +19,7 @@ import {
   LayoutIntrinsicMode,
   naturalLayoutProposal,
 } from '../../../../core/src';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 
 const scene = (children: IRScene['children']): IRScene => ({
   version: 1,
@@ -97,7 +97,7 @@ describe('布局感知的复合事务和产物', () => {
       },
     });
 
-    const result = compileToScene(scene([{ namespace: 'test', type: 'multiProposalIsolation' }]), {
+    const result = compileTestResult(scene([{ namespace: 'test', type: 'multiProposalIsolation' }]), {
       composites: [definition],
     });
     const serialized = JSON.stringify(result);
@@ -105,13 +105,16 @@ describe('布局感知的复合事务和产物', () => {
     expect(serialized).toContain('exact-only');
     expect(serialized).not.toContain('minimum-only');
     expect(serialized).not.toContain('natural-only');
-    expect(result.scene.resources).toEqual([
-      {
-        kind: 'paint',
-        id: result.scene.resources!.filter(resource => resource.kind === 'paint')[0].id,
-        spec: gradient('#500', '#600'),
-      },
-    ]);
+    expect(result.scene.resources).toEqual({
+      paints: [
+        {
+          kind: 'paint',
+          id: (result.scene.resources?.paints ?? [])[0].id,
+          spec: gradient('#500', '#600'),
+        },
+      ],
+      clips: [],
+    });
     expect(result.artifacts).toEqual([]);
   });
 
@@ -146,17 +149,20 @@ describe('布局感知的复合事务和产物', () => {
       },
     });
 
-    const result = compileToScene(scene([{ namespace: 'test', type: 'resourceProbe' }]), {
+    const result = compileTestResult(scene([{ namespace: 'test', type: 'resourceProbe' }]), {
       composites: [definition],
     });
 
-    expect(result.scene.resources).toEqual([
-      {
-        kind: 'paint',
-        id: result.scene.resources!.filter(resource => resource.kind === 'paint')[0].id,
-        spec: selected,
-      },
-    ]);
+    expect(result.scene.resources).toEqual({
+      paints: [
+        {
+          kind: 'paint',
+          id: (result.scene.resources?.paints ?? [])[0].id,
+          spec: selected,
+        },
+      ],
+      clips: [],
+    });
   });
 
   it('丢弃探测警告，直到选择相应的回放', () => {
@@ -181,7 +187,7 @@ describe('布局感知的复合事务和产物', () => {
       },
     });
 
-    compileToScene(scene([{ namespace: 'test', type: 'warningProbe' }]), {
+    compileTestResult(scene([{ namespace: 'test', type: 'warningProbe' }]), {
       composites: [definition],
       onWarn: warning => warnings.push(warning),
     });
@@ -232,14 +238,14 @@ describe('布局感知的复合事务和产物', () => {
     });
     const warnings: Array<{ code: string }> = [];
 
-    const result = compileToScene(scene([{ namespace: 'test', type: 'failedSideEffectIsolation' }]), {
+    const result = compileTestResult(scene([{ namespace: 'test', type: 'failedSideEffectIsolation' }]), {
       composites: [failure, parent],
 
       onWarn: warning => warnings.push(warning),
     });
 
     expect(result.scene.primitives).toEqual([]);
-    expect(result.scene.resources ?? []).toEqual([]);
+    expect(result.scene.resources ?? { paints: [], clips: [] }).toEqual({ paints: [], clips: [] });
     expect(result.artifacts).toEqual([]);
     expect(warnings).toEqual([]);
     expect(JSON.stringify(result)).not.toContain('discarded-side-effects');
@@ -263,7 +269,7 @@ describe('布局感知的复合事务和产物', () => {
         return { children: [context.replay(laid)] };
       },
     });
-    const result = compileToScene(
+    const result = compileTestResult(
       scene([
         { namespace: 'test', type: 'namedChild' },
         {
@@ -294,7 +300,7 @@ describe('布局感知的复合事务和产物', () => {
       },
     });
     const warnings: Array<{ code: string }> = [];
-    const result = compileToScene(
+    const result = compileTestResult(
       scene([
         { namespace: 'test', type: 'discardedNamespace' },
         {
@@ -337,7 +343,7 @@ describe('布局感知的复合事务和产物', () => {
       },
     });
     const warnings: Array<{ code: string }> = [];
-    const result = compileToScene(
+    const result = compileTestResult(
       scene([
         { type: 'node', id: 'ready', position: [20, 0] },
         { namespace: 'test', type: 'currentReferences' },
@@ -383,7 +389,7 @@ describe('布局感知的复合事务和产物', () => {
       },
     });
 
-    const result = compileToScene(scene([{ namespace: 'test', type: 'parent' }]), {
+    const result = compileTestResult(scene([{ namespace: 'test', type: 'parent' }]), {
       composites: [child, parent],
     });
 
@@ -423,7 +429,7 @@ describe('布局感知的复合事务和产物', () => {
       compile: () => ({ children: [{ namespace: 'test', type: 'layoutArtifact' }] }),
     });
 
-    const result = compileToScene(scene([{ namespace: 'test', type: 'wrapper' }]), {
+    const result = compileTestResult(scene([{ namespace: 'test', type: 'wrapper' }]), {
       composites: [wrapper, layout],
     });
 
@@ -460,7 +466,7 @@ describe('布局感知的复合事务和产物', () => {
         ],
       }),
     });
-    const result = compileToScene(
+    const result = compileTestResult(
       scene([
         { namespace: 'test', type: 'scopeOutput' },
         {
@@ -520,7 +526,7 @@ describe('布局感知的复合事务和产物', () => {
         return { children: [context.replay(selected)] };
       },
     });
-    const result = compileToScene(scene([{ namespace: 'test', type: 'replayedScope' }]), {
+    const result = compileTestResult(scene([{ namespace: 'test', type: 'replayedScope' }]), {
       composites: [leaf, parent],
     });
 
@@ -552,7 +558,7 @@ describe('布局感知的复合事务和产物', () => {
       { type: 'node', id: 'node', position: [0, 0], text: 'N' },
     ]);
 
-    const withoutLayouts = compileToScene(ir, { composites: [definition] });
+    const withoutLayouts = compileTestResult(ir, { composites: [definition] });
     payload.width = 99;
 
     expect(withoutLayouts.artifacts).toHaveLength(1);

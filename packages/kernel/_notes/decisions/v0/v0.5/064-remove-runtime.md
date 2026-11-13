@@ -5,12 +5,16 @@ keywords: Runtime、Reconciler、Weave、事务、Render、依赖移除
 
 # ADR-064：移除 Runtime 并收敛增量执行职责
 
+> 运行时 Scene 归属修订：本文原定归 Reconciler 的渲染身份、拓扑、快照和 Scene 更新输出契约改归 Render，覆盖下文对应约定。编译来源、计算会话 revision 和单目标提交协议仍归 Reconciler；Render 根据编译来源和候选版本构造渲染快照，身份及拓扑构造错误归 Render
+
 - 状态：Accepted
 - 决策日期：2026-10-21
 - 接受日期：2026-10-21
 - 关联：[Roadmap](./roadmap.md)、[055](./055-reconciler-extraction.md)、[061](./061-weave-core-integration.md)、[062](./062-weave-node-state-isolation.md)、[063](./063-weave-incremental-update.md)、[Drawing Complete](../../../architecture/core-drawing-complete.md)
 
 > 编译执行归属与中间产物决策由 [ADR-080](./080-unified-reconciler-compilation.md) 部分替代：完整入口、遍历、试算与输出生命周期归 Reconciler；Core 保留原子阶段及权威产物。本篇其余绘图语义与事务约束继续有效。
+
+> 静态编译不创建协调器会话的约定由 [ADR-082](./082-scene-reconciler-entry.md) 替代：完整与增量编译统一通过现有 SceneReconciler，一次性调用使用临时非增量实例
 
 ## 背景与目标
 

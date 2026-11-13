@@ -651,7 +651,6 @@ test('Foundation 属于 kernel 发布组且发布契约仅依赖 Zod', async () 
   const foundationRecord = packageRecords.find(({ manifest }) => manifest.name === '@retikz/foundation');
 
   assert.ok(foundationRecord, 'Foundation package manifest must be discoverable');
-  assert.equal(foundationRecord.manifest.version, '0.5.0-alpha.5');
   assert.equal(foundationRecord.manifest.retikz?.releaseGroup, 'kernel');
   assert.equal(foundationRecord.manifest.sideEffects, false);
   assert.deepEqual(Object.keys(foundationRecord.manifest.exports), ['.']);
@@ -661,7 +660,7 @@ test('Foundation 属于 kernel 发布组且发布契约仅依赖 Zod', async () 
 
   const kernelRecords = packageRecords.filter(({ manifest }) => releaseGroups.kernel.packages.includes(manifest.name));
 
-  assert.ok(kernelRecords.length > 0);
+  assert.equal(kernelRecords.length, releaseGroups.kernel.packages.length);
   assert.ok(kernelRecords.every(({ manifest }) => manifest.version === foundationRecord.manifest.version));
 });
 

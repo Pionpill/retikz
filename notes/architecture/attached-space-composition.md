@@ -1,5 +1,7 @@
 # 空间贴附与复用长期计划
 
+> **运行时前提更新：独立 Runtime 已退出当前包边界。** 下文 Runtime sidecar 是原候选方案中的结果协调设想，当前不作为可消费契约；跨领域 sidecar 与 Scene 的一致发布仍须由后续 ADR 明确，不自动归入 Reconciler。
+
 > **状态：长期计划；首个 rect handle / qualified selector 子集由 Core ADR-19 Proposed，attachment 仍未实现。** 本文记录复杂复合可视化所需的底层能力，用于后续 core / plot 架构演进时对齐方向。
 > 关联：[`Core ADR-028`](../../packages/kernel/_notes/decisions/v0/v0.5/028-qualified-spatial-handles.md) · `packages/viz/_notes/architecture/plot-design.md` · `packages/viz/_notes/architecture/chart-design.md` · `packages/viz/_notes/decisions/plot/v0/v0.1/088-composition-api-structure.md`。
 

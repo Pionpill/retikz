@@ -1,12 +1,12 @@
 import { resolveCoreProviderDependencies } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { BranchDiagramSchema, createBranchDiagramProviderContribution } from '../../src/branch';
 import { resolveBranchDiagram } from '../../src/branch/resolve';
+import { compileTestResult } from '../helpers/compilation';
 
 const compile = (source: Record<string, unknown>) =>
-  compileToScene(
+  compileTestResult(
     {
       version: 1,
       type: 'scene',

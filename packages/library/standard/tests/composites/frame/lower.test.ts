@@ -1,10 +1,10 @@
 import type { GroupPrimitive, PathPrimitive, ScenePrimitive } from '@retikz/core';
 import { rect as rectOps } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import type { InputFrameConfig } from '../../../src/presentation';
 import { createFrame, frameDefinition, FrameHeaderDirection } from '../../../src/presentation';
+import { compileTestResult } from '../../helpers/compilation';
 import { sceneNodes } from '../../helpers/scene-geometry';
 import { fullScopeProps } from '../presentation/scope-props';
 
@@ -17,7 +17,7 @@ const pathsOf = (primitives: ReadonlyArray<ScenePrimitive>): Array<PathPrimitive
   );
 
 const compileFrameScene = (input: InputFrameConfig) =>
-  compileToScene(
+  compileTestResult(
     { type: 'scene', version: 1, children: [createFrame(input)] },
     {
       composites: [frameDefinition],
@@ -180,7 +180,7 @@ describe('框架布局编译', () => {
 
   it('保留直接帧 IR 的缺失定义诊断', () => {
     const warnings: Array<string> = [];
-    compileToScene(
+    compileTestResult(
       { type: 'scene', version: 1, children: [createFrame({ id: 'group', children: [body] })] },
       { onWarn: warning => warnings.push(warning.code) },
     );

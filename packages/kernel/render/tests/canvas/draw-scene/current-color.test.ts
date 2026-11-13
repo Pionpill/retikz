@@ -1,8 +1,8 @@
 import type { IRScene, Scene } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { drawScene } from '../../../src/canvas';
+import { compileTestResult } from '../../helpers/compilation';
 import { createSpyCanvasContext, stealthSpec } from './helpers';
 
 describe('drawScene currentColor 解析', () => {
@@ -18,7 +18,7 @@ describe('drawScene currentColor 解析', () => {
         },
       ],
     };
-    const scene = compileToScene(ir).scene;
+    const scene = compileTestResult(ir).scene;
     const context = createSpyCanvasContext();
 
     drawScene(context as unknown as CanvasRenderingContext2D, scene);

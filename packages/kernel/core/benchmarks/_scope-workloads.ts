@@ -280,5 +280,5 @@ export const createScopeBenchmarkBounds = (count: number, decoration: boolean) =
       { kind: 'scale', x: 2, y: 3 },
     ],
   };
-  return { bounds, group, resources: fixture.clipRegistry.getResources() };
+  return { bounds, group, resources: { paints: [], clips: fixture.clipRegistry.getResources() } };
 };

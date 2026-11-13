@@ -1,6 +1,5 @@
 import type { IRChild, IRNode, IRScope } from '@retikz/core';
 import { ChildSchema } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import type { PlotsLoweringOptions } from '../../../src/pipeline/expand';
@@ -8,6 +7,7 @@ import { lowerPlots } from '../../../src/pipeline/expand';
 import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
+import { compileTestResult } from '../../helpers/compilation';
 import { measureLabel } from '../../helpers/text-measurement';
 
 /**
@@ -172,7 +172,7 @@ describe('[adversarial] legend — JSON round-trip / 非有限数泄漏（攻击
     }
   });
 
-  it('[adversarial] 含 legend 的完整 plot 经 compileToScene 全程不抛、产 Scene', () => {
+  it('[adversarial] 含 legend 的完整 plot 经 SceneReconciler 全程不抛、产 Scene', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -208,7 +208,9 @@ describe('[adversarial] legend — JSON round-trip / 非有限数泄漏（攻击
       { layout: { width: 480, height: 300 } },
     );
 
-    expect(() => compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites }).scene).not.toThrow();
+    expect(
+      () => compileTestResult({ version: 1, type: 'scene', children: [spec] }, { composites }).scene,
+    ).not.toThrow();
   });
 });
 

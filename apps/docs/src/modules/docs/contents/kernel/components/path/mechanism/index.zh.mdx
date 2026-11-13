@@ -17,7 +17,7 @@ description: 解释路径写法、游标、端点引用、箭头接合与标签�
 
 <ComponentPreview files="draw-compilation" size="sm" hideCode type="flow" />
 
-`arrow.start` / `arrow.end` 与 `marks` 在 React、Vanilla 和 IR 中保持相同结构。端点箭头按接触几何截断主线；标记按整条路径弧长定位，只放置内容。标记即使位于首尾，也不转成端点箭头。
+`arrow.start` / `arrow.end` 与 `marks` 在 React、Vanilla 和 IR 中保持相同结构。端点箭头按接触几何截断主线；标记默认按整条路径弧长定位，也可通过 `positionMode` 按步骤定位，并通过 `positionGeometry` 选择圆角前后几何；标记只放置内容。标记即使位于首尾，也不转成端点箭头。
 
 <SourceLinks
   sources={[
@@ -72,12 +72,12 @@ description: 解释路径写法、游标、端点引用、箭头接合与标签�
   sources={[
     {
       label: '路径排队与绘制顺序占位',
-      path: 'packages/kernel/reconciler/src/compile/tree/path/deferred.ts',
+      path: 'packages/kernel/reconciler/src/compile/execution/leaf/path.ts',
       startLine: 38,
     },
     {
       label: '解析待处理路径并回填',
-      path: 'packages/kernel/reconciler/src/compile/tree/path/deferred.ts',
+      path: 'packages/kernel/reconciler/src/compile/execution/leaf/path.ts',
       startLine: 86,
     },
   ]}
@@ -162,7 +162,7 @@ description: 解释路径写法、游标、端点引用、箭头接合与标签�
 
 ## 箭头如何缩短端点
 
-默认端点箭头的尖端固定在目标，尾部接到原曲线的断点。Core 根据箭头几何与线宽寻找接合点，保形切片后将箭头朝向对齐到“断点 → 目标”。线条与尾部的抗锯齿重叠单独处理；短路径会缩小箭头以保持接合。计算步骤与对照图见[路径编译 · 端点如何缩短](/kernel/packages/core/path-compilation#端点如何缩短)。
+默认端点箭头的尖端固定在目标，尾部接到原曲线的断点。Core 根据箭头几何与线宽寻找接合点，保形切片后将箭头朝向对齐到“断点 → 目标”。线条与尾部的抗锯齿重叠单独处理；短路径会缩小箭头以保持接合。计算步骤与对照图见[路径编译 · 端点如何缩短](/kernel/packages/core/path-compilation#端点箭头与线身收缩)。
 
 ## 延伸阅读
 

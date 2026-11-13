@@ -181,8 +181,9 @@ export const svg = renderToSvgString(ir, { compile: { paths: [pulseRibbonDefinit
 When an adapter or toolchain must collect runtime datasets before compilation, use `createRibbonProviderContribution`. It merges the built-in `bulge` profile and caller profiles into one `path/ribbon` provider, then hands that contribution to Core's generic resolver:
 
 ```ts
+import { compileToScene } from '@retikz/vanilla';
 import { resolveCoreProviderDependencies } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
+
 import { createRibbonProviderContribution } from '@retikz/extension';
 
 import { pulseProfile } from './pulse-profile';
@@ -192,7 +193,7 @@ const compileOptions = resolveCoreProviderDependencies({
   contributions: [createRibbonProviderContribution({ profiles: [pulseProfile] })],
 });
 
-const result = compileToScene(ir, compileOptions);
+const result = compileToScene(ir, { compile: compileOptions });
 ```
 
 The provider only assembles Definitions and runtime profile datasets into ordinary Core compile options. It does not change the `Path` IR shape or create a second Ribbon lookup. Direct `paths` injection and the provider graph share the same `createRibbonPathDefinition` construction path, schema, and compile implementation.

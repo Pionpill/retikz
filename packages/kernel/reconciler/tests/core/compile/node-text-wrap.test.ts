@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { ScenePrimitive, TextPrimitive } from '../../../../core/src/contract';
 import type { IRScene } from '../../../../core/src/schemas';
 import type { CompileOptions } from '../../../src/compile';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 import { flattenPrims } from '../../helpers/flatten';
 
 const findText = (prims: Array<ScenePrimitive>): TextPrimitive | undefined =>
@@ -18,7 +18,7 @@ const compileNode = (node: Record<string, unknown>): TextPrimitive => {
     type: 'scene',
     children: [{ type: 'node', id: 'A', position: [0, 0], ...node }] as never,
   };
-  const t = findText(compileToScene(ir, opts).scene.primitives);
+  const t = findText(compileTestResult(ir, opts).scene.primitives);
   if (!t) throw new Error('expected TextPrimitive');
 
   return t;

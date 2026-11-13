@@ -1,8 +1,8 @@
 import { resolveCoreProviderDependencies } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import * as Graph from '../../src';
+import { compileTestResult } from '../helpers/compilation';
 import { primitivesOf } from './test-utils';
 
 const compileGraph = (source: unknown) => {
@@ -11,7 +11,7 @@ const compileGraph = (source: unknown) => {
     contributions: [{ roots: [Graph.GraphProviderKey], providers: Graph.createGraphProviders() }],
   });
 
-  return compileToScene({ type: 'scene', version: 1, children: [graph] }, { ...definitions, padding: 0 });
+  return compileTestResult({ type: 'scene', version: 1, children: [graph] }, { ...definitions, padding: 0 });
 };
 
 const fillsOf = (output: ReturnType<typeof compileGraph>): Array<unknown> =>

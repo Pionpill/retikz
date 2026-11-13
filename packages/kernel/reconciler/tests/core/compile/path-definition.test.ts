@@ -12,7 +12,7 @@ import type {
   ScenePrimitive,
 } from '../../../../core/src';
 import { BuiltinCompileWarningCode, definePath, PathSchema } from '../../../../core/src';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 
 const steps = [
   { type: 'step' as const, kind: 'move' as const, to: [0, 0] as [number, number] },
@@ -36,8 +36,8 @@ const flatten = (primitives: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitiv
   return out;
 };
 
-const pathPrims = (ir: IRScene, options?: Parameters<typeof compileToScene>[1]): Array<PathPrimitive> =>
-  flatten(compileToScene(ir, { padding: 0, ...options }).scene.primitives).filter(
+const pathPrims = (ir: IRScene, options?: Parameters<typeof compileTestResult>[1]): Array<PathPrimitive> =>
+  flatten(compileTestResult(ir, { padding: 0, ...options }).scene.primitives).filter(
     (primitive): primitive is PathPrimitive => primitive.type === 'path',
   );
 
@@ -62,7 +62,7 @@ describe('Path 注册表', () => {
   it('在注册提供者之前抛出未知路径定义', () => {
     expect(
       () =>
-        compileToScene(
+        compileTestResult(
           scene([{ type: 'path', kind: 'missing', kindOptions: {}, children: steps }] as IRScene['children']),
         ).scene,
     ).toThrow(/Unknown provider 'missing'/);
@@ -113,7 +113,7 @@ describe('Path 注册表', () => {
         return null;
       },
     });
-    const output = compileToScene(scene([{ type: 'path', kind: 'empty', style: { stroke: 'blue' } }]), {
+    const output = compileTestResult(scene([{ type: 'path', kind: 'empty', style: { stroke: 'blue' } }]), {
       paths: [empty],
     });
 
@@ -138,7 +138,7 @@ describe('Path 注册表', () => {
         return context.emitStroke();
       },
     });
-    const compiled = compileToScene(
+    const compiled = compileTestResult(
       scene([
         {
           type: 'path',
@@ -176,10 +176,10 @@ describe('Path 注册表', () => {
     };
 
     expect(() =>
-      compileToScene(scene([{ ...source, kind: 'silent' }] as IRScene['children']), { paths: [silent] }),
+      compileTestResult(scene([{ ...source, kind: 'silent' }] as IRScene['children']), { paths: [silent] }),
     ).not.toThrow();
     expect(() =>
-      compileToScene(scene([{ ...source, kind: 'direct' }] as IRScene['children']), { paths: [direct] }),
+      compileTestResult(scene([{ ...source, kind: 'direct' }] as IRScene['children']), { paths: [direct] }),
     ).not.toThrow();
   });
 
@@ -198,7 +198,7 @@ describe('Path 注册表', () => {
       },
     ]);
 
-    expect(() => compileToScene(input, { paths: [custom] })).toThrow(
+    expect(() => compileTestResult(input, { paths: [custom] })).toThrow(
       /children\[0\]\.arrow\.end\.endpointOverlap.*built-in Stroke path/,
     );
   });
@@ -227,7 +227,7 @@ describe('Path 注册表', () => {
     };
 
     expect(() =>
-      compileToScene(scene([source] as IRScene['children']), {
+      compileTestResult(scene([source] as IRScene['children']), {
         paths: [shortStroke],
         onWarn: warning => warnings.push(warning),
       }),
@@ -267,7 +267,7 @@ describe('Path 注册表', () => {
         ],
       }),
     });
-    const compiled = compileToScene(
+    const compiled = compileTestResult(
       scene([
         {
           type: 'scope',
@@ -317,8 +317,8 @@ describe('Path 注册表', () => {
       },
     ] as IRScene['children']);
 
-    expect(() => compileToScene(ir, { paths: [highlight] }).scene).toThrow(/path 'highlight'/);
-    expect(() => compileToScene(ir, { paths: [highlight] }).scene).toThrow(/children\[0\]\.kindOptions\.stroke/);
+    expect(() => compileTestResult(ir, { paths: [highlight] }).scene).toThrow(/path 'highlight'/);
+    expect(() => compileTestResult(ir, { paths: [highlight] }).scene).toThrow(/children\[0\]\.kindOptions\.stroke/);
   });
 });
 
@@ -347,7 +347,7 @@ describe('Path 输出环绕', () => {
         };
       },
     });
-    const result = compileToScene(
+    const result = compileTestResult(
       scene([
         { type: 'path', kind: 'ordered', id: 'a' },
         { type: 'path', id: 'ordinary', children: steps },
@@ -379,7 +379,7 @@ describe('Path 输出环绕', () => {
 
   it.each([false, true])('一次性输出保持图元顺序和布局结果（宿主包装：%s）', wrapped => {
     const compile = (iterable: boolean) =>
-      compileToScene(scene([{ type: 'path', kind: 'iterable', rotate: 90 }]), {
+      compileTestResult(scene([{ type: 'path', kind: 'iterable', rotate: 90 }]), {
         padding: 0,
         paths: [
           definePath({
@@ -423,7 +423,7 @@ describe('Path 输出环绕', () => {
       },
     });
     expect(
-      compileToScene(scene([{ type: 'path', kind: definition.name }]), { paths: [definition] }).scene.primitives,
+      compileTestResult(scene([{ type: 'path', kind: definition.name }]), { paths: [definition] }).scene.primitives,
     ).toEqual([]);
   });
 
@@ -452,7 +452,7 @@ describe('Path 输出环绕', () => {
         return wrapped ? context.wrapOutput(output) : output;
       },
     });
-    expect(() => compileToScene(scene([{ type: 'path', kind: definition.name }]), { paths: [definition] })).toThrow(
+    expect(() => compileTestResult(scene([{ type: 'path', kind: definition.name }]), { paths: [definition] })).toThrow(
       expect.objectContaining({ cause }),
     );
   });
@@ -480,8 +480,8 @@ describe('Path 输出环绕', () => {
         return null;
       },
     });
-    compileToScene(scene([{ ...input, type: 'path', kind: custom.name }]), { paths: [custom] });
-    const output = compileToScene(scene([{ ...input, type: 'path' }])).scene;
+    compileTestResult(scene([{ ...input, type: 'path', kind: custom.name }]), { paths: [custom] });
+    const output = compileTestResult(scene([{ ...input, type: 'path' }])).scene;
     const primitive = flatten(output.primitives).find(item => item.type === 'path');
     expect(primitive).toBeDefined();
     expect(commands).toEqual(primitive?.commands);
@@ -498,7 +498,7 @@ describe('Path 输出环绕', () => {
         return null;
       },
     });
-    compileToScene(
+    compileTestResult(
       scene([
         {
           type: 'path',
@@ -543,7 +543,7 @@ describe('Path 输出环绕', () => {
         });
       },
     });
-    const output = compileToScene(
+    const output = compileTestResult(
       scene([
         {
           type: 'path',
@@ -571,8 +571,8 @@ describe('Path 输出环绕', () => {
       compile: context => context.emitStroke(),
     });
     const input = { type: 'path' as const, children: steps, rotate: 90, scale: { x: 2, y: 3 } };
-    const builtin = compileToScene(scene([input]), { padding: 0 }).scene;
-    const delegated = compileToScene(scene([{ ...input, kind: 'delegated' }]), {
+    const builtin = compileTestResult(scene([input]), { padding: 0 }).scene;
+    const delegated = compileTestResult(scene([{ ...input, kind: 'delegated' }]), {
       padding: 0,
       paths: [custom],
     }).scene;

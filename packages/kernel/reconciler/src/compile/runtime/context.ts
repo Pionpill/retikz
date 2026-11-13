@@ -30,8 +30,7 @@ import {
   resolveThemeRegistry,
 } from '@retikz/core';
 
-import type { CompileHostOptions, CompileLayoutOptions } from '../options';
-import type { CompileOptions } from '../types';
+import type { CompileHostOptions, CompileLayoutOptions, CompileOptions } from '../types';
 
 /** 相对定位默认距离，只在编译配置入口补齐 */
 const DEFAULT_NODE_DISTANCE = 24;
@@ -90,7 +89,7 @@ export type CompileContextLimits = Readonly<{
   maxClipDepth: NonNullable<CompileOptions['maxClipDepth']>;
 }>;
 
-/** 可跨次共享的编译配置与服务，不持有输入树或本次资源工作区 */
+/** 同一会话内可跨次执行共享的编译配置与服务，不持有输入树或本次资源工作区 */
 export type SharedCompileContext = Readonly<{
   /** 跨次复用的有效定义索引 */
   registries: CompileContextRegistries;
@@ -186,13 +185,15 @@ export const createSharedCompileContext = (options: SharedCompileContextOptions 
   });
 };
 
-/** 整次树编译的稳定输入环境 */
-export type CompileContext = SharedCompileContext &
-  Readonly<{
-    /** 当前编译入口的组件实例输入 */
-    compositeInputs: CompositeInputScope;
-    /** 当前编译入口的有效主题，递归时派生新的继承环境 */
-    theme: CanonicalTheme;
-    /** 最终 Scene 自动视口留白，不参与子树测量 */
-    padding?: CompileOptions['padding'];
-  }>;
+/** 当前输入对应的单次编译环境，每次执行重新构建，试编译可按子树输入派生 */
+export type ExecutionCompileContext = Readonly<{
+  /** 当前编译入口的组件实例输入 */
+  compositeInputs: CompositeInputScope;
+  /** 当前编译入口的有效主题，递归时派生新的继承环境 */
+  theme: CanonicalTheme;
+  /** 最终 Scene 自动视口留白，不参与子树测量 */
+  padding?: CompileOptions['padding'];
+}>;
+
+/** 完整的树编译上下文；宿主文字度量服务在每次执行时包装独立缓存 */
+export type CompileContext = SharedCompileContext & ExecutionCompileContext;

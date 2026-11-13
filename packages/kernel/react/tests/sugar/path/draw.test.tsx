@@ -16,6 +16,23 @@ import { normalizeReactInput } from '../../helpers/normalize-input';
 const ir = (jsx: React.ReactNode) => normalizeReactInput(jsx);
 
 describe('Draw: 基础展开', () => {
+  it('双定位字段经 React 与 Vanilla 归一后保留为同一公开 IR', () => {
+    const label = { text: 'half', position: 0.5, positionMode: 'length', positionGeometry: 'original' } as const;
+    const marks = [{ shape: 'star', pos: 0.5, positionMode: 'step', positionGeometry: 'rounded' }] as const;
+    const out = ir(<Draw way={[[0, 0], { label }, [80, 0], [80, 40]]} marks={[...marks]} />);
+    const kernel = ir(
+      <Path marks={[...marks]}>
+        <Step kind="move" to={[0, 0]} />
+        <Step kind="line" to={[80, 0]} label={label} />
+        <Step kind="line" to={[80, 40]} />
+      </Path>,
+    );
+    expect(out.children).toEqual(kernel.children);
+    expect(out.children[0]).toMatchObject({
+      children: [{ kind: 'move' }, { kind: 'line', label }, { kind: 'line' }],
+      marks: [...marks],
+    });
+  });
   it('两个 id：展开为 Path + move + line', () => {
     const out = ir(<Draw way={['a', 'b']} />);
 

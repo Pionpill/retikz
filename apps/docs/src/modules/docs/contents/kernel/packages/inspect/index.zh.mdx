@@ -12,7 +12,8 @@ description: 读取普通编译结果，通过独立辅助图层观察最终路�
 注册表定义可以使用哪些检查器，requests 决定本次检查什么。仅创建注册表不会显示辅助图形。
 
 ```ts
-import { compileToScene } from '@retikz/reconciler';
+import { compileToScene } from '@retikz/vanilla';
+
 import { compileInspectionToScene, createDefaultInspectorRegistry, PATH_INSPECTOR_KEY } from '@retikz/inspect';
 
 const primary = compileToScene({

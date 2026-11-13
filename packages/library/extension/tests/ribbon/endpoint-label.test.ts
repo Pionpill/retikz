@@ -1,5 +1,4 @@
 import type { AnyPathDefinition, IRBoundaryLabel, IRScene, ScenePrimitive } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { strictObject } from 'zod';
 
@@ -9,6 +8,7 @@ import {
   ribbonPathDefinition,
   RibbonPathOptionsSchema,
 } from '../../src/ribbon';
+import { compileTestResult } from '../helpers/compilation';
 
 const textsOf = (items: ReadonlyArray<ScenePrimitive>): Array<string> =>
   items.flatMap(item =>
@@ -31,7 +31,7 @@ describe('功能区端点标签', () => {
   });
 
   it('在中心线标签旁边发出两个端点标签', () => {
-    const scene = compileToScene(
+    const scene = compileTestResult(
       {
         version: 1,
         type: 'scene',
@@ -64,7 +64,7 @@ const labeledScene = (
   label: IRBoundaryLabel = { text: 'endpoint' },
   definition: AnyPathDefinition = ribbonPathDefinition,
 ) =>
-  compileToScene(
+  compileTestResult(
     {
       version: 1,
       type: 'scene',
@@ -174,7 +174,7 @@ it('将两个标签放置在零宽度对接大写处并保留父变换', () => {
     ],
   };
   const restored = JSON.parse(JSON.stringify(input));
-  const result = compileToScene(restored, {
+  const result = compileTestResult(restored, {
     paths: [ribbonPathDefinition],
     padding: 0,
     measureText: () => ({ width: 40, height: 20 }),
@@ -212,7 +212,7 @@ it('继承内核标签字体和颜色，倍增不透明度，并保留宿主元�
       },
     ],
   };
-  const scene = compileToScene(input, { paths: [ribbonPathDefinition] }).scene;
+  const scene = compileTestResult(input, { paths: [ribbonPathDefinition] }).scene;
   const primitives = allPrimitives(scene.primitives);
   const text = primitives.find(p => p.type === 'text');
 
@@ -220,7 +220,7 @@ it('继承内核标签字体和颜色，倍增不透明度，并保留宿主元�
   expect(primitives.some(p => p.type === 'group' && p.meta?.source === 'connection')).toBe(true);
 });
 it('使用指定的端点截面进行径向旋转和切线对齐', () => {
-  const scene = compileToScene(
+  const scene = compileTestResult(
     {
       version: 1,
       type: 'scene',
@@ -264,7 +264,7 @@ describe('整个功能区变换', () => {
     { rotate: undefined, scale: 2, x: -72, y: -20, width: 288, height: 40 },
     { rotate: 90, scale: { x: 2, y: 3 }, x: 42, y: -144, width: 60, height: 288 },
   ])('将轮廓和端点标签一起变换：$rotate / $scale', ({ rotate, scale, ...expected }) => {
-    const result = compileToScene(
+    const result = compileTestResult(
       {
         version: 1,
         type: 'scene',
