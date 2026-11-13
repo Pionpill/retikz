@@ -21,6 +21,6 @@ export const restoreWeaveResources = (
   primitives?: Array<ScenePrimitive>,
 ): void => {
   const resources =
-    primitives === undefined ? cache.resources : collectContributionResources(primitives, [...cache.resources]);
+    primitives === undefined ? cache.resources : collectContributionResources(primitives, cache.resources);
   importSceneResources(resources, runtime.state.workspace.paintRegistry, runtime.state.workspace.clipRegistry);
 };

@@ -123,7 +123,7 @@ export const createRetainedRenderTarget = (input: RetainedRenderTargetOptions): 
           const expected = options.expectedInitialFrame;
           const normalized = {
             ...expected.primary,
-            resources: expected.primary.resources ?? [],
+            resources: expected.primary.resources ?? { paints: [], clips: [] },
             animations: expected.primary.animations ?? [],
           };
           if (

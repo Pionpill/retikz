@@ -7,7 +7,7 @@ import type {
   LayoutChildResult,
   LayoutMeasurementAxis,
   LayoutProposal,
-  SceneResource,
+  SceneResources,
   Transform,
 } from '@retikz/core';
 import {
@@ -190,10 +190,10 @@ export const probeCompositeLayout = (
     captureScopeTargets,
   );
   const token = Object.freeze({}) as CompositeReplay;
-  const resources: Array<SceneResource> = [
-    ...workspace.paintRegistry.getResources(),
-    ...workspace.clipRegistry.getResources(),
-  ];
+  const resources: SceneResources = {
+    paints: workspace.paintRegistry.getResources(),
+    clips: workspace.clipRegistry.getResources(),
+  };
   const namespaceChanges = namespaceStack.diffTopFrame(namespaceBaseline);
   const probeFrameDepth = namespaceStack.depth - 1;
   const allocationBounds = snapshotAllocationBounds(boundsRectOf(laid), key, probeOccurrence);

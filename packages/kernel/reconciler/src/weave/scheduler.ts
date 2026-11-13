@@ -295,7 +295,7 @@ export const executeWeaveUpdate = <TComposite extends AnyCompositeDefinition>(
     for (const child of scope.children) appendState(childState, outputOf(child));
     const result = emptyOutput();
     importSceneResources(
-      scope.cache?.resources ?? [],
+      scope.cache?.resources ?? { paints: [], clips: [] },
       runtime.state.workspace.paintRegistry,
       runtime.state.workspace.clipRegistry,
     );

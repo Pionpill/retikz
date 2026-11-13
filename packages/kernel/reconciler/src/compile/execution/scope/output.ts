@@ -78,7 +78,7 @@ export const assembleScopeOutput = (
     ...projectScopeOutputBounds(
       children.bounds,
       { type: 'group', transforms, ...(clipRef === undefined ? {} : { clipRef }) },
-      runtime.state.workspace.clipRegistry.getResources(),
+      { paints: [], clips: runtime.state.workspace.clipRegistry.getResources() },
     ),
   );
 };

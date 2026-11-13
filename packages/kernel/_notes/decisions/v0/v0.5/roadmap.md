@@ -137,6 +137,7 @@ Composite 与布局试算进入同一 Reconciler 执行链路，Core 与领域�
 
 - 统一轻量 Theme、上下文颜色与 Source 语义分组。
 - 收敛默认片段和 schema 边界，使源输入不承载冗余派生状态。
+- 编译资源、缓存与 Scene 按绘制和裁剪分类，保持资源引用及事务一致：[085](./085-scene-resources.md)。
 - 完整承接上层职责内适用的基础绘制属性，统一实例配置与 Definition 消费边界：[072](./072-complete-drawing-property-propagation.md)。
 - 默认配置按宿主组织，完整支持标签与箭头默认、字体继承及宿主级重置：[067](./067-host-owned-defaults.md)。
 

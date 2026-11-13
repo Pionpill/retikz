@@ -92,13 +92,9 @@ describe('Array / Map 外观和身份', () => {
 
     expect(clipped?.type === 'group' ? clipped.clipRef : undefined).toBeDefined();
     expect(
-      result.scene.resources
-        ?.filter(resource => resource.kind === 'clip')
-        .some(resource =>
-          resource.path.commands.some(
-            command => command.kind === 'line' && command.to[0] === 12 && command.to[1] === 8,
-          ),
-        ),
+      (result.scene.resources?.clips ?? []).some(resource =>
+        resource.path.commands.some(command => command.kind === 'line' && command.to[0] === 12 && command.to[1] === 8),
+      ),
     ).toBe(true);
     expect(sceneCellBounds(result.scene)[0]).toEqual({
       x: 0,
@@ -195,7 +191,7 @@ describe('Array / Map 外观和身份', () => {
         .filter(node => node.type === 'text')
         .every(node => node.fontSize === 30),
     ).toBe(true);
-    expect(result.scene.resources?.some(resource => resource.kind === 'clip')).toBe(true);
+    expect((result.scene.resources?.clips.length ?? 0) > 0).toBe(true);
     expect(sceneCellBounds(result.scene)[0].width).toBeCloseTo(82);
   });
 });

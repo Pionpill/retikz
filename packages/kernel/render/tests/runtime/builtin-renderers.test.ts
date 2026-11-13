@@ -1,3 +1,5 @@
+// @vitest-environment jsdom
+
 import type { Canvas as NapiCanvas } from '@napi-rs/canvas';
 import type { IRScene, Scene } from '@retikz/core';
 import { SceneReconciler, RetikzReconcilerErrorCode } from '@retikz/reconciler';
@@ -14,8 +16,6 @@ import { builtinRetainedRendererFactory, createRetainedRenderTarget } from '../.
 import { getRetainedRendererExecutor } from '../../src/runtime/renderer';
 import type { RuntimeScenePrimitive, ScenePatch, ScenePatchOperation, SceneRuntimeSnapshot } from '../../src/scene';
 import { createSceneIdentity, createFullSceneRuntimeSnapshot } from '../../src/scene';
-
-// @vitest-environment jsdom
 import { compileTestSnapshot } from '../helpers/compilation';
 
 const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
@@ -40,13 +40,16 @@ const imageReadonlyLayers = (href: string): ReadonlyArray<RenderReadonlyLayer> =
     transform: [1, 0, 0, 1, 0, 0],
     scene: {
       layout: { x: 0, y: 0, width: 20, height: 10 },
-      resources: [
-        {
-          kind: 'paint',
-          id: 'layer-image',
-          spec: { kind: 'image', href },
-        },
-      ],
+      resources: {
+        paints: [
+          {
+            kind: 'paint',
+            id: 'layer-image',
+            spec: { kind: 'image', href },
+          },
+        ],
+        clips: [],
+      },
       primitives: [
         {
           type: 'rect',
@@ -272,6 +275,70 @@ const createCorePair = (currentSource: IRScene, nextSource: IRScene) => {
 
 afterEach(() => vi.restoreAllMocks());
 
+it('清空分类资源时同时移除绘制与裁剪定义，回滚恢复完整旧帧', () => {
+  const initial: IRScene = {
+    version: 1,
+    type: 'scene',
+    children: [
+      {
+        type: 'scope',
+        id: 'window',
+        clip: { kind: 'rect', params: { x: -50, y: -50, width: 100, height: 100 } },
+        children: [
+          {
+            type: 'node',
+            id: 'a',
+            text: 'A',
+            style: {
+              fill: {
+                kind: 'linearGradient',
+                stops: [
+                  { offset: 0, color: 'red' },
+                  { offset: 1, color: 'blue' },
+                ],
+              },
+            },
+          },
+        ],
+      },
+    ],
+  };
+  const replacement: IRScene = {
+    ...initial,
+    children: [
+      { type: 'scope', id: 'window', children: [{ type: 'node', id: 'a', text: 'A', style: { fill: 'red' } }] },
+    ],
+  };
+  const pair = createCorePair(initial, replacement);
+  expect(pair.next.scene.resources).toEqual({ paints: [], clips: [] });
+  const host = document.createElementNS(SVG_NAMESPACE, 'svg');
+  const renderer = builtinRetainedRendererFactory({
+    backend: 'svg',
+    host,
+    immutableOptions: { backend: 'svg', idPrefix: 'clear-resources' },
+  });
+  const executor = getRetainedRendererExecutor(renderer);
+  if (executor === undefined) throw new Error('expected builtin SVG renderer executor');
+  const mount = executor.prepareMount(frameOf(pair.current), {}, 'create');
+  mount.commit();
+  mount.dispose();
+  expect(host.querySelector('linearGradient')).not.toBeNull();
+  expect(host.querySelector('clipPath')).not.toBeNull();
+
+  const update = executor.prepare(pair.patch, frameOf(pair.next), {});
+  expect(host.querySelector('linearGradient')).not.toBeNull();
+  expect(host.querySelector('clipPath')).not.toBeNull();
+  update.commit();
+  expect(host.querySelector('linearGradient')).toBeNull();
+  expect(host.querySelector('clipPath')).toBeNull();
+  update.rollback();
+  expect(host.querySelector('linearGradient')).not.toBeNull();
+  expect(host.querySelector('clipPath')).not.toBeNull();
+  expect(executor.read().frame.primary.revision).toBe(pair.current.revision);
+  update.dispose();
+  executor.dispose();
+});
+
 it('共享 Pattern 文本在 retained 提交与回滚时对所有宿主原子生效', () => {
   const source: IRScene = {
     type: 'scene',
@@ -288,32 +355,35 @@ it('共享 Pattern 文本在 retained 提交与回滚时对所有宿主原子生
     ...snapshot,
     scene: {
       ...snapshot.scene,
-      resources: snapshot.scene.resources.map(resource =>
-        resource.kind === 'paint' && 'tile' in resource
-          ? {
-              ...resource,
-              tile: {
-                ...resource.tile,
-                motif: [
-                  {
-                    type: 'text',
-                    id: 'local',
-                    x: 0,
-                    y: 0,
-                    lines: [{ text }],
-                    fontSize: 8,
-                    lineHeight: 8,
-                    measuredWidth: 5,
-                    measuredHeight: 8,
-                    align: 'start',
-                    baseline: 'top',
-                    fill: 'red',
-                  },
-                ],
-              },
-            }
-          : resource,
-      ),
+      resources: {
+        ...snapshot.scene.resources,
+        paints: snapshot.scene.resources.paints.map(resource =>
+          'tile' in resource
+            ? {
+                ...resource,
+                tile: {
+                  ...resource.tile,
+                  motif: [
+                    {
+                      type: 'text',
+                      id: 'local',
+                      x: 0,
+                      y: 0,
+                      lines: [{ text }],
+                      fontSize: 8,
+                      lineHeight: 8,
+                      measuredWidth: 5,
+                      measuredHeight: 8,
+                      align: 'start',
+                      baseline: 'top',
+                      fill: 'red',
+                    },
+                  ],
+                },
+              }
+            : resource,
+        ),
+      },
     },
   });
   const current = withText(pair.current, 'old');
@@ -776,7 +846,7 @@ describe('内置保留渲染器', () => {
       root,
       scene: {
         layout: { x: 0, y: 0, width: 100, height: 40 },
-        resources: [],
+        resources: { paints: [], clips: [] },
         animations: [],
         primitives: [
           {
@@ -1001,7 +1071,7 @@ describe('内置保留渲染器', () => {
       root,
       scene: {
         layout: { x: 0, y: 0, width: 100, height: 40 },
-        resources: [],
+        resources: { paints: [], clips: [] },
         animations: [],
         primitives: [
           { type: 'rect', id: 'a', x: 0, y: 0, width: 20, height: 20, fill: '#ef4444', animations: [animation] },
@@ -2454,7 +2524,7 @@ describe('内置保留渲染器', () => {
       root,
       scene: {
         layout: { x: 0, y: 0, width: 100, height: 40 },
-        resources: [],
+        resources: { paints: [], clips: [] },
         animations: [rootAnimation(duration)],
         primitives: [primitive],
       },
@@ -3212,7 +3282,7 @@ describe('内置保留渲染器', () => {
       root,
       scene: {
         layout: { x: 0, y: 0, width: 100, height: 40 },
-        resources: [],
+        resources: { paints: [], clips: [] },
         animations: [],
         primitives,
       },
@@ -3376,7 +3446,7 @@ describe('内置保留渲染器', () => {
       root,
       scene: {
         layout: { x: 0, y: 0, width: 40, height: 40 },
-        resources: [],
+        resources: { paints: [], clips: [] },
         animations: [],
         primitives: [primitive],
       },
@@ -3729,7 +3799,7 @@ describe('内置保留渲染器', () => {
       root,
       scene: {
         layout: { x: 0, y: 0, width, height: 40 },
-        resources: [],
+        resources: { paints: [], clips: [] },
         animations: [],
         primitives: [primitive],
       },
@@ -3827,7 +3897,7 @@ describe('内置保留渲染器', () => {
       root,
       scene: {
         layout: { x: 0, y: 0, width: 100, height: 40 },
-        resources: [],
+        resources: { paints: [], clips: [] },
         animations: [],
         primitives,
       },
@@ -4666,7 +4736,7 @@ describe('内置保留渲染器', () => {
       root,
       scene: {
         layout: { x: 0, y: 0, width: 120, height: 80 },
-        resources: [],
+        resources: { paints: [], clips: [] },
         animations: [],
         primitives,
       },
@@ -5150,7 +5220,7 @@ describe('内置保留渲染器', () => {
       root,
       scene: {
         layout: { x: 0, y: 0, width: 240, height: 100 },
-        resources: [],
+        resources: { paints: [], clips: [] },
         animations: [],
         primitives,
       },
@@ -5283,7 +5353,7 @@ describe('内置保留渲染器', () => {
       root,
       scene: {
         layout: { x: 0, y: 0, width: 100, height: 40 },
-        resources: [],
+        resources: { paints: [], clips: [] },
         animations: [],
         primitives,
       },
@@ -5383,7 +5453,7 @@ describe('内置保留渲染器', () => {
       root,
       scene: {
         layout: { x: 0, y: 0, width: 40, height: 40 },
-        resources: [],
+        resources: { paints: [], clips: [] },
         animations: [],
         primitives: [primitive(duration)],
       },
@@ -5478,7 +5548,7 @@ describe('内置保留渲染器', () => {
       root,
       scene: {
         layout: { x: 0, y: 0, width: 40, height: 40 },
-        resources: [],
+        resources: { paints: [], clips: [] },
         animations: [],
         primitives: [primitive(duration)],
       },
@@ -5559,7 +5629,7 @@ describe('内置保留渲染器', () => {
       root,
       scene: {
         layout: { x: 0, y: 0, width: 100, height: 40 },
-        resources: [],
+        resources: { paints: [], clips: [] },
         animations: [],
         primitives: [
           {
@@ -5678,7 +5748,7 @@ describe('内置保留渲染器', () => {
       root,
       scene: {
         layout: { x: 0, y: 0, width: 100, height: 40 },
-        resources: [],
+        resources: { paints: [], clips: [] },
         animations: [],
         primitives: [primitive(fill)],
       },

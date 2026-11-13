@@ -14,6 +14,14 @@ type PreparedSceneContent = {
 /** 仅保存显式接收的 Runtime 快照或私有副本；普通可变 Scene 不进入此缓存 */
 const runtimeContentCache = new WeakMap<Scene, PreparedSceneContent>();
 
+/** 从分类资源建立当前消费者使用的查询索引 */
+const indexSceneResources = (scene: Scene): ReadonlyMap<string, SceneResource> => {
+  const resources = new Map<string, SceneResource>();
+  for (const resource of scene.resources?.paints ?? []) resources.set(resource.id, resource);
+  for (const resource of scene.resources?.clips ?? []) resources.set(resource.id, resource);
+  return resources;
+};
+
 /** 将内容检查错误归属到渲染器的拓扑错误边界 */
 const throwSceneContentError = (cause: unknown): never => {
   throw new RetikzRenderError(
@@ -35,7 +43,7 @@ export const prepareRuntimeSceneContent = (scene: Scene): Scene => {
     throwSceneContentError(cause);
   }
   runtimeContentCache.set(scene, {
-    resourceMap: new Map((scene.resources ?? []).map(resource => [resource.id, resource])),
+    resourceMap: indexSceneResources(scene),
     animations,
   });
   return scene;
@@ -61,7 +69,7 @@ export const resolveSceneResourceMap = (scene: Scene): ReadonlyMap<string, Scene
   const content = runtimeContentCache.get(scene);
   if (content !== undefined) return content.resourceMap;
   assertSceneContent(scene);
-  return new Map((scene.resources ?? []).map(resource => [resource.id, resource]));
+  return indexSceneResources(scene);
 };
 
 /** 在渲染器发布任何输出前检查 Scene 的资源引用闭包 */

@@ -205,7 +205,7 @@ describe('JSON 数据呈现', () => {
 
     expect(actual.scene.primitives).toEqual(expected.scene.primitives);
     expect(actual.scene.resources).toEqual(expected.scene.resources);
-    expect(actual.scene.resources?.some(resource => resource.kind === 'clip')).toBe(true);
+    expect((actual.scene.resources?.clips.length ?? 0) > 0).toBe(true);
   });
 
   it('通过数据生成的嵌套数组传递内容宽度', () => {

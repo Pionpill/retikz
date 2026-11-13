@@ -83,17 +83,17 @@ describe('裁剪提供者', () => {
       },
     ).scene;
 
-    expect(scene.resources ?? []).toHaveLength(1);
-    expect((scene.resources ?? [])[0]).toMatchObject({
+    expect([...(scene.resources?.paints ?? []), ...(scene.resources?.clips ?? [])]).toHaveLength(1);
+    expect(scene.resources?.clips[0]).toMatchObject({
       kind: 'clip',
-      id: scene.resources!.filter(resource => resource.kind === 'clip')[0].id,
+      id: (scene.resources?.clips ?? [])[0].id,
       path: {
         fillRule: 'evenodd' as const,
       },
     });
     expect(scene.primitives[0]).toMatchObject({
       type: 'group',
-      clipRef: scene.resources!.filter(resource => resource.kind === 'clip')[0].id,
+      clipRef: (scene.resources?.clips ?? [])[0].id,
     });
   });
 
@@ -207,17 +207,20 @@ describe('裁剪提供者', () => {
     const { scene } = compileTestResult(clippedIr({ kind: 'scaledClip', params: { size: 6 } }), {
       clips: [definition],
     });
-    expect(scene.resources).toMatchObject([
-      {
-        kind: 'clip',
-        path: {
-          commands: [
-            { kind: 'move', to: [0, 0] },
-            { kind: 'line', to: [6, 6] },
-          ],
-          fillRule: 'nonzero',
+    expect(scene.resources).toMatchObject({
+      paints: [],
+      clips: [
+        {
+          kind: 'clip',
+          path: {
+            commands: [
+              { kind: 'move', to: [0, 0] },
+              { kind: 'line', to: [6, 6] },
+            ],
+            fillRule: 'nonzero',
+          },
         },
-      },
-    ]);
+      ],
+    });
   });
 });

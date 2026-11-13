@@ -54,19 +54,24 @@ describe('裁剪递归防护', () => {
     const scene = clippedIr({ kind: 'pair', params: {} });
     const clips = [pair, RecursiveClipDefinition];
 
-    expect(compileTestResult(scene, { clips, maxClipDepth: 3 }).scene.resources).toMatchObject([
-      { kind: 'clip', path: { commands: expect.arrayContaining([{ kind: 'line', to: [10, 10] }]) } },
-    ]);
+    expect(compileTestResult(scene, { clips, maxClipDepth: 3 }).scene.resources).toMatchObject({
+      paints: [],
+      clips: [{ kind: 'clip', path: { commands: expect.arrayContaining([{ kind: 'line', to: [10, 10] }]) } }],
+    });
     expect(() => compileTestResult(scene, { clips, maxClipDepth: 2 })).toThrow(/maxClipDepth.*2/i);
   });
 
   it('对每个裁剪转换计数一次', () => {
-    expect(
-      compileTestResult(clippedIr({ kind: 'recursive', params: { depth: 2 } }), {
+    expect([
+      ...(compileTestResult(clippedIr({ kind: 'recursive', params: { depth: 2 } }), {
         clips: [RecursiveClipDefinition],
         maxClipDepth: 3,
-      }).scene.resources,
-    ).toHaveLength(1);
+      }).scene.resources?.paints ?? []),
+      ...(compileTestResult(clippedIr({ kind: 'recursive', params: { depth: 2 } }), {
+        clips: [RecursiveClipDefinition],
+        maxClipDepth: 3,
+      }).scene.resources?.clips ?? []),
+    ]).toHaveLength(1);
 
     expect(() =>
       compileTestResult(clippedIr({ kind: 'recursive', params: { depth: 2 } }), {
@@ -98,13 +103,18 @@ describe('裁剪递归防护', () => {
       children: [{ namespace: 'test', type: 'runtimeScopeClip' }],
     };
 
-    expect(
-      compileTestResult(scene, {
+    expect([
+      ...(compileTestResult(scene, {
         clips: [RecursiveClipDefinition],
         composites: [runtimeScope],
         maxClipDepth: 3,
-      }).scene.resources,
-    ).toHaveLength(1);
+      }).scene.resources?.paints ?? []),
+      ...(compileTestResult(scene, {
+        clips: [RecursiveClipDefinition],
+        composites: [runtimeScope],
+        maxClipDepth: 3,
+      }).scene.resources?.clips ?? []),
+    ]).toHaveLength(1);
     expect(() =>
       compileTestResult(scene, {
         clips: [RecursiveClipDefinition],
@@ -115,10 +125,14 @@ describe('裁剪递归防护', () => {
   });
 
   it('使用 32 个裁剪转换的默认预算', () => {
-    expect(
-      compileTestResult(clippedIr({ kind: 'recursive', params: { depth: 31 } }), { clips: [RecursiveClipDefinition] })
-        .scene.resources,
-    ).toHaveLength(1);
+    expect([
+      ...(compileTestResult(clippedIr({ kind: 'recursive', params: { depth: 31 } }), {
+        clips: [RecursiveClipDefinition],
+      }).scene.resources?.paints ?? []),
+      ...(compileTestResult(clippedIr({ kind: 'recursive', params: { depth: 31 } }), {
+        clips: [RecursiveClipDefinition],
+      }).scene.resources?.clips ?? []),
+    ]).toHaveLength(1);
     expect(() =>
       compileTestResult(clippedIr({ kind: 'recursive', params: { depth: 32 } }), { clips: [RecursiveClipDefinition] }),
     ).toThrow(/maxClipDepth.*32/i);

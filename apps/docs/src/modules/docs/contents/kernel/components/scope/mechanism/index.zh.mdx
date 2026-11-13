@@ -197,7 +197,7 @@ Scope 把里面的内容当作一组：可以一起放大、旋转，再一起�
 
 内置和自定义裁剪都通过 Clip Definition 的 `lower` 处理；资源表根据最终路径去重，随后把返回的 id 写入 `GroupPrimitive.clipRef`。
 
-**Core 负责描述“裁哪里”，Render 负责真正执行裁剪。** Core 把裁剪路径放进 `Scene.resources`，再用分组的 `clipRef` 指向它；不会提前把超出边界的图形切碎或删除。
+**Core 负责描述“裁哪里”，Render 负责真正执行裁剪。** Core 把裁剪路径放进 `Scene.resources.clips`，再用分组的 `clipRef` 指向它；不会提前把超出边界的图形切碎或删除。
 
 - **SVG Render**：把裁剪路径生成 `<clipPath>`，再通过分组的 `clip-path` 属性应用，由 SVG 按这个区域显示内容。
 - **Canvas Render**：先保存绘图状态、应用分组变换，再调用 `ctx.clip()` 设置裁剪区，绘制组内内容，最后恢复状态，避免影响后面的绘制。

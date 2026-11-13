@@ -245,7 +245,7 @@ describe('viewBox 与 clip / paint 资源正交共存', () => {
     expect(result.layout).toEqual(viewBox);
 
     // clip 资源独立于 viewBox 生成
-    const clipResources = (result.resources ?? []).filter(r => r.kind === 'clip');
+    const clipResources = result.resources?.clips ?? [];
 
     expect(clipResources.length).toBeGreaterThan(0);
   });
@@ -279,7 +279,7 @@ describe('viewBox 与 clip / paint 资源正交共存', () => {
 
     expect(result.layout).toEqual(viewBox);
 
-    const paintResources = (result.resources ?? []).filter(r => r.kind === 'paint');
+    const paintResources = result.resources?.paints ?? [];
 
     expect(paintResources.length).toBeGreaterThan(0);
   });

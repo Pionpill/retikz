@@ -206,10 +206,10 @@ export const createPathCompileContext = (
   ...runtime.context.host,
   boundaryStore: runtime.state.workspace.boundaryStore,
   registerPaint: runtime.state.workspace.paintRegistry.register,
-  resources: () => [
-    ...runtime.state.workspace.paintRegistry.getResources(),
-    ...runtime.state.workspace.clipRegistry.getResources(),
-  ],
+  resources: () => ({
+    paints: runtime.state.workspace.paintRegistry.getResources(),
+    clips: runtime.state.workspace.clipRegistry.getResources(),
+  }),
   onWarn: runtime.state.workspace.diagnosticCollector.collect,
   resolveTransform: runtime.state.execution.scopeTransformComposer.resolve,
 });

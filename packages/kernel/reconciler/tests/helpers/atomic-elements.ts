@@ -78,7 +78,11 @@ export const compileWeaveNode = (input: IRNode, runtime: WeaveElementRuntime): W
   return Object.freeze({
     canon: resolution,
     compiled: compilation,
-    output: Object.freeze({ ...output, zIndex: input.zIndex, resources: workspace.paintRegistry.getResources() }),
+    output: Object.freeze({
+      ...output,
+      zIndex: input.zIndex,
+      resources: { paints: workspace.paintRegistry.getResources(), clips: [] },
+    }),
   });
 };
 
@@ -118,7 +122,7 @@ export const compileWeavePath = (input: IRPathBase, runtime: WeaveElementRuntime
     ...shared.host,
     boundaryStore: workspace.boundaryStore,
     registerPaint: workspace.paintRegistry.register,
-    resources: () => [...workspace.paintRegistry.getResources(), ...workspace.clipRegistry.getResources()],
+    resources: () => ({ paints: workspace.paintRegistry.getResources(), clips: workspace.clipRegistry.getResources() }),
     onWarn: workspace.diagnosticCollector.collect,
     resolveTransform: composeScopeTransform,
   });
@@ -127,7 +131,7 @@ export const compileWeavePath = (input: IRPathBase, runtime: WeaveElementRuntime
     output: Object.freeze({
       zIndex: input.zIndex,
       primitives: compiled.emit?.primitives ?? [],
-      resources: workspace.paintRegistry.getResources(),
+      resources: { paints: workspace.paintRegistry.getResources(), clips: [] },
       bounds:
         compiled.emit === null ? [] : [{ boundsPoints: compiled.emit.boundsPoints, shadow: compiled.style.shadow }],
     }),
@@ -201,7 +205,7 @@ export const compileWeaveScope = (
       zIndex: input.zIndex,
       primitives: [],
       bounds: [],
-      resources: [...workspace.paintRegistry.getResources(), ...workspace.clipRegistry.getResources()],
+      resources: { paints: workspace.paintRegistry.getResources(), clips: workspace.clipRegistry.getResources() },
     }),
   });
 };

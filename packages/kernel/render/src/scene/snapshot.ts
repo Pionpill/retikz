@@ -68,7 +68,7 @@ export const createFullSceneRuntimeSnapshot = (
   const runtimeScene = freezeComputationOutput({
     ...scene,
     primitives: scene.primitives,
-    resources: scene.resources ?? [],
+    resources: scene.resources ?? { paints: [], clips: [] },
     animations: scene.animations ?? [],
   }) as RuntimeScene;
   return Object.freeze({

@@ -141,8 +141,12 @@ export const createCompileWorkload = (nodeCount: number) => {
         { kind: 'line', to: [140, 0] },
       ]);
       expect(translatedGroups).toBeGreaterThanOrEqual(groupCount - 1);
-      expect(result.scene.resources).toHaveLength(1);
-      const resourceIds = new Set(result.scene.resources?.map(resource => resource.id));
+      expect([...(result.scene.resources?.paints ?? []), ...(result.scene.resources?.clips ?? [])]).toHaveLength(1);
+      const resourceIds = new Set(
+        [...(result.scene.resources?.paints ?? []), ...(result.scene.resources?.clips ?? [])].map(
+          resource => resource.id,
+        ),
+      );
       const references = leaves.filter(
         primitive => 'fill' in primitive && typeof primitive.fill === 'object' && primitive.fill.kind === 'resourceRef',
       );

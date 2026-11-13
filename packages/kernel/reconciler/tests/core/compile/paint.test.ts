@@ -104,11 +104,12 @@ describe('node IRPaint fill → 资源表 + resourceRef', () => {
 
     expect(rect.fill).toEqual({
       kind: 'resourceRef',
-      id: scene.resources!.filter(resource => resource.kind === 'paint')[0].id,
+      id: (scene.resources?.paints ?? [])[0].id,
     });
-    expect(scene.resources).toEqual([
-      { kind: 'paint', id: scene.resources!.filter(resource => resource.kind === 'paint')[0].id, spec: grad },
-    ]);
+    expect(scene.resources).toEqual({
+      paints: [{ kind: 'paint', id: (scene.resources?.paints ?? [])[0].id, spec: grad }],
+      clips: [],
+    });
   });
 
   it('纯色 string → primitive.fill 原样、resources 省略', () => {
@@ -159,13 +160,13 @@ describe('去重 + 稳定 id', () => {
 
     expect(rects[0].fill).toEqual({
       kind: 'resourceRef',
-      id: scene.resources!.filter(resource => resource.kind === 'paint')[0].id,
+      id: (scene.resources?.paints ?? [])[0].id,
     });
     expect(rects[1].fill).toEqual({
       kind: 'resourceRef',
-      id: scene.resources!.filter(resource => resource.kind === 'paint')[0].id,
+      id: (scene.resources?.paints ?? [])[0].id,
     });
-    expect(scene.resources).toHaveLength(1);
+    expect([...(scene.resources?.paints ?? []), ...(scene.resources?.clips ?? [])]).toHaveLength(1);
   });
 
   it('不同 gradient → 多条、不同 id', () => {
@@ -192,10 +193,10 @@ describe('去重 + 稳定 id', () => {
     };
     const scene = compileTestResult(ir).scene;
 
-    expect(scene.resources).toHaveLength(2);
-    expect(scene.resources?.map(r => r.id)).toEqual([
-      scene.resources!.filter(resource => resource.kind === 'paint')[0].id,
-      scene.resources!.filter(resource => resource.kind === 'paint')[1].id,
+    expect([...(scene.resources?.paints ?? []), ...(scene.resources?.clips ?? [])]).toHaveLength(2);
+    expect([...(scene.resources?.paints ?? []), ...(scene.resources?.clips ?? [])].map(r => r.id)).toEqual([
+      (scene.resources?.paints ?? [])[0].id,
+      (scene.resources?.paints ?? [])[1].id,
     ]);
   });
 
@@ -241,9 +242,9 @@ describe('IRPaint 填充路径', () => {
 
     expect(path?.type === 'path' && path.fill).toEqual({
       kind: 'resourceRef',
-      id: scene.resources!.filter(resource => resource.kind === 'paint')[0].id,
+      id: (scene.resources?.paints ?? [])[0].id,
     });
-    expect(scene.resources).toHaveLength(1);
+    expect([...(scene.resources?.paints ?? []), ...(scene.resources?.clips ?? [])]).toHaveLength(1);
   });
 });
 
@@ -268,15 +269,16 @@ describe('交互：scope 级联 + 纯色/渐变共存', () => {
 
     expect(rects[0].fill).toEqual({
       kind: 'resourceRef',
-      id: scene.resources!.filter(resource => resource.kind === 'paint')[0].id,
+      id: (scene.resources?.paints ?? [])[0].id,
     });
     expect(rects[1].fill).toEqual({
       kind: 'resourceRef',
-      id: scene.resources!.filter(resource => resource.kind === 'paint')[0].id,
+      id: (scene.resources?.paints ?? [])[0].id,
     });
-    expect(scene.resources).toEqual([
-      { kind: 'paint', id: scene.resources!.filter(resource => resource.kind === 'paint')[0].id, spec: grad },
-    ]);
+    expect(scene.resources).toEqual({
+      paints: [{ kind: 'paint', id: (scene.resources?.paints ?? [])[0].id, spec: grad }],
+      clips: [],
+    });
   });
 
   it('纯色与渐变同场景 → 纯色不进表、渐变进表，互不干扰', () => {
@@ -306,11 +308,12 @@ describe('交互：scope 级联 + 纯色/渐变共存', () => {
     expect(rects[0].fill).toBe('lightblue');
     expect(rects[1].fill).toEqual({
       kind: 'resourceRef',
-      id: scene.resources!.filter(resource => resource.kind === 'paint')[0].id,
+      id: (scene.resources?.paints ?? [])[0].id,
     });
-    expect(scene.resources).toEqual([
-      { kind: 'paint', id: scene.resources!.filter(resource => resource.kind === 'paint')[0].id, spec: grad },
-    ]);
+    expect(scene.resources).toEqual({
+      paints: [{ kind: 'paint', id: (scene.resources?.paints ?? [])[0].id, spec: grad }],
+      clips: [],
+    });
   });
 });
 
@@ -334,11 +337,12 @@ describe('stroke IRPaint → 资源表 + resourceRef', () => {
 
     expect(pathsOf(scene.primitives)[0].stroke).toEqual({
       kind: 'resourceRef',
-      id: scene.resources!.filter(resource => resource.kind === 'paint')[0].id,
+      id: (scene.resources?.paints ?? [])[0].id,
     });
-    expect(scene.resources).toEqual([
-      { kind: 'paint', id: scene.resources!.filter(resource => resource.kind === 'paint')[0].id, spec: grad },
-    ]);
+    expect(scene.resources).toEqual({
+      paints: [{ kind: 'paint', id: (scene.resources?.paints ?? [])[0].id, spec: grad }],
+      clips: [],
+    });
   });
 
   it('节点行程 radialGradient → RectPrimitive.stroke = resourceRef', () => {
@@ -360,11 +364,12 @@ describe('stroke IRPaint → 资源表 + resourceRef', () => {
 
     expect(rectsOf(scene.primitives)[0].stroke).toEqual({
       kind: 'resourceRef',
-      id: scene.resources!.filter(resource => resource.kind === 'paint')[0].id,
+      id: (scene.resources?.paints ?? [])[0].id,
     });
-    expect(scene.resources).toEqual([
-      { kind: 'paint', id: scene.resources!.filter(resource => resource.kind === 'paint')[0].id, spec: radial },
-    ]);
+    expect(scene.resources).toEqual({
+      paints: [{ kind: 'paint', id: (scene.resources?.paints ?? [])[0].id, spec: radial }],
+      clips: [],
+    });
   });
 
   it('scope stroke IRPaint 级联到 node/path，并共用同一个 resourceRef', () => {
@@ -392,13 +397,13 @@ describe('stroke IRPaint → 资源表 + resourceRef', () => {
 
     expect(rectsOf(scene.primitives)[0].stroke).toEqual({
       kind: 'resourceRef',
-      id: scene.resources!.filter(resource => resource.kind === 'paint')[0].id,
+      id: (scene.resources?.paints ?? [])[0].id,
     });
     expect(pathsOf(scene.primitives)[0].stroke).toEqual({
       kind: 'resourceRef',
-      id: scene.resources!.filter(resource => resource.kind === 'paint')[0].id,
+      id: (scene.resources?.paints ?? [])[0].id,
     });
-    expect(scene.resources).toHaveLength(1);
+    expect([...(scene.resources?.paints ?? []), ...(scene.resources?.clips ?? [])]).toHaveLength(1);
   });
 
   it('fill 与 stroke 使用同一 IRPaint → 资源去重', () => {
@@ -423,13 +428,13 @@ describe('stroke IRPaint → 资源表 + resourceRef', () => {
 
     expect(path.fill).toEqual({
       kind: 'resourceRef',
-      id: scene.resources!.filter(resource => resource.kind === 'paint')[0].id,
+      id: (scene.resources?.paints ?? [])[0].id,
     });
     expect(path.stroke).toEqual({
       kind: 'resourceRef',
-      id: scene.resources!.filter(resource => resource.kind === 'paint')[0].id,
+      id: (scene.resources?.paints ?? [])[0].id,
     });
-    expect(scene.resources).toHaveLength(1);
+    expect([...(scene.resources?.paints ?? []), ...(scene.resources?.clips ?? [])]).toHaveLength(1);
   });
 
   it('纯色 stroke 保持原样、不进入 resources', () => {
@@ -495,12 +500,13 @@ describe('stroke IRPaint → 资源表 + resourceRef', () => {
 
     expect(path.stroke).toEqual({
       kind: 'resourceRef',
-      id: scene.resources!.filter(resource => resource.kind === 'paint')[0].id,
+      id: (scene.resources?.paints ?? [])[0].id,
     });
     expect(path.arrowEnd?.marker[0]).toMatchObject({ fill: { kind: 'contextStroke' } });
-    expect(scene.resources).toEqual([
-      { kind: 'paint', id: scene.resources!.filter(resource => resource.kind === 'paint')[0].id, spec: grad },
-    ]);
+    expect(scene.resources).toEqual({
+      paints: [{ kind: 'paint', id: (scene.resources?.paints ?? [])[0].id, spec: grad }],
+      clips: [],
+    });
   });
 
   it('arrow × gradient stroke：显式 arrowDetail.color 时允许，marker 使用纯色', () => {
@@ -524,7 +530,7 @@ describe('stroke IRPaint → 资源表 + resourceRef', () => {
 
     expect(path.stroke).toEqual({
       kind: 'resourceRef',
-      id: scene.resources!.filter(resource => resource.kind === 'paint')[0].id,
+      id: (scene.resources?.paints ?? [])[0].id,
     });
     expect(path.arrowEnd?.marker[0]).toMatchObject({ fill: '#111' });
   });

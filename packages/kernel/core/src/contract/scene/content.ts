@@ -1,4 +1,4 @@
-import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
+﻿import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { Scene, ScenePrimitive, SceneResource } from './scene';
 
 /** 遍历场景内容时的宿主、资源归属与位置上下文 */
@@ -28,9 +28,11 @@ export const visitSceneContent = (
     throw new RetikzCoreError(RetikzCoreErrorCode.Compile, `Scene content ${scenePath}: ${reason}`);
   };
 
-  for (const resource of scene.resources ?? []) {
-    if (resourceMap.has(resource.id)) throwSceneContentError(`resources.${resource.id}`, 'duplicate resource id');
-    resourceMap.set(resource.id, resource);
+  for (const category of [scene.resources?.paints, scene.resources?.clips]) {
+    for (const resource of category ?? []) {
+      if (resourceMap.has(resource.id)) throwSceneContentError(`resources.${resource.id}`, 'duplicate resource id');
+      resourceMap.set(resource.id, resource);
+    }
   }
   /** 在对象的递归访问作用域内执行操作，正常返回或抛错后均移除活动标记 */
   const withActiveObject = (contentObject: object, scenePath: string, action: () => void): void => {

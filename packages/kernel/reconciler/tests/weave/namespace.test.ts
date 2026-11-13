@@ -98,7 +98,7 @@ describe('版本内名称与读取', () => {
       compileWeaveNode({ type: 'node', position: [0, 0] }, runtime),
     );
     if (ready.status !== 'compiled') throw new Error('expected completed retry');
-    expect(ready.compiled.output.resources).toEqual([]);
+    expect(ready.compiled.output.resources).toEqual({ paints: [], clips: [] });
     expect(ready.diagnostics).toEqual([]);
   });
 

@@ -745,7 +745,7 @@ describe('编译功能区', () => {
     const prim = pathPrim(compiled.primitives[0]);
 
     expect(prim.fill).toEqual({ kind: 'resourceRef', id: 'paint-1' });
-    expect(compiled.resources?.[0]).toMatchObject({
+    expect(compiled.resources?.paints[0]).toMatchObject({
       id: 'paint-1',
       kind: 'paint',
       spec: conic,

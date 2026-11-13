@@ -1,18 +1,18 @@
-import { assert, describe, expect, it } from 'vitest';
+﻿import { assert, describe, expect, it } from 'vitest';
 
 import type {
   IRAnimationTrack,
   IRScene,
   PathCommand,
   ScenePrimitive,
-  SceneResource,
+  SceneResources,
   TextPrimitive,
 } from '../../../../core/src';
 import { defineArrow } from '../../../../core/src';
 import { calculateBoundsOfPrimitives } from '../../../../core/src/compile/scene/bounds';
 import { compileTestResult } from '../../helpers/compilation';
 
-const boundsOf = (primitives: ReadonlyArray<ScenePrimitive>, resources: ReadonlyArray<SceneResource> = []) =>
+const boundsOf = (primitives: ReadonlyArray<ScenePrimitive>, resources: SceneResources = { paints: [], clips: [] }) =>
   calculateBoundsOfPrimitives(primitives, resources);
 
 it('箭头中的已度量文本和裁剪共同决定可视边界', () => {
@@ -40,9 +40,9 @@ it('箭头中的已度量文本和裁剪共同决定可视边界', () => {
     arrowEnd: { shape: 'text', baseSize: 10, refX: 0, markerWidth: 10, markerHeight: 10, marker: [content] },
   });
   const full = boundsOf([path(text)]);
-  const clipped = boundsOf(
-    [path({ type: 'group', clipRef: 'window', children: [text] })],
-    [
+  const clipped = boundsOf([path({ type: 'group', clipRef: 'window', children: [text] })], {
+    paints: [],
+    clips: [
       {
         kind: 'clip',
         id: 'window',
@@ -58,7 +58,7 @@ it('箭头中的已度量文本和裁剪共同决定可视边界', () => {
         },
       },
     ],
-  );
+  });
   assert(full !== undefined && clipped !== undefined);
   expect(full.x + full.width).toBe(50);
   expect(clipped.x + clipped.width).toBe(35);
@@ -339,22 +339,25 @@ describe('规范的视觉边界', () => {
             ],
           },
         ],
-        [
-          {
-            kind: 'clip',
-            id: 'clip-1',
-            path: {
-              commands: [
-                { kind: 'move', to: [0, 0] },
-                { kind: 'line', to: [5, 0] },
-                { kind: 'line', to: [5, 5] },
-                { kind: 'line', to: [0, 5] },
-                { kind: 'close' },
-              ],
-              fillRule: 'nonzero',
+        {
+          paints: [],
+          clips: [
+            {
+              kind: 'clip',
+              id: 'clip-1',
+              path: {
+                commands: [
+                  { kind: 'move', to: [0, 0] },
+                  { kind: 'line', to: [5, 0] },
+                  { kind: 'line', to: [5, 5] },
+                  { kind: 'line', to: [0, 5] },
+                  { kind: 'close' },
+                ],
+                fillRule: 'nonzero',
+              },
             },
-          },
-        ],
+          ],
+        },
       ),
     ).toEqual({ x: 5, y: 7, width: 5, height: 5 });
   });
@@ -392,7 +395,7 @@ describe('规范的视觉边界', () => {
               children: [{ type: 'rect', x: -10, y: -10, width: 20, height: 20, fill: '#f00' }],
             },
           ],
-          [{ kind: 'clip', id: 'clip-1', path: { commands, fillRule: 'nonzero' } }],
+          { paints: [], clips: [{ kind: 'clip', id: 'clip-1', path: { commands, fillRule: 'nonzero' } }] },
         ),
       ).toBeUndefined();
     },

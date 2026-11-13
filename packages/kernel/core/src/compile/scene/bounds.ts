@@ -1,4 +1,4 @@
-import type { AxisAlignedBounds, BoundsRect } from '@retikz/math';
+﻿import type { AxisAlignedBounds, BoundsRect } from '@retikz/math';
 import { DEG_TO_RAD, boundsOf, boundsToRect, expandBounds, mergeBounds, rectToBounds } from '@retikz/math';
 
 import type {
@@ -7,6 +7,7 @@ import type {
   PathPrimitive,
   ScenePrimitive,
   SceneResource,
+  SceneResources,
   Transform,
 } from '../../contract';
 import { computeSceneTextBounds } from '../../contract';
@@ -404,13 +405,21 @@ const calculatePrimitiveBounds = (
   return primitive.type === 'path' ? unionBoundsRects(geometry, calculateMarkerBounds(primitive, resources)) : geometry;
 };
 
+/** 按资源 ID 建立本次边界查询的索引 */
+const indexBoundsResources = (resources: SceneResources): ReadonlyMap<string, SceneResource> => {
+  const resourceMap = new Map<string, SceneResource>();
+  for (const resource of resources.paints) resourceMap.set(resource.id, resource);
+  for (const resource of resources.clips) resourceMap.set(resource.id, resource);
+  return resourceMap;
+};
+
 /** 计算最终 Scene 图元树的可见边界；没有可见内容时返回 undefined */
 export const calculateBoundsOfPrimitives = (
   primitives: ReadonlyArray<ScenePrimitive>,
-  resources: ReadonlyArray<SceneResource>,
+  resources: SceneResources,
 ): Readonly<BoundsRect> | undefined => {
   /** 当前输出按资源 ID 索引的资源，仅用于本次边界求值 */
-  const resourceMap = new Map(resources.map(resource => [resource.id, resource]));
+  const resourceMap = indexBoundsResources(resources);
   const bounds = primitives.reduce<BoundsRect | undefined>(
     (current, primitive) => unionBoundsRects(current, calculatePrimitiveBounds(primitive, resourceMap)),
     undefined,
@@ -450,7 +459,7 @@ const finalizeVisualBounds = (bounds: BoundsRect): Readonly<BoundsRect> => {
 /** 包内分组矩形投影器；一次消费共享裁剪准备，不持有跨次缓存 */
 export const createGroupBoundsProjector = (
   group: Omit<GroupPrimitive, 'children'>,
-  resources: ReadonlyArray<SceneResource>,
+  resources: SceneResources,
 ): ((bounds: BoundsRect) => Readonly<BoundsRect> | undefined) => {
   let prepared = false;
   let clip: BoundsRect | undefined;
@@ -458,7 +467,7 @@ export const createGroupBoundsProjector = (
     // ⚡整组贡献只索引资源并扫描裁剪一次；延迟到首个非空装饰以保留报错时点
     if (!prepared) {
       if (group.clipRef !== undefined) {
-        clip = resolveGroupClipBounds(group.clipRef, new Map(resources.map(resource => [resource.id, resource])));
+        clip = resolveGroupClipBounds(group.clipRef, indexBoundsResources(resources));
       }
       prepared = true;
     }

@@ -200,7 +200,7 @@ Built-in and custom definitions enter the same resolution path. The resulting pa
 
 Built-in and custom clips both use Clip Definition's `lower`. The resource table deduplicates the resulting paths, and the returned id becomes `GroupPrimitive.clipRef`.
 
-**Core describes where to clip; Render performs the clipping.** Core stores the clipping path in `Scene.resources` and links it to the group through `clipRef`. It does not cut up or delete geometry outside the boundary in advance.
+**Core describes where to clip; Render performs the clipping.** Core stores the clipping path in `Scene.resources.clips` and links it to the group through `clipRef`. It does not cut up or delete geometry outside the boundary in advance.
 
 - **SVG Render**: generates a `<clipPath>` and applies it through the group's `clip-path` attribute. SVG uses that region to determine which content is visible.
 - **Canvas Render**: saves the drawing state, applies the group transforms, calls `ctx.clip()`, draws the children, and restores the state so later drawing is unaffected.

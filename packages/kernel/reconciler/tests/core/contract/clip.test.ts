@@ -81,16 +81,19 @@ describe('裁剪定义契约', () => {
       children: [{ type: 'scope', clip: spec, children: [] }],
     };
 
-    expect(compileTestResult(scene, { clips: [definition] }).scene.resources).toMatchObject([
-      {
-        kind: 'clip',
-        path: {
-          commands: [
-            { kind: 'move', to: [0, 0] },
-            { kind: 'line', to: [4, 4] },
-          ],
+    expect(compileTestResult(scene, { clips: [definition] }).scene.resources).toMatchObject({
+      paints: [],
+      clips: [
+        {
+          kind: 'clip',
+          path: {
+            commands: [
+              { kind: 'move', to: [0, 0] },
+              { kind: 'line', to: [4, 4] },
+            ],
+          },
         },
-      },
-    ]);
+      ],
+    });
   });
 });

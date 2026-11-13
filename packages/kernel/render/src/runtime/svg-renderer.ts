@@ -485,7 +485,8 @@ const primitiveNeedsDerivedResource = (primitive: RuntimeScenePrimitive): boolea
 
 /** 判断 snapshot 是否可安全执行 entity 级 DOM patch */
 const supportsEntityPatch = (snapshot: SceneRuntimeSnapshot): boolean =>
-  snapshot.scene.resources.length === 0 &&
+  snapshot.scene.resources.paints.length === 0 &&
+  snapshot.scene.resources.clips.length === 0 &&
   !snapshot.scene.primitives.some(
     primitive => primitiveHasAnimation(primitive) || primitiveNeedsDerivedResource(primitive),
   );
@@ -627,7 +628,7 @@ const buildSubtreeDescriptor = (
     {
       ...(snapshot.scene as unknown as Scene),
       primitives: [subtree.primitive as unknown as ScenePrimitive],
-      resources: [],
+      resources: { paints: [], clips: [] },
       animations: [],
     },
     {

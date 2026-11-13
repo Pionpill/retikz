@@ -151,10 +151,10 @@ export const commitCompositeReplay = (
       });
     }
   } else {
-    const visualBounds = calculateBoundsOfPrimitives(committedPrimitives, [
-      ...execution.runtime.state.workspace.paintRegistry.getResources(),
-      ...execution.runtime.state.workspace.clipRegistry.getResources(),
-    ]);
+    const visualBounds = calculateBoundsOfPrimitives(committedPrimitives, {
+      paints: execution.runtime.state.workspace.paintRegistry.getResources(),
+      clips: execution.runtime.state.workspace.clipRegistry.getResources(),
+    });
     if (visualBounds !== undefined)
       contribution.bounds.push({
         boundsPoints: allocationPointsOf(visualBounds),

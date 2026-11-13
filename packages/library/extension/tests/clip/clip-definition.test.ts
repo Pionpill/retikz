@@ -148,13 +148,16 @@ describe('扩展裁剪定义公共契约', () => {
   it.each(cases)('通过仅作为裁剪传递的完整定义来编译 $kind', testCase => {
     const scene = compileTestResult(sceneOf(testCase.clip), { clips: testCase.definitions }).scene;
 
-    expect(scene.resources).toEqual([
-      {
-        kind: 'clip',
-        id: 'clip-1',
-        path: { commands: testCase.commands, fillRule: testCase.fillRule },
-      },
-    ]);
+    expect(scene.resources).toEqual({
+      paints: [],
+      clips: [
+        {
+          kind: 'clip',
+          id: 'clip-1',
+          path: { commands: testCase.commands, fillRule: testCase.fillRule },
+        },
+      ],
+    });
   });
 });
 

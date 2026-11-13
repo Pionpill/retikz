@@ -92,7 +92,7 @@ describe('扩展复合裁剪定义', () => {
     const compiled = compileTestResult(scene, {
       clips: [compoundClipDefinition, circleClipDefinition, ellipseClipDefinition, roundedRectClip()],
     }).scene;
-    const resource = compiled.resources?.[0];
+    const resource = compiled.resources?.clips[0];
 
     expect(resource).toMatchObject({ kind: 'clip', path: { fillRule: 'evenodd' } });
 

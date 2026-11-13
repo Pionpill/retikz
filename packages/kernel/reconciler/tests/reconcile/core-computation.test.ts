@@ -257,6 +257,33 @@ it('Scope 子内容更新、资源撤销和匿名组删除与全量编译等价'
 });
 
 it('宿主提交失败保留旧编译结果，重试发布完整新树', () => {
+  const sourceWithResources = (text: string, width: number, color: string): IRScene => ({
+    version: 1,
+    type: 'scene',
+    children: [
+      {
+        type: 'scope',
+        clip: { kind: 'rect', params: { x: 0, y: 0, width, height: 40 } },
+        children: [
+          {
+            type: 'node',
+            text,
+            style: {
+              fill: {
+                kind: 'linearGradient',
+                stops: [
+                  { offset: 0, color },
+                  { offset: 1, color: 'white' },
+                ],
+              },
+            },
+          },
+        ],
+      },
+    ],
+  });
+  const initial = sourceWithResources('before', 20, 'red');
+  const replacement = sourceWithResources('after', 40, 'blue');
   let failing = false;
   const session = new SceneReconciler(
     { onWarn: () => {} },
@@ -272,11 +299,15 @@ it('宿主提交失败保留旧编译结果，重试发布完整新树', () => {
       },
     },
   );
-  const previous = session.mount(sceneWithText('before'));
+  const previous = session.mount(initial);
   failing = true;
-  expect(() => session.replace(sceneWithText('after'))).toThrow();
+  expect(() => session.replace(replacement)).toThrow();
   expect(session.read()).toBe(previous);
+  expect(session.read().compilation.result.scene.resources).toEqual(previous.compilation.result.scene.resources);
   failing = false;
-  expect(session.replace(sceneWithText('after')).compilation.result).toEqual(compileTestResult(sceneWithText('after')));
+  const retried = session.replace(replacement).compilation.result;
+  expect(retried).toEqual(compileTestResult(replacement));
+  expect(retried.scene.resources?.paints).toHaveLength(1);
+  expect(retried.scene.resources?.clips).toHaveLength(1);
   session.dispose();
 });

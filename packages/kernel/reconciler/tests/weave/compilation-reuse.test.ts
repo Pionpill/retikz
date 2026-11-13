@@ -91,6 +91,45 @@ describe('Weave 编译产物复用', () => {
     });
     expect(keep.current!.compiled).toBe(product);
     expect(updated.compilation.result).toEqual(compileTestResult({ ...source, children: source.children.slice(0, 1) }));
-    expect(updated.compilation.result.scene.resources).toHaveLength(1);
+    expect([
+      ...(updated.compilation.result.scene.resources?.paints ?? []),
+      ...(updated.compilation.result.scene.resources?.clips ?? []),
+    ]).toHaveLength(1);
+  });
+
+  it('回滚再更新时，未变化的子树同时恢复绘制和裁剪资源', () => {
+    const source: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'scope',
+          id: 'stable',
+          clip: { kind: 'rect', params: { x: -10, y: -10, width: 20, height: 20 } },
+          children: [{ type: 'node', position: [0, 0], style: { fill: { kind: 'pattern', shape: 'dots' } } }],
+        },
+        { type: 'node', id: 'moving', position: [50, 0] },
+      ],
+    };
+    const session = new WeaveManager(source);
+    const mounted = session.mount();
+    const stable = mounted.root.current!.children[0];
+    const compilation = stable.current!.compiled;
+    const replacement = { type: 'node' as const, id: 'moving', position: [80, 0] as [number, number] };
+    const batch: WeaveBatch = {
+      operations: [
+        { kind: 'update', target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'moving' }, input: replacement },
+      ],
+    };
+    const expected = compileTestResult({ ...source, children: [source.children[0], replacement] });
+    const discarded = session.update(batch);
+    expect(discarded.compilation.result).toEqual(expected);
+    discarded.rollback();
+
+    const retried = commitUpdate(session, batch);
+    expect(retried.compilation.result).toEqual(expected);
+    expect(retried.compilation.result.scene.resources?.paints).toHaveLength(1);
+    expect(retried.compilation.result.scene.resources?.clips).toHaveLength(1);
+    expect(stable.current!.compiled).toBe(compilation);
   });
 });

@@ -1,4 +1,4 @@
-import type { CompileOccurrenceLocator, CompileWarning, ScenePrimitive, SceneResource } from '@retikz/core';
+﻿import type { CompileOccurrenceLocator, CompileWarning, ScenePrimitive, SceneResources } from '@retikz/core';
 import { visitSceneContent } from '@retikz/core';
 import type { PropertyPath } from '@retikz/foundation';
 import { isPropertyPathEqual } from '@retikz/foundation';
@@ -20,7 +20,7 @@ export type CompileContribution = {
   /** 实例实际读取的外部或内部名称 */
   reads: Array<CompileReferenceRead>;
   /** 图元引用的资源闭包 */
-  resources: Array<SceneResource>;
+  resources: SceneResources;
   /** 实例诊断；有诊断时由驱动决定重新计算 */
   diagnostics: Array<CompileWarning>;
   /** 可重新绑定到当前来源树的局部事实 */
@@ -35,8 +35,8 @@ export type CompileContributionController = {
 /** 从已物化图元收集真实资源依赖，避免保留其它实例的资源 */
 export const collectContributionResources = (
   primitives: Array<ScenePrimitive>,
-  resources: Array<SceneResource>,
-): Array<SceneResource> => {
+  resources: SceneResources,
+): SceneResources => {
   const retained = new Set<string>();
   visitSceneContent({ primitives, resources }, primitive => {
     if (primitive.type === 'group') {
@@ -46,7 +46,10 @@ export const collectContributionResources = (
         if (typeof paint === 'object' && paint.kind === 'resourceRef') retained.add(paint.id);
     }
   });
-  return resources.filter(resource => retained.has(resource.id));
+  return {
+    paints: resources.paints.filter(resource => retained.has(resource.id)),
+    clips: resources.clips.filter(resource => retained.has(resource.id)),
+  };
 };
 
 /** 从已完成的局部输出捕获可复用贡献，不执行领域计算 */
@@ -74,10 +77,10 @@ export const captureCompileContribution = (
     zIndices: primitives.map(primitive => output.zIndexOf.get(primitive)),
     bindings,
     reads,
-    resources: collectContributionResources(primitives, [
-      ...workspace.paintRegistry.getResources(),
-      ...workspace.clipRegistry.getResources(),
-    ]),
+    resources: collectContributionResources(primitives, {
+      paints: workspace.paintRegistry.getResources(),
+      clips: workspace.clipRegistry.getResources(),
+    }),
     diagnostics: workspace.diagnosticCollector.warnings.filter(warning =>
       isPropertyPathEqual(compileWarningOccurrenceOf(warning).sourcePath, occurrence.sourcePath),
     ),

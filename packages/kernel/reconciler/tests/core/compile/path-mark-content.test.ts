@@ -310,7 +310,7 @@ it('普通标记保留嵌套样式和资源描边，并把完整内容计入边�
   const definition = defineMark({ ...dot, emit: () => content });
   const scene = compile({ style: { stroke: gradient }, marks: [{ pos: 0.5, ...custom }] }, [definition]);
   expect(scene.layout.y + scene.layout.height).toBeGreaterThanOrEqual(35);
-  expect(scene.resources).toHaveLength(1);
+  expect([...(scene.resources?.paints ?? []), ...(scene.resources?.clips ?? [])]).toHaveLength(1);
   const flat = flattenPrims(scene.primitives);
   expect(flat.find(primitive => primitive.type === 'rect')).toMatchObject({ fill: { kind: 'resourceRef' } });
   expect(flat.find(primitive => primitive.type === 'ellipse')).toMatchObject({ fill: 'gold' });

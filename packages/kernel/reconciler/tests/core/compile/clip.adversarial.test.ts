@@ -8,7 +8,7 @@ import type {
   IRPaint,
   IRScene,
   ScenePrimitive,
-  SceneResource,
+  SceneResources,
 } from '../../../../core/src';
 import { defineClip } from '../../../../core/src';
 import { compileTestResult } from '../../helpers/compilation';
@@ -53,8 +53,7 @@ const firstGroup = (primitives: ReadonlyArray<ScenePrimitive>): GroupPrimitive |
 const allGroups = (primitives: ReadonlyArray<ScenePrimitive>): Array<GroupPrimitive> =>
   primitives.filter((p): p is GroupPrimitive => p.type === 'group');
 
-const clipResources = (resources: Array<SceneResource> | undefined): Array<ClipResource> =>
-  (resources ?? []).filter((r): r is ClipResource => r.kind === 'clip');
+const clipResources = (resources: SceneResources | undefined): ReadonlyArray<ClipResource> => resources?.clips ?? [];
 
 const grad: IRPaint = {
   kind: 'linearGradient',
@@ -339,13 +338,13 @@ describe('clip + paint 资源命名空间：大量混合不撞、稳定', () => 
       },
     ]);
     const compiled = compileTestResult(ir).scene;
-    const paints = (compiled.resources ?? []).filter(r => r.kind === 'paint');
+    const paints = compiled.resources?.paints ?? [];
     const clips = clipResources(compiled.resources);
 
     expect(paints).toHaveLength(2);
     expect(clips).toHaveLength(2);
 
-    const allIds = (compiled.resources ?? []).map(r => r.id);
+    const allIds = [...(compiled.resources?.paints ?? []), ...(compiled.resources?.clips ?? [])].map(r => r.id);
 
     expect(new Set(allIds).size).toBe(allIds.length);
   });

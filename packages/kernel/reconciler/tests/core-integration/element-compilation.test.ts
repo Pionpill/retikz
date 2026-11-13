@@ -128,7 +128,10 @@ describe('独立元素编译', () => {
     };
     const mounted = new WeaveManager(source).mount();
     expect(mounted.compilation.result).toEqual(compileTestResult(source));
-    expect(mounted.compilation.result.scene.resources).toHaveLength(1);
+    expect([
+      ...(mounted.compilation.result.scene.resources?.paints ?? []),
+      ...(mounted.compilation.result.scene.resources?.clips ?? []),
+    ]).toHaveLength(1);
   });
 
   it('引用从 pending 就绪后可重算，祖先包络引用仍报错', () => {
@@ -210,7 +213,7 @@ describe('独立元素编译', () => {
       context,
     );
     if (first.status !== 'compiled' || second.status !== 'compiled') throw new Error('expected nodes');
-    expect(first.compiled.output.resources[0].id).not.toBe(second.compiled.output.resources[0].id);
+    expect(first.compiled.output.resources.paints[0].id).not.toBe(second.compiled.output.resources.paints[0].id);
   });
   it('未就绪引用返回 pending，不暴露半成品', () => {
     const shared = createSharedCompileContext();

@@ -687,7 +687,7 @@ describe('布局感知的复契约束和边界', () => {
     });
 
     expect(result.scene.primitives).toEqual([]);
-    expect(result.scene.resources ?? []).toEqual([]);
+    expect(result.scene.resources ?? { paints: [], clips: [] }).toEqual({ paints: [], clips: [] });
     expect(result.artifacts).toEqual([]);
   });
 
@@ -1255,7 +1255,7 @@ describe('布局感知的复契约束和边界', () => {
       composites: [parent],
     });
 
-    expect(result.scene.resources?.filter(resource => resource.kind === 'clip')).toHaveLength(1);
+    expect(result.scene.resources?.clips ?? []).toHaveLength(1);
     expect(clipReads).toBe(1);
   });
 
@@ -2332,7 +2332,7 @@ describe('布局感知的复契约束和边界', () => {
       sceneOf({ type: 'scope', clip: { kind: 'dynamicClipPath', params: {} }, children: [] }),
       { clips: [definition] },
     );
-    const clip = scene.resources?.find(resource => resource.kind === 'clip');
+    const clip = scene.resources?.clips[0];
     expect(clip).toMatchObject({ kind: 'clip', path });
     expect(commandsReads).toBe(1);
     path.commands.length = 0;
@@ -2807,7 +2807,7 @@ describe('布局感知的复合回放所有权', () => {
     expect(result.scene.primitives.map(primitive => primitive.type)).toEqual(['group', 'rect', 'group']);
     expect(groups).toHaveLength(2);
     expect(groups[0]?.clipRef).toBe(groups[1]?.clipRef);
-    expect(result.scene.resources?.filter(resource => resource.kind === 'clip')).toHaveLength(1);
+    expect(result.scene.resources?.clips ?? []).toHaveLength(1);
   });
 
   it('拒绝从先前编译中保留的回放令牌', () => {

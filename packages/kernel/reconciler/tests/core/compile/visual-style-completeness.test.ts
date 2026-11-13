@@ -121,7 +121,9 @@ it('pin 解析绘画资源并使用其自己的不透明度和描边几何形状
     dashPattern: [2, 3],
     dashOffset: 1,
   });
-  expect(scene.resources).toEqual(expect.arrayContaining([expect.objectContaining({ kind: 'paint', spec: gradient })]));
+  expect(scene.resources?.paints).toEqual(
+    expect.arrayContaining([expect.objectContaining({ kind: 'paint', spec: gradient })]),
+  );
 });
 
 it('端点和内联箭头保留显式绘画和描边覆盖', () => {
@@ -172,7 +174,7 @@ it('端点和内联箭头保留显式绘画和描边覆盖', () => {
   };
   expect(paths[0].arrowEnd?.marker[0]).toMatchObject(expected);
   expect(paths[1]).toMatchObject(expected);
-  expect(scene.resources).toHaveLength(1);
+  expect([...(scene.resources?.paints ?? []), ...(scene.resources?.clips ?? [])]).toHaveLength(1);
 });
 
 it('提供箭头选项时，自定义箭头输出保留固定的嵌套样式', () => {

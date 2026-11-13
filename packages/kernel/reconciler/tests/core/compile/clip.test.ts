@@ -6,7 +6,7 @@ import type {
   IRPaint,
   IRScene,
   ScenePrimitive,
-  SceneResource,
+  SceneResources,
 } from '../../../../core/src';
 import { compileTestResult } from '../../helpers/compilation';
 
@@ -21,8 +21,7 @@ const firstGroup = (primitives: ReadonlyArray<ScenePrimitive>): GroupPrimitive |
   primitives.find((p): p is GroupPrimitive => p.type === 'group');
 
 /** 从 Scene.resources 取所有 clip 资源 */
-const clipResources = (resources: Array<SceneResource> | undefined): Array<ClipResource> =>
-  (resources ?? []).filter((r): r is ClipResource => r.kind === 'clip');
+const clipResources = (resources: SceneResources | undefined): ReadonlyArray<ClipResource> => resources?.clips ?? [];
 
 const grad: IRPaint = {
   kind: 'linearGradient',
@@ -191,13 +190,13 @@ describe('交互：paint + clip 资源共存 / transformed scope path ownership'
       },
     ]);
     const compiled = compileTestResult(ir).scene;
-    const paints = (compiled.resources ?? []).filter(r => r.kind === 'paint');
+    const paints = compiled.resources?.paints ?? [];
     const clips = clipResources(compiled.resources);
 
     expect(paints).toHaveLength(1);
     expect(clips).toHaveLength(1);
 
-    const allIds = (compiled.resources ?? []).map(r => r.id);
+    const allIds = [...(compiled.resources?.paints ?? []), ...(compiled.resources?.clips ?? [])].map(r => r.id);
 
     expect(new Set(allIds).size).toBe(allIds.length);
   });

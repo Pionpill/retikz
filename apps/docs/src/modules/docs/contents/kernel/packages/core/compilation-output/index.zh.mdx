@@ -57,7 +57,9 @@ Scene 不要求所有图元摊平成世界坐标。Scope 或 Node 可以保留 G
 
 ## 绘制资源怎样共享
 
-普通颜色可以直接出现在图元中，渐变、图案和裁剪等通过资源表与引用表达。Core 的 paint / clip registry 物化后端中立资源并按内容身份复用；Reconciler 为每次工作区创建并汇总这些注册表。
+普通颜色可以直接出现在图元中。渐变、图案和图片保存在 `Scene.resources.paints`，由填充或描边的资源引用使用；裁剪路径保存在 `Scene.resources.clips`，由分组的 `clipRef` 引用。Core 的 paint / clip registry 物化后端中立资源并按内容身份复用；Reconciler 为每次工作区创建这些注册表，缓存、回放和最终 Scene 都保留相同分类。
+
+`resources` 存在时，`paints` 和 `clips` 都是数组，没有对应资源的类别使用空数组。编译结果没有资源时可以省略整个字段；Render 运行时快照则始终补齐两个集合。资源更新与引用它的图元在同一 revision 生效。
 
 Pattern Definition 可以生成 tile 的图元，但不能另带一份资源表。Path 等扩展回调的资源引用同样受宿主许可约束。隔离试算的资源只有选中 replay 才导入正式工作区，不能只复制图元而漏掉它引用的资源。
 

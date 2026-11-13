@@ -167,6 +167,6 @@ export const createPathWorkload = ({ kind, segments }: PathBenchmarkCase, count:
         ),
       ).toBe(true);
     }
-    expect(result.scene.resources ?? []).toHaveLength(0);
+    expect([...(result.scene.resources?.paints ?? []), ...(result.scene.resources?.clips ?? [])]).toHaveLength(0);
   });
 };

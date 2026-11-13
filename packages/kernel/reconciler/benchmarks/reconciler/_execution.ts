@@ -54,7 +54,11 @@ export const createBenchmarkWorkload = (
       expect(JSON.stringify(ir)).toBe(before);
       expect(result.artifacts).toEqual([]);
       for (const coordinate of Object.values(result.scene.layout)) expect(Number.isFinite(coordinate)).toBe(true);
-      const resources = new Set(result.scene.resources?.map(resource => resource.id));
+      const resources = new Set(
+        [...(result.scene.resources?.paints ?? []), ...(result.scene.resources?.clips ?? [])].map(
+          resource => resource.id,
+        ),
+      );
       for (const primitive of inspectBenchmarkScene(result).leaves) {
         for (const paint of [
           'fill' in primitive ? primitive.fill : undefined,

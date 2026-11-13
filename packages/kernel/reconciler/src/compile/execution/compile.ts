@@ -32,7 +32,7 @@ export const finalizeSceneCompilation = <TComposite extends AnyCompositeDefiniti
 ): SceneCompilationSnapshot<TComposite> => {
   const { paintRegistry, clipRegistry, diagnosticCollector } = runtime.state.workspace;
   const primitives = subtree.primitives;
-  const resources = [...paintRegistry.getResources(), ...clipRegistry.getResources()];
+  const resources = { paints: paintRegistry.getResources(), clips: clipRegistry.getResources() };
   const round = runtime.context.layout.round;
   const { padding = DEFAULT_LAYOUT_PADDING } = runtime.context;
   if (!Number.isFinite(padding) || padding < 0) {
@@ -56,7 +56,7 @@ export const finalizeSceneCompilation = <TComposite extends AnyCompositeDefiniti
       root.viewBox === undefined
         ? calculateLayoutFromBounds(subtree.visualBounds, padding, round)
         : viewBoxToLayout(root.viewBox, round),
-    ...(resources.length === 0 ? {} : { resources }),
+    ...(resources.paints.length === 0 && resources.clips.length === 0 ? {} : { resources }),
     ...(animations === undefined ? {} : { animations }),
   };
   const provenance = runtime.state.execution.provenanceTracker?.capture(primitives);

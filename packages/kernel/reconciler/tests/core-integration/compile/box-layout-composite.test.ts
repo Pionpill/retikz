@@ -524,25 +524,28 @@ describe('盒子 Layout 综合契约', () => {
     });
     const primitive = result.scene.primitives[0];
 
-    expect(result.scene.resources).toEqual([
-      expect.objectContaining({
-        kind: 'clip',
-        id: result.scene.resources!.filter(resource => resource.kind === 'clip')[0].id,
-        path: {
-          commands: [
-            { kind: 'move', to: [8, 18] },
-            { kind: 'line', to: [12, 18] },
-            { kind: 'line', to: [12, 22] },
-            { kind: 'line', to: [8, 22] },
-            { kind: 'close' },
-          ],
-          fillRule: 'nonzero',
-        },
-      }),
-    ]);
+    expect(result.scene.resources).toEqual({
+      paints: [],
+      clips: [
+        expect.objectContaining({
+          kind: 'clip',
+          id: (result.scene.resources?.clips ?? [])[0].id,
+          path: {
+            commands: [
+              { kind: 'move', to: [8, 18] },
+              { kind: 'line', to: [12, 18] },
+              { kind: 'line', to: [12, 22] },
+              { kind: 'line', to: [8, 22] },
+              { kind: 'close' },
+            ],
+            fillRule: 'nonzero',
+          },
+        }),
+      ],
+    });
     expect(primitive).toMatchObject({
       type: 'group',
-      clipRef: result.scene.resources!.filter(resource => resource.kind === 'clip')[0].id,
+      clipRef: (result.scene.resources?.clips ?? [])[0].id,
     });
     expect(primitive).not.toHaveProperty('transforms');
 
@@ -619,7 +622,7 @@ describe('盒子 Layout 综合契约', () => {
 
     expect(primitive).toMatchObject({
       type: 'group',
-      clipRef: result.scene.resources!.filter(resource => resource.kind === 'clip')[0].id,
+      clipRef: (result.scene.resources?.clips ?? [])[0].id,
     });
 
     if (primitive.type !== 'group') throw new Error('expected replay clip group');
@@ -628,7 +631,7 @@ describe('盒子 Layout 综合契约', () => {
       type: 'group',
       transforms: [{ kind: 'translate', x: 5, y: 6 }],
     });
-    expect(result.scene.resources?.[0]).toMatchObject({
+    expect(result.scene.resources?.clips[0]).toMatchObject({
       kind: 'clip',
       path: {
         commands: [

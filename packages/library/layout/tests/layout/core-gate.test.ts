@@ -513,7 +513,7 @@ describe('Layout Core 布局能力门', () => {
     });
 
     expect(discarded.scene.primitives).toEqual([]);
-    expect(discarded.scene.resources ?? []).toEqual([]);
+    expect(discarded.scene.resources ?? { paints: [], clips: [] }).toEqual({ paints: [], clips: [] });
     expect(discarded.artifacts).toEqual([]);
     expect(warnings).toEqual([]);
     expect(() =>

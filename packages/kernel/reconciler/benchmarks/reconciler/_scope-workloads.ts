@@ -28,7 +28,7 @@ export const createScopeWorkload = (kind: ScopeBenchmarkKind, count: number) => 
       Array.from({ length: count }, (): IRScope => ({ type: 'scope', children: [] })),
       result => {
         expect(inspectBenchmarkScene(result).leaves).toHaveLength(0);
-        expect(result.scene.resources ?? []).toHaveLength(0);
+        expect([...(result.scene.resources?.paints ?? []), ...(result.scene.resources?.clips ?? [])]).toHaveLength(0);
       },
     );
 
@@ -115,6 +115,6 @@ export const createScopeWorkload = (kind: ScopeBenchmarkKind, count: number) => 
       expect(transforms.filter(transform => transform.kind === 'rotate')).toHaveLength(scopeCount);
       expect(transforms.filter(transform => transform.kind === 'scale')).toHaveLength(scopeCount);
     }
-    expect(result.scene.resources ?? []).toHaveLength(0);
+    expect([...(result.scene.resources?.paints ?? []), ...(result.scene.resources?.clips ?? [])]).toHaveLength(0);
   });
 };

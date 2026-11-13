@@ -1002,7 +1002,10 @@ describe('lowerPlots 标记绘制', () => {
       { composites: lowerPlots({ sales: SALES }, opts) },
     ).scene;
 
-    expect(scene.resources).toEqual([{ kind: 'paint', id: expect.any(String), spec: paintGradient }]);
+    expect(scene.resources).toEqual({
+      paints: [{ kind: 'paint', id: expect.any(String), spec: paintGradient }],
+      clips: [],
+    });
   });
 
   it('路径常量描边绘制下沉到路径默认值并编译', () => {
@@ -1032,7 +1035,10 @@ describe('lowerPlots 标记绘制', () => {
       { composites: lowerPlots({ sales: SALES }, opts) },
     ).scene;
 
-    expect(scene.resources).toEqual([{ kind: 'paint', id: expect.any(String), spec: paintGradient }]);
+    expect(scene.resources).toEqual({
+      paints: [{ kind: 'paint', id: expect.any(String), spec: paintGradient }],
+      clips: [],
+    });
   });
 
   it('间隔常量绘制下沉到节点默认值并编译', () => {
@@ -1063,7 +1069,10 @@ describe('lowerPlots 标记绘制', () => {
       { composites: lowerPlots({ sales: SALES }, opts) },
     ).scene;
 
-    expect(scene.resources).toEqual([{ kind: 'paint', id: expect.any(String), spec: paintGradient }]);
+    expect(scene.resources).toEqual({
+      paints: [{ kind: 'paint', id: expect.any(String), spec: paintGradient }],
+      clips: [],
+    });
   });
 
   it('路径闭合常量绘制下沉到路径默认值并编译', () => {
@@ -1094,7 +1103,10 @@ describe('lowerPlots 标记绘制', () => {
       { composites: lowerPlots({ sales: SALES }, opts) },
     ).scene;
 
-    expect(scene.resources).toEqual([{ kind: 'paint', id: expect.any(String), spec: paintGradient }]);
+    expect(scene.resources).toEqual({
+      paints: [{ kind: 'paint', id: expect.any(String), spec: paintGradient }],
+      clips: [],
+    });
   });
 
   it('间隔常量绘制下沉到节点默认值并编译', () => {
@@ -1129,7 +1141,10 @@ describe('lowerPlots 标记绘制', () => {
       { composites: lowerPlots({ sales: SALES }, opts) },
     ).scene;
 
-    expect(scene.resources).toEqual([{ kind: 'paint', id: expect.any(String), spec: paintGradient }]);
+    expect(scene.resources).toEqual({
+      paints: [{ kind: 'paint', id: expect.any(String), spec: paintGradient }],
+      clips: [],
+    });
   });
 });
 

@@ -619,11 +619,7 @@ describe('FlexLayout 编译契约', () => {
 
     expect(result.observed.allocationBounds).toEqual({ x: 0, y: 0, width: 0, height: 20 });
     expect(groupsOf(result.output.scene.primitives).some(group => group.clipRef !== undefined)).toBe(true);
-    expect(
-      (result.output.scene.resources ?? []).some(
-        resource => resource.kind === 'clip' && resource.path.commands.length > 0,
-      ),
-    ).toBe(true);
+    expect(result.output.scene.resources?.clips.some(resource => resource.path.commands.length > 0)).toBe(true);
   });
 
   it('主要收缩后重新探测交叉指标，以便响应式文本的孩子可以长高', () => {

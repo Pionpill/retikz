@@ -61,7 +61,7 @@ describe('资源内容复用基础图元', () => {
         },
         { patterns: [pattern] },
       );
-      const resource = result.scene.resources?.[0];
+      const resource = result.scene.resources?.paints[0];
       if (resource?.kind !== 'paint' || !('tile' in resource)) throw new Error('Expected pattern resource');
       expect(resource.tile.motif).toEqual([path]);
       expect(resource.id).toBe(
@@ -143,8 +143,8 @@ describe('资源内容复用基础图元', () => {
       },
       { patterns: [pattern] },
     ).scene;
-    expect(compiled.resources).toHaveLength(1);
-    const resource = compiled.resources?.[0];
+    expect([...(compiled.resources?.paints ?? []), ...(compiled.resources?.clips ?? [])]).toHaveLength(1);
+    const resource = compiled.resources?.paints[0];
     if (resource?.kind !== 'paint' || !('tile' in resource)) throw new Error('Expected pattern resource');
     expect(resource.spec).toEqual(spec);
     const content = {
@@ -192,7 +192,7 @@ describe('资源内容复用基础图元', () => {
       },
       { patterns: [pattern] },
     );
-    const resource = result.scene.resources?.find(item => item.kind === 'paint' && 'tile' in item);
+    const resource = result.scene.resources?.paints.find(item => 'tile' in item);
     expect(resource?.tile.motif).toEqual([text]);
     expect(resource?.tile.motif[0]).not.toBe(text);
   });
@@ -228,7 +228,7 @@ describe('Scene 资源依赖关闭', () => {
     const patterns = [definePattern({ name: 'first', emit: () => [rectangle] })];
     const result = compileTestResult(input, { shapes: [valid], patterns }).scene;
     expect(() => visitSceneContent(result)).not.toThrow();
-    expect(result.resources).toHaveLength(1);
+    expect([...(result.resources?.paints ?? []), ...(result.resources?.clips ?? [])]).toHaveLength(1);
     expect(() =>
       compileTestResult(
         { ...input, children: [...input.children, { type: 'node', shape: 'foreign', position: [2, 0] }] },
@@ -263,7 +263,7 @@ describe('Scene 资源依赖关闭', () => {
       patterns,
       marks: [defineMark({ name: 'custom', emit: context => [{ ...rectangle, fill: context.fill }] })],
     }).scene;
-    expect(result.resources).toHaveLength(1);
+    expect([...(result.resources?.paints ?? []), ...(result.resources?.clips ?? [])]).toHaveLength(1);
     expect(() => visitSceneContent(result)).not.toThrow();
     expect(() =>
       compileTestResult(input, {
@@ -311,11 +311,16 @@ describe('Scene 资源依赖关闭', () => {
         }),
     });
     const result = compileTestResult(input, { patterns, paths: [path] }).scene;
-    expect(result.resources).toHaveLength(1);
+    expect([...(result.resources?.paints ?? []), ...(result.resources?.clips ?? [])]).toHaveLength(1);
     expect(() => visitSceneContent(result)).not.toThrow();
     expect(() =>
       compileTestResult(input, {
-        paths: [{ ...path, compile: () => ({ primitives: [rectangle], boundsPoints: [], resources: [] }) }],
+        paths: [
+          {
+            ...path,
+            compile: () => ({ primitives: [rectangle], boundsPoints: [], resources: { paints: [], clips: [] } }),
+          },
+        ],
       }),
     ).toThrow(/cannot declare resources/);
     expect(() =>
@@ -400,29 +405,31 @@ describe('Scene 资源依赖关闭', () => {
         patterns: [definePattern({ name: 'first', emit: () => [{ ...rectangle, meta }] })],
       },
     ).scene;
-    const resource = scene.resources?.find(item => item.kind === 'paint' && 'tile' in item);
+    const resource = scene.resources?.paints.find(item => 'tile' in item);
     expect(resource?.tile.motif[0].meta).toEqual(meta);
   });
 
   it('重复导入保留宿主及嵌套箭头的资源引用', () => {
-    const resources: NonNullable<Scene['resources']> = [
-      {
-        kind: 'paint',
-        id: 'first',
-        spec: { kind: 'pattern', shape: 'custom' },
-        tile: { size: 10, motif: [{ ...rectangle, fill: 'red' }] },
-      },
-      {
-        kind: 'paint',
-        id: 'second',
-        spec: { kind: 'pattern', shape: 'custom' },
-        tile: { size: 10, motif: [{ ...rectangle, fill: 'blue' }] },
-      },
-    ];
     const paint = createPaintRegistry(value => value);
     const clip = createClipRegistry(value => value);
     const windowId = clip.registerPath({ fillRule: 'nonzero', commands: [] });
-    resources.push(...clip.getResources());
+    const resources: NonNullable<Scene['resources']> = {
+      paints: [
+        {
+          kind: 'paint',
+          id: 'first',
+          spec: { kind: 'pattern', shape: 'custom' },
+          tile: { size: 10, motif: [{ ...rectangle, fill: 'red' }] },
+        },
+        {
+          kind: 'paint',
+          id: 'second',
+          spec: { kind: 'pattern', shape: 'custom' },
+          tile: { size: 10, motif: [{ ...rectangle, fill: 'blue' }] },
+        },
+      ],
+      clips: clip.getResources(),
+    };
     importSceneResources(resources, paint, clip);
     importSceneResources(resources, paint, clip);
     expect(paint.getResources()).toHaveLength(2);
@@ -452,10 +459,13 @@ describe('Scene 资源依赖关闭', () => {
       children: [{ fill: { id: 'first' }, arrowEnd: { marker: [{ fill: { id: 'second' } }] } }],
     });
     expect(() =>
-      visitSceneContent({ primitives: [host], resources: [...paint.getResources(), ...clip.getResources()] }),
+      visitSceneContent({
+        primitives: [host],
+        resources: { paints: paint.getResources(), clips: clip.getResources() },
+      }),
     ).not.toThrow();
     expect(source.clipRef).toBe(windowId);
-    expect(resources[0].id).toBe('first');
+    expect(resources.paints[0].id).toBe('first');
   });
   it('Pattern 资源身份由输出内容决定，编译结果中的资源引用完整', () => {
     const input: IRScene = { ...patternScene, children: patternScene.children.slice(0, 1) };
@@ -466,8 +476,8 @@ describe('Scene 资源依赖关闭', () => {
     const red = compile('red');
     const blue = compile('blue');
     const repeated = compile('red');
-    expect(red.resources![0].id).toBe(repeated.resources![0].id);
-    expect(red.resources![0].id).not.toBe(blue.resources![0].id);
+    expect(red.resources?.paints[0].id).toBe(repeated.resources?.paints[0].id);
+    expect(red.resources?.paints[0].id).not.toBe(blue.resources?.paints[0].id);
 
     for (const scene of [red, blue, repeated]) {
       expect(() => visitSceneContent(scene)).not.toThrow();

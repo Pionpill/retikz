@@ -102,7 +102,7 @@ describe('解析/资源绘制', () => {
       ],
     }).scene;
 
-    expect(scene.resources).toHaveLength(1);
+    expect([...(scene.resources?.paints ?? []), ...(scene.resources?.clips ?? [])]).toHaveLength(1);
   });
 
   it('发出一次去重模式资源', () => {
@@ -128,7 +128,7 @@ describe('解析/资源绘制', () => {
       { patterns: [pattern] },
     ).scene;
 
-    expect(scene.resources).toHaveLength(1);
+    expect([...(scene.resources?.paints ?? []), ...(scene.resources?.clips ?? [])]).toHaveLength(1);
     expect(emit).toHaveBeenCalledTimes(1);
   });
 });
@@ -239,7 +239,7 @@ describe('解析/资源裁剪', () => {
       },
       { clips: [wrapper, leaf] },
     ).scene;
-    const resource = scene.resources?.find(item => item.kind === 'clip');
+    const resource = scene.resources?.clips[0];
 
     expect(resource).toMatchObject({
       kind: 'clip',

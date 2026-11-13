@@ -28,7 +28,7 @@ const compilePath = (
     clips: [pathOperation(kind, commands, options.fillRule)],
     ...(options.precision === undefined ? {} : { precision: options.precision }),
   }).scene;
-  const resource = (scene.resources ?? []).find(entry => entry.kind === 'clip');
+  const resource = scene.resources?.clips[0];
   if (resource?.kind !== 'clip') throw new Error('Expected one clip resource.');
 
   return resource.path;
@@ -80,7 +80,7 @@ describe('规范的 SceneClipPath', () => {
       clips: [pathOperation('pathA', commandsA), pathOperation('pathB', commandsB)],
     }).scene;
 
-    expect((scene.resources ?? []).filter(entry => entry.kind === 'clip')).toHaveLength(1);
+    expect(scene.resources?.clips ?? []).toHaveLength(1);
   });
 
   it.each([

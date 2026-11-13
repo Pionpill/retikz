@@ -67,7 +67,7 @@ export const emitStrokePath = (
   const markBounds =
     marks.primitives.length === 0
       ? undefined
-      : calculateBoundsOfPrimitives(marks.primitives, context.options?.resources?.() ?? []);
+      : calculateBoundsOfPrimitives(marks.primitives, context.options?.resources?.() ?? { paints: [], clips: [] });
   if (markBounds !== undefined)
     boundsPoints.push(
       [markBounds.x, markBounds.y],

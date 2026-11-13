@@ -173,7 +173,7 @@ describe('布局感知复合运行时包装树', () => {
       type: 'group',
       id: 'cell',
       meta: { role: 'cell' },
-      clipRef: result.scene.resources!.filter(resource => resource.kind === 'clip')[0].id,
+      clipRef: (result.scene.resources?.clips ?? [])[0].id,
     });
     expect(outer).not.toHaveProperty('transforms');
 
@@ -187,22 +187,25 @@ describe('布局感知复合运行时包装树', () => {
         { kind: 'translate', x: 10, y: 12 },
       ],
     });
-    expect(result.scene.resources).toEqual([
-      {
-        kind: 'clip',
-        id: result.scene.resources!.filter(resource => resource.kind === 'clip')[0].id,
-        path: {
-          commands: [
-            { kind: 'move', to: [0, 0] },
-            { kind: 'line', to: [30, 0] },
-            { kind: 'line', to: [30, 20] },
-            { kind: 'line', to: [0, 20] },
-            { kind: 'close' },
-          ],
-          fillRule: 'nonzero',
+    expect(result.scene.resources).toEqual({
+      paints: [],
+      clips: [
+        {
+          kind: 'clip',
+          id: (result.scene.resources?.clips ?? [])[0].id,
+          path: {
+            commands: [
+              { kind: 'move', to: [0, 0] },
+              { kind: 'line', to: [30, 0] },
+              { kind: 'line', to: [30, 20] },
+              { kind: 'line', to: [0, 20] },
+              { kind: 'close' },
+            ],
+            fillRule: 'nonzero',
+          },
         },
-      },
-    ]);
+      ],
+    });
   });
 
   it('项目运行时 Scope 在混合的原始/回放引用、产物和边界之间进行转换', () => {
@@ -596,7 +599,7 @@ describe('布局感知复合运行时包装树', () => {
 
     expect(transaction).toMatchObject({ used: false });
     expect(transaction?.primitives.length).toBeGreaterThan(0);
-    expect(transaction?.resources.length).toBeGreaterThan(0);
+    expect((transaction?.resources.paints.length ?? 0) + (transaction?.resources.clips.length ?? 0)).toBeGreaterThan(0);
     expect(transaction?.warnings.length).toBeGreaterThan(0);
     expect(transaction?.artifacts.length).toBeGreaterThan(0);
     expect(transaction?.namespaceChanges.length).toBeGreaterThan(0);
@@ -608,7 +611,11 @@ describe('布局感知复合运行时包装树', () => {
     );
 
     expect(committed.scene.primitives).toHaveLength(2);
-    expect(committed.scene.resources?.map(resource => resource.kind)).toEqual(['paint', 'clip']);
+    expect(
+      [...(committed.scene.resources?.paints ?? []), ...(committed.scene.resources?.clips ?? [])].map(
+        resource => resource.kind,
+      ),
+    ).toEqual(['paint', 'clip']);
     expect(warnings.map(warning => warning.code)).toContain(BuiltinCompileWarningCode.DuplicateNodeId);
     expect(clipLowerCalls).toBe(2);
   });
@@ -777,12 +784,12 @@ describe('布局感知复合运行时包装树', () => {
     const result = compileTestResult(scene([{ namespace: 'test', type: 'resourceWrapper' }]), {
       composites: [definition],
     });
-    const resources = result.scene.resources ?? [];
-    const ids = resources.map(resource => resource.id);
+    const resources = result.scene.resources ?? { paints: [], clips: [] };
+    const ids = [...resources.paints.map(resource => resource.id), ...resources.clips.map(resource => resource.id)];
 
     expect(new Set(ids).size).toBe(ids.length);
-    expect(resources.filter(resource => resource.kind === 'paint')).toHaveLength(1);
-    expect(resources.filter(resource => resource.kind === 'clip')).toHaveLength(2);
+    expect(resources.paints).toHaveLength(1);
+    expect(resources.clips).toHaveLength(2);
     expect(groups(result.scene.primitives).filter(group => group.clipRef !== undefined)).toHaveLength(2);
 
     const serializedPrimitives = JSON.stringify(result.scene.primitives);
@@ -1038,7 +1045,7 @@ describe('布局感知复合运行时包装树', () => {
 
     expect(outer).toMatchObject({
       type: 'group',
-      clipRef: result.scene.resources!.filter(resource => resource.kind === 'clip')[0].id,
+      clipRef: (result.scene.resources?.clips ?? [])[0].id,
     });
     expect(outer).not.toHaveProperty('transforms');
 
@@ -1137,7 +1144,7 @@ describe('布局感知复合运行时包装树', () => {
         type: 'group',
         id: 'cell-0-0',
         meta: { row: 0, column: 0 },
-        clipRef: result.scene.resources!.filter(resource => resource.kind === 'clip')[0].id,
+        clipRef: (result.scene.resources?.clips ?? [])[0].id,
       }),
     );
     expect(JSON.stringify(root.children).match(/content/g)).toHaveLength(1);

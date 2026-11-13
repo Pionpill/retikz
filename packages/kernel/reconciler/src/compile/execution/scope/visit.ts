@@ -287,7 +287,7 @@ export const prepareScopeExecution = (
       ...projectScopeOutputBounds(
         state.bounds,
         { type: 'group', transforms: scopeTransforms, ...(clipRef === undefined ? {} : { clipRef }) },
-        runtime.state.workspace.clipRegistry.getResources(),
+        { paints: [], clips: runtime.state.workspace.clipRegistry.getResources() },
       ),
     );
   };

@@ -378,6 +378,13 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
+          label: { zh: '待发布：BREAKING 场景资源分类', en: 'Unreleased: BREAKING categorized Scene resources' },
+          content: {
+            zh: 'Scene.resources 从混合数组改为 { paints, clips }，渐变、Pattern 和图片从 paints 读取，裁剪从 clips 读取。缓存、回放、Runtime 快照与 setResources 使用同一结构；清空时提供两个空数组。没有资源的编译 Scene 仍可省略 resources。fill / stroke / Scope.clip 作者语法及资源 ID 保持不变，旧数组结构不再接受。',
+            en: 'Scene.resources changes from a mixed array to { paints, clips }. Read gradients, patterns and images from paints, and clip paths from clips. Caches, replay, Runtime snapshots and setResources share this structure; use two empty arrays to clear resources. Compiled Scenes without resources may still omit the field. Authoring through fill / stroke / Scope.clip and resource IDs is unchanged. The old array structure is no longer accepted.',
+          },
+        },
+        {
           label: { zh: '待发布：路径双模式定位', en: 'Unreleased: dual path positioning modes' },
           content: {
             zh: 'Path、Step 标签及 marks 支持 positionMode: step / length，并可独立选择 positionGeometry: original / rounded。标签默认按步骤定位，标记默认按长度定位；省略几何时分别采用原始与圆角路径。增量位置更新复用几何度量与未变化的局部内容。',

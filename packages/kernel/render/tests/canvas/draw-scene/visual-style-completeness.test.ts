@@ -38,7 +38,7 @@ it('箭头绘制资源渲染为范围 SVG 引用和 Canvas 渐变', () => {
     ],
   });
   const scene = compileTestResult(source).scene;
-  const resource = scene.resources?.[0];
+  const resource = scene.resources?.paints[0];
   expect(resource).toBeDefined();
   const svg = renderToSvgString(scene, { idPrefix: 'style-test' });
   expect(svg).toContain(`fill="url(#retikz-paint-style-test-${resource?.id})"`);

@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   CompileWarning,
   ReferenceReadKind,
   CompiledNode,
@@ -16,7 +16,7 @@ import type {
   IRPathBase,
   IRScope,
   IRScene,
-  SceneResource,
+  SceneResources,
   prepareScopePlacement,
 } from '@retikz/core';
 
@@ -46,7 +46,7 @@ export type WeaveCacheMetadata = Readonly<{
   /** 实际读取事实 */
   reads: ReadonlyArray<CompileReferenceRead>;
   /** 配套资源 */
-  resources: ReadonlyArray<SceneResource>;
+  resources: SceneResources;
   /** 有诊断时重新计算并派发 */
   diagnostics: ReadonlyArray<CompileWarning>;
   /** Scope 在后代计算前产出的放置准备 */

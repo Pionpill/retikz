@@ -57,7 +57,9 @@ A local rectangle at x=0 inside a group translated by 20 has world x=20. Writing
 
 ## Shared Drawing Resources
 
-Colors can appear directly on primitives. Gradients, patterns and clips use resource tables and references. Core paint / clip registries materialize backend-neutral resources and reuse content identities; Reconciler creates and collects the workspace registries.
+Colors can appear directly on primitives. Gradients, patterns and images live in `Scene.resources.paints`, referenced by fill or stroke values. Clip paths live in `Scene.resources.clips`, referenced by a group's `clipRef`. Core paint / clip registries materialize backend-neutral resources and reuse content identities. Reconciler creates the workspace registries and preserves these categories through caching, replay and the final Scene.
+
+When `resources` is present, both `paints` and `clips` are arrays; an unused category is empty. Compilation can omit the entire field when there are no resources, while Render runtime snapshots always include both collections. Resources and the primitives referencing them take effect in the same revision.
 
 Pattern Definitions can emit tile primitives, not separate resource tables. Extension outputs can reference only resources permitted by their host. Resources from isolated probes enter the real workspace only through selected replay; copying primitives without their resources is incomplete.
 

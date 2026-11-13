@@ -1,6 +1,6 @@
-import { boundsToRect } from '@retikz/math';
+﻿import { boundsToRect } from '@retikz/math';
 
-import type { GroupPrimitive, SceneResource, Transform } from '../../contract';
+import type { GroupPrimitive, SceneResources, Transform } from '../../contract';
 import type { IRScope } from '../../schemas';
 import type { CompiledBoundaryGeometry } from '../boundary';
 import type { CompiledReferenceGeometry } from '../reference';
@@ -13,7 +13,7 @@ import { applyTransformChain, composeScopeTransform } from '../shared';
 export const projectScopeOutputBounds = (
   bounds: ReadonlyArray<CompileBounds>,
   group: Omit<GroupPrimitive, 'children'>,
-  resources: ReadonlyArray<SceneResource>,
+  resources: SceneResources,
 ): Array<LayoutBoundsContribution> => {
   const projectedBounds: Array<LayoutBoundsContribution> = [];
   let projectDecoration: ReturnType<typeof createGroupBoundsProjector> | undefined;

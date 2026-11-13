@@ -39,10 +39,11 @@ describe('conicGradient IRPaint 编译', () => {
 
     expect(rectsOf(scene.primitives)[0].fill).toEqual({
       kind: 'resourceRef',
-      id: scene.resources!.filter(resource => resource.kind === 'paint')[0].id,
+      id: (scene.resources?.paints ?? [])[0].id,
     });
-    expect(scene.resources).toEqual([
-      { kind: 'paint', id: scene.resources!.filter(resource => resource.kind === 'paint')[0].id, spec: conicGrad },
-    ]);
+    expect(scene.resources).toEqual({
+      paints: [{ kind: 'paint', id: (scene.resources?.paints ?? [])[0].id, spec: conicGrad }],
+      clips: [],
+    });
   });
 });

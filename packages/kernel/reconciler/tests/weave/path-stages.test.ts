@@ -87,7 +87,10 @@ describe('Path 三层复用', () => {
       ],
     });
     expect(update.compilation.result).toEqual(compileTestResult({ ...source, children: [next] }, options));
-    expect(update.compilation.result.scene.resources ?? []).toHaveLength(0);
+    expect([
+      ...(update.compilation.result.scene.resources?.paints ?? []),
+      ...(update.compilation.result.scene.resources?.clips ?? []),
+    ]).toHaveLength(0);
     update.rollback();
   });
 
@@ -124,7 +127,10 @@ describe('Path 三层复用', () => {
         ],
       });
       expect(update.compilation.result).toEqual(compileTestResult({ ...source, children: [next] }));
-      expect(update.compilation.result.scene.resources ?? []).toHaveLength(marks.length === 0 ? 0 : 1);
+      expect([
+        ...(update.compilation.result.scene.resources?.paints ?? []),
+        ...(update.compilation.result.scene.resources?.clips ?? []),
+      ]).toHaveLength(marks.length === 0 ? 0 : 1);
       update.commit();
       update.finish();
     }

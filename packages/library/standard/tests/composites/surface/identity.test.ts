@@ -100,7 +100,7 @@ describe('Surface 外观与 Scope', () => {
     );
     const root = groupsOf(result.scene.primitives).find(group => group.id === 'clipped-surface');
     const content = root?.children.find((child): child is GroupPrimitive => child.type === 'group');
-    const clipResources = (result.scene.resources ?? []).filter(resource => resource.kind === 'clip');
+    const clipResources = result.scene.resources?.clips ?? [];
 
     expect(root?.clipRef).toBeDefined();
     expect(content?.clipRef).toBeDefined();
@@ -200,7 +200,7 @@ describe('Surface 外观与 Scope', () => {
         padding: 0,
       },
     );
-    const clip = (result.scene.resources ?? []).find(resource => resource.kind === 'clip');
+    const clip = result.scene.resources?.clips[0];
 
     expect(clip?.path).toMatchObject({ fillRule: 'nonzero', commands: expect.any(Array) });
 

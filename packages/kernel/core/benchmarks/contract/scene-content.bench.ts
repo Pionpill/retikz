@@ -1,5 +1,5 @@
 import { visitSceneContent } from '@retikz/core';
-import type { Scene, ScenePrimitive, SceneResource } from '@retikz/core';
+import type { Scene, ScenePrimitive, PaintResource } from '@retikz/core';
 import { expect } from 'vitest';
 
 import { defineBenchmark } from '../../../../../scripts/benchmarks/scenario';
@@ -13,7 +13,7 @@ for (const count of [100, 1_000]) {
           dimensions: ['Scene 内容遍历', `${shape}/${mode}`, `${count}宿主`],
         },
         () => {
-          const resources: Array<SceneResource> = [];
+          const resources: Array<PaintResource> = [];
           const primitives: Array<ScenePrimitive> = [];
           const hasPattern = shape === 'shared' || shape === 'distinct';
           const resourceCount = shape === 'shared' ? 1 : shape === 'distinct' ? count : 0;
@@ -45,7 +45,10 @@ for (const count of [100, 1_000]) {
             }
             primitives.push(primitive);
           }
-          const scene: Pick<Scene, 'primitives' | 'resources'> = { primitives, resources };
+          const scene: Pick<Scene, 'primitives' | 'resources'> = {
+            primitives,
+            resources: { paints: resources, clips: [] },
+          };
           const before = structuredClone(scene);
           const expectedVisits = count * (shape === 'flat' ? 1 : 9);
           return {

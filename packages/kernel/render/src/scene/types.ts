@@ -1,4 +1,4 @@
-import type { Scene, ScenePrimitive, SceneResource } from '@retikz/core';
+import type { Scene, ScenePrimitive, SceneResource, SceneResources } from '@retikz/core';
 import type { PropertyPath } from '@retikz/foundation';
 
 import type { SceneIdentity } from './identity';
@@ -18,8 +18,8 @@ export type RuntimeDeepReadonly<T> = T extends (...args: infer TArgs) => infer T
 /** Runtime 持有的 deeply immutable Scene */
 export type RuntimeScene = RuntimeDeepReadonly<Omit<Scene, 'resources' | 'animations'>> &
   Readonly<{
-    /** 规范化后的有序资源表 */
-    resources: ReadonlyArray<RuntimeSceneResource>;
+    /** 按绘制与裁剪分类的只读资源 */
+    resources: RuntimeDeepReadonly<SceneResources>;
     /** 规范化后的根动画轨道 */
     animations: RuntimeDeepReadonly<NonNullable<Scene['animations']>>;
   }>;
@@ -129,8 +129,8 @@ export type ScenePatchOperation =
   | Readonly<{
       /** operation 判别符 */
       kind: 'setResources';
-      /** 完整 next ordered resources，空数组表示清除全部资源 */
-      resources: ReadonlyArray<RuntimeSceneResource>;
+      /** 完整分类资源，两个空集合表示清除全部资源 */
+      resources: RuntimeScene['resources'];
     }>
   | Readonly<{
       /** operation 判别符 */

@@ -50,7 +50,7 @@ const fixture = (
     targetResolver: { pointOfTarget },
     boundaryStore: workspace.boundaryStore,
     registerPaint,
-    resources: workspace.paintRegistry.getResources,
+    resources: () => ({ paints: workspace.paintRegistry.getResources(), clips: [] }),
     onWarn: workspace.diagnosticCollector.collect,
     resolveTransform: composeScopeTransform,
   };
@@ -90,7 +90,7 @@ describe('Path prepared 复用', () => {
     f.pointOfTarget.mockClear();
     const next = compilePath(
       canon,
-      { ...f.context, registerPaint, resources: restored.paintRegistry.getResources },
+      { ...f.context, registerPaint, resources: () => ({ paints: restored.paintRegistry.getResources(), clips: [] }) },
       first,
     );
     expect(next.emit).toBe(first.emit);
@@ -344,7 +344,11 @@ describe('Path 局部图元缓存与隔离', () => {
     emitMark.mockClear();
     const next = compilePath(
       f.resolve(nextInput),
-      { ...f.context, registerPaint: restored.paintRegistry.register, resources: restored.paintRegistry.getResources },
+      {
+        ...f.context,
+        registerPaint: restored.paintRegistry.register,
+        resources: () => ({ paints: restored.paintRegistry.getResources(), clips: [] }),
+      },
       {
         stroke: {
           layout: { labels: { host: [{ measurement: first.stroke?.layout?.labels?.host?.[0]?.measurement }] } },

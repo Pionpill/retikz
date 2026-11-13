@@ -112,7 +112,9 @@ export const createNodeWorkload = (kind: NodeBenchmarkKind, count: number) => {
       expect(new Set(ids).size).toBe(count);
     }
     const resourceCount = kind === 'gradient-shared' ? 1 : kind === 'gradient-distinct' ? count : 0;
-    expect(result.scene.resources ?? []).toHaveLength(resourceCount);
+    expect([...(result.scene.resources?.paints ?? []), ...(result.scene.resources?.clips ?? [])]).toHaveLength(
+      resourceCount,
+    );
     if (resourceCount > 0)
       expect(bodies.filter(primitive => 'fill' in primitive && typeof primitive.fill === 'object')).toHaveLength(count);
   });

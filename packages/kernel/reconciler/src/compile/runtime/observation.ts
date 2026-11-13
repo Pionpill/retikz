@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   CanonicalCoordinate,
   CanonicalNode,
   CanonicalScope,
@@ -9,7 +9,7 @@ import type {
   CompileWarning,
   PathResolution,
   InputPathCompilation,
-  SceneResource,
+  SceneResources,
   ReferenceReadKind,
   PaintRegistry,
   ClipRegistry,
@@ -39,7 +39,7 @@ export type CompileObservationFacts = Readonly<{
   /** 本次实际消费的名称绑定与几何粒度 */
   reads: ReadonlyArray<CompileReferenceRead>;
   /** 本次实际登记或导入的资源 */
-  resources: ReadonlyArray<SceneResource>;
+  resources: SceneResources;
   /** 本轮工作区收集的计算诊断 */
   diagnostics: ReadonlyArray<CompileWarning>;
 }>;
@@ -130,7 +130,7 @@ export const createCompileObservation = (runtime: CompileRuntime) => {
       reads.push({ name, entry, kind }),
     facts: (): CompileObservationFacts => ({
       reads,
-      resources: [...paintRegistry.getResources(), ...clipRegistry.getResources()],
+      resources: { paints: paintRegistry.getResources(), clips: clipRegistry.getResources() },
       diagnostics: workspace.diagnosticCollector.warnings.slice(warningCount),
     }),
   };

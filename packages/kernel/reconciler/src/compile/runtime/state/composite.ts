@@ -14,7 +14,7 @@ import type {
   LayoutContribution,
   MergedScopeDefaults,
   ScenePrimitive,
-  SceneResource,
+  SceneResources,
   Transform,
 } from '@retikz/core';
 import type { PropertyPath } from '@retikz/foundation';
@@ -58,7 +58,7 @@ export type CompositeReplayTransaction = {
   /** 与 probe 图元树配对的完整来源，仅在选中重放时导入 */
   provenance?: CompileProvenanceSnapshot;
   /** probe 已解析资源 */
-  resources: Array<SceneResource>;
+  resources: SceneResources;
   /** 仅在 replay 时发布的 warning */
   warnings: Array<CompileWarning>;
   /** 仅在 replay 时发布的 artifacts */

@@ -9,7 +9,7 @@ import type {
   PatternDefinition,
   PatternEmitContext,
   CompiledPatternTile,
-  SceneResource,
+  SceneResources,
 } from '../../../../../core/src/contract';
 import { definePattern } from '../../../../../core/src/contract';
 import { BUILTIN_PATTERNS } from '../../../../../core/src/providers/pattern';
@@ -45,8 +45,8 @@ const patternNodeIR = (spec: IRPaint, second?: IRPaint): IRScene => ({
 });
 
 /** 从 Scene.resources 取首个 pattern 资源（spec.kind === 'pattern'） */
-const firstPatternResource = (resources: Array<SceneResource> | undefined): PatternResource | undefined =>
-  (resources ?? []).find((r): r is PatternResource => r.kind === 'paint' && r.spec.kind === 'pattern');
+const firstPatternResource = (resources: SceneResources | undefined): PatternResource | undefined =>
+  resources?.paints.find((r): r is PatternResource => r.spec.kind === 'pattern');
 
 /** 从 Scene.resources 取首个 pattern 资源的 tile（已解析 motif） */
 const tileOf = (spec: IRPaint, opts?: CompileOptions): CompiledPatternTile | undefined =>
@@ -159,9 +159,8 @@ describe('模式注册表——正常流程', () => {
   it('pattern_dedup：同 pattern spec 多处 → 1 资源 1 tile', () => {
     const spec: IRPaint = { kind: 'pattern', shape: 'lines', size: 6 };
     const scene = compileTestResult(patternNodeIR(spec, spec)).scene;
-    const patternResources = (scene.resources ?? []).filter(
-      (r): r is PatternResource => r.kind === 'paint' && r.spec.kind === 'pattern',
-    );
+    const patternResources =
+      scene.resources?.paints.filter((r): r is PatternResource => r.spec.kind === 'pattern') ?? [];
 
     expect(patternResources).toHaveLength(1);
     expect(patternResources[0].tile).toBeDefined();
@@ -463,19 +462,15 @@ describe('模式注册表-边界', () => {
     const pat: IRPaint = { kind: 'pattern', shape: 'grid' };
     const scene = compileTestResult(patternNodeIR(grad, pat)).scene;
 
-    expect(scene.resources).toHaveLength(2);
+    expect([...(scene.resources?.paints ?? []), ...(scene.resources?.clips ?? [])]).toHaveLength(2);
 
-    const ids = (scene.resources ?? []).map(r => r.id);
+    const ids = [...(scene.resources?.paints ?? []), ...(scene.resources?.clips ?? [])].map(r => r.id);
 
     expect(new Set(ids).size).toBe(2);
 
     // gradient 资源无 tile、pattern 资源有 tile
-    const gradRes = (scene.resources ?? []).find(
-      (r): r is GradientResource => r.kind === 'paint' && r.spec.kind === 'linearGradient',
-    );
-    const patRes = (scene.resources ?? []).find(
-      (r): r is PatternResource => r.kind === 'paint' && r.spec.kind === 'pattern',
-    );
+    const gradRes = scene.resources?.paints.find((r): r is GradientResource => r.spec.kind === 'linearGradient');
+    const patRes = scene.resources?.paints.find((r): r is PatternResource => r.spec.kind === 'pattern');
 
     expect(gradRes).not.toHaveProperty('tile');
     expect(patRes?.tile).toBeDefined();
