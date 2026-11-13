@@ -68,7 +68,7 @@ Sol 主控遇到复杂争议或持续返工时，只在计划已授权的职责�
 
 本 skill 不创建 review gate，也不规定 review 轮数：
 
-- owning flow 要求整体或专项 review 时，只调度各角色已授权的 reviewer；默认串行，修改后复用各角色的同一 reviewer，按 [常规评审](../flow-development/references/review-cycle.md) 统一循环
+- owning flow 要求整体或专项 review 时，只调度各角色已授权的 reviewer；默认串行且只做一轮；修改后由主 agent 自审和验证，不调度 reviewer 复核，遵循 [常规评审](../flow-development/references/review-cycle.md)
 - owning flow 在大型任务最终阶段调用已授权的 `cross-review`，或用户明确要求交叉验证时，按主模型优先使用上述 fresh 双模型组合
 - 实现 worker 不自动成为 reviewer；是否允许由已确认计划决定
 

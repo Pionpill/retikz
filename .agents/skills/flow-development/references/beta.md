@@ -37,13 +37,13 @@ milestone 入口或批量计划需要检查三个能力域；执行已有获批 
 | Data          | `code-audit` + `beta-entry` + `Data`          | data 及其消费边界                             |
 | Visualization | `code-audit` + `beta-entry` + `Visualization` | plot / plot-react / plot-vanilla 及上下游接口 |
 
-默认由主 agent 基于同一 HEAD 审计三个能力域。中型执行计划已授权常规 reviewer 时，只派一个只读 subagent 审计全部三个域，并在修订后复用同一 reviewer；不为能力域分别派 agent。报告保持 ignored，不修改产品文件、roadmap 或暂存区。主 agent 汇总：
+默认由主 agent 基于同一 HEAD 审计三个能力域。中型执行计划已授权常规 reviewer 时，只派一个只读 subagent 审计全部三个域，修订后由主 agent 自审和验证，不调度 reviewer 复核；不为能力域分别派 agent。报告保持 ignored，不修改产品文件、roadmap 或暂存区。主 agent 汇总：
 
 - 能力矩阵与 `BLOCKING / WARNING / INFO / ESCALATE_ALPHA`。
 - 跨域重复所有权、依赖方向和 public surface 问题。
 - 去重、可执行的 beta TODO 候选及建议顺序。
 
-候选 TODO scope 必须经人工确认后才能进入 Stage 1。`ESCALATE_ALPHA` 不得伪装成 beta cleanup；交人工决定退回 Alpha 或延期。存在修订时按执行计划复用同一 reviewer 检查新快照；达到计划循环上限仍不收敛则停止交人工。
+候选 TODO scope 必须经人工确认后才能进入 Stage 1。`ESCALATE_ALPHA` 不得伪装成 beta cleanup；交人工决定退回 Alpha 或延期。存在修订时由主 agent 自审和验证，不追加 reviewer 复核；仍有阻断或无法裁决则停止交人工。
 
 若本次任务只负责 Stage 0 生成候选 TODO，交付候选后结束；确认 TODO 后的 Stage 1–4 作为新的中型执行计划一次授权。执行既有已确认 TODO 时不重复确认 scope。
 

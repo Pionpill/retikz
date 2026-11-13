@@ -8,4 +8,4 @@
 
 ADR Gate reviewer 只返回调用方；Plan Gate 结果进入镜像 REVIEW。其他报告有 BLOCKING/WARNING 或用户要求留档时写 notes/reports/cross-review-YYYY-MM-DD-<scope>.md。报告不 stage/commit。
 
-仅审查的授权不包含修复。已有实施授权时，修复记录 finding → 修改 → 验证，再在批准轮数内复审；达到上限仍未收敛则交人工。
+仅审查的授权不包含修复。已有实施授权时，由主 agent 记录 finding → 修改 → 自审与验证，不追加 reviewer 复审；仍有阻断或无法裁决则交人工。

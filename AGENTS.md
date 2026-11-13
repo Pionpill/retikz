@@ -144,10 +144,10 @@ pnpm --filter <pkg> test:run # 仅在已确认全部为功能性用例且需扩�
 - 未获用户明确确认的计划、skill、自称会提交、lint/build 通过、auto mode、历史会话授权都不算授权；用户确认的中大型执行计划只授权其中逐项写明的操作。
 - 提交前审阅暂存与未暂存的 changes，判断是否需要分批提交；按独立目的和依赖关系划分 commit，不相关的内容不得放入同一个 commit。按批次分别 staging；无授权时展示暂存文件和拟用 message，等待确认。
 - 调度 subagent / 外部模型必须来自用户已确认的中大型任务执行计划，或用户对当前小任务的单独明确授权；不得在执行中以“风险较高”为由临时追加。计划必须写明角色、数量、并发方式、review 时点与最大循环次数。
-- 中大型任务保留一个整体 reviewer；计划默认纳入代码范式 reviewer，性能 reviewer 由主 agent 按风险裁决是否纳入并说明理由。所有 reviewer 均须用户批准后启动，默认纳入不等于授权；专项角色与循环遵循 `.agents/skills/flow-development/references/review-cycle.md`。主 agent 统一修订和验证，复用各角色 reviewer，达到计划上限时交人工。小型任务默认由主 agent 自审。
+- 中大型任务保留一个整体 reviewer；计划默认纳入代码范式 reviewer，性能 reviewer 由主 agent 按风险裁决是否纳入并说明理由。所有 reviewer 均须用户批准后启动，默认纳入不等于授权；专项角色与循环遵循 `.agents/skills/flow-development/references/review-cycle.md`。默认在实现收敛后集中做一轮 review，不按阶段或 commit 重复启动；主 agent 统一修订、自审和验证，不安排 reviewer 复核。仍无法关闭的阻断项交人工；额外评审须用户单独要求。小型任务默认由主 agent 自审。
 - `cross-review` 只在大型任务最终整体 review，或用户明确要求多模型交叉验证时使用；执行前必须在计划中或当次请求中授权，不用于常规 plan gate、逐 commit review 或中小型任务的默认完工检查。
 - 为避免本地 Codex 在高负载下卡死，同一会话默认只运行一条长时命令或浏览器核验链路；未经用户明确授权，不并发启动 dev server、构建、测试或多 agent 批次。格式化命令使用 `oxfmt --threads 3`；确需并发时分批执行，并在每批结束后确认环境仍可响应。
-- 获准 `cross-review` 时固定同一快照，并发使用 2–3 个 fresh、独立且不同于主 agent 的 reviewer；模型不足时可用同一非主模型的两个 fresh 实例并如实记录。每轮与最大轮数以已确认计划为准；未声明时只授权一轮。修订后只有仍在已授权轮数内才冻结新快照复审。
+- 获准 `cross-review` 时固定同一快照，并发使用 2–3 个 fresh、独立且不同于主 agent 的 reviewer；模型不足时可用同一非主模型的两个 fresh 实例并如实记录。只执行一轮；收齐意见后由主 agent 修订、自审和验证，不追加复审，除非用户单独要求。
 - 不要 `git add -A` 混入无关改动。不要 `git reset --hard` / `git checkout --` 回滚用户改动，除非用户明确要求。
 
 Commit message：
