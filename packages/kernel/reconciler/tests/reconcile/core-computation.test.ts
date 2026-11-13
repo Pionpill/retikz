@@ -1,12 +1,11 @@
 import type { CompileWarning, IRScene } from '@retikz/core';
 import { CompositeBaseSchema, defineComposite, defineShape } from '@retikz/core';
-import type { ReconcilerResult, RuntimeScenePrimitive } from '@retikz/reconciler';
-import { createFullSceneRuntimeSnapshot, SceneReconciler } from '@retikz/reconciler';
+import { SceneReconciler } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject, string } from 'zod';
 
 import { BUILTIN_SHAPES } from '../../../core/src/providers/shape/shape';
-import { compileToScene } from '../../src/compile';
+import { compileTestResult } from '../helpers/compilation';
 
 const sceneWithText = (text: string): IRScene => ({
   version: 1,
@@ -14,82 +13,7 @@ const sceneWithText = (text: string): IRScene => ({
   children: [{ type: 'node', id: 'node-a', position: [0, 0], text }],
 });
 
-const identityKey = (identity: { owner: string; path: ReadonlyArray<string> }): string =>
-  `${identity.owner}:${identity.path.join('/')}`;
-
-const primitivePaths = (
-  primitives: ReadonlyArray<RuntimeScenePrimitive>,
-  prefix: ReadonlyArray<string | number> = ['primitives'],
-): Array<ReadonlyArray<string | number>> => {
-  const paths: Array<ReadonlyArray<string | number>> = [];
-  primitives.forEach((primitive, index) => {
-    const path = [...prefix, index];
-    paths.push(path);
-    if (primitive.type === 'group') paths.push(...primitivePaths(primitive.children, [...path, 'children']));
-  });
-
-  return paths;
-};
-
 describe('Core Runtime 计算初始完整运行', () => {
-  it('为 topology 建立 primitive 双射、真实 semantic owner 与稳定 emission identity', () => {
-    const ir: IRScene = {
-      version: 1,
-      type: 'scene',
-      children: [
-        { type: 'node', id: 'node-a', position: [0, 0], text: 'A' },
-        {
-          type: 'scope',
-          id: 'scope-a',
-          children: [{ type: 'node', id: 'node-b', position: [80, 0], text: 'B' }],
-        },
-        {
-          type: 'path',
-          id: 'path-a',
-          children: [
-            { type: 'step', kind: 'move', to: [0, 0] },
-            { type: 'step', kind: 'line', to: [80, 0] },
-          ],
-        },
-      ],
-    };
-    const session = new SceneReconciler({ onWarn: () => {} }, { captureProvenance: true });
-
-    session.mount(ir);
-    const snapshot = snapshotOf(session.read());
-    const topologyIdentityKeys = snapshot.topology.map(node => identityKey(node.identity));
-    const topologyByPath = new Map(snapshot.topology.map(node => [node.primitivePath.join('.'), node]));
-    const topologyPaths = snapshot.topology.map(node => node.primitivePath.join('.')).sort();
-    const expectedPaths = primitivePaths(snapshot.scene.primitives)
-      .map(path => path.join('.'))
-      .sort();
-    const semanticOwnerPaths = new Set(snapshot.topology.map(node => node.semanticOwner.path.join('/')));
-
-    expect(new Set(topologyIdentityKeys).size).toBe(topologyIdentityKeys.length);
-    expect(topologyPaths).toEqual(expectedPaths);
-    expect(semanticOwnerPaths).toContain('root/node/node-a');
-    expect(semanticOwnerPaths).toContain('root/scope/scope-a');
-    expect(semanticOwnerPaths).toContain('root/scope/scope-a/node/node-b');
-    expect(semanticOwnerPaths).toContain('root/path/path-a');
-
-    for (const node of snapshot.topology) {
-      expect(node.identity.path.slice(0, node.semanticOwner.path.length)).toEqual(node.semanticOwner.path);
-      expect(node.identity.path[node.semanticOwner.path.length]).toBe('emission');
-
-      const parentPath = node.primitivePath.slice(0, -2).join('.');
-      const parentNode = topologyByPath.get(parentPath);
-      let expectedParent = snapshot.root;
-      if (node.primitivePath.length > 2 && parentNode === undefined) {
-        throw new Error(`missing topology parent at ${parentPath}`);
-      }
-
-      if (node.primitivePath.length > 2 && parentNode !== undefined) expectedParent = parentNode.identity;
-
-      expect(identityKey(node.parent)).toBe(identityKey(expectedParent));
-      expect(node.order).toBe(node.primitivePath.at(-1));
-    }
-  });
-
   it('在 initial commit 后按 canonical 顺序派发 warning，并保存等价 diagnostics', () => {
     const ir: IRScene = {
       version: 1,
@@ -97,7 +21,7 @@ describe('Core Runtime 计算初始完整运行', () => {
       children: [{ type: 'path', children: [{ type: 'step', kind: 'move', to: [0, 0] }] }],
     };
     const expectedWarnings: Array<CompileWarning> = [];
-    const expected = compileToScene(ir, { onWarn: warning => expectedWarnings.push(warning) });
+    const expected = compileTestResult(ir, { onWarn: warning => expectedWarnings.push(warning) });
     const observedWarnings: Array<CompileWarning> = [];
     const session = new SceneReconciler({ onWarn: warning => observedWarnings.push(warning) });
 
@@ -148,7 +72,7 @@ describe('Core Runtime 领域产物事务', () => {
     const before = session.read();
     session.replace(source('B'));
     const after = session.read();
-    expect(after.compilation.result).toEqual(compileToScene(source('B'), { composites: [definition] }));
+    expect(after.compilation.result).toEqual(compileTestResult(source('B'), { composites: [definition] }));
     expect(after.compilation.result.artifacts[0].value).toEqual({ label: 'B' });
     expect(before.compilation.result.artifacts[0].value).toEqual({ label: 'A' });
     expect(after.revision).not.toBe(before.revision);
@@ -179,7 +103,7 @@ describe('Core Runtime 计算完整回退更新', () => {
     session.replace(next);
 
     expect(session.read().compilation.diagnostics).toEqual([]);
-    expect(session.read().compilation.result).toEqual(compileToScene(next, { onWarn: () => {} }));
+    expect(session.read().compilation.result).toEqual(compileTestResult(next, { onWarn: () => {} }));
   });
 
   it('完整输入编译失败时不发布诊断或替换已提交结果', () => {
@@ -217,7 +141,7 @@ describe('Core Runtime 计算替换样式更新', () => {
     session.mount(initial);
     session.replace(next);
 
-    expect(session.read().compilation.result).toEqual(compileToScene(next, { onWarn: () => {} }));
+    expect(session.read().compilation.result).toEqual(compileTestResult(next, { onWarn: () => {} }));
   });
 
   it('root Node 存在引用 position 时保守 full fallback', () => {
@@ -245,7 +169,7 @@ describe('Core Runtime 计算替换样式更新', () => {
 
     session.replace(next);
 
-    expect(session.read().compilation.result).toEqual(compileToScene(next, { onWarn: () => {} }));
+    expect(session.read().compilation.result).toEqual(compileTestResult(next, { onWarn: () => {} }));
 
     const changedReferenceNode: IRScene = {
       ...next,
@@ -253,7 +177,7 @@ describe('Core Runtime 计算替换样式更新', () => {
     };
     session.replace(changedReferenceNode);
 
-    expect(session.read().compilation.result).toEqual(compileToScene(changedReferenceNode, { onWarn: () => {} }));
+    expect(session.read().compilation.result).toEqual(compileTestResult(changedReferenceNode, { onWarn: () => {} }));
   });
 
   it('自定义 ShapeDefinition 可读取 fill 时保守 full fallback', () => {
@@ -291,7 +215,7 @@ describe('Core Runtime 计算替换样式更新', () => {
 
     session.replace(next);
 
-    expect(session.read().compilation.result).toEqual(compileToScene(next, options));
+    expect(session.read().compilation.result).toEqual(compileTestResult(next, options));
   });
 });
 
@@ -328,11 +252,38 @@ it('Scope 子内容更新、资源撤销和匿名组删除与全量编译等价'
   for (const ir of states) {
     session.replace(ir);
 
-    expect(session.read().compilation.result.scene).toEqual(compileToScene(ir).scene);
+    expect(session.read().compilation.result.scene).toEqual(compileTestResult(ir).scene);
   }
 });
 
 it('宿主提交失败保留旧编译结果，重试发布完整新树', () => {
+  const sourceWithResources = (text: string, width: number, color: string): IRScene => ({
+    version: 1,
+    type: 'scene',
+    children: [
+      {
+        type: 'scope',
+        clip: { kind: 'rect', params: { x: 0, y: 0, width, height: 40 } },
+        children: [
+          {
+            type: 'node',
+            text,
+            style: {
+              fill: {
+                kind: 'linearGradient',
+                stops: [
+                  { offset: 0, color },
+                  { offset: 1, color: 'white' },
+                ],
+              },
+            },
+          },
+        ],
+      },
+    ],
+  });
+  const initial = sourceWithResources('before', 20, 'red');
+  const replacement = sourceWithResources('after', 40, 'blue');
   let failing = false;
   const session = new SceneReconciler(
     { onWarn: () => {} },
@@ -348,15 +299,15 @@ it('宿主提交失败保留旧编译结果，重试发布完整新树', () => {
       },
     },
   );
-  const previous = session.mount(sceneWithText('before'));
+  const previous = session.mount(initial);
   failing = true;
-  expect(() => session.replace(sceneWithText('after'))).toThrow();
+  expect(() => session.replace(replacement)).toThrow();
   expect(session.read()).toBe(previous);
+  expect(session.read().compilation.result.scene.resources).toEqual(previous.compilation.result.scene.resources);
   failing = false;
-  expect(session.replace(sceneWithText('after')).compilation.result).toEqual(compileToScene(sceneWithText('after')));
+  const retried = session.replace(replacement).compilation.result;
+  expect(retried).toEqual(compileTestResult(replacement));
+  expect(retried.scene.resources?.paints).toHaveLength(1);
+  expect(retried.scene.resources?.clips).toHaveLength(1);
   session.dispose();
 });
-
-/** 从本次已捕获的编译来源生成渲染快照，计算会话不默认持有此投影 */
-const snapshotOf = (result: ReconcilerResult) =>
-  createFullSceneRuntimeSnapshot(result.compilation.result.scene, result.revision, result.compilation.provenance!);

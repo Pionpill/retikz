@@ -6,6 +6,7 @@ import type { infer as ZodInfer } from 'zod';
 import { Side } from '../../shared';
 import { createLabelVisualStyleShape } from '../text/label';
 import { TextBlockSchema } from '../text/text';
+import { PathPositionGeometrySchema, PathPositionModeSchema } from './position';
 
 /** path-like 路径标签沿段的位置关键字 */
 export const PathLabelPosition = {
@@ -40,7 +41,15 @@ export const PathLabelSchema = strictObject({
   ),
   position: union([zodEnum(PathLabelPosition), NormalizedFractionSchema])
     .optional()
-    .describe('Position along the step: keyword or normalized number. Parameter meaning follows the step kind.'),
+    .describe(
+      'Normalized position within the host path or step: keyword or number. Interpreted using positionMode and positionGeometry.',
+    ),
+  positionMode: PathPositionModeSchema.default('step')
+    .optional()
+    .describe('Normalized position interpretation. Defaults to step after label defaults are merged.'),
+  positionGeometry: PathPositionGeometrySchema.optional().describe(
+    'Geometry before or after corner rounding. When omitted after inheritance, step uses original and length uses rounded.',
+  ),
   side: union([zodEnum(Side), literal('center')])
     .optional()
     .describe(

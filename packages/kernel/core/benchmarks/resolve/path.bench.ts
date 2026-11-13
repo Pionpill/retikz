@@ -67,7 +67,7 @@ for (const count of [16, 1_000, 10_000]) {
               });
             if (kind === 'labels')
               expect(result.canon.children?.at(-1)).toMatchObject({
-                label: { text: `L${count - 1}`, position: 0.5, distance: 4 },
+                label: { text: { lines: [{ plainText: `L${count - 1}` }] }, position: 0.5, distance: 4 },
               });
             expect(JSON.stringify(source)).toBe(original);
           },

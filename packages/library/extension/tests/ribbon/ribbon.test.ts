@@ -1,5 +1,4 @@
 import type { IRPathBase, IRScene, IRStep, PathCommand, PathPrimitive, ScenePrimitive } from '@retikz/core';
-import { compileToScene as compileCoreToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import type { IRRibbonPathOptions } from '../../src/ribbon';
@@ -9,6 +8,7 @@ import {
   defineRibbonWidthProfile,
   ribbonPathDefinition,
 } from '../../src/ribbon';
+import { compileTestResult } from '../helpers/compilation';
 
 const scene = (children: IRScene['children']): IRScene => ({
   version: 1,
@@ -74,11 +74,11 @@ const ribbonWithDefaultSampling = (overrides: Record<string, unknown> = {}): IRP
   return next;
 };
 
-const compileToScene = (input: IRScene, options: Parameters<typeof compileCoreToScene>[1] = {}) => {
+const compileRibbonResult = (input: IRScene, options: Parameters<typeof compileTestResult>[1] = {}) => {
   const supplied = options.paths ?? [];
   const ribbonDefinition = supplied.find(definition => definition.name === 'ribbon') ?? ribbonPathDefinition;
 
-  return compileCoreToScene(input, {
+  return compileTestResult(input, {
     ...options,
     paths: [ribbonDefinition, ...supplied.filter(definition => definition.name !== 'ribbon')],
   });
@@ -123,12 +123,12 @@ describe('编译功能区', () => {
       },
     });
     expect(() =>
-      compileToScene(scene([ribbon({ start: { cap: { name: 'arc', params: { center: [0, 0], radius: 0 } } } })])),
+      compileRibbonResult(scene([ribbon({ start: { cap: { name: 'arc', params: { center: [0, 0], radius: 0 } } } })])),
     ).toThrow();
   });
 
   it('固定宽度功能区将直线中心线下沉到一条填充的闭合路径', () => {
-    const compiled = compileToScene(scene([ribbon()]), { padding: 0 }).scene;
+    const compiled = compileRibbonResult(scene([ribbon()]), { padding: 0 }).scene;
     const prim = pathPrim(compiled.primitives[0]);
 
     expect(prim.fill).toBe('currentColor');
@@ -143,7 +143,7 @@ describe('编译功能区', () => {
   });
 
   it('默认采样通过立方段连接直线中心线', () => {
-    const compiled = compileToScene(scene([ribbonWithDefaultSampling()]), { padding: 0 }).scene;
+    const compiled = compileRibbonResult(scene([ribbonWithDefaultSampling()]), { padding: 0 }).scene;
     const prim = pathPrim(compiled.primitives[0]);
 
     expect(prim.commands).toHaveLength(129);
@@ -152,7 +152,7 @@ describe('编译功能区', () => {
   });
 
   it('默认采样将二次中心线连接到三次轮廓命令', () => {
-    const compiled = compileToScene(
+    const compiled = compileRibbonResult(
       scene([
         ribbonWithDefaultSampling({
           children: [
@@ -171,14 +171,14 @@ describe('编译功能区', () => {
 
   it('省略采样使用默认的固定采样计数', () => {
     const parsed = RibbonSchema.parse(ribbon({ sampling: undefined }));
-    const compiled = compileToScene(scene([parsed]), { padding: 0 }).scene;
+    const compiled = compileRibbonResult(scene([parsed]), { padding: 0 }).scene;
     const prim = pathPrim(compiled.primitives[0]);
 
     expect(prim.commands).toHaveLength(129);
   });
 
   it('默认采样保留阶梯宽度停止点', () => {
-    const compiled = compileToScene(
+    const compiled = compileRibbonResult(
       scene([
         ribbonWithDefaultSampling({
           width: {
@@ -201,7 +201,7 @@ describe('编译功能区', () => {
   });
 
   it('线性锥度独立改变开始和结束宽度', () => {
-    const compiled = compileToScene(
+    const compiled = compileRibbonResult(
       scene([ribbon({ width: { kind: 'taper', start: 4, end: 2 }, sampling: { kind: 'fixed', samples: 2 } })]),
       { padding: 0 },
     ).scene;
@@ -217,7 +217,7 @@ describe('编译功能区', () => {
   });
 
   it('停止宽度可以使中间比两端窄', () => {
-    const compiled = compileToScene(
+    const compiled = compileRibbonResult(
       scene([
         ribbon({
           width: {
@@ -247,7 +247,7 @@ describe('编译功能区', () => {
   });
 
   it('停止宽度在插值之前按偏移量排序', () => {
-    const compiled = compileToScene(
+    const compiled = compileRibbonResult(
       scene([
         ribbon({
           width: {
@@ -269,7 +269,7 @@ describe('编译功能区', () => {
   });
 
   it('停止宽度向外延伸缺失的端点值', () => {
-    const compiled = compileToScene(
+    const compiled = compileRibbonResult(
       scene([
         ribbon({
           width: {
@@ -291,7 +291,7 @@ describe('编译功能区', () => {
   });
 
   it('立方带下降到具有有限坐标的闭合采样路径', () => {
-    const compiled = compileToScene(
+    const compiled = compileRibbonResult(
       scene([
         ribbon({
           sampling: { kind: 'fixed', samples: 12 },
@@ -312,7 +312,7 @@ describe('编译功能区', () => {
   });
 
   it('默认情况下，弯曲带状端点帽遵循中心线端点切线', () => {
-    const compiled = compileToScene(
+    const compiled = compileRibbonResult(
       scene([
         ribbon({
           sampling: { kind: 'fixed', samples: 3 },
@@ -331,7 +331,7 @@ describe('编译功能区', () => {
   });
 
   it('端点方向覆盖接受角度和矢量形式', () => {
-    const compiled = compileToScene(
+    const compiled = compileRibbonResult(
       scene([
         ribbon({
           start: { direction: 90 },
@@ -352,7 +352,7 @@ describe('编译功能区', () => {
   });
 
   it('端点方向覆盖接受 PolarPosition 糖', () => {
-    const compiled = compileToScene(
+    const compiled = compileRibbonResult(
       scene([
         ribbon({
           start: { direction: { angle: 90, radius: 1 } },
@@ -373,8 +373,10 @@ describe('编译功能区', () => {
   });
 
   it('将中心线色带向左侧或右侧对齐', () => {
-    const left = pathPrim(compileToScene(scene([ribbon({ align: 'left' })]), { padding: 0 }).scene.primitives[0]);
-    const right = pathPrim(compileToScene(scene([ribbon({ align: 'right' })]), { padding: 0 }).scene.primitives[0]);
+    const left = pathPrim(compileRibbonResult(scene([ribbon({ align: 'left' })]), { padding: 0 }).scene.primitives[0]);
+    const right = pathPrim(
+      compileRibbonResult(scene([ribbon({ align: 'right' })]), { padding: 0 }).scene.primitives[0],
+    );
 
     expect(left.commands).toEqual([
       { kind: 'move', to: [0, 4] },
@@ -394,7 +396,7 @@ describe('编译功能区', () => {
 
   it('支持中心线色带上的方形帽', () => {
     const prim = pathPrim(
-      compileToScene(scene([ribbon({ start: { cap: { name: 'square' } }, end: { cap: { name: 'square' } } })]), {
+      compileRibbonResult(scene([ribbon({ start: { cap: { name: 'square' } }, end: { cap: { name: 'square' } } })]), {
         padding: 0,
       }).scene.primitives[0],
     );
@@ -410,7 +412,7 @@ describe('编译功能区', () => {
 
   it('右对齐时，使用圆帽的色带侧中点', () => {
     const prim = pathPrim(
-      compileToScene(
+      compileRibbonResult(
         scene([
           ribbon({
             align: 'right',
@@ -433,7 +435,7 @@ describe('编译功能区', () => {
         end: { cap: { name: 'arc', params: { center: [0, 0], radius: 2 } } },
       }),
     );
-    const prim = pathPrim(compileToScene(scene([parsed]), { padding: 0 }).scene.primitives[0]);
+    const prim = pathPrim(compileRibbonResult(scene([parsed]), { padding: 0 }).scene.primitives[0]);
 
     expect(prim.commands[2]).toMatchObject({ kind: 'arc', center: [10, 0], radius: 2, startAngle: 90, endAngle: -90 });
     expect(prim.commands.at(-2)).toMatchObject({ kind: 'arc', center: [0, 0], radius: 2 });
@@ -445,12 +447,12 @@ describe('编译功能区', () => {
       ribbon({ start: { cap: { name: 'arc', params: { center: [0, 0], radius: 3 } } } }),
     );
 
-    expect(() => compileToScene(scene([parsed]), { padding: 0 }).scene).toThrow(/arc cap/);
+    expect(() => compileRibbonResult(scene([parsed]), { padding: 0 }).scene).toThrow(/arc cap/);
   });
 
   it('使用固定采样配置作为样本简写替换', () => {
     const prim = pathPrim(
-      compileToScene(scene([ribbon({ sampling: { kind: 'fixed', samples: 3 } })]), {
+      compileRibbonResult(scene([ribbon({ sampling: { kind: 'fixed', samples: 3 } })]), {
         padding: 0,
       }).scene.primitives[0],
     );
@@ -465,7 +467,7 @@ describe('编译功能区', () => {
     type RibbonDirection = NonNullable<Extract<IRRibbonPathOptions, { mode?: 'centerline' }>['start']>['direction'];
     const commandsFor = (startDirection: RibbonDirection, endDirection: RibbonDirection) =>
       pathPrim(
-        compileToScene(
+        compileRibbonResult(
           scene([
             ribbon({
               start: { direction: startDirection },
@@ -491,11 +493,11 @@ describe('编译功能区', () => {
       { type: 'step', kind: 'curve', control: [30, -40], to: [80, 20] },
     ];
     const withoutDirection = pathPrim(
-      compileToScene(scene([ribbon({ children, sampling: { kind: 'fixed', samples: 5 } })]), { padding: 0 }).scene
+      compileRibbonResult(scene([ribbon({ children, sampling: { kind: 'fixed', samples: 5 } })]), { padding: 0 }).scene
         .primitives[0],
     );
     const withDirection = pathPrim(
-      compileToScene(
+      compileRibbonResult(
         scene([
           ribbon({ children, sampling: { kind: 'fixed', samples: 5 }, start: { direction: 0 }, end: { direction: 0 } }),
         ]),
@@ -511,7 +513,7 @@ describe('编译功能区', () => {
 
   it('当中心线需要时，将直线段保留在曲线段之前', () => {
     const prim = pathPrim(
-      compileToScene(
+      compileRibbonResult(
         scene([
           ribbon({
             sampling: { kind: 'fixed', samples: 5 },
@@ -532,7 +534,7 @@ describe('编译功能区', () => {
   });
 
   it('保持端点覆盖边与采样轮廓对齐', () => {
-    const compiled = compileToScene(
+    const compiled = compileRibbonResult(
       scene([
         ribbon({
           start: { direction: [0, 1] },
@@ -557,7 +559,7 @@ describe('编译功能区', () => {
   });
 
   it('在盖子处保持明确的端点方向，而不旋转附近的直线部分', () => {
-    const compiled = compileToScene(
+    const compiled = compileRibbonResult(
       scene([
         ribbon({
           start: { direction: 90 },
@@ -584,7 +586,7 @@ describe('编译功能区', () => {
         return params.start + (params.end - params.start) * offset;
       },
     });
-    const compiled = compileToScene(
+    const compiled = compileRibbonResult(
       scene([
         ribbon({
           width: { kind: 'profile', name: 'taper', params: { start: 4, end: 0 } },
@@ -600,7 +602,7 @@ describe('编译功能区', () => {
   });
 
   it('抛出未注册的宽度配置', () => {
-    expect(() => compileToScene(scene([ribbon({ width: { kind: 'profile', name: 'missing' } })])).scene).toThrow(
+    expect(() => compileRibbonResult(scene([ribbon({ width: { kind: 'profile', name: 'missing' } })])).scene).toThrow(
       /missing/,
     );
   });
@@ -613,7 +615,7 @@ describe('编译功能区', () => {
 
     expect(
       () =>
-        compileToScene(scene([ribbon({ width: { kind: 'profile', name: 'bad' } })]), {
+        compileRibbonResult(scene([ribbon({ width: { kind: 'profile', name: 'bad' } })]), {
           paths: [createRibbonPathDefinition({ profiles: [bad] })],
         }).scene,
     ).toThrow(/profile "bad"/);
@@ -641,7 +643,7 @@ describe('编译功能区', () => {
       }),
     ).toThrow(/width/);
 
-    const prim = pathPrim(compileToScene(scene([boundary]), { padding: 0 }).scene.primitives[0]);
+    const prim = pathPrim(compileRibbonResult(scene([boundary]), { padding: 0 }).scene.primitives[0]);
 
     expect(prim.commands).toEqual([
       { kind: 'move', to: [0, 0] },
@@ -656,7 +658,7 @@ describe('编译功能区', () => {
   it('拒绝闭合中心线', () => {
     expect(
       () =>
-        compileToScene(
+        compileRibbonResult(
           scene([
             ribbon({
               children: [
@@ -673,7 +675,7 @@ describe('编译功能区', () => {
   it('拒绝零长度中心线', () => {
     expect(
       () =>
-        compileToScene(
+        compileRibbonResult(
           scene([
             ribbon({
               children: [
@@ -713,7 +715,7 @@ describe('编译功能区', () => {
     ],
   ])('拒绝带有 %s 的边界', (_label, upper) => {
     expect(() =>
-      compileToScene(
+      compileRibbonResult(
         scene([
           ribbon({
             kind: 'boundary',
@@ -733,7 +735,7 @@ describe('编译功能区', () => {
         { offset: 1, color: 'blue' },
       ],
     };
-    const compiled = compileToScene(
+    const compiled = compileRibbonResult(
       scene([
         ribbon({
           style: { fill: conic },
@@ -743,7 +745,7 @@ describe('编译功能区', () => {
     const prim = pathPrim(compiled.primitives[0]);
 
     expect(prim.fill).toEqual({ kind: 'resourceRef', id: 'paint-1' });
-    expect(compiled.resources?.[0]).toMatchObject({
+    expect(compiled.resources?.paints[0]).toMatchObject({
       id: 'paint-1',
       kind: 'paint',
       spec: conic,
@@ -751,7 +753,7 @@ describe('编译功能区', () => {
   });
 
   it('保留下沉路径上的轮廓和不透明度样式', () => {
-    const compiled = compileToScene(
+    const compiled = compileRibbonResult(
       scene([
         ribbon({
           style: {
@@ -775,9 +777,12 @@ describe('编译功能区', () => {
   });
 
   it('对下沉的路径基元进行排序时使用功能区 zIndex', () => {
-    const compiled = compileToScene(scene([ribbon({ id: 'front', zIndex: 2 }), ribbon({ id: 'back', zIndex: 0 })]), {
-      padding: 0,
-    }).scene;
+    const compiled = compileRibbonResult(
+      scene([ribbon({ id: 'front', zIndex: 2 }), ribbon({ id: 'back', zIndex: 0 })]),
+      {
+        padding: 0,
+      },
+    ).scene;
 
     expect(compiled.primitives.map(prim => prim.id)).toEqual(['back', 'front']);
   });

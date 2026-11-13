@@ -7,7 +7,7 @@ import { BUILTIN_BOUNDARIES } from '../../../../../core/src/providers/boundary';
 import type { IRBoundary, IRChild, IRScene } from '../../../../../core/src/schemas';
 import { BoundarySchema } from '../../../../../core/src/schemas';
 import type { CompileOptions } from '../../../../src/compile';
-import { compileToScene } from '../../../../src/compile';
+import { compileTestResult } from '../../../helpers/compilation';
 import { flattenPrims } from '../../../helpers/flatten';
 
 const lineEndpoint = (options: CompileOptions, boundary?: IRBoundary): [number, number] => {
@@ -32,7 +32,7 @@ const lineEndpoint = (options: CompileOptions, boundary?: IRBoundary): [number, 
       },
     ],
   };
-  const scene = compileToScene(ir, { padding: 0, ...options }).scene;
+  const scene = compileTestResult(ir, { padding: 0, ...options }).scene;
   const prim = flattenPrims(scene.primitives).find(
     (p): p is Extract<ScenePrimitive, { type: 'path' }> =>
       p.type === 'path' && !p.commands.some(command => command.kind === 'close'),

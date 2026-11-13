@@ -11,7 +11,6 @@ import {
   resolveTransformRegistry,
 } from '@retikz/data';
 import { NonBlankStringSchema } from '@retikz/foundation';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { object } from 'zod';
 
@@ -20,6 +19,7 @@ import type { PlotsLoweringOptions } from '../../../src/pipeline/expand';
 import { lowerPlots } from '../../../src/pipeline/expand';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
+import { compileTestResult } from '../../helpers/compilation';
 
 /** 跑一次完整下沉（抛错路径用 expect(fn).toThrow） */
 const compile = (
@@ -27,7 +27,8 @@ const compile = (
   datasets: Record<string, Array<Record<string, unknown>>>,
   options?: PlotsLoweringOptions,
 ) =>
-  compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots(datasets, options) }).scene;
+  compileTestResult({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots(datasets, options) })
+    .scene;
 
 const specWithModel = (reference = 'd'): IRPlot =>
   PlotSchema.parse({

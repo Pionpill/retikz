@@ -5,7 +5,7 @@ import {
   createProcessingControllerAsync,
   embed,
   prepareStaticProcessingAsync,
-  processToStaticInputResultAsync,
+  compileToSceneAsync,
   scene,
 } from '@retikz/vanilla';
 import { describe, expect, it, vi } from 'vitest';
@@ -154,7 +154,7 @@ describe('异步 Plot 编写', () => {
     const plot = spec();
     const input = (values: typeof rows) =>
       embed({ kind: 'plot', props: { spec: plot, dataBindings: { rows: { kind: 'rows', rows: values } } } });
-    const result = await processToStaticInputResultAsync(scene({ children: [input(rows), input([{ x: 3, y: 1 }])] }), {
+    const result = await compileToSceneAsync(scene({ children: [input(rows), input([{ x: 3, y: 1 }])] }), {
       adapters: [plotInputEmbedAdapter],
     });
 

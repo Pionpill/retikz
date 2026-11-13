@@ -1,7 +1,7 @@
 import { normalizeFlowDiagram } from '@retikz/diagram-vanilla/flow';
 import { FlowDiagramSchema } from '@retikz/diagram/flow';
 import { createInputScene } from '@retikz/react';
-import { normalizeScene, processToStaticInputResult } from '@retikz/vanilla';
+import { normalizeScene, compileToScene } from '@retikz/vanilla';
 import type { FC, ReactNode } from 'react';
 import { createElement, Fragment } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -252,7 +252,7 @@ describe('@retikz/diagram-react/flow', () => {
     expect(FlowDiagramSchema.parse(react)).toEqual(direct);
     expect(FlowDiagramSchema.parse(normalizeFlowDiagram(source))).toEqual(direct);
 
-    const result = processToStaticInputResult(input.scene, {
+    const result = compileToScene(input.scene, {
       adapters: synchronousAdapters(input.adapters),
       compile: { measureText: text => ({ width: text.length * 8, height: 12, ascent: 9, descent: 3 }) },
     });
@@ -485,7 +485,7 @@ describe('@retikz/diagram-react/flow', () => {
     );
 
     expect(() =>
-      processToStaticInputResult(input.scene, {
+      compileToScene(input.scene, {
         adapters: synchronousAdapters(input.adapters),
         compile: { measureText: text => ({ width: text.length * 8, height: 12, ascent: 9, descent: 3 }) },
       }),
@@ -791,7 +791,7 @@ describe('@retikz/diagram-react/flow', () => {
     const input = createInputScene(
       createElement(FlowDiagram, null, createElement(FlowEntity, { id: 'only', text: 'Only' })),
     );
-    const result = processToStaticInputResult(input.scene, {
+    const result = compileToScene(input.scene, {
       adapters: synchronousAdapters(input.adapters),
       compile: {
         padding: 0,
@@ -847,17 +847,12 @@ it('通过 React、Vanilla 和直接 Source 相同地编译弯曲和完整标签
   expect(FlowDiagramSchema.parse(vanilla)).toEqual(direct);
 
   const providers = prepareProcessingInput(input.scene, { adapters: synchronousAdapters(input.adapters) }).coreOptions;
-  const expected = processToStaticInputResult(
-    { type: 'scene', version: 1, children: [direct] },
-    { compile: providers },
-  ).scene;
+  const expected = compileToScene({ type: 'scene', version: 1, children: [direct] }, { compile: providers }).scene;
 
-  expect(
-    processToStaticInputResult({ type: 'scene', version: 1, children: [vanilla] }, { compile: providers }).scene,
-  ).toEqual(expected);
-  expect(processToStaticInputResult(input.scene, { adapters: synchronousAdapters(input.adapters) }).scene).toEqual(
+  expect(compileToScene({ type: 'scene', version: 1, children: [vanilla] }, { compile: providers }).scene).toEqual(
     expected,
   );
+  expect(compileToScene(input.scene, { adapters: synchronousAdapters(input.adapters) }).scene).toEqual(expected);
 });
 
 it('在所有编写条目中保留自动、显式贝塞尔曲线和平滑路由', () => {
@@ -922,17 +917,12 @@ it('在所有编写条目中保留自动、显式贝塞尔曲线和平滑路由'
   expect(FlowDiagramSchema.parse(vanilla)).toEqual(direct);
 
   const providers = prepareProcessingInput(input.scene, { adapters: synchronousAdapters(input.adapters) }).coreOptions;
-  const expected = processToStaticInputResult(
-    { type: 'scene', version: 1, children: [direct] },
-    { compile: providers },
-  ).scene;
+  const expected = compileToScene({ type: 'scene', version: 1, children: [direct] }, { compile: providers }).scene;
 
-  expect(
-    processToStaticInputResult({ type: 'scene', version: 1, children: [vanilla] }, { compile: providers }).scene,
-  ).toEqual(expected);
-  expect(processToStaticInputResult(input.scene, { adapters: synchronousAdapters(input.adapters) }).scene).toEqual(
+  expect(compileToScene({ type: 'scene', version: 1, children: [vanilla] }, { compile: providers }).scene).toEqual(
     expected,
   );
+  expect(compileToScene(input.scene, { adapters: synchronousAdapters(input.adapters) }).scene).toEqual(expected);
 });
 
 it('在 React、Vanilla 和 JSON 上保持端点约束和稀疏默认值相等', () => {

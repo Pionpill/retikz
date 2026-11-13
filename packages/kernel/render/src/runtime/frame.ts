@@ -1,6 +1,6 @@
 import type { Scene } from '@retikz/core';
-import type { SceneRuntimeSnapshot } from '@retikz/reconciler';
 
+import type { SceneRuntimeSnapshot } from '../scene';
 import type { RenderReadonlyLayer } from './readonly-layer';
 
 /** 静态 renderer 一次性物化的主图与有序只读图层 */

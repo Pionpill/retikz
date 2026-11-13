@@ -1,9 +1,9 @@
 import { DEFAULT_RESOLVED_THEME, defineTheme, resolveCoreProviderDependencies } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
 import * as Graph from '../../src';
+import { compileTestResult } from '../helpers/compilation';
 import { primitivesOf } from './test-utils';
 
 const schema = () => Graph.CodeBlockPropsSchema.safeExtend({ namespace: literal('test'), type: literal('service') });
@@ -33,7 +33,7 @@ describe('代码块贡献关闭', () => {
       id: 'service',
       localNamespace: true,
     });
-    const output = compileToScene({ type: 'scene', version: 1, children: [source] }, providers);
+    const output = compileTestResult({ type: 'scene', version: 1, children: [source] }, providers);
 
     expect(JSON.stringify(output.scene)).toContain('Service');
     expect(JSON.stringify(output.scene)).toContain('Read source');
@@ -55,7 +55,7 @@ describe('代码块贡献关闭', () => {
       name: 'Local',
       theme: { name: 'local', mode: 'dark' },
     });
-    const output = compileToScene(
+    const output = compileTestResult(
       { type: 'scene', version: 1, children: [source] },
       { ...providers, themeDefinitions: [defineTheme({ name: 'local', resolve: () => ({}) })] },
     );
@@ -89,7 +89,7 @@ describe('代码块贡献关闭', () => {
     });
 
     expect(() =>
-      compileToScene(
+      compileTestResult(
         {
           type: 'scene',
           version: 1,
@@ -120,7 +120,7 @@ describe('代码块根和组合语义', () => {
       meta: { file: 'service.ts' },
       defaults: { style: { opacity: 0.8 }, node: { style: { textColor: '#123456' } } },
     });
-    const actual = compileToScene({ type: 'scene', version: 1, children: [source] }, providers);
+    const actual = compileTestResult({ type: 'scene', version: 1, children: [source] }, providers);
     const shell = {
       id: source.id,
       localNamespace: source.localNamespace,
@@ -145,7 +145,7 @@ describe('代码块根和组合语义', () => {
         Graph.createBlockSection({ id: 'logic', children: [{ type: 'node', position: [0, 0], text: 'Read source' }] }),
       ],
     });
-    const expected = compileToScene({ type: 'scene', version: 1, children: [block] }, providers);
+    const expected = compileTestResult({ type: 'scene', version: 1, children: [block] }, providers);
 
     expect(actual.scene).toEqual(expected.scene);
     expect(primitivesOf(actual.scene.primitives).filter(item => item.id === 'service')).toHaveLength(1);
@@ -166,7 +166,7 @@ describe('代码块根和组合语义', () => {
     const providers = resolveCoreProviderDependencies({
       contributions: [Graph.createCodeBlockContribution(a), Graph.createCodeBlockContribution(b)],
     });
-    const output = compileToScene(
+    const output = compileTestResult(
       {
         type: 'scene',
         version: 1,
@@ -209,7 +209,7 @@ describe('代码块根和组合语义', () => {
     const providers = resolveCoreProviderDependencies({
       contributions: [Graph.createCodeBlockContribution(definition)],
     });
-    const output = compileToScene(
+    const output = compileTestResult(
       {
         type: 'scene',
         version: 1,
@@ -231,7 +231,7 @@ describe('代码块根和组合语义', () => {
     const emptyProviders = resolveCoreProviderDependencies({
       contributions: [Graph.createCodeBlockContribution(empty)],
     });
-    const emptyOutput = compileToScene(
+    const emptyOutput = compileTestResult(
       {
         type: 'scene',
         version: 1,

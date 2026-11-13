@@ -1,12 +1,12 @@
-import type { IRScene, IRScope, ScenePrimitive } from '@retikz/core';
+import type { IRPathBase, IRScene, IRScope, ScenePrimitive } from '@retikz/core';
 import { definePath, PathSchema } from '@retikz/core';
 import { encodePropertyPath } from '@retikz/foundation';
 import type { CompileProvenanceSnapshot } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
-import { compileSceneSnapshot, compileToScene } from '../../src/compile';
 import { readWeaveCurrent, WeaveManager } from '../../src/weave';
+import { compileTestResult, compileTestSnapshot } from '../helpers/compilation';
 
 const readEmissions = (provenance: CompileProvenanceSnapshot) =>
   [...provenance.ownerMap.values()]
@@ -34,19 +34,19 @@ const scene: IRScene = {
 describe('Weave 编译构建', () => {
   it.each([0, 7])('外层 Scene 留白 %s 与全量编译一致', padding => {
     const prepared = new WeaveManager(scene, { padding }).mount();
-    expect(prepared.compilation.result).toEqual(compileToScene(scene, { padding }));
+    expect(prepared.compilation.result).toEqual(compileTestResult(scene, { padding }));
   });
 
   it('保留跨 Scope 延后路径、声明结构和完整来源', () => {
     const prepared = new WeaveManager(scene, {}, { captureProvenance: true }).mount();
-    expect(prepared.compilation.result).toEqual(compileToScene(scene));
+    expect(prepared.compilation.result).toEqual(compileTestResult(scene));
     expect(prepared.root.pending).toBeNull();
     expect(readWeaveCurrent(prepared.root).children.every(node => node.pending === null)).toBe(true);
     expect(readWeaveCurrent(prepared.root).children.map(node => node.type)).toEqual(['path', 'scope', 'scope']);
     expect(readWeaveCurrent(prepared.root).scopeIds.size).toBe(3);
     expect(readWeaveCurrent(prepared.root).children.every(node => readWeaveCurrent(node).compiled !== null)).toBe(true);
     expect(readEmissions(prepared.compilation.provenance!).map(entry => entry.primitivePath)).toEqual(
-      readEmissions(compileSceneSnapshot(scene, {}, { captureProvenance: true }).provenance!).map(
+      readEmissions(compileTestSnapshot(scene, {}, { captureProvenance: true }).provenance!).map(
         entry => entry.primitivePath,
       ),
     );
@@ -96,7 +96,7 @@ describe('Weave 编译构建', () => {
         },
       ],
     };
-    expect(new WeaveManager(input).mount().compilation.result).toEqual(compileToScene(input));
+    expect(new WeaveManager(input).mount().compilation.result).toEqual(compileTestResult(input));
   });
 });
 
@@ -176,7 +176,7 @@ describe('Weave 与 Core 可观察等价', () => {
     },
   ];
   it.each(inputs)('保持引用、变换、排序、诊断与发射归属', input => {
-    const full = compileSceneSnapshot(input, {}, { captureProvenance: true });
+    const full = compileTestSnapshot(input, {}, { captureProvenance: true });
     const weave = new WeaveManager(input, {}, { captureProvenance: true }).mount().compilation;
     expect(weave.result).toEqual(full.result);
     expect(weave.diagnostics).toEqual(full.diagnostics);
@@ -254,7 +254,7 @@ it('嵌套旋转缩放后的引用、渐变资源与观察结果保持同版本'
       },
     ],
   };
-  const full = compileSceneSnapshot(input, {});
+  const full = compileTestSnapshot(input, {});
   const weave = new WeaveManager(input, {}, { captureProvenance: true }).mount().compilation;
   expect(weave.result).toEqual(full.result);
 });
@@ -298,7 +298,7 @@ it('祖先 Scope 几何引用失败，未来声明不会提前对 Node 可见', 
       { type: 'node', id: 'future', position: [100, 0] },
     ],
   };
-  expect(() => compileSceneSnapshot(input)).toThrow(/Cannot resolve position/);
+  expect(() => compileTestSnapshot(input)).toThrow(/Cannot resolve position/);
   expect(() => new WeaveManager(input).mount()).toThrow(/Cannot resolve position/);
 });
 
@@ -340,7 +340,7 @@ it('自定义 Path 重用相同图元对象时保留各自的发射来源', () =
     ],
   };
   const prepared = new WeaveManager(input, { paths: [kind] }, { captureProvenance: true }).mount();
-  expect(prepared.compilation.result).toEqual(compileToScene(input, { paths: [kind] }));
+  expect(prepared.compilation.result).toEqual(compileTestResult(input, { paths: [kind] }));
   const owners = [...prepared.compilation.provenance!.ownerMap.values()].filter(owner => owner.emissions.length > 0);
   expect(owners).toHaveLength(2);
 });
@@ -362,10 +362,53 @@ it.each(['empty', 'null-path', 'retained'] as const)('Scope 裁空与动画诊�
       }),
     ],
   };
-  const full = compileSceneSnapshot(input, options);
+  const full = compileTestSnapshot(input, options);
   const weave = new WeaveManager(input, options).mount().compilation;
   expect(weave.result).toEqual(full.result);
   expect(weave.diagnostics).toEqual(full.diagnostics);
   expect(weave.diagnostics).toHaveLength(variant === 'retained' ? 1 : 0);
   expect(weave.result.scene.primitives).toHaveLength(variant === 'retained' ? 1 : 0);
+});
+
+it.each(['opacity', 'viewBox'] as const)('Path 可见性变化更新 Scope 动画与诊断：%s', property => {
+  const empty: IRPathBase = { type: 'path', kind: 'empty-output' };
+  const scope: IRScope = {
+    type: 'scope',
+    animations:
+      property === 'opacity'
+        ? [{ property: 'opacity', duration: 100, keyframes: [{ at: 0, value: 0 }] }]
+        : [{ property: 'viewBox', duration: 100, keyframes: [{ at: 0, value: [0, 0, 10, 10] }] }],
+    children: [empty],
+  };
+  const source: IRScene = { type: 'scene', version: 1, children: [scope] };
+  const options = {
+    paths: [
+      definePath({
+        name: 'empty-output',
+        schema: PathSchema.extend({ kind: literal('empty-output') }),
+        compile: () => null,
+      }),
+    ],
+  };
+  const session = new WeaveManager(source, options);
+  session.mount();
+  const visible: IRPathBase = {
+    type: 'path',
+    children: [
+      { type: 'step', kind: 'move', to: [0, 0] },
+      { type: 'step', kind: 'line', to: [10, 0] },
+    ],
+  };
+  for (const path of [visible, empty, visible]) {
+    const candidate = session.update({
+      operations: [
+        { kind: 'update', target: { kind: 'child', scopeId: session.getScopeId([0]), index: 0 }, input: path },
+      ],
+    });
+    expect(candidate.compilation).toEqual(
+      compileTestSnapshot({ ...source, children: [{ ...scope, children: [path] }] }, options),
+    );
+    candidate.commit();
+    candidate.finish();
+  }
 });

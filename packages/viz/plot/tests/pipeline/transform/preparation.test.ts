@@ -2,10 +2,10 @@ import { createCompositeInputBindings } from '@retikz/core';
 import type { IRScene } from '@retikz/core';
 import { applyTransforms, createDataTransformExecutor, readSourceIndex, tagSourceIndex } from '@retikz/data';
 import type { DataTransformImplementationProvider } from '@retikz/data';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { lowerPlots, preparePlotData, PlotSchema, MarkSchema } from '../../../src';
+import { compileTestResult } from '../../helpers/compilation';
 
 const specOf = () => {
   const spec = PlotSchema.parse({
@@ -101,7 +101,7 @@ describe('Plot 全范围数据准备', () => {
   it('同步入口按实际作用域检查策略，并尊重单条 builtin 覆盖', () => {
     const spec = specOf();
     const compile = () =>
-      compileToScene({ type: 'scene', version: 1, children: [spec] }, { composites: lowerPlots({ rows }) });
+      compileTestResult({ type: 'scene', version: 1, children: [spec] }, { composites: lowerPlots({ rows }) });
     spec.dataExecution = { root: { mode: 'builtin' }, marks: { mode: 'external', external: 'fixture' } };
     expect(compile).toThrow(/async preparation/);
     spec.marks[0].transforms![0].dataExecution = { mode: 'builtin' };
@@ -126,11 +126,11 @@ describe('Plot 全范围数据准备', () => {
       composites: lowerPlots({}),
       compositeInputs: createCompositeInputBindings(source, [{ path: ['children', 0], input: prepared }]),
     };
-    const first = compileToScene(source, options).scene;
+    const first = compileTestResult(source, options).scene;
 
-    expect(compileToScene(source, options).scene).toEqual(first);
+    expect(compileTestResult(source, options).scene).toEqual(first);
 
-    const expected = compileToScene(
+    const expected = compileTestResult(
       { ...source, children: [{ ...spec, transform: [] }] },
       {
         composites: lowerPlots({ rows: prepared.root.rows }),
@@ -213,8 +213,8 @@ describe('Plot 全范围数据准备', () => {
       composites: lowerPlots({}),
       compositeInputs: createCompositeInputBindings(source, [{ path: ['children', 0], input: prepared }]),
     };
-    compileToScene(source, options);
-    compileToScene(source, options);
+    compileTestResult(source, options);
+    compileTestResult(source, options);
 
     expect(calls.filter(call => call.startsWith('execute'))).toEqual([
       'execute:2',

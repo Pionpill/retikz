@@ -1,5 +1,5 @@
-import type { CurveSegment, CurveSegmentSample } from '@retikz/math';
-import { curve } from '@retikz/math';
+import type { CurveSegment, CurveSegmentSample, CurveLengthModel } from '@retikz/math';
+import { curve, curveMetrics } from '@retikz/math';
 
 import type { PathCommand } from '../../../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../../error';
@@ -7,8 +7,7 @@ import type { IRPosition } from '../../../../schemas';
 import { applyRoundedCorners } from './rounded-corners';
 
 const DISTANCE_EPSILON = 1e-7;
-const PARAMETER_BISECTION_STEPS = 32;
-const CURVE_LENGTH_SAMPLES = 32;
+
 type StrokeParameterBoundaryOwner = 'previous' | 'next';
 
 /** Stroke command 在未断开的逻辑路径中的一次绘制 occurrence */
@@ -17,6 +16,8 @@ export type StrokeCommandOccurrence = {
   command: PathCommand;
   /** command 在编译后数组中的下标 */
   commandIndex: number;
+  /** 可复用的未舍入曲线度量 */
+  metrics: CurveLengthModel;
   /** 产生此 command 的 Source Path step 下标 */
   sourceStepIndex: number;
   /** 所属连续 sub-path 下标 */
@@ -110,49 +111,47 @@ export const curveSegmentOfOccurrence = ({ command, from, to }: StrokeCommandGeo
 };
 
 /** 在绘制 occurrence 的局部参数位置取点与切线 */
-export const sampleStrokeOccurrence = (occurrence: StrokeCommandOccurrence, parameter: number): CurveSegmentSample =>
-  curve.sampleAt(curveSegmentOfOccurrence(occurrence), clampUnit(parameter));
-
-const approximateOccurrenceLength = (
-  occurrence: Omit<StrokeCommandOccurrence, 'logicalStart' | 'logicalEnd'>,
-): number =>
-  curve.approximateLength(curveSegmentOfOccurrence(occurrence), {
-    sampleCount: occurrence.command.kind === 'ellipseArc' ? CURVE_LENGTH_SAMPLES * 2 : CURVE_LENGTH_SAMPLES,
-  });
-
-const approximateOccurrenceLengthTo = (occurrence: StrokeCommandOccurrence, end: number): number => {
-  const parameter = clampUnit(end);
-  if (parameter <= DISTANCE_EPSILON) return 0;
-  if (parameter >= 1 - DISTANCE_EPSILON) return occurrence.logicalEnd - occurrence.logicalStart;
-  if (occurrence.command.kind === 'line' || occurrence.command.kind === 'close') {
-    return (occurrence.logicalEnd - occurrence.logicalStart) * parameter;
+export const sampleStrokeOccurrence = (occurrence: StrokeCommandOccurrence, parameter: number): CurveSegmentSample => {
+  const segment = occurrence.metrics.segment;
+  const t = clampUnit(parameter);
+  const sample = curve.sampleAt(segment, t);
+  if (segment.kind !== 'quadraticBezier' && segment.kind !== 'cubicBezier') return sample;
+  const inverse = 1 - t;
+  const derivative = (axis: 0 | 1): number =>
+    segment.kind === 'quadraticBezier'
+      ? 2 * (inverse * (segment.control[axis] - segment.from[axis]) + t * (segment.to[axis] - segment.control[axis]))
+      : 3 *
+        (inverse * inverse * (segment.control1[axis] - segment.from[axis]) +
+          2 * inverse * t * (segment.control2[axis] - segment.control1[axis]) +
+          t * t * (segment.to[axis] - segment.control2[axis]));
+  const derivativeX = derivative(0);
+  const derivativeY = derivative(1);
+  const speed = Math.hypot(derivativeX, derivativeY);
+  if (speed > 1e-12) return { point: sample.point, tangent: [derivativeX / speed, derivativeY / speed] };
+  const second = (axis: 0 | 1): number =>
+    segment.kind === 'quadraticBezier'
+      ? 2 * (segment.to[axis] - 2 * segment.control[axis] + segment.from[axis])
+      : 6 *
+        (inverse * (segment.control2[axis] - 2 * segment.control1[axis] + segment.from[axis]) +
+          t * (segment.to[axis] - 2 * segment.control2[axis] + segment.control1[axis]));
+  const side = t === 1 ? -1 : 1;
+  let dx = side * second(0);
+  let dy = side * second(1);
+  if (Math.hypot(dx, dy) <= 1e-12 && segment.kind === 'cubicBezier') {
+    dx = segment.to[0] - 3 * segment.control2[0] + 3 * segment.control1[0] - segment.from[0];
+    dy = segment.to[1] - 3 * segment.control2[1] + 3 * segment.control1[1] - segment.from[1];
   }
-
-  if (occurrence.command.kind === 'arc') {
-    return (occurrence.logicalEnd - occurrence.logicalStart) * parameter;
-  }
-
-  return curve.approximateLength(curve.slice(curveSegmentOfOccurrence(occurrence), 0, parameter), {
-    sampleCount: Math.max(4, Math.ceil(CURVE_LENGTH_SAMPLES * parameter)),
-  });
+  const magnitude = Math.hypot(dx, dy);
+  return magnitude === 0 ? sample : { point: sample.point, tangent: [dx / magnitude, dy / magnitude] };
 };
+
+/** 复用曲线度量计算参数对应的前缀长度 */
+const approximateOccurrenceLengthTo = (occurrence: StrokeCommandOccurrence, end: number): number =>
+  curveMetrics.distanceAt(occurrence.metrics, end);
 
 /** 将 occurrence 内的弧长距离换算为曲线参数 */
-export const parameterAtStrokeOccurrenceDistance = (occurrence: StrokeCommandOccurrence, distance: number): number => {
-  const length = occurrence.logicalEnd - occurrence.logicalStart;
-  if (length <= DISTANCE_EPSILON) return 0;
-
-  const clamped = Math.max(0, Math.min(length, distance));
-  if (clamped <= DISTANCE_EPSILON) return 0;
-  if (length - clamped <= DISTANCE_EPSILON) return 1;
-
-  return curve.parameterAtDistance(curveSegmentOfOccurrence(occurrence), clamped, {
-    sampleCount: CURVE_LENGTH_SAMPLES,
-    totalLength: length,
-    bisectionSteps: PARAMETER_BISECTION_STEPS,
-  });
-};
-
+export const parameterAtStrokeOccurrenceDistance = (occurrence: StrokeCommandOccurrence, distance: number): number =>
+  curveMetrics.parameterAt(occurrence.metrics, distance);
 /** 从最终 commands 与其 source step provenance 建立逻辑绘制 occurrence */
 export const createStrokePathGeometry = (
   commands: ReadonlyArray<PathCommand>,
@@ -201,9 +200,15 @@ export const createStrokePathGeometry = (
       subPathLogicalStart: subPaths[subPathIndex].logicalStart,
       subPathLogicalEnd: 0,
     };
-    const length = approximateOccurrenceLength(rawOccurrence);
+    const metrics = curveMetrics.prepare(curveSegmentOfOccurrence(rawOccurrence));
+    if (metrics === null)
+      throw new RetikzCoreError(RetikzCoreErrorCode.Compile, 'Path curve measurement did not converge.');
+    const length = metrics.length;
+    if (!Number.isFinite(logicalDistance + length))
+      throw new RetikzCoreError(RetikzCoreErrorCode.Compile, 'Path cumulative length is not finite.');
     const occurrence: StrokeCommandOccurrence = {
       ...rawOccurrence,
+      metrics,
       logicalStart: logicalDistance,
       logicalEnd: logicalDistance + length,
     };
@@ -264,30 +269,6 @@ export const sampleStrokePathGeometry = (
   geometry: StrokePathGeometry,
   position: number,
 ): StrokeLabelSample | undefined => sampleGeometryOccurrences(geometry.occurrences, position);
-
-/** 沿路径采样标记，驻点使用前进侧切线，末端使用进入侧切线 */
-export const sampleStrokeMarkGeometry = (
-  geometry: StrokePathGeometry,
-  position: number,
-): CurveSegmentSample | undefined => {
-  const located = sampleStrokePathGeometry(geometry, position);
-  if (located === undefined) return undefined;
-  const { occurrence, logicalDistance, sample } = located;
-  const segment = curveSegmentOfOccurrence(occurrence);
-  if (segment.kind !== 'quadraticBezier' && segment.kind !== 'cubicBezier') return sample;
-  const t = parameterAtStrokeOccurrenceDistance(occurrence, logicalDistance - occurrence.logicalStart);
-  const inverse = 1 - t;
-  const derivative = (axis: 0 | 1): number =>
-    segment.kind === 'quadraticBezier'
-      ? 2 * (inverse * (segment.control[axis] - segment.from[axis]) + t * (segment.to[axis] - segment.control[axis]))
-      : 3 *
-        (inverse * inverse * (segment.control1[axis] - segment.from[axis]) +
-          2 * inverse * t * (segment.control2[axis] - segment.control1[axis]) +
-          t * t * (segment.to[axis] - segment.control2[axis]));
-  if (Math.hypot(derivative(0), derivative(1)) > DISTANCE_EPSILON) return sample;
-  const nearby = Math.min(1, Math.max(0, t + (position === 1 ? -1e-4 : 1e-4)));
-  return { point: sample.point, tangent: curve.sampleAt(segment, nearby).tangent };
-};
 
 /**
  * 建立单次编译内的步骤索引，按既有 step-local 参数语义采样

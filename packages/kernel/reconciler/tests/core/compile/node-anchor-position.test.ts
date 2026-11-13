@@ -7,7 +7,7 @@ import { defineBoundary } from '../../../../core/src/contract';
 import type { IRNode, IRScene } from '../../../../core/src/schemas';
 import { rect as rectOps } from '../../../../core/src/shared/geometry';
 import type { CompileOptions } from '../../../src/compile';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 import { flattenPrims } from '../../helpers/flatten';
 import { sceneRectangles } from '../../helpers/scene-rectangles';
 
@@ -16,7 +16,7 @@ const scene = (children: IRScene['children']): IRScene => ({ type: 'scene', vers
 type RectangleGeometry = { id?: string; rect: CenteredBox };
 const compileLayouts = (ir: IRScene, options: CompileOptions = {}): Map<string, RectangleGeometry> => {
   const layouts = new Map<string, RectangleGeometry>();
-  for (const rectangle of sceneRectangles(compileToScene(ir, { precision: 12, ...options }).scene)) {
+  for (const rectangle of sceneRectangles(compileTestResult(ir, { precision: 12, ...options }).scene)) {
     if (rectangle.id !== undefined) layouts.set(rectangle.id, rectangle);
   }
   return layouts;
@@ -285,7 +285,7 @@ describe('Node 锚点到锚点位置', () => {
   });
 
   it('当前 Node 无 id 时仍可对齐已完成 target', () => {
-    const result = compileToScene(
+    const result = compileTestResult(
       scene([
         {
           type: 'node',
@@ -341,7 +341,7 @@ describe('Node 锚点到锚点位置', () => {
   });
 
   it('Scene primitive、observer 与自动 viewBox 只看到最终几何', () => {
-    const result = compileToScene(
+    const result = compileTestResult(
       scene([
         {
           type: 'node',
@@ -374,7 +374,7 @@ describe('Node 锚点到锚点位置故障声音', () => {
   it('拒绝 undefined target', () => {
     expect(
       () =>
-        compileToScene(
+        compileTestResult(
           scene([{ type: 'node', id: 'current', position: { kind: 'anchor', target: { id: 'missing' } } }]),
         ).scene,
     ).toThrow(/anchor position target 'missing'.*undefined or defined later/i);
@@ -383,7 +383,7 @@ describe('Node 锚点到锚点位置故障声音', () => {
   it('拒绝 later target', () => {
     expect(
       () =>
-        compileToScene(
+        compileTestResult(
           scene([
             { type: 'node', id: 'current', position: { kind: 'anchor', target: { id: 'later' } } },
             { type: 'node', id: 'later', position: [0, 0] },
@@ -395,7 +395,7 @@ describe('Node 锚点到锚点位置故障声音', () => {
   it('拒绝 self target', () => {
     expect(
       () =>
-        compileToScene(scene([{ type: 'node', id: 'self', position: { kind: 'anchor', target: { id: 'self' } } }]))
+        compileTestResult(scene([{ type: 'node', id: 'self', position: { kind: 'anchor', target: { id: 'self' } } }]))
           .scene,
     ).toThrow(/anchor position.*cannot reference itself/i);
   });
@@ -403,7 +403,7 @@ describe('Node 锚点到锚点位置故障声音', () => {
   it('拒绝尚未完成布局的祖先 Scope placeholder', () => {
     expect(
       () =>
-        compileToScene(
+        compileTestResult(
           scene([
             {
               type: 'scope',
@@ -427,7 +427,7 @@ describe('Node 锚点到锚点位置故障声音', () => {
   it('拒绝当前 Scope chain 中的零缩放轴', () => {
     expect(
       () =>
-        compileToScene(
+        compileTestResult(
           scene([
             { type: 'node', id: 'target', position: [0, 0] },
             {
@@ -443,7 +443,7 @@ describe('Node 锚点到锚点位置故障声音', () => {
   it('拒绝零尺寸 resolved Scope 的边上比例 anchor', () => {
     expect(
       () =>
-        compileToScene(
+        compileTestResult(
           scene([
             { type: 'scope', id: 'empty', children: [] },
             {
@@ -464,7 +464,7 @@ describe('Node 锚点到锚点位置故障声音', () => {
 
     expect(
       () =>
-        compileToScene(
+        compileTestResult(
           scene([
             target,
             {
@@ -477,7 +477,7 @@ describe('Node 锚点到锚点位置故障声音', () => {
 
     expect(
       () =>
-        compileToScene(
+        compileTestResult(
           scene([
             target,
             {

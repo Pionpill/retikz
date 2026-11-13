@@ -408,6 +408,8 @@ Sankey layout is separate from rendering. Without an explicit scale, width field
 
 ## Errors and limitations
 
+When a field in a complete `from` / `to` endpoint is missing or maps to a non-finite value, that row produces no path; independent Point marks can still display valid endpoints. Both ends are resolved, so missing data does not hide invalid constants, undeclared fields, or invalid target references. Invalid coordinate projections still raise errors.
+
 - Built-in Cartesian 2D and polar 2D coordinates support paths and closed regions. Generic coordinate frames support open paths with no `closure` and `closed` other than `true`.
 - Explicit `interpolation` is only valid in polar coordinates. Other coordinate systems reject it.
 - `color` requires a categorical field; continuous and temporal fields are rejected.
@@ -485,9 +487,9 @@ These are defaults chosen from the angle scale, not restrictions imposed by the 
 
 Ribbons reject closure, gap bridging, corner rounding, arrows, path markers, and step labels. Host labels use `properties.label` / `encodings.label`; `placement="inside"` places them inside the band. Stroke interruption is not supported.
 
-Use `encodings.label: 'name'` for a content field or `properties.label: 'Highlight'` for fixed text. Object labels support field bindings for `font.size`, `font.weight`, `textColor` and other targets. Label arrays match by index; unencoded font leaves retain inheritance. See [label encodings](/viz/plot/reference/encoding#labelencodingschema).
+Use `encodings.label: 'name'` for a content field or `properties.label: 'Highlight'` for fixed text. Object labels support field bindings for `font.size`, `font.weight`, `textColor` and other targets. Label arrays match by index; unencoded font leaves retain inheritance. See [label encodings](/viz/plot/channel/reference#labelencodingschema).
 
-`PathMarkProps` is exported by `@retikz/plot-react` and reuses `InputPlotPathMark` from `@retikz/plot-vanilla`. Members are grouped by purpose. `—` means the declaration has no field-level default; runtime defaults are explained above. Source IR fields and constraints reuse `PathMarkSchema` from the [mark contract reference](/viz/plot/reference/mark).
+`PathMarkProps` is exported by `@retikz/plot-react` and reuses `InputPlotPathMark` from `@retikz/plot-vanilla`. Members are grouped by purpose. `—` means the declaration has no field-level default; runtime defaults are explained above. Source IR fields and constraints are documented by `PathMarkSchema` below; see [shared mark APIs](/viz/plot/mark#api-reference) for common configuration.
 
 {/* @include viz/plot/mark/path/generated */}
 

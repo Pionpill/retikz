@@ -1,8 +1,8 @@
 import { createRegressionChartProviderContribution } from '@retikz/chart/point';
 import type { InputEmbed } from '@retikz/vanilla';
 
+import { buildChartRuntime, typedChartPartsOf } from '../../authoring';
 import { createChartInputEmbedAdapter } from '../../shared';
-import { buildPointChartRuntime, typedChartPartsOf } from '../shared';
 import { normalizeRegressionChart } from './normalize';
 import type { RegressionChartInputEmbedProps } from './types';
 
@@ -23,7 +23,7 @@ export const regressionChartInputEmbedAdapter = createChartInputEmbedAdapter(
       ...(input.marks === undefined ? {} : { marks: input.marks }),
     });
 
-    return buildPointChartRuntime(
+    return buildChartRuntime(
       source,
       parts,
       createRegressionChartProviderContribution(parts.chartThemeDefinitions, parts.lowerOptions),

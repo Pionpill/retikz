@@ -1,7 +1,7 @@
 import type { IRBubbleChart } from '@retikz/chart/point';
 import type { FC } from 'react';
 
-import type { ChartMarkOf } from '../shared';
+import type { ChartMarkOf } from '../../authoring';
 
 /** Bubble Chart mark 的精确 Source payload */
 export type BubbleChartMark = Extract<ChartMarkOf<IRBubbleChart>, { kind: 'bubble' }>;

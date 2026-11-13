@@ -10,8 +10,8 @@ import type {
 import {
   createProcessingControllerAsync,
   prepareStaticProcessingAsync,
-  processToStaticInputResult,
-  processToStaticInputResultAsync,
+  compileToScene,
+  compileToSceneAsync,
   RetikzVanillaError,
 } from '../../src';
 
@@ -152,8 +152,8 @@ describe('共享异步编写准备', () => {
       },
     };
     const input: InputSceneChildren = { children: [{ type: 'embed', kind: 'slots', props: {} }] };
-    const synchronous = processToStaticInputResult(input, { adapters: [outer, inner] });
-    const asynchronous = await processToStaticInputResultAsync(input, { adapters: [outer, inner] });
+    const synchronous = compileToScene(input, { adapters: [outer, inner] });
+    const asynchronous = await compileToSceneAsync(input, { adapters: [outer, inner] });
 
     expect(asynchronous.scene).toEqual(synchronous.scene);
     expect([...asynchronous.runtimeMeta.identityIndex]).toEqual([...synchronous.runtimeMeta.identityIndex]);
@@ -189,14 +189,14 @@ describe('共享异步编写准备', () => {
     };
 
     await expect(
-      processToStaticInputResultAsync(
+      compileToSceneAsync(
         { children: [{ type: 'embed', kind: 'container', props: {} }] },
         { adapters: [outer, inner] },
       ),
     ).rejects.toThrow(/during preparation/);
     expect(executed).toBe(0);
-    await expect(processToStaticInputResultAsync(source(), { adapters: [inner, inner] })).rejects.toThrow(/Duplicate/);
-    await expect(processToStaticInputResultAsync(source())).rejects.toThrow(/no prepare adapter/);
+    await expect(compileToSceneAsync(source(), { adapters: [inner, inner] })).rejects.toThrow(/Duplicate/);
+    await expect(compileToSceneAsync(source())).rejects.toThrow(/no prepare adapter/);
   });
 
   it('在准备和下沉过程中保持图层、Scope 和主题上下文相同', async () => {
@@ -239,8 +239,8 @@ describe('共享异步编写准备', () => {
         },
       ],
     };
-    const sync = processToStaticInputResult(input, { adapters: [adapter] });
-    const asynchronous = await processToStaticInputResultAsync(input, { adapters: [adapter] });
+    const sync = compileToScene(input, { adapters: [adapter] });
+    const asynchronous = await compileToSceneAsync(input, { adapters: [adapter] });
 
     expect(asyncContexts).toEqual(syncContexts);
     expect(asynchronous.scene).toEqual(sync.scene);
@@ -295,10 +295,7 @@ describe('共享异步编写准备', () => {
     };
 
     await expect(
-      processToStaticInputResultAsync(
-        { children: [...source(1).children, ...source(2).children] },
-        { adapters: [adapter] },
-      ),
+      compileToSceneAsync({ children: [...source(1).children, ...source(2).children] }, { adapters: [adapter] }),
     ).rejects.toThrow(/unsupported/);
     expect(calls).toEqual(['prepare:1', 'prepare:2']);
   });
@@ -342,8 +339,8 @@ describe('共享异步编写准备', () => {
       theme: { mode: 'dark' },
       children: [{ type: 'embed', kind: 'container', props: { children: source(4).children } }],
     };
-    const sync = processToStaticInputResult(input, { adapters: [outer, inner] });
-    const asyncResult = await processToStaticInputResultAsync(input, { adapters: [outer, inner] });
+    const sync = compileToScene(input, { adapters: [outer, inner] });
+    const asyncResult = await compileToSceneAsync(input, { adapters: [outer, inner] });
 
     expect(asyncResult.scene).toEqual(sync.scene);
     expect(asyncResult.runtimeMeta.layers).toEqual(sync.runtimeMeta.layers);

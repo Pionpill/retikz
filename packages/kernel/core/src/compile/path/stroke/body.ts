@@ -1,7 +1,38 @@
+import type { PathCommand } from '../../../contract';
 import { shortenEndpointContacts, splitStrokePathAtInterruptions } from './decoration';
 import type { StrokeInterruptionInterval, StrokeEndpointPlacements } from './decoration';
 import type { StrokePathGeometry } from './geometry';
 import type { LoweredStrokeBody, LoweredStrokePathGeometry, StrokePathCompileContext } from './types';
+
+/** Scene 输出边界统一舍入，定位与圆角始终消费未舍入几何 */
+const roundStrokeCommand = (command: PathCommand, round: StrokePathCompileContext['round']): PathCommand => {
+  const point = (position: [number, number]): [number, number] => [round(position[0]), round(position[1])];
+  switch (command.kind) {
+    case 'close':
+      return command;
+    case 'move':
+    case 'line':
+      return { ...command, to: point(command.to) };
+    case 'quad':
+      return { ...command, to: point(command.to), control: point(command.control) };
+    case 'cubic':
+      return {
+        ...command,
+        to: point(command.to),
+        control1: point(command.control1),
+        control2: point(command.control2),
+      };
+    case 'arc':
+      return { ...command, center: point(command.center), radius: round(command.radius) };
+    case 'ellipseArc':
+      return {
+        ...command,
+        center: point(command.center),
+        radiusX: round(command.radiusX),
+        radiusY: round(command.radiusY),
+      };
+  }
+};
 
 /** 应用标签断口和箭头接触截取，不读取图元或绘制外观 */
 export const lowerStrokeBody = (
@@ -14,7 +45,7 @@ export const lowerStrokeBody = (
 ): LoweredStrokeBody => {
   const { shrinkStart, shrinkEnd, hasEndArrow } = contact;
   if (metrics === undefined || intervals.length === 0) {
-    if (shrinkStart !== 0 || shrinkEnd !== 0) commands = [...commands];
+    commands = commands.map(command => roundStrokeCommand(command, round));
     const contacts = shortenEndpointContacts(commands, { shrinkStart, shrinkEnd, strokeWidth, round });
     return { kind: 'continuous', commands, contacts };
   }

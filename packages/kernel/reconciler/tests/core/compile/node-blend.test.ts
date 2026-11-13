@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { ScenePrimitive } from '../../../../core/src/contract';
 import type { IRScene } from '../../../../core/src/schemas';
 import { BlendMode, NodeSchema } from '../../../../core/src/schemas';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 import { flattenPrims } from '../../helpers/flatten';
 
 const silent = { onWarn: () => {} };
@@ -16,8 +16,8 @@ const findByType = <T extends ScenePrimitive['type']>(
 ): Extract<ScenePrimitive, { type: T }> | undefined =>
   flattenPrims(prims).find((p): p is Extract<ScenePrimitive, { type: T }> => p.type === type);
 
-const compileNode = (n: Record<string, unknown>): ReturnType<typeof compileToScene>['scene'] =>
-  compileToScene(scene([{ type: 'node', position: [0, 0], ...n }]), silent).scene;
+const compileNode = (n: Record<string, unknown>): ReturnType<typeof compileTestResult>['scene'] =>
+  compileTestResult(scene([{ type: 'node', position: [0, 0], ...n }]), silent).scene;
 
 // ════════════════ Happy ════════════════
 

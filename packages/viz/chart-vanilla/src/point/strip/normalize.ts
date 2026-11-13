@@ -1,6 +1,6 @@
 import type { IRStripChart } from '@retikz/chart/point';
 
-import { chartSourceOf } from '../shared';
+import { chartSourceOf } from '../../authoring';
 import type { InputStripChart } from './types';
 
 /** 将 Strip Chart Vanilla Input 组装为精确 Source IR */

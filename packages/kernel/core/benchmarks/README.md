@@ -2,21 +2,21 @@
 
 ## 编译资源注册表
 
-[resource-paint.bench.ts](./compile/resource-paint.bench.ts) 与 [resource-clip.bench.ts](./compile/resource-clip.bench.ts) 分别测量 Paint / Clip 一次独立注册表生命周期：创建注册表、处理 10 / 100 / 1000 次登记或导入、取得资源和引用结果。规模表示登记次数；重复输入最终只有一份资源，独立输入最终有同等数量资源。每个文件 24 个场景，共 48 个场景；独立资源引用校验 API 移除后，对应 6 个旧场景不再运行，历史报告仍保留。
+[resource-paint.bench.ts](./compile/resource-paint.bench.ts) 与 [resource-clip.bench.ts](./compile/resource-clip.bench.ts) 分别测量 Paint / Clip 一次独立注册表生命周期：创建注册表、处理 16 / 64 / 256 次登记或导入、取得资源和引用结果。规模表示登记次数；重复输入最终只有一份资源，不同内容或导入最终有同等数量资源，报告同时标明这两个数量。每个文件 24 个场景，共 48 个场景；旧规模及已移除场景的历史报告仍保留，不直接与新规模计算回归比例。
 
 绘制输入分为两色渐变和固定 8 图元 Pattern；裁剪分为矩形和固定 32 段路径。分别覆盖不同内容、重复实例、等值独立对象及导入已有资源。输入解析和导入源资源生成均在计时外；计时包含登记所需的 provider 执行、路径生成、快照、key 序列化、去重与输出分配。计数器用于核对 provider 次数，计数开销未扣除。
 
 每场景预热 10 次、测量 100 次，核对资源数量、首尾引用、图元或命令数量，以及 provider 调用次数。Paint 重复登记只生成一次 Pattern；Clip 按输出路径去重，重复登记仍调用 lower；已有资源导入均不再调用 provider。
 
-本组以 P90 消费预算评价结果，不启用 CI 耗时阻断。1000 是测量规模上限，不是运行时资源限制。登记与导入采用相同预算，复杂 Pattern 不放宽；预算来自局部编辑、普通更新和大批资源处理的阶段时间分配假设，不按实测倒推。
+本组以 P90 消费预算评价结果，不启用 CI 耗时阻断。用户指定 256 为本组测试规模上限，不是运行时资源限制，也不表示实际资源分布已被统计验证。三档均采用正式常规采样，不另保留 1000 档。登记与导入采用相同预算，复杂 Pattern 不放宽；预算来自阶段时间分配假设，不按实测倒推。
 
 | 规模 | 注册表整批操作：警告 / 错误 |
 | ---- | --------------------------- |
-| 10   | 1 / 4ms                     |
-| 100  | 4 / 8ms                     |
-| 1000 | 8 / 16.6ms                  |
+| 16   | 1 / 2ms                     |
+| 64   | 2 / 4ms                     |
+| 256  | 4 / 8ms                     |
 
-登记阶段在最大档接近一帧时间即有同步阻塞风险，其他编译与渲染阶段仍需单独留时。源码加载结果只用于本机探索，稳定历史回归基线尚未选定。最初无预算报告保留为历史记录，补预算后重新采样，不追溯声称旧报告采样前已设阈值。
+16 次局部使用分配 1/2ms，64 次较多资源分配 2/4ms，256 次上限分配 4/8ms；最大档错误预算控制在约半个 60Hz 帧内，为其它编译与渲染阶段留时，不代表整帧保证。源码加载结果只用于本机探索，稳定历史回归基线尚未选定。新阈值仅用于新规模的后续采样，不重新判定旧报告，也不以修改配置宣称新场景已达标。
 
 ```bash
 pnpm --filter @retikz/core exec vitest bench --run --config vitest.bench.config.ts benchmarks/compile/resource-paint.bench.ts benchmarks/compile/resource-clip.bench.ts --fsModuleCache=false
@@ -180,7 +180,7 @@ pnpm --filter @retikz/core exec vitest bench --run --config vitest.bench.config.
 
 ## 测量边界
 
-当前覆盖 `src/providers`、`src/resolve`、`src/contract` 的代表操作，以及 `src/compile` 的资源注册表、文本、Scene、共享、Boundary、Reference、Node与Scope操作，不调用 `compileToScene`。shape / arrow / mark 的 iterable 在计时内完整消费，包含该操作自身的计算与分配。
+当前覆盖 `src/providers`、`src/resolve`、`src/contract` 的代表操作，以及 `src/compile` 的资源注册表、文本、Scene、共享、Boundary、Reference、Node与Scope操作，不调用 `SceneReconciler`。shape / arrow / mark 的 iterable 在计时内完整消费，包含该操作自身的计算与分配。
 
 - Scene 图元生成属于编译计算；SVG 字符串生成、Canvas 绘制、DOM 更新、浏览器布局与绘制均不计入。
 - 不接入 `@retikz/render`、React/Vanilla renderer 或浏览器。Runtime / Reconciler 调度、增量更新与生命周期不属于本目录。
@@ -204,7 +204,7 @@ anchor、edge、关键点、参数缩放及等价参数组合不再独立采样�
 
 boundary 的上游 envelope 使用预置值；path 的宿主 emitter 使用固定结果，故这两类分别只反映 fit / gap 与委托开销，不代表几何计算或完整路径编译耗时。短操作可能接近计时及回调开销，结果需谨慎解释。本节仅列 provider 场景；资源、文本、contract 和 resolve 场景使用各自的测量边界。
 
-复用根目录 `scripts/benchmarks` 的采样与报告工具：预热 10 次、正式采样 100 次；结果保留并在计时外校验。每个场景在采样前配置 P90 警告/错误预算；预算评价与用例执行成功分别报告，不启用 CI 耗时阻断。
+复用根目录 `scripts/benchmarks` 的采样与报告工具：常规场景预热 10 次、正式采样 100 次；1024 边 polygon 的 6 个上限参考场景不预热、仅执行 3 次。结果保留并在计时外校验。每个常规场景在采样前配置 P90 警告/错误预算；参考场景仅报告，不以 3 个样本推断稳定分位数。预算评价与用例执行成功分别报告，不启用 CI 耗时阻断。
 
 ## 运行
 
@@ -224,10 +224,10 @@ pnpm --filter @retikz/core exec vitest bench --run --config vitest.bench.config.
 | ------------------------------------------------ | --------------------------------------------------------------------------- | -------------------------------------------------------- |
 | [path.bench.ts](./resolve/path.bench.ts)         | 完整 Path 解析：绝对坐标、累积相对坐标、预置引用查询、步骤标签、smooth 点集 | 16 / 1k / 10k 步骤或点；smooth 为一个步骤                |
 | [node.bench.ts](./resolve/node.bench.ts)         | 完整 Node 解析：简单节点、继承与局部覆盖、自动对比色、图案绑定、多标签      | 单节点；多标签场景含 16 个标签                           |
-| [text.bench.ts](./resolve/text.bench.ts)         | 完整行解析：纯文本公式开关、美元公式混排、显式片段与相对字体                | 纯文本 32 / 1024 / 16384 字符；混排 16 / 256 / 2048 片段 |
+| [text.bench.ts](./resolve/text.bench.ts)         | 完整单行文本块解析：纯文本公式开关、美元公式混排、显式片段与相对字体        | 纯文本 32 / 1024 / 16384 字符；混排 16 / 256 / 2048 片段 |
 | [defaults.bench.ts](./resolve/defaults.bench.ts) | 单层 Scope 默认值：直接继承、稀疏合并、node 通道 reset                      | 固定 node/path 两通道                                    |
 
-共 35 个代表场景。Path 是逐路径解析，Node 是逐节点解析，Text 是节点正文、节点标签及路径标签共同使用的行解析；Scope 默认值合并是独立的继承操作。规模用于观察增长趋势，较大档的消费需求是显式规划假设，不表示已验证业务上限；不使用外部循环把多个节点或多次查询包装成一次操作。
+共 35 个代表场景。Path 是逐路径解析，Node 是逐节点解析，Text 是节点正文、节点标签及路径标签共同使用的文本块解析；Scope 默认值合并是独立的继承操作。规模用于观察增长趋势，较大档的消费需求是显式规划假设，不表示已验证业务上限；不使用外部循环把多个节点或多次查询包装成一次操作。
 
 registry、父级默认值、目标坐标 Map 和输入均在计时外准备。引用查询仅使用确定性的坐标 Map，不包含 compile 的引用索引、变换链与边界几何处理。文本不包含度量或 TeX 排版；图案仅绑定资源，不生成图元。结果断言验证坐标与目标数量、标签默认值、颜色、字体、通道继承及输入不变性，不以“不抛错”代替正确性。
 

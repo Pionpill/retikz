@@ -1,4 +1,4 @@
-import type { ScenePrimitive, SceneResource } from '../../contract';
+import type { ScenePrimitive, SceneResources } from '../../contract';
 import type { CanonicalDropShadow, IRPosition } from '../../schemas';
 
 /** 自动 viewBox 的当前 frame 几何贡献 */
@@ -30,7 +30,7 @@ export type CompileOutput = Readonly<{
   /** 同层输出排序值 */
   zIndex?: number;
   /** 图元引用的局部资源 */
-  resources: Array<SceneResource>;
+  resources: SceneResources;
   /** 可见边界贡献 */
   bounds: ReadonlyArray<CompileBounds>;
 }>;

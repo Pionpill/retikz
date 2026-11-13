@@ -4,7 +4,7 @@ import type { CompileWarning, IRScene, IRTarget } from '../../../../core/src';
 import { BuiltinCompileWarningCode } from '../../../../core/src';
 import type { CubicPathCommand, PathPrimitive, ScenePrimitive, TextPrimitive } from '../../../../core/src/contract';
 import { PathSchema, SmoothStepSchema } from '../../../../core/src/schemas';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 import { flattenPrims } from '../../helpers/flatten';
 import { move } from '../../helpers/path-command-factory';
 
@@ -37,7 +37,7 @@ describe('平稳的步伐：快乐的道路', () => {
         ],
       },
     );
-    const commands = findPathPrim(compileToScene(ir, silent).scene.primitives).commands;
+    const commands = findPathPrim(compileTestResult(ir, silent).scene.primitives).commands;
 
     expect(commands[0]).toEqual(move([0, 0]));
 
@@ -64,7 +64,7 @@ describe('平稳的步伐：快乐的道路', () => {
         ],
       },
     );
-    const commands = findPathPrim(compileToScene(ir, silent).scene.primitives).commands;
+    const commands = findPathPrim(compileTestResult(ir, silent).scene.primitives).commands;
     const cubics = commands.filter((c): c is CubicPathCommand => c.kind === 'cubic');
 
     expect(cubics).toHaveLength(4);
@@ -100,10 +100,10 @@ describe('平稳的步伐：快乐的道路', () => {
         tension: 2,
       },
     );
-    const baseCubics = findPathPrim(compileToScene(base, silent).scene.primitives).commands.filter(
+    const baseCubics = findPathPrim(compileTestResult(base, silent).scene.primitives).commands.filter(
       (c): c is CubicPathCommand => c.kind === 'cubic',
     );
-    const looseCubics = findPathPrim(compileToScene(loose, silent).scene.primitives).commands.filter(
+    const looseCubics = findPathPrim(compileTestResult(loose, silent).scene.primitives).commands.filter(
       (c): c is CubicPathCommand => c.kind === 'cubic',
     );
 
@@ -118,7 +118,7 @@ describe('平稳的步伐：快乐的道路', () => {
 describe('smooth step：边界', () => {
   it('cursor + 1 point（2 knot）→ 1 cubic，.to = 该点', () => {
     const ir = path({ type: 'step', kind: 'move', to: [0, 0] }, { type: 'step', kind: 'smooth', points: [[4, 3]] });
-    const commands = findPathPrim(compileToScene(ir, silent).scene.primitives).commands;
+    const commands = findPathPrim(compileTestResult(ir, silent).scene.primitives).commands;
     const cubics = commands.filter((c): c is CubicPathCommand => c.kind === 'cubic');
 
     expect(cubics).toHaveLength(1);
@@ -150,8 +150,8 @@ describe('smooth step：边界', () => {
       },
     );
 
-    expect(findPathPrim(compileToScene(explicit, silent).scene.primitives).commands).toEqual(
-      findPathPrim(compileToScene(omitted, silent).scene.primitives).commands,
+    expect(findPathPrim(compileTestResult(explicit, silent).scene.primitives).commands).toEqual(
+      findPathPrim(compileTestResult(omitted, silent).scene.primitives).commands,
     );
   });
 });
@@ -223,7 +223,7 @@ describe('smooth step：错误路径', () => {
       },
       { type: 'step', kind: 'line', to: [20, 20] },
     );
-    const result = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
+    const result = compileTestResult(ir, { onWarn: w => warnings.push(w) }).scene;
 
     expect(result.primitives.find(p => p.type === 'path')).toBeUndefined();
     expect(warnings.find(w => w.code === BuiltinCompileWarningCode.PathTooShort)).toBeDefined();
@@ -244,7 +244,7 @@ describe('smooth step：交互', () => {
         label: { text: 'flow' },
       },
     );
-    const prims = compileToScene(ir, silent).scene.primitives;
+    const prims = compileTestResult(ir, silent).scene.primitives;
     const labels = prims.filter((p): p is TextPrimitive => p.type === 'text');
 
     expect(labels.length).toBeGreaterThan(0);
@@ -264,7 +264,7 @@ describe('smooth step：交互', () => {
       },
       { type: 'step', kind: 'line', to: [20, 20] },
     );
-    const commands = findPathPrim(compileToScene(ir, silent).scene.primitives).commands;
+    const commands = findPathPrim(compileTestResult(ir, silent).scene.primitives).commands;
 
     // 末 cubic .to = smooth 末点；其后无 move（line 复用 cursor），末命令为 line→(20,20)
     const lastCubicIdx = commands.map(c => c.kind).lastIndexOf('cubic');
@@ -287,7 +287,7 @@ describe('smooth step：交互', () => {
       },
       { type: 'step', kind: 'cycle' },
     );
-    const commands = findPathPrim(compileToScene(ir, silent).scene.primitives).commands;
+    const commands = findPathPrim(compileTestResult(ir, silent).scene.primitives).commands;
 
     // cycle 收尾：末命令为 close 或一条回到 (0,0) 的 line
     const last = commands[commands.length - 1];
@@ -324,8 +324,8 @@ describe('smooth step：交互', () => {
         ],
       } as never,
     ]);
-    const baseCount = flattenPrims(compileToScene(without, silent).scene.primitives).length;
-    const markCount = flattenPrims(compileToScene(withMark, silent).scene.primitives).length;
+    const baseCount = flattenPrims(compileTestResult(without, silent).scene.primitives).length;
+    const markCount = flattenPrims(compileTestResult(withMark, silent).scene.primitives).length;
 
     expect(markCount).toBeGreaterThan(baseCount);
   });
@@ -349,7 +349,7 @@ describe('smooth step：交互', () => {
         ],
       } as never,
     ]);
-    const commands = findPathPrim(compileToScene(ir, silent).scene.primitives).commands;
+    const commands = findPathPrim(compileTestResult(ir, silent).scene.primitives).commands;
     const last = commands[commands.length - 1];
 
     expect(last.kind).toBe('line');
@@ -386,7 +386,7 @@ describe('平滑步：JSON 往返', () => {
 });
 
 it('裁剪最终隐式平滑 NodeTarget，同时保留中间结', () => {
-  const result = compileToScene(
+  const result = compileTestResult(
     scene([
       {
         type: 'node',
@@ -419,7 +419,7 @@ it.each<{ target: IRTarget; expected: [number, number] }>([
   { target: { id: 'end', anchor: 'right' }, expected: [110, 0] },
   { target: { id: 'end', offset: [5, 4] }, expected: [105, 4] },
 ])('保留显式终端锚点或偏移位置：$target', ({ target, expected }) => {
-  const result = compileToScene(
+  const result = compileTestResult(
     scene([
       {
         type: 'node',

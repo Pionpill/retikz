@@ -14,6 +14,41 @@ export const apiReferenceBranchLabels: Readonly<
     >
   >
 > = {
+  '@retikz/plot-react#PlotScaleProps': [
+    { value: 'log', field: 'type', type: "'log'", label: { zh: '对数', en: 'Logarithmic' } },
+    { value: 'symlog', field: 'type', type: "'symlog'", label: { zh: '对称对数', en: 'Symmetric logarithmic' } },
+    {
+      value: 'continuous',
+      field: 'singleValueSpan',
+      label: { zh: '连续映射', en: 'Continuous mapping' },
+      and: [
+        { field: 'base', type: 'never' },
+        { field: 'constant', type: 'never' },
+      ],
+    },
+    { value: 'band', field: 'type', type: "'band'", label: { zh: '分类带宽', en: 'Category bands' } },
+    { value: 'point', field: 'type', type: "'point'", label: { zh: '分类点位', en: 'Category points' } },
+  ],
+  '@retikz/plot-vanilla#InputPlotScale': [
+    { value: 'log', field: 'type', type: "'log'", label: { zh: '对数', en: 'Logarithmic' } },
+    { value: 'symlog', field: 'type', type: "'symlog'", label: { zh: '对称对数', en: 'Symmetric logarithmic' } },
+    {
+      value: 'continuous',
+      field: 'singleValueSpan',
+      label: { zh: '连续映射', en: 'Continuous mapping' },
+      and: [
+        { field: 'base', type: 'never' },
+        { field: 'constant', type: 'never' },
+      ],
+    },
+    { value: 'band', field: 'type', type: "'band'", label: { zh: '分类带宽', en: 'Category bands' } },
+    { value: 'point', field: 'type', type: "'point'", label: { zh: '分类点位', en: 'Category points' } },
+  ],
+  '@retikz/plot#CellGeometry': [
+    { value: 'rect', field: 'kind', type: "'rect'", label: { zh: '矩形', en: 'Rectangle' } },
+    { value: 'sector', field: 'kind', type: "'sector'", label: { zh: '环形扇区', en: 'Annular sector' } },
+    { value: 'contour', field: 'kind', type: "'contour'", label: { zh: '轮廓', en: 'Contour' } },
+  ],
   '@retikz/core#IRAnimationTrack': [
     {
       value: 'opacity',
@@ -89,6 +124,38 @@ export const apiReferenceBranchLabels: Readonly<
     { value: 'result', field: 'kind', type: "'result'", label: { zh: '已计算结果', en: 'Computed result' } },
     { value: 'source', field: 'kind', type: "'source'", label: { zh: '原生数据源', en: 'Native source' } },
   ],
+  '@retikz/data#RegressionImplementation': [
+    {
+      value: 'sync',
+      field: 'fit',
+      required: true,
+      and: [{ field: 'fitAsync', required: false }],
+      label: { zh: '同步能力，可选异步入口', en: 'Synchronous, optional async entry' },
+    },
+    {
+      value: 'async',
+      field: 'fitAsync',
+      required: true,
+      and: [{ field: 'fit', required: false }],
+      label: { zh: '异步能力，可选同步入口', en: 'Asynchronous, optional sync entry' },
+    },
+  ],
+  '@retikz/data#AnyRegressionImplementation': [
+    {
+      value: 'sync',
+      field: 'fit',
+      required: true,
+      and: [{ field: 'fitAsync', required: false }],
+      label: { zh: '同步能力，可选异步入口', en: 'Synchronous, optional async entry' },
+    },
+    {
+      value: 'async',
+      field: 'fitAsync',
+      required: true,
+      and: [{ field: 'fit', required: false }],
+      label: { zh: '异步能力，可选同步入口', en: 'Asynchronous, optional sync entry' },
+    },
+  ],
   '@retikz/data#DataTransformDependency': [
     { value: 'reducer', field: 'type', type: "'reducer'", label: { zh: '归约依赖', en: 'Reducer' } },
     { value: 'selector', field: 'type', type: "'selector'", label: { zh: '行选择依赖', en: 'Selector' } },
@@ -117,68 +184,6 @@ export const apiReferenceBranchLabels: Readonly<
   '@retikz/data#IRDataDensityBandwidth': [
     { value: 'silverman', field: 'kind', type: '"silverman"', label: { zh: '自动带宽', en: 'Silverman bandwidth' } },
     { value: 'value', field: 'kind', type: '"value"', label: { zh: '显式带宽', en: 'Explicit bandwidth' } },
-  ],
-  '@retikz/runtime#RuntimeCandidateView': [
-    {
-      value: 'initial',
-      field: 'phase',
-      type: 'typeof RuntimeComputationPhase.Initial',
-      label: { zh: '初始化', en: 'Initial' },
-    },
-    {
-      value: 'update',
-      field: 'phase',
-      type: 'typeof RuntimeComputationPhase.Update',
-      label: { zh: '更新', en: 'Update' },
-    },
-  ],
-  '@retikz/runtime#RuntimeParticipantCandidateView': [
-    {
-      value: 'initial',
-      field: 'phase',
-      type: 'typeof RuntimeComputationPhase.Initial',
-      label: { zh: '初始化', en: 'Initial' },
-    },
-    {
-      value: 'update',
-      field: 'phase',
-      type: 'typeof RuntimeComputationPhase.Update',
-      label: { zh: '更新', en: 'Update' },
-    },
-  ],
-  '@retikz/runtime#RuntimeCommitEvent': [
-    {
-      value: 'initial',
-      field: 'phase',
-      type: 'typeof RuntimeComputationPhase.Initial',
-      label: { zh: '初始提交', en: 'Initial commit' },
-    },
-    {
-      value: 'update',
-      field: 'phase',
-      type: 'typeof RuntimeComputationPhase.Update',
-      label: { zh: '更新提交', en: 'Update commit' },
-    },
-  ],
-  '@retikz/runtime#RuntimeUpdateOutcome': [
-    {
-      value: 'incremental',
-      field: 'kind',
-      type: 'typeof RuntimeComputationKind.Incremental',
-      label: { zh: '增量结果', en: 'Incremental result' },
-    },
-    {
-      value: 'bailout',
-      field: 'kind',
-      type: 'typeof RuntimeComputationKind.Bailout',
-      label: { zh: '复用结果', en: 'Reuse result' },
-    },
-    {
-      value: 'fallback',
-      field: 'kind',
-      type: 'typeof RuntimeComputationKind.Fallback',
-      label: { zh: '回退全量', en: 'Full fallback' },
-    },
   ],
   '@retikz/data#IRDataFieldDefinition': [
     { value: 'categorical', field: 'type', type: '"categorical"', label: { zh: '离散类别', en: 'Categorical' } },

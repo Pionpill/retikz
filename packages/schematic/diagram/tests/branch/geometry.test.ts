@@ -1,6 +1,5 @@
 import type { IRChild } from '@retikz/core';
 import { resolveCoreProviderDependencies } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { expect, it } from 'vitest';
 
 import type { BranchDiagramDefinitionOptions, BranchLayoutOutput } from '../../src/branch';
@@ -11,10 +10,11 @@ import {
   defineBranchLayout,
   lanesBranchLayoutDefinition,
 } from '../../src/branch';
+import { compileTestResult } from '../helpers/compilation';
 import { sceneNodes } from '../helpers/scene-geometry';
 
 const compile = (source: Record<string, unknown>, options: BranchDiagramDefinitionOptions = {}) =>
-  compileToScene(
+  compileTestResult(
     {
       version: 1,
       type: 'scene',
@@ -157,7 +157,7 @@ it('支持独立节点并保持本地命名空间独立', () => {
     nodes: [{ id: 'only' }],
     branches: [{ id: 'only', nodes: ['only'] }],
   });
-  const result = compileToScene(
+  const result = compileTestResult(
     { version: 1, type: 'scene', children: [child, child] },
     resolveCoreProviderDependencies({ contributions: [createBranchDiagramProviderContribution()] }),
   );

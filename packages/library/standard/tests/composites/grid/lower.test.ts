@@ -1,8 +1,8 @@
 import type { GroupPrimitive, IRPath, IRScope, ScenePrimitive } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { createGrid, gridDefinition, lowerGrid } from '../../../src/presentation';
+import { compileTestResult } from '../../helpers/compilation';
 import { fullScopeProps } from '../presentation/scope-props';
 
 const findGridGroup = (primitives: ReadonlyArray<ScenePrimitive>): GroupPrimitive | undefined => {
@@ -308,7 +308,7 @@ describe('gridDefinition', () => {
 
   it('通过注册的 Grid 定义编译笛卡尔中心', () => {
     const warnings: Array<string> = [];
-    const scene = compileToScene(
+    const scene = compileTestResult(
       {
         type: 'scene',
         version: 1,
@@ -324,7 +324,7 @@ describe('gridDefinition', () => {
 
   it('解析 Core 中的递归 PolarPosition 中心引用', () => {
     const warnings: Array<string> = [];
-    const scene = compileToScene(
+    const scene = compileTestResult(
       {
         type: 'scene',
         version: 1,
@@ -350,7 +350,7 @@ describe('gridDefinition', () => {
 
   it('保留未解析的 PolarPosition 中心参考的 Core 诊断', () => {
     const warnings: Array<string> = [];
-    compileToScene(
+    compileTestResult(
       {
         type: 'scene',
         version: 1,
@@ -369,7 +369,7 @@ describe('gridDefinition', () => {
 
   it('保留直接 Grid IR 的 Core 诊断，而无需其定义', () => {
     const warnings: Array<string> = [];
-    compileToScene(
+    compileTestResult(
       {
         type: 'scene',
         version: 1,

@@ -1,0 +1,597 @@
+---
+title: 折线图
+description: 以开放路径连接序列观测，支持多系列、可选观测点、曲线、阶梯与缺值连接。
+---
+
+折线图把一个指标沿序列的变化连接起来。路径是主体，点是可选的观测标记；它不执行回归，也不会补出缺失数据。二维观测的行进轨迹可使用 [连接散点图](/viz/chart/points/connected-scatter)。
+
+## 接入方式
+
+完成 [安装与首次渲染](/viz/chart/get-start) 后，从各 Chart 包的 `/line` 子入口导入。以下四种方式使用同一数据，默认只画线，线宽为 2。
+
+<ComponentPreview
+  files={['line-minimal', 'line-minimal.preview.tsx', 'line-basic.data.ts']}
+  defaultSourceFile="line-minimal.preview.tsx"
+  controls={{ name: 'line-minimal' }}
+  mode="showcase"
+  size="xl"
+  hideCode
+  responsive
+/>
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+`LineChart` 的专属子组件如下。映射是基础入口，属性和追加图元按需声明。
+
+```text
+LineChart
+├── LineEncodings
+├── LineProperties
+└── LineMark
+```
+
+```tsx
+import { LineChart, LineEncodings } from '@retikz/chart-react/line';
+import { lineData } from './line-basic.data';
+
+export const Example = () => (
+  <LineChart rows={lineData} layout={{ width: 640, height: 320 }}>
+    <LineEncodings x="x" y="y" series="series" />
+  </LineChart>
+);
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { resolveCoreProviderDependencies } from '@retikz/core';
+import { LineChartSchema, createLineChartProviderContribution } from '@retikz/chart/line';
+import { createPlotProviderContribution } from '@retikz/plot';
+import { pathClipProvider } from '@retikz/extension';
+import { lineData } from './line-basic.data';
+import { Layout } from '@retikz/react';
+
+const chart = LineChartSchema.parse({
+  namespace: 'chart',
+  type: 'line',
+  data: { reference: 'chart.data' },
+  layout: { width: 640, height: 320 },
+  recipe: { chartType: 'line', encodings: { x: 'x', y: 'y', series: 'series' } },
+});
+const ir: IRScene = { type: 'scene', version: 1, children: [chart] };
+const definitions = resolveCoreProviderDependencies({
+  contributions: [
+    createLineChartProviderContribution(),
+    createPlotProviderContribution({ 'chart.data': lineData }),
+    { roots: [pathClipProvider.key], providers: [pathClipProvider] },
+  ],
+});
+
+export const Example = () => <Layout ir={ir} extensions={definitions} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import { renderChart } from '@retikz/chart-vanilla';
+import { lineChart, lineChartInputEmbedAdapter } from '@retikz/chart-vanilla/line';
+import { lineData } from './line-basic.data';
+
+const chart = lineChart({
+  data: lineData,
+  layout: { width: 640, height: 320 },
+  encodings: { x: 'x', y: 'y', series: 'series' },
+});
+export const svg = renderChart(chart, { adapters: [lineChartInputEmbedAdapter] }).svg;
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { resolveCoreProviderDependencies } from '@retikz/core';
+import { LineChartSchema, createLineChartProviderContribution } from '@retikz/chart/line';
+import { createPlotProviderContribution } from '@retikz/plot';
+import { pathClipProvider } from '@retikz/extension';
+import { lineData } from './line-basic.data';
+import { compileToScene } from '@retikz/reconciler';
+import { renderToSvgString } from '@retikz/vanilla';
+
+const chart = LineChartSchema.parse({
+  namespace: 'chart',
+  type: 'line',
+  data: { reference: 'chart.data' },
+  layout: { width: 640, height: 320 },
+  recipe: { chartType: 'line', encodings: { x: 'x', y: 'y', series: 'series' } },
+});
+const ir: IRScene = { type: 'scene', version: 1, children: [chart] };
+const definitions = resolveCoreProviderDependencies({
+  contributions: [
+    createLineChartProviderContribution(),
+    createPlotProviderContribution({ 'chart.data': lineData }),
+    { roots: [pathClipProvider.key], providers: [pathClipProvider] },
+  ],
+});
+
+export const svg = renderToSvgString(compileToScene(ir, definitions).scene);
+```
+
+</DocTab>
+</DocTabs>
+
+## 基础用法
+
+### 折线映射
+
+映射决定观测位置、系列身份和连接顺序。系列身份独立于颜色；指定相同颜色不会合并不同系列。
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+<LineEncodings x="x" y="y" series="series" />
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+encodings: { x: 'x', y: 'y', series: 'series' }
+```
+
+</DocTab>
+<DocTab value="direct-ir" label="IR">
+
+```json
+{ "recipe": { "encodings": { "x": "x", "y": "y", "series": "series" } } }
+```
+
+</DocTab>
+</DocTabs>
+
+| 属性名          | 类型                 | 说明                                   |
+| --------------- | -------------------- | -------------------------------------- |
+| `x`、`y`        | 字段名、位置映射对象 | 必填；支持直接字段、单值聚合与显式尺度 |
+| `series`        | 字段名、直接映射对象 | 分开连接各系列，默认分配系列颜色       |
+| `order`         | 字段名、直接映射对象 | 稳定升序；省略时保留数据行顺序         |
+| `row`、`column` | 字段名、分面维度     | 按行列划分面板                         |
+| `facet`         | `IRPlotFacetOptions` | 分面配置，须配合 row 或 column         |
+
+数据记录 A、B 两组的六次观测；x 是采样位置，y 是指标值。B 的第三次观测缺失。
+
+- `x`、`y`：分别绑定同名字段，确定样本位置。
+- `series`：绑定 series，将 A、B 分开连接。
+- `order`：默认不设置，保留输入顺序。
+
+本例默认保留原始输入顺序。打开“打乱输入顺序”会打乱 A 的前三条记录，连线随之出现折返；关闭后恢复。关闭系列分组会把两组数据视为同一序列。
+
+<ComponentPreview
+  mode="showcase"
+  size="xl"
+  responsive
+  files={['line-mapping', 'line-mapping.preview.tsx', 'line-basic.data.ts']}
+  controls={{ name: 'line-mapping' }}
+  controlPanelDefaultOpen={false}
+  hideCode
+  defaultSourceFile="line-mapping.preview.tsx"
+/>
+
+### 折线属性
+
+属性控制连接形态和观测点外观，不改变字段绑定。平滑、阶梯和带点展示均属于折线图的配置。
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+<LineProperties point={false} path={{ curve: 'linear', strokeWidth: 2, connectNulls: false }} />
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+properties: { point: false, path: { curve: 'linear', strokeWidth: 2, connectNulls: false } }
+```
+
+</DocTab>
+<DocTab value="direct-ir" label="IR">
+
+```json
+{
+  "recipe": {
+    "properties": { "point": false, "path": { "curve": "linear", "strokeWidth": 2, "connectNulls": false } }
+  }
+}
+```
+
+</DocTab>
+</DocTabs>
+
+| 属性名              | 类型                               | 说明                                                                        |
+| ------------------- | ---------------------------------- | --------------------------------------------------------------------------- |
+| `point`             | `boolean`、`IRLinePointProperties` | 默认 false；true 或样式对象显示点，对象可设置半径、形状、填充、描边及透明度 |
+| `path`              | `IRLinePathProperties`             | 路径外观与连接方式                                                          |
+| `path.curve`        | 曲线名、曲线配置                   | 默认 linear，支持 Plot 阶梯与平滑曲线                                       |
+| `path.strokeWidth`  | `number`                           | 默认 2，可显式设为 0                                                        |
+| `path.connectNulls` | `boolean`、桥接配置                | 默认 false，跨缺值连接但不补充观测值                                        |
+
+`point: true` 使用默认样式，`point: { size: 4, fill: '#fff' }` 显示点并设置样式；空对象 `{}` 也会显示点。
+
+沿用两组采样数据，对比直线、阶梯和平滑连接。
+
+- `point`：默认 false；打开后使用 `{ size: 4 }`，通过“点半径”调节样本标记大小。
+- `path.curve`：默认 linear，切换连接方式时样本位置不变。
+- `path.strokeWidth`：默认 2，调节线宽观察路径辨识度。
+
+下拉框列出 Path 的全部 10 种连接方式。B 样条通常不穿过所有中间样本；X / Y 单调插值适合对应轴递增的数据。打开观测点后比较路径与样本的位置关系。
+
+<ComponentPreview
+  mode="showcase"
+  size="xl"
+  responsive
+  files={['line-basic', 'line-basic.preview.tsx', 'line-basic.data.ts']}
+  controls={{ name: 'line-basic' }}
+  controlPanelDefaultOpen={false}
+  hideCode
+  defaultSourceFile="line-basic.preview.tsx"
+/>
+
+### 折线图元
+
+图元可在内建折线之外追加线／点组合，也可以替换内建组合。它继承配方的映射与属性，只需声明差异。
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+<LineMark properties={{ point: false, path: { curve: 'step', stroke: '#a855f7' } }} />
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+marks: [lineMark({ properties: { point: false, path: { curve: 'step', stroke: '#a855f7' } } })];
+```
+
+</DocTab>
+<DocTab value="direct-ir" label="IR">
+
+```json
+{
+  "recipe": {
+    "marks": [{ "kind": "line", "properties": { "point": false, "path": { "curve": "step", "stroke": "#a855f7" } } }]
+  }
+}
+```
+
+</DocTab>
+</DocTabs>
+
+| 属性名       | 类型             | 说明                                    |
+| ------------ | ---------------- | --------------------------------------- |
+| `override`   | `boolean`        | 默认追加；true 替换同 kind 的完整内建组 |
+| `encodings`  | 直接字段覆盖对象 | 可覆盖 x、y、order，不改变系列或分面    |
+| `properties` | 稀疏成员属性     | 覆盖 path、point，其余继承配方          |
+
+示例在 A、B 原始直线上追加紫色阶梯线，使用相同数据与位置映射。
+
+- `properties.path.curve`：设为 step，与内建直线对照。
+- `properties.path.stroke`：设为紫色，区分追加组合与内建组合。
+- `override`：默认 false，保留两组；打开后只保留阶梯组合。
+
+打开“显示追加观测点”，再切换替换开关。替换以完整语义组为单位，不是仅替换一条 Plot Path。
+
+<ComponentPreview
+  mode="showcase"
+  size="xl"
+  responsive
+  files={['line-mark', 'line-mark.preview.tsx', 'line-basic.data.ts']}
+  controls={{ name: 'line-mark' }}
+  controlPanelDefaultOpen={false}
+  hideCode
+  defaultSourceFile="line-mark.preview.tsx"
+/>
+
+## 扩展用法
+
+以下分组均位于 IR 的 recipe 中，属性名相对于各自分组。
+
+### 标识缺失观测
+
+采集中断时，可以保留缺口或连接前后样本。桥接不是插值，不代表缺失位置的实测值。
+
+| 分组         | 属性名              | 类型                | 说明                        |
+| ------------ | ------------------- | ------------------- | --------------------------- |
+| `encodings`  | `series`            | 字段名、映射对象    | 在各系列内部处理缺口        |
+| `properties` | `path.connectNulls` | `boolean`、桥接配置 | true 使用默认虚线桥接       |
+|              | `point`             | `boolean`           | 本例设为 true，标出实际样本 |
+
+B 在 x=3 处没有观测。打开“连接缺口”，比较 x=2 与 x=4 之间的路径：出现虚线，但 x=3 处仍没有点。
+
+<ComponentPreview
+  mode="showcase"
+  size="xl"
+  responsive
+  files={['line-gaps', 'line-gaps.preview.tsx', 'line-basic.data.ts']}
+  controls={{ name: 'line-gaps' }}
+  controlPanelDefaultOpen={false}
+  hideCode
+  defaultSourceFile="line-gaps.preview.tsx"
+/>
+
+### 分面比较系列
+
+将重叠的系列拆成独立面板。分面改变分组和布局，不改变样本值。
+
+| 分组        | 属性名                                     | 类型             | 说明                 |
+| ----------- | ------------------------------------------ | ---------------- | -------------------- |
+| `encodings` | `column` / `row`                           | 字段名、分面维度 | 按 series 分列或分行 |
+|             | `series`                                   | 字段名、映射对象 | 保留系列身份与颜色   |
+|             | `facet.header.column` / `facet.header.row` | `boolean`        | 控制分面标题         |
+
+宽屏左右、窄屏上下分别展示 A 和 B；窄屏改用 row 分面以保留横轴空间。关闭“按系列分面”回到同一面板，比较叠加与分面的阅读效果；分面开启时可切换标题。
+
+<ComponentPreview
+  mode="showcase"
+  size="xl"
+  responsive
+  files={['line-facet', 'line-facet.preview.tsx', 'line-basic.data.ts']}
+  controls={{ name: 'line-facet' }}
+  controlPanelDefaultOpen={false}
+  hideCode
+  defaultSourceFile="line-facet.preview.tsx"
+/>
+
+## 错误与限制
+
+- 输入顺序、排序字段和轴 domain 是不同的配置，不会相互推断。
+- 不补齐整行、不插值观测值、不自动聚合重复位置；缺值桥接只改变路径。
+- 路径保持开放，不支持面积填充或闭合；Slope、Bump 和面积系列不属于 Line。
+- 同一 React slot 不能同时使用根 recipe 与子声明；错误的字段或尺度引用由对应 owner 报错。
+
+## 实现原理
+
+<ComponentAlert type="tip" title="选读" description="只需要使用图表时可以跳过本节。" />
+
+### 图形构建
+
+| 分组 | `@retikz/chart`       | `@retikz/plot`                        | 描述                              |
+| ---- | --------------------- | ------------------------------------- | --------------------------------- |
+| 映射 | `x`、`y`              | `encodings.position`                  | 绑定 Path 与可选 Point 的同源位置 |
+|      | `series`、`order`     | `encodings.series`、`encodings.order` | 在系列内按指定顺序连接路径        |
+| 属性 | `path`                | Path 的 `properties`                  | 路径恒为开放路径，默认线宽 2      |
+|      | `point`               | Point 的 `properties`                 | 开启 point 时加入观测点           |
+| 图元 | `LineChartMarkSchema` | `PathMarkSchema`、`PointMarkSchema`   | 一组 Line 解析为路径与可选点      |
+
+Line 配方把位置、顺序、系列和常量属性映射到 Plot Path；启用 point 时，再加入同源 Point。Plot 在各分面和系列内连接数据，负责投影、曲线与缺口几何，最后沿 Core 主链生成 Scene。Chart 不另建排序或曲线算法。
+
+<SourceLinks
+  sources={[
+    { path: 'packages/viz/chart/src/line/line/mark.ts', label: 'Line 图元组合' },
+    { path: 'packages/viz/chart/src/line/line/recipe.ts', label: '字段、尺度与分面接线' },
+  ]}
+/>
+
+## API 参考
+
+从 `@retikz/chart/line` 导出。React 的 LineEncodings / LineProperties / LineMark 对应 Vanilla 的 encodings / properties / marks，以及 IR 的 recipe 同名字段。
+
+### 折线配置
+
+#### [LineChartSchema](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/line/schema.ts) / [IRLineChart](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/line/schema.ts)
+
+<DocTabs defaultValue="schema">
+<DocTab value="schema" label="Schema">
+
+<ZodSchema
+  name="LineChartSchema"
+  shallow
+  descriptions={{
+    namespace: '固定为 chart',
+    type: '固定为 line',
+    id: '图表标识',
+    background: '图表背景',
+    presentation: '标题、副标题、注释与来源',
+    defaultChart: '图表默认片段',
+    dataExecution: '数据执行配置',
+    data: '数据集引用与字段模型',
+    layout: '布局尺寸与间距',
+    coordinate: '坐标系选择',
+    recipe: '折线配方',
+    plotExtension: '显式 Plot 扩展',
+  }}
+/>
+
+</DocTab>
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRLineChart = ZodInfer<typeof LineChartSchema>;
+```
+
+</DocTab>
+</DocTabs>
+
+#### [LineChartRecipeSchema](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/line/schema.ts)
+
+<ZodSchema
+  name="LineChartRecipeSchema"
+  shallow
+  descriptions={{
+    chartType: '固定为 line',
+    encodings: '字段映射',
+    properties: '常量属性',
+    guides: '坐标轴、网格与图例开关',
+    marks: '追加或替换的 Line 图元',
+  }}
+/>
+
+### 折线映射
+
+#### [LineChartEncodingsSchema](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/line/encoding-schema.ts) / [IRLineChartEncodings](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/line/schema.ts)
+
+<DocTabs defaultValue="schema">
+<DocTab value="schema" label="Schema">
+
+<ZodSchema
+  name="LineChartEncodingsSchema"
+  shallow
+  descriptions={{
+    x: '必填 x 位置字段或聚合映射，可指定尺度',
+    y: '必填 y 位置字段或聚合映射，可指定尺度',
+    order: '可选直接排序字段；省略保留行顺序',
+    series: '系列身份字段与可选 ordinal 尺度',
+    row: '行分面维度',
+    column: '列分面维度',
+    facet: '分面配置，需要 row 或 column',
+  }}
+/>
+
+</DocTab>
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRLineChartEncodings = ZodInfer<typeof LineChartEncodingsSchema>;
+```
+
+</DocTab>
+</DocTabs>
+
+### 折线属性
+
+#### [LineChartPropertiesSchema](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/line/schema.ts) / [IRLineChartProperties](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/line/schema.ts)
+
+<DocTabs defaultValue="schema">
+<DocTab value="schema" label="Schema">
+
+<ZodSchema
+  name="LineChartPropertiesSchema"
+  shallow
+  descriptions={{
+    path: '路径常量；线宽默认 2',
+    point: '默认 false 隐藏；true 或样式对象开启，对象设置点外观',
+  }}
+/>
+
+</DocTab>
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRLineChartProperties = ZodInfer<typeof LineChartPropertiesSchema>;
+```
+
+</DocTab>
+</DocTabs>
+
+#### [LinePathPropertiesSchema](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/line/schema.ts) / [IRLinePathProperties](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/line/schema.ts)
+
+<DocTabs defaultValue="schema">
+<DocTab value="schema" label="Schema">
+
+<ZodSchema
+  name="LinePathPropertiesSchema"
+  shallow
+  descriptions={{
+    curve: '连接曲线，默认 linear',
+    stroke: '固定描边颜色，覆盖系列颜色',
+    strokeWidth: '线宽，默认 2',
+    opacity: '整体或分通道透明度',
+    lineCap: '端点样式',
+    lineJoin: '转角样式',
+    dashPattern: '虚线节奏',
+    shadow: '阴影',
+    blendMode: '混合模式',
+    connectNulls: '缺值桥接开关或桥接样式，默认 false',
+  }}
+/>
+
+</DocTab>
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRLinePathProperties = ZodInfer<typeof LinePathPropertiesSchema>;
+```
+
+</DocTab>
+</DocTabs>
+
+#### [LinePointPropertiesSchema](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/line/schema.ts) / [IRLinePointProperties](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/line/schema.ts)
+
+<DocTabs defaultValue="schema">
+<DocTab value="schema" label="Schema">
+
+<ZodSchema
+  name="LinePointPropertiesSchema"
+  shallow
+  descriptions={{
+    size: '点半径',
+    shape: '点形状',
+    fill: '固定填充，覆盖系列颜色',
+    stroke: '描边',
+    strokeWidth: '描边宽度',
+    opacity: '透明度',
+  }}
+/>
+
+</DocTab>
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRLinePointProperties = ZodInfer<typeof LinePointPropertiesSchema>;
+```
+
+</DocTab>
+</DocTabs>
+
+### 折线图元
+
+#### [LineChartMarkSchema](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/line/schema.ts) / [IRLineMark](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/line/schema.ts)
+
+<DocTabs defaultValue="schema">
+<DocTab value="schema" label="Schema">
+
+<ZodSchema
+  name="LineChartMarkSchema"
+  shallow
+  descriptions={{
+    kind: '固定为 line',
+    override: 'true 替换同 kind 的完整内建组，否则追加',
+    encodings: '直接覆盖 x/y/order，不改变系列或分面',
+    properties: '稀疏成员属性，逐字段继承；false 和 0 保留',
+  }}
+/>
+
+</DocTab>
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRLineMark = ZodInfer<typeof LineChartMarkSchema>;
+```
+
+</DocTab>
+</DocTabs>
+
+#### [LineMarkEncodingsSchema](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/line/schema.ts)
+
+<ZodSchema
+  name="LineMarkEncodingsSchema"
+  shallow
+  descriptions={{ x: '可选直接 x 字段覆盖', y: '可选直接 y 字段覆盖', order: '可选直接排序字段覆盖' }}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '线图', description: '选择图表与区分适用场景', url: '/viz/chart/lines' },
+    { title: '通用结构', description: '数据、主题与布局', url: '/viz/chart/model/general-structure' },
+    { title: '连接散点图', description: '二维观测的变化轨迹', url: '/viz/chart/points/connected-scatter' },
+  ]}
+/>

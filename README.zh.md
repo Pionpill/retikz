@@ -1,4 +1,4 @@
-# retikz
+﻿# retikz
 
 [English](./README.md) | 简体中文
 
@@ -132,7 +132,7 @@ retikz 0.3 聚焦通用图形原语，并补齐了多后端渲染、动画与交
 ```text
 React JSX / plain JS objects / future DSL / AI JSON
   -> retikz IR
-  -> compileToScene()
+  -> SceneReconciler.mount / replace
   -> Scene primitives
   -> @retikz/render: SVG / Canvas 2D（react / vanilla 适配挂载）
 ```

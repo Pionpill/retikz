@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { IRScene } from '../../../../../core/src/schemas';
-import { compileToScene } from '../../../../src/compile';
+import { compileTestResult } from '../../../helpers/compilation';
 import { findPathPrim } from './helpers';
 
 describe('编译路径：填写/fillRule', () => {
@@ -19,7 +19,7 @@ describe('编译路径：填写/fillRule', () => {
         },
       ],
     };
-    const path = findPathPrim(compileToScene(ir).scene.primitives);
+    const path = findPathPrim(compileTestResult(ir).scene.primitives);
 
     expect(path.fill).toBe('none');
     expect(path.fillRule).toBeUndefined();
@@ -42,7 +42,7 @@ describe('编译路径：填写/fillRule', () => {
         },
       ],
     };
-    const path = findPathPrim(compileToScene(ir).scene.primitives);
+    const path = findPathPrim(compileTestResult(ir).scene.primitives);
 
     expect(path.fill).toBe('#3b82f6');
   });
@@ -62,7 +62,7 @@ describe('编译路径：填写/fillRule', () => {
         },
       ],
     };
-    const path = findPathPrim(compileToScene(ir).scene.primitives);
+    const path = findPathPrim(compileTestResult(ir).scene.primitives);
 
     expect(path.fillRule).toBe('evenodd');
   });

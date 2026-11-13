@@ -1,6 +1,5 @@
 import { resolveCoreProviderDependencies } from '@retikz/core';
 import type { CompileWarning } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { createFlowDiagramProviderContribution, FlowDiagramSchema } from '../../src/flow';
@@ -10,6 +9,7 @@ import { routeFlowRelations } from '../../src/flow';
 import { executeFlowLayout } from '../../src/flow/pipeline';
 import { evaluateFlowOrthogonalConflicts } from '../../src/flow/providers';
 import { resolveEffectiveFlowLayout } from '../../src/flow/resolve';
+import { compileTestResult } from '../helpers/compilation';
 
 const input = (): InputFlowLayoutComputation => ({
   layout: { direction: 'right', nodeGap: 48, rankGap: 48, routing: { kind: 'orthogonal', cornerRadius: 8 } },
@@ -287,7 +287,7 @@ it.each([false, true])('保留可绘制的阻塞路线，并在 aligned=%s 时�
     relations: [{ source: 'a', target: 'b', routing: { kind: 'orthogonal', cornerRadius: 8 } }],
   });
   const warnings: Array<CompileWarning> = [];
-  const result = compileToScene(
+  const result = compileTestResult(
     { type: 'scene', version: 1, children: [source] },
     {
       ...resolveCoreProviderDependencies({

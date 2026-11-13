@@ -27,17 +27,17 @@ Kernel 保留基础绘图语义，Sugar 在构建 IR 时展开为这些基础表
 
 Kernel 当前包含九个同步发版的包。按使用任务选择入口；依赖由包管理器安装，不需要手动安装整组。
 
-| 包                   | 职责                      |
-| -------------------- | ------------------------- |
-| `@retikz/foundation` | 跨包原子契约与基础 schema |
-| `@retikz/math`       | 零依赖几何与数值计算      |
-| `@retikz/runtime`    | 增量执行与事务            |
-| `@retikz/core`       | 共享 IR、Scene 与编译     |
-| `@retikz/inspect`    | 诊断观察与辅助图形        |
-| `@retikz/render`     | SVG / Canvas 后端输出     |
-| `@retikz/vanilla`    | 框架无关输入与宿主接入    |
-| `@retikz/react`      | React 组件与生命周期接线  |
-| `@retikz/tex`        | 可选 LaTeX 公式接入       |
+| 包                   | 职责                           |
+| -------------------- | ------------------------------ |
+| `@retikz/foundation` | 跨包原子契约与基础 schema      |
+| `@retikz/math`       | 零依赖几何与数值计算           |
+| `@retikz/reconciler` | 完整与增量编译、缓存及输出事务 |
+| `@retikz/core`       | 共享 IR、Scene 与编译          |
+| `@retikz/inspect`    | 诊断观察与辅助图形             |
+| `@retikz/render`     | SVG / Canvas 后端输出          |
+| `@retikz/vanilla`    | 框架无关输入与宿主接入         |
+| `@retikz/react`      | React 组件与生命周期接线       |
+| `@retikz/tex`        | 可选 LaTeX 公式接入            |
 
 浏览器应用通常从 React 或 Vanilla 开始；查看各包的独立文档再决定是否直接依赖其他包。
 

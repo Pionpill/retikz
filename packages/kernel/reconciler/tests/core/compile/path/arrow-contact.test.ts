@@ -7,7 +7,7 @@ import {
   curveSegmentOfOccurrence,
 } from '../../../../../core/src/compile/path/stroke/geometry';
 import { applyTransformChain } from '../../../../../core/src/compile/shared';
-import { compileToScene } from '../../../../src/compile';
+import { compileTestResult } from '../../../helpers/compilation';
 import { flattenPrims } from '../../../helpers/flatten';
 
 describe('端点箭头触点', () => {
@@ -46,7 +46,7 @@ describe('端点箭头触点', () => {
         },
       ],
     };
-    const path = flattenPrims(compileToScene(ir, { padding: 0 }).scene.primitives).find(
+    const path = flattenPrims(compileTestResult(ir, { padding: 0 }).scene.primitives).find(
       (primitive): primitive is PathPrimitive => primitive.type === 'path' && primitive.arrowEnd !== undefined,
     );
     if (path === undefined || path.arrowEnd === undefined) throw new Error('Expected endpoint arrow');
@@ -111,7 +111,7 @@ describe('保留端点几何形状', () => {
         },
       ],
     };
-    const path = flattenPrims(compileToScene(scene, { padding: 0 }).scene.primitives).find(
+    const path = flattenPrims(compileTestResult(scene, { padding: 0 }).scene.primitives).find(
       (p): p is PathPrimitive => p.type === 'path',
     );
     if (!path?.arrowEnd) throw new Error('Missing arrow');
@@ -138,7 +138,7 @@ describe('保留端点几何形状', () => {
         },
       ],
     };
-    const paths = flattenPrims(compileToScene(scene).scene.primitives).filter(
+    const paths = flattenPrims(compileTestResult(scene).scene.primitives).filter(
       (p): p is PathPrimitive => p.type === 'path',
     );
     expect(paths.every(path => path.arrowEnd === undefined)).toBe(true);
@@ -169,7 +169,7 @@ describe('保留端点几何形状', () => {
           },
         ],
       };
-      const paths = flattenPrims(compileToScene(scene, { padding: 0 }).scene.primitives).filter(
+      const paths = flattenPrims(compileTestResult(scene, { padding: 0 }).scene.primitives).filter(
         (p): p is PathPrimitive => p.type === 'path',
       );
       for (const start of [true, false]) {
@@ -219,7 +219,7 @@ describe('保留端点几何形状', () => {
         },
       ],
     };
-    const path = flattenPrims(compileToScene(scene, { padding: 0 }).scene.primitives).find(
+    const path = flattenPrims(compileTestResult(scene, { padding: 0 }).scene.primitives).find(
       (p): p is PathPrimitive => p.type === 'path',
     );
     if (!path?.arrowEnd) throw new Error('Missing short-path arrow');

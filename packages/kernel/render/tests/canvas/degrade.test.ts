@@ -74,16 +74,19 @@ describe('canvas 降级与边界规格', () => {
     const context = createSpyCanvasContext();
     const scene: Scene = {
       layout: { x: 0, y: 0, width: 40, height: 20 },
-      resources: [
-        {
-          kind: 'paint',
-          id: 'paint-1',
-          spec: {
-            kind: 'image',
-            href: 'https://example.com/x.png',
+      resources: {
+        paints: [
+          {
+            kind: 'paint',
+            id: 'paint-1',
+            spec: {
+              kind: 'image',
+              href: 'https://example.com/x.png',
+            },
           },
-        },
-      ],
+        ],
+        clips: [],
+      },
       primitives: [
         {
           type: 'rect',

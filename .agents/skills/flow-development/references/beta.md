@@ -13,7 +13,7 @@ Beta 流程负责 beta 期 plan TODO 编排。beta 只做修改类工作：重�
 
 发现需要新功能时立即 halt，登记到下个 alpha 窗口，改走 [alpha](alpha.md)。
 
-Beta 优化通常是中型任务；执行前按根规则一次确认 scope、步骤、验证和是否使用一个常规 reviewer。长重构或 scope 不清时先走 `develop-refactor` 写 plan；不在 plan 与代码完成后分别追加询问。
+Beta 优化通常是中型任务；执行前按根规则一次确认 scope、步骤、验证和整体与专项 reviewer 的角色授权，代码范式默认纳入计划、性能按需裁决。长重构或 scope 不清时先走 `develop-refactor` 写 plan；不在 plan 与代码完成后分别追加询问。
 
 ## 阶段
 
@@ -37,13 +37,13 @@ milestone 入口或批量计划需要检查三个能力域；执行已有获批 
 | Data          | `code-audit` + `beta-entry` + `Data`          | data 及其消费边界                             |
 | Visualization | `code-audit` + `beta-entry` + `Visualization` | plot / plot-react / plot-vanilla 及上下游接口 |
 
-默认由主 agent 基于同一 HEAD 审计三个能力域。中型执行计划已授权常规 reviewer 时，只派一个只读 subagent 审计全部三个域，并在修订后复用同一 reviewer；不为能力域分别派 agent。报告保持 ignored，不修改产品文件、roadmap 或暂存区。主 agent 汇总：
+默认由主 agent 基于同一 HEAD 审计三个能力域。中型执行计划已授权常规 reviewer 时，只派一个只读 subagent 审计全部三个域，修订后由主 agent 自审和验证，不调度 reviewer 复核；不为能力域分别派 agent。报告保持 ignored，不修改产品文件、roadmap 或暂存区。主 agent 汇总：
 
 - 能力矩阵与 `BLOCKING / WARNING / INFO / ESCALATE_ALPHA`。
 - 跨域重复所有权、依赖方向和 public surface 问题。
 - 去重、可执行的 beta TODO 候选及建议顺序。
 
-候选 TODO scope 必须经人工确认后才能进入 Stage 1。`ESCALATE_ALPHA` 不得伪装成 beta cleanup；交人工决定退回 Alpha 或延期。存在修订时按执行计划复用同一 reviewer 检查新快照；达到计划循环上限仍不收敛则停止交人工。
+候选 TODO scope 必须经人工确认后才能进入 Stage 1。`ESCALATE_ALPHA` 不得伪装成 beta cleanup；交人工决定退回 Alpha 或延期。存在修订时由主 agent 自审和验证，不追加 reviewer 复核；仍有阻断或无法裁决则停止交人工。
 
 若本次任务只负责 Stage 0 生成候选 TODO，交付候选后结束；确认 TODO 后的 Stage 1–4 作为新的中型执行计划一次授权。执行既有已确认 TODO 时不重复确认 scope。
 
@@ -61,7 +61,7 @@ beta 允许调整既有契约的 breaking，不允许用 breaking 包装净新�
 
 - 不走 alpha red 的 Spec-First TDD，除非 TODO 本身是 bugfix 或风险足够高；visible / breaking、跨包契约或测试加固 TODO 必须先用 `test-contract` 补行为、不变量、反例与最低测试层。
 - 既有测试可跟随 rename / 类型迁移修改，但不得弱化断言语义。
-- bugfix 必加回归测试；性能优化应有基准或复杂度测试；纯内部搬迁可依赖既有测试。
+- bugfix 必加回归测试；性能优化按 [test-performance](../../test-performance/SKILL.md) 明确预算、对照与授权，复杂度分析不替代耗时收益证据；纯内部搬迁可依赖既有测试。
 - 只跑受影响模块验证，除非跨包契约、CI 复现、发布门禁或用户要求全量。
 
 ## Stage 2 TODO 评估

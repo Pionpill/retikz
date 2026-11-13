@@ -1,11 +1,11 @@
 import type { IRScene } from '@retikz/core';
 import { CompositeBaseSchema, defineComposite, defineTheme, ThemeMode } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal, string } from 'zod';
 
 import { drawScene } from '../../src/canvas';
 import { renderToSvgString } from '../../src/svg';
+import { compileTestResult } from '../helpers/compilation';
 
 /**
  * Tier 2 composite —— renderer 对照（render 零源码改动）
@@ -52,7 +52,7 @@ const academicTheme = defineTheme({
 
 describe('Tier 2 composite —— renderer 对照', () => {
   it('composite IR → Scene → svg 渲染出 rect', () => {
-    const result = compileToScene(ir, { composites: [labeledBox], themeDefinitions: [academicTheme] });
+    const result = compileTestResult(ir, { composites: [labeledBox], themeDefinitions: [academicTheme] });
     const { scene } = result;
     const svg = renderToSvgString(scene, { idPrefix: 'r' });
 
@@ -62,7 +62,7 @@ describe('Tier 2 composite —— renderer 对照', () => {
   });
 
   it('Theme-aware Composite物化后的同一 Scene由SVG与Canvas等价消费', () => {
-    const result = compileToScene(ir, { composites: [labeledBox], themeDefinitions: [academicTheme] });
+    const result = compileTestResult(ir, { composites: [labeledBox], themeDefinitions: [academicTheme] });
     const { scene } = result;
     const calls: Array<string> = [];
     const fillStyles: Array<string> = [];

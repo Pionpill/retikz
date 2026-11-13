@@ -1,7 +1,6 @@
 import type { IRPlot } from '@retikz/plot';
 import { lowerPlots, PlotSchema } from '@retikz/plot';
 import { normalizePlot } from '@retikz/plot-vanilla';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { buildPlotIR } from '../../../src/adapter';
@@ -9,9 +8,10 @@ import { PlotFacet, PlotScaffold, PlotTrack } from '../../../src/components/comp
 import { PlotAxis } from '../../../src/components/guides';
 import { IntervalMark, PathMark, PointMark } from '../../../src/components/marks';
 import { PlotScale } from '../../../src/components/scales';
+import { compileTestResult } from '../../helpers/compilation';
 
 const compilePlot = (spec: IRPlot, datasets: Parameters<typeof lowerPlots>[0]) =>
-  compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots(datasets) });
+  compileTestResult({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots(datasets) });
 
 describe('React 与 framework-neutral authoring parity', () => {
   it('图元目标端点在 React 与 Vanilla 中等价并完成 Core 编译', () => {

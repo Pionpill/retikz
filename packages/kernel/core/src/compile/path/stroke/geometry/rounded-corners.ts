@@ -1,10 +1,20 @@
-import type { ContourCommand, ContourSegment } from '@retikz/math';
+import type { ContourCommand, LineSegment } from '@retikz/math';
 
 import type { PathCommand } from '../../../../contract';
 import { contourCommands, filletContour } from '../../../../shared/geometry';
 
 /** 单条 emit 命令的来源 step kind（用于判定接缝两侧是否均为 line step） */
 type CommandProvenance = string;
+
+/** 圆角命令区间与原始绘制段参数区间的对应关系 */
+export type StrokeCornerSpan = {
+  /** 原始命令下标 */
+  sourceCommandIndex: number;
+  /** 原始段参数范围 */
+  sourceRange: readonly [number, number];
+  /** 输出命令参数范围 */
+  commandRange: readonly [number, number];
+};
 
 /**
  * ContourCommand → PathCommand（圆角后只可能是 move / line / arc / close 子集）
@@ -66,6 +76,8 @@ type InputRoundedCorners = {
 
 /** 圆角改写后的 command 与其 source step 映射 */
 type RoundedCommandsResult = {
+  /** 与输出命令对齐的参数映射 */
+  spans: Array<Array<StrokeCornerSpan>>;
   /** 应用圆角后的路径命令序列 */
   commands: Array<PathCommand>;
   /** 与输出命令逐项对应的原始步骤索引 */
@@ -75,29 +87,78 @@ type RoundedCommandsResult = {
 const appendRoundedCommands = (
   output: Array<PathCommand>,
   outputStepIndexes: Array<number>,
+  outputSpans: Array<Array<StrokeCornerSpan>>,
   rounded: ReadonlyArray<PathCommand>,
   lineStepIndexes: ReadonlyArray<number>,
+  sourceCommandIndexes: ReadonlyArray<number>,
+  segments: ReadonlyArray<LineSegment>,
   moveStepIndex?: number,
 ): void => {
-  let lineIndex = 0;
+  let lineIndex = -1;
+  let cursor: [number, number] = segments[0].from;
+  const parameter = (index: number, point: [number, number]): number => {
+    const segment = segments[index];
+    const dx = segment.to[0] - segment.from[0];
+    const dy = segment.to[1] - segment.from[1];
+    const squareLength = dx * dx + dy * dy;
+    return squareLength === 0
+      ? 0
+      : Math.max(
+          0,
+          Math.min(1, ((point[0] - segment.from[0]) * dx + (point[1] - segment.from[1]) * dy) / squareLength),
+        );
+  };
+  const lineCommands = rounded.filter(command => command.kind === 'line');
 
   for (const command of rounded) {
     if (command.kind === 'move') {
       output.push(command);
       outputStepIndexes.push(moveStepIndex ?? lineStepIndexes[0]);
+      outputSpans.push([]);
+      cursor = command.to;
       continue;
     }
 
-    const sourceIndex = lineStepIndexes[Math.min(lineIndex, lineStepIndexes.length - 1)];
+    if (command.kind === 'line') lineIndex += 1;
+    const sourceIndex = lineStepIndexes[Math.max(0, lineIndex)];
     output.push(command);
     outputStepIndexes.push(sourceIndex);
-    if (command.kind === 'line' && lineIndex < lineStepIndexes.length - 1) lineIndex += 1;
+    if (command.kind === 'line') {
+      outputSpans.push([
+        {
+          sourceCommandIndex: sourceCommandIndexes[lineIndex],
+          sourceRange: [parameter(lineIndex, cursor), parameter(lineIndex, command.to)],
+          commandRange: [0, 1],
+        },
+      ]);
+      cursor = command.to;
+    } else if (command.kind === 'arc') {
+      const nextIndex = (lineIndex + 1) % segments.length;
+      const radians = (command.endAngle * Math.PI) / 180;
+      const end: [number, number] = [
+        command.center[0] + command.radius * Math.cos(radians),
+        command.center[1] + command.radius * Math.sin(radians),
+      ];
+      outputSpans.push([
+        {
+          sourceCommandIndex: sourceCommandIndexes[lineIndex],
+          sourceRange: [parameter(lineIndex, lineCommands[lineIndex].to), 1],
+          commandRange: [0, 0.5],
+        },
+        {
+          sourceCommandIndex: sourceCommandIndexes[nextIndex],
+          sourceRange: [0, parameter(nextIndex, end)],
+          commandRange: [0.5, 1],
+        },
+      ]);
+      cursor = end;
+    } else outputSpans.push([]);
   }
 };
 
 /** 把 LineRun 的折线顶点转成开放 contour 段序列 */
-const runSegments = (run: LineRun): Array<ContourSegment> => {
-  const segs: Array<ContourSegment> = [];
+const runSegments = (run: LineRun): Array<LineSegment> => {
+  const segs: Array<LineSegment> = [];
   let from = run.start;
 
   for (const to of run.lineEnds) {
@@ -123,6 +184,10 @@ export const applyRoundedCorners = ({
   // 收集合格 run：连续 line-step 的 line 命令。move / 非 line step 命令打断 run。
   const out: Array<PathCommand> = [];
   const outStepIndexes: Array<number> = [];
+  const spans: Array<Array<StrokeCornerSpan>> = [];
+  const originalSpan = (index: number): Array<StrokeCornerSpan> => [
+    { sourceCommandIndex: index, sourceRange: [0, 1], commandRange: [0, 1] },
+  ];
   let i = 0;
 
   while (i < commands.length) {
@@ -131,6 +196,7 @@ export const applyRoundedCorners = ({
     if (!isLineStep) {
       out.push(cmd);
       outStepIndexes.push(sourceStepIndexes[i] ?? -1);
+      spans.push(originalSpan(i));
       i++;
       continue;
     }
@@ -141,6 +207,7 @@ export const applyRoundedCorners = ({
     if (!start) {
       out.push(cmd);
       outStepIndexes.push(sourceStepIndexes[i] ?? -1);
+      spans.push(originalSpan(i));
       i++;
       continue;
     }
@@ -186,11 +253,16 @@ export const applyRoundedCorners = ({
         // contourCommands 闭合版自带 move + close；替换 run 的 move（out 末尾）+ line 命令 + 这条 close
         out.pop(); // 去掉原 move（contourCommands 会重发 move）
         const moveStepIndex = outStepIndexes.pop();
+        spans.pop();
+        const indexes = Array.from({ length: segs.length }, (_, index) => cmdStart + index);
         appendRoundedCommands(
           out,
           outStepIndexes,
+          spans,
           rounded.map(command => contourToPathCommand(command, round)),
-          sourceStepIndexes.slice(cmdStart, cmdEnd),
+          indexes.map(index => sourceStepIndexes[index]),
+          indexes,
+          segs,
           moveStepIndex,
         );
         i = closeIdx + 1; // 跳过被吸收的 close
@@ -206,8 +278,11 @@ export const applyRoundedCorners = ({
       appendRoundedCommands(
         out,
         outStepIndexes,
+        spans,
         rounded.filter(command => command.kind !== 'move').map(command => contourToPathCommand(command, round)),
         sourceStepIndexes.slice(cmdStart, cmdEnd),
+        Array.from({ length: segs.length }, (_, index) => cmdStart + index),
+        segs,
       );
       continue;
     }
@@ -216,8 +291,9 @@ export const applyRoundedCorners = ({
     for (let k = cmdStart; k < cmdEnd; k++) {
       out.push(commands[k]);
       outStepIndexes.push(sourceStepIndexes[k] ?? -1);
+      spans.push(originalSpan(k));
     }
   }
 
-  return { commands: out, sourceStepIndexes: outStepIndexes };
+  return { commands: out, sourceStepIndexes: outStepIndexes, spans };
 };

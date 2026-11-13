@@ -80,13 +80,13 @@ $$
     },
     {
       label: 'Core：选择显式视窗或自动边界',
-      path: 'packages/kernel/reconciler/src/compile/scene/output.ts',
+      path: 'packages/kernel/reconciler/src/compile/execution/scene.ts',
     },
     {
       label: '自动留白与无内容时的范围',
       path: 'packages/kernel/core/src/compile/scene/layout.ts',
     },
-    { label: '默认布局留白', path: 'packages/kernel/reconciler/src/compile/scene/output.ts' },
+    { label: '默认布局留白', path: 'packages/kernel/reconciler/src/compile/execution/scene.ts' },
   ]}
 />
 
@@ -192,7 +192,7 @@ Layout 把主题写入输入场景，供后续处理读取；它不会把主题�
     },
     {
       label: 'Composite 输出继续使用当前作用域',
-      path: 'packages/kernel/reconciler/src/compile/tree/composite/compile.ts',
+      path: 'packages/kernel/reconciler/src/compile/execution/composite/compile.ts',
     },
     {
       label: 'Node 显式样式覆盖继承样式',
@@ -219,6 +219,5 @@ Layout 把主题写入输入场景，供后续处理读取；它不会把主题�
       description: '查看 IR 到 Scene 的完整处理过程',
       url: '/kernel/packages/core/compilation',
     },
-    { title: 'Runtime', description: '深入持续更新、事务与增量执行', url: '/kernel/packages/runtime' },
   ]}
 />

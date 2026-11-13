@@ -76,7 +76,7 @@ export type GroupPrimitiveContent = {
    */
   transforms?: Array<Transform>;
   /**
-   * 裁剪资源 id：指向 `Scene.resources` 里某 ClipResource
+   * 裁剪资源 id：指向 `Scene.resources.clips` 中的裁剪路径
    * @description 有值时该 group 的所有子原语被裁到该资源描述的区域（adapter → `<g clip-path="url(#id)">`）；
    *   裁剪区坐标在该 group 的局部坐标系（与 children 同帧）。缺省 = 不裁
    * @default undefined

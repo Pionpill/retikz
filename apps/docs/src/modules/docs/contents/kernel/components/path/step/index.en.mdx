@@ -96,14 +96,14 @@ const view = mount(document.getElementById('diagram')!, ir);
 </DocTab>
 </DocTabs>
 
-`<Draw>` compiles down to `<Path>` and covers everyday step / fold / curve / arc connections; but `<Path>` additionally exposes element-level capabilities — `rotate` / `scale` / `marks` / `id` / `meta` / `animations` — that `<Draw>` does not. Reach for `<Draw>`'s single-line `way` array for everyday connections, and `<Path>` when you need an explicit Step sequence, multiple `move`s, per-segment mixing of `kind` / label / control points, or any of those Path-only capabilities:
+`<Draw>` compiles down to `<Path>` and covers everyday step / fold / curve / arc connections; but `<Path>` additionally exposes element-level capabilities — `rotate` / `scale` / `id` / `meta` / `animations` — that `<Draw>` does not. Reach for `<Draw>`'s single-line `way` array for everyday connections, and `<Path>` when you need an explicit Step sequence, multiple `move`s, per-segment mixing of `kind` / label / control points, or any of those Path-only capabilities:
 
-|                                                             | `<Draw>`                | `<Path>` + `<Step>`                              |
-| ----------------------------------------------------------- | ----------------------- | ------------------------------------------------ |
-| Form                                                        | Single-line `way` array | Container + child nodes                          |
-| step / curve / fold / arc                                   | Yes                     | Yes                                              |
-| `rotate` / `scale` / `marks` / `id` / `meta` / `animations` | Not exposed             | Yes                                              |
-| Use when                                                    | Common connections      | Explicit Step sequence, element-level capability |
+|                                                   | `<Draw>`                | `<Path>` + `<Step>`                              |
+| ------------------------------------------------- | ----------------------- | ------------------------------------------------ |
+| Form                                              | Single-line `way` array | Container + child nodes                          |
+| step / curve / fold / arc                         | Yes                     | Yes                                              |
+| `rotate` / `scale` / `id` / `meta` / `animations` | Not exposed             | Yes                                              |
+| Use when                                          | Common connections      | Explicit Step sequence, element-level capability |
 
 ## Composition structure
 
@@ -235,7 +235,7 @@ Either `outAngle` or `inAngle` selects tangent mode; the omitted partner default
 
 ### Arrows
 
-`arrow.start` / `arrow.end` configure each endpoint's appearance and `endpointOverlap`. `marks` places content at arbitrary arc-length positions without shortening the main stroke. Both work equally on `<Path>` and `<Draw>`; see [Arrows and marks](/kernel/components/path/arrow).
+`arrow.start` / `arrow.end` configure each endpoint's appearance and `endpointOverlap`. `marks` places content by step parameters or cumulative length without shortening the main stroke. Both work equally on `<Path>` and `<Draw>`; see [Arrows and marks](/kernel/components/path/arrow).
 
 ### Endpoint connection surface
 
@@ -282,7 +282,7 @@ Pass an ordinary compilation result to the path inspector in `@retikz/inspect` t
 
 ### Mid-path marks
 
-`marks` entries directly contain `pos`, `shape`, sizing, and appearance fields, with custom arguments in `params`. `pos ∈ [0, 1]` is the whole-path arc-length fraction. Marks follow the tangent unless `rotate` supplies a fixed angle. Size scales with `strokeWidth`, just like endpoint arrows. Marks only place primitives and never shorten the path, including at endpoints.
+`marks` entries directly contain `pos`, `shape`, sizing, and appearance fields, with custom arguments in `params`. `pos ∈ [0, 1]` is a whole-path fraction: `positionMode` defaults to length and also accepts step; `positionGeometry` independently selects original or rounded geometry. Marks follow the tangent unless `rotate` supplies a fixed angle. Size scales with `strokeWidth`, just like endpoint arrows. Marks only place primitives and never shorten the path, including at endpoints.
 
 <ComponentPreview
   files={['path-marks', 'path-marks.preview.tsx']}
@@ -300,7 +300,7 @@ Pass an ordinary compilation result to the path inspector in `@retikz/inspect` t
   defaultSourceFile="path-rounded-corners.preview.tsx"
 />
 
-`cornerRadius` changes the **path geometry** — it pulls the joint vertices back and inserts a tangent arc, so it affects the bounding box, arc length, path-level `marks` normalization, and connection-point resolution. This is distinct from `lineJoin`, which only styles the **stroke render** while the path centerline stays a sharp fold. The panel shows `lineJoin` above and geometric rounding below so you can drag the radius and compare them directly. See [Implementation](/kernel/components/path/mechanism) for label sampling and gaps.
+`cornerRadius` changes the **path geometry** — it pulls the joint vertices back and inserts a tangent arc, so it affects the bounding box, arc length, labels and `marks` using rounded geometry, and connection-point resolution. This is distinct from `lineJoin`, which only styles the **stroke render** while the path centerline stays a sharp fold. The panel shows `lineJoin` above and geometric rounding below so you can drag the radius and compare them directly. See [Implementation](/kernel/components/path/mechanism) for label sampling and gaps.
 
 <Comparison target="tikz" title="Path Syntax Mapping">
 

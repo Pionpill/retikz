@@ -54,6 +54,7 @@ export const regressionBasicControls = definePreviewControls({
           label: '回归方法',
           defaultValue: 'linear',
           options: [
+            { value: 'auto', label: '自动' },
             { value: 'linear', label: '线性' },
             { value: 'quadratic', label: '二次多项式' },
             { value: 'polynomial', label: '可配置多项式' },

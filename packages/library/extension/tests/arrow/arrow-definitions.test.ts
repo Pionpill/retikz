@@ -1,5 +1,4 @@
 import type { IRScene, PathPrimitive, ScenePrimitive } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -24,6 +23,7 @@ import {
   straightBarbArrowDefinition,
   straightBarbArrowProvider,
 } from '../../src/arrow';
+import { compileTestResult } from '../helpers/compilation';
 
 const arrowScene = (shape: string): IRScene => ({
   type: 'scene',
@@ -66,7 +66,7 @@ describe('扩展可选箭头定义', () => {
       openSquareArrowDefinition,
     ];
     const compiled = definitions.map(definition =>
-      firstPath(compileToScene(arrowScene(definition.name), { arrows: [definition] }).scene.primitives),
+      firstPath(compileTestResult(arrowScene(definition.name), { arrows: [definition] }).scene.primitives),
     );
 
     expect(compiled.map(path => path?.arrowEnd?.shape)).toEqual([
@@ -242,7 +242,7 @@ describe('扩展可选箭头定义', () => {
       ],
     };
     const customized = firstPath(
-      compileToScene(customizedScene, { arrows: [openSquareArrowDefinition] }).scene.primitives,
+      compileTestResult(customizedScene, { arrows: [openSquareArrowDefinition] }).scene.primitives,
     );
 
     expect(customized?.commands.at(-1)).toEqual({ kind: 'line', to: [89.7, 0] });
@@ -255,7 +255,7 @@ describe('扩展可选箭头定义', () => {
 
   it('将新的实体和开放族放置在反向路线的两端', () => {
     const reversed = firstPath(
-      compileToScene(
+      compileTestResult(
         {
           type: 'scene',
           version: 1,
@@ -362,7 +362,7 @@ describe('扩展可选箭头定义', () => {
     if (definition === undefined) return;
 
     const customized = firstPath(
-      compileToScene(
+      compileTestResult(
         {
           type: 'scene',
           version: 1,
@@ -391,7 +391,7 @@ describe('扩展可选箭头定义', () => {
     expect(customized?.arrowEnd?.marker[0]).toMatchObject({ stroke: '#f00', strokeWidth: 2 });
 
     const reversed = firstPath(
-      compileToScene(
+      compileTestResult(
         {
           type: 'scene',
           version: 1,
@@ -413,7 +413,7 @@ describe('扩展可选箭头定义', () => {
     expect(reversed?.commands.at(-1)).toEqual({ kind: 'line', to: [0.1, 0] });
 
     const doubleEnded = firstPath(
-      compileToScene(
+      compileTestResult(
         {
           type: 'scene',
           version: 1,
@@ -467,7 +467,7 @@ describe('扩展可选箭头定义', () => {
         },
       ],
     };
-    const customized = firstPath(compileToScene(customizedScene, { arrows: [barArrowDefinition] }).scene.primitives);
+    const customized = firstPath(compileTestResult(customizedScene, { arrows: [barArrowDefinition] }).scene.primitives);
 
     expect(customized?.commands.at(-1)).toEqual({ kind: 'line', to: [99.3, 0] });
     expect(customized?.arrowEnd).toMatchObject({ markerWidth: 12, markerHeight: 18, opacity: 0.4 });
@@ -475,7 +475,7 @@ describe('扩展可选箭头定义', () => {
     expect(customized?.arrowEnd?.marker[0]).toMatchObject({ stroke: '#f00', strokeWidth: 2 });
 
     const reversed = firstPath(
-      compileToScene(
+      compileTestResult(
         {
           ...arrowScene('crowFoot'),
           children: [
@@ -496,7 +496,7 @@ describe('扩展可选箭头定义', () => {
     expect(reversed?.commands.at(-1)).toEqual({ kind: 'line', to: [6.5, 0] });
 
     const doubleEnded = firstPath(
-      compileToScene(
+      compileTestResult(
         {
           type: 'scene',
           version: 1,
@@ -539,7 +539,7 @@ describe('扩展可选箭头定义', () => {
         },
       ],
     };
-    const primitive = firstPath(compileToScene(scene, { arrows: [definition] }).scene.primitives);
+    const primitive = firstPath(compileTestResult(scene, { arrows: [definition] }).scene.primitives);
 
     expect(primitive?.commands.at(-1)).toEqual({ kind: 'line', to: [100, 0] });
   });

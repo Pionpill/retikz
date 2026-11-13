@@ -1,5 +1,4 @@
 import { DataFieldType } from '@retikz/data';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
@@ -10,6 +9,7 @@ import {
 } from '../../../src/resolve/scale';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
+import { compileTestResult } from '../../helpers/compilation';
 
 // 内置 scale registry：compat 校验经 registry isFieldCompatible 谓词，测试包一层省去逐处传参
 const scaleRegistry = resolveScaleRegistry();
@@ -18,7 +18,7 @@ const assertScaleFieldCompatible = (role: string, scaleType: string, fieldType: 
   assertScaleFieldCompatibleOp(role, scaleType, fieldType, scaleName, { registry: scaleRegistry });
 
 const compile = (spec: IRPlot, datasets: Record<string, Array<Record<string, unknown>>>) =>
-  compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots(datasets) }).scene;
+  compileTestResult({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots(datasets) }).scene;
 
 /** cartesian spec，可选省略 coordinate 的 x/y 绑定（触发派生） */
 const spec = (

@@ -1,5 +1,4 @@
 import { ribbonPathDefinition } from '@retikz/extension';
-import { compileToScene } from '@retikz/reconciler';
 import { normalizeScene, path, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
@@ -11,6 +10,7 @@ import { renderRibbonCustomProfilePreview } from '../../src/modules/docs/content
 import { svg as customProfileSvg } from '../../src/modules/docs/contents/library/extension/ribbon/custom/ribbon-custom-profile.vanilla';
 import { renderRibbonEndpointsPreview } from '../../src/modules/docs/contents/library/extension/ribbon/extended/ribbon-endpoints.preview';
 import RibbonBasicDemo from '../../src/modules/docs/contents/library/extension/ribbon/usage/ribbon-basic.demo';
+import { compileTestResult } from '../helpers/compilation';
 
 describe('Ribbon 的 Vanilla 预览', () => {
   it('通过 React 和 Vanilla 编写保留独立的端点方向', () => {
@@ -46,7 +46,7 @@ describe('Ribbon 的 Vanilla 预览', () => {
       ],
     });
     const compile = (ir: typeof preview.ir) =>
-      compileToScene(ir, { paths: [ribbonPathDefinition] }).scene.primitives.find(p => p.type === 'path');
+      compileTestResult(ir, { paths: [ribbonPathDefinition] }).scene.primitives.find(p => p.type === 'path');
     const reactPath = compile(preview.ir);
 
     expect(reactPath?.type).toBe('path');

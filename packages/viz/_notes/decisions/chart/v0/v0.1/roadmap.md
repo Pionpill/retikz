@@ -9,7 +9,7 @@
 | 重点能力            | 目标                                                                          | 相关 ADR                                                                                                                                                                                                                                                                                                                 |
 | ------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Point family        | 覆盖 Scatter、Bubble、Regression、Connected Scatter、Ranged Dot 与 Strip      | [004](./004-scatter.md)、[005](./005-connected-scatter.md)、[006](./006-regression.md)、[007](./007-ranged-dot.md)、[008](./008-strip.md)、[013](./013-bubble.md)、[014](./014-point-radius-domain-padding.md)、[017](./017-regression-definition-and-trend-curves.md)                                                   |
-| Line / Area family  | 规划 Line、Area、Range Area 与相关 Pattern                                    | —                                                                                                                                                                                                                                                                                                                        |
+| Line / Area family  | 覆盖 Line、Slope、Bump、Area、Range Area 与 Streamgraph                       | [018](./018-line.md)、[019](./019-slope.md)                                                                                                                                                                                                                                                                              |
 | Bar / Column family | 规划 Bar / Column 系列                                                        | —                                                                                                                                                                                                                                                                                                                        |
 | 主链与外观          | 统一精确 recipe、字段映射、声明式入口、Theme 与呈现                           | [003](./003-presentation-standard-layout.md)、[009](./009-family-recipe-chart-schema.md)、[010](./010-chart-plot-declaration-authoring.md)、[011](./011-chart-encoding-field-mapping.md)、[012](./012-chart-react-declaration-authoring.md)、[016](./016-vanilla-input-embed.md)、[015](./015-theme-source-fragments.md) |
 | 声明式入口          | 保持直接 IR、React 与 Vanilla 的 recipe 表达一致，Vanilla 采用标准 InputEmbed | [010](./010-chart-plot-declaration-authoring.md)、[011](./011-chart-encoding-field-mapping.md)、[012](./012-chart-react-declaration-authoring.md)、[016](./016-vanilla-input-embed.md)                                                                                                                                   |
@@ -37,17 +37,34 @@
 
 主要场景：
 
-- 时序或连续趋势需要 Line 与 Area 呈现。
-- 一个区间需要 Range Area 或关联 Pattern 表达。
+- 时间、数值或有序类别上的指标变化需要折线与面积呈现。
+- 两阶段变化、逐期排名和上下界区间需要明确的数据角色与阅读方式。
+- 多系列的总量、占比及构成变化需要堆叠或居中面积呈现。
 
 规划内容：
 
-- 保留 Line / Area family 的功能规划。
-- 具体 recipe 在既有 Plot 能力之上形成，不因目录存在视为已实现。
+| 图表        | 功能目标                                                               |
+| ----------- | ---------------------------------------------------------------------- |
+| Line        | 有序序列趋势；支持单／多系列、可选观测点、曲线与阶梯、缺值连接及分面   |
+| Slope       | 两阶段数值变化；明确阶段顺序、实体配对、缺失端点与两端标签             |
+| Bump        | 逐期排名变化；区分已有排名与原始指标计算排名，保持排名轴及并列语义明确 |
+| Area        | 趋势量级与构成；统一普通、重叠、堆叠及百分比堆叠模式                   |
+| Range Area  | 随序列变化的上下界区间；可组合中心线与边界线                           |
+| Streamgraph | 多系列构成随序列变化；以居中堆叠及相应坐标展示表达流动趋势             |
+
+优先完成 Line，再扩展 Slope 与 Bump；面积方向依次覆盖 Area、Range Area 与 Streamgraph。具体 recipe 与 family 归属由后续 ADR 明确，本规划不代表已经实现。
+
+必要边界与依赖：
+
+- 绘制主要复用 Plot PathMark，按需组合 Point 与标签；曲线、闭合、缺值连接及坐标语义不在 Chart 重建。
+- 明确连接顺序、重复位置、系列身份与颜色／线型的分工；缺失值和缺失整行分别处理，不隐式补零。
+- 堆叠复用 Data，统一系列顺序与采样位置；稀疏序列补齐、排名计算及并列规则的缺口由 Data 承担。居中堆叠不等同于 wiggle 布局。
+- Sparkline 作为 Line 的紧凑配置与示例，不单独抽象；平滑、阶梯、带点、多系列、分面及坐标方向不单独建立 chartType 或 Chart mark。
+- Connected Scatter 与 Regression 保留 Point 归属；统计分布、雷达及平行坐标不因使用 PathMark 纳入本方向。
 
 预期效果：
 
-趋势图 family 具有清晰的后续目标，而不是预发布批次占位清单。
+每种 Chart 与 Chart mark 具有明确功能划分，共享样式和适用场景通过配置与组合表达；序列、变化、排名、区间和构成图复用同一 Plot 绘制主链。
 
 ### Bar / Column family
 

@@ -39,11 +39,11 @@ import { RetikzCoreError, RetikzCoreErrorCode } from '../../../../core/src/error
 import { BUILTIN_SHAPES } from '../../../../core/src/providers/shape/shape';
 import { isLayoutProbeRecoverableError } from '../../../../core/src/resolve';
 import { cloneAndFreezeJson } from '../../../../core/src/shared';
-import { compileToScene } from '../../../src/compile';
 import * as compileProvenance from '../../../src/compile/provenance/tracker';
 import { createExecutionInvariantError, createCompileRuntime, NamespaceStack } from '../../../src/compile/runtime';
 import { wrapLayoutProbeError } from '../../../src/compile/shared';
-import { CompileManager } from '../../../src/compile/tree';
+import { compileScene } from '../../../src/full';
+import { compileTestResult } from '../../helpers/compilation';
 import { pathArrows } from '../../helpers/path-arrows';
 
 const fixedMeasurer: TextMeasurer = text => ({
@@ -114,7 +114,7 @@ const createBoundsProbe = () =>
 describe('布局感知的复契约束和边界', () => {
   it('在分配中保持边距，同时视觉边界遵循绘制和阴影', () => {
     const definition = createBoundsProbe();
-    const result = compileToScene(
+    const result = compileTestResult(
       sceneOf({
         namespace: 'test',
         type: 'boundsProbe',
@@ -146,7 +146,7 @@ describe('布局感知的复契约束和边界', () => {
 
   it('将 maxWidth 视为回流上限，而不缩放固定几何形状', () => {
     const definition = createBoundsProbe();
-    const pathResult = compileToScene(
+    const pathResult = compileTestResult(
       sceneOf({
         namespace: 'test',
         type: 'boundsProbe',
@@ -161,7 +161,7 @@ describe('布局感知的复契约束和边界', () => {
       }),
       { composites: [definition] },
     );
-    const emptyTextResult = compileToScene(
+    const emptyTextResult = compileTestResult(
       sceneOf({
         namespace: 'test',
         type: 'boundsProbe',
@@ -188,7 +188,7 @@ describe('布局感知的复契约束和边界', () => {
 
   it('布局 Coordinate、Scope 和具有有限边界的空输出', () => {
     const definition = createBoundsProbe();
-    const result = compileToScene(
+    const result = compileTestResult(
       sceneOf(
         {
           namespace: 'test',
@@ -285,7 +285,7 @@ describe('布局感知的复契约束和边界', () => {
       },
     });
 
-    const result = compileToScene(sceneOf({ namespace: 'test', type: 'constraintParent' }), {
+    const result = compileTestResult(sceneOf({ namespace: 'test', type: 'constraintParent' }), {
       composites: [nested, parent],
     });
 
@@ -300,7 +300,7 @@ describe('布局感知的复契约束和边界', () => {
 
   it('将箭头标记绘制保留在路径分配之外但在视觉边界内', () => {
     const definition = createBoundsProbe();
-    const result = compileToScene(
+    const result = compileTestResult(
       sceneOf({
         namespace: 'test',
         type: 'boundsProbe',
@@ -392,7 +392,7 @@ describe('布局感知的复契约束和边界', () => {
     });
 
     expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'invalidConstraint' }), {
+      compileTestResult(sceneOf({ namespace: 'test', type: 'invalidConstraint' }), {
         composites: [definition, dispatchSentinel],
       }),
     ).toThrow(/test\.invalidConstraint.*children\[0\]/i);
@@ -432,7 +432,7 @@ describe('布局感知的复契约束和边界', () => {
     });
 
     expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'discardInvalidNestedProposal' }), {
+      compileTestResult(sceneOf({ namespace: 'test', type: 'discardInvalidNestedProposal' }), {
         composites: [parent, nested],
       }),
     ).toThrow(/test\.invalidNestedProposal.*proposal.*finite and non-negative/i);
@@ -473,7 +473,7 @@ describe('布局感知的复契约束和边界', () => {
     let thrown: unknown;
 
     try {
-      compileToScene(sceneOf({ namespace: 'test', type: 'discardHostileNestedProposal' }), {
+      compileTestResult(sceneOf({ namespace: 'test', type: 'discardHostileNestedProposal' }), {
         composites: [parent, nested],
       });
     } catch (error) {
@@ -530,7 +530,7 @@ describe('布局感知的复契约束和边界', () => {
     });
 
     expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: `singleRead${axis.kind}ProposalParent` }), {
+      compileTestResult(sceneOf({ namespace: 'test', type: `singleRead${axis.kind}ProposalParent` }), {
         composites: [parent],
       }),
     ).not.toThrow();
@@ -572,7 +572,7 @@ describe('布局感知的复契约束和边界', () => {
       },
     });
 
-    const result = compileToScene(sceneOf({ namespace: 'test', type: 'zeroParent' }), {
+    const result = compileTestResult(sceneOf({ namespace: 'test', type: 'zeroParent' }), {
       composites: [nested, parent],
     });
 
@@ -615,7 +615,7 @@ describe('布局感知的复契约束和边界', () => {
     });
 
     expect(() =>
-      compileToScene(
+      compileTestResult(
         sceneOf(
           { namespace: 'test', type: 'forwardReference' },
           {
@@ -682,12 +682,12 @@ describe('布局感知的复契约束和边界', () => {
       },
     });
 
-    const result = compileToScene(sceneOf({ namespace: 'test', type: 'discardFailures' }), {
+    const result = compileTestResult(sceneOf({ namespace: 'test', type: 'discardFailures' }), {
       composites: [ordinary, nonError, parent],
     });
 
     expect(result.scene.primitives).toEqual([]);
-    expect(result.scene.resources ?? []).toEqual([]);
+    expect(result.scene.resources ?? { paints: [], clips: [] }).toEqual({ paints: [], clips: [] });
     expect(result.artifacts).toEqual([]);
   });
 
@@ -729,7 +729,7 @@ describe('布局感知的复契约束和边界', () => {
       },
     });
 
-    compileToScene(sceneOf({ namespace: 'test', type: 'rawCauseParent' }), { composites: [leaf, parent] });
+    compileTestResult(sceneOf({ namespace: 'test', type: 'rawCauseParent' }), { composites: [leaf, parent] });
   });
 
   it('在探测器中未注册的复合组件返回失败，而不发布其警告', () => {
@@ -746,7 +746,7 @@ describe('布局感知的复契约束和边界', () => {
       },
     });
 
-    compileToScene(sceneOf({ namespace: 'test', type: 'unregisteredProbeParent' }), {
+    compileTestResult(sceneOf({ namespace: 'test', type: 'unregisteredProbeParent' }), {
       composites: [parent],
       onWarn: warning => warnings.push(warning),
     });
@@ -789,7 +789,7 @@ describe('布局感知的复契约束和边界', () => {
     });
 
     expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'deepSchemaParent' }), { composites: [leaf, parent] }),
+      compileTestResult(sceneOf({ namespace: 'test', type: 'deepSchemaParent' }), { composites: [leaf, parent] }),
     ).toThrow(/test\.deepSchemaLeaf.*scopeChild\[0\]::scopeChild\[0\]/i);
   });
 
@@ -830,7 +830,7 @@ describe('布局感知的复契约束和边界', () => {
     let thrown: unknown;
 
     try {
-      compileToScene(sceneOf({ namespace: 'test', type: 'selectedFailureParent' }), {
+      compileTestResult(sceneOf({ namespace: 'test', type: 'selectedFailureParent' }), {
         composites: [leaf, parent],
       });
     } catch (error) {
@@ -892,19 +892,19 @@ describe('布局感知的复契约束和边界', () => {
     });
 
     expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'copiedFailure' }), { composites: [leaf, copied] }),
+      compileTestResult(sceneOf({ namespace: 'test', type: 'copiedFailure' }), { composites: [leaf, copied] }),
     ).toThrow(/failure.*forged|does not belong|callback/i);
     expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'forgedFailure' }), { composites: [forged] }),
+      compileTestResult(sceneOf({ namespace: 'test', type: 'forgedFailure' }), { composites: [forged] }),
     ).toThrow(/failure.*forged|does not belong/i);
     expect(() =>
-      compileToScene(
+      compileTestResult(
         sceneOf({ namespace: 'test', type: 'failureOwnerProducer' }, { namespace: 'test', type: 'foreignFailure' }),
         { composites: [leaf, producer, foreign] },
       ),
     ).toThrow(/failure.*callback|does not belong/i);
     expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'failureOwnerProducer' }), { composites: [leaf, producer] }),
+      compileTestResult(sceneOf({ namespace: 'test', type: 'failureOwnerProducer' }), { composites: [leaf, producer] }),
     ).toThrow(/failure.*compile|forged|does not belong/i);
   });
 
@@ -931,7 +931,7 @@ describe('布局感知的复契约束和边界', () => {
     });
 
     expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'fatalInvariantParent' }), { composites: [parent] }),
+      compileTestResult(sceneOf({ namespace: 'test', type: 'fatalInvariantParent' }), { composites: [parent] }),
     ).toThrow(invariant);
 
     diff.mockRestore();
@@ -960,7 +960,7 @@ describe('布局感知的复契约束和边界', () => {
       });
     const context = createCompileRuntime(ir, { composites: [parent] }, { captureProvenance: true });
 
-    expect(() => new CompileManager(context).compileScene(ir)).toThrow(invariant);
+    expect(() => compileScene(ir, context)).toThrow(invariant);
 
     captureProbe.mockRestore();
   });
@@ -980,7 +980,7 @@ describe('布局感知的复契约束和边界', () => {
     });
 
     expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'invalidLayoutChildDiscriminatorParent' }), {
+      compileTestResult(sceneOf({ namespace: 'test', type: 'invalidLayoutChildDiscriminatorParent' }), {
         composites: [parent],
       }),
     ).toThrow(RetikzCoreError);
@@ -1006,7 +1006,7 @@ describe('布局感知的复契约束和边界', () => {
     });
 
     expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'hostileLayoutChildParent' }), {
+      compileTestResult(sceneOf({ namespace: 'test', type: 'hostileLayoutChildParent' }), {
         composites: [parent],
       }),
     ).toThrow(RetikzCoreError);
@@ -1034,7 +1034,7 @@ describe('布局感知的复契约束和边界', () => {
     });
 
     expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'nonFiniteAutomaticAllocationParent' }), {
+      compileTestResult(sceneOf({ namespace: 'test', type: 'nonFiniteAutomaticAllocationParent' }), {
         composites: [parent],
       }),
     ).toThrow(RetikzCoreError);
@@ -1058,7 +1058,7 @@ describe('布局感知的复契约束和边界', () => {
     });
 
     expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'malformedProbeParent' }), {
+      compileTestResult(sceneOf({ namespace: 'test', type: 'malformedProbeParent' }), {
         composites: [malformed, parent],
       }),
     ).toThrow(/malformedProbeChild.*children|invalid.*children/i);
@@ -1089,7 +1089,7 @@ describe('布局感知的复契约束和边界', () => {
       compile: () => result,
     });
 
-    const compiled = compileToScene(sceneOf({ namespace: 'test', type: 'dynamicCompileResult' }), {
+    const compiled = compileTestResult(sceneOf({ namespace: 'test', type: 'dynamicCompileResult' }), {
       composites: [definition],
     });
 
@@ -1118,7 +1118,7 @@ describe('布局感知的复契约束和边界', () => {
     });
 
     expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'sparseProbeChildrenParent' }), {
+      compileTestResult(sceneOf({ namespace: 'test', type: 'sparseProbeChildrenParent' }), {
         composites: [malformed, parent],
       }),
     ).toThrow(RetikzCoreError);
@@ -1145,7 +1145,7 @@ describe('布局感知的复契约束和边界', () => {
     });
 
     expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'invalidOutputChildParent' }), {
+      compileTestResult(sceneOf({ namespace: 'test', type: 'invalidOutputChildParent' }), {
         composites: [malformed, parent],
       }),
     ).toThrow(/invalidOutputChild.*output child.*index 0/i);
@@ -1180,7 +1180,7 @@ describe('布局感知的复契约束和边界', () => {
     });
 
     expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'hostileCallbackResultParent' }), {
+      compileTestResult(sceneOf({ namespace: 'test', type: 'hostileCallbackResultParent' }), {
         composites: [malformed, parent],
       }),
     ).toThrow(RetikzCoreError);
@@ -1221,7 +1221,7 @@ describe('布局感知的复契约束和边界', () => {
     });
 
     expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'hostileReplayWrapperParent' }), {
+      compileTestResult(sceneOf({ namespace: 'test', type: 'hostileReplayWrapperParent' }), {
         composites: [malformed, parent],
       }),
     ).toThrow(RetikzCoreError);
@@ -1251,11 +1251,11 @@ describe('布局感知的复契约束和边界', () => {
       },
     });
 
-    const result = compileToScene(sceneOf({ namespace: 'test', type: 'dynamicReplayWrapperClipParent' }), {
+    const result = compileTestResult(sceneOf({ namespace: 'test', type: 'dynamicReplayWrapperClipParent' }), {
       composites: [parent],
     });
 
-    expect(result.scene.resources?.filter(resource => resource.kind === 'clip')).toHaveLength(1);
+    expect(result.scene.resources?.clips ?? []).toHaveLength(1);
     expect(clipReads).toBe(1);
   });
 
@@ -1293,7 +1293,7 @@ describe('布局感知的复契约束和边界', () => {
     });
 
     expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'hostileRuntimeScopePropsParent' }), {
+      compileTestResult(sceneOf({ namespace: 'test', type: 'hostileRuntimeScopePropsParent' }), {
         composites: [malformed, parent],
       }),
     ).toThrow(RetikzCoreError);
@@ -1323,7 +1323,7 @@ describe('布局感知的复契约束和边界', () => {
     });
 
     expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'sparseRuntimeScopeChildrenParent' }), {
+      compileTestResult(sceneOf({ namespace: 'test', type: 'sparseRuntimeScopeChildrenParent' }), {
         composites: [malformed, parent],
       }),
     ).toThrow(RetikzCoreError);
@@ -1347,7 +1347,7 @@ describe('布局感知的复契约束和边界', () => {
       }),
     });
 
-    const result = compileToScene(sceneOf({ namespace: 'test', type: 'singleRectangleExpand' }), {
+    const result = compileTestResult(sceneOf({ namespace: 'test', type: 'singleRectangleExpand' }), {
       composites: [expanded],
     });
 
@@ -1404,7 +1404,7 @@ describe('布局感知的复契约束和边界', () => {
       });
 
       expect(() =>
-        compileToScene(sceneOf({ namespace: 'test', type: `malformedExpand${variant}Parent` }), {
+        compileTestResult(sceneOf({ namespace: 'test', type: `malformedExpand${variant}Parent` }), {
           composites: [expanded, parent],
         }),
       ).toThrow(RetikzCoreError);
@@ -1443,13 +1443,13 @@ describe('布局感知的复契约束和边界', () => {
     });
 
     expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'malformedShapeParent' }), {
+      compileTestResult(sceneOf({ namespace: 'test', type: 'malformedShapeParent' }), {
         composites: [shapeParent],
         shapes: [malformedShape],
       }),
     ).toThrow(/malformedProbeShape.*circumscribe/i);
     expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'malformedMetricsParent' }), {
+      compileTestResult(sceneOf({ namespace: 'test', type: 'malformedMetricsParent' }), {
         composites: [metricsParent],
         measureText: () => ({ width: Number.NaN, height: 10 }),
       }),
@@ -1516,7 +1516,7 @@ describe('布局感知的复契约束和边界', () => {
       );
 
     expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: `hostileMetrics${variant}Parent` }), {
+      compileTestResult(sceneOf({ namespace: 'test', type: `hostileMetrics${variant}Parent` }), {
         composites: [parent],
         measureText,
       }),
@@ -1588,7 +1588,7 @@ describe('布局感知的复契约束和边界', () => {
     };
 
     expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: `malformedTex${variant}Parent` }), {
+      compileTestResult(sceneOf({ namespace: 'test', type: `malformedTex${variant}Parent` }), {
         composites: [parent],
         lowerTex,
       }),
@@ -1634,7 +1634,7 @@ describe('布局感知的复契约束和边界', () => {
           };
 
     expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: `throwing${provider}Parent` }), options),
+      compileTestResult(sceneOf({ namespace: 'test', type: `throwing${provider}Parent` }), options),
     ).not.toThrow();
   });
 
@@ -1673,7 +1673,7 @@ describe('布局感知的复契约束和边界', () => {
     });
 
     expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'hostileCircumscribeParent' }), {
+      compileTestResult(sceneOf({ namespace: 'test', type: 'hostileCircumscribeParent' }), {
         composites: [parent],
         shapes: [hostileShape],
       }),
@@ -1748,7 +1748,7 @@ describe('布局感知的复契约束和边界', () => {
     });
 
     expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: `hostile${variant}Parent` }), {
+      compileTestResult(sceneOf({ namespace: 'test', type: `hostile${variant}Parent` }), {
         composites: [parent],
         shapes: [hostileShape],
         boundaries: [hostileBoundary],
@@ -1796,7 +1796,7 @@ describe('布局感知的复契约束和边界', () => {
     });
 
     expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'hostileScaleParamsParent' }), {
+      compileTestResult(sceneOf({ namespace: 'test', type: 'hostileScaleParamsParent' }), {
         composites: [parent],
         shapes: [hostileShape],
       }),
@@ -1871,7 +1871,7 @@ describe('布局感知的复契约束和边界', () => {
     });
 
     expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: `hostile${variant}Parent` }), {
+      compileTestResult(sceneOf({ namespace: 'test', type: `hostile${variant}Parent` }), {
         composites: [parent],
         shapes: [hostileEnvelopeShape],
         boundaries: [hostileBoundary],
@@ -1917,7 +1917,7 @@ describe('布局感知的复契约束和边界', () => {
     });
 
     expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'hostilePathParent' }), {
+      compileTestResult(sceneOf({ namespace: 'test', type: 'hostilePathParent' }), {
         composites: [parent],
         paths: [hostilePath],
       }),
@@ -1956,7 +1956,7 @@ describe('布局感知的复契约束和边界', () => {
       compile: () => result,
     });
 
-    const compiled = compileToScene(
+    const compiled = compileTestResult(
       sceneOf({
         type: 'path',
         kind: 'dynamicPath',
@@ -2052,7 +2052,7 @@ describe('布局感知的复契约束和边界', () => {
 
     for (const variant of ['shape', 'arrow', 'pattern', 'clip'] as const) {
       expect(
-        () => compileToScene(sceneOf({ namespace: 'test', type: 'malformedProviderParent', variant }), options),
+        () => compileTestResult(sceneOf({ namespace: 'test', type: 'malformedProviderParent', variant }), options),
         variant,
       ).toThrow(/emit|primitive|invalid|root shape|path command|output validation|subpath/i);
     }
@@ -2112,7 +2112,7 @@ describe('布局感知的复契约束和边界', () => {
         },
       });
       expect(() =>
-        compileToScene(sceneOf({ namespace: 'test', type: 'invalidNumericParent' }), {
+        compileTestResult(sceneOf({ namespace: 'test', type: 'invalidNumericParent' }), {
           composites: [parent],
           shapes: [shape],
         }),
@@ -2190,7 +2190,7 @@ describe('布局感知的复契约束和边界', () => {
       let thrown: unknown;
 
       try {
-        compileToScene(sceneOf({ namespace: 'test', type: 'proxyTrapParent', variant }), options);
+        compileTestResult(sceneOf({ namespace: 'test', type: 'proxyTrapParent', variant }), options);
       } catch (cause) {
         thrown = cause;
       }
@@ -2221,7 +2221,7 @@ describe('布局感知的复契约束和边界', () => {
       emit: () => [dynamicRect],
     });
 
-    const result = compileToScene(
+    const result = compileTestResult(
       sceneOf({ type: 'node', position: [0, 0], shape: { type: 'dynamicScenePrimitiveShape', params: {} } }),
       { shapes: [dynamicShape] },
     );
@@ -2262,7 +2262,7 @@ describe('布局感知的复契约束和边界', () => {
     });
 
     expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'nonFiniteVisualBoundsParent' }), {
+      compileTestResult(sceneOf({ namespace: 'test', type: 'nonFiniteVisualBoundsParent' }), {
         composites: [parent],
         shapes: [farShape],
       }),
@@ -2288,7 +2288,7 @@ describe('布局感知的复契约束和边界', () => {
       emit: () => [dynamicRect],
     });
 
-    const result = compileToScene(
+    const result = compileTestResult(
       sceneOf({
         type: 'path',
         arrow: pathArrows('->', { shape: 'dynamicMarkerPrimitiveArrow' }),
@@ -2328,11 +2328,11 @@ describe('布局感知的复契约束和边界', () => {
       schema: strictObject({ kind: literal('dynamicClipPath'), params: strictObject({}) }),
       lower: () => dynamicPath,
     });
-    const { scene } = compileToScene(
+    const { scene } = compileTestResult(
       sceneOf({ type: 'scope', clip: { kind: 'dynamicClipPath', params: {} }, children: [] }),
       { clips: [definition] },
     );
-    const clip = scene.resources?.find(resource => resource.kind === 'clip');
+    const clip = scene.resources?.clips[0];
     expect(clip).toMatchObject({ kind: 'clip', path });
     expect(commandsReads).toBe(1);
     path.commands.length = 0;
@@ -2380,7 +2380,7 @@ describe('布局感知的复契约束和边界', () => {
       emit: BUILTIN_SHAPES.get('rectangle')!.emit,
     });
 
-    const result = compileToScene(
+    const result = compileTestResult(
       sceneOf({
         type: 'node',
         position: [0, 0],
@@ -2430,7 +2430,7 @@ describe('布局感知的复契约束和边界', () => {
       height: 10,
       cornerRadius: undefined,
     });
-    const result = compileToScene(
+    const result = compileTestResult(
       sceneOf({ type: 'node', position: [0, 0], shape: { type: 'optionalUndefinedSceneShape', params: {} } }),
       { shapes: [validShape] },
     );
@@ -2478,13 +2478,13 @@ describe('布局感知的复契约束和边界', () => {
     const options = { composites: [parent], shapes: [throwingShape] };
 
     expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'hostileProxyFailureParent', select: false }), options),
+      compileTestResult(sceneOf({ namespace: 'test', type: 'hostileProxyFailureParent', select: false }), options),
     ).not.toThrow();
 
     let selected: unknown;
 
     try {
-      compileToScene(sceneOf({ namespace: 'test', type: 'hostileProxyFailureParent', select: true }), options);
+      compileTestResult(sceneOf({ namespace: 'test', type: 'hostileProxyFailureParent', select: true }), options);
     } catch (cause) {
       selected = cause;
     }
@@ -2548,7 +2548,7 @@ describe('布局感知的复契约束和边界', () => {
     prototypeTrapCalls = 0;
 
     expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'selfPrototypeProxyParent', select: false }), options),
+      compileTestResult(sceneOf({ namespace: 'test', type: 'selfPrototypeProxyParent', select: false }), options),
     ).not.toThrow();
     expect(prototypeTrapCalls).toBe(1);
 
@@ -2556,7 +2556,7 @@ describe('布局感知的复契约束和边界', () => {
     let selected: unknown;
 
     try {
-      compileToScene(sceneOf({ namespace: 'test', type: 'selfPrototypeProxyParent', select: true }), options);
+      compileTestResult(sceneOf({ namespace: 'test', type: 'selfPrototypeProxyParent', select: true }), options);
     } catch (cause) {
       selected = cause;
     }
@@ -2599,7 +2599,7 @@ describe('布局感知的复契约束和边界', () => {
     });
 
     expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'discardThrowingClip' }), {
+      compileTestResult(sceneOf({ namespace: 'test', type: 'discardThrowingClip' }), {
         composites: [parent],
         clips: [throwingClip],
       }),
@@ -2623,7 +2623,7 @@ describe('布局感知的复合回放所有权', () => {
     });
     const warnings: Array<CompileWarning> = [];
 
-    const result = compileToScene(
+    const result = compileTestResult(
       sceneOf(
         { type: 'coordinate', id: 'same', position: [0, 0] },
         { namespace: 'test', type: 'duplicateReplayId' },
@@ -2667,7 +2667,7 @@ describe('布局感知的复合回放所有权', () => {
     });
     const warnings: Array<CompileWarning> = [];
 
-    const result = compileToScene(
+    const result = compileTestResult(
       sceneOf(
         { namespace: 'test', type: 'rawBeforeReplayId' },
         {
@@ -2719,7 +2719,7 @@ describe('布局感知的复合回放所有权', () => {
       },
     });
 
-    const result = compileToScene(sceneOf({ namespace: 'test', type: 'mixedZIndex' }), {
+    const result = compileTestResult(sceneOf({ namespace: 'test', type: 'mixedZIndex' }), {
       composites: [definition],
     });
 
@@ -2752,7 +2752,7 @@ describe('布局感知的复合回放所有权', () => {
       },
     });
 
-    const result = compileToScene(sceneOf({ namespace: 'test', type: 'transformedZIndex' }), {
+    const result = compileTestResult(sceneOf({ namespace: 'test', type: 'transformedZIndex' }), {
       composites: [definition],
     });
 
@@ -2799,7 +2799,7 @@ describe('布局感知的复合回放所有权', () => {
       },
     });
 
-    const result = compileToScene(sceneOf({ namespace: 'test', type: 'wrappedMultipleRoots' }), {
+    const result = compileTestResult(sceneOf({ namespace: 'test', type: 'wrappedMultipleRoots' }), {
       composites: [roots, parent],
     });
     const groups = result.scene.primitives.filter(primitive => primitive.type === 'group');
@@ -2807,7 +2807,7 @@ describe('布局感知的复合回放所有权', () => {
     expect(result.scene.primitives.map(primitive => primitive.type)).toEqual(['group', 'rect', 'group']);
     expect(groups).toHaveLength(2);
     expect(groups[0]?.clipRef).toBe(groups[1]?.clipRef);
-    expect(result.scene.resources?.filter(resource => resource.kind === 'clip')).toHaveLength(1);
+    expect(result.scene.resources?.clips ?? []).toHaveLength(1);
   });
 
   it('拒绝从先前编译中保留的回放令牌', () => {
@@ -2831,13 +2831,13 @@ describe('布局感知的复合回放所有权', () => {
       },
     });
 
-    compileToScene(sceneOf({ namespace: 'test', type: 'retainedReplay' }), {
+    compileTestResult(sceneOf({ namespace: 'test', type: 'retainedReplay' }), {
       composites: [definition],
     });
     reuse = true;
 
     expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'retainedReplay' }), {
+      compileTestResult(sceneOf({ namespace: 'test', type: 'retainedReplay' }), {
         composites: [definition],
       }),
     ).toThrow(/does not belong to this compile|forged/i);
@@ -2864,7 +2864,7 @@ describe('布局感知的复合回放所有权', () => {
     });
 
     expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'forgedReplay' }), {
+      compileTestResult(sceneOf({ namespace: 'test', type: 'forgedReplay' }), {
         composites: [definition],
       }),
     ).toThrow(/does not belong to this compile|forged/i);
@@ -2892,7 +2892,7 @@ describe('布局感知的复合回放所有权', () => {
     });
 
     expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'copiedLayoutResult' }), {
+      compileTestResult(sceneOf({ namespace: 'test', type: 'copiedLayoutResult' }), {
         composites: [definition],
       }),
     ).toThrow(/test\.copiedLayoutResult.*children\[0\].*(invalid|forged).*layout result/i);
@@ -2934,7 +2934,7 @@ describe('布局感知的复合回放所有权', () => {
         };
       },
     });
-    const result = compileToScene(
+    const result = compileTestResult(
       sceneOf(
         { namespace: 'test', type: 'outer' },
         {
@@ -2979,7 +2979,7 @@ describe('布局感知复合组件的产物与下沉错误', () => {
     });
 
     expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'recursive' }), {
+      compileTestResult(sceneOf({ namespace: 'test', type: 'recursive' }), {
         composites: [recursive],
         maxCompositeDepth: 2,
       }),
@@ -3003,7 +3003,7 @@ describe('布局感知复合组件的产物与下沉错误', () => {
     });
 
     expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'unsafeArtifact' }), {
+      compileTestResult(sceneOf({ namespace: 'test', type: 'unsafeArtifact' }), {
         composites: [definition],
       }),
     ).toThrow(/plain objects and arrays/i);
@@ -3022,7 +3022,7 @@ describe('布局感知复合组件的产物与下沉错误', () => {
       compile: () => ({ children: [], artifact: payload }),
     });
 
-    const artifact = compileToScene(sceneOf({ namespace: 'test', type: 'specialArtifactKeys' }), {
+    const artifact = compileTestResult(sceneOf({ namespace: 'test', type: 'specialArtifactKeys' }), {
       composites: [definition],
     }).artifacts[0];
     expect(Object.hasOwn(artifact.value as object, '__proto__')).toBe(true);
@@ -3043,7 +3043,7 @@ describe('布局感知复合组件的产物与下沉错误', () => {
     });
 
     expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'symbolArtifactKey' }), {
+      compileTestResult(sceneOf({ namespace: 'test', type: 'symbolArtifactKey' }), {
         composites: [definition],
       }),
     ).toThrow(/symbol key/i);

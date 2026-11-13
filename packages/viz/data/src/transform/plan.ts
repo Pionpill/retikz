@@ -1,6 +1,6 @@
 import type { DataTransformModel } from '../model';
 import type { AnyStatisticsReducerDefinition, IRDataReducerOperation } from '../operators/reducer';
-import type { AnyRegressionDefinition, IRRegressionMethod } from '../operators/regression';
+import type { RegressionDependency } from '../operators/regression';
 import type { AnyRowSelectorDefinition, IRDataSelectorOperation } from '../operators/selector';
 import type { AnyTransformDefinition } from './contract';
 import type { IRDataExecution } from './declaration';
@@ -24,14 +24,7 @@ export type DataTransformDependency =
       /** 与操作匹配的语义定义 */
       definition: AnyRowSelectorDefinition;
     }>
-  | Readonly<{
-      /** 区分归约、行选择与拟合依赖 */
-      type: 'regression';
-      /** 该依赖的精确操作声明 */
-      operation: IRRegressionMethod;
-      /** 与操作匹配的语义定义 */
-      definition: AnyRegressionDefinition;
-    }>;
+  | RegressionDependency;
 
 /** 按声明顺序解析的单个变换阶段 */
 export type DataTransformStage = Readonly<{

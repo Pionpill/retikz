@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { ScenePrimitive, TextPrimitive } from '../../../../core/src/contract';
 import type { IRScene } from '../../../../core/src/schemas';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 
 const flatten = (prims: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> => {
   const out: Array<ScenePrimitive> = [];
@@ -17,7 +17,7 @@ const flatten = (prims: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
 
 /** 取首个 step label TextPrimitive（拍平 group，找 text） */
 const labelOf = (ir: IRScene): TextPrimitive | undefined =>
-  flatten(compileToScene(ir).scene.primitives).find((p): p is TextPrimitive => p.type === 'text');
+  flatten(compileTestResult(ir).scene.primitives).find((p): p is TextPrimitive => p.type === 'text');
 
 /** 构造单 line 段 path（可选 path 级字段 + label 字段） */
 const pathWithLabel = (pathProps: Record<string, unknown>, label: Record<string, unknown>): IRScene => ({
@@ -41,7 +41,7 @@ const pathWithLabel = (pathProps: Record<string, unknown>, label: Record<string,
 
 describe('Happy: StepLabel 样式字段落地', () => {
   it('单行文本对象的字体、颜色与透明度覆盖参与测量和输出', () => {
-    const scene = compileToScene(
+    const scene = compileTestResult(
       pathWithLabel(
         { style: { opacity: 0.5 } },
         {

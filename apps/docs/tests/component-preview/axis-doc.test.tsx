@@ -4,15 +4,13 @@ import { describe, expect, it } from 'vitest';
 
 import type { PreviewControlsDefinition } from '../../src/modules/docs/components/component-preview';
 import { PreviewControlStateContext } from '../../src/modules/docs/components/component-preview/context';
-import {
-  axisCartesianPlaygroundControls,
-  previewControlContract,
-} from '../../src/modules/docs/contents/viz/plot/guide/axis/axis-cartesian-playground.controls';
-import AxisCartesianPlayground from '../../src/modules/docs/contents/viz/plot/guide/axis/axis-cartesian-playground.demo';
-import {
-  axisCartesianPlaygroundControls as englishAxisCartesianPlaygroundControls,
-  previewControlContract as englishPreviewControlContract,
-} from '../../src/modules/docs/contents/viz/plot/guide/axis/axis-cartesian-playground.en.controls';
+import AxisCartesianPlayground from '../../src/modules/docs/contents/viz/plot/guide/axis/axis-cartesian-playground';
+import { createPreviewControlContract } from '../../src/modules/docs/contents/viz/plot/guide/axis/axis-cartesian-playground.controls';
+
+const previewControlContract = createPreviewControlContract('zh');
+const englishPreviewControlContract = createPreviewControlContract('en');
+const axisCartesianPlaygroundControls = previewControlContract.controls;
+const englishAxisCartesianPlaygroundControls = englishPreviewControlContract.controls;
 
 const fieldContractOf = (definition: PreviewControlsDefinition) => {
   if (definition.presentation !== 'panel') throw new Error('Axis playground must use panel controls');

@@ -31,6 +31,8 @@ Import these retained APIs from `@retikz/render/runtime`; they are not exported 
 
 ### Primary figure and readonly layers
 
+Render owns runtime Scene identities, topology, snapshots and Patch contracts. Import their types, including `SceneIdentity`, `SceneRuntimeSnapshot` and `ScenePatch`, from `@retikz/render/runtime`. Reconciler delivers the complete compilation result, provenance and candidate revision; the Render commit target uses them to build the rendering snapshot. Identity or topology construction failures are reported as `RetikzRenderError`.
+
 Static APIs use `StaticRenderFrame { primary: Scene, layers }`. Retained renderers use `RenderFrameSnapshot { primary: SceneRuntimeSnapshot, layers }`. Both materialize the primary figure and ordered readonly layers as one frame, so a failed retained transaction cannot publish a new figure with old layers.
 
 Every `RenderReadonlyLayer` contains a frame-unique `key`, an ordinary static `scene`, and its transform into primary Scene coordinates. SVG appends a `pointer-events="none"` group after the primary figure, executes each layer through the ordinary Scene-fragment path, and gives its resources an isolated prefix without hydration ids. Canvas applies the layer transform and calls the ordinary Scene drawing path; `hitTest` still reads only the primary Scene. A readonly layer never determines the viewBox, primary resources, animation, or primary identity, and cannot contain public `id`, `meta`, or animation fields.
@@ -51,7 +53,7 @@ Import `StaticRenderFrame` from `@retikz/render/runtime`; import each materializ
   sources={[
     { label: 'Retained config', path: 'packages/kernel/render/src/runtime/config.ts' },
     { label: 'Reconciler commit target', path: 'packages/kernel/render/src/runtime/target.ts' },
-    { label: 'Session publication and recovery', path: 'packages/kernel/reconciler/src/reconciler.ts' },
+    { label: 'Session publication and recovery', path: 'packages/kernel/reconciler/src/reconcile/reconciler.ts' },
     {
       label: 'SVG WAAPI independent resource cleanup',
       path: 'packages/kernel/render/src/animation/retained/binding.ts',

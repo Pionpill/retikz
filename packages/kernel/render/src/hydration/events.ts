@@ -1,6 +1,6 @@
 import type { ValueOf } from '@retikz/foundation';
-import type { SceneIdentity } from '@retikz/reconciler';
 
+import type { SceneIdentity } from '../scene';
 import type { HydrationContext } from './context';
 
 /**

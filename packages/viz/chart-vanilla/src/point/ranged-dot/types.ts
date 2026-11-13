@@ -1,6 +1,6 @@
 import type { IRRangedDotChart } from '@retikz/chart/point';
 
-import type { InputTypedChart, InputChartCommon } from '../shared';
+import type { InputTypedChart, InputChartCommon } from '../../authoring';
 
 /** Ranged Dot exact Source 的 plain normalizer 输入 */
 export type InputRangedDotChart = InputTypedChart<IRRangedDotChart>;

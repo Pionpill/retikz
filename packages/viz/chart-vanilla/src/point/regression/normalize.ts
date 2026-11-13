@@ -1,6 +1,6 @@
 import type { IRRegressionChart } from '@retikz/chart/point';
 
-import { chartSourceOf, normalizePointPartitionEncodings } from '../shared';
+import { chartSourceOf, normalizeChartPartitionEncodings } from '../../authoring';
 import type { InputRegressionChart } from './types';
 
 /** 将 Regression Chart Vanilla Input 组装为精确 Source IR */
@@ -14,7 +14,7 @@ export const normalizeRegressionChart = (input: InputRegressionChart): IRRegress
     ...(root.plotExtension === undefined ? {} : { plotExtension: root.plotExtension }),
     recipe: {
       chartType: 'regression',
-      encodings: normalizePointPartitionEncodings(encodings),
+      encodings: normalizeChartPartitionEncodings(encodings),
       ...(properties === undefined ? {} : { properties }),
       ...(guides === undefined ? {} : { guides }),
       ...(marks === undefined ? {} : { marks }),

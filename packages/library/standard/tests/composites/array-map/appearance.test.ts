@@ -1,10 +1,10 @@
 import type { CompileWarning, IRChild, ScenePrimitive } from '@retikz/core';
 import { BuiltinCompileWarningCode } from '@retikz/core';
 import { pathClipDefinition } from '@retikz/extension';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { arrayDefinition, mapDefinition } from '../../../src/collection';
+import { compileTestResult } from '../../helpers/compilation';
 import { sceneCellBounds, sceneNodes } from '../../helpers/scene-geometry';
 
 const content: IRChild = {
@@ -19,7 +19,7 @@ const flat = (nodes: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
   nodes.flatMap(node => (node.type === 'group' ? [node, ...flat(node.children)] : [node]));
 
 const compile = (children: Array<IRChild>) =>
-  compileToScene(
+  compileTestResult(
     { type: 'scene', version: 1, children },
     {
       composites: [arrayDefinition, mapDefinition],
@@ -92,13 +92,9 @@ describe('Array / Map 外观和身份', () => {
 
     expect(clipped?.type === 'group' ? clipped.clipRef : undefined).toBeDefined();
     expect(
-      result.scene.resources
-        ?.filter(resource => resource.kind === 'clip')
-        .some(resource =>
-          resource.path.commands.some(
-            command => command.kind === 'line' && command.to[0] === 12 && command.to[1] === 8,
-          ),
-        ),
+      (result.scene.resources?.clips ?? []).some(resource =>
+        resource.path.commands.some(command => command.kind === 'line' && command.to[0] === 12 && command.to[1] === 8),
+      ),
     ).toBe(true);
     expect(sceneCellBounds(result.scene)[0]).toEqual({
       x: 0,
@@ -195,7 +191,7 @@ describe('Array / Map 外观和身份', () => {
         .filter(node => node.type === 'text')
         .every(node => node.fontSize === 30),
     ).toBe(true);
-    expect(result.scene.resources?.some(resource => resource.kind === 'clip')).toBe(true);
+    expect((result.scene.resources?.clips.length ?? 0) > 0).toBe(true);
     expect(sceneCellBounds(result.scene)[0].width).toBeCloseTo(82);
   });
 });
@@ -203,7 +199,7 @@ describe('Array / Map 外观和身份', () => {
 it('保留 Core 命名空间隔离、重复诊断和延迟单元引用', () => {
   for (const localNamespace of [true, false]) {
     const warnings: Array<CompileWarning> = [];
-    const result = compileToScene(
+    const result = compileTestResult(
       {
         type: 'scene',
         version: 1,

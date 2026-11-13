@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { GroupPrimitive, IRChild, IRPathBase, IRScene, PathCommand, PathPrimitive } from '../../../../../core/src';
-import { compileToScene } from '../../../../src/compile';
+import { compileTestResult } from '../../../helpers/compilation';
 import { flattenPrims } from '../../../helpers/flatten';
 
 const steps = [
@@ -13,7 +13,7 @@ const pathPrimitive = (
   arrow: NonNullable<IRPathBase['arrow']>,
   input: Readonly<{
     children?: IRScene['children'];
-    arrows?: NonNullable<Parameters<typeof compileToScene>[1]>['arrows'];
+    arrows?: NonNullable<Parameters<typeof compileTestResult>[1]>['arrows'];
   }> = {},
 ): PathPrimitive => {
   const ir: IRScene = {
@@ -21,7 +21,7 @@ const pathPrimitive = (
     type: 'scene',
     children: input.children ?? [{ type: 'path', arrow, children: steps }],
   };
-  const primitive = flattenPrims(compileToScene(ir, { padding: 0, arrows: input.arrows }).scene.primitives).find(
+  const primitive = flattenPrims(compileTestResult(ir, { padding: 0, arrows: input.arrows }).scene.primitives).find(
     (item): item is PathPrimitive =>
       item.type === 'path' && (item.arrowStart !== undefined || item.arrowEnd !== undefined),
   );
@@ -75,7 +75,7 @@ describe('编译路径：端点箭头重叠', () => {
 
     logicalPath.arrow = undefined;
     const logicalPrimitive = flattenPrims(
-      compileToScene({ version: 1, type: 'scene', children: logicalChildren }, { padding: 0 }).scene.primitives,
+      compileTestResult({ version: 1, type: 'scene', children: logicalChildren }, { padding: 0 }).scene.primitives,
     ).find((item): item is PathPrimitive => item.type === 'path');
     if (logicalPrimitive === undefined) throw new Error('Expected a logical PathPrimitive');
 
@@ -215,7 +215,7 @@ describe('编译路径：端点箭头重叠', () => {
           },
         ],
       };
-      return flattenPrims(compileToScene(ir, { padding: 0 }).scene.primitives);
+      return flattenPrims(compileTestResult(ir, { padding: 0 }).scene.primitives);
     };
 
     const baseline = compile(0);
@@ -261,7 +261,7 @@ describe('编译路径：端点箭头重叠', () => {
       ],
     };
 
-    expect(JSON.stringify(compileToScene(ir).scene)).not.toMatch(/NaN|Infinity/);
+    expect(JSON.stringify(compileTestResult(ir).scene)).not.toMatch(/NaN|Infinity/);
   });
 
   it('让显式零跳过可能溢出的完整进入位移并保持默认放置', () => {

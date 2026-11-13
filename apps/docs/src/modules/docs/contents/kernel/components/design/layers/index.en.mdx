@@ -27,17 +27,17 @@ Kernel preserves basic drawing semantics; Sugar expands into those expressions d
 
 Kernel currently contains nine packages released together. Choose an entry for your task; the package manager installs its dependencies.
 
-| Package              | Responsibility                                    |
-| -------------------- | ------------------------------------------------- |
-| `@retikz/foundation` | Shared atomic contracts and base schemas          |
-| `@retikz/math`       | Dependency-free geometry and numerical algorithms |
-| `@retikz/runtime`    | Incremental execution and transactions            |
-| `@retikz/core`       | Shared IR, Scene, and compilation                 |
-| `@retikz/inspect`    | Diagnostic observation and overlays               |
-| `@retikz/render`     | SVG / Canvas output                               |
-| `@retikz/vanilla`    | Framework-free input and host integration         |
-| `@retikz/react`      | React components and lifecycle integration        |
-| `@retikz/tex`        | Optional LaTeX formula integration                |
+| Package              | Responsibility                                                     |
+| -------------------- | ------------------------------------------------------------------ |
+| `@retikz/foundation` | Shared atomic contracts and base schemas                           |
+| `@retikz/math`       | Dependency-free geometry and numerical algorithms                  |
+| `@retikz/reconciler` | Full and incremental compilation, caching, and output transactions |
+| `@retikz/core`       | Shared IR, Scene, and compilation                                  |
+| `@retikz/inspect`    | Diagnostic observation and overlays                                |
+| `@retikz/render`     | SVG / Canvas output                                                |
+| `@retikz/vanilla`    | Framework-free input and host integration                          |
+| `@retikz/react`      | React components and lifecycle integration                         |
+| `@retikz/tex`        | Optional LaTeX formula integration                                 |
 
 Browser applications usually start with React or Vanilla. Consult the package documentation before adding other direct dependencies.
 

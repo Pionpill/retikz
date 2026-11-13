@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { ScenePrimitive, TextPrimitive } from '../../../../core/src/contract';
 import type { IRScene } from '../../../../core/src/schemas';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 
 const collectTexts = (prims: Array<ScenePrimitive>): Array<TextPrimitive> => {
   const out: Array<TextPrimitive> = [];
@@ -33,7 +33,7 @@ describe('Node 标签位置中心', () => {
       ],
     };
 
-    const scene = compileToScene(ir).scene;
+    const scene = compileTestResult(ir).scene;
     const label = collectTexts(scene.primitives).find(t =>
       t.lines.some(l => (typeof l === 'string' ? l : l.text) === 'center label'),
     );
@@ -57,12 +57,12 @@ describe('Node 标签位置中心', () => {
       ],
     };
 
-    const defaultLabel = collectTexts(compileToScene(ir).scene.primitives).find(t =>
+    const defaultLabel = collectTexts(compileTestResult(ir).scene.primitives).find(t =>
       t.lines.some(l => (typeof l === 'string' ? l : l.text) === 'right label'),
     );
     const customDistance = 40;
-    const customLabel = collectTexts(compileToScene(ir, { labelDistance: customDistance }).scene.primitives).find(t =>
-      t.lines.some(l => (typeof l === 'string' ? l : l.text) === 'right label'),
+    const customLabel = collectTexts(compileTestResult(ir, { labelDistance: customDistance }).scene.primitives).find(
+      t => t.lines.some(l => (typeof l === 'string' ? l : l.text) === 'right label'),
     );
 
     expect(defaultLabel).toBeDefined();

@@ -1,8 +1,8 @@
 import type { AnyCompositeDefinition } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import { isPropertyPathEqual } from '@retikz/foundation';
+import { SceneReconciler } from '@retikz/reconciler';
 import type { CompositeArtifact } from '@retikz/reconciler';
-import { compileToScene } from '@retikz/reconciler';
 
 import { RetikzTableError } from '../error';
 import type { IRTable } from '../schemas';
@@ -18,28 +18,35 @@ const isRootTableArtifact = (artifact: CompositeArtifact): artifact is TableComp
 
 /**
  * 编译 canonical 单根 Table Scene，并返回同次 compile 的精确根 manifest
- * @template TComposites 额外注册的组合定义集合，决定编译结果中可出现的扩展产物类型；默认 readonly []
+ * @template TComposite 额外注册的组合定义类型联合，决定编译结果中可出现的扩展产物类型；默认 never
  */
-export const compileTable = <const TComposites extends ReadonlyArray<AnyCompositeDefinition> = readonly []>(
+export const compileTable = <const TComposite extends AnyCompositeDefinition = never>(
   spec: IRTable,
   datasets: ExternalDatasets,
-  options: CompileTableOptions<TComposites> = {},
-): CompileTableResult<TComposites> => {
+  options: CompileTableOptions<TComposite> = {},
+): CompileTableResult<TComposite> => {
   const compileOptions = options.compile ?? {};
   const tableDefinitions = lowerTables(datasets, options.lower);
   const composites = [...tableDefinitions, ...(compileOptions.composites ?? [])];
-  const result = compileToScene(
-    {
-      type: 'scene',
-      version: 1,
-      ...(options.theme === undefined ? {} : { theme: options.theme }),
-      children: [spec],
-    },
-    {
-      ...compileOptions,
-      composites,
-    },
-  );
+  const result = (() => {
+    const reconciler = new SceneReconciler(
+      {
+        ...compileOptions,
+        composites,
+      },
+      { incremental: false },
+    );
+    try {
+      return reconciler.mount({
+        type: 'scene',
+        version: 1,
+        ...(options.theme === undefined ? {} : { theme: options.theme }),
+        children: [spec],
+      }).compilation.result;
+    } finally {
+      reconciler.dispose();
+    }
+  })();
   const matches = result.artifacts.filter(isRootTableArtifact);
   if (matches.length !== 1) {
     throw new RetikzTableError(

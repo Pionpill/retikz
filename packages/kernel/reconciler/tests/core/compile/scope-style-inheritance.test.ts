@@ -10,7 +10,7 @@ import type {
   TextPrimitive,
 } from '../../../../core/src/contract';
 import type { IRScene } from '../../../../core/src/schemas';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 import { pathArrows } from '../../helpers/path-arrows';
 
 /** 递归展开 GroupPrimitive，把所有叶子 primitive 拍平（scope 子元素在 GroupPrimitive 内） */
@@ -25,7 +25,7 @@ const flatten = (prims: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
   return out;
 };
 
-const allPrims = (ir: IRScene): Array<ScenePrimitive> => flatten(compileToScene(ir).scene.primitives);
+const allPrims = (ir: IRScene): Array<ScenePrimitive> => flatten(compileTestResult(ir).scene.primitives);
 
 const rectOf = (ir: IRScene): RectPrimitive | undefined =>
   allPrims(ir).find((p): p is RectPrimitive => p.type === 'rect');

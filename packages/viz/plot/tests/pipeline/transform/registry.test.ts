@@ -13,7 +13,6 @@ import {
   resolveTransformRegistry,
 } from '@retikz/data';
 import { NonBlankStringSchema } from '@retikz/foundation';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { object, string } from 'zod';
 
@@ -21,6 +20,7 @@ import { lowerPlots } from '../../../src/pipeline/expand';
 import { collectSourceFields } from '../../../src/pipeline/source-fields';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
+import { compileTestResult } from '../../helpers/compilation';
 
 const doubleDefinition = defineTransform({
   kind: 'double',
@@ -78,7 +78,7 @@ const compile = (
   datasets: Record<string, Array<Record<string, unknown>>>,
   definitions = [doubleDefinition],
 ) =>
-  compileToScene(
+  compileTestResult(
     { version: 1, type: 'scene', children: [spec] },
     {
       composites: lowerPlots(datasets, {

@@ -212,7 +212,7 @@ export type HydrationHandle = {
 export type HydrateOptions = {
   /** id → 事件名 → handler 的注册表（透传给 `@retikz/render/hydration` 控制器） */
   handlers: HydrationHandlers;
-  /** 富 context 来源 Scene（仅 standalone `hydrate` 用；不传则最小 context）；可经 `compileToScene(ir).scene` 得到 */
+  /** 富 context 来源 Scene（仅 standalone `hydrate` 用；不传则最小 context）；可使用 SceneReconciler 的已编译 Scene */
   scene?: Scene;
 };
 

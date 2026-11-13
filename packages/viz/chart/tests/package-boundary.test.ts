@@ -135,11 +135,11 @@ describe('已发布的 Chart 发布组边界', () => {
     ['Chart', publishablePackageExpectations.chart],
     ['React', publishablePackageExpectations.react],
     ['Vanilla', publishablePackageExpectations.vanilla],
-  ])('仅发布 %s 的根和点族条目', async (_name, expectation) => {
+  ])('仅发布 %s 的根、点族和线族条目', async (_name, expectation) => {
     const manifest = await readManifest(expectation.manifest);
 
-    expect(Object.keys(manifest.exports ?? {})).toEqual(['.', './point']);
-    expect(Object.keys(manifest.publishConfig?.exports ?? {})).toEqual(['.', './point']);
+    expect(Object.keys(manifest.exports ?? {})).toEqual(['.', './point', './line']);
+    expect(Object.keys(manifest.publishConfig?.exports ?? {})).toEqual(['.', './point', './line']);
   });
 
   it('发布具有精确 Chart 组依赖关系图的核心包', async () => {
@@ -158,12 +158,18 @@ describe('已发布的 Chart 发布组边界', () => {
     expect(manifest.exports).toEqual({
       '.': { types: './src/index.ts', default: './src/index.ts' },
       './point': { types: './src/point/index.ts', default: './src/point/index.ts' },
+      './line': { types: './src/line/index.ts', default: './src/line/index.ts' },
     });
     expect(manifest.publishConfig?.exports).toEqual({
       '.': {
         types: './dist/types/index.d.ts',
         import: './dist/index.js',
         default: './dist/index.js',
+      },
+      './line': {
+        types: './dist/types/line/index.d.ts',
+        import: './dist/line/index.js',
+        default: './dist/line/index.js',
       },
       './point': {
         types: './dist/types/point/index.d.ts',

@@ -31,6 +31,8 @@ description: 把渲染目标无关的 Scene 落到 SVG / Canvas，并以 retaine
 
 ### 主图与只读图层
 
+运行时 Scene 身份、拓扑、快照和 Patch 契约由 Render 拥有，相关类型从 `@retikz/render/runtime` 导入，包括 `SceneIdentity`、`SceneRuntimeSnapshot` 和 `ScenePatch`。Reconciler 交付完整编译结果、来源信息和候选版本；Render 提交目标据此建立渲染快照。身份或拓扑构造失败使用 `RetikzRenderError` 报告。
+
 Static API 使用 `StaticRenderFrame { primary: Scene, layers }`，retained renderer 使用 `RenderFrameSnapshot { primary: SceneRuntimeSnapshot, layers }`。两者都把主图和有序只读图层作为一个 frame 物化；retained transaction 失败时不会发布新主图配旧图层。
 
 每个 `RenderReadonlyLayer` 都携带单帧唯一的 `key`、普通静态 `scene` 和到主 Scene 坐标的 `transform`。SVG 在主图之后追加 `pointer-events="none"` 的分组，用普通 Scene fragment 路径执行每个图层，并为其资源生成独立前缀，不写 hydration id。Canvas 套用图层 transform 后调用普通 Scene 绘制路径；`hitTest` 仍只读取主 Scene。只读图层不会决定 viewBox、主资源、动画或主图 identity，也不能包含公共 `id`、`meta` 或动画字段。
@@ -51,7 +53,7 @@ Static API 使用 `StaticRenderFrame { primary: Scene, layers }`，retained rend
   sources={[
     { label: 'Retained config', path: 'packages/kernel/render/src/runtime/config.ts' },
     { label: 'Reconciler commit target', path: 'packages/kernel/render/src/runtime/target.ts' },
-    { label: 'Session publication and recovery', path: 'packages/kernel/reconciler/src/reconciler.ts' },
+    { label: 'Session publication and recovery', path: 'packages/kernel/reconciler/src/reconcile/reconciler.ts' },
     {
       label: 'SVG WAAPI 独立资源 cleanup',
       path: 'packages/kernel/render/src/animation/retained/binding.ts',

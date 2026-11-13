@@ -67,7 +67,7 @@ afterEach(() => {
 });
 
 describe('<SourcePanel>', () => {
-  it('获取 raw GitHub 源码，并把引用行范围交给高亮器', async () => {
+  it('开发环境获取本地源码，并把引用行范围交给高亮器', async () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response('export const value = 1;'));
     vi.stubGlobal('fetch', fetchMock);
 
@@ -78,7 +78,7 @@ describe('<SourcePanel>', () => {
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
-      'https://raw.githubusercontent.com/Pionpill/retikz/main/packages/kernel/foundation/src/assert.ts',
+      '/__docs-source?path=packages%2Fkernel%2Ffoundation%2Fsrc%2Fassert.ts',
       expect.objectContaining({ signal: expect.any(AbortSignal) }),
     );
     expect(container.querySelector('[data-code]')?.getAttribute('data-code')).toBe('export const value = 1;');

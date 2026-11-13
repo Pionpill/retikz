@@ -1,7 +1,6 @@
 import type { ScenePrimitive } from '@retikz/core';
 import { resolveCoreProviderDependencies } from '@retikz/core';
 import { GraphSchema } from '@retikz/graph';
-import { compileToScene } from '@retikz/reconciler';
 import type { ReactElement } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -35,6 +34,7 @@ import {
   createPreviewControlContract as createBlockStyleContract,
 } from '../src/modules/docs/contents/schematic/graph/block/usage/block-style.controls';
 import { createGraphPreviewSource } from '../src/modules/docs/preview';
+import { compileTestResult } from './helpers/compilation';
 import { sceneSurfaceBounds } from './helpers/scene-geometry';
 
 const BlockBuiltinPreviewEn = (values: Parameters<typeof BlockBuiltinPreview>[0]) => BlockBuiltinPreview(values, 'en');
@@ -614,7 +614,7 @@ describe('Graph Block 文档', () => {
     const definitions = resolveCoreProviderDependencies({ contributions: preview.contributions });
     const { viewBox: _viewBox, ...ir } = preview.ir;
     void _viewBox;
-    const result = compileToScene(ir, { ...definitions, padding: 0 });
+    const result = compileTestResult(ir, { ...definitions, padding: 0 });
     const arrowPaths = primitivesOf(result.scene.primitives).filter(
       (primitive): primitive is Extract<ScenePrimitive, { type: 'path' }> =>
         primitive.type === 'path' && primitive.arrowEnd !== undefined,
@@ -682,7 +682,7 @@ describe('Graph Block 文档', () => {
     const { viewBox: _viewBox, ...ir } = preview.ir;
     void _viewBox;
     const definitions = resolveCoreProviderDependencies({ contributions: preview.contributions });
-    const layout = compileToScene(ir, { ...definitions, padding: 0 }).scene.layout;
+    const layout = compileTestResult(ir, { ...definitions, padding: 0 }).scene.layout;
 
     const viewCenter = {
       x: viewBox.x + viewBox.width / 2,

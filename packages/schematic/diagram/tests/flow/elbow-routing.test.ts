@@ -1,7 +1,6 @@
 import type { ScenePrimitive } from '@retikz/core';
 import { resolveCoreProviderDependencies } from '@retikz/core';
 import type { Position } from '@retikz/math';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { RetikzDiagramErrorCode } from '../../src/errors';
@@ -17,6 +16,7 @@ import {
 import { executeFlowLayout } from '../../src/flow/pipeline';
 import { routeFlowRelations } from '../../src/flow/providers/layout/routing';
 import { resolveEffectiveFlowLayout } from '../../src/flow/resolve';
+import { compileTestResult } from '../helpers/compilation';
 
 const inputFor = (kind: '-|' | '|-'): InputFlowLayoutComputation => ({
   layout: { direction: 'right', nodeGap: 48, rankGap: 48, routing: { kind, cornerRadius: 0 } },
@@ -72,7 +72,7 @@ describe('Flow 单弯头铣削', () => {
       },
     };
     const compile = (definition: typeof provider) =>
-      compileToScene(
+      compileTestResult(
         { type: 'scene', version: 1, children: [source] },
         resolveCoreProviderDependencies({
           contributions: [
@@ -141,7 +141,7 @@ describe('Flow 单弯头铣削', () => {
             { source: group ? 'g' : 'a', target: 'b', routing: { kind, cornerRadius }, style: { stroke: '#c026d3' } },
           ],
         });
-        const result = compileToScene(
+        const result = compileTestResult(
           { type: 'scene', version: 1, children: [source] },
           {
             ...resolveCoreProviderDependencies({ contributions: [createFlowDiagramProviderContribution()] }),

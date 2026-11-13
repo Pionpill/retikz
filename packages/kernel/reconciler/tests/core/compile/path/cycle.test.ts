@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { PathPrimitive } from '../../../../../core/src/contract';
 import type { IRScene } from '../../../../../core/src/schemas';
-import { compileToScene } from '../../../../src/compile';
+import { compileTestResult } from '../../../helpers/compilation';
 import { flattenPrims } from '../../../helpers/flatten';
 import { pathArrows } from '../../../helpers/path-arrows';
 import { arc, close, line, move } from '../../../helpers/path-command-factory';
@@ -26,7 +26,7 @@ describe("compile path: 'cycle' 闭合", () => {
       ],
     };
 
-    expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([
+    expect(findPathPrim(compileTestResult(ir).scene.primitives).commands).toEqual([
       move([0, 0]),
       line([10, 0]),
       line([10, 10]),
@@ -65,7 +65,7 @@ describe("compile path: 'cycle' 闭合", () => {
       ],
     };
 
-    expect(compileToScene(irWith).scene.layout).toEqual(compileToScene(irWithout).scene.layout);
+    expect(compileTestResult(irWith).scene.layout).toEqual(compileTestResult(irWithout).scene.layout);
   });
 
   it('cycle 与节点 ref 配合：每段独立 clip，cycle 段不能用 Z（闭合点与 lastEnd 不同）', () => {
@@ -87,7 +87,7 @@ describe("compile path: 'cycle' 闭合", () => {
         },
       ],
     };
-    const commands = findPathPrim(compileToScene(ir).scene.primitives).commands;
+    const commands = findPathPrim(compileTestResult(ir).scene.primitives).commands;
 
     // 三段独立：A→B、B→C、C→A，每段都 M 开头；不出现 close
     expect(commands.some(c => c.kind === 'close')).toBe(false);
@@ -111,7 +111,7 @@ describe("compile path: 'cycle' 闭合", () => {
       ],
     };
 
-    expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([
+    expect(findPathPrim(compileTestResult(ir).scene.primitives).commands).toEqual([
       move([10, 0]),
       arc([0, 0], 10, 0, 90),
       move([20, 20]),
@@ -136,7 +136,7 @@ describe("compile path: 'cycle' 闭合", () => {
       ],
     };
 
-    expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([
+    expect(findPathPrim(compileTestResult(ir).scene.primitives).commands).toEqual([
       move([0, 0]),
       line([20, 0]),
       move([30, 0]),
@@ -165,7 +165,7 @@ describe("compile path: 'cycle' 闭合", () => {
       ],
     };
     const fragments = flattenPrims(
-      compileToScene(ir, { measureText: () => ({ width: 20, height: 10 }) }).scene.primitives,
+      compileTestResult(ir, { measureText: () => ({ width: 20, height: 10 }) }).scene.primitives,
     ).filter((primitive): primitive is PathPrimitive => primitive.type === 'path' && primitive.stroke === '#13579b');
 
     expect(fragments.length).toBeGreaterThanOrEqual(2);

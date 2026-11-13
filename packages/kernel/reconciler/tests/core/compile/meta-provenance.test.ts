@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { IRScene, ScenePrimitive } from '../../../../core/src';
 import { NodeDefaultSchema, NodeSchema, PathDefaultSchema, SceneSchema } from '../../../../core/src';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 import { flattenPrims } from '../../helpers/flatten';
 
 const scene = (children: IRScene['children']): IRScene => ({
@@ -21,7 +21,7 @@ const PROV = { source: 'plot', series: 'sales', datum: 3 } as const;
 describe('Happy path：三载体 meta stamp 落点', () => {
   it('node_meta_stamped_on_shape_prims：纯几何 Node 带 meta → 每个平铺 shape 图元带同款 meta', () => {
     const ir = scene([{ type: 'node', id: 'a', position: [0, 0], meta: { ...PROV } }]);
-    const prims = compileToScene(ir, silent).scene.primitives;
+    const prims = compileTestResult(ir, silent).scene.primitives;
     const rects = allOfType(prims, 'rect');
 
     expect(rects.length).toBeGreaterThanOrEqual(1);
@@ -33,7 +33,7 @@ describe('Happy path：三载体 meta stamp 落点', () => {
 
   it('text_node_meta_on_group：文本 Node 带 meta → 单层 GroupPrimitive 带 meta，子图元不带', () => {
     const ir = scene([{ type: 'node', id: 'n', position: [0, 0], text: 'A', meta: { ...PROV } }]);
-    const prims = compileToScene(ir, silent).scene.primitives;
+    const prims = compileTestResult(ir, silent).scene.primitives;
 
     expect(prims).toHaveLength(1);
 
@@ -59,7 +59,7 @@ describe('Happy path：三载体 meta stamp 落点', () => {
         ],
       },
     ]);
-    const prims = compileToScene(ir, silent).scene.primitives;
+    const prims = compileTestResult(ir, silent).scene.primitives;
     const paths = allOfType(prims, 'path');
 
     expect(paths.length).toBeGreaterThanOrEqual(1);
@@ -78,7 +78,7 @@ describe('Happy path：三载体 meta stamp 落点', () => {
         children: [{ type: 'node', id: 'a', position: [0, 0] }],
       },
     ]);
-    const prims = compileToScene(ir, silent).scene.primitives;
+    const prims = compileTestResult(ir, silent).scene.primitives;
     const groups = prims.filter(p => p.type === 'group');
 
     expect(groups).toHaveLength(1);
@@ -98,7 +98,7 @@ describe('Happy path：三载体 meta stamp 落点', () => {
 describe('边界', () => {
   it('meta_omitted_equivalent：省略 meta → 图元无 meta 键（非 undefined 值）', () => {
     const ir = scene([{ type: 'node', id: 'a', position: [0, 0] }]);
-    const rects = allOfType(compileToScene(ir, silent).scene.primitives, 'rect');
+    const rects = allOfType(compileTestResult(ir, silent).scene.primitives, 'rect');
 
     expect(rects.length).toBeGreaterThanOrEqual(1);
 
@@ -109,7 +109,7 @@ describe('边界', () => {
 
   it('meta_pruned_scope：仅带 meta 的空 scope 仍被 prune（meta 不构成保留理由）', () => {
     const ir = scene([{ type: 'scope', meta: { ...PROV }, children: [] }]);
-    const prims = compileToScene(ir, silent).scene.primitives;
+    const prims = compileTestResult(ir, silent).scene.primitives;
 
     expect(prims).toHaveLength(0);
   });
@@ -137,7 +137,7 @@ describe('错误路径：非 JSON meta / meta 不进 every-X 默认', () => {
 describe('交互', () => {
   it('id_and_meta_coexist：同图元同时带 id + meta，两者都正确 stamp、互不影响', () => {
     const ir = scene([{ type: 'node', id: 'a', position: [0, 0], meta: { ...PROV } }]);
-    const rects = allOfType(compileToScene(ir, silent).scene.primitives, 'rect');
+    const rects = allOfType(compileTestResult(ir, silent).scene.primitives, 'rect');
 
     for (const rect of rects) {
       expect(rect.id).toBe('a');
@@ -146,8 +146,8 @@ describe('交互', () => {
   });
 
   it('meta_layout_neutral：加 / 删 meta 前后 viewBox / 图元几何不变', () => {
-    const without = compileToScene(scene([{ type: 'node', id: 'a', position: [0, 0], text: 'A' }]), silent).scene;
-    const withMeta = compileToScene(
+    const without = compileTestResult(scene([{ type: 'node', id: 'a', position: [0, 0], text: 'A' }]), silent).scene;
+    const withMeta = compileTestResult(
       scene([{ type: 'node', id: 'a', position: [0, 0], text: 'A', meta: { ...PROV } }]),
       silent,
     ).scene;

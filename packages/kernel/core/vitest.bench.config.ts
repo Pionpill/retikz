@@ -1,4 +1,4 @@
-import { fileURLToPath } from 'node:url';
+﻿import { fileURLToPath } from 'node:url';
 
 import { defineConfig } from 'vitest/config';
 
@@ -6,7 +6,7 @@ import { createRetikzDevPlugin } from '../../../config/vite/dev-plugin';
 import { BenchmarkReporter } from '../../../scripts/benchmarks/reporter';
 import { resolveCoreBudget } from './benchmarks/_budgets';
 
-// 当前原生构建入口有 schema 初始化错误；源码探索结果不可与原生 ESM 基线直接比较
+// 保留源码探索入口；此加载条件的结果不可与原生 ESM 基线直接比较
 const coreEntry = fileURLToPath(new URL('./src/index.ts', import.meta.url));
 
 export default defineConfig({

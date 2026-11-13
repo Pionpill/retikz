@@ -5,10 +5,9 @@ import type { StrokePathResolution } from '../../../../resolve';
 import type { IRPosition } from '../../../../schemas';
 import { fallbackMeasurer } from '../../../text';
 import { emitPathLabelContent, measurePathLabel, placePathLabel, placePathLabelContent } from '../../label';
-import type { StrokePathGeometry, StrokeLabelSample } from '../geometry';
-import { createStrokeStepSampler, sampleStrokePathGeometry, sampleStrokeSource } from '../geometry';
+import type { StrokePositionModel, StrokeLabelSample } from '../geometry';
+import { sampleStrokePosition } from '../geometry';
 import type {
-  LoweredStrokePathGeometry,
   PreparedStrokeLabelLayout,
   PreparedStrokeLabelEmit,
   StrokeLabelSlots,
@@ -18,15 +17,11 @@ import type {
 /** 按当前声明计算标签测量与放置，几何记录不保存旧标签 */
 export const layoutStrokeLabels = (
   resolution: StrokePathResolution,
-  geometry: LoweredStrokePathGeometry,
-  metrics: StrokePathGeometry | undefined,
+  positions: StrokePositionModel | undefined,
   context: StrokePathCompileContext,
   prepared?: StrokeLabelSlots<PreparedStrokeLabelLayout>,
 ): Required<StrokeLabelSlots<PreparedStrokeLabelLayout>> => {
   const { canon: path, irPath } = resolution;
-  const { samplerRecords } = geometry.sampling;
-  // ⚡只在实际定位标签时建立步骤索引，marks-only 或已准备 placement 不承担整路索引成本
-  let sampleStep: ReturnType<typeof createStrokeStepSampler> | undefined;
   const labelContext = {
     round: context.round,
     measureText: context.measureText ?? fallbackMeasurer,
@@ -61,43 +56,18 @@ export const layoutStrokeLabels = (
       )
         return {};
       const label = step.label;
-      return layoutLabel(label, prepared?.steps?.[index], () => {
-        if (label.interrupt) {
-          const logical =
-            metrics === undefined
-              ? undefined
-              : (sampleStep ??= createStrokeStepSampler(metrics))(
-                  index,
-                  label.position,
-                  step.kind === 'fold' ? 'previous' : 'next',
-                );
-          return { visual: logical?.sample, logical };
-        }
-        const record = samplerRecords.find(candidate => candidate.sourceStepIndex === index);
-        return { visual: record === undefined ? undefined : sampleStrokeSource(record.source, label.position) };
-      });
+      return layoutLabel(label, prepared?.steps?.[index], () =>
+        positions === undefined
+          ? {}
+          : (sampleStrokePosition(positions, label.position, label.positionMode, label.positionGeometry, index) ?? {}),
+      );
     }),
     host: (path.label ?? []).map((label, index) =>
-      layoutLabel(label, prepared?.host?.[index], () => {
-        if (metrics === undefined) return {};
-        if (geometry.roundedCommands) {
-          const logical = sampleStrokePathGeometry(metrics, label.position);
-          return { visual: logical?.sample, logical };
-        }
-        if (samplerRecords.length === 0) return {};
-        const scaled = label.position * samplerRecords.length;
-        const recordIndex = Math.min(Math.floor(scaled), samplerRecords.length - 1);
-        const localPosition = label.position === 1 ? 1 : scaled - recordIndex;
-        const record = samplerRecords[recordIndex];
-        const parameter =
-          record.parameterRange[0] + localPosition * (record.parameterRange[1] - record.parameterRange[0]);
-        const logical = (sampleStep ??= createStrokeStepSampler(metrics))(
-          record.sourceStepIndex,
-          parameter,
-          record.stepKind === 'fold' ? 'previous' : 'next',
-        );
-        return logical === undefined ? {} : { visual: sampleStrokeSource(record.source, parameter), logical };
-      }),
+      layoutLabel(label, prepared?.host?.[index], () =>
+        positions === undefined
+          ? {}
+          : (sampleStrokePosition(positions, label.position, label.positionMode, label.positionGeometry) ?? {}),
+      ),
     ),
   };
 };

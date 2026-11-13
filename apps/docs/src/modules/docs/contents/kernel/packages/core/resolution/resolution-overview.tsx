@@ -1,6 +1,5 @@
 import { FlowEntities, FlowLayout, FlowRelations } from '@retikz/diagram-react/flow';
 import type { FC } from 'react';
-import { useTranslation } from 'react-i18next';
 
 import type { Lang } from '@/i18n';
 import { PreviewFlowDiagram } from '@/modules/docs/components/component-preview/theme';
@@ -8,16 +7,16 @@ import { logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
 
 import { resolutionOverviewI18n } from './resolution-overview.i18n';
 
-/** 解析总览图的语言 */
+/** 语义解析总览图的语言 */
 export type ResolutionOverviewProps = { lang?: Lang };
 
-/** 按执行顺序展示解析阶段和输入输出 */
+/** 区分外部输入校验与依赖上下文的语义解析 */
 const ResolutionOverview: FC<ResolutionOverviewProps> = props => {
-  const { i18n } = useTranslation();
-  const lang = props.lang ?? ((i18n.resolvedLanguage ?? 'zh').startsWith('zh') ? 'zh' : 'en');
+  const { lang = 'zh' } = props;
   const text = resolutionOverviewI18n[lang];
-  const stages = ['setup', 'scope', 'merge', 'resolve', 'bind'] as const;
-  const products = ['environment', 'frames', 'input', 'effective', 'result'] as const;
+  const activities = ['schema', 'resolve', 'compile'] as const;
+  const states = ['external', 'typed', 'source', 'context', 'canonical'] as const;
+
   return (
     <PreviewFlowDiagram {...logicFigureGraphProps()} style={{ maxWidth: '100%', height: 'auto' }}>
       <FlowLayout
@@ -25,46 +24,45 @@ const ResolutionOverview: FC<ResolutionOverviewProps> = props => {
         kind="grid"
         gap={{ row: 20, column: 24 }}
         placements={[
-          [null, 'setup', 'environment'],
-          [null, 'scope', 'frames'],
-          ['input', 'merge', 'effective'],
-          [null, 'resolve', null],
-          [null, 'bind', 'result'],
+          ['external', 'schema', null],
+          ['typed', 'source', null],
+          [null, 'resolve', 'context'],
+          [null, 'canonical', null],
+          [null, 'compile', null],
         ]}
       >
         <FlowEntities
-          items={stages.map(id => ({
+          items={activities.map(id => ({
             id,
             role: 'activity',
             text: text[id],
-            layout: { width: 216 },
-            ...(id === 'merge' ? { kind: 'docs.logic.important' } : {}),
+            layout: { width: 200 },
+            ...(id === 'resolve' ? { kind: 'docs.logic.important' } : {}),
           }))}
         />
         <FlowEntities
-          items={products.map(id => ({
+          items={states.map(id => ({
             id,
             role: 'state',
             text: text[id],
-            layout: { width: 182 },
-            ...(id !== 'input' ? { kind: 'docs.logic.secondary' } : {}),
+            layout: { width: id === 'source' || id === 'canonical' ? 200 : 180 },
+            ...(id === 'canonical' ? { kind: 'docs.logic.importantData' } : {}),
           }))}
         />
       </FlowLayout>
       <FlowRelations
         items={[
-          { source: 'setup', target: 'scope' },
-          { source: 'scope', target: 'merge' },
-          { source: 'merge', target: 'resolve' },
-          { source: 'resolve', target: 'bind' },
-          { source: 'setup', target: 'environment' },
-          { source: 'scope', target: 'frames' },
-          { source: 'input', target: 'merge' },
-          { source: 'merge', target: 'effective' },
-          { source: 'bind', target: 'result' },
+          { source: 'external', target: 'schema' },
+          { source: { id: 'schema', anchor: 'bottom' }, target: { id: 'source', anchor: 'top' } },
+          { source: 'typed', target: 'source' },
+          { source: 'source', target: 'resolve' },
+          { source: 'context', target: 'resolve' },
+          { source: 'resolve', target: 'canonical' },
+          { source: 'canonical', target: 'compile' },
         ]}
       />
     </PreviewFlowDiagram>
   );
 };
+
 export default ResolutionOverview;

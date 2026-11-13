@@ -1,6 +1,13 @@
 import type { IRChartSource } from '@retikz/chart';
 import { renderChart } from '@retikz/chart-vanilla';
 import {
+  lineChart,
+  lineChartInputEmbedAdapter,
+  slopeChart,
+  slopeChartInputEmbedAdapter,
+} from '@retikz/chart-vanilla/line';
+import type { LineChartInputEmbedProps, SlopeChartInputEmbedProps } from '@retikz/chart-vanilla/line';
+import {
   scatterChartInputEmbedAdapter,
   bubbleChartInputEmbedAdapter,
   connectedScatterChartInputEmbedAdapter,
@@ -24,6 +31,8 @@ import {
   scatterChart,
   stripChart,
 } from '@retikz/chart-vanilla/point';
+import { LineChartSchema, SlopeChartSchema } from '@retikz/chart/line';
+import type { IRLineChart, IRSlopeChart } from '@retikz/chart/line';
 import type {
   IRBubbleChart,
   IRConnectedScatterChart,
@@ -1083,6 +1092,8 @@ const buildDatasetImportCode = (
 };
 
 type TypedChartSource =
+  | IRSlopeChart
+  | IRLineChart
   | IRScatterChart
   | IRBubbleChart
   | IRConnectedScatterChart
@@ -1092,11 +1103,16 @@ type TypedChartSource =
 
 /** 从 Source IR 识别确定形态的 Chart */
 const typedChartSourceOf = (source: CompositeChild): TypedChartSource | undefined => {
-  if (source.namespace !== 'chart' || source.type !== 'point' || !('recipe' in source)) return undefined;
+  if (source.namespace !== 'chart' || (source.type !== 'point' && source.type !== 'line') || !('recipe' in source))
+    return undefined;
 
   const chartType = (source as IRChartSource).recipe.chartType;
 
   switch (chartType) {
+    case 'slope':
+      return SlopeChartSchema.parse(source);
+    case 'line':
+      return LineChartSchema.parse(source);
     case 'scatter':
       return ScatterChartSchema.parse(source);
     case 'bubble':
@@ -1144,6 +1160,8 @@ const buildChartCode = (
   const typedSource = typedChartSourceOf(chart);
   if (typedSource !== undefined) {
     const factoryByChartType = {
+      slope: 'slopeChart',
+      line: 'lineChart',
       bubble: 'bubbleChart',
       'connected-scatter': 'connectedScatterChart',
       'ranged-dot': 'rangedDotChart',
@@ -1152,7 +1170,7 @@ const buildChartCode = (
       strip: 'stripChart',
     } as const;
     const factory = factoryByChartType[typedSource.recipe.chartType];
-    const adapter = `${factory[0].toUpperCase()}${factory.slice(1)}InputEmbedAdapter`;
+    const adapter = `${factory}InputEmbedAdapter`;
 
     const datasetImport = buildDatasetImportCode(datasets, options);
     const importCode = datasetImport === null || datasetImport.imports.length === 0 ? '' : `${datasetImport.imports}\n`;
@@ -1179,7 +1197,7 @@ const buildChartCode = (
     const size = outputSize(preview);
     const renderOptionsCode = `, { adapters: [${adapter}]${Object.keys(size).length === 0 ? '' : `, output: ${formatVanillaValue(size)}`} }`;
 
-    return `import { renderChart } from '@retikz/chart-vanilla';\nimport { ${factory}, ${adapter} } from '@retikz/chart-vanilla/point';\nimport { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';\n${importCode}\n${dataCode}const chart = ${factory}(${inputCode});\n\nexport const svg = renderChart(chart${renderOptionsCode}).svg;\n`;
+    return `import { renderChart } from '@retikz/chart-vanilla';\nimport { ${factory}, ${adapter} } from '@retikz/chart-vanilla/${typedSource.type}';\nimport { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';\n${importCode}\n${dataCode}const chart = ${factory}(${inputCode});\n\nexport const svg = renderChart(chart${renderOptionsCode}).svg;\n`;
   }
 
   return diagnostic(`Cannot generate Vanilla preview for unknown Chart Source type "${chart.type}".`).code;
@@ -1209,6 +1227,10 @@ const buildChartPreview = (
 
   const runtime = (() => {
     switch (chart.recipe.chartType) {
+      case 'slope':
+        return slopeChart(input as SlopeChartInputEmbedProps);
+      case 'line':
+        return lineChart(input as LineChartInputEmbedProps);
       case 'bubble':
         return bubbleChart(input as BubbleChartInputEmbedProps);
       case 'connected-scatter':
@@ -1232,6 +1254,8 @@ const buildChartPreview = (
       rangedDotChartInputEmbedAdapter,
       regressionChartInputEmbedAdapter,
       stripChartInputEmbedAdapter,
+      lineChartInputEmbedAdapter,
+      slopeChartInputEmbedAdapter,
     ],
     ...(options.measureText === undefined ? {} : { compile: { measureText: options.measureText } }),
     ...(Object.keys(size).length === 0 ? {} : { output: size }),

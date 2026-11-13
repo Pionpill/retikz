@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { PathPrimitive, ScenePrimitive } from '../../../../core/src/contract';
 import type { IRScene } from '../../../../core/src/schemas';
 import { PathSchema, SHADOW_PRESETS } from '../../../../core/src/schemas';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 import { flattenPrims } from '../../helpers/flatten';
 import { pathArrows } from '../../helpers/path-arrows';
 
@@ -21,8 +21,9 @@ const move = (to: [number, number]): unknown => ({ type: 'step', kind: 'move', t
 
 const line = (to: [number, number]): unknown => ({ type: 'step', kind: 'line', to });
 
-const compilePath = (extra: Record<string, unknown>): ReturnType<typeof compileToScene>['scene'] =>
-  compileToScene(scene([{ type: 'path', children: [move([0, 0]), line([10, 0])], ...extra } as never]), silent).scene;
+const compilePath = (extra: Record<string, unknown>): ReturnType<typeof compileTestResult>['scene'] =>
+  compileTestResult(scene([{ type: 'path', children: [move([0, 0]), line([10, 0])], ...extra } as never]), silent)
+    .scene;
 
 const bottomOf = (layout: { y: number; height: number }): number => layout.y + layout.height;
 

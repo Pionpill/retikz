@@ -1,0 +1,121 @@
+## ChannelSchema
+
+<ZodSchema
+  name="ChannelSchema"
+  description="字段名字符串，或带显式比例尺的字段对象。"
+  descriptions={{
+    field: '从数据行读取标量值的路径，例如 month 或 user.age。',
+    scale: '已声明的比例尺名；使用对象绑定时必填。',
+  }}
+/>
+
+## PositionEncodingSchema
+
+由以下三个严格对象 Schema 组成联合，拒绝跳过位置角色或加入未知角色。
+
+<ZodSchema name="PositionEncodingSchema" />
+
+## Position1DEncodingSchema
+
+仅 x 必填，不允许 y、z。
+
+<ZodSchema name="Position1DEncodingSchema" />
+
+## Position2DEncodingSchema
+
+x、y 必填，不允许 z。
+
+<ZodSchema name="Position2DEncodingSchema" />
+
+## Position3DEncodingSchema
+
+x、y、z 全部必填。
+
+<ZodSchema name="Position3DEncodingSchema" />
+
+## VisualEncodingSchema
+
+<ZodSchema
+  name="VisualEncodingSchema"
+  description="图元 lowering 消费的非位置通道。"
+  descriptions={{
+    color: '图元 fill / stroke 的颜色通道。',
+
+}}
+/>
+
+## NodeEncodingSchema
+
+<ZodSchema name="NodeEncodingSchema" />
+
+## PathEncodingSchema
+
+<ZodSchema name="PathEncodingSchema" />
+
+## PointMarkEncodingSchema
+
+<ZodSchema
+  name="PlotPointMarkEncodingSchema"
+  description="PointMark 的位置、文本和扩展通道编码。"
+  descriptions={{
+    position: '坐标角色到字段名的映射。',
+    text: '存在时把点 lowering 为承载文本的无边框 Node，而非 glyph。',
+    color: '图元 fill / stroke 颜色通道。',
+
+}}
+/>
+
+## PathMarkEncodingSchema
+
+顶点序列与完整端点两种输入互斥。
+
+<ZodSchema name="PathMarkEncodingSchema" />
+
+## IntervalMarkEncodingSchema
+
+组合节点外观与区间位置、分组及边界编码。
+
+<ZodSchema name="IntervalMarkEncodingSchema" />
+
+## OpacityEncodingSchema
+
+<ZodSchema
+  name="OpacityEncodingSchema"
+  description="透明度的 overall、fill、stroke 因子独立绑定字段。"
+  descriptions={{ overall: '整体透明度字段。', fill: '填充透明度字段。', stroke: '描边透明度字段。' }}
+/>
+
+## LabelEncodingSchema
+
+<ZodSchema
+  name="LabelEncodingSchema"
+  description="标签内容与外观字段，与 properties.label 按相同索引组合。"
+  descriptions={{ text: '当前数据行中的标签内容字段。' }}
+/>
+
+`encodings.label: 'name'` 等价于 `{ text: 'name' }`，表示字段绑定；`properties.label: '重点'` 表示固定文字。需要细化时改用对象，非空数组可混合字符串与对象，每一项对应一个标签。
+
+| 目标                        | 编码形式                                    |
+| --------------------------- | ------------------------------------------- |
+| `text`                      | 字段名，格式由固定属性 `displayFormat` 控制 |
+| `font.size`、`font.weight`  | 字段名，或 `{ field, scale }` 数值映射      |
+| `font.family`、`font.style` | 字段名，直接读取字体族或字形                |
+| `textColor`、`opacity`      | 字段名或显式尺度；透明度为标签自身的标量    |
+| 宿主附着属性                | 字段名；Node 与 Geometry 各自限制可用属性   |
+
+未编码的字体叶子保留固定配置及继承；编码失败不会回退固定值。只有样式绑定字段时，也按数据行生成 Mark。Path 标签使用实际线段首行，不为每个顶点生成标签。
+
+## LabelFontEncodingSchema
+
+<ZodSchema name="LabelFontEncodingSchema" description="字号、字重、字体族和字形的独立字段编码。" />
+
+## NodeLabelEncodingSchema
+
+<ZodSchema
+  name="NodeLabelEncodingSchema"
+  description="节点标签额外支持 placement、align、rotate、keepUpright，并复用共同的 position、distance 字段。"
+/>
+
+## PathLabelEncodingSchema
+
+<ZodSchema name="PathLabelEncodingSchema" description="几何标签额外支持 side、sloped；position 表示沿路径的位置。" />

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { IRScene } from '../../../../../core/src/schemas';
-import { compileToScene } from '../../../../src/compile';
+import { compileTestResult } from '../../../helpers/compilation';
 import { flattenPrims } from '../../../helpers/flatten';
 import { line, move } from '../../../helpers/path-command-factory';
 import { findPathPrim } from './helpers';
@@ -36,8 +36,8 @@ describe("compile path: 'step' 折角", () => {
       ],
     };
 
-    expect(findPathPrim(compileToScene(folded).scene.primitives).commands).toEqual(
-      findPathPrim(compileToScene(manual).scene.primitives).commands,
+    expect(findPathPrim(compileTestResult(folded).scene.primitives).commands).toEqual(
+      findPathPrim(compileTestResult(manual).scene.primitives).commands,
     );
   });
 
@@ -70,8 +70,8 @@ describe("compile path: 'step' 折角", () => {
       ],
     };
 
-    expect(findPathPrim(compileToScene(folded).scene.primitives).commands).toEqual(
-      findPathPrim(compileToScene(manual).scene.primitives).commands,
+    expect(findPathPrim(compileTestResult(folded).scene.primitives).commands).toEqual(
+      findPathPrim(compileTestResult(manual).scene.primitives).commands,
     );
   });
 
@@ -91,7 +91,7 @@ describe("compile path: 'step' 折角", () => {
         },
       ],
     };
-    const scene = compileToScene(ir, { padding: 10 }).scene;
+    const scene = compileTestResult(ir, { padding: 10 }).scene;
 
     expect(scene.layout).toEqual({ x: -10, y: -10, width: 60, height: 50 });
   });
@@ -120,7 +120,7 @@ describe("compile path: 'step' 折角", () => {
         },
       ],
     };
-    const scene = compileToScene(ir).scene;
+    const scene = compileTestResult(ir).scene;
     const commands = findPathPrim(scene.primitives).commands;
 
     expect(commands.map(c => c.kind)).toEqual(['move', 'line', 'line']); // M start, L corner, L end
@@ -148,7 +148,7 @@ describe("compile path: 'step' 折角", () => {
       ],
     };
 
-    expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([
+    expect(findPathPrim(compileTestResult(ir).scene.primitives).commands).toEqual([
       move([8, 0]),
       line([100, 0]),
       line([100, 52]),
@@ -172,7 +172,7 @@ describe("compile path: 'step' 折角", () => {
       ],
     };
 
-    expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([
+    expect(findPathPrim(compileTestResult(ir).scene.primitives).commands).toEqual([
       move([0, 8]),
       line([0, 60]),
       line([92, 60]),
@@ -196,7 +196,7 @@ describe("compile path: 'step' 折角", () => {
       ],
     };
 
-    expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([move([0, 8]), line([0, 52])]);
+    expect(findPathPrim(compileTestResult(ir).scene.primitives).commands).toEqual([move([0, 8]), line([0, 52])]);
   });
 
   it.each([
@@ -231,7 +231,7 @@ describe("compile path: 'step' 折角", () => {
       ],
     };
 
-    expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual(expected);
+    expect(findPathPrim(compileTestResult(ir).scene.primitives).commands).toEqual(expected);
   });
 
   it.each([
@@ -260,7 +260,7 @@ describe("compile path: 'step' 折角", () => {
       ],
     };
 
-    expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual(expected);
+    expect(findPathPrim(compileTestResult(ir).scene.primitives).commands).toEqual(expected);
   });
 
   it('三段 fold 从 arc 的真实 pen override 续接', () => {
@@ -278,7 +278,7 @@ describe("compile path: 'step' 折角", () => {
         },
       ],
     };
-    const tail = findPathPrim(compileToScene(ir).scene.primitives).commands.slice(-3);
+    const tail = findPathPrim(compileTestResult(ir).scene.primitives).commands.slice(-3);
 
     expect(tail.map(command => command.kind)).toEqual(['line', 'line', 'line']);
 
@@ -308,7 +308,7 @@ describe("compile path: 'step' 折角", () => {
       ],
     };
 
-    expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([
+    expect(findPathPrim(compileTestResult(ir).scene.primitives).commands).toEqual([
       move([100, 60]),
       line([75, 60]),
       line([75, 0]),
@@ -325,7 +325,7 @@ it.each([
   { via: '-|' as const, target: [100, 0] as [number, number], expected: [move([8, 0]), line([92, 0])] },
   { via: '|-' as const, target: [100, 0] as [number, number], expected: [move([8, 0]), line([92, 0])] },
 ])('两段 $via 移除节点内部转折点并保留原路线', ({ via, target, expected }) => {
-  const result = compileToScene({
+  const result = compileTestResult({
     type: 'scene',
     version: 1,
     children: [
@@ -347,7 +347,7 @@ it.each([
   { fraction: 0.04, expected: [move([4, 8]), line([4, 60]), line([92, 60])] },
   { fraction: 0.96, expected: [move([8, 0]), line([96, 0]), line([96, 52])] },
 ])('三段折线 fraction=$fraction 裁掉节点内部的转折部分', ({ fraction, expected }) => {
-  const result = compileToScene({
+  const result = compileTestResult({
     type: 'scene',
     version: 1,
     children: [
@@ -366,7 +366,7 @@ it.each([
 });
 
 it('折线沿原水平段与椭圆相交，不能用中心连线替代', () => {
-  const result = compileToScene({
+  const result = compileTestResult({
     type: 'scene',
     version: 1,
     children: [
@@ -391,7 +391,7 @@ it('折线沿原水平段与椭圆相交，不能用中心连线替代', () => {
 });
 
 it('折线裁切使用含非对称 margin 的连接面，反向连接仍正确', () => {
-  const result = compileToScene({
+  const result = compileTestResult({
     type: 'scene',
     version: 1,
     children: [
@@ -410,7 +410,7 @@ it('折线裁切使用含非对称 margin 的连接面，反向连接仍正确',
 });
 
 it('显式 center anchor 保留作者端点，不进行节点内部裁切', () => {
-  const result = compileToScene({
+  const result = compileTestResult({
     type: 'scene',
     version: 1,
     children: [
@@ -434,7 +434,7 @@ it('折线退化后标签与双向箭头沿可见直线采样', () => {
     { type: 'node', id: 'B', position: [100, 5] },
   ];
   const arrow = { start: {}, end: {} };
-  const actual = compileToScene({
+  const actual = compileTestResult({
     type: 'scene',
     version: 1,
     children: [
@@ -449,7 +449,7 @@ it('折线退化后标签与双向箭头沿可见直线采样', () => {
       },
     ],
   }).scene;
-  const expected = compileToScene({
+  const expected = compileTestResult({
     type: 'scene',
     version: 1,
     children: [
@@ -472,7 +472,7 @@ it('折线退化后标签与双向箭头沿可见直线采样', () => {
 });
 
 it('折线在自身 Scope 坐标中裁切外部节点，保持变换后的边界交点', () => {
-  const result = compileToScene({
+  const result = compileTestResult({
     type: 'scene',
     version: 1,
     children: [

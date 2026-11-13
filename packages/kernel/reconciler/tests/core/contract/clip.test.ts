@@ -4,7 +4,7 @@ import { literal, number, strictObject } from 'zod';
 
 import type { IRScene } from '../../../../core/src';
 import { defineClip } from '../../../../core/src';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 
 type TicketClip = {
   kind: 'ticket';
@@ -81,16 +81,19 @@ describe('裁剪定义契约', () => {
       children: [{ type: 'scope', clip: spec, children: [] }],
     };
 
-    expect(compileToScene(scene, { clips: [definition] }).scene.resources).toMatchObject([
-      {
-        kind: 'clip',
-        path: {
-          commands: [
-            { kind: 'move', to: [0, 0] },
-            { kind: 'line', to: [4, 4] },
-          ],
+    expect(compileTestResult(scene, { clips: [definition] }).scene.resources).toMatchObject({
+      paints: [],
+      clips: [
+        {
+          kind: 'clip',
+          path: {
+            commands: [
+              { kind: 'move', to: [0, 0] },
+              { kind: 'line', to: [4, 4] },
+            ],
+          },
         },
-      },
-    ]);
+      ],
+    });
   });
 });

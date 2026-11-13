@@ -1,16 +1,16 @@
 import type { IRChild } from '@retikz/core';
 import { pathClipDefinition } from '@retikz/extension';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { arrayDefinition, ArraySchema, getArrayCellId, mapDefinition } from '../../../src/collection';
 import { RetikzStandardError } from '../../../src/shared/errors';
+import { compileTestResult } from '../../helpers/compilation';
 import { sceneCellBounds, sceneNodes } from '../../helpers/scene-geometry';
 
 const base = { namespace: 'standard', type: 'array', id: 'array', cellIdMode: 'index' };
 
 const compile = (children: Array<IRChild>) =>
-  compileToScene(
+  compileTestResult(
     { type: 'scene', version: 1, children },
     { composites: [arrayDefinition, mapDefinition], clips: [pathClipDefinition] },
   );

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { ScenePrimitive, TextPrimitive } from '../../../../core/src/contract';
 import type { IRNode, IRNodeLabel, IRScene } from '../../../../core/src/schemas';
 import { NodeLabelSchema, SceneSchema } from '../../../../core/src/schemas';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 import { flattenPrims } from '../../helpers/flatten';
 
 const silent = { onWarn: () => {} };
@@ -111,7 +111,7 @@ describe('Node 标签放置', () => {
 
   describe('内部放置', () => {
     it('top + inside 沿 top boundary 向内偏移', () => {
-      const scene = compileToScene(
+      const scene = compileTestResult(
         sceneWithLabel({ text: 'L', position: 'top', placement: 'inside', distance: 6 }),
         silent,
       ).scene;
@@ -122,7 +122,7 @@ describe('Node 标签放置', () => {
     });
 
     it('数字角度 + inside 沿径向向内偏移', () => {
-      const scene = compileToScene(
+      const scene = compileTestResult(
         sceneWithLabel({ text: 'L', position: 0, placement: 'inside', distance: 8 }),
         silent,
       ).scene;
@@ -135,7 +135,7 @@ describe('Node 标签放置', () => {
 
   describe('边界位置', () => {
     it('top boundary 支持自定义比例位置并向内偏移', () => {
-      const scene = compileToScene(
+      const scene = compileTestResult(
         sceneWithLabel({
           text: 'L',
           position: { boundary: 'top', fraction: 0.25 },
@@ -151,7 +151,7 @@ describe('Node 标签放置', () => {
     });
 
     it('right boundary 缺省 fraction=0.5 并向内偏移', () => {
-      const scene = compileToScene(
+      const scene = compileTestResult(
         sceneWithLabel({
           text: 'L',
           position: { boundary: 'right' },
@@ -167,11 +167,11 @@ describe('Node 标签放置', () => {
     });
 
     it('boundary position 的端点 fraction=0 / fraction=1 落在同一条边界两端', () => {
-      const start = compileToScene(
+      const start = compileTestResult(
         sceneWithLabel({ text: 'S', position: { boundary: 'bottom', fraction: 0 }, distance: 0 }),
         silent,
       ).scene;
-      const end = compileToScene(
+      const end = compileTestResult(
         sceneWithLabel({ text: 'E', position: { boundary: 'bottom', fraction: 1 }, distance: 0 }),
         silent,
       ).scene;
@@ -187,7 +187,7 @@ describe('Node 标签放置', () => {
     it('非 box-like shape 使用 boundary position 时抛出诊断', () => {
       expect(
         () =>
-          compileToScene(
+          compileTestResult(
             sceneWithLabel(
               {
                 text: 'L',
@@ -202,11 +202,11 @@ describe('Node 标签放置', () => {
     });
 
     it('bottom boundary 的 start / end 沿切线贴合视觉盒边缘', () => {
-      const start = compileToScene(
+      const start = compileTestResult(
         sceneWithLabel({ text: 'Start', position: { boundary: 'bottom', fraction: 0 }, align: 'start', distance: 0 }),
         silent,
       ).scene;
-      const end = compileToScene(
+      const end = compileTestResult(
         sceneWithLabel({ text: 'End', position: { boundary: 'bottom', fraction: 0 }, align: 'end', distance: 0 }),
         silent,
       ).scene;
@@ -220,11 +220,11 @@ describe('Node 标签放置', () => {
     });
 
     it('right boundary 的切线方向从上到下', () => {
-      const start = compileToScene(
+      const start = compileTestResult(
         sceneWithLabel({ text: 'Start', position: { boundary: 'right', fraction: 0 }, align: 'start', distance: 0 }),
         silent,
       ).scene;
-      const end = compileToScene(
+      const end = compileTestResult(
         sceneWithLabel({ text: 'End', position: { boundary: 'right', fraction: 0 }, align: 'end', distance: 0 }),
         silent,
       ).scene;
@@ -239,11 +239,14 @@ describe('Node 标签放置', () => {
     });
 
     it('center position 忽略 label align', () => {
-      const middle = compileToScene(
+      const middle = compileTestResult(
         sceneWithLabel({ text: 'Middle', position: 'center', align: 'middle' }),
         silent,
       ).scene;
-      const start = compileToScene(sceneWithLabel({ text: 'Start', position: 'center', align: 'start' }), silent).scene;
+      const start = compileTestResult(
+        sceneWithLabel({ text: 'Start', position: 'center', align: 'start' }),
+        silent,
+      ).scene;
       const middleLabel = labelText(middle.primitives, 'Middle')!;
       const startLabel = labelText(start.primitives, 'Start')!;
 
@@ -252,7 +255,7 @@ describe('Node 标签放置', () => {
     });
 
     it('旋转 label 的 start 使用旋转后视觉盒投影', () => {
-      const scene = compileToScene(
+      const scene = compileTestResult(
         sceneWithLabel({
           text: 'Rotated',
           position: { boundary: 'bottom', fraction: 0 },
@@ -276,8 +279,8 @@ describe('Node 标签放置', () => {
         placement: 'inside',
         distance: 6,
       };
-      const base = compileToScene(sceneWithLabel(label), silent).scene;
-      const rotated = compileToScene(
+      const base = compileTestResult(sceneWithLabel(label), silent).scene;
+      const rotated = compileTestResult(
         {
           ...sceneWithLabel(label),
           children: [{ ...sceneWithLabel(label).children[0], rotate: 90 }],
@@ -292,7 +295,7 @@ describe('Node 标签放置', () => {
     });
 
     it('outside + pin 仍然生成 leader line', () => {
-      const scene = compileToScene(
+      const scene = compileTestResult(
         sceneWithLabel({
           text: 'L',
           position: { boundary: 'top', fraction: 0.5 },

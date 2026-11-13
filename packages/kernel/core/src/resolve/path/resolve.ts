@@ -3,7 +3,13 @@ import { formatPropertyPath } from '@retikz/foundation';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { IRMarkStyle, IRPaintValue, IRPathBase, IRPathLabel, IRStep } from '../../schemas';
-import { BendAngleSchema, BuiltinPath, SmoothTensionSchema } from '../../schemas';
+import {
+  BendAngleSchema,
+  BuiltinPath,
+  SmoothTensionSchema,
+  PathLabelSchema,
+  PathMarkPlacementSchema,
+} from '../../schemas';
 import { resolvePaint } from '../resource';
 import { mergePathStyle, resolveContextualColor, resolveDropShadow, resolveGraphicOpacity } from '../style';
 import { resolveTextBlock, resolveTextLineColors } from '../text';
@@ -102,8 +108,11 @@ const canonicalizeLabelPlacement = <TLabel extends PathLabelGeometryOptions>(
   canAutomaticallyInterrupt: boolean,
 ): Omit<TLabel, 'position' | 'side' | 'distance' | 'interrupt' | 'gap'> & CanonicalPathLabelPlacement => {
   const side = label.side ?? (label.sloped === true ? 'center' : 'top');
+  const positionMode = label.positionMode ?? PathLabelSchema.shape.positionMode.unwrap().parse(undefined);
   return {
     ...label,
+    positionMode,
+    positionGeometry: label.positionGeometry ?? (positionMode === 'step' ? 'original' : 'rounded'),
     position:
       label.position === undefined
         ? 0.5
@@ -200,7 +209,7 @@ const canonicalizePath = (
 ): Omit<CanonicalPath, 'fill' | 'stroke' | 'strokeWidth'> &
   Pick<NonNullable<PathColorSource['style']>, 'fill' | 'stroke' | 'strokeWidth'> => {
   const { style, ...source } = path;
-  const { children, label: pathLabel } = source;
+  const { children, label: pathLabel, marks } = source;
   const { opacity, ...visual } = style ?? {};
   return {
     ...source,
@@ -218,6 +227,14 @@ const canonicalizePath = (
     strokeOpacity: 1,
     ...resolveGraphicOpacity(opacity),
     children: canonicalizeSteps(children, canAutomaticallyInterrupt, context),
+    marks: marks?.map(mark => {
+      const positionMode = mark.positionMode ?? PathMarkPlacementSchema.shape.positionMode.unwrap().parse(undefined);
+      return {
+        ...mark,
+        positionMode,
+        positionGeometry: mark.positionGeometry ?? (positionMode === 'step' ? 'original' : 'rounded'),
+      };
+    }),
     label:
       pathLabel === undefined
         ? undefined
@@ -405,6 +422,8 @@ const resolvePathContextualColors = (
             ...resolveMarkColors(item, masterColor, context, [...irPath, 'marks', index]),
             pos: item.pos,
             rotate: item.rotate,
+            positionMode: item.positionMode,
+            positionGeometry: item.positionGeometry,
           })),
         }),
   };

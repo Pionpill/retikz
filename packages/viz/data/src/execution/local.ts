@@ -2,8 +2,13 @@ import { RetikzDataError } from '../error';
 import { extractStatisticOperation } from '../operators';
 import type { AnyStatisticsReducerImplementation, IRDataReducerOperation } from '../operators/reducer';
 import { BUILTIN_STATISTICS_REDUCER_IMPLEMENTATIONS, resolveStatisticsReducerRegistry } from '../operators/reducer';
-import type { AnyRegressionImplementation } from '../operators/regression';
-import { BUILTIN_REGRESSION_IMPLEMENTATIONS, extractRegressionKind } from '../operators/regression';
+import type { AnyRegressionImplementation, RegressionFitOptions, RegressionPair } from '../operators/regression';
+import {
+  BUILTIN_REGRESSION_IMPLEMENTATIONS,
+  extractRegressionKind,
+  hasRegressionImplementations,
+  fitPreparedRegressionAsync,
+} from '../operators/regression';
 import type { AnyRowSelectorImplementation, IRDataSelectorOperation } from '../operators/selector';
 import { BUILTIN_ROW_SELECTOR_IMPLEMENTATIONS, resolveRowSelectorRegistry } from '../operators/selector';
 import type { AnyTransformImplementation, DataTransformStage, TransformContext } from '../transform';
@@ -61,6 +66,7 @@ export const createLocalTransformPreparation = <TSource>(
       throw new RetikzDataError(`data: "${stage.operation.kind}" references a different Definition`);
 
     for (const dependency of stage.dependencies) {
+      if (dependency.type === 'regression' && !hasRegressionImplementations(dependency, regressions)) return undefined;
       const implementation =
         dependency.type === 'reducer'
           ? reducers.get(dependency.operation.kind)
@@ -151,23 +157,9 @@ export const createLocalTransformPreparation = <TSource>(
 
       const dependency = stage.dependencies.find(candidate => candidate.type === 'regression');
       const regression = {
-        fit: async (pairs: Parameters<AnyRegressionImplementation['fit']>[0]) => {
+        fit: async (pairs: ReadonlyArray<RegressionPair>, fitOptions?: RegressionFitOptions) => {
           if (dependency?.type !== 'regression') throw new RetikzDataError('data: undeclared regression dependency');
-
-          const implementation = regressions.get(dependency.operation.kind);
-          if (implementation === undefined) throw new RetikzDataError('data: missing prepared regression');
-
-          const model = await implementation.fit(pairs, dependency.operation as never);
-
-          return {
-            predict: (x: number) => {
-              const prediction = model.predict(x);
-              if (!Number.isFinite(prediction))
-                throw new RetikzDataError('data: regression produced a non-finite prediction');
-
-              return prediction;
-            },
-          };
+          return fitPreparedRegressionAsync(dependency, regressions, pairs, fitOptions);
         },
         validateExtent: (extent: [number, number]) => {
           if (dependency?.type === 'regression')

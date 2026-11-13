@@ -1,5 +1,4 @@
 import type { IRScene, PathCommand, PathPrimitive, ScenePrimitive } from '@retikz/core';
-import { compileToScene as compileCoreToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -9,6 +8,7 @@ import {
   ribbonPathDefinition,
 } from '../../src/ribbon';
 import { widthFunction } from '../../src/ribbon/geometry/width';
+import { compileTestResult } from '../helpers/compilation';
 
 const scene = (children: IRScene['children']): IRScene => ({
   version: 1,
@@ -32,11 +32,11 @@ const commandPoint = (command: PathCommand): [number, number] => {
   return command.to;
 };
 
-const compileToRibbonScene = (input: IRScene, options: Parameters<typeof compileCoreToScene>[1] = {}) => {
+const compileToRibbonScene = (input: IRScene, options: Parameters<typeof compileTestResult>[1] = {}) => {
   const supplied = options.paths ?? [];
   const ribbonDefinition = supplied.find(definition => definition.name === 'ribbon') ?? ribbonPathDefinition;
 
-  return compileCoreToScene(input, {
+  return compileTestResult(input, {
     ...options,
     paths: [ribbonDefinition, ...supplied.filter(definition => definition.name !== 'ribbon')],
   });

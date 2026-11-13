@@ -7,7 +7,8 @@ import { NodeSchema } from '../node/node';
 import { ArrowDetailSchema } from '../path/arrow';
 import { PathLabelSchema } from '../path/label';
 import { PathSchema, PathGeometrySchema, PathTransformSchema } from '../path/path';
-import { CssColorSchema, CascadingGraphicStyleSchema } from '../style/graphic';
+import { CssColorSchema } from '../style/color';
+import { CascadingGraphicStyleSchema } from '../style/graphic';
 
 const ScopeStyleChannel = {
   /** node 默认样式通道 */
@@ -23,6 +24,7 @@ export const NodeLabelDefaultSchema = NodeLabelConfigSchema.safeExtend({
 
 /** 路径与步骤已有标签的稀疏配置 */
 export const PathLabelDefaultSchema = PathLabelSchema.omit({ text: true }).extend({
+  positionMode: PathLabelSchema.shape.positionMode.unwrap().unwrap().optional(),
   color: CssColorSchema.optional().describe('Master color for path and step labels; textColor falls back to it.'),
 });
 

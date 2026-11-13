@@ -1,17 +1,17 @@
 import { resolveCoreProviderDependencies } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { createProcessingController, normalizeScene, scene } from '@retikz/vanilla';
 import { expect, it } from 'vitest';
 
 import { standardInputEmbedAdapters } from '../src';
 import { tree } from '../src/collection';
+import { compileTestResult } from './helpers/compilation';
 
 it('Tree自动装配并保留root稀疏Source', () => {
   for (const child of [tree({ root: 'A' }), tree({ root: { content: '2', children: [null] } }), tree({ root: null })]) {
     const normalized = normalizeScene(scene({ children: [child] }), { adapters: standardInputEmbedAdapters });
     expect(normalized.ir.children[0]).not.toHaveProperty('node');
     const options = resolveCoreProviderDependencies({ contributions: normalized.contributions });
-    expect(() => compileToScene(normalized.ir, options)).not.toThrow();
+    expect(() => compileTestResult(normalized.ir, options)).not.toThrow();
   }
 });
 

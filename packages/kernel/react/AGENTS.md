@@ -72,7 +72,7 @@ runtime/     Layout、hydration handler 收集、Vanilla processing 调度与 Re
 ## Renderer 接线
 
 - 输入是 Vanilla readonly processing result，不在 renderer 里重做 IR -> Scene 编译或 Runtime session。
-- `Layout` 的客户端 IR / JSX 路径由 Vanilla processing mode 选择 retained Session 或无 Session 的 static full 执行，默认 retained；React 只声明 `<svg>` / `<canvas>` shell，并将 Vanilla result 交给 Render 接线。
+- `Layout` 的客户端 IR / JSX 路径由 Vanilla processing mode 选择常驻或临时非增量 SceneReconciler 执行，默认 retained；React 只声明 `<svg>` / `<canvas>` shell，并将 Vanilla result 交给 Render 接线。
 - SSR SVG 只输出 opaque seed，首次客户端 layout effect 以 `adopt` 接管；后续 render 不重写 Render-owned descendants。
 - 坐标、anchor、bbox 等几何计算属于 core；react renderer 不重复实现。
 - SVG 输出形态优先改 `@retikz/render/svg`；react 侧保持 `SvgNode -> ReactElement` 薄映射。

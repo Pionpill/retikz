@@ -1,11 +1,17 @@
-import type { Lang } from '@/i18n';
-
-/** 编译产物示意图文案 */
-export const outputOverviewI18n: Record<Lang, Array<string>> = {
-  zh: ['完成遍历\n图元与布局贡献', '装配 Scene\n资源与画布', '交付结果\nScene 与附加产物'],
-  en: [
-    'Finish traversal\nPrimitives and bounds',
-    'Assemble Scene\nResources and canvas',
-    'Deliver result\nScene and side results',
-  ],
+/** 局部图元、布局与资源引用流程图的双语文案 */
+export const outputOverviewI18n = {
+  zh: {
+    atomic: '局部图元、布局与资源引用',
+    tree: '投影边界、回填路径、排序',
+    snapshot: 'result + diagnostics + 可选 provenance',
+    consumer: '绘图与领域数据分别消费',
+    artifact: '显式 JSON 领域产物',
+  },
+  en: {
+    atomic: 'Local primitives, bounds and references',
+    tree: 'Project bounds, fill paths and sort',
+    snapshot: 'result, diagnostics, optional provenance',
+    consumer: 'Consume drawing and domain data',
+    artifact: 'Explicit JSON domain artifacts',
+  },
 };

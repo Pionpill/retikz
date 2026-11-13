@@ -59,11 +59,16 @@ export const targetKeyOf = (target: IRTarget): string => {
   const stable = (value: unknown): unknown => {
     if (Array.isArray(value)) return value.map(stable);
     if (value !== null && typeof value === 'object') {
-      return Object.fromEntries(
-        Object.entries(value as Record<string, unknown>)
-          .sort(([a], [b]) => a.localeCompare(b))
-          .map(([key, item]) => [key, stable(item)]),
-      );
+      // ⚡只排序字段名，直接构造规范对象，避免两轮条目元组与数组分配
+      const source = value as Record<string, unknown>;
+      const result: Record<string, unknown> = {};
+      for (const key of Object.keys(source).sort((left, right) => left.localeCompare(right))) {
+        const item = stable(source[key]);
+        if (key === '__proto__')
+          Object.defineProperty(result, key, { value: item, enumerable: true, configurable: true, writable: true });
+        else result[key] = item;
+      }
+      return result;
     }
 
     return value;

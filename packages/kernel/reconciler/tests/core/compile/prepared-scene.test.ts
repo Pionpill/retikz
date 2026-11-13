@@ -3,8 +3,8 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { IRChild, IRScene, ScenePrimitive } from '../../../../core/src';
 import { createCompositeInputBindings, RetikzCoreErrorCode } from '../../../../core/src';
-import { compileSceneSnapshot, compileToScene } from '../../../src/compile';
 import { CompileProvenanceTracker } from '../../../src/compile/index';
+import { compileTestResult, compileTestSnapshot } from '../../helpers/compilation';
 
 const scene: IRScene = {
   version: 1,
@@ -53,8 +53,8 @@ describe('静态编译快照', () => {
   });
 
   it('默认结果等价且不收集来源', () => {
-    const snapshot = compileSceneSnapshot(scene);
-    expect(snapshot.result).toEqual(compileToScene(scene));
+    const snapshot = compileTestSnapshot(scene);
+    expect(snapshot.result).toEqual(compileTestResult(scene));
     expect(snapshot.provenance).toBeUndefined();
   });
 
@@ -68,10 +68,10 @@ describe('静态编译快照', () => {
     };
     const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     try {
-      const snapshot = compileSceneSnapshot(input, {}, { captureProvenance: true });
+      const snapshot = compileTestSnapshot(input, {}, { captureProvenance: true });
       const provenance = snapshot.provenance!;
       expect(snapshot.diagnostics.length).toBeGreaterThan(0);
-      expect(warning).not.toHaveBeenCalled();
+      expect(warning).toHaveBeenCalledTimes(snapshot.diagnostics.length);
       expect([...provenance.ownerMap.values()].filter(owner => owner.id === 'same')).toHaveLength(2);
       const paths: Array<Array<string | number>> = [];
       const visit = (items: typeof snapshot.result.scene.primitives, parent: Array<string | number>): void => {
@@ -101,8 +101,8 @@ describe('静态编译快照', () => {
 
   it('编译入口接受配对绑定并拒绝过期绑定', () => {
     const bindings = createCompositeInputBindings(scene, []);
-    expect(compileToScene(scene, { compositeInputs: bindings })).toEqual(compileToScene(scene));
-    expect(() => compileToScene({ ...scene, children: [] }, { compositeInputs: bindings })).toThrow(
+    expect(compileTestResult(scene, { compositeInputs: bindings })).toEqual(compileTestResult(scene));
+    expect(() => compileTestResult({ ...scene, children: [] }, { compositeInputs: bindings })).toThrow(
       expect.objectContaining({ code: RetikzCoreErrorCode.ContractViolation }),
     );
   });

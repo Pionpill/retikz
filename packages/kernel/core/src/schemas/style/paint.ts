@@ -20,14 +20,8 @@ import {
 } from 'zod';
 import type { infer as ZodInfer } from 'zod';
 
-import {
-  CssColorSchema,
-  OpacitySchema,
-  StrokeDashPatternSchema,
-  StrokeDashOffsetSchema,
-  PathLineCapSchema,
-  PathLineJoinSchema,
-} from './graphic';
+import { CssColorSchema, OpacitySchema } from './color';
+import { StrokeDashPatternSchema, StrokeDashOffsetSchema, PathLineCapSchema, PathLineJoinSchema } from './graphic';
 
 /** 内置图案：平行线、圆点和网格 */
 export const BuiltinPatternShape = {

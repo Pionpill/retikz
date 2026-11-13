@@ -134,6 +134,12 @@ recipe 的显式 consumer 列表贴近实际 resolver 维护，不从 schema 字
 
 仅把 `chartType` 嵌套进 `recipe`，但仍一次展开所有宽 union，不能降低选择复杂度。LLM 与 unknown JSON 入口应消费应用层生成或提供的 family catalog，再选择具体 chartType 的精确 schema；Chart runtime 只处理当前 provider 边界已经选定的 schema。
 
+### 3.4 Chart 与 Chart mark 的抽象边界
+
+每一种 Chart（chartType）与 Chart mark 都必须具有明确的功能职责，并能说明其数据角色、行为或组合语义与已有能力的区别。独立抽象不要求新增底层算法，但必须承载独立的功能语义，不能仅由名称或展示效果区分。
+
+仅样式、尺寸、装饰显隐或适用场景不同的变体，优先统一设计，通过已有配置、Theme 或组合表达，不单独新增 chartType 或 Chart mark。例如，隐藏坐标轴和网格、缩小尺寸的 Sparkline 属于 Line 的紧凑展示，不据此建立独立抽象。
+
 ## 4. Encodings 与 Properties
 
 ### 4.1 精确 schema 与原子组合

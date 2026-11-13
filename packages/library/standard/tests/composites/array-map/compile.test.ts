@@ -2,11 +2,11 @@ import type { AnyCompositeDefinition, IRChild, LayoutChildResult, LayoutProposal
 import { ChildSchema, CompositeBaseSchema, defineComposite, LayoutChildProbeKind } from '@retikz/core';
 import { pathClipDefinition } from '@retikz/extension';
 import { intrinsicLayoutProposal } from '@retikz/layout/compose';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { boolean, literal } from 'zod';
 
 import { arrayDefinition, mapDefinition } from '../../../src/collection';
+import { compileTestResult } from '../../helpers/compilation';
 import { sceneCellBounds, sceneNodeBounds, sceneNodes } from '../../helpers/scene-geometry';
 
 const cell = (id: string, width: number, height: number) => ({
@@ -43,7 +43,7 @@ const compile = (
       return { children: [context.replay(probe.result)] };
     },
   });
-  const scene = compileToScene(
+  const scene = compileTestResult(
     { type: 'scene', version: 1, children: [{ namespace: 'cell-test', type: 'harness', child }] },
     {
       composites: [harness, customArrayDefinition, mapDefinition, ...extra],

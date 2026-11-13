@@ -1,13 +1,13 @@
 import type { ParsedFieldValue, FieldResolver } from '@retikz/data';
 import { applyFieldResolver, resolveDataRows } from '@retikz/data';
 import { DataFieldType } from '@retikz/data';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { createPlotLocator } from '../../../src/pipeline';
 import { lowerPlots, prepareRows } from '../../../src/pipeline/expand';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
+import { compileTestResult } from '../../helpers/compilation';
 
 /** cartesian point spec，model 可选（部分声明走 contract），无 scales → 走 type-driven 派生 */
 const pointSpec = (model?: Array<{ name: string; type?: string }>): IRPlot =>
@@ -237,7 +237,7 @@ describe('render ⟺ locator parity + scale 兼容', () => {
   };
 
   it('使用 resolveField 进行渲染编译', () => {
-    const scene = compileToScene(
+    const scene = compileTestResult(
       { version: 1, type: 'scene', children: [spec] },
       { composites: lowerPlots(datasets, { resolveField }) },
     ).scene;
@@ -271,7 +271,7 @@ describe('render ⟺ locator parity + scale 兼容', () => {
 
     expect(
       () =>
-        compileToScene(
+        compileTestResult(
           { version: 1, type: 'scene', children: [explicitSpec] },
           {
             composites: lowerPlots(

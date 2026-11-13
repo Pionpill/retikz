@@ -1,6 +1,6 @@
 ---
 title: mark · Marks
-description: Place a cross, plus, check, star, or registered arrow at any arc-length position on a path
+description: Place a cross, plus, check, star, or registered arrow by path length or step progress
 ---
 
 Declare shapes and positions in `Draw` or `Path` through `marks` to add status, emphasis, or direction to a connection. Each entry directly contains `pos`, `shape`, and appearance fields; custom parameters go in `params`. Start with [Basic usage](/kernel/components/path/usage) if this is your first drawing.
@@ -49,13 +49,21 @@ React `Draw` / `Path`, Vanilla `path({ marks })`, and the JSON IR path `marks` f
 
 Names identify shapes without assigning a status or color. The four ordinary marks anchor at the center of their local reference square. Registered arrows also work as `shape`, including `stealth`; they anchor at their tip.
 
-`pos` is a fraction of the entire path's accumulated arc length, from 0 to 1: 0 is the start, 0.5 is halfway along, and 1 is the end. Sampling happens before endpoint shortening and label interruption, so changing arrow size or a label gap does not move a mark.
+`pos` ranges from 0 to 1, with 0 at the start and 1 at the end. `positionMode` determines how that fraction is interpreted:
+
+| Mode                      | Meaning of `pos: 0.5`                                                    |
+| ------------------------- | ------------------------------------------------------------------------ |
+| `'length'` (mark default) | Half the accumulated length of the selected geometry                     |
+| `'step'`                  | Equal shares for drawable segments, then each segment's native parameter |
+
+`positionGeometry` independently selects `'original'` (before corner rounding) or `'rounded'` (after rounding). When omitted, `step` uses original geometry and `length` uses rounded geometry. Native curves remain curves in both; original geometry already includes routing and connection-boundary clipping. With `step + rounded`, the original vertex maps to the arc midpoint, and the removed portions of its adjacent lines map to the two halves of the arc.
+Sampling happens before endpoint shortening and label interruption, so changing arrow size or a label gap does not move a mark.
 
 <ComponentPreview
   files={['mark-placement', 'mark-placement.preview.tsx']}
   defaultSourceFile="mark-placement.preview.tsx"
   size="lg"
-  caption="Change the position to move the mark along the path. Select the arrow shape to compare tip anchoring. The example uses scale 2 and a fixed angle of 0 to keep the check upright."
+  caption="Change the position to move the mark along the path. Select the arrow shape to compare tip anchoring. The example uses scale 2, corner radius 25, and a fixed angle of 0 to keep the check upright."
 />
 
 Omit `rotate`, or use `'auto'`, to follow the path tangent. A number sets a fixed angle in degrees within the path's local coordinates. Use `rotate: 0` for an upright status check; whole-path and Scope transforms still apply.
@@ -82,7 +90,8 @@ The main stroke and endpoint arrows render first, marks render in list order, an
       name: 'IRPathMark',
       kind: 'type',
       type: 'IRPathMark',
-      description: 'A placement entry with pos, shape, rotate, dimensions, appearance, and optional params.',
+      description:
+        'A placement entry with pos, positionMode, positionGeometry, shape, rotate, dimensions, appearance, and optional params.',
     },
     {
       name: 'BuiltinMarkShape',

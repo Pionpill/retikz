@@ -2,7 +2,6 @@ import type { CoreProviderContribution, GroupPrimitive, IRChild, ScenePrimitive,
 import { DEFAULT_RESOLVED_THEME, defineTheme, resolveCoreProviderDependencies } from '@retikz/core';
 import { defineGraphTheme, defineRelationRole } from '@retikz/graph';
 import { createFlexLayout, FlexLayoutArtifactSchema, LayoutItemKind } from '@retikz/layout';
-import { compileToScene } from '@retikz/reconciler';
 import { LegendSchema } from '@retikz/standard/presentation';
 import { describe, expect, it } from 'vitest';
 
@@ -22,6 +21,7 @@ import { materializeFlowGraph } from '../../src/flow/pipeline/flow/materialize';
 import type { FlowMeasurement } from '../../src/flow/pipeline/flow/types';
 import { resolveFlowThemeRegistry } from '../../src/flow/providers/theme';
 import { resolveFlowDiagram } from '../../src/flow/resolve';
+import { compileTestResult } from '../helpers/compilation';
 import { parseTestFlowDiagram } from './fixtures';
 
 type ExecuteFlowLayout = (
@@ -440,7 +440,7 @@ describe('Flow Diagram 编译事务', () => {
       ],
       children: ['lane'],
     });
-    const result = compileToScene(
+    const result = compileTestResult(
       { type: 'scene', version: 1, children: [source] },
       {
         ...definitions,
@@ -486,7 +486,7 @@ describe('Flow Diagram 编译事务', () => {
         children: ['form'],
       });
 
-      return compileToScene(
+      return compileTestResult(
         { type: 'scene', version: 1, children: [source] },
         {
           ...definitions,
@@ -502,7 +502,7 @@ describe('Flow Diagram 编译事务', () => {
       lineHeight: 18,
       maxTextWidth: 160,
     });
-    const artifactOf = (result: ReturnType<typeof compileToScene>) =>
+    const artifactOf = (result: ReturnType<typeof compileTestResult>) =>
       Flow.FlowDiagramArtifactSchema.parse(result.artifacts.find(artifact => artifact.namespace === 'diagram')?.value);
 
     const text = textPrimitive(rich.scene.primitives, 'Frontend form');
@@ -537,7 +537,7 @@ describe('Flow Diagram 编译事务', () => {
       children: ['source', 'target'],
       relations: [{ source: 'source', target: 'target', status: 'warning' }],
     });
-    const result = compileToScene(
+    const result = compileTestResult(
       { type: 'scene', version: 1, children: [source] },
       {
         ...definitions,
@@ -579,7 +579,7 @@ describe('Flow Diagram 编译事务', () => {
       children: ['source', 'target'],
       relations: [{ source: 'source', target: 'target', style: { stroke: '#c026d3' } }],
     });
-    const result = compileToScene(
+    const result = compileTestResult(
       { type: 'scene', version: 1, children: [source] },
       {
         ...definitions,
@@ -644,7 +644,7 @@ describe('Flow Diagram 编译事务', () => {
         }),
       ],
     });
-    const result = compileToScene(
+    const result = compileTestResult(
       { type: 'scene', version: 1, theme: { name: styleName }, children: [source] },
       {
         ...definitions,
@@ -681,7 +681,7 @@ describe('Flow Diagram 编译事务', () => {
       layouts: [],
       children: ['only'],
     });
-    const result = compileToScene(
+    const result = compileTestResult(
       { type: 'scene', version: 1, children: [source] },
       {
         ...definitions,
@@ -721,7 +721,7 @@ describe('Flow Diagram 编译事务', () => {
       layouts: [],
       children: ['group-0'],
     });
-    const result = compileToScene(
+    const result = compileTestResult(
       { type: 'scene', version: 1, children: [source] },
       {
         ...definitions,
@@ -757,7 +757,7 @@ describe('Flow Diagram 编译事务', () => {
       children: ['source', 'target'],
       relations: [{ source: 'source', target: 'target' }],
     });
-    const result = compileToScene(
+    const result = compileTestResult(
       { type: 'scene', version: 1, children: [source] },
       {
         ...definitions,
@@ -789,7 +789,7 @@ describe('Flow Diagram 编译事务', () => {
       children: ['source', 'target'],
       relations: [{ source: 'source', target: 'target' }],
     });
-    const result = compileToScene(
+    const result = compileTestResult(
       { type: 'scene', version: 1, children: [source] },
       {
         ...definitions,
@@ -840,7 +840,7 @@ describe('Flow Diagram 编译事务', () => {
       layouts: [],
       children: ['only'],
     });
-    const result = compileToScene(
+    const result = compileTestResult(
       {
         type: 'scene',
         version: 1,
@@ -912,7 +912,7 @@ describe('Flow Diagram 编译事务', () => {
         layouts: [],
         children: ['only'],
       });
-      const result = compileToScene(
+      const result = compileTestResult(
         {
           type: 'scene',
           version: 1,
@@ -1052,7 +1052,7 @@ describe('Flow Diagram 编译事务', () => {
         children: ['source', 'target'],
         relations: [{ source: 'source', target: 'target', label: relationLabel }],
       });
-      const result = compileToScene(
+      const result = compileTestResult(
         { type: 'scene', version: 1, children: [source] },
         {
           ...definitions,
@@ -1131,7 +1131,7 @@ describe('Flow Diagram 编译事务', () => {
     });
 
     try {
-      compileToScene(
+      compileTestResult(
         { type: 'scene', version: 1, children: [source] },
         {
           ...definitions,
@@ -1171,7 +1171,7 @@ describe('Flow Diagram 编译事务', () => {
     });
 
     try {
-      compileToScene(
+      compileTestResult(
         {
           type: 'scene',
           version: 1,
@@ -1282,7 +1282,7 @@ describe('Flow Diagram 编译事务', () => {
         },
       ],
     });
-    const result = compileToScene(
+    const result = compileTestResult(
       { type: 'scene', version: 1, children: [source] },
       {
         ...definitions,
@@ -1362,7 +1362,7 @@ describe('Flow Diagram 编译事务', () => {
       layouts: [{ kind: 'linear' as const, id: 'layout-only', direction: 'down', children: ['nested'] }],
       children: ['layout-only', 'outside'],
     });
-    const result = compileToScene(
+    const result = compileTestResult(
       { type: 'scene', version: 1, children: [source] },
       {
         ...definitions,
@@ -1406,7 +1406,7 @@ describe('Flow Diagram 编译事务', () => {
       layouts: [{ kind: 'linear' as const, id: 'lane', direction, gap: 13, align: 'end', children: ['short', 'long'] }],
       children: ['lane'],
     });
-    const result = compileToScene(
+    const result = compileTestResult(
       { type: 'scene', version: 1, children: [source] },
       {
         ...definitions,

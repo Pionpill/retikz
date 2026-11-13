@@ -126,19 +126,22 @@ describe('renderToCanvas 规格', () => {
         transform: [1, 0, 0, 1, 12, 8],
         scene: {
           layout: { x: 0, y: 0, width: 26, height: 8 },
-          resources: [
-            {
-              kind: 'paint',
-              id: 'paint-1',
-              spec: {
-                kind: 'linearGradient',
-                stops: [
-                  { offset: 0, color: '#7c3aed' },
-                  { offset: 1, color: '#ffffff' },
-                ],
+          resources: {
+            paints: [
+              {
+                kind: 'paint',
+                id: 'paint-1',
+                spec: {
+                  kind: 'linearGradient',
+                  stops: [
+                    { offset: 0, color: '#7c3aed' },
+                    { offset: 1, color: '#ffffff' },
+                  ],
+                },
               },
-            },
-          ],
+            ],
+            clips: [],
+          },
           primitives: [
             {
               type: 'path',
@@ -165,27 +168,30 @@ describe('renderToCanvas 规格', () => {
         transform: [1, 0, 0, 1, -4, 6],
         scene: {
           layout: { x: 0, y: 0, width: 12, height: 12 },
-          resources: [
-            {
-              kind: 'paint',
-              id: 'paint-1',
-              spec: { kind: 'pattern', shape: 'lines', size: 8 },
-              tile: {
-                size: 8,
-                motif: [
-                  {
-                    type: 'path',
-                    commands: [
-                      { kind: 'move', to: [0, 0] },
-                      { kind: 'line', to: [8, 8] },
-                    ],
-                    stroke: '#dc2626',
-                    strokeWidth: 1,
-                  },
-                ],
+          resources: {
+            paints: [
+              {
+                kind: 'paint',
+                id: 'paint-1',
+                spec: { kind: 'pattern', shape: 'lines', size: 8 },
+                tile: {
+                  size: 8,
+                  motif: [
+                    {
+                      type: 'path',
+                      commands: [
+                        { kind: 'move', to: [0, 0] },
+                        { kind: 'line', to: [8, 8] },
+                      ],
+                      stroke: '#dc2626',
+                      strokeWidth: 1,
+                    },
+                  ],
+                },
               },
-            },
-          ],
+            ],
+            clips: [],
+          },
           primitives: [
             {
               type: 'rect',

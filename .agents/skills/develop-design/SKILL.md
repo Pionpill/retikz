@@ -28,6 +28,7 @@ description: Use when planning a retikz architecture direction, version roadmap,
 
 ## 按产物加载
 
+- 性能作为目标或验收条件时，按 [test-performance](../test-performance/SKILL.md) 在镜像 plan 明确操作 owner、消费场景、预算、对照与运行授权范围；长期性能契约才进入 ADR，不因设计任务自动运行基准。
 - 版本目标与 roadmap：读 [roadmap](references/roadmap.md)。
 - 新建/修改/检索 ADR：读 [ADR 与镜像计划](references/adr.md)。
 - Architecture Gate 的审计标准由 develop-completeness 拥有；阶段顺序与 Plan Gate 读 flow-development 的 Alpha reference。

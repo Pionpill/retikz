@@ -35,6 +35,17 @@ const input = scene({
 const svg = renderToSvgString(input, { output: { width: 640, height: 360 } });
 ```
 
+## One-shot compilation
+
+```ts
+import { compileToScene, compileToSceneAsync } from '@retikz/vanilla';
+
+const result = compileToScene(input);
+const prepared = await compileToSceneAsync(input, { adapters });
+```
+
+Both entries return the existing processing result and manage the internal compiler session. Pass compile configuration under `options.compile`. The async entry requires prepare-capable adapters.
+
 ## Browser mounting
 
 ```ts

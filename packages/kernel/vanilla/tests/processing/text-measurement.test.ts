@@ -2,7 +2,7 @@
 import { fallbackMeasurer } from '@retikz/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { processToStaticInputResult, processToStaticInputResultAsync } from '../../src';
+import { compileToScene, compileToSceneAsync } from '../../src';
 import { prepareProcessingInput } from '../../src/processing/prepare';
 
 afterEach(() => {
@@ -48,8 +48,8 @@ describe('默认文字测量', () => {
       ascent: 12,
       descent: 3,
     });
-    const sync = processToStaticInputResult(source, {});
-    const asyncResult = await processToStaticInputResultAsync(source, {});
+    const sync = compileToScene(source, {});
+    const asyncResult = await compileToSceneAsync(source, {});
     expect(asyncResult.scene).toEqual(sync.scene);
     expect(context.font).toBe('normal normal 16px serif');
     const failure = new Error('measurement failed');
@@ -61,7 +61,7 @@ describe('默认文字测量', () => {
 
   it('自定义异常与非法度量不能被替换成正常 Scene', () => {
     expect(() =>
-      processToStaticInputResult(source, {
+      compileToScene(source, {
         compile: {
           measureText: () => {
             throw new Error('custom failed');
@@ -69,8 +69,6 @@ describe('默认文字测量', () => {
         },
       }),
     ).toThrow();
-    expect(() =>
-      processToStaticInputResult(source, { compile: { measureText: () => ({ width: -1, height: 16 }) } }),
-    ).toThrow();
+    expect(() => compileToScene(source, { compile: { measureText: () => ({ width: -1, height: 16 }) } })).toThrow();
   });
 });

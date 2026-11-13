@@ -9,10 +9,11 @@ import {
   ribbonPathDefinition,
 } from '@retikz/extension';
 import { Layout } from '@retikz/react';
-import { compileToScene } from '@retikz/reconciler';
 import { renderToSvgString, scene, toSceneResult } from '@retikz/vanilla';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
+
+import { compileTestResult } from '../helpers/compilation';
 
 const source: IRScene = {
   version: 1,
@@ -84,7 +85,7 @@ describe('扩展根条目集成', () => {
   });
 
   it('保持直接 Core 编译和 Vanilla 编译场景与精确的功能条目等效', () => {
-    const direct = compileToScene(source, definitions);
+    const direct = compileTestResult(source, definitions);
     const vanilla = toSceneResult(source, { compile: definitions });
     const svg = renderToSvgString(source, { compile: definitions });
 
@@ -120,8 +121,8 @@ describe('扩展根条目集成', () => {
         clips: definitions.clips,
       },
     });
-    const resolved = compileToScene(source, providerDefinitions);
+    const resolved = compileTestResult(source, providerDefinitions);
 
-    expect(resolved.scene).toEqual(compileToScene(source, definitions).scene);
+    expect(resolved.scene).toEqual(compileTestResult(source, definitions).scene);
   });
 });

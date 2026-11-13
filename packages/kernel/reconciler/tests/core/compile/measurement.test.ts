@@ -9,7 +9,7 @@ import {
   defineComposite,
   naturalLayoutProposal,
 } from '../../../../core/src';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 
 const schema = <const TType extends string>(type: TType) =>
   CompositeBaseSchema.extend({ namespace: literal('measurement-test'), type: literal(type) });
@@ -68,11 +68,11 @@ describe('孤立的大小贡献', () => {
         return { children: [context.replay(probe.result)] };
       },
     });
-    const result = compileToScene(
+    const result = compileTestResult(
       { version: 1, type: 'scene', children: [{ namespace: 'measurement-test', type: 'parent' }] },
       { composites: [parent, leaf], padding: 0 },
     );
-    const expected = compileToScene(
+    const expected = compileTestResult(
       {
         version: 1,
         type: 'scene',
@@ -104,7 +104,7 @@ describe('孤立的大小贡献', () => {
       compile: (): CompositeEvaluationResult => ({ kind: 'contribution', contribution: { axis: 'x', width: 10 } }),
     });
     expect(() =>
-      compileToScene(
+      compileTestResult(
         { version: 1, type: 'scene', children: [{ namespace: 'measurement-test', type: 'invalid' }] },
         { composites: [leaf] },
       ),
@@ -176,11 +176,11 @@ it.each(['source', 'generated', 'bound'])('仅重用跨祖先探测的稳定编�
       },
     ],
   };
-  compileToScene(ir, { composites: [leaf, inner, outer] });
+  compileTestResult(ir, { composites: [leaf, inner, outer] });
   expect(seen).toEqual([37, 37]);
   expect(queries).toBe(mode === 'source' ? 1 : 2);
   expect(full).toBe(2);
-  compileToScene(ir, { composites: [leaf, inner, outer] });
+  compileTestResult(ir, { composites: [leaf, inner, outer] });
   expect(queries).toBe(mode === 'source' ? 2 : 4);
 });
 
@@ -211,7 +211,7 @@ it('不缓存可恢复的故障或发布来自仅大小候选者的警告', () =
       return { children: [] };
     },
   });
-  compileToScene(
+  compileTestResult(
     { version: 1, type: 'scene', children: [{ namespace: 'measurement-test', type: 'retry-parent' }] },
     { composites: [leaf, parent], onWarn: warning => warnings.push(warning.code) },
   );
@@ -255,7 +255,7 @@ it('分隔主题环境并接受非 JSON 运行时绑定', () => {
       },
     ],
   };
-  compileToScene(ir, {
+  compileTestResult(ir, {
     composites: [leaf, parent],
     compositeInputs: createCompositeInputBindings(ir, [{ path: ['children', 0, 'child'], input: 7n }]),
   });
@@ -283,7 +283,7 @@ it.each([
     },
   });
   expect(() =>
-    compileToScene(
+    compileTestResult(
       { version: 1, type: 'scene', children: [{ namespace: 'measurement-test', type: 'fatal-host' }] },
       { composites: [host, leaf] },
     ),
@@ -330,7 +330,7 @@ it.each([false, true])('保持不同源位置的相同编写对象独立：neste
   });
   const leafSource = { namespace: 'measurement-test', type: 'position-leaf' };
   const child = nested ? { namespace: 'measurement-test', type: 'position-wrapper', child: leafSource } : leafSource;
-  compileToScene(
+  compileTestResult(
     {
       version: 1,
       type: 'scene',
@@ -384,7 +384,7 @@ it('隔离完整的回退候选者并仅发布独立的最终回放', () => {
       return { children: [context.replay(final.result)] };
     },
   });
-  const output = compileToScene(
+  const output = compileTestResult(
     {
       version: 1,
       type: 'scene',
@@ -398,7 +398,7 @@ it('隔离完整的回退候选者并仅发布独立的最终回放', () => {
     },
     { composites: [host, leaf] },
   );
-  const expected = compileToScene(
+  const expected = compileTestResult(
     { version: 1, type: 'scene', children: [{ namespace: 'measurement-test', type: 'fallback' }] },
     { composites: [leaf] },
   );
@@ -450,7 +450,7 @@ it('在祖先命名空间更改后重新计算依赖于引用的大小', () => {
       return { children: [] };
     },
   });
-  compileToScene(
+  compileTestResult(
     {
       version: 1,
       type: 'scene',

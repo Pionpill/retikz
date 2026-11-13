@@ -1,5 +1,5 @@
 import type { IRNode, IRPath, IRScope } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
+import { pointAtArcAngle } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
 import type { CoordinateFrame, PositionScale } from '../../../src/contract';
@@ -10,6 +10,7 @@ import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import { lowerCustomAxis, lowerGuide } from '../../../src/pipeline/guide';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
+import { compileTestResult } from '../../helpers/compilation';
 import { measureLabel } from '../../helpers/text-measurement';
 
 /** 测试用最小 PositionScale：guide 只调 coordinate，其余成员给占位 */
@@ -401,7 +402,7 @@ describe('lowerGuide（契约）', () => {
           project: () => null,
           projectRoles: () => null,
           mapRoles: () => null,
-          projectMappedRoles: () => null,
+          projectMappedRoles: ([angle, radius]) => pointAtArcAngle([100, 100], radius, angle),
           placementBoundary: fakePolarPlacementBoundary,
           projectPolar: () => null,
           projectCell: () => ({
@@ -418,7 +419,7 @@ describe('lowerGuide（契约）', () => {
     );
     const title = nodeByText(axisLayer as IRScope, 'radius');
 
-    expect((title.position as [number, number])[0]).toBeGreaterThan(170);
+    expect((title.position as [number, number])[0]).toBeCloseTo(180, 6);
   });
 
   it('自定义轴标题放置样本数字轴范围', () => {
@@ -1383,7 +1384,7 @@ describe('lowerPlots 指导编排（契约）', () => {
       { type: 'axis', dimension: 'x' },
       { type: 'axis', dimension: 'y', grid: true },
     ]);
-    const scene = compileToScene(
+    const scene = compileTestResult(
       { version: 1, type: 'scene', children: [spec] },
       { composites: lowerPlots({ sales: SALES }, { layout: { width: 480, height: 300 } }) },
     ).scene;

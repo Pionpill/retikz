@@ -2102,6 +2102,70 @@ export type CurveApproximationOptions = {
 
 </DocTabs>
 
+#### <ApiSourceLink label={"CurveLengthModel"} path={"packages/kernel/math/src/algorithms/curve-metrics.ts"} startLine={5}>CurveLengthModel</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member                | Type                    | Default | Description                                                          |
+| --------------------- | ----------------------- | ------- | -------------------------------------------------------------------- |
+| `readonly distances`  | `ReadonlyArray<number>` | —       | Cumulative lengths at the parameter boundaries                       |
+| `readonly length`     | `number`                | —       | Total curve length                                                   |
+| `readonly parameters` | `ReadonlyArray<number>` | —       | Parameters at adaptive interval boundaries                           |
+| `readonly segment`    | `CurveSegment`          | —       | Original curve, which must not be modified during the model lifetime |
+| `readonly tolerance`  | `number`                | —       | Absolute tolerance for local distance queries                        |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type CurveLengthModel = Readonly<{
+  segment: CurveSegment;
+  parameters: ReadonlyArray<number>;
+  distances: ReadonlyArray<number>;
+  length: number;
+  tolerance: number;
+}>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"curveMetrics"} path={"packages/kernel/math/src/algorithms/curve-metrics.ts"} startLine={160}>curveMetrics</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="methods">
+
+| Member        | Signature                                                                                                                                                                          | Description                                                                                                         |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `distanceAt`  | `(model: CurveLengthModel, parameter: number) => number`                                                                                                                           | Reuse the monotone metric table to compute prefix length at a curve parameter                                       |
+| `parameterAt` | `(model: CurveLengthModel, distance: number) => number`                                                                                                                            | Binary-search the cumulative table, then invert distance within the matching interval without remeasuring the curve |
+| `prepare`     | `(segment: CurveSegment) => Readonly<{ distances: readonly Array<number>; length: number; parameters: readonly Array<number>; segment: CurveSegment; tolerance: number }> \| null` | Prepare a reusable curve length model; return null for non-finite results or an exhausted subdivision budget        |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export const curveMetrics = { prepare, distanceAt, parameterAt };
+```
+
+</DocTab>
+
+</DocTabs>
+
 #### <ApiSourceLink label={"CurveParameterAtDistanceOptions"} path={"packages/kernel/math/src/algorithms/curve.ts"} startLine={118}>CurveParameterAtDistanceOptions</ApiSourceLink>
 
 <DocTabs defaultValue="members">

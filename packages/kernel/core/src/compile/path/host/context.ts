@@ -136,7 +136,7 @@ export const createPathDefinitionContext = (
     const output = emitted.emit.overall;
     if (output === null) return null;
     // 只许可本次宿主实际取得的可信缓存内容；配套资源由调用方恢复
-    visitSceneContent({ primitives: output.primitives, resources: [...resources()] }, primitive => {
+    visitSceneContent({ primitives: output.primitives, resources: resources() }, primitive => {
       if (primitive.type === 'group' || primitive.type === 'text') return;
       for (const field of ['fill', 'stroke'] as const) {
         const paint = primitive[field];

@@ -25,24 +25,34 @@ Path 可以闭合并填充，也可以沿中心线形成带状区域；Interval 
 
 同一个图元在不同坐标系下可以形成不同图形。例如，Interval 在直角坐标系下可以表达柱或矩形单元，在极坐标系下可以表达径向柱或扇区。
 
+## 图元标签
+
+固定标签使用可选的 `text` 字段；省略时可由同一索引的 `encodings.label.text` 提供内容。两处均未提供有效文字时不生成标签，字符串简写保持相同语义。
+
+节点与路径标签的 `text` 均复用 Core 文本块，支持包含换行的字符串或非空行数组。逐行样式与混排片段放在行数组内；一个文本块仍对应一个标签。
+
 ## 章节内容
 
 <LinkedSections
   items={[
     {
-      title: 'PointMark · 点图元',
+      title: 'point · 点图元',
       description: '从位置节点入手，绘制散点、气泡、形状和文本。',
       url: '/viz/plot/mark/point',
     },
     {
-      title: 'PathMark · 路径图元',
+      title: 'path · 路径图元',
       description: '学习有序连线、分组、曲线与闭合区域，再探索端点连接和带状路径。',
       url: '/viz/plot/mark/path',
     },
     {
-      title: 'IntervalMark · 区间图元',
+      title: 'interval · 区间图元',
       description: '用位置区间表达柱、热图、径向区间和饼图。',
       url: '/viz/plot/mark/interval',
     },
   ]}
 />
+
+## API 参考
+
+{/* @include viz/plot/mark/generated */}

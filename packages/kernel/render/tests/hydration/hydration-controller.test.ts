@@ -1,12 +1,12 @@
 // @vitest-environment jsdom
 import { isRetikzError } from '@retikz/foundation';
-import { createSceneIdentity } from '@retikz/reconciler';
 import { describe, expect, it, vi } from 'vitest';
 
 import { RetikzRenderError, RetikzRenderErrorCode } from '../../src/error';
 import type { HydrationHandlers, HydrationTarget } from '../../src/hydration';
 import type { HydrationController } from '../../src/hydration';
 import { createHydrationController, locateSvg } from '../../src/hydration';
+import { createSceneIdentity } from '../../src/scene';
 
 /*
  * 水合 renderer 无关控制器：根级委托 + enter/leave 合成 + dispose

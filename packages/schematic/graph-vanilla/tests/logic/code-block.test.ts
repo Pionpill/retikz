@@ -6,7 +6,7 @@ import {
   defineGraphTheme,
 } from '@retikz/graph';
 import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
-import { normalizeScene, processToStaticInputResult } from '@retikz/vanilla';
+import { normalizeScene, compileToScene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
@@ -54,11 +54,11 @@ describe('自定义代码块 Vanilla 编写', () => {
 
     expect(normalized.ir.children).toEqual([source]);
 
-    const actual = processToStaticInputResult(input, {
+    const actual = compileToScene(input, {
       adapters: [adapter],
       compile: { themeDefinitions: [coreStyle] },
     });
-    const direct = processToStaticInputResult(
+    const direct = compileToScene(
       { type: 'scene', version: 1, children: [source] },
       {
         compile: prepareProcessingInput(

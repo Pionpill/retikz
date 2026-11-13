@@ -105,6 +105,7 @@ export {
   RegressionMethodSchema,
   defineRegression,
   defineRegressionImplementation,
+  evaluateRegression,
   extractRegressionKind,
   resolveRegression,
   resolveRegressionImplementationRegistry,
@@ -116,10 +117,14 @@ export type {
   AnySynchronousRegressionImplementation,
   IRRegressionMethod,
   RegressionDefinition,
+  RegressionDependency,
+  RegressionFitContext,
+  RegressionFitOptions,
   RegressionImplementation,
   RegressionModel,
   RegressionPair,
   RegressionResolution,
+  RegressionScore,
 } from './operators/regression';
 export {
   BUILTIN_ROW_SELECTORS,

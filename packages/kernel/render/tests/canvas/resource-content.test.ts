@@ -26,34 +26,38 @@ it('箭头和 Pattern 内容共用场景的裁剪与绘制资源', () => {
       },
       { type: 'rect', x: 0, y: 30, width: 20, height: 20, fill: { kind: 'resourceRef', id: 'tile' } },
     ],
-    resources: [
-      {
-        kind: 'paint',
-        id: 'green',
-        spec: {
-          kind: 'linearGradient',
-          stops: [
-            { offset: 0, color: '#00ff00' },
-            { offset: 1, color: '#00ff00' },
-          ],
+    resources: {
+      paints: [
+        {
+          kind: 'paint',
+          id: 'green',
+          spec: {
+            kind: 'linearGradient',
+            stops: [
+              { offset: 0, color: '#00ff00' },
+              { offset: 1, color: '#00ff00' },
+            ],
+          },
         },
-      },
-      { kind: 'paint', id: 'tile', spec: { kind: 'pattern', shape: 'test' }, tile: { size: 10, motif: [content] } },
-      {
-        kind: 'clip',
-        id: 'window',
-        path: {
-          fillRule: 'nonzero',
-          commands: [
-            { kind: 'move', to: [0, 0] },
-            { kind: 'line', to: [5, 0] },
-            { kind: 'line', to: [5, 10] },
-            { kind: 'line', to: [0, 10] },
-            { kind: 'close' },
-          ],
+        { kind: 'paint', id: 'tile', spec: { kind: 'pattern', shape: 'test' }, tile: { size: 10, motif: [content] } },
+      ],
+      clips: [
+        {
+          kind: 'clip',
+          id: 'window',
+          path: {
+            fillRule: 'nonzero',
+            commands: [
+              { kind: 'move', to: [0, 0] },
+              { kind: 'line', to: [5, 0] },
+              { kind: 'line', to: [5, 10] },
+              { kind: 'line', to: [0, 10] },
+              { kind: 'close' },
+            ],
+          },
         },
-      },
-    ],
+      ],
+    },
   };
   const canvas = createCanvas(64, 64);
   const context = canvas.getContext('2d');

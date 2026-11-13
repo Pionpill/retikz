@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { CompileWarning, IRScene, ScenePrimitive } from '../../../../core/src';
 import { SceneSchema } from '../../../../core/src';
 import type { RectPrimitive } from '../../../../core/src/contract';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 import { flattenPrims } from '../../helpers/flatten';
 
 /** 取所有 RectPrimitive（默认 rectangle 节点；带文本节点包 group，flatten 穿透） */
@@ -74,7 +74,7 @@ describe('between 在带 scale / 复合 transform 的 scope 内投影到正确�
         ],
       },
     ]);
-    const end = firstLineTo(topPath(compileToScene(ir).scene.primitives));
+    const end = firstLineTo(topPath(compileTestResult(ir).scene.primitives));
 
     expect(end).toBeDefined();
     expect(end![0]).toBeCloseTo(100, 1);
@@ -112,7 +112,7 @@ describe('between 在带 scale / 复合 transform 的 scope 内投影到正确�
         ],
       },
     ]);
-    const end = firstLineTo(topPath(compileToScene(ir).scene.primitives));
+    const end = firstLineTo(topPath(compileTestResult(ir).scene.primitives));
 
     expect(end).toBeDefined();
     expect(end![0]).toBeCloseTo(0, 0);
@@ -143,7 +143,7 @@ describe('between 在带 scale / 复合 transform 的 scope 内投影到正确�
         ],
       },
     ]);
-    const end = firstLineTo(topPath(compileToScene(ir).scene.primitives));
+    const end = firstLineTo(topPath(compileTestResult(ir).scene.primitives));
 
     expect(end).toBeDefined();
     expect(end![0]).toBeCloseTo(10, 1);
@@ -181,7 +181,7 @@ describe('between 在带 scale / 复合 transform 的 scope 内投影到正确�
         ],
       },
     ]);
-    const end = firstLineTo(topPath(compileToScene(ir).scene.primitives));
+    const end = firstLineTo(topPath(compileTestResult(ir).scene.primitives));
 
     expect(end).toBeDefined();
     expect(end![0]).toBeCloseTo(80, 1);
@@ -215,7 +215,7 @@ describe('between 在带 scale / 复合 transform 的 scope 内投影到正确�
         ],
       },
     ]);
-    const end = firstLineTo(topPath(compileToScene(ir).scene.primitives));
+    const end = firstLineTo(topPath(compileTestResult(ir).scene.primitives));
 
     expect(end).toBeDefined();
     expect(end![0]).toBeCloseTo(100, 1);
@@ -263,7 +263,7 @@ describe('深层嵌套 between + 端点混极坐标 / offset', () => {
         ],
       },
     ]);
-    const end = firstLineTo(topPath(compileToScene(ir).scene.primitives));
+    const end = firstLineTo(topPath(compileTestResult(ir).scene.primitives));
 
     expect(end).toBeDefined();
     expect(end![0]).toBeCloseTo(3, 1);
@@ -293,7 +293,7 @@ describe('深层嵌套 between + 端点混极坐标 / offset', () => {
         ],
       },
     ]);
-    const end = firstLineTo(topPath(compileToScene(ir).scene.primitives));
+    const end = firstLineTo(topPath(compileTestResult(ir).scene.primitives));
 
     expect(end).toBeDefined();
     expect(end![0]).toBeCloseTo(50, 1);
@@ -322,7 +322,7 @@ describe('深层嵌套 between + 端点混极坐标 / offset', () => {
         ],
       },
     ]);
-    const end = firstLineTo(topPath(compileToScene(ir).scene.primitives));
+    const end = firstLineTo(topPath(compileTestResult(ir).scene.primitives));
 
     expect(end).toBeDefined();
     expect(end![0]).toBeCloseTo(42, 1);
@@ -335,7 +335,7 @@ describe('深层嵌套 between + 端点混极坐标 / offset', () => {
 // ---------------------------------------------------------------------------
 describe('非 finite 端点不进 Scene；带 between 的 Scene round-trip', () => {
   it('端点极坐标 radius=Infinity（手搓绕过 schema）→ 不产生非 finite 进 Scene', () => {
-    // PolarPositionSchema.radius 的 number 校验会拒，但 compileToScene 直接吃手搓 IR 绕过。
+    // PolarPositionSchema.radius 的 number 校验会拒，但 SceneReconciler 直接吃手搓 IR 绕过。
     // 端点解析出 Infinity → lerp 出 Infinity；正确行为：要么 warn + 不进 Scene，
     // 绝不能让 Infinity 污染 Scene 坐标。
     const ir = {
@@ -365,10 +365,10 @@ describe('非 finite 端点不进 Scene；带 between 的 Scene round-trip', () 
     const warnings: Array<CompileWarning> = [];
 
     // 契约：非 finite 端点要么编译期干净抛（Coordinate 位置不可解析），要么不让非 finite 进 Scene
-    let scn: ReturnType<typeof compileToScene>['scene'] | undefined;
+    let scn: ReturnType<typeof compileTestResult>['scene'] | undefined;
 
     try {
-      scn = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
+      scn = compileTestResult(ir, { onWarn: w => warnings.push(w) }).scene;
     } catch {
       scn = undefined;
     }
@@ -403,10 +403,10 @@ describe('非 finite 端点不进 Scene；带 between 的 Scene round-trip', () 
       ],
     } as unknown as IRScene;
     const warnings: Array<CompileWarning> = [];
-    let scn: ReturnType<typeof compileToScene>['scene'] | undefined;
+    let scn: ReturnType<typeof compileTestResult>['scene'] | undefined;
 
     try {
-      scn = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
+      scn = compileTestResult(ir, { onWarn: w => warnings.push(w) }).scene;
     } catch {
       scn = undefined;
     }
@@ -436,7 +436,7 @@ describe('非 finite 端点不进 Scene；带 between 的 Scene round-trip', () 
     const parsed = SceneSchema.parse(roundTripped);
 
     // 解析后再编译，结果与原 IR 编译一致（中点 [0,0]）
-    const all = rects(compileToScene(parsed).scene.primitives).map(rectCenter);
+    const all = rects(compileTestResult(parsed).scene.primitives).map(rectCenter);
 
     expect(all[2][0]).toBeCloseTo(0);
     expect(all[2][1]).toBeCloseTo(0);
@@ -466,7 +466,7 @@ describe('未解析端点：前向引用 / bogus 端点应 warn 不崩', () => {
       { type: 'coordinate', id: 'B', position: [50, 0] },
     ]);
     const warnings: Array<CompileWarning> = [];
-    const scn = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
+    const scn = compileTestResult(ir, { onWarn: w => warnings.push(w) }).scene;
     const end = firstLineTo(topPath(scn.primitives));
 
     expect(end).toBeDefined();
@@ -491,7 +491,7 @@ describe('未解析端点：前向引用 / bogus 端点应 warn 不崩', () => {
     ]);
     const warnings: Array<CompileWarning> = [];
 
-    expect(() => compileToScene(ir, { onWarn: w => warnings.push(w) }).scene).not.toThrow();
+    expect(() => compileTestResult(ir, { onWarn: w => warnings.push(w) }).scene).not.toThrow();
     expect(warnings.length).toBeGreaterThan(0);
   });
 
@@ -508,7 +508,7 @@ describe('未解析端点：前向引用 / bogus 端点应 warn 不崩', () => {
       },
     ]);
 
-    expect(() => compileToScene(ir, { onWarn: () => {} }).scene).toThrow(/Cannot resolve position/);
+    expect(() => compileTestResult(ir, { onWarn: () => {} }).scene).toThrow(/Cannot resolve position/);
   });
 
   it('Coordinate.position between 端点 bogus → 干净抛错，不产错坐标', () => {
@@ -521,7 +521,7 @@ describe('未解析端点：前向引用 / bogus 端点应 warn 不崩', () => {
       },
     ]);
 
-    expect(() => compileToScene(ir, { onWarn: () => {} }).scene).toThrow(/Cannot resolve position/);
+    expect(() => compileTestResult(ir, { onWarn: () => {} }).scene).toThrow(/Cannot resolve position/);
   });
 });
 
@@ -550,7 +550,7 @@ describe('t 退化与越界（手搓绕过 schema）', () => {
         ],
       },
     ]);
-    const end = firstLineTo(topPath(compileToScene(ir).scene.primitives));
+    const end = firstLineTo(topPath(compileTestResult(ir).scene.primitives));
 
     expect(end).toBeDefined();
     expect(end![0]).toBeCloseTo(33);
@@ -585,10 +585,10 @@ describe('t 退化与越界（手搓绕过 schema）', () => {
     const warnings: Array<CompileWarning> = [];
 
     // t=NaN → lerp 出 NaN：要么干净抛（Coordinate 不可解析），要么 NaN 绝不进 Scene（JSON 序列化变 null 破坏 round-trip）
-    let scn: ReturnType<typeof compileToScene>['scene'] | undefined;
+    let scn: ReturnType<typeof compileTestResult>['scene'] | undefined;
 
     try {
-      scn = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
+      scn = compileTestResult(ir, { onWarn: w => warnings.push(w) }).scene;
     } catch {
       scn = undefined;
     }
@@ -626,7 +626,7 @@ describe('t 退化与越界（手搓绕过 schema）', () => {
         },
       ],
     } as unknown as IRScene;
-    const scn = compileToScene(ir).scene;
+    const scn = compileTestResult(ir).scene;
 
     expect(allNumbersFinite(scn.primitives)).toBe(true);
     expect(allNumbersFinite(scn.layout)).toBe(true);
@@ -657,7 +657,7 @@ describe('between 端点为 relative（手搓绕过 schema）应被拒绝，不�
       ],
     } as unknown as IRScene;
     const warnings: Array<CompileWarning> = [];
-    const scn = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
+    const scn = compileTestResult(ir, { onWarn: w => warnings.push(w) }).scene;
 
     expect(allNumbersFinite(scn.primitives)).toBe(true);
 
@@ -682,7 +682,7 @@ describe('between 端点为 relative（手搓绕过 schema）应被拒绝，不�
       ],
     } as unknown as IRScene;
 
-    expect(() => compileToScene(ir, { onWarn: () => {} }).scene).toThrow(/Cannot resolve position/);
+    expect(() => compileTestResult(ir, { onWarn: () => {} }).scene).toThrow(/Cannot resolve position/);
   });
 });
 
@@ -734,8 +734,8 @@ describe('端点带 anchor / offset 的 lerp', () => {
         ],
       },
     ]);
-    const endEast = firstLineTo(topPath(compileToScene(ir).scene.primitives));
-    const endCenter = firstLineTo(topPath(compileToScene(irCenter).scene.primitives));
+    const endEast = firstLineTo(topPath(compileTestResult(ir).scene.primitives));
+    const endCenter = firstLineTo(topPath(compileTestResult(irCenter).scene.primitives));
 
     expect(endEast).toBeDefined();
     expect(endCenter).toBeDefined();
@@ -769,7 +769,7 @@ describe('端点带 anchor / offset 的 lerp', () => {
         ],
       },
     ]);
-    const end = firstLineTo(topPath(compileToScene(ir).scene.primitives));
+    const end = firstLineTo(topPath(compileTestResult(ir).scene.primitives));
 
     expect(end).toBeDefined();
     expect(end![0]).toBeCloseTo(50, 1);

@@ -1,0 +1,176 @@
+---
+title: Scope 编译
+description: 理解 Scope 的继承、局部空间、子布局包络及分组输出，以及 Core 与 Reconciler 的分工
+---
+
+前面的坐标、节点与路径都可以放进 Scope，共享继承配置和局部坐标空间。本篇进一步说明这些子项的布局怎样形成 Scope 的包络，以及局部结果怎样通过变换参与外层布局。Core 计算有效语义、包络、放置和分组属性；Reconciler 执行子项、发布引用并组装 GroupPrimitive。
+
+## 整体流程
+
+Scope 属性解析为 <ApiSourceLink label="CanonicalScope" path="packages/kernel/core/src/resolve/scope/types.ts" startLine={47}>`CanonicalScope`</ApiSourceLink>。子项布局就绪后，<ApiSourceLink label="compileScope" path="packages/kernel/core/src/compile/scope/compile.ts" startLine={16}>`compileScope`</ApiSourceLink> 计算包络与放置，得到 <ApiSourceLink label="CompiledScope" path="packages/kernel/core/src/compile/scope/types.ts" startLine={20}>`CompiledScope`</ApiSourceLink>；调用方把实际子图元挂到分组上。
+
+<ComponentPreview files="scope-flow" size="lg" hideCode type="flow" />
+
+## 输入契约
+
+类型 <ApiSourceLink label="ScopeSchema" path="packages/kernel/core/src/schemas/scope/scope.ts" startLine={98}>`ScopeSchema`</ApiSourceLink> 由 <ApiSourceLink label="ScopePropsSchema" path="packages/kernel/core/src/schemas/scope/scope.ts" startLine={56}>`ScopePropsSchema`</ApiSourceLink> 与递归 `children` 组成。各字段分别影响继承、名称环境和几何放置，子项的编译结果再成为包络输入。
+
+| 字段与 Schema                                                                                                                                                       | 输入形式                                                     | 对后续处理的影响                                                      |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | --------------------------------------------------------------------- |
+| `position` / <ApiSourceLink label="ScopePositionSchema" path="packages/kernel/core/src/schemas/scope/scope.ts" startLine={51}>`ScopePositionSchema`</ApiSourceLink> | 坐标对，或 `{ kind: 'anchor', target, selfAnchor? }`，共两种 | 坐标对确定父空间中的原点；锚点对齐等待变换后的自身包络                |
+| `transforms` / `TransformSchema`                                                                                                                                    | 平移、旋转、缩放，以及极坐标、方向、偏移、插值平移           | 解析时补参数；编译将引用和 pivot 变为数值变换，数组末项先作用于局部点 |
+| `boundingShape`                                                                                                                                                     | rectangle 或 circle                                          | 选择矩形聚合或最小包围圆算法，并绑定对应形状能力                      |
+| `defaults`、`theme`                                                                                                                                                 | 稀疏默认值和主题配置                                         | 解析为子项使用的继承环境，子项 resolver 再应用各自默认值              |
+| `id`、`localNamespace`                                                                                                                                              | 可选名称、局部命名空间开关                                   | 名称用于引用整个包络；局部命名空间控制子项名称的可见范围              |
+| `clip` / `ClipSchema`                                                                                                                                               | 裁剪配置                                                     | 解析裁剪能力，编译登记裁剪资源并在分组上输出 `clipRef`                |
+
+下面这个局部分组中的 A、B 提供了后续包络计算所需的两个子布局。
+
+```ts
+const scope = {
+  type: 'scope',
+  id: 'pair',
+  position: [100, 60],
+  defaults: { style: { color: 'blue' } },
+  children: [
+    {
+      type: 'node',
+      id: 'A',
+      position: [0, 0],
+      text: 'A',
+      layout: { minimumSize: { width: 60, height: 40 }, padding: 0, margin: 0 },
+    },
+    {
+      type: 'node',
+      id: 'B',
+      position: [180, 0],
+      text: 'B',
+      layout: { minimumSize: { width: 60, height: 40 }, padding: 0, margin: 0 },
+    },
+  ],
+} satisfies import('@retikz/core').IRScope;
+```
+
+## 解析过程
+
+函数 <ApiSourceLink label="resolveScope" path="packages/kernel/core/src/resolve/scope/resolve.ts" startLine={29}>`resolveScope`</ApiSourceLink> 接收 Scope 自身属性与 <ApiSourceLink label="ScopeResolveContext" path="packages/kernel/core/src/resolve/scope/types.ts" startLine={65}>`ScopeResolveContext`</ApiSourceLink>，得到 <ApiSourceLink label="CanonicalScope" path="packages/kernel/core/src/resolve/scope/types.ts" startLine={47}>`CanonicalScope`</ApiSourceLink>。下列完整字段把继承配置、包络能力与变换意图分开保存，省略源码注释。
+
+```ts
+export type CanonicalScope = {
+  inheritance: CanonicalScopeInheritance;
+  localNamespace: boolean;
+  envelope: CanonicalScopeEnvelope;
+  transform: CanonicalScopeTransform;
+  style: CanonicalScopeStyle;
+  clip?: ClipResolution;
+  animations: Array<IRAnimationTrack>;
+};
+
+export type CanonicalScopeTransform = {
+  position: Extract<IRScopePosition, Array<number>> | Required<Exclude<IRScopePosition, Array<number>>>;
+  transforms: Array<CanonicalScopeTransformStep>;
+};
+```
+
+函数 <ApiSourceLink label="resolveScopeInheritance" path="packages/kernel/core/src/resolve/scope/resolve.ts" startLine={16}>`resolveScopeInheritance`</ApiSourceLink> 合并父级 defaults 和 theme，得到子项解析时使用的环境。<ApiSourceLink label="resolveScope" path="packages/kernel/core/src/resolve/scope/resolve.ts" startLine={29}>`resolveScope`</ApiSourceLink> 按 `boundingShape` 绑定 rectangle 或圆形包络所需的形状，解析 clip，并保留分组元数据和动画。变换的 pivot、两轴 scale、方向距离等静态缺省值在这里补齐。
+
+类型 <ApiSourceLink label="ScopeResolveContext" path="packages/kernel/core/src/resolve/scope/types.ts" startLine={65}>`ScopeResolveContext`</ApiSourceLink> 提供父级 <ApiSourceLink label="CanonicalScopeInheritance" path="packages/kernel/core/src/resolve/scope/types.ts" startLine={13}>`CanonicalScopeInheritance`</ApiSourceLink>、theme / shape / clip 注册表、相对定位距离和来源路径。解析产物保留位置目标与变换表达式，编译时再结合子布局求包络和最终放置。
+
+示例中的 `position: [100, 60]` 保存在 `transform.position`，blue 合入 `inheritance.defaults`。此时已绑定矩形包络能力；子项产生布局后，编译才得到宽 240、高 40 的包络。
+
+<ComponentPreview files="scope-resolution" size="lg" hideCode type="flow" />
+
+## 编译过程
+
+函数 <ApiSourceLink label="compileScope" path="packages/kernel/core/src/compile/scope/compile.ts" startLine={16}>`compileScope`</ApiSourceLink> 消费 <ApiSourceLink label="CanonicalScope" path="packages/kernel/core/src/resolve/scope/types.ts" startLine={47}>`CanonicalScope`</ApiSourceLink> 与 <ApiSourceLink label="ScopeCompileContext" path="packages/kernel/core/src/compile/scope/types.ts" startLine={78}>`ScopeCompileContext`</ApiSourceLink>，生成 <ApiSourceLink label="CompiledScope" path="packages/kernel/core/src/compile/scope/types.ts" startLine={20}>`CompiledScope`</ApiSourceLink>。`layout.overall` 包含包络和数值变换，`emit.overall` 保存待挂载 children 的分组属性。下面展示完整字段；局部产物允许调用方在后续执行中按需提供，省略源码注释。
+
+```ts
+export type CompiledScope = Pick<CompiledBoundaryGeometry, 'shape' | 'boundary'> &
+  Readonly<{
+    layout: WithRequiredProperties<PreparedScopeLayout, 'overall'>;
+    emit: WithRequiredProperties<PreparedScopeEmit, 'overall'>;
+    zIndex?: IRScope['zIndex'];
+  }>;
+
+export type CompiledScopeLayout = {
+  geometry: CompiledScopeGeometry;
+  transforms: Array<Transform>;
+};
+
+export type CompiledScopeGeometry = {
+  rect: CenteredBox;
+  margin: BoundsInsets;
+};
+
+export type PreparedScopeEmit = {
+  overall?: Omit<GroupPrimitive, 'children'>;
+  clip?: Pick<GroupPrimitive, 'clipRef'>;
+};
+```
+
+| <ApiSourceLink label="ScopeCompileContext" path="packages/kernel/core/src/compile/scope/types.ts" startLine={78}>`ScopeCompileContext`</ApiSourceLink> 成员 | 编译时提供什么                           |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| `layouts`                                                                                                                                                   | 子项已经产生的布局几何，用于计算自身包络 |
+| `positionContext`                                                                                                                                           | 目标引用、锚点与坐标空间转换             |
+| `resolvedClipPath`、`registerClip`、`registerClipPath`                                                                                                      | 已求值裁剪路径或裁剪配置的资源登记       |
+| `animations`                                                                                                                                                | 可用于分组输出的已处理动画               |
+| `irPath`、`onWarn`                                                                                                                                          | 来源位置与编译诊断                       |
+
+子布局是编译 Scope 的实际输入。图中的子项执行先产生这份输入，再计算包络、放置和分组属性；后文分别说明这些数据的用途。
+
+<ComponentPreview files="scope-overview" size="lg" hideCode type="flow" />
+
+### 命名与几何就绪
+
+`id` 让 Scope 的包络可以被引用，不自动创建局部名称帧。`localNamespace: true` 才会为子项建立局部名称环境；Reconciler 负责进入、退出与名称发布。内部运行时 Scope 身份与作者 id 分离。
+
+具名 Scope 在子树执行前先注册位置占位，子布局完成后替换为真实包络。占位尚不能提供完整的形状边界；引用求值必须区分所需的是位置还是完整几何。Scope 内延迟路径在该 Scope 收尾时处理，不能假定其可以引用后面才声明的外部节点。
+
+<ComponentPreview files="scope-readiness" size="lg" hideCode type="flow" />
+
+主链跟踪同一个具名 Scope 的就绪状态；左侧配置决定子项注册和查找名称时使用的环境。
+
+### 子布局怎样形成包络
+
+矩形包络聚合子节点外边界的角点及 Coordinate 位置；圆形包络根据这些点求最小包围圆。空子布局得到零尺寸包络。这个过程消费子布局几何；路径、标签与阴影的绘制范围另行计入最终画布边界。
+
+以上例为例，未平移的矩形包络中心是 [90, 0]，宽 240、高 40。Scope 平移后中心是 [190, 60]。这份可连接几何与 Scene 最终画布边界不是同一个概念：后者还要收集路径、标签、阴影等输出贡献。
+
+向父层贡献布局时，具名 Scope 贡献自身包络，匿名 Scope 透传子布局；两者都需要应用 Scope 自身变换。
+
+<ComponentPreview files="scope-envelope" size="xl" hideCode type="illustration" />
+
+两幅图使用相同的 A、B 和 Coordinate。向父层贡献布局时，具名 Scope 使用图中的包络；匿名 Scope 继续传递这些子布局。
+
+### 放置、裁剪与分组输出
+
+不依赖自身包络的变换先由 <ApiSourceLink label="prepareScopePlacement" path="packages/kernel/core/src/compile/scope/placement/layout.ts" startLine={145}>`prepareScopePlacement`</ApiSourceLink> 准备。使用自身包络锚点的旋转或缩放中心，以及相对目标的 selfAnchor 对齐，需要等待包络。最终变换既用于投影发布几何，也保留在 GroupPrimitive 上，让渲染后端按组解释局部图元。
+
+Core 的 <ApiSourceLink label="compileScope" path="packages/kernel/core/src/compile/scope/compile.ts" startLine={16}>`compileScope`</ApiSourceLink> 只生成包络、放置与不含 children 的分组属性。Reconciler 回填延迟路径、绑定动画并挂载实际 children。只要存在子图元、变换、id 或裁剪，就保留分组；没有这些内容的空匿名分组可以省去。
+
+裁剪通过 clipRef 引用共享资源。<ApiSourceLink label="projectScopeOutputBounds" path="packages/kernel/core/src/compile/scope/output.ts" startLine={13}>`projectScopeOutputBounds`</ApiSourceLink> 对布局贡献应用变换，对装饰贡献另外考虑裁剪；不要将可见裁剪范围等同于布局分配范围。
+
+<ComponentPreview files="scope-placement-clip" size="lg" hideCode type="illustration" />
+
+右图通过真实的 Scope 裁剪绘制：节点的局部宽度仍为 160，可见部分被限制在宽 80 的裁剪区内，随后与分组一起平移。
+
+## 完整流程
+
+<ComponentPreview files="scope-implementation" size="xxl" hideCode type="flow" />
+
+读 `visitScope` 可以看到 resolve、提前放置、递归、Core 编译、引用投影、路径回填和分组输出的先后。prepared 只复用调用方确认有效的局部产物，其跨次有效性仍由调度方判断。
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '编译流程', description: '把 Scope 放回整体调度链', url: '/kernel/packages/core/compilation' },
+    { title: '坐标求值', description: '区分位置占位、边界和空间投影', url: '/kernel/packages/core/coordinates' },
+    { title: 'Node 编译', description: '查看子节点怎样提供布局几何', url: '/kernel/packages/core/node-compilation' },
+    {
+      title: '编译输出',
+      description: '区分几何包络、布局贡献与最终 Scene',
+      url: '/kernel/packages/core/compilation-output',
+    },
+  ]}
+/>

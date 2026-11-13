@@ -7,6 +7,8 @@ import type { IRRegressionMethod } from './operators/regression';
 export const RetikzDataErrorCode = {
   /** 未被更精确分类覆盖的 Data 错误 */
   Default: 'DATA_ERROR',
+  /** 拟合方法不适用于当前观测或预测域 */
+  RegressionNotApplicable: 'DATA_REGRESSION_NOT_APPLICABLE',
 } as const;
 
 /** Data 包稳定错误码取值 */
@@ -14,6 +16,8 @@ export type RetikzDataErrorCode = ValueOf<typeof RetikzDataErrorCode>;
 
 /** Data 包运行时错误的可选构造参数 */
 type RetikzDataErrorOptions = Readonly<{
+  /** 已明确分类的领域错误 */
+  code?: RetikzDataErrorCode;
   /** 导致当前错误的原始异常或值 */
   cause?: unknown;
   /** 导致拟合失败的方法参数，供宿主补充 Source 路径 */
@@ -32,7 +36,7 @@ export class RetikzDataError extends RetikzError<
   /** 创建保留原始消息与 cause 的 Data 包错误 */
   constructor(message: string, options?: RetikzDataErrorOptions) {
     super({
-      code: RetikzDataErrorCode.Default,
+      code: options?.code ?? RetikzDataErrorCode.Default,
       message,
       details: {
         message,

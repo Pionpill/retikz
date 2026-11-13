@@ -39,7 +39,7 @@ import {
 import type { GuideTextStyle, PlotLabelMeasure } from '../../shared';
 import { DEFAULT_AXIS_LABEL_GAP, DEFAULT_AXIS_TICK_LENGTH, guideTextSourceProps } from '../../shared';
 
-/** 度 → 弧度；仅用于 polar radial 轴切向量，点投影统一走 `@retikz/math` 的 pointAtArcAngle */
+/** 角度转弧度，用于文字旋转与角向轴方向计算 */
 const DEG_TO_RAD = Math.PI / 180;
 
 /** 一段直线（首尾两点） */
@@ -1352,16 +1352,19 @@ const lowerAngularAxis = (
     },
   };
 
-  // ---- 网格层（grid:true → 每角向刻度一条圆心→外圆辐条）----
+  // ---- 网格层（grid:true → 每角向刻度一条内外边界间的投影辐条）----
   let gridLayer: IRScope | null = null;
   if (guide.grid) {
+    /** 分类间方向也沿 chord 边界投影，避免端点网格伸到外接圆 */
+    const projectGridPoint = (angle: number, radius: number): Position =>
+      frame.projectMappedRoles([angle, radius]) ?? [NaN, NaN];
     const grid = axisGridTokenOf(guide);
     const majorBandPosition = grid?.bandPosition;
     const majorCoordinates = resolveAxisGridCoordinates(scale, ticks, grid, value =>
       gridCoordinateOf(scale, value, majorBandPosition),
     );
     const spokes: Array<Segment> = majorCoordinates.map(theta => {
-      return [finitePolarPoint(frame.center, theta, frame.innerRadius), finitePolarPoint(frame.center, theta, outer)];
+      return [projectGridPoint(theta, frame.innerRadius), projectGridPoint(theta, outer)];
     });
     const gridPath = segmentsToPath(spokes, { drawOpacity: 0.15, ...axisGridStyleOf(grid) });
 
@@ -1380,10 +1383,7 @@ const lowerAngularAxis = (
       minorTicks === null
         ? []
         : minorTicks.map(theta => {
-            return [
-              finitePolarPoint(frame.center, theta, frame.innerRadius),
-              finitePolarPoint(frame.center, theta, outer),
-            ];
+            return [projectGridPoint(theta, frame.innerRadius), projectGridPoint(theta, outer)];
           });
     const minorGridPath = segmentsToPath(minorSpokes, { drawOpacity: 0.08, ...axisGridStyleOf(minorGrid) });
 
@@ -1406,9 +1406,9 @@ const lowerAngularAxis = (
 };
 
 /**
- * polar radial axis：沿 startAngle 辐条轴线 + 辐条上刻度 + 标签
- * @description 轴线 = center→外圆 直段（基准角 = startAngle）；刻度 = 辐条上每径向刻度短切向横线；
- *   标签 = 刻度点旁 Node text。grid:true → 每径向刻度一个同心圆环（arc step）
+ * polar radial axis：沿 startAngle 的投影轴线、刻度与标签
+ * @description 轴线与刻度位置复用坐标帧的映射后投影，离散 chord 与多边形网格对齐；刻度垂直于投影轴线；
+ *   标签 = 刻度点旁 Node text。grid:true 按相同径向值生成圆环或多边形网格
  */
 const lowerRadialAxis = (
   guide: IRPlotAxisGuide,
@@ -1423,6 +1423,11 @@ const lowerRadialAxis = (
   const ticks = radialTicks ?? { values: [], labels: [] };
   const scale = frame.secondary;
   const baseAngle = frame.startAngle;
+  /** 与 mark / 多边形网格共用映射后投影；无效 scale 输出沿用显性非有限坐标 */
+  const projectRadius = (radius: number): Position => frame.projectMappedRoles([baseAngle, radius]) ?? [NaN, NaN];
+  const unitPoint = projectRadius(1);
+  const direction = Math.atan2(unitPoint[1] - frame.center[1], unitPoint[0] - frame.center[0]);
+  const axisTangent: [number, number] = [Math.cos(direction), Math.sin(direction)];
   const tickLength = axisTickLengthOf(guide);
   const tickLabelGap = axisTickLabelGapOf(guide);
   const tickLabelStyle = axisTickLabelStyleOf(guide);
@@ -1430,26 +1435,23 @@ const lowerRadialAxis = (
 
   // 辐条切向单位向量（垂直于辐条）；刻度短线与标签沿此方向朝一侧（-tangent）偏移，与 cartesian / angular 轴一致
   // 不沿辐条方向画刻度——否则首尾刻度会沿辐条越出内 / 外圆端点（各多出半个刻度长）
-  const tangent: [number, number] = [-Math.sin(baseAngle * DEG_TO_RAD), Math.cos(baseAngle * DEG_TO_RAD)];
+  const tangent: [number, number] = [-axisTangent[1], axisTangent[0]];
 
   // ---- 轴层 ----
-  const axisLine: Segment = [
-    finitePolarPoint(frame.center, baseAngle, frame.innerRadius),
-    finitePolarPoint(frame.center, baseAngle, frame.outerRadius),
-  ];
+  const axisLine: Segment = [projectRadius(frame.innerRadius), projectRadius(frame.outerRadius)];
   const tickSegments: Array<Segment> = ticks.values.map(value => {
     const radius = scale.coordinate(value);
-    const point = finitePolarPoint(frame.center, baseAngle, radius);
+    const point = projectRadius(radius);
     return [point, [point[0] - tangent[0] * tickLength, point[1] - tangent[1] * tickLength]];
   });
   const tickShapePlacements: Array<TickShapePlacement> = ticks.values.map(value => {
     const radius = scale.coordinate(value);
-    const point = finitePolarPoint(frame.center, baseAngle, radius);
+    const point = projectRadius(radius);
 
     return {
       point,
       normal: [-tangent[0], -tangent[1]],
-      tangent: [Math.cos(baseAngle * DEG_TO_RAD), Math.sin(baseAngle * DEG_TO_RAD)],
+      tangent: axisTangent,
     };
   });
 
@@ -1464,7 +1466,7 @@ const lowerRadialAxis = (
         guide,
         ticks.values.map((value, index): IRNode => {
           const radius = scale.coordinate(value);
-          const point = finitePolarPoint(frame.center, baseAngle, radius);
+          const point = projectRadius(radius);
           const text = ticks.labels[index];
 
           // 标签在刻度外侧（与刻度同侧、沿 -tangent），偏移 = 刻度长 + gap + 半字高
@@ -1483,8 +1485,7 @@ const lowerRadialAxis = (
   if (title !== null) {
     const placementRatio = axisTitlePlacementRatioOf(title.placement);
     const titleRadius = frame.innerRadius + (frame.outerRadius - frame.innerRadius) * placementRatio;
-    const titlePoint = finitePolarPoint(frame.center, baseAngle, titleRadius);
-    const axisTangent: [number, number] = [Math.cos(baseAngle * DEG_TO_RAD), Math.sin(baseAngle * DEG_TO_RAD)];
+    const titlePoint = projectRadius(titleRadius);
     const axisNormal: [number, number] = [-tangent[0], -tangent[1]];
     const rotate = axisTitleRotateOf(title, undefined, axisTangent);
     const titleStyle = axisTitleTextStyleOf(title, axisTangent);
@@ -2057,7 +2058,7 @@ export const lowerLegend = (options: LegendLoweringOptions, measure: PlotLabelMe
         const swatch = rectNode(cursorX + swatchOffset, symbolCenter[1] - swatchSize / 2, swatchSize, swatchSize);
         if (entry.color !== undefined) swatch.style = { ...swatch.style, fill: entry.color };
         if (entry.opacity !== undefined) {
-          swatch.style = { ...swatch.style, fill: 'currentColor' };
+          swatch.style = { ...swatch.style, fill: entry.color ?? 'currentColor' };
           swatch.style = { ...swatch.style, opacity: { fill: entry.opacity } };
         }
 

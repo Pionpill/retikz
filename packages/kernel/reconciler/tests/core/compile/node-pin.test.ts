@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { PathPrimitive, ScenePrimitive } from '../../../../core/src/contract';
 import type { IRScene } from '../../../../core/src/schemas';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 import { flattenPrims } from '../../helpers/flatten';
 
 const findPaths = (prims: Array<ScenePrimitive>): Array<PathPrimitive> =>
@@ -14,7 +14,7 @@ const compileNode = (label: unknown): Array<PathPrimitive> => {
     type: 'scene',
     children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A', label } as never],
   };
-  return findPaths(compileToScene(ir).scene.primitives);
+  return findPaths(compileTestResult(ir).scene.primitives);
 };
 
 const lineEnds = (p: PathPrimitive): { from: [number, number]; to: [number, number] } => {
@@ -83,7 +83,7 @@ describe('label / pin 进 bbox（不被 viewBox 裁切）', () => {
       type: 'scene',
       children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A', ...node } as never],
     };
-    return compileToScene(ir).scene.layout;
+    return compileTestResult(ir).scene.layout;
   };
 
   it('远处 label 撑大 scene.layout（与无 label 比）', () => {

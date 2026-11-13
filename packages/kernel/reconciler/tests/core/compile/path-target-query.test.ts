@@ -3,7 +3,7 @@ import { literal, strictObject } from 'zod';
 
 import type { CompositeCompileContext, IRNode, IRTarget, PathTargetQueryResult } from '../../../../core/src';
 import { CompositeBaseSchema, defineComposite, defineShape } from '../../../../core/src';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 
 /** 通过正式 Composite 回调验证查询隔离，并禁止查询产物进入最终 Scene */
 const runQueries = (query: (context: CompositeCompileContext) => void) => {
@@ -16,7 +16,7 @@ const runQueries = (query: (context: CompositeCompileContext) => void) => {
       return { children: [] };
     },
   });
-  const result = compileToScene(
+  const result = compileTestResult(
     { version: 1, type: 'scene', children: [{ namespace: 'test', type: 'query' }] },
     { composites: [definition] },
   );
@@ -102,7 +102,7 @@ it('使特定于主题的几何图形在派生上下文和回调所属模块之�
       { namespace: 'test', type: 'query' },
     ],
   };
-  for (let index = 0; index < 2; index++) compileToScene(source, { composites: [geometry, query] });
+  for (let index = 0; index < 2; index++) compileTestResult(source, { composites: [geometry, query] });
   expect(positions).toEqual(
     Array.from({ length: 4 }, () => [
       [20, 10],
@@ -170,7 +170,7 @@ it('使用平滑的光标语义查询真实的子目标，而无需发布探测�
       return { children: [] };
     },
   });
-  const result = compileToScene(
+  const result = compileTestResult(
     { version: 1, type: 'scene', children: [{ namespace: 'test', type: 'query' }] },
     { composites: [definition] },
   );
@@ -217,7 +217,7 @@ it('重复的本地阴影查询永远不会替换可见的祖先引用', () => {
       return { children: [] };
     },
   });
-  const result = compileToScene(
+  const result = compileTestResult(
     {
       type: 'scene',
       version: 1,
@@ -244,7 +244,7 @@ it('在缺失点使目标查询失败，而不是默默地删除它', () => {
   });
 
   expect(() =>
-    compileToScene(
+    compileTestResult(
       { version: 1, type: 'scene', children: [{ namespace: 'test', type: 'query' }] },
       { composites: [definition] },
     ),
@@ -282,7 +282,7 @@ it('使用调用者变换和带有嵌套绝对表达式的世界节点偏移', (
       return { children: [] };
     },
   });
-  compileToScene(
+  compileTestResult(
     {
       type: 'scene',
       version: 1,
@@ -331,7 +331,7 @@ it('查询注册的形状锚点而不是矩形近似值', () => {
       return { children: [] };
     },
   });
-  compileToScene(
+  compileTestResult(
     { type: 'scene', version: 1, children: [{ namespace: 'test', type: 'query' }] },
     { composites: [definition], shapes: [shape] },
   );
@@ -359,7 +359,7 @@ it('在查询的根 Scope 命名空间内解析并返回其本地坐标', () => 
       return { children: [] };
     },
   });
-  compileToScene(
+  compileTestResult(
     { type: 'scene', version: 1, children: [{ namespace: 'test', type: 'query' }] },
     { composites: [definition] },
   );

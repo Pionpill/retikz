@@ -4,12 +4,12 @@ import { BuiltinPlotMark } from '@retikz/plot';
 
 import type { ChartMarkDefinition, ChartMarkResolveContext } from '../../_chart/contract';
 import { defineChartMark } from '../../_chart/contract';
+import { chartRecipeId } from '../../_chart/resolve';
 import { markOpacityOf, mergeMarkProperties, requiredFieldOf, resolvePointMark } from '../shared';
-import { pointRecipeId } from '../shared/plot';
 import type { IRConnectedScatterChartProperties, IRConnectedScatterMark } from './schema';
 import { ConnectedScatterChartMarkSchema } from './schema';
 
-const seriesScaleName = pointRecipeId('connected-scatter', 'scale.series');
+const seriesScaleName = chartRecipeId('connected-scatter', 'scale.series');
 
 const seriesOf = (encodings: JsonObject): Readonly<{ field: string; scale: string }> | undefined => {
   if (!Object.hasOwn(encodings, 'series')) return undefined;

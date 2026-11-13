@@ -70,6 +70,7 @@ export class CompileProvenanceTracker {
     parent: CompileOwnerKey,
     index: number,
     targetNamespace: CompileNamespaceKey,
+    includeRootEmissions = false,
   ): void {
     /** 仅在此次导入中映射实体键；试算根由提交位置的父实体替代 */
     const ownerKeyMap = new Map<CompileOwnerKey, CompileOwnerKey>([[provenance.root, parent]]);
@@ -77,6 +78,15 @@ export class CompileProvenanceTracker {
     const namespaceKeyMap = new Map<CompileNamespaceKey, CompileNamespaceKey>([
       [provenance.ownerMap.get(provenance.root)!.namespace, targetNamespace],
     ]);
+    if (includeRootEmissions) {
+      for (const emission of provenance.ownerMap.get(provenance.root)!.emissions) {
+        const primitive = readPropertyPath({ primitives }, emission.primitivePath) as ScenePrimitive;
+        this.primitiveRecordMap.set(primitive, { owner: parent, role: emission.role, ordinal: emission.ordinal });
+        let ordinals = this.ordinalMap.get(parent);
+        if (ordinals === undefined) this.ordinalMap.set(parent, (ordinals = new Map()));
+        ordinals.set(emission.role, Math.max(ordinals.get(emission.role) ?? 0, emission.ordinal + 1));
+      }
+    }
     for (const key of provenance.ownerMap.keys()) {
       if (key !== provenance.root) ownerKeyMap.set(key, Object.freeze({}) as CompileOwnerKey);
     }
@@ -95,7 +105,7 @@ export class CompileProvenanceTracker {
         ...owner,
         parent: ownerKeyMap.get(sourceOwnerParent!)!,
         namespace,
-        index: sourceOwnerParent === provenance.root ? index : sourceOwnerIndex,
+        index: sourceOwnerParent === provenance.root && !includeRootEmissions ? index : sourceOwnerIndex,
         generated: true,
       });
 

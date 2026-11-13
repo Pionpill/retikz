@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { IRChild, IRScene, PathPrimitive, ScenePrimitive } from '../../../../core/src';
 import { PathDefaultSchema, ScopeSchema } from '../../../../core/src';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 
 const steps = [
   { type: 'step' as const, kind: 'move' as const, to: [0, 0] as [number, number] },
@@ -33,7 +33,7 @@ const flatten = (primitives: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitiv
 };
 
 const pathPrims = (ir: IRScene): Array<PathPrimitive> =>
-  flatten(compileToScene(ir, { padding: 0 }).scene.primitives).filter(
+  flatten(compileTestResult(ir, { padding: 0 }).scene.primitives).filter(
     (primitive): primitive is PathPrimitive => primitive.type === 'path',
   );
 
@@ -65,7 +65,7 @@ describe('Drawable 共享样式解析结果', () => {
   });
 
   it('drawable-shared-path-default-stroke-full：stroke path 消费 pathDefault 的适用字段', () => {
-    const compiled = compileToScene(
+    const compiled = compileTestResult(
       scene([
         {
           type: 'scope',

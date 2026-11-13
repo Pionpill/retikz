@@ -86,7 +86,7 @@ export type IRDataTransformDeclaration = ZodInfer<typeof DataTransformDeclaratio
 
 ## 变换定义与实现
 
-#### <ApiSourceLink label={"TransformDefinition"} path={"packages/viz/data/src/transform/contract.ts"} startLine={146}>TransformDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"TransformDefinition"} path={"packages/viz/data/src/transform/contract.ts"} startLine={152}>TransformDefinition</ApiSourceLink>
 
 definition 是运行时对象，不进入 JSON IR；IR 只保存 `{ kind, params }` 形态的 IRDataTransform
 
@@ -127,7 +127,7 @@ export type TransformDefinition<TTransform extends IRDataTransform = IRDataTrans
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InputTransformDefinition"} path={"packages/viz/data/src/transform/contract.ts"} startLine={166}>InputTransformDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"InputTransformDefinition"} path={"packages/viz/data/src/transform/contract.ts"} startLine={172}>InputTransformDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -173,7 +173,7 @@ export type InputTransformDefinition<
 
 </DocTabs>
 
-#### <ApiSourceLink label={"AnyTransformDefinition"} path={"packages/viz/data/src/transform/contract.ts"} startLine={197}>AnyTransformDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"AnyTransformDefinition"} path={"packages/viz/data/src/transform/contract.ts"} startLine={203}>AnyTransformDefinition</ApiSourceLink>
 
 registry 需要存放不同 operation 泛型的 definition；真正调用前必须用对应 schema parse 收窄
 
@@ -215,7 +215,7 @@ export type AnyTransformDefinition = Omit<
 
 </DocTabs>
 
-#### <ApiSourceLink label={"TransformSemanticContext"} path={"packages/viz/data/src/transform/contract.ts"} startLine={130}>TransformSemanticContext</ApiSourceLink>
+#### <ApiSourceLink label={"TransformSemanticContext"} path={"packages/viz/data/src/transform/contract.ts"} startLine={136}>TransformSemanticContext</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -249,7 +249,7 @@ export type TransformSemanticContext = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"TransformImplementation"} path={"packages/viz/data/src/transform/contract.ts"} startLine={218}>TransformImplementation</ApiSourceLink>
+#### <ApiSourceLink label={"TransformImplementation"} path={"packages/viz/data/src/transform/contract.ts"} startLine={224}>TransformImplementation</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -284,7 +284,7 @@ export type TransformImplementation<
 
 </DocTabs>
 
-#### <ApiSourceLink label={"AnyTransformImplementation"} path={"packages/viz/data/src/transform/contract.ts"} startLine={243}>AnyTransformImplementation</ApiSourceLink>
+#### <ApiSourceLink label={"AnyTransformImplementation"} path={"packages/viz/data/src/transform/contract.ts"} startLine={249}>AnyTransformImplementation</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -318,7 +318,7 @@ export type AnyTransformImplementation = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"AnySynchronousTransformImplementation"} path={"packages/viz/data/src/transform/contract.ts"} startLine={255}>AnySynchronousTransformImplementation</ApiSourceLink>
+#### <ApiSourceLink label={"AnySynchronousTransformImplementation"} path={"packages/viz/data/src/transform/contract.ts"} startLine={261}>AnySynchronousTransformImplementation</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -348,7 +348,7 @@ export type AnySynchronousTransformImplementation = Readonly<Omit<AnyTransformIm
 
 </DocTabs>
 
-#### <ApiSourceLink label={"TransformContext"} path={"packages/viz/data/src/transform/contract.ts"} startLine={104}>TransformContext</ApiSourceLink>
+#### <ApiSourceLink label={"TransformContext"} path={"packages/viz/data/src/transform/contract.ts"} startLine={108}>TransformContext</ApiSourceLink>
 
 自定义 transform 用它读取 / 写入数据来源标记：保行数 transform 通常透传行对象即可保留 sourceIndex；
 改行数 transform 若输出行代表一组源行，必须用 groupProvenance 给输出行挂 sourceIndices，避免 locator / datum meta 丢失组级来源；
@@ -366,6 +366,7 @@ export type AnySynchronousTransformImplementation = Readonly<Omit<AnyTransformIm
 | `lineage?`                                 | `DataLineageRecorder`                                                | —      | data lineage recorder；缺省时不记录 transform / reducer / selector 事件 |
 | `readSourceIndex`                          | `(row: ExternalRow) => number \| undefined`                          | —      | 读单行源序标记；未开启 provenance 或行未打标记时返回 undefined          |
 | `readSourceIndices`                        | `(row: ExternalRow) => Array<number> \| undefined`                   | —      | 读组级源序标记；bin / summarize 或自定义改行数 transform 输出行可能携带 |
+| `regressionDependencies?`                  | `ReadonlyArray<RegressionDependency>`                                | —      | 当前阶段已精确解析的拟合依赖                                            |
 | `regressionImplementationRegistry?`        | `ReadonlyMap<string, AnySynchronousRegressionImplementation>`        | —      | 本次同步拟合实现                                                        |
 | `regressionRegistry?`                      | `ReadonlyMap<string, AnyRegressionDefinition>`                       | —      | 当前运行的拟合方法 registry                                             |
 | `rowSelectorImplementationRegistry?`       | `ReadonlyMap<string, AnySynchronousRowSelectorImplementation>`       | —      | 本次同步选择实现                                                        |
@@ -382,6 +383,7 @@ export type AnySynchronousTransformImplementation = Readonly<Omit<AnyTransformIm
 
 ```ts
 export type TransformContext = {
+  regressionDependencies?: ReadonlyArray<RegressionDependency>;
   readSourceIndex: (row: ExternalRow) => number | undefined;
   readSourceIndices: (row: ExternalRow) => Array<number> | undefined;
   groupProvenance: (out: ExternalRow, members: Array<ExternalRow>) => ExternalRow;
@@ -410,7 +412,7 @@ export const DEFAULT_TRANSFORM_CONTEXT: Readonly<TransformContext> = Object.free
 });
 ```
 
-#### <ApiSourceLink label={"defineTransform"} path={"packages/viz/data/src/transform/contract.ts"} startLine={183}>defineTransform</ApiSourceLink>
+#### <ApiSourceLink label={"defineTransform"} path={"packages/viz/data/src/transform/contract.ts"} startLine={189}>defineTransform</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -468,7 +470,7 @@ export declare const defineTransform: <
 
 </DocTabs>
 
-#### <ApiSourceLink label={"defineTransformImplementation"} path={"packages/viz/data/src/transform/contract.ts"} startLine={235}>defineTransformImplementation</ApiSourceLink>
+#### <ApiSourceLink label={"defineTransformImplementation"} path={"packages/viz/data/src/transform/contract.ts"} startLine={241}>defineTransformImplementation</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -502,7 +504,7 @@ export declare const defineTransformImplementation: <
 
 </DocTabs>
 
-#### <ApiSourceLink label={"extractTransformKind"} path={"packages/viz/data/src/transform/contract.ts"} startLine={268}>extractTransformKind</ApiSourceLink>
+#### <ApiSourceLink label={"extractTransformKind"} path={"packages/viz/data/src/transform/contract.ts"} startLine={274}>extractTransformKind</ApiSourceLink>
 
 definition schema 必须是包含 `kind: z.literal('<transform-kind>')` 的 ZodObject；该 literal 值就是 registry 唯一键
 
@@ -532,7 +534,7 @@ export declare const extractTransformKind: (schema: ZodType) => string;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"resolveTransformRegistry"} path={"packages/viz/data/src/transform/definitions.ts"} startLine={529}>resolveTransformRegistry</ApiSourceLink>
+#### <ApiSourceLink label={"resolveTransformRegistry"} path={"packages/viz/data/src/transform/definitions.ts"} startLine={525}>resolveTransformRegistry</ApiSourceLink>
 
 内置 transform 总是先注册；用户自定义 definition 不能覆盖内置 kind，也不能彼此重复
 
@@ -564,7 +566,7 @@ export declare const resolveTransformRegistry: (
 
 </DocTabs>
 
-#### <ApiSourceLink label={"resolveTransformImplementationRegistry"} path={"packages/viz/data/src/transform/definitions.ts"} startLine={571}>resolveTransformImplementationRegistry</ApiSourceLink>
+#### <ApiSourceLink label={"resolveTransformImplementationRegistry"} path={"packages/viz/data/src/transform/definitions.ts"} startLine={567}>resolveTransformImplementationRegistry</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1372,7 +1374,7 @@ export declare const resolveStatisticsReducerImplementationRegistry: <
 
 ## 回归拟合
 
-#### <ApiSourceLink label={"IRRegressionMethod"} path={"packages/viz/data/src/operators/regression/schema.ts"} startLine={41}>IRRegressionMethod</ApiSourceLink> / <ApiSourceLink label={"RegressionMethodSchema"} path={"packages/viz/data/src/operators/regression/schema.ts"} startLine={22}>RegressionMethodSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRRegressionMethod"} path={"packages/viz/data/src/operators/regression/schema.ts"} startLine={58}>IRRegressionMethod</ApiSourceLink> / <ApiSourceLink label={"RegressionMethodSchema"} path={"packages/viz/data/src/operators/regression/schema.ts"} startLine={24}>RegressionMethodSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1380,10 +1382,10 @@ export declare const resolveStatisticsReducerImplementationRegistry: <
 
 <ApiTable>
 
-| 成员     | 类型                                                                                                                                                                                                                         | 默认值 | 说明                 |
-| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | -------------------- |
-| `kind`   | `OpenString<ValueOf<{ readonly Linear: "linear"; readonly Quadratic: "quadratic"; readonly Polynomial: "polynomial"; readonly Logarithmic: "logarithmic"; readonly Exponential: "exponential"; readonly Power: "power"; }>>` | —      | 已注册的拟合方法名称 |
-| 索引签名 | `[key: string]: import("@retikz/foundation").JsonValue`                                                                                                                                                                      | —      | —                    |
+| 成员     | 类型                                                                                                                                                                                                                                                | 默认值 | 说明                 |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | -------------------- |
+| `kind`   | `OpenString<ValueOf<{ readonly Auto: "auto"; readonly Linear: "linear"; readonly Quadratic: "quadratic"; readonly Polynomial: "polynomial"; readonly Logarithmic: "logarithmic"; readonly Exponential: "exponential"; readonly Power: "power"; }>>` | —      | 已注册的拟合方法名称 |
+| 索引签名 | `[key: string]: import("@retikz/foundation").JsonValue`                                                                                                                                                                                             | —      | —                    |
 
 </ApiTable>
 
@@ -1443,6 +1445,160 @@ export type RegressionPair = Readonly<{
 
 </DocTabs>
 
+#### <ApiSourceLink label={"RegressionScore"} path={"packages/viz/data/src/operators/regression/evaluate.ts"} startLine={5}>RegressionScore</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员                        | 类型             | 默认值 | 说明                       |
+| --------------------------- | ---------------- | ------ | -------------------------- |
+| `readonly meanSquaredError` | `number`         | —      | 同一批观测的均方误差       |
+| `readonly rSquared`         | `number \| null` | —      | 决定系数；常量响应时未定义 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type RegressionScore = Readonly<{
+  rSquared: number | null;
+  meanSquaredError: number;
+}>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"evaluateRegression"} path={"packages/viz/data/src/operators/regression/evaluate.ts"} startLine={26}>evaluateRegression</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称    | 类型 / 签名                     | 说明 |
+| ------ | ------- | ------------------------------- | ---- |
+| 参数   | `pairs` | `ReadonlyArray<RegressionPair>` | —    |
+|        | `model` | `RegressionModel`               | —    |
+| 返回值 | —       | `RegressionScore`               | —    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export declare const evaluateRegression: (
+  pairs: ReadonlyArray<RegressionPair>,
+  model: RegressionModel,
+) => RegressionScore;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"RegressionFitOptions"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={22}>RegressionFitOptions</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员               | 类型                                               | 默认值 | 说明             |
+| ------------------ | -------------------------------------------------- | ------ | ---------------- |
+| `readonly extent?` | `readonly [`<br />`number,`<br />`number`<br />`]` | —      | 当前组最终预测域 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type RegressionFitOptions = Readonly<{
+  extent?: readonly [number, number];
+}>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"RegressionFitContext"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={28}>RegressionFitContext</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员                     | 类型                                                              | 默认值 | 说明                                               |
+| ------------------------ | ----------------------------------------------------------------- | ------ | -------------------------------------------------- |
+| `TModel` (泛型)          | `= RegressionModel \| Promise<RegressionModel>`                   | —      | —                                                  |
+| `readonly extent?`       | `readonly [`<br />`number,`<br />`number`<br />`]`                | —      | 当前组最终预测域                                   |
+| `readonly fitRegression` | `(index: number, pairs: ReadonlyArray<RegressionPair>) => TModel` | —      | 按 Definition 声明顺序拟合一个依赖，继承当前预测域 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type RegressionFitContext<TModel = RegressionModel | Promise<RegressionModel>> = RegressionFitOptions &
+  Readonly<{
+    fitRegression: (index: number, pairs: ReadonlyArray<RegressionPair>) => TModel;
+  }>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"RegressionDependency"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={35}>RegressionDependency</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员                    | 类型                                  | 默认值 | 说明                   |
+| ----------------------- | ------------------------------------- | ------ | ---------------------- |
+| `readonly definition`   | `AnyRegressionDefinition`             | —      | 本次请求的语义身份     |
+| `readonly dependencies` | `ReadonlyArray<RegressionDependency>` | —      | 保留候选顺序的传递依赖 |
+| `readonly operation`    | `IRRegressionMethod`                  | —      | 精确解析后的方法声明   |
+| `readonly type`         | `'regression'`                        | —      | Data 计算依赖类别      |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type RegressionDependency = Readonly<{
+  type: 'regression';
+  operation: IRRegressionMethod;
+  definition: AnyRegressionDefinition;
+  dependencies: ReadonlyArray<RegressionDependency>;
+}>;
+```
+
+</DocTab>
+
+</DocTabs>
+
 #### <ApiSourceLink label={"RegressionModel"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={16}>RegressionModel</ApiSourceLink>
 
 <DocTabs defaultValue="members">
@@ -1471,7 +1627,7 @@ export type RegressionModel = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"RegressionResolution"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={118}>RegressionResolution</ApiSourceLink>
+#### <ApiSourceLink label={"RegressionResolution"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={185}>RegressionResolution</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1479,10 +1635,10 @@ export type RegressionModel = Readonly<{
 
 <ApiTable>
 
-| 成员                      | 类型                                                                 | 默认值 | 说明                                           |
-| ------------------------- | -------------------------------------------------------------------- | ------ | ---------------------------------------------- |
-| `readonly fit`            | `(pairs: ReadonlyArray<RegressionPair>) => RegressionModel`          | —      | 拟合当前组，返回已包装异常与非有限值诊断的模型 |
-| `readonly validateExtent` | `(extent: readonly [`<br />`number,`<br />`number`<br />`]) => void` | —      | 校验当前预测域                                 |
+| 成员                      | 类型                                                                                        | 默认值 | 说明                                           |
+| ------------------------- | ------------------------------------------------------------------------------------------- | ------ | ---------------------------------------------- |
+| `readonly fit`            | `(pairs: ReadonlyArray<RegressionPair>, options?: RegressionFitOptions) => RegressionModel` | —      | 拟合当前组，返回已包装异常与非有限值诊断的模型 |
+| `readonly validateExtent` | `(extent: readonly [`<br />`number,`<br />`number`<br />`]) => void`                        | —      | 校验当前预测域                                 |
 
 </ApiTable>
 
@@ -1492,7 +1648,7 @@ export type RegressionModel = Readonly<{
 
 ```ts
 export type RegressionResolution = Readonly<{
-  fit: (pairs: ReadonlyArray<RegressionPair>) => RegressionModel;
+  fit: (pairs: ReadonlyArray<RegressionPair>, options?: RegressionFitOptions) => RegressionModel;
   validateExtent: (extent: readonly [number, number]) => void;
 }>;
 ```
@@ -1501,7 +1657,7 @@ export type RegressionResolution = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"RegressionDefinition"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={26}>RegressionDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"RegressionDefinition"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={51}>RegressionDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1513,6 +1669,7 @@ export type RegressionResolution = Readonly<{
 | ------------------- | ------------------------------------------------------------------------------------------- | ------ | ----------------------------------------------------------------- |
 | `TSource` (泛型)    | `extends IRRegressionMethod = IRRegressionMethod`                                           | —      | 拟合方法 schema 接受的原始声明类型                                |
 | `TOperation` (泛型) | `= TSource`                                                                                 | —      | schema 解析后传给拟合及范围校验回调的参数类型，默认与输入声明一致 |
+| `dependencies?`     | `(operation: TOperation) => ReadonlyArray<IRRegressionMethod>`                              | —      | 从精确参数声明有序拟合依赖，不读取观测                            |
 | `schema`            | `ZodType<TOperation, TSource>`                                                              | —      | 精确参数 schema，kind 必须是非空字面量                            |
 | `validateExtent?`   | `(operation: TOperation, extent: readonly [`<br />`number,`<br />`number`<br />`]) => void` | —      | 方法专有预测域约束                                                |
 
@@ -1525,6 +1682,7 @@ export type RegressionResolution = Readonly<{
 ```ts
 export type RegressionDefinition<TSource extends IRRegressionMethod = IRRegressionMethod, TOperation = TSource> = {
   schema: ZodType<TOperation, TSource>;
+  dependencies?: (operation: TOperation) => ReadonlyArray<IRRegressionMethod>;
   validateExtent?: (operation: TOperation, extent: readonly [number, number]) => void;
 };
 ```
@@ -1533,7 +1691,7 @@ export type RegressionDefinition<TSource extends IRRegressionMethod = IRRegressi
 
 </DocTabs>
 
-#### <ApiSourceLink label={"AnyRegressionDefinition"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={45}>AnyRegressionDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"AnyRegressionDefinition"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={72}>AnyRegressionDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1541,10 +1699,11 @@ export type RegressionDefinition<TSource extends IRRegressionMethod = IRRegressi
 
 <ApiTable>
 
-| 成员              | 类型                                                                                   | 默认值 | 说明                   |
-| ----------------- | -------------------------------------------------------------------------------------- | ------ | ---------------------- |
-| `schema`          | `ZodType`                                                                              | —      | 精确参数 schema        |
-| `validateExtent?` | `(operation: never, extent: readonly [`<br />`number,`<br />`number`<br />`]) => void` | —      | 已解析参数的预测域校验 |
+| 成员              | 类型                                                                                   | 默认值 | 说明                     |
+| ----------------- | -------------------------------------------------------------------------------------- | ------ | ------------------------ |
+| `dependencies?`   | `(operation: never) => ReadonlyArray<IRRegressionMethod>`                              | —      | 已解析参数对应的有序依赖 |
+| `schema`          | `ZodType`                                                                              | —      | 精确参数 schema          |
+| `validateExtent?` | `(operation: never, extent: readonly [`<br />`number,`<br />`number`<br />`]) => void` | —      | 已解析参数的预测域校验   |
 
 </ApiTable>
 
@@ -1555,6 +1714,7 @@ export type RegressionDefinition<TSource extends IRRegressionMethod = IRRegressi
 ```ts
 export type AnyRegressionDefinition = {
   schema: ZodType;
+  dependencies?: (operation: never) => ReadonlyArray<IRRegressionMethod>;
   validateExtent?: (operation: never, extent: readonly [number, number]) => void;
 };
 ```
@@ -1563,21 +1723,45 @@ export type AnyRegressionDefinition = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"RegressionImplementation"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={58}>RegressionImplementation</ApiSourceLink>
+#### <ApiSourceLink label={"RegressionImplementation"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={115}>RegressionImplementation</ApiSourceLink>
 
-<DocTabs defaultValue="members">
-
-<DocTab value="members" label="属性">
+**公共属性**
 
 <ApiTable>
 
-| 成员                  | 类型                                                                                                | 默认值 | 说明                                                              |
-| --------------------- | --------------------------------------------------------------------------------------------------- | ------ | ----------------------------------------------------------------- |
-| `TSource` (泛型)      | `extends IRRegressionMethod = IRRegressionMethod`                                                   | —      | 拟合方法 schema 接受的原始声明类型                                |
-| `TOperation` (泛型)   | `= TSource`                                                                                         | —      | schema 解析后传给拟合及范围校验回调的参数类型，默认与输入声明一致 |
-| `TResult` (泛型)      | `extends RegressionModel \| Promise<RegressionModel> = RegressionModel \| Promise<RegressionModel>` | —      | 拟合回调返回的模型或模型 Promise 类型                             |
-| `readonly definition` | `RegressionDefinition<TSource, TOperation>`                                                         | —      | 同一方法的唯一语义身份                                            |
-| `readonly fit`        | `(pairs: ReadonlyArray<RegressionPair>, operation: TOperation) => TResult`                          | —      | 拟合规范有限观测，返回预测模型                                    |
+| 成员                  | 类型                                              | 默认值 | 说明                       |
+| --------------------- | ------------------------------------------------- | ------ | -------------------------- |
+| `TSource` (泛型)      | `extends IRRegressionMethod = IRRegressionMethod` | —      | 方法 schema 接受的声明类型 |
+| `TOperation` (泛型)   | `= TSource`                                       | —      | 精确解析后的参数类型       |
+| `readonly definition` | `RegressionDefinition<TSource, TOperation>`       | —      | 同一方法的唯一语义身份     |
+
+</ApiTable>
+
+公共属性适用于所有分支；输入还需满足至少一个分支的属性约束。
+
+<DocTabs defaultValue="sync">
+
+<DocTab value="sync" label="属性 · 同步能力，可选异步入口">
+
+<ApiTable>
+
+| 成员                 | 类型                                    | 默认值 | 说明                                         |
+| -------------------- | --------------------------------------- | ------ | -------------------------------------------- |
+| `readonly fit`       | `SynchronousRegressionFit<TOperation>`  | —      | 同步入口；整个依赖树必须具有同步能力         |
+| `readonly fitAsync?` | `AsynchronousRegressionFit<TOperation>` | —      | 异步入口；省略时异步执行器复用完整同步依赖树 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="async" label="属性 · 异步能力，可选同步入口">
+
+<ApiTable>
+
+| 成员                | 类型                                    | 默认值 | 说明                                 |
+| ------------------- | --------------------------------------- | ------ | ------------------------------------ |
+| `readonly fit?`     | `SynchronousRegressionFit<TOperation>`  | —      | 未提供同步能力时不可进入同步执行集合 |
+| `readonly fitAsync` | `AsynchronousRegressionFit<TOperation>` | —      | 异步入口；依赖可以是同步或异步实现   |
 
 </ApiTable>
 
@@ -1589,29 +1773,53 @@ export type AnyRegressionDefinition = {
 export type RegressionImplementation<
   TSource extends IRRegressionMethod = IRRegressionMethod,
   TOperation = TSource,
-  TResult extends RegressionModel | Promise<RegressionModel> = RegressionModel | Promise<RegressionModel>,
 > = Readonly<{
   definition: RegressionDefinition<TSource, TOperation>;
-  fit: (pairs: ReadonlyArray<RegressionPair>, operation: TOperation) => TResult;
-}>;
+}> &
+  RegressionComputation<TOperation>;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"AnyRegressionImplementation"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={86}>AnyRegressionImplementation</ApiSourceLink>
+#### <ApiSourceLink label={"AnyRegressionImplementation"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={151}>AnyRegressionImplementation</ApiSourceLink>
 
-<DocTabs defaultValue="members">
-
-<DocTab value="members" label="属性">
+**公共属性**
 
 <ApiTable>
 
-| 成员                  | 类型                                                                                                      | 默认值 | 说明             |
-| --------------------- | --------------------------------------------------------------------------------------------------------- | ------ | ---------------- |
-| `readonly definition` | `AnyRegressionDefinition`                                                                                 | —      | 唯一拟合语义身份 |
-| `readonly fit`        | `(pairs: ReadonlyArray<RegressionPair>, operation: never) => RegressionModel \| Promise<RegressionModel>` | —      | 精确解析后的拟合 |
+| 成员                  | 类型                      | 默认值 | 说明             |
+| --------------------- | ------------------------- | ------ | ---------------- |
+| `readonly definition` | `AnyRegressionDefinition` | —      | 唯一拟合语义身份 |
+
+</ApiTable>
+
+公共属性适用于所有分支；输入还需满足至少一个分支的属性约束。
+
+<DocTabs defaultValue="sync">
+
+<DocTab value="sync" label="属性 · 同步能力，可选异步入口">
+
+<ApiTable>
+
+| 成员                 | 类型                               | 默认值 | 说明                                         |
+| -------------------- | ---------------------------------- | ------ | -------------------------------------------- |
+| `readonly fit`       | `SynchronousRegressionFit<never>`  | —      | 同步入口；整个依赖树必须具有同步能力         |
+| `readonly fitAsync?` | `AsynchronousRegressionFit<never>` | —      | 异步入口；省略时异步执行器复用完整同步依赖树 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="async" label="属性 · 异步能力，可选同步入口">
+
+<ApiTable>
+
+| 成员                | 类型                               | 默认值 | 说明                                 |
+| ------------------- | ---------------------------------- | ------ | ------------------------------------ |
+| `readonly fit?`     | `SynchronousRegressionFit<never>`  | —      | 未提供同步能力时不可进入同步执行集合 |
+| `readonly fitAsync` | `AsynchronousRegressionFit<never>` | —      | 异步入口；依赖可以是同步或异步实现   |
 
 </ApiTable>
 
@@ -1622,15 +1830,15 @@ export type RegressionImplementation<
 ```ts
 export type AnyRegressionImplementation = Readonly<{
   definition: AnyRegressionDefinition;
-  fit: (pairs: ReadonlyArray<RegressionPair>, operation: never) => RegressionModel | Promise<RegressionModel>;
-}>;
+}> &
+  RegressionComputation<never>;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"AnySynchronousRegressionImplementation"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={94}>AnySynchronousRegressionImplementation</ApiSourceLink>
+#### <ApiSourceLink label={"AnySynchronousRegressionImplementation"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={158}>AnySynchronousRegressionImplementation</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1638,10 +1846,11 @@ export type AnyRegressionImplementation = Readonly<{
 
 <ApiTable>
 
-| 成员                  | 类型                                                                          | 默认值 | 说明                  |
-| --------------------- | ----------------------------------------------------------------------------- | ------ | --------------------- |
-| `readonly definition` | `AnyRegressionDefinition`                                                     | —      | 唯一拟合语义身份      |
-| `readonly fit`        | `(pairs: ReadonlyArray<RegressionPair>, operation: never) => RegressionModel` | —      | 不返回 Promise 的拟合 |
+| 成员                  | 类型                               | 默认值 | 说明                                 |
+| --------------------- | ---------------------------------- | ------ | ------------------------------------ |
+| `readonly definition` | `AnyRegressionDefinition`          | —      | 唯一拟合语义身份                     |
+| `readonly fit`        | `SynchronousRegressionFit<never>`  | —      | 不返回 Promise 的拟合                |
+| `readonly fitAsync?`  | `AsynchronousRegressionFit<never>` | —      | 可选异步能力；同步执行不会调用此入口 |
 
 </ApiTable>
 
@@ -1650,17 +1859,18 @@ export type AnyRegressionImplementation = Readonly<{
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type AnySynchronousRegressionImplementation = Omit<AnyRegressionImplementation, 'fit'> &
-  Readonly<{
-    fit: (pairs: ReadonlyArray<RegressionPair>, operation: never) => RegressionModel;
-  }>;
+export type AnySynchronousRegressionImplementation = Readonly<{
+  definition: AnyRegressionDefinition;
+  fit: SynchronousRegressionFit<never>;
+  fitAsync?: AsynchronousRegressionFit<never>;
+}>;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"defineRegression"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={40}>defineRegression</ApiSourceLink>
+#### <ApiSourceLink label={"defineRegression"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={67}>defineRegression</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1691,7 +1901,7 @@ export declare const defineRegression: <TSource extends IRRegressionMethod, TOpe
 
 </DocTabs>
 
-#### <ApiSourceLink label={"defineRegressionImplementation"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={77}>defineRegressionImplementation</ApiSourceLink>
+#### <ApiSourceLink label={"defineRegressionImplementation"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={131}>defineRegressionImplementation</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1699,13 +1909,16 @@ export declare const defineRegression: <TSource extends IRRegressionMethod, TOpe
 
 <ApiTable variant="parameters">
 
-| 类别   | 名称             | 类型 / 签名                                              | 说明                                                              |
-| ------ | ---------------- | -------------------------------------------------------- | ----------------------------------------------------------------- |
-| 泛型   | `TSource`        | `extends IRRegressionMethod`                             | 拟合方法 schema 接受的原始声明类型                                |
-|        | `TOperation`     | —                                                        | schema 解析后传给拟合及范围校验回调的参数类型，默认与输入声明一致 |
-|        | `TResult`        | `extends RegressionModel \| Promise<RegressionModel>`    | 拟合回调返回的模型或模型 Promise 类型                             |
-| 参数   | `implementation` | `RegressionImplementation<TSource, TOperation, TResult>` | 具备精确参数关联的定义或实现；不会自动注册                        |
-| 返回值 | —                | `RegressionImplementation<TSource, TOperation, TResult>` | 原样返回传入对象，保留泛型关联                                    |
+| 重载 | 类别   | 名称             | 类型 / 签名                                                                                     | 说明                                                             |
+| ---- | ------ | ---------------- | ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| 1    | 泛型   | `TSource`        | `extends IRRegressionMethod`                                                                    | 保留同步入口与精确方法参数的关联<br />方法 schema 接受的声明类型 |
+|      |        | `TOperation`     | —                                                                                               | 精确解析后的参数类型                                             |
+|      | 参数   | `implementation` | `RegressionImplementation<TSource, TOperation> & { fit: SynchronousRegressionFit<TOperation> }` | 具备同步能力的计算实现；不会自动注册                             |
+|      | 返回值 | —                | `RegressionImplementation<TSource, TOperation> & { fit: SynchronousRegressionFit<TOperation> }` | 原样返回实现，保留必有同步入口的类型                             |
+| 2    | 泛型   | `TSource`        | `extends IRRegressionMethod`                                                                    | 保留异步入口与精确方法参数的关联<br />方法 schema 接受的声明类型 |
+|      |        | `TOperation`     | —                                                                                               | 精确解析后的参数类型                                             |
+|      | 参数   | `implementation` | `RegressionImplementation<TSource, TOperation>`                                                 | 具备异步能力的计算实现；不会自动注册                             |
+|      | 返回值 | —                | `RegressionImplementation<TSource, TOperation>`                                                 | 原样返回实现，不推断或探测同步能力                               |
 
 </ApiTable>
 
@@ -1714,20 +1927,15 @@ export declare const defineRegression: <TSource extends IRRegressionMethod, TOpe
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export declare const defineRegressionImplementation: <
-  TSource extends IRRegressionMethod,
-  TOperation,
-  TResult extends RegressionModel | Promise<RegressionModel>,
->(
-  implementation: RegressionImplementation<TSource, TOperation, TResult>,
-) => RegressionImplementation<TSource, TOperation, TResult>;
+<TSource extends { kind: OpenString<ValueOf<{ Auto: 'auto'; Exponential: 'exponential'; Linear: 'linear'; Logarithmic: 'logarithmic'; Polynomial: 'polynomial'; Power: 'power'; Quadratic: 'quadratic' }>> }, TOperation>(implementation: RegressionImplementation<TSource, TOperation> & { fit: SynchronousRegressionFit<TOperation> }) => RegressionImplementation<TSource, TOperation> & { fit: SynchronousRegressionFit<TOperation> }
+<TSource extends { kind: OpenString<ValueOf<{ Auto: 'auto'; Exponential: 'exponential'; Linear: 'linear'; Logarithmic: 'logarithmic'; Polynomial: 'polynomial'; Power: 'power'; Quadratic: 'quadratic' }>> }, TOperation>(implementation: RegressionImplementation<TSource, TOperation>) => RegressionImplementation<TSource, TOperation>
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"extractRegressionKind"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={106}>extractRegressionKind</ApiSourceLink>
+#### <ApiSourceLink label={"extractRegressionKind"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={173}>extractRegressionKind</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1755,7 +1963,7 @@ export declare const extractRegressionKind: (schema: ZodType) => string;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"resolveRegression"} path={"packages/viz/data/src/operators/regression/registry.ts"} startLine={87}>resolveRegression</ApiSourceLink>
+#### <ApiSourceLink label={"resolveRegression"} path={"packages/viz/data/src/operators/regression/registry.ts"} startLine={95}>resolveRegression</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1789,7 +1997,7 @@ export declare const resolveRegression: (
 
 </DocTabs>
 
-#### <ApiSourceLink label={"resolveRegressionRegistry"} path={"packages/viz/data/src/operators/regression/registry.ts"} startLine={51}>resolveRegressionRegistry</ApiSourceLink>
+#### <ApiSourceLink label={"resolveRegressionRegistry"} path={"packages/viz/data/src/operators/regression/registry.ts"} startLine={59}>resolveRegressionRegistry</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1819,7 +2027,7 @@ export declare const resolveRegressionRegistry: (
 
 </DocTabs>
 
-#### <ApiSourceLink label={"resolveRegressionImplementationRegistry"} path={"packages/viz/data/src/operators/regression/registry.ts"} startLine={22}>resolveRegressionImplementationRegistry</ApiSourceLink>
+#### <ApiSourceLink label={"resolveRegressionImplementationRegistry"} path={"packages/viz/data/src/operators/regression/registry.ts"} startLine={25}>resolveRegressionImplementationRegistry</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1859,7 +2067,7 @@ export declare const resolveRegressionImplementationRegistry: <
 #### <ApiSourceLink label={"DataTransformModel"} path={"packages/viz/data/src/model/contract.ts"} startLine={55}>DataTransformModel</ApiSourceLink>
 
 ```ts
-export type DataTransformModel = Array<DataTransformField<IRDataModel[number]>>;
+export type DataTransformModel = Array<DataTransformField<IRDataFieldDefinition>>;
 ```
 
 #### <ApiSourceLink label={"DataTransformInputDescriptor"} path={"packages/viz/data/src/execution/contract.ts"} startLine={51}>DataTransformInputDescriptor</ApiSourceLink>
@@ -1923,7 +2131,7 @@ export type DataTransformInputDescriptor<TSource> =
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DataTransformOutputDescriptor"} path={"packages/viz/data/src/transform/contract.ts"} startLine={71}>DataTransformOutputDescriptor</ApiSourceLink>
+#### <ApiSourceLink label={"DataTransformOutputDescriptor"} path={"packages/viz/data/src/transform/contract.ts"} startLine={75}>DataTransformOutputDescriptor</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1957,7 +2165,7 @@ export type DataTransformOutputDescriptor = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DataTransformOutputModel"} path={"packages/viz/data/src/transform/contract.ts"} startLine={84}>DataTransformOutputModel</ApiSourceLink>
+#### <ApiSourceLink label={"DataTransformOutputModel"} path={"packages/viz/data/src/transform/contract.ts"} startLine={88}>DataTransformOutputModel</ApiSourceLink>
 
 <DocTabs defaultValue="preserve">
 
@@ -2005,7 +2213,7 @@ export type DataTransformOutputModel =
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DataTransformFieldEffect"} path={"packages/viz/data/src/transform/contract.ts"} startLine={48}>DataTransformFieldEffect</ApiSourceLink>
+#### <ApiSourceLink label={"DataTransformFieldEffect"} path={"packages/viz/data/src/transform/contract.ts"} startLine={52}>DataTransformFieldEffect</ApiSourceLink>
 
 ```ts
 export const DataTransformFieldEffect = {
@@ -2017,7 +2225,7 @@ export const DataTransformFieldEffect = {
 export type DataTransformFieldEffect = ValueOf<typeof DataTransformFieldEffect>;
 ```
 
-#### <ApiSourceLink label={"DataTransformBindingClass"} path={"packages/viz/data/src/transform/contract.ts"} startLine={37}>DataTransformBindingClass</ApiSourceLink>
+#### <ApiSourceLink label={"DataTransformBindingClass"} path={"packages/viz/data/src/transform/contract.ts"} startLine={41}>DataTransformBindingClass</ApiSourceLink>
 
 ```ts
 export const DataTransformBindingClass = {
@@ -2028,7 +2236,7 @@ export const DataTransformBindingClass = {
 export type DataTransformBindingClass = ValueOf<typeof DataTransformBindingClass>;
 ```
 
-#### <ApiSourceLink label={"DataTransformPhase"} path={"packages/viz/data/src/transform/contract.ts"} startLine={20}>DataTransformPhase</ApiSourceLink>
+#### <ApiSourceLink label={"DataTransformPhase"} path={"packages/viz/data/src/transform/contract.ts"} startLine={24}>DataTransformPhase</ApiSourceLink>
 
 ```ts
 export const DataTransformPhase = {
@@ -2044,7 +2252,22 @@ export type DataTransformPhase = ValueOf<typeof DataTransformPhase>;
 
 #### <ApiSourceLink label={"DataTransformDependency"} path={"packages/viz/data/src/transform/plan.ts"} startLine={10}>DataTransformDependency</ApiSourceLink>
 
-<DocTabs defaultValue="reducer">
+<DocTabs defaultValue="regression">
+
+<DocTab value="regression" label="属性 · 拟合依赖">
+
+<ApiTable>
+
+| 成员                    | 类型                                  | 默认值 | 说明                   |
+| ----------------------- | ------------------------------------- | ------ | ---------------------- |
+| `readonly definition`   | `AnyRegressionDefinition`             | —      | 本次请求的语义身份     |
+| `readonly dependencies` | `ReadonlyArray<RegressionDependency>` | —      | 保留候选顺序的传递依赖 |
+| `readonly operation`    | `IRRegressionMethod`                  | —      | 精确解析后的方法声明   |
+| `readonly type`         | `'regression'`                        | —      | Data 计算依赖类别      |
+
+</ApiTable>
+
+</DocTab>
 
 <DocTab value="reducer" label="属性 · 归约依赖">
 
@@ -2074,20 +2297,6 @@ export type DataTransformPhase = ValueOf<typeof DataTransformPhase>;
 
 </DocTab>
 
-<DocTab value="regression" label="属性 · 拟合依赖">
-
-<ApiTable>
-
-| 成员                  | 类型                      | 默认值 | 说明                       |
-| --------------------- | ------------------------- | ------ | -------------------------- |
-| `readonly definition` | `AnyRegressionDefinition` | —      | 与操作匹配的语义定义       |
-| `readonly operation`  | `IRRegressionMethod`      | —      | 该依赖的精确操作声明       |
-| `readonly type`       | `'regression'`            | —      | 区分归约、行选择与拟合依赖 |
-
-</ApiTable>
-
-</DocTab>
-
 <DocTab value="definition" label="类型定义">
 
 ```ts
@@ -2102,18 +2311,14 @@ export type DataTransformDependency =
       operation: IRDataSelectorOperation;
       definition: AnyRowSelectorDefinition;
     }>
-  | Readonly<{
-      type: 'regression';
-      operation: IRRegressionMethod;
-      definition: AnyRegressionDefinition;
-    }>;
+  | RegressionDependency;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DataTransformStage"} path={"packages/viz/data/src/transform/plan.ts"} startLine={37}>DataTransformStage</ApiSourceLink>
+#### <ApiSourceLink label={"DataTransformStage"} path={"packages/viz/data/src/transform/plan.ts"} startLine={30}>DataTransformStage</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -2149,7 +2354,7 @@ export type DataTransformStage = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DataTransformResolution"} path={"packages/viz/data/src/transform/plan.ts"} startLine={51}>DataTransformResolution</ApiSourceLink>
+#### <ApiSourceLink label={"DataTransformResolution"} path={"packages/viz/data/src/transform/plan.ts"} startLine={44}>DataTransformResolution</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -2847,7 +3052,7 @@ export type DataTransformPreparation<TSource> =
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DataTransformSchedule"} path={"packages/viz/data/src/transform/contract.ts"} startLine={61}>DataTransformSchedule</ApiSourceLink>
+#### <ApiSourceLink label={"DataTransformSchedule"} path={"packages/viz/data/src/transform/contract.ts"} startLine={65}>DataTransformSchedule</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -3141,7 +3346,7 @@ export declare const ingestDataTransformResult: (
 
 ## 同步调用
 
-#### <ApiSourceLink label={"applyTransforms"} path={"packages/viz/data/src/execution/apply.ts"} startLine={228}>applyTransforms</ApiSourceLink>
+#### <ApiSourceLink label={"applyTransforms"} path={"packages/viz/data/src/execution/apply.ts"} startLine={236}>applyTransforms</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -3247,7 +3452,7 @@ export type ApplyTransformsResult = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"applyTransformsToDataView"} path={"packages/viz/data/src/execution/apply.ts"} startLine={211}>applyTransformsToDataView</ApiSourceLink>
+#### <ApiSourceLink label={"applyTransformsToDataView"} path={"packages/viz/data/src/execution/apply.ts"} startLine={219}>applyTransformsToDataView</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 

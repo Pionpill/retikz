@@ -7,61 +7,72 @@ import { logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
 
 import { coordinateImplementationI18n } from './coordinate-implementation.i18n';
 
-/** 完整实现流程的语言 */
+/** 坐标阶段图的语言 */
 export type CoordinateImplementationProps = { lang?: Lang };
 
-/** 沿 Scope 生命周期串联位置、布局、引用与路径 */
+/** 展示位置表达的阶段产物与上下文输入 */
 const CoordinateImplementation: FC<CoordinateImplementationProps> = props => {
   const { lang = 'zh' } = props;
   const text = coordinateImplementationI18n[lang];
-  const stages = ['target', 'placeholder', 'children', 'envelope', 'transforms', 'publish', 'paths', 'group'] as const;
+  const stages = [
+    { id: 'canon', name: 'CanonicalCoordinate', state: true },
+    { id: 'evaluate', name: 'evaluatePosition', state: false },
+    { id: 'points', name: 'PositionEvaluation', state: true },
+    { id: 'compiled', name: 'CompiledCoordinate', state: true },
+    { id: 'publish', name: 'visitCoordinate', state: false },
+  ] as const;
   return (
     <PreviewFlowDiagram {...logicFigureGraphProps()} style={{ maxWidth: '100%', height: 'auto' }}>
       <FlowLayout
-        id="implementation"
+        id="coordinate-implementation"
         kind="grid"
-        gap={{ row: 20, column: 24 }}
+        gap={{ row: 20, column: 28 }}
         placements={[
-          ['target', null],
-          ['placeholder', 'entry'],
-          ['children', null],
-          ['envelope', null],
-          ['transforms', null],
-          ['publish', 'geometry'],
-          ['paths', null],
-          ['group', null],
+          [null, 'canon'],
+          ['context', 'evaluate'],
+          [null, 'points'],
+          [null, 'compiled'],
+          [null, 'publish'],
         ]}
       >
         <FlowEntities
-          items={stages.map(id => ({
-            id,
-            text: text[id]
-              .split('\n')
-              .map((line, index) => ({ text: line, ...(index === 0 ? {} : { font: { size: 12 }, fill: 'gray' }) })),
-            role: 'activity',
-            layout: { width: 340 },
-            ...(id === 'transforms' ? { kind: 'docs.logic.important' } : {}),
+          items={stages.map(item => ({
+            id: item.id,
+            role: item.state ? 'state' : 'activity',
+            layout: { width: 300 },
+            text: [
+              { text: item.name, font: { size: 12 } },
+              { text: text[item.id], font: { size: 12 }, fill: 'gray' },
+            ],
           }))}
         />
         <FlowEntities
-          items={(['entry', 'geometry'] as const).map(id => ({
-            id,
-            text: text[id],
-            role: 'state',
-            kind: 'docs.logic.secondary',
-            layout: { width: 230 },
-          }))}
+          items={[
+            {
+              id: 'context',
+              role: 'state',
+              kind: 'docs.logic.secondary',
+              layout: { width: 260 },
+              text: [
+                { text: 'PositionEvaluateContext', font: { size: 12 } },
+                { text: text.context, font: { size: 12 }, fill: 'gray' },
+              ],
+            },
+          ]}
         />
       </FlowLayout>
       <FlowRelations
         items={[
-          ...stages.slice(1).map((id, index) => ({ source: stages[index], target: id })),
-          { source: 'placeholder', target: 'entry' },
-          { source: 'publish', target: 'geometry' },
+          ...stages
+            .slice(1)
+            .map((item, index) => ({
+              source: { id: stages[index].id, anchor: 'bottom' as const },
+              target: { id: item.id, anchor: 'top' as const },
+            })),
+          { source: { id: 'context', anchor: 'right' }, target: { id: 'evaluate', anchor: 'left' } },
         ]}
       />
     </PreviewFlowDiagram>
   );
 };
-
 export default CoordinateImplementation;

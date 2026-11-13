@@ -1,5 +1,5 @@
 import { Path, Step, createInputScene } from '@retikz/react';
-import { processToStaticInputResult } from '@retikz/vanilla';
+import { compileToScene } from '@retikz/vanilla';
 import type { ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
 
@@ -8,7 +8,7 @@ import { synchronousAdapters } from './helpers/synchronous-adapters';
 
 const ir = (jsx: ReactNode) => {
   const input = createInputScene(jsx);
-  return { children: processToStaticInputResult(input.scene, { adapters: synchronousAdapters(input.adapters) }).scene };
+  return { children: compileToScene(input.scene, { adapters: synchronousAdapters(input.adapters) }).scene };
 };
 
 const polarXY = (center: [number, number], rx: number, ry: number, angle: number): [number, number] => [

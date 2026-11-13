@@ -5,6 +5,8 @@ description: Connect Data transforms to Plot, choose shared or mark-local scopes
 
 Transforms process data rows before marks read their result fields. For example, normalize values into shares, then bind those shares to vertical positions. [Data](/viz/data/transforms) owns the definitions, parameters, and computation; Plot connects declarations, organizes plotting scopes, and consumes the results.
 
+See [Data API Reference](/viz/data/transform/reference) for operation contracts. Data `jitter` uses data units; Plot handles projected [position adjustment](/viz/plot/mark#jitterpositionadjustmentschema) separately.
+
 ## Using transforms
 
 Complete the [Plot quick start](/viz/plot/get-start) first. This example normalizes three values into `share` and draws three points at y = 0.2, 0.3, and 0.5. A declaration wraps `{ kind, params }` in `operation`.

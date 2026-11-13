@@ -2,6 +2,7 @@ export * from './arc-intersection';
 export * from './circle';
 export * from './contour';
 export * from './curve';
+export * from './curve-metrics';
 export * from './hull';
 export * from './intersect';
 export * from './polygon';

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { PathPrimitive, RectPrimitive, ScenePrimitive } from '../../../../core/src/contract';
 import type { IRScene } from '../../../../core/src/schemas';
 import { NodeDefaultSchema, NodeSchema, PathDefaultSchema, PathSchema } from '../../../../core/src/schemas';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 import { flattenPrims } from '../../helpers/flatten';
 
 const strokePath = (dashOffset: unknown): unknown => ({
@@ -118,7 +118,7 @@ describe('描边虚线偏移', () => {
       ],
     };
 
-    const scene = compileToScene(ir).scene;
+    const scene = compileTestResult(ir).scene;
 
     expect(firstPath(scene.primitives, '#123')?.dashOffset).toBe(-2);
     expect(firstRect(scene.primitives, 'box')?.dashOffset).toBe(5);
@@ -144,7 +144,7 @@ describe('描边虚线偏移', () => {
       ],
     };
     const fragments = strokeFragments(
-      compileToScene(ir, { measureText: () => ({ width: 20, height: 10 }) }).scene.primitives,
+      compileTestResult(ir, { measureText: () => ({ width: 20, height: 10 }) }).scene.primitives,
       '#123',
     ).sort((left, right) => firstMoveX(left) - firstMoveX(right));
 

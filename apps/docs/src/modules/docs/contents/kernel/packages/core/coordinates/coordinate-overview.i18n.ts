@@ -1,24 +1,15 @@
-import type { Lang } from '@/i18n';
-
-/** 坐标解析总览的阶段文案 */
-export const coordinateOverviewI18n: Record<
-  Lang,
-  Record<'input' | 'context' | 'resolve' | 'layout' | 'close' | 'output', string>
-> = {
+/** 坐标阶段图的双语文案 */
+export const coordinateOverviewI18n = {
   zh: {
-    input: '位置表达与引用',
-    context: '读取可见名称与当前变换',
-    resolve: '完成定位与布局',
-    layout: '注册世界引用几何',
-    close: '闭合 Scope 并回填路径',
-    output: '局部图元与分组变换',
+    source: 'P: of A + offset [40, 0]',
+    resolve: '按位置形式补配置、递归整理',
+    canon: 'P: 保留 A 与局部偏移',
+    context: 'nodeDistance：方向定位默认距离',
   },
   en: {
-    input: 'Positions and references',
-    context: 'Read names and current transforms',
-    resolve: 'Resolve placement and layout',
-    layout: 'Register world reference geometry',
-    close: 'Finalize Scope and deferred paths',
-    output: 'Local primitives and group transforms',
+    source: 'P: of A + offset [40, 0]',
+    resolve: 'Complete configuration recursively',
+    canon: 'P: retain A and the local offset',
+    context: 'nodeDistance: directional default',
   },
 };

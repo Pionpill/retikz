@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { IRScene, ScenePrimitive } from '../../../../core/src';
 import { rectPerimeterSample } from '../../../../core/src/shared/geometry/path/segment';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 
 /** mark marker group 的签名：transforms = [translate(point), rotate, scale, translate]；取首个 translate 为落点 */
 const findMarkPoint = (prims: ReadonlyArray<ScenePrimitive>): [number, number] | undefined => {
@@ -62,7 +62,7 @@ describe('C7：cycle 闭合段可承载 mark', () => {
 
     // 已走过前两段，加上闭合段的一半，再除以总弧长
     // → 闭合段 (5,8)→(0,0) 中点 (2.5, 4)
-    const pt = findMarkPoint(compileToScene(ir).scene.primitives);
+    const pt = findMarkPoint(compileTestResult(ir).scene.primitives);
 
     expect(pt).toBeDefined();
     expect(pt![0]).toBeCloseTo(2.5, 5);
@@ -84,7 +84,7 @@ describe('C7：rectangle 段计入段数并可承载 mark', () => {
   });
 
   it('pos=0.5 → 矩形周长右下角 (40, 20)', () => {
-    const pt = findMarkPoint(compileToScene(rectPath(0.5)).scene.primitives);
+    const pt = findMarkPoint(compileTestResult(rectPath(0.5)).scene.primitives);
 
     expect(pt).toBeDefined();
     expect(pt![0]).toBeCloseTo(40, 5);
@@ -92,7 +92,7 @@ describe('C7：rectangle 段计入段数并可承载 mark', () => {
   });
 
   it('pos=0.25 → 矩形周长右上角 (40, 0)', () => {
-    const pt = findMarkPoint(compileToScene(rectPath(1 / 3)).scene.primitives);
+    const pt = findMarkPoint(compileTestResult(rectPath(1 / 3)).scene.primitives);
 
     expect(pt).toBeDefined();
     expect(pt![0]).toBeCloseTo(40, 5);

@@ -5,6 +5,8 @@ keywords: Vanilla、InputEmbed、prepare、Promise、SSR、revision、AbortSigna
 
 # ADR-047：共享异步作者输入准备
 
+> 后续入口收敛：[ADR-082](./082-scene-reconciler-entry.md) 将下述一次性异步入口命名为 Vanilla 的 `compileToSceneAsync`，其作者准备、取消、结果与发布语义保持。
+
 - 状态：Accepted
 - 决策日期：2026-10-02
 - 关联：[kernel v0.5 roadmap](./roadmap.md) · [包职能设计](../../../../../../notes/architecture/package-responsibility-design.md) · [Core 能力边界](../../../architecture/core-drawing-complete.md)

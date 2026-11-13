@@ -1,6 +1,6 @@
 import type { IRStripChart } from '@retikz/chart/point';
 
-import type { InputTypedChart, InputChartCommon } from '../shared';
+import type { InputTypedChart, InputChartCommon } from '../../authoring';
 
 /** Strip Chart 的精确 Vanilla Source 组装输入 */
 export type InputStripChart = InputTypedChart<IRStripChart>;

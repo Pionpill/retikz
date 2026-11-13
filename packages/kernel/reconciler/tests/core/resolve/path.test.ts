@@ -5,7 +5,7 @@ import {
   resolvePathWithBuiltinProviders,
   resolveStrokePathWithBuiltinProviders,
 } from '../../../../core/tests/resolve/path-helper';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 
 const path = (overrides: Partial<IRPathBase> = {}): IRPathBase => ({
   type: 'path',
@@ -211,7 +211,7 @@ describe('resolvePath', () => {
       ],
     });
 
-    expect(compileToScene(sceneWith(compact)).scene).toEqual(compileToScene(sceneWith(expanded)).scene);
+    expect(compileTestResult(sceneWith(compact)).scene).toEqual(compileTestResult(sceneWith(expanded)).scene);
   });
 
   it('编译紧凑弯曲和部分形状默认值，就像它们的显式形式一样', () => {
@@ -239,6 +239,6 @@ describe('resolvePath', () => {
       ],
     });
 
-    expect(compileToScene(sceneWith(compact)).scene).toEqual(compileToScene(sceneWith(expanded)).scene);
+    expect(compileTestResult(sceneWith(compact)).scene).toEqual(compileTestResult(sceneWith(expanded)).scene);
   });
 });

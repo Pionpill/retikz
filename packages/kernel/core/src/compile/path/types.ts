@@ -1,4 +1,4 @@
-import type { PropertyPath } from '@retikz/foundation';
+﻿import type { PropertyPath } from '@retikz/foundation';
 
 import type {
   AnyPathDefinition,
@@ -6,7 +6,7 @@ import type {
   MarkDefinition,
   PatternDefinition,
   TextMeasurer,
-  SceneResource,
+  SceneResources,
   ScenePrimitive,
   Transform,
 } from '../../contract';
@@ -151,7 +151,7 @@ export type PathCompileContext = Omit<InputPathCompilation, 'path'> &
     /** 资源登记 */
     registerPaint: RegisterPaint;
     /** 当前可读取的绘制与裁剪资源 */
-    resources: () => ReadonlyArray<SceneResource>;
+    resources: () => SceneResources;
     /** 收集诊断，不向用户发布 */
     onWarn: (warning: CompileWarning) => void;
     /** 按坐标链提供合成变换 */

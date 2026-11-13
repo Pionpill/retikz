@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { IRChild, IRScene } from '../../../../core/src';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 
 const scene = (children: IRScene['children']): IRScene => ({ type: 'scene', version: 1, children });
 const sources: Array<IRChild> = [
@@ -21,12 +21,12 @@ const sources: Array<IRChild> = [
 describe('Scope 祖先几何体引用', () => {
   it.each(sources)('拒绝嵌套 $type 中的祖先几何体', child => {
     expect(() =>
-      compileToScene(scene([{ type: 'scope', id: 'outer', children: [{ type: 'scope', children: [child] }] }])),
+      compileTestResult(scene([{ type: 'scope', id: 'outer', children: [{ type: 'scope', children: [child] }] }])),
     ).toThrow(/ancestor Scope.*outer/);
   });
 
   it('允许本地 Node 隐藏祖先 Scope 名称', () => {
-    const result = compileToScene(
+    const result = compileTestResult(
       scene([
         {
           type: 'scope',

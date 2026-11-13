@@ -1,8 +1,7 @@
-import type { AnyCompositeDefinition } from '@retikz/core';
-import type { ReconcilerOutput } from '@retikz/reconciler';
 import type { ReconcilerCommitTarget } from '@retikz/reconciler';
 import type { RenderReadonlyLayer } from '@retikz/render/runtime';
 
+import type { VanillaReconcilerOutput } from '../../runtime';
 import type { InputPreparedProcessing } from '../types';
 import type { ProcessingController } from '../types';
 
@@ -34,9 +33,7 @@ export type ProcessingTransactionParticipantFactory = (
     /** runtime 创建时的初始 processing 输入 */
     initial: InputPreparedProcessing;
     /** 从同一 Core candidate 读取 compile-driver readonly layers */
-    resolveReadonlyLayers: (
-      output: ReconcilerOutput<ReadonlyArray<AnyCompositeDefinition>>,
-    ) => ReadonlyArray<RenderReadonlyLayer>;
+    resolveReadonlyLayers: (output: VanillaReconcilerOutput) => ReadonlyArray<RenderReadonlyLayer>;
   }>,
 ) => ProcessingTransactionParticipant;
 

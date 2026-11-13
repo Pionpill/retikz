@@ -186,10 +186,11 @@ const svg = renderToSvgString(input, { compile: { clips: [roundedRectClip] } });
 IR 面板中的 JSON 可直接作为 `ir` 传给 Core；仍要在编译时传入 Definition：
 
 ```ts
-import { compileToScene } from '@retikz/reconciler';
+import { compileToScene } from '@retikz/vanilla';
+
 import { roundedRectClip } from './rounded-rect-clip';
 
-const { scene } = compileToScene(ir, { clips: [roundedRectClip] });
+const { scene } = compileToScene(ir, { compile: { clips: [roundedRectClip] } });
 ```
 
 provider graph 中的 `{ capability: 'clip', name: kind }` provider 同样产出完整 Definition，并与显式 `clips` 参与相同的冲突检查。

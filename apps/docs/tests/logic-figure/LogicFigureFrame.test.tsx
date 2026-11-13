@@ -30,7 +30,7 @@ describe('LogicFigureFrame', () => {
         <LogicFigureFrameTitle>Core</LogicFigureFrameTitle>
         <LogicFigureFrameDescription>IR → Scene</LogicFigureFrameDescription>
         <Node id="compile" position={[0, 0]}>
-          compileToScene
+          SceneReconciler
         </Node>
       </LogicFigureFrame>,
     );

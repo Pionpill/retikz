@@ -1,6 +1,5 @@
 import type { CompileWarning, IRTarget } from '@retikz/core';
 import { resolveCoreProviderDependencies } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import type { FlowLayoutDefinition } from '../../src/flow';
@@ -13,6 +12,7 @@ import {
   layeredFlowLayoutDefinition,
 } from '../../src/flow';
 import { flowRouteLabelBounds, flowSmoothConflicts } from '../../src/flow/providers';
+import { compileTestResult } from '../helpers/compilation';
 
 describe('顺利的编写契约', () => {
   it('通过 JSON 保留中间目标、重复结和张力', () => {
@@ -71,7 +71,7 @@ const compileSmooth = (
       { source: 'a', target: 'b', routing: { kind: 'smooth', points }, label: { text: 'Via', sloped: true } },
     ],
   });
-  const result = compileToScene(
+  const result = compileTestResult(
     { type: 'scene', version: 1, children: [source] },
     {
       ...resolveCoreProviderDependencies({

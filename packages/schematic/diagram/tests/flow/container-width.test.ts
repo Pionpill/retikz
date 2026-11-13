@@ -1,7 +1,6 @@
 import type { ScenePrimitive } from '@retikz/core';
 import { defineTheme, resolveCoreProviderDependencies } from '@retikz/core';
 import { defineGraphTheme } from '@retikz/graph';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import type { DiagramThemeDefinition } from '../../src/_diagram';
@@ -12,6 +11,7 @@ import {
   FlowDiagramSchema,
   layeredFlowLayoutDefinition,
 } from '../../src/flow';
+import { compileTestResult } from '../helpers/compilation';
 
 const source = (fill = true, fixed = false) => ({
   namespace: 'diagram',
@@ -56,7 +56,7 @@ const source = (fill = true, fixed = false) => ({
 });
 
 const compile = (input: unknown) => {
-  const result = compileToScene(
+  const result = compileTestResult(
     { type: 'scene', version: 1, children: [FlowDiagramSchema.parse(input)] },
     {
       ...resolveCoreProviderDependencies({ contributions: [createFlowDiagramProviderContribution()] }),
@@ -77,7 +77,7 @@ const compile = (input: unknown) => {
 describe('Flow 容器宽度', () => {
   it('局部主题改变字号时，测量与最终外框仍保持行等宽', () => {
     const name = 'compact';
-    const result = compileToScene(
+    const result = compileTestResult(
       { type: 'scene', version: 1, children: [FlowDiagramSchema.parse({ ...source(), theme: { name } })] },
       {
         ...resolveCoreProviderDependencies({
@@ -224,7 +224,7 @@ describe('Flow 容器宽度边界', () => {
   it('Group 以外壳预算等宽，扣除 inset 后交给唯一内容行', () => {
     const input = source();
     input.layouts[0].children = ['g1', 'g2'];
-    const result = compileToScene(
+    const result = compileTestResult(
       {
         type: 'scene',
         version: 1,
@@ -317,7 +317,7 @@ it('自定义 provider 无法忽略已分配宽度', () => {
   };
 
   expect(() =>
-    compileToScene(
+    compileTestResult(
       { type: 'scene', version: 1, children: [FlowDiagramSchema.parse(source())] },
       resolveCoreProviderDependencies({
         contributions: [

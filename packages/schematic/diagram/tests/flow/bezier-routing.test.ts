@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { InputFlowLayoutRelation } from '../../src/flow';
 import { FlowDiagramSchema, FlowRoutingSchema } from '../../src/flow';
 import { evaluateFlowBezierConflicts, flowRouteLabelBounds } from '../../src/flow/providers';
+import { compileTestResult } from '../helpers/compilation';
 
 describe('贝塞尔曲线编写契约', () => {
   it.each([
@@ -167,7 +168,6 @@ describe('贝塞尔曲线布局', () => {
 
 import type { CompileWarning, ScenePrimitive } from '@retikz/core';
 import { resolveCoreProviderDependencies } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 
 import type { FlowLayoutDefinition, IRFlowRouting } from '../../src/flow';
 import { FlowDiagramArtifactSchema, createFlowDiagramProviderContribution } from '../../src/flow';
@@ -203,7 +203,7 @@ const compileBezier = (
       },
     ],
   });
-  const result = compileToScene(
+  const result = compileTestResult(
     { type: 'scene', version: 1, children: [source] },
     {
       ...resolveCoreProviderDependencies({

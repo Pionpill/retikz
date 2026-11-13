@@ -54,7 +54,7 @@ const lowerPartialArcClosure = (
  * @returns `false` 表示 target clipping 或 provider 解析失败，调用方应跳过整个 path
  */
 export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: StrokeLoweringContext): boolean => {
-  const { targetView, scopeChain, warn, commandEmitter, cursor, sampling } = context;
+  const { targetView, scopeChain, warn, commandEmitter, cursor } = context;
   const { boundsPoints } = commandEmitter;
 
   if (step.kind === 'cycle') {
@@ -74,7 +74,6 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: St
     });
     if (!fromClip || !toClip) return false;
 
-    sampling.addSampler({ kind: 'line', from: fromClip, to: toClip });
     if (isSamePoint(fromClip, commandEmitter.getLastEnd()) && isSamePoint(toClip, commandEmitter.getSubPathStart())) {
       commandEmitter.emitClose();
       return true;
@@ -139,7 +138,6 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: St
     const minY = Math.min(from[1], to[1]);
     const maxY = Math.max(from[1], to[1]);
     boundsPoints.push([minX, minY], [maxX, minY], [maxX, maxY], [minX, maxY]);
-    sampling.addSampler({ kind: 'rectangle', from, to });
     if (rectangleStart) cursor.setPenOverride(rectangleStart);
 
     return true;
@@ -199,15 +197,6 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: St
         }),
       );
 
-      sampling.collect({
-        kind: 'ellipseArc',
-        center,
-        radiusX,
-        radiusY,
-        startAngleDeg: step.startAngle,
-        endAngleDeg: step.endAngle,
-      });
-
       cursor.setPenOverride(pointAtEllipseArcAngle({ center, radiusX, radiusY, angleDeg: step.endAngle }));
 
       return true;
@@ -225,13 +214,6 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: St
           endAngleDeg: step.endAngle,
         }),
       );
-      sampling.collect({
-        kind: 'arc',
-        center,
-        radius,
-        startAngleDeg: step.startAngle,
-        endAngleDeg: step.endAngle,
-      });
       cursor.setPenOverride(pointAtArcAngle(center, radius, step.endAngle));
 
       return true;
@@ -266,15 +248,6 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: St
         }),
       );
 
-      sampling.collect({
-        kind: 'ellipseArc',
-        center,
-        radiusX: radius,
-        radiusY: radius,
-        startAngleDeg: startAngle,
-        endAngleDeg: endAngle,
-      });
-
       const closing = lowerPartialArcClosure(step.closed, index, warn);
       if (closing === 'chord') {
         commandEmitter.emitClose();
@@ -308,14 +281,6 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: St
       [center[0], center[1] + radius],
       [center[0], center[1] - radius],
     );
-    sampling.collect({
-      kind: 'ellipseArc',
-      center,
-      radiusX: radius,
-      radiusY: radius,
-      startAngleDeg: 0,
-      endAngleDeg: 360,
-    });
     cursor.setPenOverride(center);
 
     return true;
@@ -339,14 +304,6 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: St
           endAngleDeg: endAngle,
         }),
       );
-      sampling.collect({
-        kind: 'ellipseArc',
-        center,
-        radiusX,
-        radiusY,
-        startAngleDeg: startAngle,
-        endAngleDeg: endAngle,
-      });
       const closing = lowerPartialArcClosure(step.closed, index, warn);
       if (closing === 'chord') {
         commandEmitter.emitClose();
@@ -378,7 +335,6 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: St
       [center[0], center[1] + radiusY],
       [center[0], center[1] - radiusY],
     );
-    sampling.collect({ kind: 'ellipseArc', center, radiusX, radiusY, startAngleDeg: 0, endAngleDeg: 360 });
     cursor.setPenOverride(center);
 
     return true;
@@ -449,16 +405,6 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: St
     });
   }
 
-  sampling.collect({
-    kind: 'smooth',
-    segments: segments.map((segment, segmentIndex) => ({
-      kind: 'cubicBezier' as const,
-      from: segmentIndex === 0 ? fromClip : segments[segmentIndex - 1].to,
-      control1: segment.control1,
-      control2: segment.control2,
-      to: segment.to,
-    })),
-  });
   cursor.setPenOverride(commandEmitter.getLastEnd());
 
   return true;

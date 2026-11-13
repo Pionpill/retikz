@@ -2,19 +2,21 @@ import { PlotFacetOptionsSchema } from '@retikz/plot';
 import { strictObject } from 'zod';
 
 import {
-  createPointPositionEncodingSchema,
+  ChartPositionScaleBindingSchema,
+  ChartPartitionEncodingSchema,
+  createChartPositionEncodingSchema,
+  refineChartFacetEncodings,
+} from '../../_chart/schemas';
+import {
   PointColorEncodingSchema,
   PointColorScaleBindingSchema,
   PointOpacityEncodingSchema,
-  PointPartitionEncodingSchema,
-  PointPositionScaleBindingSchema,
   PointShapeEncodingSchema,
   PointSizeEncodingSchema,
-  refinePointFacetEncodings,
 } from '../shared';
 
 /** 校验散点图位置通道的尺度操作或已有尺度引用 */
-export const ScatterPositionScaleBindingSchema = PointPositionScaleBindingSchema.describe(
+export const ScatterPositionScaleBindingSchema = ChartPositionScaleBindingSchema.describe(
   'Scatter position scale binding',
 );
 
@@ -22,10 +24,10 @@ export const ScatterPositionScaleBindingSchema = PointPositionScaleBindingSchema
 export const ScatterColorScaleBindingSchema = PointColorScaleBindingSchema.describe('Scatter color scale binding');
 
 /** 校验散点图 x 通道的字段、聚合或变换输出映射及可选尺度 */
-export const ScatterXEncodingSchema = createPointPositionEncodingSchema('x', 'Scatter');
+export const ScatterXEncodingSchema = createChartPositionEncodingSchema('x', 'Scatter');
 
 /** 校验散点图 y 通道的字段、聚合或变换输出映射及可选尺度 */
-export const ScatterYEncodingSchema = createPointPositionEncodingSchema('y', 'Scatter');
+export const ScatterYEncodingSchema = createChartPositionEncodingSchema('y', 'Scatter');
 
 /** 校验散点图颜色通道的字段或聚合映射及可选尺度 */
 export const ScatterColorEncodingSchema = PointColorEncodingSchema.describe('Scatter color field mapping');
@@ -47,9 +49,9 @@ export const ScatterChartEncodingsSchema = strictObject({
   size: ScatterSizeEncodingSchema.optional(),
   opacity: ScatterOpacityEncodingSchema.optional(),
   shape: ScatterShapeEncodingSchema.optional(),
-  row: PointPartitionEncodingSchema.optional(),
-  column: PointPartitionEncodingSchema.optional(),
+  row: ChartPartitionEncodingSchema.optional(),
+  column: ChartPartitionEncodingSchema.optional(),
   facet: PlotFacetOptionsSchema.optional(),
 })
-  .superRefine((encodings, context) => refinePointFacetEncodings(encodings, context, 'Scatter'))
+  .superRefine((encodings, context) => refineChartFacetEncodings(encodings, context, 'Scatter'))
   .describe('Scatter Chart exact field mapping plan');

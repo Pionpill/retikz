@@ -7,7 +7,7 @@ import { EMPTY_READONLY_LAYERS } from '@retikz/render/runtime';
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
 import type { InputRuntimeMeta } from '../normalize';
 import { createEmptyInputRuntimeMetaSnapshot } from '../normalize';
-import { processToStaticInputResult } from '../processing';
+import { compileToScene } from '../processing';
 import type { CommonOptions, InputRender } from './types';
 
 /** 为非 InputScene 输入创建独立的空 runtime metadata */
@@ -36,7 +36,7 @@ const EMPTY_DIAGNOSTICS: ReadonlyArray<never> = Object.freeze([]);
 /**
  * 入参归一成 `Scene`
  * @description 已是 `Scene`（有 `primitives`）直接用；InputScene 先规范化成 IR；
- *   否则当 `IRScene` 经 `compileToScene` 编译。`InputScene` 会先进入 processing 归一与 resolver。
+ *   否则当 `IRScene` 经 processing 内部的 SceneReconciler 编译。`InputScene` 会先进入 processing 归一与 resolver。
  *   显式测量器优先，否则按需使用浏览器 Canvas；不可用时使用 Core 估算器
  */
 export const toSceneResult = (input: InputRender, options: CommonOptions): SceneResult => {
@@ -58,7 +58,7 @@ export const toSceneResult = (input: InputRender, options: CommonOptions): Scene
     };
   }
 
-  const result = processToStaticInputResult(input, options);
+  const result = compileToScene(input, options);
 
   return {
     scene: result.scene,

@@ -35,7 +35,8 @@ export const lowerPathInstances = (
         if (scale === undefined || position[role] === undefined)
           throw new RetikzPlotError('Path endpoint requires role ' + role);
         const mapped = mapPositionInput(position[role], scale, row);
-        if (!Number.isFinite(mapped)) throw new RetikzPlotError('Path endpoint cannot map role ' + role);
+        if (!Number.isFinite(mapped) && !('field' in position[role]))
+          throw new RetikzPlotError('Path endpoint cannot map role ' + role);
         return mapped;
       });
     const properties = unencodedMarkProperties(mark) ?? {};
@@ -68,7 +69,7 @@ export const lowerPathInstances = (
         throw new RetikzPlotError(
           `Path mark "${mark.id ?? context?.markIndex}" cannot use coordinate connection with mark targets`,
         );
-      const endpointTarget = (endpoint: IRPlotPathEndpoint, role: string): IRTarget => {
+      const endpointTarget = (endpoint: IRPlotPathEndpoint, role: string): IRTarget | undefined => {
         if ('mark' in endpoint) {
           if (context?.targets === undefined) throw new RetikzPlotError('Mark target resolution requires a plot view');
           return context.targets.reference(endpoint, instance, {
@@ -81,20 +82,26 @@ export const lowerPathInstances = (
               : { kind: 'single' }),
           });
         }
-        const projected = frame.projectMappedRoles?.(mapEndpoint(endpoint));
+        const mapped = mapEndpoint(endpoint);
+        if (!mapped.every(Number.isFinite)) return undefined;
+        const projected = frame.projectMappedRoles?.(mapped);
         if (projected == null || !projected.every(Number.isFinite))
           throw new RetikzPlotError('Path endpoint requires valid mapped-role projection');
         return projected;
       };
+      const from = endpointTarget(mark.encodings.from, 'from');
+      const to = endpointTarget(mark.encodings.to, 'to');
+      if (from === undefined || to === undefined) continue;
       steps = [
-        { type: 'step', kind: 'move', to: endpointTarget(mark.encodings.from, 'from') },
-        { type: 'step', kind: 'line', to: endpointTarget(mark.encodings.to, 'to') },
+        { type: 'step', kind: 'move', to: from },
+        { type: 'step', kind: 'line', to },
       ];
     } else {
       const start = mapEndpoint(mark.encodings.from),
         end = mapEndpoint(mark.encodings.to);
       if (connection !== 'straight' && frame.projectSegment === undefined)
         throw new RetikzPlotError('Coordinate connection requires projectSegment');
+      if (!start.every(Number.isFinite) || !end.every(Number.isFinite)) continue;
       const points =
         connection === 'straight'
           ? [frame.projectMappedRoles?.(start), frame.projectMappedRoles?.(end)]

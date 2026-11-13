@@ -1,6 +1,6 @@
 import type { DataTransformImplementationProvider } from '@retikz/data';
 import { createDataTransformExecutor } from '@retikz/data';
-import { processToStaticInputResultAsync, scene } from '@retikz/vanilla';
+import { compileToSceneAsync, scene } from '@retikz/vanilla';
 import { describe, expect, it, vi } from 'vitest';
 
 import { renderChartAsync } from '../src';
@@ -97,7 +97,7 @@ describe('Chart 异步数据准备', () => {
     });
 
     await expect(
-      processToStaticInputResultAsync(scene({ children: [inherited] }), { adapters: [scatterChartInputEmbedAdapter] }),
+      compileToSceneAsync(scene({ children: [inherited] }), { adapters: [scatterChartInputEmbedAdapter] }),
     ).rejects.toThrow(/unsupported fixture/);
     expect(external).toHaveBeenCalledWith('summarize');
   });

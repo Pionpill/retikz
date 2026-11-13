@@ -14,7 +14,7 @@ import {
   LayoutChildProbeKind,
   naturalLayoutProposal,
 } from '../../../../core/src';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 
 type MutableGuide = {
   name: string;
@@ -63,7 +63,7 @@ const probeGuidesOf = (
     },
   });
 
-  compileToScene(sceneOf({ namespace: 'test', type: 'guideInspector' }), {
+  compileTestResult(sceneOf({ namespace: 'test', type: 'guideInspector' }), {
     composites: [...composites, inspector],
     padding: 0,
   });
@@ -80,20 +80,53 @@ describe('布局对齐引导传播', () => {
       { name: 'row', dimension: 'y', position: 4 },
     ]);
 
+    const guides = probeGuidesOf(
+      {
+        type: 'scope',
+        transforms: [{ kind: 'translate', x: 10, y: 20 }],
+        clip: { kind: 'rect', params: { x: -100, y: -100, width: 200, height: 200 } },
+        children: [explicitGuideChild],
+      },
+      [explicit],
+    );
+
+    expect(guides).toEqual([
+      { name: 'column', dimension: 'x', position: 13 },
+      { name: 'row', dimension: 'y', position: 24 },
+    ]);
+    expect(Object.isFrozen(guides)).toBe(true);
+    expect(guides?.every(guide => Object.isFrozen(guide))).toBe(true);
+  });
+
+  it('拒绝有限参考线位置经变换后溢出的结果', () => {
+    const explicit = explicitGuideDefinition([{ name: 'column', dimension: 'x', position: Number.MAX_VALUE }]);
+
+    expect(() =>
+      probeGuidesOf({ type: 'scope', transforms: [{ kind: 'scale', x: 2 }], children: [explicitGuideChild] }, [
+        explicit,
+      ]),
+    ).toThrow(/guide.*position.*finite/i);
+  });
+
+  it.each([
+    { position: 1e200, scale: 1e-200, expected: 1e-200 },
+    { position: 1e-200, scale: 1e200, expected: 1e200 },
+  ])('矩阵系数超出数值范围时保留有效的参考线位置：$scale', ({ position, scale, expected }) => {
+    const explicit = explicitGuideDefinition([{ name: 'column', dimension: 'x', position }]);
+
     expect(
       probeGuidesOf(
         {
           type: 'scope',
-          transforms: [{ kind: 'translate', x: 10, y: 20 }],
-          clip: { kind: 'rect', params: { x: -100, y: -100, width: 200, height: 200 } },
+          transforms: [
+            { kind: 'scale', x: scale },
+            { kind: 'scale', x: scale },
+          ],
           children: [explicitGuideChild],
         },
         [explicit],
       ),
-    ).toEqual([
-      { name: 'column', dimension: 'x', position: 13 },
-      { name: 'row', dimension: 'y', position: 24 },
-    ]);
+    ).toEqual([{ name: 'column', dimension: 'x', position: expected }]);
   });
 
   it('以与 Core 几何体相同的反向列表顺序应用变换链', () => {
@@ -174,7 +207,7 @@ describe('布局对齐引导传播', () => {
         {
           type: 'scope',
           transforms: [
-            { kind: 'rotate', degrees: 720 },
+            { kind: 'rotate', degrees: 720, pivot: [1e20, -1e20] },
             { kind: 'translate', x: 100, y: 3 },
           ],
           children: [explicitGuideChild],
@@ -238,6 +271,8 @@ describe('布局对齐辅助线所有权', () => {
     });
 
     expect(one?.map(guide => guide.name)).toEqual(['first-baseline', 'last-baseline']);
+    expect(Object.isFrozen(one)).toBe(true);
+    expect(one?.every(guide => Object.isFrozen(guide))).toBe(true);
     expect(duplicate).toBeUndefined();
   });
 
@@ -343,8 +378,41 @@ describe('布局对齐辅助线所有权', () => {
     expect([...arrayReads.values()]).toEqual([...arrayReads.values()].map(() => 1));
   });
 
-  it('分离并冻结每个面向结果的辅助线实例，同时规范化负零', () => {
-    const sourceGuides: Array<MutableGuide> = [{ name: 'origin', dimension: 'x', position: -0 }];
+  it('在编译子项前隔离组件返回的辅助线', () => {
+    const sourceGuides: Array<MutableGuide> = [{ name: 'origin', dimension: 'x', position: 12 }];
+    const mutator = defineComposite({
+      namespace: 'test',
+      type: 'mutateGuides',
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('mutateGuides') }),
+      compile: () => {
+        sourceGuides[0].position = 99;
+        sourceGuides.push({ name: 'late', dimension: 'y', position: 8 });
+        return { children: [] };
+      },
+    });
+    const explicit = defineComposite({
+      namespace: 'test',
+      type: 'explicitGuides',
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('explicitGuides') }),
+      compile: () => ({
+        children: [{ namespace: 'test', type: 'mutateGuides' }],
+        alignmentGuides: sourceGuides,
+      }),
+    });
+
+    expect(probeGuidesOf(explicitGuideChild, [explicit, mutator])).toEqual([
+      { name: 'origin', dimension: 'x', position: 12 },
+    ]);
+    expect(sourceGuides).toEqual([
+      { name: 'origin', dimension: 'x', position: 99 },
+      { name: 'late', dimension: 'y', position: 8 },
+    ]);
+    expect(Object.isFrozen(sourceGuides)).toBe(false);
+    expect(Object.isFrozen(sourceGuides[0])).toBe(false);
+  });
+
+  it('分离并冻结每个面向结果的辅助线实例', () => {
+    const sourceGuides: Array<MutableGuide> = [{ name: 'origin', dimension: 'x', position: 12 }];
     const explicit = explicitGuideDefinition(sourceGuides);
     let first: ReadonlyArray<LayoutAlignmentGuide> | undefined;
     let second: ReadonlyArray<LayoutAlignmentGuide> | undefined;
@@ -367,14 +435,13 @@ describe('布局对齐辅助线所有权', () => {
       },
     });
 
-    compileToScene(sceneOf({ namespace: 'test', type: 'doubleInspector' }), {
+    compileTestResult(sceneOf({ namespace: 'test', type: 'doubleInspector' }), {
       composites: [explicit, inspector],
       padding: 0,
     });
     sourceGuides[0].position = 99;
 
-    expect(first).toEqual([{ name: 'origin', dimension: 'x', position: 0 }]);
-    expect(Object.is(first?.[0].position, -0)).toBe(false);
+    expect(first).toEqual([{ name: 'origin', dimension: 'x', position: 12 }]);
     expect(Object.isFrozen(first)).toBe(true);
     expect(Object.isFrozen(first?.[0])).toBe(true);
     expect(Object.isFrozen(firstResult)).toBe(true);

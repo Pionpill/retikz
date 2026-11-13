@@ -1,16 +1,12 @@
 import { NonBlankStringSchema } from '@retikz/foundation';
 import { strictObject, union } from 'zod';
 
+import { ChartPositionScaleBindingSchema } from '../../_chart/schemas';
 import { createChartDirectMappingSchema } from '../../_chart/schemas/encoding';
-import {
-  PointColorScaleBindingSchema,
-  PointOpacityScaleBindingSchema,
-  PointPositionScaleBindingSchema,
-  PointSizeScaleBindingSchema,
-} from '../shared';
+import { PointColorScaleBindingSchema, PointOpacityScaleBindingSchema, PointSizeScaleBindingSchema } from '../shared';
 
 /** 校验条带图位置通道的尺度操作或已有尺度引用 */
-export const StripPositionScaleBindingSchema = PointPositionScaleBindingSchema.describe('Strip position scale binding');
+export const StripPositionScaleBindingSchema = ChartPositionScaleBindingSchema.describe('Strip position scale binding');
 
 /** 校验条带图颜色通道的尺度操作或已有尺度引用 */
 export const StripColorScaleBindingSchema = PointColorScaleBindingSchema.describe('Strip color scale binding');

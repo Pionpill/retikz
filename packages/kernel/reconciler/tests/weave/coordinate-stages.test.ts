@@ -1,13 +1,13 @@
 import type { IRScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { compileToScene } from '../../src/compile';
 import { readWeaveCurrent, WeaveManager } from '../../src/weave';
+import { compileTestResult } from '../helpers/compilation';
 
 describe('Coordinate 三层复用', () => {
   it('真实坐标引用拒绝不存在的命名锚点', () => {
     expect(() =>
-      compileToScene({
+      compileTestResult({
         type: 'scene',
         version: 1,
         children: [
@@ -58,7 +58,7 @@ describe('Coordinate 三层复用', () => {
       operations: [{ kind: 'update', target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'c' }, input: changed }],
     });
     expect(update.compilation.result).toEqual(
-      compileToScene({ ...source, children: [source.children[0], source.children[1], changed, source.children[3]] }),
+      compileTestResult({ ...source, children: [source.children[0], source.children[1], changed, source.children[3]] }),
     );
     update.rollback();
     expect(readWeaveCurrent(coordinate).compiled).toBe(previous);

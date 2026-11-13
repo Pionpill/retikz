@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
-import type { CollectedPointChartDeclarations } from '../shared';
-import { collectPointChartDeclarations } from '../shared';
+import type { CollectedTypedChartDeclarations } from '../../authoring';
+import { collectTypedChartDeclarations } from '../../authoring';
 import type { ConnectedScatterEncodingsProps } from './ConnectedScatterEncodings';
 import { ConnectedScatterEncodings } from './ConnectedScatterEncodings';
 import type { ConnectedScatterChartMark, ConnectedScatterMarkProps } from './ConnectedScatterMark';
@@ -10,7 +10,7 @@ import type { ConnectedScatterPropertiesProps } from './ConnectedScatterProperti
 import { ConnectedScatterProperties } from './ConnectedScatterProperties';
 
 /** ConnectedScatterChart 直接子声明的收集结果 */
-type CollectedConnectedScatterChartDeclarations = CollectedPointChartDeclarations<
+type CollectedConnectedScatterChartDeclarations = CollectedTypedChartDeclarations<
   ConnectedScatterEncodingsProps,
   ConnectedScatterPropertiesProps,
   ConnectedScatterChartMark
@@ -20,7 +20,7 @@ type CollectedConnectedScatterChartDeclarations = CollectedPointChartDeclaration
 export const collectConnectedScatterChartDeclarations = (
   children: ReactNode,
 ): CollectedConnectedScatterChartDeclarations =>
-  collectPointChartDeclarations(children, {
+  collectTypedChartDeclarations(children, {
     encodingsComponent: ConnectedScatterEncodings,
     encodingsName: 'ConnectedScatterEncodings',
     propertiesComponent: ConnectedScatterProperties,

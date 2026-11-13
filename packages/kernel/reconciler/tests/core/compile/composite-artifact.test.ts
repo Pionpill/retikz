@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { literal, number, strictObject } from 'zod';
 
 import { CompositeBaseSchema, defineComposite } from '../../../../core/src';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 
 describe('Composite 产物交付', () => {
   it('分别交付多个实例的领域值和最终定位，并隔离冻结嵌套快照', () => {
@@ -14,7 +14,7 @@ describe('Composite 产物交付', () => {
       artifactSchema: strictObject({ nested: strictObject({ count: number() }) }),
       compile: () => ({ children: [], artifact: payload }),
     });
-    const result = compileToScene(
+    const result = compileTestResult(
       {
         version: 1,
         type: 'scene',
@@ -54,7 +54,7 @@ describe('Composite 产物交付', () => {
       artifactSchema: literal(null),
       compile: node => (node.present ? { children: [], artifact: null } : { children: [] }),
     });
-    const result = compileToScene(
+    const result = compileTestResult(
       {
         version: 1,
         type: 'scene',
@@ -74,6 +74,6 @@ describe('Composite 产物交付', () => {
         value: null,
       },
     ]);
-    expect(compileToScene({ version: 1, type: 'scene', children: [] }).artifacts).toEqual([]);
+    expect(compileTestResult({ version: 1, type: 'scene', children: [] }).artifacts).toEqual([]);
   });
 });

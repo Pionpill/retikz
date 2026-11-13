@@ -5,7 +5,8 @@ import { strictObject } from 'zod';
 import type { CompileWarning, IRChild, IRScene } from '../../../../core/src';
 import { BuiltinCompileWarningCode, defineShape } from '../../../../core/src';
 import { BUILTIN_SHAPES } from '../../../../core/src/providers/shape/shape';
-import { compileToScene, formatCompileWarning } from '../../../src';
+import { formatCompileWarning } from '../../../src';
+import { compileTestResult } from '../../helpers/compilation';
 
 const scene = (children: IRScene['children']): IRScene => ({
   version: 1,
@@ -25,7 +26,7 @@ describe('CompileOptions.onWarn', () => {
 
     for (const child of cases) {
       const warnings: Array<CompileWarning> = [];
-      const result = compileToScene(scene([child]), { onWarn: warning => warnings.push(warning) }).scene;
+      const result = compileTestResult(scene([child]), { onWarn: warning => warnings.push(warning) }).scene;
 
       expect(result.primitives).toEqual([]);
       expect(warnings).toHaveLength(1);
@@ -41,7 +42,7 @@ describe('CompileOptions.onWarn', () => {
       },
     ]);
     const warnings: Array<CompileWarning> = [];
-    compileToScene(ir, { onWarn: w => warnings.push(w) });
+    compileTestResult(ir, { onWarn: w => warnings.push(w) });
 
     expect(warnings).toHaveLength(1);
     expect(warnings[0]).toMatchObject({
@@ -68,7 +69,7 @@ describe('CompileOptions.onWarn', () => {
       },
     ]);
     const warnings: Array<CompileWarning> = [];
-    compileToScene(ir, { onWarn: w => warnings.push(w) });
+    compileTestResult(ir, { onWarn: w => warnings.push(w) });
 
     expect(warnings).toHaveLength(1);
     expect(warnings[0]).toMatchObject({
@@ -89,7 +90,7 @@ describe('CompileOptions.onWarn', () => {
       },
     ]);
     const warnings: Array<CompileWarning> = [];
-    compileToScene(ir, { onWarn: w => warnings.push(w) });
+    compileTestResult(ir, { onWarn: w => warnings.push(w) });
 
     expect(warnings.some(w => w.code === BuiltinCompileWarningCode.UnresolvedNodeReference)).toBe(true);
 
@@ -111,7 +112,7 @@ describe('CompileOptions.onWarn', () => {
       },
     ]);
     const warnings: Array<CompileWarning> = [];
-    compileToScene(ir, { onWarn: w => warnings.push(w) });
+    compileTestResult(ir, { onWarn: w => warnings.push(w) });
     const unresolved = warnings.find(w => w.code === BuiltinCompileWarningCode.UnresolvedNodeReference);
 
     expect(unresolved).toBeDefined();
@@ -130,7 +131,7 @@ describe('CompileOptions.onWarn', () => {
       },
     ]);
     const warnings: Array<CompileWarning> = [];
-    compileToScene(ir, { onWarn: w => warnings.push(w) });
+    compileTestResult(ir, { onWarn: w => warnings.push(w) });
     const unresolved = warnings.find(w => w.code === BuiltinCompileWarningCode.UnresolvedNodeReference);
 
     expect(unresolved).toBeDefined();
@@ -149,7 +150,7 @@ describe('CompileOptions.onWarn', () => {
       },
     ]);
     const warnings: Array<CompileWarning> = [];
-    compileToScene(ir, { onWarn: w => warnings.push(w) });
+    compileTestResult(ir, { onWarn: w => warnings.push(w) });
     const unresolved = warnings.find(w => w.code === BuiltinCompileWarningCode.UnresolvedNodeReference);
 
     expect(unresolved!.path).toEqual(['children', 1, 'children', 1, 'to']);
@@ -166,7 +167,7 @@ describe('CompileOptions.onWarn', () => {
       },
     ]);
     const codes: Array<string> = [];
-    compileToScene(ir, { onWarn: w => codes.push(w.code) });
+    compileTestResult(ir, { onWarn: w => codes.push(w.code) });
 
     expect(codes.filter(c => c === BuiltinCompileWarningCode.UnresolvedNodeReference)).toHaveLength(2);
   });
@@ -183,7 +184,7 @@ describe('CompileOptions.onWarn', () => {
       },
     ]);
     const warnings: Array<CompileWarning> = [];
-    compileToScene(ir, { onWarn: w => warnings.push(w) });
+    compileTestResult(ir, { onWarn: w => warnings.push(w) });
 
     expect(warnings).toHaveLength(0);
   });
@@ -217,7 +218,7 @@ describe('CompileOptions.onWarn', () => {
     ]);
     const warnings: Array<CompileWarning> = [];
 
-    compileToScene(ir, { shapes: [customShape], onWarn: warning => warnings.push(warning) });
+    compileTestResult(ir, { shapes: [customShape], onWarn: warning => warnings.push(warning) });
 
     expect(warnings.filter(warning => warning.code === BuiltinCompileWarningCode.BoundaryTightFallback)).toEqual([
       expect.objectContaining({
@@ -242,7 +243,7 @@ describe('CompileOptions.onWarn 缺省行为', () => {
 
   it('不传 onWarn + dev 模式 → 默认 console.warn 触发，含 code / path / message', () => {
     const ir = scene([{ type: 'path', children: [{ type: 'step', kind: 'move', to: [0, 0] }] }]);
-    compileToScene(ir);
+    compileTestResult(ir);
 
     expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
 
@@ -255,7 +256,7 @@ describe('CompileOptions.onWarn 缺省行为', () => {
 
   it('不传 onWarn + 显式传 onWarn=空函数 → console.warn 不触发（用户接管）', () => {
     const ir = scene([{ type: 'path', children: [{ type: 'step', kind: 'move', to: [0, 0] }] }]);
-    compileToScene(ir, { onWarn: () => {} });
+    compileTestResult(ir, { onWarn: () => {} });
 
     expect(consoleWarnSpy).not.toHaveBeenCalled();
   });
@@ -277,7 +278,7 @@ describe('scope.transforms warn code 指向真正失败的那个 transform', () 
       },
     ]);
     const warnings: Array<CompileWarning> = [];
-    compileToScene(ir, { onWarn: w => warnings.push(w) });
+    compileTestResult(ir, { onWarn: w => warnings.push(w) });
     const w = warnings.find(x => x.path.at(-1) === 'transforms');
 
     expect(w).toBeDefined();

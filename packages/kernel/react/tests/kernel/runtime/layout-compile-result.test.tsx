@@ -2,7 +2,6 @@ import { CompositeBaseSchema, defineComposite } from '@retikz/core';
 
 // @vitest-environment jsdom
 import type { CompileResult } from '@retikz/reconciler';
-import { compileToScene } from '@retikz/reconciler';
 import { createRoot } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { act } from 'react-dom/test-utils';
@@ -10,6 +9,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { literal, number, strictObject } from 'zod';
 
 import { Layout } from '../../../src';
+import { compileTestResult } from '../../helpers/compilation';
 
 const card = defineComposite({
   namespace: 'third',
@@ -78,7 +78,7 @@ describe('<Layout onCompileResult>', () => {
   });
 
   it('保留直接编译的Scene 和领域产物', async () => {
-    const direct = compileToScene(scene(10), { composites: [card] });
+    const direct = compileTestResult(scene(10), { composites: [card] });
     const onCompileResult = vi.fn();
     const container = document.createElement('div');
     const root = createRoot(container);

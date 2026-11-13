@@ -3,8 +3,8 @@ import foundationPackage from '../../../../../../packages/kernel/foundation/pack
 import inspectPackage from '../../../../../../packages/kernel/inspect/package.json';
 import mathPackage from '../../../../../../packages/kernel/math/package.json';
 import reactPackage from '../../../../../../packages/kernel/react/package.json';
+import reconcilerPackage from '../../../../../../packages/kernel/reconciler/package.json';
 import renderPackage from '../../../../../../packages/kernel/render/package.json';
-import runtimePackage from '../../../../../../packages/kernel/runtime/package.json';
 import texPackage from '../../../../../../packages/kernel/tex/package.json';
 import vanillaPackage from '../../../../../../packages/kernel/vanilla/package.json';
 import extensionPackage from '../../../../../../packages/library/extension/package.json';
@@ -49,7 +49,7 @@ export type DocPackageLocation = {
 const packageManifests: Array<PackageManifest> = [
   foundationPackage,
   mathPackage,
-  runtimePackage,
+  reconcilerPackage,
   corePackage,
   inspectPackage,
   renderPackage,

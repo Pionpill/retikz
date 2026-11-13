@@ -2,11 +2,22 @@ import { isFiniteNumber } from '@retikz/math';
 
 import { RetikzDataError } from '../error';
 import { resolveFieldPath } from '../model';
-import type { IRRegressionMethod, RegressionModel, RegressionPair } from '../operators/regression';
-import { BuiltinRegressionMethod, resolveRegression } from '../operators/regression';
+import type {
+  AnySynchronousRegressionImplementation,
+  IRRegressionMethod,
+  RegressionFitOptions,
+  RegressionModel,
+  RegressionPair,
+} from '../operators/regression';
+import {
+  BuiltinRegressionMethod,
+  resolveRegression,
+  resolvePreparedRegression,
+  resolveRegressionImplementationRegistry,
+} from '../operators/regression';
 import type { ExternalRow } from '../shared';
-import type { TransformComputation } from './computation';
-import { computeTransformValue, runTransformComputation } from './computation';
+import type { DataComputation } from '../shared';
+import { computeDataValue, runDataComputation } from '../shared';
 import type { TransformContext } from './contract';
 import { groupRowsByFields, linearSamplesOf } from './shared';
 import type { IRDataSmoothTransform } from './types';
@@ -69,19 +80,18 @@ export function* computeSmooth(
   operation: IRDataSmoothTransform,
   context: TransformContext,
   regression: {
-    fit: (pairs: Array<RegressionPair>) => RegressionModel | Promise<RegressionModel>;
+    fit: (pairs: Array<RegressionPair>, options?: RegressionFitOptions) => RegressionModel | Promise<RegressionModel>;
     validateExtent: (extent: [number, number]) => void;
   },
-): TransformComputation<Array<ExternalRow>> {
+): DataComputation<Array<ExternalRow>> {
   const method = smoothMethodOf(operation);
   const output: Array<ExternalRow> = [];
 
   for (const group of groupRowsByFields(rows, operation.params.groupBy)) {
     try {
       const pairs = finitePairsOf(group.rows, operation.params.x, operation.params.y);
-      const model = yield* computeTransformValue(() => regression.fit(pairs));
       const extent = sampleExtentOf(operation, pairs);
-      regression.validateExtent(extent);
+      const model = yield* computeDataValue(() => regression.fit(pairs, { extent }));
       const sampleCount = operation.params.sampleCount ?? DEFAULT_SMOOTH_SAMPLE_COUNT;
       const predictions = linearSamplesOf(extent, sampleCount).map(x =>
         context.groupProvenance(
@@ -112,15 +122,23 @@ export const applySmooth = (
   operation: IRDataSmoothTransform,
   context: TransformContext,
 ): Array<ExternalRow> =>
-  runTransformComputation(
+  runDataComputation(
     computeSmooth(
       rows,
       operation,
       context,
-      resolveRegression(
-        smoothMethodOf(operation),
-        context.regressionRegistry,
-        context.regressionImplementationRegistry,
-      ),
+      context.regressionDependencies?.[0] === undefined
+        ? resolveRegression(
+            smoothMethodOf(operation),
+            context.regressionRegistry,
+            context.regressionImplementationRegistry,
+          )
+        : resolvePreparedRegression(
+            context.regressionDependencies[0],
+            context.regressionImplementationRegistry ??
+              resolveRegressionImplementationRegistry<AnySynchronousRegressionImplementation>(
+                context.regressionRegistry,
+              ),
+          ),
     ),
   );

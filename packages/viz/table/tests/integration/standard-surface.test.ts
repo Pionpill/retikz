@@ -1,11 +1,11 @@
 import { resolveCoreProviderDependencies } from '@retikz/core';
 import { pathClipProvider } from '@retikz/extension';
-import { compileToScene } from '@retikz/reconciler';
 import { createSurface, surfaceProvider } from '@retikz/standard/presentation';
 import { describe, expect, it } from 'vitest';
 
 import type { IRTable } from '../../src';
 import { createTableRuntimeContribution, TABLE_NAMESPACE, TableComposite } from '../../src';
+import { compileTestResult } from '../helpers/compilation';
 
 describe('Standard Surface 里面的 Table', () => {
   it('使用真实的 Table 子项贯通提供者、布局、Scene 和领域产物', () => {
@@ -32,7 +32,7 @@ describe('Standard Surface 里面的 Table', () => {
       child: table,
     });
 
-    const result = compileToScene(
+    const result = compileTestResult(
       { type: 'scene', version: 1, children: [surface] },
       { ...providerDefinitions, padding: 0 },
     );

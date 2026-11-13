@@ -3,8 +3,8 @@ import { definePath, PathSchema } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
-import { compileToScene } from '../../../src/compile';
 import { WeaveManager } from '../../../src/weave';
+import { compileTestResult } from '../../helpers/compilation';
 import { flattenPrims } from '../../helpers/flatten';
 
 const measureText = (text: string) => ({ width: [...text].length * 5, height: 10, ascent: 8, descent: 2 });
@@ -12,7 +12,7 @@ const layout = { textAlign: 'end' as const, lineHeight: 20, maxTextWidth: 10 };
 const font = { size: 10 };
 
 const primitivesOf = (child: IRScene['children'][number]) =>
-  flattenPrims(compileToScene({ type: 'scene', version: 1, children: [child] }, { measureText }).scene.primitives)
+  flattenPrims(compileTestResult({ type: 'scene', version: 1, children: [child] }, { measureText }).scene.primitives)
     .filter((primitive): primitive is TextPrimitive => primitive.type === 'text')
     .flatMap(primitive =>
       primitive.lines.map((line, index) => ({
@@ -48,7 +48,7 @@ describe('正文和标签共享文本能力', () => {
         { kind: 'update', target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'path-text' }, input: next },
       ],
     });
-    expect(update.compilation.result).toEqual(compileToScene({ ...input, children: [next] }, { measureText }));
+    expect(update.compilation.result).toEqual(compileTestResult({ ...input, children: [next] }, { measureText }));
     update.commit();
     update.finish();
   });
@@ -72,7 +72,7 @@ describe('正文和标签共享文本能力', () => {
         return context.wrapOutput({ primitives: [...host, ...boundary], boundsPoints: [] });
       },
     });
-    const output = compileToScene(
+    const output = compileTestResult(
       { type: 'scene', version: 1, children: [{ type: 'path', kind: 'shared-labels', style: { opacity: 0.5 } }] },
       { measureText, paths: [definition] },
     );
@@ -105,7 +105,7 @@ describe('正文和标签共享文本能力', () => {
           { kind: 'update', target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'text' }, input: next },
         ],
       });
-      expect(update.compilation.result).toEqual(compileToScene({ ...input, children: [next] }, { measureText }));
+      expect(update.compilation.result).toEqual(compileTestResult({ ...input, children: [next] }, { measureText }));
       update.commit();
       update.finish();
     }

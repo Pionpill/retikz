@@ -1,6 +1,5 @@
 import type { IRScene, IRPath } from '@retikz/core';
 import { SceneSchema } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { normalizeScene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
@@ -8,6 +7,7 @@ import { Node, Path, Scope, Step } from '../../../src/kernel';
 import { createInputScene } from '../../../src/kernel/adapter/input-scene';
 import { convertIRToReactNode } from '../../../src/kernel/adapter/unbuilder';
 import { Draw, EdgeLabel } from '../../../src/sugar';
+import { compileTestResult } from '../../helpers/compilation';
 
 describe('React JSX Input 场景', () => {
   it.each(['->', '<-', '<->'] as const)('Path 与 Draw 的 %s 简写统一由 Vanilla 转换', arrow => {
@@ -44,7 +44,7 @@ describe('React JSX Input 场景', () => {
     ).ir;
     expect(fromPath).toEqual(explicit);
     expect(fromDraw).toEqual(explicit);
-    expect(compileToScene(fromDraw).scene).toEqual(compileToScene(explicit).scene);
+    expect(compileTestResult(fromDraw).scene).toEqual(compileTestResult(explicit).scene);
   });
   it('通过 JSX、Vanilla 和 IR 往返保留多行节点标签', () => {
     const text = ['first', { text: 'second', fill: '#ff0000' }];
@@ -57,7 +57,7 @@ describe('React JSX Input 场景', () => {
     if ('namespace' in child || child.type !== 'node') throw new Error('expected Kernel node');
     const rebuilt = createInputScene(convertIRToReactNode({ ...ir, children: [child] }));
     expect(normalizeScene(rebuilt.scene).ir).toEqual(ir);
-    expect(compileToScene(normalizeScene(rebuilt.scene).ir).scene).toEqual(compileToScene(ir).scene);
+    expect(compileTestResult(normalizeScene(rebuilt.scene).ir).scene).toEqual(compileTestResult(ir).scene);
   });
   it('通过 JSX、Vanilla 标准化和 IR 往返保留 Node 别名', () => {
     const input = createInputScene(<Node id="primary" aliasIds={['alternate']} position={[0, 0]} text="A" />);
@@ -202,9 +202,9 @@ describe('React JSX Input 场景', () => {
       </Path>,
     );
     const measureText = () => ({ width: 20, height: 10 });
-    const jsonScene = compileToScene(direct, { measureText }).scene;
-    const vanillaScene = compileToScene(normalizeScene({ children: direct.children }).ir, { measureText }).scene;
-    const reactScene = compileToScene(normalizeScene(reactInput.scene).ir, { measureText }).scene;
+    const jsonScene = compileTestResult(direct, { measureText }).scene;
+    const vanillaScene = compileTestResult(normalizeScene({ children: direct.children }).ir, { measureText }).scene;
+    const reactScene = compileTestResult(normalizeScene(reactInput.scene).ir, { measureText }).scene;
 
     expect(vanillaScene).toEqual(jsonScene);
     expect(reactScene).toEqual(jsonScene);
@@ -228,7 +228,7 @@ it('Scope 包络在 React、Vanilla 和 IR roundtrip 中保持等价', () => {
   const kernel = { ...ir, children: [{ ...scope, children: [child] }] };
   const restored = normalizeScene(createInputScene(convertIRToReactNode(kernel)).scene).ir;
 
-  expect(compileToScene(restored).scene).toEqual(compileToScene(ir).scene);
+  expect(compileTestResult(restored).scene).toEqual(compileTestResult(ir).scene);
 });
 
 it('React 与 Vanilla 保留独立端点箭头和任意位置标记', () => {

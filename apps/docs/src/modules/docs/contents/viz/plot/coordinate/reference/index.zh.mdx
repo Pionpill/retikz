@@ -1,0 +1,10 @@
+---
+title: API 参考
+description: 查询坐标配置、Definition 注册、比例尺绑定及投影能力。
+---
+
+本页收录 `@retikz/plot-vanilla` 的坐标声明输入，以及 `@retikz/plot` 的坐标配置、扩展定义与运行时投影契约。用法见[坐标维度](/viz/plot/coordinate/dimension)；扩展步骤见[自定义坐标系](/viz/plot/coordinate/custom-coordinate)。
+
+Plot 的布局服务绘图本体：composition 使用四边间距配置，坐标轴、图例与分面维护各自的空间契约。`IRPlot` 不接受顶层 `layout` 或 `labels`；标题、副标题与来源等整图内容由 [Chart](/viz/chart/introduction) 组织。
+
+{/* @include viz/plot/coordinate/reference/generated */}

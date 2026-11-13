@@ -12,7 +12,7 @@ import { SceneReconciler } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal, string } from 'zod';
 
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 
 const leaf = (): IRChild => ({ namespace: 'fixture', type: 'prepared' });
 
@@ -64,7 +64,7 @@ describe('复合实例运行时输入', () => {
       { path: ['children', 0], input: 'first-prepared' },
       { path: ['children', 1], input: 'second-prepared' },
     ]);
-    const output = compileToScene(source, { composites: [prepared], compositeInputs });
+    const output = compileTestResult(source, { composites: [prepared], compositeInputs });
 
     expect(JSON.stringify(output.scene)).toContain('first-prepared');
     expect(JSON.stringify(output.scene)).toContain('second-prepared');
@@ -77,7 +77,7 @@ describe('复合实例运行时输入', () => {
     const compositeInputs = createCompositeInputBindings(source, [
       { path: ['children', 0, 'child'], input: 'nested-prepared' },
     ]);
-    const output = compileToScene(source, { composites: [prepared, container], compositeInputs });
+    const output = compileTestResult(source, { composites: [prepared, container], compositeInputs });
 
     expect(JSON.stringify(output.scene)).toContain('nested-prepared');
     expect(JSON.stringify(output.scene)).not.toContain('unbound');
@@ -93,7 +93,7 @@ describe('复合实例运行时输入', () => {
       }),
     });
     const source = sceneOf([{ namespace: 'fixture', type: 'generated' }]);
-    const output = compileToScene(source, {
+    const output = compileTestResult(source, {
       composites: [prepared, generated],
       compositeInputs: createCompositeInputBindings(source, [{ path: ['children', 0], input: 'parent-only' }]),
     });
@@ -108,7 +108,7 @@ describe('复合实例运行时输入', () => {
       { type: 'scope', id: 'a', localNamespace: true, children: [{ ...leaf(), id: 'shared' }] },
       { type: 'scope', id: 'b', localNamespace: true, children: [{ ...leaf(), id: 'shared' }] },
     ]);
-    const output = compileToScene(source, {
+    const output = compileTestResult(source, {
       composites: [prepared],
       compositeInputs: createCompositeInputBindings(source, [
         { path: ['children', 0, 'children', 0], input: 'scope-a' },
@@ -139,10 +139,10 @@ describe('复合实例运行时输入', () => {
 
     expect(
       JSON.stringify(
-        compileToScene(JSON.parse(JSON.stringify(source)), { composites: [prepared], compositeInputs }).scene,
+        compileTestResult(JSON.parse(JSON.stringify(source)), { composites: [prepared], compositeInputs }).scene,
       ),
     ).toContain('ready');
-    expect(() => compileToScene(sceneOf([leaf(), leaf()]), { composites: [prepared], compositeInputs })).toThrow(
+    expect(() => compileTestResult(sceneOf([leaf(), leaf()]), { composites: [prepared], compositeInputs })).toThrow(
       /source/i,
     );
   });
@@ -159,7 +159,7 @@ describe('复合实例运行时输入', () => {
     });
 
     expect(() =>
-      compileToScene(sceneOf([{ namespace: 'fixture', type: 'duplicate' }]), { composites: [prepared, duplicate] }),
+      compileTestResult(sceneOf([{ namespace: 'fixture', type: 'duplicate' }]), { composites: [prepared, duplicate] }),
     ).toThrow(/more than once/i);
   });
 
@@ -178,7 +178,7 @@ describe('复合实例运行时输入', () => {
       });
 
       expect(() =>
-        compileToScene(
+        compileTestResult(
           sceneOf([
             { namespace: 'fixture', type: 'holder' },
             { namespace: 'fixture', type: 'holder' },
@@ -204,7 +204,7 @@ describe('复合实例运行时输入', () => {
     });
     const source = sceneOf([{ namespace: 'fixture', type: 'duplicateSource', child: leaf() }]);
 
-    expect(() => compileToScene(source, { composites: [duplicate, prepared] })).toThrow(/more than once/i);
+    expect(() => compileTestResult(source, { composites: [duplicate, prepared] })).toThrow(/more than once/i);
   });
 
   it('重新编译相同 JSON 的更改输入并回滚不匹配的候选者', () => {

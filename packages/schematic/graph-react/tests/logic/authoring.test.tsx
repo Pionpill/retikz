@@ -12,7 +12,7 @@ import type { InputGraph } from '@retikz/graph-vanilla';
 import { createGraphVanillaAdapters, graph, normalizeGraph, relation } from '@retikz/graph-vanilla';
 import { createInputScene, Node, Step, Text } from '@retikz/react';
 import type { InputEmbedAdapter, InputEmbedContext } from '@retikz/vanilla';
-import { normalizeScene, processToStaticInputResult } from '@retikz/vanilla';
+import { normalizeScene, compileToScene } from '@retikz/vanilla';
 import type { FC } from 'react';
 import { createElement, Fragment } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -739,11 +739,11 @@ describe('Graph Definition 选项等价性', () => {
         <Relation {...props} />
       </Graph>,
     );
-    const reactResult = processToStaticInputResult(react.scene, {
+    const reactResult = compileToScene(react.scene, {
       adapters: synchronousAdapters(react.adapters),
       compile: { padding: 0 },
     });
-    const vanillaResult = processToStaticInputResult(
+    const vanillaResult = compileToScene(
       {
         children: [
           graph({
@@ -832,7 +832,7 @@ describe('Graph Definition 选项等价性', () => {
     }
 
     expect(() =>
-      processToStaticInputResult(input.scene, {
+      compileToScene(input.scene, {
         adapters: synchronousAdapters(input.adapters),
         compile: { padding: 0 },
       }),

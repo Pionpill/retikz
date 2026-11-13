@@ -1,8 +1,8 @@
 import type { IRScene, IRScope, IRCoordinate } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { compileToScene } from '../../src/compile';
 import { readWeaveCurrent, WeaveManager } from '../../src/weave';
+import { compileTestResult } from '../helpers/compilation';
 
 describe('Scope 三层复用', () => {
   it('显式默认变换复用最终包络，外部引用变化重新放置且回滚不污染缓存', () => {
@@ -46,7 +46,7 @@ describe('Scope 三层复用', () => {
         },
       ],
     });
-    expect(changed.compilation.result).toEqual(compileToScene({ ...source, children: [moved, explicit] }));
+    expect(changed.compilation.result).toEqual(compileTestResult({ ...source, children: [moved, explicit] }));
     expect(changed.compilation.result).not.toEqual(mounted.compilation.result);
     changed.rollback();
     expect(readWeaveCurrent(child).compiled).toBe(previous);

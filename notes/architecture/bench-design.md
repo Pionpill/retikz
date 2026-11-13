@@ -58,13 +58,13 @@ Scenario
 
 整体分为五层：
 
-| 层               | 职责                                                               |
-| ---------------- | ------------------------------------------------------------------ |
-| Scenario         | 描述要运行的真实场景、参数范围和正确性依据                         |
-| Run Engine       | 在 Node、无头浏览器或交互浏览器中组织执行与生命周期                |
-| Product Pipeline | 运行 Runtime、Core、renderer、adapter 及未来上层能力的真实公共链路 |
-| Observation      | 收集 trace、Patch、耗时、诊断、生命周期和可选内存信息              |
-| Presentation     | CLI 负责门禁与报告，Performance Lab 负责操作、图形观察和对比       |
+| 层               | 职责                                                                  |
+| ---------------- | --------------------------------------------------------------------- |
+| Scenario         | 描述要运行的真实场景、参数范围和正确性依据                            |
+| Run Engine       | 在 Node、无头浏览器或交互浏览器中组织执行与生命周期                   |
+| Product Pipeline | 运行 Reconciler、Core、renderer、adapter 及未来上层能力的真实公共链路 |
+| Observation      | 收集 trace、Patch、耗时、诊断、生命周期和可选内存信息                 |
+| Presentation     | CLI 负责门禁与报告，Performance Lab 负责操作、图形观察和对比          |
 
 产品包不能依赖 Bench。Bench 可以组合各包公开能力，但 Bench 内部概念不反向进入产品契约。
 
@@ -98,7 +98,7 @@ Performance Lab 长期围绕五类问题组织信息：
 
 首版只为 Kernel 当前已落地的性能优化提供调试面板，不提前模拟未来能力。当前已提供：
 
-- 选择 SVG / Canvas 与当前支持的 Runtime 执行策略。
+- 选择 SVG / Canvas 与当前支持的 Reconciler 执行策略。
 - 运行固定的单实体更新场景并直接查看真实图形输出。
 - 判断本次是否发生增量执行、完整执行或 fallback。
 - 对比不同策略的确定性工作量与本机耗时。
@@ -124,7 +124,7 @@ Performance Lab 长期围绕五类问题组织信息：
 - 渐进物化的首个可见、完整呈现、fallback 与一致性观测。
 - LLM generation 的合法 draft 批次、预览、失败恢复和最终接受过程。
 
-真实 LLM 的网络、模型和 prompt 具有不确定性，默认只适合开发者观察。需要稳定评测 Runtime 与渲染链路时，应重放固定、脱敏的 generation 过程。
+真实 LLM 的网络、模型和 prompt 具有不确定性，默认只适合开发者观察。需要稳定评测编译与渲染链路时，应重放固定、脱敏的 generation 过程。
 
 ## 8. 结果与 baseline 治理
 

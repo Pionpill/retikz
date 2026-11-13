@@ -1,9 +1,11 @@
 import { createOpenStringSchema, JsonValueSchema } from '@retikz/foundation';
 import type { input } from 'zod';
-import { literal, looseObject, number, strictObject } from 'zod';
+import { array, literal, looseObject, number, strictObject, string, union } from 'zod';
 
 /** 内置拟合方法提示；实际可用方法由当前 registry 决定 */
 export const BuiltinRegressionMethod = {
+  /** 从候选方法中按同组观测择优 */
+  Auto: 'auto',
   /** 线性拟合 */
   Linear: 'linear',
   /** 二次多项式拟合 */
@@ -27,6 +29,21 @@ export const RegressionMethodSchema = looseObject({
 
 /** 内置拟合 Definition 的精确参数真源 */
 export const BUILTIN_REGRESSION_METHOD_SCHEMAS = {
+  Auto: strictObject({
+    kind: literal(BuiltinRegressionMethod.Auto),
+    candidates: array(
+      union([
+        string()
+          .trim()
+          .min(1)
+          .transform(kind => ({ kind })),
+        RegressionMethodSchema,
+      ]),
+    )
+      .min(1)
+      .default(() => ['linear', 'quadratic', 'logarithmic', 'exponential', 'power'].map(kind => ({ kind })))
+      .describe('Ordered regression candidates; defaults exclude polynomial and custom methods'),
+  }),
   Linear: strictObject({ kind: literal(BuiltinRegressionMethod.Linear) }),
   Quadratic: strictObject({ kind: literal(BuiltinRegressionMethod.Quadratic) }),
   Polynomial: strictObject({

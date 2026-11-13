@@ -7,39 +7,72 @@ import { logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
 
 import { outputOverviewI18n } from './output-overview.i18n';
 
-/** 编译产物示意图 */
+/** 局部图元、布局与资源引用流程图的语言 */
 export type OutputOverviewProps = { lang?: Lang };
-/** 编译产物示意图 */
-const Figure: FC<OutputOverviewProps> = props => {
+
+/** 展示本页追踪的阶段、产物与必要输入 */
+const OutputOverview: FC<OutputOverviewProps> = props => {
   const { lang = 'zh' } = props;
-  const labels = outputOverviewI18n[lang];
-  const items = labels.map((label, index) => ({
-    id: `s${index}`,
-    role: 'activity' as const,
-    ...(index === 1 ? { kind: 'docs.logic.important' } : {}),
-    text: label.split('\n').map((text, line) => ({ text, ...(line ? { font: { size: 12 }, fill: 'gray' } : {}) })),
-  }));
+  const text = outputOverviewI18n[lang];
+  const stages = [
+    { id: 'atomic', name: 'Core stage products', state: true },
+    { id: 'tree', name: 'Reconciler · subtree collection', state: false },
+    { id: 'snapshot', name: 'SceneCompilationSnapshot', state: true },
+    { id: 'consumer', name: 'Render / application', state: true },
+  ] as const;
+  const inputs = [{ id: 'artifact', name: 'Composite artifacts', target: 'tree' }] as const;
   return (
     <PreviewFlowDiagram {...logicFigureGraphProps()} style={{ maxWidth: '100%', height: 'auto' }}>
-      <FlowLayout id="main" kind="linear" direction="down" containerWidth="match-largest">
-        {[0].map(start => (
-          <FlowLayout key={start} id={`row-${start}`} kind="linear" direction="right" itemWidth="fill">
-            <FlowEntities items={items.slice(start, start + 3)} />
-          </FlowLayout>
-        ))}
+      <FlowLayout
+        id="output-overview"
+        kind="grid"
+        gap={{ row: 20, column: 28 }}
+        placements={[
+          [null, 'atomic'],
+          ['artifact', 'tree'],
+          [null, 'snapshot'],
+          [null, 'consumer'],
+        ]}
+      >
+        <FlowEntities
+          items={stages.map(item => ({
+            id: item.id,
+            role: item.state ? 'state' : 'activity',
+            layout: { width: 290 },
+            text: [
+              { text: item.name, font: { size: 12 } },
+              { text: text[item.id], font: { size: 12 }, fill: 'gray' },
+            ],
+          }))}
+        />
+        <FlowEntities
+          items={inputs.map(item => ({
+            id: item.id,
+            role: 'state',
+            kind: 'docs.logic.secondary',
+            layout: { width: 230 },
+            text: [
+              { text: item.name, font: { size: 12 } },
+              { text: text[item.id], font: { size: 12 }, fill: 'gray' },
+            ],
+          }))}
+        />
       </FlowLayout>
       <FlowRelations
-        items={labels.slice(1).map((_, index) =>
-          index % 3 === 2
-            ? {
-                source: { id: `s${index}`, side: 'bottom' as const },
-                target: { id: `s${index + 1}`, side: 'top' as const },
-                routing: { kind: 'orthogonal' as const, cornerRadius: 0 },
-              }
-            : { source: `s${index}`, target: `s${index + 1}` },
-        )}
+        items={[
+          ...stages
+            .slice(1)
+            .map((item, index) => ({
+              source: { id: stages[index].id, anchor: 'bottom' as const },
+              target: { id: item.id, anchor: 'top' as const },
+            })),
+          ...inputs.map(item => ({
+            source: { id: item.id, anchor: 'right' as const },
+            target: { id: item.target, anchor: 'left' as const },
+          })),
+        ]}
       />
     </PreviewFlowDiagram>
   );
 };
-export default Figure;
+export default OutputOverview;

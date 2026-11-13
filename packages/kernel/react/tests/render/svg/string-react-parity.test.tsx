@@ -1,4 +1,4 @@
-import type { CompiledArrowEnd, Scene, SceneResource } from '@retikz/core';
+import type { CompiledArrowEnd, Scene, SceneResources } from '@retikz/core';
 import { buildSvgDocument, renderToSvgString } from '@retikz/render/svg';
 import type { ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
@@ -27,33 +27,37 @@ const arrowSpec: CompiledArrowEnd = {
   ],
 };
 
-const resources: Array<SceneResource> = [
-  {
-    kind: 'paint',
-    id: 'paint-1',
-    spec: {
-      kind: 'linearGradient',
-      stops: [
-        { offset: 0, color: '#123' },
-        { offset: 1, color: '#fed', opacity: 0.8 },
-      ],
+const resources: SceneResources = {
+  paints: [
+    {
+      kind: 'paint',
+      id: 'paint-1',
+      spec: {
+        kind: 'linearGradient',
+        stops: [
+          { offset: 0, color: '#123' },
+          { offset: 1, color: '#fed', opacity: 0.8 },
+        ],
+      },
     },
-  },
-  {
-    kind: 'clip',
-    id: 'clip-1',
-    path: {
-      commands: [
-        { kind: 'move', to: [0, 0] },
-        { kind: 'line', to: [16, 0] },
-        { kind: 'line', to: [16, 12] },
-        { kind: 'line', to: [0, 12] },
-        { kind: 'close' },
-      ],
-      fillRule: 'nonzero',
+  ],
+  clips: [
+    {
+      kind: 'clip',
+      id: 'clip-1',
+      path: {
+        commands: [
+          { kind: 'move', to: [0, 0] },
+          { kind: 'line', to: [16, 0] },
+          { kind: 'line', to: [16, 12] },
+          { kind: 'line', to: [0, 12] },
+          { kind: 'close' },
+        ],
+        fillRule: 'nonzero',
+      },
     },
-  },
-];
+  ],
+};
 
 const scene: Scene = {
   layout: { x: 0, y: 0, width: 20, height: 20 },

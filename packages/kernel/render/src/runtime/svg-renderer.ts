@@ -1,16 +1,7 @@
 import type { IRAnimationTrack, Scene, ScenePrimitive } from '@retikz/core';
 import type { PropertyPath } from '@retikz/foundation';
 import { encodePropertyPath } from '@retikz/foundation';
-import type {
-  ReconcilerPreparedCommit,
-  RuntimeScenePrimitive,
-  SceneIdentity,
-  ScenePatch,
-  ScenePatchOperation,
-  SceneRuntimeNode,
-  SceneRuntimeSnapshot,
-  SceneRuntimeSubtree,
-} from '@retikz/reconciler';
+import type { ReconcilerPreparedCommit } from '@retikz/reconciler';
 
 import type { AnimationControls } from '../animation';
 import { classifyProperty, evaluateTrack, isAutoplayTrigger, sceneHasAnimations } from '../animation';
@@ -27,6 +18,15 @@ import {
   createSvgAnimationControls,
   resolvePointViaLayout,
 } from '../hydration';
+import type {
+  RuntimeScenePrimitive,
+  SceneIdentity,
+  ScenePatch,
+  ScenePatchOperation,
+  SceneRuntimeNode,
+  SceneRuntimeSnapshot,
+  SceneRuntimeSubtree,
+} from '../scene';
 import { prepareRuntimeSceneContent } from '../shared';
 import type { SvgNode } from '../svg';
 import { buildSvgDocument, buildSvgFragment } from '../svg';
@@ -485,7 +485,8 @@ const primitiveNeedsDerivedResource = (primitive: RuntimeScenePrimitive): boolea
 
 /** 判断 snapshot 是否可安全执行 entity 级 DOM patch */
 const supportsEntityPatch = (snapshot: SceneRuntimeSnapshot): boolean =>
-  snapshot.scene.resources.length === 0 &&
+  snapshot.scene.resources.paints.length === 0 &&
+  snapshot.scene.resources.clips.length === 0 &&
   !snapshot.scene.primitives.some(
     primitive => primitiveHasAnimation(primitive) || primitiveNeedsDerivedResource(primitive),
   );
@@ -627,7 +628,7 @@ const buildSubtreeDescriptor = (
     {
       ...(snapshot.scene as unknown as Scene),
       primitives: [subtree.primitive as unknown as ScenePrimitive],
-      resources: [],
+      resources: { paints: [], clips: [] },
       animations: [],
     },
     {

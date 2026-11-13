@@ -85,7 +85,7 @@ Scope 上下文下传与包络上收是独立的计算职责：
 - `resolveScopeInheritance` 解析有效继承上下文；`prepareScopePlacement` 准备 Scope 放置目标与可提前确定的变换，可能等待外部引用
 - 子元素在自身实际依赖就绪后调用对应 Core 编译入口，不把父 Scope 包络完成作为所有子元素的前置条件
 - `compileScope` 消费 Core 语义要求的局部子布局，生成 Scope 包络与最终变换；发布几何并完成待定路径后，调用方依据真实子输出解析动画，再通过 context 交给 compileScope 重组分组属性，此时可复用布局与裁剪。最终输出组装负责附加 children 和空分组裁剪；Core 不递归编译 children
-- 引用布局由 Core 投影到正确坐标系；最终子输出通过 `assembleScopeOutput` 包装，不能重复应用变换
+- 引用布局由 Core 投影到正确坐标系；Reconciler 将最终子输出组织到 Scope 分组，不能重复应用变换
 
 Scope 引用包络、可见边界与布局 allocation 不混为同一对象。Path 不加入现有 Scope 引用包络；匿名与具名 Scope 的几何贡献继续遵循 Core 规则，运行时容器 id 不改变这些规则。若接线仍需解释聚合规则，缺少的选择或投影能力应由 Core 提供，不能由 Weave 复制。
 
@@ -95,7 +95,7 @@ Scope 引用包络、可见边界与布局 allocation 不混为同一对象。Pa
 
 按 [062](./062-weave-node-state-isolation.md)，使用稳定 Root 与节点的 current / pending 状态。不可变输入、稳定环境和仍有效的 Core 产物可共享；声明关系、索引、依赖集合与待处理记录按需隔离。关联指向稳定节点，候选计算统一读取 pending 或未变 current；可变绑定和观察等工作区由本次计算独占。
 
-Weave 按声明组织已完成贡献，调用 `assembleCompileOutputs`、`assembleScopeOutput` 和 `assembleSceneCompilation` 准备完整结果。资源重映射、zIndex、裁剪、Scene 布局与输出语义继续由 Core 处理；输出组装允许遍历整树，不把单元素计算误报为整次更新已经是局部成本。
+全量与增量编译共用 Reconciler 执行器，按声明组织 Core 阶段产物、导入资源并准备完整 Scene 结果。Core 提供绘图、裁剪与几何语义，Reconciler 负责遍历调度、绘制顺序与输出组装；输出组装允许遍历整树，不把单元素计算误报为整次更新已经是局部成本。
 
 同一候选的诊断、观察、artifacts、provenance、空间句柄与 Scene 必须一致。启用观察时使用本次独占的 `createCompileObservationRuntime`；不能把旧会话生成的延迟观察内容直接并入新会话。缺少安全复用契约的附属产物必须重新准备，不能省略或拼接其它版本的 metadata。
 

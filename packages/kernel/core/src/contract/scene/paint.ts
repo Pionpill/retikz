@@ -3,7 +3,7 @@ import type { ScenePrimitive } from './scene';
 
 /**
  * paint 属性取值词汇表（可用于 fill / stroke，不绑定单一属性）
- * @description 渲染无关：`string` 表示纯色，`resourceRef` 指向 `Scene.resources`，`contextStroke` 继承所在元素描边
+ * @description 渲染无关：`string` 表示纯色，`resourceRef` 指向 `Scene.resources.paints`，`contextStroke` 继承所在元素描边
  */
 export type PaintValue =
   | string

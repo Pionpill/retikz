@@ -7,7 +7,7 @@ import type { ScenePrimitive, TextPrimitive } from '../../../../core/src/contrac
 import { BUILTIN_SHAPES } from '../../../../core/src/providers/shape/shape';
 import type { IRScene } from '../../../../core/src/schemas';
 import { NodeSchema } from '../../../../core/src/schemas';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 import { line, move } from '../../helpers/path-command-factory';
 
 /** 最简 rectangle CompiledNodeLayout（rect 40×30、半轴 20×15、中心原点），margin 可调 */
@@ -83,7 +83,7 @@ describe('margin：border 类 anchor 外扩（happy）', () => {
         },
       ],
     };
-    const p = compileToScene(ir).scene.primitives.find(x => x.type === 'path');
+    const p = compileTestResult(ir).scene.primitives.find(x => x.type === 'path');
 
     expect(p?.type === 'path' ? p.commands : undefined).toEqual([move([18, 0]), line([100, 0])]);
   });
@@ -101,8 +101,8 @@ describe('margin：border 类 anchor 外扩（happy）', () => {
         },
       ],
     });
-    const l0 = compileToScene(mk(0)).scene.layout;
-    const l10 = compileToScene(mk(10)).scene.layout;
+    const l0 = compileTestResult(mk(0)).scene.layout;
+    const l10 = compileTestResult(mk(10)).scene.layout;
 
     expect(l10.width - l0.width).toBe(20);
     expect(l10.height - l0.height).toBe(20);
@@ -190,7 +190,7 @@ describe('margin：不外扩护栏 + 校验', () => {
         }
       };
 
-      walk(compileToScene(mk(margin)).scene.primitives);
+      walk(compileTestResult(mk(margin)).scene.primitives);
       const lbl = texts.find(t => t.lines.some(l => (typeof l === 'string' ? l : l.text) === 'L'));
 
       return lbl?.y;
@@ -228,6 +228,6 @@ describe('margin：交互', () => {
     });
 
     // 借用连接面只改连接点求交，绝不改布局占位。
-    expect(compileToScene(mk('circle')).scene.layout).toEqual(compileToScene(mk('shape')).scene.layout);
+    expect(compileTestResult(mk('circle')).scene.layout).toEqual(compileTestResult(mk('shape')).scene.layout);
   });
 });

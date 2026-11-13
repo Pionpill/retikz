@@ -12,6 +12,14 @@ export const markPlacementI18n: Record<
     star: string;
     arrow: string;
     position: string;
+    positionMode: string;
+    positionGeometry: string;
+    defaultGeometry: string;
+    step: string;
+    length: string;
+    original: string;
+    rounded: string;
+    cornerRadius: string;
     scale: string;
     color: string;
     autoRotate: string;
@@ -27,6 +35,14 @@ export const markPlacementI18n: Record<
     star: '五角星',
     arrow: '箭头',
     position: '位置',
+    positionMode: '定位模式',
+    positionGeometry: '定位几何',
+    defaultGeometry: '随模式默认',
+    step: '按步骤',
+    length: '按长度',
+    original: '原始路径',
+    rounded: '圆角路径',
+    cornerRadius: '圆角半径',
     scale: '缩放',
     color: '标记颜色',
     autoRotate: '沿切线旋转',
@@ -41,6 +57,14 @@ export const markPlacementI18n: Record<
     star: 'Star',
     arrow: 'Arrow',
     position: 'Position',
+    positionMode: 'Position mode',
+    positionGeometry: 'Position geometry',
+    defaultGeometry: 'Mode default',
+    step: 'Step',
+    length: 'Length',
+    original: 'Original',
+    rounded: 'Rounded',
+    cornerRadius: 'Corner radius',
     scale: 'Scale',
     color: 'Mark color',
     autoRotate: 'Follow tangent',

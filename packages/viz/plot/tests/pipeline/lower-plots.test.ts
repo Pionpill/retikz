@@ -1,6 +1,5 @@
 import type { IRNode, IRPaint, IRPath, IRScope } from '@retikz/core';
 import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import type { PlotsLoweringOptions } from '../../src/pipeline/expand';
@@ -9,6 +8,7 @@ import { lowerPlotWithDataArtifact } from '../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../src/schemas';
 import { PlotLayerZIndex, PlotSchema } from '../../src/schemas';
 import { DEFAULT_FONT_SIZE } from '../../src/shared';
+import { compileTestResult } from '../helpers/compilation';
 import { measureLabel } from '../helpers/text-measurement';
 
 const SALES = [
@@ -403,7 +403,7 @@ describe('lowerPlots（契约）', () => {
     });
     expect(markLayer.defaults?.style?.color).toBeUndefined();
 
-    const scene = compileToScene(
+    const scene = compileTestResult(
       { version: 1, type: 'scene', theme: { mode }, children: [spec] },
       { composites: lowerPlots({ sales: data }, opts) },
     ).scene;
@@ -476,7 +476,7 @@ describe('lowerPlots（契约）', () => {
   });
 
   it('将行编译到场景正常', () => {
-    const scene = compileToScene(
+    const scene = compileTestResult(
       { version: 1, type: 'scene', children: [lineSpec] },
       { composites: lowerPlots({ sales: SALES }, opts) },
     ).scene;
@@ -488,7 +488,7 @@ describe('lowerPlots（契约）', () => {
 
   it('编译点到场景正常', () => {
     // 验证样式上提后 nodeDefault 仍级联出可渲染的散点
-    const scene = compileToScene(
+    const scene = compileTestResult(
       { version: 1, type: 'scene', children: [pointSpec()] },
       { composites: lowerPlots({ sales: SALES }, opts) },
     ).scene;
@@ -754,7 +754,7 @@ describe('lowerPlots 区间/柱（契约）', () => {
   });
 
   it('bar 编译到场景', () => {
-    const scene = compileToScene(
+    const scene = compileTestResult(
       { version: 1, type: 'scene', children: [barSpec()] },
       { composites: lowerPlots({ sales: SALES }, opts) },
     ).scene;
@@ -997,12 +997,15 @@ describe('lowerPlots 标记绘制', () => {
     expect(layer.defaults?.node?.style?.fill).toEqual(paintGradient);
     expect(layer.defaults?.node?.style?.stroke).toEqual(paintGradient);
 
-    const scene = compileToScene(
+    const scene = compileTestResult(
       { version: 1, type: 'scene', children: [spec] },
       { composites: lowerPlots({ sales: SALES }, opts) },
     ).scene;
 
-    expect(scene.resources).toEqual([{ kind: 'paint', id: expect.any(String), spec: paintGradient }]);
+    expect(scene.resources).toEqual({
+      paints: [{ kind: 'paint', id: expect.any(String), spec: paintGradient }],
+      clips: [],
+    });
   });
 
   it('路径常量描边绘制下沉到路径默认值并编译', () => {
@@ -1027,12 +1030,15 @@ describe('lowerPlots 标记绘制', () => {
 
     expect(layer.defaults?.path?.style?.stroke).toEqual(paintGradient);
 
-    const scene = compileToScene(
+    const scene = compileTestResult(
       { version: 1, type: 'scene', children: [spec] },
       { composites: lowerPlots({ sales: SALES }, opts) },
     ).scene;
 
-    expect(scene.resources).toEqual([{ kind: 'paint', id: expect.any(String), spec: paintGradient }]);
+    expect(scene.resources).toEqual({
+      paints: [{ kind: 'paint', id: expect.any(String), spec: paintGradient }],
+      clips: [],
+    });
   });
 
   it('间隔常量绘制下沉到节点默认值并编译', () => {
@@ -1058,12 +1064,15 @@ describe('lowerPlots 标记绘制', () => {
     expect(layer.defaults?.node?.style?.fill).toEqual(paintGradient);
     expect(layer.defaults?.node?.style?.stroke).toEqual(paintGradient);
 
-    const scene = compileToScene(
+    const scene = compileTestResult(
       { version: 1, type: 'scene', children: [spec] },
       { composites: lowerPlots({ sales: SALES }, opts) },
     ).scene;
 
-    expect(scene.resources).toEqual([{ kind: 'paint', id: expect.any(String), spec: paintGradient }]);
+    expect(scene.resources).toEqual({
+      paints: [{ kind: 'paint', id: expect.any(String), spec: paintGradient }],
+      clips: [],
+    });
   });
 
   it('路径闭合常量绘制下沉到路径默认值并编译', () => {
@@ -1089,12 +1098,15 @@ describe('lowerPlots 标记绘制', () => {
     expect(layer.defaults?.path?.style?.fill).toEqual(paintGradient);
     expect(layer.defaults?.path?.style?.stroke).toEqual(paintGradient);
 
-    const scene = compileToScene(
+    const scene = compileTestResult(
       { version: 1, type: 'scene', children: [spec] },
       { composites: lowerPlots({ sales: SALES }, opts) },
     ).scene;
 
-    expect(scene.resources).toEqual([{ kind: 'paint', id: expect.any(String), spec: paintGradient }]);
+    expect(scene.resources).toEqual({
+      paints: [{ kind: 'paint', id: expect.any(String), spec: paintGradient }],
+      clips: [],
+    });
   });
 
   it('间隔常量绘制下沉到节点默认值并编译', () => {
@@ -1124,12 +1136,15 @@ describe('lowerPlots 标记绘制', () => {
     expect(layer.defaults?.node?.style?.fill).toEqual(paintGradient);
     expect(layer.defaults?.node?.style?.stroke).toEqual(paintGradient);
 
-    const scene = compileToScene(
+    const scene = compileTestResult(
       { version: 1, type: 'scene', children: [spec] },
       { composites: lowerPlots({ sales: SALES }, opts) },
     ).scene;
 
-    expect(scene.resources).toEqual([{ kind: 'paint', id: expect.any(String), spec: paintGradient }]);
+    expect(scene.resources).toEqual({
+      paints: [{ kind: 'paint', id: expect.any(String), spec: paintGradient }],
+      clips: [],
+    });
   });
 });
 
@@ -1347,7 +1362,7 @@ describe('lowerPlots 关系（契约）', () => {
         { type: 'axis', dimension: 'y', grid: true },
       ],
     });
-    const scene = compileToScene(
+    const scene = compileTestResult(
       { version: 1, type: 'scene', children: [spec] },
       { composites: lowerPlots({ s: SALES2 }, opts) },
     ).scene;

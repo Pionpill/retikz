@@ -2,12 +2,12 @@ import { describe, expect, it } from 'vitest';
 
 import type { CompileWarning, IRChild } from '../../../../core/src';
 import { BuiltinCompileWarningCode, NodeSchema } from '../../../../core/src';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 
 const node = (id = 'primary', aliasIds = ['alternate']) =>
   NodeSchema.parse({ type: 'node', id, aliasIds, position: [30, 40], text: 'one' });
 
-const compile = (children: Array<IRChild>) => compileToScene({ type: 'scene', version: 1, children }, {});
+const compile = (children: Array<IRChild>) => compileTestResult({ type: 'scene', version: 1, children }, {});
 
 const path = (id: string): IRChild => ({
   type: 'path',
@@ -22,7 +22,7 @@ describe('Node 查询别名', () => {
     const warnings: Array<CompileWarning> = [];
     const first = { ...node('first', []), position: [0, 0] as [number, number] };
     const second = node('second', ['first']);
-    const result = compileToScene(
+    const result = compileTestResult(
       { type: 'scene', version: 1, children: [first, second, path('first')] },
       { onWarn: warning => warnings.push(warning) },
     );
@@ -31,7 +31,7 @@ describe('Node 查询别名', () => {
     expect(result.scene).toEqual(compile([first, second, path('second')]).scene);
 
     const isolatedWarnings: Array<CompileWarning> = [];
-    compileToScene(
+    compileTestResult(
       {
         type: 'scene',
         version: 1,

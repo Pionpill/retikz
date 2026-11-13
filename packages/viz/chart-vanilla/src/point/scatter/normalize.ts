@@ -1,6 +1,6 @@
 import type { IRScatterChart } from '@retikz/chart/point';
 
-import { chartSourceOf, normalizePointPartitionEncodings } from '../shared';
+import { chartSourceOf, normalizeChartPartitionEncodings } from '../../authoring';
 import type { InputScatterChart } from './types';
 
 /** 将 Scatter Chart Vanilla Input 组装为精确 Source IR */
@@ -14,7 +14,7 @@ export const normalizeScatterChart = (input: InputScatterChart): IRScatterChart 
     ...(root.plotExtension === undefined ? {} : { plotExtension: root.plotExtension }),
     recipe: {
       chartType: 'scatter',
-      encodings: normalizePointPartitionEncodings(encodings),
+      encodings: normalizeChartPartitionEncodings(encodings),
       ...(properties === undefined ? {} : { properties }),
       ...(guides === undefined ? {} : { guides }),
       ...(marks === undefined ? {} : { marks }),

@@ -1,0 +1,31 @@
+/** 控件显示文案 */
+export const controlLabels = {
+  zh: {
+    coordinateSystemAndAxisRoles: '坐标系与轴职责',
+    data: '数据',
+    dimensionValues: '维度数值',
+    coordinate: '坐标系',
+    projection: '投影',
+    cartesian: '笛卡尔坐标',
+    polar: '极坐标',
+    axes: '坐标轴',
+    showXAngularAxis: '显示 x / 角向轴',
+    showYRadialAxis: '显示 y / 径向轴',
+    showYRadialGrid: '显示 y / 径向网格',
+    targetYRadialTickCount: 'y / 径向刻度目标数',
+  },
+  en: {
+    coordinateSystemAndAxisRoles: 'Coordinate system and axis roles',
+    data: 'Data',
+    dimensionValues: 'Dimension values',
+    coordinate: 'Coordinate',
+    projection: 'Projection',
+    cartesian: 'Cartesian',
+    polar: 'Polar',
+    axes: 'Axes',
+    showXAngularAxis: 'Show x / angular axis',
+    showYRadialAxis: 'Show y / radial axis',
+    showYRadialGrid: 'Show y / radial grid',
+    targetYRadialTickCount: 'Target y / radial tick count',
+  },
+} as const;

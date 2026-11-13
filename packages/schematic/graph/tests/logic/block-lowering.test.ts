@@ -6,10 +6,10 @@ import {
   resolveCoreProviderDependencies,
 } from '@retikz/core';
 import type { FlexLayoutCompileArtifact } from '@retikz/layout';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import * as Graph from '../../src';
+import { compileTestResult } from '../helpers/compilation';
 import {
   compileInHarness,
   exactProposal,
@@ -30,7 +30,7 @@ const textValues = (primitives: ReturnType<typeof primitivesOf>): Array<string> 
   primitives.flatMap(primitive => (primitive.type === 'text' ? primitive.lines.map(line => line.text) : []));
 
 const flexArtifactWithKeys = (
-  output: ReturnType<typeof compileToScene>,
+  output: ReturnType<typeof compileTestResult>,
   keys: ReadonlyArray<string>,
 ): FlexLayoutCompileArtifact => {
   const artifact = output.artifacts
@@ -91,7 +91,7 @@ describe('Block 系列布局感知下沉', () => {
         },
       }),
     });
-    const output = compileToScene(
+    const output = compileTestResult(
       {
         type: 'scene',
         version: 1,
@@ -133,7 +133,7 @@ describe('Block 系列布局感知下沉', () => {
         },
       }),
     });
-    const output = compileToScene(
+    const output = compileTestResult(
       {
         type: 'scene',
         version: 1,
@@ -470,14 +470,14 @@ describe('Block 系列布局感知下沉', () => {
     const twoItems = compileBlock(['name', 'string']);
     const threeItems = compileBlock(['name', 'string', '必填']);
 
-    const rowHeights = (output: ReturnType<typeof compileToScene>, keys: ReadonlyArray<string>) =>
+    const rowHeights = (output: ReturnType<typeof compileTestResult>, keys: ReadonlyArray<string>) =>
       output.artifacts
         .filter(candidate => candidate.type === 'flexLayout')
         .map(candidate => candidate as FlexLayoutCompileArtifact)
         .filter(candidate => candidate.value.items.map(item => item.key).join('|') === keys.join('|'))
         .map(candidate => candidate.value.container.allocationBounds.height);
 
-    const sectionHeight = (output: ReturnType<typeof compileToScene>) => {
+    const sectionHeight = (output: ReturnType<typeof compileTestResult>) => {
       const background = pathPrimitivesOf(output.scene.primitives).find(
         path => path.fill === 'currentColor' && path.fillOpacity === 0.037,
       );
@@ -594,7 +594,7 @@ describe('Block 系列布局感知下沉', () => {
     const definitions = resolveCoreProviderDependencies({
       contributions: [{ roots: [Graph.GraphProviderKey], providers: Graph.createGraphProviders() }],
     });
-    const output = compileToScene(
+    const output = compileTestResult(
       {
         type: 'scene',
         version: 1,

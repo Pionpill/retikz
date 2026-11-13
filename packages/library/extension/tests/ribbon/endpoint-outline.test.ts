@@ -1,6 +1,5 @@
 import type { AnyPathDefinition, IRPathBase, IRPosition } from '@retikz/core';
 import { resolveCoreProviderDependencies } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { strictObject } from 'zod';
 
@@ -11,9 +10,10 @@ import {
   ribbonPathDefinition,
   RibbonPathOptionsSchema,
 } from '../../src/ribbon';
+import { compileTestResult } from '../helpers/compilation';
 
 const compile = (kindOptions: IRPathBase['kindOptions'], definition: AnyPathDefinition = ribbonPathDefinition) => {
-  const scene = compileToScene(
+  const scene = compileTestResult(
     {
       version: 1,
       type: 'scene',
@@ -97,7 +97,7 @@ describe('功能区端点轮廓契约', () => {
   });
 
   it('即使只有两个基础样本，也可以在中心线角处保持斜角连接', () => {
-    const scene = compileToScene(
+    const scene = compileTestResult(
       {
         version: 1,
         type: 'scene',
@@ -178,7 +178,7 @@ describe('功能区端点轮廓契约', () => {
   });
 
   it('包括场景布局边界中的长圆形帽极值', () => {
-    const scene = compileToScene(
+    const scene = compileTestResult(
       {
         version: 1,
         type: 'scene',
@@ -275,7 +275,7 @@ describe('功能区端点轮廓契约', () => {
   });
 
   it('保留编写的边界曲线并反转三次控制顺序', () => {
-    const scene = compileToScene(
+    const scene = compileTestResult(
       {
         version: 1,
         type: 'scene',

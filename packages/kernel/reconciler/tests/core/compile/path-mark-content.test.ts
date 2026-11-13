@@ -11,7 +11,7 @@ import type {
   MarkDefinition,
 } from '../../../../core/src';
 import { defineArrow, defineMark, resolveCoreProviderDependencies } from '../../../../core/src';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 import { flattenPrims } from '../../helpers/flatten';
 import { pathIr } from './path/helpers';
 
@@ -28,7 +28,7 @@ const dot = defineMark({
   emit: context => [{ type: 'ellipse', cx: 0, cy: 0, rx: 2, ry: 8, fill: context.fill }],
 });
 const compile = (path: Omit<IRPathBase, 'type'>, marks: Array<MarkDefinition> = [dot]) =>
-  compileToScene(pathIr(path.children ?? steps, path), { marks }).scene;
+  compileTestResult(pathIr(path.children ?? steps, path), { marks }).scene;
 const placementGroups = (scene: Scene) =>
   flattenPrims(scene.primitives).filter(
     (primitive): primitive is GroupPrimitive =>
@@ -50,7 +50,7 @@ it('端点与标记共享外观和参数上下文，标记缩放只应用一次'
     },
   });
   const appearance = { shape: 'shared', length: 10, width: 20, scale: 2, fill: 'red', params: { radius: 3 } };
-  const scene = compileToScene(
+  const scene = compileTestResult(
     pathIr(steps, {
       style: { strokeWidth: 3 },
       arrow: { end: appearance },
@@ -76,7 +76,7 @@ it('已注册箭头可同时用于端点与标记，普通标记不具有端点�
       { pos: 0.75, ...custom },
     ],
   });
-  const scene = compileToScene(input, {
+  const scene = compileTestResult(input, {
     marks: [dot],
     arrows: [
       {
@@ -92,9 +92,9 @@ it('已注册箭头可同时用于端点与标记，普通标记不具有端点�
   expect(primitives.filter(primitive => primitive.type === 'ellipse')).toEqual(
     expect.arrayContaining([expect.objectContaining({ rx: 3, fill: 'blue' }), expect.objectContaining({ rx: 2 })]),
   );
-  expect(() => compileToScene(input, { marks: [dot] })).toThrow(/arrowDot/);
-  expect(() => compileToScene(pathIr(steps, { arrow: { end: { shape: 'dot' } } }), { marks: [dot] })).toThrow(/dot/);
-  expect(() => compileToScene(input, { marks: [dot], arrows: [{ ...dot, backX: 0, lineContactX: 0 }] })).toThrow(
+  expect(() => compileTestResult(input, { marks: [dot] })).toThrow(/arrowDot/);
+  expect(() => compileTestResult(pathIr(steps, { arrow: { end: { shape: 'dot' } } }), { marks: [dot] })).toThrow(/dot/);
+  expect(() => compileTestResult(input, { marks: [dot], arrows: [{ ...dot, backX: 0, lineContactX: 0 }] })).toThrow(
     /duplicate mark/,
   );
 });
@@ -310,7 +310,7 @@ it('普通标记保留嵌套样式和资源描边，并把完整内容计入边�
   const definition = defineMark({ ...dot, emit: () => content });
   const scene = compile({ style: { stroke: gradient }, marks: [{ pos: 0.5, ...custom }] }, [definition]);
   expect(scene.layout.y + scene.layout.height).toBeGreaterThanOrEqual(35);
-  expect(scene.resources).toHaveLength(1);
+  expect([...(scene.resources?.paints ?? []), ...(scene.resources?.clips ?? [])]).toHaveLength(1);
   const flat = flattenPrims(scene.primitives);
   expect(flat.find(primitive => primitive.type === 'rect')).toMatchObject({ fill: { kind: 'resourceRef' } });
   expect(flat.find(primitive => primitive.type === 'ellipse')).toMatchObject({ fill: 'gold' });
@@ -322,7 +322,7 @@ it('普通标记保留嵌套样式和资源描边，并把完整内容计入边�
 it('箭头默认不创建内容，端点片段不影响位于端点的标记', () => {
   const input = pathIr(steps, { marks: [{ pos: 1 }] });
   const shared = { shape: 'circle', scale: 2 };
-  const scoped = compileToScene({
+  const scoped = compileTestResult({
     type: 'scene',
     version: 1,
     children: [

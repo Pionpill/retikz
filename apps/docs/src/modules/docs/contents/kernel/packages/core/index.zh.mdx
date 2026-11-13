@@ -1,29 +1,31 @@
 ---
 title: 编译核心 · core
-description: 了解 @retikz/core 的原子编译阶段及其与 Reconciler 的协作，了解核心契约、编译过程与包边界
+description: 了解 @retikz/core 如何定义绘图语义、提供可扩展能力与原子编译阶段，以及它和 Reconciler、Render 的职责边界
 ---
 
-图形声明可以写“连接 A 和 B”，但渲染器需要知道线段从哪里开始、在哪里结束。`@retikz/core` 负责解析这些声明，计算节点布局、坐标和路径，返回共享的解析、布局与图元产物，由 Reconciler 组织成 Scene。
+`@retikz/core` 定义 retikz 能表达的图形，以及这些图形如何得到布局和绘制数据。它提供可序列化的 IR、能力扩展契约，以及语义解析、坐标求值、布局和图元生成等原子阶段。
 
-本包面向编写领域组件、扩展能力或接入编译器的开发者。普通绘图通常从 React 或 Vanilla 入口开始，由适配层组织 Core 输入，再将编译结果交给渲染器。
+整个编译生命周期由 `@retikz/reconciler` 调度：它接收图形声明，维护编译上下文，按依赖调用 Core 的阶段，再将产物组织成 Scene。后续更新中的缓存复用和输出事务也由 Reconciler 负责。`@retikz/render` 则将 Scene 绘制到 SVG、Canvas 等后端。
+
+本系列面向需要理解图形语义、编写扩展或接入编译过程的开发者。日常绘图可以从 React 或 Vanilla 开始，使用同一套 Core 契约。
 
 ## 职责一览
 
-以两个节点 A、B 和一条连线为例：输入保存节点的位置、文字及连线目标，Core 求出节点边界和连接端点，最终输出可绘制的图元。
+IR 是图形声明的数据形式，例如节点的位置、形状与文字，以及一条路径要连接的目标。Scene 是编译后的绘制数据，包含已布局的图元与资源。两者之间的语义和计算由以下部分承接：
 
-| 对象                  | 职责                                     | 双节点示例                                   |
-| --------------------- | ---------------------------------------- | -------------------------------------------- |
-| IR                    | 保存可序列化的图形声明                   | 声明 A、B 及引用它们的路径                   |
-| Definition / registry | 定义并绑定形状、路径定义、复合组件等能力 | 查找节点形状与路径处理能力                   |
-| 编译器                | 解析配置、完成布局、求解坐标与路径       | 根据节点边界确定连线端点                     |
-| Scene                 | 保存已确定的图元、资源与画布等绘制信息   | 矩形、文字和连接线的绘制数据                 |
-| CompileResult         | 由 Reconciler 汇总 Scene 与附加产物      | 向渲染器交付 Scene，向其他消费方提供所需数据 |
+| 组成                  | 职责                                                       | 何时阅读                         |
+| --------------------- | ---------------------------------------------------------- | -------------------------------- |
+| IR / Schema           | 定义可保存、可交换的图形声明，说明字段含义、约束和默认值   | 理解作者可以表达什么             |
+| Resolve               | 结合当前上下文，展开简写、处理继承并确定下游消费的值与能力 | 追踪声明如何变成内部确定形态     |
+| Definition / registry | 定义扩展能力，并按名称找到对应实现；内置与自定义共用契约   | 理解形状、路径或复合组件如何接入 |
+| 原子编译阶段          | 计算布局与几何，生成图元及供后续阶段消费的产物             | 理解节点、路径和作用域如何处理   |
+| Scene / Primitive     | 定义后端中立的场景、图元与资源契约                         | 理解结果如何交给渲染器           |
 
-IR 描述作者希望画什么，Scene 保存编译后怎样绘制。Definition 是能力的定义，registry 负责按名称查找这些定义；内置能力与自定义能力通过对应契约参与编译。
+Definition 描述一种能力的实现契约，例如形状如何参与尺寸计算和绘制；registry 保存按名称索引的定义。IR 中记录的是可序列化的声明，扩展实现则通过编译选项等运行时接线提供。
 
-## 从图形声明到绘制数据
+## 从声明到图元
 
-下面两个节点的中心分别位于 `[0, 0]` 和 `[180, 0]`。连线只引用 A、B，Core 根据节点形状和连接边界计算端点，线段最终连接到两侧边缘。
+下面的场景有两个节点 A、B，中心分别位于 `[0, 0]` 和 `[180, 0]`。连线声明引用节点名称，连接点需要结合节点的形状与布局才能确定。观察连线两端：它们落在节点边缘。
 
 <ComponentPreview
   files={[
@@ -35,34 +37,28 @@ IR 描述作者希望画什么，Scene 保存编译后怎样绘制。Definition 
   type="illustration"
 />
 
-Core 先解析节点的样式和形状，结合文字度量确定尺寸，再解析引用它们的路径。即使连线声明写在节点前面，也可以在节点布局完成后回填端点。编译完成后，SVG 与 Canvas 渲染器消费同一套 Scene 契约。
+处理这张图时，Reconciler 根据依赖安排阶段执行。Core 解析节点配置，结合文字度量和形状定义计算布局；有了节点边界，路径阶段才能求出连接端点并生成绘制图元。图中指定了节点的最小尺寸，便于看清边界与连线的关系。
 
-图中为节点指定了最小尺寸，便于观察连接边界；完整输入及处理顺序见[编译流程](/kernel/packages/core/compilation)。
+Reconciler 将这些产物组织成 Scene，Render 再消费 Scene。图元是结构化绘制数据，例如矩形、文字和路径命令；同一份 Scene 可以由不同渲染后端消费。完整的阶段衔接见[编译流程](/kernel/packages/core/compilation)。
 
 ## 安装与使用
 
-<PackageManagerInstall packages={['@retikz/core', '@retikz/reconciler']} />
+若要直接声明 IR 并执行编译，需要 Core 的类型与 Reconciler 的执行入口：
 
-`PathTransformSchema` 只包含整条路径的 `rotate` 与 `scale`；`cornerRadius` 属于 `PathGeometrySchema`，用于将折线拐角改成圆角。
+<PackageManagerInstall packages="@retikz/core @retikz/reconciler" />
 
-组合描边 schema 时，`GraphicStrokeSchema` 统一提供线宽、虚线序列、偏移和 `stroke` 颜色或绘制资源。`NodeStrokeSchema` 增加 `dashed`、`dotted` 快捷设置，优先级为 `dashPattern > dashed > dotted`；`PathStrokeSchema` 增加 `lineCap`、`lineJoin`。这些片段的类型分别由 schema 推导为 `IRGraphicStroke`、`IRNodeStroke` 和 `IRPathStroke`。通用的 `GraphicStyleSchema` 与 `CascadingGraphicStyleSchema` 组合完整描边字段，支持虚线序列与相位偏移。
-
-内置连接面名称使用 `BuiltinBoundary`，自定义连接面通过编译选项 `boundaries` 注册；`IRBoundary` 接受内置名称、自定义 boundary 或 shape 名称，以及 `{ type, params }` 引用。内置编译警告码使用 `BuiltinCompileWarningCode`，开放类型 `CompileWarningCode` 同时接受自定义警告码。
-
-`CompileOptions.onWarn` 接收统一的 `CompileWarning`：`code` 是警告码，`message` 是英文说明，`path` 是相对输入根对象的属性路径。警告对象的可枚举字段和 JSON 表示均只包含这三个字段。
-
-声明图形时使用 Core 的 `IRScene` 等 IR 类型；处理编译后的路径命令时使用 Core 的 `PathCommand`。纯坐标和向量类型 `Position`、`Vector2` 从 `@retikz/math` 导入。
-
-Reconciler 提供无框架差异的完整 TypeScript 编译入口，Core 提供 IR 与原子阶段。下面使用同样的 A、B 连线关系，节点尺寸采用默认布局：
+从 Core 导入 `IRScene` 声明场景，从 Reconciler 导入 `SceneReconciler` 执行。下面只进行一次完整编译，通过 `incremental: false` 关闭后续增量更新所需的状态保留。`mount(ir)` 建立会话的首次结果，`compilation.result.scene` 是可交给渲染器的 Scene。
 
 ```ts
-import { type IRScene } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
+import type { IRScene } from '@retikz/core';
+import { SceneReconciler } from '@retikz/reconciler';
 
 const ir: IRScene = {
   type: 'scene',
   version: 1,
   children: [
+    { type: 'node', id: 'A', position: [0, 0], text: 'A' },
+    { type: 'node', id: 'B', position: [180, 0], text: 'B' },
     {
       type: 'path',
       children: [
@@ -70,71 +66,73 @@ const ir: IRScene = {
         { type: 'step', kind: 'line', to: { id: 'B' } },
       ],
     },
-    { type: 'node', id: 'A', position: [0, 0], text: 'A' },
-    { type: 'node', id: 'B', position: [180, 0], text: 'B' },
   ],
 };
 
-const result = compileToScene(ir);
-console.log(result.scene);
+const reconciler = new SceneReconciler({}, { incremental: false });
+
+try {
+  const { compilation } = reconciler.mount(ir);
+  console.log(compilation.result.scene);
+} finally {
+  reconciler.dispose();
+}
 ```
 
-`compileToScene` 同步返回 `CompileResult`。其中 `scene` 可交给渲染器；`artifacts` 承载 Composite 返回的领域产物，具体内容见[编译产物](/kernel/packages/core/compilation-output)。这次调用只完成编译，画面绘制由 Render 或适配层继续完成。
+这段代码在控制台输出绘制数据；绘制画面还需要接入渲染器。示例中的节点采用默认布局，前面的插图则指定了最小尺寸。
 
-入口接收已类型化的 IR。来自 JSON 等外部输入的数据应先经过对应 schema 校验；文字测量、公式处理和扩展定义等能力可通过编译选项接入。
-
-通过 TypeScript 定义扩展时，作者负责保证名称和回调返回值满足声明的契约；注册表仍检查名称冲突。开放参数会在选中具体 Definition 后通过其 schema 精确解析。内部已经类型化的数据不需要在每个阶段重复解析；编译仍检查引用是否存在、几何数值是否有效及输出归属，并保留必要的快照隔离。
+来自 JSON 等外部输入的数据应先通过对应 Schema 校验。类型明确的 TypeScript 声明可以直接传入；文字测量和扩展定义等能力通过编译选项接入。有关字段含义与内部确定形态的说明，将沿着本系列的语义解析主线展开。
 
 ## 包边界
 
-| Core 负责                          | 协作方负责                                          |
-| ---------------------------------- | --------------------------------------------------- |
-| 核心 IR、Definition 与扩展契约     | React / Vanilla 提供作者侧 API 并组织输入           |
-| 配置解析、节点布局、坐标与路径求解 | Math 提供基础计算；宿主提供文字度量等能力           |
-| 编译 Scene、汇总资源和其他产物     | Render 将 Scene 绘制为 SVG、Canvas 等输出           |
-| 提供单次编译结果与可选来源信息     | Reconciler 负责增量复用，Runtime 管理事务与一致发布 |
-| 提供编译观测输出                   | Inspect 消费观测并生成检查辅助图形                  |
+选择扩展位置时，先看需要改变的是绘图表达、执行过程还是后端呈现：
 
-本系列从一次编译的输入讲到最终产物。后续输入变化怎样经 Runtime、Reconciler、Core 和 Render 更新画面，属于跨包的动态更新专题；Runtime 的状态与事务机制见[增量执行](/kernel/packages/runtime)。
+| 需要处理的问题                                         | 负责方                                |
+| ------------------------------------------------------ | ------------------------------------- |
+| IR 字段、绘图语义、能力定义、布局与图元计算            | Core                                  |
+| 完整与增量编译、树遍历、上下文生命周期、缓存及输出事务 | Reconciler                            |
+| SVG / Canvas 绘制及后端资源                            | Render                                |
+| React 组件或 Vanilla 编写入口、输入组织与宿主接线      | React / Vanilla                       |
+| 通用计算几何与基础数学                                 | Math                                  |
+| Plot、Table 等领域声明与领域逻辑                       | 对应领域包，通过 Composite 等契约接入 |
+
+Core 的阶段接收当前操作需要的输入与能力上下文，返回对应产物。何时执行阶段、某份产物是否可以跨次复用，以及何时向输出目标提交，由 Reconciler 决定。
+
+## 阅读顺序
+
+本系列先从语义解析讲起：IR 如何定义、字段描述如何表达含义，以及 resolve 如何将声明确定为内部消费形态。接着介绍能力注册，说明内置和自定义实现如何参与。最后沿坐标求值、Node、Path、Scope 与 Composite 展开编译过程，追踪到输出契约。
+
+下面列出当前已有的专题入口；各页的内部处理顺序由其所需的上下文和依赖决定。
 
 ## 章节内容
 
 <LinkedSections
   items={[
+    { title: '语义解析', description: '理解 IR、Schema 与声明确定化', url: '/kernel/packages/core/resolution' },
     {
-      title: '编译流程',
-      description: '追踪一次完整编译的输入、布局与输出',
-      url: '/kernel/packages/core/compilation',
+      title: '能力注册',
+      description: '理解能力契约、注册键与统一消费',
+      url: '/kernel/packages/core/definitions',
     },
     {
-      title: '配置解析',
-      description: '理解样式覆盖、主题颜色与能力绑定',
-      url: '/kernel/packages/core/resolution',
+      title: '能力依赖',
+      description: '理解提供者贡献、依赖闭包与内置能力',
+      url: '/kernel/packages/core/providers',
+    },
+    { title: '编译流程', description: '衔接 resolve、compile 与实体依赖', url: '/kernel/packages/core/compilation' },
+    { title: '坐标求值', description: '追踪引用读取与空间求值', url: '/kernel/packages/core/coordinates' },
+    { title: 'Node 编译', description: '追踪文字度量、形状布局与图元', url: '/kernel/packages/core/node-compilation' },
+    { title: 'Path 编译', description: '追踪目标绑定、路径几何与装饰', url: '/kernel/packages/core/path-compilation' },
+    {
+      title: 'Scope 编译',
+      description: '追踪继承、子项布局与局部变换',
+      url: '/kernel/packages/core/scope-compilation',
     },
     {
-      title: '坐标解析',
-      description: '理解引用查找、坐标变换与 Scope 最终定位',
-      url: '/kernel/packages/core/coordinates',
-    },
-    {
-      title: '节点编译',
-      description: '理解文字测量、形状尺寸、基线与连接边界',
-      url: '/kernel/packages/core/node-compilation',
-    },
-    {
-      title: '路径编译',
-      description: '追踪目标绑定、路径段、边界交点、箭头与标签输出',
-      url: '/kernel/packages/core/path-compilation',
-    },
-    {
-      title: '复合编译',
-      description: '理解定义装配、子布局试算、隔离与重放',
+      title: 'Composite 编译',
+      description: '追踪子项生成、布局协作与领域产物',
       url: '/kernel/packages/core/composite-compilation',
     },
-    {
-      title: '编译产物',
-      description: '理解 Scene、资源、画布与附加结果的交付',
-      url: '/kernel/packages/core/compilation-output',
-    },
+    { title: '编译输出', description: '理解图元、资源与最终输出契约', url: '/kernel/packages/core/compilation-output' },
   ]}
 />

@@ -10,6 +10,6 @@
 
 “相关属性”统一使用 [ComponentProps](component-props.md)，不要再手写平行属性表；叙述中的少量参数就近解释。公开枚举可用 `<ApiValues name="PublicConstant" />`，由 registry 引用真实常量，不在 MDX 重抄一份取值。
 
-机制说明先写用户可观察行为，再用 `<SourceLinks>` 给直接实现入口。每项 `path` 使用仓库相对路径，行号范围最小且必须仍支撑正文结论；源码链接不能替代解释。
+正文涉及源码中的函数、类型、Schema 或字段时，就地用 `<ApiSourceLink>` 联动右侧源码面板，链接内的标识符用 Markdown 反引号保留行内代码格式。`path` 使用仓库相对路径，行号定位到支撑当前说明的真实声明或实现；源码链接不能替代解释。已有文中链接时，段落或小节末尾不再重复列 `<SourceLinks>` 或“源码入口”。
 
 实现原理页按 `docs-doc-mechanism` 展开内部成员与执行过程；明确标注的内部实现锚点不受公共 API 标识符要求限制，但不得冒充公开调用入口或进入 API Reference。

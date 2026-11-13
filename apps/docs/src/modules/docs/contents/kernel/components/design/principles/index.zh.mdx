@@ -11,7 +11,7 @@ retikz 把“描述图形”“解释能力”和“执行输出”分开：作�
 
 <ComponentPreview files="principles-packages" size="md" hideCode />
 
-图中的实线是数据流：作者输入进入 IR，`compileToScene` 同次生成 Scene 与 typed artifacts，renderer 再把 Scene 输出为 SVG 或 Canvas。下方的次要节点表示可选辅助能力：`@retikz/tex` 作为 lowerer 接入编译，`@retikz/inspect` 读取最终编译结果生成只读辅助内容。虚线区分这些辅助关系与主数据流；它们不成为 IR 或 renderer 的特殊分支。
+图中的实线是数据流：作者输入进入 IR，`SceneReconciler` 同次生成 Scene 与 typed artifacts，renderer 再把 Scene 输出为 SVG 或 Canvas。下方的次要节点表示可选辅助能力：`@retikz/tex` 作为 lowerer 接入编译，`@retikz/inspect` 读取最终编译结果生成只读辅助内容。虚线区分这些辅助关系与主数据流；它们不成为 IR 或 renderer 的特殊分支。
 
 完整的九个 Kernel 包及职责见[分层 · 包结构](/kernel/components/design/layers#包结构)。上图只画主要输入与渲染链路，不是完整依赖图。
 
