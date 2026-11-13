@@ -360,7 +360,7 @@ Compare the angular spans for January and July to see how daylight hours change.
 ## Errors and limitations
 
 - category maps to y; start and end share x. These roles are fixed.
-- A missing or unprojectable endpoint causes the connector path to raise an error. Clean missing values before supplying the data. Equal endpoints remain coincident.
+- A missing or unmappable field endpoint skips that row's connector while preserving its valid endpoint and other complete rows. Invalid constants and unknown references still raise errors. Equal endpoints remain coincident.
 - Different explicit endpoint scale names fail. Member appearance does not create independent field scales.
 
 In React, supplying the same configuration field through both the root `recipe` and a child component raises an error.

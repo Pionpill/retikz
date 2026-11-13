@@ -49,6 +49,52 @@ const flatten = (items: Array<ScenePrimitive>): Array<ScenePrimitive> =>
   items.flatMap(item => (item.type === 'group' ? flatten(item.children) : [item]));
 
 describe('标记目标连接', () => {
+  it('跳过不可映射的字段端点，保留有效行和独立点', () => {
+    const endpoints = {
+      type: 'path',
+      encodings: { from: { x: { value: 0 }, y: { field: 'start' } }, to: { x: { value: 10 }, y: { field: 'end' } } },
+    };
+    const data = [
+      { start: null, end: 4 },
+      { start: 2, end: 8 },
+      { start: 3, end: null },
+    ];
+    const result = paths(lower(plot([endpoints]), { data }));
+    expect(result).toHaveLength(1);
+    expect(result[0].children).toHaveLength(2);
+    const invalidConstant = {
+      ...endpoints,
+      encodings: { ...endpoints.encodings, from: { x: { value: 'invalid' }, y: { field: 'start' } } },
+    };
+    expect(() => lower(plot([invalidConstant]), { data })).toThrow(/cannot map/);
+    const absentField = {
+      ...endpoints,
+      encodings: { ...endpoints.encodings, to: { x: { value: 10 }, y: { field: 'missing' } } },
+    };
+    expect(() => lower(plot([absentField]), { data })).toThrow();
+  });
+
+  it('缺值坐标不会掩盖另一端的无效引用', () => {
+    const mixed = {
+      type: 'path',
+      encodings: {
+        from: { x: { value: 0 }, y: { field: 'missingValue' } },
+        to: { mark: 'nodes', key: { value: 'a' } },
+      },
+    };
+    const data = rows.map(row => ({ ...row, missingValue: null }));
+    expect(paths(lower(plot([nodes, mixed]), { data }))).toHaveLength(0);
+    expect(() =>
+      lower(
+        plot([
+          nodes,
+          { ...mixed, encodings: { ...mixed.encodings, to: { mark: 'nodes', key: { value: 'unknown' } } } },
+        ]),
+        { data },
+      ),
+    ).toThrow(/unknown/);
+  });
+
   it('解析步骤目标并拒绝其前向声明，即使对于空数据也是如此', () => {
     const stepped = {
       type: 'path',

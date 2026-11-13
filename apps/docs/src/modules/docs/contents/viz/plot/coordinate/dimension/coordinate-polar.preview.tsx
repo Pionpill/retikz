@@ -5,7 +5,6 @@ import { coordinate2DRows } from './coordinate-2d.data';
 /** 图形参数 */
 export type CoordinatePolarValues = {
   markType: 'point' | 'line' | 'interval';
-  markInterpolation: 'inherit' | 'polar' | 'chord';
   coordinateInterpolation: 'polar' | 'chord' | 'auto';
   innerRadius: number;
   startAngle: number;
@@ -34,14 +33,10 @@ export const renderCoordinatePolar = (values: CoordinatePolarValues) => (
         encodings={{ order: 'order', position: { x: { field: 'category' }, y: { field: 'value' } } }}
         properties={{
           closed: true,
-          interpolation: values.markInterpolation === 'inherit' ? undefined : values.markInterpolation,
         }}
       />
     ) : (
-      <IntervalMark
-        encodings={{ position: { x: { field: 'category' }, y: { field: 'value' } } }}
-        properties={{ interpolation: values.markInterpolation === 'inherit' ? undefined : values.markInterpolation }}
-      />
+      <IntervalMark encodings={{ position: { x: { field: 'category' }, y: { field: 'value' } } }} />
     )}
     <PlotAxis dimension="x" />
     <PlotAxis dimension="y" grid />

@@ -443,6 +443,41 @@ export const vizSection: Array<Section> = [
         },
       },
       {
+        id: 'lines',
+        label: 'viz.chartLines',
+        icon: 'chart-paths',
+        sidebarGroup: 'viz.chartComponents',
+        children: [
+          {
+            id: 'line',
+            label: 'viz.chartLine',
+            icon: 'chart-line',
+            difficulty: DocDifficulty.Beginner,
+            meta: {
+              pageType: 'component',
+              audience: 'user',
+              capability: 'chart.line',
+              sourceOfTruth: 'docs',
+              layout: 'article',
+            },
+          },
+          {
+            id: 'slope',
+            label: 'viz.chartSlope',
+            icon: 'chart-slope',
+            difficulty: DocDifficulty.Beginner,
+            meta: {
+              pageType: 'component',
+              audience: 'user',
+              capability: 'chart.slope',
+              sourceOfTruth: 'docs',
+              layout: 'article',
+            },
+          },
+        ],
+        meta: { pageType: 'group', audience: 'user', capability: 'chart.lines', sourceOfTruth: 'architecture' },
+      },
+      {
         id: 'model',
         label: 'viz.chartModel',
         sidebarGroup: 'viz.chartInternals',
@@ -537,9 +572,9 @@ export const vizSection: Array<Section> = [
         label: 'viz.grammarMark',
         sidebarGroup: 'viz.plotGrammar',
         children: [
-          { id: 'point', label: 'viz.compPointMark', difficulty: DocDifficulty.Beginner },
-          { id: 'path', label: 'viz.compPathMark', difficulty: DocDifficulty.Beginner },
-          { id: 'interval', label: 'viz.compIntervalMark', difficulty: DocDifficulty.Beginner },
+          { id: 'point', label: 'viz.compPointMark', difficulty: DocDifficulty.Advanced },
+          { id: 'path', label: 'viz.compPathMark', difficulty: DocDifficulty.Advanced },
+          { id: 'interval', label: 'viz.compIntervalMark', difficulty: DocDifficulty.Advanced },
         ],
       },
       {
@@ -549,6 +584,7 @@ export const vizSection: Array<Section> = [
         children: [
           { id: 'position', label: 'viz.grammarScalePosition', difficulty: DocDifficulty.Advanced },
           { id: 'mark-attributes', label: 'viz.grammarScaleAttributes', difficulty: DocDifficulty.Advanced },
+          { id: 'reference', label: 'viz.grammarScaleReference' },
         ],
       },
       {
@@ -561,9 +597,10 @@ export const vizSection: Array<Section> = [
           {
             id: 'custom-coordinate',
             label: 'viz.grammarCoordinateCustom',
-            difficulty: DocDifficulty.Internals,
+            difficulty: DocDifficulty.Advanced,
             meta: extensionGuide('plot.coordinate.extensions'),
           },
+          { id: 'reference', label: 'viz.grammarCoordinateReference' },
         ],
       },
       {
@@ -574,37 +611,6 @@ export const vizSection: Array<Section> = [
           { id: 'axis', label: 'viz.compAxis', difficulty: DocDifficulty.Beginner },
           { id: 'legend', label: 'viz.compLegend', difficulty: DocDifficulty.Beginner },
         ],
-      },
-      {
-        id: 'provenance',
-        label: 'viz.plotProvenance',
-        sidebarGroup: 'viz.plotGrammar',
-        difficulty: DocDifficulty.Beginner,
-        meta: { pageType: 'guide', audience: 'user', capability: 'plot.lineage', sourceOfTruth: 'runtime' },
-      },
-      {
-        id: 'reference',
-        label: 'viz.plotReference',
-        sidebarGroup: 'viz.plotGrammar',
-        children: [
-          { id: 'plot', label: 'viz.plotReferenceContractPlot' },
-          { id: 'encoding', label: 'viz.plotReferenceContractEncoding' },
-          { id: 'transform', label: 'viz.plotReferenceContractTransform' },
-          { id: 'mark', label: 'viz.plotReferenceContractMark' },
-          { id: 'scale', label: 'viz.plotReferenceContractScale' },
-          { id: 'coordinate', label: 'viz.plotReferenceContractCoordinate' },
-          { id: 'guide', label: 'viz.plotReferenceContractGuide' },
-          { id: 'layout', label: 'viz.plotReferenceContractLayout' },
-          { id: 'layer', label: 'viz.plotReferenceContractLayer' },
-          { id: 'theme', label: 'viz.plotReferenceContractTheme' },
-          { id: 'runtime', label: 'viz.plotReferenceRuntime' },
-        ],
-        meta: {
-          pageType: 'reference',
-          audience: 'integrator',
-          capability: 'plot.contract',
-          sourceOfTruth: 'schema',
-        },
       },
     ],
   },

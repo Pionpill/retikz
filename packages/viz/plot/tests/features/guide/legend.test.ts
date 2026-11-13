@@ -1096,3 +1096,102 @@ describe('数值属性图例与图元共享映射', () => {
     expect(allScopes(result).some(scope => scope.id?.startsWith('legend'))).toBe(false);
   });
 });
+
+describe('透明度图例继承共同的 mark 颜色', () => {
+  const cases = [
+    { name: '默认主题色', properties: [{}] },
+    {
+      name: '忽略其它比例尺的 mark',
+      properties: [{ color: '#4682b4' }, { color: '#cc6633' }],
+      separateScale: true,
+      expected: '#4682b4',
+    },
+    { name: '固定 color', properties: [{ color: '#4682b4' }], expected: '#4682b4' },
+    { name: '固定 fill', properties: [{ fill: '#cc6633' }], expected: '#cc6633' },
+    {
+      name: '渐变填充使用中性色',
+      properties: [
+        {
+          fill: {
+            kind: 'linearGradient',
+            stops: [
+              { offset: 0, color: '#4682b4' },
+              { offset: 1, color: '#cc6633' },
+            ],
+          },
+        },
+      ],
+      expected: 'currentColor',
+    },
+    { name: '同色 mark 共用比例尺', properties: [{ color: '#4682b4' }, { color: '#4682b4' }], expected: '#4682b4' },
+    {
+      name: '异色 mark 共用比例尺',
+      properties: [{ color: '#4682b4' }, { color: '#cc6633' }],
+      expected: 'currentColor',
+    },
+    { name: '字段映射多色', properties: [{}], range: ['#4682b4', '#cc6633'], expected: 'currentColor' },
+    { name: '字段映射同色', properties: [{}], range: ['#4682b4', '#4682b4'], expected: '#4682b4' },
+  ];
+  for (const scaleType of ['linear', 'ordinal']) {
+    it.each(cases)(`${scaleType}: $name`, ({ properties, range, expected, separateScale }) => {
+      const spec = PlotSchema.parse({
+        namespace: 'plot',
+        type: 'plot',
+        data: {
+          reference: 'd',
+          model: [
+            { name: 'x', type: 'continuous' },
+            { name: 'y', type: 'continuous' },
+            { name: 'o', type: 'continuous' },
+            { name: 'group', type: 'categorical' },
+          ],
+        },
+        scales: [
+          { type: 'linear', name: 'x' },
+          { type: 'linear', name: 'y' },
+          { type: scaleType, name: 'alpha', domain: [0, 1], range: [0.2, 1] },
+          { type: scaleType, name: 'other', domain: [0, 1], range: [0.2, 1] },
+          ...(range ? [{ type: 'ordinal', name: 'colors', domain: ['a', 'b'], range }] : []),
+        ],
+        coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+        marks: properties.map((property, index) => ({
+          type: 'point',
+          properties: property,
+          encodings: {
+            position: { x: { field: 'x' }, y: { field: 'y' } },
+            opacity: { overall: { field: 'o', scale: separateScale && index === 1 ? 'other' : 'alpha' } },
+            shape: 'group',
+            ...(range ? { color: { field: 'group', scale: 'colors' } } : {}),
+          },
+        })),
+        guides: [
+          { type: 'legend', channel: 'opacity', scale: 'alpha' },
+          { type: 'legend', channel: 'shape' },
+        ],
+      });
+      const outer = expandOf(spec, {
+        d: [
+          { x: 0, y: 0, o: 0, group: 'a' },
+          { x: 1, y: 1, o: 1, group: 'b' },
+        ],
+      });
+      const legend = findLegendLayer(outer)!;
+      const shapeLegend = allScopes(outer).find(scope => scope.id === 'legend.shape.1')!;
+      const expectedColor = expected ?? swatchNodesOf(shapeLegend)[0].style?.fill;
+      expect(legend).toBeDefined();
+      const swatches = swatchNodesOf(legend);
+      expect(swatches.length).toBeGreaterThan(0);
+      if (scaleType === 'linear') {
+        const fill = swatches[0].style?.fill;
+        expect(fill).toMatchObject({ kind: 'linearGradient' });
+        if (typeof fill !== 'object' || fill.kind !== 'linearGradient') throw new Error('Expected opacity ramp');
+        expect(new Set(fill.stops.map(stop => stop.color))).toEqual(new Set([expectedColor]));
+        expect(fill.stops[0].opacity).toBe(0.2);
+        expect(fill.stops.at(-1)?.opacity).toBe(1);
+      } else {
+        expect(swatches.map(swatch => swatch.style?.fill)).toEqual([expectedColor, expectedColor]);
+        expect(swatches.map(swatch => swatch.style?.opacity)).toEqual([{ fill: 0.2 }, { fill: 1 }]);
+      }
+    });
+  }
+});

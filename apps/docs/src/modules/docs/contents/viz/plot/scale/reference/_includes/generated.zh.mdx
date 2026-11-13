@@ -1,0 +1,948 @@
+{/* Generated reference. Do not edit manually. */}
+
+比例尺是数据值到位置或视觉值的具名映射。坐标角色通过坐标操作引用位置比例尺，颜色等非位置通道通过编码的 `scale` 字段引用。
+
+## 声明输入
+
+#### <ApiSourceLink label={"PlotScale"} path={"packages/viz/plot-react/src/components/scales.tsx"} startLine={7}>PlotScale</ApiSourceLink> / <ApiSourceLink label={"PlotScaleProps"} path={"packages/viz/plot-react/src/components/scales.tsx"} startLine={4}>PlotScaleProps</ApiSourceLink>
+
+**公共属性**
+
+<ApiTable>
+
+| 成员             | 类型                      | 默认值 | 说明                                          |
+| ---------------- | ------------------------- | ------ | --------------------------------------------- |
+| `dimension`      | `InputPlotScaleDimension` | —      | 绑定哪个定位维度；polar 下 x 为角向，y 为径向 |
+| `domainPadding?` | `InputDomainPadding`      | —      | 位置留白；分类尺度保留类别域并压缩输出范围    |
+
+</ApiTable>
+
+公共属性适用于所有分支；输入还需满足至少一个分支的属性约束。
+
+<DocTabs defaultValue="log">
+
+<DocTab value="log" label="属性 · 对数">
+
+<ApiTable>
+
+| 成员               | 类型                                      | 默认值 | 说明                                          |
+| ------------------ | ----------------------------------------- | ------ | --------------------------------------------- |
+| `base?`            | `IRPlotLogScale['base']`                  | —      | 对数底数；省略时为 10                         |
+| `constant?`        | `never`                                   | —      | —                                             |
+| `domain?`          | `[`<br />`number,`<br />`number`<br />`]` | —      | 显式数值 / 时间 domain；省略时从绑定数据推断  |
+| `singleValueSpan?` | `number`                                  | —      | 单值 domain 展开跨度；省略时按 scale 类型默认 |
+| `type`             | `'log'`                                   | —      | 对数位置 scale                                |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="symlog" label="属性 · 对称对数">
+
+<ApiTable>
+
+| 成员               | 类型                                      | 默认值 | 说明                                          |
+| ------------------ | ----------------------------------------- | ------ | --------------------------------------------- |
+| `base?`            | `never`                                   | —      | —                                             |
+| `constant?`        | `IRPlotSymlogScale['constant']`           | —      | 线性区宽度常数；省略时为 1                    |
+| `domain?`          | `[`<br />`number,`<br />`number`<br />`]` | —      | 显式数值 / 时间 domain；省略时从绑定数据推断  |
+| `singleValueSpan?` | `number`                                  | —      | 单值 domain 展开跨度；省略时按 scale 类型默认 |
+| `type`             | `'symlog'`                                | —      | 对称对数位置 scale                            |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="continuous" label="属性 · 连续映射">
+
+<ApiTable>
+
+| 成员               | 类型                                                               | 默认值 | 说明                                          |
+| ------------------ | ------------------------------------------------------------------ | ------ | --------------------------------------------- |
+| `base?`            | `never`                                                            | —      | —                                             |
+| `constant?`        | `never`                                                            | —      | —                                             |
+| `domain?`          | `[`<br />`number,`<br />`number`<br />`]`                          | —      | 显式数值 / 时间 domain；省略时从绑定数据推断  |
+| `singleValueSpan?` | `number`                                                           | —      | 单值 domain 展开跨度；省略时按 scale 类型默认 |
+| `type`             | `Exclude<InputPlotContinuousPositionScaleType, 'log' \| 'symlog'>` | —      | 除 log / symlog 外的连续位置 scale            |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="band" label="属性 · 分类带宽">
+
+<ApiTable>
+
+| 成员            | 类型                              | 默认值 | 说明                                                |
+| --------------- | --------------------------------- | ------ | --------------------------------------------------- |
+| `align?`        | `IRPlotBandScale['align']`        | —      | 首尾留白在范围两端的分配方式；省略时为 0.5          |
+| `domain?`       | `IRPlotBandScale['domain']`       | —      | 显式分类 domain；省略时按数据出现顺序推断           |
+| `paddingInner?` | `IRPlotBandScale['paddingInner']` | —      | 相邻 band 间距占 step 的比例；省略时为 0.1          |
+| `paddingOuter?` | `IRPlotBandScale['paddingOuter']` | —      | 首尾外侧留白占 step 的比例；省略时等于 paddingInner |
+| `type`          | `'band'`                          | —      | 分类带宽 scale 类型                                 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="point" label="属性 · 分类点位">
+
+<ApiTable>
+
+| 成员       | 类型                          | 默认值 | 说明                                        |
+| ---------- | ----------------------------- | ------ | ------------------------------------------- |
+| `align?`   | `IRPlotPointScale['align']`   | —      | 首尾留白在范围两端的分配方式；省略时为 0.5  |
+| `domain?`  | `IRPlotPointScale['domain']`  | —      | 显式分类 domain；省略时按数据出现顺序推断   |
+| `padding?` | `IRPlotPointScale['padding']` | —      | 首尾外侧留白占 step 的比例；省略时为 0.5    |
+| `type`     | `'point'`                     | —      | 分类点位 scale 类型；不接受连续 domain 配置 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export declare const PlotScale: FC<PlotScaleProps>;
+
+export type PlotScaleProps = InputPlotScale;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"InputPlotScale"} path={"packages/viz/plot-vanilla/src/normalize/plot/input-scales.ts"} startLine={85}>InputPlotScale</ApiSourceLink>
+
+**公共属性**
+
+<ApiTable>
+
+| 成员             | 类型                      | 默认值 | 说明                                          |
+| ---------------- | ------------------------- | ------ | --------------------------------------------- |
+| `dimension`      | `InputPlotScaleDimension` | —      | 绑定哪个定位维度；polar 下 x 为角向，y 为径向 |
+| `domainPadding?` | `InputDomainPadding`      | —      | 位置留白；分类尺度保留类别域并压缩输出范围    |
+
+</ApiTable>
+
+公共属性适用于所有分支；输入还需满足至少一个分支的属性约束。
+
+<DocTabs defaultValue="log">
+
+<DocTab value="log" label="属性 · 对数">
+
+<ApiTable>
+
+| 成员               | 类型                                      | 默认值 | 说明                                          |
+| ------------------ | ----------------------------------------- | ------ | --------------------------------------------- |
+| `base?`            | `IRPlotLogScale['base']`                  | —      | 对数底数；省略时为 10                         |
+| `constant?`        | `never`                                   | —      | —                                             |
+| `domain?`          | `[`<br />`number,`<br />`number`<br />`]` | —      | 显式数值 / 时间 domain；省略时从绑定数据推断  |
+| `singleValueSpan?` | `number`                                  | —      | 单值 domain 展开跨度；省略时按 scale 类型默认 |
+| `type`             | `'log'`                                   | —      | 对数位置 scale                                |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="symlog" label="属性 · 对称对数">
+
+<ApiTable>
+
+| 成员               | 类型                                      | 默认值 | 说明                                          |
+| ------------------ | ----------------------------------------- | ------ | --------------------------------------------- |
+| `base?`            | `never`                                   | —      | —                                             |
+| `constant?`        | `IRPlotSymlogScale['constant']`           | —      | 线性区宽度常数；省略时为 1                    |
+| `domain?`          | `[`<br />`number,`<br />`number`<br />`]` | —      | 显式数值 / 时间 domain；省略时从绑定数据推断  |
+| `singleValueSpan?` | `number`                                  | —      | 单值 domain 展开跨度；省略时按 scale 类型默认 |
+| `type`             | `'symlog'`                                | —      | 对称对数位置 scale                            |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="continuous" label="属性 · 连续映射">
+
+<ApiTable>
+
+| 成员               | 类型                                                               | 默认值 | 说明                                          |
+| ------------------ | ------------------------------------------------------------------ | ------ | --------------------------------------------- |
+| `base?`            | `never`                                                            | —      | —                                             |
+| `constant?`        | `never`                                                            | —      | —                                             |
+| `domain?`          | `[`<br />`number,`<br />`number`<br />`]`                          | —      | 显式数值 / 时间 domain；省略时从绑定数据推断  |
+| `singleValueSpan?` | `number`                                                           | —      | 单值 domain 展开跨度；省略时按 scale 类型默认 |
+| `type`             | `Exclude<InputPlotContinuousPositionScaleType, 'log' \| 'symlog'>` | —      | 除 log / symlog 外的连续位置 scale            |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="band" label="属性 · 分类带宽">
+
+<ApiTable>
+
+| 成员            | 类型                              | 默认值 | 说明                                                |
+| --------------- | --------------------------------- | ------ | --------------------------------------------------- |
+| `align?`        | `IRPlotBandScale['align']`        | —      | 首尾留白在范围两端的分配方式；省略时为 0.5          |
+| `domain?`       | `IRPlotBandScale['domain']`       | —      | 显式分类 domain；省略时按数据出现顺序推断           |
+| `paddingInner?` | `IRPlotBandScale['paddingInner']` | —      | 相邻 band 间距占 step 的比例；省略时为 0.1          |
+| `paddingOuter?` | `IRPlotBandScale['paddingOuter']` | —      | 首尾外侧留白占 step 的比例；省略时等于 paddingInner |
+| `type`          | `'band'`                          | —      | 分类带宽 scale 类型                                 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="point" label="属性 · 分类点位">
+
+<ApiTable>
+
+| 成员       | 类型                          | 默认值 | 说明                                        |
+| ---------- | ----------------------------- | ------ | ------------------------------------------- |
+| `align?`   | `IRPlotPointScale['align']`   | —      | 首尾留白在范围两端的分配方式；省略时为 0.5  |
+| `domain?`  | `IRPlotPointScale['domain']`  | —      | 显式分类 domain；省略时按数据出现顺序推断   |
+| `padding?` | `IRPlotPointScale['padding']` | —      | 首尾外侧留白占 step 的比例；省略时为 0.5    |
+| `type`     | `'point'`                     | —      | 分类点位 scale 类型；不接受连续 domain 配置 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type InputPlotScale = ContinuousScaleProps | BandScaleProps | PointScaleProps;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"InputPlotScaleDimension"} path={"packages/viz/plot-vanilla/src/normalize/plot/input-scales.ts"} startLine={10}>InputPlotScaleDimension</ApiSourceLink>
+
+```ts
+export type InputPlotScaleDimension = 'x' | 'y';
+```
+
+#### <ApiSourceLink label={"InputPlotPositionScaleType"} path={"packages/viz/plot-vanilla/src/normalize/plot/input-scales.ts"} startLine={13}>InputPlotPositionScaleType</ApiSourceLink>
+
+```ts
+export type InputPlotPositionScaleType = 'linear' | 'time' | 'band' | 'point' | 'log' | 'sqrt' | 'symlog' | 'radial';
+```
+
+## 比例尺配置
+
+#### <ApiSourceLink label={"IRPlotScale"} path={"packages/viz/plot/src/schemas/scale/types.ts"} startLine={83}>IRPlotScale</ApiSourceLink> / <ApiSourceLink label={"ScaleSchema"} path={"packages/viz/plot/src/schemas/scale/schema.ts"} startLine={424}>ScaleSchema</ApiSourceLink>
+
+<DocTabs defaultValue="definition">
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRPlotScale = ZodInfer<typeof ScaleSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+<ZodSchema name="ScaleSchema" description="所有 Plot 内置比例尺的判别联合。" />
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"IRPlotScaleOperation"} path={"packages/viz/plot/src/schemas/scale/types.ts"} startLine={89}>IRPlotScaleOperation</ApiSourceLink> / <ApiSourceLink label={"ScaleOperationSchema"} path={"packages/viz/plot/src/schemas/scale/schema.ts"} startLine={463}>ScaleOperationSchema</ApiSourceLink>
+
+<DocTabs defaultValue="definition">
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRPlotScaleOperation = ZodInfer<typeof ScaleOperationSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+<ZodSchema name="ScaleOperationSchema" description="内置比例尺或运行时注册自定义比例尺的联合。" />
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"IRPlotCustomScale"} path={"packages/viz/plot/src/schemas/scale/types.ts"} startLine={86}>IRPlotCustomScale</ApiSourceLink> / <ApiSourceLink label={"CustomScaleSchema"} path={"packages/viz/plot/src/schemas/scale/schema.ts"} startLine={445}>CustomScaleSchema</ApiSourceLink>
+
+<DocTabs defaultValue="definition">
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRPlotCustomScale = ZodInfer<typeof CustomScaleSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+<ZodSchema
+  name="CustomScaleSchema"
+  description="由运行时 ScaleDefinition 校验和消费的开放 JSON 比例尺操作。"
+  descriptions={{
+    type: '已注册的自定义比例尺类型，不得与内置类型冲突。',
+    name: '被坐标角色或非位置通道引用的比例尺名。',
+  }}
+/>
+
+</DocTab>
+
+</DocTabs>
+
+## 位置映射
+
+#### <ApiSourceLink label={"PositionScale"} path={"packages/viz/plot/src/contract/scale.ts"} startLine={35}>PositionScale</ApiSourceLink>
+
+把「band 起点 vs 中心」「bandwidth 是否为 0」「类别 vs 数值刻度」收进一层；
+下游（projector / guide / bar）只认 coordinate + bandwidth + ticks，不各自分支 scale 类型。
+连续 scale 使用 bandwidth=0 + coordinate=scale(value)，与 band / point scale 对齐到同一接口
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员                 | 类型                                                                | 默认值 | 说明                                                                                           |
+| -------------------- | ------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------- |
+| `readonly bandwidth` | `number`                                                            | —      | band 宽（连续 / point = 0；band = scale.bandwidth()）；getter 反映 setRange 后的最新值         |
+| `coordinate`         | `(value: unknown) => number`                                        | —      | 数据值 → 坐标（连续=scale(value)；band=band 中心；point=点位）；非法值返回 NaN，调用方据此跳过 |
+| `domain`             | `() => ReadonlyArray<IRDataScalarValue>`                            | —      | 当前输入域；连续 scale 返回 [min, max]，分类 scale 返回类别序列                                |
+| `range`              | `() => [`<br />`number,`<br />`number`<br />`]`                     | —      | 当前 range [start, end]（屏幕坐标，y 可能倒置）                                                |
+| `setRange`           | `(range: readonly [`<br />`number,`<br />`number`<br />`]) => void` | —      | 设置 range（显式 range 的 scale 由 expand 决定是否调用）                                       |
+| `readonly step`      | `number`                                                            | —      | 最终 range 下的离散刻度间距（band / point 为正 step；continuous 为 0）                         |
+| `tickKind?`          | `PositionTickKind`                                                  | —      | guide 标签格式化用的刻度值族；自定义 scale 可省略并保留原 tick 标签                            |
+| `ticks`              | `(count?: number) => TickSet`                                       | —      | 刻度 + 标签（连续走 scaleTicks；band / point = 每类别一刻度，落 band 中心 / 点位）             |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type PositionScale = {
+  coordinate: (value: unknown) => number;
+  domain: () => ReadonlyArray<IRDataScalarValue>;
+  readonly bandwidth: number;
+  readonly step: number;
+  ticks: (count?: number) => TickSet;
+  tickKind?: PositionTickKind;
+  range: () => [number, number];
+  setRange: (range: readonly [number, number]) => void;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"PositionScaleContinuity"} path={"packages/viz/plot/src/contract/scale.ts"} startLine={19}>PositionScaleContinuity</ApiSourceLink>
+
+```ts
+export const PositionScaleContinuity = {
+  Continuous: 'continuous',
+  Discrete: 'discrete',
+} as const;
+
+export type PositionScaleContinuity = ValueOf<typeof PositionScaleContinuity>;
+```
+
+#### <ApiSourceLink label={"PositionTickKind"} path={"packages/viz/plot/src/contract/scale.ts"} startLine={16}>PositionTickKind</ApiSourceLink>
+
+```ts
+export type PositionTickKind = 'number' | 'time' | 'category';
+```
+
+#### <ApiSourceLink label={"TickSet"} path={"packages/viz/plot/src/contract/scale.ts"} startLine={8}>TickSet</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员     | 类型                       | 默认值 | 说明                           |
+| -------- | -------------------------- | ------ | ------------------------------ |
+| `labels` | `Array<string>`            | —      | 与 values 逐项对应的格式化标签 |
+| `values` | `Array<IRDataScalarValue>` | —      | 按显示顺序排列的刻度原始值     |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type TickSet = {
+  values: Array<IRDataScalarValue>;
+  labels: Array<string>;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+## 连续位置比例尺
+
+#### <ApiSourceLink label={"IRPlotLinearScale"} path={"packages/viz/plot/src/schemas/scale/types.ts"} startLine={38}>IRPlotLinearScale</ApiSourceLink> / <ApiSourceLink label={"LinearScaleSchema"} path={"packages/viz/plot/src/schemas/scale/schema.ts"} startLine={95}>LinearScaleSchema</ApiSourceLink>
+
+<DocTabs defaultValue="definition">
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRPlotLinearScale = ZodInfer<typeof LinearScaleSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+<ZodSchema
+  name="LinearScaleSchema"
+  description="连续数值 domain 到 range 的线性映射。"
+  descriptions={{
+    type: '线性比例尺判别值。',
+    name: '被坐标角色引用的比例尺名。',
+    domain: '输入范围 [min, max]；省略时从绑定数据推断。',
+    range: '图区单位中的输出范围 [start, end]；省略时从坐标 extent 派生。',
+    nice: '是否把 domain 取整为易读数值。',
+    clamp: '是否把 domain 外输入夹到 range 端点。',
+    domainPadding: 'range / ratio 留白，或通过 mark 引用求解自动端；具体支持范围见正文。',
+    singleValueSpan: 'domain 只有单值时使用的备用跨度。',
+  }}
+/>
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"IRPlotTimeScale"} path={"packages/viz/plot/src/schemas/scale/types.ts"} startLine={50}>IRPlotTimeScale</ApiSourceLink> / <ApiSourceLink label={"TimeScaleSchema"} path={"packages/viz/plot/src/schemas/scale/schema.ts"} startLine={171}>TimeScaleSchema</ApiSourceLink>
+
+<DocTabs defaultValue="definition">
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRPlotTimeScale = ZodInfer<typeof TimeScaleSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+<ZodSchema
+  name="TimeScaleSchema"
+  description="从 epoch 毫秒时间到坐标 range 的连续映射。"
+  descriptions={{
+    type: '时间比例尺判别值。',
+    name: '被坐标角色引用的比例尺名。',
+    domain: 'epoch 毫秒 [start, end]；Date 实例不进入 IR。',
+    nice: '是否向外对齐到易读时间边界。',
+    clamp: '是否夹紧 domain 外时刻。',
+    domainPadding: 'range / ratio 留白，或通过 mark 引用求解自动端；具体支持范围见正文。',
+    singleValueSpan: '时间 domain 只有单值时的备用跨度。',
+  }}
+/>
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"IRPlotLogScale"} path={"packages/viz/plot/src/schemas/scale/types.ts"} startLine={53}>IRPlotLogScale</ApiSourceLink> / <ApiSourceLink label={"LogScaleSchema"} path={"packages/viz/plot/src/schemas/scale/schema.ts"} startLine={189}>LogScaleSchema</ApiSourceLink>
+
+<DocTabs defaultValue="definition">
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRPlotLogScale = ZodInfer<typeof LogScaleSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+<ZodSchema
+  name="LogScaleSchema"
+  description="只接受严格正 domain 的连续对数映射。"
+  descriptions={{
+    type: '对数比例尺判别值。',
+    name: '比例尺名。',
+    domain: '严格正的 [min, max]；省略时从正数数据推断。',
+    range: '图区单位中的输出范围。',
+    base: '大于 1 的对数底，默认 10。',
+    nice: '是否向外对齐到底数的整次幂。',
+    clamp: '是否夹紧 domain 外输入。',
+    domainPadding: '添加到 domain 的 range 单位留白，或显式 ratio 留白。',
+    singleValueSpan: '单值 domain 的备用跨度。',
+  }}
+/>
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"IRPlotPowScale"} path={"packages/viz/plot/src/schemas/scale/types.ts"} startLine={56}>IRPlotPowScale</ApiSourceLink> / <ApiSourceLink label={"PowScaleSchema"} path={"packages/viz/plot/src/schemas/scale/schema.ts"} startLine={211}>PowScaleSchema</ApiSourceLink>
+
+<DocTabs defaultValue="definition">
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRPlotPowScale = ZodInfer<typeof PowScaleSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+<ZodSchema
+  name="PowScaleSchema"
+  description="使用显式 exponent 的连续幂映射。"
+  descriptions={{
+    type: '幂比例尺判别值。',
+    name: '比例尺名。',
+    domain: '输入范围；非整数 exponent 要求非负 domain。',
+    range: '图区单位中的输出范围。',
+    exponent: '幂指数，默认 2。',
+    nice: '是否取整 domain。',
+    clamp: '是否夹紧 domain 外输入。',
+    domainPadding: '添加到 domain 的 range 单位留白，或显式 ratio 留白。',
+    singleValueSpan: '单值 domain 的备用跨度。',
+  }}
+/>
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"IRPlotSqrtScale"} path={"packages/viz/plot/src/schemas/scale/types.ts"} startLine={59}>IRPlotSqrtScale</ApiSourceLink> / <ApiSourceLink label={"SqrtScaleSchema"} path={"packages/viz/plot/src/schemas/scale/schema.ts"} startLine={229}>SqrtScaleSchema</ApiSourceLink>
+
+<DocTabs defaultValue="definition">
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRPlotSqrtScale = ZodInfer<typeof SqrtScaleSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+<ZodSchema
+  name="SqrtScaleSchema"
+  description="面积感知友好的平方根映射。"
+  descriptions={{
+    type: '平方根比例尺判别值。',
+    name: '比例尺名，也可被 size 通道引用。',
+    domain: '非负输入范围。',
+    range: '位置输出范围，或 size 通道的半径范围。',
+    nice: '是否取整 domain。',
+    clamp: '是否夹紧 domain 外输入。',
+    domainPadding: '添加到 domain 的 range 单位留白，或显式 ratio 留白。',
+    singleValueSpan: '单值 domain 的备用跨度。',
+  }}
+/>
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"IRPlotSymlogScale"} path={"packages/viz/plot/src/schemas/scale/types.ts"} startLine={62}>IRPlotSymlogScale</ApiSourceLink> / <ApiSourceLink label={"SymlogScaleSchema"} path={"packages/viz/plot/src/schemas/scale/schema.ts"} startLine={252}>SymlogScaleSchema</ApiSourceLink>
+
+<DocTabs defaultValue="definition">
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRPlotSymlogScale = ZodInfer<typeof SymlogScaleSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+<ZodSchema
+  name="SymlogScaleSchema"
+  description="零附近线性、两端对数的对称映射，允许负值和零。"
+  descriptions={{
+    type: '对称对数比例尺判别值。',
+    name: '比例尺名。',
+    domain: '可以穿过零或完全为负的输入范围。',
+    range: '图区单位中的输出范围。',
+    constant: '零附近线性区宽度，默认 1。',
+    nice: '是否取整 domain。',
+    clamp: '是否夹紧 domain 外输入。',
+    domainPadding: '添加到 domain 的 range 单位留白，或显式 ratio 留白。',
+    singleValueSpan: '单值 domain 的备用跨度。',
+  }}
+/>
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"IRPlotRadialScale"} path={"packages/viz/plot/src/schemas/scale/types.ts"} startLine={65}>IRPlotRadialScale</ApiSourceLink> / <ApiSourceLink label={"RadialScaleSchema"} path={"packages/viz/plot/src/schemas/scale/schema.ts"} startLine={279}>RadialScaleSchema</ApiSourceLink>
+
+<DocTabs defaultValue="definition">
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRPlotRadialScale = ZodInfer<typeof RadialScaleSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+<ZodSchema
+  name="RadialScaleSchema"
+  description="让所编码面积与数值成正比的径向映射。"
+  descriptions={{
+    type: '径向比例尺判别值。',
+    name: '比例尺名，通常被极坐标 radius 角色引用。',
+    domain: '输入范围。',
+    range: '图区单位中的 [innerRadius, outerRadius]。',
+    nice: '是否取整 domain。',
+    clamp: '是否夹紧 domain 外输入。',
+    domainPadding: '添加到 domain 的 range 单位留白，或显式 ratio 留白。',
+    singleValueSpan: '单值 domain 的备用跨度。',
+  }}
+/>
+
+</DocTab>
+
+</DocTabs>
+
+## 离散比例尺
+
+#### <ApiSourceLink label={"IRPlotBandScale"} path={"packages/viz/plot/src/schemas/scale/types.ts"} startLine={41}>IRPlotBandScale</ApiSourceLink> / <ApiSourceLink label={"BandScaleSchema"} path={"packages/viz/plot/src/schemas/scale/schema.ts"} startLine={110}>BandScaleSchema</ApiSourceLink>
+
+<DocTabs defaultValue="definition">
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRPlotBandScale = ZodInfer<typeof BandScaleSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+<ZodSchema
+  name="BandScaleSchema"
+  description="把分类集映射到等宽带区的比例尺。"
+  descriptions={{
+    domainPadding: '分类间距之外的输出范围留白',
+    type: '带状比例尺判别值。',
+    name: '被坐标角色引用的比例尺名。',
+    domain: '有序分类列表；省略时按数据出现顺序推断。',
+    paddingInner: '相邻带区之间占 step 的间隔比例。',
+    paddingOuter: '首尾外侧占 step 的间隔比例。',
+    align: '外侧空间的分布方式，默认居中。',
+  }}
+/>
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"IRPlotPointScale"} path={"packages/viz/plot/src/schemas/scale/types.ts"} startLine={44}>IRPlotPointScale</ApiSourceLink> / <ApiSourceLink label={"PointScaleSchema"} path={"packages/viz/plot/src/schemas/scale/schema.ts"} startLine={133}>PointScaleSchema</ApiSourceLink>
+
+<DocTabs defaultValue="definition">
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRPlotPointScale = ZodInfer<typeof PointScaleSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+<ZodSchema
+  name="PointScaleSchema"
+  description="把分类值放在等距零带宽位置的比例尺。"
+  descriptions={{
+    domainPadding: '分类间距之外的输出范围留白',
+    type: '点比例尺判别值。',
+    name: '被坐标角色引用的比例尺名。',
+    domain: '有序分类列表；省略时按数据出现顺序推断。',
+    padding: '首尾外侧占 step 的间隔比例。',
+    align: '外侧空间的分布方式，默认居中。',
+  }}
+/>
+
+`PositionScale` 运行时契约同时暴露 `bandwidth` 与最终 range 下的只读 `step`。`band` / `point` 的 `step` 是正离散刻度间距，连续位置 scale 固定为 `0`；Position Adjustment 的 ratio span 只消费这个实时值，不用零宽的 point `bandwidth` 代替。
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"IRPlotOrdinalScale"} path={"packages/viz/plot/src/schemas/scale/types.ts"} startLine={47}>IRPlotOrdinalScale</ApiSourceLink> / <ApiSourceLink label={"OrdinalScaleSchema"} path={"packages/viz/plot/src/schemas/scale/schema.ts"} startLine={149}>OrdinalScaleSchema</ApiSourceLink>
+
+<DocTabs defaultValue="definition">
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRPlotOrdinalScale = ZodInfer<typeof OrdinalScaleSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+<ZodSchema
+  name="OrdinalScaleSchema"
+  description="离散 domain 到离散 range 的序数映射，常用于 series 颜色。"
+  descriptions={{
+    rangeIndex: '分类索引到输出范围的循环映射',
+    'rangeIndex.step': '索引步长，正整数，默认 1',
+    'rangeIndex.offset': '索引偏移，非负整数，默认 0',
+    type: '序数比例尺判别值。',
+    name: '被非位置通道引用的比例尺名。',
+    domain: '有序分类列表。',
+    range: '循环分配给 domain 的输出值；省略时使用默认分类色板。',
+  }}
+/>
+
+</DocTab>
+
+</DocTabs>
+
+## 颜色比例尺
+
+#### <ApiSourceLink label={"IRPlotSequentialColorScale"} path={"packages/viz/plot/src/schemas/scale/types.ts"} startLine={68}>IRPlotSequentialColorScale</ApiSourceLink> / <ApiSourceLink label={"SequentialColorScaleSchema"} path={"packages/viz/plot/src/schemas/scale/schema.ts"} startLine={300}>SequentialColorScaleSchema</ApiSourceLink>
+
+<DocTabs defaultValue="definition">
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRPlotSequentialColorScale = ZodInfer<typeof SequentialColorScaleSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+<ZodSchema
+  name="SequentialColorScaleSchema"
+  description="单调数量到单向连续色带的映射。"
+  descriptions={{
+    type: '顺序颜色比例尺判别值。',
+    name: '被 color 通道引用的比例尺名。',
+    domain: '连续输入范围；省略时从绑定字段推断。',
+    scheme: '用于插值的内置或已注册色方案名，默认 viridis。',
+    range: '覆盖 scheme 的 [low, high] 端点颜色。',
+    nice: '是否取整 domain。',
+    clamp: '是否夹紧 domain 外输入。',
+  }}
+/>
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"IRPlotDivergingColorScale"} path={"packages/viz/plot/src/schemas/scale/types.ts"} startLine={71}>IRPlotDivergingColorScale</ApiSourceLink> / <ApiSourceLink label={"DivergingColorScaleSchema"} path={"packages/viz/plot/src/schemas/scale/schema.ts"} startLine={325}>DivergingColorScaleSchema</ApiSourceLink>
+
+<DocTabs defaultValue="definition">
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRPlotDivergingColorScale = ZodInfer<typeof DivergingColorScaleSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+<ZodSchema
+  name="DivergingColorScaleSchema"
+  description="围绕有意义中点的连续数量到双向色带的映射。"
+  descriptions={{
+    type: '发散颜色比例尺判别值。',
+    name: '被 color 通道引用的比例尺名。',
+    domain: '严格递增的 [low, mid, high]。',
+    scheme: '围绕中点插值的发散色方案名，默认 rdbu。',
+    range: '覆盖 scheme 的 [low, mid, high] 颜色。',
+    nice: '是否取整 domain。',
+    clamp: '是否夹紧 domain 外输入。',
+  }}
+/>
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"IRPlotQuantizeColorScale"} path={"packages/viz/plot/src/schemas/scale/types.ts"} startLine={74}>IRPlotQuantizeColorScale</ApiSourceLink> / <ApiSourceLink label={"QuantizeColorScaleSchema"} path={"packages/viz/plot/src/schemas/scale/schema.ts"} startLine={350}>QuantizeColorScaleSchema</ApiSourceLink>
+
+<DocTabs defaultValue="definition">
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRPlotQuantizeColorScale = ZodInfer<typeof QuantizeColorScaleSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+<ZodSchema
+  name="QuantizeColorScaleSchema"
+  description="把连续 domain 切成等宽 bin，每个 bin 映射到一种离散颜色。"
+  descriptions={{
+    type: '等宽量化颜色比例尺判别值。',
+    name: '被 color 通道引用的比例尺名。',
+    domain: '被等宽切分的 [min, max]。',
+    count: 'bin 数，默认 5；显式 range 时必须与其长度一致。',
+    scheme: '被采样为离散颜色的色方案名。',
+    range: '覆盖 scheme 的显式 bin 颜色。',
+  }}
+/>
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"IRPlotThresholdColorScale"} path={"packages/viz/plot/src/schemas/scale/types.ts"} startLine={77}>IRPlotThresholdColorScale</ApiSourceLink> / <ApiSourceLink label={"ThresholdColorScaleSchema"} path={"packages/viz/plot/src/schemas/scale/schema.ts"} startLine={378}>ThresholdColorScaleSchema</ApiSourceLink>
+
+<DocTabs defaultValue="definition">
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRPlotThresholdColorScale = ZodInfer<typeof ThresholdColorScaleSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+<ZodSchema
+  name="ThresholdColorScaleSchema"
+  description="用显式阈值切分数值范围，每个 bin 映射到一种颜色。"
+  descriptions={{
+    type: '阈值颜色比例尺判别值。',
+    name: '被 color 通道引用的比例尺名。',
+    breakpoints: '严格递增的有限阈值，产生 length + 1 个 bin。',
+    scheme: '采样为 bin 颜色的色方案名。',
+    range: '显式 bin 颜色，长度必须等于 breakpoints.length + 1。',
+  }}
+/>
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"IRPlotQuantileColorScale"} path={"packages/viz/plot/src/schemas/scale/types.ts"} startLine={80}>IRPlotQuantileColorScale</ApiSourceLink> / <ApiSourceLink label={"QuantileColorScaleSchema"} path={"packages/viz/plot/src/schemas/scale/schema.ts"} startLine={401}>QuantileColorScaleSchema</ApiSourceLink>
+
+<DocTabs defaultValue="definition">
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRPlotQuantileColorScale = ZodInfer<typeof QuantileColorScaleSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+<ZodSchema
+  name="QuantileColorScaleSchema"
+  description="按分位数把数据切成样本数近似相等的 bin。"
+  descriptions={{
+    type: '分位数颜色比例尺判别值。',
+    name: '被 color 通道引用的比例尺名。',
+    count: '分位数 bin 数，默认 5；显式 range 时必须与其长度一致。',
+    scheme: '采样为 bin 颜色的色方案名。',
+    range: '覆盖 scheme 的显式 bin 颜色。',
+  }}
+/>
+
+</DocTab>
+
+</DocTabs>
+
+## 域留白与辅助值
+
+#### <ApiSourceLink label={"IRPlotDomainPadding"} path={"packages/viz/plot/src/schemas/scale/types.ts"} startLine={35}>IRPlotDomainPadding</ApiSourceLink> / <ApiSourceLink label={"DomainPaddingSchema"} path={"packages/viz/plot/src/schemas/scale/schema.ts"} startLine={77}>DomainPaddingSchema</ApiSourceLink>
+
+<DocTabs defaultValue="definition">
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRPlotDomainPadding = ZodInfer<typeof DomainPaddingSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+连续位置比例尺共用 `domainPadding` 和 `singleValueSpan`。`domainPadding` 的裸数字与省略 kind 的对象使用 range 单位；`kind: 'ratio'` 才使用原始 domain 跨度比例。两种 domain 来源默认都不扩展。
+
+`kind: 'mark'` 引用具名图元按外缘求解自动端，可选 `lower` / `upper` 固定一端。内置支持 linear/time 与无 placement 的 Cartesian2D；能力和失败边界见 [按图元外缘留白](/viz/plot/scale/position#按图元外缘留白)。
+
+mark 分支的 `clearance` 是图元外缘到自动边界的最小净空，使用非负 range 单位，默认 `0`。例如 `{ kind: 'mark', marks: ['dots'], clearance: 8 }`。固定端不叠加净空；空有效点集不扩域，净空过大导致无解时会报错。
+
+`clearance` 支持数值或 `{ lower?: number, upper?: number }`；数值同时用于两端，对象未指定端为 `0`。这里的 lower / upper 对应 domain 起止端，跟随 range 方向，不固定对应视觉左右；Chart 负责将四边净空转换为各轴的这两个端。
+
+<ZodSchema
+  name="DomainPaddingSchema"
+  description="使用 range 输出单位或显式 domain 比例，为连续 domain 两端增加留白。"
+  descriptions={{
+    kind: '留白单位；省略时为 range，ratio 必须显式声明。',
+    lower: 'domain 下端的非负留白；ratio 时必须小于 1。',
+    upper: 'domain 上端的非负留白；ratio 时必须小于 1。',
+  }}
+/>
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"IRPlotCategoryValue"} path={"packages/viz/plot/src/schemas/scale/types.ts"} startLine={32}>IRPlotCategoryValue</ApiSourceLink> / <ApiSourceLink label={"CategoryValueSchema"} path={"packages/viz/plot/src/schemas/scale/schema.ts"} startLine={25}>CategoryValueSchema</ApiSourceLink>
+
+<DocTabs defaultValue="definition">
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRPlotCategoryValue = ZodInfer<typeof CategoryValueSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+<ZodSchema name="CategoryValueSchema" description="Band / Point domain 中的字符串或数值分类值。" />
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"ColorSchemeNameSchema"} path={"packages/viz/plot/src/schemas/scale/schema.ts"} startLine={20}>ColorSchemeNameSchema</ApiSourceLink>
+
+<ZodSchema name="ColorSchemeNameSchema" description="内置色方案名，或通过 options.colorSchemes 注册的名称。" />

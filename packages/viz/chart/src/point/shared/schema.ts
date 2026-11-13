@@ -116,13 +116,6 @@ export const PointPropertiesWithoutSizeSchema = PointPropertiesSchema.omit({ siz
   'Point Chart constant properties without size',
 );
 
-/** Point recipe 生成默认 guide 的稀疏控制项 */
-export const PointRecipeGuidesSchema = strictObject({
-  axis: boolean().optional().describe('Whether the recipe generates default axis guides'),
-  grid: boolean().optional().describe('Whether generated axis guides include grid lines'),
-  legend: boolean().optional().describe('Whether the recipe generates default legend guides'),
-}).describe('Sparse Point recipe guide generation controls');
-
 /**
  * 为具体 chartType 创建精确的 Point authored mark schema
  * @template TKind mark kind 判别字段的字面量类型
@@ -148,5 +141,3 @@ export const createPointChartMarkSchema = <
 export type IRPointProperties = ZodInfer<typeof PointPropertiesSchema>;
 
 export type IRPointPositionDomainPadding = ZodInfer<typeof PointPositionDomainPaddingSchema>;
-
-export type IRPointRecipeGuides = ZodInfer<typeof PointRecipeGuidesSchema>;

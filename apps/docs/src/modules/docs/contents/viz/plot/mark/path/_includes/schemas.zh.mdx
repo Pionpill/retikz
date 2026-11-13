@@ -1,0 +1,75 @@
+## PathMarkSchema
+
+<ZodSchema
+  name="PathMarkSchema"
+  description="按顺序连接数据点形成一条或多条一维路径。"
+  descriptions={{
+    defaultColorIndex: '默认分类色索引；省略时按默认颜色分组分配',
+    type: '路径图元判别值。',
+    order: '连接顺序字段；省略时使用数组顺序。',
+    series: '按不同值拆分多条路径的 series 字段。',
+    closed: '是否把末点连回起点。',
+    connectNulls: '是否跨过无效投影点连接；开放无填充路径支持描边对象，仅覆盖缺值连接段，默认虚线。',
+    closure: '循环、常量基线或每行堆叠基线的闭合策略。',
+    curve: '相邻有序点的连接曲线。',
+    interpolation: 'polar2D 相邻位置的连接空间覆盖；省略时继承 coordinate。',
+    strokeWidth: '路径描边宽度。',
+    opacity: '路径整体不透明度。',
+    lineCap: '路径端点样式。',
+    lineJoin: '路径连接处样式。',
+    cornerRadius: '几何圆角半径。',
+    fill: 'Core Path 填充 paint。',
+    stroke: 'Core Path 描边 paint。',
+    'opacity.stroke': 'Core Path 描边不透明度。',
+    zIndex: 'Core Path 叠放顺序。',
+    rotate: 'Core Path 旋转角度。',
+    scale: 'Core Path 缩放。',
+    fillRule: 'Core Path 填充规则。',
+    marks: '沿 lowering 路径放置的静态 Core Path marks。',
+    dashPattern: 'Core Path 虚线数组。',
+    shadow: 'Core Path 阴影。',
+    blendMode: 'Core Path 混合模式。',
+    anchorId: '为路径上每数据 Coordinate 生成稳定 id 的规则。',
+    id: '可选图元 id。',
+    defaultColorGroup: '省略显式颜色时共享同一个顺序色板槽位的语义组。',
+    layer: '外层 Scope 图层覆盖。',
+    coordinateView: '用于投影的坐标视图 id。',
+    transform: '图元局部变换链。',
+    label: '附着在路径几何上的标签。',
+    encoding: '路径的位置与颜色通道。',
+  }}
+/>
+
+## PlotPathStepSchema
+
+<ZodSchema
+  name="PlotPathStepSchema"
+  description="数据位置先投影，再沿用 Core 步骤构造路径。每项用 kind 区分，不需要 type 字段。"
+/>
+
+目标位置接受 Core 绘图坐标、Plot 数据位置或图元引用；贝塞尔控制点只接受绝对坐标或数据位置。详细写法见[路径构造](/viz/plot/mark/path#路径构造)。
+
+## PathClosureSchema
+
+<ZodSchema name="PathClosureSchema" description="直接回到起点、回到常量基线，或回到每行堆叠基线的闭合联合。" />
+
+## MarkPathLabelSchema
+
+<ZodSchema
+  name="MarkPathLabelSchema"
+  description="附着在路径类几何 host 上的 Plot 标签。"
+  descriptions={{
+    textColor: '标签文本颜色。',
+    opacity: '标签自身不透明度，与所属路径相乘。',
+    font: '标签字体覆盖。',
+    position: '沿 host 的关键词或 0..1 归一化位置。',
+    side: '相对标签锚点的标准侧。',
+    sloped: '是否沿采样切线旋转。',
+    interrupt: '是否请求在兼容宿主的描边中形成断口；省略时由宿主策略决定。',
+    gap: '断口两侧的额外留白，单位为用户单位，默认 4。',
+    placement: '外侧偏移或区域 host 内部放置。',
+    distance: '标签侧向偏移距离。',
+    text: '固定标签文本；编码内容写入 encodings.label 的相同索引。',
+    displayFormat: '字段内容的显示格式。',
+  }}
+/>

@@ -4,7 +4,7 @@ import { createDataView } from '../model';
 import type { AnySynchronousStatisticsReducerImplementation } from '../operators/reducer';
 import { resolveStatisticsReducerImplementationRegistry } from '../operators/reducer';
 import type { AnySynchronousRegressionImplementation } from '../operators/regression';
-import { resolveRegressionImplementationRegistry } from '../operators/regression';
+import { resolveRegressionImplementationRegistry, hasRegressionImplementations } from '../operators/regression';
 import type { AnySynchronousRowSelectorImplementation } from '../operators/selector';
 import { resolveRowSelectorImplementationRegistry } from '../operators/selector';
 import type { DataLineageOptions, DataLineageRun } from '../provenance';
@@ -134,6 +134,11 @@ const applyToView = (
       throw new RetikzDataError(`data: "${stage.operation.kind}" has no matching synchronous implementation`);
 
     for (const dependency of stage.dependencies) {
+      if (
+        dependency.type === 'regression' &&
+        !hasRegressionImplementations(dependency, context.regressionImplementationRegistry ?? new Map(), 'sync')
+      )
+        throw new RetikzDataError('data: regression dependency has no matching synchronous implementation');
       const matched =
         dependency.type === 'reducer'
           ? context.statisticsReducerImplementationRegistry?.get(dependency.operation.kind)
@@ -159,7 +164,10 @@ const applyToView = (
     const previous = rows;
 
     try {
-      rows = implementations[operationIndex].apply(rows, stage.operation as never, context);
+      rows = implementations[operationIndex].apply(rows, stage.operation as never, {
+        ...context,
+        regressionDependencies: stage.dependencies.filter(dependency => dependency.type === 'regression'),
+      });
     } catch (cause) {
       throw new RetikzDataError(
         `data: transform at index ${operationIndex} failed${cause instanceof RetikzDataError ? `: ${cause.message}` : ''}`,

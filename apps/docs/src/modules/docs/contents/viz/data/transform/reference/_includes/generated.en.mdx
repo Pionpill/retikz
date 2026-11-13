@@ -65,7 +65,7 @@ This schema checks the JSON shape. The registered Definition validates exact par
 
 ## Transform definitions and implementations
 
-#### <ApiSourceLink label={"TransformDefinition"} path={"packages/viz/data/src/transform/contract.ts"} startLine={146}>TransformDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"TransformDefinition"} path={"packages/viz/data/src/transform/contract.ts"} startLine={152}>TransformDefinition</ApiSourceLink>
 
 Definitions stay outside JSON IR; IRDataTransform stores only &#123; kind, params &#125;
 
@@ -106,7 +106,7 @@ export type TransformDefinition<TTransform extends IRDataTransform = IRDataTrans
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InputTransformDefinition"} path={"packages/viz/data/src/transform/contract.ts"} startLine={166}>InputTransformDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"InputTransformDefinition"} path={"packages/viz/data/src/transform/contract.ts"} startLine={172}>InputTransformDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -152,7 +152,7 @@ export type InputTransformDefinition<
 
 </DocTabs>
 
-#### <ApiSourceLink label={"AnyTransformDefinition"} path={"packages/viz/data/src/transform/contract.ts"} startLine={197}>AnyTransformDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"AnyTransformDefinition"} path={"packages/viz/data/src/transform/contract.ts"} startLine={203}>AnyTransformDefinition</ApiSourceLink>
 
 Stores definitions with different operation generics; parse with the matching schema before calling
 
@@ -194,7 +194,7 @@ export type AnyTransformDefinition = Omit<
 
 </DocTabs>
 
-#### <ApiSourceLink label={"TransformSemanticContext"} path={"packages/viz/data/src/transform/contract.ts"} startLine={130}>TransformSemanticContext</ApiSourceLink>
+#### <ApiSourceLink label={"TransformSemanticContext"} path={"packages/viz/data/src/transform/contract.ts"} startLine={136}>TransformSemanticContext</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -228,7 +228,7 @@ export type TransformSemanticContext = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"TransformImplementation"} path={"packages/viz/data/src/transform/contract.ts"} startLine={218}>TransformImplementation</ApiSourceLink>
+#### <ApiSourceLink label={"TransformImplementation"} path={"packages/viz/data/src/transform/contract.ts"} startLine={224}>TransformImplementation</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -263,7 +263,7 @@ export type TransformImplementation<
 
 </DocTabs>
 
-#### <ApiSourceLink label={"AnyTransformImplementation"} path={"packages/viz/data/src/transform/contract.ts"} startLine={243}>AnyTransformImplementation</ApiSourceLink>
+#### <ApiSourceLink label={"AnyTransformImplementation"} path={"packages/viz/data/src/transform/contract.ts"} startLine={249}>AnyTransformImplementation</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -297,7 +297,7 @@ export type AnyTransformImplementation = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"AnySynchronousTransformImplementation"} path={"packages/viz/data/src/transform/contract.ts"} startLine={255}>AnySynchronousTransformImplementation</ApiSourceLink>
+#### <ApiSourceLink label={"AnySynchronousTransformImplementation"} path={"packages/viz/data/src/transform/contract.ts"} startLine={261}>AnySynchronousTransformImplementation</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -327,7 +327,7 @@ export type AnySynchronousTransformImplementation = Readonly<Omit<AnyTransformIm
 
 </DocTabs>
 
-#### <ApiSourceLink label={"TransformContext"} path={"packages/viz/data/src/transform/contract.ts"} startLine={104}>TransformContext</ApiSourceLink>
+#### <ApiSourceLink label={"TransformContext"} path={"packages/viz/data/src/transform/contract.ts"} startLine={108}>TransformContext</ApiSourceLink>
 
 Custom transforms use these helpers to read and write provenance. Row-preserving transforms can usually pass through row objects to retain sourceIndex. Outputs representing groups of input rows must use groupProvenance to attach sourceIndices. Generated rows without source rows may have no provenance
 
@@ -343,6 +343,7 @@ Custom transforms use these helpers to read and write provenance. Row-preserving
 | `lineage?`                                 | `DataLineageRecorder`                                                | —       | Lineage recorder; transform, reducer, and selector events are not recorded when omitted               |
 | `readSourceIndex`                          | `(row: ExternalRow) => number \| undefined`                          | —       | Reads a single-row source index; returns undefined when provenance is disabled or the row is unmarked |
 | `readSourceIndices`                        | `(row: ExternalRow) => Array<number> \| undefined`                   | —       | Reads group source indices that may be carried by bin, summarize, or custom row-changing outputs      |
+| `regressionDependencies?`                  | `ReadonlyArray<RegressionDependency>`                                | —       | Precisely parsed regression dependencies for the current stage                                        |
 | `regressionImplementationRegistry?`        | `ReadonlyMap<string, AnySynchronousRegressionImplementation>`        | —       | Synchronous regression implementations for this request                                               |
 | `regressionRegistry?`                      | `ReadonlyMap<string, AnyRegressionDefinition>`                       | —       | Regression Definition registry for the current run                                                    |
 | `rowSelectorImplementationRegistry?`       | `ReadonlyMap<string, AnySynchronousRowSelectorImplementation>`       | —       | Synchronous selector implementations for this request                                                 |
@@ -359,6 +360,7 @@ Custom transforms use these helpers to read and write provenance. Row-preserving
 
 ```ts
 export type TransformContext = {
+  regressionDependencies?: ReadonlyArray<RegressionDependency>;
   readSourceIndex: (row: ExternalRow) => number | undefined;
   readSourceIndices: (row: ExternalRow) => Array<number> | undefined;
   groupProvenance: (out: ExternalRow, members: Array<ExternalRow>) => ExternalRow;
@@ -387,7 +389,7 @@ export const DEFAULT_TRANSFORM_CONTEXT: Readonly<TransformContext> = Object.free
 });
 ```
 
-#### <ApiSourceLink label={"defineTransform"} path={"packages/viz/data/src/transform/contract.ts"} startLine={183}>defineTransform</ApiSourceLink>
+#### <ApiSourceLink label={"defineTransform"} path={"packages/viz/data/src/transform/contract.ts"} startLine={189}>defineTransform</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -445,7 +447,7 @@ export declare const defineTransform: <
 
 </DocTabs>
 
-#### <ApiSourceLink label={"defineTransformImplementation"} path={"packages/viz/data/src/transform/contract.ts"} startLine={235}>defineTransformImplementation</ApiSourceLink>
+#### <ApiSourceLink label={"defineTransformImplementation"} path={"packages/viz/data/src/transform/contract.ts"} startLine={241}>defineTransformImplementation</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -479,7 +481,7 @@ export declare const defineTransformImplementation: <
 
 </DocTabs>
 
-#### <ApiSourceLink label={"extractTransformKind"} path={"packages/viz/data/src/transform/contract.ts"} startLine={268}>extractTransformKind</ApiSourceLink>
+#### <ApiSourceLink label={"extractTransformKind"} path={"packages/viz/data/src/transform/contract.ts"} startLine={274}>extractTransformKind</ApiSourceLink>
 
 The Definition schema must be a ZodObject with kind: z.literal('&lt;transform-kind>'); that literal is the unique registry key
 
@@ -509,7 +511,7 @@ export declare const extractTransformKind: (schema: ZodType) => string;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"resolveTransformRegistry"} path={"packages/viz/data/src/transform/definitions.ts"} startLine={529}>resolveTransformRegistry</ApiSourceLink>
+#### <ApiSourceLink label={"resolveTransformRegistry"} path={"packages/viz/data/src/transform/definitions.ts"} startLine={525}>resolveTransformRegistry</ApiSourceLink>
 
 Built-ins are registered first; custom Definitions cannot override built-in kinds or duplicate one another
 
@@ -541,7 +543,7 @@ export declare const resolveTransformRegistry: (
 
 </DocTabs>
 
-#### <ApiSourceLink label={"resolveTransformImplementationRegistry"} path={"packages/viz/data/src/transform/definitions.ts"} startLine={571}>resolveTransformImplementationRegistry</ApiSourceLink>
+#### <ApiSourceLink label={"resolveTransformImplementationRegistry"} path={"packages/viz/data/src/transform/definitions.ts"} startLine={567}>resolveTransformImplementationRegistry</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1321,7 +1323,7 @@ export declare const resolveStatisticsReducerImplementationRegistry: <
 
 ## Regression fitting
 
-#### <ApiSourceLink label={"IRRegressionMethod"} path={"packages/viz/data/src/operators/regression/schema.ts"} startLine={41}>IRRegressionMethod</ApiSourceLink> / <ApiSourceLink label={"RegressionMethodSchema"} path={"packages/viz/data/src/operators/regression/schema.ts"} startLine={22}>RegressionMethodSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRRegressionMethod"} path={"packages/viz/data/src/operators/regression/schema.ts"} startLine={58}>IRRegressionMethod</ApiSourceLink> / <ApiSourceLink label={"RegressionMethodSchema"} path={"packages/viz/data/src/operators/regression/schema.ts"} startLine={24}>RegressionMethodSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1329,10 +1331,10 @@ export declare const resolveStatisticsReducerImplementationRegistry: <
 
 <ApiTable>
 
-| Member          | Type                                                                                                                                                                                                                         | Default | Description                       |
-| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | --------------------------------- |
-| `kind`          | `OpenString<ValueOf<{ readonly Linear: "linear"; readonly Quadratic: "quadratic"; readonly Polynomial: "polynomial"; readonly Logarithmic: "logarithmic"; readonly Exponential: "exponential"; readonly Power: "power"; }>>` | —       | Registered regression method kind |
-| Index signature | `[key: string]: import("@retikz/foundation").JsonValue`                                                                                                                                                                      | —       | —                                 |
+| Member          | Type                                                                                                                                                                                                                                                | Default | Description                       |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | --------------------------------- |
+| `kind`          | `OpenString<ValueOf<{ readonly Auto: "auto"; readonly Linear: "linear"; readonly Quadratic: "quadratic"; readonly Polynomial: "polynomial"; readonly Logarithmic: "logarithmic"; readonly Exponential: "exponential"; readonly Power: "power"; }>>` | —       | Registered regression method kind |
+| Index signature | `[key: string]: import("@retikz/foundation").JsonValue`                                                                                                                                                                                             | —       | —                                 |
 
 </ApiTable>
 
@@ -1386,6 +1388,160 @@ export type RegressionPair = Readonly<{
 
 </DocTabs>
 
+#### <ApiSourceLink label={"RegressionScore"} path={"packages/viz/data/src/operators/regression/evaluate.ts"} startLine={5}>RegressionScore</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member                      | Type             | Default | Description                                                    |
+| --------------------------- | ---------------- | ------- | -------------------------------------------------------------- |
+| `readonly meanSquaredError` | `number`         | —       | Mean squared error on the same observations                    |
+| `readonly rSquared`         | `number \| null` | —       | Coefficient of determination; undefined for constant responses |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type RegressionScore = Readonly<{
+  rSquared: number | null;
+  meanSquaredError: number;
+}>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"evaluateRegression"} path={"packages/viz/data/src/operators/regression/evaluate.ts"} startLine={26}>evaluateRegression</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name    | Type / signature                | Description |
+| ---------- | ------- | ------------------------------- | ----------- |
+| Parameters | `pairs` | `ReadonlyArray<RegressionPair>` | —           |
+|            | `model` | `RegressionModel`               | —           |
+| Returns    | —       | `RegressionScore`               | —           |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export declare const evaluateRegression: (
+  pairs: ReadonlyArray<RegressionPair>,
+  model: RegressionModel,
+) => RegressionScore;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"RegressionFitOptions"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={22}>RegressionFitOptions</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member             | Type                                               | Default | Description                                   |
+| ------------------ | -------------------------------------------------- | ------- | --------------------------------------------- |
+| `readonly extent?` | `readonly [`<br />`number,`<br />`number`<br />`]` | —       | Final prediction extent for the current group |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type RegressionFitOptions = Readonly<{
+  extent?: readonly [number, number];
+}>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"RegressionFitContext"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={28}>RegressionFitContext</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member                    | Type                                                              | Default | Description                                                                       |
+| ------------------------- | ----------------------------------------------------------------- | ------- | --------------------------------------------------------------------------------- |
+| `TModel` (Type parameter) | `= RegressionModel \| Promise<RegressionModel>`                   | —       | —                                                                                 |
+| `readonly extent?`        | `readonly [`<br />`number,`<br />`number`<br />`]`                | —       | Final prediction extent for the current group                                     |
+| `readonly fitRegression`  | `(index: number, pairs: ReadonlyArray<RegressionPair>) => TModel` | —       | Fits a dependency by its declared index, inheriting the current prediction extent |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type RegressionFitContext<TModel = RegressionModel | Promise<RegressionModel>> = RegressionFitOptions &
+  Readonly<{
+    fitRegression: (index: number, pairs: ReadonlyArray<RegressionPair>) => TModel;
+  }>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"RegressionDependency"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={35}>RegressionDependency</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member                  | Type                                  | Default | Description                                        |
+| ----------------------- | ------------------------------------- | ------- | -------------------------------------------------- |
+| `readonly definition`   | `AnyRegressionDefinition`             | —       | Definition identity for this request               |
+| `readonly dependencies` | `ReadonlyArray<RegressionDependency>` | —       | Transitive dependencies preserving candidate order |
+| `readonly operation`    | `IRRegressionMethod`                  | —       | Precisely parsed method declaration                |
+| `readonly type`         | `'regression'`                        | —       | Data computation dependency category               |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type RegressionDependency = Readonly<{
+  type: 'regression';
+  operation: IRRegressionMethod;
+  definition: AnyRegressionDefinition;
+  dependencies: ReadonlyArray<RegressionDependency>;
+}>;
+```
+
+</DocTab>
+
+</DocTabs>
+
 #### <ApiSourceLink label={"RegressionModel"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={16}>RegressionModel</ApiSourceLink>
 
 <DocTabs defaultValue="members">
@@ -1414,7 +1570,7 @@ export type RegressionModel = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"RegressionResolution"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={118}>RegressionResolution</ApiSourceLink>
+#### <ApiSourceLink label={"RegressionResolution"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={185}>RegressionResolution</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1422,10 +1578,10 @@ export type RegressionModel = Readonly<{
 
 <ApiTable>
 
-| Member                    | Type                                                                 | Default | Description                                                                                         |
-| ------------------------- | -------------------------------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------- |
-| `readonly fit`            | `(pairs: ReadonlyArray<RegressionPair>) => RegressionModel`          | —       | Fits the current group and returns a model with wrapped errors and nonfinite-prediction diagnostics |
-| `readonly validateExtent` | `(extent: readonly [`<br />`number,`<br />`number`<br />`]) => void` | —       | Validates the current prediction extent                                                             |
+| Member                    | Type                                                                                        | Default | Description                                                                                         |
+| ------------------------- | ------------------------------------------------------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------- |
+| `readonly fit`            | `(pairs: ReadonlyArray<RegressionPair>, options?: RegressionFitOptions) => RegressionModel` | —       | Fits the current group and returns a model with wrapped errors and nonfinite-prediction diagnostics |
+| `readonly validateExtent` | `(extent: readonly [`<br />`number,`<br />`number`<br />`]) => void`                        | —       | Validates the current prediction extent                                                             |
 
 </ApiTable>
 
@@ -1435,7 +1591,7 @@ export type RegressionModel = Readonly<{
 
 ```ts
 export type RegressionResolution = Readonly<{
-  fit: (pairs: ReadonlyArray<RegressionPair>) => RegressionModel;
+  fit: (pairs: ReadonlyArray<RegressionPair>, options?: RegressionFitOptions) => RegressionModel;
   validateExtent: (extent: readonly [number, number]) => void;
 }>;
 ```
@@ -1444,7 +1600,7 @@ export type RegressionResolution = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"RegressionDefinition"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={26}>RegressionDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"RegressionDefinition"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={51}>RegressionDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1456,6 +1612,7 @@ export type RegressionResolution = Readonly<{
 | ----------------------------- | ------------------------------------------------------------------------------------------- | ------- | -------------------------------------------------------------------------------------------------- |
 | `TSource` (Type parameter)    | `extends IRRegressionMethod = IRRegressionMethod`                                           | —       | Source declaration type accepted by the regression schema                                          |
 | `TOperation` (Type parameter) | `= TSource`                                                                                 | —       | Parsed parameters passed to fitting and extent validation; defaults to the source declaration type |
+| `dependencies?`               | `(operation: TOperation) => ReadonlyArray<IRRegressionMethod>`                              | —       | Declares ordered regression dependencies from parsed parameters without reading observations       |
 | `schema`                      | `ZodType<TOperation, TSource>`                                                              | —       | Exact parameter schema with a nonempty literal kind                                                |
 | `validateExtent?`             | `(operation: TOperation, extent: readonly [`<br />`number,`<br />`number`<br />`]) => void` | —       | Method-specific prediction-domain constraints                                                      |
 
@@ -1468,6 +1625,7 @@ export type RegressionResolution = Readonly<{
 ```ts
 export type RegressionDefinition<TSource extends IRRegressionMethod = IRRegressionMethod, TOperation = TSource> = {
   schema: ZodType<TOperation, TSource>;
+  dependencies?: (operation: TOperation) => ReadonlyArray<IRRegressionMethod>;
   validateExtent?: (operation: TOperation, extent: readonly [number, number]) => void;
 };
 ```
@@ -1476,7 +1634,7 @@ export type RegressionDefinition<TSource extends IRRegressionMethod = IRRegressi
 
 </DocTabs>
 
-#### <ApiSourceLink label={"AnyRegressionDefinition"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={45}>AnyRegressionDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"AnyRegressionDefinition"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={72}>AnyRegressionDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1484,10 +1642,11 @@ export type RegressionDefinition<TSource extends IRRegressionMethod = IRRegressi
 
 <ApiTable>
 
-| Member            | Type                                                                                   | Default | Description                                        |
-| ----------------- | -------------------------------------------------------------------------------------- | ------- | -------------------------------------------------- |
-| `schema`          | `ZodType`                                                                              | —       | Exact parameter schema                             |
-| `validateExtent?` | `(operation: never, extent: readonly [`<br />`number,`<br />`number`<br />`]) => void` | —       | Prediction-domain validation for parsed parameters |
+| Member            | Type                                                                                   | Default | Description                                         |
+| ----------------- | -------------------------------------------------------------------------------------- | ------- | --------------------------------------------------- |
+| `dependencies?`   | `(operation: never) => ReadonlyArray<IRRegressionMethod>`                              | —       | Ordered dependencies derived from parsed parameters |
+| `schema`          | `ZodType`                                                                              | —       | Exact parameter schema                              |
+| `validateExtent?` | `(operation: never, extent: readonly [`<br />`number,`<br />`number`<br />`]) => void` | —       | Prediction-domain validation for parsed parameters  |
 
 </ApiTable>
 
@@ -1498,6 +1657,7 @@ export type RegressionDefinition<TSource extends IRRegressionMethod = IRRegressi
 ```ts
 export type AnyRegressionDefinition = {
   schema: ZodType;
+  dependencies?: (operation: never) => ReadonlyArray<IRRegressionMethod>;
   validateExtent?: (operation: never, extent: readonly [number, number]) => void;
 };
 ```
@@ -1506,21 +1666,45 @@ export type AnyRegressionDefinition = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"RegressionImplementation"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={58}>RegressionImplementation</ApiSourceLink>
+#### <ApiSourceLink label={"RegressionImplementation"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={115}>RegressionImplementation</ApiSourceLink>
 
-<DocTabs defaultValue="members">
-
-<DocTab value="members" label="Members">
+**Common members**
 
 <ApiTable>
 
-| Member                        | Type                                                                                                | Default | Description                                                                                        |
-| ----------------------------- | --------------------------------------------------------------------------------------------------- | ------- | -------------------------------------------------------------------------------------------------- |
-| `TSource` (Type parameter)    | `extends IRRegressionMethod = IRRegressionMethod`                                                   | —       | Source declaration type accepted by the regression schema                                          |
-| `TOperation` (Type parameter) | `= TSource`                                                                                         | —       | Parsed parameters passed to fitting and extent validation; defaults to the source declaration type |
-| `TResult` (Type parameter)    | `extends RegressionModel \| Promise<RegressionModel> = RegressionModel \| Promise<RegressionModel>` | —       | Model or Promise of a model returned by fitting                                                    |
-| `readonly definition`         | `RegressionDefinition<TSource, TOperation>`                                                         | —       | Unique Definition identity for the same regression method                                          |
-| `readonly fit`                | `(pairs: ReadonlyArray<RegressionPair>, operation: TOperation) => TResult`                          | —       | Fits normalized finite observations and returns a prediction model                                 |
+| Member                        | Type                                              | Default | Description                                               |
+| ----------------------------- | ------------------------------------------------- | ------- | --------------------------------------------------------- |
+| `TSource` (Type parameter)    | `extends IRRegressionMethod = IRRegressionMethod` | —       | Declaration type accepted by the method schema            |
+| `TOperation` (Type parameter) | `= TSource`                                       | —       | Precisely parsed parameter type                           |
+| `readonly definition`         | `RegressionDefinition<TSource, TOperation>`       | —       | Unique Definition identity for the same regression method |
+
+</ApiTable>
+
+Common members apply to every branch; a value must also satisfy at least one branch.
+
+<DocTabs defaultValue="sync">
+
+<DocTab value="sync" label="Members · Synchronous, optional async entry">
+
+<ApiTable>
+
+| Member               | Type                                    | Default | Description                                                                                  |
+| -------------------- | --------------------------------------- | ------- | -------------------------------------------------------------------------------------------- |
+| `readonly fit`       | `SynchronousRegressionFit<TOperation>`  | —       | Synchronous entry; every transitive dependency must support synchronous fitting              |
+| `readonly fitAsync?` | `AsynchronousRegressionFit<TOperation>` | —       | Asynchronous entry; when omitted, async execution reuses a fully synchronous dependency tree |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="async" label="Members · Asynchronous, optional sync entry">
+
+<ApiTable>
+
+| Member              | Type                                    | Default | Description                                                                                    |
+| ------------------- | --------------------------------------- | ------- | ---------------------------------------------------------------------------------------------- |
+| `readonly fit?`     | `SynchronousRegressionFit<TOperation>`  | —       | Without synchronous capability, this implementation cannot enter the synchronous execution set |
+| `readonly fitAsync` | `AsynchronousRegressionFit<TOperation>` | —       | Asynchronous entry supporting synchronous or asynchronous dependencies                         |
 
 </ApiTable>
 
@@ -1532,29 +1716,53 @@ export type AnyRegressionDefinition = {
 export type RegressionImplementation<
   TSource extends IRRegressionMethod = IRRegressionMethod,
   TOperation = TSource,
-  TResult extends RegressionModel | Promise<RegressionModel> = RegressionModel | Promise<RegressionModel>,
 > = Readonly<{
   definition: RegressionDefinition<TSource, TOperation>;
-  fit: (pairs: ReadonlyArray<RegressionPair>, operation: TOperation) => TResult;
-}>;
+}> &
+  RegressionComputation<TOperation>;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"AnyRegressionImplementation"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={86}>AnyRegressionImplementation</ApiSourceLink>
+#### <ApiSourceLink label={"AnyRegressionImplementation"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={151}>AnyRegressionImplementation</ApiSourceLink>
 
-<DocTabs defaultValue="members">
-
-<DocTab value="members" label="Members">
+**Common members**
 
 <ApiTable>
 
-| Member                | Type                                                                                                      | Default | Description                           |
-| --------------------- | --------------------------------------------------------------------------------------------------------- | ------- | ------------------------------------- |
-| `readonly definition` | `AnyRegressionDefinition`                                                                                 | —       | Unique regression Definition identity |
-| `readonly fit`        | `(pairs: ReadonlyArray<RegressionPair>, operation: never) => RegressionModel \| Promise<RegressionModel>` | —       | Fits with precisely parsed parameters |
+| Member                | Type                      | Default | Description                           |
+| --------------------- | ------------------------- | ------- | ------------------------------------- |
+| `readonly definition` | `AnyRegressionDefinition` | —       | Unique regression Definition identity |
+
+</ApiTable>
+
+Common members apply to every branch; a value must also satisfy at least one branch.
+
+<DocTabs defaultValue="sync">
+
+<DocTab value="sync" label="Members · Synchronous, optional async entry">
+
+<ApiTable>
+
+| Member               | Type                               | Default | Description                                                                                  |
+| -------------------- | ---------------------------------- | ------- | -------------------------------------------------------------------------------------------- |
+| `readonly fit`       | `SynchronousRegressionFit<never>`  | —       | Synchronous entry; every transitive dependency must support synchronous fitting              |
+| `readonly fitAsync?` | `AsynchronousRegressionFit<never>` | —       | Asynchronous entry; when omitted, async execution reuses a fully synchronous dependency tree |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="async" label="Members · Asynchronous, optional sync entry">
+
+<ApiTable>
+
+| Member              | Type                               | Default | Description                                                                                    |
+| ------------------- | ---------------------------------- | ------- | ---------------------------------------------------------------------------------------------- |
+| `readonly fit?`     | `SynchronousRegressionFit<never>`  | —       | Without synchronous capability, this implementation cannot enter the synchronous execution set |
+| `readonly fitAsync` | `AsynchronousRegressionFit<never>` | —       | Asynchronous entry supporting synchronous or asynchronous dependencies                         |
 
 </ApiTable>
 
@@ -1565,15 +1773,15 @@ export type RegressionImplementation<
 ```ts
 export type AnyRegressionImplementation = Readonly<{
   definition: AnyRegressionDefinition;
-  fit: (pairs: ReadonlyArray<RegressionPair>, operation: never) => RegressionModel | Promise<RegressionModel>;
-}>;
+}> &
+  RegressionComputation<never>;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"AnySynchronousRegressionImplementation"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={94}>AnySynchronousRegressionImplementation</ApiSourceLink>
+#### <ApiSourceLink label={"AnySynchronousRegressionImplementation"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={158}>AnySynchronousRegressionImplementation</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1581,10 +1789,11 @@ export type AnyRegressionImplementation = Readonly<{
 
 <ApiTable>
 
-| Member                | Type                                                                          | Default | Description                           |
-| --------------------- | ----------------------------------------------------------------------------- | ------- | ------------------------------------- |
-| `readonly definition` | `AnyRegressionDefinition`                                                     | —       | Unique regression Definition identity |
-| `readonly fit`        | `(pairs: ReadonlyArray<RegressionPair>, operation: never) => RegressionModel` | —       | Fits without returning a Promise      |
+| Member                | Type                               | Default | Description                                                                    |
+| --------------------- | ---------------------------------- | ------- | ------------------------------------------------------------------------------ |
+| `readonly definition` | `AnyRegressionDefinition`          | —       | Unique regression Definition identity                                          |
+| `readonly fit`        | `SynchronousRegressionFit<never>`  | —       | Fits without returning a Promise                                               |
+| `readonly fitAsync?`  | `AsynchronousRegressionFit<never>` | —       | Optional asynchronous capability; synchronous execution never calls this entry |
 
 </ApiTable>
 
@@ -1593,17 +1802,18 @@ export type AnyRegressionImplementation = Readonly<{
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type AnySynchronousRegressionImplementation = Omit<AnyRegressionImplementation, 'fit'> &
-  Readonly<{
-    fit: (pairs: ReadonlyArray<RegressionPair>, operation: never) => RegressionModel;
-  }>;
+export type AnySynchronousRegressionImplementation = Readonly<{
+  definition: AnyRegressionDefinition;
+  fit: SynchronousRegressionFit<never>;
+  fitAsync?: AsynchronousRegressionFit<never>;
+}>;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"defineRegression"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={40}>defineRegression</ApiSourceLink>
+#### <ApiSourceLink label={"defineRegression"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={67}>defineRegression</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1634,7 +1844,7 @@ export declare const defineRegression: <TSource extends IRRegressionMethod, TOpe
 
 </DocTabs>
 
-#### <ApiSourceLink label={"defineRegressionImplementation"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={77}>defineRegressionImplementation</ApiSourceLink>
+#### <ApiSourceLink label={"defineRegressionImplementation"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={131}>defineRegressionImplementation</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1642,13 +1852,16 @@ export declare const defineRegression: <TSource extends IRRegressionMethod, TOpe
 
 <ApiTable variant="parameters">
 
-| Category        | Name             | Type / signature                                         | Description                                                                                        |
-| --------------- | ---------------- | -------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| Type parameters | `TSource`        | `extends IRRegressionMethod`                             | Source declaration type accepted by the regression schema                                          |
-|                 | `TOperation`     | —                                                        | Parsed parameters passed to fitting and extent validation; defaults to the source declaration type |
-|                 | `TResult`        | `extends RegressionModel \| Promise<RegressionModel>`    | Model or Promise of a model returned by fitting                                                    |
-| Parameters      | `implementation` | `RegressionImplementation<TSource, TOperation, TResult>` | Definition or implementation with exact parameter associations; does not register it               |
-| Returns         | —                | `RegressionImplementation<TSource, TOperation, TResult>` | Returns the supplied object unchanged, preserving generic associations                             |
+| Overload | Category        | Name             | Type / signature                                                                                | Description                                                                                                                            |
+| -------- | --------------- | ---------------- | ----------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| 1        | Type parameters | `TSource`        | `extends IRRegressionMethod`                                                                    | Preserves the association between synchronous fitting and exact method parameters<br />Declaration type accepted by the method schema  |
+|          |                 | `TOperation`     | —                                                                                               | Precisely parsed parameter type                                                                                                        |
+|          | Parameters      | `implementation` | `RegressionImplementation<TSource, TOperation> & { fit: SynchronousRegressionFit<TOperation> }` | Synchronous-capable implementation; does not register automatically                                                                    |
+|          | Returns         | —                | `RegressionImplementation<TSource, TOperation> & { fit: SynchronousRegressionFit<TOperation> }` | Returns the implementation unchanged, retaining its required synchronous entry                                                         |
+| 2        | Type parameters | `TSource`        | `extends IRRegressionMethod`                                                                    | Preserves the association between asynchronous fitting and exact method parameters<br />Declaration type accepted by the method schema |
+|          |                 | `TOperation`     | —                                                                                               | Precisely parsed parameter type                                                                                                        |
+|          | Parameters      | `implementation` | `RegressionImplementation<TSource, TOperation>`                                                 | Asynchronous-capable implementation; does not register automatically                                                                   |
+|          | Returns         | —                | `RegressionImplementation<TSource, TOperation>`                                                 | Returns the implementation unchanged without inferring or probing synchronous capability                                               |
 
 </ApiTable>
 
@@ -1657,20 +1870,15 @@ export declare const defineRegression: <TSource extends IRRegressionMethod, TOpe
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export declare const defineRegressionImplementation: <
-  TSource extends IRRegressionMethod,
-  TOperation,
-  TResult extends RegressionModel | Promise<RegressionModel>,
->(
-  implementation: RegressionImplementation<TSource, TOperation, TResult>,
-) => RegressionImplementation<TSource, TOperation, TResult>;
+<TSource extends { kind: OpenString<ValueOf<{ Auto: 'auto'; Exponential: 'exponential'; Linear: 'linear'; Logarithmic: 'logarithmic'; Polynomial: 'polynomial'; Power: 'power'; Quadratic: 'quadratic' }>> }, TOperation>(implementation: RegressionImplementation<TSource, TOperation> & { fit: SynchronousRegressionFit<TOperation> }) => RegressionImplementation<TSource, TOperation> & { fit: SynchronousRegressionFit<TOperation> }
+<TSource extends { kind: OpenString<ValueOf<{ Auto: 'auto'; Exponential: 'exponential'; Linear: 'linear'; Logarithmic: 'logarithmic'; Polynomial: 'polynomial'; Power: 'power'; Quadratic: 'quadratic' }>> }, TOperation>(implementation: RegressionImplementation<TSource, TOperation>) => RegressionImplementation<TSource, TOperation>
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"extractRegressionKind"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={106}>extractRegressionKind</ApiSourceLink>
+#### <ApiSourceLink label={"extractRegressionKind"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={173}>extractRegressionKind</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1698,7 +1906,7 @@ export declare const extractRegressionKind: (schema: ZodType) => string;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"resolveRegression"} path={"packages/viz/data/src/operators/regression/registry.ts"} startLine={87}>resolveRegression</ApiSourceLink>
+#### <ApiSourceLink label={"resolveRegression"} path={"packages/viz/data/src/operators/regression/registry.ts"} startLine={95}>resolveRegression</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1732,7 +1940,7 @@ export declare const resolveRegression: (
 
 </DocTabs>
 
-#### <ApiSourceLink label={"resolveRegressionRegistry"} path={"packages/viz/data/src/operators/regression/registry.ts"} startLine={51}>resolveRegressionRegistry</ApiSourceLink>
+#### <ApiSourceLink label={"resolveRegressionRegistry"} path={"packages/viz/data/src/operators/regression/registry.ts"} startLine={59}>resolveRegressionRegistry</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1762,7 +1970,7 @@ export declare const resolveRegressionRegistry: (
 
 </DocTabs>
 
-#### <ApiSourceLink label={"resolveRegressionImplementationRegistry"} path={"packages/viz/data/src/operators/regression/registry.ts"} startLine={22}>resolveRegressionImplementationRegistry</ApiSourceLink>
+#### <ApiSourceLink label={"resolveRegressionImplementationRegistry"} path={"packages/viz/data/src/operators/regression/registry.ts"} startLine={25}>resolveRegressionImplementationRegistry</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1802,7 +2010,7 @@ export declare const resolveRegressionImplementationRegistry: <
 #### <ApiSourceLink label={"DataTransformModel"} path={"packages/viz/data/src/model/contract.ts"} startLine={55}>DataTransformModel</ApiSourceLink>
 
 ```ts
-export type DataTransformModel = Array<DataTransformField<IRDataModel[number]>>;
+export type DataTransformModel = Array<DataTransformField<IRDataFieldDefinition>>;
 ```
 
 #### <ApiSourceLink label={"DataTransformInputDescriptor"} path={"packages/viz/data/src/execution/contract.ts"} startLine={51}>DataTransformInputDescriptor</ApiSourceLink>
@@ -1866,7 +2074,7 @@ export type DataTransformInputDescriptor<TSource> =
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DataTransformOutputDescriptor"} path={"packages/viz/data/src/transform/contract.ts"} startLine={71}>DataTransformOutputDescriptor</ApiSourceLink>
+#### <ApiSourceLink label={"DataTransformOutputDescriptor"} path={"packages/viz/data/src/transform/contract.ts"} startLine={75}>DataTransformOutputDescriptor</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1900,7 +2108,7 @@ export type DataTransformOutputDescriptor = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DataTransformOutputModel"} path={"packages/viz/data/src/transform/contract.ts"} startLine={84}>DataTransformOutputModel</ApiSourceLink>
+#### <ApiSourceLink label={"DataTransformOutputModel"} path={"packages/viz/data/src/transform/contract.ts"} startLine={88}>DataTransformOutputModel</ApiSourceLink>
 
 <DocTabs defaultValue="preserve">
 
@@ -1948,7 +2156,7 @@ export type DataTransformOutputModel =
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DataTransformFieldEffect"} path={"packages/viz/data/src/transform/contract.ts"} startLine={48}>DataTransformFieldEffect</ApiSourceLink>
+#### <ApiSourceLink label={"DataTransformFieldEffect"} path={"packages/viz/data/src/transform/contract.ts"} startLine={52}>DataTransformFieldEffect</ApiSourceLink>
 
 ```ts
 export const DataTransformFieldEffect = {
@@ -1960,7 +2168,7 @@ export const DataTransformFieldEffect = {
 export type DataTransformFieldEffect = ValueOf<typeof DataTransformFieldEffect>;
 ```
 
-#### <ApiSourceLink label={"DataTransformBindingClass"} path={"packages/viz/data/src/transform/contract.ts"} startLine={37}>DataTransformBindingClass</ApiSourceLink>
+#### <ApiSourceLink label={"DataTransformBindingClass"} path={"packages/viz/data/src/transform/contract.ts"} startLine={41}>DataTransformBindingClass</ApiSourceLink>
 
 ```ts
 export const DataTransformBindingClass = {
@@ -1971,7 +2179,7 @@ export const DataTransformBindingClass = {
 export type DataTransformBindingClass = ValueOf<typeof DataTransformBindingClass>;
 ```
 
-#### <ApiSourceLink label={"DataTransformPhase"} path={"packages/viz/data/src/transform/contract.ts"} startLine={20}>DataTransformPhase</ApiSourceLink>
+#### <ApiSourceLink label={"DataTransformPhase"} path={"packages/viz/data/src/transform/contract.ts"} startLine={24}>DataTransformPhase</ApiSourceLink>
 
 ```ts
 export const DataTransformPhase = {
@@ -1987,7 +2195,22 @@ export type DataTransformPhase = ValueOf<typeof DataTransformPhase>;
 
 #### <ApiSourceLink label={"DataTransformDependency"} path={"packages/viz/data/src/transform/plan.ts"} startLine={10}>DataTransformDependency</ApiSourceLink>
 
-<DocTabs defaultValue="reducer">
+<DocTabs defaultValue="regression">
+
+<DocTab value="regression" label="Members · Regression">
+
+<ApiTable>
+
+| Member                  | Type                                  | Default | Description                                        |
+| ----------------------- | ------------------------------------- | ------- | -------------------------------------------------- |
+| `readonly definition`   | `AnyRegressionDefinition`             | —       | Definition identity for this request               |
+| `readonly dependencies` | `ReadonlyArray<RegressionDependency>` | —       | Transitive dependencies preserving candidate order |
+| `readonly operation`    | `IRRegressionMethod`                  | —       | Precisely parsed method declaration                |
+| `readonly type`         | `'regression'`                        | —       | Data computation dependency category               |
+
+</ApiTable>
+
+</DocTab>
 
 <DocTab value="reducer" label="Members · Reducer">
 
@@ -2017,20 +2240,6 @@ export type DataTransformPhase = ValueOf<typeof DataTransformPhase>;
 
 </DocTab>
 
-<DocTab value="regression" label="Members · Regression">
-
-<ApiTable>
-
-| Member                | Type                      | Default | Description                                                  |
-| --------------------- | ------------------------- | ------- | ------------------------------------------------------------ |
-| `readonly definition` | `AnyRegressionDefinition` | —       | Definition matching the operation                            |
-| `readonly operation`  | `IRRegressionMethod`      | —       | The exact operation declaration for this dependency          |
-| `readonly type`       | `'regression'`            | —       | Distinguishes reducer, selector, and regression dependencies |
-
-</ApiTable>
-
-</DocTab>
-
 <DocTab value="definition" label="Type definition">
 
 ```ts
@@ -2045,18 +2254,14 @@ export type DataTransformDependency =
       operation: IRDataSelectorOperation;
       definition: AnyRowSelectorDefinition;
     }>
-  | Readonly<{
-      type: 'regression';
-      operation: IRRegressionMethod;
-      definition: AnyRegressionDefinition;
-    }>;
+  | RegressionDependency;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DataTransformStage"} path={"packages/viz/data/src/transform/plan.ts"} startLine={37}>DataTransformStage</ApiSourceLink>
+#### <ApiSourceLink label={"DataTransformStage"} path={"packages/viz/data/src/transform/plan.ts"} startLine={30}>DataTransformStage</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -2092,7 +2297,7 @@ export type DataTransformStage = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DataTransformResolution"} path={"packages/viz/data/src/transform/plan.ts"} startLine={51}>DataTransformResolution</ApiSourceLink>
+#### <ApiSourceLink label={"DataTransformResolution"} path={"packages/viz/data/src/transform/plan.ts"} startLine={44}>DataTransformResolution</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -2783,7 +2988,7 @@ export type DataTransformPreparation<TSource> =
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DataTransformSchedule"} path={"packages/viz/data/src/transform/contract.ts"} startLine={61}>DataTransformSchedule</ApiSourceLink>
+#### <ApiSourceLink label={"DataTransformSchedule"} path={"packages/viz/data/src/transform/contract.ts"} startLine={65}>DataTransformSchedule</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -3077,7 +3282,7 @@ export declare const ingestDataTransformResult: (
 
 ## Synchronous calls
 
-#### <ApiSourceLink label={"applyTransforms"} path={"packages/viz/data/src/execution/apply.ts"} startLine={228}>applyTransforms</ApiSourceLink>
+#### <ApiSourceLink label={"applyTransforms"} path={"packages/viz/data/src/execution/apply.ts"} startLine={236}>applyTransforms</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -3183,7 +3388,7 @@ export type ApplyTransformsResult = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"applyTransformsToDataView"} path={"packages/viz/data/src/execution/apply.ts"} startLine={211}>applyTransformsToDataView</ApiSourceLink>
+#### <ApiSourceLink label={"applyTransformsToDataView"} path={"packages/viz/data/src/execution/apply.ts"} startLine={219}>applyTransformsToDataView</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 

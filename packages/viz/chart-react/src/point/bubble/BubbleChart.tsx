@@ -2,8 +2,8 @@ import type { BubbleChartInputEmbedProps } from '@retikz/chart-vanilla/point';
 import { bubbleChart, bubbleChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';
 import type { IRBubbleChart } from '@retikz/chart/point';
 
-import type { TypedChartCommonProps } from '../shared';
-import { createTypedChartComponent, createTypedChartInput } from '../shared';
+import type { TypedChartCommonProps } from '../../authoring';
+import { createTypedChartComponent, createTypedChartInput } from '../../authoring';
 import { collectBubbleChartDeclarations } from './declaration-collection';
 
 /**

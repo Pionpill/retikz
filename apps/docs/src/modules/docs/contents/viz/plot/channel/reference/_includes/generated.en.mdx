@@ -1,8 +1,104 @@
 {/* Generated reference. Do not edit manually. */}
 
+## Encoding inputs
+
+#### <ApiSourceLink label={"ChannelSchema"} path={"packages/viz/plot/src/schemas/encoding/channel.ts"} startLine={9}>ChannelSchema</ApiSourceLink>
+
+<ZodSchema name="ChannelSchema" />
+
+#### <ApiSourceLink label={"PositionEncodingSchema"} path={"packages/viz/plot/src/schemas/encoding/position.ts"} startLine={48}>PositionEncodingSchema</ApiSourceLink>
+
+A union of the following three strict object schemas rejects skipped or unknown position roles.
+
+<ZodSchema name="PositionEncodingSchema" />
+
+#### <ApiSourceLink label={"Position1DEncodingSchema"} path={"packages/viz/plot/src/schemas/encoding/position.ts"} startLine={27}>Position1DEncodingSchema</ApiSourceLink>
+
+Requires x; y and z are not allowed.
+
+<ZodSchema name="Position1DEncodingSchema" />
+
+#### <ApiSourceLink label={"Position2DEncodingSchema"} path={"packages/viz/plot/src/schemas/encoding/position.ts"} startLine={34}>Position2DEncodingSchema</ApiSourceLink>
+
+Requires x and y; z is not allowed.
+
+<ZodSchema name="Position2DEncodingSchema" />
+
+#### <ApiSourceLink label={"Position3DEncodingSchema"} path={"packages/viz/plot/src/schemas/encoding/position.ts"} startLine={41}>Position3DEncodingSchema</ApiSourceLink>
+
+Requires x, y, and z.
+
+<ZodSchema name="Position3DEncodingSchema" />
+
+#### <ApiSourceLink label={"VisualEncodingSchema"} path={"packages/viz/plot/src/schemas/encoding/visual.ts"} startLine={18}>VisualEncodingSchema</ApiSourceLink>
+
+<ZodSchema name="VisualEncodingSchema" />
+
+#### <ApiSourceLink label={"NodeEncodingSchema"} path={"packages/viz/plot/src/schemas/encoding/node.ts"} startLine={12}>NodeEncodingSchema</ApiSourceLink>
+
+<ZodSchema name="NodeEncodingSchema" />
+
+#### <ApiSourceLink label={"PathEncodingSchema"} path={"packages/viz/plot/src/schemas/encoding/path.ts"} startLine={12}>PathEncodingSchema</ApiSourceLink>
+
+<ZodSchema name="PathEncodingSchema" />
+
+#### <ApiSourceLink label={"PointMarkEncodingSchema"} path={"packages/viz/plot/src/schemas/mark/point.ts"} startLine={106}>PointMarkEncodingSchema</ApiSourceLink>
+
+<ZodSchema name="PlotPointMarkEncodingSchema" />
+
+#### <ApiSourceLink label={"PathMarkEncodingSchema"} path={"packages/viz/plot/src/schemas/mark/path.ts"} startLine={189}>PathMarkEncodingSchema</ApiSourceLink>
+
+Vertex-sequence and complete-endpoint inputs are mutually exclusive.
+
+<ZodSchema name="PathMarkEncodingSchema" />
+
+#### <ApiSourceLink label={"IntervalMarkEncodingSchema"} path={"packages/viz/plot/src/schemas/mark/interval.ts"} startLine={133}>IntervalMarkEncodingSchema</ApiSourceLink>
+
+Combines node appearance with interval positions, grouping and bound encodings.
+
+<ZodSchema name="IntervalMarkEncodingSchema" />
+
+#### <ApiSourceLink label={"OpacityEncodingSchema"} path={"packages/viz/plot/src/schemas/encoding/visual.ts"} startLine={8}>OpacityEncodingSchema</ApiSourceLink>
+
+<ZodSchema name="OpacityEncodingSchema" />
+
+#### <ApiSourceLink label={"LabelEncodingSchema"} path={"packages/viz/plot/src/schemas/encoding/label.ts"} startLine={20}>LabelEncodingSchema</ApiSourceLink>
+
+<ZodSchema name="LabelEncodingSchema" />
+
+`encodings.label: 'name'` is shorthand for `{ text: 'name' }`, a field binding; `properties.label: 'Highlight'` is fixed text. Use an object for additional settings. Non-empty arrays can mix strings and objects, with one label per entry.
+
+| Target                      | Encoding                                                     |
+| --------------------------- | ------------------------------------------------------------ |
+| `text`                      | Field name; fixed `displayFormat` controls formatting        |
+| `font.size`, `font.weight`  | Field name or numeric `{ field, scale }` mapping             |
+| `font.family`, `font.style` | Field name; reads the font family or style directly          |
+| `textColor`, `opacity`      | Field name or explicit scale; opacity is a label-only scalar |
+| Host attachment properties  | Field names with separate Node and Geometry constraints      |
+
+Unencoded font leaves retain fixed settings and inheritance. Failed bindings do not fall back to fixed values. A style-only binding still creates data-driven Mark instances. Path labels use the first row of each actual segment, not one label per vertex.
+
+#### <ApiSourceLink label={"LabelFontEncodingSchema"} path={"packages/viz/plot/src/schemas/encoding/label.ts"} startLine={9}>LabelFontEncodingSchema</ApiSourceLink>
+
+<ZodSchema name="LabelFontEncodingSchema" description="Independent size, weight, family and style field bindings." />
+
+#### <ApiSourceLink label={"NodeLabelEncodingSchema"} path={"packages/viz/plot/src/schemas/encoding/label.ts"} startLine={35}>NodeLabelEncodingSchema</ApiSourceLink>
+
+<ZodSchema
+  name="NodeLabelEncodingSchema"
+  description="Node labels add placement, align, rotate and keepUpright to the shared position and distance targets."
+/>
+
+#### <ApiSourceLink label={"PathLabelEncodingSchema"} path={"packages/viz/plot/src/schemas/encoding/label.ts"} startLine={44}>PathLabelEncodingSchema</ApiSourceLink>
+
+<ZodSchema
+  name="PathLabelEncodingSchema"
+  description="Geometry labels add side and sloped; position describes placement along the path."
+/>
+
 ## Channel definitions
 
-#### <ApiSourceLink label={"ChannelDefinitionKind"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={55}>ChannelDefinitionKind</ApiSourceLink>
+#### <ApiSourceLink label={"ChannelDefinitionKind"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={57}>ChannelDefinitionKind</ApiSourceLink>
 
 Classifies channels by their consumer: coordinate roles consume position channels, mark lowering consumes mark channels, and scope, node, and path channels write directly to core IRScope, IRNode, and IRPath.
 
@@ -19,7 +115,7 @@ export const ChannelDefinitionKind = {
 export type ChannelDefinitionKind = ValueOf<typeof ChannelDefinitionKind>;
 ```
 
-#### <ApiSourceLink label={"defineChannel"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={463}>defineChannel</ApiSourceLink>
+#### <ApiSourceLink label={"defineChannel"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={489}>defineChannel</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -47,7 +143,7 @@ export declare const defineChannel: <T extends ChannelDefinition>(def: T) => T;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"defineNodeChannel"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={481}>defineNodeChannel</ApiSourceLink>
+#### <ApiSourceLink label={"defineNodeChannel"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={507}>defineNodeChannel</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -77,7 +173,7 @@ export declare const defineNodeChannel: <T extends ChannelValue>(
 
 </DocTabs>
 
-#### <ApiSourceLink label={"defineLabelChannel"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={584}>defineLabelChannel</ApiSourceLink>
+#### <ApiSourceLink label={"defineLabelChannel"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={610}>defineLabelChannel</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -106,7 +202,7 @@ export declare const defineLabelChannel: (
 
 </DocTabs>
 
-#### <ApiSourceLink label={"definePathChannel"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={491}>definePathChannel</ApiSourceLink>
+#### <ApiSourceLink label={"definePathChannel"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={517}>definePathChannel</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -136,7 +232,7 @@ export declare const definePathChannel: <T extends ChannelValue>(
 
 </DocTabs>
 
-#### <ApiSourceLink label={"defineScopeChannel"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={471}>defineScopeChannel</ApiSourceLink>
+#### <ApiSourceLink label={"defineScopeChannel"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={497}>defineScopeChannel</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -166,7 +262,7 @@ export declare const defineScopeChannel: <T extends ChannelValue>(
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PositionChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={368}>PositionChannelDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"PositionChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={380}>PositionChannelDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -174,12 +270,13 @@ export declare const defineScopeChannel: <T extends ChannelValue>(
 
 <ApiTable>
 
-| Member    | Type                     | Default | Description                                                  |
-| --------- | ------------------------ | ------- | ------------------------------------------------------------ |
-| `channel` | `string`                 | —       | Channel registration key                                     |
-| `kind`    | `"position"`             | —       | Channel kind: position / mark / scope / node / path          |
-| `pick`    | `ChannelBindingResolver` | —       | Reads the channel binding for this position role from a mark |
-| `role`    | `DimensionRole`          | —       | Coordinate role name                                         |
+| Member    | Type                                                     | Default | Description                                                                                 |
+| --------- | -------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------- |
+| `channel` | `string`                                                 | —       | Channel registration key                                                                    |
+| `kind`    | `"position"`                                             | —       | Channel kind: position / mark / scope / node / path                                         |
+| `pick`    | `ChannelBindingResolver`                                 | —       | Reads the channel binding for this position role from a mark                                |
+| `role`    | `DimensionRole`                                          | —       | Coordinate role name                                                                        |
+| `scales?` | `Readonly<Partial<Record<string, PositionScalePolicy>>>` | —       | Mathematical mappings and consumption policies explicitly accepted by this position channel |
 
 </ApiTable>
 
@@ -189,6 +286,7 @@ export declare const defineScopeChannel: <T extends ChannelValue>(
 
 ```ts
 export type PositionChannelDefinition = BaseChannelDefinition<typeof ChannelDefinitionKind.Position> & {
+  scales?: Readonly<Partial<Record<string, PositionScalePolicy>>>;
   role: DimensionRole;
   pick: ChannelBindingResolver;
 };
@@ -198,7 +296,7 @@ export type PositionChannelDefinition = BaseChannelDefinition<typeof ChannelDefi
 
 </DocTabs>
 
-#### <ApiSourceLink label={"MarkChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={379}>MarkChannelDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"MarkChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={405}>MarkChannelDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -231,7 +329,7 @@ export type MarkChannelDefinition<T extends ChannelValue = ChannelValue> = BaseC
 
 </DocTabs>
 
-#### <ApiSourceLink label={"NodeChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={391}>NodeChannelDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"NodeChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={417}>NodeChannelDefinition</ApiSourceLink>
 
 Resolves channel values directly into existing core IRNode properties, including point properties such as `size`, `shape`, and `opacity`
 
@@ -272,7 +370,7 @@ export type NodeChannelDefinition<T extends ChannelValue = ChannelValue> = BaseC
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={432}>PathChannelDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"PathChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={458}>PathChannelDefinition</ApiSourceLink>
 
 Channels mapped directly to existing scalar core IRPath properties, such as strokeWidth and opacity. Channels such as `color`, whose target varies between node fill, path stroke, and path fill, remain MarkChannelDefinition.
 
@@ -313,7 +411,7 @@ export type PathChannelDefinition<T extends ChannelValue = ChannelValue> = BaseC
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ScopeChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={413}>ScopeChannelDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"ScopeChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={439}>ScopeChannelDefinition</ApiSourceLink>
 
 Maps directly to existing core IRScope properties or `nodeDefault`, `pathDefault`, `labelDefault`, and `arrowDefault`. It represents shared layer defaults; per-datum properties use NodeChannelDefinition or PathChannelDefinition.
 
@@ -354,7 +452,7 @@ export type ScopeChannelDefinition<T extends ChannelValue = ChannelValue> = Base
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={449}>ChannelDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"ChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={475}>ChannelDefinition</ApiSourceLink>
 
 **Common members**
 
@@ -390,11 +488,12 @@ Common members apply to every branch; a value must also satisfy at least one bra
 
 <ApiTable>
 
-| Member | Type                     | Default | Description                                                  |
-| ------ | ------------------------ | ------- | ------------------------------------------------------------ |
-| `kind` | `"position"`             | —       | Channel kind: position / mark / scope / node / path          |
-| `pick` | `ChannelBindingResolver` | —       | Reads the channel binding for this position role from a mark |
-| `role` | `DimensionRole`          | —       | Coordinate role name                                         |
+| Member    | Type                                                     | Default | Description                                                                                 |
+| --------- | -------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------- |
+| `kind`    | `"position"`                                             | —       | Channel kind: position / mark / scope / node / path                                         |
+| `pick`    | `ChannelBindingResolver`                                 | —       | Reads the channel binding for this position role from a mark                                |
+| `role`    | `DimensionRole`                                          | —       | Coordinate role name                                                                        |
+| `scales?` | `Readonly<Partial<Record<string, PositionScalePolicy>>>` | —       | Mathematical mappings and consumption policies explicitly accepted by this position channel |
 
 </ApiTable>
 
@@ -477,7 +576,7 @@ export type ChannelDefinition<T extends ChannelValue = ChannelValue> =
 
 </DocTabs>
 
-#### <ApiSourceLink label={"AnyChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={496}>AnyChannelDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"AnyChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={522}>AnyChannelDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="label">
 
@@ -501,12 +600,13 @@ export type ChannelDefinition<T extends ChannelValue = ChannelValue> =
 
 <ApiTable>
 
-| Member    | Type                     | Default | Description                                                  |
-| --------- | ------------------------ | ------- | ------------------------------------------------------------ |
-| `channel` | `string`                 | —       | Channel registration key                                     |
-| `kind`    | `"position"`             | —       | Channel kind: position / mark / scope / node / path          |
-| `pick`    | `ChannelBindingResolver` | —       | Reads the channel binding for this position role from a mark |
-| `role`    | `DimensionRole`          | —       | Coordinate role name                                         |
+| Member    | Type                                                     | Default | Description                                                                                 |
+| --------- | -------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------- |
+| `channel` | `string`                                                 | —       | Channel registration key                                                                    |
+| `kind`    | `"position"`                                             | —       | Channel kind: position / mark / scope / node / path                                         |
+| `pick`    | `ChannelBindingResolver`                                 | —       | Reads the channel binding for this position role from a mark                                |
+| `role`    | `DimensionRole`                                          | —       | Coordinate role name                                                                        |
+| `scales?` | `Readonly<Partial<Record<string, PositionScalePolicy>>>` | —       | Mathematical mappings and consumption policies explicitly accepted by this position channel |
 
 </ApiTable>
 
@@ -630,7 +730,7 @@ export type AnyChannelDefinition =
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ChannelOutputSpace"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={255}>ChannelOutputSpace</ApiSourceLink>
+#### <ApiSourceLink label={"ChannelOutputSpace"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={259}>ChannelOutputSpace</ApiSourceLink>
 
 A discriminated union for ranges and palettes that prevents invalid combinations such as a symbol palette on a numeric channel
 
@@ -759,7 +859,7 @@ export type ChannelOutputSpace =
 
 ## Resolution context and results
 
-#### <ApiSourceLink label={"ChannelDefinitionResolveContext"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={292}>ChannelDefinitionResolveContext</ApiSourceLink>
+#### <ApiSourceLink label={"ChannelDefinitionResolveContext"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={302}>ChannelDefinitionResolveContext</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -775,6 +875,7 @@ export type ChannelOutputSpace =
 | `resolveCategoryDomain` | `(values: Array<unknown>, order?: NonNullable<IRDataFieldDefinition['order']>) => Array<string \| number>`                 | —       | Computes the categorical domain using IR data.model order; injected by the resolve layer                          |
 | `resolveChannelScale`   | `(operation: IRPlotScaleOperation, values: Array<unknown>, context: ChannelScaleResolveContext) => ChannelScaleResolution` | —       | Resolves a channel scale; injected by the resolve layer so providers do not depend directly on the scale resolver |
 | `resolveColorScheme`    | `(name: string) => (t: number) => string`                                                                                  | —       | Looks up a registered interpolation function from normalized positions to colors                                  |
+| `resolveScaleMapping`   | `(operation: IRPlotScaleOperation, context?: ChannelScaleMappingContext) => ScaleResolution`                               | —       | Resolves the mathematical mapping; the channel owns defaults, output validation, and presentation semantics       |
 | `rows`                  | `Array<ExternalRow>`                                                                                                       | —       | Effective rows in the current resolution scope                                                                    |
 
 </ApiTable>
@@ -785,6 +886,7 @@ export type ChannelOutputSpace =
 
 ```ts
 export type ChannelDefinitionResolveContext = {
+  resolveScaleMapping: (operation: IRPlotScaleOperation, context?: ChannelScaleMappingContext) => ScaleResolution;
   node: IRPlot;
   rows: Array<ExternalRow>;
   model: DataTransformModel;
@@ -806,7 +908,7 @@ export type ChannelDefinitionResolveContext = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"NodeChannelDefinitionResolveContext"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={317}>NodeChannelDefinitionResolveContext</ApiSourceLink>
+#### <ApiSourceLink label={"NodeChannelDefinitionResolveContext"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={329}>NodeChannelDefinitionResolveContext</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -822,6 +924,7 @@ export type ChannelDefinitionResolveContext = {
 | `resolveCategoryDomain` | `(values: Array<unknown>, order?: NonNullable<IRDataFieldDefinition['order']>) => Array<string \| number>`                 | —       | Computes the categorical domain using IR data.model order; injected by the resolve layer                          |
 | `resolveChannelScale`   | `(operation: IRPlotScaleOperation, values: Array<unknown>, context: ChannelScaleResolveContext) => ChannelScaleResolution` | —       | Resolves a channel scale; injected by the resolve layer so providers do not depend directly on the scale resolver |
 | `resolveColorScheme`    | `(name: string) => (t: number) => string`                                                                                  | —       | Looks up a registered interpolation function from normalized positions to colors                                  |
+| `resolveScaleMapping`   | `(operation: IRPlotScaleOperation, context?: ChannelScaleMappingContext) => ScaleResolution`                               | —       | Resolves the mathematical mapping; the channel owns defaults, output validation, and presentation semantics       |
 | `rows`                  | `Array<ExternalRow>`                                                                                                       | —       | Effective rows in the current resolution scope                                                                    |
 
 </ApiTable>
@@ -838,7 +941,7 @@ export type NodeChannelDefinitionResolveContext = ChannelDefinitionResolveContex
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathChannelDefinitionResolveContext"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={320}>PathChannelDefinitionResolveContext</ApiSourceLink>
+#### <ApiSourceLink label={"PathChannelDefinitionResolveContext"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={332}>PathChannelDefinitionResolveContext</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -854,6 +957,7 @@ export type NodeChannelDefinitionResolveContext = ChannelDefinitionResolveContex
 | `resolveCategoryDomain` | `(values: Array<unknown>, order?: NonNullable<IRDataFieldDefinition['order']>) => Array<string \| number>`                 | —       | Computes the categorical domain using IR data.model order; injected by the resolve layer                          |
 | `resolveChannelScale`   | `(operation: IRPlotScaleOperation, values: Array<unknown>, context: ChannelScaleResolveContext) => ChannelScaleResolution` | —       | Resolves a channel scale; injected by the resolve layer so providers do not depend directly on the scale resolver |
 | `resolveColorScheme`    | `(name: string) => (t: number) => string`                                                                                  | —       | Looks up a registered interpolation function from normalized positions to colors                                  |
+| `resolveScaleMapping`   | `(operation: IRPlotScaleOperation, context?: ChannelScaleMappingContext) => ScaleResolution`                               | —       | Resolves the mathematical mapping; the channel owns defaults, output validation, and presentation semantics       |
 | `rows`                  | `Array<ExternalRow>`                                                                                                       | —       | Effective rows in the current resolution scope                                                                    |
 
 </ApiTable>
@@ -870,7 +974,7 @@ export type PathChannelDefinitionResolveContext = ChannelDefinitionResolveContex
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ScopeChannelDefinitionResolveContext"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={323}>ScopeChannelDefinitionResolveContext</ApiSourceLink>
+#### <ApiSourceLink label={"ScopeChannelDefinitionResolveContext"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={335}>ScopeChannelDefinitionResolveContext</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -886,6 +990,7 @@ export type PathChannelDefinitionResolveContext = ChannelDefinitionResolveContex
 | `resolveCategoryDomain` | `(values: Array<unknown>, order?: NonNullable<IRDataFieldDefinition['order']>) => Array<string \| number>`                 | —       | Computes the categorical domain using IR data.model order; injected by the resolve layer                          |
 | `resolveChannelScale`   | `(operation: IRPlotScaleOperation, values: Array<unknown>, context: ChannelScaleResolveContext) => ChannelScaleResolution` | —       | Resolves a channel scale; injected by the resolve layer so providers do not depend directly on the scale resolver |
 | `resolveColorScheme`    | `(name: string) => (t: number) => string`                                                                                  | —       | Looks up a registered interpolation function from normalized positions to colors                                  |
+| `resolveScaleMapping`   | `(operation: IRPlotScaleOperation, context?: ChannelScaleMappingContext) => ScaleResolution`                               | —       | Resolves the mathematical mapping; the channel owns defaults, output validation, and presentation semantics       |
 | `rows`                  | `Array<ExternalRow>`                                                                                                       | —       | Effective rows in the current resolution scope                                                                    |
 
 </ApiTable>
@@ -902,7 +1007,7 @@ export type ScopeChannelDefinitionResolveContext = ChannelDefinitionResolveConte
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ChannelPaletteContext"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={16}>ChannelPaletteContext</ApiSourceLink>
+#### <ApiSourceLink label={"ChannelPaletteContext"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={18}>ChannelPaletteContext</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -938,7 +1043,7 @@ export type ChannelPaletteContext = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ChannelValue"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={33}>ChannelValue</ApiSourceLink>
+#### <ApiSourceLink label={"ChannelValue"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={35}>ChannelValue</ApiSourceLink>
 
 Channel definitions produce runtime values only, outside IRPlot and core IR; object values require an explicit JSON contract and delivery target
 
@@ -946,7 +1051,7 @@ Channel definitions produce runtime values only, outside IRPlot and core IR; obj
 export type ChannelValue = JsonValue;
 ```
 
-#### <ApiSourceLink label={"ChannelValueResolver"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={41}>ChannelValueResolver</ApiSourceLink>
+#### <ApiSourceLink label={"ChannelValueResolver"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={43}>ChannelValueResolver</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -974,7 +1079,7 @@ export type ChannelValueResolver<T extends ChannelValue = ChannelValue> = (row: 
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ChannelBindingResolver"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={354}>ChannelBindingResolver</ApiSourceLink>
+#### <ApiSourceLink label={"ChannelBindingResolver"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={366}>ChannelBindingResolver</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1001,7 +1106,7 @@ export type ChannelBindingResolver = (mark: IRPlotMark) => IRPlotChannel | undef
 
 </DocTabs>
 
-#### <ApiSourceLink label={"LabelResolver"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={48}>LabelResolver</ApiSourceLink>
+#### <ApiSourceLink label={"LabelResolver"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={50}>LabelResolver</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1028,7 +1133,7 @@ export type LabelResolver = (row: ExternalRow) => string;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ChannelResolution"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={244}>ChannelResolution</ApiSourceLink>
+#### <ApiSourceLink label={"ChannelResolution"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={248}>ChannelResolution</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1059,7 +1164,7 @@ export type ChannelResolution<T> = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"MarkChannelResolution"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={329}>MarkChannelResolution</ApiSourceLink>
+#### <ApiSourceLink label={"MarkChannelResolution"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={341}>MarkChannelResolution</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1092,7 +1197,7 @@ export type MarkChannelResolution<T extends ChannelValue = ChannelValue> = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ScopeChannelResolution"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={342}>ScopeChannelResolution</ApiSourceLink>
+#### <ApiSourceLink label={"ScopeChannelResolution"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={354}>ScopeChannelResolution</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1123,7 +1228,7 @@ export type ScopeChannelResolution<T extends ChannelValue = ChannelValue> = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ScaleDescriptor"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={219}>ScaleDescriptor</ApiSourceLink>
+#### <ApiSourceLink label={"ScaleDescriptor"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={221}>ScaleDescriptor</ApiSourceLink>
 
 Internal lowering type, outside IR. Resolvers and legends share the same descriptor to keep legends consistent with rendering.
 
@@ -1141,6 +1246,7 @@ Internal lowering type, outside IR. Resolvers and legends share the same descrip
 | `domain`        | `ReadonlyArray<IRDataScalarValue>` | —       | Domain: [min, max] for continuous data, ordered categories for categorical data, or boundaries and categories for discretization |
 | `field?`        | `string`                           | —       | Bound field name; constant channels have no field                                                                                |
 | `fieldType?`    | `DataFieldType`                    | —       | Bound field type; omitted for constants or unknown types                                                                         |
+| `mapping?`      | `ScaleResolution`                  | —       | Mathematical mapping used by marks; legends interpret it through the channel without rebuilding the algorithm                    |
 | `range`         | `ReadonlyArray<JsonValue>`         | —       | Output range: color strings, radii, opacity values, or shape names                                                               |
 | `scaleName?`    | `string`                           | —       | Bound scale name; legend.scale uses it to distinguish multiple scales for the same channel                                       |
 | `scaleType`     | `string`                           | —       | Type string of the bound scale                                                                                                   |
@@ -1153,6 +1259,7 @@ Internal lowering type, outside IR. Resolvers and legends share the same descrip
 
 ```ts
 export type ScaleDescriptor = {
+  mapping?: ScaleResolution;
   channel: LegendChannelValue;
   scaleType: string;
   domain: ReadonlyArray<IRDataScalarValue>;
@@ -1169,7 +1276,7 @@ export type ScaleDescriptor = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"MarkChannels"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={135}>MarkChannels</ApiSourceLink>
+#### <ApiSourceLink label={"MarkChannels"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={137}>MarkChannels</ApiSourceLink>
 
 `values` holds named evaluators for channels such as color and label that require mark-specific consumption. `defaults` holds defaults under the same names. `scopeDeliveries`, `nodeDeliveries`, and `pathDeliveries` hold deliveries to core IRScope, IRNode, and IRPath.
 
@@ -1211,7 +1318,7 @@ export type MarkChannels = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"LabelChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={569}>LabelChannelDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"LabelChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={595}>LabelChannelDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1250,7 +1357,7 @@ export type LabelChannelDefinition = BaseChannelDefinition<typeof ChannelDefinit
 
 </DocTabs>
 
-#### <ApiSourceLink label={"LabelChannelDelivery"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={589}>LabelChannelDelivery</ApiSourceLink>
+#### <ApiSourceLink label={"LabelChannelDelivery"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={615}>LabelChannelDelivery</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1280,13 +1387,13 @@ export type LabelChannelDelivery = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"LabelChannelTarget"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={566}>LabelChannelTarget</ApiSourceLink>
+#### <ApiSourceLink label={"LabelChannelTarget"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={592}>LabelChannelTarget</ApiSourceLink>
 
 ```ts
 export type LabelChannelTarget = IRNodeLabel | IRPathLabel;
 ```
 
-#### <ApiSourceLink label={"LabelHost"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={563}>LabelHost</ApiSourceLink>
+#### <ApiSourceLink label={"LabelHost"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={589}>LabelHost</ApiSourceLink>
 
 ```ts
 export type LabelHost = 'node' | 'geometry';
@@ -1294,7 +1401,7 @@ export type LabelHost = 'node' | 'geometry';
 
 ## Property delivery
 
-#### <ApiSourceLink label={"NodeChannelDeliveryContext"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={74}>NodeChannelDeliveryContext</ApiSourceLink>
+#### <ApiSourceLink label={"NodeChannelDeliveryContext"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={76}>NodeChannelDeliveryContext</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1326,7 +1433,7 @@ export type NodeChannelDeliveryContext = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathChannelDeliveryContext"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={94}>PathChannelDeliveryContext</ApiSourceLink>
+#### <ApiSourceLink label={"PathChannelDeliveryContext"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={96}>PathChannelDeliveryContext</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1356,7 +1463,7 @@ export type PathChannelDeliveryContext = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ScopeChannelDeliveryContext"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={112}>ScopeChannelDeliveryContext</ApiSourceLink>
+#### <ApiSourceLink label={"ScopeChannelDeliveryContext"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={114}>ScopeChannelDeliveryContext</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1386,7 +1493,7 @@ export type ScopeChannelDeliveryContext = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"NodeChannelDelivery"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={84}>NodeChannelDelivery</ApiSourceLink>
+#### <ApiSourceLink label={"NodeChannelDelivery"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={86}>NodeChannelDelivery</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1418,7 +1525,7 @@ export type NodeChannelDelivery = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathChannelDelivery"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={102}>PathChannelDelivery</ApiSourceLink>
+#### <ApiSourceLink label={"PathChannelDelivery"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={104}>PathChannelDelivery</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1450,7 +1557,7 @@ export type PathChannelDelivery = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ScopeChannelDelivery"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={120}>ScopeChannelDelivery</ApiSourceLink>
+#### <ApiSourceLink label={"ScopeChannelDelivery"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={122}>ScopeChannelDelivery</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1484,7 +1591,7 @@ export type ScopeChannelDelivery = {
 
 ## Shared defaults
 
-#### <ApiSourceLink label={"SIZE_MAX_RADIUS"} path={"packages/viz/plot/src/providers/channel/features/node.ts"} startLine={66}>SIZE_MAX_RADIUS</ApiSourceLink>
+#### <ApiSourceLink label={"SIZE_MAX_RADIUS"} path={"packages/viz/plot/src/providers/channel/features/node.ts"} startLine={59}>SIZE_MAX_RADIUS</ApiSourceLink>
 
 ```ts
 export const SIZE_MAX_RADIUS = 20;
@@ -1563,7 +1670,7 @@ export declare const makeColorChannelDefinition: (
 
 ## Fields and values
 
-#### <ApiSourceLink label={"channelField"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={153}>channelField</ApiSourceLink>
+#### <ApiSourceLink label={"channelField"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={155}>channelField</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1590,7 +1697,7 @@ export declare const channelField: (channel: IRPlotChannel) => string;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"channelScale"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={156}>channelScale</ApiSourceLink>
+#### <ApiSourceLink label={"channelScale"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={158}>channelScale</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1617,7 +1724,7 @@ export declare const channelScale: (channel: IRPlotChannel) => string | undefine
 
 </DocTabs>
 
-#### <ApiSourceLink label={"markChannelEncoding"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={160}>markChannelEncoding</ApiSourceLink>
+#### <ApiSourceLink label={"markChannelEncoding"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={162}>markChannelEncoding</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1645,7 +1752,7 @@ export declare const markChannelEncoding: (mark: IRPlotMark, target: string) => 
 
 </DocTabs>
 
-#### <ApiSourceLink label={"FieldCollector"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={206}>FieldCollector</ApiSourceLink>
+#### <ApiSourceLink label={"FieldCollector"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={208}>FieldCollector</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 

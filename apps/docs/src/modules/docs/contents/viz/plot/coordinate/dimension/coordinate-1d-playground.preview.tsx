@@ -1,62 +1,23 @@
 import { Plot, PlotAxis, PlotScale, PointMark } from '@retikz/plot-react';
-import type { InputPlotCoordinate } from '@retikz/plot-vanilla';
 
 import { oneDimensionalEvents } from './coordinate-1d-playground.data';
 
-/** 图形参数 */
-export type Coordinate1dPlaygroundPreviewValues = {
-  coordinate: 'cartesian1D' | 'polar1D';
-  orientation: 'horizontal' | 'vertical';
-  radius: number;
-  startAngle: number;
-  sweepAngle: number;
-  pointSize: number;
-  pointFill: string;
-  pointStroke: string;
-  pointStrokeWidth: number;
-  pointOpacity: number;
-  axisVisible: boolean;
-  axisStroke: string;
-  axisStrokeWidth: number;
-};
+/** 一维投影参数 */
+export type Coordinate1DPlaygroundValues = { orientation: 'horizontal' | 'vertical' };
 
-/** 绘制示例图形 */
-export const Coordinate1dPlaygroundPreview = (values: Coordinate1dPlaygroundPreviewValues) => {
-  const coordinate: InputPlotCoordinate =
-    values.coordinate === 'cartesian1D'
-      ? {
-          type: 'cartesian1D',
-          orientation: values.orientation,
-        }
-      : {
-          type: 'polar1D',
-          radius: values.radius,
-          startAngle: values.startAngle,
-          endAngle: values.startAngle + values.sweepAngle,
-        };
-
-  return (
-    <Plot data={oneDimensionalEvents} coordinate={coordinate} width={270} height={270}>
-      <PlotScale dimension="x" type="linear" domain={[0, 24]} />
-      <PointMark
-        encodings={{ position: { x: { field: 'hour' } } }}
-        properties={{
-          size: values.pointSize,
-          fill: values.pointFill,
-          stroke: values.pointStroke,
-          strokeWidth: values.pointStrokeWidth,
-          opacity: { overall: values.pointOpacity },
-        }}
-      />
-      {values.axisVisible ? (
-        <PlotAxis
-          dimension="x"
-          line={{
-            stroke: values.axisStroke,
-            strokeWidth: values.axisStrokeWidth,
-          }}
-        />
-      ) : null}
-    </Plot>
-  );
-};
+/** 投影事件时刻 */
+export const renderCoordinate1DPlayground = (values: Coordinate1DPlaygroundValues) => (
+  <Plot
+    data={oneDimensionalEvents}
+    coordinate={{ type: 'cartesian1D', orientation: values.orientation }}
+    width={270}
+    height={270}
+  >
+    <PlotScale dimension="x" type="linear" domain={[0, 24]} />
+    <PointMark
+      encodings={{ position: { x: { field: 'hour' } } }}
+      properties={{ size: 11, fill: '#bfdbfe', stroke: '#1d4ed8', strokeWidth: 1.5 }}
+    />
+    <PlotAxis dimension="x" />
+  </Plot>
+);

@@ -2,8 +2,12 @@ import { NonBlankStringSchema } from '@retikz/foundation';
 import { OrdinalScaleSchema, PlotFacetOptionsSchema } from '@retikz/plot';
 import { strictObject, union } from 'zod';
 
+import {
+  ChartPartitionEncodingSchema,
+  createChartPositionEncodingSchema,
+  refineChartFacetEncodings,
+} from '../../_chart/schemas';
 import { createChartDirectMappingSchema, createChartScaleBindingSchema } from '../../_chart/schemas/encoding';
-import { createPointPositionEncodingSchema, PointPartitionEncodingSchema, refinePointFacetEncodings } from '../shared';
 
 /** Regression series 允许的 ordinal scale 绑定 */
 export const RegressionSeriesScaleBindingSchema = createChartScaleBindingSchema(OrdinalScaleSchema).describe(
@@ -11,10 +15,10 @@ export const RegressionSeriesScaleBindingSchema = createChartScaleBindingSchema(
 );
 
 /** Regression x 位置字段映射 */
-export const RegressionXEncodingSchema = createPointPositionEncodingSchema('x', 'Regression');
+export const RegressionXEncodingSchema = createChartPositionEncodingSchema('x', 'Regression');
 
 /** Regression y 位置字段映射 */
-export const RegressionYEncodingSchema = createPointPositionEncodingSchema('y', 'Regression');
+export const RegressionYEncodingSchema = createChartPositionEncodingSchema('y', 'Regression');
 
 /** Regression recipe-only series 直接字段映射 */
 export const RegressionSeriesEncodingSchema = union([
@@ -27,9 +31,9 @@ export const RegressionChartEncodingsSchema = strictObject({
   x: RegressionXEncodingSchema,
   y: RegressionYEncodingSchema,
   series: RegressionSeriesEncodingSchema.optional(),
-  row: PointPartitionEncodingSchema.optional(),
-  column: PointPartitionEncodingSchema.optional(),
+  row: ChartPartitionEncodingSchema.optional(),
+  column: ChartPartitionEncodingSchema.optional(),
   facet: PlotFacetOptionsSchema.optional(),
 })
-  .superRefine((encodings, context) => refinePointFacetEncodings(encodings, context, 'Regression'))
+  .superRefine((encodings, context) => refineChartFacetEncodings(encodings, context, 'Regression'))
   .describe('Regression Chart exact field mapping plan');

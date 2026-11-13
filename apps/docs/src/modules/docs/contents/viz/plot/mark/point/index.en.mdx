@@ -309,7 +309,7 @@ Label position, distance, pins and font belong in the `label` object. Source IR 
 
 Select Text points and Multiline text to compare alignment, line height, and wrapping. Choose Population to compare number formats. Callback labels combine the letter and population value from the same row.
 
-Use `encodings.label: 'name'` for a content field or `properties.label: 'Highlight'` for fixed text. Object labels support field bindings for `font.size`, `font.weight`, `textColor` and other targets. Label arrays match by index; unencoded font leaves retain inheritance. See [label encodings](/viz/plot/reference/encoding#labelencodingschema).
+Use `encodings.label: 'name'` for a content field or `properties.label: 'Highlight'` for fixed text. Object labels support field bindings for `font.size`, `font.weight`, `textColor` and other targets. Label arrays match by index; unencoded font leaves retain inheritance. See [label encodings](/viz/plot/channel/reference#labelencodingschema).
 
 In label mode, the font controls change the data fields `labelSize` and `labelWeight`. Font sizes vary by row while other fixed font settings remain intact.
 
@@ -495,7 +495,7 @@ Set the Mark's `id` and its `encodings.anchorId` identity field so a later Path 
 
 ## API Reference
 
-`PointMarkProps` is exported by `@retikz/plot-react` and reuses `InputPlotPointMark` from `@retikz/plot-vanilla`. The table is generated from public declarations. `—` means the declaration has no field-level default annotation, not that rendering has no fallback. `PointMarkSchema` shows Source IR fields and constraints using the same descriptions as the [mark contract reference](/viz/plot/reference/mark).
+`PointMarkProps` is exported by `@retikz/plot-react` and reuses `InputPlotPointMark` from `@retikz/plot-vanilla`. The table is generated from public declarations. `—` means the declaration has no field-level default annotation, not that rendering has no fallback. `PointMarkSchema` shows Source IR fields and constraints are documented by `PointMarkSchema` below; see [shared mark APIs](/viz/plot/mark#api-reference) for common configuration.
 
 {/* @include viz/plot/mark/point/generated */}
 

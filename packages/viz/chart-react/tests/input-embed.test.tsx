@@ -89,7 +89,7 @@ describe('Chart React InputEmbed 路由', () => {
         trend: { strokeWidth: 2 },
       },
       marks: [
-        { kind: 'regression', hidePoints: true, override: true, properties: { trend: { opacity: { stroke: 0.7 } } } },
+        { kind: 'regression', showPoints: true, override: true, properties: { trend: { opacity: { stroke: 0.7 } } } },
       ],
     } satisfies RegressionChartInputEmbedProps;
     const reactInput = inputOf(RegressionChart, {
@@ -99,7 +99,7 @@ describe('Chart React InputEmbed 路由', () => {
           <ChartLayout layout={regressionInput.layout} />
           <RegressionEncodings {...regressionInput.encodings} />
           <RegressionProperties {...regressionInput.properties} />
-          <RegressionMark override hidePoints properties={{ trend: { opacity: { stroke: 0.7 } } }} />
+          <RegressionMark override showPoints properties={{ trend: { opacity: { stroke: 0.7 } } }} />
         </>
       ),
     });

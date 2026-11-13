@@ -1,0 +1,50 @@
+## MarkSchema
+
+<ZodSchema name="MarkSchema" />
+
+Every mark can use `defaultColorGroup` to declare a shared fallback color. A named group consumes one `palette.series` slot at its first appearance and reuses it for later members; ungrouped marks each consume the next slot in declaration order. Explicit color encodings and constant paints still take precedence.
+
+## MarkPlacementSchema
+
+<ZodSchema name="MarkPlacementSchema" />
+
+## PositionAdjustmentOperationSchema
+
+<ZodSchema name="PositionAdjustmentOperationSchema" />
+
+## JitterPositionAdjustmentSchema
+
+<ZodSchema name="JitterPositionAdjustmentSchema" />
+
+## PlotRandomDistributionSchema
+
+<ZodSchema
+  name="PlotRandomDistributionSchema"
+  description="Built-in random-distribution union for bounded jitter."
+  descriptions={{
+    kind: 'Distribution discriminator: uniform or normal.',
+    sigma: 'Positive normal standard deviation relative to the jitter half-span; defaults to 0.5.',
+  }}
+/>
+
+## JitterRatioSpanSchema
+
+<ZodSchema name="JitterRatioSpanSchema" />
+
+## CustomPositionAdjustmentSchema
+
+<ZodSchema name="CustomPositionAdjustmentSchema" />
+
+## MarkTransformSchema
+
+<ZodSchema name="MarkTransformSchema" />
+
+## AnchorIdSchema
+
+<ZodSchema name="AnchorIdSchema" />
+
+Exactly one of `field`, `template`, and `generator` must be present.
+
+## PlotLayerSchema
+
+<ZodSchema name="PlotLayerSchema" />

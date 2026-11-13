@@ -1,21 +1,20 @@
 import type { IRPlotGuide } from '@retikz/plot';
 import { PlotGuide, BuiltinPlotScale, BuiltinPlotMark, isBuiltinScaleOperation } from '@retikz/plot';
 
-import type { ChartRecipeDefinition, ChartRecipeResolveContext } from '../../_chart/contract';
 import { defineChartRecipe } from '../../_chart/contract';
+import type { ChartRecipeDefinition, ChartRecipeResolveContext } from '../../_chart/contract';
 import type { ChartEncodingFieldConsumer } from '../../_chart/resolve';
-import { resolveChartEncodingMappings } from '../../_chart/resolve';
+import {
+  chartRecipeId,
+  chartResolutionOf,
+  chartSlotsOf,
+  chartSpatialResolutionOf,
+  resolveChartGuideDefaults,
+  resolveChartEncodingMappings,
+} from '../../_chart/resolve';
 import { RetikzChartError, RetikzChartErrorCode } from '../../error';
 import { ChartType } from '../constants';
-import {
-  pointPositionFieldConsumersOf,
-  pointResolutionOf,
-  pointSlotsOf,
-  pointSpatialResolutionOf,
-  resolvePointGuideDefaults,
-  resolvePointScaleDefaults,
-} from '../shared';
-import { pointRecipeId } from '../shared/plot';
+import { pointPositionFieldConsumersOf, resolvePointScaleDefaults } from '../shared';
 import { connectedScatterMarkDefinition, resolveConnectedScatterMarkGroup } from './mark';
 import type { IRConnectedScatterChart } from './schema';
 import { ConnectedScatterChartSchema } from './schema';
@@ -27,7 +26,7 @@ const markPropertySlots = ['point', 'path', 'colorMode'] as const;
 
 const propertySlots = [...markPropertySlots, 'domainPadding', 'autoPadding'] as const;
 
-const seriesScaleName = pointRecipeId(ChartType.ConnectedScatter, 'scale.series');
+const seriesScaleName = chartRecipeId(ChartType.ConnectedScatter, 'scale.series');
 
 const consumers: ReadonlyArray<ChartEncodingFieldConsumer<(typeof connectedScatterChartEncodingSlots)[number]>> = [
   ...pointPositionFieldConsumersOf(ChartType.ConnectedScatter),
@@ -56,15 +55,15 @@ export const connectedScatterChartDefinition: ChartRecipeDefinition<IRConnectedS
   ],
   resolveEncodings: context => {
     const resolution = resolveChartEncodingMappings(context, connectedScatterChartEncodingSlots, consumers);
-    const spatial = pointSpatialResolutionOf(ChartType.ConnectedScatter, context.encodings);
+    const spatial = chartSpatialResolutionOf(ChartType.ConnectedScatter, context.encodings);
     return spatial === undefined ? resolution : { ...resolution, spatial };
   },
   resolve: (context: ChartRecipeResolveContext) => {
-    const slots = pointSlotsOf(context);
+    const slots = chartSlotsOf(context);
     const hasSeries = Object.hasOwn(slots.encodings, 'series');
     const guides: Array<IRPlotGuide> = hasSeries ? [{ type: PlotGuide.Legend, channel: 'color' }] : [];
 
-    return pointResolutionOf(
+    return chartResolutionOf(
       ChartType.ConnectedScatter,
       [
         {
@@ -118,7 +117,7 @@ export const connectedScatterChartDefinition: ChartRecipeDefinition<IRConnectedS
     ];
   },
   resolveGuideDefaults: context => {
-    const guides = resolvePointGuideDefaults(context);
+    const guides = resolveChartGuideDefaults(context);
     if (
       context.source.plotExtension?.guides !== undefined ||
       context.source.recipe.properties?.colorMode !== 'mark' ||

@@ -1,0 +1,520 @@
+---
+title: Line
+description: Connect observations with open paths, optional points, multiple series, curves, steps, and gap bridges.
+---
+
+A line chart connects a measure across a sequence. Paths are primary; observation points are optional. It does not fit a regression or impute missing data. Use [Connected Scatter](/viz/chart/points/connected-scatter) for trajectories through two-dimensional observations.
+
+## Integration
+
+After [installation and first render](/viz/chart/get-start), import from each Chart package's `/line` entry. All four approaches use the same data. Lines default to width 2 without observation markers.
+
+<ComponentPreview
+  files={['line-minimal', 'line-minimal.preview.tsx', 'line-basic.data.ts']}
+  defaultSourceFile="line-minimal.preview.tsx"
+  controls={{ name: 'line-minimal' }}
+  mode="showcase"
+  size="xl"
+  hideCode
+  responsive
+/>
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+The dedicated children of `LineChart` are listed below. Start with encodings; properties and authored marks are optional.
+
+```text
+LineChart
+├── LineEncodings
+├── LineProperties
+└── LineMark
+```
+
+```tsx
+import { LineChart, LineEncodings } from '@retikz/chart-react/line';
+import { lineData } from './line-basic.data';
+
+export const Example = () => (
+  <LineChart rows={lineData} layout={{ width: 640, height: 320 }}>
+    <LineEncodings x="x" y="y" series="series" />
+  </LineChart>
+);
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { resolveCoreProviderDependencies } from '@retikz/core';
+import { LineChartSchema, createLineChartProviderContribution } from '@retikz/chart/line';
+import { createPlotProviderContribution } from '@retikz/plot';
+import { pathClipProvider } from '@retikz/extension';
+import { lineData } from './line-basic.data';
+import { Layout } from '@retikz/react';
+
+const chart = LineChartSchema.parse({
+  namespace: 'chart',
+  type: 'line',
+  data: { reference: 'chart.data' },
+  layout: { width: 640, height: 320 },
+  recipe: { chartType: 'line', encodings: { x: 'x', y: 'y', series: 'series' } },
+});
+const ir: IRScene = { type: 'scene', version: 1, children: [chart] };
+const definitions = resolveCoreProviderDependencies({
+  contributions: [
+    createLineChartProviderContribution(),
+    createPlotProviderContribution({ 'chart.data': lineData }),
+    { roots: [pathClipProvider.key], providers: [pathClipProvider] },
+  ],
+});
+
+export const Example = () => <Layout ir={ir} extensions={definitions} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import { renderChart } from '@retikz/chart-vanilla';
+import { lineChart, lineChartInputEmbedAdapter } from '@retikz/chart-vanilla/line';
+import { lineData } from './line-basic.data';
+
+const chart = lineChart({
+  data: lineData,
+  layout: { width: 640, height: 320 },
+  encodings: { x: 'x', y: 'y', series: 'series' },
+});
+export const svg = renderChart(chart, { adapters: [lineChartInputEmbedAdapter] }).svg;
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { resolveCoreProviderDependencies } from '@retikz/core';
+import { LineChartSchema, createLineChartProviderContribution } from '@retikz/chart/line';
+import { createPlotProviderContribution } from '@retikz/plot';
+import { pathClipProvider } from '@retikz/extension';
+import { lineData } from './line-basic.data';
+import { compileToScene } from '@retikz/reconciler';
+import { renderToSvgString } from '@retikz/vanilla';
+
+const chart = LineChartSchema.parse({
+  namespace: 'chart',
+  type: 'line',
+  data: { reference: 'chart.data' },
+  layout: { width: 640, height: 320 },
+  recipe: { chartType: 'line', encodings: { x: 'x', y: 'y', series: 'series' } },
+});
+const ir: IRScene = { type: 'scene', version: 1, children: [chart] };
+const definitions = resolveCoreProviderDependencies({
+  contributions: [
+    createLineChartProviderContribution(),
+    createPlotProviderContribution({ 'chart.data': lineData }),
+    { roots: [pathClipProvider.key], providers: [pathClipProvider] },
+  ],
+});
+
+export const svg = renderToSvgString(compileToScene(ir, definitions).scene);
+```
+
+</DocTab>
+</DocTabs>
+
+## Basic usage
+
+### Line encodings
+
+Encodings determine positions, series membership, and connection order. Series identity is independent of color: assigning the same color does not merge separate series.
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+<LineEncodings x="x" y="y" series="series" />
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+encodings: { x: 'x', y: 'y', series: 'series' }
+```
+
+</DocTab>
+<DocTab value="direct-ir" label="IR">
+
+```json
+{ "recipe": { "encodings": { "x": "x", "y": "y", "series": "series" } } }
+```
+
+</DocTab>
+</DocTabs>
+
+| Property        | Type                         | Description                                                           |
+| --------------- | ---------------------------- | --------------------------------------------------------------------- |
+| `x`, `y`        | Field name, position mapping | Required; direct fields, single-value aggregates, and explicit scales |
+| `series`        | Field name, direct mapping   | Connects each series separately and assigns colors by default         |
+| `order`         | Field name, direct mapping   | Stable ascending order; omitted means input row order                 |
+| `row`, `column` | Field name, facet dimension  | Splits panels by row or column                                        |
+| `facet`         | `IRPlotFacetOptions`         | Facet options; requires row or column                                 |
+
+The data records six observations for each of A and B. x is the sampling position and y is the measure. The third B observation is missing.
+
+- `x`, `y`: bind the corresponding fields to sample positions.
+- `series`: binds series, connecting A and B separately.
+- `order`: omitted initially to preserve input order.
+
+The example preserves the original input order by default. Enable “Shuffle input” to shuffle the first three A records and make the path backtrack; disable it to restore the original sequence. Disabling series treats both groups as one sequence; keep it enabled when comparing independent series.
+
+<ComponentPreview
+  mode="showcase"
+  size="xl"
+  responsive
+  files={['line-mapping', 'line-mapping.preview.tsx', 'line-basic.data.ts']}
+  controls={{ name: 'line-mapping' }}
+  controlPanelDefaultOpen={false}
+  hideCode
+  defaultSourceFile="line-mapping.preview.tsx"
+/>
+
+### Line properties
+
+Properties control connection geometry and marker appearance without changing field bindings. Smooth, stepped, and marked lines are configurations of the same chart.
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+<LineProperties point={false} path={{ curve: 'linear', strokeWidth: 2, connectNulls: false }} />
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+properties: { point: false, path: { curve: 'linear', strokeWidth: 2, connectNulls: false } }
+```
+
+</DocTab>
+<DocTab value="direct-ir" label="IR">
+
+```json
+{
+  "recipe": {
+    "properties": { "point": false, "path": { "curve": "linear", "strokeWidth": 2, "connectNulls": false } }
+  }
+}
+```
+
+</DocTab>
+</DocTabs>
+
+| Property            | Type                               | Description                                                                                                  |
+| ------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `point`             | `boolean`, `IRLinePointProperties` | Defaults to false; true or a style object shows points. Objects set radius, shape, fill, stroke, and opacity |
+| `path`              | `IRLinePathProperties`             | Path appearance and connections                                                                              |
+| `path.curve`        | Curve name, curve configuration    | Defaults to linear; supports Plot step and smooth curves                                                     |
+| `path.strokeWidth`  | `number`                           | Defaults to 2; zero is allowed                                                                               |
+| `path.connectNulls` | `boolean`, bridge configuration    | Defaults to false; bridges gaps without imputing values                                                      |
+
+`point: true` uses default styles; `point: { size: 4, fill: '#fff' }` shows styled points. An empty object `{}` also shows points.
+
+Use the same two series to compare straight, stepped, and smooth connections.
+
+- `point`: initially false; enabling it uses `{ size: 4 }`. Adjust “Point radius” to change marker size.
+- `path.curve`: initially linear; changing it preserves sample positions.
+- `path.strokeWidth`: initially 2; adjust it to compare visibility.
+
+The selector lists all 10 Path connection types. Basis splines usually do not pass through every interior sample; monotone X / Y interpolation is intended for data increasing along the corresponding axis. Enable points to compare the path with the observations.
+
+<ComponentPreview
+  mode="showcase"
+  size="xl"
+  responsive
+  files={['line-basic', 'line-basic.preview.tsx', 'line-basic.data.ts']}
+  controls={{ name: 'line-basic' }}
+  controlPanelDefaultOpen={false}
+  hideCode
+  defaultSourceFile="line-basic.preview.tsx"
+/>
+
+### Line marks
+
+A mark appends a line/point group or replaces the built-in group. It inherits recipe encodings and properties, so only differences need to be declared.
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+<LineMark properties={{ point: false, path: { curve: 'step', stroke: '#a855f7' } }} />
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+marks: [lineMark({ properties: { point: false, path: { curve: 'step', stroke: '#a855f7' } } })];
+```
+
+</DocTab>
+<DocTab value="direct-ir" label="IR">
+
+```json
+{
+  "recipe": {
+    "marks": [{ "kind": "line", "properties": { "point": false, "path": { "curve": "step", "stroke": "#a855f7" } } }]
+  }
+}
+```
+
+</DocTab>
+</DocTabs>
+
+| Property     | Type                     | Description                                                                    |
+| ------------ | ------------------------ | ------------------------------------------------------------------------------ |
+| `override`   | `boolean`                | Appends by default; true replaces the complete built-in group of the same kind |
+| `encodings`  | Direct field overrides   | Overrides x, y, or order, not series or facet identity                         |
+| `properties` | Sparse member properties | Overrides path and point; inherits the rest                                    |
+
+The example adds purple step paths over the original A and B lines, using the same data and positions.
+
+- `properties.path.curve`: step contrasts with the built-in straight lines.
+- `properties.path.stroke`: purple distinguishes the authored group.
+- `override`: false retains both groups; true leaves only the step group.
+
+Enable authored points, then toggle replacement. It acts on the entire semantic group, not just one Plot Path.
+
+<ComponentPreview
+  mode="showcase"
+  size="xl"
+  responsive
+  files={['line-mark', 'line-mark.preview.tsx', 'line-basic.data.ts']}
+  controls={{ name: 'line-mark' }}
+  controlPanelDefaultOpen={false}
+  hideCode
+  defaultSourceFile="line-mark.preview.tsx"
+/>
+
+## Extended usage
+
+All groups below belong to recipe in IR; property names are relative to each group.
+
+### Showing missing observations
+
+Retain gaps or bridge neighboring samples when sampling is interrupted. Bridging is not interpolation and does not represent a measured value at a missing position.
+
+| Group        | Property            | Type                            | Description                                   |
+| ------------ | ------------------- | ------------------------------- | --------------------------------------------- |
+| `encodings`  | `series`            | Field name, mapping             | Handles gaps within each series               |
+| `properties` | `path.connectNulls` | `boolean`, bridge configuration | true uses the default dashed bridge           |
+|              | `point`             | `boolean`                       | Set to true here to identify observed samples |
+
+B has no observation at x=3. Enable “Connect gaps”: a dashed bridge appears between x=2 and x=4, but no point is added at x=3.
+
+<ComponentPreview
+  mode="showcase"
+  size="xl"
+  responsive
+  files={['line-gaps', 'line-gaps.preview.tsx', 'line-basic.data.ts']}
+  controls={{ name: 'line-gaps' }}
+  controlPanelDefaultOpen={false}
+  hideCode
+  defaultSourceFile="line-gaps.preview.tsx"
+/>
+
+### Comparing series in facets
+
+Separate overlapping series into panels. Faceting changes grouping and layout, not the observed values.
+
+| Group       | Property                                   | Type                        | Description                       |
+| ----------- | ------------------------------------------ | --------------------------- | --------------------------------- |
+| `encodings` | `column` / `row`                           | Field name, facet dimension | Uses series for columns or rows   |
+|             | `series`                                   | Field name, mapping         | Retains series identity and color |
+|             | `facet.header.column` / `facet.header.row` | `boolean`                   | Controls facet headers            |
+
+The panels show A and B separately, side by side on wide screens and stacked with row facets on narrow screens. Disable faceting to return to a shared panel and compare the two layouts. Headers can be toggled while faceting is active.
+
+<ComponentPreview
+  mode="showcase"
+  size="xl"
+  responsive
+  files={['line-facet', 'line-facet.preview.tsx', 'line-basic.data.ts']}
+  controls={{ name: 'line-facet' }}
+  controlPanelDefaultOpen={false}
+  hideCode
+  defaultSourceFile="line-facet.preview.tsx"
+/>
+
+## Errors and limits
+
+- Input order, the order field, and axis domains are independent; none infers the others.
+- No missing-row insertion, imputation, or automatic aggregation of duplicate positions. Gap bridging only changes paths.
+- Paths remain open, without area fills or closure. Slope, Bump, and area charts are not Line variants.
+- A React slot cannot come from both root recipe and child declarations. Invalid fields and scale references fail at their owning boundary.
+
+## Implementation
+
+<ComponentAlert
+  type="tip"
+  title="Optional reading"
+  description="Skip this section if you only need to use the chart."
+/>
+
+### Chart construction
+
+| Group      | `@retikz/chart`       | `@retikz/plot`                        | Description                                           |
+| ---------- | --------------------- | ------------------------------------- | ----------------------------------------------------- |
+| Encodings  | `x`, `y`              | `encodings.position`                  | Binds the same positions for Path and optional Point  |
+|            | `series`, `order`     | `encodings.series`, `encodings.order` | Connects paths within series in the specified order   |
+| Properties | `path`                | Path `properties`                     | Always open; default stroke width is 2                |
+|            | `point`               | Point `properties`                    | Adds observed points when point is enabled            |
+| Mark       | `LineChartMarkSchema` | `PathMarkSchema`, `PointMarkSchema`   | Resolves a Line group into a path and optional points |
+
+The recipe maps position, order, series, and constants to a Plot Path, adding a Point from the same data when point is enabled. Plot connects rows within each facet and series, owns projection, curves, and gaps, and lowers through Core into Scene. Chart does not implement parallel sorting or curve algorithms.
+
+<SourceLinks
+  sources={[
+    { path: 'packages/viz/chart/src/line/line/mark.ts', label: 'Line mark composition' },
+    { path: 'packages/viz/chart/src/line/line/recipe.ts', label: 'Fields, scales, and facets' },
+  ]}
+/>
+
+## API reference
+
+Exported from `@retikz/chart/line`. React LineEncodings / LineProperties / LineMark correspond to Vanilla encodings / properties / marks and the same fields under recipe in IR.
+
+### Line configuration
+
+#### [LineChartSchema](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/line/schema.ts) / [IRLineChart](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/line/schema.ts)
+
+<DocTabs defaultValue="schema">
+<DocTab value="schema" label="Schema">
+
+<ZodSchema name="LineChartSchema" shallow />
+
+</DocTab>
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRLineChart = ZodInfer<typeof LineChartSchema>;
+```
+
+</DocTab>
+</DocTabs>
+
+#### [LineChartRecipeSchema](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/line/schema.ts)
+
+<ZodSchema name="LineChartRecipeSchema" shallow />
+
+### Line encodings
+
+#### [LineChartEncodingsSchema](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/line/encoding-schema.ts) / [IRLineChartEncodings](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/line/schema.ts)
+
+<DocTabs defaultValue="schema">
+<DocTab value="schema" label="Schema">
+
+<ZodSchema name="LineChartEncodingsSchema" shallow />
+
+</DocTab>
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRLineChartEncodings = ZodInfer<typeof LineChartEncodingsSchema>;
+```
+
+</DocTab>
+</DocTabs>
+
+### Line properties
+
+#### [LineChartPropertiesSchema](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/line/schema.ts) / [IRLineChartProperties](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/line/schema.ts)
+
+<DocTabs defaultValue="schema">
+<DocTab value="schema" label="Schema">
+
+<ZodSchema name="LineChartPropertiesSchema" shallow />
+
+</DocTab>
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRLineChartProperties = ZodInfer<typeof LineChartPropertiesSchema>;
+```
+
+</DocTab>
+</DocTabs>
+
+#### [LinePathPropertiesSchema](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/line/schema.ts) / [IRLinePathProperties](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/line/schema.ts)
+
+<DocTabs defaultValue="schema">
+<DocTab value="schema" label="Schema">
+
+<ZodSchema name="LinePathPropertiesSchema" shallow />
+
+</DocTab>
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRLinePathProperties = ZodInfer<typeof LinePathPropertiesSchema>;
+```
+
+</DocTab>
+</DocTabs>
+
+#### [LinePointPropertiesSchema](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/line/schema.ts) / [IRLinePointProperties](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/line/schema.ts)
+
+<DocTabs defaultValue="schema">
+<DocTab value="schema" label="Schema">
+
+<ZodSchema name="LinePointPropertiesSchema" shallow />
+
+</DocTab>
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRLinePointProperties = ZodInfer<typeof LinePointPropertiesSchema>;
+```
+
+</DocTab>
+</DocTabs>
+
+### Line marks
+
+#### [LineChartMarkSchema](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/line/schema.ts) / [IRLineMark](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/line/schema.ts)
+
+<DocTabs defaultValue="schema">
+<DocTab value="schema" label="Schema">
+
+<ZodSchema name="LineChartMarkSchema" shallow />
+
+</DocTab>
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRLineMark = ZodInfer<typeof LineChartMarkSchema>;
+```
+
+</DocTab>
+</DocTabs>
+
+#### [LineMarkEncodingsSchema](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/line/schema.ts)
+
+<ZodSchema name="LineMarkEncodingsSchema" shallow />
+
+## Further reading
+
+<LinkedSections
+  items={[
+    { title: 'Line charts', description: 'Choose a chart for your question', url: '/viz/chart/lines' },
+    { title: 'General structure', description: 'Data, themes, and layout', url: '/viz/chart/model/general-structure' },
+    {
+      title: 'Connected Scatter',
+      description: 'Trajectories through two-dimensional observations',
+      url: '/viz/chart/points/connected-scatter',
+    },
+  ]}
+/>

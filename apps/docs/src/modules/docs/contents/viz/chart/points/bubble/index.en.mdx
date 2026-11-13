@@ -377,7 +377,7 @@ Compare panels within the same x interval. The number of bubbles represents coun
 ## Errors and limitations
 
 - Size must come from a numeric field; `BubbleEncodings.size` cannot be removed through constant properties or a mark override.
-- Named size scales must use sqrt. Exact area ratios also depend on domain, range and glyph shape.
+- Size uses a sqrt mapping by default. An explicit named scale can use a linear or another mathematical mapping, provided it produces finite, nonnegative radii. Exact area ratios also depend on domain, range and glyph shape.
 - Facet options require row or column; binned position mappings cannot be combined with facets.
 
 In React, supplying the same configuration field through both the root `recipe` and a child component raises an error.

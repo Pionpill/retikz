@@ -228,3 +228,5 @@ Plot 生成流程具有清晰的阶段边界，布局后的位置调整与数据
 ## 边界与依赖
 
 空间映射复用 Core，性能依赖 Kernel 增量链路，交互依赖 Headless Interaction；布局与 Legend 呈现复用 Layout / Standard。
+
+完整 Path 端点缺失值处理保持与数据映射一致，配置与引用错误仍明确报错，见 [030](./030-path-endpoint-missing-values.md)。

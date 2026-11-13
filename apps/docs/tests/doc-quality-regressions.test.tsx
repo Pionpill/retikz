@@ -14,8 +14,17 @@ import LearningPathPathsDemo from '../src/modules/docs/contents/kernel/galleries
 import LearningPathDashedDemo from '../src/modules/docs/contents/kernel/galleries/learning-path/learning-path-05-dashed.demo';
 import InspectCustomDemo from '../src/modules/docs/contents/kernel/packages/inspect/custom/inspect-custom.demo';
 import { previewSource as RibbonGeometryPreviewSource } from '../src/modules/docs/contents/library/extension/ribbon/usage/ribbon-geometry.demo';
-import { previewSource as LegendColorFormsEnPreviewSource } from '../src/modules/docs/contents/viz/plot/guide/legend/legend-color-forms.en.demo';
-import { previewSource as LegendColorFormsPreviewSource } from '../src/modules/docs/contents/viz/plot/guide/legend/legend-color-forms.zh.demo';
+import { previewSource as LegendColorFormsPreviewSource } from '../src/modules/docs/contents/viz/plot/guide/legend/legend-color-forms';
+import { createPreviewControlContract } from '../src/modules/docs/contents/viz/plot/guide/legend/legend-color-forms.controls';
+import { LegendColorFormsPreview } from '../src/modules/docs/contents/viz/plot/guide/legend/legend-color-forms.preview';
+import { defineControlledPreview } from '../src/modules/docs/preview';
+
+const englishLegendSource = defineControlledPreview(createPreviewControlContract('en'), values =>
+  LegendColorFormsPreview(
+    { orient: 'auto', swatchSize: 14, rampLength: 118, rampThickness: 14, scheme: 'blues', ...values },
+    'en',
+  ),
+).source;
 
 /** 验证文档 demo 的 canonical IR 能通过 Runtime owner 的 JSON 快照边界 */
 const expectCanonicalPreviewToBeJsonSafe = (Demo: FC) => {
@@ -29,8 +38,8 @@ describe('Docs 质量巡检回归', () => {
     ['Primitive Relations 自动锚点', PrimitiveRelationsDemo],
     ['Draw 样式', () => DrawStylePreviewSource.canonicalRender?.() ?? null],
     ['Ribbon 几何', () => RibbonGeometryPreviewSource.canonicalRender?.() ?? null],
+    ['Legend 颜色形态（英文）', () => englishLegendSource.canonicalRender?.() ?? null],
     ['Legend 颜色形态（中文）', () => LegendColorFormsPreviewSource.canonicalRender?.() ?? null],
-    ['Legend 颜色形态（英文）', () => LegendColorFormsEnPreviewSource.canonicalRender?.() ?? null],
     ['Learning Path 步骤 1', LearningPathTitleDemo],
     ['Learning Path 步骤 2', LearningPathSpineDemo],
     ['Learning Path 步骤 3', LearningPathStacksDemo],

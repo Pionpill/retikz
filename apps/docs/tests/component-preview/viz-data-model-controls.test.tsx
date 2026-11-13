@@ -180,22 +180,6 @@ describe('可视化数据模型控件', () => {
     }
   });
 
-  it('将 Plot 来源追溯条形示例固定到值轴基线', () => {
-    const demoSource = readFileSync(
-      resolve('src/modules/docs/contents/viz/plot/provenance/plot-lineage.preview.tsx'),
-      'utf8',
-    );
-
-    expect(demoSource).toContain("import { IntervalMark, Plot, PlotAxis, PlotScale } from '@retikz/plot-react';");
-    expect(demoSource).toContain('<PlotScale dimension="y" type="linear" domainPadding={0} />');
-
-    for (const locale of ['zh', 'en']) {
-      const source = readFileSync(resolve(`src/modules/docs/contents/viz/plot/provenance/index.${locale}.mdx`), 'utf8');
-
-      expect(source).toContain("{ type: 'linear', name: 'y', domainPadding: 0 },");
-    }
-  });
-
   it('通过规范控件更改类别顺序、源绑定和解析', () => {
     expect(renderWithValues(OrderDemo, { orderMode: 'appearance' })).not.toBe(
       renderWithValues(OrderDemo, { orderMode: 'business' }),

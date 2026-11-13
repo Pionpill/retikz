@@ -38,7 +38,7 @@ describe('布局实用程序', () => {
       ?.modules.find(item => item.value === 'compilation-mechanisms');
     expect(link?.linkTo).toBe('/kernel/packages/core');
     expect(link?.Icon).toBeDefined();
-    expect(link?.children).toHaveLength(7);
+    expect(link?.children).toHaveLength(10);
     expect(link?.children?.every(item => item.linkTo?.startsWith('/kernel/packages/core/') && item.Icon)).toBe(true);
     const paths = flattenLeaves('kernel', kernelSection).map(item => item.path);
     expect(paths.some(path => path.includes('/compilation-mechanisms'))).toBe(false);
@@ -111,19 +111,16 @@ describe('布局实用程序', () => {
     const plot = vizSection.find(section => section.id === 'plot');
     expect(plot?.pages.slice(0, 3).every(page => page.sidebarGroup === undefined)).toBe(true);
     expect(plot?.pages.slice(3).every(page => page.sidebarGroup === 'viz.plotGrammar')).toBe(true);
-    expect(plotPaths.slice(-11)).toEqual([
-      '/viz/plot/reference/plot',
-      '/viz/plot/reference/encoding',
-      '/viz/plot/reference/transform',
-      '/viz/plot/reference/mark',
-      '/viz/plot/reference/scale',
-      '/viz/plot/reference/coordinate',
-      '/viz/plot/reference/guide',
-      '/viz/plot/reference/layout',
-      '/viz/plot/reference/layer',
-      '/viz/plot/reference/theme',
-      '/viz/plot/reference/runtime',
-    ]);
+    for (const id of ['scale', 'coordinate']) {
+      const group = plot?.pages.find(page => page.id === id);
+      const reference = group?.children?.at(-1);
+      expect(reference?.id).toBe('reference');
+      expect(reference?.difficulty).toBeUndefined();
+      expect(plotPaths).toContain(`/viz/plot/${id}/reference`);
+    }
+    expect(plotPaths).not.toContain('/viz/plot/theme');
+    expect(plotPaths).not.toContain('/viz/plot/reference');
+    expect(plotPaths.some(path => path.startsWith('/viz/plot/reference/'))).toBe(false);
   });
 
   it('Data 与 Table 分别在模块末尾注册更新日志，并删除 Viz 发布分区', () => {
@@ -180,6 +177,8 @@ describe('布局实用程序', () => {
       '/viz/chart/points/connected-scatter',
       '/viz/chart/points/ranged-dot',
       '/viz/chart/points/strip',
+      '/viz/chart/lines/line',
+      '/viz/chart/lines/slope',
       '/viz/chart/model/general-structure',
       '/viz/chart/model/core-structure',
     ]);

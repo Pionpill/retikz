@@ -1,0 +1,532 @@
+---
+title: Slope
+description: Compare paired values across two stages with endpoint markers and entity labels.
+---
+
+A slope chart connects two values for each entity. An upward line indicates an increase; a downward line indicates a decrease. Both ends share one value scale. Each data row supplies a pair. Use [Line](/viz/chart/lines/line) for trends across more than two stages.
+
+## Using this topic
+
+After [installation and first render](/viz/chart/get-start), import from the Chart packages' `/line` entry. The four forms below use the same data. Points and labels are visible by default, with a line width of 2.
+
+<ComponentPreview
+  files={['slope-minimal', 'slope-minimal.preview.tsx', 'slope-basic.data.ts']}
+  defaultSourceFile="slope-minimal.preview.tsx"
+  controls={{ name: 'slope-minimal' }}
+  mode="showcase"
+  size="xl"
+  hideCode
+  responsive
+/>
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+The dedicated children of `SlopeChart` are listed below. Start with encodings; properties and authored marks are optional.
+
+```text
+SlopeChart
+├── SlopeEncodings
+├── SlopeProperties
+└── SlopeMark
+```
+
+```tsx
+import { SlopeChart, SlopeEncodings } from '@retikz/chart-react/line';
+import { slopeData } from './slope-basic.data';
+
+export const Example = () => (
+  <SlopeChart rows={slopeData} layout={{ width: 640, height: 320 }}>
+    <SlopeEncodings entity="entity" start="previous" end="current" />
+  </SlopeChart>
+);
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { resolveCoreProviderDependencies } from '@retikz/core';
+import { SlopeChartSchema, createSlopeChartProviderContribution } from '@retikz/chart/line';
+import { createPlotProviderContribution } from '@retikz/plot';
+import { pathClipProvider } from '@retikz/extension';
+import { slopeData } from './slope-basic.data';
+import { Layout } from '@retikz/react';
+
+const chart = SlopeChartSchema.parse({
+  namespace: 'chart',
+  type: 'line',
+  data: { reference: 'chart.data' },
+  layout: { width: 640, height: 320 },
+  recipe: { chartType: 'slope', encodings: { entity: 'entity', start: 'previous', end: 'current' } },
+});
+const ir: IRScene = { type: 'scene', version: 1, children: [chart] };
+const definitions = resolveCoreProviderDependencies({
+  contributions: [
+    createSlopeChartProviderContribution(),
+    createPlotProviderContribution({ 'chart.data': slopeData }),
+    { roots: [pathClipProvider.key], providers: [pathClipProvider] },
+  ],
+});
+
+export const Example = () => <Layout ir={ir} extensions={definitions} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import { renderChart } from '@retikz/chart-vanilla';
+import { slopeChart, slopeChartInputEmbedAdapter } from '@retikz/chart-vanilla/line';
+import { slopeData } from './slope-basic.data';
+
+const chart = slopeChart({
+  data: slopeData,
+  layout: { width: 640, height: 320 },
+  encodings: { entity: 'entity', start: 'previous', end: 'current' },
+});
+export const svg = renderChart(chart, { adapters: [slopeChartInputEmbedAdapter] }).svg;
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { resolveCoreProviderDependencies } from '@retikz/core';
+import { SlopeChartSchema, createSlopeChartProviderContribution } from '@retikz/chart/line';
+import { createPlotProviderContribution } from '@retikz/plot';
+import { pathClipProvider } from '@retikz/extension';
+import { slopeData } from './slope-basic.data';
+import { compileToScene } from '@retikz/reconciler';
+import { renderToSvgString } from '@retikz/vanilla';
+
+const chart = SlopeChartSchema.parse({
+  namespace: 'chart',
+  type: 'line',
+  data: { reference: 'chart.data' },
+  layout: { width: 640, height: 320 },
+  recipe: { chartType: 'slope', encodings: { entity: 'entity', start: 'previous', end: 'current' } },
+});
+const ir: IRScene = { type: 'scene', version: 1, children: [chart] };
+const definitions = resolveCoreProviderDependencies({
+  contributions: [
+    createSlopeChartProviderContribution(),
+    createPlotProviderContribution({ 'chart.data': slopeData }),
+    { roots: [pathClipProvider.key], providers: [pathClipProvider] },
+  ],
+});
+
+export const svg = renderToSvgString(compileToScene(ir, definitions).scene);
+```
+
+</DocTab>
+</DocTabs>
+
+## Basic usage
+
+### Slope encodings
+
+Each row supplies an entity and its start/end values. Swapping the fields reverses the comparison; reordering rows preserves every pair.
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+<SlopeEncodings entity="entity" start="previous" end="current" />
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+encodings: { entity: 'entity', start: 'previous', end: 'current' }
+```
+
+</DocTab>
+<DocTab value="direct-ir" label="IR">
+
+```json
+{ "recipe": { "encodings": { "entity": "entity", "start": "previous", "end": "current" } } }
+```
+
+</DocTab>
+</DocTabs>
+
+| Property        | Type                         | Description                                                                     |
+| --------------- | ---------------------------- | ------------------------------------------------------------------------------- |
+| `entity`        | Field name or direct mapping | Required; endpoint names and default categorical color                          |
+| `start` / `end` | Field name or direct mapping | Required paired values; may bind one shared scale, without implicit aggregation |
+| `color`         | Field name or direct mapping | Optional categorical color; defaults to entity                                  |
+
+Eight entities, A, B, C, E, F, G, H, and I, each occupy one row with previous and current observations.
+
+- `entity`: binds entity to distinguish the eight comparisons.
+- `start` / `end`: bind previous and current on the same value axis.
+
+Swap stages to reverse the comparison. Shuffle rows to confirm that pairing remains unchanged.
+
+<ComponentPreview
+  mode="showcase"
+  size="xl"
+  responsive
+  files={['slope-mapping', 'slope-mapping.preview.tsx', 'slope-basic.data.ts']}
+  controls={{ name: 'slope-mapping' }}
+  controlPanelDefaultOpen={false}
+  hideCode
+  defaultSourceFile="slope-mapping.preview.tsx"
+/>
+
+### Slope properties
+
+The default y scale uses `domainPadding: 32` to leave 32 drawing units at both ends for endpoint labels. An explicitly declared value scale uses its own padding configuration; set `domainPadding: 0` to disable it.
+
+Configure points, labels, and lines independently. Hiding points can leave their entity labels visible.
+
+Each endpoint has one label whose content comes from `entity`. Set `label: false` to hide it; `true` or an options object enables it. Without `position`, the start label faces left and the end label faces right; an explicit position applies to both. Label arrays and separate endpoint configurations are not supported.
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+<SlopeProperties point={{ size: 4 }} label={{ position: 'top', distance: 8 }} path={{ strokeWidth: 2 }} />
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+properties: { point: { size: 4 }, label: { position: 'top', distance: 8 }, path: { strokeWidth: 2 } }
+```
+
+</DocTab>
+<DocTab value="direct-ir" label="IR">
+
+```json
+{
+  "recipe": {
+    "properties": {
+      "point": { "size": 4 },
+      "label": { "position": "top", "distance": 8 },
+      "path": { "strokeWidth": 2 }
+    }
+  }
+}
+```
+
+</DocTab>
+</DocTabs>
+
+| Property | Type                    | Description                                                                               |
+| -------- | ----------------------- | ----------------------------------------------------------------------------------------- |
+| `stages` | Two strings             | Distinct left/right names; defaults to field names                                        |
+| `point`  | Boolean or style object | Defaults to true; controls radius, shape, fill, stroke, and opacity                       |
+| `label`  | Boolean or options      | Defaults to true; one entity label per endpoint, with position, distance, font, and color |
+| `path`   | Stroke style object     | Width defaults to 2; a straight two-stage connection                                      |
+
+The paired observations remain fixed while appearance changes.
+
+- `point.size`: starts at 4; zero is a valid radius.
+- `label`: enabled initially, using entity names, outward placement, and a distance of 8.
+- `path.strokeWidth`: starts at 2.
+
+Hide the points while retaining their labels; change label direction or distance to affect both endpoints, then reset.
+
+<ComponentPreview
+  mode="showcase"
+  size="xl"
+  responsive
+  files={['slope-basic', 'slope-basic.preview.tsx', 'slope-basic.data.ts']}
+  controls={{ name: 'slope-basic' }}
+  controlPanelDefaultOpen={false}
+  hideCode
+  defaultSourceFile="slope-basic.preview.tsx"
+/>
+
+### Slope marks
+
+Add a comparison group or replace the built-in line, points, and labels together.
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+<SlopeMark
+  properties={{ path: { stroke: '#a855f7', strokeWidth: 2, dashPattern: [5, 4] }, point: false, label: false }}
+/>
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+marks: [
+  slopeMark({
+    properties: { path: { stroke: '#a855f7', strokeWidth: 2, dashPattern: [5, 4] }, point: false, label: false },
+  }),
+];
+```
+
+</DocTab>
+<DocTab value="direct-ir" label="IR">
+
+```json
+{
+  "recipe": {
+    "marks": [
+      {
+        "kind": "slope",
+        "properties": {
+          "path": { "stroke": "#a855f7", "strokeWidth": 2, "dashPattern": [5, 4] },
+          "point": false,
+          "label": false
+        }
+      }
+    ]
+  }
+}
+```
+
+</DocTab>
+</DocTabs>
+
+| Property     | Type                     | Description                                                 |
+| ------------ | ------------------------ | ----------------------------------------------------------- |
+| `override`   | Boolean                  | Appends by default; true replaces the entire built-in group |
+| `encodings`  | Direct field overrides   | Overrides start/end, not entity or stage names              |
+| `properties` | Sparse member properties | Inherits path/point/label fields; preserves false and zero  |
+
+The purple dashed group uses the same pairs as the solid built-in lines.
+
+- `path`: purple stroke, width 2, dash pattern [5, 4].
+- `point` / `label`: disabled for the added group to avoid duplicate annotations.
+- `override`: starts false.
+
+Enable replacement to remove the original lines, points, and labels together. Enable added points to show the new group's endpoints.
+
+<ComponentPreview
+  mode="showcase"
+  size="xl"
+  responsive
+  files={['slope-mark', 'slope-mark.preview.tsx', 'slope-basic.data.ts']}
+  controls={{ name: 'slope-mark' }}
+  controlPanelDefaultOpen={false}
+  hideCode
+  defaultSourceFile="slope-mark.preview.tsx"
+/>
+
+## Extended usage
+
+The encodings and properties groups below belong to recipe in the IR.
+
+### Missing endpoints
+
+A missing observation removes only that row's connection. The valid endpoint and its labels remain, without filling the gap with zero.
+
+| Group        | Property        | Type       | Description                    |
+| ------------ | --------------- | ---------- | ------------------------------ |
+| `encodings`  | `start` / `end` | Field name | Read both stages from one row  |
+| `properties` | `label`         | Boolean    | Show labels on valid endpoints |
+
+B initially has no previous value; its current value of 62 remains visible. Restore the start to recover the connection.
+
+<ComponentPreview
+  mode="showcase"
+  size="xl"
+  responsive
+  files={['slope-gaps', 'slope-gaps.preview.tsx', 'slope-basic.data.ts']}
+  controls={{ name: 'slope-gaps' }}
+  controlPanelDefaultOpen={false}
+  hideCode
+  defaultSourceFile="slope-gaps.preview.tsx"
+/>
+
+### Faceted comparisons
+
+Separate regions to reduce crossings without changing their paired observations.
+
+| Group       | Property | Type       | Description                         |
+| ----------- | -------- | ---------- | ----------------------------------- |
+| `encodings` | `row`    | Field name | Split vertically by region          |
+|             | `entity` | Field name | Retain names and categorical colors |
+
+Regions I and II appear in separate rows, keeping the full stage width on narrow screens. Disable faceting to compare the overlaid result.
+
+<ComponentPreview
+  mode="showcase"
+  size="xl"
+  responsive
+  files={['slope-facet', 'slope-facet.preview.tsx', 'slope-basic.data.ts']}
+  controls={{ name: 'slope-facet' }}
+  controlPanelDefaultOpen={false}
+  hideCode
+  defaultSourceFile="slope-facet.preview.tsx"
+/>
+
+## Errors and limitations
+
+- Input uses paired wide rows. Reshape long tables first. Repeated names remain independent rows, without deduplication or aggregation.
+- Stage names must differ. Explicit endpoint scales must agree; independent value axes are not supported.
+- Missing observations omit connections. Missing field declarations, invalid scale references, invalid constants, and coordinate projection errors still fail.
+- Labels do not avoid collisions automatically. Filter data, adjust fonts, or facet dense comparisons.
+
+## Implementation
+
+<ComponentAlert
+  type="tip"
+  title="Optional reading"
+  description="This section explains internals. Skip to API Reference if you only need to use the chart."
+/>
+
+### Chart construction
+
+| Group      | `@retikz/chart`      | `@retikz/plot`                  | Description                                              |
+| ---------- | -------------------- | ------------------------------- | -------------------------------------------------------- |
+| Encodings  | start, end           | Path encodings.from/to          | One complete endpoint path per row                       |
+|            | entity, color        | color, label                    | Names and colors do not determine pairing                |
+| Properties | stages               | Point scale domain              | Fix the two stage positions                              |
+|            | point, label         | Point properties, label         | Zero-size hosts can retain labels when points are hidden |
+| Mark       | SlopeChartMarkSchema | PathMarkSchema, PointMarkSchema | A connection and two independent endpoints               |
+
+Both ends use the same y scale. Plot skips the row's path when a field value cannot be mapped. The endpoint marks still consume the original rows, keeping the valid end visible.
+
+<SourceLinks
+  sources={[
+    { path: 'packages/viz/chart/src/line/slope/mark.ts', label: 'Slope mark composition' },
+    { path: 'packages/viz/chart/src/line/slope/recipe.ts', label: 'Shared scale and stage wiring' },
+  ]}
+/>
+
+## API Reference
+
+Exported from `@retikz/chart/line`. React SlopeEncodings / SlopeProperties / SlopeMark correspond to Vanilla encodings / properties / marks and the same recipe fields in IR.
+
+### Slope configuration
+
+#### [SlopeChartSchema](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/slope/schema.ts) / [IRSlopeChart](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/slope/schema.ts)
+
+<DocTabs defaultValue="schema">
+<DocTab value="schema" label="Schema">
+
+<ZodSchema name="SlopeChartSchema" shallow />
+
+</DocTab>
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRSlopeChart = ZodInfer<typeof SlopeChartSchema>;
+```
+
+</DocTab>
+</DocTabs>
+#### [SlopeChartRecipeSchema](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/slope/schema.ts)
+
+<ZodSchema name="SlopeChartRecipeSchema" shallow />
+
+### Slope encodings
+
+#### [SlopeChartEncodingsSchema](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/slope/encoding-schema.ts) / [IRSlopeChartEncodings](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/slope/schema.ts)
+
+<DocTabs defaultValue="schema">
+<DocTab value="schema" label="Schema">
+
+<ZodSchema name="SlopeChartEncodingsSchema" shallow />
+
+</DocTab>
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRSlopeChartEncodings = ZodInfer<typeof SlopeChartEncodingsSchema>;
+```
+
+</DocTab>
+</DocTabs>
+
+### Slope properties
+
+The default y scale uses `domainPadding: 32` to leave 32 drawing units at both ends for endpoint labels. An explicitly declared value scale uses its own padding configuration; set `domainPadding: 0` to disable it.
+
+#### [SlopeChartPropertiesSchema](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/slope/schema.ts) / [IRSlopeChartProperties](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/slope/schema.ts)
+
+<DocTabs defaultValue="schema">
+<DocTab value="schema" label="Schema">
+
+<ZodSchema name="SlopeChartPropertiesSchema" shallow />
+
+</DocTab>
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRSlopeChartProperties = ZodInfer<typeof SlopeChartPropertiesSchema>;
+```
+
+</DocTab>
+</DocTabs>
+#### [SlopePointPropertiesSchema](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/slope/schema.ts) / [IRSlopePointProperties](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/slope/schema.ts)
+
+<DocTabs defaultValue="schema">
+<DocTab value="schema" label="Schema">
+
+<ZodSchema name="SlopePointPropertiesSchema" shallow />
+
+</DocTab>
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRSlopePointProperties = ZodInfer<typeof SlopePointPropertiesSchema>;
+```
+
+</DocTab>
+</DocTabs>
+#### [SlopePathPropertiesSchema](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/slope/schema.ts)
+
+<ZodSchema name="SlopePathPropertiesSchema" shallow />
+
+#### [SlopeLabelPropertiesSchema](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/slope/schema.ts) / [IRSlopeLabelProperties](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/slope/schema.ts)
+
+<DocTabs defaultValue="schema">
+<DocTab value="schema" label="Schema">
+
+<ZodSchema name="SlopeLabelPropertiesSchema" shallow />
+
+</DocTab>
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRSlopeLabelProperties = ZodInfer<typeof SlopeLabelPropertiesSchema>;
+```
+
+</DocTab>
+</DocTabs>
+
+### Slope marks
+
+#### [SlopeChartMarkSchema](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/slope/schema.ts) / [IRSlopeMark](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/slope/schema.ts)
+
+<DocTabs defaultValue="schema">
+<DocTab value="schema" label="Schema">
+
+<ZodSchema name="SlopeChartMarkSchema" shallow />
+
+</DocTab>
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRSlopeMark = ZodInfer<typeof SlopeChartMarkSchema>;
+```
+
+</DocTab>
+</DocTabs>
+#### [SlopeMarkEncodingsSchema](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/slope/schema.ts)
+
+<ZodSchema name="SlopeMarkEncodingsSchema" shallow />
+
+## Further reading
+
+<LinkedSections
+  items={[
+    { title: 'Line', description: 'Trends across multiple stages', url: '/viz/chart/lines/line' },
+    { title: 'paths', description: 'Choose a line chart', url: '/viz/chart/lines' },
+  ]}
+/>

@@ -1,0 +1,54 @@
+## IntervalMarkSchema
+
+<ZodSchema
+  name="IntervalMarkSchema"
+  description="把正交区间乘积投影为线段、矩形、扇区或 cell。"
+  descriptions={{
+    defaultColorIndex: '默认分类色索引；省略时按默认颜色分组分配',
+    type: '区间图元判别值。',
+    series: '颜色分组和带内子分组的 series 字段。',
+    bounds: '按坐标角色声明的区间边界；省略时从角色比例尺推断。',
+    interpolation: 'polar2D cell 边界的局部连接空间覆盖。',
+    strokeWidth: '区间 cell 描边宽度。',
+    fill: '区间 cell 填充 paint。',
+    stroke: '区间 cell 描边 paint。',
+    opacity: '区间 cell 整体不透明度。',
+    'opacity.fill': '区间 cell 填充不透明度。',
+    padAngle: '极坐标扇区之间的角度间隔，直角 cell 忽略。',
+    pull: '极坐标扇区沿中角的静态径向偏移。',
+    anchorId: '写入每个生成 interval Node 的稳定 id 规则。',
+    textAlign: 'Core Node 文本对齐。',
+    lineHeight: 'Core Node 行高。',
+    maxTextWidth: 'Core Node 文本最大宽度。',
+    cornerRadius: 'Core Node 圆角。',
+    scale: 'Core Node 缩放。',
+    padding: 'Core Node 内边距。',
+    margin: 'Core Node 外边距。',
+    dashed: 'Core Node 虚线开关。',
+    dotted: 'Core Node 点线开关。',
+    dashPattern: 'Core Node 虚线数组。',
+    font: 'Core Node 字体。',
+    boundary: 'Core Node 边界。',
+    shadow: 'Core Node 阴影。',
+    blendMode: 'Core Node 混合模式。',
+    id: '可选图元 id。',
+    defaultColorGroup: '省略显式颜色时共享同一个顺序色板槽位的语义组。',
+    layer: '外层 Scope 图层覆盖。',
+    coordinateView: '用于投影的坐标视图 id。',
+    transform: '图元局部变换链。',
+    label: '附着在每个 interval Node 上的标签。',
+    encoding: '区间的位置与颜色通道。',
+  }}
+/>
+
+## IntervalBoundsSchema
+
+<ZodSchema
+  name="IntervalBoundsSchema"
+  description="按坐标角色指定的区间边界映射。"
+  descriptions={{ x: '第一位置角色的区间边界。', y: '第二位置角色的区间边界。' }}
+/>
+
+## IntervalBoundSchema
+
+<ZodSchema name="IntervalBoundSchema" description="Band、Span、Extent、Proportional 或 Full 单角色区间边界联合。" />

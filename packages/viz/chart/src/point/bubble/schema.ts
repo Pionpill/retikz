@@ -1,7 +1,7 @@
 import type { infer as ZodInfer } from 'zod';
 import { array, literal, strictObject } from 'zod';
 
-import { createChartSourceSchema } from '../../_chart/schemas';
+import { ChartRecipeGuidesSchema, createChartSourceSchema } from '../../_chart/schemas';
 import { ChartFamily, ChartType } from '../constants';
 import {
   createPointChartMarkSchema,
@@ -9,7 +9,6 @@ import {
   PointAutoPaddingSchema,
   PointPositionDomainPaddingSchema,
   PointPropertiesWithoutSizeSchema,
-  PointRecipeGuidesSchema,
 } from '../shared';
 import { BubbleChartEncodingsSchema } from './encoding-schema';
 
@@ -33,7 +32,7 @@ export const BubbleChartRecipeSchema = strictObject({
   chartType: literal(ChartType.Bubble).describe('Globally unique Bubble recipe key'),
   encodings: BubbleChartEncodingsSchema,
   properties: BubbleChartPropertiesSchema.prefault({}).optional(),
-  guides: PointRecipeGuidesSchema.optional(),
+  guides: ChartRecipeGuidesSchema.optional(),
   marks: array(BubbleChartMarkSchema).optional(),
 }).describe('Bubble Chart recipe payload');
 

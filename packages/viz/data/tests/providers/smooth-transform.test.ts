@@ -552,3 +552,36 @@ describe('平滑变换行为（契约）', () => {
     expect(() => resolveTransformRegistry([collision])).toThrow(/duplicate transform registration/i);
   });
 });
+
+it('自动拟合逐组选择，采样密度不改变模型且保留来源', () => {
+  const rows = [-2, -1, 0, 1, 2].flatMap(x => [
+    { series: 'line', x, y: 2 * x - 5 },
+    { series: 'curve', x, y: x * x - 5 },
+  ]);
+  for (const sampleCount of [3, 9]) {
+    const result = applyTransforms(
+      rows,
+      [
+        smoothOperation({
+          kind: 'smooth',
+          params: {
+            x: 'x',
+            y: 'y',
+            groupBy: ['series'],
+            method: { kind: 'auto' },
+            sampleCount,
+            xAs: 'trendX',
+            yAs: 'trendY',
+          },
+        }),
+      ],
+      { provenance: true },
+    ).rows;
+    expect(result).toHaveLength(sampleCount * 2);
+    for (const row of result) {
+      const x = Number(row.trendX);
+      expect(row.trendY).toBeCloseTo(row.series === 'line' ? 2 * x - 5 : x * x - 5);
+      expect(readSourceIndices(row)).toHaveLength(5);
+    }
+  }
+});

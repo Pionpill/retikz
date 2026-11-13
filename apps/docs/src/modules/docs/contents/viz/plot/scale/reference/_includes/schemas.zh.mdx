@@ -1,0 +1,293 @@
+比例尺是数据值到位置或视觉值的具名映射。坐标角色通过坐标操作引用位置比例尺，颜色等非位置通道通过编码的 `scale` 字段引用。
+
+## ScaleSchema
+
+<ZodSchema name="ScaleSchema" description="所有 Plot 内置比例尺的判别联合。" />
+
+## ScaleOperationSchema
+
+<ZodSchema name="ScaleOperationSchema" description="内置比例尺或运行时注册自定义比例尺的联合。" />
+
+## LinearScaleSchema
+
+<ZodSchema
+  name="LinearScaleSchema"
+  description="连续数值 domain 到 range 的线性映射。"
+  descriptions={{
+    type: '线性比例尺判别值。',
+    name: '被坐标角色引用的比例尺名。',
+    domain: '输入范围 [min, max]；省略时从绑定数据推断。',
+    range: '图区单位中的输出范围 [start, end]；省略时从坐标 extent 派生。',
+    nice: '是否把 domain 取整为易读数值。',
+    clamp: '是否把 domain 外输入夹到 range 端点。',
+    domainPadding: 'range / ratio 留白，或通过 mark 引用求解自动端；具体支持范围见正文。',
+    singleValueSpan: 'domain 只有单值时使用的备用跨度。',
+  }}
+/>
+
+## TimeScaleSchema
+
+<ZodSchema
+  name="TimeScaleSchema"
+  description="从 epoch 毫秒时间到坐标 range 的连续映射。"
+  descriptions={{
+    type: '时间比例尺判别值。',
+    name: '被坐标角色引用的比例尺名。',
+    domain: 'epoch 毫秒 [start, end]；Date 实例不进入 IR。',
+    nice: '是否向外对齐到易读时间边界。',
+    clamp: '是否夹紧 domain 外时刻。',
+    domainPadding: 'range / ratio 留白，或通过 mark 引用求解自动端；具体支持范围见正文。',
+    singleValueSpan: '时间 domain 只有单值时的备用跨度。',
+  }}
+/>
+
+## LogScaleSchema
+
+<ZodSchema
+  name="LogScaleSchema"
+  description="只接受严格正 domain 的连续对数映射。"
+  descriptions={{
+    type: '对数比例尺判别值。',
+    name: '比例尺名。',
+    domain: '严格正的 [min, max]；省略时从正数数据推断。',
+    range: '图区单位中的输出范围。',
+    base: '大于 1 的对数底，默认 10。',
+    nice: '是否向外对齐到底数的整次幂。',
+    clamp: '是否夹紧 domain 外输入。',
+    domainPadding: '添加到 domain 的 range 单位留白，或显式 ratio 留白。',
+    singleValueSpan: '单值 domain 的备用跨度。',
+  }}
+/>
+
+## PowScaleSchema
+
+<ZodSchema
+  name="PowScaleSchema"
+  description="使用显式 exponent 的连续幂映射。"
+  descriptions={{
+    type: '幂比例尺判别值。',
+    name: '比例尺名。',
+    domain: '输入范围；非整数 exponent 要求非负 domain。',
+    range: '图区单位中的输出范围。',
+    exponent: '幂指数，默认 2。',
+    nice: '是否取整 domain。',
+    clamp: '是否夹紧 domain 外输入。',
+    domainPadding: '添加到 domain 的 range 单位留白，或显式 ratio 留白。',
+    singleValueSpan: '单值 domain 的备用跨度。',
+  }}
+/>
+
+## SqrtScaleSchema
+
+<ZodSchema
+  name="SqrtScaleSchema"
+  description="面积感知友好的平方根映射。"
+  descriptions={{
+    type: '平方根比例尺判别值。',
+    name: '比例尺名，也可被 size 通道引用。',
+    domain: '非负输入范围。',
+    range: '位置输出范围，或 size 通道的半径范围。',
+    nice: '是否取整 domain。',
+    clamp: '是否夹紧 domain 外输入。',
+    domainPadding: '添加到 domain 的 range 单位留白，或显式 ratio 留白。',
+    singleValueSpan: '单值 domain 的备用跨度。',
+  }}
+/>
+
+## SymlogScaleSchema
+
+<ZodSchema
+  name="SymlogScaleSchema"
+  description="零附近线性、两端对数的对称映射，允许负值和零。"
+  descriptions={{
+    type: '对称对数比例尺判别值。',
+    name: '比例尺名。',
+    domain: '可以穿过零或完全为负的输入范围。',
+    range: '图区单位中的输出范围。',
+    constant: '零附近线性区宽度，默认 1。',
+    nice: '是否取整 domain。',
+    clamp: '是否夹紧 domain 外输入。',
+    domainPadding: '添加到 domain 的 range 单位留白，或显式 ratio 留白。',
+    singleValueSpan: '单值 domain 的备用跨度。',
+  }}
+/>
+
+## RadialScaleSchema
+
+<ZodSchema
+  name="RadialScaleSchema"
+  description="让所编码面积与数值成正比的径向映射。"
+  descriptions={{
+    type: '径向比例尺判别值。',
+    name: '比例尺名，通常被极坐标 radius 角色引用。',
+    domain: '输入范围。',
+    range: '图区单位中的 [innerRadius, outerRadius]。',
+    nice: '是否取整 domain。',
+    clamp: '是否夹紧 domain 外输入。',
+    domainPadding: '添加到 domain 的 range 单位留白，或显式 ratio 留白。',
+    singleValueSpan: '单值 domain 的备用跨度。',
+  }}
+/>
+
+## BandScaleSchema
+
+<ZodSchema
+  name="BandScaleSchema"
+  description="把分类集映射到等宽带区的比例尺。"
+  descriptions={{
+    domainPadding: '分类间距之外的输出范围留白',
+    type: '带状比例尺判别值。',
+    name: '被坐标角色引用的比例尺名。',
+    domain: '有序分类列表；省略时按数据出现顺序推断。',
+    paddingInner: '相邻带区之间占 step 的间隔比例。',
+    paddingOuter: '首尾外侧占 step 的间隔比例。',
+    align: '外侧空间的分布方式，默认居中。',
+  }}
+/>
+
+## PointScaleSchema
+
+<ZodSchema
+  name="PointScaleSchema"
+  description="把分类值放在等距零带宽位置的比例尺。"
+  descriptions={{
+    domainPadding: '分类间距之外的输出范围留白',
+    type: '点比例尺判别值。',
+    name: '被坐标角色引用的比例尺名。',
+    domain: '有序分类列表；省略时按数据出现顺序推断。',
+    padding: '首尾外侧占 step 的间隔比例。',
+    align: '外侧空间的分布方式，默认居中。',
+  }}
+/>
+
+`PositionScale` 运行时契约同时暴露 `bandwidth` 与最终 range 下的只读 `step`。`band` / `point` 的 `step` 是正离散刻度间距，连续位置 scale 固定为 `0`；Position Adjustment 的 ratio span 只消费这个实时值，不用零宽的 point `bandwidth` 代替。
+
+## OrdinalScaleSchema
+
+<ZodSchema
+  name="OrdinalScaleSchema"
+  description="离散 domain 到离散 range 的序数映射，常用于 series 颜色。"
+  descriptions={{
+    rangeIndex: '分类索引到输出范围的循环映射',
+    'rangeIndex.step': '索引步长，正整数，默认 1',
+    'rangeIndex.offset': '索引偏移，非负整数，默认 0',
+    type: '序数比例尺判别值。',
+    name: '被非位置通道引用的比例尺名。',
+    domain: '有序分类列表。',
+    range: '循环分配给 domain 的输出值；省略时使用默认分类色板。',
+  }}
+/>
+
+## SequentialColorScaleSchema
+
+<ZodSchema
+  name="SequentialColorScaleSchema"
+  description="单调数量到单向连续色带的映射。"
+  descriptions={{
+    type: '顺序颜色比例尺判别值。',
+    name: '被 color 通道引用的比例尺名。',
+    domain: '连续输入范围；省略时从绑定字段推断。',
+    scheme: '用于插值的内置或已注册色方案名，默认 viridis。',
+    range: '覆盖 scheme 的 [low, high] 端点颜色。',
+    nice: '是否取整 domain。',
+    clamp: '是否夹紧 domain 外输入。',
+  }}
+/>
+
+## DivergingColorScaleSchema
+
+<ZodSchema
+  name="DivergingColorScaleSchema"
+  description="围绕有意义中点的连续数量到双向色带的映射。"
+  descriptions={{
+    type: '发散颜色比例尺判别值。',
+    name: '被 color 通道引用的比例尺名。',
+    domain: '严格递增的 [low, mid, high]。',
+    scheme: '围绕中点插值的发散色方案名，默认 rdbu。',
+    range: '覆盖 scheme 的 [low, mid, high] 颜色。',
+    nice: '是否取整 domain。',
+    clamp: '是否夹紧 domain 外输入。',
+  }}
+/>
+
+## QuantizeColorScaleSchema
+
+<ZodSchema
+  name="QuantizeColorScaleSchema"
+  description="把连续 domain 切成等宽 bin，每个 bin 映射到一种离散颜色。"
+  descriptions={{
+    type: '等宽量化颜色比例尺判别值。',
+    name: '被 color 通道引用的比例尺名。',
+    domain: '被等宽切分的 [min, max]。',
+    count: 'bin 数，默认 5；显式 range 时必须与其长度一致。',
+    scheme: '被采样为离散颜色的色方案名。',
+    range: '覆盖 scheme 的显式 bin 颜色。',
+  }}
+/>
+
+## ThresholdColorScaleSchema
+
+<ZodSchema
+  name="ThresholdColorScaleSchema"
+  description="用显式阈值切分数值范围，每个 bin 映射到一种颜色。"
+  descriptions={{
+    type: '阈值颜色比例尺判别值。',
+    name: '被 color 通道引用的比例尺名。',
+    breakpoints: '严格递增的有限阈值，产生 length + 1 个 bin。',
+    scheme: '采样为 bin 颜色的色方案名。',
+    range: '显式 bin 颜色，长度必须等于 breakpoints.length + 1。',
+  }}
+/>
+
+## QuantileColorScaleSchema
+
+<ZodSchema
+  name="QuantileColorScaleSchema"
+  description="按分位数把数据切成样本数近似相等的 bin。"
+  descriptions={{
+    type: '分位数颜色比例尺判别值。',
+    name: '被 color 通道引用的比例尺名。',
+    count: '分位数 bin 数，默认 5；显式 range 时必须与其长度一致。',
+    scheme: '采样为 bin 颜色的色方案名。',
+    range: '覆盖 scheme 的显式 bin 颜色。',
+  }}
+/>
+
+## CustomScaleSchema
+
+<ZodSchema
+  name="CustomScaleSchema"
+  description="由运行时 ScaleDefinition 校验和消费的开放 JSON 比例尺操作。"
+  descriptions={{
+    type: '已注册的自定义比例尺类型，不得与内置类型冲突。',
+    name: '被坐标角色或非位置通道引用的比例尺名。',
+  }}
+/>
+
+## DomainPaddingSchema
+
+连续位置比例尺共用 `domainPadding` 和 `singleValueSpan`。`domainPadding` 的裸数字与省略 kind 的对象使用 range 单位；`kind: 'ratio'` 才使用原始 domain 跨度比例。两种 domain 来源默认都不扩展。
+
+`kind: 'mark'` 引用具名图元按外缘求解自动端，可选 `lower` / `upper` 固定一端。内置支持 linear/time 与无 placement 的 Cartesian2D；能力和失败边界见 [按图元外缘留白](/viz/plot/scale/position#按图元外缘留白)。
+
+mark 分支的 `clearance` 是图元外缘到自动边界的最小净空，使用非负 range 单位，默认 `0`。例如 `{ kind: 'mark', marks: ['dots'], clearance: 8 }`。固定端不叠加净空；空有效点集不扩域，净空过大导致无解时会报错。
+
+`clearance` 支持数值或 `{ lower?: number, upper?: number }`；数值同时用于两端，对象未指定端为 `0`。这里的 lower / upper 对应 domain 起止端，跟随 range 方向，不固定对应视觉左右；Chart 负责将四边净空转换为各轴的这两个端。
+
+<ZodSchema
+  name="DomainPaddingSchema"
+  description="使用 range 输出单位或显式 domain 比例，为连续 domain 两端增加留白。"
+  descriptions={{
+    kind: '留白单位；省略时为 range，ratio 必须显式声明。',
+    lower: 'domain 下端的非负留白；ratio 时必须小于 1。',
+    upper: 'domain 上端的非负留白；ratio 时必须小于 1。',
+  }}
+/>
+
+## CategoryValueSchema
+
+<ZodSchema name="CategoryValueSchema" description="Band / Point domain 中的字符串或数值分类值。" />
+
+## ColorSchemeNameSchema
+
+<ZodSchema name="ColorSchemeNameSchema" description="内置色方案名，或通过 options.colorSchemes 注册的名称。" />

@@ -2,7 +2,7 @@ import { JitterPositionAdjustmentSchema } from '@retikz/plot';
 import type { infer as ZodInfer } from 'zod';
 import { array, literal, strictObject } from 'zod';
 
-import { createChartSourceSchema } from '../../_chart/schemas';
+import { ChartRecipeGuidesSchema, createChartSourceSchema } from '../../_chart/schemas';
 import { ChartFamily, ChartType } from '../constants';
 import {
   createPointChartMarkSchema,
@@ -10,7 +10,6 @@ import {
   PointAutoPaddingSchema,
   PointPositionDomainPaddingSchema,
   PointPropertiesSchema,
-  PointRecipeGuidesSchema,
 } from '../shared';
 import { StripChartEncodingsSchema } from './encoding-schema';
 
@@ -43,7 +42,7 @@ export const StripChartRecipeSchema = strictObject({
   chartType: literal(ChartType.Strip).describe('Globally unique Strip recipe key'),
   encodings: StripChartEncodingsSchema,
   properties: StripChartPropertiesSchema.optional(),
-  guides: PointRecipeGuidesSchema.optional(),
+  guides: ChartRecipeGuidesSchema.optional(),
   marks: array(StripChartMarkSchema).optional(),
 }).describe('Strip Chart recipe payload');
 

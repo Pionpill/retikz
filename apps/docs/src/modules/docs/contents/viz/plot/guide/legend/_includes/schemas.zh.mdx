@@ -1,0 +1,39 @@
+## LegendGuideSchema
+
+<ZodSchema
+  name="LegendGuideSchema"
+  description="把非位置通道可视化为色块、连续 ramp、分箱 class 或渐变 symbol。"
+  descriptions={{
+    symbols: '分类颜色图例按顺序叠加的符号，每项须指定 paint 或绑定的比例尺',
+    type: '图例 guide 判别值。',
+    channel: '图例要可视化的非位置通道名。',
+    scale: '同一通道由多个比例尺驱动时用于消歧的比例尺名。',
+    layer: '生成图例 Scope 的语义图层覆盖。',
+    title: '图例条目上方的非空标题文本块。',
+    position: '图例预留空间的图区侧边，默认 right。',
+    orient: '图例条目排列方向；省略时从 position 派生。',
+    ticks: '连续 ramp 刻度源；size 图例只读取 count。',
+    tickLabels: '图例标签开关或 ramp 刻度格式。',
+    style: '图例局部视觉 token，不改变通道、比例尺、位置与刻度语义。',
+  }}
+/>
+
+## LegendGuideStyleSchema
+
+<ZodSchema
+  name="LegendGuideStyleSchema"
+  description="图例色块、条目、ramp、symbol 和文本的视觉默认值。"
+  descriptions={{
+    swatchSize: '离散图例色块基准尺寸。',
+    swatchGap: '色块与标签的间距。',
+    entryGap: '相邻图例条目的间距。',
+    titleGap: '标题与第一条目的间距。',
+    rampLength: '连续图例 ramp 长边。',
+    rampThickness: '连续图例 ramp 短边厚度。',
+    symbolSize: 'symbol 图例条目的目标视觉框尺寸。',
+    symbolScale: '经 fit 后应用于 symbol 的缩放系数。',
+    symbolFit: 'size 图例 symbol 把 descriptor 半径映射到视觉框的方式。',
+    title: '图例标题文本样式。',
+    label: '图例条目标签文本样式。',
+  }}
+/>

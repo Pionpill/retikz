@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
-import type { CollectedPointChartDeclarations } from '../shared';
-import { collectPointChartDeclarations } from '../shared';
+import type { CollectedTypedChartDeclarations } from '../../authoring';
+import { collectTypedChartDeclarations } from '../../authoring';
 import type { BubbleEncodingsProps } from './BubbleEncodings';
 import { BubbleEncodings } from './BubbleEncodings';
 import type { BubbleChartMark, BubbleMarkProps } from './BubbleMark';
@@ -10,7 +10,7 @@ import type { BubblePropertiesProps } from './BubbleProperties';
 import { BubbleProperties } from './BubbleProperties';
 
 /** BubbleChart direct-child declarations 的完整收集结果 */
-type CollectedBubbleChartDeclarations = CollectedPointChartDeclarations<
+type CollectedBubbleChartDeclarations = CollectedTypedChartDeclarations<
   BubbleEncodingsProps,
   BubblePropertiesProps,
   BubbleChartMark
@@ -18,7 +18,7 @@ type CollectedBubbleChartDeclarations = CollectedPointChartDeclarations<
 
 /** 收集 BubbleChart 的公共与具体类型 direct-child declarations */
 export const collectBubbleChartDeclarations = (children: ReactNode): CollectedBubbleChartDeclarations =>
-  collectPointChartDeclarations(children, {
+  collectTypedChartDeclarations(children, {
     encodingsComponent: BubbleEncodings,
     encodingsName: 'BubbleEncodings',
     propertiesComponent: BubbleProperties,

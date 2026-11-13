@@ -1,0 +1,1236 @@
+{/* Generated reference. Do not edit manually. */}
+
+坐标操作定义位置角色及其比例尺归属：二维坐标需要 `x / y`，一维坐标只使用 `x`，具体角色再由坐标 Definition 映射到几何空间。
+
+React / Vanilla authoring 保留省略字段。`polar2D` 的起始角 `0`、终止角 `360`、内半径比例 `0` 由唯一坐标 schema 声明；直接 `parse()` 会物化这些默认值。Plot 坐标解析复用同一默认值，不回写作者原始配置。
+
+**位置投影约束**
+
+支持 Position Adjustment 的 frame 把位置处理拆成两个同源能力：`mapRoles(values)` 只完成 position scale 映射，`projectMappedRoles(values)` 再把已映射 role tuple 投到屏幕。`projectRoles(values)` 保留为两者组合的普通投影入口。
+
+| 能力                 | 作用                                                       |
+| -------------------- | ---------------------------------------------------------- |
+| `roleScales`         | 按 role 读取最终 `PositionScale`、range、bandwidth 与 step |
+| `mapRoles`           | 原始 role values → scale 输出 tuple                        |
+| `projectMappedRoles` | scale 输出 tuple → 屏幕位置                                |
+| `projectRoles`       | 无 adjustment 时的一步组合入口                             |
+| `placementBoundary`  | 循环 role、边界法向与 glyph extent 的 role 单位换算        |
+
+自定义 coordinate 不使用 placement 时可以只提供 `projectRoles`。Point 声明 placement 时必须同时提供两段投影；要求自动 containment 时还必须提供 `roleScales` 与 `placementBoundary`，缺失能力会 fail-loud。
+
+## 坐标组合与分面
+
+#### <ApiSourceLink label={"CoordinateCompositionSchema"} path={"packages/viz/plot/src/schemas/plot/schema.ts"} startLine={219}>CoordinateCompositionSchema</ApiSourceLink>
+
+<ZodSchema
+  name="CoordinateCompositionSchema"
+  description="Plot 内部的坐标视图注册表及组合策略。"
+  descriptions={{
+    defaultView: '图元或坐标轴未指定 coordinateView 时使用的视图 id。',
+    views: '显式注册的坐标视图，id 必须唯一。',
+    arrangements: '派生额外坐标视图的 Facet 或 Tracks 组合。',
+    spacing: '组合层统一间距、标签距离和外边距。',
+    'spacing.panelGap': '生成的分面 panel 之间的间距，单位为用户坐标。',
+    'spacing.trackGap': 'track 组合中各 track 之间的间距，单位为用户坐标。',
+    'spacing.axisGap': '共享同一 side 或 edge 的坐标轴之间的向外间距。',
+    'spacing.labelGap': 'panel、track 或轴标题标签与相关图区之间的距离。',
+    'spacing.padding': '参与组合 frame 计算的可选外边距。',
+    resolve: '各坐标角色的比例尺、坐标轴和网格解析策略。',
+    'resolve.scale': '按坐标角色声明比例尺解析模式。',
+    'resolve.axis': '按坐标角色声明坐标轴渲染模式。',
+    'resolve.grid': '按坐标角色声明默认网格投影模式。',
+  }}
+/>
+
+#### <ApiSourceLink label={"CoordinateViewSchema"} path={"packages/viz/plot/src/schemas/plot/schema.ts"} startLine={95}>CoordinateViewSchema</ApiSourceLink>
+
+<ZodSchema
+  name="CoordinateViewSchema"
+  description="Plot 组合中的具名坐标视图。"
+  descriptions={{
+    id: '被图元和坐标轴引用的稳定视图 id。',
+    coordinate: '该视图拥有的坐标操作。',
+    placement: '在 Plot 组合中的根、slot 或 overlay 放置；省略时归一为根放置。',
+    meta: '该坐标视图的自由 JSON-safe 元数据。',
+  }}
+/>
+
+#### <ApiSourceLink label={"PlotFacetConfigurationSchema"} path={"packages/viz/plot/src/schemas/plot/schema.ts"} startLine={153}>PlotFacetConfigurationSchema</ApiSourceLink>
+
+<ZodSchema
+  name="PlotFacetConfigurationSchema"
+  description="Plot 与高层 Chart 共同复用的 JSON-safe 分面作者配置。"
+  descriptions={{
+    id: '用于派生 panel view id 和溯源的稳定分面 id。',
+    row: '行分面字段或有序的多级行分面维度。',
+    column: '列分面字段或有序的多级列分面维度。',
+    empty: '空 panel 策略；省略时丢弃无数据的行列组合。',
+    header: '分面行、列标签的可见性和文本样式。',
+    'header.row': '生成的行标签是否可见或采用指定文本样式。',
+    'header.column': '生成的列标签是否可见或采用指定文本样式。',
+    resolve: '分面内的比例尺、坐标轴与网格解析策略。',
+    'resolve.scale': '按坐标角色声明比例尺解析模式。',
+    'resolve.axis': '按坐标角色声明坐标轴渲染模式。',
+    'resolve.grid': '按坐标角色声明默认网格投影模式。',
+    spacing: '分面局部间距覆盖。',
+    'spacing.panelGap': '生成的分面 panel 之间的间距，单位为用户坐标。',
+    'spacing.trackGap': 'track 组合中各 track 之间的间距，单位为用户坐标。',
+    'spacing.axisGap': '共享同一 side 或 edge 的坐标轴之间的向外间距。',
+    'spacing.labelGap': 'panel、track 或轴标题标签与相关图区之间的距离。',
+    'spacing.padding': '参与组合 frame 计算的可选外边距。',
+  }}
+/>
+
+`row` 与 `column` 至少声明一个。该原子配置不包含模板视图、坐标或 panel id 模板；这些低层控制只属于完整 `FacetArrangementSchema`。
+
+#### <ApiSourceLink label={"FacetArrangementSchema"} path={"packages/viz/plot/src/schemas/plot/schema.ts"} startLine={158}>FacetArrangementSchema</ApiSourceLink>
+
+<ZodSchema
+  name="FacetArrangementSchema"
+  description="按数据字段派生分面 panel 坐标视图的组合。"
+  descriptions={{
+    kind: '固定为 facet 的组合判别值。',
+    id: '用于派生 panel view id 和溯源的稳定组合 id。',
+    view: '被所有分面 panel 复用的模板坐标视图 id。',
+    row: '行分面字段或有序的多级行分面维度。',
+    column: '列分面字段或有序的多级列分面维度。',
+    empty: '空 panel 策略；省略时丢弃无数据的行列组合。',
+    header: '分面行、列标签的可见性和文本样式。',
+    'header.row': '生成的行标签是否可见或采用指定文本样式。',
+    'header.column': '生成的列标签是否可见或采用指定文本样式。',
+    resolve: '分面内的比例尺、坐标轴与网格解析策略。',
+    'resolve.scale': '按坐标角色声明比例尺解析模式。',
+    'resolve.axis': '按坐标角色声明坐标轴渲染模式。',
+    'resolve.grid': '按坐标角色声明默认网格投影模式。',
+    spacing: '分面局部间距覆盖。',
+    'spacing.panelGap': '生成的分面 panel 之间的间距，单位为用户坐标。',
+    'spacing.trackGap': 'track 组合中各 track 之间的间距，单位为用户坐标。',
+    'spacing.axisGap': '共享同一 side 或 edge 的坐标轴之间的向外间距。',
+    'spacing.labelGap': 'panel、track 或轴标题标签与相关图区之间的距离。',
+    'spacing.padding': '参与组合 frame 计算的可选外边距。',
+    coordinate: '所有派生 panel 使用的坐标操作；省略时继承模板视图。',
+    viewIdTemplate: '支持 arrangement、row、column 和 panel 占位符的视图 id 模板。',
+  }}
+/>
+
+`row` 与 `column` 至少声明一个。
+
+#### <ApiSourceLink label={"TrackArrangementSchema"} path={"packages/viz/plot/src/schemas/plot/schema.ts"} startLine={193}>TrackArrangementSchema</ApiSourceLink>
+
+<ZodSchema
+  name="TrackArrangementSchema"
+  description="派生共享角色比例尺的多 track 坐标视图组合。"
+  descriptions={{
+    kind: '固定为 tracks 的组合判别值。',
+    id: '用于派生 track view id 和溯源的稳定组合 id。',
+    coordinate: '该 tracks 组合拥有的基础坐标操作。',
+    sharedRoles: '在各 track 之间共享 domain 与 range 的坐标角色。',
+    frame: '各 track 的 frame 共享方式。',
+    tracks: '挂载在该组合下的 track 列表。',
+    header: 'track 标签的可见性。',
+    'header.track': '生成的 track 标签是否可见。',
+    resolve: 'track 局部的比例尺、坐标轴与网格解析策略。',
+    'resolve.scale': '按坐标角色声明比例尺解析模式。',
+    'resolve.axis': '按坐标角色声明坐标轴渲染模式。',
+    'resolve.grid': '按坐标角色声明默认网格投影模式。',
+    spacing: 'track 局部间距覆盖。',
+    'spacing.panelGap': '生成的分面 panel 之间的间距，单位为用户坐标。',
+    'spacing.trackGap': 'track 组合中各 track 之间的间距，单位为用户坐标。',
+    'spacing.axisGap': '共享同一 side 或 edge 的坐标轴之间的向外间距。',
+    'spacing.labelGap': 'panel、track 或轴标题标签与相关图区之间的距离。',
+    'spacing.padding': '参与组合 frame 计算的可选外边距。',
+    viewIdTemplate: '支持 arrangement 和 track 占位符的视图 id 模板。',
+  }}
+/>
+
+#### <ApiSourceLink label={"BoxPaddingSchema"} path={"packages/viz/plot/src/schemas/layout/schema.ts"} startLine={5}>BoxPaddingSchema</ApiSourceLink>
+
+<ZodSchema
+  name="BoxPaddingSchema"
+  description="Plot frame 或坐标组合四边可选外边距。"
+  descriptions={{
+    top: '上边距，用户单位。',
+    right: '右边距，用户单位。',
+    bottom: '下边距，用户单位。',
+    left: '左边距，用户单位。',
+  }}
+/>
+
+## 坐标配置
+
+#### <ApiSourceLink label={"InputPlotCoordinate"} path={"packages/viz/plot-vanilla/src/normalize/plot/contracts.ts"} startLine={22}>InputPlotCoordinate</ApiSourceLink>
+
+```ts
+export type InputPlotCoordinate =
+  | 'polar2D'
+  | 'cartesian1D'
+  | 'polar1D'
+  | {
+      type: 'polar2D';
+      innerRadius?: number;
+      startAngle?: number;
+      endAngle?: number;
+      interpolation?: PolarInterpolation;
+    }
+  | {
+      type: 'cartesian1D';
+      orientation?: 'horizontal' | 'vertical';
+    }
+  | {
+      type: 'polar1D';
+      radius?: number;
+      startAngle?: number;
+      endAngle?: number;
+    }
+  | ({
+      type: string;
+    } & JsonObject)
+  | IRPlotCoordinateOperation;
+```
+
+#### <ApiSourceLink label={"IRPlotCoordinate"} path={"packages/viz/plot/src/schemas/coordinate/types.ts"} startLine={17}>IRPlotCoordinate</ApiSourceLink> / <ApiSourceLink label={"CoordinateSchema"} path={"packages/viz/plot/src/schemas/coordinate/schema.ts"} startLine={115}>CoordinateSchema</ApiSourceLink>
+
+<DocTabs defaultValue="definition">
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRPlotCoordinate = ZodInput<typeof CoordinateSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+<ZodSchema name="PlotCoordinateSchema" description="内置坐标系联合：cartesian2D、polar2D、cartesian1D 或 polar1D。" />
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"IRPlotCoordinateOperation"} path={"packages/viz/plot/src/schemas/coordinate/types.ts"} startLine={20}>IRPlotCoordinateOperation</ApiSourceLink>
+
+```ts
+export type IRPlotCoordinateOperation = IRPlotCoordinate | IRPlotCustomCoordinate;
+```
+
+#### <ApiSourceLink label={"IRPlotCartesian1DCoordinate"} path={"packages/viz/plot/src/schemas/coordinate/types.ts"} startLine={23}>IRPlotCartesian1DCoordinate</ApiSourceLink> / <ApiSourceLink label={"Cartesian1DSchema"} path={"packages/viz/plot/src/schemas/coordinate/schema.ts"} startLine={56}>Cartesian1DSchema</ApiSourceLink>
+
+<DocTabs defaultValue="definition">
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRPlotCartesian1DCoordinate = ZodInfer<typeof Cartesian1DSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+<ZodSchema
+  name="Cartesian1DSchema"
+  description="固定在一条直线上的一维直角坐标系。"
+  descriptions={{
+    type: '一维直角坐标判别值。',
+    x: '唯一位置维度的比例尺名；省略时自动派生。',
+    orientation: '水平或垂直方向；省略时为水平。',
+  }}
+/>
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"IRPlotPolar1DCoordinate"} path={"packages/viz/plot/src/schemas/coordinate/types.ts"} startLine={26}>IRPlotPolar1DCoordinate</ApiSourceLink> / <ApiSourceLink label={"Polar1DSchema"} path={"packages/viz/plot/src/schemas/coordinate/schema.ts"} startLine={73}>Polar1DSchema</ApiSourceLink>
+
+<DocTabs defaultValue="definition">
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRPlotPolar1DCoordinate = ZodInfer<typeof Polar1DSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+<ZodSchema
+  name="Polar1DSchema"
+  description="固定在一个圆周上的一维极坐标系。"
+  descriptions={{
+    type: '一维极坐标判别值。',
+    angle: '唯一角度维度的比例尺名；省略时自动派生。',
+    radius: '圆半径占可用半径的比例；省略时为 1。',
+    startAngle: '角度范围起点（度）；省略时为 0。',
+    endAngle: '角度范围终点（度）；省略时为 360。',
+  }}
+/>
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"IRPlotPolar2DCoordinate"} path={"packages/viz/plot/src/schemas/coordinate/types.ts"} startLine={29}>IRPlotPolar2DCoordinate</ApiSourceLink> / <ApiSourceLink label={"Polar2DSchema"} path={"packages/viz/plot/src/schemas/coordinate/schema.ts"} startLine={25}>Polar2DSchema</ApiSourceLink>
+
+<DocTabs defaultValue="definition">
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRPlotPolar2DCoordinate = ZodInput<typeof Polar2DSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+<ZodSchema
+  name="Polar2DSchema"
+  description="二维极坐标系。"
+  descriptions={{
+    type: '二维极坐标判别值，angle 绕中心旋转、radius 向外延伸。',
+    angle: '角度角色的比例尺名；省略时按字段类型派生。',
+    radius: '半径角色的比例尺名；省略时按字段类型派生。',
+    interpolation: '相邻极坐标位置的连接空间；省略时按有效角向位置比例尺的连续性推断。',
+    startAngle: '角度范围起点（度），0 表示 +x 方向。',
+    endAngle: '角度范围终点（度），默认 360。',
+    innerRadius: '内圆半径占外半径的比例，0 表示无中孔。',
+  }}
+/>
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"IRPlotCustomCoordinate"} path={"packages/viz/plot/src/schemas/coordinate/types.ts"} startLine={32}>IRPlotCustomCoordinate</ApiSourceLink> / <ApiSourceLink label={"CustomCoordinateSchema"} path={"packages/viz/plot/src/schemas/coordinate/schema.ts"} startLine={110}>CustomCoordinateSchema</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员     | 类型                                                    | 默认值 | 说明 |
+| -------- | ------------------------------------------------------- | ------ | ---- |
+| 索引签名 | `[key: string]: import("@retikz/foundation").JsonValue` | —      | —    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRPlotCustomCoordinate = ZodInfer<typeof CustomCoordinateSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+<ZodSchema
+  name="CustomCoordinateSchema"
+  description="由运行时 CoordinateDefinition 校验和消费的开放 JSON 坐标操作。"
+  descriptions={{ type: '已注册的自定义坐标类型，不得与内置或保留类型冲突。' }}
+/>
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"CoordinateOperationSchema"} path={"packages/viz/plot/src/schemas/coordinate/schema.ts"} startLine={123}>CoordinateOperationSchema</ApiSourceLink>
+
+<ZodSchema name="PlotCoordinateOperationSchema" description="内置坐标配置或自定义坐标操作的联合。" />
+
+#### <ApiSourceLink label={"Cartesian2DSchema"} path={"packages/viz/plot/src/schemas/coordinate/schema.ts"} startLine={12}>Cartesian2DSchema</ApiSourceLink>
+
+<ZodSchema
+  name="Cartesian2DSchema"
+  description="二维直角坐标系。"
+  descriptions={{
+    type: '二维直角坐标系判别值，x 水平、y 垂直。',
+    x: 'x 位置角色的比例尺名；省略时按绑定字段类型派生。',
+    y: 'y 位置角色的比例尺名；省略时按绑定字段类型派生。',
+  }}
+/>
+
+## 定义与注册
+
+#### <ApiSourceLink label={"CoordinateDefinition"} path={"packages/viz/plot/src/contract/coordinate/define.ts"} startLine={148}>CoordinateDefinition</ApiSourceLink>
+
+definition 是含函数的运行时对象，不进入 JSON IR；IR 只保存 `{ type, ...config }` 形态的 coordinate operation
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员                          | 类型                                                                                                 | 默认值 | 说明                                                                                  |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------- |
+| `TCoordinateOperation` (泛型) | `extends IRPlotCoordinateOperation = IRPlotCoordinateOperation`                                      | —      | 坐标系 schema 解析的操作类型，关联尺度绑定与坐标解析                                  |
+| `domainPadding?`              | `CoordinateDomainPaddingCapability`                                                                  | —      | 位置角色的输出空间边界度量能力                                                        |
+| `resolve`                     | `(operation: TCoordinateOperation, ctx: CoordinateDefinitionResolveContext) => CoordinateResolution` | —      | 将 coordinate operation 解析成运行时 frame 与 guide 层                                |
+| `roles`                       | `ReadonlyArray<DimensionRole>`                                                                       | —      | 该坐标系消费的定位角色序，用于 required-channel 与 guide-dimension 校验               |
+| `scaleBinding?`               | `CoordinateScaleBinding<TCoordinateOperation>`                                                       | —      | operation 字段与统一位置 role 之间的可选 scale binding；默认使用 role 同名字段        |
+| `schema`                      | `ZodType<TCoordinateOperation>`                                                                      | —      | 完整 coordinate operation schema；必须含非空 z.literal('type') 供 registry 提取注册键 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type CoordinateDefinition<TCoordinateOperation extends IRPlotCoordinateOperation = IRPlotCoordinateOperation> = {
+  domainPadding?: CoordinateDomainPaddingCapability;
+  schema: ZodType<TCoordinateOperation>;
+  roles: ReadonlyArray<DimensionRole>;
+  scaleBinding?: CoordinateScaleBinding<TCoordinateOperation>;
+  resolve: (operation: TCoordinateOperation, ctx: CoordinateDefinitionResolveContext) => CoordinateResolution;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"AnyCoordinateDefinition"} path={"packages/viz/plot/src/contract/coordinate/define.ts"} startLine={294}>AnyCoordinateDefinition</ApiSourceLink>
+
+registry 需要存放不同 operation 泛型的 definition；取出后由具体 schema parse 收窄，因此 resolve 入参在表内用 never 防止误调
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="直接属性">
+
+其余属性继承自 `CoordinateDefinition<IRPlotCoordinateOperation>`，并移除 `'scaleBinding'`、`'schema'`、`'resolve'`。完整组合关系见“类型定义”
+
+<ApiTable>
+
+| 成员            | 类型                                                                                                                                                                            | 默认值 | 说明                                                                            |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------- |
+| `resolve`       | `(operation: never, ctx: CoordinateDefinitionResolveContext) => CoordinateResolution`                                                                                           | —      | 内部宽类型占位；真正调用前必须用该 definition.schema 解析 operation             |
+| `scaleBinding?` | `Readonly<{`<br />`read: (operation: never) => CoordinateScaleNames;`<br />`bind: (operation: never, scaleNames: CoordinateScaleNames) => IRPlotCoordinateOperation;`<br />`}>` | —      | 泛型擦除后的可选 scale binding；调用前必须先由 schema 收窄 operation            |
+| `schema`        | `ZodType`                                                                                                                                                                       | —      | 不同 definition 的 schema 泛型不同，registry 只关心能从中提取 type 并执行 parse |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type AnyCoordinateDefinition = Omit<
+  CoordinateDefinition<IRPlotCoordinateOperation>,
+  'scaleBinding' | 'schema' | 'resolve'
+> & {
+  schema: ZodType;
+  scaleBinding?: Readonly<{
+    read: (operation: never) => CoordinateScaleNames;
+    bind: (operation: never, scaleNames: CoordinateScaleNames) => IRPlotCoordinateOperation;
+  }>;
+  resolve: (operation: never, ctx: CoordinateDefinitionResolveContext) => CoordinateResolution;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"defineCoordinate"} path={"packages/viz/plot/src/contract/coordinate/define.ts"} startLine={231}>defineCoordinate</ApiSourceLink>
+
+这是坐标系扩展的唯一注册单元：schema 决定 IR 中允许的 coordinate operation，
+roles 决定 mark 必填位置通道，resolve 把 JSON operation 解析成运行时 frame 与 guide 层。内置坐标系和
+自定义坐标系都应通过这个对象进入 registry，避免内置白名单与扩展补丁接口分叉
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称                   | 类型 / 签名                                  | 说明                                                 |
+| ------ | ---------------------- | -------------------------------------------- | ---------------------------------------------------- |
+| 泛型   | `TCoordinateOperation` | `extends IRPlotCoordinateOperation`          | 坐标系 schema 解析的操作类型，关联尺度绑定与坐标解析 |
+| 参数   | `def`                  | `CoordinateDefinition<TCoordinateOperation>` | 坐标配置 Schema、位置角色与解析能力                  |
+| 返回值 | —                      | `CoordinateDefinition<TCoordinateOperation>` | 原样返回传入的定义对象                               |
+
+</ApiTable>
+
+> **备注：** 当前 helper 只做 `CoordinateDefinition` 类型约束并原样返回定义对象；保留稳定入口是为了与其它 registry API 对齐，并为后续运行时校验、默认值归一或泛型收敛预留 contract hook
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export declare const defineCoordinate: <TCoordinateOperation extends IRPlotCoordinateOperation>(
+  def: CoordinateDefinition<TCoordinateOperation>,
+) => CoordinateDefinition<TCoordinateOperation>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"resolveCoordinateRegistry"} path={"packages/viz/plot/src/providers/coordinate/registry.ts"} startLine={15}>resolveCoordinateRegistry</ApiSourceLink>
+
+内置坐标系总是先注册；用户自定义 definition 不能覆盖内置 type，也不能彼此重复。
+返回值是一次 lowering 使用的完整 registry，后续通过 coordinate.type 找到 definition，再由该 definition.schema parse
+operation，并调用 definition.resolve 得到运行时 frame
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称      | 类型 / 签名                              | 说明                                                   |
+| ------ | --------- | ---------------------------------------- | ------------------------------------------------------ |
+| 参数   | `custom?` | `ReadonlyArray<AnyCoordinateDefinition>` | 自定义坐标定义；省略时仅注册内置坐标系                 |
+| 返回值 | —         | `Map<string, AnyCoordinateDefinition>`   | 按坐标类型索引的完整定义表                             |
+| 错误   | —         | —                                        | Schema 缺少非空字面量 type、位置角色重复或注册类型冲突 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export declare const resolveCoordinateRegistry: (
+  custom?: ReadonlyArray<AnyCoordinateDefinition>,
+) => Map<string, AnyCoordinateDefinition>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"CoordinateDefinitionResolveContext"} path={"packages/viz/plot/src/contract/coordinate/define.ts"} startLine={64}>CoordinateDefinitionResolveContext</ApiSourceLink>
+
+这里暴露的是坐标系无关的能力：画布尺寸、数据取值、scale 解析、guide 下沉与 provenance。
+definition 不应该绕过这些 helper 另建平行数据 / scale 语义
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员                             | 类型                                                                                                                                                          | 默认值 | 说明                                                                                              |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------- |
+| `assertBaselineScaleCompatible`  | `(scaleType: string, marks: ReadonlyArray<IRPlotMark>, role?: DimensionRole) => void`                                                                         | —      | 校验 interval / area 等依赖 baseline 的 mark 是否可安全使用当前 scale 类型（type 串，含自定义）   |
+| `axisGuides`                     | `ReadonlyArray<IRPlotAxisGuide>`                                                                                                                              | —      | 当前 plot 内所有 axis guide；definition 决定如何将其下沉到 grid / axis 层                         |
+| `buildPositionScale`             | `(def: IRPlotScaleOperation, values: Array<unknown>, range: readonly [`<br />`number,`<br />`number`<br />`]) => PositionScale`                               | —      | 把 scale operation 与数据域、屏幕 range 组合成可投影的位置 scale                                  |
+| `collectAxisTicks`               | `(role: DimensionRole) => TickSet \| undefined`                                                                                                               | —      | 为角色位置由区间边界推导的标记覆盖坐标轴刻度                                                      |
+| `collectPositionValues`          | `(role: DimensionRole, opts?: {`<br />`axis?: 'primary' \| 'secondary';`<br />`includeBaseline?: boolean;`<br />`}) => Array<unknown>`                        | —      | 按内置坐标系语义收集定位值；会保留 interval bounds / baseline 的既有特殊域贡献                    |
+| `collectRoleValues`              | `(role: DimensionRole, opts?: {`<br />`includeBaseline?: boolean;`<br />`}) => Array<unknown>`                                                                | —      | 按定位角色收集 mark 通道原始值；includeBaseline 用于需要把 baseline 纳入连续域的值轴              |
+| `fontSize`                       | `number`                                                                                                                                                      | —      | guide / label 使用的基础字号                                                                      |
+| `guideRoleRangeOverrides?`       | `Partial<Record<DimensionRole, readonly [`<br />`number,`<br />`number`<br />`]>>`                                                                            | —      | 坐标轴与网格的 role 边界覆盖；空对象使用布局范围，省略时沿用最终 role range，刻度仍使用映射比例尺 |
+| `height`                         | `number`                                                                                                                                                      | —      | 画布高度                                                                                          |
+| `labelGap?`                      | `number`                                                                                                                                                      | —      | guide title / composition label 固定间距                                                          |
+| `layoutReserve?`                 | `Partial<BoundsInsets>`                                                                                                                                       | —      | plot layout / decoration 触发的自动预留；内置坐标系把它叠加到自动 plotArea 边距                   |
+| `legendReserve`                  | `Partial<BoundsInsets>`                                                                                                                                       | —      | legend 预留区域；内置坐标系用它收窄 plotArea，自定义坐标系 v1 通常保持满画布                      |
+| `lowerCustomAxis`                | `(frame: CoordinateFrame, guide: IRPlotAxisGuide, fontSize: number, provenance?: ProvenanceContext) => LoweredGuide`                                          | —      | 下沉曲线坐标轴的入口，依赖 frame.roleScales 与 frame.projectRoles                                 |
+| `lowerGuide`                     | `(guide: IRPlotAxisGuide, ctx: GuideContext, provenance?: ProvenanceContext) => LoweredGuide`                                                                 | —      | 下沉直线 / 内置 guide 的通用入口                                                                  |
+| `margin?`                        | `Partial<BoundsInsets>`                                                                                                                                       | —      | 用户传入的边距覆盖；自定义坐标系可选择是否消费                                                    |
+| `marks`                          | `ReadonlyArray<IRPlotMark>`                                                                                                                                   | —      | 当前 plot 的 mark 列表；主要用于 scale 兼容性与坐标系特定校验                                     |
+| `plotAreaOverride?`              | `CoordinatePlotArea`                                                                                                                                          | —      | overlay scope 共享的目标 plotArea；给定时坐标系仍独立训练 scale，但使用该矩形作为 range           |
+| `provenance?`                    | `ProvenanceContext`                                                                                                                                           | —      | provenance 上下文，透传给 guide 下沉以保留诊断来源                                                |
+| `resolveGuideTicks`              | `(scale: PositionScale, source?: NonNullable<IRPlotAxisGuide['ticks']>, labelFormat?: Exclude<IRPlotAxisGuide['tickLabels'], false \| undefined>) => TickSet` | —      | 解析轴 / 网格候选刻度；由 resolve 层注入，provider 不直接依赖 guide resolver                      |
+| `resolvePositionScaleContinuity` | `(operation: IRPlotScaleOperation) => PositionScaleContinuity`                                                                                                | —      | 读取已注册 position scale definition 的拓扑连续性；channel scale 与未注册 type 会 fail-loud       |
+| `resolveScaleForRole`            | `(role: DimensionRole, scaleName: string \| undefined, values: Array<unknown>) => IRPlotScaleOperation`                                                       | —      | 解析某个定位角色的 scale operation；未指定 scaleName 时按数据推导默认 scale（含自定义 type）      |
+| `resolveVisibleGuideTicks`       | `(ticks: TickSet, source: NonNullable<IRPlotAxisGuide['ticks']> \| undefined, coordinate: (value: IRDataScalarValue) => number) => TickSet`                   | —      | 按 guide density 从候选刻度中筛出可见刻度；由 resolve 层注入                                      |
+| `roleRangeOverrides?`            | `Partial<Record<DimensionRole, readonly [`<br />`number,`<br />`number`<br />`]>>`                                                                            | —      | 指定 role 的最终 range；用于 scaffold track 把局部 role 映射进 track band                         |
+| `rows`                           | `Array<ExternalRow>`                                                                                                                                          | —      | 已解析的外部数据行；高级坐标系可按需读取完整数据                                                  |
+| `textMeasurer`                   | `PlotLabelMeasure`                                                                                                                                            | —      | 当前 Core 编译环境的标签测量                                                                      |
+| `width`                          | `number`                                                                                                                                                      | —      | 画布宽度                                                                                          |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type CoordinateDefinitionResolveContext = {
+  textMeasurer: PlotLabelMeasure;
+  width: number;
+  height: number;
+  fontSize: number;
+  labelGap?: number;
+  margin?: Partial<BoundsInsets>;
+  layoutReserve?: Partial<BoundsInsets>;
+  legendReserve: Partial<BoundsInsets>;
+  plotAreaOverride?: CoordinatePlotArea;
+  roleRangeOverrides?: Partial<Record<DimensionRole, readonly [number, number]>>;
+  guideRoleRangeOverrides?: Partial<Record<DimensionRole, readonly [number, number]>>;
+  provenance?: ProvenanceContext;
+  collectRoleValues: (
+    role: DimensionRole,
+    opts?: {
+      includeBaseline?: boolean;
+    },
+  ) => Array<unknown>;
+  collectPositionValues: (
+    role: DimensionRole,
+    opts?: {
+      axis?: 'primary' | 'secondary';
+      includeBaseline?: boolean;
+    },
+  ) => Array<unknown>;
+  collectAxisTicks: (role: DimensionRole) => TickSet | undefined;
+  resolveGuideTicks: (
+    scale: PositionScale,
+    source?: NonNullable<IRPlotAxisGuide['ticks']>,
+    labelFormat?: Exclude<IRPlotAxisGuide['tickLabels'], false | undefined>,
+  ) => TickSet;
+  resolveVisibleGuideTicks: (
+    ticks: TickSet,
+    source: NonNullable<IRPlotAxisGuide['ticks']> | undefined,
+    coordinate: (value: IRDataScalarValue) => number,
+  ) => TickSet;
+  resolveScaleForRole: (
+    role: DimensionRole,
+    scaleName: string | undefined,
+    values: Array<unknown>,
+  ) => IRPlotScaleOperation;
+  resolvePositionScaleContinuity: (operation: IRPlotScaleOperation) => PositionScaleContinuity;
+  buildPositionScale: (
+    def: IRPlotScaleOperation,
+    values: Array<unknown>,
+    range: readonly [number, number],
+  ) => PositionScale;
+  assertBaselineScaleCompatible: (scaleType: string, marks: ReadonlyArray<IRPlotMark>, role?: DimensionRole) => void;
+  axisGuides: ReadonlyArray<IRPlotAxisGuide>;
+  lowerGuide: (guide: IRPlotAxisGuide, ctx: GuideContext, provenance?: ProvenanceContext) => LoweredGuide;
+  lowerCustomAxis: (
+    frame: CoordinateFrame,
+    guide: IRPlotAxisGuide,
+    fontSize: number,
+    provenance?: ProvenanceContext,
+  ) => LoweredGuide;
+  rows: Array<ExternalRow>;
+  marks: ReadonlyArray<IRPlotMark>;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"CoordinateResolution"} path={"packages/viz/plot/src/contract/coordinate/define.ts"} startLine={31}>CoordinateResolution</ApiSourceLink>
+
+frame 负责 mark 投影；plotArea 供布局 / clipping / locator 使用；gridLayers 与 axisLayers
+是坐标系在解析阶段同步下沉出的 guide 层，避免 mark 与 guide 使用不同的临时投影状态
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员         | 类型                 | 默认值 | 说明                                      |
+| ------------ | -------------------- | ------ | ----------------------------------------- |
+| `axisLayers` | `Array<IRScope>`     | —      | guide axis 下沉后的 IR scope 列表         |
+| `frame`      | `CoordinateFrame`    | —      | mark / guide / locator 共用的运行时坐标帧 |
+| `gridLayers` | `Array<IRScope>`     | —      | guide grid 下沉后的 IR scope 列表         |
+| `plotArea`   | `CoordinatePlotArea` | —      | 当前坐标系计算出的绘图区                  |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type CoordinateResolution = {
+  frame: CoordinateFrame;
+  plotArea: CoordinatePlotArea;
+  gridLayers: Array<IRScope>;
+  axisLayers: Array<IRScope>;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"CoordinatePlotArea"} path={"packages/viz/plot/src/contract/coordinate/define.ts"} startLine={15}>CoordinatePlotArea</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员     | 类型     | 默认值 | 说明                |
+| -------- | -------- | ------ | ------------------- |
+| `height` | `number` | —      | 绘图区高度          |
+| `width`  | `number` | —      | 绘图区宽度          |
+| `x`      | `number` | —      | 绘图区左上角 x 坐标 |
+| `y`      | `number` | —      | 绘图区左上角 y 坐标 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type CoordinatePlotArea = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+## 比例尺绑定
+
+#### <ApiSourceLink label={"DimensionRole"} path={"packages/viz/plot/src/contract/coordinate/types.ts"} startLine={12}>DimensionRole</ApiSourceLink>
+
+内置坐标系使用 x / y；自定义 CoordinateDefinition 可声明任意非空字符串角色。
+schema 只保留 JSON 形状，角色是否被坐标系支持由 definition.roles 在 lowering 阶段校验
+
+```ts
+export type DimensionRole = string;
+```
+
+#### <ApiSourceLink label={"CoordinateScaleNames"} path={"packages/viz/plot/src/contract/coordinate/define.ts"} startLine={43}>CoordinateScaleNames</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员     | 类型                                          | 默认值 | 说明 |
+| -------- | --------------------------------------------- | ------ | ---- |
+| 索引签名 | `readonly [key: string]: string \| undefined` | —      | —    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type CoordinateScaleNames = Readonly<Partial<Record<DimensionRole, string>>>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"CoordinateScaleBinding"} path={"packages/viz/plot/src/contract/coordinate/define.ts"} startLine={51}>CoordinateScaleBinding</ApiSourceLink>
+
+read 把 operation 自有字段投影为统一 role；bind 将统一 role 写回 operation 自有字段。
+省略该契约时，Plot 默认读取和写入与 role 同名的 operation 字段
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员                          | 类型                                                                                          | 默认值 | 说明                                                      |
+| ----------------------------- | --------------------------------------------------------------------------------------------- | ------ | --------------------------------------------------------- |
+| `TCoordinateOperation` (泛型) | `extends IRPlotCoordinateOperation`                                                           | —      | 坐标系 schema 解析的操作类型，关联尺度绑定与坐标解析      |
+| `readonly bind`               | `(operation: TCoordinateOperation, scaleNames: CoordinateScaleNames) => TCoordinateOperation` | —      | 将按 role 命名的 scale 写入坐标 operation，并保留其它配置 |
+| `readonly read`               | `(operation: TCoordinateOperation) => CoordinateScaleNames`                                   | —      | 从坐标 operation 读取按 role 命名的 scale                 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type CoordinateScaleBinding<TCoordinateOperation extends IRPlotCoordinateOperation> = Readonly<{
+  read: (operation: TCoordinateOperation) => CoordinateScaleNames;
+  bind: (operation: TCoordinateOperation, scaleNames: CoordinateScaleNames) => TCoordinateOperation;
+}>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"readCoordinateScaleNames"} path={"packages/viz/plot/src/contract/coordinate/define.ts"} startLine={177}>readCoordinateScaleNames</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称                   | 类型 / 签名                         | 说明                                                 |
+| ------ | ---------------------- | ----------------------------------- | ---------------------------------------------------- |
+| 泛型   | `TCoordinateOperation` | `extends IRPlotCoordinateOperation` | 坐标系 schema 解析的操作类型，关联尺度绑定与坐标解析 |
+| 参数   | `definition`           | `CoordinateScaleBindingDefinition`  | 坐标定义及其位置角色和可选绑定钩子                   |
+|        | `operation`            | `TCoordinateOperation`              | 已按该定义解析的坐标操作                             |
+| 返回值 | —                      | `CoordinateScaleNames`              | 当前定义角色上的具名比例尺绑定                       |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export declare const readCoordinateScaleNames: <TCoordinateOperation extends IRPlotCoordinateOperation>(
+  definition: CoordinateScaleBindingDefinition,
+  operation: TCoordinateOperation,
+) => CoordinateScaleNames;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"bindCoordinateScaleNames"} path={"packages/viz/plot/src/contract/coordinate/define.ts"} startLine={201}>bindCoordinateScaleNames</ApiSourceLink>
+
+消费已精确解析的 operation；自定义 hook 与默认同名字段路径直接返回类型化绑定结果，不重复解析
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称                   | 类型 / 签名                         | 说明                                                 |
+| ------ | ---------------------- | ----------------------------------- | ---------------------------------------------------- |
+| 泛型   | `TCoordinateOperation` | `extends IRPlotCoordinateOperation` | 坐标系 schema 解析的操作类型，关联尺度绑定与坐标解析 |
+| 参数   | `definition`           | `CoordinateScaleBindingDefinition`  | 坐标定义及其位置角色和可选绑定钩子                   |
+|        | `operation`            | `TCoordinateOperation`              | 已按该定义解析的坐标操作                             |
+|        | `scaleNames`           | `CoordinateScaleNames`              | 待写入的位置角色与比例尺名称                         |
+| 返回值 | —                      | `TCoordinateOperation`              | 保留其它配置并写入适用绑定的坐标操作                 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export declare const bindCoordinateScaleNames: <TCoordinateOperation extends IRPlotCoordinateOperation>(
+  definition: CoordinateScaleBindingDefinition,
+  operation: TCoordinateOperation,
+  scaleNames: CoordinateScaleNames,
+) => TCoordinateOperation;
+```
+
+</DocTab>
+
+</DocTabs>
+
+## 位置投影
+
+#### <ApiSourceLink label={"CoordinateFrame"} path={"packages/viz/plot/src/contract/coordinate/types.ts"} startLine={28}>CoordinateFrame</ApiSourceLink>
+
+grammar of graphics 的 coordinate 层：scale 把值归一化后，frame 负责归一化→2D 点。
+内置坐标系（cartesian / polar）与自定义注册坐标系都满足这一契约——内置帧是它的结构子类型，
+带各自专属字段（如 primary/secondary scale），需要时由 providers 的 `isXxxCoordinateFrame` 守卫收窄。
+lowering 算一次，mark / guide / locator 共享同一帧；投影函数由实现/注册 definition 提供，不进入 JSON IR。
+`type` 保持 definition 注册的真实判别串；非有限值返回 null（跳过该点）
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员                  | 类型                                                                                  | 默认值 | 说明                                                                                                                                                                                                                                                                                                                |
+| --------------------- | ------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mapRoles?`           | `(values: ReadonlyArray<unknown>) => ReadonlyArray<number> \| null`                   | —      | 原始角色值经各 role 的 position scale 映射；支持 role-space placement 时必须提供                                                                                                                                                                                                                                    |
+| `placementBoundary?`  | `CoordinateFrame["placementBoundary"]`                                                | —      | role-space containment 所需的 coordinate 边界度量；未提供时不能消费要求自动 containment 的 adjustment                                                                                                                                                                                                               |
+| `project`             | `(primaryValue: unknown, secondaryValue: unknown) => Position \| null`                | —      | 投影别名：2 通道便捷形态，委托 projectRoles；不适用时返回 null                                                                                                                                                                                                                                                      |
+| `projectCell?`        | `(cell: Cell, options?: CellProjectionOptions) => CellGeometry`                       | —      | 正交 cell → CellGeometry（可选）：实现了才支持 cell 类 mark（interval / sector / rect）<br />曲线 / 自定义 frame 自行把 cell 四边经自身几何投影密采样成 contour（用引擎 helper densifyCellContour）；<br />不回传 → cell 类 mark 在该坐标系 fail-loud（无引擎自动兜底——「输出空间→屏幕」后段映射只有 frame 自己有） |
+| `projectMappedRoles?` | `(values: ReadonlyArray<number>) => Position \| null`                                 | —      | 已映射角色值投影到屏幕；支持 role-space placement 时必须提供                                                                                                                                                                                                                                                        |
+| `projectRoles`        | `(values: ReadonlyArray<unknown>) => Position \| null`                                | —      | N 通道投影：按 roles 序传值 → 屏幕点；非有限 → null（跳过）                                                                                                                                                                                                                                                         |
+| `projectSegment?`     | `(from: ReadonlyArray<number>, to: ReadonlyArray<number>) => Array<Position> \| null` | —      | 映射后的角色端点沿坐标几何连接；无法投影时返回 null                                                                                                                                                                                                                                                                 |
+| `roles`               | `ReadonlyArray<DimensionRole>`                                                        | —      | 位置角色序（消费哪些 mark 通道，按序喂 projectRoles）                                                                                                                                                                                                                                                               |
+| `roleScales?`         | `Partial<Record<DimensionRole, PositionScale>>`                                       | —      | 各角色的位置 scale（可选）：供 guide 画轴用——取该角色刻度、其余角色锚在各自 domain 起点，<br />沿 projectRoles 密采样得曲线轴线 + 刻度点。不回传 → 该坐标系不画轴                                                                                                                                                   |
+| `supportsPlotArea?`   | `boolean`                                                                             | `true` | 是否支持绘图区背景、边框和区域锚点                                                                                                                                                                                                                                                                                  |
+| `tangentAt?`          | `(role: DimensionRole, mappedRoles: ReadonlyArray<number>) => Position \| null`       | —      | 映射后角色参数递增时的屏幕切向；与 mapRoles / projectMappedRoles 同源<br />返回有限非零向量；奇点或尖点返回 null。显式节点定向要求提供此能力，Guide 缺省仍可数值求切向                                                                                                                                              |
+| `type`                | `string`                                                                              | —      | 坐标系注册 type；内置用其判别串（如 `cartesian2D`），自定义用自己的 type（如 `bridge` / `sine`）                                                                                                                                                                                                                    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type CoordinateFrame = {
+  supportsPlotArea?: boolean;
+  type: string;
+  roles: ReadonlyArray<DimensionRole>;
+  project: (primaryValue: unknown, secondaryValue: unknown) => Position | null;
+  projectRoles: (values: ReadonlyArray<unknown>) => Position | null;
+  mapRoles?: (values: ReadonlyArray<unknown>) => ReadonlyArray<number> | null;
+  projectMappedRoles?: (values: ReadonlyArray<number>) => Position | null;
+  placementBoundary?: {
+    isCyclic: (role: DimensionRole) => boolean;
+    unitNormal: (role: DimensionRole, mappedRoles: ReadonlyArray<number>) => readonly [number, number] | null;
+    glyphExtentInRoleUnits: (
+      role: DimensionRole,
+      mappedRoles: ReadonlyArray<number>,
+      screenExtent: number,
+    ) => number | null;
+  };
+  roleScales?: Partial<Record<DimensionRole, PositionScale>>;
+  tangentAt?: (role: DimensionRole, mappedRoles: ReadonlyArray<number>) => Position | null;
+  projectCell?: (cell: Cell, options?: CellProjectionOptions) => CellGeometry;
+  projectSegment?: (from: ReadonlyArray<number>, to: ReadonlyArray<number>) => Array<Position> | null;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"CoordinateFrameOptions"} path={"packages/viz/plot/src/contract/coordinate/define.ts"} startLine={236}>CoordinateFrameOptions</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员                  | 类型                                                                | 默认值 | 说明                                                                                                    |
+| --------------------- | ------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------- |
+| `mapRoles?`           | `(values: ReadonlyArray<unknown>) => ReadonlyArray<number> \| null` | —      | 原始角色值经 position scale 映射；支持 role-space placement 时与 projectMappedRoles 一起提供            |
+| `placementBoundary?`  | `NonNullable<CoordinateFrame['placementBoundary']>`                 | —      | role-space placement containment 的 coordinate 边界度量                                                 |
+| `projectCell?`        | `CoordinateFrame['projectCell']`                                    | —      | 正交 cell → CellGeometry；实现了才支持 cell 类 mark（interval / sector），省略 → cell 类 mark fail-loud |
+| `projectMappedRoles?` | `(values: ReadonlyArray<number>) => Position \| null`               | —      | 已映射角色值投影到屏幕；支持 role-space placement 时与 mapRoles 一起提供                                |
+| `projectSegment?`     | `CoordinateFrame['projectSegment']`                                 | —      | 映射后的角色端点沿坐标几何连接                                                                          |
+| `roleScales?`         | `Partial<Record<DimensionRole, PositionScale>>`                     | —      | 各角色位置 scale；供 guide 画轴。省略 → 该坐标系无轴                                                    |
+| `supportsPlotArea?`   | `boolean`                                                           | `true` | 是否支持绘图区背景、边框和区域锚点                                                                      |
+| `tangentAt?`          | `CoordinateFrame['tangentAt']`                                      | —      | 映射后角色递增的屏幕切向；提供时必须同时提供两段投影                                                    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type CoordinateFrameOptions = {
+  supportsPlotArea?: boolean;
+  roleScales?: Partial<Record<DimensionRole, PositionScale>>;
+  tangentAt?: CoordinateFrame['tangentAt'];
+  projectCell?: CoordinateFrame['projectCell'];
+  projectSegment?: CoordinateFrame['projectSegment'];
+  mapRoles?: (values: ReadonlyArray<unknown>) => ReadonlyArray<number> | null;
+  projectMappedRoles?: (values: ReadonlyArray<number>) => Position | null;
+  placementBoundary?: NonNullable<CoordinateFrame['placementBoundary']>;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"createCoordinateFrame"} path={"packages/viz/plot/src/contract/coordinate/define.ts"} startLine={270}>createCoordinateFrame</ApiSourceLink>
+
+把 definition 注册 type、roles 与 projectRoles 包成 CoordinateFrame。`type` 会保留调用方注册的真实判别值，
+不会压成 `custom`；point/path/region 等按 `projectRoles` 投影。第四参 options 逐项声明额外能力：
+roleScales 允许 guide / interval 构造读取 scale，mapRoles / projectMappedRoles 开启两段 position projection，
+placementBoundary 开启 role-space containment，tangentAt 提供局部切向，projectSegment 提供坐标路径，projectCell 开启 cell 类 mark。
+supportsPlotArea 默认开启，可显式设为 false；其它未声明的能力保持不可用并由消费方 fail-loud
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称           | 类型 / 签名                                            | 说明                                     |
+| ------ | -------------- | ------------------------------------------------------ | ---------------------------------------- |
+| 参数   | `type`         | `string`                                               | 已注册的坐标类型名称                     |
+|        | `roles`        | `ReadonlyArray<DimensionRole>`                         | 投影函数接收的位置角色顺序               |
+|        | `projectRoles` | `(values: ReadonlyArray<unknown>) => Position \| null` | 原始角色值到屏幕位置的投影函数           |
+|        | `options?`     | `CoordinateFrameOptions`                               | 按需声明比例尺、分段投影与单元几何等能力 |
+| 返回值 | —              | `CoordinateFrame`                                      | 供图元、坐标轴与定位器共用的坐标帧       |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export declare const createCoordinateFrame: (
+  type: string,
+  roles: ReadonlyArray<DimensionRole>,
+  projectRoles: (values: ReadonlyArray<unknown>) => Position | null,
+  options?: CoordinateFrameOptions,
+) => CoordinateFrame;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"CoordinateDomainPaddingCapability"} path={"packages/viz/plot/src/contract/domain-padding.ts"} startLine={38}>CoordinateDomainPaddingCapability</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员       | 类型                                           | 默认值 | 说明                                                                    |
+| ---------- | ---------------------------------------------- | ------ | ----------------------------------------------------------------------- |
+| `measure?` | `CoordinateDomainPaddingCapability["measure"]` | —      | 将屏幕外缘及净空转成两端 role range 距离；循环角色返回 null，不制造接缝 |
+| `roles`    | `ReadonlyArray<string>`                        | —      | 支持逐点留白的轴向角色                                                  |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type CoordinateDomainPaddingCapability = {
+  roles: ReadonlyArray<string>;
+  measure?: (context: {
+    frame: CoordinateFrame;
+    role: string;
+    mappedRoles: ReadonlyArray<number>;
+    extent: number;
+    clearance: {
+      lower: number;
+      upper: number;
+    };
+  }) => {
+    lower: number;
+    upper: number;
+  } | null;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+## 单元投影
+
+#### <ApiSourceLink label={"Cell"} path={"packages/viz/plot/src/contract/coordinate/cell.ts"} startLine={16}>Cell</ApiSourceLink>
+
+区间类 mark（interval / sector / rect）的坐标系无关描述：cartesian primary=x 像素带 [lo,hi]、
+secondary=y 像素 [base,value]；polar primary=角度带 [start°,end°]、secondary=半径 [inner,outer]。
+frame.projectCell 把它投影成 CellGeometry。区间端点不要求有序（投影方各自处理方向 / swap）
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员        | 类型                                                                      | 默认值 | 说明                                                     |
+| ----------- | ------------------------------------------------------------------------- | ------ | -------------------------------------------------------- |
+| `intervals` | `Partial<Record<DimensionRole, [`<br />`number,`<br />`number`<br />`]>>` | —      | 按位置角色记录的输出区间；各坐标系只读取自己声明的 roles |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type Cell = {
+  intervals: Partial<Record<DimensionRole, [number, number]>>;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"CellGeometry"} path={"packages/viz/plot/src/contract/coordinate/cell.ts"} startLine={27}>CellGeometry</ApiSourceLink>
+
+cartesian → rect（轴对齐矩形）、polar → sector（环楔），皆 O(1) 闭式参数；曲线 / 自定义 frame
+经自身投影把四边密采样成 contour 顶点环。mark 侧据 kind 统一装配 core Node（rect→rectangle、sector→sector、
+contour→contour shape），不再按坐标系分叉
+
+<DocTabs defaultValue="rect">
+
+<DocTab value="rect" label="属性 · 矩形">
+
+<ApiTable>
+
+| 成员       | 类型       | 默认值 | 说明                             |
+| ---------- | ---------- | ------ | -------------------------------- |
+| `height`   | `number`   | —      | 投影后矩形的完整高度             |
+| `kind`     | `'rect'`   | —      | 区分矩形、环形扇区与一般轮廓投影 |
+| `position` | `Position` | —      | 投影后矩形中心的屏幕坐标         |
+| `width`    | `number`   | —      | 投影后矩形的完整宽度             |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="sector" label="属性 · 环形扇区">
+
+<ApiTable>
+
+| 成员          | 类型       | 默认值 | 说明                             |
+| ------------- | ---------- | ------ | -------------------------------- |
+| `center`      | `Position` | —      | 环形扇区圆心的屏幕坐标           |
+| `endAngle`    | `number`   | —      | 扇区终止角，单位为度             |
+| `innerRadius` | `number`   | —      | 环形扇区的内侧半径               |
+| `kind`        | `'sector'` | —      | 区分矩形、环形扇区与一般轮廓投影 |
+| `outerRadius` | `number`   | —      | 环形扇区的外侧半径               |
+| `startAngle`  | `number`   | —      | 扇区起始角，单位为度             |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="contour" label="属性 · 轮廓">
+
+<ApiTable>
+
+| 成员     | 类型              | 默认值 | 说明                             |
+| -------- | ----------------- | ------ | -------------------------------- |
+| `kind`   | `'contour'`       | —      | 区分矩形、环形扇区与一般轮廓投影 |
+| `points` | `Array<Position>` | —      | 按边界顺序排列的屏幕坐标顶点     |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type CellGeometry =
+  | {
+      kind: 'rect';
+      position: Position;
+      width: number;
+      height: number;
+    }
+  | {
+      kind: 'sector';
+      center: Position;
+      innerRadius: number;
+      outerRadius: number;
+      startAngle: number;
+      endAngle: number;
+    }
+  | {
+      kind: 'contour';
+      points: Array<Position>;
+    };
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"CellProjectionOptions"} path={"packages/viz/plot/src/contract/coordinate/types.ts"} startLine={15}>CellProjectionOptions</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员          | 类型                   | 默认值 | 说明                                              |
+| ------------- | ---------------------- | ------ | ------------------------------------------------- |
+| `connection?` | `CoordinateConnection` | —      | 默认沿坐标几何连接；straight 直接连接投影后的角点 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type CellProjectionOptions = {
+  connection?: CoordinateConnection;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"CellProjectableCoordinate"} path={"packages/viz/plot/src/contract/coordinate/types.ts"} startLine={132}>CellProjectableCoordinate</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员                  | 类型                                                                                                                                | 默认值 | 说明                                                                                                                                                                                                                                                                                                                                                                |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mapRoles?`           | `(values: ReadonlyArray<unknown>) => ReadonlyArray<number> \| null`                                                                 | —      | 原始角色值经各 role 的 position scale 映射；支持 role-space placement 时必须提供                                                                                                                                                                                                                                                                                    |
+| `placementBoundary?`  | `CoordinateFrame['placementBoundary']`                                                                                              | —      | role-space containment 所需的 coordinate 边界度量；未提供时不能消费要求自动 containment 的 adjustment                                                                                                                                                                                                                                                               |
+| `project`             | `(primaryValue: unknown, secondaryValue: unknown) => Position \| null`                                                              | —      | 投影别名：2 通道便捷形态，委托 projectRoles；不适用时返回 null                                                                                                                                                                                                                                                                                                      |
+| `projectCell`         | `((cell: Cell, options?: CellProjectionOptions) => CellGeometry) & ((cell: Cell, options?: CellProjectionOptions) => CellGeometry)` | —      | 正交 cell → CellGeometry（可选）：实现了才支持 cell 类 mark（interval / sector / rect）<br />将各角色的尺度输出区间投影为可绘制单元几何<br />曲线 / 自定义 frame 自行把 cell 四边经自身几何投影密采样成 contour（用引擎 helper densifyCellContour）；<br />不回传 → cell 类 mark 在该坐标系 fail-loud（无引擎自动兜底——「输出空间→屏幕」后段映射只有 frame 自己有） |
+| `projectMappedRoles?` | `(values: ReadonlyArray<number>) => Position \| null`                                                                               | —      | 已映射角色值投影到屏幕；支持 role-space placement 时必须提供                                                                                                                                                                                                                                                                                                        |
+| `projectRoles`        | `(values: ReadonlyArray<unknown>) => Position \| null`                                                                              | —      | N 通道投影：按 roles 序传值 → 屏幕点；非有限 → null（跳过）                                                                                                                                                                                                                                                                                                         |
+| `projectSegment?`     | `(from: ReadonlyArray<number>, to: ReadonlyArray<number>) => Array<Position> \| null`                                               | —      | 映射后的角色端点沿坐标几何连接；无法投影时返回 null                                                                                                                                                                                                                                                                                                                 |
+| `roles`               | `ReadonlyArray<DimensionRole>`                                                                                                      | —      | 位置角色序（消费哪些 mark 通道，按序喂 projectRoles）                                                                                                                                                                                                                                                                                                               |
+| `roleScales?`         | `Partial<Record<DimensionRole, PositionScale>>`                                                                                     | —      | 各角色的位置 scale（可选）：供 guide 画轴用——取该角色刻度、其余角色锚在各自 domain 起点，<br />沿 projectRoles 密采样得曲线轴线 + 刻度点。不回传 → 该坐标系不画轴                                                                                                                                                                                                   |
+| `supportsPlotArea?`   | `boolean`                                                                                                                           | `true` | 是否支持绘图区背景、边框和区域锚点                                                                                                                                                                                                                                                                                                                                  |
+| `tangentAt?`          | `(role: DimensionRole, mappedRoles: ReadonlyArray<number>) => Position \| null`                                                     | —      | 映射后角色参数递增时的屏幕切向；与 mapRoles / projectMappedRoles 同源<br />返回有限非零向量；奇点或尖点返回 null。显式节点定向要求提供此能力，Guide 缺省仍可数值求切向                                                                                                                                                                                              |
+| `type`                | `string`                                                                                                                            | —      | 坐标系注册 type；内置用其判别串（如 `cartesian2D`），自定义用自己的 type（如 `bridge` / `sine`）                                                                                                                                                                                                                                                                    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type CellProjectableCoordinate = CoordinateFrame & {
+  projectCell: (cell: Cell, options?: CellProjectionOptions) => CellGeometry;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"hasProjectCell"} path={"packages/viz/plot/src/contract/coordinate/utils.ts"} startLine={14}>hasProjectCell</ApiSourceLink>
+
+interval、reference band 等 mark 先构造逻辑 Cell，再要求 frame.projectCell 把 Cell 投成 rect / sector / contour。
+这个 guard 只表示“能投 cell”，不表示 mark 侧一定能构造 cell；自定义 interval 仍需要 roleScales
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称         | 类型 / 签名                               | 说明                              |
+| ------ | ------------ | ----------------------------------------- | --------------------------------- |
+| 参数   | `coordinate` | `CoordinateFrame`                         | 待检查的运行时坐标帧              |
+| 返回值 | —            | `coordinate is CellProjectableCoordinate` | 是否提供可调用的 projectCell 能力 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export declare const hasProjectCell: (coordinate: CoordinateFrame) => coordinate is CellProjectableCoordinate;
+```
+
+</DocTab>
+
+</DocTabs>

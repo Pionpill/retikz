@@ -8,6 +8,9 @@ import { BUILTIN_COORDINATES } from './private';
  * @description 内置坐标系总是先注册；用户自定义 definition 不能覆盖内置 type，也不能彼此重复。
  *   返回值是一次 lowering 使用的完整 registry，后续通过 coordinate.type 找到 definition，再由该 definition.schema parse
  *   operation，并调用 definition.resolve 得到运行时 frame
+ * @param custom 自定义坐标定义；省略时仅注册内置坐标系
+ * @returns 按坐标类型索引的完整定义表
+ * @throws {RetikzPlotError} Schema 缺少非空字面量 type、位置角色重复或注册类型冲突
  */
 export const resolveCoordinateRegistry = (
   custom?: ReadonlyArray<AnyCoordinateDefinition>,

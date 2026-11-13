@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
-import type { CollectedPointChartDeclarations } from '../shared';
-import { collectPointChartDeclarations } from '../shared';
+import type { CollectedTypedChartDeclarations } from '../../authoring';
+import { collectTypedChartDeclarations } from '../../authoring';
 import type { RangedDotEncodingsProps } from './RangedDotEncodings';
 import { RangedDotEncodings } from './RangedDotEncodings';
 import type { RangedDotChartMark, RangedDotMarkProps } from './RangedDotMark';
@@ -10,7 +10,7 @@ import type { RangedDotPropertiesProps } from './RangedDotProperties';
 import { RangedDotProperties } from './RangedDotProperties';
 
 /** RangedDotChart 直接子声明的收集结果 */
-type CollectedRangedDotChartDeclarations = CollectedPointChartDeclarations<
+type CollectedRangedDotChartDeclarations = CollectedTypedChartDeclarations<
   RangedDotEncodingsProps,
   RangedDotPropertiesProps,
   RangedDotChartMark
@@ -18,7 +18,7 @@ type CollectedRangedDotChartDeclarations = CollectedPointChartDeclarations<
 
 /** 收集 RangedDotChart 的 encodings、properties 与 mark 声明 */
 export const collectRangedDotChartDeclarations = (children: ReactNode): CollectedRangedDotChartDeclarations =>
-  collectPointChartDeclarations(children, {
+  collectTypedChartDeclarations(children, {
     encodingsComponent: RangedDotEncodings,
     encodingsName: 'RangedDotEncodings',
     propertiesComponent: RangedDotProperties,

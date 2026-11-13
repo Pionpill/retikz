@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
-import type { CollectedPointChartDeclarations } from '../shared';
-import { collectPointChartDeclarations } from '../shared';
+import type { CollectedTypedChartDeclarations } from '../../authoring';
+import { collectTypedChartDeclarations } from '../../authoring';
 import type { RegressionEncodingsProps } from './RegressionEncodings';
 import { RegressionEncodings } from './RegressionEncodings';
 import type { RegressionChartMark, RegressionMarkProps } from './RegressionMark';
@@ -10,7 +10,7 @@ import type { RegressionPropertiesProps } from './RegressionProperties';
 import { RegressionProperties } from './RegressionProperties';
 
 /** RegressionChart direct-child declarations 的完整收集结果 */
-type CollectedRegressionChartDeclarations = CollectedPointChartDeclarations<
+type CollectedRegressionChartDeclarations = CollectedTypedChartDeclarations<
   RegressionEncodingsProps,
   RegressionPropertiesProps,
   RegressionChartMark
@@ -18,7 +18,7 @@ type CollectedRegressionChartDeclarations = CollectedPointChartDeclarations<
 
 /** 收集 RegressionChart 的公共与具体类型 direct-child declarations */
 export const collectRegressionChartDeclarations = (children: ReactNode): CollectedRegressionChartDeclarations =>
-  collectPointChartDeclarations(children, {
+  collectTypedChartDeclarations(children, {
     encodingsComponent: RegressionEncodings,
     encodingsName: 'RegressionEncodings',
     propertiesComponent: RegressionProperties,

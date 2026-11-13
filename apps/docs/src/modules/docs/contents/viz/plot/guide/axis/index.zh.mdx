@@ -1,5 +1,5 @@
 ---
-title: 坐标轴
+title: axis · 坐标轴
 description: 用 <PlotAxis> 解释位置 scale：为 cartesian 或 polar 坐标系绘制轴线、刻度、标签和网格。
 ---
 
@@ -7,36 +7,177 @@ description: 用 <PlotAxis> 解释位置 scale：为 cartesian 或 polar 坐标�
 
 `<Plot>` 不会自动补轴。需要哪条轴，就在 `<Plot>` 中显式声明对应的 `<PlotAxis>`。轴线、刻度、刻度文字、标题和网格都是同一条 PlotAxis guide 的配置槽位。
 
-## 用法
+## 接入方式
 
-```tsx
-import { PlotAxis, PathMark, Plot } from '@retikz/plot-react';
+下面用三个点和两条坐标轴说明接入，y 轴同时生成网格。
+
+<ComponentPreview mode="showcase" files="axis-entry" size="md" hideCode />
+
+在 HTML 中准备 `<div id="plot"></div>`。React JSX 中各声明作为 Plot 的子组件：
+
+```text
+Plot
+├── PointMark
+├── PlotScale
+└── PlotAxis
 ```
 
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+从 `@retikz/plot-react` 导入组件，用子组件声明图元、比例尺与辅助。
+
 ```tsx
-<Plot data={rows}>
-  <PathMark encodings={{ order: 'month', position: { x: 'month', y: 'revenue' } }} />
-  <PlotAxis dimension="x" />
-  <PlotAxis dimension="y" grid />
-</Plot>
+import { Plot, PlotAxis, PlotScale, PointMark } from '@retikz/plot-react';
+import { createRoot } from 'react-dom/client';
+
+const rows = [
+  { gdp: 400, life: 76, region: 'A' },
+  { gdp: 900, life: 81, region: 'B' },
+  { gdp: 1600, life: 84, region: 'A' },
+];
+
+createRoot(document.getElementById('plot')!).render(
+  <Plot data={rows} width={360} height={220}>
+    <PlotScale dimension="x" type="linear" domainPadding={{ kind: 'ratio', lower: 0.15, upper: 0.15 }} />
+    <PlotScale dimension="y" type="linear" domainPadding={{ kind: 'ratio', lower: 0.15, upper: 0.15 }} />
+    <PointMark encodings={{ position: { x: { field: 'gdp' }, y: { field: 'life' } } }} properties={{ size: 6 }} />
+    <PlotAxis dimension="x" />
+    <PlotAxis dimension="y" grid />
+  </Plot>,
+);
 ```
 
-## 例子
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+从 `@retikz/plot` 导入配置类型，将完整 IR 传给 React `Plot` 的 `spec`。
+
+```tsx
+import { Plot } from '@retikz/plot-react';
+import type { IRPlot } from '@retikz/plot';
+import { createRoot } from 'react-dom/client';
+
+const rows = [
+  { gdp: 400, life: 76, region: 'A' },
+  { gdp: 900, life: 81, region: 'B' },
+  { gdp: 1600, life: 84, region: 'A' },
+];
+
+const spec: IRPlot = {
+  namespace: 'plot',
+  type: 'plot',
+  data: { reference: 'rows' },
+  scales: [
+    { type: 'linear', name: 'x', domainPadding: { kind: 'ratio', lower: 0.15, upper: 0.15 } },
+    { type: 'linear', name: 'y', domainPadding: { kind: 'ratio', lower: 0.15, upper: 0.15 } },
+  ],
+  coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+  marks: [
+    { type: 'point', encodings: { position: { x: { field: 'gdp' }, y: { field: 'life' } } }, properties: { size: 6 } },
+  ],
+  guides: [
+    { type: 'axis', dimension: 'x' },
+    { type: 'axis', dimension: 'y', grid: true },
+  ],
+};
+
+createRoot(document.getElementById('plot')!).render(<Plot spec={spec} data={{ rows }} width={360} height={220} />);
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+从 `@retikz/plot-vanilla` 导入 `plot` 创建配置，再用 `renderPlot` 输出 SVG。
+
+```ts
+import { plot, renderPlot } from '@retikz/plot-vanilla';
+
+const rows = [
+  { gdp: 400, life: 76, region: 'A' },
+  { gdp: 900, life: 81, region: 'B' },
+  { gdp: 1600, life: 84, region: 'A' },
+];
+
+const spec = plot({
+  data: { reference: 'rows' },
+  scales: [
+    { type: 'linear', name: 'x', domainPadding: { kind: 'ratio', lower: 0.15, upper: 0.15 } },
+    { type: 'linear', name: 'y', domainPadding: { kind: 'ratio', lower: 0.15, upper: 0.15 } },
+  ],
+  coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+  marks: [
+    { type: 'point', encodings: { position: { x: { field: 'gdp' }, y: { field: 'life' } } }, properties: { size: 6 } },
+  ],
+  guides: [
+    { type: 'axis', dimension: 'x' },
+    { type: 'axis', dimension: 'y', grid: true },
+  ],
+});
+
+document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout: { width: 360, height: 220 } });
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+直接声明 `IRPlot`，交给 `renderPlot` 和命名数据集渲染。
+
+```ts
+import type { IRPlot } from '@retikz/plot';
+import { renderPlot } from '@retikz/plot-vanilla';
+
+const rows = [
+  { gdp: 400, life: 76, region: 'A' },
+  { gdp: 900, life: 81, region: 'B' },
+  { gdp: 1600, life: 84, region: 'A' },
+];
+
+const spec: IRPlot = {
+  namespace: 'plot',
+  type: 'plot',
+  data: { reference: 'rows' },
+  scales: [
+    { type: 'linear', name: 'x', domainPadding: { kind: 'ratio', lower: 0.15, upper: 0.15 } },
+    { type: 'linear', name: 'y', domainPadding: { kind: 'ratio', lower: 0.15, upper: 0.15 } },
+  ],
+  coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+  marks: [
+    { type: 'point', encodings: { position: { x: { field: 'gdp' }, y: { field: 'life' } } }, properties: { size: 6 } },
+  ],
+  guides: [
+    { type: 'axis', dimension: 'x' },
+    { type: 'axis', dimension: 'y', grid: true },
+  ],
+};
+
+document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout: { width: 360, height: 220 } });
+```
+
+</DocTab>
+</DocTabs>
+
+## 基础用法
 
 ### 坐标系与轴职责
 
 先从同一份数据和同一个 `<PathMark>` 出发。切换 `cartesian2D` / `polar2D` 时，`dimension="x"` 分别解释横向 / 角向位置，`dimension="y"` 分别解释纵向 / 径向位置；`grid` 仍属于生成它的 PlotAxis。
 
+极坐标的角向维度为离散分类时，默认采用直弦连接，等值网格呈多边形。径向轴的轴线、刻度和标签使用相同投影，因此刻度对齐多边形边，而不是按外接圆半径继续延伸。显式使用 `interpolation: 'polar'` 时，仍按圆形投影。
+
 <ComponentPreview
+  mode="showcase"
   files={['axis-coordinate-basics', 'axis-coordinate-basics.preview.tsx', 'axis-coordinate-basics.data.ts']}
   size="lg"
   caption="切换坐标系、轴显隐、网格和目标刻度数，比较 x / y 在两种投影中的职责。"
   defaultSourceFile="axis-coordinate-basics.preview.tsx"
 />
 
-### 笛卡尔坐标轴试验场
+## 扩展用法
 
-掌握轴的基本职责后，再在笛卡尔坐标系中集中调整完整配置。连续轴场景覆盖 `ticks.interval`、`ticks.density`、`ticks.mark` 以及独立的主 / 次网格来源；分类轴场景用于观察 `tickLabels.layout` 的旋转、隐藏和边界处理。
+### 刻度、标签与原点轴
+
+掌握轴的基本职责后，再在笛卡尔坐标系中集中调整完整配置。连续轴场景覆盖 `ticks.interval`、`ticks.density` 以及独立的主 / 次网格来源；分类轴场景用于观察 `tickLabels.layout` 的旋转、隐藏和边界处理。
 
 标签留白与避让使用 Core 的文字布局结果，字体、字重、换行和行高会参与测量。通过 `CompileOptions.measureText` 注入的宿主测量器同时服务 Plot 布局和最终文字绘制；未注入时沿用 Core 的默认测量。极坐标角向标签的半径预留、图例条目的文字间距也复用这条测量路径。
 
@@ -45,45 +186,44 @@ import { PlotAxis, PathMark, Plot } from '@retikz/plot-react';
 切到原点场景时，两条轴通过 `placement.kind="origin"` 穿过另一维的 0。这个摆放不会扩展 domain；`crossing` 控制交点标签，`line.arrow` 与 `ticks.endpoint` 分别控制端点箭头和附近刻度避让。
 
 <ComponentPreview
+  mode="showcase"
   files={['axis-cartesian-playground', 'axis-cartesian-playground.preview.tsx', 'axis-cartesian-playground.data.ts']}
   size="lg"
   caption="切换连续边缘、连续原点和分类标签场景，只调整当前场景有效的 PlotAxis 配置。"
   defaultSourceFile="axis-cartesian-playground.preview.tsx"
 />
 
-## 技术原理
+## 错误与限制
+
+`dimension` 必须属于当前坐标系。原点轴及轴线端点箭头等笛卡尔配置不应套用到极坐标；原点轴不会自动扩展比例尺 domain，交叉值需要落在可见范围内。
+
+## 实现原理
 
 <ComponentAlert
   type="tip"
   title="先会用，再理解生成顺序"
-  description="日常配置只需查上面的示例和 API；这一节用于解释 tick、grid 与语义图层为何能独立控制。"
+  description="日常配置只需查示例和页末 API；这一节用于解释 tick、grid 与语义图层为何能独立控制。"
 />
 
 ### 刻度与网格来源
 
 PlotAxis 先按 `ticks.values > ticks.interval > ticks.count` 的优先级生成候选 tick，再应用 `density` 得到可见 tick。网格默认复用这批结果；只有配置 `grid.ticks` 时才单独生成候选位置，因此网格密度可以独立于轴标签。`grid.includeDomain` 会在上述解析完成后追加缺失的 effective scale domain 首尾位置，并按最终投影坐标去重；它不会改变轴 tick，也不会为次网格自动追加端点。该字段的 guide 局部默认是 `false`，Theme 可以为已启用的 major grid 提供默认：未声明 style 的默认 baseline 对 x / y PlotAxis 为 `true`，本站注入的三个参考风格为 `false`。Theme 端点 token 不会单独启用 grid，guide 显式 boolean 最终优先。次网格仍从 `grid.minor.ticks` 生成，并过滤与主网格重合的位置。
 
-<ComponentPreview files="axis-tick-grid-flow" size="xs" hideCode />
+<ComponentPreview files="axis-tick-grid-flow" size="md" hideCode type="flow" />
 
 <SourceLinks
   sources={[
     {
       label: '轴 tick 的来源优先级与格式化',
       path: 'packages/viz/plot/src/resolve/guide/ticks.ts',
-      startLine: 237,
-      endLine: 266,
     },
     {
       label: '网格来源、端点追加与投影去重',
       path: 'packages/viz/plot/src/pipeline/guide/guide.ts',
-      startLine: 785,
-      endLine: 832,
     },
     {
       label: '笛卡尔次网格调用去重',
       path: 'packages/viz/plot/src/pipeline/guide/guide.ts',
-      startLine: 1162,
-      endLine: 1190,
     },
   ]}
 />
@@ -92,72 +232,28 @@ PlotAxis 先按 `ticks.values > ticks.interval > ticks.count` 的优先级生成
 
 坐标轴默认位于 mark 之上，网格位于 mark 之下。`layer={{ zIndex }}` 只覆盖轴 scope 的层级；grid 始终使用独立网格层，避免背景线盖住数据。默认顺序是网格 `-300`、mark `0`、轴 `200`、Facet 标签 `300`、图例 `500`。
 
-<ComponentPreview files="axis-semantic-layers" size="md" hideCode />
+<ComponentPreview files="axis-semantic-layers" size="md" hideCode type="flow" />
 
 <SourceLinks
   sources={[
     {
       label: '轴与网格分别选择 zIndex',
       path: 'packages/viz/plot/src/pipeline/guide/guide.ts',
-      startLine: 928,
-      endLine: 939,
     },
     {
       label: 'Plot 语义图层默认值',
       path: 'packages/viz/plot/src/schemas/plot/layer.ts',
-      startLine: 5,
-      endLine: 24,
     },
   ]}
 />
 
 ## API 参考
 
-#### PlotAxisProps
+公开属性复用 React / Vanilla 的共享输入。Source IR 及嵌套约束使用下列 Schema；`—` 表示声明未记录字段级默认值。共享的线条、文字和刻度来源见[共享辅助 API](/viz/plot/guide#api-参考)。
 
-| 属性          | 类型                          | 默认值   | 描述                                                                                            |
-| ------------- | ----------------------------- | -------- | ----------------------------------------------------------------------------------------------- |
-| `dimension`   | `PlotAxisProps['dimension']`  | —        | 要解释的维度：cartesian / polar 使用 x / y；必须匹配当前坐标系                                  |
-| `scale?`      | `PlotAxisProps['scale']`      | 自动派生 | 位置 scale 快捷类型；等价于同维度的 `<PlotScale dimension="..." type="..." />`                  |
-| `placement?`  | `PlotAxisProps['placement']`  | 自动推断 | 轴线摆放；分支 `kind` 见 <ApiValues name="AxisPlacementKind" />；`origin` 仅适用于 cartesian    |
-| `line?`       | `PlotAxisProps['line']`       | 默认轴线 | 轴线样式与端点几何；`extent` 和 `arrow` 目前仅适用于 cartesian                                  |
-| `crossing?`   | `PlotAxisProps['crossing']`   | 正常刻度 | 交叉值处的 tick / label 策略；`label:'corner'` 可把共享原点标签移到角落                         |
-| `ticks?`      | `PlotAxisProps['ticks']`      | 默认刻度 | 候选 tick 来源、可见密度、端点避让和刻度标记外观                                                |
-| `tickLabels?` | `PlotAxisProps['tickLabels']` | `true`   | 刻度文字开关、格式和样式；显式 `rotate` 优先于 `layout.rotate`，`layout:false` 关闭自适应避让   |
-| `title?`      | `PlotAxisProps['title']`      | —        | 轴标题内容、间距、沿轴位置、方向和局部偏移                                                      |
-| `grid?`       | `PlotAxisProps['grid']`       | `false`  | 网格开关、样式和独立 tick 来源；`minor` 生成次网格，`applyTo/select` 控制组合或分面中的投放目标 |
-| `layer?`      | `PlotAxisProps['layer']`      | 轴层     | 覆盖轴 scope 的语义层级；不改变 grid 的背景层级                                                 |
-| `id?`         | `PlotAxisProps['id']`         | —        | 可选 guide 句柄，用于稳定标识轴及其派生网格                                                     |
+{/* @include viz/plot/guide/axis/generated */}
 
-`PlotAxisProps` 的嵌套字段如下：
-
-| 对象字段             | 类型                                                | 默认值                | 作用                                                                             |
-| -------------------- | --------------------------------------------------- | --------------------- | -------------------------------------------------------------------------------- |
-| `placement.kind`     | <ApiValues name="AxisPlacementKind" />              | 自动推断              | 选择自动、四边、坐标系原生边或笛卡尔原点轴                                       |
-| `placement.side`     | `'top' \| 'right' \| 'bottom' \| 'left'`            | —                     | `kind:'side'` 的必填四边位置                                                     |
-| `placement.edge`     | `string`                                            | —                     | `kind:'edge'` 的必填坐标系原生边 id                                              |
-| `placement.origin`   | `string \| number`                                  | `0`                   | `kind:'origin'` 时另一维的交叉数据值                                             |
-| `ticks.values`       | `Array<string \| number>`                           | —                     | 显式候选值，优先级高于 `interval` 和 `count`                                     |
-| `ticks.interval`     | `{ kind:'number' \| 'time' \| 'category'; ... }`    | —                     | 固定数值步长、UTC 时间单位或分类索引步长                                         |
-| `ticks.count`        | `number`                                            | scale 默认            | 未提供 `values` / `interval` 时的目标候选数量                                    |
-| `ticks.density`      | `{ kind:'all' \| 'sample'; ... }`                   | 全部候选              | sample 分支按 `maxCount` 或 `minGap` 抽稀可见 tick                               |
-| `ticks.mark`         | `false \| { kind; ... }`                            | 线刻度                | 选择 line / 内置 shape / custom 标记；不与 `ticks.length` / `ticks.line` 同用    |
-| `ticks.endpoint`     | `false \| { hideWhenArrow?; distance?; affect? }`   | 箭头端点自动避让      | 控制端点箭头附近隐藏刻度标记，`affect` 可把标签一并隐藏                          |
-| `tickLabels.format`  | `string`                                            | 自动格式              | 数值使用 d3-format，时间使用 UTC d3-time-format                                  |
-| `tickLabels.rotate`  | `number`                                            | 自适应                | 固定旋转角；显式值优先于 `layout.rotate`                                         |
-| `tickLabels.layout`  | `false \| { rotate?; hide?; bounds?; sampleSize? }` | 自适应布局            | 控制自动旋转、重叠隐藏与轴范围边界处理                                           |
-| `grid.ticks`         | `{ values?; interval?; count? }`                    | 复用可见轴 tick       | 为主网格指定独立候选来源                                                         |
-| `grid.density`       | `{ kind:'all' \| 'sample'; ... }`                   | 全部网格候选          | 只抽稀网格，不改变轴 tick                                                        |
-| `grid.includeDomain` | `boolean`                                           | `false`，Theme 可覆盖 | 在来源与密度解析后追加缺失的 effective domain 首尾主网格位置；局部显式值最终优先 |
-| `grid.minor`         | `false \| { ticks; density?; bandPosition?; ... }`  | `false`               | 用独立来源生成次网格，并自动移除与主网格重合的位置                               |
-| `grid.applyTo`       | `'local' \| 'all' \| 'none' \| 'selected'`          | 组合策略              | 决定网格投放到当前视图、共享目标或显式选中目标                                   |
-| `grid.select`        | `{ view?; facet?; track? }`                         | —                     | `applyTo:'selected'` 时必填，用 view / facet / track 条件选择目标                |
-
-`coordinateView`、`facetId`、`scaffoldId` 和 `trackId` 是组合 / 分面流程用于定位轴归属的高级字段。普通单图无需设置；需要组合轴时请查看[坐标组合](/viz/plot/coordinate/composition)。
-
-视觉样式分别写在 `line`、`ticks`、`tickLabels`、`title` 和 `grid` 中；例如 `dashPattern` / `dashOffset` 控制虚线，文字样式放在对应文本槽位，不需要额外的样式组件。
-
-## 相关
+## 延伸阅读
 
 - [比例尺](/viz/plot/scale)：决定位置值如何映射和生成 tick
 - [图例](/viz/plot/guide/legend)：解释颜色、大小、透明度和形状等非位置通道

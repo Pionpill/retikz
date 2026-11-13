@@ -107,3 +107,24 @@ export type IRPlotPointMark = ZodInfer<typeof PointMarkSchema>;
 </DocTab>
 
 </DocTabs>
+
+#### <ApiSourceLink label={"MarkNodeLabelSchema"} path={"packages/viz/plot/src/schemas/mark/label.ts"} startLine={7}>MarkNodeLabelSchema</ApiSourceLink>
+
+<ZodSchema
+  name="MarkNodeLabelSchema"
+  description="附着在 Core Node.label host 上的 Plot 标签。"
+  descriptions={{
+    align: '标签视觉盒沿附着切线的对齐方式：start / middle / end，省略时使用 middle。',
+    textColor: '标签文本颜色；省略时继承 currentColor。',
+    opacity: '标签自身不透明度，与 host 不透明度相乘。',
+    font: '标签字体覆盖，未指定字段继承 host。',
+    position: '附着位置：方位、中心、角度或边界比例。',
+    placement: '在附着点外侧或内侧放置标签。',
+    distance: '节点边界到标签中心的距离。',
+    rotate: '无旋转、径向、切向或显式角度。',
+    keepUpright: '旋转文本倒置时是否翻转 180 度保持正立。',
+    pin: '外侧标签的引导线开关或样式。',
+    text: '固定标签文本；编码内容写入 encodings.label 的相同索引。',
+    displayFormat: '字段内容的显示格式。',
+  }}
+/>

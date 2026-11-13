@@ -40,6 +40,7 @@ export const regressionBasicControls = definePreviewControls({
           label: 'Regression method',
           defaultValue: 'linear',
           options: [
+            { value: 'auto', label: 'Auto' },
             { value: 'linear', label: 'Linear' },
             { value: 'quadratic', label: 'Quadratic' },
             { value: 'polynomial', label: 'Configurable polynomial' },

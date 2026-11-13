@@ -2,25 +2,22 @@ import { resolvePositionScalePolicy } from '@retikz/plot';
 import type { IRPlotGuide, IRPlotScaleOperation } from '@retikz/plot';
 import { PlotGuide, PositionScaleContinuity, readCoordinateScaleNames } from '@retikz/plot';
 
+import { defineChartRecipe } from '../../_chart/contract';
 import type {
   ChartGuideDefaultsResolveContext,
   ChartRecipeDefinition,
   ChartRecipeResolveContext,
 } from '../../_chart/contract';
-import { defineChartRecipe } from '../../_chart/contract';
-import { resolveChartEncodingMappings } from '../../_chart/resolve';
+import {
+  chartResolutionOf,
+  chartSlotsOf,
+  resolveChartGuideDefaults,
+  resolveChartEncodingMappings,
+} from '../../_chart/resolve';
+import type { IRChartRecipeGuides } from '../../_chart/schemas';
 import { RetikzChartError, RetikzChartErrorCode } from '../../error';
 import { ChartType } from '../constants';
-import {
-  pointFieldConsumersOf,
-  pointPropertySlots,
-  pointResolutionOf,
-  pointSlotsOf,
-  resolvePointGuideDefaults,
-  resolvePointScaleDefaults,
-  sizeGuideOf,
-} from '../shared';
-import type { IRPointRecipeGuides } from '../shared';
+import { pointFieldConsumersOf, pointPropertySlots, resolvePointScaleDefaults, sizeGuideOf } from '../shared';
 import { resolveStripPointMark, stripMarkDefinition } from './mark';
 import type { IRStripChart, IRStripChartProperties } from './schema';
 import { StripChartSchema } from './schema';
@@ -119,8 +116,8 @@ const resolveStripGuideDefaults = (context: ChartGuideDefaultsResolveContext): R
   if (context.source.plotExtension?.guides !== undefined) return context.guides;
 
   const continuousRole = continuousRoles[0];
-  const guides = resolvePointGuideDefaults(context);
-  const grid = (context.source.recipe.guides as IRPointRecipeGuides | undefined)?.grid;
+  const guides = resolveChartGuideDefaults(context);
+  const grid = (context.source.recipe.guides as IRChartRecipeGuides | undefined)?.grid;
 
   return guides.map(guide => {
     if (guide.type !== PlotGuide.Axis || (guide.dimension !== 'x' && guide.dimension !== 'y')) return guide;
@@ -155,12 +152,12 @@ export const stripChartDefinition: ChartRecipeDefinition<IRStripChart> = defineC
   resolveEncodings: context =>
     resolveChartEncodingMappings(context, stripChartEncodingSlots, pointFieldConsumersOf(ChartType.Strip)),
   resolve: (context: ChartRecipeResolveContext) => {
-    const slots = pointSlotsOf(context);
+    const slots = chartSlotsOf(context);
     const properties = slots.properties as IRStripChartProperties;
     const mark = resolveStripPointMark(slots.encodings, properties);
     const sizeGuide = sizeGuideOf(slots.encodings);
 
-    return pointResolutionOf(ChartType.Strip, [{ kind: ChartType.Strip, plotMarks: [mark] }], {
+    return chartResolutionOf(ChartType.Strip, [{ kind: ChartType.Strip, plotMarks: [mark] }], {
       guides: sizeGuide === undefined ? [] : [sizeGuide],
     });
   },

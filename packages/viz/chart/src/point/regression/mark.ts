@@ -6,14 +6,14 @@ import { BuiltinPlotMark } from '@retikz/plot';
 
 import type { ChartMarkDefinition, ChartMarkResolveContext } from '../../_chart/contract';
 import { defineChartMark } from '../../_chart/contract';
+import { chartRecipeId } from '../../_chart/resolve';
 import { markOpacityOf, mergeMarkProperties, requiredFieldOf, resolvePointMark } from '../shared';
-import { pointRecipeId } from '../shared/plot';
 import type { IRRegressionChartProperties, IRRegressionMark } from './schema';
 import { RegressionChartMarkSchema, RegressionTrendCurveSchema } from './schema';
 
-const trendXField = pointRecipeId('regression', 'trend.x');
+const trendXField = chartRecipeId('regression', 'trend.x');
 
-const trendYField = pointRecipeId('regression', 'trend.y');
+const trendYField = chartRecipeId('regression', 'trend.y');
 
 type RegressionSeriesMapping = Readonly<{
   field: string;
@@ -24,7 +24,7 @@ const seriesMappingOf = (encodings: JsonObject): RegressionSeriesMapping | undef
   if (!Object.hasOwn(encodings, 'series')) return undefined;
 
   const value = encodings.series;
-  const fallbackScale = pointRecipeId('regression', 'scale.series');
+  const fallbackScale = chartRecipeId('regression', 'scale.series');
   if (typeof value === 'string') return { field: value, scale: fallbackScale };
 
   const mapping = value as JsonObject;
@@ -70,7 +70,7 @@ const constantPathPropertiesOf = (properties: IRRegressionChartProperties): Json
 export const resolveRegressionMarkGroup = (
   encodings: JsonObject,
   properties: IRRegressionChartProperties,
-  hidePoints?: boolean,
+  showPoints: boolean | undefined,
 ): readonly [IRPlotMark, ...Array<IRPlotMark>] => {
   const x = requiredFieldOf(encodings, 'x', ['recipe', 'encodings', 'x']);
   const y = requiredFieldOf(encodings, 'y', ['recipe', 'encodings', 'y']);
@@ -125,7 +125,7 @@ export const resolveRegressionMarkGroup = (
     return series === undefined ? { ...resolved, defaultColorGroup: 'trend' } : resolved;
   };
 
-  const point = hidePoints ? undefined : resolvePointMark(pointEncodings, pointProperties);
+  const point = showPoints ? resolvePointMark(pointEncodings, pointProperties) : undefined;
   const trends: [IRPlotMark, ...Array<IRPlotMark>] = [
     createTrend(properties),
     ...(properties.extraMethods ?? []).map(extra =>
@@ -152,6 +152,8 @@ export const regressionMarkDefinition: ChartMarkDefinition = defineChartMark({
   resolve: context => {
     const source = context.source as IRRegressionMark;
     const encodings: JsonObject = { ...context.inherited.encodings, ...(source.encodings ?? {}) };
-    return { marks: resolveRegressionMarkGroup(encodings, regressionPropertiesOf(context, source), source.hidePoints) };
+    return {
+      marks: resolveRegressionMarkGroup(encodings, regressionPropertiesOf(context, source), source.showPoints),
+    };
   },
 });
