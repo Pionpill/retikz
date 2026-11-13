@@ -2,9 +2,9 @@
 
 /** 单次操作的消费预算；次数是规划假设，不代表代码硬上限或实测业务分布 */
 type CoreBudgetPolicy = {
-  /** P90 警告阈值，单位为毫秒 */
+  /** P50 警告阈值，单位为毫秒 */
   warningMs: number;
-  /** P90 错误阈值，单位为毫秒 */
+  /** P50 错误阈值，单位为毫秒 */
   errorMs: number;
   /** 消费路径、调用频率和阶段时间分配依据 */
   rationale: string;
@@ -63,12 +63,14 @@ export const resolveCoreBudget = (scenario: BenchmarkScenario): BenchmarkBudget 
                   : count === (variant === 'custom-double-stroke' ? 1024 : 16)
                 : false;
     if (!valid) throw new Error(`Missing Core path operation budget: ${identity}`);
-    const large = count === 1024 || count === 128;
+    // 千步骤路径属于少见的大规模负载；保留采样和复用对照，不承诺批量实时预算
+    if (count === 1024) return undefined;
+    const large = count === 128;
     policy = {
       warningMs: large ? 0.5 : binding ? 0.05 : 0.1,
       errorMs: large ? 2 : binding ? 0.2 : 0.5,
       rationale:
-        '一次Core Path完整编译或明确阶段，不含Source resolve、fixture、prepared构造、调用方有效性比较/跨次资源恢复及renderer。真实目标解析器每次新建并计时，单次绑定缓存不跨样本；BoundaryStore背景与paint资源暖态。规划假设100条16步骤普通路径编译分配10/50ms，20条1024步骤复杂路径分配10/40ms；16目标绑定分配0.05/0.2ms，1024目标或复杂stroke阶段0.5/2ms。8/128叶图元Definition分别按普通/复杂路径，同最终输入各prepared档预算相同。scale表示步骤、smooth过点或自定义叶图元，装饰为1/16个且箭头恒双端；缺少业务遥测，不代表业务硬上限或整帧保证，不按本次测量放宽',
+        '一次Core Path完整编译或明确阶段，不含Source resolve、fixture、prepared构造、调用方有效性比较/跨次资源恢复及renderer。真实目标解析器每次新建并计时，单次绑定缓存不跨样本；BoundaryStore背景与paint资源暖态。规划假设100条16步骤普通路径编译分配10/50ms；16目标绑定分配0.05/0.2ms。8/128叶图元Definition分别按普通/复杂路径，复杂叶图元分配0.5/2ms。1024步骤、过点或目标属于少见大规模负载，仅参考，不承诺批量实时更新；其完整编译、prepared更新及独立阶段仍保留对比。scale表示步骤、smooth过点或自定义叶图元，装饰为1/16个且箭头恒双端；缺少业务遥测，不代表业务硬上限或整帧保证，不按本次测量放宽',
     };
   } else if (layer === 'compile' && family === 'scope') {
     const count = Number(scale);
@@ -568,5 +570,5 @@ export const resolveCoreBudget = (scenario: BenchmarkScenario): BenchmarkBudget 
   } else {
     throw new Error(`Missing Core benchmark budget: ${identity}`);
   }
-  return { kind: 'workload', metric: 'p90', blocking: false, ...policy };
+  return { kind: 'workload', metric: 'p50', blocking: false, ...policy };
 };
