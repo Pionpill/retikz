@@ -40,7 +40,7 @@ React 中的 `Node`、`Path`、`Step` 只做声明。`Layout` 收集整棵声明
 
 Vanilla 在输入层统一处理配置：将 `InputScene` 归一化为 `IRScene`，整理编译选项，再安排 Core 执行。已有 IR 也从这里接入。本例经过输入准备后，IR 中仍保留 A、B 的名称引用，等待 Core 计算连接位置。
 
-Vanilla 还负责处理模式的装配。**static** 创建临时非增量 SceneReconciler，完成编译后释放；默认的 **retained** 模式由控制器持有协调器，持续接收完整输入并通过 replace 更新。两种模式复用同一执行器。
+Vanilla 还负责处理模式的装配。**static** 创建临时非增量 SceneReconciler，完成编译后释放；默认的 **retained** 模式由控制器持有协调器，持续接收完整输入并通过 replace 更新。协调器按编译模式选择完整遍历或 Weave，两者共享元素计算与输出语义。
 
 <ComponentPreview files="pipeline-processing" size="sm" hideCode type="flow" />
 

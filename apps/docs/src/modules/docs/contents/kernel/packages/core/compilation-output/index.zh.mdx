@@ -98,6 +98,8 @@ diagnostics 保存本次成功编译可提交的警告，含 code、message 及�
 
 ## 完整实现流程
 
+下图展示非增量会话的完整遍历。增量会话的首次构建、完整替换与批次更新由 Weave 独立调度，两种驱动共享元素计算和快照组装语义。
+
 <ComponentPreview files="output-implementation" size="lg" hideCode type="flow" />
 
 compileScene 先调用 assembleCompileSubtree 收敛延迟路径与子项贡献，再调用 finalizeSceneCompilation 收集资源并组装快照。后者负责 layout、根动画、结果与诊断快照，不再执行实体编译；SceneReconciler 负责把完整候选结果提交给消费者。
@@ -107,8 +109,8 @@ compileScene 先调用 assembleCompileSubtree 收敛延迟路径与子项贡献�
     { label: 'Scene and primitive contract', path: 'packages/kernel/core/src/contract/scene/scene.ts' },
     { label: 'Layout bounds helpers', path: 'packages/kernel/core/src/compile/scene/bounds.ts' },
     { label: 'Scene layout calculation', path: 'packages/kernel/core/src/compile/scene/layout.ts' },
-    { label: 'Complete compilation entry', path: 'packages/kernel/reconciler/src/compile/execution/compile.ts' },
-    { label: 'Snapshot assembly', path: 'packages/kernel/reconciler/src/compile/execution/compile.ts' },
+    { label: 'Complete compilation entry', path: 'packages/kernel/reconciler/src/full.ts' },
+    { label: 'Snapshot assembly', path: 'packages/kernel/reconciler/src/compile/execution/scene.ts' },
     { label: 'Snapshot and result types', path: 'packages/kernel/reconciler/src/compile/types.ts' },
     { label: 'Reconciler result and commit target', path: 'packages/kernel/reconciler/src/reconcile/types.ts' },
   ]}

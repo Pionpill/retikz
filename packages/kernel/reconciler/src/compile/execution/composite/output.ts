@@ -39,7 +39,7 @@ export const compileCompositeOutput = (
       sourcePath: parentOccurrence.sourcePath,
       expansionPath: [...parentOccurrence.expansionPath, { kind: scopeSegment, index }],
     };
-    execution.host.compileChild(
+    execution.host.compilePreparedChild(
       output.child,
       index,
       { context: { ...frame.context, compositeInput: output.runtimeInputs }, state: frame.state },
@@ -107,7 +107,7 @@ export const compileCompositeOutput = (
               { kind: CompileExpansionKind.ScopeChild, index: childIndex },
             ],
           };
-          execution.host.compileChild(
+          execution.host.compilePreparedChild(
             child,
             childIndex,
             { context: { ...scopeFrame.context, compositeInput: undefined }, state: scopeFrame.state },

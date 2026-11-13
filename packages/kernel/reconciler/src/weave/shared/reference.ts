@@ -2,11 +2,21 @@ import { referencePositionOf, evaluateAnchorReference } from '@retikz/core';
 import type { CompiledReferenceGeometry, ReferenceReadKind } from '@retikz/core';
 import { jsonStructuralEquals } from '@retikz/foundation';
 
-import type { CompileReferenceRead, NamespaceStack } from '../../compile/runtime';
+import type { NamespaceStack, NamespaceEntry } from '../../compile/runtime';
+
+/** Weave 计算实际消费的名称绑定与几何粒度 */
+export type WeaveReferenceRead = Readonly<{
+  /** 请求的名称 */
+  name: string;
+  /** 当时查询到的绑定；未命中时省略 */
+  entry?: NamespaceEntry;
+  /** 实际读取的几何粒度 */
+  kind: ReferenceReadKind;
+}>;
 
 /** 在当前查询环境核对已消费的绑定与结果，不把生产者外观变化当作几何失效 */
 export const matchWeaveReferences = (
-  reads: ReadonlyArray<CompileReferenceRead>,
+  reads: ReadonlyArray<WeaveReferenceRead>,
   namespace: Pick<NamespaceStack, 'lookupReference'>,
 ): boolean =>
   reads.every(read => {

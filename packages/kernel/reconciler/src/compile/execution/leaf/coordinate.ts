@@ -2,7 +2,6 @@ import { resolveCoordinate, compileCoordinate } from '@retikz/core';
 import type { IRCoordinate, CompiledCoordinate } from '@retikz/core';
 import type { PropertyPath } from '@retikz/foundation';
 
-import { createCompileObservation } from '../../runtime';
 import type { CompileRuntime } from '../../runtime';
 import { createCompileChildPath } from '../../shared';
 import { createTreePositionContext } from '../shared';
@@ -16,16 +15,9 @@ export const visitCoordinate = (
   frame: SubtreeCompileRuntime,
 ): void => {
   const path = createCompileChildPath(frame.context.pathPrefix, index);
-  const observation = runtime.onCompiled === undefined ? undefined : createCompileObservation(runtime);
   const canon = resolveCoordinate(child, runtime.context.layout);
   const context = createTreePositionContext(runtime, frame.context.transformChains);
-  const compiled =
-    observation === undefined
-      ? compileCoordinate(canon, context)
-      : runtime.state.execution.namespaceStack.observeReferences(observation.read, () =>
-          compileCoordinate(canon, context),
-        );
-  runtime.onCompiled?.(path, frame.context, { kind: 'coordinate', canon, compiled }, observation!.facts());
+  const compiled = compileCoordinate(canon, context);
   assembleCoordinateOutput(runtime, child, path, frame, compiled);
 };
 

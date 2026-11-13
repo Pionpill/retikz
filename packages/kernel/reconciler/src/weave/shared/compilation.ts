@@ -1,14 +1,15 @@
 import type { ScenePrimitive } from '@retikz/core';
 
-import { collectContributionResources } from '../../compile/execution';
-import type { CompileReferenceRead, CompileRuntime } from '../../compile/runtime';
+import type { CompileRuntime } from '../../compile/runtime';
 import { importSceneResources } from '../../compile/shared';
+import { collectContributionResources } from './contribution';
+import type { WeaveReferenceRead } from './reference';
 import type { WeaveCacheMetadata } from './types';
 
 /** 部分复用未重新查询的引用仍属于本次计算依赖 */
 export const retainWeaveReads = (
-  reads: Array<CompileReferenceRead>,
-  previous: ReadonlyArray<CompileReferenceRead>,
+  reads: Array<WeaveReferenceRead>,
+  previous: ReadonlyArray<WeaveReferenceRead>,
 ): void => {
   for (const read of previous)
     if (!reads.some(current => current.name === read.name && current.kind === read.kind)) reads.push(read);

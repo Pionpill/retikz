@@ -43,7 +43,7 @@ Both entries deliver nodes A and B and their connecting path. Names, positions, 
 
 Vanilla handles configuration at the input layer: it normalizes `InputScene` into `IRScene`, assembles compile options and arranges Core execution. Existing IR enters here too. The prepared IR still contains references to A and B, ready for Core to calculate their connection points.
 
-Vanilla also assembles the processing mode. **static** creates a temporary non-incremental SceneReconciler and disposes it after compilation. In the default **retained** mode, the controller holds a reconciler and applies complete input updates through replace. Both modes share the executor.
+Vanilla also assembles the processing mode. **static** creates a temporary non-incremental SceneReconciler and disposes it after compilation. In the default **retained** mode, the controller holds a reconciler and applies complete input updates through replace. The reconciler selects complete traversal or Weave scheduling according to the compilation mode; both drivers share drawing computation and output assembly.
 
 <ComponentPreview files="pipeline-processing" size="sm" hideCode type="flow" />
 

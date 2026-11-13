@@ -11,7 +11,6 @@ import type { PropertyPath } from '@retikz/foundation';
 
 import type { CompileOwnerKey } from '../../provenance';
 import type { CompileRuntime } from '../../runtime';
-import { createCompileObservation } from '../../runtime';
 import { createCompileChildPath } from '../../shared';
 import type { TreeOutputState } from '../shared';
 import { createTreePositionContext } from '../shared';
@@ -28,15 +27,9 @@ export const visitNode = (
   semanticOwner?: CompileOwnerKey,
 ): void => {
   const nodeIrPath = createCompileChildPath(frame.context.pathPrefix, index);
-  const observation = runtime.onCompiled === undefined ? undefined : createCompileObservation(runtime);
-  const local = observation?.runtime ?? runtime;
-  const canon = resolveNode(child, createNodeResolveContext(local, nodeIrPath, frame.context));
-  const context = createNodeCompileContext(local, canon, nodeIrPath, frame.context);
-  const compiled =
-    observation === undefined
-      ? compileNode(canon, context)
-      : runtime.state.execution.namespaceStack.observeReferences(observation.read, () => compileNode(canon, context));
-  runtime.onCompiled?.(nodeIrPath, frame.context, { kind: 'node', canon, compiled }, observation!.facts());
+  const canon = resolveNode(child, createNodeResolveContext(runtime, nodeIrPath, frame.context));
+  const context = createNodeCompileContext(runtime, canon, nodeIrPath, frame.context);
+  const compiled = compileNode(canon, context);
   assembleNodeOutput(runtime, outputState, child, nodeIrPath, frame, compiled, semanticOwner);
 };
 

@@ -24,8 +24,8 @@ import {
   LayoutIntrinsicMode,
   naturalLayoutProposal,
 } from '../../../../core/src';
-import { compileScene } from '../../../src/compile/execution';
 import { createCompileRuntime } from '../../../src/compile/runtime';
+import { compileScene } from '../../../src/full';
 import { compileTestResult } from '../../helpers/compilation';
 import { sceneRectangles } from '../../helpers/scene-rectangles';
 

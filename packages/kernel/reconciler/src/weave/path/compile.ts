@@ -12,8 +12,8 @@ import { compareProperties, jsonStructuralEquals } from '@retikz/foundation';
 
 import { createPathResolveContext, createPathCompileContext } from '../../compile/execution';
 import type { PendingPathEmission } from '../../compile/execution';
-import { createCompileObservation } from '../../compile/runtime';
 import type { CompileRuntime } from '../../compile/runtime';
+import { createWeaveObservation } from '../shared';
 import { comparePaintResolutions, matchWeaveReferences, restoreWeaveResources, retainWeaveReads } from '../shared';
 import type { WeaveNode, WeaveCacheMetadata } from '../shared';
 import { comparePathResolutions, compareStrokeBindings } from './compare';
@@ -149,7 +149,7 @@ export const executeWeavePath = (
   const compileInputs = { scopeChain: pending.scopeChain };
   const cache = previous?.cache;
   const before = previous?.canon;
-  const observation = createCompileObservation(runtime);
+  const observation = createWeaveObservation(runtime);
   const canon =
     before != null &&
     cache?.diagnostics.length === 0 &&

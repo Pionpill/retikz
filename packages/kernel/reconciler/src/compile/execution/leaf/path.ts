@@ -1,7 +1,6 @@
 import type {
   CompileOccurrenceLocator,
   CompiledPath,
-  PathResolution,
   PathCompileContext,
   IRPathBase,
   InputPathCompilation,
@@ -11,8 +10,8 @@ import type {
 import { compilePath, createPathTargetResolver, resolvePathAnimations, resolvePath } from '@retikz/core';
 
 import type { CompileOwnerKey } from '../../provenance';
-import { createExecutionInvariantError, createCompileObservation } from '../../runtime';
-import type { CompileRuntime, CompileReferenceRead, CompileObservationFacts } from '../../runtime';
+import { createExecutionInvariantError } from '../../runtime';
+import type { CompileRuntime } from '../../runtime';
 import { createCompileChildPath } from '../../shared';
 import type { TreeOutputState, InternalScenePrimitive } from '../shared';
 import { PATH_PLACEHOLDER, createTreePositionContext } from '../shared';
@@ -20,14 +19,6 @@ import type { SubtreeCompileRuntime } from '../subtree';
 
 /** 等待命名引用完成注册后再 emit 的 path 任务 */
 export type PendingPathEmission = InputPathCompilation & {
-  /** 延迟结果的单向观察端，生成内容不提供 */
-  observeResult?: (canon: PathResolution, compiled: CompiledPath, facts: CompileObservationFacts) => void;
-  observeRead?: (name: string, entry: CompileReferenceRead['entry'], kind: CompileReferenceRead['kind']) => void;
-  mirror?: {
-    primitives: Array<InternalScenePrimitive>;
-    bounds: Array<LayoutBoundsContribution>;
-    allocations: Array<LayoutBoundsContribution>;
-  };
   /** 入队时的编译出现位置，仅供驱动绑定诊断 */
   occurrence: CompileOccurrenceLocator;
   /** path 几何完成后写入的当前 frame bbox 贡献 */
@@ -68,16 +59,6 @@ export const queuePathChild = (
   const placeholder = { type: PATH_PLACEHOLDER } as const;
   primitives.push(placeholder);
   const pending: PendingPathEmission = {
-    observeResult:
-      runtime.onCompiled === undefined
-        ? undefined
-        : (canon, compiled, facts) =>
-            runtime.onCompiled?.(
-              pathIrPath,
-              { ...frame.context, transformChains: pending.scopeChain },
-              { kind: 'path', path: pending.path, canon, compiled },
-              facts,
-            ),
     path: resolvePathAnimations(child, pathIrPath, runtime.state.workspace.diagnosticCollector.collect),
     irPath: pathIrPath,
     scopeChain,
@@ -132,11 +113,6 @@ export const assemblePathOutputs = (
       replacementsBySink.set(sink, replacements);
     }
     replacements.set(placeholder, primitives);
-    if (pendingPath.mirror !== undefined) {
-      let mirrored = replacementsBySink.get(pendingPath.mirror.primitives);
-      if (mirrored === undefined) replacementsBySink.set(pendingPath.mirror.primitives, (mirrored = new Map()));
-      mirrored.set(placeholder, primitives);
-    }
     if (pendingPath.semanticOwner !== undefined) {
       runtime.state.execution.provenanceTracker?.recordPrimitives(primitives, pendingPath.semanticOwner, 'path');
     }
@@ -147,12 +123,6 @@ export const assemblePathOutputs = (
       for (const prim of primitives) output.zIndexMap.set(prim, pendingPath.zIndex);
     }
     if (result !== null) {
-      const bound = { boundsPoints: [...result.boundsPoints], shadow: compiled.style.shadow };
-      pendingPath.mirror?.bounds.push(bound);
-      pendingPath.mirror?.allocations.push({
-        boundsPoints: [...result.boundsPoints],
-        skipAllocation: pendingPath.skipAllocation,
-      });
       pendingPath.bounds.push({
         boundsPoints: [...result.boundsPoints],
         shadow: compiled.style.shadow,
@@ -216,19 +186,12 @@ export const createPathCompileContext = (
 
 /** 完整计算延迟 Path，不读取跨批结果 */
 const compilePendingPath = (runtime: CompileRuntime, pending: PendingPathEmission): CompiledPath => {
-  const observation = createCompileObservation(runtime);
-  const local = observation.runtime;
-  const canon = resolvePath(pending.path, createPathResolveContext(local, pending));
-  const compile = () => compilePath(canon, createPathCompileContext(local, pending));
+  const canon = resolvePath(pending.path, createPathResolveContext(runtime, pending));
+  const compile = () => compilePath(canon, createPathCompileContext(runtime, pending));
   const namespace = runtime.state.execution.namespaceStack;
   namespace.setPhase('resolving');
   try {
-    const calculate = () =>
-      pending.observeResult === undefined ? compile() : namespace.observeReferences(observation.read, compile);
-    const compiled =
-      pending.observeRead === undefined ? calculate() : namespace.observeReferences(pending.observeRead, calculate);
-    pending.observeResult?.(canon, compiled, observation.facts());
-    return compiled;
+    return compile();
   } finally {
     namespace.setPhase('registering');
   }

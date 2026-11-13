@@ -10,6 +10,8 @@ keywords: Weave、prepared、Compiled、拓扑依赖、增量编译、队列、�
 - 决策日期：2026-11-11
 - 关联：[版本目标](./roadmap.md)、[057](./057-scope-acyclic-geometry-references.md)、[062](./062-weave-node-state-isolation.md)、[063](./063-weave-incremental-update.md)、[065](./065-compiled-layout-paint.md)、[080](./080-unified-reconciler-compilation.md)、[083](./083-path-position-modes.md)、[Drawing Complete](../../../architecture/core-drawing-complete.md)
 
+> 首轮调度归属由 [ADR-086](./086-independent-compilation-drivers.md) 调整为全量与 Weave 独立驱动；共享绘图语义、会话入口与事务约束保持
+
 ## 背景与目标
 
 增量执行需要从批次变动出发，按真实依赖计算受影响内容。仅将阶段缓存和失效选择归入 Weave，仍不足以实现这一目标：若计算任务依赖完整子树遍历才能获得环境，或者输入变化立即使整个消费者链失效，更新仍受遍历顺序和过度传播约束。

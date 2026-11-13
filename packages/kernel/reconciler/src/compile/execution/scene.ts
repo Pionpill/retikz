@@ -11,18 +11,10 @@ import type { CompileRuntime } from '../runtime';
 import type { CompositeArtifactOf } from '../shared';
 import { orderCompileWarnings } from '../shared';
 import type { SceneCompilationSnapshot } from '../types';
-import { assembleCompileSubtree } from './subtree';
 import type { SubtreeCompilation } from './subtree';
 
 /** Scene 自动边界的默认留白 */
 const DEFAULT_LAYOUT_PADDING = 10;
-
-/** 完整编译根子树并组装 Scene 快照；padding 只在最终组装时使用 */
-export const compileScene = <TComposite extends AnyCompositeDefinition>(
-  root: IRScene,
-  runtime: CompileRuntime,
-): SceneCompilationSnapshot<TComposite> =>
-  finalizeSceneCompilation<TComposite>(root, runtime, assembleCompileSubtree(root.children, runtime));
 
 /** 将已完成的元素贡献与本批资源、来源及诊断合并为快照，不执行元素编译 */
 export const finalizeSceneCompilation = <TComposite extends AnyCompositeDefinition>(

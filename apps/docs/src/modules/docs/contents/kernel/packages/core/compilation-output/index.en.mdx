@@ -98,6 +98,8 @@ Readonly snapshot, result and artifacts / diagnostics array shells do not imply 
 
 ## Complete Implementation Flow
 
+The diagram follows complete traversal in a non-incremental session. Weave independently schedules initial construction, complete replacement, and batch updates in incremental sessions. Both drivers share element computation and snapshot assembly semantics.
+
 <ComponentPreview files="output-implementation" size="lg" hideCode type="flow" />
 
 compileScene first calls assembleCompileSubtree to finish paths and child contributions, then calls finalizeSceneCompilation to collect resources and assemble the snapshot. That function determines layout, root tracks, result and diagnostics without compiling entities again. SceneReconciler commits the complete candidate for consumers.
@@ -107,8 +109,8 @@ compileScene first calls assembleCompileSubtree to finish paths and child contri
     { label: 'Scene and primitive contract', path: 'packages/kernel/core/src/contract/scene/scene.ts' },
     { label: 'Layout bounds helpers', path: 'packages/kernel/core/src/compile/scene/bounds.ts' },
     { label: 'Scene layout calculation', path: 'packages/kernel/core/src/compile/scene/layout.ts' },
-    { label: 'Complete compilation entry', path: 'packages/kernel/reconciler/src/compile/execution/compile.ts' },
-    { label: 'Snapshot assembly', path: 'packages/kernel/reconciler/src/compile/execution/compile.ts' },
+    { label: 'Complete compilation entry', path: 'packages/kernel/reconciler/src/full.ts' },
+    { label: 'Snapshot assembly', path: 'packages/kernel/reconciler/src/compile/execution/scene.ts' },
     { label: 'Snapshot and result types', path: 'packages/kernel/reconciler/src/compile/types.ts' },
     { label: 'Reconciler result and commit target', path: 'packages/kernel/reconciler/src/reconcile/types.ts' },
   ]}

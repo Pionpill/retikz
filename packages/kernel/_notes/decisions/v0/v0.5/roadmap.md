@@ -68,7 +68,7 @@
 - 本版本完成 Reconciler 的同步完整与增量编译能力：Core 保持唯一绘图语义及原子阶段，Reconciler 管理执行、缓存与依赖失效、candidate 隔离、结果生命周期和单目标原子提交。
 - 包边界确定为 Reconciler 单向依赖 Core、Foundation 与实际使用的 Math，Core 不反向依赖 Reconciler。Core 保留 IR、绘图语义与原子阶段产物；完整驱动、遍历和跨次缓存归 Reconciler。
 - 完整与增量执行统一归 Reconciler，包括编译会话接线、跨次身份与版本关联、编译树、依赖响应、缓存复用、运行时拓扑、快照与 Scene Patch 契约及生成逻辑。Reconciler 复用 Core 的原子计算能力和已有 Weave 状态事务，不复制绘图算法或事务引擎；Render 的 retained 路径消费 Reconciler 的公开输出契约。
-- 一次性与持续编译统一经过现有 SceneReconciler；静态编译不保留跨次缓存，局部更新使用权威批次，不依赖根 IR 的全量深比较：[080](./080-unified-reconciler-compilation.md)、[082](./082-scene-reconciler-entry.md)。
+- 一次性与持续编译统一经过现有 SceneReconciler；全量与增量独立调度并共享计算语义，静态编译不保留跨次缓存，局部更新使用权威批次，不依赖根 IR 的全量深比较：[080](./080-unified-reconciler-compilation.md)、[082](./082-scene-reconciler-entry.md)、[086](./086-independent-compilation-drivers.md)。
 - 支持多次独立更新请求在明确批次边界内合并为一次事务，基于最终有效变化统一分析依赖并整体重算、生成 Patch 和提交，避免逐请求重复完整计算；在领域语义可证明等价时压缩更新，覆盖式赋值保留最终值，相对增量累积。合批与压缩必须保持必要的顺序、校验和失败语义，批次边界及领域合并契约在后续设计中明确。
 - 移除独立 Runtime；trace 原子类型归 Foundation，各 owner 发射，工具负责校验与聚合：[064](./064-remove-runtime.md)。
 

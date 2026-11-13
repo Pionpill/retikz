@@ -185,7 +185,15 @@ describe('独立编译会话', () => {
     expect(visible).toBe(0);
     expect(session.read()).toBe(initial);
     fail = false;
-    expect(session.replace({ ...scene, children: [] }).revision).toBe(1);
+    const retried = session.update({
+      operations: [{ kind: 'remove', target: { kind: 'id', scopeId: session.getScopeId(), id: 'a' } }],
+    });
+    expect(retried.revision).toBe(1);
+    expect(visible).toBe(1);
+    expect(retried.compilation.result).toEqual(compileTestResult({ ...scene, children: [] }));
+    expect(initial.compilation.result).toEqual(compileTestResult(scene));
+    expect(session.replace(scene).revision).toBe(2);
+    session.dispose();
   });
 
   it('配置更新复用编译结果，销毁与过期更新有明确边界', () => {

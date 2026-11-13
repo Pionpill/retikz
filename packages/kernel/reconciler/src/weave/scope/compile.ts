@@ -4,10 +4,10 @@ import type { PropertyPath } from '@retikz/foundation';
 import { compareProperties, jsonStructuralEquals, formatPropertyPath } from '@retikz/foundation';
 
 import type { ScopeExecutionSteps, SubtreeCompileRuntime } from '../../compile/execution';
-import { createCompileObservation } from '../../compile/runtime';
 import type { CompileRuntime } from '../../compile/runtime';
+import { createWeaveObservation } from '../shared';
 import { matchWeaveReferences, restoreWeaveResources } from '../shared';
-import type { WeaveNode } from '../shared';
+import type { WeaveNode, WeaveReferenceRead } from '../shared';
 import { compareCanonicalScopes } from './compare';
 
 type WeaveScopeState = NonNullable<Extract<WeaveNode, { type: 'scope' }>['current']>;
@@ -43,6 +43,7 @@ export const executeWeaveScope = (
   context: SubtreeCompileRuntime['context'],
   steps: ScopeExecutionSteps,
   preparedDiagnostics: ReadonlyArray<CompileWarning>,
+  preparedReads: ReadonlyArray<WeaveReferenceRead>,
   previous?: WeaveScopeState,
 ) => {
   const resolveInputs = { child: { ...child, children: undefined }, inheritedStyle: context.inheritance };
@@ -72,7 +73,7 @@ export const executeWeaveScope = (
       reused: true,
     };
   }
-  const observation = createCompileObservation(runtime);
+  const observation = createWeaveObservation(runtime);
   const local = observation.runtime;
   const compiled = runtime.state.execution.namespaceStack.observeReferences(observation.read, () =>
     compileScope(
@@ -95,7 +96,7 @@ export const executeWeaveScope = (
       resolveInputs,
       compileInputs,
       scopePreparation: steps.preparation,
-      reads: [...steps.preparedReads, ...facts.reads],
+      reads: [...preparedReads, ...facts.reads],
       diagnostics: [...preparedDiagnostics, ...facts.diagnostics],
     },
     reused: false,

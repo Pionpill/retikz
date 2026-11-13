@@ -92,7 +92,7 @@ export type SubtreeOutputContribution = {
   artifacts: Array<CompositeArtifact>;
 };
 
-/** 使用独占工作区与名称环境执行子树；实现由全量会话持有 */
+/** 使用独占工作区与名称环境执行子树；不持有作者树或跨批缓存 */
 type CompileSubtree = (
   children: ReadonlyArray<IRChild>,
   runtime: CompileRuntime,

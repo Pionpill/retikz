@@ -4,14 +4,13 @@ import type { PropertyPath } from '@retikz/foundation';
 import { createIdAllocator, isPropertyPathEqual } from '@retikz/foundation';
 
 import type { CompileOptions, ExecuteOptions } from '../compile';
-import type { CompileContribution } from '../compile/execution';
-import { compileScene } from '../compile/execution';
 import { createSharedCompileContext, createCompileRuntime } from '../compile/runtime';
-import type { CompileObserver } from '../compile/runtime';
 import { createCompileChildPath } from '../compile/shared';
 import { RetikzReconcilerError, RetikzReconcilerErrorCode } from '../error';
-import { executeWeaveUpdate } from './scheduler';
+import { executeWeaveMount } from './mount';
+import { executeWeaveCompilation } from './scheduler';
 import type { WeaveUpdateRequest } from './scheduler';
+import type { WeaveContribution } from './shared';
 import type { WeaveCacheMetadata } from './shared';
 import type { WeaveCompileRead } from './shared';
 import type { WeaveBatch, WeaveNode, WeaveRoot, WeaveScopeNode } from './shared';
@@ -331,88 +330,33 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
       });
       tracker.recordNodeReads(node, reads, metadata.diagnostics);
     };
-    const onCompiled: CompileObserver = (path, context, element, facts) => {
-      const node = nodes.get(keyOf(path));
-      if (node === undefined) return;
-      let metadata: WeaveCacheMetadata;
-      if (node.type === 'node' && element.kind === 'node') {
-        const state = transaction.editNode(node);
-        state.canon = element.canon;
-        state.compiled = element.compiled;
-        metadata = {
-          ...facts,
-          resolveInputs: { child: state.input.own, style: context.inheritance },
-          compileInputs: { scopeChain: context.transformChains, proposal: context.layout?.childProposal },
-        };
-      } else if (node.type === 'coordinate' && element.kind === 'coordinate') {
-        const state = transaction.editNode(node);
-        state.canon = element.canon;
-        state.compiled = element.compiled;
-        metadata = {
-          ...facts,
-          resolveInputs: { child: state.input.own, nodeDistance: runtime.context.layout.nodeDistance },
-          compileInputs: { scopeChain: context.transformChains },
-        };
-      } else if (node.type === 'path' && element.kind === 'path') {
-        const state = transaction.editNode(node);
-        state.canon = element.canon;
-        state.compiled = element.compiled;
-        metadata = {
-          ...facts,
-          resolveInputs: {
-            path: element.path,
-            defaults: context.inheritance.defaults,
-            theme: context.inheritance.theme,
-          },
-          compileInputs: { scopeChain: context.transformChains },
-        };
-      } else if (node.type === 'scope' && element.kind === 'scope') {
-        const state = transaction.editNode(node);
-        state.canon = element.canon;
-        state.compiled = element.compiled;
-        metadata = {
-          ...facts,
-          resolveInputs: { child: { ...state.input.own, children: undefined }, inheritedStyle: context.inheritance },
-          compileInputs: {
-            preparation: element.preparation,
-            layouts: element.layouts,
-            scopeChain: context.transformChains,
-            childCount: element.childCount,
-            preResolvedClipPath: element.resolvedClipPath,
-          },
-          scopePreparation: element.preparation,
-          outputDiagnostics: element.outputDiagnostics,
-        };
-      } else return;
-      recordComputed(node, metadata, false);
-    };
-    const contributions = {
-      write: (path: PropertyPath, contribution: CompileContribution) => {
-        const node = nodes.get(keyOf(path));
-        if (node === undefined || node.type === 'scope') return;
-        transaction.editNode(node).contribution = contribution;
-        if (node.type !== 'composite') return;
+    const writeContribution = (node: WeaveNode, contribution: WeaveContribution): void => {
+      if (node.type === 'scope') return;
+      transaction.editNode(node).contribution = contribution;
+      if (node.type !== 'composite') return;
+      if (!counted.has(node)) {
+        counted.add(node);
         batch.visited++;
-        tracker.recordNodeReads(
-          node,
-          contribution.reads.map(read => ({
-            name: read.name,
-            kind: read.kind,
-            state: read.entry === undefined ? 'missing' : read.entry.state === 'resolved' ? 'ready' : 'pending',
-            binding:
-              read.entry === undefined
-                ? undefined
-                : read.entry.producer === undefined
-                  ? findProducer(read.entry.irPath)
-                  : this.state.persistent.bindings.get(read.entry.producer),
-          })),
-          contribution.diagnostics,
-        );
-      },
+      }
+      tracker.recordNodeReads(
+        node,
+        contribution.reads.map(read => ({
+          name: read.name,
+          kind: read.kind,
+          state: read.entry === undefined ? 'missing' : read.entry.state === 'resolved' ? 'ready' : 'pending',
+          binding:
+            read.entry === undefined
+              ? undefined
+              : read.entry.producer === undefined
+                ? findProducer(read.entry.irPath)
+                : this.state.persistent.bindings.get(read.entry.producer),
+        })),
+        contribution.diagnostics,
+      );
     };
-    const retained = new Map<string, CompileContribution>();
+    const retained = new Map<string, WeaveContribution>();
     const pending = new Map<string, WeaveUpdateRequest>();
-    const requested = batch.forceFull || !batch.updating ? paths.keys() : tracker.requests;
+    const requested = !batch.updating ? [] : batch.forceFull ? paths.keys() : tracker.requests;
     for (const node of requested) {
       const path = keyOf(paths.get(node)!);
       const state = transaction.readNode(node);
@@ -436,21 +380,24 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
         retained.set(path, contribution);
       else pending.set(path, request);
     }
-    const candidate = { ...runtime, contributions, producer: (path: PropertyPath) => nodes.get(keyOf(path)) };
+    const context = {
+      source: batch.source,
+      runtime,
+      recordComputed,
+      writeContribution,
+      root,
+      transaction,
+      paths,
+      names: batch.addresses.names,
+    };
     const compilation = batch.updating
-      ? executeWeaveUpdate<TComposite>(
-          batch.source,
-          candidate,
-          node => !batch.forceFull && isPropertyPathEqual(batch.previousNodeIrPaths.get(node) ?? [], paths.get(node)!),
-          recordComputed,
+      ? executeWeaveCompilation<TComposite>(context, {
+          canReuse: node =>
+            !batch.forceFull && isPropertyPathEqual(batch.previousNodeIrPaths.get(node) ?? [], paths.get(node)!),
           retained,
           pending,
-          root,
-          transaction,
-          paths,
-          batch.addresses.names,
-        )
-      : compileScene<TComposite>(batch.source, { ...candidate, onCompiled });
+        })
+      : executeWeaveMount<TComposite>(context);
     if (!batch.updating || batch.indexesChanged)
       for (const node of batch.updating ? tracker.requests : nodes.values()) {
         if (node.type === 'scope') tracker.recordScopeLayoutDependencies(node);

@@ -40,7 +40,7 @@ export type CompositeCompileHost = SubtreeCompileHost & {
   /** 接受已选择的子树贡献，输出容器由宿主维护 */
   acceptContribution: (frame: SubtreeCompileRuntime, contribution: SubtreeOutputContribution) => void;
   /** 编译一个已绑定输入或生成的子项 */
-  compileChild: (
+  compilePreparedChild: (
     child: IRChild,
     index: number,
     frame: SubtreeCompileRuntime,

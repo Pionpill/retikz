@@ -1,7 +1,6 @@
 import type {
   CanonicalScope,
   ScopeCompileContext,
-  CompileWarning,
   CompiledScope,
   CompileOccurrenceLocator,
   IRChild,
@@ -10,7 +9,6 @@ import type {
 } from '@retikz/core';
 
 import type { CompileOwnerKey } from '../../provenance';
-import type { CompileReferenceRead } from '../../runtime';
 import type { InternalScenePrimitive } from '../shared';
 import type { SubtreeCompileRuntime } from '../subtree';
 
@@ -69,12 +67,6 @@ export type ScopeExecutionSteps = {
   canon: CanonicalScope;
   /** 子布局就绪后供 Core 计算包络的上下文 */
   readonly compileContext: ScopeCompileContext;
-  /** 后代计算前消费的引用 */
-  preparedReads: ReadonlyArray<CompileReferenceRead>;
-  /** 后代计算前产生的诊断 */
-  preparedDiagnostics: ReadonlyArray<CompileWarning>;
-  /** 依赖最终可见输出的诊断 */
-  readonly outputDiagnostics: ReadonlyArray<CompileWarning>;
   /** 发布最终包络并投影后代几何 */
   project: (compiled: CompiledScope) => void;
   /** 计算当前名称环境中的路径与输出分配 */

@@ -10,6 +10,8 @@ keywords: SceneReconciler、编译入口、Vanilla、SSR、incremental、compile
 - 接受日期：2026-11-07
 - 关联：[roadmap](./roadmap.md)、[统一执行器](./080-unified-reconciler-compilation.md)、[同步提交](./064-remove-runtime.md)、[编译产物](./077-compile-output-contract.md)、[异步作者准备](./047-async-authoring-preparation.md)、[Drawing Complete](../../../architecture/core-drawing-complete.md)、[包职能设计](../../../../../../notes/architecture/package-responsibility-design.md)
 
+> 首轮调度归属由 [ADR-086](./086-independent-compilation-drivers.md) 调整为全量与 Weave 独立驱动；共享绘图语义、会话入口与事务约束保持
+
 ## 背景与目标
 
 全量与增量已经共享底层执行器，但独立完整编译函数和 SceneReconciler 仍提供两类公开调用入口。持续处理通过会话编译，一次性处理可以直接进入底层完整驱动，调用生命周期和诊断接线分别维护。

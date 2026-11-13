@@ -1,13 +1,10 @@
 import { DEFAULT_RESOLVED_THEME, resolveCompositeInputScope, resolveTheme } from '@retikz/core';
 import type { IRScene } from '@retikz/core';
-import type { PropertyPath } from '@retikz/foundation';
 
-import type { CompileContributionController } from '../execution';
 import { CompileProvenanceTracker } from '../provenance';
 import type { CompileOptions, ExecuteOptions } from '../types';
 import { createSharedCompileContext } from './context';
 import type { CompileContext } from './context';
-import type { CompileObserver } from './observation';
 import { CompositeCompileState, createCompileEnvironment, createWorkspaceCompileState } from './state';
 import type { CompileState } from './state';
 import { createCachedTextMeasurer } from './text-cache';
@@ -18,12 +15,6 @@ export type CompileRuntime = Readonly<{
   state: CompileState;
   /** 编译期间不修改的输入环境 */
   context: CompileContext;
-  /** 将完整构建的事实交给首轮结果接收方，不控制计算 */
-  onCompiled?: CompileObserver;
-  /** 将已完成的作者输出贡献交给当前候选保存 */
-  contributions?: CompileContributionController;
-  /** 将作者声明位置映射到驱动的稳定生产者，不参与绘图语义 */
-  producer?: (path: PropertyPath) => object | undefined;
 }>;
 
 /** 创建根树 Runtime，每次调用建立独立工作区与组件会话 */

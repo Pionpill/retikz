@@ -1,69 +1,35 @@
-﻿import type { CompileOccurrenceLocator, CompileWarning, ScenePrimitive, SceneResources } from '@retikz/core';
-import { visitSceneContent } from '@retikz/core';
-import type { PropertyPath } from '@retikz/foundation';
+import type { ScenePrimitive, CompileOccurrenceLocator } from '@retikz/core';
 import { isPropertyPathEqual } from '@retikz/foundation';
 
-import type { CompileOwnerKey, CompileNamespaceKey, CompileProvenanceSnapshot } from '../../provenance';
-import type { CompileReferenceRead, CompileRuntime, NamespaceFrameChange } from '../../runtime';
-import { importSceneResources, compileWarningOccurrenceOf } from '../../shared';
-import type { TreeOutputState } from '../shared';
-import type { SubtreeCompileState } from './compile';
-
-/** 作者实例已经完成的输出贡献，不包含 probe token、回调或可写工作区 */
-export type CompileContribution = {
-  /** 局部输出与父布局贡献 */
-  output: Omit<SubtreeCompileState, 'primitives' | 'paths'> & { primitives: Array<ScenePrimitive> };
-  /** 与局部图元对应的绘制顺序 */
-  zIndices: Array<number | undefined>;
-  /** 实例向当前名称空间提交的声明 */
-  bindings: Array<NamespaceFrameChange>;
-  /** 实例实际读取的外部或内部名称 */
-  reads: Array<CompileReferenceRead>;
-  /** 图元引用的资源闭包 */
-  resources: SceneResources;
-  /** 实例诊断；有诊断时由驱动决定重新计算 */
-  diagnostics: Array<CompileWarning>;
-  /** 可重新绑定到当前来源树的局部事实 */
-  provenance?: CompileProvenanceSnapshot;
-};
-
-/** 驱动持有贡献有效性和存储，组装层只消费已选定的贡献 */
-export type CompileContributionController = {
-  write: (path: PropertyPath, contribution: CompileContribution) => void;
-};
-
-/** 从已物化图元收集真实资源依赖，避免保留其它实例的资源 */
-export const collectContributionResources = (
-  primitives: Array<ScenePrimitive>,
-  resources: SceneResources,
-): SceneResources => {
-  const retained = new Set<string>();
-  visitSceneContent({ primitives, resources }, primitive => {
-    if (primitive.type === 'group') {
-      if (primitive.clipRef !== undefined) retained.add(primitive.clipRef);
-    } else if (primitive.type !== 'text') {
-      for (const paint of [primitive.fill, primitive.stroke])
-        if (typeof paint === 'object' && paint.kind === 'resourceRef') retained.add(paint.id);
-    }
-  });
-  return {
-    paints: resources.paints.filter(resource => retained.has(resource.id)),
-    clips: resources.clips.filter(resource => retained.has(resource.id)),
-  };
-};
+import type { SubtreeCompileState, TreeOutputState } from '../compile/execution';
+import type { CompileOwnerKey, CompileNamespaceKey, CompileProvenanceOwner } from '../compile/provenance';
+import type { CompileRuntime, NamespaceFrameChange } from '../compile/runtime';
+import { importSceneResources, compileWarningOccurrenceOf } from '../compile/shared';
+import { collectContributionResources } from './shared';
+import type { WeaveContribution, WeaveContributionRead } from './shared';
 
 /** 从已完成的局部输出捕获可复用贡献，不执行领域计算 */
-export const captureCompileContribution = (
+export const captureWeaveContribution = (
   runtime: CompileRuntime,
   output: TreeOutputState,
   state: SubtreeCompileState,
-  bindings: Array<NamespaceFrameChange>,
-  reads: Array<CompileReferenceRead>,
+  bindings: ReadonlyArray<NamespaceFrameChange>,
+  reads: ReadonlyArray<WeaveContributionRead>,
   occurrence: CompileOccurrenceLocator,
   semanticOwner?: CompileOwnerKey,
-): CompileContribution => {
+): WeaveContribution => {
   const primitives = state.primitives as Array<ScenePrimitive>;
   const workspace = runtime.state.workspace;
+  const captureProvenance = () => {
+    const tracker = runtime.state.execution.provenanceTracker;
+    if (semanticOwner === undefined || tracker === undefined) return;
+    const snapshot = tracker.capture(primitives);
+    const owners = new Map<CompileOwnerKey, CompileProvenanceOwner>();
+    owners.set(semanticOwner, snapshot.ownerMap.get(semanticOwner)!);
+    for (const [key, entry] of snapshot.ownerMap)
+      if (entry.parent !== undefined && owners.has(entry.parent)) owners.set(key, entry);
+    return { root: semanticOwner, ownerMap: owners };
+  };
   return {
     output: {
       primitives,
@@ -84,18 +50,15 @@ export const captureCompileContribution = (
     diagnostics: workspace.diagnosticCollector.warnings.filter(warning =>
       isPropertyPathEqual(compileWarningOccurrenceOf(warning).sourcePath, occurrence.sourcePath),
     ),
-    provenance:
-      semanticOwner === undefined
-        ? undefined
-        : runtime.state.execution.provenanceTracker?.captureContribution(primitives, semanticOwner),
+    provenance: captureProvenance(),
   };
 };
 
 /** 只物化绘制、资源与来源，不建立计算环境或重新发布名称 */
-export const materializeCompileOutput = (
+export const materializeWeaveOutput = (
   runtime: CompileRuntime,
   output: TreeOutputState,
-  contribution: CompileContribution,
+  contribution: WeaveContribution,
   semanticOwner?: CompileOwnerKey,
   namespace: CompileNamespaceKey = runtime.state.execution.namespaceStack.identity,
 ): SubtreeCompileState => {
@@ -124,13 +87,13 @@ export const materializeCompileOutput = (
 };
 
 /** 在计算工作区物化贡献并重放其已确认有效的名称 */
-export const materializeCompileContribution = (
+export const materializeWeaveContribution = (
   runtime: CompileRuntime,
   output: TreeOutputState,
-  contribution: CompileContribution,
+  contribution: WeaveContribution,
   semanticOwner?: CompileOwnerKey,
 ): SubtreeCompileState => {
-  const state = materializeCompileOutput(runtime, output, contribution, semanticOwner);
+  const state = materializeWeaveOutput(runtime, output, contribution, semanticOwner);
   const namespaceStack = runtime.state.execution.namespaceStack;
   const scopeIds = new Map<string, string>();
   for (const binding of contribution.bindings) {

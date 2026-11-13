@@ -118,11 +118,6 @@ export class NamespaceStack {
   /** 当前阶段；registering 允许写入，resolving 只允许 lookup */
   private currentPhase: NamespacePhase = 'registering';
 
-  /** 当前生成内容继承的作者实体 */
-  get currentProducer(): object | undefined {
-    return this.producer;
-  }
-
   /** 当前是否已经进入路径查询阶段 */
   get isResolving(): boolean {
     return this.currentPhase === 'resolving';

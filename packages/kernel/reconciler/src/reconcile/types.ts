@@ -8,7 +8,7 @@ import type { ReconcilerUpdateStrategy } from './constants';
 export type ReconcilerResult<TComposite extends AnyCompositeDefinition = AnyCompositeDefinition> = Readonly<{
   /** 会话内的已提交版本，首次发布为零 */
   revision: number;
-  /** 统一执行器的完整编译产物，不强制生成渲染快照 */
+  /** 会话已提交的完整编译产物，不强制生成渲染快照 */
   compilation: SceneCompilationSnapshot<TComposite>;
 }>;
 

@@ -11,7 +11,7 @@ import {
 } from '@retikz/core';
 
 import type { CompileOwnerKey } from '../../provenance';
-import type { CompileReferenceRead, CompileRuntime } from '../../runtime';
+import type { CompileRuntime } from '../../runtime';
 import { createExecutionInvariantError } from '../../runtime';
 import { createCompileChildPath, enrichLayoutProbeError, orderCompileArtifacts } from '../../shared';
 import { CompositeCompiler } from '../composite';
@@ -27,17 +27,14 @@ import type {
   SubtreeCompilation,
   SubtreeOutputContribution,
 } from './compile';
-import { captureCompileContribution, materializeCompileContribution } from './contribution';
-import type { CompileContribution } from './contribution';
 
-/** 共享元素执行、贡献捕获与输出工作区；计算顺序由所属驱动选择 */
+/** 共享元素执行与输出工作区；计算顺序由所属驱动选择 */
 export class CompileElementExecutor {
   /** 当前执行的输出记录 */
   readonly output: TreeOutputState = { zIndexMap: new WeakMap(), pendingPathCount: 0 };
 
   /** 首次遇到复合组件时创建，同次子树执行复用 */
   private compositeCompiler: CompositeCompiler | undefined;
-  private readonly finalizers: Array<() => void> = [];
 
   constructor(
     private readonly rootChildren: ReadonlyArray<IRChild>,
@@ -75,10 +72,9 @@ export class CompileElementExecutor {
     };
   }
 
-  /** 完成延迟输出、贡献捕获与最终排序，不负责选择失效元素 */
+  /** 完成延迟输出与最终排序，不负责选择失效元素 */
   finish(state: SubtreeCompileState): SubtreeCompilation {
     flushPendingPathEmissions(this.runtime, this.output, state.paths);
-    for (const finalize of this.finalizers) finalize();
 
     let visualBounds: SubtreeCompilation['visualBounds'];
     for (const contribution of state.bounds) {
@@ -128,19 +124,18 @@ export class CompileElementExecutor {
     compositeDepth = this.options.compositeDepth ?? 0,
   ): void {
     for (const [index, child] of children.entries())
-      this.executeChild(child, index, runtime, isRoot, scopeOccurrence, compositeDepth);
+      this.compileChild(child, index, runtime, isRoot, scopeOccurrence, compositeDepth);
   }
 
-  /** 在驱动给定的候选环境执行一个声明，不生成子节点计算任务 */
-  executeChild(
+  /** 准备声明的来源与输入绑定并编译，不生成子节点计算任务 */
+  compileChild(
     child: IRChild,
     index: number,
     runtime: SubtreeCompileRuntime,
     isRoot = false,
     scopeOccurrence?: CompileOccurrenceLocator,
     compositeDepth = this.options.compositeDepth ?? 0,
-    retained?: CompileContribution,
-  ): void {
+  ): CompileOwnerKey | undefined {
     const generated = scopeOccurrence !== undefined || (isRoot ? (this.options.generated ?? false) : false);
     const semanticOwner =
       runtime.context.compileOwner === undefined
@@ -169,25 +164,20 @@ export class CompileElementExecutor {
         : runtime.context.compositeInput === undefined
           ? undefined
           : selectCompositeInputScope(runtime.context.compositeInput, ['children', index]);
-    const producer = generated
-      ? this.runtime.state.execution.namespaceStack.currentProducer
-      : this.runtime.producer?.(createCompileChildPath(runtime.context.pathPrefix, index));
-    this.runtime.state.execution.namespaceStack.withProducer(producer, () =>
-      this.compileChild(
-        child,
-        index,
-        { context: { ...runtime.context, compositeInput: runtimeInputs }, state: runtime.state },
-        occurrence,
-        compositeDepth,
-        generated,
-        semanticOwner,
-        retained,
-      ),
+    this.compilePreparedChild(
+      child,
+      index,
+      { context: { ...runtime.context, compositeInput: runtimeInputs }, state: runtime.state },
+      occurrence,
+      compositeDepth,
+      generated,
+      semanticOwner,
     );
+    return semanticOwner;
   }
 
-  /** 捕获或物化单元素贡献，合入当前输出工作区，并统一包装外部编译失败 */
-  private compileChild(
+  /** 编译已准备来源与输入绑定的子项，并统一包装外部编译失败 */
+  private compilePreparedChild(
     child: IRChild,
     index: number,
     frame: SubtreeCompileRuntime,
@@ -195,86 +185,11 @@ export class CompileElementExecutor {
     compositeDepth: number,
     generated: boolean,
     semanticOwner?: CompileOwnerKey,
-    retained?: CompileContribution,
   ): void {
     try {
       this.runtime.state.execution.withWarningOccurrence(occurrence, () => {
         {
-          const contributions =
-            generated || (!('namespace' in child) && child.type === 'scope') ? undefined : this.runtime.contributions;
-          if (contributions === undefined) {
-            this.compileElement(child, index, frame, occurrence, compositeDepth, generated, semanticOwner);
-            return;
-          }
-          const path = createCompileChildPath(frame.context.pathPrefix, index);
-          let state: SubtreeCompileState;
-          if (retained !== undefined) {
-            state = materializeCompileContribution(this.runtime, this.output, retained, semanticOwner);
-          } else {
-            state = {
-              primitives: [],
-              geometries: [],
-              paths: [],
-              publications: [],
-              bounds: [],
-              allocations: [],
-              alignmentGuides: [],
-              artifacts: [],
-            };
-            const reads: Array<CompileReferenceRead> = [];
-            const observeRead = (
-              name: string,
-              entry: CompileReferenceRead['entry'],
-              kind: CompileReferenceRead['kind'],
-            ) => reads.push({ name, entry, kind, readiness: 'prepare' });
-            const namespace = this.runtime.state.execution.namespaceStack;
-            // ⚡按实际发布捕获贡献，避免每个元素复制全栈并扫描全部绑定
-            const bindings = namespace.captureFrameChanges(() =>
-              namespace.observeReferences(observeRead, () =>
-                this.compileElement(
-                  child,
-                  index,
-                  { context: frame.context, state },
-                  occurrence,
-                  compositeDepth,
-                  generated,
-                  semanticOwner,
-                ),
-              ),
-            );
-            for (const pendingPath of state.paths)
-              pendingPath.observeRead = (name, entry, kind) => reads.push({ name, entry, kind, readiness: 'output' });
-            const captured = state;
-            this.finalizers.push(() =>
-              contributions.write(
-                path,
-                captureCompileContribution(
-                  this.runtime,
-                  this.output,
-                  captured,
-                  bindings,
-                  reads,
-                  occurrence,
-                  semanticOwner,
-                ),
-              ),
-            );
-          }
-          for (const pendingPath of state.paths) {
-            pendingPath.mirror = { primitives: state.primitives, bounds: state.bounds, allocations: state.allocations };
-            pendingPath.placeholderSlot.primitives = frame.state.primitives;
-            pendingPath.bounds = frame.state.bounds;
-            pendingPath.allocations = frame.state.allocations;
-          }
-          frame.state.primitives.push(...state.primitives);
-          frame.state.paths.push(...state.paths);
-          frame.state.geometries.push(...state.geometries);
-          frame.state.publications.push(...state.publications);
-          frame.state.bounds.push(...state.bounds);
-          frame.state.allocations.push(...state.allocations);
-          frame.state.alignmentGuides.push(...state.alignmentGuides);
-          frame.state.artifacts.push(...state.artifacts);
-          return;
+          this.compileElement(child, index, frame, occurrence, compositeDepth, generated, semanticOwner);
         }
       });
     } catch (thrown) {
@@ -306,7 +221,7 @@ export class CompileElementExecutor {
       this.getCompositeCompiler().compile(child, index, frame, occurrence, compositeDepth, semanticOwner);
       return;
     }
-    const elementRuntime = generated ? { ...this.runtime, onCompiled: undefined } : this.runtime;
+    const elementRuntime = this.runtime;
     switch (child.type) {
       case 'node':
         visitNode(elementRuntime, this.output, child, index, frame, occurrence, semanticOwner);
@@ -378,10 +293,10 @@ export class CompileElementExecutor {
       {
         compileSubtree: this.options.compileSubtree,
         acceptContribution: this.acceptContribution.bind(this),
-        compileChild: (...args) => this.compileChild(...args),
+        compilePreparedChild: (...args) => this.compilePreparedChild(...args),
         compileScopeChild: (...args) =>
           visitScope(
-            { ...this.runtime, onCompiled: undefined },
+            this.runtime,
             this.output,
             { compileChildren: this.compileChildren.bind(this) },
             this.options,

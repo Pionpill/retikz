@@ -255,7 +255,7 @@ export class CompositeCompiler {
           sourcePath: occurrence.sourcePath,
           expansionPath: [...occurrence.expansionPath, { kind: CompileExpansionKind.Output, index: outputIndex }],
         };
-        this.host.compileChild(
+        this.host.compilePreparedChild(
           output,
           outputIndex,
           outputFrame,

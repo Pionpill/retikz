@@ -21,10 +21,10 @@
 } from '@retikz/core';
 
 import type { SharedCompileContext } from '../../compile';
-import type { CompileContribution } from '../../compile/execution';
-import type { CompileReferenceRead } from '../../compile/runtime';
 import type { WeaveChangeKind, WeaveChangeSource, WeaveOperationKind } from './constants';
+import type { WeaveContribution } from './contribution';
 import type { WeaveCompileRead } from './read';
+import type { WeaveReferenceRead } from './reference';
 
 /** 名称读取与父包络聚合实际依赖的最终结果粒度 */
 export type WeaveDependencyKind = ReferenceReadKind | 'layout';
@@ -44,7 +44,7 @@ export type WeaveCacheMetadata = Readonly<{
   /** 计算所需的额外上下文 */
   compileInputs: unknown;
   /** 实际读取事实 */
-  reads: ReadonlyArray<CompileReferenceRead>;
+  reads: ReadonlyArray<WeaveReferenceRead>;
   /** 配套资源 */
   resources: SceneResources;
   /** 有诊断时重新计算并派发 */
@@ -60,7 +60,7 @@ type WeaveNodeStateBase<TInput> = {
   /** 阶段复用依据与资源诊断；实际产物分别保存在 canon / compiled */
   cache?: WeaveCacheMetadata;
   /** 作者元素的局部输出；Scope 不保存后代的完整输出 */
-  contribution?: CompileContribution;
+  contribution?: WeaveContribution;
   /** 所属声明容器，引用稳定对象 */
   parent: WeaveRoot | WeaveScopeNode;
   /** 自身输入与有效上下文，替换对象而非修改共享内容 */

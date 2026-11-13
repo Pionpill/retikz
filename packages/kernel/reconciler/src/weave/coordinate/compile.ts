@@ -4,8 +4,8 @@ import { compareProperties, jsonStructuralEquals } from '@retikz/foundation';
 
 import type { SubtreeCompileRuntime } from '../../compile/execution';
 import { createTreePositionContext } from '../../compile/execution';
-import { createCompileObservation } from '../../compile/runtime';
 import type { CompileRuntime } from '../../compile/runtime';
+import { createWeaveObservation } from '../shared';
 import { matchWeaveReferences, restoreWeaveResources } from '../shared';
 import type { WeaveNode } from '../shared';
 import { compareCanonicalCoordinates } from './compare';
@@ -38,7 +38,7 @@ export const executeWeaveCoordinate = (
     restoreWeaveResources(runtime, cache);
     return { canon, compiled: previous.compiled, cache: { ...cache, resolveInputs, compileInputs }, reused: true };
   }
-  const observation = createCompileObservation(runtime);
+  const observation = createWeaveObservation(runtime);
   const compiled = runtime.state.execution.namespaceStack.observeReferences(observation.read, () =>
     compileCoordinate(canon, createTreePositionContext(observation.runtime, context.transformChains)),
   );

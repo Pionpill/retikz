@@ -18,8 +18,7 @@ import {
 import { formatPropertyPath } from '@retikz/foundation';
 
 import type { CompileOwnerKey } from '../../provenance';
-import { createCompileObservation } from '../../runtime';
-import type { CompileRuntime, CompileReferenceRead, CompileObservationFacts } from '../../runtime';
+import type { CompileRuntime } from '../../runtime';
 import { createCompileChildPath, formatCompileOccurrence } from '../../shared';
 import { flushPendingPathEmissions } from '../leaf';
 import { createTreePositionContext, resolveStructuralAlignmentGuides, transformAlignmentGuides } from '../shared';
@@ -97,7 +96,6 @@ export const prepareScopeExecution = (
     generatedOccurrence === undefined
       ? formatPropertyPath([...createCompileChildPath(locatorPrefix, index), 'theme'])
       : `${formatCompileOccurrence(generatedOccurrence)}.scope.theme`;
-  const warningCount = runtime.state.workspace.diagnosticCollector.warnings.length;
   const canon =
     resolvedScope ??
     resolveScope(child, {
@@ -113,12 +111,10 @@ export const prepareScopeExecution = (
     irPath: createCompileChildPath(locatorPrefix, index),
     onWarn: runtime.state.workspace.diagnosticCollector.collect,
   };
-  const preparedReads: Array<CompileReferenceRead> = [];
-  const preparation = runtime.state.execution.namespaceStack.observeReferences(
-    (name, entry, kind) => preparedReads.push({ name, entry, kind }),
-    () => prepareScopePlacement({ type: 'scope', id: canon.style.id, ...canon.transform }, scopeGeometryContext),
+  const preparation = prepareScopePlacement(
+    { type: 'scope', id: canon.style.id, ...canon.transform },
+    scopeGeometryContext,
   );
-  const preparedDiagnostics = runtime.state.workspace.diagnosticCollector.warnings.slice(warningCount);
 
   // runtime Scope 可能包住在当前 frame 外完成的 replay probe，因此它的数值 transform
   // 必须在 Scope 收尾时统一投影到普通 child 与 replay 导入的 布局发布结果
@@ -147,7 +143,6 @@ export const prepareScopeExecution = (
   };
   let scopeTransforms: Array<Transform> = [];
   let compiledScope: CompiledScope;
-  let outputDiagnostics: ScopeExecutionSteps['outputDiagnostics'] = [];
 
   const children = () => {
     const scopeFrame: SubtreeCompileRuntime = {
@@ -276,7 +271,6 @@ export const prepareScopeExecution = (
     });
     compiledScope = bound.compiled;
     for (const warning of bound.diagnostics) runtime.state.workspace.diagnosticCollector.collect(warning);
-    outputDiagnostics = bound.diagnostics;
     const clipRef = emitScopeGroup(runtime, output, compiledScope, {
       scopePrimitives: state.primitives,
       frame,
@@ -317,62 +311,20 @@ export const prepareScopeExecution = (
     },
     preparation,
     canon,
-    preparedReads,
-    preparedDiagnostics,
     compileContext,
-    get outputDiagnostics() {
-      return outputDiagnostics;
-    },
   };
 };
 
 /** 完整构建按语义顺序执行 Scope，增量更新将实际阶段操作交给驱动 */
 export const visitScope = (...args: Parameters<typeof prepareScopeExecution>): void => {
-  const [runtime, , , , , index, frame] = args;
   const steps = prepareScopeExecution(...args);
-  let facts: CompileObservationFacts | undefined;
-  let childCount = 0;
   try {
     steps.children();
-    childCount = steps.childFrame.state.primitives.length;
-    const observation = runtime.onCompiled === undefined ? undefined : createCompileObservation(runtime);
-    const local = observation?.runtime ?? runtime;
-    const context = {
-      ...steps.compileContext,
-      registerClip: local.state.workspace.clipRegistry.register,
-      registerClipPath: local.state.workspace.clipRegistry.registerPath,
-      onWarn: local.state.workspace.diagnosticCollector.collect,
-    };
-    const compile = () => compileScope(steps.canon, context, { layout: { preparation: steps.preparation } });
-    const compiled =
-      observation === undefined
-        ? compile()
-        : runtime.state.execution.namespaceStack.observeReferences(observation.read, compile);
-    facts = observation?.facts();
+    const compiled = compileScope(steps.canon, steps.compileContext, { layout: { preparation: steps.preparation } });
     steps.project(compiled);
     steps.paths();
   } finally {
     steps.dispose();
   }
   steps.publish();
-  if (facts !== undefined)
-    runtime.onCompiled?.(
-      createCompileChildPath(frame.context.pathPrefix, index),
-      frame.context,
-      {
-        kind: 'scope',
-        canon: steps.canon,
-        compiled: steps.compiled,
-        preparation: steps.preparation,
-        layouts: steps.compileContext.layouts,
-        childCount,
-        resolvedClipPath: steps.compileContext.resolvedClipPath,
-        outputDiagnostics: steps.outputDiagnostics,
-      },
-      {
-        ...facts,
-        reads: [...steps.preparedReads, ...facts.reads],
-        diagnostics: [...steps.preparedDiagnostics, ...facts.diagnostics],
-      },
-    );
 };

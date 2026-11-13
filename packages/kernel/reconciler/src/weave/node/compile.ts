@@ -5,8 +5,8 @@ import type { PropertyPath } from '@retikz/foundation';
 
 import type { SubtreeCompileRuntime } from '../../compile/execution';
 import { createNodeResolveContext, createNodeCompileContext } from '../../compile/execution';
-import { createCompileObservation } from '../../compile/runtime';
 import type { CompileRuntime } from '../../compile/runtime';
+import { createWeaveObservation } from '../shared';
 import { matchWeaveReferences, restoreWeaveResources, retainWeaveReads } from '../shared';
 import type { WeaveNode, WeaveCacheMetadata } from '../shared';
 import { compareCanonicalNodes, compareNodeLayoutInputs, compareNodeMeasurementInputs } from './compare';
@@ -51,7 +51,7 @@ export const executeWeaveNode = (
   const compileInputs = { scopeChain: context.transformChains, proposal: context.layout?.childProposal };
   const cache = previous?.cache;
   const before = previous?.canon;
-  const observation = createCompileObservation(runtime);
+  const observation = createWeaveObservation(runtime);
   const canon =
     before != null &&
     cache?.diagnostics.length === 0 &&

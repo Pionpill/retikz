@@ -3,9 +3,9 @@ import { RetikzError } from '@retikz/foundation';
 
 import type { CompileOptions } from '../compile';
 import { formatCompileWarning } from '../compile';
-import { compileScene } from '../compile/execution';
 import { createCompileRuntime } from '../compile/runtime';
 import { RetikzReconcilerError, RetikzReconcilerErrorCode } from '../error';
+import { compileScene } from '../full';
 import type { WeaveBatch, WeavePreparedUpdate } from '../weave';
 import { WeaveManager } from '../weave';
 import {

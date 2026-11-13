@@ -157,17 +157,6 @@ export class CompileProvenanceTracker {
     return Object.freeze({ root: this.root, ownerMap });
   }
 
-  /** 捕获单个作者实体的已物化贡献，不保存其它分支的来源 */
-  captureContribution(primitives: ReadonlyArray<ScenePrimitive>, owner: CompileOwnerKey): CompileProvenanceSnapshot {
-    const snapshot = this.capture(primitives);
-    const owners = new Map<CompileOwnerKey, CompileProvenanceOwner>();
-    owners.set(owner, snapshot.ownerMap.get(owner)!);
-    for (const [key, entry] of snapshot.ownerMap) {
-      if (entry.parent !== undefined && owners.has(entry.parent)) owners.set(key, entry);
-    }
-    return { root: owner, ownerMap: owners };
-  }
-
   /** 记录单次输入出现的来源，重复 IR 引用仍分配独立键 */
   createOwner(
     child: IRChild,

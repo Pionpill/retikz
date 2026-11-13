@@ -8,8 +8,9 @@ import type { CompileWarning } from '../../../../core/src/compile/shared';
 import type { TextMeasurer, TextPrimitive } from '../../../../core/src/contract';
 import type { IRScene } from '../../../../core/src/schemas';
 import { createSharedCompileContext } from '../../../src/compile';
-import { assembleCompileSubtree, compileScene, finalizeSceneCompilation } from '../../../src/compile/execution';
+import { assembleCompileSubtree, finalizeSceneCompilation } from '../../../src/compile/execution';
 import { createCompileRuntime } from '../../../src/compile/runtime';
+import { compileScene } from '../../../src/full';
 import { flattenPrims } from '../../helpers/flatten';
 
 const measureText: TextMeasurer = (text, font) => ({
