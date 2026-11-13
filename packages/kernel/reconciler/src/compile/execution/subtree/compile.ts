@@ -164,7 +164,7 @@ export const assembleCompileSubtree = (
     ...options,
     compileSubtree: assembleCompileSubtree,
   });
-  const frame = executor.createRootFrame();
+  const frame = executor.createRootRuntime();
   executor.compileChildren(children, frame, true);
   return executor.finish(frame.state);
 };

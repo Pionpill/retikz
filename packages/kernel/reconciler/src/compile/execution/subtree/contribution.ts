@@ -74,7 +74,7 @@ export const captureCompileContribution = (
       alignmentGuides: state.alignmentGuides,
       artifacts: state.artifacts,
     },
-    zIndices: primitives.map(primitive => output.zIndexOf.get(primitive)),
+    zIndices: primitives.map(primitive => output.zIndexMap.get(primitive)),
     bindings,
     reads,
     resources: collectContributionResources(primitives, {
@@ -109,7 +109,7 @@ export const materializeCompileOutput = (
     provenanceTracker?.importProvenance(contribution.provenance, primitives, semanticOwner, 0, namespace, true);
   for (const [index, primitive] of primitives.entries()) {
     const zIndex = contribution.zIndices[index];
-    if (zIndex !== undefined) output.zIndexOf.set(primitive, zIndex);
+    if (zIndex !== undefined) output.zIndexMap.set(primitive, zIndex);
   }
   return {
     primitives,

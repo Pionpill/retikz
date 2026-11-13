@@ -93,7 +93,7 @@ export const assembleNodeOutput = (
 
   for (const prim of emittedPrimitives) {
     primitives.push(prim);
-    if (child.zIndex !== undefined) outputState.zIndexOf.set(prim, child.zIndex);
+    if (child.zIndex !== undefined) outputState.zIndexMap.set(prim, child.zIndex);
   }
 
   bounds.push(...output.bounds);

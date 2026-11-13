@@ -103,7 +103,7 @@ export const executeWeaveUpdate = <TComposite extends AnyCompositeDefinition>(
   const tracker = runtime.state.execution.provenanceTracker;
   namespaces.set(root, runtime.state.execution.namespaceStack.identity);
   const rootExecutor = new CompileElementExecutor(source.children, runtime, { compileSubtree: assembleCompileSubtree });
-  const rootFrame = rootExecutor.createRootFrame();
+  const rootFrame = rootExecutor.createRootRuntime();
 
   const prepareAddress = (node: WeaveNode): WeaveTaskAddress => {
     switch (node.type) {
@@ -262,8 +262,8 @@ export const executeWeaveUpdate = <TComposite extends AnyCompositeDefinition>(
       queue.require(outputAddress(node));
       for (const primitive of execution.frame.state.primitives) {
         if (primitive.type === 'path-placeholder') continue;
-        const zIndex = execution.executor.output.zIndexOf.get(primitive);
-        if (zIndex !== undefined) rootExecutor.output.zIndexOf.set(primitive, zIndex);
+        const zIndex = execution.executor.output.zIndexMap.get(primitive);
+        if (zIndex !== undefined) rootExecutor.output.zIndexMap.set(primitive, zIndex);
       }
       return execution.frame.state;
     }
@@ -518,7 +518,7 @@ export const executeWeaveUpdate = <TComposite extends AnyCompositeDefinition>(
       const facts = scopeFacts(parent);
       chains = composer.append(facts.context.transformChains, facts.transforms);
     }
-    const frame = { context: { ...parentContext, transformChains: chains }, state: executor.createRootFrame().state };
+    const frame = { context: { ...parentContext, transformChains: chains }, state: executor.createRootRuntime().state };
     const execution = { runtime: candidate, executor, frame, bindings: [] };
     executions.set(node, execution);
     return execution;
@@ -540,8 +540,8 @@ export const executeWeaveUpdate = <TComposite extends AnyCompositeDefinition>(
     destination.artifacts.push(...state.artifacts);
     for (const primitive of state.primitives) {
       if (primitive.type === 'path-placeholder') continue;
-      const zIndex = execution.executor.output.zIndexOf.get(primitive);
-      if (zIndex !== undefined) output.zIndexOf.set(primitive, zIndex);
+      const zIndex = execution.executor.output.zIndexMap.get(primitive);
+      if (zIndex !== undefined) output.zIndexMap.set(primitive, zIndex);
     }
   };
 
@@ -609,8 +609,8 @@ export const executeWeaveUpdate = <TComposite extends AnyCompositeDefinition>(
             steps.childFrame.state.alignmentGuides.push(...childState.alignmentGuides);
             for (const primitive of childState.primitives) {
               if (primitive.type === 'path-placeholder') continue;
-              const zIndex = rootExecutor.output.zIndexOf.get(primitive);
-              if (zIndex !== undefined) execution.executor.output.zIndexOf.set(primitive, zIndex);
+              const zIndex = rootExecutor.output.zIndexMap.get(primitive);
+              if (zIndex !== undefined) execution.executor.output.zIndexMap.set(primitive, zIndex);
             }
           }
           steps.paths();

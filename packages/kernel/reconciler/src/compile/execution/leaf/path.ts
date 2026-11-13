@@ -144,7 +144,7 @@ export const assemblePathOutputs = (
     output.pendingPathCount--;
 
     if (pendingPath.zIndex !== undefined) {
-      for (const prim of primitives) output.zIndexOf.set(prim, pendingPath.zIndex);
+      for (const prim of primitives) output.zIndexMap.set(prim, pendingPath.zIndex);
     }
     if (result !== null) {
       const bound = { boundsPoints: [...result.boundsPoints], shadow: compiled.style.shadow };

@@ -2,7 +2,6 @@ import type { CompiledScope, GroupPrimitive, ScenePrimitive, Transform } from '@
 
 import type { CompileRuntime } from '../../runtime';
 import type { TreeOutputState } from '../shared';
-import { stableSortByZIndex } from '../shared';
 import type { EmitScopeGroupContext } from './visit-types';
 
 /** 判断 Scope 是否需要保留可见分组，空匿名分组可被裁去 */
@@ -37,12 +36,14 @@ export const emitScopeGroup = (
     return;
   const group: GroupPrimitive = {
     ...attributes,
-    children: stableSortByZIndex(scopePrimitives as Array<ScenePrimitive>, output.zIndexOf),
+    children: (scopePrimitives as Array<ScenePrimitive>).sort(
+      (a, b) => (output.zIndexMap.get(a) ?? 0) - (output.zIndexMap.get(b) ?? 0),
+    ),
   };
   primitives.push(group);
   if (semanticOwner !== undefined)
     runtime.state.execution.provenanceTracker?.recordPrimitives([group], semanticOwner, 'scope');
-  if (zIndex !== undefined) output.zIndexOf.set(group, zIndex);
+  if (zIndex !== undefined) output.zIndexMap.set(group, zIndex);
 
   return group.clipRef;
 };

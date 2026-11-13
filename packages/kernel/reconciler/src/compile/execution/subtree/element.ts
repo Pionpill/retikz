@@ -17,7 +17,7 @@ import { createCompileChildPath, enrichLayoutProbeError, orderCompileArtifacts }
 import { CompositeCompiler } from '../composite';
 import { visitCoordinate, visitNode, queuePathChild, flushPendingPathEmissions } from '../leaf';
 import { visitScope } from '../scope';
-import { resolveStructuralAlignmentGuides, PATH_PLACEHOLDER, stableSortByZIndex } from '../shared';
+import { resolveStructuralAlignmentGuides, PATH_PLACEHOLDER } from '../shared';
 import type { InternalScenePrimitive, TreeOutputState } from '../shared';
 import type {
   SubtreeCompileRuntime,
@@ -33,7 +33,7 @@ import type { CompileContribution } from './contribution';
 /** 共享元素执行、贡献捕获与输出工作区；计算顺序由所属驱动选择 */
 export class CompileElementExecutor {
   /** 当前执行的输出记录 */
-  readonly output: TreeOutputState = { zIndexOf: new WeakMap(), pendingPathCount: 0 };
+  readonly output: TreeOutputState = { zIndexMap: new WeakMap(), pendingPathCount: 0 };
 
   /** 首次遇到复合组件时创建，同次子树执行复用 */
   private compositeCompiler: CompositeCompiler | undefined;
@@ -46,7 +46,7 @@ export class CompileElementExecutor {
   ) {}
 
   /** 创建当前执行的根环境与输出收集容器 */
-  createRootFrame(): SubtreeCompileRuntime {
+  createRootRuntime(): SubtreeCompileRuntime {
     const state: SubtreeCompileState = {
       primitives: [],
       geometries: [],
@@ -93,13 +93,15 @@ export class CompileElementExecutor {
     }
 
     // 延迟路径已回填，输出容器中不再包含占位项
-    const primitives = stableSortByZIndex(state.primitives as Array<ScenePrimitive>, this.output.zIndexOf);
+    const primitives = (state.primitives as Array<ScenePrimitive>).sort(
+      (a, b) => (this.output.zIndexMap.get(a) ?? 0) - (this.output.zIndexMap.get(b) ?? 0),
+    );
 
     const alignmentGuides = resolveStructuralAlignmentGuides(state.alignmentGuides);
 
     return {
       primitives,
-      primitiveZIndices: primitives.map(primitive => this.output.zIndexOf.get(primitive)),
+      primitiveZIndices: primitives.map(primitive => this.output.zIndexMap.get(primitive)),
       layout: {
         ...(this.compositeCompiler?.rootContribution === undefined
           ? {}
@@ -355,7 +357,7 @@ export class CompileElementExecutor {
     for (const [index, primitive] of contribution.primitives.entries()) {
       runtime.state.primitives.push(primitive);
       const zIndex = contribution.primitiveZIndices[index];
-      if (zIndex !== undefined) this.output.zIndexOf.set(primitive, zIndex);
+      if (zIndex !== undefined) this.output.zIndexMap.set(primitive, zIndex);
     }
     runtime.state.geometries.push(...contribution.geometries);
     runtime.state.publications.push(...contribution.publications);
