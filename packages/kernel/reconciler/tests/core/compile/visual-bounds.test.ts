@@ -2,6 +2,7 @@
 
 import type {
   IRAnimationTrack,
+  ClipResource,
   IRScene,
   PathCommand,
   ScenePrimitive,
@@ -9,7 +10,7 @@ import type {
   TextPrimitive,
 } from '../../../../core/src';
 import { defineArrow } from '../../../../core/src';
-import { calculateBoundsOfPrimitives } from '../../../../core/src/compile/scene/bounds';
+import { calculateBoundsOfPrimitives } from '../../../../core/src/compile/scene/bounds-visual';
 import { compileTestResult } from '../../helpers/compilation';
 
 const boundsOf = (primitives: ReadonlyArray<ScenePrimitive>, resources: SceneResources = { paints: [], clips: [] }) =>
@@ -400,6 +401,67 @@ describe('规范的视觉边界', () => {
       ).toBeUndefined();
     },
   );
+
+  it('共享裁剪的分组交集不会缩小其它分组可用的裁剪范围', () => {
+    const primitives: Array<ScenePrimitive> = [1, 6].map(position => ({
+      type: 'group',
+      clipRef: 'window',
+      children: [{ type: 'rect', x: position, y: position, width: 2, height: 2, fill: '#f00' }],
+    }));
+    const resources: SceneResources = {
+      paints: [],
+      clips: [
+        {
+          kind: 'clip',
+          id: 'window',
+          path: {
+            fillRule: 'nonzero',
+            commands: [
+              { kind: 'move', to: [0, 0] },
+              { kind: 'line', to: [10, 0] },
+              { kind: 'line', to: [10, 10] },
+              { kind: 'line', to: [0, 10] },
+              { kind: 'close' },
+            ],
+          },
+        },
+      ],
+    };
+    const before = structuredClone(resources);
+
+    expect(boundsOf(primitives, resources)).toEqual({ x: 1, y: 1, width: 7, height: 7 });
+    expect(resources).toEqual(before);
+  });
+
+  it('再次求值读取当前裁剪资源，不沿用上次同名资源的边界', () => {
+    const createClip = (size: number): ClipResource => ({
+      kind: 'clip',
+      id: 'window',
+      path: {
+        fillRule: 'nonzero',
+        commands: [
+          { kind: 'move', to: [0, 0] },
+          { kind: 'line', to: [size, 0] },
+          { kind: 'line', to: [size, size] },
+          { kind: 'line', to: [0, size] },
+          { kind: 'close' },
+        ],
+      },
+    });
+    const clips = [createClip(10)];
+    const resources: SceneResources = { paints: [], clips };
+    const primitives: Array<ScenePrimitive> = [
+      {
+        type: 'group',
+        clipRef: 'window',
+        children: [{ type: 'rect', x: 0, y: 0, width: 20, height: 20, fill: '#f00' }],
+      },
+    ];
+
+    expect(boundsOf(primitives, resources)).toEqual({ x: 0, y: 0, width: 10, height: 10 });
+    clips[0] = createClip(4);
+    expect(boundsOf(primitives, resources)).toEqual({ x: 0, y: 0, width: 4, height: 4 });
+  });
 
   it('没有可见内容时返回 undefined', () => {
     const bounds = boundsOf([]);
