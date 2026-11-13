@@ -1,11 +1,116 @@
-import type { AnyCompositeDefinition, CompileWarning, CompositeInputBindings, Scene } from '@retikz/core';
+import type {
+  AnyCompositeDefinition,
+  CompileWarning,
+  CompositeInputBindings,
+  Scene,
+  TextMeasurer,
+  CoreProviderDefinitions,
+  ThemeDefinition,
+  TexLowerer,
+} from '@retikz/core';
 
-import type { CompileHostOptions, CompileLayoutOptions, CompileProviderOptions } from './options';
 import type { CompileProvenanceSnapshot } from './provenance';
 import type { CompositeArtifact, CompositeArtifactOf } from './shared';
 
+/** 宿主环境注入的 compile 能力 */
+export type CompileHostOptions = {
+  /**
+   * 注入文字度量函数
+   * @description 每次编译执行统一缓存相同文本与字体的度量；测量调用传入 disableCache=true 时绕过缓存
+   * @default fallbackMeasurer
+   */
+  measureText?: TextMeasurer;
+  /**
+   * 运行时注入的公式渲染能力
+   * @description 带 tex 内容但未注入或解析失败时会 warning 并降级
+   */
+  lowerTex?: TexLowerer;
+  /**
+   * 编译期警告收集器
+   * @description path / position 解析失败时按 IR locator + code + message 同步触发
+   * @default defaultWarnDispatcher
+   */
+  onWarn?: (warning: CompileWarning) => void;
+};
+
+/** 自动布局与 Scene 输出口径 */
+export type CompileLayoutOptions = {
+  /**
+   * layout 周围的留白
+   * @description 必须是非负有限数值
+   * @default DEFAULT_LAYOUT_PADDING (10)
+   */
+  padding?: number;
+  /**
+   * 输出坐标的小数位精度
+   * @description 仅作用于 Scene 输出；内部几何保持 double 精度。必须是非负整数，且 10 的对应次幂为有限数值
+   * @default DEFAULT_PRECISION (2)
+   */
+  precision?: number;
+  /**
+   * 相对定位距离
+   * @description `Node.position` 为 `{ direction, of }` 且未自带 `distance` 时取此值。必须是有限数值，负值表示反方向偏移
+   * @default 24
+   */
+  nodeDistance?: number;
+  /**
+   * 节点 label 视觉盒与节点边界的默认净距
+   * @description `Node.label.distance` 未设置时取此值，必须是 finite nonnegative number
+   * @default 12
+   */
+  labelDistance?: number;
+  /**
+   * 默认字号
+   * @description `font.size` 缺省时使用此值；同时作为字号 preset 与 `rem` 的根字号。不改变显式数字字号
+   * @default DEFAULT_FONT_SIZE (16)
+   */
+  fontSize?: number;
+};
+
+/** 运行时注入的 provider 注册表 */
+export type CompileProviderOptions = Omit<CoreProviderDefinitions, 'composites'> & {
+  /** 运行时注入的 Core Theme definitions */
+  themeDefinitions?: ReadonlyArray<ThemeDefinition>;
+};
+
 /**
- * `compileToScene()` 的显式 Scene + artifact 结果
+ * Tier 2 composite 展开选项
+ * @template TComposite 本次编译使用的复合组件定义类型联合，用于保留输出产物的精确类型
+ */
+export type CompileCompositeOptions<TComposite extends AnyCompositeDefinition = AnyCompositeDefinition> = {
+  /** 与本次完整 Source 配对的 composite 实例运行时输入 */
+  compositeInputs?: CompositeInputBindings;
+  /**
+   * 运行时注入的 Tier 2 composite 展开逻辑
+   * @description Core 不预留官方 namespace 名称；未注册的 namespace/type 会触发 warning，并跳过该 composite 节点，重复的完整 namespace/type 键在注册期报错
+   * @default []
+   */
+  composites?: ReadonlyArray<TComposite>;
+  /**
+   * composite 嵌套展开的最大深度
+   * @description 必须是非负安全整数；零禁止展开 composite，超限或环会 throw
+   * @default DEFAULT_MAX_COMPOSITE_DEPTH
+   */
+  maxCompositeDepth?: number;
+};
+
+/**
+ * SceneReconciler 的绘图编译参数
+ * @template TComposite 本次编译使用的复合组件定义类型联合，用于保留输出产物的精确类型
+ */
+export type CompileOptions<TComposite extends AnyCompositeDefinition = AnyCompositeDefinition> = CompileHostOptions &
+  CompileLayoutOptions &
+  CompileProviderOptions &
+  CompileCompositeOptions<TComposite> & {
+    /**
+     * 单次裁剪转换允许访问的声明数量，包含根声明及递归子声明
+     * @default 32
+     */
+    maxClipDepth?: number;
+  };
+
+/**
+ * 编译的显式 Scene + artifact 结果
  * @template TCompositeArtifact 本次编译可返回的复合组件产物联合
  */
 export type CompileResult<TCompositeArtifact extends CompositeArtifact = CompositeArtifact> = Readonly<{
@@ -16,52 +121,12 @@ export type CompileResult<TCompositeArtifact extends CompositeArtifact = Composi
 }>;
 
 /**
- * Tier 2 composite 展开选项
- * @template TComposites 本次编译使用的复合组件定义集合，用于保留输出产物的精确类型
- */
-export type CompileCompositeOptions<
-  TComposites extends ReadonlyArray<AnyCompositeDefinition> = ReadonlyArray<AnyCompositeDefinition>,
-> = {
-  /** 与本次完整 Source 配对的 composite 实例运行时输入 */
-  compositeInputs?: CompositeInputBindings;
-  /**
-   * 运行时注入的 Tier 2 composite 展开逻辑
-   * @description Core 不预留官方 namespace 名称；未注册的 namespace/type 会触发 warning，并跳过该 composite 节点，重复的完整 namespace/type 键在注册期报错
-   * @default []
-   */
-  composites?: TComposites;
-  /**
-   * composite 嵌套展开的最大深度
-   * @description 必须是非负安全整数；零禁止展开 composite，超限或环会 throw
-   * @default DEFAULT_MAX_COMPOSITE_DEPTH
-   */
-  maxCompositeDepth?: number;
-};
-
-/**
- * compileToScene 的可选参数
- * @template TComposites 本次编译使用的复合组件定义集合，用于保留输出产物的精确类型
- */
-export type CompileOptions<
-  TComposites extends ReadonlyArray<AnyCompositeDefinition> = ReadonlyArray<AnyCompositeDefinition>,
-> = CompileHostOptions &
-  CompileLayoutOptions &
-  CompileProviderOptions &
-  CompileCompositeOptions<TComposites> & {
-    /**
-     * 单次裁剪转换允许访问的声明数量，包含根声明及递归子声明
-     * @default 32
-     */
-    maxClipDepth?: number;
-  };
-
-/**
  * 单次静态编译的产物、诊断与可选来源信息
- * @template TComposites 本次编译使用的复合组件定义集合，用于保留输出产物的精确类型
+ * @template TComposite 本次编译使用的复合组件定义类型联合，用于保留输出产物的精确类型
  */
-export type SceneCompilationSnapshot<TComposites extends ReadonlyArray<AnyCompositeDefinition>> = Readonly<{
+export type SceneCompilationSnapshot<TComposite extends AnyCompositeDefinition> = Readonly<{
   /** 完整 compile result */
-  result: CompileResult<CompositeArtifactOf<TComposites[number]>>;
+  result: CompileResult<CompositeArtifactOf<TComposite>>;
   /** 仅在完整 compile 成功后可提交的 canonical warnings */
   diagnostics: ReadonlyArray<CompileWarning>;
   /** 按需收集的编译来源信息 */

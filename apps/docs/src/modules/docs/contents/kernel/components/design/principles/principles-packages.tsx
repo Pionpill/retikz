@@ -50,7 +50,7 @@ const Demo: FC<PrinciplesPackagesProps> = props => {
             <FlowEntities
               items={[
                 { id: 'ir', text: 'IR', role: 'resource', kind: LogicFigureEntityKind.ImportantData },
-                { id: 'compile', text: 'compileToScene', role: 'activity' },
+                { id: 'compile', text: 'SceneReconciler', role: 'activity' },
                 { id: 'scene', text: 'Scene', role: 'resource', kind: LogicFigureEntityKind.ImportantData },
               ]}
             />

@@ -2,7 +2,7 @@
 
 **Component properties**
 
-#### <ApiSourceLink label={"PathMarkProps"} path={"packages/viz/plot-react/src/components/marks.tsx"} startLine={11}>PathMarkProps</ApiSourceLink>
+#### <ApiSourceLink label={"PathMarkProps"} path={"packages/viz/plot-react/src/components/marks.tsx"} startLine={10}>PathMarkProps</ApiSourceLink>
 
 **Common members**
 
@@ -119,3 +119,20 @@ export type IRPlotPathMark = ZodInfer<typeof PathMarkSchema>;
 </DocTab>
 
 </DocTabs>
+
+#### <ApiSourceLink label={"PlotPathStepSchema"} path={"packages/viz/plot/src/schemas/mark/path-step.ts"} startLine={37}>PlotPathStepSchema</ApiSourceLink>
+
+<ZodSchema
+  name="PlotPathStepSchema"
+  description="Constructs a path with Core steps after projecting data positions. Steps use kind and omit the type field."
+/>
+
+Targets accept Core drawing coordinates, Plot data positions, or mark references. Bezier control points accept only absolute coordinates or data positions. See [Path construction](/viz/plot/mark/path#path-construction).
+
+#### <ApiSourceLink label={"PathClosureSchema"} path={"packages/viz/plot/src/schemas/mark/path.ts"} startLine={134}>PathClosureSchema</ApiSourceLink>
+
+<ZodSchema name="PathClosureSchema" />
+
+#### <ApiSourceLink label={"MarkPathLabelSchema"} path={"packages/viz/plot/src/schemas/mark/label.ts"} startLine={26}>MarkPathLabelSchema</ApiSourceLink>
+
+<ZodSchema name="MarkPathLabelSchema" />

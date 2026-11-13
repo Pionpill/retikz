@@ -1,9 +1,17 @@
 ---
-title: 辅助
+title: guide · 辅助
 description: 辅助组件把 scale 与 coordinate 的结果解释给读者；Axis 解释位置，Legend 解释颜色、大小、透明度和形状，它们不负责绘制数据 mark。
 ---
 
 辅助组件是图形语法的解释层。Mark 负责画数据，Axis 和 Legend 负责让读者知道这些位置、颜色、大小或形状代表什么。
+
+## 阅读路径
+
+先完成字段与通道的绑定，再用辅助组件解释映射结果。Plot 不会自动补齐坐标轴或图例，需要哪些说明，就显式声明哪些 guide。修改数据域、比例尺或坐标系后，辅助组件会使用同一份解析结果更新刻度、网格和图例。
+
+坐标轴文档从 x / y 轴的接入开始，介绍笛卡尔与极坐标中的维度含义，再说明刻度来源、网格、标签避让和原点轴。图例文档先解释颜色比例尺如何决定色块、色带或分箱，再展示尺寸、形状和透明度图例，以及图例的位置与排列。
+
+两篇文档都包含交互示例、实现流程和各自的 API 参考。共用的线条、文字和刻度来源契约见本页的 [API 参考](#api-参考)。
 
 ## 职责一览
 
@@ -19,14 +27,18 @@ description: 辅助组件把 scale 与 coordinate 的结果解释给读者；Axi
 <LinkedSections
   items={[
     {
-      title: '坐标轴',
+      title: 'axis · 坐标轴',
       description: '解释位置通道，绘制刻度、标签和网格',
       url: '/viz/plot/guide/axis',
     },
     {
-      title: '图例',
+      title: 'legend · 图例',
       description: '解释颜色、大小、透明度和形状等非位置通道',
       url: '/viz/plot/guide/legend',
     },
   ]}
 />
+
+## API 参考
+
+{/* @include viz/plot/guide/generated */}

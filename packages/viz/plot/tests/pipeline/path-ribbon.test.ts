@@ -1,10 +1,10 @@
 import type { IRChild, IRPath, IRScope } from '@retikz/core';
 import { ribbonPathDefinition } from '@retikz/extension';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { lowerPlotWithDataArtifact } from '../../src/pipeline/expand/lower';
 import { PlotSchema } from '../../src/schemas';
+import { compileTestResult } from '../helpers/compilation';
 import { measureLabel } from '../helpers/text-measurement';
 
 const paths = (child: IRChild): Array<IRPath> =>
@@ -59,7 +59,7 @@ describe('PathMark 色带', () => {
       children: actual.children,
     };
     const compile = (path: IRPath) =>
-      compileToScene({ type: 'scene', version: 1, children: [path] }, { paths: [ribbonPathDefinition] }).scene;
+      compileTestResult({ type: 'scene', version: 1, children: [path] }, { paths: [ribbonPathDefinition] }).scene;
     expect(compile(actual)).toEqual(compile(direct));
     expect(compile(actual).primitives.length).toBeGreaterThan(0);
   });

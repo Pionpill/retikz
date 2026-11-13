@@ -1,8 +1,8 @@
 import { createConnectedScatterChartProviderContribution } from '@retikz/chart/point';
 import type { InputEmbed } from '@retikz/vanilla';
 
+import { buildChartRuntime, typedChartPartsOf } from '../../authoring';
 import { createChartInputEmbedAdapter } from '../../shared';
-import { buildPointChartRuntime, typedChartPartsOf } from '../shared';
 import { normalizeConnectedScatterChart } from './normalize';
 import type { ConnectedScatterChartInputEmbedProps } from './types';
 
@@ -23,7 +23,7 @@ export const connectedScatterChartInputEmbedAdapter = createChartInputEmbedAdapt
       ...(input.marks === undefined ? {} : { marks: input.marks }),
     });
 
-    return buildPointChartRuntime(
+    return buildChartRuntime(
       source,
       parts,
       createConnectedScatterChartProviderContribution(parts.chartThemeDefinitions, parts.lowerOptions),

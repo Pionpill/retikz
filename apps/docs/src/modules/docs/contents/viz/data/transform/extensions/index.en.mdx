@@ -490,12 +490,14 @@ These are the definition and computation entries used on this page. See the [Dat
     {
       name: 'defineRegressionImplementation',
       kind: 'function',
-      type: '<TSource extends IRRegressionMethod, TOperation, TResult extends RegressionModel | Promise<RegressionModel>>(implementation: RegressionImplementation<TSource, TOperation, TResult>) => RegressionImplementation<TSource, TOperation, TResult>',
+      type: '<TSource extends IRRegressionMethod, TOperation>(implementation: RegressionImplementation<TSource, TOperation>) => RegressionImplementation<TSource, TOperation>',
       description:
-        'References the fitting definition; fit returns a model with predict. Synchronous entries require a synchronous model.',
+        'References a regression Definition and provides fit, fitAsync, or both. fit is synchronous; fitAsync may await declared dependencies and return a model Promise.',
     },
   ]}
 />
+
+A regression implementation provides synchronous `fit`, asynchronous `fitAsync`, or both. Synchronous execution requires `fit` throughout the dependency tree. Asynchronous execution prefers `fitAsync`, otherwise it reuses a fully synchronous tree without probing callbacks. Composite methods declare `dependencies` on their Definition and invoke them through `context.fitRegression(index, pairs)`.
 
 ## Further reading
 

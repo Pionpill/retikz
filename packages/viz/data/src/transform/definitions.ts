@@ -1,11 +1,11 @@
 import { RetikzDataError } from '../error';
 import { DataFieldType } from '../model';
 import { reducerInputFields, reducerOutputDescriptors, resolveReducerDependency } from '../operators/reducer';
-import type { RegressionModel, RegressionPair } from '../operators/regression';
+import type { RegressionFitOptions, RegressionModel, RegressionPair } from '../operators/regression';
 import { resolveRegressionDependency } from '../operators/regression';
 import { resolveSelectorDependency, selectorInputFields } from '../operators/selector';
 import { freezeDefinitions, resolveImplementationRegistry } from '../shared';
-import { runTransformComputationAsync } from './computation';
+import { runDataComputationAsync } from '../shared';
 import { JitterAxis } from './constants';
 import type {
   AnySynchronousTransformImplementation,
@@ -74,7 +74,7 @@ import type { IRDataBinTransform } from './types';
 export const createAsyncBuiltinTransformImplementations = (
   computation: GroupComputation,
   regression: {
-    fit: (pairs: Array<RegressionPair>) => RegressionModel | Promise<RegressionModel>;
+    fit: (pairs: Array<RegressionPair>, options?: RegressionFitOptions) => RegressionModel | Promise<RegressionModel>;
     validateExtent: (extent: [number, number]) => void;
   },
 ): ReadonlyArray<AnyTransformImplementation> => [
@@ -82,37 +82,33 @@ export const createAsyncBuiltinTransformImplementations = (
   defineTransformImplementation({
     definition: summarizeTransformDefinition,
     apply: (rows, operation, context) =>
-      runTransformComputationAsync(computeSummarize(rows, operation, context, computation)),
+      runDataComputationAsync(computeSummarize(rows, operation, context, computation)),
   }),
   defineTransformImplementation({
     definition: selectTransformDefinition,
-    apply: (rows, operation, context) =>
-      runTransformComputationAsync(computeSelect(rows, operation, context, computation)),
+    apply: (rows, operation, context) => runDataComputationAsync(computeSelect(rows, operation, context, computation)),
   }),
   defineTransformImplementation({
     definition: annotateTransformDefinition,
     apply: (rows, operation, context) =>
-      runTransformComputationAsync(computeAnnotate(rows, operation, context, computation)),
+      runDataComputationAsync(computeAnnotate(rows, operation, context, computation)),
   }),
   stackTransformImplementation,
   defineTransformImplementation({
     definition: binTransformDefinition,
-    apply: (rows, operation, context) =>
-      runTransformComputationAsync(computeBin(rows, operation, context, computation)),
+    apply: (rows, operation, context) => runDataComputationAsync(computeBin(rows, operation, context, computation)),
   }),
   normalizeTransformImplementation,
   deriveIntervalTransformImplementation,
   defineTransformImplementation({
     definition: relateTransformDefinition,
-    apply: (rows, operation, context) =>
-      runTransformComputationAsync(computeRelate(rows, operation, context, computation)),
+    apply: (rows, operation, context) => runDataComputationAsync(computeRelate(rows, operation, context, computation)),
   }),
   jitterTransformImplementation,
   densityTransformImplementation,
   defineTransformImplementation({
     definition: smoothTransformDefinition,
-    apply: (rows, operation, context) =>
-      runTransformComputationAsync(computeSmooth(rows, operation, context, regression)),
+    apply: (rows, operation, context) => runDataComputationAsync(computeSmooth(rows, operation, context, regression)),
   }),
 ];
 

@@ -18,6 +18,22 @@ const path = (overrides: Partial<IRPathBase> = {}): IRPathBase => ({
 });
 
 describe('解析/路径提供者绑定', () => {
+  it('先合并标签模式与显式几何，再补依赖模式的几何默认值', () => {
+    const inherited = resolveScopeDefaults({ path: { label: { positionMode: 'length' } } });
+    const byLength = resolvePathWithBuiltinProviders(path({ label: { text: 'label' } }), { scopeDefaults: inherited });
+    expect(byLength.canon.label?.[0]).toMatchObject({ positionMode: 'length', positionGeometry: 'rounded' });
+    const byStep = resolvePathWithBuiltinProviders(path({ label: { text: 'label', positionMode: 'step' } }), {
+      scopeDefaults: inherited,
+    });
+    expect(byStep.canon.label?.[0]).toMatchObject({ positionMode: 'step', positionGeometry: 'original' });
+    const explicitGeometry = resolveScopeDefaults({
+      path: { label: { positionMode: 'length', positionGeometry: 'rounded' } },
+    });
+    const overridden = resolvePathWithBuiltinProviders(path({ label: { text: 'label', positionMode: 'step' } }), {
+      scopeDefaults: explicitGeometry,
+    });
+    expect(overridden.canon.label?.[0]).toMatchObject({ positionMode: 'step', positionGeometry: 'rounded' });
+  });
   it('绑定内置和自定义路径定义并解析一次选项', () => {
     const custom = definePath({
       name: 'highlight',

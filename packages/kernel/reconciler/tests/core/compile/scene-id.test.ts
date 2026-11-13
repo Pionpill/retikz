@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { IRScene, ScenePrimitive } from '../../../../core/src';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 import { flattenPrims } from '../../helpers/flatten';
 
 const scene = (children: IRScene['children']): IRScene => ({
@@ -19,7 +19,7 @@ const allOfType = (prims: ReadonlyArray<ScenePrimitive>, type: ScenePrimitive['t
 describe('纯几何 Node（无文本 / 无 rotate）带 id → 平铺 shape 图元逐个 stamp 同一 id', () => {
   it('rectangle 纯几何 Node 带 id → 其 RectPrimitive 带该 id（不强制包 group）', () => {
     const ir = scene([{ type: 'node', id: 'a', position: [0, 0] }]);
-    const prims = compileToScene(ir, silent).scene.primitives;
+    const prims = compileTestResult(ir, silent).scene.primitives;
 
     // 纯几何 rectangle → 平铺 RectPrimitive，不包 group
     expect(prims.map(p => p.type)).toEqual(['rect']);
@@ -35,7 +35,7 @@ describe('纯几何 Node（无文本 / 无 rotate）带 id → 平铺 shape 图�
 
   it('circle 纯几何 Node 带 id → 其 EllipsePrimitive 带该 id', () => {
     const ir = scene([{ type: 'node', id: 'c', position: [0, 0], shape: 'circle' }]);
-    const prims = compileToScene(ir, silent).scene.primitives;
+    const prims = compileTestResult(ir, silent).scene.primitives;
     const ellipses = allOfType(prims, 'ellipse');
 
     expect(ellipses.length).toBeGreaterThanOrEqual(1);
@@ -49,7 +49,7 @@ describe('纯几何 Node（无文本 / 无 rotate）带 id → 平铺 shape 图�
 describe('带文本 Node 带 id → 落成的 GroupPrimitive 带该 id', () => {
   it('文本 Node 带 id → 顶层 GroupPrimitive.id = id', () => {
     const ir = scene([{ type: 'node', id: 'n', position: [0, 0], text: 'A' }]);
-    const prims = compileToScene(ir, silent).scene.primitives;
+    const prims = compileTestResult(ir, silent).scene.primitives;
 
     expect(prims).toHaveLength(1);
     expect(prims[0].type).toBe('group');
@@ -72,7 +72,7 @@ describe('Path 带 id → 其 PathPrimitive 带该 id', () => {
         ],
       },
     ]);
-    const prims = compileToScene(ir, silent).scene.primitives;
+    const prims = compileTestResult(ir, silent).scene.primitives;
     const paths = allOfType(prims, 'path');
 
     expect(paths.length).toBeGreaterThanOrEqual(1);
@@ -92,7 +92,7 @@ describe('Scope 带 id → 其 GroupPrimitive 带该 id', () => {
         children: [{ type: 'node', id: 'a', position: [0, 0] }],
       },
     ]);
-    const prims = compileToScene(ir, silent).scene.primitives;
+    const prims = compileTestResult(ir, silent).scene.primitives;
 
     // 子节点是纯几何（不包 group），故顶层唯一 group 即 scope 自身
     const groups = prims.filter(p => p.type === 'group');
@@ -105,7 +105,7 @@ describe('Scope 带 id → 其 GroupPrimitive 带该 id', () => {
 describe('无 id 的元素 → emit 图元不含 id', () => {
   it('无 id 的纯几何 Node → RectPrimitive.id 为 undefined', () => {
     const ir = scene([{ type: 'node', position: [0, 0] }]);
-    const prims = compileToScene(ir, silent).scene.primitives;
+    const prims = compileTestResult(ir, silent).scene.primitives;
     const rects = allOfType(prims, 'rect');
 
     expect(rects.length).toBeGreaterThanOrEqual(1);
@@ -125,7 +125,7 @@ describe('无 id 的元素 → emit 图元不含 id', () => {
         ],
       },
     ]);
-    const prims = compileToScene(ir, silent).scene.primitives;
+    const prims = compileTestResult(ir, silent).scene.primitives;
     const paths = allOfType(prims, 'path');
 
     expect(paths.length).toBeGreaterThanOrEqual(1);
@@ -140,9 +140,9 @@ describe('Coordinate（无视觉）→ 不 emit 任何 ScenePrimitive', () => {
   it('带 id 的 coordinate → primitives 中无对应图元（id 无处可挂、不报错）', () => {
     const ir = scene([{ type: 'coordinate', id: 'm', position: [3, 2] }]);
 
-    expect(() => compileToScene(ir, silent).scene).not.toThrow();
+    expect(() => compileTestResult(ir, silent).scene).not.toThrow();
 
-    const prims = compileToScene(ir, silent).scene.primitives;
+    const prims = compileTestResult(ir, silent).scene.primitives;
 
     expect(prims).toHaveLength(0);
   });

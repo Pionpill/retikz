@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { IRChild, IRScene, ScenePrimitive } from '../../../../core/src';
 import { BuiltinCompileWarningCode } from '../../../../core/src';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 import { flattenPrims } from '../../helpers/flatten';
 
 const scene = (children: IRScene['children']): IRScene => ({
@@ -41,7 +41,7 @@ describe('跨 scope anchor keyword', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileTestResult(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
 
     expect(end).toBeDefined();
@@ -82,8 +82,8 @@ describe('跨 scope anchor keyword', () => {
         ],
       },
     ]);
-    const eBase = lineTo(topPath(compileToScene(irBase).scene.primitives));
-    const eScale = lineTo(topPath(compileToScene(irScale).scene.primitives));
+    const eBase = lineTo(topPath(compileTestResult(irBase).scene.primitives));
+    const eScale = lineTo(topPath(compileTestResult(irScale).scene.primitives));
 
     expect(eBase).toBeDefined();
     expect(eScale).toBeDefined();
@@ -125,8 +125,8 @@ describe('跨 scope 数字角度', () => {
         ],
       },
     ]);
-    const eBase = lineTo(topPath(compileToScene(irBase).scene.primitives));
-    const eRot = lineTo(topPath(compileToScene(irRot).scene.primitives));
+    const eBase = lineTo(topPath(compileTestResult(irBase).scene.primitives));
+    const eRot = lineTo(topPath(compileTestResult(irRot).scene.primitives));
 
     expect(eBase).toBeDefined();
     expect(eRot).toBeDefined();
@@ -155,7 +155,7 @@ describe('scope.id synthetic bbox 注册到父 frame，外部可 lookup', () => 
       },
     ]);
     const warnings: Array<{ code: string }> = [];
-    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
+    const compiled = compileTestResult(ir, { onWarn: w => warnings.push(w) }).scene;
 
     expect(warnings.filter(w => w.code === BuiltinCompileWarningCode.UnresolvedNodeReference)).toHaveLength(0);
 
@@ -192,7 +192,7 @@ describe('跨 scope 位置引用（polar.origin / AtPosition.of / OffsetPosition
       },
     ]);
     const warnings: Array<{ code: string }> = [];
-    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
+    const compiled = compileTestResult(ir, { onWarn: w => warnings.push(w) }).scene;
 
     // referent hub_global=(0,0); inverseTranslate(100,0) → 局部 (-100,0); +(30,0) → 局部 (-70,0); applyTranslate(100,0) → 全局 (30,0)
     // 几何上：scope translate 不改 relative 矢量方向 / 长度——orbit 视觉在 hub 全局右 30
@@ -228,7 +228,7 @@ describe('跨 scope 位置引用（polar.origin / AtPosition.of / OffsetPosition
       },
     ]);
     const warnings: Array<{ code: string }> = [];
-    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
+    const compiled = compileTestResult(ir, { onWarn: w => warnings.push(w) }).scene;
 
     expect(warnings.filter(w => w.code === BuiltinCompileWarningCode.AtTargetUnresolved)).toHaveLength(0);
 
@@ -263,7 +263,7 @@ describe('跨 scope 位置引用（polar.origin / AtPosition.of / OffsetPosition
       },
     ]);
     const warnings: Array<{ code: string }> = [];
-    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
+    const compiled = compileTestResult(ir, { onWarn: w => warnings.push(w) }).scene;
 
     expect(warnings.filter(w => w.code === BuiltinCompileWarningCode.OffsetBaseUnresolved)).toHaveLength(0);
 
@@ -292,7 +292,7 @@ describe('跨 scope anchor 边界', () => {
       },
     ]);
     const warnings: Array<{ code: string }> = [];
-    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
+    const compiled = compileTestResult(ir, { onWarn: w => warnings.push(w) }).scene;
 
     expect(warnings.filter(w => w.code === BuiltinCompileWarningCode.UnresolvedNodeReference)).toHaveLength(0);
 
@@ -330,8 +330,8 @@ describe('跨 scope anchor 边界', () => {
         ],
       },
     ]);
-    const eFlat = lineTo(topPath(compileToScene(irNoScope).scene.primitives));
-    const eScope = lineTo(topPath(compileToScene(irZeroScope).scene.primitives));
+    const eFlat = lineTo(topPath(compileTestResult(irNoScope).scene.primitives));
+    const eScope = lineTo(topPath(compileTestResult(irZeroScope).scene.primitives));
 
     expect(eFlat).toBeDefined();
     expect(eScope).toBeDefined();
@@ -363,7 +363,7 @@ describe('跨 scope anchor 边界', () => {
       },
     ]);
     const warnings: Array<{ code: string }> = [];
-    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
+    const compiled = compileTestResult(ir, { onWarn: w => warnings.push(w) }).scene;
 
     expect(warnings.filter(w => w.code === BuiltinCompileWarningCode.UnresolvedNodeReference)).toHaveLength(0);
 
@@ -394,7 +394,7 @@ describe('跨 scope anchor 错误路径', () => {
       },
     ]);
     const warnings: Array<{ code: string }> = [];
-    compileToScene(ir, { onWarn: w => warnings.push(w) });
+    compileTestResult(ir, { onWarn: w => warnings.push(w) });
 
     expect(warnings.some(w => w.code === BuiltinCompileWarningCode.UnresolvedNodeReference)).toBe(true);
   });
@@ -416,7 +416,7 @@ describe('跨 scope anchor 错误路径', () => {
     ]);
 
     // 对象形态：compile 端 evaluateNamedBoundaryAnchor（shapeDef.anchor 返回 undefined）抛错（避免静默吞拼写错误）
-    expect(() => compileToScene(ir).scene).toThrow(/Unknown anchor/);
+    expect(() => compileTestResult(ir).scene).toThrow(/Unknown anchor/);
   });
 });
 
@@ -449,8 +449,8 @@ describe('跨 scope anchor 交互场景', () => {
         ],
       },
     ]);
-    const eBase = lineTo(topPath(compileToScene(irBase).scene.primitives));
-    const eRot = lineTo(topPath(compileToScene(irRot).scene.primitives));
+    const eBase = lineTo(topPath(compileTestResult(irBase).scene.primitives));
+    const eRot = lineTo(topPath(compileTestResult(irRot).scene.primitives));
 
     expect(eBase).toBeDefined();
     expect(eRot).toBeDefined();
@@ -487,7 +487,7 @@ describe('跨 scope anchor 交互场景', () => {
       },
     ]);
     const warnings: Array<{ code: string }> = [];
-    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
+    const compiled = compileTestResult(ir, { onWarn: w => warnings.push(w) }).scene;
 
     expect(warnings.filter(w => w.code === BuiltinCompileWarningCode.UnresolvedNodeReference)).toHaveLength(0);
 
@@ -528,7 +528,7 @@ describe('跨 scope anchor 交互场景', () => {
       },
     ]);
     const warnings: Array<{ code: string }> = [];
-    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
+    const compiled = compileTestResult(ir, { onWarn: w => warnings.push(w) }).scene;
 
     expect(warnings.filter(w => w.code === BuiltinCompileWarningCode.PolarOriginUnresolved)).toHaveLength(0);
 
@@ -556,7 +556,7 @@ describe('跨 scope anchor 交互场景', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileTestResult(ir).scene;
 
     // 顶层 GroupPrimitive 含 transforms translate(120, 0)；其 children 中 A 的 rect.x = 10（局部坐标）
     const group = compiled.primitives.find(p => p.type === 'group');

@@ -1,13 +1,13 @@
 import { createCanvas } from '@napi-rs/canvas';
 import type { PathPrimitive, RectPrimitive, CompiledArrowEnd, Scene } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { drawScene } from '../../src/canvas/draw-scene';
 import { renderToSvgString } from '../../src/svg/serialize/to-string';
+import { compileTestResult } from '../helpers/compilation';
 
 it('编译后的中段mark在SVG和Canvas中保留透明度乘积', () => {
-  const scene = compileToScene(
+  const scene = compileTestResult(
     {
       type: 'scene',
       version: 1,

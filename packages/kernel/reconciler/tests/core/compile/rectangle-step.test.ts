@@ -4,7 +4,7 @@ import type { CompileWarning, IRScene } from '../../../../core/src';
 import { BuiltinCompileWarningCode } from '../../../../core/src';
 import type { PathPrimitive, ScenePrimitive } from '../../../../core/src/contract';
 import { RectangleStepSchema } from '../../../../core/src/schemas';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 import { arc, close, line, move } from '../../helpers/path-command-factory';
 
 const silent = { onWarn: () => {} };
@@ -26,7 +26,7 @@ describe('rectangle step：直角', () => {
       { type: 'step', kind: 'rectangle', from: [0, 0], to: [10, 6] },
     );
 
-    expect(findPathPrim(compileToScene(ir, silent).scene.primitives).commands).toEqual([
+    expect(findPathPrim(compileTestResult(ir, silent).scene.primitives).commands).toEqual([
       move([0, 0]),
       line([10, 0]),
       line([10, 6]),
@@ -45,8 +45,8 @@ describe('rectangle step：直角', () => {
       { type: 'step', kind: 'rectangle', from: [10, 6], to: [0, 0] },
     );
 
-    expect(findPathPrim(compileToScene(b, silent).scene.primitives).commands).toEqual(
-      findPathPrim(compileToScene(a, silent).scene.primitives).commands,
+    expect(findPathPrim(compileTestResult(b, silent).scene.primitives).commands).toEqual(
+      findPathPrim(compileTestResult(a, silent).scene.primitives).commands,
     );
   });
 
@@ -60,8 +60,8 @@ describe('rectangle step：直角', () => {
       { type: 'step', kind: 'rectangle', from: [0, 0], to: [10, 6], cornerRadius: 0 },
     );
 
-    expect(findPathPrim(compileToScene(zero, silent).scene.primitives).commands).toEqual(
-      findPathPrim(compileToScene(sharp, silent).scene.primitives).commands,
+    expect(findPathPrim(compileTestResult(zero, silent).scene.primitives).commands).toEqual(
+      findPathPrim(compileTestResult(sharp, silent).scene.primitives).commands,
     );
   });
 });
@@ -73,7 +73,7 @@ describe('rectangle step：圆角', () => {
       { type: 'step', kind: 'rectangle', from: [0, 0], to: [10, 6], cornerRadius: 2 },
     );
 
-    expect(findPathPrim(compileToScene(ir, silent).scene.primitives).commands).toEqual([
+    expect(findPathPrim(compileTestResult(ir, silent).scene.primitives).commands).toEqual([
       move([2, 0]),
       line([8, 0]),
       arc([8, 2], 2, 270, 360),
@@ -98,8 +98,8 @@ describe('rectangle step：圆角', () => {
       { type: 'step', kind: 'rectangle', from: [0, 0], to: [10, 6], cornerRadius: 3 },
     );
 
-    expect(findPathPrim(compileToScene(clamped, silent).scene.primitives).commands).toEqual(
-      findPathPrim(compileToScene(r3, silent).scene.primitives).commands,
+    expect(findPathPrim(compileTestResult(clamped, silent).scene.primitives).commands).toEqual(
+      findPathPrim(compileTestResult(r3, silent).scene.primitives).commands,
     );
   });
 });
@@ -112,7 +112,7 @@ describe('rectangle step：pen / 组合', () => {
       { type: 'step', kind: 'line', to: [20, 20] },
     );
 
-    expect(findPathPrim(compileToScene(ir, silent).scene.primitives).commands).toEqual([
+    expect(findPathPrim(compileTestResult(ir, silent).scene.primitives).commands).toEqual([
       move([0, 0]),
       line([10, 0]),
       line([10, 6]),
@@ -130,7 +130,7 @@ describe('rectangle step：pen / 组合', () => {
       { type: 'step', kind: 'line', to: [20, 20] },
     );
 
-    expect(findPathPrim(compileToScene(ir, silent).scene.primitives).commands).toEqual([
+    expect(findPathPrim(compileTestResult(ir, silent).scene.primitives).commands).toEqual([
       move([0, 0]),
       line([5, 0]),
       move([5, 0]), // 矩形起新子路径（即便 pen 已在 (5,0)）
@@ -148,7 +148,7 @@ describe('rectangle step：pen / 组合', () => {
       { type: 'step', kind: 'rectangle', from: [0, 0], to: [10, 6] },
     );
 
-    expect(compileToScene(ir, { padding: 10, onWarn: () => {} }).scene.layout).toEqual({
+    expect(compileTestResult(ir, { padding: 10, onWarn: () => {} }).scene.layout).toEqual({
       x: -10,
       y: -10,
       width: 30,
@@ -161,7 +161,7 @@ describe('rectangle step：单步自包含（无前置 move）', () => {
   it('仅一个 rectangle step（无 move）→ 正常渲染，不触发 PATH_TOO_SHORT', () => {
     const warnings: Array<CompileWarning> = [];
     const ir = path({ type: 'step', kind: 'rectangle', from: [0, 0], to: [10, 6] });
-    const commands = findPathPrim(compileToScene(ir, { onWarn: w => warnings.push(w) }).scene.primitives).commands;
+    const commands = findPathPrim(compileTestResult(ir, { onWarn: w => warnings.push(w) }).scene.primitives).commands;
 
     expect(commands).toEqual([move([0, 0]), line([10, 0]), line([10, 6]), line([0, 6]), close()]);
     expect(warnings.find(w => w.code === BuiltinCompileWarningCode.PathTooShort)).toBeUndefined();
@@ -170,7 +170,7 @@ describe('rectangle step：单步自包含（无前置 move）', () => {
   it('仅一个非自包含 step（单 move）→ 仍触发 PATH_TOO_SHORT 且跳过', () => {
     const warnings: Array<CompileWarning> = [];
     const ir = path({ type: 'step', kind: 'move', to: [0, 0] });
-    const result = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
+    const result = compileTestResult(ir, { onWarn: w => warnings.push(w) }).scene;
 
     expect(result.primitives.find(p => p.type === 'path')).toBeUndefined();
     expect(warnings.find(w => w.code === BuiltinCompileWarningCode.PathTooShort)).toBeDefined();
@@ -184,7 +184,7 @@ describe('rectangle step：node ref 角 + schema', () => {
       { type: 'step', kind: 'rectangle', from: { id: 'ghost' }, to: [10, 6] },
     );
 
-    expect(compileToScene(ir, silent).scene.primitives.find(p => p.type === 'path')).toBeUndefined();
+    expect(compileTestResult(ir, silent).scene.primitives.find(p => p.type === 'path')).toBeUndefined();
   });
 
   it('缺 to → schema 拒（from/to 必填）', () => {

@@ -7,7 +7,6 @@ import {
   naturalLayoutProposal,
 } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
@@ -15,6 +14,7 @@ import type { PlotsLoweringOptions } from '../../src/pipeline/expand';
 import { lowerPlots } from '../../src/pipeline/expand';
 import type { IRPlot } from '../../src/schemas';
 import { PlotSchema } from '../../src/schemas';
+import { compileTestResult } from '../helpers/compilation';
 
 const datasets: ExternalDatasets = {
   sales: [
@@ -68,7 +68,7 @@ const compileWithProposal = (
     },
   });
 
-  compileToScene(
+  compileTestResult(
     {
       version: 1,
       type: 'scene',

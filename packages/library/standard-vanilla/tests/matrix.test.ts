@@ -1,10 +1,10 @@
 import { resolveCoreProviderDependencies } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { createProcessingController, normalizeScene, scene } from '@retikz/vanilla';
 import { expect, it } from 'vitest';
 
 import { standardInputEmbedAdapters } from '../src';
 import { matrix, array, map } from '../src/collection';
+import { compileTestResult } from './helpers/compilation';
 
 it('标准化嵌套编写并解析每个输入的提供者', () => {
   for (const child of [
@@ -15,7 +15,7 @@ it('标准化嵌套编写并解析每个输入的提供者', () => {
     const normalized = normalizeScene(scene({ children: [child] }), { adapters: standardInputEmbedAdapters });
     const options = resolveCoreProviderDependencies({ contributions: normalized.contributions });
 
-    expect(compileToScene(normalized.ir, options).scene.primitives.length).toBeGreaterThan(0);
+    expect(compileTestResult(normalized.ir, options).scene.primitives.length).toBeGreaterThan(0);
   }
 });
 

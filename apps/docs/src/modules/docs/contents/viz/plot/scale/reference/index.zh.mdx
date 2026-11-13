@@ -1,0 +1,10 @@
+---
+title: API 参考
+description: 查询 Plot 的比例尺声明、位置映射及内置配置。
+---
+
+本页收录 `@retikz/plot-react` 的 `PlotScale`、`@retikz/plot-vanilla` 的声明输入，以及 `@retikz/plot` 的位置映射契约和 Schema。用法见[位置比例尺](/viz/plot/scale/position)和[图元属性映射](/viz/plot/scale/mark-attributes)。数学算法的定义、注册与求值接口见 [Data 比例尺 API 参考](/viz/data/scale/reference)。
+
+Schema 中的默认值表示直接解析配置时补入的值。数据域推断、坐标范围和图元留白依赖当前数据与布局，具体规则见位置比例尺用法；它们不等同于 Schema 的静态默认值。
+
+{/* @include viz/plot/scale/reference/generated */}

@@ -15,7 +15,6 @@ import {
 } from '@retikz/core';
 import { pathClipProvider } from '@retikz/extension';
 import { flexLayoutProvider } from '@retikz/layout';
-import { compileToScene } from '@retikz/reconciler';
 import { legendProvider, surfaceProvider } from '@retikz/standard/presentation';
 import { literal } from 'zod';
 
@@ -28,6 +27,7 @@ import {
   resolveDiagramDefinitionOptions,
   resolveDiagramFoundation,
 } from '../src/_diagram';
+import { compileTestResult } from './helpers/compilation';
 
 const TestDiagramFoundationSchema = CompositeBaseSchema.extend({
   namespace: literal('diagram-test'),
@@ -125,7 +125,7 @@ export const compileTestDiagramFoundation = (
   });
   const child: IRChild = options.host === undefined ? root : { type: 'scope', ...options.host, children: [root] };
 
-  return compileToScene(
+  return compileTestResult(
     { version: 1, type: 'scene', children: [child] },
     {
       ...definitions,

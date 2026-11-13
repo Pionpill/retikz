@@ -1,7 +1,6 @@
 import type { IRChild, ScenePrimitive } from '@retikz/core';
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
 import { NonBlankStringSchema } from '@retikz/foundation';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
@@ -9,6 +8,7 @@ import type { IRTable } from '../../src';
 import { TableSchema } from '../../src';
 import { resolveTableTransaction } from '../../src/pipeline/layout';
 import { CLEAN_TABLE_DEFAULTS } from '../fixtures/clean-table-defaults';
+import { compileTestResult } from '../helpers/compilation';
 
 const flattenScenePrimitives = (primitives: ReadonlyArray<ScenePrimitive>): ReadonlyArray<ScenePrimitive> =>
   primitives.flatMap(primitive =>
@@ -115,7 +115,7 @@ describe('提出 Table 布局交易', () => {
         return { children: transaction.children };
       },
     });
-    const result = compileToScene(
+    const result = compileTestResult(
       {
         type: 'scene',
         version: 1,
@@ -283,7 +283,7 @@ describe('提出 Table 布局交易', () => {
         return { children: transaction.children };
       },
     });
-    const result = compileToScene(
+    const result = compileTestResult(
       {
         type: 'scene',
         version: 1,
@@ -350,7 +350,7 @@ describe('提出 Table 布局交易', () => {
         return { children: transaction.children };
       },
     });
-    compileToScene(
+    compileTestResult(
       {
         type: 'scene',
         version: 1,

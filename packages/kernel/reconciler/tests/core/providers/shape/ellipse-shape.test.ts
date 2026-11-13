@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { ScenePrimitive } from '../../../../../core/src/contract';
 import { ellipseShape } from '../../../../../core/src/providers/shape';
 import type { IRScene } from '../../../../../core/src/schemas';
-import { compileToScene } from '../../../../src/compile';
+import { compileTestResult } from '../../../helpers/compilation';
 import { flattenPrims } from '../../../helpers/flatten';
 
 const findByType = <T extends ScenePrimitive['type']>(
@@ -87,7 +87,7 @@ describe('ellipse shape — equal × Node 变换交互', () => {
         text: 'long text',
       },
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileTestResult(ir).scene;
     const el = findByType(compiled.primitives, 'ellipse');
 
     expect(el).toBeDefined();
@@ -106,7 +106,7 @@ describe('ellipse shape — equal × Node 变换交互', () => {
         text: 'long text',
       },
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileTestResult(ir).scene;
     const el = findByType(compiled.primitives, 'ellipse');
 
     expect(el).toBeDefined();

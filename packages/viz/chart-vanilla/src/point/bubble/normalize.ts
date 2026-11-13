@@ -1,6 +1,6 @@
 import type { IRBubbleChart } from '@retikz/chart/point';
 
-import { chartSourceOf, normalizePointPartitionEncodings } from '../shared';
+import { chartSourceOf, normalizeChartPartitionEncodings } from '../../authoring';
 import type { InputBubbleChart } from './types';
 
 /** 将 Bubble Chart Vanilla Input 组装为精确 Source IR */
@@ -14,7 +14,7 @@ export const normalizeBubbleChart = (input: InputBubbleChart): IRBubbleChart => 
     ...(root.plotExtension === undefined ? {} : { plotExtension: root.plotExtension }),
     recipe: {
       chartType: 'bubble',
-      encodings: normalizePointPartitionEncodings(encodings),
+      encodings: normalizeChartPartitionEncodings(encodings),
       ...(properties === undefined ? {} : { properties }),
       ...(guides === undefined ? {} : { guides }),
       ...(marks === undefined ? {} : { marks }),

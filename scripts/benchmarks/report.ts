@@ -84,7 +84,7 @@ export const formatReport = (report: BenchmarkReport, title = '单元性能测�
     );
     previousDimensions = dimensions;
     const stats = scenario.statistics;
-    const durations = [stats?.mean, stats?.p50, stats?.p90, stats?.p99].map(formatDuration);
+    const durations = [stats?.mean, stats?.p50, stats?.p90].map(formatDuration);
     const assessment = scenario.assessment;
     const reason = assessment.reason ?? scenario.errors.join('; ');
     const limit = formatLimit(assessment);
@@ -110,7 +110,7 @@ export const formatReport = (report: BenchmarkReport, title = '单元性能测�
     `采样时间：${escapeCell(report.createdAt)}`,
     `提交：${escapeCell(report.source.commit)}；工作区存在未提交改动：${report.source.dirty ? '是' : '否'}；源码 SHA-256：${escapeCell(report.source.sourceHash)}`,
     '',
-    '耗时对应模块拥有的一次完整操作；纯算法用例每个样本只调用一次算法，规模表示输入大小或计算精度。样本数是统计测量轮次，不是单次操作内的调用次数。P50 为中位数；P90/P99 使用最近秩法（nearest-rank）计算。“仅报告”不代表性能达标。',
+    '耗时对应模块拥有的一次完整操作；纯算法用例每个样本只调用一次算法，规模表示输入大小或计算精度。样本数是统计测量轮次，不是单次操作内的调用次数。P50 为中位数；P90 使用最近秩法（nearest-rank）计算。“仅报告”不代表性能达标。',
     '环境中的 sampling 为常规档默认值；各场景实际采样配置和含预热的执行次数见 JSON measurement。reference 档关闭预热与异步探测，仅计算 3 次。',
     '耗时按原始值选择单位：小于 1ms 用 μs，小于 1s 用 ms，其余用 s，均四舍五入保留 1 位小数；展示位数不代表实际测量精度。JSON 和预算配置仍使用毫秒。',
     '',
@@ -162,8 +162,8 @@ export const formatReport = (report: BenchmarkReport, title = '单元性能测�
     '',
     '维度列的空白表示沿用同一分组上一行的值；“—”表示未提供该维度。',
     '',
-    `| ${[...report.dimensionLabels.map(escapeCell), '状态', '样本数', '均值', 'P50', 'P90', 'P99', '上限', '备注'].join(' | ')} |`,
-    `| ${[...report.dimensionLabels.map(() => '---'), '---', '---:', '---:', '---:', '---:', '---:', '---', '---'].join(' | ')} |`,
+    `| ${[...report.dimensionLabels.map(escapeCell), '状态', '样本数', '均值', 'P50', 'P90', '上限', '备注'].join(' | ')} |`,
+    `| ${[...report.dimensionLabels.map(() => '---'), '---', '---:', '---:', '---:', '---:', '---', '---'].join(' | ')} |`,
     ...rows,
     '',
     '## 运行错误',

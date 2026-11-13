@@ -10,7 +10,7 @@ import {
   visitStrokeLabels,
 } from './decoration';
 import type { StrokeInterruptionProtectedRange } from './decoration';
-import { createStrokePathGeometry, lowerStrokePathGeometry } from './geometry';
+import { createStrokePathGeometry, createStrokePositionModel, lowerStrokePathGeometry } from './geometry';
 import type { PreparedStrokePathLayout, StrokePathCompileContext, StrokePathLayout } from './types';
 
 /** 复用调用方提供的布局原子产物，补算完整标准描边布局 */
@@ -28,15 +28,18 @@ export const layoutStrokePath = (
     path.marks?.some((_, index) => prepared?.marks?.[index]?.placement === undefined) ||
     path.children?.some(
       (step, index) =>
-        'label' in step && step.label?.interrupt && prepared?.labels?.steps?.[index]?.placement === undefined,
+        'label' in step && step.label !== undefined && prepared?.labels?.steps?.[index]?.placement === undefined,
     ) ||
     (prepared?.body === undefined &&
       (path.label?.some(label => label.interrupt) ||
         path.children?.some(step => 'label' in step && step.label?.interrupt)));
   const metrics =
     prepared?.metrics ?? (needsMetrics ? createStrokePathGeometry(geometry.commands, geometry.stepIndexes) : undefined);
-  const labels = layoutStrokeLabels(resolution, geometry, metrics, context, prepared?.labels);
-  const marks = layoutStrokeMarks(resolution, metrics, context, prepared?.marks);
+  const positions =
+    prepared?.positions ??
+    (metrics === undefined ? undefined : createStrokePositionModel(geometry, metrics, prepared?.originalMetrics));
+  const labels = layoutStrokeLabels(resolution, positions, context, prepared?.labels);
+  const marks = layoutStrokeMarks(resolution, positions, context, prepared?.marks);
   let body = prepared?.body;
   if (body === undefined) {
     const contact = calculateStrokeEndpointContact(resolution, geometry.endpointSource);
@@ -75,6 +78,6 @@ export const layoutStrokePath = (
       context.round,
     );
   }
-  const overall: StrokePathLayout = { geometry, metrics, labels, marks, body };
-  return { geometry, metrics, labels, marks, body, overall };
+  const overall: StrokePathLayout = { geometry, metrics, positions, labels, marks, body };
+  return { geometry, metrics, positions, labels, marks, body, overall };
 };

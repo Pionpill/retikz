@@ -1,11 +1,11 @@
 import type { LayoutChildResult, LayoutProposal, ScenePrimitive } from '@retikz/core';
 import { ChildSchema, CompositeBaseSchema, defineComposite, LayoutChildProbeKind } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { expect, it } from 'vitest';
 import { literal } from 'zod';
 
 import { treeDefinition } from '../../../src/collection/tree';
 import type { IRTree } from '../../../src/collection/tree/schema';
+import { compileTestResult } from '../../helpers/compilation';
 import { compileMeasured } from '../../helpers/compile-measured';
 
 const base = { namespace: 'standard', type: 'tree' } as const;
@@ -46,7 +46,7 @@ it('圆形连接命中真实边界，外部引用保留节点身份', () => {
     root: { id: 'p', content: '1', children: [{ id: 'c', content: '2' }] },
     defaultConnection: { path: { meta: { edge: true } } },
   };
-  const result = compileToScene(
+  const result = compileTestResult(
     {
       type: 'scene',
       version: 1,
@@ -89,7 +89,7 @@ it('逐边覆盖可以重新开启、清空箭头', () => {
 it.each(['straight', '-|', '|-', '-|-', '|-|'] as const)('%s 连接与直接引用节点的 Core 路径等价', route => {
   for (const direction of ['down', 'up', 'right', 'left'] as const) {
     const connection = route === '-|-' || route === '|-|' ? { route, fraction: 0.3 } : { route };
-    const result = compileToScene(
+    const result = compileTestResult(
       {
         type: 'scene',
         version: 1,
@@ -146,7 +146,7 @@ it.each(['circle', 'ellipse', 'diamond', 'rectangle'] as const)('%s 带不对称
     root: { id: 'p', content: 'wide parent', children: [{ id: 'c', content: 'child' }] },
     defaultConnection: { path: { meta: { edge: true } } },
   };
-  const result = compileToScene(
+  const result = compileTestResult(
     {
       type: 'scene',
       version: 1,
@@ -169,7 +169,7 @@ it.each(['circle', 'ellipse', 'diamond', 'rectangle'] as const)('%s 带不对称
 });
 it('空子槽保留默认节点宽度及子树净距，唯一子节点居中', () => {
   const centers = (missing: boolean) => {
-    const result = compileToScene(
+    const result = compileTestResult(
       {
         type: 'scene',
         version: 1,
@@ -205,7 +205,7 @@ it('空子槽保留默认节点宽度及子树净距，唯一子节点居中', (
   ]);
 });
 it('多个匿名树的内部引用互不冲突，根变换保留实际节点引用', () => {
-  const result = compileToScene(
+  const result = compileTestResult(
     {
       type: 'scene',
       version: 1,
@@ -251,7 +251,7 @@ it('父分配保留自然节点尺寸，过小约束失败', () => {
         return { children: [context.replay(result.result)] };
       },
     });
-    compileToScene(
+    compileTestResult(
       {
         type: 'scene',
         version: 1,
@@ -277,7 +277,7 @@ it('父分配保留自然节点尺寸，过小约束失败', () => {
 });
 it('非均匀子树不重叠，同层中心对齐且兄弟顺序稳定', () => {
   for (const direction of ['down', 'up', 'right', 'left'] as const) {
-    const result = compileToScene(
+    const result = compileTestResult(
       {
         type: 'scene',
         version: 1,
@@ -311,7 +311,7 @@ it('非均匀子树不重叠，同层中心对齐且兄弟顺序稳定', () => {
   }
 });
 it('根容器引用和整体标签保留', () => {
-  const result = compileToScene(
+  const result = compileTestResult(
     {
       type: 'scene',
       version: 1,
@@ -340,7 +340,7 @@ it('根容器引用和整体标签保留', () => {
 });
 
 it('继承节点旋转时直线仍与真实形状边界相接', () => {
-  const result = compileToScene(
+  const result = compileTestResult(
     {
       type: 'scene',
       version: 1,
@@ -379,7 +379,7 @@ it.each(['down', 'up', 'right', 'left'] as const)('%s 父节点居于直属子�
       { id: 'c', content: 'C', children: [null, { id: 'd', content: 'D' }] },
     ],
   };
-  const result = compileToScene(
+  const result = compileTestResult(
     {
       type: 'scene',
       version: 1,

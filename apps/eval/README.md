@@ -4,7 +4,7 @@ LLM 生成 retikz IR 的准确性评测（L1 结构有效性 + L2 语义断言�
 
 ## 这是什么
 
-把「core schema 契约 → LLM 自由生成 → zod 校验 + compileToScene 打分 → 断言打分 → 报告」跑成一条可回归流水线。
+把「core schema 契约 → LLM 自由生成 → zod 校验 + SceneReconciler 打分 → 断言打分 → 报告」跑成一条可回归流水线。
 
 - **L1 结构有效性**：能不能过 zod、能不能过 compile（两层）。
 - **L2 语义正确性**：对编译后的 Scene 跑一组**确定性断言**，测「画对没」——L1 在强模型上会饱和到 100%（只测「合法」不测「对」），L2 才有区分信号。

@@ -1,0 +1,71 @@
+## PointMarkSchema
+
+<ZodSchema
+  name="PointMarkSchema"
+  description="每条数据生成一个 glyph，或在 encoding.text 存在时生成无边框文本 Node。"
+  descriptions={{
+    autoPadding: '自动边缘留白，默认 max-radius；point-aware 按实际位置与半径求解，false 关闭图元贡献。',
+    defaultColorIndex: '默认分类色索引；省略时按默认颜色分组分配',
+    type: '点图元判别值。',
+    color: '数据绑定或常量 glyph 主颜色，优先于常量 fill。',
+    textColor: '文本点的 Core Node textColor，仅 encoding.text 存在时生效。',
+    size: '经 sqrt 半径比例尺映射的字段，或最终半径常量。',
+    shape: '分类映射或常量 Core Node 形状名。',
+    fill: 'glyph 填充 paint。',
+    stroke: 'glyph 描边 paint。',
+    strokeWidth: 'glyph 描边宽度。',
+    'opacity.fill': 'glyph 填充不透明度。',
+    'opacity.stroke': 'glyph 描边不透明度。',
+    opacity: 'glyph 整体不透明度。',
+    orientation: '节点方向参考：screen 或 coordinate role 的 tangent / normal；默认屏幕方向。',
+    rotate: '叠加到方向基准角的常量或字段旋转偏移，单位为度。',
+    minimumSize: '最小可视尺寸，会被每数据 size 覆盖。',
+    zIndex: '每数据 Node 的绘制顺序提示。',
+    textAlign: 'Core Node 多行文本对齐。',
+    lineHeight: 'Core Node 行高。',
+    maxTextWidth: 'Core Node 文本最大换行宽度。',
+    cornerRadius: 'Core Node 圆角半径。',
+    scale: 'Core Node 缩放。',
+    padding: 'Core Node 内边距。',
+    margin: 'Core Node 外边距。',
+    dashed: 'Core Node 虚线快捷开关。',
+    dotted: 'Core Node 点线快捷开关。',
+    dashPattern: 'Core Node 虚线数组。',
+    font: 'Core Node 字体覆盖。',
+    boundary: 'Core Node 边界覆盖。',
+    shadow: 'Core Node 阴影。',
+    blendMode: 'Core Node 混合模式。',
+    dx: '相对投影锚点的水平微调，正值向右。',
+    dy: '相对投影锚点的垂直微调，正值向屏幕下方。',
+    anchorId: '写入每个生成 Node 的稳定 id 规则。',
+    id: '用于生成 Scope 和锚点目标的可选图元 id。',
+    defaultColorGroup: '省略显式颜色时共享同一个顺序色板槽位的语义组。',
+    layer: '外层图元 Scope 的语义图层覆盖。',
+    coordinateView: '投影该图元的坐标视图 id；省略时使用组合默认视图。',
+    transform: '仅影响该图元的局部变换链。',
+    label: '附着在每数据 Node.label 上的标签。',
+    placement: '位置比例尺之后、Point 几何之前执行的有序位置调整。',
+    encoding: '点图元的位置、文本与扩展通道。',
+  }}
+/>
+
+## MarkNodeLabelSchema
+
+<ZodSchema
+  name="MarkNodeLabelSchema"
+  description="附着在 Core Node.label host 上的 Plot 标签。"
+  descriptions={{
+    align: '标签视觉盒沿附着切线的对齐方式：start / middle / end，省略时使用 middle。',
+    textColor: '标签文本颜色；省略时继承 currentColor。',
+    opacity: '标签自身不透明度，与 host 不透明度相乘。',
+    font: '标签字体覆盖，未指定字段继承 host。',
+    position: '附着位置：方位、中心、角度或边界比例。',
+    placement: '在附着点外侧或内侧放置标签。',
+    distance: '节点边界到标签中心的距离。',
+    rotate: '无旋转、径向、切向或显式角度。',
+    keepUpright: '旋转文本倒置时是否翻转 180 度保持正立。',
+    pin: '外侧标签的引导线开关或样式。',
+    text: '固定标签文本；编码内容写入 encodings.label 的相同索引。',
+    displayFormat: '字段内容的显示格式。',
+  }}
+/>

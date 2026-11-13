@@ -68,25 +68,28 @@ describe('最终图元检查', () => {
           { type: 'group', transforms: [{ kind: 'translate', x: 10, y: 0 }], clipRef: 'shared', children: [] },
           { type: 'group', transforms: [{ kind: 'translate', x: 40, y: 0 }], clipRef: 'shared', children: [] },
         ],
-        resources: [
-          {
-            kind: 'clip',
-            id: 'shared',
-            path: {
-              commands: [
-                { kind: 'move', to: [0, 0] },
-                { kind: 'line', to: [20, 0] },
-                { kind: 'line', to: [20, 20] },
-                { kind: 'close' },
-                { kind: 'move', to: [5, 5] },
-                { kind: 'line', to: [10, 5] },
-                { kind: 'line', to: [10, 10] },
-                { kind: 'close' },
-              ],
-              fillRule: 'evenodd',
+        resources: {
+          paints: [],
+          clips: [
+            {
+              kind: 'clip',
+              id: 'shared',
+              path: {
+                commands: [
+                  { kind: 'move', to: [0, 0] },
+                  { kind: 'line', to: [20, 0] },
+                  { kind: 'line', to: [20, 20] },
+                  { kind: 'close' },
+                  { kind: 'move', to: [5, 5] },
+                  { kind: 'line', to: [10, 5] },
+                  { kind: 'line', to: [10, 10] },
+                  { kind: 'close' },
+                ],
+                fillRule: 'evenodd',
+              },
             },
-          },
-        ],
+          ],
+        },
       },
       artifacts: [],
     };
@@ -94,8 +97,7 @@ describe('最终图元检查', () => {
     const output = compileInspectionToScene(input, { registry, requests: [{ inspector: CLIP_INSPECTOR_KEY }] });
     expect(output.inspection?.entries.map(entry => entry.transform[4])).toEqual([10, 10, 40, 40]);
     expect(input).toEqual(before);
-    for (const entry of output.inspection?.entries ?? [])
-      expect(entry.scene.resources?.some(resource => resource.kind === 'clip')).not.toBe(true);
+    for (const entry of output.inspection?.entries ?? []) expect(entry.scene.resources?.clips ?? []).toHaveLength(0);
   });
   it('辅助输出清除公开身份、meta 和动画，保留独立资源闭包', () => {
     const definition = defineInspector({
@@ -128,7 +130,7 @@ describe('最终图元检查', () => {
       registry: createInspectorRegistry([definition]),
       requests: [{ inspector: definition }],
     });
-    expect(output.inspection?.entries[0].scene.resources?.length).toBeGreaterThan(0);
+    expect(output.inspection?.entries[0].scene.resources?.paints.length).toBeGreaterThan(0);
     for (const entry of output.inspection?.entries ?? [])
       visitSceneContent(entry.scene, primitive => {
         expect(primitive.id).toBeUndefined();

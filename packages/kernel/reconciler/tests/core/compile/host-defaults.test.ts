@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import { SceneSchema, ScopeDefaultsSchema } from '../../../../core/src';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 
 const render = (defaults: object, children: Array<object>) =>
-  compileToScene(SceneSchema.parse({ type: 'scene', version: 1, children: [{ type: 'scope', defaults, children }] }))
+  compileTestResult(SceneSchema.parse({ type: 'scene', version: 1, children: [{ type: 'scope', defaults, children }] }))
     .scene;
 
 const nodeLabel = {

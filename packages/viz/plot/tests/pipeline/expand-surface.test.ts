@@ -1,11 +1,11 @@
 import type { IRScene } from '@retikz/core';
 import { CURRENT_IR_VERSION, resolveCoreProviderDependencies, RetikzCoreErrorCode } from '@retikz/core';
 import { BUILTIN_RIBBON_WIDTH_PROFILES, ribbonPathDefinition } from '@retikz/extension';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import type { PlotsLoweringOptions, PlotDefinitions, PlotImplementations } from '../../src/pipeline/expand';
 import { createPlotProviderContribution } from '../../src/pipeline/expand';
+import { compileTestResult } from '../helpers/compilation';
 
 describe('扩大管线稳定面', () => {
   it('复用同名行数组，拒绝不同引用覆盖同名数据集', () => {
@@ -39,7 +39,7 @@ describe('扩大管线稳定面', () => {
 
     const definitions = resolveCoreProviderDependencies({ contributions });
     expect(() =>
-      compileToScene({ version: CURRENT_IR_VERSION, type: 'scene', children: [] }, definitions),
+      compileTestResult({ version: CURRENT_IR_VERSION, type: 'scene', children: [] }, definitions),
     ).not.toThrow();
   });
 
@@ -97,6 +97,6 @@ describe('扩大管线稳定面', () => {
       ],
     };
 
-    expect(() => compileToScene(ir, { ...definitions, padding: 0 })).not.toThrow();
+    expect(() => compileTestResult(ir, { ...definitions, padding: 0 })).not.toThrow();
   });
 });

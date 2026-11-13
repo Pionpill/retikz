@@ -14,9 +14,10 @@ import {
   LayoutChildProbeKind,
 } from '@retikz/core';
 import { NonBlankStringSchema } from '@retikz/foundation';
-import { compileToScene } from '@retikz/reconciler';
 import type { infer as ZodInfer } from 'zod';
 import { boolean, custom, literal, number } from 'zod';
+
+import { compileTestResult } from '../helpers/compilation';
 
 const LogicTestNamespace = 'standard-logic-test';
 
@@ -51,7 +52,7 @@ export type ProbeRecord = Readonly<{
   proposal: LayoutProposal;
 }>;
 
-export type LogicCompileOutput = ReturnType<typeof compileToScene>;
+export type LogicCompileOutput = ReturnType<typeof compileTestResult>;
 
 const resolvedAxis = (
   proposal: LayoutProposal['x'],
@@ -139,7 +140,7 @@ export const compileInHarness = (
   options: Readonly<{ onWarn?: (warning: CompileWarning) => void }> = {},
 ): { output: LogicCompileOutput; result: LayoutChildResult } => {
   const observed: { result?: LayoutChildResult } = {};
-  const output = compileToScene(
+  const output = compileTestResult(
     {
       version: 1,
       type: 'scene',

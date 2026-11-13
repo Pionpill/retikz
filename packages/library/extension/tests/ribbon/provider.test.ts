@@ -1,6 +1,5 @@
 import type { IRScene } from '@retikz/core';
 import { CURRENT_IR_VERSION, resolveCoreProviderDependencies } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import type { RibbonWidthProfileDefinition } from '../../src/ribbon';
@@ -9,6 +8,7 @@ import {
   createRibbonProviderContribution,
   defineRibbonWidthProfile,
 } from '../../src/ribbon';
+import { compileTestResult } from '../helpers/compilation';
 
 const profile = (name: string, width: number): RibbonWidthProfileDefinition =>
   defineRibbonWidthProfile({ name, widthAt: () => width });
@@ -53,7 +53,7 @@ describe('扩展功能区提供者的贡献', () => {
 
     expect(definitions.paths).toHaveLength(1);
     expect(() =>
-      compileToScene(profileScene('custom'), {
+      compileTestResult(profileScene('custom'), {
         paths: definitions.paths,
         padding: 0,
       }),
@@ -79,7 +79,7 @@ describe('扩展功能区提供者的贡献', () => {
     const definitions = resolveCoreProviderDependencies({ contributions: [contribution] });
 
     expect(() =>
-      compileToScene(profileScene('__proto__'), {
+      compileTestResult(profileScene('__proto__'), {
         paths: definitions.paths,
         padding: 0,
       }),

@@ -14,14 +14,9 @@ import { PathPropertiesSchema } from '@retikz/plot';
 import type { infer as ZodInfer } from 'zod';
 import { array, boolean, enum as zodEnum, literal, strictObject, union } from 'zod';
 
-import { createChartSourceSchema } from '../../_chart/schemas';
+import { ChartRecipeGuidesSchema, createChartSourceSchema } from '../../_chart/schemas';
 import { ChartFamily, ChartType } from '../constants';
-import {
-  PointAutoPaddingSchema,
-  PointPositionDomainPaddingSchema,
-  PointPropertiesSchema,
-  PointRecipeGuidesSchema,
-} from '../shared';
+import { PointAutoPaddingSchema, PointPositionDomainPaddingSchema, PointPropertiesSchema } from '../shared';
 import { ConnectedScatterChartEncodingsSchema } from './encoding-schema';
 
 /** 连接散点中不携带图层归属的点成员常量 */
@@ -84,7 +79,7 @@ export const ConnectedScatterChartRecipeSchema = strictObject({
   chartType: literal(ChartType.ConnectedScatter),
   encodings: ConnectedScatterChartEncodingsSchema,
   properties: ConnectedScatterChartPropertiesSchema.optional(),
-  guides: PointRecipeGuidesSchema.optional(),
+  guides: ChartRecipeGuidesSchema.optional(),
   marks: array(ConnectedScatterChartMarkSchema).optional(),
 }).describe('Connected Scatter Chart recipe payload');
 

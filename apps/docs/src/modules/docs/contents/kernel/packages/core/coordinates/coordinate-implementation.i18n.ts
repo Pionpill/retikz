@@ -1,44 +1,19 @@
-import type { Lang } from '@/i18n';
-
-/** Scope 定位与引用交付的源码流程 */
-export const coordinateImplementationI18n: Record<
-  Lang,
-  Record<
-    | 'target'
-    | 'placeholder'
-    | 'children'
-    | 'envelope'
-    | 'transforms'
-    | 'publish'
-    | 'paths'
-    | 'group'
-    | 'entry'
-    | 'geometry',
-    string
-  >
-> = {
+/** 坐标阶段图的双语文案 */
+export const coordinateImplementationI18n = {
   zh: {
-    target: 'evaluateScopePositionTarget\n先冻结父空间目标',
-    placeholder: 'registerScopeLayoutPlaceholder\n再进入局部命名空间',
-    children: 'compileChildren\n布局节点、注册坐标、暂存路径',
-    envelope: 'createIntrinsicScopeLayout\n汇总子布局包络',
-    transforms: 'lowerScopePlacementTransforms\n解析 pivot 与自身锚点对齐',
-    publish: 'applyOwnTransformsToPublishedLayout\n更新引用并 replaceCompiled',
-    paths: 'flushPendingPathEmissions\n绑定引用，回填路径',
-    group: 'emitScopeGroup\n出栈后输出局部图元与变换',
-    entry: 'state: scope-placeholder',
-    geometry: 'state: resolved\n最终世界坐标几何',
+    canon: 'P: of A + offset [40, 0]',
+    evaluate: '查询 A → 转局部 → 加偏移 → 转世界',
+    points: 'local [40, 0] · world [180, 50]',
+    compiled: 'compileCoordinate 取 position [40, 0]',
+    publish: '发布 P 世界位置；收集局部布局',
+    context: 'lookupReference / toLocal / toWorld',
   },
   en: {
-    target: 'evaluateScopePositionTarget\nFreeze the parent-frame target',
-    placeholder: 'registerScopeLayoutPlaceholder\nThen enter the local namespace',
-    children: 'compileChildren\nLayout, coordinates, deferred paths',
-    envelope: 'createIntrinsicScopeLayout\nCollect child layout envelope',
-    transforms: 'lowerScopePlacementTransforms\nResolve pivot and self alignment',
-    publish: 'applyOwnTransformsToPublishedLayout\nUpdate references and replaceCompiled',
-    paths: 'flushPendingPathEmissions\nBind references and fill paths',
-    group: 'emitScopeGroup\nAfter pop: local primitives and transforms',
-    entry: 'state: scope-placeholder',
-    geometry: 'state: resolved\nFinal world-space geometry',
+    canon: 'P: of A + offset [40, 0]',
+    evaluate: 'Read A → local → offset → world',
+    points: 'local [40, 0] · world [180, 50]',
+    compiled: 'compileCoordinate keeps [40, 0]',
+    publish: 'Publish P globally; collect local layout',
+    context: 'lookupReference / toLocal / toWorld',
   },
 };

@@ -1,5 +1,7 @@
 # 画板交互控件与状态持久化讨论记录
 
+> **运行时前提更新：独立 Runtime 已退出当前包边界。** 下文通用 identity / ownership / transaction 是原讨论的基础假设；跨领域事务与交互路由仍待设计，不能当作当前 Reconciler 已提供的能力。
+
 > **状态：长期方向讨论记录，未冻结公开契约、包名或实现范围。** 本文讨论画板内 Button、Tabs、Select 等控件的适用边界，以及交互和动画状态如何保存。现有事件水合与动画触发能力不等于完整的 Headless Interaction。
 >
 > 关联：[`交互与增量运行时设计`](./interaction-design.md) · [`性能与增量运行时设计`](./performance-design.md) · [`包职能设计`](./package-responsibility-design.md) · [`Editor 编辑运行时架构设计`](./editor-design.md) · [`Core 绘图完备设计`](../../packages/kernel/_notes/architecture/core-drawing-complete.md) · [`Standard 标准库设计`](../../packages/library/_notes/architecture/standard-library-design.md)

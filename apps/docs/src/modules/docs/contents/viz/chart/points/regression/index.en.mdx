@@ -98,8 +98,8 @@ import { RegressionChartSchema, createRegressionChartProviderContribution } from
 import { createPlotProviderContribution } from '@retikz/plot';
 import { pathClipProvider } from '@retikz/extension';
 import { regressionMinimalData } from './regression-minimal.data';
-import { compileToScene } from '@retikz/reconciler';
-import { renderToSvgString } from '@retikz/vanilla';
+
+import { compileToScene, renderToSvgString } from '@retikz/vanilla';
 
 const chart = RegressionChartSchema.parse({
   namespace: 'chart',
@@ -116,7 +116,7 @@ const definitions = resolveCoreProviderDependencies({
   ],
 });
 
-export const svg = renderToSvgString(compileToScene(ir, definitions).scene);
+export const svg = renderToSvgString(compileToScene(ir, { compile: definitions }).scene);
 ```
 
 </DocTab>
@@ -250,7 +250,7 @@ For complete properties and constraints, see [API reference: RegressionPropertie
 
 ### Regression marks
 
-Each mark contains observations and trends; replacing or appending affects the complete group. Use `extraMethods` to compare several fits of the same observations, as shown below.
+The built-in group of `RegressionChart` shows observations by default. `RegressionMark` shows only trends unless `showPoints: true` is set. Replacement affects the complete group; appending does not hide the built-in observations. Use `extraMethods` to compare several fits of the same observations, as shown below.
 
 <DocTabs defaultValue="react-jsx">
 <DocTab value="react-jsx" label="React + JSX">
@@ -260,7 +260,7 @@ Each mark contains observations and trends; replacing or appending affects the c
   override
   properties={{
     method: { kind: 'quadratic' },
-    trend: { strokeWidth: 3 },
+    trend: { strokeWidth: 2 },
   }}
 />
 ```
@@ -275,7 +275,7 @@ marks: [
     override: true,
     properties: {
       method: { kind: 'quadratic' },
-      trend: { strokeWidth: 3 },
+      trend: { strokeWidth: 2 },
     },
   },
 ],
@@ -292,7 +292,7 @@ recipe: {
       override: true,
       properties: {
         method: { kind: 'quadratic' },
-        trend: { strokeWidth: 3 },
+        trend: { strokeWidth: 2 },
       },
     },
   ],
@@ -302,10 +302,11 @@ recipe: {
 </DocTab>
 </DocTabs>
 
-This replaces each species’ default linear group with a quadratic group. Observations remain; a more curved trend is another model description, not automatically a better explanation.
+This replaces each species’ default linear group with a quadratic group. Only trends are shown by default; enable “Show observations” to display the original samples. A more curved trend is another model description, not automatically a better explanation.
 
 - `override`: Replace the primary regression group.
-- `properties.method`: Select quadratic.
+- `showPoints`: Defaults to `false`; enable it to show this mark’s observations.
+- `properties.method`: This example defaults to quadratic. Select “Auto” to choose the best default candidate independently for each species; see [Automatic selection and goodness of fit](#automatic-selection-and-goodness-of-fit).
 - `properties.trend.strokeWidth`: Make the trend easier to identify.
 
 RegressionMark inherits series and cannot introduce a different grouping rule.
@@ -317,7 +318,7 @@ RegressionMark inherits series and cannot introduce a different grouping rule.
   files={['regression-marks', 'regression-marks.preview.tsx', 'regression-basic.data.ts']}
   size="xl"
   controls={{ name: 'regression-marks' }}
-  caption="Switch fitting methods and adjust trend width to compare the same observations."
+  caption="Switch fitting methods, adjust trend width, or show observations to compare with the original samples."
   defaultSourceFile="regression-marks.preview.tsx"
 />
 
@@ -400,12 +401,12 @@ In React, supplying the same configuration field through both the root `recipe` 
 
 Chart resolves a regression mark to a trend Plot Path and, when enabled, an observation Plot Point mark. The table lists conversions specific to fitting.
 
-| Group      | `@retikz/chart`                   | `@retikz/plot`                           | Description                                                             |
-| ---------- | --------------------------------- | ---------------------------------------- | ----------------------------------------------------------------------- |
-| Encodings  | `x`, `y`, `series`                | `smooth.x`, `smooth.y`, `smooth.groupBy` | Fits observation coordinates separately for each series                 |
-| Properties | `method`, `sampleCount`, `extent` | `smooth` transform options               | Passes the fitting method, sample count, and extent to the transform    |
-|            | `trend`, `extraMethods`           | Path appearance and additional Paths     | Styles the primary trend and adds one trend Path per extra method       |
-| Mark       | `IRRegressionMark`                | `IRPlotPathMark`, `IRPlotPointMark`      | Always creates a trend Path; creates Points unless `hidePoints` is true |
+| Group      | `@retikz/chart`                   | `@retikz/plot`                           | Description                                                                |
+| ---------- | --------------------------------- | ---------------------------------------- | -------------------------------------------------------------------------- |
+| Encodings  | `x`, `y`, `series`                | `smooth.x`, `smooth.y`, `smooth.groupBy` | Fits observation coordinates separately for each series                    |
+| Properties | `method`, `sampleCount`, `extent` | `smooth` transform options               | Passes the fitting method, sample count, and extent to the transform       |
+|            | `trend`, `extraMethods`           | Path appearance and additional Paths     | Styles the primary trend and adds one trend Path per extra method          |
+| Mark       | `IRRegressionMark`                | `IRPlotPathMark`, `IRPlotPointMark`      | Always creates a trend Path; creates Points only when `showPoints` is true |
 
 <SourceLinks
   sources={[{ path: 'packages/viz/chart/src/point/regression/mark.ts', label: 'Trend and observation marks' }]}
@@ -479,6 +480,43 @@ These methods transform the observations, reuse the linear slope and intercept c
 For exponential and power models, $a=e^\alpha$ and $b=\beta$. They minimize squared residuals in log-y space, so results generally differ from nonlinear fitting that minimizes residuals in the original y space. Every log-transformed field must be positive. Setting an axis to a log scale alone does not change the fitting method.
 
 **Time complexity:** The logarithmic transformation and subsequent linear fit each take $O(N)$, so each of these three methods fits in $O(N)$. A prediction uses a fixed number of arithmetic, logarithm and exponential operations, taking $O(1)$.
+
+#### Automatic selection and goodness of fit
+
+Use either the default or explicit candidates, score their fits on the current group, then draw the winning model.
+
+<ComponentPreview
+  files="regression-auto-flow"
+  size="md"
+  hideCode
+  type="flow"
+  caption="For the same nonconstant observations, highest R² equals lowest MSE. Constant responses use MSE; ties select the earlier candidate."
+/>
+
+`method: { kind: 'auto' }` compares candidates independently within each facet and group, drawing only the winning model's trend. The default candidates, in order, are `linear`, `quadratic`, `logarithmic`, `exponential`, and `power`. Quadratic fitting is included; `polynomial` is excluded. Omitting `method` still selects linear fitting.
+
+Use `candidates` to replace the default list, for example `{ kind: 'auto', candidates: ['linear', { kind: 'polynomial', order: 3 }, 'custom-fit'] }`. Strings use the method's default parameters; objects can supply parameters. Custom methods must be registered first. The list must be nonempty and cannot contain `auto`, directly or indirectly.
+
+Every candidate uses the same valid observations. For observation $(x_i,y_i)$, let $\hat y_i$ be the model's prediction at the original $x_i$, and $\bar y$ the observed mean. The residual sum of squares SSE, total sum of squares SST, and coefficient of determination $R^2$ are:
+
+$$
+\bar y=\frac{1}{N}\sum_{i=1}^{N}y_i,\qquad
+\mathrm{SSE}=\sum_{i=1}^{N}(y_i-\hat y_i)^2,\qquad
+\mathrm{SST}=\sum_{i=1}^{N}(y_i-\bar y)^2
+$$
+
+$$
+R^2=1-\frac{\mathrm{SSE}}{\mathrm{SST}},\qquad
+\mathrm{MSE}=\frac{\mathrm{SSE}}{N}
+$$
+
+When SST is positive, a higher $R^2$ means a better in-sample fit: 1 is a perfect fit, 0 matches the error of predicting the mean, and negative values are worse than predicting the mean. For example, SST = 10 and SSE = 2 give $R^2=0.8$. Exponential and power models are also scored in the original y space after reversing their transformations, not in log space.
+
+Selection minimizes mean squared error MSE, which is equivalent to maximizing $R^2$ on the same nonconstant observations. If every y is identical, SST is zero and $R^2$ is `null`; MSE still determines the winner. Exact MSE ties select the earlier candidate. Sampling reuses the winning model without fitting it again.
+
+Candidates are excluded when sample count, matrix rank, positive-domain requirements, or the final prediction extent make them inapplicable. If none applies, fitting fails with the ordered reasons. Invalid parameters, unregistered methods, missing implementations, callback exceptions, and nonfinite predictions or scores abort the calculation. Custom methods must explicitly report `DATA_REGRESSION_NOT_APPLICABLE` to be excluded as inapplicable.
+
+Scoring uses actual observations and is independent of `sampleCount`, `trend.curve`, and `showPoints`; `extent` checks whether the method can predict over the final range. This $R^2$ measures fit to the current sample, not predictive accuracy on new data, particularly when higher-order polynomials are explicitly included.
 
 #### Sampling the fitted trend
 
@@ -607,7 +645,7 @@ Custom methods also work in `extraMethods[].method`. Each group is fitted indepe
 
 ## Further reading
 
-For custom fitting, see [Custom fitting](#custom-fitting). For independently organized data transforms and layers, use [Plot Path](/viz/plot/mark/path) with a [custom transform](/viz/plot/transform#custom-transforms). See [Transform Schema](/viz/plot/reference/transform) for `SmoothTransformSchema`; this route does not inherit Regression’s automatic observations or mark replacement.
+For custom fitting, see [Custom fitting](#custom-fitting). For independently organized data transforms and layers, use [Plot Path](/viz/plot/mark/path) with a [custom transform](/viz/plot/transform#custom-transforms). See [Transform Schema](/viz/data/transform/reference) for `SmoothTransformSchema`; this route does not inherit Regression’s automatic observations or mark replacement.
 
 <LinkedSections
   items={[

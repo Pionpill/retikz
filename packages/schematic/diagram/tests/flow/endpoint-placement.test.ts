@@ -1,5 +1,4 @@
 import { resolveCoreProviderDependencies } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import type { FlowLayoutDefinition, IRFlowRelation, IRFlowRouting } from '../../src/flow';
@@ -10,6 +9,7 @@ import {
   createFlowDiagramProviderContribution,
   layeredFlowLayoutDefinition,
 } from '../../src/flow';
+import { compileTestResult } from '../helpers/compilation';
 
 const compileEndpoints = (count: number, shared = false) => {
   const source = FlowDiagramSchema.parse({
@@ -27,7 +27,7 @@ const compileEndpoints = (count: number, shared = false) => {
       target: { id: 'output', side: 'left', overlap: shared && index < 2 ? 'allow' : 'separate' },
     })),
   });
-  const result = compileToScene(
+  const result = compileTestResult(
     { type: 'scene', version: 1, children: [source] },
     resolveCoreProviderDependencies({ contributions: [createFlowDiagramProviderContribution()] }),
   );
@@ -77,7 +77,7 @@ const compileRelations = (
     relations,
     ...extra,
   });
-  const result = compileToScene(
+  const result = compileTestResult(
     { type: 'scene', version: 1, children: [source] },
     resolveCoreProviderDependencies({
       contributions: [

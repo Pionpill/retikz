@@ -7,20 +7,23 @@ import { createSpyCanvasContext } from './helpers';
 /** 构造非正方形 rect 的 gradient stroke 场景 */
 const gradientRectScene = (kind: 'linearGradient' | 'radialGradient' | 'conicGradient'): Scene => ({
   layout: { x: 0, y: 0, width: 120, height: 80 },
-  resources: [
-    {
-      kind: 'paint',
-      id: 'gradient',
-      spec: {
-        kind,
-        angle: kind === 'linearGradient' ? 45 : undefined,
-        stops: [
-          { offset: 0, color: '#fff' },
-          { offset: 1, color: '#000' },
-        ],
+  resources: {
+    paints: [
+      {
+        kind: 'paint',
+        id: 'gradient',
+        spec: {
+          kind,
+          angle: kind === 'linearGradient' ? 45 : undefined,
+          stops: [
+            { offset: 0, color: '#fff' },
+            { offset: 1, color: '#000' },
+          ],
+        },
       },
-    },
-  ],
+    ],
+    clips: [],
+  },
   primitives: [
     {
       type: 'rect',
@@ -40,19 +43,22 @@ describe('drawScene 渐变描边', () => {
     const offscreen = createSpyCanvasContext();
     const s: Scene = {
       layout: { x: 0, y: 0, width: 120, height: 80 },
-      resources: [
-        {
-          kind: 'paint',
-          id: 'r',
-          spec: {
-            kind: 'radialGradient',
-            stops: [
-              { offset: 0, color: '#fff' },
-              { offset: 1, color: '#000' },
-            ],
+      resources: {
+        paints: [
+          {
+            kind: 'paint',
+            id: 'r',
+            spec: {
+              kind: 'radialGradient',
+              stops: [
+                { offset: 0, color: '#fff' },
+                { offset: 1, color: '#000' },
+              ],
+            },
           },
-        },
-      ],
+        ],
+        clips: [],
+      },
       primitives: [
         {
           type: 'path',
@@ -101,19 +107,22 @@ describe('drawScene 渐变描边', () => {
     const warnings: Array<string> = [];
     const s: Scene = {
       layout: { x: 0, y: 0, width: 120, height: 80 },
-      resources: [
-        {
-          kind: 'paint',
-          id: 'r',
-          spec: {
-            kind: 'radialGradient',
-            stops: [
-              { offset: 0, color: '#fff' },
-              { offset: 1, color: '#000' },
-            ],
+      resources: {
+        paints: [
+          {
+            kind: 'paint',
+            id: 'r',
+            spec: {
+              kind: 'radialGradient',
+              stops: [
+                { offset: 0, color: '#fff' },
+                { offset: 1, color: '#000' },
+              ],
+            },
           },
-        },
-      ],
+        ],
+        clips: [],
+      },
       primitives: [
         {
           type: 'path',
@@ -157,19 +166,22 @@ describe('drawScene 渐变描边', () => {
     };
     const s: Scene = {
       layout: { x: 0, y: 0, width: 120, height: 80 },
-      resources: [
-        {
-          kind: 'paint',
-          id: 'r',
-          spec: {
-            kind: 'radialGradient',
-            stops: [
-              { offset: 0, color: '#fff' },
-              { offset: 1, color: '#000' },
-            ],
+      resources: {
+        paints: [
+          {
+            kind: 'paint',
+            id: 'r',
+            spec: {
+              kind: 'radialGradient',
+              stops: [
+                { offset: 0, color: '#fff' },
+                { offset: 1, color: '#000' },
+              ],
+            },
           },
-        },
-      ],
+        ],
+        clips: [],
+      },
       primitives: [path, path],
     };
 
@@ -191,19 +203,22 @@ describe('drawScene 渐变描边', () => {
     const sizes: Array<[number, number]> = [];
     const s: Scene = {
       layout: { x: 0, y: 0, width: 100000, height: 50000 },
-      resources: [
-        {
-          kind: 'paint',
-          id: 'r',
-          spec: {
-            kind: 'radialGradient',
-            stops: [
-              { offset: 0, color: '#fff' },
-              { offset: 1, color: '#000' },
-            ],
+      resources: {
+        paints: [
+          {
+            kind: 'paint',
+            id: 'r',
+            spec: {
+              kind: 'radialGradient',
+              stops: [
+                { offset: 0, color: '#fff' },
+                { offset: 1, color: '#000' },
+              ],
+            },
           },
-        },
-      ],
+        ],
+        clips: [],
+      },
       primitives: [
         {
           type: 'rect',
@@ -316,20 +331,23 @@ describe('drawScene 渐变描边', () => {
     const context = createSpyCanvasContext();
     const s: Scene = {
       layout: { x: 0, y: 0, width: 100, height: 50 },
-      resources: [
-        {
-          kind: 'paint',
-          id: 'g',
-          spec: {
-            kind: 'linearGradient',
-            angle: 90,
-            stops: [
-              { offset: 0, color: '#000' },
-              { offset: 1, color: '#fff' },
-            ],
+      resources: {
+        paints: [
+          {
+            kind: 'paint',
+            id: 'g',
+            spec: {
+              kind: 'linearGradient',
+              angle: 90,
+              stops: [
+                { offset: 0, color: '#000' },
+                { offset: 1, color: '#fff' },
+              ],
+            },
           },
-        },
-      ],
+        ],
+        clips: [],
+      },
       primitives: [
         {
           type: 'path',

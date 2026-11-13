@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { IRScene } from '../../../../../core/src/schemas';
-import { compileToScene } from '../../../../src/compile';
+import { compileTestResult } from '../../../helpers/compilation';
 import { ellipseArc, move } from '../../../helpers/path-command-factory';
 import { findPathPrim } from './helpers';
 
@@ -21,7 +21,7 @@ describe("编译路径：'ellipsePath'", () => {
       ],
     };
 
-    expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([
+    expect(findPathPrim(compileTestResult(ir).scene.primitives).commands).toEqual([
       move([15, 0]),
       ellipseArc([0, 0], 15, 10, 0, 360),
     ]);
@@ -55,8 +55,8 @@ describe("编译路径：'ellipsePath'", () => {
       ],
     };
 
-    expect(findPathPrim(compileToScene(fromEllipse).scene.primitives).commands).toEqual(
-      findPathPrim(compileToScene(fromCircle).scene.primitives).commands,
+    expect(findPathPrim(compileTestResult(fromEllipse).scene.primitives).commands).toEqual(
+      findPathPrim(compileTestResult(fromCircle).scene.primitives).commands,
     );
   });
 });

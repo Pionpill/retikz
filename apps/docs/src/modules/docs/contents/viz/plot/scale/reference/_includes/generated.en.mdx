@@ -1,0 +1,748 @@
+{/* Generated reference. Do not edit manually. */}
+
+Scales are named mappings from data values to positions or visual values. Coordinate roles reference positional scales through coordinate operations; non-positional channels such as color reference them through the encoding `scale` field.
+
+## Authoring inputs
+
+#### <ApiSourceLink label={"PlotScale"} path={"packages/viz/plot-react/src/components/scales.tsx"} startLine={7}>PlotScale</ApiSourceLink> / <ApiSourceLink label={"PlotScaleProps"} path={"packages/viz/plot-react/src/components/scales.tsx"} startLine={4}>PlotScaleProps</ApiSourceLink>
+
+**Common members**
+
+<ApiTable>
+
+| Member           | Type                      | Default | Description                                                                                     |
+| ---------------- | ------------------------- | ------- | ----------------------------------------------------------------------------------------------- |
+| `dimension`      | `InputPlotScaleDimension` | —       | Position dimension to bind; x is angular and y radial in polar coordinates                      |
+| `domainPadding?` | `InputDomainPadding`      | —       | Position padding; categorical scales retain their category domain and compress the output range |
+
+</ApiTable>
+
+Common members apply to every branch; a value must also satisfy at least one branch.
+
+<DocTabs defaultValue="log">
+
+<DocTab value="log" label="Members · Logarithmic">
+
+<ApiTable>
+
+| Member             | Type                                      | Default | Description                                                                      |
+| ------------------ | ----------------------------------------- | ------- | -------------------------------------------------------------------------------- |
+| `base?`            | `IRPlotLogScale['base']`                  | —       | Logarithm base; defaults to 10 when omitted                                      |
+| `constant?`        | `never`                                   | —       | —                                                                                |
+| `domain?`          | `[`<br />`number,`<br />`number`<br />`]` | —       | Explicit numeric or temporal domain; inferred from bound data when omitted       |
+| `singleValueSpan?` | `number`                                  | —       | Span used to expand a single-value domain; the default depends on the scale type |
+| `type`             | `'log'`                                   | —       | Logarithmic position scale                                                       |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="symlog" label="Members · Symmetric logarithmic">
+
+<ApiTable>
+
+| Member             | Type                                      | Default | Description                                                                      |
+| ------------------ | ----------------------------------------- | ------- | -------------------------------------------------------------------------------- |
+| `base?`            | `never`                                   | —       | —                                                                                |
+| `constant?`        | `IRPlotSymlogScale['constant']`           | —       | Width constant of the linear region; defaults to 1 when omitted                  |
+| `domain?`          | `[`<br />`number,`<br />`number`<br />`]` | —       | Explicit numeric or temporal domain; inferred from bound data when omitted       |
+| `singleValueSpan?` | `number`                                  | —       | Span used to expand a single-value domain; the default depends on the scale type |
+| `type`             | `'symlog'`                                | —       | Symmetric logarithmic position scale                                             |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="continuous" label="Members · Continuous mapping">
+
+<ApiTable>
+
+| Member             | Type                                                               | Default | Description                                                                      |
+| ------------------ | ------------------------------------------------------------------ | ------- | -------------------------------------------------------------------------------- |
+| `base?`            | `never`                                                            | —       | —                                                                                |
+| `constant?`        | `never`                                                            | —       | —                                                                                |
+| `domain?`          | `[`<br />`number,`<br />`number`<br />`]`                          | —       | Explicit numeric or temporal domain; inferred from bound data when omitted       |
+| `singleValueSpan?` | `number`                                                           | —       | Span used to expand a single-value domain; the default depends on the scale type |
+| `type`             | `Exclude<InputPlotContinuousPositionScaleType, 'log' \| 'symlog'>` | —       | Continuous position scale other than log or symlog                               |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="band" label="Members · Category bands">
+
+<ApiTable>
+
+| Member          | Type                              | Default | Description                                                               |
+| --------------- | --------------------------------- | ------- | ------------------------------------------------------------------------- |
+| `align?`        | `IRPlotBandScale['align']`        | —       | Distribution of outer padding between the two range ends; defaults to 0.5 |
+| `domain?`       | `IRPlotBandScale['domain']`       | —       | Explicit category domain; inferred in data encounter order when omitted   |
+| `paddingInner?` | `IRPlotBandScale['paddingInner']` | —       | Gap between adjacent bands as a fraction of step; defaults to 0.1         |
+| `paddingOuter?` | `IRPlotBandScale['paddingOuter']` | —       | Outer padding as a fraction of step; defaults to paddingInner             |
+| `type`          | `'band'`                          | —       | Category band scale type                                                  |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="point" label="Members · Category points">
+
+<ApiTable>
+
+| Member     | Type                          | Default | Description                                                                |
+| ---------- | ----------------------------- | ------- | -------------------------------------------------------------------------- |
+| `align?`   | `IRPlotPointScale['align']`   | —       | Distribution of outer padding between the two range ends; defaults to 0.5  |
+| `domain?`  | `IRPlotPointScale['domain']`  | —       | Explicit category domain; inferred in data encounter order when omitted    |
+| `padding?` | `IRPlotPointScale['padding']` | —       | Outer padding as a fraction of step; defaults to 0.5                       |
+| `type`     | `'point'`                     | —       | Category point scale type; does not accept continuous domain configuration |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export declare const PlotScale: FC<PlotScaleProps>;
+
+export type PlotScaleProps = InputPlotScale;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"InputPlotScale"} path={"packages/viz/plot-vanilla/src/normalize/plot/input-scales.ts"} startLine={85}>InputPlotScale</ApiSourceLink>
+
+**Common members**
+
+<ApiTable>
+
+| Member           | Type                      | Default | Description                                                                                     |
+| ---------------- | ------------------------- | ------- | ----------------------------------------------------------------------------------------------- |
+| `dimension`      | `InputPlotScaleDimension` | —       | Position dimension to bind; x is angular and y radial in polar coordinates                      |
+| `domainPadding?` | `InputDomainPadding`      | —       | Position padding; categorical scales retain their category domain and compress the output range |
+
+</ApiTable>
+
+Common members apply to every branch; a value must also satisfy at least one branch.
+
+<DocTabs defaultValue="log">
+
+<DocTab value="log" label="Members · Logarithmic">
+
+<ApiTable>
+
+| Member             | Type                                      | Default | Description                                                                      |
+| ------------------ | ----------------------------------------- | ------- | -------------------------------------------------------------------------------- |
+| `base?`            | `IRPlotLogScale['base']`                  | —       | Logarithm base; defaults to 10 when omitted                                      |
+| `constant?`        | `never`                                   | —       | —                                                                                |
+| `domain?`          | `[`<br />`number,`<br />`number`<br />`]` | —       | Explicit numeric or temporal domain; inferred from bound data when omitted       |
+| `singleValueSpan?` | `number`                                  | —       | Span used to expand a single-value domain; the default depends on the scale type |
+| `type`             | `'log'`                                   | —       | Logarithmic position scale                                                       |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="symlog" label="Members · Symmetric logarithmic">
+
+<ApiTable>
+
+| Member             | Type                                      | Default | Description                                                                      |
+| ------------------ | ----------------------------------------- | ------- | -------------------------------------------------------------------------------- |
+| `base?`            | `never`                                   | —       | —                                                                                |
+| `constant?`        | `IRPlotSymlogScale['constant']`           | —       | Width constant of the linear region; defaults to 1 when omitted                  |
+| `domain?`          | `[`<br />`number,`<br />`number`<br />`]` | —       | Explicit numeric or temporal domain; inferred from bound data when omitted       |
+| `singleValueSpan?` | `number`                                  | —       | Span used to expand a single-value domain; the default depends on the scale type |
+| `type`             | `'symlog'`                                | —       | Symmetric logarithmic position scale                                             |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="continuous" label="Members · Continuous mapping">
+
+<ApiTable>
+
+| Member             | Type                                                               | Default | Description                                                                      |
+| ------------------ | ------------------------------------------------------------------ | ------- | -------------------------------------------------------------------------------- |
+| `base?`            | `never`                                                            | —       | —                                                                                |
+| `constant?`        | `never`                                                            | —       | —                                                                                |
+| `domain?`          | `[`<br />`number,`<br />`number`<br />`]`                          | —       | Explicit numeric or temporal domain; inferred from bound data when omitted       |
+| `singleValueSpan?` | `number`                                                           | —       | Span used to expand a single-value domain; the default depends on the scale type |
+| `type`             | `Exclude<InputPlotContinuousPositionScaleType, 'log' \| 'symlog'>` | —       | Continuous position scale other than log or symlog                               |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="band" label="Members · Category bands">
+
+<ApiTable>
+
+| Member          | Type                              | Default | Description                                                               |
+| --------------- | --------------------------------- | ------- | ------------------------------------------------------------------------- |
+| `align?`        | `IRPlotBandScale['align']`        | —       | Distribution of outer padding between the two range ends; defaults to 0.5 |
+| `domain?`       | `IRPlotBandScale['domain']`       | —       | Explicit category domain; inferred in data encounter order when omitted   |
+| `paddingInner?` | `IRPlotBandScale['paddingInner']` | —       | Gap between adjacent bands as a fraction of step; defaults to 0.1         |
+| `paddingOuter?` | `IRPlotBandScale['paddingOuter']` | —       | Outer padding as a fraction of step; defaults to paddingInner             |
+| `type`          | `'band'`                          | —       | Category band scale type                                                  |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="point" label="Members · Category points">
+
+<ApiTable>
+
+| Member     | Type                          | Default | Description                                                                |
+| ---------- | ----------------------------- | ------- | -------------------------------------------------------------------------- |
+| `align?`   | `IRPlotPointScale['align']`   | —       | Distribution of outer padding between the two range ends; defaults to 0.5  |
+| `domain?`  | `IRPlotPointScale['domain']`  | —       | Explicit category domain; inferred in data encounter order when omitted    |
+| `padding?` | `IRPlotPointScale['padding']` | —       | Outer padding as a fraction of step; defaults to 0.5                       |
+| `type`     | `'point'`                     | —       | Category point scale type; does not accept continuous domain configuration |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type InputPlotScale = ContinuousScaleProps | BandScaleProps | PointScaleProps;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"InputPlotScaleDimension"} path={"packages/viz/plot-vanilla/src/normalize/plot/input-scales.ts"} startLine={10}>InputPlotScaleDimension</ApiSourceLink>
+
+```ts
+export type InputPlotScaleDimension = 'x' | 'y';
+```
+
+#### <ApiSourceLink label={"InputPlotPositionScaleType"} path={"packages/viz/plot-vanilla/src/normalize/plot/input-scales.ts"} startLine={13}>InputPlotPositionScaleType</ApiSourceLink>
+
+```ts
+export type InputPlotPositionScaleType = 'linear' | 'time' | 'band' | 'point' | 'log' | 'sqrt' | 'symlog' | 'radial';
+```
+
+## Scale configuration
+
+#### <ApiSourceLink label={"IRPlotScale"} path={"packages/viz/plot/src/schemas/scale/types.ts"} startLine={83}>IRPlotScale</ApiSourceLink> / <ApiSourceLink label={"ScaleSchema"} path={"packages/viz/plot/src/schemas/scale/schema.ts"} startLine={424}>ScaleSchema</ApiSourceLink>
+
+<DocTabs defaultValue="definition">
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRPlotScale = ZodInfer<typeof ScaleSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+<ZodSchema name="ScaleSchema" />
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"IRPlotScaleOperation"} path={"packages/viz/plot/src/schemas/scale/types.ts"} startLine={89}>IRPlotScaleOperation</ApiSourceLink> / <ApiSourceLink label={"ScaleOperationSchema"} path={"packages/viz/plot/src/schemas/scale/schema.ts"} startLine={463}>ScaleOperationSchema</ApiSourceLink>
+
+<DocTabs defaultValue="definition">
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRPlotScaleOperation = ZodInfer<typeof ScaleOperationSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+<ZodSchema name="ScaleOperationSchema" />
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"IRPlotCustomScale"} path={"packages/viz/plot/src/schemas/scale/types.ts"} startLine={86}>IRPlotCustomScale</ApiSourceLink> / <ApiSourceLink label={"CustomScaleSchema"} path={"packages/viz/plot/src/schemas/scale/schema.ts"} startLine={445}>CustomScaleSchema</ApiSourceLink>
+
+<DocTabs defaultValue="definition">
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRPlotCustomScale = ZodInfer<typeof CustomScaleSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+<ZodSchema name="CustomScaleSchema" />
+
+</DocTab>
+
+</DocTabs>
+
+## Position mapping
+
+#### <ApiSourceLink label={"PositionScale"} path={"packages/viz/plot/src/contract/scale.ts"} startLine={35}>PositionScale</ApiSourceLink>
+
+Unifies band centers, bandwidth, and categorical or numeric ticks. Projectors, guides, and bars consume coordinate, bandwidth, and ticks without branching on the scale type. Continuous scales use bandwidth=0 and coordinate=scale(value).
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member               | Type                                                                | Default | Description                                                                                                                            |
+| -------------------- | ------------------------------------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `readonly bandwidth` | `number`                                                            | —       | Band width: zero for continuous and point scales; the getter reflects the latest setRange call                                         |
+| `coordinate`         | `(value: unknown) => number`                                        | —       | Maps a data value to a coordinate: continuous output, band center, or point position; invalid values return NaN for the caller to skip |
+| `domain`             | `() => ReadonlyArray<IRDataScalarValue>`                            | —       | Current input domain: [min, max] for continuous scales or an ordered category sequence                                                 |
+| `range`              | `() => [`<br />`number,`<br />`number`<br />`]`                     | —       | Current screen-coordinate range [start, end]; y may be reversed                                                                        |
+| `setRange`           | `(range: readonly [`<br />`number,`<br />`number`<br />`]) => void` | —       | Sets the range; expand determines whether this is called for scales with an explicit range                                             |
+| `readonly step`      | `number`                                                            | —       | Discrete tick spacing in the final range: a positive step for band and point scales, zero for continuous scales                        |
+| `tickKind?`          | `PositionTickKind`                                                  | —       | Tick value family used by guide formatters; custom scales may omit it to preserve original labels                                      |
+| `ticks`              | `(count?: number) => TickSet`                                       | —       | Ticks and labels: continuous scales use scaleTicks; band and point scales return one tick per category at its center or point          |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type PositionScale = {
+  coordinate: (value: unknown) => number;
+  domain: () => ReadonlyArray<IRDataScalarValue>;
+  readonly bandwidth: number;
+  readonly step: number;
+  ticks: (count?: number) => TickSet;
+  tickKind?: PositionTickKind;
+  range: () => [number, number];
+  setRange: (range: readonly [number, number]) => void;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"PositionScaleContinuity"} path={"packages/viz/plot/src/contract/scale.ts"} startLine={19}>PositionScaleContinuity</ApiSourceLink>
+
+```ts
+export const PositionScaleContinuity = {
+  Continuous: 'continuous',
+  Discrete: 'discrete',
+} as const;
+
+export type PositionScaleContinuity = ValueOf<typeof PositionScaleContinuity>;
+```
+
+#### <ApiSourceLink label={"PositionTickKind"} path={"packages/viz/plot/src/contract/scale.ts"} startLine={16}>PositionTickKind</ApiSourceLink>
+
+```ts
+export type PositionTickKind = 'number' | 'time' | 'category';
+```
+
+#### <ApiSourceLink label={"TickSet"} path={"packages/viz/plot/src/contract/scale.ts"} startLine={8}>TickSet</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member   | Type                       | Default | Description                                           |
+| -------- | -------------------------- | ------- | ----------------------------------------------------- |
+| `labels` | `Array<string>`            | —       | Formatted labels corresponding one-to-one with values |
+| `values` | `Array<IRDataScalarValue>` | —       | Raw tick values in display order                      |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type TickSet = {
+  values: Array<IRDataScalarValue>;
+  labels: Array<string>;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+## Continuous position scales
+
+#### <ApiSourceLink label={"IRPlotLinearScale"} path={"packages/viz/plot/src/schemas/scale/types.ts"} startLine={38}>IRPlotLinearScale</ApiSourceLink> / <ApiSourceLink label={"LinearScaleSchema"} path={"packages/viz/plot/src/schemas/scale/schema.ts"} startLine={95}>LinearScaleSchema</ApiSourceLink>
+
+<DocTabs defaultValue="definition">
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRPlotLinearScale = ZodInfer<typeof LinearScaleSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+<ZodSchema name="LinearScaleSchema" />
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"IRPlotTimeScale"} path={"packages/viz/plot/src/schemas/scale/types.ts"} startLine={50}>IRPlotTimeScale</ApiSourceLink> / <ApiSourceLink label={"TimeScaleSchema"} path={"packages/viz/plot/src/schemas/scale/schema.ts"} startLine={171}>TimeScaleSchema</ApiSourceLink>
+
+<DocTabs defaultValue="definition">
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRPlotTimeScale = ZodInfer<typeof TimeScaleSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+<ZodSchema name="TimeScaleSchema" />
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"IRPlotLogScale"} path={"packages/viz/plot/src/schemas/scale/types.ts"} startLine={53}>IRPlotLogScale</ApiSourceLink> / <ApiSourceLink label={"LogScaleSchema"} path={"packages/viz/plot/src/schemas/scale/schema.ts"} startLine={189}>LogScaleSchema</ApiSourceLink>
+
+<DocTabs defaultValue="definition">
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRPlotLogScale = ZodInfer<typeof LogScaleSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+<ZodSchema name="LogScaleSchema" />
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"IRPlotPowScale"} path={"packages/viz/plot/src/schemas/scale/types.ts"} startLine={56}>IRPlotPowScale</ApiSourceLink> / <ApiSourceLink label={"PowScaleSchema"} path={"packages/viz/plot/src/schemas/scale/schema.ts"} startLine={211}>PowScaleSchema</ApiSourceLink>
+
+<DocTabs defaultValue="definition">
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRPlotPowScale = ZodInfer<typeof PowScaleSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+<ZodSchema name="PowScaleSchema" />
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"IRPlotSqrtScale"} path={"packages/viz/plot/src/schemas/scale/types.ts"} startLine={59}>IRPlotSqrtScale</ApiSourceLink> / <ApiSourceLink label={"SqrtScaleSchema"} path={"packages/viz/plot/src/schemas/scale/schema.ts"} startLine={229}>SqrtScaleSchema</ApiSourceLink>
+
+<DocTabs defaultValue="definition">
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRPlotSqrtScale = ZodInfer<typeof SqrtScaleSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+<ZodSchema name="SqrtScaleSchema" />
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"IRPlotSymlogScale"} path={"packages/viz/plot/src/schemas/scale/types.ts"} startLine={62}>IRPlotSymlogScale</ApiSourceLink> / <ApiSourceLink label={"SymlogScaleSchema"} path={"packages/viz/plot/src/schemas/scale/schema.ts"} startLine={252}>SymlogScaleSchema</ApiSourceLink>
+
+<DocTabs defaultValue="definition">
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRPlotSymlogScale = ZodInfer<typeof SymlogScaleSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+<ZodSchema name="SymlogScaleSchema" />
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"IRPlotRadialScale"} path={"packages/viz/plot/src/schemas/scale/types.ts"} startLine={65}>IRPlotRadialScale</ApiSourceLink> / <ApiSourceLink label={"RadialScaleSchema"} path={"packages/viz/plot/src/schemas/scale/schema.ts"} startLine={279}>RadialScaleSchema</ApiSourceLink>
+
+<DocTabs defaultValue="definition">
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRPlotRadialScale = ZodInfer<typeof RadialScaleSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+<ZodSchema name="RadialScaleSchema" />
+
+</DocTab>
+
+</DocTabs>
+
+## Discrete scales
+
+#### <ApiSourceLink label={"IRPlotBandScale"} path={"packages/viz/plot/src/schemas/scale/types.ts"} startLine={41}>IRPlotBandScale</ApiSourceLink> / <ApiSourceLink label={"BandScaleSchema"} path={"packages/viz/plot/src/schemas/scale/schema.ts"} startLine={110}>BandScaleSchema</ApiSourceLink>
+
+<DocTabs defaultValue="definition">
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRPlotBandScale = ZodInfer<typeof BandScaleSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+<ZodSchema name="BandScaleSchema" />
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"IRPlotPointScale"} path={"packages/viz/plot/src/schemas/scale/types.ts"} startLine={44}>IRPlotPointScale</ApiSourceLink> / <ApiSourceLink label={"PointScaleSchema"} path={"packages/viz/plot/src/schemas/scale/schema.ts"} startLine={133}>PointScaleSchema</ApiSourceLink>
+
+<DocTabs defaultValue="definition">
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRPlotPointScale = ZodInfer<typeof PointScaleSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+<ZodSchema name="PointScaleSchema" />
+
+The runtime `PositionScale` contract exposes both `bandwidth` and a read-only `step` for the final range. `band` and `point` provide a positive discrete tick interval, while continuous position scales return `0`. Position Adjustment ratio spans consume this live value rather than treating a point scale's zero `bandwidth` as spacing.
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"IRPlotOrdinalScale"} path={"packages/viz/plot/src/schemas/scale/types.ts"} startLine={47}>IRPlotOrdinalScale</ApiSourceLink> / <ApiSourceLink label={"OrdinalScaleSchema"} path={"packages/viz/plot/src/schemas/scale/schema.ts"} startLine={149}>OrdinalScaleSchema</ApiSourceLink>
+
+<DocTabs defaultValue="definition">
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRPlotOrdinalScale = ZodInfer<typeof OrdinalScaleSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+<ZodSchema name="OrdinalScaleSchema" />
+
+</DocTab>
+
+</DocTabs>
+
+## Color scales
+
+#### <ApiSourceLink label={"IRPlotSequentialColorScale"} path={"packages/viz/plot/src/schemas/scale/types.ts"} startLine={68}>IRPlotSequentialColorScale</ApiSourceLink> / <ApiSourceLink label={"SequentialColorScaleSchema"} path={"packages/viz/plot/src/schemas/scale/schema.ts"} startLine={300}>SequentialColorScaleSchema</ApiSourceLink>
+
+<DocTabs defaultValue="definition">
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRPlotSequentialColorScale = ZodInfer<typeof SequentialColorScaleSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+<ZodSchema name="SequentialColorScaleSchema" />
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"IRPlotDivergingColorScale"} path={"packages/viz/plot/src/schemas/scale/types.ts"} startLine={71}>IRPlotDivergingColorScale</ApiSourceLink> / <ApiSourceLink label={"DivergingColorScaleSchema"} path={"packages/viz/plot/src/schemas/scale/schema.ts"} startLine={325}>DivergingColorScaleSchema</ApiSourceLink>
+
+<DocTabs defaultValue="definition">
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRPlotDivergingColorScale = ZodInfer<typeof DivergingColorScaleSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+<ZodSchema name="DivergingColorScaleSchema" />
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"IRPlotQuantizeColorScale"} path={"packages/viz/plot/src/schemas/scale/types.ts"} startLine={74}>IRPlotQuantizeColorScale</ApiSourceLink> / <ApiSourceLink label={"QuantizeColorScaleSchema"} path={"packages/viz/plot/src/schemas/scale/schema.ts"} startLine={350}>QuantizeColorScaleSchema</ApiSourceLink>
+
+<DocTabs defaultValue="definition">
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRPlotQuantizeColorScale = ZodInfer<typeof QuantizeColorScaleSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+<ZodSchema name="QuantizeColorScaleSchema" />
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"IRPlotThresholdColorScale"} path={"packages/viz/plot/src/schemas/scale/types.ts"} startLine={77}>IRPlotThresholdColorScale</ApiSourceLink> / <ApiSourceLink label={"ThresholdColorScaleSchema"} path={"packages/viz/plot/src/schemas/scale/schema.ts"} startLine={378}>ThresholdColorScaleSchema</ApiSourceLink>
+
+<DocTabs defaultValue="definition">
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRPlotThresholdColorScale = ZodInfer<typeof ThresholdColorScaleSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+<ZodSchema name="ThresholdColorScaleSchema" />
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"IRPlotQuantileColorScale"} path={"packages/viz/plot/src/schemas/scale/types.ts"} startLine={80}>IRPlotQuantileColorScale</ApiSourceLink> / <ApiSourceLink label={"QuantileColorScaleSchema"} path={"packages/viz/plot/src/schemas/scale/schema.ts"} startLine={401}>QuantileColorScaleSchema</ApiSourceLink>
+
+<DocTabs defaultValue="definition">
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRPlotQuantileColorScale = ZodInfer<typeof QuantileColorScaleSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+<ZodSchema name="QuantileColorScaleSchema" />
+
+</DocTab>
+
+</DocTabs>
+
+## Domain padding and supporting values
+
+#### <ApiSourceLink label={"IRPlotDomainPadding"} path={"packages/viz/plot/src/schemas/scale/types.ts"} startLine={35}>IRPlotDomainPadding</ApiSourceLink> / <ApiSourceLink label={"DomainPaddingSchema"} path={"packages/viz/plot/src/schemas/scale/schema.ts"} startLine={77}>DomainPaddingSchema</ApiSourceLink>
+
+<DocTabs defaultValue="definition">
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRPlotDomainPadding = ZodInfer<typeof DomainPaddingSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+Continuous positional scales share `domainPadding` and `singleValueSpan`. Bare numbers and objects without `kind` use range output units; `kind: 'ratio'` explicitly uses a fraction of the original domain span. Both inferred and explicit domains default to no padding.
+
+`kind: 'mark'` references named marks to solve automatic ends from their extents; optional `lower` / `upper` fix one end. Built-in support covers linear/time with Cartesian2D and no placement. See [padding from mark extents](/viz/plot/scale/position#padding-from-mark-extents) for capabilities and errors.
+
+The mark branch accepts `clearance`, a nonnegative minimum distance from protected mark extents to automatic edges in range units, defaulting to `0`. For example: `{ kind: 'mark', marks: ['dots'], clearance: 8 }`. Fixed ends do not add clearance; empty effective samples add no padding, and infeasible clearance produces an error.
+
+`clearance` accepts a number or `{ lower?: number, upper?: number }`. A number applies to both ends; omitted object ends use `0`. These ends follow domain order and range direction, rather than fixed visual left/right. Chart maps its four-sided clearance to these per-axis ends.
+
+<ZodSchema name="DomainPaddingSchema" />
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"IRPlotCategoryValue"} path={"packages/viz/plot/src/schemas/scale/types.ts"} startLine={32}>IRPlotCategoryValue</ApiSourceLink> / <ApiSourceLink label={"CategoryValueSchema"} path={"packages/viz/plot/src/schemas/scale/schema.ts"} startLine={25}>CategoryValueSchema</ApiSourceLink>
+
+<DocTabs defaultValue="definition">
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRPlotCategoryValue = ZodInfer<typeof CategoryValueSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+<ZodSchema name="CategoryValueSchema" />
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"ColorSchemeNameSchema"} path={"packages/viz/plot/src/schemas/scale/schema.ts"} startLine={20}>ColorSchemeNameSchema</ApiSourceLink>
+
+<ZodSchema name="ColorSchemeNameSchema" />

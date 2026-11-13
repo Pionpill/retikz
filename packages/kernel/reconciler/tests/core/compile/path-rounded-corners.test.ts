@@ -4,7 +4,7 @@ import type { GroupPrimitive, IRScene, PathCommand, ScenePrimitive, TextPrimitiv
 import type { PathPrimitive } from '../../../../core/src/contract';
 import type { IRPath } from '../../../../core/src/schemas';
 import { PathSchema } from '../../../../core/src/schemas';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 import { flattenPrims } from '../../helpers/flatten';
 import { close } from '../../helpers/path-command-factory';
 
@@ -26,7 +26,7 @@ const pathWith = (config: Record<string, unknown>, ...steps: Array<unknown>): IR
 
 /** 取编译后首个 PathPrimitive 的 commands 的 kind 序列（结构化断言用） */
 const kinds = (ir: IRScene): Array<string> =>
-  findPathPrim(compileToScene(ir, silent).scene.primitives).commands.map(c => c.kind);
+  findPathPrim(compileTestResult(ir, silent).scene.primitives).commands.map(c => c.kind);
 
 /** 取 sloped label 的旋转锚点，作为文字沿最终路径定位的可观察结果 */
 const labelRotationCenter = (primitives: ReadonlyArray<ScenePrimitive>, text: string): [number, number] => {
@@ -55,7 +55,7 @@ describe('cornerRadius happy：折线 line-line 内拐角倒圆', () => {
       { type: 'step', kind: 'line', to: [10, 0] },
       { type: 'step', kind: 'line', to: [10, 10] },
     );
-    const cmds = findPathPrim(compileToScene(ir, silent).scene.primitives).commands;
+    const cmds = findPathPrim(compileTestResult(ir, silent).scene.primitives).commands;
 
     // 结构断言：直角拐角处插一段 arc，两侧仍是 line；首点 move、末点 line 尖角
     expect(cmds.map(c => c.kind)).toEqual(['move', 'line', 'arc', 'line']);
@@ -76,7 +76,7 @@ describe('cornerRadius happy：折线 line-line 内拐角倒圆', () => {
       { type: 'step', kind: 'line', to: [20, 10] },
       { type: 'step', kind: 'line', to: [20, 20] },
     );
-    const cmds = findPathPrim(compileToScene(ir, silent).scene.primitives).commands;
+    const cmds = findPathPrim(compileTestResult(ir, silent).scene.primitives).commands;
     const arcs = cmds.filter(c => c.kind === 'arc');
 
     expect(arcs).toHaveLength(3);
@@ -95,7 +95,7 @@ describe('cornerRadius happy：折线 line-line 内拐角倒圆', () => {
       { type: 'step', kind: 'line', to: [0, 0] },
       { type: 'step', kind: 'cycle' },
     );
-    const cmds = findPathPrim(compileToScene(ir, silent).scene.primitives).commands;
+    const cmds = findPathPrim(compileTestResult(ir, silent).scene.primitives).commands;
 
     expect(cmds.filter(c => c.kind === 'arc')).toHaveLength(3);
     expect(cmds[cmds.length - 1]).toEqual(close());
@@ -110,7 +110,7 @@ describe('cornerRadius happy：折线 line-line 内拐角倒圆', () => {
       { type: 'step', kind: 'line', to: [0, 10] },
       { type: 'step', kind: 'cycle' },
     );
-    const cmds = findPathPrim(compileToScene(ir, silent).scene.primitives).commands;
+    const cmds = findPathPrim(compileTestResult(ir, silent).scene.primitives).commands;
 
     // 闭合正方形 4 个拐角全倒 → 4 段 arc；末尾仍 close
     const arcs = cmds.filter(c => c.kind === 'arc');
@@ -136,8 +136,8 @@ describe('cornerRadius 边界', () => {
       { type: 'step', kind: 'line', to: [10, 10] },
     );
 
-    expect(findPathPrim(compileToScene(zero, silent).scene.primitives).commands).toEqual(
-      findPathPrim(compileToScene(sharp, silent).scene.primitives).commands,
+    expect(findPathPrim(compileTestResult(zero, silent).scene.primitives).commands).toEqual(
+      findPathPrim(compileTestResult(sharp, silent).scene.primitives).commands,
     );
   });
 
@@ -166,8 +166,8 @@ describe('cornerRadius 边界', () => {
       { type: 'step', kind: 'line', to: [10, 10] },
     );
 
-    expect(findPathPrim(compileToScene(clamped, silent).scene.primitives).commands).toEqual(
-      findPathPrim(compileToScene(r5, silent).scene.primitives).commands,
+    expect(findPathPrim(compileTestResult(clamped, silent).scene.primitives).commands).toEqual(
+      findPathPrim(compileTestResult(r5, silent).scene.primitives).commands,
     );
   });
 
@@ -179,8 +179,8 @@ describe('cornerRadius 边界', () => {
       { type: 'step', kind: 'line', to: [10, 0] },
     );
 
-    expect(findPathPrim(compileToScene(rounded, silent).scene.primitives).commands).toEqual(
-      findPathPrim(compileToScene(sharp, silent).scene.primitives).commands,
+    expect(findPathPrim(compileTestResult(rounded, silent).scene.primitives).commands).toEqual(
+      findPathPrim(compileTestResult(sharp, silent).scene.primitives).commands,
     );
   });
 });
@@ -230,7 +230,7 @@ describe('cornerRadius 交互', () => {
       { type: 'step', kind: 'line', to: [10, 10] },
       { type: 'step', kind: 'curve', to: [20, 20], control: [15, 10] },
     );
-    const cmds = findPathPrim(compileToScene(ir, silent).scene.primitives).commands;
+    const cmds = findPathPrim(compileTestResult(ir, silent).scene.primitives).commands;
 
     // 只有 line-line 接缝 A 倒出一段 arc；line↔curve 接缝 B 保持尖（curve 段不被 fillet）
     const arcs = cmds.filter(c => c.kind === 'arc');
@@ -250,7 +250,7 @@ describe('cornerRadius 交互', () => {
       { type: 'step', kind: 'line', to: [10, 10] },
       { type: 'step', kind: 'fold', via: '-|', to: [20, 20] },
     );
-    const cmds = findPathPrim(compileToScene(ir, silent).scene.primitives).commands;
+    const cmds = findPathPrim(compileTestResult(ir, silent).scene.primitives).commands;
 
     // fold 自身展开为两段直角直线但其接缝不被 fillet：仅 line-line 接缝 A 出 1 段 arc
     const arcs = cmds.filter(c => c.kind === 'arc');
@@ -266,7 +266,7 @@ describe('cornerRadius 交互', () => {
       { type: 'step', kind: 'line', to: [10, 10] },
       { type: 'step', kind: 'fold', via: '-|-', fraction: 0.4, to: [30, 30] },
     );
-    const commands = findPathPrim(compileToScene(ir, silent).scene.primitives).commands;
+    const commands = findPathPrim(compileTestResult(ir, silent).scene.primitives).commands;
 
     expect(commands.filter(command => command.kind === 'arc')).toHaveLength(1);
     expect(commands.filter(command => command.kind === 'line')).toHaveLength(5);
@@ -297,7 +297,7 @@ describe('cornerRadius 交互', () => {
         return undefined;
       };
 
-      return walk(compileToScene(ir, silent).scene.primitives);
+      return walk(compileTestResult(ir, silent).scene.primitives);
     };
 
     const gSharp = markGroup(sharp);
@@ -317,11 +317,16 @@ describe('cornerRadius 交互', () => {
         style: { stroke: '#13579b' },
       },
       { type: 'step', kind: 'move', to: [0, 0] },
-      { type: 'step', kind: 'line', to: [100, 0], label: { text: 'turn', position: 0.9, sloped: true } },
+      {
+        type: 'step',
+        kind: 'line',
+        to: [100, 0],
+        label: { text: 'turn', position: 0.9, positionGeometry: 'rounded', sloped: true },
+      },
       { type: 'step', kind: 'line', to: [100, 100] },
     );
     const fragments = flattenPrims(
-      compileToScene(ir, { measureText: () => ({ width: 20, height: 10 }) }).scene.primitives,
+      compileTestResult(ir, { measureText: () => ({ width: 20, height: 10 }) }).scene.primitives,
     ).filter((primitive): primitive is PathPrimitive => primitive.type === 'path' && primitive.stroke === '#13579b');
 
     expect(fragments).toHaveLength(2);
@@ -348,11 +353,11 @@ describe('cornerRadius 交互', () => {
     // path 的中点位于倒角圆弧 45°：圆心 [70, 30]、半径 30，故锚点为 [91.213..., 8.786...]
     const roundedAnchor: [number, number] = [91.2132034, 8.7867966];
     const roundedMidpointAngle = -45;
-    const compiledScene = compileToScene(
+    const compiledScene = compileTestResult(
       pathWith(
         {
           cornerRadius: 30,
-          label,
+          label: { ...label, positionGeometry: 'rounded' },
           style: { stroke: '#13579b' },
         },
         { type: 'step', kind: 'move', to: [0, 0] },
@@ -413,15 +418,15 @@ describe('cornerRadius 交互', () => {
       return undefined;
     };
 
-    const pNo = findPath(compileToScene(roundedNoRot, silent).scene.primitives);
-    const pRot = findPath(compileToScene(roundedRot, silent).scene.primitives);
+    const pNo = findPath(compileTestResult(roundedNoRot, silent).scene.primitives);
+    const pRot = findPath(compileTestResult(roundedRot, silent).scene.primitives);
 
     expect(pNo).toBeDefined();
     expect(pRot).toBeDefined();
     expect(pRot?.commands).toEqual(pNo?.commands);
 
     // 旋转产生带 transforms 的外层 group
-    const hasTransformGroup = compileToScene(roundedRot, silent).scene.primitives.some(
+    const hasTransformGroup = compileTestResult(roundedRot, silent).scene.primitives.some(
       p => p.type === 'group' && p.transforms !== undefined && p.transforms.length > 0,
     );
 
@@ -449,8 +454,8 @@ describe('cornerRadius 交互', () => {
       return undefined;
     };
 
-    const pNo = findPath(compileToScene(roundedNoScale, silent).scene.primitives);
-    const pScaled = findPath(compileToScene(roundedScale, silent).scene.primitives);
+    const pNo = findPath(compileTestResult(roundedNoScale, silent).scene.primitives);
+    const pScaled = findPath(compileTestResult(roundedScale, silent).scene.primitives);
 
     expect(pNo).toBeDefined();
     expect(pScaled).toBeDefined();

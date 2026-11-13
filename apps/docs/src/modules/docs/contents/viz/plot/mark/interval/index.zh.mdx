@@ -1,5 +1,5 @@
 ---
-title: IntervalMark · 区间图元
+title: interval · 区间图元
 description: 用 IntervalMark 定义数据区间，通过坐标投影绘制柱、直方图、热图、饼图与环图。
 ---
 
@@ -339,9 +339,9 @@ document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout
 
 ## API 参考
 
-标签内容可简写为 `encodings.label: 'name'`，固定文字写 `properties.label: '重点'`。对象形式支持 `font.size`、`font.weight`、`textColor` 等字段编码，多标签数组按索引配对；未编码的字体叶子继续继承。详见[标签编码](/viz/plot/reference/encoding#labelencodingschema)。
+标签内容可简写为 `encodings.label: 'name'`，固定文字写 `properties.label: '重点'`。对象形式支持 `font.size`、`font.weight`、`textColor` 等字段编码，多标签数组按索引配对；未编码的字体叶子继续继承。详见[标签编码](/viz/plot/channel/reference#labelencodingschema)。
 
-`IntervalMarkProps` 从 `@retikz/plot-react` 导出，复用 `@retikz/plot-vanilla` 的 `InputPlotIntervalMark`。下表按用途分组；`—` 表示声明没有字段级默认值，缺省行为见上文。Source IR 的字段与约束复用[图元契约参考](/viz/plot/reference/mark)中的 `IntervalMarkSchema`。
+`IntervalMarkProps` 从 `@retikz/plot-react` 导出，复用 `@retikz/plot-vanilla` 的 `InputPlotIntervalMark`。下表按用途分组；`—` 表示声明没有字段级默认值，缺省行为见上文。Source IR 的字段与约束由本页的 `IntervalMarkSchema` 展示；共享配置见[图元 API 参考](/viz/plot/mark#api-参考)。
 
 {/* @include viz/plot/mark/interval/generated */}
 
@@ -349,8 +349,8 @@ document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout
 
 <LinkedSections
   items={[
-    { title: 'PointMark · 点图元', description: '在区间或数据位置叠加节点。', url: '/viz/plot/mark/point' },
-    { title: 'PathMark · 路径图元', description: '连接数据位置，绘制折线和轮廓。', url: '/viz/plot/mark/path' },
+    { title: 'point · 点图元', description: '在区间或数据位置叠加节点。', url: '/viz/plot/mark/point' },
+    { title: 'path · 路径图元', description: '连接数据位置，绘制折线和轮廓。', url: '/viz/plot/mark/path' },
     { title: '变换', description: '了解分箱、聚合与堆叠的数据准备。', url: '/viz/plot/transform' },
     { title: '坐标系', description: '配置笛卡尔与极坐标的投影。', url: '/viz/plot/coordinate' },
   ]}

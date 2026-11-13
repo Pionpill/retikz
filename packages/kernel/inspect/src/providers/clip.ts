@@ -14,10 +14,8 @@ export const CLIP_INSPECTOR = defineInspector({
   optionsSchema: ClipInspectOptionsSchema,
   inspect: (subject, context) => {
     if (!context.options.outline || subject.clipRef === undefined) return [];
-    const resource = context.result.scene.resources?.find(
-      candidate => candidate.kind === 'clip' && candidate.id === subject.clipRef,
-    );
-    if (resource?.kind !== 'clip') {
+    const resource = context.result.scene.resources?.clips.find(candidate => candidate.id === subject.clipRef);
+    if (resource === undefined) {
       context.warn('UnsupportedGeometry', 'Clip resource is unavailable');
       return [];
     }

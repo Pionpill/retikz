@@ -17,9 +17,12 @@ describe('Scene 内容遍历契约', () => {
         height: 1,
         fill: { kind: 'resourceRef', id: 'tile' },
       })),
-      resources: [
-        { kind: 'paint', id: 'tile', spec: { kind: 'pattern', shape: 'dots' }, tile: { size: 10, motif: [motif] } },
-      ],
+      resources: {
+        paints: [
+          { kind: 'paint', id: 'tile', spec: { kind: 'pattern', shape: 'dots' }, tile: { size: 10, motif: [motif] } },
+        ],
+        clips: [],
+      },
     };
     const sites: Array<SceneContentVisitContext> = [];
 
@@ -39,10 +42,13 @@ describe('Scene 内容遍历契约', () => {
     const scene: Scene = {
       layout: { x: 0, y: 0, width: 10, height: 10 },
       primitives: [],
-      resources: [
-        { kind: 'clip', id: 'duplicate', path: { commands: [], fillRule: 'nonzero' } },
-        { kind: 'clip', id: 'duplicate', path: { commands: [], fillRule: 'evenodd' } },
-      ],
+      resources: {
+        paints: [],
+        clips: [
+          { kind: 'clip', id: 'duplicate', path: { commands: [], fillRule: 'nonzero' } },
+          { kind: 'clip', id: 'duplicate', path: { commands: [], fillRule: 'evenodd' } },
+        ],
+      },
     };
 
     expect(() => visitSceneContent(scene)).toThrow(
@@ -53,13 +59,29 @@ describe('Scene 内容遍历契约', () => {
       }),
     );
   });
+  it('不同资源分类也不能使用同一个 ID', () => {
+    const scene: Scene = {
+      layout: { x: 0, y: 0, width: 10, height: 10 },
+      primitives: [],
+      resources: {
+        paints: [{ kind: 'paint', id: 'duplicate', spec: { kind: 'image', href: 'tile.png' } }],
+        clips: [{ kind: 'clip', id: 'duplicate', path: { commands: [], fillRule: 'nonzero' } }],
+      },
+    };
+
+    expect(() => visitSceneContent(scene)).toThrow(/duplicate resource id/);
+  });
+
   it('拒绝丢失和错误类型的资源引用及其使用路径', () => {
     const scene: Scene = {
       layout: { x: 0, y: 0, width: 10, height: 10 },
       primitives: [{ type: 'rect', x: 0, y: 0, width: 1, height: 1, fill: { kind: 'resourceRef', id: 'missing' } }],
     };
     expect(() => visitSceneContent(scene)).toThrow(/primitives\[0\].fill.*missing/);
-    scene.resources = [{ kind: 'clip', id: 'missing', path: { fillRule: 'nonzero', commands: [] } }];
+    scene.resources = {
+      paints: [],
+      clips: [{ kind: 'clip', id: 'missing', path: { fillRule: 'nonzero', commands: [] } }],
+    };
     expect(() => visitSceneContent(scene)).toThrow(/expected paint resource/);
   });
 
@@ -75,9 +97,17 @@ describe('Scene 内容遍历契约', () => {
     const scene: Scene = {
       layout: { x: 0, y: 0, width: 10, height: 10 },
       primitives: [primitive],
-      resources: [
-        { kind: 'paint', id: 'tile', spec: { kind: 'pattern', shape: 'dots' }, tile: { size: 10, motif: [primitive] } },
-      ],
+      resources: {
+        paints: [
+          {
+            kind: 'paint',
+            id: 'tile',
+            spec: { kind: 'pattern', shape: 'dots' },
+            tile: { size: 10, motif: [primitive] },
+          },
+        ],
+        clips: [],
+      },
     };
     expect(() => visitSceneContent(scene)).toThrow(/cyclic/);
     const group: GroupPrimitive = { type: 'group', children: [] };

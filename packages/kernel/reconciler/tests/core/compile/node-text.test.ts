@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { ScenePrimitive, TextPrimitive } from '../../../../core/src/contract';
 import type { IRScene } from '../../../../core/src/schemas';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 import { flattenPrims } from '../../helpers/flatten';
 
 const findText = (prims: Array<ScenePrimitive>): TextPrimitive | undefined =>
@@ -11,7 +11,7 @@ const findText = (prims: Array<ScenePrimitive>): TextPrimitive | undefined =>
 describe('Node 多行文本', () => {
   it('正文和标签在测量与输出前将字重关键字换算为数值', () => {
     const measured = new Map<string, number | string | undefined>();
-    const { scene } = compileToScene(
+    const { scene } = compileTestResult(
       {
         version: 1,
         type: 'scene',
@@ -50,8 +50,8 @@ describe('Node 多行文本', () => {
       type: 'scene',
       children: [{ type: 'node', id: 'A', position: [0, 0], text: ['Hello'] }],
     };
-    const t1 = findText(compileToScene(single).scene.primitives);
-    const t2 = findText(compileToScene(arr).scene.primitives);
+    const t1 = findText(compileTestResult(single).scene.primitives);
+    const t2 = findText(compileTestResult(arr).scene.primitives);
 
     expect(t1?.lines).toEqual([{ text: 'Hello' }]);
     expect(t2?.lines).toEqual([{ text: 'Hello' }]);
@@ -70,8 +70,8 @@ describe('Node 多行文本', () => {
       type: 'scene',
       children: [{ type: 'node', id: 'A', position: [0, 0], text: ['a', 'b'] }],
     };
-    const t1 = findText(compileToScene(str).scene.primitives);
-    const t2 = findText(compileToScene(arr).scene.primitives);
+    const t1 = findText(compileTestResult(str).scene.primitives);
+    const t2 = findText(compileTestResult(arr).scene.primitives);
 
     expect(t1?.lines).toEqual([{ text: 'a' }, { text: 'b' }]);
     expect(t1?.lines).toEqual(t2?.lines);
@@ -91,7 +91,7 @@ describe('Node 多行文本', () => {
         },
       ],
     };
-    const t = findText(compileToScene(ir).scene.primitives);
+    const t = findText(compileTestResult(ir).scene.primitives);
 
     expect(t?.lines).toEqual([
       { text: 'a', fill: 'red' },
@@ -105,7 +105,7 @@ describe('Node 多行文本', () => {
       type: 'scene',
       children: [{ type: 'node', id: 'A', position: [0, 0], text: ['a\nb', 'c'] }],
     };
-    const t = findText(compileToScene(ir).scene.primitives);
+    const t = findText(compileTestResult(ir).scene.primitives);
 
     expect(t?.lines).toEqual([{ text: 'a' }, { text: 'b' }, { text: 'c' }]);
   });
@@ -123,7 +123,7 @@ describe('Node 多行文本', () => {
         },
       ],
     };
-    const t = findText(compileToScene(ir).scene.primitives);
+    const t = findText(compileTestResult(ir).scene.primitives);
 
     expect(t?.lines).toEqual([{ text: 'ab' }, { text: 'longer line' }, { text: 'c' }]);
 
@@ -147,7 +147,7 @@ describe('Node 多行文本', () => {
         },
       ],
     };
-    const t = findText(compileToScene(ir).scene.primitives);
+    const t = findText(compileTestResult(ir).scene.primitives);
 
     expect(t?.align).toBe('start');
 
@@ -169,7 +169,7 @@ describe('Node 多行文本', () => {
         },
       ],
     };
-    const t = findText(compileToScene(ir).scene.primitives);
+    const t = findText(compileTestResult(ir).scene.primitives);
 
     expect(t?.align).toBe('end');
     expect(t!.x).toBeGreaterThan(100);
@@ -181,7 +181,7 @@ describe('Node 多行文本', () => {
       type: 'scene',
       children: [{ type: 'node', id: 'A', position: [50, 50], text: ['hi', 'there'] }],
     };
-    const t = findText(compileToScene(ir).scene.primitives);
+    const t = findText(compileTestResult(ir).scene.primitives);
 
     expect(t?.align).toBe('middle');
     expect(t?.x).toBe(50);
@@ -201,7 +201,7 @@ describe('Node 多行文本', () => {
         },
       ],
     };
-    const t = findText(compileToScene(ir).scene.primitives);
+    const t = findText(compileTestResult(ir).scene.primitives);
 
     expect(t?.lineHeight).toBeCloseTo(20 * 1.2, 1);
   });
@@ -220,7 +220,7 @@ describe('Node 多行文本', () => {
         },
       ],
     };
-    const t = findText(compileToScene(ir).scene.primitives);
+    const t = findText(compileTestResult(ir).scene.primitives);
 
     expect(t?.lineHeight).toBe(30);
   });
@@ -236,8 +236,8 @@ describe('Node 多行文本', () => {
       type: 'scene',
       children: [{ type: 'node', id: 'A', position: [0, 0], text: ['a', 'b', 'c'] }],
     };
-    const r1 = compileToScene(single).scene.primitives.find(p => p.type === 'rect');
-    const r3 = compileToScene(multi).scene.primitives.find(p => p.type === 'rect');
+    const r1 = compileTestResult(single).scene.primitives.find(p => p.type === 'rect');
+    const r3 = compileTestResult(multi).scene.primitives.find(p => p.type === 'rect');
     if (r1?.type === 'rect' && r3?.type === 'rect') {
       expect(r3.height).toBeGreaterThan(r1.height);
     }
@@ -250,7 +250,7 @@ describe('Node 多行文本', () => {
       children: [{ type: 'node', id: 'A', position: [0, 0] }],
     };
 
-    expect(findText(compileToScene(ir).scene.primitives)).toBeUndefined();
+    expect(findText(compileTestResult(ir).scene.primitives)).toBeUndefined();
   });
 
   it('行级 IRLine 对象可覆盖 fill / opacity（emit 写入对应字段）', () => {
@@ -266,7 +266,7 @@ describe('Node 多行文本', () => {
         },
       ],
     };
-    const t = findText(compileToScene(ir).scene.primitives);
+    const t = findText(compileTestResult(ir).scene.primitives);
 
     expect(t?.lines).toEqual([{ text: 'red', fill: 'red' }, { text: 'half', opacity: 0.5 }, { text: 'plain' }]);
   });
@@ -285,7 +285,7 @@ describe('Node 多行文本', () => {
         },
       ],
     };
-    const texts = flattenPrims(compileToScene(ir).scene.primitives).filter(
+    const texts = flattenPrims(compileTestResult(ir).scene.primitives).filter(
       (p): p is TextPrimitive => p.type === 'text',
     );
     const t = texts[0];
@@ -322,7 +322,7 @@ describe('Node 多行文本', () => {
         },
       ],
     };
-    const t = findText(compileToScene(ir).scene.primitives);
+    const t = findText(compileTestResult(ir).scene.primitives);
 
     expect(t?.measuredWidth).toBeCloseTo(66, 0);
   });
@@ -341,7 +341,7 @@ describe('Node 多行文本', () => {
         },
       ],
     };
-    const t = findText(compileToScene(ir).scene.primitives);
+    const t = findText(compileTestResult(ir).scene.primitives);
 
     expect(t?.fontSize).toBe(32);
     expect(t?.lines[0]).toEqual({ text: 'scaled', fontSize: 28 });

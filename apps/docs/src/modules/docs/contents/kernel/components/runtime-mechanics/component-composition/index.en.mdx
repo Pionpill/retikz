@@ -120,6 +120,8 @@ After layout returns, FlexLayout translates each child into place; Surface then 
 
 ## Compilation output
 
+For explicit type annotations, the type parameter of `SceneReconciler<TComposite>` and `CompileOptions<TComposite>` denotes a Composite Definition element type or union; the `composites` field remains a readonly array. Two definitions can be represented by `typeof firstDefinition | typeof secondDefinition`, though inference from the supplied array usually suffices. `SceneCompilationSnapshot<TComposite>` derives the artifact union from these definitions; a session with no supplied definitions defaults to `never`.
+
 Once Plot has a size, its scales and coordinates map the three records to point positions, connecting them in ascending x order and producing Core Scope, Node, and Path declarations. It compiles these through Core and returns the selected child layout result. The title Node follows Core's text and node compilation path as well.
 
 Each layer submits its selected child result through `replay`. FlexLayout adds child translations. Surface adds the padding translation and any required background, border, or clipping. Chart returns the whole container result. These results enter one Scene, whose primitives, group transforms, and resources are consumed by Render.
@@ -133,7 +135,7 @@ Reconciler provides recursive execution, probes, and replay; Core provides measu
     { label: 'Plot conversion to Core child declarations', path: 'packages/viz/plot/src/pipeline/expand/lower.ts' },
     {
       label: 'Reconciler traversal and composite result submission',
-      path: 'packages/kernel/reconciler/src/compile/tree/subtree.ts',
+      path: 'packages/kernel/reconciler/src/compile/execution/subtree/element.ts',
     },
     {
       label: 'Child layout results and replay contract',

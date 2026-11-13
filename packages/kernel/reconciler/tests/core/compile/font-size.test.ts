@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { ScenePrimitive, TextLine, TextPrimitive } from '../../../../core/src/contract';
 import type { IRScene } from '../../../../core/src/schemas';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 
 const collectTexts = (primitives: Array<ScenePrimitive>): Array<TextPrimitive> => {
   const texts: Array<TextPrimitive> = [];
@@ -17,7 +17,7 @@ const collectTexts = (primitives: Array<ScenePrimitive>): Array<TextPrimitive> =
 
 const lineText = (line: string | TextLine): string => (typeof line === 'string' ? line : line.text);
 
-const findText = (scene: ReturnType<typeof compileToScene>['scene'], text: string): TextPrimitive => {
+const findText = (scene: ReturnType<typeof compileTestResult>['scene'], text: string): TextPrimitive => {
   const primitive = collectTexts(scene.primitives).find(candidate =>
     candidate.lines.some(line => lineText(line) === text),
   );
@@ -35,7 +35,7 @@ describe('编译字体大小预设和相对单位', () => {
       children: [{ type: 'node', position: [0, 0], text: 'default' }],
     };
 
-    expect(findText(compileToScene(ir).scene, 'default').fontSize).toBe(16);
+    expect(findText(compileTestResult(ir).scene, 'default').fontSize).toBe(16);
   });
 
   it('使用默认根字体大小解析网页预设', () => {
@@ -52,7 +52,7 @@ describe('编译字体大小预设和相对单位', () => {
       ],
     };
 
-    expect(findText(compileToScene(ir).scene, 'web').fontSize).toBe(14);
+    expect(findText(compileTestResult(ir).scene, 'web').fontSize).toBe(14);
   });
 
   it('拒绝核心 schema 中的 TikZ 预设', () => {
@@ -75,7 +75,7 @@ describe('编译字体大小预设和相对单位', () => {
       ],
     };
 
-    expect(() => compileToScene(ir).scene).toThrow();
+    expect(() => compileTestResult(ir).scene).toThrow();
   });
 
   it('从 CompileOptions.fontSize 解析 rem', () => {
@@ -92,7 +92,7 @@ describe('编译字体大小预设和相对单位', () => {
       ],
     };
 
-    expect(findText(compileToScene(ir, { fontSize: 20 }).scene, 'rem').fontSize).toBe(25);
+    expect(findText(compileTestResult(ir, { fontSize: 20 }).scene, 'rem').fontSize).toBe(25);
   });
 
   it('解析路径标签预设', () => {
@@ -110,7 +110,7 @@ describe('编译字体大小预设和相对单位', () => {
       ],
     };
 
-    expect(findText(compileToScene(ir).scene, 'label').fontSize).toBe(18);
+    expect(findText(compileTestResult(ir).scene, 'label').fontSize).toBe(18);
   });
 
   it.each([false, true])('普通文本按未缩放字号解析行 em 后应用节点缩放，公式开关=%s', withTex => {
@@ -128,7 +128,7 @@ describe('编译字体大小预设和相对单位', () => {
       ],
     };
 
-    const text = findText(compileToScene(ir, withTex ? { lowerTex: () => null } : {}).scene, 'line');
+    const text = findText(compileTestResult(ir, withTex ? { lowerTex: () => null } : {}).scene, 'line');
 
     expect(text.lines[0].fontSize).toBe(18);
   });
@@ -148,7 +148,7 @@ describe('编译字体大小预设和相对单位', () => {
       ],
     };
 
-    expect(findText(compileToScene(ir).scene, 'scaled').fontSize).toBe(36);
+    expect(findText(compileTestResult(ir).scene, 'scaled').fontSize).toBe(36);
   });
 
   it('将解析的字体大小传递给 lowerTex', () => {
@@ -166,7 +166,7 @@ describe('编译字体大小预设和相对单位', () => {
       ],
     };
 
-    compileToScene(ir, {
+    compileTestResult(ir, {
       lowerTex: (_content, style) => {
         calls.push(style.fontSize);
         return null;
@@ -183,13 +183,13 @@ describe('编译字体大小预设和相对单位', () => {
       children: [{ type: 'node', position: [0, 0], text: 'bad' }],
     };
 
-    expect(() => compileToScene(ir, { fontSize: 0 }).scene).toThrow(/fontSize/);
+    expect(() => compileTestResult(ir, { fontSize: 0 }).scene).toThrow(/fontSize/);
   });
 });
 
 describe('根字号编译准入', () => {
   it.each([0, -1, Number.NaN, Number.POSITIVE_INFINITY])('空场景也拒绝非法根字号 %s', fontSize => {
     const ir: IRScene = { version: 1, type: 'scene', children: [] };
-    expect(() => compileToScene(ir, { fontSize })).toThrow(/CompileOptions.fontSize.*positive finite/);
+    expect(() => compileTestResult(ir, { fontSize })).toThrow(/CompileOptions.fontSize.*positive finite/);
   });
 });

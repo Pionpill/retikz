@@ -116,7 +116,7 @@ describe('LogicFigure 语义词汇', () => {
         <LogicFigureFrame id="core">
           <LogicFigureFrameTitle>@retikz/core</LogicFigureFrameTitle>
           <Entity id="compile" role="activity" kind={LogicFigureEntityKind.Algorithm} position={[120, 80]}>
-            compileToScene
+            SceneReconciler
           </Entity>
         </LogicFigureFrame>
       </LogicFigure>,

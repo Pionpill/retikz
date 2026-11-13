@@ -1,5 +1,5 @@
 ﻿---
-title: PathMark · 路径图元
+title: path · 路径图元
 description: 用 PathMark 按顺序连接数据位置，绘制折线、多系列路径、极坐标轮廓和闭合区域。
 ---
 
@@ -407,6 +407,8 @@ Plot
 
 ## 错误与限制
 
+完整 `from` / `to` 端点中的字段值缺失或映射为非有限值时，跳过该行路径，不补零；独立 Point 图元仍可显示有效端点。两个端点都会解析，缺失数据不会掩盖非法常量、缺少字段声明或无效目标引用；坐标投影错误仍会报错。
+
 - 内置二维笛卡尔与极坐标支持路径及闭合区域；通用坐标帧只支持未设置 `closure` 且 `closed` 不为 `true` 的开放路径。
 - `interpolation` 只能用于极坐标；其他坐标系下显式设置会报错。
 - `color` 用于分类颜色，不接受连续或时间字段。
@@ -481,9 +483,9 @@ Plot
 
 Ribbon 不接受闭合、缺值桥接、圆角、箭头、路径标记或步骤标签。整条流带标签仍写 `properties.label` / `encodings.label`，可用 `placement="inside"` 放入带内，不支持描边断口。
 
-标签内容可简写为 `encodings.label: 'name'`，固定文字写 `properties.label: '重点'`。对象形式支持 `font.size`、`font.weight`、`textColor` 等字段编码，多标签数组按索引配对；未编码的字体叶子继续继承。详见[标签编码](/viz/plot/reference/encoding#labelencodingschema)。
+标签内容可简写为 `encodings.label: 'name'`，固定文字写 `properties.label: '重点'`。对象形式支持 `font.size`、`font.weight`、`textColor` 等字段编码，多标签数组按索引配对；未编码的字体叶子继续继承。详见[标签编码](/viz/plot/channel/reference#labelencodingschema)。
 
-`PathMarkProps` 从 `@retikz/plot-react` 导出，复用 `@retikz/plot-vanilla` 的 `InputPlotPathMark`。下表按用途分组；`—` 表示声明没有字段级默认值，实际缺省行为见上文。Source IR 的字段与约束复用[图元契约参考](/viz/plot/reference/mark)中的 `PathMarkSchema`。
+`PathMarkProps` 从 `@retikz/plot-react` 导出，复用 `@retikz/plot-vanilla` 的 `InputPlotPathMark`。下表按用途分组；`—` 表示声明没有字段级默认值，实际缺省行为见上文。Source IR 的字段与约束由本页的 `PathMarkSchema` 展示；共享配置见[图元 API 参考](/viz/plot/mark#api-参考)。
 
 {/* @include viz/plot/mark/path/generated */}
 
@@ -491,7 +493,7 @@ Ribbon 不接受闭合、缺值桥接、圆角、箭头、路径标记或步骤�
 
 <LinkedSections
   items={[
-    { title: 'PointMark · 点图元', description: '在路径的数据位置叠加节点。', url: '/viz/plot/mark/point' },
+    { title: 'point · 点图元', description: '在路径的数据位置叠加节点。', url: '/viz/plot/mark/point' },
     { title: '坐标系', description: '理解位置投影与极坐标插值。', url: '/viz/plot/coordinate' },
     { title: 'Path', description: '查阅路径步骤、样式和箭头。', url: '/kernel/components/path/step' },
   ]}

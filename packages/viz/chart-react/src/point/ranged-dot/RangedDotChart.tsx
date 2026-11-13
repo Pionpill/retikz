@@ -2,8 +2,8 @@ import type { RangedDotChartInputEmbedProps } from '@retikz/chart-vanilla/point'
 import { rangedDotChart, rangedDotChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';
 import type { IRRangedDotChart } from '@retikz/chart/point';
 
-import type { TypedChartCommonProps } from '../shared';
-import { createTypedChartComponent, createTypedChartInput } from '../shared';
+import type { TypedChartCommonProps } from '../../authoring';
+import { createTypedChartComponent, createTypedChartInput } from '../../authoring';
 import { collectRangedDotChartDeclarations } from './declaration-collection';
 
 /**

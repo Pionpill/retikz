@@ -1,9 +1,9 @@
 import type { CompileWarning, IRChild, IRPath, IRScope, ScenePrimitive } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it, vi } from 'vitest';
 
 import { lowerPlotWithDataArtifact } from '../../src/pipeline/expand/lower';
 import { PlotSchema } from '../../src/schemas';
+import { compileTestResult } from '../helpers/compilation';
 import { measureLabel } from '../helpers/text-measurement';
 
 const lower = (
@@ -49,6 +49,52 @@ const flatten = (items: Array<ScenePrimitive>): Array<ScenePrimitive> =>
   items.flatMap(item => (item.type === 'group' ? flatten(item.children) : [item]));
 
 describe('标记目标连接', () => {
+  it('跳过不可映射的字段端点，保留有效行和独立点', () => {
+    const endpoints = {
+      type: 'path',
+      encodings: { from: { x: { value: 0 }, y: { field: 'start' } }, to: { x: { value: 10 }, y: { field: 'end' } } },
+    };
+    const data = [
+      { start: null, end: 4 },
+      { start: 2, end: 8 },
+      { start: 3, end: null },
+    ];
+    const result = paths(lower(plot([endpoints]), { data }));
+    expect(result).toHaveLength(1);
+    expect(result[0].children).toHaveLength(2);
+    const invalidConstant = {
+      ...endpoints,
+      encodings: { ...endpoints.encodings, from: { x: { value: 'invalid' }, y: { field: 'start' } } },
+    };
+    expect(() => lower(plot([invalidConstant]), { data })).toThrow(/cannot map/);
+    const absentField = {
+      ...endpoints,
+      encodings: { ...endpoints.encodings, to: { x: { value: 10 }, y: { field: 'missing' } } },
+    };
+    expect(() => lower(plot([absentField]), { data })).toThrow();
+  });
+
+  it('缺值坐标不会掩盖另一端的无效引用', () => {
+    const mixed = {
+      type: 'path',
+      encodings: {
+        from: { x: { value: 0 }, y: { field: 'missingValue' } },
+        to: { mark: 'nodes', key: { value: 'a' } },
+      },
+    };
+    const data = rows.map(row => ({ ...row, missingValue: null }));
+    expect(paths(lower(plot([nodes, mixed]), { data }))).toHaveLength(0);
+    expect(() =>
+      lower(
+        plot([
+          nodes,
+          { ...mixed, encodings: { ...mixed.encodings, to: { mark: 'nodes', key: { value: 'unknown' } } } },
+        ]),
+        { data },
+      ),
+    ).toThrow(/unknown/);
+  });
+
   it('解析步骤目标并拒绝其前向声明，即使对于空数据也是如此', () => {
     const stepped = {
       type: 'path',
@@ -65,7 +111,7 @@ describe('标记目标连接', () => {
       { kind: 'move', to: { id: 'custom.a' } },
       { kind: 'bend', to: { id: 'custom.b' }, outAngle: 30, inAngle: 150 },
     ]);
-    expect(() => compileToScene({ version: 1, type: 'scene', children: [lowered] })).not.toThrow();
+    expect(() => compileTestResult({ version: 1, type: 'scene', children: [lowered] })).not.toThrow();
     expect(() => lower(plot([stepped, nodes]), { data: [] })).toThrow(/declared before/);
   });
   it('解析目标标识并编译实际几何图形', () => {
@@ -77,7 +123,7 @@ describe('标记目标连接', () => {
       { kind: 'line', to: { id: 'custom.b' } },
     ]);
     const warnings: Array<CompileWarning> = [];
-    const result = compileToScene(
+    const result = compileTestResult(
       { version: 1, type: 'scene', children: [lowered] },
       { onWarn: warning => warnings.push(warning) },
     );
@@ -116,7 +162,7 @@ describe('标记目标连接', () => {
     const inferred = { ...spec, scales: spec.scales.map(scale => ({ ...scale, domain: undefined })) };
     const compile = (data: typeof rows) =>
       flatten(
-        compileToScene({ type: 'scene', version: 1, children: [lower(inferred, { data })] }).scene.primitives,
+        compileTestResult({ type: 'scene', version: 1, children: [lower(inferred, { data })] }).scene.primitives,
       ).filter(item => item.type === 'path');
     const renamed = rows.map(row => ({
       ...row,
@@ -160,7 +206,7 @@ describe('标记目标连接', () => {
     };
     const compile = (data: typeof rows) =>
       flatten(
-        compileToScene({ type: 'scene', version: 1, children: [lower(plot([nodes, fixed]), { data })] }).scene
+        compileTestResult({ type: 'scene', version: 1, children: [lower(plot([nodes, fixed]), { data })] }).scene
           .primitives,
       ).filter(item => item.type === 'path');
     expect(compile(rows)).toEqual(compile([...rows].reverse()));
@@ -238,7 +284,10 @@ describe('标记目标连接', () => {
     };
     const lowered = lower(plot([intervals, connection]), { data: rows });
     const warnings: Array<CompileWarning> = [];
-    compileToScene({ type: 'scene', version: 1, children: [lowered] }, { onWarn: warning => warnings.push(warning) });
+    compileTestResult(
+      { type: 'scene', version: 1, children: [lowered] },
+      { onWarn: warning => warnings.push(warning) },
+    );
     expect(warnings).toEqual([]);
     expect(paths(lowered)).toHaveLength(2);
   });

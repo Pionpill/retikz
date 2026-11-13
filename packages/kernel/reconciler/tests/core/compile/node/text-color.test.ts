@@ -4,7 +4,7 @@ import { BuiltinCompileWarningCode } from '../../../../../core/src';
 import type { CompileWarning } from '../../../../../core/src/compile/shared';
 import type { TextPrimitive } from '../../../../../core/src/contract';
 import type { IRNode, IRNodeStyle, IRScene } from '../../../../../core/src/schemas';
-import { compileToScene } from '../../../../src/compile';
+import { compileTestResult } from '../../../helpers/compilation';
 import { flattenPrims } from '../../../helpers/flatten';
 
 const AUTO_CONTRAST = 'contrast' as const;
@@ -17,7 +17,7 @@ const sceneOf = (node: Partial<IRNode>): IRScene =>
   }) as unknown as IRScene;
 
 const textPrimitives = (ir: IRScene, warnings: Array<CompileWarning> = []): Array<TextPrimitive> =>
-  flattenPrims(compileToScene(ir, { onWarn: warning => warnings.push(warning) }).scene.primitives).filter(
+  flattenPrims(compileTestResult(ir, { onWarn: warning => warnings.push(warning) }).scene.primitives).filter(
     (primitive): primitive is TextPrimitive => primitive.type === 'text',
   );
 
@@ -199,7 +199,7 @@ describe('Node 自动对比消费者和警告', () => {
       },
       style: { fill: '#000000', textColor: AUTO_CONTRAST },
     });
-    const paths = flattenPrims(compileToScene(ir).scene.primitives).filter(primitive => primitive.type === 'path');
+    const paths = flattenPrims(compileTestResult(ir).scene.primitives).filter(primitive => primitive.type === 'path');
 
     expect(paths.some(path => path.stroke === '#ffffff')).toBe(true);
   });
@@ -245,7 +245,7 @@ describe('Node 自动对比级联和优先级', () => {
       label: [{ text: 'node-color' }, { text: 'label-color', textColor: 'blue' }],
       style: { fill: '#000000', textColor: AUTO_CONTRAST },
     });
-    const fills = flattenPrims(compileToScene(ir).scene.primitives)
+    const fills = flattenPrims(compileTestResult(ir).scene.primitives)
       .filter(primitive => primitive.type === 'text' || primitive.type === 'path')
       .map(primitive => primitive.fill);
 

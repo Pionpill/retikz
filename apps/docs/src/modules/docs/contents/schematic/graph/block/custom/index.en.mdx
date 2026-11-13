@@ -29,11 +29,11 @@ Use `CodeBlockPropsSchema.safeExtend(...)` to add your own `namespace`, `type`, 
 
 `createCodeBlockContribution(definition, options)` supplies the entity and its complete lower-level dependencies. All three entries reuse the same contribution:
 
-| Entry     | Injection                                                                                                              |
-| --------- | ---------------------------------------------------------------------------------------------------------------------- |
-| Direct IR | Pass the result of `resolveCoreProviderDependencies({ contributions: [contribution] })` to Reconciler `compileToScene` |
-| Vanilla   | Return `{ node: { ...source }, providerDependencies: contribution }` from `InputEmbedAdapter.lower`                    |
-| React     | A component marker with `isTier2Embeddable` and `inputEmbedAdapter` reuses the Vanilla adapter, as shown above         |
+| Entry     | Injection                                                                                                                           |
+| --------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Direct IR | Pass the result of `resolveCoreProviderDependencies({ contributions: [contribution] })` as Vanilla `compileToScene` options.compile |
+| Vanilla   | Return `{ node: { ...source }, providerDependencies: contribution }` from `InputEmbedAdapter.lower`                                 |
+| React     | A component marker with `isTier2Embeddable` and `inputEmbedAdapter` reuses the Vanilla adapter, as shown above                      |
 
 The adapter constructs a plain Source object; host properties such as React `key` are not persistent data. Custom entities need neither a separate entity allowlist nor manual registration of internal providers.
 

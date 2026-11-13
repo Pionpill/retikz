@@ -17,7 +17,7 @@ export type RegressionBasicPreviewValues = {
   groupBySpecies: boolean;
   pointSize: number;
   pointOpacity: number;
-  method: 'linear' | 'quadratic' | 'polynomial' | 'logarithmic' | 'exponential' | 'power';
+  method: 'auto' | 'linear' | 'quadratic' | 'polynomial' | 'logarithmic' | 'exponential' | 'power';
   order: number;
   sampleCount: number;
   trendStrokeColor: string;

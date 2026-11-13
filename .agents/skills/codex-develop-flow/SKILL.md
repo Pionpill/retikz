@@ -1,6 +1,6 @@
 ---
 name: codex-develop-flow
-description: Use when the active main model is gpt-6-astra or gpt-6-sol and an approved large task, or an approved medium task with separable implementation work, requires authorized agent roles.
+description: Use when the active main model is gpt-6-astra or gpt-6-sol and an approved large task, or an approved medium task with separable implementation or specialist review work, requires authorized agent roles.
 ---
 
 # Codex Develop Flow
@@ -14,11 +14,11 @@ description: Use when the active main model is gpt-6-astra or gpt-6-sol and an a
 同时满足以下条件才加载：
 
 - 主模型明确为 `gpt-6-astra` 或 `gpt-6-sol`
-- 大型任务的执行计划已确认，或部分中型任务包含可分离的实现工作
+- 大型任务的执行计划已确认，或中型任务包含可分离的实现或专项评审工作
 - 已确认计划明确授权 subagent、角色、数量、review 时点与最大循环次数
 - 具体 owning flow 已决定某个阶段需要 implementer 或 reviewer
 
-小型任务、不改变功能的中小型任务、普通文档 / bugfix / 命名调整，以及计划未授权 subagent 的任务不使用本 skill。触发本 skill 不新增文件修改、subagent、review、commit、push、tag 或 publish 权限。
+小型任务及计划未授权 subagent 的任务不使用本 skill；中型等价重构或文档任务可因获批专项评审加载，不因此升级为大型任务。触发本 skill 不新增文件修改、subagent、review、commit、push、tag 或 publish 权限。
 
 主模型选择只按根 AGENTS；这里不维护第二份难度矩阵。
 
@@ -30,7 +30,9 @@ description: Use when the active main model is gpt-6-astra or gpt-6-sol and an a
 - 需要有限调研、诊断或较多判断的中型任务主控：优先 `gpt-6-sol`；小型任务仍由主 agent 直接执行，不启用本 skill
 - 输入输出明确、可独立验收的实现：`gpt-6-luna`；调度时显式选择该模型，不依赖自定义固定模型角色
 - 跨层疑难 bug、关键算法、难以拆分的核心链路：优先由 Astra 主控直接实现，或按计划交给 `gpt-6-astra`
-- 常规单 reviewer：边界明确时优先 `gpt-6-luna`；需要跨层诊断或较多判断时使用独立的 `gpt-6-sol` 实例，或计划指定的其他实际获批模型
+- 常规整体 reviewer：边界明确时优先 `gpt-6-luna`；需要跨层诊断或较多判断时使用独立的 `gpt-6-sol` 实例，或计划指定的其他实际获批模型
+- 代码范式 reviewer：中大型计划默认纳入，获批后由独立 `gpt-6-sol` 实例执行，职责按 [代码范式评审](../flow-development/references/review-code-paradigm.md)
+- 性能 reviewer：按需纳入计划，获批后由独立 `gpt-6-sol` 实例执行，诊断与测量权限按 [性能评审](../flow-development/references/review-performance.md)
 - 最终 `cross-review`：Astra 主控优先 fresh Sol + Luna；Sol 主控优先 fresh Astra + Luna，确保 reviewer 均不同于主模型
 
 以上 agent 分工与主模型选择是两层规则。大型任务仍保持 Astra / Sol 主控，Sol / Luna 按已确认计划承担执行或评审；主模型匹配规则不替换、不削弱这套大型任务流程。
@@ -66,7 +68,7 @@ Sol 主控遇到复杂争议或持续返工时，只在计划已授权的职责�
 
 本 skill 不创建 review gate，也不规定 review 轮数：
 
-- owning flow 要求常规单 subagent review 时，调度计划中已授权的一个 reviewer；修改后复用同一 reviewer 循环
+- owning flow 要求整体或专项 review 时，只调度各角色已授权的 reviewer；默认串行且只做一轮；修改后由主 agent 自审和验证，不调度 reviewer 复核，遵循 [常规评审](../flow-development/references/review-cycle.md)
 - owning flow 在大型任务最终阶段调用已授权的 `cross-review`，或用户明确要求交叉验证时，按主模型优先使用上述 fresh 双模型组合
 - 实现 worker 不自动成为 reviewer；是否允许由已确认计划决定
 

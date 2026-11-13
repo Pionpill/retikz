@@ -1,21 +1,25 @@
-import type * as RetikzCore from '@retikz/core';
+import type { AnyCompositeDefinition } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import type { IRPlot } from '@retikz/plot';
 import { definePlotTheme } from '@retikz/plot';
+import type * as RetikzReconciler from '@retikz/reconciler';
+import type { CompileOptions, SceneReconcilerOptions } from '@retikz/reconciler';
 import type * as RetikzVanilla from '@retikz/vanilla';
 import type { InputEmbedContext } from '@retikz/vanilla';
 import { describe, expect, it, vi } from 'vitest';
 
-const compileCalls = vi.hoisted(() => [] as Array<ReadonlyArray<unknown>>);
+const compileCalls: Array<CompileOptions> = vi.hoisted(() => []);
 
-vi.mock('@retikz/core', async importOriginal => {
-  const actual = await importOriginal<typeof RetikzCore>();
+vi.mock('@retikz/reconciler', async importOriginal => {
+  const actual = await importOriginal<typeof RetikzReconciler>();
   return {
     ...actual,
-    compileToScene: vi.fn((...args: Array<unknown>) => {
-      compileCalls.push(args);
-      return { scene: { version: 1, type: 'scene', children: [] } };
-    }),
+    SceneReconciler: class extends actual.SceneReconciler<AnyCompositeDefinition> {
+      constructor(options: CompileOptions = {}, execution: SceneReconcilerOptions = {}) {
+        super(options, execution);
+        compileCalls.push(options);
+      }
+    },
   };
 });
 
@@ -61,7 +65,7 @@ describe('Plot Vanilla 运行时样式选项', () => {
       '<svg />',
     );
 
-    const options = compileCalls.at(-1)?.[1] as { themeDefinitions?: Array<unknown> } | undefined;
+    const options = compileCalls.at(-1);
 
     expect(options?.themeDefinitions).toEqual([]);
   });

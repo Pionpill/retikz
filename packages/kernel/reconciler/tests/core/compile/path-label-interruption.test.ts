@@ -2,17 +2,17 @@ import { describe, expect, it } from 'vitest';
 
 import type { GroupPrimitive, PathPrimitive, ScenePrimitive, TextMeasurer, TextPrimitive } from '../../../../core/src';
 import type { IRPath, IRScene } from '../../../../core/src/schemas';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 import { flattenPrims } from '../../helpers/flatten';
 
 const STROKE = '#13579b';
 
 const measuredLabel: TextMeasurer = () => ({ width: 20, height: 10 });
 
-type CoreCompileOptions = NonNullable<Parameters<typeof compileToScene>[1]>;
+type CoreCompileOptions = NonNullable<Parameters<typeof compileTestResult>[1]>;
 
 const compile = (ir: IRScene, options: CoreCompileOptions = {}) =>
-  compileToScene(ir, { ...options, measureText: measuredLabel }).scene;
+  compileTestResult(ir, { ...options, measureText: measuredLabel }).scene;
 
 const horizontalHostLabelPath = (label: IRPath['label']): IRScene => ({
   version: 1,
@@ -229,7 +229,7 @@ describe('行程 Path 标签中断', () => {
           },
         ],
       };
-      return compileToScene(ir, {
+      return compileTestResult(ir, {
         measureText: value => ({ width: value.length * 4, height: 10, ascent: 8, descent: 2 }),
       }).scene;
     };

@@ -1,9 +1,10 @@
 import type { PerformanceTraceSink } from '@retikz/foundation';
-import { createFullSceneRuntimeSnapshot } from '@retikz/reconciler';
-import type { ReconcilerCommitTarget, ReconcilerResult, ScenePatch } from '@retikz/reconciler';
+import type { ReconcilerCommitTarget, ReconcilerResult } from '@retikz/reconciler';
 
 import type { AnimationControls } from '../animation';
 import { isRetikzRenderError, RetikzRenderError, RetikzRenderErrorCode } from '../error';
+import { createFullSceneRuntimeSnapshot } from '../scene';
+import type { ScenePatch } from '../scene';
 import { captureRuntimeConfig } from './config';
 import type { InputRenderRuntimeConfig } from './config';
 import type { RenderFrameSnapshot, StaticRenderFrame } from './frame';
@@ -122,7 +123,7 @@ export const createRetainedRenderTarget = (input: RetainedRenderTargetOptions): 
           const expected = options.expectedInitialFrame;
           const normalized = {
             ...expected.primary,
-            resources: expected.primary.resources ?? [],
+            resources: expected.primary.resources ?? { paints: [], clips: [] },
             animations: expected.primary.animations ?? [],
           };
           if (

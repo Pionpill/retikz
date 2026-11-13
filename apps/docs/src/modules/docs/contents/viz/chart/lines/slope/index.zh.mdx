@@ -1,0 +1,625 @@
+---
+title: 坡度图
+description: 比较同一实体在两个阶段的数值变化，支持端点、实体标签。
+---
+
+坡度图用一条线连接同一实体在两个阶段的值。向上表示增加，向下表示减少；两端使用相同的数值尺度。每行数据就是一组配对，适合前后对比。多个阶段的趋势请使用 [折线图](/viz/chart/lines/line)。
+
+## 接入方式
+
+完成 [安装与首次渲染](/viz/chart/get-start) 后，从各 Chart 包的 `/line` 子入口导入。以下四种方式使用同一数据，默认显示端点与标签，线宽为 2。
+
+<ComponentPreview
+  files={['slope-minimal', 'slope-minimal.preview.tsx', 'slope-basic.data.ts']}
+  defaultSourceFile="slope-minimal.preview.tsx"
+  controls={{ name: 'slope-minimal' }}
+  mode="showcase"
+  size="xl"
+  hideCode
+  responsive
+/>
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+`SlopeChart` 的专属子组件如下。映射是基础入口，属性和追加图元按需声明。
+
+```text
+SlopeChart
+├── SlopeEncodings
+├── SlopeProperties
+└── SlopeMark
+```
+
+```tsx
+import { SlopeChart, SlopeEncodings } from '@retikz/chart-react/line';
+import { slopeData } from './slope-basic.data';
+
+export const Example = () => (
+  <SlopeChart rows={slopeData} layout={{ width: 640, height: 320 }}>
+    <SlopeEncodings entity="entity" start="previous" end="current" />
+  </SlopeChart>
+);
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { resolveCoreProviderDependencies } from '@retikz/core';
+import { SlopeChartSchema, createSlopeChartProviderContribution } from '@retikz/chart/line';
+import { createPlotProviderContribution } from '@retikz/plot';
+import { pathClipProvider } from '@retikz/extension';
+import { slopeData } from './slope-basic.data';
+import { Layout } from '@retikz/react';
+
+const chart = SlopeChartSchema.parse({
+  namespace: 'chart',
+  type: 'line',
+  data: { reference: 'chart.data' },
+  layout: { width: 640, height: 320 },
+  recipe: { chartType: 'slope', encodings: { entity: 'entity', start: 'previous', end: 'current' } },
+});
+const ir: IRScene = { type: 'scene', version: 1, children: [chart] };
+const definitions = resolveCoreProviderDependencies({
+  contributions: [
+    createSlopeChartProviderContribution(),
+    createPlotProviderContribution({ 'chart.data': slopeData }),
+    { roots: [pathClipProvider.key], providers: [pathClipProvider] },
+  ],
+});
+
+export const Example = () => <Layout ir={ir} extensions={definitions} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import { renderChart } from '@retikz/chart-vanilla';
+import { slopeChart, slopeChartInputEmbedAdapter } from '@retikz/chart-vanilla/line';
+import { slopeData } from './slope-basic.data';
+
+const chart = slopeChart({
+  data: slopeData,
+  layout: { width: 640, height: 320 },
+  encodings: { entity: 'entity', start: 'previous', end: 'current' },
+});
+export const svg = renderChart(chart, { adapters: [slopeChartInputEmbedAdapter] }).svg;
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { resolveCoreProviderDependencies } from '@retikz/core';
+import { SlopeChartSchema, createSlopeChartProviderContribution } from '@retikz/chart/line';
+import { createPlotProviderContribution } from '@retikz/plot';
+import { pathClipProvider } from '@retikz/extension';
+import { slopeData } from './slope-basic.data';
+import { compileToScene } from '@retikz/reconciler';
+import { renderToSvgString } from '@retikz/vanilla';
+
+const chart = SlopeChartSchema.parse({
+  namespace: 'chart',
+  type: 'line',
+  data: { reference: 'chart.data' },
+  layout: { width: 640, height: 320 },
+  recipe: { chartType: 'slope', encodings: { entity: 'entity', start: 'previous', end: 'current' } },
+});
+const ir: IRScene = { type: 'scene', version: 1, children: [chart] };
+const definitions = resolveCoreProviderDependencies({
+  contributions: [
+    createSlopeChartProviderContribution(),
+    createPlotProviderContribution({ 'chart.data': slopeData }),
+    { roots: [pathClipProvider.key], providers: [pathClipProvider] },
+  ],
+});
+
+export const svg = renderToSvgString(compileToScene(ir, definitions).scene);
+```
+
+</DocTab>
+</DocTabs>
+
+## 基础用法
+
+### 坡度映射
+
+每行同时提供实体名称、起点值和终点值。调整起终字段可以交换比较方向；调整行顺序不会改变配对。
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+<SlopeEncodings entity="entity" start="previous" end="current" />
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+encodings: { entity: 'entity', start: 'previous', end: 'current' }
+```
+
+</DocTab>
+<DocTab value="direct-ir" label="IR">
+
+```json
+{ "recipe": { "encodings": { "entity": "entity", "start": "previous", "end": "current" } } }
+```
+
+</DocTab>
+</DocTabs>
+
+| 属性名          | 类型             | 说明                                           |
+| --------------- | ---------------- | ---------------------------------------------- |
+| `entity`        | 字段名、直接映射 | 必填，名称与默认分类颜色                       |
+| `start` / `end` | 字段名、直接映射 | 必填，两个阶段的值；可指定同一尺度，不隐式聚合 |
+| `color`         | 字段名、直接映射 | 可选分类颜色；省略使用 entity                  |
+
+A、B、C、E、F、G、H、I 共八个实体，各占一行，previous 与 current 是前后两次观测。
+
+- `entity`：绑定 entity，区分八条连线。
+- `start` / `end`：分别绑定 previous 与 current，两端共用数值轴。
+
+打开“交换阶段”观察比较方向；“打乱行顺序”只改变绘制顺序，不改变两端的对应关系。
+
+<ComponentPreview
+  mode="showcase"
+  size="xl"
+  responsive
+  files={['slope-mapping', 'slope-mapping.preview.tsx', 'slope-basic.data.ts']}
+  controls={{ name: 'slope-mapping' }}
+  controlPanelDefaultOpen={false}
+  hideCode
+  defaultSourceFile="slope-mapping.preview.tsx"
+/>
+
+### 坡度属性
+
+默认 y 尺度通过 `domainPadding: 32` 在上下两端各留 32 个绘图单位，为端点标签提供空间。显式声明数值尺度时使用该尺度自己的留白配置；设置 `domainPadding: 0` 可关闭。
+
+点、标签和路径可分别设置。隐藏点后，实体标签仍可保留。
+
+每端只显示一个标签，内容固定取 `entity`。`label: false` 关闭，`true` 或配置对象开启；省略 `position` 时起点向左、终点向右，显式方向同时作用于两端。不提供标签数组或独立端点配置。
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+<SlopeProperties point={{ size: 4 }} label={{ position: 'top', distance: 8 }} path={{ strokeWidth: 2 }} />
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+properties: { point: { size: 4 }, label: { position: 'top', distance: 8 }, path: { strokeWidth: 2 } }
+```
+
+</DocTab>
+<DocTab value="direct-ir" label="IR">
+
+```json
+{
+  "recipe": {
+    "properties": {
+      "point": { "size": 4 },
+      "label": { "position": "top", "distance": 8 },
+      "path": { "strokeWidth": 2 }
+    }
+  }
+}
+```
+
+</DocTab>
+</DocTabs>
+
+| 属性名   | 类型               | 说明                                                                    |
+| -------- | ------------------ | ----------------------------------------------------------------------- |
+| `stages` | 两个字符串         | 自定义左右阶段名称，必须不同；省略使用字段名                            |
+| `point`  | boolean 或样式对象 | 默认 true；对象设置半径、形状、填色、描边与透明度                       |
+| `label`  | boolean 或配置对象 | 默认 true；每端一个 entity 标签，支持方向、距离、字体、颜色等单标签配置 |
+| `path`   | 描边样式对象       | 默认线宽 2，只绘制两阶段直线                                            |
+
+本例保留八个实体的原始配对，集中比较表现设置。
+
+- `point.size`：初始为 4，设为 0 可观察零半径。
+- `label`：默认显示 entity；方向初始向外，距离为 8，可调整方向与距离。
+- `path.strokeWidth`：初始为 2。
+
+关闭观测点时标签仍保留；切换标签方向或调整距离，观察两端同时变化，重置后恢复初始配置。
+
+<ComponentPreview
+  mode="showcase"
+  size="xl"
+  responsive
+  files={['slope-basic', 'slope-basic.preview.tsx', 'slope-basic.data.ts']}
+  controls={{ name: 'slope-basic' }}
+  controlPanelDefaultOpen={false}
+  hideCode
+  defaultSourceFile="slope-basic.preview.tsx"
+/>
+
+### 坡度图元
+
+图元可以追加一组对照线，也可以替换内建的线、点和标签组合。
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+<SlopeMark
+  properties={{ path: { stroke: '#a855f7', strokeWidth: 2, dashPattern: [5, 4] }, point: false, label: false }}
+/>
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+marks: [
+  slopeMark({
+    properties: { path: { stroke: '#a855f7', strokeWidth: 2, dashPattern: [5, 4] }, point: false, label: false },
+  }),
+];
+```
+
+</DocTab>
+<DocTab value="direct-ir" label="IR">
+
+```json
+{
+  "recipe": {
+    "marks": [
+      {
+        "kind": "slope",
+        "properties": {
+          "path": { "stroke": "#a855f7", "strokeWidth": 2, "dashPattern": [5, 4] },
+          "point": false,
+          "label": false
+        }
+      }
+    ]
+  }
+}
+```
+
+</DocTab>
+</DocTabs>
+
+| 属性名       | 类型         | 说明                                           |
+| ------------ | ------------ | ---------------------------------------------- |
+| `override`   | boolean      | 默认追加；true 替换整个内建组                  |
+| `encodings`  | 直接字段覆盖 | 可覆盖 start、end，不改变实体或阶段名称        |
+| `properties` | 稀疏成员属性 | path、point、label 按字段继承；false 与 0 保留 |
+
+紫色虚线使用同一组配对值，与内建实线叠加。
+
+- `path`：紫色、线宽 2、虚线节奏 [5, 4]。
+- `point` / `label`：追加组默认关闭，避免重复标签。
+- `override`：默认 false。
+
+打开“替换内建图元”，实线、原有点和标签一起被替换；打开“显示追加点”可显示新组的端点。
+
+<ComponentPreview
+  mode="showcase"
+  size="xl"
+  responsive
+  files={['slope-mark', 'slope-mark.preview.tsx', 'slope-basic.data.ts']}
+  controls={{ name: 'slope-mark' }}
+  controlPanelDefaultOpen={false}
+  hideCode
+  defaultSourceFile="slope-mark.preview.tsx"
+/>
+
+## 扩展用法
+
+以下 encodings、properties 均位于 IR 的 recipe 中。
+
+### 缺失端点
+
+一个阶段没有观测时，不补零、不画该行连线；另一阶段的有效点与标签保留。
+
+| 分组         | 属性名          | 类型    | 说明                 |
+| ------------ | --------------- | ------- | -------------------- |
+| `encodings`  | `start` / `end` | 字段名  | 从同一行读取两个阶段 |
+| `properties` | `label`         | boolean | 控制有效端点的标签   |
+
+B 的 previous 初始为空，右侧仍保留 current=62。关闭“移除 B 的起点”恢复完整连线。
+
+<ComponentPreview
+  mode="showcase"
+  size="xl"
+  responsive
+  files={['slope-gaps', 'slope-gaps.preview.tsx', 'slope-basic.data.ts']}
+  controls={{ name: 'slope-gaps' }}
+  controlPanelDefaultOpen={false}
+  hideCode
+  defaultSourceFile="slope-gaps.preview.tsx"
+/>
+
+### 分面比较
+
+把两个区域分开，减少连线交叉。分面不改变每行的配对值。
+
+| 分组        | 属性名   | 类型   | 说明                   |
+| ----------- | -------- | ------ | ---------------------- |
+| `encodings` | `row`    | 字段名 | 按 region 分行展示     |
+|             | `entity` | 字段名 | 保留各自实体名称与颜色 |
+
+I、II 两组数据上下排列，窄屏也保持完整的阶段宽度。关闭分面开关后比较叠加结果。
+
+<ComponentPreview
+  mode="showcase"
+  size="xl"
+  responsive
+  files={['slope-facet', 'slope-facet.preview.tsx', 'slope-basic.data.ts']}
+  controls={{ name: 'slope-facet' }}
+  controlPanelDefaultOpen={false}
+  hideCode
+  defaultSourceFile="slope-facet.preview.tsx"
+/>
+
+## 错误与限制
+
+- 输入为配对宽表；长表需先整理。同名多行仍是独立比较单元，不自动去重或聚合。
+- 阶段名称必须不同；两端显式尺度必须一致，不能使用两个独立数值轴。
+- 缺失观测不连线，但缺失字段声明、错误尺度引用、非法常量和坐标投影错误仍会报错。
+- 标签不自动避让；密集数据可筛选、调整字体或分面。
+
+## 实现原理
+
+<ComponentAlert type="tip" title="选读" description="本节解释内部实现，仅使用图表时可跳过，直接查阅后面的 API 参考。" />
+
+### 图形构建
+
+| 分组 | `@retikz/chart`      | `@retikz/plot`                  | 描述                             |
+| ---- | -------------------- | ------------------------------- | -------------------------------- |
+| 映射 | start、end           | Path encodings.from/to          | 每行生成一条完整端点路径         |
+|      | entity、color        | color、label                    | 实体名与分类颜色不决定配对       |
+| 属性 | stages               | point scale domain              | 固定左右两个阶段                 |
+|      | point、label         | Point properties、label         | 点隐藏时仍可用零尺寸宿主承载标签 |
+| 图元 | SlopeChartMarkSchema | PathMarkSchema、PointMarkSchema | 一组包含连线与两个独立端点       |
+
+两端位置都使用同一个 y 尺度。Plot 在字段值无法映射时跳过该行路径；独立端点仍消费原始数据，因此有效一端不会随连线消失。
+
+<SourceLinks
+  sources={[
+    { path: 'packages/viz/chart/src/line/slope/mark.ts', label: '坡度图元组合' },
+    { path: 'packages/viz/chart/src/line/slope/recipe.ts', label: '共享尺度与阶段接线' },
+  ]}
+/>
+
+## API 参考
+
+从 `@retikz/chart/line` 导出。React 的 SlopeEncodings / SlopeProperties / SlopeMark 对应 Vanilla 的 encodings / properties / marks，以及 IR 的 recipe 同名字段。
+
+### 坡度配置
+
+#### [SlopeChartSchema](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/slope/schema.ts) / [IRSlopeChart](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/slope/schema.ts)
+
+<DocTabs defaultValue="schema">
+<DocTab value="schema" label="Schema">
+
+<ZodSchema
+  name="SlopeChartSchema"
+  shallow
+  descriptions={{
+    namespace: '固定为 chart',
+    type: '固定为 line',
+    id: '图表标识',
+    background: '图表背景',
+    presentation: '标题、副标题、注释与来源',
+    defaultChart: '图表默认片段',
+    dataExecution: '数据执行配置',
+    data: '数据集引用与字段模型',
+    layout: '布局尺寸与间距',
+    coordinate: '坐标系选择',
+    recipe: '坡度配方',
+    plotExtension: '显式 Plot 扩展',
+  }}
+/>
+
+</DocTab>
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRSlopeChart = ZodInfer<typeof SlopeChartSchema>;
+```
+
+</DocTab>
+</DocTabs>
+#### [SlopeChartRecipeSchema](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/slope/schema.ts)
+
+<ZodSchema
+  name="SlopeChartRecipeSchema"
+  shallow
+  descriptions={{
+    chartType: '固定为 slope',
+    encodings: '字段映射',
+    properties: '常量属性',
+    guides: '坐标轴、网格与图例开关',
+    marks: '追加或替换的 Slope 图元',
+  }}
+/>
+
+### 坡度映射
+
+#### [SlopeChartEncodingsSchema](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/slope/encoding-schema.ts) / [IRSlopeChartEncodings](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/slope/schema.ts)
+
+<DocTabs defaultValue="schema">
+<DocTab value="schema" label="Schema">
+
+<ZodSchema
+  name="SlopeChartEncodingsSchema"
+  shallow
+  descriptions={{
+    entity: '实体名称字段，不参与跨行配对',
+    start: '起点数值字段，可指定共享 y 尺度',
+    end: '终点数值字段，可指定共享 y 尺度',
+    color: '分类颜色字段；省略使用 entity',
+    row: '行分面维度',
+    column: '列分面维度',
+    facet: '分面配置，需要 row 或 column',
+  }}
+/>
+
+</DocTab>
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRSlopeChartEncodings = ZodInfer<typeof SlopeChartEncodingsSchema>;
+```
+
+</DocTab>
+</DocTabs>
+
+### 坡度属性
+
+默认 y 尺度通过 `domainPadding: 32` 在上下两端各留 32 个绘图单位，为端点标签提供空间。显式声明数值尺度时使用该尺度自己的留白配置；设置 `domainPadding: 0` 可关闭。
+
+#### [SlopeChartPropertiesSchema](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/slope/schema.ts) / [IRSlopeChartProperties](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/slope/schema.ts)
+
+<DocTabs defaultValue="schema">
+<DocTab value="schema" label="Schema">
+
+<ZodSchema
+  name="SlopeChartPropertiesSchema"
+  shallow
+  descriptions={{
+    stages: '左右阶段名称，必须不同；默认使用字段名',
+    path: '直线描边样式，默认线宽 2',
+    point: '端点开关或样式，默认 true',
+    label: '实体标签开关或配置，默认 true',
+  }}
+/>
+
+</DocTab>
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRSlopeChartProperties = ZodInfer<typeof SlopeChartPropertiesSchema>;
+```
+
+</DocTab>
+</DocTabs>
+#### [SlopePointPropertiesSchema](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/slope/schema.ts) / [IRSlopePointProperties](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/slope/schema.ts)
+
+<DocTabs defaultValue="schema">
+<DocTab value="schema" label="Schema">
+
+<ZodSchema
+  name="SlopePointPropertiesSchema"
+  shallow
+  descriptions={{
+    size: '点半径，支持 0',
+    shape: '点形状',
+    fill: '填色',
+    stroke: '描边颜色',
+    strokeWidth: '描边宽度',
+    opacity: '透明度',
+  }}
+/>
+
+</DocTab>
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRSlopePointProperties = ZodInfer<typeof SlopePointPropertiesSchema>;
+```
+
+</DocTab>
+</DocTabs>
+#### [SlopePathPropertiesSchema](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/slope/schema.ts)
+
+<ZodSchema
+  name="SlopePathPropertiesSchema"
+  shallow
+  descriptions={{
+    stroke: '线条颜色',
+    strokeWidth: '线宽，默认 2',
+    opacity: '透明度',
+    lineCap: '线帽',
+    lineJoin: '连接处样式',
+    dashPattern: '虚线节奏',
+    shadow: '阴影',
+    blendMode: '混合模式',
+  }}
+/>
+
+#### [SlopeLabelPropertiesSchema](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/slope/schema.ts) / [IRSlopeLabelProperties](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/slope/schema.ts)
+
+<DocTabs defaultValue="schema">
+<DocTab value="schema" label="Schema">
+
+<ZodSchema
+  name="SlopeLabelPropertiesSchema"
+  shallow
+  descriptions={{
+    position: '标签方向；省略时起点向左、终点向右，显式配置同时作用于两端',
+    placement: '标签置于宿主内部或外部',
+    rotate: '标签旋转',
+    keepUpright: '保持文字正向',
+    align: '切向对齐',
+    pin: '外部标签引线',
+    opacity: '标签透明度',
+    font: '字体样式',
+    textColor: '文字颜色',
+    distance: '标签距离',
+    displayFormat: 'entity 的显示格式',
+  }}
+/>
+
+</DocTab>
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRSlopeLabelProperties = ZodInfer<typeof SlopeLabelPropertiesSchema>;
+```
+
+</DocTab>
+</DocTabs>
+
+### 坡度图元
+
+#### [SlopeChartMarkSchema](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/slope/schema.ts) / [IRSlopeMark](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/slope/schema.ts)
+
+<DocTabs defaultValue="schema">
+<DocTab value="schema" label="Schema">
+
+<ZodSchema
+  name="SlopeChartMarkSchema"
+  shallow
+  descriptions={{
+    kind: '固定为 slope',
+    override: '替换整个内建组，默认追加',
+    encodings: '起终字段覆盖',
+    properties: '稀疏属性覆盖；省略继承，false 关闭，true 保留继承样式',
+  }}
+/>
+
+</DocTab>
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRSlopeMark = ZodInfer<typeof SlopeChartMarkSchema>;
+```
+
+</DocTab>
+</DocTabs>
+#### [SlopeMarkEncodingsSchema](https://github.com/Pionpill/retikz/blob/next/packages/viz/chart/src/line/slope/schema.ts)
+
+<ZodSchema name="SlopeMarkEncodingsSchema" shallow descriptions={{ start: '起点字段覆盖', end: '终点字段覆盖' }} />
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: 'Line', description: '多个阶段的序列变化', url: '/viz/chart/lines/line' },
+    { title: 'paths', description: '选择合适的线图', url: '/viz/chart/lines' },
+  ]}
+/>

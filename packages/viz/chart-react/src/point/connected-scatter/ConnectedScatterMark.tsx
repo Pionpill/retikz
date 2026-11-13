@@ -1,7 +1,7 @@
 import type { IRConnectedScatterChart } from '@retikz/chart/point';
 import type { FC } from 'react';
 
-import type { ChartMarkOf } from '../shared';
+import type { ChartMarkOf } from '../../authoring';
 
 /** Connected Scatter Chart mark 的精确 Source payload */
 export type ConnectedScatterChartMark = Extract<ChartMarkOf<IRConnectedScatterChart>, { kind: 'connected-scatter' }>;

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { ArrowDefinition, IRArrowStyle, IRPathStyle, IRStep } from '../../../../../core/src';
-import { compileToScene } from '../../../../src/compile';
+import { compileTestResult } from '../../../helpers/compilation';
 import { findPathPrim, pathIr } from './helpers';
 
 const steps: Array<IRStep> = [
@@ -10,8 +10,9 @@ const steps: Array<IRStep> = [
 ];
 
 const compileArrow = (mark: IRArrowStyle, style?: IRPathStyle, arrows?: Array<ArrowDefinition>) =>
-  findPathPrim(compileToScene(pathIr(steps, { style: style ?? {}, arrow: { end: mark } }), { arrows }).scene.primitives)
-    .arrowEnd!.marker;
+  findPathPrim(
+    compileTestResult(pathIr(steps, { style: style ?? {}, arrow: { end: mark } }), { arrows }).scene.primitives,
+  ).arrowEnd!.marker;
 
 describe('箭头有效样式', () => {
   it.each(['normal', 'stealth', 'circle'])('实心 %s 保持无轮廓默认并消费显式描边', shape => {
@@ -23,7 +24,7 @@ describe('箭头有效样式', () => {
   });
 
   it('Scope 主色覆盖公共与端点颜色，保留端点具体 paint', () => {
-    const scene = compileToScene({
+    const scene = compileTestResult({
       type: 'scene',
       version: 1,
       children: [

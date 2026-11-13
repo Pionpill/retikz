@@ -1,6 +1,5 @@
 import type { IRNode, IRPath, IRScope } from '@retikz/core';
 import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { lowerPlots } from '../../src/pipeline';
@@ -14,6 +13,7 @@ import {
 } from '../../src/resolve/theme';
 import type { IRPlot, IRPlotAxisGuide } from '../../src/schemas';
 import { PlotSchema } from '../../src/schemas';
+import { compileTestResult } from '../helpers/compilation';
 import { measureLabel } from '../helpers/text-measurement';
 
 const ROWS = [
@@ -220,7 +220,7 @@ describe('Plot Source 默认并引导下降', () => {
   });
 
   it('Scene 和 Scope 有效主题达到 Plot 调色板默认值', () => {
-    const scene = compileToScene(
+    const scene = compileTestResult(
       {
         version: 1,
         type: 'scene',

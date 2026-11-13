@@ -45,6 +45,8 @@ export type BenchmarkMeasurement = {
   mode: 'normal' | 'reference';
   sampling: { time: number; iterations: number; warmupTime: number; warmupIterations: number; warmup?: boolean };
   calls: number;
+  /** 计时外独立核验的工作量，不是计时样本或缓存命中率 */
+  observations?: Readonly<Record<string, number>>;
 };
 
 declare module 'vitest' {
@@ -111,4 +113,6 @@ export type BenchmarkReporterOptions = {
   sourceDirectory: string;
   /** 影响构建与加载的配置文件 */
   configFiles: ReadonlyArray<string>;
+  /** 包专属对比表与测量说明，追加在同一份报告中 */
+  appendix?: (report: BenchmarkReport) => string;
 };

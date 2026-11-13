@@ -97,7 +97,9 @@ export const PathDecorationSchema = strictObject({
     .describe('Host label attached to this path-like relation.'),
   marks: array(PathMarkPlacementSchema)
     .optional()
-    .describe('Marks placed along the path at normalized positions; direction follows the path tangent.'),
+    .describe(
+      'Marks placed by step parameters or cumulative length on original or rounded geometry; direction follows the path tangent.',
+    ),
 }).describe('Path decoration fields for host labels and along-path marks.');
 
 /** 校验开放路径定义的判别字段和能力选项 */

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { GroupPrimitive, ScenePrimitive, TextPrimitive } from '../../../../core/src/contract';
 import type { IRScene } from '../../../../core/src/schemas';
 import { NodeLabelSchema } from '../../../../core/src/schemas';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 import { flattenPrims } from '../../helpers/flatten';
 
 // fallback measurer 不提供 ascent / descent，Node label 规范化为上下对称视觉盒
@@ -44,14 +44,14 @@ describe('Node 标签旋转', () => {
   it('rotate 缺省 → label 不包 rotate group', () => {
     const ir = scene([{ type: 'node', position: [0, 0], text: 'A', label: { text: 'L' } }]);
 
-    expect(findLabelRotateGroup(compileToScene(ir, silent).scene.primitives, 'L')).toBeUndefined();
+    expect(findLabelRotateGroup(compileTestResult(ir, silent).scene.primitives, 'L')).toBeUndefined();
   });
 
   it('rotate 数字 → label 包绕自身中心的 rotate group', () => {
     const ir = scene([
       { type: 'node', position: [0, 0], text: 'A', label: { text: 'L', position: 'right', rotate: 30 } },
     ]);
-    const g = findLabelRotateGroup(compileToScene(ir, silent).scene.primitives, 'L')!;
+    const g = findLabelRotateGroup(compileTestResult(ir, silent).scene.primitives, 'L')!;
     const rot = g.transforms!.find(t => t.kind === 'rotate')!;
 
     expect(rot.degrees).toBe(30);
@@ -67,7 +67,7 @@ describe('Node 标签旋转', () => {
     const ir = scene([
       { type: 'node', position: [0, 0], text: 'A', label: { text: 'L', position: 'bottom', rotate: 'radial' } },
     ]);
-    const g = findLabelRotateGroup(compileToScene(ir, silent).scene.primitives, 'L')!;
+    const g = findLabelRotateGroup(compileTestResult(ir, silent).scene.primitives, 'L')!;
     const rot = g.transforms!.find(t => t.kind === 'rotate')!;
 
     expect(rot.degrees).toBeCloseTo(90);
@@ -79,7 +79,7 @@ describe('Node 标签旋转', () => {
     ]);
 
     // radial 指向 +x 即 0°，自旋是 no-op，不产生 rotate group
-    expect(findLabelRotateGroup(compileToScene(ir, silent).scene.primitives, 'L')).toBeUndefined();
+    expect(findLabelRotateGroup(compileTestResult(ir, silent).scene.primitives, 'L')).toBeUndefined();
   });
 
   it('radial：boundary fraction 使用所选边的外法向，不使用 node center → label center', () => {
@@ -95,7 +95,7 @@ describe('Node 标签旋转', () => {
         },
       },
     ]);
-    const g = findLabelRotateGroup(compileToScene(ir, silent).scene.primitives, 'L')!;
+    const g = findLabelRotateGroup(compileTestResult(ir, silent).scene.primitives, 'L')!;
     const rot = g.transforms!.find(t => t.kind === 'rotate')!;
 
     expect(rot.degrees).toBeCloseTo(-90);
@@ -105,7 +105,7 @@ describe('Node 标签旋转', () => {
     const ir = scene([
       { type: 'node', position: [0, 0], text: 'A', label: { text: 'L', position: 'right', rotate: 'tangent' } },
     ]);
-    const g = findLabelRotateGroup(compileToScene(ir, silent).scene.primitives, 'L')!;
+    const g = findLabelRotateGroup(compileTestResult(ir, silent).scene.primitives, 'L')!;
     const rot = g.transforms!.find(t => t.kind === 'rotate')!;
 
     expect(rot.degrees).toBeCloseTo(90);
@@ -115,7 +115,7 @@ describe('Node 标签旋转', () => {
   it("rotate 'none' 显式 = 缺省 → 不包 group", () => {
     const ir = scene([{ type: 'node', position: [0, 0], text: 'A', label: { text: 'L', rotate: 'none' } }]);
 
-    expect(findLabelRotateGroup(compileToScene(ir, silent).scene.primitives, 'L')).toBeUndefined();
+    expect(findLabelRotateGroup(compileTestResult(ir, silent).scene.primitives, 'L')).toBeUndefined();
   });
 
   it("keepUpright：position='left'（radial≈180）翻 180 → 接近正立", () => {
@@ -127,7 +127,7 @@ describe('Node 标签旋转', () => {
         label: { text: 'L', position: 'left', rotate: 'radial', keepUpright: true },
       },
     ]);
-    const g = findLabelRotateGroup(compileToScene(ir, silent).scene.primitives, 'L')!;
+    const g = findLabelRotateGroup(compileTestResult(ir, silent).scene.primitives, 'L')!;
     const rot = g.transforms!.find(t => t.kind === 'rotate')!;
     const norm = ((rot.degrees % 360) + 360) % 360;
 
@@ -143,7 +143,7 @@ describe('Node 标签旋转', () => {
         label: { text: 'L', position: 'left', rotate: 'radial' },
       },
     ]);
-    const g = findLabelRotateGroup(compileToScene(ir, silent).scene.primitives, 'L')!;
+    const g = findLabelRotateGroup(compileTestResult(ir, silent).scene.primitives, 'L')!;
     const rot = g.transforms!.find(t => t.kind === 'rotate')!;
     const norm = ((rot.degrees % 360) + 360) % 360;
 
@@ -164,8 +164,8 @@ describe('Node 标签旋转', () => {
     const labelSpec = { text: 'L', position: 'right' as const, distance: 10 };
     const base = scene([{ type: 'node', position: [0, 0], text: 'A', label: labelSpec }]);
     const rotated = scene([{ type: 'node', position: [0, 0], text: 'A', rotate: 90, label: labelSpec }]);
-    const lb = labelText(compileToScene(base, silent).scene.primitives, 'L')!;
-    const lr = labelText(compileToScene(rotated, silent).scene.primitives, 'L')!;
+    const lb = labelText(compileTestResult(base, silent).scene.primitives, 'L')!;
+    const lr = labelText(compileTestResult(rotated, silent).scene.primitives, 'L')!;
 
     // 修双重旋转后：旋转 Node 的 label TextPrimitive 局部坐标 = 不旋转版（外层 node group 统一旋转一次）
     expect(lr.x).toBeCloseTo(lb.x);
@@ -176,8 +176,8 @@ describe('Node 标签旋转', () => {
     const labelSpec = { text: 'L', position: 30, distance: 10 };
     const base = scene([{ type: 'node', position: [0, 0], text: 'A', label: labelSpec }]);
     const rotated = scene([{ type: 'node', position: [0, 0], text: 'A', rotate: 90, label: labelSpec }]);
-    const lb = labelText(compileToScene(base, silent).scene.primitives, 'L')!;
-    const lr = labelText(compileToScene(rotated, silent).scene.primitives, 'L')!;
+    const lb = labelText(compileTestResult(base, silent).scene.primitives, 'L')!;
+    const lr = labelText(compileTestResult(rotated, silent).scene.primitives, 'L')!;
 
     expect(lr.x).toBeCloseTo(lb.x);
     expect(lr.y).toBeCloseTo(lb.y);
@@ -195,8 +195,8 @@ describe('Node 标签旋转', () => {
         label: { text: 'L', position: 'right', distance: 10, rotate: 45 },
       },
     ]);
-    const a = labelText(compileToScene(noRot, silent).scene.primitives, 'L')!;
-    const b = labelText(compileToScene(withRot, silent).scene.primitives, 'L')!;
+    const a = labelText(compileTestResult(noRot, silent).scene.primitives, 'L')!;
+    const b = labelText(compileTestResult(withRot, silent).scene.primitives, 'L')!;
 
     expect(b.x - a.x).toBeCloseTo(5.5, 1);
     expect(b.y).toBeCloseTo(a.y);

@@ -1,7 +1,5 @@
-// @vitest-environment jsdom
 import type { AnyCompositeDefinition, IRScene } from '@retikz/core';
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import type { ReconcilerPreparedCommit } from '@retikz/reconciler';
 import type {
   InputRetainedRendererFactory,
@@ -17,6 +15,9 @@ import type { InputEmbedAdapter, InputScene, VanillaCompileDriver } from '../../
 import { InputLayerCache } from '../../src';
 import { mountCanvas, mountSvg } from '../../src/dom';
 import { createRetainedCompositeDefinitions } from '../../src/processing/composites';
+
+// @vitest-environment jsdom
+import { compileTestResult } from '../helpers/compilation';
 
 const source = (fill: string): IRScene => ({
   version: 1,
@@ -180,7 +181,7 @@ const datasetScene = (color: string): InputScene => ({
   children: [{ type: 'embed', kind: 'fixture-dataset', id: 'dataset', props: { color } }],
 });
 
-const readonlyLayerScene = compileToScene({
+const readonlyLayerScene = compileTestResult({
   type: 'scene',
   version: 1,
   children: [{ type: 'node', position: [0, 0], shape: 'rectangle' }],
@@ -313,7 +314,7 @@ describe('@retikz/vanilla 保留安装座', () => {
     const retained = createRetainedCompositeDefinitions([initial]);
 
     const sceneInput: IRScene = { version: 1, type: 'scene', children: [{ namespace: 'fixture', type: 'datasetBox' }] };
-    const render = () => JSON.stringify(compileToScene(sceneInput, { composites: retained.definitions }).scene);
+    const render = () => JSON.stringify(compileTestResult(sceneInput, { composites: retained.definitions }).scene);
 
     const prepared = retained.prepare([candidate]);
 
@@ -352,7 +353,7 @@ describe('@retikz/vanilla 保留安装座', () => {
       theme: { mode: 'dark' },
       children: [{ namespace: 'fixture', type: 'themeDelegate' }],
     };
-    const result = compileToScene(sceneInput, { composites: retained.definitions });
+    const result = compileTestResult(sceneInput, { composites: retained.definitions });
     expect(JSON.stringify(result.scene)).toContain('#111111');
     expect(initialCompile).toHaveBeenCalledWith(
       expect.any(Object),
@@ -954,7 +955,7 @@ describe('@retikz/vanilla 保留安装座', () => {
 
   it('预编译 Scene 保持 static view', () => {
     const container = document.createElement('div');
-    const view = mountSvg(container, compileToScene(source('#ef4444')).scene);
+    const view = mountSvg(container, compileTestResult(source('#ef4444')).scene);
 
     expect(view.mode).toBe('static');
   });
@@ -963,7 +964,7 @@ describe('@retikz/vanilla 保留安装座', () => {
     const retainedContainer = document.createElement('div');
     const retained = mountCanvas(retainedContainer, source('#ef4444'), { output: { width: 100, height: 100 } });
     const staticContainer = document.createElement('div');
-    const staticView = mountCanvas(staticContainer, compileToScene(source('#ef4444')).scene);
+    const staticView = mountCanvas(staticContainer, compileTestResult(source('#ef4444')).scene);
 
     expect(retained.mode).toBe('retained');
     expect(staticView.mode).toBe('static');

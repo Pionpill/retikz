@@ -7,12 +7,12 @@ import {
   SceneSchema,
   ThemeMode,
 } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it, vi } from 'vitest';
 import { literal, string } from 'zod';
 
 import type { InputChild, InputEmbedAdapter, InputScene, SynchronousInputEmbedAdapter } from '../../src';
 import { coordinate, embed, InputLayerCache, layer, node, normalizeScene, path, scene, scope } from '../../src';
+import { compileTestResult } from '../helpers/compilation';
 
 it('Node 与 Coordinate 的 opaque authoring 只进入来源站点，不进入嵌套 Core IR', () => {
   const marker = { request: 'opaque' };
@@ -240,7 +240,7 @@ describe('@retikz/vanilla InputScene', () => {
     );
     const warnings: Array<CompileWarning> = [];
 
-    const compiled = compileToScene(normalized.ir, { onWarn: warning => warnings.push(warning) }).scene;
+    const compiled = compileTestResult(normalized.ir, { onWarn: warning => warnings.push(warning) }).scene;
     const edge = compiled.primitives.find(primitive => primitive.type === 'path' && primitive.id === 'edge');
     const line = edge?.type === 'path' ? edge.commands.find(command => command.kind === 'line') : undefined;
 

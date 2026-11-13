@@ -6,9 +6,9 @@ import type {
   IRPaint,
   IRScene,
   ScenePrimitive,
-  SceneResource,
+  SceneResources,
 } from '../../../../core/src';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 
 const scene = (children: IRScene['children']): IRScene => ({
   version: 1,
@@ -21,8 +21,7 @@ const firstGroup = (primitives: ReadonlyArray<ScenePrimitive>): GroupPrimitive |
   primitives.find((p): p is GroupPrimitive => p.type === 'group');
 
 /** 从 Scene.resources 取所有 clip 资源 */
-const clipResources = (resources: Array<SceneResource> | undefined): Array<ClipResource> =>
-  (resources ?? []).filter((r): r is ClipResource => r.kind === 'clip');
+const clipResources = (resources: SceneResources | undefined): ReadonlyArray<ClipResource> => resources?.clips ?? [];
 
 const grad: IRPaint = {
   kind: 'linearGradient',
@@ -42,7 +41,7 @@ describe('clip 资源生成 + GroupPrimitive.clipRef 挂载', () => {
         children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
       },
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileTestResult(ir).scene;
     const clips = clipResources(compiled.resources);
 
     expect(clips).toHaveLength(1);
@@ -73,10 +72,10 @@ describe('clip 资源生成 + GroupPrimitive.clipRef 挂载', () => {
         children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
       },
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileTestResult(ir).scene;
 
-    expect(clipResources(compiled.resources)[0].id).toBe(clipResources(compileToScene(ir).scene.resources)[0].id);
-    const reordered = compileToScene(
+    expect(clipResources(compiled.resources)[0].id).toBe(clipResources(compileTestResult(ir).scene.resources)[0].id);
+    const reordered = compileTestResult(
       scene([
         { type: 'scope', clip: { kind: 'rect', params: { x: 0, y: 0, width: 20, height: 20 } }, children: [] },
         ...ir.children,
@@ -104,7 +103,7 @@ describe('clip 去重 / 不同 clip 各自资源', () => {
         children: [{ type: 'node', id: 'B', position: [80, 0], text: 'B' }],
       },
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileTestResult(ir).scene;
     const clips = clipResources(compiled.resources);
 
     expect(clips).toHaveLength(1);
@@ -129,7 +128,7 @@ describe('clip 去重 / 不同 clip 各自资源', () => {
         children: [{ type: 'node', id: 'B', position: [80, 0], text: 'B' }],
       },
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileTestResult(ir).scene;
     const clips = clipResources(compiled.resources);
 
     expect(clips).toHaveLength(2);
@@ -150,7 +149,7 @@ describe('带 clip 的 scope 不被 prune', () => {
         children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
       },
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileTestResult(ir).scene;
     const group = firstGroup(compiled.primitives);
 
     expect(group).toBeDefined();
@@ -166,7 +165,7 @@ describe('带 clip 的 scope 不被 prune', () => {
         children: [],
       },
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileTestResult(ir).scene;
     const group = firstGroup(compiled.primitives);
 
     expect(group).toBeDefined();
@@ -190,14 +189,14 @@ describe('交互：paint + clip 资源共存 / transformed scope path ownership'
         children: [{ type: 'node', id: 'A', position: [80, 0], text: 'A' }],
       },
     ]);
-    const compiled = compileToScene(ir).scene;
-    const paints = (compiled.resources ?? []).filter(r => r.kind === 'paint');
+    const compiled = compileTestResult(ir).scene;
+    const paints = compiled.resources?.paints ?? [];
     const clips = clipResources(compiled.resources);
 
     expect(paints).toHaveLength(1);
     expect(clips).toHaveLength(1);
 
-    const allIds = (compiled.resources ?? []).map(r => r.id);
+    const allIds = [...(compiled.resources?.paints ?? []), ...(compiled.resources?.clips ?? [])].map(r => r.id);
 
     expect(new Set(allIds).size).toBe(allIds.length);
   });
@@ -221,7 +220,7 @@ describe('交互：paint + clip 资源共存 / transformed scope path ownership'
         ],
       },
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileTestResult(ir).scene;
     const topPath = compiled.primitives.find(p => p.type === 'path');
 
     expect(topPath).toBeUndefined();
@@ -253,7 +252,7 @@ describe('交互：paint + clip 资源共存 / transformed scope path ownership'
         ],
       },
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileTestResult(ir).scene;
     const group = firstGroup(compiled.primitives);
 
     expect(group?.clipRef).toBe(clipResources(compiled.resources)[0].id);
@@ -275,7 +274,7 @@ describe('退化裁剪区手搓 IR 编译期守卫', () => {
       },
     ]);
 
-    expect(() => compileToScene(ir).scene).toThrow();
+    expect(() => compileTestResult(ir).scene).toThrow();
   });
 
   it('rect height = NaN（绕过 schema）→ 编译期抛', () => {
@@ -287,7 +286,7 @@ describe('退化裁剪区手搓 IR 编译期守卫', () => {
       },
     ]);
 
-    expect(() => compileToScene(ir).scene).toThrow();
+    expect(() => compileTestResult(ir).scene).toThrow();
   });
 
   it('polygon 仅 2 点（绕过 schema）→ 编译期抛', () => {
@@ -307,6 +306,6 @@ describe('退化裁剪区手搓 IR 编译期守卫', () => {
       },
     ]);
 
-    expect(() => compileToScene(ir).scene).toThrow();
+    expect(() => compileTestResult(ir).scene).toThrow();
   });
 });

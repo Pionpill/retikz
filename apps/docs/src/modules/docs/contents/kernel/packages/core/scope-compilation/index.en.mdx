@@ -1,0 +1,188 @@
+---
+title: Scope Compilation
+description: Understand inheritance, local space, child layout envelopes and group output across Core and Reconciler
+---
+
+Coordinates, Nodes and Paths can belong to a Scope, sharing inherited configuration and a local coordinate space. This page explains how child layouts form the Scope envelope and how transforms place local results in the parent layout. Core computes effective semantics, envelope, placement and group attributes; Reconciler runs children, publishes references and assembles the GroupPrimitive.
+
+## Overall Flow
+
+Scope properties resolve to <ApiSourceLink label="CanonicalScope" path="packages/kernel/core/src/resolve/scope/types.ts" startLine={47}>`CanonicalScope`</ApiSourceLink>. Once child layouts are available, <ApiSourceLink label="compileScope" path="packages/kernel/core/src/compile/scope/compile.ts" startLine={16}>`compileScope`</ApiSourceLink> computes the envelope and placement as <ApiSourceLink label="CompiledScope" path="packages/kernel/core/src/compile/scope/types.ts" startLine={20}>`CompiledScope`</ApiSourceLink>; the caller attaches child primitives to the group.
+
+<ComponentPreview files="scope-flow" size="lg" hideCode type="flow" />
+
+## Input Contract
+
+The type <ApiSourceLink label="ScopeSchema" path="packages/kernel/core/src/schemas/scope/scope.ts" startLine={98}>`ScopeSchema`</ApiSourceLink> combines <ApiSourceLink label="ScopePropsSchema" path="packages/kernel/core/src/schemas/scope/scope.ts" startLine={56}>`ScopePropsSchema`</ApiSourceLink> with recursive `children`. Its fields control inheritance, names and placement. Compiled child layouts later supply the envelope input.
+
+| Field and schema                                                                                                                                                    | Input forms                                                                           | Effect on later processing                                                                                                              |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `position` / <ApiSourceLink label="ScopePositionSchema" path="packages/kernel/core/src/schemas/scope/scope.ts" startLine={51}>`ScopePositionSchema`</ApiSourceLink> | Cartesian point or `{ kind: 'anchor', target, selfAnchor? }`: two forms               | A point sets the parent-frame origin; anchor alignment waits for the transformed envelope                                               |
+| `transforms` / `TransformSchema`                                                                                                                                    | Translation, rotation, scaling, and polar, directional, offset or between translation | Resolution fills parameters; compilation evaluates references and pivots into numeric transforms, with the last array item acting first |
+| `boundingShape`                                                                                                                                                     | rectangle or circle                                                                   | Selects box aggregation or a minimum enclosing circle and binds the matching shape                                                      |
+| `defaults`, `theme`                                                                                                                                                 | Sparse defaults and theme configuration                                               | Resolution prepares descendant inheritance; child resolvers apply their own defaults                                                    |
+| `id`, `localNamespace`                                                                                                                                              | Optional name and local namespace switch                                              | The name references the envelope; the namespace switch controls child-name visibility                                                   |
+| `clip` / `ClipSchema`                                                                                                                                               | Clip configuration                                                                    | Resolution binds the clip capability; compilation registers a resource and emits a group `clipRef`                                      |
+
+The following local group contains two child layouts that will define its envelope.
+
+```ts
+const scope = {
+  type: 'scope',
+  id: 'pair',
+  position: [100, 60],
+  defaults: { style: { color: 'blue' } },
+  children: [
+    {
+      type: 'node',
+      id: 'A',
+      position: [0, 0],
+      text: 'A',
+      layout: { minimumSize: { width: 60, height: 40 }, padding: 0, margin: 0 },
+    },
+    {
+      type: 'node',
+      id: 'B',
+      position: [180, 0],
+      text: 'B',
+      layout: { minimumSize: { width: 60, height: 40 }, padding: 0, margin: 0 },
+    },
+  ],
+} satisfies import('@retikz/core').IRScope;
+```
+
+## Resolution
+
+The function <ApiSourceLink label="resolveScope" path="packages/kernel/core/src/resolve/scope/resolve.ts" startLine={29}>`resolveScope`</ApiSourceLink> receives the Scope properties and <ApiSourceLink label="ScopeResolveContext" path="packages/kernel/core/src/resolve/scope/types.ts" startLine={65}>`ScopeResolveContext`</ApiSourceLink>, producing <ApiSourceLink label="CanonicalScope" path="packages/kernel/core/src/resolve/scope/types.ts" startLine={47}>`CanonicalScope`</ApiSourceLink>. These complete fields separate inheritance, envelope capability and transform intent; source comments are omitted.
+
+```ts
+export type CanonicalScope = {
+  inheritance: CanonicalScopeInheritance;
+  localNamespace: boolean;
+  envelope: CanonicalScopeEnvelope;
+  transform: CanonicalScopeTransform;
+  style: CanonicalScopeStyle;
+  clip?: ClipResolution;
+  animations: Array<IRAnimationTrack>;
+};
+
+export type CanonicalScopeTransform = {
+  position: Extract<IRScopePosition, Array<number>> | Required<Exclude<IRScopePosition, Array<number>>>;
+  transforms: Array<CanonicalScopeTransformStep>;
+};
+```
+
+The function <ApiSourceLink label="resolveScopeInheritance" path="packages/kernel/core/src/resolve/scope/resolve.ts" startLine={16}>`resolveScopeInheritance`</ApiSourceLink> merges parent defaults and theme for descendant resolution. <ApiSourceLink label="resolveScope" path="packages/kernel/core/src/resolve/scope/resolve.ts" startLine={29}>`resolveScope`</ApiSourceLink> binds the shape needed by the rectangle or circle envelope, resolves clipping, and retains group metadata and animation. It fills static transform defaults such as pivot, scale on both axes and directional distance.
+
+The type <ApiSourceLink label="ScopeResolveContext" path="packages/kernel/core/src/resolve/scope/types.ts" startLine={65}>`ScopeResolveContext`</ApiSourceLink> supplies parent <ApiSourceLink label="CanonicalScopeInheritance" path="packages/kernel/core/src/resolve/scope/types.ts" startLine={13}>`CanonicalScopeInheritance`</ApiSourceLink>, theme, shape and clip registries, the relative-position distance and source paths. The result retains placement targets and transform expressions; compilation combines them with child layouts to compute the envelope and final placement.
+
+In the example, `position: [100, 60]` is retained in `transform.position`, and blue is merged into `inheritance.defaults`. Resolution binds the rectangle envelope capability; compilation obtains the 240 × 40 envelope after child layouts are available.
+
+<ComponentPreview files="scope-resolution" size="lg" hideCode type="flow" />
+
+## Compilation
+
+The function <ApiSourceLink label="compileScope" path="packages/kernel/core/src/compile/scope/compile.ts" startLine={16}>`compileScope`</ApiSourceLink> consumes <ApiSourceLink label="CanonicalScope" path="packages/kernel/core/src/resolve/scope/types.ts" startLine={47}>`CanonicalScope`</ApiSourceLink> and <ApiSourceLink label="ScopeCompileContext" path="packages/kernel/core/src/compile/scope/types.ts" startLine={78}>`ScopeCompileContext`</ApiSourceLink> to produce <ApiSourceLink label="CompiledScope" path="packages/kernel/core/src/compile/scope/types.ts" startLine={20}>`CompiledScope`</ApiSourceLink>. `layout.overall` contains the envelope and numeric transforms; `emit.overall` contains group properties awaiting children. The declarations below show the full fields, including partial products that callers can supply for reuse; source comments are omitted.
+
+```ts
+export type CompiledScope = Pick<CompiledBoundaryGeometry, 'shape' | 'boundary'> &
+  Readonly<{
+    layout: WithRequiredProperties<PreparedScopeLayout, 'overall'>;
+    emit: WithRequiredProperties<PreparedScopeEmit, 'overall'>;
+    zIndex?: IRScope['zIndex'];
+  }>;
+
+export type CompiledScopeLayout = {
+  geometry: CompiledScopeGeometry;
+  transforms: Array<Transform>;
+};
+
+export type CompiledScopeGeometry = {
+  rect: CenteredBox;
+  margin: BoundsInsets;
+};
+
+export type PreparedScopeEmit = {
+  overall?: Omit<GroupPrimitive, 'children'>;
+  clip?: Pick<GroupPrimitive, 'clipRef'>;
+};
+```
+
+| <ApiSourceLink label="ScopeCompileContext" path="packages/kernel/core/src/compile/scope/types.ts" startLine={78}>`ScopeCompileContext`</ApiSourceLink> member | What compilation receives                                  |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `layouts`                                                                                                                                                     | Completed child layout geometry used to build the envelope |
+| `positionContext`                                                                                                                                             | Target references, anchors and coordinate conversion       |
+| `resolvedClipPath`, `registerClip`, `registerClipPath`                                                                                                        | Clip-path or clip-configuration resource registration      |
+| `animations`                                                                                                                                                  | Processed animations available for group output            |
+| `irPath`, `onWarn`                                                                                                                                            | Source location and diagnostics                            |
+
+Child layouts are an actual input to Scope compilation. In the diagram, child execution produces that input before envelope, placement and group properties are computed. The following sections explain each product.
+
+<ComponentPreview files="scope-overview" size="lg" hideCode type="flow" />
+
+### Naming and Geometry Readiness
+
+An `id` makes the Scope envelope referenceable; it does not automatically create a local name frame. `localNamespace: true` creates that environment for children. Reconciler owns entry, exit and publication. Runtime Scope identity is separate from author ids.
+
+A named Scope first publishes a position placeholder, replaced by its real envelope after child layouts complete. A placeholder cannot answer every boundary query; reference evaluation distinguishes position from full geometry. Deferred paths inside a Scope run when that Scope closes, so they cannot assume access to external nodes declared later.
+
+<ComponentPreview files="scope-readiness" size="lg" hideCode type="flow" />
+
+The main chain follows one named Scope as its geometry becomes ready; the side configuration determines the name environment used by its children.
+
+### Building the Envelope
+
+A rectangular envelope aggregates corners of child outer boundaries and Coordinate positions. A circular envelope computes their minimal enclosing circle. Empty layouts produce a zero-size envelope. This consumes geometry directly, without node resolution or text measurement. Path drawing extents do not define the Scope's geometric envelope.
+
+Before translation, the example's rectangular envelope is centered at [90, 0], with width 240 and height 40. After translation its center is [190, 60]. This connection geometry differs from final Scene layout bounds, which also collect paths, labels, shadows and other output contributions.
+
+A named Scope contributes its envelope to its parent; an anonymous Scope passes through child layouts. Both apply the Scope's own transforms.
+
+<ComponentPreview files="scope-envelope" size="xl" hideCode type="illustration" />
+
+Both views use the same A, B and Coordinate. A named Scope contributes the illustrated envelope to its parent; an anonymous Scope passes through those child layouts.
+
+### Placement, Clipping and Group Output
+
+The function <ApiSourceLink label="prepareScopePlacement" path="packages/kernel/core/src/compile/scope/placement/layout.ts" startLine={145}>`prepareScopePlacement`</ApiSourceLink> prepares transforms that do not require the Scope envelope. Rotation or scaling about an envelope anchor, and selfAnchor alignment against a target, wait for that geometry. Final transforms project published references and remain on GroupPrimitive so backends can interpret local primitives as a group.
+
+Core's <ApiSourceLink label="compileScope" path="packages/kernel/core/src/compile/scope/compile.ts" startLine={16}>`compileScope`</ApiSourceLink> produces envelope, placement and group attributes without children. Reconciler fills deferred paths, binds animations and attaches children. A group is retained when it has children, transforms, an id or clipping; an empty anonymous group with none of these can be omitted.
+
+Clipping uses a shared resource through clipRef. <ApiSourceLink label="projectScopeOutputBounds" path="packages/kernel/core/src/compile/scope/output.ts" startLine={13}>`projectScopeOutputBounds`</ApiSourceLink> transforms layout contributions and also accounts for clipping on decoration contributions. Visible clipping extents and layout allocation are different quantities.
+
+<ComponentPreview files="scope-placement-clip" size="lg" hideCode type="illustration" />
+
+The right view uses actual Scope clipping: the node remains 160 units wide locally, while the clip limits its visible portion to 80 units. The group translation moves both together.
+
+## Complete Flow
+
+<ComponentPreview files="scope-implementation" size="xxl" hideCode type="flow" />
+
+Follow `visitScope` through resolution, preliminary placement, recursion, Core compilation, reference projection, path flushing and group emission. <ApiSourceLink label="compileScope" path="packages/kernel/core/src/compile/scope/compile.ts" startLine={16}>`compileScope`</ApiSourceLink> owns neither traversal nor the name stack. Prepared products are reused only when the caller has established their validity.
+
+## Further Reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Compilation Flow',
+      description: 'Locate Scope within overall scheduling',
+      url: '/kernel/packages/core/compilation',
+    },
+    {
+      title: 'Coordinate Evaluation',
+      description: 'Distinguish position placeholders, boundaries and projection',
+      url: '/kernel/packages/core/coordinates',
+    },
+    {
+      title: 'Node Compilation',
+      description: 'See how children provide layout geometry',
+      url: '/kernel/packages/core/node-compilation',
+    },
+    {
+      title: 'Compilation Output',
+      description: 'Separate envelopes, layout contributions and Scene output',
+      url: '/kernel/packages/core/compilation-output',
+    },
+  ]}
+/>

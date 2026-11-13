@@ -1,17 +1,17 @@
 import type { IRChild, IRNode, ScenePrimitive } from '@retikz/core';
 import { pathClipDefinition } from '@retikz/extension';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import type { IRArray, IRMap } from '../../../src/collection';
 import { arrayDefinition, ArraySchema, mapDefinition, MapSchema } from '../../../src/collection';
+import { compileTestResult } from '../../helpers/compilation';
 import { sceneCellBounds, sceneNodes } from '../../helpers/scene-geometry';
 
 const flat = (nodes: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
   nodes.flatMap(node => (node.type === 'group' ? [node, ...flat(node.children)] : [node]));
 
 const compile = (children: Array<IRChild>) =>
-  compileToScene(
+  compileTestResult(
     { type: 'scene', version: 1, children },
     { composites: [arrayDefinition, mapDefinition], clips: [pathClipDefinition], padding: 0 },
   );

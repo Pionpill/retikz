@@ -12,7 +12,7 @@ import {
   relationProviderKey,
 } from '@retikz/graph';
 import type { InputEmbed, SynchronousInputEmbedAdapter, InputEmbedContext } from '@retikz/vanilla';
-import { normalizeScene, processToStaticInputResult } from '@retikz/vanilla';
+import { normalizeScene, compileToScene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
 import type { InputBlock, InputBlockHeader, InputBlockRow, InputBlockSection, InputGraph, InputGroup } from '../src';
@@ -632,7 +632,7 @@ describe('Graph Vanilla 嵌入适配器', () => {
 
   it('编译直接在独立 Group 内声明的并置 Block', () => {
     expect(() =>
-      processToStaticInputResult(
+      compileToScene(
         {
           children: [
             group({
@@ -761,7 +761,7 @@ describe('Graph Vanilla 嵌入适配器', () => {
     }
 
     expect(() =>
-      processToStaticInputResult(
+      compileToScene(
         {
           children: [
             { type: 'node', id: 'direct-source', position: [0, 200] },

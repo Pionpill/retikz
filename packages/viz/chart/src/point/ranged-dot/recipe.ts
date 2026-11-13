@@ -2,19 +2,20 @@ import type { JsonObject } from '@retikz/foundation';
 import type { IRPlotGuide } from '@retikz/plot';
 import { PlotGuide, BuiltinPlotScale } from '@retikz/plot';
 
-import type { ChartRecipeDefinition, ChartRecipeResolveContext } from '../../_chart/contract';
 import { defineChartRecipe } from '../../_chart/contract';
+import type { ChartRecipeDefinition, ChartRecipeResolveContext } from '../../_chart/contract';
 import type { ChartEncodingFieldConsumer } from '../../_chart/resolve';
-import { resolveChartEncodingMappings } from '../../_chart/resolve';
-import { ChartType } from '../constants';
 import {
-  pointPositionFieldConsumersOf,
-  pointSlotsOf,
-  pointSpatialResolutionOf,
-  resolvePointGuideDefaults,
-  resolvePointScaleDefaults,
-} from '../shared';
-import { pointAxisGuidesOf, pointCartesian2DOf, pointRecipeId } from '../shared/plot';
+  chartAxisGuidesOf,
+  chartCartesian2DOf,
+  chartRecipeId,
+  chartSlotsOf,
+  chartSpatialResolutionOf,
+  resolveChartGuideDefaults,
+  resolveChartEncodingMappings,
+} from '../../_chart/resolve';
+import { ChartType } from '../constants';
+import { pointPositionFieldConsumersOf, resolvePointScaleDefaults } from '../shared';
 import { rangedDotMarkDefinition, resolveRangedDotMarkGroup } from './mark';
 import type { IRRangedDotChart } from './schema';
 import { RangedDotChartSchema } from './schema';
@@ -26,11 +27,11 @@ const markPropertySlots = ['point', 'startPoint', 'endPoint', 'range'] as const;
 
 const propertySlots = [...markPropertySlots, 'domainPadding', 'autoPadding'] as const;
 
-const xScaleName = pointRecipeId(ChartType.RangedDot, 'scale.x');
+const xScaleName = chartRecipeId(ChartType.RangedDot, 'scale.x');
 
-const yScaleName = pointRecipeId(ChartType.RangedDot, 'scale.y');
+const yScaleName = chartRecipeId(ChartType.RangedDot, 'scale.y');
 
-const colorScaleName = pointRecipeId(ChartType.RangedDot, 'scale.color');
+const colorScaleName = chartRecipeId(ChartType.RangedDot, 'scale.color');
 
 const [xConsumer, yConsumer] = pointPositionFieldConsumersOf(ChartType.RangedDot);
 
@@ -100,7 +101,7 @@ export const rangedDotChartDefinition: ChartRecipeDefinition<IRRangedDotChart> =
   resolveEncodings: context => {
     const resolution = resolveChartEncodingMappings(context, rangedDotChartEncodingSlots, fieldConsumers);
     const encodings = withColorFallback(resolution.encodings);
-    const spatial = pointSpatialResolutionOf(ChartType.RangedDot, {
+    const spatial = chartSpatialResolutionOf(ChartType.RangedDot, {
       row: context.encodings.row,
       column: context.encodings.column,
       facet: context.encodings.facet,
@@ -109,16 +110,16 @@ export const rangedDotChartDefinition: ChartRecipeDefinition<IRRangedDotChart> =
     return { ...resolution, encodings, ...(spatial === undefined ? {} : { spatial }) };
   },
   resolve: (context: ChartRecipeResolveContext) => {
-    const slots = pointSlotsOf(context);
+    const slots = chartSlotsOf(context);
     const hasColor = Object.hasOwn(slots.encodings, 'color');
-    const cartesian = pointCartesian2DOf(ChartType.RangedDot);
+    const cartesian = chartCartesian2DOf(ChartType.RangedDot);
     const scales = [
       { value: cartesian.scales[0], replaceable: true },
       { value: { type: BuiltinPlotScale.Point, name: yScaleName }, replaceable: true },
       ...(hasColor ? [{ value: { type: BuiltinPlotScale.Ordinal, name: colorScaleName }, replaceable: true }] : []),
     ];
     const guides: Array<IRPlotGuide> = [
-      ...pointAxisGuidesOf(),
+      ...chartAxisGuidesOf(),
       ...(hasColor ? [{ type: PlotGuide.Legend, channel: 'color' } as const] : []),
     ];
 
@@ -134,5 +135,5 @@ export const rangedDotChartDefinition: ChartRecipeDefinition<IRRangedDotChart> =
     };
   },
   resolveScaleDefaults: resolvePointScaleDefaults,
-  resolveGuideDefaults: resolvePointGuideDefaults,
+  resolveGuideDefaults: resolveChartGuideDefaults,
 });

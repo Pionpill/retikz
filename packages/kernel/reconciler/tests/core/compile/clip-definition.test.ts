@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { IRClip, IRScene, PathCommand } from '../../../../core/src';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 
 const clippedIr = (clip: IRClip): IRScene => ({
   version: 1,
@@ -19,35 +19,41 @@ const rectCommands: Array<PathCommand> = [
 
 describe('Core 的 rect 裁剪定义', () => {
   it('通过完整的内置定义解析并下沉 rect', () => {
-    const scene = compileToScene(clippedIr({ kind: 'rect', params: { x: 1, y: 2, width: 3, height: 4 } })).scene;
+    const scene = compileTestResult(clippedIr({ kind: 'rect', params: { x: 1, y: 2, width: 3, height: 4 } })).scene;
 
-    expect(scene.resources).toEqual([
-      {
-        kind: 'clip',
-        id: scene.resources!.filter(resource => resource.kind === 'clip')[0].id,
-        path: { commands: rectCommands, fillRule: 'nonzero' },
-      },
-    ]);
+    expect(scene.resources).toEqual({
+      paints: [],
+      clips: [
+        {
+          kind: 'clip',
+          id: (scene.resources?.clips ?? [])[0].id,
+          path: { commands: rectCommands, fillRule: 'nonzero' },
+        },
+      ],
+    });
   });
 
   it('保留零宽度矩形作为规范的空裁剪路径', () => {
-    const scene = compileToScene(clippedIr({ kind: 'rect', params: { x: 1, y: 2, width: 0, height: 4 } })).scene;
+    const scene = compileTestResult(clippedIr({ kind: 'rect', params: { x: 1, y: 2, width: 0, height: 4 } })).scene;
 
-    expect(scene.resources).toEqual([
-      {
-        kind: 'clip',
-        id: scene.resources!.filter(resource => resource.kind === 'clip')[0].id,
-        path: {
-          commands: [
-            { kind: 'move', to: [1, 2] },
-            { kind: 'line', to: [1, 2] },
-            { kind: 'line', to: [1, 6] },
-            { kind: 'line', to: [1, 6] },
-            { kind: 'close' },
-          ],
-          fillRule: 'nonzero',
+    expect(scene.resources).toEqual({
+      paints: [],
+      clips: [
+        {
+          kind: 'clip',
+          id: (scene.resources?.clips ?? [])[0].id,
+          path: {
+            commands: [
+              { kind: 'move', to: [1, 2] },
+              { kind: 'line', to: [1, 2] },
+              { kind: 'line', to: [1, 6] },
+              { kind: 'line', to: [1, 6] },
+              { kind: 'close' },
+            ],
+            fillRule: 'nonzero',
+          },
         },
-      },
-    ]);
+      ],
+    });
   });
 });

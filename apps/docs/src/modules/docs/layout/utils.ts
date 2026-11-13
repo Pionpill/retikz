@@ -3,6 +3,9 @@ import { ArrowUpRight } from 'lucide-react';
 import type { ComponentType } from 'react';
 
 import {
+  LineChartIcon,
+  SlopeChartIcon,
+  PathsChartIcon,
   BubbleChartIcon,
   ConnectedScatterChartIcon,
   RangedDotChartIcon,
@@ -26,6 +29,9 @@ const LIBRARY_CHANGELOG_SECTIONS = new Set(['standard', 'extension', 'layout']);
 
 /** 文档数据中的稳定图标 id 到图标组件的唯一映射 */
 const DOC_SIDEBAR_ICONS: Record<DocSidebarIcon, ComponentType<{ className?: string }>> = {
+  'chart-paths': PathsChartIcon,
+  'chart-line': LineChartIcon,
+  'chart-slope': SlopeChartIcon,
   'chart-scatter': ScatterChartIcon,
   'chart-bubble': BubbleChartIcon,
   'chart-regression': RegressionChartIcon,

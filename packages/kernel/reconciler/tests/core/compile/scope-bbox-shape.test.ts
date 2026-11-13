@@ -11,7 +11,8 @@ import { layoutScopeEnvelope } from '../../../../core/src/compile/scope/envelope
 import { composeScopeTransform } from '../../../../core/src/compile/shared';
 import { BUILTIN_SHAPES } from '../../../../core/src/providers/shape/shape';
 import { resolveScope, resolveScopeInheritance } from '../../../../core/src/resolve';
-import { compileToScene, createSharedCompileContext } from '../../../src/compile';
+import { createSharedCompileContext } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 
 const scopeLayout = (
   shape: 'rectangle' | 'circle',
@@ -142,7 +143,7 @@ describe('scope boundingShape="circle" 集成测试', () => {
       },
     ]);
     const warnings: Array<CompileWarning> = [];
-    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
+    const compiled = compileTestResult(ir, { onWarn: w => warnings.push(w) }).scene;
 
     expect(warnings.filter(w => w.code === BuiltinCompileWarningCode.UnresolvedNodeReference)).toHaveLength(0);
 
@@ -186,7 +187,7 @@ describe('scope boundingShape="circle" 集成测试', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileTestResult(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
 
     expect(end).toBeDefined();
@@ -218,7 +219,7 @@ describe('scope boundingShape="circle" 集成测试', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileTestResult(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
 
     expect(end).toBeDefined();
@@ -247,7 +248,7 @@ describe('scope boundingShape 缺省（矩形 AABB）向后兼容', () => {
         ],
       },
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileTestResult(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
 
     expect(end).toBeDefined();
@@ -293,8 +294,8 @@ describe('scope boundingShape 缺省（矩形 AABB）向后兼容', () => {
         ],
       },
     ]);
-    const endDefault = lineTo(topPath(compileToScene(irDefault).scene.primitives));
-    const endExplicit = lineTo(topPath(compileToScene(irExplicit).scene.primitives));
+    const endDefault = lineTo(topPath(compileTestResult(irDefault).scene.primitives));
+    const endExplicit = lineTo(topPath(compileTestResult(irExplicit).scene.primitives));
 
     expect(endDefault).toBeDefined();
     expect(endExplicit).toBeDefined();

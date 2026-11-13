@@ -1,5 +1,4 @@
 import type { IRPath, IRScope, IRStep } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { RETIKZ_POLAR_SEGMENT_SAMPLES } from '../../../src/contract';
@@ -8,6 +7,7 @@ import { lowerPlots } from '../../../src/pipeline/expand';
 import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import type { IRPlot, IRPlotPathMark } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
+import { compileTestResult } from '../../helpers/compilation';
 import { measureLabel } from '../../helpers/text-measurement';
 
 /** 笛卡尔使用默认画布；极坐标使用正方形画布，因此 outerRadius = 200、center = [200, 200] */
@@ -201,7 +201,7 @@ describe('lowerPlots 笛卡尔面积路径', () => {
   });
 
   it('区域编译到场景', () => {
-    const scene = compileToScene(
+    const scene = compileTestResult(
       {
         version: 1,
         type: 'scene',
@@ -399,9 +399,9 @@ describe('lowerPlots 笛卡尔折线回归', () => {
     expect(paths[0].style?.strokeWidth).toBe(2);
     expect(paths[2].style?.strokeWidth).toBe(2);
     expect(paths[0].style?.dashPattern).toBeUndefined();
-    expect(compileToScene({ type: 'scene', version: 1, children: [paths[1]] }).scene.primitives.length).toBeGreaterThan(
-      0,
-    );
+    expect(
+      compileTestResult({ type: 'scene', version: 1, children: [paths[1]] }).scene.primitives.length,
+    ).toBeGreaterThan(0);
     expect(
       firstLayer(lineSpec({ properties: { connectNulls: true } }), { sales: [{ month: 0, revenue: null }] }, cartOpts),
     ).toBeUndefined();
@@ -793,7 +793,7 @@ describe('lowerPlots 雷达图', () => {
   });
 
   it('雷达编译到场景', () => {
-    const scene = compileToScene(
+    const scene = compileTestResult(
       { version: 1, type: 'scene', children: [radarSpec()] },
       { composites: lowerPlots({ m: METRICS }, polarOpts) },
     ).scene;
@@ -957,7 +957,7 @@ describe('lowerPlots 极坐标面积路径', () => {
   });
 
   it('极地区域编译到场景', () => {
-    const scene = compileToScene(
+    const scene = compileTestResult(
       { version: 1, type: 'scene', children: [polarAreaSpec()] },
       { composites: lowerPlots({ m: METRICS }, polarOpts) },
     ).scene;

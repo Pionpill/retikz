@@ -363,7 +363,7 @@ export const createPathBenchmarkFixture = (kind: PathBenchmarkKind, scale: numbe
     measureText: textBenchmarkContext.measureText,
     boundaryStore,
     registerPaint: paintRegistry.register,
-    resources: paintRegistry.getResources,
+    resources: () => ({ paints: paintRegistry.getResources(), clips: [] }),
     onWarn: warning => failPathBenchmarkWarning(warning.code, warning.message),
     resolveTransform: composeScopeTransform,
   };

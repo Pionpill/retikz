@@ -1,6 +1,6 @@
 import { isFiniteNumber } from '@retikz/math';
 
-import { RetikzDataError } from '../../error';
+import { RetikzDataError, RetikzDataErrorCode } from '../../error';
 import type { RegressionModel, RegressionPair } from './contract';
 import type { IRRegressionMethod } from './schema';
 
@@ -12,6 +12,11 @@ type LinearCoefficients = Readonly<{
 const regressionError = (method: IRRegressionMethod, message: string): RetikzDataError =>
   new RetikzDataError(`data: ${method.kind} regression ${message}`);
 
+const notApplicable = (method: IRRegressionMethod, message: string): RetikzDataError =>
+  new RetikzDataError(`data: ${method.kind} regression ${message}`, {
+    code: RetikzDataErrorCode.RegressionNotApplicable,
+  });
+
 const assertFiniteResult = (method: IRRegressionMethod, value: number, label: string): number => {
   if (!isFiniteNumber(value)) throw regressionError(method, `produced a non-finite ${label}`);
   return value;
@@ -19,7 +24,7 @@ const assertFiniteResult = (method: IRRegressionMethod, value: number, label: st
 
 const assertPairCount = (pairs: ReadonlyArray<RegressionPair>, minimum: number, method: IRRegressionMethod): void => {
   if (pairs.length < minimum) {
-    throw regressionError(method, `requires at least ${minimum} finite x/y pairs`);
+    throw notApplicable(method, `requires at least ${minimum} finite x/y pairs`);
   }
 };
 
@@ -34,7 +39,7 @@ export const assertPositiveDomain = (
     if (axis === 'y') return pair.y > 0;
     return pair.x > 0 && pair.y > 0;
   });
-  if (!valid) throw regressionError(method, `requires positive ${axis} values`);
+  if (!valid) throw notApplicable(method, `requires positive ${axis} values`);
 };
 
 const fitCenteredLinear = (pairs: ReadonlyArray<RegressionPair>, method: IRRegressionMethod): LinearCoefficients => {
@@ -45,8 +50,9 @@ const fitCenteredLinear = (pairs: ReadonlyArray<RegressionPair>, method: IRRegre
   assertFiniteResult(method, meanY, 'y mean');
 
   const varianceX = pairs.reduce((sum, pair) => sum + (pair.x - meanX) ** 2, 0);
-  if (!isFiniteNumber(varianceX) || varianceX <= 0) {
-    throw regressionError(method, 'x variance is zero or non-finite; distinct x values are required');
+  assertFiniteResult(method, varianceX, 'x variance');
+  if (varianceX <= 0) {
+    throw notApplicable(method, 'x variance is zero; distinct x values are required');
   }
 
   const covarianceXY = pairs.reduce((sum, pair) => sum + (pair.x - meanX) * (pair.y - meanY), 0);
@@ -120,8 +126,9 @@ const solveNormalEquations = (
     }
 
     const pivot = matrix[column][column];
-    if (!isFiniteNumber(pivot) || Math.abs(pivot) <= tolerance) {
-      throw regressionError(method, 'design matrix is rank deficient');
+    assertFiniteResult(method, pivot, 'matrix pivot');
+    if (Math.abs(pivot) <= tolerance) {
+      throw notApplicable(method, 'design matrix is rank deficient');
     }
 
     for (let row = column + 1; row < dimension; row++) {
@@ -161,7 +168,7 @@ export const fitPolynomial = (
   const dimension = degree + 1;
   assertPairCount(pairs, dimension, method);
   if (new Set(pairs.map(pair => pair.x)).size < dimension) {
-    throw regressionError(method, `requires at least ${dimension} distinct x values`);
+    throw notApplicable(method, `requires at least ${dimension} distinct x values`);
   }
 
   const minimumX = Math.min(...pairs.map(pair => pair.x));

@@ -1,4 +1,4 @@
-import type { TextInlineSegment, TextFont, TextContentLineStyle } from '../../contract';
+﻿import type { TextInlineSegment, TextFont, TextContentLineStyle } from '../../contract';
 import { combineOpacity } from '../style';
 import { resolveFont, resolveFontSize, resolveFontWeight, resolveTextLineHeight } from './font';
 import { isMathSegment, parseInlineSegments } from './inline';
@@ -26,6 +26,8 @@ export const resolveTextBlock = (
   const font = { ...inheritedFont, size: inheritedFont.size * fontScale };
   const lines = (typeof text === 'string' ? [text] : text).map(line => {
     const resolved = resolveTextLine(line, { ...context, inheritedFont });
+    // ⚡单位字号缩放直接使用本次解析新建的行与片段，避免再次复制字体和片段
+    if (fontScale === 1) return resolved;
     return {
       ...resolved,
       segments: resolved.segments.map(segment =>

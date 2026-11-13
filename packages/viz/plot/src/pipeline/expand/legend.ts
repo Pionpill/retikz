@@ -403,6 +403,18 @@ export const buildLegendLayers = (
     };
     const showLabels = guide.tickLabels !== false;
     const descriptor = selectLegendDescriptor(guide, channelDescriptors, scaleByName, scaleRegistry);
+    // 共享透明度比例尺的所有 mark 颜色一致时才继承，避免取首个 mark 的颜色误导读者
+    const opacityColors = new Set(
+      guide.channel === 'opacity'
+        ? channelDescriptors
+            .filter(
+              candidate =>
+                candidate.channel === 'opacity' && (guide.scale === undefined || candidate.scaleName === guide.scale),
+            )
+            .map(candidate => candidate.defaultColor ?? 'currentColor')
+        : [],
+    );
+    const opacityColor = opacityColors.size === 1 ? [...opacityColors][0] : 'currentColor';
 
     if (descriptor?.colorScale !== undefined) {
       const options = resolveColorLegend(descriptor, guide, base, showLabels);
@@ -550,7 +562,10 @@ export const buildLegendLayers = (
                     : `${edges[index - 1]} – < ${edges[index]}`;
           return {
             label: showLabels ? label : '',
-            color: descriptor.defaultColor ?? categoricalColorAt(resolvedTheme.palette.series, 0),
+            color:
+              legendForm === 'size'
+                ? (descriptor.defaultColor ?? categoricalColorAt(resolvedTheme.palette.series, 0))
+                : opacityColor,
             ...(legendForm === 'size' ? { radius: fitRadius(mapped) } : { opacity: mapped }),
           };
         },
@@ -611,7 +626,7 @@ export const buildLegendLayers = (
             }))
           : Array.from({ length: 33 }, (_, index) => {
               const offset = index / 32;
-              return { offset, color: 'currentColor', opacity: numericValue(lo + (hi - lo) * offset) };
+              return { offset, color: opacityColor, opacity: numericValue(lo + (hi - lo) * offset) };
             });
       const normalizedStops =
         stops.length === 1
@@ -652,7 +667,7 @@ export const buildLegendLayers = (
     const [lo, hi] = [Number(descriptor.domain[0]), Number(descriptor.domain[descriptor.domain.length - 1])];
     const ticks = niceNumericTicks([lo, hi], guide.ticks?.count ?? 3);
     const entries: Array<LegendEntry> = ticks.map(tick => {
-      return { label: showLabels ? tick.label : '', opacity: numericValue(tick.value) };
+      return { label: showLabels ? tick.label : '', color: opacityColor, opacity: numericValue(tick.value) };
     });
 
     return lowerLegend({ ...base, form: 'swatch', title, entries }, measure);

@@ -1,10 +1,10 @@
 import type { PropertyPath } from '@retikz/foundation';
-import type { SceneIdentity } from '@retikz/reconciler';
-import { createSceneIdentityLookup, sceneIdentityEquals } from '@retikz/reconciler';
 
 import { RetikzRenderError, RetikzRenderErrorCode } from '../error';
 import type { HydrationController } from '../hydration';
 import { recoverHydrationSetupFailure } from '../hydration/setup-failure';
+import type { SceneIdentity } from '../scene';
+import { createSceneIdentityLookup, sceneIdentityEquals } from '../scene';
 
 /** 判断动态值是否为普通对象 */
 const isPlainObject = (value: object): boolean => {

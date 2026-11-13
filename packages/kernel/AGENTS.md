@@ -1,6 +1,6 @@
 # kernel 分组工作指南
 
-本文件覆盖 `packages/kernel/` 下的 `foundation` / `math` / `runtime` / `reconciler` / `core` / `inspect` / `render` / `react` / `vanilla` / `tex`。全仓通用规则见根 [`AGENTS.md`](../../AGENTS.md)，包内细则看就近 `AGENTS.md`。
+本文件覆盖 `packages/kernel/` 下的 `foundation` / `math` / `reconciler` / `core` / `inspect` / `render` / `react` / `vanilla` / `tex`。全仓通用规则见根 [`AGENTS.md`](../../AGENTS.md)，包内细则看就近 `AGENTS.md`。
 
 ## 包职责与边界
 

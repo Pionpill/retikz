@@ -107,8 +107,8 @@ export const prepareStaticProcessingAsync = async (
   });
 };
 
-/** 异步 SSR 和静态宿主共用的完整准备、编译与提交入口 */
-export const processToStaticInputResultAsync = async (
+/** 异步准备作者输入后完成一次编译，返回无需管理会话生命周期的处理结果 */
+export const compileToSceneAsync = async (
   source: ProcessingSource,
   options: AsyncProcessingOptions = {},
 ): Promise<ProcessingResult> => {
@@ -134,11 +134,9 @@ export const processToResult = (
   return prepared.result;
 };
 
-/** 以 revision `0` 执行一次无生命周期的作者输入处理 */
-export const processToStaticInputResult = (
-  source: ProcessingSource,
-  options: ProcessingOptions = {},
-): ProcessingResult => processToResult(source, options, 0);
+/** 同步编译 InputScene 或 Core IR，返回 revision 为 0 且无需释放的处理结果 */
+export const compileToScene = (source: ProcessingSource, options: ProcessingOptions = {}): ProcessingResult =>
+  processToResult(source, options, 0);
 
 /** 将预编译 Scene 封装为不可更新的 static processing result */
 export const processToStaticResult = (scene: Scene, _options: ProcessingOptions = {}): StaticProcessingResult => {

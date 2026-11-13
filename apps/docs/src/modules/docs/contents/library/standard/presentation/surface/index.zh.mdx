@@ -142,7 +142,7 @@ console.log(svg);
 standard.surface → surfaceDefinition → Core Scope(Path + child replay + Path)
 ```
 
-未注入 `surfaceDefinition` 的手写 `standard.surface` 会得到 `COMPOSITE_NOT_REGISTERED` 诊断。React 与 Vanilla adapter 会贡献 `surfaceProvider → pathClipProvider` 的完整依赖链；嵌套 Tier 2 child 的 provider 依赖按 authored order 一并进入 Core resolver。直接调用 `compileToScene` 时，如果使用 `overflow: 'clip'`，除了 `surfaceDefinition` 还需通过 `clips` 传入完整的 `pathClipDefinition`。
+未注入 `surfaceDefinition` 的手写 `standard.surface` 会得到 `COMPOSITE_NOT_REGISTERED` 诊断。React 与 Vanilla adapter 会贡献 `surfaceProvider → pathClipProvider` 的完整依赖链；嵌套 Tier 2 child 的 provider 依赖按 authored order 一并进入 Core resolver。通过 `compileToScene` 编译手写 IR 时，如果使用 `overflow: 'clip'`，除了 `surfaceDefinition` 还需通过 `clips` 传入完整的 `pathClipDefinition`。
 
 Surface 还在 authored 外层 Scope 发布 id 为 `surface` 的 qualified spatial handle。handle 继承最终 placement 与 transform；child 自己的 handle 保持原 id、role、tags 与 payload，只增加真实 owner path。
 

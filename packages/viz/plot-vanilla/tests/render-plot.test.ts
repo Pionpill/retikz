@@ -2,7 +2,6 @@ import type { ExternalDatasets } from '@retikz/data';
 import { defineFieldOrder } from '@retikz/data';
 import type { IRPlot } from '@retikz/plot';
 import { definePositionAdjustment, lowerPlots } from '@retikz/plot';
-import { compileToScene } from '@retikz/reconciler';
 import { renderToSvgString } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 import { literal, number, strictObject } from 'zod';
@@ -22,6 +21,7 @@ import {
   smoothData,
 } from '../../plot/tests/helpers/plot-spec-fixtures';
 import { renderPlot } from '../src';
+import { compileTestResult } from './helpers/compilation';
 
 const spec: IRPlot = {
   namespace: 'plot',
@@ -110,9 +110,9 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
     expect(() => renderPlot(spec, {}, { layout: { width: 480, height: 300 } })).toThrow();
   });
 
-  it('与手写 compileToScene + renderToSvgString 等价（证明薄包装不引入额外语义）', () => {
+  it('与手写 SceneReconciler + renderToSvgString 等价（证明薄包装不引入额外语义）', () => {
     const viaRenderPlot = renderPlot(spec, data, { layout: { width: 480, height: 300 } });
-    const scene = compileToScene(
+    const scene = compileTestResult(
       { version: 1, type: 'scene', children: [spec] },
       { composites: lowerPlots(data, { layout: { width: 480, height: 300 } }) },
     ).scene;
@@ -133,7 +133,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
     };
     const options = { layout: { width: 480, height: 300 }, definitions: { positionAdjustments: [screenShift] } };
     const viaRenderPlot = renderPlot(placementSpec, data, options);
-    const scene = compileToScene(
+    const scene = compileTestResult(
       { version: 1, type: 'scene', children: [placementSpec] },
       { composites: lowerPlots(data, options) },
     ).scene;
@@ -173,7 +173,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
       ],
     };
     const datasets = { layered: [{ x: 0, y: 1, series: 'A' }] };
-    const scene = compileToScene(
+    const scene = compileTestResult(
       { version: 1, type: 'scene', children: [layeredSpec] },
       { composites: lowerPlots(datasets, { layout: { width: 480, height: 300 }, provenance: true }) },
     ).scene;
@@ -221,7 +221,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
         { month: 1, score: 9, city: 'B' },
       ],
     };
-    const scene = compileToScene(
+    const scene = compileTestResult(
       {
         version: 1,
         type: 'scene',

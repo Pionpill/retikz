@@ -571,7 +571,7 @@ export declare const jsonStructuralEquals: (left: unknown, right: unknown) => bo
 
 ## 校验与集合工具
 
-#### <ApiSourceLink label={"MergePropertiesOptions"} path={"packages/kernel/foundation/src/objects.ts"} startLine={19}>MergePropertiesOptions</ApiSourceLink>
+#### <ApiSourceLink label={"MergePropertiesOptions"} path={"packages/kernel/foundation/src/objects.ts"} startLine={87}>MergePropertiesOptions</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -594,6 +594,72 @@ export declare const jsonStructuralEquals: (left: unknown, right: unknown) => bo
 export type MergePropertiesOptions<T extends object> = Readonly<{
   shouldOverride?: (value: T[keyof T], key: PropertyKey) => boolean;
 }>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"ComparePropertiesOptions"} path={"packages/kernel/foundation/src/objects.ts"} startLine={4}>ComparePropertiesOptions</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员              | 类型     | 默认值 | 说明                                                                     |
+| ----------------- | -------- | ------ | ------------------------------------------------------------------------ |
+| `readonly depth?` | `number` | `1`    | 展开普通对象或数组的最大层数，必须为非负安全整数；0 表示仅使用 Object.is |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type ComparePropertiesOptions = Readonly<{
+  depth?: number;
+}>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"compareProperties"} path={"packages/kernel/foundation/src/objects.ts"} startLine={18}>compareProperties</ApiSourceLink>
+
+省略 options 时展开一层；到达深度上限及其他对象类型按 Object.is 比较。包含字符串与 symbol 键，数组长度和空位参与比较，不比较普通对象的 Object.prototype 与 null 原型差异，不修改输入
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称       | 类型 / 签名                | 说明                                                                           |
+| ------ | ---------- | -------------------------- | ------------------------------------------------------------------------------ |
+| 参数   | `previous` | `unknown`                  | —                                                                              |
+|        | `current`  | `unknown`                  | —                                                                              |
+|        | `options?` | `ComparePropertiesOptions` | —                                                                              |
+| 返回值 | —          | `boolean`                  | —                                                                              |
+| 错误   | —          | —                          | 深度无效或属性检查、读取失败时抛出 RetikzFoundationError，读取异常保留为 cause |
+
+</ApiTable>
+
+> **备注：** 循环引用同样受深度限制，不提供无限递归或循环结构等价判断。访问器在遍历到对应属性时读取，属性顺序不参与比较
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export declare const compareProperties: (
+  previous: unknown,
+  current: unknown,
+  options?: ComparePropertiesOptions,
+) => boolean;
 ```
 
 </DocTab>
@@ -693,7 +759,7 @@ export declare const createReadonlyMap: <TKey, TValue>(
 
 </DocTabs>
 
-#### <ApiSourceLink label={"mergeDefinedProperties"} path={"packages/kernel/foundation/src/objects.ts"} startLine={11}>mergeDefinedProperties</ApiSourceLink>
+#### <ApiSourceLink label={"mergeDefinedProperties"} path={"packages/kernel/foundation/src/objects.ts"} startLine={79}>mergeDefinedProperties</ApiSourceLink>
 
 跳过 undefined 源和属性值，保留 null、false、0 和空字符串；后面的有效值优先，不递归合并或修改输入
 
@@ -726,7 +792,7 @@ export declare const mergeDefinedProperties: <T extends object>(
 
 </DocTabs>
 
-#### <ApiSourceLink label={"mergeProperties"} path={"packages/kernel/foundation/src/objects.ts"} startLine={35}>mergeProperties</ApiSourceLink>
+#### <ApiSourceLink label={"mergeProperties"} path={"packages/kernel/foundation/src/objects.ts"} startLine={103}>mergeProperties</ApiSourceLink>
 
 包含字符串与 symbol 键，跳过 undefined 源；默认保留所有属性值，不递归合并或修改输入
 

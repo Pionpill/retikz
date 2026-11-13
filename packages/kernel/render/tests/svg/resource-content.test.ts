@@ -4,12 +4,13 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { bindWaapiDescriptors } from '../../src/animation';
 import { renderToSvgString } from '../../src/svg';
+import { compileTestResult } from '../helpers/compilation';
 
 describe('资源中的基础图元', () => {
   it('带箭头的路径绘制动画只在宿主容器应用一次透明度', () => {
     const scene: Scene = {
       layout: { x: 0, y: 0, width: 100, height: 100 },
-      resources: [],
+      resources: { paints: [], clips: [] },
       primitives: [
         {
           type: 'path',
@@ -83,21 +84,24 @@ describe('资源中的基础图元', () => {
           arrowEnd: { shape: 'test', baseSize: 10, refX: 10, markerWidth: 10, markerHeight: 10, marker: [content] },
         },
       ],
-      resources: [
-        {
-          kind: 'clip',
-          id: 'window',
-          path: {
-            fillRule: 'nonzero',
-            commands: [
-              { kind: 'move', to: [0, 0] },
-              { kind: 'line', to: [10, 0] },
-              { kind: 'line', to: [10, 10] },
-              { kind: 'close' },
-            ],
+      resources: {
+        paints: [],
+        clips: [
+          {
+            kind: 'clip',
+            id: 'window',
+            path: {
+              fillRule: 'nonzero',
+              commands: [
+                { kind: 'move', to: [0, 0] },
+                { kind: 'line', to: [10, 0] },
+                { kind: 'line', to: [10, 10] },
+                { kind: 'close' },
+              ],
+            },
           },
-        },
-      ],
+        ],
+      },
     };
     const svg = renderToSvgString(scene, { idPrefix: 'resource-test' });
     expect(svg).toContain('clip-path="url(#retikz-clip-resource-test-window)"');
@@ -117,38 +121,41 @@ it('隔离 Pattern 播放所属模块并将本地 ID 保留在 DOM 宿主索引�
       height: 10,
       fill: { kind: 'resourceRef', id: 'tile' },
     })),
-    resources: [
-      {
-        kind: 'paint',
-        id: 'tile',
-        spec: { kind: 'pattern', shape: 'dots' },
-        tile: {
-          size: 10,
-          motif: [
-            {
-              type: 'rect',
-              id: 'local',
-              x: 0,
-              y: 0,
-              width: 2,
-              height: 2,
-              fill: 'red',
-              animations: [
-                {
-                  property: 'opacity',
-                  duration: 100,
-                  trigger: { onEvent: 'click' },
-                  keyframes: [
-                    { at: 0, value: 0 },
-                    { at: 1, value: 1 },
-                  ],
-                },
-              ],
-            },
-          ],
+    resources: {
+      paints: [
+        {
+          kind: 'paint',
+          id: 'tile',
+          spec: { kind: 'pattern', shape: 'dots' },
+          tile: {
+            size: 10,
+            motif: [
+              {
+                type: 'rect',
+                id: 'local',
+                x: 0,
+                y: 0,
+                width: 2,
+                height: 2,
+                fill: 'red',
+                animations: [
+                  {
+                    property: 'opacity',
+                    duration: 100,
+                    trigger: { onEvent: 'click' },
+                    keyframes: [
+                      { at: 0, value: 0 },
+                      { at: 1, value: 1 },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
         },
-      },
-    ],
+      ],
+      clips: [],
+    },
   };
   const svg = renderToSvgString(scene, { idPrefix: 'owners' });
   expect(svg).toContain('id="retikz-paint-owners-tile-host-A"');
@@ -171,38 +178,41 @@ it('单击一台宿主仅重新启动其图案动画', () => {
       height: 10,
       fill: { kind: 'resourceRef', id: 'tile' },
     })),
-    resources: [
-      {
-        kind: 'paint',
-        id: 'tile',
-        spec: { kind: 'pattern', shape: 'dots' },
-        tile: {
-          size: 10,
-          motif: [
-            {
-              type: 'rect',
-              id: 'local',
-              x: 0,
-              y: 0,
-              width: 2,
-              height: 2,
-              fill: 'red',
-              animations: [
-                {
-                  property: 'opacity',
-                  duration: 100,
-                  trigger: { onEvent: 'click' },
-                  keyframes: [
-                    { at: 0, value: 0 },
-                    { at: 1, value: 1 },
-                  ],
-                },
-              ],
-            },
-          ],
+    resources: {
+      paints: [
+        {
+          kind: 'paint',
+          id: 'tile',
+          spec: { kind: 'pattern', shape: 'dots' },
+          tile: {
+            size: 10,
+            motif: [
+              {
+                type: 'rect',
+                id: 'local',
+                x: 0,
+                y: 0,
+                width: 2,
+                height: 2,
+                fill: 'red',
+                animations: [
+                  {
+                    property: 'opacity',
+                    duration: 100,
+                    trigger: { onEvent: 'click' },
+                    keyframes: [
+                      { at: 0, value: 0 },
+                      { at: 1, value: 1 },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
         },
-      },
-    ],
+      ],
+      clips: [],
+    },
   };
   const container = document.createElement('div');
   container.innerHTML = renderToSvgString(scene, { idPrefix: 'events' });
@@ -223,7 +233,6 @@ it('单击一台宿主仅重新启动其图案动画', () => {
 
 it('普通标记的动画沿宿主事件上下文绑定且实例隔离', async () => {
   const { defineMark } = await import('@retikz/core');
-  const { compileToScene } = await import('@retikz/reconciler');
   const mark = defineMark({
     name: 'animated',
     emit: () => [
@@ -249,7 +258,7 @@ it('普通标记的动画沿宿主事件上下文绑定且实例隔离', async (
       },
     ],
   });
-  const scene = compileToScene(
+  const scene = compileTestResult(
     {
       type: 'scene',
       version: 1,

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { IRScene } from '../../../../../core/src/schemas';
-import { compileToScene } from '../../../../src/compile';
+import { compileTestResult } from '../../../helpers/compilation';
 import { cubic, line, move } from '../../../helpers/path-command-factory';
 import { findPathPrim } from './helpers';
 
@@ -25,7 +25,7 @@ describe("编译路径：'bend'", () => {
     const offset = (6 * Math.tan((15 * Math.PI) / 180) * 4) / 3;
     const r = (n: number) => Math.round(n * 100) / 100;
 
-    expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([
+    expect(findPathPrim(compileTestResult(ir).scene.primitives).commands).toEqual([
       move([0, 0]),
       cubic([4, r(-offset)], [8, r(-offset)], [12, 0]),
     ]);
@@ -59,8 +59,8 @@ describe("编译路径：'bend'", () => {
       ],
     };
 
-    expect(findPathPrim(compileToScene(irImplicit).scene.primitives).commands).toEqual(
-      findPathPrim(compileToScene(irExplicit).scene.primitives).commands,
+    expect(findPathPrim(compileTestResult(irImplicit).scene.primitives).commands).toEqual(
+      findPathPrim(compileTestResult(irExplicit).scene.primitives).commands,
     );
   });
 
@@ -91,8 +91,8 @@ describe("编译路径：'bend'", () => {
         },
       ],
     };
-    const cmdsL = findPathPrim(compileToScene(irL).scene.primitives).commands;
-    const cmdsR = findPathPrim(compileToScene(irR).scene.primitives).commands;
+    const cmdsL = findPathPrim(compileTestResult(irL).scene.primitives).commands;
+    const cmdsR = findPathPrim(compileTestResult(irR).scene.primitives).commands;
 
     // 期望第二个 command 是 cubic：control 点 y 关于 chord 对称
     const cubL = cmdsL[1];
@@ -122,7 +122,7 @@ describe("编译路径：'bend'", () => {
         },
       ],
     };
-    const commands = findPathPrim(compileToScene(ir).scene.primitives).commands;
+    const commands = findPathPrim(compileTestResult(ir).scene.primitives).commands;
 
     // 起头是 move(0,0) → cubic ...，结尾是 line(20, 0)
     expect(commands[0]).toEqual(move([0, 0]));

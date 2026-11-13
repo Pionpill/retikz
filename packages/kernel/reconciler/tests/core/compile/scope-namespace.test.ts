@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { CompileWarning, IRScene, Scene, ScenePrimitive, Transform } from '../../../../core/src';
 import { BuiltinCompileWarningCode } from '../../../../core/src';
 import { applyTransformChain } from '../../../../core/src/compile/shared';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 
 const scene = (children: IRScene['children']): IRScene => ({
   version: 1,
@@ -13,7 +13,7 @@ const scene = (children: IRScene['children']): IRScene => ({
 
 const compileWithWarnings = (ir: IRScene): { compiled: Scene; warnings: Array<CompileWarning> } => {
   const warnings: Array<CompileWarning> = [];
-  const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
+  const compiled = compileTestResult(ir, { onWarn: w => warnings.push(w) }).scene;
   return { compiled, warnings };
 };
 
@@ -302,7 +302,7 @@ describe('GroupPrimitive 形态仍随 localNamespace 不变（仅命名空间隔
         children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
       },
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileTestResult(ir).scene;
     const group = compiled.primitives.find(p => p.type === 'group');
 
     expect(group?.transforms).toEqual([{ kind: 'translate', x: 30, y: 0 }]);

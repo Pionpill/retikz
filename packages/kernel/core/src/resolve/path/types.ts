@@ -37,6 +37,10 @@ export type CanonicalPathLabelPlacement = Omit<
 > & {
   /** 路径上的归一化位置 */
   position: number;
+  /** 已确定的比例解释方式 */
+  positionMode: NonNullable<IRPathLabel['positionMode']>;
+  /** 继承合并后确定的定位几何 */
+  positionGeometry: NonNullable<IRPathLabel['positionGeometry']>;
   /** 相对宿主的方向 */
   side: NonNullable<IRPathLabel['side']> | 'center';
   /** 相对宿主的距离 */
@@ -66,6 +70,10 @@ export type CanonicalPathLabel = Omit<
   text: CanonicalTextBlock;
   /** 路径上的归一化位置 */
   position: number;
+  /** 已确定的比例解释方式 */
+  positionMode: NonNullable<IRPathLabel['positionMode']>;
+  /** 继承合并后确定的定位几何 */
+  positionGeometry: NonNullable<IRPathLabel['positionGeometry']>;
   /** 相对宿主线段的方向 */
   side: NonNullable<IRPathLabel['side']> | 'center';
   /** 相对宿主线的偏移距离 */
@@ -116,7 +124,7 @@ export type PathColorSource = Omit<IRPathBase, 'style' | 'children' | 'label' | 
     end?: MarkColorSource & { endpointOverlap?: number };
   };
   /** 已解析颜色并保留位置、旋转配置的沿线标记 */
-  marks?: Array<MarkColorSource & Pick<IRPathMark, 'pos' | 'rotate'>>;
+  marks?: Array<MarkColorSource & Pick<IRPathMark, 'pos' | 'rotate' | 'positionMode' | 'positionGeometry'>>;
 };
 
 type WithCanonicalStepLabel<TStep extends StepColorSource> = TStep extends unknown
@@ -148,7 +156,7 @@ export type CanonicalPathStep = CompleteCanonicalStep<StepColorSource>;
 /** 已补齐静态默认值并解析绘制资源的待编译路径 */
 export type CanonicalPath = Omit<
   Omit<PathColorSource, 'style'> & NonNullable<PathColorSource['style']>,
-  'children' | 'label' | 'shadow' | 'fill' | 'stroke' | 'strokeWidth' | 'opacity'
+  'children' | 'label' | 'marks' | 'shadow' | 'fill' | 'stroke' | 'strokeWidth' | 'opacity'
 > &
   Required<GraphicOpacityResolution> &
   Required<
@@ -171,6 +179,10 @@ export type CanonicalPath = Omit<
     children?: Array<CanonicalPathStep>;
     /** 统一为数组的宿主标签 */
     label?: Array<CanonicalPathLabel>;
+    /** 已确定定位模式和几何的沿线标记 */
+    marks?: Array<
+      NonNullable<PathColorSource['marks']>[number] & Required<Pick<IRPathMark, 'positionMode' | 'positionGeometry'>>
+    >;
     /** 已展开预设并补齐颜色的阴影 */
     shadow?: CanonicalDropShadow;
   };

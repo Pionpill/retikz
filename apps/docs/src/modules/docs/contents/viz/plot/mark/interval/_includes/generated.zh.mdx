@@ -109,3 +109,15 @@ export type IRPlotIntervalMark = ZodInfer<typeof IntervalMarkSchema>;
 </DocTab>
 
 </DocTabs>
+
+#### <ApiSourceLink label={"IntervalBoundsSchema"} path={"packages/viz/plot/src/schemas/mark/interval.ts"} startLine={82}>IntervalBoundsSchema</ApiSourceLink>
+
+<ZodSchema
+  name="IntervalBoundsSchema"
+  description="按坐标角色指定的区间边界映射。"
+  descriptions={{ x: '第一位置角色的区间边界。', y: '第二位置角色的区间边界。' }}
+/>
+
+#### <ApiSourceLink label={"IntervalBoundSchema"} path={"packages/viz/plot/src/schemas/mark/interval.ts"} startLine={73}>IntervalBoundSchema</ApiSourceLink>
+
+<ZodSchema name="IntervalBoundSchema" description="Band、Span、Extent、Proportional 或 Full 单角色区间边界联合。" />

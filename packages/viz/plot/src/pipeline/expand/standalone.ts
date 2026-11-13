@@ -1,8 +1,8 @@
 import type { IRScene, IRScope } from '@retikz/core';
 import { defineComposite } from '@retikz/core';
 import type { DataLineageOptions, ExternalDatasets } from '@retikz/data';
+import { SceneReconciler } from '@retikz/reconciler';
 import type { CompileOptions } from '@retikz/reconciler';
-import { compileToScene } from '@retikz/reconciler';
 
 import type { PreparedPlotData } from '../../contract';
 import type { IRPlot } from '../../schemas';
@@ -53,22 +53,29 @@ export const lowerStandalonePlot = (
       return { children: [] };
     },
   });
-  compileToScene(
-    {
-      version: 1,
-      type: 'scene',
-      ...(options.environment.theme === undefined ? {} : { theme: options.environment.theme }),
-      children:
-        options.environment.defaults === undefined
-          ? [spec]
-          : [{ type: 'scope', defaults: options.environment.defaults, children: [spec] }],
-    },
-    {
-      ...options.environment.compile,
-      // 独立 Source 使用显式 preparedData，不能复用宿主 Source 的实例输入绑定
-      compositeInputs: undefined,
-      composites: [definition],
-    },
-  );
+  (() => {
+    const reconciler = new SceneReconciler(
+      {
+        ...options.environment.compile,
+        // 独立 Source 使用显式 preparedData，不能复用宿主 Source 的实例输入绑定
+        compositeInputs: undefined,
+        composites: [definition],
+      },
+      { incremental: false },
+    );
+    try {
+      return reconciler.mount({
+        version: 1,
+        type: 'scene',
+        ...(options.environment.theme === undefined ? {} : { theme: options.environment.theme }),
+        children:
+          options.environment.defaults === undefined
+            ? [spec]
+            : [{ type: 'scope', defaults: options.environment.defaults, children: [spec] }],
+      }).compilation.result;
+    } finally {
+      reconciler.dispose();
+    }
+  })();
   return lowered;
 };

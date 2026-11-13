@@ -7,7 +7,7 @@ import { defineShape } from '../../../../core/src/contract';
 import { BUILTIN_SHAPES } from '../../../../core/src/providers/shape/shape';
 import type { IRScene } from '../../../../core/src/schemas';
 import { NodeSchema } from '../../../../core/src/schemas';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 import { flattenPrims } from '../../helpers/flatten';
 
 const findByType = <T extends ScenePrimitive['type']>(
@@ -102,7 +102,7 @@ describe('形状注册表 - 注入（快乐路径）', () => {
       resolveAnchor: rectangle.resolveAnchor,
       emit: rectangle.emit,
     });
-    const result = compileToScene(
+    const result = compileTestResult(
       {
         version: 1,
         type: 'scene',
@@ -136,7 +136,7 @@ describe('形状注册表 - 注入（快乐路径）', () => {
       type: 'scene',
       children: [{ type: 'node', id: 'A', shape: 'hexagon', position: [0, 0] }],
     };
-    const scene = compileToScene(ir, { shapes: [{ ...radialShape(), name: 'hexagon' }] }).scene;
+    const scene = compileTestResult(ir, { shapes: [{ ...radialShape(), name: 'hexagon' }] }).scene;
 
     expect(findByType(scene.primitives, 'ellipse')).toBeDefined();
   });
@@ -156,7 +156,7 @@ describe('形状注册表 - 注入（快乐路径）', () => {
         },
       ],
     };
-    const scene = compileToScene(ir, { shapes: [{ ...radialShape(), name: 'hexagon' }] }).scene;
+    const scene = compileTestResult(ir, { shapes: [{ ...radialShape(), name: 'hexagon' }] }).scene;
     const linePath = scene.primitives.find(p => p.type === 'path');
 
     // r = √(8²+8²) = 11.31; 30° → (9.8, 5.66)
@@ -169,7 +169,7 @@ describe('形状注册表 - 注入（快乐路径）', () => {
       type: 'scene',
       children: [{ type: 'node', id: 'A', shape: 'chip', position: [0, 0] }],
     };
-    const scene = compileToScene(ir, { shapes: [{ ...chipShape(), name: 'chip' }] }).scene;
+    const scene = compileTestResult(ir, { shapes: [{ ...chipShape(), name: 'chip' }] }).scene;
 
     expect(scene.primitives.filter(p => p.type === 'rect' || p.type === 'path')).toHaveLength(3);
   });
@@ -197,7 +197,7 @@ describe('形状注册表 - 注入（快乐路径）', () => {
         { type: 'node', id: 'B', shape: 'cached', position: [20, 0] },
       ],
     };
-    const scene = compileToScene(ir, { shapes: [{ ...cachedShape, name: 'cached' }] }).scene;
+    const scene = compileTestResult(ir, { shapes: [{ ...cachedShape, name: 'cached' }] }).scene;
     const rects = scene.primitives.filter((p): p is Extract<ScenePrimitive, { type: 'rect' }> => p.type === 'rect');
 
     expect(rects).toHaveLength(2);
@@ -224,7 +224,7 @@ describe('形状注册表 - 边界', () => {
       ],
     };
 
-    expect(compileToScene(ir, { shapes: [] }).scene).toEqual(compileToScene(ir).scene);
+    expect(compileTestResult(ir, { shapes: [] }).scene).toEqual(compileTestResult(ir).scene);
   });
 
   it('未指定形状时默认生成 RectPrimitive', () => {
@@ -234,7 +234,7 @@ describe('形状注册表 - 边界', () => {
       children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
     };
 
-    expect(findByType(compileToScene(ir).scene.primitives, 'rect')).toBeDefined();
+    expect(findByType(compileTestResult(ir).scene.primitives, 'rect')).toBeDefined();
   });
 
   it('Coordinate 和带 id 的 Scope 通过矩形几何解析合成布局', () => {
@@ -259,7 +259,7 @@ describe('形状注册表 - 边界', () => {
         },
       ],
     };
-    const scene = compileToScene(ir).scene;
+    const scene = compileTestResult(ir).scene;
     const linePath = scene.primitives.find(
       (p): p is Extract<ScenePrimitive, { type: 'path' }> =>
         p.type === 'path' && !p.commands.some(c => c.kind === 'close'),
@@ -298,7 +298,7 @@ describe('形状注册表 - 边界', () => {
 
     expect(
       () =>
-        compileToScene(ir, {
+        compileTestResult(ir, {
           shapes: [{ ...sentinelRect, name: 'rectangle' }],
         }).scene,
     ).toThrow(/duplicate shape registration: "rectangle"/);
@@ -313,11 +313,11 @@ describe('形状注册表 - 错误路径', () => {
       children: [{ type: 'node', id: 'A', shape: 'cloud', position: [0, 0] }],
     };
 
-    expect(() => compileToScene(ir).scene).toThrow(/Unknown provider 'cloud'/);
+    expect(() => compileTestResult(ir).scene).toThrow(/Unknown provider 'cloud'/);
 
     // circle 是内置 shape preset，不在 provider 注册表（裸 'circle' 由 compile 解析到 ellipse，不走查表）
     // 注册表含 polygon：排序后落在 ellipse 与 rectangle 之间。
-    expect(() => compileToScene(ir).scene).toThrow(/ellipse, polygon, rectangle/);
+    expect(() => compileTestResult(ir).scene).toThrow(/ellipse, polygon, rectangle/);
   });
 
   it('schema 接受非空白字符串形式的未知形状名', () => {
@@ -352,8 +352,8 @@ describe('形状注册表 - 错误路径', () => {
       children: [{ type: 'node', shape: { type: 'scaledBox', params: { scale: 'wide' } }, position: [0, 0] }],
     };
 
-    expect(() => compileToScene(ir, { shapes: [strictShape] }).scene).toThrow(/shape 'scaledBox'/);
-    expect(() => compileToScene(ir, { shapes: [strictShape] }).scene).toThrow(/children\[0\]\.shape\.params/);
+    expect(() => compileTestResult(ir, { shapes: [strictShape] }).scene).toThrow(/shape 'scaledBox'/);
+    expect(() => compileTestResult(ir, { shapes: [strictShape] }).scene).toThrow(/children\[0\]\.shape\.params/);
   });
 
   it('custom_shape_anchor_only_center: canonical anchor (top) 通过 AABB 上提不再 throw', () => {
@@ -375,7 +375,7 @@ describe('形状注册表 - 错误路径', () => {
     };
 
     // top 是 canonical 名，上提后走 AABB rectangle，不再 throw
-    expect(() => compileToScene(ir, { shapes: [{ ...radialShape(), name: 'dot' }] }).scene).not.toThrow();
+    expect(() => compileTestResult(ir, { shapes: [{ ...radialShape(), name: 'dot' }] }).scene).not.toThrow();
   });
 
   it('custom_shape_anchor_only_center: 非 canonical 专属 anchor (tip) 仍然 throw', () => {
@@ -395,7 +395,7 @@ describe('形状注册表 - 错误路径', () => {
       ],
     };
 
-    expect(() => compileToScene(ir, { shapes: [{ ...radialShape(), name: 'dot' }] }).scene).toThrow(
+    expect(() => compileTestResult(ir, { shapes: [{ ...radialShape(), name: 'dot' }] }).scene).toThrow(
       /Unknown anchor 'tip' for shape 'dot'/,
     );
   });
@@ -425,7 +425,7 @@ describe('形状注册表——交互', () => {
       children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
     };
 
-    expect(() => compileToScene(ir, { shapes: [{ ...ovalRect, name: 'rectangle' }] }).scene).toThrow(
+    expect(() => compileTestResult(ir, { shapes: [{ ...ovalRect, name: 'rectangle' }] }).scene).toThrow(
       /duplicate shape registration: "rectangle"/,
     );
   });
@@ -444,7 +444,7 @@ describe('形状注册表——交互', () => {
       };
       const ir: IRScene = { version: 1, type: 'scene', children: [{ type: 'node', id: 'A', position: [0, 0] }] };
 
-      expect(() => compileToScene(ir, { shapes: [{ ...ovalRect, name: 'rectangle' }] }).scene).toThrow(
+      expect(() => compileTestResult(ir, { shapes: [{ ...ovalRect, name: 'rectangle' }] }).scene).toThrow(
         /duplicate shape registration: "rectangle"/,
       );
     } finally {
@@ -458,7 +458,7 @@ describe('形状注册表——交互', () => {
       type: 'scene',
       children: [{ type: 'node', id: 'A', shape: 'diamond', position: [0, 0], text: 'D', rotate: 45 }],
     };
-    const group = findByType(compileToScene(ir).scene.primitives, 'group');
+    const group = findByType(compileTestResult(ir).scene.primitives, 'group');
 
     expect(group).toBeDefined();
     expect(group?.transforms?.[0]).toMatchObject({ kind: 'rotate', degrees: 45 });
@@ -486,7 +486,7 @@ describe('形状注册表——交互', () => {
         },
       ],
     };
-    const scene = compileToScene(ir, { shapes: [{ ...radialShape(), name: 'hexagon' }] }).scene;
+    const scene = compileTestResult(ir, { shapes: [{ ...radialShape(), name: 'hexagon' }] }).scene;
     const linePath = scene.primitives.find(p => p.type === 'path');
 
     // r = √(8²+8²)=11.31, + margin 10 → 21.31

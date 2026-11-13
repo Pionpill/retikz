@@ -1,8 +1,8 @@
 import { SceneSchema } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { scoreL2 } from '../../src/score/l2';
+import { compileTestResult } from '../helpers/compilation';
 
 const ir = SceneSchema.parse({
   version: 1,
@@ -10,7 +10,7 @@ const ir = SceneSchema.parse({
   children: [{ type: 'node', position: [0, 0], text: 'Hello', shape: 'rectangle' }],
 });
 
-const scene = compileToScene(ir).scene;
+const scene = compileTestResult(ir).scene;
 
 describe('scoreL2', () => {
   it('全部断言通过 → total=passed', () => {

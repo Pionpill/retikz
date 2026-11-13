@@ -25,5 +25,6 @@ export {
 } from './path';
 export type { IRPath, IRPathBase, IRPathScale, IRPathStroke, IRPathStyle } from './path';
 export * from './step';
+export * from './position';
 export { TargetSchema } from './target';
 export type { IRRelativeAccumulateTarget, IRRelativeTarget, IRTarget } from './target';

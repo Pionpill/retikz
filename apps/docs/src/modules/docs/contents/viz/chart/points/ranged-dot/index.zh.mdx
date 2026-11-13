@@ -101,8 +101,8 @@ import { RangedDotChartSchema, createRangedDotChartProviderContribution } from '
 import { createPlotProviderContribution } from '@retikz/plot';
 import { pathClipProvider } from '@retikz/extension';
 import { rangedDotMinimalData } from './ranged-dot-minimal.data';
-import { compileToScene } from '@retikz/reconciler';
-import { renderToSvgString } from '@retikz/vanilla';
+
+import { compileToScene, renderToSvgString } from '@retikz/vanilla';
 
 const chart = RangedDotChartSchema.parse({
   namespace: 'chart',
@@ -122,7 +122,7 @@ const definitions = resolveCoreProviderDependencies({
   ],
 });
 
-export const svg = renderToSvgString(compileToScene(ir, definitions).scene);
+export const svg = renderToSvgString(compileToScene(ir, { compile: definitions }).scene);
 ```
 
 </DocTab>
@@ -360,7 +360,7 @@ recipe: {
 ## 错误与限制
 
 - category 固定映射 y，start / end 固定共用 x，不通过交换字段改变图形方向。
-- 任一端点缺失或无法投影时，连接路径报错；请在传入数据前清理缺值。相等端点保持重合，不人为展开。
+- 任一字段端点缺值或无法映射时跳过该行连接，另一端有效的点和其它完整行继续绘制；无效常量和未知引用仍报错。相等端点保持重合，不人为展开。
 - 显式声明两个不同的端点尺度名会失败。成员外观不建立独立字段尺度。
 
 React 中，同一项配置不能同时通过根 `recipe` 与子组件声明，否则报错。

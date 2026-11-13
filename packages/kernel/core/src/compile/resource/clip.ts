@@ -8,7 +8,8 @@ import {
   safeThrownDetail,
 } from '../../resolve';
 import type { ClipResolution } from '../../resolve';
-import { formatResourceId, serializeResourceContent, storeSceneResource } from './identity';
+import { formatResourceId, storeSceneResource } from './identity';
+import { encodePathCommandSequence } from './path';
 
 /** 生成裁剪路径并登记可复用资源 */
 export type ClipRegistry = {
@@ -208,7 +209,10 @@ export const createClipRegistry = (
   };
 
   const registerPath = (path: SceneClipPath): string => {
-    const id = formatResourceId('clip', serializeResourceContent(path));
+    const id = formatResourceId(
+      'clip',
+      `{"commands":[${encodePathCommandSequence(path.commands)}],"fillRule":${JSON.stringify(path.fillRule)}}`,
+    );
     return importResource({ kind: 'clip', id, path });
   };
 

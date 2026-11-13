@@ -21,7 +21,7 @@ import {
 } from '../../../../core/src';
 import { BUILTIN_SHAPES } from '../../../../core/src/providers/shape/shape';
 import type { CompileOptions } from '../../../src/compile';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 import { flattenPrims } from '../../helpers/flatten';
 
 const fixedMeasurer: TextMeasurer = text => ({
@@ -80,7 +80,7 @@ const probeChild = (
     type: 'scene',
     children: [{ namespace: 'test', type: 'builtinProbe', child }],
   };
-  const compiled = compileToScene(scene, {
+  const compiled = compileTestResult(scene, {
     composites: [definition],
     measureText: fixedMeasurer,
     padding: 0,

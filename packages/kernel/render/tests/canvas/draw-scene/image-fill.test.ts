@@ -7,7 +7,10 @@ import { createSpyCanvasContext } from './helpers';
 describe('drawScene 图片填充', () => {
   const imageScene = (fit?: 'fill' | 'contain' | 'cover'): Scene => ({
     layout: { x: 0, y: 0, width: 200, height: 200 },
-    resources: [{ kind: 'paint', id: 'img', spec: { kind: 'image', href: 'pic.png', ...(fit ? { fit } : {}) } }],
+    resources: {
+      paints: [{ kind: 'paint', id: 'img', spec: { kind: 'image', href: 'pic.png', ...(fit ? { fit } : {}) } }],
+      clips: [],
+    },
     primitives: [{ type: 'rect', x: 0, y: 0, width: 200, height: 200, fill: { kind: 'resourceRef', id: 'img' } }],
   });
   const mockImage = { width: 100, height: 50 } as unknown as CanvasImageSource;

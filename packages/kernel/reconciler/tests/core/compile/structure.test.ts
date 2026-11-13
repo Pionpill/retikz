@@ -16,8 +16,7 @@ const source = (path: string): string => readFileSync(resolve(root, path), 'utf8
 describe('编译源结构', () => {
   it('Reconciler 根入口保留编译契约，隐藏内部产物与诊断组装', () => {
     for (const name of [
-      'compileToScene',
-      'compileSceneSnapshot',
+      'SceneReconciler',
       'createSharedCompileContext',
       'createWorkspaceCompileState',
       'formatCompileWarning',
@@ -43,8 +42,8 @@ describe('编译源结构', () => {
   });
 
   it('执行器不重复解析 provider 输入', () => {
-    const lower = source('../reconciler/src/compile/tree/composite/output.ts');
-    const traversal = source('../reconciler/src/compile/tree/scope/visit.ts');
+    const lower = source('../reconciler/src/compile/execution/composite/output.ts');
+    const traversal = source('../reconciler/src/compile/execution/scope/visit.ts');
 
     expect(lower).not.toContain('parseProviderPayload');
     expect(lower).not.toContain('registry.get(');
@@ -59,7 +58,6 @@ describe('编译源结构', () => {
       'compilePath',
       'compileScope',
       'composeScopeTransform',
-      'calculateCompileOutputBounds',
       'calculateLayoutFromBounds',
       'compileCoordinate',
       'compileNode',
@@ -68,7 +66,7 @@ describe('编译源结构', () => {
       'createPositionEvaluateContext',
       'fallbackMeasurer',
       'prepareScopePlacement',
-      'projectPublishedCompileLayout',
+      'projectPublishedReference',
       'projectNodeGeometry',
       'projectScopeCompileLayouts',
       'projectScopeOutputBounds',
@@ -77,6 +75,8 @@ describe('编译源结构', () => {
       expect(compile).toHaveProperty(name);
 
     for (const name of [
+      'calculateCompileOutputBounds',
+      'projectPublishedCompileLayout',
       'layoutNode',
       'emitNode',
       'emitNodePrimitives',

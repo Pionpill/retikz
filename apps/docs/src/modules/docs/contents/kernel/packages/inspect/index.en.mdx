@@ -12,7 +12,8 @@ description: Read ordinary compilation results and draw independent guides for f
 The registry describes available inspectors; requests select what to inspect. Registration alone produces no guides.
 
 ```ts
-import { compileToScene } from '@retikz/reconciler';
+import { compileToScene } from '@retikz/vanilla';
+
 import { compileInspectionToScene, createDefaultInspectorRegistry, PATH_INSPECTOR_KEY } from '@retikz/inspect';
 
 const primary = compileToScene({

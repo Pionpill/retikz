@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { IRPath, IRScene, ScenePrimitive } from '../../../../core/src';
 import type { ArrowDefinition } from '../../../../core/src/contract';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 import { flattenPrims } from '../../helpers/flatten';
 
 type TestArrowDefinition = WithOptionalProperties<ArrowDefinition, 'name'>;
@@ -29,7 +29,7 @@ const linePathIR = (marks?: IRPath['marks']): IRScene => ({
 
 describe('marks → 中段 marker primitive', () => {
   it.each([undefined, 0, 0.4])('中段mark将宿主和自身透明度合成到嵌套绘制图元：%s', opacity => {
-    const scene = compileToScene(
+    const scene = compileTestResult(
       {
         version: 1,
         type: 'scene',
@@ -71,15 +71,15 @@ describe('marks → 中段 marker primitive', () => {
   });
 
   it('单个中点 mark 比无 mark 多产 primitive', () => {
-    const without = leafCount(compileToScene(linePathIR()).scene.primitives);
-    const withMark = leafCount(compileToScene(linePathIR([{ pos: 0.5, shape: 'stealth' }])).scene.primitives);
+    const without = leafCount(compileTestResult(linePathIR()).scene.primitives);
+    const withMark = leafCount(compileTestResult(linePathIR([{ pos: 0.5, shape: 'stealth' }])).scene.primitives);
 
     expect(withMark).toBeGreaterThan(without);
   });
 
   it('两个 mark 比一个 mark 再多产 primitive', () => {
-    const one = leafCount(compileToScene(linePathIR([{ pos: 0.5 }])).scene.primitives);
-    const two = leafCount(compileToScene(linePathIR([{ pos: 0.25 }, { pos: 0.75 }])).scene.primitives);
+    const one = leafCount(compileTestResult(linePathIR([{ pos: 0.5 }])).scene.primitives);
+    const two = leafCount(compileTestResult(linePathIR([{ pos: 0.25 }, { pos: 0.75 }])).scene.primitives);
 
     expect(two).toBeGreaterThan(one);
   });
@@ -104,10 +104,11 @@ describe('marks → 中段 marker primitive', () => {
         ],
       },
     };
-    const without = leafCount(compileToScene(linePathIR()).scene.primitives);
+    const without = leafCount(compileTestResult(linePathIR()).scene.primitives);
     const withMark = leafCount(
-      compileToScene(ir, { arrows: Object.entries(customArrow).map(([name, definition]) => ({ ...definition, name })) })
-        .scene.primitives,
+      compileTestResult(ir, {
+        arrows: Object.entries(customArrow).map(([name, definition]) => ({ ...definition, name })),
+      }).scene.primitives,
     );
 
     expect(withMark).toBeGreaterThan(without);
@@ -146,8 +147,8 @@ describe('marks → 中段 marker primitive', () => {
       ],
     };
     const options = { measureText: () => ({ width: 20, height: 10 }) };
-    const basePrimitives = compileToScene(base, options).scene.primitives;
-    const markedPrimitives = compileToScene(withMark, options).scene.primitives;
+    const basePrimitives = compileTestResult(base, options).scene.primitives;
+    const markedPrimitives = compileTestResult(withMark, options).scene.primitives;
     const fragments = flattenPrims(markedPrimitives).filter(
       primitive => primitive.type === 'path' && primitive.stroke === '#13579b',
     );
@@ -190,7 +191,7 @@ describe('marks → 中段 marker 随 strokeWidth 缩放（与端点箭头一致
       return undefined;
     };
 
-    const x = find(compileToScene(ir).scene.primitives);
+    const x = find(compileTestResult(ir).scene.primitives);
     if (x === undefined) throw new Error('no mark scale group found');
 
     return x;

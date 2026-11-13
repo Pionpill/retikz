@@ -22,7 +22,7 @@ description: 根据位置字段的数量选择直角或极坐标投影，在平�
 
 ### 直角坐标系
 
-笛卡尔坐标系把 `x` 映射到水平方向、把 `y` 映射到垂直方向，适合沿共享直线轴比较分类与数值。下面的试验场固定坐标系和六行数据，可以切换图元，并调整绘图区留白与 y 网格：
+笛卡尔坐标系把 `x` 映射到水平方向、把 `y` 映射到垂直方向，适合沿共享直线轴比较分类与数值。下面的试验场固定坐标系和六行数据，可以切换图元，并控制 y 网格的显示：
 
 - 点使用 `<PointMark>` 显示每行数据的位置。
 - 线使用开放的 `<PathMark>` 按 `order` 连接这些位置。
@@ -32,7 +32,7 @@ description: 根据位置字段的数量选择直角或极坐标投影，在平�
   mode="showcase"
   files={['coordinate-cartesian', 'coordinate-cartesian.preview.tsx', 'coordinate-2d.data.ts']}
   size="lg"
-  caption="切换点、线、面后，再调整四边留白和 y 网格，观察同一组 x / y 绑定如何适应绘图区。"
+  caption="切换点、线、面，观察同一组 x / y 绑定的不同表达；打开网格可对照各点的数值。"
   defaultSourceFile="coordinate-cartesian.preview.tsx"
 />
 
@@ -46,13 +46,13 @@ description: 根据位置字段的数量选择直角或极坐标投影，在平�
 
 `interpolation` 决定相邻极坐标位置之间的连接空间。省略时，连续角向比例尺使用 `polar`，在角度 / 半径输出空间插值后再投影；离散角向比例尺使用 `chord`，直接连接投影顶点。coordinate 的显式值会同时作用于网格与可继承图元；PathMark 和 IntervalMark 可以再局部覆盖，PointMark 没有连接边界，因此不提供该配置。
 
-试验场可以分别控制 coordinate 与当前图元的插值模式，也可以调整 `innerRadius`、起始角度和扫过角度。扫过角度是面板中的教学参数，实际传给 coordinate 的 `endAngle` 等于 `startAngle + sweepAngle`。
+试验场可以控制坐标系的插值模式，并调整 `innerRadius`、起始角度和扫过角度。扫过角度是面板中的教学参数，实际传给 coordinate 的 `endAngle` 等于 `startAngle + sweepAngle`。
 
 <ComponentPreview
   mode="showcase"
   files={['coordinate-polar', 'coordinate-polar.preview.tsx', 'coordinate-2d.data.ts']}
   size="lg"
-  caption="比较自动推断、coordinate 显式模式与单个图元覆盖；PointMark 下图元插值会隐藏，因为点没有相邻边界。"
+  caption="比较自动推断、极坐标曲线与直线弦，观察网格和图元边界如何变化。示例起始角度为 −90°，使首个分类位于上方。"
   defaultSourceFile="coordinate-polar.preview.tsx"
 />
 
@@ -60,45 +60,44 @@ description: 根据位置字段的数量选择直角或极坐标投影，在平�
 
 一维坐标系使用一个位置维度，把事件或节点放到直线或固定半径的圆周上。
 
-### 沿直线或圆周定位
+位置字段始终绑定到 `x`，仍可使用 linear、log 或 time 等比例尺。下面两个示例使用同一组事件时刻，并将小时 domain 固定为 `[0, 24]`。
 
-| 目标     | 坐标配置                                              | 关键配置                        |
-| -------- | ----------------------------------------------------- | ------------------------------- |
-| 横向直线 | `coordinate="cartesian1D"`                            | `orientation: 'horizontal'`     |
-| 纵向直线 | `{ type: 'cartesian1D', orientation: 'vertical' }`    | `orientation: 'vertical'`       |
-| 完整圆周 | `coordinate="polar1D"`                                | `radius: 1`、角度 `0` 到 `360`  |
-| 部分圆周 | `{ type: 'polar1D', startAngle: 180, endAngle: 360 }` | 使用 `startAngle` 和 `endAngle` |
+`<PointMark>` 可以直接使用一维投影定位；柱、扇区和面积需要二维区域，不能使用一维坐标系。
 
-两种对象写法都是 `<Plot>` 的 `PlotDslProps['coordinate']` 输入。`cartesian1D` 默认横向，`polar1D` 的 `radius` 默认是 `1`，表示占满可用外半径，取值范围是 `0 < radius <= 1`，不是像素值。角度使用度数，默认从 `0` 到 `360`。
+### 直线投影
 
-试验场中的“扫过角度”是便于探索的教学控件，不是 `PlotDslProps['coordinate']` 字段。它在内部换算为 `endAngle = startAngle + sweepAngle`。
+`cartesian1D` 把位置映射到一条直线上。`orientation` 控制直线方向，默认横向；切换为纵向后，字段仍绑定到 `x`。
 
-坐标维度的数量不会限制比例尺类型；这个位置字段仍可使用 linear、log 或 time 等比例尺。示例显式把小时 domain 固定为 `[0, 24]`，因此 `22` 小时会落在完整圆周的 `330°`。
-
-需要一维坐标直接投影位置的 mark 目前只有 `<PointMark>`，适合沿轴事件点、时间线节点或圆周事件点；`PathMark` 可以像后面的示例一样引用已经定位的目标。柱、扇区和面积需要二维区域，在一维坐标中会报错。
-
-在控件面板中切换直线与圆周。使用圆周时，还可以调整外半径和角度区间。
+| 方向 | 坐标配置                                                        |
+| ---- | --------------------------------------------------------------- |
+| 横向 | `coordinate="cartesian1D"`                                      |
+| 纵向 | `coordinate={{ type: 'cartesian1D', orientation: 'vertical' }}` |
 
 <ComponentPreview
   mode="showcase"
   files={['coordinate-1d-playground', 'coordinate-1d-playground.preview.tsx', 'coordinate-1d-playground.data.ts']}
-  size="lg"
-  caption="两种形态使用同一组事件时刻和固定的 0–24 小时 domain。方形画布保持不变，便于直接比较直线与圆周的空间排列。"
+  size="sm"
+  caption="切换横向与纵向，观察相同事件时刻沿直线排列；数据和比例尺保持不变。"
   defaultSourceFile="coordinate-1d-playground.preview.tsx"
 />
 
-### 连接已定位的对象
+### 圆形投影
 
-一维坐标不必成为最终图形，它也可以先把对象排到一条线上，再让这些结果参与连线。下图把 12 个上层对象排到横线上，每 4 个对象连接到下方同一个汇总点，最终形成 3 组。
+`polar1D` 把位置映射为角度，所有点共用一个固定半径。`radius` 是可用外半径的比例，取值为 `0 < radius <= 1`，默认 `1`；角度使用度数，默认从 `0` 到 `360`。
 
-在同一个 Plot 内，`PointMark` 先用 `thingX` 把单个位置字段映射为节点，再用局部 `summarize` 将重复的目标字段折叠成 3 个下层节点。`anchorId` 为这些映射结果提供稳定 id，`PathMark` 因而能让每 4 个来源节点引用同一个目标节点。映射后的结果还可以继续参与汇聚连线、标注等二次操作。
+| 形态     | 坐标配置                                                           |
+| -------- | ------------------------------------------------------------------ |
+| 完整圆周 | `coordinate="polar1D"`                                             |
+| 部分圆周 | `coordinate={{ type: 'polar1D', startAngle: 180, endAngle: 360 }}` |
+
+控件中的“扫过角度”用来调整圆弧覆盖范围，传入坐标系时换算为 `endAngle = startAngle + sweepAngle`。在默认的完整圆周上，`22` 小时对应 `330°`。
 
 <ComponentPreview
   mode="showcase"
-  files={['coordinate-1d-composition', 'coordinate-1d-composition.preview.tsx', 'coordinate-1d-composition.zh.data.ts']}
+  files={['coordinate-1d-polar', 'coordinate-1d-polar.preview.tsx', 'coordinate-1d-playground.data.ts']}
   size="lg"
-  caption="横轴只负责一维定位；12 个来源节点在投影后按稳定 id 分成 3 组，每组 4 条连接线汇聚到同一个目标节点。"
-  defaultSourceFile="coordinate-1d-composition.preview.tsx"
+  caption="调整半径、起始角度和扫过角度，观察同一组事件在圆周或圆弧上的位置。"
+  defaultSourceFile="coordinate-1d-polar.preview.tsx"
 />
 
 ## 自定义坐标系
@@ -109,7 +108,7 @@ description: 根据位置字段的数量选择直角或极坐标投影，在平�
 
 ## 相关属性
 
-以下属性用于本页的坐标配置；完整定义见[坐标系参考](/viz/plot/reference/coordinate)。
+以下属性用于本页的坐标配置；完整定义见[坐标系参考](/viz/plot/coordinate/reference)。
 
 <ComponentProps
   items={[

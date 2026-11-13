@@ -8,6 +8,8 @@ import type { CellProjectableCoordinate, CoordinateFrame } from './types';
  * 判断坐标帧是否支持 cell 类几何投影
  * @description interval、reference band 等 mark 先构造逻辑 Cell，再要求 frame.projectCell 把 Cell 投成 rect / sector / contour。
  *   这个 guard 只表示“能投 cell”，不表示 mark 侧一定能构造 cell；自定义 interval 仍需要 roleScales
+ * @param coordinate 待检查的运行时坐标帧
+ * @returns 是否提供可调用的 projectCell 能力
  */
 export const hasProjectCell = (coordinate: CoordinateFrame): coordinate is CellProjectableCoordinate => {
   const candidate = coordinate as { projectCell?: unknown };

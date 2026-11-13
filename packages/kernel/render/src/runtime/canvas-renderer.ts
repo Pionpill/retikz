@@ -1,14 +1,7 @@
 import type { Scene, ScenePrimitive } from '@retikz/core';
 import type { PropertyPath } from '@retikz/foundation';
 import { encodePropertyPath, readPropertyPath } from '@retikz/foundation';
-import type {
-  ReconcilerPreparedCommit,
-  RuntimeScenePrimitive,
-  SceneIdentity,
-  ScenePatch,
-  SceneRuntimeSnapshot,
-} from '@retikz/reconciler';
-import { sceneIdentityEquals } from '@retikz/reconciler';
+import type { ReconcilerPreparedCommit } from '@retikz/reconciler';
 
 import type { AnimationControls, IdClockRegistry } from '../animation';
 import {
@@ -31,6 +24,8 @@ import {
   isCanvasAnimationIdVisible,
   withCanvasAnimationEventHandlers,
 } from '../hydration';
+import type { RuntimeScenePrimitive, SceneIdentity, ScenePatch, SceneRuntimeSnapshot } from '../scene';
+import { sceneIdentityEquals } from '../scene';
 import { computeDisplaySize, pathBounds, prepareRuntimeSceneContent } from '../shared';
 import type { RenderRuntimeConfig } from './config';
 import type { RenderFrameSnapshot } from './frame';
@@ -70,7 +65,7 @@ const primitiveAnimationDurationMs = (
 ): number | null =>
   sceneAnimationDurationMs({
     layout: { x: 0, y: 0, width: 0, height: 0 },
-    resources: [],
+    resources: { paints: [], clips: [] },
     primitives: [],
     animations: occurrenceAnimationTracks(primitive, snapshot),
   });
@@ -385,9 +380,7 @@ const collectCanvasImageHrefs = (
 ): ReadonlySet<string> =>
   new Set(
     [snapshot.scene, ...layers.map(layer => layer.scene)].flatMap(scene =>
-      (scene.resources ?? []).flatMap(resource =>
-        resource.kind === 'paint' && resource.spec.kind === 'image' ? [resource.spec.href] : [],
-      ),
+      (scene.resources?.paints ?? []).flatMap(resource => (resource.spec.kind === 'image' ? [resource.spec.href] : [])),
     ),
   );
 
@@ -511,7 +504,12 @@ const primitiveBounds = (primitive: RuntimeScenePrimitive): CanvasBounds | undef
 
 /** 按 primitivePath 建立顶层 display list，不依赖 topology 数组排列 */
 const buildDisplayList = (snapshot: SceneRuntimeSnapshot): ReadonlyArray<CanvasDisplayItem> | undefined => {
-  if (snapshot.scene.resources.length > 0 || snapshot.scene.animations.length > 0) return undefined;
+  if (
+    snapshot.scene.resources.paints.length > 0 ||
+    snapshot.scene.resources.clips.length > 0 ||
+    snapshot.scene.animations.length > 0
+  )
+    return undefined;
 
   const topologyByIndex = new Map(
     snapshot.topology.flatMap(node =>

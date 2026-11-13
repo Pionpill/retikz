@@ -11,6 +11,48 @@ const resolveTestLine = (
 ) => resolveTextBlock({ text: [source] }, context).lines[0];
 
 describe('解析文本', () => {
+  it.each([
+    { scale: { x: 1, y: 1 }, fontSize: 20, formulaSize: 10, lineHeight: 30, maxTextWidth: 80 },
+    { scale: { x: 2, y: 3 }, fontSize: 40, formulaSize: 20, lineHeight: 90, maxTextWidth: 160 },
+  ])('混排文本块应用缩放并隔离作者字体，scale=$scale', expected => {
+    const source = {
+      text: [
+        {
+          font: { size: '0.5em' as const },
+          segments: [{ text: 'a', font: { size: '2em' as const } }, { tex: 'x' }],
+        },
+      ],
+      lineHeight: 30,
+      maxTextWidth: 80,
+    };
+    const before = structuredClone(source);
+    const result = resolveTextBlock(source, {
+      rootFontSize: 16,
+      inheritedFont: { size: 20, family: 'serif' },
+      gatingOn: true,
+      scale: expected.scale,
+    });
+    expect(result).toMatchObject({
+      font: { size: expected.fontSize },
+      lineHeight: expected.lineHeight,
+      maxTextWidth: expected.maxTextWidth,
+      lines: [
+        {
+          plainText: 'a',
+          hasMath: true,
+          style: { font: { size: expected.formulaSize } },
+          segments: [
+            { text: 'a', font: { size: expected.fontSize } },
+            { tex: 'x', fontSize: expected.formulaSize },
+          ],
+        },
+      ],
+    });
+    const segment = result.lines[0].segments[0];
+    if ('text' in segment) segment.font.size = 999;
+    expect(source).toEqual(before);
+  });
+
   it('解析字体预设和相对单位', () => {
     expect(resolveFontSize('sm', { rootFontSize: 20, inheritedFontSize: 12 })).toBe(17.5);
     expect(resolveFontSize('1.25rem', { rootFontSize: 20, inheritedFontSize: 12 })).toBe(25);

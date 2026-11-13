@@ -86,7 +86,7 @@ describe('回归精确的 Source schema', () => {
         marks: [
           {
             kind: 'regression',
-            hidePoints: false,
+            showPoints: false,
             override: true,
             encodings: { x: 'sepalWidth' },
             properties: {

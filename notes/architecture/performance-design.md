@@ -1,207 +1,109 @@
-# 性能与增量运行时设计
+﻿# 性能与增量执行设计
 
-> **状态：架构总则，基础契约已部分实现。** `@retikz/runtime` 已承接 identity、owner / program registry、同步 transaction、revision 与 trace，Core 已建立受限 incremental program；跨 Tier 增量、cooperative scheduler、retained patch、渐进物化与 generation 仍由后续 ADR 冻结。本文只维护统一方向、跨包契约和验收口径，不替代当前公开类型。
+> **状态：当前执行边界与后续演进总则。** Core 提供原子绘图计算，Reconciler 统一完整与增量编译、Weave 缓存及候选事务；独立 Runtime 包及通用 Source / Computation / Participant 注册体系已移除。跨 Tier 增量、cooperative scheduler、渐进物化与 generation 的具体契约仍由后续 ADR 冻结，不作为当前已实现能力。
 >
-> 关联：[`交互与增量运行时设计`](./interaction-design.md) · [`能力完备性与模块边界`](./capability-design.md) · [`Kernel v0.5 路线`](../../packages/kernel/_notes/decisions/v0/v0.5/roadmap.md)
+> 关联：[能力完备性与模块边界](./capability-design.md) · [包职能设计](./package-responsibility-design.md) · [交互设计](./interaction-design.md) · [ADR-064](../../packages/kernel/_notes/decisions/v0/v0.5/064-remove-runtime.md) · [ADR-080](../../packages/kernel/_notes/decisions/v0/v0.5/080-unified-reconciler-compilation.md)
 >
-> 本文主责 Snapshot / ChangeSet、逐 Tier 增量、调度、retained patch、渐进物化和 LLM generation，也是 identity、revision、transaction 与 ownership 等共享运行时基础的总则；事件、behavior、intent、动画与交互 presentation 以交互设计为准。
+> 本文维护性能方向、能力归属与证据边界，不替代公开类型或 ADR。历史文档中的 Runtime / incremental program 设计不构成恢复通用运行时框架的要求；当前编译归属以 ADR-080 为准。
 
----
+## 1. 性能目标与边界
 
-## 1. 定位
+Retikz 的目标是让实际消费规模下的绘图与持续更新满足交互预算，同时保持正确性、扩展性与可维护性。首次完整执行和常用小输入是优化护栏，不能只验证大输入或缓存命中场景。
 
-retikz 的多 Tier lowering、renderer-agnostic Scene 与可序列化 IR 带来表达力和扩展性，也增加了全量更新路径的固定成本。v0.5 不以极限大数据吞吐为主要目标，而以“中等规模图形持续更新时仍然流畅”为性能定位：
+三类能力分别解决不同问题：
 
-- 用 Diff、缓存和局部失效减少无效工作。
-- 用 retained renderer 和 Scene Patch 降低提交成本。
-- 用可取消、可让出的 prepare 控制主线程占用。
-- 让交互优先于后台计算，让复杂更新尽快提供有效反馈。
-- 支持 LLM 以多个合法批次渐进生成，而不要求一次产出完整图形。
+- 增量计算减少不必执行的工作
+- 并发调度决定剩余工作何时执行、让出或取消
+- 渐进呈现决定完整语义结果如何分批物化
 
-首次全量渲染和极限吞吐是不得明显退化的护栏，不是牺牲架构边界追逐的单一指标。
+当前增量能力不自动提供可中断计算或渐进呈现。React 的并发渲染也不会自动中断普通 JavaScript 编译。
 
-## 2. 三个正交维度
-
-性能系统必须区分三个问题：
-
-1. **增量计算**决定哪些工作不必执行。
-2. **并发调度**决定剩余工作何时执行、何时让出或取消。
-3. **渐进呈现**决定哪些完整结果可以分批向用户显示。
-
-三者共享 transaction、revision、identity 和 ownership，但不能互相替代。只加入时间片不会减少全量 lowering；只做 Scene Diff 也无法避免上游 Tier 重算；渐进显示更不能掩盖不一致的中间状态。
-
-## 3. 统一运行链路
+## 2. 当前统一执行链路
 
 ```text
-Snapshot / ChangeSet
-  → Runtime Transaction
-  → Tier Computations
-  → Core Contributions
-  → Core Compiler
-  → Scene Snapshot / Patch
-  → Retained Renderer
+Core IR / 合法 Weave 批次
+  → Reconciler 候选执行与依赖调度
+  → Core resolve / layout / compile / emit 原子阶段
+  → 完整 Scene 与 artifacts
+  → 可选输出目标准备
+  → 候选状态与宿主结果提交
 ```
 
-Runtime 在链路之外统一管理 session、revision、调度、取消和提交。各领域只解释自己拥有的依赖与变化，不建立理解所有 Tier 语义的万能 Diff 引擎。
+完整与增量首轮复用同一执行器、领域语义和输出组装流程；增量模式额外保留 Weave 的输入、依赖与有效阶段产物。后续批次按有效性复用或重算同一套阶段，不建立第二个完整编译器。完整替换建立新计算状态，不隐式推断元素身份。
 
-### Snapshot 与 ChangeSet
+Core 不持有树遍历、等待队列、跨次缓存或发布生命周期。Reconciler 不复制默认值、几何和 Definition 语义，也不导入 Render、DOM 或框架；没有输出目标时仍可编译、读取和更新。Render 通过注入的输出目标参与提交，负责后端修改与恢复；Vanilla / React 负责 authoring 和宿主接线。
 
-- Snapshot 是完整事实、通用入口和正确性回退。
-- ChangeSet 是 Data、Plot、Table、交互与 LLM 的快速路径。
-- Runtime 把两者规范化为同一种有版本 transaction。
-- 每个被接受的 ChangeSet 都必须在候选 transaction 内确定性地产生下一份完整 owner Snapshot；下游 Patch 是前后 Snapshot 之间的派生产物。
-- 无法证明局部等价时，program 必须回退到所属失效边界的完整重算。
+无效批次与真实编译失败不得被静默完整重算掩盖。无法证明细粒度复用时，在现有执行链路内重算安全边界；这不放宽作者批次可操作的对象范围，也不赋予 Composite 生成内容独立编辑地址。
 
-Commit 时，owner Snapshot、program 输出、provenance 和索引一起切换。Patch 只优化执行，不成为第二份 IR、Scene 或领域真源。任何缓存和索引都必须允许丢弃后从 Snapshot 重建。
+## 3. 阶段产物、缓存与身份
 
-## 4. Identity、Key 与定位
+- Core 定义权威的领域配置和阶段产物；Reconciler 管理输入比较、依赖失效、缓存与传播，不为缓存另建简化布局或重复引用几何模型
+- 输入变化、领域配置变化与最终几何变化分别判断；新对象身份不直接证明几何改变，输入未变也不证明 Definition、测量条件或引用依赖未变
+- Core 消费调用方已确认有效的 prepared，只补算缺项；支持复用、驱动实际接入和整次更新收益分别举证
+- 名称、来源与出现位置来自当前输入及执行记录，不从旧布局推断；阶段产物不承担跨版本身份管理
+- 编译缓存属于显式会话，内部临时工作区属于本次执行；含可变状态、局部 token 或闭包的对象不自动具备跨次复用资格
+- 资源定义、资源引用和诊断随复用产物恢复，不能只复用图元而遗失资源或重复派发诊断
 
-稳定身份是 Diff、交互、history、动画与 LLM Patch 的共同基础，但 `id` 与 `key` 角色不同：
+字段、上下文与阶段命名遵循 [standard-name](../../.agents/skills/standard-name/SKILL.md)，输入、Canonical 与编译产物的职责遵循 [ADR-065](../../packages/kernel/_notes/decisions/v0/v0.5/065-compiled-layout-paint.md) 和 ADR-080，不在总则复制私有数据结构。
 
-- `id` 是声明作用域内稳定的局部身份，用于 ownership、事件、Patch 和查询。
-- `key` 是领域集合内部匹配新旧成员的规则，由集合 owner 决定。
-- 已有稳定 `id` 的集合可以直接以 `id` 作为 key。
-- 没有稳定身份时只能使用结构比较或扩大失效范围；数组下标不是 reorder 场景的可靠身份。
+## 4. 候选隔离与提交
 
-跨 owner 公共寻址必须使用包含 owner、namespace 或 identity path 的限定 identity；一个限定 identity 唯一解析到一个语义 owner，但可以映射到多个 Scene primitive。具体字段形态由 identity ADR 冻结。
+一次会话的候选输入、阶段结果、资源、来源和诊断保持隔离；成功提交前，外部读取仍指向已提交结果。试算、未就绪或未选中的 Composite 候选不得污染已发布状态。
 
-每个 Tier 维护自己拥有的索引，并通过 ownership 关联：
+Reconciler 协调编译与可选宿主准备、提交和恢复；Render 拥有具体后端恢复实现。失败不推进成功版本、不发布成功通知；恢复失败必须如实报告，不声称画面已恢复一致。warning 与观察通知在成功发布后派发，观察回调失败不撤销已发布结果。
 
-```text
-Domain identity
-  → Core contribution identities
-  → Scene semantic identities
-  → Renderer objects
-```
+提交与重入、失败恢复、释放语义以 ADR-064 及当前 Reconciler / Render 契约为准。输出 Patch 是执行优化，不能成为第二份 IR 或绕过权威完整结果；只改变 Render 配置时复用已提交计算结果。
 
-同一个语义 `id` 可以下沉为多个 Scene primitive，因此公共索引不能简化成 `id → mutable object`。按 id 发起的持久更新必须路由给领域 owner，再通过 transaction 修改 Snapshot；只有 hover、drag preview、动画等瞬时 presentation 可以直接作用于 retained view。
+## 5. 包职责
 
-## 5. 每个 Tier 负责自己的增量
+| Owner                  | 当前职责                                                                                  | 不承担                                           |
+| ---------------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| Core                   | IR / schema、Definition / registry、领域解析、布局、几何与图元计算、Scene 语义            | 完整执行生命周期、跨次身份、缓存有效性、宿主提交 |
+| Reconciler             | 完整与增量执行、Weave、依赖与失效、候选隔离、revision、运行期快照与更新输出、输出事务协调 | 领域绘图算法、通用任务调度框架、后端绘制         |
+| Render                 | Scene 后端执行、retained view、宿主资源与输出目标的准备/提交/恢复                         | 作者输入解释、领域布局与失效推断                 |
+| Vanilla / 框架 adapter | 输入组装、会话与宿主接线；框架经 Vanilla 复用处理能力                                     | 平行编译器、事务或渲染语义                       |
+| 各 Tier 2              | 所属领域的 schema、lowering、依赖与输出语义                                               | 通用运行时或其他领域的失效规则                   |
 
-Data、Plot、Table、Core 和未来 Tier 2 都以 incremental program 参与运行时。每个 program 负责：
+无领域、确有跨包消费者的原子契约才进入 Foundation；不得将已删除的通用注册图、事务框架或领域诊断搬入 Foundation。各包拥有自己的 trace 词汇，观测工具不反向决定生产公共 API。
 
-- 从完整输入生成完整输出。
-- 识别自己拥有的依赖与最小失效边界。
-- 在支持时从 ChangeSet 生成下游 Patch。
-- 保留输入身份到输出身份的 provenance。
-- 在局部处理不安全时声明 fallback。
+## 6. 性能测量与验收
 
-因此 Diff 逐层传播，而不是等所有 lowering 完成后只比较最终 Scene：
+性能工作遵循 [test-performance](../../.agents/skills/test-performance/SKILL.md)，日常功能检查、发布与只读 review 不自动授权性能运行。独立 Bench 应用的旧方案见[历史设计](./bench-design.md)，不作为现行实施要求。
 
-```text
-Data Pulse
-  → Plot mark changes
-  → Core contribution changes
-  → Scene changes
-  → Renderer patches
-```
+- Math 测单次算法；Core 测拥有的解析、布局或编译阶段；Reconciler 测完整编译与更新流程。渲染或应用交互成本由相应消费层测量，不能用编译耗时代替帧延迟
+- 每项先确定操作 owner、真实消费或需求假设、输入复杂度与数量、计时边界、输出不变量和预算；采样次数不等于业务规模
+- 功能正确性、消费预算、相对收益与 CI 阻断分别评价；局部提速不能推导完整流程提速，复杂度分析不能代替实测收益
+- 完整流程覆盖实际拥有的准备、比较、计算、资源恢复和提交成本；准备好的单阶段对照只能证明该阶段的消费成本
+- 操作 owner 或计时边界变化时核对基准、fixture、预算和报告归属；不同入口、环境或工作负载不能直接沿用同一基线
+- 跨包对照记录实际参与计算的源码或产物身份；只记录调用包指纹与 dirty 标记不足以区分依赖变更
+- 已获授权的有状态流程测量覆盖首次执行、真实变化和等值更新，并核对与完整重建的可观察等价性；按实际能力增加失效传播或安全重算场景，不模拟未落地能力
 
-Compile cache、索引、候选结果和 retained state 都属于显式 runtime session，不使用模块全局或时间相关缓存。候选 session 只有在 revision 校验通过并成功提交后才能成为当前状态。
+采样、报告、退化复测、优化轮次与人工基线选择统一由性能 skill 维护。未测量、条件不可比或输出错误时，明确证据缺口，不给出性能通过结论。
 
-## 6. 并发准备与原子提交
+## 7. 后续方向：逐领域增量
 
-React Concurrent Rendering 不会自动中断普通 JavaScript lowering。Kernel 需要 framework-neutral 的 cooperative scheduler；React 和 Vanilla 只负责宿主接线。
+跨 Tier 增量是后续方向，不要求所有领域接入通用 incremental program。各领域继续拥有 key、依赖、最小安全重算边界、lowering 和 provenance；未来变化协议必须经 ADR 定义真实输入输出及跨层组合方式。
 
-Computation 可以声明三类执行能力：
+完整输入是正确性依据，变化协议必须闭合为下一份完整领域结果。没有可证明的局部复用条件时重算所属安全边界；不建立理解全部 Tier 语义的万能 Diff 引擎。
 
-- **blocking**：必须一次完成的短任务。
-- **chunkable**：可保存进度并按预算主动让出。
-- **offloadable**：纯计算且可序列化，可交给 Worker 等执行环境。
+身份与显示索引分开：一个领域实体可下沉为多个图元，数组下标不自动成为重排后的稳定身份。持久更新回到对应领域输入，瞬时 hover 或拖动预览不能绕过领域契约修改持久事实。缓存与索引可丢弃后重建，不成为持久化真源。
 
-未声明能力的内置或第三方 program 默认按 blocking 执行，保证扩展可以渐进接入。
+## 8. 后续方向：并发调度
 
-跨包只使用有限的语义优先级：
+Cooperative scheduler、取消、时间片与 Worker 接入尚需独立设计，不能通过把原 Runtime 改名为 Reconciler 引入。执行能力可以按 blocking、chunkable、offloadable 区分，但注册契约、默认行为、宿主映射和包归属必须由后续 ADR 冻结。
 
-1. `immediate`：pointer feedback、drag preview、取消。
-2. `interactive`：用户明确触发的领域更新。
-3. `visible`：当前视图编译与 LLM 可见批次。
-4. `background`：预计算、缓存与非当前视图任务。
+优先级可区分 pointer feedback、交互更新、可见内容与后台预计算；领域包不以任意数字争抢资源。可中断任务在协作边界让出，普通 blocking 调用不承诺可中途取消。若引入异步候选，提交前的版本与有效性检查仍是拒绝过期结果的边界。
 
-Tier 2 不使用任意数字争抢资源。Runtime 根据宿主、设备和当前帧动态映射实际预算。高优先级任务在下一个 cooperative boundary 抢占低优先级 prepare；主线程 blocking program 不能被中途打断，默认 blocking 只保证兼容与正确性，不承诺帧延迟。同一 session 的新 revision 可以废弃旧候选结果；commit 前的 revision 校验仍是拒绝过期结果的正确性边界。
+## 9. 后续方向：渐进呈现与生成
 
-## 7. Retained Renderer 与可选渐进呈现
+渐进呈现只改变完整语义结果的物化节奏，不等于增量计算，也不是部分提交 IR。原子呈现仍服务 SSR、导出、截图及严格一致性视图；渐进策略须显式启用，并由 renderer 能力与后续 ADR 明确适用范围、诊断及恢复行为。
 
-SVG、Canvas 与未来 renderer 共享 Scene Patch 语义，但各自拥有 retained structure、资源缓存、空间索引和局部提交策略。无法安全 patch 时，可以扩大到 render group、layer 或完整 redraw，fallback 只影响性能。
+表现层的可见内容、geometry、hit-test 与 presentation index 必须对应同一物化状态，未物化实体不可命中。候选画面不提供绕过领域提交的持久编辑入口。具体首屏/更新开关、候选呈现时机和资源释放不在本文预先冻结。
 
-**可增量计算不等于必须渐进显示。** 表现层必须提供可选择的呈现策略，以适应不同场景：
+LLM 多批生成修改的是领域声明，与 renderer 分批物化不同。后续 generation 设计应明确合法批次、稳定身份、恢复、接受与撤销边界；不能把未来 generation 场景列为当前性能套件已覆盖能力。
 
-- **原子呈现**：完整结果准备并物化后一次显示，适合 SSR、导出、截图、严格一致性视图以及不希望出现搭建过程的场景。
-- **渐进呈现**：首屏或大型更新按合法 presentation batch 显示，适合交互式浏览和强调尽快反馈的场景。
+## 10. 演进与收尾
 
-首屏与后续更新是否渐进应允许分别选择。Computation 仍只产出完整 Scene；渐进策略只有在调用方启用且 renderer / Scene 边界声明支持时生效，否则回退到原子呈现并提供可观察诊断；具体开关、默认值、诊断和 `auto` 策略由 runtime / renderer ADR 冻结。
+优先测清真实消费链路并减少无效工作，再设计剩余工作的调度和呈现。各能力形成最小端到端闭环后扩展，不为未实现的方向拆除已工作的执行路径。
 
-逻辑 transaction 的 semantic revision 仍然原子提交。渐进模式可以在最终 semantic commit 前显示可回滚的候选 presentation batch，也可以在 commit 后继续物化同一 Scene；这些 batch 都不构成 document、contribution 或 Scene 的部分提交。
-
-表现层独立维护 materialization state。每个可见 batch 都必须让画面、geometry、hit-test、事件 target 与 presentation index 基于同一 materialization state，并暴露尚未完成的状态；未物化实体不得命中。候选 batch 在 semantic commit 前只能产生瞬时反馈，持久 intent 必须等待对应 owner Snapshot 提交或重新校验。原子模式仍保证 semantic revision 与完整 view 一次切换，渐进模式则是显式启用、可诊断、可回滚的表现层例外。
-
-LLM 的多批 draft transaction 与 renderer 的渐进物化是两种不同机制：前者逐批增加或修正语义内容，后者只改变同一语义结果的显示节奏。
-
-## 8. LLM 渐进生成
-
-LLM 默认在 generation session 中提交多个可见 draft transaction，例如：
-
-```text
-scale / coordinate / guide
-  → marks / series
-  → labels / annotations / details
-```
-
-每批必须是语义合法但可以不完整的结果，使用稳定 identity 的 upsert、remove、move 等领域操作，不以数组下标 JSON Patch 作为主要协议。批次可见、可恢复、可取消，但不进入正式 undo history；用户接受后再 squash 为一次正式文档 transaction。
-
-Generation log 可以保留批次 ChangeSet、基础 revision 和恢复 checkpoint，用于诊断与恢复，但不成为普通文档历史。
-
-## 9. 包职责
-
-- **`@retikz/runtime` 基础契约**：identity、revision、ChangeSet、program、transaction、ownership 与执行 capability。
-- **`@retikz/core`**：Core IR / contribution 的增量编译语义，输出 Scene Snapshot / Patch。
-- **`@retikz/runtime`**：session、调度、取消、revision 校验和原子提交；只协调通过通用契约注入的 program，不静态识别或依赖 Data、Plot、Table。当前同步 transaction、owner / program registry 与 trace 已落地，后续 cooperative scheduler 在同一包内扩展。
-- **`@retikz/render`**：Scene Patch、retained view、空间索引、命中与 presentation materialization。
-- **`@retikz/vanilla`**：创建并持有 framework-neutral runtime session，统一发布 revision-bound readonly processing result，并提供无 DOM 的处理入口。
-- **`@retikz/react` 等框架包**：通过 Vanilla 输入与处理 API 接入框架调度、生命周期和宿主桥接；不得创建或持有平行 runtime session。
-- **Data、Plot、Table 等 Tier 2**：领域 key、依赖、ChangeSet、增量 lowering 和 provenance。
-
-Signal 可以作为包内脏标记、派生缓存和细粒度订阅的实现工具，但跨包仍传播显式 ChangeSet、Patch、revision、identity 与 ownership。
-
-## 10. 性能验收
-
-v0.5 的主性能门槛是中等规模持续更新中的帧延迟与无效工作量。基准至少覆盖：
-
-- 首次完整渲染。
-- 单属性和单实体几何修改。
-- 数据增删、修改与 reorder。
-- 局部变化触发全局 layout 的 fallback。
-- 连续 drag / zoom 和快速 revision 替换。
-- LLM 分批 draft generation。
-- Tier 2 嵌套与跨 owner 失效。
-- 原子呈现与渐进呈现两种策略。
-
-每个场景同时观察首次延迟、更新延迟、最长主线程阻塞、访问实体数量、cache / patch 命中、取消浪费、commit 成本和 session 内存。具体规模、设备、预算与目标数值由各迭代 ADR 基于 baseline 冻结。
-
-## 11. 迭代顺序与 ADR 分工
-
-建议按以下顺序推进：
-
-1. 测量、tracing 与基准场景。
-2. Runtime、revision、identity 与 ownership。
-3. Snapshot Diff、bailout 与局部失效。
-4. 各 Tier incremental program 与 provenance。
-5. Scene Patch 与 retained renderer。
-6. Cooperative scheduler、取消与帧预算。
-7. LLM generation session。
-8. 在同一底座上建设 interaction。
-
-先减少工作，再调度剩余工作；Scene Patch 与 retained renderer 必须形成闭环，不能只优化 compile 后仍完整重建表现层。
-
-各包 ADR 负责冻结所属模块的 schema、API、算法、预算、fallback、测试契约与 capability；不得重复定义本文已统一的 Snapshot / ChangeSet、identity、transaction、调度与呈现边界。
-
-## 12. 正确性不变量
-
-1. Snapshot 是完整事实，增量结果与完整重建可观察等价。
-2. ChangeSet 必须闭合为下一份完整 owner Snapshot，Patch 只由前后 Snapshot 派生。
-3. 领域 owner 决定依赖、key 和最小失效范围。
-4. 过期 revision、失败候选和部分 prepare 结果不可提交。
-5. 缓存、Signal、Patch 和 renderer state 都不是持久化真源。
-6. 持久更新必须回到 owner，presentation 不绕过领域语义修改文档。
-7. 渐进呈现必须显式启用、可回退，并保持同一 materialization state 下可见内容与命中一致。
-8. React / Vanilla、SVG / Canvas 共享运行语义，差异通过 capability 表达。
-9. 内置与第三方 program 使用相同的增量、调度、fallback 和 diagnostics 契约。
+改变包职责、阶段或命名真源时，按 [规范同步](../../.agents/skills/develop-wrapup/SKILL.md#规范同步) 对齐架构总则、相关 ADR、就近指南与 skill。ADR 冻结长期行为，ignored plan 保存工作负载、验证命令与执行证据；未落地方向不写成当前承诺。

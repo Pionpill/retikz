@@ -485,11 +485,14 @@ Plot 通过 `definitions.regressions` 和 `implementations.regressions` 接收�
     {
       name: 'defineRegressionImplementation',
       kind: 'function',
-      type: '<TSource extends IRRegressionMethod, TOperation, TResult extends RegressionModel | Promise<RegressionModel>>(implementation: RegressionImplementation<TSource, TOperation, TResult>) => RegressionImplementation<TSource, TOperation, TResult>',
-      description: '引用拟合定义，fit 接收观测对并返回带 predict 的模型；同步入口要求同步模型。',
+      type: '<TSource extends IRRegressionMethod, TOperation>(implementation: RegressionImplementation<TSource, TOperation>) => RegressionImplementation<TSource, TOperation>',
+      description:
+        '引用拟合定义，至少提供同步 fit 或异步 fitAsync 之一；两者接收观测、参数和依赖上下文，返回带 predict 的模型。',
     },
   ]}
 />
+
+拟合实现的 `fit` 只返回同步模型，`fitAsync` 可返回 Promise，至少提供一个入口。同步执行要求整个依赖树都有 `fit`；异步执行优先使用 `fitAsync`，省略时复用完整同步依赖树，不通过调用回调探测能力。组合方法通过 Definition 的 `dependencies` 声明依赖，再用上下文的 `fitRegression(index, pairs)` 调用。
 
 ## 延伸阅读
 

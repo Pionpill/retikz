@@ -1,7 +1,6 @@
 import type { IRScene } from '@retikz/core';
 import type { PerformanceTraceSink } from '@retikz/foundation';
 import { isRetikzError } from '@retikz/foundation';
-import type { ScenePatch } from '@retikz/reconciler';
 import { SceneReconciler } from '@retikz/reconciler';
 import type { ReconcilerPreparedCommit } from '@retikz/reconciler';
 import { describe, expect, it, vi } from 'vitest';
@@ -21,6 +20,7 @@ import {
   RetikzRenderError,
   RetikzRenderErrorCode,
 } from '../../src/runtime';
+import type { ScenePatch } from '../../src/scene';
 
 const scene = (text: string): IRScene => ({
   version: 1,

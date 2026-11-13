@@ -186,10 +186,11 @@ const svg = renderToSvgString(input, { compile: { clips: [roundedRectClip] } });
 Pass the JSON in the IR panel to Core as `ir`, and still supply the Definition at compile time:
 
 ```ts
-import { compileToScene } from '@retikz/reconciler';
+import { compileToScene } from '@retikz/vanilla';
+
 import { roundedRectClip } from './rounded-rect-clip';
 
-const { scene } = compileToScene(ir, { clips: [roundedRectClip] });
+const { scene } = compileToScene(ir, { compile: { clips: [roundedRectClip] } });
 ```
 
 A `{ capability: 'clip', name: kind }` provider in a provider graph likewise creates a complete Definition and participates in the same conflict checks as explicit `clips`.

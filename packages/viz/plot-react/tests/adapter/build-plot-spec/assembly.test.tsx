@@ -1,17 +1,17 @@
 import type { IRPlot } from '@retikz/plot';
 import { lowerPlots, PlotSchema } from '@retikz/plot';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { buildPlotIR } from '../../../src/adapter';
 import { PlotAxis, PlotLegend } from '../../../src/components/guides';
 import { IntervalMark, PathMark, PointMark } from '../../../src/components/marks';
+import { compileTestResult } from '../../helpers/compilation';
 
 const compilePlot = (
   spec: IRPlot,
   datasets: Parameters<typeof lowerPlots>[0],
   options?: Parameters<typeof lowerPlots>[1],
-) => compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots(datasets, options) });
+) => compileTestResult({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots(datasets, options) });
 
 describe('buildPlotIR 装配', () => {
   it('透传 Plot defaultPlot 到 canonical IRPlot', () => {

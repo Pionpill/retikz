@@ -457,7 +457,7 @@ describe('Diagram Foundation 提供者集成', () => {
     const clippedGroups = primitivesOf(output.scene.primitives).filter(
       primitive => primitive.type === 'group' && primitive.clipRef !== undefined,
     );
-    const clipResources = (output.scene.resources ?? []).filter(resource => resource.kind === 'clip');
+    const clipResources = output.scene.resources?.clips ?? [];
     const roundedClip = clipResources.find(resource => resource.path.commands.some(command => command.kind === 'arc'));
     const scopeClip = clipResources.find(resource => resource.path.commands.every(command => command.kind !== 'arc'));
     const roundedArcs = roundedClip?.path.commands.filter(command => command.kind === 'arc') ?? [];

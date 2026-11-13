@@ -38,47 +38,6 @@ export const coordinateCartesianControls = definePreviewControls({
       ],
     },
     {
-      label: 'Plot area',
-      controls: [
-        {
-          kind: 'range',
-          id: 'marginTop',
-          label: 'Top margin',
-          defaultValue: 24,
-          min: 8,
-          max: 64,
-          step: 4,
-        },
-        {
-          kind: 'range',
-          id: 'marginRight',
-          label: 'Right margin',
-          defaultValue: 24,
-          min: 8,
-          max: 64,
-          step: 4,
-        },
-        {
-          kind: 'range',
-          id: 'marginBottom',
-          label: 'Bottom margin',
-          defaultValue: 24,
-          min: 8,
-          max: 64,
-          step: 4,
-        },
-        {
-          kind: 'range',
-          id: 'marginLeft',
-          label: 'Left margin',
-          defaultValue: 24,
-          min: 8,
-          max: 64,
-          step: 4,
-        },
-      ],
-    },
-    {
       label: 'Coordinate guide',
       controls: [
         {
@@ -97,11 +56,7 @@ export const previewControlContract = {
   controls: coordinateCartesianControls,
   canonicalValues: {
     markType: 'point',
-    marginTop: 24,
-    marginRight: 24,
-    marginBottom: 24,
-    marginLeft: 24,
     showGrid: true,
   },
-  relatedApis: ['PointMark', 'PathMark', 'IntervalMark', 'Plot.margin', 'PlotAxis.grid'],
+  relatedApis: ['PointMark', 'PathMark', 'IntervalMark', 'PlotAxis.grid'],
 } satisfies PreviewControlContract;

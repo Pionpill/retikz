@@ -10,8 +10,8 @@ import { BUILTIN_SHAPES } from '../../../../../core/src/providers/shape/shape';
 import { resolveNode } from '../../../../../core/src/resolve';
 import type { IRNode } from '../../../../../core/src/schemas';
 import { BoundarySchema, BuiltinBoundary, NodeSchema, NodeTargetSchema } from '../../../../../core/src/schemas';
-import { compileToScene } from '../../../../src';
 import { NamespaceStack } from '../../../../src/compile/runtime';
+import { compileTestResult } from '../../../helpers/compilation';
 
 describe('BoundarySchema', () => {
   it('解析保留关键字和注册名称', () => {
@@ -188,7 +188,7 @@ describe('公共导出+剩余象限', () => {
       ],
     };
 
-    expect(() => compileToScene(ir)).toThrow(/Unknown connection surface provider 'nope'/);
+    expect(() => compileTestResult(ir)).toThrow(/Unknown connection surface provider 'nope'/);
   });
 
   it('roundtrip_self_describing: 含 node.boundary / 端点 boundary 的 IR JSON 序列化后再 schema parse 等价', () => {
@@ -259,9 +259,9 @@ describe('公共导出+剩余象限', () => {
       ],
     };
 
-    expect(() => compileToScene(ir)).not.toThrow();
+    expect(() => compileTestResult(ir)).not.toThrow();
 
-    const scene = compileToScene(ir).scene;
+    const scene = compileTestResult(ir).scene;
 
     // 产出包含路径
     const paths = scene.primitives.filter(p => p.type === 'path');

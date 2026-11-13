@@ -1,6 +1,5 @@
 import type { IRNode, IRPath, IRScope } from '@retikz/core';
 import { resolveFieldPath } from '@retikz/data';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { defineLabelChannel } from '../../../src/contract';
@@ -8,6 +7,7 @@ import type { PlotsLoweringOptions } from '../../../src/pipeline/expand';
 import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
+import { compileTestResult } from '../../helpers/compilation';
 import { measureLabel } from '../../helpers/text-measurement';
 
 const opts: PlotsLoweringOptions = { layout: { width: 200, height: 100 } };
@@ -365,6 +365,6 @@ it('将编码的字体叶子编译到与固定标签值相同的测量场景中'
   const fixed = expandOf(fixedDomains([constantPoint(undefined, { text: 'fixed', font: { size: 24, weight: 700 } })]), {
     d: [],
   });
-  const compile = (scope: IRScope) => compileToScene({ version: 1, type: 'scene', children: [scope] }).scene;
+  const compile = (scope: IRScope) => compileTestResult({ version: 1, type: 'scene', children: [scope] }).scene;
   expect(compile(encoded)).toEqual(compile(fixed));
 });

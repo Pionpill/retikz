@@ -11,14 +11,14 @@ import type { StrokePathCompileContext } from '../types';
 import { PathCommandEmitter } from './commands';
 import { StrokeCursor } from './cursor';
 import { applyRoundedCorners } from './rounded-corners';
-import { StrokeSamplingCollector } from './sampling';
+import type { StrokeCornerSpan } from './rounded-corners';
 import { isStrokeSegmentStep, lowerSegmentStep } from './segments';
 import { isStrokeShapeStep, lowerShapeStep } from './shapes';
 import { evaluateStrokeStep } from './step';
 
 /** 将路径步骤转换为共享的几何命令与采样数据 */
 export const lowerStrokePathGeometry = (resolution: PathResolution, context: StrokePathCompileContext) => {
-  const { targetView, round, options: pathEmitOptions = {} } = context;
+  const { targetView, options: pathEmitOptions = {} } = context;
   const { canon: path, irPath } = resolution;
   const canonicalSteps = path.children ?? [];
 
@@ -54,16 +54,14 @@ export const lowerStrokePathGeometry = (resolution: PathResolution, context: Str
     warn,
   });
 
-  const commandEmitter = new PathCommandEmitter(round);
+  const commandEmitter = new PathCommandEmitter(value => value);
   const { commands, provenance, stepIndexes, boundsPoints, endpointSource } = commandEmitter;
-  const sampling = new StrokeSamplingCollector();
 
   for (let i = 0; i < steps.length; i++) {
     cursor.advance(i);
 
     let step = steps[i];
     const originalStep = canonicalSteps[i];
-    sampling.beginStep(i, step.kind);
     commandEmitter.beginStep(i, step.kind);
 
     step = evaluateStrokeStep(step, originalStep, i, { cursor, targetView, scopeChain });
@@ -82,7 +80,6 @@ export const lowerStrokePathGeometry = (resolution: PathResolution, context: Str
         warn,
         commandEmitter,
         cursor,
-        sampling,
       });
       if (!lowered) return null;
       if (
@@ -144,7 +141,6 @@ export const lowerStrokePathGeometry = (resolution: PathResolution, context: Str
       currentAnchor: currAnchor,
       penOverride: usedOverride,
       commandEmitter,
-      sampling,
     });
     if (!lowered) return null;
   }
@@ -152,6 +148,11 @@ export const lowerStrokePathGeometry = (resolution: PathResolution, context: Str
   // 折线几何圆角：对 line step ↔ line step 的内接缝插入圆弧
   // 在 shrink / split / marks 之前作用于未变换的 commands；缺省或 0 时逐字不变
   let roundedCommands = false;
+  const originalCommands = [...commands];
+  const originalStepIndexes = [...stepIndexes];
+  let spans: Array<Array<StrokeCornerSpan>> = commands.map((_, sourceCommandIndex) => [
+    { sourceCommandIndex, sourceRange: [0, 1], commandRange: [0, 1] },
+  ]);
   if (path.cornerRadius !== undefined && path.cornerRadius > 0) {
     const before = commands.length;
     const next = applyRoundedCorners({
@@ -159,8 +160,9 @@ export const lowerStrokePathGeometry = (resolution: PathResolution, context: Str
       provenance,
       sourceStepIndexes: stepIndexes,
       radius: path.cornerRadius,
-      round,
+      round: value => value,
     });
+    spans = next.spans;
 
     // 原地替换 commands 内容，下游 applyArrowShrinks / split 直接消费此数组
     if (next.commands.length !== before || next.commands.some((command, index) => command !== commands[index])) {
@@ -174,10 +176,12 @@ export const lowerStrokePathGeometry = (resolution: PathResolution, context: Str
 
   return {
     commands,
+    originalCommands,
+    originalStepIndexes,
+    spans,
     stepIndexes,
     boundsPoints,
     endpointSource,
-    sampling: { samplerRecords: sampling.samplerRecords },
     roundedCommands,
   };
 };

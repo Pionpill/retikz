@@ -31,7 +31,7 @@ const Demo: FC = () => (
     <Node
       id="compile"
       position={[75, 0]}
-      text={['Core compiler', 'compileToScene']}
+      text={['Core compiler', 'SceneReconciler']}
       cornerRadius={4}
       style={{ stroke: 'darkorange', fill: 'darkorange', font: { size: 12 }, opacity: { fill: 0.08 } }}
       layout={{ padding: 8 }}

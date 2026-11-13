@@ -14,6 +14,7 @@ import {
   compileScope,
 } from '@retikz/core';
 import type {
+  GroupPrimitive,
   CanonicalScope,
   CompiledBoundaryGeometry,
   CompiledNode,
@@ -31,7 +32,6 @@ import type {
 } from '@retikz/core';
 import type { PropertyPath } from '@retikz/foundation';
 
-import type { ScopeOutput } from '../helpers/scope-output';
 import type { WeaveElementRuntime } from './atomic-runtime';
 
 /** 节点阶段产物与当前工作区绘制输出，分别交给执行器保存 */
@@ -78,7 +78,11 @@ export const compileWeaveNode = (input: IRNode, runtime: WeaveElementRuntime): W
   return Object.freeze({
     canon: resolution,
     compiled: compilation,
-    output: Object.freeze({ ...output, zIndex: input.zIndex, resources: workspace.paintRegistry.getResources() }),
+    output: Object.freeze({
+      ...output,
+      zIndex: input.zIndex,
+      resources: { paints: workspace.paintRegistry.getResources(), clips: [] },
+    }),
   });
 };
 
@@ -118,7 +122,7 @@ export const compileWeavePath = (input: IRPathBase, runtime: WeaveElementRuntime
     ...shared.host,
     boundaryStore: workspace.boundaryStore,
     registerPaint: workspace.paintRegistry.register,
-    resources: () => [...workspace.paintRegistry.getResources(), ...workspace.clipRegistry.getResources()],
+    resources: () => ({ paints: workspace.paintRegistry.getResources(), clips: workspace.clipRegistry.getResources() }),
     onWarn: workspace.diagnosticCollector.collect,
     resolveTransform: composeScopeTransform,
   });
@@ -127,7 +131,7 @@ export const compileWeavePath = (input: IRPathBase, runtime: WeaveElementRuntime
     output: Object.freeze({
       zIndex: input.zIndex,
       primitives: compiled.emit?.primitives ?? [],
-      resources: workspace.paintRegistry.getResources(),
+      resources: { paints: workspace.paintRegistry.getResources(), clips: [] },
       bounds:
         compiled.emit === null ? [] : [{ boundsPoints: compiled.emit.boundsPoints, shadow: compiled.style.shadow }],
     }),
@@ -155,7 +159,11 @@ export const prepareWeaveScope = (input: InputScopeCompile, runtime: WeaveElemen
 };
 
 /** Scope 独立阶段结果，由执行器分别保存 */
-export type WeaveScopeCompilation = ScopeOutput & {
+export type WeaveScopeCompilation = {
+  /** 不含后代的分组包装属性 */
+  group: Omit<GroupPrimitive, 'children' | 'animations'>;
+  /** 自身图元、资源及绘制顺序 */
+  output: CompileOutput;
   /** Core 产生的包络与自身变换 */
   compiled: CompiledScope;
   canon: CanonicalScope;
@@ -197,7 +205,7 @@ export const compileWeaveScope = (
       zIndex: input.zIndex,
       primitives: [],
       bounds: [],
-      resources: [...workspace.paintRegistry.getResources(), ...workspace.clipRegistry.getResources()],
+      resources: { paints: workspace.paintRegistry.getResources(), clips: workspace.clipRegistry.getResources() },
     }),
   });
 };

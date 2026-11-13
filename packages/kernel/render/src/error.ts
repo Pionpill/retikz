@@ -48,6 +48,8 @@ export const RetikzRenderErrorCode = {
 
   /** Scene 拓扑无效 */
   SceneTopologyInvalid: 'RENDER_SCENE_TOPOLOGY_INVALID',
+  /** Scene 身份无效 */
+  SceneIdentityInvalid: 'RENDER_SCENE_IDENTITY_INVALID',
 
   /** SVG 渲染失败 */
   Svg: 'RENDER_SVG_ERROR',

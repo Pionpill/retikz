@@ -1,5 +1,19 @@
 /** @retikz/math 中文 JSDoc 的审阅后英文投影 */
 const translations: Readonly<Record<string, string>> = {
+  '一段曲线的只读累计长度模型，独立于查询位置':
+    'Read-only cumulative length model for a curve, independent of query position',
+  '原始曲线，不得在模型生命周期内修改': 'Original curve, which must not be modified during the model lifetime',
+  自适应区间边界的参数: 'Parameters at adaptive interval boundaries',
+  对应参数边界的累计长度: 'Cumulative lengths at the parameter boundaries',
+  全曲线长度: 'Total curve length',
+  局部距离查询的绝对容差: 'Absolute tolerance for local distance queries',
+  曲线长度准备与无状态位置查询: 'Curve length preparation and stateless position queries',
+  '准备可反复查询的曲线长度模型；非有限或细分预算耗尽时返回 null':
+    'Prepare a reusable curve length model; return null for non-finite results or an exhausted subdivision budget',
+  '复用单调度量表，计算曲线参数对应的前缀长度':
+    'Reuse the monotone metric table to compute prefix length at a curve parameter',
+  '先二分累计表，再在命中区间内反解距离，不重新测量整条曲线':
+    'Binary-search the cumulative table, then invert distance within the matching interval without remeasuring the curve',
   '空数组返回空数组；单顶点产生自连接线段，双顶点产生方向相反的两段\n  保留输入绕向与重复顶点，线段端点复用输入坐标，不修改或复制坐标':
     'An empty array returns an empty array; one vertex creates a self-loop, and two vertices create opposite segments. Input winding and repeated vertices are preserved. Segment endpoints reuse the input coordinates without modifying or copying them',
   '按顶点顺序构造闭合有向线段环，末段连接最后一个顶点与首个顶点':

@@ -1,10 +1,10 @@
 import type { Scene } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { drawScene } from '../../src/canvas';
 import { renderToSvgString } from '../../src/svg';
 import { createSpyCanvasContext } from '../canvas/draw-scene/helpers';
+import { compileTestResult } from '../helpers/compilation';
 
 const scene: Scene = {
   layout: { x: 0, y: 0, width: 20, height: 20 },
@@ -52,7 +52,7 @@ describe('TeX 下沉了 PathPrimitive 渲染器等价性', () => {
 });
 
 it('编译后的分组不透明度同时达到 SVG 属性和 Canvas alpha', () => {
-  const compiled = compileToScene({
+  const compiled = compileTestResult({
     version: 1,
     type: 'scene',
     children: [

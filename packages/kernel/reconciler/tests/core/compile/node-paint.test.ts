@@ -3,8 +3,9 @@ import { describe, expect, it, vi } from 'vitest';
 import { resolveNode, compileNode, createPositionEvaluateContext, resolveScopeInheritance } from '../../../../core/src';
 import type { IRNode, CanonicalScopeInheritance } from '../../../../core/src';
 import { createPaintRegistry } from '../../../../core/src/compile/resource';
-import { compileToScene, createSharedCompileContext } from '../../../src/compile';
+import { createSharedCompileContext } from '../../../src/compile';
 import type { SharedCompileContext } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 import { flattenPrims } from '../../helpers/flatten';
 
 const compileTestNode = (
@@ -134,7 +135,7 @@ describe('节点有效属性与布局复用', () => {
     expect(next.properties).not.toEqual(first.properties);
     expect(next.properties.id).toBe('a');
     expect(first.output.primitives).toEqual(
-      compileToScene({ type: 'scene', version: 1, children: [source] }).scene.primitives,
+      compileTestResult({ type: 'scene', version: 1, children: [source] }).scene.primitives,
     );
   });
 });

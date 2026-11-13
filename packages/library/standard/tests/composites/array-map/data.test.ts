@@ -1,13 +1,13 @@
 import type { IRChild, ScenePrimitive } from '@retikz/core';
 import { pathClipDefinition } from '@retikz/extension';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { arrayDefinition, ArraySchema, mapDefinition, MapSchema } from '../../../src/collection';
+import { compileTestResult } from '../../helpers/compilation';
 import { sceneNodes } from '../../helpers/scene-geometry';
 
 const compile = (child: IRChild) =>
-  compileToScene(
+  compileTestResult(
     { type: 'scene', version: 1, children: [child] },
     { composites: [arrayDefinition, mapDefinition], clips: [pathClipDefinition], padding: 0 },
   );
@@ -205,7 +205,7 @@ describe('JSON 数据呈现', () => {
 
     expect(actual.scene.primitives).toEqual(expected.scene.primitives);
     expect(actual.scene.resources).toEqual(expected.scene.resources);
-    expect(actual.scene.resources?.some(resource => resource.kind === 'clip')).toBe(true);
+    expect((actual.scene.resources?.clips.length ?? 0) > 0).toBe(true);
   });
 
   it('通过数据生成的嵌套数组传递内容宽度', () => {

@@ -1,10 +1,10 @@
 import { resolveCoreProviderDependencies } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { normalizeScene, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
 import { standardInputEmbedAdapters } from '../src';
 import { array, map } from '../src/collection';
+import { compileTestResult } from './helpers/compilation';
 
 describe('Array / Map 提供者集', () => {
   it('在 Array 和 Map 数据输入中保持对象文本显示', () => {
@@ -14,7 +14,7 @@ describe('Array / Map 提供者集', () => {
     ]) {
       const normalized = normalizeScene(scene({ children: [child] }), { adapters: standardInputEmbedAdapters });
       const options = resolveCoreProviderDependencies({ contributions: normalized.contributions });
-      const result = compileToScene(normalized.ir, options);
+      const result = compileTestResult(normalized.ir, options);
 
       expect(normalized.ir.children[0]).toMatchObject({ dataExpand: ['array'] });
       expect(JSON.stringify(result.scene.primitives)).toContain('value');
@@ -27,7 +27,7 @@ describe('Array / Map 提供者集', () => {
       { adapters: standardInputEmbedAdapters },
     );
     const options = resolveCoreProviderDependencies({ contributions: normalized.contributions });
-    const result = compileToScene(normalized.ir, options);
+    const result = compileTestResult(normalized.ir, options);
 
     expect(normalized.ir.children[0]).toMatchObject({ items: [{ layout: { width: 'content' } }, 'longer'] });
     expect(result.scene.primitives.length).toBeGreaterThan(0);
@@ -56,7 +56,7 @@ describe('Array / Map 提供者集', () => {
     });
     const normalized = normalizeScene(input, { adapters: standardInputEmbedAdapters });
     const options = resolveCoreProviderDependencies({ contributions: normalized.contributions });
-    const result = compileToScene(normalized.ir, options);
+    const result = compileTestResult(normalized.ir, options);
 
     expect(normalized.ir.children[0]).toMatchObject({
       defaultCell: {
@@ -65,7 +65,7 @@ describe('Array / Map 提供者集', () => {
       },
     });
     expect(JSON.stringify(normalized.ir)).toContain('"key":"key"');
-    expect(result.scene.resources?.some(resource => resource.kind === 'clip')).toBe(true);
+    expect((result.scene.resources?.clips.length ?? 0) > 0).toBe(true);
     expect(JSON.stringify(normalized.ir)).not.toContain('providerDependencies');
     expect(JSON.stringify(normalized.ir)).not.toContain('authoring-map');
   });
@@ -78,10 +78,10 @@ it('从任一根适配器组装数据定义和裁剪', () => {
   ]) {
     const normalized = normalizeScene(scene({ children: [child] }), { adapters: standardInputEmbedAdapters });
     const options = resolveCoreProviderDependencies({ contributions: normalized.contributions });
-    const result = compileToScene(normalized.ir, options);
+    const result = compileTestResult(normalized.ir, options);
 
     expect(result.scene.primitives.length).toBeGreaterThan(0);
-    expect(result.scene.resources?.some(resource => resource.kind === 'clip')).toBe(true);
+    expect((result.scene.resources?.clips.length ?? 0) > 0).toBe(true);
     expect(normalized.ir.children[0]).toHaveProperty('data');
     expect(normalized.ir.children[0]).not.toHaveProperty('entries');
     expect(normalized.ir.children[0]).not.toHaveProperty('items');
@@ -95,7 +95,7 @@ it('骨架与空单元格通过公开 adapter 装配裁切依赖并保留输入'
     array({ items: [{}] }),
   ]) {
     const normalized = normalizeScene(scene({ children: [child] }), { adapters: standardInputEmbedAdapters });
-    const result = compileToScene(
+    const result = compileTestResult(
       normalized.ir,
       resolveCoreProviderDependencies({ contributions: normalized.contributions }),
     );

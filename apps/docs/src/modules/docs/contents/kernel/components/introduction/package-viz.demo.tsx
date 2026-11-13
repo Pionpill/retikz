@@ -20,7 +20,7 @@ const Demo: FC = () => (
       @retikz/core
     </Node>
     <Node id="core-caption" position={[-100, 20]} style={{ stroke: 'none', textColor: 'gray', font: { size: 12 } }}>
-      IR + compileToScene
+      IR + SceneReconciler
     </Node>
 
     <Node id="render" position={[70, 0]} style={{ stroke: 'none', font: { size: 15, weight: 'bold' } }}>

@@ -111,6 +111,8 @@ FlexLayout 先查询子项的尺寸贡献，再依据布局规则分配空间，
 
 ## 编译输出
 
+显式标注编译类型时，`SceneReconciler<TComposite>` 与 `CompileOptions<TComposite>` 的泛型表示复合 Definition 的元素类型或类型联合；`composites` 字段仍是只读数组。例如，两种定义可用 `typeof firstDefinition | typeof secondDefinition` 表达，通常也可直接由传入数组推断。`SceneCompilationSnapshot<TComposite>` 根据这些定义推导 artifact 联合；未传入定义的会话默认使用 `never`。
+
 Plot 确定尺寸后，根据比例尺和坐标系把三条数据映射到点的位置，按 x 的升序连接这些点，并生成 Scope、Node、Path 等 Core 声明。它通过 Core 编译这些子声明，返回选中的子布局结果。标题 Node 也走 Core 的文字和节点编译路径。
 
 各层通过 `replay` 提交选中的子布局结果。FlexLayout 附加子项平移，Surface 附加内边距平移和需要的背景、边框或裁切，Chart 返回整个容器的结果。这些结果最终汇入同一个 Scene，Render 消费其中的图元、分组变换和资源。
@@ -122,7 +124,10 @@ Reconciler 提供递归执行、试算与重放，Core 提供度量和绘图原�
 <SourceLinks
   sources={[
     { label: 'Plot 转换为 Core 子声明', path: 'packages/viz/plot/src/pipeline/expand/lower.ts' },
-    { label: 'Reconciler 遍历与复合结果提交', path: 'packages/kernel/reconciler/src/compile/tree/subtree.ts' },
+    {
+      label: 'Reconciler 遍历与复合结果提交',
+      path: 'packages/kernel/reconciler/src/compile/execution/subtree/element.ts',
+    },
     { label: '子布局结果与 replay 契约', path: 'packages/kernel/core/src/contract/composite/layout.ts' },
   ]}
 />

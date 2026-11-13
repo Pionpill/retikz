@@ -1,9 +1,9 @@
 import type { IRScene, ScenePrimitive } from '@retikz/core';
 import { visitSceneContent } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { ribbonPathDefinition } from '../../src/ribbon';
+import { compileTestResult } from '../helpers/compilation';
 
 const line = [
   { type: 'step' as const, kind: 'move' as const, to: [0, 0] as [number, number] },
@@ -11,7 +11,7 @@ const line = [
 ];
 
 const compile = (path: Record<string, unknown>) =>
-  compileToScene({ version: 1, type: 'scene', children: [path] } as unknown as IRScene, {
+  compileTestResult({ version: 1, type: 'scene', children: [path] } as unknown as IRScene, {
     paths: [ribbonPathDefinition],
   }).scene;
 

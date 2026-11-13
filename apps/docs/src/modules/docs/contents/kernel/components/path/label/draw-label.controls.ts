@@ -20,12 +20,35 @@ const createControls = (lang: Lang) => {
             label: i18n.segmentKind,
             defaultValue: 'line',
             options: [
+              { value: 'corner', label: i18n.corner },
               { value: 'line', label: i18n.line },
               { value: '-|', label: i18n.horizontalThenVertical },
               { value: '|-', label: i18n.verticalThenHorizontal },
               { value: 'curve', label: i18n.quadraticBezier },
             ],
           },
+          {
+            kind: 'select',
+            id: 'positionMode',
+            label: i18n.positionMode,
+            defaultValue: 'step',
+            options: [
+              { value: 'step', label: i18n.step },
+              { value: 'length', label: i18n.length },
+            ],
+          },
+          {
+            kind: 'select',
+            id: 'positionGeometry',
+            label: i18n.positionGeometry,
+            defaultValue: 'default',
+            options: [
+              { value: 'default', label: i18n.defaultGeometry },
+              { value: 'original', label: i18n.original },
+              { value: 'rounded', label: i18n.rounded },
+            ],
+          },
+          { kind: 'range', id: 'cornerRadius', label: i18n.cornerRadius, defaultValue: 25, min: 0, max: 40, step: 1 },
           {
             kind: 'range',
             id: 'position',
@@ -84,6 +107,9 @@ export const createPreviewControlContract = (lang: Lang) =>
     canonicalValues: {
       segmentKind: 'line',
       position: 0.5,
+      positionMode: 'step',
+      positionGeometry: 'default',
+      cornerRadius: 25,
       side: 'top',
       sloped: false,
       textColor: '#6b7280',

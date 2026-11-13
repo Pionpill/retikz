@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { CompileWarning, IRPosition, IRScene, IRStep, ScenePrimitive } from '../../../../../core/src';
 import { BuiltinCompileWarningCode } from '../../../../../core/src';
-import { compileToScene } from '../../../../src/compile';
+import { compileTestResult } from '../../../helpers/compilation';
 import { flattenPrims } from '../../../helpers/flatten';
 import { pathArrows } from '../../../helpers/path-arrows';
 import { line, move } from '../../../helpers/path-command-factory';
@@ -35,7 +35,7 @@ describe('编译路径：轴线', () => {
       ],
     };
 
-    expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([move([10, 20]), line([100, 20])]);
+    expect(findPathPrim(compileTestResult(ir).scene.primitives).commands).toEqual([move([10, 20]), line([100, 20])]);
   });
 
   it('source NodeTarget 仍以 projected endpoint 为 toward 做现有 boundary clipping', () => {
@@ -54,13 +54,13 @@ describe('编译路径：轴线', () => {
       ],
     };
 
-    expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([move([8, 0]), line([100, 0])]);
+    expect(findPathPrim(compileTestResult(ir).scene.primitives).commands).toEqual([move([8, 0]), line([100, 0])]);
   });
 
   it('target NodeTarget 的隐式边界与 arrow inset 始终禁用', () => {
     const compile = (to: { id: string; anchor?: 'center' }) =>
       findPathPrim(
-        compileToScene({
+        compileTestResult({
           version: 1,
           type: 'scene',
           children: [
@@ -88,7 +88,7 @@ describe('编译路径：轴线', () => {
       offset?: [number, number];
     }) => {
       const path = findPathPrim(
-        compileToScene({
+        compileTestResult({
           version: 1,
           type: 'scene',
           children: [
@@ -123,7 +123,7 @@ describe('编译路径：轴线', () => {
   });
 
   it('当前 Scope 的 rotate / scale 通过 inverse transform 后按局部轴投影', () => {
-    const scene = compileToScene({
+    const scene = compileTestResult({
       version: 1,
       type: 'scene',
       children: [
@@ -152,7 +152,7 @@ describe('编译路径：轴线', () => {
   });
 
   it('后置 Coordinate / Scope target 在 pending path flush 后解析', () => {
-    const coordinateScene = compileToScene({
+    const coordinateScene = compileTestResult({
       version: 1,
       type: 'scene',
       children: [
@@ -166,7 +166,7 @@ describe('编译路径：轴线', () => {
         { type: 'coordinate', id: 'later-coordinate', position: [80, 90] },
       ],
     }).scene;
-    const scopeScene = compileToScene({
+    const scopeScene = compileTestResult({
       version: 1,
       type: 'scene',
       children: [
@@ -264,7 +264,7 @@ describe('编译路径：轴线', () => {
   ];
 
   it.each(penOverrideCases)('紧随 %s 时使用实际 pen override', (_name, children, expectedEnd) => {
-    const scene = compileToScene({
+    const scene = compileTestResult({
       version: 1,
       type: 'scene',
       children: [{ type: 'path', children }],
@@ -277,7 +277,7 @@ describe('编译路径：轴线', () => {
 
   it('缺 current 时发 PATH_TOO_SHORT 并跳过整条 path', () => {
     const warnings: Array<CompileWarning> = [];
-    const scene = compileToScene(
+    const scene = compileTestResult(
       {
         version: 1,
         type: 'scene',
@@ -300,7 +300,7 @@ describe('编译路径：轴线', () => {
 
   it('未定义 NodeTarget 发 UNRESOLVED_NODE_REFERENCE 并跳过整条 path', () => {
     const warnings: Array<CompileWarning> = [];
-    const scene = compileToScene(
+    const scene = compileTestResult(
       {
         version: 1,
         type: 'scene',
@@ -344,7 +344,7 @@ describe('编译路径：轴线', () => {
       ],
     };
 
-    expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([move([0, 0]), line([100, 0])]);
+    expect(findPathPrim(compileTestResult(ir).scene.primitives).commands).toEqual([move([0, 0]), line([100, 0])]);
   });
 
   it('连续零长度投影保留合法 line commands', () => {
@@ -377,11 +377,11 @@ describe('编译路径：轴线', () => {
       ],
     } as unknown as IRScene;
 
-    expect(() => compileToScene(ir).scene).toThrow(/non-finite/i);
+    expect(() => compileTestResult(ir).scene).toThrow(/non-finite/i);
   });
 
   it('label sampler 使用投影后的真实 segment', () => {
-    const scene = compileToScene({
+    const scene = compileTestResult({
       version: 1,
       type: 'scene',
       children: [
@@ -406,7 +406,7 @@ describe('编译路径：轴线', () => {
   });
 
   it('path mark 沿投影后的真实 segment 采样', () => {
-    const scene = compileToScene({
+    const scene = compileTestResult({
       version: 1,
       type: 'scene',
       children: [

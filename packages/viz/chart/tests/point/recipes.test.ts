@@ -1101,11 +1101,11 @@ describe('点 Chart 配方定义', () => {
       const result = resolveChart(source, regressionChartDefinition, regressionRuntime);
 
       expect(result.plot.marks.map(mark => mark.type)).toEqual(
-        extraMethods?.length === 0 ? ['point', 'path'] : ['point', 'path', 'path'],
+        extraMethods?.length === 0 ? ['path'] : ['path', 'path'],
       );
 
       if (extraMethods?.length !== 0)
-        expect(result.plot.marks[2]).toMatchObject({
+        expect(result.plot.marks[1]).toMatchObject({
           transforms: [
             {
               operation: expect.objectContaining({
@@ -1256,7 +1256,7 @@ describe('点 Chart 配方定义', () => {
     const [point, path] = result.semanticMarks[0].plotMarks;
 
     expect(result.scaffold.scales).toContainEqual({ value: { type: 'ordinal', name: scale }, replaceable: true });
-    expect(result.scaffold.guides?.value).toContainEqual({ type: 'legend', channel: 'color' });
+    expect(result.scaffold.guides?.value).toContainEqual({ type: 'legend', channel: 'stroke' });
     expect(point).toMatchObject({
       encodings: { color: { field: 'species', scale: '__chart.regression.scale.series' } },
     });
@@ -1292,9 +1292,10 @@ describe('点 Chart 配方定义', () => {
             kind: 'regression',
             override: true,
             encodings: { x: 'x2' },
+            showPoints: true,
             properties: { point: { size: 5 }, trend: { strokeWidth: 4 } },
           },
-          { kind: 'regression', properties: { trend: { opacity: 0.8 } } },
+          { kind: 'regression', showPoints: true, properties: { trend: { opacity: 0.8 } } },
         ],
       },
     });
@@ -1776,8 +1777,8 @@ describe('点 autoPadding 间隙', () => {
   });
 });
 
-describe('回归隐藏观测值', () => {
-  const plotOf = (hidePoints: boolean | undefined, override = true) =>
+describe('回归观测点显示', () => {
+  const plotOf = (showPoints: boolean | undefined, override = true) =>
     resolveChart(
       RegressionChartSchema.parse({
         namespace: 'chart',
@@ -1790,7 +1791,7 @@ describe('回归隐藏观测值', () => {
             {
               kind: 'regression',
               override,
-              ...(hidePoints === undefined ? {} : { hidePoints }),
+              ...(showPoints === undefined ? {} : { showPoints }),
               properties: { extraMethods: [{ method: { kind: 'quadratic' } }] },
             },
           ],
@@ -1799,22 +1800,23 @@ describe('回归隐藏观测值', () => {
       regressionChartDefinition,
       runtime,
     ).plot;
-  it('默认情况下以及明确禁用时保留观察结果', () => {
-    for (const value of [undefined, false])
-      expect(plotOf(value).marks.map(mark => mark.type)).toEqual(['point', 'path', 'path']);
+  it('显式开启时生成观测点和全部趋势', () => {
+    expect(plotOf(true).marks.map(mark => mark.type)).toEqual(['point', 'path', 'path']);
+    expect(plotOf(true, false).marks.map(mark => mark.type)).toEqual(['point', 'path', 'point', 'path', 'path']);
   });
 
-  it('仅省略选定的观察标记并保留每个拟合变换', () => {
-    const plot = plotOf(true);
+  it.each([undefined, false])('省略或关闭观测点时保留拟合及内置组：%s', showPoints => {
+    const plot = plotOf(showPoints);
 
     expect(plot.marks.map(mark => mark.type)).toEqual(['path', 'path']);
+    expect(plot.marks).toEqual(plotOf(true).marks.slice(1));
 
     for (const mark of plot.marks)
       expect(mark.transforms).toEqual([
         { operation: expect.objectContaining({ kind: 'smooth', params: expect.objectContaining({ x: 'x', y: 'y' }) }) },
       ]);
 
-    expect(plotOf(true, false).marks.map(mark => mark.type)).toEqual(['point', 'path', 'path', 'path']);
+    expect(plotOf(showPoints, false).marks.map(mark => mark.type)).toEqual(['point', 'path', 'path', 'path']);
   });
 });
 

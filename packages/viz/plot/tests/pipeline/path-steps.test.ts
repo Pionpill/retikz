@@ -1,9 +1,9 @@
 import type { IRChild, IRPath, IRScope } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { lowerPlotWithDataArtifact } from '../../src/pipeline/expand/lower';
 import { PlotSchema } from '../../src/schemas';
+import { compileTestResult } from '../helpers/compilation';
 import { measureLabel } from '../helpers/text-measurement';
 
 const paths = (child: IRChild): Array<IRPath> =>
@@ -58,7 +58,7 @@ describe('投影路径构建', () => {
     ).child;
     const path = paths(output)[0];
     expect(path.arrow).toEqual({ end: { length: 7 } });
-    const scene = compileToScene({ type: 'scene', version: 1, children: [path] }).scene;
+    const scene = compileTestResult({ type: 'scene', version: 1, children: [path] }).scene;
     expect(scene.primitives[0]).toMatchObject({ type: 'path', arrowEnd: { markerWidth: 7 } });
   });
 
@@ -136,9 +136,9 @@ describe('投影路径构建', () => {
     expect(output).toHaveLength(2);
     expect(output[0].children[0]).not.toEqual(output[1].children[0]);
     expect(output[0].children[1]).toMatchObject({ kind: 'cubic', control1: [10, 20], to: { relative: [30, 40] } });
-    expect(compileToScene({ type: 'scene', version: 1, children: [result] }).scene.primitives.length).toBeGreaterThan(
-      0,
-    );
+    expect(
+      compileTestResult({ type: 'scene', version: 1, children: [result] }).scene.primitives.length,
+    ).toBeGreaterThan(0);
   });
 
   it('为空字段数据创建 1 个常量实例和 0 个实例', () => {

@@ -1,5 +1,4 @@
 import type { IRScene, ScenePrimitive } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -17,6 +16,7 @@ import {
   starShapeDefinition,
   starShapeProvider,
 } from '../../src/node-shape';
+import { compileTestResult } from '../helpers/compilation';
 
 const scene = (children: IRScene['children']): IRScene => ({ type: 'scene', version: 1, children });
 
@@ -41,7 +41,7 @@ const pathsOf = (primitives: ReadonlyArray<ScenePrimitive>): Array<Extract<Scene
 
 describe('扩展可选形状定义', () => {
   it('解决横向宽度和高度覆盖的边、轴，然后默认', () => {
-    const compiled = compileToScene(
+    const compiled = compileTestResult(
       scene([
         {
           type: 'node',
@@ -78,7 +78,7 @@ describe('扩展可选形状定义', () => {
   });
 
   it('接受对称臂的标量交叉宽度和高度', () => {
-    const compiled = compileToScene(
+    const compiled = compileTestResult(
       scene([
         {
           type: 'node',
@@ -109,7 +109,7 @@ describe('扩展可选形状定义', () => {
   });
 
   it('在对象默认值之前使用交叉轴覆盖', () => {
-    const compiled = compileToScene(
+    const compiled = compileTestResult(
       scene([
         {
           type: 'node',
@@ -146,7 +146,7 @@ describe('扩展可选形状定义', () => {
   });
 
   it('将零厚度扇区编译为开放弧', () => {
-    const compiled = compileToScene(
+    const compiled = compileTestResult(
       scene([
         {
           type: 'node',
@@ -169,7 +169,7 @@ describe('扩展可选形状定义', () => {
 
   it('拒绝大于外半径的内半径', () => {
     expect(() =>
-      compileToScene(
+      compileTestResult(
         scene([
           {
             type: 'node',
@@ -183,7 +183,7 @@ describe('扩展可选形状定义', () => {
   });
 
   it('编译十字、扇形、星形和轮廓定义及其视觉路径语义', () => {
-    const compiled = compileToScene(
+    const compiled = compileTestResult(
       scene([
         { type: 'node', position: [0, 0], shape: 'cross' },
         {
@@ -226,7 +226,7 @@ describe('扩展可选形状定义', () => {
   });
 
   it('在编译的 Scene 中保持每个显式可选形状定义可观察', () => {
-    const compiled = compileToScene(
+    const compiled = compileTestResult(
       scene([
         { type: 'node', position: [0, 0], shape: 'cross' },
         {

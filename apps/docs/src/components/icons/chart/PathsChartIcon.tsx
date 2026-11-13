@@ -1,0 +1,22 @@
+import type { FC } from 'react';
+
+import type { ChartIconProps } from './types';
+
+/** 路径家族图标 */
+export const PathsChartIcon: FC<ChartIconProps> = props => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    {...props}
+  >
+    <path d="M3 3v16a2 2 0 0 0 2 2h16" />
+    <path d="M7 16C10 4 14 18 20 6" />
+    <path d="M7 10 12 14 16 8 20 12" />
+  </svg>
+);

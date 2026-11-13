@@ -2,6 +2,8 @@ import type { SceneClipPath } from '@retikz/core';
 import { comparePropertyPaths, encodePropertyPath } from '@retikz/foundation';
 import { readPropertyPath } from '@retikz/foundation';
 import type { PropertyPath } from '@retikz/foundation';
+
+import { isRetikzRenderError, RetikzRenderError, RetikzRenderErrorCode } from '../error';
 import type {
   RuntimeScene,
   RuntimeScenePrimitive,
@@ -11,11 +13,9 @@ import type {
   SceneRuntimeSnapshot,
   SceneRuntimeSubtree,
   SceneRuntimeSubtreeNode,
-} from '@retikz/reconciler';
-import type { SceneIdentity } from '@retikz/reconciler';
-import { sceneIdentityEquals } from '@retikz/reconciler';
-
-import { isRetikzRenderError, RetikzRenderError, RetikzRenderErrorCode } from '../error';
+} from '../scene';
+import type { SceneIdentity } from '../scene';
+import { sceneIdentityEquals } from '../scene';
 import type { SceneIdentityMap } from './shared';
 import { createSceneIdentityMap, runtimeStructuralEquals } from './shared';
 
@@ -121,14 +121,21 @@ const isCanonicalClipPath = (value: unknown): boolean => {
 };
 
 const assertSceneResources = (resources: unknown, fail: (cause: unknown) => never): void => {
-  if (!isDenseObjectArray(resources)) {
+  if (
+    !isExactDataRecord(resources, ['paints', 'clips']) ||
+    !isDenseObjectArray(resources.paints) ||
+    !isDenseObjectArray(resources.clips)
+  ) {
     return fail({ reason: 'invalid-scene-resources', resources });
   }
 
-  for (const resource of resources) {
-    if (Reflect.get(resource, 'kind') !== 'clip') continue;
+  for (const resource of resources.paints) {
+    if (Reflect.get(resource, 'kind') !== 'paint') return fail({ reason: 'invalid-paint-resource', resource });
+  }
+  for (const resource of resources.clips) {
     if (
       !isExactDataRecord(resource, ['kind', 'id', 'path']) ||
+      resource.kind !== 'clip' ||
       typeof resource.id !== 'string' ||
       resource.id.length === 0 ||
       !isCanonicalClipPath(resource.path)
@@ -531,10 +538,13 @@ const assertOperationShape = (operation: ScenePatchOperation): void => {
     return;
   }
 
-  if (kind === 'setResources' || kind === 'setAnimations') {
-    const field = kind === 'setResources' ? 'resources' : 'animations';
-    if (!isDenseArray(Reflect.get(candidate, field), () => true)) return patchError(operation);
-    if (kind === 'setResources') assertSceneResources(Reflect.get(candidate, field), patchError);
+  if (kind === 'setResources') {
+    assertSceneResources(Reflect.get(candidate, 'resources'), patchError);
+    return;
+  }
+
+  if (kind === 'setAnimations') {
+    if (!isDenseArray(Reflect.get(candidate, 'animations'), () => true)) return patchError(operation);
 
     return;
   }
@@ -719,7 +729,6 @@ const assertSceneRuntimeSnapshotInternal = (snapshot: SceneRuntimeSnapshot): voi
     typeof candidateScene !== 'object' ||
     candidateScene === null ||
     !Array.isArray(Reflect.get(candidateScene, 'primitives')) ||
-    !isDenseArray(Reflect.get(candidateScene, 'resources'), () => true) ||
     !isDenseArray(Reflect.get(candidateScene, 'animations'), () => true) ||
     !isDenseArray(Reflect.get(candidate, 'topology'), node => typeof node === 'object' && node !== null)
   ) {

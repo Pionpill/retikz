@@ -1,9 +1,9 @@
 import type { IRAnimationTrack } from '@retikz/core';
-import type { RuntimeScenePrimitive, SceneRuntimeSnapshot } from '@retikz/reconciler';
-import { createSceneIdentity } from '@retikz/reconciler';
 import { expect, it } from 'vitest';
 
 import { diffSceneAnimationDescriptors, occurrenceAnimationTracks } from '../../src/runtime/runtime-options';
+import type { RuntimeScenePrimitive, SceneRuntimeSnapshot } from '../../src/scene';
+import { createSceneIdentity } from '../../src/scene';
 
 it('共享 Pattern 的动画按使用处归属，资源更新和回滚不串用快照', () => {
   const track = (duration: number): IRAnimationTrack => ({
@@ -34,27 +34,30 @@ it('共享 Pattern 的动画按使用处归属，资源更新和回滚不串用�
       layout: { x: 0, y: 0, width: 10, height: 10 },
       animations: [],
       primitives: [group],
-      resources: [
-        {
-          kind: 'paint',
-          id: 'tile',
-          spec: { kind: 'pattern', shape: 'dots' },
-          tile: {
-            size: 10,
-            motif: [
-              {
-                type: 'rect',
-                id: 'local',
-                x: 0,
-                y: 0,
-                width: 1,
-                height: 1,
-                animations: [track(duration)],
-              },
-            ],
+      resources: {
+        paints: [
+          {
+            kind: 'paint',
+            id: 'tile',
+            spec: { kind: 'pattern', shape: 'dots' },
+            tile: {
+              size: 10,
+              motif: [
+                {
+                  type: 'rect',
+                  id: 'local',
+                  x: 0,
+                  y: 0,
+                  width: 1,
+                  height: 1,
+                  animations: [track(duration)],
+                },
+              ],
+            },
           },
-        },
-      ],
+        ],
+        clips: [],
+      },
     },
     topology: [
       {

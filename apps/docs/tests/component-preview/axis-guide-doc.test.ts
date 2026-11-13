@@ -2,7 +2,7 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
-import AxisCoordinateBasicsDemo from '../../src/modules/docs/contents/viz/plot/guide/axis/axis-coordinate-basics.demo';
+import AxisCoordinateBasicsDemo from '../../src/modules/docs/contents/viz/plot/guide/axis/axis-coordinate-basics';
 
 type ViewBox = {
   x: number;

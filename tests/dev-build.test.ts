@@ -141,12 +141,18 @@ test('开发服务器向浏览器注入宏，无需宿主 process 或监听端�
 
 test('Node/tsx 源码入口预加载宏，开发提示和生产诊断均可用', () => {
   const source = `
-    import { compileToScene } from '@retikz/core';
+    import { SceneReconciler } from '@retikz/reconciler';
     const scene = { version: 1, type: 'scene', children: [
       { type: 'path', children: [{ type: 'step', kind: 'move', to: [0, 0] }] }
     ] };
-    compileToScene(scene);
-    compileToScene(scene, { onWarn: warning => console.log(warning.code) });
+    for (const options of [{}, { onWarn: warning => console.log(warning.code) }]) {
+      const reconciler = new SceneReconciler(options, { incremental: false });
+      try {
+        reconciler.mount(scene);
+      } finally {
+        reconciler.dispose();
+      }
+    }
   `;
   for (const environment of ['development', 'production']) {
     const result = spawnSync(

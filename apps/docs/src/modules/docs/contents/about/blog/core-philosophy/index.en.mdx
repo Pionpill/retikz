@@ -1,4 +1,4 @@
----
+﻿---
 title: Core Philosophy of retikz
 description: IR-centric description, cross-platform rendering
 date: 2026-05-17
@@ -69,7 +69,7 @@ These 12 are the result of repeated trimming — TikZ has dozens of native path 
 
 ## The Scene compiler: what the two passes do
 
-`compileToScene(ir, options)` is core's heaviest asset (`packages/kernel/reconciler/src/compile/compile.ts`), and it's a two-pass design:
+`SceneReconciler` is core's heaviest asset (`packages/kernel/reconciler/src/reconcile/reconciler.ts`), and it's a two-pass design:
 
 - **Pass 1**: Walk every Node, resolve relative placement (e.g. `{ direction: 'right', of: 'A', distance: 2 }`), register into `nodeIndex` — a map from node id to known coordinates plus anchor table.
 - **Pass 2**: Emit primitives in JSX source order. Steps in a Path resolve their `to` here — node references like `"A.right"` / `"A.45"` look up `nodeIndex`; relative / accumulated-relative targets track cursor position.
@@ -112,11 +112,11 @@ The iron rule: **Sugar introduces no new capability**. Anything Sugar can expres
 
 Tier 2 is carried by domain packages such as `@retikz/plot` and `@retikz/table`:
 
-| Layer  | Examples                                        | IR form                   | Expansion time          |
-| ------ | ----------------------------------------------- | ------------------------- | ----------------------- |
-| Tier 2 | `<Axis>` `<BarPlot>` `<Tree>` (domain packages) | High-level form preserved | Inside `compileToScene` |
+| Layer  | Examples                                        | IR form                   | Expansion time           |
+| ------ | ----------------------------------------------- | ------------------------- | ------------------------ |
+| Tier 2 | `<Axis>` `<BarPlot>` `<Tree>` (domain packages) | High-level form preserved | Inside `SceneReconciler` |
 
-Their shared trait is algorithmic decision-making, so high-level intent remains through `compileToScene`. A composite uses one `compile` callback to return child declarations directly or optionally measure, solve, constrain, and replay within one Core compile. Core therefore does not need a separate compile channel for every chart or table layout.
+Their shared trait is algorithmic decision-making, so high-level intent remains through `SceneReconciler`. A composite uses one `compile` callback to return child declarations directly or optionally measure, solve, constrain, and replay within one Core compile. Core therefore does not need a separate compile channel for every chart or table layout.
 
 ## Framework adapter: deliberately thin
 

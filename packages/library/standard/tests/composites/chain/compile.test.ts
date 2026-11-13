@@ -1,11 +1,11 @@
 import type { LayoutProposal, PathPrimitive, ScenePrimitive } from '@retikz/core';
 import { ChildSchema, CompositeBaseSchema, defineComposite, LayoutChildProbeKind } from '@retikz/core';
 import { pathClipDefinition } from '@retikz/extension';
-import { compileToScene } from '@retikz/reconciler';
 import { expect, it } from 'vitest';
 import { literal } from 'zod';
 
 import { chainDefinition, createChain } from '../../../src/collection/chain';
+import { compileTestResult } from '../../helpers/compilation';
 import { compileMeasured } from '../../helpers/compile-measured';
 import { sceneCellBounds, sceneNodeBounds, sceneNodes } from '../../helpers/scene-geometry';
 
@@ -43,7 +43,7 @@ it('奇数空轨道留在末端，JSON 数据不猜测分支结构', () => {
   expect(texts[0].lines[0].text).toBe(JSON.stringify(value));
 });
 it('外部路径连接显式单元边框，局部命名空间隔离同名内容', () => {
-  const result = compileToScene(
+  const result = compileTestResult(
     {
       type: 'scene',
       version: 1,
@@ -130,7 +130,7 @@ it('父约束不足时失败，充足空间不拉伸单元或间距', () => {
         return { children: [context.replay(probe.result)] };
       },
     });
-    return compileToScene(
+    return compileTestResult(
       {
         type: 'scene',
         version: 1,

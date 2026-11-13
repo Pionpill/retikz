@@ -7,16 +7,14 @@ Plot draws data records as points, lines, or intervals. You choose which fields 
 
 ## Responsibilities at a glance
 
-| Section       | Responsibility                                                                 | When to read                                              |
-| ------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------- |
-| Channels      | Bind fields or constants to position, color, size, and other visual properties | Choose how data appears in the graphic                    |
-| Transforms    | Process data into the results needed for plotting                              | Derive, aggregate, or calculate statistics before drawing |
-| Marks         | Draw records as points, paths, intervals, and other shapes                     | Choose or layer drawing forms                             |
-| Scales        | Convert data ranges into positions or styles                                   | Adjust numeric ranges, category order, and color mappings |
-| Coordinates   | Place positions on a plane, in polar coordinates, or in composed views         | Change the spatial representation                         |
-| Guides        | Explain mappings through axes and legends                                      | Help readers interpret values and categories              |
-| Plot Lineage  | Connect drawing results to data and processing steps                           | Explain why a particular mark appears                     |
-| API Reference | Collect field contracts and runtime entry points                               | Look up exact parameters and calls                        |
+| Section     | Responsibility                                                                 | When to read                                              |
+| ----------- | ------------------------------------------------------------------------------ | --------------------------------------------------------- |
+| Channels    | Bind fields or constants to position, color, size, and other visual properties | Choose how data appears in the graphic                    |
+| Transforms  | Process data into the results needed for plotting                              | Derive, aggregate, or calculate statistics before drawing |
+| Marks       | Draw records as points, paths, intervals, and other shapes                     | Choose or layer drawing forms                             |
+| Scales      | Convert data ranges into positions or styles                                   | Adjust numeric ranges, category order, and color mappings |
+| Coordinates | Place positions on a plane, in polar coordinates, or in composed views         | Change the spatial representation                         |
+| Guides      | Explain mappings through axes and legends                                      | Help readers interpret values and categories              |
 
 ## How a graphic fits together
 
@@ -38,7 +36,7 @@ Channels choose the fields. Scales convert values into positions, the coordinate
 
 ## Installation and usage
 
-Use `@retikz/plot-react` in React projects or `@retikz/plot-vanilla` in plain TypeScript projects. Both can produce a graphic on their own. [Quick start](/viz/plot/get-start) includes the dependencies, imports, and mounting code. To save or validate JSON configurations, see the [Plot spec contract](/viz/plot/reference/plot) provided by `@retikz/plot`.
+Use `@retikz/plot-react` in React projects or `@retikz/plot-vanilla` in plain TypeScript projects. Both can produce a graphic on their own. [Quick start](/viz/plot/get-start) includes the dependencies, imports, and mounting code.
 
 ## Where to start
 
@@ -59,11 +57,5 @@ If you already know which chart type you need and prefer whole-chart configurati
     { title: 'Scales', description: 'Control how data ranges map to visual properties.', url: '/viz/plot/scale' },
     { title: 'Coordinates', description: 'Choose Cartesian, polar, or composed views.', url: '/viz/plot/coordinate' },
     { title: 'Guides', description: 'Configure axes and legends.', url: '/viz/plot/guide' },
-    {
-      title: 'Plot Lineage',
-      description: 'Trace marks to their data and plotting steps.',
-      url: '/viz/plot/provenance',
-    },
-    { title: 'API Reference', description: 'Look up fields and runtime APIs.', url: '/viz/plot/reference' },
   ]}
 />

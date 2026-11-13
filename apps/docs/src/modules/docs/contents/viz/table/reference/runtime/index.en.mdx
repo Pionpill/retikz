@@ -251,6 +251,8 @@ Top-level `composites` has been removed; use `compile.composites`. `renderTable(
 
 ## Table compile API
 
+`compileTable<TComposite>`, `CompileTableOptions<TComposite>`, and `CompileTableResult<TComposite>` use the union of additional Composite Definition element types. The default `never` means no additional definitions are registered. The definitions array is still passed through `compile.composites`, and its type is usually inferred. Returned `artifacts` retain the union of Table artifacts and artifacts from those definitions, while the root `manifest` keeps its precise Table type.
+
 | Export                 | Purpose                                                                   |
 | ---------------------- | ------------------------------------------------------------------------- |
 | `lowerTables()`        | Creates the layout-aware `table.table` definition for a host compile      |
@@ -259,9 +261,9 @@ Top-level `composites` has been removed; use `compile.composites`. `renderTable(
 | `CompileTableResult`   | `CompileResult` plus the exact-root `manifest`                            |
 | `TableCompileArtifact` | `CompositeArtifact<'table', 'table', TableLayoutManifest>`                |
 
-`compileTable(spec, datasets, options?)` merges `lowerTables()` with `compile.composites`, then calls `compileToScene()` once. Its `manifest` is the same immutable reference as the exact root artifact's `value`; nested Tables, repeated table ids, and unrelated composite artifacts cannot be mistaken for the root.
+`compileTable(spec, datasets, options?)` merges `lowerTables()` with `compile.composites`, then calls `SceneReconciler` once. Its `manifest` is the same immutable reference as the exact root artifact's `value`; nested Tables, repeated table ids, and unrelated composite artifacts cannot be mistaken for the root.
 
-A Table replay tree belongs to the current compilation and cannot be persisted as Kernel IR. Use `compileTable()` for a standalone result. For an embedded Scene, pass `lowerTables()` definitions to host `compileToScene()`, React `<Layout>`, or the Vanilla adapter.
+A Table replay tree belongs to the current compilation and cannot be persisted as Kernel IR. Use `compileTable()` for a standalone result. For an embedded Scene, pass `lowerTables()` definitions to host `SceneReconciler`, React `<Layout>`, or the Vanilla adapter.
 
 The manifest is a JSON-safe, detached, recursively frozen typed-artifact payload. See [Artifact contracts](/viz/table/reference/manifest) for its fields and nested DTOs. Core compile traversal creates the root artifact occurrence; it never enters IRTable or the manifest. `tableId` is not an instance selector; exact occurrences distinguish anonymous roots, nested Tables, and repeated ids.
 

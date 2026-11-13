@@ -1,6 +1,6 @@
 import * as DiagramFlow from '@retikz/diagram/flow';
 import type { InputEmbed, SynchronousInputEmbedAdapter, InputEmbedContext } from '@retikz/vanilla';
-import { createProcessingController, processToStaticInputResult } from '@retikz/vanilla';
+import { createProcessingController, compileToScene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
 import * as FlowVanilla from '../src/flow';
@@ -136,7 +136,7 @@ const artifactValueOf = (
 
 describe('@retikz/diagram-vanilla/flow', () => {
   it.each(['-|', '|-'] as const)('通过公共 Vanilla 适配器编译 %s 路由', kind => {
-    const result = processToStaticInputResult(
+    const result = compileToScene(
       {
         children: [
           FlowVanilla.flowDiagram({
@@ -252,7 +252,7 @@ describe('@retikz/diagram-vanilla/flow', () => {
 
     if (flowDiagram === undefined || adapter === undefined) return;
 
-    const vanillaResult = processToStaticInputResult(
+    const vanillaResult = compileToScene(
       { children: [flowDiagram(sourceInput)] },
       { adapters: [adapter], compile: { padding: 0, measureText } },
     );

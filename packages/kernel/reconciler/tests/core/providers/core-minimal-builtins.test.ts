@@ -4,7 +4,7 @@ import type { IRClip, IRScene } from '../../../../core/src';
 import { BUILTIN_ARROWS } from '../../../../core/src/providers/arrow';
 import { BUILTIN_CLIPS } from '../../../../core/src/providers/clip';
 import { BUILTIN_SHAPES } from '../../../../core/src/providers/shape/shape';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 
 const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: 'scene', children });
 
@@ -34,12 +34,12 @@ describe('Core 最小内置提供者', () => {
   });
 
   it('当 IR 命名可选提供者时，需要可选的 Standard 定义', () => {
-    expect(() => compileToScene(scene([{ type: 'node', position: [0, 0], shape: 'cross' }]), { padding: 0 })).toThrow(
-      /Unknown provider 'cross'.*available:/i,
-    );
+    expect(() =>
+      compileTestResult(scene([{ type: 'node', position: [0, 0], shape: 'cross' }]), { padding: 0 }),
+    ).toThrow(/Unknown provider 'cross'.*available:/i);
 
     expect(() =>
-      compileToScene(
+      compileTestResult(
         scene([
           {
             type: 'scope',
@@ -66,7 +66,7 @@ describe('Core 最小内置提供者', () => {
     ];
 
     for (const clip of optionalClips) {
-      expect(() => compileToScene(scene([{ type: 'scope', clip, children: [] }]), { padding: 0 })).toThrow(
+      expect(() => compileTestResult(scene([{ type: 'scope', clip, children: [] }]), { padding: 0 })).toThrow(
         new RegExp(`Unknown provider '${clip.kind}'.*available:`, 'i'),
       );
     }
@@ -76,14 +76,14 @@ describe('Core 最小内置提供者', () => {
     const clip: IRClip =
       kind === 'circle' ? { kind, params: { cx: 0, cy: 0, r: 10 } } : { kind, params: { cx: 0, cy: 0, rx: 10, ry: 5 } };
 
-    expect(() => compileToScene(scene([{ type: 'scope', clip, children: [] }]), { padding: 0 })).toThrow(
+    expect(() => compileTestResult(scene([{ type: 'scope', clip, children: [] }]), { padding: 0 })).toThrow(
       new RegExp(`Unknown provider '${kind}'.*available:`, 'i'),
     );
   });
 
   it('编译内置空心隐形箭头，无需注入定义', () => {
     expect(() =>
-      compileToScene(
+      compileTestResult(
         scene([
           {
             type: 'path',
@@ -101,7 +101,7 @@ describe('Core 最小内置提供者', () => {
 
   it('编译内置空心三角形箭头，无需注入定义', () => {
     expect(() =>
-      compileToScene(
+      compileTestResult(
         scene([
           {
             type: 'path',
@@ -119,7 +119,7 @@ describe('Core 最小内置提供者', () => {
 
   it('编译内置圆形箭头，无需注入定义', () => {
     expect(() =>
-      compileToScene(
+      compileTestResult(
         scene([
           {
             type: 'path',

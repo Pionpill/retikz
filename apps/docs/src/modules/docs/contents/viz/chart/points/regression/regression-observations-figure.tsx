@@ -24,7 +24,7 @@ const render = (lang: Lang, dimensions?: PreviewDimensions) => {
 
       recipe={{
         encodings: { x: 'x', y: 'y' },
-        properties: { point: { size: 8, color: 'dodgerblue' }, trend: { stroke: 'darkorange', strokeWidth: 3 } },
+        properties: { point: { size: 8, color: 'dodgerblue' }, trend: { stroke: 'darkorange', strokeWidth: 2 } },
       }}
     />
   );

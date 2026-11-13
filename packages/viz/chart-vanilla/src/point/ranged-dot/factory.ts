@@ -1,8 +1,8 @@
 import { createRangedDotChartProviderContribution } from '@retikz/chart/point';
 import type { InputEmbed } from '@retikz/vanilla';
 
+import { buildChartRuntime, typedChartPartsOf } from '../../authoring';
 import { createChartInputEmbedAdapter } from '../../shared';
-import { buildPointChartRuntime, typedChartPartsOf } from '../shared';
 import { normalizeRangedDotChart } from './normalize';
 import type { RangedDotChartInputEmbedProps } from './types';
 
@@ -23,7 +23,7 @@ export const rangedDotChartInputEmbedAdapter = createChartInputEmbedAdapter(
       ...(input.marks === undefined ? {} : { marks: input.marks }),
     });
 
-    return buildPointChartRuntime(
+    return buildChartRuntime(
       source,
       parts,
       createRangedDotChartProviderContribution(parts.chartThemeDefinitions, parts.lowerOptions),

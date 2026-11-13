@@ -181,8 +181,9 @@ export const svg = renderToSvgString(ir, { compile: { paths: [pulseRibbonDefinit
 需要由 adapter 或工具链在编译前汇总 runtime datasets 时，使用 `createRibbonProviderContribution`。它把官方 `bulge` 和调用方 profiles 合并到同一个 `path/ribbon` provider，再交给 Core 的通用 resolver：
 
 ```ts
+import { compileToScene } from '@retikz/vanilla';
 import { resolveCoreProviderDependencies } from '@retikz/core';
-import { compileToScene } from '@retikz/reconciler';
+
 import { createRibbonProviderContribution } from '@retikz/extension';
 
 import { pulseProfile } from './pulse-profile';
@@ -192,7 +193,7 @@ const compileOptions = resolveCoreProviderDependencies({
   contributions: [createRibbonProviderContribution({ profiles: [pulseProfile] })],
 });
 
-const result = compileToScene(ir, compileOptions);
+const result = compileToScene(ir, { compile: compileOptions });
 ```
 
 Provider 只负责把 Definition 和 runtime profile dataset 装配成普通 Core compile options；它不改变 `Path` 的 IR 结构，也不建立第二套 Ribbon lookup。直接 `paths` 注入与 provider graph 共享同一套 `createRibbonPathDefinition` 构造路径、schema 和 compile 实现。

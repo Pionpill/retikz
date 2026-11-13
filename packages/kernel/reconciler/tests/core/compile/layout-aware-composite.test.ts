@@ -21,7 +21,7 @@ import {
   LayoutIntrinsicMode,
   naturalLayoutProposal,
 } from '../../../../core/src';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 
 const fixedMeasurer: TextMeasurer = text => ({
   width: text.length * 10,
@@ -107,13 +107,13 @@ describe('布局感知复合', () => {
         return { children: [child] };
       },
     });
-    compileToScene(sceneOf({ namespace: 'test', type: 'scope-query' }), { composites: [definition] });
+    compileTestResult(sceneOf({ namespace: 'test', type: 'scope-query' }), { composites: [definition] });
   });
 
   it('在隔离复合测量期间拒绝祖先引用', () => {
     const definition = createLayoutDefinition();
     expect(() =>
-      compileToScene(
+      compileTestResult(
         sceneOf({
           type: 'scope',
           id: 'outer',
@@ -171,7 +171,7 @@ describe('布局感知复合', () => {
         return { children: [context.createScope({ theme: { name: 'compact' } }, [context.replay(probe.result)])] };
       },
     });
-    const result = compileToScene(sceneOf({ namespace: 'test', type: 'themed-parent' }), {
+    const result = compileTestResult(sceneOf({ namespace: 'test', type: 'themed-parent' }), {
       composites: [parent, child],
       themeDefinitions: [defineTheme({ name: 'compact', resolve: () => ({}) })],
     });
@@ -194,7 +194,7 @@ describe('布局感知复合', () => {
     });
     const warnings: Array<CompileWarning> = [];
 
-    compileToScene(sceneOf({ namespace: 'test', type: 'warning' }), {
+    compileTestResult(sceneOf({ namespace: 'test', type: 'warning' }), {
       composites: [definition],
       onWarn: warning => warnings.push(warning),
     });
@@ -238,11 +238,11 @@ describe('布局感知复合', () => {
     const discardedWarnings: Array<CompileWarning> = [];
     const replayedWarnings: Array<CompileWarning> = [];
 
-    compileToScene(sceneOf({ namespace: 'test', type: 'warningParent', replay: false }), {
+    compileTestResult(sceneOf({ namespace: 'test', type: 'warningParent', replay: false }), {
       composites: [child, parent],
       onWarn: warning => discardedWarnings.push(warning),
     });
-    compileToScene(sceneOf({ namespace: 'test', type: 'warningParent', replay: true }), {
+    compileTestResult(sceneOf({ namespace: 'test', type: 'warningParent', replay: true }), {
       composites: [child, parent],
       onWarn: warning => replayedWarnings.push(warning),
     });
@@ -265,7 +265,7 @@ describe('布局感知复合', () => {
         return output;
       },
     };
-    const result = compileToScene(
+    const result = compileTestResult(
       sceneOf({
         namespace: 'test',
         type: 'layout',
@@ -346,7 +346,7 @@ describe('布局感知复合', () => {
       },
     });
 
-    const result = compileToScene(sceneOf({ namespace: 'test', type: 'scopeConstraint' }), {
+    const result = compileTestResult(sceneOf({ namespace: 'test', type: 'scopeConstraint' }), {
       composites: [parent, nested],
     });
 
@@ -384,7 +384,7 @@ describe('布局感知复合', () => {
     });
 
     expect(() =>
-      compileToScene(
+      compileTestResult(
         sceneOf({
           namespace: 'test',
           type: 'duplicateReplay',

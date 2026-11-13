@@ -2,8 +2,8 @@ import type { ConnectedScatterChartInputEmbedProps } from '@retikz/chart-vanilla
 import { connectedScatterChart, connectedScatterChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';
 import type { IRConnectedScatterChart } from '@retikz/chart/point';
 
-import type { TypedChartCommonProps } from '../shared';
-import { createTypedChartComponent, createTypedChartInput } from '../shared';
+import type { TypedChartCommonProps } from '../../authoring';
+import { createTypedChartComponent, createTypedChartInput } from '../../authoring';
 import { collectConnectedScatterChartDeclarations } from './declaration-collection';
 
 /**

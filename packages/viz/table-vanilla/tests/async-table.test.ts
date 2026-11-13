@@ -1,5 +1,5 @@
 import { createDataTransformExecutor } from '@retikz/data';
-import { processToStaticInputResultAsync, renderToSvgString, scene } from '@retikz/vanilla';
+import { compileToSceneAsync, renderToSvgString, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
 import { detailTable, embedTable, renderTable, renderTableAsync, tableInputEmbedAdapter } from '../src';
@@ -55,7 +55,7 @@ describe('异步 Table 编写', () => {
     spec.data.model = [{ name: 'value', type: 'continuous' }];
     const input = (values: Array<number>) =>
       embedTable(spec, { dataBindings: { rows: { kind: 'source', source: { values } } }, dataTransformExecutor });
-    const result = await processToStaticInputResultAsync(scene({ children: [input([2, 6]), input([4])] }), {
+    const result = await compileToSceneAsync(scene({ children: [input([2, 6]), input([4])] }), {
       adapters: [tableInputEmbedAdapter],
     });
     const svg = renderToSvgString(result.scene);

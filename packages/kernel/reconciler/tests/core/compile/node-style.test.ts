@@ -3,23 +3,23 @@ import { describe, expect, it } from 'vitest';
 import type { EllipsePrimitive, PathPrimitive, RectPrimitive, TextPrimitive } from '../../../../core/src/contract';
 import type { IRScene } from '../../../../core/src/schemas';
 import { NodeSchema } from '../../../../core/src/schemas';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 import { flattenPrims } from '../../helpers/flatten';
 import { line, move } from '../../helpers/path-command-factory';
 
 const findRect = (ir: IRScene): RectPrimitive | undefined =>
-  flattenPrims(compileToScene(ir).scene.primitives).find((p): p is RectPrimitive => p.type === 'rect');
+  flattenPrims(compileTestResult(ir).scene.primitives).find((p): p is RectPrimitive => p.type === 'rect');
 
 const findEllipse = (ir: IRScene): EllipsePrimitive | undefined =>
-  flattenPrims(compileToScene(ir).scene.primitives).find((p): p is EllipsePrimitive => p.type === 'ellipse');
+  flattenPrims(compileTestResult(ir).scene.primitives).find((p): p is EllipsePrimitive => p.type === 'ellipse');
 
 const findShapePath = (ir: IRScene): PathPrimitive | undefined =>
-  flattenPrims(compileToScene(ir).scene.primitives).find(
+  flattenPrims(compileTestResult(ir).scene.primitives).find(
     (p): p is PathPrimitive => p.type === 'path' && p.commands.some(c => c.kind === 'close'),
   );
 
 const findText = (ir: IRScene): TextPrimitive | undefined =>
-  flattenPrims(compileToScene(ir).scene.primitives).find((p): p is TextPrimitive => p.type === 'text');
+  flattenPrims(compileTestResult(ir).scene.primitives).find((p): p is TextPrimitive => p.type === 'text');
 
 describe('Node 颜色 / 不透明度', () => {
   it('textColor 透传到 TextPrimitive.fill', () => {
@@ -447,7 +447,7 @@ describe('Node 缩放', () => {
         },
       ],
     };
-    const linePath = flattenPrims(compileToScene(ir).scene.primitives).find(p => p.type === 'path');
+    const linePath = flattenPrims(compileTestResult(ir).scene.primitives).find(p => p.type === 'path');
     if (linePath?.type === 'path') {
       expect(linePath.commands).toEqual([move([16, 0]), line([100, 0])]);
     }

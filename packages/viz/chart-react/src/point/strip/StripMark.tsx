@@ -1,7 +1,7 @@
 import type { IRStripChart } from '@retikz/chart/point';
 import type { FC } from 'react';
 
-import type { ChartMarkOf } from '../shared';
+import type { ChartMarkOf } from '../../authoring';
 
 /** Strip Chart mark 的精确 Source payload */
 export type StripChartMark = Extract<ChartMarkOf<IRStripChart>, { kind: 'strip' }>;

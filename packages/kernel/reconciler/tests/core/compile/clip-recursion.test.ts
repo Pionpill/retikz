@@ -3,7 +3,7 @@ import { literal, number, strictObject } from 'zod';
 
 import type { IRClip, IRScene } from '../../../../core/src';
 import { CompositeBaseSchema, defineClip, defineComposite, RetikzCoreError } from '../../../../core/src';
-import { compileToScene } from '../../../src/compile';
+import { compileTestResult } from '../../helpers/compilation';
 
 const clippedIr = (clip: IRClip): IRScene => ({
   version: 1,
@@ -54,22 +54,27 @@ describe('裁剪递归防护', () => {
     const scene = clippedIr({ kind: 'pair', params: {} });
     const clips = [pair, RecursiveClipDefinition];
 
-    expect(compileToScene(scene, { clips, maxClipDepth: 3 }).scene.resources).toMatchObject([
-      { kind: 'clip', path: { commands: expect.arrayContaining([{ kind: 'line', to: [10, 10] }]) } },
-    ]);
-    expect(() => compileToScene(scene, { clips, maxClipDepth: 2 })).toThrow(/maxClipDepth.*2/i);
+    expect(compileTestResult(scene, { clips, maxClipDepth: 3 }).scene.resources).toMatchObject({
+      paints: [],
+      clips: [{ kind: 'clip', path: { commands: expect.arrayContaining([{ kind: 'line', to: [10, 10] }]) } }],
+    });
+    expect(() => compileTestResult(scene, { clips, maxClipDepth: 2 })).toThrow(/maxClipDepth.*2/i);
   });
 
   it('对每个裁剪转换计数一次', () => {
-    expect(
-      compileToScene(clippedIr({ kind: 'recursive', params: { depth: 2 } }), {
+    expect([
+      ...(compileTestResult(clippedIr({ kind: 'recursive', params: { depth: 2 } }), {
         clips: [RecursiveClipDefinition],
         maxClipDepth: 3,
-      }).scene.resources,
-    ).toHaveLength(1);
+      }).scene.resources?.paints ?? []),
+      ...(compileTestResult(clippedIr({ kind: 'recursive', params: { depth: 2 } }), {
+        clips: [RecursiveClipDefinition],
+        maxClipDepth: 3,
+      }).scene.resources?.clips ?? []),
+    ]).toHaveLength(1);
 
     expect(() =>
-      compileToScene(clippedIr({ kind: 'recursive', params: { depth: 2 } }), {
+      compileTestResult(clippedIr({ kind: 'recursive', params: { depth: 2 } }), {
         clips: [RecursiveClipDefinition],
         maxClipDepth: 2,
       }),
@@ -98,15 +103,20 @@ describe('裁剪递归防护', () => {
       children: [{ namespace: 'test', type: 'runtimeScopeClip' }],
     };
 
-    expect(
-      compileToScene(scene, {
+    expect([
+      ...(compileTestResult(scene, {
         clips: [RecursiveClipDefinition],
         composites: [runtimeScope],
         maxClipDepth: 3,
-      }).scene.resources,
-    ).toHaveLength(1);
+      }).scene.resources?.paints ?? []),
+      ...(compileTestResult(scene, {
+        clips: [RecursiveClipDefinition],
+        composites: [runtimeScope],
+        maxClipDepth: 3,
+      }).scene.resources?.clips ?? []),
+    ]).toHaveLength(1);
     expect(() =>
-      compileToScene(scene, {
+      compileTestResult(scene, {
         clips: [RecursiveClipDefinition],
         composites: [runtimeScope],
         maxClipDepth: 2,
@@ -115,18 +125,22 @@ describe('裁剪递归防护', () => {
   });
 
   it('使用 32 个裁剪转换的默认预算', () => {
-    expect(
-      compileToScene(clippedIr({ kind: 'recursive', params: { depth: 31 } }), { clips: [RecursiveClipDefinition] })
-        .scene.resources,
-    ).toHaveLength(1);
+    expect([
+      ...(compileTestResult(clippedIr({ kind: 'recursive', params: { depth: 31 } }), {
+        clips: [RecursiveClipDefinition],
+      }).scene.resources?.paints ?? []),
+      ...(compileTestResult(clippedIr({ kind: 'recursive', params: { depth: 31 } }), {
+        clips: [RecursiveClipDefinition],
+      }).scene.resources?.clips ?? []),
+    ]).toHaveLength(1);
     expect(() =>
-      compileToScene(clippedIr({ kind: 'recursive', params: { depth: 32 } }), { clips: [RecursiveClipDefinition] }),
+      compileTestResult(clippedIr({ kind: 'recursive', params: { depth: 32 } }), { clips: [RecursiveClipDefinition] }),
     ).toThrow(/maxClipDepth.*32/i);
   });
 
   it('拒绝深度溢出之前的活动操作对象循环', () => {
     expect(() =>
-      compileToScene(clippedIr({ kind: 'operationCycle', params: {} }), {
+      compileTestResult(clippedIr({ kind: 'operationCycle', params: {} }), {
         clips: [OperationCycleDefinition],
         maxClipDepth: 100,
       }),
@@ -136,7 +150,7 @@ describe('裁剪递归防护', () => {
 
 describe('裁剪失败边界', () => {
   it('报告缺失定义并列出可用注册表键', () => {
-    expect(() => compileToScene(clippedIr({ kind: 'missingOperation', params: {} }))).toThrow(
+    expect(() => compileTestResult(clippedIr({ kind: 'missingOperation', params: {} }))).toThrow(
       /Unknown provider .*available: rect/i,
     );
   });
@@ -151,7 +165,7 @@ describe('裁剪失败边界', () => {
       },
     });
 
-    expect(() => compileToScene(clippedIr({ kind: 'malformed', params: {} }), { clips: [malformed] })).toThrow(
+    expect(() => compileTestResult(clippedIr({ kind: 'malformed', params: {} }), { clips: [malformed] })).toThrow(
       RetikzCoreError,
     );
   });
