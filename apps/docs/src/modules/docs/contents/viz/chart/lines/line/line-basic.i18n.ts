@@ -3,6 +3,7 @@ import type { Lang } from '@/i18n';
 /** 折线示例与交互面板的双语文案 */
 export const lineBasicI18n = {
   zh: {
+    data: '数据',
     settings: '折线配置',
     point: '显示观测点',
     pointSize: '点半径',
@@ -21,6 +22,7 @@ export const lineBasicI18n = {
     width: '线宽',
   },
   en: {
+    data: 'Data',
     settings: 'Line settings',
     point: 'Show points',
     pointSize: 'Point radius',

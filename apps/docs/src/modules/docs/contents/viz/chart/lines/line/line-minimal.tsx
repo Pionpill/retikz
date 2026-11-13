@@ -14,3 +14,5 @@ export const previewSource = {
   canonicalRender: () => renderLineMinimal(),
   datasetImports: { 'chart.data': { name: 'lineData', from: './line-basic.data' } },
 };
+
+export { createPreviewControlContract } from './line-minimal.controls';

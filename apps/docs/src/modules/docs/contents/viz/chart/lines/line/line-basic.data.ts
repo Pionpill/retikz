@@ -13,3 +13,7 @@ export const lineData = [
   { x: 5, y: 23, series: 'B' },
   { x: 6, y: 21, series: 'B' },
 ];
+
+/** 乱序演示和数据面板共用同一行顺序 */
+export const lineMappingRows = (shuffle: boolean) =>
+  shuffle ? [lineData[2], lineData[0], lineData[1], ...lineData.slice(3)] : lineData;
