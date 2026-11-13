@@ -1,8 +1,8 @@
 import { createStripChartProviderContribution } from '@retikz/chart/point';
 import type { InputEmbed } from '@retikz/vanilla';
 
+import { buildChartRuntime, typedChartPartsOf } from '../../authoring';
 import { createChartInputEmbedAdapter } from '../../shared';
-import { buildPointChartRuntime, typedChartPartsOf } from '../shared';
 import { normalizeStripChart } from './normalize';
 import type { StripChartInputEmbedProps } from './types';
 
@@ -23,7 +23,7 @@ export const stripChartInputEmbedAdapter = createChartInputEmbedAdapter(
       ...(input.marks === undefined ? {} : { marks: input.marks }),
     });
 
-    return buildPointChartRuntime(
+    return buildChartRuntime(
       source,
       parts,
       createStripChartProviderContribution(parts.chartThemeDefinitions, parts.lowerOptions),

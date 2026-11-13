@@ -22,7 +22,7 @@ A 2D coordinate uses two positional dimensions to control horizontal and vertica
 
 ### Cartesian coordinates
 
-Cartesian coordinates map `x` horizontally and `y` vertically, making them suitable for comparing categories and values along shared straight axes. The playground fixes the coordinate and six data rows while letting you switch marks, adjust plot-area margins, and toggle the y grid:
+Cartesian coordinates map `x` horizontally and `y` vertically, making them suitable for comparing categories and values along shared straight axes. The playground fixes the coordinate and six data rows while letting you switch marks and toggle the y grid:
 
 - Points use `<PointMark>` to show the position of each row.
 - Lines use an open `<PathMark>` to connect those positions by `order`.
@@ -32,7 +32,7 @@ Cartesian coordinates map `x` horizontally and `y` vertically, making them suita
   mode="showcase"
   files={['coordinate-cartesian', 'coordinate-cartesian.preview.tsx', 'coordinate-2d.data.ts']}
   size="lg"
-  caption="After switching point, line, and area marks, adjust all four margins and the y grid to see how the same x / y bindings adapt to the plot area."
+  caption="Switch point, line, and area marks to compare expressions of the same x / y bindings; use the grid to read their values."
   defaultSourceFile="coordinate-cartesian.preview.tsx"
 />
 
@@ -46,13 +46,13 @@ Polar coordinates map `x` to angular positions around the center and `y` to radi
 
 `interpolation` chooses the connection space between neighboring polar positions. When omitted, a continuous angular scale uses `polar`, interpolating in angular / radial output space before projection; a discrete angular scale uses `chord`, connecting projected vertices directly. An explicit coordinate value affects both the grid and inheriting marks. PathMark and IntervalMark may override it locally, while PointMark exposes no such setting because points have no adjacent boundary.
 
-The playground controls coordinate and mark interpolation separately, along with `innerRadius`, the start angle, and the sweep angle. Sweep angle is a teaching parameter in the panel; the coordinate receives `endAngle = startAngle + sweepAngle`.
+The playground controls coordinate interpolation, along with `innerRadius`, the start angle, and the sweep angle. Sweep angle is a teaching parameter in the panel; the coordinate receives `endAngle = startAngle + sweepAngle`.
 
 <ComponentPreview
   mode="showcase"
   files={['coordinate-polar', 'coordinate-polar.preview.tsx', 'coordinate-2d.data.ts']}
   size="lg"
-  caption="Compare automatic inference, an explicit coordinate mode, and a local mark override. Mark interpolation hides for PointMark because a point has no adjacent boundary."
+  caption="Compare automatic inference, polar curves, and straight chords in the grid and mark boundaries. This example starts at −90° to place the first category at the top."
   defaultSourceFile="coordinate-polar.preview.tsx"
 />
 
@@ -60,45 +60,44 @@ The playground controls coordinate and mark interpolation separately, along with
 
 A 1D coordinate uses one positional dimension to place events or nodes along a line or a circle with a fixed radius.
 
-### Position along a line or circle
+The positional field remains bound to `x` and can use linear, log, time, and other scales. Both examples use the same event times and fix the hour domain to `[0, 24]`.
 
-| Goal            | Coordinate configuration                              | Key configuration                     |
-| --------------- | ----------------------------------------------------- | ------------------------------------- |
-| Horizontal line | `coordinate="cartesian1D"`                            | `orientation: 'horizontal'`           |
-| Vertical line   | `{ type: 'cartesian1D', orientation: 'vertical' }`    | `orientation: 'vertical'`             |
-| Full circle     | `coordinate="polar1D"`                                | `radius: 1`, angles from `0` to `360` |
-| Partial circle  | `{ type: 'polar1D', startAngle: 180, endAngle: 360 }` | Set `startAngle` and `endAngle`       |
+`<PointMark>` can use 1D projection directly. Bars, sectors, and areas require a 2D region and cannot use a 1D coordinate.
 
-Both object forms are values of `<Plot>`'s `PlotDslProps['coordinate']` prop. `cartesian1D` is horizontal by default. For `polar1D`, `radius` defaults to `1`, meaning the full available outer radius; its range is `0 < radius <= 1`, not a pixel value. Angles use degrees and default to `0` through `360`.
+### Linear projection
 
-The playground's “Sweep angle” is a teaching control, not a `PlotDslProps['coordinate']` field. Internally it becomes `endAngle = startAngle + sweepAngle`.
+`cartesian1D` maps positions onto a straight line. `orientation` controls its direction and defaults to horizontal. The field remains bound to `x` when the line is vertical.
 
-The number of coordinate dimensions does not restrict the scale type. The position field can still use linear, log, time, and other scales. This example explicitly fixes the hour domain to `[0, 24]`, so hour `22` lands at `330°` on a full circle.
-
-`<PointMark>` is currently the only mark whose position can be projected directly by a 1D coordinate, covering axis events, timeline nodes, and circular event points. `PathMark` can still reference already positioned targets, as in the following example. Bars, sectors, and areas require a 2D region and report an error in a 1D coordinate.
-
-Switch between the line and circle in the control panel. In the circular form, you can also adjust the outer radius and angular range.
+| Direction  | Coordinate configuration                                        |
+| ---------- | --------------------------------------------------------------- |
+| Horizontal | `coordinate="cartesian1D"`                                      |
+| Vertical   | `coordinate={{ type: 'cartesian1D', orientation: 'vertical' }}` |
 
 <ComponentPreview
   mode="showcase"
   files={['coordinate-1d-playground', 'coordinate-1d-playground.preview.tsx', 'coordinate-1d-playground.data.ts']}
-  size="lg"
-  caption="Both forms use the same event times on a fixed 0–24 hour domain. The square canvas stays fixed so the line and circle can be compared directly."
+  size="sm"
+  caption="Switch between horizontal and vertical to see the same event times arranged along a line. The data and scale stay fixed."
   defaultSourceFile="coordinate-1d-playground.preview.tsx"
 />
 
-### Connect positioned objects
+### Circular projection
 
-A 1D coordinate does not have to be the final graphic. It can first arrange objects along a line and let the mapped results participate in links. The figure places 12 objects on the upper line; every four connect to one shared summary point below, producing three groups.
+`polar1D` maps positions to angles, with all points sharing a fixed radius. `radius` is a fraction of the available outer radius, with a range of `0 < radius <= 1` and a default of `1`. Angles use degrees and default to `0` through `360`.
 
-Within the same Plot, `PointMark` first uses `thingX` to map the single positional field into nodes, then a mark-local `summarize` collapses repeated target fields into three lower Nodes. `anchorId` gives these results stable ids, so `PathMark` can make every four source Nodes reference the same target Node. Mapped results can therefore continue into converging links, annotations, and other follow-up operations.
+| Shape          | Coordinate configuration                                           |
+| -------------- | ------------------------------------------------------------------ |
+| Full circle    | `coordinate="polar1D"`                                             |
+| Partial circle | `coordinate={{ type: 'polar1D', startAngle: 180, endAngle: 360 }}` |
+
+The “Sweep angle” control adjusts the arc's span and becomes `endAngle = startAngle + sweepAngle` in the coordinate configuration. On the default full circle, hour `22` maps to `330°`.
 
 <ComponentPreview
   mode="showcase"
-  files={['coordinate-1d-composition', 'coordinate-1d-composition.preview.tsx', 'coordinate-1d-composition.en.data.ts']}
+  files={['coordinate-1d-polar', 'coordinate-1d-polar.preview.tsx', 'coordinate-1d-playground.data.ts']}
   size="lg"
-  caption="The horizontal axis handles only 1D positioning. After projection, 12 source Nodes form three stable-id groups, and each set of four connections converges on the same target Node."
-  defaultSourceFile="coordinate-1d-composition.preview.tsx"
+  caption="Adjust the radius, start angle, and sweep angle to see the same events positioned on a circle or arc."
+  defaultSourceFile="coordinate-1d-polar.preview.tsx"
 />
 
 ## Custom coordinates
@@ -109,7 +108,7 @@ See [Custom coordinates](/viz/plot/coordinate/custom-coordinate) for a complete 
 
 ## Related props
 
-These properties configure the projections used here. See the [coordinate reference](/viz/plot/reference/coordinate) for complete definitions.
+These properties configure the projections used here. See the [coordinate reference](/viz/plot/coordinate/reference) for complete definitions.
 
 <ComponentProps
   items={[

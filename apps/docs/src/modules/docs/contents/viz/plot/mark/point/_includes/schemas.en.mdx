@@ -1,0 +1,17 @@
+## PointMarkSchema
+
+<ZodSchema
+  name="PointMarkSchema"
+  descriptions={{
+      orientation: 'Node orientation reference: screen or a coordinate-role tangent / normal; defaults to screen.',
+      rotate: 'Constant or field-bound rotation offset added to the orientation angle, in degrees.',
+
+    autoPadding:
+      'Automatic edge padding, default max-radius; point-aware uses actual positions and radii, false disables this mark contribution.',
+
+}}
+/>
+
+## MarkNodeLabelSchema
+
+<ZodSchema name="MarkNodeLabelSchema" />

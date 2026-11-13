@@ -592,3 +592,80 @@ describe('lowerPlots cartesian guide 回归 (contract)', () => {
     expect(hasKind(pathsOf(axisLayers[0])[0], 'line')).toBe(true);
   });
 });
+
+describe('离散角向的径向轴投影', () => {
+  it('角向边界网格止于多边形边，不延伸到外接圆', () => {
+    const outer = expandOf(
+      polarSpec([{ type: 'axis', dimension: 'x', grid: { includeDomain: true } }]),
+      { d: [...ROWS, { cat: 'E', value: 7 }] },
+      opts,
+    );
+    const { children, markIndex } = layersOf(outer);
+    const grid = children.slice(0, markIndex).find(isScope)!;
+    const axis = children.slice(markIndex + 1).find(isScope)!;
+    const vertices = pathsOf(axis)[0]
+      .children.filter(step => step.kind === 'move' || step.kind === 'line')
+      .map(stepTo);
+    const first = vertices[0],
+      last = vertices.at(-1)!;
+    const expected = [(first[0] + last[0]) / 2, (first[1] + last[1]) / 2];
+    const spokes = segmentsOfAxis(grid);
+    expect(spokes).toHaveLength(7);
+    for (const segment of spokes.slice(-2)) {
+      expect(segment[1][0]).toBeCloseTo(expected[0], 6);
+      expect(segment[1][1]).toBeCloseTo(expected[1], 6);
+    }
+  });
+
+  it.each([
+    { startAngle: 0, sweep: 360 },
+    { startAngle: 30, sweep: 360 },
+    { startAngle: -45, sweep: 360 },
+    { startAngle: 30, sweep: -360 },
+  ])('起始角 $startAngle、跨度 $sweep 的轴、刻度和标题与多边形边对齐', ({ startAngle, sweep }) => {
+    const rows = [...ROWS, { cat: 'E', value: 7 }];
+    const outer = expandOf(
+      polarSpec(
+        [
+          {
+            type: 'axis',
+            dimension: 'y',
+            grid: { includeDomain: false },
+            ticks: { values: [5, 10] },
+            tickLabels: { layout: false },
+            title: { text: 'radius', placement: 1 },
+          },
+        ],
+        { startAngle, endAngle: startAngle + sweep },
+      ),
+      { d: rows },
+      opts,
+    );
+    const scopes = outer.children.filter(isScope);
+    const grid = scopes.find(layer => allKinds(layer).includes('cycle'))!;
+    const axis = scopes.find(layer => nodesOf(layer).some(node => node.text === 'radius'))!;
+    const segments = segmentsOfAxis(axis);
+    const direction = [Math.cos((startAngle * Math.PI) / 180), Math.sin((startAngle * Math.PI) / 180)];
+    const along = (point: readonly [number, number]) => point[0] * direction[0] + point[1] * direction[1];
+    const rings = pathsOf(grid);
+    expect(rings).toHaveLength(2);
+    for (let index = 0; index < rings.length; index++) {
+      const vertices = rings[index].children.filter(step => step.kind === 'move' || step.kind === 'line').map(stepTo);
+      const first = vertices[0],
+        last = vertices.at(-1)!;
+      const expected: [number, number] = [(first[0] + last[0]) / 2, (first[1] + last[1]) / 2];
+      const tick = segments[index + 1];
+      expect(tick[0][0]).toBeCloseTo(expected[0], 6);
+      expect(tick[0][1]).toBeCloseTo(expected[1], 6);
+      expect(along(tick[1])).toBeCloseTo(along(tick[0]), 6);
+      const label = nodesOf(axis).find(node => String(node.text) === String((index + 1) * 5))!;
+      expect(along(label.position as [number, number])).toBeCloseTo(along(expected), 6);
+      if (index === 1) {
+        expect(segments[0][1][0]).toBeCloseTo(expected[0], 6);
+        expect(segments[0][1][1]).toBeCloseTo(expected[1], 6);
+        const title = nodesOf(axis).find(node => node.text === 'radius')!;
+        expect(along(title.position as [number, number])).toBeCloseTo(along(expected), 6);
+      }
+    }
+  });
+});

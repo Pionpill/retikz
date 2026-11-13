@@ -345,9 +345,9 @@ Set the Mark's `id` and use `encodings.anchorId` for region identities. A later 
 
 ## API reference
 
-Use `encodings.label: 'name'` for a content field or `properties.label: 'Highlight'` for fixed text. Object labels support field bindings for `font.size`, `font.weight`, `textColor` and other targets. Label arrays match by index; unencoded font leaves retain inheritance. See [label encodings](/viz/plot/reference/encoding#labelencodingschema).
+Use `encodings.label: 'name'` for a content field or `properties.label: 'Highlight'` for fixed text. Object labels support field bindings for `font.size`, `font.weight`, `textColor` and other targets. Label arrays match by index; unencoded font leaves retain inheritance. See [label encodings](/viz/plot/channel/reference#labelencodingschema).
 
-`IntervalMarkProps` is exported by `@retikz/plot-react` and reuses `InputPlotIntervalMark` from `@retikz/plot-vanilla`. Properties are grouped by purpose. `—` means the declaration has no field-level default; effective defaults are explained above. Source IR fields and constraints reuse `IntervalMarkSchema` from the [mark contract reference](/viz/plot/reference/mark).
+`IntervalMarkProps` is exported by `@retikz/plot-react` and reuses `InputPlotIntervalMark` from `@retikz/plot-vanilla`. Properties are grouped by purpose. `—` means the declaration has no field-level default; effective defaults are explained above. Source IR fields and constraints are documented by `IntervalMarkSchema` below; see [shared mark APIs](/viz/plot/mark#api-reference) for common configuration.
 
 {/* @include viz/plot/mark/interval/generated */}
 

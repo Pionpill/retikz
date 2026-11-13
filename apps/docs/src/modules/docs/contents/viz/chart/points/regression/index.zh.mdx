@@ -250,7 +250,7 @@ recipe: {
 
 ### 回归图元
 
-每个图元包含观测点与趋势；替换或追加作用于完整组合。同一观测的多方法比较使用 `extraMethods`，见下方扩展用法。
+`RegressionChart` 的内置组默认显示观测点；`RegressionMark` 默认只显示趋势，设置 `showPoints: true` 才显示当前图元的观测点。替换作用于完整组合，追加不会隐藏内置组的点。同一观测的多方法比较使用 `extraMethods`，见下方扩展用法。
 
 <DocTabs defaultValue="react-jsx">
 <DocTab value="react-jsx" label="React + JSX">
@@ -260,7 +260,7 @@ recipe: {
   override
   properties={{
     method: { kind: 'quadratic' },
-    trend: { strokeWidth: 3 },
+    trend: { strokeWidth: 2 },
   }}
 />
 ```
@@ -275,7 +275,7 @@ marks: [
     override: true,
     properties: {
       method: { kind: 'quadratic' },
-      trend: { strokeWidth: 3 },
+      trend: { strokeWidth: 2 },
     },
   },
 ],
@@ -292,7 +292,7 @@ recipe: {
       override: true,
       properties: {
         method: { kind: 'quadratic' },
-        trend: { strokeWidth: 3 },
+        trend: { strokeWidth: 2 },
       },
     },
   ],
@@ -302,10 +302,11 @@ recipe: {
 </DocTab>
 </DocTabs>
 
-下面将每个物种的默认线性组合替换为二次组合。观测点仍然存在；更弯的趋势只是另一种模型描述，并不自动意味着解释更好。
+下面将每个物种的默认线性组合替换为二次组合。默认只显示趋势，可开启“显示观测点”查看原始样本；更弯的趋势只是另一种模型描述，并不自动意味着解释更好。
 
 - `override`：替换主回归组合。
-- `properties.method`：设为 quadratic。
+- `showPoints`：默认 `false`，开启后显示当前图元的观测点。
+- `properties.method`：本例默认 quadratic；切换“自动”后，各物种从默认候选中独立择优，详见[自动选择与拟合优度](#自动选择与拟合优度)。
 - `properties.trend.strokeWidth`：加粗趋势方便辨认。
 
 RegressionMark 始终继承 series，不能在同一个图元里改成另一套分组规则。
@@ -317,7 +318,7 @@ RegressionMark 始终继承 series，不能在同一个图元里改成另一套�
   files={['regression-marks', 'regression-marks.preview.tsx', 'regression-basic.data.ts']}
   size="xl"
   controls={{ name: 'regression-marks' }}
-  caption="切换拟合方法并调整趋势线宽，比较同一组观测点的趋势。"
+  caption="切换拟合方法、调整趋势线宽，或开启观测点对照原始样本。"
   defaultSourceFile="regression-marks.preview.tsx"
 />
 
@@ -396,12 +397,12 @@ React 中，同一项配置不能同时通过根 `recipe` 与子组件声明，�
 
 Chart 将回归图元解析为趋势 Plot Path，并按需加入观测 Plot Point。下表只列拟合图元特有的转换。
 
-| 分组 | `@retikz/chart`                   | `@retikz/plot`                           | 描述                                                    |
-| ---- | --------------------------------- | ---------------------------------------- | ------------------------------------------------------- |
-| 映射 | `x`、`y`、`series`                | `smooth.x`、`smooth.y`、`smooth.groupBy` | 使用观测坐标拟合，并按序列分别计算趋势                  |
-| 属性 | `method`、`sampleCount`、`extent` | `smooth` 变换参数                        | 将拟合方法、采样数量和值域传给趋势变换                  |
-|      | `trend`、`extraMethods`           | `Path` 外观与额外 `Path`                 | 设置主趋势外观，并为每个额外方法增加一条趋势路径        |
-| 图元 | `IRRegressionMark`                | `IRPlotPathMark`、`IRPlotPointMark`      | 始终创建趋势 Path；`hidePoints` 为 false 时再创建 Point |
+| 分组 | `@retikz/chart`                   | `@retikz/plot`                           | 描述                                                   |
+| ---- | --------------------------------- | ---------------------------------------- | ------------------------------------------------------ |
+| 映射 | `x`、`y`、`series`                | `smooth.x`、`smooth.y`、`smooth.groupBy` | 使用观测坐标拟合，并按序列分别计算趋势                 |
+| 属性 | `method`、`sampleCount`、`extent` | `smooth` 变换参数                        | 将拟合方法、采样数量和值域传给趋势变换                 |
+|      | `trend`、`extraMethods`           | `Path` 外观与额外 `Path`                 | 设置主趋势外观，并为每个额外方法增加一条趋势路径       |
+| 图元 | `IRRegressionMark`                | `IRPlotPathMark`、`IRPlotPointMark`      | 始终创建趋势 Path；`showPoints` 为 true 时再创建 Point |
 
 <SourceLinks sources={[{ path: 'packages/viz/chart/src/point/regression/mark.ts', label: '趋势与观测图元构建' }]} />
 
@@ -473,6 +474,43 @@ $$
 指数与幂模型中的系数为 $a=e^\alpha$、$b=\beta$。它们最小化的是对数 y 空间中的残差平方和，因此通常与直接最小化原始 y 残差的非线性拟合结果不同。取对数的字段必须为正；仅将坐标轴设置为 log 尺度不会改变拟合方法。
 
 **时间复杂度：** 对数变换与后续线性拟合均为 $O(N)$，因此这三种方法的参数求解各为 $O(N)$；单次预测只需固定次数的算术与对数、指数运算，为 $O(1)$。
+
+#### 自动选择与拟合优度
+
+候选输入二选一，再对当前组拟合评分，最后用最佳模型绘制趋势。
+
+<ComponentPreview
+  files="regression-auto-flow"
+  size="md"
+  hideCode
+  type="flow"
+  caption="同一组非恒定观测中，最高 R² 等价于最低 MSE；常量响应按 MSE 选择，同分取靠前候选。"
+/>
+
+`method: { kind: 'auto' }` 在每个分面、每个分组内分别比较候选模型，只绘制获胜模型的趋势。默认候选按顺序为 `linear`、`quadratic`、`logarithmic`、`exponential`、`power`，保留二次多项式，不包含 `polynomial`。省略整个 `method` 时仍使用线性拟合。
+
+可通过 `candidates` 完整替换默认候选，例如 `{ kind: 'auto', candidates: ['linear', { kind: 'polynomial', order: 3 }, 'custom-fit'] }`。字符串使用该方法的默认参数，对象可携带参数；自定义方法需先注册。候选不能为空，也不能直接或间接包含 `auto`。
+
+所有候选使用同一批有效观测。设第 $i$ 个观测为 $(x_i,y_i)$，模型在原始 $x_i$ 位置的预测为 $\hat y_i$，观测均值为 $\bar y$，则残差平方和 SSE、总平方和 SST 与决定系数 $R^2$ 为：
+
+$$
+\bar y=\frac{1}{N}\sum_{i=1}^{N}y_i,\qquad
+\mathrm{SSE}=\sum_{i=1}^{N}(y_i-\hat y_i)^2,\qquad
+\mathrm{SST}=\sum_{i=1}^{N}(y_i-\bar y)^2
+$$
+
+$$
+R^2=1-\frac{\mathrm{SSE}}{\mathrm{SST}},\qquad
+\mathrm{MSE}=\frac{\mathrm{SSE}}{N}
+$$
+
+当 SST 大于 0 时，$R^2$ 越大表示样本内拟合越好：1 表示完全拟合，0 表示误差与用均值预测相同，负值表示比均值预测更差。例如 SST 为 10、SSE 为 2 时，$R^2=0.8$。指数、幂等方法也在还原后的原始 y 空间评分，不比较对数空间的误差。
+
+实际选择取均方误差 MSE 最小的模型；同一批非恒定观测上，这与取最高 $R^2$ 等价。若所有 y 相同，SST 为 0，$R^2$ 返回 `null`，仍按 MSE 选择。MSE 完全相等时取候选数组中靠前的方法，获胜模型直接用于采样，不重复拟合。
+
+样本不足、矩阵秩不足、正值域或最终预测范围不满足要求的候选会被排除；全部候选都不适用时报告各项原因。参数错误、未注册或缺失实现、自定义回调异常、非有限预测与评分会中止计算。自定义方法只有明确报告 `DATA_REGRESSION_NOT_APPLICABLE` 才能作为不适用候选排除。
+
+评分使用真实观测，与 `sampleCount`、`trend.curve` 和 `showPoints` 无关；`extent` 用于检查方法是否适用于最终预测范围。这里的 $R^2$ 描述当前样本的拟合程度，不代表对新数据的预测能力，显式加入高阶多项式时尤其需要注意。
 
 #### 从模型得到趋势线
 
@@ -601,7 +639,7 @@ const chart = regressionChart({
 
 ## 延伸阅读
 
-自定义拟合见上方 [自定义拟合](#自定义拟合)。需要独立的数据变换与图层组织时使用 [Plot Path](/viz/plot/mark/path) 与 [自定义变换](/viz/plot/transform#自定义变换)。`SmoothTransformSchema` 的字段见 [Transform Schema](/viz/plot/reference/transform)；该路径不继承 Regression 的自动观测点和图元替换行为。
+自定义拟合见上方 [自定义拟合](#自定义拟合)。需要独立的数据变换与图层组织时使用 [Plot Path](/viz/plot/mark/path) 与 [自定义变换](/viz/plot/transform#自定义变换)。`SmoothTransformSchema` 的字段见 [Transform Schema](/viz/data/transform/reference)；该路径不继承 Regression 的自动观测点和图元替换行为。
 
 <LinkedSections
   items={[

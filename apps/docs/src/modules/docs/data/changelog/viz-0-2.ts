@@ -125,8 +125,8 @@ export const vizV02: Release = {
             en: 'Unreleased: Path Mark target endpoints',
           },
           content: {
-            zh: 'Path 的 encodings.from/to 支持 mark + key 图元引用，可与坐标端点混用；复用 Point、Interval 和 Path 顶点的稳定身份。目标必须先声明，缺失目标和顺序错误明确报错；节点锚点、边界和偏移复用 Core，引用连接默认直连。',
-            en: 'Path encodings.from/to accept mark + key references mixed with coordinate endpoints, using stable identities from Points, Intervals, and Path vertices. Targets must be declared first; missing targets and invalid order produce errors. Node anchors, boundaries, and offsets use Core, and reference connections default to straight.',
+            zh: 'Path 的 encodings.from/to 支持 mark + key 图元引用，可与坐标端点混用；复用 Point、Interval 和 Path 顶点的稳定身份。目标必须先声明，缺失目标和顺序错误明确报错；节点锚点、边界和偏移复用 Core，引用连接默认直连。完整字段端点缺失时跳过该行路径；配置、引用与坐标投影错误仍会报错。',
+            en: 'Path encodings.from/to accept mark + key references mixed with coordinate endpoints, using stable identities from Points, Intervals, and Path vertices. Targets must be declared first; missing targets and invalid order produce errors. Node anchors, boundaries, and offsets use Core, and reference connections default to straight. Missing full field endpoints skip the row path; configuration, reference, and coordinate projection errors still fail.',
           },
         },
         {

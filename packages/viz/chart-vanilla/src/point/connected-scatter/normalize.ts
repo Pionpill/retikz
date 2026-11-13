@@ -1,6 +1,6 @@
 import type { IRConnectedScatterChart } from '@retikz/chart/point';
 
-import { chartSourceOf, normalizePointPartitionEncodings } from '../shared';
+import { chartSourceOf, normalizeChartPartitionEncodings } from '../../authoring';
 import type { InputConnectedScatterChart } from './types';
 
 /** 将 Connected Scatter Vanilla Input 组装为 exact Source */
@@ -14,7 +14,7 @@ export const normalizeConnectedScatterChart = (input: InputConnectedScatterChart
     ...(root.plotExtension === undefined ? {} : { plotExtension: root.plotExtension }),
     recipe: {
       chartType: 'connected-scatter',
-      encodings: normalizePointPartitionEncodings(encodings),
+      encodings: normalizeChartPartitionEncodings(encodings),
       ...(properties === undefined ? {} : { properties }),
       ...(guides === undefined ? {} : { guides }),
       ...(marks === undefined ? {} : { marks }),

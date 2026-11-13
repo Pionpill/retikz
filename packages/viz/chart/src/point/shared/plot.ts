@@ -1,7 +1,8 @@
-import type { IRPlot, IRPlotDomainPadding, IRPlotGuide, IRPlotScaleOperation } from '@retikz/plot';
-import { BuiltinPlotCoordinate, BuiltinPlotScale, PlotGuide } from '@retikz/plot';
+import type { IRPlotDomainPadding, IRPlotScaleOperation } from '@retikz/plot';
+import { BuiltinPlotCoordinate, BuiltinPlotScale } from '@retikz/plot';
 
 import type { ChartScaleDefaultsResolveContext } from '../../_chart/contract';
+import { chartRecipeId } from '../../_chart/resolve';
 import { RetikzChartError, RetikzChartErrorCode } from '../../error';
 import type { IRPointAutoPadding, IRPointPositionDomainPadding } from './schema';
 
@@ -42,8 +43,8 @@ export const resolvePointScaleDefaults = (
     });
   }
   const roles = new Map<string, 'x' | 'y'>([
-    [pointRecipeId(context.source.recipe.chartType, 'scale.x'), 'x'],
-    [pointRecipeId(context.source.recipe.chartType, 'scale.y'), 'y'],
+    [chartRecipeId(context.source.recipe.chartType, 'scale.x'), 'x'],
+    [chartRecipeId(context.source.recipe.chartType, 'scale.y'), 'y'],
   ]);
   for (const [role, name] of Object.entries(context.encodings.positionScales)) {
     if (role === 'x' || role === 'y') roles.set(name, role);
@@ -75,39 +76,3 @@ export const resolvePointScaleDefaults = (
     return { ...scale, domainPadding };
   });
 };
-/** 生成 Point recipe 使用的稳定 Plot member identity */
-export const pointRecipeId = (chartType: string, target: string): string => `__chart.${chartType}.${target}`;
-
-/** 为 Point recipe 建立二维笛卡尔 scaffold */
-export const pointCartesian2DOf = (
-  chartType: string,
-): Readonly<{
-  scales: readonly [IRPlotScaleOperation, IRPlotScaleOperation];
-  coordinate: NonNullable<IRPlot['coordinate']>;
-}> => {
-  const x = pointRecipeId(chartType, 'scale.x');
-  const y = pointRecipeId(chartType, 'scale.y');
-
-  return {
-    scales: [
-      { type: BuiltinPlotScale.Linear, name: x },
-      { type: BuiltinPlotScale.Linear, name: y },
-    ],
-    coordinate: { type: BuiltinPlotCoordinate.Cartesian2D, x, y },
-  };
-};
-
-/** 创建 Point recipe 的默认轴 guide
- *
- * guide 的生成开关由 Source recipe.guides 在 resolve 阶段应用
- */
-export const pointAxisGuidesOf = (): ReadonlyArray<IRPlotGuide> => [
-  {
-    type: PlotGuide.Axis,
-    dimension: 'x',
-  },
-  {
-    type: PlotGuide.Axis,
-    dimension: 'y',
-  },
-];

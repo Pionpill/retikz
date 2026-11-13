@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
-import type { CollectedPointChartDeclarations } from '../shared';
-import { collectPointChartDeclarations } from '../shared';
+import type { CollectedTypedChartDeclarations } from '../../authoring';
+import { collectTypedChartDeclarations } from '../../authoring';
 import type { ScatterEncodingsProps } from './ScatterEncodings';
 import { ScatterEncodings } from './ScatterEncodings';
 import type { ScatterChartMark, ScatterMarkProps } from './ScatterMark';
@@ -10,7 +10,7 @@ import type { ScatterPropertiesProps } from './ScatterProperties';
 import { ScatterProperties } from './ScatterProperties';
 
 /** ScatterChart direct-child declarations 的完整收集结果 */
-type CollectedScatterChartDeclarations = CollectedPointChartDeclarations<
+type CollectedScatterChartDeclarations = CollectedTypedChartDeclarations<
   ScatterEncodingsProps,
   ScatterPropertiesProps,
   ScatterChartMark
@@ -18,7 +18,7 @@ type CollectedScatterChartDeclarations = CollectedPointChartDeclarations<
 
 /** 收集 ScatterChart 的公共与具体类型 direct-child declarations */
 export const collectScatterChartDeclarations = (children: ReactNode): CollectedScatterChartDeclarations => {
-  return collectPointChartDeclarations(children, {
+  return collectTypedChartDeclarations(children, {
     encodingsComponent: ScatterEncodings,
     encodingsName: 'ScatterEncodings',
     propertiesComponent: ScatterProperties,

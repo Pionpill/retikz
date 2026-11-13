@@ -2,19 +2,21 @@ import { PlotFacetOptionsSchema } from '@retikz/plot';
 import { strictObject } from 'zod';
 
 import {
-  createPointPositionEncodingSchema,
+  ChartPositionScaleBindingSchema,
+  ChartPartitionEncodingSchema,
+  createChartPositionEncodingSchema,
+  refineChartFacetEncodings,
+} from '../../_chart/schemas';
+import {
   PointColorEncodingSchema,
   PointColorScaleBindingSchema,
   PointOpacityEncodingSchema,
-  PointPartitionEncodingSchema,
-  PointPositionScaleBindingSchema,
   PointShapeEncodingSchema,
   PointSizeEncodingSchema,
-  refinePointFacetEncodings,
 } from '../shared';
 
 /** 校验气泡图位置通道的尺度操作或已有尺度引用 */
-export const BubblePositionScaleBindingSchema = PointPositionScaleBindingSchema.describe(
+export const BubblePositionScaleBindingSchema = ChartPositionScaleBindingSchema.describe(
   'Bubble position scale binding',
 );
 
@@ -22,10 +24,10 @@ export const BubblePositionScaleBindingSchema = PointPositionScaleBindingSchema.
 export const BubbleColorScaleBindingSchema = PointColorScaleBindingSchema.describe('Bubble color scale binding');
 
 /** 校验气泡图 x 通道的字段、聚合或变换输出映射及可选尺度 */
-export const BubbleXEncodingSchema = createPointPositionEncodingSchema('x', 'Bubble');
+export const BubbleXEncodingSchema = createChartPositionEncodingSchema('x', 'Bubble');
 
 /** 校验气泡图 y 通道的字段、聚合或变换输出映射及可选尺度 */
-export const BubbleYEncodingSchema = createPointPositionEncodingSchema('y', 'Bubble');
+export const BubbleYEncodingSchema = createChartPositionEncodingSchema('y', 'Bubble');
 
 /** 校验气泡图颜色通道的字段或聚合映射及可选尺度 */
 export const BubbleColorEncodingSchema = PointColorEncodingSchema.describe('Bubble color field mapping');
@@ -47,9 +49,9 @@ export const BubbleChartEncodingsSchema = strictObject({
   color: BubbleColorEncodingSchema.optional(),
   opacity: BubbleOpacityEncodingSchema.optional(),
   shape: BubbleShapeEncodingSchema.optional(),
-  row: PointPartitionEncodingSchema.optional(),
-  column: PointPartitionEncodingSchema.optional(),
+  row: ChartPartitionEncodingSchema.optional(),
+  column: ChartPartitionEncodingSchema.optional(),
   facet: PlotFacetOptionsSchema.optional(),
 })
-  .superRefine((encodings, context) => refinePointFacetEncodings(encodings, context, 'Bubble'))
+  .superRefine((encodings, context) => refineChartFacetEncodings(encodings, context, 'Bubble'))
   .describe('Bubble Chart exact field mapping plan');

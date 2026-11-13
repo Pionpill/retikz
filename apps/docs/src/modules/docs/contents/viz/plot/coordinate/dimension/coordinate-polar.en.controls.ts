@@ -35,18 +35,6 @@ export const coordinatePolarControls = definePreviewControls({
             { value: 'interval', label: 'Area' },
           ],
         },
-        {
-          kind: 'select',
-          id: 'markInterpolation',
-          label: 'Mark interpolation',
-          defaultValue: 'inherit',
-          options: [
-            { value: 'inherit', label: 'Inherit coordinate' },
-            { value: 'polar', label: 'Polar curve' },
-            { value: 'chord', label: 'Straight chord' },
-          ],
-          visibleWhen: { controlId: 'markType', oneOf: ['line', 'interval'] },
-        },
       ],
     },
     {
@@ -100,11 +88,10 @@ export const previewControlContract = {
   controls: coordinatePolarControls,
   canonicalValues: {
     markType: 'line',
-    markInterpolation: 'inherit',
     coordinateInterpolation: 'auto',
     innerRadius: 0,
     startAngle: -90,
     sweepAngle: 360,
   },
-  relatedApis: ['PointMark', 'PathMark.interpolation', 'IntervalMark.interpolation', 'Plot.coordinate.interpolation'],
+  relatedApis: ['PointMark', 'Plot.coordinate.interpolation'],
 } satisfies PreviewControlContract;

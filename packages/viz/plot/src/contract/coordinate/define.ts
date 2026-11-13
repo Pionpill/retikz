@@ -170,6 +170,9 @@ type CoordinateScaleBindingDefinition = Readonly<{
 /**
  * 按 Definition 契约读取已精确解析的 coordinate operation 的位置 scale 名称
  * @template TCoordinateOperation 坐标系 schema 解析的操作类型，关联尺度绑定与坐标解析
+ * @param definition 坐标定义及其位置角色和可选绑定钩子
+ * @param operation 已按该定义解析的坐标操作
+ * @returns 当前定义角色上的具名比例尺绑定
  */
 export const readCoordinateScaleNames = <TCoordinateOperation extends IRPlotCoordinateOperation>(
   definition: CoordinateScaleBindingDefinition,
@@ -190,6 +193,10 @@ export const readCoordinateScaleNames = <TCoordinateOperation extends IRPlotCoor
  * 按 Definition 契约把位置 scale 名称写回 coordinate operation
  * @description 消费已精确解析的 operation；自定义 hook 与默认同名字段路径直接返回类型化绑定结果，不重复解析
  * @template TCoordinateOperation 坐标系 schema 解析的操作类型，关联尺度绑定与坐标解析
+ * @param definition 坐标定义及其位置角色和可选绑定钩子
+ * @param operation 已按该定义解析的坐标操作
+ * @param scaleNames 待写入的位置角色与比例尺名称
+ * @returns 保留其它配置并写入适用绑定的坐标操作
  */
 export const bindCoordinateScaleNames = <TCoordinateOperation extends IRPlotCoordinateOperation>(
   definition: CoordinateScaleBindingDefinition,
@@ -218,6 +225,8 @@ export const bindCoordinateScaleNames = <TCoordinateOperation extends IRPlotCoor
  *   自定义坐标系都应通过这个对象进入 registry，避免内置白名单与扩展补丁接口分叉
  * @remarks 当前 helper 只做 `CoordinateDefinition` 类型约束并原样返回定义对象；保留稳定入口是为了与其它 registry API 对齐，并为后续运行时校验、默认值归一或泛型收敛预留 contract hook
  * @template TCoordinateOperation 坐标系 schema 解析的操作类型，关联尺度绑定与坐标解析
+ * @param def 坐标配置 Schema、位置角色与解析能力
+ * @returns 原样返回传入的定义对象
  */
 export const defineCoordinate = <TCoordinateOperation extends IRPlotCoordinateOperation>(
   def: CoordinateDefinition<TCoordinateOperation>,
@@ -252,6 +261,11 @@ export type CoordinateFrameOptions = {
  *   roleScales 允许 guide / interval 构造读取 scale，mapRoles / projectMappedRoles 开启两段 position projection，
  *   placementBoundary 开启 role-space containment，tangentAt 提供局部切向，projectSegment 提供坐标路径，projectCell 开启 cell 类 mark。
  *   supportsPlotArea 默认开启，可显式设为 false；其它未声明的能力保持不可用并由消费方 fail-loud
+ * @param type 已注册的坐标类型名称
+ * @param roles 投影函数接收的位置角色顺序
+ * @param projectRoles 原始角色值到屏幕位置的投影函数
+ * @param options 按需声明比例尺、分段投影与单元几何等能力
+ * @returns 供图元、坐标轴与定位器共用的坐标帧
  */
 export const createCoordinateFrame = (
   type: string,

@@ -1,7 +1,7 @@
 import type { IRRegressionChart } from '@retikz/chart/point';
 import type { FC } from 'react';
 
-import type { ChartMarkOf } from '../shared';
+import type { ChartMarkOf } from '../../authoring';
 
 /** Regression Chart mark 的精确 Source payload */
 export type RegressionChartMark = Extract<ChartMarkOf<IRRegressionChart>, { kind: 'regression' }>;

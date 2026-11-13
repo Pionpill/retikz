@@ -2,7 +2,7 @@
 
 **组件属性**
 
-#### <ApiSourceLink label={"PathMarkProps"} path={"packages/viz/plot-react/src/components/marks.tsx"} startLine={11}>PathMarkProps</ApiSourceLink>
+#### <ApiSourceLink label={"PathMarkProps"} path={"packages/viz/plot-react/src/components/marks.tsx"} startLine={10}>PathMarkProps</ApiSourceLink>
 
 **公共属性**
 
@@ -157,3 +157,37 @@ export type IRPlotPathMark = ZodInfer<typeof PathMarkSchema>;
 </DocTab>
 
 </DocTabs>
+
+#### <ApiSourceLink label={"PlotPathStepSchema"} path={"packages/viz/plot/src/schemas/mark/path-step.ts"} startLine={37}>PlotPathStepSchema</ApiSourceLink>
+
+<ZodSchema
+  name="PlotPathStepSchema"
+  description="数据位置先投影，再沿用 Core 步骤构造路径。每项用 kind 区分，不需要 type 字段。"
+/>
+
+目标位置接受 Core 绘图坐标、Plot 数据位置或图元引用；贝塞尔控制点只接受绝对坐标或数据位置。详细写法见[路径构造](/viz/plot/mark/path#路径构造)。
+
+#### <ApiSourceLink label={"PathClosureSchema"} path={"packages/viz/plot/src/schemas/mark/path.ts"} startLine={134}>PathClosureSchema</ApiSourceLink>
+
+<ZodSchema name="PathClosureSchema" description="直接回到起点、回到常量基线，或回到每行堆叠基线的闭合联合。" />
+
+#### <ApiSourceLink label={"MarkPathLabelSchema"} path={"packages/viz/plot/src/schemas/mark/label.ts"} startLine={26}>MarkPathLabelSchema</ApiSourceLink>
+
+<ZodSchema
+  name="MarkPathLabelSchema"
+  description="附着在路径类几何 host 上的 Plot 标签。"
+  descriptions={{
+    textColor: '标签文本颜色。',
+    opacity: '标签自身不透明度，与所属路径相乘。',
+    font: '标签字体覆盖。',
+    position: '沿 host 的关键词或 0..1 归一化位置。',
+    side: '相对标签锚点的标准侧。',
+    sloped: '是否沿采样切线旋转。',
+    interrupt: '是否请求在兼容宿主的描边中形成断口；省略时由宿主策略决定。',
+    gap: '断口两侧的额外留白，单位为用户单位，默认 4。',
+    placement: '外侧偏移或区域 host 内部放置。',
+    distance: '标签侧向偏移距离。',
+    text: '固定标签文本；编码内容写入 encodings.label 的相同索引。',
+    displayFormat: '字段内容的显示格式。',
+  }}
+/>

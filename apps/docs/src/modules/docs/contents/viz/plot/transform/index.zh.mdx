@@ -5,6 +5,8 @@ description: 在 Plot 中接入 Data 变换，选择共享或图元局部作用�
 
 变换先处理数据行，图元再读取结果字段绘图。例如，先将数值转成占比，再把占比绑定到纵向位置。变换的定义、参数和计算由 [Data](/viz/data/transforms) 提供；Plot 负责接入声明、组织绘图数据作用域并消费结果。
 
+完整操作契约见 [Data API 参考](/viz/data/transform/reference)。数据 `jitter` 的幅度使用数据单位；投影后的 [position adjustment](/viz/plot/mark#jitterpositionadjustmentschema) 由 Plot 独立处理。
+
 ## 接入方式
 
 先完成 [Plot 快速开始](/viz/plot/get-start)。本例将三行数值归一化为 `share`，再绘制三个点；输出纵坐标为 0.2、0.3、0.5。变换声明用 `operation` 包裹 `{ kind, params }`。

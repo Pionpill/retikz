@@ -292,7 +292,7 @@ describe('Chart Vanilla 归一化', () => {
       marks: [
         {
           kind: 'regression',
-          hidePoints: true,
+          showPoints: true,
           encodings: { y: 'petalWidthCm' },
           properties: { method: { kind: 'quadratic' }, trend: { opacity: { stroke: 0.75 } } },
         },
@@ -325,7 +325,7 @@ describe('Chart Vanilla 归一化', () => {
         marks: [
           {
             kind: 'regression',
-            hidePoints: true,
+            showPoints: true,
             encodings: { y: 'petalWidthCm' },
             properties: { method: { kind: 'quadratic' }, trend: { opacity: { stroke: 0.75 } } },
           },

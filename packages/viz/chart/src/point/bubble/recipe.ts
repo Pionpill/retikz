@@ -1,14 +1,16 @@
-import type { ChartRecipeDefinition, ChartRecipeResolveContext } from '../../_chart/contract';
 import { defineChartRecipe } from '../../_chart/contract';
-import { resolveChartEncodingMappings } from '../../_chart/resolve';
+import type { ChartRecipeDefinition, ChartRecipeResolveContext } from '../../_chart/contract';
+import {
+  chartResolutionOf,
+  chartSlotsOf,
+  chartSpatialResolutionOf,
+  resolveChartGuideDefaults,
+  resolveChartEncodingMappings,
+} from '../../_chart/resolve';
 import { ChartType } from '../constants';
 import {
   pointFieldConsumersOf,
   pointPropertySlotsWithoutSize,
-  pointResolutionOf,
-  pointSlotsOf,
-  pointSpatialResolutionOf,
-  resolvePointGuideDefaults,
   resolvePointScaleDefaults,
   sizeGuideOf,
 } from '../shared';
@@ -45,19 +47,19 @@ export const bubbleChartDefinition: ChartRecipeDefinition<IRBubbleChart> = defin
       bubbleChartEncodingSlots,
       pointFieldConsumersOf(ChartType.Bubble),
     );
-    const spatial = pointSpatialResolutionOf(ChartType.Bubble, context.encodings);
+    const spatial = chartSpatialResolutionOf(ChartType.Bubble, context.encodings);
 
     return spatial === undefined ? resolution : { ...resolution, spatial };
   },
   resolve: (context: ChartRecipeResolveContext) => {
-    const slots = pointSlotsOf(context);
+    const slots = chartSlotsOf(context);
     const mark = resolveBubbleMark(slots.encodings, slots.properties);
     const sizeGuide = sizeGuideOf(slots.encodings);
 
-    return pointResolutionOf(ChartType.Bubble, [{ kind: ChartType.Bubble, plotMarks: [mark] }], {
+    return chartResolutionOf(ChartType.Bubble, [{ kind: ChartType.Bubble, plotMarks: [mark] }], {
       guides: sizeGuide === undefined ? [] : [sizeGuide],
     });
   },
   resolveScaleDefaults: resolvePointScaleDefaults,
-  resolveGuideDefaults: resolvePointGuideDefaults,
+  resolveGuideDefaults: resolveChartGuideDefaults,
 });

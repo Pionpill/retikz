@@ -56,6 +56,7 @@ const sceneIdsOf = (primitives: ReadonlyArray<{ id?: string; children?: Readonly
 /** 测试中递归检查 Scene 图元所需的最小结构 */
 type ScenePrimitiveLike = {
   type: string;
+  lines?: ReadonlyArray<{ text: string }>;
   children?: ReadonlyArray<ScenePrimitiveLike>;
   commands?: ReadonlyArray<{ kind?: string; to?: [number, number] }>;
   fill?: unknown;
@@ -427,7 +428,7 @@ describe('Chart 提供者通过 Core 编译', () => {
     expect(JSON.stringify(result.scene.primitives)).not.toMatch(/NaN|Infinity/);
   });
 
-  it.each(['start', 'end'])('rejects a missing Ranged Dot %s through the Path endpoint contract', endpoint => {
+  it.each(['start', 'end'])('范围点缺失 %s 时跳过连接并保留有效端点与完整行', endpoint => {
     const source = RangedDotChartSchema.parse({
       namespace: 'chart',
       type: 'point',
@@ -435,21 +436,38 @@ describe('Chart 提供者通过 Core 编译', () => {
       recipe: {
         chartType: 'ranged-dot',
         encodings: { category: 'category', start: 'start', end: 'end' },
+        properties: { range: { strokeWidth: 7 } },
       },
     });
     const definitions = resolveCoreProviderDependencies({
       contributions: [
         createRangedDotChartProviderContribution(),
         createPlotProviderContribution({
-          'ranged.invalid': [{ category: 'A', start: 1, end: 2, [endpoint]: null }],
+          'ranged.invalid': [
+            { category: 'A', start: 1, end: 2, [endpoint]: null },
+            { category: 'B', start: 3, end: 4 },
+          ],
         }),
         { roots: [pathClipProvider.key], providers: [pathClipProvider] },
       ],
     });
-    expect(() => compileTestResult(sceneOf(source), definitions)).toThrow(/Path endpoint cannot map role x/);
+    const result = compileTestResult(sceneOf(source), definitions);
+    const connectors = scenePrimitivesOfType(result.scene.primitives, 'path').filter(
+      primitive => primitive.strokeWidth === 7,
+    );
+    expect(connectors).toHaveLength(1);
+    expect(scenePrimitivesOfType(result.scene.primitives, 'ellipse')).toHaveLength(3);
+    expect(JSON.stringify(result.scene.primitives)).not.toMatch(/NaN|Infinity/);
   });
 
-  it('compiles grouped Regression through Point + mark-local Smooth Path with finite Scene output', () => {
+  it.each([
+    { authored: false, showPoints: undefined, customScale: false },
+    { authored: true, showPoints: undefined, customScale: false },
+    { authored: true, showPoints: false, customScale: true },
+    { authored: true, showPoints: true, customScale: false },
+    { authored: true, showPoints: false, customScale: false, method: { kind: 'auto' } },
+    { authored: false, showPoints: undefined, customScale: false, method: { kind: 'auto' } },
+  ])('分组回归按观测点开关编译趋势与分类图例：%j', ({ authored, showPoints, customScale, method }) => {
     const regressionRows = [
       { series: 'A', x: 1, y: 2 },
       { series: 'A', x: 2, y: 4 },
@@ -465,8 +483,17 @@ describe('Chart 提供者通过 Core 编译', () => {
       data: { reference: 'regression.rows' },
       recipe: {
         chartType: 'regression',
-        encodings: { x: 'x', y: 'y', series: 'series' },
-        properties: { sampleCount: 3, trend: { strokeWidth: 7 } },
+        encodings: {
+          x: 'x',
+          y: 'y',
+          series: customScale
+            ? { field: 'series', scale: { operation: { type: 'ordinal', name: 'customSeries' } } }
+            : 'series',
+        },
+        ...(authored
+          ? { marks: [{ kind: 'regression', override: true, ...(showPoints === undefined ? {} : { showPoints }) }] }
+          : {}),
+        properties: { ...(method === undefined ? {} : { method }), sampleCount: 3, trend: { strokeWidth: 7 } },
       },
     });
     const definitions = resolveCoreProviderDependencies({
@@ -488,9 +515,15 @@ describe('Chart 提供者通过 Core 编译', () => {
       primitive => primitive.strokeWidth === 7,
     );
 
-    expect(observationPoints).toHaveLength(regressionRows.length);
+    expect(observationPoints).toHaveLength(!authored || showPoints ? regressionRows.length : 0);
     expect(trendPaths).toHaveLength(2);
-    expect(new Set(observationPoints.map(point => point.fill))).toEqual(new Set(trendPaths.map(path => path.stroke)));
+    expect(new Set(trendPaths.map(path => path.stroke)).size).toBe(2);
+    const labels = scenePrimitivesOfType(result.scene.primitives, 'text').flatMap(
+      primitive => primitive.lines?.map(line => line.text) ?? [],
+    );
+    expect(labels).toEqual(expect.arrayContaining(['A', 'B']));
+    if (!authored || showPoints)
+      expect(new Set(observationPoints.map(point => point.fill))).toEqual(new Set(trendPaths.map(path => path.stroke)));
   });
 
   it('编译具有唯一 ID 和一个观察层的分组额外方法', () => {
@@ -731,7 +764,7 @@ describe('Chart 提供者通过 Core 编译', () => {
     }
   });
 
-  it('拒绝负气泡尺寸值并命名线性尺寸尺度', () => {
+  it('自动尺寸映射拒绝负值，显式线性尺寸映射控制半径', () => {
     const negativeSource = BubbleChartSchema.parse({
       namespace: 'chart',
       type: 'point',
@@ -756,17 +789,35 @@ describe('Chart 提供者通过 Core 编译', () => {
         chartType: 'bubble',
         encodings: { x: 'x', y: 'y', size: { field: 'size', scale: { reference: 'linearSize' } } },
       },
-      plotExtension: { scales: [{ type: 'linear', name: 'linearSize' }] },
+      plotExtension: { scales: [{ type: 'linear', name: 'linearSize', domain: [0, 6], range: [3, 15] }] },
     });
     const linearDefinitions = resolveCoreProviderDependencies({
       contributions: [
         createBubbleChartProviderContribution(),
-        createPlotProviderContribution({ 'bubble.rows': [{ x: 1, y: 2, size: 3 }] }),
+        createPlotProviderContribution({
+          'bubble.rows': [
+            { x: 1, y: 2, size: 0 },
+            { x: 2, y: 4, size: 3 },
+            { x: 3, y: 6, size: 6 },
+          ],
+        }),
         { roots: [pathClipProvider.key], providers: [pathClipProvider] },
       ],
     });
 
-    expect(() => compileTestResult(sceneOf(linearSource), linearDefinitions)).toThrow(/size|sqrt|linear|scale/i);
+    const result = compileTestResult(sceneOf(linearSource), linearDefinitions);
+    const bubbles = scenePrimitivesOfType(result.scene.primitives, 'ellipse').filter(
+      primitive => primitive.fillOpacity === 0.7,
+    );
+    expect(bubbles).toHaveLength(3);
+    const radii = bubbles
+      .flatMap(primitive => (primitive.rx === undefined ? [] : [primitive.rx]))
+      .toSorted((a, b) => a - b);
+    expect(radii).toHaveLength(3);
+    expect(radii[0]).toBeGreaterThan(0);
+    expect(radii[1]).toBeCloseTo(radii[0] * 3, 1);
+    expect(radii[2]).toBeCloseTo(radii[0] * 5, 1);
+    expect(bubbles.every(primitive => primitive.rx === primitive.ry)).toBe(true);
   });
 
   it('当仅安装了 Scatter 配方的情况下编译 Bubble Source 时，会明确报错', () => {
@@ -1111,13 +1162,17 @@ describe('注册回归编译', () => {
     return compileTestResult(sceneOf(source), definitions);
   };
 
-  it('使用继承或覆盖曲线的主要趋势和额外趋势的自定义方法', () => {
+  it.each([false, true])('使用继承或覆盖曲线的主要趋势和额外趋势的自定义方法 auto=%s', auto => {
     const result = compile({
-      method: { kind: 'custom-polynomial' },
+      method: auto ? { kind: 'auto', candidates: ['linear', 'custom-polynomial'] } : { kind: 'custom-polynomial' },
       sampleCount: 6,
       trend: { strokeWidth: 7 },
       extraMethods: [
-        { method: { kind: 'custom-polynomial', degree: 1 } },
+        {
+          method: auto
+            ? { kind: 'auto', candidates: [{ kind: 'custom-polynomial', degree: 1 }] }
+            : { kind: 'custom-polynomial', degree: 1 },
+        },
         { method: { kind: 'custom-polynomial' }, trend: { curve: 'linear' } },
       ],
     });
