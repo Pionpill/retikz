@@ -67,7 +67,6 @@
   "dependencies": {
     "@retikz/core": "workspace:*",
     "@retikz/foundation": "workspace:*",
-    "zod": "catalog:",
     "@retikz/math": "workspace:*"
   },
   "devDependencies": {
@@ -75,6 +74,7 @@
     "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plugin-dts": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "zod": "catalog:"
   }
 }
