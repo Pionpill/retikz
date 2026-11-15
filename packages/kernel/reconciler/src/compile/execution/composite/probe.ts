@@ -30,7 +30,6 @@ import {
 import type { SubtreeCompileRuntime, SubtreeCompileHost, SubtreeCompileOptions } from '../subtree';
 import { boundsRectOf, snapshotAllocationBounds } from './layout';
 import { resolveLayoutSlotSize } from './proposal';
-import { replayStyleFingerprint, replayThemeFingerprint } from './replay';
 
 /** 单次组件回调的隔离试编译依赖 */
 export type CompositeProbeContext = {
@@ -227,8 +226,8 @@ export const probeCompositeLayout = (
     resources,
     warnings: [...warnings],
     artifacts: laid.artifacts,
-    styleFingerprint: replayStyleFingerprint(probeScopeDefaults),
-    themeFingerprint: replayThemeFingerprint(probeTheme),
+    styleFingerprint: JSON.stringify(probeScopeDefaults),
+    themeFingerprint: JSON.stringify(probeTheme),
     ...(scopeChainApplied ? { scopeChainApplied: true } : {}),
   };
 
