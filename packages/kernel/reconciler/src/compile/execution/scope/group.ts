@@ -1,8 +1,18 @@
-import type { CompiledScope, GroupPrimitive, ScenePrimitive, Transform } from '@retikz/core';
+import type {
+  CanonicalScope,
+  CompiledScope,
+  CompileWarning,
+  GroupPrimitive,
+  ScenePrimitive,
+  ScopeCompileContext,
+  Transform,
+} from '@retikz/core';
+import { compileScope, resolveAnimations } from '@retikz/core';
+import { jsonStructuralEquals } from '@retikz/foundation';
 
 import type { CompileRuntime } from '../../runtime';
 import type { TreeOutputState } from '../shared';
-import type { EmitScopeGroupContext } from './visit-types';
+import type { EmitScopeGroupContext } from './types';
 
 /** 判断 Scope 是否需要保留可见分组，空匿名分组可被裁去 */
 export const shouldEmitScopeGroup = (
@@ -46,4 +56,36 @@ export const emitScopeGroup = (
   if (zIndex !== undefined) output.zIndexMap.set(group, zIndex);
 
   return group.clipRef;
+};
+
+/** 按最终子输出绑定分组动画；布局与裁剪继续使用已完成的 Core 产物 */
+export const bindScopeOutputAnimations = (
+  canon: CanonicalScope,
+  compiled: CompiledScope,
+  childCount: number,
+  context: ScopeCompileContext,
+): { compiled: CompiledScope; diagnostics: Array<CompileWarning> } => {
+  const diagnostics: Array<CompileWarning> = [];
+  const animations = shouldEmitScopeGroup(
+    childCount,
+    compiled.layout.overall.transforms,
+    compiled.emit.overall.id,
+    compiled.emit.overall.clipRef !== undefined,
+  )
+    ? (resolveAnimations(canon.animations, {
+        target: 'element',
+        irPath: context.irPath,
+        onWarn: warning => diagnostics.push(warning),
+      }) ?? [])
+    : [];
+  return {
+    compiled: jsonStructuralEquals(compiled.emit.overall.animations ?? [], animations)
+      ? compiled
+      : compileScope(
+          canon,
+          { ...context, animations },
+          { layout: compiled.layout, emit: { clip: compiled.emit.clip ?? { clipRef: compiled.emit.overall.clipRef } } },
+        ),
+    diagnostics,
+  };
 };

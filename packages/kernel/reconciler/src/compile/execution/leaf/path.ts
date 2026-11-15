@@ -44,33 +44,37 @@ export type PendingPathEmission = InputPathCompilation & {
 export const queuePathChild = (
   runtime: CompileRuntime,
   output: TreeOutputState,
-  child: IRPathBase,
+  ir: IRPathBase,
   index: number,
   frame: SubtreeCompileRuntime,
   occurrence: CompileOccurrenceLocator,
   semanticOwner?: CompileOwnerKey,
 ): void => {
   const {
-    context: { transformChains: scopeChain, pathPrefix: locatorPrefix, inheritance: style, layout },
+    context: {
+      transformChains,
+      pathPrefix,
+      inheritance: { defaults, theme },
+      layout,
+    },
     state: { primitives, paths, bounds, allocations },
   } = frame;
-  const { defaults: scopeDefaults, theme } = style;
-  const pathIrPath = createCompileChildPath(locatorPrefix, index);
+  const irPath = createCompileChildPath(pathPrefix, index);
   const placeholder = { type: PATH_PLACEHOLDER } as const;
   primitives.push(placeholder);
   const pending: PendingPathEmission = {
-    path: resolvePathAnimations(child, pathIrPath, runtime.state.workspace.diagnosticCollector.collect),
-    irPath: pathIrPath,
-    scopeChain,
+    path: resolvePathAnimations(ir, irPath, runtime.state.workspace.diagnosticCollector.collect),
+    irPath,
+    scopeChain: transformChains,
     bounds,
     allocations,
     ...(layout?.skipAllocation === undefined ? {} : { skipAllocation: layout.skipAllocation }),
     placeholderSlot: { primitives, placeholder },
     occurrence,
     theme,
-    scopeDefaults,
+    scopeDefaults: defaults,
     ...(semanticOwner === undefined ? {} : { semanticOwner }),
-    zIndex: child.zIndex,
+    zIndex: ir.zIndex,
   };
   output.pendingPathCount++;
   paths.push(pending);
@@ -87,11 +91,24 @@ export const flushPendingPathEmissions = (
   const compiled = pendingPaths.map(pending =>
     runtime.state.execution.withWarningOccurrence(pending.occurrence, () => compilePendingPath(runtime, pending)),
   );
-  assemblePathOutputs(runtime, output, pendingPaths, compiled);
+  assemblePaths(runtime, output, pendingPaths, compiled);
 };
 
+/** 完整计算延迟 Path，不读取跨批结果 */
+const compilePendingPath = (runtime: CompileRuntime, pending: PendingPathEmission): CompiledPath => {
+  const canon = resolvePath(pending.path, createPathResolveContext(runtime, pending));
+  const namespace = runtime.state.execution.namespaceStack;
+  namespace.setPhase('resolving');
+  try {
+    return compilePath(canon, createPathCompileContext(runtime, pending));
+  } finally {
+    namespace.setPhase('registering');
+  }
+};
+
+
 /** 将已完成的 Path 结果原位回填到输出容器 */
-export const assemblePathOutputs = (
+export const assemblePaths = (
   runtime: CompileRuntime,
   output: TreeOutputState,
   pendingPaths: ReadonlyArray<PendingPathEmission>,
@@ -183,16 +200,3 @@ export const createPathCompileContext = (
   onWarn: runtime.state.workspace.diagnosticCollector.collect,
   resolveTransform: runtime.state.execution.scopeTransformComposer.resolve,
 });
-
-/** 完整计算延迟 Path，不读取跨批结果 */
-const compilePendingPath = (runtime: CompileRuntime, pending: PendingPathEmission): CompiledPath => {
-  const canon = resolvePath(pending.path, createPathResolveContext(runtime, pending));
-  const compile = () => compilePath(canon, createPathCompileContext(runtime, pending));
-  const namespace = runtime.state.execution.namespaceStack;
-  namespace.setPhase('resolving');
-  try {
-    return compile();
-  } finally {
-    namespace.setPhase('registering');
-  }
-};

@@ -20,9 +20,9 @@ import {
   bindScopeOutputAnimations,
   createTreePositionContext,
   shouldEmitScopeGroup,
-  assembleCoordinateOutput,
-  assembleNodeOutput,
-  assemblePathOutputs,
+  assembleCoordinate,
+  assembleNode,
+  assemblePaths,
   queuePathChild,
 } from '../compile/execution';
 import type { SubtreeCompileRuntime, SubtreeCompileState, ScopeExecutionSteps } from '../compile/execution';
@@ -693,7 +693,7 @@ export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinitio
                 target.canon = result.canon;
                 target.compiled = result.compiled;
                 recordComputed(node, result.cache, result.reused);
-                assemblePathOutputs(execution.runtime, execution.executor.output, [pendingPath], [result.compiled]);
+                assemblePaths(execution.runtime, execution.executor.output, [pendingPath], [result.compiled]);
               }),
             );
             execution.frame.state.paths.length = 0;
@@ -790,16 +790,10 @@ export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinitio
                   throw createExecutionInvariantError('Authored Scope cannot traverse children during update');
                 },
               },
-              {},
               { ...own, children: [] },
               index,
               scopeFrame,
-              undefined,
-              0,
-              owner,
-              undefined,
-              undefined,
-              canon,
+              { semanticOwner: owner, resolvedScope: canon },
             ),
         );
         execution.scopeDiagnostics = runtime.state.workspace.diagnosticCollector.warnings.slice(warningCount);
@@ -885,7 +879,7 @@ export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinitio
                 target.canon = result.canon;
                 target.compiled = result.compiled;
                 recordComputed(node, result.cache, result.reused);
-                assembleCoordinateOutput(execution.runtime, own, path, frame, result.compiled);
+                assembleCoordinate(execution.runtime, own, index, frame, result.compiled);
               } else if (node.type === 'node') {
                 const own = transaction.readNode(node).input.own;
                 const result = executeWeaveNode(
@@ -899,7 +893,7 @@ export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinitio
                 target.canon = result.canon;
                 target.compiled = result.compiled;
                 recordComputed(node, result.cache, result.reused);
-                assembleNodeOutput(
+                assembleNode(
                   execution.runtime,
                   executor.output,
                   own,
