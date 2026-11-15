@@ -83,7 +83,6 @@ const createMeasureChild = (
         frame.context.inheritance.defaults,
         theme,
         inputs,
-        undefined,
         axis,
       );
       const allocation = laid.layout.contribution ?? contributionOfBounds(axis, boundsRectOf(laid));
@@ -170,7 +169,11 @@ const createLayoutChild = (
 
       /** 登记结果与凭据的归属，后续由输出预检和 replay 提交阶段消费 */
       runtime.state.composite.replayTransactions.set(layoutResult.replay, transaction);
-      runtime.state.composite.layoutResults.set(layoutResult, { owner, replay: layoutResult.replay });
+      runtime.state.composite.layoutResults.set(layoutResult, {
+        owner,
+        replay: layoutResult.replay,
+        resolvePathTargets: probed.resolvePathTargets,
+      });
 
       return Object.freeze({ kind: LayoutChildProbeKind.Resolved, result: layoutResult });
     } catch (thrown) {

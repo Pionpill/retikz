@@ -1,5 +1,6 @@
 import type {
   CanonicalTheme,
+  CompositeCompileContext,
   CompileOccurrenceLocator,
   CompileWarning,
   CompositeInputScope,
@@ -27,7 +28,9 @@ import {
   freezeOccurrence,
   withCompileWarningOccurrence,
 } from '../../shared';
-import type { SubtreeCompileRuntime, SubtreeCompileHost, SubtreeCompileOptions } from '../subtree';
+import { createPathResolveContext } from '../leaf';
+import { createTreePositionContext, createLayoutTargetResolver } from '../shared';
+import type { SubtreeCompileRuntime, SubtreeCompileHost } from '../subtree';
 import { boundsRectOf, snapshotAllocationBounds } from './layout';
 import { resolveLayoutSlotSize } from './proposal';
 
@@ -57,7 +60,6 @@ export const evaluateCompositeLayout = (
   probeScopeDefaults: SubtreeCompileRuntime['context']['inheritance']['defaults'],
   probeTheme: CanonicalTheme,
   probeInputs?: CompositeInputScope,
-  captureScopeTargets?: SubtreeCompileOptions['captureScopeTargets'],
   measurementAxis?: LayoutMeasurementAxis,
 ) => {
   const { key, occurrence, compositeDepth, runtime, host } = probeContext;
@@ -125,6 +127,8 @@ export const evaluateCompositeLayout = (
     },
   };
 
+  let targetNamespace: NamespaceStack | undefined;
+  let targetChain = probeScopeChain;
   const laid = host.compileSubtree([clonedChild], sandboxRuntime, {
     transformChains: probeScopeChain,
     scopeDefaults: probeScopeDefaults,
@@ -135,10 +139,41 @@ export const evaluateCompositeLayout = (
     skipAllocation: false,
     proposal: clonedProposal,
     ...(measurementAxis === undefined ? {} : { measurementAxis }),
-    ...(captureScopeTargets === undefined ? {} : { captureScopeTargets }),
+    ...(measurementAxis === undefined
+      ? {
+          captureScopeTargets: (scope, namespace, chain) => {
+            if (scope !== clonedChild) return;
+            targetNamespace = namespace.fork();
+            // 查询者位于子项外部，但可读取其根局部名称；真正祖先仍不可引用
+            targetNamespace.leaveScope();
+            targetChain = chain;
+          },
+        }
+      : {}),
   });
 
+  /** 仅完整布局保存查询能力；尺寸贡献不构造或保留额外的引用环境 */
+  let resolvePathTargets;
+  if (measurementAxis === undefined) {
+    const queryNamespace = targetNamespace ?? namespaceStack.fork();
+    queryNamespace.setPhase('resolving');
+    resolvePathTargets = createLayoutTargetResolver(
+      createTreePositionContext(sandboxRuntime, targetChain, queryNamespace),
+      {
+        ...createPathResolveContext(sandboxRuntime, {
+          irPath: ['query'],
+          scopeDefaults: probeScopeDefaults,
+          theme: probeTheme,
+        }),
+        // 查询仅绑定目标，不消费绘制默认值或向已完成的试算追加诊断
+        warn: undefined,
+        scopeDefaults: undefined,
+      },
+      targetChain,
+    );
+  }
   return {
+    resolvePathTargets,
     laid,
     workspace,
     namespaceStack,
@@ -162,11 +197,12 @@ export const probeCompositeLayout = (
   probeTheme: CanonicalTheme,
   scopeChainApplied = false,
   probeInputs?: CompositeInputScope,
-  captureScopeTargets?: SubtreeCompileOptions['captureScopeTargets'],
 ): Readonly<{
   layoutResult: LayoutChildResult;
   transaction: CompositeReplayTransaction;
-  namespaceStack: NamespaceStack;
+  resolvePathTargets: (
+    query: Parameters<CompositeCompileContext['resolvePathTargets']>[1],
+  ) => ReturnType<CompositeCompileContext['resolvePathTargets']>;
 }> => {
   const { owner, key } = probeContext;
 
@@ -177,6 +213,7 @@ export const probeCompositeLayout = (
     namespaceBaseline,
     registrationOccurrences,
     registrationKey,
+    resolvePathTargets,
     warnings,
     probeProvenanceTracker,
   } = evaluateCompositeLayout(
@@ -188,7 +225,6 @@ export const probeCompositeLayout = (
     probeScopeDefaults,
     probeTheme,
     probeInputs,
-    captureScopeTargets,
   );
   const token = Object.freeze({}) as CompositeReplay;
   const resources: SceneResources = {
@@ -231,5 +267,6 @@ export const probeCompositeLayout = (
     ...(scopeChainApplied ? { scopeChainApplied: true } : {}),
   };
 
-  return { layoutResult, transaction, namespaceStack };
+  // 此入口固定执行完整布局，始终具有结果查询能力
+  return { layoutResult, transaction, resolvePathTargets: resolvePathTargets! };
 };

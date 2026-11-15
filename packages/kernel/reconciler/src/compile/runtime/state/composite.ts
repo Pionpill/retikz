@@ -5,6 +5,7 @@ import type {
   CompiledReferenceGeometry,
   CompositeBoundChild,
   CompositeCompileChild,
+  CompositeCompileContext,
   CompositeCompileScopeProps,
   CompositeInputScope,
   CompositeReplay,
@@ -123,6 +124,10 @@ type CompositeLayoutResultEntry = Readonly<{
   owner: CompositeCompileOwner;
   /** 与该布局结果绑定的重放凭证 */
   replay: CompositeReplay;
+  /** 只读取本次布局快照，不重新执行子树编译 */
+  resolvePathTargets: (
+    query: Parameters<CompositeCompileContext['resolvePathTargets']>[1],
+  ) => ReturnType<CompositeCompileContext['resolvePathTargets']>;
 }>;
 
 /** compile-local WeakMap 保存的 opaque failure 快照 */

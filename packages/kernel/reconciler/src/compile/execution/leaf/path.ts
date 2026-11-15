@@ -171,7 +171,7 @@ export const assemblePaths = (
 /** 创建全量与增量共用的 Path 确定化上下文 */
 export const createPathResolveContext = (
   runtime: CompileRuntime,
-  pending: InputPathCompilation,
+  pending: Pick<InputPathCompilation, 'irPath' | 'scopeDefaults' | 'theme'>,
 ): Parameters<typeof resolvePath>[1] => ({
   ...runtime.context.registries,
   ...runtime.context.layout,

@@ -163,7 +163,7 @@ const resolveCompositeCallable = (
   return resolveComposite(binding, occurrence.sourcePath);
 };
 
-/** 执行组件回调并生成返回值快照，统一维护异常包装和临时查询状态的释放 */
+/** 执行组件回调并生成返回值快照，统一包装回调异常 */
 const evaluateCompositeCallback = (
   callable: ReturnType<typeof resolveComposite>,
   frame: SubtreeCompileRuntime,
@@ -180,9 +180,9 @@ const evaluateCompositeCallback = (
     measurementAxis === undefined ? { kind: 'layout' } : { kind: 'contribution', axis: measurementAxis },
   );
 
-  /** 执行组件回调：包装外部异常，并确保释放本次回调的临时查询状态 */
+  /** 执行组件回调：包装外部异常 */
   try {
-    callbackResult = callable.compile(callable.ir, callbackContext.createContext(frame.context.inheritance.theme));
+    callbackResult = callable.compile(callable.ir, callbackContext(frame.context.inheritance.theme));
   } catch (thrown) {
     if (isFatalProbeError(thrown) || isLayoutProbeRecoverableError(thrown)) throw thrown;
 
@@ -191,11 +191,9 @@ const evaluateCompositeCallback = (
       providerKey: context.key,
       occurrence: context.occurrence,
     });
-  } finally {
-    callbackContext.dispose();
   }
 
-  /** 在回调临时状态释放后检查并快照返回值，供主流程区分测量与完整布局 */
+  /** 检查并快照返回值，供主流程区分测量与完整布局 */
   return snapshotCompositeCompileResult(callbackResult, callable, context, measurementAxis);
 };
 

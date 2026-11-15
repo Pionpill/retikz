@@ -81,7 +81,7 @@ React 的 FlowRelation、批量 FlowRelations、Vanilla 与 direct JSON 表达�
 
 继续使用唯一 Flow Layout Definition/registry，不新增端点或路由 registry。新增必填布尔能力 `endpointPlacement`：请求包含 side、anchor 或有效 separate 时要求该能力，在 callback 前拒绝不支持的 Definition。内置 layered 支持；self-loop 仍由独立 selfLoops 能力控制，不因端点能力新增而隐式支持。
 
-Provider relation 输入的 source/target 统一为含 id、有效 overlap、可选 side 或 anchor 的只读对象。不重复另存端点 id、marker recipe 或 Graph appearance。执行 context 增加公开 `resolveEndpoint({ target, elements })`：target 复用 Core NodeTarget，elements 是本次完整根局部布局矩形；返回同坐标系 Position。端点分配使用 Core/Graph 真实投影查询，不能从矩形盒重建形状。查询对内置和自定义同等开放，复用 Core resolvePathTargets，不新增 marker 测量。
+Provider relation 输入的 source/target 统一为含 id、有效 overlap、可选 side 或 anchor 的只读对象。不重复另存端点 id、marker recipe 或 Graph appearance。执行 context 增加公开 `resolveEndpoint({ target, elements })`：target 复用 Core NodeTarget，elements 是本次完整根局部布局矩形；返回同坐标系 Position。端点分配使用 Core/Graph 真实投影查询，不能从矩形盒重建形状。查询对内置和自定义同等开放，通过正常 layoutChild 取得布局结果并复用 Core resolvePathTargets 查询，不新增 marker 测量或独立子树求值入口。
 
 Provider relation 输出在原 route / labelBounds 之外提供 source/target，复用 Core NodeTarget 的 id/anchor 窄投影。自动分离或指定侧的结果必须有确定 anchor；完全无约束且允许重合时可省略 anchor，保留既有自动边界裁剪。输出不携带 overlap 或原始 side；这些分别是输入约束和可由 anchor 表达的事实。
 
