@@ -149,6 +149,12 @@ export class CompositeCompileState {
   /** 有界的编译内成功贡献缓存 */
   private measurements: Map<string, LayoutContribution> = new Map();
 
+  /** 已冻结子项快照的内容编号，避免同一快照被反复序列化 */
+  private measurementChildMap: WeakMap<IRChild, number> = new WeakMap();
+
+  /** 子项与环境的 JSON 内容到编译内短编号，限制不同内容数量 */
+  private measurementContentMap: Map<string, number> = new Map();
+
   /** 对象依赖的编译内身份 */
   private measurementIdentities: WeakMap<object, number> = new WeakMap();
 
@@ -184,6 +190,29 @@ export class CompositeCompileState {
     if (existing !== undefined) return existing;
     const identity = this.nextMeasurementIdentity++;
     this.measurementIdentities.set(dependency, identity);
+    return identity;
+  }
+
+  /** 为已脱离并冻结的测量子项复用内容编号 */
+  internMeasurementChild(child: IRChild): number {
+    const existing = this.measurementChildMap.get(child);
+    if (existing !== undefined) return existing;
+    // ⚡同一不可变快照只序列化一次，相同内容的不同快照仍可共享编号
+    const identity = this.internMeasurementContent(JSON.stringify(child));
+    this.measurementChildMap.set(child, identity);
+    return identity;
+  }
+
+  /** 按 JSON 内容复用短编号，避免每个测量 key 重复保存完整子项和环境 */
+  internMeasurementContent(serialized: string): number {
+    const existing = this.measurementContentMap.get(serialized);
+    if (existing !== undefined) return existing;
+    const identity = this.nextMeasurementIdentity++;
+    this.measurementContentMap.set(serialized, identity);
+    if (this.measurementContentMap.size > 4096) {
+      const oldest = this.measurementContentMap.keys().next();
+      if (!oldest.done) this.measurementContentMap.delete(oldest.value);
+    }
     return identity;
   }
 

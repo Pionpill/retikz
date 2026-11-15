@@ -28,6 +28,7 @@ const createMeasureChild = (
   theme: CanonicalTheme,
 ): CompositeCompileContext['measureChild'] => {
   const { runtime, owner, key, occurrence, compositeDepth } = probeContext;
+  let measurementEnvironmentIdentity: number | undefined;
   return (nextChild, proposal, axis) => {
     /** 准备约束、子项和来源快照，绑定子项必须属于当前回调 */
     const clonedProposal = cloneLayoutProposal(proposal, key, occurrence);
@@ -35,37 +36,41 @@ const createMeasureChild = (
     if (inputEntry !== undefined && (inputEntry.owner !== owner || inputEntry.child.kind !== 'bound'))
       throw createCompositeContractError(`${owner.label} measureChild requires a child from this callback`);
     const inputs = inputEntry?.child.kind === 'bound' ? inputEntry.child.runtimeInputs : undefined;
-    const clonedChild = guardProviderOutput(owner.label, () =>
-      snapshotCompositeLayoutChild(
-        owner.label,
-        inputEntry?.child.kind === 'bound' ? inputEntry.child.child : nextChild,
-        probeSequence.index,
-      ),
-    );
-    const probeOccurrence = freezeOccurrence({
-      sourcePath: occurrence.sourcePath,
-      expansionPath: [...occurrence.expansionPath, { kind: CompileExpansionKind.Probe, index: probeSequence.index++ }],
-    });
+    // ⚡绑定子项已在创建句柄时脱离并冻结，直接复用快照
+    const clonedChild =
+      inputEntry?.child.kind === 'bound'
+        ? inputEntry.child.child
+        : guardProviderOutput(owner.label, () =>
+            snapshotCompositeLayoutChild(owner.label, nextChild, probeSequence.index),
+          );
+    const probeIndex = probeSequence.index++;
 
     /** 按子项、测量轴、约束和有效编译环境查询尺寸缓存 */
+    // ⚡同一回调的稳定环境只序列化一次，跨回调按内容共享短编号
+    measurementEnvironmentIdentity ??= runtime.state.composite.internMeasurementContent(
+      JSON.stringify([frame.context.inheritance.defaults, theme, frame.context.transformChains, compositeDepth]),
+    );
     const cacheKey = JSON.stringify([
       runtime.state.composite.identityOf(inputs?.source ?? nextChild),
       inputs === undefined ? runtime.state.composite.identityOf(owner) : null,
       inputs?.sourcePath,
-      clonedChild,
+      runtime.state.composite.internMeasurementChild(clonedChild),
       axis,
       clonedProposal,
-      frame.context.inheritance.defaults,
-      theme,
-      frame.context.transformChains,
+      measurementEnvironmentIdentity,
       inputs?.bindings.map(input => [input.path, runtime.state.composite.identityOf(input.input)]),
       runtime.state.composite.identityOf(runtime.state.execution.namespaceStack.measurementIdentity),
-      compositeDepth,
     ]);
     const cached = runtime.state.composite.getMeasurement(cacheKey);
     if (cached !== undefined) {
       return { kind: 'resolved', result: cached };
     }
+
+    // ⚡只有实际试算才创建位置快照，命中缓存仍保留探测序号推进
+    const probeOccurrence = freezeOccurrence({
+      sourcePath: occurrence.sourcePath,
+      expansionPath: [...occurrence.expansionPath, { kind: CompileExpansionKind.Probe, index: probeIndex }],
+    });
 
     /** 未命中缓存时隔离求值，优先使用尺寸贡献，否则从完整布局中提取尺寸 */
     try {
