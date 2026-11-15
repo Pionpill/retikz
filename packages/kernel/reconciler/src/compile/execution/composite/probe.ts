@@ -1,4 +1,5 @@
 import type {
+  CanonicalTheme,
   CompileOccurrenceLocator,
   CompileWarning,
   CompositeInputScope,
@@ -55,7 +56,7 @@ export const evaluateCompositeLayout = (
   probeOccurrence: CompileOccurrenceLocator,
   probeScopeChain: ReadonlyArray<Transform>,
   probeScopeDefaults: SubtreeCompileRuntime['context']['inheritance']['defaults'],
-  probeTheme: SubtreeCompileRuntime['context']['inheritance']['theme'],
+  probeTheme: CanonicalTheme,
   probeInputs?: CompositeInputScope,
   captureScopeTargets?: SubtreeCompileOptions['captureScopeTargets'],
   measurementAxis?: LayoutMeasurementAxis,
@@ -159,7 +160,7 @@ export const probeCompositeLayout = (
   probeOccurrence: CompileOccurrenceLocator,
   probeScopeChain: ReadonlyArray<Transform>,
   probeScopeDefaults: SubtreeCompileRuntime['context']['inheritance']['defaults'],
-  probeTheme: SubtreeCompileRuntime['context']['inheritance']['theme'],
+  probeTheme: CanonicalTheme,
   scopeChainApplied = false,
   probeInputs?: CompositeInputScope,
   captureScopeTargets?: SubtreeCompileOptions['captureScopeTargets'],

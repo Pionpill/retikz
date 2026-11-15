@@ -1,4 +1,4 @@
-import type { CompositeCompileContext, IRPosition, IRTarget, Transform } from '@retikz/core';
+import type { CanonicalTheme, CompositeCompileContext, IRPosition, IRTarget, Transform } from '@retikz/core';
 import {
   RetikzCoreError,
   RetikzCoreErrorCode,
@@ -37,7 +37,7 @@ export const createCompositeTargetQuery = (
   return {
     /** 在指定主题下查询目标点，缓存不保存可消费的重放凭证 */
     resolve: (
-      theme: SubtreeCompileRuntime['context']['inheritance']['theme'],
+      theme: CanonicalTheme,
       query: Parameters<CompositeCompileContext['resolvePathTargets']>[0],
     ): ReturnType<CompositeCompileContext['resolvePathTargets']> => {
       const queryChild = snapshotCompositeLayoutChild(owner.label, query.child, probeSequence.index++);

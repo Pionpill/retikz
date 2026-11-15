@@ -1,4 +1,5 @@
 import type {
+  CanonicalTheme,
   CompileOccurrenceLocator,
   CompiledReferenceGeometry,
   CompositeReplay,
@@ -200,8 +201,7 @@ export const replayStyleFingerprint = (
 ): string => JSON.stringify(scopeDefaults);
 
 /** 对 resolved Theme 做 compile-local 稳定比较 */
-export const replayThemeFingerprint = (theme: SubtreeCompileRuntime['context']['inheritance']['theme']): string =>
-  JSON.stringify(theme);
+export const replayThemeFingerprint = (theme: CanonicalTheme): string => JSON.stringify(theme);
 
 /** 将试编译内的出现位置重定位到最终重放位置，保留内部展开后缀 */
 const replayOccurrence = (

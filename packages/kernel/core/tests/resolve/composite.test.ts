@@ -20,7 +20,7 @@ const expandDefinition = defineComposite({
     type: literal('box'),
     value: number(),
   }),
-  compile: node => ({ children: [{ type: 'node', position: [node.value, 0] }] }),
+  compile: ir => ({ children: [{ type: 'node', position: [ir.value, 0] }] }),
 });
 
 const layoutDefinition = defineComposite({
@@ -32,7 +32,7 @@ const layoutDefinition = defineComposite({
     value: number(),
   }),
   artifactSchema: strictObject({ value: number() }),
-  compile: node => ({ children: [], artifact: { value: node.value } }),
+  compile: ir => ({ children: [], artifact: { value: ir.value } }),
 });
 
 describe('resolveComposite', () => {
@@ -63,7 +63,7 @@ describe('resolveComposite', () => {
 
     const resolution = resolveComposite(binding, ['children', 0]);
 
-    expect(resolution).toMatchObject({ kind: 'compile', key: 'test.box', node: source() });
+    expect(resolution).toMatchObject({ kind: 'compile', key: 'test.box', ir: source() });
 
     expect(resolution.compile).toBe(expandDefinition.compile);
   });
@@ -74,7 +74,7 @@ describe('resolveComposite', () => {
 
     const resolution = resolveComposite(binding, ['children', 0]);
 
-    expect(resolution).toMatchObject({ kind: 'compile', key: 'test.layout', node: source({ type: 'layout' }) });
+    expect(resolution).toMatchObject({ kind: 'compile', key: 'test.layout', ir: source({ type: 'layout' }) });
 
     expect(resolution.artifactSchema).toBe(layoutDefinition.artifactSchema);
   });

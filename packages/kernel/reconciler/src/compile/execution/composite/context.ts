@@ -1,4 +1,10 @@
-import type { CompositeBoundChild, CompositeCompileContext, CompositeRuntimeInputContext, IRChild } from '@retikz/core';
+import type {
+  CanonicalTheme,
+  CompositeBoundChild,
+  CompositeCompileContext,
+  CompositeRuntimeInputContext,
+  IRChild,
+} from '@retikz/core';
 import {
   captureCompositeInputScope,
   naturalLayoutProposal,
@@ -14,7 +20,6 @@ import { createCompositeBoundChild, createCompositeReplayChild, createCompositeS
 import { createCompositeMeasurementMethods } from './measurement';
 import type { CompositeProbeSequence } from './measurement';
 import type { CompositeProbeContext } from './probe';
-import { cloneLayoutProposal } from './proposal';
 import { createCompositeTargetQuery } from './target-query';
 
 /** 装配一次 Composite 作者回调的环境，派生主题共享句柄与探测序号 */
@@ -25,7 +30,7 @@ export const createCompositeCallbackContext = (
   probeContext: CompositeProbeContext,
   evaluation: CompositeCompileContext['evaluation'],
 ) => {
-  const { runtime, owner, key, occurrence } = probeContext;
+  const { runtime, owner } = probeContext;
   const sourceInputs = frame.context.compositeInput ?? { source: child, bindings: [] };
   const authoredChildren = new Map<string, CompositeBoundChild>();
   const runtimeInputContext: CompositeRuntimeInputContext = Object.freeze({
@@ -52,9 +57,7 @@ export const createCompositeCallbackContext = (
   const probeSequence: CompositeProbeSequence = { index: 0 };
   const targetQuery = createCompositeTargetQuery(probeContext, frame, probeSequence);
   /** 装配继承指定主题的作者能力视图 */
-  const createLayoutContext = (
-    theme: SubtreeCompileRuntime['context']['inheritance']['theme'],
-  ): CompositeCompileContext => ({
+  const createLayoutContext = (theme: CanonicalTheme): CompositeCompileContext => ({
     ...runtimeInputContext,
     theme,
     withTheme: override =>
@@ -66,7 +69,8 @@ export const createCompositeCallbackContext = (
           runtime.context.registries.themeRegistry,
         ),
       ),
-    proposal: cloneLayoutProposal(frame.context.layout?.childProposal ?? naturalLayoutProposal, key, occurrence),
+    /** 复用入口已校验并冻结的提案，派生主题不改变布局约束 */
+    proposal: frame.context.layout?.childProposal ?? naturalLayoutProposal,
     evaluation: { ...evaluation },
     ...createCompositeMeasurementMethods(probeContext, frame, probeSequence, theme),
     resolvePathTargets: query => targetQuery.resolve(theme, query),

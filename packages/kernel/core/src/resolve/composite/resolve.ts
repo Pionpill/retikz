@@ -17,14 +17,14 @@ export const bindComposite = (source: IRComposite, composites: CompositeRegistry
     type: definition.type,
     source,
     schema: definition.schema,
-    // resolveComposite 使用同一定义的 schema 解析节点后，才交给此回调
+    // resolveComposite 使用同一定义的 schema 解析组件 IR 后，才交给此回调
     compile: definition.compile as RegisteredCompositeBinding['compile'],
     ...(definition.artifactSchema === undefined ? {} : { artifactSchema: definition.artifactSchema }),
   };
 };
 
 /**
- * 按已绑定定义的 schema 解析复合组件节点，保留后续编译所需的定义信息
+ * 按已绑定定义的 schema 解析组件 IR，保留后续编译所需的定义信息
  * @template TBinding 已注册的组件绑定类型，解析结果保留该绑定的字段
  */
 export const resolveComposite = <TBinding extends RegisteredCompositeBinding>(
@@ -32,7 +32,7 @@ export const resolveComposite = <TBinding extends RegisteredCompositeBinding>(
   irPath: PropertyPath,
 ): CompositeResolution<TBinding> => ({
   ...binding,
-  node: parseProviderPayload({
+  ir: parseProviderPayload({
     capability: 'composite',
     providerName: binding.key,
     irPath,
