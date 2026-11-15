@@ -57,7 +57,11 @@ export class CompileElementExecutor {
 
     return {
       context: {
-        layout: { childProposal: this.options.proposal ?? naturalLayoutProposal },
+        layout: {
+          childProposal: this.options.proposal ?? naturalLayoutProposal,
+          // ⚡默认跳过无人消费的父布局占位传播，测量和增量驱动按需显式开启
+          skipAllocation: this.options.skipAllocation ?? true,
+        },
         compositeInput: this.runtime.context.compositeInputs,
         transformChains: this.options.transformChains ?? [],
         pathPrefix: [],

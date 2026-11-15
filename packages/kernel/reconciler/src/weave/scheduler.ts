@@ -123,7 +123,10 @@ export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinitio
   const composer = runtime.state.execution.scopeTransformComposer;
   const tracker = runtime.state.execution.provenanceTracker;
   namespaces.set(root, runtime.state.execution.namespaceStack.identity);
-  const rootExecutor = new CompileElementExecutor(source.children, runtime, { compileSubtree: assembleCompileSubtree });
+  const rootExecutor = new CompileElementExecutor(source.children, runtime, {
+    compileSubtree: assembleCompileSubtree,
+    skipAllocation: false,
+  });
   const rootFrame = rootExecutor.createRootRuntime();
 
   const prepareAddress = (node: WeaveNode): WeaveTaskAddress => {

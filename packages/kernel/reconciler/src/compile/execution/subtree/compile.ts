@@ -72,6 +72,11 @@ export type SubtreeCompileOptions = {
   generated?: boolean;
   /** 当前 root child 收到的完整双轴 proposal */
   proposal?: LayoutProposal;
+  /**
+   * 当前子树不向父布局贡献占位，真实几何与可见边界仍正常计算；布局测量和增量编译显式传 false
+   * @default true
+   */
+  skipAllocation?: boolean;
 };
 
 /** 选中隔离子树后交给宿主接受的局部输出，不包含可写工作区或递归调度器 */
@@ -113,7 +118,7 @@ type SubtreeCompileContext = Readonly<{
   layout?: Readonly<{
     /** 当前子树接收的父布局约束，普通 Scope 会继续透传 */
     childProposal?: LayoutProposal;
-    /** 祖先组件已显式声明占位时，跳过内部贡献的父布局占位汇总，不影响实际几何边界 */
+    /** 跳过当前子树向父布局贡献的占位汇总，不影响真实几何与可见边界 */
     skipAllocation?: boolean;
   }>;
   /** 当前 scope 累计变换 */

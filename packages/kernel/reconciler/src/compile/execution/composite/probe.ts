@@ -132,6 +132,7 @@ export const evaluateCompositeLayout = (
     compositeDepth: compositeDepth + 1,
     generated: true,
     probe: true,
+    skipAllocation: false,
     proposal: clonedProposal,
     ...(measurementAxis === undefined ? {} : { measurementAxis }),
     ...(captureScopeTargets === undefined ? {} : { captureScopeTargets }),

@@ -5,7 +5,9 @@ import type {
   IRPathBase,
   InputPathCompilation,
   LayoutBoundsContribution,
+  PositionTargetEvaluateContext,
   ScenePrimitive,
+  Transform,
 } from '@retikz/core';
 import { compilePath, createPathTargetResolver, resolvePathAnimations, resolvePath } from '@retikz/core';
 
@@ -106,7 +108,6 @@ const compilePendingPath = (runtime: CompileRuntime, pending: PendingPathEmissio
   }
 };
 
-
 /** 将已完成的 Path 结果原位回填到输出容器 */
 export const assemblePaths = (
   runtime: CompileRuntime,
@@ -185,18 +186,30 @@ export const createPathResolveContext = (
 export const createPathCompileContext = (
   runtime: CompileRuntime,
   pending: InputPathCompilation,
-): PathCompileContext => ({
-  ...pending,
-  targetResolver: createPathTargetResolver(chain => createTreePositionContext(runtime, chain)),
-  registries: runtime.context.registries,
-  ...runtime.context.layout,
-  ...runtime.context.host,
-  boundaryStore: runtime.state.workspace.boundaryStore,
-  registerPaint: runtime.state.workspace.paintRegistry.register,
-  resources: () => ({
-    paints: runtime.state.workspace.paintRegistry.getResources(),
-    clips: runtime.state.workspace.clipRegistry.getResources(),
-  }),
-  onWarn: runtime.state.workspace.diagnosticCollector.collect,
-  resolveTransform: runtime.state.execution.scopeTransformComposer.resolve,
-});
+): PathCompileContext => {
+  /** ⚡按变换链对象身份缓存位置上下文，仅在当前 PathCompileContext 内有效，名称仍动态查询 */
+  const positionContextCache = new WeakMap<ReadonlyArray<Transform>, PositionTargetEvaluateContext>();
+  const targetResolver = createPathTargetResolver(chain => {
+    let context = positionContextCache.get(chain);
+    if (context === undefined) {
+      context = createTreePositionContext(runtime, chain);
+      positionContextCache.set(chain, context);
+    }
+    return context;
+  });
+  return {
+    ...pending,
+    targetResolver,
+    registries: runtime.context.registries,
+    ...runtime.context.layout,
+    ...runtime.context.host,
+    boundaryStore: runtime.state.workspace.boundaryStore,
+    registerPaint: runtime.state.workspace.paintRegistry.register,
+    resources: () => ({
+      paints: runtime.state.workspace.paintRegistry.getResources(),
+      clips: runtime.state.workspace.clipRegistry.getResources(),
+    }),
+    onWarn: runtime.state.workspace.diagnosticCollector.collect,
+    resolveTransform: runtime.state.execution.scopeTransformComposer.resolve,
+  };
+};
