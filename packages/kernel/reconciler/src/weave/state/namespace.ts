@@ -1,20 +1,20 @@
 import type { PropertyPath } from '@retikz/foundation';
 
 import type { NamespaceFrameChange } from '../../compile';
-import type { WeaveNode, WeaveRoot, WeaveScopeNode } from '../shared';
+import type { WeaveEntry, WeaveRoot, WeaveScopeEntry } from '../shared';
 import { WeaveLookup } from './lookup';
 import { readWeaveCandidate, readWeaveCurrent } from './transaction';
 
 /** 名称查询保留消费者身份与原有声明阶段，不以队列执行顺序改变可见性 */
 export type WeaveNameQuery = Readonly<{
-  consumer: WeaveNode;
+  consumer: WeaveEntry;
   name: string;
   visibility: 'declaration' | 'closed';
 }>;
 
 /** 查询命中的作者身份与具体声明；生成名称仍归所属 Composite */
 export type WeaveNameBinding = Readonly<{
-  node: WeaveNode;
+  node: WeaveEntry;
   path: PropertyPath;
   generated?: NamespaceFrameChange;
 }>;
@@ -22,23 +22,23 @@ export type WeaveNameBinding = Readonly<{
 /** 从候选声明事实建立本批可见性索引，不保存编译栈或领域计算闭包 */
 export class WeaveNameIndex {
   /** 名称与可能生成名称的作者声明，结构地址由共享索引提供 */
-  private readonly declarations: WeaveLookup<string, ReadonlySet<WeaveNode>>;
-  private readonly composites: WeaveLookup<Extract<WeaveNode, { type: 'composite' }>, true>;
+  private readonly declarations: WeaveLookup<string, ReadonlySet<WeaveEntry>>;
+  private readonly composites: WeaveLookup<Extract<WeaveEntry, { type: 'composite' }>, true>;
   /** 前一候选声明的反向索引，支持同批连续改名 */
-  private readonly memberships: WeaveLookup<WeaveNode, ReadonlyArray<string>>;
+  private readonly memberships: WeaveLookup<WeaveEntry, ReadonlyArray<string>>;
 
   constructor(
-    private readonly paths: ReadonlyMap<WeaveNode, PropertyPath>,
+    private readonly paths: ReadonlyMap<WeaveEntry, PropertyPath>,
     previous?: WeaveNameIndex,
-    changed: ReadonlySet<WeaveNode> = new Set(paths.keys()),
-    removed: ReadonlySet<WeaveNode> = new Set(),
+    changed: ReadonlySet<WeaveEntry> = new Set(paths.keys()),
+    removed: ReadonlySet<WeaveEntry> = new Set(),
   ) {
     this.declarations = new WeaveLookup(previous?.declarations);
     this.composites = new WeaveLookup(previous?.composites);
     this.memberships = new WeaveLookup(previous?.memberships);
     for (const node of new Set([...changed, ...removed])) {
-      const before = node.current?.input.own;
-      const after = removed.has(node) ? undefined : readWeaveCandidate(node).input.own;
+      const before = node.current?.origin.own;
+      const after = removed.has(node) ? undefined : readWeaveCandidate(node).origin.own;
       const names = (own: typeof before): Array<string> =>
         own === undefined || 'namespace' in own
           ? []
@@ -70,16 +70,16 @@ export class WeaveNameIndex {
   }
 
   /** 取得所属局部命名空间；Scope 自身的名称仍写入父空间 */
-  namespaceOf(node: WeaveNode, committed = false): WeaveRoot | WeaveScopeNode {
+  namespaceOf(node: WeaveEntry, committed = false): WeaveRoot | WeaveScopeEntry {
     const read = committed ? readWeaveCurrent : readWeaveCandidate;
     let parent = read(node).parent;
-    while (parent.type !== 'root' && !read(parent).input.own.localNamespace) parent = read(parent).parent;
+    while (parent.type !== 'root' && !read(parent).origin.own.localNamespace) parent = read(parent).parent;
     return parent;
   }
 
   /** 操作寻址使用容器闭合后的最后同名作者，不包含 Composite 生成节点 */
-  lastDeclaration(namespace: WeaveRoot | WeaveScopeNode, name: string): WeaveNode | undefined {
-    let found: WeaveNode | undefined;
+  lastDeclaration(namespace: WeaveRoot | WeaveScopeEntry, name: string): WeaveEntry | undefined {
+    let found: WeaveEntry | undefined;
     for (const node of this.declarations.get(name) ?? []) {
       if (this.namespaceOf(node) !== namespace) continue;
       if (found === undefined || this.compare(this.paths.get(node)!, this.paths.get(found)!) > 0) found = node;
@@ -90,7 +90,7 @@ export class WeaveNameIndex {
   /** 外部生成名称按实例准备结果查询；调用方先完成可见 Composite 的名称发布 */
   lookup(
     query: WeaveNameQuery,
-    generatedBindings: (node: Extract<WeaveNode, { type: 'composite' }>) => ReadonlyArray<NamespaceFrameChange>,
+    generatedBindings: (node: Extract<WeaveEntry, { type: 'composite' }>) => ReadonlyArray<NamespaceFrameChange>,
     committed = false,
   ): WeaveNameBinding | undefined {
     const read = committed ? readWeaveCurrent : readWeaveCandidate;
@@ -105,7 +105,7 @@ export class WeaveNameIndex {
     let closed = query.visibility === 'closed';
     let inclusive = false;
     for (;;) {
-      const visible = (node: WeaveNode) => {
+      const visible = (node: WeaveEntry) => {
         if (this.namespaceOf(node, committed) !== namespace) return false;
         const path = this.paths.get(node)!;
         if (closed && boundary.every((part, index) => path[index] === part)) return true;
@@ -119,7 +119,7 @@ export class WeaveNameIndex {
           (authored !== undefined && this.compare(this.paths.get(node)!, this.paths.get(authored.node)!) <= 0)
         )
           continue;
-        const alias = node.type === 'node' ? (read(node).input.own.aliasIds?.indexOf(query.name) ?? -1) : -1;
+        const alias = node.type === 'node' ? (read(node).origin.own.aliasIds?.indexOf(query.name) ?? -1) : -1;
         authored = { node, path: [...this.paths.get(node)!, ...(alias < 0 ? ['id'] : ['aliasIds', alias])] };
       }
       const composites = [...this.composites.keys()]

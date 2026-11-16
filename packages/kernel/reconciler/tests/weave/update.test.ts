@@ -339,7 +339,7 @@ describe('Weave 批次更新', () => {
     const root = mounted.root;
     const [a, b, independent] = readWeaveCurrent(root).children;
     const oldState = readWeaveCurrent(a);
-    const oldIndependent = readWeaveCurrent(independent).compiled;
+    const oldIndependent = readWeaveCurrent(independent).compile?.value;
     const oldOutput = JSON.stringify(mounted.compilation.result);
     const own = { type: 'node' as const, id: 'a', position: [60, 20] as [number, number] };
     const prepared = session.update({
@@ -352,7 +352,7 @@ describe('Weave 批次更新', () => {
     prepared.commit();
     expect(readWeaveCurrent(root).children[0]).toBe(a);
     expect(readWeaveCurrent(b).dependencies.has(a)).toBe(true);
-    expect(readWeaveCurrent(independent).compiled).toBe(oldIndependent);
+    expect(readWeaveCurrent(independent).compile?.value).toBe(oldIndependent);
     prepared.finish();
     expect(JSON.stringify(mounted.compilation.result)).toBe(oldOutput);
   });

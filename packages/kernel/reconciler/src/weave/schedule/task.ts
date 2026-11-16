@@ -1,6 +1,6 @@
 import type { ValueOf } from '@retikz/foundation';
 
-import type { WeaveNode } from '../shared';
+import type { WeaveEntry } from '../shared';
 
 /** 候选执行的就绪边界，局部布局与世界投影分别完成 */
 export const WeaveTaskPhase = {
@@ -14,10 +14,10 @@ export type WeaveTaskPhase = ValueOf<typeof WeaveTaskPhase>;
 
 /** 稳定节点加就绪阶段，不以会随结构修改变化的声明路径作为身份 */
 export type WeaveTaskAddress = Readonly<
-  | { node: WeaveNode; phase: typeof WeaveTaskPhase.Output }
-  | { node: Extract<WeaveNode, { type: 'node' | 'coordinate' | 'path' }>; phase: typeof WeaveTaskPhase.Compile }
-  | { node: Extract<WeaveNode, { type: 'scope' | 'composite' }>; phase: typeof WeaveTaskPhase.Prepare }
-  | { node: Extract<WeaveNode, { type: 'scope' }>; phase: typeof WeaveTaskPhase.Project }
+  | { node: WeaveEntry; phase: typeof WeaveTaskPhase.Output }
+  | { node: Extract<WeaveEntry, { type: 'node' | 'coordinate' | 'path' }>; phase: typeof WeaveTaskPhase.Compile }
+  | { node: Extract<WeaveEntry, { type: 'scope' | 'composite' }>; phase: typeof WeaveTaskPhase.Prepare }
+  | { node: Extract<WeaveEntry, { type: 'scope' }>; phase: typeof WeaveTaskPhase.Project }
 >;
 
 /** 只在本批存活的执行记录，不保存领域产物或逐节点回调 */

@@ -5,10 +5,10 @@ export type {
   InputWeaveOwn,
   WeaveBatch,
   WeaveDependencyKind,
-  WeaveNode,
+  WeaveEntry,
   WeaveOperation,
   WeaveRoot,
-  WeaveScopeNode,
+  WeaveScopeEntry,
   WeaveTarget,
 } from './shared';
 export { WeaveTransaction, readWeaveCurrent } from './state';

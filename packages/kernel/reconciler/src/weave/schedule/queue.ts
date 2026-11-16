@@ -1,13 +1,13 @@
 import { RetikzError } from '@retikz/foundation';
 
 import { RetikzReconcilerError, RetikzReconcilerErrorCode } from '../../error';
-import type { WeaveNode } from '../shared';
+import type { WeaveEntry } from '../shared';
 import type { WeaveTaskAddress, WeaveTaskPhase, WeaveTaskRecord } from './task';
 
 /** 同步就绪队列；动态读取在原调用栈完成生产者，不通过重放回调模拟等待 */
 export class WeaveTaskQueue {
   /** 稳定节点及其本批阶段记录 */
-  private readonly tasks = new Map<WeaveNode, Map<WeaveTaskPhase, WeaveTaskRecord>>();
+  private readonly tasks = new Map<WeaveEntry, Map<WeaveTaskPhase, WeaveTaskRecord>>();
   /** 已归并的待检查记录；require 提前完成后，出队时直接跳过 */
   private readonly ready: Array<WeaveTaskRecord> = [];
   /** 活动阶段链，只用于真实依赖环诊断 */

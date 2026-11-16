@@ -1,9 +1,9 @@
 import { RetikzReconcilerError, RetikzReconcilerErrorCode } from '../../error';
-import type { WeaveNode, WeaveRoot } from '../shared';
+import type { WeaveEntry, WeaveRoot } from '../shared';
 import { WeaveLookup } from './lookup';
 
 /** 状态槽的稳定所有者 */
-type WeaveStateOwner = WeaveNode | WeaveRoot;
+type WeaveStateOwner = WeaveEntry | WeaveRoot;
 
 /** 从具体节点类别保留其状态类型 */
 type WeaveStateOf<TNode extends WeaveStateOwner> = NonNullable<TNode['current']>;
@@ -112,7 +112,7 @@ export class WeaveTransaction {
   }
 
   /** 删除成员不再提交其候选状态；已提交对象留给回滚结构引用 */
-  discardNode(node: WeaveNode): void {
+  discardNode(node: WeaveEntry): void {
     this.assertPreparing();
     if (this.previous.has(node)) {
       node.pending = null;
@@ -127,7 +127,7 @@ export class WeaveTransaction {
     for (const node of this.previous.keys()) {
       if (
         node.pending === null ||
-        (node.type !== 'root' && node.type !== 'composite' && node.pending.compiled === null)
+        (node.type !== 'root' && node.type !== 'composite' && node.pending.compile === undefined)
       )
         throw new RetikzReconcilerError(RetikzReconcilerErrorCode.Compile, 'Cannot commit unfinished Weave state');
     }

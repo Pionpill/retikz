@@ -5,7 +5,7 @@ import { compareProperties } from '@retikz/foundation';
 import type { CompileRuntime, SubtreeCompileRuntime } from '../../../compile';
 import { createTreePositionContext } from '../../../compile';
 import { createWeaveObservation, matchWeaveReferences, restoreWeaveResources } from '../../shared';
-import type { WeaveNode } from '../../shared';
+import type { WeaveCoordinateState } from '../../shared';
 import { compareCanonicalCoordinates } from './compare';
 
 /** 从候选状态选择或计算坐标，完整构建不参与此策略 */
@@ -13,32 +13,44 @@ export const executeWeaveCoordinate = (
   runtime: CompileRuntime,
   child: IRCoordinate,
   context: SubtreeCompileRuntime['context'],
-  previous?: NonNullable<Extract<WeaveNode, { type: 'coordinate' }>['current']>,
+  previous?: WeaveCoordinateState,
 ) => {
-  const resolveInputs = { child, nodeDistance: runtime.context.layout.nodeDistance };
+  const resolveInputs = { nodeDistance: runtime.context.layout.nodeDistance };
   const compileInputs = { scopeChain: context.transformChains };
-  const cache = previous?.cache;
-  const before = previous?.canon;
+  const previousCompile = previous?.compile;
+  const previousReads = previous?.referenceReads ?? [];
+  const before = previous?.resolve?.value;
   const canon =
     before != null &&
-    cache?.diagnostics.length === 0 &&
-    compareProperties(cache.resolveInputs, resolveInputs, { depth: 2 })
+    previousCompile?.diagnostics.length === 0 &&
+    compareProperties(previous?.resolve?.input, child) &&
+    compareProperties(previous?.resolve?.context, resolveInputs)
       ? before
       : resolveCoordinate(child, runtime.context.layout);
   if (
     before != null &&
-    previous?.compiled != null &&
-    cache?.diagnostics.length === 0 &&
+    previous?.compile?.value != null &&
+    previousCompile?.diagnostics.length === 0 &&
     compareCanonicalCoordinates(before, canon) &&
-    compareProperties(cache.compileInputs, compileInputs, { depth: 3 }) &&
-    matchWeaveReferences(cache.reads, runtime.state.execution.namespaceStack)
+    compareProperties(previousCompile.context, compileInputs, { depth: 3 }) &&
+    matchWeaveReferences(previousReads, runtime.state.execution.namespaceStack)
   ) {
-    restoreWeaveResources(runtime, cache);
-    return { canon, compiled: previous.compiled, cache: { ...cache, resolveInputs, compileInputs }, reused: true };
+    restoreWeaveResources(runtime, previousCompile.resources);
+    return {
+      resolve: { input: child, context: resolveInputs, value: canon },
+      compile: { ...previousCompile, context: compileInputs },
+      referenceReads: previousReads,
+      reused: true,
+    };
   }
   const observation = createWeaveObservation(runtime);
   const compiled = runtime.state.execution.namespaceStack.observeReferences(observation.read, () =>
     compileCoordinate(canon, createTreePositionContext(observation.runtime, context.transformChains)),
   );
-  return { canon, compiled, cache: { ...observation.facts(), resolveInputs, compileInputs }, reused: false };
+  return {
+    resolve: { input: child, context: resolveInputs, value: canon },
+    compile: { ...observation.facts(), context: compileInputs, value: compiled },
+    referenceReads: observation.reads,
+    reused: false,
+  };
 };

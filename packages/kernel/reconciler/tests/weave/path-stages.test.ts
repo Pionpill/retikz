@@ -1,12 +1,59 @@
 import type { IRPathBase, IRScene } from '@retikz/core';
 import { definePath, PathSchema } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { literal } from 'zod';
+import { literal, number, strictObject } from 'zod';
 
 import { readWeaveCurrent, WeaveManager } from '../../src/weave';
 import { compileTestResult } from '../helpers/compilation';
 
 describe('Path 三层复用', () => {
+  it('属性引用不变跳过解析，其他属性变化仍执行可重写 children 的扩展 schema', () => {
+    let resolutions = 0;
+    const definition = definePath({
+      name: 'shifted',
+      schema: PathSchema.extend({ kind: literal('shifted'), kindOptions: strictObject({ shift: number() }) }).transform(
+        path => {
+          resolutions++;
+          return {
+            ...path,
+            children: [
+              { type: 'step' as const, kind: 'move' as const, to: [0, 0] as [number, number] },
+              { type: 'step' as const, kind: 'line' as const, to: [path.kindOptions.shift, 0] as [number, number] },
+            ],
+          };
+        },
+      ),
+      compile: context => context.emitStroke(),
+    });
+    const path: IRPathBase = {
+      type: 'path',
+      kind: 'shifted',
+      id: 'p',
+      kindOptions: { shift: 10 },
+      children: [
+        { type: 'step', kind: 'move', to: [0, 0] },
+        { type: 'step', kind: 'line', to: [10, 0] },
+      ],
+    };
+    const source: IRScene = { type: 'scene', version: 1, children: [path] };
+    const options = { paths: [definition] };
+    const session = new WeaveManager(source, options);
+    const mounted = session.mount();
+    const target = { kind: 'id' as const, scopeId: mounted.root.scopeId, id: 'p' };
+    const count = resolutions;
+    const equal = session.update({ operations: [{ kind: 'update', target, input: { ...path } }] });
+    expect(resolutions).toBe(count);
+    expect(equal.compilation.result).toEqual(mounted.compilation.result);
+    equal.commit();
+    equal.finish();
+    const next: IRPathBase = { ...path, kindOptions: { shift: 30 } };
+    const changed = session.update({ operations: [{ kind: 'update', target, input: next }] });
+    expect(resolutions).toBeGreaterThan(count);
+    expect(changed.compilation.result).not.toEqual(mounted.compilation.result);
+    expect(changed.compilation.result).toEqual(compileTestResult({ ...source, children: [next] }, options));
+    changed.rollback();
+  });
+
   it('圆角候选回滚不污染原始度量，后续半径更新保留原始模型', () => {
     const path: IRPathBase = {
       type: 'path',
@@ -24,7 +71,7 @@ describe('Path 三层复用', () => {
     const mounted = session.mount();
     const node = readWeaveCurrent(mounted.root).children[0];
     if (node.type !== 'path') throw new Error('Expected path');
-    const previous = readWeaveCurrent(node).compiled;
+    const previous = readWeaveCurrent(node).compile?.value;
     const snapshot = structuredClone(mounted.compilation.result);
     for (const [cornerRadius, commit] of [
       [18, false],
@@ -40,12 +87,12 @@ describe('Path 三层复用', () => {
       if (commit) {
         update.commit();
         update.finish();
-        const positions = readWeaveCurrent(node).compiled?.stroke?.layout?.positions;
+        const positions = readWeaveCurrent(node).compile?.value.stroke?.layout?.positions;
         expect(positions).not.toBe(previous?.stroke?.layout?.positions);
         expect(positions?.original).toBe(previous?.stroke?.layout?.positions?.original);
       } else {
         update.rollback();
-        expect(readWeaveCurrent(node).compiled).toBe(previous);
+        expect(readWeaveCurrent(node).compile?.value).toBe(previous);
       }
       expect(mounted.compilation.result).toEqual(snapshot);
     }
@@ -196,7 +243,7 @@ describe('Path 三层复用', () => {
     const mounted = session.mount();
     const node = readWeaveCurrent(mounted.root).children[0];
     if (node.type !== 'path') throw new Error('Expected path');
-    const previous = readWeaveCurrent(node).compiled;
+    const previous = readWeaveCurrent(node).compile?.value;
     for (const [pos, positionMode, positionGeometry] of [
       [0.25, 'step', 'original'],
       [0.5, 'step', 'rounded'],
@@ -214,7 +261,7 @@ describe('Path 三层复用', () => {
       expect(update.compilation.result).toEqual(compileTestResult({ ...source, children: [next] }));
       update.commit();
       update.finish();
-      const compiled = readWeaveCurrent(node).compiled;
+      const compiled = readWeaveCurrent(node).compile?.value;
       expect(compiled?.stroke?.layout?.geometry).toBe(previous?.stroke?.layout?.geometry);
       expect(compiled?.stroke?.layout?.positions).toBe(previous?.stroke?.layout?.positions);
       expect(compiled?.stroke?.emit?.marks?.[0]?.content).toBe(previous?.stroke?.emit?.marks?.[0]?.content);
@@ -233,7 +280,7 @@ describe('Path 三层复用', () => {
     const mounted = session.mount();
     const node = readWeaveCurrent(mounted.root).children[0];
     if (node.type !== 'path') throw new Error('Expected path');
-    const previous = readWeaveCurrent(node).compiled;
+    const previous = readWeaveCurrent(node).compile?.value;
     const update = session.update({
       operations: [
         {
@@ -246,7 +293,7 @@ describe('Path 三层复用', () => {
     expect(update.compilation.result).toEqual(mounted.compilation.result);
     update.commit();
     update.finish();
-    expect(readWeaveCurrent(node).compiled).toBe(previous);
+    expect(readWeaveCurrent(node).compile?.value).toBe(previous);
   });
   it('省略与显式固定样式默认值复用自定义编译结果', () => {
     let calls = 0;
@@ -273,7 +320,7 @@ describe('Path 三层复用', () => {
     const before = calls;
     const node = readWeaveCurrent(mounted.root).children[0];
     if (node.type !== 'path') throw new Error('Expected path');
-    const previous = readWeaveCurrent(node).compiled;
+    const previous = readWeaveCurrent(node).compile?.value;
     const explicit: IRPathBase = {
       ...path,
       style: {
@@ -300,6 +347,6 @@ describe('Path 三层复用', () => {
     );
     update.commit();
     update.finish();
-    expect(readWeaveCurrent(node).compiled).toBe(previous);
+    expect(readWeaveCurrent(node).compile?.value).toBe(previous);
   });
 });

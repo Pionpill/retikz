@@ -9,14 +9,6 @@
 import { visitSceneContent } from '@retikz/core';
 
 import type { CompileProvenanceSnapshot, CompositeArtifact, NamespaceFrameChange } from '../../compile';
-import type { WeaveReferenceRead } from './reference';
-
-/** 输出贡献实际读取的名称及复用校验阶段 */
-export type WeaveContributionRead = WeaveReferenceRead &
-  Readonly<{
-    /** 准备读取与延迟输出读取分别在对应阶段校验 */
-    readiness: 'prepare' | 'output';
-  }>;
 
 /** 作者实例已经完成的输出贡献，不包含 probe token、回调或可写工作区 */
 export type WeaveContribution = Readonly<{
@@ -41,8 +33,6 @@ export type WeaveContribution = Readonly<{
   zIndices: ReadonlyArray<number | undefined>;
   /** 实例向当前名称空间提交的声明 */
   bindings: ReadonlyArray<NamespaceFrameChange>;
-  /** 实例实际读取的外部或内部名称 */
-  reads: ReadonlyArray<WeaveContributionRead>;
   /** 图元引用的资源闭包 */
   resources: SceneResources;
   /** 实例诊断；有诊断时由驱动决定重新计算 */

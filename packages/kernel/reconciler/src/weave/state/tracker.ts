@@ -1,52 +1,52 @@
 import type { CompileWarning } from '@retikz/core';
 import { compareProperties } from '@retikz/foundation';
 
-import type { WeaveCompileRead, WeaveNode, WeaveRoot, WeaveScopeNode } from '../shared';
+import type { WeaveCompileRead, WeaveEntry, WeaveRoot, WeaveScopeEntry } from '../shared';
 import type { WeaveTransaction } from './transaction';
 
 /** 维护编译读取、双向依赖与批次失效，不编辑声明结构或执行编译 */
 export class WeaveTracker {
   /** 本批已失效节点，用于传播去重与阻止缓存复用，不是待执行队列 */
-  private readonly dirtyNodes = new Set<WeaveNode>();
+  private readonly dirtyNodes = new Set<WeaveEntry>();
   /** 仅可能受上游影响的节点；读取结果未变时不进入领域计算 */
-  private readonly checkedNodes = new Set<WeaveNode>();
+  private readonly checkedNodes = new Set<WeaveEntry>();
 
   /** 仅回收本批新增但未提交的身份 */
-  private readonly inserted = new Set<WeaveNode>();
+  private readonly inserted = new Set<WeaveEntry>();
   /** 提交成功后释放被移除的绑定 */
-  private readonly removed = new Set<WeaveNode>();
+  private readonly removed = new Set<WeaveEntry>();
 
   /** 自身输入或可见绑定确实变化的节点 */
-  get requests(): ReadonlySet<WeaveNode> {
+  get requests(): ReadonlySet<WeaveEntry> {
     return this.checkedNodes;
   }
 
   constructor(
     private readonly root: WeaveRoot,
     private readonly transaction: WeaveTransaction,
-    private readonly bindings: Map<object, WeaveNode>,
+    private readonly bindings: Map<object, WeaveEntry>,
   ) {}
 
   /** 将节点登记为可被 Core 读取记录引用的生产者 */
-  registerNodeBinding(node: WeaveNode): void {
+  registerNodeBinding(node: WeaveEntry): void {
     this.bindings.set(node, node);
     this.inserted.add(node);
   }
 
   /** 判断节点是否已被本批次失效传播覆盖 */
-  isNodeDirty(node: WeaveNode): boolean {
+  isNodeDirty(node: WeaveEntry): boolean {
     return this.dirtyNodes.has(node) || this.checkedNodes.has(node);
   }
 
   /** 没有自身输入或继承变化，可以通过实际读取结果确认旧贡献 */
-  canCheckNode(node: WeaveNode): boolean {
+  canCheckNode(node: WeaveEntry): boolean {
     return !this.dirtyNodes.has(node) && this.checkedNodes.has(node);
   }
 
   /** 名称声明变化同时唤醒未命中读取，不能只沿已有生产者边传播 */
-  invalidateBindings(names: ReadonlySet<string>, changed: (node: WeaveNode) => boolean): void {
+  invalidateBindings(names: ReadonlySet<string>, changed: (node: WeaveEntry) => boolean): void {
     const readers = this.transaction.readNode(this.root).readers;
-    const checked = new Set<WeaveNode>();
+    const checked = new Set<WeaveEntry>();
     for (const name of names)
       for (const node of readers.get(name) ?? []) {
         if (checked.has(node)) continue;
@@ -56,21 +56,21 @@ export class WeaveTracker {
   }
 
   /** 仅登记自身输入变化，后代环境与引用结果由读取点核对 */
-  invalidateNode(node: WeaveNode): void {
+  invalidateNode(node: WeaveEntry): void {
     if (this.dirtyNodes.has(node)) return;
     this.dirtyNodes.add(node);
     this.checkNode(node);
   }
 
   /** 登记名称变化，不提前扩散消费闭包 */
-  private checkNode(node: WeaveNode): void {
+  private checkNode(node: WeaveEntry): void {
     if (this.checkedNodes.has(node)) return;
     this.checkedNodes.add(node);
   }
 
   /** 保存读取与诊断，并以最新读取事实重建节点的双向计算依赖 */
   recordNodeReads(
-    node: WeaveNode,
+    node: WeaveEntry,
     compileReads: ReadonlyArray<WeaveCompileRead>,
     diagnostics: ReadonlyArray<CompileWarning>,
     append = false,
@@ -127,7 +127,7 @@ export class WeaveTracker {
   }
 
   /** 登记 Scope 包络对子元素布局的依赖，Path 不参与引用包络 */
-  recordScopeLayoutDependencies(node: WeaveScopeNode): void {
+  recordScopeLayoutDependencies(node: WeaveScopeEntry): void {
     for (const dependency of this.transaction.readNode(node).children) {
       if (dependency.type === 'path') continue;
       const dependencies = this.transaction.editNodeAttribute(node, 'dependencies');
@@ -139,7 +139,7 @@ export class WeaveTracker {
   }
 
   /** 删除节点的双向计算关联与读取记录，不修改声明父子关系 */
-  detachNodeDependencies(node: WeaveNode): void {
+  detachNodeDependencies(node: WeaveEntry): void {
     const state = this.transaction.readNode(node);
     this.removed.add(node);
     this.dirtyNodes.delete(node);

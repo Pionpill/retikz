@@ -7,11 +7,11 @@ import { WeaveOperationKind } from '../shared';
 import type {
   WeaveDependencyKind,
   InputWeaveElement,
-  WeaveNode,
+  WeaveEntry,
   WeaveOperation,
   InputWeaveOwn,
   WeaveRoot,
-  WeaveScopeNode,
+  WeaveScopeEntry,
   WeaveTarget,
 } from '../shared';
 import type { WeaveAddressIndex } from './address';
@@ -22,17 +22,17 @@ import type { WeaveTransaction } from './transaction';
 type WeaveEditResult = {
   /** 本次声明变化涉及的名称与原/新空间，用于精确更新操作索引 */
   names: Set<string>;
-  namespaces: Set<WeaveRoot | WeaveScopeNode>;
+  namespaces: Set<WeaveRoot | WeaveScopeEntry>;
   /** 自身输入或声明成员发生变化的节点，不包含推导的消费者 */
-  changedNodes: Array<WeaveNode>;
+  changedNodes: Array<WeaveEntry>;
   /** 名称声明或命名空间归属变化 */
   indexesChanged: boolean;
   /** 插删改变的容器；仅它的后续子地址需要刷新 */
-  structure?: { parent: WeaveRoot | WeaveScopeNode; index: number };
+  structure?: { parent: WeaveRoot | WeaveScopeEntry; index: number };
   /** 新建的全部节点，用于登记编译 binding */
-  insertedNodes: Array<WeaveNode>;
+  insertedNodes: Array<WeaveEntry>;
   /** 已脱离候选树的节点，按父先子后排列，依赖断开前仍可读取其状态 */
-  removedNodes: Array<WeaveNode>;
+  removedNodes: Array<WeaveEntry>;
 };
 
 /** 编辑候选声明树与寻址索引，不负责依赖传播、Core 编译或事务提交 */
@@ -78,7 +78,7 @@ export class WeaveEditor {
         );
       changes.changedNodes.push(node);
       if (operation.kind === WeaveOperationKind.Update) {
-        const before = this.transaction.readNode(node).input.own;
+        const before = this.transaction.readNode(node).origin.own;
         const after = operation.input;
         const namespaceChanged =
           node.type === 'scope' &&
@@ -111,8 +111,8 @@ export class WeaveEditor {
   /** 只重算发生变化的名称，重名顺序由已更新的声明地址索引决定 */
   refreshIndexes(changes: WeaveEditResult, addresses: WeaveAddressIndex): void {
     for (const namespace of changes.namespaces) {
-      if (changes.removedNodes.includes(namespace as WeaveNode)) continue;
-      if (namespace.type === 'scope' && !this.transaction.readNode(namespace).input.own.localNamespace) {
+      if (changes.removedNodes.includes(namespace as WeaveEntry)) continue;
+      if (namespace.type === 'scope' && !this.transaction.readNode(namespace).origin.own.localNamespace) {
         if (this.transaction.readNode(namespace).ids !== undefined) delete this.transaction.editNode(namespace).ids;
         continue;
       }
@@ -129,13 +129,13 @@ export class WeaveEditor {
   }
 
   /** 空间切换只收集变动子树的名称；普通改名只访问该声明 */
-  private collectIndexChanges(node: WeaveNode, changes: WeaveEditResult, descendants = true): void {
+  private collectIndexChanges(node: WeaveEntry, changes: WeaveEditResult, descendants = true): void {
     const state = this.transaction.readNode(node);
     let parent = state.parent;
-    while (parent.type !== 'root' && !this.transaction.readNode(parent).input.own.localNamespace)
+    while (parent.type !== 'root' && !this.transaction.readNode(parent).origin.own.localNamespace)
       parent = this.transaction.readNode(parent).parent;
     changes.namespaces.add(parent);
-    const own = state.input.own;
+    const own = state.origin.own;
     if (!('namespace' in own)) {
       if (own.id !== undefined) changes.names.add(own.id);
       if (own.type === 'node') for (const name of own.aliasIds ?? []) changes.names.add(name);
@@ -149,32 +149,33 @@ export class WeaveEditor {
   /** 创建声明节点并登记本次编译的节点与容器索引 */
   createNode(
     childElement: IRChild,
-    parentWeaveNode: WeaveRoot | WeaveScopeNode,
+    parentWeaveNode: WeaveRoot | WeaveScopeEntry,
     context: CanonicalScopeInheritance,
-  ): WeaveNode {
+  ): WeaveEntry {
     const base = {
       parent: parentWeaveNode,
       pendingInputs: [],
-      dependencies: new Map<WeaveNode, Array<WeaveDependencyKind>>(),
-      consumers: new Set<WeaveNode>(),
+      referenceReads: [],
+      dependencies: new Map<WeaveEntry, Array<WeaveDependencyKind>>(),
+      consumers: new Set<WeaveEntry>(),
     };
-    let node: WeaveNode;
+    let node: WeaveEntry;
     if ('namespace' in childElement) {
-      node = { type: 'composite', current: null, pending: { ...base, input: { own: childElement, context } } };
+      node = { type: 'composite', current: null, pending: { ...base, origin: { own: childElement, context } } };
     } else
       switch (childElement.type) {
         case 'node':
           node = {
             type: 'node',
             current: null,
-            pending: { ...base, input: { own: childElement, context }, canon: null, compiled: null },
+            pending: { ...base, origin: { own: childElement, context } },
           };
           break;
         case 'coordinate':
           node = {
             type: 'coordinate',
             current: null,
-            pending: { ...base, input: { own: childElement, context }, canon: null, compiled: null },
+            pending: { ...base, origin: { own: childElement, context } },
           };
           break;
         case 'scope': {
@@ -187,11 +188,10 @@ export class WeaveEditor {
             current: null,
             pending: {
               ...base,
-              input: { own: scopeInput, context },
-              canon: null,
-              compiled: null,
+              origin: { own: scopeInput, context },
+
               children: [],
-              ...(localNamespace ? { ids: new WeaveLookup<string, WeaveNode>() } : {}),
+              ...(localNamespace ? { ids: new WeaveLookup<string, WeaveEntry>() } : {}),
             },
           };
           this.transaction.editNodeAttribute(this.root, 'scopeIds').set(node.scopeId, node);
@@ -201,7 +201,7 @@ export class WeaveEditor {
           node = {
             type: 'path',
             current: null,
-            pending: { ...base, input: { own: childElement, context }, canon: null, compiled: null },
+            pending: { ...base, origin: { own: childElement, context } },
           };
       }
     this.transaction.editNode(node);
@@ -210,16 +210,16 @@ export class WeaveEditor {
   }
 
   /** 序列化候选声明供 Core 组装和来源遍历，不比较新旧完整 IR */
-  serializeNodeDeclaration(node: WeaveNode): IRChild {
+  serializeNodeDeclaration(node: WeaveEntry): IRChild {
     if (node.type === 'scope') {
       const state = this.transaction.readNode(node);
-      return { ...state.input.own, children: state.children.map(child => this.serializeNodeDeclaration(child)) };
+      return { ...state.origin.own, children: state.children.map(child => this.serializeNodeDeclaration(child)) };
     }
-    return this.transaction.readNode(node).input.own;
+    return this.transaction.readNode(node).origin.own;
   }
 
   /** 解析批次容器，地址仅在当前候选结构内有效 */
-  private findScope(scopeId: string): WeaveRoot | WeaveScopeNode {
+  private findScope(scopeId: string): WeaveRoot | WeaveScopeEntry {
     const scopeNode = this.transaction.readNode(this.root).scopeIds.get(scopeId);
     if (scopeNode === undefined)
       throw new RetikzReconcilerError(RetikzReconcilerErrorCode.Contract, 'Unknown Weave scope', {
@@ -229,7 +229,7 @@ export class WeaveEditor {
   }
 
   /** 解析元素地址，不允许把 Root 当成基础元素 */
-  private findTargetNode(target: WeaveTarget): WeaveNode {
+  private findTargetNode(target: WeaveTarget): WeaveEntry {
     let container = this.findScope(target.scopeId);
     if (target.kind === 'scope') {
       if (container.type !== 'root') return container;
@@ -254,15 +254,15 @@ export class WeaveEditor {
   }
 
   /** 按判别类型替换权威输入，不保留被省略的旧覆盖 */
-  private replaceNodeInput(node: WeaveNode, input: InputWeaveOwn): void {
+  private replaceNodeInput(node: WeaveEntry, input: InputWeaveOwn): void {
     if (node.type === 'node' && input.type === 'node')
-      this.transaction.editNode(node).input = { ...this.transaction.readNode(node).input, own: input };
+      this.transaction.editNode(node).origin = { ...this.transaction.readNode(node).origin, own: input };
     else if (node.type === 'coordinate' && input.type === 'coordinate')
-      this.transaction.editNode(node).input = { ...this.transaction.readNode(node).input, own: input };
+      this.transaction.editNode(node).origin = { ...this.transaction.readNode(node).origin, own: input };
     else if (node.type === 'scope' && input.type === 'scope')
-      this.transaction.editNode(node).input = { ...this.transaction.readNode(node).input, own: input };
+      this.transaction.editNode(node).origin = { ...this.transaction.readNode(node).origin, own: input };
     else if (node.type === 'path' && input.type === 'path')
-      this.transaction.editNode(node).input = { ...this.transaction.readNode(node).input, own: input };
+      this.transaction.editNode(node).origin = { ...this.transaction.readNode(node).origin, own: input };
     else throw new RetikzReconcilerError(RetikzReconcilerErrorCode.Contract, 'Weave input type does not match target');
     this.transaction
       .editNodeAttribute(node, 'pendingInputs')
@@ -272,10 +272,10 @@ export class WeaveEditor {
   /** 创建子树并收集新增节点，初始 context 在正式编译遍历时解析更新 */
   private insertSubtree(
     input: InputWeaveElement,
-    parent: WeaveRoot | WeaveScopeNode,
+    parent: WeaveRoot | WeaveScopeEntry,
     context: CanonicalScopeInheritance,
-    insertedNodes: Array<WeaveNode>,
-  ): WeaveNode {
+    insertedNodes: Array<WeaveEntry>,
+  ): WeaveEntry {
     const node = this.createNode(input, parent, context);
     insertedNodes.push(node);
     if (node.type === 'scope' && input.type === 'scope') {
@@ -285,7 +285,7 @@ export class WeaveEditor {
   }
 
   /** 移除子树的容器地址，保留节点状态供后续失效传播和依赖解绑 */
-  private removeSubtreeAddresses(node: WeaveNode, removedNodes: Array<WeaveNode>): void {
+  private removeSubtreeAddresses(node: WeaveEntry, removedNodes: Array<WeaveEntry>): void {
     removedNodes.push(node);
     if (node.type === 'scope') {
       for (const child of this.transaction.readNode(node).children) this.removeSubtreeAddresses(child, removedNodes);

@@ -2,7 +2,7 @@ import type { AnyCompositeDefinition, IRScene } from '@retikz/core';
 import type { IdAllocator, PropertyPath } from '@retikz/foundation';
 
 import type { CompileOptions, ExecuteOptions, SceneCompilationSnapshot, SharedCompileContext } from '../../compile';
-import type { WeaveNode, WeaveRoot } from '../shared';
+import type { WeaveEntry, WeaveRoot } from '../shared';
 import type { WeaveAddressIndex } from './address';
 import { WeaveEditor } from './editor';
 import { WeaveTracker } from './tracker';
@@ -35,7 +35,7 @@ type WeavePersistentState<TComposite extends AnyCompositeDefinition = AnyComposi
   /** Scope 身份分配器，回滚不复用编号 */
   readonly scopeIds: IdAllocator;
   /** 名称读取身份与稳定节点的对应关系 */
-  readonly bindings: Map<object, WeaveNode>;
+  readonly bindings: Map<object, WeaveEntry>;
   /** 最近完成的声明输入 */
   source: IRScene;
   /** 已提交声明的派生寻址结构 */
@@ -59,7 +59,7 @@ export type WeaveBatchState = {
   /** 当前批次是否强制重新计算 */
   readonly forceFull: boolean;
   /** 操作前的声明路径，路径变化时禁止复用旧位置缓存 */
-  readonly previousNodeIrPaths: ReadonlyMap<WeaveNode, PropertyPath>;
+  readonly previousNodeIrPaths: ReadonlyMap<WeaveEntry, PropertyPath>;
   /** 本批选定的派生寻址索引，完成发布后才保存 */
   addresses?: WeaveAddressIndex;
   /** 结构或命名声明变化，需要重建派生索引 */

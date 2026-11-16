@@ -6,7 +6,7 @@ import type { PropertyPath } from '@retikz/foundation';
 import type { CompileRuntime, SubtreeCompileRuntime } from '../../../compile';
 import { createNodeCompileContext, createNodeResolveContext } from '../../../compile';
 import { createWeaveObservation, matchWeaveReferences, restoreWeaveResources, retainWeaveReads } from '../../shared';
-import type { WeaveNode, WeaveCacheMetadata } from '../../shared';
+import type { WeaveNodeState, WeaveReferenceRead } from '../../shared';
 import { compareCanonicalNodes, compareNodeLayoutInputs, compareNodeMeasurementInputs } from './compare';
 
 /** 编译变化的 Node，并保留仍有效的局部布局 */
@@ -43,38 +43,60 @@ export const executeWeaveNode = (
   child: IRNode,
   path: PropertyPath,
   context: SubtreeCompileRuntime['context'],
-  previous?: NonNullable<Extract<WeaveNode, { type: 'node' }>['current']>,
-): { canon: CanonicalNode; compiled: CompiledNode; cache: WeaveCacheMetadata; reused: boolean } => {
-  const resolveInputs = { child, style: context.inheritance };
+  previous?: WeaveNodeState,
+): {
+  resolve: NonNullable<WeaveNodeState['resolve']>;
+  compile: NonNullable<WeaveNodeState['compile']>;
+  referenceReads: ReadonlyArray<WeaveReferenceRead>;
+  reused: boolean;
+} => {
+  // own 来自不可变编辑输入；默认配置只取 Node 通道，registry 与根配置由会话保证稳定
+  const resolveInputs = {
+    nodeDefaults: context.inheritance.defaults.node,
+    mode: context.inheritance.theme.mode,
+  };
   const compileInputs = { scopeChain: context.transformChains, proposal: context.layout?.childProposal };
-  const cache = previous?.cache;
-  const before = previous?.canon;
+  const previousCompile = previous?.compile;
+  const previousReads = previous?.referenceReads ?? [];
+  const previousResolve = previous?.resolve;
+  const before = previousResolve?.value;
   const observation = createWeaveObservation(runtime);
   const canon =
     before != null &&
-    cache?.diagnostics.length === 0 &&
-    compareProperties(cache.resolveInputs, resolveInputs, { depth: 2 })
+    previousCompile?.diagnostics.length === 0 &&
+    compareProperties(previousResolve?.input, child) &&
+    compareProperties(previousResolve?.context, resolveInputs)
       ? before
       : resolveNode(child, createNodeResolveContext(observation.runtime, path, context));
   const referencesValid =
-    cache !== undefined && matchWeaveReferences(cache.reads, runtime.state.execution.namespaceStack);
+    previousCompile !== undefined && matchWeaveReferences(previousReads, runtime.state.execution.namespaceStack);
   // ⚡只展开上下文包装、变换项及双轴提案的标量字段，不做无界递归
   const canRetain =
-    cache?.diagnostics.length === 0 && compareProperties(cache.compileInputs, compileInputs, { depth: 3 });
+    previousCompile?.diagnostics.length === 0 &&
+    compareProperties(previousCompile.context, compileInputs, { depth: 3 });
   if (
     before != null &&
-    previous?.compiled != null &&
+    previous?.compile?.value != null &&
     canRetain &&
     referencesValid &&
     observation.diagnostics.length === 0 &&
     compareCanonicalNodes(before, canon)
   ) {
-    restoreWeaveResources(runtime, cache);
-    return { canon, compiled: previous.compiled, cache: { ...cache, resolveInputs, compileInputs }, reused: true };
+    restoreWeaveResources(runtime, previousCompile.resources);
+    return {
+      resolve: {
+        input: child,
+        context: resolveInputs,
+        value: canon,
+      },
+      compile: { ...previousCompile, context: compileInputs },
+      referenceReads: previousReads,
+      reused: true,
+    };
   }
   const reusable =
-    before != null && previous?.compiled != null && canRetain
-      ? { canon: before, compiled: previous.compiled }
+    before != null && previous?.compile?.value != null && canRetain
+      ? { canon: before, compiled: previous.compile.value }
       : undefined;
   const compiled = runtime.state.execution.namespaceStack.observeReferences(observation.read, () =>
     compileWeaveNode(
@@ -84,6 +106,15 @@ export const executeWeaveNode = (
       referencesValid,
     ),
   );
-  if (referencesValid && reusable !== undefined) retainWeaveReads(observation.reads, cache.reads);
-  return { canon, compiled, cache: { ...observation.facts(), resolveInputs, compileInputs }, reused: false };
+  if (referencesValid && reusable !== undefined) retainWeaveReads(observation.reads, previousReads);
+  return {
+    resolve: {
+      input: child,
+      context: resolveInputs,
+      value: canon,
+    },
+    compile: { ...observation.facts(), context: compileInputs, value: compiled },
+    referenceReads: observation.reads,
+    reused: false,
+  };
 };

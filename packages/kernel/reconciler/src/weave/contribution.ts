@@ -12,7 +12,7 @@ import type {
 } from '../compile';
 import { compileWarningOccurrenceOf, importSceneResources } from '../compile';
 import { collectContributionResources } from './shared';
-import type { WeaveContribution, WeaveContributionRead } from './shared';
+import type { WeaveContribution } from './shared';
 
 /** 从已完成的局部输出捕获可复用贡献，不执行领域计算 */
 export const captureWeaveContribution = (
@@ -20,7 +20,6 @@ export const captureWeaveContribution = (
   output: TreeOutputState,
   state: SubtreeCompileState,
   bindings: ReadonlyArray<NamespaceFrameChange>,
-  reads: ReadonlyArray<WeaveContributionRead>,
   occurrence: CompileOccurrenceLocator,
   semanticOwner?: CompileOwnerKey,
 ): WeaveContribution => {
@@ -48,7 +47,6 @@ export const captureWeaveContribution = (
     },
     zIndices: primitives.map(primitive => output.zIndexMap.get(primitive)),
     bindings,
-    reads,
     resources: collectContributionResources(primitives, {
       paints: workspace.paintRegistry.getResources(),
       clips: workspace.clipRegistry.getResources(),

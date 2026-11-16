@@ -1,30 +1,28 @@
 import { compileScope, resolveScope } from '@retikz/core';
 import type { IRScope, CompileWarning } from '@retikz/core';
 import type { PropertyPath } from '@retikz/foundation';
-import { compareProperties, jsonStructuralEquals, formatPropertyPath } from '@retikz/foundation';
+import { compareProperties, formatPropertyPath } from '@retikz/foundation';
 
 import type { CompileRuntime, ScopeExecutionSteps, SubtreeCompileRuntime } from '../../compile';
 import { createWeaveObservation, matchWeaveReferences, restoreWeaveResources } from '../shared';
-import type { WeaveNode, WeaveReferenceRead } from '../shared';
-import { compareCanonicalScopes } from './compare';
-
-type WeaveScopeState = NonNullable<Extract<WeaveNode, { type: 'scope' }>['current']>;
+import type { WeaveScopeState, WeaveReferenceRead } from '../shared';
+import { compareCanonicalScopes, compareScopeCompileInputs } from './compare';
 
 /** 在后代继承前选择或确定 Scope 自身配置 */
 export const resolveWeaveScope = (
   runtime: CompileRuntime,
-  child: IRScope,
+  child: Omit<IRScope, 'children'>,
   path: PropertyPath,
   context: SubtreeCompileRuntime['context'],
   previous?: WeaveScopeState,
 ) => {
-  const resolveInputs = { child: { ...child, children: undefined }, inheritedStyle: context.inheritance };
   if (
-    previous?.canon != null &&
-    previous.cache?.diagnostics.length === 0 &&
-    compareProperties(previous.cache.resolveInputs, resolveInputs, { depth: 2 })
+    previous?.resolve?.value != null &&
+    previous.compile?.diagnostics.length === 0 &&
+    compareProperties(previous.resolve.input, child) &&
+    compareProperties(previous.resolve.context.inheritedStyle, context.inheritance)
   )
-    return previous.canon;
+    return previous.resolve.value;
   return resolveScope(child, {
     nodeDistance: runtime.context.layout.nodeDistance,
     parent: context.inheritance,
@@ -44,7 +42,6 @@ export const executeWeaveScope = (
   preparedReads: ReadonlyArray<WeaveReferenceRead>,
   previous?: WeaveScopeState,
 ) => {
-  const resolveInputs = { child: { ...child, children: undefined }, inheritedStyle: context.inheritance };
   const compileInputs = {
     preparation: steps.preparation,
     layouts: steps.childFrame.state.geometries,
@@ -52,22 +49,23 @@ export const executeWeaveScope = (
     childCount: steps.childFrame.state.primitives.length,
     preResolvedClipPath: steps.compileContext.resolvedClipPath,
   };
-  const cache = previous?.cache;
+  const previousCompile = previous?.compile;
+  const previousReads = previous?.referenceReads ?? [];
   const canon = steps.canon;
   if (
-    previous?.canon != null &&
-    previous.compiled != null &&
-    cache?.diagnostics.length === 0 &&
+    previous?.resolve?.value != null &&
+    previous.compile != null &&
+    previousCompile?.diagnostics.length === 0 &&
     preparedDiagnostics.length === 0 &&
-    compareCanonicalScopes(previous.canon, canon) &&
-    jsonStructuralEquals(cache.compileInputs, compileInputs) &&
-    matchWeaveReferences(cache.reads, runtime.state.execution.namespaceStack)
+    compareCanonicalScopes(previous.resolve.value, canon) &&
+    compareScopeCompileInputs(previousCompile.context, compileInputs) &&
+    matchWeaveReferences(previousReads, runtime.state.execution.namespaceStack)
   ) {
-    restoreWeaveResources(runtime, cache);
+    restoreWeaveResources(runtime, previousCompile.resources);
     return {
-      canon,
-      compiled: previous.compiled,
-      cache: { ...cache, resolveInputs, compileInputs, scopePreparation: steps.preparation },
+      resolve: { input: child, context: { inheritedStyle: context.inheritance }, value: canon },
+      compile: { ...previousCompile, context: compileInputs },
+      referenceReads: previousReads,
       reused: true,
     };
   }
@@ -87,16 +85,14 @@ export const executeWeaveScope = (
   );
   const facts = observation.facts();
   return {
-    canon,
-    compiled,
-    cache: {
+    resolve: { input: child, context: { inheritedStyle: context.inheritance }, value: canon },
+    compile: {
       ...facts,
-      resolveInputs,
-      compileInputs,
-      scopePreparation: steps.preparation,
-      reads: [...preparedReads, ...facts.reads],
+      context: compileInputs,
+      value: compiled,
       diagnostics: [...preparedDiagnostics, ...facts.diagnostics],
     },
+    referenceReads: [...preparedReads, ...observation.reads],
     reused: false,
   };
 };

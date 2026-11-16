@@ -21,7 +21,7 @@ describe('Scope 三层复用', () => {
     const mounted = session.mount();
     const child = readWeaveCurrent(mounted.root).children[1];
     if (child.type !== 'scope') throw new Error('Expected scope');
-    const previous = readWeaveCurrent(child).compiled;
+    const previous = readWeaveCurrent(child).compile?.value;
     const explicit: IRScope = { ...scope, transforms: [{ kind: 'offset-translate', of: 'origin', offset: [0, 0] }] };
     const equivalent = session.update({
       operations: [
@@ -35,7 +35,7 @@ describe('Scope 三层复用', () => {
     expect(equivalent.compilation.result).toEqual(mounted.compilation.result);
     equivalent.commit();
     equivalent.finish();
-    expect(readWeaveCurrent(child).compiled).toBe(previous);
+    expect(readWeaveCurrent(child).compile?.value).toBe(previous);
     const moved: IRCoordinate = { type: 'coordinate', id: 'origin', position: [40, 50] };
     const changed = session.update({
       operations: [
@@ -49,6 +49,6 @@ describe('Scope 三层复用', () => {
     expect(changed.compilation.result).toEqual(compileTestResult({ ...source, children: [moved, explicit] }));
     expect(changed.compilation.result).not.toEqual(mounted.compilation.result);
     changed.rollback();
-    expect(readWeaveCurrent(child).compiled).toBe(previous);
+    expect(readWeaveCurrent(child).compile?.value).toBe(previous);
   });
 });

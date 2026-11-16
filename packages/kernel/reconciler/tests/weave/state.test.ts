@@ -36,11 +36,11 @@ describe('Weave 候选状态隔离', () => {
     const children = readWeaveCurrent(scope).children;
     const work = new WeaveTransaction(root);
     const pending = work.editNode(a);
-    pending.input = { ...pending.input, own: { ...pending.input.own, text: 'changed' } };
-    expect(work.readNode(a).input.own.text).toBe('changed');
+    pending.origin = { ...pending.origin, own: { ...pending.origin.own, text: 'changed' } };
+    expect(work.readNode(a).origin.own.text).toBe('changed');
     expect(readWeaveCurrent(a)).toBe(before);
-    expect(before.input.own.text).toBeUndefined();
-    expect(pending.compiled).toBe(before.compiled);
+    expect(before.origin.own.text).toBeUndefined();
+    expect(pending.compile?.value).toBe(before.compile?.value);
     expect(work.readNode(scope).children).toBe(children);
     expect(scope.pending).toBeNull();
     work.rollback();
@@ -102,7 +102,7 @@ describe('Weave 候选状态隔离', () => {
     work.editNodeAttribute(root, 'scopeIds').delete(scope.scopeId);
     work.editNodeAttribute(scope, 'ids').delete('a');
     const pending = work.editNode(a);
-    pending.input = { ...pending.input, own: { ...pending.input.own, text: 'candidate' } };
+    pending.origin = { ...pending.origin, own: { ...pending.origin.own, text: 'candidate' } };
     work.commit();
     expect(readWeaveCurrent(root).children).toEqual([]);
     work.rollback();
@@ -148,11 +148,11 @@ it('未完成状态阻止整批提交，不切换此前已检查的节点', () =
   const before = readWeaveCurrent(a);
   const work = new WeaveTransaction(root);
   work.editNode(a);
-  work.editNode(b).compiled = null;
+  work.editNode(b).compile = undefined;
   expect(() => work.commit()).toThrow(/unfinished Weave state/);
   expect(readWeaveCurrent(a)).toBe(before);
   work.rollback();
-  expect(readWeaveCurrent(b).compiled).not.toBeNull();
+  expect(readWeaveCurrent(b).compile?.value).toBeDefined();
 });
 
 it('普通 Scope 缺少局部 ids 时不隐式创建命名空间', () => {

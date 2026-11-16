@@ -28,7 +28,7 @@ describe('Weave 编译产物复用', () => {
     const first = session.mount();
     const root = first.root;
     const stable = root.current!.children[2];
-    const product = stable.current!.compiled;
+    const product = stable.current!.compile?.value;
     const replacement = {
       type: 'node' as const,
       id: 'anchor',
@@ -41,7 +41,7 @@ describe('Weave 编译产物复用', () => {
     expect(next.compilation.result).toEqual(
       compileTestResult({ ...source, children: [replacement, ...source.children.slice(1)] }),
     );
-    expect(stable.current!.compiled).toBe(product);
+    expect(stable.current!.compile?.value).toBe(product);
     expect(root.current!.children[1].current!.dependencies.has(root.current!.children[0])).toBe(true);
     const moved = commitUpdate(session, {
       operations: [
@@ -85,11 +85,11 @@ describe('Weave 编译产物复用', () => {
     const session = new WeaveManager(source);
     const first = session.mount();
     const keep = first.root.current!.children[0];
-    const product = keep.current!.compiled;
+    const product = keep.current!.compile?.value;
     const updated = commitUpdate(session, {
       operations: [{ kind: 'remove', target: { kind: 'id', scopeId: first.root.scopeId, id: 'remove' } }],
     });
-    expect(keep.current!.compiled).toBe(product);
+    expect(keep.current!.compile?.value).toBe(product);
     expect(updated.compilation.result).toEqual(compileTestResult({ ...source, children: source.children.slice(0, 1) }));
     expect([
       ...(updated.compilation.result.scene.resources?.paints ?? []),
@@ -114,7 +114,7 @@ describe('Weave 编译产物复用', () => {
     const session = new WeaveManager(source);
     const mounted = session.mount();
     const stable = mounted.root.current!.children[0];
-    const compilation = stable.current!.compiled;
+    const compilation = stable.current!.compile?.value;
     const replacement = { type: 'node' as const, id: 'moving', position: [80, 0] as [number, number] };
     const batch: WeaveBatch = {
       operations: [
@@ -130,6 +130,6 @@ describe('Weave 编译产物复用', () => {
     expect(retried.compilation.result).toEqual(expected);
     expect(retried.compilation.result.scene.resources?.paints).toHaveLength(1);
     expect(retried.compilation.result.scene.resources?.clips).toHaveLength(1);
-    expect(stable.current!.compiled).toBe(compilation);
+    expect(stable.current!.compile?.value).toBe(compilation);
   });
 });

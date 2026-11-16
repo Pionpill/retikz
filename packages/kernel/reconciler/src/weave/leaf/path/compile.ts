@@ -19,7 +19,7 @@ import {
   restoreWeaveResources,
   retainWeaveReads,
 } from '../../shared';
-import type { WeaveNode, WeaveCacheMetadata } from '../../shared';
+import type { WeavePathState, WeaveReferenceRead } from '../../shared';
 import { comparePathResolutions, compareStrokeBindings } from './compare';
 
 /** 选择仍有效的标准描边原子产物；Definition 回调始终由 Core 执行 */
@@ -147,43 +147,72 @@ export const preparePathCompilation = (
 export const executeWeavePath = (
   runtime: CompileRuntime,
   pending: PendingPathEmission,
-  previous?: NonNullable<Extract<WeaveNode, { type: 'path' }>['current']>,
-): { canon: PathResolution; compiled: CompiledPath; cache: WeaveCacheMetadata; reused: boolean } => {
-  const resolveInputs = { path: pending.path, defaults: pending.scopeDefaults, theme: pending.theme };
+  previous?: WeavePathState,
+): {
+  resolve: NonNullable<WeavePathState['resolve']>;
+  compile: NonNullable<WeavePathState['compile']>;
+  referenceReads: ReadonlyArray<WeaveReferenceRead>;
+  reused: boolean;
+} => {
+  // 排队只在过滤动画时改写 path；解析不依赖 Node 默认值或主题外壳
+  const resolveInputs = { pathDefaults: pending.scopeDefaults.path, mode: pending.theme.mode };
   const compileInputs = { scopeChain: pending.scopeChain };
-  const cache = previous?.cache;
-  const before = previous?.canon;
-  const observation = createWeaveObservation(runtime);
+  const previousCompile = previous?.compile;
+  const previousReads = previous?.referenceReads ?? [];
+  const previousResolve = previous?.resolve;
+  const before = previousResolve?.value;
+  const observation = createWeaveObservation(runtime, 'output');
   const canon =
     before != null &&
-    cache?.diagnostics.length === 0 &&
-    compareProperties(cache.resolveInputs, resolveInputs, { depth: 2 })
+    previousCompile?.diagnostics.length === 0 &&
+    compareProperties(previousResolve?.input, pending.path) &&
+    compareProperties(previousResolve?.context, resolveInputs)
       ? before
       : resolvePath(pending.path, createPathResolveContext(observation.runtime, pending));
   const referencesValid =
-    cache !== undefined && matchWeaveReferences(cache.reads, runtime.state.execution.namespaceStack);
+    previousCompile !== undefined && matchWeaveReferences(previousReads, runtime.state.execution.namespaceStack);
   // ⚡变换链只展开到每项标量字段，保持重建链的值比较而不做无界递归
   const canRetain =
-    cache?.diagnostics.length === 0 && compareProperties(cache.compileInputs, compileInputs, { depth: 3 });
+    previousCompile?.diagnostics.length === 0 &&
+    compareProperties(previousCompile.context, compileInputs, { depth: 3 });
   if (
     before != null &&
-    previous?.compiled != null &&
+    previous?.compile?.value != null &&
     canRetain &&
     referencesValid &&
     observation.diagnostics.length === 0 &&
     comparePathResolutions(before, canon)
   ) {
-    restoreWeaveResources(runtime, cache);
-    return { canon, compiled: previous.compiled, cache: { ...cache, resolveInputs, compileInputs }, reused: true };
+    restoreWeaveResources(runtime, previousCompile.resources);
+    return {
+      resolve: {
+        input: pending.path,
+        context: resolveInputs,
+        value: canon,
+      },
+      compile: { ...previousCompile, context: compileInputs },
+      referenceReads: previousReads,
+      reused: true,
+    };
   }
   const selected =
-    before != null && previous?.compiled != null && canRetain
-      ? preparePathCompilation({ canon: before, compiled: previous.compiled }, canon, referencesValid)
+    before != null && previous?.compile?.value != null && canRetain
+      ? preparePathCompilation({ canon: before, compiled: previous.compile.value }, canon, referencesValid)
       : undefined;
-  if (selected !== undefined) restoreWeaveResources(observation.runtime, cache!, selected.primitives);
+  if (selected !== undefined)
+    restoreWeaveResources(observation.runtime, previousCompile!.resources, selected.primitives);
   const compiled = runtime.state.execution.namespaceStack.observeReferences(observation.read, () =>
     compilePath(canon, createPathCompileContext(observation.runtime, pending), selected?.prepared),
   );
-  if (referencesValid && selected !== undefined) retainWeaveReads(observation.reads, cache.reads);
-  return { canon, compiled, cache: { ...observation.facts(), resolveInputs, compileInputs }, reused: false };
+  if (referencesValid && selected !== undefined) retainWeaveReads(observation.reads, previousReads);
+  return {
+    resolve: {
+      input: pending.path,
+      context: resolveInputs,
+      value: canon,
+    },
+    compile: { ...observation.facts(), context: compileInputs, value: compiled },
+    referenceReads: observation.reads,
+    reused: false,
+  };
 };

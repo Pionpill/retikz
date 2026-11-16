@@ -12,6 +12,8 @@ export type WeaveReferenceRead = Readonly<{
   entry?: NamespaceEntry;
   /** 实际读取的几何粒度 */
   kind: ReferenceReadKind;
+  /** 准备读取与延迟输出读取分别在对应就绪阶段校验 */
+  readiness: 'prepare' | 'output';
 }>;
 
 /** 在当前查询环境核对已消费的绑定与结果，不把生产者外观变化当作几何失效 */
