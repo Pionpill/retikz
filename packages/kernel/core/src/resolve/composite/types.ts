@@ -21,12 +21,12 @@ export type CompositeBinding =
       namespace: string;
       /** 组件定义的类型名称 */
       type: string;
-      /** 待组件定义的 schema 解析的原始节点 */
+      /** 待组件定义的 schema 解析的原始 IR */
       source: IRComposite;
-      /** 组件定义声明的完整节点 schema */
+      /** 组件定义声明的完整 IR schema */
       schema: ZodType;
-      /** 接收已解析节点并执行编译的回调 */
-      compile: (node: unknown, context: CompositeCompileContext) => CompositeEvaluationResult<JsonValue>;
+      /** 接收已解析的组件 IR 并执行编译的回调 */
+      compile: (ir: unknown, context: CompositeCompileContext) => CompositeEvaluationResult<JsonValue>;
       /** 用于校验组件附加产物的可选 schema */
       artifactSchema?: ZodType<JsonValue>;
     }>;
@@ -35,13 +35,13 @@ export type CompositeBinding =
 export type RegisteredCompositeBinding = Exclude<CompositeBinding, { kind: 'unregistered' }>;
 
 /**
- * 已按组件定义的 schema 解析节点后的结果
+ * 已按组件定义的 schema 解析 IR 后的结果
  * @template TBinding 解析前的注册绑定类型，结果保留其身份与执行分支
  */
 export type CompositeResolution<TBinding extends RegisteredCompositeBinding = RegisteredCompositeBinding> = TBinding &
   Readonly<{
-    /** 交给组件编译回调的已解析节点 */
-    node: unknown;
+    /** 交给组件编译回调的已解析组件 IR */
+    ir: unknown;
   }>;
 
 /** 按命名空间、类型名称两级索引的只读复合组件注册表 */

@@ -85,7 +85,7 @@ export type CompositeContributionResult = Readonly<{
 | `evaluation`、`proposal`                                                                                                                                                   | 当前是完整布局还是按轴测量，以及父级槽位要求                 |
 | `measureChild`、`layoutChild`                                                                                                                                              | 查询子项尺寸，或获取完整隔离布局与可重放令牌                 |
 | `replay`、`createScope`                                                                                                                                                    | 选中布局结果，或构造带完整 Scope 属性的输出子项              |
-| `resolvePathTargets`                                                                                                                                                       | 在指定 child 环境中查询 source 与有序目标点                  |
+| `resolvePathTargets`                                                                                                                                                       | 读取已有布局结果中的 source 与有序目标点                     |
 | `theme`、`withTheme`                                                                                                                                                       | 当前有效主题及局部主题下的测量、查询上下文                   |
 | `runtimeInput`、`selectSourceChild`、`bindChild`                                                                                                                           | 读取当前运行时输入，转交作者子项绑定，或为生成的子项提供绑定 |
 | `warn`、`raise`                                                                                                                                                            | 报告诊断，或重新抛出无法采用的布局失败                       |
@@ -153,7 +153,21 @@ const shiftedNode = defineComposite({
 
 ### 目标查询、主题和运行时输入
 
-`resolvePathTargets` 在隔离的真实 child 环境中解析 source 与有序 points，返回局部坐标。它不提交绘图，不执行最终路径边界裁剪或插值，也不修改作者点列，适合领域路径在 lowering 前读取既有引用能力。
+`resolvePathTargets(result, query)` 读取当前回调通过 `layoutChild` 得到的成功结果，返回该结果根局部空间中的 source 与有序 points。查询不会重新编译子树，也不会消费重放凭据；同一结果可以查询多次，再按需重放一次。
+
+```ts
+const probe = context.layoutChild(child, context.proposal);
+if (probe.kind === 'failed') context.raise(probe.failure);
+else {
+  const points = context.resolvePathTargets(probe.result, {
+    source: { id: 'start', anchor: 'right' },
+    points: [{ id: 'end', anchor: 'left' }],
+  });
+  // 使用 points 生成路线；需要绘制子项时返回 context.replay(probe.result)
+}
+```
+
+查询使用布局结果生成时的主题和引用快照，派生主题不会改变旧结果。输入或环境改变时需重新布局。结果不包含未来重放的放置变换，不执行最终路径裁剪或插值，也不修改作者点列。根 Scope 的局部名称可以查询，但不会穿透后代私有命名空间。
 
 `withTheme` 创建局部有效主题上下文，供测量和查询使用；最终 children 仍要通过 createScope 声明相同主题边界，不能只改试算环境却让正式输出继承另一套主题。
 

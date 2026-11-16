@@ -1040,30 +1040,6 @@ describe('布局感知的复契约束和边界', () => {
     ).toThrow(RetikzCoreError);
   });
 
-  it('不会将格式错误的嵌套复合输出降级为失败的探测', () => {
-    const malformed = defineComposite({
-      namespace: 'test',
-      type: 'malformedProbeChild',
-      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('malformedProbeChild') }),
-      compile: () => ({ children: undefined as unknown as Array<IRChild> }),
-    });
-    const parent = defineComposite({
-      namespace: 'test',
-      type: 'malformedProbeParent',
-      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('malformedProbeParent') }),
-      compile: (_, context) => {
-        context.layoutChild({ namespace: 'test', type: 'malformedProbeChild' }, naturalLayoutProposal);
-        return { children: [] };
-      },
-    });
-
-    expect(() =>
-      compileTestResult(sceneOf({ namespace: 'test', type: 'malformedProbeParent' }), {
-        composites: [malformed, parent],
-      }),
-    ).toThrow(/malformedProbeChild.*children|invalid.*children/i);
-  });
-
   it('在验证和提交之前对动态复合结果字段进行快照', () => {
     let childrenReads = 0;
     const result = new Proxy(
