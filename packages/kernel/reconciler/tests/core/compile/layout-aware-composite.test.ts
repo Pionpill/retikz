@@ -101,7 +101,10 @@ describe('布局感知复合', () => {
         };
         for (let index = 0; index < 2; index++) {
           expect(
-            context.resolvePathTargets({ child, source: { id: 'box', anchor: 'center' }, points: [] }).source,
+            context.resolvePathTargets(resolvedResultOf(context, child), {
+              source: { id: 'box', anchor: 'center' },
+              points: [],
+            }).source,
           ).toEqual([20, 10]);
         }
         return { children: [child] };
@@ -166,7 +169,10 @@ describe('布局感知复合', () => {
         expect(probe.result.allocationBounds.width).toBe(40);
         expect(resolvedResultOf(context, source).allocationBounds.width).toBe(80);
         expect(
-          local.resolvePathTargets({ child: source, source: { id: 'target', anchor: 'right' }, points: [] }).source,
+          local.resolvePathTargets(resolvedResultOf(local, source), {
+            source: { id: 'target', anchor: 'right' },
+            points: [],
+          }).source,
         ).toEqual([20, 0]);
         return { children: [context.createScope({ theme: { name: 'compact' } }, [context.replay(probe.result)])] };
       },

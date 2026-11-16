@@ -9,5 +9,4 @@ export * from './preflight';
 export * from './probe';
 export * from './proposal';
 export * from './replay';
-export * from './target-query';
 export * from './types';

@@ -1,8 +1,8 @@
 export * from './scene';
 export {
-  assembleCoordinateOutput,
-  assembleNodeOutput,
-  assemblePathOutputs,
+  assembleCoordinate,
+  assembleNode,
+  assemblePaths,
   createNodeCompileContext,
   createNodeResolveContext,
   createPathCompileContext,

@@ -195,10 +195,8 @@ export type CompositeReplayWrapper = Readonly<{
   clip?: IRClip;
 }>;
 
-/** 在当前编译环境中查询 child 根局部空间的有序路径目标 */
+/** 在已布局结果的根局部空间中查询有序路径目标 */
 export type PathTargetQuery = Readonly<{
-  /** 提供真实布局、引用和定义绑定的 child */
-  child: IRChild;
   /** 初始参考点；相对形式以局部原点为基准 */
   source: IRTarget;
   /** 按 smooth cursor 规则消费的目标序列 */
@@ -265,7 +263,7 @@ export type CompositeCompileContext = CompositeRuntimeInputContext &
     proposal: LayoutProposal;
     /**
      * 创建使用局部 Theme 的编译上下文，复用当前 callback 的 probe、replay 与输入所有权
-     * @description 通过 Core 已注册的 Theme definitions 解析覆盖；测量与目标查询使用解析后的主题，不修改父上下文。最终输出仍须由 createScope() 声明同一主题边界
+     * @description 通过 Core 已注册的 Theme definitions 解析覆盖；测量与布局使用解析后的主题，结果查询保留生成结果时的主题，不修改父上下文。最终输出仍须由 createScope() 声明同一主题边界
      */
     withTheme: (theme: NonNullable<IRScopeProps['theme']>) => CompositeCompileContext;
     /**
@@ -277,8 +275,11 @@ export type CompositeCompileContext = CompositeRuntimeInputContext &
     warn: (code: string, message: string, subPath?: PropertyPath) => void;
     /** 在完整编译环境中试算任意子项的布局 */
     layoutChild: (child: IRChild | CompositeBoundChild, proposal: LayoutProposal) => LayoutChildProbe;
-    /** 隔离绑定真实 child 后查询有序目标，不提交 probe 绘图或修改作者点列 */
-    resolvePathTargets: (query: PathTargetQuery) => PathTargetQueryResult;
+    /**
+     * 读取当前回调已布局结果中的有序目标，不重新编译或消费重放凭据
+     * @description 使用结果生成时的主题、引用快照和根局部坐标；每次查询独立推进游标，不修改作者点列或提交绘图
+     */
+    resolvePathTargets: (result: LayoutChildResult, query: PathTargetQuery) => PathTargetQueryResult;
     /**
      * 把当前回调的一次布局结果转为只能放置一次的输出子项
      * @param result 当前回调中试算成功的布局结果

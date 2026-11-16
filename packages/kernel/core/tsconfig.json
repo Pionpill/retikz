@@ -9,7 +9,9 @@
     "tests/**/*.tsx",
     "vite.config.ts",
     "benchmarks/**/*.ts",
-    "vitest.bench.config.ts"
+    "vitest.bench.config.ts",
+    "evals/**/*.ts",
+    "vitest.eval.config.ts"
   ],
   "exclude": ["node_modules", "dist"]
 }

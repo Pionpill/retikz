@@ -1,11 +1,4 @@
-import type {
-  CompiledScope,
-  CanonicalScope,
-  CompileOccurrenceLocator,
-  IRScope,
-  SceneClipPath,
-  Transform,
-} from '@retikz/core';
+import type { CompiledScope, IRScope, Transform } from '@retikz/core';
 import {
   compileScope,
   prepareScopePlacement,
@@ -17,49 +10,47 @@ import {
 } from '@retikz/core';
 import { formatPropertyPath } from '@retikz/foundation';
 
-import type { CompileOwnerKey } from '../../provenance';
 import type { CompileRuntime } from '../../runtime';
 import { createCompileChildPath, formatCompileOccurrence } from '../../shared';
 import { flushPendingPathEmissions } from '../leaf';
 import { createTreePositionContext, resolveStructuralAlignmentGuides, transformAlignmentGuides } from '../shared';
 import type { TreeOutputState } from '../shared';
-import type { SubtreeCompileRuntime, SubtreeCompileState, SubtreeCompileOptions } from '../subtree';
-import { emitScopeGroup } from './group';
-import { bindScopeOutputAnimations } from './output';
+import type { SubtreeCompileRuntime, SubtreeCompileState } from '../subtree';
+import { bindScopeOutputAnimations, emitScopeGroup } from './group';
 import type {
-  ScopeLayoutPlaceholder,
   ScopeLayoutPlaceholderContext,
   ScopeVisitHost,
+  ScopeExecutionOptions,
   ScopeExecutionSteps,
-} from './visit-types';
+} from './types';
 
-/** 有 scope.id 时先注册占位 layout，等子树 bbox 算出后再替换 */
+/** 有 scope.id 时注册占位布局，返回后续替换所需的父 namespace frame 深度 */
 const registerScopeLayoutPlaceholder = (
   runtime: CompileRuntime,
-  child: IRScope,
+  ir: IRScope,
   input: ScopeLayoutPlaceholderContext,
-): ScopeLayoutPlaceholder => {
+): number => {
   const { index, frame, scopeId } = input;
   const {
     context: { pathPrefix: locatorPrefix, transformChains },
   } = frame;
   const scopeIrPath = createCompileChildPath(locatorPrefix, index);
   const parentFrameDepth = runtime.state.execution.namespaceStack.depth - 1;
-  if (child.id === undefined) {
-    return { parentFrameDepth };
+  if (ir.id === undefined) {
+    return parentFrameDepth;
   }
 
   const placeholderLayout = {
     position: runtime.state.execution.scopeTransformComposer.apply([0, 0], transformChains),
   };
-  runtime.state.execution.namespaceStack.register(child.id, {
+  runtime.state.execution.namespaceStack.register(ir.id, {
     geometry: placeholderLayout,
     irPath: [...scopeIrPath, 'id'],
     state: 'scope-placeholder',
     scopeId,
   });
 
-  return { parentFrameDepth };
+  return parentFrameDepth;
 };
 
 /** 编排单个 scope 子树，处理命名空间、局部输出容器、延迟 path 和 scope group 输出 */
@@ -67,20 +58,20 @@ export const prepareScopeExecution = (
   runtime: CompileRuntime,
   output: TreeOutputState,
   host: ScopeVisitHost,
-  options: SubtreeCompileOptions,
-  child: IRScope,
+  ir: IRScope,
   index: number,
   frame: SubtreeCompileRuntime,
-  generatedOccurrence?: CompileOccurrenceLocator,
-  compositeDepth = options.compositeDepth ?? 0,
-  semanticOwner?: CompileOwnerKey,
-  compileNested?: (
-    scopeFrame: SubtreeCompileRuntime,
-    preliminaryTransforms: ReadonlyArray<Transform> | undefined,
-  ) => void,
-  preResolvedClipPath?: SceneClipPath,
-  resolvedScope?: CanonicalScope,
+  options: ScopeExecutionOptions = {},
 ): ScopeExecutionSteps => {
+  const {
+    captureScopeTargets,
+    compositeDepth = 0,
+    generatedOccurrence,
+    semanticOwner,
+    compileNested,
+    preResolvedClipPath,
+    resolvedScope,
+  } = options;
   const {
     context: {
       pathPrefix: locatorPrefix,
@@ -98,7 +89,7 @@ export const prepareScopeExecution = (
       : `${formatCompileOccurrence(generatedOccurrence)}.scope.theme`;
   const canon =
     resolvedScope ??
-    resolveScope(child, {
+    resolveScope(ir, {
       nodeDistance: runtime.context.layout.nodeDistance,
       parent: inheritedStyle,
       ...runtime.context.registries,
@@ -123,10 +114,10 @@ export const prepareScopeExecution = (
     preliminaryTransforms === undefined
       ? transformChains
       : runtime.state.execution.scopeTransformComposer.append(transformChains, preliminaryTransforms);
-  const scopeId = runtime.state.execution.namespaceStack.enterScope(child.id);
-  const layoutPlaceholder = registerScopeLayoutPlaceholder(runtime, child, { index, frame, scopeId });
+  const scopeId = runtime.state.execution.namespaceStack.enterScope(ir.id);
+  const parentFrameDepth = registerScopeLayoutPlaceholder(runtime, ir, { index, frame, scopeId });
 
-  const didPushNamespaceFrame = child.localNamespace === true;
+  const didPushNamespaceFrame = ir.localNamespace === true;
   if (didPushNamespaceFrame) {
     runtime.state.execution.namespaceStack.pushFrame();
   }
@@ -158,7 +149,7 @@ export const prepareScopeExecution = (
     };
 
     if (compileNested === undefined) {
-      host.compileChildren(child.children, scopeFrame, false, generatedOccurrence, compositeDepth);
+      host.compileChildren(ir.children, scopeFrame, false, generatedOccurrence, compositeDepth);
     } else {
       compileNested(scopeFrame, preliminaryTransforms);
     }
@@ -209,28 +200,21 @@ export const prepareScopeExecution = (
             intrinsicLayout,
             runtime.state.execution.scopeTransformComposer.resolve(scopeTransforms),
           );
-    frameState.geometries.push(
-      ...projectScopeCompileLayouts(child, intrinsicLayout, state.geometries, scopeTransforms),
-    );
-    if (child.id !== undefined) {
+    frameState.geometries.push(...projectScopeCompileLayouts(ir, intrinsicLayout, state.geometries, scopeTransforms));
+    if (ir.id !== undefined) {
       const globalEnvelope = projectLayoutWithTransform(
         finalEnvelope,
         runtime.state.execution.scopeTransformComposer.resolve(transformChains),
       );
-      runtime.state.execution.namespaceStack.replaceGeometry(
-        child.id,
-        globalEnvelope,
-        layoutPlaceholder.parentFrameDepth,
-        scopeId,
-      );
+      runtime.state.execution.namespaceStack.replaceGeometry(ir.id, globalEnvelope, parentFrameDepth, scopeId);
       frameState.publications.push(globalEnvelope);
     }
   };
 
   const paths = () => {
     flushPendingPathEmissions(runtime, output, state.paths);
-    options.captureScopeTargets?.(
-      child,
+    captureScopeTargets?.(
+      ir,
       runtime.state.execution.namespaceStack,
       runtime.state.execution.scopeTransformComposer.append(transformChains, scopeTransforms),
     );
