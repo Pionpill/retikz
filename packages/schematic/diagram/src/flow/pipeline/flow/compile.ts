@@ -1,4 +1,4 @@
-import type { CompositeCompileContext, CompositeCompileResult, IRScope } from '@retikz/core';
+import type { CompositeCompileContext, CompositeCompileResult, IRScope, LayoutChildResult } from '@retikz/core';
 import { RetikzCoreError } from '@retikz/core';
 import { intrinsicLayoutProposal, requiredLayoutProbe } from '@retikz/layout/compose';
 import type { Position } from '@retikz/math';
@@ -122,26 +122,30 @@ export const createCompileFlowDiagram =
     const measurement = measureFlowDiagram(diagram, context, definition, options.graph);
     // measurement 与 source 在回调内固定，完整 elements 快照决定查询投影是否仍然有效
     let queryElementsKey: string | undefined;
-    let queryScope: IRScope | undefined;
-    const materializeQueryScope = (elements: ReadonlyArray<FlowLayoutElementOutput>): IRScope => {
+    let queryLayout: LayoutChildResult | undefined;
+    const layoutQueryElements = (elements: ReadonlyArray<FlowLayoutElementOutput>): LayoutChildResult => {
       const elementsKey = JSON.stringify(elements);
-      if (queryScope === undefined || queryElementsKey !== elementsKey) {
-        queryScope = {
+      if (queryLayout === undefined || queryElementsKey !== elementsKey) {
+        const queryScope: IRScope = {
           type: 'scope',
           localNamespace: true,
           ...(source.transforms === undefined ? {} : { transforms: source.transforms }),
           children: [materializeFlowElements(measurement, elements)],
         };
+        queryLayout = requiredLayoutProbe(
+          context,
+          { child: queryScope, occurrence: 0 },
+          intrinsicLayoutProposal('natural'),
+        );
         queryElementsKey = elementsKey;
       }
-      return queryScope;
+      return queryLayout;
     };
     const output = executeFlowLayout(definition, measurement.input, {
       ...createFlowLayoutExecutionContext(context, measurement.input),
       resolveEndpoint: query => {
         try {
-          return context.resolvePathTargets({
-            child: materializeQueryScope(query.elements),
+          return context.resolvePathTargets(layoutQueryElements(query.elements), {
             source: query.target,
             points: [],
           }).source;
@@ -162,8 +166,7 @@ export const createCompileFlowDiagram =
       },
       resolveRoutePoints: query => {
         try {
-          const resolved = context.resolvePathTargets({
-            child: materializeQueryScope(query.elements),
+          const resolved = context.resolvePathTargets(layoutQueryElements(query.elements), {
             source: query.source,
             points: [...query.points, query.target],
           });

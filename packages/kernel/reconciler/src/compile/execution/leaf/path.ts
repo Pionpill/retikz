@@ -5,7 +5,9 @@ import type {
   IRPathBase,
   InputPathCompilation,
   LayoutBoundsContribution,
+  PositionTargetEvaluateContext,
   ScenePrimitive,
+  Transform,
 } from '@retikz/core';
 import { compilePath, createPathTargetResolver, resolvePathAnimations, resolvePath } from '@retikz/core';
 
@@ -44,33 +46,37 @@ export type PendingPathEmission = InputPathCompilation & {
 export const queuePathChild = (
   runtime: CompileRuntime,
   output: TreeOutputState,
-  child: IRPathBase,
+  ir: IRPathBase,
   index: number,
   frame: SubtreeCompileRuntime,
   occurrence: CompileOccurrenceLocator,
   semanticOwner?: CompileOwnerKey,
 ): void => {
   const {
-    context: { transformChains: scopeChain, pathPrefix: locatorPrefix, inheritance: style, layout },
+    context: {
+      transformChains,
+      pathPrefix,
+      inheritance: { defaults, theme },
+      layout,
+    },
     state: { primitives, paths, bounds, allocations },
   } = frame;
-  const { defaults: scopeDefaults, theme } = style;
-  const pathIrPath = createCompileChildPath(locatorPrefix, index);
+  const irPath = createCompileChildPath(pathPrefix, index);
   const placeholder = { type: PATH_PLACEHOLDER } as const;
   primitives.push(placeholder);
   const pending: PendingPathEmission = {
-    path: resolvePathAnimations(child, pathIrPath, runtime.state.workspace.diagnosticCollector.collect),
-    irPath: pathIrPath,
-    scopeChain,
+    path: resolvePathAnimations(ir, irPath, runtime.state.workspace.diagnosticCollector.collect),
+    irPath,
+    scopeChain: transformChains,
     bounds,
     allocations,
     ...(layout?.skipAllocation === undefined ? {} : { skipAllocation: layout.skipAllocation }),
     placeholderSlot: { primitives, placeholder },
     occurrence,
     theme,
-    scopeDefaults,
+    scopeDefaults: defaults,
     ...(semanticOwner === undefined ? {} : { semanticOwner }),
-    zIndex: child.zIndex,
+    zIndex: ir.zIndex,
   };
   output.pendingPathCount++;
   paths.push(pending);
@@ -87,11 +93,23 @@ export const flushPendingPathEmissions = (
   const compiled = pendingPaths.map(pending =>
     runtime.state.execution.withWarningOccurrence(pending.occurrence, () => compilePendingPath(runtime, pending)),
   );
-  assemblePathOutputs(runtime, output, pendingPaths, compiled);
+  assemblePaths(runtime, output, pendingPaths, compiled);
+};
+
+/** 完整计算延迟 Path，不读取跨批结果 */
+const compilePendingPath = (runtime: CompileRuntime, pending: PendingPathEmission): CompiledPath => {
+  const canon = resolvePath(pending.path, createPathResolveContext(runtime, pending));
+  const namespace = runtime.state.execution.namespaceStack;
+  namespace.setPhase('resolving');
+  try {
+    return compilePath(canon, createPathCompileContext(runtime, pending));
+  } finally {
+    namespace.setPhase('registering');
+  }
 };
 
 /** 将已完成的 Path 结果原位回填到输出容器 */
-export const assemblePathOutputs = (
+export const assemblePaths = (
   runtime: CompileRuntime,
   output: TreeOutputState,
   pendingPaths: ReadonlyArray<PendingPathEmission>,
@@ -153,7 +171,7 @@ export const assemblePathOutputs = (
 /** 创建全量与增量共用的 Path 确定化上下文 */
 export const createPathResolveContext = (
   runtime: CompileRuntime,
-  pending: InputPathCompilation,
+  pending: Pick<InputPathCompilation, 'irPath' | 'scopeDefaults' | 'theme'>,
 ): Parameters<typeof resolvePath>[1] => ({
   ...runtime.context.registries,
   ...runtime.context.layout,
@@ -168,31 +186,30 @@ export const createPathResolveContext = (
 export const createPathCompileContext = (
   runtime: CompileRuntime,
   pending: InputPathCompilation,
-): PathCompileContext => ({
-  ...pending,
-  targetResolver: createPathTargetResolver(chain => createTreePositionContext(runtime, chain)),
-  registries: runtime.context.registries,
-  ...runtime.context.layout,
-  ...runtime.context.host,
-  boundaryStore: runtime.state.workspace.boundaryStore,
-  registerPaint: runtime.state.workspace.paintRegistry.register,
-  resources: () => ({
-    paints: runtime.state.workspace.paintRegistry.getResources(),
-    clips: runtime.state.workspace.clipRegistry.getResources(),
-  }),
-  onWarn: runtime.state.workspace.diagnosticCollector.collect,
-  resolveTransform: runtime.state.execution.scopeTransformComposer.resolve,
-});
-
-/** 完整计算延迟 Path，不读取跨批结果 */
-const compilePendingPath = (runtime: CompileRuntime, pending: PendingPathEmission): CompiledPath => {
-  const canon = resolvePath(pending.path, createPathResolveContext(runtime, pending));
-  const compile = () => compilePath(canon, createPathCompileContext(runtime, pending));
-  const namespace = runtime.state.execution.namespaceStack;
-  namespace.setPhase('resolving');
-  try {
-    return compile();
-  } finally {
-    namespace.setPhase('registering');
-  }
+): PathCompileContext => {
+  /** ⚡按变换链对象身份缓存位置上下文，仅在当前 PathCompileContext 内有效，名称仍动态查询 */
+  const positionContextCache = new WeakMap<ReadonlyArray<Transform>, PositionTargetEvaluateContext>();
+  const targetResolver = createPathTargetResolver(chain => {
+    let context = positionContextCache.get(chain);
+    if (context === undefined) {
+      context = createTreePositionContext(runtime, chain);
+      positionContextCache.set(chain, context);
+    }
+    return context;
+  });
+  return {
+    ...pending,
+    targetResolver,
+    registries: runtime.context.registries,
+    ...runtime.context.layout,
+    ...runtime.context.host,
+    boundaryStore: runtime.state.workspace.boundaryStore,
+    registerPaint: runtime.state.workspace.paintRegistry.register,
+    resources: () => ({
+      paints: runtime.state.workspace.paintRegistry.getResources(),
+      clips: runtime.state.workspace.clipRegistry.getResources(),
+    }),
+    onWarn: runtime.state.workspace.diagnosticCollector.collect,
+    resolveTransform: runtime.state.execution.scopeTransformComposer.resolve,
+  };
 };

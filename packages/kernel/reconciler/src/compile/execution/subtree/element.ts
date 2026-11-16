@@ -1,4 +1,4 @@
-import type { CompileOccurrenceLocator, IRChild, ScenePrimitive } from '@retikz/core';
+import type { CompileOccurrenceLocator, IRChild, LayoutContribution, ScenePrimitive } from '@retikz/core';
 import {
   CompileExpansionKind,
   mergeLayoutBounds,
@@ -14,7 +14,7 @@ import type { CompileOwnerKey } from '../../provenance';
 import type { CompileRuntime } from '../../runtime';
 import { createExecutionInvariantError } from '../../runtime';
 import { createCompileChildPath, enrichLayoutProbeError, orderCompileArtifacts } from '../../shared';
-import { CompositeCompiler } from '../composite';
+import { compileComposite } from '../composite';
 import { visitCoordinate, visitNode, queuePathChild, flushPendingPathEmissions } from '../leaf';
 import { visitScope } from '../scope';
 import { resolveStructuralAlignmentGuides, PATH_PLACEHOLDER } from '../shared';
@@ -33,8 +33,8 @@ export class CompileElementExecutor {
   /** 当前执行的输出记录 */
   readonly output: TreeOutputState = { zIndexMap: new WeakMap(), pendingPathCount: 0 };
 
-  /** 首次遇到复合组件时创建，同次子树执行复用 */
-  private compositeCompiler: CompositeCompiler | undefined;
+  /** 当前子树根组件在测量模式下返回的分配贡献 */
+  private rootContribution: LayoutContribution | undefined;
 
   constructor(
     private readonly rootChildren: ReadonlyArray<IRChild>,
@@ -57,7 +57,11 @@ export class CompileElementExecutor {
 
     return {
       context: {
-        layout: { childProposal: this.options.proposal ?? naturalLayoutProposal },
+        layout: {
+          childProposal: this.options.proposal ?? naturalLayoutProposal,
+          // ⚡默认跳过无人消费的父布局占位传播，测量和增量驱动按需显式开启
+          skipAllocation: this.options.skipAllocation ?? true,
+        },
         compositeInput: this.runtime.context.compositeInputs,
         transformChains: this.options.transformChains ?? [],
         pathPrefix: [],
@@ -99,9 +103,7 @@ export class CompileElementExecutor {
       primitives,
       primitiveZIndices: primitives.map(primitive => this.output.zIndexMap.get(primitive)),
       layout: {
-        ...(this.compositeCompiler?.rootContribution === undefined
-          ? {}
-          : { contribution: this.compositeCompiler.rootContribution }),
+        ...(this.rootContribution === undefined ? {} : { contribution: this.rootContribution }),
         allocations: state.allocations.filter(allocation => allocation.skipAllocation !== true),
         ...(alignmentGuides === undefined ? {} : { alignmentGuides }),
       },
@@ -218,13 +220,47 @@ export class CompileElementExecutor {
     semanticOwner?: CompileOwnerKey,
   ): void {
     if ('namespace' in child) {
-      this.getCompositeCompiler().compile(child, index, frame, occurrence, compositeDepth, semanticOwner);
+      const contribution = compileComposite(
+        {
+          runtime: this.runtime,
+          host: {
+            compileSubtree: this.options.compileSubtree,
+            acceptContribution: this.acceptContribution.bind(this),
+            compilePreparedChild: (...args) => this.compilePreparedChild(...args),
+            compileScopeChild: (ir, scopeIndex, scopeFrame, options) =>
+              visitScope(
+                this.runtime,
+                this.output,
+                { compileChildren: this.compileChildren.bind(this) },
+                ir,
+                scopeIndex,
+                scopeFrame,
+                {
+                  ...options,
+                  captureScopeTargets: options?.captureScopeTargets ?? this.options.captureScopeTargets,
+                  compositeDepth: options?.compositeDepth ?? this.options.compositeDepth,
+                },
+              ),
+          },
+        },
+        child,
+        index,
+        frame,
+        occurrence,
+        compositeDepth,
+        {
+          probe: this.options.probe,
+          measurementAxis: child === this.rootChildren[0] ? this.options.measurementAxis : undefined,
+          semanticOwner,
+        },
+      );
+      if (contribution !== undefined) this.rootContribution = contribution;
       return;
     }
     const elementRuntime = this.runtime;
     switch (child.type) {
       case 'node':
-        visitNode(elementRuntime, this.output, child, index, frame, occurrence, semanticOwner);
+        visitNode(elementRuntime, this.output, child, index, frame, semanticOwner);
         break;
       case 'coordinate':
         visitCoordinate(elementRuntime, child, index, frame);
@@ -236,13 +272,15 @@ export class CompileElementExecutor {
           {
             compileChildren: this.compileChildren.bind(this),
           },
-          this.options,
           child,
           index,
           frame,
-          generated ? occurrence : undefined,
-          compositeDepth,
-          semanticOwner,
+          {
+            captureScopeTargets: this.options.captureScopeTargets,
+            generatedOccurrence: generated ? occurrence : undefined,
+            compositeDepth,
+            semanticOwner,
+          },
         );
         break;
       default:
@@ -284,30 +322,5 @@ export class CompileElementExecutor {
       });
     }
     runtime.state.artifacts.push(...contribution.artifacts);
-  }
-
-  /** 按需建立复合组件执行器及其宿主回调 */
-  private getCompositeCompiler(): CompositeCompiler {
-    return (this.compositeCompiler ??= new CompositeCompiler(
-      this.runtime,
-      {
-        compileSubtree: this.options.compileSubtree,
-        acceptContribution: this.acceptContribution.bind(this),
-        compilePreparedChild: (...args) => this.compilePreparedChild(...args),
-        compileScopeChild: (...args) =>
-          visitScope(
-            this.runtime,
-            this.output,
-            { compileChildren: this.compileChildren.bind(this) },
-            this.options,
-            ...args,
-          ),
-      },
-      {
-        rootChild: this.rootChildren[0],
-        probe: this.options.probe,
-        measurementAxis: this.options.measurementAxis,
-      },
-    ));
   }
 }

@@ -1,8 +1,7 @@
-import type { CompileOccurrenceLocator } from '@retikz/core';
+import type { CompileOccurrenceLocator, CompositeDefinition } from '@retikz/core';
 import { compareCompileOccurrences } from '@retikz/core';
 import type { JsonValue, PropertyPath } from '@retikz/foundation';
 import { formatPropertyPath } from '@retikz/foundation';
-import type { ZodType } from 'zod';
 
 /**
  * layout-aware composite 返回的显式领域产物
@@ -26,16 +25,17 @@ export type CompositeArtifact<
 }>;
 
 /**
- * 从精确 composite definition 推导 artifact envelope
+ * 从 Core 组件定义推导携带注册键和领域值类型的产物
+ * @description 产物值类型以 artifactSchema 的解析返回类型为准，未声明产物 schema 的定义不产生此类型
  * @template TDefinition 用于推导命名空间、类型标识与产物值的复合组件定义
  */
-export type CompositeArtifactOf<TDefinition> = TDefinition extends {
-  namespace: infer TNamespace extends string;
-  type: infer TType extends string;
-  artifactSchema: ZodType<infer TArtifact extends JsonValue>;
-}
-  ? CompositeArtifact<TNamespace, TType, TArtifact>
-  : never;
+export type CompositeArtifactOf<TDefinition> =
+  TDefinition extends Pick<
+    CompositeDefinition<unknown, infer TNamespace, infer TType, JsonValue>,
+    'namespace' | 'type' | 'artifactSchema'
+  >
+    ? CompositeArtifact<TNamespace, TType, ReturnType<TDefinition['artifactSchema']['parse']>>
+    : never;
 
 /** 把结构化 occurrence locator 格式化为唯一调试字符串 */
 export const formatCompileOccurrence = (locator: CompileOccurrenceLocator): string =>

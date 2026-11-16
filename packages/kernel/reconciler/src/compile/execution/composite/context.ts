@@ -1,6 +1,13 @@
-import type { CompositeBoundChild, CompositeCompileContext, CompositeRuntimeInputContext, IRChild } from '@retikz/core';
+import type {
+  CanonicalTheme,
+  CompositeBoundChild,
+  CompositeCompileContext,
+  CompositeRuntimeInputContext,
+  IRChild,
+} from '@retikz/core';
 import {
   captureCompositeInputScope,
+  createCompositeContractError,
   naturalLayoutProposal,
   resolveTheme,
   selectCompositeInputScope,
@@ -14,8 +21,6 @@ import { createCompositeBoundChild, createCompositeReplayChild, createCompositeS
 import { createCompositeMeasurementMethods } from './measurement';
 import type { CompositeProbeSequence } from './measurement';
 import type { CompositeProbeContext } from './probe';
-import { cloneLayoutProposal } from './proposal';
-import { createCompositeTargetQuery } from './target-query';
 
 /** 装配一次 Composite 作者回调的环境，派生主题共享句柄与探测序号 */
 export const createCompositeCallbackContext = (
@@ -25,7 +30,7 @@ export const createCompositeCallbackContext = (
   probeContext: CompositeProbeContext,
   evaluation: CompositeCompileContext['evaluation'],
 ) => {
-  const { runtime, owner, key, occurrence } = probeContext;
+  const { runtime, owner } = probeContext;
   const sourceInputs = frame.context.compositeInput ?? { source: child, bindings: [] };
   const authoredChildren = new Map<string, CompositeBoundChild>();
   const runtimeInputContext: CompositeRuntimeInputContext = Object.freeze({
@@ -50,11 +55,8 @@ export const createCompositeCallbackContext = (
 
   /** 当前作者回调的探测序号，所有派生主题共用 */
   const probeSequence: CompositeProbeSequence = { index: 0 };
-  const targetQuery = createCompositeTargetQuery(probeContext, frame, probeSequence);
   /** 装配继承指定主题的作者能力视图 */
-  const createLayoutContext = (
-    theme: SubtreeCompileRuntime['context']['inheritance']['theme'],
-  ): CompositeCompileContext => ({
+  const createLayoutContext = (theme: CanonicalTheme): CompositeCompileContext => ({
     ...runtimeInputContext,
     theme,
     withTheme: override =>
@@ -66,10 +68,16 @@ export const createCompositeCallbackContext = (
           runtime.context.registries.themeRegistry,
         ),
       ),
-    proposal: cloneLayoutProposal(frame.context.layout?.childProposal ?? naturalLayoutProposal, key, occurrence),
+    /** 复用入口已校验并冻结的提案，派生主题不改变布局约束 */
+    proposal: frame.context.layout?.childProposal ?? naturalLayoutProposal,
     evaluation: { ...evaluation },
     ...createCompositeMeasurementMethods(probeContext, frame, probeSequence, theme),
-    resolvePathTargets: query => targetQuery.resolve(theme, query),
+    resolvePathTargets: (result, query) => {
+      const entry = runtime.state.composite.layoutResults.get(result);
+      if (entry === undefined || entry.owner !== owner)
+        throw createCompositeContractError(`${owner.label} target query requires a layout result from this callback.`);
+      return entry.resolvePathTargets(query);
+    },
     warn: (code, message, subPath) =>
       runtime.state.workspace.diagnosticCollector.collect({
         code,
@@ -81,5 +89,5 @@ export const createCompositeCallbackContext = (
     raise: failure => raiseLayoutChildFailure(runtime.state.composite.failures, owner, failure),
     createScope: (props, children) => createCompositeScopeChild(runtime.state.composite, owner, props, children),
   });
-  return { createContext: createLayoutContext, dispose: targetQuery.clear };
+  return createLayoutContext;
 };

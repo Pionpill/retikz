@@ -1,0 +1,74 @@
+# Core Schema 语义评估
+
+当前试点以完整 [NodeSchema](../src/schemas/node/node.ts) 为单元；[正式用例](node/cases/) 含146条可计分任务和1条契约诊断题。每题始终读取完整输入 JSON Schema，属性路径只用于判分和报告归因。
+
+用例按 [cases/](node/cases/) 下的身份、变换、定位、文本、样式、绘制资源、布局、标签和动画拆分。文件承担分组，逐题只保留稳定 ID、任务、参考配置，以及有需要的省略要求、诊断原因和反例；不重复维护标题、源码依据或非执行说明。相同模板用数据表表达，仍生成独立任务。
+
+离线自检集中在 [checks/](node/checks/)，按题库完整性、覆盖、判分与提示隔离组织，不与题库文件一一对应。
+
+通用类型、判分、提示、覆盖清单与报告位于根目录 [scripts/evals](../../../../scripts/evals)；[节点接入](node/suite.ts) 只绑定真实 Schema、节点等价规则与宿主边界。
+
+编号按文件分段，各段从 `001` 开始：
+
+| 文件                                              | 编号段 |
+| ------------------------------------------------- | ------ |
+| [identity.eval.ts](node/cases/identity.eval.ts)   | NAxxx  |
+| [transform.eval.ts](node/cases/transform.eval.ts) | NBxxx  |
+| [position.eval.ts](node/cases/position.eval.ts)   | NCxxx  |
+| [text.eval.ts](node/cases/text.eval.ts)           | NDxxx  |
+| [style.eval.ts](node/cases/style.eval.ts)         | NExxx  |
+| [paint.eval.ts](node/cases/paint.eval.ts)         | NFxxx  |
+| [layout.eval.ts](node/cases/layout.eval.ts)       | NGxxx  |
+| [label.eval.ts](node/cases/label.eval.ts)         | NHxxx  |
+| [animation.eval.ts](node/cases/animation.eval.ts) | NIxxx  |
+
+## 离线自检
+
+```sh
+pnpm --filter @retikz/core eval:check
+```
+
+只做功能自检：参考输入合法、语义反例被拒绝、声明的等价表达通过、契约清单关联配置检查，以及提示不泄漏答案。还会生成单点错值，验证仍通过 Zod 的错误配置不会被误判通过。它不读取 API key、不调用模型、不运行基准或采样。
+
+每次保存新的 ignored `notes/reports/node-eval-offline-<时间戳>.md/.json`，不覆盖历史记录。普通功能测试只发现 `tests/**/*.test.*`，不会运行这里的 `*.check.ts`；这些资产不进入发布产物。
+
+```sh
+pnpm exec oxfmt --threads 3 packages/kernel/core/evals packages/kernel/core/vitest.eval.config.ts
+pnpm --filter @retikz/core exec oxlint . --fix
+pnpm --filter @retikz/core exec tsc --noEmit
+```
+
+## 输入与判分
+
+- [提示组装](node/suite.ts) 只返回统一指令、完整当前契约及当前任务。标题、分组、参考解、断言和主 agent 历史不发给模型。诊断题返回 `null`，不得请求模型
+- [契约导出](node/suite.ts) 使用 `io: 'input', reused: 'ref'`，保留全部引用、默认和描述；不改公开 schema，不手写第二份字段定义
+- [判分入口](../../../../scripts/evals/grading.ts) 接收用例和原始回答字符串；直接解析完整 JSON，返回 JSON/Zod 合法、字段选择、赋值、联合成功及逐路径检查。不抽取 Markdown、不修复或重试答案
+- 原始 `mustOmit` 先检查，再比较配置事实。不用 parse 补出的默认掩盖错误，也不让宽松子对象剥离的字段消失。非法回答也留在完整样本分母
+- [语义投影](node/projection.ts) 支持无参数形状引用、统一缩放/尺寸/间距简写、整体透明度简写、文本行、公式明示的行内缺省、单标签/数组、独立轨道顺序、静态 CSS 颜色及明示默认。要求保留引用、后备配置或省略继承的任务不按最终几何值折叠
+- 浮点容差为 `1e-6`；文本段、关键帧和端点次序保留。开放 `meta`、`params` 原样比较，不作颜色、几何或默认转换。其他等价表达须经审阅后扩展，不能因模型失败任意放宽
+
+## 覆盖与边界
+
+[覆盖核验](../../../../scripts/evals/coverage.ts) 从真实导出契约盘点属性、描述位置和 union 分支，关联参考输入实际经过的位置与可执行配置检查。不同位置的相同文本不合并；同一动画构造器的相同公共字段可复用。测试固定经过审阅的完整契约哈希；名称、结构、约束或描述变化后先核对用例，不能直接改哈希绕过。
+
+报告区分 `direct`、`shared`、`diagnostic`、`gap`。这是**配置断言关联**，不是 LLM 成绩，也不等于 describe 中全部独立规则的语义覆盖率。执行项由参考配置、原始省略要求、等价投影和逐路径比较形成，不额外维护一套文字版断言。
+
+- **viewBox**：节点 Zod 当前接受镜头轨道，但元素消费契约限制它只属于 Scene 根。保留诊断复现，不进入节点成功率
+- **运行时性质**：meta 进入 Scene、动画不参与布局/不跨 scope 继承、同 zIndex 的顺序、非矩形圆角无效、缩放后的附着点、非变换轨道忽略支点等，不能由生成的一个 Node JSON 证明；这些由功能测试负责，这里测配置选择与保真
+- **组合描述缺失**：[NodeStrokeSchema](../src/schemas/node/node.ts) 的父描述包含省略线宽默认1，但字段展开后该父描述不在 NodeSchema 投影中；不要求模型猜隐藏值
+- **refinement**：原始 Zod 执行别名依附/唯一性、inside 禁引线、关键帧有序、周期索引和阴影字段关系。不可见规则单列缺口，尤其周期索引唯一且小于 period 不因导出成功就视为已告知模型
+- **有限覆盖**：递归、数组和开放 JSON 采用代表性嵌套、顺序及值形态，不穷举任意深度、键、长度或字段组合。注册提供者只测已知名称与参数传递，不猜其私有参数语义
+
+## 真实采样
+
+默认使用当前订阅（plan）的 subagent 通道，仅用 Terra（`gpt-6.1-terra`）和 Luna（`gpt-6-luna`），思考程度均为 high。运行前给出简要执行说明，确认具体模型 ID、思考程度、并发安排、采样量与报告范围后启动；当前提供题库、提示、判分与覆盖工具，采样由主 agent 按已确认安排调度。
+
+每次采样单独创建不继承主会话的 fresh subagent，不跨题或采样共享上下文。各模型、用例及变体独立按动态采样规则执行：中间档累计1→3→5次，完整报告档累计3→5→10次；初始全部成功即通过，累计至少1次失败补至第二档，第二档累计至少2次失败才补至第三档，只补差额。未触发追加或达到第三档即结束，保留已有失败，不因后续成功改判全通过。
+
+146条题、2个模型、1个变体，中间档初始292份、上限1,460份，完整报告档初始876份、上限2,920份。两个模型的样本并发调度，上限4；实际并发取确认上限和可用 worker 槽位的较小值，扣除主 agent 占槽。同题完成当前档评分后再决定追加，空槽可调度其他题。报告记录实际并发、逐题次数、追加与停止原因及执行缺口；初始阶段与追加阶段分开报告，不将动态追加后的汇总频率作为无偏总体准确率。
+
+最终统计和失败排序采用逐题联合失败率，即失败次数除以该题实际采样次数，并标明样本数。每个模型、变体和采样档按用例等权汇总，不按回答数加权；失败次数只用于追加门槛和原始记录。
+
+仅提供 `buildNodeEvalPrompt()` 中的指令、完整契约和任务；被测 agent 可读取这些输入并写自己的原始结果，禁止读取源码、参考答案、评分反馈或其他模型结果。每次重新生成，不能复制历史答案充数；原始回答交给 `gradeNodeAnswer()`，不启用强制结构化解码或自动纠错。
+
+当前用例为经人工审阅的设计/优化集，不是独立盲测留出集；正式验收前按语义家族另建并冻结验收任务。采样及优化边界见 [test-eval 技能](../../../../.agents/skills/test-eval/SKILL.md)。

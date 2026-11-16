@@ -1,14 +1,8 @@
-import type {
-  CompileOccurrenceLocator,
-  CompositeReplay,
-  IRChild,
-  IRScope,
-  SceneClipPath,
-  Transform,
-} from '@retikz/core';
+import type { CompileOccurrenceLocator, CompositeReplay, IRChild, IRScope, SceneClipPath } from '@retikz/core';
 
 import type { CompileOwnerKey } from '../../provenance';
 import type { CompileRuntime, CompositeReplayTransaction, CompositeRuntimeOutputChild } from '../../runtime';
+import type { ScopeExecutionOptions } from '../scope';
 import type { SubtreeCompileRuntime, SubtreeOutputContribution, SubtreeCompileHost } from '../subtree';
 
 /** 完成预检的重放事务及外层裁剪 */
@@ -54,11 +48,7 @@ export type CompositeCompileHost = SubtreeCompileHost & {
     child: IRScope,
     index: number,
     frame: SubtreeCompileRuntime,
-    occurrence?: CompileOccurrenceLocator,
-    compositeDepth?: number,
-    semanticOwner?: CompileOwnerKey,
-    compileNested?: (frame: SubtreeCompileRuntime, preliminaryTransforms: ReadonlyArray<Transform> | undefined) => void,
-    clipPath?: SceneClipPath,
+    options?: ScopeExecutionOptions,
   ) => void;
 };
 
