@@ -1,7 +1,7 @@
 import type { ScenePrimitive } from '@retikz/core';
 
-import type { CompileRuntime } from '../../compile/runtime';
-import { importSceneResources } from '../../compile/shared';
+import type { CompileRuntime } from '../../compile';
+import { importSceneResources } from '../../compile';
 import { collectContributionResources } from './contribution';
 import type { WeaveReferenceRead } from './reference';
 import type { WeaveCacheMetadata } from './types';

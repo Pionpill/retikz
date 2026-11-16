@@ -4,16 +4,20 @@ import type { PropertyPath } from '@retikz/foundation';
 import { createIdAllocator, isPropertyPathEqual } from '@retikz/foundation';
 
 import type { CompileOptions, ExecuteOptions } from '../compile';
-import { createSharedCompileContext, createCompileRuntime } from '../compile/runtime';
-import { createCompileChildPath } from '../compile/shared';
+import { createCompileChildPath, createCompileRuntime, createSharedCompileContext } from '../compile';
 import { RetikzReconcilerError, RetikzReconcilerErrorCode } from '../error';
 import { executeWeaveMount } from './mount';
 import { executeWeaveCompilation } from './scheduler';
 import type { WeaveUpdateRequest } from './scheduler';
-import type { WeaveContribution } from './shared';
-import type { WeaveCacheMetadata } from './shared';
-import type { WeaveCompileRead } from './shared';
-import type { WeaveBatch, WeaveNode, WeaveRoot, WeaveScopeNode } from './shared';
+import type {
+  WeaveBatch,
+  WeaveCacheMetadata,
+  WeaveCompileRead,
+  WeaveContribution,
+  WeaveNode,
+  WeaveRoot,
+  WeaveScopeNode,
+} from './shared';
 import { createWeaveBatchState, WeaveAddressIndex, WeaveLookup } from './state';
 import type { WeaveBatchState, WeaveCompilation, WeaveCompileContext, WeaveCompileState } from './state';
 

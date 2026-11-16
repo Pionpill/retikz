@@ -2,7 +2,7 @@ import type { IRChild, IRScene } from '@retikz/core';
 import type { PropertyPath } from '@retikz/foundation';
 import { isPropertyPathEqual } from '@retikz/foundation';
 
-import { createCompileChildPath } from '../../compile/shared';
+import { createCompileChildPath } from '../../compile';
 import type { WeaveNode, WeaveRoot, WeaveScopeNode } from '../shared';
 import { WeaveLookup } from './lookup';
 import { WeaveNameIndex } from './namespace';

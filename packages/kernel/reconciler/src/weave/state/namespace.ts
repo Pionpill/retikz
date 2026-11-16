@@ -1,6 +1,6 @@
 import type { PropertyPath } from '@retikz/foundation';
 
-import type { NamespaceFrameChange } from '../../compile/runtime';
+import type { NamespaceFrameChange } from '../../compile';
 import type { WeaveNode, WeaveRoot, WeaveScopeNode } from '../shared';
 import { WeaveLookup } from './lookup';
 import { readWeaveCandidate, readWeaveCurrent } from './transaction';

@@ -1,8 +1,7 @@
 import type { CompileWarning } from '@retikz/core';
 import { jsonStructuralEquals } from '@retikz/foundation';
 
-import type { WeaveCompileRead } from '../shared';
-import type { WeaveNode, WeaveRoot, WeaveScopeNode } from '../shared';
+import type { WeaveCompileRead, WeaveNode, WeaveRoot, WeaveScopeNode } from '../shared';
 import type { WeaveTransaction } from './transaction';
 
 /** 维护编译读取、双向依赖与批次失效，不编辑声明结构或执行编译 */

@@ -10,11 +10,15 @@ import type {
 } from '@retikz/core';
 import { compareProperties, jsonStructuralEquals } from '@retikz/foundation';
 
-import { createPathResolveContext, createPathCompileContext } from '../../compile/execution';
-import type { PendingPathEmission } from '../../compile/execution';
-import type { CompileRuntime } from '../../compile/runtime';
-import { createWeaveObservation } from '../shared';
-import { comparePaintResolutions, matchWeaveReferences, restoreWeaveResources, retainWeaveReads } from '../shared';
+import { createPathCompileContext, createPathResolveContext } from '../../compile';
+import type { CompileRuntime, PendingPathEmission } from '../../compile';
+import {
+  comparePaintResolutions,
+  createWeaveObservation,
+  matchWeaveReferences,
+  restoreWeaveResources,
+  retainWeaveReads,
+} from '../shared';
 import type { WeaveNode, WeaveCacheMetadata } from '../shared';
 import { comparePathResolutions, compareStrokeBindings } from './compare';
 

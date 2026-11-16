@@ -1,6 +1,6 @@
 import type { CompileWarning, SceneResources, PaintRegistry, ClipRegistry, ReferenceReadKind } from '@retikz/core';
 
-import type { CompileRuntime, NamespaceEntry } from '../../compile/runtime';
+import type { CompileRuntime, NamespaceEntry } from '../../compile';
 import type { WeaveReferenceRead } from './reference';
 
 /** 本次计算使用的资源、引用和诊断，不包含跨批复用策略 */

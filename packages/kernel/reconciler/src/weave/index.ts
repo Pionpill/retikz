@@ -1,3 +1,4 @@
+export * from './manager';
 export { WeaveChangeKind, WeaveChangeSource, WeaveOperationKind } from './shared';
 export type {
   InputWeaveElement,
@@ -10,5 +11,4 @@ export type {
   WeaveScopeNode,
   WeaveTarget,
 } from './shared';
-export * from './manager';
 export { WeaveTransaction, readWeaveCurrent } from './state';

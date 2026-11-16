@@ -8,9 +8,7 @@
 } from '@retikz/core';
 import { visitSceneContent } from '@retikz/core';
 
-import type { CompileProvenanceSnapshot } from '../../compile/provenance';
-import type { NamespaceFrameChange } from '../../compile/runtime';
-import type { CompositeArtifact } from '../../compile/shared';
+import type { CompileProvenanceSnapshot, CompositeArtifact, NamespaceFrameChange } from '../../compile';
 import type { WeaveReferenceRead } from './reference';
 
 /** 输出贡献实际读取的名称及复用校验阶段 */

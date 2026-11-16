@@ -3,10 +3,8 @@ import type { IRScope, CompileWarning } from '@retikz/core';
 import type { PropertyPath } from '@retikz/foundation';
 import { compareProperties, jsonStructuralEquals, formatPropertyPath } from '@retikz/foundation';
 
-import type { ScopeExecutionSteps, SubtreeCompileRuntime } from '../../compile/execution';
-import type { CompileRuntime } from '../../compile/runtime';
-import { createWeaveObservation } from '../shared';
-import { matchWeaveReferences, restoreWeaveResources } from '../shared';
+import type { CompileRuntime, ScopeExecutionSteps, SubtreeCompileRuntime } from '../../compile';
+import { createWeaveObservation, matchWeaveReferences, restoreWeaveResources } from '../shared';
 import type { WeaveNode, WeaveReferenceRead } from '../shared';
 import { compareCanonicalScopes } from './compare';
 

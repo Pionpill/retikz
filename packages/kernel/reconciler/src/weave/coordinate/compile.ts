@@ -2,11 +2,9 @@ import { compileCoordinate, resolveCoordinate } from '@retikz/core';
 import type { IRCoordinate } from '@retikz/core';
 import { compareProperties, jsonStructuralEquals } from '@retikz/foundation';
 
-import type { SubtreeCompileRuntime } from '../../compile/execution';
-import { createTreePositionContext } from '../../compile/execution';
-import type { CompileRuntime } from '../../compile/runtime';
-import { createWeaveObservation } from '../shared';
-import { matchWeaveReferences, restoreWeaveResources } from '../shared';
+import type { CompileRuntime, SubtreeCompileRuntime } from '../../compile';
+import { createTreePositionContext } from '../../compile';
+import { createWeaveObservation, matchWeaveReferences, restoreWeaveResources } from '../shared';
 import type { WeaveNode } from '../shared';
 import { compareCanonicalCoordinates } from './compare';
 

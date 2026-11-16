@@ -2,7 +2,7 @@ import { referencePositionOf, evaluateAnchorReference } from '@retikz/core';
 import type { CompiledReferenceGeometry, ReferenceReadKind } from '@retikz/core';
 import { jsonStructuralEquals } from '@retikz/foundation';
 
-import type { NamespaceStack, NamespaceEntry } from '../../compile/runtime';
+import type { NamespaceEntry, NamespaceStack } from '../../compile';
 
 /** Weave 计算实际消费的名称绑定与几何粒度 */
 export type WeaveReferenceRead = Readonly<{

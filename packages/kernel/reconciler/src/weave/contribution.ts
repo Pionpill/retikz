@@ -1,10 +1,16 @@
 import type { ScenePrimitive, CompileOccurrenceLocator } from '@retikz/core';
 import { isPropertyPathEqual } from '@retikz/foundation';
 
-import type { SubtreeCompileState, TreeOutputState } from '../compile/execution';
-import type { CompileOwnerKey, CompileNamespaceKey, CompileProvenanceOwner } from '../compile/provenance';
-import type { CompileRuntime, NamespaceFrameChange } from '../compile/runtime';
-import { importSceneResources, compileWarningOccurrenceOf } from '../compile/shared';
+import type {
+  CompileNamespaceKey,
+  CompileOwnerKey,
+  CompileProvenanceOwner,
+  CompileRuntime,
+  NamespaceFrameChange,
+  SubtreeCompileState,
+  TreeOutputState,
+} from '../compile';
+import { compileWarningOccurrenceOf, importSceneResources } from '../compile';
 import { collectContributionResources } from './shared';
 import type { WeaveContribution, WeaveContributionRead } from './shared';
 

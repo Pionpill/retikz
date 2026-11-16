@@ -14,22 +14,31 @@ import { compareProperties, createIdAllocator, jsonStructuralEquals } from '@ret
 
 import {
   assembleCompileSubtree,
-  finalizeSceneCompilation,
-  CompileElementExecutor,
-  prepareScopeExecution,
-  bindScopeOutputAnimations,
-  createTreePositionContext,
-  shouldEmitScopeGroup,
   assembleCoordinate,
   assembleNode,
   assemblePaths,
+  bindScopeOutputAnimations,
+  CompileElementExecutor,
+  createDuplicateWarning,
+  createExecutionInvariantError,
+  createTreePositionContext,
+  finalizeSceneCompilation,
+  importSceneResources,
+  NamespaceStack,
+  prepareScopeExecution,
   queuePathChild,
-} from '../compile/execution';
-import type { SubtreeCompileRuntime, SubtreeCompileState, ScopeExecutionSteps } from '../compile/execution';
-import type { CompileNamespaceKey, CompileOwnerKey } from '../compile/provenance';
-import type { CompileRuntime, NamespaceFrameChange, NamespaceEntry } from '../compile/runtime';
-import { NamespaceStack, createExecutionInvariantError } from '../compile/runtime';
-import { importSceneResources, createDuplicateWarning } from '../compile/shared';
+  shouldEmitScopeGroup,
+} from '../compile';
+import type {
+  CompileNamespaceKey,
+  CompileOwnerKey,
+  CompileRuntime,
+  NamespaceEntry,
+  NamespaceFrameChange,
+  ScopeExecutionSteps,
+  SubtreeCompileRuntime,
+  SubtreeCompileState,
+} from '../compile';
 import { captureWeaveContribution, materializeWeaveContribution, materializeWeaveOutput } from './contribution';
 import { executeWeaveCoordinate } from './coordinate';
 import { executeWeaveNode } from './node';
@@ -37,11 +46,17 @@ import { executeWeavePath } from './path';
 import { WeaveTaskQueue } from './schedule';
 import type { WeaveTaskAddress } from './schedule';
 import { assembleWeaveScopeOutput, executeWeaveScope, resolveWeaveScope } from './scope';
-import type { WeaveContribution, WeaveContributionRead, WeaveReferenceRead } from './shared';
-import type { WeaveNode, WeaveRoot, WeaveScopeNode, WeaveCacheMetadata } from './shared';
+import type {
+  WeaveCacheMetadata,
+  WeaveContribution,
+  WeaveContributionRead,
+  WeaveNode,
+  WeaveReferenceRead,
+  WeaveRoot,
+  WeaveScopeNode,
+} from './shared';
 import { compareReferenceGeometry, matchWeaveReferences } from './shared';
-import type { WeaveNameIndex } from './state';
-import type { WeaveTransaction } from './state';
+import type { WeaveNameIndex, WeaveTransaction } from './state';
 
 /** 候选直接变化与完成确认；依赖在读取点核对实际结果 */
 export type WeaveUpdateRequest = {

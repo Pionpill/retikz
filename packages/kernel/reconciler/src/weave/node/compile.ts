@@ -3,11 +3,9 @@ import type { CanonicalNode, NodeCompileContext, CompiledNode, IRNode } from '@r
 import { compareProperties, jsonStructuralEquals } from '@retikz/foundation';
 import type { PropertyPath } from '@retikz/foundation';
 
-import type { SubtreeCompileRuntime } from '../../compile/execution';
-import { createNodeResolveContext, createNodeCompileContext } from '../../compile/execution';
-import type { CompileRuntime } from '../../compile/runtime';
-import { createWeaveObservation } from '../shared';
-import { matchWeaveReferences, restoreWeaveResources, retainWeaveReads } from '../shared';
+import type { CompileRuntime, SubtreeCompileRuntime } from '../../compile';
+import { createNodeCompileContext, createNodeResolveContext } from '../../compile';
+import { createWeaveObservation, matchWeaveReferences, restoreWeaveResources, retainWeaveReads } from '../shared';
 import type { WeaveNode, WeaveCacheMetadata } from '../shared';
 import { compareCanonicalNodes, compareNodeLayoutInputs, compareNodeMeasurementInputs } from './compare';
 
