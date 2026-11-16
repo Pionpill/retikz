@@ -58,7 +58,9 @@ export const executeWeaveNode = (
       : resolveNode(child, createNodeResolveContext(observation.runtime, path, context));
   const referencesValid =
     cache !== undefined && matchWeaveReferences(cache.reads, runtime.state.execution.namespaceStack);
-  const canRetain = cache?.diagnostics.length === 0 && jsonStructuralEquals(cache.compileInputs, compileInputs);
+  // ⚡只展开上下文包装、变换项及双轴提案的标量字段，不做无界递归
+  const canRetain =
+    cache?.diagnostics.length === 0 && compareProperties(cache.compileInputs, compileInputs, { depth: 3 });
   if (
     before != null &&
     previous?.compiled != null &&

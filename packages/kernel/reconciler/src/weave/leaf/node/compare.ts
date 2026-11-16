@@ -1,5 +1,5 @@
 import type { CanonicalNode } from '@retikz/core';
-import { jsonStructuralEquals } from '@retikz/foundation';
+import { compareProperties, jsonStructuralEquals } from '@retikz/foundation';
 
 import { comparePaintResolutions } from '../../shared';
 
@@ -17,7 +17,7 @@ export const compareNodeMeasurementInputs = (previous: CanonicalNode, current: C
   );
 };
 
-/** 比较节点的有效语义，能力绑定按身份参与失效判断 */
+/** 比较节点的有效语义，能力绑定按身份参与失效判断；⚡元数据只浅比较，嵌套引用变化时保守重算 */
 export const compareCanonicalNodes = (previous: CanonicalNode, current: CanonicalNode): boolean => {
   if (previous === current) return true;
   return (
@@ -35,8 +35,8 @@ export const compareCanonicalNodes = (previous: CanonicalNode, current: Canonica
     jsonStructuralEquals(previous.animations, current.animations) &&
     previous.id === current.id &&
     previous.zIndex === current.zIndex &&
-    jsonStructuralEquals(previous.aliasIds, current.aliasIds) &&
-    jsonStructuralEquals(previous.meta, current.meta)
+    compareProperties(previous.aliasIds, current.aliasIds) &&
+    compareProperties(previous.meta, current.meta)
   );
 };
 

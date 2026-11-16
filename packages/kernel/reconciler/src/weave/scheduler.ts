@@ -351,7 +351,7 @@ export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinitio
         registerClip: runtime.state.workspace.clipRegistry.register,
         registerClipPath: runtime.state.workspace.clipRegistry.registerPath,
       });
-      if (bound.compiled !== compiled || !jsonStructuralEquals(outputDiagnostics, bound.diagnostics)) {
+      if (bound.compiled !== compiled || !compareProperties(outputDiagnostics, bound.diagnostics)) {
         transaction.editNode(node).compiled = bound.compiled;
         recordComputed(node, { ...scope.cache!, outputDiagnostics: bound.diagnostics }, bound.compiled === compiled);
       }
@@ -418,7 +418,7 @@ export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinitio
     destination.artifacts.push(...contribution.artifacts);
   };
 
-  /** 贡献携带局部输出，作用域输入变化时交回阶段级 prepared 比较 */
+  /** 贡献携带局部输出，作用域输入变化时交回阶段级 prepared 比较；⚡数值变换链只展开到标量字段 */
   const contextMatches = (node: WeaveNode, finalParent = false, inheritance = true): boolean => {
     if (
       inheritance &&
@@ -430,16 +430,19 @@ export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinitio
       ensure(ancestor);
       const facts = scopeFacts(ancestor);
       if (
-        !jsonStructuralEquals(
+        !compareProperties(
           ancestor.current?.cache?.scopePreparation?.preliminaryTransforms,
           facts.preparation.preliminaryTransforms,
+          { depth: 2 },
         )
       )
         return false;
       if (finalParent && index === 0) {
         requireProjection(ancestor);
         if (
-          !jsonStructuralEquals(ancestor.current?.compiled?.layout.overall.transforms, scopeFacts(ancestor).transforms)
+          !compareProperties(ancestor.current?.compiled?.layout.overall.transforms, scopeFacts(ancestor).transforms, {
+            depth: 2,
+          })
         )
           return false;
       }
@@ -818,9 +821,10 @@ export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinitio
           !compareProperties(node.current?.canon?.inheritance, execution.scope.childFrame.context.inheritance, {
             depth: 2,
           }) ||
-          !jsonStructuralEquals(
+          !compareProperties(
             node.current?.cache?.scopePreparation?.preliminaryTransforms,
             execution.scope.preparation.preliminaryTransforms,
+            { depth: 2 },
           )
         ) {
           for (const child of transaction.readNode(node).children) notify(child);
@@ -992,9 +996,10 @@ export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinitio
       if (
         producer.type === 'scope' &&
         task.phase === 'project' &&
-        !jsonStructuralEquals(
+        !compareProperties(
           producer.current?.compiled?.layout.overall.transforms,
           executions.get(producer)!.scope!.transforms,
+          { depth: 2 },
         )
       ) {
         // 后代局部几何可以复用，世界投影变化只通知其实际消费者

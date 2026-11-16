@@ -162,7 +162,9 @@ export const executeWeavePath = (
       : resolvePath(pending.path, createPathResolveContext(observation.runtime, pending));
   const referencesValid =
     cache !== undefined && matchWeaveReferences(cache.reads, runtime.state.execution.namespaceStack);
-  const canRetain = cache?.diagnostics.length === 0 && jsonStructuralEquals(cache.compileInputs, compileInputs);
+  // ⚡变换链只展开到每项标量字段，保持重建链的值比较而不做无界递归
+  const canRetain =
+    cache?.diagnostics.length === 0 && compareProperties(cache.compileInputs, compileInputs, { depth: 3 });
   if (
     before != null &&
     previous?.compiled != null &&

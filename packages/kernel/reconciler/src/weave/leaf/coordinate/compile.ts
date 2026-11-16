@@ -1,6 +1,6 @@
 import { compileCoordinate, resolveCoordinate } from '@retikz/core';
 import type { IRCoordinate } from '@retikz/core';
-import { compareProperties, jsonStructuralEquals } from '@retikz/foundation';
+import { compareProperties } from '@retikz/foundation';
 
 import type { CompileRuntime, SubtreeCompileRuntime } from '../../../compile';
 import { createTreePositionContext } from '../../../compile';
@@ -30,7 +30,7 @@ export const executeWeaveCoordinate = (
     previous?.compiled != null &&
     cache?.diagnostics.length === 0 &&
     compareCanonicalCoordinates(before, canon) &&
-    jsonStructuralEquals(cache.compileInputs, compileInputs) &&
+    compareProperties(cache.compileInputs, compileInputs, { depth: 3 }) &&
     matchWeaveReferences(cache.reads, runtime.state.execution.namespaceStack)
   ) {
     restoreWeaveResources(runtime, cache);

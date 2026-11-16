@@ -1,5 +1,5 @@
 import type { CompileWarning } from '@retikz/core';
-import { jsonStructuralEquals } from '@retikz/foundation';
+import { compareProperties } from '@retikz/foundation';
 
 import type { WeaveCompileRead, WeaveNode, WeaveRoot, WeaveScopeNode } from '../shared';
 import type { WeaveTransaction } from './transaction';
@@ -87,10 +87,11 @@ export class WeaveTracker {
           old.name === read.name &&
           old.binding === read.binding &&
           old.state === read.state &&
-          jsonStructuralEquals(old.kind, read.kind)
+          compareProperties(old.kind, read.kind, { depth: 2 })
         );
       });
-    if (sameReads && jsonStructuralEquals(oldRecord.diagnostics, diagnostics)) return;
+    // ⚡诊断按条目身份浅比较，不递归遍历任意 details；新条目保守刷新记录
+    if (sameReads && compareProperties(oldRecord.diagnostics, diagnostics)) return;
     const names = new Set([...(oldRecord?.reads ?? []).map(read => read.name), ...reads.map(read => read.name)]);
     for (const name of names) {
       const readers = this.transaction.editNodeAttribute(this.root, 'readers');

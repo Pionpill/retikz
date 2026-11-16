@@ -1,6 +1,6 @@
 import type { CanonicalScopeInheritance, IRChild } from '@retikz/core';
 import type { IdAllocator } from '@retikz/foundation';
-import { jsonStructuralEquals } from '@retikz/foundation';
+import { compareProperties } from '@retikz/foundation';
 
 import { RetikzReconcilerError, RetikzReconcilerErrorCode } from '../../error';
 import { WeaveOperationKind } from '../shared';
@@ -86,7 +86,7 @@ export class WeaveEditor {
             ('localNamespace' in after ? after.localNamespace : undefined);
         changes.indexesChanged =
           before.id !== after.id ||
-          !jsonStructuralEquals(
+          !compareProperties(
             'aliasIds' in before ? before.aliasIds : undefined,
             'aliasIds' in after ? after.aliasIds : undefined,
           ) ||
