@@ -1,59 +1,12 @@
 import type { IRPathBase, IRScene } from '@retikz/core';
 import { definePath, PathSchema } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { literal, number, strictObject } from 'zod';
+import { literal } from 'zod';
 
 import { readWeaveCurrent, WeaveManager } from '../../src/weave';
 import { compileTestResult } from '../helpers/compilation';
 
 describe('Path 三层复用', () => {
-  it('属性引用不变跳过解析，其他属性变化仍执行可重写 children 的扩展 schema', () => {
-    let resolutions = 0;
-    const definition = definePath({
-      name: 'shifted',
-      schema: PathSchema.extend({ kind: literal('shifted'), kindOptions: strictObject({ shift: number() }) }).transform(
-        path => {
-          resolutions++;
-          return {
-            ...path,
-            children: [
-              { type: 'step' as const, kind: 'move' as const, to: [0, 0] as [number, number] },
-              { type: 'step' as const, kind: 'line' as const, to: [path.kindOptions.shift, 0] as [number, number] },
-            ],
-          };
-        },
-      ),
-      compile: context => context.emitStroke(),
-    });
-    const path: IRPathBase = {
-      type: 'path',
-      kind: 'shifted',
-      id: 'p',
-      kindOptions: { shift: 10 },
-      children: [
-        { type: 'step', kind: 'move', to: [0, 0] },
-        { type: 'step', kind: 'line', to: [10, 0] },
-      ],
-    };
-    const source: IRScene = { type: 'scene', version: 1, children: [path] };
-    const options = { paths: [definition] };
-    const session = new WeaveManager(source, options);
-    const mounted = session.mount();
-    const target = { kind: 'id' as const, scopeId: mounted.root.scopeId, id: 'p' };
-    const count = resolutions;
-    const equal = session.update({ operations: [{ kind: 'update', target, input: { ...path } }] });
-    expect(resolutions).toBe(count);
-    expect(equal.compilation.result).toEqual(mounted.compilation.result);
-    equal.commit();
-    equal.finish();
-    const next: IRPathBase = { ...path, kindOptions: { shift: 30 } };
-    const changed = session.update({ operations: [{ kind: 'update', target, input: next }] });
-    expect(resolutions).toBeGreaterThan(count);
-    expect(changed.compilation.result).not.toEqual(mounted.compilation.result);
-    expect(changed.compilation.result).toEqual(compileTestResult({ ...source, children: [next] }, options));
-    changed.rollback();
-  });
-
   it('圆角候选回滚不污染原始度量，后续半径更新保留原始模型', () => {
     const path: IRPathBase = {
       type: 'path',

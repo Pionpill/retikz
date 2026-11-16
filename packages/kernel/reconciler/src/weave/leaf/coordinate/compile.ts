@@ -15,7 +15,7 @@ export const executeWeaveCoordinate = (
   context: SubtreeCompileRuntime['context'],
   previous?: WeaveCoordinateState,
 ) => {
-  const resolveInputs = { nodeDistance: runtime.context.layout.nodeDistance };
+  const resolveInputs = { child, nodeDistance: runtime.context.layout.nodeDistance };
   const compileInputs = { scopeChain: context.transformChains };
   const previousCompile = previous?.compile;
   const previousReads = previous?.referenceReads ?? [];
@@ -23,8 +23,7 @@ export const executeWeaveCoordinate = (
   const canon =
     before != null &&
     previousCompile?.diagnostics.length === 0 &&
-    compareProperties(previous?.resolve?.input, child) &&
-    compareProperties(previous?.resolve?.context, resolveInputs)
+    compareProperties({ child: previous!.resolve!.input, ...previous!.resolve!.context }, resolveInputs, { depth: 2 })
       ? before
       : resolveCoordinate(child, runtime.context.layout);
   if (
@@ -37,7 +36,7 @@ export const executeWeaveCoordinate = (
   ) {
     restoreWeaveResources(runtime, previousCompile.resources);
     return {
-      resolve: { input: child, context: resolveInputs, value: canon },
+      resolve: { input: child, context: { nodeDistance: resolveInputs.nodeDistance }, value: canon },
       compile: { ...previousCompile, context: compileInputs },
       referenceReads: previousReads,
       reused: true,
@@ -48,7 +47,7 @@ export const executeWeaveCoordinate = (
     compileCoordinate(canon, createTreePositionContext(observation.runtime, context.transformChains)),
   );
   return {
-    resolve: { input: child, context: resolveInputs, value: canon },
+    resolve: { input: child, context: { nodeDistance: resolveInputs.nodeDistance }, value: canon },
     compile: { ...observation.facts(), context: compileInputs, value: compiled },
     referenceReads: observation.reads,
     reused: false,

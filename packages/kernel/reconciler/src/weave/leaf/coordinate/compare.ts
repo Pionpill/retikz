@@ -1,6 +1,6 @@
 import type { CanonicalCoordinate } from '@retikz/core';
-import { jsonStructuralEquals } from '@retikz/foundation';
+import { compareProperties } from '@retikz/foundation';
 
-/** 比较确定化后的坐标表达式，省略与显式默认值等价 */
+/** ⚡只展开坐标字段与位置顶层属性；嵌套位置引用变化时保守重算 */
 export const compareCanonicalCoordinates = (left: CanonicalCoordinate, right: CanonicalCoordinate): boolean =>
-  jsonStructuralEquals(left, right);
+  compareProperties(left, right, { depth: 2 });

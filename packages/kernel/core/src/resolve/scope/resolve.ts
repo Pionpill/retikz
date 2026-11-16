@@ -19,11 +19,14 @@ export const resolveScopeInheritance = (
   parent?: CanonicalScopeInheritance,
   irPath: PropertyPath = [],
   themePath = formatPropertyPath([...irPath, 'theme']),
-): CanonicalScopeInheritance =>
-  Object.freeze({
-    defaults: resolveScopeDefaults(scope.defaults, parent?.defaults),
-    theme: resolveTheme(parent?.theme ?? DEFAULT_RESOLVED_THEME, scope.theme, themePath, themeRegistry),
-  });
+): CanonicalScopeInheritance => {
+  const defaults = resolveScopeDefaults(scope.defaults, parent?.defaults);
+  const theme = resolveTheme(parent?.theme ?? DEFAULT_RESOLVED_THEME, scope.theme, themePath, themeRegistry);
+  // 默认配置与主题各自保留父级引用；没有覆盖时也保留继承外壳
+  return parent !== undefined && defaults === parent.defaults && theme === parent.theme
+    ? parent
+    : Object.freeze({ defaults, theme });
+};
 
 /** 在子树执行前确定继承、包络能力及分组配置 */
 export const resolveScope = (input: Omit<IRScope, 'children'>, context: ScopeResolveContext): CanonicalScope => {

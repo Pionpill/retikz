@@ -1,13 +1,24 @@
 import { compileNode, evaluatePosition, evaluatePositionTargetWorld, resolveNode } from '@retikz/core';
 import type { CanonicalNode, NodeCompileContext, CompiledNode, IRNode } from '@retikz/core';
-import { compareProperties, jsonStructuralEquals } from '@retikz/foundation';
+import { compareProperties } from '@retikz/foundation';
 import type { PropertyPath } from '@retikz/foundation';
 
 import type { CompileRuntime, SubtreeCompileRuntime } from '../../../compile';
 import { createNodeCompileContext, createNodeResolveContext } from '../../../compile';
-import { createWeaveObservation, matchWeaveReferences, restoreWeaveResources, retainWeaveReads } from '../../shared';
+import {
+  compareTextBlocks,
+  createWeaveObservation,
+  matchWeaveReferences,
+  restoreWeaveResources,
+  retainWeaveReads,
+} from '../../shared';
 import type { WeaveNodeState, WeaveReferenceRead } from '../../shared';
-import { compareCanonicalNodes, compareNodeLayoutInputs, compareNodeMeasurementInputs } from './compare';
+import {
+  compareCanonicalNodes,
+  compareNodeLayoutInputs,
+  compareNodeMeasurementInputs,
+  retainCanonicalNode,
+} from './compare';
 
 /** 编译变化的 Node，并保留仍有效的局部布局 */
 export const compileWeaveNode = (
@@ -23,7 +34,7 @@ export const compileWeaveNode = (
       layout: {
         ...(measured ? { content: previous.compiled.layout.content, shape: previous.compiled.layout.shape } : {}),
         labels: canon.labels.map((label, index) => ({
-          measurement: jsonStructuralEquals(previous.canon.labels[index]?.text, label.text)
+          measurement: compareTextBlocks(previous.canon.labels[index]?.text, label.text)
             ? previous.compiled.layout.labels?.[index]?.measurement
             : undefined,
         })),
@@ -52,22 +63,21 @@ export const executeWeaveNode = (
 } => {
   // own 来自不可变编辑输入；默认配置只取 Node 通道，registry 与根配置由会话保证稳定
   const resolveInputs = {
+    child,
     nodeDefaults: context.inheritance.defaults.node,
     mode: context.inheritance.theme.mode,
   };
   const compileInputs = { scopeChain: context.transformChains, proposal: context.layout?.childProposal };
   const previousCompile = previous?.compile;
   const previousReads = previous?.referenceReads ?? [];
-  const previousResolve = previous?.resolve;
-  const before = previousResolve?.value;
+  const before = previous?.resolve?.value;
   const observation = createWeaveObservation(runtime);
   const canon =
     before != null &&
     previousCompile?.diagnostics.length === 0 &&
-    compareProperties(previousResolve?.input, child) &&
-    compareProperties(previousResolve?.context, resolveInputs)
+    compareProperties({ child: previous!.resolve!.input, ...previous!.resolve!.context }, resolveInputs, { depth: 2 })
       ? before
-      : resolveNode(child, createNodeResolveContext(observation.runtime, path, context));
+      : retainCanonicalNode(before, resolveNode(child, createNodeResolveContext(observation.runtime, path, context)));
   const referencesValid =
     previousCompile !== undefined && matchWeaveReferences(previousReads, runtime.state.execution.namespaceStack);
   // ⚡只展开上下文包装、变换项及双轴提案的标量字段，不做无界递归
@@ -86,7 +96,7 @@ export const executeWeaveNode = (
     return {
       resolve: {
         input: child,
-        context: resolveInputs,
+        context: { nodeDefaults: resolveInputs.nodeDefaults, mode: resolveInputs.mode },
         value: canon,
       },
       compile: { ...previousCompile, context: compileInputs },
@@ -110,7 +120,7 @@ export const executeWeaveNode = (
   return {
     resolve: {
       input: child,
-      context: resolveInputs,
+      context: { nodeDefaults: resolveInputs.nodeDefaults, mode: resolveInputs.mode },
       value: canon,
     },
     compile: { ...observation.facts(), context: compileInputs, value: compiled },

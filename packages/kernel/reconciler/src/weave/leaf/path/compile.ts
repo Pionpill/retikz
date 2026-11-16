@@ -13,14 +13,21 @@ import { compareProperties, jsonStructuralEquals } from '@retikz/foundation';
 import { createPathCompileContext, createPathResolveContext } from '../../../compile';
 import type { CompileRuntime, PendingPathEmission } from '../../../compile';
 import {
-  comparePaintResolutions,
+  compareTextBlocks,
   createWeaveObservation,
   matchWeaveReferences,
   restoreWeaveResources,
   retainWeaveReads,
 } from '../../shared';
 import type { WeavePathState, WeaveReferenceRead } from '../../shared';
-import { comparePathResolutions, compareStrokeBindings } from './compare';
+import {
+  comparePathResolutions,
+  compareStrokeBindings,
+  compareCanonicalPaths,
+  comparePathStepGeometry,
+  comparePathMarkContent,
+  retainPathResolution,
+} from './compare';
 
 /** 选择仍有效的标准描边原子产物；Definition 回调始终由 Core 执行 */
 export const preparePathCompilation = (
@@ -33,13 +40,7 @@ export const preparePathCompilation = (
   const old = previous.canon;
   const cached = previous.compiled.stroke;
   if (old.definition !== current.definition || cached === undefined) return { prepared, primitives };
-  const stepsOf = (path: PathResolution) =>
-    path.canon.children?.map(step => {
-      if (!('label' in step)) return step;
-      const { label: _label, ...geometry } = step;
-      return geometry;
-    });
-  const targetsEqual = referencesValid && jsonStructuralEquals(stepsOf(old), stepsOf(current));
+  const targetsEqual = referencesValid && comparePathStepGeometry(old.canon.children, current.canon.children);
   if (targetsEqual) prepared.targets = previous.compiled.targets;
   const geometryEqual = targetsEqual && old.canon.cornerRadius === current.canon.cornerRadius;
   const layout = cached.layout;
@@ -67,7 +68,7 @@ export const preparePathCompilation = (
       const nextLabelLayout: PreparedStrokeLabelLayout = {};
       const nextLabelEmit: PreparedStrokeLabelEmit = {};
       if (prior !== undefined && label !== undefined) {
-        const textEqual = jsonStructuralEquals(prior.text, label.text);
+        const textEqual = compareTextBlocks(prior.text, label.text);
         if (textEqual) nextLabelLayout.measurement = oldLayout?.measurement;
         if (textEqual && opacityEqual && prior.opacity === label.opacity) nextLabelEmit.content = oldEmit?.content;
         if (geometryEqual && jsonStructuralEquals(prior, label)) {
@@ -95,12 +96,7 @@ export const preparePathCompilation = (
     const priorBinding = prior === undefined ? undefined : old.stroke?.marks.get(prior);
     const binding = current.stroke?.marks.get(mark);
     const contentEqual =
-      priorBinding !== undefined &&
-      binding !== undefined &&
-      priorBinding.definition === binding.definition &&
-      comparePaintResolutions(priorBinding.mark.fill, binding.mark.fill) &&
-      comparePaintResolutions(priorBinding.mark.stroke, binding.mark.stroke) &&
-      jsonStructuralEquals(priorBinding.mark, binding.mark);
+      priorBinding !== undefined && binding !== undefined && comparePathMarkContent(priorBinding, binding);
     const content = contentEqual ? emit?.marks?.[index]?.content : undefined;
     if (content !== undefined) primitives.push(...content);
     // 放置只依赖当前位置与几何，局部内容不保存位置历史
@@ -109,25 +105,16 @@ export const preparePathCompilation = (
         prior !== undefined &&
         jsonStructuralEquals(prior, mark) &&
         old.canon.strokeWidth === current.canon.strokeWidth &&
-        jsonStructuralEquals(priorBinding?.geometry, binding?.geometry)
+        compareProperties(priorBinding?.geometry, binding?.geometry, { depth: 2 })
         ? (layout?.marks?.[index] ?? {})
         : {},
     );
     return { content };
   });
-  const withoutMarks = (path: PathResolution) => {
-    const { marks: _marks, ...body } = path.canon;
-    return body;
-  };
   const bodyEqual =
     geometryEqual &&
-    jsonStructuralEquals(withoutMarks(old), withoutMarks(current)) &&
-    comparePaintResolutions(old.canon.stroke, current.canon.stroke) &&
-    comparePaintResolutions(old.canon.fill, current.canon.fill) &&
-    compareStrokeBindings(
-      old.stroke === undefined ? undefined : { ...old.stroke, marks: new Map() },
-      current.stroke === undefined ? undefined : { ...current.stroke, marks: new Map() },
-    );
+    compareCanonicalPaths(old.canon, current.canon, false) &&
+    compareStrokeBindings(old.stroke, current.stroke, false);
   if (bodyEqual) {
     nextLayout.body = layout?.body;
     nextEmit.body = emit?.body;
@@ -155,20 +142,18 @@ export const executeWeavePath = (
   reused: boolean;
 } => {
   // 排队只在过滤动画时改写 path；解析不依赖 Node 默认值或主题外壳
-  const resolveInputs = { pathDefaults: pending.scopeDefaults.path, mode: pending.theme.mode };
+  const resolveInputs = { path: pending.path, pathDefaults: pending.scopeDefaults.path, mode: pending.theme.mode };
   const compileInputs = { scopeChain: pending.scopeChain };
   const previousCompile = previous?.compile;
   const previousReads = previous?.referenceReads ?? [];
-  const previousResolve = previous?.resolve;
-  const before = previousResolve?.value;
+  const before = previous?.resolve?.value;
   const observation = createWeaveObservation(runtime, 'output');
   const canon =
     before != null &&
     previousCompile?.diagnostics.length === 0 &&
-    compareProperties(previousResolve?.input, pending.path) &&
-    compareProperties(previousResolve?.context, resolveInputs)
+    compareProperties({ path: previous!.resolve!.input, ...previous!.resolve!.context }, resolveInputs, { depth: 2 })
       ? before
-      : resolvePath(pending.path, createPathResolveContext(observation.runtime, pending));
+      : retainPathResolution(before, resolvePath(pending.path, createPathResolveContext(observation.runtime, pending)));
   const referencesValid =
     previousCompile !== undefined && matchWeaveReferences(previousReads, runtime.state.execution.namespaceStack);
   // ⚡变换链只展开到每项标量字段，保持重建链的值比较而不做无界递归
@@ -187,7 +172,7 @@ export const executeWeavePath = (
     return {
       resolve: {
         input: pending.path,
-        context: resolveInputs,
+        context: { pathDefaults: resolveInputs.pathDefaults, mode: resolveInputs.mode },
         value: canon,
       },
       compile: { ...previousCompile, context: compileInputs },
@@ -208,7 +193,7 @@ export const executeWeavePath = (
   return {
     resolve: {
       input: pending.path,
-      context: resolveInputs,
+      context: { pathDefaults: resolveInputs.pathDefaults, mode: resolveInputs.mode },
       value: canon,
     },
     compile: { ...observation.facts(), context: compileInputs, value: compiled },
