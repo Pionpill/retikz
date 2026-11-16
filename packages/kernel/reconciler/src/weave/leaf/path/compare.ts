@@ -1,7 +1,7 @@
 import type { PathResolution } from '@retikz/core';
 import { jsonStructuralEquals } from '@retikz/foundation';
 
-import { comparePaintResolutions } from '../shared';
+import { comparePaintResolutions } from '../../shared';
 
 /** 路径能力绑定及当前完整语义的比较 */
 export const comparePathResolutions = (previous: PathResolution, current: PathResolution): boolean =>

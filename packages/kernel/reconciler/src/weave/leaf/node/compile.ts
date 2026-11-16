@@ -3,10 +3,10 @@ import type { CanonicalNode, NodeCompileContext, CompiledNode, IRNode } from '@r
 import { compareProperties, jsonStructuralEquals } from '@retikz/foundation';
 import type { PropertyPath } from '@retikz/foundation';
 
-import type { CompileRuntime, SubtreeCompileRuntime } from '../../compile';
-import { createNodeCompileContext, createNodeResolveContext } from '../../compile';
-import { createWeaveObservation, matchWeaveReferences, restoreWeaveResources, retainWeaveReads } from '../shared';
-import type { WeaveNode, WeaveCacheMetadata } from '../shared';
+import type { CompileRuntime, SubtreeCompileRuntime } from '../../../compile';
+import { createNodeCompileContext, createNodeResolveContext } from '../../../compile';
+import { createWeaveObservation, matchWeaveReferences, restoreWeaveResources, retainWeaveReads } from '../../shared';
+import type { WeaveNode, WeaveCacheMetadata } from '../../shared';
 import { compareCanonicalNodes, compareNodeLayoutInputs, compareNodeMeasurementInputs } from './compare';
 
 /** 编译变化的 Node，并保留仍有效的局部布局 */

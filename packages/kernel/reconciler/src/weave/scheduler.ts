@@ -40,9 +40,7 @@ import type {
   SubtreeCompileState,
 } from '../compile';
 import { captureWeaveContribution, materializeWeaveContribution, materializeWeaveOutput } from './contribution';
-import { executeWeaveCoordinate } from './coordinate';
-import { executeWeaveNode } from './node';
-import { executeWeavePath } from './path';
+import { executeWeaveCoordinate, executeWeaveNode, executeWeavePath } from './leaf';
 import { WeaveTaskQueue } from './schedule';
 import type { WeaveTaskAddress } from './schedule';
 import { assembleWeaveScopeOutput, executeWeaveScope, resolveWeaveScope } from './scope';

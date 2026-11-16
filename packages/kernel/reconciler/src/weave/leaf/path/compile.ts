@@ -10,16 +10,16 @@ import type {
 } from '@retikz/core';
 import { compareProperties, jsonStructuralEquals } from '@retikz/foundation';
 
-import { createPathCompileContext, createPathResolveContext } from '../../compile';
-import type { CompileRuntime, PendingPathEmission } from '../../compile';
+import { createPathCompileContext, createPathResolveContext } from '../../../compile';
+import type { CompileRuntime, PendingPathEmission } from '../../../compile';
 import {
   comparePaintResolutions,
   createWeaveObservation,
   matchWeaveReferences,
   restoreWeaveResources,
   retainWeaveReads,
-} from '../shared';
-import type { WeaveNode, WeaveCacheMetadata } from '../shared';
+} from '../../shared';
+import type { WeaveNode, WeaveCacheMetadata } from '../../shared';
 import { comparePathResolutions, compareStrokeBindings } from './compare';
 
 /** 选择仍有效的标准描边原子产物；Definition 回调始终由 Core 执行 */

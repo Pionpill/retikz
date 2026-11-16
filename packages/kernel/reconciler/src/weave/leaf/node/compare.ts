@@ -1,7 +1,7 @@
 import type { CanonicalNode } from '@retikz/core';
 import { jsonStructuralEquals } from '@retikz/foundation';
 
-import { comparePaintResolutions } from '../shared';
+import { comparePaintResolutions } from '../../shared';
 
 /** 比较正文与形状测量条件；位置不参与测量，旋转和边距仍可能改变 allocation 宽度 */
 export const compareNodeMeasurementInputs = (previous: CanonicalNode, current: CanonicalNode): boolean => {

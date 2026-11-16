@@ -2,10 +2,10 @@ import { compileCoordinate, resolveCoordinate } from '@retikz/core';
 import type { IRCoordinate } from '@retikz/core';
 import { compareProperties, jsonStructuralEquals } from '@retikz/foundation';
 
-import type { CompileRuntime, SubtreeCompileRuntime } from '../../compile';
-import { createTreePositionContext } from '../../compile';
-import { createWeaveObservation, matchWeaveReferences, restoreWeaveResources } from '../shared';
-import type { WeaveNode } from '../shared';
+import type { CompileRuntime, SubtreeCompileRuntime } from '../../../compile';
+import { createTreePositionContext } from '../../../compile';
+import { createWeaveObservation, matchWeaveReferences, restoreWeaveResources } from '../../shared';
+import type { WeaveNode } from '../../shared';
 import { compareCanonicalCoordinates } from './compare';
 
 /** 从候选状态选择或计算坐标，完整构建不参与此策略 */
