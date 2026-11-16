@@ -70,7 +70,6 @@ export type {
   CanonicalTextBlock,
   CanonicalTextLine,
   CompositeRegistry,
-  CoordinateResolveContext,
   GraphicOpacityResolution,
   InputPaintResolution,
   LayoutProbeRecoverableError,
