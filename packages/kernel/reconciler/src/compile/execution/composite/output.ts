@@ -90,14 +90,11 @@ export const compileCompositeOutput = (
     sourcePath: parentOccurrence.sourcePath,
     expansionPath: [...parentOccurrence.expansionPath, { kind: scopeSegment, index }],
   };
-  execution.host.compileScopeChild(
-    runtimeScopeChild,
-    index,
-    frame,
-    scopeOccurrence,
+  execution.host.compileScopeChild(runtimeScopeChild, index, frame, {
+    generatedOccurrence: scopeOccurrence,
     compositeDepth,
-    scopeSemanticOwner,
-    (scopeFrame, scopePreliminaryTransforms) => {
+    semanticOwner: scopeSemanticOwner,
+    compileNested: (scopeFrame, scopePreliminaryTransforms) => {
       for (const [childIndex, child] of output.children.entries()) {
         if (!isCompositeOutputHandle(execution.runtime, child)) {
           const childOccurrence: CompileOccurrenceLocator = {
@@ -149,8 +146,8 @@ export const compileCompositeOutput = (
         );
       }
     },
-    preparedScopeClipPath,
-  );
+    preResolvedClipPath: preparedScopeClipPath,
+  });
 };
 
 /** 将组件生成的 Scope 属性转换为普通作用域声明 */

@@ -4,19 +4,14 @@ import type {
   CompiledScope,
   CompileOccurrenceLocator,
   IRChild,
+  SceneClipPath,
   Transform,
   prepareScopePlacement,
 } from '@retikz/core';
 
 import type { CompileOwnerKey } from '../../provenance';
 import type { InternalScenePrimitive } from '../shared';
-import type { SubtreeCompileRuntime } from '../subtree';
-
-/** scope.id layout 占位注册结果 */
-export type ScopeLayoutPlaceholder = {
-  /** scope.id 所在父 namespace frame 深度 */
-  parentFrameDepth: number;
-};
+import type { SubtreeCompileOptions, SubtreeCompileRuntime } from '../subtree';
 
 /** 创建 Scope 布局占位项所需的遍历位置与父帧 */
 export type ScopeLayoutPlaceholderContext = {
@@ -49,6 +44,20 @@ export type ScopeVisitHost = {
     occurrence: CompileOccurrenceLocator | undefined,
     compositeDepth: number,
   ) => void;
+};
+
+/** 单个 Scope 的来源、执行方式与已准备的阶段产物 */
+export type ScopeExecutionOptions = Pick<SubtreeCompileOptions, 'captureScopeTargets' | 'compositeDepth'> & {
+  /** 生成 Scope 的出现位置，普通作者 Scope 省略 */
+  generatedOccurrence?: CompileOccurrenceLocator;
+  /** 当前 Scope 的编译溯源归属 */
+  semanticOwner?: CompileOwnerKey;
+  /** 替代普通后代遍历，用于提交已预检的组件输出句柄 */
+  compileNested?: (frame: SubtreeCompileRuntime, preliminaryTransforms: ReadonlyArray<Transform> | undefined) => void;
+  /** 已解析的 Scope 裁剪路径 */
+  preResolvedClipPath?: SceneClipPath;
+  /** 已确定的 Scope 配置，省略时由执行入口解析 */
+  resolvedScope?: CanonicalScope;
 };
 
 /** Scope 准备后的候选操作；依赖与推进顺序由驱动持有 */

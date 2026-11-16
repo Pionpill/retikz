@@ -85,7 +85,7 @@ export type CompositeContributionResult = Readonly<{
 | `evaluation`, `proposal`                                                                                                                                                     | Full-layout or axis-measurement request and parent slot constraints                                    |
 | `measureChild`, `layoutChild`                                                                                                                                                | Size queries or a complete isolated layout with a replay token                                         |
 | `replay`, `createScope`                                                                                                                                                      | Selection of a layout result or an output child carrying authored Scope properties                     |
-| `resolvePathTargets`                                                                                                                                                         | Queries for source and ordered target points in a child environment                                    |
+| `resolvePathTargets`                                                                                                                                                         | Reads source and ordered target points from an existing layout result                                  |
 | `theme`, `withTheme`                                                                                                                                                         | Effective theme and a themed measurement/query context                                                 |
 | `runtimeInput`, `selectSourceChild`, `bindChild`                                                                                                                             | Current runtime input, transfer of authored child bindings and explicit binding for generated children |
 | `warn`, `raise`                                                                                                                                                              | Diagnostics or propagation of an unusable layout failure                                               |
@@ -153,7 +153,21 @@ Ordinary children continue through compilation; replay children consume saved tr
 
 ### Queries, Theme and Runtime Input
 
-`resolvePathTargets` evaluates source and ordered points inside an isolated real child environment and returns local coordinates. It commits no drawing, performs no final endpoint clipping or interpolation, and does not mutate author points. Domain paths can use it before lowering.
+`resolvePathTargets(result, query)` reads a successful result produced by `layoutChild` in the current callback. It returns source and ordered points in that result’s root-local space. Queries neither recompile the subtree nor consume the replay token: one result can be queried repeatedly and replayed once when needed.
+
+```ts
+const probe = context.layoutChild(child, context.proposal);
+if (probe.kind === 'failed') context.raise(probe.failure);
+else {
+  const points = context.resolvePathTargets(probe.result, {
+    source: { id: 'start', anchor: 'right' },
+    points: [{ id: 'end', anchor: 'left' }],
+  });
+  // Use points to generate routes; return context.replay(probe.result) to draw the child
+}
+```
+
+Queries use the theme and reference snapshot captured during layout; a derived theme does not change an existing result. Lay out the child again when its input or environment changes. Coordinates exclude future replay placement transforms. Queries perform no final path clipping or interpolation and do not mutate author points. Names in the root Scope’s local namespace are available, but private descendant namespaces remain isolated.
 
 `withTheme` creates effective local theme context for queries and measurements. Final children must still declare the matching theme boundary through createScope, so selected output does not accidentally inherit a different theme.
 

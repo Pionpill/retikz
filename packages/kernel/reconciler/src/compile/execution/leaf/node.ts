@@ -1,11 +1,4 @@
-import type {
-  CompileOccurrenceLocator,
-  IRNode,
-  CanonicalNode,
-  CompiledNode,
-  NodeCompileContext,
-  NodeResolveContext,
-} from '@retikz/core';
+import type { IRNode, CanonicalNode, CompiledNode, NodeCompileContext, NodeResolveContext } from '@retikz/core';
 import { compileNode, projectLayoutWithTransform, projectNodeGeometry, resolveNode } from '@retikz/core';
 import type { PropertyPath } from '@retikz/foundation';
 
@@ -20,55 +13,46 @@ import type { SubtreeCompileRuntime } from '../subtree';
 export const visitNode = (
   runtime: CompileRuntime,
   outputState: TreeOutputState,
-  child: IRNode,
+  ir: IRNode,
   index: number,
   frame: SubtreeCompileRuntime,
-  occurrence?: CompileOccurrenceLocator,
   semanticOwner?: CompileOwnerKey,
 ): void => {
   const nodeIrPath = createCompileChildPath(frame.context.pathPrefix, index);
-  const canon = resolveNode(child, createNodeResolveContext(runtime, nodeIrPath, frame.context));
-  const context = createNodeCompileContext(runtime, canon, nodeIrPath, frame.context);
-  const compiled = compileNode(canon, context);
-  assembleNodeOutput(runtime, outputState, child, nodeIrPath, frame, compiled, semanticOwner);
+  const canon = resolveNode(ir, createNodeResolveContext(runtime, nodeIrPath, frame.context));
+  const compiled = compileNode(canon, createNodeCompileContext(runtime, canon, nodeIrPath, frame.context));
+  assembleNode(runtime, outputState, ir, nodeIrPath, frame, compiled, semanticOwner);
 };
 
 /** 发布已完成的 Node 产物，不选择计算或缓存 */
-export const assembleNodeOutput = (
+export const assembleNode = (
   runtime: CompileRuntime,
   outputState: TreeOutputState,
-  child: IRNode,
+  ir: IRNode,
   nodeIrPath: PropertyPath,
   frame: SubtreeCompileRuntime,
-  compilation: CompiledNode,
+  compiled: CompiledNode,
   semanticOwner?: CompileOwnerKey,
 ): void => {
   const {
-    context: { transformChains: scopeChain, layout: layoutContext },
-    state: {
-      primitives,
-      geometries: layouts,
-      publications,
-      bounds,
-      allocations,
-      alignmentGuides: frameAlignmentGuides,
-    },
+    context: { transformChains, layout },
+    state: { primitives, geometries, publications, bounds, allocations, alignmentGuides },
   } = frame;
-  const layout = projectNodeGeometry(compilation);
-  const boundaryState = runtime.state.workspace.boundaryStore.getOrCreateState(layout.shape);
+  const nodeGeometry = projectNodeGeometry(compiled);
+  const boundaryState = runtime.state.workspace.boundaryStore.getOrCreateState(nodeGeometry.shape);
   boundaryState.irPath = nodeIrPath;
   boundaryState.warn = (code, message) =>
     runtime.state.workspace.diagnosticCollector.collect({ code, message, path: nodeIrPath });
-  if (child.id) {
+  if (ir.id) {
     const globalLayout = projectLayoutWithTransform(
-      layout,
-      runtime.state.execution.scopeTransformComposer.resolve(scopeChain),
+      nodeGeometry,
+      runtime.state.execution.scopeTransformComposer.resolve(transformChains),
     );
-    runtime.state.execution.namespaceStack.register(child.id, {
+    runtime.state.execution.namespaceStack.register(ir.id, {
       geometry: globalLayout,
       irPath: [...nodeIrPath, 'id'],
     });
-    child.aliasIds?.forEach((id, aliasIndex) =>
+    ir.aliasIds?.forEach((id, aliasIndex) =>
       runtime.state.execution.namespaceStack.register(id, {
         geometry: globalLayout,
         irPath: [...nodeIrPath, 'aliasIds', aliasIndex],
@@ -77,7 +61,7 @@ export const assembleNodeOutput = (
     publications.push(globalLayout);
   }
 
-  const output = compilation.emit.overall;
+  const output = compiled.emit.overall;
   const emittedPrimitives =
     runtime.state.execution.provenanceTracker?.materializePrimitives(output.primitives) ?? output.primitives;
   if (semanticOwner !== undefined) {
@@ -86,20 +70,20 @@ export const assembleNodeOutput = (
 
   for (const prim of emittedPrimitives) {
     primitives.push(prim);
-    if (child.zIndex !== undefined) outputState.zIndexMap.set(prim, child.zIndex);
+    if (ir.zIndex !== undefined) outputState.zIndexMap.set(prim, ir.zIndex);
   }
 
   bounds.push(...output.bounds);
   allocations.push({
     boundsPoints: output.bounds[0].boundsPoints,
-    skipAllocation: layoutContext?.skipAllocation,
+    skipAllocation: layout?.skipAllocation,
   });
-  const alignmentGuides = compilation.alignmentGuides;
-  if (alignmentGuides !== undefined) {
-    frameAlignmentGuides.push(...alignmentGuides);
+  const nodeAlignmentGuides = compiled.alignmentGuides;
+  if (nodeAlignmentGuides !== undefined) {
+    alignmentGuides.push(...nodeAlignmentGuides);
   }
 
-  layouts.push(layout);
+  geometries.push(nodeGeometry);
 };
 
 /** 创建全量与增量共用的 Node 确定化上下文 */

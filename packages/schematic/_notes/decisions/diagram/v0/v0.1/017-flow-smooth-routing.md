@@ -91,7 +91,7 @@ type FlowRoutePointsQuery = Readonly<{
 }>;
 ```
 
-Core 的 `LayoutCompositeCompileContext.resolvePathTargets` 同步接收 `PathTargetQuery` 并返回 `PathTargetQueryResult`。结果 source 是起始参考点，points 数量和 query.points 一致；查询只执行引用位置确定，不做路由、贝塞尔插值、箭头、标签或最终 stroke shortening。查询处于 child 的根局部坐标，起始 source 若使用相对形式，其初始基准是 `[0, 0]`，随后 points 按 smooth cursor 规则推进。目标解析失败时抛出带查询字段位置的 Core owner 错误，不返回空数组或静默跳过点。
+Core 的 `CompositeCompileContext.resolvePathTargets` 同步接收已有 `LayoutChildResult` 与 `PathTargetQuery` 并返回 `PathTargetQueryResult`。Flow 先通过正常 `layoutChild` 取得完整节点布局结果，相同布局投影的端点和路径点查询复用该结果；查询不隐式编译子树。结果 source 是起始参考点，points 数量和 query.points 一致；查询只执行引用位置确定，不做路由、贝塞尔插值、箭头、标签或最终 stroke shortening。查询处于 child 的根局部坐标，起始 source 若使用相对形式，其初始基准是 `[0, 0]`，随后 points 按 smooth cursor 规则推进。目标解析失败时抛出带查询字段位置的 Core owner 错误，不返回空数组或静默跳过点。
 
 `FlowLayoutExecutionContext.resolveRoutePoints(query: FlowRoutePointsQuery)` 同步返回含起点、经过点和追加终点的 `ReadonlyArray<Readonly<Position>>`。elements 是本次回调最后返回的全部 root-local bounds，必须保持 authored identity / containment / placement；查询不能修改输入或把引用结果保存为下一次 compile 的缓存。
 
