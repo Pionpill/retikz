@@ -29,11 +29,22 @@
 import type { SharedCompileContext } from '../../compile';
 import type { WeaveChangeKind, WeaveChangeSource, WeaveOperationKind } from './constants';
 import type { WeaveContribution } from './contribution';
-import type { WeaveCompileRead } from './read';
 import type { WeaveReferenceRead } from './reference';
 
 /** 名称读取与父包络聚合实际依赖的最终结果粒度 */
 export type WeaveDependencyKind = ReferenceReadKind | 'layout';
+
+/** 当前阶段的名称读取与作者节点依赖 */
+export type WeaveCompileRead = Readonly<{
+  /** 查询名称 */
+  name: string;
+  /** 消费者实际读取的结果粒度 */
+  kind: ReferenceReadKind;
+  /** 查询结果 */
+  state: 'missing' | 'pending' | 'ready';
+  /** 命中声明对应的稳定作者节点 */
+  binding?: WeaveEntry;
+}>;
 
 /** 节点自身输入与有效继承上下文，不重复保存合并后的输入 */
 type InputWeave<TInput> = {
