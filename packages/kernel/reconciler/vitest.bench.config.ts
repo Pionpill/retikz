@@ -16,8 +16,9 @@ export default defineConfig({
     alias: [{ find: /^@retikz\/reconciler$/, replacement: reconcilerEntry }],
   },
   test: {
-    maxWorkers: 3,
-    fileParallelism: true,
+    maxWorkers: 1,
+    fileParallelism: false,
+    fsModuleCache: false,
     reporters: [
       'verbose',
       new BenchmarkReporter({
@@ -29,7 +30,17 @@ export default defineConfig({
         baselinePath: process.env.RETIKZ_RECONCILER_BENCH_BASELINE,
         runnerId: process.env.RETIKZ_RECONCILER_BENCH_RUNNER_ID,
         sourceDirectory: 'src',
-        configFiles: ['vite.config.ts', 'vitest.bench.config.ts', '../../../config/vite/library-config.ts'],
+        sourceDependencies: ['../core/src', '../foundation/src', '../math/src'],
+        configFiles: [
+          'vite.config.ts',
+          'vitest.bench.config.ts',
+          'package.json',
+          'tsconfig.json',
+          '../../../tsconfig.json',
+          '../../../pnpm-workspace.yaml',
+          '../../../config/vite/library-config.ts',
+          '../../../config/vite/dev-plugin.ts',
+        ],
       }),
     ],
     environment: 'node',

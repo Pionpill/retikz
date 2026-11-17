@@ -59,7 +59,12 @@ export const captureBenchmarkContext = (
     source: {
       commit: execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim(),
       dirty: execFileSync('git', ['status', '--porcelain'], { cwd: repository, encoding: 'utf8' }).trim().length > 0,
-      sourceHash: hashFiles(root, listSourceFiles(resolve(root, options.sourceDirectory))),
+      sourceHash: hashFiles(
+        root,
+        [options.sourceDirectory, ...(options.sourceDependencies ?? [])].flatMap(directory =>
+          listSourceFiles(resolve(root, directory)),
+        ),
+      ),
     },
   };
 };

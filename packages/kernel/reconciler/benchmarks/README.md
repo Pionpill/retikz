@@ -1,116 +1,77 @@
-﻿# Reconciler 全量、增量首屏与增量更新基准
+﻿# Reconciler 编译性能基准
 
-整体编译耗时基准入口放在一层 [reconciler/](./reconciler)，用 `full-`、`mount-`、`update-` 前缀分组，每组按 Node / Path / Scope / Scene 拆文件。这里测量从输入到完整 Scene 结果就绪的编译成本，不包含 SVG / Canvas 绘制、DOM、React / Vanilla adapter 或宿主 target。
+本目录只测 Core IR 到完整编译结果的计算、组装及 Reconciler 内部事务，不包含 React/Vanilla normalize、SVG/Canvas 绘制、DOM 或真实宿主 target。
 
-## Weave 更新耗时观察
+## 测量组
 
-[weave/](./weave) 记录 Coordinate / Node / Path / Scope 在不同输入情况下的完整更新耗时，不加入下文的基准数量、时间预算或历史基线。缓存是否正确命中、失效和保留局部产物，由 [功能测试](../tests/weave) 的硬断言保护，不在性能入口重复统计命中率或发出命中 warning。
+| 前缀     | 操作                   | 计时内                                       | 计时外                                            | 场景数 |
+| -------- | ---------------------- | -------------------------------------------- | ------------------------------------------------- | -----: |
+| full-    | 非增量新会话首次编译   | 创建、mount、返回结果                        | fixture、oracle、校验、逐样本dispose              |     97 |
+| mount-   | 增量新会话首次编译     | 创建、mount、返回结果                        | fixture、oracle、校验、逐样本dispose              |     97 |
+| replace- | 已挂载会话完整输入替换 | replace、完整重建和内部提交                  | 初始mount、输入准备、校验、dispose                |     12 |
+| update-  | 增量持久会话批次更新   | 编辑、依赖传播、计算、完整输出组装、内部提交 | 初始mount、批次准备、oracle、校验、trace、dispose |    228 |
+
+整体共434项，其中10000节点背景扩容有4项参考场景。用例按Node/Path/Scope/Scene/Composite拆文件，仍只用一层reconciler目录。full表示非增量首次编译；update/.../full表示增量会话的强制全量批次，不是同一操作。
+
+replace单列的原因是完整输入消费方并不自动转成Weave批次。首次编译结果不能代替已挂载完整替换，Weave update成绩也不能推导上层processing已获得同样收益。
+
+## 工作负载
+
+- 原有Node：有/无ID、矩形/椭圆/圆/菱形/多边形、正文长度、折行、1/8标签、共享/独立渐变
+- 原有Path：直线、8/128段折线、cubic、16/256过点smooth、绝对/引用/锚点/跨Scope连接、箭头/标签/mark
+- 路径定位：original/rounded几何上的length mark，位置变化、等值和曲线变化
+- 原有Scope：平级/深层、继承、变换、Node/Path混合；Scene为确定性流程图及局部/10%批量/结构更新
+- replace：同引用、新对象等值、位置变化，incremental开/关
+- 拓扑：单生产者N连线的改色/移动/尺寸变化、中心锚点不变对照、有序坐标链、同批双生产者变化合流
+- 结构与名称：头/中部/嵌套插删、重命名并更新引用、别名、命名空间开关、局部遮蔽解除、同目标同批连续修改
+- Scope包络：后代尺寸变化后，命名Scope与外部连接共同更新
+- Composite：轻量注册定义直接展开、layoutChild+replay；外部改色与移动分别检查复用与失效，包含显式artifacts
+- 清洁背景：固定一次改色，100/1000/10000节点，各0/8标签，不将作者数等同输出图元数
+- 资源/来源：最后渐变消费者移除、Scope clip更新，provenance开/关配对
+- 诊断：N条缺失引用产生的预期诊断，无关节点更新后仍完整恢复并与全量oracle相同
+
+常规规模为100/1000主体。连接场景另外包含支撑节点，Scope含容器，Composite主体指实例；JSON observations保存实际作者元素、输出叶图元、资源、批次及编译条目工作量。编译条目不是访问总数、命中率或内部阶段耗时。
+
+## 正确性与状态
+
+首次编译各样本新建会话。持久更新按A→B→A往返，插入与删除配对，不持续增长；等值提交仍为非空批次，空批次单列。
+
+常规更新用独立非增量完整编译的A/B结果作参照；计时外trace会话核对两个方向。计时会话无trace，校验最初和最终样本，覆盖Scene、artifacts、canonical diagnostics、隔离异常、revision及输入/批次不变性。provenance比较稳定的父子/命名空间关系与发射归属，不比较单次编译的身份对象。
+
+预期无诊断的配方必须断言diagnostics为空。明确的诊断配方只允许与oracle相同的诊断；onWarn抛错会被会话隔离，因此不能用回调抛错代替读取会话diagnostics验收。
+
+10000背景参考档只执行3次被测update，不另做trace更新或同规模oracle重建。初始mount是前置状态；输出数量、颜色、资源、revision和输入不变性用独立已知不变量校验，同配方低规模仍通过完整oracle对照。
+
+## 采样与报告
+
+- 常规档固定10次预热+100次测量，显式async:false；参考档无预热、3次测量。共享helper核对真实调用数及样本数
+- 文件串行、一个worker，避免文件间CPU/内存争用；不与旧三worker数据直接作回归判断
+- 比较与消费预算统一P50，均值辅助，正文不展示P90/P99；JSON保留原始正式毫秒样本
+- auto更新按消费预算验收；update/full仍执行并校验，但只报告，不用预算重分类冒充速度变化。首次full/mount和replace仍有独立消费预算
+- 既有预算数值不因指标变化自动调整。新范围传播1000主体采用25/50ms假设；replace按100节点8/16.6ms、1000节点50/100ms规划。参考档仅报告，这些均不是已验证业务分布
+- 单项执行时限600秒与单次操作预算分离。失败样本、超时、源码漂移均保留，不将执行通过称为性能达标
+- 当前是Vite源码加载探索数据，不是原生ESM或浏览器基线。保留JIT、GC、顺序和本机负载的可比性限制
+- 采样前后核对Reconciler/Core/Foundation/Math源码、fixture、配置与lockfile身份；漂移使本轮不能成为基线
+- 报告保存在ignored `_notes/reports/benchmarks/`，历史和基线不自动覆盖。模式/策略对比从同一轮配对，不跨轮拼接或把总成本差当某阶段独占耗时
+
+## Weave输入情况专项
+
+weave目录有Coordinate/Node/Path/Scope的同引用、浅等值、嵌套等值、显式默认、真实变化和后续失效，共33项；Context再提供带标签改色、祖先平移、复杂变换下后代移动的1/100/1000规模，共9项。总计42项独立输入情况观察，不合入整体434项预算。
+
+每个样本在计时外重建会话、mount并重放前置步骤，仅测当前一次完整update；与整体持久A/B会话是不同协议，不能直接混比。该专项仍仅报告，缓存行为由功能测试断言，不在性能基准重复建设命中率框架。
+
+源码与配置在运行前后跨包签名，报告保存在ignored `_notes/reports/weave/`。passed只表示执行和正确性通过。
+
+## 执行
+
+性能运行需当前任务明确授权，并在任务专用隔离worktree中串行执行，不与构建、功能测试或其它基准并发。
 
 ```bash
+# 整体完整编译/首屏/替换/更新
+pnpm --filter @retikz/reconciler exec vitest bench --run --config vitest.bench.config.ts --fsModuleCache=false
+
+# Weave输入情况专项，上一条完成后运行
 pnpm --filter @retikz/reconciler bench:weave
 ```
 
-该入口使用独立 [配置](../vitest.weave.config.ts) 串行运行 `*.bench.ts`，不加载缓存观察包装或 trace。复用共享 Tinybench 协议，每项 10 次预热、100 次正式测量；默认功能测试与原有耗时基准均不收集这些用例，不修改生产源码或新增公开观察 API。
-
-每个计时样本在计时外重建会话、mount 并重放前置步骤，保持输入身份关系与前置状态一致；仅测当前一次完整 `SceneReconciler.update`，包含事务提交。构造、校验、前置更新及 dispose 均不计时。样本前置恢复不同于下文持久会话 A/B 交替协议，不能直接混用结果。
-
-- 输入覆盖同引用、浅层等值、嵌套新引用等值、显式默认值、真实属性变化，以及复用后的引用和继承失效
-- 输出不等于独立非增量编译结果、输入被修改或采样协议错误仍使基准执行失败，不把错误结果当作性能收益
-- 表中展示输入情况、样本数、均值和 P50，JSON 保存原始毫秒样本、实际调用及准备工作量；不设时间预算或耗时警告。计时为 Vite 源码探索数据，非原生 ESM 或浏览器渲染基线
-- 场景名称描述输入，不是计时样本实际命中阶段的证明；耗时是一次完整更新，不能相减推算 resolve / compile 的独占成本
-- 每次运行在 ignored `_notes/reports/weave/` 新建中文 Markdown / JSON 报告，保留执行错误和跨包源码快照；passed 只表示执行与正确性通过，不表示性能达标
-
-功能测试不采样耗时，也不锁定无消费意义的外层对象身份或强制深等值输入必须重新解析。旧 `_notes/reports/weave-cache/` 报告保留为历史诊断证据，不作为当前功能测试结构的新运行结果。
-
-下文整体编译基准的场景注册和专属更新配方直接写在 `.bench.ts` 中。`_` 辅助文件只保留跨入口复用的首次编译 workload、执行生命周期和增量对照协议，不为单个入口另建转发层。
-
-## 测量组与计时边界
-
-| 前缀    | 模式与操作                        | 计时包含                                     | 计时外                                               | 数量 |
-| ------- | --------------------------------- | -------------------------------------------- | ---------------------------------------------------- | ---: |
-| full-   | incremental:false，新会话首次编译 | new SceneReconciler、mount、结果返回         | fixture、断言、逐样本 dispose                        |   89 |
-| mount-  | incremental:true，新会话首次编译  | new SceneReconciler、mount、结果返回         | fixture、断言、逐样本 dispose                        |   89 |
-| update- | incremental:true，持久会话 update | 批次处理、依赖传播、计算、内部提交、结果返回 | 首次 mount、批次构造/选择、断言、trace、最终 dispose |   96 |
-
-共 274 个计时场景。更新的 `auto` 与强制 `full` 使用独立持久会话，强制全量批次不是关闭增量的首次编译；不使用 replace 冒充增量更新。
-
-首次编译两种模式共用同一配方和选项，每个样本新建会话，不跨样本保留缓存。这里的“首屏”指经过 JIT 预热后的新会话首次 Scene 就绪，不是冷启动或浏览器首次绘制。旧第一轮包含 dispose，ID 与计时边界均已变化，不能直接沿用旧数据作新协议回归基线。
-
-## 首次编译配方
-
-| 域    | 特征                                                                                                                                 | 每种模式用例数 |
-| ----- | ------------------------------------------------------------------------------------------------------------------------------------ | -------------: |
-| Node  | 无/有 ID；rectangle、ellipse、circle、diamond、6/64边 polygon；16/256字符正文；固定宽度折行；1/8标签；共享/不同渐变                  |             28 |
-| Path  | 直线、8/128段折线、cubic、16/256过点 smooth；绝对坐标与节点引用、锚点、跨Scope、ellipse/diamond边界；单/双端箭头；1/8标签与plus mark |             36 |
-| Scope | 空Scope、无Scope对照、4/32平级或嵌套Scope、32层继承/平移/旋转缩放、Path/混合内容                                                     |             22 |
-| Scene | 两层流程图，100/500/1000节点与1.2倍路径                                                                                              |              3 |
-
-元素专项主体规模为100/1000。连接组另含2N支撑节点，不归因成纯Path耗时；Scope宽/深32对照拥有相同Scope数与叶数量，空Scope档位指容器数，混合内容为N节点＋N路径。Scope没有命名包络或裁剪能力覆盖。
-
-专项使用固定文字度量：字号10时每UTF-16 code unit宽5，高10；不测真实字体或TeX。相同正文会命中本次编译的度量缓存；Circle使用80×80方形约束，其余空节点80×40，不能将耗时差完全归因于shape算法。整体流程图继续采用原有默认文字度量。两种模式之间选项一致。
-
-输入构造和独立断言不进入计时。断言覆盖数量、几何、文字、资源引用、变换和输入不变性。
-
-## 增量更新矩阵
-
-每种变化使用100/1000主体规模，分别测auto和强制full，不做特征排列组合。
-
-| 域    | 变化                                                                            | 配方数 | 计时场景数 |
-| ----- | ------------------------------------------------------------------------------- | -----: | ---------: |
-| Node  | 单节点填色、位置、尺寸、正文、标签、渐变资源；新对象等值提交                    |      7 |         28 |
-| Path  | 单路径描边、8段折线、cubic、箭头、标签、mark、切换引用目标                      |      7 |         28 |
-| Scope | 默认填色、平移、旋转缩放、32层继承传播、含10%节点的局部子树插入/删除            |      5 |         20 |
-| Scene | 移动节点及连线、连续10%节点批量移动、Scope范围填色、插入/删除节点与连线、空批次 |      5 |         20 |
-
-Node/Scope主体规模为节点数，Path为路径数（引用场景另有2N支撑节点），Scene为节点数（另有N−1条连线）；报告工作量表列出A/B实际作者元素数，包含Scope及支撑节点。Scope属性操作的直接变化元素数为1，不等于受影响后代数。
-
-真实变化按A→B→A反复切换，插入/删除相互配对，不持续增长场景。等值用例每次构造新input对象并提交非空批次；空批次单独列出，不增加revision。二者不作为真实变化的加速收益。
-
-每个更新场景先用非增量模式独立编译A/B作为输出参照，再在独立trace会话验证两个方向，最后建立无trace的计时会话。计时外校验前两轮预热与最后两轮正式样本，验证输出、revision及输入/批次不变性。真实变化的两个Scene结果必须不同，等值和空批次必须相同。
-
-每场景计时更新110次，另有计时外2次独立trace更新和4次首次编译（A/B参照各一次、trace会话一次、计时会话一次）。JSON measurement.calls只计算计时回调调用；工作量来自独立trace，不能冒充计时过程中采集的样本。
-
-## 采样、预算与执行条件
-
-- 固定预热10次、正式100次；共享helper校验110次调用和100个保留样本，显式async:false。最多3个worker并行执行基准文件，每个文件内的场景仍串行；并行文件可能争用CPU与内存资源，本配置结果不直接与此前单worker串行结果比较。
-- 首次编译的元素专项P90警告/错误预算：100主体4/8ms，1000主体25/50ms。Scene为100节点8/16.6ms、500节点25/50ms、1000节点50/100ms。两种模式同预算。
-- 更新局部/等值/空批次P90预算4/8ms；1000主体的Scope或Scene范围/批量传播25/50ms。auto/full同预算。以上为同步消费规划假设，非已验证业务分布，不因复杂度或实测超限自动放宽。
-- 单用例执行时限600秒，与单次操作P90预算独立；此前复杂路径110次执行超过120秒，不能据此减少采样或提高耗时预算。失败报告照常保留。
-- 当前使用Vite源码加载，可能有export getter开销，不是原生ESM性能基线。自然GC、执行顺序及本机其它负载可能影响结果；独立策略按auto→full注册，不宣称随机化或ABBA实验。
-- 无provenance显式捕获、宿主target或renderer。未显式捕获provenance不表示增量内部没有来源信息维护。
-- 跨包测量涉及Reconciler/Core/Foundation/Math，运行时须记录实际源码快照及相关dirty状态，不能只凭Reconciler单包哈希判断整个编译链一致。
-
-## 运行入口
-
-在仓库根目录运行；性能采样需当前任务明确授权。独立运行只生成对应分组，缺失配对的对比列显示“—”，不自动读取其它轮次拼接。
-
-```bash
-# 全部274项
-pnpm --filter @retikz/reconciler exec vitest bench --run --config vitest.bench.config.ts --fsModuleCache=false
-
-# 关闭增量的首次编译89项
-pnpm --filter @retikz/reconciler exec vitest bench --run --config vitest.bench.config.ts full- --fsModuleCache=false
-
-# 开启增量的首次编译89项
-pnpm --filter @retikz/reconciler exec vitest bench --run --config vitest.bench.config.ts mount- --fsModuleCache=false
-
-# 持久会话更新96项
-pnpm --filter @retikz/reconciler exec vitest bench --run --config vitest.bench.config.ts update- --fsModuleCache=false
-
-# 只比较Node的两种首次编译模式
-pnpm --filter @retikz/reconciler exec vitest bench --run --config vitest.bench.config.ts full-node mount-node --fsModuleCache=false
-```
-
-## 报告阅读
-
-每轮在包内ignored `_notes/reports/benchmarks/` 创建独立目录，保存中文Markdown和原始JSON，不自动覆盖旧报告或更新回归基线。
-
-主表按测量组→元素域→输入/变化→规模→策略展示均值、P50、P90、P99、预算和执行状态。附表从同一份JSON数据生成：
-
-1. 首次模式对比：非增量/增量首屏的均值、P90、绝对差及倍率。
-2. 更新策略对比：auto/full的均值、P90、差值及full/auto倍率。
-3. 更新工作量：实际A/B元素数、直接变化元素数、批次操作数及正反向编译元素数。
-
-配对任一侧缺失或失败不计算比值。trace的element-compile数量只表示实际编译工作量，不是遍历总数；不使用reused字段计算命中率。不将两个P90的差值解释为内部阶段耗时。
-
-先通过这些场景判断首屏额外成本、依赖传播范围与少量编译仍耗时的问题；内部函数热点、阶段占比、临时埋点及优化需独立诊断授权。本次结构调整不代表已经运行新协议的性能采样。
+可用full-、mount-、replace-、update-筛选分组。上层authoring、真实宿主提交与renderer应在所属owner另外评测；异步调度、Worker或渐进绘制等未落地能力不列入当前覆盖。

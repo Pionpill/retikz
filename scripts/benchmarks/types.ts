@@ -41,6 +41,8 @@ export type BenchmarkScenario = Omit<BenchmarkIdentity, 'dimensions'> & {
   execution: 'passed' | 'failed' | 'skipped' | 'pending';
   errors: Array<string>;
   statistics?: LatencySummary;
+  /** 正式测量的原始毫秒样本，不包含预热 */
+  samplesMs?: ReadonlyArray<number>;
   measurement?: BenchmarkMeasurement;
   /** 独立分配阶段的采样事实，不含 worker 背景堆占用 */
   allocation?: BenchmarkAllocation;
@@ -149,6 +151,8 @@ export type BenchmarkReporterOptions = {
   runnerId?: string;
   /** 纳入源码摘要的目录 */
   sourceDirectory: string;
+  /** 相对包根、实际参与执行并纳入源码摘要的依赖源码目录 */
+  sourceDependencies?: ReadonlyArray<string>;
   /** 影响构建与加载的配置文件 */
   configFiles: ReadonlyArray<string>;
   /** 包专属对比表与测量说明，追加在同一份报告中 */

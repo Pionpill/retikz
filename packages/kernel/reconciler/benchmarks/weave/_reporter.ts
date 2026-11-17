@@ -83,14 +83,19 @@ export class WeaveTimingReporter implements Reporter {
   onInit(context: Vitest): void {
     this.root = context.config.root;
     this.source = snapshotSources(this.root);
-    this.environment = captureBenchmarkContext(this.root, sampling, {
-      title: 'Weave 更新耗时观察',
-      dimensionLabels: ['元素', '输入情况', '更新'],
-      budgets: {},
-      artifact: 'vite-source',
-      sourceDirectory: 'src',
-      configFiles: ['vitest.weave.config.ts', 'package.json', 'tsconfig.json', '../../../config/vite/dev-plugin.ts'],
-    }).environment;
+    this.environment = captureBenchmarkContext(
+      this.root,
+      sampling,
+      {
+        title: 'Weave 更新耗时观察',
+        dimensionLabels: ['元素', '输入情况', '更新'],
+        budgets: {},
+        artifact: 'vite-source',
+        sourceDirectory: 'src',
+        configFiles: ['vitest.weave.config.ts', 'package.json', 'tsconfig.json', '../../../config/vite/dev-plugin.ts'],
+      },
+      { pool: context.config.pool, maxWorkers: context.config.maxWorkers, isolate: context.config.isolate },
+    ).environment;
   }
 
   /** 读取真实 Tinybench 样本和调用数，不读取测试运行器 duration */

@@ -8,8 +8,8 @@ export type UpdateBenchmarkScene = Omit<IRScene, 'children'> & {
 
 /** 一对确定性场景及 A→B、B→A 批次；期望场景独立构造，不由批次执行器生成 */
 export type UpdateBenchmarkWorkload = {
-  states: readonly [UpdateBenchmarkScene, UpdateBenchmarkScene];
-  batches: (rootId: string) => readonly [WeaveBatch, WeaveBatch];
+  states: readonly [IRScene, IRScene];
+  batches: (rootId: string, scopeIdAt: (path: ReadonlyArray<number>) => string) => readonly [WeaveBatch, WeaveBatch];
   change: 'real' | 'equal' | 'empty';
   changedElements: number;
 };
@@ -24,13 +24,16 @@ export type UpdateBenchmarkCase = {
 /** 将完整场景与独立的批次操作组合；批次中的 input 由调用者给出 */
 export const createUpdateWorkload = (
   states: UpdateBenchmarkWorkload['states'],
-  operations: (rootId: string) => readonly [Array<WeaveOperation>, Array<WeaveOperation>],
+  operations: (
+    rootId: string,
+    scopeIdAt: (path: ReadonlyArray<number>) => string,
+  ) => readonly [Array<WeaveOperation>, Array<WeaveOperation>],
   changedElements: number,
   change: UpdateBenchmarkWorkload['change'] = 'real',
 ): UpdateBenchmarkWorkload => ({
   states,
-  batches: rootId => {
-    const [forward, backward] = operations(rootId);
+  batches: (rootId, scopeIdAt) => {
+    const [forward, backward] = operations(rootId, scopeIdAt);
     return [{ operations: forward }, { operations: backward }];
   },
   changedElements,
@@ -52,8 +55,11 @@ export const updateChild = (
 ): WeaveOperation => ({ kind: 'update', target: { kind: 'child', scopeId: rootId, index }, input });
 
 /** 实际作者元素数，包含 Scope 与支撑节点，不把主体规模当成总元素数 */
-export const countSceneElements = (scene: UpdateBenchmarkScene): number => {
-  const count = (children: UpdateBenchmarkScene['children']): number =>
-    children.reduce((total, child) => total + 1 + (child.type === 'scope' ? count(child.children) : 0), 0);
+export const countSceneElements = (scene: IRScene): number => {
+  const count = (children: IRScene['children']): number =>
+    children.reduce(
+      (total, child) => total + 1 + (!('namespace' in child) && child.type === 'scope' ? count(child.children) : 0),
+      0,
+    );
   return count(scene.children);
 };

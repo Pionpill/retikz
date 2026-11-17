@@ -27,9 +27,7 @@ export type CacheScenario = {
 /** 复用既有固定文字度量，不允许编译诊断在基准中静默丢失 */
 const compileOptions: CompileOptions<never> = {
   ...benchmarkCompileOptions,
-  onWarn: warning => {
-    throw new Error(`Unexpected compilation warning: ${warning.message}`);
-  },
+  onWarn: () => {},
 };
 
 /** 每个样本在计时外恢复相同前置状态，仅测量当前完整 update */
@@ -42,7 +40,10 @@ const createCacheTiming = (
   const oracle = new SceneReconciler(compileOptions, { incremental: false });
   let expected: CompileResult;
   try {
-    expected = oracle.mount(reference.steps[index].scene).compilation.result;
+    const referenceResult = oracle.mount(reference.steps[index].scene);
+    expect(referenceResult.compilation.diagnostics).toEqual([]);
+    expect(oracle.diagnostics()).toEqual([]);
+    expected = referenceResult.compilation.result;
   } finally {
     oracle.dispose();
   }
@@ -69,6 +70,7 @@ const createCacheTiming = (
   };
   const verify = (value: ReconcilerResult) => {
     expect(value.compilation.result).toEqual(expected);
+    expect(value.compilation.diagnostics).toEqual([]);
     expect(JSON.stringify(scenario)).toBe(before);
   };
   return {
@@ -77,10 +79,14 @@ const createCacheTiming = (
       scenario = create();
       expect(JSON.stringify(scenario)).toBe(before);
       reconciler = new SceneReconciler(compileOptions, { incremental: true, updateStrategy: 'auto' });
-      reconciler.mount(scenario.scene);
+      const mounted = reconciler.mount(scenario.scene);
+      expect(mounted.compilation.diagnostics).toEqual([]);
+      expect(reconciler.diagnostics()).toEqual([]);
       observations.mounts++;
       for (const step of scenario.steps.slice(0, index)) {
-        reconciler.update(createBatch(step));
+        const prerequisite = reconciler.update(createBatch(step));
+        expect(prerequisite.compilation.diagnostics).toEqual([]);
+        expect(reconciler.diagnostics()).toEqual([]);
         observations.prerequisiteUpdates++;
       }
       batch = createBatch(scenario.steps[index]);
@@ -90,6 +96,7 @@ const createCacheTiming = (
       observations.targetUpdates++;
       try {
         verify(result);
+        expect(reconciler?.diagnostics()).toEqual([]);
       } finally {
         dispose();
       }

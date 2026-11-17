@@ -73,7 +73,8 @@ export class BenchmarkReporter implements Reporter {
     }
     const tasks = test.benchmarks().flatMap(group => group.tasks);
     if (tasks.length === 1 && tasks[0].latency.samples?.length) {
-      scenario.statistics = summarizeLatency(tasks[0].latency.samples);
+      scenario.samplesMs = [...tasks[0].latency.samples];
+      scenario.statistics = summarizeLatency(scenario.samplesMs);
     } else if (result.state === 'passed') {
       scenario.execution = 'failed';
       scenario.errors.push('Expected exactly one benchmark with retained latency samples');
@@ -90,6 +91,17 @@ export class BenchmarkReporter implements Reporter {
     if (!this.context) throw new Error('Benchmark context unavailable');
     const context = this.context;
     const errors = unhandledErrors.map(error => error.message);
+    const completedContext = captureBenchmarkContext(this.root, sampling, this.options, {
+      pool: context.environment.pool,
+      maxWorkers: context.environment.maxWorkers,
+      isolate: context.environment.isolate,
+    });
+    if (
+      completedContext.source.sourceHash !== context.source.sourceHash ||
+      completedContext.environment.fixtureHash !== context.environment.fixtureHash ||
+      completedContext.environment.lockHash !== context.environment.lockHash
+    )
+      errors.push('Source, fixture or configuration changed during measurement; results cannot form a baseline');
     for (const module of modules) {
       for (const error of module.errors()) errors.push(`${module.relativeModuleId}: ${error.message}`);
       for (const suite of module.children.allSuites()) {
