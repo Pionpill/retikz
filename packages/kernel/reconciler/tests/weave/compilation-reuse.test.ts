@@ -1,8 +1,8 @@
 import type { IRScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import type { WeaveBatch } from '../../src/weave';
-import { WeaveManager } from '../../src/weave';
+import type { InputWeaveElement, WeaveBatch } from '../../src/weave';
+import { readWeaveCurrent, WeaveManager } from '../../src/weave';
 import { compileTestResult, compileTestSnapshot } from '../helpers/compilation';
 
 /** 在内部编译测试中完成候选提交与事务清理 */
@@ -14,6 +14,66 @@ const commitUpdate = (manager: WeaveManager, batch: WeaveBatch) => {
 };
 
 describe('Weave 编译产物复用', () => {
+  const equalInputs: Array<{ label: string; element: InputWeaveElement; consumers: Array<InputWeaveElement> }> = [
+    {
+      label: 'Coordinate',
+      element: { type: 'coordinate', id: 'point', position: [10, 20] },
+      consumers: [{ type: 'node', text: 'point', position: { of: 'point', direction: 'right', distance: 0 } }],
+    },
+    { label: 'Node', element: { type: 'node', id: 'body', text: 'body', position: [0, 0] }, consumers: [] },
+    {
+      label: 'Path',
+      element: {
+        type: 'path',
+        id: 'line',
+        children: [
+          { type: 'step', kind: 'move', to: [0, 0] },
+          { type: 'step', kind: 'line', to: [80, 0] },
+        ],
+      },
+      consumers: [],
+    },
+    {
+      label: 'Scope',
+      element: {
+        type: 'scope',
+        id: 'box',
+        transforms: [{ kind: 'translate', x: 10, y: 20 }],
+        children: [{ type: 'node', text: 'body' }],
+      },
+      consumers: [],
+    },
+  ];
+
+  it.each(equalInputs)('$label 的同引用、浅等值和深等值更新复用编译产物', ({ element, consumers }) => {
+    const source: IRScene = { type: 'scene', version: 1, children: [element, ...consumers] };
+    const snapshot = JSON.stringify(source);
+    const session = new WeaveManager(source);
+    const mounted = session.mount();
+    const entry = readWeaveCurrent(mounted.root).children[0];
+    if (entry.type === 'composite') throw new Error('Expected a base element');
+    const before = readWeaveCurrent(entry);
+    if (before.resolve === undefined || before.compile === undefined)
+      throw new Error('Expected resolved and compiled products');
+    const input = before.origin.own;
+    const canonical = before.resolve.value;
+    const compiled = before.compile.value;
+    for (const identity of ['same', 'shallow', 'nested'] as const) {
+      const next = identity === 'same' ? input : identity === 'shallow' ? { ...input } : structuredClone(input);
+      const update = commitUpdate(session, {
+        operations: [
+          { kind: 'update', target: { kind: 'child', scopeId: mounted.root.scopeId, index: 0 }, input: next },
+        ],
+      });
+      expect(update.compilation.result, identity).toEqual(compileTestResult(source));
+      const current = readWeaveCurrent(entry);
+      expect(current.compile?.value, identity).toBe(compiled);
+      // 深等值只要求最终复用，不强制解析必须重算或必须创建新的外层对象
+      if (identity !== 'nested') expect(current.resolve?.value, identity).toBe(canonical);
+      expect(JSON.stringify(source), identity).toBe(snapshot);
+    }
+  });
+
   it('别名引用更新与声明移动保留当前来源，并复用独立元素的阶段产物', () => {
     const source: IRScene = {
       version: 1,

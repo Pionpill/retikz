@@ -197,6 +197,7 @@ describe('Path 三层复用', () => {
     const node = readWeaveCurrent(mounted.root).children[0];
     if (node.type !== 'path') throw new Error('Expected path');
     const previous = readWeaveCurrent(node).compile?.value;
+    expect(previous?.targets).toBeDefined();
     for (const [pos, positionMode, positionGeometry] of [
       [0.25, 'step', 'original'],
       [0.5, 'step', 'rounded'],
@@ -215,9 +216,48 @@ describe('Path 三层复用', () => {
       update.commit();
       update.finish();
       const compiled = readWeaveCurrent(node).compile?.value;
+      expect(compiled?.targets).toBe(previous?.targets);
       expect(compiled?.stroke?.layout?.geometry).toBe(previous?.stroke?.layout?.geometry);
       expect(compiled?.stroke?.layout?.positions).toBe(previous?.stroke?.layout?.positions);
       expect(compiled?.stroke?.emit?.marks?.[0]?.content).toBe(previous?.stroke?.emit?.marks?.[0]?.content);
+    }
+  });
+
+  it('标签沿路径移动保留测量，正文变化只失效标签测量而保留几何', () => {
+    const path: IRPathBase = {
+      type: 'path',
+      id: 'line',
+      children: [
+        { type: 'step', kind: 'move', to: [0, 0] },
+        { type: 'step', kind: 'line', to: [100, 0] },
+      ],
+      label: [{ text: 'label', position: 0.2 }],
+    };
+    const source: IRScene = { type: 'scene', version: 1, children: [path] };
+    const session = new WeaveManager(source);
+    const mounted = session.mount();
+    const entry = readWeaveCurrent(mounted.root).children[0];
+    if (entry.type !== 'path') throw new Error('Expected path');
+    const previous = readWeaveCurrent(entry).compile?.value;
+    const measurement = previous?.stroke?.layout?.labels?.host?.[0]?.measurement;
+    expect(measurement).toBeDefined();
+    expect(previous?.stroke?.layout?.geometry).toBeDefined();
+    for (const text of ['label', 'renamed']) {
+      const next: IRPathBase = { ...path, label: [{ text, position: 0.8 }] };
+      const update = session.update({
+        operations: [
+          { kind: 'update', target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'line' }, input: next },
+        ],
+      });
+      expect(update.compilation.result).toEqual(compileTestResult({ ...source, children: [next] }));
+      update.commit();
+      update.finish();
+      const current = readWeaveCurrent(entry).compile?.value;
+      expect(current?.stroke?.layout?.geometry).toBe(previous?.stroke?.layout?.geometry);
+      const currentMeasurement = current?.stroke?.layout?.labels?.host?.[0]?.measurement;
+      expect(currentMeasurement).toBeDefined();
+      if (text === 'label') expect(currentMeasurement).toBe(measurement);
+      else expect(currentMeasurement).not.toBe(measurement);
     }
   });
   it('省略与显式 stroke 种类复用同一最终结果', () => {
