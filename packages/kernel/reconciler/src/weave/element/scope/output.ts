@@ -1,14 +1,14 @@
 import type { IRScope, CompiledScope } from '@retikz/core';
 import { projectScopeCompileLayouts, projectScopeOutputBounds } from '@retikz/core';
 
-import { emitScopeGroup, resolveStructuralAlignmentGuides, transformAlignmentGuides } from '../../compile';
+import { emitScopeGroup, resolveStructuralAlignmentGuides, transformAlignmentGuides } from '../../../compile';
 import type {
   CompileOwnerKey,
   CompileRuntime,
   SubtreeCompileRuntime,
   SubtreeCompileState,
   TreeOutputState,
-} from '../../compile';
+} from '../../../compile';
 
 /** 只组装已完成 Scope 的绘制、边界和布局贡献，不解析、比较或执行其后代 */
 export const assembleWeaveScopeOutput = (

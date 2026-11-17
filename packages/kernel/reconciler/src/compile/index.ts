@@ -21,6 +21,7 @@ export {
 export type {
   PendingPathEmission,
   ScopeExecutionSteps,
+  SubtreeCompileContext,
   SubtreeCompileRuntime,
   SubtreeCompileState,
   TreeOutputState,

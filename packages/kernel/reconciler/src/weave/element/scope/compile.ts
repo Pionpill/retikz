@@ -3,9 +3,9 @@ import type { IRScope, CompileWarning } from '@retikz/core';
 import type { PropertyPath } from '@retikz/foundation';
 import { compareProperties, formatPropertyPath } from '@retikz/foundation';
 
-import type { CompileRuntime, ScopeExecutionSteps, SubtreeCompileRuntime } from '../../compile';
-import { createWeaveObservation, matchWeaveReferences, restoreWeaveResources } from '../shared';
-import type { WeaveScopeState, WeaveReferenceRead } from '../shared';
+import type { CompileRuntime, ScopeExecutionSteps, SubtreeCompileContext } from '../../../compile';
+import { createWeaveObservation, matchWeaveReferences, restoreWeaveResources } from '../../shared';
+import type { WeaveScopeState, WeaveReferenceRead } from '../../shared';
 import { compareCanonicalScopes, compareScopeCompileInputs, retainCanonicalScope } from './compare';
 
 /** 在后代继承前选择或确定 Scope 自身配置 */
@@ -13,7 +13,7 @@ export const resolveWeaveScope = (
   runtime: CompileRuntime,
   child: Omit<IRScope, 'children'>,
   path: PropertyPath,
-  context: SubtreeCompileRuntime['context'],
+  context: SubtreeCompileContext,
   previous?: WeaveScopeState,
 ) => {
   const resolveInputs = { child, inheritedStyle: context.inheritance };
@@ -39,7 +39,7 @@ export const resolveWeaveScope = (
 export const executeWeaveScope = (
   runtime: CompileRuntime,
   child: Omit<IRScope, 'children'>,
-  context: SubtreeCompileRuntime['context'],
+  context: SubtreeCompileContext,
   steps: ScopeExecutionSteps,
   preparedDiagnostics: ReadonlyArray<CompileWarning>,
   preparedReads: ReadonlyArray<WeaveReferenceRead>,

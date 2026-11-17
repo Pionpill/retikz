@@ -2,7 +2,7 @@ import { compileCoordinate, resolveCoordinate } from '@retikz/core';
 import type { IRCoordinate } from '@retikz/core';
 import { compareProperties } from '@retikz/foundation';
 
-import type { CompileRuntime, SubtreeCompileRuntime } from '../../../compile';
+import type { CompileRuntime, SubtreeCompileContext } from '../../../compile';
 import { createTreePositionContext } from '../../../compile';
 import { createWeaveObservation, matchWeaveReferences, restoreWeaveResources } from '../../shared';
 import type { WeaveCoordinateState } from '../../shared';
@@ -12,7 +12,7 @@ import { compareCanonicalCoordinates } from './compare';
 export const executeWeaveCoordinate = (
   runtime: CompileRuntime,
   child: IRCoordinate,
-  context: SubtreeCompileRuntime['context'],
+  context: SubtreeCompileContext,
   previous?: WeaveCoordinateState,
 ) => {
   const resolveInputs = { child, nodeDistance: runtime.context.layout.nodeDistance };

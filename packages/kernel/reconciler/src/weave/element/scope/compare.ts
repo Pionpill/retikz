@@ -1,8 +1,8 @@
 import type { CanonicalScope } from '@retikz/core';
 import { compareProperties, jsonStructuralEquals } from '@retikz/foundation';
 
-import { compareReferenceGeometry } from '../shared';
-import type { WeaveScopeState } from '../shared';
+import { compareReferenceGeometry } from '../../shared';
+import type { WeaveScopeState } from '../../shared';
 
 /** 继承来自父级和局部默认合并；只比较默认通道及主题字段，不深扫整个继承树 */
 const compareInheritance = (previous: CanonicalScope['inheritance'], current: CanonicalScope['inheritance']): boolean =>

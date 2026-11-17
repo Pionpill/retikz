@@ -3,7 +3,7 @@ import type { CanonicalNode, NodeCompileContext, CompiledNode, IRNode } from '@r
 import { compareProperties } from '@retikz/foundation';
 import type { PropertyPath } from '@retikz/foundation';
 
-import type { CompileRuntime, SubtreeCompileRuntime } from '../../../compile';
+import type { CompileRuntime, SubtreeCompileContext } from '../../../compile';
 import { createNodeCompileContext, createNodeResolveContext } from '../../../compile';
 import {
   compareTextBlocks,
@@ -53,7 +53,7 @@ export const executeWeaveNode = (
   runtime: CompileRuntime,
   child: IRNode,
   path: PropertyPath,
-  context: SubtreeCompileRuntime['context'],
+  context: SubtreeCompileContext,
   previous?: WeaveNodeState,
 ): {
   resolve: NonNullable<WeaveNodeState['resolve']>;

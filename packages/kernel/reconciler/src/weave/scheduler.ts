@@ -36,14 +36,21 @@ import type {
   NamespaceEntry,
   NamespaceFrameChange,
   ScopeExecutionSteps,
+  SubtreeCompileContext,
   SubtreeCompileRuntime,
   SubtreeCompileState,
 } from '../compile';
 import { captureWeaveContribution, materializeWeaveContribution, materializeWeaveOutput } from './contribution';
-import { executeWeaveCoordinate, executeWeaveNode, executeWeavePath } from './leaf';
+import {
+  assembleWeaveScopeOutput,
+  executeWeaveCoordinate,
+  executeWeaveNode,
+  executeWeavePath,
+  executeWeaveScope,
+  resolveWeaveScope,
+} from './element';
 import { WeaveTaskQueue } from './schedule';
 import type { WeaveTaskAddress } from './schedule';
-import { assembleWeaveScopeOutput, executeWeaveScope, resolveWeaveScope } from './scope';
 import type { WeaveContribution, WeaveEntry, WeaveReferenceRead, WeaveRoot, WeaveScopeEntry } from './shared';
 import { compareReferenceGeometry, matchWeaveReferences } from './shared';
 import type { WeaveNameIndex, WeaveTransaction } from './state';
@@ -245,7 +252,7 @@ export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinitio
     return identity;
   };
   /** 从父级稳定事实取得环境，只为计算或必要 Scope 输出建立上下文 */
-  const contextOf = (parent: WeaveRoot | WeaveScopeEntry): SubtreeCompileRuntime['context'] => {
+  const contextOf = (parent: WeaveRoot | WeaveScopeEntry): SubtreeCompileContext => {
     if (parent.type === 'root') return rootFrame.context;
     const execution = executions.get(parent);
     if (execution?.scope !== undefined) return execution.scope.childFrame.context;
