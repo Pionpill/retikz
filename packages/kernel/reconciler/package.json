@@ -62,7 +62,8 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:run": "vitest run",
-    "test:changed": "vitest run --changed --passWithNoTests"
+    "test:changed": "vitest run --changed --passWithNoTests",
+    "bench:weave": "vitest bench --run --config vitest.weave.config.ts"
   },
   "dependencies": {
     "@retikz/core": "workspace:*",

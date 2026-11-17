@@ -1,8 +1,28 @@
 ﻿# Reconciler 全量、增量首屏与增量更新基准
 
-所有入口只放一层 [reconciler/](./reconciler)，用 `full-`、`mount-`、`update-` 前缀分组，每组按 Node / Path / Scope / Scene 拆文件。这里测量从输入到完整 Scene 结果就绪的编译成本，不包含 SVG / Canvas 绘制、DOM、React / Vanilla adapter 或宿主 target。
+整体编译耗时基准入口放在一层 [reconciler/](./reconciler)，用 `full-`、`mount-`、`update-` 前缀分组，每组按 Node / Path / Scope / Scene 拆文件。这里测量从输入到完整 Scene 结果就绪的编译成本，不包含 SVG / Canvas 绘制、DOM、React / Vanilla adapter 或宿主 target。
 
-场景注册和仅供该入口使用的更新配方直接写在 `.bench.ts` 中。`_` 辅助文件只保留跨入口复用的首次编译 workload、执行生命周期和增量对照协议，不为单个入口另建转发层。
+## Weave 更新耗时观察
+
+[weave/](./weave) 记录 Coordinate / Node / Path / Scope 在不同输入情况下的完整更新耗时，不加入下文的基准数量、时间预算或历史基线。缓存是否正确命中、失效和保留局部产物，由 [功能测试](../tests/weave) 的硬断言保护，不在性能入口重复统计命中率或发出命中 warning。
+
+```bash
+pnpm --filter @retikz/reconciler bench:weave
+```
+
+该入口使用独立 [配置](../vitest.weave.config.ts) 串行运行 `*.bench.ts`，不加载缓存观察包装或 trace。复用共享 Tinybench 协议，每项 10 次预热、100 次正式测量；默认功能测试与原有耗时基准均不收集这些用例，不修改生产源码或新增公开观察 API。
+
+每个计时样本在计时外重建会话、mount 并重放前置步骤，保持输入身份关系与前置状态一致；仅测当前一次完整 `SceneReconciler.update`，包含事务提交。构造、校验、前置更新及 dispose 均不计时。样本前置恢复不同于下文持久会话 A/B 交替协议，不能直接混用结果。
+
+- 输入覆盖同引用、浅层等值、嵌套新引用等值、显式默认值、真实属性变化，以及复用后的引用和继承失效
+- 输出不等于独立非增量编译结果、输入被修改或采样协议错误仍使基准执行失败，不把错误结果当作性能收益
+- 表中展示输入情况、样本数、均值和 P50，JSON 保存原始毫秒样本、实际调用及准备工作量；不设时间预算或耗时警告。计时为 Vite 源码探索数据，非原生 ESM 或浏览器渲染基线
+- 场景名称描述输入，不是计时样本实际命中阶段的证明；耗时是一次完整更新，不能相减推算 resolve / compile 的独占成本
+- 每次运行在 ignored `_notes/reports/weave/` 新建中文 Markdown / JSON 报告，保留执行错误和跨包源码快照；passed 只表示执行与正确性通过，不表示性能达标
+
+功能测试不采样耗时，也不锁定无消费意义的外层对象身份或强制深等值输入必须重新解析。旧 `_notes/reports/weave-cache/` 报告保留为历史诊断证据，不作为当前功能测试结构的新运行结果。
+
+下文整体编译基准的场景注册和专属更新配方直接写在 `.bench.ts` 中。`_` 辅助文件只保留跨入口复用的首次编译 workload、执行生命周期和增量对照协议，不为单个入口另建转发层。
 
 ## 测量组与计时边界
 

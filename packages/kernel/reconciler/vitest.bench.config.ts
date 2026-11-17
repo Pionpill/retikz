@@ -34,7 +34,7 @@ export default defineConfig({
     ],
     environment: 'node',
     include: [],
-    benchmark: { include: ['benchmarks/**/*.bench.ts'], retainSamples: true },
+    benchmark: { include: ['benchmarks/reconciler/**/*.bench.ts'], retainSamples: true },
     pool: 'threads',
   },
 });
