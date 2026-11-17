@@ -126,7 +126,22 @@ export const formatReport = (report: BenchmarkReport, title = '单元性能测�
     ]
       .filter(Boolean)
       .join('；');
-    return `| ${dimensionCells.length ? `${dimensionCells.join(' | ')} | ` : ''} ${executionLabels[scenario.execution]} | ${stats ? formatSamples(stats.samples) : '—'} | ${durations.join(' | ')} | ${limit} | ${allocationValue} | ${allocation?.sampleCount ?? '—'} | ${escapeCell(allocationNote(allocation, report.allocationPolicy))} | ${escapeCell(remarks)} |`;
+    const allocationCells = report.allocationEnabled
+      ? [
+          allocationValue,
+          allocation?.sampleCount ?? '—',
+          escapeCell(allocationNote(allocation, report.allocationPolicy)),
+        ]
+      : [];
+    return `| ${[
+      ...dimensionCells,
+      executionLabels[scenario.execution],
+      stats ? formatSamples(stats.samples) : '—',
+      ...durations,
+      limit,
+      ...allocationCells,
+      escapeCell(remarks),
+    ].join(' | ')} |`;
   });
   return [
     `# ${escapeCell(title)}`,
@@ -139,22 +154,30 @@ export const formatReport = (report: BenchmarkReport, title = '单元性能测�
     '耗时按原始值选择单位：小于 1ms 用 μs，小于 1s 用 ms，其余用 s，均四舍五入保留 1 位小数；展示位数不代表实际测量精度。JSON 和预算配置仍使用毫秒。',
     ...(report.scenarios.some(scenario => scenario.assessment.metric && scenario.assessment.metric !== 'p50')
       ? [
-          '本次内存接入未获准迁移模块既有耗时预算指标，仍按备注和重点结果中的原指标判定；均值/P50 展示不表示预算已改为 P50，既有上限不可直接套用到 P50。',
+          '模块既有耗时预算仍按备注和重点结果中的原指标判定；均值/P50 展示不表示预算已改为 P50，既有上限不可直接套用到 P50。',
         ]
       : []),
-    '估算单次分配 = 本用例正式阶段 V8 估算累计分配字节数 / 实际调用次数。所有耗时场景先完成，之后重新创建场景执行独立分配采样；profiler 不在耗时阶段启用。仅统计JS堆对象分配，不覆盖外部缓冲区、原生或GPU内存；不是 worker 堆占用、运行峰值、常驻内存或泄漏证据。',
-    '分配阶段固定10次预热和100次正式调用；最后一次预热以32KiB间隔粗采样，据此选择正式间隔（最低128B，目标约4096条记录）。只累计被测操作调用栈，排除 fixture、hooks、断言及 profiler 自身分配；采样停止前在计时阶段之外执行GC，统计包括被 minor/major GC 回收的对象，而不是仅剩存活结果。',
-    'B/op 使用采样率修正后的估计总量计算，JSON 保存总量、调用数、分配样本数与实际采样间隔。有效分配样本少于16时不展示数值，不代表零分配；参考档仍遵守总共3次算法调用，不额外测量分配。',
-    ...(report.allocationPolicy
+    ...(report.allocationEnabled
       ? [
-          `单次分配观察线：${formatAllocationBytes(report.allocationPolicy.warningBytesPerOp)}/op；仅作黄色复测提示，不影响进程退出。依据：${escapeCell(report.allocationPolicy.rationale)}`,
+          '估算单次分配 = 本用例正式阶段 V8 估算累计分配字节数 / 实际调用次数。所有耗时场景先完成，之后重新创建场景执行独立分配采样；profiler 不在耗时阶段启用。仅统计JS堆对象分配，不覆盖外部缓冲区、原生或GPU内存；不是 worker 堆占用、运行峰值、常驻内存或泄漏证据。',
+          '分配阶段固定10次预热和100次正式调用；最后一次预热以32KiB间隔粗采样，据此选择正式间隔（最低128B，目标约4096条记录）。只累计被测操作调用栈，排除 fixture、hooks、断言及 profiler 自身分配；采样停止前在计时阶段之外执行GC，统计包括被 minor/major GC 回收的对象，而不是仅剩存活结果。',
+          'B/op 使用采样率修正后的估计总量计算，JSON 保存总量、调用数、分配样本数与实际采样间隔。有效分配样本少于16时不展示数值，不代表零分配；参考档仍遵守总共3次算法调用，不额外测量分配。',
+          ...(report.allocationPolicy
+            ? [
+                `单次分配观察线：${formatAllocationBytes(report.allocationPolicy.warningBytesPerOp)}/op；仅作黄色复测提示，不影响进程退出。依据：${escapeCell(report.allocationPolicy.rationale)}`,
+              ]
+            : ['未配置内存观察线，本次仅记录。']),
         ]
-      : ['未配置内存观察线，本次仅记录。']),
+      : []),
     '',
     '## 重点结果',
     '',
     `🔴 错误 ${errors.length} 项；🟡 警告 ${warnings.length} 项；仅报告 ${report.scenarios.filter(({ assessment }) => assessment.status === 'report-only').length} 项。`,
-    `可估计单次分配 ${report.scenarios.filter(scenario => scenario.allocation?.status === 'measured').length} 项；采样不足 ${report.scenarios.filter(scenario => scenario.allocation?.status === 'insufficient').length} 项；不可用 ${report.scenarios.filter(scenario => scenario.allocation?.status === 'unavailable').length} 项；参考档跳过 ${report.scenarios.filter(scenario => scenario.allocation?.status === 'skipped').length} 项；🟡 单次分配提示 ${report.scenarios.filter(scenario => allocationNote(scenario.allocation, report.allocationPolicy).startsWith('🟡')).length} 项（不阻断）。`,
+    ...(report.allocationEnabled
+      ? [
+          `可估计单次分配 ${report.scenarios.filter(scenario => scenario.allocation?.status === 'measured').length} 项；采样不足 ${report.scenarios.filter(scenario => scenario.allocation?.status === 'insufficient').length} 项；不可用 ${report.scenarios.filter(scenario => scenario.allocation?.status === 'unavailable').length} 项；参考档跳过 ${report.scenarios.filter(scenario => scenario.allocation?.status === 'skipped').length} 项；🟡 单次分配提示 ${report.scenarios.filter(scenario => allocationNote(scenario.allocation, report.allocationPolicy).startsWith('🟡')).length} 项（不阻断）。`,
+        ]
+      : []),
     '业务预算是消费需求的规划标准，不是根据本次结果生成的回归基线；本机超限说明该环境下未满足配置目标，不等同于已测得浏览器卡顿。标红不自动阻断 CI，门禁由配置独立控制。',
     '',
     `| ${['标记', ...report.dimensionLabels.map(escapeCell), '指标', '实测', '上限', '说明'].join(' | ')} |`,
@@ -200,8 +223,8 @@ export const formatReport = (report: BenchmarkReport, title = '单元性能测�
     '',
     '维度列的空白表示沿用同一分组上一行的值；“—”表示未提供该维度。',
     '',
-    `| ${[...report.dimensionLabels.map(escapeCell), '状态', '耗时样本', '均值', 'P50', '上限', '估算单次分配', '分配样本', '内存提示', '备注'].join(' | ')} |`,
-    `| ${[...report.dimensionLabels.map(() => '---'), '---', '---:', '---:', '---:', '---', '---:', '---:', '---', '---'].join(' | ')} |`,
+    `| ${[...report.dimensionLabels.map(escapeCell), '状态', '耗时样本', '均值', 'P50', '上限', ...(report.allocationEnabled ? ['估算单次分配', '分配样本', '内存提示'] : []), '备注'].join(' | ')} |`,
+    `| ${[...report.dimensionLabels.map(() => '---'), '---', '---:', '---:', '---:', '---', ...(report.allocationEnabled ? ['---:', '---:', '---'] : []), '---'].join(' | ')} |`,
     ...rows,
     '',
     '## 运行错误',

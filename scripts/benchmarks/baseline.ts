@@ -21,7 +21,8 @@ const assertNumber: (value: unknown) => asserts value is number = value => {
 /** 验证当前报告版本及预算消费的完整事实 */
 const assertBaseline: (value: unknown) => asserts value is BenchmarkReport = value => {
   assertRecord(value);
-  assert(value.version === 4 && typeof value.createdAt === 'string', 'Unsupported baseline version');
+  assert(value.version === 5 && typeof value.createdAt === 'string', 'Unsupported baseline version');
+  assert(typeof value.allocationEnabled === 'boolean', 'Missing allocation run mode');
   assertStrings(value.dimensionLabels);
   assertRecord(value.environment);
   const environment = value.environment;
