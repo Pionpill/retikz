@@ -130,7 +130,7 @@ export const preparePathCompilation = (
   return { prepared, primitives };
 };
 
-/** 选择有效 Path prepared 槽位并直接计算缺失产物 */
+/** 按输入、编译上下文与引用依赖复用路径产物，变化时保留有效的 prepared 槽位 */
 export const executeWeavePath = (
   runtime: CompileRuntime,
   pending: PendingPathEmission,
@@ -148,12 +148,16 @@ export const executeWeavePath = (
   const previousReads = previous?.referenceReads ?? [];
   const before = previous?.resolve?.value;
   const observation = createWeaveObservation(runtime, 'output');
+
+  // 1. 输入与解析上下文相同时复用 canon，否则重新解析并保留等价子产物
   const canon =
     before != null &&
     previousCompile?.diagnostics.length === 0 &&
     compareProperties({ path: previous!.resolve!.input, ...previous!.resolve!.context }, resolveInputs, { depth: 2 })
       ? before
       : retainPathResolution(before, resolvePath(pending.path, createPathResolveContext(observation.runtime, pending)));
+
+  // 2. 核对引用、编译上下文与解析结果，并要求新旧诊断均允许整体复用
   const referencesValid =
     previousCompile !== undefined && matchWeaveReferences(previousReads, runtime.state.execution.namespaceStack);
   // ⚡变换链只展开到每项标量字段，保持重建链的值比较而不做无界递归
@@ -180,6 +184,8 @@ export const executeWeavePath = (
       reused: true,
     };
   }
+
+  // 3. 整体不能复用时，选择有效 prepared 槽位并恢复其使用的绘制资源
   const selected =
     before != null && previous?.compile?.value != null && canRetain
       ? preparePathCompilation({ canon: before, compiled: previous.compile.value }, canon, referencesValid)
@@ -189,6 +195,7 @@ export const executeWeavePath = (
   const compiled = runtime.state.execution.namespaceStack.observeReferences(observation.read, () =>
     compilePath(canon, createPathCompileContext(observation.runtime, pending), selected?.prepared),
   );
+  // 局部复用可能跳过原有读取，保留仍有效的依赖事实
   if (referencesValid && selected !== undefined) retainWeaveReads(observation.reads, previousReads);
   return {
     resolve: {

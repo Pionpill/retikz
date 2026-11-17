@@ -48,7 +48,7 @@ export const compileWeaveNode = (
   return compileNode(canon, context, { layout: previous.compiled.layout });
 };
 
-/** 由增量驱动选择有效 Node 产物并直接调用 Core */
+/** 按输入、编译上下文与引用依赖复用节点产物，变化时保留有效的局部布局 */
 export const executeWeaveNode = (
   runtime: CompileRuntime,
   child: IRNode,
@@ -61,7 +61,7 @@ export const executeWeaveNode = (
   referenceReads: ReadonlyArray<WeaveReferenceRead>;
   reused: boolean;
 } => {
-  // own 来自不可变编辑输入；默认配置只取 Node 通道，registry 与根配置由会话保证稳定
+  // child 来自不可变编辑输入；默认配置只取 Node 通道，registry 与根配置由会话保证稳定
   const resolveInputs = {
     child,
     nodeDefaults: context.inheritance.defaults.node,
@@ -72,12 +72,16 @@ export const executeWeaveNode = (
   const previousReads = previous?.referenceReads ?? [];
   const before = previous?.resolve?.value;
   const observation = createWeaveObservation(runtime);
+
+  // 1. 输入与解析上下文相同时复用 canon，否则重新解析并保留等价子产物
   const canon =
     before != null &&
     previousCompile?.diagnostics.length === 0 &&
     compareProperties({ child: previous!.resolve!.input, ...previous!.resolve!.context }, resolveInputs, { depth: 2 })
       ? before
       : retainCanonicalNode(before, resolveNode(child, createNodeResolveContext(observation.runtime, path, context)));
+
+  // 2. 核对引用、编译上下文与解析结果，并要求新旧诊断均允许整体复用
   const referencesValid =
     previousCompile !== undefined && matchWeaveReferences(previousReads, runtime.state.execution.namespaceStack);
   // ⚡只展开上下文包装、变换项及双轴提案的标量字段，不做无界递归
@@ -104,6 +108,8 @@ export const executeWeaveNode = (
       reused: true,
     };
   }
+
+  // 3. 整体不能复用时，选择仍有效的测量或布局产物参与重新编译
   const reusable =
     before != null && previous?.compile?.value != null && canRetain
       ? { canon: before, compiled: previous.compile.value }
@@ -116,6 +122,7 @@ export const executeWeaveNode = (
       referencesValid,
     ),
   );
+  // 局部复用可能跳过原有读取，保留仍有效的依赖事实
   if (referencesValid && reusable !== undefined) retainWeaveReads(observation.reads, previousReads);
   return {
     resolve: {

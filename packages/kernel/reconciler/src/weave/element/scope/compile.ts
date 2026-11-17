@@ -8,7 +8,7 @@ import { createWeaveObservation, matchWeaveReferences, restoreWeaveResources } f
 import type { WeaveScopeState, WeaveReferenceRead } from '../../shared';
 import { compareCanonicalScopes, compareScopeCompileInputs, retainCanonicalScope } from './compare';
 
-/** 在后代继承前选择或确定 Scope 自身配置 */
+/** 在后代执行前，按自身输入与继承上下文复用或解析 Scope 配置 */
 export const resolveWeaveScope = (
   runtime: CompileRuntime,
   child: Omit<IRScope, 'children'>,
@@ -16,6 +16,7 @@ export const resolveWeaveScope = (
   context: SubtreeCompileContext,
   previous?: WeaveScopeState,
 ) => {
+  // 1. 输入与继承上下文相同且旧编译无诊断时，复用供后代继承的 canon
   const resolveInputs = { child, inheritedStyle: context.inheritance };
   if (
     previous?.resolve?.value != null &&
@@ -23,6 +24,8 @@ export const resolveWeaveScope = (
     compareProperties({ child: previous.resolve.input, ...previous.resolve.context }, resolveInputs, { depth: 2 })
   )
     return previous.resolve.value;
+
+  // 2. 重新解析自身配置，并保留与旧值等价的子产物
   return retainCanonicalScope(
     previous?.resolve?.value,
     resolveScope(child, {
@@ -35,7 +38,7 @@ export const resolveWeaveScope = (
   );
 };
 
-/** 子布局就绪后由 Weave 直接计算或复用 Scope 包络 */
+/** 子布局就绪后，按 Scope 配置、编译上下文与引用依赖复用或重新计算包络 */
 export const executeWeaveScope = (
   runtime: CompileRuntime,
   child: Omit<IRScope, 'children'>,
@@ -45,6 +48,7 @@ export const executeWeaveScope = (
   preparedReads: ReadonlyArray<WeaveReferenceRead>,
   previous?: WeaveScopeState,
 ) => {
+  // 1. 以已完成的准备结果、子布局和变换等通道作为编译复用依据
   const compileInputs = {
     preparation: steps.preparation,
     layouts: steps.childFrame.state.geometries,
@@ -55,6 +59,8 @@ export const executeWeaveScope = (
   const previousCompile = previous?.compile;
   const previousReads = previous?.referenceReads ?? [];
   const canon = steps.canon;
+
+  // 2. 配置、编译上下文与引用均有效且新旧诊断为空时，恢复资源并复用包络
   if (
     previous?.resolve?.value != null &&
     previous.compile != null &&
@@ -72,6 +78,8 @@ export const executeWeaveScope = (
       reused: true,
     };
   }
+
+  // 3. 重新计算包络，并合并准备阶段与本轮编译的诊断和读取事实
   const observation = createWeaveObservation(runtime);
   const local = observation.runtime;
   const compiled = runtime.state.execution.namespaceStack.observeReferences(observation.read, () =>
