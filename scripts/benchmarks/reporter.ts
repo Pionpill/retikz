@@ -6,6 +6,7 @@ import type { Reporter, TestCase, TestModule, TestRunEndReason, Vitest } from 'v
 
 import { captureBenchmarkContext } from './environment';
 import { evaluateBudget, parseBaseline, shouldFailReport, summarizeLatency, writeReport } from './index';
+import { allocationPolicy } from './policy';
 import { sampling } from './sampling';
 import type { BenchmarkReport, BenchmarkReporterOptions, BenchmarkScenario } from './types';
 
@@ -16,6 +17,7 @@ export class BenchmarkReporter implements Reporter {
   private readonly scenarios = new Map<string, BenchmarkScenario>();
   private readonly collected = new Set<string>();
   private allocationStarted = false;
+  private allocationEnabled = false;
   private readonly phaseErrors: Array<string> = [];
 
   /** 接收被测包的环境与预算配置 */
@@ -24,6 +26,7 @@ export class BenchmarkReporter implements Reporter {
   /** 记录真实运行环境，不把 git、文件读取或报告生成计入采样 */
   onInit(context: Vitest): void {
     this.root = context.config.root;
+    this.allocationEnabled = context.getProvidedContext().benchmarkMemory === true;
     this.context = captureBenchmarkContext(this.root, sampling, this.options, {
       pool: context.config.pool,
       maxWorkers: context.config.maxWorkers,
@@ -114,10 +117,7 @@ export class BenchmarkReporter implements Reporter {
       }
     }
     const scenarios = [...this.scenarios.values()].sort((left, right) => left.id.localeCompare(right.id, 'en'));
-    if (
-      this.options.allocationPolicy &&
-      scenarios.some(scenario => !scenario.allocation && scenario.execution === 'passed')
-    )
+    if (this.allocationEnabled && scenarios.some(scenario => !scenario.allocation && scenario.execution === 'passed'))
       errors.push('Configured allocation phase did not produce metadata for every passed latency scenario');
     for (const id of Object.keys(typeof this.options.budgets === 'function' ? {} : this.options.budgets)) {
       if (!this.scenarios.has(id)) {
@@ -125,12 +125,13 @@ export class BenchmarkReporter implements Reporter {
       }
     }
     const report: BenchmarkReport = {
-      version: 4,
+      version: 5,
+      allocationEnabled: this.allocationEnabled,
       dimensionLabels: this.options.dimensionLabels,
       createdAt: new Date().toISOString(),
       ...context,
       errors,
-      allocationPolicy: this.options.allocationPolicy,
+      allocationPolicy: this.allocationEnabled ? allocationPolicy : undefined,
       scenarios: scenarios.map(scenario => ({
         ...scenario,
         assessment: evaluateBudget(

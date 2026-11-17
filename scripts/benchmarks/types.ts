@@ -57,6 +57,7 @@ export type BenchmarkMeasurement = {
 
 declare module 'vitest' {
   interface ProvidedContext {
+    benchmarkMemory?: boolean;
     benchmarkPhase?: 'latency' | 'allocation';
   }
   interface TaskMeta {
@@ -120,7 +121,9 @@ export type BenchmarkAllocationPolicy = {
 
 /** 本机报告，同时可由人工选择为相对预算的只读基线 */
 export type BenchmarkReport = {
-  version: 4;
+  version: 5;
+  /** 本次是否请求独立分配阶段，与观察线及采样是否成功无关 */
+  allocationEnabled: boolean;
   /** 模块提供的维度列名，按层级由父到子排列 */
   dimensionLabels: ReadonlyArray<string>;
   createdAt: string;
@@ -141,8 +144,6 @@ export type BenchmarkReporterOptions = {
   dimensionLabels: ReadonlyArray<string>;
   /** 场景性能预算 */
   budgets: Readonly<Record<string, BenchmarkBudget>> | ((scenario: BenchmarkScenario) => BenchmarkBudget | undefined);
-  /** 估算单次分配量观察线，不阻断测试或影响耗时预算 */
-  allocationPolicy?: BenchmarkAllocationPolicy;
   /** 人工指定的基线报告路径 */
   baselinePath?: string;
   /** 稳定 runner 标识，省略时使用 hostname */

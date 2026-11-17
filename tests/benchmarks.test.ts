@@ -9,7 +9,8 @@ import type { BenchmarkReport } from '../scripts/benchmarks/types';
 
 /** 最小完整报告，保护单次分配统计及报告语义 */
 const createReport = (): BenchmarkReport => ({
-  version: 4,
+  version: 5,
+  allocationEnabled: true,
   dimensionLabels: ['算法'],
   createdAt: '2026-11-17T00:00:00.000Z',
   environment: {
@@ -90,6 +91,17 @@ describe('单次分配报告', () => {
     expect(formatReport(report)).not.toContain('单次分配偏高');
   });
 
+  it('未请求内存测量时隐藏内存列、提示和说明，不从观察线推断运行模式', () => {
+    const report = createReport();
+    report.allocationEnabled = false;
+    report.allocationPolicy = { warningBytesPerOp: 32, rationale: '单次分配观察线' };
+    const markdown = formatReport(report);
+    expect(markdown).toContain('P50');
+    for (const text of ['估算单次分配', '分配样本', '内存提示', 'V8', '单次分配偏高', '未测量']) {
+      expect(markdown).not.toContain(text);
+    }
+  });
+
   it('基线解析拒绝非法采样事实，并接受当前两种加载身份', () => {
     for (const estimatedTotalBytes of [-1, null, '6400']) {
       const report = createReport();
@@ -100,6 +112,9 @@ describe('单次分配报告', () => {
       expect(() => parseBaseline(JSON.stringify(value))).toThrow();
     }
     expect(parseBaseline(JSON.stringify(createReport())).scenarios[0].allocation?.estimatedTotalBytes).toBe(6400);
+    expect(() => parseBaseline(JSON.stringify({ ...createReport(), allocationEnabled: undefined }))).toThrow(
+      'Missing allocation run mode',
+    );
     const report = createReport();
     report.environment.artifact = 'vite-source';
     expect(parseBaseline(JSON.stringify(report)).environment.artifact).toBe('vite-source');
