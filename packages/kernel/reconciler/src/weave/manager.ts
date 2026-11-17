@@ -6,9 +6,8 @@ import { createIdAllocator, isPropertyPathEqual } from '@retikz/foundation';
 import type { CompileOptions, ExecuteOptions } from '../compile';
 import { createCompileChildPath, createCompileRuntime, createSharedCompileContext } from '../compile';
 import { RetikzReconcilerError, RetikzReconcilerErrorCode } from '../error';
-import { executeWeaveMount } from './mount';
-import { executeWeaveCompilation } from './scheduler';
-import type { WeaveExecutionContext, WeaveUpdateRequest } from './scheduler';
+import { executeWeaveCompilation } from './schedule';
+import type { WeaveExecutionContext, WeaveUpdateRequest } from './schedule';
 import type {
   WeaveBatch,
   WeaveCompileRead,
@@ -411,8 +410,8 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
     /** 待计算或待验证的声明，进入此集合不代表其全部阶段都需要重算 */
     const pending = new Map<string, WeaveUpdateRequest>();
 
-    /** 更新时 full 选择全部作者条目，auto 仅选择已登记变化；首轮的全部任务由挂载入口准备 */
-    const requested = !batch.updating ? [] : batch.forceFull ? paths.keys() : tracker.requests;
+    /** 首轮及 full 选择全部作者条目，auto 仅选择已登记变化 */
+    const requested = !batch.updating || batch.forceFull ? paths.keys() : tracker.requests;
     for (const entry of requested) {
       const path = keyOf(paths.get(entry)!);
       const state = transaction.readState(entry);
@@ -451,16 +450,15 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
       names: batch.addresses.names,
     };
 
-    /** 首轮和更新最终共用编译调度器；这里仅选择初始任务，后续依赖在实际读取时动态补齐 */
-    const compilation = batch.updating
-      ? executeWeaveCompilation<TComposite>(context, {
-          /** full 禁用旧阶段产物；auto 先要求声明位置不变，具体输入、上下文和引用再由执行方核对 */
-          canReuse: entry =>
-            !batch.forceFull && isPropertyPathEqual(batch.previousEntryIrPaths.get(entry) ?? [], paths.get(entry)!),
-          retained,
-          pending,
-        })
-      : executeWeaveMount<TComposite>(context);
+    /** 首轮、full 与 auto 共用调度器；仅 auto 允许复用声明位置不变的旧阶段产物 */
+    const compilation = executeWeaveCompilation<TComposite>(context, {
+      canReuse: entry =>
+        batch.updating &&
+        !batch.forceFull &&
+        isPropertyPathEqual(batch.previousEntryIrPaths.get(entry) ?? [], paths.get(entry)!),
+      retained,
+      pending,
+    });
 
     /** 挂载或声明索引变化后补齐 Scope 对子布局的聚合依赖，仅属性更新时沿用既有结构依赖 */
     if (!batch.updating || batch.indexesChanged)
