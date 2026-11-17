@@ -31,6 +31,7 @@ export const captureBenchmarkContext = (
   root: string,
   sampling: BenchmarkEnvironment['sampling'],
   options: BenchmarkReporterOptions,
+  execution: Pick<BenchmarkEnvironment, 'pool' | 'maxWorkers' | 'isolate'>,
 ): Pick<BenchmarkReport, 'environment' | 'source'> => {
   const repository = execFileSync('git', ['rev-parse', '--show-toplevel'], { cwd: root, encoding: 'utf8' }).trim();
   const models = [...new Set(cpus().map(cpu => cpu.model))].sort();
@@ -52,6 +53,7 @@ export const captureBenchmarkContext = (
         ...listSourceFiles(join(repository, 'scripts', 'benchmarks')),
       ]),
       artifact: options.artifact ?? 'native-esm',
+      ...execution,
       sampling,
     },
     source: {
