@@ -21,6 +21,10 @@ export type BenchmarkEnvironment = {
   /** 用例与加载配置的摘要，防止输入或测量方式改变后误用基线 */
   fixtureHash: string;
   artifact: 'native-esm' | 'vite-source';
+  /** 实际执行隔离与并行设置，区分命令行覆盖后的运行环境 */
+  pool: string;
+  maxWorkers: number;
+  isolate: boolean;
   sampling: { time: number; iterations: number; warmupTime: number; warmupIterations: number };
 };
 
@@ -38,6 +42,8 @@ export type BenchmarkScenario = Omit<BenchmarkIdentity, 'dimensions'> & {
   errors: Array<string>;
   statistics?: LatencySummary;
   measurement?: BenchmarkMeasurement;
+  /** 独立分配阶段的采样事实，不含 worker 背景堆占用 */
+  allocation?: BenchmarkAllocation;
 };
 
 /** 场景实际采用的采样参数与包含预热在内的执行次数 */
@@ -50,9 +56,14 @@ export type BenchmarkMeasurement = {
 };
 
 declare module 'vitest' {
+  interface ProvidedContext {
+    benchmarkPhase?: 'latency' | 'allocation';
+  }
   interface TaskMeta {
     benchmarkDimensions?: ReadonlyArray<string>;
     measurement?: BenchmarkMeasurement;
+    benchmarkPhase?: 'latency' | 'allocation';
+    allocation?: BenchmarkAllocation;
   }
 }
 
@@ -83,15 +94,40 @@ export type BudgetAssessment = {
   blocking?: boolean;
 };
 
+/** V8 分配采样的原始统计；平均 B/op 由估算总量除以 calls 按需计算 */
+export type BenchmarkAllocation = {
+  /** 正式分配阶段实际执行次数，不包含预热 */
+  calls: number;
+  warmupCalls: number;
+  /** 位于被测操作调用栈内的原始分配样本数 */
+  sampleCount: number;
+  /** 正式采样的平均间隔，单位为字节 */
+  samplingInterval: number;
+  reason?: string;
+} & (
+  | { status: 'measured'; estimatedTotalBytes: number }
+  | { status: 'insufficient'; estimatedTotalBytes?: number }
+  | { status: 'unavailable'; estimatedTotalBytes?: number }
+  | { status: 'skipped'; estimatedTotalBytes?: number }
+);
+
+/** 单次分配量的非阻断观察线 */
+export type BenchmarkAllocationPolicy = {
+  warningBytesPerOp: number;
+  /** 观察线依据，不从首次实测倒推 */
+  rationale: string;
+};
+
 /** 本机报告，同时可由人工选择为相对预算的只读基线 */
 export type BenchmarkReport = {
-  version: 2;
+  version: 4;
   /** 模块提供的维度列名，按层级由父到子排列 */
   dimensionLabels: ReadonlyArray<string>;
   createdAt: string;
   environment: BenchmarkEnvironment;
   source: { commit: string; dirty: boolean; sourceHash: string };
   errors: Array<string>;
+  allocationPolicy?: BenchmarkAllocationPolicy;
   scenarios: Array<BenchmarkScenario & { assessment: BudgetAssessment }>;
 };
 
@@ -105,6 +141,8 @@ export type BenchmarkReporterOptions = {
   dimensionLabels: ReadonlyArray<string>;
   /** 场景性能预算 */
   budgets: Readonly<Record<string, BenchmarkBudget>> | ((scenario: BenchmarkScenario) => BenchmarkBudget | undefined);
+  /** 估算单次分配量观察线，不阻断测试或影响耗时预算 */
+  allocationPolicy?: BenchmarkAllocationPolicy;
   /** 人工指定的基线报告路径 */
   baselinePath?: string;
   /** 稳定 runner 标识，省略时使用 hostname */
