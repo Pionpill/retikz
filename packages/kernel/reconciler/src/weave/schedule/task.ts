@@ -12,15 +12,15 @@ export const WeaveTaskPhase = {
 
 export type WeaveTaskPhase = ValueOf<typeof WeaveTaskPhase>;
 
-/** 稳定节点加就绪阶段，不以会随结构修改变化的声明路径作为身份 */
+/** 稳定条目加就绪阶段，不以会随结构修改变化的声明路径作为身份 */
 export type WeaveTaskAddress = Readonly<
-  | { node: WeaveEntry; phase: typeof WeaveTaskPhase.Output }
-  | { node: Extract<WeaveEntry, { type: 'node' | 'coordinate' | 'path' }>; phase: typeof WeaveTaskPhase.Compile }
-  | { node: Extract<WeaveEntry, { type: 'scope' | 'composite' }>; phase: typeof WeaveTaskPhase.Prepare }
-  | { node: Extract<WeaveEntry, { type: 'scope' }>; phase: typeof WeaveTaskPhase.Project }
+  | { entry: WeaveEntry; phase: typeof WeaveTaskPhase.Output }
+  | { entry: Extract<WeaveEntry, { type: 'node' | 'coordinate' | 'path' }>; phase: typeof WeaveTaskPhase.Compile }
+  | { entry: Extract<WeaveEntry, { type: 'scope' | 'composite' }>; phase: typeof WeaveTaskPhase.Prepare }
+  | { entry: Extract<WeaveEntry, { type: 'scope' }>; phase: typeof WeaveTaskPhase.Project }
 >;
 
-/** 只在本批存活的执行记录，不保存领域产物或逐节点回调 */
+/** 只在本批存活的执行记录，不保存领域产物或逐条目回调 */
 export type WeaveTaskRecord = {
   /** 关联稳定身份与该元素支持的阶段 */
   readonly address: WeaveTaskAddress;

@@ -6,12 +6,12 @@ import type { WeaveExecutionContext, WeaveUpdateRequest } from './scheduler';
 /** 为新候选树选择全部作者声明，不读取已提交产物 */
 export const executeWeaveMount = <TComposite extends AnyCompositeDefinition>(context: WeaveExecutionContext) => {
   const pending = new Map<string, WeaveUpdateRequest>();
-  for (const [node, path] of context.paths) {
+  for (const [entry, path] of context.paths) {
     pending.set(JSON.stringify(path), {
-      node,
+      entry,
       inputs: [],
       consume: () => {
-        context.transaction.editNode(node).pendingInputs = [];
+        context.transaction.editState(entry).pendingInputs = [];
       },
     });
   }

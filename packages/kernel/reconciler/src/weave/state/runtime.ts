@@ -59,7 +59,7 @@ export type WeaveBatchState = {
   /** 当前批次是否强制重新计算 */
   readonly forceFull: boolean;
   /** 操作前的声明路径，路径变化时禁止复用旧位置缓存 */
-  readonly previousNodeIrPaths: ReadonlyMap<WeaveEntry, PropertyPath>;
+  readonly previousEntryIrPaths: ReadonlyMap<WeaveEntry, PropertyPath>;
   /** 本批选定的派生寻址索引，完成发布后才保存 */
   addresses?: WeaveAddressIndex;
   /** 结构或命名声明变化，需要重建派生索引 */
@@ -91,7 +91,7 @@ export const createWeaveBatchState = (
     tracker: new WeaveTracker(persistent.root, transaction, persistent.bindings),
     updating,
     forceFull,
-    previousNodeIrPaths: persistent.addresses?.paths ?? new Map(),
+    previousEntryIrPaths: persistent.addresses?.paths ?? new Map(),
     addresses: persistent.addresses,
     indexesChanged: !updating,
     visited: 0,

@@ -1,17 +1,12 @@
 import { RetikzReconcilerError, RetikzReconcilerErrorCode } from '../../error';
 import type { WeaveEntry, WeaveRoot } from '../shared';
 import { WeaveLookup } from './lookup';
-
-/** 状态槽的稳定所有者 */
-type WeaveStateOwner = WeaveEntry | WeaveRoot;
-
-/** 从具体节点类别保留其状态类型 */
-type WeaveStateOf<TNode extends WeaveStateOwner> = NonNullable<TNode['current']>;
+import type { WeaveStateOf, WeaveStateOwner } from './read';
 
 /** 支持按需浅拷贝的状态属性 */
 type WeaveAttribute = ReadonlyMap<unknown, unknown> | ReadonlySet<unknown> | ReadonlyArray<unknown>;
 
-/** 仅允许节点状态中实际存在的可复制属性 */
+/** 仅允许条目状态中实际存在的可复制属性 */
 type WeaveAttributeKey<TState> = TState extends object
   ? {
       [TKey in keyof TState]-?: [NonNullable<TState[TKey]>] extends [never]
@@ -22,7 +17,7 @@ type WeaveAttributeKey<TState> = TState extends object
     }[keyof TState]
   : never;
 
-/** 内部属性访问视图；具体字段与返回类型由 editNodeAttribute 的调用签名约束 */
+/** 内部属性访问视图；具体字段与返回类型由 editStateAttribute 的调用签名约束 */
 type WeaveAttributeState = Partial<Record<WeaveAttributeKey<WeaveStateOf<WeaveStateOwner>>, WeaveAttribute>>;
 
 /** 保留属性成员类型，仅将外层容器转为可写 */
@@ -35,30 +30,15 @@ type EditableWeaveAttribute<TAttribute> =
         ? Array<TElement>
         : never;
 
-/** 读取当前候选视图，供不持有事务对象的派生索引使用 */
-export const readWeaveCandidate = <TNode extends WeaveStateOwner>(node: TNode): Readonly<WeaveStateOf<TNode>> => {
-  const state = node.pending ?? node.current;
-  if (state === null) throw new RetikzReconcilerError(RetikzReconcilerErrorCode.Contract, 'Weave node has no state');
-  return state as Readonly<WeaveStateOf<TNode>>;
-};
-
-/** 读取已提交状态，不把候选当作当前结果 */
-export const readWeaveCurrent = <TNode extends WeaveStateOwner>(node: TNode): Readonly<WeaveStateOf<TNode>> => {
-  if (node.current === null)
-    throw new RetikzReconcilerError(RetikzReconcilerErrorCode.Contract, 'Weave node has no committed state');
-  // 状态只能从同一所有者读取，类别关联由节点联合保证
-  return node.current as Readonly<WeaveStateOf<TNode>>;
-};
-
 /** 每棵树同时只有一个候选工作区 */
 const activeRoots = new WeakSet<WeaveRoot>();
 
 /** 单批状态隔离与提交恢复，不负责输入操作或计算调度 */
 export class WeaveTransaction {
-  /** key 为本事务修改的节点或根，value 为修改前的 current 引用；新节点为 null，用于提交与回滚 */
+  /** key 为本事务修改的条目或根，value 为修改前的 current 引用；新条目为 null，用于提交与回滚 */
   private readonly previous = new Map<WeaveStateOwner, WeaveStateOwner['current']>();
   /** 本事务拥有的外层 Map、Set、Array 副本，避免重复浅拷贝；不表示拥有集合内部成员 */
-  private readonly ownedCollections = new WeakSet<object>();
+  private readonly ownedCollections = new WeakSet<WeaveAttribute>();
   /** preparing 允许编辑，committed 保留回滚依据，closed 表示事务已结束 */
   private phase: 'preparing' | 'committed' | 'closed' = 'preparing';
 
@@ -68,37 +48,37 @@ export class WeaveTransaction {
     activeRoots.add(root);
   }
 
-  /** 获取某个节点的状态 (pending 或 current) */
-  readNode<TNode extends WeaveStateOwner>(node: TNode): Readonly<WeaveStateOf<TNode>> {
+  /** 获取状态所有者的候选或当前状态 */
+  readState<TOwner extends WeaveStateOwner>(owner: TOwner): Readonly<WeaveStateOf<TOwner>> {
     this.assertPreparing();
-    const state = node.pending ?? node.current;
+    const state = owner.pending ?? owner.current;
     if (state === null)
       throw new RetikzReconcilerError(RetikzReconcilerErrorCode.Contract, 'Weave node has no readable state');
-    return state as Readonly<WeaveStateOf<TNode>>;
+    return state as Readonly<WeaveStateOf<TOwner>>;
   }
 
   /** 首次写入仅复制状态壳；共享字段仍保持只读 */
-  editNode<TNode extends WeaveStateOwner>(node: TNode): WeaveStateOf<TNode> {
+  editState<TOwner extends WeaveStateOwner>(owner: TOwner): WeaveStateOf<TOwner> {
     this.assertPreparing();
-    if (!this.previous.has(node)) this.previous.set(node, node.current);
-    if (node.pending === null) {
-      if (node.current === null)
+    if (!this.previous.has(owner)) this.previous.set(owner, owner.current);
+    if (owner.pending === null) {
+      if (owner.current === null)
         throw new RetikzReconcilerError(RetikzReconcilerErrorCode.Contract, 'Weave node has no readable state');
-      node.pending = { ...node.current };
+      owner.pending = { ...owner.current };
     }
-    return node.pending;
+    return owner.pending;
   }
 
   /**
    * 获取候选状态中可安全修改的属性；同批首次写入浅拷贝，之后复用副本
    * @remarks 仅支持 Map、Set、Array；内部成员仍只读共享，可选属性不存在时不自动创建
    */
-  editNodeAttribute<
-    TNode extends WeaveStateOwner,
-    TKey extends keyof WeaveStateOf<TNode> & WeaveAttributeKey<WeaveStateOf<TNode>>,
-  >(node: TNode, key: TKey): EditableWeaveAttribute<NonNullable<WeaveStateOf<TNode>[TKey]>>;
-  editNodeAttribute(node: WeaveStateOwner, key: keyof WeaveAttributeState): WeaveAttribute {
-    const state: WeaveAttributeState = this.editNode(node);
+  editStateAttribute<
+    TOwner extends WeaveStateOwner,
+    TKey extends keyof WeaveStateOf<TOwner> & WeaveAttributeKey<WeaveStateOf<TOwner>>,
+  >(owner: TOwner, key: TKey): EditableWeaveAttribute<NonNullable<WeaveStateOf<TOwner>[TKey]>>;
+  editStateAttribute(owner: WeaveStateOwner, key: keyof WeaveAttributeState): WeaveAttribute {
+    const state: WeaveAttributeState = this.editState(owner);
     const source = state[key];
     if (source === undefined)
       throw new RetikzReconcilerError(RetikzReconcilerErrorCode.Contract, 'Weave state attribute is absent', {
@@ -112,11 +92,11 @@ export class WeaveTransaction {
   }
 
   /** 删除成员不再提交其候选状态；已提交对象留给回滚结构引用 */
-  discardNode(node: WeaveEntry): void {
+  discardEntry(entry: WeaveEntry): void {
     this.assertPreparing();
-    if (this.previous.has(node)) {
-      node.pending = null;
-      this.previous.delete(node);
+    if (this.previous.has(entry)) {
+      entry.pending = null;
+      this.previous.delete(entry);
     }
   }
 
@@ -124,16 +104,16 @@ export class WeaveTransaction {
   commit(): void {
     this.assertPreparing();
     // 先验证全部状态，避免检查失败时产生部分切换
-    for (const node of this.previous.keys()) {
+    for (const entry of this.previous.keys()) {
       if (
-        node.pending === null ||
-        (node.type !== 'root' && node.type !== 'composite' && node.pending.compile === undefined)
+        entry.pending === null ||
+        (entry.type !== 'root' && entry.type !== 'composite' && entry.pending.compile === undefined)
       )
         throw new RetikzReconcilerError(RetikzReconcilerErrorCode.Compile, 'Cannot commit unfinished Weave state');
     }
-    for (const node of this.previous.keys()) {
-      node.current = node.pending;
-      node.pending = null;
+    for (const entry of this.previous.keys()) {
+      entry.current = entry.pending;
+      entry.pending = null;
     }
     this.phase = 'committed';
   }
@@ -148,9 +128,9 @@ export class WeaveTransaction {
   /** 放弃候选，或恢复已切换但尚未确认的状态 */
   rollback(): void {
     if (this.phase === 'closed') return;
-    for (const [node, previous] of this.previous) {
-      node.current = previous;
-      node.pending = null;
+    for (const [entry, previous] of this.previous) {
+      entry.current = previous;
+      entry.pending = null;
     }
     this.closeTransaction();
   }

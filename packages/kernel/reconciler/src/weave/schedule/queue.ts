@@ -24,7 +24,7 @@ export class WeaveTaskQueue {
 
   /** 查询本批已登记的边界，不因探测而提前建立任务 */
   has(address: WeaveTaskAddress): boolean {
-    return this.tasks.get(address.node)?.has(address.phase) === true;
+    return this.tasks.get(address.entry)?.has(address.phase) === true;
   }
 
   /** 通知一个尚未完成的阶段，相同通知不产生第二份执行记录 */
@@ -60,7 +60,7 @@ export class WeaveTaskQueue {
           ? cause
           : new RetikzReconcilerError({
               code: RetikzReconcilerErrorCode.Compile,
-              message: `Weave stage failed: ${address.node.type}:${address.phase}`,
+              message: `Weave stage failed: ${address.entry.type}:${address.phase}`,
               cause,
             });
       throw this.failure;
@@ -80,8 +80,8 @@ export class WeaveTaskQueue {
 
   private record(address: WeaveTaskAddress): WeaveTaskRecord {
     if (this.failure !== undefined) throw this.failure;
-    let phases = this.tasks.get(address.node);
-    if (phases === undefined) this.tasks.set(address.node, (phases = new Map()));
+    let phases = this.tasks.get(address.entry);
+    if (phases === undefined) this.tasks.set(address.entry, (phases = new Map()));
     let record = phases.get(address.phase);
     if (record === undefined) {
       record = { address, state: 'pending' };
@@ -94,10 +94,10 @@ export class WeaveTaskQueue {
   private fail(reason: 'cycle' | 'invalidated-running', address: WeaveTaskAddress): never {
     throw new RetikzReconcilerError({
       code: RetikzReconcilerErrorCode.Compile,
-      message: `Weave stage ${reason}: ${address.node.type}:${address.phase}`,
+      message: `Weave stage ${reason}: ${address.entry.type}:${address.phase}`,
       details: {
         reason,
-        chain: [...this.active, address].map(task => ({ type: task.node.type, phase: task.phase })),
+        chain: [...this.active, address].map(task => ({ type: task.entry.type, phase: task.phase })),
       },
     });
   }
