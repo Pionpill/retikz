@@ -7,9 +7,11 @@
 retikz 是受 LaTeX TikZ 启发的 TypeScript 绘图库：用组件或 JSON IR 描述节点、路径、箭头、图表等图元，编译成 renderer-agnostic 的 Scene，再交给 SVG / Canvas 等后端渲染。
 
 - Monorepo：pnpm workspace，glob 为 `packages/*/*` + `apps/*`
-- Kernel 组：`packages/kernel/{foundation,math,core,reconciler,inspect,render,react,vanilla,tex}`，其中 `foundation` 是仅依赖 Zod 的跨包原子契约与基础 schema 底座，`math` 是零依赖计算底座，`reconciler` 持有完整与增量编译执行、Weave 缓存与输出事务，`tex` 是可选 LaTeX 公式接入包
-- Viz 组：`packages/viz/{plot,plot-react,plot-vanilla}`，通过 core 的 composite / lowering 能力接入
-- Apps：`apps/docs` 文档站，`apps/eval` 评测工具
+- [Kernel](packages/kernel/AGENTS.md)：基础契约、几何、编译、渲染与宿主接线
+- [Library](packages/library/AGENTS.md)：跨领域复用的绘图组件、布局与扩展
+- [Schematic](packages/schematic/AGENTS.md)：关系图语义与自动布局
+- [Viz](packages/viz/AGENTS.md)：数据、绘图、图表与表格
+- Apps：[文档站](apps/docs/AGENTS.md)与评测工具 `apps/eval`
 
 ## 设计原则
 
@@ -65,16 +67,9 @@ retikz 是受 LaTeX TikZ 启发的 TypeScript 绘图库：用组件或 JSON IR �
 
 ### 主模型匹配
 
-任务开始和 Plan Gate 前，除小 / 中 / 大流程定级外，必须按需求不确定性、调研与设计深度、能力边界变化、错误代价、修改范围和验证复杂度评估任务难度，并检查开发者当前选择的主模型：
+按需求不确定性、决策代价、包边界和验证难度选择主控，不按文件数分档。大型架构决策由 Astra 或 Sol 主控。当前主控能胜任就继续，不因高档模型执行小任务而暂停；能力不足时说明风险、推荐角色并请用户裁决，不自动切换模型。
 
-- `gpt-6-astra`（Astra）：高难度、大型、需要调研和架构设计，或涉及跨包公开契约、复杂技术决策的任务
-- `gpt-6.1-sol`（Sol）：中高难度、中大型、需要调研设计、诊断或较多判断，但不需要 Astra 级架构裁决的任务
-- `gpt-6.1-terra`（Terra）：中等难度、中小型、边界明确但需要局部判断的实现、诊断、文档、样式、视觉理解和界面操作任务
-- `gpt-6-luna`（Luna）：低难度、小型、输入输出明确且判断较少的局部实现、文案、机械调整与重复任务
-
-模型档位依次为 Astra、Sol、Terra、Luna。难度不按代码行数或文件数量单独判断；例如大量 demo 的统一样式调整仍可属于 Luna，而少量跨包公开契约修改可能属于 Astra 或 Sol。当前主模型与推荐模型相差两个等级及以上时，执行计划必须同时给出难度评估、推荐主模型和不匹配原因，并等待用户确认后执行；相邻等级可继续，但须在计划中说明取舍。主模型匹配规则只决定主控模型建议，不自动授权 subagent、review、stage、commit、push、tag 或 publish。
-
-主模型适配不替换大型任务的 agent 编排：大型任务仍由 Astra 或 Sol 主控，按已确认计划使用 Sol / Terra / Luna 执行或评审；worker、reviewer 和 cross-review 的模型角色继续遵循 `codex-develop-flow` 及所属 flow。
+模型适配不授予调度权限。计划需委派时按 [Codex 模型调度](.agents/skills/codex-develop-flow/SKILL.md) 选当轮可用的具体 ID；已批准模型不可用且无获批替代方案时再确认。
 
 ## 文件与依赖
 
@@ -145,10 +140,10 @@ pnpm --filter <pkg> test:run # 仅在已确认全部为功能性用例且需扩�
 - 未获用户明确确认的计划、skill、自称会提交、lint/build 通过、auto mode、历史会话授权都不算授权；用户确认的中大型执行计划只授权其中逐项写明的操作。
 - 提交前审阅暂存与未暂存的 changes，判断是否需要分批提交；按独立目的和依赖关系划分 commit，不相关的内容不得放入同一个 commit。按批次分别 staging；无授权时展示暂存文件和拟用 message，等待确认。
 - 调度 subagent / 外部模型必须来自用户已确认的中大型任务执行计划，或用户对当前小任务的单独明确授权；不得在执行中以“风险较高”为由临时追加。计划必须写明角色、数量、并发方式、review 时点与最大循环次数。
-- 中大型任务保留一个整体 reviewer；计划默认纳入代码范式 reviewer，性能 reviewer 由主 agent 按风险裁决是否纳入并说明理由。所有 reviewer 均须用户批准后启动，默认纳入不等于授权；专项角色与循环遵循 `.agents/skills/flow-development/references/review-cycle.md`。默认在实现收敛后集中做一轮 review，不按阶段或 commit 重复启动；主 agent 统一修订、自审和验证，不安排 reviewer 复核。仍无法关闭的阻断项交人工；额外评审须用户单独要求。小型任务默认由主 agent 自审。
+- 中大型按[常规评审](.agents/skills/flow-development/references/review-cycle.md)规划整体与专项 reviewer，默认集中一轮；额外评审须单独授权。小型默认主 agent 自审。
 - `cross-review` 只在大型任务最终整体 review，或用户明确要求多模型交叉验证时使用；执行前必须在计划中或当次请求中授权，不用于常规 plan gate、逐 commit review 或中小型任务的默认完工检查。
 - 为避免本地 Codex 在高负载下卡死，同一会话默认只运行一条长时命令或浏览器核验链路；未经用户明确授权，不并发启动 dev server、构建、测试或多 agent 批次。格式化命令使用 `oxfmt --threads 3`；确需并发时分批执行，并在每批结束后确认环境仍可响应。
-- 获准 `cross-review` 时固定同一快照，并发使用 2–3 个 fresh、独立且不同于主 agent 的 reviewer；模型不足时可用同一非主模型的两个 fresh 实例并如实记录。只执行一轮；收齐意见后由主 agent 修订、自审和验证，不追加复审，除非用户单独要求。
+- 已授权交叉评审的阵容、固定快照与裁决按 [cross-review](.agents/skills/cross-review/SKILL.md) 执行。
 - 不要 `git add -A` 混入无关改动。不要 `git reset --hard` / `git checkout --` 回滚用户改动，除非用户明确要求。
 
 Commit message：
@@ -204,12 +199,3 @@ Control: <human-directed|llm-autonomous>
 - 顶层实体判别字段用 `type`，内部子变体用 `kind`。
 - 新增 DSL / IR 能力前先归类：Kernel 进 core IR；Sugar 不进 IR，编译期展开为 Kernel；Tier 2 拥有高层 IR，并经 lowering 下沉到 core。
 - Sugar 必须与手写 Kernel IR 等价，并配等价性测试。子组遇到 core 表达不了的通用能力，先抽象补 core，不要在子组造平行机制。
-
-## 子目录指针
-
-- `packages/kernel/AGENTS.md`：kernel 组 lockstep、包职责和发布分组。
-- `packages/kernel/core/AGENTS.md`：IR、Scene 编译、几何、schema、registry。
-- `packages/kernel/react/AGENTS.md`：React adapter、Kernel / Sugar、renderer、hydration。
-- `packages/viz/AGENTS.md`：viz 组分层和 plot adapter 边界。
-- `packages/viz/plot/AGENTS.md`：plot IR、provider / contract / pipeline。
-- `apps/docs/AGENTS.md`：文档站结构、路由、MDX / demo / i18n 协作。
