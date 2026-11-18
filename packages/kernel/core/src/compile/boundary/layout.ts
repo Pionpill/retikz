@@ -1,10 +1,11 @@
 import type { PropertyPath } from '@retikz/foundation';
 import { formatPropertyPath } from '@retikz/foundation';
 import type { CenteredBox, Position } from '@retikz/math';
-import { DEG_TO_RAD, point } from '@retikz/math';
+import { DEFAULT_EPSILON, DEG_TO_RAD, lerp, point } from '@retikz/math';
 
 import type { BoundaryDefinition, ConnectionEnvelope, ConnectionEnvelopeKind } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
+import { rectangle } from '../../providers/shape';
 import type { CanonicalNodeBoundary } from '../../resolve';
 import {
   boundaryKey,
@@ -215,6 +216,55 @@ export const evaluateBoundaryPoint = (
   return snapshotProviderPosition(`Boundary '${boundaryKey(boundary)}' boundaryPoint`, raw);
 };
 
+/** 注册项允许由调用方持有；仅优化未被替换的内置求交实现 */
+const builtinRectanglePoint = rectangle.computeBoundaryPoint;
+
+const clipBisectionIterations = 48;
+const clipParameterSteps = 2 ** clipBisectionIterations;
+
+/** 预测轴对齐直边矩形向同侧出界的正交线段交点；其余线段保持 provider 二分 */
+const orthogonalRectangleExit = (
+  bounds: CenteredBox,
+  inside: Position,
+  outside: Position,
+  contains: (position: Position) => boolean,
+): Position | undefined => {
+  if (bounds.rotate || bounds.width / 2 <= DEFAULT_EPSILON || bounds.height / 2 <= DEFAULT_EPSILON) return undefined;
+  const horizontal = inside[1] === outside[1];
+  if (!horizontal && inside[0] !== outside[0]) return undefined;
+
+  // 不绕过原二分在极大坐标下的中点溢出及其诊断
+  const midpointLimit = Number.MAX_VALUE / 2;
+  if (Math.max(Math.abs(inside[0]), Math.abs(outside[0]), Math.abs(inside[1]), Math.abs(outside[1])) > midpointLimit)
+    return undefined;
+
+  const axis = horizontal ? 0 : 1;
+  const center = horizontal ? bounds.x : bounds.y;
+  const half = (horizontal ? bounds.width : bounds.height) / 2;
+  const tangentFraction = horizontal
+    ? Math.abs(inside[1] - bounds.y) / (bounds.height / 2)
+    : Math.abs(inside[0] - bounds.x) / (bounds.width / 2);
+  const start = inside[axis] - center;
+  const end = outside[axis] - center;
+  // 起点与终点都朝向同一条边，远离中心和角点切换区；沿线段的内外判定单调
+  if (
+    Math.abs(start) < 1e-12 ||
+    Math.abs(start) / half <= tangentFraction ||
+    Math.abs(start) >= half ||
+    Math.sign(start) !== Math.sign(end) ||
+    Math.abs(end) <= half
+  )
+    return undefined;
+
+  const fraction = (Math.sign(end) * half - start) / (end - start);
+  const step = Math.floor(fraction * clipParameterSteps);
+  if (!(step >= 0 && step < clipParameterSteps)) return undefined;
+  const lower = lerp(inside, outside, step / clipParameterSteps);
+  const upper = lerp(inside, outside, (step + 1) / clipParameterSteps);
+  // 以原 provider 验证一个二分末级区间；舍入导致夹点不可靠时不采用预测
+  return contains(lower) && !contains(upper) ? upper : undefined;
+};
+
 /** 沿折线移除起始连接面内的前缀，保留原线段上的出界交点 */
 export const clipBoundaryPolyline = (
   layout: CompiledBoundaryGeometry,
@@ -245,7 +295,15 @@ export const clipBoundaryPolyline = (
     // 沿原线段求内外分界，避免改用中心射线后破坏正交方向
     let inside = points[index - 1];
     let edge = outside;
-    for (let iteration = 0; iteration < 48; iteration += 1) {
+    if (
+      def === rectangle &&
+      def.computeBoundaryPoint === builtinRectanglePoint &&
+      ('cornerRadius' in params ? params.cornerRadius === 0 : true)
+    ) {
+      const hit = orthogonalRectangleExit(outer, inside, outside, contains);
+      if (hit !== undefined) return [hit, ...points.slice(index)];
+    }
+    for (let iteration = 0; iteration < clipBisectionIterations; iteration += 1) {
       const midpoint: Position = [(inside[0] + edge[0]) / 2, (inside[1] + edge[1]) / 2];
       if (contains(midpoint)) inside = midpoint;
       else edge = midpoint;
