@@ -54,11 +54,7 @@ export const rectangle = defineShape<RectangleParams>({
   computeBoundaryPoint: (bounds: CenteredBox, toward: Position, params): Position => {
     const halfWidth = bounds.width / 2;
     const halfHeight = bounds.height / 2;
-    if (
-      (params.cornerRadius === undefined || params.cornerRadius === 0) &&
-      halfWidth > DEFAULT_EPSILON &&
-      halfHeight > DEFAULT_EPSILON
-    ) {
+    if (halfWidth > DEFAULT_EPSILON && halfHeight > DEFAULT_EPSILON) {
       const localToward = worldToLocal(bounds, toward);
       if (Math.hypot(localToward[0], localToward[1]) < 1e-12) return [bounds.x, bounds.y];
       const directionX = localToward[0] / halfWidth;
@@ -75,7 +71,13 @@ export const rectangle = defineShape<RectangleParams>({
         b1: edge.from,
         b2: edge.to,
       });
-      return hit === null ? [bounds.x, bounds.y] : localToWorld(bounds, [hit[0] * halfWidth, hit[1] * halfHeight]);
+      if (hit === null) return [bounds.x, bounds.y];
+      const localHit: Position = [hit[0] * halfWidth, hit[1] * halfHeight];
+      const radius = params.cornerRadius ?? 0;
+      // ⚡命中边到最近顶点的距离大于请求半径时，圆角不可能裁掉该交点
+      const cornerDistance =
+        absoluteX > absoluteY ? halfHeight - Math.abs(localHit[1]) : halfWidth - Math.abs(localHit[0]);
+      if (radius === 0 || cornerDistance > radius) return localToWorld(bounds, localHit);
     }
 
     const verts = rectVertices(bounds);
