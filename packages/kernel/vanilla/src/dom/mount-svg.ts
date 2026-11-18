@@ -184,13 +184,20 @@ const mountRetainedSvg = (
     idPrefix: output.idPrefix ?? DEFAULT_ID_PREFIX,
   });
   container.appendChild(root);
+  let rootRemoved = false;
 
   return {
     mode: VanillaViewMode.Retained,
     root,
     update: processing.update,
     hydrate: processing.hydrate,
-    dispose: processing.dispose,
+    dispose: () => {
+      processing.dispose();
+      if (!rootRemoved) {
+        root.remove();
+        rootRemoved = true;
+      }
+    },
     diagnostics: processing.diagnostics,
     get animation() {
       return processing.read().animation;

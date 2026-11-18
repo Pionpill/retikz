@@ -6,6 +6,7 @@ import type {
   IRScope,
 } from '@retikz/core';
 import { CURRENT_IR_VERSION } from '@retikz/core';
+import { RetikzError } from '@retikz/foundation';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../error';
 import type {
@@ -18,7 +19,7 @@ import type {
 } from '../embed';
 import type { InputNode } from '../node';
 import { normalizeNode } from '../node';
-import type { InputPath } from '../path';
+import type { InputPath, InputStep } from '../path';
 import { normalizePath } from '../path';
 import type { InputScope } from '../scope';
 import { normalizeScopeWithChildren } from '../scope';
@@ -155,17 +156,12 @@ const hasInputPathSteps = (child: InputChild): boolean => inputChildrenOf(child)
 /** 判断省略 type 的输入是否有可用于识别 Scope 的非空 children */
 const hasInputChildren = (child: InputChild): boolean => (inputChildrenOf(child)?.length ?? 0) > 0;
 
-/** 判断已带 Scope 判别字段的容器是否仍含有需要 Vanilla 归一化的 authoring 子树 */
-const hasNestedInput = (child: InputChild): boolean =>
-  inputChildrenOf(child)?.some(nested => {
-    if ('authoring' in nested) return true;
-    if (nested.type === undefined || nested.type === 'embed') return true;
-    if (nested.type === 'path' && ('way' in nested || ('arrow' in nested && typeof nested.arrow === 'string'))) {
-      return true;
-    }
-
-    return nested.type === 'scope' && hasNestedInput(nested as InputChild);
-  }) ?? false;
+/** 只有作者侧 target 简写需要转换，纯 Core 步骤保持原样 */
+const hasTargetShorthand = (step: InputStep): boolean =>
+  ('to' in step && typeof step.to === 'string') ||
+  (step.kind === 'rectangle' && typeof step.from === 'string') ||
+  (step.kind === 'arc' && typeof step.center === 'string') ||
+  (step.kind === 'smooth' && step.points.some(point => typeof point === 'string'));
 
 /** 判断一个 child 是否为需经 Vanilla 处理的作者侧路径 */
 const isInputPath = (child: InputChild): child is InputPath =>
@@ -173,7 +169,21 @@ const isInputPath = (child: InputChild): child is InputPath =>
   (child.type === undefined
     ? 'way' in child || hasInputPathSteps(child) || 'kind' in child
     : child.type === 'path' &&
-      ('authoring' in child || 'way' in child || ('arrow' in child && typeof child.arrow === 'string')));
+      ('authoring' in child ||
+        'way' in child ||
+        typeof child.arrow === 'string' ||
+        child.children?.some(hasTargetShorthand) === true));
+
+/** 判断已带 Scope 判别字段的容器是否仍含有需要 Vanilla 归一化的 authoring 子树 */
+const hasNestedInput = (scope: InputScope): boolean =>
+  scope.children.some(
+    child =>
+      'authoring' in child ||
+      child.type === undefined ||
+      child.type === 'embed' ||
+      isInputPath(child) ||
+      (child.type === 'scope' && !('namespace' in child) && hasNestedInput(child)),
+  );
 
 /** 判断一个 child 是否为 Core Scope 或 InputScope */
 const isInputScope = (child: InputChild): child is InputScope =>
@@ -470,7 +480,17 @@ const normalizeEmbed = (input: AnyInputEmbed, embedId: string, ctx: SceneNormali
         reusedEmbedIdentity,
       ),
   };
-  const contribution = adapter.lower(input.props as never, context);
+  let contribution: InputEmbedContribution;
+  try {
+    contribution = adapter.lower(input.props as never, context);
+  } catch (cause) {
+    if (cause instanceof RetikzError) throw cause;
+    throw new RetikzVanillaError(
+      RetikzVanillaErrorCode.Normalize,
+      `normalizeScene: adapter "${input.kind}" failed to lower embed "${embedId}" at ${ctx.sourcePath}`,
+      { cause },
+    );
+  }
 
   for (const binding of contribution.runtimeInputs ?? [])
     ctx.runtimeInputs.push(

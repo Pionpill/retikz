@@ -10,8 +10,28 @@ import {
 import { describe, expect, it, vi } from 'vitest';
 import { literal, string } from 'zod';
 
-import type { InputChild, InputEmbedAdapter, InputScene, SynchronousInputEmbedAdapter } from '../../src';
-import { coordinate, embed, InputLayerCache, layer, node, normalizeScene, path, scene, scope } from '../../src';
+import type {
+  InputChild,
+  InputEmbedAdapter,
+  InputPath,
+  InputScene,
+  InputStep,
+  SynchronousInputEmbedAdapter,
+} from '../../src';
+import {
+  coordinate,
+  embed,
+  InputLayerCache,
+  layer,
+  node,
+  normalizePath,
+  normalizeScene,
+  RetikzVanillaError,
+  RetikzVanillaErrorCode,
+  path,
+  scene,
+  scope,
+} from '../../src';
 import { compileTestResult } from '../helpers/compilation';
 
 it('Node 与 Coordinate 的 opaque authoring 只进入来源站点，不进入嵌套 Core IR', () => {
@@ -181,6 +201,33 @@ describe('@retikz/vanilla InputScene', () => {
     ]);
   });
 
+  it.each([
+    { type: 'step', kind: 'line', to: 'b.center' },
+    { type: 'step', kind: 'rectangle', from: 'a.center', to: [1, 1] },
+    { type: 'step', kind: 'arc', center: 'a.center', startAngle: 0, endAngle: 90, radius: 1 },
+    { type: 'step', kind: 'smooth', points: [[0, 0], 'b.center'] },
+  ] satisfies Array<InputStep>)('显式 Path 的 $kind 字符串目标在 Scene 和嵌套 Scope 使用相同归一化', step => {
+    const input: InputPath = { type: 'path', children: [{ type: 'step', kind: 'move', to: [0, 0] }, step] };
+    const expected = normalizePath(input);
+    expect(normalizeScene({ children: [input] }).ir.children).toEqual([expected]);
+    expect(normalizeScene({ children: [{ type: 'scope', children: [input] }] }).ir.children).toMatchObject([
+      { type: 'scope', children: [expected] },
+    ]);
+  });
+
+  it('同步 adapter 失败由 Vanilla 报告并保留原始异常', () => {
+    const cause = new Error('external adapter failure');
+    const adapter: SynchronousInputEmbedAdapter = {
+      kind: 'broken',
+      lower: () => {
+        throw cause;
+      },
+    };
+    expect(() => normalizeScene(scene([embed({ kind: 'broken', props: {} })]), { adapters: [adapter] })).toThrow(
+      expect.objectContaining({ constructor: RetikzVanillaError, code: RetikzVanillaErrorCode.Normalize, cause }),
+    );
+  });
+
   it('直接传入的 Core Path 保持原有步骤语义，不进入 InputPath 归一化', () => {
     const corePath: IRPath = {
       type: 'path',
@@ -191,6 +238,10 @@ describe('@retikz/vanilla InputScene', () => {
     };
 
     expect(normalizeScene({ children: [corePath] }).ir.children[0]).toBe(corePath);
+    const nested = normalizeScene({
+      children: [{ type: 'scope', children: [corePath, node({ id: 'sibling', authoring: true })] }],
+    }).ir.children[0];
+    expect(nested.type === 'scope' && !('namespace' in nested) && nested.children[0]).toBe(corePath);
   });
 
   it('直接 Core Path 的 host 与 step label interrupt 经归一化后保持 JSON 合法', () => {
