@@ -38,7 +38,16 @@ export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinitio
 ) => {
   const { source, runtime, recordComputed, writeContribution, root, transaction, paths, names } = executionContext;
   const { canReuse, retained, pending } = selection;
-  const keyOf = (entry: WeaveEntry) => JSON.stringify(paths.get(entry));
+  // ⚡本次执行期间路径已固定，复用任务键以避免深 Scope 调度重复序列化
+  const keys = new Map<WeaveEntry, string>();
+  const keyOf = (entry: WeaveEntry) => {
+    let key = keys.get(entry);
+    if (key === undefined) {
+      key = JSON.stringify(paths.get(entry));
+      keys.set(entry, key);
+    }
+    return key;
+  };
   const executions = new Map<WeaveEntry, WeaveElementExecution>();
   const namespaces = new Map<WeaveRoot | WeaveScopeEntry, CompileNamespaceKey>();
   const owners = new Map<WeaveScopeEntry, CompileOwnerKey>();
@@ -48,7 +57,8 @@ export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinitio
   namespaces.set(root, runtime.state.execution.namespaceStack.identity);
   const rootExecutor = new CompileElementExecutor(source.children, runtime, {
     compileSubtree: assembleCompileSubtree,
-    skipAllocation: false,
+    // ⚡Scene 根输出不消费父布局占位，跳过逐层传播；独立 Composite 测量仍按需开启
+    skipAllocation: true,
   });
   const rootFrame = rootExecutor.createRootRuntime();
 
@@ -274,6 +284,12 @@ export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinitio
             execution.executor.output,
             execution.frame.state,
             execution.bindings,
+            entry.type === 'composite'
+              ? {
+                  paints: runtime.state.workspace.paintRegistry.getResources(),
+                  clips: runtime.state.workspace.clipRegistry.getResources(),
+                }
+              : transaction.readState(entry).compile!.resources,
             { sourcePath: path, expansionPath: [] },
             execution.semanticOwner,
           ),

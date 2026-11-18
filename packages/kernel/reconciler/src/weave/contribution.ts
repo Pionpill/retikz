@@ -1,4 +1,4 @@
-import type { ScenePrimitive, CompileOccurrenceLocator } from '@retikz/core';
+import type { ScenePrimitive, SceneResources, CompileOccurrenceLocator } from '@retikz/core';
 import { isPropertyPathEqual } from '@retikz/foundation';
 
 import type {
@@ -20,6 +20,7 @@ export const captureWeaveContribution = (
   output: TreeOutputState,
   state: SubtreeCompileState,
   bindings: ReadonlyArray<NamespaceFrameChange>,
+  resources: SceneResources,
   occurrence: CompileOccurrenceLocator,
   semanticOwner?: CompileOwnerKey,
 ): WeaveContribution => {
@@ -47,10 +48,8 @@ export const captureWeaveContribution = (
     },
     zIndices: primitives.map(primitive => output.zIndexMap.get(primitive)),
     bindings,
-    resources: collectContributionResources(primitives, {
-      paints: workspace.paintRegistry.getResources(),
-      clips: workspace.clipRegistry.getResources(),
-    }),
+    // ⚡基础元素只扫描已记录的局部资源，避免逐元素重建全局资源索引
+    resources: collectContributionResources(primitives, resources),
     diagnostics: workspace.diagnosticCollector.warnings.filter(warning =>
       isPropertyPathEqual(compileWarningOccurrenceOf(warning).sourcePath, occurrence.sourcePath),
     ),

@@ -36,14 +36,21 @@ export const createWeaveObservation = (
       retainResource(value.id);
       return value;
     },
-    getResources: () => workspace.paintRegistry.getResources().filter(resource => resourceIds.has(resource.id)),
+    // ⚡未登记资源的计算不枚举其它元素已经登记的全局资源
+    getResources: () =>
+      resourceIds.size === 0
+        ? []
+        : workspace.paintRegistry.getResources().filter(resource => resourceIds.has(resource.id)),
   };
   const clipRegistry: ClipRegistry = {
     lower: workspace.clipRegistry.lower,
     register: clip => retainResource(workspace.clipRegistry.register(clip)),
     registerPath: clip => retainResource(workspace.clipRegistry.registerPath(clip)),
     importResource: resource => retainResource(workspace.clipRegistry.importResource(resource)),
-    getResources: () => workspace.clipRegistry.getResources().filter(resource => resourceIds.has(resource.id)),
+    getResources: () =>
+      resourceIds.size === 0
+        ? []
+        : workspace.clipRegistry.getResources().filter(resource => resourceIds.has(resource.id)),
   };
   const local: CompileRuntime = {
     ...runtime,
