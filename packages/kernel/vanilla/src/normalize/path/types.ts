@@ -1,4 +1,5 @@
 import type { IRAxisLineTarget, IRPath, IRStep, IRStepLabel, IRTarget } from '@retikz/core';
+import type { RequireExactlyOne } from '@retikz/foundation';
 
 import type { WayDSL } from './way';
 
@@ -117,20 +118,18 @@ export type InputStep =
   | InputRectangleStep
   | InputSmoothStep;
 
-/** 作者侧路径输入的公共字段 */
-type InputPathBase = Omit<IRPath, 'type' | 'children' | 'arrow'> & {
+/** 具名路径构造函数的配置，必须选择一种步骤来源 */
+export type InputPathConfig = Omit<IRPath, 'type' | 'children' | 'arrow'> & {
   /** 端点箭头配置，或用方向字符串快捷启用起点、终点或两端箭头 */
   arrow?: IRPath['arrow'] | '->' | '<-' | '<->';
-  /** 路径步骤序列；与 way 互斥 */
-  children?: ReadonlyArray<InputStep>;
-  /** TikZ 风格的路径走向简写 */
-  way?: WayDSL;
   /** 可选编译驱动自行解释的运行时载荷，不进入 Core IR */
   authoring?: unknown;
-};
+} & RequireExactlyOne<{
+    /** 路径步骤序列；与 way 互斥 */
+    children: ReadonlyArray<InputStep>;
+    /** TikZ 风格的路径走向简写 */
+    way: WayDSL;
+  }>;
 
 /** 作者侧路径输入 */
-export type InputPath = InputPathBase & {
-  /** 无法由 authoring 字段唯一识别时显式指定路径类别 */
-  type?: 'path';
-};
+export type InputPath = Pick<IRPath, 'type'> & InputPathConfig;

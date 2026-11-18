@@ -908,6 +908,9 @@ importers:
 
   packages/library/layout-react:
     dependencies:
+      '@retikz/foundation':
+        specifier: workspace:^
+        version: link:../../kernel/foundation
       '@retikz/layout':
         specifier: workspace:*
         version: link:../layout

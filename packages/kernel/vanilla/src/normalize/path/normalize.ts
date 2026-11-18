@@ -100,19 +100,7 @@ export const normalizePath = (input: InputPath): IRPath => {
   const { type: _type, authoring: _authoring, way, children, arrow, ...path } = input;
   void _type;
   void _authoring;
-  if (way !== undefined && children !== undefined) {
-    throw new RetikzVanillaError(
-      RetikzVanillaErrorCode.Normalize,
-      'normalizePath: use either way or children, not both',
-    );
-  }
-
-  const authoredChildren =
-    way === undefined ? (children === undefined ? undefined : children.map(normalizeStep)) : parseWay(way);
-  if (authoredChildren === undefined) {
-    throw new RetikzVanillaError(RetikzVanillaErrorCode.Normalize, 'normalizePath: path requires way or children');
-  }
-
+  const authoredChildren = children !== undefined ? children.map(normalizeStep) : parseWay(way);
   const normalizedChildren = normalizePathChildren(authoredChildren);
   const normalizedArrow = normalizePathArrow(arrow);
 

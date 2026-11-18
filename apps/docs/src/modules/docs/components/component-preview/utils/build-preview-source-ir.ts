@@ -160,9 +160,9 @@ const sourceCoreChildOf = (
     } as IRScope;
   }
 
-  if (input.type === 'path' || input.type === undefined) return normalizePath(input as InputPath);
-
-  return runtime ?? (input as IRChild);
+  if ('way' in input && input.way !== undefined) return normalizePath(input);
+  if (input.children !== undefined) return normalizePath({ ...input, children: input.children });
+  return input;
 };
 
 const sourceGraphChildrenOf = (

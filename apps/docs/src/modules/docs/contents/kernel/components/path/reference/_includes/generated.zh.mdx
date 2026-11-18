@@ -1034,33 +1034,57 @@ export declare const samplePathRoute: (
 
 ## 直接调用
 
-#### <ApiSourceLink label={"path"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={30}>path</ApiSourceLink> / <ApiSourceLink label={"InputPath"} path={"packages/kernel/vanilla/src/normalize/path/types.ts"} startLine={133}>InputPath</ApiSourceLink>
+#### <ApiSourceLink label={"path"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={30}>path</ApiSourceLink> / <ApiSourceLink label={"InputPath"} path={"packages/kernel/vanilla/src/normalize/path/types.ts"} startLine={104}>InputPath</ApiSourceLink>
 
-<DocTabs defaultValue="members">
+**公共属性**
 
-<DocTab value="members" label="属性">
+<ApiTable>
 
-<ApiTable grouped>
+| 成员            | 类型                                       | 默认值 | 说明                                                                                                                                                                         |
+| --------------- | ------------------------------------------ | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `animations?`   | `InputPathConfig['animations']`            | —      | 声明式动画 track 数组（关键帧 + 时长 / 缓动 / 触发器）；用法与 preset 见动画组件文档                                                                                         |
+| `arrow?`        | `IRPath['arrow'] \| '->' \| '<-' \| '<->'` | —      | 端点箭头配置，或用方向字符串快捷启用起点、终点或两端箭头                                                                                                                     |
+| `authoring?`    | `unknown`                                  | —      | 可选编译驱动自行解释的运行时载荷，不进入 Core IR                                                                                                                             |
+| `cornerRadius?` | `number`                                   | —      | 线段相交处的几何圆角半径；与只改变描边外观的 `lineJoin` 不同                                                                                                                 |
+| `id?`           | `string`                                   | —      | 可选稳定 id：供其它元素 anchor 引用，也是水合事件绑定的挂点（带 id 才能给 path 绑 onClick 等 handler）                                                                       |
+| `kind?`         | `string & {} \| "stroke"`                  | —      | Path provider 名；省略时使用内置 `stroke`                                                                                                                                    |
+| `kindOptions?`  | `Record<string, JsonValue>`                | —      | 由选定 Path provider 消费的 JSON-safe 参数对象；完整 schema 在后续解析                                                                                                       |
+| `label?`        | `InputPathConfig['label']`                 | —      | 附着在 Path 或其它 path-like 宿主上的路径标签                                                                                                                                |
+| `marks?`        | `InputPathConfig['marks']`                 | —      | 沿整条路径按步骤参数或累计长度放置内容；每项包含 pos、positionMode、positionGeometry、shape 及外观字段，不截断宿主路径                                                       |
+| `meta?`         | `Record<string, JsonValue>`                | —      | provenance 元数据：原样透传进本路径 emit 的 Scene 图元，renderer 忽略、不参与布局 / 样式；典型由 Tier 2 lowering 注入（标记来自哪个 datum / series / layer），须为 JSON 对象 |
+| `rotate?`       | `number`                                   | —      | 整条 path 旋转角（度，绕包围盒中心）                                                                                                                                         |
+| `scale?`        | `number \| { x: number; y: number; }`      | —      | 整条 path 缩放（数字等比，或 `{ x, y }` 非等比，绕包围盒中心）                                                                                                               |
+| `style?`        | `InputPathConfig['style']`                 | —      | 当前实例的视觉覆盖，按字段继承与覆盖                                                                                                                                         |
+| `type`          | `"path"`                                   | —      | 判别字段，标记此子节点为 path                                                                                                                                                |
+| `zIndex?`       | `number`                                   | —      | 显式栈序：大者在上；缺省 0、同值保持声明顺序；只在同层子节点间生效                                                                                                           |
 
-| 分组   | 成员            | 类型                                       | 默认值 | 说明                                                                                                                                                                         |
-| ------ | --------------- | ------------------------------------------ | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 主要   | `children?`     | `ReadonlyArray<InputStep>`                 | —      | 路径步骤序列；与 way 互斥                                                                                                                                                    |
-|        | `id?`           | `string`                                   | —      | 可选稳定 id：供其它元素 anchor 引用，也是水合事件绑定的挂点（带 id 才能给 path 绑 onClick 等 handler）                                                                       |
-|        | `kind?`         | `string & {} \| "stroke"`                  | —      | Path provider 名；省略时使用内置 `stroke`                                                                                                                                    |
-|        | `kindOptions?`  | `Record<string, JsonValue>`                | —      | 由选定 Path provider 消费的 JSON-safe 参数对象；完整 schema 在后续解析                                                                                                       |
-|        | `label?`        | `InputPath["label"]`                       | —      | 附着在 Path 或其它 path-like 宿主上的路径标签                                                                                                                                |
-|        | `type?`         | `'path'`                                   | —      | 无法由 authoring 字段唯一识别时显式指定路径类别                                                                                                                              |
-|        | `way?`          | `WayDSL`                                   | —      | TikZ 风格的路径走向简写                                                                                                                                                      |
-| 几何   | `arrow?`        | `IRPath['arrow'] \| '->' \| '<-' \| '<->'` | —      | 端点箭头配置，或用方向字符串快捷启用起点、终点或两端箭头                                                                                                                     |
-|        | `cornerRadius?` | `number`                                   | —      | 线段相交处的几何圆角半径；与只改变描边外观的 `lineJoin` 不同                                                                                                                 |
-|        | `marks?`        | `InputPath["marks"]`                       | —      | 沿整条路径按步骤参数或累计长度放置内容；每项包含 pos、positionMode、positionGeometry、shape 及外观字段，不截断宿主路径                                                       |
-|        | `rotate?`       | `number`                                   | —      | 整条 path 旋转角（度，绕包围盒中心）                                                                                                                                         |
-|        | `scale?`        | `number \| { x: number; y: number; }`      | —      | 整条 path 缩放（数字等比，或 `{ x, y }` 非等比，绕包围盒中心）                                                                                                               |
-| 样式   | `style?`        | `InputPath["style"]`                       | —      | 当前实例的视觉覆盖，按字段继承与覆盖                                                                                                                                         |
-|        | `zIndex?`       | `number`                                   | —      | 显式栈序：大者在上；缺省 0、同值保持声明顺序；只在同层子节点间生效                                                                                                           |
-| 动画   | `animations?`   | `InputPath["animations"]`                  | —      | 声明式动画 track 数组（关键帧 + 时长 / 缓动 / 触发器）；用法与 preset 见动画组件文档                                                                                         |
-| 运行时 | `authoring?`    | `unknown`                                  | —      | 可选编译驱动自行解释的运行时载荷，不进入 Core IR                                                                                                                             |
-|        | `meta?`         | `Record<string, JsonValue>`                | —      | provenance 元数据：原样透传进本路径 emit 的 Scene 图元，renderer 忽略、不参与布局 / 样式；典型由 Tier 2 lowering 注入（标记来自哪个 datum / series / layer），须为 JSON 对象 |
+</ApiTable>
+
+公共属性适用于所有分支；输入还需满足至少一个分支的属性约束。
+
+<DocTabs defaultValue="children">
+
+<DocTab value="children" label="属性 · 显式步骤">
+
+<ApiTable>
+
+| 成员       | 类型                       | 默认值 | 说明                      |
+| ---------- | -------------------------- | ------ | ------------------------- |
+| `children` | `ReadonlyArray<InputStep>` | —      | 路径步骤序列；与 way 互斥 |
+| `way?`     | `never`                    | —      | TikZ 风格的路径走向简写   |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="way" label="属性 · 路径简写">
+
+<ApiTable>
+
+| 成员        | 类型     | 默认值 | 说明                      |
+| ----------- | -------- | ------ | ------------------------- |
+| `children?` | `never`  | —      | 路径步骤序列；与 way 互斥 |
+| `way`       | `WayDSL` | —      | TikZ 风格的路径走向简写   |
 
 </ApiTable>
 
@@ -1069,11 +1093,9 @@ export declare const samplePathRoute: (
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export declare const path: (config: Omit<InputPath, 'type'>) => InputPath;
+export declare const path: (config: InputPathConfig) => InputPath;
 
-export type InputPath = InputPathBase & {
-  type?: 'path';
-};
+export type InputPath = Pick<IRPath, 'type'> & InputPathConfig;
 ```
 
 </DocTab>

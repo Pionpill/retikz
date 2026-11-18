@@ -184,7 +184,7 @@ Use Path with explicit Steps for clearer control over multiple subpaths or indiv
 </Path>
 ```
 
-Import `Path` and `Step` from `@retikz/react` and replace Draw inside the existing Layout. Path also accepts `way`, but it cannot be supplied together with explicit steps.
+Import `Path` and `Step` from `@retikz/react` and replace Draw inside the existing Layout. Path also accepts `way`, as an alternative to explicit steps. If both are supplied, the explicit steps take precedence.
 
 ## Additional notes
 
@@ -204,7 +204,7 @@ These are the props most relevant to this page. See the [API reference](/kernel/
       type: 'WayDSL',
       required: true,
       description:
-        'Describes an entire path with relative cursor operations and endpoints; cannot be supplied with explicit `Step` children',
+        'Describes an entire path with relative cursor operations and endpoints; explicit `Step` children take precedence if supplied',
     },
     {
       name: 'style',

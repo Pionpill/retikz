@@ -6,7 +6,7 @@ import type {
   IRScene,
   IRViewBox,
 } from '@retikz/core';
-import type { ValueOf } from '@retikz/foundation';
+import type { RequireExactlyOne, ValueOf } from '@retikz/foundation';
 
 import type { InputCoordinate } from '../coordinate';
 import type { AnyInputEmbed, InputEmbedThemeContextResolver, SynchronousInputEmbedAdapter } from '../embed';
@@ -69,21 +69,19 @@ type InputSceneBase = Omit<IRScene, 'type' | 'version' | 'children'> & {
   authoring?: unknown;
 };
 
-/** 使用 children 简写的作者侧 Scene 输入 */
-export type InputSceneChildren = InputSceneBase & {
+/** 场景的两种互斥内容来源 */
+type SceneSource = RequireExactlyOne<{
   /** 有序子图元，归一化时置于隐式默认层 */
   children: ReadonlyArray<InputChild>;
-  /** children 模式不接受显式 layers */
-  layers?: never;
-};
-
-/** 使用 Layer 列表的作者侧 Scene 输入 */
-export type InputSceneLayers = InputSceneBase & {
   /** 显式分层列表，按 zIndex 稳定排序后归一化 */
   layers: ReadonlyArray<InputLayer>;
-  /** layers 模式不接受顶层 children */
-  children?: never;
-};
+}>;
+
+/** 使用 children 简写的作者侧 Scene 输入 */
+export type InputSceneChildren = InputSceneBase & Extract<SceneSource, { children: unknown }>;
+
+/** 使用 Layer 列表的作者侧 Scene 输入 */
+export type InputSceneLayers = InputSceneBase & Extract<SceneSource, { layers: unknown }>;
 
 /** 作者侧 Scene 输入 */
 export type InputScene = InputSceneChildren | InputSceneLayers;

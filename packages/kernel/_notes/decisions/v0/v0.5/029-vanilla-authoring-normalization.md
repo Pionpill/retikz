@@ -34,10 +34,9 @@ type InputNode = Omit<IRNode, 'type' | 'position' | 'label'> & {
   readonly label?: InputNodeLabel | ReadonlyArray<InputNodeLabel>;
 };
 
-type InputPath = Omit<IRPath, 'type' | 'children'> & {
-  readonly type?: 'path';
-  readonly children?: ReadonlyArray<InputStep>;
-};
+type InputPath = Omit<IRPath, 'children' | 'arrow'> & {
+  readonly arrow?: IRPath['arrow'] | '->' | '<-' | '<->';
+} & RequireExactlyOne<{ children: ReadonlyArray<InputStep>; way: WayDSL }>;
 
 type InputScene = Omit<IRScene, 'type' | 'version' | 'children'> & {
   readonly type?: 'scene';

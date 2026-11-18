@@ -17,14 +17,15 @@ import { type WithRequiredProperties, createOpenStringSchema } from '@retikz/fou
 
 这些类型仅在编译期生效，用来描述或收窄跨包契约。
 
-| 类型                              | 作用                                   |
-| --------------------------------- | -------------------------------------- |
-| `ValueOf<T>`                      | 取得对象所有 value 的联合类型          |
-| `AssertEqual<TActual, TExpected>` | 双向检查两个类型是否等价               |
-| `OpenString<T>`                   | 保留已知字符串提示，同时接受任意字符串 |
-| `WithRequiredProperties<T, TKey>` | 将指定属性收窄为必填，同时保留其余属性 |
-| `WithOptionalProperties<T, TKey>` | 将指定属性扩展为可选，同时保留其余属性 |
-| `NonEmptyReadonlyArray<T>`        | 表示至少包含一个元素的只读数组         |
+| 类型                              | 作用                                                 |
+| --------------------------------- | ---------------------------------------------------- |
+| `ValueOf<T>`                      | 取得对象所有 value 的联合类型                        |
+| `AssertEqual<TActual, TExpected>` | 双向检查两个类型是否等价                             |
+| `OpenString<T>`                   | 保留已知字符串提示，同时接受任意字符串               |
+| `RequireExactlyOne<T>`            | 候选属性中必须且只能提供一个；公共字段放在交叉类型中 |
+| `WithRequiredProperties<T, TKey>` | 将指定属性收窄为必填，同时保留其余属性               |
+| `WithOptionalProperties<T, TKey>` | 将指定属性扩展为可选，同时保留其余属性               |
+| `NonEmptyReadonlyArray<T>`        | 表示至少包含一个元素的只读数组                       |
 
 例如，在局部流程已经保证 `id` 存在后，可以用 `WithRequiredProperties` 将该事实传递给后续函数：
 

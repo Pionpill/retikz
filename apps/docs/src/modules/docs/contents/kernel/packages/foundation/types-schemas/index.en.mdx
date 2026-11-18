@@ -17,14 +17,15 @@ import { type WithRequiredProperties, createOpenStringSchema } from '@retikz/fou
 
 These types exist only at compile time and describe or narrow cross-package contracts.
 
-| Type                              | Purpose                                                           |
-| --------------------------------- | ----------------------------------------------------------------- |
-| `ValueOf<T>`                      | Gets the union of all object values                               |
-| `AssertEqual<TActual, TExpected>` | Checks two types for bidirectional equality                       |
-| `OpenString<T>`                   | Preserves known string hints while accepting any string           |
-| `WithRequiredProperties<T, TKey>` | Narrows selected properties to required while preserving the rest |
-| `WithOptionalProperties<T, TKey>` | Makes selected properties optional while preserving the rest      |
-| `NonEmptyReadonlyArray<T>`        | Represents a readonly array with at least one item                |
+| Type                              | Purpose                                                                     |
+| --------------------------------- | --------------------------------------------------------------------------- |
+| `ValueOf<T>`                      | Gets the union of all object values                                         |
+| `AssertEqual<TActual, TExpected>` | Checks two types for bidirectional equality                                 |
+| `OpenString<T>`                   | Preserves known string hints while accepting any string                     |
+| `RequireExactlyOne<T>`            | Requires exactly one candidate property; intersect shared fields separately |
+| `WithRequiredProperties<T, TKey>` | Narrows selected properties to required while preserving the rest           |
+| `WithOptionalProperties<T, TKey>` | Makes selected properties optional while preserving the rest                |
+| `NonEmptyReadonlyArray<T>`        | Represents a readonly array with at least one item                          |
 
 For example, after a local flow has established that an `id` exists, use `WithRequiredProperties` to carry that fact to the next function:
 

@@ -1,4 +1,4 @@
-import type { IRLine, IRNode } from '@retikz/core';
+import type { IRLine, IRNode, IRPathBase } from '@retikz/core';
 import type {
   AnyInputEmbedAdapter,
   InputChild,
@@ -422,15 +422,27 @@ const inputNodeFromProps = (props: NodeProps): InputNode => {
 };
 
 /** 把 <Path> props 组装为 Vanilla InputPath */
-const inputPathFromProps = (props: PathProps): InputPath => {
-  const isDirectPath = props.authoring === undefined && props.way === undefined && props.children === undefined;
-  return {
-    ...(isDirectPath ? { type: 'path' as const } : {}),
-    ...pickDefined(props, PATH_FIELDS),
-    ...(props.authoring === undefined ? {} : { authoring: props.authoring }),
-    ...(props.way === undefined ? {} : { way: props.way }),
-    ...(props.children === undefined ? {} : { children: readPathChildren(props.children) }),
-  };
+const inputPathFromProps = (props: PathProps): InputPath | IRPathBase => {
+  const fields = pickDefined(props, PATH_FIELDS);
+  if (props.children !== undefined) {
+    return { ...fields, type: 'path', authoring: props.authoring, children: readPathChildren(props.children) };
+  }
+  if (props.way !== undefined) {
+    return {
+      ...fields,
+      type: 'path',
+      way: props.way,
+      ...(props.authoring === undefined ? {} : { authoring: props.authoring }),
+    };
+  }
+  const { arrow, ...path } = fields;
+  if (typeof arrow === 'string' || props.authoring !== undefined) {
+    throw new RetikzReactError(
+      RetikzReactErrorCode.Kernel,
+      '<Path> with authoring or arrow shorthand requires children or way',
+    );
+  }
+  return { ...path, type: 'path', ...(arrow === undefined ? {} : { arrow }) };
 };
 
 /** 把 <Coordinate> props 组装为 Vanilla 命名坐标输入 */

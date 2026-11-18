@@ -658,6 +658,7 @@ export const referenceGroups: Readonly<Partial<Record<string, ReadonlyArray<Refe
       title: {
         zh: '类型工具',
         en: 'Type utilities',
+        'RequireExactlyOne',
       },
       members: [
         'AssertEqual',

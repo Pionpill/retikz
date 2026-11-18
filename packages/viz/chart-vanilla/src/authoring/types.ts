@@ -1,6 +1,7 @@
 import type { ChartThemeDefinition, IRChartSource } from '@retikz/chart';
 import type { IRScene, ThemeDefinition } from '@retikz/core';
 import type { ExternalRow, DataInputBindings, DataTransformExecutor } from '@retikz/data';
+import type { RequireExactlyOne } from '@retikz/foundation';
 import type { PlotsLoweringOptions } from '@retikz/plot';
 
 import type { InputChartCoordinate, InputChartPresentation } from '../normalize/chart';
@@ -12,18 +13,12 @@ import type { InputChartPanel } from '../shared';
  * @template TSource 当前 chartType 的精确 Chart 输入声明类型，关联 recipe 与运行时组装
  */
 export type InputChartCommon<TSource extends IRChartSource, TNative = never> = InputChartPresentation &
-  (
-    | {
-        /** 直接输入的行数据，与 dataBindings 互斥 */
-        data: Array<ExternalRow>;
-        dataBindings?: never;
-      }
-    | {
-        /** 具名行数据、结果或原生源绑定，与 data 互斥 */
-        dataBindings: DataInputBindings<TNative>;
-        data?: never;
-      }
-  ) &
+  RequireExactlyOne<{
+    /** 直接输入的行数据，与 dataBindings 互斥 */
+    data: Array<ExternalRow>;
+    /** 具名行数据、结果或原生源绑定，与 data 互斥 */
+    dataBindings: DataInputBindings<TNative>;
+  }> &
   Readonly<{
     /** 根级执行配置 */
     dataExecution?: TSource['dataExecution'];

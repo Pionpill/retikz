@@ -10,6 +10,22 @@ import { Draw, EdgeLabel } from '../../../src/sugar';
 import { compileTestResult } from '../../helpers/compilation';
 
 describe('React JSX Input 场景', () => {
+  it('当 JSX 同时提供显式步骤和 way 时只采用步骤', () => {
+    const input = createInputScene(
+      <Path way={[]}>
+        <Step to="A" />
+        <Step to="B" />
+      </Path>,
+    );
+    expect(normalizeScene(input.scene).ir.children).toMatchObject([
+      {
+        children: [
+          { kind: 'move', to: { id: 'A' } },
+          { kind: 'line', to: { id: 'B' } },
+        ],
+      },
+    ]);
+  });
   it.each(['->', '<-', '<->'] as const)('Path 与 Draw 的 %s 简写统一由 Vanilla 转换', arrow => {
     const endpoints = arrow === '->' ? { end: {} } : arrow === '<-' ? { start: {} } : { start: {}, end: {} };
     const fromPath = normalizeScene(

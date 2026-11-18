@@ -75,6 +75,8 @@ const view = mount(document.querySelector('#diagram')!, input);
 
 ### 用配置对象声明身份
 
+Vanilla 的路径配置必须在 `way` 与 `children` 中选择一项。运行时若同时收到两者，以显式 `children` 为准；空步骤数组也不会回退到 `way`。
+
 Vanilla 构造函数不接收独立的 ID 字符串参数。`node({ id, position })`、`path({ id, way })`、`coordinate({ id, position })` 和 `layer({ id, children })` 都从配置读取身份；是否必须提供 `id` 仍由对应输入契约决定。
 
 领域 builder 同样直接接收配置，例如 `shape.circle({ id, center, radius })`、`entity({ id, role, position })`。已有领域 `id` 的输入会复用该值作为 embed 身份；匿名输入不因此获得可引用的图元 ID。Layout 输入没有领域 `id`，直接使用 `flexLayout({ children })` 等入口。
