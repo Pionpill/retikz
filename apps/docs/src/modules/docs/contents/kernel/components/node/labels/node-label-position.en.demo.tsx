@@ -1,5 +1,5 @@
+import type { IRNodeLabel } from '@retikz/core';
 import { Layout, Node } from '@retikz/react';
-import type { InputNodeLabel } from '@retikz/vanilla';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -8,7 +8,7 @@ import { nodeLabelPositionControls, previewControlContract } from './node-label-
 export const previewControls = nodeLabelPositionControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
-  const position: InputNodeLabel['position'] =
+  const position: IRNodeLabel['position'] =
     values.positionMode === 'center'
       ? 'center'
       : values.positionMode === 'angle'

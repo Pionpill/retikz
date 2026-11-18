@@ -1,9 +1,5 @@
-import type { InputCoordinate } from './coordinate';
-import type { InputEmbed } from './embed';
-import type { InputNode } from './node';
-import type { InputPath, InputPathConfig } from './path';
+import type { InputCoordinate, InputEmbed, InputNode, InputPath, InputPathConfig, InputScope } from './element';
 import type { InputChild, InputLayer, InputScene, InputSceneChildren, InputSceneLayers } from './scene';
-import type { InputScope } from './scope';
 
 /**
  * 创建作者侧节点输入，身份由配置中的 id 声明
@@ -43,7 +39,7 @@ export const path = (config: InputPathConfig): InputPath => ({
 export const scope = (
   config: Omit<InputScope, 'type' | 'children'>,
   children: ReadonlyArray<InputChild>,
-): InputScope => ({ ...config, children });
+): InputScope => ({ type: 'scope', authoring: config.authoring, ...config, children });
 
 /**
  * 创建作者侧分层输入

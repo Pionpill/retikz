@@ -1,7 +1,7 @@
 import type { IRNodeTarget } from '@retikz/core';
 import { Anchor, CenterAnchor, isAnchor } from '@retikz/core';
 
-import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../error';
+import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../../error';
 
 /** 纯数字识别 `A.30` / `A.-45` / `A.180.5` */
 const ANGLE_RE = /^-?\d+(\.\d+)?$/;

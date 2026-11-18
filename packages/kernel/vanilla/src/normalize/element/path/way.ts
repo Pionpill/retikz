@@ -18,7 +18,7 @@ import type {
   IRTarget,
 } from '@retikz/core';
 
-import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../error';
+import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../../error';
 import { parseAxisLineTarget, parseTargetSugar } from './target';
 
 /**

@@ -10,6 +10,37 @@ import { Draw, EdgeLabel } from '../../../src/sugar';
 import { compileTestResult } from '../../helpers/compilation';
 
 describe('React JSX Input 场景', () => {
+  it('只在省略 kind 时按实际步骤顺序补上起点和直线', () => {
+    const input = createInputScene(
+      <>
+        <Path>
+          <>
+            <Step to="A" />
+          </>
+          <Step to="B" />
+        </Path>
+        <Path>
+          <Step kind="line" to="A" />
+          <Step to="B" />
+        </Path>
+      </>,
+    );
+    expect(normalizeScene(input.scene).ir.children).toMatchObject([
+      {
+        children: [
+          { kind: 'move', to: { id: 'A' } },
+          { kind: 'line', to: { id: 'B' } },
+        ],
+      },
+      {
+        children: [
+          { kind: 'line', to: { id: 'A' } },
+          { kind: 'line', to: { id: 'B' } },
+        ],
+      },
+    ]);
+  });
+
   it('当 JSX 同时提供显式步骤和 way 时只采用步骤', () => {
     const input = createInputScene(
       <Path way={[]}>
@@ -100,6 +131,7 @@ describe('React JSX Input 场景', () => {
       </>,
     );
 
+    expect(input.scene.children).toMatchObject([{ type: 'node' }, { type: 'path' }]);
     expect(normalizeScene(input.scene).ir.children).toMatchObject([
       { type: 'node', id: 'source' },
       {
@@ -161,8 +193,9 @@ describe('React JSX Input 场景', () => {
 
     expect(input.scene.children).toMatchObject([
       {
+        type: 'scope',
         authoring: scopeAuthoring,
-        children: [{ authoring: pathAuthoring }],
+        children: [{ type: 'path', authoring: pathAuthoring }],
       },
     ]);
   });

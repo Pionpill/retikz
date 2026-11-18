@@ -51,14 +51,7 @@ import {
   normalizeRelation,
   relationEmbedKind,
 } from '@retikz/graph-vanilla';
-import type {
-  AnyInputEmbed,
-  SynchronousInputEmbedAdapter,
-  InputChild,
-  InputPath,
-  InputScene,
-  InputScope,
-} from '@retikz/vanilla';
+import type { AnyInputEmbed, SynchronousInputEmbedAdapter, InputChild, InputScope, InputScene } from '@retikz/vanilla';
 import { normalizeNode, normalizePath, normalizeScene, scene } from '@retikz/vanilla';
 import type { ReactNode } from 'react';
 import { Fragment, isValidElement } from 'react';
@@ -133,26 +126,24 @@ const isInputGraphEmbed = (child: InputGraphChild): child is AnyInputEmbed =>
   !('namespace' in child) && child.type === 'embed';
 
 const sourceCoreChildOf = (
-  input: InputChild,
+  input: Exclude<InputChild, AnyInputEmbed>,
   runtime: IRChild | undefined,
   chartSources: ReadonlyArray<TypedChartSource>,
   chartIndex: { value: number },
 ): IRChild => {
   if ('namespace' in input) return input;
   if (input.type === 'coordinate') return input;
-  if (input.type === 'node' || (input.type === undefined && !('children' in input) && 'position' in input)) {
+  if (input.type === 'node') {
     return normalizeNode(input);
   }
 
-  if (input.type === 'scope' || runtime?.type === 'scope') {
-    const { type: _type, children, ...scopeWithAuthoring } = input as InputScope;
-    void _type;
-    const { authoring: _authoring, ...scope } = scopeWithAuthoring;
+  if (input.type === 'scope') {
+    const scopeInput: InputScope = input;
+    const { children, authoring: _authoring, ...scope } = scopeInput;
     void _authoring;
     const runtimeChildren = runtime?.type === 'scope' && Array.isArray(runtime.children) ? runtime.children : undefined;
 
     return {
-      type: 'scope',
       ...scope,
       children: children.map((child, index) =>
         sourceChildOf(child, runtimeChildren?.[index], chartSources, chartIndex),

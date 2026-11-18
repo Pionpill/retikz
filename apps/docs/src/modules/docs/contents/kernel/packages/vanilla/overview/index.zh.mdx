@@ -75,6 +75,8 @@ const view = mount(document.querySelector('#diagram')!, input);
 
 ### 用配置对象声明身份
 
+直接写入 children 的 Node、Path、Scope 对象必须声明 `type`。使用 `node()`、`path()`、`scope()` 或对应 JSX 组件时，入口会提供类别，不需要重复填写。
+
 Vanilla 的路径配置必须在 `way` 与 `children` 中选择一项。运行时若同时收到两者，以显式 `children` 为准；空步骤数组也不会回退到 `way`。
 
 Vanilla 构造函数不接收独立的 ID 字符串参数。`node({ id, position })`、`path({ id, way })`、`coordinate({ id, position })` 和 `layer({ id, children })` 都从配置读取身份；是否必须提供 `id` 仍由对应输入契约决定。

@@ -373,8 +373,6 @@ export type {
   CanonicalThemeColors,
   CoreSemanticColors,
   CssColorValue,
-  InputAnchor,
-  InputDirectionalAnchor,
   NonEmptyReadonlyArray,
   SharedPolarPosition,
   ThemeName,

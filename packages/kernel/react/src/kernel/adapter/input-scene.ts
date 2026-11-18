@@ -1,4 +1,4 @@
-import type { IRLine, IRNode, IRPathBase } from '@retikz/core';
+import type { IRLine, IRNode, IRPathBase, IRStepLabel } from '@retikz/core';
 import type {
   AnyInputEmbedAdapter,
   InputChild,
@@ -9,7 +9,6 @@ import type {
   InputScene,
   InputScope,
   InputStep,
-  InputStepLabel,
 } from '@retikz/vanilla';
 import type { ReactElement, ReactNode } from 'react';
 import { Children, createElement, Fragment, isValidElement } from 'react';
@@ -33,10 +32,10 @@ import {
 import { NODE_FIELDS, PATH_FIELDS, pickDefined, SCOPE_FIELDS, SCOPE_STYLE_FIELDS } from './fields';
 
 type EdgeLabelElementProps = Readonly<{
-  position?: InputStepLabel['position'];
-  side?: InputStepLabel['side'];
-  sloped?: InputStepLabel['sloped'];
-  interrupt?: InputStepLabel['interrupt'];
+  position?: IRStepLabel['position'];
+  side?: IRStepLabel['side'];
+  sloped?: IRStepLabel['sloped'];
+  interrupt?: IRStepLabel['interrupt'];
   children?: unknown;
 }>;
 
@@ -218,8 +217,8 @@ const readNodeText = (props: NodeProps): IRNode['text'] => {
 };
 
 /** 从 <EdgeLabel> sugar 中读取首个标签 */
-const readEdgeLabel = (children: ReactNode): InputStepLabel | undefined => {
-  let result: InputStepLabel | undefined;
+const readEdgeLabel = (children: ReactNode): IRStepLabel | undefined => {
+  let result: IRStepLabel | undefined;
 
   const visit = (node: ReactNode): void => {
     Children.forEach(node, child => {
@@ -260,14 +259,14 @@ const readEdgeLabel = (children: ReactNode): InputStepLabel | undefined => {
 };
 
 /** 读取 Step 的 prop label 或 <EdgeLabel> sugar */
-const resolveStepLabel = (props: StepProps): InputStepLabel | undefined => {
+const resolveStepLabel = (props: StepProps): IRStepLabel | undefined => {
   if ('label' in props && props.label !== undefined) return props.label;
   return 'children' in props ? readEdgeLabel(props.children) : undefined;
 };
 
 /** 把一个 <Step> props 组装为 Vanilla InputStep，不解析 target */
-const inputStepFromProps = (props: StepProps): InputStep => {
-  const kind = props.kind ?? 'line';
+const inputStepFromProps = (props: StepProps, first: boolean): InputStep => {
+  const kind = props.kind ?? (first ? 'move' : 'line');
   if (kind === 'cycle') return { type: 'step', kind: 'cycle' };
   if (kind === 'move') {
     const step = props as Extract<StepProps, { kind: 'move' }>;
@@ -395,7 +394,7 @@ const readPathChildren = (children: ReactNode): ReadonlyArray<InputStep> => {
       }
 
       if (getDisplayName(child) === TIKZ_STEP) {
-        steps.push(inputStepFromProps(child.props as StepProps));
+        steps.push(inputStepFromProps(child.props as StepProps, steps.length === 0));
         return;
       }
 
@@ -457,9 +456,9 @@ const inputCoordinateFromProps = (props: CoordinateProps): InputCoordinate => ({
 const inputScopeFromProps = (props: ScopeProps, context: InputContext): InputScope => {
   const children = readSceneChildren(props.children, context);
   return {
-    ...(children.length === 0 ? { type: 'scope' as const } : {}),
+    type: 'scope',
     ...pickDefined(props, SCOPE_FIELDS),
-    ...(props.authoring === undefined ? {} : { authoring: props.authoring }),
+    ...(props.authoring === undefined && children.length === 0 ? {} : { authoring: props.authoring }),
     children,
   };
 };

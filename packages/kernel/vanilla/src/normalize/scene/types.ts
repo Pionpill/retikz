@@ -8,11 +8,15 @@ import type {
 } from '@retikz/core';
 import type { RequireExactlyOne, ValueOf } from '@retikz/foundation';
 
-import type { InputCoordinate } from '../coordinate';
-import type { AnyInputEmbed, InputEmbedThemeContextResolver, SynchronousInputEmbedAdapter } from '../embed';
-import type { InputNode } from '../node';
-import type { InputPath } from '../path';
-import type { InputScope } from '../scope';
+import type {
+  AnyInputEmbed,
+  InputCoordinate,
+  InputEmbedThemeContextResolver,
+  InputNode,
+  InputPath,
+  InputScope,
+  SynchronousInputEmbedAdapter,
+} from '../element';
 
 /** 输入分层缓存提示 */
 export const InputLayerCache = {

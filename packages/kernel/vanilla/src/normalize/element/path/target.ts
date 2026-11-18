@@ -1,8 +1,8 @@
 import type { IRAxisLineTarget, IRTarget } from '@retikz/core';
 
-import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../error';
+import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../../error';
 import { parseNodeTarget } from './node';
-import type { InputAxisLineTarget, InputTarget } from './types';
+import type { InputAxisLineTarget, InputTarget } from './path';
 
 /** TikZ 风格相对偏移字面量正则：捕获 `+` / `++` 前缀 + dx / dy 数值 */
 const RELATIVE_NUMBER = '-?(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][+-]?\\d+)?';

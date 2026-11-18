@@ -39,7 +39,7 @@ describe('Node API 公开范围', () => {
 
     const inputNode = source.split('### node / InputNode\n')[1]?.split('\n### ')[0] ?? '';
 
-    expect(inputNode).toContain('`InputPosition`');
+    expect(inputNode).toContain("`IRNode['position']`");
     expect(inputNode).toContain('`position?`');
     expect(inputNode).toContain('`[0, 0]`');
 
@@ -48,17 +48,16 @@ describe('Node API 公开范围', () => {
     expect(irNode).toContain('`position?`');
     expect(irNode).toContain('`[0, 0]`');
     expect(irNode).toContain('`text?`');
-    expect(inputNode).not.toContain("`IRNode['position']`");
     expect(inputNode).toContain('`Array<IRAnimationTrack>`');
     expect(inputNode).toContain('| Returns |');
     expect(inputNode).toContain("Omit<InputNode, 'type'>");
     expect(headings).not.toContain('NodeProps');
 
-    const label = source.split('### InputNodeLabel\n')[1]?.split('\n### ')[0] ?? '';
+    const label = source.split('### IRNodeLabel\n')[1]?.split('\n### ')[0] ?? '';
 
-    expect(label).toContain('label="Direct members"');
+    expect(label).toContain('`placement?`');
     expect(source).toContain('`resolveRect?`');
-    expect(source).toContain('`outline?`');
+    expect(source).toContain('`computeBoundaryPoint`');
 
     for (const name of ['defineShape', 'defineBoundary']) {
       const section = source.split(`### ${name}\n`)[1]?.split('\n### ')[0] ?? '';
@@ -69,7 +68,7 @@ describe('Node API 公开范围', () => {
 
       expect(members).toContain('| Category | Name | Type / signature | Description |');
       expect(members).toContain('| Type parameters | `TParams` | `extends JsonObject` |');
-      expect(members).toContain('| Parameters | `def` | `' + definitionName + 'Input<TParams>` |');
+      expect(members).toContain('| Parameters | `def` | `Input' + definitionName + '<TParams>` |');
       expect(members).toContain('| Returns | — | `' + definitionName + '` |');
       expect(members).not.toContain('| Throws |');
       expect(members).not.toMatch(/#### (Parameters|Returns|Type parameters)/);
@@ -90,7 +89,8 @@ describe('Node API 公开范围', () => {
       expect(members.match(/\| (?:Group \| )?Member \|/g)).toHaveLength(1);
       expect(section).not.toMatch(/^#### /m);
 
-      if (name.endsWith('DefinitionInput')) expect(members).toContain('`TParams` (Type parameter)');
+      if (name.startsWith('Input') && name.endsWith('Definition'))
+        expect(members).toContain('`TParams` (Type parameter)');
       else {
         expect(members).toContain('`config` (Parameter)');
         expect(members).toContain('| Returns |');

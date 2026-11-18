@@ -31,7 +31,7 @@ const input: InputScene = {
     {
       type: 'scope',
       clip: { kind: 'ticketClip', params: {} },
-      children: [{ id: 'ticket', position: [10, 5], text: 'A' }],
+      children: [{ type: 'node', id: 'ticket', position: [10, 5], text: 'A' }],
     },
   ],
 };

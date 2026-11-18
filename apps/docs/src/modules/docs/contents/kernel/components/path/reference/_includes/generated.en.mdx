@@ -119,11 +119,11 @@ export type DrawProps = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"Step"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={257}>Step</ApiSourceLink> / <ApiSourceLink label={"StepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={238}>StepProps</ApiSourceLink>
+#### <ApiSourceLink label={"Step"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={263}>Step</ApiSourceLink> / <ApiSourceLink label={"StepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={244}>StepProps</ApiSourceLink>
 
 Declare a path action such as moving, drawing a line or curve, drawing an arc, or closing a subpath
 
-Thirteen kinds: 'move', 'line' (default), 'axis-line' (single-axis projection), 'fold', 'cycle', 'curve' (quadratic Bézier), 'cubic', 'bend', 'arc', 'circlePath', 'ellipsePath', 'rectangle', and 'smooth'. All except 'move', 'cycle', and 'rectangle' accept `label?: IRStepLabel`, equivalent to an `<EdgeLabel>` child with the prop taking precedence. 'smooth' uses `points` instead of `to`. Named types for each kind support wrappers and derived props
+Thirteen kinds: 'move' (first step default), 'line' (subsequent step default), 'axis-line' (single-axis projection), 'fold', 'cycle', 'curve' (quadratic Bézier), 'cubic', 'bend', 'arc', 'circlePath', 'ellipsePath', 'rectangle', and 'smooth'. All except 'move', 'cycle', and 'rectangle' accept `label?: IRStepLabel`, equivalent to an `<EdgeLabel>` child with the prop taking precedence. 'smooth' uses `points` instead of `to`. Named types for each kind support wrappers and derived props
 
 ```ts
 export declare const Step: FC<StepProps>;
@@ -146,7 +146,7 @@ export type StepProps =
 
 ## Execution and supporting contracts
 
-#### <ApiSourceLink label={"ArcStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={149}>ArcStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"ArcStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={155}>ArcStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -154,15 +154,15 @@ export type StepProps =
 
 <ApiTable>
 
-| Member       | Type             | Default | Description                                                                                    |
-| ------------ | ---------------- | ------- | ---------------------------------------------------------------------------------------------- |
-| `center?`    | `DslTarget`      | —       | Explicit center; defaults to the cursor (the previous step anchor)                             |
-| `children?`  | `ReactNode`      | —       | Sugar form                                                                                     |
-| `endAngle`   | `number`         | —       | End angle in degrees; sweep direction follows the relationship between startAngle and endAngle |
-| `kind`       | `'arc'`          | —       | Discriminant for an arc step                                                                   |
-| `label?`     | `InputStepLabel` | —       | Edge label                                                                                     |
-| `radius`     | `IRStepRadius`   | —       | Arc radius: a number for a circle, or &#123; x, y &#125; for an ellipse                        |
-| `startAngle` | `number`         | —       | Start angle in degrees: 0° is +x and 90° is screen-down +y, matching ArcStep and Node labels   |
+| Member       | Type           | Default | Description                                                                                    |
+| ------------ | -------------- | ------- | ---------------------------------------------------------------------------------------------- |
+| `center?`    | `DslTarget`    | —       | Explicit center; defaults to the cursor (the previous step anchor)                             |
+| `children?`  | `ReactNode`    | —       | Sugar form                                                                                     |
+| `endAngle`   | `number`       | —       | End angle in degrees; sweep direction follows the relationship between startAngle and endAngle |
+| `kind`       | `'arc'`        | —       | Discriminant for an arc step                                                                   |
+| `label?`     | `IRStepLabel`  | —       | Edge label                                                                                     |
+| `radius`     | `IRStepRadius` | —       | Arc radius: a number for a circle, or &#123; x, y &#125; for an ellipse                        |
+| `startAngle` | `number`       | —       | Start angle in degrees: 0° is +x and 90° is screen-down +y, matching ArcStep and Node labels   |
 
 </ApiTable>
 
@@ -177,7 +177,7 @@ export type ArcStepProps = {
   endAngle: number;
   radius: IRStepRadius;
   center?: DslTarget;
-  label?: InputStepLabel;
+  label?: IRStepLabel;
   children?: ReactNode;
 };
 ```
@@ -186,7 +186,7 @@ export type ArcStepProps = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"AxisLineStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={34}>AxisLineStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"AxisLineStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={40}>AxisLineStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -199,7 +199,7 @@ export type ArcStepProps = {
 | `axis`      | `'horizontal' \| 'vertical'` | —       | Local host axis whose current coordinate is preserved                                         |
 | `children?` | `ReactNode`                  | —       | Sugar form                                                                                    |
 | `kind`      | `'axis-line'`                | —       | Discriminant for a single-axis step                                                           |
-| `label?`    | `InputStepLabel`             | —       | Edge label                                                                                    |
+| `label?`    | `IRStepLabel`                | —       | Edge label                                                                                    |
 | `to`        | `IRAxisLineTarget \| string` | —       | Projection target: Cartesian coordinates, a NodeTarget, or the corresponding string shorthand |
 
 </ApiTable>
@@ -213,7 +213,7 @@ export type AxisLineStepProps = {
   kind: 'axis-line';
   axis: 'horizontal' | 'vertical';
   to: IRAxisLineTarget | string;
-  label?: InputStepLabel;
+  label?: IRStepLabel;
   children?: ReactNode;
 };
 ```
@@ -222,7 +222,7 @@ export type AxisLineStepProps = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"BendStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={121}>BendStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"BendStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={127}>BendStepProps</ApiSourceLink>
 
 Supports symmetric bends and asymmetric bends or loops. Explicit out/in angles take precedence during compilation. With all three omitted, defaults to a symmetric left bend. When `from == to`, explicit out/in angles create a loop
 
@@ -239,7 +239,7 @@ Supports symmetric bends and asymmetric bends or loops. Explicit out/in angles t
 | `children?`      | `ReactNode`         | —        | Sugar form                                                                                                                                                     |
 | `inAngle?`       | `number`            | —        | Absolute screen incoming angle in degrees; either outAngle or inAngle selects tangent mode, with incoming angle defaulting to 180                              |
 | `kind`           | `'bend'`            | —        | Discriminant for a bend step                                                                                                                                   |
-| `label?`         | `InputStepLabel`    | —        | Edge label                                                                                                                                                     |
+| `label?`         | `IRStepLabel`       | —        | Edge label                                                                                                                                                     |
 | `looseness?`     | `number`            | —        | Positive control-point distance multiplier for tangent mode, default 1; also scales loops and is ignored in symmetric mode                                     |
 | `outAngle?`      | `number`            | —        | Absolute screen outgoing angle in degrees; either outAngle or inAngle selects tangent mode, with outgoing angle defaulting to 0 and symmetric settings ignored |
 | `to`             | `DslTarget`         | —        | Endpoint                                                                                                                                                       |
@@ -259,7 +259,7 @@ export type BendStepProps = {
   inAngle?: number;
   looseness?: number;
   to: DslTarget;
-  label?: InputStepLabel;
+  label?: IRStepLabel;
   children?: ReactNode;
 };
 ```
@@ -268,7 +268,7 @@ export type BendStepProps = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"CirclePathStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={167}>CirclePathStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"CirclePathStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={173}>CirclePathStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -282,7 +282,7 @@ export type BendStepProps = {
 | `closed?`     | `'closed' \| 'chord' \| 'open' \| 'sector'` | —       | Closure: without angles, closed; with angles, chord (default), sector (back to center), or open (arc only) |
 | `endAngle?`   | `number`                                    | —       | Partial-circle end angle in degrees                                                                        |
 | `kind`        | `'circlePath'`                              | —       | Discriminant for a circle-path step                                                                        |
-| `label?`      | `InputStepLabel`                            | —       | Edge label                                                                                                 |
+| `label?`      | `IRStepLabel`                               | —       | Edge label                                                                                                 |
 | `radius`      | `number`                                    | —       | Circle radius in user units                                                                                |
 | `startAngle?` | `number`                                    | —       | Partial-circle start angle in degrees; applies only together with endAngle                                 |
 
@@ -299,7 +299,7 @@ export type CirclePathStepProps = {
   startAngle?: number;
   endAngle?: number;
   closed?: 'closed' | 'chord' | 'open' | 'sector';
-  label?: InputStepLabel;
+  label?: IRStepLabel;
   children?: ReactNode;
 };
 ```
@@ -308,7 +308,7 @@ export type CirclePathStepProps = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"CubicStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={101}>CubicStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"CubicStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={107}>CubicStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -322,7 +322,7 @@ export type CirclePathStepProps = {
 | `control1`  | `IRControlPoint` | —       | First control point, affecting the start tangent |
 | `control2`  | `IRControlPoint` | —       | Second control point, affecting the end tangent  |
 | `kind`      | `'cubic'`        | —       | Discriminant for a cubic Bézier step             |
-| `label?`    | `InputStepLabel` | —       | Edge label                                       |
+| `label?`    | `IRStepLabel`    | —       | Edge label                                       |
 | `to`        | `DslTarget`      | —       | Curve endpoint                                   |
 
 </ApiTable>
@@ -337,7 +337,7 @@ export type CubicStepProps = {
   control1: IRControlPoint;
   control2: IRControlPoint;
   to: DslTarget;
-  label?: InputStepLabel;
+  label?: IRStepLabel;
   children?: ReactNode;
 };
 ```
@@ -346,7 +346,7 @@ export type CubicStepProps = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"CurveStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={87}>CurveStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"CurveStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={93}>CurveStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -359,7 +359,7 @@ export type CubicStepProps = {
 | `children?` | `ReactNode`      | —       | Sugar form                                          |
 | `control`   | `IRControlPoint` | —       | Control point; only Cartesian `[x, y]` is supported |
 | `kind`      | `'curve'`        | —       | Discriminant for a quadratic Bézier step            |
-| `label?`    | `InputStepLabel` | —       | Edge label                                          |
+| `label?`    | `IRStepLabel`    | —       | Edge label                                          |
 | `to`        | `DslTarget`      | —       | Curve endpoint                                      |
 
 </ApiTable>
@@ -373,7 +373,7 @@ export type CurveStepProps = {
   kind: 'curve';
   control: IRControlPoint;
   to: DslTarget;
-  label?: InputStepLabel;
+  label?: IRStepLabel;
   children?: ReactNode;
 };
 ```
@@ -382,7 +382,7 @@ export type CurveStepProps = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"CycleStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={81}>CycleStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"CycleStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={87}>CycleStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -410,7 +410,7 @@ export type CycleStepProps = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"EllipsePathStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={185}>EllipsePathStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"EllipsePathStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={191}>EllipsePathStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -424,7 +424,7 @@ export type CycleStepProps = {
 | `closed?`     | `'closed' \| 'chord' \| 'open' \| 'sector'` | —       | Closure: without angles, closed; with angles, chord (default), sector (back to center), or open |
 | `endAngle?`   | `number`                                    | —       | Partial-ellipse end angle in degrees                                                            |
 | `kind`        | `'ellipsePath'`                             | —       | Discriminant for an ellipse-path step                                                           |
-| `label?`      | `InputStepLabel`                            | —       | Edge label                                                                                      |
+| `label?`      | `IRStepLabel`                               | —       | Edge label                                                                                      |
 | `radius`      | `IRStepAnisotropicRadius`                   | —       | Ellipse radii on the x and y axes                                                               |
 | `startAngle?` | `number`                                    | —       | Partial-ellipse start angle in degrees; applies only together with endAngle                     |
 
@@ -441,7 +441,7 @@ export type EllipsePathStepProps = {
   startAngle?: number;
   endAngle?: number;
   closed?: 'closed' | 'chord' | 'open' | 'sector';
-  label?: InputStepLabel;
+  label?: IRStepLabel;
   children?: ReactNode;
 };
 ```
@@ -450,7 +450,7 @@ export type EllipsePathStepProps = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"FoldStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={63}>FoldStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"FoldStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={69}>FoldStepProps</ApiSourceLink>
 
 `-|` and `|-` use one turn; `-|-` and `|-|` use two turns, with normalized `fraction` controlling the middle leg
 
@@ -458,12 +458,12 @@ export type EllipsePathStepProps = {
 
 <ApiTable>
 
-| Member      | Type             | Default | Description                  |
-| ----------- | ---------------- | ------- | ---------------------------- |
-| `children?` | `ReactNode`      | —       | Sugar form                   |
-| `kind`      | `'fold'`         | —       | Discriminant for a fold step |
-| `label?`    | `InputStepLabel` | —       | Edge label                   |
-| `to`        | `DslTarget`      | —       | Fold endpoint                |
+| Member      | Type          | Default | Description                  |
+| ----------- | ------------- | ------- | ---------------------------- |
+| `children?` | `ReactNode`   | —       | Sugar form                   |
+| `kind`      | `'fold'`      | —       | Discriminant for a fold step |
+| `label?`    | `IRStepLabel` | —       | Edge label                   |
+| `to`        | `DslTarget`   | —       | Fold endpoint                |
 
 </ApiTable>
 
@@ -515,7 +515,7 @@ export type FoldStepProps = FoldStepBaseProps &
 
 </DocTabs>
 
-#### <ApiSourceLink label={"LineStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={22}>LineStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"LineStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={28}>LineStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -523,12 +523,12 @@ export type FoldStepProps = FoldStepBaseProps &
 
 <ApiTable>
 
-| Member      | Type             | Default | Description                                                                                |
-| ----------- | ---------------- | ------- | ------------------------------------------------------------------------------------------ |
-| `children?` | `ReactNode`      | —       | Sugar form: `<Step><EdgeLabel>...</EdgeLabel></Step>`; other children are silently ignored |
-| `kind?`     | `'line'`         | —       | Line-step discriminant; defaults to 'line' when omitted                                    |
-| `label?`    | `InputStepLabel` | —       | Edge label, equivalent to a sugar `<EdgeLabel>` child                                      |
-| `to`        | `DslTarget`      | —       | Line endpoint                                                                              |
+| Member      | Type          | Default | Description                                                                                |
+| ----------- | ------------- | ------- | ------------------------------------------------------------------------------------------ |
+| `children?` | `ReactNode`   | —       | Sugar form: `<Step><EdgeLabel>...</EdgeLabel></Step>`; other children are silently ignored |
+| `kind?`     | `'line'`      | —       | When omitted, the first step is a move and subsequent steps are lines                      |
+| `label?`    | `IRStepLabel` | —       | Edge label, equivalent to a sugar `<EdgeLabel>` child                                      |
+| `to`        | `DslTarget`   | —       | Line endpoint                                                                              |
 
 </ApiTable>
 
@@ -540,7 +540,7 @@ export type FoldStepProps = FoldStepBaseProps &
 export type LineStepProps = {
   kind?: 'line';
   to: DslTarget;
-  label?: InputStepLabel;
+  label?: IRStepLabel;
   children?: ReactNode;
 };
 ```
@@ -549,7 +549,7 @@ export type LineStepProps = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"MoveStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={14}>MoveStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"MoveStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={20}>MoveStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -579,7 +579,7 @@ export type MoveStepProps = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"RectangleStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={203}>RectangleStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"RectangleStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={209}>RectangleStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -613,7 +613,7 @@ export type RectangleStepProps = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"SmoothStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={219}>SmoothStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"SmoothStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={225}>SmoothStepProps</ApiSourceLink>
 
 The cursor is the implicit first knot; the curve passes through each entry in `points`, using centripetal Catmull–Rom converted to cubics. A preceding step must set the cursor, which ends at the last point. `tension` defaults to 1; values below 1 tighten the curve and values above 1 increase the bulge
 
@@ -627,7 +627,7 @@ The cursor is the implicit first knot; the curve passes through each entry in `p
 | ----------- | ------------------ | ------- | ------------------------------------------------------------------------------------------------------------------- |
 | `children?` | `ReactNode`        | —       | Sugar form                                                                                                          |
 | `kind`      | `'smooth'`         | —       | Discriminant for a smooth step                                                                                      |
-| `label?`    | `InputStepLabel`   | —       | Edge label positioned by Bézier parameter along the generated cubics                                                |
+| `label?`    | `IRStepLabel`      | —       | Edge label positioned by Bézier parameter along the generated cubics                                                |
 | `points`    | `Array<DslTarget>` | —       | Ordered points after the cursor; one point creates one segment, and the cursor ends at the last point               |
 | `tension?`  | `number`           | `1`     | Tangent-length multiplier (TikZ `tension`); defaults to 1, with lower values tighter and higher values more rounded |
 
@@ -642,7 +642,7 @@ export type SmoothStepProps = {
   kind: 'smooth';
   points: Array<DslTarget>;
   tension?: number;
-  label?: InputStepLabel;
+  label?: IRStepLabel;
   children?: ReactNode;
 };
 ```
@@ -873,7 +873,7 @@ export type PathCompileResult = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"WayDSL"} path={"packages/kernel/vanilla/src/normalize/path/way.ts"} startLine={175}>WayDSL</ApiSourceLink>
+#### <ApiSourceLink label={"WayDSL"} path={"packages/kernel/vanilla/src/normalize/element/path/way.ts"} startLine={172}>WayDSL</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -903,7 +903,7 @@ export type WayDSL<TTarget = IRTarget, TControl = IRControlPoint, TAxisTarget = 
 
 </DocTabs>
 
-#### <ApiSourceLink label={"WayItem"} path={"packages/kernel/vanilla/src/normalize/path/way.ts"} startLine={157}>WayItem</ApiSourceLink>
+#### <ApiSourceLink label={"WayItem"} path={"packages/kernel/vanilla/src/normalize/element/path/way.ts"} startLine={154}>WayItem</ApiSourceLink>
 
 Node-id strings, Cartesian points, and polar points become line steps (the first becomes move). Relative objects become IR relative/relativeAccumulate targets. horizontalTo/verticalTo become axis-line. A bare via or `{via,fraction}` combines with the next target into a fold. DrawWay.Cycle closes the subpath. curve/cubic/bend consume the next target, while arc/circle/ellipse use the previous position as center without consuming the next item. Internal Cycle/Relative/Accumulate strings avoid collisions with node ids
 
@@ -947,7 +947,7 @@ export type WayItem<TTarget = IRTarget, TControl = IRControlPoint, TAxisTarget =
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DrawWay"} path={"packages/kernel/vanilla/src/normalize/path/way.ts"} startLine={31}>DrawWay</ApiSourceLink>
+#### <ApiSourceLink label={"DrawWay"} path={"packages/kernel/vanilla/src/normalize/element/path/way.ts"} startLine={28}>DrawWay</ApiSourceLink>
 
 Cycle closes to the way start and must be referenced through DrawWay.Cycle. Hv/Vh/Hvh/Vhv describe two- or three-segment folds. Relative/Accumulate discriminate relative-offset items: Relative preserves prevEnd, while Accumulate updates it cumulatively. A const object with as const avoids TypeScript enum reverse mappings and literal incompatibility
 
@@ -963,7 +963,7 @@ export const DrawWay = {
 } as const;
 ```
 
-#### <ApiSourceLink label={"resolvePathLabelPlacement"} path={"packages/kernel/core/src/resolve/path/resolve.ts"} startLine={134}>resolvePathLabelPlacement</ApiSourceLink>
+#### <ApiSourceLink label={"resolvePathLabelPlacement"} path={"packages/kernel/core/src/resolve/path/resolve.ts"} startLine={136}>resolvePathLabelPlacement</ApiSourceLink>
 
 Position defaults to 0.5; distance and the gap on each side default to 4. If side is omitted, sloped labels are centered and other labels are placed above the path
 
@@ -1031,7 +1031,7 @@ export declare const samplePathRoute: (
 
 ## Direct calls
 
-#### <ApiSourceLink label={"path"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={30}>path</ApiSourceLink> / <ApiSourceLink label={"InputPath"} path={"packages/kernel/vanilla/src/normalize/path/types.ts"} startLine={104}>InputPath</ApiSourceLink>
+#### <ApiSourceLink label={"path"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={26}>path</ApiSourceLink> / <ApiSourceLink label={"InputPath"} path={"packages/kernel/vanilla/src/normalize/element/path/path.ts"} startLine={107}>InputPath</ApiSourceLink>
 
 **Common members**
 
@@ -1099,7 +1099,7 @@ export type InputPath = Pick<IRPath, 'type'> & InputPathConfig;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InputStep"} path={"packages/kernel/vanilla/src/normalize/path/types.ts"} startLine={105}>InputStep</ApiSourceLink>
+#### <ApiSourceLink label={"InputStep"} path={"packages/kernel/vanilla/src/normalize/element/path/path.ts"} startLine={78}>InputStep</ApiSourceLink>
 
 ```ts
 export type InputStep =
@@ -1116,8 +1116,8 @@ export type InputStep =
   | InputCurveStep
   | InputCubicStep
   | InputBendStep
-  | InputCirclePathStep
-  | InputEllipsePathStep
+  | IRCirclePathStep
+  | IREllipsePathStep
   | InputArcStep
   | InputRectangleStep
   | InputSmoothStep;
@@ -1368,7 +1368,7 @@ export declare const defineMark: (definition: MarkDefinition) => MarkDefinition;
 
 ## Configuration and validation
 
-#### <ApiSourceLink label={"PathSchema"} path={"packages/kernel/core/src/schemas/path/path.ts"} startLine={121}>PathSchema</ApiSourceLink>
+#### <ApiSourceLink label={"PathSchema"} path={"packages/kernel/core/src/schemas/path/path.ts"} startLine={123}>PathSchema</ApiSourceLink>
 
 <ZodSchema shallow name="PathSchema" />
 
@@ -1438,11 +1438,11 @@ Either tangent angle selects tangent mode; the omitted outgoing/incoming angle d
 
 <ZodSchema shallow name="PathArrowSchema" />
 
-#### <ApiSourceLink label={"MarkStyleSchema"} path={"packages/kernel/core/src/schemas/path/mark.ts"} startLine={27}>MarkStyleSchema</ApiSourceLink>
+#### <ApiSourceLink label={"MarkStyleSchema"} path={"packages/kernel/core/src/schemas/path/mark.ts"} startLine={28}>MarkStyleSchema</ApiSourceLink>
 
 <ZodSchema shallow name="MarkStyleSchema" />
 
-#### <ApiSourceLink label={"PathMarkPlacementSchema"} path={"packages/kernel/core/src/schemas/path/mark.ts"} startLine={55}>PathMarkPlacementSchema</ApiSourceLink>
+#### <ApiSourceLink label={"PathMarkPlacementSchema"} path={"packages/kernel/core/src/schemas/path/mark.ts"} startLine={56}>PathMarkPlacementSchema</ApiSourceLink>
 
 <ZodSchema shallow name="PathMarkPlacementSchema" />
 

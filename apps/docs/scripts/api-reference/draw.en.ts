@@ -89,8 +89,8 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   标记定义生成局部图元所需的宿主上下文: 'Host context for emitting mark-local primitives',
   宿主路径的有效描边: 'Effective host path stroke',
   编译坐标精度取整: 'Round coordinates to compile precision',
-  "十三种 kind：'move' / 'line'（默认） / 'axis-line'（单轴投影连接） / 'fold'（折角） / 'cycle'（闭合） / 'curve'（二次贝塞尔） / 'cubic'（三次贝塞尔） / 'bend'（弧形简记） / 'arc'（圆 / 椭圆弧段） / 'circlePath'（整圆 / 部分圆） / 'ellipsePath'（整椭圆 / 部分椭圆） / 'rectangle'（矩形） / 'smooth'（过点平滑曲线）。除 'move' / 'cycle' / 'rectangle' 外均可挂 `label?: IRStepLabel`，等价于 sugar `<EdgeLabel>` child（prop 优先）；'smooth' 用 `points` 而非 `to`。每个 kind 有对应 named type export，便于 wrapper / forwardRef / `Pick<>` 派生":
-    "Thirteen kinds: 'move', 'line' (default), 'axis-line' (single-axis projection), 'fold', 'cycle', 'curve' (quadratic Bézier), 'cubic', 'bend', 'arc', 'circlePath', 'ellipsePath', 'rectangle', and 'smooth'. All except 'move', 'cycle', and 'rectangle' accept `label?: IRStepLabel`, equivalent to an `<EdgeLabel>` child with the prop taking precedence. 'smooth' uses `points` instead of `to`. Named types for each kind support wrappers and derived props",
+  "十三种 kind：'move'（首步默认） / 'line'（后续步骤默认） / 'axis-line'（单轴投影连接） / 'fold'（折角） / 'cycle'（闭合） / 'curve'（二次贝塞尔） / 'cubic'（三次贝塞尔） / 'bend'（弧形简记） / 'arc'（圆 / 椭圆弧段） / 'circlePath'（整圆 / 部分圆） / 'ellipsePath'（整椭圆 / 部分椭圆） / 'rectangle'（矩形） / 'smooth'（过点平滑曲线）。除 'move' / 'cycle' / 'rectangle' 外均可挂 `label?: IRStepLabel`，等价于 sugar `<EdgeLabel>` child（prop 优先）；'smooth' 用 `points` 而非 `to`。每个 kind 有对应 named type export，便于 wrapper / forwardRef / `Pick<>` 派生":
+    "Thirteen kinds: 'move' (first step default), 'line' (subsequent step default), 'axis-line' (single-axis projection), 'fold', 'cycle', 'curve' (quadratic Bézier), 'cubic', 'bend', 'arc', 'circlePath', 'ellipsePath', 'rectangle', and 'smooth'. All except 'move', 'cycle', and 'rectangle' accept `label?: IRStepLabel`, equivalent to an `<EdgeLabel>` child with the prop taking precedence. 'smooth' uses `points` instead of `to`. Named types for each kind support wrappers and derived props",
   '声明路径中的一个动作，例如移动、连线、曲线、圆弧或闭合':
     'Declare a path action such as moving, drawing a line or curve, drawing an arc, or closing a subpath',
   '有效描边；实心定义默认无轮廓，空心定义缺少主色时继承宿主描边':
@@ -277,7 +277,7 @@ const translations: Readonly<Partial<Record<string, string>>> = {
     'Line action: draw from the cursor to a target (TikZ `(A) -- (B)`)',
   'sugar 形态：`<Step><EdgeLabel>...</EdgeLabel></Step>`；其它 children 静默忽略':
     'Sugar form: `<Step><EdgeLabel>...</EdgeLabel></Step>`; other children are silently ignored',
-  "直线 step 鉴别字面量；省略时默认 'line'": "Line-step discriminant; defaults to 'line' when omitted",
+  '省略时，首个步骤为 move，后续步骤为 line': 'When omitted, the first step is a move and subsequent steps are lines',
   '边标注，等价于 sugar `<EdgeLabel>` child': 'Edge label, equivalent to a sugar `<EdgeLabel>` child',
   直线终点: 'Line endpoint',
   'Move action：移动游标但不绘制（TikZ `(A)`）': 'Move action: move the cursor without drawing (TikZ `(A)`)',
@@ -353,8 +353,6 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   箭头端点的共享与逐端放置配置: 'Shared and per-end arrow placement settings',
   '可选编译驱动自行解释的运行时载荷，不进入 Core IR':
     'Optional runtime payload interpreted by a compile driver; excluded from Core IR',
-  '无法由 authoring 字段唯一识别时显式指定路径类别':
-    'Explicit path category when authoring fields cannot identify it uniquely',
   作者侧路径步骤: 'Authoring path step',
   '创建作者侧路径输入，支持 id 简写与完整配置':
     'Create authoring path input with an id shorthand or full configuration',

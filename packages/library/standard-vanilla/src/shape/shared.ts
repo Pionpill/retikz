@@ -60,6 +60,7 @@ const normalizeShapeProperties = <TInput extends InputShapeProperties>(
     children: _children,
     ...source
   } = normalizePath({
+    type: 'path',
     ...input,
     children: [
       { type: 'step', kind: 'move', to: [0, 0] },
