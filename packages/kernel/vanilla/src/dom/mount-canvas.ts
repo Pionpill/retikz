@@ -25,12 +25,12 @@ import type { RenderReadonlyLayer } from '@retikz/render/runtime';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
 import type { InputRuntimeMeta } from '../normalize';
+import { createEmptyInputRuntimeMetaSnapshot } from '../normalize';
 import {
   DEFAULT_ID_PREFIX,
   VanillaViewMode,
   captureVanillaRuntimeOptions,
   computeDisplaySize,
-  createEmptyRuntimeMeta,
   toSceneResult,
 } from '../runtime';
 import type {
@@ -95,7 +95,7 @@ const mountStaticCanvas = (
   let currentLayers: ReadonlyArray<RenderReadonlyLayer> = Object.freeze([]);
   let currentArtifacts: ReadonlyArray<CompositeArtifact> = Object.freeze([]);
   let currentCompileResult: CompileResult | undefined;
-  let currentRuntimeMeta: InputRuntimeMeta = createEmptyRuntimeMeta();
+  let currentRuntimeMeta: InputRuntimeMeta = createEmptyInputRuntimeMetaSnapshot();
 
   // 存活的水合：onEvent 触发的 handler 表按「绑定时的 scene」合成（新增 / 移除的 onEvent track 决定注册哪些
   // listener），update 换图后必须按新 scene 重建、否则陈旧；view.dispose 时统一解绑全部未手动 dispose 的水合。

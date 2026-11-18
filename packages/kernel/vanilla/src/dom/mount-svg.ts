@@ -19,12 +19,12 @@ import { buildSvgFrameDocument } from '@retikz/render/svg';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
 import type { InputRuntimeMeta } from '../normalize';
+import { createEmptyInputRuntimeMetaSnapshot } from '../normalize';
 import {
   DEFAULT_ID_PREFIX,
   VanillaViewMode,
   captureVanillaRuntimeOptions,
   computeDisplaySize,
-  createEmptyRuntimeMeta,
   toSceneResult,
 } from '../runtime';
 import type {
@@ -69,7 +69,7 @@ const mountStaticSvg = (
   let currentScene: Scene;
   let currentArtifacts: ReadonlyArray<CompositeArtifact> = Object.freeze([]);
   let currentCompileResult: CompileResult | undefined;
-  let currentRuntimeMeta: InputRuntimeMeta = createEmptyRuntimeMeta();
+  let currentRuntimeMeta: InputRuntimeMeta = createEmptyInputRuntimeMetaSnapshot();
   const liveHydrationDisposers = new Set<() => void>();
 
   const renderInto = (next: InputRender): void => {

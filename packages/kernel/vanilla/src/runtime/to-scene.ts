@@ -9,9 +9,6 @@ import { createEmptyInputRuntimeMetaSnapshot } from '../normalize';
 import { compileToScene } from '../processing';
 import type { CommonOptions, InputRender } from './types';
 
-/** 为非 InputScene 输入创建独立的空 runtime metadata */
-export const createEmptyRuntimeMeta = (): InputRuntimeMeta => createEmptyInputRuntimeMetaSnapshot();
-
 /** Render input 归一结果 */
 export type SceneResult = {
   /** 主 Scene */
@@ -53,7 +50,7 @@ export const toSceneResult = (input: InputRender, options: CommonOptions): Scene
       compileResult: undefined,
       layers: EMPTY_READONLY_LAYERS,
       diagnostics: EMPTY_DIAGNOSTICS,
-      runtimeMeta: createEmptyRuntimeMeta(),
+      runtimeMeta: createEmptyInputRuntimeMetaSnapshot(),
     };
   }
 
