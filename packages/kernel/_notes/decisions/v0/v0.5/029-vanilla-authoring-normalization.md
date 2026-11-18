@@ -28,10 +28,8 @@ Vanilla 提供纯 `normalizeXxx(InputXxx): IRXxx`。它只负责已类型化 aut
 最小边界如下：
 
 ```ts
-type InputNode = Omit<IRNode, 'type' | 'position' | 'label'> & {
-  readonly type?: 'node';
-  readonly position?: InputPosition;
-  readonly label?: InputNodeLabel | ReadonlyArray<InputNodeLabel>;
+type InputNode = IRNode & {
+  readonly authoring?: unknown;
 };
 
 type InputPath = Omit<IRPath, 'children' | 'arrow'> & {
@@ -52,6 +50,8 @@ declare const normalizeScope: (input: InputScope) => IRScope;
 declare const normalizeScene: (input: InputScene, options?: InputNormalizeOptions) => NormalizedInputScene;
 ```
 
+进入 Scene、Layer 或 Scope 的作者子项必须显式携带实体 `type`；Node、Path、Scope 不根据其它字段推断类别。具名 helper 和框架组件负责填入各自类别，调用方无需重复声明。
+
 `InputScene` 取代既有 Vanilla plain spec，成为 plain API 与所有框架 adapter 共用的唯一顶层 typed authoring 契约；不保留另一个平行顶层 spec 或兼容别名。它要么直接拥有有序 `InputChild`，要么拥有有序 `InputLayer`，两种形态不能并存。Layer 只表达 authoring 顺序、身份与运行时缓存提示，不进入 Core IR；归一化以稳定顺序把其 children 汇入唯一的 `IRScene`，同时保留对应 runtime metadata。
 
 `version` 只属于 Core 可持久化 IR Schema：`IRScene.version` 固定为当前 IR 版本。`InputScene` 不携带 `version`，因此 Vanilla 可以在已类型化边界以它与 `IRScene` 区分；不以 `type`、children 或 layer 形态猜测输入阶段。
@@ -64,7 +64,7 @@ declare const normalizeScene: (input: InputScene, options?: InputNormalizeOption
 
 `normalizeScene` 是统一顶层入口，返回 `NormalizedInputScene`：其中唯一的 Source IR、按显式 adapter 收集的 Composite dependency contribution、authoring provenance 与 runtime metadata 必须来自同一次有序归一化，不能由调用方再做第二次 children 遍历或手工合并。只有 `NormalizedInputScene.ir` 与 Vanilla processing 通过既有 Core resolver 得到的 definitions 能交给 Core；contribution、provenance 与 runtime metadata 只供 Vanilla processing 使用，既不成为 Core compile 的平行输入，也不替代既有 resolver 输入。其 options 只接收显式 Vanilla adapter 与 processing 已准备的窄 Theme context；调用方的 Core Composite definitions 与 Theme style definitions 只经 `ProcessingOptions.compile` 进入 Vanilla processing，再由该 owner 调度既有 Core resolver。`normalizeNode`、`normalizePath` 等实体 normalizer 仍直接返回对应 `IRXxx`，以便组合出该顶层结果。
 
-`InputPosition`、`InputTarget`、`InputTransform`、`InputNodeLabel`、`InputStepLabel`、`InputStep` 与其它实际存在的 authoring 子结构遵循同一规则：以最窄的 Source IR 类型派生，只在 authoring 形态确实不同处放宽。无差异的 Source IR 字段直接复用 `IRXxx`，不为命名完整性制造平行类型。
+`InputTarget`、`InputStep` 与其它实际存在的 authoring 子结构遵循同一规则：以最窄的 Source IR 类型派生，只在 authoring 形态确实不同处放宽。无差异的 Source IR 字段直接复用 `IRXxx`，不为命名完整性制造平行类型。
 
 Core 的公开 schema 与类型只描述持久化 IR：`XxxSchema` 和由其推导的 `IRXxx`。目前仅为 authoring 宽松写法存在的 Core `*Input` 类型和同义输入 helper 从 Core 公共面移除，不保留别名、deprecated bridge、fallback 或双轨入口。Core compile 仍只接收 `IRScene`。独立的文本或 DSL parser 可保留自己的 grammar 类型，但其包归属由输入契约决定，不因输出 Core IR 就归 Core。
 
