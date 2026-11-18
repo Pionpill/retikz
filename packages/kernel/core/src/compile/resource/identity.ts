@@ -28,7 +28,7 @@ export const serializeResourceContent = (value: unknown): string =>
 
 /** 对规范内容的 UTF-16LE 字节计算 FNV-1a 128 位摘要，生成与注册顺序无关的资源 ID */
 export const formatResourceId = (kind: SceneResource['kind'], content: string): string => {
-  // ⚡用八个16位字保持128位状态，乘积小于2^26，以位运算传播进位，避免逐字节浮点除法
+  // ⚡用八个16位字保持128位状态，按码元更新并用位运算传播进位
   let word0 = 0xc58d;
   let word1 = 0x6295;
   let word2 = 0x2175;
@@ -39,28 +39,40 @@ export const formatResourceId = (kind: SceneResource['kind'], content: string): 
   let word7 = 0x6c62;
   for (let index = 0; index < content.length; index++) {
     const code = content.charCodeAt(index);
-    for (let shift = 0; shift <= 8; shift += 8) {
-      const mixed = word0 ^ ((code >>> shift) & 255);
-      const previousWord1 = word1;
-      const previousWord2 = word2;
-      let product = mixed * 315;
-      word0 = product & 65535;
-      product = word1 * 315 + (product >>> 16);
-      word1 = product & 65535;
-      product = word2 * 315 + (product >>> 16);
-      word2 = product & 65535;
-      product = word3 * 315 + (product >>> 16);
-      word3 = product & 65535;
-      product = word4 * 315 + (product >>> 16);
-      word4 = product & 65535;
-      // 素数的2^88项从第5字的第8位开始叠加，读取异或后的原始低三字
-      product = word5 * 315 + (product >>> 16) + mixed * 256;
-      word5 = product & 65535;
-      product = word6 * 315 + (product >>> 16) + previousWord1 * 256;
-      word6 = product & 65535;
-      product = word7 * 315 + (product >>> 16) + previousWord2 * 256;
-      word7 = product & 65535;
-    }
+    // ⚡低字节异或后的状态记作 X。两次 FNV 乘法合并为 X·P² + correction·P，
+    // correction 是第一次乘积异或高字节后的差；ASCII 码元的差为零
+    const mixed = word0 ^ (code & 255);
+    const firstByte = (mixed * 315) & 255;
+    const correction = (firstByte ^ (code >>> 8)) - firstByte;
+    // P² ≡ (33689 + 2^16) + (30208 + 2·2^16)·2^80 (mod 2^128)
+    // 乘积均小于 2^32，可用无符号移位传播进位；原状态从高到低的依赖用局部值保留
+    const previousWord1 = word1;
+    const previousWord2 = word2;
+    const previousWord3 = word3;
+    const previousWord4 = word4;
+    const previousWord5 = word5;
+    const previousWord6 = word6;
+    let product = Math.imul(mixed, 33689) + correction * 315;
+    word0 = product & 65535;
+    product = Math.imul(word1, 33689) + mixed + (product >>> 16);
+    word1 = product & 65535;
+    product = Math.imul(word2, 33689) + previousWord1 + (product >>> 16);
+    word2 = product & 65535;
+    product = Math.imul(word3, 33689) + previousWord2 + (product >>> 16);
+    word3 = product & 65535;
+    product = Math.imul(word4, 33689) + previousWord3 + (product >>> 16);
+    word4 = product & 65535;
+    product = Math.imul(word5, 33689) + previousWord4 + (product >>> 16) + Math.imul(mixed, 30208) + correction * 256;
+    word5 = product & 65535;
+    product = Math.imul(word6, 33689) + previousWord5 + (product >>> 16) + Math.imul(previousWord1, 30208) + mixed * 2;
+    word6 = product & 65535;
+    word7 =
+      (Math.imul(word7, 33689) +
+        previousWord6 +
+        (product >>> 16) +
+        Math.imul(previousWord2, 30208) +
+        previousWord1 * 2) &
+      65535;
   }
   return `${kind}-${word7.toString(16).padStart(4, '0')}${word6.toString(16).padStart(4, '0')}${word5.toString(16).padStart(4, '0')}${word4.toString(16).padStart(4, '0')}${word3.toString(16).padStart(4, '0')}${word2.toString(16).padStart(4, '0')}${word1.toString(16).padStart(4, '0')}${word0.toString(16).padStart(4, '0')}`;
 };
