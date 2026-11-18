@@ -2,7 +2,7 @@ import { compareProperties, jsonStructuralEquals } from '@retikz/foundation';
 
 import { shouldEmitScopeGroup } from '../../compile';
 import { compareReferenceGeometry } from '../shared';
-import type { WeaveEntry, WeaveScopeEntry } from '../shared';
+import type { WeaveDependencyKind, WeaveEntry, WeaveScopeEntry } from '../shared';
 import type { WeaveTransaction } from '../state';
 import type { WeaveTaskAddress } from './task';
 import type { WeaveAssembledOutput, WeaveElementExecution, WeaveUpdateRequest } from './types';
@@ -132,31 +132,49 @@ export const createWeaveDependencyFlow = ({
     const previousBindings = producer.current?.contribution?.bindings ?? [];
     const bindings = executions.get(producer)?.bindings ?? [];
     // 先比较生产者实际输出通道；只通知直接消费者，由其按查询及 prepared 槽位继续核对
-    for (const consumer of state.consumers) {
-      const kinds = transaction.readState(consumer).dependencies.get(producer) ?? [];
-      const changed =
-        producer.type === 'scope'
-          ? task.phase === 'project' &&
-            !jsonStructuralEquals(
-              producer.current?.compile?.value.layout.overall,
-              executions.get(producer)!.scope!.compiled.layout.overall,
+    // ⚡同一生产者的本次通知只比较一次连续相同的通道，不跨生产者、阶段或事务复用
+    let previousKind: WeaveDependencyKind | undefined;
+    let previousChanged = false;
+    const channelChanged = (kind: WeaveDependencyKind): boolean => {
+      if (
+        kind === previousKind ||
+        (typeof kind === 'object' &&
+          typeof previousKind === 'object' &&
+          kind.anchor === previousKind.anchor &&
+          kind.boundary === previousKind.boundary)
+      )
+        return previousChanged;
+      previousKind = kind;
+      previousChanged =
+        kind === 'layout'
+          ? !jsonStructuralEquals(
+              producer.current?.contribution?.output.geometries,
+              executions.get(producer)!.frame.state.geometries,
             )
-          : kinds.some(kind => {
-              if (kind === 'layout')
-                return !jsonStructuralEquals(
-                  producer.current?.contribution?.output.geometries,
-                  executions.get(producer)!.frame.state.geometries,
-                );
-              if (previousBindings.length !== bindings.length) return true;
-              return bindings.some((binding, index) => {
-                const previous = previousBindings[index];
-                return (
-                  previous.id !== binding.id ||
-                  !compareReferenceGeometry(previous.entry.geometry, binding.entry.geometry, kind)
-                );
-              });
+          : previousBindings.length !== bindings.length ||
+            bindings.some((binding, index) => {
+              const previous = previousBindings[index];
+              return (
+                previous.id !== binding.id ||
+                !compareReferenceGeometry(previous.entry.geometry, binding.entry.geometry, kind)
+              );
             });
-      if (changed) notify(consumer);
+      return previousChanged;
+    };
+    if (producer.type === 'scope') {
+      if (
+        state.consumers.size > 0 &&
+        task.phase === 'project' &&
+        !jsonStructuralEquals(
+          producer.current?.compile?.value.layout.overall,
+          executions.get(producer)!.scope!.compiled.layout.overall,
+        )
+      )
+        for (const consumer of state.consumers) notify(consumer);
+    } else {
+      for (const consumer of state.consumers) {
+        if (transaction.readState(consumer).dependencies.get(producer)?.some(channelChanged)) notify(consumer);
+      }
     }
     if (
       producer.type === 'scope' &&
