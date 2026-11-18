@@ -17,12 +17,9 @@ import type {
   IRStepRadius,
   IRTarget,
 } from '@retikz/core';
-import { AxisLineTargetSchema, FoldStepVia } from '@retikz/core';
-import { NormalizedFractionSchema } from '@retikz/foundation';
-import { enum as zodEnum, strictObject } from 'zod';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../error';
-import { parseTargetSugar } from './target';
+import { parseAxisLineTarget, parseTargetSugar } from './target';
 
 /**
  * Sugar 层 way 数组的关键字常量
@@ -203,11 +200,6 @@ export type WayParsedStep<TTarget, TControl, TAxisTarget> =
   | IREllipsePathStep
   | Extract<IRStep, { kind: 'cycle' }>;
 
-const WayFoldOpSchema = strictObject({
-  via: zodEnum([FoldStepVia.HorizontalVerticalHorizontal, FoldStepVia.VerticalHorizontalVertical]),
-  fraction: NormalizedFractionSchema.optional(),
-});
-
 /**
  * 将同一套 way 算子语法归约为保留领域位置的步骤
  * @description 领域目标不能使用保留算子字段；目标适配不改变算子顺序与标签消费规则
@@ -273,9 +265,18 @@ export const parseWayWithTargets = <TTarget, TControl, TAxisTarget>(
         if (typeof item === 'string') {
           output.push({ type: 'step', kind: 'fold', via: item as WayVia, to, ...label });
         } else {
-          const parsed = WayFoldOpSchema.safeParse(item);
-          if (!parsed.success) fail(`invalid fold operator: ${parsed.error.issues[0]?.message ?? 'invalid object'}`);
-          output.push({ type: 'step', kind: 'fold', ...parsed.data!, to, ...label });
+          const { via, fraction } = item as WayFoldOp;
+          if (fraction !== undefined && !(fraction >= 0 && fraction <= 1)) {
+            fail('fold fraction must be between 0 and 1');
+          }
+          output.push({
+            type: 'step',
+            kind: 'fold',
+            via,
+            to,
+            ...(fraction === undefined ? {} : { fraction }),
+            ...label,
+          });
         }
       } else if (operation === 'curve') {
         output.push({
@@ -342,14 +343,5 @@ export const parseWay = (way: WayDSL): Array<IRStep> =>
       return parseTargetSugar(value);
     },
     control: value => value,
-    axisTarget: value => {
-      const result = AxisLineTargetSchema.safeParse(parseTargetSugar(value));
-      if (!result.success)
-        throw new RetikzVanillaError(
-          RetikzVanillaErrorCode.Normalize,
-          'parseWay: axis-line target must resolve to a Cartesian position or NodeTarget; polar, relative, offset, and between targets are not supported',
-          { cause: result.error },
-        );
-      return result.data;
-    },
+    axisTarget: parseAxisLineTarget,
   });

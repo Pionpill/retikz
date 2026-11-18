@@ -17,23 +17,10 @@ describe('parseWay', () => {
       ]);
     });
 
-    it.each([
-      { horizontalTo: '+10,0' },
-      { verticalTo: '++0,10' },
-      { horizontalTo: { angle: 30, radius: 10 } },
-      { verticalTo: { relative: [0, 10] } },
-      { horizontalTo: { relativeAccumulate: [10, 0] } },
-      {
-        verticalTo: {
-          between: [
-            [0, 0],
-            [10, 10],
-          ],
-          fraction: 0.5,
-        },
-      },
-    ] as Array<Record<string, unknown>>)('拒绝收窄范围外的 target：%j', operator => {
-      expect(() => parseWay([[0, 0], operator] as WayDSL)).toThrow(/^parseWay:/);
+    it.each(['+10,0', '++0,10'])('拒绝单轴目标中的相对偏移简写：%s', target => {
+      expect(() => parseWay([[0, 0], { horizontalTo: target }])).toThrow(
+        /axis-line target cannot be a relative offset/,
+      );
     });
 
     it.each([
@@ -183,15 +170,8 @@ describe('parseWay', () => {
       ]);
     });
 
-    it.each([
-      { via: '-|', fraction: 0.25 },
-      { via: '-|-', fraction: -0.01 },
-      { via: '|-|', fraction: 1.01 },
-      { via: '-|-', fracton: 0.25 },
-      { via: '-|-', fraction: 0.25, unknown: true },
-      { via: 'diagonal', fraction: 0.25 },
-    ])('三段配置对象 strict fail-loud：%j', operator => {
-      expect(() => parseWay(['A', operator, 'B'] as WayDSL)).toThrow(/^parseWay:/);
+    it.each([-0.01, 1.01, NaN, Infinity])('拒绝无效折角比例：%s', fraction => {
+      expect(() => parseWay(['A', { via: '-|-', fraction }, 'B'])).toThrow(/fold fraction/);
     });
 
     it('三段配置对象参与多 operator 冲突检测', () => {

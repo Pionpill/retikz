@@ -1,9 +1,8 @@
-import type { IRArcStep, IRAxisLineTarget, IRPath, IRStep, IRTarget } from '@retikz/core';
-import { AxisLineTargetSchema } from '@retikz/core';
+import type { IRArcStep, IRPath, IRStep, IRTarget } from '@retikz/core';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../error';
-import { parseTargetSugar } from './target';
-import type { InputAxisLineTarget, InputPath, InputStep, InputTarget } from './types';
+import { parseAxisLineTarget, parseTargetSugar } from './target';
+import type { InputPath, InputStep, InputTarget } from './types';
 import { parseWay } from './way';
 
 /** 将方向简写转换为端点箭头对象，供 Kernel 与领域路径作者入口复用 */
@@ -17,23 +16,6 @@ export const normalizePathArrow = (arrow: InputPath['arrow']): IRPath['arrow'] =
 
 /** 将作者目标写法转换为 IR 目标 */
 const normalizeTarget = (input: InputTarget): IRTarget => parseTargetSugar(input);
-
-/** 将作者侧 axis-line target 组装为受限的 Source IR target */
-const normalizeAxisLineTarget = (input: InputAxisLineTarget): IRAxisLineTarget => {
-  const target = normalizeTarget(input);
-  const result = AxisLineTargetSchema.safeParse(target);
-  if (!result.success) {
-    throw new RetikzVanillaError(
-      RetikzVanillaErrorCode.Normalize,
-      'normalizePath: axis-line target must resolve to a Cartesian position or NodeTarget',
-      {
-        cause: result.error,
-      },
-    );
-  }
-
-  return result.data;
-};
 
 /** 将一条作者侧步骤组装为 Source IR 步骤 */
 const normalizeStep = (input: InputStep): IRStep => {
@@ -49,7 +31,7 @@ const normalizeStep = (input: InputStep): IRStep => {
     case 'axis-line':
       return {
         ...input,
-        to: normalizeAxisLineTarget(input.to),
+        to: parseAxisLineTarget(input.to),
         ...(input.label === undefined ? {} : { label: input.label }),
       };
     case 'arc': {

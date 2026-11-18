@@ -22,7 +22,7 @@ export const parseNodeTarget = (s: string): IRNodeTarget => {
 
   // 空 id（`''` / `'.top'`）fail-fast——否则产出 NodeTargetSchema 非法的 `{ id: '' }`，
   // 流到 compile 会误报"undefined node id ''"（拼写错误被当成缺节点）
-  if (id.length === 0) {
+  if (id.trim().length === 0) {
     throw new RetikzVanillaError(RetikzVanillaErrorCode.Normalize, `parseNodeTarget: empty node id in '${s}'`);
   }
 
@@ -30,7 +30,11 @@ export const parseNodeTarget = (s: string): IRNodeTarget => {
 
   const tail = s.slice(dot + 1);
   if (ANGLE_RE.test(tail)) {
-    return { id, anchor: Number(tail) };
+    const anchor = Number(tail);
+    if (!Number.isFinite(anchor)) {
+      throw new RetikzVanillaError(RetikzVanillaErrorCode.Normalize, `parseNodeTarget: non-finite angle in '${s}'`);
+    }
+    return { id, anchor };
   }
 
   if (!isAnchor(tail)) {

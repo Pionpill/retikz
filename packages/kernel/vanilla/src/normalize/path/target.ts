@@ -1,8 +1,8 @@
-import type { IRTarget } from '@retikz/core';
+import type { IRAxisLineTarget, IRTarget } from '@retikz/core';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../error';
 import { parseNodeTarget } from './node';
-import type { InputTarget } from './types';
+import type { InputAxisLineTarget, InputTarget } from './types';
 
 /** TikZ 风格相对偏移字面量正则：捕获 `+` / `++` 前缀 + dx / dy 数值 */
 const RELATIVE_NUMBER = '-?(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][+-]?\\d+)?';
@@ -40,4 +40,13 @@ export const parseTargetSugar = (input: InputTarget): IRTarget => {
   }
 
   return { relative: [dx, dy] };
+};
+
+/** 单轴目标只接受节点简写；类型化的直角坐标和节点引用直接沿用 */
+export const parseAxisLineTarget = (input: InputAxisLineTarget): IRAxisLineTarget => {
+  if (typeof input !== 'string') return input;
+  if (RELATIVE_LIKE_RE.test(input)) {
+    throw new RetikzVanillaError(RetikzVanillaErrorCode.Normalize, 'axis-line target cannot be a relative offset');
+  }
+  return parseNodeTarget(input);
 };
