@@ -21,10 +21,10 @@ import {
 import type { CompileElementExecutor } from '../../compile';
 import { materializeWeaveOutput } from '../contribution';
 import { assembleWeaveScopeOutput } from '../element';
-import type { WeaveContribution, WeaveEntry, WeaveRoot, WeaveScopeEntry } from '../shared';
+import type { WeaveEntry, WeaveRoot, WeaveScopeEntry } from '../shared';
 import type { WeaveTransaction } from '../state';
 import type { WeaveTaskAddress } from './task';
-import type { WeaveElementExecution, WeaveExecutionContext, WeaveUpdateRequest } from './types';
+import type { WeaveAssembledOutput, WeaveElementExecution, WeaveExecutionContext, WeaveUpdateRequest } from './types';
 
 /** 本批输出组装所需的执行状态与阶段调度能力 */
 type WeaveOutputFlowContext = {
@@ -33,7 +33,7 @@ type WeaveOutputFlowContext = {
   paths: ReadonlyMap<WeaveEntry, PropertyPath>;
   pending: Map<string, WeaveUpdateRequest>;
   executions: Map<WeaveEntry, WeaveElementExecution>;
-  assembled: Map<WeaveEntry, SubtreeCompileState>;
+  assembled: Map<WeaveEntry, WeaveAssembledOutput>;
   changedOutputs: Set<WeaveScopeEntry>;
   rootExecutor: CompileElementExecutor;
   recordComputed: WeaveExecutionContext['recordComputed'];
@@ -71,7 +71,7 @@ export const createWeaveOutputFlow = ({
 }: WeaveOutputFlowContext) => {
   const tracker = runtime.state.execution.provenanceTracker;
   /** ⚡清洁贡献直接物化输出，不进入元素执行器或候选写入 */
-  const outputOf = (entry: WeaveEntry): SubtreeCompileState => {
+  const outputOf = (entry: WeaveEntry): WeaveAssembledOutput => {
     if (pending.has(keyOf(entry))) requireTask(prepareAddress(entry));
     const execution = executions.get(entry);
     if (execution !== undefined) {
@@ -166,7 +166,7 @@ export const createWeaveOutputFlow = ({
     artifacts: [],
   });
   /** 包络读取清洁布局，不提前物化绘制或来源所有者 */
-  const layoutOf = (entry: WeaveEntry): WeaveContribution['output'] | SubtreeCompileState => {
+  const layoutOf = (entry: WeaveEntry): WeaveAssembledOutput => {
     if (entry.type !== 'scope') return transaction.readState(entry).contribution!.output;
     const state = transaction.readState(entry);
     const children = emptyOutput();
@@ -189,10 +189,7 @@ export const createWeaveOutputFlow = ({
     result.primitives.push(...children.primitives);
     return result;
   };
-  const appendState = (
-    destination: SubtreeCompileState,
-    contribution: SubtreeCompileState | WeaveContribution['output'],
-  ) => {
+  const appendState = (destination: SubtreeCompileState, contribution: WeaveAssembledOutput) => {
     destination.primitives.push(...contribution.primitives);
     destination.geometries.push(...contribution.geometries);
     destination.publications.push(...contribution.publications);

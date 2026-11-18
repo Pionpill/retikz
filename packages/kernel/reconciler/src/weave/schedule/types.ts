@@ -8,10 +8,14 @@ import type {
   NamespaceFrameChange,
   ScopeExecutionSteps,
   SubtreeCompileRuntime,
+  SubtreeCompileState,
 } from '../../compile';
 import type { executeWeaveScope } from '../element';
 import type { WeaveContribution, WeaveEntry, WeaveReferenceRead, WeaveRoot } from '../shared';
 import type { WeaveNameIndex, WeaveTransaction } from '../state';
+
+/** 父容器读取的子输出，来自本批子树或已发布的只读贡献 */
+export type WeaveAssembledOutput = SubtreeCompileState | WeaveContribution['output'];
 
 /** 候选直接变化与完成确认；依赖在读取点核对实际结果 */
 export type WeaveUpdateRequest = {
