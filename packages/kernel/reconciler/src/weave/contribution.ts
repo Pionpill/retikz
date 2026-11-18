@@ -64,29 +64,20 @@ export const materializeWeaveOutput = (
   contribution: WeaveContribution,
   semanticOwner?: CompileOwnerKey,
   namespace: CompileNamespaceKey = runtime.state.execution.namespaceStack.identity,
-): SubtreeCompileState => {
+): WeaveContribution['output'] => {
   const { provenanceTracker } = runtime.state.execution;
   const { paintRegistry, clipRegistry } = runtime.state.workspace;
   importSceneResources(contribution.resources, paintRegistry, clipRegistry);
-  const primitives = provenanceTracker?.materializePrimitives(contribution.output.primitives) ?? [
-    ...contribution.output.primitives,
-  ];
+  const primitives =
+    provenanceTracker?.materializePrimitives(contribution.output.primitives) ?? contribution.output.primitives;
   if (semanticOwner !== undefined && contribution.provenance !== undefined)
     provenanceTracker?.importProvenance(contribution.provenance, primitives, semanticOwner, 0, namespace, true);
   for (const [index, primitive] of primitives.entries()) {
     const zIndex = contribution.zIndices[index];
     if (zIndex !== undefined) output.zIndexMap.set(primitive, zIndex);
   }
-  return {
-    primitives,
-    paths: [],
-    geometries: [...contribution.output.geometries],
-    publications: [...contribution.output.publications],
-    bounds: [...contribution.output.bounds],
-    allocations: [...contribution.output.allocations],
-    alignmentGuides: [...contribution.output.alignmentGuides],
-    artifacts: [...contribution.output.artifacts],
-  };
+  // ⚡父容器只读取并追加这些数组；来源重绑仅替换图元，不复制其余只读贡献
+  return primitives === contribution.output.primitives ? contribution.output : { ...contribution.output, primitives };
 };
 
 /** 在计算工作区物化贡献并重放其已确认有效的名称 */
@@ -95,7 +86,7 @@ export const materializeWeaveContribution = (
   output: TreeOutputState,
   contribution: WeaveContribution,
   semanticOwner?: CompileOwnerKey,
-): SubtreeCompileState => {
+): WeaveContribution['output'] => {
   const state = materializeWeaveOutput(runtime, output, contribution, semanticOwner);
   const namespaceStack = runtime.state.execution.namespaceStack;
   const scopeIds = new Map<string, string>();

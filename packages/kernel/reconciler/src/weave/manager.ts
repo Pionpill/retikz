@@ -450,12 +450,28 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
       names: batch.addresses.names,
     };
 
-    /** 首轮、full 与 auto 共用调度器；仅 auto 允许复用声明位置不变的旧阶段产物 */
+    /** 首轮、full 与 auto 共用调度器；仅 auto 可复用与当前声明位置兼容的阶段产物 */
     const compilation = executeWeaveCompilation<TComposite>(context, {
-      canReuse: entry =>
-        batch.updating &&
-        !batch.forceFull &&
-        isPropertyPathEqual(batch.previousEntryIrPaths.get(entry) ?? [], paths.get(entry)!),
+      canReuse: entry => {
+        if (!batch.updating || batch.forceFull) return false;
+        if (isPropertyPathEqual(batch.previousEntryIrPaths.get(entry) ?? [], paths.get(entry)!)) return true;
+        if (entry.type !== 'node') return false;
+        const state = transaction.readState(entry);
+        const canon = state.resolve?.value;
+        // ⚡绝对定位、纯色且无文本的节点不捕获地址；仍用新位置组装绑定、来源和输出
+        return (
+          canon != null &&
+          state.resolve?.input === state.origin.own &&
+          Array.isArray(canon.layout.position) &&
+          typeof canon.style.fill === 'string' &&
+          typeof canon.style.stroke === 'string' &&
+          canon.text === undefined &&
+          canon.labels.length === 0 &&
+          state.referenceReads.length === 0 &&
+          state.compile?.diagnostics.length === 0 &&
+          state.contribution?.diagnostics.length === 0
+        );
+      },
       retained,
       pending,
     });

@@ -1,18 +1,17 @@
 import { compareProperties, jsonStructuralEquals } from '@retikz/foundation';
 
 import { shouldEmitScopeGroup } from '../../compile';
-import type { SubtreeCompileState } from '../../compile';
 import { compareReferenceGeometry } from '../shared';
 import type { WeaveEntry, WeaveScopeEntry } from '../shared';
 import type { WeaveTransaction } from '../state';
 import type { WeaveTaskAddress } from './task';
-import type { WeaveElementExecution, WeaveUpdateRequest } from './types';
+import type { WeaveAssembledOutput, WeaveElementExecution, WeaveUpdateRequest } from './types';
 
 type WeaveDependencyContext = {
   transaction: WeaveTransaction;
   pending: Map<string, WeaveUpdateRequest>;
   executions: Map<WeaveEntry, WeaveElementExecution>;
-  assembled: Map<WeaveEntry, SubtreeCompileState>;
+  assembled: Map<WeaveEntry, WeaveAssembledOutput>;
   changedOutputs: Set<WeaveScopeEntry>;
   keyOf: (entry: WeaveEntry) => string;
   prepareAddress: (entry: WeaveEntry) => WeaveTaskAddress;

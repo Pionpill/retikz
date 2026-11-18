@@ -13,7 +13,7 @@ import {
   prepareScopeExecution,
   queuePathChild,
 } from '../../compile';
-import type { CompileNamespaceKey, CompileOwnerKey, SubtreeCompileState } from '../../compile';
+import type { CompileNamespaceKey, CompileOwnerKey } from '../../compile';
 import { captureWeaveContribution, materializeWeaveContribution, materializeWeaveOutput } from '../contribution';
 import {
   executeWeaveCoordinate,
@@ -29,7 +29,12 @@ import { createWeaveDependencyFlow } from './dependency';
 import { createWeaveOutputFlow } from './output';
 import { WeaveTaskQueue } from './queue';
 import type { WeaveTaskAddress } from './task';
-import type { WeaveElementExecution, WeaveExecutionContext, WeaveExecutionSelection } from './types';
+import type {
+  WeaveAssembledOutput,
+  WeaveElementExecution,
+  WeaveExecutionContext,
+  WeaveExecutionSelection,
+} from './types';
 
 /** 执行已选择的候选任务，首屏与更新共用条目计算和组装 */
 export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinition>(
@@ -79,7 +84,7 @@ export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinitio
     pending.get(keyOf(entry))?.consume();
     pending.delete(keyOf(entry));
   };
-  const assembled = new Map<WeaveEntry, SubtreeCompileState>();
+  const assembled = new Map<WeaveEntry, WeaveAssembledOutput>();
   /** 子输出可见性变化只更新祖先分组输出，不失效子布局 */
   const changedOutputs = new Set<WeaveScopeEntry>();
   const { ancestorsOf, notify, ensureDependencies, ensure, requireProjection, notifyConsumers } =
