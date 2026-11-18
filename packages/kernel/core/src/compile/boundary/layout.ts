@@ -227,9 +227,10 @@ export const clipBoundaryPolyline = (
   const { def, rect, params } = bindLayoutBoundary(layout, boundary, canon, warn, state);
   const outer = calculateExpandedBoundaryRect(rect, layout.geometry.margin);
   const center: Position = [outer.x, outer.y];
+  let positionOwner: string | undefined;
   const boundaryAt = (position: Position): Position =>
     snapshotProviderPosition(
-      `Boundary '${boundaryKey(boundary)}' boundaryPoint`,
+      (positionOwner ??= `Boundary '${boundaryKey(boundary)}' boundaryPoint`),
       def.computeBoundaryPoint(outer, position, params),
     );
   const contains = (position: Position): boolean =>
