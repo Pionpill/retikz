@@ -25,7 +25,8 @@ describe('性能报告消费口径', () => {
   });
   it('展示均值与P50，表格列数一致，不把执行成功当性能达标', () => {
     const report: BenchmarkReport = {
-      version: 4,
+      version: 5,
+      allocationEnabled: false,
       createdAt: '2026-11-17T00:00:00Z',
       dimensionLabels: ['场景'],
       source: { commit: 'snapshot', dirty: false, sourceHash: 'source' },
