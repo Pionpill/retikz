@@ -1,5 +1,5 @@
-export * from './coordinate';
-export * from './embed';
+export type * from './coordinate';
+export type * from './embed';
 export * from './helpers';
 export * from './node';
 export * from './path';

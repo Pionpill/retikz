@@ -14,8 +14,12 @@ import type {
   InputEmbedThemeContextResolver,
   InputScene,
 } from '../normalize';
-import { createEmptyInputRuntimeMetaSnapshot, isInputScene, normalizeScene } from '../normalize';
-import { createInputSceneTraversal } from '../normalize/scene';
+import {
+  createEmptyInputRuntimeMetaSnapshot,
+  createInputSceneTraversal,
+  isInputScene,
+  normalizeScene,
+} from '../normalize';
 import { assertPreparationActive, prepareAuthoringContributions } from './authoring';
 import { createTextMeasurer } from './text-measurement';
 import type { AsyncProcessingOptions, InputPreparedProcessing, ProcessingOptions, ProcessingSource } from './types';

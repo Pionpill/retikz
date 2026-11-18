@@ -1,7 +1,5 @@
 import type { AnyCompositeDefinition, IRScene, Scene } from '@retikz/core';
-import type { CompositeArtifact } from '@retikz/reconciler';
-import type { CompileOptions, CompileResult } from '@retikz/reconciler';
-import type { ReconcilerUpdateStrategy } from '@retikz/reconciler';
+import type { CompileOptions, CompileResult, CompositeArtifact, ReconcilerUpdateStrategy } from '@retikz/reconciler';
 import type { RenderReadonlyLayer } from '@retikz/render/runtime';
 
 import type {
@@ -11,7 +9,7 @@ import type {
   InputRuntimeMeta,
   InputScene,
 } from '../normalize';
-import type { VanillaCompileDriver } from '../runtime/compile-driver';
+import type { VanillaCompileDriver } from './compile-driver';
 
 /** 可进入 Vanilla 框架无关 processing 的作者输入 */
 export type ProcessingSource = InputScene | IRScene;

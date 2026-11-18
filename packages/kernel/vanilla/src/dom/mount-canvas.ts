@@ -1,6 +1,5 @@
 import type { Scene } from '@retikz/core';
-import type { CompositeArtifact } from '@retikz/reconciler';
-import type { CompileResult } from '@retikz/reconciler';
+import type { CompileResult, CompositeArtifact } from '@retikz/reconciler';
 import type { AnimationControls, IdClockRegistry } from '@retikz/render/animation';
 import {
   createClock,
@@ -26,10 +25,14 @@ import type { RenderReadonlyLayer } from '@retikz/render/runtime';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
 import type { InputRuntimeMeta } from '../normalize';
-import { computeDisplaySize } from '../runtime';
-import { DEFAULT_ID_PREFIX, VanillaViewMode } from '../runtime/constants';
-import { captureVanillaRuntimeOptions } from '../runtime/runtime-options';
-import { createEmptyRuntimeMeta, toSceneResult } from '../runtime/to-scene';
+import {
+  DEFAULT_ID_PREFIX,
+  VanillaViewMode,
+  captureVanillaRuntimeOptions,
+  computeDisplaySize,
+  createEmptyRuntimeMeta,
+  toSceneResult,
+} from '../runtime';
 import type {
   CanvasView,
   HydrateOptions,
@@ -44,7 +47,7 @@ import type {
   StaticMountCanvasOptions,
   StaticRawCanvasView,
   VanillaRetainedRuntimeOptions,
-} from '../runtime/types';
+} from '../runtime';
 import { createRetainedProcessingController } from './retained';
 
 /** 设备像素比：取有限正数、否则回退 1（镜像 react CanvasHost） */

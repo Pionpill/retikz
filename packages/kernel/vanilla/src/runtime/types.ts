@@ -1,7 +1,10 @@
 import type { IRScene, Scene } from '@retikz/core';
-import type { CompositeArtifact } from '@retikz/reconciler';
-import type { CompileResult } from '@retikz/reconciler';
-import type { ReconcilerDiagnostic, ReconcilerUpdateStrategy } from '@retikz/reconciler';
+import type {
+  CompileResult,
+  CompositeArtifact,
+  ReconcilerDiagnostic,
+  ReconcilerUpdateStrategy,
+} from '@retikz/reconciler';
 import type { AnimationControls } from '@retikz/render/animation';
 import type { HydrationHandlers } from '@retikz/render/hydration';
 import type { RetainedRendererFactory } from '@retikz/render/runtime';
@@ -9,8 +12,6 @@ import type { RetainedRendererFactory } from '@retikz/render/runtime';
 import type { InputRuntimeMeta, InputScene, SynchronousInputEmbedAdapter } from '../normalize';
 import type { ProcessingOptions } from '../processing';
 import type { VanillaViewMode } from './constants';
-
-export { VanillaViewMode } from './constants';
 
 /** mount / renderToSvgString 的入参：已编译 `Scene`、待编译 `IRScene` 或 Vanilla InputScene */
 export type InputRender = Scene | IRScene | InputScene;
