@@ -12,12 +12,21 @@ const collectAdrs = root => {
     for (const item of readdirSync(directory, { withFileTypes: true })) {
       const absolute = path.join(directory, item.name);
       if (item.isDirectory()) visit(absolute);
-      else if (/^\d{3,}-.+\.md$/.test(item.name)) {
+      else if (item.name.endsWith('.md')) {
         const relative = path.relative(root, absolute).split(path.sep).join('/');
-        const match = relative.match(
-          /^packages\/([^/]+)\/_notes\/decisions\/(?:(.*?)\/)?v\d+\/(v\d+\.\d+)\/\d{3,}-.+\.md$/,
-        );
-        if (match) entries.push({ path: relative, absolute, owner: match[2] || match[1], version: match[3] });
+        const [, group, , , ...segments] = relative.split('/');
+        const owner = group === 'kernel' ? group : segments.shift();
+        if (item.name === '_template.md') continue;
+        if (segments.length !== 2) throw new Error(relative + ': ADR 必须位于当期目录或settled 目录');
+
+        const [directoryName, filename] = segments;
+        const version = directoryName.match(/^_(v\d+\.\d+)$/)?.[1];
+        if (filename === 'roadmap.md' && version) continue;
+        if (version && /^\d{3,}-.+\.md$/.test(filename))
+          entries.push({ path: relative, absolute, owner, kind: 'current', version });
+        else if (directoryName === 'settled' && /^[a-z][a-z0-9-]*\.md$/.test(filename))
+          entries.push({ path: relative, absolute, owner, kind: 'long-term' });
+        else throw new Error(relative + ': ADR 路径不符合当期编号或长期主题命名');
       }
     }
   };
@@ -77,11 +86,15 @@ const readAdr = entry => {
   const title = body.match(/^#\s+(.+)$/m)?.[1];
   if (!title) throw new Error(`${entry.path}: 缺少 ADR 标题`);
 
+  if (entry.kind === 'long-term' && !/^## 历史记录\s*$/m.test(body))
+    throw new Error(entry.path + ': 长期 ADR 缺少历史记录');
+
   const status = body.match(/^\s*-\s*状态[：:]\s*(.+)$/m)?.[1] || '未标注';
 
   return {
     path: entry.path,
     owner: entry.owner,
+    kind: entry.kind,
     version: entry.version,
     title,
     status,
@@ -107,7 +120,7 @@ const run = () => {
   });
   if (values.help) {
     console.log(
-      '用法: pnpm adr:search <关键词...> [--owner diagram] [--version v0.1] [--limit 10] [--body] [--json]\n多词要求全部命中；默认只搜索文件名、标题、摘要和关键词。--body 补查正文，仍只输出摘要。\npnpm adr:search --check 校验全仓 ADR 元数据；不读取实现完成状态、不写索引。',
+      '用法: pnpm adr:search <关键词...> [--owner diagram] [--version v0.1] [--limit 10] [--body] [--json]\n--version 只筛选当期 ADR。多词要求全部命中；默认只搜索文件名、标题、摘要和关键词。--body 补查正文，仍只输出摘要。\npnpm adr:search --check 校验全仓 ADR 元数据；不读取实现完成状态、不写索引。',
     );
     return;
   }
@@ -157,9 +170,10 @@ const run = () => {
   const results = matches.slice(0, limit).map(({ record }) => ({
     path: record.path,
     owner: record.owner,
+    kind: record.kind,
     version: record.version,
     title: record.title,
-    status: record.status,
+    status: record.kind === 'current' ? record.status : undefined,
     description: record.description,
     keywords: record.keywords,
   }));
@@ -168,8 +182,10 @@ const run = () => {
   else {
     console.log(`命中 ${matches.length} 篇，显示 ${results.length} 篇${values.body ? '（包含正文搜索）' : ''}`);
 
-    for (const result of results)
-      console.log(`\n${result.path}\n${result.title}\n${result.description}\n状态: ${result.status}`);
+    for (const result of results) {
+      const classification = result.kind === 'current' ? '当期决策 · ' + result.status : '长期决策';
+      console.log(['', result.path, result.title, result.description, classification].join('\n'));
+    }
     if (matches.length > limit) console.log('\n结果已限量；请增加关键词或用 --owner / --version 缩小范围。');
     if (!matches.length && !values.body) console.log('可更换同义词、移除筛选，或用 --body 搜索正文。');
   }
