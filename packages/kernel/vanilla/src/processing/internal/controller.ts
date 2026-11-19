@@ -1,4 +1,4 @@
-import type { ReconcilerCommitTarget } from '@retikz/reconciler';
+import type { ReconcilerCommitTarget, WeaveBatch } from '@retikz/reconciler';
 import { SceneReconciler } from '@retikz/reconciler';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../error';
@@ -88,6 +88,8 @@ type RetainedProcessingState = Readonly<{
     revision: number,
   ) => ProcessingResult;
   /** 仅更新固定 participant 的配置 */
+  getScopeId: (path: ReadonlyArray<number>) => string;
+  applyBatch: (batch: WeaveBatch, revision: number) => ProcessingResult;
   updateParticipant: (revision: number) => ProcessingResult;
   /** 提交当前已准备 Core 输出的 compile driver 通知 */
   commitDriver: () => void;
@@ -102,6 +104,7 @@ const createRetainedProcessingState = (
   initial: InputPreparedProcessing,
   initialDriverInput: InputVanillaCompileDriver,
   initialRevision: number,
+  execution: ProcessingOptions['reconciler'],
   compileDriver: NonNullable<ProcessingOptions['compileDriver']>,
   compileSession: VanillaCompileDriverSession,
   assertCurrent: () => void,
@@ -143,7 +146,8 @@ const createRetainedProcessingState = (
     dispose: () => participant?.target.dispose?.(),
   };
   const session = new SceneReconciler(initial.coreOptions, {
-    captureProvenance: participant !== undefined,
+    ...execution,
+    captureProvenance: participant !== undefined || execution?.captureProvenance,
     target,
   });
   try {
@@ -198,6 +202,19 @@ const createRetainedProcessingState = (
         throw cause;
       }
     },
+    getScopeId: path => session.getScopeId(path),
+    applyBatch: (batch, revision) => {
+      const before = participantRevision;
+      participantRevision = revision;
+      try {
+        const previous = session.read();
+        if (session.update(batch, previous) !== previous) commitDriver();
+        return read();
+      } catch (cause) {
+        participantRevision = before;
+        throw cause;
+      }
+    },
     updateParticipant: revision => {
       if (participant?.updateParticipant === undefined)
         throw new RetikzVanillaError(RetikzVanillaErrorCode.Processing, 'Renderer configuration is unavailable');
@@ -220,6 +237,7 @@ const createProcessingController = (
   transactionParticipantFactory?: ProcessingTransactionParticipantFactory,
   initialPrepared?: InputPreparedProcessing,
   assertInitial?: () => void,
+  pendingDriverCommits?: Array<() => void>,
 ): PreparedInputProcessingController => {
   let assertCurrent = assertInitial ?? (() => undefined);
   const fixedOptions = captureProcessingOptions(options);
@@ -248,6 +266,7 @@ const createProcessingController = (
       prepared,
       input,
       revision,
+      fixedOptions.reconciler,
       compileDriver,
       compileSession,
       () => assertCurrent(),
@@ -256,7 +275,8 @@ const createProcessingController = (
 
   let state = createState(initial, initialDriverInput, 0, transactionParticipantFactory);
   let current = state.read();
-  state.commitDriver();
+  if (pendingDriverCommits) pendingDriverCommits.push(state.commitDriver);
+  else state.commitDriver();
   assertCurrent = () => undefined;
 
   let disposed = false;
@@ -332,6 +352,19 @@ const createProcessingController = (
   };
 
   return Object.freeze({
+    getScopeId: (path, expected) => {
+      assertActive();
+      if (current !== expected) throw new RetikzVanillaError(RetikzVanillaErrorCode.Processing, 'Stale layer result');
+      return state.getScopeId(path);
+    },
+    applyBatch: (batch, expected) => {
+      assertActive();
+      if (current !== expected) throw new RetikzVanillaError(RetikzVanillaErrorCode.Processing, 'Stale layer result');
+      const next = state.applyBatch(batch, current.revision + 1);
+      if (next === current) return;
+      current = next;
+      notifyListeners(current);
+    },
     updatePrepared: (next, check) => {
       // 保留此前诊断，过期请求只清理自身事务产生的失败
       if (check !== undefined) diagnostics.push(...state.diagnostics());
@@ -408,5 +441,6 @@ export const createPreparedInputProcessingController = (
   input: InputPreparedProcessing,
   options: ProcessingOptions,
   assertCurrent?: () => void,
+  pendingDriverCommits?: Array<() => void>,
 ): PreparedInputProcessingController =>
-  createProcessingController(input.source, options, undefined, input, assertCurrent);
+  createProcessingController(input.source, options, undefined, input, assertCurrent, pendingDriverCommits);

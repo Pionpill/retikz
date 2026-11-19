@@ -238,12 +238,12 @@ describe('<Layout> 的 Vanilla Input processing', () => {
   it('Strict Effects 重放后在最终卸载时释放 Vanilla controller', async () => {
     vi.useFakeTimers();
     const createController = vanilla.createProcessingController;
-    const controllers: Array<Readonly<{ controller: ProcessingController; dispose: ReturnType<typeof vi.fn> }>> = [];
+    const disposers: Array<ReturnType<typeof vi.fn>> = [];
     vi.spyOn(vanilla, 'createProcessingController').mockImplementation((source, options) => {
       const controller = createController(source, options);
       const dispose = vi.fn(controller.dispose);
-      const observedController: ProcessingController = Object.freeze({ ...controller, dispose });
-      controllers.push(Object.freeze({ controller: observedController, dispose }));
+      const observedController = Object.freeze({ ...controller, dispose });
+      disposers.push(dispose);
 
       return observedController;
     });
@@ -260,12 +260,12 @@ describe('<Layout> 的 Vanilla Input processing', () => {
       ),
     );
 
-    expect(controllers).toHaveLength(2);
+    expect(disposers).toHaveLength(2);
 
     await act(() => root.unmount());
     await act(() => vi.runAllTimers());
 
-    for (const controller of controllers) expect(controller.dispose).toHaveBeenCalledTimes(1);
+    for (const dispose of disposers) expect(dispose).toHaveBeenCalledTimes(1);
   });
 
   it('retained source update 失败时保留最后成功宿主帧', async () => {

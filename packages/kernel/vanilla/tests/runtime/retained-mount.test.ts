@@ -11,8 +11,8 @@ import { defineRetainedRenderer, RetikzRenderErrorCode } from '@retikz/render/ru
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { literal, strictObject, string, enum as zodEnum } from 'zod';
 
-import type { InputEmbedAdapter, InputScene, VanillaCompileDriver } from '../../src';
-import { InputLayerCache, RetikzVanillaErrorCode } from '../../src';
+import type { InputEmbedAdapter, InputSceneChildren, VanillaCompileDriver } from '../../src';
+import { RetikzVanillaErrorCode } from '../../src';
 import { mountCanvas, mountSvg } from '../../src/dom';
 import { createRetainedCompositeDefinitions } from '../../src/processing/composites';
 
@@ -40,15 +40,9 @@ const source = (fill: string): IRScene => ({
   ],
 });
 
-const inputScene = (fill: string): InputScene => ({
+const inputScene = (fill: string): InputSceneChildren => ({
   type: 'scene',
-  layers: [
-    {
-      type: 'layer',
-      id: 'main',
-      children: source(fill).children,
-    },
-  ],
+  children: source(fill).children,
 });
 
 const createRecordingContext = (): CanvasRenderingContext2D => {
@@ -176,7 +170,7 @@ const datasetAdapter: InputEmbedAdapter<{ color: string }> = {
   }),
 };
 
-const datasetScene = (color: string): InputScene => ({
+const datasetScene = (color: string): InputSceneChildren => ({
   type: 'scene',
   children: [{ type: 'embed', kind: 'fixture-dataset', id: 'dataset', props: { color } }],
 });
@@ -234,7 +228,7 @@ const createLayerDriver = (): VanillaCompileDriver => {
   });
 };
 
-const layerScene = (authoring: unknown): InputScene => ({
+const layerScene = (authoring: unknown): InputSceneChildren => ({
   type: 'scene',
   authoring,
   children: [{ type: 'node', id: 'layer-box', position: [0, 0], shape: 'rectangle' }],
@@ -416,7 +410,7 @@ describe('@retikz/vanilla 保留安装座', () => {
         },
       }),
     };
-    const cachedDatasetScene = (color: '#ef4444' | '#22c55e'): InputScene => ({
+    const cachedDatasetScene = (color: '#ef4444' | '#22c55e'): InputSceneChildren => ({
       type: 'scene',
       children: [{ type: 'embed', kind: 'fixture-cached-dataset', id: 'dataset', props: { color } }],
     });
@@ -648,22 +642,11 @@ describe('@retikz/vanilla 保留安装座', () => {
     expect(view.root.querySelector('rect')?.getAttribute('fill')).toBe('#ef4444');
   });
 
-  it('公开 runtimeMeta mutation 不改变后续 renderer config', () => {
+  it('公开身份索引不可修改，重新水合不改变 renderer 缺省配置', () => {
     const observedCachePolicies: Array<RenderRuntimeConfig['cachePolicy']> = [];
-    const container = document.createElement('div');
     const view = mountSvg(
-      container,
-      {
-        type: 'scene',
-        layers: [
-          {
-            type: 'layer',
-            id: 'main',
-            cache: InputLayerCache.Static,
-            children: [{ type: 'node', id: 'box', position: [0, 0], shape: 'rectangle' }],
-          },
-        ],
-      },
+      document.createElement('div'),
+      { children: source('#fff').children },
       {
         runtime: {
           rendererFactory: createMemoryRendererFactory('entity', false, config =>
@@ -672,17 +655,15 @@ describe('@retikz/vanilla 保留安装座', () => {
         },
       },
     );
-
-    expect(() => {
-      (view.runtimeMeta.layers[0] as { cache: string }).cache = InputLayerCache.Dynamic;
-    }).toThrow(TypeError);
-    expect(() => {
-      (view.runtimeMeta.identityIndex as Map<string, Array<string>>).set('forged', ['main']);
-    }).toThrow(TypeError);
-
-    view.hydrate({ handlers: {} });
-
-    expect(observedCachePolicies).toEqual(['static', 'static']);
+    try {
+      expect(() => (view.runtimeMeta.identityIndex as Map<string, Array<string>>).set('forged', ['main'])).toThrow(
+        TypeError,
+      );
+      view.hydrate({ handlers: {} });
+      expect(observedCachePolicies).toEqual([undefined, undefined]);
+    } finally {
+      view.dispose();
+    }
   });
 
   it('Canvas retained update 在运行时拒绝修改 mount-lifetime DPR', () => {

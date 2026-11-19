@@ -8,7 +8,6 @@ import type {
 import { normalizeEmbeddedChildren } from './children';
 import type { ReusedEmbedIdentity, SceneNormalizeContext } from './context';
 import {
-  asLayerStack,
   childSourcePath,
   embedSlotSourcePath,
   inputEmbedIdentityOf,
@@ -17,8 +16,8 @@ import {
   readIdentity,
   scopeContextOf,
 } from './context';
-import { normalizeScene } from './normalize';
-import type { InputChild, InputNormalizeOptions, InputScene, SceneNormalizationResult } from './types';
+import { normalizeSceneLayer } from './normalize';
+import type { InputChild, InputLayer, InputNormalizeOptions, InputScene, SceneNormalizationResult } from './types';
 
 /** 准备 traversal 只描述作者位置，不执行 adapter 或构造占位贡献 */
 export type InputEmbedSite = Readonly<{
@@ -143,44 +142,29 @@ const collectChildEmbedSites = (
 /** 准备阶段与同步归一化共用的作者分层上下文 */
 export const createInputSceneTraversal = (
   scene: InputScene,
+  layer: InputLayer,
   options: InputNormalizeOptions = {},
 ): InputSceneTraversal => {
-  const layers = asLayerStack(scene);
-  const sites: Array<InputEmbedSite> = [];
-  const layerIds = new Set<string>();
-  let offset = 0;
-
-  for (const layer of layers) {
-    if (layerIds.has(layer.id))
-      throw new RetikzVanillaError(
-        RetikzVanillaErrorCode.Normalize,
-        `normalizeScene: duplicate identity "${layer.id}" at layer "${layer.id}"`,
-      );
-
-    layerIds.add(layer.id);
-    const context: SceneNormalizeContext = {
-      layerId: layer.id,
-      parentId: layer.id,
-      path: [layer.id],
-      adapters: options.adapters,
-      embedThemeContext: options.embedThemeContext?.root,
-      resolveEmbedScopeTheme: options.embedThemeContext?.resolveScope,
-      contributions: [],
-      identityIndex: new Map(),
-      parentIndex: new Map(),
-      identityFrame: '',
-      sourcePath: '',
-      runtimePath: [],
-      runtimeInputs: [],
-      authoringSites: [],
-    };
-    sites.push(...collectChildEmbedSites(layer.children, context, offset));
-    offset += layer.children.length;
-  }
-
+  const context: SceneNormalizeContext = {
+    layerId: layer.name,
+    parentId: layer.name,
+    path: [layer.name],
+    adapters: options.adapters,
+    embedThemeContext: options.embedThemeContext?.root,
+    resolveEmbedScopeTheme: options.embedThemeContext?.resolveScope,
+    contributions: [],
+    identityIndex: new Map(),
+    parentIndex: new Map(),
+    identityFrame: '',
+    sourcePath: '',
+    runtimePath: [],
+    runtimeInputs: [],
+    authoringSites: [],
+  };
+  const sites = collectChildEmbedSites(layer.children, context);
   return {
     sites,
     normalize: contributions =>
-      normalizeScene(scene, { ...options, adapters: completedAdaptersOf(sites, contributions) }),
+      normalizeSceneLayer(scene, layer, { ...options, adapters: completedAdaptersOf(sites, contributions) }),
   };
 };

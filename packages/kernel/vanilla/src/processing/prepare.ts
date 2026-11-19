@@ -8,8 +8,10 @@ import {
 } from '@retikz/core';
 import type { CompileOptions } from '@retikz/reconciler';
 
+import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
 import type {
   InputAuthoringSite,
+  InputLayer,
   InputEmbedThemeContext,
   InputEmbedThemeContextResolver,
   InputScene,
@@ -18,11 +20,19 @@ import {
   createEmptyInputRuntimeMetaSnapshot,
   createInputSceneTraversal,
   isInputScene,
-  normalizeScene,
+  BuiltinLayerName,
+  normalizeSceneLayer,
 } from '../normalize';
 import { assertPreparationActive, prepareAuthoringContributions } from './authoring';
 import { createTextMeasurer } from './text-measurement';
 import type { AsyncProcessingOptions, InputPreparedProcessing, ProcessingOptions, ProcessingSource } from './types';
+
+/** 单图入口的默认层；显式层必须已经过视口分派 */
+const implicitLayer = (source: InputScene): InputLayer => {
+  if (source.children === undefined)
+    throw new RetikzVanillaError(RetikzVanillaErrorCode.Processing, 'Expected a single scene, received a layer stack');
+  return { type: 'layer', name: BuiltinLayerName.Main, children: source.children };
+};
 
 const EMPTY_AUTHORING_SITES: ReadonlyArray<InputAuthoringSite> = Object.freeze([]);
 
@@ -78,9 +88,10 @@ const resolveCoreOptions = (
 export const prepareProcessingInput = (
   source: ProcessingSource,
   options: ProcessingOptions,
+  layer?: InputLayer,
 ): InputPreparedProcessing => {
   if (isInputScene(source)) {
-    const normalized = normalizeScene(source, {
+    const normalized = normalizeSceneLayer(source, layer ?? implicitLayer(source), {
       adapters: options.adapters,
       embedThemeContext: createInputEmbedThemeContextResolver(source, options.compile),
     });
@@ -117,11 +128,12 @@ export const prepareProcessingInputAsync = async (
   source: ProcessingSource,
   options: AsyncProcessingOptions,
   signal: AbortSignal,
+  layer?: InputLayer,
 ): Promise<InputPreparedProcessing> => {
   assertPreparationActive(signal);
   if (!isInputScene(source)) return prepareProcessingInput(source, { ...options, adapters: undefined });
 
-  const traversal = createInputSceneTraversal(source, {
+  const traversal = createInputSceneTraversal(source, layer ?? implicitLayer(source), {
     embedThemeContext: createInputEmbedThemeContextResolver(source, options.compile),
   });
   const execute = await prepareAuthoringContributions(traversal.sites, options.adapters ?? [], signal);

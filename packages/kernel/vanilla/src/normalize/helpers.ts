@@ -43,7 +43,7 @@ export const scope = (
 
 /**
  * 创建作者侧分层输入
- * @param config 分层标识、排序、缓存提示与子图元
+ * @param config 分层名称、排序、计算配置与子图元
  * @returns 带 layer 类别的输入，不编译或复制子图元
  */
 export const layer = (config: Omit<InputLayer, 'type'>): InputLayer => ({ type: 'layer', ...config });

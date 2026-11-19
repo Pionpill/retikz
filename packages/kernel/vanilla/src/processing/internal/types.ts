@@ -1,8 +1,8 @@
-import type { ReconcilerCommitTarget } from '@retikz/reconciler';
+import type { ReconcilerCommitTarget, WeaveBatch } from '@retikz/reconciler';
 import type { RenderReadonlyLayer } from '@retikz/render/runtime';
 
 import type { VanillaReconcilerOutput } from '../compile-driver';
-import type { InputPreparedProcessing, ProcessingController } from '../types';
+import type { InputPreparedProcessing, ProcessingController, ProcessingResult } from '../types';
 
 /** processing 与 DOM materializer 间固定的内部事务 participant */
 export type ProcessingTransactionParticipant = Readonly<{
@@ -47,5 +47,7 @@ export type InternalProcessingController = ProcessingController &
 export type PreparedInputProcessingController = InternalProcessingController &
   Readonly<{
     /** 不重新归一或计算贡献，直接进入同一同步事务 */
+    getScopeId: (path: ReadonlyArray<number>, expected: ProcessingResult) => string;
+    applyBatch: (batch: WeaveBatch, expected: ProcessingResult) => void;
     updatePrepared: (input: InputPreparedProcessing, assertCurrent?: () => void) => void;
   }>;

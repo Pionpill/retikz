@@ -279,7 +279,7 @@ export const LayoutRuntimeMode = Object.freeze({
 export type LayoutRuntimeMode = ValueOf<typeof LayoutRuntimeMode>;
 ```
 
-#### <ApiSourceLink label={"scene"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={115}>scene</ApiSourceLink>
+#### <ApiSourceLink label={"scene"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={111}>scene</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -312,7 +312,7 @@ export type LayoutRuntimeMode = ValueOf<typeof LayoutRuntimeMode>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"layer"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={53}>layer</ApiSourceLink>
+#### <ApiSourceLink label={"layer"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={49}>layer</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -322,7 +322,7 @@ export type LayoutRuntimeMode = ValueOf<typeof LayoutRuntimeMode>;
 
 | Category   | Name     | Type / signature           | Description                                                    |
 | ---------- | -------- | -------------------------- | -------------------------------------------------------------- |
-| Parameters | `config` | `Omit<InputLayer, 'type'>` | Layer identity, stacking order, cache hint, and children       |
+| Parameters | `config` | `Omit<InputLayer, 'type'>` | Layer name, stacking order, processing options, and children   |
 | Returns    | —        | `InputLayer`               | Input tagged as a layer; does not compile or copy its children |
 
 </ApiTable>
@@ -341,7 +341,7 @@ export declare const layer: (config: Omit<InputLayer, 'type'>) => InputLayer;
 
 ## Direct calls
 
-#### <ApiSourceLink label={"InputLayer"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={28}>InputLayer</ApiSourceLink>
+#### <ApiSourceLink label={"InputLayer"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={39}>InputLayer</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -349,13 +349,14 @@ export declare const layer: (config: Omit<InputLayer, 'type'>) => InputLayer;
 
 <ApiTable>
 
-| Member     | Type                        | Default                | Description                                                   |
-| ---------- | --------------------------- | ---------------------- | ------------------------------------------------------------- |
-| `cache?`   | `InputLayerCache`           | `InputLayerCache.Auto` | Runtime cache hint                                            |
-| `children` | `ReadonlyArray<InputChild>` | —                      | Children normalized in declaration order                      |
-| `id`       | `string`                    | —                      | Layer identity                                                |
-| `type`     | `'layer'`                   | —                      | Authoring layer discriminator, fixed to layer                 |
-| `zIndex?`  | `number`                    | `0`                    | Layer stacking order; equal values preserve declaration order |
+| Member                 | Type                        | Default                                      | Description                                                   |
+| ---------------------- | --------------------------- | -------------------------------------------- | ------------------------------------------------------------- |
+| `children`             | `ReadonlyArray<InputChild>` | —                                            | Children normalized in declaration order                      |
+| `readonly compile?`    | `CompileOptions`            | —                                            | Compile options for this layer                                |
+| `name`                 | `LayerName`                 | —                                            | Unique layer name in the viewport                             |
+| `readonly reconciler?` | `LayerReconcilerOptions`    | —                                            | Reconciler execution options for this layer                   |
+| `type`                 | `'layer'`                   | —                                            | Authoring layer discriminator, fixed to layer                 |
+| `zIndex?`              | `number`                    | `background: 0; overlay: 100; otherwise: 10` | Layer stacking order; equal values preserve declaration order |
 
 </ApiTable>
 
@@ -364,10 +365,9 @@ export declare const layer: (config: Omit<InputLayer, 'type'>) => InputLayer;
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type InputLayer = {
+export type InputLayer = LayerOptions & {
   type: 'layer';
-  id: string;
-  cache?: InputLayerCache;
+  name: LayerName;
   zIndex?: number;
   children: ReadonlyArray<InputChild>;
 };
@@ -377,7 +377,7 @@ export type InputLayer = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InputScene"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={87}>InputScene</ApiSourceLink>
+#### <ApiSourceLink label={"InputScene"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={94}>InputScene</ApiSourceLink>
 
 **Common members**
 
@@ -397,20 +397,7 @@ export type InputLayer = {
 
 Common members apply to every branch; a value must also satisfy at least one branch.
 
-<DocTabs defaultValue="children">
-
-<DocTab value="children" label="Members · Children">
-
-<ApiTable>
-
-| Member     | Type                        | Default | Description                                                                |
-| ---------- | --------------------------- | ------- | -------------------------------------------------------------------------- |
-| `children` | `ReadonlyArray<InputChild>` | —       | Ordered children placed in the implicit default layer during normalization |
-| `layers?`  | `never`                     | —       | Explicit layers, normalized after a stable sort by zIndex                  |
-
-</ApiTable>
-
-</DocTab>
+<DocTabs defaultValue="layers">
 
 <DocTab value="layers" label="Members · Layers">
 
@@ -420,6 +407,19 @@ Common members apply to every branch; a value must also satisfy at least one bra
 | ----------- | --------------------------- | ------- | -------------------------------------------------------------------------- |
 | `children?` | `never`                     | —       | Ordered children placed in the implicit default layer during normalization |
 | `layers`    | `ReadonlyArray<InputLayer>` | —       | Explicit layers, normalized after a stable sort by zIndex                  |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="children" label="Members · Children">
+
+<ApiTable>
+
+| Member     | Type                        | Default | Description                                                                |
+| ---------- | --------------------------- | ------- | -------------------------------------------------------------------------- |
+| `children` | `ReadonlyArray<InputChild>` | —       | Ordered children placed in the implicit default layer during normalization |
+| `layers?`  | `never`                     | —       | Explicit layers, normalized after a stable sort by zIndex                  |
 
 </ApiTable>
 
@@ -435,7 +435,7 @@ export type InputScene = InputSceneChildren | InputSceneLayers;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InputSceneChildren"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={81}>InputSceneChildren</ApiSourceLink>
+#### <ApiSourceLink label={"InputSceneChildren"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={88}>InputSceneChildren</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -475,7 +475,7 @@ export type InputSceneChildren = InputSceneBase &
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InputSceneLayers"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={84}>InputSceneLayers</ApiSourceLink>
+#### <ApiSourceLink label={"InputSceneLayers"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={91}>InputSceneLayers</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 

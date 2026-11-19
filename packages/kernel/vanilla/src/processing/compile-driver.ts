@@ -5,6 +5,7 @@ import type { RenderReadonlyLayer } from '@retikz/render/runtime';
 import { EMPTY_READONLY_LAYERS, snapshotReadonlyLayers } from '@retikz/render/runtime';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
+import type { LayerReconcilerOptions } from '../normalize';
 import type { InputAuthoringSite } from '../normalize';
 
 /** Vanilla 编译驱动消费的产物与诊断，不要求编译来源信息 */
@@ -129,8 +130,9 @@ export const resolveVanillaCompileOutput = (
 export const compileVanillaWithDriver = (
   input: InputVanillaCompileDriver,
   session: VanillaCompileDriverSession,
+  execution?: LayerReconcilerOptions,
 ): VanillaCompileOutput => {
-  const reconciler = new SceneReconciler(input.coreOptions, { incremental: false });
+  const reconciler = new SceneReconciler(input.coreOptions, execution ?? { incremental: false });
   try {
     const output = resolveVanillaCompileOutput(session, reconciler.mount(input.source).compilation);
     const diagnostics = reconciler.diagnostics();

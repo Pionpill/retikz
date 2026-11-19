@@ -6,7 +6,7 @@ import type {
   InputEmbed,
   InputNode,
   InputPath,
-  InputScene,
+  InputSceneChildren,
   InputScope,
   InputStep,
 } from '@retikz/vanilla';
@@ -42,7 +42,7 @@ type EdgeLabelElementProps = Readonly<{
 /** JSX 遍历得到的 Vanilla Input 场景 */
 export type ReactInputScene = Readonly<{
   /** 交给 Vanilla normalize 的唯一作者输入 */
-  scene: InputScene;
+  scene: InputSceneChildren;
   /** React JSX 中使用的 Vanilla embed adapters */
   adapters: ReadonlyArray<AnyInputEmbedAdapter>;
 }>;

@@ -4,7 +4,7 @@ import type {
   AsyncProcessingOptions,
   PreparedAsyncStaticProcessing,
   ProcessingResult,
-  ProcessingSource,
+  SingleSceneSource,
 } from '@retikz/vanilla';
 import { createProcessingControllerAsync, prepareStaticProcessingAsync } from '@retikz/vanilla';
 import type { ComponentProps, FC } from 'react';
@@ -15,7 +15,7 @@ import { ProcessingResultHost } from '../../render/processing-result';
 /** Layout 异步作者输入的框架桥接属性 */
 export type AsyncLayoutContentProps = {
   /** 完整作者输入 */
-  source: ProcessingSource;
+  source: SingleSceneSource;
   /** 固定共享 preparation 配置 */
   options: AsyncProcessingOptions;
   /** 更新方式 */

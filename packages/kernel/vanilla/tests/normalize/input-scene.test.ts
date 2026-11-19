@@ -21,7 +21,6 @@ import type {
 import {
   coordinate,
   embed,
-  InputLayerCache,
   layer,
   node,
   normalizePath,
@@ -124,7 +123,7 @@ describe('@retikz/vanilla InputScene', () => {
     const input = scene({
       layers: [
         layer({
-          id: 'main',
+          name: 'main',
           children: [
             node({ id: 'source', position: [0, 0] }),
             path({ id: 'edge', way: ['source', [24, 0]], style: { strokeWidth: 2 } }),
@@ -137,7 +136,7 @@ describe('@retikz/vanilla InputScene', () => {
       type: 'scene',
       layers: [
         {
-          id: 'main',
+          name: 'main',
           children: [
             { type: 'node', id: 'source' },
             { type: 'path', id: 'edge', way: ['source', [24, 0]], style: { strokeWidth: 2 } },
@@ -159,7 +158,7 @@ describe('@retikz/vanilla InputScene', () => {
       },
       contributions: [],
       runtimeMeta: {
-        layers: [{ id: 'default', cache: 'auto', order: 0, zIndex: 0, childIds: ['node'] }],
+        layers: [{ name: 'main', order: 0, zIndex: 10, childIds: ['node'] }],
       },
     });
   });
@@ -342,30 +341,13 @@ describe('@retikz/vanilla InputScene', () => {
     ]);
   });
 
-  it('Layer 按 zIndex 与声明顺序稳定合并，缓存提示不写入 Core IR', () => {
+  it('显式层序优先，同层序保持声明顺序', () => {
     const normalized = normalizeScene(
       scene({
-        layers: [
-          layer({
-            id: 'top',
-            ...{ zIndex: 10, cache: InputLayerCache.Dynamic },
-            children: [node({ id: 'top-node', position: [10, 0] })],
-          }),
-          layer({
-            id: 'background',
-            ...{ cache: InputLayerCache.Static },
-            children: [node({ id: 'base', position: [0, 0] })],
-          }),
-        ],
+        layers: [layer({ name: 'overlay', zIndex: 0, children: [] }), layer({ name: 'background', children: [] })],
       }),
     );
-
-    expect(normalized.ir.children.map(child => child.id)).toEqual(['base', 'top-node']);
-    expect(normalized.runtimeMeta.layers.map(entry => [entry.id, entry.cache, entry.zIndex])).toEqual([
-      ['background', InputLayerCache.Static, 0],
-      ['top', InputLayerCache.Dynamic, 10],
-    ]);
-    expect(JSON.stringify(normalized.ir)).not.toContain('static');
+    expect(normalized.map(({ name }) => name)).toEqual(['overlay', 'background']);
   });
 
   it('normalizeScene 解析 path shorthand，并保留零线宽', () => {
@@ -507,15 +489,15 @@ describe('@retikz/vanilla InputScene', () => {
     const normalized = normalizeScene(
       scene({
         layers: [
-          layer({ id: 'main', children: [embed({ kind: 'named-output', id: 'chart', props: { label: 'A' } })] }),
+          layer({ name: 'main', children: [embed({ kind: 'named-output', id: 'chart', props: { label: 'A' } })] }),
         ],
       }),
       { adapters: [adapter] },
     );
 
-    expect(normalized.runtimeMeta.identityIndex.get('chart')).toEqual(['main', 'chart']);
-    expect(normalized.runtimeMeta.identityIndex.get('chart/root')).toEqual(['main', 'chart', 'chart/root']);
-    expect(normalized.runtimeMeta.parentIndex.get('chart/label')).toBe('chart/root');
+    expect(normalized[0].result.runtimeMeta.identityIndex.get('chart')).toEqual(['main', 'chart']);
+    expect(normalized[0].result.runtimeMeta.identityIndex.get('chart/root')).toEqual(['main', 'chart', 'chart/root']);
+    expect(normalized[0].result.runtimeMeta.parentIndex.get('chart/label')).toBe('chart/root');
 
     const wrappedAdapter: InputEmbedAdapter<Record<string, never>> = {
       kind: 'wrapped-output',
@@ -535,7 +517,7 @@ describe('@retikz/vanilla InputScene', () => {
     expect(wrapped.ir.children).toEqual([
       { type: 'scope', children: [{ type: 'node', id: 'chart', position: [0, 0] }] },
     ]);
-    expect(wrapped.runtimeMeta.identityIndex.get('chart')).toEqual(['default', 'chart']);
+    expect(wrapped.runtimeMeta.identityIndex.get('chart')).toEqual(['main', 'chart']);
   });
 
   it('embed slot 与根 Scene 共享公开 identity 索引，后定义覆盖此前定位', () => {
@@ -585,7 +567,7 @@ describe('@retikz/vanilla InputScene', () => {
       { adapters: [slotAdapter] },
     );
 
-    expect(rootLater.runtimeMeta.parentIndex.get('shared')).toBe('default');
+    expect(rootLater.runtimeMeta.parentIndex.get('shared')).toBe('main');
     expect(slotLater.runtimeMeta.parentIndex.get('shared')).toBe('frame');
     expect(secondSlotLater.runtimeMeta.parentIndex.get('shared')).toBe('frame');
   });

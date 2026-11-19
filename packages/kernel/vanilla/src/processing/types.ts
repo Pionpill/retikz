@@ -1,32 +1,38 @@
 import type { AnyCompositeDefinition, IRScene, Scene } from '@retikz/core';
-import type { CompileOptions, CompileResult, CompositeArtifact, ReconcilerUpdateStrategy } from '@retikz/reconciler';
+import type { CompileOptions, CompileResult, CompositeArtifact, WeaveBatch } from '@retikz/reconciler';
 import type { RenderReadonlyLayer } from '@retikz/render/runtime';
 
 import type {
   AnyInputEmbedAdapter,
   InputAuthoringSite,
+  LayerOptions,
   InputNormalizeOptions,
   InputRuntimeMeta,
   InputScene,
+  InputSceneChildren,
+  InputLayer,
+  InputSceneLayers,
+  LayerName,
+  NamedLayerResult,
 } from '../normalize';
 import type { VanillaCompileDriver } from './compile-driver';
 
 /** 可进入 Vanilla 框架无关 processing 的作者输入 */
 export type ProcessingSource = InputScene | IRScene;
 
+/** 单图作者输入或其持久化 IR */
+export type SingleSceneSource = InputSceneChildren | IRScene;
+
 /** 创建 processing controller 时固定的框架无关配置 */
-export type ProcessingOptions = Readonly<{
-  /** 文字未指定字体族时的宿主默认字体，同时用于测量与宿主显示 */
-  defaultFontFamily?: string;
-  /** Core 编译配置 */
-  compile?: CompileOptions;
-  /** 作者侧 Tier 2 adapter */
-  adapters?: InputNormalizeOptions['adapters'];
-  /** 领域中立的同 revision compile observer driver */
-  compileDriver?: VanillaCompileDriver;
-  /** Core Computation 的 retained 更新策略 */
-  updateStrategy?: ReconcilerUpdateStrategy;
-}>;
+export type ProcessingOptions = LayerOptions &
+  Readonly<{
+    /** 文字未指定字体族时的宿主默认字体，同时用于测量与宿主显示 */
+    defaultFontFamily?: string;
+    /** 作者侧 Tier 2 adapter */
+    adapters?: InputNormalizeOptions['adapters'];
+    /** 领域中立的同 revision compile observer driver */
+    compileDriver?: VanillaCompileDriver;
+  }>;
 
 /** 已完成作者侧归一与 Composite dependency 解析的 processing 输入 */
 export type InputPreparedProcessing = Readonly<{
@@ -58,10 +64,28 @@ export type ProcessingResult = Readonly<{
   runtimeMeta: InputRuntimeMeta;
 }>;
 
+/** 视口按层序发布的完整结果，各层保留自己的编译结果 */
+export type LayerProcessingResult = ReadonlyArray<NamedLayerResult<ProcessingResult>>;
+
+/** 显式层栈的计算控制器；批次依赖本层此前交付的结果 */
+export type LayerProcessingController = Readonly<{
+  read: () => LayerProcessingResult;
+  update: (source: InputSceneLayers) => void;
+  replaceLayer: (layer: InputLayer) => void;
+  /** 从本层已提交结果取得批次地址；不能跨会话或版本使用 */
+  getScopeId: (name: LayerName, path: ReadonlyArray<number>, expected: ProcessingResult) => string;
+  updateLayer: (name: LayerName, batch: WeaveBatch, expected: ProcessingResult) => void;
+  setLayerOrder: (name: LayerName, zIndex: number) => void;
+  removeLayer: (name: LayerName) => void;
+  subscribe: (listener: (result: LayerProcessingResult) => void) => () => void;
+  diagnostics: () => ReadonlyArray<unknown>;
+  dispose: () => void;
+}>;
+
 /** 不绑定框架的保留式处理控制器 */
 export type ProcessingController = Readonly<{
   /** 原子提交下一份 InputScene 或已归一的 IRScene */
-  update: (source: ProcessingSource) => void;
+  update: (source: SingleSceneSource) => void;
   /** 读取最后一次成功提交的结果 */
   read: () => ProcessingResult;
   /** 订阅后续成功提交，返回取消订阅函数 */
@@ -82,9 +106,9 @@ export type AsyncProcessingOptions = Readonly<Omit<ProcessingOptions, 'adapters'
   }>;
 
 /** 同步编译结束后的完整候选，其提交与丢弃互斥 */
-export type PreparedAsyncStaticProcessing = Readonly<{
+export type PreparedAsyncStaticProcessing<TResult = ProcessingResult> = Readonly<{
   /** 同 revision 的不可变结果 */
-  result: ProcessingResult;
+  result: TResult;
   /** 原子发布一次；重复提交无副作用 */
   commit: () => void;
   /** 放弃候选；重复丢弃无副作用 */
@@ -108,5 +132,15 @@ export type ProcessingUpdateOutcome =
 export type AsyncProcessingController = Readonly<Omit<ProcessingController, 'update'>> &
   Readonly<{
     /** 到达时立即使更早的准备请求失效 */
-    update: (source: ProcessingSource) => Promise<ProcessingUpdateOutcome>;
+    update: (source: SingleSceneSource) => Promise<ProcessingUpdateOutcome>;
   }>;
+
+/** 允许作者贡献异步就绪的具名层控制器 */
+export type AsyncLayerProcessingController = Omit<LayerProcessingController, 'update' | 'replaceLayer'> & {
+  update: (source: InputSceneLayers) => Promise<LayerProcessingUpdateOutcome>;
+  replaceLayer: (layer: InputLayer) => Promise<LayerProcessingUpdateOutcome>;
+};
+/** 只有仍持有发布权的请求返回结果 */
+export type LayerProcessingUpdateOutcome =
+  | { kind: 'committed'; result: LayerProcessingResult }
+  | { kind: 'superseded' };

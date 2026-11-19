@@ -180,7 +180,7 @@ describe('Vanilla 输入标准化器', () => {
       },
       contributions: [],
       runtimeMeta: {
-        layers: [{ id: 'default', cache: 'auto', order: 0, zIndex: 0, childIds: ['node'] }],
+        layers: [{ name: 'main', order: 0, zIndex: 10, childIds: ['node'] }],
       },
     });
   });

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { layer, scene } from '@retikz/vanilla';
+import { scene } from '@retikz/vanilla';
 import { mount } from '@retikz/vanilla/dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -11,6 +11,11 @@ const createCanvasContext = (): CanvasRenderingContext2D => {
     fillStyle: '#000',
     strokeStyle: '#000',
     lineWidth: 1,
+    measureText: (text: string) => ({
+      width: text.length * 8,
+      actualBoundingBoxAscent: 9,
+      actualBoundingBoxDescent: 3,
+    }),
   };
   return new Proxy(target, {
     get(value, property) {
@@ -41,7 +46,7 @@ describe('Table Vanilla 安装运行时', () => {
     });
     const tableFigure = (name: string) =>
       scene({
-        layers: [layer({ id: 'content', children: [embedTable(spec, { data: { people: [{ name }] } })] })],
+        children: [embedTable(spec, { data: { people: [{ name }] } })],
       });
     const svgContainer = document.createElement('div');
     const svgView = mount(svgContainer, tableFigure('Ada'), { adapters: [tableInputEmbedAdapter] });

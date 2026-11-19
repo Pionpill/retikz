@@ -279,7 +279,7 @@ export const LayoutRuntimeMode = Object.freeze({
 export type LayoutRuntimeMode = ValueOf<typeof LayoutRuntimeMode>;
 ```
 
-#### <ApiSourceLink label={"scene"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={115}>scene</ApiSourceLink>
+#### <ApiSourceLink label={"scene"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={111}>scene</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -312,7 +312,7 @@ export type LayoutRuntimeMode = ValueOf<typeof LayoutRuntimeMode>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"layer"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={53}>layer</ApiSourceLink>
+#### <ApiSourceLink label={"layer"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={49}>layer</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -322,7 +322,7 @@ export type LayoutRuntimeMode = ValueOf<typeof LayoutRuntimeMode>;
 
 | 类别   | 名称     | 类型 / 签名                | 说明                                    |
 | ------ | -------- | -------------------------- | --------------------------------------- |
-| 参数   | `config` | `Omit<InputLayer, 'type'>` | 分层标识、排序、缓存提示与子图元        |
+| 参数   | `config` | `Omit<InputLayer, 'type'>` | 分层名称、排序、计算配置与子图元        |
 | 返回值 | —        | `InputLayer`               | 带 layer 类别的输入，不编译或复制子图元 |
 
 </ApiTable>
@@ -341,7 +341,7 @@ export declare const layer: (config: Omit<InputLayer, 'type'>) => InputLayer;
 
 ## 直接调用
 
-#### <ApiSourceLink label={"InputLayer"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={28}>InputLayer</ApiSourceLink>
+#### <ApiSourceLink label={"InputLayer"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={39}>InputLayer</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -349,13 +349,14 @@ export declare const layer: (config: Omit<InputLayer, 'type'>) => InputLayer;
 
 <ApiTable>
 
-| 成员       | 类型                        | 默认值                 | 说明                         |
-| ---------- | --------------------------- | ---------------------- | ---------------------------- |
-| `cache?`   | `InputLayerCache`           | `InputLayerCache.Auto` | 运行时缓存提示               |
-| `children` | `ReadonlyArray<InputChild>` | —                      | 按声明顺序归一的子节点       |
-| `id`       | `string`                    | —                      | 分层身份标识                 |
-| `type`     | `'layer'`                   | —                      | 固定为 layer 的作者分层标识  |
-| `zIndex?`  | `number`                    | `0`                    | 同值保持声明顺序的分层排序值 |
+| 成员                   | 类型                        | 默认值                                       | 说明                         |
+| ---------------------- | --------------------------- | -------------------------------------------- | ---------------------------- |
+| `children`             | `ReadonlyArray<InputChild>` | —                                            | 按声明顺序归一的子节点       |
+| `readonly compile?`    | `CompileOptions`            | —                                            | 本层的编译选项               |
+| `name`                 | `LayerName`                 | —                                            | 在视口内唯一的名称           |
+| `readonly reconciler?` | `LayerReconcilerOptions`    | —                                            | 本层的协调器执行选项         |
+| `type`                 | `'layer'`                   | —                                            | 固定为 layer 的作者分层标识  |
+| `zIndex?`              | `number`                    | `background: 0; overlay: 100; otherwise: 10` | 同值保持声明顺序的分层排序值 |
 
 </ApiTable>
 
@@ -364,10 +365,9 @@ export declare const layer: (config: Omit<InputLayer, 'type'>) => InputLayer;
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type InputLayer = {
+export type InputLayer = LayerOptions & {
   type: 'layer';
-  id: string;
-  cache?: InputLayerCache;
+  name: LayerName;
   zIndex?: number;
   children: ReadonlyArray<InputChild>;
 };
@@ -377,7 +377,7 @@ export type InputLayer = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InputScene"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={87}>InputScene</ApiSourceLink>
+#### <ApiSourceLink label={"InputScene"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={94}>InputScene</ApiSourceLink>
 
 **公共属性**
 
@@ -397,20 +397,7 @@ export type InputLayer = {
 
 公共属性适用于所有分支；输入还需满足至少一个分支的属性约束。
 
-<DocTabs defaultValue="children">
-
-<DocTab value="children" label="属性 · 子节点">
-
-<ApiTable>
-
-| 成员       | 类型                        | 默认值 | 说明                                     |
-| ---------- | --------------------------- | ------ | ---------------------------------------- |
-| `children` | `ReadonlyArray<InputChild>` | —      | 有序子图元，归一化时置于隐式默认层       |
-| `layers?`  | `never`                     | —      | 显式分层列表，按 zIndex 稳定排序后归一化 |
-
-</ApiTable>
-
-</DocTab>
+<DocTabs defaultValue="layers">
 
 <DocTab value="layers" label="属性 · 分层">
 
@@ -420,6 +407,19 @@ export type InputLayer = {
 | ----------- | --------------------------- | ------ | ---------------------------------------- |
 | `children?` | `never`                     | —      | 有序子图元，归一化时置于隐式默认层       |
 | `layers`    | `ReadonlyArray<InputLayer>` | —      | 显式分层列表，按 zIndex 稳定排序后归一化 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="children" label="属性 · 子节点">
+
+<ApiTable>
+
+| 成员       | 类型                        | 默认值 | 说明                                     |
+| ---------- | --------------------------- | ------ | ---------------------------------------- |
+| `children` | `ReadonlyArray<InputChild>` | —      | 有序子图元，归一化时置于隐式默认层       |
+| `layers?`  | `never`                     | —      | 显式分层列表，按 zIndex 稳定排序后归一化 |
 
 </ApiTable>
 
@@ -435,7 +435,7 @@ export type InputScene = InputSceneChildren | InputSceneLayers;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InputSceneChildren"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={81}>InputSceneChildren</ApiSourceLink>
+#### <ApiSourceLink label={"InputSceneChildren"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={88}>InputSceneChildren</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -475,7 +475,7 @@ export type InputSceneChildren = InputSceneBase &
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InputSceneLayers"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={84}>InputSceneLayers</ApiSourceLink>
+#### <ApiSourceLink label={"InputSceneLayers"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={91}>InputSceneLayers</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 

@@ -13,7 +13,7 @@ describe('@retikz/vanilla 入口边界', () => {
       'coordinate',
       'scope',
       'embed',
-      'InputLayerCache',
+      'BuiltinLayerName',
       'processToStaticResult',
       'createProcessingController',
       'DrawWay',

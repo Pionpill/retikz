@@ -1,11 +1,9 @@
 import type { CompositeInputBinding, CompositeInputPath, CoreProviderContribution } from '@retikz/core';
 
+import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../error';
 import type { AnyInputEmbed, InputEmbedThemeContext, InputPath, InputScope, InputStep } from '../element';
 import type { InputAuthoringSite, InputChild, InputLayer, InputNormalizeOptions, InputScene } from './types';
-import { InputLayerCache } from './types';
-
-/** 隐式 children 简写使用的默认 Layer 身份 */
-const DEFAULT_LAYER_ID = 'default';
+import { BuiltinLayerName } from './types';
 
 /** 当前 embed 在所有 slot 中可共用一次的外层 identity */
 export type ReusedEmbedIdentity = {
@@ -33,22 +31,19 @@ export type SceneNormalizeContext = {
 };
 
 /** 从 children 简写或显式 layers 取得稳定排序的 Layer 栈 */
+export const layerZIndex = (layer: InputLayer): number =>
+  layer.zIndex ?? (layer.name === BuiltinLayerName.Background ? 0 : layer.name === BuiltinLayerName.Overlay ? 100 : 10);
+
+/** 先拒绝重名，再稳定排序，不改变作者输入 */
 export const asLayerStack = (scene: InputScene): Array<InputLayer> => {
-  const layers: Array<InputLayer> =
-    'children' in scene
-      ? [
-          {
-            type: 'layer' as const,
-            id: DEFAULT_LAYER_ID,
-            cache: InputLayerCache.Auto,
-            children: scene.children ?? [],
-          },
-        ]
-      : [...scene.layers];
-  return layers
-    .map((entry, index) => ({ entry, index }))
-    .sort((left, right) => (left.entry.zIndex ?? 0) - (right.entry.zIndex ?? 0) || left.index - right.index)
-    .map(({ entry }) => entry);
+  if (scene.layers === undefined) return [{ type: 'layer', name: BuiltinLayerName.Main, children: scene.children }];
+  const names = new Set<string>();
+  for (const { name } of scene.layers) {
+    if (names.has(name))
+      throw new RetikzVanillaError(RetikzVanillaErrorCode.Normalize, 'Duplicate layer name: ' + name);
+    names.add(name);
+  }
+  return [...scene.layers].sort((left, right) => layerZIndex(left) - layerZIndex(right));
 };
 
 /** 进入 localNamespace Scope 后创建与 Core NameStack 对齐的 identity frame */

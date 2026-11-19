@@ -217,7 +217,7 @@ describe('共享异步编写准备', () => {
       layers: [
         {
           type: 'layer',
-          id: 'front',
+          name: 'front',
           zIndex: 2,
           children: [
             {
@@ -230,7 +230,7 @@ describe('共享异步编写准备', () => {
         },
         {
           type: 'layer',
-          id: 'back',
+          name: 'back',
           zIndex: 1,
           children: [
             { type: 'embed', kind: 'probe', props: {} },
@@ -243,8 +243,10 @@ describe('共享异步编写准备', () => {
     const asynchronous = await compileToSceneAsync(input, { adapters: [adapter] });
 
     expect(asyncContexts).toEqual(syncContexts);
-    expect(asynchronous.scene).toEqual(sync.scene);
-    expect([...asynchronous.runtimeMeta.identityIndex]).toEqual([...sync.runtimeMeta.identityIndex]);
+    expect(asynchronous.map(layer => layer.result.scene)).toEqual(sync.map(layer => layer.result.scene));
+    expect(asynchronous.map(layer => [...layer.result.runtimeMeta.identityIndex])).toEqual(
+      sync.map(layer => [...layer.result.runtimeMeta.identityIndex]),
+    );
   });
 
   it('处理生命周期取消并防止发布后期忽略信号结果', async () => {

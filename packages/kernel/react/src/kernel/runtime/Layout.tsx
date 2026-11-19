@@ -24,12 +24,11 @@ import type {
   AnyInputEmbedAdapter,
   AsyncProcessingController,
   AsyncProcessingOptions,
-  InputScene,
   InputScope,
   ProcessingController,
   ProcessingOptions,
   ProcessingResult,
-  ProcessingSource,
+  SingleSceneSource,
   VanillaCompileDriver,
 } from '@retikz/vanilla';
 import { createProcessingController, prepareStaticProcessing } from '@retikz/vanilla';
@@ -320,7 +319,7 @@ type LayoutResultHostProps = Omit<React.ComponentProps<typeof ProcessingResultHo
 
 /** static 模式只执行一次无生命周期的 Vanilla processing */
 const StaticLayoutContent: FC<{
-  source: ProcessingSource;
+  source: SingleSceneSource;
   options: ProcessingOptions;
   hostKey: string;
   hostProps: LayoutResultHostProps;
@@ -335,7 +334,7 @@ const StaticLayoutContent: FC<{
 
 /** retained 模式复用同一 Vanilla controller，仅将后续 source 推入 update */
 const RetainedLayoutContent: FC<{
-  source: ProcessingSource;
+  source: SingleSceneSource;
   options: ProcessingOptions;
   onDiagnostic?: (diagnostic: ReconcilerDiagnostic) => void;
   hostKey: string;
@@ -345,9 +344,9 @@ const RetainedLayoutContent: FC<{
   const [controller, setController] = useState<ProcessingController | undefined>(undefined);
   const currentSourceRef = useRef(source);
   const result = useProcessingResult(controller, fallbackResult);
-  const appliedSourceRef = useRef<Readonly<{ controller: ProcessingController; source: ProcessingSource }> | undefined>(
-    undefined,
-  );
+  const appliedSourceRef = useRef<
+    Readonly<{ controller: ProcessingController; source: SingleSceneSource }> | undefined
+  >(undefined);
   const pendingDisposalRef = useRef<
     Readonly<{ controller: ProcessingController; timer: ReturnType<typeof setTimeout> }> | undefined
   >(undefined);
@@ -487,8 +486,8 @@ export const Layout: FC<LayoutProps> = props => {
   }, [authoring, children, irFromProp, scopeStyle]);
 
   const stableInputAdapters = canonicalizeDefinitionArray(reactInput?.adapters);
-  const source = useMemo<ProcessingSource>(() => {
-    const base: ProcessingSource =
+  const source = useMemo<SingleSceneSource>(() => {
+    const base: SingleSceneSource =
       irFromProp ??
       reactInput?.scene ??
       (() => {
@@ -502,7 +501,7 @@ export const Layout: FC<LayoutProps> = props => {
 
     const animations = viewed.animations === undefined ? rootAnimations : [...viewed.animations, ...rootAnimations];
 
-    return { ...viewed, animations } as InputScene;
+    return { ...viewed, animations } as SingleSceneSource;
   }, [ambientTheme, irFromProp, reactInput, rootAnimations, theme, viewBox]);
 
   const defaultFontFamily = styleFontFamily(style);
@@ -513,7 +512,9 @@ export const Layout: FC<LayoutProps> = props => {
       compileDriver,
       ...inputAdapterOptions(stableInputAdapters, prepareAsync),
       ...(prepareAsync ? { signal: resolvedRuntime.signal } : {}),
-      ...(resolvedRuntime.updateStrategy === undefined ? {} : { updateStrategy: resolvedRuntime.updateStrategy }),
+      ...(resolvedRuntime.updateStrategy === undefined
+        ? {}
+        : { reconciler: { incremental: true, updateStrategy: resolvedRuntime.updateStrategy } }),
       compile: {
         measureText,
         nodeDistance,

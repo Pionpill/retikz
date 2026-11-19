@@ -15,20 +15,14 @@ This package is ESM-only and requires Node.js 24 or newer.
 ## Authoring and SSR
 
 ```ts
-import { InputLayerCache, layer, node, path, renderToSvgString, scene } from '@retikz/vanilla';
+import { node, path, renderToSvgString, scene } from '@retikz/vanilla';
 
 const input = scene({
   id: 'flow',
-  layers: [
-    layer({
-      id: 'main',
-      ...{ cache: InputLayerCache.Static },
-      children: [
-        node({ id: 'a', position: [0, 0], text: 'A' }),
-        node({ id: 'b', position: [120, 0], text: 'B' }),
-        path({ id: 'edge', way: ['a', 'b'], marks: [{ pos: 1, mark: { kind: 'arrow' } }] }),
-      ],
-    }),
+  children: [
+    node({ id: 'a', position: [0, 0], text: 'A' }),
+    node({ id: 'b', position: [120, 0], text: 'B' }),
+    path({ id: 'edge', way: ['a', 'b'], marks: [{ pos: 1, mark: { kind: 'arrow' } }] }),
   ],
 });
 
@@ -44,7 +38,7 @@ const result = compileToScene(input);
 const prepared = await compileToSceneAsync(input, { adapters });
 ```
 
-Both entries return the existing processing result and manage the internal compiler session. Pass compile configuration under `options.compile`. The async entry requires prepare-capable adapters.
+For a single graph both entries return its processing result; explicit layers return an ordered list of named results. Both entries run compilation and manage the internal compiler session. Pass compile configuration under `options.compile`. The async entry requires prepare-capable adapters.
 
 ## Browser mounting
 

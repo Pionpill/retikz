@@ -25,7 +25,10 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   '有序子图元，归一化时置于隐式默认层': 'Ordered children placed in the implicit default layer during normalization',
 
   '作者侧 Layer 输入': 'Authoring input for a layer',
-  运行时缓存提示: 'Runtime cache hint',
+  作者侧图层: 'Authoring input for a layer',
+  在视口内唯一的名称: 'Unique layer name in the viewport',
+  本层的编译选项: 'Compile options for this layer',
+  本层的协调器执行选项: 'Reconciler execution options for this layer',
   按声明顺序归一的子节点: 'Children normalized in declaration order',
   分层身份标识: 'Layer identity',
   同值保持声明顺序的分层排序值: 'Layer stacking order; equal values preserve declaration order',
@@ -48,7 +51,7 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   '保留分层列表引用的场景输入，分层运行时信息由归一化提取':
     'Scene input retaining the layers array reference; normalization extracts runtime layer metadata',
   创建作者侧分层输入: 'Create layer authoring input',
-  '分层标识、排序、缓存提示与子图元': 'Layer identity, stacking order, cache hint, and children',
+  '分层名称、排序、计算配置与子图元': 'Layer name, stacking order, processing options, and children',
   '带 layer 类别的输入，不编译或复制子图元': 'Input tagged as a layer; does not compile or copy its children',
   'retikz 顶层绘制 IR，可序列化 JSON 形式的绘制描述': 'Root drawing IR, a JSON-serializable description of a drawing',
   '显式视框 IR 类型 `{ x, y, width, height }`': 'Explicit viewport IR: `{ x, y, width, height }`',

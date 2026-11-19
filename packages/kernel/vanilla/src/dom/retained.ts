@@ -2,11 +2,11 @@ import type { AnyCompositeDefinition } from '@retikz/core';
 import type { ReconcilerDiagnostic } from '@retikz/reconciler';
 import { prefersReducedMotion, resolveAnimationEnabled } from '@retikz/render/animation';
 import type { RenderHandlerContribution, InputRenderRuntimeConfig, RetainedRendererRead } from '@retikz/render/runtime';
-import { builtinRetainedRendererFactory, createRetainedRenderTarget, RenderCachePolicy } from '@retikz/render/runtime';
+import { builtinRetainedRendererFactory, createRetainedRenderTarget } from '@retikz/render/runtime';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
 import type { InputRuntimeMeta } from '../normalize';
-import { InputLayerCache, createEmptyInputRuntimeMetaSnapshot } from '../normalize';
+import { createEmptyInputRuntimeMetaSnapshot } from '../normalize';
 import type { ProcessingOptions, ProcessingResult } from '../processing';
 import { createDomProcessingController } from '../processing/internal';
 import type {
@@ -138,16 +138,6 @@ const createRenderConfig = (
   handlers: ReadonlyArray<RenderHandlerContribution>,
   canvas: InputRenderRuntimeConfig['canvas'],
 ): InputRenderRuntimeConfig => {
-  /** 把 Vanilla layer hints 保守折叠为 Render cache policy */
-  const resolveCachePolicy = (runtimeMeta: InputRuntimeMeta): 'auto' | 'static' | 'dynamic' => {
-    if (runtimeMeta.layers.some(layer => layer.cache === InputLayerCache.Dynamic)) return RenderCachePolicy.Dynamic;
-    if (runtimeMeta.layers.length > 0 && runtimeMeta.layers.every(layer => layer.cache === InputLayerCache.Static)) {
-      return RenderCachePolicy.Static;
-    }
-
-    return RenderCachePolicy.Auto;
-  };
-
   return {
     handlerContributions: handlers,
     animation: {
@@ -155,7 +145,6 @@ const createRenderConfig = (
       ...(state.animation.snapshotAt === undefined ? {} : { snapshotAt: state.animation.snapshotAt }),
     },
     ...(canvas === undefined ? {} : { canvas }),
-    cachePolicy: resolveCachePolicy(state.runtimeMeta),
   };
 };
 
@@ -257,7 +246,7 @@ const createRetainedProcessingControllerImplementation = (
       defaultFontFamily: processingOptions.defaultFontFamily,
       adapters: processingOptions.adapters,
       compileDriver: processingOptions.compileDriver,
-      updateStrategy,
+      reconciler: updateStrategy === undefined ? undefined : { incremental: true, updateStrategy },
     };
   };
 

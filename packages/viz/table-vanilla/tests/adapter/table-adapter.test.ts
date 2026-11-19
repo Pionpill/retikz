@@ -2,7 +2,7 @@ import { CompositeBaseSchema, defineComposite } from '@retikz/core';
 import type { IRDetailTable } from '@retikz/table';
 import { createManualTableIR, TableSchema } from '@retikz/table';
 import type { InputEmbedContext } from '@retikz/vanilla';
-import { layer, normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
+import { compileToScene, layer, normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 import { literal, string } from 'zod';
 
@@ -90,7 +90,7 @@ describe('Table Vanilla 适配器', () => {
     const inputScene = scene({
       layers: [
         layer({
-          id: 'content',
+          name: 'content',
           children: [
             embedTable(spec, { data: { people: [{ name: 'Ada' }] } }),
             embedTable({ ...spec, data: { reference: 'others' } }, { data: { others: [{ name: 'Lin' }] } }),
@@ -98,12 +98,13 @@ describe('Table Vanilla 适配器', () => {
         }),
       ],
     });
-    const svg = renderToSvgString(inputScene, { adapters: [tableInputEmbedAdapter] });
+    const [compiled] = compileToScene(inputScene, { adapters: [tableInputEmbedAdapter] });
+    const svg = renderToSvgString(compiled.result.scene);
 
     expect(svg).toContain('Ada');
     expect(svg).toContain('Lin');
 
-    const normalized = normalizeScene(inputScene, { adapters: [tableInputEmbedAdapter] });
+    const [{ result: normalized }] = normalizeScene(inputScene, { adapters: [tableInputEmbedAdapter] });
 
     expect(new Set(normalized.runtimeMeta.layers[0].childIds).size).toBe(2);
 

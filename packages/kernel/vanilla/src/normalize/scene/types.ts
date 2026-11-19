@@ -6,7 +6,8 @@ import type {
   IRScene,
   IRViewBox,
 } from '@retikz/core';
-import type { RequireExactlyOne, ValueOf } from '@retikz/foundation';
+import type { OpenString, RequireExactlyOne, ValueOf } from '@retikz/foundation';
+import type { CompileOptions, FullSceneReconcilerOptions, IncrementalSceneReconcilerOptions } from '@retikz/reconciler';
 
 import type {
   AnyInputEmbed,
@@ -18,28 +19,35 @@ import type {
   SynchronousInputEmbedAdapter,
 } from '../element';
 
-/** 输入分层缓存提示 */
-export const InputLayerCache = {
-  Static: 'static',
-  Dynamic: 'dynamic',
-  Auto: 'auto',
-} as const;
+/** 内置作者图层名称 */
+export const BuiltinLayerName = { Background: 'background', Main: 'main', Overlay: 'overlay' } as const;
 
-/** 输入分层缓存提示取值 */
-export type InputLayerCache = ValueOf<typeof InputLayerCache>;
+export type LayerName = OpenString<ValueOf<typeof BuiltinLayerName>>;
 
-/** 作者侧 Layer 输入 */
-export type InputLayer = {
+/** 视口宿主管理提交目标，各层配置执行方式 */
+export type LayerReconcilerOptions =
+  | Omit<FullSceneReconcilerOptions, 'target'>
+  | Omit<IncrementalSceneReconcilerOptions, 'target'>;
+
+/** 视口公共配置与单层覆盖 */
+export type LayerOptions = Readonly<{
+  /** 本层的编译选项 */
+  compile?: CompileOptions;
+  /** 本层的协调器执行选项 */
+  reconciler?: LayerReconcilerOptions;
+}>;
+
+/** 按画面顺序发布的独立图层结果 */
+export type NamedLayerResult<TResult> = Readonly<{ name: LayerName; zIndex: number; result: TResult }>;
+
+/** 作者侧图层 */
+export type InputLayer = LayerOptions & {
   /** 固定为 layer 的作者分层标识 */
   type: 'layer';
-  /** 分层身份标识 */
-  id: string;
-  /** 运行时缓存提示
-   * @default InputLayerCache.Auto
-   */
-  cache?: InputLayerCache;
+  /** 在视口内唯一的名称 */
+  name: LayerName;
   /** 同值保持声明顺序的分层排序值
-   * @default 0
+   * @default background: 0; overlay: 100; otherwise: 10
    */
   zIndex?: number;
   /** 按声明顺序归一的子节点 */
@@ -108,9 +116,7 @@ export type InputAuthoringSite = Readonly<{
 /** 运行时记录的单个 Layer metadata */
 export type InputLayerMeta = Readonly<{
   /** 图层的稳定身份标识 */
-  id: string;
-  /** 已补齐缺省值的图层缓存提示 */
-  cache: InputLayerCache;
+  name: LayerName;
   /** 图层稳定排序后的顺序编号 */
   order: number;
   /** 已补齐缺省值的绘制层级 */

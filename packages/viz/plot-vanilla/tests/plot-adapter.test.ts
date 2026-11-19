@@ -1,5 +1,5 @@
 import type { InputEmbedContext } from '@retikz/vanilla';
-import { layer, normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
+import { compileToScene, layer, normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
 import { embedPlot, plot, plotInputEmbedAdapter, plotIROf } from '../src';
@@ -117,19 +117,19 @@ describe('Plot Vanilla Tier2 适配器', () => {
     const input = structuredClone(spec);
     const inputScene = scene({
       layers: [
-        layer({ id: 'chart', children: [embedPlot({ spec }, datasets, { layout: { width: 360, height: 200 } })] }),
+        layer({ name: 'chart', children: [embedPlot({ spec }, datasets, { layout: { width: 360, height: 200 } })] }),
       ],
     });
-    const svg = renderToSvgString(inputScene, {
-      adapters: [plotInputEmbedAdapter],
+    const [compiled] = compileToScene(inputScene, { adapters: [plotInputEmbedAdapter] });
+    const svg = renderToSvgString(compiled.result.scene, {
       output: { width: 360, height: 200 },
     });
 
     expect(svg).toContain('<rect');
     expect(spec).toEqual(input);
-    expect(normalizeScene(inputScene, { adapters: [plotInputEmbedAdapter] }).runtimeMeta.layers[0].childIds).toEqual([
-      'sales',
-    ]);
+    expect(
+      normalizeScene(inputScene, { adapters: [plotInputEmbedAdapter] })[0].result.runtimeMeta.layers[0].childIds,
+    ).toEqual(['sales']);
   });
 
   it('保持 lineage 在 IRPlot、Core IR 与 Scene meta 之外', () => {
