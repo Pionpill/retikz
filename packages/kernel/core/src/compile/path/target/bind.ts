@@ -40,13 +40,15 @@ const bindPathStepTargets = (
   targets: Map<string, TargetResolution>,
   prefix: PropertyPath,
 ): Array<CanonicalPathStep> => {
+  // ⚡只编码一次可变前缀，固定字段和数组索引直接追加为相同的 JSON 路径键
+  const childrenKey = encodePropertyPath([...prefix, 'children']).slice(0, -1);
   const resolver = context.targetResolver;
   const scopeChain = context.scopeChain ?? [];
   let previous: IRPosition | null = null;
   let deferRelative = false;
   const out: Array<CanonicalPathStep> = [];
 
-  const bindStepTarget = (target: IRTarget, key: PropertyPath): IRTarget => {
+  const bindStepTarget = (target: IRTarget, key: string): IRTarget => {
     let value = target;
     if (isRelativeTargetLike(target) && !deferRelative) {
       const base = previous ?? [0, 0];
@@ -56,7 +58,7 @@ const bindPathStepTargets = (
       value = [base[0] + target.relativeAccumulate[0], base[1] + target.relativeAccumulate[1]];
     }
 
-    targets.set(encodePropertyPath(key), bindTarget(value, context, scopeChain));
+    targets.set(key, bindTarget(value, context, scopeChain));
 
     return value;
   };
@@ -70,14 +72,14 @@ const bindPathStepTargets = (
 
     if (step.kind === 'axis-line') {
       deferRelative = true;
-      const value = bindStepTarget(step.to, [...prefix, 'children', index, 'to']) as typeof step.to;
+      const value = bindStepTarget(step.to, `${childrenKey},${index},"to"]`) as typeof step.to;
       out.push({ ...step, to: value });
       continue;
     }
 
     if (step.kind === 'arc') {
       const center =
-        step.center === undefined ? undefined : bindStepTarget(step.center, [...prefix, 'children', index, 'center']);
+        step.center === undefined ? undefined : bindStepTarget(step.center, `${childrenKey},${index},"center"]`);
       out.push(center === undefined ? step : { ...step, center });
       if (previous && typeof step.radius === 'number' && step.center === undefined) {
         previous = pointAtArcAngle(previous, step.radius, step.endAngle);
@@ -87,8 +89,9 @@ const bindPathStepTargets = (
 
     if (step.kind === 'smooth') {
       let smoothPrevious: IRPosition | null = previous;
+      const pointsKey = `${childrenKey},${index},"points",`;
       const points = step.points.map((target, pointIndex) => {
-        const key = [...prefix, 'children', index, 'points', pointIndex];
+        const key = `${pointsKey}${pointIndex}]`;
         let value: IRTarget = target;
         if (isRelativeTargetLike(target) && !deferRelative) {
           const base = smoothPrevious ?? [0, 0];
@@ -99,7 +102,7 @@ const bindPathStepTargets = (
         }
 
         const binding = bindTarget(value, context, scopeChain);
-        targets.set(encodePropertyPath(key), binding);
+        targets.set(key, binding);
         const point = binding.point;
         if (point && !isRelativeTargetLike(target)) smoothPrevious = point;
         if (point && isRelativeAccumulateTargetLike(target)) smoothPrevious = point;
@@ -113,13 +116,13 @@ const bindPathStepTargets = (
     }
 
     if (step.kind === 'rectangle') {
-      const from = bindStepTarget(step.from, [...prefix, 'children', index, 'from']);
-      const to = bindStepTarget(step.to, [...prefix, 'children', index, 'to']);
+      const from = bindStepTarget(step.from, `${childrenKey},${index},"from"]`);
+      const to = bindStepTarget(step.to, `${childrenKey},${index},"to"]`);
       out.push({ ...step, from, to });
       continue;
     }
 
-    const value = bindStepTarget(step.to, [...prefix, 'children', index, 'to']);
+    const value = bindStepTarget(step.to, `${childrenKey},${index},"to"]`);
     out.push({ ...step, to: value });
     if (!isRelativeTargetLike(step.to)) {
       const point = pointOfTarget(value, resolver, scopeChain);
