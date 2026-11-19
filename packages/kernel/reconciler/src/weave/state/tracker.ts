@@ -6,6 +6,9 @@ import type { WeaveTransaction } from './transaction';
 
 /** 维护编译读取、双向依赖与批次失效，不编辑声明结构或执行编译 */
 export class WeaveTracker {
+  /** 同批已隔离的名称订阅者集合，不与已提交版本共享可写引用 */
+  private readonly editedSubscribers = new Map<string, Set<WeaveEntry>>();
+
   /** 本批已失效条目，用于传播去重与阻止缓存复用，不是待执行队列 */
   private readonly dirtyEntries = new Set<WeaveEntry>();
   /** 仅可能受上游影响的条目；读取结果未变时不进入领域计算 */
@@ -92,14 +95,11 @@ export class WeaveTracker {
       });
     // ⚡诊断按条目身份浅比较，不递归遍历任意 details；新条目保守刷新记录
     if (sameReads && compareProperties(oldRecord.diagnostics, diagnostics)) return;
-    const names = new Set([...(oldRecord?.reads ?? []).map(read => read.name), ...reads.map(read => read.name)]);
-    for (const name of names) {
-      const readers = this.transaction.editStateAttribute(this.root, 'readers');
-      const subscribers = new Set(readers.get(name));
-      if (reads.some(read => read.name === name)) subscribers.add(entry);
-      else subscribers.delete(entry);
-      if (subscribers.size === 0) readers.delete(name);
-      else readers.set(name, subscribers);
+    if (!sameReads) {
+      const nextNames = new Set(reads.map(read => read.name));
+      for (const read of oldRecord?.reads ?? [])
+        if (!nextNames.has(read.name)) this.setSubscription(read.name, entry, false);
+      for (const name of nextNames) this.setSubscription(name, entry, true);
     }
     this.transaction.editStateAttribute(this.root, 'records').set(entry, {
       reads,
@@ -126,6 +126,27 @@ export class WeaveTracker {
     }
   }
 
+  /** ⚡成员关系变化才写入；同一名称在本批首次写入时复制一次 */
+  private setSubscription(name: string, entry: WeaveEntry, present: boolean): void {
+    const existing = this.transaction.readState(this.root).readers.get(name);
+    if ((existing?.has(entry) ?? false) === present) return;
+    const readers = this.transaction.editStateAttribute(this.root, 'readers');
+    let subscribers = this.editedSubscribers.get(name);
+    if (subscribers === undefined) {
+      subscribers = new Set(existing);
+      this.editedSubscribers.set(name, subscribers);
+      readers.set(name, subscribers);
+    }
+    if (present) subscribers.add(entry);
+    else {
+      subscribers.delete(entry);
+      if (subscribers.size === 0) {
+        readers.delete(name);
+        this.editedSubscribers.delete(name);
+      }
+    }
+  }
+
   /** 更新 Scope 包络对子元素布局的双向依赖，Path 不参与引用包络 */
   updateScopeLayoutDependencies(entry: WeaveScopeEntry): void {
     for (const dependency of this.transaction.readState(entry).children) {
@@ -144,13 +165,8 @@ export class WeaveTracker {
     this.removed.add(entry);
     this.dirtyEntries.delete(entry);
     this.checkedEntries.delete(entry);
-    for (const read of this.transaction.readState(this.root).records.get(entry)?.reads ?? []) {
-      const readers = this.transaction.editStateAttribute(this.root, 'readers');
-      const subscribers = new Set(readers.get(read.name));
-      subscribers.delete(entry);
-      if (subscribers.size === 0) readers.delete(read.name);
-      else readers.set(read.name, subscribers);
-    }
+    for (const read of this.transaction.readState(this.root).records.get(entry)?.reads ?? [])
+      this.setSubscription(read.name, entry, false);
     for (const producer of state.dependencies.keys())
       this.transaction.editStateAttribute(producer, 'consumers').delete(entry);
     for (const consumer of state.consumers) this.transaction.editStateAttribute(consumer, 'dependencies').delete(entry);

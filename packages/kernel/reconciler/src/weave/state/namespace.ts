@@ -43,16 +43,24 @@ export class WeaveNameIndex {
         own === undefined || 'namespace' in own
           ? []
           : [...(own.id === undefined ? [] : [own.id]), ...('aliasIds' in own ? (own.aliasIds ?? []) : [])];
-      const nextNames = new Set(names(after));
-      for (const name of new Set([...(this.memberships.get(entry) ?? []), ...nextNames])) {
-        const entries = new Set(this.declarations.get(name));
-        if (nextNames.has(name)) entries.add(entry);
-        else entries.delete(entry);
-        if (entries.size === 0) this.declarations.delete(name);
-        else this.declarations.set(name, entries);
+      const declarations = names(after);
+      const previousNames = this.memberships.get(entry);
+      // ⚡无名称时不建立空索引；成员关系未变时复用原声明集合
+      if (declarations.length > 0 || previousNames !== undefined) {
+        const nextNames = new Set(declarations);
+        for (const name of new Set([...(previousNames ?? []), ...nextNames])) {
+          const current = this.declarations.get(name);
+          const present = nextNames.has(name);
+          if ((current?.has(entry) ?? false) === present) continue;
+          const entries = new Set(current);
+          if (present) entries.add(entry);
+          else entries.delete(entry);
+          if (entries.size === 0) this.declarations.delete(name);
+          else this.declarations.set(name, entries);
+        }
+        if (nextNames.size === 0) this.memberships.delete(entry);
+        else this.memberships.set(entry, [...nextNames]);
       }
-      if (removed.has(entry)) this.memberships.delete(entry);
-      else this.memberships.set(entry, [...nextNames]);
       if (entry.type === 'composite') {
         if (removed.has(entry)) this.composites.delete(entry);
         else this.composites.set(entry, true);
