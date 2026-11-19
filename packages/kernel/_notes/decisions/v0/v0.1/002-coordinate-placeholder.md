@@ -34,9 +34,3 @@ keywords: 'Coordinate、IRChild、at.of、position、NodeLayout'
 
 - coordinate 自身 anchor（`m.north`）：占位无形状边界，所有 anchor 退化为中心，不提供显式 anchor 语法。
 - `\path[name path=...]` / `\path coordinate (...)` 等其它占位变体：留 v0.2+。
-
----
-
-## 最终实现结果
-
-已实现本 ADR 的核心决策。兼容性：正文所列默认行为与既有契约保持兼容；其余默认行为、失败语义与公开契约以正文为准。

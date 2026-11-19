@@ -1,28 +1,21 @@
 ---
-description: Ribbon arc cap；背景：Circular flow、chord 和极坐标流图需要沿圆弧连接 ribbon 两侧边界；只支持直线闭合会造成不自然的轮廓和命中区域
+description: '带状路径的起点与终点可以各自使用圆弧闭合两侧边界'
 keywords: 'Ribbon、arc、cap、Path.ribbon.start.cap、Path.ribbon.end.cap'
 ---
 
 # ADR-017：Ribbon arc cap
 
-- 状态：被 ADR-021 收敛
+- 状态：Partially Superseded
 - 决策日期：2026-06-25
 - 关联：[ADR-021](./021-path-kind-registry.md)
+- 后续决策：[kernel v0.4/021](021-path-kind-registry.md)
 
-## 背景
+## 保留的决策
 
-Circular flow、chord 和极坐标流图需要沿圆弧连接 ribbon 两侧边界；只支持直线闭合会造成不自然的轮廓和命中区域
+带状路径的起点与终点可以各自使用圆弧闭合两侧边界。圆心、半径和扫向必须可序列化，编译时验证能否连接；不能生成有限有效几何时应报告错误，而非让后端猜测。
 
-## 决策
+起点与终点的 cap 可分别配置；圆弧封口连接的是同一端的两条边，而非沿中心线添加一个装饰箭头。
 
-Ribbon 端点支持 JSON-safe 的 arc 描述，公开位置为 `Path.ribbon.start.cap` 与 `Path.ribbon.end.cap`。描述包含圆心、半径和扫掠方向，由 Core 在编译期验证并转换为闭合 path 段
+## 修订边界
 
-Arc cap 是 ribbon 几何的一部分，不是 renderer 后处理；输入不得包含函数。无法连接两侧边界、产生非有限或无效几何时 compile 必须 fail-loud。该能力只描述端点闭合方式，不引入 chord/Sankey 布局
-
-## 兼容性与最终结果
-
-Arc cap 随 ribbon path options 收敛到 ADR-021 的 Path kind registry，并由普通 Scene path primitive 输出；renderer 不再拥有独立 cap 语义
-
-## 遗留边界
-
-不定义通用圆弧路径、领域布局或 renderer-specific cap；其它端点样式须沿 Path contract 另行扩展
+端盖属于 Path 的 ribbon 几何，不是独立 Ribbon 节点或绘制后处理。

@@ -39,9 +39,3 @@ keywords: 'Node、position、Coordinate、OffsetPosition、offset、calc、Node.
 ## 长期边界
 
 - 链式 offset 深度不设上限（与 polar nested origin 一致）；`AtPosition.distance` 扩二元组；OffsetPosition 的字符串 sugar（`of`+`offset` 难用单字符串表达，保持对象形态，未来另开 ADR）。
-
----
-
-## 最终实现结果
-
-已实现本 ADR 的核心决策。兼容性：additive；其余默认行为、失败语义与公开契约以正文为准。

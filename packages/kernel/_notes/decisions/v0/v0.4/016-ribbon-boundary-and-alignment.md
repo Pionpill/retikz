@@ -1,34 +1,21 @@
 ---
-description: Ribbon 边界、对齐与采样语义；背景：Variable-width ribbon 需要稳定的中心线、边界、宽度采样、端点方向和对齐语义，否则同一份 IR 会在不同 renderer 或上层包中生成不同轮廓
+description: '中心线模式按宽度分布及 center/left/right 对齐派生两侧边界；显式边界模式直接使用 upper/lower'
 keywords: 'Ribbon、Path.ribbon、width、start、interpolation'
 ---
 
 # ADR-016：Ribbon 边界、对齐与采样语义
 
-- 状态：被 ADR-021 收敛
+- 状态：Partially Superseded
 - 决策日期：2026-06-25
-- 关联：[ADR-015](./015-ribbon.md) · [ADR-021](./021-path-kind-registry.md)
+- 关联：[ADR-015](./015-ribbon.md)、[ADR-021](./021-path-kind-registry.md)
+- 后续决策：[kernel v0.4/021](021-path-kind-registry.md)
 
-## 背景
+## 保留的决策
 
-Variable-width ribbon 需要稳定的中心线、边界、宽度采样、端点方向和对齐语义，否则同一份 IR 会在不同 renderer 或上层包中生成不同轮廓
+中心线模式按宽度分布及 center/left/right 对齐派生两侧边界；显式边界模式直接使用 upper/lower。采样应由几何契约决定，不能因换后端而改变轮廓。
 
-## 决策
+center 将宽度分配在中心线两侧，left/right 将带放在方向确定的一侧；边界模式不应再从宽度 profile 反推作者已明确给出的边界。
 
-Ribbon 支持从中心线和宽度 profile 派生边界，也支持直接给出上下边界；端点、对齐和采样属于 Core 的 path-like 几何语义，Sankey layout、流量分配、排序和 crossing minimization 不属于 Core
+## 修订边界
 
-ADR-021 收敛后的 `Path.ribbon` 字段为：
-
-- `mode: "centerline" | "boundary"`：中心线或显式边界模式
-- `width`、`start`、`end`、`interpolation`：宽度 profile 与端点参数
-- `align: "center" | "left" | "right"`：宽度相对中心线的分布
-- `samples` / `sampling`：确定曲线采样密度
-- `upper` / `lower`：边界模式的两侧边界
-
-## 兼容性与最终结果
-
-字段由 `Path.ribbon` 的公共契约统一消费，Plot 等领域只负责产生合法的 Core 输入；中心线和边界两种模式均保持，缺省与非法参数的诊断由统一 Path compile 链路处理
-
-## 遗留边界
-
-不在 Core 内实现领域布局或通用路径避障；新增几何模式须扩展 Path kind 契约
+这两种输入模式保留在 Path 的 ribbon 参数中，而非独立 Ribbon 实体。

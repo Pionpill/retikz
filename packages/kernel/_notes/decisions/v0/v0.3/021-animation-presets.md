@@ -1,42 +1,19 @@
 ---
-description: 具名动画 preset factory；背景：AnimationTrack 原语功能完整，但手写 keyframes 冗长且容易出错
+description: '具名预设应当是返回可序列化轨道的纯工厂，而不是只在某个框架中才能执行的组件；作者可以直接组合结果或手写等价轨道'
 keywords: 'preset、factory'
 ---
 
 # ADR-021：具名动画 preset factory
 
-- 状态：Accepted（预设归属由 Standard ADR-031 部分替代）
+- 状态：Partially Superseded
 - 决策日期：2026-06-07
-- 关联：[ADR-017 动画 IR](./017-timeline-animation-ir.md) · [ADR-018 SVG](./018-svg-playback.md) · [ADR-019 Canvas](./019-canvas-playback.md) · [ADR-020 runtime](./020-runtime-control.md)
+- 关联：[ADR-017 动画 IR](./017-timeline-animation-ir.md)、[ADR-018 SVG](./018-svg-playback.md)、[ADR-019 Canvas](./019-canvas-playback.md)、[ADR-020 runtime](./020-runtime-control.md)
+- 后续决策：[standard v0.1/031](../../../../../library/_notes/decisions/standard/v0/v0.1/031-animation-preset-migration.md)
 
-## 背景
+## 保留的决策
 
-AnimationTrack 原语功能完整，但手写 keyframes 冗长且容易出错。preset 只是可逆的纯数据构造，不增加新能力，必须逐字段等价于手写 AnimationTrack。
+具名预设应当是返回可序列化轨道的纯工厂，而不是只在某个框架中才能执行的组件；作者可以直接组合结果或手写等价轨道。
 
-## 决策
+## 修订边界
 
-preset 是 framework-agnostic 的纯 factory，返回 IRAnimationTrack，而不是组件；它们可直接用于 Node/Path/Scope 的 animations 数组。公共 options 包含 duration、delay、easing、trigger；专属参数只表达现有 track 数据。
-
-内置 preset 及默认语义：
-
-| preset        | track                         | 默认值                               |
-| ------------- | ----------------------------- | ------------------------------------ |
-| fadeIn        | opacity 0→1                   | 400ms, ease-out                      |
-| drawOn        | pathDraw 0→1                  | 600ms, ease-in-out                   |
-| scaleIn       | scale from→1                  | from 0.8, 400ms, ease-out            |
-| grow / growUp | scale 0→1 / scaleY 0→1        | growUp origin south, 500ms, ease-out |
-| slideIn       | translateX/Y offset→0         | x, -20, 400ms, ease-out              |
-| colorShift    | fill/stroke from→to           | fill, 400ms, ease-in-out；to 必填    |
-| cameraTo      | root viewBox from→to          | 800ms, ease-in-out；两端必填         |
-| pulse / spin  | scale 1→peak→1 / rotate 0→360 | infinite；peak 1.1 或 linear         |
-| loop          | 包装既有 track                | iterations infinite                  |
-
-intro preset 的末帧等于 base；循环 preset 按其循环语义播放。stagger 是纯数组 helper，仅叠加每项 delay，不建立完整 timeline DSL。React、Vanilla 和直接 IR 共享同一 factory，preset 输出不绕过 schema、播放或降级契约。
-
-## 当前归属与兼容性
-
-[Standard ADR-031](../../../../../library/_notes/decisions/standard/v0/v0.1/031-animation-preset-migration.md) 部分替代本决策的包归属：Core 保留 fadeIn、scaleIn、slideIn、drawOn、colorShift、cameraTo、loop、stagger；grow、growUp、pulse、spin、flash、blink、wiggle 及其专属选项由 Extension 拥有。迁出项不保留 Core 或 adapter 的兼容转导出。纯工厂、手写轨道等价与已有 JSON 不受影响的原则继续成立。
-
-## 遗留风险
-
-动画文档页仍待补；along-path、wipe、morph 和完整 sequence DSL 不属于 preset。
+跨领域可复用的预设由 Standard 提供；Kernel 定义轨道及其消费，不把配方清单变成底层词汇。

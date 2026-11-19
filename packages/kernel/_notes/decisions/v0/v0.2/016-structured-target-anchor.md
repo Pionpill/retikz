@@ -44,8 +44,4 @@ keywords: 'Target、Anchor、path、target、AnchorRef、parseNodeTarget、Targe
 - `{ side, t }` 的几何实现（真实边界 / `edgePoint` / `resolveEdgePoint`）→ [ADR-017](./017-side-t-edge-point.md)，本篇只纳入 schema + compile 分发。
 - `<TikZ>`→`<Layout>` 改名 → [ADR-018](./018-tikz-to-layout-rename.md)；命名 / 角度 anchor 的 `resolveAnchor` 缓存沿用 alpha.3。
 
----
-
-## 最终实现结果
-
-已实现本 ADR 的核心决策。兼容性：⚠️ BREAKING（core `TargetSchema` 不再接受字符串节点引用；React JSX / Draw way 字符串写法不变——eager 解析，直接手写 IR 改对象，pre-rc 允许）；其余默认行为、失败语义与公开契约以正文为准。
+当时的兼容边界：core `TargetSchema` 不再接受字符串节点引用。

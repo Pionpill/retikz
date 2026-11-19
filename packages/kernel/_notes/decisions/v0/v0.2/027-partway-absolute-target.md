@@ -44,9 +44,3 @@ export type IRBetweenPosition = { between: [IRAbsoluteTarget, IRAbsoluteTarget];
 - **`t` 外插**（`t<0` / `t>1` 端点延长线）：实现钳制 `[0,1]`，外插推迟。
 - **投影 projection / 完整 calc 表达式**：学术 / 逆结构化方向，不做。
 - **clip**→ [ADR-028](./028-clip.md)；**viewBox override**→ [ADR-029](./029-viewbox-override.md)。
-
----
-
-## 最终实现结果
-
-已实现本 ADR 的核心决策。兼容性：向后兼容纯叠加 union 分支、零破坏；其余默认行为、失败语义与公开契约以正文为准。

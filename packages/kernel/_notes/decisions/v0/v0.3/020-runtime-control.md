@@ -1,31 +1,19 @@
 ---
-description: runtime 播放控制、trigger 与静态截帧
+description: '播放控制与渲染一帧是两种操作'
 keywords: 'runtime、trigger'
 ---
 
 # ADR-020：runtime 播放控制、trigger 与静态截帧
 
-- 状态：Accepted
+- 状态：Partially Superseded
 - 决策日期：2026-06-07
-- 关联：[ADR-018 SVG 播放](./018-svg-playback.md) · [ADR-019 Canvas 播放](./019-canvas-playback.md) · [alpha.3 hydration](./008-hydration.md)
+- 关联：[ADR-018 SVG 播放](./018-svg-playback.md)、[ADR-019 Canvas 播放](./019-canvas-playback.md)、[alpha.3 hydration](./008-hydration.md)
+- 后续决策：[kernel v0.3/024](024-canvas-animation-trigger-bridge.md)、[kernel v0.4/040](../v0.4/040-animation-enabled-override.md)
 
-## 背景
+## 保留的决策
 
-renderer 已能按 CSS/WAAPI 或给定 time 产生动画帧，但 rAF、trigger、reduced-motion、控制句柄和静态截帧依赖环境，属于 Vanilla/React runtime，不属于纯 render。
+播放控制与渲染一帧是两种操作。宿主拥有时钟、启动和停止，renderer 按给定状态绘制；无须让每个图元各自启动循环。
 
-## 决策
+## 修订边界
 
-- Canvas runtime 为一个 Scene 维护共享 rAF 时钟，反复调用 drawScene({ time })；per-track delay 在 evaluateTrack 内处理。没有 infinite track 时结束在 settled 帧，有 infinite 时持续
-- SVG 的 load 由 CSS 自播；visible/manual/onEvent 由 runtime 读取 WAAPI 描述并连接 IntersectionObserver、控制 API 或 hydration 事件
-- Canvas 在当前契约中只自动播放 load/缺省 track；visible/manual/onEvent 一律按 base 绘制，避免与共享 Scene 时钟一起意外自动播放。per-track Canvas trigger 另行扩展
-- animate:false 或 reduced-motion 统一关闭 CSS/WAAPI 和 Canvas rAF，渲染完整 base
-- drawScene({ time: t }) 提供 Canvas 单帧截帧。SVG 的 renderToSvgString({ at: t }) 仍未实现，不能在 ADR 中宣称已具备
-- React 与 Vanilla 均支持动画自动播放和静态开关；Vanilla 另提供 Scene 级 play/pause/seek 等控制，handler 回调仍不进入 IR
-
-## 兼容性与实现结果
-
-共享 clock、reduced-motion 检测、SVG WAAPI 接线、Vanilla mountCanvas 和 React Canvas rAF 已落地；静态路径在无动画时保持兼容。
-
-## 遗留风险
-
-SVG 静态截帧、Canvas 的 visible/manual/onEvent、React per-element manual ref 和 adapter 层自定义 animation registry 仍缺失；它们是明确缺口，不应被状态行覆盖。
+Canvas 不再只限 load，按 id 的触发桥接入事件及可见性。省略动画开关时跟随系统；显式 true 或 false 优先于系统偏好。

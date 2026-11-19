@@ -44,9 +44,3 @@ Node / Path / Scope schema 加可选 `zIndex`（`z.number().int().finite().optio
 - **transformed scope 内 path 的完整 z-order**：ADR-008 已锁的 hoist 限制；彻底方案（path 端点改 scope 局部坐标）留未来坐标系 ADR。本 ADR zIndex 对这类 hoist path 只能在顶层覆盖。
 - **`GroupPrim.meta` / `data-node-id` 钩子**：与 zIndex 无关，留未来。
 - **带文本 Node 包 `<g>`** → [ADR-010](./010-text-node-group-wrap.md)；**Node label rotate** → [ADR-011](./011-node-label-rotate.md)。
-
----
-
-## 最终实现结果
-
-已实现本 ADR 的核心决策。兼容性：非 breaking（新字段全 optional，未用时输出恒等）；其余默认行为、失败语义与公开契约以正文为准。

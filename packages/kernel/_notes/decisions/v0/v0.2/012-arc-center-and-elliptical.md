@@ -46,9 +46,3 @@ move(arcStart)          // 起点 = 弧起点；arcStart = center + polar(radius
 ## 长期边界
 
 - circlePath / ellipsePath 部分裁剪（[ADR-013](./013-partial-circle-ellipse.md)）；矩形 step（[ADR-014](./014-rectangle-step.md)）。
-
----
-
-## 最终实现结果
-
-已实现本 ADR 的核心决策。兼容性：additive 零破坏（新字段 optional，现有 `radius`-only arc 输出逐字节不变）；其余默认行为、失败语义与公开契约以正文为准。

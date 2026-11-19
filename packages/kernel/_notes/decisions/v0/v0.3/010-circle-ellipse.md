@@ -1,31 +1,21 @@
 ---
-description: circle 作为 ellipse 的 equal preset
+description: '圆可视为等半轴椭圆的预设'
 keywords: 'circle、ellipse、equal、preset'
 ---
 
 # ADR-010：circle 作为 ellipse 的 equal preset
 
-- 状态：Accepted
+- 状态：Partially Superseded
 - 决策日期：2026-06-06
 - 关联：[ADR-009 shape 参数化机制](./009-shape-params-generalization.md)
+- 后续决策：[kernel v0.5/076](../v0.5/076-shape-circumscribed-geometry.md)
 
-## 背景
+## 保留的决策
 
-circle 与 ellipse 的 boundaryPoint、anchor、edgePoint 和 emit 几何相同；差异只在 circumscribe：circle 使用等轴的内框对角线半长，ellipse 对两个轴分别乘以 √2。保留两套实现会造成几何重复。
+圆可视为等半轴椭圆的预设。包含相同内容时，等半轴约束不能简单裁掉矩形内容的角；绘制轮廓和连接锚点使用同一几何。
 
-## 决策
+在最初的矩形内容模型中，equal 的两个半轴均取内容半宽与半高的斜边长度；proportional 各自将半宽、半高乘以 √2。等半轴不是简单取两边中较大的一边。
 
-ellipse 的参数 schema 增加 circumscribe 策略：
+## 修订边界
 
-- proportional（默认）按轴分别以 √2 扩展，保持 ellipse 行为
-- equal 使两个半轴都为 hypot(innerHalfWidth, innerHalfHeight)，表达正圆
-
-circle 不再拥有独立几何，compile 将裸 shape circle 规范化为 type ellipse、params { circumscribe: equal }。shape: circle 和 shape: ellipse 两种旧写法都保留；其他几何函数只实现一次。
-
-## 兼容性与实现结果
-
-既有 circle/ellipse 字符串写法和连接语义保持兼容，circle 已作为 ellipse preset 实现。
-
-## 遗留风险
-
-其他形状的 preset 别名应继续复用单一几何实现，不应重新建立同义注册项。
+本篇确定的是圆与椭圆的几何关系，而非旧 circumscribe 方法签名。外接几何由 Shape Definition 统一返回。

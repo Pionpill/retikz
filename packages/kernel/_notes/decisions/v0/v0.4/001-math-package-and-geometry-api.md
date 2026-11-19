@@ -1,45 +1,19 @@
-﻿---
-description: '@retikz/math 零依赖纯计算几何包；背景：Core 中已有私有的求交和弧几何，但纯数学、IR 类型和 TikZ 语义混在同一层'
+---
+description: 'Math 提供零运行时依赖的纯几何计算；坐标、向量、弧与求交不需要理解节点 id、IR 或 Zod'
 keywords: 'retikz、math'
 ---
 
 # ADR-001：@retikz/math 零依赖纯计算几何包
 
-- 状态：Accepted（已实现）
+- 状态：Partially Superseded
 - 决策日期：2026-06-13
-- 关联：[ADR-002 core 几何下沉](./002-core-pure-geometry-sink.md) · [ADR-003 point 公开面](./003-point-polar-surface-fix.md)
+- 关联：[ADR-002 core 几何下沉](./002-core-pure-geometry-sink.md)、[ADR-003 point 公开面](./003-point-polar-surface-fix.md)
+- 后续决策：[kernel v0.4/003](003-point-polar-surface-fix.md)
 
-## 背景
+## 保留的决策
 
-Core 中已有私有的求交和弧几何，但纯数学、IR 类型和 TikZ 语义混在同一层。需要一个可独立复用的计算底座，同时不把业务语义带入 math。
+Math 提供零运行时依赖的纯几何计算；坐标、向量、弧与求交不需要理解节点 id、IR 或 Zod。Core 消费这些计算，而不公开另一份同义实现。
 
-## 决策
+## 修订边界
 
-新建 @retikz/math：ESM、零运行时依赖、零 IR/Zod、不使用 class；所有 API 为纯函数、普通对象和 Position 数组。Position 与 DEFAULT_EPSILON（1e-9）在 math 中成为真源，消费方从 math 公开入口直接导入。
-
-首切公开命名空间与能力：
-
-- point：Position、向量加减缩放、dot/cross、length、normalize、shiftToward、equal、lerp
-- transform：CenteredShape、localToWorld、worldToLocal
-- arc：arcEndPoint、arcAngleInRange、rayArc、ellipseArcPoint、arcBoundingPoints、ellipseArcBoundingPoints
-- intersect：lineLine、lineCircle、circleCircle、segmentSegment；rayArc 留在 arc 并返回沿射线的距离数组
-- triangle：Circle、incircle、circumcircle
-- polygon：不限定凹凸和绕向的 ray-casting containsPoint
-- hull：CCW Andrew monotone chain，去重并剔除共线中间点；少于三个点返回排序去重后的点
-
-返回和退化语义：
-
-- lineLine 平行/共线为 null；lineCircle/circleCircle 返回 0/1/2 个交点，重合、内含、相离为空；切线仍返回两个重合点
-- segmentSegment 首切只返回真交点，平行、共线（含重叠）和不相交为 null
-- triangle 三点共线时返回 null；containsPoint 的边界结果首切未定义
-- 所有数值比较使用朴素 epsilon，复杂退化谓词另行升级
-
-math 只接受可独立复用的纯数学能力；曲线、变换与中立轮廓算法属于本包，业务 shape、Anchor 与 IR 语义不属于本包。
-
-## 兼容性与实现结果
-
-@retikz/math 已加入 Kernel lockstep，核心几何 API 已落地；纯计算由 Math 单独提供公开入口，Core 不维护重复导出。
-
-## 遗留风险
-
-共线重叠的细分判别、稳健谓词、Bezier 求交和更复杂曲线算法仍需独立契约。
+最初导出表只是首批 API。点与极坐标的公开归属后来调整，不能据此使用已移除的 equal 等 helper。

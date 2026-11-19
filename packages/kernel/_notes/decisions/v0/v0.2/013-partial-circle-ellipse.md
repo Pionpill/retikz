@@ -56,9 +56,3 @@ keywords: 'circlePath、ellipsePath、startAngle、endAngle、closed'
 ## 长期边界
 
 - 扇形 wedge（经圆心闭合）—— `<Sector>` 形态，见 [ADR-012](./012-arc-center-and-elliptical.md)。
-
----
-
-## 最终实现结果
-
-已实现本 ADR 的核心决策。兼容性：additive 零破坏（新字段 optional，整圆 / 整椭圆输出不变）；其余默认行为、失败语义与公开契约以正文为准。

@@ -1,35 +1,19 @@
 ---
-description: unbuilder round-trip 等价性
+description: '纯 Kernel IR 在 React 构建与反向转换之间应逐字段等价，不能只凭最终绘制相似就丢掉位置、标签或箭头的作者意图'
 keywords: 'unbuilder、round-trip、arrowDetail、OffsetPosition、StepLabel.position'
 ---
 
 # ADR-011：unbuilder round-trip 等价性
 
-- 状态：Accepted（已实现）
+- 状态：Partially Superseded
 - 决策日期：2026-05-13
-- 关联： · [ADR-006 arrowDetail](./006-path-arrow-detail.md) · [ADR-007 OffsetPosition](./007-position-offset.md) · [ADR-005 StepLabel position](./005-step-label-position-t.md)
+- 关联：[ADR-006 arrowDetail](./006-path-arrow-detail.md)、[ADR-007 OffsetPosition](./007-position-offset.md)、[ADR-005 StepLabel position](./005-step-label-position-t.md)
+- 后续决策：[kernel v0.5/052](../v0.5/052-unified-composite-compilation.md)
 
-> **目标**：保证新增 IR 形态在 React DSL 与 IR 之间无损往返
+## 保留的决策
 
-## 背景 / 约束
+纯 Kernel IR 在 React 构建与反向转换之间应逐字段等价，不能只凭最终绘制相似就丢掉位置、标签或箭头的作者意图。
 
-alpha.4 / alpha.5 新增的 IR 形态必须在 builder 与 unbuilder 间保持无损往返，尤其是 `arrowDetail` 的起末覆盖、嵌套 `OffsetPosition` 以及 `StepLabel.position` 的关键词与数值形态
+## 修订边界
 
-## 决策：unbuilder 保持 IR round-trip 等价
-
-构建与反构建对这些形态保持逐字段等价
-
-理由：不需改实现（字段已透传），纯补测；一次性补齐 alpha.5 的 react-layer 守门。
-
-### 决策细节
-
-- **若 round-trip 不等价 → 算 alpha.5 遗留 bug**，本 ADR scope 扩展到修 unbuilder。
-- IR round-trip 不定义 renderer 输出格式；SVG 等后端的输出遵循各自的 compile / render 契约
-
-## 长期边界
-
----
-
-## 最终实现结果
-
-已实现本 ADR 的核心决策。兼容性：非 breaking（零公开 API / 运行时变化）；其余默认行为、失败语义与公开契约以正文为准。
+这个保证不覆盖任意 Composite 或 Sugar 的原始写法；React 反向转换消费不含 Composite 的 Kernel IR，不负责逆推 Tier 2 组件。

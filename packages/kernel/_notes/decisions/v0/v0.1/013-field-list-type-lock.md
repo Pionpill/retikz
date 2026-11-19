@@ -33,9 +33,3 @@ keywords: 'builder、unbuilder、stableArrowKey、AssertEqual、buildNode、node
 - `Step` 10-kind discriminated union 的字段表——需 per-kind 分开、工作量大，留单独 ADR。
 - `Path` props 字段表（有 `children` 特化）。
 - 其他可能存在的字段表（grep `props.X as Y` / `if (x !== undefined) y[key] = x` 模式）。
-
----
-
-## 最终实现结果
-
-已实现本 ADR 的核心决策。兼容性：非 breaking（仅内部实现 + 类型层）；其余默认行为、失败语义与公开契约以正文为准。

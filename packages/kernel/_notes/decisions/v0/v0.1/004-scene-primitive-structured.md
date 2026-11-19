@@ -45,8 +45,4 @@ keywords: 'Scene、PathPrim、GroupPrim、SVG、PathPrim.d、GroupPrim.transform
 - 其它 primitive 审计：`Rect/Ellipse/Text` 经审无字符串 leakage（TextPrim 已是结构化 `lines`）。
 - `boundsHint` 等性能字段；canvas / Skia / PDF adapter 的实际实现（v1+）；IR 层 `IRStep.kind` 设计不动。
 
----
-
-## 最终实现结果
-
-已实现本 ADR 的核心决策。兼容性：⚠️ BREAKING（消费 Scene primitive 的 adapter 作者需同步；React/IR/LLM 端零感知、文档不改）；其余默认行为、失败语义与公开契约以正文为准。
+当时的兼容边界：消费 Scene primitive 的 adapter 作者需同步。

@@ -37,9 +37,3 @@ override 落点是 **Scene IR 顶层 `viewBox` 字段**，可序列化、AI 可�
 - **部分覆盖**（只固定宽 / 只固定高、其余自动）：留扩展。
 - **libraries 划分**（`\usetikzlibrary`）：非功能缺口，已被注册面策略覆盖，不做。
 - **partway**→ [ADR-027](./027-partway-absolute-target.md)；**clip**→ [ADR-028](./028-clip.md)。
-
----
-
-## 最终实现结果
-
-已实现本 ADR 的核心决策。兼容性：向后兼容纯叠加字段、零破坏（未给时全自动不变）；其余默认行为、失败语义与公开契约以正文为准。

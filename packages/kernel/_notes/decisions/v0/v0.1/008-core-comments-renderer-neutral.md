@@ -32,8 +32,4 @@ keywords: 'core、describe、SVG-imposing、textAnchor、PathPrim.commands、Gro
 - `path/path.ts` / `path/step.ts` / `compile/path.ts` 中已被 v0.1 ADR-004 重写自然清掉 SVG 注释的位置。
 - `geometry/arc.ts`（已在 alpha.5 挪去 react adapter，不再属 core 注释范围）。
 
----
-
-## 最终实现结果
-
-已实现本 ADR 的核心决策。兼容性：非 breaking（仅 `.describe()` / JSDoc 文本，零行为变化；`.describe()` 变化会影响 zod JSON Schema 导出，下游对中性表述更友好，不视为破坏）；其余默认行为、失败语义与公开契约以正文为准。
+当时的兼容边界：仅 `.describe()` / JSDoc 文本，零行为变化。

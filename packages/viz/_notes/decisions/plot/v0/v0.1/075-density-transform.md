@@ -1,31 +1,21 @@
 ---
-description: Density transform；背景：density plot 需要把原始样本转换成连续采样点，再交给 path/area 类 mark 绘制
+description: 'density 按组从数值样本生成密度估计的采样行'
 keywords: 'Density、transform、PathMark、DensityMark、density、extent'
 ---
 
 # ADR-075：Density transform
 
-- 状态：Accepted
+- 状态：Partially Superseded
 - 决策日期：2026-06-26
-- Owner：plot
-- 关联：[plot v0.1-alpha.13 roadmap](./roadmap.md) · [ADR-077](./077-stat-geom-surface.md)
+- 关联：[plot v0.1-alpha.13 roadmap](./roadmap.md)、[ADR-077](./077-stat-geom-surface.md)
+- 后续决策：[data v0.2/001](../../../data/v0/v0.2/001-shared-transforms.md)、[data v0.2/002](../../../data/v0/v0.2/002-transform-execution.md)、[data v0.2/004](../../../data/v0/v0.2/004-transform-parameters.md)
 
-## 背景
+## 保留的决策
 
-density plot 需要把原始样本转换成连续采样点，再交给 path/area 类 mark 绘制。若新增 `DensityMark`，统计计算、采样密度、曲线闭合与图形表达会被绑成一个 preset，不利于 grammar 组合。
+density 按组从数值样本生成密度估计的采样行。输出可由路径图元作为曲线或区域消费，而非把 KDE 算法嵌入 Path。
 
-## 决策记录
+高斯 KDE 按组计算，可用 Silverman 规则或显式正带宽。采样范围与采样点数控制输出网格，生成行保留分组与生成字段，并通过组来源关联输入样本，不复制任意一行充当来源。
 
-新增内置 `density` transform。它按 group 对输入数值做 KDE 采样，输出生成行，再由 `PathMark` 等抽象 mark 消费。
+## 修订边界
 
-稳定语义：
-
-- 默认 kernel 为 Gaussian。
-- 默认 bandwidth 使用 Silverman 规则；显式 positive bandwidth 可处理退化 group。
-- `extent` 控制采样区间；未给定时从观测值推导。
-- `sampleCount` 控制输出采样点数量。
-- `xAs` 与 `densityAs` 指定生成字段名。
-- 输出只包含 group key 与生成字段，不复制无意义的原始行字段。
-- provenance 通过 group provenance 追踪到参与统计的源行集合。
-
-area/density visual 由 `PathMark` 的曲线与 baseline closure 表达，不新增 region/density chart preset。
+密度操作与执行细节归 Data，Plot 不为该变换另设注册或绘制专用实现。

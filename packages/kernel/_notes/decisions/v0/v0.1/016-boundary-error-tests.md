@@ -28,8 +28,4 @@ keywords: '边界输入、错误、diagnostics'
 - 性能 benchmark（如 100 step path compile 耗时）——留 ADR-012 拆 compile/path 时一并。
 - E2E 集成（headless browser 跑真实 SVG 输出）、视觉回归（screenshot diff）——v0.2+。
 
----
-
-## 最终实现结果
-
-已实现本 ADR 的核心决策。兼容性：非 breaking（纯补测 + 个别边界行为微调）；其余默认行为、失败语义与公开契约以正文为准。
+当时的兼容边界：纯补测 + 个别边界行为微调。

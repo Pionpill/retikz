@@ -1,42 +1,19 @@
 ---
-description: Capability provider migration；背景：仅定义 registry 规则而不迁移现有 capability，会让新旧 provider 形态并存，继续复制差异并使 Core、adapter 与上层包的 authoring 心智不一致
+description: 'provider 以 Definition 集合注入，让内置与自定义项遵守同一注册、冲突和查找规则'
 keywords: 'Capability、provider、migration、CompileOptions、resolveXxxRegistry、ReadonlyMap'
 ---
 
 # ADR-024：Capability provider migration
 
-- 状态：Accepted
+- 状态：Partially Superseded
 - 决策日期：2026-06-28
-- 关联：[ADR-022](./022-provider-registry-contract.md) · [ADR-023](./023-provider-key-contract.md) · [ADR-025](./025-adapter-surface-and-docs.md)
+- 关联：[ADR-022](./022-provider-registry-contract.md)、[ADR-023](./023-provider-key-contract.md)、[ADR-025](./025-adapter-surface-and-docs.md)
+- 后续决策：[kernel v0.2/024](../v0.2/024-path-generator-definition.md)、[kernel v0.5/043](../v0.5/043-layout-extensions.md)
 
-## 背景
+## 保留的决策
 
-仅定义 registry 规则而不迁移现有 capability，会让新旧 provider 形态并存，继续复制差异并使 Core、adapter 与上层包的 authoring 心智不一致
+provider 以 Definition 集合注入，让内置与自定义项遵守同一注册、冲突和查找规则。集合描述有哪些能力，不应用后写覆盖掩盖重名。
 
-## 决策
+## 修订边界
 
-所有现有 provider 使用统一 `CompileOptions` 数组输入：
-
-```ts
-type CompileOptions = {
-  shapes?: ReadonlyArray<ShapeDefinition>;
-  arrows?: ReadonlyArray<ArrowDefinition>;
-  patterns?: ReadonlyArray<PatternDefinition>;
-  pathGenerators?: ReadonlyArray<PathGeneratorDefinition>;
-  pathKinds?: ReadonlyArray<PathKindDefinition>;
-  ribbonWidthProfiles?: ReadonlyArray<RibbonWidthProfileDefinition>;
-  composites?: ReadonlyArray<CompositeDefinition>;
-  boundaries?: ReadonlyArray<BoundaryDefinition>;
-  clips?: ReadonlyArray<ClipDefinition>;
-};
-```
-
-Builtin 集合统一为 definition 数组，`resolveXxxRegistry` 统一使用 ADR-022 helper，compile 只消费 resolved `ReadonlyMap`。删除面向 builtin 的白名单与 fallback 分支；custom 不再覆盖 builtin。IR 中 shape、arrow、pattern、path kind 等既有用户语义保持不变
-
-## 兼容性与最终结果
-
-这是 0.x 的 provider 输入收敛：旧 Record、覆盖 builtin 和双轨 resolver 删除，内置与自定义 definition 走同一注册、解析和消费链路。适配层与文档按 ADR-025 暴露同形态输入
-
-## 遗留边界
-
-本 ADR 不新增 provider capability，也不提供 builtin replacement API；字段与领域迁移若改变公开 IR，须另立 ADR
+旧迁移清单中的 pathGenerators 已退出；数组注入原则不意味着每种历史能力都继续存在。

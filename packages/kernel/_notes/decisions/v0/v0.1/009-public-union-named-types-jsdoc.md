@@ -34,8 +34,4 @@ keywords: 'union、named、type、JSDoc、StepProps、PathCommand、Transform、
 - IR 端 zod schema 拆 named——IR 端已经 named（如 `IRMoveStep`），本 ADR 只让 React props + Scene primitive 端跟齐。
 - 把 `IRControlPoint` / `IRStepLabel` / `IRArrowDetail` 等单 record 类型也拆——单 record 不存在 union 拆分问题，不必要。
 
----
-
-## 最终实现结果
-
-已实现本 ADR 的核心决策。兼容性：非 breaking（新增 ~20 个 named type export 是 superset 扩张，运行时零变化）；其余默认行为、失败语义与公开契约以正文为准。
+当时的兼容边界：新增 ~20 个 named type export 是 superset 扩张，运行时零变化。

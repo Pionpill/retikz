@@ -43,8 +43,4 @@ keywords: 'Node、emit、stacking、DOM、GroupPrim、rotate、layout.lines、tr
 - **无条件全包**：评估后否决，保留记录避免重复立项。
 - **显式 zIndex** → [ADR-009](./009-explicit-zindex.md)；**Node label rotate** → [ADR-011](./011-node-label-rotate.md)。
 
----
-
-## 最终实现结果
-
-已实现本 ADR 的核心决策。兼容性：非 breaking（无 schema / IR / 公开类型变化，纯 emit 输出结构调整——带文本 Node 多包一层 `GroupPrim`）；其余默认行为、失败语义与公开契约以正文为准。
+当时的兼容边界：无 schema / IR / 公开类型变化，纯 emit 输出结构调整——带文本 Node 多包一层 `GroupPrim`。

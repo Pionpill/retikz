@@ -43,8 +43,4 @@ keywords: 'side、ShapeDefinition、edgePoint、resolveEdgePoint、ShapeDefiniti
 - `{ side, t }` 的 schema + compile 分发 → ADR-016；offset 叠加 → ADR-016 compile 路径。
 - 第三方 shape 的 `{side,t}` generic 兜底；角度 / 命名 anchor 沿用 alpha.3。
 
----
-
-## 最终实现结果
-
-已实现本 ADR 的核心决策。兼容性：向后兼容（第三方现有 shape 不实现仍合法、仅不支持 `{side,t}`）；其余默认行为、失败语义与公开契约以正文为准。
+当时的兼容边界：第三方现有 shape 不实现仍合法、仅不支持 `{side,t}`。

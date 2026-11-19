@@ -1,34 +1,19 @@
 ---
-description: Adapter surface and provider authoring docs；背景：用户通常通过 React <Layout> 或 Vanilla processing 注入 provider
+description: 'adapter 只接入底层 Definition，不再为同一 provider 发明框架专用的注册语义'
 keywords: 'Adapter、surface、and、provider、authoring、docs、shapes、arrows'
 ---
 
 # ADR-025：Adapter surface and provider authoring docs
 
-- 状态：Accepted
+- 状态：Partially Superseded
 - 决策日期：2026-06-28
-- 关联：[ADR-022](./022-provider-registry-contract.md) · [ADR-023](./023-provider-key-contract.md) · [ADR-024](./024-capability-provider-migration.md)
+- 关联：[ADR-022](./022-provider-registry-contract.md)、[ADR-023](./023-provider-key-contract.md)、[ADR-024](./024-capability-provider-migration.md)
+- 后续决策：[kernel v0.2/024](../v0.2/024-path-generator-definition.md)、[kernel v0.5/043](../v0.5/043-layout-extensions.md)
 
-## 背景
+## 保留的决策
 
-用户通常通过 React `<Layout>` 或 Vanilla processing 注入 provider。若 adapter 继续接受旧 Record 或私有命名，Core 的统一 provider contract 就无法成为用户可见的稳定 authoring 语义
+adapter 只接入底层 Definition，不再为同一 provider 发明框架专用的注册语义。内置和自定义实现使用同一能力入口。
 
-## 决策
+## 修订边界
 
-React、Vanilla 与 Core 的 provider surface 同名同形，均使用 definition 数组；典型输入包括 `shapes`、`arrows`、`patterns`、`pathGenerators`、`pathKinds`、`ribbonWidthProfiles` 与 `composites`
-
-文档以统一 provider authoring 机制为入口，明确：
-
-1. `contract` 定义第三方 runtime definition
-2. `providers` 提供内置 definition 与 registry resolve
-3. Definition 可含函数和 Zod schema，但不进入 IR
-4. IR 只保存字符串引用或 operation object，保持 JSON-safe
-5. builtin 与 custom 共用 registry，custom 不覆盖 builtin
-
-## 兼容性与最终结果
-
-Adapter 不再提供旧 Record、私有 provider registry 或 renderer 旁路；React、Vanilla、headless compile 和文档示例均指向同一 Core contract。Provider registry 迁移本身仍由 ADR-024 拥有
-
-## 遗留边界
-
-不在本 ADR 内新增 provider 能力或为单个 docs demo 设计视觉功能；后续 adapter 扩展必须保持同名同形和 JSON/runtime 分离
+旧 React 顶层 provider 清单已调整为宿主 extensions，移除的 pathGenerators 不再列为可选能力。

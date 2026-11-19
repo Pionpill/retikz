@@ -1,31 +1,21 @@
 ---
-description: Smooth regression transform；背景：trend line / regression line 是 plot grammar 的基础统计能力，但不应该以 RegressionMark 或 chart preset 形式进入
+description: 'smooth 从分组观测得到拟合结果，趋势线消费它生成的数据；绘制图元不参与模型选择'
 keywords: 'Smooth、regression、transform、RegressionMark、smooth、groupBy、extent'
 ---
 
 # ADR-076：Smooth regression transform
 
-- 状态：Accepted
+- 状态：Partially Superseded
 - 决策日期：2026-06-27
-- Owner：plot
-- 关联：[plot v0.1-alpha.13 roadmap](./roadmap.md) · [ADR-077](./077-stat-geom-surface.md)
+- 关联：[plot v0.1-alpha.13 roadmap](./roadmap.md)、[ADR-077](./077-stat-geom-surface.md)
+- 后续决策：[data v0.2/001](../../../data/v0/v0.2/001-shared-transforms.md)、[data v0.2/002](../../../data/v0/v0.2/002-transform-execution.md)、[data v0.2/004](../../../data/v0/v0.2/004-transform-parameters.md)
 
-## 背景
+## 保留的决策
 
-trend line / regression line 是 plot grammar 的基础统计能力，但不应该以 `RegressionMark` 或 chart preset 形式进入。alpha.13 需要先提供最小可测试的 smooth transform，让用户用 PathMark 自行表达回归线。
+smooth 从分组观测得到拟合结果，趋势线消费它生成的数据；绘制图元不参与模型选择。最早的实现只覆盖线性回归，这不是统计与几何分工的上限。
 
-## 决策记录
+输入是同组有效的有限数值对；生成的是预测采样行而非图元，未指定采样区间时沿观测 x 范围取样。拟合和置信带是两个不同的统计契约。
 
-新增内置 `smooth` transform，第一版只支持 linear regression。
+## 修订边界
 
-稳定语义：
-
-- 读取有限 `(x, y)` 数值对。
-- 可按 `groupBy` 分组拟合。
-- 输出 prediction sample rows，而不是直接输出图元。
-- `xAs` / `yAs` 指定生成字段。
-- `extent` 未给定时使用观测 x 范围。
-- 退化输入 fail-loud，例如有效点不足、x 无变化或出现非有限数。
-- 不输出 confidence band；置信区间需要后续独立统计 contract。
-
-`PathMark` 消费 smooth 输出绘制趋势线，保持 stat = transform、geom = mark。
+回归方法、模型选择和执行归 Data，Plot 只投影结果，不维护自己的拟合方法列表。

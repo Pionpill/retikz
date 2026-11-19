@@ -1,32 +1,21 @@
 ---
-description: '@retikz/tex 与公式降解能力；背景：公式必须进入 renderer-agnostic Scene，但 core 不能依赖 MathJax、DOM、字体状态或具体 renderer'
+description: '可选 TeX 包负责数学语法、排版和字形降解，最终输出基础图形；普通文字与节点布局不应依赖完整 TeX 引擎，renderer 也不解析公式'
 keywords: 'retikz、tex'
 ---
 
 # ADR-011：@retikz/tex 与公式降解能力
 
-- 状态：Accepted（已实现；最终随 ADR-013 收敛）
+- 状态：Partially Superseded
 - 决策日期：2026-06-16
-- 关联：[ADR-012 带框公式](./012-node-embedded-math.md) · [ADR-013 行内混排](./013-inline-math-runs.md)
+- 关联：[ADR-012 带框公式](./012-node-embedded-math.md)、[ADR-013 行内混排](./013-inline-math-runs.md)
+- 后续决策：[kernel v0.4/013](013-inline-math-runs.md)、[kernel v0.5/081](../v0.5/081-shared-text-capabilities.md)
 
-## 背景
+## 保留的决策
 
-公式必须进入 renderer-agnostic Scene，但 core 不能依赖 MathJax、DOM、字体状态或具体 renderer。MathJax SVG 的 glyph path 可以降解为既有 PathPrim，因此引擎能力应由可选包注入。
+可选 TeX 包负责数学语法、排版和字形降解，最终输出基础图形；普通文字与节点布局不应依赖完整 TeX 引擎，renderer 也不解析公式。
 
-## 决策
+缺少公式 lowerer 与公式本身无效应分别报告。失败只影响相关公式片段，不能令同一节点中的普通文本或整幅图消失。
 
-@retikz/tex 提供 MathJax SVG 到 glyph PathPrim 的降解：
+## 修订边界
 
-- createMathJaxEngine 创建引擎，createLowerTex(engine) 产生可传给 core 的 LowerTex；@retikz/tex/react 提供 useLowerTex
-- MathJax 是 optional peer，由用户控制安装、版本和 macro；core、render、react 不直接依赖它
-- 最终公开模型没有 node.math、node.tex 或 TexNode。公式是文本的一部分：单独公式使用单个 $$...$$ display segment，带框公式使用同一文本节点加普通 shape
-- 未注入 lowerTex 时发出 TEX_LOWERER_MISSING；lowerTex 返回 null 或引擎失败时发出 TEX_INVALID。两者都只降级公式段，不抛 MathJax 运行时错误
-- MathJax 对象、DOM 和字体状态不进入 IR 或 Scene；glyph path 继续走现有 renderer-agnostic primitive
-
-## 兼容性与实现结果
-
-core 已增加 lowerTex 注入点与诊断，tex 包和 React/Vanilla 透传已实现；公式公开模型由 ADR-013 的 text segment 收敛。
-
-## 遗留风险
-
-公式编辑器、实时重排、替代引擎、非数学 TeX 包和公式内嵌 retikz 图元不属于本能力。
+早期在 Node 上接入公式是首个宿主，不是独立的节点数学协议；混排由共享行与片段承载。

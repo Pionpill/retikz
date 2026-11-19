@@ -34,9 +34,3 @@ keywords: 'rectangle、step、RectPrim、RectangleStepSchema、label、rectSegme
 ## 长期边界
 
 - 矩形边 `label`（需 `rectSegmentSample`，后续补）；四角独立圆角半径。
-
----
-
-## 最终实现结果
-
-已实现本 ADR 的核心决策。兼容性：additive 零破坏（纯新增 step kind，不动既有）；其余默认行为、失败语义与公开契约以正文为准。

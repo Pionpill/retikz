@@ -1,27 +1,19 @@
 ---
-description: Plot 统计与几何的结构化协作，覆盖统计输出和对应 mark 表达
+description: '统计图形由两类可分别复用的能力组成：transform/reducer/selector 决定数据，几何图元决定如何展示'
 keywords: 'stat、geom、boxplot、density、smooth、统计几何'
 ---
 
 # ADR-077：Stat / geom structural surface
 
-- 状态：Accepted
+- 状态：Partially Superseded
 - 决策日期：2026-06-27
-- Owner：plot
-- 关联：[plot v0.1-alpha.13 roadmap](./roadmap.md) · [ADR-074](./074-quantile-band-boxplot.md) · [ADR-075](./075-density-transform.md) · [ADR-076](./076-smooth-regression.md)
+- 关联：[plot v0.1-alpha.13 roadmap](./roadmap.md)、[ADR-074](./074-quantile-band-boxplot.md)、[ADR-075](./075-density-transform.md)、[ADR-076](./076-smooth-regression.md)
+- 后续决策：[data v0.2/001](../../../data/v0/v0.2/001-shared-transforms.md)、[data v0.2/002](../../../data/v0/v0.2/002-transform-execution.md)、[data v0.2/004](../../../data/v0/v0.2/004-transform-parameters.md)
 
-## 背景
+## 保留的决策
 
-alpha.13 同时补齐 boxplot、density、smooth 等统计能力。若每个能力都以 chart preset 或 specialized mark 发布，plot 会迅速滑向“图表组件集合”，而不是 grammar 层。需要把统计和几何的边界明确写入文档、测试和 public surface。
+统计图形由两类可分别复用的能力组成：transform/reducer/selector 决定数据，几何图元决定如何展示。移除某个图元并不应使数据能力失效。
 
-## 决策记录
+## 修订边界
 
-plot alpha.13 采用“stat = transform / reducer / selector，geom = abstract mark”的结构面：
-
-- 统计能力以 transform、summary reducer、selector 暴露。
-- 几何表达继续由 `PointMark`、`IntervalMark`、`PathMark`、`ReferenceMark`、`RelationMark` 等抽象 mark 承担。
-- 不新增 `BoxPlot`、`DensityPlot`、`RegressionPlot`、`BoxPlotMark`、`DensityMark`、`RegressionMark`。
-- React 与 Vanilla 都消费同一 IRPlot；React 只做薄 authoring adapter。
-- docs 以组合 demo 说明 boxplot、density、smooth，而不是宣传 chart preset。
-
-文档 IA 使用 transform / summary / statistics 页面承载统计能力；demo 名称保持 `transform-boxplot`、`transform-density`、`transform-smooth` 这类 grammar 取向。
+旧例中的 ReferenceMark 和 RelationMark 不再作为抽象图元保留；Data 的统计结果可由 Point、Path、Interval 或 Chart 配方消费。
