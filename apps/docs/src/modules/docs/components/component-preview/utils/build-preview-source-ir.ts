@@ -148,7 +148,7 @@ const sourceCoreChildOf = (
       children: children.map((child, index) =>
         sourceChildOf(child, runtimeChildren?.[index], chartSources, chartIndex),
       ),
-    } as IRScope;
+    };
   }
 
   if ('way' in input && input.way !== undefined) return normalizePath(input);
