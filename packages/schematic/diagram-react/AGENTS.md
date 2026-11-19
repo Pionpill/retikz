@@ -23,4 +23,4 @@
 
 ## 验证
 
-结构化文件改动至少运行 Prettier、ESLint、`tsc --noEmit`、包测试与 build。公开 authoring 能力建立后还必须验证 direct IR、Vanilla、SSR 与 hydration parity。
+公开 authoring 契约变化时验证 direct IR、Vanilla、SSR 与 hydration parity。

@@ -1,5 +1,5 @@
+import type { IRNodeLabel } from '@retikz/core';
 import { Layout, Node } from '@retikz/react';
-import type { InputNodeLabel } from '@retikz/vanilla';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -8,8 +8,8 @@ import { nodeLabelRotatePinControls, previewControlContract } from './node-label
 export const previewControls = nodeLabelRotatePinControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
-  const rotate: InputNodeLabel['rotate'] = values.rotateMode === 'angle' ? values.rotateAngle : values.rotateMode;
-  const pin: InputNodeLabel['pin'] =
+  const rotate: IRNodeLabel['rotate'] = values.rotateMode === 'angle' ? values.rotateAngle : values.rotateMode;
+  const pin: IRNodeLabel['pin'] =
     values.pinStyle === 'none'
       ? undefined
       : {

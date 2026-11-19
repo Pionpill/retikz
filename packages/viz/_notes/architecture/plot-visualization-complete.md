@@ -108,7 +108,7 @@ docs / notes 可解释
 
 ### 4.4 比例尺重构的能力检查
 
-[Plot 比例尺设计](./plot-scale-design.md)定义从位置/颜色分族转向映射语义与消费能力分离的目标。通用映射拟由 Data 持有，Plot 拥有选型、绑定和领域消费，见 [Data ADR-006](../decisions/data/v0/v0.2/006-scale-mapping.md)。本节不宣称现有契约已经完成迁移。
+[Plot 比例尺设计](./plot-scale-design.md)定义从位置/颜色分族转向映射语义与消费能力分离的目标。通用映射拟由 Data 持有，Plot 拥有选型、绑定和领域消费，见 [Data ADR-006](../decisions/data/_v0.2/006-scale-mapping.md)。本节不宣称现有契约已经完成迁移。
 
 - 输入、映射与输出语义足以表达同一种映射服务多个适用通道，不靠属性名称复制算法；不兼容输出有明确诊断。
 - 内置与自定义走同一 Definition / registry 与能力消费路径；band 间距、时间刻度、分档边界、输出上界及留白能力按真实需要保留。

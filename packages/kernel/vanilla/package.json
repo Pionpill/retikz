@@ -1,6 +1,6 @@
 {
   "name": "@retikz/vanilla",
-  "version": "0.5.0-alpha.7",
+  "version": "0.5.0-alpha.8",
   "retikz": {
     "domain": "kernel",
     "releaseGroup": "kernel",
@@ -79,14 +79,14 @@
     "@retikz/core": "workspace:*",
     "@retikz/foundation": "workspace:*",
     "@retikz/render": "workspace:*",
-    "@retikz/reconciler": "workspace:*",
-    "zod": "catalog:"
+    "@retikz/reconciler": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plugin-dts": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "zod": "catalog:"
   }
 }

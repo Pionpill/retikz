@@ -29,7 +29,6 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   标签附着的节点边界方向: 'Side of the node boundary to which the label attaches',
   '标签位置；省略时位于节点上方，支持方向、角度或边界比例':
     'Label position; defaults to above the node, accepting a direction, angle, or boundary fraction',
-  '节点类别标识，可省略': 'Optional node discriminator',
   '节点中心位置，支持坐标、相对定位和锚点对齐；省略时使用当前局部坐标系的原点':
     'Node center position, supporting coordinates, relative positioning, and anchor alignment; defaults to the origin of the current local coordinate system',
   附着于节点的一个或多个标签: 'One or more labels attached to the node',

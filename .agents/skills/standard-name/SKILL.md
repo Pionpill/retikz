@@ -49,10 +49,10 @@ description: 新增、移动、拆分或审查 Retikz 源码目录、文件、�
 
 ## 类型引用与参数形态
 
-- 表达独立领域概念时优先直接引用已有具名类型；集合元素已有类型时，用 `Array<CompileBounds>`，不绕写 `Array<CompileOutput['bounds'][number]>`
-- 表达“某契约字段的类型”且需要随字段声明同步时，用 `T['field']`；泛型关联或字段没有独立具名类型时也可使用，数组元素可进一步取 `[number]`，不为消除索引访问另造纯别名
-- 函数只消费单个字段值时，优先直接接收该值，如参数用 `CompileOutput['bounds']`、调用传 `output.bounds`；确实以原对象的字段子集协作时才用 `Pick<T, K>`，不为类型关联额外保留对象层
-- 选择写法时保留实际需要的可选性、只读性与泛型关系；局部可变收集数组用 `Array<元素类型>`，完整字段契约用索引访问，不因简写擅自使用 `NonNullable` 或改变容器约束
+- 属性已有可直接引用的具名类型时，必须直接使用，不通过宿主对象索引取类型；例如用 `ReadonlyArray<Transform>`，不用 `SubtreeCompileRuntime['context']['transformChains']`。集合元素已有类型时同样直接引用，不绕写 `Array<CompileOutput['bounds'][number]>`
+- 仅在需要保留泛型关联或字段没有独立具名类型时使用 `T['field']`，必要时取 `[number]`；不为消除索引访问另造纯别名，普通标量直接使用其类型
+- 函数只消费单个字段值时，优先直接接收该值，调用传 `output.bounds`；确实以原对象的字段子集协作时才用 `Pick<T, K>`，不为类型关联额外保留对象层
+- 直接引用类型时保留字段原有的可选性、只读性与泛型关系，如 `LayoutProposal | undefined`、`ReadonlyArray<Transform>`；局部可变收集数组用 `Array<元素类型>`，不因简写擅自使用 `NonNullable` 或改变容器约束
 
 ## 按需读取
 

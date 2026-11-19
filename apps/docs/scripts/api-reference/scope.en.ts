@@ -8,8 +8,6 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   'Scope 原点位置或最终锚点对齐': 'Scope origin position or final anchor alignment',
   'Scope 锚点定位允许的闭合目标': 'Closed set of targets accepted by Scope anchor positioning',
   当前作用域内按声明顺序处理的子图元: 'Children processed in declaration order within this Scope',
-  '局部变换列表，最后一项先作用于局部点；省略时不施加局部变换':
-    'Local transform list; the last item acts on local points first. Omission applies no local transform',
   '固定为 scope 的容器判别字段': 'Container discriminator, fixed to scope',
   '按声明顺序处理的节点、路径、坐标点、作用域或复合组件':
     'Nodes, paths, coordinates, scopes, or composites processed in declaration order',
@@ -18,8 +16,6 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   '作者侧 Scope 输入': 'Scope authoring input',
   '可选编译驱动自行解释的运行时载荷，不进入 Core IR':
     'Optional runtime payload interpreted by a compile driver; excluded from Core IR',
-  '无法由 authoring 字段唯一识别时显式指定 Scope 类别':
-    'Explicitly identify a Scope when its authoring fields do not uniquely identify it',
   '局部变换、样式、裁剪与引用配置': 'Local transforms, styles, clipping, and reference configuration',
   '按声明顺序保留的子图元，不复制子数组': 'Children retained in declaration order; the array is not copied',
   '保留配置与子图元引用的 Scope 输入，尚未归一化或编译':

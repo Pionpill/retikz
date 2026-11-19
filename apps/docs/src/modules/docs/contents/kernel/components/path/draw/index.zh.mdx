@@ -190,7 +190,7 @@ const view = mount(document.getElementById('diagram')!, ir);
       type: 'Array<WayItem>',
       required: true,
       description:
-        "至少包含两项，首项是目标；不能与显式 Step 同时提供。按路线顺序组合：\n\n- 目标：节点 id、`[x, y]`、极坐标或 `{ id, anchor?, boundary? }`\n- 相对偏移：`{ position: [x, y], type: DrawWay.Relative | DrawWay.Accumulate }`，分别保持或推进相对计算基点\n- 折角：`'-|' | '|-' | '-|-' | '|-|'`；三段可写 `{ via: '-|-' | '|-|', fraction?: number }`\n- 单轴：`{ horizontalTo: target }` 或 `{ verticalTo: target }`，只连接目标的一个坐标\n- 标签：`{ label: string | InputStepLabel }`，标注下一段\n- 曲线：`{ curve: [x, y] }`、`{ cubic: [[x1, y1], [x2, y2]] }` 或 `{ bend: 'left' | 'right' }`，随后给出终点\n- 闭合：`DrawWay.Cycle`，回到子路径起点\n\n完整圆弧与形状算子见 API 参考",
+        "至少包含两项，首项是目标；不能与显式 Step 同时提供。按路线顺序组合：\n\n- 目标：节点 id、`[x, y]`、极坐标或 `{ id, anchor?, boundary? }`\n- 相对偏移：`{ position: [x, y], type: DrawWay.Relative | DrawWay.Accumulate }`，分别保持或推进相对计算基点\n- 折角：`'-|' | '|-' | '-|-' | '|-|'`；三段可写 `{ via: '-|-' | '|-|', fraction?: number }`\n- 单轴：`{ horizontalTo: target }` 或 `{ verticalTo: target }`，只连接目标的一个坐标\n- 标签：`{ label: string | IRStepLabel }`，标注下一段\n- 曲线：`{ curve: [x, y] }`、`{ cubic: [[x1, y1], [x2, y2]] }` 或 `{ bend: 'left' | 'right' }`，随后给出终点\n- 闭合：`DrawWay.Cycle`，回到子路径起点\n\n完整圆弧与形状算子见 API 参考",
     },
     {
       name: 'DrawWay',

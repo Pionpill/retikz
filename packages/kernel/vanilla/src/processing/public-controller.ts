@@ -1,4 +1,4 @@
-import { createDomProcessingController } from './internal/controller';
+import { createDomProcessingController } from './internal';
 import type { ProcessingController, ProcessingOptions, ProcessingSource } from './types';
 
 /** 创建只发布完整成功 revision 的 framework-neutral retained processing controller */

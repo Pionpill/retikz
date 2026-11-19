@@ -770,6 +770,10 @@ export const apiReferenceBranchLabels: Readonly<
     { value: 'primitive', field: 'kind', type: "'primitive'", label: { zh: '场景图元', en: 'Scene primitive' } },
     { value: 'artifact', field: 'kind', type: "'artifact'", label: { zh: '复合产物', en: 'Composite artifact' } },
   ],
+  '@retikz/vanilla#InputPath': [
+    { value: 'children', field: 'children', required: true, label: { zh: '显式步骤', en: 'Explicit steps' } },
+    { value: 'way', field: 'way', required: true, label: { zh: '路径简写', en: 'Way shorthand' } },
+  ],
   '@retikz/vanilla#InputScene': [
     { value: 'children', field: 'layers', type: 'never', label: { zh: '子节点', en: 'Children' } },
     { value: 'layers', field: 'layers', type: 'ReadonlyArray<InputLayer>', label: { zh: '分层', en: 'Layers' } },

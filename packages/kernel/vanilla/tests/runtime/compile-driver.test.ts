@@ -5,10 +5,12 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { VanillaCompileDriver, VanillaCompileOutput } from '../../src';
 import { defaultVanillaCompileDriver, RetikzVanillaError, RetikzVanillaErrorCode } from '../../src';
-import type { VanillaReconcilerOutput } from '../../src/runtime';
-import { createVanillaCompileDriverSession } from '../../src/runtime/compile-driver';
-import { resolveVanillaCompileOutput } from '../../src/runtime/compile-driver';
-import { compileVanillaWithDriver } from '../../src/runtime/compile-driver';
+import type { VanillaReconcilerOutput } from '../../src/processing/compile-driver';
+import {
+  compileVanillaWithDriver,
+  createVanillaCompileDriverSession,
+  resolveVanillaCompileOutput,
+} from '../../src/processing/compile-driver';
 import { compileTestResult } from '../helpers/compilation';
 
 const source: IRScene = {

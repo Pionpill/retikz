@@ -1,5 +1,4 @@
-import type { IRAtPosition, IRBetweenPosition, IROffsetPosition, IRPosition, PolarPosition } from '@retikz/core';
-import type { InputAtPosition } from '@retikz/vanilla';
+import type { IRCoordinate } from '@retikz/core';
 import type { FC } from 'react';
 
 import { TIKZ_COORDINATE } from '../protocol';
@@ -14,7 +13,7 @@ export type CoordinateProps = {
    * 坐标点位置；不支持 Node 专属的自身锚点对齐
    * @description 笛卡尔 `[x, y]` / 极坐标 `{ angle, radius, origin? }` / 相对定位 `{ direction, of, distance? }` / 偏移定位 `{ of, offset }` / 比例位置 `{ between: [A, B], fraction }`
    */
-  position: IRPosition | PolarPosition | IRAtPosition | InputAtPosition | IROffsetPosition | IRBetweenPosition;
+  position: IRCoordinate['position'];
 };
 
 /**

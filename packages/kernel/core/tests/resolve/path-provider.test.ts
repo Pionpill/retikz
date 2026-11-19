@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { literal, strictObject, string } from 'zod';
 
 import { definePath, PathSchema, resolveArrowRegistry, resolvePathRegistry } from '../../src';
+import { resolvePathAnimations } from '../../src/resolve/path';
 import { resolveScopeDefaults } from '../../src/resolve/style';
 import type { IRPathBase } from '../../src/schemas';
 import { resolvePathWithBuiltinProviders, resolveStrokePathWithBuiltinProviders } from './path-helper';
@@ -18,6 +19,31 @@ const path = (overrides: Partial<IRPathBase> = {}): IRPathBase => ({
 });
 
 describe('解析/路径提供者绑定', () => {
+  it('有效动画保留输入身份，过滤非法轨道仍逐次报告原始位置且不修改输入', () => {
+    const valid: IRPathBase = {
+      type: 'path',
+      animations: [{ property: 'opacity', duration: 100, keyframes: [{ at: 0, value: 0 }] }],
+    };
+    const warnings: Array<{ code: string; path: ReadonlyArray<string | number> }> = [];
+    const warn = (warning: { code: string; path: ReadonlyArray<string | number> }) => warnings.push(warning);
+    expect(resolvePathAnimations(valid, ['children', 0], warn)).toBe(valid);
+    const mixed: IRPathBase = {
+      ...valid,
+      animations: [
+        ...valid.animations!,
+        { property: 'viewBox', duration: 100, keyframes: [{ at: 0, value: [0, 0, 10, 10] }] },
+      ],
+    };
+    expect(resolvePathAnimations(mixed, ['children', 1], warn).animations).toEqual(valid.animations);
+    expect(resolvePathAnimations(mixed, ['children', 1], warn).animations).toEqual(valid.animations);
+    expect(mixed.animations).toHaveLength(2);
+    expect(warnings.map(warning => warning.path)).toEqual([
+      ['children', 1, 'animations', 1],
+      ['children', 1, 'animations', 1],
+    ]);
+    expect(resolvePathAnimations({ type: 'path', animations: [] }, [], warn).animations).toBeUndefined();
+  });
+
   it('先合并标签模式与显式几何，再补依赖模式的几何默认值', () => {
     const inherited = resolveScopeDefaults({ path: { label: { positionMode: 'length' } } });
     const byLength = resolvePathWithBuiltinProviders(path({ label: { text: 'label' } }), { scopeDefaults: inherited });

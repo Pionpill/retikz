@@ -60,7 +60,7 @@ describe('路径比例与几何独立选择', () => {
     const mounted = session.mount();
     const node = readWeaveCurrent(mounted.root).children[0];
     if (node.type !== 'path') throw new Error('Expected path');
-    const layout = readWeaveCurrent(node).compiled?.stroke?.layout;
+    const layout = readWeaveCurrent(node).compile?.value.stroke?.layout;
     expect(layout?.positions?.original.totalLength).toBeCloseTo(100.62, 6);
     expect(layout?.marks?.[0]?.placement?.point[0]).toBeCloseTo(50.5, 5);
   });
@@ -124,7 +124,7 @@ describe('路径比例与几何独立选择', () => {
     const mounted = session.mount();
     const path = readWeaveCurrent(mounted.root).children[0];
     if (path.type !== 'path') throw new Error('Expected path');
-    const layout = readWeaveCurrent(path).compiled?.stroke?.layout;
+    const layout = readWeaveCurrent(path).compile?.value.stroke?.layout;
     expect(layout?.labels?.steps?.[1]?.placement?.logicalSample !== undefined).toBe(hasGap);
     expect(layout?.body?.kind).toBe(hasGap ? 'interrupted' : 'continuous');
   });
@@ -147,7 +147,7 @@ describe('路径比例与几何独立选择', () => {
     const mounted = session.mount();
     const path = readWeaveCurrent(mounted.root).children[0];
     if (path.type !== 'path') throw new Error('Expected path');
-    const rotation = readWeaveCurrent(path).compiled?.stroke?.layout?.marks?.[0]?.placement?.transforms[1];
+    const rotation = readWeaveCurrent(path).compile?.value.stroke?.layout?.marks?.[0]?.placement?.transforms[1];
     expect(rotation).toEqual({ kind: 'rotate', degrees: 90 });
   });
   it('闭合圆角的首步骤局部长度从起始圆角中点开始', () => {
@@ -177,7 +177,7 @@ describe('路径比例与几何独立选择', () => {
     const path = readWeaveCurrent(mounted.root).children[0];
     if (path.type !== 'path') throw new Error('Expected path');
     const point =
-      readWeaveCurrent(path).compiled?.stroke?.layout?.labels?.steps?.[1]?.placement?.logicalSample?.sample.point;
+      readWeaveCurrent(path).compile?.value.stroke?.layout?.labels?.steps?.[1]?.placement?.logicalSample?.sample.point;
     expect(point?.[0]).toBeCloseTo(20 - 20 * Math.SQRT1_2, 6);
     expect(point?.[1]).toBeCloseTo(20 - 20 * Math.SQRT1_2, 6);
   });

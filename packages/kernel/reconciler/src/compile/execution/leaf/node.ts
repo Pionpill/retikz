@@ -7,7 +7,7 @@ import type { CompileRuntime } from '../../runtime';
 import { createCompileChildPath } from '../../shared';
 import type { TreeOutputState } from '../shared';
 import { createTreePositionContext } from '../shared';
-import type { SubtreeCompileRuntime } from '../subtree';
+import type { SubtreeCompileContext, SubtreeCompileRuntime } from '../subtree';
 
 /** 布局并 emit node，同时注册 id、收集边界点和父 scope layout 输入 */
 export const visitNode = (
@@ -90,7 +90,7 @@ export const assembleNode = (
 export const createNodeResolveContext = (
   runtime: CompileRuntime,
   irPath: PropertyPath,
-  context: SubtreeCompileRuntime['context'],
+  context: SubtreeCompileContext,
 ): NodeResolveContext => ({
   ...runtime.context.registries,
   ...runtime.context.layout,
@@ -106,7 +106,7 @@ export const createNodeCompileContext = (
   runtime: CompileRuntime,
   canon: CanonicalNode,
   irPath: PropertyPath,
-  context: SubtreeCompileRuntime['context'],
+  context: SubtreeCompileContext,
 ): NodeCompileContext => {
   const warn = (code: string, message: string, path: PropertyPath = irPath): void =>
     runtime.state.workspace.diagnosticCollector.collect({ code, message, path });

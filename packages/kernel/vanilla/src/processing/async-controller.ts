@@ -1,6 +1,6 @@
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
 import { assertPreparationActive } from './authoring';
-import { createPreparedInputProcessingController } from './internal/controller';
+import { createPreparedInputProcessingController } from './internal';
 import { prepareProcessingInputAsync } from './prepare';
 import type { AsyncProcessingController, AsyncProcessingOptions, ProcessingSource } from './types';
 

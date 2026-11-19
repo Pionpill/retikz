@@ -1,5 +1,44 @@
+export type {
+  CanvasView,
+  CanvasViewState,
+  CommonOptions,
+  HydrateOptions,
+  HydrationHandle,
+  InputRender,
+  InputRetainedRender,
+  MountCanvasOptions,
+  MountOptions,
+  RawStaticMountCanvasOptions,
+  RawStaticMountOptions,
+  RenderToStringOptions,
+  RetainedCanvasUpdateOptions,
+  RetainedCanvasView,
+  RetainedMountCanvasOptions,
+  RetainedMountOptions,
+  RetainedSvgUpdateOptions,
+  RetainedSvgView,
+  RetainedVanillaCanvasUpdateOptions,
+  RetainedVanillaUpdateOptions,
+  RetainedVanillaView,
+  ScenePoint,
+  StaticCanvasView,
+  StaticMountCanvasOptions,
+  StaticMountOptions,
+  StaticRawCanvasView,
+  StaticRawSvgView,
+  StaticSvgView,
+  StaticVanillaView,
+  VanillaAnimationOptions,
+  VanillaCanvasOptions,
+  VanillaOutputOptions,
+  VanillaRetainedRuntimeOptions,
+  VanillaRuntimeOptions,
+  VanillaStaticRuntimeOptions,
+  VanillaView,
+  VanillaViewState,
+} from '../runtime';
+export { VanillaViewMode } from '../runtime';
 export * from './hydrate';
 export * from './mount';
 export * from './mount-canvas';
 export * from './mount-svg';
-export * from './types';

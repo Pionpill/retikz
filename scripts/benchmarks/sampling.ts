@@ -15,3 +15,13 @@ export const referenceSampling = {
   warmupTime: 0,
   warmupIterations: 0,
 };
+
+/** 独立分配阶段协议；粗采样复用最后一次预热，不增加算法调用 */
+export const allocationSampling = {
+  warmupIterations: 10,
+  iterations: 100,
+  pilotInterval: 32_768,
+  minimumInterval: 128,
+  targetSamples: 4096,
+  minimumSamples: 16,
+};

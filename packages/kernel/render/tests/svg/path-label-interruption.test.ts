@@ -11,6 +11,7 @@ const measuredLabel = () => ({ width: 20, height: 10 });
 const render = (ir: IRScene): string =>
   renderToSvgString(compileTestResult(ir, { measureText: measuredLabel }).scene, { idPrefix: 'label-interruption' });
 
+// 闭合边的标签中心为 (30, 30)，20 宽的斜置标签在每端另留半个描边宽度，两轴断点为 30 ± 10.5 / √2
 const closedPath = (extra: Partial<IRPath> = {}): IRScene => ({
   version: 1,
   type: 'scene',
@@ -60,8 +61,8 @@ describe('SVG 行程 Path 标签中断', () => {
   it('在没有 Z 命令的情况下序列化中断的闭合边缘，并保留每个片段的破折号相位', () => {
     const svg = render(closedPath({ style: { dashPattern: [11, 7], dashOffset: 3 } }));
 
-    expect(svg).toContain('d="M 0 0 L 100 0 L 100 100 L 40.35 40.35"');
-    expect(svg).toContain('d="M 19.65 19.65 L 0 0"');
+    expect(svg).toContain('d="M 0 0 L 100 0 L 100 100 L 37.42 37.42"');
+    expect(svg).toContain('d="M 22.58 22.58 L 0 0"');
     expect(svg).not.toContain('d="M 0 0 L 100 0 L 100 100 Z"');
     expect(svg).toContain('stroke-dashoffset="3"');
     expect(svg).toMatch(/stroke-dashoffset="(?!3")[^"]+"/);
@@ -72,7 +73,7 @@ describe('SVG 行程 Path 标签中断', () => {
 
     expect(svg).toContain('d="M 0 0 L 100 0 L 100 94.9"');
     expect(svg).toContain('transform="translate(100 94.9) rotate(90)');
-    expect(svg).toContain('d="M 100 100 L 40.35 40.35"');
-    expect(svg).toContain('d="M 19.65 19.65 L 0 0"');
+    expect(svg).toContain('d="M 100 100 L 37.42 37.42"');
+    expect(svg).toContain('d="M 22.58 22.58 L 0 0"');
   });
 });

@@ -48,6 +48,8 @@ import type {
 } from '@retikz/foundation';
 ```
 
+`RequireExactlyOne<T>` requires exactly one property from a set of alternatives. Intersect it with shared fields for options with multiple input forms.
+
 `NonEmptyReadonlyArray<T>` describes a readonly array with at least one element. `WithRequiredProperties<T, TKey>` makes only the selected keys required while preserving every other property from `T`, including readonly and optional members.
 
 `JsonValueSchema` and `JsonObjectSchema` expose Zod's recursive JSON validation for domain-neutral values and string-keyed objects. They reject non-JSON leaves without adding a separate walker, filter, clone, freeze, or parser. The six fixed scalar schemas validate non-blank strings, positive/non-negative finite numbers, positive/non-negative safe integers, and inclusive `0..1` fractions. `createOpenStringSchema(values)` combines a const object enum with the same non-blank custom-string boundary, preserving built-in suggestions in TypeScript and JSON Schema without closing runtime extension keys. The package has no public subpath exports. Consumers keep domain object composition, registries, defaults, refinements, diagnostics, and recovery at their own boundaries.

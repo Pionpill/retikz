@@ -272,7 +272,7 @@ export type AssertEqual<TActual, TExpected> = [TActual] extends [TExpected]
 
 </DocTabs>
 
-#### <ApiSourceLink label={"NonEmptyReadonlyArray"} path={"packages/kernel/foundation/src/types.ts"} startLine={58}>NonEmptyReadonlyArray</ApiSourceLink>
+#### <ApiSourceLink label={"NonEmptyReadonlyArray"} path={"packages/kernel/foundation/src/types.ts"} startLine={66}>NonEmptyReadonlyArray</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -344,6 +344,40 @@ export type OpenString<T extends string> = T | (string & {});
 
 ```ts
 export type ValueOf<T extends object> = T[keyof T];
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"RequireExactlyOne"} path={"packages/kernel/foundation/src/types.ts"} startLine={57}>RequireExactlyOne</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member               | Type             | Default | Description          |
+| -------------------- | ---------------- | ------- | -------------------- |
+| `T` (Type parameter) | `extends object` | —       | Candidate properties |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type RequireExactlyOne<T extends object> = {
+  [TKey in keyof T]-?: Required<Pick<T, TKey>> &
+    Omit<
+      {
+        [TField in keyof T]?: never;
+      },
+      TKey
+    >;
+}[keyof T];
 ```
 
 </DocTab>

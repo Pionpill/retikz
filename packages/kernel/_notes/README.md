@@ -4,7 +4,7 @@
 
 ## 目录
 
-- [`decisions`](./decisions)：中版本能力 roadmap 与独立 ADR；保留 `v0/v0.x/`，不设预发布子目录。
+- [`decisions`](./decisions)：当期编号 ADR 与 roadmap 放在 `_v<major>.<minor>/`，长期决策平铺在 `settled/` 中。
 - `plans/`：与 ADR 相对路径镜像的 ignored implementation plan、测试契约、任务状态与评审记录；不 stage / commit。
 - [`architecture`](./architecture)：kernel / core 长期架构设计与能力准入标准。
 - [`analysis`](./analysis)：kernel / core 相关一次性分析。
@@ -13,17 +13,17 @@
 
 ## 当前入口
 
-- [`decisions/v0/roadmap.md`](./decisions/v0/roadmap.md)：kernel v0 总路线。
-- [`decisions/v0/v0.4/roadmap.md`](./decisions/v0/v0.4/roadmap.md)：上一条 kernel v0.4 路线。
-- [`decisions/v0/v0.5/roadmap.md`](./decisions/v0/v0.5/roadmap.md)：当前 v0.5 路线；alpha.1 / alpha.2 已完成，alpha.3 交付上下文颜色，Concurrent + generation 尚未排期，alpha.4 保留 Headless Interaction 候选边界
-- [`decisions/v0/v0.4/backlog.md`](./decisions/v0/v0.4/backlog.md)：未排期候选、边界与启动条件。
-- [`decisions/v0/v0.4/history.md`](./decisions/v0/v0.4/history.md)：v0.4 早期路线讨论与已完成方向快照。
+- [`roadmaps/v0/roadmap.md`](./roadmaps/v0/roadmap.md)：kernel v0 总路线。
+- [`roadmaps/v0/v0.4/roadmap.md`](./roadmaps/v0/v0.4/roadmap.md)：上一条 kernel v0.4 路线。
+- [`decisions/_v0.5/roadmap.md`](./decisions/_v0.5/roadmap.md)：当前 v0.5 路线；alpha.1 / alpha.2 已完成，alpha.3 交付上下文颜色，Concurrent + generation 尚未排期，alpha.4 保留 Headless Interaction 候选边界
+- [`roadmaps/v0/v0.4/backlog.md`](./roadmaps/v0/v0.4/backlog.md)：未排期候选、边界与启动条件。
+- [`roadmaps/v0/v0.4/history.md`](./roadmaps/v0/v0.4/history.md)：v0.4 早期路线讨论与已完成方向快照。
 - [`decisions/_template.md`](./decisions/_template.md)：kernel ADR 模板。
 - [`architecture/core-drawing-complete.md`](./architecture/core-drawing-complete.md)：core 绘图完备检测设计。
 - [Kernel 功能比较 prompt](analysis/kernel-compare-analysis.md)：底座比较对象与维度，结果放根目录 ignored reports。
 
 ## 规则
 
-- roadmap 汇总中版本能力目标与进度，不分配预发布批次任务；ADR 按中版本三位连续编号，Accepted 仅代表设计接受，不代表实现或发布完成。
+- roadmap 汇总中版本能力目标与进度，不分配预发布批次任务；ADR 按中版本三位递增编号，Accepted 仅代表设计接受，不代表实现或发布完成。
 - ADR 长期一致性与发版审计规则以 `.agents/skills/package-publish/SKILL.md` 为准。
 - 本目录不进入 npm 包；发布包由各自 `package.json` 的 `files` 白名单控制。

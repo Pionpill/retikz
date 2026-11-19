@@ -1,0 +1,11 @@
+import type { IRScope } from '@retikz/core';
+
+import type { InputChild } from '../scene';
+
+/** 作者侧 Scope 输入 */
+export type InputScope = Omit<IRScope, 'children'> & {
+  /** 当前作用域内按声明顺序处理的子图元 */
+  children: ReadonlyArray<InputChild>;
+  /** 可选编译驱动自行解释的运行时载荷，不进入 Core IR */
+  authoring?: unknown;
+};

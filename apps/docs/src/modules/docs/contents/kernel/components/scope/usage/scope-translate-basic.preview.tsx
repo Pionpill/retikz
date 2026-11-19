@@ -1,7 +1,7 @@
 import type { IRScopePosition, IRScopeSelfPoint } from '@retikz/core';
+import type { IRTransform } from '@retikz/core';
 import { Draw, Layout, Node, Scope } from '@retikz/react';
 import { Circle } from '@retikz/standard-react/shape';
-import type { InputTransform } from '@retikz/vanilla';
 
 const selfPointOf = (
   value: ScopeTranslateBasicPreviewValues['selfAnchor'] | ScopeTranslateBasicPreviewValues['pivot'],
@@ -17,7 +17,7 @@ const positionOf = (values: ScopeTranslateBasicPreviewValues): IRScopePosition =
       }
     : values.originPosition;
 
-const transformOf = (values: ScopeTranslateBasicPreviewValues): InputTransform => {
+const transformOf = (values: ScopeTranslateBasicPreviewValues): IRTransform => {
   switch (values.operation) {
     case 'translate':
       return { kind: 'translate', x: values.translateX, y: values.translateY };

@@ -1,5 +1,6 @@
-import { expect, test } from 'vitest';
+import { expect, inject, test } from 'vitest';
 
+import { measureAllocations } from './allocation';
 import { referenceSampling, sampling } from './sampling';
 import type { BenchmarkIdentity, BenchmarkMeasurement } from './types';
 
@@ -23,6 +24,28 @@ export const defineBenchmark = <T>(
   const { id: name, dimensions } = identity;
   test(`${name}${reference ? '/reference' : ''}`, { timeout }, async ({ bench, task }) => {
     task.meta.benchmarkDimensions = dimensions;
+    const phase = inject('benchmarkPhase') ?? 'latency';
+    task.meta.benchmarkPhase = phase;
+    if (phase === 'allocation') {
+      if (reference) {
+        task.meta.allocation = {
+          status: 'skipped',
+          calls: 0,
+          warmupCalls: 0,
+          sampleCount: 0,
+          samplingInterval: 0,
+          reason: '参考档保持总共3次算法调用，不额外执行分配采样',
+        };
+        return;
+      }
+      const execution = setup();
+      try {
+        task.meta.allocation = await measureAllocations(execution);
+      } finally {
+        execution.dispose?.();
+      }
+      return;
+    }
     const { run, verify, beforeEach, afterEach, dispose, observations } = setup();
     const options = reference ? referenceSampling : sampling;
     let calls = 0;

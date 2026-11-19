@@ -31,7 +31,7 @@ const input: InputScene = {
     {
       type: 'scope',
       clip: { kind: 'ticketClip', params: {} },
-      children: [{ id: 'ticket', position: [10, 5], text: 'A' }],
+      children: [{ type: 'node', id: 'ticket', position: [10, 5], text: 'A' }],
     },
   ],
 };
@@ -45,7 +45,7 @@ describe('Vanilla 裁剪处理等价性', () => {
 
     expect(staticResult.scene).toEqual(direct);
     expect(retained.read().scene).toEqual(direct);
-    expect(direct.resources).toEqual([
+    expect(direct.resources?.clips).toEqual([
       expect.objectContaining({ kind: 'clip', path: expect.objectContaining({ fillRule: 'nonzero' }) }),
     ]);
 

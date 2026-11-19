@@ -32,6 +32,7 @@ const config = {
         'RetikzErrorOptions',
         'RetikzFoundationErrorCode',
         'ValueOf',
+        'RequireExactlyOne',
         'WithOptionalProperties',
         'WithRequiredProperties',
         'staticCssNamedColorHexByName',

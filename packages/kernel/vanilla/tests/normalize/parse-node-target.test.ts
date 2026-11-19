@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../src/error';
-import { parseNodeTarget } from '../../src/normalize/path/node';
+import { parseNodeTarget } from '../../src/normalize/element/path/node';
 
 describe('parseNodeTarget node 模式（无 .）', () => {
   it('简单 id → { id }', () => {

@@ -8,7 +8,7 @@ This page selects Scope-owned and directly clipping-related schemas from `@retik
 
 ## Component declarations
 
-#### <ApiSourceLink label={"Scope"} path={"packages/kernel/react/src/kernel/components/Scope.tsx"} startLine={64}>Scope</ApiSourceLink> / <ApiSourceLink label={"ScopeProps"} path={"packages/kernel/react/src/kernel/components/Scope.tsx"} startLine={11}>ScopeProps</ApiSourceLink>
+#### <ApiSourceLink label={"Scope"} path={"packages/kernel/react/src/kernel/components/Scope.tsx"} startLine={63}>Scope</ApiSourceLink> / <ApiSourceLink label={"ScopeProps"} path={"packages/kernel/react/src/kernel/components/Scope.tsx"} startLine={10}>ScopeProps</ApiSourceLink>
 
 Provides local styles, namespaces, origin or anchor positioning, local transforms, clipping, and reference bounds for a group of nodes and paths
 
@@ -26,7 +26,7 @@ Provides local styles, namespaces, origin or anchor positioning, local transform
 | Geometry  | `boundingShape?`  | <ApiValues name="ScopeBoundingShape" /> | `'rectangle'` | Envelope shape used when referencing the group by id; supports rectangles or circles and defaults to an axis-aligned rectangle                                                                                                                                        |
 |           | `clip?`           | `IRScope['clip']`                       | —             | Clip region in Scope-local coordinates (rect, circle, ellipse, polygon, path, compound, or custom); clips all children when supplied                                                                                                                                  |
 |           | `position?`       | `IRScope['position']`                   | `[0, 0]`      | Scope origin position in parent coordinates or final anchor alignment<br />A coordinate position is applied outside local transforms. The anchor form aligns selfAnchor on the transformed envelope to target; selfAnchor defaults to center                          |
-|           | `transforms?`     | `Array<InputTransform>`                 | —             | Local transform list following SVG transform-list order; the last item acts on a local point first<br />Supports translate, polar-translate, at-translate, offset-translate, between-translate, rotate, and scale                                                     |
+|           | `transforms?`     | `Array<IRTransform>`                    | —             | Local transform list following SVG transform-list order; the last item acts on a local point first<br />Supports translate, polar-translate, at-translate, offset-translate, between-translate, rotate, and scale                                                     |
 | Style     | `defaults?`       | `InputScope['defaults']`                | —             | Default styles for descendant Nodes, Paths, Labels, and Arrows; explicit element values win and `reset` blocks selected outer channels                                                                                                                                |
 |           | `theme?`          | `IRScope['theme']`                      | —             | Local Theme overriding only declared fields, inherited by descendant Composites                                                                                                                                                                                       |
 |           | `zIndex?`         | `number`                                | `0`           | Explicit stacking order of the whole Scope among siblings, without changing child order; defaults to 0, preserving declaration order                                                                                                                                  |
@@ -57,7 +57,7 @@ export type ScopeProps = ScopeStyleProps &
     theme?: IRScope['theme'];
     id?: string;
     localNamespace?: boolean;
-    transforms?: Array<InputTransform>;
+    transforms?: Array<IRTransform>;
     position?: IRScope['position'];
     zIndex?: IRScope['zIndex'];
     clip?: IRScope['clip'];
@@ -105,7 +105,7 @@ export type ScopeStyleProps = {
 
 ## Direct calls
 
-#### <ApiSourceLink label={"scope"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={38}>scope</ApiSourceLink> / <ApiSourceLink label={"InputScope"} path={"packages/kernel/vanilla/src/normalize/scope/types.ts"} startLine={22}>InputScope</ApiSourceLink>
+#### <ApiSourceLink label={"scope"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={39}>scope</ApiSourceLink> / <ApiSourceLink label={"InputScope"} path={"packages/kernel/vanilla/src/normalize/element/scope.ts"} startLine={6}>InputScope</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -113,25 +113,25 @@ export type ScopeStyleProps = {
 
 <ApiTable grouped>
 
-| Group     | Member                 | Type                                                                                                                                          | Default | Description                                                                                                                                    |
-| --------- | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| Main      | `children`             | `ReadonlyArray<InputChild>`                                                                                                                   | —       | Children processed in declaration order within this Scope                                                                                      |
-|           | `id?`                  | `string`                                                                                                                                      | —       | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace.                                            |
-|           | `localNamespace?`      | `false \| true`                                                                                                                               | —       | When true, child node, coordinate, and nested-scope ids stay local to this scope. The scope id itself still registers in the parent namespace. |
-|           | `type?`                | `'scope'`                                                                                                                                     | —       | Explicitly identify a Scope when its authoring fields do not uniquely identify it                                                              |
-| Geometry  | `boundingShape?`       | `"rectangle" \| "circle"`                                                                                                                     | —       | Synthetic bounding envelope for this scope's id: rectangle or circle.                                                                          |
-|           | `clip?`                | `{ kind: string; params: Record<string, JsonValue>; } \| { kind: "rect"; params: { x: number; y: number; width: number; height: number; }; }` | —       | Clip region for this scope in scope-local coordinates. Applies to clipped children through the emitted scope group.                            |
-|           | `position?`            | `IRScopePosition`                                                                                                                             | —       | Origin position in the parent frame or final anchor alignment; defaults to the origin                                                          |
-|           | `transforms?`          | `ReadonlyArray<InputTransform>`                                                                                                               | —       | Local transform list; the last item acts on local points first. Omission applies no local transform                                            |
-| Style     | `defaults?`            | `InputScope["defaults"]`                                                                                                                      | —       | Named descendant defaults and their inheritance barrier.                                                                                       |
-|           | `theme?`               | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                      | —       | Sparse Theme override inherited by this Scope descendants.                                                                                     |
-|           | `zIndex?`              | `number`                                                                                                                                      | —       | Stacking order of this scope among sibling IR children. Applies to the scope group as one unit, not to children inside it.                     |
-| Animation | `animations?`          | `InputScope["animations"]`                                                                                                                    | —       | Declarative animation tracks for this scope as a group. They do not affect layout and are not propagated to child elements.                    |
-| Runtime   | `authoring?`           | `unknown`                                                                                                                                     | —       | Optional runtime payload interpreted by a compile driver; excluded from Core IR                                                                |
-|           | `meta?`                | `Record<string, JsonValue>`                                                                                                                   | —       | Opaque JSON metadata carried by this scope. Preserved into emitted Scene primitives and ignored by the compiler.                               |
-|           | `config` (Parameter)   | `Omit<InputScope, 'type' \| 'children'>`                                                                                                      | —       | Local transforms, styles, clipping, and reference configuration                                                                                |
-|           | `children` (Parameter) | `ReadonlyArray<InputChild>`                                                                                                                   | —       | Children retained in declaration order; the array is not copied                                                                                |
-|           | Returns                | `InputScope`                                                                                                                                  | —       | Scope input retaining options and child references, before normalization or compilation                                                        |
+| Group     | Member                 | Type                                                                                                                                          | Default | Description                                                                                                                                     |
+| --------- | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Main      | `children`             | `ReadonlyArray<InputChild>`                                                                                                                   | —       | Children processed in declaration order within this Scope                                                                                       |
+|           | `id?`                  | `string`                                                                                                                                      | —       | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace.                                             |
+|           | `localNamespace?`      | `false \| true`                                                                                                                               | —       | When true, child node, coordinate, and nested-scope ids stay local to this scope. The scope id itself still registers in the parent namespace.  |
+|           | `type`                 | `'scope'`                                                                                                                                     | —       | Container discriminator, fixed to scope                                                                                                         |
+| Geometry  | `boundingShape?`       | `"rectangle" \| "circle"`                                                                                                                     | —       | Synthetic bounding envelope for this scope's id: rectangle or circle.                                                                           |
+|           | `clip?`                | `{ kind: string; params: Record<string, JsonValue>; } \| { kind: "rect"; params: { x: number; y: number; width: number; height: number; }; }` | —       | Clip region for this scope in scope-local coordinates. Applies to clipped children through the emitted scope group.                             |
+|           | `position?`            | `IRScopePosition`                                                                                                                             | —       | Origin position in the parent frame or final anchor alignment; defaults to the origin                                                           |
+|           | `transforms?`          | `IRScope['transforms']`                                                                                                                       | —       | Local transforms applied to all scope children. The last array item acts on local points first; translate variants are lowered at compile time. |
+| Style     | `defaults?`            | `IRScope['defaults']`                                                                                                                         | —       | Named descendant defaults and their inheritance barrier.                                                                                        |
+|           | `theme?`               | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                      | —       | Sparse Theme override inherited by this Scope descendants.                                                                                      |
+|           | `zIndex?`              | `number`                                                                                                                                      | —       | Stacking order of this scope among sibling IR children. Applies to the scope group as one unit, not to children inside it.                      |
+| Animation | `animations?`          | `IRScope['animations']`                                                                                                                       | —       | Declarative animation tracks for this scope as a group. They do not affect layout and are not propagated to child elements.                     |
+| Runtime   | `authoring?`           | `unknown`                                                                                                                                     | —       | Optional runtime payload interpreted by a compile driver; excluded from Core IR                                                                 |
+|           | `meta?`                | `Record<string, JsonValue>`                                                                                                                   | —       | Opaque JSON metadata carried by this scope. Preserved into emitted Scene primitives and ignored by the compiler.                                |
+|           | `config` (Parameter)   | `Omit<InputScope, 'type' \| 'children'>`                                                                                                      | —       | Local transforms, styles, clipping, and reference configuration                                                                                 |
+|           | `children` (Parameter) | `ReadonlyArray<InputChild>`                                                                                                                   | —       | Children retained in declaration order; the array is not copied                                                                                 |
+|           | Returns                | `InputScope`                                                                                                                                  | —       | Scope input retaining options and child references, before normalization or compilation                                                         |
 
 </ApiTable>
 
@@ -145,9 +145,9 @@ export declare const scope: (
   children: ReadonlyArray<InputChild>,
 ) => InputScope;
 
-export type InputScope = InputScopeBase & {
-  type?: 'scope';
-  transforms?: ReadonlyArray<InputTransform>;
+export type InputScope = Omit<IRScope, 'children'> & {
+  children: ReadonlyArray<InputChild>;
+  authoring?: unknown;
 };
 ```
 
@@ -209,7 +209,7 @@ export type IRScope = IRScopeProps & {
 | Member        | Type                                                                                                                                                                                                                                                 | Default | Description                                                                           |
 | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------- |
 | `kind`        | `"anchor"`                                                                                                                                                                                                                                           | —       | Anchor alignment position discriminator.                                              |
-| `selfAnchor?` | `number \| [number, number] \| "origin" \| string & {} \| "center" \| "top" \| "right" \| "bottom" \| "left" \| "top-right" \| "top-left" \| "bottom-right" \| "bottom-left" \| { side: "top" \| "right" \| "bottom" \| "left"; fraction: number; }` | —       | Point on the transformed Scope envelope aligned to target. Omitted fields use center. |
+| `selfAnchor?` | `number \| [number, number] \| string & {} \| "center" \| "top" \| "right" \| "bottom" \| "left" \| "top-right" \| "top-left" \| "bottom-right" \| "bottom-left" \| "origin" \| { side: "top" \| "right" \| "bottom" \| "left"; fraction: number; }` | —       | Point on the transformed Scope envelope aligned to target. Omitted fields use center. |
 | `target`      | `ZodInput<typeof ScopeAnchorPositionSchema.shape["target"]>`                                                                                                                                                                                         | —       | Alignment target resolved in the parent coordinate frame.                             |
 
 </ApiTable>
@@ -232,7 +232,7 @@ export type IRScopeAnchorPosition = ZodInput<typeof ScopeAnchorPositionSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRScopeDefaults"} path={"packages/kernel/core/src/schemas/scope/defaults.ts"} startLine={84}>IRScopeDefaults</ApiSourceLink> / <ApiSourceLink label={"ScopeDefaultsSchema"} path={"packages/kernel/core/src/schemas/scope/defaults.ts"} startLine={54}>ScopeDefaultsSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRScopeDefaults"} path={"packages/kernel/core/src/schemas/scope/defaults.ts"} startLine={86}>IRScopeDefaults</ApiSourceLink> / <ApiSourceLink label={"ScopeDefaultsSchema"} path={"packages/kernel/core/src/schemas/scope/defaults.ts"} startLine={56}>ScopeDefaultsSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -244,7 +244,7 @@ export type IRScopeAnchorPosition = ZodInput<typeof ScopeAnchorPositionSchema>;
 | -------- | ----------------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | `node?`  | `ZodInfer<typeof ScopeDefaultsSchema.shape["node"]>`  | —       | Default style applied to nodes in this scope. Independent from the other default channels.                                                    |
 | `path?`  | `ZodInfer<typeof ScopeDefaultsSchema.shape["path"]>`  | —       | Default style applied to path-like drawables in this scope. Includes label and arrow defaults.                                                |
-| `reset?` | `false \| true \| Array<"path" \| "node">`            | —       | Inheritance barrier for style defaults. Use true for all channels, or list node and path host channels to reset, including their decorations. |
+| `reset?` | `false \| true \| Array<"node" \| "path">`            | —       | Inheritance barrier for style defaults. Use true for all channels, or list node and path host channels to reset, including their decorations. |
 | `style?` | `ZodInfer<typeof ScopeDefaultsSchema.shape["style"]>` | —       | Shared graphic defaults inherited by descendants.                                                                                             |
 
 </ApiTable>

@@ -1,5 +1,11 @@
-import type { IRAxisLineTarget, IRControlPoint, IRStepAnisotropicRadius, IRStepRadius, IRTarget } from '@retikz/core';
-import type { InputStepLabel } from '@retikz/vanilla';
+import type {
+  IRAxisLineTarget,
+  IRControlPoint,
+  IRStepAnisotropicRadius,
+  IRStepRadius,
+  IRTarget,
+  IRStepLabel,
+} from '@retikz/core';
 import type { FC, ReactNode } from 'react';
 
 import { TIKZ_STEP } from '../protocol';
@@ -20,12 +26,12 @@ export type MoveStepProps = {
 
 /** Line action：从当前游标到目标点画直线（TikZ `(A) -- (B)`） */
 export type LineStepProps = {
-  /** 直线 step 鉴别字面量；省略时默认 'line' */
+  /** 省略时，首个步骤为 move，后续步骤为 line */
   kind?: 'line';
   /** 直线终点 */
   to: DslTarget;
   /** 边标注，等价于 sugar `<EdgeLabel>` child */
-  label?: InputStepLabel;
+  label?: IRStepLabel;
   /** sugar 形态：`<Step><EdgeLabel>...</EdgeLabel></Step>`；其它 children 静默忽略 */
   children?: ReactNode;
 };
@@ -39,7 +45,7 @@ export type AxisLineStepProps = {
   /** 投影目标，仅支持笛卡尔坐标、NodeTarget 或对应字符串 shorthand */
   to: IRAxisLineTarget | string;
   /** 边标注 */
-  label?: InputStepLabel;
+  label?: IRStepLabel;
   /** sugar 形态 */
   children?: ReactNode;
 };
@@ -51,7 +57,7 @@ type FoldStepBaseProps = {
   /** 折角终点 */
   to: DslTarget;
   /** 边标注 */
-  label?: InputStepLabel;
+  label?: IRStepLabel;
   /** sugar 形态 */
   children?: ReactNode;
 };
@@ -92,7 +98,7 @@ export type CurveStepProps = {
   /** 曲线终点 */
   to: DslTarget;
   /** 边标注 */
-  label?: InputStepLabel;
+  label?: IRStepLabel;
   /** sugar 形态 */
   children?: ReactNode;
 };
@@ -108,7 +114,7 @@ export type CubicStepProps = {
   /** 曲线终点 */
   to: DslTarget;
   /** 边标注 */
-  label?: InputStepLabel;
+  label?: IRStepLabel;
   /** sugar 形态 */
   children?: ReactNode;
 };
@@ -140,7 +146,7 @@ export type BendStepProps = {
   /** 终点 */
   to: DslTarget;
   /** 边标注 */
-  label?: InputStepLabel;
+  label?: IRStepLabel;
   /** sugar 形态 */
   children?: ReactNode;
 };
@@ -158,7 +164,7 @@ export type ArcStepProps = {
   /** 显式圆心；缺省取游标（上一 step anchor） */
   center?: DslTarget;
   /** 边标注 */
-  label?: InputStepLabel;
+  label?: IRStepLabel;
   /** sugar 形态 */
   children?: ReactNode;
 };
@@ -176,7 +182,7 @@ export type CirclePathStepProps = {
   /** 闭合模式：无角度=closed（整圆）；带角度=chord（弦，默认）/ sector（连回中心）/ open（纯弧） */
   closed?: 'closed' | 'chord' | 'open' | 'sector';
   /** 边标注 */
-  label?: InputStepLabel;
+  label?: IRStepLabel;
   /** sugar 形态 */
   children?: ReactNode;
 };
@@ -194,7 +200,7 @@ export type EllipsePathStepProps = {
   /** 闭合模式：无角度=closed（整椭圆）；带角度=chord（默认）/ sector（连回中心）/ open */
   closed?: 'closed' | 'chord' | 'open' | 'sector';
   /** 边标注 */
-  label?: InputStepLabel;
+  label?: IRStepLabel;
   /** sugar 形态 */
   children?: ReactNode;
 };
@@ -227,13 +233,13 @@ export type SmoothStepProps = {
    */
   tension?: number;
   /** 边标注，沿生成 cubic 按贝塞尔参数定位 */
-  label?: InputStepLabel;
+  label?: IRStepLabel;
   /** sugar 形态 */
   children?: ReactNode;
 };
 
 /**
- * @description 十三种 kind：'move' / 'line'（默认） / 'axis-line'（单轴投影连接） / 'fold'（折角） / 'cycle'（闭合） / 'curve'（二次贝塞尔） / 'cubic'（三次贝塞尔） / 'bend'（弧形简记） / 'arc'（圆 / 椭圆弧段） / 'circlePath'（整圆 / 部分圆） / 'ellipsePath'（整椭圆 / 部分椭圆） / 'rectangle'（矩形） / 'smooth'（过点平滑曲线）。除 'move' / 'cycle' / 'rectangle' 外均可挂 `label?: IRStepLabel`，等价于 sugar `<EdgeLabel>` child（prop 优先）；'smooth' 用 `points` 而非 `to`。每个 kind 有对应 named type export，便于 wrapper / forwardRef / `Pick<>` 派生
+ * @description 十三种 kind：'move'（首步默认） / 'line'（后续步骤默认） / 'axis-line'（单轴投影连接） / 'fold'（折角） / 'cycle'（闭合） / 'curve'（二次贝塞尔） / 'cubic'（三次贝塞尔） / 'bend'（弧形简记） / 'arc'（圆 / 椭圆弧段） / 'circlePath'（整圆 / 部分圆） / 'ellipsePath'（整椭圆 / 部分椭圆） / 'rectangle'（矩形） / 'smooth'（过点平滑曲线）。除 'move' / 'cycle' / 'rectangle' 外均可挂 `label?: IRStepLabel`，等价于 sugar `<EdgeLabel>` child（prop 优先）；'smooth' 用 `points` 而非 `to`。每个 kind 有对应 named type export，便于 wrapper / forwardRef / `Pick<>` 派生
  */
 export type StepProps =
   | MoveStepProps

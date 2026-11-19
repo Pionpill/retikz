@@ -8,7 +8,7 @@ import type {
 } from '@retikz/graph-vanilla';
 import type { LayoutExtensions, LayoutProps } from '@retikz/react';
 import { createInputScene, Node, Path, Step, Text } from '@retikz/react';
-import type { AnyInputEmbedAdapter, InputChild, InputPath } from '@retikz/vanilla';
+import type { AnyInputEmbedAdapter, InputChild } from '@retikz/vanilla';
 import { normalizePath } from '@retikz/vanilla';
 import type { ReactElement, ReactNode } from 'react';
 import { Children, createElement, Fragment, isValidElement } from 'react';
@@ -254,7 +254,7 @@ const relationRouteOf = (children: ReactNode, embedIdPrefix: string): InputRelat
   const stepNodes = collectRelationStepNodes(children);
   const input = createInputScene(createElement(Path, null, stepNodes), { embedIdPrefix });
   const child = input.scene.children?.[0];
-  if (child === undefined || child.type === 'embed' || child.type === 'scope' || child.type === 'node') {
+  if (child === undefined || 'namespace' in child || child.type !== 'path') {
     throw new RetikzGraphReactError({
       code: RetikzGraphReactErrorCode.RelationInputInvalid,
       message: 'Relation Step declarations must normalize to one Core Path.',
@@ -262,10 +262,9 @@ const relationRouteOf = (children: ReactNode, embedIdPrefix: string): InputRelat
     });
   }
 
-  const path = child as InputPath;
-  if (path.children === undefined || path.children.length === 0) return undefined;
+  if (child.children === undefined || child.children.length === 0) return undefined;
 
-  const route = normalizePath(path).children;
+  const route = normalizePath({ type: 'path', children: child.children }).children;
 
   return route.length === 0 ? undefined : route;
 };

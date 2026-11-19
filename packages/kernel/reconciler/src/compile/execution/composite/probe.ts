@@ -1,5 +1,6 @@
 import type {
   CanonicalTheme,
+  MergedScopeDefaults,
   CompositeCompileContext,
   CompileOccurrenceLocator,
   CompileWarning,
@@ -30,7 +31,7 @@ import {
 } from '../../shared';
 import { createPathResolveContext } from '../leaf';
 import { createTreePositionContext, createLayoutTargetResolver } from '../shared';
-import type { SubtreeCompileRuntime, SubtreeCompileHost } from '../subtree';
+import type { SubtreeCompileHost } from '../subtree';
 import { boundsRectOf, snapshotAllocationBounds } from './layout';
 import { resolveLayoutSlotSize } from './proposal';
 
@@ -57,7 +58,7 @@ export const evaluateCompositeLayout = (
   clonedProposal: LayoutProposal,
   probeOccurrence: CompileOccurrenceLocator,
   probeScopeChain: ReadonlyArray<Transform>,
-  probeScopeDefaults: SubtreeCompileRuntime['context']['inheritance']['defaults'],
+  probeScopeDefaults: MergedScopeDefaults,
   probeTheme: CanonicalTheme,
   probeInputs?: CompositeInputScope,
   measurementAxis?: LayoutMeasurementAxis,
@@ -193,7 +194,7 @@ export const probeCompositeLayout = (
   clonedProposal: LayoutProposal,
   probeOccurrence: CompileOccurrenceLocator,
   probeScopeChain: ReadonlyArray<Transform>,
-  probeScopeDefaults: SubtreeCompileRuntime['context']['inheritance']['defaults'],
+  probeScopeDefaults: MergedScopeDefaults,
   probeTheme: CanonicalTheme,
   scopeChainApplied = false,
   probeInputs?: CompositeInputScope,

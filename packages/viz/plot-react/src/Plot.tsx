@@ -7,6 +7,7 @@ import type {
   IRDataModel,
   IRDataTransformDeclaration,
 } from '@retikz/data';
+import type { RequireExactlyOne } from '@retikz/foundation';
 import type { AssertEqual } from '@retikz/foundation';
 import type {
   IRPlot,
@@ -97,18 +98,12 @@ export type PlotThemeProps = {
  */
 export type PlotIRProps<TSource = never> = PlotCommonProps<TSource> &
   PlotThemeProps &
-  (
-    | {
-        /** 以数据引用名索引的外部行数据集，与 dataBindings 互斥 */
-        data: ExternalDatasets;
-        dataBindings?: never;
-      }
-    | {
-        /** 行数据或原生数据源的运行时绑定，与 data 互斥 */
-        dataBindings: DataInputBindings<TSource>;
-        data?: never;
-      }
-  ) & {
+  RequireExactlyOne<{
+    /** 以数据引用名索引的外部行数据集，与 dataBindings 互斥 */
+    data: ExternalDatasets;
+    /** 行数据或原生数据源的运行时绑定，与 data 互斥 */
+    dataBindings: DataInputBindings<TSource>;
+  }> & {
     /** 完整 Plot Source IR 根节点 */
     spec: IRPlot;
     /** 由 Plot lowering 消费的外部数据集表 */

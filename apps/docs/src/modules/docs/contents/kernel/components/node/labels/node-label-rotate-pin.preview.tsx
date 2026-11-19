@@ -1,5 +1,5 @@
+import type { IRNodeLabel } from '@retikz/core';
 import { Layout, Node } from '@retikz/react';
-import type { InputNodeLabel } from '@retikz/vanilla';
 
 /** 图形参数 */
 export type NodeLabelRotatePinPreviewValues = {
@@ -14,8 +14,8 @@ export type NodeLabelRotatePinPreviewValues = {
 
 /** 绘制示例图形 */
 export const NodeLabelRotatePinPreview = (values: NodeLabelRotatePinPreviewValues) => {
-  const rotate: InputNodeLabel['rotate'] = values.rotateMode === 'angle' ? values.rotateAngle : values.rotateMode;
-  const pin: InputNodeLabel['pin'] =
+  const rotate: IRNodeLabel['rotate'] = values.rotateMode === 'angle' ? values.rotateAngle : values.rotateMode;
+  const pin: IRNodeLabel['pin'] =
     values.pinStyle === 'none'
       ? undefined
       : {

@@ -1,4 +1,5 @@
 import type { DataInputBindings, DataTransformExecutor, ExternalDatasets } from '@retikz/data';
+import type { RequireExactlyOne } from '@retikz/foundation';
 import type {
   IRPlot,
   PlotsLoweringOptions,
@@ -15,37 +16,24 @@ import type { InputPlot } from '../normalize/plot';
 export type InputPlotPanel = Pick<InputScope, 'clip' | 'position' | 'theme' | 'transforms' | 'zIndex'>;
 
 /** Plot source 的显式阶段互斥输入 */
-export type PlotSource =
-  | Readonly<{
-      /** 需要由 Plot Vanilla 归一化的 framework-neutral authoring input */
-      input: InputPlot;
-      /** 同一 source 不得同时提供 IRPlot */
-      spec?: never;
-    }>
-  | Readonly<{
-      /** 已完成的 Plot Source IR */
-      spec: IRPlot;
-      /** 同一 source 不得同时提供 authoring input */
-      input?: never;
-    }>;
+export type PlotSource = RequireExactlyOne<{
+  /** 需要由 Plot Vanilla 归一化的 framework-neutral authoring input */
+  readonly input: InputPlot;
+  /** 已完成的 Plot Source IR */
+  readonly spec: IRPlot;
+}>;
 
 /**
  * Plot InputEmbed 交给 adapter 的属性
  * @template TSource 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
  */
 export type InputPlotEmbed<TSource = never> = PlotSource &
-  (
-    | Readonly<{
-        /** 以数据引用名索引的外部行数据集，与 dataBindings 互斥 */
-        datasets: ExternalDatasets;
-        dataBindings?: never;
-      }>
-    | Readonly<{
-        /** 行数据或原生数据源的运行时绑定，与 datasets 互斥 */
-        dataBindings: DataInputBindings<TSource>;
-        datasets?: never;
-      }>
-  ) &
+  RequireExactlyOne<{
+    /** 以数据引用名索引的外部行数据集，与 dataBindings 互斥 */
+    readonly datasets: ExternalDatasets;
+    /** 行数据或原生数据源的运行时绑定，与 datasets 互斥 */
+    readonly dataBindings: DataInputBindings<TSource>;
+  }> &
   Readonly<{
     /** 通用异步 transform 执行器，不进入 Source IR */
     dataTransformExecutor?: DataTransformExecutor<TSource>;

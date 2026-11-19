@@ -111,7 +111,7 @@ export type SubtreeCompileHost = {
 };
 
 /** 当前递归子树的继承环境和布局输入 */
-type SubtreeCompileContext = Readonly<{
+export type SubtreeCompileContext = Readonly<{
   /** 当前原始 Source 子树及其组件运行时输入绑定，生成的普通 child 不继承 */
   compositeInput?: CompositeInputScope;
   /** 子树的布局约束与父布局占位策略，省略时使用默认行为 */

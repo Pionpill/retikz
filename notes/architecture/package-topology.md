@@ -71,4 +71,4 @@ pnpm run check:release-groups
 
 ## 编译执行归属
 
-Core 拥有绘图语义、原子解析 / layout / emit 与共享阶段产物。Reconciler 拥有完整编译 API、遍历、Composite 试算与重放、资源工作区及输出事务；完整与增量首轮共用执行器，Weave 只保留增量所需的实际产物与执行记录。参见 [ADR-080](../../packages/kernel/_notes/decisions/v0/v0.5/080-unified-reconciler-compilation.md)。
+Core 拥有绘图语义、原子解析 / layout / emit 与共享阶段产物。Reconciler 拥有完整编译 API、遍历、Composite 试算与重放、资源工作区及输出事务；完整与增量首轮共用执行器，Weave 只保留增量所需的实际产物与执行记录。参见 [ADR-080](../../packages/kernel/_notes/decisions/_v0.5/080-unified-reconciler-compilation.md)。

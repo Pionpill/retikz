@@ -16,6 +16,46 @@ const input: IRScene = {
 };
 
 describe('统一编译模式', () => {
+  it('头插复用普通节点的编译结果，仍为别名和绘制来源登记新地址', () => {
+    const source: IRScene = {
+      type: 'scene',
+      version: 1,
+      children: [{ type: 'node', id: 'old', aliasIds: ['alias'], position: [12, 24] }],
+    };
+    const inserted = { type: 'node' as const, id: 'first' };
+    const execution = { captureProvenance: true };
+    let computed = 0;
+    const session = new SceneReconciler(
+      {},
+      {
+        ...execution,
+        incremental: true,
+        trace: record => {
+          if (record.phase === 'update' && record.unit === 'element-compile') computed += record.visited;
+        },
+      },
+    );
+    try {
+      const first = session.mount(source);
+      const scopeId = session.getScopeId();
+      const after = session.update({
+        operations: [{ kind: 'insert', parentId: scopeId, index: 0, elements: [inserted] }],
+      });
+      expect(computed).toBe(1);
+      expect(after.compilation).toEqual(
+        compileTestSnapshot({ ...source, children: [inserted, ...source.children] }, {}, execution),
+      );
+      const restored = session.update({
+        operations: [{ kind: 'remove', target: { kind: 'child', scopeId, index: 0 } }],
+      });
+      expect(computed).toBe(1);
+      expect(restored.compilation).toEqual(first.compilation);
+      expect(first.compilation).toEqual(compileTestSnapshot(source, {}, execution));
+    } finally {
+      session.dispose();
+    }
+  });
+
   it('两种会话模式产生相同的完整结果和诊断', () => {
     const expected = compileTestSnapshot(input);
     for (const incremental of [false, true]) {

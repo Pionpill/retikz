@@ -10,8 +10,28 @@ import {
 import { describe, expect, it, vi } from 'vitest';
 import { literal, string } from 'zod';
 
-import type { InputChild, InputEmbedAdapter, InputScene, SynchronousInputEmbedAdapter } from '../../src';
-import { coordinate, embed, InputLayerCache, layer, node, normalizeScene, path, scene, scope } from '../../src';
+import type {
+  InputChild,
+  InputEmbedAdapter,
+  InputPath,
+  InputScene,
+  InputStep,
+  SynchronousInputEmbedAdapter,
+} from '../../src';
+import {
+  coordinate,
+  embed,
+  InputLayerCache,
+  layer,
+  node,
+  normalizePath,
+  normalizeScene,
+  RetikzVanillaError,
+  RetikzVanillaErrorCode,
+  path,
+  scene,
+  scope,
+} from '../../src';
 import { compileTestResult } from '../helpers/compilation';
 
 it('Node 与 Coordinate 的 opaque authoring 只进入来源站点，不进入嵌套 Core IR', () => {
@@ -120,7 +140,7 @@ describe('@retikz/vanilla InputScene', () => {
           id: 'main',
           children: [
             { type: 'node', id: 'source' },
-            { id: 'edge', way: ['source', [24, 0]], style: { strokeWidth: 2 } },
+            { type: 'path', id: 'edge', way: ['source', [24, 0]], style: { strokeWidth: 2 } },
           ],
         },
       ],
@@ -129,7 +149,7 @@ describe('@retikz/vanilla InputScene', () => {
   });
 
   it('InputScene 的 children 简写归一为唯一 IR 与默认 Layer metadata', () => {
-    const input: InputScene = { children: [{ id: 'node', position: [0, 0] }] };
+    const input: InputScene = { children: [{ type: 'node', id: 'node', position: [0, 0] }] };
 
     expect(normalizeScene(input)).toMatchObject({
       ir: {
@@ -144,10 +164,11 @@ describe('@retikz/vanilla InputScene', () => {
     });
   });
 
-  it('省略 type 的 Path Input 仍由 Vanilla 归一为路径 IR', () => {
+  it('显式 type 的 Path Input 仍由 Vanilla 归一为路径 IR', () => {
     const input: InputScene = {
       children: [
         {
+          type: 'path',
           way: [
             [0, 0],
             [24, 0],
@@ -167,9 +188,9 @@ describe('@retikz/vanilla InputScene', () => {
     ]);
   });
 
-  it('省略 type 的 Scope Input 仍由 Vanilla 归一为 Scope IR', () => {
+  it('显式 type 的 Scope Input 仍由 Vanilla 归一为 Scope IR', () => {
     const input: InputScene = {
-      children: [{ transforms: [], children: [{ id: 'nested', position: [0, 0] }] }],
+      children: [{ type: 'scope', transforms: [], children: [{ type: 'node', id: 'nested', position: [0, 0] }] }],
     };
 
     expect(normalizeScene(input).ir.children).toEqual([
@@ -177,6 +198,59 @@ describe('@retikz/vanilla InputScene', () => {
         type: 'scope',
         transforms: [],
         children: [{ type: 'node', id: 'nested', position: [0, 0] }],
+      },
+    ]);
+  });
+
+  it.each([
+    { type: 'step', kind: 'line', to: 'b.center' },
+    { type: 'step', kind: 'rectangle', from: 'a.center', to: [1, 1] },
+    { type: 'step', kind: 'arc', center: 'a.center', startAngle: 0, endAngle: 90, radius: 1 },
+    { type: 'step', kind: 'smooth', points: [[0, 0], 'b.center'] },
+  ] satisfies Array<InputStep>)('显式 Path 的 $kind 字符串目标在 Scene 和嵌套 Scope 使用相同归一化', step => {
+    const input: InputPath = { type: 'path', children: [{ type: 'step', kind: 'move', to: [0, 0] }, step] };
+    const expected = normalizePath(input);
+    expect(normalizeScene({ children: [input] }).ir.children).toEqual([expected]);
+    expect(normalizeScene({ children: [{ type: 'scope', children: [input] }] }).ir.children).toMatchObject([
+      { type: 'scope', children: [expected] },
+    ]);
+  });
+
+  it('同步 adapter 失败由 Vanilla 报告并保留原始异常', () => {
+    const cause = new Error('external adapter failure');
+    const adapter: SynchronousInputEmbedAdapter = {
+      kind: 'broken',
+      lower: () => {
+        throw cause;
+      },
+    };
+    expect(() => normalizeScene(scene([embed({ kind: 'broken', props: {} })]), { adapters: [adapter] })).toThrow(
+      expect.objectContaining({ constructor: RetikzVanillaError, code: RetikzVanillaErrorCode.Normalize, cause }),
+    );
+  });
+
+  it('由 helper 构造的 Scope 和 Path 保留类别和显式首段', () => {
+    const edge = path({
+      children: [
+        { type: 'step', kind: 'line', to: [1, 2] },
+        { type: 'step', kind: 'line', to: [3, 4] },
+      ],
+    });
+    const group = scope({}, [edge]);
+    expect(group.type).toBe('scope');
+    expect(edge.type).toBe('path');
+    expect(normalizeScene(scene([group])).ir.children).toMatchObject([
+      {
+        type: 'scope',
+        children: [
+          {
+            type: 'path',
+            children: [
+              { type: 'step', kind: 'line', to: [1, 2] },
+              { type: 'step', kind: 'line', to: [3, 4] },
+            ],
+          },
+        ],
       },
     ]);
   });
@@ -191,6 +265,10 @@ describe('@retikz/vanilla InputScene', () => {
     };
 
     expect(normalizeScene({ children: [corePath] }).ir.children[0]).toBe(corePath);
+    const nested = normalizeScene({
+      children: [{ type: 'scope', children: [corePath, node({ id: 'sibling', authoring: true })] }],
+    }).ir.children[0];
+    expect(nested.type === 'scope' && !('namespace' in nested) && nested.children[0]).toBe(corePath);
   });
 
   it('直接 Core Path 的 host 与 step label interrupt 经归一化后保持 JSON 合法', () => {
@@ -250,12 +328,7 @@ describe('@retikz/vanilla InputScene', () => {
     expect(line?.to[0]).toBeGreaterThan(60);
   });
 
-  it('空 children 的省略 type Input 必须显式声明 Scope，避免错误归类', () => {
-    const ambiguous: InputScene = {
-      children: [{ children: [] }],
-    };
-
-    expect(() => normalizeScene(ambiguous)).toThrow(/empty children array must declare type/i);
+  it('显式的空 Scope 保留空子列表', () => {
     expect(
       normalizeScene({
         children: [{ type: 'scope', children: [] }],
