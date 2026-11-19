@@ -141,12 +141,13 @@ export const assemblePaths = (
       for (const prim of primitives) output.zIndexMap.set(prim, pendingPath.zIndex);
     }
     if (result !== null) {
+      // ⚡两种内部边界汇总只读同一份已物化点集
       pendingPath.bounds.push({
-        boundsPoints: [...result.boundsPoints],
+        boundsPoints: result.boundsPoints,
         shadow: compiled.style.shadow,
       });
       pendingPath.allocations.push({
-        boundsPoints: [...result.boundsPoints],
+        boundsPoints: result.boundsPoints,
         skipAllocation: pendingPath.skipAllocation,
       });
     }

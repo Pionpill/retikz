@@ -125,7 +125,7 @@ export const createPathDefinitionContext = (
         : pathTargetViewOf(strokeResolution.targets, targetWarn, boundaryStore, resolveTransform);
     return compileStrokePath(
       strokeResolution,
-      { targetView: emittedTargetView, round, measureText, options: { ...emitOptions } },
+      { targetView: emittedTargetView, round, measureText, options: emitOptions },
       nextPath === undefined ? prepared : undefined,
     );
   };
