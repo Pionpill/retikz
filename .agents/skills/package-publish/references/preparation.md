@@ -7,7 +7,7 @@
 1. **包版本号**：发布组内每个包都改到目标版本。
 2. **changelog 数据**：更新 `apps/docs/src/modules/docs/data/changelog/*.ts` 中对应 release 文件，结构以 `apps/docs/src/modules/docs/data/types.ts` 为准；不要改旧 changelog MDX。
 3. **模块徽章**：只有可见模块版本变化时才改 `apps/docs/src/modules/docs/data/module.ts`，例如 minor / major 切档或 alpha -> beta -> rc -> stable。
-4. **roadmap**：仅在重点功能、目标或必要依赖发生获批变化时按 `develop-design` 更新；不回填发布记录、ADR 细节或阶段检查清单，不搬迁未完成 ADR。
+4. **roadmap**：仅在重点功能、目标或必要依赖发生获批变化时按 `develop-design` 更新；不回填发布记录、ADR 细节或阶段检查清单，不因预发布递增搬迁未完成 ADR。
 5. **ADR 检查**：每次发包都做下方的全文审计；中版本首次正式发布时，另做中版本 ADR 整理。
 6. **lockfile**：package metadata 或依赖图变化导致 lockfile 漂移时，运行 `pnpm install`。
 
@@ -15,7 +15,7 @@
 
 全仓验证和 dry-run 前，从本次交付与依赖识别相关 ADR（含被动上游组），逐篇阅读全文并追踪 Superseded/替代关系。按 [ADR 长期一致性](../../develop-wrapup/references/adr-consistency.md) 对账实现、公开契约、tests/docs/changelog。
 
-生效决策为 Accepted；被替代记录为 Superseded 并链接替代 ADR。状态本身不证明完成；不相关且不影响快照的未来能力列“未纳入”，不随 alpha 批次搬迁。半成品污染发布快照不能靠省略 changelog 排除。
+当期获批提案标 Accepted，被替代提案指明后继；长期主题核对实际生效的契约及历史记录。状态本身不证明完成；不相关且不影响快照的未来能力列“未纳入”，不随 alpha 批次搬迁。半成品污染发布快照不能靠省略 changelog 排除。
 
 逐篇报告状态、长期形态、契约一致性和结论；未通过停止，不继续验证、commit、tag 或 publish。修订不得扩大既有授权。
 
@@ -23,9 +23,9 @@
 
 在发布组首次发布该中版本的正式版（如 `0.5.0`）前执行；alpha、beta、rc 和后续 patch 仍按本次交付做全文审计，不重复整档整理。
 
-1. **收敛当前中版本**：逐篇核对本组相关 owner 的 ADR，保留决策、关键理由、适用边界与仍生效的约束；删去重复背景、施工过程及已被替代的细节，不把尚未交付的提案写成现行契约。
-2. **回查此前中版本**：按 owner 检查旧 ADR，沿跨版本、跨 owner 的替代链核对。仍有效的保持原样；部分替代的明确哪些条款仍有效，并链接新决策；完全替代且有追溯价值的在原路径保留简短的 Superseded 记录与替代链接。不要把旧决定改写成当初就采用了新方案。
-3. **删除与验收**：只删除没有独立决策或追溯价值的失效记录；先检索原路径及带 owner / 版本的编号引用，修正 roadmap、ADR 和文档中的现行链接。按 [ADR 编号规则](../../develop-design/references/adr.md) 留空号，不重排、不复用；即使删除的是末号，新编号也要越过历史已用号。完成后核验受影响链接，汇报压缩、部分替代、完全替代及删除的记录。
+1. 按实际交付逐篇核对当期编号 ADR，将仍生效的条款合入所属 owner 的长期主题，更新或移除被覆盖的正文；不把编号文件原样搬入长期目录。
+2. 在每个受影响主题末尾的“历史记录”按 owner、中版本和原 ADR 编号简记实质变化与原因。同一版本合并一条；完全失效且没有现行契约的主题可删除，历史由 Git 保留。
+3. 未交付但仍计划实施的提案转到明确的目标中版本并按目标目录编号；已放弃的移除。修正跨 owner 链接、roadmap 与编号引用，确认无悬空引用或遗漏提案后清理旧版本目录，不保留编号占位页。
 
 ## Changelog 规则
 

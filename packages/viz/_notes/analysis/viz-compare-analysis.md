@@ -36,7 +36,7 @@
 
 比较角度：数据模型与字段解析、排序/派生、分组聚合、统计采样、关联与重塑、开放算子、同步/异步及外部执行接入、lineage/provenance、诊断、增量数据流、耗时与内存。不要把普通 Promise 执行当作增量数据流，把外部 executor 契约当作已交付数据库连接器，或把 lineage 事件当作逐行来源证据。
 
-先读 [Data roadmap](../decisions/data/v0/roadmap.md)、[Data 完备设计](../architecture/data-capability-complete.md) 与相关 ADR，再核对源码；已有本地/外部/hybrid 执行不得重复计入规划。各数据项目定位不同，不要求都采用 Retikz IR 或 registry。
+先读 [Data roadmap](../roadmaps/data/v0/roadmap.md)、[Data 完备设计](../architecture/data-capability-complete.md) 与相关 ADR，再核对源码；已有本地/外部/hybrid 执行不得重复计入规划。各数据项目定位不同，不要求都采用 Retikz IR 或 registry。
 
 ## Plot：图形语法比较
 
@@ -65,7 +65,7 @@
 
 比较角度：图表家族与数据角色、内置类型与组合 Pattern、最小到高级配置的连续性、混合图与 Plot 扩展出口、主题与默认视觉、标题/注释/来源等完整展示、导出与可访问性、交互接入、文档与 gallery 发现性、不同作者接口的语义一致性。独立评价封装完成度，不以名称数量代替覆盖，不以 Plot 能画 Line/Bar 推断 Chart 已有 Line/Bar recipe。
 
-先读 [Chart roadmap](../decisions/chart/v0/v0.1/roadmap.md)、[Chart 总设计](../architecture/chart-design.md) 与 [封装完备设计](../architecture/chart-encapsulation-complete.md)，再查公开入口与实际输出。区分内部 recipe Definition、公开 provider contribution 与第三方扩展入口，不把内部 registry 视作公开 recipe 注册机制。
+先读 [Chart roadmap](../decisions/chart/_v0.1/roadmap.md)、[Chart 总设计](../architecture/chart-design.md) 与 [封装完备设计](../architecture/chart-encapsulation-complete.md)，再查公开入口与实际输出。区分内部 recipe Definition、公开 provider contribution 与第三方扩展入口，不把内部 registry 视作公开 recipe 注册机制。
 
 ## Table：表格能力比较
 
@@ -82,11 +82,11 @@
 
 比较角度：语义区域、List / Pivot、数据与格式化、行列轨道与 span、内容测量、表线与样式、分页与重复表头、Cell 内容扩展、可视编码与 Legend、布局输出和追溯。滚动、虚拟化、排序筛选、选择编辑分别注明计算层与宿主职责；JSON-safe 契约和函数型 API 按各自用途评价，不直接互判优劣。
 
-先读 [Table roadmap](../decisions/table/v0/roadmap.md)、[Table 总设计](../architecture/table-design.md) 与 [表格完备设计](../architecture/table-visualization-complete.md)，再核验公开入口与实际输出。Data 的统计变换不重复计分；分页排版、虚拟滚动和编辑能力分别评价，不把宿主能力记为 Table 原生能力。
+先读 [Table roadmap](../roadmaps/table/v0/roadmap.md)、[Table 总设计](../architecture/table-design.md) 与 [表格完备设计](../architecture/table-visualization-complete.md)，再核验公开入口与实际输出。Data 的统计变换不重复计分；分页排版、虚拟滚动和编辑能力分别评价，不把宿主能力记为 Table 原生能力。
 
 ## 渲染性能与后端可行性
 
-本节维护 Plot 渲染性能比较任务；Chart / Table 只补充其封装或表格特有成本，不重复计算底层后端能力。不保存历史性能结论。先阅读 [性能与增量运行时设计](../../../../notes/architecture/performance-design.md)、[Plot roadmap](../decisions/plot/v0/roadmap.md) 及相关架构设计，再核验当前 Mark lowering、pipeline、Scene 契约和 Render 实现。历史阈值、图元数量与后端假设不得直接作为当前事实。
+本节维护 Plot 渲染性能比较任务；Chart / Table 只补充其封装或表格特有成本，不重复计算底层后端能力。不保存历史性能结论。先阅读 [性能与增量运行时设计](../../../../notes/architecture/performance-design.md)、[Plot roadmap](../roadmaps/plot/v0/roadmap.md) 及相关架构设计，再核验当前 Mark lowering、pipeline、Scene 契约和 Render 实现。历史阈值、图元数量与后端假设不得直接作为当前事实。
 
 | 比较项           | 核验内容                                                                                                                                                        |
 | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |

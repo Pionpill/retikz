@@ -2,13 +2,13 @@
 
 > **状态：长期边界已确认；Surface 为 Accepted 扩展。** Standard 三包提供 Grid、Axes、Frame、Legend 等通用绘图能力；Flex / GridLayout / OverlayLayout 已迁入独立 Layout package family，不再属于 Standard。任意 child 的 renderer-neutral Surface 由当前版本 v0.1 alpha.3 冻结。
 >
-> 关联：[`Library 能力库设计`](./library-design.md) · [`Layout 布局库设计`](./layout-library-design.md) · [`Standard v0.1 roadmap`](../decisions/standard/v0/v0.1/roadmap.md) · [`能力完备性与模块边界`](../../../../notes/architecture/capability-design.md)
+> 关联：[`Library 能力库设计`](./library-design.md) · [`Layout 布局库设计`](./layout-library-design.md) · [`Standard v0.1 roadmap`](../decisions/standard/_v0.1/roadmap.md) · [`能力完备性与模块边界`](../../../../notes/architecture/capability-design.md)
 
 ---
 
 ## 定位
 
-Standard 是 Retikz 的标准绘图包家族，拥有通用 Tier 2 composite、对应持久化输入、factory、lowering 与动画效果纯工厂。官方 Core provider 实现由独立的 Extension 包拥有；现行边界见 [ADR-032](../decisions/standard/v0/v0.1/032-extension-package-boundary.md)。
+Standard 是 Retikz 的标准绘图包家族，拥有通用 Tier 2 composite、对应持久化输入、factory、lowering 与动画效果纯工厂。官方 Core provider 实现由独立的 Extension 包拥有；现行边界见 [ADR-032](../decisions/standard/_v0.1/032-extension-package-boundary.md)。
 
 “Standard”表示官方维护、跨领域可复用和拥有稳定公共契约，不表示所有通用能力都必须进入同一包。形成独立纵向模型、求解、artifact 与工具链的能力应拥有自己的 package family；排版布局因此由 Layout 主责。
 
@@ -58,7 +58,7 @@ Plot、Table、Graph 等领域包先把 channel、scale、表格规则、图式�
 
 ## 发布与演进
 
-新增 Standard 能力继续由对应 milestone ADR 冻结公共契约、Definition、lowering、adapter、测试与文档。Surface 的现行 Accepted 契约见 [v0.1 ADR-022](../decisions/standard/v0/v0.1/022-arbitrary-child-surface.md)。能力迁出时，旧 ADR 原地保留并标记 Superseded，由新 owner ADR 建立后继映射；不保留跨 owner alias。
+新增 Standard 能力继续由对应 milestone ADR 冻结公共契约、Definition、lowering、adapter、测试与文档。Surface 的现行 Accepted 契约见 [v0.1 ADR-022](../decisions/standard/_v0.1/022-arbitrary-child-surface.md)。能力迁出时，旧 ADR 原地保留并标记 Superseded，由新 owner ADR 建立后继映射；不保留跨 owner alias。
 
 文档站在 Library 模块的 `Standard · 标准包` 分组维护自身的简介、组件、参考与更新日志；Extension 与 Layout 分别拥有独立分组。
 
@@ -70,4 +70,4 @@ Plot、Table、Graph 等领域包先把 channel、scale、表格规则、图式�
 - Core IR、Scene、renderer、运行时资源或编辑器状态
 - 兼容 re-export、双 namespace、隐式全局注册或跨 package 私有导入
 
-显式递归输入的静态 Tree 集合呈现可由 Standard 拥有：节点与父子连接复用 Core，子树仅按自然包络作确定排列，不提供一般图算法布局。公开契约草案见 [v0.1 ADR-042](../decisions/standard/v0/v0.1/042-tree-presentation.md)。
+显式递归输入的静态 Tree 集合呈现可由 Standard 拥有：节点与父子连接复用 Core，子树仅按自然包络作确定排列，不提供一般图算法布局。公开契约草案见 [v0.1 ADR-042](../decisions/standard/_v0.1/042-tree-presentation.md)。

@@ -5,14 +5,14 @@ description: Use when planning a retikz architecture direction, version roadmap,
 
 # 功能设计
 
-先判断当前产物是 architecture design、版本 roadmap 还是 ADR。ADR 从 Proposed 起就是长期功能与架构文档；设计检查与实现细节始终写入 ignored plan，不经过“施工蓝图再压缩”的阶段。
+先判断当前产物是 architecture design、版本 roadmap 还是 ADR。当期 ADR 记录本中版本拟改变的决策；长期 ADR 在 settled 中按主题记录已发布且仍有效的契约；设计检查与实现细节始终写入 ignored plan，不经过“施工蓝图再压缩”的阶段。
 
 ## 产物边界
 
 | 产物                | 负责                                                                | 不负责                                               |
 | ------------------- | ------------------------------------------------------------------- | ---------------------------------------------------- |
 | Architecture design | 长期问题、整体结构、能力归属、功能边界、关键原则与演进方向          | 版本字段、具体实现和执行步骤                         |
-| 版本 roadmap        | 当前版本重点功能、目标与必要边界 / 依赖；ADR 仅用编号链接           | ADR 细节、实施进度、历史排期、执行及发布记录         |
+| 版本 roadmap        | 当前版本重点功能、目标与必要边界 / 依赖；当期 ADR 用编号链接        | ADR 细节、实施进度、历史排期、执行及发布记录         |
 | ADR                 | 单项功能、核心决策、基础数据结构 / 公开契约、行为、失败语义与兼容性 | 设计检查材料、文件 scope、测试策略和执行过程         |
 | Mirror plan         | 设计检查结论；ADR 确认后再细化文件 scope、逻辑、测试、命令和风险    | 改写 ADR 的公开契约、默认 / 失败语义或 breaking 行为 |
 
@@ -30,7 +30,7 @@ description: Use when planning a retikz architecture direction, version roadmap,
 
 - 性能作为目标或验收条件时，按 [test-performance](../test-performance/SKILL.md) 在镜像 plan 明确操作 owner、消费场景、预算、对照与运行授权范围；长期性能契约才进入 ADR，不因设计任务自动运行基准。
 - 版本目标与 roadmap：读 [roadmap](references/roadmap.md)。
-- 新建/修改/检索 ADR：读 [ADR 与镜像计划](references/adr.md)。
+- 当期 ADR 的编号与计划、长期 ADR 的主题与历史记录、两类文档的检索：读 [ADR 与镜像计划](references/adr.md)。
 - Architecture Gate 的审计标准由 develop-completeness 拥有；阶段顺序与 Plan Gate 读 flow-development 的 Alpha reference。
 
 设计交付到用户要求的产物为止，不从 roadmap 自动进入 ADR，也不从设计获批自动进入实现。Accepted 在人工接受设计或批准执行时记录；它不表示实现完成。实际实施、评审与 Git 操作仍需明确授权。

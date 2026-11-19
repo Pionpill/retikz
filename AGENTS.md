@@ -36,7 +36,7 @@ retikz 是受 LaTeX TikZ 启发的 TypeScript 绘图库：用组件或 JSON IR �
 - 写 `apps/docs` 正文、demo、导航、i18n、schema registry 前，先读 `docs-doc-principle`；再按页型选择主写作 skill，共享组件、controls、测量、插图与导航规则只按触发条件加载 references，不全量读取。
 - 大型任务在执行计划获用户确认后读 `flow-long-task`；性能测试明确获准结果后自动优化时，也按 `test-performance` 使用其状态管理，不因此升级任务规模。其余中小型任务不读 `flow-long-task`。主模型为 Astra / Sol 且计划已授权多 agent 协作时再读 `codex-develop-flow`；中型仅在包含可分离实现或专项评审且计划明确授权模型角色分工时可用。中小型任务不因多文件、多步骤或可能多 commit 自动升级。
 - Alpha / Beta / RC 按 `flow-development` 选择阶段 reference；主题按 `theme-contract` 选择风格 reference。发包、跨模型评审、文档外站转换按对应 skill 执行，不把步骤复制进 AGENTS。
-- ADR 按 owner / 大版本 / 中版本归档，文件用三位编号 `001-xxx.md`，不设 alpha / beta / rc 子目录；roadmap 只保留版本重点功能、目标与必要边界 / 依赖，ADR 仅用编号链接，细则见 `develop-design`。ADR `Accepted` 表示设计获批，不代表实现或发布完成。
+- ADR 分当期与长期：各 owner 的 `_v<major>.<minor>/` 存编号提案，长期决策在 `settled/` 平铺主题文件，不编号；roadmap 只保留版本重点功能、目标与必要边界 / 依赖，ADR 仅用编号链接，细则见 `develop-design`。ADR `Accepted` 表示设计获批，不代表实现或发布完成。
 - 所有发布组发包前都必须按 `package-publish` 从实际交付改动及依赖识别相关 ADR，逐篇阅读全文审计长期一致性、状态与当前公开契约；未纳入本次交付且不影响发布快照的未完成能力不阻塞发布、不因 alpha 递增迁移。ADR 不得残留文件 scope、私有实现、测试 case / 路径 / 命令、commit 切分或 review 记录。不得以状态字段、roadmap 勾选或 commit message 代替内容检查。
 - 重构优先走 `.agents/skills/develop-refactor/SKILL.md`；纯审计仍走 `develop-review`。
 - 规范沉淀检查是每次任务收尾的必做项，不限于问答。执行过程中发现可复用的约束、用户偏好、流程或操作模式，或实际采用了与现有规范 / skill 不同的命令、参数、步骤时，必须记录候选项，并在完成当前任务后检查是否值得抽象或修正规范。

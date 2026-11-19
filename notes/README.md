@@ -64,7 +64,7 @@
 ### kernel 发布组
 
 - [`kernel notes`](../packages/kernel/_notes/README.md)：kernel 发布组内部文档入口。
-- [`kernel v0 roadmap`](../packages/kernel/_notes/decisions/v0/roadmap.md)：kernel v0 总路线。
+- [`kernel v0 roadmap`](../packages/kernel/_notes/roadmaps/v0/roadmap.md)：kernel v0 总路线。
 - [`kernel ADR template`](../packages/kernel/_notes/decisions/_template.md)：kernel ADR 模板。
 - [`Kernel 功能比较 prompt`](../packages/kernel/_notes/analysis/kernel-compare-analysis.md)：底座比较对象与维度。
 
@@ -74,18 +74,18 @@
 - [`plot-design.md`](../packages/viz/_notes/architecture/plot-design.md)：`@retikz/plot` 架构设计。
 - [`data-capability-complete.md`](../packages/viz/_notes/architecture/data-capability-complete.md)：data 能力完备与宿主边界。
 - [`plot-visualization-complete.md`](../packages/viz/_notes/architecture/plot-visualization-complete.md)：plot 可视化完备与跨能力域闭环。
-- [`plot v0 roadmap`](../packages/viz/_notes/decisions/plot/v0/roadmap.md)：plot v0 总路线。
-- [`plot v0.1 roadmap`](../packages/viz/_notes/decisions/plot/v0/v0.1/roadmap.md)：plot v0.1 路线与 milestone 索引。
+- [`plot v0 roadmap`](../packages/viz/_notes/roadmaps/plot/v0/roadmap.md)：plot v0 总路线。
+- [`plot v0.1 roadmap`](../packages/viz/_notes/roadmaps/plot/v0/v0.1/roadmap.md)：plot v0.1 路线与 milestone 索引。
 - [`Viz 功能比较 prompt`](../packages/viz/_notes/analysis/viz-compare-analysis.md)：Data、Plot、Chart、Table 独立比较。
 - [`table-visualization-complete.md`](../packages/viz/_notes/architecture/table-visualization-complete.md)：table 能力准入与完备性边界。
 - [`table-design.md`](../packages/viz/_notes/architecture/table-design.md)：Table grammar、Table Algebra 与约束布局总设计。
-- [`table v0.1 roadmap`](../packages/viz/_notes/decisions/table/v0/v0.1/roadmap.md)：table v0.1 路线与 milestone 索引。
+- [`table v0.1 roadmap`](../packages/viz/_notes/decisions/table/_v0.1/roadmap.md)：table v0.1 路线与 milestone 索引。
 
 ### library 发布组
 
 - [`library notes`](../packages/library/_notes/README.md)：Standard 发布组内部文档入口。
 - [`standard-library-design.md`](../packages/library/_notes/architecture/standard-library-design.md)：Standard 包家族、Core 扩展机制与领域包边界。
-- [`standard v0.1 roadmap`](../packages/library/_notes/decisions/standard/v0/v0.1/roadmap.md)：Standard v0.1 路线与 milestone 索引。
+- [`standard v0.1 roadmap`](../packages/library/_notes/decisions/standard/_v0.1/roadmap.md)：Standard v0.1 路线与 milestone 索引。
 
 ## 打包约束
 
