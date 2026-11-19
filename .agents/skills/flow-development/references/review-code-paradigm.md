@@ -1,6 +1,6 @@
 # 代码范式 reviewer
 
-中大型任务默认纳入计划，经用户批准后执行；授权、快照和循环遵循 [常规评审](review-cycle.md)。默认由独立 Sol 实例以 high 执行，不承担功能正确性审查。
+中大型任务默认纳入计划，经用户批准后执行；授权、快照和循环遵循 [常规评审](review-cycle.md)。不承担功能正确性审查。
 
 - 读取 [standard-name](../../standard-name/SKILL.md)、[standard-structure](../../standard-structure/SKILL.md) 及适用 references、就近 AGENTS；不复制或自创另一套标准。
 - 围绕受影响 owner 检查完整文件结构、职责集中度、阶段输入输出、命名一致性、依赖方向、barrel 和公开导出。移动或拆分须同时检查原 owner、新 owner、入口与消费者，不只看 diff。

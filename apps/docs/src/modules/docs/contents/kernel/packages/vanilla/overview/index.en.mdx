@@ -75,6 +75,10 @@ const view = mount(document.querySelector('#diagram')!, input);
 
 ### Declare identity in the configuration
 
+Node, Path, and Scope objects written directly in `children` must declare their `type`. The `node()`, `path()`, and `scope()` helpers and their JSX counterparts supply it for you.
+
+Vanilla path configurations require exactly one of `way` and `children`. If both reach the runtime, explicit `children` take precedence, even when empty.
+
 Vanilla constructors do not take a separate ID string argument. `node({ id, position })`, `path({ id, way })`, `coordinate({ id, position })`, and `layer({ id, children })` read identity from their configuration. Each input contract still determines whether `id` is required.
 
 Domain builders also take their configuration directly, such as `shape.circle({ id, center, radius })` and `entity({ id, role, position })`. Inputs with a domain `id` reuse it as the embed identity; anonymous inputs do not gain a referenceable graphic ID. Layout inputs have no domain `id`, so use entries such as `flexLayout({ children })` directly.

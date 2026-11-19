@@ -173,7 +173,8 @@ export const sampleStrokePosition = (
   if (located === undefined) return undefined;
   let { parameter } = located;
   let occurrence = located.span.occurrence;
-  const originalSample = sampleStrokeOccurrence(occurrence, parameter);
+  // ⚡只有返回原路径视觉位置时才采样，圆角结果直接使用逻辑采样
+  const originalVisual = () => sampleStrokeOccurrence(located.span.occurrence, located.parameter);
   if (useOriginal) {
     const mappings = model.mappings.get(occurrence.commandIndex) ?? [];
     const mapping = mappings.find(
@@ -181,7 +182,7 @@ export const sampleStrokePosition = (
         parameter >= entry.sourceFrom &&
         (parameter < entry.sourceTo || (index === mappings.length - 1 && parameter <= entry.sourceTo)),
     );
-    if (mapping === undefined) return { visual: originalSample };
+    if (mapping === undefined) return { visual: originalVisual() };
     const fraction = (parameter - mapping.sourceFrom) / (mapping.sourceTo - mapping.sourceFrom);
     parameter = mapping.span.from + fraction * (mapping.span.to - mapping.span.from);
     if (
@@ -191,7 +192,7 @@ export const sampleStrokePosition = (
       parameter > 1e-12 &&
       parameter < 1 - 1e-12
     )
-      return { visual: originalSample };
+      return { visual: originalVisual() };
     occurrence = mapping.span.occurrence;
   }
   const logical = {
@@ -199,5 +200,5 @@ export const sampleStrokePosition = (
     sample: sampleStrokeOccurrence(occurrence, parameter),
     logicalDistance: occurrence.logicalStart + curveMetrics.distanceAt(occurrence.metrics, parameter),
   };
-  return { visual: geometry === PathPositionGeometry.Original ? originalSample : logical.sample, logical };
+  return { visual: geometry === PathPositionGeometry.Original ? originalVisual() : logical.sample, logical };
 };

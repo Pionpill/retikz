@@ -1,6 +1,6 @@
 import { NonNegativeNumberSchema } from '@retikz/foundation';
 import type { CenteredBox, ContourSegment, Position } from '@retikz/math';
-import { DEFAULT_EPSILON, intersect, localToWorld, verticesToSegments, worldToLocal } from '@retikz/math';
+import { DEFAULT_EPSILON, localToWorld, verticesToSegments, worldToLocal } from '@retikz/math';
 import type { infer as ZodInfer } from 'zod';
 import { strictObject } from 'zod';
 
@@ -17,17 +17,6 @@ const rectangleParamsSchema = strictObject({
 });
 
 type RectangleParams = ZodInfer<typeof rectangleParamsSchema>;
-
-/** ⚡直角矩形复用固定的单位轮廓，避免每次求交重建四顶点与四线段 */
-const sharpRectangleContour = verticesToSegments([
-  [-1, -1],
-  [1, -1],
-  [1, 1],
-  [-1, 1],
-]);
-
-/** 单位轮廓的射线原点，不随几何查询变化 */
-const rectangleOrigin: Position = [0, 0];
 
 /** 轴对齐 / 旋转矩形的 4 个角（CW 绕向：左上 → 右上 → 右下 → 左下），局部系经 localToWorld 投世界 */
 const rectVertices = (bounds: CenteredBox): Array<Position> => {
@@ -54,28 +43,26 @@ export const rectangle = defineShape<RectangleParams>({
   computeBoundaryPoint: (bounds: CenteredBox, toward: Position, params): Position => {
     const halfWidth = bounds.width / 2;
     const halfHeight = bounds.height / 2;
-    if (
-      (params.cornerRadius === undefined || params.cornerRadius === 0) &&
-      halfWidth > DEFAULT_EPSILON &&
-      halfHeight > DEFAULT_EPSILON
-    ) {
+    if (halfWidth > DEFAULT_EPSILON && halfHeight > DEFAULT_EPSILON) {
       const localToward = worldToLocal(bounds, toward);
-      if (Math.hypot(localToward[0], localToward[1]) < 1e-12) return [bounds.x, bounds.y];
+      // 只有两个分量都足够小时才需要精算到中心的距离
+      if (Math.abs(localToward[0]) < 1e-12 && Math.abs(localToward[1]) < 1e-12 && Math.hypot(...localToward) < 1e-12)
+        return [bounds.x, bounds.y];
       const directionX = localToward[0] / halfWidth;
       const directionY = localToward[1] / halfHeight;
       const absoluteX = Math.abs(directionX);
       const absoluteY = Math.abs(directionY);
-      const directionScale = Math.max(absoluteX, absoluteY);
-      const edgeIndex = absoluteX > absoluteY ? (directionX > 0 ? 1 : 3) : directionY > 0 ? 2 : 0;
-      // ⚡射线命中边已由单位方向确定，复用直线求交，省去通用轮廓遍历与方向单位化
-      const edge = sharpRectangleContour[edgeIndex];
-      const hit = intersect.lineLine({
-        a1: rectangleOrigin,
-        a2: [directionX / directionScale, directionY / directionScale],
-        b1: edge.from,
-        b2: edge.to,
-      });
-      return hit === null ? [bounds.x, bounds.y] : localToWorld(bounds, [hit[0] * halfWidth, hit[1] * halfHeight]);
+      // ⚡单位矩形中最大绝对分量为 1 的方向已在边界上，不再与命中边重复求交
+      const verticalEdge = absoluteX > absoluteY;
+      const scale = verticalEdge ? absoluteX : absoluteY;
+      const unitX = directionX / scale;
+      const unitY = directionY / scale;
+      const localHit: Position =
+        Number.isFinite(unitX) && Number.isFinite(unitY) ? [unitX * halfWidth, unitY * halfHeight] : [NaN, NaN];
+      const radius = params.cornerRadius ?? 0;
+      if (radius === 0) return localToWorld(bounds, localHit);
+      const cornerDistance = verticalEdge ? halfHeight - Math.abs(localHit[1]) : halfWidth - Math.abs(localHit[0]);
+      if (cornerDistance > radius) return localToWorld(bounds, localHit);
     }
 
     const verts = rectVertices(bounds);

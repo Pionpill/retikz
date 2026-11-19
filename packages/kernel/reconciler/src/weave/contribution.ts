@@ -1,12 +1,18 @@
-import type { ScenePrimitive, CompileOccurrenceLocator } from '@retikz/core';
+import type { ScenePrimitive, SceneResources, CompileOccurrenceLocator } from '@retikz/core';
 import { isPropertyPathEqual } from '@retikz/foundation';
 
-import type { SubtreeCompileState, TreeOutputState } from '../compile/execution';
-import type { CompileOwnerKey, CompileNamespaceKey, CompileProvenanceOwner } from '../compile/provenance';
-import type { CompileRuntime, NamespaceFrameChange } from '../compile/runtime';
-import { importSceneResources, compileWarningOccurrenceOf } from '../compile/shared';
+import type {
+  CompileNamespaceKey,
+  CompileOwnerKey,
+  CompileProvenanceOwner,
+  CompileRuntime,
+  NamespaceFrameChange,
+  SubtreeCompileState,
+  TreeOutputState,
+} from '../compile';
+import { compileWarningOccurrenceOf, importSceneResources } from '../compile';
 import { collectContributionResources } from './shared';
-import type { WeaveContribution, WeaveContributionRead } from './shared';
+import type { WeaveContribution } from './shared';
 
 /** 从已完成的局部输出捕获可复用贡献，不执行领域计算 */
 export const captureWeaveContribution = (
@@ -14,7 +20,7 @@ export const captureWeaveContribution = (
   output: TreeOutputState,
   state: SubtreeCompileState,
   bindings: ReadonlyArray<NamespaceFrameChange>,
-  reads: ReadonlyArray<WeaveContributionRead>,
+  resources: SceneResources,
   occurrence: CompileOccurrenceLocator,
   semanticOwner?: CompileOwnerKey,
 ): WeaveContribution => {
@@ -42,11 +48,8 @@ export const captureWeaveContribution = (
     },
     zIndices: primitives.map(primitive => output.zIndexMap.get(primitive)),
     bindings,
-    reads,
-    resources: collectContributionResources(primitives, {
-      paints: workspace.paintRegistry.getResources(),
-      clips: workspace.clipRegistry.getResources(),
-    }),
+    // ⚡基础元素只扫描已记录的局部资源，避免逐元素重建全局资源索引
+    resources: collectContributionResources(primitives, resources),
     diagnostics: workspace.diagnosticCollector.warnings.filter(warning =>
       isPropertyPathEqual(compileWarningOccurrenceOf(warning).sourcePath, occurrence.sourcePath),
     ),
@@ -61,29 +64,20 @@ export const materializeWeaveOutput = (
   contribution: WeaveContribution,
   semanticOwner?: CompileOwnerKey,
   namespace: CompileNamespaceKey = runtime.state.execution.namespaceStack.identity,
-): SubtreeCompileState => {
+): WeaveContribution['output'] => {
   const { provenanceTracker } = runtime.state.execution;
   const { paintRegistry, clipRegistry } = runtime.state.workspace;
   importSceneResources(contribution.resources, paintRegistry, clipRegistry);
-  const primitives = provenanceTracker?.materializePrimitives(contribution.output.primitives) ?? [
-    ...contribution.output.primitives,
-  ];
+  const primitives =
+    provenanceTracker?.materializePrimitives(contribution.output.primitives) ?? contribution.output.primitives;
   if (semanticOwner !== undefined && contribution.provenance !== undefined)
     provenanceTracker?.importProvenance(contribution.provenance, primitives, semanticOwner, 0, namespace, true);
   for (const [index, primitive] of primitives.entries()) {
     const zIndex = contribution.zIndices[index];
     if (zIndex !== undefined) output.zIndexMap.set(primitive, zIndex);
   }
-  return {
-    primitives,
-    paths: [],
-    geometries: [...contribution.output.geometries],
-    publications: [...contribution.output.publications],
-    bounds: [...contribution.output.bounds],
-    allocations: [...contribution.output.allocations],
-    alignmentGuides: [...contribution.output.alignmentGuides],
-    artifacts: [...contribution.output.artifacts],
-  };
+  // ⚡父容器只读取并追加这些数组；来源重绑仅替换图元，不复制其余只读贡献
+  return primitives === contribution.output.primitives ? contribution.output : { ...contribution.output, primitives };
 };
 
 /** 在计算工作区物化贡献并重放其已确认有效的名称 */
@@ -92,7 +86,7 @@ export const materializeWeaveContribution = (
   output: TreeOutputState,
   contribution: WeaveContribution,
   semanticOwner?: CompileOwnerKey,
-): SubtreeCompileState => {
+): WeaveContribution['output'] => {
   const state = materializeWeaveOutput(runtime, output, contribution, semanticOwner);
   const namespaceStack = runtime.state.execution.namespaceStack;
   const scopeIds = new Map<string, string>();

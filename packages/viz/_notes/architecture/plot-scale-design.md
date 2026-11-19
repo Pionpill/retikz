@@ -6,7 +6,7 @@
 
 关联：[Plot 总设计](./plot-design.md) · [可视化完备设计](./plot-visualization-complete.md) · [包职能设计](../../../../notes/architecture/package-responsibility-design.md)
 
-具体决策见 [ADR-029](../decisions/plot/v0/v0.2/029-scale-mapping-contract.md)，当前为 Accepted；实现与验证进度独立记录。
+具体决策见 [ADR-029](../decisions/plot/_v0.2/029-scale-mapping-contract.md)，当前为 Accepted；实现与验证进度独立记录。
 
 ## 1. 问题与目标
 
@@ -130,7 +130,7 @@ Scale 解析产出与映射一致的 domain、类别顺序、分档边界及适�
 
 ## 8. 声明、扩展与包边界
 
-通用 Scale operation、Definition、registry 和数学映射由 Data 持有，Plot 与 Table 共同消费，不新增比例尺发布包。Plot 保留通道选型、坐标绑定、基线许可、主题与布局协调，Table 保留单元格选择、视觉规则及主题策略。底层数值与插值优先复用现有数学能力及 D3 生态，不为结构调整重写已验证算法。归属草案见 [Data ADR-006](../decisions/data/v0/v0.2/006-scale-mapping.md)。
+通用 Scale operation、Definition、registry 和数学映射由 Data 持有，Plot 与 Table 共同消费，不新增比例尺发布包。Plot 保留通道选型、坐标绑定、基线许可、主题与布局协调，Table 保留单元格选择、视觉规则及主题策略。底层数值与插值优先复用现有数学能力及 D3 生态，不为结构调整重写已验证算法。归属草案见 [Data ADR-006](../decisions/data/_v0.2/006-scale-mapping.md)。
 
 Data 不依赖 Core、Plot 或 Table。通用映射处理标量、插值和数学能力，视觉 output、颜色/形状校验和 Guide 解释由宿主承担。Scale 与 transform 并列，不要求生成数据列；范围重建可共享机制，但参与域收集的数据范围和自动留白求解仍由宿主决定。
 
@@ -179,6 +179,6 @@ Data 不依赖 Core、Plot 或 Table。通用映射处理标量、插值和数�
 - [G2 scale](https://g2.antv.antgroup.com/en/manual/core/scale/overview/)：按通道使用比例尺，并协调同视图的映射；配置便利不要求底层按视觉属性拆算法。
 - [ECharts visualMap](https://echarts.apache.org/handbook/en/concepts/visual-map/)：连续及分段映射可以服务颜色、尺寸等多个视觉属性；其成品图表配置不作为 Plot 底层契约模板。
 
-现行 [D3 底座决策](../decisions/plot/v0/v0.1/010-d3-scale.md) 的算法复用方向、[统一 registry](../decisions/plot/v0/v0.1/063-scale-registry.md) 的扩展与 JSON 边界继续保留。registry 中 position/channel 分族和[离散化仅输出颜色](../decisions/plot/v0/v0.1/043-discretization-scale.md)属于本次拟调整边界，后续 ADR 必须明确替代关系。
+现行 [D3 底座决策](../decisions/plot/settled/scale-mapping.md) 的算法复用方向、[统一 registry](../decisions/plot/settled/scale-mapping.md) 的扩展与 JSON 边界继续保留。registry 中 position/channel 分族和[离散化仅输出颜色](../decisions/plot/settled/scale-mapping.md)属于本次拟调整边界，后续 ADR 必须明确替代关系。
 
-[逐点留白](../decisions/plot/v0/v0.2/012-mark-aware-domain-padding.md)及其后续[策略归属修订](../decisions/plot/v0/v0.2/016-point-mark-auto-padding.md)约束位置求解的闭环。本设计保留其当前仍适用的不变量，不恢复其中已被后续 Mark 决策移除的历史类型。
+[逐点留白](../decisions/plot/_v0.2/012-mark-aware-domain-padding.md)及其后续[策略归属修订](../decisions/plot/_v0.2/016-point-mark-auto-padding.md)约束位置求解的闭环。本设计保留其当前仍适用的不变量，不恢复其中已被后续 Mark 决策移除的历史类型。

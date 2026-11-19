@@ -2,18 +2,18 @@ import type { ReconcilerCommitTarget } from '@retikz/reconciler';
 import { SceneReconciler } from '@retikz/reconciler';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../error';
-import type { VanillaReconcilerOutput } from '../../runtime';
 import type {
   InputVanillaCompileDriver,
   VanillaCompileDriver,
   VanillaCompileDriverSession,
-} from '../../runtime/compile-driver';
+  VanillaReconcilerOutput,
+} from '../compile-driver';
 import {
   commitVanillaCompileOutput,
   createVanillaCompileDriverSession,
   defaultVanillaCompileDriver,
   resolveVanillaCompileOutput,
-} from '../../runtime/compile-driver';
+} from '../compile-driver';
 import { createRetainedCompositeDefinitions } from '../composites';
 import { prepareProcessingInput } from '../prepare';
 import type { InputPreparedProcessing, ProcessingOptions, ProcessingResult, ProcessingSource } from '../types';

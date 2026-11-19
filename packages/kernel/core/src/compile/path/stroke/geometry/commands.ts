@@ -76,7 +76,7 @@ export class PathCommandEmitter {
   emitMove(p: IRPosition, sourceAutoBoundary = false): void {
     this.noteEndpointSource(sourceAutoBoundary);
     const rp = this.roundPoint(p);
-    this.commands.push({ kind: 'move', to: [rp[0], rp[1]] });
+    this.commands.push({ kind: 'move', to: rp });
     this.provenance.push(this.currentStepKind);
     this.stepIndexes.push(this.currentStepIndex);
     this.boundsPoints.push(p);
@@ -88,7 +88,7 @@ export class PathCommandEmitter {
   emitLine(p: IRPosition, sourceAutoBoundary = false): void {
     this.noteEndpointSource(sourceAutoBoundary);
     const rp = this.roundPoint(p);
-    this.commands.push({ kind: 'line', to: [rp[0], rp[1]] });
+    this.commands.push({ kind: 'line', to: rp });
     this.provenance.push(this.currentStepKind);
     this.stepIndexes.push(this.currentStepIndex);
     this.boundsPoints.push(p);
@@ -110,8 +110,8 @@ export class PathCommandEmitter {
     const rp = this.roundPoint(p);
     this.commands.push({
       kind: 'quad',
-      control: [rc[0], rc[1]],
-      to: [rp[0], rp[1]],
+      control: rc,
+      to: rp,
     });
     this.provenance.push(this.currentStepKind);
     this.stepIndexes.push(this.currentStepIndex);
@@ -128,9 +128,9 @@ export class PathCommandEmitter {
     const rp = this.roundPoint(to);
     this.commands.push({
       kind: 'cubic',
-      control1: [rc1[0], rc1[1]],
-      control2: [rc2[0], rc2[1]],
-      to: [rp[0], rp[1]],
+      control1: rc1,
+      control2: rc2,
+      to: rp,
     });
     this.provenance.push(this.currentStepKind);
     this.stepIndexes.push(this.currentStepIndex);
@@ -146,7 +146,7 @@ export class PathCommandEmitter {
     const rc = this.roundPoint(center);
     this.commands.push({
       kind: 'arc',
-      center: [rc[0], rc[1]],
+      center: rc,
       radius: this.round(radius),
       startAngle,
       endAngle,
@@ -164,7 +164,7 @@ export class PathCommandEmitter {
     const rc = this.roundPoint(center);
     this.commands.push({
       kind: 'ellipseArc',
-      center: [rc[0], rc[1]],
+      center: rc,
       radiusX: this.round(radiusX),
       radiusY: this.round(radiusY),
       startAngle,
@@ -186,7 +186,7 @@ export class PathCommandEmitter {
     this.emitMove(p, sourceAutoBoundary);
   }
 
-  /** 将点坐标舍入至输出精度 */
+  /** ⚡返回由命令独占的舍入坐标，不再复制同一元组 */
   private roundPoint(point: IRPosition): IRPosition {
     return [this.round(point[0]), this.round(point[1])];
   }

@@ -107,7 +107,7 @@ const view = mount(document.getElementById('diagram')!, ir);
 
 ## Composition structure
 
-Explicit steps normally need at least two entries; a single self-contained `rectangle` is an exception. Vanilla replaces a non-move first step with move. Write the starting point explicitly:
+Explicit steps normally need at least two entries; a single self-contained `rectangle` is an exception. In JSX, omitting `kind` gives a move for the first step and a line for later steps. Explicit actions are preserved. A line or curve without a starting point causes Core to warn and skip the entire stroke path. To declare the starting point:
 
 ```tsx
 <Path>

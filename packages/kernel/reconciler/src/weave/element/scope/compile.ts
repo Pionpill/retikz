@@ -1,0 +1,109 @@
+import { compileScope, resolveScope } from '@retikz/core';
+import type { IRScope, CompileWarning } from '@retikz/core';
+import type { PropertyPath } from '@retikz/foundation';
+import { compareProperties, formatPropertyPath } from '@retikz/foundation';
+
+import type { CompileRuntime, ScopeExecutionSteps, SubtreeCompileContext } from '../../../compile';
+import { createWeaveObservation, matchWeaveReferences, restoreWeaveResources } from '../../shared';
+import type { WeaveScopeState, WeaveReferenceRead } from '../../shared';
+import { compareCanonicalScopes, compareScopeCompileInputs, retainCanonicalScope } from './compare';
+
+/** 在后代执行前，按自身输入与继承上下文复用或解析 Scope 配置 */
+export const resolveWeaveScope = (
+  runtime: CompileRuntime,
+  child: Omit<IRScope, 'children'>,
+  path: PropertyPath,
+  context: SubtreeCompileContext,
+  previous?: WeaveScopeState,
+) => {
+  // 1. 输入与继承上下文相同且旧编译无诊断时，复用供后代继承的 canon
+  const resolveInputs = { child, inheritedStyle: context.inheritance };
+  if (
+    previous?.resolve?.value != null &&
+    previous.compile?.diagnostics.length === 0 &&
+    compareProperties({ child: previous.resolve.input, ...previous.resolve.context }, resolveInputs, { depth: 2 })
+  )
+    return previous.resolve.value;
+
+  // 2. 重新解析自身配置，并保留与旧值等价的子产物
+  return retainCanonicalScope(
+    previous?.resolve?.value,
+    resolveScope(child, {
+      nodeDistance: runtime.context.layout.nodeDistance,
+      parent: context.inheritance,
+      ...runtime.context.registries,
+      irPath: path,
+      themePath: `${formatPropertyPath(path)}.theme`,
+    }),
+  );
+};
+
+/** 子布局就绪后，按 Scope 配置、编译上下文与引用依赖复用或重新计算包络 */
+export const executeWeaveScope = (
+  runtime: CompileRuntime,
+  child: Omit<IRScope, 'children'>,
+  context: SubtreeCompileContext,
+  steps: ScopeExecutionSteps,
+  preparedDiagnostics: ReadonlyArray<CompileWarning>,
+  preparedReads: ReadonlyArray<WeaveReferenceRead>,
+  previous?: WeaveScopeState,
+) => {
+  // 1. 以已完成的准备结果、子布局和变换等通道作为编译复用依据
+  const compileInputs = {
+    preparation: steps.preparation,
+    layouts: steps.childFrame.state.geometries,
+    scopeChain: context.transformChains,
+    childCount: steps.childFrame.state.primitives.length,
+    preResolvedClipPath: steps.compileContext.resolvedClipPath,
+  };
+  const previousCompile = previous?.compile;
+  const previousReads = previous?.referenceReads ?? [];
+  const canon = steps.canon;
+
+  // 2. 配置、编译上下文与引用均有效且新旧诊断为空时，恢复资源并复用包络
+  if (
+    previous?.resolve?.value != null &&
+    previous.compile != null &&
+    previousCompile?.diagnostics.length === 0 &&
+    preparedDiagnostics.length === 0 &&
+    compareCanonicalScopes(previous.resolve.value, canon) &&
+    compareScopeCompileInputs(previousCompile.context, compileInputs) &&
+    matchWeaveReferences(previousReads, runtime.state.execution.namespaceStack)
+  ) {
+    restoreWeaveResources(runtime, previousCompile.resources);
+    return {
+      resolve: { input: child, context: { inheritedStyle: context.inheritance }, value: canon },
+      compile: { ...previousCompile, context: compileInputs },
+      referenceReads: previousReads,
+      reused: true,
+    };
+  }
+
+  // 3. 重新计算包络，并合并准备阶段与本轮编译的诊断和读取事实
+  const observation = createWeaveObservation(runtime);
+  const local = observation.runtime;
+  const compiled = runtime.state.execution.namespaceStack.observeReferences(observation.read, () =>
+    compileScope(
+      canon,
+      {
+        ...steps.compileContext,
+        registerClip: local.state.workspace.clipRegistry.register,
+        registerClipPath: local.state.workspace.clipRegistry.registerPath,
+        onWarn: local.state.workspace.diagnosticCollector.collect,
+      },
+      { layout: { preparation: steps.preparation } },
+    ),
+  );
+  const facts = observation.facts();
+  return {
+    resolve: { input: child, context: { inheritedStyle: context.inheritance }, value: canon },
+    compile: {
+      ...facts,
+      context: compileInputs,
+      value: compiled,
+      diagnostics: [...preparedDiagnostics, ...facts.diagnostics],
+    },
+    referenceReads: [...preparedReads, ...observation.reads],
+    reused: false,
+  };
+};

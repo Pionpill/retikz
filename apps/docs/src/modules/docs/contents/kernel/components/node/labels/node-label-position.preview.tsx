@@ -1,5 +1,5 @@
+import type { IRNodeLabel } from '@retikz/core';
 import { Layout, Node } from '@retikz/react';
-import type { InputNodeLabel } from '@retikz/vanilla';
 
 /** 图形参数 */
 export type NodeLabelPositionPreviewValues = {
@@ -12,7 +12,7 @@ export type NodeLabelPositionPreviewValues = {
 
 /** 绘制示例图形 */
 export const NodeLabelPositionPreview = (values: NodeLabelPositionPreviewValues) => {
-  const position: InputNodeLabel['position'] =
+  const position: IRNodeLabel['position'] =
     values.positionMode === 'center'
       ? 'center'
       : values.positionMode === 'angle'

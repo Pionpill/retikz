@@ -2,7 +2,7 @@
 
 > **状态：当前执行边界与后续演进总则。** Core 提供原子绘图计算，Reconciler 统一完整与增量编译、Weave 缓存及候选事务；独立 Runtime 包及通用 Source / Computation / Participant 注册体系已移除。跨 Tier 增量、cooperative scheduler、渐进物化与 generation 的具体契约仍由后续 ADR 冻结，不作为当前已实现能力。
 >
-> 关联：[能力完备性与模块边界](./capability-design.md) · [包职能设计](./package-responsibility-design.md) · [交互设计](./interaction-design.md) · [ADR-064](../../packages/kernel/_notes/decisions/v0/v0.5/064-remove-runtime.md) · [ADR-080](../../packages/kernel/_notes/decisions/v0/v0.5/080-unified-reconciler-compilation.md)
+> 关联：[能力完备性与模块边界](./capability-design.md) · [包职能设计](./package-responsibility-design.md) · [交互设计](./interaction-design.md) · [ADR-064](../../packages/kernel/_notes/decisions/_v0.5/064-remove-runtime.md) · [ADR-080](../../packages/kernel/_notes/decisions/_v0.5/080-unified-reconciler-compilation.md)
 >
 > 本文维护性能方向、能力归属与证据边界，不替代公开类型或 ADR。历史文档中的 Runtime / incremental program 设计不构成恢复通用运行时框架的要求；当前编译归属以 ADR-080 为准。
 
@@ -44,7 +44,7 @@ Core 不持有树遍历、等待队列、跨次缓存或发布生命周期。Rec
 - 编译缓存属于显式会话，内部临时工作区属于本次执行；含可变状态、局部 token 或闭包的对象不自动具备跨次复用资格
 - 资源定义、资源引用和诊断随复用产物恢复，不能只复用图元而遗失资源或重复派发诊断
 
-字段、上下文与阶段命名遵循 [standard-name](../../.agents/skills/standard-name/SKILL.md)，输入、Canonical 与编译产物的职责遵循 [ADR-065](../../packages/kernel/_notes/decisions/v0/v0.5/065-compiled-layout-paint.md) 和 ADR-080，不在总则复制私有数据结构。
+字段、上下文与阶段命名遵循 [standard-name](../../.agents/skills/standard-name/SKILL.md)，输入、Canonical 与编译产物的职责遵循 [ADR-065](../../packages/kernel/_notes/decisions/_v0.5/065-compiled-layout-paint.md) 和 ADR-080，不在总则复制私有数据结构。
 
 ## 4. 候选隔离与提交
 

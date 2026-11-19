@@ -2,17 +2,22 @@ import type { Scene } from '@retikz/core';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
 import { createEmptyInputRuntimeMetaSnapshot } from '../normalize';
+import { assertPreparationActive } from './authoring';
 import {
   commitVanillaCompileOutput,
   compileVanillaWithDriver,
   createVanillaCompileDriverSession,
   defaultVanillaCompileDriver,
-} from '../runtime/compile-driver';
-import { assertPreparationActive } from './authoring';
-import { prepareProcessingInput } from './prepare';
-import { prepareProcessingInputAsync } from './prepare';
-import type { ProcessingOptions, ProcessingResult, ProcessingSource } from './types';
-import type { InputPreparedProcessing, PreparedAsyncStaticProcessing, AsyncProcessingOptions } from './types';
+} from './compile-driver';
+import { prepareProcessingInput, prepareProcessingInputAsync } from './prepare';
+import type {
+  AsyncProcessingOptions,
+  InputPreparedProcessing,
+  PreparedAsyncStaticProcessing,
+  ProcessingOptions,
+  ProcessingResult,
+  ProcessingSource,
+} from './types';
 
 const EMPTY_ARTIFACTS = Object.freeze([]);
 

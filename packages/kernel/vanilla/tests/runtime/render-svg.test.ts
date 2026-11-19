@@ -19,7 +19,7 @@ const nodeIr: IRScene = {
 it('SSR 自定义测量与 SVG 输出共享宿主默认字体', () => {
   const measureText = vi.fn(() => ({ width: 20, height: 16 }));
   const svg = renderToSvgString(nodeIr, { defaultFontFamily: 'serif', compile: { measureText } });
-  expect(measureText).toHaveBeenCalledWith('A', expect.objectContaining({ family: 'serif' }));
+  expect(measureText).toHaveBeenCalledWith('A', expect.objectContaining({ family: 'serif' }), false);
   expect(svg).toContain('font-family="serif"');
 });
 

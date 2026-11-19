@@ -61,6 +61,7 @@ export const drawApiReferenceConfigs: ReadonlyArray<ApiReferencePackageConfig> =
       {
         source: path.resolve(repositoryRoot, 'packages/kernel/vanilla/src/index.ts'),
         title: { zh: '`@retikz/vanilla`', en: '`@retikz/vanilla`' },
+        fullMemberSymbols: ['InputPath'],
         symbolPairs: [['path', 'InputPath']],
         omitPairedCallDetails: true,
         symbols: ['path', 'InputPath', 'InputStep', 'DrawWay', 'WayDSL', 'WayItem'],

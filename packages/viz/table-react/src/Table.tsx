@@ -6,6 +6,7 @@ import type {
   ExternalRow,
   IRDataExecution,
 } from '@retikz/data';
+import type { RequireExactlyOne } from '@retikz/foundation';
 import type { LayoutExtensions, LayoutProps } from '@retikz/react';
 import type { IRTable, TablesLoweringOptions, TableLayoutManifest } from '@retikz/table';
 import type { InputTable } from '@retikz/table-vanilla';
@@ -89,18 +90,12 @@ export type TableDatasetProps<TSource = never> = TableDataRuntimeProps<TSource> 
  * @template TSource 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
  */
 export type DetailTableDatasetProps<TSource = never> = TableDataRuntimeProps<TSource> &
-  (
-    | {
-        /** 明细表直接消费的行数据，与 dataBindings 互斥 */
-        data: Array<ExternalRow>;
-        dataBindings?: never;
-      }
-    | {
-        data?: never;
-        /** 明细表按引用名称消费的数据绑定，与 data 互斥 */
-        dataBindings: DataInputBindings<TSource>;
-      }
-  );
+  RequireExactlyOne<{
+    /** 明细表直接消费的行数据，与 dataBindings 互斥 */
+    data: Array<ExternalRow>;
+    /** 明细表按引用名称消费的数据绑定，与 data 互斥 */
+    dataBindings: DataInputBindings<TSource>;
+  }>;
 
 /**
  * 通用Table的精确作者输入

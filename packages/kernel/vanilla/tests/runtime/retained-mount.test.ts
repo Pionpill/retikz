@@ -12,7 +12,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { literal, strictObject, string, enum as zodEnum } from 'zod';
 
 import type { InputEmbedAdapter, InputScene, VanillaCompileDriver } from '../../src';
-import { InputLayerCache } from '../../src';
+import { InputLayerCache, RetikzVanillaErrorCode } from '../../src';
 import { mountCanvas, mountSvg } from '../../src/dom';
 import { createRetainedCompositeDefinitions } from '../../src/processing/composites';
 
@@ -478,7 +478,7 @@ describe('@retikz/vanilla 保留安装座', () => {
       compile: () => ({ children: [] }),
     });
     const retained = createRetainedCompositeDefinitions([first, second]);
-    const invalid = expect.objectContaining({ code: RetikzRenderErrorCode.RuntimeInputInvalid });
+    const invalid = expect.objectContaining({ code: RetikzVanillaErrorCode.Processing });
 
     expect(() => retained.prepare([first])).toThrow(invalid);
     expect(() => retained.prepare([second, first])).toThrow(invalid);
@@ -508,7 +508,7 @@ describe('@retikz/vanilla 保留安装座', () => {
     const retained = createRetainedCompositeDefinitions([initial]);
 
     expect(() => retained.prepare([candidate])).toThrow(
-      expect.objectContaining({ code: RetikzRenderErrorCode.RuntimeInputInvalid }),
+      expect.objectContaining({ code: RetikzVanillaErrorCode.Processing }),
     );
   });
 
@@ -690,7 +690,7 @@ describe('@retikz/vanilla 保留安装座', () => {
     const view = mountCanvas(container, source('#ef4444'));
 
     expect(() => view.update(source('#22c55e'), { canvas: { devicePixelRatio: 2 } })).toThrow(
-      expect.objectContaining({ code: RetikzRenderErrorCode.RuntimeInputInvalid }),
+      expect.objectContaining({ code: RetikzVanillaErrorCode.Runtime }),
     );
   });
 
@@ -705,7 +705,7 @@ describe('@retikz/vanilla 保留安装座', () => {
     });
 
     expect(() => view.update(source('#22c55e'), { animation })).toThrow(
-      expect.objectContaining({ code: RetikzRenderErrorCode.RuntimeInputInvalid }),
+      expect.objectContaining({ code: RetikzVanillaErrorCode.Runtime }),
     );
     expect(configGetter).not.toHaveBeenCalled();
 
@@ -826,7 +826,7 @@ describe('@retikz/vanilla 保留安装座', () => {
     const container = document.createElement('div');
 
     expect(() => mountSvg(container, source('#ef4444'), { runtime } as never)).toThrowError(
-      expect.objectContaining({ code: RetikzRenderErrorCode.RuntimeInputInvalid }),
+      expect.objectContaining({ code: RetikzVanillaErrorCode.Runtime }),
     );
     expect(getter).not.toHaveBeenCalled();
     expect(container.children).toHaveLength(0);
@@ -835,7 +835,7 @@ describe('@retikz/vanilla 保留安装座', () => {
     const options = Object.defineProperty({}, 'runtime', { enumerable: true, get: runtimeGetter });
 
     expect(() => mountSvg(container, source('#ef4444'), options as never)).toThrowError(
-      expect.objectContaining({ code: RetikzRenderErrorCode.RuntimeInputInvalid }),
+      expect.objectContaining({ code: RetikzVanillaErrorCode.Runtime }),
     );
     expect(runtimeGetter).not.toHaveBeenCalled();
     expect(container.children).toHaveLength(0);
@@ -1017,7 +1017,8 @@ describe('@retikz/vanilla 保留安装座', () => {
         throw disposeFailure;
       }
     });
-    const view = mountSvg(document.createElement('div'), source('#ef4444'), {
+    const container = document.createElement('div');
+    const view = mountSvg(container, source('#ef4444'), {
       runtime: {
         rendererFactory: createMemoryRendererFactory('entity', false, undefined, undefined, dispose),
       },
@@ -1025,6 +1026,7 @@ describe('@retikz/vanilla 保留安装座', () => {
 
     expect(() => view.dispose()).not.toThrow();
     expect(dispose).toHaveBeenCalledTimes(1);
+    expect(container.contains(view.root)).toBe(false);
     expect(view.diagnostics()).toEqual([
       expect.objectContaining({ code: 'RECONCILER_CLEANUP_FAILED', cause: disposeFailure }),
     ]);

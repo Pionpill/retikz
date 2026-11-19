@@ -24,11 +24,12 @@ describe('Vanilla 输入标准化器', () => {
     });
   });
   it('省略 Node position 时保留稀疏 Source', () => {
-    expect(normalizeNode({ id: 'origin' })).toStrictEqual({ type: 'node', id: 'origin' });
+    expect(normalizeNode({ type: 'node', id: 'origin' })).toStrictEqual({ type: 'node', id: 'origin' });
   });
 
   it('将 typed Node 输入收敛为唯一 Source IR', () => {
     const input: InputNode = {
+      type: 'node',
       id: 'source',
       position: [0, 0],
       label: { text: 'source', position: { boundary: 'top', fraction: 0 } },
@@ -44,6 +45,7 @@ describe('Vanilla 输入标准化器', () => {
 
   it('保留 InputNode 相对定位中的作者侧方向值', () => {
     const node: InputNode = {
+      type: 'node',
       id: 'target',
       position: { direction: 'top', of: 'source' },
     };
@@ -53,6 +55,7 @@ describe('Vanilla 输入标准化器', () => {
 
   it('将 way 收敛为 Path Source IR，并保留显式零线宽', () => {
     const input: InputPath = {
+      type: 'path',
       id: 'edge',
       way: [
         [0, 0],
@@ -74,6 +77,7 @@ describe('Vanilla 输入标准化器', () => {
 
   it('把共享箭头重叠比例与逐端覆盖映射到对应 endpoint placement', () => {
     const input = {
+      type: 'path',
       way: [
         [0, 0],
         [24, 0],
@@ -88,6 +92,7 @@ describe('Vanilla 输入标准化器', () => {
 
   it('只把顶层共享值写到实际创建的箭头端点', () => {
     const input = {
+      type: 'path',
       way: [
         [0, 0],
         [24, 0],
@@ -100,6 +105,7 @@ describe('Vanilla 输入标准化器', () => {
 
   it('将 typed Step 的字符串 target 收敛为 Core Path step', () => {
     const input: InputPath = {
+      type: 'path',
       id: 'edge',
       children: [
         { type: 'step', kind: 'move', to: 'source.center' },
@@ -123,19 +129,19 @@ describe('Vanilla 输入标准化器', () => {
     });
   });
 
-  it('将首个可定位步骤收敛为 move，保留后续绘制步骤', () => {
+  it('显式首步保留曲线及控制点，只转换目标简写', () => {
     expect(
       normalizePath({
         type: 'path',
         children: [
-          { type: 'step', kind: 'line', to: 'source' },
+          { type: 'step', kind: 'curve', control: [3, 5], to: 'source' },
           { type: 'step', kind: 'line', to: 'target' },
         ],
       }),
     ).toMatchObject({
       type: 'path',
       children: [
-        { type: 'step', kind: 'move', to: { id: 'source' } },
+        { type: 'step', kind: 'curve', control: [3, 5], to: { id: 'source' } },
         { type: 'step', kind: 'line', to: { id: 'target' } },
       ],
     });
@@ -163,7 +169,7 @@ describe('Vanilla 输入标准化器', () => {
 
   it('将 InputScene 的 children 简写收敛为 IR 与默认 Layer metadata', () => {
     const input: InputScene = {
-      children: [{ id: 'node', position: [0, 0] }],
+      children: [{ type: 'node', id: 'node', position: [0, 0] }],
     };
 
     expect(normalizeScene(input)).toMatchObject({

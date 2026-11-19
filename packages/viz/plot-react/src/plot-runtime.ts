@@ -1,4 +1,5 @@
 import type { DataInputBindings, ExternalDatasets, ExternalRow } from '@retikz/data';
+import type { RequireExactlyOne } from '@retikz/foundation';
 import type { PlotCompileEnvironment } from '@retikz/plot';
 import type { IRPlot, PlotsLoweringOptions, PlotLineageRun } from '@retikz/plot';
 import { lowerPlotWithLineage } from '@retikz/plot';
@@ -20,18 +21,12 @@ export type PlotAuthoringResolution<TSource = never> = Readonly<{
   /** 将绘图描述降低为 Core 图元时的运行时选项 */
   lowerOptions: PlotsLoweringOptions;
 }> &
-  (
-    | Readonly<{
-        /** 传给 Plot 下沉阶段的外部行数据集 */
-        datasets: ExternalDatasets;
-        dataBindings?: never;
-      }>
-    | Readonly<{
-        /** 传给数据执行阶段的运行时源绑定 */
-        dataBindings: DataInputBindings<TSource>;
-        datasets?: never;
-      }>
-  );
+  RequireExactlyOne<{
+    /** 传给 Plot 下沉阶段的外部行数据集 */
+    readonly datasets: ExternalDatasets;
+    /** 传给数据执行阶段的运行时源绑定 */
+    readonly dataBindings: DataInputBindings<TSource>;
+  }>;
 
 /** `resolvePlotAuthoring` 的可选嵌入与默认数据引用配置 */
 export type PlotAuthoringResolveOptions = Readonly<{

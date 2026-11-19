@@ -1,5 +1,7 @@
 /** @retikz/foundation 中文 JSDoc 的审阅后英文投影 */
 const translations: Readonly<Record<string, string>> = {
+  '从候选属性中恰好选择一个，其余属性不能同时提供': 'Requires exactly one candidate property and excludes the others',
+  候选属性集合: 'Candidate properties',
   属性比较允许展开的容器深度: 'Maximum container depth for property comparison',
   '展开普通对象或数组的最大层数，必须为非负安全整数；0 表示仅使用 Object.is':
     'Maximum levels of plain objects or arrays to expand; a non-negative safe integer. Zero uses only Object.is.',

@@ -103,8 +103,9 @@ describe('单次编译文字测量', () => {
       { type: 'node', id: 'b', text: 'first', position: [100, 0] },
     ];
     let reject = false;
+    const measurementFailure = new Error('measurement failed');
     const measureText = vi.fn<TextMeasurer>(() => {
-      if (reject) throw new Error('measurement failed');
+      if (reject) throw measurementFailure;
       return { width: 20, height: 10 };
     });
     const manager = new WeaveManager({ ...emptyScene, children: nodes }, { measureText });
@@ -126,7 +127,7 @@ describe('单次编译文字测量', () => {
     expect(measureText).toHaveBeenCalledTimes(3);
     rolledBack.rollback();
     reject = true;
-    expect(() => update('first')).toThrow('measurement failed');
+    expect(() => update('first')).toThrow(expect.objectContaining({ cause: measurementFailure }));
     expect(measureText).toHaveBeenCalledTimes(4);
     reject = false;
     const retried = update('first');

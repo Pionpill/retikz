@@ -1,7 +1,7 @@
 ﻿import { boundsToRect } from '@retikz/math';
 
 import type { GroupPrimitive, SceneResources, Transform } from '../../contract';
-import type { IRScope } from '../../schemas';
+import type { IRPosition, IRScope } from '../../schemas';
 import type { CompiledBoundaryGeometry } from '../boundary';
 import type { CompiledReferenceGeometry } from '../reference';
 import { projectReferenceGeometry } from '../reference';
@@ -17,6 +17,12 @@ export const projectScopeOutputBounds = (
 ): Array<LayoutBoundsContribution> => {
   const projectedBounds: Array<LayoutBoundsContribution> = [];
   let projectDecoration: ReturnType<typeof createGroupBoundsProjector> | undefined;
+  // ⚡同一 Scope 的普通布局点共用投影方式，无变换仍复制坐标以隔离输出
+  const transforms = group.transforms;
+  const projectPoint =
+    transforms === undefined || transforms.length === 0
+      ? (point: IRPosition): IRPosition => [point[0], point[1]]
+      : (point: IRPosition): IRPosition => applyTransformChain(point, transforms);
   for (const contribution of bounds) {
     if (contribution.decoration) {
       const box = mergeLayoutBounds(undefined, contribution.boundsPoints);
@@ -28,7 +34,7 @@ export const projectScopeOutputBounds = (
     } else {
       projectedBounds.push({
         shadow: contribution.shadow,
-        boundsPoints: contribution.boundsPoints.map(point => applyTransformChain(point, group.transforms ?? [])),
+        boundsPoints: contribution.boundsPoints.map(projectPoint),
       });
     }
   }

@@ -1,4 +1,11 @@
-import type { CompileOccurrenceLocator, IRChild, LayoutContribution, ScenePrimitive } from '@retikz/core';
+import type {
+  CompileOccurrenceLocator,
+  IRChild,
+  LayoutContribution,
+  ScenePrimitive,
+  MergedScopeDefaults,
+  Transform,
+} from '@retikz/core';
 import {
   CompileExpansionKind,
   mergeLayoutBounds,
@@ -27,6 +34,12 @@ import type {
   SubtreeCompilation,
   SubtreeOutputContribution,
 } from './compile';
+
+/** 缺省根环境无可变成员；跨批共享空值，输出收集容器仍由每次执行独立创建 */
+const emptyDefaults: MergedScopeDefaults = Object.freeze({});
+
+/** 未指定祖先变换时共享只读空链，不作为批内输出容器使用 */
+const emptyTransforms: ReadonlyArray<Transform> = Object.freeze([]);
 
 /** 共享元素执行与输出工作区；计算顺序由所属驱动选择 */
 export class CompileElementExecutor {
@@ -63,14 +76,14 @@ export class CompileElementExecutor {
           skipAllocation: this.options.skipAllocation ?? true,
         },
         compositeInput: this.runtime.context.compositeInputs,
-        transformChains: this.options.transformChains ?? [],
+        transformChains: this.options.transformChains ?? emptyTransforms,
         pathPrefix: [],
         ...(this.runtime.state.execution.provenanceTracker === undefined
           ? {}
           : {
               compileOwner: this.runtime.state.execution.provenanceTracker.root,
             }),
-        inheritance: { defaults: this.options.scopeDefaults ?? {}, theme: this.runtime.context.theme },
+        inheritance: { defaults: this.options.scopeDefaults ?? emptyDefaults, theme: this.runtime.context.theme },
       },
       state,
     };

@@ -6,18 +6,16 @@ import { builtinRetainedRendererFactory, createRetainedRenderTarget, RenderCache
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
 import type { InputRuntimeMeta } from '../normalize';
-import { InputLayerCache } from '../normalize';
-import { createEmptyInputRuntimeMetaSnapshot } from '../normalize/scene/runtime-meta';
-import { createDomProcessingController } from '../processing/internal/controller';
+import { InputLayerCache, createEmptyInputRuntimeMetaSnapshot } from '../normalize';
+import type { ProcessingOptions, ProcessingResult } from '../processing';
+import { createDomProcessingController } from '../processing/internal';
 import type {
-  InternalProcessingController,
   InputProcessingParticipantUpdate,
+  InternalProcessingController,
   ProcessingTransactionParticipant,
   ProcessingTransactionParticipantFactory,
-} from '../processing/internal/types';
-import type { ProcessingOptions, ProcessingResult } from '../processing/types';
-import { computeDisplaySize } from '../runtime';
-import { captureRetainedUpdateOptions } from '../runtime/retained-update-options';
+} from '../processing/internal';
+import { captureRetainedUpdateOptions, computeDisplaySize } from '../runtime';
 import type {
   CommonOptions,
   HydrateOptions,
@@ -30,7 +28,7 @@ import type {
   RetainedVanillaCanvasUpdateOptions,
   VanillaAnimationOptions,
   VanillaRetainedRuntimeOptions,
-} from '../runtime/types';
+} from '../runtime';
 
 /** 捕获 mount-lifetime composite definition record，保留 schema 与 callback identity */
 const captureCompositeDefinition = (definition: AnyCompositeDefinition): AnyCompositeDefinition =>

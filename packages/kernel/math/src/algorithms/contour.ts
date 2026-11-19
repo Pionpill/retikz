@@ -232,6 +232,35 @@ const footOnLine = (p: Position, base: Position, dir: Position): Position => {
   return [base[0] + dir[0] * t, base[1] + dir[1] * t];
 };
 
+/** 将切点与圆心转换为沿轮廓行进方向的圆弧 */
+const buildFilletSolution = (
+  center: Position,
+  tangentInPoint: Position,
+  tangentOutPoint: Position,
+  radius: number,
+  turnSign: number,
+): FilletSolution => {
+  // fillet 弧从 tInPt 扫到 tOutPt，方向与轮廓绕向一致：凸角同绕向、凹角反向。
+  // atan2 只给 [-180, 180] 主值；跨 ±180° 时需按扫描方向对齐成小弧，避免 SVG/Canvas 走远端大弧。
+  const startAngle = Math.atan2(tangentInPoint[1] - center[1], tangentInPoint[0] - center[0]) * RAD_TO_DEG;
+  const endAngle = Math.atan2(tangentOutPoint[1] - center[1], tangentOutPoint[0] - center[0]) * RAD_TO_DEG;
+
+  // turnSign>0（叉积正，y-down 下为顺时针转弯凸角）→ CW（counterClockwise=false）；凹角反向。
+  const counterClockwise = turnSign < 0;
+  const adjusted = alignAngleSweep(startAngle, endAngle, counterClockwise);
+
+  return {
+    tangentInPoint,
+    tangentOutPoint,
+    center,
+    radius,
+    startAngle: adjusted.start,
+    endAngle: adjusted.end,
+    counterClockwise,
+    clampedToZero: false,
+  };
+};
+
 /**
  * 解算一个接缝（segA 终点 = segB 起点）的 fillet
  * @description segA / segB 至少一为 line（arc-arc 由调用方提前拒绝）。流程：
@@ -245,6 +274,28 @@ const solveFillet = (segA: ContourSegment, segB: ContourSegment, r: number): Fil
   const tIn = tangentAt(segA, false); // 前段终点处行进方向
   const tOut = tangentAt(segB, true); // 后段起点处行进方向
   const turnSign = vector2.cross(tIn, tOut);
+
+  // ⚡相接直边的切距为 r·tan(转角/2)，无需构造两条偏移线并搜索圆心候选
+  if (
+    segA.kind === 'line' &&
+    segB.kind === 'line' &&
+    r > EPSILON &&
+    segA.to[0] === segB.from[0] &&
+    segA.to[1] === segB.from[1] &&
+    Math.abs(turnSign) > EPSILON
+  ) {
+    const dot = vector2.dot(tIn, tOut);
+    const tangentDistance = r * (dot >= 0 ? Math.abs(turnSign) / (1 + dot) : (1 - dot) / Math.abs(turnSign));
+    const inLength = Math.hypot(corner[0] - segA.from[0], corner[1] - segA.from[1]);
+    const outLength = Math.hypot(segB.to[0] - corner[0], segB.to[1] - corner[1]);
+    if (tangentDistance <= Math.min(inLength, outLength) / 2 && Math.min(inLength, outLength) > EPSILON) {
+      const tangentInPoint: Position = [corner[0] - tangentDistance * tIn[0], corner[1] - tangentDistance * tIn[1]];
+      const tangentOutPoint: Position = [corner[0] + tangentDistance * tOut[0], corner[1] + tangentDistance * tOut[1]];
+      const signedRadius = Math.sign(turnSign) * r;
+      const center: Position = [tangentInPoint[0] - signedRadius * tIn[1], tangentInPoint[1] + signedRadius * tIn[0]];
+      return buildFilletSolution(center, tangentInPoint, tangentOutPoint, r, turnSign);
+    }
+  }
 
   const attempt = (radius: number): FilletSolution | undefined => {
     if (radius <= EPSILON) return undefined;
@@ -312,25 +363,7 @@ const solveFillet = (segA: ContourSegment, segB: ContourSegment, r: number): Fil
 
     if (!best) return undefined;
 
-    // fillet 弧从 tInPt 扫到 tOutPt，方向与轮廓绕向一致：凸角同绕向、凹角反向。
-    // atan2 只给 [-180, 180] 主值；跨 ±180° 时需按扫描方向对齐成小弧，避免 SVG/Canvas 走远端大弧。
-    const startAngle = Math.atan2(best.tInPt[1] - best.center[1], best.tInPt[0] - best.center[0]) * RAD_TO_DEG;
-    const endAngle = Math.atan2(best.tOutPt[1] - best.center[1], best.tOutPt[0] - best.center[0]) * RAD_TO_DEG;
-
-    // turnSign>0（叉积正，y-down 下为顺时针转弯凸角）→ CW（counterClockwise=false）；凹角反向。
-    const counterClockwise = turnSign < 0;
-    const adjusted = alignAngleSweep(startAngle, endAngle, counterClockwise);
-
-    return {
-      tangentInPoint: best.tInPt,
-      tangentOutPoint: best.tOutPt,
-      center: best.center,
-      radius,
-      startAngle: adjusted.start,
-      endAngle: adjusted.end,
-      counterClockwise,
-      clampedToZero: false,
-    };
+    return buildFilletSolution(best.center, best.tInPt, best.tOutPt, radius, turnSign);
   };
 
   // 逐角夹紧：attempt 只返回切点落在段内（≤半段）的合法 fillet。请求 r 直接合法则原值采用；

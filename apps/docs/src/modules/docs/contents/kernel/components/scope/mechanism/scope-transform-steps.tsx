@@ -1,6 +1,6 @@
+import type { IRTransform } from '@retikz/core';
 import { Draw, Layout, Node, Scope } from '@retikz/react';
 import { Circle } from '@retikz/standard-react/shape';
-import type { InputTransform } from '@retikz/vanilla';
 import type { FC } from 'react';
 
 import type { Lang } from '@/i18n';
@@ -9,11 +9,11 @@ import { scopeTransformStepsI18n } from './scope-transform-steps.i18n';
 
 export type ScopeTransformStepsProps = Readonly<{ lang?: Lang }>;
 
-const scale: InputTransform = { kind: 'scale', x: 1.4, y: 1.4, pivot: 'origin' };
+const scale: IRTransform = { kind: 'scale', x: 1.4, y: 1.4, pivot: 'origin' };
 
-const rotate: InputTransform = { kind: 'rotate', degrees: 30, pivot: 'origin' };
+const rotate: IRTransform = { kind: 'rotate', degrees: 30, pivot: 'origin' };
 
-const stages: ReadonlyArray<ReadonlyArray<InputTransform>> = [[], [scale], [rotate, scale], [rotate, scale]];
+const stages: ReadonlyArray<ReadonlyArray<IRTransform>> = [[], [scale], [rotate, scale], [rotate, scale]];
 
 const positions = [60, 245, 430, 615];
 

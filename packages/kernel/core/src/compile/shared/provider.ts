@@ -71,13 +71,15 @@ export const snapshotProviderOutputJson = <T>(
     }
     const output = Object.create(null) as Record<string, unknown>;
     const fields = input as Record<string, unknown>;
-    /** ⚡分别保存键和值，减少键值对数组分配；先完整取值再递归，保持 getter 时序 */
+    // ⚡直接在隔离的输出对象上暂存字段值，先完成所有 getter，再递归复制子容器
     const keys = Object.keys(fields);
-    const values = keys.map(key => fields[key]);
-    for (let index = 0; index < keys.length; index++) {
-      const key = keys[index];
-      const entry = values[index];
-      if (entry !== undefined) {
+    for (const key of keys) {
+      const entry = fields[key];
+      if (entry !== undefined) output[key] = entry;
+    }
+    for (const key of keys) {
+      const entry = output[key];
+      if ((entry !== null && typeof entry === 'object') || (typeof entry === 'number' && !Number.isFinite(entry))) {
         pathSegments[depth] = key;
         output[key] = snapshotValue(entry, depth + 1, shouldCheckResources && key !== 'meta');
       }

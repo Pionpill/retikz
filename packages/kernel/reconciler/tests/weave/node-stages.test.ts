@@ -1,9 +1,9 @@
-import type { IRCoordinate, IRNode, IRScene, TextMeasurer } from '@retikz/core';
+import type { IRCoordinate, IRNode, IRScene, IRScope, TextMeasurer } from '@retikz/core';
 import { definePath, PathSchema } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
-import { WeaveManager } from '../../src/weave';
+import { readWeaveCurrent, WeaveManager } from '../../src/weave';
 import { compileTestResult } from '../helpers/compilation';
 
 describe('Node 阶段复用', () => {
@@ -55,6 +55,11 @@ describe('Node 阶段复用', () => {
     const options = { measureText };
     const session = new WeaveManager(source, options);
     const mounted = session.mount();
+    const entry = readWeaveCurrent(mounted.root).children[0];
+    if (entry.type !== 'node') throw new Error('Expected node');
+    const layout = readWeaveCurrent(entry).compile?.value.layout;
+    expect(layout?.content).toBeDefined();
+    expect(layout?.shape).toBeDefined();
     const beforeMove = measurements;
     const moved: IRNode = { ...node, position: [50, 30] };
     const move = session.update({
@@ -64,6 +69,8 @@ describe('Node 阶段复用', () => {
     expect(move.compilation.result).toEqual(compileTestResult({ ...source, children: [moved] }, options));
     move.commit();
     move.finish();
+    expect(readWeaveCurrent(entry).compile?.value.layout.content).toBe(layout?.content);
+    expect(readWeaveCurrent(entry).compile?.value.layout.shape).toBe(layout?.shape);
     const narrower: IRNode = { ...moved, layout: { width: 80 } };
     const beforeResize = measurements;
     const resize = session.update({
@@ -146,6 +153,10 @@ describe('Node 阶段复用', () => {
     };
     const session = new WeaveManager(source, { measureText });
     const mounted = session.mount();
+    const entry = readWeaveCurrent(mounted.root).children[1];
+    if (entry.type !== 'node') throw new Error('Expected node');
+    const layout = readWeaveCurrent(entry).compile?.value.layout.overall;
+    expect(layout).toBeDefined();
     const before = measurements;
     const repainted = { ...body, style: { textColor: 'blue' } };
     const paint = session.update({
@@ -159,6 +170,7 @@ describe('Node 阶段复用', () => {
     );
     paint.commit();
     paint.finish();
+    expect(readWeaveCurrent(entry).compile?.value.layout.overall).toBe(layout);
     const origin: IRCoordinate = { type: 'coordinate', id: 'origin', position: [50, 0] };
     const beforeMove = measurements;
     const moved = session.update({
@@ -171,5 +183,35 @@ describe('Node 阶段复用', () => {
       compileTestResult({ ...source, children: [origin, repainted] }, { measureText }),
     );
     moved.rollback();
+  });
+
+  it('继承默认填色变化重新生成绘制结果，但复用节点完整布局', () => {
+    const node: IRNode = { type: 'node', id: 'body', text: 'body' };
+    const scope: IRScope = {
+      type: 'scope',
+      id: 'container',
+      defaults: { node: { style: { fill: 'red' } } },
+      children: [node],
+    };
+    const source: IRScene = { type: 'scene', version: 1, children: [scope] };
+    const session = new WeaveManager(source);
+    const mounted = session.mount();
+    const container = readWeaveCurrent(mounted.root).children[0];
+    if (container.type !== 'scope') throw new Error('Expected scope');
+    const entry = readWeaveCurrent(container).children[0];
+    if (entry.type !== 'node') throw new Error('Expected node');
+    const previous = readWeaveCurrent(entry).compile?.value;
+    expect(previous).toBeDefined();
+    const next: IRScope = { ...scope, defaults: { node: { style: { fill: 'blue' } } } };
+    const update = session.update({
+      operations: [
+        { kind: 'update', target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'container' }, input: next },
+      ],
+    });
+    expect(update.compilation.result).toEqual(compileTestResult({ ...source, children: [next] }));
+    expect(update.compilation.result).not.toEqual(mounted.compilation.result);
+    update.commit();
+    update.finish();
+    expect(readWeaveCurrent(entry).compile?.value.layout.overall).toBe(previous?.layout.overall);
   });
 });

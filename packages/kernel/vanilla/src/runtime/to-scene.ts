@@ -1,6 +1,5 @@
 import type { Scene } from '@retikz/core';
-import type { CompositeArtifact } from '@retikz/reconciler';
-import type { CompileResult } from '@retikz/reconciler';
+import type { CompileResult, CompositeArtifact } from '@retikz/reconciler';
 import type { RenderReadonlyLayer } from '@retikz/render/runtime';
 import { EMPTY_READONLY_LAYERS } from '@retikz/render/runtime';
 
@@ -9,9 +8,6 @@ import type { InputRuntimeMeta } from '../normalize';
 import { createEmptyInputRuntimeMetaSnapshot } from '../normalize';
 import { compileToScene } from '../processing';
 import type { CommonOptions, InputRender } from './types';
-
-/** 为非 InputScene 输入创建独立的空 runtime metadata */
-export const createEmptyRuntimeMeta = (): InputRuntimeMeta => createEmptyInputRuntimeMetaSnapshot();
 
 /** Render input 归一结果 */
 export type SceneResult = {
@@ -54,7 +50,7 @@ export const toSceneResult = (input: InputRender, options: CommonOptions): Scene
       compileResult: undefined,
       layers: EMPTY_READONLY_LAYERS,
       diagnostics: EMPTY_DIAGNOSTICS,
-      runtimeMeta: createEmptyRuntimeMeta(),
+      runtimeMeta: createEmptyInputRuntimeMetaSnapshot(),
     };
   }
 

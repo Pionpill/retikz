@@ -279,7 +279,7 @@ export const LayoutRuntimeMode = Object.freeze({
 export type LayoutRuntimeMode = ValueOf<typeof LayoutRuntimeMode>;
 ```
 
-#### <ApiSourceLink label={"scene"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={110}>scene</ApiSourceLink>
+#### <ApiSourceLink label={"scene"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={115}>scene</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -312,7 +312,7 @@ export type LayoutRuntimeMode = ValueOf<typeof LayoutRuntimeMode>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"layer"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={48}>layer</ApiSourceLink>
+#### <ApiSourceLink label={"layer"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={53}>layer</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -377,7 +377,7 @@ export type InputLayer = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InputScene"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={89}>InputScene</ApiSourceLink>
+#### <ApiSourceLink label={"InputScene"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={87}>InputScene</ApiSourceLink>
 
 **公共属性**
 
@@ -403,10 +403,10 @@ export type InputLayer = {
 
 <ApiTable>
 
-| 成员       | 类型                        | 默认值 | 说明                               |
-| ---------- | --------------------------- | ------ | ---------------------------------- |
-| `children` | `ReadonlyArray<InputChild>` | —      | 有序子图元，归一化时置于隐式默认层 |
-| `layers?`  | `never`                     | —      | children 模式不接受显式 layers     |
+| 成员       | 类型                        | 默认值 | 说明                                     |
+| ---------- | --------------------------- | ------ | ---------------------------------------- |
+| `children` | `ReadonlyArray<InputChild>` | —      | 有序子图元，归一化时置于隐式默认层       |
+| `layers?`  | `never`                     | —      | 显式分层列表，按 zIndex 稳定排序后归一化 |
 
 </ApiTable>
 
@@ -418,7 +418,7 @@ export type InputLayer = {
 
 | 成员        | 类型                        | 默认值 | 说明                                     |
 | ----------- | --------------------------- | ------ | ---------------------------------------- |
-| `children?` | `never`                     | —      | layers 模式不接受顶层 children           |
+| `children?` | `never`                     | —      | 有序子图元，归一化时置于隐式默认层       |
 | `layers`    | `ReadonlyArray<InputLayer>` | —      | 显式分层列表，按 zIndex 稳定排序后归一化 |
 
 </ApiTable>
@@ -435,7 +435,7 @@ export type InputScene = InputSceneChildren | InputSceneLayers;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InputSceneChildren"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={73}>InputSceneChildren</ApiSourceLink>
+#### <ApiSourceLink label={"InputSceneChildren"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={81}>InputSceneChildren</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -449,7 +449,7 @@ export type InputScene = InputSceneChildren | InputSceneLayers;
 | `authoring?`  | `unknown`                   | —      | 可选编译驱动自行解释的运行时载荷，不进入 Core IR |
 | `children`    | `ReadonlyArray<InputChild>` | —      | 有序子图元，归一化时置于隐式默认层               |
 | `id?`         | `string`                    | —      | 作者侧场景标识，不写入持久化 Scene IR            |
-| `layers?`     | `never`                     | —      | children 模式不接受显式 layers                   |
+| `layers?`     | `never`                     | —      | 显式分层列表，按 zIndex 稳定排序后归一化         |
 | `theme?`      | `IRScene['theme']`          | —      | 场景根主题，只填写需要覆盖的 name 与 mode        |
 | `type?`       | `'scene'`                   | —      | 可省略的场景类别；归一化后固定为 scene           |
 | `version?`    | `never`                     | —      | 作者输入不接受版本号；归一化时写入当前 IR 版本   |
@@ -462,17 +462,20 @@ export type InputScene = InputSceneChildren | InputSceneLayers;
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type InputSceneChildren = InputSceneBase & {
-  children: ReadonlyArray<InputChild>;
-  layers?: never;
-};
+export type InputSceneChildren = InputSceneBase &
+  Extract<
+    SceneSource,
+    {
+      children: unknown;
+    }
+  >;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InputSceneLayers"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={81}>InputSceneLayers</ApiSourceLink>
+#### <ApiSourceLink label={"InputSceneLayers"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={84}>InputSceneLayers</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -484,7 +487,7 @@ export type InputSceneChildren = InputSceneBase & {
 | ------------- | --------------------------- | ------ | ------------------------------------------------ |
 | `animations?` | `IRScene['animations']`     | —      | 场景根动画轨道，省略时不添加根动画               |
 | `authoring?`  | `unknown`                   | —      | 可选编译驱动自行解释的运行时载荷，不进入 Core IR |
-| `children?`   | `never`                     | —      | layers 模式不接受顶层 children                   |
+| `children?`   | `never`                     | —      | 有序子图元，归一化时置于隐式默认层               |
 | `id?`         | `string`                    | —      | 作者侧场景标识，不写入持久化 Scene IR            |
 | `layers`      | `ReadonlyArray<InputLayer>` | —      | 显式分层列表，按 zIndex 稳定排序后归一化         |
 | `theme?`      | `IRScene['theme']`          | —      | 场景根主题，只填写需要覆盖的 name 与 mode        |
@@ -499,10 +502,13 @@ export type InputSceneChildren = InputSceneBase & {
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type InputSceneLayers = InputSceneBase & {
-  layers: ReadonlyArray<InputLayer>;
-  children?: never;
-};
+export type InputSceneLayers = InputSceneBase &
+  Extract<
+    SceneSource,
+    {
+      layers: unknown;
+    }
+  >;
 ```
 
 </DocTab>

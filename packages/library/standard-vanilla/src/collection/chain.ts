@@ -73,6 +73,7 @@ const normalizeConnection = (defaultConnection: InputChainConnection): IRChainCo
   if (inputPath === undefined) return connection;
 
   const { type, children, ...path } = normalizePath({
+    type: 'path',
     ...inputPath,
     way: [
       [0, 0],
