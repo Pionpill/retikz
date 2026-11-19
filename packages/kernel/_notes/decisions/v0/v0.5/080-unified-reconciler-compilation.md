@@ -36,7 +36,7 @@ Core 可以提供纯粹的资源重映射、边界计算、变换、排序与图
 
 Reconciler 单向依赖 Core 与实际使用的 Foundation 能力，拥有完整编译入口、执行环境、遍历与阶段组装、命名空间实例、依赖等待、试算与重放调度、资源工作区、输出汇总、来源记录、诊断派发及候选生命周期。Core 不反向导入 Reconciler，包括类型与转发出口。
 
-名称可见性、几何引用和绘图输出的语义仍由 Core 契约定义；Reconciler 按这些规则提供查询与组织执行，不维护第二套样式默认、形状参数或几何算法。运行期 Scene 身份、revision、更新协议和可选提交目标继续属于 Reconciler；DOM、后端渲染及宿主资源属于 Render，authoring 与框架接线属于 Vanilla / React。
+名称可见性、几何引用和绘图输出的语义仍由 Core 契约定义；Reconciler 按这些规则提供查询与组织执行，不维护第二套样式默认、形状参数或几何算法。编译来源、会话 revision 和单目标提交协议属于 Reconciler；运行时 Scene 的渲染身份、拓扑、快照与 Patch，以及 DOM、后端绘制和宿主资源属于 Render，authoring 与框架接线属于 Vanilla / React。
 
 ## 基础数据结构与公开契约
 

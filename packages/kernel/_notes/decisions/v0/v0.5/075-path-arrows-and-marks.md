@@ -10,6 +10,8 @@ keywords: arrow、marks、MarkDefinition、端点截断、弧长、路径标记
 - 关联：[roadmap](./roadmap.md) · [绘图完备](../../../architecture/core-drawing-complete.md) · [基础图元](./070-marker-scene-primitives.md) · [宿主默认](./067-host-owned-defaults.md) · [绘制属性](./072-complete-drawing-property-propagation.md)
 - 替代关系：替代 [v0.2/025](../v0.2/025-curve-transform-marking.md) 中仅允许箭头标记、按段参数定位的规定，[034](./034-path-endpoint-arrow-overlap.md) 中以 mark 承载端点重叠的输入形式，以及 [067](./067-host-owned-defaults.md) 中根据 mark 位置应用端点默认的规定；保留端点重叠几何及 [v0.2/023](../v0.2/023-arrow-definition.md) 的箭头注册与接触几何能力，并继续遵守 [070](./070-marker-scene-primitives.md) 的基础图元和资源契约
 
+> 沿线标记的定位模式由 [083](./083-path-position-modes.md) 扩展；弧长是默认值，不是唯一模式。
+
 ## 背景与目标
 
 端点箭头与沿路径标记都能绘制箭头外观，但前者需要根据尖端、接触点及包络调整路径，后者只需在指定位置放置内容。通过标记的位置推断其是否为端点箭头，会使位置变化额外改变路径几何，并使同一位置多个标记的行为依赖声明顺序。

@@ -9,6 +9,8 @@ keywords: Composite、compile、context、spatialHandles、Kernel IR
 - 决策日期：2026-10-13
 - 关联：[roadmap](./roadmap.md) · [ADR-007](./007-layout-aware-composite.md) · [ADR-039](../v0.4/039-tier2-unbuilder-lowering.md) · [绘图完备性](../../../architecture/core-drawing-complete.md)
 
+> [077](./077-compile-output-contract.md) 已移除下述空间句柄声明及输出；统一 compile、子项绑定与领域产物契约保留。
+
 ## 背景与目标
 
 复合组件都根据经过 schema 解析的声明生成子项。部分组件需要先测量子图，另一些组件只组合声明；这一区别可以通过按需使用上下文能力表达。将其拆为 expand 与 compile，使定义、宿主代理和输出处理维护两套分支，同时独立展开无法覆盖需要布局或空间结算的组件。

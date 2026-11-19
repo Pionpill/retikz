@@ -3,11 +3,13 @@ description: 节点与路径标签统一复用 Core 文本块，支持多行与�
 keywords: 'label、TextBlock、多行文本、NodeLabel、Plot'
 ---
 
-# ADR-073：统一标签文本块
+# ADR-087：统一标签文本块
 
 - 状态：Accepted
 - 决策日期：2026-10-24
 - 关联：[033](./033-stroke-path-label-interruption.md)
+
+> 标签的文本对齐、行高和折行宽度由 [081](./081-shared-text-capabilities.md) 扩展；整个文本块仍共享宿主附着与变换。
 
 ## 背景与目标
 

@@ -5,7 +5,7 @@ keywords: 'qualified、spatial、handle、sidecar、Composite、ownerPath、inst
 
 # ADR-028：以 qualified spatial handle sidecar 保持 Composite 空间透明
 
-- 状态：Accepted
+- 状态：Superseded（由 [077](./077-compile-output-contract.md) 移除）
 - 决策日期：2026-08-11
 - 关联：[Chart ADR-003](../../../../../viz/_notes/decisions/chart/v0/v0.1/003-presentation-standard-layout.md)
 

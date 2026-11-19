@@ -9,6 +9,8 @@ keywords: 'stroke、lineCap、lineJoin、pin、arrow、font、segments、effects
 - 决策日期：2026-10-23
 - 关联：[图元效果边界](../v0.4/030-group-scope-effect-boundary.md)、[描边相位](../v0.4/032-stroke-dash-offset.md)
 
+> 文字透明度的层级组合以 [081](./081-shared-text-capabilities.md) 为准；行与片段的有效因子相乘。
+
 ## 决策
 
 Core 的通用描边包含 paint、width、dashPattern、dashOffset、lineCap、lineJoin。Node、Path、Scope 外框与 pin 使用一致的描边含义；Scene 的矩形、椭圆、路径和 marker 保留适用字段，SVG / Canvas 等价执行。线帽同样作用于闭合形状的虚线段。共享后代默认允许 shadow / blendMode，逐图元应用；不引入 Scope 整体离屏合成，外框仍独立。

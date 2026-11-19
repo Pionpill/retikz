@@ -5,7 +5,7 @@ keywords: 'Runtime、Computation、transaction、事务、原子提交'
 
 # ADR-012：Computation Graph 与同步 Transaction Lifecycle
 
-- 状态：Accepted
+- 状态：Superseded（[064](./064-remove-runtime.md)：独立 Computation / Participant 事务 API 已移除，候选隔离与原子提交由 Reconciler 管理）
 - 决策日期：2026-07-26
 - 接受日期：2026-07-27
 - 关联：[ADR-011](./011-runtime-identity-source-registry.md) · [ADR-013](./013-incremental-core-compile.md)

@@ -15,7 +15,7 @@ keywords: PropertyPath、irPath、primitivePath、定位、诊断、来源
 
 ## 决策：路径只包含真实属性与数组下标
 
-Foundation 提供无领域的结构化属性路径与操作。Core 拥有输入和生成来源语义，Reconciler 拥有跨次身份，Render 消费 Scene 与子树定位，不复制路径解释规则。
+Foundation 提供无领域的结构化属性路径与操作。Core 拥有输入和生成来源语义，Reconciler 维护编译来源与会话版本，Render 生成渲染身份并消费 Scene 与子树定位，不复制路径解释规则。
 
 ```ts
 type PropertyPath = ReadonlyArray<string | number>;

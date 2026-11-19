@@ -7,7 +7,7 @@ keywords: 文本、label、lineHeight、maxTextWidth、textAlign、opacity
 
 - 状态：Accepted
 - 决策日期：2026-11-05
-- 关联：[roadmap](./roadmap.md)、[统一标签文本块](./073-unified-label-text-block.md)、[标签断线](./033-stroke-path-label-interruption.md)、[附着对齐](./008-node-label-alignment.md)、[宿主默认](./067-host-owned-defaults.md)
+- 关联：[roadmap](./roadmap.md)、[统一标签文本块](./087-unified-label-text-block.md)、[标签断线](./033-stroke-path-label-interruption.md)、[附着对齐](./008-node-label-alignment.md)、[宿主默认](./067-host-owned-defaults.md)
 
 ## 背景与目标
 
@@ -67,4 +67,4 @@ Direct IR、Vanilla 与 React 等价表达这些能力；宿主默认、实例�
 
 这是破坏性行为调整：正文 `layout.align` 直接删除并改用 `layout.textAlign`；Node 标签显式透明度由覆盖宿主改为与宿主相乘；单行与混排标签统一行槽可能改变标签包络、pin 位置和 Path 断口。无兼容别名或双轨解释。
 
-本决策获接受后，替代 ADR-073、ADR-033 中标签固定居中、固定行高及不提供文本排版配置的限制，其余内容表达、宿主定位和断线契约继续有效。ADR-008 的附着对齐与 ADR-067 的宿主默认归属保持有效；透明度以本决策为准。
+本决策获接受后，替代 ADR-087、ADR-033 中标签固定居中、固定行高及不提供文本排版配置的限制，其余内容表达、宿主定位和断线契约继续有效。ADR-008 的附着对齐与 ADR-067 的宿主默认归属保持有效；透明度以本决策为准。

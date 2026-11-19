@@ -5,7 +5,7 @@ keywords: 'Runtime、Identity、Source、Registry、TRead、unknown、VanillaRun
 
 # ADR-011：Runtime Identity 与 Source Registry
 
-- 状态：Accepted
+- 状态：Superseded（[064](./064-remove-runtime.md)：独立 Runtime Source Registry 已移除）
 - 决策日期：2026-07-26
 - 接受日期：2026-07-27
 - 关联：[ADR-010](./010-performance-observability-baseline.md) · [ADR-012](./012-computation-transaction-lifecycle.md)

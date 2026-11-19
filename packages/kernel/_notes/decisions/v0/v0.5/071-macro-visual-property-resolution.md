@@ -9,6 +9,8 @@ keywords: 宏属性、color、opacity、ArrowEmitContext、主色、绘制上下
 - 决策日期：2026-10-23
 - 关联：[roadmap](./roadmap.md) · [绘图完备](../../../architecture/core-drawing-complete.md) · [上下文颜色](./032-contextual-color-resolution.md) · [透明度](./051-progressive-visual-properties.md) · [宿主默认值](./067-host-owned-defaults.md) · [基础场景图元](./070-marker-scene-primitives.md)
 
+> Node 标签与引线的透明度规则由 [081](./081-shared-text-capabilities.md) 更新；标签局部因子与宿主整体因子相乘，不覆盖宿主。
+
 ## 背景与目标
 
 共享主色能够影响 Node、Path 以及内部文字、描边和装饰，但各消费方若独立补默认值，就容易把主色误当成显式描边、丢失继承意图，或在 Definition 输出后再次覆盖样式。需要统一属性的消费关系与解析边界，使内置和自定义定义遵守同一规则。
