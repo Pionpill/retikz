@@ -538,7 +538,9 @@ describe('convertIRToReactNode', () => {
         ],
       };
 
-      expect(SceneSchema.parse(normalizeReactInput(convertIRToReactNode(ir)))).toEqual(ir);
+      const rebuilt = normalizeReactInput(convertIRToReactNode(ir));
+      expect(rebuilt).toEqual(ir);
+      expect(SceneSchema.parse(rebuilt)).toEqual(SceneSchema.parse(ir));
     });
 
     it('八种带 label 的 kind 全部 round-trip', () => {

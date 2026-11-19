@@ -1,6 +1,6 @@
 ---
 name: codex-develop-flow
-description: Use when the active main model is gpt-6-astra or gpt-6.1-sol and an approved large task, or an approved medium task with separable implementation or specialist review work, requires authorized agent roles.
+description: Use when an approved large or separable medium Retikz task authorizes an Astra or Sol lead to delegate implementation or review.
 ---
 
 # Codex Develop Flow
@@ -11,47 +11,23 @@ description: Use when the active main model is gpt-6-astra or gpt-6.1-sol and an
 
 ## 启动条件
 
-同时满足以下条件才加载：
+仅在 Astra / Sol 主控的中大型任务中，按已确认计划调度具备独立文件范围的 worker 或只读 reviewer。中型任务须有可分离的实现或专项评审。角色、数量、时点、并发与循环上限均以授权为准；不因加载本 skill 新增权限。
 
-- 主模型明确为 `gpt-6-astra` 或 `gpt-6.1-sol`
-- 大型任务的执行计划已确认，或中型任务包含可分离的实现或专项评审工作
-- 已确认计划明确授权 subagent、角色、数量、review 时点与最大循环次数
-- 具体 owning flow 已决定某个阶段需要 implementer 或 reviewer
+## 模型与角色
 
-小型任务及计划未授权 subagent 的任务不使用本 skill；中型等价重构或文档任务可因获批专项评审加载，不因此升级为大型任务。触发本 skill 不新增文件修改、subagent、review、commit、push、tag 或 publish 权限。
+| 角色  | 当前模型 ID     | 使用场景                                     |
+| ----- | --------------- | -------------------------------------------- |
+| Astra | `gpt-6.2-astra` | 高不确定性的架构决策、跨层疑难问题和关键算法 |
+| Sol   | `gpt-6.2-sol`   | 常规工程主控、跨层诊断、整体或专项评审       |
+| Terra | `gpt-6.1-terra` | 边界明确的实现、文档、视觉核验及局部评审     |
 
-主模型选择只按根 AGENTS；这里不维护第二份难度矩阵。
-
-## Agent 模型矩阵
-
-只使用调度工具当轮实际暴露的名字：
-
-- 大型复杂任务主控与集成：优先 `gpt-6-astra`
-- 需要有限调研、诊断或较多判断的中型任务主控：优先 `gpt-6.1-sol`；小型任务仍由主 agent 直接执行，不启用本 skill
-- 边界明确但需要局部判断的实现、诊断、文档、样式或视觉任务：`gpt-6.1-terra`
-- 输入输出明确、判断较少且可独立验收的实现或机械调整：`gpt-6-luna`；调度时显式选择该模型，不依赖自定义固定模型角色
-- 跨层疑难 bug、关键算法、难以拆分的核心链路：优先由 Astra 主控直接实现，或按计划交给 `gpt-6-astra`
-- 常规整体 reviewer：简单且判断较少时优先 `gpt-6-luna`；边界明确但需要局部判断时使用 `gpt-6.1-terra`；需要跨层诊断或较多判断时使用独立的 `gpt-6.1-sol` 实例，或计划指定的其他实际获批模型
-- 代码范式 reviewer：中大型计划默认纳入，获批后由独立 `gpt-6.1-sol` 实例执行，职责按 [代码范式评审](../flow-development/references/review-code-paradigm.md)
-- 性能 reviewer：按需纳入计划，获批后由独立 `gpt-6.1-sol` 实例执行，诊断与测量权限按 [性能评审](../flow-development/references/review-performance.md)
-- 最终 `cross-review`：Astra 主控优先 fresh Sol + Luna；Sol 主控优先 fresh Astra + Luna，确保 reviewer 均不同于主模型
-
-以上 agent 分工与主模型选择是两层规则。大型任务仍保持 Astra / Sol 主控，Sol / Terra / Luna 按已确认计划承担执行或评审；主模型匹配规则不替换、不削弱这套大型任务流程。
-
-按问题不确定性、错误代价和依赖选择模型，不按代码量分配。以完成任务的总成本评估效果，包括计费 token、交接、验证和返工；步骤减少不等于费用降低。
-
-记录实际模型、角色、实例和 reasoning effort；不发明 `luna_max` 等不存在的名字。矩阵是计划选型建议，不自动切换当前主模型或扩大授权。
-
-## 思考强度
-
-- 用户开启的主模型沿用用户设置，不主动覆盖
-- Astra / Sol / Terra 由 agent 被动开启或调度时，未有用户明确指定则使用 `high`
-- Luna 被动调度时使用 `max`，适用于实现、诊断、常规 review 与最终 `cross-review`
-- 调度时显式传入对应 reasoning effort，不依赖父 agent 的继承值
+- 代码范式与按需的性能 reviewer 各用独立 Sol；职责见[常规评审](../flow-development/references/review-cycle.md)。
+- 已授权最终交叉评审时，Astra 主控优先 Sol + Terra，Sol 主控优先 Astra + Terra；独立性与降级条件按 [cross-review](../cross-review/SKILL.md)。
+- 计划以当轮工具实际提供的 ID 为准。主控沿用用户的思考强度；调度时默认显式使用 `high`，用户指定时优先。记录实际角色、ID、实例与强度，不静默替换获批模型。
 
 ## 角色分工
 
-主控负责 source of truth、计划、验收标准、任务拆分、依赖、集成验证与 finding 裁决。owning flow 允许主 agent 实现时，主控可以直接处理未委派文件；本 skill 不为维持“纯调度”而强制派 Luna。
+主控负责 source of truth、计划、验收标准、任务拆分、依赖、集成验证与 finding 裁决。owning flow 允许主 agent 实现时，主控可以直接处理未委派文件。
 
 同一任务只保留一个主控，不叠加 Astra 与 Sol 两层常驻管理。Astra 主控可直接完成难以拆分的核心链路，不为委派而拆碎问题。
 
@@ -65,16 +41,4 @@ Sol 主控遇到复杂争议或持续返工时，只在计划已授权的职责�
 
 每波结束后由主控核对跨文件改动与所有权，并统一运行受影响范围的格式化、Oxlint、类型检查、测试和构建。冲突或共享状态污染使该波失效，后续改为串行。
 
-## Review 角色映射
-
-本 skill 不创建 review gate，也不规定 review 轮数：
-
-- owning flow 要求整体或专项 review 时，只调度各角色已授权的 reviewer；默认串行且只做一轮；修改后由主 agent 自审和验证，不调度 reviewer 复核，遵循 [常规评审](../flow-development/references/review-cycle.md)
-- owning flow 在大型任务最终阶段调用已授权的 `cross-review`，或用户明确要求交叉验证时，按主模型优先使用上述 fresh 双模型组合
-- 实现 worker 不自动成为 reviewer；是否允许由已确认计划决定
-
-reviewer 不可用时按 owning flow 与执行计划的降级规则处理；不得自行追加 reviewer 或扩大轮数。
-
-## 不拥有的职责
-
-本 skill 不新增 plan、`TEST_CONTRACT.md`、状态文件、completion gate、subagent 或评审轮次，也不把中小型任务升级为 long task。先按根规则选择任务规模和具体 flow；只有 owning flow 已要求 agent 角色时才用本 skill 完成模型映射。
+评审使用已授权的独立角色，worker 不自动成为 reviewer；常规评审和交叉评审分别按对应流程执行。

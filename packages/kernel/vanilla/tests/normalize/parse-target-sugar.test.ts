@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import type { InputTarget } from '../../src/normalize/path';
-import { parseTargetSugar } from '../../src/normalize/path/target';
+import type { InputTarget } from '../../src/normalize/element/path';
+import { parseTargetSugar } from '../../src/normalize/element/path/target';
 
 describe('parseTargetSugar', () => {
   it("'+1,0' 解析为 relative", () => {

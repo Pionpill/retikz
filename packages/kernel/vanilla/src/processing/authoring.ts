@@ -1,6 +1,5 @@
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
-import type { AnyInputEmbedAdapter, InputEmbedContribution, InputEmbedPreparation } from '../normalize';
-import type { InputEmbedSite } from '../normalize/scene';
+import type { AnyInputEmbedAdapter, InputEmbedContribution, InputEmbedPreparation, InputEmbedSite } from '../normalize';
 
 /** 在任意等待与同步提交边界检查当前请求是否仍有效 */
 export const assertPreparationActive = (signal: AbortSignal): void => {

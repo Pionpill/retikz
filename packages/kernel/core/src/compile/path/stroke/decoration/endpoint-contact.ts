@@ -65,7 +65,10 @@ const findContact = (
     if (occurrence.subPathIndex !== endpoint.subPathIndex) break;
     const segment = curveSegmentOfOccurrence(occurrence);
     let inside = start ? 0 : 1;
-    for (let step = 1; step <= 128; step++) {
+    // ⚡直线到固定端点的距离是凸函数；首、末采样都在接触圆内时中间不会出界，
+    // 最远点也在这两个采样端点之一。曲线仍逐点寻找首次出界区间
+    const linear = segment.kind === 'line';
+    for (let step = 1; step <= 128; step += linear ? 127 : 1) {
       const outside = start ? step / 128 : 1 - step / 128;
       const sample = curve.sampleAt(segment, outside);
       const separation = point.distance(sample.point, origin.point);
@@ -82,7 +85,9 @@ const findContact = (
       if (separation >= distance) {
         let high = outside;
         let low = inside;
-        for (let iteration = 0; iteration < 48; iteration++) {
+        // 直线跨过最多 127 个采样格，增加 7 次二分以保持原参数精度
+        const iterations = linear && step > 1 ? 55 : 48;
+        for (let iteration = 0; iteration < iterations; iteration++) {
           const middle = (low + high) / 2;
           if (point.distance(curve.sampleAt(segment, middle).point, origin.point) < distance) low = middle;
           else high = middle;

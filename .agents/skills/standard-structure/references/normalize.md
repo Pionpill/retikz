@@ -25,6 +25,10 @@ Vanilla normalize 不负责：
 - registry、theme、data、host、reference、DOM 或 runtime context
 - warning、lowering、layout、emit 或 renderer 输出
 
+## 输入类型的准入
+
+只有作者写法、只读集合或运行时字段等与 Source IR 确有差异时，才定义独立的 `InputXxx`，并只转换有差异的部分。等价类型由消费方直接使用领域公开类型或其字段，不建立同义别名、重复联合或纯透传 normalizer。
+
 ## 所有权与依赖
 
 - Vanilla authoring 的 `InputXxx` 与阶段函数 `normalizeXxx` 只定义在 `@retikz/vanilla`、`@retikz/plot-vanilla` 等 Vanilla API 包

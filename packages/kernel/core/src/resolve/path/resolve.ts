@@ -29,6 +29,8 @@ import type {
   StepColorSource,
 } from './types';
 
+const DEFAULT_LABEL_POSITION_MODE = PathLabelSchema.shape.positionMode.unwrap().parse(undefined);
+
 const LABEL_POSITION: Record<string, number> = {
   'at-start': 0,
   'very-near-start': 0.125,
@@ -108,7 +110,7 @@ const canonicalizeLabelPlacement = <TLabel extends PathLabelGeometryOptions>(
   canAutomaticallyInterrupt: boolean,
 ): Omit<TLabel, 'position' | 'side' | 'distance' | 'interrupt' | 'gap'> & CanonicalPathLabelPlacement => {
   const side = label.side ?? (label.sloped === true ? 'center' : 'top');
-  const positionMode = label.positionMode ?? PathLabelSchema.shape.positionMode.unwrap().parse(undefined);
+  const positionMode = label.positionMode ?? DEFAULT_LABEL_POSITION_MODE;
   return {
     ...label,
     positionMode,
@@ -136,35 +138,42 @@ export const resolvePathLabelPlacement = (
   canAutomaticallyInterrupt: boolean,
 ): CanonicalPathLabelPlacement => canonicalizeLabelPlacement(label, canAutomaticallyInterrupt);
 
+/** 构造同一路径所有标签共用的只读文本上下文 */
+const createLabelTextContext = (context: Pick<PathResolveContext, 'rootFontSize' | 'gatingOn' | 'warn'>) => ({
+  ...context,
+  inheritedFont: { size: context.rootFontSize },
+});
+
+/** 补齐宿主字段，使用路径继承上下文分别构造标签文本 */
+const canonicalizeLabel = (
+  label: PathLabelColorSource,
+  canAutomaticallyInterrupt: boolean,
+  context: ReturnType<typeof createLabelTextContext>,
+): CanonicalPathLabel => {
+  const { text, font, textColor, textAlign, lineHeight, maxTextWidth, ...host } = label;
+  return {
+    ...canonicalizeLabelPlacement(host, canAutomaticallyInterrupt),
+    text: resolveTextBlock({ text, font, textColor, textAlign, lineHeight, maxTextWidth }, context),
+  };
+};
+
 /** 为已解析颜色的标签补齐放置与断线默认值 */
 export const resolvePathLabelContent = (
   label: PathLabelColorSource,
   canAutomaticallyInterrupt: boolean,
   context: Pick<PathResolveContext, 'rootFontSize' | 'gatingOn' | 'warn'>,
-): CanonicalPathLabel => {
-  const { text, font, textColor, textAlign, lineHeight, maxTextWidth, ...host } = label;
-  return {
-    ...canonicalizeLabelPlacement(host, canAutomaticallyInterrupt),
-    text: resolveTextBlock(
-      { text, font, textColor, textAlign, lineHeight, maxTextWidth },
-      {
-        ...context,
-        inheritedFont: { size: context.rootFontSize },
-      },
-    ),
-  };
-};
+): CanonicalPathLabel => canonicalizeLabel(label, canAutomaticallyInterrupt, createLabelTextContext(context));
 
 /** 为路径步骤及其标签补齐静态默认值，保留目标引用供后续解析 */
 const canonicalizeStep = (
   step: StepColorSource,
   canAutomaticallyInterrupt: boolean,
-  context: PathResolveContext,
+  context: ReturnType<typeof createLabelTextContext>,
 ): CanonicalPathStep => {
   if (step.kind === 'move' || step.kind === 'cycle' || step.kind === 'rectangle') return step;
 
   const label =
-    step.label === undefined ? undefined : resolvePathLabelContent(step.label, canAutomaticallyInterrupt, context);
+    step.label === undefined ? undefined : canonicalizeLabel(step.label, canAutomaticallyInterrupt, context);
   if (step.kind === 'fold') {
     switch (step.via) {
       case '-|-':
@@ -197,7 +206,7 @@ const canonicalizeStep = (
 const canonicalizeSteps = (
   steps: ReadonlyArray<StepColorSource> | undefined,
   canAutomaticallyInterrupt: boolean,
-  context: PathResolveContext,
+  context: ReturnType<typeof createLabelTextContext>,
 ): Array<CanonicalPathStep> | undefined =>
   steps?.map(step => canonicalizeStep(step, canAutomaticallyInterrupt, context));
 
@@ -208,6 +217,7 @@ const canonicalizePath = (
   context: PathResolveContext,
 ): Omit<CanonicalPath, 'fill' | 'stroke' | 'strokeWidth'> &
   Pick<NonNullable<PathColorSource['style']>, 'fill' | 'stroke' | 'strokeWidth'> => {
+  const textContext = createLabelTextContext(context);
   const { style, ...source } = path;
   const { children, label: pathLabel, marks } = source;
   const { opacity, ...visual } = style ?? {};
@@ -226,7 +236,7 @@ const canonicalizePath = (
     fillOpacity: 1,
     strokeOpacity: 1,
     ...resolveGraphicOpacity(opacity),
-    children: canonicalizeSteps(children, canAutomaticallyInterrupt, context),
+    children: canonicalizeSteps(children, canAutomaticallyInterrupt, textContext),
     marks: marks?.map(mark => {
       const positionMode = mark.positionMode ?? PathMarkPlacementSchema.shape.positionMode.unwrap().parse(undefined);
       return {
@@ -239,7 +249,7 @@ const canonicalizePath = (
       pathLabel === undefined
         ? undefined
         : (Array.isArray(pathLabel) ? pathLabel : [pathLabel]).map(label =>
-            resolvePathLabelContent(label, canAutomaticallyInterrupt, context),
+            canonicalizeLabel(label, canAutomaticallyInterrupt, textContext),
           ),
     shadow: resolveDropShadow(style?.shadow),
   };
@@ -295,16 +305,30 @@ const resolveStepLabelColors = (
   step: IRStep,
   masterColor: string | undefined,
   context: PathResolveContext,
-  fieldPath: PropertyPath,
+  irPath: PropertyPath,
+  index: number,
 ): StepColorSource => {
   if (!('label' in step)) return step as StepColorSource;
 
-  const { label, ...source } = step;
-  if (label === undefined) return source;
+  const label = step.label;
+  if (label === undefined) {
+    const { label: _label, ...source } = step;
+    return source;
+  }
+
+  // 字符串无需逐行混色，仍复制标签以隔离 provider 对输入的修改
+  if (typeof label.text === 'string' && typeof label.textColor !== 'number') {
+    const { textColor, text, ...placement } = label;
+    const color = textColor ?? masterColor;
+    return {
+      ...step,
+      label: { ...placement, text, ...(color === undefined ? {} : { textColor: color }) },
+    };
+  }
 
   return {
-    ...source,
-    label: resolvePathLabelColors(label, masterColor, context.mode, [...fieldPath, 'label']),
+    ...step,
+    label: resolvePathLabelColors(label, masterColor, context.mode, [...irPath, 'children', index, 'label']),
   };
 };
 
@@ -411,7 +435,7 @@ const resolvePathContextualColors = (
       ? {}
       : {
           children: children.map((step, index) =>
-            resolveStepLabelColors(step, labelMasterColor, context, [...irPath, 'children', index]),
+            resolveStepLabelColors(step, labelMasterColor, context, irPath, index),
           ),
         }),
     ...(resolvedHostLabel === undefined ? {} : { label: resolvedHostLabel }),

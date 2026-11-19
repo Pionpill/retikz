@@ -184,7 +184,7 @@ const view = mount(document.getElementById('diagram')!, ir);
 </Path>
 ```
 
-从 `@retikz/react` 导入 `Path`、`Step`，在现有 Layout 内替换 Draw 即可。Path 也接受 `way`，但不能与显式步骤同时提供。
+从 `@retikz/react` 导入 `Path`、`Step`，在现有 Layout 内替换 Draw 即可。Path 也接受 `way`，作为显式步骤的替代写法；两者都提供时，以显式步骤为准。
 
 ## 补充说明
 
@@ -203,7 +203,7 @@ const view = mount(document.getElementById('diagram')!, ir);
       kind: 'property',
       type: 'WayDSL',
       required: true,
-      description: '按相对游标和端点描述整条路径，不能与显式 `Step` 同时提供',
+      description: '按相对游标和端点描述整条路径，提供显式 `Step` 时以步骤为准',
     },
     { name: 'style', kind: 'property', type: "InputPath['style']", description: '设置路径描边、填充和线型等视觉样式' },
     {

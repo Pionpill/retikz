@@ -39,6 +39,20 @@ export const kernelV05: Release = {
       ],
       subVersions: [
         {
+          version: 'alpha.7',
+          date: '2026-11-19',
+          summary: { zh: '基础类型与观测', en: 'Shared types and tracing' },
+          items: [
+            {
+              label: { zh: '基础类型与观测', en: 'Shared types and tracing' },
+              content: {
+                zh: '需要限制输入分支时，从 @retikz/foundation 导入 RequireExactlyOne；跨包 trace 使用共享 record / sink 类型。',
+                en: 'Import RequireExactlyOne from @retikz/foundation for mutually exclusive input fields. Trace producers share record and sink types.',
+              },
+            },
+          ],
+        },
+        {
           version: 'alpha.6',
           date: '2026-10-08',
           summary: {
@@ -161,6 +175,20 @@ export const kernelV05: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'alpha.7',
+          date: '2026-11-19',
+          summary: { zh: '路径测量', en: 'Path measurement' },
+          items: [
+            {
+              label: { zh: '路径测量', en: 'Path measurement' },
+              content: {
+                zh: '新增曲线长度度量与轮廓几何工具，供按弧长定位及轮廓求交复用。',
+                en: 'Adds curve-length metrics and contour geometry for arc-length positioning and intersections.',
+              },
+            },
+          ],
+        },
         {
           version: 'alpha.6',
           date: '2026-10-08',
@@ -378,303 +406,196 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
-          label: { zh: '待发布：BREAKING 场景资源分类', en: 'Unreleased: BREAKING categorized Scene resources' },
+          label: { zh: 'BREAKING：整图编译移出 Core', en: 'BREAKING: whole-scene compilation moves out of Core' },
+          content: {
+            zh: 'Core 保留 IR、Definition、原子计算与 Scene。一次性编译从 @retikz/vanilla 调用 compileToScene；直接处理 IR 或需要批次更新时，从 @retikz/reconciler 创建 SceneReconciler。独立的 @retikz/runtime 不再是 Kernel 依赖。',
+            en: 'Core owns IR, definitions, atomic operations, and Scene. For a one-shot compile, import compileToScene from @retikz/vanilla; for direct IR compilation or batch updates, use SceneReconciler from @retikz/reconciler. Kernel no longer depends on the standalone @retikz/runtime package.',
+          },
+        },
+        {
+          label: { zh: 'BREAKING 场景资源分类', en: 'BREAKING categorized Scene resources' },
           content: {
             zh: 'Scene.resources 从混合数组改为 { paints, clips }，渐变、Pattern 和图片从 paints 读取，裁剪从 clips 读取。缓存、回放、Runtime 快照与 setResources 使用同一结构；清空时提供两个空数组。没有资源的编译 Scene 仍可省略 resources。fill / stroke / Scope.clip 作者语法及资源 ID 保持不变，旧数组结构不再接受。',
             en: 'Scene.resources changes from a mixed array to { paints, clips }. Read gradients, patterns and images from paints, and clip paths from clips. Caches, replay, Runtime snapshots and setResources share this structure; use two empty arrays to clear resources. Compiled Scenes without resources may still omit the field. Authoring through fill / stroke / Scope.clip and resource IDs is unchanged. The old array structure is no longer accepted.',
           },
         },
         {
-          label: { zh: '待发布：路径双模式定位', en: 'Unreleased: dual path positioning modes' },
-          content: {
-            zh: 'Path、Step 标签及 marks 支持 positionMode: step / length，并可独立选择 positionGeometry: original / rounded。标签默认按步骤定位，标记默认按长度定位；省略几何时分别采用原始与圆角路径。增量位置更新复用几何度量与未变化的局部内容。',
-            en: 'Path and Step labels and marks support positionMode: step / length and an independent positionGeometry: original / rounded. Labels default to step positioning and marks to length positioning, using original and rounded geometry respectively when geometry is omitted. Incremental position updates reuse geometry metrics and unchanged local content.',
-          },
-        },
-        {
           label: {
-            zh: '待发布：BREAKING 正文与标签共享文本能力',
-            en: 'Unreleased: BREAKING shared text capabilities for body text and labels',
+            zh: 'BREAKING 正文与标签共享文本能力',
+            en: 'BREAKING shared text capabilities for body text and labels',
           },
           content: {
             zh: 'Node 正文、Node 标签与 Path 标签统一支持硬换行、混排折行、textAlign、lineHeight 和 maxTextWidth。Node layout.align 改为 layout.textAlign，标签附着 align 保留。过长单词按字素拆分，公式保持完整；行槽至少容纳实际度量。标签透明度与宿主、行和片段透明度相乘，可能改变已有标签外观与包络。Path Definition 的标签 text 改为 TextBlockContent；动态原始标签先调用 resolveHostLabel，再交给 emitHostLabels。',
             en: 'Node body text, Node labels, and Path labels share hard breaks, mixed-content wrapping, textAlign, lineHeight, and maxTextWidth. Rename Node layout.align to layout.textAlign; attachment align remains. Oversized words split at grapheme boundaries while formulas stay intact, and line slots accommodate measured content. Label opacity multiplies host, line, and segment factors, which can change existing appearance and bounds. Path Definition label text is now TextBlockContent; resolve dynamic source labels with resolveHostLabel before passing them to emitHostLabels.',
           },
         },
-        {
-          label: {
-            zh: '待发布：BREAKING 编译入口迁至 Reconciler',
-            en: 'Unreleased: BREAKING compilation APIs move to Reconciler',
-          },
-          content: {
-            zh: 'compileToScene、compileSceneSnapshot、CompileOptions、CompileResult、ExecuteOptions 与 SceneCompilationSnapshot 改从 @retikz/reconciler 导入，Core 不保留转发出口。Core 保留原子阶段与共享产物；全量、增量首轮及 Composite 使用同一执行器。SceneReconciler 的 incremental 默认 true；false 不保留 Weave，支持 mount/replace，拒绝 update 与 updateStrategy。含 Composite 场景可批次更新作者基础元素，生成内容不可直接编辑。',
-            en: 'Import compileToScene, compileSceneSnapshot, CompileOptions, CompileResult, ExecuteOptions, SceneCompilationSnapshot, CompileProvenanceSnapshot, CompositeArtifact / CompositeArtifactOf, and compilation option groups from @retikz/reconciler; Core keeps no forwarding exports. Core supplies atomic stages and shared products. Complete compilation, incremental initialization, and Composites share one executor. SceneReconciler incremental defaults to true; false retains no Weave, supports mount/replace, and rejects update and updateStrategy. Composite scenes allow batch edits to authored basic elements, excluding generated content.',
-          },
-        },
-        {
-          label: { zh: '待发布：BREAKING 三层编译产物', en: 'Unreleased: BREAKING three-stage compilation products' },
-          content: {
-            zh: 'Node、Coordinate、Path、Scope 分别保存稀疏输入、Canonical 配置与纯数据 Compiled 结果；连接查询显式结合 canon 能力与最终几何。自定义 Path 回调的 context.path 改为确定化配置，标签位置已展开，外观改从 context.appearance 读取；委托新路径时向 emitStroke 显式传入 IR，不能将 canonical 配置当作原始输入回传。旧 NodeResolution、PathResolution 和虚拟 Node 坐标工具删除，原子阶段消费者需迁移到对应 Canonical/Compiled 类型。',
-            en: 'Node, Coordinate, Path, and Scope retain sparse input, Canonical configuration, and data-only Compiled results separately. Connection queries explicitly combine canon capabilities with final geometry. Custom Path callbacks receive canonical context.path with resolved label placement; read drawing styles from context.appearance. Pass explicit IR when delegating a new path to emitStroke instead of passing canonical configuration back as source input. NodeResolution, PathResolution, and synthetic Node coordinate helpers are removed; atomic-stage consumers must migrate to the corresponding Canonical/Compiled types.',
-          },
-        },
-        {
-          label: { zh: '待发布：BREAKING 冗余 API 清理', en: 'Unreleased: BREAKING unused API cleanup' },
-          content: {
-            zh: '删除无生产消费者的内部 helper 和测试专用入口；Reconciler 同步移除 createSceneRevision，SceneRevision 类型及编译 revision 语义保持。',
-            en: 'Removes unused internal helpers and test-only entry points. Reconciler also removes createSceneRevision; the SceneRevision type and compilation revision semantics remain unchanged.',
-          },
-        },
-        {
-          label: { zh: 'BREAKING：Shape 包围几何统一入口', en: 'BREAKING: unified Shape circumscribed geometry' },
-          content: {
-            zh: '自定义 Shape 将 computeCircumscribedHalfAxes 和 computeCircumscribedOffset 合并为 computeCircumscribedGeometry，统一返回 { halfWidth, halfHeight, offset? }；省略 offset 表示居中。删除旧回调，尺寸和偏移随同一布局候选消费，已有形状的绘制与定位行为保持不变。',
-            en: 'Custom Shapes replace computeCircumscribedHalfAxes and computeCircumscribedOffset with computeCircumscribedGeometry, returning { halfWidth, halfHeight, offset? } together. Omitting offset means a centered box. The old callbacks are removed; sizing and offset belong to the same layout candidate, preserving existing drawing and positioning behavior.',
-          },
-        },
-        {
-          label: { zh: 'BREAKING：端点箭头与沿线标记分离', en: 'BREAKING: separate endpoint arrows and path marks' },
-          content: {
-            zh: '端点箭头统一使用 arrow.start / arrow.end，并负责接触与截断；marks 按截断前整条路径的弧长放置图元，包括首尾位置，且不截断主线。marks 每项直接组合 pos、shape、尺寸和样式，自定义参数放入 params；删除 kind 与内层 mark。内置 times、plus、check、star 四种普通标记，补充[标记用法](/kernel/components/path/mark)与[自定义标记](/kernel/components/path/custom-mark)文档。普通标记通过 defineMark 注册，与箭头共享 MarkEmitContext、尺寸和图元生成能力；已注册箭头自动可作为标记使用，名称冲突报错。React、Vanilla 保留 ->、<-、<-> 方向简写，由 Vanilla 归一化为端点对象；JSON IR 只使用对象。arrowDetail、arrowPlacement 内容并入端点对象，原先承担端点箭头的 marks 需迁入 arrow。',
-            en: 'Endpoint arrows use arrow.start / arrow.end and own contact and shortening. Marks place primitives by arc length along the complete, unshortened path, including its endpoints, without shortening the stroke. Each marks entry combines pos, shape, dimensions, and style directly, with custom parameters in params; kind and the nested mark object are removed. Adds built-in times, plus, check, and star marks with [usage](/kernel/components/path/mark) and [custom mark](/kernel/components/path/custom-mark) guides. Register marks through defineMark; marks and arrows share MarkEmitContext, sizing, and primitive generation. Registered arrows are automatically usable as marks, and name collisions are rejected. React and Vanilla retain ->, <-, and <-> shorthands, normalized by Vanilla into endpoint objects; JSON IR uses objects only. Move arrowDetail and arrowPlacement settings into endpoint objects, and former endpoint-arrow marks into arrow.',
-          },
-        },
-        {
-          label: { zh: '动画属性与关键帧值契约', en: 'Animation property and keyframe contracts' },
-          content: {
-            zh: '动画属性与缓动采用闭合枚举 AnimationProperty / AnimationEasing，移除自定义属性和具名缓动注册。轨道按属性约束关键帧类型与范围，新增 fillOpacity、strokeOpacity、dashOffset；SVG 采样与 Canvas 复用段缓动求值，pathDraw 优先于虚线偏移动画。',
-            en: 'AnimationProperty and AnimationEasing are closed enums, replacing custom property and named-easing registries. Tracks constrain keyframe types and ranges by property and add fillOpacity, strokeOpacity, and dashOffset. SVG sampling and Canvas share segment easing; pathDraw takes precedence over animated dash offsets.',
-          },
-        },
-        {
-          label: { zh: 'BREAKING：裁剪参数收口到 params', en: 'BREAKING: clip parameters move into params' },
-          content: {
-            zh: 'Clip 输入与解析后形状统一使用 { kind, params }。矩形、官方扩展和自定义裁剪均把几何字段放入必填 params；resolve/lower 分别读取 spec.params 和 shape.params。移除平铺参数写法，Scene 路径与渲染行为不变。',
-            en: 'Clip specs and resolved shapes now use { kind, params }. Built-in, official extension, and custom clips put geometry fields in the required params object; resolve/lower read spec.params and shape.params. Flat parameter fields are removed; Scene paths and rendering behavior are unchanged.',
-          },
-        },
-        {
-          label: { zh: '待发布：BREAKING 标签统一多行文本块', en: 'Unreleased: BREAKING unified multiline labels' },
-          content: {
-            zh: '节点与路径标签统一使用 TextBlock，支持换行字符串、非空行数组及逐行样式；附着、旋转和引线按整个文本块计算。移除 LabelTextContentSchema；旧 text: { segments: [...] } 改为 text: [{ segments: [...] }]。React、Vanilla 和 Plot 使用同一文本契约。',
-            en: 'Node and path labels share TextBlock, supporting strings with line breaks, non-empty line arrays, and per-line styles. Attachment, rotation, and leaders use the whole block. LabelTextContentSchema is removed; change text: { segments: [...] } to text: [{ segments: [...] }]. React, Vanilla, and Plot use the same text contract.',
-          },
-        },
-        {
-          label: { zh: 'BREAKING：主色传播与箭头绘制上下文', en: 'BREAKING: master colors and arrow drawing contexts' },
-          content: {
-            zh: 'Path 的有效 color 覆盖 mark 的 color，具体 stroke / fill 仍优先。Arrow Definition 直接消费已解析的绘制上下文，包括虚线、端帽和连接样式；Core 不再覆盖输出图元的局部样式。实心定义默认无描边，需要同色线条的自定义定义改用上下文 fill。透明度语义保持不变。',
-            en: 'The effective Path color overrides mark color, while explicit stroke / fill still takes precedence. Arrow Definitions consume resolved drawing contexts, including dash, cap, and join styles; Core no longer overwrites emitted local styles. Filled definitions have no stroke by default; custom definitions needing lines in the master color should use context fill. Opacity semantics are unchanged.',
-          },
-        },
-        {
-          label: { zh: 'BREAKING：箭头与图案复用基础图元', en: 'BREAKING: arrows and patterns use basic primitives' },
-          content: {
-            zh: '删除 MarkerPrimitive、MarkerPathPrim、MarkerEllipsePrim、MarkerRectPrim、MarkerGroupPrim 与 MarkerFill。Arrow / Pattern 定义改为返回 ScenePrimitive，颜色复用 PaintValue；空心内容显式使用 fill: none。文本须已度量，内容可以使用场景裁剪、绘制资源、动画与有限嵌套图元；播放状态按宿主隔离，局部 id 不创建独立更新或命中目标。',
-            en: 'MarkerPrimitive, MarkerPathPrim, MarkerEllipsePrim, MarkerRectPrim, MarkerGroupPrim, and MarkerFill are removed. Arrow and Pattern definitions return ScenePrimitive and use PaintValue; hollow content explicitly uses fill: none. Text must be measured. Content can use Scene clips, paint resources, animation, and finite nested primitives. Playback state is isolated per host, and local ids create no independent update or hit targets.',
-          },
-        },
-        {
-          label: { zh: 'BREAKING：移除角度 Schema 别名', en: 'BREAKING: remove the angle schema alias' },
-          content: {
-            zh: '移除 `AngleDegreesSchema` 导出；自定义 Schema 直接使用 Zod `number()`，并在字段描述中注明角度单位。现有角度字段的数值校验、约束和默认值保持不变。',
-            en: 'The `AngleDegreesSchema` export is removed. Use Zod `number()` in custom schemas and describe the angle unit on each field. Existing angle validation, constraints, and defaults remain unchanged.',
-          },
-        },
-        {
-          label: {
-            zh: 'BREAKING：统一主题名称与定义注册',
-            en: 'BREAKING: consistent theme names and definition registries',
-          },
-          content: {
-            zh: '主题选择字段由 `theme.style` 改为 `theme.name`；类型使用 `ThemeName` / `ThemeDefinition`，注册集合统一使用 `themeDefinitions` 及各领域前缀。Chart 的领域定义使用 `chartThemeDefinitions`，宿主 Core 定义使用 `themeDefinitions`。实际 `style` 配置对象及主题继承、颜色和覆盖优先级保持不变；旧名称移除。',
-            en: 'The theme selector changes from `theme.style` to `theme.name`. Types use `ThemeName` / `ThemeDefinition`, and registries use `themeDefinitions` with domain prefixes. Chart domain definitions use `chartThemeDefinitions`, while host Core definitions use `themeDefinitions`. Actual `style` configuration objects, theme inheritance, colors, and override priority remain unchanged. Old names are removed.',
-          },
-        },
-        {
-          label: { zh: 'BREAKING：移除 Scope 外框', en: 'BREAKING: remove Scope frames' },
-          content: {
-            zh: '删除 Scope.frame 及相关类型、Schema 和编译绘制。Scope 保留包络、定位和引用；已有外框配置需改用 Standard Surface / Frame，React、Vanilla 和直接 IR 使用同一契约。',
-            en: 'Removes Scope.frame, its types and schemas, and frame rendering. Scope retains its envelope, placement, and references. Replace frame configuration with Standard Surface / Frame; React, Vanilla, and direct IR share the same contract.',
-          },
-        },
-        {
-          label: { zh: 'BREAKING：默认配置归属宿主', en: 'BREAKING: host-owned defaults' },
-          content: {
-            zh: '将 defaults.label 分别迁移到 defaults.node.label 与 defaults.path.label，将 defaults.arrow 迁移到 defaults.path.arrow。标签默认支持除 text 外的完整配置，只装饰已有内容；字体逐字段继承。reset 仅接受 node / path，并同时清除对应标签与箭头默认；true 清除所有默认通道。',
-            en: 'Move defaults.label to defaults.node.label and defaults.path.label, and defaults.arrow to defaults.path.arrow. Label defaults support every configuration field except text and only decorate existing content; fonts inherit field by field. Reset accepts only node / path and clears their decoration defaults too; true resets all default channels.',
-          },
-        },
-        {
-          label: { zh: '视觉样式完整消费', en: 'Complete visual style support' },
-          content: {
-            zh: '补齐通用描边端帽与连接样式、后代默认阴影和混合模式；引线支持 paint 与独立透明度，箭头支持 paint 与虚线。分段行支持行级样式，公式继承行字号并可单独覆盖。',
-            en: 'Completes shared stroke caps and joins, descendant shadow/blend defaults, leader paints and independent opacity, and arrow paints and dashes. Segmented lines support line styles; math inherits the line size with optional overrides.',
-          },
-        },
-        {
-          label: { zh: '共享虚线描边', en: 'Shared dashed strokes' },
-          content: {
-            zh: '`Scope.defaults.style` 支持 `dashPattern` 与 `dashOffset`，Node 与 Path 按既有通道优先级继承。',
-            en: '`Scope.defaults.style` supports `dashPattern` and `dashOffset`, inherited by Node and Path through existing channel precedence.',
-          },
-        },
-        {
-          label: { zh: '移除旧输入 diff 协议', en: 'Remove the old input diff protocol' },
-          content: {
-            zh: '移除 CoreChange 及其增删改移动类型、CoreComputationDiagnosticCode 和旧快照 diff 校验。完整输入继续重建并提交 replaceScene；Weave 批次执行尚未接入。Runtime 通用 ChangeSet 与图元身份契约保持不变。',
-            en: 'Removed CoreChange and its add/update/remove/move types, CoreComputationDiagnosticCode, and old snapshot diff validation. Full inputs still rebuild and publish replaceScene; Weave batch execution is not connected yet. Generic Runtime ChangeSets and primitive identity contracts remain unchanged.',
-          },
-        },
-        {
-          label: { zh: 'Weave 批次计算与状态隔离', en: 'Weave batch computation and state isolation' },
-          content: {
-            zh: 'Weave 使用稳定节点引用与 current / pending 双状态，内部批次入口支持增删改、保守依赖失效和编译缓存复用，完整输出准备后可提交或回滚。公开 Runtime 输入仍为完整 IR，尚未接入批次 API 或局部 Render Patch。',
-            en: 'Weave uses stable node references with current / pending states. Its internal batch entry supports insertion, updates, removal, conservative dependency invalidation and compiled cache reuse, with commit or rollback after complete output preparation. Public Runtime inputs remain full IR; batch APIs and local Render patches are not connected.',
-          },
-        },
-        {
-          label: { zh: 'Weave 编译接入', en: 'Weave compilation integration' },
-          content: {
-            zh: '基础元素输入通过 Weave 构建声明树，持有 Core 编译环境、状态与名称读取关系，并生成同版本的 Scene 和来源信息。完整输入替换重新准备候选树，失败保留已发布结果。Composite 保留 Core 完整准备路径；原根 Node 填充色特例移除，当前更新发布 replaceScene，批次局部调度尚未接入。',
-            en: 'Basic-element input now builds a Weave declaration tree with Core compilation state, environment and name-read relations, producing a matching Scene and provenance. Full input replacement prepares a candidate tree; failure preserves the published result. Composite input retains Core full preparation. The root-node fill special case is removed; updates currently publish replaceScene, while batch-local scheduling remains unconnected.',
-          },
-        },
-        {
-          label: { zh: '单元素编译与可复用状态', en: 'Element compilation and reusable state' },
-          content: {
-            zh: 'Core 提供共享的 resolve、layout、emit 与 Path 宿主编译阶段，各阶段使用窄上下文。全量驱动与 Reconciler 自行组合并持有工作区，等待重试和提交归 Reconciler；Scope 保留前置准备与后置包络。',
-            en: 'Core provides shared resolution, layout, emission, and Path-host compilation stages with narrow contexts. Full and Reconciler drivers compose them and own workspace lifetime; Reconciler owns waiting, retries, and commits. Scope retains preparation and envelope completion phases.',
-          },
-        },
-        {
-          label: { zh: 'BREAKING：节点布局观察类型更名', en: 'BREAKING: node layout observation type renamed' },
-          content: {
-            zh: '公开类型 CompiledNodeLayout 更名为 NodeLayoutObservation，请更新类型导入。完整可缓存节点状态使用 CompiledNode，观察 DTO 的字段语义保持不变。',
-            en: 'The public CompiledNodeLayout type is renamed to NodeLayoutObservation; update type imports. Use CompiledNode for complete cacheable state. Observation DTO field semantics are unchanged.',
-          },
-        },
-        {
-          label: { zh: '按需布局测量', en: 'On-demand layout measurement' },
-          content: {
-            zh: '复合组件新增按轴 measureChild 贡献查询；同次编译复用等价尺寸贡献与纯文字度量，完整布局和一次 replay 仍保持独立。',
-            en: 'Composite components gain axis-specific measureChild queries. Equivalent size contributions and text metrics are reused within a compilation, while full layout and one-use replay remain separate.',
-          },
-        },
-        {
-          label: {
-            zh: '待发布：BREAKING 增量能力迁入 Reconciler',
-            en: 'Unreleased: BREAKING incremental APIs move to Reconciler',
-          },
-          content: {
-            zh: 'CoreSourceDefinition、CoreCompositeInputSourceDefinition、createCoreComputation、CoreChange、SceneRuntimeSnapshot、ScenePatch 及相关类型改从 @retikz/reconciler 导入，Core 不保留转发。Core 新增 compileSceneSnapshot 与 validateCompositeInputBindings，不再依赖 Runtime。增量输入捕获与装配错误改为 RetikzReconcilerError；更新 trace 常量改为 ReconcilerLifecyclePhase / ReconcilerTraceUnit，ChangeSetMismatch 改由 CoreComputationDiagnosticCode 提供，原诊断码字符串与身份 owner 值保持不变。',
-            en: 'Import CoreSourceDefinition, CoreCompositeInputSourceDefinition, createCoreComputation, CoreChange, SceneRuntimeSnapshot, ScenePatch and related types from @retikz/reconciler; Core no longer forwards them. Core adds compileSceneSnapshot and validateCompositeInputBindings and drops its Runtime dependency. Incremental capture and assembly failures use RetikzReconcilerError. Update trace constants move to ReconcilerLifecyclePhase / ReconcilerTraceUnit, and CoreComputationDiagnosticCode provides ChangeSetMismatch. Diagnostic strings and identity owner values remain unchanged.',
-          },
-        },
-        {
-          label: {
-            zh: '待发布：BREAKING 统一 Composite 编译',
-            en: 'Unreleased: BREAKING unified Composite compilation',
-          },
-          content: {
-            zh: '复合定义统一使用 compile(node, context)，简单组合直接返回 children，布局试算按需调用。将 expand 改为 compile，并将 ExpandCompositeDefinition / LayoutCompositeDefinition、CompositeExpandContext / LayoutCompositeCompileContext、CompositeExpandResult / LayoutCompositeCompileResult 分别改为 CompositeDefinition、CompositeCompileContext、CompositeCompileResult；异构定义统一为 AnyCompositeDefinition。直接 spatialHandles、输入绑定与产物仍受支持。删除 lowerIRToKernel 及其选项，生成子项的 occurrence 改为 output。React 的 convertIRToReactNode 只接受递归不含 Composite 的 IRKernelScene，并移除第二个 options 参数；包含 Composite 的输入交给完整编译宿主。',
-            en: 'Composite definitions now use compile(node, context). Simple compositions return children directly; layout probing is optional. Replace expand with compile; replace ExpandCompositeDefinition / LayoutCompositeDefinition, CompositeExpandContext / LayoutCompositeCompileContext, and CompositeExpandResult / LayoutCompositeCompileResult with CompositeDefinition, CompositeCompileContext, and CompositeCompileResult. Heterogeneous definitions use AnyCompositeDefinition. Direct spatialHandles, input bindings, and artifacts remain supported. lowerIRToKernel and its options are removed, and generated child occurrences use output. React convertIRToReactNode now accepts only recursively Composite-free IRKernelScene and has no second options argument; use a full compilation host for inputs containing composites.',
-          },
-        },
-        {
-          label: { zh: '待发布：BREAKING 渐进式视觉属性', en: 'Unreleased: BREAKING progressive visual properties' },
-          content: {
-            zh: '图形透明度支持 opacity: number 或 { overall, fill, stroke }，数值只设置 overall。各成员独立继承，overall 与 fill/stroke 相乘；删除图形样式的平级 fillOpacity、strokeOpacity。纯文字、渐变色标等独立标量保持原契约。',
-            en: 'Graphic opacity accepts a number or { overall, fill, stroke }; a number sets only overall. Factors inherit independently, and overall multiplies fill/stroke. Flat graphic fillOpacity and strokeOpacity fields are removed. Text-only and gradient-stop scalar contracts remain unchanged.',
-          },
-        },
-        {
-          label: { zh: '可组合绘图契约', en: 'Composable drawing contracts' },
-          content: {
-            zh: 'Core 根入口公开主色、整体透明度、填充、描边、端点转角、文字呈现与布局、路径变换片段及推导类型。上层可以正向组合所需字段，既有 Node、Path、默认继承与 JSON 输入形态保持不变。',
-            en: 'The Core root exports master-color, element-opacity, fill, stroke, cap/join, text-visual, text-layout, and path-transform fragments with inferred types. Consumers can compose the fields they need while existing Node, Path, default inheritance, and JSON input shapes remain unchanged.',
-          },
-        },
-        {
-          label: { zh: '路径几何复用', en: 'Shared path geometry' },
-          content: {
-            zh: '公开 samplePathRoute 与 resolveGeometryLabelPlacement，供上层复用路径采样和标签默认。bend 单独提供 outAngle 或 inAngle 即启用切线模式，缺项使用统一权威默认；控制点溢出保留 Core 错误。',
-            en: 'Exports samplePathRoute and resolveGeometryLabelPlacement for shared path sampling and label defaults. Either outAngle or inAngle selects tangent bend mode, with omitted fields using authoritative defaults. Control-point overflow retains a Core error.',
-          },
-        },
-
-        {
-          label: { zh: '复合组件实例运行输入', en: 'composite instance runtime inputs' },
-          content: {
-            zh: '按真实 Source 位置绑定 runtimeInput，作者 child 和生成 child 显式转交 opaque 绑定；probe/replay/direct lowering 和 retained 事务复用同一运行输入，保持 Core 同步且领域中立。',
-            en: 'Bind runtimeInput to actual Source positions and transport opaque bindings explicitly for authored and generated children. Probes, replay, direct lowering and retained transactions reuse the same runtime input while Core remains synchronous and domain-neutral.',
-          },
-        },
-        {
-          label: { zh: 'Node 默认位置', en: 'Default Node position' },
-          content: {
-            zh: 'Node 的 position 可省略，Core 统一解析为当前局部坐标系的 [0, 0]；React、Vanilla 与 Source IR 使用同一语义，布局子项无需显式填写零坐标。显式定位保持不变，Coordinate 的 position 仍必填。',
-            en: 'Node position is optional and Core resolves it to [0, 0] in the current local coordinate system. React, Vanilla, and Source IR share this behavior, so layout children no longer need explicit zero coordinates. Explicit positioning is unchanged; Coordinate position remains required.',
-          },
-        },
-        {
-          label: { zh: '图元身份与别名', en: 'Graphic identities and aliases' },
-          content: {
-            zh: '空间声明、查询和结果统一使用 id，移除旧 key 字段。Node 与空间句柄新增 aliasIds；多个 id 查询同一份几何或冻结空间记录，不重复创建图元，命名空间、变换、布局重放和原子更新保持一致。',
-            en: 'Spatial declarations, selectors, and results now use id, removing the old key field. Node and spatial handles add aliasIds: multiple ids query the same geometry or frozen record without duplicate primitives, preserving namespaces, transforms, layout replay, and atomic updates.',
-          },
-        },
-        {
-          label: { zh: '动画预设分层', en: 'Animation preset ownership' },
-          content: {
-            zh: 'grow、growUp、pulse、spin、flash、blink、wiggle 及专属选项迁至 @retikz/extension 根入口。Core 保留基础预设与通用轨道工具；效果默认值、已保存轨道 JSON 和播放机制不变，旧 Core 导入不再保留。Kernel 与 Extension 双语文档和 API 参考同步按归属拆分。',
-            en: 'grow, growUp, pulse, spin, flash, blink, wiggle and their options move to the @retikz/extension root. Core retains basic presets and track utilities. Defaults, saved track JSON and playback are unchanged; old Core imports are removed. Bilingual Kernel and Extension guides and API references follow their sources.',
-          },
-        },
-        {
-          label: { zh: 'Node 与 Scope 锚点布局', en: 'Node and Scope anchor layout' },
-          content: {
-            zh: '`Node.position` 支持 anchor-to-anchor 分支；`IRScope.placement` 可把 Scope 自身 center / side / corner 对齐已完成 target，rotate / scale 统一通过 `pivot` 绑定固有包络。',
-            en: '`Node.position` supports anchor-to-anchor placement. `IRScope.placement` aligns the Scope’s own center, side, or corner to a completed target, while rotate and scale share a `pivot` resolved from the intrinsic envelope.',
-          },
-        },
-        {
-          label: { zh: '单轴与三段正交连接', en: 'Axis-only and three-leg orthogonal paths' },
-          content: {
-            zh: '`axis-line`、`horizontalTo` / `verticalTo` 只投影目标的一个轴；fold 新增 `-|-` / `|-|` 与归一化 `fraction`。它们复用既有 target、cursor、clipping、sampling 与 Scene line command，不增加 renderer 语义。',
-            en: '`axis-line` and `horizontalTo` / `verticalTo` project one target axis only. Folds add `-|-` / `|-|` with a normalized `fraction`. They reuse existing target, cursor, clipping, sampling, and Scene line-command semantics without renderer changes.',
-          },
-        },
-        {
-          label: { zh: '可读文本与标签视觉盒', en: 'Readable text and visual-box labels' },
-          content: {
-            zh: '`NodeTextColor.Contrast` 对静态不透明 fill 选择黑 / 白文字，无法静态求值时 warning 并回退 `currentColor`。`Node.label.distance` 表示节点边界到旋转后标签视觉盒的净距；`Node.label.align` 复用 `start` / `middle` / `end` 沿 attachment tangent 对齐视觉盒；baseline、pin、Scene bounds 与自动 viewBox 共用同一度量。',
-            en: '`NodeTextColor.Contrast` chooses black or white text for a static opaque fill and warns before falling back to `currentColor` when the fill cannot be resolved. `Node.label.distance` means the net gap to the rotated visual box, while `Node.label.align` reuses `start` / `middle` / `end` to align that box along the attachment tangent. Baselines, pins, Scene bounds, and the automatic viewBox share the same measurement.',
-          },
-        },
-        {
-          label: { zh: '上下文化 layout proposal', en: 'Contextual layout proposals' },
-          content: {
-            zh: '`defineComposite()` 的 `compile` 分支以双轴 minimum / natural / range / exact proposal 查询任意 child，独立返回 resolved `slotSize`、真实 allocation / visual bounds 与 alignment guides。每次 probe 的成功或失败 transaction 保持隔离；solver 通过 one-use `replay()` 或 occurrence-aware `raise()` 选择结果。此变更删除 `ChildLayoutAxisConstraint`、`ChildLayoutConstraint` 与 `ChildLayoutSize`，把 `context.constraint` 改为 `context.proposal`，并把 `layoutChild()` 返回值改为需按 `kind` narrowing 的 `LayoutChildProbe`；原 fail-loud consumer 应对 `failed` 调用 `raise()`，不提供旧别名或兼容 overload。',
-            en: '`defineComposite()` compile branches query any child with two-axis minimum / natural / range / exact proposals and independently return resolved `slotSize`, real allocation / visual bounds, and alignment guides. Every successful or failed probe transaction stays isolated until the solver selects it through one-use `replay()` or occurrence-aware `raise()`. This breaking change removes `ChildLayoutAxisConstraint`, `ChildLayoutConstraint`, and `ChildLayoutSize`, renames `context.constraint` to `context.proposal`, and makes `layoutChild()` return a `LayoutChildProbe` that must be narrowed by `kind`; consumers preserving fail-loud behavior should call `raise()` for `failed`, with no legacy aliases or compatibility overloads.',
-          },
-        },
-        {
-          label: { zh: 'Core Runtime Computation', en: 'Core Runtime Computation' },
-          content: {
-            zh: '`createCoreComputation()` 让完整 IR Snapshot 在 Runtime transaction 中原子产出完整 CompileResult、带 canonical identity topology 的 Scene Snapshot 与 Patch。ChangeSet 会与前后 Snapshot 交叉校验；当前安全局部路径只重编一个 root Node 的纯色 fill，引用、资源、Scope、Path、Composite 与其它变化保守 full fallback。',
-            en: '`createCoreComputation()` atomically derives a complete CompileResult, a Scene Snapshot with canonical identity topology, and a Patch from complete IR Snapshots inside Runtime transactions. ChangeSets are cross-checked against previous and next Snapshots. The current safe local path recompiles only one root Node solid fill, while references, resources, Scopes, Paths, composites, and other changes conservatively use full fallback.',
-          },
-        },
-        {
-          label: { zh: '可继承 Theme 环境', en: 'Inherited Theme environment' },
-          content: {
-            zh: '`IRScene.theme` 与 `IRScope.theme` 以默认 light 基线逐字段继承；无布局与布局感知 Composite 都收到完整只读 Theme，并由领域 owner 自行映射 token。Core 图元、最终 Scene 与 SVG / Canvas renderer 不解释 Theme。',
-            en: '`IRScene.theme` and `IRScope.theme` inherit per field from the default light baseline. Both expand and layout-aware composites receive the complete readonly Theme and let the domain owner map its own tokens. Core primitives, the final Scene, and SVG / Canvas renderers do not interpret Theme.',
-          },
-        },
       ],
       subVersions: [
+        {
+          version: 'alpha.7',
+          date: '2026-11-19',
+          summary: { zh: 'BREAKING：整图编译移出 Core', en: 'BREAKING: whole-scene compilation moves out of Core' },
+          items: [
+            {
+              label: { zh: 'BREAKING 标签统一多行文本块', en: 'BREAKING unified multiline labels' },
+              content: {
+                zh: '节点与路径标签统一使用 TextBlock，支持换行字符串、非空行数组及逐行样式；附着、旋转和引线按整个文本块计算。移除 LabelTextContentSchema；旧 text: { segments: [...] } 改为 text: [{ segments: [...] }]。React、Vanilla 和 Plot 使用同一文本契约。',
+                en: 'Node and path labels share TextBlock, supporting strings with line breaks, non-empty line arrays, and per-line styles. Attachment, rotation, and leaders use the whole block. LabelTextContentSchema is removed; change text: { segments: [...] } to text: [{ segments: [...] }]. React, Vanilla, and Plot use the same text contract.',
+              },
+            },
+            {
+              label: { zh: 'BREAKING：移除角度 Schema 别名', en: 'BREAKING: remove the angle schema alias' },
+              content: {
+                zh: '移除 `AngleDegreesSchema` 导出；自定义 Schema 直接使用 Zod `number()`，并在字段描述中注明角度单位。现有角度字段的数值校验、约束和默认值保持不变。',
+                en: 'The `AngleDegreesSchema` export is removed. Use Zod `number()` in custom schemas and describe the angle unit on each field. Existing angle validation, constraints, and defaults remain unchanged.',
+              },
+            },
+            {
+              label: { zh: '视觉样式完整消费', en: 'Complete visual style support' },
+              content: {
+                zh: '补齐通用描边端帽与连接样式、后代默认阴影和混合模式；引线支持 paint 与独立透明度，箭头支持 paint 与虚线。分段行支持行级样式，公式继承行字号并可单独覆盖。',
+                en: 'Completes shared stroke caps and joins, descendant shadow/blend defaults, leader paints and independent opacity, and arrow paints and dashes. Segmented lines support line styles; math inherits the line size with optional overrides.',
+              },
+            },
+            {
+              label: { zh: '共享虚线描边', en: 'Shared dashed strokes' },
+              content: {
+                zh: '`Scope.defaults.style` 支持 `dashPattern` 与 `dashOffset`，Node 与 Path 按既有通道优先级继承。',
+                en: '`Scope.defaults.style` supports `dashPattern` and `dashOffset`, inherited by Node and Path through existing channel precedence.',
+              },
+            },
+            {
+              label: { zh: '按需布局测量', en: 'On-demand layout measurement' },
+              content: {
+                zh: '复合组件新增按轴 measureChild 贡献查询；同次编译复用等价尺寸贡献与纯文字度量，完整布局和一次 replay 仍保持独立。',
+                en: 'Composite components gain axis-specific measureChild queries. Equivalent size contributions and text metrics are reused within a compilation, while full layout and one-use replay remain separate.',
+              },
+            },
+            {
+              label: { zh: 'BREAKING 渐进式视觉属性', en: 'BREAKING progressive visual properties' },
+              content: {
+                zh: '图形透明度支持 opacity: number 或 { overall, fill, stroke }，数值只设置 overall。各成员独立继承，overall 与 fill/stroke 相乘；删除图形样式的平级 fillOpacity、strokeOpacity。纯文字、渐变色标等独立标量保持原契约。',
+                en: 'Graphic opacity accepts a number or { overall, fill, stroke }; a number sets only overall. Factors inherit independently, and overall multiplies fill/stroke. Flat graphic fillOpacity and strokeOpacity fields are removed. Text-only and gradient-stop scalar contracts remain unchanged.',
+              },
+            },
+            {
+              label: { zh: 'BREAKING：整图编译移出 Core', en: 'BREAKING: whole-scene compilation moves out of Core' },
+              content: {
+                zh: 'Core 保留 IR、Definition、原子计算与 Scene。一次性编译从 @retikz/vanilla 调用 compileToScene；直接处理 IR 或需要批次更新时，从 @retikz/reconciler 创建 SceneReconciler。独立的 @retikz/runtime 不再是 Kernel 依赖。',
+                en: 'Core owns IR, definitions, atomic operations, and Scene. For a one-shot compile, import compileToScene from @retikz/vanilla; for direct IR compilation or batch updates, use SceneReconciler from @retikz/reconciler. Kernel no longer depends on the standalone @retikz/runtime package.',
+              },
+            },
+            {
+              label: { zh: 'BREAKING 场景资源分类', en: 'BREAKING categorized Scene resources' },
+              content: {
+                zh: 'Scene.resources 从混合数组改为 { paints, clips }，渐变、Pattern 和图片从 paints 读取，裁剪从 clips 读取。缓存、回放、Runtime 快照与 setResources 使用同一结构；清空时提供两个空数组。没有资源的编译 Scene 仍可省略 resources。fill / stroke / Scope.clip 作者语法及资源 ID 保持不变，旧数组结构不再接受。',
+                en: 'Scene.resources changes from a mixed array to { paints, clips }. Read gradients, patterns and images from paints, and clip paths from clips. Caches, replay, Runtime snapshots and setResources share this structure; use two empty arrays to clear resources. Compiled Scenes without resources may still omit the field. Authoring through fill / stroke / Scope.clip and resource IDs is unchanged. The old array structure is no longer accepted.',
+              },
+            },
+            {
+              label: { zh: '路径双模式定位', en: 'dual path positioning modes' },
+              content: {
+                zh: 'Path、Step 标签及 marks 支持 positionMode: step / length，并可独立选择 positionGeometry: original / rounded。标签默认按步骤定位，标记默认按长度定位；省略几何时分别采用原始与圆角路径。增量位置更新复用几何度量与未变化的局部内容。',
+                en: 'Path and Step labels and marks support positionMode: step / length and an independent positionGeometry: original / rounded. Labels default to step positioning and marks to length positioning, using original and rounded geometry respectively when geometry is omitted. Incremental position updates reuse geometry metrics and unchanged local content.',
+              },
+            },
+            {
+              label: {
+                zh: 'BREAKING 正文与标签共享文本能力',
+                en: 'BREAKING shared text capabilities for body text and labels',
+              },
+              content: {
+                zh: 'Node 正文、Node 标签与 Path 标签统一支持硬换行、混排折行、textAlign、lineHeight 和 maxTextWidth。Node layout.align 改为 layout.textAlign，标签附着 align 保留。过长单词按字素拆分，公式保持完整；行槽至少容纳实际度量。标签透明度与宿主、行和片段透明度相乘，可能改变已有标签外观与包络。Path Definition 的标签 text 改为 TextBlockContent；动态原始标签先调用 resolveHostLabel，再交给 emitHostLabels。',
+                en: 'Node body text, Node labels, and Path labels share hard breaks, mixed-content wrapping, textAlign, lineHeight, and maxTextWidth. Rename Node layout.align to layout.textAlign; attachment align remains. Oversized words split at grapheme boundaries while formulas stay intact, and line slots accommodate measured content. Label opacity multiplies host, line, and segment factors, which can change existing appearance and bounds. Path Definition label text is now TextBlockContent; resolve dynamic source labels with resolveHostLabel before passing them to emitHostLabels.',
+              },
+            },
+            {
+              label: { zh: 'BREAKING：Shape 包围几何统一入口', en: 'BREAKING: unified Shape circumscribed geometry' },
+              content: {
+                zh: '自定义 Shape 将 computeCircumscribedHalfAxes 和 computeCircumscribedOffset 合并为 computeCircumscribedGeometry，统一返回 { halfWidth, halfHeight, offset? }；省略 offset 表示居中。删除旧回调，尺寸和偏移随同一布局候选消费，已有形状的绘制与定位行为保持不变。',
+                en: 'Custom Shapes replace computeCircumscribedHalfAxes and computeCircumscribedOffset with computeCircumscribedGeometry, returning { halfWidth, halfHeight, offset? } together. Omitting offset means a centered box. The old callbacks are removed; sizing and offset belong to the same layout candidate, preserving existing drawing and positioning behavior.',
+              },
+            },
+            {
+              label: {
+                zh: 'BREAKING：端点箭头与沿线标记分离',
+                en: 'BREAKING: separate endpoint arrows and path marks',
+              },
+              content: {
+                zh: '端点箭头统一使用 arrow.start / arrow.end，并负责接触与截断；marks 默认按截断前整条路径的弧长放置图元，包括首尾位置，且不截断主线。marks 每项直接组合 pos、shape、尺寸和样式，自定义参数放入 params；删除 kind 与内层 mark。内置 times、plus、check、star 四种普通标记，补充[标记用法](/kernel/components/path/mark)与[自定义标记](/kernel/components/path/custom-mark)文档。普通标记通过 defineMark 注册，与箭头共享 MarkEmitContext、尺寸和图元生成能力；已注册箭头自动可作为标记使用，名称冲突报错。React、Vanilla 保留 ->、<-、<-> 方向简写，由 Vanilla 归一化为端点对象；JSON IR 只使用对象。arrowDetail、arrowPlacement 内容并入端点对象，原先承担端点箭头的 marks 需迁入 arrow。',
+                en: 'Endpoint arrows use arrow.start / arrow.end and own contact and shortening. By default, marks place primitives by arc length along the complete, unshortened path, including its endpoints, without shortening the stroke. Each marks entry combines pos, shape, dimensions, and style directly, with custom parameters in params; kind and the nested mark object are removed. Adds built-in times, plus, check, and star marks with [usage](/kernel/components/path/mark) and [custom mark](/kernel/components/path/custom-mark) guides. Register marks through defineMark; marks and arrows share MarkEmitContext, sizing, and primitive generation. Registered arrows are automatically usable as marks, and name collisions are rejected. React and Vanilla retain ->, <-, and <-> shorthands, normalized by Vanilla into endpoint objects; JSON IR uses objects only. Move arrowDetail and arrowPlacement settings into endpoint objects, and former endpoint-arrow marks into arrow.',
+              },
+            },
+            {
+              label: { zh: '动画属性与关键帧值契约', en: 'Animation property and keyframe contracts' },
+              content: {
+                zh: '动画属性与缓动采用闭合枚举 AnimationProperty / AnimationEasing，移除自定义属性和具名缓动注册。轨道按属性约束关键帧类型与范围，新增 fillOpacity、strokeOpacity、dashOffset；SVG 采样与 Canvas 复用段缓动求值，pathDraw 优先于虚线偏移动画。',
+                en: 'AnimationProperty and AnimationEasing are closed enums, replacing custom property and named-easing registries. Tracks constrain keyframe types and ranges by property and add fillOpacity, strokeOpacity, and dashOffset. SVG sampling and Canvas share segment easing; pathDraw takes precedence over animated dash offsets.',
+              },
+            },
+            {
+              label: { zh: 'BREAKING：裁剪参数收口到 params', en: 'BREAKING: clip parameters move into params' },
+              content: {
+                zh: '矩形、官方扩展和自定义裁剪均使用 { kind, params }，几何字段放在必填的 params 中。定义的 schema 解析完整声明；lower 读取解析后的 params 并返回 SceneClipPath，不再提供独立 resolve 回调。移除平铺参数写法，Scene 路径与渲染行为不变。',
+                en: 'Built-in, extension, and custom clips use { kind, params }, with geometry fields in the required params object. The definition schema parses the entire spec; lower reads the parsed params and returns a SceneClipPath. The separate resolve callback is removed. Flat parameter fields are removed; Scene paths and rendering behavior are unchanged.',
+              },
+            },
+            {
+              label: {
+                zh: 'BREAKING：主色传播与箭头绘制上下文',
+                en: 'BREAKING: master colors and arrow drawing contexts',
+              },
+              content: {
+                zh: 'Path 的有效 color 覆盖 mark 的 color，具体 stroke / fill 仍优先。Arrow Definition 直接消费已解析的绘制上下文，包括虚线、端帽和连接样式；Core 不再覆盖输出图元的局部样式。实心定义默认无描边，需要同色线条的自定义定义改用上下文 fill。透明度语义保持不变。',
+                en: 'The effective Path color overrides mark color, while explicit stroke / fill still takes precedence. Arrow Definitions consume resolved drawing contexts, including dash, cap, and join styles; Core no longer overwrites emitted local styles. Filled definitions have no stroke by default; custom definitions needing lines in the master color should use context fill. Opacity semantics are unchanged.',
+              },
+            },
+            {
+              label: {
+                zh: 'BREAKING：箭头与图案复用基础图元',
+                en: 'BREAKING: arrows and patterns use basic primitives',
+              },
+              content: {
+                zh: '删除 MarkerPrimitive、MarkerPathPrim、MarkerEllipsePrim、MarkerRectPrim、MarkerGroupPrim 与 MarkerFill。Arrow / Pattern 定义改为返回 ScenePrimitive，颜色复用 PaintValue；空心内容显式使用 fill: none。文本须已度量，内容可以使用场景裁剪、绘制资源、动画与有限嵌套图元；播放状态按宿主隔离，局部 id 不创建独立更新或命中目标。',
+                en: 'MarkerPrimitive, MarkerPathPrim, MarkerEllipsePrim, MarkerRectPrim, MarkerGroupPrim, and MarkerFill are removed. Arrow and Pattern definitions return ScenePrimitive and use PaintValue; hollow content explicitly uses fill: none. Text must be measured. Content can use Scene clips, paint resources, animation, and finite nested primitives. Playback state is isolated per host, and local ids create no independent update or hit targets.',
+              },
+            },
+            {
+              label: {
+                zh: 'BREAKING：统一主题名称与定义注册',
+                en: 'BREAKING: consistent theme names and definition registries',
+              },
+              content: {
+                zh: '主题选择字段由 `theme.style` 改为 `theme.name`；类型使用 `ThemeName` / `ThemeDefinition`，注册集合统一使用 `themeDefinitions` 及各领域前缀。Chart 的领域定义使用 `chartThemeDefinitions`，宿主 Core 定义使用 `themeDefinitions`。实际 `style` 配置对象及主题继承、颜色和覆盖优先级保持不变；旧名称移除。',
+                en: 'The theme selector changes from `theme.style` to `theme.name`. Types use `ThemeName` / `ThemeDefinition`, and registries use `themeDefinitions` with domain prefixes. Chart domain definitions use `chartThemeDefinitions`, while host Core definitions use `themeDefinitions`. Actual `style` configuration objects, theme inheritance, colors, and override priority remain unchanged. Old names are removed.',
+              },
+            },
+            {
+              label: { zh: 'BREAKING：移除 Scope 外框', en: 'BREAKING: remove Scope frames' },
+              content: {
+                zh: '删除 Scope.frame 及相关类型、Schema 和编译绘制。Scope 保留包络、定位和引用；已有外框配置需改用 Standard Surface / Frame，React、Vanilla 和直接 IR 使用同一契约。',
+                en: 'Removes Scope.frame, its types and schemas, and frame rendering. Scope retains its envelope, placement, and references. Replace frame configuration with Standard Surface / Frame; React, Vanilla, and direct IR share the same contract.',
+              },
+            },
+            {
+              label: { zh: 'BREAKING：默认配置归属宿主', en: 'BREAKING: host-owned defaults' },
+              content: {
+                zh: '将 defaults.label 分别迁移到 defaults.node.label 与 defaults.path.label，将 defaults.arrow 迁移到 defaults.path.arrow。标签默认支持除 text 外的完整配置，只装饰已有内容；字体逐字段继承。reset 仅接受 node / path，并同时清除对应标签与箭头默认；true 清除所有默认通道。',
+                en: 'Move defaults.label to defaults.node.label and defaults.path.label, and defaults.arrow to defaults.path.arrow. Label defaults support every configuration field except text and only decorate existing content; fonts inherit field by field. Reset accepts only node / path and clears their decoration defaults too; true resets all default channels.',
+              },
+            },
+            {
+              label: {
+                zh: 'BREAKING 统一 Composite 编译',
+                en: 'BREAKING unified Composite compilation',
+              },
+              content: {
+                zh: '复合定义统一使用 compile(node, context)，简单组合直接返回 children，布局试算按需调用。将 expand 改为 compile，并将 ExpandCompositeDefinition / LayoutCompositeDefinition、CompositeExpandContext / LayoutCompositeCompileContext、CompositeExpandResult / LayoutCompositeCompileResult 分别改为 CompositeDefinition、CompositeCompileContext、CompositeCompileResult；异构定义统一为 AnyCompositeDefinition。保留输入绑定与领域产物；删除 spatialHandles。删除 lowerIRToKernel 及其选项，生成子项的 occurrence 改为 output。React 的 convertIRToReactNode 只接受递归不含 Composite 的 IRKernelScene，并移除第二个 options 参数；包含 Composite 的输入交给完整编译宿主。',
+                en: 'Composite definitions now use compile(node, context). Simple compositions return children directly; layout probing is optional. Replace expand with compile; replace ExpandCompositeDefinition / LayoutCompositeDefinition, CompositeExpandContext / LayoutCompositeCompileContext, and CompositeExpandResult / LayoutCompositeCompileResult with CompositeDefinition, CompositeCompileContext, and CompositeCompileResult. Heterogeneous definitions use AnyCompositeDefinition. Input bindings and domain artifacts remain supported; spatialHandles is removed. lowerIRToKernel and its options are removed, and generated child occurrences use output. React convertIRToReactNode now accepts only recursively Composite-free IRKernelScene and has no second options argument; use a full compilation host for inputs containing composites.',
+              },
+            },
+          ],
+        },
         {
           version: 'alpha.6',
           date: '2026-10-08',
@@ -978,6 +899,20 @@ export const kernelV05: Release = {
       ],
       subVersions: [
         {
+          version: 'alpha.7',
+          date: '2026-11-19',
+          summary: { zh: '检查已完成的编译结果', en: 'Inspect completed compilation results' },
+          items: [
+            {
+              label: { zh: '检查已完成的编译结果', en: 'Inspect completed compilation results' },
+              content: {
+                zh: '传入 CompileResult，在主图之外生成辅助图层；不再向主编译注入观察器。',
+                en: 'Pass a CompileResult to generate inspection overlays outside the primary compilation instead of injecting observers.',
+              },
+            },
+          ],
+        },
+        {
           version: 'alpha.6',
           date: '2026-10-08',
           summary: {
@@ -1098,14 +1033,35 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
-          label: { zh: 'BREAKING：统一编译入口', en: 'BREAKING: unified compilation entry' },
+          label: { zh: '首次发布：全量与增量编译会话', en: 'First release: full and incremental compilation sessions' },
           content: {
-            zh: '删除 compileToScene 和 compileSceneSnapshot；直接 IR 消费者改用 SceneReconciler。一次性编译创建 incremental: false 的临时实例，读取 mount(source).compilation，并在 finally 中 dispose；Vanilla、SSR、Inspect 与领域独立编译同步接入，不增加公开准备阶段。',
-            en: 'Removes compileToScene and compileSceneSnapshot. Direct IR consumers use SceneReconciler: create a temporary instance with incremental: false, read mount(source).compilation, and dispose it in finally. Vanilla, SSR, Inspect, and standalone domain compilation use the same entry without adding a public preparation phase.',
+            zh: '直接 IR 消费者使用 SceneReconciler.mount / replace。默认增量会话接受 Weave 批次；incremental: false 不保留 Weave，也不接受批次。增量会话中，auto 空批次保留当前结果；full 空批次强制重算并在成功后推进版本。结束时调用 dispose。',
+            en: 'Use SceneReconciler.mount and replace for direct IR input. Incremental sessions accept Weave batches by default; incremental: false disables retained Weave state and batch updates. Empty auto batches keep the current result, while full batches force recomputation and advance the revision on success. Dispose the session when finished.',
           },
         },
       ],
-      subVersions: [],
+      subVersions: [
+        {
+          version: 'alpha.7',
+          date: '2026-11-19',
+          summary: {
+            zh: '首次发布：全量与增量编译会话',
+            en: 'First release: full and incremental compilation sessions',
+          },
+          items: [
+            {
+              label: {
+                zh: '首次发布：全量与增量编译会话',
+                en: 'First release: full and incremental compilation sessions',
+              },
+              content: {
+                zh: '直接 IR 消费者使用 SceneReconciler.mount / replace。默认增量会话接受 Weave 批次；incremental: false 不保留 Weave，也不接受批次。增量会话中，auto 空批次保留当前结果；full 空批次强制重算并在成功后推进版本。结束时调用 dispose。',
+                en: 'Use SceneReconciler.mount and replace for direct IR input. Incremental sessions accept Weave batches by default; incremental: false disables retained Weave state and batch updates. Empty auto batches keep the current result, while full batches force recomputation and advance the revision on success. Dispose the session when finished.',
+              },
+            },
+          ],
+        },
+      ],
     },
     {
       pkg: '@retikz/render',
@@ -1116,10 +1072,10 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
-          label: { zh: '待发布：BREAKING 冗余 API 清理', en: 'Unreleased: BREAKING unused API cleanup' },
+          label: { zh: '运行时快照与 Scene Patch', en: 'Runtime snapshots and Scene patches' },
           content: {
-            zh: '移除 sampleColorOklch 与 RENDER_RUNTIME_SOURCE_KEY；颜色动画继续通过 lerpColorOklch 求值，SVG 资源仍由正式 builder 物化。',
-            en: 'Removes sampleColorOklch and RENDER_RUNTIME_SOURCE_KEY. Color animation continues through lerpColorOklch and SVG resources through the active builders.',
+            zh: '从 @retikz/render/runtime 获取渲染快照和 Scene Patch 类型。绘制与裁剪资源分别从 resources.paints 与 resources.clips 读取。',
+            en: 'Import rendering snapshot and Scene patch types from @retikz/render/runtime. Read paint and clip resources from resources.paints and resources.clips respectively.',
           },
         },
         {
@@ -1127,13 +1083,6 @@ export const kernelV05: Release = {
           content: {
             zh: 'SVG 与 Canvas 统一执行矩形、椭圆和箭头的端帽、连接样式与 paint；SVG 箭头资源使用实例隔离的引用。',
             en: 'SVG and Canvas render caps, joins, and paints on rectangles, ellipses, and arrows consistently. SVG arrow paint references are scoped to each instance.',
-          },
-        },
-        {
-          label: { zh: 'Retained renderer runtime', en: 'Retained renderer runtime' },
-          content: {
-            zh: '`@retikz/render/runtime` 提供 nominal renderer factory、`none | group | entity` capability、Patch/Snapshot validator 与 Runtime participant；合法但不受支持的操作在执行前完整 fallback，第三方 renderer 与内置后端共用协议。',
-            en: '`@retikz/render/runtime` provides nominal renderer factories, `none | group | entity` capabilities, Patch/Snapshot validation, and a Runtime participant. Valid unsupported operations fully fall back before execution, and third-party renderers share the built-in protocol.',
           },
         },
         {
@@ -1145,6 +1094,20 @@ export const kernelV05: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'alpha.7',
+          date: '2026-11-19',
+          summary: { zh: '运行时快照与 Scene Patch', en: 'Runtime snapshots and Scene patches' },
+          items: [
+            {
+              label: { zh: '运行时快照与 Scene Patch', en: 'Runtime snapshots and Scene patches' },
+              content: {
+                zh: '从 @retikz/render/runtime 获取渲染快照和 Scene Patch 类型。绘制与裁剪资源分别从 resources.paints 与 resources.clips 读取。',
+                en: 'Import rendering snapshot and Scene patch types from @retikz/render/runtime. Read paint and clip resources from resources.paints and resources.clips respectively.',
+              },
+            },
+          ],
+        },
         {
           version: 'alpha.6',
           date: '2026-10-08',
@@ -1247,7 +1210,7 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
-          label: { zh: '待发布：BREAKING 冗余 API 清理', en: 'Unreleased: BREAKING unused API cleanup' },
+          label: { zh: 'BREAKING 冗余 API 清理', en: 'BREAKING unused API cleanup' },
           content: {
             zh: '移除 createLayoutAuthoringSite 冻结包装函数及未被 Layout 消费的内部 SVG 包装组件；LayoutAuthoringSite 类型与 Layout 渲染行为保持。',
             en: 'Removes the createLayoutAuthoringSite freeze wrapper and internal SVG wrappers unused by Layout. LayoutAuthoringSite and Layout rendering behavior remain unchanged.',
@@ -1283,6 +1246,20 @@ export const kernelV05: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'alpha.7',
+          date: '2026-11-19',
+          summary: { zh: '框架接入', en: 'React integration' },
+          items: [
+            {
+              label: { zh: '框架接入', en: 'React integration' },
+              content: {
+                zh: 'React 接入 Vanilla 的编译流程，不需要应用创建 Reconciler。移除 createLayoutAuthoringSite 包装函数。',
+                en: 'React uses the Vanilla compilation pipeline; applications do not need to construct a reconciler. The createLayoutAuthoringSite wrapper is removed.',
+              },
+            },
+          ],
+        },
         {
           version: 'alpha.6',
           date: '2026-10-08',
@@ -1412,6 +1389,20 @@ export const kernelV05: Release = {
       ],
       subVersions: [
         {
+          version: 'alpha.7',
+          date: '2026-11-19',
+          summary: { zh: '一次性编译与作者输入', en: 'One-shot compilation and authoring inputs' },
+          items: [
+            {
+              label: { zh: '一次性编译与作者输入', en: 'One-shot compilation and authoring inputs' },
+              content: {
+                zh: '一次性编译使用 compileToScene 或 compileToSceneAsync，替代 processToStaticInputResult 系列。节点标签沿用 Core 的数组形式；直接编写节点对象时保留 type 判别字段。',
+                en: 'Replace the processToStaticInputResult family with compileToScene or compileToSceneAsync. Use Core’s array form for node labels and keep the type discriminator when authoring a node object directly.',
+              },
+            },
+          ],
+        },
+        {
           version: 'alpha.6',
           date: '2026-10-08',
           summary: {
@@ -1532,6 +1523,20 @@ export const kernelV05: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'alpha.7',
+          date: '2026-11-19',
+          summary: { zh: 'TeX 选项类型更名', en: 'TeX options type renamed' },
+          items: [
+            {
+              label: { zh: 'TeX 选项类型更名', en: 'TeX options type renamed' },
+              content: {
+                zh: '将 LowerTexOptions 导入改为 TexLoweringOptions；公式转换继续使用 createLowerTex 或 createMathJaxLowerTex。',
+                en: 'Rename LowerTexOptions imports to TexLoweringOptions. Continue to use createLowerTex or createMathJaxLowerTex for formula conversion.',
+              },
+            },
+          ],
+        },
         {
           version: 'alpha.6',
           date: '2026-10-08',

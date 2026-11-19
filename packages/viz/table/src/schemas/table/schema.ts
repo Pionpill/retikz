@@ -1,7 +1,16 @@
 import { CompositeBaseSchema } from '@retikz/core';
 import { DataReferenceSchema, DataExecutionSchema, DataTransformDeclarationSchema } from '@retikz/data';
 import { JsonObjectSchema, NonBlankStringSchema } from '@retikz/foundation';
-import type { infer as ZodInfer, RefinementCtx, ZodType } from 'zod';
+import type {
+  infer as ZodInfer,
+  RefinementCtx,
+  strictObject,
+  ZodArray,
+  ZodLiteral,
+  ZodNever,
+  ZodOptional,
+  ZodType,
+} from 'zod';
 import { array, literal, never, union } from 'zod';
 
 import { TableAppearanceDefaultsSchema } from '../appearance';
@@ -11,6 +20,25 @@ import { TableCellRuleSchema } from '../rule';
 import { CustomTableStructureSchema, DetailTableStructureSchema, ManualTableStructureSchema } from '../structure';
 import { TableCellLayoutDefaultsSchema, TableDefaultsSchema, TableVisualDefaultsSchema } from '../style';
 import { TABLE_NAMESPACE, TableComposite } from './constants';
+
+type TableBaseShape = {
+  namespace: ZodLiteral<typeof TABLE_NAMESPACE>;
+  type: ZodLiteral<typeof TableComposite.Table>;
+  id: ZodOptional<typeof NonBlankStringSchema>;
+  defaultCellLayout: ZodOptional<typeof TableCellLayoutDefaultsSchema>;
+  defaultAppearance: ZodOptional<typeof TableAppearanceDefaultsSchema>;
+  layout: ZodOptional<typeof TableLayoutSchema>;
+  meta: ZodOptional<typeof JsonObjectSchema>;
+  rules: ZodOptional<ZodArray<typeof TableCellRuleSchema>>;
+  encodings: ZodOptional<ZodArray<typeof TableCellVisualEncodingSchema>>;
+  defaultVisual: ZodOptional<typeof TableVisualDefaultsSchema>;
+  defaultTable: ZodOptional<typeof TableDefaultsSchema>;
+};
+
+type BoundTableDataShape = {
+  transform: ZodOptional<ZodArray<typeof DataTransformDeclarationSchema>>;
+  dataExecution: ZodOptional<typeof DataExecutionSchema>;
+};
 
 const TableBaseSchema = CompositeBaseSchema.extend({
   namespace: literal(TABLE_NAMESPACE).describe(
@@ -56,7 +84,12 @@ const refineTableRoot = (spec: InputTableRootSemantic, context: RefinementCtx): 
 };
 
 /** 校验绑定外部数据的可序列化明细表格组合节点 */
-export const DetailTableSchema = TableBaseSchema.extend({
+export const DetailTableSchema: ReturnType<
+  typeof strictObject<
+    TableBaseShape &
+      BoundTableDataShape & { data: typeof DataReferenceSchema; structure: typeof DetailTableStructureSchema }
+  >
+> = TableBaseSchema.extend({
   transform: array(DataTransformDeclarationSchema)
     .optional()
     .describe('Ordered data transforms before Table structure resolution'),
@@ -70,7 +103,16 @@ export const DetailTableSchema = TableBaseSchema.extend({
   .describe('JSON-safe detail Table composite specification bound to external data.');
 
 /** 校验直接编写内容的表格组合节点，拒绝外部数据与数据执行选项 */
-export const ManualTableSchema = TableBaseSchema.extend({
+export const ManualTableSchema: ReturnType<
+  typeof strictObject<
+    TableBaseShape & {
+      transform: ZodOptional<ZodNever>;
+      dataExecution: ZodOptional<ZodNever>;
+      data: ZodOptional<ZodNever>;
+      structure: typeof ManualTableStructureSchema;
+    }
+  >
+> = TableBaseSchema.extend({
   transform: never().optional().describe('Manual Table does not accept data transforms'),
   dataExecution: never().optional().describe('Manual Table does not accept data execution configuration'),
   data: never().optional().describe('Manual Table specifications do not accept an external dataset reference.'),
@@ -80,7 +122,15 @@ export const ManualTableSchema = TableBaseSchema.extend({
   .describe('JSON-safe manual Table composite specification with explicit content.');
 
 /** 校验通过注册结构能力解析、可选择绑定外部数据的表格组合节点 */
-export const CustomTableSchema = TableBaseSchema.extend({
+export const CustomTableSchema: ReturnType<
+  typeof strictObject<
+    TableBaseShape &
+      BoundTableDataShape & {
+        data: ZodOptional<typeof DataReferenceSchema>;
+        structure: typeof CustomTableStructureSchema;
+      }
+  >
+> = TableBaseSchema.extend({
   transform: array(DataTransformDeclarationSchema)
     .optional()
     .describe('Ordered data transforms requiring a bound dataset'),

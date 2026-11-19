@@ -25,6 +25,15 @@ export const resolveTextBlock = (
   const fontScale = Math.min(scale.x, scale.y);
   const font = { ...inheritedFont, size: inheritedFont.size * fontScale };
   const lines = (typeof text === 'string' ? [text] : text).map(line => {
+    // 普通字符串直接构造单个片段，片段字体仍独立于块字体
+    if (typeof line === 'string' && fontScale === 1 && (!context.gatingOn || !line.includes('$'))) {
+      return {
+        segments: [{ text: line, font: resolveFont(undefined, { rootFontSize: context.rootFontSize, inheritedFont }) }],
+        plainText: line,
+        hasMath: false,
+        mixed: false,
+      };
+    }
     const resolved = resolveTextLine(line, { ...context, inheritedFont });
     // ⚡单位字号缩放直接使用本次解析新建的行与片段，避免再次复制字体和片段
     if (fontScale === 1) return resolved;

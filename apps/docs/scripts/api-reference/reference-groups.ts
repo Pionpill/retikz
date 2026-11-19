@@ -437,13 +437,7 @@ export const referenceGroups: Readonly<Partial<Record<string, ReadonlyArray<Refe
         zh: '直接调用',
         en: 'Direct calls',
       },
-      members: [
-        'node / InputNode',
-        'coordinate / InputCoordinate',
-        'InputNodeLabel',
-        'InputNodeLabelBoundaryPosition',
-        'InputNodeLabelPosition',
-      ],
+      members: ['node / InputNode', 'coordinate / InputCoordinate'],
       schemas: [],
     },
     {
@@ -664,6 +658,7 @@ export const referenceGroups: Readonly<Partial<Record<string, ReadonlyArray<Refe
         'NonEmptyReadonlyArray',
         'OpenString',
         'ValueOf',
+        'RequireExactlyOne',
         'WithOptionalProperties',
         'WithRequiredProperties',
         'createOpenStringSchema',

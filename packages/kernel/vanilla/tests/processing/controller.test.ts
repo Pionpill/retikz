@@ -108,12 +108,12 @@ describe('Vanilla 处理', () => {
   });
 
   it('controller 仅在完整成功后发布不可变 revision，失败保持上一次结果', () => {
-    const controller = createProcessingController({ children: [{ id: 'first', position: [0, 0] }] }, {});
+    const controller = createProcessingController({ children: [{ type: 'node', id: 'first', position: [0, 0] }] }, {});
     const first = controller.read();
     const listener = vi.fn();
     const unsubscribe = controller.subscribe(listener);
 
-    controller.update({ children: [{ id: 'second', position: [20, 0] }] });
+    controller.update({ children: [{ type: 'node', id: 'second', position: [20, 0] }] });
 
     const second = controller.read();
 
@@ -130,13 +130,15 @@ describe('Vanilla 处理', () => {
     expect(controller.read()).toBe(second);
 
     unsubscribe();
-    controller.update({ children: [{ id: 'third', position: [40, 0] }] });
+    controller.update({ children: [{ type: 'node', id: 'third', position: [40, 0] }] });
 
     expect(listener).toHaveBeenCalledTimes(1);
 
     controller.dispose();
 
-    expect(() => controller.update({ children: [{ id: 'after-dispose', position: [60, 0] }] })).toThrow(/disposed/i);
+    expect(() => controller.update({ children: [{ type: 'node', id: 'after-dispose', position: [60, 0] }] })).toThrow(
+      /disposed/i,
+    );
   });
 
   it('retained controller 接受新增和移除 Composite contribution 的 InputScene 更新', () => {
@@ -165,7 +167,7 @@ describe('Vanilla 处理', () => {
       }),
     };
     const controller = createProcessingController(
-      { children: [{ id: 'stable', position: [0, 0] }] },
+      { children: [{ type: 'node', id: 'stable', position: [0, 0] }] },
       { adapters: [adapter] },
     );
     const first = controller.read();
@@ -177,7 +179,7 @@ describe('Vanilla 处理', () => {
     ).not.toThrow();
     expect(controller.read().revision).toBe(first.revision + 1);
 
-    expect(() => controller.update({ children: [{ id: 'restored', position: [20, 0] }] })).not.toThrow();
+    expect(() => controller.update({ children: [{ type: 'node', id: 'restored', position: [20, 0] }] })).not.toThrow();
     expect(controller.read().revision).toBe(first.revision + 2);
 
     controller.dispose();
@@ -212,7 +214,7 @@ describe('Vanilla 处理', () => {
       }),
     };
     const controller = createProcessingController(
-      { children: [{ id: 'stable', position: [0, 0] }] },
+      { children: [{ type: 'node', id: 'stable', position: [0, 0] }] },
       { adapters: [adapter] },
     );
     const stable = controller.read();
@@ -231,14 +233,14 @@ describe('Vanilla 处理', () => {
   });
 
   it('订阅方异常不会回滚已提交 revision，并经诊断边界报告', () => {
-    const controller = createProcessingController({ children: [{ id: 'first', position: [0, 0] }] });
+    const controller = createProcessingController({ children: [{ type: 'node', id: 'first', position: [0, 0] }] });
     const first = controller.read();
     const failure = new Error('expected subscriber failure');
     controller.subscribe(() => {
       throw failure;
     });
 
-    expect(() => controller.update({ children: [{ id: 'second', position: [20, 0] }] })).not.toThrow();
+    expect(() => controller.update({ children: [{ type: 'node', id: 'second', position: [20, 0] }] })).not.toThrow();
     expect(controller.read().revision).toBe(first.revision + 1);
     expect(controller.diagnostics()).toContain(failure);
 
@@ -270,12 +272,12 @@ describe('Vanilla 处理', () => {
   });
 
   it('retained processing 只在成功 Runtime transaction 后替换完整 result', () => {
-    const processing = createProcessingController({ children: [{ id: 'first', position: [0, 0] }] });
+    const processing = createProcessingController({ children: [{ type: 'node', id: 'first', position: [0, 0] }] });
     const first = processing.read();
     const listener = vi.fn();
     const unsubscribe = processing.subscribe(listener);
 
-    processing.update({ children: [{ id: 'second', position: [20, 0] }] });
+    processing.update({ children: [{ type: 'node', id: 'second', position: [20, 0] }] });
 
     const second = processing.read();
 
@@ -283,12 +285,12 @@ describe('Vanilla 处理', () => {
     expect(second.scene).not.toBe(first.scene);
     expect(listener).toHaveBeenCalledWith(second);
     expect(() =>
-      processing.update({ children: [{ id: 'broken', position: [0, 0], shape: 'missing-shape' }] }),
+      processing.update({ children: [{ type: 'node', id: 'broken', position: [0, 0], shape: 'missing-shape' }] }),
     ).toThrow();
     expect(processing.read()).toBe(second);
 
     unsubscribe();
-    processing.update({ children: [{ id: 'third', position: [40, 0] }] });
+    processing.update({ children: [{ type: 'node', id: 'third', position: [40, 0] }] });
 
     expect(listener).toHaveBeenCalledTimes(1);
 
@@ -316,8 +318,8 @@ describe('Vanilla 处理', () => {
         return session;
       },
     };
-    const first = { children: [{ id: 'first', position: [0, 0] }] };
-    const second = { children: [{ id: 'second', position: [20, 0] }] };
+    const first = { children: [{ type: 'node', id: 'first', position: [0, 0] }] } satisfies InputScene;
+    const second = { children: [{ type: 'node', id: 'second', position: [20, 0] }] } satisfies InputScene;
     const controller = createProcessingController(first, { compileDriver: driver });
 
     controller.update(second);
@@ -354,14 +356,14 @@ describe('Vanilla 处理', () => {
       },
     };
     const controller = createProcessingController(
-      { children: [{ id: 'stable', position: [0, 0] }] },
+      { children: [{ type: 'node', id: 'stable', position: [0, 0] }] },
       { compileDriver: driver },
     );
     const stable = controller.read();
     const listener = vi.fn();
     controller.subscribe(listener);
 
-    expect(() => controller.update({ children: [{ id: 'broken', position: [20, 0] }] })).toThrow(
+    expect(() => controller.update({ children: [{ type: 'node', id: 'broken', position: [20, 0] }] })).toThrow(
       /Failed to publish the compilation|RENDER_RUNTIME_RENDERER_PREPARE_FAILED|Vanilla compile driver resolve failed/,
     );
 
@@ -369,7 +371,7 @@ describe('Vanilla 处理', () => {
     expect(listener).not.toHaveBeenCalled();
     expect(controller.diagnostics()).toEqual([expect.objectContaining({ code: 'VANILLA_COMPILE_DRIVER_FAILED' })]);
 
-    controller.update({ children: [{ id: 'recovered', position: [40, 0] }] });
+    controller.update({ children: [{ type: 'node', id: 'recovered', position: [40, 0] }] });
 
     expect(controller.read().revision).toBe(stable.revision + 1);
 

@@ -66,7 +66,7 @@ export const normalizeRelation = (input: InputRelation): IRGraphRelation => {
 
   return createRelation({
     ...endpointRelation,
-    route: normalizePath({ way }).children,
+    route: normalizePath({ type: 'path', way }).children,
   });
 };
 

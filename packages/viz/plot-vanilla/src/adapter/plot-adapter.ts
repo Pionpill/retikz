@@ -1,20 +1,15 @@
+import type { IRScope } from '@retikz/core';
 import type { DataLineageOptions } from '@retikz/data';
 import type { IRPlot } from '@retikz/plot';
 import { createPlotProviderContribution, PLOT_NAMESPACE, preparePlotData } from '@retikz/plot';
-import type {
-  InputEmbedContext,
-  InputEmbedPreparationContext,
-  InputScope,
-  SynchronousInputEmbedAdapter,
-} from '@retikz/vanilla';
-import { normalizeScopeWithChildren } from '@retikz/vanilla';
+import type { InputEmbedContext, InputEmbedPreparationContext, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
 import { RetikzPlotVanillaError } from '../error';
 import type { InputPlotEmbed, PreparedPlotLineageNotification } from '../spec';
 import { plotIROf } from '../spec';
 
 /** 将 Plot 根节点包进可选的面板 Scope */
-const wrapPlotPanel = (node: IRPlot, panel: InputPlotEmbed['panel']) => {
+const wrapPlotPanel = (node: IRPlot, panel: InputPlotEmbed['panel']): IRPlot | IRScope => {
   if (panel === undefined) return node;
 
   const { position, transforms, zIndex, clip, theme } = panel;
@@ -27,7 +22,7 @@ const wrapPlotPanel = (node: IRPlot, panel: InputPlotEmbed['panel']) => {
   )
     return node;
 
-  const input: InputScope = {
+  return {
     type: 'scope',
     ...(position === undefined ? {} : { position }),
     ...(transforms === undefined ? {} : { transforms }),
@@ -36,8 +31,6 @@ const wrapPlotPanel = (node: IRPlot, panel: InputPlotEmbed['panel']) => {
     ...(theme === undefined ? {} : { theme }),
     children: [node],
   };
-
-  return normalizeScopeWithChildren(input, () => [node]);
 };
 
 /** 将 Plot authoring input 下沉为 Core contribution 的 InputEmbed adapter */

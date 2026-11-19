@@ -1,9 +1,5 @@
-import type { InputCoordinate } from './coordinate';
-import type { InputEmbed } from './embed';
-import type { InputNode } from './node';
-import type { InputPath } from './path';
+import type { InputCoordinate, InputEmbed, InputNode, InputPath, InputPathConfig, InputScope } from './element';
 import type { InputChild, InputLayer, InputScene, InputSceneChildren, InputSceneLayers } from './scene';
-import type { InputScope } from './scope';
 
 /**
  * 创建作者侧节点输入，身份由配置中的 id 声明
@@ -27,7 +23,12 @@ export const coordinate = (config: Omit<InputCoordinate, 'type'>): InputCoordina
  * @param config 路径配置，way 与 children 互斥
  * @returns 保留配置字段的路径作者输入
  */
-export const path = (config: Omit<InputPath, 'type'>): InputPath => ({ ...config });
+export const path = (config: InputPathConfig): InputPath => ({
+  type: 'path',
+  // 保留自有字段，让规范化阶段区分作者步骤与直接传入的 Core Path
+  authoring: config.authoring,
+  ...config,
+});
 
 /**
  * 创建一组图元的作者侧作用域输入
@@ -38,7 +39,7 @@ export const path = (config: Omit<InputPath, 'type'>): InputPath => ({ ...config
 export const scope = (
   config: Omit<InputScope, 'type' | 'children'>,
   children: ReadonlyArray<InputChild>,
-): InputScope => ({ ...config, children });
+): InputScope => ({ type: 'scope', authoring: config.authoring, ...config, children });
 
 /**
  * 创建作者侧分层输入

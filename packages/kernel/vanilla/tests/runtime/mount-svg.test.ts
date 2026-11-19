@@ -18,6 +18,15 @@ const sceneOf = (text = 'A'): ReturnType<typeof compileTestResult>['scene'] => {
 };
 
 describe('@retikz/vanilla mountSvg', () => {
+  it('卸载默认 retained SVG 时仅移除当前宿主', () => {
+    const container = document.createElement('div');
+    const sibling = container.appendChild(document.createElement('span'));
+    const view = mountSvg(container, { children: [] });
+    expect(view.root.parentNode).toBe(container);
+    view.dispose();
+    expect(Array.from(container.children)).toEqual([sibling]);
+  });
+
   it.each(['static', 'retained'] as const)('%s 测量与更新后的 SVG 宿主共享默认字体', mode => {
     const ir: IRScene = { version: 1, type: 'scene', children: [{ type: 'node', text: 'Alpha', position: [0, 0] }] };
     const measureText = vi.fn(() => ({ width: 40, height: 16 }));
@@ -27,7 +36,7 @@ describe('@retikz/vanilla mountSvg', () => {
       mode === 'static'
         ? mountSvg(container, ir, { ...options, runtime: { mode } })
         : mountSvg(container, ir, { ...options, runtime: { mode } });
-    expect(measureText).toHaveBeenCalledWith('Alpha', expect.objectContaining({ family: 'serif' }));
+    expect(measureText).toHaveBeenCalledWith('Alpha', expect.objectContaining({ family: 'serif' }), false);
     view.update(ir);
     expect(view.root.getAttribute('font-family') ?? view.root.style.fontFamily).toBe('serif');
     view.dispose();

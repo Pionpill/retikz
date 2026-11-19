@@ -1,8 +1,8 @@
+import type { IRTransform } from '@retikz/core';
 import type { Position } from '@retikz/math';
 import { localToWorld } from '@retikz/math';
 import { Draw, Layout, Node, Scope } from '@retikz/react';
 import { Circle } from '@retikz/standard-react/shape';
-import type { InputTransform } from '@retikz/vanilla';
 import type { FC } from 'react';
 
 import type { Lang } from '@/i18n';
@@ -19,7 +19,7 @@ const outline: Array<Position> = [
   [-34, -14],
 ];
 
-const transforms: Array<InputTransform> = [
+const transforms: Array<IRTransform> = [
   { kind: 'rotate', degrees: 30, pivot: 'origin' },
   { kind: 'scale', x: 1.4, y: 1.4, pivot: 'origin' },
 ];

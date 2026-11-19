@@ -11,7 +11,7 @@ description: Use when retikz work is primarily refactoring, reorganization, rena
 
 先按根规则判级：变量 / 私有命名和机械搬迁通常为小型，优化型重构通常为中型，改变功能结构、跨包架构或公开能力的功能型重构为大型。小型直接执行；中大型在动代码前一次确认计划、review、subagent 与 Git 权限，执行中不分别询问 plan review 和完工 review。
 
-中型默认由主 agent 实现和自审；计划默认纳入代码范式 reviewer，性能 reviewer 按需裁决，均须获批后启动；整体 review 保持原有职责。大型功能型重构读取 `flow-long-task`，只有最终整体 review 已在计划中授权或用户明确要求时使用 `cross-review`。
+角色、授权及轮次按根指南与[常规评审](../flow-development/references/review-cycle.md)；仅大型功能型重构读取 `flow-long-task`。
 
 ## Plan First
 
@@ -38,10 +38,7 @@ description: Use when retikz work is primarily refactoring, reorganization, rena
 ## 执行规则
 
 - 集合处理遵循 [集合遍历](../develop-implement/SKILL.md#集合遍历)：优先单次 `reduce` 或循环，消除可合并的连续筛选、映射与中间数组。
-- 小型重构：主 agent 直接执行并跑受影响验证，不自动派 agent。
-- 中型优化重构：按已确认计划连续执行；计划有 reviewer 时使用整体与专项 reviewer 循环。
-- 大型功能型重构：按 `flow-long-task` 执行；计划已授权自动 commit 时按确认粒度提交，不在每个 commit 前重新询问。
-- 常规评审使用上述整体与专项 reviewer 规则；多模型 cross-review 仅按独立授权执行。
+- 按已确认的规模与计划执行，仅在计划明确授权时分批提交。
 - 发现必须改公开契约、文档可见行为或 roadmap 外目标时，halt 并请用户裁决是否换流。
 
 ## 验证

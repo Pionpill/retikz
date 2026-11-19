@@ -56,8 +56,10 @@ type PolygonParams = ZodInfer<typeof polygonParamsSchema>;
 
 /** 顶点角的 |cos| 最大值，用于由 AABB 半宽反推外接半径 */
 const maxAbsCos = (params: PolygonParams): number => {
-  let max = 0;
   const startDeg = params.rotate ?? 0;
+  // ⚡零自旋的首顶点就在正 x 轴，已达到 |cos| 的上界
+  if (startDeg === 0) return 1;
+  let max = 0;
   const stepDeg = 360 / params.sides;
 
   for (let index = 0; index < params.sides; index++) {

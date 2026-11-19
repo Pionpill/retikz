@@ -217,7 +217,9 @@ describe('<Layout> 的 Vanilla Input processing', () => {
       severity: 'warning' as const,
       message: 'test diagnostic',
     });
-    const controller = vanilla.createProcessingController({ children: [{ id: 'diagnostic-node', position: [0, 0] }] });
+    const controller = vanilla.createProcessingController({
+      children: [{ type: 'node', id: 'diagnostic-node', position: [0, 0] }],
+    });
     const diagnostics = vi.fn(() => Object.freeze([diagnostic]));
     const observedController: ProcessingController = Object.freeze({ ...controller, diagnostics });
     vi.spyOn(vanilla, 'createProcessingController').mockReturnValue(observedController);

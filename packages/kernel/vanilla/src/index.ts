@@ -1,21 +1,85 @@
 export * from './error';
-export * from './normalize/coordinate';
-export * from './normalize/embed';
-export * from './normalize/helpers';
-export * from './normalize/node';
-export * from './normalize/path';
-export { isInputScene, normalizeScene } from './normalize/scene';
-export * from './normalize/scene/types';
-export * from './normalize/scope';
-export * from './processing';
 export type {
-  InputVanillaCompileDriver,
-  VanillaCompileDriver,
-  VanillaCompileDriverSession,
-  VanillaCompileOutput,
-} from './runtime/compile-driver';
-export { defaultVanillaCompileDriver } from './runtime/compile-driver';
-export * from './runtime/render-svg';
-export type { SceneResult } from './runtime/to-scene';
-export { toSceneResult } from './runtime/to-scene';
-export type { CommonOptions, InputRender, RenderToStringOptions, InputRetainedRender } from './runtime/types';
+  AnyInputEmbed,
+  AnyInputEmbedAdapter,
+  EmbedChildrenNormalizationResult,
+  InputArcStep,
+  InputAuthoringSite,
+  InputAuthoringSiteKind,
+  InputAxisLineStep,
+  InputAxisLineTarget,
+  InputBendStep,
+  InputChild,
+  InputCoordinate,
+  InputCubicStep,
+  InputCurveStep,
+  InputEmbed,
+  InputEmbedAdapter,
+  InputEmbedAuthoringSite,
+  InputEmbedChildrenPreparation,
+  InputEmbedContext,
+  InputEmbedContribution,
+  InputEmbedPreparation,
+  InputEmbedPreparationContext,
+  InputEmbedThemeContext,
+  InputEmbedThemeContextResolver,
+  InputFoldStep,
+  InputLayer,
+  InputLayerMeta,
+  InputLineStep,
+  InputMoveStep,
+  InputNode,
+  InputNormalizeOptions,
+  InputPath,
+  InputRectangleStep,
+  InputRuntimeMeta,
+  InputScene,
+  InputSceneChildren,
+  InputSceneLayers,
+  InputScope,
+  InputSmoothStep,
+  InputStep,
+  InputTarget,
+  SceneNormalizationResult,
+  SynchronousInputEmbedAdapter,
+  WayArcOp,
+  WayAxisLineOp,
+  WayBendOp,
+  WayCircleOp,
+  WayCubicOp,
+  WayCurveOp,
+  WayCycle,
+  WayDSL,
+  WayEllipseOp,
+  WayFoldOp,
+  WayItem,
+  WayLabel,
+  WayLabelOp,
+  WayParsedStep,
+  WayRelativeItem,
+  WayTargetAdapter,
+  WayVia,
+} from './normalize';
+export {
+  coordinate,
+  DrawWay,
+  embed,
+  InputLayerCache,
+  isInputScene,
+  layer,
+  node,
+  normalizeNode,
+  normalizePath,
+  normalizePathArrow,
+  normalizeScene,
+  parseNodeTarget,
+  parseTargetSugar,
+  parseWay,
+  parseWayWithTargets,
+  path,
+  scene,
+  scope,
+} from './normalize';
+export * from './processing';
+export type { CommonOptions, InputRender, InputRetainedRender, RenderToStringOptions, SceneResult } from './runtime';
+export { renderToSvgString, toSceneResult } from './runtime';

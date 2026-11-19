@@ -1,5 +1,6 @@
 import type { AnyCompositeDefinition } from '@retikz/core';
-import { RetikzRenderError, RetikzRenderErrorCode } from '@retikz/render/runtime';
+
+import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
 
 type CompositeSlot = {
   /** 当前 transaction 可见的 composite Definition */
@@ -27,8 +28,8 @@ type RetainedCompositeDefinitions = Readonly<{
 }>;
 
 const invalidDefinitions = (cause: unknown): never => {
-  throw new RetikzRenderError({
-    code: RetikzRenderErrorCode.RuntimeInputInvalid,
+  throw new RetikzVanillaError({
+    code: RetikzVanillaErrorCode.Processing,
     cause,
     message: 'Vanilla retained processing must preserve composite definition keys, schemas, and execution branches',
   });

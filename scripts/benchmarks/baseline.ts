@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 
+import { allocationSampling } from './sampling';
 import type { BenchmarkReport } from './types';
 
 /** 基线文件是外部输入，只在此入口校验一次 */
@@ -20,18 +21,22 @@ const assertNumber: (value: unknown) => asserts value is number = value => {
 /** 验证当前报告版本及预算消费的完整事实 */
 const assertBaseline: (value: unknown) => asserts value is BenchmarkReport = value => {
   assertRecord(value);
-  assert(value.version === 2 && typeof value.createdAt === 'string', 'Unsupported baseline version');
+  assert(value.version === 5 && typeof value.createdAt === 'string', 'Unsupported baseline version');
+  assert(typeof value.allocationEnabled === 'boolean', 'Missing allocation run mode');
   assertStrings(value.dimensionLabels);
   assertRecord(value.environment);
   const environment = value.environment;
-  for (const field of ['runnerId', 'node', 'platform', 'architecture', 'vitest', 'lockHash', 'fixtureHash']) {
+  for (const field of ['runnerId', 'node', 'platform', 'architecture', 'vitest', 'lockHash', 'fixtureHash', 'pool']) {
     assert(typeof environment[field] === 'string' && environment[field].length > 0, `Invalid environment ${field}`);
   }
-  assert(environment.artifact === 'native-esm', 'Unsupported artifact');
+  assert(environment.artifact === 'native-esm' || environment.artifact === 'vite-source', 'Unsupported artifact');
   assertStrings(environment.cpuModels);
   assert(environment.cpuModels.length > 0, 'Missing CPU model');
   assertNumber(environment.logicalCpuCount);
   assert(environment.logicalCpuCount > 0 && Number.isInteger(environment.logicalCpuCount));
+  assertNumber(environment.maxWorkers);
+  assert(environment.maxWorkers > 0 && Number.isInteger(environment.maxWorkers));
+  assert(typeof environment.isolate === 'boolean');
   assertNumber(environment.totalMemoryBytes);
   assert(environment.totalMemoryBytes > 0);
   assertRecord(environment.sampling);
@@ -55,6 +60,40 @@ const assertBaseline: (value: unknown) => asserts value is BenchmarkReport = val
     );
     ids.add(scenario.id);
     if (scenario.dimensions !== undefined) assertStrings(scenario.dimensions);
+    if (scenario.allocation !== undefined) {
+      assertRecord(scenario.allocation);
+      const allocation = scenario.allocation;
+      assert(['measured', 'insufficient', 'unavailable', 'skipped'].includes(String(allocation.status)));
+      assertNumber(allocation.calls);
+      assertNumber(allocation.warmupCalls);
+      assertNumber(allocation.sampleCount);
+      assertNumber(allocation.samplingInterval);
+      assert(
+        [allocation.calls, allocation.warmupCalls, allocation.sampleCount, allocation.samplingInterval].every(
+          Number.isInteger,
+        ),
+      );
+      if (allocation.estimatedTotalBytes !== undefined) assertNumber(allocation.estimatedTotalBytes);
+      if (allocation.status === 'measured') {
+        assert(
+          allocation.calls > 0 &&
+            allocation.sampleCount >= allocationSampling.minimumSamples &&
+            allocation.samplingInterval >= allocationSampling.minimumInterval,
+        );
+        assertNumber(allocation.estimatedTotalBytes);
+      }
+    }
+    if (scenario.measurement !== undefined) {
+      assertRecord(scenario.measurement);
+      assert(scenario.measurement.mode === 'normal' || scenario.measurement.mode === 'reference');
+      assertNumber(scenario.measurement.calls);
+      assert(Number.isInteger(scenario.measurement.calls));
+      assertRecord(scenario.measurement.sampling);
+      for (const field of ['time', 'iterations', 'warmupTime', 'warmupIterations'])
+        assertNumber(scenario.measurement.sampling[field]);
+      if (scenario.measurement.sampling.warmup !== undefined)
+        assert(typeof scenario.measurement.sampling.warmup === 'boolean');
+    }
     assert(
       typeof scenario.execution === 'string' && ['passed', 'failed', 'skipped', 'pending'].includes(scenario.execution),
       'Invalid execution',

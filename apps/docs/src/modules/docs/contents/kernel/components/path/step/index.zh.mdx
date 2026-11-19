@@ -107,7 +107,7 @@ const view = mount(document.getElementById('diagram')!, ir);
 
 ## 组合结构
 
-显式步骤通常至少两个；单个 `rectangle` 是例外。作者输入的首个步骤不是 `move` 时，Vanilla 会把它改为 `move`。建议显式写出起点：
+显式步骤通常至少两个；单个 `rectangle` 是例外。JSX 中省略 `kind` 时，首步是 `move`，后续步骤是 `line`。显式写出的动作不会被改写；直线或曲线若没有起点，Core 会告警并跳过整条描边路径。可以这样声明起点：
 
 ```tsx
 <Path>

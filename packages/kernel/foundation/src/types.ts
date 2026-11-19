@@ -51,6 +51,14 @@ export type WithRequiredProperties<T, TKey extends keyof T> = T & Required<Pick<
 export type WithOptionalProperties<T, TKey extends keyof T> = Omit<T, TKey> & Partial<Pick<T, TKey>>;
 
 /**
+ * 从候选属性中恰好选择一个，其余属性不能同时提供
+ * @template T 候选属性集合
+ */
+export type RequireExactlyOne<T extends object> = {
+  [TKey in keyof T]-?: Required<Pick<T, TKey>> & Omit<{ [TField in keyof T]?: never }, TKey>;
+}[keyof T];
+
+/**
  * 至少包含一个元素的只读数组
  *
  * @template T 数组元素类型

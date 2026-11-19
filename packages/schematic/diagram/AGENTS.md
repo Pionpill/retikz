@@ -12,7 +12,7 @@
 
 长期输入是 JSON-safe Diagram Presentation / Frame、具体 Drawing Core Source、Flow defaults / 实例配置与 Diagram 布局意图；Flow resolve 只把 Graph element 已公开字段的窄投影确定性下沉为 Graph semantic records。长期输出是完整 renderer-neutral Scene 所需的区域装配与 Diagram 布局几何。具体 Source IR、Canonical、Definition、provider、失败语义与 lowering 契约必须由 Diagram roadmap / ADR 确认后建立。
 
-当前 alpha.1 已在包内建立 Presentation / Frame / Diagram Theme、固定区域装配 Foundation 与 FlowDiagram MVP。Flow 通过三个包对称的 `./flow` 子入口公开，不从包根聚合；不得添加占位 drawing core、schema、类型、provider、算法或 fallback
+Flow 通过三个包对称的 `./flow` 子入口公开，不从包根聚合；不得添加占位 drawing core、schema、类型、provider、算法或 fallback
 
 当前 Flow Source 支持 Entity、Group、Layout 与 Relation：三类 element 在平级 catalog 中声明，根、Group 与 Layout 的 `children` 是唯一包含事实源。Group 始终自动布局并下沉为可见 Graph Group，可作为 Relation endpoint；Layout 必填 `kind`，以 `linear` 顺序排列或 `grid` 共享行列中心，复用 Layout 的 Flex/Grid，不绘制、没有 Graph identity 且不能作为 endpoint。Graph Block 在其结构与连接契约稳定并出现真实 Flow 消费者后再通过独立设计引入；当前不预留 Block schema、Theme token、adapter、artifact 或兼容入口
 
@@ -28,4 +28,4 @@ Flow Group 直接复用 Graph Group Schema 的呈现与上下文字段，只替�
 
 ## 验证
 
-结构化文件改动至少运行 Prettier、ESLint、`tsc --noEmit`、包测试与 build。公开能力建立后还必须验证 direct IR、React、Vanilla、Graph identity 对齐、renderer-neutral 结果及双语文档。
+公开能力变化时验证 direct IR、React、Vanilla、Graph identity 对齐、renderer-neutral 结果及双语文档。

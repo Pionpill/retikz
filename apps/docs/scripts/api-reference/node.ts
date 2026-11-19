@@ -35,12 +35,14 @@ const nodeEntries: ReadonlyArray<{ owner: string } & Omit<ApiReferenceEntry, 'so
   },
   {
     owner: 'vanilla',
+    fullMemberSymbols: ['InputNode'],
     symbolPairs: [
       ['node', 'InputNode'],
       ['coordinate', 'InputCoordinate'],
     ],
     memberTypeLabels: {
       InputNode: {
+        position: "IRNode['position']",
         animations: 'Array<IRAnimationTrack>',
         boundary: 'IRBoundary',
         layout: 'IRNodeLayout',
@@ -50,15 +52,7 @@ const nodeEntries: ReadonlyArray<{ owner: string } & Omit<ApiReferenceEntry, 'so
       },
       InputCoordinate: { position: "IRCoordinate['position']" },
     },
-    symbols: [
-      'node',
-      'coordinate',
-      'InputNode',
-      'InputCoordinate',
-      'InputNodeLabel',
-      'InputNodeLabelPosition',
-      'InputNodeLabelBoundaryPosition',
-    ],
+    symbols: ['node', 'coordinate', 'InputNode', 'InputCoordinate'],
   },
   {
     owner: 'core',

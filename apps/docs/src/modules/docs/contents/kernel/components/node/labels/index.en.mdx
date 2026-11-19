@@ -180,9 +180,9 @@ These members control label attachment, placement, and visual style. See the [AP
           'Accepts one label object or an array. Labels are separate from node text and do not enlarge the node shape.',
       },
       {
-        name: 'InputNodeLabel.position',
+        name: 'IRNodeLabel.position',
         kind: 'property',
-        type: "InputNodeLabel['position']",
+        type: "IRNodeLabel['position']",
         defaultValue: "'top'",
         description: `Chooses the label attachment point:
 
@@ -191,21 +191,21 @@ These members control label attachment, placement, and visual style. See the [AP
 - Boundary fraction: \`{ boundary: 'top' | 'right' | 'bottom' | 'left'; fraction?: number }\`. It attaches to one edge; \`fraction\` defaults to \`0.5\` and ranges from \`0..1\``,
 },
 {
-  name: 'InputNodeLabel.placement',
+  name: 'IRNodeLabel.placement',
   kind: 'property',
   type: "'outside' | 'inside'",
   defaultValue: "'outside'",
   description: 'Offsets the label outward or inward from its attachment; inside labels cannot use a leader line.',
 },
 {
-  name: 'InputNodeLabel.distance',
+  name: 'IRNodeLabel.distance',
   kind: 'property',
   type: 'number',
   defaultValue: 'CompileOptions.labelDistance (12 by default)',
   description: 'Sets the user-unit gap from the node border to the rotated label visual box.',
 },
 {
-  name: 'InputNodeLabel.rotate',
+  name: 'IRNodeLabel.rotate',
   kind: 'property',
   type: "'none' | 'radial' | 'tangent' | number",
   description:
@@ -213,14 +213,14 @@ These members control label attachment, placement, and visual style. See the [AP
   defaultValue: "'none'",
 },
 {
-  name: 'InputNodeLabel.keepUpright',
+  name: 'IRNodeLabel.keepUpright',
   kind: 'property',
   type: 'boolean',
   description: 'Flips upside-down text by 180° without changing its attachment point.',
   defaultValue: 'false',
 },
 {
-  name: 'InputNodeLabel.pin',
+  name: 'IRNodeLabel.pin',
   kind: 'property',
   type: "IRNodeLabel['pin']",
   description: `Leader line for outside labels only:

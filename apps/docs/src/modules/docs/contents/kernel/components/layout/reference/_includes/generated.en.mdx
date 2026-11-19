@@ -279,7 +279,7 @@ export const LayoutRuntimeMode = Object.freeze({
 export type LayoutRuntimeMode = ValueOf<typeof LayoutRuntimeMode>;
 ```
 
-#### <ApiSourceLink label={"scene"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={110}>scene</ApiSourceLink>
+#### <ApiSourceLink label={"scene"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={115}>scene</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -312,7 +312,7 @@ export type LayoutRuntimeMode = ValueOf<typeof LayoutRuntimeMode>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"layer"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={48}>layer</ApiSourceLink>
+#### <ApiSourceLink label={"layer"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={53}>layer</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -377,7 +377,7 @@ export type InputLayer = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InputScene"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={89}>InputScene</ApiSourceLink>
+#### <ApiSourceLink label={"InputScene"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={87}>InputScene</ApiSourceLink>
 
 **Common members**
 
@@ -406,7 +406,7 @@ Common members apply to every branch; a value must also satisfy at least one bra
 | Member     | Type                        | Default | Description                                                                |
 | ---------- | --------------------------- | ------- | -------------------------------------------------------------------------- |
 | `children` | `ReadonlyArray<InputChild>` | —       | Ordered children placed in the implicit default layer during normalization |
-| `layers?`  | `never`                     | —       | The children variant excludes explicit layers                              |
+| `layers?`  | `never`                     | —       | Explicit layers, normalized after a stable sort by zIndex                  |
 
 </ApiTable>
 
@@ -416,10 +416,10 @@ Common members apply to every branch; a value must also satisfy at least one bra
 
 <ApiTable>
 
-| Member      | Type                        | Default | Description                                               |
-| ----------- | --------------------------- | ------- | --------------------------------------------------------- |
-| `children?` | `never`                     | —       | The layers variant excludes top-level children            |
-| `layers`    | `ReadonlyArray<InputLayer>` | —       | Explicit layers, normalized after a stable sort by zIndex |
+| Member      | Type                        | Default | Description                                                                |
+| ----------- | --------------------------- | ------- | -------------------------------------------------------------------------- |
+| `children?` | `never`                     | —       | Ordered children placed in the implicit default layer during normalization |
+| `layers`    | `ReadonlyArray<InputLayer>` | —       | Explicit layers, normalized after a stable sort by zIndex                  |
 
 </ApiTable>
 
@@ -435,7 +435,7 @@ export type InputScene = InputSceneChildren | InputSceneLayers;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InputSceneChildren"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={73}>InputSceneChildren</ApiSourceLink>
+#### <ApiSourceLink label={"InputSceneChildren"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={81}>InputSceneChildren</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -449,7 +449,7 @@ export type InputScene = InputSceneChildren | InputSceneLayers;
 | `authoring?`  | `unknown`                   | —       | Optional runtime payload interpreted by a compile driver; excluded from Core IR   |
 | `children`    | `ReadonlyArray<InputChild>` | —       | Ordered children placed in the implicit default layer during normalization        |
 | `id?`         | `string`                    | —       | Authoring scene identity, excluded from persisted Scene IR                        |
-| `layers?`     | `never`                     | —       | The children variant excludes explicit layers                                     |
+| `layers?`     | `never`                     | —       | Explicit layers, normalized after a stable sort by zIndex                         |
 | `theme?`      | `IRScene['theme']`          | —       | Root theme; specify only name and mode overrides                                  |
 | `type?`       | `'scene'`                   | —       | Optional scene discriminator; fixed to scene after normalization                  |
 | `version?`    | `never`                     | —       | Authoring input excludes a version; normalization supplies the current IR version |
@@ -462,17 +462,20 @@ export type InputScene = InputSceneChildren | InputSceneLayers;
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type InputSceneChildren = InputSceneBase & {
-  children: ReadonlyArray<InputChild>;
-  layers?: never;
-};
+export type InputSceneChildren = InputSceneBase &
+  Extract<
+    SceneSource,
+    {
+      children: unknown;
+    }
+  >;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InputSceneLayers"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={81}>InputSceneLayers</ApiSourceLink>
+#### <ApiSourceLink label={"InputSceneLayers"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={84}>InputSceneLayers</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -484,7 +487,7 @@ export type InputSceneChildren = InputSceneBase & {
 | ------------- | --------------------------- | ------- | --------------------------------------------------------------------------------- |
 | `animations?` | `IRScene['animations']`     | —       | Scene-root animation tracks; omitted means no root animation                      |
 | `authoring?`  | `unknown`                   | —       | Optional runtime payload interpreted by a compile driver; excluded from Core IR   |
-| `children?`   | `never`                     | —       | The layers variant excludes top-level children                                    |
+| `children?`   | `never`                     | —       | Ordered children placed in the implicit default layer during normalization        |
 | `id?`         | `string`                    | —       | Authoring scene identity, excluded from persisted Scene IR                        |
 | `layers`      | `ReadonlyArray<InputLayer>` | —       | Explicit layers, normalized after a stable sort by zIndex                         |
 | `theme?`      | `IRScene['theme']`          | —       | Root theme; specify only name and mode overrides                                  |
@@ -499,10 +502,13 @@ export type InputSceneChildren = InputSceneBase & {
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type InputSceneLayers = InputSceneBase & {
-  layers: ReadonlyArray<InputLayer>;
-  children?: never;
-};
+export type InputSceneLayers = InputSceneBase &
+  Extract<
+    SceneSource,
+    {
+      layers: unknown;
+    }
+  >;
 ```
 
 </DocTab>

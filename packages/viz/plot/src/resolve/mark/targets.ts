@@ -14,7 +14,10 @@ const resolveTargetKey = (value: unknown, context: string): string => {
 };
 
 /** 创建单个实际视图的身份解析上下文，几何仍由 Core 消费 */
-export const resolveMarkTargets = (marks: Array<IRPlotMark>, declarationOrder = marks): MarkTargetResolution => {
+export const resolveMarkTargets = (
+  marks: Array<IRPlotMark>,
+  declarationOrder: Array<IRPlotMark> = marks,
+): MarkTargetResolution => {
   const declarations = new Map<string, IRPlotMark>();
   for (const mark of marks) {
     if (mark.id === undefined) continue;

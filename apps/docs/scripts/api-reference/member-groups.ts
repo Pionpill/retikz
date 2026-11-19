@@ -237,28 +237,6 @@ export const apiReferenceMemberGroups: Readonly<Partial<Record<string, ApiRefere
       meta: 'Runtime',
     },
   },
-  '@retikz/vanilla#InputPath': {
-    order: ['Main', 'Geometry', 'Style', 'Animation', 'Runtime'],
-    members: {
-      children: 'Main',
-      id: 'Main',
-      kind: 'Main',
-      kindOptions: 'Main',
-      label: 'Main',
-      type: 'Main',
-      way: 'Main',
-      arrow: 'Geometry',
-      marks: 'Geometry',
-      rotate: 'Geometry',
-      cornerRadius: 'Geometry',
-      scale: 'Geometry',
-      style: 'Style',
-      zIndex: 'Style',
-      animations: 'Animation',
-      authoring: 'Runtime',
-      meta: 'Runtime',
-    },
-  },
   '@retikz/react#NodeProps': {
     order: ['Main', 'Geometry', 'Style', 'Callbacks', 'Animation', 'Runtime'],
     members: {

@@ -1,9 +1,8 @@
 import type { ReconcilerCommitTarget } from '@retikz/reconciler';
 import type { RenderReadonlyLayer } from '@retikz/render/runtime';
 
-import type { VanillaReconcilerOutput } from '../../runtime';
-import type { InputPreparedProcessing } from '../types';
-import type { ProcessingController } from '../types';
+import type { VanillaReconcilerOutput } from '../compile-driver';
+import type { InputPreparedProcessing, ProcessingController } from '../types';
 
 /** processing 与 DOM materializer 间固定的内部事务 participant */
 export type ProcessingTransactionParticipant = Readonly<{

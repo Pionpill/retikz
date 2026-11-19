@@ -1,20 +1,21 @@
 import type { CompileWarning, SceneResources, PaintRegistry, ClipRegistry, ReferenceReadKind } from '@retikz/core';
 
-import type { CompileRuntime, NamespaceEntry } from '../../compile/runtime';
+import type { CompileRuntime, NamespaceEntry } from '../../compile';
 import type { WeaveReferenceRead } from './reference';
 
-/** 本次计算使用的资源、引用和诊断，不包含跨批复用策略 */
+/** 本次计算使用的资源和诊断，读取事实通过独立数组交给节点持有 */
 export type WeaveObservationFacts = Readonly<{
-  /** 本次实际消费的名称绑定与几何粒度 */
-  reads: ReadonlyArray<WeaveReferenceRead>;
   /** 本次实际登记或导入的资源 */
   resources: SceneResources;
   /** 本轮工作区收集的计算诊断 */
   diagnostics: ReadonlyArray<CompileWarning>;
 }>;
 
-/** 捕获本次计算的资源与诊断，计算和提交由调用方负责 */
-export const createWeaveObservation = (runtime: CompileRuntime) => {
+/** 捕获计算的资源、诊断及指定阶段的读取，计算和候选状态回写由调用方负责 */
+export const createWeaveObservation = (
+  runtime: CompileRuntime,
+  readiness: WeaveReferenceRead['readiness'] = 'prepare',
+) => {
   const reads: Array<WeaveReferenceRead> = [];
   const diagnostics: Array<CompileWarning> = [];
   const workspace = runtime.state.workspace;
@@ -35,14 +36,21 @@ export const createWeaveObservation = (runtime: CompileRuntime) => {
       retainResource(value.id);
       return value;
     },
-    getResources: () => workspace.paintRegistry.getResources().filter(resource => resourceIds.has(resource.id)),
+    // ⚡未登记资源的计算不枚举其它元素已经登记的全局资源
+    getResources: () =>
+      resourceIds.size === 0
+        ? []
+        : workspace.paintRegistry.getResources().filter(resource => resourceIds.has(resource.id)),
   };
   const clipRegistry: ClipRegistry = {
     lower: workspace.clipRegistry.lower,
     register: clip => retainResource(workspace.clipRegistry.register(clip)),
     registerPath: clip => retainResource(workspace.clipRegistry.registerPath(clip)),
     importResource: resource => retainResource(workspace.clipRegistry.importResource(resource)),
-    getResources: () => workspace.clipRegistry.getResources().filter(resource => resourceIds.has(resource.id)),
+    getResources: () =>
+      resourceIds.size === 0
+        ? []
+        : workspace.clipRegistry.getResources().filter(resource => resourceIds.has(resource.id)),
   };
   const local: CompileRuntime = {
     ...runtime,
@@ -67,9 +75,8 @@ export const createWeaveObservation = (runtime: CompileRuntime) => {
     reads,
     diagnostics,
     read: (name: string, entry: NamespaceEntry | undefined, kind: ReferenceReadKind) =>
-      reads.push({ name, entry, kind }),
+      reads.push({ name, entry, kind, readiness }),
     facts: (): WeaveObservationFacts => ({
-      reads,
       resources: { paints: paintRegistry.getResources(), clips: clipRegistry.getResources() },
       diagnostics: workspace.diagnosticCollector.warnings.slice(warningCount),
     }),

@@ -1,6 +1,5 @@
 import type { Scene } from '@retikz/core';
-import type { CompositeArtifact } from '@retikz/reconciler';
-import type { CompileResult } from '@retikz/reconciler';
+import type { CompileResult, CompositeArtifact } from '@retikz/reconciler';
 import type { AnimationControls } from '@retikz/render/animation';
 import {
   bindWaapiDescriptors,
@@ -20,10 +19,14 @@ import { buildSvgFrameDocument } from '@retikz/render/svg';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
 import type { InputRuntimeMeta } from '../normalize';
-import { computeDisplaySize } from '../runtime';
-import { DEFAULT_ID_PREFIX, VanillaViewMode } from '../runtime/constants';
-import { captureVanillaRuntimeOptions } from '../runtime/runtime-options';
-import { createEmptyRuntimeMeta, toSceneResult } from '../runtime/to-scene';
+import { createEmptyInputRuntimeMetaSnapshot } from '../normalize';
+import {
+  DEFAULT_ID_PREFIX,
+  VanillaViewMode,
+  captureVanillaRuntimeOptions,
+  computeDisplaySize,
+  toSceneResult,
+} from '../runtime';
 import type {
   HydrateOptions,
   HydrationHandle,
@@ -38,7 +41,7 @@ import type {
   StaticSvgView,
   VanillaRetainedRuntimeOptions,
   VanillaView,
-} from '../runtime/types';
+} from '../runtime';
 import { createRetainedProcessingController } from './retained';
 import { applyAttrs, svgNodeToDom } from './svg-dom';
 
@@ -66,7 +69,7 @@ const mountStaticSvg = (
   let currentScene: Scene;
   let currentArtifacts: ReadonlyArray<CompositeArtifact> = Object.freeze([]);
   let currentCompileResult: CompileResult | undefined;
-  let currentRuntimeMeta: InputRuntimeMeta = createEmptyRuntimeMeta();
+  let currentRuntimeMeta: InputRuntimeMeta = createEmptyInputRuntimeMetaSnapshot();
   const liveHydrationDisposers = new Set<() => void>();
 
   const renderInto = (next: InputRender): void => {
@@ -184,13 +187,20 @@ const mountRetainedSvg = (
     idPrefix: output.idPrefix ?? DEFAULT_ID_PREFIX,
   });
   container.appendChild(root);
+  let rootRemoved = false;
 
   return {
     mode: VanillaViewMode.Retained,
     root,
     update: processing.update,
     hydrate: processing.hydrate,
-    dispose: processing.dispose,
+    dispose: () => {
+      processing.dispose();
+      if (!rootRemoved) {
+        root.remove();
+        rootRemoved = true;
+      }
+    },
     diagnostics: processing.diagnostics,
     get animation() {
       return processing.read().animation;

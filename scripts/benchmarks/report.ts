@@ -1,7 +1,7 @@
 import { mkdir, mkdtemp, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import type { BenchmarkReport, BudgetAssessment } from './types';
+import type { BenchmarkAllocation, BenchmarkAllocationPolicy, BenchmarkReport, BudgetAssessment } from './types';
 
 /** 将报告中的外部文本作为纯文本展示，避免被解释为 HTML */
 const escapeCell = (text: string): string =>
@@ -37,6 +37,25 @@ const formatSamples = (value: number): string => {
   if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
   if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
   return String(value);
+};
+
+/** 单次分配按二进制单位展示，不把 worker 存量或低采样数当作算法成本 */
+const formatAllocationBytes = (bytes: number): string => {
+  if (bytes < 1024) return `${bytes.toFixed(1)} B`;
+  if (bytes < 1024 ** 2) return `${(bytes / 1024).toFixed(1)} KiB`;
+  if (bytes < 1024 ** 3) return `${(bytes / 1024 ** 2).toFixed(1)} MiB`;
+  return `${(bytes / 1024 ** 3).toFixed(1)} GiB`;
+};
+
+/** 分配量只在采样充分时生成非阻断观察提示 */
+const allocationNote = (allocation?: BenchmarkAllocation, policy?: BenchmarkAllocationPolicy): string => {
+  if (!allocation) return '未测量';
+  if (allocation.status === 'insufficient') return '无法可靠估计（采样不足，不代表零分配）';
+  if (allocation.status === 'skipped') return allocation.reason ?? '参考档未采样';
+  if (allocation.status === 'unavailable') return allocation.reason ?? '采样不可用';
+  if (policy && allocation.estimatedTotalBytes / allocation.calls > policy.warningBytesPerOp)
+    return '🟡 单次分配偏高，建议单独复测（采样估计，非泄漏结论）';
+  return '采样估计';
 };
 
 /** 展示统计与性能验收；用例执行通过不等于性能达标 */
@@ -84,7 +103,12 @@ export const formatReport = (report: BenchmarkReport, title = '单元性能测�
     );
     previousDimensions = dimensions;
     const stats = scenario.statistics;
-    const durations = [stats?.mean, stats?.p50, stats?.p90].map(formatDuration);
+    const durations = [stats?.mean, stats?.p50].map(formatDuration);
+    const allocation = scenario.allocation;
+    const allocationValue =
+      allocation?.status === 'measured'
+        ? `${formatAllocationBytes(allocation.estimatedTotalBytes / allocation.calls)}/op`
+        : '—';
     const assessment = scenario.assessment;
     const reason = assessment.reason ?? scenario.errors.join('; ');
     const limit = formatLimit(assessment);
@@ -102,7 +126,22 @@ export const formatReport = (report: BenchmarkReport, title = '单元性能测�
     ]
       .filter(Boolean)
       .join('；');
-    return `| ${dimensionCells.length ? `${dimensionCells.join(' | ')} | ` : ''} ${executionLabels[scenario.execution]} | ${stats ? formatSamples(stats.samples) : '—'} | ${durations.join(' | ')} | ${limit} | ${escapeCell(remarks)} |`;
+    const allocationCells = report.allocationEnabled
+      ? [
+          allocationValue,
+          allocation?.sampleCount ?? '—',
+          escapeCell(allocationNote(allocation, report.allocationPolicy)),
+        ]
+      : [];
+    return `| ${[
+      ...dimensionCells,
+      executionLabels[scenario.execution],
+      stats ? formatSamples(stats.samples) : '—',
+      ...durations,
+      limit,
+      ...allocationCells,
+      escapeCell(remarks),
+    ].join(' | ')} |`;
   });
   return [
     `# ${escapeCell(title)}`,
@@ -110,13 +149,35 @@ export const formatReport = (report: BenchmarkReport, title = '单元性能测�
     `采样时间：${escapeCell(report.createdAt)}`,
     `提交：${escapeCell(report.source.commit)}；工作区存在未提交改动：${report.source.dirty ? '是' : '否'}；源码 SHA-256：${escapeCell(report.source.sourceHash)}`,
     '',
-    '耗时对应模块拥有的一次完整操作；纯算法用例每个样本只调用一次算法，规模表示输入大小或计算精度。样本数是统计测量轮次，不是单次操作内的调用次数。P50 为中位数；P90 使用最近秩法（nearest-rank）计算。“仅报告”不代表性能达标。',
+    '耗时对应模块拥有的一次完整操作；纯算法用例每个样本只调用一次算法，规模表示输入大小或计算精度。样本数是统计测量轮次，不是单次操作内的调用次数。P50 为中位数，是比较与预算的主指标。“仅报告”不代表性能达标。',
     '环境中的 sampling 为常规档默认值；各场景实际采样配置和含预热的执行次数见 JSON measurement。reference 档关闭预热与异步探测，仅计算 3 次。',
     '耗时按原始值选择单位：小于 1ms 用 μs，小于 1s 用 ms，其余用 s，均四舍五入保留 1 位小数；展示位数不代表实际测量精度。JSON 和预算配置仍使用毫秒。',
+    ...(report.scenarios.some(scenario => scenario.assessment.metric && scenario.assessment.metric !== 'p50')
+      ? [
+          '模块既有耗时预算仍按备注和重点结果中的原指标判定；均值/P50 展示不表示预算已改为 P50，既有上限不可直接套用到 P50。',
+        ]
+      : []),
+    ...(report.allocationEnabled
+      ? [
+          '估算单次分配 = 本用例正式阶段 V8 估算累计分配字节数 / 实际调用次数。所有耗时场景先完成，之后重新创建场景执行独立分配采样；profiler 不在耗时阶段启用。仅统计JS堆对象分配，不覆盖外部缓冲区、原生或GPU内存；不是 worker 堆占用、运行峰值、常驻内存或泄漏证据。',
+          '分配阶段固定10次预热和100次正式调用；最后一次预热以32KiB间隔粗采样，据此选择正式间隔（最低128B，目标约4096条记录）。只累计被测操作调用栈，排除 fixture、hooks、断言及 profiler 自身分配；采样停止前在计时阶段之外执行GC，统计包括被 minor/major GC 回收的对象，而不是仅剩存活结果。',
+          'B/op 使用采样率修正后的估计总量计算，JSON 保存总量、调用数、分配样本数与实际采样间隔。有效分配样本少于16时不展示数值，不代表零分配；参考档仍遵守总共3次算法调用，不额外测量分配。',
+          ...(report.allocationPolicy
+            ? [
+                `单次分配观察线：${formatAllocationBytes(report.allocationPolicy.warningBytesPerOp)}/op；仅作黄色复测提示，不影响进程退出。依据：${escapeCell(report.allocationPolicy.rationale)}`,
+              ]
+            : ['未配置内存观察线，本次仅记录。']),
+        ]
+      : []),
     '',
     '## 重点结果',
     '',
     `🔴 错误 ${errors.length} 项；🟡 警告 ${warnings.length} 项；仅报告 ${report.scenarios.filter(({ assessment }) => assessment.status === 'report-only').length} 项。`,
+    ...(report.allocationEnabled
+      ? [
+          `可估计单次分配 ${report.scenarios.filter(scenario => scenario.allocation?.status === 'measured').length} 项；采样不足 ${report.scenarios.filter(scenario => scenario.allocation?.status === 'insufficient').length} 项；不可用 ${report.scenarios.filter(scenario => scenario.allocation?.status === 'unavailable').length} 项；参考档跳过 ${report.scenarios.filter(scenario => scenario.allocation?.status === 'skipped').length} 项；🟡 单次分配提示 ${report.scenarios.filter(scenario => allocationNote(scenario.allocation, report.allocationPolicy).startsWith('🟡')).length} 项（不阻断）。`,
+        ]
+      : []),
     '业务预算是消费需求的规划标准，不是根据本次结果生成的回归基线；本机超限说明该环境下未满足配置目标，不等同于已测得浏览器卡顿。标红不自动阻断 CI，门禁由配置独立控制。',
     '',
     `| ${['标记', ...report.dimensionLabels.map(escapeCell), '指标', '实测', '上限', '说明'].join(' | ')} |`,
@@ -162,8 +223,8 @@ export const formatReport = (report: BenchmarkReport, title = '单元性能测�
     '',
     '维度列的空白表示沿用同一分组上一行的值；“—”表示未提供该维度。',
     '',
-    `| ${[...report.dimensionLabels.map(escapeCell), '状态', '样本数', '均值', 'P50', 'P90', '上限', '备注'].join(' | ')} |`,
-    `| ${[...report.dimensionLabels.map(() => '---'), '---', '---:', '---:', '---:', '---:', '---', '---'].join(' | ')} |`,
+    `| ${[...report.dimensionLabels.map(escapeCell), '状态', '耗时样本', '均值', 'P50', '上限', ...(report.allocationEnabled ? ['估算单次分配', '分配样本', '内存提示'] : []), '备注'].join(' | ')} |`,
+    `| ${[...report.dimensionLabels.map(() => '---'), '---', '---:', '---:', '---:', '---', ...(report.allocationEnabled ? ['---:', '---:', '---'] : []), '---'].join(' | ')} |`,
     ...rows,
     '',
     '## 运行错误',

@@ -1,17 +1,5 @@
-import type {
-  IRAnchorPosition,
-  IRAtPosition,
-  IRAxisScale,
-  IRBetweenPosition,
-  IRBoundary,
-  IRLine,
-  IRNode,
-  IROffsetPosition,
-  IRPosition,
-  PolarPosition,
-} from '@retikz/core';
+import type { IRAxisScale, IRBoundary, IRLine, IRNode, IRNodeLabel } from '@retikz/core';
 import type { InputNode } from '@retikz/vanilla';
-import type { InputAtPosition, InputNodeLabel } from '@retikz/vanilla';
 import type { FC, ReactNode } from 'react';
 
 import type { HydrationEventProps } from '../protocol';
@@ -48,14 +36,7 @@ export type NodeProps = HydrationEventProps & {
    * @default [0, 0]
    * @description 六种形态：笛卡尔 `[x, y]` / 极坐标 `{ angle, radius, origin? }` / 相对定位 `{ direction, of, distance? }` / 偏移定位 `{ of, offset }` / 比例位置 `{ between: [A, B], fraction }` / 锚点对齐 `{ kind: 'anchor', target, selfAnchor? }`。锚点对齐会先完成当前 Node 的文本、shape、padding、margin、scale、rotate 布局，再整体平移；双方 anchor 缺省为 center
    */
-  position?:
-    | IRPosition
-    | PolarPosition
-    | IRAtPosition
-    | InputAtPosition
-    | IROffsetPosition
-    | IRBetweenPosition
-    | IRAnchorPosition;
+  position?: IRNode['position'];
   /**
    * 绕节点中心旋转的角度，单位为度；正值顺时针
    * @default 0
@@ -84,7 +65,7 @@ export type NodeProps = HydrationEventProps & {
    * 节点附加标签，支持单对象或数组
    * @description 标签可附着到命名方向、中心、角度或边界比例位置；支持内外侧摆放、旋转、切向对齐和外侧引线，不参与节点形状尺寸计算。缺省位置为 top，间距继承编译配置 labelDistance
    */
-  label?: InputNodeLabel | Array<InputNodeLabel>;
+  label?: IRNodeLabel | Array<IRNodeLabel>;
   /**
    * 同层元素的栈序；大者在上，同值保持声明顺序
    * @default 0

@@ -2,8 +2,7 @@ import type { AnyCompositeDefinition, IRScene } from '@retikz/core';
 import { RetikzError } from '@retikz/foundation';
 
 import type { CompileOptions } from '../compile';
-import { formatCompileWarning } from '../compile';
-import { createCompileRuntime } from '../compile/runtime';
+import { createCompileRuntime, formatCompileWarning } from '../compile';
 import { RetikzReconcilerError, RetikzReconcilerErrorCode } from '../error';
 import { compileScene } from '../full';
 import type { WeaveBatch, WeavePreparedUpdate } from '../weave';

@@ -1,5 +1,4 @@
-import type { IRScope } from '@retikz/core';
-import type { InputTransform } from '@retikz/vanilla';
+import type { IRScope, IRTransform } from '@retikz/core';
 import type { FC, ReactNode } from 'react';
 
 import type { HydrationEventProps, ScopeStyleProps } from '../protocol';
@@ -28,7 +27,7 @@ export type ScopeProps = ScopeStyleProps &
      * 局部 transform 列表；遵循 SVG transform list，最后一项先作用于局部点
      * @description 支持 translate / polar-translate / at-translate / offset-translate / between-translate / rotate / scale
      */
-    transforms?: Array<InputTransform>;
+    transforms?: Array<IRTransform>;
     /**
      * Scope 在父坐标系中的原点位置或最终锚点对齐
      * @description 坐标位置在局部 transforms 外侧应用；anchor 形式将变换后包络的 selfAnchor 对齐 target，selfAnchor 缺省为 center

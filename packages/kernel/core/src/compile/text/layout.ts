@@ -196,9 +196,11 @@ export const layoutTextBlock = (
     }
 
     /** 尝试追加文本范围，超出宽度时先提交上一行 */
-    const appendRange = (start: number, end: number) => {
+    const appendRange = (start: number, end: number, tokenLayout?: ReturnType<typeof measureRange>) => {
       const candidateStart = pieces.length === 0 ? start : lineStart;
-      const candidate = measureRange(candidateStart, end);
+      // ⚡候选行恰好是已测 token 时复用布局，跨 token 仍按整行测量
+      const candidate =
+        candidateStart === start && tokenLayout !== undefined ? tokenLayout : measureRange(candidateStart, end);
       if (pieces.length > 0 && candidate.width > maxTextWidth && /\S/u.test(sourceText.slice(start, end))) {
         const trimmedEnd = sourceText.slice(lineStart, lineEnd).trimEnd().length + lineStart;
         setRange(lineStart, trimmedEnd);
@@ -206,7 +208,7 @@ export const layoutTextBlock = (
         lineStart = start;
         while (lineStart < end && /[^\S\r\n]/u.test(sourceText[lineStart])) lineStart++;
         if (lineStart === end) return;
-        setRange(lineStart, end);
+        setRange(lineStart, end, lineStart === start ? tokenLayout : undefined);
       } else {
         setRange(candidateStart, end, candidate);
       }
@@ -234,7 +236,7 @@ export const layoutTextBlock = (
           for (const grapheme of graphemes.segment(token.segment)) {
             appendRange(offset + grapheme.index, offset + grapheme.index + grapheme.segment.length);
           }
-        } else appendRange(offset, offset + token.segment.length);
+        } else appendRange(offset, offset + token.segment.length, lineLayout);
       }
     }
     flushLine();

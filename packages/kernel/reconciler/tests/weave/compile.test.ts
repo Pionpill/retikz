@@ -44,7 +44,9 @@ describe('Weave 编译构建', () => {
     expect(readWeaveCurrent(prepared.root).children.every(node => node.pending === null)).toBe(true);
     expect(readWeaveCurrent(prepared.root).children.map(node => node.type)).toEqual(['path', 'scope', 'scope']);
     expect(readWeaveCurrent(prepared.root).scopeIds.size).toBe(3);
-    expect(readWeaveCurrent(prepared.root).children.every(node => readWeaveCurrent(node).compiled !== null)).toBe(true);
+    expect(readWeaveCurrent(prepared.root).children.every(node => readWeaveCurrent(node).compile !== undefined)).toBe(
+      true,
+    );
     expect(readEmissions(prepared.compilation.provenance!).map(entry => entry.primitivePath)).toEqual(
       readEmissions(compileTestSnapshot(scene, {}, { captureProvenance: true }).provenance!).map(
         entry => entry.primitivePath,

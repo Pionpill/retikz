@@ -1,4 +1,4 @@
-import type { IRNode, IRScene, ScenePrimitive } from '@retikz/core';
+import type { AnyCompositeDefinition, IRNode, IRScene, ScenePrimitive } from '@retikz/core';
 import type { CompileOptions, CompileResult } from '@retikz/reconciler';
 import { SceneReconciler } from '@retikz/reconciler';
 import { expect } from 'vitest';
@@ -87,16 +87,16 @@ export const benchmarkCompileOptions: CompileOptions<never> = {
 export const createReconcilerBenchmark = (
   workload: ReconcilerBenchmarkWorkload,
   incremental: boolean,
-  compileOptions: CompileOptions<never> = benchmarkCompileOptions,
+  compileOptions: CompileOptions = benchmarkCompileOptions,
 ): BenchmarkExecution<CompileResult> => {
   let warningCount = 0;
-  const options: CompileOptions<never> = {
+  const options: CompileOptions = {
     ...compileOptions,
     onWarn: () => {
       warningCount++;
     },
   };
-  let reconciler: SceneReconciler | undefined;
+  let reconciler: SceneReconciler<AnyCompositeDefinition> | undefined;
   const dispose = () => {
     reconciler?.dispose();
     reconciler = undefined;
@@ -110,7 +110,14 @@ export const createReconcilerBenchmark = (
       expect(warningCount).toBe(0);
       workload.verify(result);
     },
-    afterEach: dispose,
+    afterEach: () => {
+      try {
+        expect(reconciler?.read().compilation.diagnostics).toEqual([]);
+        expect(reconciler?.diagnostics()).toEqual([]);
+      } finally {
+        dispose();
+      }
+    },
     dispose,
   };
 };

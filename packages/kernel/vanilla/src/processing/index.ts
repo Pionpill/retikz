@@ -1,4 +1,11 @@
-export { createProcessingControllerAsync } from './async-controller';
-export { createProcessingController } from './public-controller';
+export * from './async-controller';
+export type {
+  InputVanillaCompileDriver,
+  VanillaCompileDriver,
+  VanillaCompileDriverSession,
+  VanillaCompileOutput,
+} from './compile-driver';
+export { defaultVanillaCompileDriver } from './compile-driver';
+export * from './public-controller';
 export * from './static';
-export * from './types';
+export type * from './types';
