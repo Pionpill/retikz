@@ -4,20 +4,17 @@
 
 新建 ADR 先确认主责 owner 与目标中版本；用户明确指定的目标优先，否则读取主责 package 当前 `package.json` 的 major / minor：
 
-- `0.5.0-alpha.4`、`0.5.0-beta.1` 与 `0.5.0` 均归入 `v0/v0.5/`，不为 patch 或预发布阶段建子目录，也不为放置 ADR 预 bump 包版本
-- 在同一 owner / 中版本内取最大编号加一，使用至少三位十进制编号，从 `001` 起；不复用删除或 Superseded 的编号，不随发布重排
-- 跨组 ADR 按能力所有权确定主责，协作组可有独立版本线；主责或目标范围不清时先对齐，不从最大目录或其它 checkout 猜测
+- **当期决策**：owner 下用 `_v<major>.<minor>/<NNN>-<slug>.md`；同一中版本的 roadmap 同目录。alpha、beta、rc、patch 不另分目录。编号在本 owner 和中版本内从 `001` 递增，不重排、不复用；下一中版本可重新起号。
+- **长期决策**：owner 下用 `settled/<topic>.md`；主题文件用英文 kebab-case 平铺，不设模块子目录，不编号、不按版本建档。正文说明原问题、设计目的、关键取舍与仍有效的行为边界；涉及契约时保留可在源码检索的类型、schema 或公开 API 名与职责，将关键名称列入 keywords，不复制字段表；跨模块按契约归属写一处，其他模块链接过去。
+- 长期 ADR 末尾设 `## 历史记录`，每个发生实质变化的中版本一条，注明来源 owner、原 ADR 编号及合入或替代的原因，不复制旧正文。合入与退役按[发布准备](../../package-publish/references/preparation.md)处理。
+
+例如 Kernel 的当期决策是 `packages/kernel/_notes/decisions/_v0.5/001-example.md`，长期主题是 `packages/kernel/_notes/decisions/settled/node-anchors.md`；有 family 的分组先在 decisions 下按 family 区分 owner。
+
+其它分组沿用同形态。模板优先使用所属分组的 `_notes/decisions/_template.md`；该分组无模板时复用 Viz 的 family 模板，并按实际位置填写引用。Roadmap 不要求每个目标对应 ADR；新增长期决策才建 ADR，bugfix / 优化不为发包补造 ADR。创建当期 ADR 时同步创建镜像目录和简略 plan：
 
 ```text
-packages/kernel/_notes/decisions/v<MAJOR>/v<MAJOR>.<MINOR>/<NNN>-<slug>.md
-packages/viz/_notes/decisions/<FAMILY>/v<MAJOR>/v<MAJOR>.<MINOR>/<NNN>-<slug>.md
-```
-
-其它分组沿用同形态。模板优先使用所属分组的 `_notes/decisions/_template.md`；该分组无模板时复用 Viz 的 family 模板，并按实际位置填写引用。Roadmap 不要求每个目标对应 ADR；新增长期决策才建 ADR，bugfix / 优化不为发包补造 ADR。创建 ADR 时同步创建镜像目录和简略 plan：
-
-```text
-packages/viz/_notes/decisions/chart/v0/v0.1/001-example.md
--> packages/viz/_notes/plans/chart/v0/v0.1/001-example/PLAN.md
+packages/viz/_notes/decisions/chart/_v0.1/001-example.md
+-> packages/viz/_notes/plans/chart/_v0.1/001-example/PLAN.md
 ```
 
 `**/_notes/plans/` 由 `.gitignore` 覆盖；简略 plan 默认不 stage、不 commit。
@@ -27,15 +24,15 @@ packages/viz/_notes/decisions/chart/v0/v0.1/001-example.md
 ### 检索元数据与读取顺序
 
 - 正式 ADR 使用 YAML frontmatter：`description` 为 1–200 字符单行摘要，说明主题与必要边界；`keywords` 为顿号 `、` 分隔的 1–12 个短关键词，保持一行，优先中英文术语与真实公开名称。正文调整时同步维护，不写状态或发布结论。
-- owner、版本、编号从路径推导，状态仍以正文为准，不复制字段或维护手写索引；元数据仅用于发现，不证明决策生效或实现完成。
-- 先用 `pnpm adr:search <关键词...> --owner <owner> [--version v0.x]`；多词全部命中，默认最多 10 条，`--limit` 上限 100，`--json` 返回结构化结果。
+- owner 和类型从路径推导；仅当期 ADR 有版本与编号，提案状态以正文为准，不复制字段或维护手写索引；元数据仅用于发现，不证明决策生效或实现完成。
+- 先用 `pnpm adr:search <关键词...> --owner <owner> [--version v0.x]`；不指定版本时同时查当期与长期，版本筛选只查当期；多词全部命中，默认最多 10 条，`--limit` 上限 100，`--json` 返回结构化结果。
 - 未命中先换同义词 / 公开名称或扩大范围，再用 `--body` 或 `rg` 补查正文。没有摘要命中不等于没有相关设计，不默认把所有 ADR 全文送入上下文。
 - 命中后阅读全文并追踪前置、Superseded 与替代决策；历史 ADR 不自动过滤。实现、设计裁决与发布审计仍以相关全文和当前代码为依据。
 - 新建、迁移或修改元数据后运行 `pnpm adr:search --check`；命令动态读文档，不生成重复索引。
 
 ### 正文
 
-ADR 至少包含：
+当期 ADR 至少包含：
 
 1. 背景、目标和必须解决的问题。
 2. 核心决策及不可让步的理由。
@@ -81,8 +78,8 @@ ADR 草拟时同步创建镜像 `PLAN.md`，至少包含：
 人工明确接受设计时将 ADR 标为 `Accepted`；明确批准执行也包含接受设计，但单独接受设计不授权实现。Accepted 不代表实现完成；实现进度由 plan / 任务证据跟踪，roadmap 只概览重点功能，发布事实由 changelog、tag 与 registry 核验。获准实施后，重新阅读全文 ADR 与简略 plan，并在同一镜像目录细化 `PLAN.md`、创建其它执行产物：
 
 ```text
-packages/viz/_notes/decisions/chart/v0/v0.1/001-example.md
--> packages/viz/_notes/plans/chart/v0/v0.1/001-example/
+packages/viz/_notes/decisions/chart/_v0.1/001-example.md
+-> packages/viz/_notes/plans/chart/_v0.1/001-example/
    PLAN.md
    TEST_CONTRACT.md
    TASK_STATE.md      # 长任务需要

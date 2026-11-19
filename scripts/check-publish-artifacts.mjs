@@ -16,7 +16,7 @@ const scriptPath = fileURLToPath(import.meta.url);
 
 const repoRoot = path.resolve(path.dirname(scriptPath), '..');
 
-const packedTypeSmokeMaxOldSpaceSize = 8192;
+const defaultPackedTypeSmokeHeapMiB = 8192;
 
 const toPosixPath = value => value.replaceAll('\\', '/');
 
@@ -495,14 +495,16 @@ async function runPackedTypeSmoke(fixtureDirectory, specifiers) {
     'utf8',
   );
 
-  const nodeOptions = (process.env.NODE_OPTIONS ?? '').replace(/(?:^|\s)--max-old-space-size=\d+/g, ' ').trim();
+  const nodeOptions = [`--max-old-space-size=${defaultPackedTypeSmokeHeapMiB}`, process.env.NODE_OPTIONS]
+    .filter(Boolean)
+    .join(' ');
 
   runCommand(
     process.execPath,
     [path.join(repoRoot, 'node_modules', 'typescript', 'bin', 'tsc'), '--project', '.'],
     fixtureDirectory,
     {
-      NODE_OPTIONS: [nodeOptions, `--max-old-space-size=${packedTypeSmokeMaxOldSpaceSize}`].filter(Boolean).join(' '),
+      NODE_OPTIONS: nodeOptions,
     },
   );
 }

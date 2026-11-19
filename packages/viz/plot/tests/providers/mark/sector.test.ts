@@ -239,7 +239,7 @@ describe('lowerPlots 区间→polar2D 下的扇区（契约）', () => {
     }
   });
 
-  it('rose 编译为具有明确标准扇区定义的场景', async () => {
+  it('rose 编译为具有明确标准扇区定义的场景', () => {
     const scene = compileTestResult(
       { version: 1, type: 'scene', children: [roseSpec()] },
       { composites: lowerPlots({ sales: SALES }, opts), shapes: [sectorShapeDefinition] },
@@ -369,7 +369,7 @@ describe('lowerPlots 扇区标记饼图/甜甜圈（契约）', () => {
     expect(sectorNodes(layer)).toHaveLength(3);
   });
 
-  it('饼图编译为具有显式标准扇区定义的场景', async () => {
+  it('饼图编译为具有显式标准扇区定义的场景', () => {
     const scene = compileTestResult(
       { version: 1, type: 'scene', children: [pieSpec()] },
       { composites: lowerPlots({ share: SHARE }, opts), shapes: [sectorShapeDefinition] },

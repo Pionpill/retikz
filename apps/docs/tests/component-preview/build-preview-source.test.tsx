@@ -248,7 +248,7 @@ describe('buildPreviewSource', () => {
     expect(vanilla.code).not.toMatch(/\binspect\b/);
     expect(vanilla.svg).not.toContain('data-retikz-readonly-layer');
     expect(html).toContain('data-retikz-readonly-layer');
-    expect(html).toContain('C1.1');
+    expect(html).toContain('stroke-dasharray="4 3"');
   });
 
   it('默认从静态 demo 派生 React、IR 与 Vanilla 源码', () => {
