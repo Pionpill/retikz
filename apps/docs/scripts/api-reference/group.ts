@@ -15,14 +15,7 @@ export const groupApiConfigs: ReadonlyArray<ApiReferencePackageConfig> = [
   { owner: 'graph-react', symbols: ['Group', 'GroupProps'], pairs: [['Group', 'GroupProps']] },
   {
     owner: 'graph-vanilla',
-    symbols: [
-      'group',
-      'GroupInputEmbedProps',
-      'InputGroup',
-      'groupInputEmbedAdapter',
-      'normalizeGroup',
-      'createGraphVanillaAdapters',
-    ],
+    symbols: ['group', 'GroupInputEmbedProps', 'InputGroup', 'groupInputEmbedAdapter', 'normalizeGroup'],
     pairs: [
       ['group', 'GroupInputEmbedProps'],
       ['normalizeGroup', 'InputGroup'],

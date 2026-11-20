@@ -1,63 +1,51 @@
 import { prepareChartData } from '@retikz/chart';
 import type { IRChartSource } from '@retikz/chart';
-import type { InputEmbedContext, InputEmbedPreparationContext, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
+import type { InputEmbedPreparationContext } from '@retikz/vanilla';
 
 import { RetikzChartVanillaError } from '../error';
 import { buildChartProviderContribution } from './contribution';
 import { wrapChartPanel } from './scope';
 import type { InputChartRuntime } from './types';
 
-/**
- * 具体 chartType 共享的同步贡献与异步数据准备
- * @template TInput 交给 Vanilla factory 与嵌入 adapter 的领域输入类型
- */
-export const createChartInputEmbedAdapter = <TInput>(
-  kind: string,
-  createRuntime: (input: TInput) => InputChartRuntime<IRChartSource, unknown>,
-) =>
-  ({
-    kind,
-    lower: (input: TInput, _context: InputEmbedContext) => {
-      const runtime = createRuntime(input);
-      if (
-        runtime.dataBindings !== undefined ||
-        runtime.dataTransformExecutor !== undefined ||
-        runtime.signal !== undefined
-      )
-        throw new RetikzChartVanillaError('Chart dataBindings, executor or signal require async processing');
+/** 将已构造的 Chart 转为同步贡献 */
+export const lowerChartInput = <TNative>(runtime: InputChartRuntime<IRChartSource, TNative>) => {
+  if (runtime.dataBindings !== undefined || runtime.dataTransformExecutor !== undefined || runtime.signal !== undefined)
+    throw new RetikzChartVanillaError('Chart dataBindings, executor or signal require async processing');
 
-      return {
-        node: wrapChartPanel(runtime.source, runtime.panel),
-        providerDependencies: buildChartProviderContribution(runtime),
-      };
-    },
-    prepare: async (input: TInput, context: InputEmbedPreparationContext) => {
-      const runtime = createRuntime(input);
-      const node = wrapChartPanel(runtime.source, runtime.panel);
-      const signal = runtime.signal === undefined ? context.signal : AbortSignal.any([runtime.signal, context.signal]);
-      const preparation = await prepareChartData(
-        runtime.source,
-        {
-          dataBindings:
-            runtime.dataBindings ??
-            Object.fromEntries(
-              Object.entries(runtime.datasets).map(([reference, rows]) => [reference, { kind: 'rows' as const, rows }]),
-            ),
-          dataTransformExecutor: runtime.dataTransformExecutor,
-          signal,
-        },
-        runtime.chartProviderContribution,
-        context.theme,
-        runtime.lowerOptions,
-      );
-      const providerDependencies = buildChartProviderContribution({ ...runtime, datasets: {} });
+  return {
+    node: wrapChartPanel(runtime.source, runtime.panel),
+    providerDependencies: buildChartProviderContribution(runtime),
+  };
+};
 
-      return {
-        execute: async () => ({
-          node,
-          providerDependencies,
-          runtimeInputs: [{ path: node === runtime.source ? [] : ['children', 0], input: await preparation.execute() }],
-        }),
-      };
+/** 保留原生数据源与其执行器的类型配对，准备异步贡献 */
+export const prepareChartInput = async <TNative>(
+  runtime: InputChartRuntime<IRChartSource, TNative>,
+  context: InputEmbedPreparationContext,
+) => {
+  const node = wrapChartPanel(runtime.source, runtime.panel);
+  const signal = runtime.signal === undefined ? context.signal : AbortSignal.any([runtime.signal, context.signal]);
+  const preparation = await prepareChartData(
+    runtime.source,
+    {
+      dataBindings:
+        runtime.dataBindings ??
+        Object.fromEntries(
+          Object.entries(runtime.datasets).map(([reference, rows]) => [reference, { kind: 'rows' as const, rows }]),
+        ),
+      dataTransformExecutor: runtime.dataTransformExecutor,
+      signal,
     },
-  }) satisfies SynchronousInputEmbedAdapter<TInput>;
+    runtime.chartProviderContribution,
+    runtime.lowerOptions,
+  );
+  const providerDependencies = buildChartProviderContribution({ ...runtime, datasets: {} });
+
+  return {
+    execute: async () => ({
+      node,
+      providerDependencies,
+      runtimeInputs: [{ path: node === runtime.source ? [] : ['children', 0], input: await preparation.execute() }],
+    }),
+  };
+};

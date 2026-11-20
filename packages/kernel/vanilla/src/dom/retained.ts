@@ -39,12 +39,10 @@ const captureCompositeDefinition = (definition: AnyCompositeDefinition): AnyComp
 
 /** 捕获 retained runtime 会在后续 normalization 继续读取的 mount options */
 const captureRetainedMountOptions = (options: RetainedMountCanvasOptions): RetainedMountCanvasOptions => {
-  const adapters = options.adapters?.map(adapter => Object.freeze({ kind: adapter.kind, lower: adapter.lower }));
   const composites = options.compile?.composites?.map(captureCompositeDefinition);
 
   return Object.freeze({
     ...options,
-    ...(adapters === undefined ? {} : { adapters: Object.freeze(adapters) }),
     ...(options.compile === undefined
       ? {}
       : {
@@ -224,7 +222,6 @@ const createRetainedProcessingControllerImplementation = (
     return {
       compile,
       defaultFontFamily: processingOptions.defaultFontFamily,
-      adapters: processingOptions.adapters,
       compileDriver: processingOptions.compileDriver,
       reconciler: updateStrategy === undefined ? undefined : { incremental: true, updateStrategy },
     };

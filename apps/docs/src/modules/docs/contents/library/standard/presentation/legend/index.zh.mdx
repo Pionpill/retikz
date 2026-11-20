@@ -75,7 +75,7 @@ export const Example = () => <Layout ir={ir} composites={[legendDefinition]} />;
 <DocTab value="vanilla-api" label="Vanilla API">
 
 ```ts
-import { legend, legendInputEmbedAdapter } from '@retikz/standard-vanilla/presentation';
+import { legend } from '@retikz/standard-vanilla/presentation';
 import { scene, node, renderToSvgString } from '@retikz/vanilla';
 
 const input = scene({
@@ -90,7 +90,7 @@ const input = scene({
     }),
   ],
 });
-const svg = renderToSvgString(input, { adapters: [legendInputEmbedAdapter] });
+const svg = renderToSvgString(input);
 console.log(svg);
 ```
 
@@ -218,8 +218,8 @@ Core `Node`、`Path`、`Scope` 等图元可以直接作为 `IRChild`。内嵌 Ti
     {
       label: '严格 marker 与 slot 转换',
       path: 'packages/library/standard-react/src/presentation/legend/convert-children.ts',
-      startLine: 48,
-      endLine: 233,
+      startLine: 46,
+      endLine: 224,
     },
     {
       label: 'Legend Definition 输出边界',

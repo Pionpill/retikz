@@ -1,21 +1,9 @@
 import type { AnyCompositeDefinition } from '@retikz/core';
-import {
-  DEFAULT_RESOLVED_THEME,
-  createCompositeInputBindings,
-  resolveCoreProviderDependencies,
-  resolveTheme,
-  resolveThemeRegistry,
-} from '@retikz/core';
+import { createCompositeInputBindings, resolveCoreProviderDependencies } from '@retikz/core';
 import type { CompileOptions } from '@retikz/reconciler';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
-import type {
-  InputAuthoringSite,
-  InputLayer,
-  InputEmbedThemeContext,
-  InputEmbedThemeContextResolver,
-  InputScene,
-} from '../normalize';
+import type { InputAuthoringSite, InputLayer, InputScene } from '../normalize';
 import { createInputSceneTraversal, isInputScene, BuiltinLayerName, normalizeSceneLayer } from '../normalize';
 import { assertPreparationActive, prepareAuthoringContributions } from './authoring';
 import { createTextMeasurer } from './text-measurement';
@@ -29,25 +17,6 @@ const implicitLayer = (source: InputScene): InputLayer => {
 };
 
 const EMPTY_AUTHORING_SITES: ReadonlyArray<InputAuthoringSite> = Object.freeze([]);
-
-/** 使用 Core 既有 resolver 准备 InputEmbed 所在 Scope 的有效 Theme */
-const createInputEmbedThemeContextResolver = (
-  scene: InputScene,
-  compile: CompileOptions | undefined,
-): InputEmbedThemeContextResolver => {
-  const themeDefinitions = compile?.themeDefinitions;
-  const registry = resolveThemeRegistry(themeDefinitions);
-  const createContext = (theme: InputEmbedThemeContext['theme']): InputEmbedThemeContext =>
-    Object.freeze({
-      theme,
-      ...(themeDefinitions === undefined ? {} : { themeDefinitions }),
-    });
-
-  return Object.freeze({
-    root: createContext(resolveTheme(DEFAULT_RESOLVED_THEME, scene.theme, 'scene.theme', registry)),
-    resolveScope: (parent, theme, sourcePath) => createContext(resolveTheme(parent.theme, theme, sourcePath, registry)),
-  });
-};
 
 /** 合并调用方 compile 选项与唯一的 Composite resolver 输出 */
 const resolveCoreOptions = (
@@ -85,10 +54,7 @@ export const prepareProcessingInput = (
   layer?: InputLayer,
 ): InputPreparedProcessing => {
   if (isInputScene(source)) {
-    const normalized = normalizeSceneLayer(source, layer ?? implicitLayer(source), {
-      adapters: options.adapters,
-      embedThemeContext: createInputEmbedThemeContextResolver(source, options.compile),
-    });
+    const normalized = normalizeSceneLayer(source, layer ?? implicitLayer(source));
     return Object.freeze({
       source: normalized.ir,
       coreOptions: resolveCoreOptions(
@@ -123,12 +89,10 @@ export const prepareProcessingInputAsync = async (
   layer?: InputLayer,
 ): Promise<InputPreparedProcessing> => {
   assertPreparationActive(signal);
-  if (!isInputScene(source)) return prepareProcessingInput(source, { ...options, adapters: undefined });
+  if (!isInputScene(source)) return prepareProcessingInput(source, options);
 
-  const traversal = createInputSceneTraversal(source, layer ?? implicitLayer(source), {
-    embedThemeContext: createInputEmbedThemeContextResolver(source, options.compile),
-  });
-  const execute = await prepareAuthoringContributions(traversal.sites, options.adapters ?? [], signal);
+  const traversal = createInputSceneTraversal(source, layer ?? implicitLayer(source));
+  const execute = await prepareAuthoringContributions(traversal.sites, signal);
   assertPreparationActive(signal);
   const contributions = await execute();
   assertPreparationActive(signal);

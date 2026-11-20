@@ -11,8 +11,6 @@ import {
   blockSectionInputEmbedAdapter,
 } from '@retikz/graph-vanilla';
 import type { ReactInputEmbedContext } from '@retikz/react';
-import { withInputEmbedAdapters } from '@retikz/react';
-import type { AnyInputEmbedAdapter } from '@retikz/vanilla';
 import type { FC, ReactNode } from 'react';
 
 import { RetikzGraphReactError, RetikzGraphReactErrorCode } from '../errors';
@@ -64,20 +62,16 @@ const structureError = (label: string, message: string, details: Record<string, 
 
 type CollectedSlot = Readonly<{
   child: NonNullable<BlockHeaderInputEmbedProps['icon']>;
-  adapters: ReadonlyArray<AnyInputEmbedAdapter>;
 }>;
 
 const createBlockInput = (props: Readonly<Record<string, unknown>>, context: ReactInputEmbedContext) => {
   const { children, ...input } = props as BlockProps;
   const collected = collectGraphChildren(children, context.id);
 
-  return withInputEmbedAdapters(
-    {
-      ...input,
-      ...(collected.children.length === 0 ? {} : { children: collected.children }),
-    },
-    collected.adapters,
-  );
+  return {
+    ...input,
+    ...(collected.children.length === 0 ? {} : { children: collected.children }),
+  };
 };
 
 const BlockComponent: FC<BlockProps> = () => null;
@@ -105,21 +99,18 @@ const createBlockHeaderInput = (props: Readonly<Record<string, unknown>>, contex
       });
     }
 
-    return { child: collected.children[0], adapters: collected.adapters };
+    return { child: collected.children[0] };
   };
 
   const { icon: iconNode, trail: trailNode, ...input } = props as BlockHeaderProps;
   const icon = collectOptionalSlot(iconNode, `${context.id}:icon`, 'BlockHeader.icon');
   const trail = collectOptionalSlot(trailNode, `${context.id}:trail`, 'BlockHeader.trail');
 
-  return withInputEmbedAdapters(
-    {
-      ...input,
-      ...(icon === undefined ? {} : { icon: icon.child }),
-      ...(trail === undefined ? {} : { trail: trail.child }),
-    },
-    [...(icon?.adapters ?? []), ...(trail?.adapters ?? [])],
-  );
+  return {
+    ...input,
+    ...(icon === undefined ? {} : { icon: icon.child }),
+    ...(trail === undefined ? {} : { trail: trail.child }),
+  };
 };
 
 const BlockHeaderComponent: FC<BlockHeaderProps> = () => null;
@@ -136,13 +127,10 @@ const createBlockSectionInput = (props: Readonly<Record<string, unknown>>, conte
   const { children, ...input } = props as BlockSectionProps;
   const collected = collectGraphChildren(children, context.id);
 
-  return withInputEmbedAdapters(
-    {
-      ...input,
-      ...(collected.children.length === 0 ? {} : { children: collected.children }),
-    },
-    collected.adapters,
-  );
+  return {
+    ...input,
+    ...(collected.children.length === 0 ? {} : { children: collected.children }),
+  };
 };
 
 const BlockSectionComponent: FC<BlockSectionProps> = () => null;
@@ -165,18 +153,15 @@ const createBlockRowInput = (props: Readonly<Record<string, unknown>>, context: 
       });
     }
 
-    return withInputEmbedAdapters(input, []);
+    return input;
   }
 
   const collected = collectGraphChildren(children, context.id);
 
-  return withInputEmbedAdapters(
-    {
-      ...input,
-      ...(collected.children.length === 0 ? {} : { children: collected.children }),
-    },
-    collected.adapters,
-  );
+  return {
+    ...input,
+    ...(collected.children.length === 0 ? {} : { children: collected.children }),
+  };
 };
 
 const BlockRowComponent: FC<BlockRowProps> = () => null;

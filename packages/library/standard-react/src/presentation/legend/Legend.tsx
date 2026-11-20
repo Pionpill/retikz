@@ -1,5 +1,4 @@
 import type { ReactInputEmbedContext } from '@retikz/react';
-import { withInputEmbedAdapters } from '@retikz/react';
 import type { InputLegend } from '@retikz/standard-vanilla/presentation';
 import { legendInputEmbedAdapter } from '@retikz/standard-vanilla/presentation';
 import type { InputLegendConfig } from '@retikz/standard/presentation';
@@ -57,7 +56,6 @@ const createItemsLegend = (props: LegendItemsFormProps, context: ReactInputEmbed
         ...(sampleAlign === undefined ? {} : { sampleAlign }),
       },
     } satisfies InputLegend,
-    adapters: converted.adapters,
   };
 };
 
@@ -78,7 +76,6 @@ const createRampLegend = (props: LegendRampFormProps, context: ReactInputEmbedCo
         ...(sampleGap === undefined ? {} : { sampleGap }),
       },
     } satisfies InputLegend,
-    adapters: converted.adapters,
   };
 };
 
@@ -88,7 +85,7 @@ const createLegendInput = (props: Readonly<Record<string, unknown>>, context: Re
     (props as LegendProps).kind === LegendContentKind.Items
       ? createItemsLegend(props as LegendItemsFormProps, context)
       : createRampLegend(props as LegendRampFormProps, context);
-  return withInputEmbedAdapters(collected.input, collected.adapters);
+  return collected.input;
 };
 
 const LegendComponent: FC<LegendProps> = () => null;

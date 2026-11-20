@@ -1,4 +1,4 @@
-import type { InputCoordinate, InputEmbed, InputNode, InputPath, InputPathConfig, InputScope } from './element';
+import type { InputCoordinate, InputNode, InputPath, InputPathConfig, InputScope } from './element';
 import type { InputChild, InputLayer, InputScene, InputSceneChildren, InputSceneLayers } from './scene';
 
 /**
@@ -47,17 +47,6 @@ export const scope = (
  * @returns 带 layer 类别的输入，不编译或复制子图元
  */
 export const layer = (config: Omit<InputLayer, 'type'>): InputLayer => ({ type: 'layer', ...config });
-
-/**
- * 创建作者侧 Tier 2 嵌入输入
- * @template TProps 嵌入声明携带的领域属性类型，传递给对应 adapter
- */
-export const embed = <TProps = Record<string, unknown>>(
-  config: Omit<InputEmbed<TProps>, 'type'>,
-): InputEmbed<TProps> => ({
-  type: 'embed',
-  ...config,
-});
 
 /** 创建作者侧 children Scene 的完整配置 */
 type InputSceneChildrenOptions = Omit<InputSceneChildren, 'type' | 'version'>;

@@ -1,5 +1,6 @@
 import type { InputFlexLayoutItemConfig } from '@retikz/layout';
 import { createFlexLayout, flexLayoutProvider } from '@retikz/layout';
+import { embed } from '@retikz/vanilla';
 import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
 import type { InputFlexLayout } from './normalize';
@@ -52,9 +53,9 @@ export const flexLayoutInputEmbedAdapter: SynchronousInputEmbedAdapter<InputFlex
  * @param authoring 交给编译驱动的不透明声明数据；省略时不附加声明
  * @returns 由布局适配器消费的 InputEmbed，不在创建时求解布局
  */
-export const flexLayout = (input: InputFlexLayout, authoring?: unknown): InputEmbed<InputFlexLayout> => ({
-  type: 'embed',
-  kind: flexLayoutEmbedKind,
-  props: input,
-  ...(authoring === undefined ? {} : { authoring }),
-});
+export const flexLayout = (input: InputFlexLayout, authoring?: unknown): InputEmbed<InputFlexLayout> =>
+  embed({
+    adapter: flexLayoutInputEmbedAdapter,
+    props: input,
+    ...(authoring === undefined ? {} : { authoring }),
+  });

@@ -27,12 +27,10 @@ import { Queue } from '@retikz/standard-react/collection';
 <DocTab value="vanilla" label="Vanilla API">
 
 ```ts
-import { queue, queueInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { queue } from '@retikz/standard-vanilla/collection';
 import { scene, renderToSvgString } from '@retikz/vanilla';
 
-renderToSvgString(scene({ children: [queue({ items: ['A', 'B', 'C'] })] }), {
-  adapters: [queueInputEmbedAdapter],
-});
+renderToSvgString(scene({ children: [queue({ items: ['A', 'B', 'C'] })] }));
 ```
 
 </DocTab>

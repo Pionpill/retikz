@@ -39,7 +39,6 @@ export const relationApiConfigs: ReadonlyArray<ApiReferencePackageConfig> = [
       'RelationInputEmbedProps',
       'relationInputEmbedAdapter',
       'normalizeRelation',
-      'createGraphVanillaAdapters',
     ],
   },
   {

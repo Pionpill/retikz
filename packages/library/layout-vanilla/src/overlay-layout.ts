@@ -1,5 +1,6 @@
 import type { InputOverlayLayoutItemConfig } from '@retikz/layout';
 import { createOverlayLayout, overlayLayoutProvider } from '@retikz/layout';
+import { embed } from '@retikz/vanilla';
 import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
 import type { InputOverlayLayout } from './normalize';
@@ -52,9 +53,9 @@ export const overlayLayoutInputEmbedAdapter: SynchronousInputEmbedAdapter<InputO
  * @param authoring 交给编译驱动的不透明声明数据；省略时不附加声明
  * @returns 由布局适配器消费的 InputEmbed，不在创建时求解布局
  */
-export const overlayLayout = (input: InputOverlayLayout, authoring?: unknown): InputEmbed<InputOverlayLayout> => ({
-  type: 'embed',
-  kind: overlayLayoutEmbedKind,
-  props: input,
-  ...(authoring === undefined ? {} : { authoring }),
-});
+export const overlayLayout = (input: InputOverlayLayout, authoring?: unknown): InputEmbed<InputOverlayLayout> =>
+  embed({
+    adapter: overlayLayoutInputEmbedAdapter,
+    props: input,
+    ...(authoring === undefined ? {} : { authoring }),
+  });

@@ -5,7 +5,6 @@ import { expect, it } from 'vitest';
 import { buildPreviewIR } from '../../src/modules/docs/components/component-preview/utils';
 import { buildVanillaPreview } from '../../src/modules/docs/components/component-preview/vanilla-preview';
 import { renderTreePreview } from '../../src/modules/docs/contents/library/standard/collection/tree/tree-layout.preview';
-import { synchronousInputAdaptersOf } from '../../src/modules/docs/lib';
 
 it('Tree 预览保留四个方向的根配置', () => {
   for (const direction of ['down', 'up', 'left', 'right'] as const) {
@@ -17,7 +16,7 @@ it('Tree 预览保留四个方向的根配置', () => {
     expect(result.svg).toContain('dodgerblue');
     expect(result.svg).toContain('darkorange');
     expect(result.code).toContain('tree(');
-    expect(result.code).toContain('treeInputEmbedAdapter');
+    expect(result.code).not.toContain('treeInputEmbedAdapter');
     expect(result.code).toContain('root:');
   }
 });
@@ -27,11 +26,11 @@ it('Tree 的保留模式更新移除并恢复节点及缺失槽位', () => {
       renderTreePreview({ direction: 'down', gap: '32', empty, missing, arrows: true, styled: true }).props.children,
     );
   const first = inputScene(false, true);
-  const controller = createProcessingController(first.scene, { adapters: synchronousInputAdaptersOf(first.adapters) });
+  const controller = createProcessingController(first);
   try {
     for (const missing of [true, false])
       for (const empty of [true, false]) {
-        controller.update(inputScene(empty, missing).scene);
+        controller.update(inputScene(empty, missing));
         expect(JSON.stringify(controller.read().scene).includes('dodgerblue')).toBe(!empty);
         expect(JSON.stringify(controller.read().scene).includes('darkorange')).toBe(!empty);
       }
@@ -51,7 +50,7 @@ it('Tree 默认预览不将 undefined 写入 retained Source', () => {
       styled: false,
     }).props.children,
   );
-  const controller = createProcessingController(input.scene, { adapters: synchronousInputAdaptersOf(input.adapters) });
+  const controller = createProcessingController(input);
   try {
     expect(controller.read().scene.primitives.length).toBeGreaterThan(0);
   } finally {

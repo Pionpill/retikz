@@ -87,7 +87,7 @@ export const Example = () => <Layout ir={ir} extensions={definitions} />;
 
 ```ts
 import { renderChart } from '@retikz/chart-vanilla';
-import { stripChart, stripChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';
+import { stripChart } from '@retikz/chart-vanilla/point';
 import { stripPalmerPenguinsData } from './strip-palmer-penguins.data';
 
 const chart = stripChart({
@@ -97,7 +97,7 @@ const chart = stripChart({
     y: { field: 'flipperLengthMm', scale: { operation: { type: 'linear', name: 'flipperLength' } } },
   },
 });
-export const svg = renderChart(chart, { adapters: [stripChartInputEmbedAdapter] }).svg;
+export const svg = renderChart(chart).svg;
 ```
 
 </DocTab>

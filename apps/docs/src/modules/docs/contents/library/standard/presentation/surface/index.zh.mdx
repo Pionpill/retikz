@@ -62,7 +62,7 @@ export const Example = () => <Layout ir={ir} composites={[surfaceDefinition]} />
 <DocTab value="vanilla-api" label="Vanilla API">
 
 ```ts
-import { surface, surfaceChild, surfaceInputEmbedAdapter } from '@retikz/standard-vanilla/presentation';
+import { surface, surfaceChild } from '@retikz/standard-vanilla/presentation';
 import { scene, node, renderToSvgString } from '@retikz/vanilla';
 
 const input = scene({
@@ -74,7 +74,7 @@ const input = scene({
     }),
   ],
 });
-const svg = renderToSvgString(input, { adapters: [surfaceInputEmbedAdapter] });
+const svg = renderToSvgString(input);
 console.log(svg);
 ```
 

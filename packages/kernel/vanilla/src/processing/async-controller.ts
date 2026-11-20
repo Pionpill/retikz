@@ -19,7 +19,6 @@ const createSingleControllerAsync = async (
   const fixed: AsyncProcessingOptions = Object.freeze({
     ...options,
     compile: options.compile === undefined ? undefined : Object.freeze({ ...options.compile }),
-    adapters: options.adapters === undefined ? undefined : Object.freeze([...options.adapters]),
   });
   const initialAbort = new AbortController();
   const lifecycle = fixed.signal;
@@ -39,7 +38,7 @@ const createSingleControllerAsync = async (
   let controller;
 
   try {
-    controller = createPreparedInputProcessingController(input, { ...fixed, adapters: undefined }, () =>
+    controller = createPreparedInputProcessingController(input, fixed, () =>
       assertPreparationActive(initialAbort.signal),
     );
   } finally {
@@ -140,9 +139,7 @@ const createAsyncLayerController = async (
   const start = async () => {
     try {
       const initial = await prepareStack(source, lifecycle.signal);
-      return createLayerController(source, { ...options, adapters: undefined }, initial, () =>
-        assertPreparationActive(lifecycle.signal),
-      );
+      return createLayerController(source, options, initial, () => assertPreparationActive(lifecycle.signal));
     } catch (cause) {
       options.signal?.removeEventListener('abort', stop);
       throw cause;

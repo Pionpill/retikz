@@ -65,7 +65,7 @@ export const Example = () => <Layout ir={ir} composites={[mapDefinition]} />;
 <DocTab value="vanilla-api" label="Vanilla API">
 
 ```ts
-import { map, mapInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { map } from '@retikz/standard-vanilla/collection';
 import { scene, renderToSvgString } from '@retikz/vanilla';
 
 const input = scene({
@@ -84,7 +84,7 @@ const input = scene({
     }),
   ],
 });
-const svg = renderToSvgString(input, { adapters: [mapInputEmbedAdapter] });
+const svg = renderToSvgString(input);
 console.log(svg);
 ```
 

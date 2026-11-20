@@ -8,7 +8,7 @@ import type {
 } from '@retikz/graph-vanilla';
 import type { LayoutExtensions, LayoutProps } from '@retikz/react';
 import { createInputScene, Node, Path, Step, Text } from '@retikz/react';
-import type { AnyInputEmbedAdapter, InputChild } from '@retikz/vanilla';
+import type { InputChild } from '@retikz/vanilla';
 import { normalizePath } from '@retikz/vanilla';
 import type { ReactElement, ReactNode } from 'react';
 import { Children, createElement, Fragment, isValidElement } from 'react';
@@ -103,8 +103,6 @@ export const graphLayoutHostPropsOf = (props: GraphLayoutHostProps): GraphLayout
 type GraphChildCollection = Readonly<{
   /** 按作者顺序收集的 Vanilla 图形输入 */
   children: ReadonlyArray<InputChild>;
-  /** 嵌套内容需要的领域 adapter 集合 */
-  adapters: ReadonlyArray<AnyInputEmbedAdapter>;
 }>;
 
 /** 递归访问 Fragment 展开的直接声明节点 */
@@ -188,7 +186,7 @@ const entityTextOf = (children: ReactNode, embedIdPrefix: string): InputEntity['
   const input = createInputScene(createElement(Node, { position: [0, 0] }, textNodes), {
     embedIdPrefix,
   });
-  const child = input.scene.children?.[0];
+  const child = input.children.at(0);
   if (child?.type !== 'node' || 'namespace' in child) {
     throw new RetikzGraphReactError({
       code: RetikzGraphReactErrorCode.EntityChildInvalid,
@@ -253,7 +251,7 @@ const collectRelationStepNodes = (children: ReactNode): Array<ReactNode> => {
 const relationRouteOf = (children: ReactNode, embedIdPrefix: string): InputRelation['route'] | undefined => {
   const stepNodes = collectRelationStepNodes(children);
   const input = createInputScene(createElement(Path, null, stepNodes), { embedIdPrefix });
-  const child = input.scene.children?.[0];
+  const child = input.children.at(0);
   if (child === undefined || 'namespace' in child || child.type !== 'path') {
     throw new RetikzGraphReactError({
       code: RetikzGraphReactErrorCode.RelationInputInvalid,
@@ -296,12 +294,11 @@ export const collectRelationInput = (props: RelationProps, embedIdPrefix: string
   };
 };
 
-/** 通过 Core React 通用 traversal 收集 Graph children 与嵌套 adapters */
+/** 通过 Core React 通用 traversal 收集 Graph children */
 export const collectGraphChildren = (children: ReactNode, embedIdPrefix: string): GraphChildCollection => {
   const input = createInputScene(children, { embedIdPrefix });
   return {
-    children: input.scene.children ?? [],
-    adapters: input.adapters,
+    children: input.children,
   };
 };
 
@@ -309,7 +306,7 @@ export const collectGraphChildren = (children: ReactNode, embedIdPrefix: string)
 export const collectGroupInput = (
   props: GroupProps,
   embedIdPrefix: string,
-): Readonly<{ input: GroupInputEmbedProps; adapters: ReadonlyArray<AnyInputEmbedAdapter> }> => {
+): Readonly<{ input: GroupInputEmbedProps }> => {
   const { children, ...input } = props;
   const collected = collectGraphChildren(children, embedIdPrefix);
 
@@ -318,6 +315,5 @@ export const collectGroupInput = (
       ...input,
       ...(collected.children.length === 0 ? {} : { children: collected.children }),
     },
-    adapters: collected.adapters,
   };
 };

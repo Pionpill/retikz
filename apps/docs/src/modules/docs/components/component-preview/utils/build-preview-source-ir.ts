@@ -52,7 +52,7 @@ import {
   relationEmbedKind,
 } from '@retikz/graph-vanilla';
 import type { AnyInputEmbed, SynchronousInputEmbedAdapter, InputChild, InputScope, InputScene } from '@retikz/vanilla';
-import { normalizeNode, normalizePath, normalizeScene, scene } from '@retikz/vanilla';
+import { embed, normalizeNode, normalizePath, normalizeScene, scene } from '@retikz/vanilla';
 import type { ReactNode } from 'react';
 import { Fragment, isValidElement } from 'react';
 
@@ -239,7 +239,7 @@ const sourceGraphEmbedOf = (
 ): IRChild | undefined => {
   const props = sourcePropsOf(input.props);
 
-  switch (input.kind) {
+  switch (input.adapter.kind) {
     case branchDiagramEmbedKind:
       return normalizeBranchDiagram(props as InputBranchDiagram);
     case flowDiagramEmbedKind:
@@ -307,7 +307,7 @@ const sourceGraphChildOf = (
         RangedDotChart,
         RegressionChart,
         StripChart,
-      ].some(component => input.kind === component.inputEmbedAdapter.kind)
+      ].some(component => input.adapter.kind === component.inputEmbedAdapter.kind)
     ) {
       const source = chartSources.at(chartIndex.value);
       chartIndex.value += 1;
@@ -349,10 +349,7 @@ const typedChartSourceOf = <TProps, TInput>(
   const input = component.createInputEmbedProps(
     previewEmbedPropsOf(component, props as Readonly<Record<string, unknown>>),
   );
-  const result = normalizeScene(
-    scene({ children: [{ type: 'embed', kind: component.inputEmbedAdapter.kind, props: input }] }),
-    { adapters: [component.inputEmbedAdapter] },
-  );
+  const result = normalizeScene(scene({ children: [embed({ adapter: component.inputEmbedAdapter, props: input })] }));
   let node = result.ir.children[0];
 
   while (node.type === 'scope') node = (node as IRScope).children[0];

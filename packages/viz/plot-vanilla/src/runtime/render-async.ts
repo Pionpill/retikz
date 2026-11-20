@@ -66,7 +66,7 @@ const renderPlotAsyncImpl = async <TSource = never>(
   const lineage = optionsLineage === undefined || optionsLineage === false ? undefined : (optionsLineage.data ?? {});
   const adapter = {
     kind: plotInputEmbedAdapter.kind,
-    prepare: async (_props: never, context: Parameters<typeof plotInputEmbedAdapter.prepare>[1]) => {
+    prepare: async (_props: typeof props, context: Parameters<typeof plotInputEmbedAdapter.prepare>[1]) => {
       const prepared = await plotInputEmbedAdapter.prepare(props, context, lineage);
       return {
         execute: async () => {
@@ -81,10 +81,9 @@ const renderPlotAsyncImpl = async <TSource = never>(
   const result = await compileToSceneAsync(
     scene({
       ...(theme === undefined ? {} : { theme }),
-      children: [embed({ kind: adapter.kind, props })],
+      children: [embed({ adapter, props })],
     }),
     {
-      adapters: [adapter],
       signal,
       compile: { themeDefinitions },
     },

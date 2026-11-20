@@ -1,9 +1,9 @@
 import { LayoutItemKind, gridLayoutDefinition, createGridLayout } from '@retikz/layout';
 import type { InputEmbedAdapter, InputEmbedContribution } from '@retikz/vanilla';
-import { compileToScene, compileToSceneAsync } from '@retikz/vanilla';
+import { embed, compileToScene, compileToSceneAsync } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
-import { flexLayout, gridLayout, overlayLayout, layoutInputEmbedAdapters } from '../src';
+import { flexLayout, gridLayout, overlayLayout } from '../src';
 
 describe('Layout 异步编写', () => {
   it('嵌套子项仅预处理一次且贡献与同步路径等价', async () => {
@@ -22,18 +22,17 @@ describe('Layout 异步编写', () => {
         },
       }),
     };
-    const child = { type: 'embed' as const, kind: 'prepared', props: {} };
+    const child = embed({ adapter, props: {} });
     const containers = [
       flexLayout({ children: [{ kind: LayoutItemKind.Flex, child }] }),
       gridLayout({ columns: [{ kind: 'content', mode: 'natural' }], children: [{ kind: LayoutItemKind.Grid, child }] }),
       overlayLayout({ children: [{ kind: LayoutItemKind.Overlay, child }] }),
     ];
-    const options = { adapters: [...layoutInputEmbedAdapters, adapter] };
 
     for (const container of containers) {
       const input = { type: 'scene' as const, children: [container] };
-      const expected = compileToScene(input, options);
-      const actual = await compileToSceneAsync(input, options);
+      const expected = compileToScene(input);
+      const actual = await compileToSceneAsync(input);
 
       expect(actual.scene).toEqual(expected.scene);
       expect(JSON.stringify(actual.scene)).toContain('prepared-child');
@@ -67,12 +66,11 @@ describe('Layout 异步编写', () => {
         type: 'scene',
         children: [
           flexLayout({
-            children: [{ kind: LayoutItemKind.Flex, child: { type: 'embed', kind: 'prepared', props: {} } }],
+            children: [{ kind: LayoutItemKind.Flex, child: embed({ adapter, props: {} }) }],
           }),
         ],
       },
       {
-        adapters: [...layoutInputEmbedAdapters, adapter],
         compile: { composites: [leafDefinition] },
       },
     );

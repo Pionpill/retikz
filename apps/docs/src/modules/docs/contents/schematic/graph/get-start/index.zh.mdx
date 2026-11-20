@@ -38,7 +38,7 @@ export const ServiceGraph = () => (
 Vanilla 先用 Graph builders 创建 InputScene，再把 Graph adapters 交给 `mount()`。adapter 会让挂载过程识别并处理 Graph 组件。
 
 ```ts
-import { createGraphVanillaAdapters, entity, graph, relation } from '@retikz/graph-vanilla';
+import { entity, graph, relation } from '@retikz/graph-vanilla';
 import { scene } from '@retikz/vanilla';
 import { mount } from '@retikz/vanilla/dom';
 
@@ -60,7 +60,7 @@ const input = scene({
   ],
 });
 
-const view = mount(document.getElementById('diagram')!, input, { adapters: createGraphVanillaAdapters() });
+const view = mount(document.getElementById('diagram')!, input);
 ```
 
 容器移除前调用 `view.dispose()`，释放本次挂载的运行时资源。

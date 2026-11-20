@@ -9,7 +9,7 @@ import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
 import type { InputEmbedAdapter, InputEmbedContribution, InputSceneChildren } from '../../src';
-import { createProcessingControllerAsync, compileToScene, compileToSceneAsync } from '../../src';
+import { embed, createProcessingControllerAsync, compileToScene, compileToSceneAsync } from '../../src';
 
 const leafDefinition = defineComposite({
   namespace: 'fixture',
@@ -33,7 +33,7 @@ const adapter: InputEmbedAdapter<{ text: string }> &
 
 const source = (text: string): InputSceneChildren => ({
   type: 'scene',
-  children: [{ type: 'embed', kind: 'prepared', props: { text } }],
+  children: [embed({ adapter, props: { text } })],
 });
 
 describe('预处理复合组件输入的消费', () => {
@@ -42,7 +42,7 @@ describe('预处理复合组件输入的消费', () => {
       type: 'scene',
       children: [...source('left-ready').children, ...source('right-ready').children],
     };
-    const options = { adapters: [adapter], compile: { composites: [leafDefinition] } };
+    const options = { compile: { composites: [leafDefinition] } };
     const sync = compileToScene(input, options);
     const async = await compileToSceneAsync(input, options);
 
@@ -53,7 +53,6 @@ describe('预处理复合组件输入的消费', () => {
 
   it('编写规范化为相同的 JSON 时更新准备好的输入', async () => {
     const controller = await createProcessingControllerAsync(source('first-ready'), {
-      adapters: [adapter],
       compile: { composites: [leafDefinition] },
     });
     const outcome = await controller.update(source('second-ready'));
@@ -99,8 +98,8 @@ describe('预处理复合组件输入的消费', () => {
       },
     };
     const result = await compileToSceneAsync(
-      { type: 'scene', children: [{ type: 'embed', kind: 'outer', props: {} }] },
-      { adapters: [adapter, outer], compile: { composites: [leafDefinition, outerDefinition] } },
+      { type: 'scene', children: [embed({ adapter: outer, props: {} })] },
+      { compile: { composites: [leafDefinition, outerDefinition] } },
     );
 
     expect(JSON.stringify(result.scene)).toContain('slot-ready');

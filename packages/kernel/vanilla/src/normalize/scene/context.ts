@@ -1,8 +1,8 @@
 import type { CompositeInputBinding, CompositeInputPath, CoreProviderContribution } from '@retikz/core';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../error';
-import type { AnyInputEmbed, InputEmbedThemeContext, InputPath, InputScope, InputStep } from '../element';
-import type { InputAuthoringSite, InputChild, InputLayer, InputNormalizeOptions, InputScene } from './types';
+import type { AnyInputEmbed, InputEmbedContribution, InputPath, InputScope, InputStep } from '../element';
+import type { InputAuthoringSite, InputChild, InputLayer, InputScene } from './types';
 import { BuiltinLayerName } from './types';
 
 /** 规范化过程共享的上下文 */
@@ -11,9 +11,7 @@ export type SceneNormalizeContext = {
   runtimeInputs: Array<CompositeInputBinding>;
   layerId: string;
   path: Array<string>;
-  adapters: InputNormalizeOptions['adapters'];
-  embedThemeContext?: InputEmbedThemeContext;
-  resolveEmbedScopeTheme?: NonNullable<InputNormalizeOptions['embedThemeContext']>['resolveScope'];
+  prepared?: (input: AnyInputEmbed, path: string) => InputEmbedContribution;
   contributions: Array<CoreProviderContribution>;
   sourcePath: string;
   authoringSites: Array<InputAuthoringSite>;
@@ -40,7 +38,7 @@ export const isInputEmbed = (child: InputChild): child is AnyInputEmbed => child
 
 /** 读取或为匿名 InputEmbed 确定仅运行时可见的稳定身份 */
 export const inputEmbedIdentityOf = (input: AnyInputEmbed, context: SceneNormalizeContext): string =>
-  input.id ?? `__retikz-embed:${context.layerId}:${context.sourcePath}:${input.kind}`;
+  input.id ?? `__retikz-embed:${context.layerId}:${context.sourcePath}:${input.adapter.kind}`;
 
 /** 只有作者侧 target 简写需要转换，纯 Core 步骤保持原样 */
 const hasTargetShorthand = (step: InputStep): boolean =>
@@ -82,14 +80,9 @@ export const embedSlotSourcePath = (sourcePath: string, slotIndex: number): stri
 
 /** 同步归一化与准备 traversal 共用的 Scope 位置及有效 Theme */
 export const scopeContextOf = (input: InputScope, ctx: SceneNormalizeContext): SceneNormalizeContext => {
-  const scopeThemeContext =
-    ctx.embedThemeContext === undefined || ctx.resolveEmbedScopeTheme === undefined
-      ? undefined
-      : ctx.resolveEmbedScopeTheme(ctx.embedThemeContext, input.theme, `${ctx.sourcePath}.theme`);
   return {
     ...ctx,
     path: input.id === undefined ? ctx.path : [...ctx.path, input.id],
     sourcePath: `${ctx.sourcePath}.scope`,
-    ...(scopeThemeContext === undefined ? {} : { embedThemeContext: scopeThemeContext }),
   };
 };

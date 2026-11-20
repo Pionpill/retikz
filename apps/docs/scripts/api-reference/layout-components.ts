@@ -14,7 +14,6 @@ export const layoutComponentApiReferenceConfigs = (
   name: 'FlexLayout' | 'GridLayout' | 'OverlayLayout',
 ): Array<ApiReferencePackageConfig> => {
   const builder = name[0].toLowerCase() + name.slice(1);
-  const shared = name === 'FlexLayout';
   const extras =
     name === 'FlexLayout'
       ? [
@@ -71,7 +70,6 @@ export const layoutComponentApiReferenceConfigs = (
         `Input${name}`,
         `Input${name}Item`,
         `${name[0].toLowerCase()}${name.slice(1)}InputEmbedAdapter`,
-        ...(shared ? ['layoutInputEmbedAdapters'] : []),
       ],
       pairs: [[builder, `Input${name}`]],
     },

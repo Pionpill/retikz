@@ -25,7 +25,6 @@ import {
   blockRowInputEmbedAdapter,
   blockSection,
   blockSectionInputEmbedAdapter,
-  createGraphVanillaAdapters,
   entity,
   entityInputEmbedAdapter,
   graph,
@@ -61,7 +60,7 @@ const contextOf = (id: string, kind: string): InputEmbedContext => ({
 });
 
 const lower = <TProps>(spec: InputEmbed<TProps>, adapter: SynchronousInputEmbedAdapter<TProps>) =>
-  adapter.lower(spec.props, contextOf(spec.id ?? '__test-embed', spec.kind));
+  adapter.lower(spec.props, contextOf(spec.id ?? '__test-embed', spec.adapter.kind));
 describe('@retikz/graph-vanilla 封装边界', () => {
   it('为每个 Graph 语义组合导出一个适配器和构建器', async () => {
     const graphVanilla = await import('../src');
@@ -88,16 +87,6 @@ describe('@retikz/graph-vanilla 封装边界', () => {
     expect(graphVanilla.normalizeBlockSection).toBeTypeOf('function');
     expect(graphVanilla.normalizeBlockRow).toBeTypeOf('function');
     expect(graphVanilla.normalizeGroup).toBeTypeOf('function');
-    expect(createGraphVanillaAdapters().map(adapter => adapter.kind)).toEqual([
-      'graph.graph',
-      'graph.group',
-      'graph.block',
-      'graph.blockHeader',
-      'graph.blockSection',
-      'graph.blockRow',
-      'graph.entity',
-      'graph.relation',
-    ]);
   });
 });
 describe('normalizeBlock', () => {
@@ -229,7 +218,7 @@ describe('normalizeGroup', () => {
     const input: InputGroup = {
       id: 'runtime',
       caption: { title: { text: 'Runtime' } },
-      labels: [{ text: 'internal', position: { boundary: 'left', fraction: 0.25 } }],
+      labels: [{ text: 'internal', position: { side: 'left', fraction: 0.25 } }],
       children: [
         { type: 'entity', role: 'participant', position: [0, 0] },
         {
@@ -520,32 +509,29 @@ describe('Graph Vanilla 嵌入适配器', () => {
   });
 
   it('标准化任意嵌套嵌入，无需添加面板 Scope', () => {
-    const normalized = normalizeScene(
-      {
-        type: 'scene',
-        children: [
-          graph({
-            transforms: [{ kind: 'translate', x: 12, y: 8 }],
-            children: [
-              { type: 'node', id: 'source', position: [0, 0] },
-              {
-                type: 'scope',
-                children: [
-                  entity({
-                    role: 'participant',
-                    position: [80, 0],
-                  }),
-                ],
-              },
-              graph({
-                children: [{ type: 'node', id: 'target', position: [160, 0] }],
-              }),
-            ],
-          }),
-        ],
-      },
-      { adapters: createGraphVanillaAdapters() },
-    );
+    const normalized = normalizeScene({
+      type: 'scene',
+      children: [
+        graph({
+          transforms: [{ kind: 'translate', x: 12, y: 8 }],
+          children: [
+            { type: 'node', id: 'source', position: [0, 0] },
+            {
+              type: 'scope',
+              children: [
+                entity({
+                  role: 'participant',
+                  position: [80, 0],
+                }),
+              ],
+            },
+            graph({
+              children: [{ type: 'node', id: 'target', position: [160, 0] }],
+            }),
+          ],
+        }),
+      ],
+    });
 
     expect(normalized.ir.children).toEqual([
       {
@@ -576,33 +562,30 @@ describe('Graph Vanilla 嵌入适配器', () => {
   });
 
   it('在合并提供者贡献的同时标准化嵌套的独立结构嵌入', () => {
-    const normalized = normalizeScene(
-      {
-        type: 'scene',
-        children: [
-          block({
-            children: [
-              blockHeader({
-                icon: entity({ role: 'state', position: [0, 0] }),
-                title: { text: 'Block' },
-              }),
-              blockSection({
-                children: [
-                  blockRow({
-                    children: [
-                      group({
-                        children: [{ type: 'node', position: [0, 0], text: 'Nested' }],
-                      }),
-                    ],
-                  }),
-                ],
-              }),
-            ],
-          }),
-        ],
-      },
-      { adapters: createGraphVanillaAdapters() },
-    );
+    const normalized = normalizeScene({
+      type: 'scene',
+      children: [
+        block({
+          children: [
+            blockHeader({
+              icon: entity({ role: 'state', position: [0, 0] }),
+              title: { text: 'Block' },
+            }),
+            blockSection({
+              children: [
+                blockRow({
+                  children: [
+                    group({
+                      children: [{ type: 'node', position: [0, 0], text: 'Nested' }],
+                    }),
+                  ],
+                }),
+              ],
+            }),
+          ],
+        }),
+      ],
+    });
 
     expect(normalized.ir.children[0]).toMatchObject({
       namespace: 'graph',
@@ -650,7 +633,7 @@ describe('Graph Vanilla 嵌入适配器', () => {
             }),
           ],
         },
-        { adapters: createGraphVanillaAdapters(), compile: { padding: 0 } },
+        { compile: { padding: 0 } },
       ),
     ).not.toThrow();
   });
@@ -796,7 +779,7 @@ describe('Graph Vanilla 嵌入适配器', () => {
             }),
           ],
         },
-        { adapters: createGraphVanillaAdapters(), compile: { padding: 0 } },
+        { compile: { padding: 0 } },
       ),
     ).not.toThrow();
   });

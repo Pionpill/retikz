@@ -1,12 +1,10 @@
 import { createInputScene } from '@retikz/react';
 import { Circle, Ellipse, Rectangle, Polygon, Star, Arc, Sector } from '@retikz/standard-react/shape';
-import { standardInputEmbedAdapters } from '@retikz/standard-vanilla';
 import { shape } from '@retikz/standard-vanilla/shape';
 import { normalizeScene, scene } from '@retikz/vanilla';
 import { expect, it } from 'vitest';
 
 import * as rootEntry from '../src';
-import { synchronousAdapters } from './helpers/synchronous-adapters';
 
 it('通过 Path 编写便利，在适配器之间保持整个系列的等效性', () => {
   const visual = {
@@ -26,7 +24,7 @@ it('通过 Path 编写便利，在适配器之间保持整个系列的等效性'
       <Sector id="w" center={[0, 0]} radius={20} innerRadius={10} startAngle={0} endAngle={90} {...visual} />
     </>,
   );
-  const react = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
+  const react = normalizeScene(input);
   const vanilla = normalizeScene(
     scene({
       children: [
@@ -38,7 +36,6 @@ it('通过 Path 编写便利，在适配器之间保持整个系列的等效性'
         shape.sector({ id: 'w', center: [0, 0], radius: 20, innerRadius: 10, startAngle: 0, endAngle: 90, ...visual }),
       ],
     }),
-    { adapters: standardInputEmbedAdapters },
   );
 
   expect(react.ir).toEqual(vanilla.ir);
@@ -51,10 +48,8 @@ it('通过 Path 编写便利，在适配器之间保持整个系列的等效性'
 
 it('在 React 和 Vanilla 之间共享 Circle Source 和提供者贡献', () => {
   const input = createInputScene(<Circle id="c1" center="origin" radius={20} />);
-  const react = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
-  const vanilla = normalizeScene(scene({ children: [shape.circle({ id: 'c1', center: 'origin', radius: 20 })] }), {
-    adapters: standardInputEmbedAdapters,
-  });
+  const react = normalizeScene(input);
+  const vanilla = normalizeScene(scene({ children: [shape.circle({ id: 'c1', center: 'origin', radius: 20 })] }));
 
   expect(react.ir.children).toEqual(vanilla.ir.children);
   expect(react.contributions).toEqual(vanilla.contributions);
@@ -62,7 +57,7 @@ it('在 React 和 Vanilla 之间共享 Circle Source 和提供者贡献', () => 
 
 it('当 React 省略编写 ID 时，不会保留生成的实例 ID', () => {
   const input = createInputScene(<Circle center={[0, 0]} radius={20} />);
-  const result = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
+  const result = normalizeScene(input);
 
   expect(result.ir.children[0]).not.toHaveProperty('id');
 });

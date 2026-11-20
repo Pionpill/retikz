@@ -9,7 +9,6 @@ import type { FC, ReactNode } from 'react';
 import { isValidElement } from 'react';
 
 import type { Lang } from '@/i18n';
-import { synchronousInputAdaptersOf } from '@/modules/docs/lib';
 
 import type {
   PreviewControlsDefinition,
@@ -37,7 +36,7 @@ export const buildInspectionPreview = (
 ) => {
   const authored = createInputScene(props.children);
   const input = {
-    ...(props.ir ?? authored.scene),
+    ...(props.ir ?? authored),
     viewBox: props.viewBox ?? props.ir?.viewBox,
     ...(theme === undefined ? {} : { theme }),
   };
@@ -46,7 +45,7 @@ export const buildInspectionPreview = (
     themeDefinitions: PreviewThemeDefinitionBundle.core,
     measureText: browserMeasurer,
   };
-  const output = toSceneResult(input, { adapters: synchronousInputAdaptersOf(authored.adapters), compile });
+  const output = toSceneResult(input, { compile });
   const result = output.compileResult ?? { scene: output.scene, artifacts: [] };
   const options = {
     registry: props.registry ?? createDefaultInspectorRegistry(),

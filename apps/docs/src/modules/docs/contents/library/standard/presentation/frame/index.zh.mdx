@@ -64,13 +64,13 @@ export const Example = () => <Layout ir={ir} composites={[frameDefinition]} />;
 <DocTab value="vanilla-api" label="Vanilla API">
 
 ```ts
-import { frame, frameTitle, frameInputEmbedAdapter } from '@retikz/standard-vanilla/presentation';
+import { frame, frameTitle } from '@retikz/standard-vanilla/presentation';
 import { scene, node, renderToSvgString } from '@retikz/vanilla';
 
 const input = scene({
   children: [frame({ title: frameTitle({ text: 'Group' }), children: [node({ position: [0, 0], text: 'A' })] })],
 });
-const svg = renderToSvgString(input, { adapters: [frameInputEmbedAdapter] });
+const svg = renderToSvgString(input);
 console.log(svg);
 ```
 

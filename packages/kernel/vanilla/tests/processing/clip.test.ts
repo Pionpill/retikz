@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { literal, strictObject } from 'zod';
 
 import type { InputEmbedAdapter, InputScene } from '../../src';
-import { createProcessingController, normalizeScene, compileToScene } from '../../src';
+import { embed, createProcessingController, normalizeScene, compileToScene } from '../../src';
 import { prepareProcessingInput } from '../../src/processing/prepare';
 import { compileTestResult } from '../helpers/compilation';
 
@@ -72,12 +72,11 @@ describe('Vanilla 裁剪处理等价性', () => {
     };
     const embedded: InputScene = {
       type: 'scene',
-      children: [{ type: 'embed', kind: 'ticketClip', id: 'ticket', props: {} }],
+      children: [embed({ adapter, id: 'ticket', props: {} })],
     };
 
     expect(() =>
       prepareProcessingInput(embedded, {
-        adapters: [adapter],
         compile: { clips: [customClip()] },
       }),
     ).toThrow(/definition conflict for clip:ticketClip/i);

@@ -51,7 +51,7 @@ export const Example = () => <Layout ir={ir} composites={[arrayDefinition]} />;
 <DocTab value="vanilla-api" label="Vanilla API">
 
 ```ts
-import { array, arrayInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { array } from '@retikz/standard-vanilla/collection';
 import { scene, renderToSvgString } from '@retikz/vanilla';
 
 const input = scene({
@@ -61,7 +61,7 @@ const input = scene({
     }),
   ],
 });
-const svg = renderToSvgString(input, { adapters: [arrayInputEmbedAdapter] });
+const svg = renderToSvgString(input);
 console.log(svg);
 ```
 

@@ -120,7 +120,7 @@ describe('Plot Vanilla Tier2 适配器', () => {
         layer({ name: 'chart', children: [embedPlot({ spec }, datasets, { layout: { width: 360, height: 200 } })] }),
       ],
     });
-    const [compiled] = compileToScene(inputScene, { adapters: [plotInputEmbedAdapter] });
+    const [compiled] = compileToScene(inputScene);
     const svg = renderToSvgString(compiled.result.scene, {
       output: { width: 360, height: 200 },
     });
@@ -132,10 +132,10 @@ describe('Plot Vanilla Tier2 适配器', () => {
 
   it('保持 lineage 在 IRPlot、Core IR 与 Scene meta 之外', () => {
     const inputScene = scene([embedPlot({ spec: salesSpec('sales') }, datasets)]);
-    const normalized = normalizeScene(inputScene, { adapters: [plotInputEmbedAdapter] });
+    const normalized = normalizeScene(inputScene);
 
     expect(JSON.stringify(normalized.ir)).not.toContain('lineage');
-    expect(renderToSvgString(inputScene, { adapters: [plotInputEmbedAdapter] })).not.toContain('lineage');
+    expect(renderToSvgString(inputScene)).not.toContain('lineage');
   });
 
   it('保留显式 root identity 且不为匿名 spec 派生 id', () => {
@@ -208,7 +208,7 @@ describe('Plot Vanilla Tier2 适配器', () => {
   it('缺失 dataset reference 时 fail-loud', () => {
     const inputScene = scene([embedPlot({ spec: salesSpec() }, {})]);
 
-    expect(() => renderToSvgString(inputScene, { adapters: [plotInputEmbedAdapter] })).toThrow(/sales/i);
+    expect(() => renderToSvgString(inputScene)).toThrow(/sales/i);
   });
 
   it('重用 Source id 并保留匿名 Source 而不发明 id', () => {

@@ -1,5 +1,4 @@
 import type { ReactInputEmbedContext } from '@retikz/react';
-import { withInputEmbedAdapters } from '@retikz/react';
 import type { InputQueue } from '@retikz/standard-vanilla/collection';
 import { queueInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
 import type { IRQueue, IRCell } from '@retikz/standard/collection';
@@ -64,7 +63,7 @@ const createQueueInput = (props: Readonly<Record<string, unknown>>, context: Rea
     items: collected.cells,
   };
 
-  return withInputEmbedAdapters(result, collected.adapters);
+  return result;
 };
 
 const QueueComponent: FC<QueueProps> = () => null;

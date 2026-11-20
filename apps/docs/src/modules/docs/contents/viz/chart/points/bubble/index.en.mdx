@@ -78,14 +78,14 @@ export const Example = () => <Layout ir={ir} extensions={definitions} />;
 
 ```ts
 import { renderChart } from '@retikz/chart-vanilla';
-import { bubbleChart, bubbleChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';
+import { bubbleChart } from '@retikz/chart-vanilla/point';
 import { bubbleMinimalData } from './bubble-minimal.data';
 
 const chart = bubbleChart({
   data: bubbleMinimalData,
   encodings: { x: 'depthKm', y: 'magnitude', size: 'significance' },
 });
-export const svg = renderChart(chart, { adapters: [bubbleChartInputEmbedAdapter] }).svg;
+export const svg = renderChart(chart).svg;
 ```
 
 </DocTab>

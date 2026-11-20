@@ -56,7 +56,7 @@ describe('irToVanillaCode', () => {
           type: 'group',
           id: 'runtime',
           caption: { title: { text: 'Runtime' } },
-          labels: [{ text: 'public', position: { boundary: 'right', fraction: 0.5 } }],
+          labels: [{ text: 'public', position: { side: 'right', fraction: 0.5 } }],
           children: [{ namespace: 'graph', type: 'entity', role: 'activity', position: [40, 30] }],
         }),
       ]),
@@ -64,10 +64,10 @@ describe('irToVanillaCode', () => {
 
     expect(code).toContain('group({');
     expect(code).toContain("caption: { title: { text: 'Runtime' } }");
-    expect(code).toContain("boundary: 'right'");
+    expect(code).toContain("side: 'right'");
     expect(code).toContain('entity({');
-    expect(code).toContain('groupInputEmbedAdapter');
-    expect(code).toContain('entityInputEmbedAdapter');
+    expect(code).not.toContain('groupInputEmbedAdapter');
+    expect(code).not.toContain('entityInputEmbedAdapter');
     expect(code).not.toContain('groupDefinition');
   });
 
@@ -116,11 +116,11 @@ describe('irToVanillaCode', () => {
     expect(code).toContain("id: 'user.fields'");
     expect(code).toContain("id: 'user.name'");
     expect(code).toContain('entity({');
-    expect(code).toContain('blockInputEmbedAdapter');
-    expect(code).toContain('blockHeaderInputEmbedAdapter');
-    expect(code).toContain('blockSectionInputEmbedAdapter');
-    expect(code).toContain('blockRowInputEmbedAdapter');
-    expect(code).toContain('entityInputEmbedAdapter');
+    expect(code).not.toContain('blockInputEmbedAdapter');
+    expect(code).not.toContain('blockHeaderInputEmbedAdapter');
+    expect(code).not.toContain('blockSectionInputEmbedAdapter');
+    expect(code).not.toContain('blockRowInputEmbedAdapter');
+    expect(code).not.toContain('entityInputEmbedAdapter');
     expect(code).not.toContain('blockDefinition');
   });
 
@@ -447,9 +447,9 @@ describe('irToVanillaCode 回退', () => {
     expect(code).toContain('flexLayout(');
     expect(code).toContain('gridLayout(');
     expect(code).toContain('overlayLayout(');
-    expect(code).toContain('flexLayoutInputEmbedAdapter');
-    expect(code).toContain('gridLayoutInputEmbedAdapter');
-    expect(code).toContain('overlayLayoutInputEmbedAdapter');
+    expect(code).not.toContain('flexLayoutInputEmbedAdapter');
+    expect(code).not.toContain('gridLayoutInputEmbedAdapter');
+    expect(code).not.toContain('overlayLayoutInputEmbedAdapter');
   });
 
   it('为 Legend 生成 authoring builder、adapter 与嵌套 Standard / Layout definitions', () => {
@@ -510,7 +510,7 @@ describe('irToVanillaCode 回退', () => {
     );
 
     expect(code).toContain('legend({');
-    expect(code).toContain('legendInputEmbedAdapter');
+    expect(code).not.toContain('legendInputEmbedAdapter');
     expect(code).toContain('const compile = { composites: [gridDefinition, flexLayoutDefinition] };');
     expect(code).not.toContain('legendDefinition');
     expect(code).not.toMatch(/\binspect\b/);
@@ -549,7 +549,7 @@ describe('irToVanillaCode 回退', () => {
     expect(code).toContain("text: 'Start'");
     expect(code).toContain('position: [0, 0]');
     expect(code).toContain("source: { id: 'start' }");
-    expect(code).toContain('graphInputEmbedAdapter');
+    expect(code).not.toContain('graphInputEmbedAdapter');
     expect(code).not.toContain('entityInputEmbedAdapter');
     expect(code).not.toContain('relationInputEmbedAdapter');
     expect(code).toContain("from '@retikz/graph-vanilla'");
@@ -587,9 +587,9 @@ describe('irToVanillaCode 回退', () => {
     expect(code).toContain('entity({');
     expect(code).toContain('relation({');
     expect(code.match(/graph\(\{/g)).toHaveLength(2);
-    expect(code).toContain('entityInputEmbedAdapter');
-    expect(code).toContain('relationInputEmbedAdapter');
-    expect(code).toContain('graphInputEmbedAdapter');
+    expect(code).not.toContain('entityInputEmbedAdapter');
+    expect(code).not.toContain('relationInputEmbedAdapter');
+    expect(code).not.toContain('graphInputEmbedAdapter');
     expect(code).not.toContain("id: 'preview-entity-1'");
     expect(code).not.toContain("id: 'preview-relation-1'");
     expect(code).not.toContain("id: 'preview-graph-1'");

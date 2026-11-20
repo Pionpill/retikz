@@ -1,7 +1,7 @@
 import { createDetailTableIR, createManualTableIR, TableSchema } from '@retikz/table';
 import { describe, expect, it } from 'vitest';
 
-import { detailTable, embedTable, manualTable } from '../../src';
+import { detailTable, embedTable, manualTable, tableInputEmbedAdapter } from '../../src';
 
 describe('Table Vanilla 简单编写', () => {
   it('detail 和 manual 辅助函数委托共享 Table 构造器且不修改输入', () => {
@@ -47,7 +47,7 @@ describe('Table Vanilla 简单编写', () => {
 
     expect(embedTable(spec, { data: {} })).toEqual({
       type: 'embed',
-      kind: 'table',
+      adapter: tableInputEmbedAdapter,
       props: { table: { kind: 'manual', input: { rows: [[null]] } }, data: {} },
     });
 

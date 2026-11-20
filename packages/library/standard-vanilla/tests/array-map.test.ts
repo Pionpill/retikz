@@ -2,7 +2,6 @@ import { resolveCoreProviderDependencies } from '@retikz/core';
 import { normalizeScene, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
-import { standardInputEmbedAdapters } from '../src';
 import { array, map } from '../src/collection';
 import { compileTestResult } from './helpers/compilation';
 
@@ -12,7 +11,7 @@ describe('Array / Map 提供者集', () => {
       array({ data: [{ value: 1 }], dataExpand: ['array'] }),
       map({ data: { item: { value: 1 } }, dataExpand: ['array'] }),
     ]) {
-      const normalized = normalizeScene(scene({ children: [child] }), { adapters: standardInputEmbedAdapters });
+      const normalized = normalizeScene(scene({ children: [child] }));
       const options = resolveCoreProviderDependencies({ contributions: normalized.contributions });
       const result = compileTestResult(normalized.ir, options);
 
@@ -24,7 +23,6 @@ describe('Array / Map 提供者集', () => {
   it('在类型化 Vanilla 输入和编译的单元分配中保留 Array 内容宽度', () => {
     const normalized = normalizeScene(
       scene({ children: [array({ items: [{ content: 'A', layout: { width: 'content' } }, 'longer'] })] }),
-      { adapters: standardInputEmbedAdapters },
     );
     const options = resolveCoreProviderDependencies({ contributions: normalized.contributions });
     const result = compileTestResult(normalized.ir, options);
@@ -54,7 +52,7 @@ describe('Array / Map 提供者集', () => {
         }),
       ],
     });
-    const normalized = normalizeScene(input, { adapters: standardInputEmbedAdapters });
+    const normalized = normalizeScene(input);
     const options = resolveCoreProviderDependencies({ contributions: normalized.contributions });
     const result = compileTestResult(normalized.ir, options);
 
@@ -76,7 +74,7 @@ it('从任一根适配器组装数据定义和裁剪', () => {
     map({ data: { values: [1, { id: 'a' }] }, defaultCell: { layout: { width: 30 } } }),
     array({ data: [{ values: [1, 1] }], defaultCell: { layout: { height: 20 } } }),
   ]) {
-    const normalized = normalizeScene(scene({ children: [child] }), { adapters: standardInputEmbedAdapters });
+    const normalized = normalizeScene(scene({ children: [child] }));
     const options = resolveCoreProviderDependencies({ contributions: normalized.contributions });
     const result = compileTestResult(normalized.ir, options);
 
@@ -94,7 +92,7 @@ it('骨架与空单元格通过公开 adapter 装配裁切依赖并保留输入'
     map({ skeleton: { keys: ['k'] }, defaultCell: { layout: { height: 20 } } }),
     array({ items: [{}] }),
   ]) {
-    const normalized = normalizeScene(scene({ children: [child] }), { adapters: standardInputEmbedAdapters });
+    const normalized = normalizeScene(scene({ children: [child] }));
     const result = compileTestResult(
       normalized.ir,
       resolveCoreProviderDependencies({ contributions: normalized.contributions }),

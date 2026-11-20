@@ -1,6 +1,7 @@
 import { pathClipProvider } from '@retikz/extension';
 import type { IRArray, IRArrayCell } from '@retikz/standard/collection';
 import { createArray, arrayProvider } from '@retikz/standard/collection';
+import { embed } from '@retikz/vanilla';
 import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
 import { standardArrayEmbedKind } from '../shared/constants';
@@ -74,9 +75,9 @@ export const arrayInputEmbedAdapter: SynchronousInputEmbedAdapter<InputArray> = 
  * @param input 使用显式单元格、JSON 数组或示意骨架的 Array 输入
  * @returns 持有原始 input 引用的 embed；内容归一与校验在后续 adapter 和编译阶段执行
  */
-export const array = (input: InputArray): InputEmbed<InputArray> => ({
-  type: 'embed',
-  kind: standardArrayEmbedKind,
-  ...(input.id === undefined ? {} : { id: input.id }),
-  props: input,
-});
+export const array = (input: InputArray): InputEmbed<InputArray> =>
+  embed({
+    adapter: arrayInputEmbedAdapter,
+    ...(input.id === undefined ? {} : { id: input.id }),
+    props: input,
+  });

@@ -8,6 +8,7 @@ import type {
   VanillaCompileDriverSession,
 } from '../../src';
 import {
+  embed,
   createProcessingControllerAsync,
   prepareStaticProcessingAsync,
   compileToScene,
@@ -20,9 +21,9 @@ const contribution = (id: string, x = 0): InputEmbedContribution => ({
   providerDependencies: { roots: [], providers: [] },
 });
 
-const source = (x = 0): InputSceneChildren => ({
+const source = (adapter: InputEmbedAdapter<{ x: number }>, x = 0): InputSceneChildren => ({
   type: 'scene',
-  children: [{ type: 'embed', kind: 'async-node', props: { x } }],
+  children: [embed({ adapter, props: { x } })],
 });
 
 describe('共享异步编写准备', () => {
@@ -132,8 +133,8 @@ describe('共享异步编写准备', () => {
     const outer: InputEmbedAdapter<unknown> & Required<Pick<InputEmbedAdapter<unknown>, 'prepare'>> = {
       kind: 'slots',
       lower: (_props, context) => {
-        const left = context.normalizeChildren?.(source(1).children);
-        const right = context.normalizeChildren?.(source(2).children);
+        const left = context.normalizeChildren?.(source(inner, 1).children);
+        const right = context.normalizeChildren?.(source(inner, 2).children);
         if (left === undefined || right === undefined) throw new Error('missing children');
 
         return {
@@ -142,8 +143,8 @@ describe('共享异步编写准备', () => {
         };
       },
       prepare: async (_props, context) => {
-        const left = await context.prepareChildren(source(1).children);
-        const right = await context.prepareChildren(source(2).children);
+        const left = await context.prepareChildren(source(inner, 1).children);
+        const right = await context.prepareChildren(source(inner, 2).children);
 
         return {
           execute: async () => ({
@@ -157,9 +158,9 @@ describe('共享异步编写准备', () => {
         };
       },
     };
-    const input: InputSceneChildren = { type: 'scene', children: [{ type: 'embed', kind: 'slots', props: {} }] };
-    const synchronous = compileToScene(input, { adapters: [outer, inner] });
-    const asynchronous = await compileToSceneAsync(input, { adapters: [outer, inner] });
+    const input: InputSceneChildren = { type: 'scene', children: [embed({ adapter: outer, props: {} })] };
+    const synchronous = compileToScene(input);
+    const asynchronous = await compileToSceneAsync(input);
 
     expect(asynchronous.scene).toEqual(synchronous.scene);
 
@@ -170,7 +171,7 @@ describe('共享异步编写准备', () => {
     expect(new Set(group.children.map(child => child.id)).size).toBe(2);
   });
 
-  it('拒绝准备期间的嵌套执行、未知适配器和重复类型而不进行计算', async () => {
+  it('拒绝准备期间的嵌套执行、缺少 prepare 的适配器而不进行计算', async () => {
     let executed = 0;
     const inner = {
       kind: 'async-node',
@@ -184,34 +185,32 @@ describe('共享异步编写准备', () => {
     const outer = {
       kind: 'container',
       prepare: async (_props: unknown, context: Parameters<NonNullable<InputEmbedAdapter<unknown>['prepare']>>[1]) => {
-        const children = await context.prepareChildren(source().children);
+        const children = await context.prepareChildren(source(inner).children);
         await children.execute();
         return { execute: () => contribution(context.id) };
       },
     };
 
     await expect(
-      compileToSceneAsync(
-        { type: 'scene', children: [{ type: 'embed', kind: 'container', props: {} }] },
-        { adapters: [outer, inner] },
-      ),
+      compileToSceneAsync({ type: 'scene', children: [embed({ adapter: outer, props: {} })] }),
     ).rejects.toThrow(/during preparation/);
     expect(executed).toBe(0);
-    await expect(compileToSceneAsync(source(), { adapters: [inner, inner] })).rejects.toThrow(/Duplicate/);
-    await expect(compileToSceneAsync(source())).rejects.toThrow(/no prepare adapter/);
+    await expect(compileToSceneAsync(source({ kind: 'sync', lower: () => contribution('sync') }))).rejects.toThrow(
+      /no prepare adapter/,
+    );
   });
 
-  it('在准备和下沉过程中保持图层、Scope 和主题上下文相同', async () => {
-    const syncContexts: Array<{ id: string; identityPath: Array<string>; mode?: string }> = [];
+  it('在准备和下沉过程中保持图层、Scope 上下文相同', async () => {
+    const syncContexts: Array<{ id: string; identityPath: Array<string> }> = [];
     const asyncContexts: typeof syncContexts = [];
     const adapter = {
       kind: 'probe',
       lower: (_props: unknown, context: Parameters<NonNullable<InputEmbedAdapter<unknown>['lower']>>[1]) => {
-        syncContexts.push({ id: context.id, identityPath: context.identityPath, mode: context.theme?.mode });
+        syncContexts.push({ id: context.id, identityPath: context.identityPath });
         return contribution(context.id);
       },
       prepare: (_props: unknown, context: Parameters<NonNullable<InputEmbedAdapter<unknown>['prepare']>>[1]) => {
-        asyncContexts.push({ id: context.id, identityPath: context.identityPath, mode: context.theme?.mode });
+        asyncContexts.push({ id: context.id, identityPath: context.identityPath });
         return { execute: () => contribution(context.id) };
       },
     };
@@ -227,7 +226,7 @@ describe('共享异步编写准备', () => {
               type: 'scope',
               id: 'container',
               theme: { mode: 'dark' },
-              children: [{ type: 'embed', kind: 'probe', props: {} }],
+              children: [embed({ adapter, props: {} })],
             },
           ],
         },
@@ -235,15 +234,12 @@ describe('共享异步编写准备', () => {
           type: 'layer',
           name: 'back',
           zIndex: 1,
-          children: [
-            { type: 'embed', kind: 'probe', props: {} },
-            { type: 'embed', kind: 'probe', props: {} },
-          ],
+          children: [embed({ adapter, props: {} }), embed({ adapter, props: {} })],
         },
       ],
     };
-    const sync = compileToScene(input, { adapters: [adapter] });
-    const asynchronous = await compileToSceneAsync(input, { adapters: [adapter] });
+    const sync = compileToScene(input);
+    const asynchronous = await compileToSceneAsync(input);
 
     expect(asyncContexts).toEqual(syncContexts);
     expect(asynchronous.map(layer => layer.result.scene)).toEqual(sync.map(layer => layer.result.scene));
@@ -263,20 +259,43 @@ describe('共享异步编写准备', () => {
               }),
       }),
     };
-    const controller = await createProcessingControllerAsync(source(), { adapters: [adapter], signal: abort.signal });
+    const controller = await createProcessingControllerAsync(source(adapter), { signal: abort.signal });
     let publications = 0;
     controller.subscribe(() => {
       publications++;
     });
-    const pending = controller.update(source(1));
+    const pending = controller.update(source(adapter, 1));
     await new Promise(resolve => setTimeout(resolve, 0));
     abort.abort();
     complete?.(contribution('__retikz-embed:default:children[0]:async-node', 1));
 
     expect(await pending).toEqual({ kind: 'superseded' });
     expect(publications).toBe(0);
-    await expect(controller.update(source())).rejects.toBeInstanceOf(RetikzVanillaError);
+    await expect(controller.update(source(adapter))).rejects.toBeInstanceOf(RetikzVanillaError);
     expect(() => controller.subscribe(() => undefined)).toThrow(/disposed/);
+  });
+
+  it('同 kind 的不同实现按位置产生贡献', async () => {
+    const executed: Array<number> = [];
+    const bound = (x: number) =>
+      embed({
+        adapter: {
+          kind: 'shared',
+          lower: (_props, context) => contribution(context.id, x),
+          prepare: (_props, context) => ({
+            execute: () => {
+              executed.push(x);
+              return contribution(context.id, x);
+            },
+          }),
+        },
+        props: {},
+      });
+    const input: InputSceneChildren = { type: 'scene', children: [bound(1), bound(2)] };
+    const sync = compileToScene(input);
+    const asyncResult = await compileToSceneAsync(input);
+    expect(asyncResult.scene).toEqual(sync.scene);
+    expect(executed).toEqual([1, 2]);
   });
 
   it('在执行任何贡献之前准备整个编写树', async () => {
@@ -297,10 +316,10 @@ describe('共享异步编写准备', () => {
     };
 
     await expect(
-      compileToSceneAsync(
-        { type: 'scene', children: [...source(1).children, ...source(2).children] },
-        { adapters: [adapter] },
-      ),
+      compileToSceneAsync({
+        type: 'scene',
+        children: [...source(adapter, 1).children, ...source(adapter, 2).children],
+      }),
     ).rejects.toThrow(/unsupported/);
     expect(calls).toEqual(['prepare:1', 'prepare:2']);
   });
@@ -343,10 +362,10 @@ describe('共享异步编写准备', () => {
     const input: InputScene = {
       type: 'scene',
       theme: { mode: 'dark' },
-      children: [{ type: 'embed', kind: 'container', props: { children: source(4).children } }],
+      children: [embed({ adapter: outer, props: { children: source(inner, 4).children } })],
     };
-    const sync = compileToScene(input, { adapters: [outer, inner] });
-    const asyncResult = await compileToSceneAsync(input, { adapters: [outer, inner] });
+    const sync = compileToScene(input);
+    const asyncResult = await compileToSceneAsync(input);
 
     expect(asyncResult.scene).toEqual(sync.scene);
   });
@@ -358,20 +377,20 @@ describe('共享异步编写准备', () => {
         execute: () => contribution(context.id, props.x),
       }),
     };
-    const discarded = await prepareStaticProcessingAsync(source(), { adapters: [adapter] }, 3);
+    const discarded = await prepareStaticProcessingAsync(source(adapter), {}, 3);
     discarded.discard();
     discarded.discard();
 
     expect(() => discarded.commit()).toThrow(/discard|terminal/);
 
-    const committed = await prepareStaticProcessingAsync(source(), { adapters: [adapter] }, 4);
+    const committed = await prepareStaticProcessingAsync(source(adapter), {}, 4);
     committed.commit();
     committed.commit();
 
     expect(() => committed.discard()).toThrow(/commit|terminal/);
 
     const abort = new AbortController();
-    const cancelled = await prepareStaticProcessingAsync(source(), { adapters: [adapter], signal: abort.signal }, 5);
+    const cancelled = await prepareStaticProcessingAsync(source(adapter), { signal: abort.signal }, 5);
     abort.abort();
 
     expect(() => cancelled.commit()).toThrow(/cancel|abort|invalid/);
@@ -427,12 +446,12 @@ describe('共享异步编写准备', () => {
             : new Promise<InputEmbedContribution>((resolve, reject) => completions.set(props.x, { resolve, reject })),
       }),
     };
-    const controller = await createProcessingControllerAsync(source(), { adapters: [adapter] });
+    const controller = await createProcessingControllerAsync(source(adapter));
     const published: Array<number> = [];
     controller.subscribe(result => published.push(result.revision));
-    const old = controller.update(source(1));
+    const old = controller.update(source(adapter, 1));
     await new Promise(resolve => setTimeout(resolve, 0));
-    const next = controller.update(source(2));
+    const next = controller.update(source(adapter, 2));
     await new Promise(resolve => setTimeout(resolve, 0));
     completions.get(2)?.resolve(contribution('__retikz-embed:default:children[0]:async-node', 2));
 
@@ -443,7 +462,7 @@ describe('共享异步编写准备', () => {
     expect(await old).toEqual({ kind: 'superseded' });
     expect(controller.diagnostics()).toEqual([]);
 
-    const failed = controller.update(source(3));
+    const failed = controller.update(source(adapter, 3));
     await new Promise(resolve => setTimeout(resolve, 0));
     completions.get(3)?.reject(new Error('current error'));
 

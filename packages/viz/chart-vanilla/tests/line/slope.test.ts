@@ -2,8 +2,8 @@ import { SlopeChartSchema } from '@retikz/chart/line';
 import { normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
-import { slopeChart, slopeChartInputEmbedAdapter, slopeMark, normalizeSlopeChart } from '../../src/line';
-import { scatterChart, scatterChartInputEmbedAdapter } from '../../src/point';
+import { slopeChart, slopeMark, normalizeSlopeChart } from '../../src/line';
+import { scatterChart } from '../../src/point';
 
 const rows = [
   { x: 0, y: 1, s: 'A' },
@@ -20,8 +20,7 @@ describe('Slope Vanilla 输入闭环', () => {
       marks: [slopeMark({ override: true, properties: { path: { strokeWidth: 3 } } })],
     };
     const input = slopeChart({ data: rows, ...recipe });
-    const actual = normalizeScene(scene({ children: [input] }), { adapters: [slopeChartInputEmbedAdapter] }).ir
-      .children[0];
+    const actual = normalizeScene(scene({ children: [input] })).ir.children[0];
     const expected = normalizeSlopeChart({ data: { reference: 'chart.data' }, ...recipe });
     expect(actual).toEqual(expected);
     expect(SlopeChartSchema.parse(actual)).toEqual(SlopeChartSchema.parse(expected));
@@ -47,7 +46,6 @@ describe('Slope Vanilla 输入闭环', () => {
           }),
         ],
       }),
-      { adapters: [slopeChartInputEmbedAdapter, scatterChartInputEmbedAdapter] },
     );
     expect(svg).toContain('<svg');
     expect(svg).toContain('trend');

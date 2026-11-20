@@ -7,7 +7,6 @@ import { buildVanillaPreview } from '../../src/modules/docs/components/component
 import { renderQueuePreview as renderComposition } from '../../src/modules/docs/contents/library/standard/collection/queue/queue-composition.preview';
 import { renderQueuePreview as renderInputs } from '../../src/modules/docs/contents/library/standard/collection/queue/queue-inputs.preview';
 import { renderQueuePreview as renderLayout } from '../../src/modules/docs/contents/library/standard/collection/queue/queue-layout.preview';
-import { synchronousInputAdaptersOf } from '../../src/modules/docs/lib';
 
 it('Queue 操作箭头在 SVG 与保留模式更新中可独立切换', () => {
   const input = (incoming: boolean, outgoing: boolean) =>
@@ -23,7 +22,7 @@ it('Queue 操作箭头在 SVG 与保留模式更新中可独立切换', () => {
       }).props.children,
     );
   const first = input(true, true);
-  const controller = createProcessingController(first.scene, { adapters: synchronousInputAdaptersOf(first.adapters) });
+  const controller = createProcessingController(first);
   try {
     for (const [incoming, outgoing] of [
       [false, true],
@@ -31,7 +30,7 @@ it('Queue 操作箭头在 SVG 与保留模式更新中可独立切换', () => {
       [false, false],
       [true, true],
     ]) {
-      controller.update(input(incoming, outgoing).scene);
+      controller.update(input(incoming, outgoing));
       const serialized = JSON.stringify(controller.read().scene);
       expect(serialized.includes('dodgerblue')).toBe(incoming);
       expect(serialized.includes('darkorange')).toBe(outgoing);
@@ -62,7 +61,7 @@ it('Queue 预览通过 Vanilla 适配器渲染所有输入和空状态', () => {
       const result = buildVanillaPreview(buildPreviewIR(() => renderInputs({ input, empty, expand: true })));
       expect(result.svg).toContain('<svg');
       expect(result.code).toContain('queue(');
-      expect(result.code).toContain('queueInputEmbedAdapter');
+      expect(result.code).not.toContain('queueInputEmbedAdapter');
     }
   }
 });
@@ -80,10 +79,10 @@ it.each([true, false])('matrix=%s 时 Queue 虚线单元格在保留模式更新
   const input = (dashed: boolean) =>
     createInputScene(renderComposition({ matrix, dashed, connect: true }).props.children);
   const first = input(true);
-  const controller = createProcessingController(first.scene, { adapters: synchronousInputAdaptersOf(first.adapters) });
+  const controller = createProcessingController(first);
   try {
     for (const dashed of [false, true, false]) {
-      controller.update(input(dashed).scene);
+      controller.update(input(dashed));
       expect(JSON.stringify(controller.read().scene).includes('"dashPattern":[4,3]')).toBe(dashed);
     }
   } finally {
@@ -99,12 +98,10 @@ it('Queue 数量变化时保留模式更新可在各个方向移除并恢复两�
           .children,
       );
     const first = input('3');
-    const controller = createProcessingController(first.scene, {
-      adapters: synchronousInputAdaptersOf(first.adapters),
-    });
+    const controller = createProcessingController(first);
     try {
       for (const count of ['0', '1', '3'] as const) {
-        controller.update(input(count).scene);
+        controller.update(input(count));
         const output = JSON.stringify(controller.read().scene);
         for (const color of ['dodgerblue', 'darkorange']) expect(output.includes(color)).toBe(count !== '0');
       }

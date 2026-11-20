@@ -10,6 +10,7 @@ import {
 } from '@retikz/vanilla';
 import { describe, expect, it, vi } from 'vitest';
 
+import type { InputPlotEmbed } from '../src';
 import { plotInputEmbedAdapter, createPlotLineageCompileDriver, renderPlot, renderPlotAsync } from '../src';
 
 const rows = [
@@ -36,13 +37,13 @@ describe('异步 Plot 编写', () => {
     const input = (onLineage: typeof first) =>
       scene({
         children: [
-          embed({
-            kind: 'plot',
+          embed<InputPlotEmbed>({
+            adapter: plotInputEmbedAdapter,
             props: { spec: spec(), datasets: { rows }, onLineage, panel: { position: [24, 12], zIndex: 3 } },
           }),
         ],
       });
-    const options = { adapters: [plotInputEmbedAdapter], compileDriver: createPlotLineageCompileDriver() };
+    const options = { compileDriver: createPlotLineageCompileDriver() };
     const a = await createProcessingControllerAsync(input(first), options);
     const b = await createProcessingControllerAsync(input(second), options);
 
@@ -69,9 +70,9 @@ describe('异步 Plot 编写', () => {
     });
     const second = vi.fn();
     const input = (onLineage: typeof second) =>
-      embed({ kind: 'plot', props: { spec: spec(), datasets: { rows }, onLineage } });
+      embed<InputPlotEmbed>({ adapter: plotInputEmbedAdapter, props: { spec: spec(), datasets: { rows }, onLineage } });
     const source = scene({ children: [input(first), input(second)] });
-    const options = { adapters: [plotInputEmbedAdapter], compileDriver: createPlotLineageCompileDriver() };
+    const options = { compileDriver: createPlotLineageCompileDriver() };
 
     try {
       const discarded = await prepareStaticProcessingAsync(source, options);
@@ -153,10 +154,11 @@ describe('异步 Plot 编写', () => {
   it('在一个准备树中保持相同的匿名 Plot 输入不同', async () => {
     const plot = spec();
     const input = (values: typeof rows) =>
-      embed({ kind: 'plot', props: { spec: plot, dataBindings: { rows: { kind: 'rows', rows: values } } } });
-    const result = await compileToSceneAsync(scene({ children: [input(rows), input([{ x: 3, y: 1 }])] }), {
-      adapters: [plotInputEmbedAdapter],
-    });
+      embed<InputPlotEmbed>({
+        adapter: plotInputEmbedAdapter,
+        props: { spec: plot, dataBindings: { rows: { kind: 'rows', rows: values } } },
+      });
+    const result = await compileToSceneAsync(scene({ children: [input(rows), input([{ x: 3, y: 1 }])] }));
 
     expect(result.scene.primitives).toHaveLength(2);
     expect(JSON.stringify(result.scene).match(/"type":"ellipse"/g)).toHaveLength(3);

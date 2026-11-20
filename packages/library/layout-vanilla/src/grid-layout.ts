@@ -1,5 +1,6 @@
 import type { InputGridLayoutItemConfig } from '@retikz/layout';
 import { createGridLayout, gridLayoutProvider } from '@retikz/layout';
+import { embed } from '@retikz/vanilla';
 import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
 import type { InputGridLayout } from './normalize';
@@ -52,9 +53,9 @@ export const gridLayoutInputEmbedAdapter: SynchronousInputEmbedAdapter<InputGrid
  * @param authoring 交给编译驱动的不透明声明数据；省略时不附加声明
  * @returns 由布局适配器消费的 InputEmbed，不在创建时求解布局
  */
-export const gridLayout = (input: InputGridLayout, authoring?: unknown): InputEmbed<InputGridLayout> => ({
-  type: 'embed',
-  kind: gridLayoutEmbedKind,
-  props: input,
-  ...(authoring === undefined ? {} : { authoring }),
-});
+export const gridLayout = (input: InputGridLayout, authoring?: unknown): InputEmbed<InputGridLayout> =>
+  embed({
+    adapter: gridLayoutInputEmbedAdapter,
+    props: input,
+    ...(authoring === undefined ? {} : { authoring }),
+  });

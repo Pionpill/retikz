@@ -1,11 +1,9 @@
 import { createInputScene, Node } from '@retikz/react';
-import { standardInputEmbedAdapters } from '@retikz/standard-vanilla';
-import { array, map, arrayInputEmbedAdapter, mapInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { array, map } from '@retikz/standard-vanilla/collection';
 import { normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
 import { Array, ArrayItem, Map, MapEntry, MapKey, MapValue } from '../src/collection';
-import { synchronousAdapters } from './helpers/synchronous-adapters';
 
 const node = { type: 'node' as const, position: [0, 0] as [number, number], text: 'A' };
 it('通过两个适配器保留具有显式 JSX 单元 ID 和数据的索引标识', () => {
@@ -18,26 +16,20 @@ it('通过两个适配器保留具有显式 JSX 单元 ID 和数据的索引标�
     children: [array({ id: 'array', cellIdMode: 'index', items: [{ id: 'named', content: 'A' }] })],
   });
 
-  expect(normalizeScene(marker.scene, { adapters: synchronousAdapters(marker.adapters) }).ir).toEqual(
-    normalizeScene(vanillaInput, { adapters: [arrayInputEmbedAdapter] }).ir,
-  );
-  expect(renderToSvgString(marker.scene, { adapters: synchronousAdapters(marker.adapters) })).toEqual(
-    renderToSvgString(vanillaInput, { adapters: [arrayInputEmbedAdapter] }),
-  );
+  expect(normalizeScene(marker).ir).toEqual(normalizeScene(vanillaInput).ir);
+  expect(renderToSvgString(marker)).toEqual(renderToSvgString(vanillaInput));
 
   const data = createInputScene(<Array id="data" cellIdMode="index" data={['A', 'A']} />);
 
-  expect(normalizeScene(data.scene, { adapters: synchronousAdapters(data.adapters) }).ir).toEqual(
-    normalizeScene(scene({ children: [array({ id: 'data', cellIdMode: 'index', data: ['A', 'A'] })] }), {
-      adapters: [arrayInputEmbedAdapter],
-    }).ir,
+  expect(normalizeScene(data).ir).toEqual(
+    normalizeScene(scene({ children: [array({ id: 'data', cellIdMode: 'index', data: ['A', 'A'] })] })).ir,
   );
 });
 it('在 React 和 Vanilla 中保留混合的 Array 字符串和对象项', () => {
   const items = ['A', { content: 'B', id: 'custom', style: { fill: 'blue' } }];
   const input = createInputScene(<Array items={items} />);
-  const react = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
-  const vanilla = normalizeScene(scene({ children: [array({ items })] }), { adapters: [arrayInputEmbedAdapter] });
+  const react = normalizeScene(input);
+  const vanilla = normalizeScene(scene({ children: [array({ items })] }));
 
   expect(react.ir).toEqual(vanilla.ir);
   expect(react.ir.children[0]).toMatchObject({ items });
@@ -45,10 +37,8 @@ it('在 React 和 Vanilla 中保留混合的 Array 字符串和对象项', () =>
 it('保留 React 和 Vanilla 之间的字符串标识选项', () => {
   const items = ['A', 'B'];
   const input = createInputScene(<Array items={items} cellIdMode="string" />);
-  const react = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
-  const vanilla = normalizeScene(scene({ children: [array({ items, cellIdMode: 'string' })] }), {
-    adapters: [arrayInputEmbedAdapter],
-  });
+  const react = normalizeScene(input);
+  const vanilla = normalizeScene(scene({ children: [array({ items, cellIdMode: 'string' })] }));
 
   expect(react.ir).toEqual(vanilla.ir);
   expect(react.ir.children[0]).toMatchObject({ items, cellIdMode: 'string' });
@@ -65,16 +55,11 @@ describe('Array / Map 适配器等价性', () => {
     );
     const fromVanilla = normalizeScene(
       scene({ children: [array({ items, defaultCell: { layout: { width: 'content' } } })] }),
-      {
-        adapters: [arrayInputEmbedAdapter],
-      },
     );
 
-    expect(normalizeScene(fromItems.scene, { adapters: synchronousAdapters(fromItems.adapters) }).ir).toEqual(
-      fromVanilla.ir,
-    );
+    expect(normalizeScene(fromItems).ir).toEqual(fromVanilla.ir);
 
-    const markerInput = normalizeScene(fromMarkers.scene, { adapters: synchronousAdapters(fromMarkers.adapters) });
+    const markerInput = normalizeScene(fromMarkers);
     const markerVanilla = normalizeScene(
       scene({
         children: [
@@ -84,7 +69,6 @@ describe('Array / Map 适配器等价性', () => {
           }),
         ],
       }),
-      { adapters: [arrayInputEmbedAdapter] },
     );
 
     expect(markerInput.ir).toEqual(markerVanilla.ir);
@@ -98,10 +82,8 @@ describe('Array / Map 适配器等价性', () => {
   ])('保留跨适配器的索引配置：%j', index => {
     const items = ['A', 'B1'];
     const input = createInputScene(<Array items={items} index={index} />);
-    const react = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
-    const vanilla = normalizeScene(scene({ children: [array({ items, index })] }), {
-      adapters: [arrayInputEmbedAdapter],
-    });
+    const react = normalizeScene(input);
+    const vanilla = normalizeScene(scene({ children: [array({ items, index })] }));
 
     expect(react.ir).toEqual(vanilla.ir);
     expect(react.ir.children[0]).toMatchObject({ index });
@@ -132,7 +114,7 @@ describe('Array / Map 适配器等价性', () => {
         </MapEntry>
       </Map>,
     );
-    const react = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
+    const react = normalizeScene(input);
     const vanilla = normalizeScene(
       scene({
         children: [
@@ -152,7 +134,6 @@ describe('Array / Map 适配器等价性', () => {
           }),
         ],
       }),
-      { adapters: [arrayInputEmbedAdapter, mapInputEmbedAdapter] },
     );
 
     expect(react.ir.children[0]).toMatchObject({
@@ -187,11 +168,10 @@ describe('Array / Map 适配器等价性', () => {
           }),
         ],
       }),
-      { adapters: [mapInputEmbedAdapter] },
     );
 
     for (const input of [data, markers]) {
-      const actual = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
+      const actual = normalizeScene(input);
 
       expect(actual.ir).toEqual(vanilla.ir);
       expect(actual.contributions).toEqual(vanilla.contributions);
@@ -216,16 +196,12 @@ describe('Array / Map 适配器等价性', () => {
       </Array>,
     );
 
-    expect(normalizeScene(data.scene, { adapters: synchronousAdapters(data.adapters) }).ir).toEqual(
-      normalizeScene(markers.scene, { adapters: synchronousAdapters(markers.adapters) }).ir,
-    );
+    expect(normalizeScene(data).ir).toEqual(normalizeScene(markers).ir);
 
     const empty = createInputScene(<Array />);
     const emptyData = createInputScene(<Array items={[]} />);
 
-    expect(normalizeScene(empty.scene, { adapters: synchronousAdapters(empty.adapters) }).ir).toEqual(
-      normalizeScene(emptyData.scene, { adapters: synchronousAdapters(emptyData.adapters) }).ir,
-    );
+    expect(normalizeScene(empty).ir).toEqual(normalizeScene(emptyData).ir);
   });
 
   it('拒绝丢失或多个可绘制子项', () => {
@@ -295,12 +271,9 @@ describe('Array / Map 适配器等价性', () => {
 it('通过 React 和 Vanilla 传递混合的 JSON 数据，具有相同的贡献', () => {
   const data = { id: 'ordinary data', values: ['', '', null, { enabled: false }] };
   const input = createInputScene(<Map data={data} defaultCell={{ value: { layout: { width: 70 } } }} />);
-  const react = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
+  const react = normalizeScene(input);
   const vanilla = normalizeScene(
     scene({ children: [map({ data, defaultCell: { value: { layout: { width: 70 } } } })] }),
-    {
-      adapters: [mapInputEmbedAdapter],
-    },
   );
 
   expect(react.ir).toEqual(vanilla.ir);
@@ -309,17 +282,13 @@ it('通过 React 和 Vanilla 传递混合的 JSON 数据，具有相同的贡献
   expect(react.ir.children[0]).not.toHaveProperty('entries');
 
   const listInput = createInputScene(<Array data={['', '', data]} />);
-  const reactArray = normalizeScene(listInput.scene, { adapters: synchronousAdapters(listInput.adapters) });
-  const vanillaArray = normalizeScene(scene({ children: [array({ data: ['', '', data] })] }), {
-    adapters: [arrayInputEmbedAdapter],
-  });
+  const reactArray = normalizeScene(listInput);
+  const vanillaArray = normalizeScene(scene({ children: [array({ data: ['', '', data] })] }));
 
   expect(reactArray.ir).toEqual(vanillaArray.ir);
   expect(reactArray.contributions).toEqual(vanillaArray.contributions);
-  expect(renderToSvgString(input.scene, { adapters: synchronousAdapters(input.adapters) })).toEqual(
-    renderToSvgString(scene({ children: [map({ data, defaultCell: { value: { layout: { width: 70 } } } })] }), {
-      adapters: [mapInputEmbedAdapter],
-    }),
+  expect(renderToSvgString(input)).toEqual(
+    renderToSvgString(scene({ children: [map({ data, defaultCell: { value: { layout: { width: 70 } } } })] })),
   );
 });
 
@@ -333,15 +302,13 @@ it.each([false, [], ['map'], ['array']] as const)('保留数据扩展 %j 到 Rea
     </>,
   );
   const vanillaInput = scene({ children: [array({ data, dataExpand }), map({ data: { value: data }, dataExpand })] });
-  const react = normalizeScene(reactInput.scene, { adapters: synchronousAdapters(reactInput.adapters) });
-  const vanilla = normalizeScene(vanillaInput, { adapters: standardInputEmbedAdapters });
+  const react = normalizeScene(reactInput);
+  const vanilla = normalizeScene(vanillaInput);
 
   expect(react.ir).toEqual(vanilla.ir);
   expect(react.ir.children[0]).toMatchObject({ data, dataExpand });
   expect(react.ir.children[1]).toMatchObject({ data: { value: data }, dataExpand });
-  expect(renderToSvgString(reactInput.scene, { adapters: synchronousAdapters(reactInput.adapters) })).toEqual(
-    renderToSvgString(vanillaInput, { adapters: standardInputEmbedAdapters }),
-  );
+  expect(renderToSvgString(reactInput)).toEqual(renderToSvgString(vanillaInput));
 });
 
 it('保留数据和标记输入中的容器标签以及匹配的 Vanilla 输出', () => {
@@ -360,15 +327,12 @@ it('保留数据和标记输入中的容器标签以及匹配的 Vanilla 输出'
       array({ items: [{ content: 'cell' }], label: [label, { text: 'Below', position: 'bottom' }] }),
     ],
   });
-  const adapters = [arrayInputEmbedAdapter, mapInputEmbedAdapter];
 
-  expect(normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) }).ir).toEqual(
-    normalizeScene(vanillaInput, { adapters }).ir,
-  );
+  expect(normalizeScene(input).ir).toEqual(normalizeScene(vanillaInput).ir);
 
-  const svg = renderToSvgString(input.scene, { adapters: synchronousAdapters(input.adapters) });
+  const svg = renderToSvgString(input);
 
-  expect(svg).toEqual(renderToSvgString(vanillaInput, { adapters }));
+  expect(svg).toEqual(renderToSvgString(vanillaInput));
   expect(svg).toContain('Container title');
   expect(svg).toContain('Below');
 });
@@ -389,16 +353,11 @@ it('骨架的格内外标号与 Map 键在 React 和 Vanilla 中等价', () => {
       map({ skeleton: { keys: ['k', '', 'k'] }, defaultCell: { layout } }),
     ],
   });
-  const adapters = react.adapters.filter(adapter => adapter.lower !== undefined);
 
-  expect(adapters).toHaveLength(react.adapters.length);
+  const normalized = normalizeScene(react);
 
-  const normalized = normalizeScene(react.scene, { adapters });
-
-  expect(normalized.ir).toEqual(normalizeScene(vanilla, { adapters: standardInputEmbedAdapters }).ir);
-  expect(renderToSvgString(react.scene, { adapters })).toEqual(
-    renderToSvgString(vanilla, { adapters: standardInputEmbedAdapters }),
-  );
+  expect(normalized.ir).toEqual(normalizeScene(vanilla).ir);
+  expect(renderToSvgString(react)).toEqual(renderToSvgString(vanilla));
 });
 it('空 marker 保留格子与 Map 角色，显式空文字仍然保留', () => {
   const react = createInputScene(
@@ -418,14 +377,9 @@ it('空 marker 保留格子与 Map 角色，显式空文字仍然保留', () => 
   const vanilla = scene({
     children: [array({ items: [{ id: 'slot' }, { content: '' }] }), map({ entries: [{ key: {}, value: {} }] })],
   });
-  const adapters = react.adapters.filter(adapter => adapter.lower !== undefined);
 
-  expect(adapters).toHaveLength(react.adapters.length);
+  const normalized = normalizeScene(react);
 
-  const normalized = normalizeScene(react.scene, { adapters });
-
-  expect(normalized.ir).toEqual(normalizeScene(vanilla, { adapters: standardInputEmbedAdapters }).ir);
-  expect(renderToSvgString(react.scene, { adapters })).toEqual(
-    renderToSvgString(vanilla, { adapters: standardInputEmbedAdapters }),
-  );
+  expect(normalized.ir).toEqual(normalizeScene(vanilla).ir);
+  expect(renderToSvgString(react)).toEqual(renderToSvgString(vanilla));
 });

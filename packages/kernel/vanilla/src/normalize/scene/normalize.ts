@@ -1,7 +1,6 @@
-import type { CompositeInputBinding, CoreProviderContribution } from '@retikz/core';
+import type { CompositeInputBinding, CoreProviderContribution, IRScene } from '@retikz/core';
 import { CURRENT_IR_VERSION } from '@retikz/core';
 
-import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../error';
 import { normalizeChild } from './children';
 import type { SceneNormalizeContext } from './context';
 import { asLayerStack, layerZIndex, childSourcePath } from './context';
@@ -11,34 +10,20 @@ import type {
   InputSceneChildren,
   InputSceneLayers,
   NamedLayerResult,
-  InputNormalizeOptions,
   InputScene,
   SceneNormalizationResult,
 } from './types';
 import { BuiltinLayerName } from './types';
 
-/** 判断输入是否为 Scene Input */
-export const isInputScene = (input: unknown): input is InputScene =>
-  typeof input === 'object' && input !== null && (input as { version?: unknown }).version !== CURRENT_IR_VERSION;
+/** 通过版本字段区分已类型化的作者输入与 Core IR */
+export const isInputScene = (input: InputScene | IRScene): input is InputScene => input.version === undefined;
 
 /** 将 InputScene 一次性归一为唯一 Source IR 与 contribution */
 export const normalizeSceneLayer = (
   scene: InputScene,
   layer: InputLayer,
-  options: InputNormalizeOptions,
+  prepared?: SceneNormalizeContext['prepared'],
 ): SceneNormalizationResult => {
-  const adapterKinds = new Set<string>();
-
-  for (const adapter of options.adapters ?? []) {
-    if (adapterKinds.has(adapter.kind))
-      throw new RetikzVanillaError(
-        RetikzVanillaErrorCode.Normalize,
-        `Duplicate input embed adapter kind "${adapter.kind}"`,
-      );
-
-    adapterKinds.add(adapter.kind);
-  }
-
   const contributions: Array<CoreProviderContribution> = [];
   const runtimeInputs: Array<CompositeInputBinding> = [];
   const authoringSites: Array<InputAuthoringSite> = [];
@@ -48,11 +33,7 @@ export const normalizeSceneLayer = (
   const context: SceneNormalizeContext = {
     layerId: layer.name,
     path: [layer.name],
-    adapters: options.adapters,
-    ...(options.embedThemeContext === undefined ? {} : { embedThemeContext: options.embedThemeContext.root }),
-    ...(options.embedThemeContext === undefined
-      ? {}
-      : { resolveEmbedScopeTheme: options.embedThemeContext.resolveScope }),
+    prepared,
     contributions,
     runtimeInputs,
     runtimePath: [],
@@ -86,28 +67,20 @@ export const normalizeSceneLayer = (
 };
 
 /** 直接子项生成单图，显式图层各自生成独立的 IR */
-export function normalizeScene(scene: InputSceneChildren, options?: InputNormalizeOptions): SceneNormalizationResult;
-export function normalizeScene(
-  scene: InputSceneLayers,
-  options?: InputNormalizeOptions,
-): ReadonlyArray<NamedLayerResult<SceneNormalizationResult>>;
+export function normalizeScene(scene: InputSceneChildren): SceneNormalizationResult;
+export function normalizeScene(scene: InputSceneLayers): ReadonlyArray<NamedLayerResult<SceneNormalizationResult>>;
 export function normalizeScene(
   scene: InputScene,
-  options?: InputNormalizeOptions,
 ): SceneNormalizationResult | ReadonlyArray<NamedLayerResult<SceneNormalizationResult>>;
-export function normalizeScene(scene: InputScene, options: InputNormalizeOptions = {}) {
+export function normalizeScene(scene: InputScene) {
   if (scene.layers === undefined)
-    return normalizeSceneLayer(
-      scene,
-      { type: 'layer', name: BuiltinLayerName.Main, children: scene.children },
-      options,
-    );
+    return normalizeSceneLayer(scene, { type: 'layer', name: BuiltinLayerName.Main, children: scene.children });
   return Object.freeze(
     asLayerStack(scene).map(layer =>
       Object.freeze({
         name: layer.name,
         zIndex: layerZIndex(layer),
-        result: normalizeSceneLayer(scene, layer, options),
+        result: normalizeSceneLayer(scene, layer),
       }),
     ),
   );

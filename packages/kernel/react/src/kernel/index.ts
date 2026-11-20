@@ -1,5 +1,5 @@
-export { convertIRToReactNode, createInputScene, withInputEmbedAdapters, wrapRootScope } from './adapter';
-export type { InputSceneCreationOptions, ReactInputScene } from './adapter';
+export { convertIRToReactNode, createInputScene, wrapRootScope } from './adapter';
+export type { InputSceneCreationOptions } from './adapter';
 export * from './components';
 export {
   EVENT_PROP_TO_NAME,

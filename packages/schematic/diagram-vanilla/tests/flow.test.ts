@@ -27,9 +27,7 @@ it('在保留模式更新期间删除并恢复 Group 标题和标签', () => {
       }),
     ],
   });
-  const controller = createProcessingController(source(true), {
-    adapters: FlowVanilla.createFlowDiagramVanillaAdapters(),
-  });
+  const controller = createProcessingController(source(true));
 
   try {
     const initial = controller.read();
@@ -151,7 +149,7 @@ describe('@retikz/diagram-vanilla/flow', () => {
           }),
         ],
       },
-      { adapters: FlowVanilla.createFlowDiagramVanillaAdapters(), compile: { measureText } },
+      { compile: { measureText } },
     );
 
     expect(artifactValueOf(result)).toMatchObject({ relations: [{ route: { kind, cornerRadius: 0 } }] });
@@ -160,7 +158,6 @@ describe('@retikz/diagram-vanilla/flow', () => {
   it('从显式子路径导出完整的 Flow 编写表面', () => {
     expect(functionExport('normalizeFlowDiagram')).toBeDefined();
     expect(functionExport('flowDiagram')).toBeDefined();
-    expect(functionExport('createFlowDiagramVanillaAdapters')).toBeDefined();
     expect(adapterExport()).toBeDefined();
   });
 
@@ -256,7 +253,7 @@ describe('@retikz/diagram-vanilla/flow', () => {
 
     const vanillaResult = compileToScene(
       { type: 'scene', children: [flowDiagram(sourceInput)] },
-      { adapters: [adapter], compile: { padding: 0, measureText } },
+      { compile: { padding: 0, measureText } },
     );
 
     expect(artifactValueOf(vanillaResult)).toMatchObject({

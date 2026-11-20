@@ -6,12 +6,11 @@ import { describe, expect, it } from 'vitest';
 
 import type { SurfaceProps } from '../../src/presentation';
 import { Frame, Surface } from '../../src/presentation';
-import { synchronousAdapters } from '../helpers/synchronous-adapters';
 
 /** 以 React 真实 authoring 路径归一化一个 Surface */
 const contribute = ({ children, ...props }: SurfaceProps) => {
   const input = createInputScene(<Surface {...props}>{children}</Surface>);
-  const normalized = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
+  const normalized = normalizeScene(input);
 
   return {
     node: normalized.ir.children[0],
@@ -50,7 +49,7 @@ describe('<Surface>', () => {
         </Frame>
       </Surface>,
     );
-    const result = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
+    const result = normalizeScene(input);
 
     expect(result.ir.children).toHaveLength(1);
     expect(result.contributions).toHaveLength(1);

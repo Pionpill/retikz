@@ -5,12 +5,12 @@ import type { IRChartSource } from '../schemas';
 import { chartThemeDefinitionsOf } from './theme';
 import type { ChartProviderResolveContext } from './types';
 
-/** 从 active provider registry 选择 recipe 并委托 Chart resolver 完成解析 */
-export const resolveChartFromProvider = (
+/** 校验 family 并取得当前注册的图表配方 */
+export const selectChartRecipe = (
   source: IRChartSource,
-  context: ChartProviderResolveContext,
-): ChartResolution => {
-  const recipe = context.registry.recipes.get(source.recipe.chartType);
+  registry: Pick<ChartProviderResolveContext['registry'], 'recipes' | 'family'>,
+) => {
+  const recipe = registry.recipes.get(source.recipe.chartType);
   if (recipe === undefined) {
     throw new RetikzChartError({
       code: RetikzChartErrorCode.ProviderDefinitionUnknown,
@@ -19,18 +19,28 @@ export const resolveChartFromProvider = (
     });
   }
 
-  if (source.type !== context.registry.family) {
+  if (source.type !== registry.family) {
     throw new RetikzChartError({
       code: RetikzChartErrorCode.ProviderFamilyMismatch,
-      message: `Chart family "${source.type}" does not match provider family "${context.registry.family}"`,
-      details: { path: ['type'], family: source.type, expected: context.registry.family },
+      message: `Chart family "${source.type}" does not match provider family "${registry.family}"`,
+      details: { path: ['type'], family: source.type, expected: registry.family },
     });
   }
 
+  return recipe;
+};
+
+/** 使用选定配方与当前主题解析完整图表 */
+export const resolveChartFromProvider = (
+  source: IRChartSource,
+  context: ChartProviderResolveContext,
+): ChartResolution => {
+  const { registry } = context;
+  const recipe = selectChartRecipe(source, registry);
   return resolveSelectedChart(source, {
     theme: context.theme,
     recipe,
-    chartThemeDefinitions: chartThemeDefinitionsOf(context.theme, context.registry.themes),
-    runtime: context.registry.runtime,
+    chartThemeDefinitions: chartThemeDefinitionsOf(context.theme, registry.themes),
+    runtime: registry.runtime,
   });
 };

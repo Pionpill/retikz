@@ -13,7 +13,7 @@ To execute a processing chain with the chart, declare ordered `{ operation, data
 
 All six React Chart families accept dataBindings, dataTransformExecutor and signal. Raw rows and dataBindings are exclusive; lowerOptions injects separate Data Definitions and Implementations. Standalone clients prepare automatically; embedded Charts enable async runtime.preparation on the outer Layout.
 
-Vanilla chart factories accept the same runtime inputs. Async SSR uses `renderChartAsync(input, { adapters: [the chart adapter], signal })` and returns a Promise of `{ svg, compileResult }`. Synchronous renderChart and React SSR use local synchronous computation. See [Data extensions](/viz/data/transform/extensions) for bindings and modes.
+Vanilla chart factories accept the same runtime inputs. Async SSR uses `renderChartAsync(input, { signal })` and returns a Promise of `{ svg, compileResult }`. Synchronous renderChart and React SSR use local synchronous computation. See [Data extensions](/viz/data/transform/extensions) for bindings and modes.
 
 ## Chart root structure
 

@@ -16,7 +16,7 @@ describe('Line 文档源码预览', () => {
     });
     const vanilla = buildVanillaPreview(preview);
     expect(vanilla.code).toContain('@retikz/chart-vanilla/line');
-    expect(vanilla.code).toContain('lineChartInputEmbedAdapter');
+    expect(vanilla.code).not.toContain('lineChartInputEmbedAdapter');
     expect(vanilla.svg).toContain('<svg');
   });
 

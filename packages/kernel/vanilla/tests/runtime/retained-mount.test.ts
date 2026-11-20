@@ -12,7 +12,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { literal, strictObject, string, enum as zodEnum } from 'zod';
 
 import type { InputEmbedAdapter, InputSceneChildren, VanillaCompileDriver } from '../../src';
-import { RetikzVanillaErrorCode } from '../../src';
+import { embed, RetikzVanillaErrorCode } from '../../src';
 import { mountCanvas, mountSvg } from '../../src/dom';
 import { createRetainedCompositeDefinitions } from '../../src/processing/composites';
 
@@ -172,7 +172,7 @@ const datasetAdapter: InputEmbedAdapter<{ color: string }> = {
 
 const datasetScene = (color: string): InputSceneChildren => ({
   type: 'scene',
-  children: [{ type: 'embed', kind: 'fixture-dataset', id: 'dataset', props: { color } }],
+  children: [embed({ adapter: datasetAdapter, id: 'dataset', props: { color } })],
 });
 
 const readonlyLayerScene = compileTestResult({
@@ -410,7 +410,7 @@ describe('@retikz/vanilla 保留安装座', () => {
     };
     const cachedDatasetScene = (color: '#ef4444' | '#22c55e'): InputSceneChildren => ({
       type: 'scene',
-      children: [{ type: 'embed', kind: 'fixture-cached-dataset', id: 'dataset', props: { color } }],
+      children: [embed({ adapter, id: 'dataset', props: { color } })],
     });
     let rejectNextUpdate = true;
     const rendererFactory = createMemoryRendererFactory('entity', () => {
@@ -419,7 +419,6 @@ describe('@retikz/vanilla 保留安装座', () => {
       return reject;
     });
     const view = mountSvg(document.createElement('div'), cachedDatasetScene('#ef4444'), {
-      adapters: [adapter],
       runtime: { rendererFactory },
     });
 
@@ -506,7 +505,7 @@ describe('@retikz/vanilla 保留安装座', () => {
 
   it('InputScene update 使用本次 normalization 生成的 composite definitions', () => {
     const container = document.createElement('div');
-    const view = mountSvg(container, datasetScene('#ef4444'), { adapters: [datasetAdapter] });
+    const view = mountSvg(container, datasetScene('#ef4444'));
 
     expect(view.root.querySelector('rect')?.getAttribute('fill')).toBe('#ef4444');
 
@@ -533,7 +532,6 @@ describe('@retikz/vanilla 保留安装座', () => {
       },
     );
     const view = mountSvg(document.createElement('div'), source('#ef4444'), {
-      adapters: [datasetAdapter],
       runtime: { rendererFactory },
     });
     const initialCompileResult = view.compileResult;
@@ -567,29 +565,6 @@ describe('@retikz/vanilla 保留安装座', () => {
     view.dispose();
 
     expect(dispose).toHaveBeenCalledTimes(1);
-  });
-
-  it('mount 后修改 adapter callback 不改变 retained session compile 语义', () => {
-    const container = document.createElement('div');
-    const adapter = { ...datasetAdapter };
-    const view = mountSvg(container, datasetScene('#ef4444'), { adapters: [adapter] });
-
-    adapter.lower = () => ({
-      node: { namespace: 'fixture', type: 'datasetBox' },
-      providerDependencies: {
-        roots: [{ capability: 'composite', namespace: 'fixture', type: 'datasetBox' }],
-        providers: [
-          {
-            key: { capability: 'composite', namespace: 'fixture', type: 'datasetBox' },
-            params: { color: '#22c55e' },
-            makeDefinition: makeDatasetDefinition,
-          },
-        ],
-      },
-    });
-    view.update(datasetScene('#ef4444'));
-
-    expect(view.root.querySelector('rect')?.getAttribute('fill')).toBe('#ef4444');
   });
 
   it('mount 后修改 compile composite record 不改变 retained session compile 语义', () => {

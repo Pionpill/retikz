@@ -30,8 +30,7 @@ const inputOf = <TInput,>(component: InputComponent<TInput>, props: Readonly<Rec
   component.createInputEmbedProps(props);
 
 const sourceOf = (input: ScatterChartInputEmbedProps<unknown>): IRChartSource =>
-  normalizeScene(scene({ children: [scatterChart(input)] }), { adapters: [scatterChartInputEmbedAdapter] }).ir
-    .children[0] as IRChartSource;
+  normalizeScene(scene({ children: [scatterChart(input)] })).ir.children[0] as IRChartSource;
 
 describe('Chart React InputEmbed 路由', () => {
   it('通过 React 和 Vanilla 保留锚定位和辅助面板属性', () => {
@@ -55,7 +54,7 @@ describe('Chart React InputEmbed 路由', () => {
       ),
     });
     const normalize = (input: ScatterChartInputEmbedProps<unknown>) =>
-      normalizeScene(scene({ children: [scatterChart(input)] }), { adapters: [scatterChartInputEmbedAdapter] }).ir;
+      normalizeScene(scene({ children: [scatterChart(input)] })).ir;
     expect(normalize(reactInput)).toEqual(normalize(vanillaInput));
     expect(normalize(reactInput).children[0]).toMatchObject({ type: 'scope', ...panel });
   });

@@ -1,12 +1,5 @@
 import type { AnyCompositeDefinition, CompileWarning, IRPath } from '@retikz/core';
-import {
-  BuiltinCompileWarningCode,
-  CompositeBaseSchema,
-  DEFAULT_RESOLVED_THEME,
-  defineComposite,
-  SceneSchema,
-  ThemeMode,
-} from '@retikz/core';
+import { BuiltinCompileWarningCode, CompositeBaseSchema, defineComposite, SceneSchema } from '@retikz/core';
 import { describe, expect, it, vi } from 'vitest';
 import { literal, string } from 'zod';
 
@@ -220,7 +213,7 @@ describe('@retikz/vanilla InputScene', () => {
         throw cause;
       },
     };
-    expect(() => normalizeScene(scene([embed({ kind: 'broken', props: {} })]), { adapters: [adapter] })).toThrow(
+    expect(() => normalizeScene(scene([embed({ adapter, props: {} })]))).toThrow(
       expect.objectContaining({ constructor: RetikzVanillaError, code: RetikzVanillaErrorCode.Normalize, cause }),
     );
   });
@@ -426,10 +419,7 @@ describe('@retikz/vanilla InputScene', () => {
     const makeDefinition = vi.fn(() => boxComposite);
     const adapter = createBoxAdapter(makeDefinition);
     const normalized = normalizeScene(
-      scene([embed({ kind: 'fixture-box', id: 'box', props: { text: 'A', data: { rows: [1] } } })]),
-      {
-        adapters: [adapter],
-      },
+      scene([embed({ adapter, id: 'box', props: { text: 'A', data: { rows: [1] } } })]),
     );
 
     expect(normalized.ir.children).toEqual([{ namespace: 'fixture', type: 'box', text: 'A' }]);
@@ -450,15 +440,12 @@ describe('@retikz/vanilla InputScene', () => {
       },
     };
     const createInput = () =>
-      scene([
-        { type: 'embed', kind: 'anonymous-output', props: { text: 'left' } },
-        { type: 'embed', kind: 'anonymous-output', props: { text: 'right' } },
-      ]);
+      scene([embed({ adapter, props: { text: 'left' } }), embed({ adapter, props: { text: 'right' } })]);
 
-    const first = normalizeScene(createInput(), { adapters: [adapter] });
+    const first = normalizeScene(createInput());
     const firstIdentities = [...identities];
     identities.length = 0;
-    const second = normalizeScene(createInput(), { adapters: [adapter] });
+    const second = normalizeScene(createInput());
 
     expect(firstIdentities).toHaveLength(2);
     expect(new Set(firstIdentities)).toHaveLength(2);
@@ -485,11 +472,8 @@ describe('@retikz/vanilla InputScene', () => {
 
     const normalized = normalizeScene(
       scene({
-        layers: [
-          layer({ name: 'main', children: [embed({ kind: 'named-output', id: 'chart', props: { label: 'A' } })] }),
-        ],
+        layers: [layer({ name: 'main', children: [embed({ adapter, id: 'chart', props: { label: 'A' } })] })],
       }),
-      { adapters: [adapter] },
     );
 
     expect(normalized[0].result.ir.children).toMatchObject([{ id: 'chart/root', children: [{ id: 'chart/label' }] }]);
@@ -505,47 +489,20 @@ describe('@retikz/vanilla InputScene', () => {
       }),
     };
 
-    const wrapped = normalizeScene(scene([embed({ kind: 'wrapped-output', id: 'chart', props: {} })]), {
-      adapters: [wrappedAdapter],
-    });
+    const wrapped = normalizeScene(scene([embed({ adapter: wrappedAdapter, id: 'chart', props: {} })]));
 
     expect(wrapped.ir.children).toEqual([
       { type: 'scope', children: [{ type: 'node', id: 'chart', position: [0, 0] }] },
     ]);
   });
 
-  it('embed slot 的 Scope Theme 诊断路径不重复 embed 段', () => {
-    const sourcePaths: Array<string> = [];
-    const themeSlotAdapter: InputEmbedAdapter<Record<string, never>> = {
-      kind: 'theme-slot',
-      lower: (_props, context) => {
-        const normalizeChildren = context.normalizeChildren;
-        if (normalizeChildren === undefined) throw new Error('expected embedded child normalizer');
-
-        normalizeChildren([scope({ theme: { mode: ThemeMode.Dark } }, [node({ id: 'child', position: [0, 0] })])]);
-
-        return {
-          node: { type: 'scope', children: [] },
-          providerDependencies: EMPTY_COMPOSITE_DEPENDENCIES,
-        };
-      },
+  it('同步入口定位只有 prepare 的 embed', () => {
+    const adapter = {
+      kind: 'async-only',
+      prepare: () => ({
+        execute: () => ({ node: node({ position: [0, 0] }), providerDependencies: EMPTY_COMPOSITE_DEPENDENCIES }),
+      }),
     };
-
-    normalizeScene(scene([embed({ kind: 'theme-slot', id: 'outer', props: {} })]), {
-      adapters: [themeSlotAdapter],
-      embedThemeContext: {
-        root: { theme: DEFAULT_RESOLVED_THEME },
-        resolveScope: (parent, _theme, sourcePath) => {
-          sourcePaths.push(sourcePath);
-          return parent;
-        },
-      },
-    });
-
-    expect(sourcePaths).toEqual(['children[0].embed.children[0].theme']);
-  });
-
-  it('缺失 adapter 时在 Input normalizer fail-loud', () => {
-    expect(() => normalizeScene(scene([embed({ kind: 'missing', id: 'x', props: {} })]))).toThrow(/adapter/i);
+    expect(() => normalizeScene(scene([embed({ adapter, id: 'x', props: {} })]))).toThrow(/x.*no synchronous lower/);
   });
 });

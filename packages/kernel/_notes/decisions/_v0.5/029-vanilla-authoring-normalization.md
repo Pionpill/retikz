@@ -5,6 +5,8 @@ keywords: 'Vanilla、Authoring、InputXxx、InputScene、IRScene、InputEmbed'
 
 # ADR-029：Vanilla 统一 Authoring 与框架无关处理
 
+> 作者位置的 adapter 绑定与主题处理边界以 [088](./088-embed-adapter-binding.md) 为准。
+
 - 状态：Accepted
 - 决策日期：2026-08-13
 - 关联：[ADR-012](./012-computation-transaction-lifecycle.md) · [ADR-014](./014-scene-patch-retained-renderer.md)

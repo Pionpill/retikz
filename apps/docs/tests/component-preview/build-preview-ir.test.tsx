@@ -2,6 +2,7 @@ import { ChartData, ChartLayout } from '@retikz/chart-react';
 import { BubbleChart, BubbleEncodings, ScatterChart, ScatterEncodings } from '@retikz/chart-react/point';
 import type { CoreProviderContribution } from '@retikz/core';
 import { Entity, Graph } from '@retikz/graph-react';
+import { graph, block } from '@retikz/graph-vanilla';
 import { Plot, PointMark } from '@retikz/plot-react';
 import { Draw, Layout, Node } from '@retikz/react';
 import type { LayoutProps } from '@retikz/react';
@@ -279,23 +280,7 @@ describe('buildPreviewIR', () => {
     const source = buildPreviewSourceIR(
       {
         type: 'scene',
-        children: [
-          {
-            type: 'embed',
-            kind: 'graph.graph',
-            id: 'graph',
-            props: {
-              children: [
-                {
-                  type: 'embed',
-                  kind: 'graph.block',
-                  id: 'block',
-                  props: { id: 'block' },
-                },
-              ],
-            },
-          },
-        ],
+        children: [graph({ children: [block({ id: 'block' })] })],
       },
       {
         type: 'scene',

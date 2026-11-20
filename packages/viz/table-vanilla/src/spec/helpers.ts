@@ -5,10 +5,11 @@ import type {
   IRTable,
   InputManualTableConfig,
 } from '@retikz/table';
-import { createDetailTableIR, createManualTableIR, TABLE_NAMESPACE } from '@retikz/table';
+import { createDetailTableIR, createManualTableIR } from '@retikz/table';
 import type { InputEmbed } from '@retikz/vanilla';
 import { embed } from '@retikz/vanilla';
 
+import { tableInputEmbedAdapter } from '../adapter';
 import type { InputTable, InputTableVariant } from '../normalize/table';
 import { inputTableFromIR } from '../normalize/table';
 
@@ -28,7 +29,7 @@ export const embedTable = <TSource = never>(
 ): InputEmbed<InputTable<TSource>> => {
   const table: InputTableVariant = inputTableFromIR(spec);
   return embed({
-    kind: TABLE_NAMESPACE,
+    adapter: tableInputEmbedAdapter,
     ...(spec.id === undefined ? {} : { id: spec.id }),
     props: { table, ...options },
   });

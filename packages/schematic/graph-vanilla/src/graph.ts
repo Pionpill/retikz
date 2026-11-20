@@ -61,4 +61,4 @@ export const graphInputEmbedAdapter: SynchronousInputEmbedAdapter<GraphInputEmbe
 };
 
 /** 创建 Graph Source root 的 authoring embed 节点 */
-export const graph = (input: GraphInputEmbedProps) => createGraphInputEmbed(graphEmbedKind, input, input.id);
+export const graph = (input: GraphInputEmbedProps) => createGraphInputEmbed(graphInputEmbedAdapter, input, input.id);

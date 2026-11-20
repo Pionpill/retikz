@@ -1,5 +1,4 @@
 import type { ReactInputEmbedContext } from '@retikz/react';
-import { withInputEmbedAdapters } from '@retikz/react';
 import type { InputArray } from '@retikz/standard-vanilla/collection';
 import { arrayInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
 import type { IRArray, IRArrayCell } from '@retikz/standard/collection';
@@ -64,7 +63,7 @@ const createArrayInput = (props: Readonly<Record<string, unknown>>, context: Rea
     items: collected.cells,
   };
 
-  return withInputEmbedAdapters(result, collected.adapters);
+  return result;
 };
 
 const ArrayComponent: FC<ArrayProps> = () => null;

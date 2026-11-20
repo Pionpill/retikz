@@ -6,6 +6,7 @@ import {
   RetikzStandardErrorCode,
   surfaceProvider,
 } from '@retikz/standard/presentation';
+import { embed } from '@retikz/vanilla';
 import type {
   InputChild,
   InputEmbed,
@@ -86,9 +87,9 @@ export const surfaceInputEmbedAdapter: SynchronousInputEmbedAdapter<InputSurface
 };
 
 /** 创建由 surfaceInputEmbedAdapter 下沉的 Standard Surface embed */
-export const surface = (input: InputSurface): InputEmbed<InputSurface> => ({
-  type: 'embed',
-  kind: standardSurfaceEmbedKind,
-  ...(input.id === undefined ? {} : { id: input.id }),
-  props: input,
-});
+export const surface = (input: InputSurface): InputEmbed<InputSurface> =>
+  embed({
+    adapter: surfaceInputEmbedAdapter,
+    ...(input.id === undefined ? {} : { id: input.id }),
+    props: input,
+  });

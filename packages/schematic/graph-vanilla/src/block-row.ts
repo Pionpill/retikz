@@ -51,4 +51,5 @@ export const blockRowInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockRowInp
 };
 
 /** 创建 Block Row Source 的 authoring embed 节点 */
-export const blockRow = (input: BlockRowInputEmbedProps) => createGraphInputEmbed(blockRowEmbedKind, input, input.id);
+export const blockRow = (input: BlockRowInputEmbedProps) =>
+  createGraphInputEmbed(blockRowInputEmbedAdapter, input, input.id);

@@ -1,5 +1,4 @@
 import type { ReactInputEmbedContext } from '@retikz/react';
-import { withInputEmbedAdapters } from '@retikz/react';
 import type { InputChain, InputChainItem } from '@retikz/standard-vanilla/collection';
 import { chainInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
 import type { FC, ReactNode, ReactElement } from 'react';
@@ -124,7 +123,7 @@ const createChainInput = (props: Readonly<Record<string, unknown>>, context: Rea
           : { ...item, branches: item.branches.map(branch => ({ items: populate(branch.items) })) },
     );
 
-  return withInputEmbedAdapters({ ...input, items: populate(structure) } satisfies InputChain, collected.adapters);
+  return { ...input, items: populate(structure) } satisfies InputChain;
 };
 
 const ChainComponent: FC<ChainProps> = () => null;

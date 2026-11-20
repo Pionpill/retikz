@@ -16,7 +16,7 @@ import {
   scopeContextOf,
 } from './context';
 import { normalizeSceneLayer } from './normalize';
-import type { InputChild, InputLayer, InputNormalizeOptions, InputScene, SceneNormalizationResult } from './types';
+import type { InputChild, InputLayer, InputScene, SceneNormalizationResult } from './types';
 
 /** 准备 traversal 只描述作者位置，不执行 adapter 或构造占位贡献 */
 export type InputEmbedSite = Readonly<{
@@ -47,35 +47,20 @@ type InputSceneTraversal = Readonly<{
 }>;
 
 /** adapter contribution 到达后按固定作者位置消费，不能在归一化时发现新计算 */
-const completedAdaptersOf = (
+const preparedContributionsOf = (
   sites: ReadonlyArray<InputEmbedSite>,
   contributions: ReadonlyArray<InputEmbedContribution>,
-): NonNullable<InputNormalizeOptions['adapters']> => {
-  const kinds = [...new Set(sites.map(site => site.input.kind))];
-  return kinds.map(kind => {
-    const positions = sites.flatMap((site, index) =>
-      site.input.kind === kind ? [{ site, contribution: contributions[index] }] : [],
-    );
-    let index = 0;
-
-    return {
-      kind,
-      lower: (props, context) => {
-        const position = positions[index++];
-        if (
-          position.site.input.props !== props ||
-          position.site.context.id !== context.id ||
-          JSON.stringify(position.site.context.identityPath) !== JSON.stringify(context.identityPath)
-        )
-          throw new RetikzVanillaError(
-            RetikzVanillaErrorCode.Normalize,
-            'Prepared contribution does not match its authoring position',
-          );
-
-        return position.contribution;
-      },
-    };
-  });
+): NonNullable<SceneNormalizeContext['prepared']> => {
+  let index = 0;
+  return (input, path) => {
+    const site = sites[index];
+    if (index >= sites.length || site.input !== input || site.sourcePath !== path)
+      throw new RetikzVanillaError(
+        RetikzVanillaErrorCode.Normalize,
+        'Prepared contribution does not match its authoring position',
+      );
+    return contributions[index++];
+  };
 };
 
 /** 沿唯一作者分派规则读取实际嵌入位置；opaque props 的子项由 adapter 明确登记 */
@@ -92,12 +77,9 @@ const collectChildEmbedSites = (
       const id = inputEmbedIdentityOf(input, context);
       const location: Omit<InputEmbedContext, 'normalizeChildren'> = {
         id,
-        kind: input.kind,
+        kind: input.adapter.kind,
         layerId: ctx.layerId,
         identityPath: [...ctx.path, id],
-        ...(ctx.embedThemeContext === undefined
-          ? {}
-          : { theme: ctx.embedThemeContext.theme, themeDefinitions: ctx.embedThemeContext.themeDefinitions }),
       };
 
       let slotIndex = 0;
@@ -118,7 +100,7 @@ const collectChildEmbedSites = (
             normalize: contributions =>
               normalizeEmbeddedChildren(nested, {
                 ...nestedContext,
-                adapters: completedAdaptersOf(nestedSites, contributions),
+                prepared: preparedContributionsOf(nestedSites, contributions),
               }),
           };
         },
@@ -133,17 +115,10 @@ const collectChildEmbedSites = (
 };
 
 /** 准备阶段与同步归一化共用的作者分层上下文 */
-export const createInputSceneTraversal = (
-  scene: InputScene,
-  layer: InputLayer,
-  options: InputNormalizeOptions = {},
-): InputSceneTraversal => {
+export const createInputSceneTraversal = (scene: InputScene, layer: InputLayer): InputSceneTraversal => {
   const context: SceneNormalizeContext = {
     layerId: layer.name,
     path: [layer.name],
-    adapters: options.adapters,
-    embedThemeContext: options.embedThemeContext?.root,
-    resolveEmbedScopeTheme: options.embedThemeContext?.resolveScope,
     contributions: [],
     sourcePath: '',
     runtimePath: [],
@@ -153,7 +128,6 @@ export const createInputSceneTraversal = (
   const sites = collectChildEmbedSites(layer.children, context);
   return {
     sites,
-    normalize: contributions =>
-      normalizeSceneLayer(scene, layer, { ...options, adapters: completedAdaptersOf(sites, contributions) }),
+    normalize: contributions => normalizeSceneLayer(scene, layer, preparedContributionsOf(sites, contributions)),
   };
 };

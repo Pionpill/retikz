@@ -36,7 +36,6 @@ const captureProcessingOptions = (options: ProcessingOptions): ProcessingOptions
             ...(composites === undefined ? {} : { composites: Object.freeze([...composites]) }),
           }),
         }),
-    ...(options.adapters === undefined ? {} : { adapters: Object.freeze([...options.adapters]) }),
   });
 };
 

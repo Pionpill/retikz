@@ -2,7 +2,7 @@ import { createDataTransformExecutor } from '@retikz/data';
 import { compileToSceneAsync, renderToSvgString, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
-import { detailTable, embedTable, renderTable, renderTableAsync, tableInputEmbedAdapter } from '../src';
+import { detailTable, embedTable, renderTable, renderTableAsync } from '../src';
 
 const table = () =>
   detailTable({
@@ -55,9 +55,7 @@ describe('异步 Table 编写', () => {
     spec.data.model = [{ name: 'value', type: 'continuous' }];
     const input = (values: Array<number>) =>
       embedTable(spec, { dataBindings: { rows: { kind: 'source', source: { values } } }, dataTransformExecutor });
-    const result = await compileToSceneAsync(scene({ children: [input([2, 6]), input([4])] }), {
-      adapters: [tableInputEmbedAdapter],
-    });
+    const result = await compileToSceneAsync(scene({ children: [input([2, 6]), input([4])] }));
     const svg = renderToSvgString(result.scene);
 
     expect(svg).toContain('0.25');

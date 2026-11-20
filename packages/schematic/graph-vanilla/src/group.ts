@@ -42,4 +42,4 @@ export const groupInputEmbedAdapter: SynchronousInputEmbedAdapter<GroupInputEmbe
 };
 
 /** 创建 Group Source 的 authoring embed 节点 */
-export const group = (input: GroupInputEmbedProps) => createGraphInputEmbed(groupEmbedKind, input, input.id);
+export const group = (input: GroupInputEmbedProps) => createGraphInputEmbed(groupInputEmbedAdapter, input, input.id);

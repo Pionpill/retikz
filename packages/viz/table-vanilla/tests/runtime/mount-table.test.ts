@@ -3,7 +3,7 @@ import { scene } from '@retikz/vanilla';
 import { mount } from '@retikz/vanilla/dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { detailTable, embedTable, tableInputEmbedAdapter } from '../../src';
+import { detailTable, embedTable } from '../../src';
 
 const createCanvasContext = (): CanvasRenderingContext2D => {
   const target: Record<string | symbol, unknown> = {
@@ -49,7 +49,7 @@ describe('Table Vanilla 安装运行时', () => {
         children: [embedTable(spec, { data: { people: [{ name }] } })],
       });
     const svgContainer = document.createElement('div');
-    const svgView = mount(svgContainer, tableFigure('Ada'), { adapters: [tableInputEmbedAdapter] });
+    const svgView = mount(svgContainer, tableFigure('Ada'));
     const svgRoot = svgView.root;
 
     expect(svgRoot.textContent).toContain('Ada');
@@ -62,7 +62,6 @@ describe('Table Vanilla 安装运行时', () => {
     const canvasContainer = document.createElement('div');
     const canvasView = mount(canvasContainer, tableFigure('Lin'), {
       renderer: 'canvas',
-      adapters: [tableInputEmbedAdapter],
     });
     const canvasRoot = canvasView.root;
     canvasView.update(tableFigure('Edsger'));

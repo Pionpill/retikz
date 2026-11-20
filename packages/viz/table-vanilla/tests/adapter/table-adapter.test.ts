@@ -98,13 +98,13 @@ describe('Table Vanilla 适配器', () => {
         }),
       ],
     });
-    const [compiled] = compileToScene(inputScene, { adapters: [tableInputEmbedAdapter] });
+    const [compiled] = compileToScene(inputScene);
     const svg = renderToSvgString(compiled.result.scene);
 
     expect(svg).toContain('Ada');
     expect(svg).toContain('Lin');
 
-    const [{ result: normalized }] = normalizeScene(inputScene, { adapters: [tableInputEmbedAdapter] });
+    const [{ result: normalized }] = normalizeScene(inputScene);
 
     expect(normalized.ir.children).toHaveLength(2);
 
@@ -128,14 +128,12 @@ describe('Table Vanilla 适配器', () => {
     });
     const inputScene = scene([embedTable(spec, { composites: [badge] })]);
 
-    expect(renderToSvgString(inputScene, { adapters: [tableInputEmbedAdapter] })).toContain('Nested');
+    expect(renderToSvgString(inputScene)).toContain('Nested');
   });
 
   it('重复的匿名嵌入在 Source 中仍保持匿名', () => {
     const spec = createManualTableIR({ rows: [[null]] });
-    const normalized = normalizeScene(scene([embedTable(spec), embedTable(spec)]), {
-      adapters: [tableInputEmbedAdapter],
-    });
+    const normalized = normalizeScene(scene([embedTable(spec), embedTable(spec)]));
 
     expect(normalized.ir.children).toEqual([spec, spec]);
   });

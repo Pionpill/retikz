@@ -1,5 +1,5 @@
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
-import type { AnyInputEmbedAdapter, InputEmbedContribution, InputEmbedPreparation, InputEmbedSite } from '../normalize';
+import type { InputEmbedContribution, InputEmbedPreparation, InputEmbedSite } from '../normalize';
 
 /** 在任意等待与同步提交边界检查当前请求是否仍有效 */
 export const assertPreparationActive = (signal: AbortSignal): void => {
@@ -14,21 +14,8 @@ export const assertPreparationActive = (signal: AbortSignal): void => {
 /** 领域中立的完整作者树准备；嵌套位置通过同一 context 登记 */
 export const prepareAuthoringContributions = async (
   sites: ReadonlyArray<InputEmbedSite>,
-  adapters: ReadonlyArray<AnyInputEmbedAdapter & Required<Pick<AnyInputEmbedAdapter, 'prepare'>>>,
   signal: AbortSignal,
 ): Promise<() => Promise<Array<InputEmbedContribution>>> => {
-  const registry = new Map<string, AnyInputEmbedAdapter & Required<Pick<AnyInputEmbedAdapter, 'prepare'>>>();
-
-  for (const adapter of adapters) {
-    if (registry.has(adapter.kind))
-      throw new RetikzVanillaError(
-        RetikzVanillaErrorCode.Processing,
-        `Duplicate input embed adapter kind "${adapter.kind}"`,
-      );
-
-    registry.set(adapter.kind, adapter);
-  }
-
   let phase: 'preparing' | 'executing' = 'preparing';
 
   const prepareSites = async (
@@ -38,8 +25,8 @@ export const prepareAuthoringContributions = async (
 
     for (const site of positions) {
       assertPreparationActive(signal);
-      const adapter = registry.get(site.input.kind);
-      if (adapter?.prepare === undefined)
+      const adapter = site.input.adapter;
+      if (adapter.prepare === undefined)
         throw new RetikzVanillaError(
           RetikzVanillaErrorCode.Processing,
           `Embed "${site.context.id}" at ${site.sourcePath} has no prepare adapter`,

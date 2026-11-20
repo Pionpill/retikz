@@ -1,8 +1,8 @@
 import type { IRChartSource } from '@retikz/chart';
 import type { CompileResult } from '@retikz/reconciler';
-import type { RenderToStringOptions, AsyncProcessingOptions } from '@retikz/vanilla';
+import type { RenderToStringOptions } from '@retikz/vanilla';
 import { renderToSvgString, scene, toSceneResult, compileToSceneAsync } from '@retikz/vanilla';
-import type { InputEmbed } from '@retikz/vanilla';
+import type { AnyInputEmbed } from '@retikz/vanilla';
 
 import { RetikzChartVanillaError } from '../error';
 import type { InputChartHostTheme } from '../shared';
@@ -12,10 +12,7 @@ export { normalizeChartCoordinate } from '../normalize/chart';
 export type { InputChartHostTheme, InputChartPanel } from '../shared';
 
 /** Chart 服务端渲染选项 */
-export type ChartRenderOptions = Omit<RenderToStringOptions, 'adapters' | 'compileDriver'> & {
-  /** 当前图表的 Vanilla adapter */
-  adapters: NonNullable<RenderToStringOptions['adapters']>;
-};
+export type ChartRenderOptions = Omit<RenderToStringOptions, 'compileDriver'>;
 
 /** Chart 单次编译与服务端渲染结果 */
 export type ChartRenderResult = Readonly<{
@@ -26,14 +23,12 @@ export type ChartRenderResult = Readonly<{
 }>;
 
 /** Chart 异步服务端渲染选项 */
-export type ChartRenderAsyncOptions = Omit<ChartRenderOptions, 'adapters'> & {
-  /** 当前图表支持prepare的adapter */
-  adapters: NonNullable<AsyncProcessingOptions['adapters']>;
+export type ChartRenderAsyncOptions = ChartRenderOptions & {
   /** 本次请求取消信号 */
   signal?: AbortSignal;
 };
 
-type InputChartRender = InputEmbed<InputChartHostTheme & { layout?: IRChartSource['layout'] }>;
+type InputChartRender = AnyInputEmbed & { props: InputChartHostTheme & { layout?: IRChartSource['layout'] } };
 
 /** 两种入口共用相同的Scene与Core配置，异步生命周期由Vanilla负责 */
 const chartRenderRequest = (input: InputChartRender, compile: ChartRenderOptions['compile']) => {
@@ -58,10 +53,10 @@ const chartRenderRequest = (input: InputChartRender, compile: ChartRenderOptions
 };
 
 /** 通过一次同步Core编译渲染Chart */
-export const renderChart = (input: InputChartRender, options: ChartRenderOptions): ChartRenderResult => {
-  const { compile, adapters, ...renderOptions } = options;
+export const renderChart = (input: InputChartRender, options: ChartRenderOptions = {}): ChartRenderResult => {
+  const { compile, ...renderOptions } = options;
   const request = chartRenderRequest(input, compile);
-  const result = toSceneResult(request.source, { adapters, compile: request.compile });
+  const result = toSceneResult(request.source, { compile: request.compile });
   if (result.compileResult === undefined)
     throw new RetikzChartVanillaError('Chart processing must produce a Core compile result');
 
@@ -71,11 +66,11 @@ export const renderChart = (input: InputChartRender, options: ChartRenderOptions
 /** 准备完整作者树后通过同一Core编译渲染Chart，支持Promise计算 */
 export const renderChartAsync = async (
   input: InputChartRender,
-  options: ChartRenderAsyncOptions,
+  options: ChartRenderAsyncOptions = {},
 ): Promise<ChartRenderResult> => {
-  const { compile, adapters, signal, ...renderOptions } = options;
+  const { compile, signal, ...renderOptions } = options;
   const request = chartRenderRequest(input, compile);
-  const result = await compileToSceneAsync(request.source, { adapters, signal, compile: request.compile });
+  const result = await compileToSceneAsync(request.source, { signal, compile: request.compile });
 
   return { svg: renderToSvgString(result.scene, renderOptions), compileResult: result.compileResult };
 };

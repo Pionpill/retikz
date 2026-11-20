@@ -42,4 +42,4 @@ export const blockInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockInputEmbe
 };
 
 /** 创建 Block Source 的 authoring embed 节点 */
-export const block = (input: BlockInputEmbedProps) => createGraphInputEmbed(blockEmbedKind, input, input.id);
+export const block = (input: BlockInputEmbedProps) => createGraphInputEmbed(blockInputEmbedAdapter, input, input.id);

@@ -1,5 +1,6 @@
 import type { IRTree } from '@retikz/standard/collection';
 import { createTree, treeProvider } from '@retikz/standard/collection';
+import { embed } from '@retikz/vanilla';
 import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
 import { standardTreeEmbedKind } from '../shared/constants';
@@ -15,9 +16,9 @@ export const treeInputEmbedAdapter: SynchronousInputEmbedAdapter<InputTree> = {
   }),
 };
 /** 创建保持稀疏输入的 Tree embed */
-export const tree = (input: InputTree): InputEmbed<InputTree> => ({
-  type: 'embed',
-  kind: standardTreeEmbedKind,
-  ...(input.id === undefined ? {} : { id: input.id }),
-  props: input,
-});
+export const tree = (input: InputTree): InputEmbed<InputTree> =>
+  embed({
+    adapter: treeInputEmbedAdapter,
+    ...(input.id === undefined ? {} : { id: input.id }),
+    props: input,
+  });

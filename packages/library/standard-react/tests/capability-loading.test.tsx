@@ -11,8 +11,6 @@ import { normalizeScene } from '@retikz/vanilla';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
-import { synchronousAdapters } from './helpers/synchronous-adapters';
-
 describe('Standard React 定义加载', () => {
   it('保持 JSX 组件通过其静态适配器进行自注册', () => {
     expect(() =>
@@ -55,7 +53,7 @@ describe('Standard React 定义加载', () => {
     ).not.toThrow();
 
     const input = createInputScene(legend);
-    const normalized = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
+    const normalized = normalizeScene(input);
 
     expect(normalized.contributions[0]).toEqual({
       roots: [legendProvider.key, gridProvider.key],

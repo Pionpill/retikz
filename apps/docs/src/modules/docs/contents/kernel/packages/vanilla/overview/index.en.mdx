@@ -18,7 +18,7 @@ import { compileToScene, compileToSceneAsync } from '@retikz/vanilla';
 
 const result = compileToScene(ir);
 const configured = compileToScene(ir, { compile: { padding: 10 } });
-const prepared = await compileToSceneAsync(input, { adapters });
+const prepared = await compileToSceneAsync(input);
 
 console.log(result.scene, result.artifacts);
 ```
@@ -77,7 +77,7 @@ Vanilla constructors do not take a separate ID string argument. `node({ id, posi
 
 Domain builders also take their configuration directly, such as `shape.circle({ id, center, radius })` and `entity({ id, role, position })`. Inputs with a domain `id` reuse it as the embed identity; anonymous inputs do not gain a referenceable graphic ID. Layout inputs have no domain `id`, so use entries such as `flexLayout({ children })` directly.
 
-Generic embedding uses an object with `kind`, `props`, and optional `id` and `authoring` fields: `embed({ kind, props })`. Plot and Table use `embedPlot(source, datasets, lowerOptions?)` and `embedTable(spec, options?)`, without an extra embed ID argument.
+Use the embed factory to pair `adapter` with `props`, and optional `id` and `authoring` fields: `embed({ adapter, props })`. Plot and Table use `embedPlot(source, datasets, lowerOptions?)` and `embedTable(spec, options?)`, without an extra embed ID argument.
 
 ### Why InputScene exists
 
@@ -159,7 +159,7 @@ Direct children use an implicit main layer and return a single result. Explicit 
 
 Layers inherit the common compile and reconciler options. The background preset selects full compilation; settings on the instance override that preset. Use `controller.replaceLayer` to update an overlay without resubmitting the background. Rendering still accepts one graph: pass an entry’s `result.scene` to render it individually. The renderer does not composite the list.
 
-Tier 2 capabilities enter through `embed({ kind, id, props })`. Vanilla does not parse components or run hooks. It finds the caller-injected `InputEmbedAdapter` by `kind`, lowering typed props into a Core child and Composite dependency contribution.
+Tier 2 capabilities enter through `embed({ adapter, id, props })`. Vanilla does not parse components or run hooks. It calls the adapter bound to that node, lowering typed props into a Core child and Composite dependency contribution.
 
 ```ts
 import type { InputEmbedAdapter } from '@retikz/vanilla';
@@ -176,16 +176,21 @@ const BadgeInputEmbedAdapter: InputEmbedAdapter<BadgeProps> = {
 };
 
 const input = scene({
-  layers: [layer({ name: 'content', children: [embed({ kind: 'badge', id: 'sales', props: { label: 'Sales' } })] })],
+  layers: [
+    layer({
+      name: 'content',
+      children: [embed({ adapter: BadgeInputEmbedAdapter, id: 'sales', props: { label: 'Sales' } })],
+    }),
+  ],
 });
 
-const [{ name, result }] = compileToScene(input, { adapters: [BadgeInputEmbedAdapter] });
+const [{ name, result }] = compileToScene(input);
 console.log(name, result.scene);
 ```
 
-`normalizeScene()` is exported from the package root. `adapters` is a top-level render, mount, and processing option—not a field inside `compile`. To inspect a normalized result, call `normalizeScene(input, { adapters })` and inspect the single result or each named entry’s result for `ir`, `contributions`, `runtimeInputs`, and `authoringSites`. Nodes without an `authoring` payload do not produce a site; sites explicitly contributed by adapters are retained.
+`normalizeScene()` is exported from the package root. Hosts do not register adapters. To inspect a normalized result, call `normalizeScene(input)` and inspect the single result or each named entry’s result for `ir`, `contributions`, `runtimeInputs`, and `authoringSites`. Nodes without an `authoring` payload do not produce a site; sites explicitly contributed by adapters are retained.
 
-Adapters, Composite definitions, and compile topology are fixed for a retained mount's lifetime. A domain adapter can process new props at the same authored position; dispose and remount to change the adapter set, a Composite schema, definition count, or execution branch.
+Composite definitions and compile topology are fixed for a retained mount's lifetime. A domain adapter can process new props at the same authored position; dispose and remount to change a Composite schema, definition count, or execution branch.
 
 ## Responsibility boundaries
 
@@ -212,10 +217,10 @@ React applications use [`@retikz/react`](/kernel/packages/react/overview) to col
 | `InputPath` / `InputScope`           | type          | Path and Scope input with authoring sugar or payload                          |
 | `InputEmbed`                         | type          | Tier 2 embed input                                                            |
 | `InputEmbedAdapter`                  | type          | Lowers an `InputEmbed` to a Core contribution                                 |
-| `isInputScene` / `normalizeScene`    | normalization | Detect and normalize InputScene                                               |
+| `isInputScene` / `normalizeScene`    | normalization | Distinguish typed InputScene / IRScene and normalize authoring input          |
 | `SceneNormalizationResult`           | type          | IR, contributions, instance inputs, and authoring provenance                  |
 | `ProcessingSource`                   | type          | InputScene or IRScene accepted by processing                                  |
-| `ProcessingOptions`                  | type          | Compile, adapters, driver, and retained update strategy                       |
+| `ProcessingOptions`                  | type          | Compile, driver, and retained update strategy                                 |
 | `ProcessingResult`                   | type          | Same-revision Scene, artifacts, layers, and diagnostics                       |
 | `createProcessingController`         | processing    | Framework-neutral retained processing controller                              |
 | `compileToScene`                     | processing    | One-shot synchronous compilation of InputScene or Core IR                     |

@@ -25,7 +25,7 @@ describe('React JSX Input 场景', () => {
         </Path>
       </>,
     );
-    expect(normalizeScene(input.scene).ir.children).toMatchObject([
+    expect(normalizeScene(input).ir.children).toMatchObject([
       {
         children: [
           { kind: 'move', to: { id: 'A' } },
@@ -48,7 +48,7 @@ describe('React JSX Input 场景', () => {
         <Step to="B" />
       </Path>,
     );
-    expect(normalizeScene(input.scene).ir.children).toMatchObject([
+    expect(normalizeScene(input).ir.children).toMatchObject([
       {
         children: [
           { kind: 'move', to: { id: 'A' } },
@@ -65,7 +65,7 @@ describe('React JSX Input 场景', () => {
           <Step kind="move" to={[0, 0]} />
           <Step kind="line" to={[100, 0]} />
         </Path>,
-      ).scene,
+      ),
     ).ir;
     const fromDraw = normalizeScene(
       createInputScene(
@@ -76,7 +76,7 @@ describe('React JSX Input 场景', () => {
             [100, 0],
           ]}
         />,
-      ).scene,
+      ),
     ).ir;
     const explicit = normalizeScene(
       createInputScene(
@@ -87,7 +87,7 @@ describe('React JSX Input 场景', () => {
             [100, 0],
           ]}
         />,
-      ).scene,
+      ),
     ).ir;
     expect(fromPath).toEqual(explicit);
     expect(fromDraw).toEqual(explicit);
@@ -97,18 +97,18 @@ describe('React JSX Input 场景', () => {
     const text = ['first', { text: 'second', fill: '#ff0000' }];
     const label = { text, textAlign: 'end' as const, lineHeight: 24, maxTextWidth: 30, opacity: 0.5 };
     const input = createInputScene(<Node label={label} />);
-    const ir = normalizeScene(input.scene).ir;
+    const ir = normalizeScene(input).ir;
     expect(ir.children[0]).toMatchObject({ label });
     expect(SceneSchema.parse(ir).children[0]).toMatchObject({ label });
     const child = ir.children[0];
     if ('namespace' in child || child.type !== 'node') throw new Error('expected Kernel node');
     const rebuilt = createInputScene(convertIRToReactNode({ ...ir, children: [child] }));
-    expect(normalizeScene(rebuilt.scene).ir).toEqual(ir);
-    expect(compileTestResult(normalizeScene(rebuilt.scene).ir).scene).toEqual(compileTestResult(ir).scene);
+    expect(normalizeScene(rebuilt).ir).toEqual(ir);
+    expect(compileTestResult(normalizeScene(rebuilt).ir).scene).toEqual(compileTestResult(ir).scene);
   });
   it('通过 JSX、Vanilla 标准化和 IR 往返保留 Node 别名', () => {
     const input = createInputScene(<Node id="primary" aliasIds={['alternate']} position={[0, 0]} text="A" />);
-    const ir = normalizeScene(input.scene).ir;
+    const ir = normalizeScene(input).ir;
 
     expect(ir.children[0]).toMatchObject({ id: 'primary', aliasIds: ['alternate'] });
 
@@ -117,7 +117,7 @@ describe('React JSX Input 场景', () => {
     const kernel = { ...ir, children: [child] };
     const rebuilt = createInputScene(convertIRToReactNode(kernel));
 
-    expect(normalizeScene(rebuilt.scene).ir).toEqual(ir);
+    expect(normalizeScene(rebuilt).ir).toEqual(ir);
   });
 
   it('将 Kernel JSX 收集为 Vanilla Input，并由 Vanilla 解析字符串 target', () => {
@@ -131,8 +131,8 @@ describe('React JSX Input 场景', () => {
       </>,
     );
 
-    expect(input.scene.children).toMatchObject([{ type: 'node' }, { type: 'path' }]);
-    expect(normalizeScene(input.scene).ir.children).toMatchObject([
+    expect(input.children).toMatchObject([{ type: 'node' }, { type: 'path' }]);
+    expect(normalizeScene(input).ir.children).toMatchObject([
       { type: 'node', id: 'source' },
       {
         type: 'path',
@@ -148,7 +148,7 @@ describe('React JSX Input 场景', () => {
   it('将 Draw 的 way 原样交给 Vanilla Path normalizer', () => {
     const input = createInputScene(<Draw way={['source', 'target']} style={{ stroke: '#2563eb' }} />);
 
-    expect(normalizeScene(input.scene).ir.children).toEqual([
+    expect(normalizeScene(input).ir.children).toEqual([
       {
         type: 'path',
         children: [
@@ -171,7 +171,7 @@ describe('React JSX Input 场景', () => {
       </Path>,
     );
 
-    expect(normalizeScene(input.scene).ir.children).toMatchObject([
+    expect(normalizeScene(input).ir.children).toMatchObject([
       {
         type: 'path',
         arrow: { end: { endpointOverlap: 0.5 } },
@@ -191,7 +191,7 @@ describe('React JSX Input 场景', () => {
       </Scope>,
     );
 
-    expect(input.scene.children).toMatchObject([
+    expect(input.children).toMatchObject([
       {
         type: 'scope',
         authoring: scopeAuthoring,
@@ -213,7 +213,7 @@ describe('React JSX Input 场景', () => {
       </Path>,
     );
 
-    expect(SceneSchema.parse(normalizeScene(input.scene).ir).children).toMatchObject([
+    expect(SceneSchema.parse(normalizeScene(input).ir).children).toMatchObject([
       {
         type: 'path',
         children: [
@@ -255,7 +255,7 @@ describe('React JSX Input 场景', () => {
     const vanillaScene = compileTestResult(normalizeScene({ type: 'scene', children: direct.children }).ir, {
       measureText,
     }).scene;
-    const reactScene = compileTestResult(normalizeScene(reactInput.scene).ir, { measureText }).scene;
+    const reactScene = compileTestResult(normalizeScene(reactInput).ir, { measureText }).scene;
 
     expect(vanillaScene).toEqual(jsonScene);
     expect(reactScene).toEqual(jsonScene);
@@ -268,7 +268,7 @@ it('Scope 包络在 React、Vanilla 和 IR roundtrip 中保持等价', () => {
       <Node position={[0, 0]} />
     </Scope>,
   );
-  const ir = normalizeScene(input.scene).ir;
+  const ir = normalizeScene(input).ir;
 
   expect(ir.children[0]).toMatchObject({ id: 'group', boundingShape: 'circle' });
 
@@ -277,7 +277,7 @@ it('Scope 包络在 React、Vanilla 和 IR roundtrip 中保持等价', () => {
   const child = scope.children[0];
   if ('namespace' in child || child.type !== 'node') throw new Error('expected Kernel node');
   const kernel = { ...ir, children: [{ ...scope, children: [child] }] };
-  const restored = normalizeScene(createInputScene(convertIRToReactNode(kernel)).scene).ir;
+  const restored = normalizeScene(createInputScene(convertIRToReactNode(kernel))).ir;
 
   expect(compileTestResult(restored).scene).toEqual(compileTestResult(ir).scene);
 });
@@ -295,7 +295,7 @@ it('React 与 Vanilla 保留独立端点箭头和任意位置标记', () => {
         arrow={arrow}
         marks={marks}
       />,
-    ).scene,
+    ),
   ).ir;
   const vanilla = normalizeScene({
     type: 'scene',
@@ -314,6 +314,6 @@ it('React 与 Vanilla 保留独立端点箭头和任意位置标记', () => {
   expect(jsx).toEqual(vanilla);
   const child = jsx.children[0];
   if ('namespace' in child || child.type !== 'path') throw new Error('expected path');
-  expect(normalizeScene(createInputScene(convertIRToReactNode({ ...jsx, children: [child] })).scene).ir).toEqual(jsx);
+  expect(normalizeScene(createInputScene(convertIRToReactNode({ ...jsx, children: [child] }))).ir).toEqual(jsx);
   expect(jsx.children[0]).toMatchObject({ arrow, marks });
 });

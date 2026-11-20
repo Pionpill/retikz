@@ -2,15 +2,7 @@ import type { CompositeInputBinding, CoreProviderContribution, IRChild, IRCoordi
 import type { OpenString, RequireExactlyOne, ValueOf } from '@retikz/foundation';
 import type { CompileOptions, FullSceneReconcilerOptions, IncrementalSceneReconcilerOptions } from '@retikz/reconciler';
 
-import type {
-  AnyInputEmbed,
-  InputCoordinate,
-  InputEmbedThemeContextResolver,
-  InputNode,
-  InputPath,
-  InputScope,
-  SynchronousInputEmbedAdapter,
-} from '../element';
+import type { AnyInputEmbed, InputCoordinate, InputNode, InputPath, InputScope } from '../element';
 
 /** 内置作者图层名称 */
 export const BuiltinLayerName = { Background: 'background', Main: 'main', Overlay: 'overlay' } as const;
@@ -107,12 +99,4 @@ export type SceneNormalizationResult = {
   contributions: ReadonlyArray<CoreProviderContribution>;
   /** 按作者顺序收集的 provenance */
   authoringSites: ReadonlyArray<InputAuthoringSite>;
-};
-
-/** Input 归一化选项 */
-export type InputNormalizeOptions = {
-  /** 调用方显式提供的 Tier 2 adapter */
-  adapters?: ReadonlyArray<SynchronousInputEmbedAdapter<never>>;
-  /** 仅由 processing 准备并注入的 Scope Theme 上下文解析器 */
-  embedThemeContext?: InputEmbedThemeContextResolver;
 };

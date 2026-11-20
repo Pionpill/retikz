@@ -21,7 +21,6 @@ import type { AnimationControls } from '@retikz/render/animation';
 import { resolveAnimationEnabled } from '@retikz/render/animation';
 import type { HydrationHandlers } from '@retikz/render/hydration';
 import type {
-  AnyInputEmbedAdapter,
   AsyncProcessingController,
   AsyncProcessingOptions,
   InputScope,
@@ -65,35 +64,6 @@ const subscribeClientRendering = (): (() => void) => () => undefined;
 const clientRenderingSnapshot = (): boolean => true;
 
 const serverRenderingSnapshot = (): boolean => false;
-
-/** 按当前入口一次收窄 adapter 能力，不调用领域回调来探测 Promise */
-const inputAdapterOptions = (adapters: ReadonlyArray<AnyInputEmbedAdapter> | undefined, prepareAsync: boolean) => {
-  if (adapters === undefined) return {};
-  if (prepareAsync)
-    return {
-      adapters: adapters.map(adapter => {
-        if (adapter.prepare === undefined)
-          throw new RetikzReactError(
-            RetikzReactErrorCode.Kernel,
-            `Layout async adapter '${adapter.kind}' requires prepare`,
-          );
-
-        return { ...adapter, prepare: adapter.prepare };
-      }),
-    };
-
-  return {
-    adapters: adapters.map(adapter => {
-      if (adapter.lower === undefined)
-        throw new RetikzReactError(
-          RetikzReactErrorCode.Kernel,
-          `Layout synchronous adapter '${adapter.kind}' requires lower`,
-        );
-
-      return { ...adapter, lower: adapter.lower };
-    }),
-  };
-};
 
 const warnOnce = (message: string): void => {
   if (warnedMessages.has(message)) return;
@@ -476,20 +446,13 @@ export const Layout: FC<LayoutProps> = props => {
 
     const input = createInputScene(wrapRootScope(children, scopeStyle));
 
-    return Object.freeze({
-      ...input,
-      scene: {
-        ...input.scene,
-        ...(authoring === undefined ? {} : { authoring }),
-      },
-    });
+    return authoring === undefined ? input : { ...input, authoring };
   }, [authoring, children, irFromProp, scopeStyle]);
 
-  const stableInputAdapters = canonicalizeDefinitionArray(reactInput?.adapters);
   const source = useMemo<SingleSceneSource>(() => {
     const base: SingleSceneSource =
       irFromProp ??
-      reactInput?.scene ??
+      reactInput ??
       (() => {
         throw new RetikzReactError(RetikzReactErrorCode.Kernel, '[retikz] <Layout> requires ir or children');
       })();
@@ -510,7 +473,6 @@ export const Layout: FC<LayoutProps> = props => {
     () => ({
       defaultFontFamily,
       compileDriver,
-      ...inputAdapterOptions(stableInputAdapters, prepareAsync),
       ...(prepareAsync ? { signal: resolvedRuntime.signal } : {}),
       ...(resolvedRuntime.updateStrategy === undefined
         ? {}
@@ -536,7 +498,6 @@ export const Layout: FC<LayoutProps> = props => {
       compileDriver,
       prepareAsync,
       resolvedRuntime.signal,
-      stableInputAdapters,
       resolvedRuntime.updateStrategy,
       measureText,
       nodeDistance,
@@ -586,7 +547,7 @@ export const Layout: FC<LayoutProps> = props => {
       <AsyncLayoutContent
         key={processingControllerIdentity.key}
         source={source}
-        options={processingOptions as AsyncProcessingOptions}
+        options={processingOptions}
         mode={resolvedRuntime.mode ?? LayoutRuntimeMode.Retained}
         hostKey={hostKey}
         hostProps={hostProps}
@@ -596,17 +557,12 @@ export const Layout: FC<LayoutProps> = props => {
     );
 
   return resolvedRuntime.mode === LayoutRuntimeMode.Static ? (
-    <StaticLayoutContent
-      source={source}
-      options={processingOptions as ProcessingOptions}
-      hostKey={hostKey}
-      hostProps={hostProps}
-    />
+    <StaticLayoutContent source={source} options={processingOptions} hostKey={hostKey} hostProps={hostProps} />
   ) : (
     <RetainedLayoutContent
       key={processingControllerIdentity.key}
       source={source}
-      options={processingOptions as ProcessingOptions}
+      options={processingOptions}
       onDiagnostic={resolvedRuntime.onDiagnostic}
       hostKey={hostKey}
       hostProps={hostProps}

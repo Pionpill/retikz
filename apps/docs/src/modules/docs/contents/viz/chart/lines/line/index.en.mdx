@@ -78,7 +78,7 @@ export const Example = () => <Layout ir={ir} extensions={definitions} />;
 
 ```ts
 import { renderChart } from '@retikz/chart-vanilla';
-import { lineChart, lineChartInputEmbedAdapter } from '@retikz/chart-vanilla/line';
+import { lineChart } from '@retikz/chart-vanilla/line';
 import { lineData } from './line-basic.data';
 
 const chart = lineChart({
@@ -86,7 +86,7 @@ const chart = lineChart({
   layout: { width: 640, height: 320 },
   encodings: { x: 'x', y: 'y', series: 'series' },
 });
-export const svg = renderChart(chart, { adapters: [lineChartInputEmbedAdapter] }).svg;
+export const svg = renderChart(chart).svg;
 ```
 
 </DocTab>

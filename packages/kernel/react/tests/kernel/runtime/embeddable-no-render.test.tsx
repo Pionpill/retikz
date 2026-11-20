@@ -152,9 +152,7 @@ describe('可嵌入 Tier2 回归护栏：函数体绝不被静态遍历调用 / 
     // React 只收集 Vanilla adapter，领域贡献由 Vanilla normalize / processing 统一消费
     const input = createInputScene(element);
 
-    expect(input.adapters).toHaveLength(1);
-
-    const children = input.scene.children;
+    const children = input.children;
 
     expect(children[0]).toMatchObject({ type: 'embed', id: 'probe' });
   });

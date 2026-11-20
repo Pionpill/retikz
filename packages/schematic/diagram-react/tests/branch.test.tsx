@@ -32,11 +32,7 @@ it('通过相同的 Vanilla 源保留共享有序分支', () => {
       <Branch id="main" nodes={['a', 'b']} />
     </BranchDiagram>,
   );
-  const adapters = input.adapters.map(adapter => {
-    if (adapter.lower === undefined) throw new Error('Expected synchronous adapter');
-    return adapter;
-  });
-  const result = normalizeScene(input.scene, { adapters });
+  const result = normalizeScene(input);
   const vanilla = normalizeBranchDiagram({
     mainBranch: 'main',
     nodes: [{ id: 'a', labels: [{ text: 'A' }] }, { id: 'b' }],

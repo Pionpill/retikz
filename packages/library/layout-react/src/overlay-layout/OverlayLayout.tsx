@@ -3,7 +3,6 @@ import { LayoutItemKind } from '@retikz/layout';
 import type { InputOverlayLayout } from '@retikz/layout-vanilla';
 import { overlayLayoutInputEmbedAdapter } from '@retikz/layout-vanilla';
 import type { ReactInputEmbedContext } from '@retikz/react';
-import { withInputEmbedAdapters } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
 
 import type { LayoutEmbeddableComponent } from '../shared';
@@ -26,10 +25,7 @@ const createOverlayLayoutInput = (props: Readonly<Record<string, unknown>>, cont
   void _authoring;
   const collected = createInputLayoutItems(children, LayoutItemKind.Overlay, context);
 
-  return withInputEmbedAdapters(
-    { ...input, children: collected.items } satisfies InputOverlayLayout,
-    collected.adapters,
-  );
+  return { ...input, children: collected.items } satisfies InputOverlayLayout;
 };
 
 const OverlayLayoutComponent: FC<OverlayLayoutProps> = () => null;

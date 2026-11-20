@@ -3,7 +3,6 @@ import { LayoutItemKind } from '@retikz/layout';
 import type { InputGridLayout } from '@retikz/layout-vanilla';
 import { gridLayoutInputEmbedAdapter } from '@retikz/layout-vanilla';
 import type { ReactInputEmbedContext } from '@retikz/react';
-import { withInputEmbedAdapters } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
 
 import type { LayoutEmbeddableComponent } from '../shared';
@@ -26,7 +25,7 @@ const createGridLayoutInput = (props: Readonly<Record<string, unknown>>, context
   void _authoring;
   const collected = createInputLayoutItems(children, LayoutItemKind.Grid, context);
 
-  return withInputEmbedAdapters({ ...input, children: collected.items } satisfies InputGridLayout, collected.adapters);
+  return { ...input, children: collected.items } satisfies InputGridLayout;
 };
 
 const GridLayoutComponent: FC<GridLayoutProps> = () => null;

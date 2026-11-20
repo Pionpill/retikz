@@ -1,6 +1,7 @@
 import { pathClipProvider } from '@retikz/extension';
 import type { IRQueue, IRCell } from '@retikz/standard/collection';
 import { createQueue, queueProvider } from '@retikz/standard/collection';
+import { embed } from '@retikz/vanilla';
 import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
 import { standardQueueEmbedKind } from '../shared/constants';
@@ -77,9 +78,9 @@ export const queueInputEmbedAdapter: SynchronousInputEmbedAdapter<InputQueue> = 
  * @param input 使用显式单元格、JSON 数组或示意骨架的 Queue 输入
  * @returns 持有原始 input 引用的 embed；内容归一与校验在后续 adapter 和编译阶段执行
  */
-export const queue = (input: InputQueue): InputEmbed<InputQueue> => ({
-  type: 'embed',
-  kind: standardQueueEmbedKind,
-  ...(input.id === undefined ? {} : { id: input.id }),
-  props: input,
-});
+export const queue = (input: InputQueue): InputEmbed<InputQueue> =>
+  embed({
+    adapter: queueInputEmbedAdapter,
+    ...(input.id === undefined ? {} : { id: input.id }),
+    props: input,
+  });

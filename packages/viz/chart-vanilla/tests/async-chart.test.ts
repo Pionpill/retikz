@@ -1,12 +1,51 @@
+import type { ThemeMode } from '@retikz/core';
 import type { DataTransformImplementationProvider } from '@retikz/data';
 import { createDataTransformExecutor } from '@retikz/data';
-import { compileToSceneAsync, scene } from '@retikz/vanilla';
+import type { InputEmbedPreparationContext } from '@retikz/vanilla';
+import { embed, compileToSceneAsync, scene, scope, renderToSvgString } from '@retikz/vanilla';
 import { describe, expect, it, vi } from 'vitest';
 
 import { renderChartAsync } from '../src';
 import { scatterChart, scatterChartInputEmbedAdapter } from '../src/point';
 
 describe('Chart 异步数据准备', () => {
+  it('明暗 Scope 生成不同的图表外观，使用相同的变换数据和分面结果', async () => {
+    const chart = scatterChart({
+      data: [
+        { x: 1, y: 2, region: 'east' },
+        { x: 2, y: 4, region: 'west' },
+      ],
+      plotExtension: { transform: [{ operation: { kind: 'normalize', params: { field: 'y', as: 'ratio' } } }] },
+      encodings: { x: 'x', y: 'ratio', row: 'region' },
+    });
+    const run = async (mode: ThemeMode) => {
+      const prepared: Array<unknown> = [];
+      const prepare = async (props: typeof chart.props, context: InputEmbedPreparationContext) => {
+        const preparation = await scatterChartInputEmbedAdapter.prepare(props, context);
+        return {
+          execute: async () => {
+            const contribution = await preparation.execute();
+            prepared.push(contribution.runtimeInputs[0].input);
+            return contribution;
+          },
+        };
+      };
+      const child = embed({ props: chart.props, adapter: { ...scatterChartInputEmbedAdapter, prepare } });
+      const result = await compileToSceneAsync(scene({ children: [scope({ theme: { mode } }, [child])] }));
+      return { prepared, svg: renderToSvgString(result.scene).toLowerCase() };
+    };
+    const light = await run('light');
+    const dark = await run('dark');
+    expect(light.prepared).toHaveLength(1);
+    expect(light.prepared[0]).toMatchObject({
+      root: { rows: expect.any(Array) },
+      panels: [expect.any(Array), expect.any(Array)],
+    });
+    expect(dark.prepared).toEqual(light.prepared);
+    expect(light.svg).toContain('#ffffff');
+    expect(dark.svg).toContain('#09090b');
+  });
+
   it('通过生成的 Surface 和 Flex 表示绑定 Promise 输出，无需重新执行', async () => {
     const execute = vi.fn();
     const provider: DataTransformImplementationProvider<never> = {
@@ -40,9 +79,7 @@ describe('Chart 异步数据准备', () => {
         y: 'ratio',
       },
     });
-    const result = await renderChartAsync(input, {
-      adapters: [scatterChartInputEmbedAdapter],
-    });
+    const result = await renderChartAsync(input);
     const svg = result.svg;
 
     expect(svg).toContain('Prepared chart');
@@ -84,9 +121,7 @@ describe('Chart 异步数据准备', () => {
         y: 'ratio',
       },
     });
-    const result = await renderChartAsync(input, {
-      adapters: [scatterChartInputEmbedAdapter],
-    });
+    const result = await renderChartAsync(input);
 
     expect(result.svg.match(/<ellipse/g)).toHaveLength(1);
     expect(external).not.toHaveBeenCalled();
@@ -96,9 +131,7 @@ describe('Chart 异步数据准备', () => {
       encodings: { x: 'x', y: { aggregate: { kind: 'mean', field: 'y', as: 'meanY' } } },
     });
 
-    await expect(
-      compileToSceneAsync(scene({ children: [inherited] }), { adapters: [scatterChartInputEmbedAdapter] }),
-    ).rejects.toThrow(/unsupported fixture/);
+    await expect(compileToSceneAsync(scene({ children: [inherited] }))).rejects.toThrow(/unsupported fixture/);
     expect(external).toHaveBeenCalledWith('summarize');
   });
 });

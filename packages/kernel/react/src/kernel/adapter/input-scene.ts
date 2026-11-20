@@ -1,9 +1,10 @@
 import type { IRLine, IRNode, IRPathBase, IRStepLabel } from '@retikz/core';
+import { embed } from '@retikz/vanilla';
 import type {
   AnyInputEmbedAdapter,
   InputChild,
   InputCoordinate,
-  InputEmbed,
+  AnyInputEmbed,
   InputNode,
   InputPath,
   InputSceneChildren,
@@ -39,40 +40,11 @@ type EdgeLabelElementProps = Readonly<{
   children?: unknown;
 }>;
 
-/** JSX 遍历得到的 Vanilla Input 场景 */
-export type ReactInputScene = Readonly<{
-  /** 交给 Vanilla normalize 的唯一作者输入 */
-  scene: InputSceneChildren;
-  /** React JSX 中使用的 Vanilla embed adapters */
-  adapters: ReadonlyArray<AnyInputEmbedAdapter>;
-}>;
-
 /** 局部 JSX 收集时为匿名嵌入分配稳定 identity 的选项 */
 export type InputSceneCreationOptions = Readonly<{
   /** 父嵌入提供的身份前缀，避免局部收集器之间的匿名 id 冲突 */
   embedIdPrefix?: string;
 }>;
-
-/** React 私有的嵌入 props 与其子树 adapter 收集结果 */
-type ReactInputEmbedProps<TInput> = Readonly<{
-  readonly __retikzReactInputEmbedProps: true;
-  input: TInput;
-  adapters: ReadonlyArray<AnyInputEmbedAdapter>;
-}>;
-
-/**
- * 将嵌入 props 与其递归 authoring 子项使用的 Vanilla adapter 一并交给根 traversal
- * @template TInput 被适配器集合伴随传递的作者输入类型，包装后仍原样保留
- */
-export const withInputEmbedAdapters = <TInput>(
-  input: TInput,
-  adapters: ReadonlyArray<AnyInputEmbedAdapter>,
-): ReactInputEmbedProps<TInput> =>
-  Object.freeze({
-    __retikzReactInputEmbedProps: true,
-    input,
-    adapters,
-  });
 
 /** 判断一个函数 type 是否为 React class 组件 */
 const isClassComponent = (type: unknown): boolean =>
@@ -465,7 +437,6 @@ const inputScopeFromProps = (props: ScopeProps, context: InputContext): InputSco
 
 /** React JSX traversal 期间共享的 Tier 2 bridge */
 type InputContext = {
-  adapters: Map<string, AnyInputEmbedAdapter>;
   embedIdPrefix?: string;
   nextAnonymousEmbed: { value: number };
 };
@@ -475,30 +446,19 @@ const inputEmbedFromElement = (
   element: ReactElement,
   adapter: AnyInputEmbedAdapter,
   context: InputContext,
-): InputEmbed<unknown> => {
+): AnyInputEmbed => {
   const props = element.props as Record<string, unknown>;
   const explicitId = typeof props.id === 'string' && props.id.length > 0 ? props.id : undefined;
   const id =
     explicitId ??
     `${context.embedIdPrefix ?? '__retikz-react-embed'}:${adapter.kind}:${context.nextAnonymousEmbed.value++}`;
   const authoredProps = createInputEmbedProps(element.type, props, { id, kind: adapter.kind });
-  const nested =
-    typeof authoredProps === 'object' &&
-    authoredProps !== null &&
-    '__retikzReactInputEmbedProps' in authoredProps &&
-    authoredProps.__retikzReactInputEmbedProps === true
-      ? (authoredProps as ReactInputEmbedProps<unknown>)
-      : undefined;
-  context.adapters.set(adapter.kind, adapter);
-  nested?.adapters.forEach(nestedAdapter => context.adapters.set(nestedAdapter.kind, nestedAdapter));
-
-  return {
-    type: 'embed',
-    kind: adapter.kind,
+  return embed({
+    adapter,
     id,
-    props: nested?.input ?? authoredProps,
+    props: authoredProps as never,
     ...(props.authoring === undefined ? {} : { authoring: props.authoring }),
-  };
+  });
 };
 
 /** 收集 JSX child 为 Vanilla Input，不解析 Core authoring grammar */
@@ -558,16 +518,12 @@ const readSceneChildren = (children: ReactNode, context: InputContext): Readonly
 };
 
 /** 收集 JSX children 为唯一 Vanilla InputScene */
-export const createInputScene = (children: ReactNode, options: InputSceneCreationOptions = {}): ReactInputScene => {
+export const createInputScene = (children: ReactNode, options: InputSceneCreationOptions = {}): InputSceneChildren => {
   const context: InputContext = {
-    adapters: new Map(),
     ...(options.embedIdPrefix === undefined ? {} : { embedIdPrefix: options.embedIdPrefix }),
     nextAnonymousEmbed: { value: 0 },
   };
-  return Object.freeze({
-    scene: { type: 'scene', children: readSceneChildren(children, context) },
-    adapters: Object.freeze([...context.adapters.values()].sort((left, right) => left.kind.localeCompare(right.kind))),
-  });
+  return { type: 'scene', children: readSceneChildren(children, context) };
 };
 
 /** 检查一个已类型化的叶子字段集合是否贡献覆盖，不递归清理复合叶子 */

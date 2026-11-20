@@ -74,7 +74,7 @@ Sugar components do not add another IR. `<Draw>` forwards authoring input to `<P
 export const Draw: FC<DrawProps> = props => <Path {...props} />;
 ```
 
-`readSceneChildren` walks children synchronously: it recognizes Kernel markers, unwraps fragments, and directly invokes function Sugar before recursing into the result. This does not pass through the React DOM renderer, so Kernel and Sugar must be hook-free, side-effect-free function components. `createInputScene()` produces the single `InputScene` plus collected `InputEmbedAdapter` values for Vanilla normalization.
+`readSceneChildren` walks children synchronously: it recognizes Kernel markers, unwraps fragments, and directly invokes function Sugar before recursing into the result. This does not pass through the React DOM renderer, so Kernel and Sugar must be hook-free, side-effect-free function components. `createInputScene()` produces the single `InputScene` with adapters bound to each embed for Vanilla normalization.
 
 <SourceLinks
   sources={[
@@ -178,7 +178,7 @@ Changing `updateStrategy` between `auto` and `full` on a retained host disposes 
 | Stage                | Owner             | Responsibility                                                                                 |
 | -------------------- | ----------------- | ---------------------------------------------------------------------------------------------- |
 | Kernel / Sugar JSX   | `@retikz/react`   | Collect props and children; expand Sugar into Kernel first                                     |
-| `createInputScene()` | `@retikz/react`   | Walk the component tree, produce `InputScene`, and collect Tier 2 `InputEmbedAdapter`          |
+| `createInputScene()` | `@retikz/react`   | Walk the component tree, produce `InputScene`, with adapters bound to embeds                   |
 | `normalizeScene()`   | `@retikz/vanilla` | Normalize typed Input to `IRScene`, lower embeds, and aggregate composite dependencies         |
 | `IRScene`            | `@retikz/core`    | JSON-serializable drawing contract with no React element, hook, or DOM                         |
 | `SceneReconciler`    | `@retikz/core`    | Process composites; resolve registries, references, geometry, layout, resources, and animation |
@@ -193,10 +193,10 @@ A `VanillaCompileDriver` may inject observers for the same compile, then resolve
 <SourceLinks
   sources={[
     {
-      label: 'React collecting JSX into an InputScene and adapters',
+      label: 'React collecting JSX into an InputScene',
       path: 'packages/kernel/react/src/kernel/adapter/input-scene.ts',
-      startLine: 503,
-      endLine: 571,
+      startLine: 466,
+      endLine: 528,
     },
     {
       label: 'Vanilla normalizing Input and merging composite dependencies',
@@ -207,8 +207,8 @@ A `VanillaCompileDriver` may inject observers for the same compile, then resolve
     {
       label: 'Layout constructing the processing source and options',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 492,
-      endLine: 576,
+      startLine: 444,
+      endLine: 571,
     },
     {
       label: 'Core IR to Scene compiler',
@@ -233,8 +233,8 @@ Event handlers are functions and cannot enter JSON IR. In children mode, React s
     {
       label: 'Layout passing source and options to Vanilla processing',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 492,
-      endLine: 576,
+      startLine: 444,
+      endLine: 571,
     },
     {
       label: 'React mapping a processing result to SVG or Canvas',

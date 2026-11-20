@@ -1,5 +1,5 @@
 import type { HydrationEventProps, NodeProps, ReactInputEmbedContext } from '@retikz/react';
-import { createInputScene, Node, withInputEmbedAdapters } from '@retikz/react';
+import { createInputScene, Node } from '@retikz/react';
 import type { InputFrame, InputFrameHeaders } from '@retikz/standard-vanilla/presentation';
 import { frameInputEmbedAdapter } from '@retikz/standard-vanilla/presentation';
 import type { InputFrameConfig } from '@retikz/standard/presentation';
@@ -34,12 +34,12 @@ const convertHeaderProps = (
   kind: 'title' | 'description',
 ): InputNode => {
   const input = createInputScene(createElement(Node, { ...props, position: [0, 0] }));
-  const children = input.scene.children;
-  if (children === undefined || children.length !== 1) {
+  const children = input.children;
+  if (children.length !== 1) {
     throw new RetikzStandardError({
       code: RetikzStandardErrorCode.AuthoringInvalid,
       message: `Frame ${kind} must contain exactly one Core Node authoring input.`,
-      details: { childCount: children?.length ?? 0, kind },
+      details: { childCount: children.length, kind },
     });
   }
 
@@ -116,14 +116,7 @@ const createFrameInput = (props: Readonly<Record<string, unknown>>, context: Rea
   const { children, ...input } = props as FrameProps;
   const parts = readFrameParts(children);
   const bodyInput = createInputScene(parts.body, { embedIdPrefix: `${context.id}:body` });
-  const childrenInput = bodyInput.scene.children;
-  if (childrenInput === undefined) {
-    throw new RetikzStandardError({
-      code: RetikzStandardErrorCode.AuthoringInvalid,
-      message: 'Frame body must use direct child authoring.',
-      details: { component: 'Frame' },
-    });
-  }
+  const childrenInput = bodyInput.children;
 
   const headers: InputFrameHeaders = {
     ...(parts.title === undefined ? {} : { title: parts.title }),
@@ -135,7 +128,7 @@ const createFrameInput = (props: Readonly<Record<string, unknown>>, context: Rea
     ...(Object.keys(headers).length === 0 ? {} : { headers }),
   };
 
-  return withInputEmbedAdapters(inputProps, bodyInput.adapters);
+  return inputProps;
 };
 
 const FrameComponent: FC<FrameProps> = () => null;

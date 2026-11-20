@@ -24,8 +24,6 @@ import { normalizeScene } from '@retikz/vanilla';
 import type { FC, ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
 
-import { synchronousAdapters } from './helpers/synchronous-adapters';
-
 type ForeignProps = Readonly<{ id: string }>;
 
 type ForeignComponent = FC<ForeignProps> & {
@@ -47,7 +45,7 @@ Foreign.inputEmbedAdapter = {
 /** 以 React 真实 authoring 路径归一化 Layout family JSX */
 const normalizeReactInput = (children: ReactNode) => {
   const input = createInputScene(children);
-  return normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
+  return normalizeScene(input);
 };
 
 describe('Layout React 布局系列', () => {

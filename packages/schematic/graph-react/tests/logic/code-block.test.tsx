@@ -5,13 +5,12 @@ import {
   defineCodeBlock,
   defineGraphTheme,
 } from '@retikz/graph';
-import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
-import { createProcessingController, normalizeScene, compileToScene } from '@retikz/vanilla';
+import type { InputEmbedAdapter } from '@retikz/vanilla';
+import { embed, createProcessingController, normalizeScene, compileToScene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
 import { prepareProcessingInput } from '../../../../kernel/vanilla/src/processing/prepare';
-import { synchronousAdapters } from '../helpers/synchronous-adapters';
 
 const schema = CodeBlockPropsSchema.safeExtend({ namespace: literal('test'), type: literal('service') });
 
@@ -46,7 +45,7 @@ const adapter: InputEmbedAdapter<typeof source> = {
   lower: props => ({ node: { ...props }, providerDependencies: contribution }),
 };
 
-const embed: InputEmbed<typeof source> = { type: 'embed', kind: adapter.kind, id: 'authoring', props: source };
+const inputEmbed = embed({ adapter, id: 'authoring', props: source });
 
 import { createInputScene } from '@retikz/react';
 import type { FC } from 'react';
@@ -62,24 +61,23 @@ const Service = Object.assign(ServiceView, {
 describe('自定义代码块 React 编写', () => {
   it('重复使用 Vanilla 适配器并匹配 Direct IR 和 Vanilla Scene', () => {
     const input = createInputScene(<Service key="service" {...source} />);
-    const normalized = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
+    const normalized = normalizeScene(input);
 
     expect(normalized.ir.children).toEqual([source]);
 
-    const actual = compileToScene(input.scene, {
-      adapters: synchronousAdapters(input.adapters),
+    const actual = compileToScene(input, {
       compile: { themeDefinitions: [coreStyle] },
     });
     const vanilla = compileToScene(
-      { type: 'scene', children: [embed] },
-      { adapters: [adapter], compile: { themeDefinitions: [coreStyle] } },
+      { type: 'scene', children: [inputEmbed] },
+      { compile: { themeDefinitions: [coreStyle] } },
     );
     const direct = compileToScene(
       { type: 'scene', version: 1, children: [source] },
       {
         compile: prepareProcessingInput(
-          { type: 'scene', children: [embed] },
-          { adapters: [adapter], compile: { themeDefinitions: [coreStyle] } },
+          { type: 'scene', children: [inputEmbed] },
+          { compile: { themeDefinitions: [coreStyle] } },
         ).coreOptions,
       },
     );
@@ -87,8 +85,7 @@ describe('自定义代码块 React 编写', () => {
     expect(actual.scene).toEqual(vanilla.scene);
     expect(actual.scene).toEqual(direct.scene);
 
-    const retained = createProcessingController(input.scene, {
-      adapters: synchronousAdapters(input.adapters),
+    const retained = createProcessingController(input, {
       compile: { themeDefinitions: [coreStyle] },
     });
 

@@ -3,10 +3,8 @@ import type { CompileOptions, CompileResult, CompositeArtifact, WeaveBatch } fro
 import type { RenderReadonlyLayer } from '@retikz/render/runtime';
 
 import type {
-  AnyInputEmbedAdapter,
   InputAuthoringSite,
   LayerOptions,
-  InputNormalizeOptions,
   InputScene,
   InputSceneChildren,
   InputLayer,
@@ -27,8 +25,6 @@ export type ProcessingOptions = LayerOptions &
   Readonly<{
     /** 文字未指定字体族时的宿主默认字体，同时用于测量与宿主显示 */
     defaultFontFamily?: string;
-    /** 作者侧 Tier 2 adapter */
-    adapters?: InputNormalizeOptions['adapters'];
     /** 领域中立的同 revision compile observer driver */
     compileDriver?: VanillaCompileDriver;
   }>;
@@ -92,10 +88,8 @@ export type ProcessingController = Readonly<{
 }>;
 
 /** 异步作者准备配置；只接受已声明 prepare 能力的 adapter */
-export type AsyncProcessingOptions = Readonly<Omit<ProcessingOptions, 'adapters'>> &
+export type AsyncProcessingOptions = ProcessingOptions &
   Readonly<{
-    /** 命名领域 adapter */
-    adapters?: ReadonlyArray<AnyInputEmbedAdapter & Required<Pick<AnyInputEmbedAdapter, 'prepare'>>>;
     /** 单次静态请求或 controller 生命周期取消信号 */
     signal?: AbortSignal;
   }>;

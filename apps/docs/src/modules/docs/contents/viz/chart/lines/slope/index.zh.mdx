@@ -78,7 +78,7 @@ export const Example = () => <Layout ir={ir} extensions={definitions} />;
 
 ```ts
 import { renderChart } from '@retikz/chart-vanilla';
-import { slopeChart, slopeChartInputEmbedAdapter } from '@retikz/chart-vanilla/line';
+import { slopeChart } from '@retikz/chart-vanilla/line';
 import { slopeData } from './slope-basic.data';
 
 const chart = slopeChart({
@@ -86,7 +86,7 @@ const chart = slopeChart({
   layout: { width: 640, height: 320 },
   encodings: { entity: 'entity', start: 'previous', end: 'current' },
 });
-export const svg = renderChart(chart, { adapters: [slopeChartInputEmbedAdapter] }).svg;
+export const svg = renderChart(chart).svg;
 ```
 
 </DocTab>

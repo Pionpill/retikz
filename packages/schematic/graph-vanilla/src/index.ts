@@ -1,4 +1,3 @@
-export * from './adapters';
 export * from './block';
 export * from './block-header';
 export * from './block-row';

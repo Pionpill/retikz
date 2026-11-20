@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { literal } from 'zod';
 
 import type { InputEmbedAdapter, InputScene, VanillaCompileDriver, VanillaCompileDriverSession } from '../../src';
-import { createProcessingController, compileToScene, processToStaticResult } from '../../src';
+import { embed, createProcessingController, compileToScene, processToStaticResult } from '../../src';
 import { prepareProcessingInput } from '../../src/processing/prepare';
 
 describe('Vanilla 处理', () => {
@@ -37,16 +37,16 @@ describe('Vanilla 处理', () => {
     };
     const input: InputScene = {
       type: 'scene',
-      children: [{ type: 'embed', kind: 'fixture-box', id: 'box', props: {} }],
+      children: [embed({ adapter, id: 'box', props: {} })],
     };
 
-    const prepared = prepareProcessingInput(input, { adapters: [adapter] });
+    const prepared = prepareProcessingInput(input, {});
 
     expect(makeDefinition).toHaveBeenCalledTimes(1);
     expect(prepared.coreOptions.composites).toEqual([definition]);
   });
 
-  it('在同一 Scope 链中把有效 Theme 交给 InputEmbed adapter', () => {
+  it('保留嵌套 Scope 的 Theme 供 Core 解析', () => {
     const themeName = defineTheme({
       name: 'academic',
       resolve: () => ({
@@ -56,10 +56,7 @@ describe('Vanilla 处理', () => {
     });
     const adapter: InputEmbedAdapter<Record<string, never>> = {
       kind: 'theme-probe',
-      lower: (_props, context) => {
-        expect(context.theme).toMatchObject({ name: 'academic', mode: ThemeMode.Dark });
-        expect(context.themeDefinitions).toEqual([themeName]);
-
+      lower: () => {
         return {
           node: { type: 'node', id: 'theme-probe', position: [0, 0] },
           providerDependencies: { roots: [], providers: [] },
@@ -75,11 +72,11 @@ describe('Vanilla 处理', () => {
           {
             type: 'scope',
             theme: { mode: ThemeMode.Dark },
-            children: [{ type: 'embed', kind: 'theme-probe', id: 'theme-probe', props: {} }],
+            children: [embed({ adapter, id: 'theme-probe', props: {} })],
           },
         ],
       },
-      { adapters: [adapter], compile: { themeDefinitions: [themeName] } },
+      { compile: { themeDefinitions: [themeName] } },
     );
 
     expect(prepared.source.children).toEqual([
@@ -173,14 +170,14 @@ describe('Vanilla 处理', () => {
         },
       }),
     };
-    const controller = createProcessingController(
-      { type: 'scene', children: [{ type: 'node', id: 'stable', position: [0, 0] }] },
-      { adapters: [adapter] },
-    );
+    const controller = createProcessingController({
+      type: 'scene',
+      children: [{ type: 'node', id: 'stable', position: [0, 0] }],
+    });
     const first = controller.read();
 
     expect(() =>
-      controller.update({ type: 'scene', children: [{ type: 'embed', kind: 'fixture-box', id: 'box', props: {} }] }),
+      controller.update({ type: 'scene', children: [embed({ adapter, id: 'box', props: {} })] }),
     ).not.toThrow();
     expect(controller.read().revision).toBe(first.revision + 1);
 
@@ -220,16 +217,16 @@ describe('Vanilla 处理', () => {
         },
       }),
     };
-    const controller = createProcessingController(
-      { type: 'scene', children: [{ type: 'node', id: 'stable', position: [0, 0] }] },
-      { adapters: [adapter] },
-    );
+    const controller = createProcessingController({
+      type: 'scene',
+      children: [{ type: 'node', id: 'stable', position: [0, 0] }],
+    });
     const stable = controller.read();
 
     expect(() =>
       controller.update({
         type: 'scene',
-        children: [{ type: 'embed', kind: 'broken-composite', id: 'broken', props: {} }],
+        children: [embed({ adapter, id: 'broken', props: {} })],
       }),
     ).toThrow(/expected candidate composite failure/);
     expect(controller.read()).toBe(stable);

@@ -27,12 +27,10 @@ import { Chain } from '@retikz/standard-react/collection';
 <DocTab value="vanilla" label="Vanilla API">
 
 ```ts
-import { chain, chainInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { chain } from '@retikz/standard-vanilla/collection';
 import { scene, renderToSvgString } from '@retikz/vanilla';
 
-renderToSvgString(scene({ children: [chain({ items: ['A', 'B', 'C'] })] }), {
-  adapters: [chainInputEmbedAdapter],
-});
+renderToSvgString(scene({ children: [chain({ items: ['A', 'B', 'C'] })] }));
 ```
 
 </DocTab>

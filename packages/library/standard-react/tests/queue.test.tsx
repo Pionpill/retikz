@@ -1,10 +1,9 @@
 import { createInputScene } from '@retikz/react';
-import { queue, queueInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { queue } from '@retikz/standard-vanilla/collection';
 import { normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
 import { expect, it } from 'vitest';
 
 import { Queue, QueueItem, Matrix, ArrayItem } from '../src/collection';
-import { synchronousAdapters } from './helpers/synchronous-adapters';
 
 it('JSX与Vanilla的样式、空格、进入箭头和容器配置等价', () => {
   const props = {
@@ -19,13 +18,9 @@ it('JSX与Vanilla的样式、空格、进入箭头和容器配置等价', () => 
     </Queue>,
   );
   const vanilla = scene({ children: [queue({ ...props, items: [{ content: 'A' }, { id: 'top' }] })] });
-  const options = { adapters: synchronousAdapters(jsx.adapters) };
-  expect(normalizeScene(jsx.scene, options).ir).toEqual(
-    normalizeScene(vanilla, { adapters: [queueInputEmbedAdapter] }).ir,
-  );
-  expect(renderToSvgString(jsx.scene, options)).toEqual(
-    renderToSvgString(vanilla, { adapters: [queueInputEmbedAdapter] }),
-  );
+
+  expect(normalizeScene(jsx).ir).toEqual(normalizeScene(vanilla).ir);
+  expect(renderToSvgString(jsx)).toEqual(renderToSvgString(vanilla));
 });
 it('嵌套Matrix及JSON内容使用相同自动依赖链', () => {
   for (const element of [
@@ -39,7 +34,7 @@ it('嵌套Matrix及JSON内容使用相同自动依赖链', () => {
     </Queue>,
   ]) {
     const jsx = createInputScene(element);
-    expect(renderToSvgString(jsx.scene, { adapters: synchronousAdapters(jsx.adapters) })).toContain('<path');
+    expect(renderToSvgString(jsx)).toContain('<path');
   }
 });
 it('其他容器marker不能冒充QueueItem', () => {

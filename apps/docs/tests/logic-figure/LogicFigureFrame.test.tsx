@@ -9,18 +9,17 @@ import {
   LogicFigureFrameDescription,
   LogicFigureFrameTitle,
 } from '@/modules/docs/components/logic-figure';
-import { synchronousInputAdaptersOf } from '@/modules/docs/lib';
 
 const readFrame = (element: ReactNode) => {
   const input = createInputScene(element);
-  const child = normalizeScene(input.scene, { adapters: synchronousInputAdaptersOf(input.adapters) }).ir.children[0];
+  const child = normalizeScene(input).ir.children[0];
   return GroupSchema.parse(child);
 };
 
 /** 通过唯一 React-to-Vanilla Input 路径触发 marker 的父级约束 */
 const normalizeReactNode = (element: ReactNode) => {
   const input = createInputScene(element);
-  return normalizeScene(input.scene, { adapters: synchronousInputAdaptersOf(input.adapters) });
+  return normalizeScene(input);
 };
 
 describe('LogicFigureFrame', () => {

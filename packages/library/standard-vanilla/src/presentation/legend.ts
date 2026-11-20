@@ -6,6 +6,7 @@ import {
   createLegend,
   legendProvider,
 } from '@retikz/standard/presentation';
+import { embed } from '@retikz/vanilla';
 import type {
   InputChild,
   InputEmbed,
@@ -136,9 +137,9 @@ export const legendInputEmbedAdapter: SynchronousInputEmbedAdapter<InputLegend> 
 };
 
 /** 创建由 legendInputEmbedAdapter 下沉的 Standard Legend embed */
-export const legend = (input: InputLegend): InputEmbed<InputLegend> => ({
-  type: 'embed',
-  kind: standardLegendEmbedKind,
-  ...(input.id === undefined ? {} : { id: input.id }),
-  props: input,
-});
+export const legend = (input: InputLegend): InputEmbed<InputLegend> =>
+  embed({
+    adapter: legendInputEmbedAdapter,
+    ...(input.id === undefined ? {} : { id: input.id }),
+    props: input,
+  });

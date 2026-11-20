@@ -78,14 +78,14 @@ export const Example = () => <Layout ir={ir} extensions={definitions} />;
 
 ```ts
 import { renderChart } from '@retikz/chart-vanilla';
-import { connectedScatterChart, connectedScatterChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';
+import { connectedScatterChart } from '@retikz/chart-vanilla/point';
 import { connectedScatterMinimalData } from './connected-scatter-minimal.data';
 
 const chart = connectedScatterChart({
   data: connectedScatterMinimalData,
   encodings: { x: 'month', y: 'unemploymentRate', order: 'month' },
 });
-export const svg = renderChart(chart, { adapters: [connectedScatterChartInputEmbedAdapter] }).svg;
+export const svg = renderChart(chart).svg;
 ```
 
 </DocTab>

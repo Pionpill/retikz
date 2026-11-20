@@ -70,28 +70,13 @@ export const normalizeEmbeddedChildren = (
 
 /** 将一个 InputEmbed 下沉为 Core child 并收集 dependency contribution */
 const normalizeEmbed = (input: AnyInputEmbed, embedId: string, ctx: SceneNormalizeContext): IRChild => {
-  const adapter = ctx.adapters?.find(entry => entry.kind === input.kind);
-  if (adapter === undefined) {
-    throw new RetikzVanillaError(
-      RetikzVanillaErrorCode.Normalize,
-      `normalizeScene: embed "${embedId}" uses kind "${input.kind}" but no adapter was provided`,
-    );
-  }
-
+  const adapter = input.adapter;
   let slotIndex = 0;
   const context: InputEmbedContext = {
     id: embedId,
-    kind: input.kind,
+    kind: input.adapter.kind,
     layerId: ctx.layerId,
     identityPath: [...ctx.path, embedId],
-    ...(ctx.embedThemeContext === undefined
-      ? {}
-      : {
-          theme: ctx.embedThemeContext.theme,
-          ...(ctx.embedThemeContext.themeDefinitions === undefined
-            ? {}
-            : { themeDefinitions: ctx.embedThemeContext.themeDefinitions }),
-        }),
     normalizeChildren: children =>
       normalizeEmbeddedChildren(children, {
         ...ctx,
@@ -101,12 +86,20 @@ const normalizeEmbed = (input: AnyInputEmbed, embedId: string, ctx: SceneNormali
   };
   let contribution: InputEmbedContribution;
   try {
-    contribution = adapter.lower(input.props as never, context);
+    if (ctx.prepared) contribution = ctx.prepared(input, ctx.sourcePath);
+    else {
+      if (!adapter.lower)
+        throw new RetikzVanillaError(
+          RetikzVanillaErrorCode.Normalize,
+          `Embed "${embedId}" at ${ctx.sourcePath} has no synchronous lower adapter`,
+        );
+      contribution = adapter.lower(input.props as never, context);
+    }
   } catch (cause) {
     if (cause instanceof RetikzError) throw cause;
     throw new RetikzVanillaError(
       RetikzVanillaErrorCode.Normalize,
-      `normalizeScene: adapter "${input.kind}" failed to lower embed "${embedId}" at ${ctx.sourcePath}`,
+      `normalizeScene: adapter "${input.adapter.kind}" failed to lower embed "${embedId}" at ${ctx.sourcePath}`,
       { cause },
     );
   }
@@ -123,7 +116,7 @@ const normalizeEmbed = (input: AnyInputEmbed, embedId: string, ctx: SceneNormali
       Object.freeze({
         kind: 'embeddable',
         sourcePath: ctx.sourcePath,
-        type: input.kind,
+        type: input.adapter.kind,
         authoring: input.authoring,
       }),
     );

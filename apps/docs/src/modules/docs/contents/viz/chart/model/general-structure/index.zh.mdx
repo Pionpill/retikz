@@ -13,7 +13,7 @@ Chart Source 的根级字段描述整张图。先识别它属于哪个图形家�
 
 React 六类 Chart 接收 dataBindings、dataTransformExecutor 和 signal；原始 rows 与 dataBindings 互斥，Data Definition/Implementation 通过 lowerOptions 分别注入。独立客户端自动异步准备；嵌入外层 Layout 时开启 runtime.preparation 为 async。
 
-Vanilla 图表工厂接收相同运行时输入。异步 SSR 使用 `renderChartAsync(input, { adapters: [当前图表Adapter], signal })`，返回 Promise 的 `{ svg, compileResult }`；同步 renderChart 与 React SSR 只接受本地同步计算。数据绑定和三模式说明见 [Data 扩展机制](/viz/data/transform/extensions)。
+Vanilla 图表工厂接收相同运行时输入。异步 SSR 使用 `renderChartAsync(input, { signal })`，返回 Promise 的 `{ svg, compileResult }`；同步 renderChart 与 React SSR 只接受本地同步计算。数据绑定和三模式说明见 [Data 扩展机制](/viz/data/transform/extensions)。
 
 ## 图形根结构
 

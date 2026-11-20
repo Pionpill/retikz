@@ -148,14 +148,14 @@ export async function prepareStaticProcessingAsync(
       layers.push({
         name: layer.name,
         zIndex: layerZIndex(layer),
-        candidate: prepareStaticProcessingInput(prepared, { ...effective, adapters: undefined }, revision, check),
+        candidate: prepareStaticProcessingInput(prepared, effective, revision, check),
       });
     }
     candidate = combinePreparedLayers(layers);
   } else {
     const prepared = await prepareProcessingInputAsync(source, options, signal);
     check();
-    candidate = prepareStaticProcessingInput(prepared, { ...options, adapters: undefined }, revision, check);
+    candidate = prepareStaticProcessingInput(prepared, options, revision, check);
   }
   check();
   let terminal: 'pending' | 'committed' | 'discarded' = 'pending';

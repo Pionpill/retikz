@@ -2,7 +2,7 @@ import type { IRScene, IRTheme } from '@retikz/core';
 import { CompositeBaseSchema, defineComposite, defineTheme, ThemeMode } from '@retikz/core';
 import type { InputEmbedAdapter } from '@retikz/vanilla';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
 import { Layout, Node, Scope, Text, ThemeProvider } from '../../../src/kernel';
@@ -289,20 +289,8 @@ describe('<Layout 主题>', () => {
     expect(markup).toContain('#123456');
   });
 
-  it('嵌入式 Tier 2 adapter 读取所在 Scope 解析后的 Theme', () => {
-    const receiveContext = vi.fn();
-    const ScopedBox = Object.assign(() => null, {
-      isTier2Embeddable: true as const,
-      inputEmbedAdapter: {
-        ...themedBoxAdapter,
-        lower: (_props, context) => {
-          receiveContext(context);
-          return themedBoxAdapter.lower({}, context);
-        },
-      } satisfies InputEmbedAdapter,
-    });
-
-    renderToStaticMarkup(
+  it('Core 编译嵌入项时应用所在 Scope 的主题', () => {
+    const markup = renderToStaticMarkup(
       <Layout
         theme={{ name: 'academic', mode: ThemeMode.Light }}
         extensions={{ themeDefinitions: testThemeDefinitions }}
@@ -310,16 +298,12 @@ describe('<Layout 主题>', () => {
         height={100}
       >
         <Scope theme={{ mode: ThemeMode.Dark }}>
-          <ScopedBox />
+          <ThemedBox />
         </Scope>
       </Layout>,
     );
 
-    expect(receiveContext).toHaveBeenCalledWith(
-      expect.objectContaining({
-        theme: expect.objectContaining({ name: 'academic', mode: ThemeMode.Dark }),
-      }),
-    );
+    expect(markup).toContain('#123456');
   });
 
   it('不同 Scope 内的匿名嵌入组件保持不同的内部 identity', () => {

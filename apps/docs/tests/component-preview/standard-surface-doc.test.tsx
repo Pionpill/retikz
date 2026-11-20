@@ -30,8 +30,8 @@ describe('Standard Surface 文档', () => {
     );
 
     expect(vanilla.code).toContain('surfaceChild(grid(');
-    expect(vanilla.code).toContain('gridInputEmbedAdapter');
-    expect(vanilla.code).toContain('surfaceInputEmbedAdapter');
+    expect(vanilla.code).not.toContain('gridInputEmbedAdapter');
+    expect(vanilla.code).not.toContain('surfaceInputEmbedAdapter');
     expect(vanilla.svg).toContain('<svg');
     expect(vanilla.svg).toContain('<path');
   });

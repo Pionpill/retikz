@@ -43,4 +43,4 @@ export const blockSectionInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockSe
 
 /** 创建 Block Section Source 的 authoring embed 节点 */
 export const blockSection = (input: BlockSectionInputEmbedProps) =>
-  createGraphInputEmbed(blockSectionEmbedKind, input, input.id);
+  createGraphInputEmbed(blockSectionInputEmbedAdapter, input, input.id);

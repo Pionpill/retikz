@@ -74,7 +74,7 @@ export const Example = () => <Layout ir={ir} extensions={{ composites: [flexLayo
 
 ```ts
 import { scene, renderToSvgString } from '@retikz/vanilla';
-import { flexLayout, flexLayoutInputEmbedAdapter } from '@retikz/layout-vanilla';
+import { flexLayout } from '@retikz/layout-vanilla';
 
 const input = scene({
   children: [
@@ -88,7 +88,7 @@ const input = scene({
   ],
 });
 
-console.log(renderToSvgString(input, { adapters: [flexLayoutInputEmbedAdapter] }));
+console.log(renderToSvgString(input));
 ```
 
 </DocTab>

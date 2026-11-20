@@ -1,6 +1,7 @@
 import { pathClipProvider } from '@retikz/extension';
 import type { IRChain, IRChainConnection, IRChainParallel, IRChainItem } from '@retikz/standard/collection';
 import { chainProvider, createChain } from '@retikz/standard/collection';
+import { embed } from '@retikz/vanilla';
 import type { InputPath, InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 import { normalizePath } from '@retikz/vanilla';
 
@@ -167,9 +168,9 @@ export const chainInputEmbedAdapter: SynchronousInputEmbedAdapter<InputChain> = 
 };
 
 /** 创建保留作者输入的链 */
-export const chain = (input: InputChain): InputEmbed<InputChain> => ({
-  type: 'embed',
-  kind: standardChainEmbedKind,
-  ...(input.id === undefined ? {} : { id: input.id }),
-  props: input,
-});
+export const chain = (input: InputChain): InputEmbed<InputChain> =>
+  embed({
+    adapter: chainInputEmbedAdapter,
+    ...(input.id === undefined ? {} : { id: input.id }),
+    props: input,
+  });

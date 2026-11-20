@@ -34,7 +34,7 @@ export const Example = () => (
 <DocTab value="vanilla" label="Vanilla API">
 
 ```ts
-import { matrix, matrixInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { matrix } from '@retikz/standard-vanilla/collection';
 import { scene, renderToSvgString } from '@retikz/vanilla';
 
 const svg = renderToSvgString(
@@ -48,7 +48,6 @@ const svg = renderToSvgString(
       }),
     ],
   }),
-  { adapters: [matrixInputEmbedAdapter] },
 );
 ```
 

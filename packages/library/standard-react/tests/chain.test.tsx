@@ -1,10 +1,9 @@
 import { createInputScene } from '@retikz/react';
-import { chain, chainInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { chain } from '@retikz/standard-vanilla/collection';
 import { normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
 import { expect, it } from 'vitest';
 
 import { Chain, ChainCell, ChainParallel, ChainBranch, Matrix } from '../src/collection';
-import { synchronousAdapters } from './helpers/synchronous-adapters';
 
 it('JSX 与 Vanilla 的嵌套分支和空单元等价', () => {
   const jsx = createInputScene(
@@ -32,14 +31,9 @@ it('JSX 与 Vanilla 的嵌套分支和空单元等价', () => {
       }),
     ],
   });
-  const options = { adapters: synchronousAdapters(jsx.adapters) };
 
-  expect(normalizeScene(jsx.scene, options).ir).toEqual(
-    normalizeScene(vanilla, { adapters: [chainInputEmbedAdapter] }).ir,
-  );
-  expect(renderToSvgString(jsx.scene, options)).toEqual(
-    renderToSvgString(vanilla, { adapters: [chainInputEmbedAdapter] }),
-  );
+  expect(normalizeScene(jsx).ir).toEqual(normalizeScene(vanilla).ir);
+  expect(renderToSvgString(jsx)).toEqual(renderToSvgString(vanilla));
 });
 it('任意图形与骨架依赖自动闭合', () => {
   for (const element of [
@@ -56,7 +50,7 @@ it('任意图形与骨架依赖自动闭合', () => {
   ]) {
     const jsx = createInputScene(element);
 
-    expect(renderToSvgString(jsx.scene, { adapters: synchronousAdapters(jsx.adapters) })).toContain('<svg');
+    expect(renderToSvgString(jsx)).toContain('<svg');
   }
 });
 it('错误 marker 不能被静默忽略', () => {

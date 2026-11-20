@@ -2,7 +2,7 @@
 
 **Component declarations**
 
-#### <ApiSourceLink label={"Frame"} path={"packages/library/standard-react/src/presentation/frame/Frame.tsx"} startLine={144}>Frame</ApiSourceLink> / <ApiSourceLink label={"FrameProps"} path={"packages/library/standard-react/src/presentation/frame/Frame.tsx"} startLine={14}>FrameProps</ApiSourceLink>
+#### <ApiSourceLink label={"Frame"} path={"packages/library/standard-react/src/presentation/frame/Frame.tsx"} startLine={137}>Frame</ApiSourceLink> / <ApiSourceLink label={"FrameProps"} path={"packages/library/standard-react/src/presentation/frame/Frame.tsx"} startLine={14}>FrameProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -36,7 +36,7 @@ export type FrameProps = Omit<InputFrameConfig, 'children' | 'title' | 'descript
 
 </DocTabs>
 
-#### <ApiSourceLink label={"FrameTitle"} path={"packages/library/standard-react/src/presentation/frame/Frame.tsx"} startLine={152}>FrameTitle</ApiSourceLink> / <ApiSourceLink label={"FrameTitleProps"} path={"packages/library/standard-react/src/presentation/frame/Frame.tsx"} startLine={20}>FrameTitleProps</ApiSourceLink>
+#### <ApiSourceLink label={"FrameTitle"} path={"packages/library/standard-react/src/presentation/frame/Frame.tsx"} startLine={145}>FrameTitle</ApiSourceLink> / <ApiSourceLink label={"FrameTitleProps"} path={"packages/library/standard-react/src/presentation/frame/Frame.tsx"} startLine={20}>FrameTitleProps</ApiSourceLink>
 
 ```ts
 export declare const FrameTitle: FC<FrameTitleProps>;
@@ -44,7 +44,7 @@ export declare const FrameTitle: FC<FrameTitleProps>;
 export type FrameTitleProps = Omit<NodeProps, 'position' | keyof HydrationEventProps>;
 ```
 
-#### <ApiSourceLink label={"FrameDescription"} path={"packages/library/standard-react/src/presentation/frame/Frame.tsx"} startLine={163}>FrameDescription</ApiSourceLink> / <ApiSourceLink label={"FrameDescriptionProps"} path={"packages/library/standard-react/src/presentation/frame/Frame.tsx"} startLine={23}>FrameDescriptionProps</ApiSourceLink>
+#### <ApiSourceLink label={"FrameDescription"} path={"packages/library/standard-react/src/presentation/frame/Frame.tsx"} startLine={156}>FrameDescription</ApiSourceLink> / <ApiSourceLink label={"FrameDescriptionProps"} path={"packages/library/standard-react/src/presentation/frame/Frame.tsx"} startLine={23}>FrameDescriptionProps</ApiSourceLink>
 
 ```ts
 export declare const FrameDescription: FC<FrameDescriptionProps>;
@@ -54,7 +54,7 @@ export type FrameDescriptionProps = Omit<NodeProps, 'position' | keyof Hydration
 
 **Direct calls**
 
-#### <ApiSourceLink label={"InputFrame"} path={"packages/library/standard-vanilla/src/presentation/frame.ts"} startLine={33}>InputFrame</ApiSourceLink>
+#### <ApiSourceLink label={"InputFrame"} path={"packages/library/standard-vanilla/src/presentation/frame.ts"} startLine={34}>InputFrame</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -88,7 +88,7 @@ export type InputFrame = Omit<InputFrameConfig, 'id' | 'children'> & {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"frameInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/presentation/frame.ts"} startLine={54}>frameInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"frameInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/presentation/frame.ts"} startLine={55}>frameInputEmbedAdapter</ApiSourceLink>
 
 ```ts
 export declare const frameInputEmbedAdapter: SynchronousInputEmbedAdapter<InputFrame>;
@@ -96,7 +96,7 @@ export declare const frameInputEmbedAdapter: SynchronousInputEmbedAdapter<InputF
 
 **Execution and supporting contracts**
 
-#### <ApiSourceLink label={"frame"} path={"packages/library/standard-vanilla/src/presentation/frame.ts"} startLine={135}>frame</ApiSourceLink>
+#### <ApiSourceLink label={"frame"} path={"packages/library/standard-vanilla/src/presentation/frame.ts"} startLine={136}>frame</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -123,7 +123,7 @@ export declare const frame: (input: InputFrame) => InputEmbed<InputFrame>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"frameDescription"} path={"packages/library/standard-vanilla/src/presentation/frame.ts"} startLine={51}>frameDescription</ApiSourceLink>
+#### <ApiSourceLink label={"frameDescription"} path={"packages/library/standard-vanilla/src/presentation/frame.ts"} startLine={52}>frameDescription</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -150,7 +150,7 @@ export declare const frameDescription: (input: InputFrameDescription) => IRFrame
 
 </DocTabs>
 
-#### <ApiSourceLink label={"frameTitle"} path={"packages/library/standard-vanilla/src/presentation/frame.ts"} startLine={48}>frameTitle</ApiSourceLink>
+#### <ApiSourceLink label={"frameTitle"} path={"packages/library/standard-vanilla/src/presentation/frame.ts"} startLine={49}>frameTitle</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -177,7 +177,7 @@ export declare const frameTitle: (input: InputFrameTitle) => IRFrameTitle;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InputFrameDescription"} path={"packages/library/standard/src/presentation/frame/types.ts"} startLine={16}>InputFrameDescription</ApiSourceLink> / <ApiSourceLink label={"FrameDescriptionSchema"} path={"packages/library/standard/src/presentation/frame/schema.ts"} startLine={21}>FrameDescriptionSchema</ApiSourceLink>
+#### <ApiSourceLink label={"InputFrameDescription"} path={"packages/library/standard/src/presentation/frame/types.ts"} startLine={16}>InputFrameDescription</ApiSourceLink> / <ApiSourceLink label={"FrameDescriptionSchema"} path={"packages/library/standard/src/presentation/frame/schema.ts"} startLine={27}>FrameDescriptionSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -227,7 +227,7 @@ export type InputFrameDescription = ZodInfer<typeof FrameDescriptionSchema>;
 export type InputFrameConfig = Omit<IRFrame, 'namespace' | 'type'>;
 ```
 
-#### <ApiSourceLink label={"InputFrameTitle"} path={"packages/library/standard/src/presentation/frame/types.ts"} startLine={10}>InputFrameTitle</ApiSourceLink> / <ApiSourceLink label={"FrameTitleSchema"} path={"packages/library/standard/src/presentation/frame/schema.ts"} startLine={16}>FrameTitleSchema</ApiSourceLink>
+#### <ApiSourceLink label={"InputFrameTitle"} path={"packages/library/standard/src/presentation/frame/types.ts"} startLine={10}>InputFrameTitle</ApiSourceLink> / <ApiSourceLink label={"FrameTitleSchema"} path={"packages/library/standard/src/presentation/frame/schema.ts"} startLine={22}>FrameTitleSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -332,11 +332,11 @@ export type IRFrame = Omit<ZodInput<typeof FrameSchema>, keyof IRScopeProps | 'c
 
 </DocTabs>
 
-#### <ApiSourceLink label={"FrameSchema"} path={"packages/library/standard/src/presentation/frame/schema.ts"} startLine={94}>FrameSchema</ApiSourceLink>
+#### <ApiSourceLink label={"FrameSchema"} path={"packages/library/standard/src/presentation/frame/schema.ts"} startLine={96}>FrameSchema</ApiSourceLink>
 
 <ZodSchema name="FrameSchema" />
 
-#### <ApiSourceLink label={"FrameBorderSchema"} path={"packages/library/standard/src/presentation/frame/schema.ts"} startLine={28}>FrameBorderSchema</ApiSourceLink>
+#### <ApiSourceLink label={"FrameBorderSchema"} path={"packages/library/standard/src/presentation/frame/schema.ts"} startLine={32}>FrameBorderSchema</ApiSourceLink>
 
 <ZodSchema name="FrameBorderSchema" />
 

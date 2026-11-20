@@ -1,15 +1,19 @@
 import { createTableRuntimeContribution, prepareTableData, TABLE_NAMESPACE } from '@retikz/table';
-import type { SynchronousInputEmbedAdapter } from '@retikz/vanilla';
+import type {
+  InputEmbedContext,
+  InputEmbedContribution,
+  InputEmbedPreparation,
+  InputEmbedPreparationContext,
+} from '@retikz/vanilla';
 
 import { RetikzTableVanillaError } from '../error';
 import type { InputTable } from '../normalize/table';
 import { normalizeTable } from '../normalize/table';
 
 /** 可复用于多个 embed 与 update 周期的无状态 Table InputEmbed adapter */
-export const tableInputEmbedAdapter: SynchronousInputEmbedAdapter<InputTable<unknown>> &
-  Required<Pick<SynchronousInputEmbedAdapter<InputTable<unknown>>, 'prepare'>> = {
+export const tableInputEmbedAdapter = {
   kind: TABLE_NAMESPACE,
-  lower: props => {
+  lower: <TNative>(props: InputTable<TNative>, _context: InputEmbedContext): InputEmbedContribution => {
     if (props.dataBindings !== undefined || props.dataTransformExecutor !== undefined || props.signal !== undefined)
       throw new RetikzTableVanillaError('Table bindings, executor or signal require async processing');
 
@@ -22,7 +26,10 @@ export const tableInputEmbedAdapter: SynchronousInputEmbedAdapter<InputTable<unk
 
     return { node: spec, providerDependencies: contribution };
   },
-  prepare: async (props, context) => {
+  prepare: async <TNative>(
+    props: InputTable<TNative>,
+    context: InputEmbedPreparationContext,
+  ): Promise<InputEmbedPreparation> => {
     if (props.data !== undefined && props.dataBindings !== undefined)
       throw new RetikzTableVanillaError('Table data and dataBindings are mutually exclusive');
 

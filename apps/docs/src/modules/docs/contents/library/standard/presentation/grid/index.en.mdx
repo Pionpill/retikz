@@ -45,11 +45,11 @@ export const Example = () => <Layout ir={ir} composites={[gridDefinition]} />;
 <DocTab value="vanilla-api" label="Vanilla API">
 
 ```ts
-import { grid, gridInputEmbedAdapter } from '@retikz/standard-vanilla/presentation';
+import { grid } from '@retikz/standard-vanilla/presentation';
 import { scene, renderToSvgString } from '@retikz/vanilla';
 
 const input = scene({ children: [grid({ bounds: { start: [0, 0], end: [120, 80] }, line: { spacing: 20 } })] });
-const svg = renderToSvgString(input, { adapters: [gridInputEmbedAdapter] });
+const svg = renderToSvgString(input);
 console.log(svg);
 ```
 

@@ -45,11 +45,11 @@ export const Example = () => <Layout ir={ir} composites={[polygonDefinition]} />
 <DocTab value="vanilla-api" label="Vanilla API">
 
 ```ts
-import { shape, polygonInputEmbedAdapter } from '@retikz/standard-vanilla/shape';
+import { shape } from '@retikz/standard-vanilla/shape';
 import { scene, renderToSvgString } from '@retikz/vanilla';
 
 const input = scene({ children: [shape.polygon({ center: [0, 0], radius: 36, sides: 6 })] });
-const svg = renderToSvgString(input, { adapters: [polygonInputEmbedAdapter] });
+const svg = renderToSvgString(input);
 console.log(svg);
 ```
 

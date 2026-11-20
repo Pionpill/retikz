@@ -12,7 +12,6 @@ import { parseRetikzJsx } from '@/lib';
 import { cn } from '@/lib';
 import type { ComponentRenderSource } from '@/modules/docs/components';
 import { CodeBlock, ComponentPreviewCard, formatIR } from '@/modules/docs/components';
-import { synchronousInputAdaptersOf } from '@/modules/docs/lib';
 
 import { formatZodError } from '../retikz-validation';
 
@@ -82,7 +81,7 @@ const resolveTsx = (source: string): Resolved => {
 
   try {
     const input = createInputScene(element.props.children);
-    irJson = formatIR(normalizeScene(input.scene, { adapters: synchronousInputAdaptersOf(input.adapters) }).ir);
+    irJson = formatIR(normalizeScene(input).ir);
   } catch (err) {
     irJson = `// Failed to compute IR: ${err instanceof Error ? err.message : String(err)}`;
   }

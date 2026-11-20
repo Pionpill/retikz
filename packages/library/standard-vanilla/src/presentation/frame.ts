@@ -11,6 +11,7 @@ import {
   RetikzStandardError,
   RetikzStandardErrorCode,
 } from '@retikz/standard/presentation';
+import { embed } from '@retikz/vanilla';
 import type {
   InputChild,
   InputEmbed,
@@ -132,9 +133,9 @@ export const frameInputEmbedAdapter: SynchronousInputEmbedAdapter<InputFrame> = 
 };
 
 /** 创建由 frameInputEmbedAdapter 下沉的 Standard Frame embed */
-export const frame = (input: InputFrame): InputEmbed<InputFrame> => ({
-  type: 'embed',
-  kind: standardFrameEmbedKind,
-  ...(input.id === undefined ? {} : { id: input.id }),
-  props: input,
-});
+export const frame = (input: InputFrame): InputEmbed<InputFrame> =>
+  embed({
+    adapter: frameInputEmbedAdapter,
+    ...(input.id === undefined ? {} : { id: input.id }),
+    props: input,
+  });

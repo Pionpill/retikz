@@ -48,4 +48,4 @@ export const blockHeaderInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockHea
 
 /** 创建 Block Header Source 的 authoring embed 节点 */
 export const blockHeader = (input: BlockHeaderInputEmbedProps) =>
-  createGraphInputEmbed(blockHeaderEmbedKind, input, undefined);
+  createGraphInputEmbed(blockHeaderInputEmbedAdapter, input, undefined);

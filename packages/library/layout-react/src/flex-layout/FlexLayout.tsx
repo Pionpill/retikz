@@ -3,7 +3,6 @@ import { LayoutItemKind } from '@retikz/layout';
 import type { InputFlexLayout } from '@retikz/layout-vanilla';
 import { flexLayoutInputEmbedAdapter } from '@retikz/layout-vanilla';
 import type { ReactInputEmbedContext } from '@retikz/react';
-import { withInputEmbedAdapters } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
 
 import type { LayoutEmbeddableComponent } from '../shared';
@@ -26,7 +25,7 @@ const createFlexLayoutInput = (props: Readonly<Record<string, unknown>>, context
   void _authoring;
   const collected = createInputLayoutItems(children, LayoutItemKind.Flex, context);
 
-  return withInputEmbedAdapters({ ...input, children: collected.items } satisfies InputFlexLayout, collected.adapters);
+  return { ...input, children: collected.items } satisfies InputFlexLayout;
 };
 
 const FlexLayoutComponent: FC<FlexLayoutProps> = () => null;

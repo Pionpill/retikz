@@ -15,7 +15,7 @@ describe('网格（）', () => {
     });
     const contribution = gridInputEmbedAdapter.lower(embed.props, {
       id: 'runtime',
-      kind: embed.kind,
+      kind: embed.adapter.kind,
       layerId: 'main',
       identityPath: ['main', 'runtime'],
     });
@@ -30,12 +30,12 @@ describe('网格（）', () => {
     });
     const contribution = gridInputEmbedAdapter.lower(embed.props, {
       id: 'runtime',
-      kind: embed.kind,
+      kind: embed.adapter.kind,
       layerId: 'main',
       identityPath: ['main', 'runtime'],
     });
 
-    expect(embed).toMatchObject({ type: 'embed', kind: 'standard.grid' });
+    expect(embed).toMatchObject({ type: 'embed', adapter: { kind: 'standard.grid' } });
     expect(contribution.node).toMatchObject({ namespace: 'standard', type: 'grid' });
     expect(contribution.providerDependencies).toEqual({ roots: [gridProvider.key], providers: [gridProvider] });
     expect(gridProvider.makeDefinition([])).toBe(gridDefinition);
@@ -49,7 +49,6 @@ describe('网格（）', () => {
           grid({ bounds: { start: [30, 0], end: [50, 10] }, line: { spacing: 10 } }),
         ],
       }),
-      { adapters: [gridInputEmbedAdapter] },
     );
 
     expect(result.contributions).toHaveLength(2);
@@ -63,7 +62,7 @@ describe('网格（）', () => {
     const embed = grid(input);
     const contribution = gridInputEmbedAdapter.lower(embed.props, {
       id: 'runtime',
-      kind: embed.kind,
+      kind: embed.adapter.kind,
       layerId: 'main',
       identityPath: ['main', 'runtime'],
     });
@@ -83,7 +82,7 @@ describe('网格（）', () => {
     const embed = grid(input);
     const contribution = gridInputEmbedAdapter.lower(embed.props, {
       id: 'runtime',
-      kind: embed.kind,
+      kind: embed.adapter.kind,
       layerId: 'main',
       identityPath: ['main', 'runtime'],
     });

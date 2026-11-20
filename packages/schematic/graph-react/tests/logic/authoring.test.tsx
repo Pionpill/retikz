@@ -9,7 +9,7 @@ import {
   relationProviderKey,
 } from '@retikz/graph';
 import type { InputGraph } from '@retikz/graph-vanilla';
-import { createGraphVanillaAdapters, graph, normalizeGraph, relation } from '@retikz/graph-vanilla';
+import { graph, normalizeGraph, relation } from '@retikz/graph-vanilla';
 import { createInputScene, Node, Step, Text } from '@retikz/react';
 import type { InputEmbedAdapter, InputEmbedContext } from '@retikz/vanilla';
 import { normalizeScene, compileToScene } from '@retikz/vanilla';
@@ -33,7 +33,6 @@ import {
   useGraphThemeDefinitions,
 } from '../../src';
 import { collectEntityInput, collectRelationInput, graphLayoutHostPropsOf } from '../../src/graph/authoring';
-import { synchronousAdapters } from '../helpers/synchronous-adapters';
 
 describe('Group React 编写', () => {
   it('生成相同的 Group Source IR，同时接受任意 React 子项', () => {
@@ -41,7 +40,7 @@ describe('Group React 编写', () => {
       <Group
         id="runtime"
         caption={{ title: { text: 'Runtime' } }}
-        labels={[{ text: 'internal', position: { boundary: 'left', fraction: 0.25 } }]}
+        labels={[{ text: 'internal', position: { side: 'left', fraction: 0.25 } }]}
       >
         <Node position={[0, 0]}>Kernel</Node>
         <Entity role="participant" position={[80, 0]}>
@@ -49,14 +48,14 @@ describe('Group React 编写', () => {
         </Entity>
       </Group>,
     );
-    const normalized = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
+    const normalized = normalizeScene(input);
 
     expect(normalized.ir.children[0]).toEqual({
       namespace: 'graph',
       type: 'group',
       id: 'runtime',
       caption: { title: { text: 'Runtime' } },
-      labels: [{ text: 'internal', position: { boundary: 'left', fraction: 0.25 } }],
+      labels: [{ text: 'internal', position: { side: 'left', fraction: 0.25 } }],
       children: [
         { type: 'node', position: [0, 0], text: 'Kernel' },
         { namespace: 'graph', type: 'entity', role: 'participant', position: [80, 0], text: 'Adapter' },
@@ -286,7 +285,7 @@ const WrappedRoute: FC = () =>
 
 const normalizeReact = (element: ReturnType<typeof createElement>) => {
   const input = createInputScene(element);
-  return normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
+  return normalizeScene(input);
 };
 
 describe('@retikz/graph-react 封装边界', () => {
@@ -739,8 +738,7 @@ describe('Graph Definition 选项等价性', () => {
         <Relation {...props} />
       </Graph>,
     );
-    const reactResult = compileToScene(react.scene, {
-      adapters: synchronousAdapters(react.adapters),
+    const reactResult = compileToScene(react, {
       compile: { padding: 0 },
     });
     const vanillaResult = compileToScene(
@@ -757,7 +755,7 @@ describe('Graph Definition 选项等价性', () => {
           }),
         ],
       },
-      { adapters: createGraphVanillaAdapters(), compile: { padding: 0 } },
+      { compile: { padding: 0 } },
     );
 
     expect(reactResult.scene).toEqual(vanillaResult.scene);
@@ -772,7 +770,7 @@ describe('Graph Definition 选项等价性', () => {
       dashPattern: [4, 2],
     });
 
-    const normalized = normalizeScene(react.scene, { adapters: synchronousAdapters(react.adapters) });
+    const normalized = normalizeScene(react);
 
     expect(normalized.ir.children[0]).toMatchObject({ children: [{ id: 'a' }, { id: 'b' }, { kind: kind.kind }] });
     expect(normalized.ir.children[0]).not.toHaveProperty('relationKinds');
@@ -826,15 +824,14 @@ describe('Graph Definition 选项等价性', () => {
         }),
       ),
     );
-    const normalized = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
+    const normalized = normalizeScene(input);
 
     for (const child of normalized.ir.children) {
       for (const key of definitionOptionKeys) expect(child).not.toHaveProperty(key);
     }
 
     expect(() =>
-      compileToScene(input.scene, {
-        adapters: synchronousAdapters(input.adapters),
+      compileToScene(input, {
         compile: { padding: 0 },
       }),
     ).not.toThrow();

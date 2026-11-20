@@ -9,7 +9,7 @@ import type { AnimationControls } from '@retikz/render/animation';
 import type { HydrationHandlers } from '@retikz/render/hydration';
 import type { RetainedRendererFactory } from '@retikz/render/runtime';
 
-import type { InputSceneChildren, SynchronousInputEmbedAdapter } from '../normalize';
+import type { InputSceneChildren } from '../normalize';
 import type { ProcessingOptions } from '../processing';
 import type { VanillaViewMode } from './constants';
 
@@ -109,15 +109,12 @@ export type VanillaRuntimeOptions = VanillaRetainedRuntimeOptions | VanillaStati
  * render 与 mount 入口共享的选项
  * @description `output` 管输出资源和显示尺寸；`compile` 只在输入是 IR / InputScene 时传给
  *   Core 编译；`compileDriver` 提供领域中立扩展接线；`animation` 控制 SVG / Canvas runtime 动画；
- *   `adapters` 只参与 InputScene normalization
  */
 export type CommonOptions = Pick<ProcessingOptions, 'defaultFontFamily' | 'compile' | 'compileDriver'> & {
   /** 输出资源与显示尺寸选项 */
   output?: VanillaOutputOptions;
   /** runtime 动画选项 */
   animation?: VanillaAnimationOptions;
-  /** 可嵌入 Tier2 adapter 列表，仅 InputScene normalize 使用 */
-  adapters?: ReadonlyArray<SynchronousInputEmbedAdapter<never>>;
 };
 
 /** SSR / build-time SVG string options；显式禁止 mount-only runtime 配置 */

@@ -4,7 +4,6 @@ import type { IRTable, TableCompileArtifact } from '@retikz/table';
 import { TABLE_NAMESPACE, TableComposite } from '@retikz/table';
 import { compileToSceneAsync, renderToSvgString, scene } from '@retikz/vanilla';
 
-import { tableInputEmbedAdapter } from '../adapter';
 import { RetikzTableVanillaError } from '../error';
 import { embedTable } from '../spec';
 import type { AsyncTableRenderer, TableRenderArtifactResult, TableRenderAsyncCommonOptions } from './types';
@@ -31,7 +30,6 @@ const renderTableAsyncImpl = async <TSource = never>(
   const result = await compileToSceneAsync(
     scene({ ...(options.theme === undefined ? {} : { theme: options.theme }), children: [input] }),
     {
-      adapters: [tableInputEmbedAdapter],
       signal: options.signal,
       compile: options.compile,
     },

@@ -1,5 +1,6 @@
 import type { BranchDiagramDefinitionOptions } from '@retikz/diagram/branch';
 import { createBranchDiagramProviderContribution } from '@retikz/diagram/branch';
+import { embed } from '@retikz/vanilla';
 import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
 import { branchDiagramEmbedKind } from './constants';
@@ -52,9 +53,9 @@ export const branchDiagramInputEmbedAdapter: SynchronousInputEmbedAdapter<Branch
  * @param input Branch 声明与运行时扩展；由 adapter 在编译时组装 Source 和 provider
  * @returns 保留 input 对象引用的 embed 节点，不在此处执行布局
  */
-export const branchDiagram = (input: BranchDiagramInputEmbedProps): InputEmbed<BranchDiagramInputEmbedProps> => ({
-  type: 'embed',
-  kind: branchDiagramEmbedKind,
-  ...(input.id === undefined ? {} : { id: input.id }),
-  props: input,
-});
+export const branchDiagram = (input: BranchDiagramInputEmbedProps): InputEmbed<BranchDiagramInputEmbedProps> =>
+  embed({
+    adapter: branchDiagramInputEmbedAdapter,
+    ...(input.id === undefined ? {} : { id: input.id }),
+    props: input,
+  });

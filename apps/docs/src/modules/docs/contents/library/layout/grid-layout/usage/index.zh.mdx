@@ -82,7 +82,7 @@ export const Example = () => <Layout ir={ir} extensions={{ composites: [gridLayo
 
 ```ts
 import { scene, renderToSvgString } from '@retikz/vanilla';
-import { gridLayout, gridLayoutInputEmbedAdapter } from '@retikz/layout-vanilla';
+import { gridLayout } from '@retikz/layout-vanilla';
 
 const input = scene({
   children: [
@@ -100,7 +100,7 @@ const input = scene({
   ],
 });
 
-console.log(renderToSvgString(input, { adapters: [gridLayoutInputEmbedAdapter] }));
+console.log(renderToSvgString(input));
 ```
 
 </DocTab>

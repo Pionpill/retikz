@@ -21,8 +21,6 @@ import { createElement, isValidElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
-import { synchronousInputAdaptersOf } from '@/modules/docs/lib';
-
 import { buildPreviewSource } from '../../src/modules/docs/components/component-preview/source-panel';
 import {
   buildPreviewIR,
@@ -283,9 +281,9 @@ describe('buildPreviewSource', () => {
     expect(result.source?.vanilla?.files[0]?.code).toContain("description: { text: 'Preview source' }");
     expect(result.source?.vanilla?.files[0]?.code).toContain('padding: { x: 8, y: 10 }');
     expect(result.source?.vanilla?.files[0]?.code).toContain("headerDirection: 'vertical'");
-    expect(result.source?.vanilla?.files[0]?.code).toContain('gridInputEmbedAdapter');
-    expect(result.source?.vanilla?.files[0]?.code).toContain('axesInputEmbedAdapter');
-    expect(result.source?.vanilla?.files[0]?.code).toContain('frameInputEmbedAdapter');
+    expect(result.source?.vanilla?.files[0]?.code).not.toContain('gridInputEmbedAdapter');
+    expect(result.source?.vanilla?.files[0]?.code).not.toContain('axesInputEmbedAdapter');
+    expect(result.source?.vanilla?.files[0]?.code).not.toContain('frameInputEmbedAdapter');
     expect(renderToStaticMarkup(result.source?.vanilla?.render?.('svg'))).toContain('<svg');
   });
 
@@ -323,7 +321,7 @@ describe('buildPreviewSource', () => {
     const input = createInputScene(
       createElement(chart.type as FC<Record<string, unknown>>, previewEmbedPropsOf(chart.type, chart.props)),
     );
-    const normalized = normalizeScene(input.scene, { adapters: synchronousInputAdaptersOf(input.adapters) });
+    const normalized = normalizeScene(input);
 
     expect(normalized).not.toHaveProperty('sourceIr');
     expect(buildPreviewIR(ChartDemo).sourceIr.children[0]).toMatchObject({ namespace: 'chart', type: 'point' });
@@ -349,9 +347,7 @@ describe('buildPreviewSource', () => {
     expect(ir?.files[0]?.code).not.toContain('__chart.scatter.scale');
     expect(ir?.files[0]?.code).not.toContain('__chart.scatter.guide');
     expect(vanilla?.files[0]?.code).toContain("import { renderChart } from '@retikz/chart-vanilla'");
-    expect(vanilla?.files[0]?.code).toContain(
-      "import { scatterChart, scatterChartInputEmbedAdapter } from '@retikz/chart-vanilla/point'",
-    );
+    expect(vanilla?.files[0]?.code).toContain("import { scatterChart } from '@retikz/chart-vanilla/point'");
     expect(vanilla?.files[0]?.code).not.toContain("import { createChart, renderChart } from '@retikz/chart-vanilla'");
     expect(vanilla?.files[0]?.code).toContain("title: { text: 'Income and life expectancy' }");
     expect(vanilla?.files[0]?.code).toContain("source: { text: 'World Bank' }");
@@ -380,9 +376,7 @@ describe('buildPreviewSource', () => {
       presentation: { title: { text: 'Income, life expectancy, and population' } },
     });
     expect(result.source?.ir?.files[0]?.code).toContain('"chartType": "bubble"');
-    expect(vanilla?.files[0]?.code).toContain(
-      "import { bubbleChart, bubbleChartInputEmbedAdapter } from '@retikz/chart-vanilla/point'",
-    );
+    expect(vanilla?.files[0]?.code).toContain("import { bubbleChart } from '@retikz/chart-vanilla/point'");
     expect(vanilla?.files[0]?.code).toContain("size: 'population'");
     expect(vanilla?.render).toBeTypeOf('function');
     expect(renderToStaticMarkup(vanilla?.render?.('svg'))).toContain('<svg');
@@ -404,9 +398,7 @@ describe('buildPreviewSource', () => {
       },
     });
     expect(result.source?.ir?.files[0]?.code).toContain('"chartType": "strip"');
-    expect(vanilla?.files[0]?.code).toContain(
-      "import { stripChart, stripChartInputEmbedAdapter } from '@retikz/chart-vanilla/point'",
-    );
+    expect(vanilla?.files[0]?.code).toContain("import { stripChart } from '@retikz/chart-vanilla/point'");
     expect(vanilla?.render).toBeTypeOf('function');
     expect(renderToStaticMarkup(vanilla?.render?.('svg'))).toContain('<svg');
   });
@@ -418,7 +410,7 @@ describe('buildPreviewSource', () => {
 
     expect(vanilla?.files[0]?.code).toContain("from '@retikz/table-vanilla'");
     expect(vanilla?.files[0]?.code).toContain('embedTable(spec');
-    expect(vanilla?.files[0]?.code).toContain('tableInputEmbedAdapter');
+    expect(vanilla?.files[0]?.code).not.toContain('tableInputEmbedAdapter');
     expect(vanilla?.files[0]?.code).toContain("category: 'A'");
     expect(vanilla?.render).toBeUndefined();
     expect(buildVanillaPreview(preview).svg).toContain('<svg');
@@ -431,7 +423,7 @@ describe('buildPreviewSource', () => {
 
     expect(vanilla?.files[0]?.code).toContain("from '@retikz/table-vanilla'");
     expect(vanilla?.files[0]?.code).toContain('embedTable(spec');
-    expect(vanilla?.files[0]?.code).toContain('tableInputEmbedAdapter');
+    expect(vanilla?.files[0]?.code).not.toContain('tableInputEmbedAdapter');
     expect(vanilla?.files[0]?.code).not.toContain('const datasets =');
     expect(vanilla?.render).toBeUndefined();
     expect(buildVanillaPreview(preview).svg).toContain('<svg');

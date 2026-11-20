@@ -4,7 +4,6 @@ import type { FC } from 'react';
 
 import { RawSvgFrame } from '@/modules/docs/components/component-preview/source-panel/RawSvgFrame';
 import { browserMeasurer } from '@/modules/docs/components/component-preview/vanilla-preview';
-import { synchronousInputAdaptersOf } from '@/modules/docs/lib';
 import type { PreviewSourceConfig } from '@/modules/docs/preview';
 
 import { roundedRectClip } from './clip-registry.definition';
@@ -44,10 +43,9 @@ export const previewSource = {
   deriveIR: false,
   buildViews: ({ theme }) => {
     const authoring = createInputScene(<Content />);
-    const input = { ...authoring.scene, ...(theme === undefined ? {} : { theme }) };
-    const ir = normalizeScene(input, { adapters: synchronousInputAdaptersOf(authoring.adapters) }).ir;
+    const input = { ...authoring, ...(theme === undefined ? {} : { theme }) };
+    const ir = normalizeScene(input).ir;
     const svg = renderToSvgString(input, {
-      adapters: synchronousInputAdaptersOf(authoring.adapters),
       compile: { clips: [roundedRectClip], measureText: browserMeasurer },
     });
 
