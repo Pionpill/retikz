@@ -90,6 +90,15 @@ export const createWeaveOutputFlow = ({
       for (const warning of contribution.diagnostics)
         if (warning.code !== BuiltinCompileWarningCode.DuplicateNodeId)
           runtime.state.workspace.diagnosticCollector.collect(warning);
+      // ⚡无来源、资源和图元时，直接返回原贡献；布局、分配、辅助线和产物仍由父级收集
+      if (
+        tracker === undefined &&
+        contribution.diagnostics.length === 0 &&
+        contribution.output.primitives.length === 0 &&
+        contribution.resources.paints.length === 0 &&
+        contribution.resources.clips.length === 0
+      )
+        return contribution.output;
       const parent = state.parent.type === 'root' ? tracker?.root : ownerOf(state.parent);
       const owner =
         parent === undefined
