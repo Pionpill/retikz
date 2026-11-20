@@ -139,14 +139,17 @@ export const createWeaveDependencyFlow = ({
         if (element.type !== 'scope') return element.current?.contribution?.output.primitives.length ?? 0;
         const state = element.current;
         if (state?.compile === undefined) return 0;
-        return shouldEmitScopeGroup(
-          state.children.some(child => previousCount(child) > 0) ? 1 : 0,
-          state.compile.value.layout.overall.transforms,
-          state.compile.value.emit.overall.id,
-          state.compile.value.emit.overall.clipRef !== undefined,
+        // ⚡自身属性已要求输出分组时，不必向后代查找第一个可绘制子项
+        if (
+          shouldEmitScopeGroup(
+            0,
+            state.compile.value.layout.overall.transforms,
+            state.compile.value.emit.overall.id,
+            state.compile.value.emit.overall.clipRef !== undefined,
+          )
         )
-          ? 1
-          : 0;
+          return 1;
+        return state.children.some(child => previousCount(child) > 0) ? 1 : 0;
       };
       if (previousCount(entry) !== executions.get(entry)!.frame.state.primitives.length)
         for (const parent of ancestorsOf(entry)) {
