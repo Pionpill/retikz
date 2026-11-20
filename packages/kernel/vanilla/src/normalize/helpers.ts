@@ -82,7 +82,7 @@ type InputSceneFactory = {
   /**
    * 用显式分层创建场景
    * @param input layers 与全图配置，不接受 children
-   * @returns 保留分层列表引用的场景输入，分层运行时信息由归一化提取
+   * @returns 保留图层列表引用的场景输入；归一化时每个图层独立生成结果
    */
   (input: InputSceneLayersOptions): InputSceneLayers;
 };

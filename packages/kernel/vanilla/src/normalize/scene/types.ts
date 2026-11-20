@@ -1,11 +1,4 @@
-import type {
-  CompositeInputBinding,
-  CoreProviderContribution,
-  IRChild,
-  IRCoordinate,
-  IRScene,
-  IRViewBox,
-} from '@retikz/core';
+import type { CompositeInputBinding, CoreProviderContribution, IRChild, IRCoordinate, IRScene } from '@retikz/core';
 import type { OpenString, RequireExactlyOne, ValueOf } from '@retikz/foundation';
 import type { CompileOptions, FullSceneReconcilerOptions, IncrementalSceneReconcilerOptions } from '@retikz/reconciler';
 
@@ -46,7 +39,8 @@ export type InputLayer = LayerOptions & {
   type: 'layer';
   /** 在视口内唯一的名称 */
   name: LayerName;
-  /** 同值保持声明顺序的分层排序值
+  /**
+   * 同值保持声明顺序的分层排序值
    * @default background: 0; overlay: 100; otherwise: 10
    */
   zIndex?: number;
@@ -64,19 +58,9 @@ export type InputChild =
   | Exclude<IRChild, IRCoordinate>;
 
 /** 作者侧 Scene 输入的公共字段 */
-type InputSceneBase = Omit<IRScene, 'type' | 'version' | 'children'> & {
-  /** 可省略的场景类别；归一化后固定为 scene */
-  type?: 'scene';
+type InputSceneBase = Omit<IRScene, 'version' | 'children'> & {
   /** 作者输入不接受版本号；归一化时写入当前 IR 版本 */
   version?: never;
-  /** 作者侧场景标识，不写入持久化 Scene IR */
-  id?: string;
-  /** 场景根主题，只填写需要覆盖的 name 与 mode */
-  theme?: IRScene['theme'];
-  /** 显式取景矩形；省略时由编译结果按内容计算 */
-  viewBox?: IRViewBox;
-  /** 场景根动画轨道，省略时不添加根动画 */
-  animations?: IRScene['animations'];
   /** 可选编译驱动自行解释的运行时载荷，不进入 Core IR */
   authoring?: unknown;
 };
@@ -113,32 +97,6 @@ export type InputAuthoringSite = Readonly<{
   authoring: unknown;
 }>;
 
-/** 运行时记录的单个 Layer metadata */
-export type InputLayerMeta = Readonly<{
-  /** 图层的稳定身份标识 */
-  name: LayerName;
-  /** 图层稳定排序后的顺序编号 */
-  order: number;
-  /** 已补齐缺省值的绘制层级 */
-  zIndex: number;
-  /** 该图层直属子项中可识别的身份列表 */
-  childIds: ReadonlyArray<string>;
-  /** 该图层是否包含未声明身份的直属子项 */
-  hasAnonymousChildren: boolean;
-  /** 用于运行时失效传播的图层边界身份 */
-  invalidationBoundary: string;
-}>;
-
-/** 输入归一化产生的运行时 metadata */
-export type InputRuntimeMeta = Readonly<{
-  /** 按最终图层顺序保存的运行时元数据 */
-  layers: ReadonlyArray<InputLayerMeta>;
-  /** 从规范身份键到完整身份路径的索引 */
-  identityIndex: ReadonlyMap<string, ReadonlyArray<string>>;
-  /** 从规范身份键到父身份的索引 */
-  parentIndex: ReadonlyMap<string, string>;
-}>;
-
 /** 单次 Scene 输入归一化的完整结果 */
 export type SceneNormalizationResult = {
   /** 相对最终 Source IR 的 composite 实例输入 */
@@ -147,8 +105,6 @@ export type SceneNormalizationResult = {
   ir: IRScene;
   /** 原样收集，待 processing 唯一调用 Core resolver */
   contributions: ReadonlyArray<CoreProviderContribution>;
-  /** 运行时缓存与失效边界 metadata */
-  runtimeMeta: InputRuntimeMeta;
   /** 按作者顺序收集的 provenance */
   authoringSites: ReadonlyArray<InputAuthoringSite>;
 };

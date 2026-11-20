@@ -31,7 +31,7 @@ describe('Layout 异步编写', () => {
     const options = { adapters: [...layoutInputEmbedAdapters, adapter] };
 
     for (const container of containers) {
-      const input = { children: [container] };
+      const input = { type: 'scene' as const, children: [container] };
       const expected = compileToScene(input, options);
       const actual = await compileToSceneAsync(input, options);
 
@@ -64,6 +64,7 @@ describe('Layout 异步编写', () => {
     };
     const result = await compileToSceneAsync(
       {
+        type: 'scene',
         children: [
           flexLayout({
             children: [{ kind: LayoutItemKind.Flex, child: { type: 'embed', kind: 'prepared', props: {} } }],

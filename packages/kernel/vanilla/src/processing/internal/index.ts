@@ -1,6 +1,5 @@
 export * from './controller';
 export type {
-  InputProcessingParticipantUpdate,
   InternalProcessingController,
   PreparedInputProcessingController,
   ProcessingTransactionParticipant,

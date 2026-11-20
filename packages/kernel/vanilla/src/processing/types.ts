@@ -7,7 +7,6 @@ import type {
   InputAuthoringSite,
   LayerOptions,
   InputNormalizeOptions,
-  InputRuntimeMeta,
   InputScene,
   InputSceneChildren,
   InputLayer,
@@ -42,8 +41,6 @@ export type InputPreparedProcessing = Readonly<{
   coreOptions: CompileOptions<AnyCompositeDefinition>;
   /** 归一化时收集的作者来源 */
   authoringSites: ReadonlyArray<InputAuthoringSite>;
-  /** 归一化时生成的 runtime metadata */
-  runtimeMeta: InputRuntimeMeta;
 }>;
 
 /** 一次成功 processing 编译得到的不可变结果 */
@@ -60,8 +57,6 @@ export type ProcessingResult = Readonly<{
   layers: ReadonlyArray<RenderReadonlyLayer>;
   /** processing 收集的诊断 */
   diagnostics: ReadonlyArray<unknown>;
-  /** 不绑定框架的运行时元数据 */
-  runtimeMeta: InputRuntimeMeta;
 }>;
 
 /** 视口按层序发布的完整结果，各层保留自己的编译结果 */

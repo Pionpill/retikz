@@ -9,28 +9,14 @@ export type ProcessingTransactionParticipant = Readonly<{
   /** 随编译输出准备的宿主目标 */
   target: ReconcilerCommitTarget;
   /** 设置本次候选宿主配置 */
-  update: (input: InputProcessingParticipantUpdate) => void;
+  update: () => void;
   /** 首次发布完成后连接宿主读取 */
   connect?: () => void;
-  /** 设置独立的候选渲染配置 */
-  updateParticipant?: (revision: number) => void;
-}>;
-
-/** 生成 transaction participant update 时可读取的 processing 候选状态 */
-export type InputProcessingParticipantUpdate = Readonly<{
-  /** 本次 source 归一后的 processing 输入 */
-  prepared: InputPreparedProcessing;
-  /** controller 将要发布的 revision */
-  revision: number;
-  /** 本次事务由 source 更新还是 participant 配置更新触发 */
-  kind: 'source' | 'participant';
 }>;
 
 /** 在 processing 创建唯一 Runtime 前构造固定 DOM participant 的内部工厂 */
 export type ProcessingTransactionParticipantFactory = (
   context: Readonly<{
-    /** runtime 创建时的初始 processing 输入 */
-    initial: InputPreparedProcessing;
     /** 从同一 Core candidate 读取 compile-driver readonly layers */
     resolveReadonlyLayers: (output: VanillaReconcilerOutput) => ReadonlyArray<RenderReadonlyLayer>;
   }>,

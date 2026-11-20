@@ -10,14 +10,7 @@ import {
 import { describe, expect, it, vi } from 'vitest';
 import { literal, string } from 'zod';
 
-import type {
-  InputChild,
-  InputEmbedAdapter,
-  InputPath,
-  InputScene,
-  InputStep,
-  SynchronousInputEmbedAdapter,
-} from '../../src';
+import type { InputEmbedAdapter, InputPath, InputScene, InputStep, SynchronousInputEmbedAdapter } from '../../src';
 import {
   coordinate,
   embed,
@@ -152,8 +145,8 @@ describe('@retikz/vanilla InputScene', () => {
     expect(input).not.toHaveProperty('version');
   });
 
-  it('InputScene 的 children 简写归一为唯一 IR 与默认 Layer metadata', () => {
-    const input: InputScene = { children: [{ type: 'node', id: 'node', position: [0, 0] }] };
+  it('InputScene 的 children 简写归一为唯一 IR', () => {
+    const input: InputScene = { type: 'scene', children: [{ type: 'node', id: 'node', position: [0, 0] }] };
 
     expect(normalizeScene(input)).toMatchObject({
       ir: {
@@ -162,14 +155,12 @@ describe('@retikz/vanilla InputScene', () => {
         children: [{ type: 'node', id: 'node', position: [0, 0] }],
       },
       contributions: [],
-      runtimeMeta: {
-        layers: [{ name: 'main', order: 0, zIndex: 10, childIds: ['node'] }],
-      },
     });
   });
 
   it('显式 type 的 Path Input 仍由 Vanilla 归一为路径 IR', () => {
     const input: InputScene = {
+      type: 'scene',
       children: [
         {
           type: 'path',
@@ -194,6 +185,7 @@ describe('@retikz/vanilla InputScene', () => {
 
   it('显式 type 的 Scope Input 仍由 Vanilla 归一为 Scope IR', () => {
     const input: InputScene = {
+      type: 'scene',
       children: [{ type: 'scope', transforms: [], children: [{ type: 'node', id: 'nested', position: [0, 0] }] }],
     };
 
@@ -214,10 +206,10 @@ describe('@retikz/vanilla InputScene', () => {
   ] satisfies Array<InputStep>)('显式 Path 的 $kind 字符串目标在 Scene 和嵌套 Scope 使用相同归一化', step => {
     const input: InputPath = { type: 'path', children: [{ type: 'step', kind: 'move', to: [0, 0] }, step] };
     const expected = normalizePath(input);
-    expect(normalizeScene({ children: [input] }).ir.children).toEqual([expected]);
-    expect(normalizeScene({ children: [{ type: 'scope', children: [input] }] }).ir.children).toMatchObject([
-      { type: 'scope', children: [expected] },
-    ]);
+    expect(normalizeScene({ type: 'scene', children: [input] }).ir.children).toEqual([expected]);
+    expect(
+      normalizeScene({ type: 'scene', children: [{ type: 'scope', children: [input] }] }).ir.children,
+    ).toMatchObject([{ type: 'scope', children: [expected] }]);
   });
 
   it('同步 adapter 失败由 Vanilla 报告并保留原始异常', () => {
@@ -268,8 +260,9 @@ describe('@retikz/vanilla InputScene', () => {
       ],
     };
 
-    expect(normalizeScene({ children: [corePath] }).ir.children[0]).toBe(corePath);
+    expect(normalizeScene({ type: 'scene', children: [corePath] }).ir.children[0]).toBe(corePath);
     const nested = normalizeScene({
+      type: 'scene',
       children: [{ type: 'scope', children: [corePath, node({ id: 'sibling', authoring: true })] }],
     }).ir.children[0];
     expect(nested.type === 'scope' && !('namespace' in nested) && nested.children[0]).toBe(corePath);
@@ -277,6 +270,7 @@ describe('@retikz/vanilla InputScene', () => {
 
   it('直接 Core Path 的 host 与 step label interrupt 经归一化后保持 JSON 合法', () => {
     const normalized = normalizeScene({
+      type: 'scene',
       children: [
         {
           type: 'path',
@@ -333,11 +327,9 @@ describe('@retikz/vanilla InputScene', () => {
   });
 
   it('显式的空 Scope 保留空子列表', () => {
-    expect(
-      normalizeScene({
-        children: [{ type: 'scope', children: [] }],
-      }).ir.children,
-    ).toEqual([{ type: 'scope', children: [] }]);
+    expect(normalizeScene({ type: 'scene', children: [{ type: 'scope', children: [] }] }).ir.children).toEqual([
+      { type: 'scope', children: [] },
+    ]);
   });
 
   it('默认 Layer identity 不占用公开 child identity', () => {
@@ -478,7 +470,7 @@ describe('@retikz/vanilla InputScene', () => {
     ]);
   });
 
-  it('adapter 输出身份纳入 runtime metadata', () => {
+  it('保留 adapter 输出的嵌套节点身份', () => {
     const adapter: InputEmbedAdapter<{ label: string }> = {
       kind: 'named-output',
       lower: props => ({
@@ -500,9 +492,7 @@ describe('@retikz/vanilla InputScene', () => {
       { adapters: [adapter] },
     );
 
-    expect(normalized[0].result.runtimeMeta.identityIndex.get('chart')).toEqual(['main', 'chart']);
-    expect(normalized[0].result.runtimeMeta.identityIndex.get('chart/root')).toEqual(['main', 'chart', 'chart/root']);
-    expect(normalized[0].result.runtimeMeta.parentIndex.get('chart/label')).toBe('chart/root');
+    expect(normalized[0].result.ir.children).toMatchObject([{ id: 'chart/root', children: [{ id: 'chart/label' }] }]);
 
     const wrappedAdapter: InputEmbedAdapter<Record<string, never>> = {
       kind: 'wrapped-output',
@@ -522,95 +512,6 @@ describe('@retikz/vanilla InputScene', () => {
     expect(wrapped.ir.children).toEqual([
       { type: 'scope', children: [{ type: 'node', id: 'chart', position: [0, 0] }] },
     ]);
-    expect(wrapped.runtimeMeta.identityIndex.get('chart')).toEqual(['main', 'chart']);
-  });
-
-  it('embed slot 与根 Scene 共享公开 identity 索引，后定义覆盖此前定位', () => {
-    const slotAdapter: InputEmbedAdapter<{ slots: ReadonlyArray<ReadonlyArray<InputChild>> }> = {
-      kind: 'slot-output',
-      lower: (props, context) => {
-        const normalizeChildren = context.normalizeChildren;
-        if (normalizeChildren === undefined) throw new Error('expected embedded child normalizer');
-
-        const slots = props.slots.map(slot => normalizeChildren(slot));
-        void slots;
-
-        return {
-          node: {
-            namespace: 'fixture',
-            type: 'box',
-            text: 'frame',
-          },
-          providerDependencies: EMPTY_COMPOSITE_DEPENDENCIES,
-        };
-      },
-    };
-    const slotChildren = [node({ id: 'shared', position: [0, 0] })];
-
-    const rootLater = normalizeScene(
-      scene([
-        embed({ kind: 'slot-output', id: 'frame', props: { slots: [slotChildren] } }),
-        node({ id: 'shared', position: [1, 0] }),
-      ]),
-      { adapters: [slotAdapter] },
-    );
-    const slotLater = normalizeScene(
-      scene([
-        node({ id: 'shared', position: [1, 0] }),
-        embed({ kind: 'slot-output', id: 'frame', props: { slots: [slotChildren] } }),
-      ]),
-      { adapters: [slotAdapter] },
-    );
-    const secondSlotLater = normalizeScene(
-      scene([
-        embed({
-          kind: 'slot-output',
-          id: 'frame',
-          props: { slots: [slotChildren, [node({ id: 'shared', position: [2, 0] })]] },
-        }),
-      ]),
-      { adapters: [slotAdapter] },
-    );
-
-    expect(rootLater.runtimeMeta.parentIndex.get('shared')).toBe('main');
-    expect(slotLater.runtimeMeta.parentIndex.get('shared')).toBe('frame');
-    expect(secondSlotLater.runtimeMeta.parentIndex.get('shared')).toBe('frame');
-  });
-
-  it('同一 embed 外层 identity 在后续 slot 中可被后定义覆盖', () => {
-    const multiSlotAdapter: InputEmbedAdapter<{ slots: ReadonlyArray<ReadonlyArray<InputChild>> }> = {
-      kind: 'multi-slot-output',
-      lower: (props, context) => {
-        const normalizeChildren = context.normalizeChildren;
-        if (normalizeChildren === undefined) throw new Error('expected embedded child normalizer');
-
-        props.slots.forEach(slot => normalizeChildren(slot));
-
-        return {
-          node: {
-            namespace: 'fixture',
-            type: 'box',
-            text: 'frame',
-          },
-          providerDependencies: EMPTY_COMPOSITE_DEPENDENCIES,
-        };
-      },
-    };
-
-    const normalized = normalizeScene(
-      scene([
-        embed({
-          kind: 'multi-slot-output',
-          id: 'outer',
-          props: {
-            slots: [[node({ id: 'outer', position: [0, 0] })], [node({ id: 'outer', position: [1, 0] })]],
-          },
-        }),
-      ]),
-      { adapters: [multiSlotAdapter] },
-    );
-
-    expect(normalized.runtimeMeta.parentIndex.get('outer')).toBe('outer');
   });
 
   it('embed slot 的 Scope Theme 诊断路径不重复 embed 段', () => {

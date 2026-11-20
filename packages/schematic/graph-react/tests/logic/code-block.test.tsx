@@ -71,14 +71,14 @@ describe('自定义代码块 React 编写', () => {
       compile: { themeDefinitions: [coreStyle] },
     });
     const vanilla = compileToScene(
-      { children: [embed] },
+      { type: 'scene', children: [embed] },
       { adapters: [adapter], compile: { themeDefinitions: [coreStyle] } },
     );
     const direct = compileToScene(
       { type: 'scene', version: 1, children: [source] },
       {
         compile: prepareProcessingInput(
-          { children: [embed] },
+          { type: 'scene', children: [embed] },
           { adapters: [adapter], compile: { themeDefinitions: [coreStyle] } },
         ).coreOptions,
       },

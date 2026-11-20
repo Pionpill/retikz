@@ -2,7 +2,7 @@ import type { Scene, IRScene } from '@retikz/core';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
 import type { InputSceneChildren, InputSceneLayers } from '../normalize';
-import { asLayerStack, layerZIndex, createEmptyInputRuntimeMetaSnapshot } from '../normalize';
+import { asLayerStack, layerZIndex } from '../normalize';
 import { assertPreparationActive } from './authoring';
 import {
   commitVanillaCompileOutput,
@@ -101,7 +101,6 @@ const prepareStaticProcessingInput = (
     artifacts: Object.freeze([...output.primary.artifacts]),
     layers: Object.freeze([...output.layers]),
     diagnostics: Object.freeze([...output.diagnostics]),
-    runtimeMeta: prepared.runtimeMeta,
   });
   let committed = false;
 
@@ -235,7 +234,6 @@ export const processToStaticResult = (scene: Scene, _options: ProcessingOptions 
     artifacts: EMPTY_ARTIFACTS,
     layers: EMPTY_LAYERS,
     diagnostics: EMPTY_DIAGNOSTICS,
-    runtimeMeta: createEmptyInputRuntimeMetaSnapshot(),
   });
 };
 

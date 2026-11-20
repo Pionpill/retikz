@@ -5,12 +5,9 @@ import type { RenderHandlerContribution, InputRenderRuntimeConfig, RetainedRende
 import { builtinRetainedRendererFactory, createRetainedRenderTarget } from '@retikz/render/runtime';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
-import type { InputRuntimeMeta } from '../normalize';
-import { createEmptyInputRuntimeMetaSnapshot } from '../normalize';
 import type { ProcessingOptions, ProcessingResult } from '../processing';
 import { createDomProcessingController } from '../processing/internal';
 import type {
-  InputProcessingParticipantUpdate,
   InternalProcessingController,
   ProcessingTransactionParticipant,
   ProcessingTransactionParticipantFactory,
@@ -64,8 +61,6 @@ type RetainedRuntimeState = Readonly<{
   animation: VanillaAnimationOptions;
   /** 当前 committed Canvas 可变配置 */
   canvas: RetainedVanillaCanvasUpdateOptions;
-  /** 当前 committed runtime metadata */
-  runtimeMeta: InputRuntimeMeta;
 }>;
 
 type SvgRetainedRuntimeOptions = Readonly<{
@@ -151,22 +146,15 @@ const createRenderConfig = (
 /** 创建 DOM 子入口固定注入的 Render participant factory */
 const createRenderParticipantFactory = (
   options: RetainedRuntimeOptions,
-  initialState: RetainedRuntimeState,
   canvas: InputRenderRuntimeConfig['canvas'],
   state: () => RetainedRuntimeState,
   handlers: () => ReadonlyArray<RenderHandlerContribution>,
 ): Readonly<{
   factory: ProcessingTransactionParticipantFactory;
   read: () => RetainedRendererRead;
-  updateConfig: (input: InputProcessingParticipantUpdate) => void;
 }> => {
   let lease: ReturnType<typeof createRetainedRenderTarget>['lease'] | undefined;
-  let active:
-    | Readonly<{
-        read: () => RetainedRendererRead;
-        updateConfig: (input: InputProcessingParticipantUpdate) => void;
-      }>
-    | undefined;
+  let active: (() => RetainedRendererRead) | undefined;
 
   const factory: ProcessingTransactionParticipantFactory = context => {
     const rendererFactory = options.runtimeOptions.rendererFactory ?? builtinRetainedRendererFactory;
@@ -194,28 +182,21 @@ const createRenderParticipantFactory = (
             configuration: () => createRenderConfig(current, currentHandlers, canvas),
             ...(lease === undefined ? {} : { rendererLease: lease }),
           });
-    let current = Object.freeze({ ...initialState, runtimeMeta: context.initial.runtimeMeta });
+    let current = state();
     let currentHandlers = handlers();
 
-    const updateConfig = (input: InputProcessingParticipantUpdate): void => {
-      current =
-        input.kind === 'source' ? Object.freeze({ ...state(), runtimeMeta: input.prepared.runtimeMeta }) : state();
+    const updateConfig = (): void => {
+      current = state();
       currentHandlers = handlers();
     };
 
     return Object.freeze({
       target: renderer.target,
-      update: input => updateConfig(input),
+      update: updateConfig,
       connect: () => {
         lease = renderer.lease;
-        active = Object.freeze({ read: () => renderer.read(), updateConfig });
+        active = () => renderer.read();
       },
-      updateParticipant: revision =>
-        updateConfig({
-          prepared: context.initial,
-          revision,
-          kind: 'participant',
-        }),
     }) satisfies ProcessingTransactionParticipant;
   };
 
@@ -224,9 +205,8 @@ const createRenderParticipantFactory = (
     read: () => {
       if (active === undefined)
         throw new RetikzVanillaError(RetikzVanillaErrorCode.Dom, 'Vanilla DOM retained renderer is unavailable');
-      return active.read();
+      return active();
     },
-    updateConfig: input => active?.updateConfig(input),
   });
 };
 
@@ -261,7 +241,6 @@ const createRetainedProcessingControllerImplementation = (
   let state: RetainedRuntimeState = Object.freeze({
     animation: initialMutableOptions.animation ?? {},
     canvas: ('canvas' in initialMutableOptions ? initialMutableOptions.canvas : undefined) ?? {},
-    runtimeMeta: createEmptyInputRuntimeMetaSnapshot(),
   });
   let handlerContributions: ReadonlyArray<RenderHandlerContribution> = Object.freeze([]);
   let nextRegistration = 0;
@@ -276,7 +255,6 @@ const createRetainedProcessingControllerImplementation = (
 
   const render = createRenderParticipantFactory(
     options,
-    state,
     canvas,
     () => state,
     () => handlerContributions,
@@ -287,8 +265,6 @@ const createRetainedProcessingControllerImplementation = (
     toProcessingOptions(fixedOptions, options.runtimeOptions.updateStrategy),
     render.factory,
   );
-
-  state = Object.freeze({ ...state, runtimeMeta: processing.read().runtimeMeta });
 
   // 只在 processing 成功发布后同步宿主尺寸，失败事务保留原显示尺寸
   const updateHostSize = (): void => {
@@ -315,13 +291,11 @@ const createRetainedProcessingControllerImplementation = (
       state = Object.freeze({
         animation: captured.animation ?? state.animation,
         canvas: ('canvas' in captured ? captured.canvas : undefined) ?? state.canvas,
-        runtimeMeta: state.runtimeMeta,
       });
 
       try {
         processing.update(next);
         updateHostSize();
-        state = Object.freeze({ ...state, runtimeMeta: processing.read().runtimeMeta });
       } catch (cause) {
         state = previousState;
         throw cause;

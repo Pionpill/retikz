@@ -93,7 +93,7 @@ export const normalizeGraphChild = (child: InputGraphChild) => {
       return normalizeRelation(child);
     default: {
       // 独立 normalizer 复用 Kernel 的 child sugar；带运行时来源的输入必须由外层 Scene 消费
-      const normalized = normalizeScene({ children: [child] });
+      const normalized = normalizeScene({ type: 'scene', children: [child] });
       if (normalized.authoringSites.some(site => site.authoring !== undefined) || normalized.contributions.length > 0) {
         throw new RetikzGraphVanillaError({
           code: RetikzGraphVanillaErrorCode.NormalizeSceneRequired,

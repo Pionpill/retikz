@@ -18,7 +18,6 @@ This package is ESM-only and requires Node.js 24 or newer.
 import { node, path, renderToSvgString, scene } from '@retikz/vanilla';
 
 const input = scene({
-  id: 'flow',
   children: [
     node({ id: 'a', position: [0, 0], text: 'A' }),
     node({ id: 'b', position: [120, 0], text: 'B' }),

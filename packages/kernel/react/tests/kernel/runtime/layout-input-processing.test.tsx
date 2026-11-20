@@ -218,6 +218,7 @@ describe('<Layout> 的 Vanilla Input processing', () => {
       message: 'test diagnostic',
     });
     const controller = vanilla.createProcessingController({
+      type: 'scene',
       children: [{ type: 'node', id: 'diagnostic-node', position: [0, 0] }],
     });
     const diagnostics = vi.fn(() => Object.freeze([diagnostic]));

@@ -18,8 +18,6 @@ import {
 import { buildSvgFrameDocument } from '@retikz/render/svg';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
-import type { InputRuntimeMeta } from '../normalize';
-import { createEmptyInputRuntimeMetaSnapshot } from '../normalize';
 import {
   DEFAULT_ID_PREFIX,
   VanillaViewMode,
@@ -69,15 +67,13 @@ const mountStaticSvg = (
   let currentScene: Scene;
   let currentArtifacts: ReadonlyArray<CompositeArtifact> = Object.freeze([]);
   let currentCompileResult: CompileResult | undefined;
-  let currentRuntimeMeta: InputRuntimeMeta = createEmptyInputRuntimeMetaSnapshot();
   const liveHydrationDisposers = new Set<() => void>();
 
   const renderInto = (next: InputRender): void => {
-    const { scene, artifacts, compileResult, layers, runtimeMeta } = toSceneResult(next, options);
+    const { scene, artifacts, compileResult, layers } = toSceneResult(next, options);
     currentScene = scene;
     currentArtifacts = artifacts;
     currentCompileResult = compileResult;
-    currentRuntimeMeta = runtimeMeta;
     const doc = buildSvgFrameDocument(
       { primary: scene, layers },
       {
@@ -150,9 +146,6 @@ const mountStaticSvg = (
     get animation() {
       return animationControls;
     },
-    get runtimeMeta() {
-      return currentRuntimeMeta;
-    },
     get artifacts() {
       return currentArtifacts;
     },
@@ -204,9 +197,6 @@ const mountRetainedSvg = (
     diagnostics: processing.diagnostics,
     get animation() {
       return processing.read().animation;
-    },
-    get runtimeMeta() {
-      return processing.result().runtimeMeta;
     },
     get artifacts() {
       return processing.result().artifacts;

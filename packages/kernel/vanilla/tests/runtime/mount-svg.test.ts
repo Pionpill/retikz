@@ -21,7 +21,7 @@ describe('@retikz/vanilla mountSvg', () => {
   it('卸载默认 retained SVG 时仅移除当前宿主', () => {
     const container = document.createElement('div');
     const sibling = container.appendChild(document.createElement('span'));
-    const view = mountSvg(container, { children: [] });
+    const view = mountSvg(container, { type: 'scene', children: [] });
     expect(view.root.parentNode).toBe(container);
     view.dispose();
     expect(Array.from(container.children)).toEqual([sibling]);

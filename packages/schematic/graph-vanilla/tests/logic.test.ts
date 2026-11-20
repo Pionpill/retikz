@@ -522,6 +522,7 @@ describe('Graph Vanilla 嵌入适配器', () => {
   it('标准化任意嵌套嵌入，无需添加面板 Scope', () => {
     const normalized = normalizeScene(
       {
+        type: 'scene',
         children: [
           graph({
             transforms: [{ kind: 'translate', x: 12, y: 8 }],
@@ -577,6 +578,7 @@ describe('Graph Vanilla 嵌入适配器', () => {
   it('在合并提供者贡献的同时标准化嵌套的独立结构嵌入', () => {
     const normalized = normalizeScene(
       {
+        type: 'scene',
         children: [
           block({
             children: [
@@ -636,6 +638,7 @@ describe('Graph Vanilla 嵌入适配器', () => {
     expect(() =>
       compileToScene(
         {
+          type: 'scene',
           children: [
             group({
               children: [
@@ -765,6 +768,7 @@ describe('Graph Vanilla 嵌入适配器', () => {
     expect(() =>
       compileToScene(
         {
+          type: 'scene',
           children: [
             { type: 'node', id: 'direct-source', position: [0, 200] },
             { type: 'node', id: 'direct-target', position: [100, 200] },

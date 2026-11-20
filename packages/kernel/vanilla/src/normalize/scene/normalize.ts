@@ -4,15 +4,7 @@ import { CURRENT_IR_VERSION } from '@retikz/core';
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../error';
 import { normalizeChild } from './children';
 import type { SceneNormalizeContext } from './context';
-import {
-  asLayerStack,
-  layerZIndex,
-  childSourcePath,
-  inputEmbedIdentityOf,
-  isInputEmbed,
-  readIdentity,
-} from './context';
-import { createInputRuntimeMetaSnapshot } from './runtime-meta';
+import { asLayerStack, layerZIndex, childSourcePath } from './context';
 import type {
   InputAuthoringSite,
   InputLayer,
@@ -20,7 +12,6 @@ import type {
   InputSceneLayers,
   NamedLayerResult,
   InputNormalizeOptions,
-  InputRuntimeMeta,
   InputScene,
   SceneNormalizationResult,
 } from './types';
@@ -30,7 +21,7 @@ import { BuiltinLayerName } from './types';
 export const isInputScene = (input: unknown): input is InputScene =>
   typeof input === 'object' && input !== null && (input as { version?: unknown }).version !== CURRENT_IR_VERSION;
 
-/** 将 InputScene 一次性归一为唯一 Source IR、contribution 与 runtime metadata */
+/** 将 InputScene 一次性归一为唯一 Source IR 与 contribution */
 export const normalizeSceneLayer = (
   scene: InputScene,
   layer: InputLayer,
@@ -50,15 +41,12 @@ export const normalizeSceneLayer = (
 
   const contributions: Array<CoreProviderContribution> = [];
   const runtimeInputs: Array<CompositeInputBinding> = [];
-  const identityIndex = new Map<string, Array<string>>();
-  const parentIndex = new Map<string, string>();
   const authoringSites: Array<InputAuthoringSite> = [];
   if (scene.authoring !== undefined)
     authoringSites.push(Object.freeze({ kind: 'scene', sourcePath: '', type: 'scene', authoring: scene.authoring }));
 
   const context: SceneNormalizeContext = {
     layerId: layer.name,
-    parentId: layer.name,
     path: [layer.name],
     adapters: options.adapters,
     ...(options.embedThemeContext === undefined ? {} : { embedThemeContext: options.embedThemeContext.root }),
@@ -68,9 +56,6 @@ export const normalizeSceneLayer = (
     contributions,
     runtimeInputs,
     runtimePath: [],
-    identityIndex,
-    parentIndex,
-    identityFrame: '',
     sourcePath: '',
     authoringSites,
   };
@@ -83,47 +68,19 @@ export const normalizeSceneLayer = (
     }),
   );
 
-  const meta = {
-    name: layer.name,
-    order: 0,
-    zIndex: layerZIndex(layer),
-    childIds: layer.children
-      .map((child, index) =>
-        isInputEmbed(child)
-          ? inputEmbedIdentityOf(child, { ...context, sourcePath: childSourcePath(context, index) })
-          : readIdentity(child),
-      )
-      .filter((id): id is string => id !== undefined),
-    hasAnonymousChildren: layer.children.some(child => readIdentity(child) === undefined),
-    invalidationBoundary: layer.name,
-  };
-
-  const {
-    type: _type,
-    version: _version,
-    id: _id,
-    authoring: _authoring,
-    layers: _layers,
-    children: _children,
-    ...rest
-  } = scene;
-  void _type;
-  void _version;
-  void _id;
-  void _authoring;
-  void _layers;
-  void _children;
-  const runtimeMeta: InputRuntimeMeta = createInputRuntimeMetaSnapshot({
-    layers: [meta],
-    identityIndex,
-    parentIndex,
-  });
+  const { type, theme, viewBox, animations } = scene;
 
   return {
-    ir: { type: 'scene', version: CURRENT_IR_VERSION, ...rest, children },
+    ir: {
+      type,
+      version: CURRENT_IR_VERSION,
+      children,
+      ...(theme === undefined ? {} : { theme }),
+      ...(viewBox === undefined ? {} : { viewBox }),
+      ...(animations === undefined ? {} : { animations }),
+    },
     contributions: Object.freeze([...contributions]),
     ...(runtimeInputs.length === 0 ? {} : { runtimeInputs: Object.freeze(runtimeInputs) }),
-    runtimeMeta,
     authoringSites: Object.freeze(authoringSites),
   };
 };

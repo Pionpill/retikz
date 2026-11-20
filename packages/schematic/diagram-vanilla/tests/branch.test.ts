@@ -6,6 +6,7 @@ import { branchDiagram, branchDiagramInputEmbedAdapter } from '../src/branch';
 it('通过同步 Vanilla 嵌入编译 Branch', () => {
   const result = compileToScene(
     {
+      type: 'scene',
       children: [
         branchDiagram({
           nodes: [{ id: 'a', labels: [{ text: 'A' }] }, { id: 'b' }],
@@ -22,6 +23,7 @@ it('通过同步 Vanilla 嵌入编译 Branch', () => {
 
 it('更新标签而不保留过时的演示内容', () => {
   const source = (visible: boolean) => ({
+    type: 'scene' as const,
     children: [
       branchDiagram({
         nodes: [{ id: 'a', ...(visible ? { labels: [{ text: 'Visible label' }] } : {}) }],

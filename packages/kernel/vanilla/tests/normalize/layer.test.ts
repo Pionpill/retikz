@@ -11,15 +11,15 @@ describe('作者图层归一化', () => {
     expect(normalizeScene(scene([])).ir.children).toEqual([]);
   });
 
-  it('层间可以重名，按层排序但不合并元素和身份索引', () => {
+  it('层间可以重名，按层排序但分别保留同名元素', () => {
     const children = [node({ id: 'button', position: [0, 0] })];
     const results = normalizeScene(
       scene({ layers: [layer({ name: 'overlay', children }), layer({ name: 'background', children })] }),
     );
     expect(results.map(entry => entry.name)).toEqual(['background', 'overlay']);
-    for (const { name, result } of results) {
+    for (const { result } of results) {
       expect(result.ir.children).toHaveLength(1);
-      expect(result.runtimeMeta.identityIndex.get('button')).toEqual([name, 'button']);
+      expect(result.ir.children[0]).toMatchObject({ id: 'button' });
     }
   });
 });

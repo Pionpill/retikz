@@ -24,8 +24,6 @@ import {
 import type { RenderReadonlyLayer } from '@retikz/render/runtime';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
-import type { InputRuntimeMeta } from '../normalize';
-import { createEmptyInputRuntimeMetaSnapshot } from '../normalize';
 import {
   DEFAULT_ID_PREFIX,
   VanillaViewMode,
@@ -95,7 +93,6 @@ const mountStaticCanvas = (
   let currentLayers: ReadonlyArray<RenderReadonlyLayer> = Object.freeze([]);
   let currentArtifacts: ReadonlyArray<CompositeArtifact> = Object.freeze([]);
   let currentCompileResult: CompileResult | undefined;
-  let currentRuntimeMeta: InputRuntimeMeta = createEmptyInputRuntimeMetaSnapshot();
 
   // 存活的水合：onEvent 触发的 handler 表按「绑定时的 scene」合成（新增 / 移除的 onEvent track 决定注册哪些
   // listener），update 换图后必须按新 scene 重建、否则陈旧；view.dispose 时统一解绑全部未手动 dispose 的水合。
@@ -185,12 +182,11 @@ const mountStaticCanvas = (
   };
 
   const renderInto = (next: InputRender): void => {
-    const { scene, artifacts, compileResult, layers, runtimeMeta } = toSceneResult(next, options);
+    const { scene, artifacts, compileResult, layers } = toSceneResult(next, options);
     currentScene = scene;
     currentLayers = layers;
     currentArtifacts = artifacts;
     currentCompileResult = compileResult;
-    currentRuntimeMeta = runtimeMeta;
     const size = computeDisplaySize(scene.layout, output.width, output.height);
     canvas.width = Math.max(1, Math.round(size.width * ratio));
     canvas.height = Math.max(1, Math.round(size.height * ratio));
@@ -364,9 +360,6 @@ const mountStaticCanvas = (
     get animation() {
       return clock;
     },
-    get runtimeMeta() {
-      return currentRuntimeMeta;
-    },
     get artifacts() {
       return currentArtifacts;
     },
@@ -431,9 +424,6 @@ const mountRetainedCanvas = (
     },
     get animation() {
       return processing.read().animation;
-    },
-    get runtimeMeta() {
-      return processing.result().runtimeMeta;
     },
     get artifacts() {
       return processing.result().artifacts;

@@ -4,8 +4,6 @@ import type { RenderReadonlyLayer } from '@retikz/render/runtime';
 import { EMPTY_READONLY_LAYERS } from '@retikz/render/runtime';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
-import type { InputRuntimeMeta } from '../normalize';
-import { createEmptyInputRuntimeMetaSnapshot } from '../normalize';
 import { compileToScene } from '../processing';
 import type { CommonOptions, InputRender } from './types';
 
@@ -21,8 +19,6 @@ export type SceneResult = {
   layers: ReadonlyArray<RenderReadonlyLayer>;
   /** 可选编译驱动产出的诊断 */
   diagnostics: ReadonlyArray<unknown>;
-  /** InputScene 运行时元数据 */
-  runtimeMeta: InputRuntimeMeta;
 };
 
 const EMPTY_ARTIFACTS: ReadonlyArray<CompositeArtifact> = Object.freeze([]);
@@ -50,7 +46,6 @@ export const toSceneResult = (input: InputRender, options: CommonOptions): Scene
       compileResult: undefined,
       layers: EMPTY_READONLY_LAYERS,
       diagnostics: EMPTY_DIAGNOSTICS,
-      runtimeMeta: createEmptyInputRuntimeMetaSnapshot(),
     };
   }
 
@@ -62,6 +57,5 @@ export const toSceneResult = (input: InputRender, options: CommonOptions): Scene
     compileResult: result.compileResult,
     layers: result.layers,
     diagnostics: result.diagnostics,
-    runtimeMeta: result.runtimeMeta,
   };
 };

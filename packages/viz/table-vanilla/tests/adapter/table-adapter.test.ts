@@ -106,7 +106,7 @@ describe('Table Vanilla 适配器', () => {
 
     const [{ result: normalized }] = normalizeScene(inputScene, { adapters: [tableInputEmbedAdapter] });
 
-    expect(new Set(normalized.runtimeMeta.layers[0].childIds).size).toBe(2);
+    expect(normalized.ir.children).toHaveLength(2);
 
     for (const child of normalized.ir.children) expect(child).not.toHaveProperty('id');
   });

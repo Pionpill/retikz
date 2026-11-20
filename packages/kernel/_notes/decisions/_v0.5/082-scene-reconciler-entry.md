@@ -72,7 +72,7 @@ declare const compileToSceneAsync: (
 ) => Promise<ProcessingResult>;
 ```
 
-`ProcessingSource` 保持为 `InputScene | IRScene`，配置继续复用现有 processing options，编译参数位于 `options.compile`。省略 options 时使用既有默认配置。返回现有不可变 ProcessingResult，包括 Scene、artifacts、compileResult、layers、diagnostics 与 runtimeMeta，静态 revision 为 0；不增加另一套结果类型或要求调用方释放句柄。
+`ProcessingSource` 保持为 `InputScene | IRScene`，配置继续复用现有 processing options，编译参数位于 `options.compile`。省略 options 时使用既有默认配置。返回现有不可变 ProcessingResult，包括 Scene、artifacts、compileResult、layers 与 diagnostics，静态 revision 为 0；不增加另一套结果类型或要求调用方释放句柄。
 
 同步门面在完整作者输入就绪后编译并完成既有驱动成功通知；异步门面沿用异步作者准备、取消与失效检查，准备完成后复用同一个同步编译过程。两者均在内部使用临时非增量协调器并负责释放。默认文字测量、provider 解析、诊断归属及错误 cause 保持现有 Vanilla processing 规则。
 

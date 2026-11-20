@@ -7,6 +7,7 @@ import * as FlowVanilla from '../src/flow';
 
 it('在保留模式更新期间删除并恢复 Group 标题和标签', () => {
   const source = (visible: boolean) => ({
+    type: 'scene' as const,
     children: [
       FlowVanilla.flowDiagram({
         entities: [{ id: 'item', text: 'Item' }],
@@ -138,6 +139,7 @@ describe('@retikz/diagram-vanilla/flow', () => {
   it.each(['-|', '|-'] as const)('通过公共 Vanilla 适配器编译 %s 路由', kind => {
     const result = compileToScene(
       {
+        type: 'scene',
         children: [
           FlowVanilla.flowDiagram({
             entities: [
@@ -253,7 +255,7 @@ describe('@retikz/diagram-vanilla/flow', () => {
     if (flowDiagram === undefined || adapter === undefined) return;
 
     const vanillaResult = compileToScene(
-      { children: [flowDiagram(sourceInput)] },
+      { type: 'scene', children: [flowDiagram(sourceInput)] },
       { adapters: [adapter], compile: { padding: 0, measureText } },
     );
 

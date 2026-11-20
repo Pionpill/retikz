@@ -10,7 +10,10 @@ afterEach(() => {
   document.body.style.fontFamily = '';
 });
 
-const source = { children: [{ type: 'node' as const, text: ['Alpha'], position: [0, 0] as [number, number] }] };
+const source = {
+  type: 'scene' as const,
+  children: [{ type: 'node' as const, text: ['Alpha'], position: [0, 0] as [number, number] }],
+};
 
 describe('默认文字测量', () => {
   it('显式测量器优先并收到宿主默认字体，文字自身字体覆盖宿主', () => {

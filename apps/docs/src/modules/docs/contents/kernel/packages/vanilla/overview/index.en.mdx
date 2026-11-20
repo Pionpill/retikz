@@ -7,7 +7,7 @@ description: Organize graphics as framework-neutral InputScene data, normalize a
 
 The package root works safely in SSR, build scripts, and other frameworks. Its default text measurer probes browser Canvas when measurement is requested. Browser SVG and Canvas mounting live at `@retikz/vanilla/dom`. IR, schemas, geometry, and compile rules belong to `@retikz/core`; backend output belongs to `@retikz/render`.
 
-Applications use `createProcessingController`, `prepareStaticProcessing`, or `compileToScene` from the package root. Custom compile drivers implement `VanillaCompileDriver` with its input, session, and output contracts. Input preparation, runtime metadata snapshots, and driver execution/commit helpers remain internal.
+Applications use `createProcessingController`, `prepareStaticProcessing`, or `compileToScene` from the package root. Custom compile drivers implement `VanillaCompileDriver` with its input, session, and output contracts. Input preparation and driver execution/commit helpers remain internal.
 
 ## One-shot compilation
 
@@ -50,7 +50,6 @@ import { node, path, renderToSvgString, scene } from '@retikz/vanilla';
 import { mount } from '@retikz/vanilla/dom';
 
 const input = scene({
-  id: 'flow',
   children: [
     node({ id: 'a', position: [0, 0], text: 'A' }),
     node({ id: 'b', position: [120, 0], text: 'B' }),
@@ -82,7 +81,7 @@ Generic embedding uses an object with `kind`, `props`, and optional `id` and `au
 
 ### Why InputScene exists
 
-Directly building `@retikz/core` IR is valid, but applications often need authoring-friendly Path, Scope, Layer, Tier 2 embeds, and runtime metadata. `scene`, `layer`, `node`, `path`, `scope`, and `embed` construct those inputs as ordinary data, without JSX, a React runtime, or component lifecycles.
+Directly building `@retikz/core` IR is valid, but applications often need authoring-friendly Path, Scope, Layer, Tier 2 embeds, and authoring payloads. `scene`, `layer`, `node`, `path`, `scope`, and `embed` construct those inputs as ordinary data, without JSX, a React runtime, or component lifecycles.
 
 `InputScene` is not a second graphics semantic. `normalizeScene()` centrally handles input sugar, authoring provenance, and embed lowering, then produces the only Core `IRScene`. The resulting IR remains JSON-serializable; callers and their domain adapters decide whether `authoring` and `embed.props` are serializable.
 
@@ -92,13 +91,13 @@ Blue nodes in this diagram belong to Vanilla input and processing; orange nodes 
 
 <ComponentPreview files="vanilla-pipeline" size="xs" hideCode />
 
-| Input            | Owner             | How processing handles it                                              |
-| ---------------- | ----------------- | ---------------------------------------------------------------------- |
-| `InputScene`     | `@retikz/vanilla` | Normalizes input, lowers embeds, and collects metadata                 |
-| Core `IRScene`   | `@retikz/core`    | Skips Input normalization and prepares Core compilation                |
-| Compiled `Scene` | `@retikz/core`    | Skips normalization and compilation; DOM can only redraw it statically |
+| Input            | Owner             | How processing handles it                                                       |
+| ---------------- | ----------------- | ------------------------------------------------------------------------------- |
+| `InputScene`     | `@retikz/vanilla` | Normalizes input, lowers embeds, and collects contributions and authoring sites |
+| Core `IRScene`   | `@retikz/core`    | Skips Input normalization and prepares Core compilation                         |
+| Compiled `Scene` | `@retikz/core`    | Skips normalization and compilation; DOM can only redraw it statically          |
 
-`normalizeScene()` produces Core Source IR, Composite dependency contributions, authoring provenance, and metadata. The internal `prepareProcessingInput()` then combines the only Core resolver options. `createProcessingController()` holds a SceneReconciler in retained mode, while `prepareStaticProcessing()` compiles once through a temporary non-incremental reconciler and disposes it.
+`normalizeScene()` produces Core Source IR, Composite dependency contributions, authoring provenance, and instance inputs. The internal `prepareProcessingInput()` then combines the only Core resolver options. `createProcessingController()` holds a SceneReconciler in retained mode, while `prepareStaticProcessing()` compiles once through a temporary non-incremental reconciler and disposes it.
 
 <SourceLinks
   sources={[
@@ -131,7 +130,7 @@ Blue nodes in this diagram belong to Vanilla input and processing; orange nodes 
 | `mountCanvas`       | Explicitly mount Canvas             | `CanvasView`                 |
 | `hydrate`           | Bind handlers to SSR / existing SVG | `HydrationHandle`            |
 
-The last four APIs are imported from `@retikz/vanilla/dom`. By default, `InputScene` and `IRScene` create a `VanillaViewMode.Retained` view. `update(next, options?)` atomically publishes the same processing transaction's Scene, artifacts, readonly layers, runtime metadata, events, and animation. A failed transaction publishes no new revision; if rollback itself fails, the view becomes broken and must be disposed and remounted.
+The last four APIs are imported from `@retikz/vanilla/dom`. By default, `InputScene` and `IRScene` create a `VanillaViewMode.Retained` view. `update(next, options?)` atomically publishes the same processing transaction's Scene, artifacts, readonly layers, events, and animation. A failed transaction publishes no new revision; if rollback itself fails, the view becomes broken and must be disposed and remounted.
 
 With `runtime: { mode: 'static' }`, every `update()` of an `InputScene` or `IRScene` fully normalizes, compiles, and redraws without a Session, Snapshot, Patch, transaction, or rollback. A precompiled `Scene` is always static and accepts only another `Scene`.
 
@@ -184,7 +183,7 @@ const [{ name, result }] = compileToScene(input, { adapters: [BadgeInputEmbedAda
 console.log(name, result.scene);
 ```
 
-`normalizeScene()` is exported from the package root. `adapters` is a top-level render, mount, and processing option—not a field inside `compile`. To inspect a normalized result, call `normalizeScene(input, { adapters })` and inspect the single result or each named entry’s result for `ir`, `contributions`, `runtimeMeta`, and `authoringSites`. Nodes without an `authoring` payload do not produce a site; sites explicitly contributed by adapters are retained.
+`normalizeScene()` is exported from the package root. `adapters` is a top-level render, mount, and processing option—not a field inside `compile`. To inspect a normalized result, call `normalizeScene(input, { adapters })` and inspect the single result or each named entry’s result for `ir`, `contributions`, `runtimeInputs`, and `authoringSites`. Nodes without an `authoring` payload do not produce a site; sites explicitly contributed by adapters are retained.
 
 Adapters, Composite definitions, and compile topology are fixed for a retained mount's lifetime. A domain adapter can process new props at the same authored position; dispose and remount to change the adapter set, a Composite schema, definition count, or execution branch.
 
@@ -214,10 +213,10 @@ React applications use [`@retikz/react`](/kernel/packages/react/overview) to col
 | `InputEmbed`                         | type          | Tier 2 embed input                                                            |
 | `InputEmbedAdapter`                  | type          | Lowers an `InputEmbed` to a Core contribution                                 |
 | `isInputScene` / `normalizeScene`    | normalization | Detect and normalize InputScene                                               |
-| `SceneNormalizationResult`           | type          | IR, contributions, metadata, and authoring provenance                         |
+| `SceneNormalizationResult`           | type          | IR, contributions, instance inputs, and authoring provenance                  |
 | `ProcessingSource`                   | type          | InputScene or IRScene accepted by processing                                  |
 | `ProcessingOptions`                  | type          | Compile, adapters, driver, and retained update strategy                       |
-| `ProcessingResult`                   | type          | Same-revision Scene, artifacts, layers, and metadata                          |
+| `ProcessingResult`                   | type          | Same-revision Scene, artifacts, layers, and diagnostics                       |
 | `createProcessingController`         | processing    | Framework-neutral retained processing controller                              |
 | `compileToScene`                     | processing    | One-shot synchronous compilation of InputScene or Core IR                     |
 | `compileToSceneAsync`                | processing    | One-shot compilation after asynchronous authoring preparation                 |

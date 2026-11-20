@@ -27,6 +27,7 @@ const customClip = (): ClipDefinition =>
   });
 
 const input: InputScene = {
+  type: 'scene',
   children: [
     {
       type: 'scope',
@@ -70,6 +71,7 @@ describe('Vanilla 裁剪处理等价性', () => {
       }),
     };
     const embedded: InputScene = {
+      type: 'scene',
       children: [{ type: 'embed', kind: 'ticketClip', id: 'ticket', props: {} }],
     };
 

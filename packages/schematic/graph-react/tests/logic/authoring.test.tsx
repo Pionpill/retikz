@@ -745,6 +745,7 @@ describe('Graph Definition 选项等价性', () => {
     });
     const vanillaResult = compileToScene(
       {
+        type: 'scene',
         children: [
           graph({
             relationKinds: [kind],

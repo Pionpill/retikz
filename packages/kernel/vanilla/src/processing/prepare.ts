@@ -16,13 +16,7 @@ import type {
   InputEmbedThemeContextResolver,
   InputScene,
 } from '../normalize';
-import {
-  createEmptyInputRuntimeMetaSnapshot,
-  createInputSceneTraversal,
-  isInputScene,
-  BuiltinLayerName,
-  normalizeSceneLayer,
-} from '../normalize';
+import { createInputSceneTraversal, isInputScene, BuiltinLayerName, normalizeSceneLayer } from '../normalize';
 import { assertPreparationActive, prepareAuthoringContributions } from './authoring';
 import { createTextMeasurer } from './text-measurement';
 import type { AsyncProcessingOptions, InputPreparedProcessing, ProcessingOptions, ProcessingSource } from './types';
@@ -108,7 +102,6 @@ export const prepareProcessingInput = (
         options.defaultFontFamily,
       ),
       authoringSites: normalized.authoringSites,
-      runtimeMeta: normalized.runtimeMeta,
     });
   }
 
@@ -119,7 +112,6 @@ export const prepareProcessingInput = (
       measureText: createTextMeasurer(options.compile?.measureText, options.defaultFontFamily),
     }),
     authoringSites: EMPTY_AUTHORING_SITES,
-    runtimeMeta: createEmptyInputRuntimeMetaSnapshot(),
   });
 };
 
@@ -155,6 +147,5 @@ export const prepareProcessingInputAsync = async (
       options.defaultFontFamily,
     ),
     authoringSites: normalized.authoringSites,
-    runtimeMeta: normalized.runtimeMeta,
   });
 };

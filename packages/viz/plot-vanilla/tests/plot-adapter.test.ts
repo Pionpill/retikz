@@ -127,9 +127,7 @@ describe('Plot Vanilla Tier2 适配器', () => {
 
     expect(svg).toContain('<rect');
     expect(spec).toEqual(input);
-    expect(
-      normalizeScene(inputScene, { adapters: [plotInputEmbedAdapter] })[0].result.runtimeMeta.layers[0].childIds,
-    ).toEqual(['sales']);
+    expect(compiled.name).toBe('chart');
   });
 
   it('保持 lineage 在 IRPlot、Core IR 与 Scene meta 之外', () => {

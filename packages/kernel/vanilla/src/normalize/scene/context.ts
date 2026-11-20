@@ -5,27 +5,16 @@ import type { AnyInputEmbed, InputEmbedThemeContext, InputPath, InputScope, Inpu
 import type { InputAuthoringSite, InputChild, InputLayer, InputNormalizeOptions, InputScene } from './types';
 import { BuiltinLayerName } from './types';
 
-/** 当前 embed 在所有 slot 中可共用一次的外层 identity */
-export type ReusedEmbedIdentity = {
-  id: string;
-  used: boolean;
-};
-
 /** 规范化过程共享的上下文 */
 export type SceneNormalizeContext = {
   runtimePath: CompositeInputPath;
   runtimeInputs: Array<CompositeInputBinding>;
   layerId: string;
-  parentId: string;
   path: Array<string>;
   adapters: InputNormalizeOptions['adapters'];
   embedThemeContext?: InputEmbedThemeContext;
   resolveEmbedScopeTheme?: NonNullable<InputNormalizeOptions['embedThemeContext']>['resolveScope'];
   contributions: Array<CoreProviderContribution>;
-  identityIndex: Map<string, Array<string>>;
-  parentIndex: Map<string, string>;
-  identityFrame: string;
-  reusedEmbedIdentity?: ReusedEmbedIdentity;
   sourcePath: string;
   authoringSites: Array<InputAuthoringSite>;
 };
@@ -45,14 +34,6 @@ export const asLayerStack = (scene: InputScene): Array<InputLayer> => {
   }
   return [...scene.layers].sort((left, right) => layerZIndex(left) - layerZIndex(right));
 };
-
-/** 进入 localNamespace Scope 后创建与 Core NameStack 对齐的 identity frame */
-export const nestedIdentityFrame = (ctx: SceneNormalizeContext, identity: string | undefined): string =>
-  [ctx.identityFrame, identity ?? ctx.sourcePath].filter(segment => segment.length > 0).join('/');
-
-/** 读取可选 IR identity */
-export const readIdentity = (child: object): string | undefined =>
-  'id' in child && typeof child.id === 'string' ? child.id : undefined;
 
 /** 判断一个 child 是否为 InputEmbed */
 export const isInputEmbed = (child: InputChild): child is AnyInputEmbed => child.type === 'embed';
@@ -100,20 +81,14 @@ export const embedSlotSourcePath = (sourcePath: string, slotIndex: number): stri
   slotIndex === 0 ? `${sourcePath}.embed` : `${sourcePath}.embed.slots[${slotIndex}]`;
 
 /** 同步归一化与准备 traversal 共用的 Scope 位置及有效 Theme */
-export const scopeContextOf = (
-  input: InputScope,
-  identity: string | undefined,
-  ctx: SceneNormalizeContext,
-): SceneNormalizeContext => {
+export const scopeContextOf = (input: InputScope, ctx: SceneNormalizeContext): SceneNormalizeContext => {
   const scopeThemeContext =
     ctx.embedThemeContext === undefined || ctx.resolveEmbedScopeTheme === undefined
       ? undefined
       : ctx.resolveEmbedScopeTheme(ctx.embedThemeContext, input.theme, `${ctx.sourcePath}.theme`);
   return {
     ...ctx,
-    parentId: identity ?? ctx.parentId,
-    path: identity === undefined ? ctx.path : [...ctx.path, identity],
-    ...(input.localNamespace ? { identityFrame: nestedIdentityFrame(ctx, identity) } : {}),
+    path: input.id === undefined ? ctx.path : [...ctx.path, input.id],
     sourcePath: `${ctx.sourcePath}.scope`,
     ...(scopeThemeContext === undefined ? {} : { embedThemeContext: scopeThemeContext }),
   };

@@ -9,7 +9,7 @@ import type { AnimationControls } from '@retikz/render/animation';
 import type { HydrationHandlers } from '@retikz/render/hydration';
 import type { RetainedRendererFactory } from '@retikz/render/runtime';
 
-import type { InputRuntimeMeta, InputSceneChildren, SynchronousInputEmbedAdapter } from '../normalize';
+import type { InputSceneChildren, SynchronousInputEmbedAdapter } from '../normalize';
 import type { ProcessingOptions } from '../processing';
 import type { VanillaViewMode } from './constants';
 
@@ -142,7 +142,7 @@ export type RawStaticMountOptions = CommonOptions & {
 export type MountOptions = RetainedMountOptions | RawStaticMountOptions;
 
 /**
- * SVG / Canvas view 共享的 lifecycle 与 committed metadata
+ * SVG / Canvas view 共享的 lifecycle 与已提交结果
  * @template TRoot 挂载产生的 SVG 或 Canvas 根元素类型
  */
 export type VanillaViewState<TRoot extends SVGSVGElement | HTMLCanvasElement> = Readonly<{
@@ -158,8 +158,6 @@ export type VanillaViewState<TRoot extends SVGSVGElement | HTMLCanvasElement> = 
   hydrate: (options: HydrateOptions) => HydrationHandle;
   /** 动画播放控制句柄（scene 含动画且未降级时存在）：play / pause / seek；manual trigger 经此驱动 */
   animation?: AnimationControls;
-  /** 当前 InputScene normalization metadata；IR / Scene 输入时为空 metadata */
-  readonly runtimeMeta: InputRuntimeMeta;
   /** 当前输入同次 compile 产出的 immutable artifacts；Scene 输入固定为空数组 */
   readonly artifacts: ReadonlyArray<CompositeArtifact>;
   /** authored input 的当前 committed 完整 compile result；Scene 输入为 undefined */

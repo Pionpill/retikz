@@ -6,14 +6,13 @@ import type {
   InputEmbedContribution,
 } from '../element';
 import { normalizeEmbeddedChildren } from './children';
-import type { ReusedEmbedIdentity, SceneNormalizeContext } from './context';
+import type { SceneNormalizeContext } from './context';
 import {
   childSourcePath,
   embedSlotSourcePath,
   inputEmbedIdentityOf,
   isInputEmbed,
   isInputScope,
-  readIdentity,
   scopeContextOf,
 } from './context';
 import { normalizeSceneLayer } from './normalize';
@@ -102,7 +101,6 @@ const collectChildEmbedSites = (
       };
 
       let slotIndex = 0;
-      const reusedEmbedIdentity: ReusedEmbedIdentity = { id, used: false };
       sites.push({
         input,
         context: location,
@@ -110,7 +108,6 @@ const collectChildEmbedSites = (
         children: nested => {
           const nestedContext = {
             ...context,
-            parentId: id,
             path: [...ctx.path, id],
             sourcePath: embedSlotSourcePath(context.sourcePath, slotIndex++),
           };
@@ -119,19 +116,15 @@ const collectChildEmbedSites = (
           return {
             sites: nestedSites,
             normalize: contributions =>
-              normalizeEmbeddedChildren(
-                nested,
-                {
-                  ...nestedContext,
-                  adapters: completedAdaptersOf(nestedSites, contributions),
-                },
-                reusedEmbedIdentity,
-              ),
+              normalizeEmbeddedChildren(nested, {
+                ...nestedContext,
+                adapters: completedAdaptersOf(nestedSites, contributions),
+              }),
           };
         },
       });
     } else if (isInputScope(input)) {
-      const nested = scopeContextOf(input, readIdentity(input), context);
+      const nested = scopeContextOf(input, context);
       sites.push(...collectChildEmbedSites(input.children, nested));
     }
   }
@@ -147,15 +140,11 @@ export const createInputSceneTraversal = (
 ): InputSceneTraversal => {
   const context: SceneNormalizeContext = {
     layerId: layer.name,
-    parentId: layer.name,
     path: [layer.name],
     adapters: options.adapters,
     embedThemeContext: options.embedThemeContext?.root,
     resolveEmbedScopeTheme: options.embedThemeContext?.resolveScope,
     contributions: [],
-    identityIndex: new Map(),
-    parentIndex: new Map(),
-    identityFrame: '',
     sourcePath: '',
     runtimePath: [],
     runtimeInputs: [],

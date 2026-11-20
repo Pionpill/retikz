@@ -32,12 +32,14 @@ const adapter: InputEmbedAdapter<{ text: string }> &
 };
 
 const source = (text: string): InputSceneChildren => ({
+  type: 'scene',
   children: [{ type: 'embed', kind: 'prepared', props: { text } }],
 });
 
 describe('预处理复合组件输入的消费', () => {
   it('保持同步和异步匿名实例等效', async () => {
     const input: InputSceneChildren = {
+      type: 'scene',
       children: [...source('left-ready').children, ...source('right-ready').children],
     };
     const options = { adapters: [adapter], compile: { composites: [leafDefinition] } };
@@ -97,7 +99,7 @@ describe('预处理复合组件输入的消费', () => {
       },
     };
     const result = await compileToSceneAsync(
-      { children: [{ type: 'embed', kind: 'outer', props: {} }] },
+      { type: 'scene', children: [{ type: 'embed', kind: 'outer', props: {} }] },
       { adapters: [adapter, outer], compile: { composites: [leafDefinition, outerDefinition] } },
     );
 

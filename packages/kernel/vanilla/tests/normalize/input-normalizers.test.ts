@@ -18,8 +18,10 @@ describe('Vanilla 输入标准化器', () => {
     };
     const expected = normalizePath({ ...input, arrow: endpoints });
     expect(normalizePath(input)).toEqual(expected);
-    expect(normalizeScene({ children: [input] }).ir.children[0]).toEqual(expected);
-    expect(normalizeScene({ children: [{ type: 'scope', children: [input] }] }).ir.children[0]).toMatchObject({
+    expect(normalizeScene({ type: 'scene', children: [input] }).ir.children[0]).toEqual(expected);
+    expect(
+      normalizeScene({ type: 'scene', children: [{ type: 'scope', children: [input] }] }).ir.children[0],
+    ).toMatchObject({
       children: [expected],
     });
   });
@@ -167,10 +169,8 @@ describe('Vanilla 输入标准化器', () => {
     });
   });
 
-  it('将 InputScene 的 children 简写收敛为 IR 与默认 Layer metadata', () => {
-    const input: InputScene = {
-      children: [{ type: 'node', id: 'node', position: [0, 0] }],
-    };
+  it('将 InputScene 的 children 简写收敛为 IR', () => {
+    const input: InputScene = { type: 'scene', children: [{ type: 'node', id: 'node', position: [0, 0] }] };
 
     expect(normalizeScene(input)).toMatchObject({
       ir: {
@@ -179,9 +179,6 @@ describe('Vanilla 输入标准化器', () => {
         children: [{ type: 'node', id: 'node', position: [0, 0] }],
       },
       contributions: [],
-      runtimeMeta: {
-        layers: [{ name: 'main', order: 0, zIndex: 10, childIds: ['node'] }],
-      },
     });
   });
 
@@ -202,7 +199,7 @@ describe('Vanilla 输入标准化器', () => {
         ],
       },
     };
-    const input: InputScene = { children: [path] };
+    const input: InputScene = { type: 'scene', children: [path] };
 
     expect(normalizeScene(input).ir.children).toEqual(input.children);
   });

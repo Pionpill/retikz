@@ -128,8 +128,10 @@ describe('Graph 渲染器集成', () => {
   it('让 direct、React 与 Vanilla 产生同一个 IRGraph root', () => {
     const direct = normalizeGraph(graphInput);
     const react = buildPreviewIR(ReactGraph).ir.children[0];
-    const vanilla = normalizeScene({ children: [graph(graphInput)] }, { adapters: createGraphVanillaAdapters() }).ir
-      .children[0];
+    const vanilla = normalizeScene(
+      { type: 'scene', children: [graph(graphInput)] },
+      { adapters: createGraphVanillaAdapters() },
+    ).ir.children[0];
 
     expect(react).toEqual(direct);
     expect(vanilla).toEqual(direct);

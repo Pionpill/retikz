@@ -20,7 +20,10 @@ const contribution = (id: string, x = 0): InputEmbedContribution => ({
   providerDependencies: { roots: [], providers: [] },
 });
 
-const source = (x = 0): InputSceneChildren => ({ children: [{ type: 'embed', kind: 'async-node', props: { x } }] });
+const source = (x = 0): InputSceneChildren => ({
+  type: 'scene',
+  children: [{ type: 'embed', kind: 'async-node', props: { x } }],
+});
 
 describe('共享异步编写准备', () => {
   it('当驱动程序创建回调取消请求时，不开始静态编译', async () => {
@@ -29,7 +32,7 @@ describe('共享异步编写准备', () => {
 
     await expect(
       prepareStaticProcessingAsync(
-        { children: [] },
+        { type: 'scene', children: [] },
         {
           signal: abort.signal,
           compileDriver: {
@@ -73,7 +76,10 @@ describe('共享异步编写准备', () => {
       };
 
       await expect(
-        createProcessingControllerAsync({ children: [] }, { compileDriver: driver, signal: abort.signal }),
+        createProcessingControllerAsync(
+          { type: 'scene', children: [] },
+          { compileDriver: driver, signal: abort.signal },
+        ),
       ).rejects.toThrow(/cancel|abort|invalid|disposed/);
       expect(commits).toBe(0);
     }
@@ -95,16 +101,16 @@ describe('共享异步编写准备', () => {
       },
     };
     const controller = await createProcessingControllerAsync(
-      { children: [] },
+      { type: 'scene', children: [] },
       { compileDriver: { create: () => session } },
     );
     const published: Array<number> = [];
     controller.subscribe(result => published.push(result.revision));
     let next: ReturnType<typeof controller.update> | undefined;
     invalidate = () => {
-      next = controller.update({ children: [{ type: 'node', position: [2, 0] }] });
+      next = controller.update({ type: 'scene', children: [{ type: 'node', position: [2, 0] }] });
     };
-    const stale = await controller.update({ children: [{ type: 'node', position: [1, 0] }] });
+    const stale = await controller.update({ type: 'scene', children: [{ type: 'node', position: [1, 0] }] });
 
     expect(stale).toEqual({ kind: 'superseded' });
     expect(await next).toMatchObject({ kind: 'committed', result: { revision: 1 } });
@@ -151,21 +157,17 @@ describe('共享异步编写准备', () => {
         };
       },
     };
-    const input: InputSceneChildren = { children: [{ type: 'embed', kind: 'slots', props: {} }] };
+    const input: InputSceneChildren = { type: 'scene', children: [{ type: 'embed', kind: 'slots', props: {} }] };
     const synchronous = compileToScene(input, { adapters: [outer, inner] });
     const asynchronous = await compileToSceneAsync(input, { adapters: [outer, inner] });
 
     expect(asynchronous.scene).toEqual(synchronous.scene);
-    expect([...asynchronous.runtimeMeta.identityIndex]).toEqual([...synchronous.runtimeMeta.identityIndex]);
-
-    const nestedIds = [...asynchronous.runtimeMeta.identityIndex.keys()].filter(id => id.endsWith(':async-node'));
-
-    expect(nestedIds).toHaveLength(2);
 
     const group = asynchronous.scene.primitives[0];
     if (group.type !== 'group') throw new Error('Expected the authored Scope group');
 
     expect(group.children).toHaveLength(2);
+    expect(new Set(group.children.map(child => child.id)).size).toBe(2);
   });
 
   it('拒绝准备期间的嵌套执行、未知适配器和重复类型而不进行计算', async () => {
@@ -190,7 +192,7 @@ describe('共享异步编写准备', () => {
 
     await expect(
       compileToSceneAsync(
-        { children: [{ type: 'embed', kind: 'container', props: {} }] },
+        { type: 'scene', children: [{ type: 'embed', kind: 'container', props: {} }] },
         { adapters: [outer, inner] },
       ),
     ).rejects.toThrow(/during preparation/);
@@ -214,6 +216,7 @@ describe('共享异步编写准备', () => {
       },
     };
     const input: InputScene = {
+      type: 'scene',
       layers: [
         {
           type: 'layer',
@@ -244,9 +247,6 @@ describe('共享异步编写准备', () => {
 
     expect(asyncContexts).toEqual(syncContexts);
     expect(asynchronous.map(layer => layer.result.scene)).toEqual(sync.map(layer => layer.result.scene));
-    expect(asynchronous.map(layer => [...layer.result.runtimeMeta.identityIndex])).toEqual(
-      sync.map(layer => [...layer.result.runtimeMeta.identityIndex]),
-    );
   });
 
   it('处理生命周期取消并防止发布后期忽略信号结果', async () => {
@@ -297,7 +297,10 @@ describe('共享异步编写准备', () => {
     };
 
     await expect(
-      compileToSceneAsync({ children: [...source(1).children, ...source(2).children] }, { adapters: [adapter] }),
+      compileToSceneAsync(
+        { type: 'scene', children: [...source(1).children, ...source(2).children] },
+        { adapters: [adapter] },
+      ),
     ).rejects.toThrow(/unsupported/);
     expect(calls).toEqual(['prepare:1', 'prepare:2']);
   });
@@ -338,6 +341,7 @@ describe('共享异步编写准备', () => {
       },
     };
     const input: InputScene = {
+      type: 'scene',
       theme: { mode: 'dark' },
       children: [{ type: 'embed', kind: 'container', props: { children: source(4).children } }],
     };
@@ -345,9 +349,6 @@ describe('共享异步编写准备', () => {
     const asyncResult = await compileToSceneAsync(input, { adapters: [outer, inner] });
 
     expect(asyncResult.scene).toEqual(sync.scene);
-    expect(asyncResult.runtimeMeta.layers).toEqual(sync.runtimeMeta.layers);
-    expect([...asyncResult.runtimeMeta.identityIndex]).toEqual([...sync.runtimeMeta.identityIndex]);
-    expect([...asyncResult.runtimeMeta.parentIndex]).toEqual([...sync.runtimeMeta.parentIndex]);
   });
 
   it('使丢弃和提交互斥的终止状态', async () => {
@@ -382,7 +383,7 @@ describe('共享异步编写准备', () => {
     let commits = 0;
     let discardCause: unknown;
     const candidate: Awaited<ReturnType<typeof prepareStaticProcessingAsync>> = await prepareStaticProcessingAsync(
-      { children: [] },
+      { type: 'scene', children: [] },
       {
         compileDriver: {
           create: () => ({

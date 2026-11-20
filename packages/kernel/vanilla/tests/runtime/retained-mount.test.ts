@@ -277,7 +277,7 @@ describe('@retikz/vanilla 保留安装座', () => {
     expect(dispose).toHaveBeenCalledTimes(1);
   });
 
-  it('编译驱动解析失败时保留上一帧和 committed metadata', () => {
+  it('编译驱动解析失败时保留上一帧和已提交的 artifacts', () => {
     const frames: Array<RenderFrameSnapshot> = [];
     const view = mountSvg(document.createElement('div'), layerScene(true), {
       compileDriver: createLayerDriver(),
@@ -288,7 +288,6 @@ describe('@retikz/vanilla 保留安装座', () => {
       },
     });
     const artifacts = view.artifacts;
-    const runtimeMeta = view.runtimeMeta;
     const committedFrame = frames.at(-1);
 
     expect(() => view.update(layerScene('fail'))).toThrow(
@@ -296,7 +295,6 @@ describe('@retikz/vanilla 保留安装座', () => {
     );
     expect(frames.at(-1)).toBe(committedFrame);
     expect(view.artifacts).toBe(artifacts);
-    expect(view.runtimeMeta).toBe(runtimeMeta);
     expect(() => view.update(layerScene(false))).not.toThrow();
 
     view.dispose();
@@ -642,11 +640,11 @@ describe('@retikz/vanilla 保留安装座', () => {
     expect(view.root.querySelector('rect')?.getAttribute('fill')).toBe('#ef4444');
   });
 
-  it('公开身份索引不可修改，重新水合不改变 renderer 缺省配置', () => {
+  it('重新水合不改变 renderer 缺省配置', () => {
     const observedCachePolicies: Array<RenderRuntimeConfig['cachePolicy']> = [];
     const view = mountSvg(
       document.createElement('div'),
-      { children: source('#fff').children },
+      { type: 'scene', children: source('#fff').children },
       {
         runtime: {
           rendererFactory: createMemoryRendererFactory('entity', false, config =>
@@ -656,9 +654,6 @@ describe('@retikz/vanilla 保留安装座', () => {
       },
     );
     try {
-      expect(() => (view.runtimeMeta.identityIndex as Map<string, Array<string>>).set('forged', ['main'])).toThrow(
-        TypeError,
-      );
       view.hydrate({ handlers: {} });
       expect(observedCachePolicies).toEqual([undefined, undefined]);
     } finally {
@@ -750,7 +745,7 @@ describe('@retikz/vanilla 保留安装座', () => {
     expect(view.diagnostics()).toEqual([]);
   });
 
-  it('IR/InputScene SVG static view 完整重绘、复用 root 并同步 metadata', () => {
+  it('IR/InputScene SVG static view 完整重绘、复用 root 并更新 artifacts', () => {
     const container = document.createElement('div');
     const view = mountSvg(container, source('#ef4444'), {
       runtime: { mode: 'static' },
@@ -763,7 +758,6 @@ describe('@retikz/vanilla 保留安装座', () => {
     expect(view.mode).toBe('static');
     expect(view.root).toBe(root);
     expect(view.root.querySelector('[data-retikz-id="changed"]')?.getAttribute('fill')).toBe('#22c55e');
-    expect(view.runtimeMeta.layers).toHaveLength(1);
     expect(view.artifacts).toEqual([]);
   });
 
@@ -779,7 +773,6 @@ describe('@retikz/vanilla 保留安装座', () => {
 
     expect(view.mode).toBe('static');
     expect(view.root).toBe(root);
-    expect(view.runtimeMeta.layers).toHaveLength(1);
   });
 
   it('retained full 保留 Session 但每次更新发布 replaceScene', () => {
@@ -829,7 +822,6 @@ describe('@retikz/vanilla 保留安装座', () => {
     });
     const html = view.root.innerHTML;
     const artifacts = view.artifacts;
-    const runtimeMeta = view.runtimeMeta;
     const invalid: IRScene = {
       ...source('#22c55e'),
       children: [{ type: 'node', id: 'invalid', position: [0, 0], shape: 'missing-shape' }],
@@ -838,7 +830,6 @@ describe('@retikz/vanilla 保留安装座', () => {
     expect(() => view.update(invalid)).toThrow();
     expect(view.root.innerHTML).toBe(html);
     expect(view.artifacts).toBe(artifacts);
-    expect(view.runtimeMeta).toBe(runtimeMeta);
 
     vi.spyOn(view.root, 'appendChild').mockImplementationOnce(() => {
       throw new Error('materialization failed');
@@ -969,14 +960,13 @@ describe('@retikz/vanilla 保留安装座', () => {
     expect(view.diagnostics()).toEqual([]);
   });
 
-  it('renderer update 失败时保留 committed artifacts 与 runtimeMeta identity', () => {
+  it('renderer update 失败时保留 committed artifacts 与编译结果', () => {
     const container = document.createElement('div');
     const view = mountSvg(container, source('#ef4444'), {
       compile: {},
       runtime: { rendererFactory: createMemoryRendererFactory('entity', true) },
     });
     const artifacts = view.artifacts;
-    const runtimeMeta = view.runtimeMeta;
     const compileResult = view.compileResult;
     const committedHtml = view.root.innerHTML;
 
@@ -984,7 +974,6 @@ describe('@retikz/vanilla 保留安装座', () => {
       /Failed to publish the compilation|RENDER_RUNTIME_RENDERER_PREPARE_FAILED|Vanilla compile driver resolve failed/,
     );
     expect(view.artifacts).toBe(artifacts);
-    expect(view.runtimeMeta).toBe(runtimeMeta);
     expect(view.compileResult).toBe(compileResult);
     expect(view.root.innerHTML).toBe(committedHtml);
   });

@@ -10,7 +10,7 @@ const scene: Scene = {
   primitives: [],
 };
 
-describe('toSceneResult 运行时元数据', () => {
+describe('toSceneResult 场景与编译结果', () => {
   it('Vanilla 与直接 JSON 在 Dark Theme 下解析相同 contextual color', () => {
     const theme = { mode: ThemeMode.Dark } as const;
     const child: IRNode = {
@@ -69,16 +69,11 @@ describe('toSceneResult 运行时元数据', () => {
     expect(JSON.stringify(vanilla.scene)).not.toContain('theme');
   });
 
-  it('为不同 Scene 输入结果创建互不共享的空 metadata', () => {
+  it('预编译 Scene 不生成 compileResult', () => {
     const first = toSceneResult(scene, {});
-    const second = toSceneResult(scene, {});
 
     expect(first.compileResult).toBeUndefined();
     expect(Object.hasOwn(first, 'compileResult')).toBe(true);
-    expect(first.runtimeMeta).not.toBe(second.runtimeMeta);
-    expect(first.runtimeMeta.layers).not.toBe(second.runtimeMeta.layers);
-    expect(first.runtimeMeta.identityIndex).not.toBe(second.runtimeMeta.identityIndex);
-    expect(first.runtimeMeta.parentIndex).not.toBe(second.runtimeMeta.parentIndex);
   });
 
   it('同次返回 Composite artifacts，Scene 输入固定为空 immutable 数组', () => {

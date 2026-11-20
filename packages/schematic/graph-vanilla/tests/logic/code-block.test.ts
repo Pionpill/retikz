@@ -49,7 +49,7 @@ const embed: InputEmbed<typeof source> = { type: 'embed', kind: adapter.kind, id
 
 describe('自定义代码块 Vanilla 编写', () => {
   it('保留 Source 并使用与 Direct IR 相同的提供者和本地主题', () => {
-    const input = { children: [embed] };
+    const input = { type: 'scene' as const, children: [embed] };
     const normalized = normalizeScene(input, { adapters: [adapter] });
 
     expect(normalized.ir.children).toEqual([source]);
@@ -62,7 +62,7 @@ describe('自定义代码块 Vanilla 编写', () => {
       { type: 'scene', version: 1, children: [source] },
       {
         compile: prepareProcessingInput(
-          { children: [embed] },
+          { type: 'scene', children: [embed] },
           { adapters: [adapter], compile: { themeDefinitions: [coreStyle] } },
         ).coreOptions,
       },

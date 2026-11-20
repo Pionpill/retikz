@@ -57,7 +57,6 @@ const restoreVanillaCompileDriverSession = (
 /** 以同一 Runtime revision 冻结全部 processing 公共结果 */
 const createProcessingResult = (
   revision: number,
-  prepared: InputPreparedProcessing,
   output: VanillaReconcilerOutput,
   compileSession: VanillaCompileDriverSession,
 ): ProcessingResult => {
@@ -69,7 +68,6 @@ const createProcessingResult = (
     artifacts: Object.freeze([...output.result.artifacts]),
     layers: Object.freeze([...resolved.layers]),
     diagnostics: Object.freeze([...resolved.diagnostics]),
-    runtimeMeta: prepared.runtimeMeta,
   });
 };
 
@@ -112,21 +110,14 @@ const createRetainedProcessingState = (
 ): RetainedProcessingState => {
   const compositeDefinitions = createRetainedCompositeDefinitions(initial.coreOptions.composites);
   let driverInput = initialDriverInput;
-  let prepared = initial;
-  let participantPrepared = initial;
   let participantRevision = initialRevision;
   let current: ProcessingResult | undefined;
   const resolveReadonlyLayers = (output: VanillaReconcilerOutput) =>
     resolveVanillaCompileOutput(compileSession, output).layers;
-  const participant = transactionParticipantFactory?.({ initial, resolveReadonlyLayers });
+  const participant = transactionParticipantFactory?.({ resolveReadonlyLayers });
   const target: ReconcilerCommitTarget = {
     prepare: (candidate, previous) => {
-      const next = createProcessingResult(
-        participantRevision,
-        participantPrepared,
-        candidate.compilation,
-        compileSession,
-      );
+      const next = createProcessingResult(participantRevision, candidate.compilation, compileSession);
       assertCurrent();
       const token = participant?.target.prepare(candidate, previous);
       const before = current;
@@ -178,16 +169,14 @@ const createRetainedProcessingState = (
         assertCurrent();
         if (nextSession !== compileSession)
           throw new RetikzVanillaError(RetikzVanillaErrorCode.Processing, 'Compile driver changed session identity');
-        participantPrepared = next;
+
         participantRevision = revision;
-        participant?.update({ prepared: next, revision, kind: 'source' });
+        participant?.update();
         session.replace(next.source, next.coreOptions);
-        prepared = next;
         driverInput = nextDriverInput;
         commitDriver();
         return read();
       } catch (cause) {
-        participantPrepared = prepared;
         participantRevision = previousRevision;
         try {
           restoreVanillaCompileDriverSession(compileDriver, previousDriverInput, compileSession);
@@ -216,10 +205,10 @@ const createRetainedProcessingState = (
       }
     },
     updateParticipant: revision => {
-      if (participant?.updateParticipant === undefined)
+      if (participant === undefined)
         throw new RetikzVanillaError(RetikzVanillaErrorCode.Processing, 'Renderer configuration is unavailable');
       participantRevision = revision;
-      participant.updateParticipant(revision);
+      participant.update();
       session.updateTarget();
       commitDriver();
       return read();

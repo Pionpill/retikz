@@ -252,7 +252,9 @@ describe('React JSX Input 场景', () => {
     );
     const measureText = () => ({ width: 20, height: 10 });
     const jsonScene = compileTestResult(direct, { measureText }).scene;
-    const vanillaScene = compileTestResult(normalizeScene({ children: direct.children }).ir, { measureText }).scene;
+    const vanillaScene = compileTestResult(normalizeScene({ type: 'scene', children: direct.children }).ir, {
+      measureText,
+    }).scene;
     const reactScene = compileTestResult(normalizeScene(reactInput.scene).ir, { measureText }).scene;
 
     expect(vanillaScene).toEqual(jsonScene);
@@ -296,6 +298,7 @@ it('React 与 Vanilla 保留独立端点箭头和任意位置标记', () => {
     ).scene,
   ).ir;
   const vanilla = normalizeScene({
+    type: 'scene',
     children: [
       {
         type: 'path',

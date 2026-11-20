@@ -38,8 +38,6 @@ describe('@retikz/vanilla 入口边界', () => {
       'createDomProcessingController',
       'updateParticipant',
       'prepareProcessingInput',
-      'createInputRuntimeMetaSnapshot',
-      'createEmptyInputRuntimeMetaSnapshot',
       'createVanillaCompileDriverSession',
       'resolveVanillaCompileOutput',
       'compileVanillaWithDriver',

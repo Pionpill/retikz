@@ -12,13 +12,8 @@ const translations: Readonly<Partial<Record<string, string>>> = {
     'Client authoring preparation mode; synchronous SSR continues to use synchronous lower',
   '异步 preparation 与 controller 的生命周期信号': 'Lifecycle signal for async preparation and the controller',
   '固定为 layer 的作者分层标识': 'Authoring layer discriminator, fixed to layer',
-  '可省略的场景类别；归一化后固定为 scene': 'Optional scene discriminator; fixed to scene after normalization',
   '作者输入不接受版本号；归一化时写入当前 IR 版本':
     'Authoring input excludes a version; normalization supplies the current IR version',
-  '作者侧场景标识，不写入持久化 Scene IR': 'Authoring scene identity, excluded from persisted Scene IR',
-  '场景根主题，只填写需要覆盖的 name 与 mode': 'Root theme; specify only name and mode overrides',
-  '显式取景矩形；省略时由编译结果按内容计算': 'Explicit viewport; compilation derives it from content when omitted',
-  '场景根动画轨道，省略时不添加根动画': 'Scene-root animation tracks; omitted means no root animation',
   'children 模式不接受显式 layers': 'The children variant excludes explicit layers',
   '显式分层列表，按 zIndex 稳定排序后归一化': 'Explicit layers, normalized after a stable sort by zIndex',
   'layers 模式不接受顶层 children': 'The layers variant excludes top-level children',
@@ -48,8 +43,8 @@ const translations: Readonly<Partial<Record<string, string>>> = {
     'Children and drawing-wide options such as theme and viewBox; excludes layers',
   '保留配置与子图元引用的场景输入，尚未编译': 'Uncompiled scene input retaining the options and child references',
   'layers 与全图配置，不接受 children': 'Layers and drawing-wide options; excludes children',
-  '保留分层列表引用的场景输入，分层运行时信息由归一化提取':
-    'Scene input retaining the layers array reference; normalization extracts runtime layer metadata',
+  '保留图层列表引用的场景输入；归一化时每个图层独立生成结果':
+    'Scene input retaining the layers array reference; normalization produces a separate result for each layer',
   创建作者侧分层输入: 'Create layer authoring input',
   '分层名称、排序、计算配置与子图元': 'Layer name, stacking order, processing options, and children',
   '带 layer 类别的输入，不编译或复制子图元': 'Input tagged as a layer; does not compile or copy its children',
