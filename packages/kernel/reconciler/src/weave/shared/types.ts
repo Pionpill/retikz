@@ -228,6 +228,8 @@ export type WeaveScopeState = WeaveElementStateBase & {
     CompiledScope
   > &
     Readonly<{
+      /** 矩形包络的原始极值，仅供后续几何变化判断，随编译事务替换 */
+      envelopeBounds?: Readonly<AxisAlignedBounds>;
       /** 最终输出绑定后的诊断，与编译阶段诊断分开回放 */
       outputDiagnostics?: ReadonlyArray<CompileWarning>;
     }>;

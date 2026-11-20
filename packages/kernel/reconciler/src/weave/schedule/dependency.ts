@@ -1,4 +1,7 @@
+import { calculateScopeEnvelopeBounds } from '@retikz/core';
+import type { CompiledReferenceGeometry } from '@retikz/core';
 import { compareProperties, jsonStructuralEquals } from '@retikz/foundation';
+import type { AxisAlignedBounds } from '@retikz/math';
 
 import { shouldEmitScopeGroup } from '../../compile';
 import { compareReferenceGeometry } from '../shared';
@@ -20,6 +23,21 @@ type WeaveDependencyContext = {
   requireTask: (address: WeaveTaskAddress) => void;
 };
 
+/** 严格位于旧矩形内部的贡献不会提供或替换任一边界，包括数值平局 */
+const isInteriorContribution = (
+  layouts: ReadonlyArray<CompiledReferenceGeometry>,
+  bounds: Readonly<AxisAlignedBounds>,
+): boolean => {
+  const child = calculateScopeEnvelopeBounds(layouts);
+  return (
+    child !== undefined &&
+    child.minX > bounds.minX &&
+    child.maxX < bounds.maxX &&
+    child.minY > bounds.minY &&
+    child.maxY < bounds.maxY
+  );
+};
+
 /** 本批依赖就绪与直接消费者通知；实际阶段执行仍由队列回调负责 */
 export const createWeaveDependencyFlow = ({
   transaction,
@@ -33,6 +51,15 @@ export const createWeaveDependencyFlow = ({
   requestTask,
   requireTask,
 }: WeaveDependencyContext) => {
+  // ⚡直接变化的子项已在本批请求中，查询父级就绪时无需遍历兄弟寻找它
+  const initialEntry = pending.size === 1 ? pending.values().next().value?.entry : undefined;
+  const initialParent = initialEntry?.current?.parent;
+  const layoutParent =
+    initialEntry !== undefined &&
+    initialParent?.type === 'scope' &&
+    initialParent.current?.dependencies.has(initialEntry)
+      ? initialParent
+      : undefined;
   const ancestorsOf = (entry: WeaveEntry): Array<WeaveScopeEntry> => {
     const ancestors: Array<WeaveScopeEntry> = [];
     let parent = transaction.readState(entry).parent;
@@ -44,6 +71,7 @@ export const createWeaveDependencyFlow = ({
   };
   const mayChange = (entry: WeaveEntry, seen = new Set<WeaveEntry>()): boolean => {
     if (pending.has(keyOf(entry)) || executions.has(entry)) return true;
+    if (entry === layoutParent) return true;
     if (seen.has(entry)) return false;
     seen.add(entry);
     const state = transaction.readState(entry);
@@ -111,14 +139,17 @@ export const createWeaveDependencyFlow = ({
         if (element.type !== 'scope') return element.current?.contribution?.output.primitives.length ?? 0;
         const state = element.current;
         if (state?.compile === undefined) return 0;
-        return shouldEmitScopeGroup(
-          state.children.some(child => previousCount(child) > 0) ? 1 : 0,
-          state.compile.value.layout.overall.transforms,
-          state.compile.value.emit.overall.id,
-          state.compile.value.emit.overall.clipRef !== undefined,
+        // ⚡自身属性已要求输出分组时，不必向后代查找第一个可绘制子项
+        if (
+          shouldEmitScopeGroup(
+            0,
+            state.compile.value.layout.overall.transforms,
+            state.compile.value.emit.overall.id,
+            state.compile.value.emit.overall.clipRef !== undefined,
+          )
         )
-          ? 1
-          : 0;
+          return 1;
+        return state.children.some(child => previousCount(child) > 0) ? 1 : 0;
       };
       if (previousCount(entry) !== executions.get(entry)!.frame.state.primitives.length)
         for (const parent of ancestorsOf(entry)) {
@@ -173,7 +204,33 @@ export const createWeaveDependencyFlow = ({
         for (const consumer of state.consumers) notify(consumer);
     } else {
       for (const consumer of state.consumers) {
-        if (transaction.readState(consumer).dependencies.get(producer)?.some(channelChanged)) notify(consumer);
+        const kinds = transaction.readState(consumer).dependencies.get(producer);
+        if (!kinds?.some(channelChanged)) continue;
+        // ⚡具名 Scope 只向父级投影自己的包络。旧、新子贡献均在内部时，
+        // 不调度父级布局；其它读取、匿名投影与绘制输出仍走原有通道
+        if (
+          consumer.type === 'scope' &&
+          consumer === state.parent &&
+          kinds.length === 1 &&
+          kinds[0] === 'layout' &&
+          consumer.current?.origin.own.id !== undefined
+        ) {
+          const bounds = consumer.current.compile?.envelopeBounds;
+          const previous = producer.current?.contribution?.output.geometries;
+          if (
+            bounds !== undefined &&
+            previous !== undefined &&
+            isInteriorContribution(previous, bounds) &&
+            isInteriorContribution(executions.get(producer)!.frame.state.geometries, bounds)
+          ) {
+            if (assembled.size !== 0) {
+              assembled.delete(consumer);
+              for (const ancestor of ancestorsOf(consumer)) assembled.delete(ancestor);
+            }
+            continue;
+          }
+        }
+        notify(consumer);
       }
     }
     if (
