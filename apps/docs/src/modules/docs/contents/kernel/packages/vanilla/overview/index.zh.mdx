@@ -184,7 +184,7 @@ const [{ name, result }] = compileToScene(input, { adapters: [BadgeInputEmbedAda
 console.log(name, result.scene);
 ```
 
-`normalizeScene()` 从包根导出；`adapters` 是 render / mount / processing 选项的顶层字段，不放在 `compile` 内。需要检查归一结果时，可从 `normalizeScene(input, { adapters })` 返回的单图结果或每个具名条目的 `result` 中读取 `ir`、`contributions`、`runtimeMeta` 与 `authoringSites`。
+`normalizeScene()` 从包根导出；`adapters` 是 render / mount / processing 选项的顶层字段，不放在 `compile` 内。需要检查归一结果时，可从 `normalizeScene(input, { adapters })` 返回的单图结果或每个具名条目的 `result` 中读取 `ir`、`contributions`、`runtimeMeta` 与 `authoringSites`。 未提供 `authoring` 的节点不会生成来源记录；adapter 显式贡献的记录仍会保留。
 
 adapter、Composite definition 和 compile topology 在 retained mount 生命周期内固定。领域 adapter 可以在同一输入位置处理新的 props；需要改变 adapter 集合、Composite schema、definition 数量或执行分支时，dispose 后 remount。
 

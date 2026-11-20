@@ -182,15 +182,15 @@ const normalizeEmbed = (input: AnyInputEmbed, embedId: string, ctx: SceneNormali
     path: [...ctx.path, embedId],
   });
 
-  ctx.authoringSites.push(
-    Object.freeze({
-      kind: 'embeddable',
-      sourcePath: ctx.sourcePath,
-      ...('namespace' in contribution.node ? {} : {}),
-      type: input.kind,
-      authoring: input.authoring,
-    }),
-  );
+  if (input.authoring !== undefined)
+    ctx.authoringSites.push(
+      Object.freeze({
+        kind: 'embeddable',
+        sourcePath: ctx.sourcePath,
+        type: input.kind,
+        authoring: input.authoring,
+      }),
+    );
 
   contribution.authoringSites?.forEach(site =>
     ctx.authoringSites.push(
@@ -233,28 +233,30 @@ export const normalizeChild = (input: InputChild, ctx: SceneNormalizeContext): I
 
   if (isInputPath(input)) {
     const path = normalizePath(input);
-    ctx.authoringSites.push(
-      Object.freeze({
-        kind: 'path',
-        sourcePath: `${ctx.sourcePath}.path`,
-        type: 'path',
-        authoring: input.authoring,
-      }),
-    );
+    if (input.authoring !== undefined)
+      ctx.authoringSites.push(
+        Object.freeze({
+          kind: 'path',
+          sourcePath: `${ctx.sourcePath}.path`,
+          type: 'path',
+          authoring: input.authoring,
+        }),
+      );
 
     return path;
   }
 
   if (isInputScope(input)) {
     const { authoring, children, ...scope } = input;
-    ctx.authoringSites.push(
-      Object.freeze({
-        kind: 'scope',
-        sourcePath: `${ctx.sourcePath}.scope`,
-        type: 'scope',
-        authoring,
-      }),
-    );
+    if (authoring !== undefined)
+      ctx.authoringSites.push(
+        Object.freeze({
+          kind: 'scope',
+          sourcePath: `${ctx.sourcePath}.scope`,
+          type: 'scope',
+          authoring,
+        }),
+      );
     const nestedContext = scopeContextOf(input, identity, ctx);
 
     return {
@@ -270,27 +272,29 @@ export const normalizeChild = (input: InputChild, ctx: SceneNormalizeContext): I
   }
 
   if (!('namespace' in input) && input.type === 'node') {
-    ctx.authoringSites.push(
-      Object.freeze({
-        kind: 'node',
-        type: 'node',
-        sourcePath: `${ctx.sourcePath}.node`,
-        authoring: 'authoring' in input ? input.authoring : undefined,
-      }),
-    );
+    if ('authoring' in input && input.authoring !== undefined)
+      ctx.authoringSites.push(
+        Object.freeze({
+          kind: 'node',
+          type: 'node',
+          sourcePath: `${ctx.sourcePath}.node`,
+          authoring: input.authoring,
+        }),
+      );
     return normalizeNode(input);
   }
 
   if (!('namespace' in input) && input.type === 'coordinate') {
     const { authoring, ...coordinate } = input;
-    ctx.authoringSites.push(
-      Object.freeze({
-        kind: 'coordinate',
-        type: 'coordinate',
-        sourcePath: `${ctx.sourcePath}.coordinate`,
-        authoring,
-      }),
-    );
+    if (authoring !== undefined)
+      ctx.authoringSites.push(
+        Object.freeze({
+          kind: 'coordinate',
+          type: 'coordinate',
+          sourcePath: `${ctx.sourcePath}.coordinate`,
+          authoring,
+        }),
+      );
 
     return coordinate;
   }

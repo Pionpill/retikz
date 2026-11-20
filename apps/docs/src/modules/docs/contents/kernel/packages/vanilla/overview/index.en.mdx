@@ -184,7 +184,7 @@ const [{ name, result }] = compileToScene(input, { adapters: [BadgeInputEmbedAda
 console.log(name, result.scene);
 ```
 
-`normalizeScene()` is exported from the package root. `adapters` is a top-level render, mount, and processing option—not a field inside `compile`. To inspect a normalized result, call `normalizeScene(input, { adapters })` and inspect the single result or each named entry’s result for `ir`, `contributions`, `runtimeMeta`, and `authoringSites`.
+`normalizeScene()` is exported from the package root. `adapters` is a top-level render, mount, and processing option—not a field inside `compile`. To inspect a normalized result, call `normalizeScene(input, { adapters })` and inspect the single result or each named entry’s result for `ir`, `contributions`, `runtimeMeta`, and `authoringSites`. Nodes without an `authoring` payload do not produce a site; sites explicitly contributed by adapters are retained.
 
 Adapters, Composite definitions, and compile topology are fixed for a retained mount's lifetime. A domain adapter can process new props at the same authored position; dispose and remount to change the adapter set, a Composite schema, definition count, or execution branch.
 

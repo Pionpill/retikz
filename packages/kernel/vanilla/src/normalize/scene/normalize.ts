@@ -52,9 +52,9 @@ export const normalizeSceneLayer = (
   const runtimeInputs: Array<CompositeInputBinding> = [];
   const identityIndex = new Map<string, Array<string>>();
   const parentIndex = new Map<string, string>();
-  const authoringSites: Array<InputAuthoringSite> = [
-    Object.freeze({ kind: 'scene', sourcePath: '', type: 'scene', authoring: scene.authoring }),
-  ];
+  const authoringSites: Array<InputAuthoringSite> = [];
+  if (scene.authoring !== undefined)
+    authoringSites.push(Object.freeze({ kind: 'scene', sourcePath: '', type: 'scene', authoring: scene.authoring }));
 
   const context: SceneNormalizeContext = {
     layerId: layer.name,

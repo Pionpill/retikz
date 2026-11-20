@@ -43,6 +43,8 @@ it('Node 与 Coordinate 的 opaque authoring 只进入来源站点，不进入�
           children: [
             node({ id: 'n', position: [0, 0], authoring: marker }),
             coordinate({ id: 'c', position: [1, 2], authoring: marker }),
+            node({ position: [2, 0] }),
+            node({ position: [3, 0], authoring: false }),
           ],
         },
       ],
@@ -55,10 +57,12 @@ it('Node 与 Coordinate 的 opaque authoring 只进入来源站点，不进入�
       children: [
         { type: 'node', id: 'n', position: [0, 0] },
         { type: 'coordinate', id: 'c', position: [1, 2] },
+        { type: 'node', position: [2, 0] },
+        { type: 'node', position: [3, 0] },
       ],
     },
   ]);
-  expect(result.authoringSites.filter(site => site.authoring === marker)).toEqual([
+  expect(result.authoringSites).toEqual([
     {
       kind: 'node',
       type: 'node',
@@ -71,6 +75,7 @@ it('Node 与 Coordinate 的 opaque authoring 只进入来源站点，不进入�
       sourcePath: 'children[0].scope.children[1].coordinate',
       authoring: marker,
     },
+    { kind: 'node', type: 'node', sourcePath: 'children[0].scope.children[3].node', authoring: false },
   ]);
 });
 
