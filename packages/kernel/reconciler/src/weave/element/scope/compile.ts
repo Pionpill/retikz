@@ -1,4 +1,10 @@
-import { compileScope, resolveScope } from '@retikz/core';
+import {
+  calculateScopeEnvelopeBounds,
+  compileScopeRectangleEnvelope,
+  ScopeBoundingShape,
+  compileScope,
+  resolveScope,
+} from '@retikz/core';
 import type { IRScope, CompileWarning } from '@retikz/core';
 import type { PropertyPath } from '@retikz/foundation';
 import { compareProperties, formatPropertyPath } from '@retikz/foundation';
@@ -7,6 +13,7 @@ import type { CompileRuntime, ScopeExecutionSteps, SubtreeCompileContext } from 
 import { createWeaveObservation, matchWeaveReferences, restoreWeaveResources } from '../../shared';
 import type { WeaveScopeState, WeaveReferenceRead } from '../../shared';
 import { compareCanonicalScopes, compareScopeCompileInputs, retainCanonicalScope } from './compare';
+import { updateWeaveScopeEnvelope } from './envelope';
 
 /** 在后代执行前，按自身输入与继承上下文复用或解析 Scope 配置 */
 export const resolveWeaveScope = (
@@ -80,6 +87,19 @@ export const executeWeaveScope = (
   }
 
   // 3. 重新计算包络，并合并准备阶段与本轮编译的诊断和读取事实
+  const envelopeBounds =
+    canon.envelope.kind === ScopeBoundingShape.Circle
+      ? undefined
+      : previousCompile?.envelopeBounds !== undefined &&
+          previous?.resolve?.value.envelope.kind !== ScopeBoundingShape.Circle
+        ? updateWeaveScopeEnvelope(
+            compileInputs.layouts,
+            previousCompile.context.layouts,
+            previousCompile.envelopeBounds,
+          )
+        : calculateScopeEnvelopeBounds(compileInputs.layouts);
+  const envelope =
+    canon.envelope.kind === ScopeBoundingShape.Circle ? undefined : compileScopeRectangleEnvelope(envelopeBounds);
   const observation = createWeaveObservation(runtime);
   const local = observation.runtime;
   const compiled = runtime.state.execution.namespaceStack.observeReferences(observation.read, () =>
@@ -91,7 +111,7 @@ export const executeWeaveScope = (
         registerClipPath: local.state.workspace.clipRegistry.registerPath,
         onWarn: local.state.workspace.diagnosticCollector.collect,
       },
-      { layout: { preparation: steps.preparation } },
+      { layout: { preparation: steps.preparation, envelope } },
     ),
   );
   const facts = observation.facts();
@@ -99,6 +119,7 @@ export const executeWeaveScope = (
     resolve: { input: child, context: { inheritedStyle: context.inheritance }, value: canon },
     compile: {
       ...facts,
+      envelopeBounds,
       context: compileInputs,
       value: compiled,
       diagnostics: [...preparedDiagnostics, ...facts.diagnostics],

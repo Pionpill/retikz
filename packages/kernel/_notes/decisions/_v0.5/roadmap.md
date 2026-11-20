@@ -63,6 +63,7 @@
 
 规划内容：
 
+- Scope 矩形包络极值复用：[088](./088-scope-contribution-aggregation.md)。保持完整输出事务与圆形包络语义。
 - 建立 identity、事务、增量编译和 Scene patch 的共同底座。
 - 明确执行策略与 retained renderer 的协作边界。
 - 本版本完成 Reconciler 的同步完整与增量编译能力：Core 保持唯一绘图语义及原子阶段，Reconciler 管理执行、缓存与依赖失效、candidate 隔离、结果生命周期和单目标原子提交。

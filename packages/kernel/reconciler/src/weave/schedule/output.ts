@@ -107,7 +107,9 @@ export const createWeaveOutputFlow = ({
     }
     const scope = transaction.readState(entry);
     const childState = emptyOutput();
-    for (const child of scope.children) appendState(childState, outputOf(child));
+    // ⚡具名 Scope 只投影自己的包络，输出收集无需再复制子布局
+    const includeLayouts = scope.origin.own.id === undefined;
+    for (const child of scope.children) appendState(childState, outputOf(child), includeLayouts);
     const result = emptyOutput();
     importSceneResources(
       scope.compile?.resources ?? { paints: [], clips: [] },
@@ -188,9 +190,9 @@ export const createWeaveOutputFlow = ({
     result.primitives.push(...children.primitives);
     return result;
   };
-  const appendState = (destination: SubtreeCompileState, contribution: WeaveAssembledOutput) => {
+  const appendState = (destination: SubtreeCompileState, contribution: WeaveAssembledOutput, includeLayouts = true) => {
     destination.primitives.push(...contribution.primitives);
-    destination.geometries.push(...contribution.geometries);
+    if (includeLayouts) destination.geometries.push(...contribution.geometries);
     destination.publications.push(...contribution.publications);
     destination.bounds.push(...contribution.bounds);
     destination.allocations.push(...contribution.allocations);
