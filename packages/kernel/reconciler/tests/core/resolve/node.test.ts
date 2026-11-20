@@ -300,7 +300,7 @@ describe('resolveNode', () => {
         node({
           label: {
             text: 'explicit',
-            position: { boundary: 'left', fraction: 0 },
+            position: { side: 'left', fraction: 0 },
             placement: 'inside',
             distance: 0,
             keepUpright: false,
@@ -312,7 +312,7 @@ describe('resolveNode', () => {
       {
         text: { lines: [{ plainText: 'explicit' }] },
         align: 'middle',
-        position: { boundary: 'left', fraction: 0 },
+        position: { side: 'left', fraction: 0 },
         placement: 'inside',
         distance: 0,
         keepUpright: false,
@@ -344,11 +344,11 @@ describe('resolveNode', () => {
   });
 
   it('当其位置省略 1 时，填充边界标签分数', () => {
-    expect(resolve(node({ label: { text: 'boundary', position: { boundary: 'right' } } })).labels).toMatchObject([
+    expect(resolve(node({ label: { text: 'boundary', position: { side: 'right' } } })).labels).toMatchObject([
       {
         text: { lines: [{ plainText: 'boundary' }] },
         align: 'middle',
-        position: { boundary: 'right', fraction: 0.5 },
+        position: { side: 'right', fraction: 0.5 },
         placement: 'outside',
         distance: 12,
       },

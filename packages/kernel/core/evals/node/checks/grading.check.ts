@@ -89,7 +89,7 @@ describe('节点回答的确定性判分', () => {
 
   it('数组标签也不能绕过原始省略检查', () => {
     const testCase = nodeEvalCases.find(candidate => candidate.id === 'NH004')!;
-    const answer = { type: 'node', label: [{ text: 'M', position: { boundary: 'bottom', fraction: 0.5 } }] };
+    const answer = { type: 'node', label: [{ text: 'M', position: { side: 'bottom', fraction: 0.5 } }] };
     expect(gradeNodeAnswer(testCase, JSON.stringify(answer))).toMatchObject({
       schemaValid: true,
       fieldSelectionCorrect: false,

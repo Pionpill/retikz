@@ -32,7 +32,7 @@ export const BoundarySchema = union([
   createOpenStringSchema({ ...BuiltinShape, Self: BuiltinBoundary.Self }),
   ShapeRefSchema,
 ]).describe(
-  'Connection surface for edge endpoints and direction anchors. "shape" uses the visual shape; registered boundary providers override shape fallback.',
+  'Sets the connection surface for path endpoints and directional anchors without changing the node\'s appearance. "shape" uses the node\'s visual shape. For other names, a registered boundary takes precedence over a shape of the same name.',
 );
 
 /** 连接面引用，支持内置名称、自定义 boundary 或 shape 名称，以及带参数的引用 */

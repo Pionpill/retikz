@@ -5,7 +5,7 @@ import { Layout, Node } from '@retikz/react';
 export type NodeLabelPositionPreviewValues = {
   positionMode: 'direction' | 'boundary' | 'angle' | 'center';
   positionAngle: number;
-  boundary: 'right' | 'top' | 'bottom' | 'left';
+  side: 'right' | 'top' | 'bottom' | 'left';
   fraction: number;
   direction: 'right' | 'top' | 'bottom' | 'left';
 };
@@ -18,7 +18,7 @@ export const NodeLabelPositionPreview = (values: NodeLabelPositionPreviewValues)
       : values.positionMode === 'angle'
         ? values.positionAngle
         : values.positionMode === 'boundary'
-          ? { boundary: values.boundary, fraction: values.fraction }
+          ? { side: values.side, fraction: values.fraction }
           : values.direction;
   return (
     <Layout>

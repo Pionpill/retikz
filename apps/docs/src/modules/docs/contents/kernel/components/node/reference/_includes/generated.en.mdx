@@ -182,7 +182,7 @@ export type CoordinateProps = {
 |           | `layout?`            | `IRNodeLayout`              | —        | Node size, spacing, and text layout overrides.                                                                                                                                  |
 |           | `position?`          | `IRNode['position']`        | `[0, 0]` | Node center position; Core resolves an omitted value to the origin of the current local coordinate system                                                                       |
 |           | `rotate?`            | `number`                    | —        | Rotation in degrees around the node center; positive is visually clockwise.                                                                                                     |
-|           | `scale?`             | `number \| IRAxisScale`     | —        | Node scale factor. Number applies to both axes; object x / y override default. Affects path attachment positions.                                                               |
+|           | `scale?`             | `number \| IRAxisScale`     | —        | Scales the node and its path attachment positions.                                                                                                                              |
 |           | `shape?`             | `IRShapeValue`              | —        | Node visual shape: bare shape name or `{ type, params }`. Built-ins and registered shapes are allowed; unregistered names fail at compile time. Omitted fields use rectangle.   |
 | Style     | `style?`             | `IRNodeStyle`               | —        | Node visual overrides; fields independently override inherited defaults.                                                                                                        |
 |           | `zIndex?`            | `number`                    | —        | Stacking order among sibling IR children. Higher draws on top; equal values keep source order within the same parent group.                                                     |
@@ -218,14 +218,14 @@ export type InputNode = IRNode & {
 
 <ApiTable>
 
-| Member               | Type                            | Default | Description                                                                                      |
-| -------------------- | ------------------------------- | ------- | ------------------------------------------------------------------------------------------------ |
-| `authoring?`         | `unknown`                       | —       | Optional runtime payload interpreted by a compile driver; excluded from Core IR                  |
-| `id`                 | `string`                        | —       | Required unique id; the whole point of a coordinate is to be referenced by paths or other nodes  |
-| `position`           | `IRCoordinate['position']`      | —       | Coordinate position. Supports Cartesian, polar, at-position, offset, and between-position forms. |
-| `type`               | `"coordinate"`                  | —       | Discriminator marking this child as a coordinate placeholder                                     |
-| `config` (Parameter) | `Omit<InputCoordinate, 'type'>` | —       | Coordinate identifier and position                                                               |
-| Returns              | `InputCoordinate`               | —       | Authoring input with the coordinate discriminator                                                |
+| Member               | Type                            | Default | Description                                                                     |
+| -------------------- | ------------------------------- | ------- | ------------------------------------------------------------------------------- |
+| `authoring?`         | `unknown`                       | —       | Optional runtime payload interpreted by a compile driver; excluded from Core IR |
+| `id`                 | `string`                        | —       | Unique reference name for this coordinate.                                      |
+| `position`           | `IRCoordinate['position']`      | —       | —                                                                               |
+| `type`               | `"coordinate"`                  | —       | —                                                                               |
+| `config` (Parameter) | `Omit<InputCoordinate, 'type'>` | —       | Coordinate identifier and position                                              |
+| Returns              | `InputCoordinate`               | —       | Authoring input with the coordinate discriminator                               |
 
 </ApiTable>
 
@@ -548,7 +548,7 @@ export declare const defineShape: <TParams extends JsonObject>(def: InputShapeDe
 
 ## Persistent configuration
 
-#### <ApiSourceLink label={"IRCoordinate"} path={"packages/kernel/core/src/schemas/node/coordinate.ts"} startLine={29}>IRCoordinate</ApiSourceLink> / <ApiSourceLink label={"CoordinateSchema"} path={"packages/kernel/core/src/schemas/node/coordinate.ts"} startLine={12}>CoordinateSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRCoordinate"} path={"packages/kernel/core/src/schemas/node/coordinate.ts"} startLine={21}>IRCoordinate</ApiSourceLink> / <ApiSourceLink label={"CoordinateSchema"} path={"packages/kernel/core/src/schemas/node/coordinate.ts"} startLine={12}>CoordinateSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -556,11 +556,11 @@ export declare const defineShape: <TParams extends JsonObject>(def: InputShapeDe
 
 <ApiTable>
 
-| Member     | Type                                                  | Default | Description                                                                                      |
-| ---------- | ----------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------ |
-| `id`       | `string`                                              | —       | Required unique id; the whole point of a coordinate is to be referenced by paths or other nodes  |
-| `position` | `ZodInfer<typeof CoordinateSchema.shape["position"]>` | —       | Coordinate position. Supports Cartesian, polar, at-position, offset, and between-position forms. |
-| `type`     | `"coordinate"`                                        | —       | Discriminator marking this child as a coordinate placeholder                                     |
+| Member     | Type                                                  | Default | Description                                |
+| ---------- | ----------------------------------------------------- | ------- | ------------------------------------------ |
+| `id`       | `string`                                              | —       | Unique reference name for this coordinate. |
+| `position` | `ZodInfer<typeof CoordinateSchema.shape["position"]>` | —       | —                                          |
+| `type`     | `"coordinate"`                                        | —       | —                                          |
 
 </ApiTable>
 
@@ -582,7 +582,7 @@ export type IRCoordinate = ZodInfer<typeof CoordinateSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRNode"} path={"packages/kernel/core/src/schemas/node/node.ts"} startLine={215}>IRNode</ApiSourceLink>
+#### <ApiSourceLink label={"IRNode"} path={"packages/kernel/core/src/schemas/node/node.ts"} startLine={210}>IRNode</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -602,7 +602,7 @@ export type IRCoordinate = ZodInfer<typeof CoordinateSchema>;
 |           | `layout?`       | `IRNode["layout"]`                                                                               | —        | Node size, spacing, and text layout overrides.                                                                                                                                  |
 |           | `position?`     | `ZodInfer<typeof NodeSchema>['position']`                                                        | `[0, 0]` | Node center position; Core resolves an omitted value to the origin of the current local coordinate system                                                                       |
 |           | `rotate?`       | `number`                                                                                         | —        | Rotation in degrees around the node center; positive is visually clockwise.                                                                                                     |
-|           | `scale?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; }` | —        | Node scale factor. Number applies to both axes; object x / y override default. Affects path attachment positions.                                                               |
+|           | `scale?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; }` | —        | Scales the node and its path attachment positions.                                                                                                                              |
 |           | `shape?`        | `IRNode["shape"]`                                                                                | —        | Node visual shape: bare shape name or `{ type, params }`. Built-ins and registered shapes are allowed; unregistered names fail at compile time. Omitted fields use rectangle.   |
 | Style     | `style?`        | `IRNode["style"]`                                                                                | —        | Node visual overrides; fields independently override inherited defaults.                                                                                                        |
 |           | `zIndex?`       | `number`                                                                                         | —        | Stacking order among sibling IR children. Higher draws on top; equal values keep source order within the same parent group.                                                     |
@@ -625,7 +625,7 @@ export type IRNode = Omit<ZodInput<typeof NodeSchema>, 'position'> & {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRNodeLabel"} path={"packages/kernel/core/src/schemas/node/label.ts"} startLine={114}>IRNodeLabel</ApiSourceLink> / <ApiSourceLink label={"NodeLabelSchema"} path={"packages/kernel/core/src/schemas/node/label.ts"} startLine={107}>NodeLabelSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRNodeLabel"} path={"packages/kernel/core/src/schemas/node/label.ts"} startLine={105}>IRNodeLabel</ApiSourceLink> / <ApiSourceLink label={"NodeLabelSchema"} path={"packages/kernel/core/src/schemas/node/label.ts"} startLine={98}>NodeLabelSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -633,22 +633,22 @@ export type IRNode = Omit<ZodInput<typeof NodeSchema>, 'position'> & {
 
 <ApiTable>
 
-| Member          | Type                                                                                                                                                                                                                    | Default | Description                                                                                                                                                           |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `align?`        | `"start" \| "middle" \| "end"`                                                                                                                                                                                          | —       | Attachment tangent alignment: start, middle, or end. Defaults to middle.                                                                                              |
-| `distance?`     | `number`                                                                                                                                                                                                                | —       | Gap between the node border and the rotated label visual box, in user units. Omitted fields use compile labelDistance.                                                |
-| `font?`         | `{ family?: string \| undefined; size?: string \| number \| undefined; weight?: number \| "normal" \| "bold" \| undefined; style?: "normal" \| "italic" \| "oblique" \| undefined; }`                                   | —       | Label font overrides. Missing fields inherit from the parent node font.                                                                                               |
-| `keepUpright?`  | `false \| true`                                                                                                                                                                                                         | —       | Flip upside-down labels when true. Default false.                                                                                                                     |
-| `lineHeight?`   | `number`                                                                                                                                                                                                                | —       | Line height in user units; falls back to `font.size × 1.2` when omitted.                                                                                              |
-| `maxTextWidth?` | `number`                                                                                                                                                                                                                | —       | Maximum line width before wrapping, in user units. Omitted fields disable automatic wrapping.                                                                         |
-| `opacity?`      | `number`                                                                                                                                                                                                                | —       | Label opacity factor multiplied by node opacity; omitted values use 1.                                                                                                |
-| `pin?`          | `ZodInfer<typeof NodeLabelSchema.shape["pin"]>`                                                                                                                                                                         | —       | Outside-label leader line. Use true for defaults or an object for style overrides.                                                                                    |
-| `placement?`    | `"outside" \| "inside"`                                                                                                                                                                                                 | —       | Outside or inside the attachment point. Default outside.                                                                                                              |
-| `position?`     | `number \| "center" \| "top" \| "right" \| "bottom" \| "left" \| "top-right" \| "top-left" \| "bottom-right" \| "bottom-left" \| { boundary: "top" \| "right" \| "bottom" \| "left"; fraction?: number \| undefined; }` | —       | Label attachment point: canonical direction, center, angle, or `{ boundary, fraction }`. Omitted fields use top.                                                      |
-| `rotate?`       | `number \| "none" \| "radial" \| "tangent"`                                                                                                                                                                             | —       | Label self-rotation: none, radial, tangent, or an explicit angle in degrees.                                                                                          |
-| `text`          | `ZodInfer<typeof NodeLabelSchema.shape["text"]>`                                                                                                                                                                        | —       | Text block: a single string for one line, or a non-empty array of line specs (string for default, object for per-line overrides, `{ segments }` for mixed text+math). |
-| `textAlign?`    | `"start" \| "middle" \| "end"`                                                                                                                                                                                          | —       | Multi-line text alignment within the text block. Omitted fields use middle.                                                                                           |
-| `textColor?`    | `string \| number`                                                                                                                                                                                                      | —       | Label text color; falls back to currentColor.                                                                                                                         |
+| Member          | Type                                                                                                                                                                                                                | Default | Description                                                                                                                                                           |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `align?`        | `"start" \| "middle" \| "end"`                                                                                                                                                                                      | —       | Aligns the label along the attachment tangent. Defaults to middle.                                                                                                    |
+| `distance?`     | `number`                                                                                                                                                                                                            | —       | Gap from the node border to the rotated label box, in user units. Falls back to labelDistance.                                                                        |
+| `font?`         | `{ family?: string \| undefined; size?: string \| number \| undefined; weight?: number \| "normal" \| "bold" \| undefined; style?: "normal" \| "italic" \| "oblique" \| undefined; }`                               | —       | Unspecified font fields inherit from the node.                                                                                                                        |
+| `keepUpright?`  | `false \| true`                                                                                                                                                                                                     | —       | Flips the label by 180° if its rotation would leave it upside down.                                                                                                   |
+| `lineHeight?`   | `number`                                                                                                                                                                                                            | —       | Line height in user units; falls back to `font.size × 1.2` when omitted.                                                                                              |
+| `maxTextWidth?` | `number`                                                                                                                                                                                                            | —       | Maximum line width before wrapping, in user units. Omitted fields disable automatic wrapping.                                                                         |
+| `opacity?`      | `number`                                                                                                                                                                                                            | —       | Multiplies the node opacity.                                                                                                                                          |
+| `pin?`          | `ZodInfer<typeof NodeLabelSchema.shape["pin"]>`                                                                                                                                                                     | —       | Draws a leader line with true or a style object. Cannot be enabled with inside placement.                                                                             |
+| `placement?`    | `"outside" \| "inside"`                                                                                                                                                                                             | —       | Defaults to outside.                                                                                                                                                  |
+| `position?`     | `number \| "center" \| "top" \| "right" \| "bottom" \| "left" \| "top-right" \| "top-left" \| "bottom-right" \| "bottom-left" \| { side: "top" \| "right" \| "bottom" \| "left"; fraction?: number \| undefined; }` | —       | Defaults to top. At center, placement, distance, and align have no effect on label placement.                                                                         |
+| `rotate?`       | `number \| "none" \| "radial" \| "tangent"`                                                                                                                                                                         | —       | Rotates the label about its center. Radial follows the outward direction; tangent adds 90°.                                                                           |
+| `text`          | `ZodInfer<typeof NodeLabelSchema.shape["text"]>`                                                                                                                                                                    | —       | Text block: a single string for one line, or a non-empty array of line specs (string for default, object for per-line overrides, `{ segments }` for mixed text+math). |
+| `textAlign?`    | `"start" \| "middle" \| "end"`                                                                                                                                                                                      | —       | Multi-line text alignment within the text block. Omitted fields use middle.                                                                                           |
+| `textColor?`    | `string \| number`                                                                                                                                                                                                  | —       | Label text color; falls back to currentColor.                                                                                                                         |
 
 </ApiTable>
 
@@ -670,7 +670,7 @@ export type IRNodeLabel = ZodInfer<typeof NodeLabelSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRNodeLayout"} path={"packages/kernel/core/src/schemas/node/node.ts"} startLine={227}>IRNodeLayout</ApiSourceLink> / <ApiSourceLink label={"NodeLayoutSchema"} path={"packages/kernel/core/src/schemas/node/node.ts"} startLine={116}>NodeLayoutSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRNodeLayout"} path={"packages/kernel/core/src/schemas/node/node.ts"} startLine={222}>IRNodeLayout</ApiSourceLink> / <ApiSourceLink label={"NodeLayoutSchema"} path={"packages/kernel/core/src/schemas/node/node.ts"} startLine={119}>NodeLayoutSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -681,10 +681,10 @@ export type IRNodeLabel = ZodInfer<typeof NodeLabelSchema>;
 | Member          | Type                                                                                                                                                                                                               | Default | Description                                                                                                                  |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | `lineHeight?`   | `number`                                                                                                                                                                                                           | —       | Line height in user units; falls back to `font.size × 1.2` when omitted.                                                     |
-| `margin?`       | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —       | Outer offset around the connection boundary. Number applies to all sides; object fields resolve as side > axis > default.    |
+| `margin?`       | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —       | Outer offset around the connection boundary.                                                                                 |
 | `maxTextWidth?` | `number`                                                                                                                                                                                                           | —       | Maximum line width before wrapping, in user units. Omitted fields disable automatic wrapping.                                |
-| `minimumSize?`  | `number \| { default?: number \| undefined; width?: number \| undefined; height?: number \| undefined; }`                                                                                                          | —       | Minimum visual border size in user units. Number applies to width and height; object width / height override default.        |
-| `padding?`      | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —       | Inner spacing from content to border. Number applies to all sides; object fields resolve as side > axis > default.           |
+| `minimumSize?`  | `number \| { default?: number \| undefined; width?: number \| undefined; height?: number \| undefined; }`                                                                                                          | —       | Lower bound on the node's visible border size, in user units.                                                                |
+| `padding?`      | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —       | Inner spacing from content to border.                                                                                        |
 | `textAlign?`    | `"start" \| "middle" \| "end"`                                                                                                                                                                                     | —       | Multi-line text alignment within the text block. Omitted fields use middle.                                                  |
 | `width?`        | `number`                                                                                                                                                                                                           | —       | Exact unscaled visible border width in user units. Excludes margin and must not be smaller than the effective minimum width. |
 
@@ -708,7 +708,7 @@ export type IRNodeLayout = ZodInfer<typeof NodeLayoutSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRNodeStyle"} path={"packages/kernel/core/src/schemas/node/node.ts"} startLine={223}>IRNodeStyle</ApiSourceLink> / <ApiSourceLink label={"NodeStyleSchema"} path={"packages/kernel/core/src/schemas/node/node.ts"} startLine={106}>NodeStyleSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRNodeStyle"} path={"packages/kernel/core/src/schemas/node/node.ts"} startLine={218}>IRNodeStyle</ApiSourceLink> / <ApiSourceLink label={"NodeStyleSchema"} path={"packages/kernel/core/src/schemas/node/node.ts"} startLine={109}>NodeStyleSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -754,7 +754,7 @@ export type IRNodeStyle = ZodInfer<typeof NodeStyleSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"NodeSchema"} path={"packages/kernel/core/src/schemas/node/node.ts"} startLine={190}>NodeSchema</ApiSourceLink>
+#### <ApiSourceLink label={"NodeSchema"} path={"packages/kernel/core/src/schemas/node/node.ts"} startLine={185}>NodeSchema</ApiSourceLink>
 
 <ZodSchema name="NodeSchema" />
 

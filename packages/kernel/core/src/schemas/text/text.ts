@@ -79,9 +79,10 @@ export const LineSchema = union([string(), TextLineSchema, SegmentedLineSchema])
 );
 
 /** 校验单字符串文本块或非空文本行序列 */
-export const TextBlockSchema = union([string(), array(LineSchema).min(1)]).describe(
-  'Text block: a single string for one line, or a non-empty array of line specs (string for default, object for per-line overrides, `{ segments }` for mixed text+math).',
-);
+export const TextBlockSchema = union([
+  string().describe('Newlines are hard line breaks. Math in $...$ or $$...$$ requires lowerTex.'),
+  array(LineSchema).min(1),
+]);
 
 /** 校验带正文元素的文本颜色及字体覆盖 */
 export const TextVisualSchema = strictObject({

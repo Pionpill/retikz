@@ -61,7 +61,7 @@ Title 默认字号为 `sm`；description 默认字号为 `xs`、opacity 为 `0.7
 
 `labels` 直接复用 Core `NodeLabelSchema` / `IRNodeLabel`，不定义 Group 专属位置、boundary、placement 或几何词汇。省略值时使用：
 
-- position：`{ boundary: 'bottom', fraction: 0 }`
+- position：`{ side: 'bottom', fraction: 0 }`
 - placement：Core 默认 `outside`
 - align：attachment-tangent `start`
 - font size：`xs`

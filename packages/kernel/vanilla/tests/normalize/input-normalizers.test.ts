@@ -34,14 +34,14 @@ describe('Vanilla 输入标准化器', () => {
       type: 'node',
       id: 'source',
       position: [0, 0],
-      label: { text: 'source', position: { boundary: 'top', fraction: 0 } },
+      label: { text: 'source', position: { side: 'top', fraction: 0 } },
     };
 
     expect(normalizeNode(input)).toEqual({
       type: 'node',
       id: 'source',
       position: [0, 0],
-      label: { text: 'source', position: { boundary: 'top', fraction: 0 } },
+      label: { text: 'source', position: { side: 'top', fraction: 0 } },
     });
   });
 

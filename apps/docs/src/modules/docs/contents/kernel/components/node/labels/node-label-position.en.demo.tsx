@@ -14,7 +14,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       : values.positionMode === 'angle'
         ? values.positionAngle
         : values.positionMode === 'boundary'
-          ? { boundary: values.boundary, fraction: values.fraction }
+          ? { side: values.side, fraction: values.fraction }
           : values.direction;
   return (
     <Layout>

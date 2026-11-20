@@ -1,5 +1,5 @@
 import {
-  BoxSpacingSchema,
+  BoxSpacingValueSchema,
   ShapeValueSchema,
   NodeLayoutSchema,
   NodeSchema,
@@ -30,9 +30,7 @@ export const PointAutoPaddingSchema = union([
   AutoPaddingKindSchema,
   strictObject({
     kind: AutoPaddingKindSchema.describe('Automatic padding strategy'),
-    clearance: union([NonNegativeNumberSchema, BoxSpacingSchema])
-      .optional()
-      .describe('Nonnegative edge clearance in drawing units; omitted means zero'),
+    clearance: BoxSpacingValueSchema.optional().describe('Edge clearance in drawing units; omitted means zero'),
   }),
 ]).describe('Automatic point padding strategy; false disables implicit contributions from this mark');
 

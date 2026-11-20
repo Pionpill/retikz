@@ -8,7 +8,7 @@ import type {
   IRBoundary,
   IRNode,
   IRNodeLabel,
-  IRNodeLabelBoundaryPosition,
+  IRNodeLabelSidePosition,
   IRNodeStyle,
   IRPaint,
   NodeLabelPlacement,
@@ -68,7 +68,7 @@ export type NodeColorSource = Omit<NodePrimaryColorSource, 'text' | 'label'> & {
 };
 
 /** 已补齐边界比例的节点标签位置 */
-export type CanonicalNodeLabelBoundaryPosition = Omit<IRNodeLabelBoundaryPosition, 'fraction'> & {
+export type CanonicalNodeLabelSidePosition = Omit<IRNodeLabelSidePosition, 'fraction'> & {
   /** 边界上的归一化位置 */
   fraction: number;
 };
@@ -81,7 +81,7 @@ export type NodeLabelColorSource = Omit<
   /** 标签视觉盒沿附着切线的对齐方式 */
   align: NodeTextAlign;
   /** 标签附着位置 */
-  position: NodeLabelPosition | number | CanonicalNodeLabelBoundaryPosition;
+  position: NodeLabelPosition | number | CanonicalNodeLabelSidePosition;
   /** 标签相对附着点的放置方向 */
   placement: NodeLabelPlacement;
   /** 标签到节点边界的距离 */

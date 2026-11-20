@@ -5,7 +5,7 @@ export type {
   CanonicalNode,
   CanonicalNodeBoundary,
   CanonicalNodeLabel,
-  CanonicalNodeLabelBoundaryPosition,
+  CanonicalNodeLabelSidePosition,
   CanonicalNodeLayout,
   CanonicalNodeShape,
   CanonicalNodeStyle,

@@ -2,7 +2,7 @@ import type { Position } from '@retikz/math';
 import { DEG_TO_RAD } from '@retikz/math';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
-import type { CanonicalNodeLabel, CanonicalNodeLabelBoundaryPosition } from '../../../resolve';
+import type { CanonicalNodeLabel, CanonicalNodeLabelSidePosition } from '../../../resolve';
 import { anchorUnitVectorByAnchor } from '../../../shared';
 import { evaluateNamedBoundaryAnchor, evaluateAngleBoundaryPoint } from '../../boundary';
 import type { CompiledBoundaryGeometry } from '../../boundary';
@@ -15,9 +15,8 @@ import type {
   NodeCompileContext,
 } from '../types';
 
-const isLabelBoundaryPosition = (
-  position: CanonicalNodeLabel['position'],
-): position is CanonicalNodeLabelBoundaryPosition => typeof position === 'object';
+const isLabelSidePosition = (position: CanonicalNodeLabel['position']): position is CanonicalNodeLabelSidePosition =>
+  typeof position === 'object';
 
 const assertBoxLikeLabelBoundary = (layout: CompiledBoundaryGeometry): void => {
   if (layout.shape.name !== 'rectangle') {
@@ -30,7 +29,7 @@ const assertBoxLikeLabelBoundary = (layout: CompiledBoundaryGeometry): void => {
 
 const calculateLabelBoundaryPoint = (
   layout: CompiledBoundaryGeometry,
-  canon: CanonicalNodeLabelBoundaryPosition,
+  canon: CanonicalNodeLabelSidePosition,
 ): Position => {
   assertBoxLikeLabelBoundary(layout);
   const fraction = canon.fraction;
@@ -38,17 +37,17 @@ const calculateLabelBoundaryPoint = (
   const right = layout.geometry.rect.x + layout.geometry.rect.width / 2;
   const top = layout.geometry.rect.y - layout.geometry.rect.height / 2;
   const bottom = layout.geometry.rect.y + layout.geometry.rect.height / 2;
-  if (canon.boundary === 'top') return [left + layout.geometry.rect.width * fraction, top];
-  if (canon.boundary === 'right') return [right, top + layout.geometry.rect.height * fraction];
-  if (canon.boundary === 'bottom') return [left + layout.geometry.rect.width * fraction, bottom];
+  if (canon.side === 'top') return [left + layout.geometry.rect.width * fraction, top];
+  if (canon.side === 'right') return [right, top + layout.geometry.rect.height * fraction];
+  if (canon.side === 'bottom') return [left + layout.geometry.rect.width * fraction, bottom];
 
   return [left, top + layout.geometry.rect.height * fraction];
 };
 
-const getLabelBoundaryDirection = (canon: CanonicalNodeLabelBoundaryPosition): Position => {
-  if (canon.boundary === 'top') return [0, -1];
-  if (canon.boundary === 'right') return [1, 0];
-  if (canon.boundary === 'bottom') return [0, 1];
+const getLabelBoundaryDirection = (canon: CanonicalNodeLabelSidePosition): Position => {
+  if (canon.side === 'top') return [0, -1];
+  if (canon.side === 'right') return [1, 0];
+  if (canon.side === 'bottom') return [0, 1];
 
   return [-1, 0];
 };
@@ -56,7 +55,7 @@ const getLabelBoundaryDirection = (canon: CanonicalNodeLabelBoundaryPosition): P
 /** 从 attachment 直接解析 label 放置单位向量 */
 const calculateLabelPlacementVector = (position: CanonicalNodeLabel['position']): Position => {
   if (position === 'center') return [1, 0];
-  if (isLabelBoundaryPosition(position)) return getLabelBoundaryDirection(position);
+  if (isLabelSidePosition(position)) return getLabelBoundaryDirection(position);
   if (typeof position === 'number') {
     const rad = position * DEG_TO_RAD;
     return [Math.cos(rad), Math.sin(rad)];
@@ -67,8 +66,8 @@ const calculateLabelPlacementVector = (position: CanonicalNodeLabel['position'])
 
 /** 从 label 附着方向取得稳定的切线正向 */
 const calculateLabelTangentVector = (position: CanonicalNodeLabel['position']): Position => {
-  if (isLabelBoundaryPosition(position)) {
-    if (position.boundary === 'top' || position.boundary === 'bottom') return [1, 0];
+  if (isLabelSidePosition(position)) {
+    if (position.side === 'top' || position.side === 'bottom') return [1, 0];
     return [0, 1];
   }
 
@@ -95,7 +94,7 @@ export const calculateNodeLabelBorderPoint = (
         ...layout,
         geometry: { ...layout.geometry, rect: { ...layout.geometry.rect, rotate: 0 } },
       };
-  if (isLabelBoundaryPosition(position)) {
+  if (isLabelSidePosition(position)) {
     return calculateLabelBoundaryPoint(aaLayout, position);
   }
 

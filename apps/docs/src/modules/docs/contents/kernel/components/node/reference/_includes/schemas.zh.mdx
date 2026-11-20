@@ -21,7 +21,7 @@ Node.position 可省略，Core 解析时使用局部原点 [0, 0]；直接 schem
     rotate: '绕节点中心的旋转角度，正值顺时针',
     text: '正文字符串或行数组，支持行级样式及文字与公式混排；公式需要 lowerTex',
     cornerRadius: '仅 rectangle 使用的顶层圆角半径，单位为用户单位',
-    scale: '均匀或分轴缩放；对象的 x、y 优先于 default，影响路径附着位置',
+    scale: '缩放节点，同时影响路径在节点上的附着位置',
     label: '附着于节点的一个或多个标签',
     zIndex: '同层元素栈序，大者在上，同值保持声明顺序',
     style: '逐字段覆盖继承默认值的节点视觉配置',
@@ -65,9 +65,9 @@ Node.position 可省略，Core 解析时使用局部原点 [0, 0]；直接 schem
     lineHeight: '行高，单位为用户单位；省略时使用字号的 1.2 倍',
     maxTextWidth: '自动折行阈值，单位为用户单位；省略时不自动折行',
     width: '缩放前可见边框的精确宽度，不含 margin，不能小于有效最小宽度',
-    minimumSize: '可见边框最小尺寸；数字同时指定宽高，对象的 width、height 优先于 default',
-    padding: '正文到边框的内间距；数字应用于各边，对象按单边、轴、default 的顺序取值',
-    margin: '连接面外间距；数字应用于各边，对象按单边、轴、default 的顺序取值',
+    minimumSize: '节点可见边框的尺寸下限，以用户单位计',
+    padding: '正文到边框的内间距',
+    margin: '连接面外间距',
   }}
 />
 
@@ -75,22 +75,22 @@ Node.position 可省略，Core 解析时使用局部原点 [0, 0]；直接 schem
 
 <ZodSchema
   name="NodeLabelSchema"
-  description="附着在节点边界或中心的额外文字，Node.label 可使用数组添加多个标签"
+  description="添加独立于节点正文的标签，不影响节点本身的尺寸"
   descriptions={{
     text: '标签文本块：字符串支持换行，非空行数组支持逐行样式与混排片段',
-    textColor: '标签文字颜色，缺省沿继承链求值',
-    opacity: '与节点整体透明度相乘的标签因子；省略为 1，显式 0 保留',
+    textColor: '标签文字颜色，缺省时回退到 currentColor',
+    opacity: '与节点整体透明度相乘',
     textAlign: '文本块内部行对齐，缺省 middle；独立于边界附着 align',
     lineHeight: '最小行槽高度，缺省为有效字号的 1.2 倍，实际内容更高时扩展',
     maxTextWidth: '自动折行宽度；过长文字按字素拆分，公式保持完整',
-    font: '标签字体覆盖，缺省字段继承节点字体',
+    font: '未指定的字体字段继承节点字体',
     align: '标签视觉框沿附着点切线的对齐方式，缺省 middle',
-    position: '命名方向、center、角度或边界比例位置，缺省 top',
-    placement: '标签位于附着点的外侧或内侧，缺省 outside',
-    distance: '节点边框到旋转后标签视觉框的净距；省略时使用编译配置 labelDistance',
-    rotate: '标签自身旋转：none、radial、tangent 或角度；边界比例位置以所选边的外法向为准',
-    keepUpright: '为 true 时将倒置文字翻转 180 度；缺省 false',
-    pin: '外侧标签引线；true 使用默认值，对象覆盖引线样式，不能与 inside 同用',
+    position: '缺省为 top；取 center 时，placement、distance 和 align 不影响标签摆放',
+    placement: '缺省为 outside',
+    distance: '节点边框到旋转后标签框的净距，以用户单位计；缺省时使用 labelDistance',
+    rotate: '标签绕自身中心旋转；radial 沿附着点的外向方向，tangent 在此基础上加 90°',
+    keepUpright: '若旋转会使标签倒置，则将其翻转 180°',
+    pin: '设为 true 或传入样式对象时绘制引线；placement 为 inside 时不能启用',
   }}
 />
 
@@ -100,9 +100,9 @@ Node.position 可省略，Core 解析时使用局部原点 [0, 0]；直接 schem
   name="CoordinateSchema"
   description="不绘制可见内容的命名位置，可作为路径端点或相对定位参照"
   descriptions={{
-    type: '判别字段，固定为 coordinate',
-    id: '必填引用标识，供路径或节点定位使用',
-    position: '笛卡尔、极坐标、相对、偏移或两点比例位置；不支持自身锚点对齐',
+    type: '',
+    id: '该坐标的唯一引用名',
+    position: '',
   }}
 />
 

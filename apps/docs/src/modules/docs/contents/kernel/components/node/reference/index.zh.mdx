@@ -7,4 +7,6 @@ description: 查询节点家族的 React、Vanilla、形状与连接面扩展公
 
 Node 的 `shape`、`boundary`、`rotate`、`scale` 省略时先继承 `Scope.defaults.node`。React 属性表中的默认值描述组件最终回退值；Schema 推导及继承的字段只列 Schema `.default()` 实际声明的默认值。继承和编译阶段的回退行为见字段说明与 Schema 页签。
 
+定义与节点内外间距写法相同的字段时，使用 `@retikz/core` 的 `BoxSpacingValueSchema`。数字应用于四边；对象中，单边值优先于对应轴的 `x` 或 `y`，轴值优先于 `default`。只接受对象写法时，使用 `BoxSpacingSchema`。
+
 {/* @include kernel/components/node/reference/generated */}

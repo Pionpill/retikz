@@ -20,7 +20,7 @@ afterAll(() => {
 describe('完整节点契约的离线覆盖清单', () => {
   it('属性、描述与分支均有关联断言或明确的宿主诊断', () => {
     expect(report.entries.filter(entry => entry.kind === 'property')).toHaveLength(249);
-    expect(report.entries.filter(entry => entry.kind === 'description')).toHaveLength(246);
+    expect(report.entries.filter(entry => entry.kind === 'description')).toHaveLength(235);
     expect(report.entries.filter(entry => entry.kind === 'branch')).toHaveLength(93);
     expect(report.entries.filter(entry => entry.status === 'gap')).toEqual([]);
     expect(report.entries.filter(entry => entry.status === 'diagnostic')).not.toHaveLength(0);
@@ -32,6 +32,6 @@ describe('完整节点契约的离线覆盖清单', () => {
   });
 
   it('契约名称、结构、约束或描述变化后要求重新审阅用例', () => {
-    expect(report.contractSha256).toBe('ab7cd9ef50a5fb8f9ddd471e0f056d898bb2dbf9f4747211d54842e82250ebce');
+    expect(report.contractSha256).toBe('3d0ee08a11e51fe3344e150b697b67371a64dbf57ea24b6a95cb7a7fed3ffeac');
   });
 });

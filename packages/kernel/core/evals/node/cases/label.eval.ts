@@ -36,14 +36,14 @@ export const labelCases: Array<NodeEvalCase> = [
   },
   {
     id: 'NH003',
-    task: '矩形节点右侧边上四分之一处放标签“Q”，标签在外侧、距旋转后的标签视觉框最近间隙为 7 个用户单位；保留边上比例表达。',
+    task: '从矩形节点右边的顶端往下量四分之一处放标签“Q”，标签在外侧、距旋转后的标签视觉框最近间隙为 7 个用户单位；保留边上比例表达。',
     expected: {
       type: 'node',
       shape: 'rectangle',
       label: {
         text: 'Q',
         position: {
-          boundary: 'right',
+          side: 'right',
           fraction: 0.25,
         },
         distance: 7,
@@ -58,7 +58,7 @@ export const labelCases: Array<NodeEvalCase> = [
       label: {
         text: 'M',
         position: {
-          boundary: 'bottom',
+          side: 'bottom',
         },
       },
     },

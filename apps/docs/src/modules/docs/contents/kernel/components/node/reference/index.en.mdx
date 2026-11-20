@@ -7,4 +7,6 @@ Generated from public package entries: React Node, Text, Coordinate and their pr
 
 Omitted Node `shape`, `boundary`, `rotate`, and `scale` first inherit `Scope.defaults.node`. Defaults in React props describe the component's final fallback values; Fields inferred or inherited from Schema list only values actually declared with Schema `.default()`. See field descriptions and the Schema reference for inheritance and compile fallbacks.
 
+For a field that accepts the same spacing as node padding or margin, use `BoxSpacingValueSchema` from `@retikz/core`. A number applies to all four sides. In an object, each side overrides its axis (`x` or `y`), which overrides `default`. Use `BoxSpacingSchema` when only the object form is allowed.
+
 {/* @include kernel/components/node/reference/generated */}

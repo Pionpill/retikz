@@ -34,7 +34,7 @@ describe('Group Source 的 schema', () => {
       labels: [
         {
           text: 'public API',
-          position: { boundary: 'right', fraction: 0.25 },
+          position: { side: 'right', fraction: 0.25 },
           placement: 'outside',
           rotate: 'tangent',
           keepUpright: true,
@@ -44,7 +44,7 @@ describe('Group Source 的 schema', () => {
     });
 
     expect(group.caption?.side).toBe('bottom');
-    expect(group.labels?.[0]?.position).toEqual({ boundary: 'right', fraction: 0.25 });
+    expect(group.labels?.[0]?.position).toEqual({ side: 'right', fraction: 0.25 });
   });
 
   it('拒绝空标题、无效间隙和 Core 无效标签组合', () => {

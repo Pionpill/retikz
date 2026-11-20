@@ -1529,9 +1529,7 @@ const projectSchemaMembers = (
 ): Array<ApiReferenceMember> => {
   const fields = schema.shape as Partial<Record<string, z.ZodType>>;
   const expected = new Set(members.map(member => member.name));
-  const missing = [...expected].filter(
-    name => fields[name] === undefined || localizations.descriptions[name] === undefined,
-  );
+  const missing = [...expected].filter(name => fields[name] === undefined);
   const unknown = Object.keys(localizations.descriptions).filter(name => !knownFields.has(name.split('.')[0]));
   if (missing.length > 0 || unknown.length > 0)
     throw new Error(
@@ -1541,16 +1539,17 @@ const projectSchemaMembers = (
   return members.map(member => {
     const field = fields[member.name];
     const chinese = localizations.descriptions[member.name];
-    if (!field || !chinese) throw new Error(`Missing ${schemaName}.${member.name} Schema field or translation`);
+    if (!field) throw new Error(`Missing ${schemaName}.${member.name} Schema field`);
 
     const english = schemaDescription(field);
-    if (!english) throw new Error(`Missing ${schemaName}.${member.name} .describe()`);
+    if (Boolean(english) !== Boolean(chinese))
+      throw new Error(`Unpaired ${schemaName}.${member.name} Schema description`);
 
     return {
       ...member,
       description: '',
       details: '',
-      schemaDescription: { zh: chinese, en: english },
+      schemaDescription: english && chinese ? { zh: chinese, en: english } : undefined,
       defaultValue: schemaDefaultValue(field),
     };
   });

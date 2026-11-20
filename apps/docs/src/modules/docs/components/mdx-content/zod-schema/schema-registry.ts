@@ -717,9 +717,9 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'NodeLayoutSchema',
     url: '/kernel/components/node/reference#irnodelayout--nodelayoutschema',
   },
-  NodeLabelBoundaryPositionSchema: {
+  NodeLabelSidePositionSchema: {
     schema: IR.NodeLabelSchema.shape.position.unwrap().options[2],
-    label: 'NodeLabelBoundaryPositionSchema',
+    label: 'NodeLabelSidePositionSchema',
   },
   NodeLabelPinSchema: {
     schema: IR.NodeLabelSchema.shape.pin.unwrap().options[1],

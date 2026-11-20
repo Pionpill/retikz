@@ -10,7 +10,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   renderArrayLabelsPreview({
     text: values.text,
     positionMode: values.positionMode,
-    boundary: values.boundary,
+    side: values.side,
     fraction: values.fraction,
     direction: values.direction,
     align: values.align,

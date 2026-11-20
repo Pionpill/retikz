@@ -1,6 +1,6 @@
-import { BoxSpacingSchema, ChildSchema } from '@retikz/core';
+import { BoxSpacingValueSchema, ChildSchema } from '@retikz/core';
 import { ScalarValueSchema } from '@retikz/data';
-import { NonBlankStringSchema, NonNegativeNumberSchema, PositiveIntegerSchema } from '@retikz/foundation';
+import { NonBlankStringSchema, PositiveIntegerSchema } from '@retikz/foundation';
 import { array, boolean, discriminatedUnion, enum as zodEnum, literal, number, strictObject, string, union } from 'zod';
 
 import { TableCellBordersSchema } from '../border';
@@ -50,9 +50,7 @@ export const TableCellSpanSchema = strictObject({
 
 /** 校验单元格内边距、对齐、折行、缩放、溢出与边框选项 */
 export const TableCellLayoutSchema = strictObject({
-  padding: union([NonNegativeNumberSchema, BoxSpacingSchema])
-    .optional()
-    .describe('Nonnegative uniform or per-side padding inside the Table Cell box.'),
+  padding: BoxSpacingValueSchema.optional().describe('Padding inside the Table Cell box.'),
   horizontalAlign: TableHorizontalAlignmentSchema.optional().describe(
     'Horizontal content alignment. Omitted fields use center at runtime.',
   ),
