@@ -95,6 +95,8 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
       batch.transaction.finish();
       persistent.completed = { root: persistent.root, visited: batch.visited, compilation };
       persistent.addresses = batch.addresses;
+      // 作者树接管声明；后续只在需要完整 Source 配对时才物化子数组
+      persistent.source = { ...batch.source, children: [] };
       this.state.batch = undefined;
       return persistent.completed;
     } catch (error) {
@@ -155,23 +157,6 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
         batch.indexesChanged ||= changes.indexesChanged;
         const addresses = batch.addresses!;
 
-        /** 结构编辑重组变动容器，普通更新仅替换对应声明；未变的兄弟声明继续共享原输入 */
-        if (changes.structure !== undefined) {
-          const parent = changes.structure.parent;
-          const children = transaction
-            .readState(parent)
-            .children.map(
-              entry => addresses.declaration(batch.source, entry) ?? editor.serializeEntryDeclaration(entry),
-            );
-          batch.source =
-            parent.type === 'root'
-              ? { ...batch.source, children }
-              : addresses.replaceDeclaration(batch.source, parent, transaction, children);
-        } else {
-          for (const entry of changes.changedEntries)
-            batch.source = addresses.replaceDeclaration(batch.source, entry, transaction);
-        }
-
         /** 名称或结构变化时刷新派生索引；路径移动也标记失效，避免复用旧声明位置相关的产物 */
         if (changes.indexesChanged)
           batch.addresses = new WeaveAddressIndex(
@@ -228,6 +213,13 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
       /** 没有声明编辑且未强制全量时沿用已有快照，否则只在此统一启动一次编译调度 */
       let prepared = { ...completed, visited: 0 };
       if (modified || forceFull) {
+        if (this.options.compositeInputs !== undefined)
+          batch.source = {
+            ...batch.source,
+            children: transaction
+              .readState(persistent.root)
+              .children.map(entry => editor.serializeEntryDeclaration(entry)),
+          };
         const compilation = this.execute();
         prepared = { root: persistent.root, visited: batch.visited, compilation };
       }
@@ -240,7 +232,6 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
         finish: () => {
           transaction.finish();
           persistent.completed = prepared;
-          persistent.source = batch.source;
           persistent.addresses = batch.addresses;
           closed = true;
           tracker.pruneRemovedBindings();
@@ -440,6 +431,8 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
 
     /** 调度器通过这些能力读取候选状态并回写结果，不在此切换已提交状态槽 */
     const context = {
+      indexesChanged: batch.indexesChanged,
+      hasBoundInputs: this.options.compositeInputs !== undefined,
       source: batch.source,
       runtime,
       recordComputed,

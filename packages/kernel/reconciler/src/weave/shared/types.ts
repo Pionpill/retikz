@@ -1,4 +1,4 @@
-﻿import type {
+import type {
   CompileWarning,
   ReferenceReadKind,
   CompiledNode,
@@ -16,6 +16,7 @@
   IRPathBase,
   IRScope,
   IRScene,
+  ScenePrimitive,
   SceneResources,
   Transform,
   LayoutProposal,
@@ -25,6 +26,7 @@
   CompiledReferenceGeometry,
   SceneClipPath,
 } from '@retikz/core';
+import type { AxisAlignedBounds } from '@retikz/math';
 
 import type { SharedCompileContext } from '../../compile';
 import type { WeaveChangeKind, WeaveChangeSource, WeaveOperationKind } from './constants';
@@ -302,6 +304,10 @@ export type WeaveEntry = WeaveCompositeEntry | WeaveCoordinateEntry | WeavePathE
 
 /** 根状态，集合、记录与输入随候选隔离 */
 type WeaveRootState = {
+  /** 已检查的声明树是否无重名；随根事务一起提交或恢复 */
+  uniqueDeclarations?: boolean;
+  /** 无重放副作用的顶层输出分块，内部缓存不暴露给快照消费者 */
+  outputBlocks?: ReadonlyArray<Readonly<{ primitives: Array<ScenePrimitive>; bounds?: AxisAlignedBounds }> | undefined>;
   /** 根没有父节点 */
   parent: null;
   /** Scene 自身输入 */

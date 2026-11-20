@@ -28,6 +28,7 @@ import { createWeaveBindingFlow } from './binding';
 import { createWeaveDependencyFlow } from './dependency';
 import { createWeaveOutputFlow } from './output';
 import { WeaveTaskQueue } from './queue';
+import { collectWeaveRootBlocks } from './root-output';
 import type { WeaveTaskAddress } from './task';
 import type {
   WeaveAssembledOutput,
@@ -65,7 +66,10 @@ export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinitio
     // ⚡Scene 根输出不消费父布局占位，跳过逐层传播；独立 Composite 测量仍按需开启
     skipAllocation: true,
   });
-  const rootFrame = rootExecutor.createRootRuntime();
+  const initialFrame = rootExecutor.createRootRuntime();
+  const rootFrame = executionContext.hasBoundInputs
+    ? initialFrame
+    : { ...initialFrame, context: { ...initialFrame.context, compositeInput: undefined } };
 
   const prepareAddress = (entry: WeaveEntry): WeaveTaskAddress => {
     switch (entry.type) {
@@ -118,7 +122,7 @@ export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinitio
     keyOf,
     scopeIds,
   });
-  const { outputOf, layoutOf, appendState, append, collectRootOutput } = createWeaveOutputFlow({
+  const { outputOf, layoutOf, appendState, append, collectDeclarationsIfChanged } = createWeaveOutputFlow({
     runtime,
     transaction,
     paths,
@@ -156,6 +160,11 @@ export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinitio
               path.at(-1) as number,
               execution.frame,
               state.parent.type === 'root',
+              undefined,
+              undefined,
+              executionContext.hasBoundInputs
+                ? undefined
+                : { source: state.origin.own, sourcePath: path, bindings: [] },
             );
           }),
       ),
@@ -500,7 +509,10 @@ export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinitio
   queue.flush();
   for (const entry of executions.keys()) queue.require(outputAddress(entry));
   queue.flush();
-  collectRootOutput(root, rootFrame);
+  collectDeclarationsIfChanged(root, executionContext.indexesChanged);
+  const blocks = collectWeaveRootBlocks(executionContext, executions.keys(), rootFrame.state, entry =>
+    appendState(rootFrame.state, outputOf(entry)),
+  );
   if (pending.size !== 0) throw createExecutionInvariantError('Weave computations did not reach output readiness');
-  return finalizeSceneCompilation<TComposite>(source, runtime, rootExecutor.finish(rootFrame.state));
+  return finalizeSceneCompilation<TComposite>(source, runtime, blocks ?? rootExecutor.finish(rootFrame.state));
 };

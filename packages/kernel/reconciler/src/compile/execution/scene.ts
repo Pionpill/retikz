@@ -20,7 +20,7 @@ const DEFAULT_LAYOUT_PADDING = 10;
 export const finalizeSceneCompilation = <TComposite extends AnyCompositeDefinition>(
   root: IRScene,
   runtime: CompileRuntime,
-  subtree: SubtreeCompilation,
+  subtree: Pick<SubtreeCompilation, 'primitives' | 'visualBounds' | 'artifacts'>,
 ): SceneCompilationSnapshot<TComposite> => {
   const { paintRegistry, clipRegistry, diagnosticCollector } = runtime.state.workspace;
   const primitives = subtree.primitives;

@@ -24,6 +24,36 @@ const scene: IRScene = {
 };
 
 describe('Weave 批次更新', () => {
+  it('跨输出块更新保留旧快照；候选回滚后按已提交的绘制顺序和边界继续更新', () => {
+    const children: Array<Extract<IRScene['children'][number], { type: 'node' }>> = Array.from(
+      { length: 100 },
+      (_, i) => ({
+        type: 'node',
+        id: 'n' + i,
+        position: [i, 0],
+      }),
+    );
+    const source: IRScene = { type: 'scene', version: 1, children };
+    const session = new WeaveManager(source);
+    const { root, compilation } = session.mount();
+    const before = compileTestResult(source);
+    const changed = { ...children[75], position: [500, 0] as [number, number], zIndex: -1 };
+    const update = (index: number, input: typeof changed | (typeof children)[number]) =>
+      session.update({
+        operations: [{ kind: 'update', target: { kind: 'child', scopeId: root.scopeId, index }, input }],
+      });
+    const rejected = update(75, changed);
+    expect(rejected.compilation.result).toEqual(compileTestResult({ ...source, children: children.with(75, changed) }));
+    rejected.commit();
+    rejected.rollback();
+    const next = { ...children[0], style: { fill: '#ff0000' } };
+    const accepted = update(0, next);
+    expect(accepted.compilation.result).toEqual(compileTestResult({ ...source, children: children.with(0, next) }));
+    accepted.commit();
+    accepted.finish();
+    expect(compilation.result).toEqual(before);
+  });
+
   it('父级字体更新重新解析正文和标签，增量结果与全量一致', () => {
     const child = {
       type: 'node',

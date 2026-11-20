@@ -1,4 +1,3 @@
-import type { IRChild, IRScene } from '@retikz/core';
 import type { PropertyPath } from '@retikz/foundation';
 import { isPropertyPathEqual } from '@retikz/foundation';
 
@@ -63,44 +62,5 @@ export class WeaveAddressIndex {
       }
     }
     this.names = new WeaveNameIndex(this.paths, previous?.names, touched, removed);
-  }
-
-  /** 读取旧声明快照；结构编辑只重新拼接变动容器，不序列化清洁子树 */
-  declaration(source: IRScene, entry: WeaveEntry): IRChild | undefined {
-    const path = this.paths.get(entry);
-    if (path === undefined) return;
-    let children = source.children;
-    for (let depth = 0; depth < path.length; depth += 2) {
-      const child = children[path[depth + 1] as number];
-      if (depth + 2 === path.length) return child;
-      if ('namespace' in child || child.type !== 'scope') return;
-      children = child.children;
-    }
-  }
-
-  /** 仅复制变更地址的祖先数组，清洁兄弟继续共享声明 */
-  replaceDeclaration(
-    source: IRScene,
-    entry: WeaveEntry,
-    transaction: WeaveTransaction,
-    childrenOverride?: Array<IRChild>,
-  ): IRScene {
-    const path = this.paths.get(entry)!;
-    const replace = (children: Array<IRChild>, depth: number): Array<IRChild> => {
-      const index = path[depth + 1] as number;
-      const next = children.slice();
-      const previous = children[index];
-      if (depth + 2 === path.length) {
-        const own = transaction.readState(entry).origin.own;
-        next[index] =
-          !('namespace' in previous) && previous.type === 'scope'
-            ? ({ ...own, type: 'scope', children: childrenOverride ?? previous.children } as IRChild)
-            : (own as IRChild);
-      } else if (!('namespace' in previous) && previous.type === 'scope') {
-        next[index] = { ...previous, children: replace(previous.children, depth + 2) };
-      }
-      return next;
-    };
-    return { ...source, children: replace(source.children, 0) };
   }
 }

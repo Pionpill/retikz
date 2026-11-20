@@ -1,5 +1,6 @@
 import type {
   CompileOccurrenceLocator,
+  CompositeInputScope,
   IRChild,
   LayoutContribution,
   ScenePrimitive,
@@ -150,6 +151,7 @@ export class CompileElementExecutor {
     isRoot = false,
     scopeOccurrence?: CompileOccurrenceLocator,
     compositeDepth = this.options.compositeDepth ?? 0,
+    authoredInput?: CompositeInputScope,
   ): CompileOwnerKey | undefined {
     const generated = scopeOccurrence !== undefined || (isRoot ? (this.options.generated ?? false) : false);
     const semanticOwner =
@@ -174,11 +176,12 @@ export class CompileElementExecutor {
             expansionPath: [],
           };
     const runtimeInputs =
-      isRoot && this.options.occurrence !== undefined && this.rootChildren.length === 1
+      authoredInput ??
+      (isRoot && this.options.occurrence !== undefined && this.rootChildren.length === 1
         ? this.runtime.context.compositeInputs
         : runtime.context.compositeInput === undefined
           ? undefined
-          : selectCompositeInputScope(runtime.context.compositeInput, ['children', index]);
+          : selectCompositeInputScope(runtime.context.compositeInput, ['children', index]));
     this.compilePreparedChild(
       child,
       index,

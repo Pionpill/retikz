@@ -36,7 +36,7 @@ type WeavePersistentState<TComposite extends AnyCompositeDefinition = AnyComposi
   readonly scopeIds: IdAllocator;
   /** 名称读取身份与稳定节点的对应关系 */
   readonly bindings: Map<object, WeaveEntry>;
-  /** 最近完成的声明输入 */
+  /** 首次挂载输入；挂载后仅保留根属性，子声明以作者树为准 */
   source: IRScene;
   /** 已提交声明的派生寻址结构 */
   addresses?: WeaveAddressIndex;

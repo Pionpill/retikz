@@ -9,7 +9,6 @@ import type {
   CompileRuntime,
   SubtreeCompileContext,
   SubtreeCompileState,
-  SubtreeCompileRuntime,
 } from '../../compile';
 import {
   bindScopeOutputAnimations,
@@ -72,7 +71,7 @@ export const createWeaveOutputFlow = ({
   const tracker = runtime.state.execution.provenanceTracker;
   /** ⚡清洁贡献直接物化输出，不进入元素执行器或候选写入 */
   const outputOf = (entry: WeaveEntry): WeaveAssembledOutput => {
-    if (pending.has(keyOf(entry))) requireTask(prepareAddress(entry));
+    if (pending.size !== 0 && pending.has(keyOf(entry))) requireTask(prepareAddress(entry));
     const execution = executions.get(entry);
     if (execution !== undefined) {
       requireTask(outputAddress(entry));
@@ -221,10 +220,32 @@ export const createWeaveOutputFlow = ({
   };
 
   /** 汇集声明重复诊断与根输出，不执行元素计算 */
-  const collectRootOutput = (root: WeaveRoot, rootFrame: SubtreeCompileRuntime) => {
+  const collectDeclarationsIfChanged = (root: WeaveRoot, indexesChanged: boolean) => {
+    // 之前没有重名时，只需核对本批实际发布的名称及其出现次数；几何和来源位置不影响唯一性
+    if (!indexesChanged && root.current?.uniqueDeclarations) {
+      let unchanged = true;
+      for (const [entry, execution] of executions) {
+        if (entry.type === 'scope') continue;
+        const previous = entry.current?.contribution?.bindings;
+        if (
+          previous?.length !== execution.bindings.length ||
+          execution.bindings.some(
+            (binding, i) => binding.id !== previous[i].id || binding.irPaths.length !== previous[i].irPaths.length,
+          )
+        ) {
+          unchanged = false;
+          break;
+        }
+      }
+      if (unchanged) return;
+    }
+    let unique = true;
     const diagnosticNamespace = new NamespaceStack({
       rootIdentity: runtime.state.execution.namespaceStack.identity,
-      onDuplicate: info => runtime.state.workspace.diagnosticCollector.collect(createDuplicateWarning(info)),
+      onDuplicate: info => {
+        unique = false;
+        runtime.state.workspace.diagnosticCollector.collect(createDuplicateWarning(info));
+      },
     });
     const collectDeclarations = (container: WeaveRoot | WeaveScopeEntry) => {
       for (const entry of transaction.readState(container).children) {
@@ -244,7 +265,7 @@ export const createWeaveOutputFlow = ({
       }
     };
     collectDeclarations(root);
-    for (const entry of transaction.readState(root).children) appendState(rootFrame.state, outputOf(entry));
+    transaction.editState(root).uniqueDeclarations = unique;
   };
-  return { outputOf, layoutOf, appendState, append, collectRootOutput };
+  return { outputOf, layoutOf, appendState, append, collectDeclarationsIfChanged };
 };
