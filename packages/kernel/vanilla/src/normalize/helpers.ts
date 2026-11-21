@@ -25,8 +25,6 @@ export const coordinate = (config: Omit<InputCoordinate, 'type'>): InputCoordina
  */
 export const path = (config: InputPathConfig): InputPath => ({
   type: 'path',
-  // 保留自有字段，让规范化阶段区分作者步骤与直接传入的 Core Path
-  authoring: config.authoring,
   ...config,
 });
 
@@ -39,7 +37,7 @@ export const path = (config: InputPathConfig): InputPath => ({
 export const scope = (
   config: Omit<InputScope, 'type' | 'children'>,
   children: ReadonlyArray<InputChild>,
-): InputScope => ({ type: 'scope', authoring: config.authoring, ...config, children });
+): InputScope => ({ type: 'scope', ...config, children });
 
 /**
  * 创建作者侧分层输入
@@ -48,53 +46,42 @@ export const scope = (
  */
 export const layer = (config: Omit<InputLayer, 'type'>): InputLayer => ({ type: 'layer', ...config });
 
-/** 创建作者侧 children Scene 的完整配置 */
-type InputSceneChildrenOptions = Omit<InputSceneChildren, 'type' | 'version'>;
-
-/** 创建作者侧 Layer Scene 的完整配置 */
-type InputSceneLayersOptions = Omit<InputSceneLayers, 'type' | 'version'>;
-
-/** 创建作者侧 Scene 输入 */
-type InputSceneFactory = {
-  /**
-   * 用子图元列表创建场景
-   * @param children 有序子图元列表，允许空数组
-   * @returns 保留子数组引用的场景输入，数据版本在归一化时补齐
-   */
-  (children: ReadonlyArray<InputChild>): InputSceneChildren;
-  /**
-   * 用子图元和全图配置创建场景
-   * @param input children 与主题、视框等全图配置，不接受 layers
-   * @returns 保留配置与子图元引用的场景输入，尚未编译
-   */
-  (input: InputSceneChildrenOptions): InputSceneChildren;
-  /**
-   * 用显式分层创建场景
-   * @param input layers 与全图配置，不接受 children
-   * @returns 保留图层列表引用的场景输入；归一化时每个图层独立生成结果
-   */
-  (input: InputSceneLayersOptions): InputSceneLayers;
-};
+/**
+ * 用子图元列表创建场景
+ * @param children 有序子图元列表，允许空数组
+ * @returns 保留子数组引用的场景输入，数据版本在归一化时补齐
+ */
+export function scene(children: ReadonlyArray<InputChild>): InputSceneChildren;
+/**
+ * 用子图元和全图配置创建场景
+ * @param input children 与主题、视框等全图配置，不接受 layers
+ * @returns 保留配置与子图元引用的场景输入，尚未编译
+ */
+export function scene(input: Omit<InputSceneChildren, 'type' | 'version'>): InputSceneChildren;
+/**
+ * 用显式分层创建场景
+ * @param input layers 与全图配置，不接受 children
+ * @returns 保留图层列表引用的场景输入；归一化时每个图层独立生成结果
+ */
+export function scene(input: Omit<InputSceneLayers, 'type' | 'version'>): InputSceneLayers;
 
 /** 创建作者侧 Scene 输入 */
-const createInputScene = (
-  input: ReadonlyArray<InputChild> | InputSceneChildrenOptions | InputSceneLayersOptions,
-): InputScene => {
+export function scene(
+  input:
+    | ReadonlyArray<InputChild>
+    | Omit<InputSceneChildren, 'type' | 'version'>
+    | Omit<InputSceneLayers, 'type' | 'version'>,
+): InputScene {
   if (Array.isArray(input)) return { type: 'scene', children: input };
   if ('layers' in input && input.layers !== undefined) {
     const { children: _children, ...config } = input;
-    const { layers } = config;
     void _children;
-    return { type: 'scene', ...config, layers };
+    return { type: 'scene', ...config };
   }
 
-  const childrenInput = input as InputSceneChildrenOptions;
+  const childrenInput = input as Omit<InputSceneChildren, 'type' | 'version'>;
   const { layers: _layers, ...config } = childrenInput;
-  const { children } = config;
   void _layers;
 
-  return { type: 'scene', ...config, children };
-};
-
-/** 创建作者侧 Scene 输入 */
-export const scene = createInputScene as InputSceneFactory;
+  return { type: 'scene', ...config };
+}
