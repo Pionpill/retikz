@@ -1,4 +1,5 @@
 import type { PathCompileResult, PathDefinitionCompileContext } from '../../../contract';
+import { compileBuiltinStroke } from '../../../providers';
 import { createCompositeContractError, guardProviderOutput } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
 import { snapshotProviderPosition, snapshotScenePrimitives } from '../../shared';
@@ -33,13 +34,14 @@ export const emitDefinedPath = (
 ) => {
   const { definition } = resolution;
   const allowedResourceIds = new Set<string>();
+  const compileDefinition = definition.compile as (context: PathDefinitionCompileContext) => PathCompileResult | null;
   const { definitionContext, getCompiledStroke } = createPathDefinitionContext(
     resolution,
     context,
     allowedResourceIds,
+    compileDefinition === compileBuiltinStroke,
     prepared,
   );
-  const compileDefinition = definition.compile as (context: PathDefinitionCompileContext) => PathCompileResult | null;
   const produced = compileDefinition(definitionContext);
   return {
     emit: snapshotPathCompileResult(definition.name, produced, allowedResourceIds),

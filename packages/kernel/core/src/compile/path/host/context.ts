@@ -44,6 +44,7 @@ export const createPathDefinitionContext = (
   resolution: BoundPathResolution,
   context: PathCompileContext,
   allowedResourceIds: Set<string>,
+  reuseStrokeOutput: boolean,
   prepared?: PreparedPathCompilation['stroke'],
 ) => {
   let compiledStroke: CompiledStrokePath | undefined;
@@ -131,7 +132,7 @@ export const createPathDefinitionContext = (
   };
 
   const emitStroke = (nextPath?: IRPathBase) => {
-    // ⚡缓存命中先于 provider 解析和视图构建；返回值仍逐次隔离
+    // ⚡缓存命中先于 provider 解析和视图构建
     const emitted = nextPath === undefined ? (compiledStroke ??= compileStroke()) : compileStroke(nextPath);
     const output = emitted.emit.overall;
     if (output === null) return null;
@@ -143,7 +144,8 @@ export const createPathDefinitionContext = (
         if (typeof paint === 'object' && paint.kind === 'resourceRef') allowedResourceIds.add(paint.id);
       }
     });
-    return cloneStrokeOutput(output);
+    // ⚡内置描边只转交宿主结果；自定义 Definition 每次调用仍得到独立副本
+    return reuseStrokeOutput ? output : cloneStrokeOutput(output);
   };
 
   const materializePath = (input?: Readonly<{ children?: ReadonlyArray<IRStep> }>) => {
