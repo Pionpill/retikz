@@ -8,18 +8,44 @@ import type {
   InputEmbedAuthoringSite,
   InputEmbedContext,
   InputEmbedContribution,
+  InputPath,
+  InputScope,
+  InputStep,
 } from '../element';
 import { normalizeNode, normalizePath } from '../element';
 import type { SceneNormalizeContext } from './context';
-import {
-  childSourcePath,
-  embedSlotSourcePath,
-  inputEmbedIdentityOf,
-  isInputPath,
-  isInputScope,
-  scopeContextOf,
-} from './context';
+import { childSourcePath, embedSlotSourcePath, inputEmbedIdentityOf, scopeContextOf } from './context';
 import type { InputAuthoringSite, InputChild } from './types';
+
+/** 只有作者侧 target 简写需要转换，纯 Core 步骤保持原样 */
+const hasTargetShorthand = (step: InputStep): boolean =>
+  ('to' in step && typeof step.to === 'string') ||
+  (step.kind === 'rectangle' && typeof step.from === 'string') ||
+  (step.kind === 'arc' && typeof step.center === 'string') ||
+  (step.kind === 'smooth' && step.points.some(point => typeof point === 'string'));
+
+/** 判断一个 child 是否为需经 Vanilla 处理的作者侧路径 */
+const isInputPath = (child: InputChild): child is InputPath =>
+  !('namespace' in child) &&
+  child.type === 'path' &&
+  ('authoring' in child ||
+    'way' in child ||
+    typeof child.arrow === 'string' ||
+    child.children?.some(hasTargetShorthand) === true);
+
+/** 判断已带 Scope 判别字段的容器是否仍含有需要 Vanilla 归一化的 authoring 子树 */
+const hasNestedInput = (scope: InputScope): boolean =>
+  scope.children.some(
+    child =>
+      'authoring' in child ||
+      child.type === 'embed' ||
+      isInputPath(child) ||
+      (child.type === 'scope' && !('namespace' in child) && hasNestedInput(child)),
+  );
+
+/** 判断 Scope 自身或其子树是否需要作者输入归一化 */
+export const isInputScope = (child: InputChild): child is InputScope =>
+  !('namespace' in child) && child.type === 'scope' && ('authoring' in child || hasNestedInput(child));
 
 /** 将嵌入 slot 的 Input child 在当前 Scene traversal 中归一化 */
 export const normalizeEmbeddedChildren = (

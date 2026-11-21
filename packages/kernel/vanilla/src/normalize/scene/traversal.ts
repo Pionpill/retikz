@@ -5,9 +5,9 @@ import type {
   InputEmbedContext,
   InputEmbedContribution,
 } from '../element';
-import { normalizeEmbeddedChildren } from './children';
+import { isInputScope, normalizeEmbeddedChildren } from './children';
 import type { SceneNormalizeContext } from './context';
-import { childSourcePath, embedSlotSourcePath, inputEmbedIdentityOf, isInputScope, scopeContextOf } from './context';
+import { childSourcePath, embedSlotSourcePath, inputEmbedIdentityOf, scopeContextOf } from './context';
 import { normalizeSceneLayer } from './normalize';
 import type { InputChild, InputLayer, InputScene, NormalizedScene } from './types';
 

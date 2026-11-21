@@ -3,7 +3,8 @@ import { CURRENT_IR_VERSION } from '@retikz/core';
 
 import { normalizeChild } from './children';
 import type { SceneNormalizeContext } from './context';
-import { asLayerStack, layerZIndex, childSourcePath } from './context';
+import { childSourcePath } from './context';
+import { asLayerStack, layerZIndex } from './layers';
 import type {
   InputAuthoringSite,
   InputLayer,
