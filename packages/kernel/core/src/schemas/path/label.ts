@@ -36,9 +36,7 @@ export const PathLabelSchema = strictObject({
     opacity: 'Label-only opacity, multiplied with the owning path opacity.',
     font: 'Label font overrides. Missing fields inherit from scope label defaults.',
   }),
-  text: TextBlockSchema.describe(
-    'One text block for this path label. Arrays provide authored lines with optional per-line styles.',
-  ),
+  text: TextBlockSchema.describe('Text at the sampled position.'),
   position: union([zodEnum(PathLabelPosition), NormalizedFractionSchema])
     .optional()
     .describe(
@@ -55,9 +53,7 @@ export const PathLabelSchema = strictObject({
     .describe(
       'Side relative to the label anchor; center places text on the path independently of sloped. Omitted values use top, or center when sloped is true.',
     ),
-  sloped: boolean()
-    .optional()
-    .describe('Rotate the label along the sampled tangent. An omitted `side` canonicalizes to `center`.'),
+  sloped: boolean().optional().describe('Rotate along the sampled tangent.'),
   interrupt: boolean()
     .optional()
     .describe('Whether this label requests a gap in a compatible host stroke. Omitted values use the host policy.'),
@@ -67,9 +63,7 @@ export const PathLabelSchema = strictObject({
   distance: NonNegativeNumberSchema.optional().describe(
     'Side offset distance in user units. Defaults to the same distance as Path step labels.',
   ),
-}).describe(
-  'Path label spec attached to a path-like host; compiled as one text block positioned from a centerline sample.',
-);
+}).describe('Text positioned from a sample on the host centerline.');
 
 /** 路径类几何共用的标签 IR 类型 */
 export type IRPathLabel = ZodInfer<typeof PathLabelSchema>;

@@ -17,7 +17,7 @@ export const createLabelVisualStyleShape = (descriptions: LabelVisualStyleDescri
     descriptions.textColor ?? 'Label text color override. Missing values inherit from host defaults.',
   ),
   opacity: OpacitySchema.optional().describe(
-    descriptions.opacity ?? 'Label opacity factor multiplied by host opacity; omitted values use 1.',
+    descriptions.opacity ?? 'Multiplies the host opacity.',
   ),
   font: FontSchema.optional().describe(
     descriptions.font ?? 'Label font overrides. Missing fields inherit from host defaults.',

@@ -30,9 +30,7 @@ export const MarkStyleSchema = strictObject({
   shape: NonBlankStringSchema.optional().describe(
     'Mark shape provider name. Built-ins and registered custom names are accepted.',
   ),
-  scale: PositiveNumberSchema.optional().describe(
-    'Uniform mark scale applied to both `length` and `width`. Defaults to 1.',
-  ),
+  scale: PositiveNumberSchema.optional().describe('Scales both length and width; defaults to 1.'),
   length: NonNegativeNumberSchema.optional().describe(
     'Mark length along the path direction, in user units. Defaults to the shape definition value, or 8.',
   ),
@@ -50,7 +48,7 @@ export const MarkStyleSchema = strictObject({
     'Outline width for hollow mark definitions, in user units. Solid mark definitions ignore this field.',
   ),
   params: JsonObjectSchema.optional().describe('JSON parameters passed to the shape definition.'),
-}).describe('Mark shape, dimensions, and visual style overrides.');
+});
 
 /** 沿路径放置的标记 */
 export const PathMarkPlacementSchema = MarkStyleSchema.extend({
@@ -61,7 +59,7 @@ export const PathMarkPlacementSchema = MarkStyleSchema.extend({
     'Geometry before or after corner rounding. Defaults to original for step and rounded for length.',
   ),
   pos: NormalizedFractionSchema.describe(
-    'Normalized position along the path before arrow shortening and label interruption, interpreted using positionMode and positionGeometry.',
+    'Position before arrow shortening and label interruptions, using positionMode and positionGeometry.',
   ),
   rotate: union([literal('auto'), number()])
     .optional()

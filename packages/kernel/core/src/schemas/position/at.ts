@@ -6,14 +6,12 @@ import { Anchor } from '../../shared';
 
 /** 校验从引用对象沿指定方向与间距放置的位置 */
 export const AtPositionSchema = object({
-  direction: zodEnum(Anchor).describe(
-    'Canonical direction from the referenced node toward this node, in visual convention.',
-  ),
+  direction: zodEnum(Anchor).describe('Direction from the reference toward the new position.'),
   of: NonBlankStringSchema.describe('Referenced node or coordinate id; must already be defined.'),
   distance: PositiveNumberSchema.optional().describe(
-    'Distance from the referenced node center to this node center in user units. Falls back to nodeDistance supplied by the resolve context.',
+    'Center-to-center distance in user units; falls back to nodeDistance.',
   ),
-}).describe('Relative position: place this node at `direction` from `of`, separated by `distance`.');
+}).describe('Place relative to an earlier reference.');
 
 /** 相对定位 IR 类型 `{ direction, of, distance? }`，与 IRPosition/PolarPosition union 平级 */
 export type IRAtPosition = ZodInfer<typeof AtPositionSchema>;

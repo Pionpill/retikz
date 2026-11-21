@@ -53,12 +53,8 @@ export type IRPathArrow = ZodInfer<typeof PathArrowSchema>;
 
 /** 校验两端箭头共用的视觉字段及逐端覆盖 */
 export const ArrowDetailSchema = ArrowStyleSchema.extend({
-  start: PathArrowEndSchema.optional().describe(
-    'Per-start arrow override. Present fields override top-level arrowDetail defaults.',
-  ),
-  end: PathArrowEndSchema.optional().describe(
-    'Per-end arrow override. Present fields override top-level arrowDetail defaults.',
-  ),
+  start: PathArrowEndSchema.optional(),
+  end: PathArrowEndSchema.optional(),
 })
   .strict()
   .describe(

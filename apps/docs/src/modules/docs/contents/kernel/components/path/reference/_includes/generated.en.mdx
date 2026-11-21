@@ -670,7 +670,7 @@ export type SmoothStepProps = {
 | `positionGeometry` | `NonNullable<IRPathLabel['positionGeometry']>` | —       | Position geometry resolved after inheritance                                                  |
 | `positionMode`     | `NonNullable<IRPathLabel['positionMode']>`     | —       | Resolved position interpretation                                                              |
 | `side`             | `NonNullable<IRPathLabel['side']> \| 'center'` | —       | Side relative to the host                                                                     |
-| `sloped?`          | `false \| true`                                | —       | Rotate the label along the sampled tangent. An omitted `side` canonicalizes to `center`.      |
+| `sloped?`          | `false \| true`                                | —       | Rotate along the sampled tangent.                                                             |
 | `textAlign?`       | `"start" \| "middle" \| "end"`                 | —       | Multi-line text alignment within the text block. Omitted fields use middle.                   |
 
 </ApiTable>
@@ -717,7 +717,7 @@ export type CanonicalPathLabelPlacement = Omit<
 | `positionGeometry?` | `"original" \| "rounded"`                                                                                            | —        | Geometry before or after corner rounding. When omitted after inheritance, step uses original and length uses rounded.                             |
 | `positionMode?`     | `"length" \| "step"`                                                                                                 | `"step"` | Normalized position interpretation. Defaults to step after label defaults are merged.                                                             |
 | `side?`             | `"center" \| "top" \| "right" \| "bottom" \| "left"`                                                                 | —        | Side relative to the label anchor; center places text on the path independently of sloped. Omitted values use top, or center when sloped is true. |
-| `sloped?`           | `false \| true`                                                                                                      | —        | Rotate the label along the sampled tangent. An omitted `side` canonicalizes to `center`.                                                          |
+| `sloped?`           | `false \| true`                                                                                                      | —        | Rotate along the sampled tangent.                                                                                                                 |
 | `textAlign?`        | `"start" \| "middle" \| "end"`                                                                                       | —        | Multi-line text alignment within the text block. Omitted fields use middle.                                                                       |
 
 </ApiTable>
@@ -1037,23 +1037,23 @@ export declare const samplePathRoute: (
 
 <ApiTable>
 
-| Member          | Type                                       | Default | Description                                                                                                                                                                  |
-| --------------- | ------------------------------------------ | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `animations?`   | `InputPathConfig['animations']`            | —       | Declarative timeline animation tracks carried verbatim into the emitted Scene primitive(s). They do not affect layout or bounding boxes and are not inherited across scopes. |
-| `arrow?`        | `IRPath['arrow'] \| '->' \| '<-' \| '<->'` | —       | Endpoint arrow configuration, or a direction shorthand enabling the start, end, or both arrows                                                                               |
-| `authoring?`    | `unknown`                                  | —       | Optional runtime payload interpreted by a compile driver; excluded from Core IR                                                                                              |
-| `cornerRadius?` | `number`                                   | —       | Geometric corner radius applied to line-to-line joints. Distinct from `lineJoin`, which only styles stroke corners. Omitted fields keep sharp joints.                        |
-| `id?`           | `string`                                   | —       | Optional stable id used as a reference target for the Scene primitive emitted by this drawable element.                                                                      |
-| `kind?`         | `string & {} \| "stroke"`                  | —       | Path provider name. Omitted means built-in `stroke`.                                                                                                                         |
-| `kindOptions?`  | `Record<string, JsonValue>`                | —       | JSON-safe option object consumed by the selected path provider.                                                                                                              |
-| `label?`        | `InputPathConfig['label']`                 | —       | Host label attached to this path-like relation.                                                                                                                              |
-| `marks?`        | `InputPathConfig['marks']`                 | —       | Marks placed by step parameters or cumulative length on original or rounded geometry; direction follows the path tangent.                                                    |
-| `meta?`         | `Record<string, JsonValue>`                | —       | Opaque JSON metadata carried by this drawable element. Preserved into emitted Scene primitives and ignored by the compiler.                                                  |
-| `rotate?`       | `number`                                   | —       | Rotate the whole path around its bounding-box center. Endpoints resolve before rotation wraps the resulting geometry.                                                        |
-| `scale?`        | `number \| { x: number; y: number; }`      | —       | Scale the whole path around its bounding-box center. Applied with rotate around the same center.                                                                             |
-| `style?`        | `InputPathConfig['style']`                 | —       | Path visual overrides; fields independently override inherited defaults.                                                                                                     |
-| `type`          | `"path"`                                   | —       | Discriminator marking this child as a path.                                                                                                                                  |
-| `zIndex?`       | `number`                                   | —       | Explicit stacking order among sibling IR children. Higher draws on top. Omitted = 0 = source order. Sorting is stable within the same parent group.                          |
+| Member          | Type                                       | Default | Description                                                                                                                                           |
+| --------------- | ------------------------------------------ | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `animations?`   | `InputPathConfig['animations']`            | —       | Passed to emitted primitives without affecting layout or bounds. Not inherited across scopes.                                                         |
+| `arrow?`        | `IRPath['arrow'] \| '->' \| '<-' \| '<->'` | —       | Endpoint arrow configuration, or a direction shorthand enabling the start, end, or both arrows                                                        |
+| `authoring?`    | `unknown`                                  | —       | Optional runtime payload interpreted by a compile driver; excluded from Core IR                                                                       |
+| `cornerRadius?` | `number`                                   | —       | Geometric corner radius applied to line-to-line joints. Distinct from `lineJoin`, which only styles stroke corners. Omitted fields keep sharp joints. |
+| `id?`           | `string`                                   | —       | Stable reference ID for the emitted primitive.                                                                                                        |
+| `kind?`         | `string & {} \| "stroke"`                  | —       | Path provider name. Omitted means built-in `stroke`.                                                                                                  |
+| `kindOptions?`  | `Record<string, JsonValue>`                | —       | JSON-safe option object consumed by the selected path provider.                                                                                       |
+| `label?`        | `InputPathConfig['label']`                 | —       | Host label attached to this path-like relation.                                                                                                       |
+| `marks?`        | `InputPathConfig['marks']`                 | —       | Marks placed by step parameters or cumulative length on original or rounded geometry; direction follows the path tangent.                             |
+| `meta?`         | `Record<string, JsonValue>`                | —       | Copied unchanged to Scene primitives without affecting compilation.                                                                                   |
+| `rotate?`       | `number`                                   | —       | Rotate the whole path around its bounding-box center. Endpoints resolve before rotation wraps the resulting geometry.                                 |
+| `scale?`        | `number \| { x: number; y: number; }`      | —       | Scale the whole path around its bounding-box center. Applied with rotate around the same center.                                                      |
+| `style?`        | `InputPathConfig['style']`                 | —       | Path visual overrides; fields independently override inherited defaults.                                                                              |
+| `type`          | `"path"`                                   | —       | Discriminator marking this child as a path.                                                                                                           |
+| `zIndex?`       | `number`                                   | —       | Sibling stacking order. Higher draws on top; ties keep source order. Defaults to 0.                                                                   |
 
 </ApiTable>
 
@@ -1372,7 +1372,7 @@ export declare const defineMark: (definition: MarkDefinition) => MarkDefinition;
 
 <ZodSchema shallow name="PathSchema" />
 
-#### <ApiSourceLink label={"StepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={330}>StepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"StepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={316}>StepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="StepSchema" />
 
@@ -1384,49 +1384,49 @@ export declare const defineMark: (definition: MarkDefinition) => MarkDefinition;
 
 <ZodSchema shallow name="LineStepSchema" />
 
-#### <ApiSourceLink label={"AxisLineStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={79}>AxisLineStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"AxisLineStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={77}>AxisLineStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="AxisLineStepSchema" />
 
-#### <ApiSourceLink label={"FoldStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={117}>FoldStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"FoldStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={115}>FoldStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="FoldStepSchema" />
 
-#### <ApiSourceLink label={"CycleStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={122}>CycleStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"CycleStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={120}>CycleStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="CycleStepSchema" />
 
-#### <ApiSourceLink label={"CurveStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={128}>CurveStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"CurveStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={126}>CurveStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="CurveStepSchema" />
 
-#### <ApiSourceLink label={"CubicStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={137}>CubicStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"CubicStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={135}>CubicStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="CubicStepSchema" />
 
 Either tangent angle selects tangent mode; the omitted outgoing/incoming angle defaults to 0/180. Angles are absolute screen angles (0 right, 90 down). Looseness defaults to 1 and affects only tangent mode.
 
-#### <ApiSourceLink label={"BendStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={173}>BendStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"BendStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={171}>BendStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="BendStepSchema" />
 
-#### <ApiSourceLink label={"ArcStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={222}>ArcStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"ArcStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={216}>ArcStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="ArcStepSchema" />
 
-#### <ApiSourceLink label={"CirclePathStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={262}>CirclePathStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"CirclePathStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={252}>CirclePathStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="CirclePathStepSchema" />
 
-#### <ApiSourceLink label={"EllipsePathStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={290}>EllipsePathStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"EllipsePathStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={280}>EllipsePathStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="EllipsePathStepSchema" />
 
-#### <ApiSourceLink label={"RectangleStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={295}>RectangleStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"RectangleStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={285}>RectangleStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="RectangleStepSchema" />
 
-#### <ApiSourceLink label={"SmoothStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={313}>SmoothStepSchema</ApiSourceLink>
+#### <ApiSourceLink label={"SmoothStepSchema"} path={"packages/kernel/core/src/schemas/path/step.ts"} startLine={301}>SmoothStepSchema</ApiSourceLink>
 
 <ZodSchema shallow name="SmoothStepSchema" />
 
@@ -1442,7 +1442,7 @@ Either tangent angle selects tangent mode; the omitted outgoing/incoming angle d
 
 <ZodSchema shallow name="MarkStyleSchema" />
 
-#### <ApiSourceLink label={"PathMarkPlacementSchema"} path={"packages/kernel/core/src/schemas/path/mark.ts"} startLine={56}>PathMarkPlacementSchema</ApiSourceLink>
+#### <ApiSourceLink label={"PathMarkPlacementSchema"} path={"packages/kernel/core/src/schemas/path/mark.ts"} startLine={54}>PathMarkPlacementSchema</ApiSourceLink>
 
 <ZodSchema shallow name="PathMarkPlacementSchema" />
 

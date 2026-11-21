@@ -13,14 +13,10 @@ export const PolarPositionSchema = object({
     lazy((): ZodType<SharedPolarPosition, SharedPolarPosition> => PolarPositionSchema),
   ])
     .optional()
-    .describe(
-      'Origin reference: node id string, Cartesian [x, y], or nested PolarPosition. Omitted fields use [0, 0].',
-    ),
-  angle: number().describe(
-    'Angle in degrees measured from the positive x axis. Positive angles follow the screen y-down convention.',
-  ),
+    .describe('Origin; defaults to [0, 0].'),
+  angle: number().describe('Degrees clockwise from +x in screen coordinates.'),
   radius: number().describe('Radius or distance in user units.'),
-}).describe('Polar coordinate position; resolved to Cartesian at Scene compile time');
+}).describe('Polar position relative to an origin.');
 
 /** 极坐标位置 IR 类型 */
 export type PolarPosition = ZodInfer<typeof PolarPositionSchema>;

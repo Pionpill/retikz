@@ -157,7 +157,7 @@ export type InputScope = Omit<IRScope, 'children'> & {
 
 ## 持久化配置
 
-#### <ApiSourceLink label={"IRScope"} path={"packages/kernel/core/src/schemas/scope/scope.ts"} startLine={124}>IRScope</ApiSourceLink>
+#### <ApiSourceLink label={"IRScope"} path={"packages/kernel/core/src/schemas/scope/scope.ts"} startLine={116}>IRScope</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -198,7 +198,7 @@ export type IRScope = IRScopeProps & {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRScopeAnchorPosition"} path={"packages/kernel/core/src/schemas/scope/scope.ts"} startLine={112}>IRScopeAnchorPosition</ApiSourceLink> / <ApiSourceLink label={"ScopeAnchorPositionSchema"} path={"packages/kernel/core/src/schemas/scope/scope.ts"} startLine={42}>ScopeAnchorPositionSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRScopeAnchorPosition"} path={"packages/kernel/core/src/schemas/scope/scope.ts"} startLine={104}>IRScopeAnchorPosition</ApiSourceLink> / <ApiSourceLink label={"ScopeAnchorPositionSchema"} path={"packages/kernel/core/src/schemas/scope/scope.ts"} startLine={42}>ScopeAnchorPositionSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -208,7 +208,7 @@ export type IRScope = IRScopeProps & {
 
 | 成员          | 类型                                                                                                                                                                                                                                                 | 默认值 | 说明                                           |
 | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ---------------------------------------------- |
-| `kind`        | `"anchor"`                                                                                                                                                                                                                                           | —      | 锚点定位的判别字段                             |
+| `kind`        | `"anchor"`                                                                                                                                                                                                                                           | —      | —                                              |
 | `selfAnchor?` | `number \| [number, number] \| string & {} \| "center" \| "top" \| "right" \| "bottom" \| "left" \| "top-right" \| "top-left" \| "bottom-right" \| "bottom-left" \| "origin" \| { side: "top" \| "right" \| "bottom" \| "left"; fraction: number; }` | —      | 变换后 Scope 包络上的对齐点；省略时使用 center |
 | `target`      | `ZodInput<typeof ScopeAnchorPositionSchema.shape["target"]>`                                                                                                                                                                                         | —      | 父坐标系中的定位目标                           |
 
@@ -231,7 +231,6 @@ export type IRScopeAnchorPosition = ZodInput<typeof ScopeAnchorPositionSchema>;
   name="ScopeAnchorPositionSchema"
   description="将变换后的 Scope 自身参照点对齐父坐标系目标。"
   descriptions={{
-    kind: '锚点定位的判别字段',
     target: '父坐标系中的定位目标',
     selfAnchor: '变换后 Scope 包络上的对齐点；省略时使用 center',
   }}
@@ -288,7 +287,7 @@ export type IRScopeDefaults = ZodInfer<typeof ScopeDefaultsSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRScopePosition"} path={"packages/kernel/core/src/schemas/scope/scope.ts"} startLine={115}>IRScopePosition</ApiSourceLink> / <ApiSourceLink label={"ScopePositionSchema"} path={"packages/kernel/core/src/schemas/scope/scope.ts"} startLine={51}>ScopePositionSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRScopePosition"} path={"packages/kernel/core/src/schemas/scope/scope.ts"} startLine={107}>IRScopePosition</ApiSourceLink> / <ApiSourceLink label={"ScopePositionSchema"} path={"packages/kernel/core/src/schemas/scope/scope.ts"} startLine={51}>ScopePositionSchema</ApiSourceLink>
 
 <DocTabs defaultValue="definition">
 
@@ -308,13 +307,13 @@ export type IRScopePosition = ZodInput<typeof ScopePositionSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRScopePositionTarget"} path={"packages/kernel/core/src/schemas/scope/scope.ts"} startLine={109}>IRScopePositionTarget</ApiSourceLink>
+#### <ApiSourceLink label={"IRScopePositionTarget"} path={"packages/kernel/core/src/schemas/scope/scope.ts"} startLine={101}>IRScopePositionTarget</ApiSourceLink>
 
 ```ts
 export type IRScopePositionTarget = ZodInput<typeof ScopePositionTargetSchema>;
 ```
 
-#### <ApiSourceLink label={"IRScopeProps"} path={"packages/kernel/core/src/schemas/scope/scope.ts"} startLine={118}>IRScopeProps</ApiSourceLink>
+#### <ApiSourceLink label={"IRScopeProps"} path={"packages/kernel/core/src/schemas/scope/scope.ts"} startLine={110}>IRScopeProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -352,7 +351,7 @@ export type IRScopeProps = Omit<ZodInfer<typeof ScopePropsSchema>, 'position'> &
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ScopeSchema"} path={"packages/kernel/core/src/schemas/scope/scope.ts"} startLine={98}>ScopeSchema</ApiSourceLink>
+#### <ApiSourceLink label={"ScopeSchema"} path={"packages/kernel/core/src/schemas/scope/scope.ts"} startLine={90}>ScopeSchema</ApiSourceLink>
 
 <ZodSchema
   shallow

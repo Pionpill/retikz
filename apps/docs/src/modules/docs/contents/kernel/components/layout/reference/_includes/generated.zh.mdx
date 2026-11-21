@@ -13,7 +13,7 @@
 
 ## 组件声明
 
-#### <ApiSourceLink label={"Layout"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={401}>Layout</ApiSourceLink> / <ApiSourceLink label={"LayoutProps"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={224}>LayoutProps</ApiSourceLink>
+#### <ApiSourceLink label={"Layout"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={371}>Layout</ApiSourceLink> / <ApiSourceLink label={"LayoutProps"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={194}>LayoutProps</ApiSourceLink>
 
 通过 children 声明图形，或通过 ir 传入完整场景；同时提供时使用 ir。默认使用 retained 模式处理后续更新，可通过 runtime 切换为 static 完整编译模式
 
@@ -97,7 +97,7 @@ export type LayoutProps = {
 
 ## 执行与辅助契约
 
-#### <ApiSourceLink label={"LayoutExtensions"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={178}>LayoutExtensions</ApiSourceLink>
+#### <ApiSourceLink label={"LayoutExtensions"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={148}>LayoutExtensions</ApiSourceLink>
 
 通过 Layout 的 extensions 属性传入，各字段接收对应的定义数组；这些运行时定义不写入可持久化的场景数据
 
@@ -279,7 +279,7 @@ export const LayoutRuntimeMode = Object.freeze({
 export type LayoutRuntimeMode = ValueOf<typeof LayoutRuntimeMode>;
 ```
 
-#### <ApiSourceLink label={"scene"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={111}>scene</ApiSourceLink>
+#### <ApiSourceLink label={"scene"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={100}>scene</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -341,7 +341,7 @@ export declare const layer: (config: Omit<InputLayer, 'type'>) => InputLayer;
 
 ## 直接调用
 
-#### <ApiSourceLink label={"InputLayer"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={37}>InputLayer</ApiSourceLink>
+#### <ApiSourceLink label={"InputLayer"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={29}>InputLayer</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -377,7 +377,7 @@ export type InputLayer = LayerOptions & {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InputScene"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={83}>InputScene</ApiSourceLink>
+#### <ApiSourceLink label={"InputScene"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={75}>InputScene</ApiSourceLink>
 
 **公共属性**
 
@@ -434,7 +434,7 @@ export type InputScene = InputSceneChildren | InputSceneLayers;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InputSceneChildren"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={77}>InputSceneChildren</ApiSourceLink>
+#### <ApiSourceLink label={"InputSceneChildren"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={69}>InputSceneChildren</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -473,7 +473,7 @@ export type InputSceneChildren = InputSceneBase &
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InputSceneLayers"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={80}>InputSceneLayers</ApiSourceLink>
+#### <ApiSourceLink label={"InputSceneLayers"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={72}>InputSceneLayers</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -514,7 +514,7 @@ export type InputSceneLayers = InputSceneBase &
 
 ## 持久化配置
 
-#### <ApiSourceLink label={"IRScene"} path={"packages/kernel/core/src/schemas/scene/scene.ts"} startLine={72}>IRScene</ApiSourceLink> / <ApiSourceLink label={"SceneSchema"} path={"packages/kernel/core/src/schemas/scene/scene.ts"} startLine={45}>SceneSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRScene"} path={"packages/kernel/core/src/schemas/scene/scene.ts"} startLine={64}>IRScene</ApiSourceLink> / <ApiSourceLink label={"SceneSchema"} path={"packages/kernel/core/src/schemas/scene/scene.ts"} startLine={43}>SceneSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -563,7 +563,7 @@ export type IRScene = ZodInfer<typeof SceneSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRViewBox"} path={"packages/kernel/core/src/schemas/scene/scene.ts"} startLine={69}>IRViewBox</ApiSourceLink> / <ApiSourceLink label={"ViewBoxSchema"} path={"packages/kernel/core/src/schemas/scene/scene.ts"} startLine={37}>ViewBoxSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRViewBox"} path={"packages/kernel/core/src/schemas/scene/scene.ts"} startLine={61}>IRViewBox</ApiSourceLink> / <ApiSourceLink label={"ViewBoxSchema"} path={"packages/kernel/core/src/schemas/scene/scene.ts"} startLine={35}>ViewBoxSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 

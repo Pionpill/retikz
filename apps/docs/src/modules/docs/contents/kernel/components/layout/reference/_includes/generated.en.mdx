@@ -13,7 +13,7 @@ For initial setup, see [Basic usage](/kernel/components/layout/usage). React pro
 
 ## Component declarations
 
-#### <ApiSourceLink label={"Layout"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={401}>Layout</ApiSourceLink> / <ApiSourceLink label={"LayoutProps"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={224}>LayoutProps</ApiSourceLink>
+#### <ApiSourceLink label={"Layout"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={371}>Layout</ApiSourceLink> / <ApiSourceLink label={"LayoutProps"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={194}>LayoutProps</ApiSourceLink>
 
 Declare drawings through children or pass a complete scene through ir; ir takes precedence when both are supplied. Subsequent updates use retained mode by default; runtime can select static mode for full compilation.
 
@@ -97,7 +97,7 @@ export type LayoutProps = {
 
 ## Execution and supporting contracts
 
-#### <ApiSourceLink label={"LayoutExtensions"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={178}>LayoutExtensions</ApiSourceLink>
+#### <ApiSourceLink label={"LayoutExtensions"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={148}>LayoutExtensions</ApiSourceLink>
 
 Pass these options through the extensions prop of Layout. Each field accepts an array of definitions; these runtime definitions are excluded from persisted scene data.
 
@@ -279,7 +279,7 @@ export const LayoutRuntimeMode = Object.freeze({
 export type LayoutRuntimeMode = ValueOf<typeof LayoutRuntimeMode>;
 ```
 
-#### <ApiSourceLink label={"scene"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={111}>scene</ApiSourceLink>
+#### <ApiSourceLink label={"scene"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={100}>scene</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -341,7 +341,7 @@ export declare const layer: (config: Omit<InputLayer, 'type'>) => InputLayer;
 
 ## Direct calls
 
-#### <ApiSourceLink label={"InputLayer"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={37}>InputLayer</ApiSourceLink>
+#### <ApiSourceLink label={"InputLayer"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={29}>InputLayer</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -377,20 +377,20 @@ export type InputLayer = LayerOptions & {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InputScene"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={83}>InputScene</ApiSourceLink>
+#### <ApiSourceLink label={"InputScene"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={75}>InputScene</ApiSourceLink>
 
 **Common members**
 
 <ApiTable>
 
-| Member        | Type                                                                     | Default | Description                                                                                                 |
-| ------------- | ------------------------------------------------------------------------ | ------- | ----------------------------------------------------------------------------------------------------------- |
-| `animations?` | `InputSceneChildren['animations']`                                       | —       | Scene-root animation tracks, including viewBox framing animations; omitting this field adds no root tracks. |
-| `authoring?`  | `unknown`                                                                | —       | Optional runtime payload interpreted by a compile driver; excluded from Core IR                             |
-| `theme?`      | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }` | —       | Root theme selection; sets only the name and mode fields to override.                                       |
-| `type`        | `"scene"`                                                                | —       | Discriminator marking this object as the root scene                                                         |
-| `version?`    | `never`                                                                  | —       | Authoring input excludes a version; normalization supplies the current IR version                           |
-| `viewBox?`    | `{ x: number; y: number; width: number; height: number; }`               | —       | Explicit framing; when omitted, bounds are computed from content plus padding.                              |
+| Member        | Type                                                                     | Default | Description                                                                       |
+| ------------- | ------------------------------------------------------------------------ | ------- | --------------------------------------------------------------------------------- |
+| `animations?` | `InputSceneChildren['animations']`                                       | —       | Root tracks can animate the viewBox.                                              |
+| `authoring?`  | `unknown`                                                                | —       | Optional runtime payload interpreted by a compile driver; excluded from Core IR   |
+| `theme?`      | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }` | —       | Root theme selection; sets only the name and mode fields to override.             |
+| `type`        | `"scene"`                                                                | —       | Discriminator marking this object as the root scene                               |
+| `version?`    | `never`                                                                  | —       | Authoring input excludes a version; normalization supplies the current IR version |
+| `viewBox?`    | `{ x: number; y: number; width: number; height: number; }`               | —       | Explicit framing; when omitted, bounds are computed from content plus padding.    |
 
 </ApiTable>
 
@@ -434,7 +434,7 @@ export type InputScene = InputSceneChildren | InputSceneLayers;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InputSceneChildren"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={77}>InputSceneChildren</ApiSourceLink>
+#### <ApiSourceLink label={"InputSceneChildren"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={69}>InputSceneChildren</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -442,16 +442,16 @@ export type InputScene = InputSceneChildren | InputSceneLayers;
 
 <ApiTable>
 
-| Member        | Type                                                                     | Default | Description                                                                                                 |
-| ------------- | ------------------------------------------------------------------------ | ------- | ----------------------------------------------------------------------------------------------------------- |
-| `animations?` | `InputSceneChildren["animations"]`                                       | —       | Scene-root animation tracks, including viewBox framing animations; omitting this field adds no root tracks. |
-| `authoring?`  | `unknown`                                                                | —       | Optional runtime payload interpreted by a compile driver; excluded from Core IR                             |
-| `children`    | `ReadonlyArray<InputChild>`                                              | —       | Ordered children placed in the implicit default layer during normalization                                  |
-| `layers?`     | `never`                                                                  | —       | Explicit layers, normalized after a stable sort by zIndex                                                   |
-| `theme?`      | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }` | —       | Root theme selection; sets only the name and mode fields to override.                                       |
-| `type`        | `"scene"`                                                                | —       | Discriminator marking this object as the root scene                                                         |
-| `version?`    | `never`                                                                  | —       | Authoring input excludes a version; normalization supplies the current IR version                           |
-| `viewBox?`    | `{ x: number; y: number; width: number; height: number; }`               | —       | Explicit framing; when omitted, bounds are computed from content plus padding.                              |
+| Member        | Type                                                                     | Default | Description                                                                       |
+| ------------- | ------------------------------------------------------------------------ | ------- | --------------------------------------------------------------------------------- |
+| `animations?` | `InputSceneChildren["animations"]`                                       | —       | Root tracks can animate the viewBox.                                              |
+| `authoring?`  | `unknown`                                                                | —       | Optional runtime payload interpreted by a compile driver; excluded from Core IR   |
+| `children`    | `ReadonlyArray<InputChild>`                                              | —       | Ordered children placed in the implicit default layer during normalization        |
+| `layers?`     | `never`                                                                  | —       | Explicit layers, normalized after a stable sort by zIndex                         |
+| `theme?`      | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }` | —       | Root theme selection; sets only the name and mode fields to override.             |
+| `type`        | `"scene"`                                                                | —       | Discriminator marking this object as the root scene                               |
+| `version?`    | `never`                                                                  | —       | Authoring input excludes a version; normalization supplies the current IR version |
+| `viewBox?`    | `{ x: number; y: number; width: number; height: number; }`               | —       | Explicit framing; when omitted, bounds are computed from content plus padding.    |
 
 </ApiTable>
 
@@ -473,7 +473,7 @@ export type InputSceneChildren = InputSceneBase &
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InputSceneLayers"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={80}>InputSceneLayers</ApiSourceLink>
+#### <ApiSourceLink label={"InputSceneLayers"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={72}>InputSceneLayers</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -481,16 +481,16 @@ export type InputSceneChildren = InputSceneBase &
 
 <ApiTable>
 
-| Member        | Type                                                                     | Default | Description                                                                                                 |
-| ------------- | ------------------------------------------------------------------------ | ------- | ----------------------------------------------------------------------------------------------------------- |
-| `animations?` | `InputSceneLayers["animations"]`                                         | —       | Scene-root animation tracks, including viewBox framing animations; omitting this field adds no root tracks. |
-| `authoring?`  | `unknown`                                                                | —       | Optional runtime payload interpreted by a compile driver; excluded from Core IR                             |
-| `children?`   | `never`                                                                  | —       | Ordered children placed in the implicit default layer during normalization                                  |
-| `layers`      | `ReadonlyArray<InputLayer>`                                              | —       | Explicit layers, normalized after a stable sort by zIndex                                                   |
-| `theme?`      | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }` | —       | Root theme selection; sets only the name and mode fields to override.                                       |
-| `type`        | `"scene"`                                                                | —       | Discriminator marking this object as the root scene                                                         |
-| `version?`    | `never`                                                                  | —       | Authoring input excludes a version; normalization supplies the current IR version                           |
-| `viewBox?`    | `{ x: number; y: number; width: number; height: number; }`               | —       | Explicit framing; when omitted, bounds are computed from content plus padding.                              |
+| Member        | Type                                                                     | Default | Description                                                                       |
+| ------------- | ------------------------------------------------------------------------ | ------- | --------------------------------------------------------------------------------- |
+| `animations?` | `InputSceneLayers["animations"]`                                         | —       | Root tracks can animate the viewBox.                                              |
+| `authoring?`  | `unknown`                                                                | —       | Optional runtime payload interpreted by a compile driver; excluded from Core IR   |
+| `children?`   | `never`                                                                  | —       | Ordered children placed in the implicit default layer during normalization        |
+| `layers`      | `ReadonlyArray<InputLayer>`                                              | —       | Explicit layers, normalized after a stable sort by zIndex                         |
+| `theme?`      | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }` | —       | Root theme selection; sets only the name and mode fields to override.             |
+| `type`        | `"scene"`                                                                | —       | Discriminator marking this object as the root scene                               |
+| `version?`    | `never`                                                                  | —       | Authoring input excludes a version; normalization supplies the current IR version |
+| `viewBox?`    | `{ x: number; y: number; width: number; height: number; }`               | —       | Explicit framing; when omitted, bounds are computed from content plus padding.    |
 
 </ApiTable>
 
@@ -514,7 +514,7 @@ export type InputSceneLayers = InputSceneBase &
 
 ## Persistent configuration
 
-#### <ApiSourceLink label={"IRScene"} path={"packages/kernel/core/src/schemas/scene/scene.ts"} startLine={72}>IRScene</ApiSourceLink> / <ApiSourceLink label={"SceneSchema"} path={"packages/kernel/core/src/schemas/scene/scene.ts"} startLine={45}>SceneSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRScene"} path={"packages/kernel/core/src/schemas/scene/scene.ts"} startLine={64}>IRScene</ApiSourceLink> / <ApiSourceLink label={"SceneSchema"} path={"packages/kernel/core/src/schemas/scene/scene.ts"} startLine={43}>SceneSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -522,14 +522,14 @@ export type InputSceneLayers = InputSceneBase &
 
 <ApiTable>
 
-| Member        | Type                                                                     | Default | Description                                                                                                 |
-| ------------- | ------------------------------------------------------------------------ | ------- | ----------------------------------------------------------------------------------------------------------- |
-| `animations?` | `ZodInfer<typeof SceneSchema.shape["animations"]>`                       | —       | Scene-root animation tracks, including viewBox framing animations; omitting this field adds no root tracks. |
-| `children`    | `Array<IRChild>`                                                         | —       | Ordered top-level scene children; an empty array is allowed.                                                |
-| `theme?`      | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }` | —       | Root theme selection; sets only the name and mode fields to override.                                       |
-| `type`        | `"scene"`                                                                | —       | Discriminator marking this object as the root scene                                                         |
-| `version`     | `1`                                                                      | —       | Scene data format version; currently must be 1, independent of the package version.                         |
-| `viewBox?`    | `{ x: number; y: number; width: number; height: number; }`               | —       | Explicit framing; when omitted, bounds are computed from content plus padding.                              |
+| Member        | Type                                                                     | Default | Description                                                                    |
+| ------------- | ------------------------------------------------------------------------ | ------- | ------------------------------------------------------------------------------ |
+| `animations?` | `ZodInfer<typeof SceneSchema.shape["animations"]>`                       | —       | Root tracks can animate the viewBox.                                           |
+| `children`    | `Array<IRChild>`                                                         | —       | Ordered top-level scene children; an empty array is allowed.                   |
+| `theme?`      | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }` | —       | Root theme selection; sets only the name and mode fields to override.          |
+| `type`        | `"scene"`                                                                | —       | Discriminator marking this object as the root scene                            |
+| `version`     | `1`                                                                      | —       | Scene format version, independent of package version.                          |
+| `viewBox?`    | `{ x: number; y: number; width: number; height: number; }`               | —       | Explicit framing; when omitted, bounds are computed from content plus padding. |
 
 </ApiTable>
 
@@ -551,7 +551,7 @@ export type IRScene = ZodInfer<typeof SceneSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRViewBox"} path={"packages/kernel/core/src/schemas/scene/scene.ts"} startLine={69}>IRViewBox</ApiSourceLink> / <ApiSourceLink label={"ViewBoxSchema"} path={"packages/kernel/core/src/schemas/scene/scene.ts"} startLine={37}>ViewBoxSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRViewBox"} path={"packages/kernel/core/src/schemas/scene/scene.ts"} startLine={61}>IRViewBox</ApiSourceLink> / <ApiSourceLink label={"ViewBoxSchema"} path={"packages/kernel/core/src/schemas/scene/scene.ts"} startLine={35}>ViewBoxSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -559,12 +559,12 @@ export type IRScene = ZodInfer<typeof SceneSchema>;
 
 <ApiTable>
 
-| Member   | Type     | Default | Description                                                              |
-| -------- | -------- | ------- | ------------------------------------------------------------------------ |
-| `height` | `number` | —       | Height in scene coordinate units; must be finite and greater than zero.  |
-| `width`  | `number` | —       | Width in scene coordinate units; must be finite and greater than zero.   |
-| `x`      | `number` | —       | Left edge in scene coordinate units; must be finite and may be negative. |
-| `y`      | `number` | —       | Top edge in scene coordinate units; must be finite and may be negative.  |
+| Member   | Type     | Default | Description                    |
+| -------- | -------- | ------- | ------------------------------ |
+| `height` | `number` | —       | Visible height in scene units. |
+| `width`  | `number` | —       | Visible width in scene units.  |
+| `x`      | `number` | —       | Left edge in scene units.      |
+| `y`      | `number` | —       | Top edge in scene units.       |
 
 </ApiTable>
 
