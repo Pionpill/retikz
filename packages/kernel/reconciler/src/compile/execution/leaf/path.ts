@@ -3,6 +3,7 @@ import type {
   CompiledPath,
   PathCompileContext,
   IRPathBase,
+  IRTarget,
   InputPathCompilation,
   LayoutBoundsContribution,
   PositionTargetEvaluateContext,
@@ -102,7 +103,25 @@ const compilePendingPath = (runtime: CompileRuntime, pending: PendingPathEmissio
   const namespace = runtime.state.execution.namespaceStack;
   namespace.setPhase('resolving');
   try {
-    return compilePath(canon, createPathCompileContext(runtime, pending));
+    // ⚡一次性描边不保存目标表；无变换的绝对点已是局部坐标，无须按来源登记后再按值查回
+    const literal = (point: IRTarget) =>
+      Array.isArray(point) &&
+      Number.isFinite(point[0]) &&
+      Number.isFinite(point[1]) &&
+      !Object.is(point[0], -0) &&
+      !Object.is(point[1], -0);
+    const direct =
+      pending.scopeChain.length === 0 &&
+      canon.stroke !== undefined &&
+      !canon.canon.arrow &&
+      !canon.canon.marks?.length &&
+      !canon.canon.label?.length &&
+      canon.canon.children?.every(step =>
+        step.kind === 'line' || step.kind === 'move'
+          ? (!('label' in step) || step.label === undefined) && literal(step.to)
+          : step.kind === 'smooth' && step.label === undefined && step.points.every(literal),
+      );
+    return compilePath(canon, createPathCompileContext(runtime, pending), direct ? { targets: new Map() } : undefined);
   } finally {
     namespace.setPhase('registering');
   }

@@ -88,7 +88,8 @@ export const pathTargetViewOf = (
 
   for (const binding of targets.values()) byTarget.set(targetKeyOf(binding.target), binding);
 
-  const bindingOf = (target: IRTarget): TargetResolution | undefined => byTarget.get(targetKeyOf(target));
+  const bindingOf = (target: IRTarget): TargetResolution | undefined =>
+    byTarget.size === 0 ? undefined : byTarget.get(targetKeyOf(target));
 
   const pointOf = (target: IRTarget): IRPosition | null => {
     if (isRelative(target)) return null;
