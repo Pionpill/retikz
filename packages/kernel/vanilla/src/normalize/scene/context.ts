@@ -33,9 +33,6 @@ export const asLayerStack = (scene: InputScene): Array<InputLayer> => {
   return [...scene.layers].sort((left, right) => layerZIndex(left) - layerZIndex(right));
 };
 
-/** 判断一个 child 是否为 InputEmbed */
-export const isInputEmbed = (child: InputChild): child is AnyInputEmbed => child.type === 'embed';
-
 /** 读取或为匿名 InputEmbed 确定仅运行时可见的稳定身份 */
 export const inputEmbedIdentityOf = (input: AnyInputEmbed, context: SceneNormalizeContext): string =>
   input.id ?? `__retikz-embed:${context.layerId}:${context.sourcePath}:${input.adapter.kind}`;

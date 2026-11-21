@@ -39,7 +39,7 @@ export type {
   InputSmoothStep,
   InputStep,
   InputTarget,
-  SceneNormalizationResult,
+  NormalizedScene,
   SynchronousInputEmbedAdapter,
   WayArcOp,
   WayAxisLineOp,

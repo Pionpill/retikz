@@ -7,16 +7,9 @@ import type {
 } from '../element';
 import { normalizeEmbeddedChildren } from './children';
 import type { SceneNormalizeContext } from './context';
-import {
-  childSourcePath,
-  embedSlotSourcePath,
-  inputEmbedIdentityOf,
-  isInputEmbed,
-  isInputScope,
-  scopeContextOf,
-} from './context';
+import { childSourcePath, embedSlotSourcePath, inputEmbedIdentityOf, isInputScope, scopeContextOf } from './context';
 import { normalizeSceneLayer } from './normalize';
-import type { InputChild, InputLayer, InputScene, SceneNormalizationResult } from './types';
+import type { InputChild, InputLayer, InputScene, NormalizedScene } from './types';
 
 /** 准备 traversal 只描述作者位置，不执行 adapter 或构造占位贡献 */
 export type InputEmbedSite = Readonly<{
@@ -43,7 +36,7 @@ type InputSceneTraversal = Readonly<{
   /** 整张场景按归一化遍历顺序收集的嵌入位置 */
   sites: ReadonlyArray<InputEmbedSite>;
   /** 将与 sites 顺序对应的已完成贡献组装为唯一场景 Source */
-  normalize: (contributions: ReadonlyArray<InputEmbedContribution>) => SceneNormalizationResult;
+  normalize: (contributions: ReadonlyArray<InputEmbedContribution>) => NormalizedScene;
 }>;
 
 /** adapter contribution 到达后按固定作者位置消费，不能在归一化时发现新计算 */
@@ -73,7 +66,7 @@ const collectChildEmbedSites = (
 
   for (const [index, input] of children.entries()) {
     const context = { ...ctx, sourcePath: childSourcePath(ctx, offset + index) };
-    if (isInputEmbed(input)) {
+    if (input.type === 'embed' && !('namespace' in input)) {
       const id = inputEmbedIdentityOf(input, context);
       const location: Omit<InputEmbedContext, 'normalizeChildren'> = {
         id,

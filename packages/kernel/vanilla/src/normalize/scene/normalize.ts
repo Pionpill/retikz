@@ -11,7 +11,7 @@ import type {
   InputSceneLayers,
   NamedLayerResult,
   InputScene,
-  SceneNormalizationResult,
+  NormalizedScene,
 } from './types';
 import { BuiltinLayerName } from './types';
 
@@ -23,7 +23,7 @@ export const normalizeSceneLayer = (
   scene: InputScene,
   layer: InputLayer,
   prepared?: SceneNormalizeContext['prepared'],
-): SceneNormalizationResult => {
+): NormalizedScene => {
   const contributions: Array<CoreProviderContribution> = [];
   const runtimeInputs: Array<CompositeInputBinding> = [];
   const authoringSites: Array<InputAuthoringSite> = [];
@@ -67,11 +67,9 @@ export const normalizeSceneLayer = (
 };
 
 /** 直接子项生成单图，显式图层各自生成独立的 IR */
-export function normalizeScene(scene: InputSceneChildren): SceneNormalizationResult;
-export function normalizeScene(scene: InputSceneLayers): ReadonlyArray<NamedLayerResult<SceneNormalizationResult>>;
-export function normalizeScene(
-  scene: InputScene,
-): SceneNormalizationResult | ReadonlyArray<NamedLayerResult<SceneNormalizationResult>>;
+export function normalizeScene(scene: InputSceneChildren): NormalizedScene;
+export function normalizeScene(scene: InputSceneLayers): ReadonlyArray<NamedLayerResult<NormalizedScene>>;
+export function normalizeScene(scene: InputScene): NormalizedScene | ReadonlyArray<NamedLayerResult<NormalizedScene>>;
 export function normalizeScene(scene: InputScene) {
   if (scene.layers === undefined)
     return normalizeSceneLayer(scene, { type: 'layer', name: BuiltinLayerName.Main, children: scene.children });
