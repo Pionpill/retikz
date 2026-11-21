@@ -5,7 +5,7 @@ description: Use when designing, implementing, running, or reviewing Retikz pack
 
 # Schema 语义评估
 
-测量 LLM 能否仅凭输入契约将自然语言要求转换为正确 JSON。LLM 是被测对象，脚本负责确定性评分；诊断同时关注契约可理解性与描述的上下文成本，在正确性不退化的前提下精简 `describe`，不以模型排名为目标。
+**核心原则：评估 LLM 仅凭输入契约理解作者意图并生成正确 JSON 的准确性，要求对可评估的输入语义全覆盖。** 通过 Zod 只证明结构合法，不证明符合题意；离线覆盖不代表模型正确率。LLM 是被测对象，脚本负责确定性评分。诊断兼顾契约可理解性与描述成本，不以模型排名为目标。
 
 ## 范围与接入
 

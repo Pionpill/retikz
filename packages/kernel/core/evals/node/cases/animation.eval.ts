@@ -107,10 +107,7 @@ const createChannelCase = (
   track: NonNullable<IRNode['animations']>[number],
 ): NodeEvalCase => ({
   id,
-  task:
-    '给节点添加一条声明式动画：' +
-    request +
-    '，一轮耗时 1.2 秒，首末帧分别在归一化时间 0 和 1；未提到的时序设置沿用默认且不显式填入。不要用静态属性或其他通道替代。',
+  task: '给节点添加一条声明式动画：' + request + '，时长 1200 毫秒，仅设起止两帧，其余沿用默认。',
   expected: { type: 'node', animations: [track] },
   mustOmit: ['position', 'rotate', 'scale', 'style'],
 });
@@ -139,7 +136,7 @@ export const animationCases: Array<NodeEvalCase> = [
   ),
   {
     id: 'NI010',
-    task: '给节点添加一条声明式动画：垂直平移动画值从 0 到负 20 个用户单位，一轮耗时 1.2 秒，首末帧分别在归一化时间 0 和 1；未提到的时序设置沿用默认且不显式填入。不要用静态属性或其他通道替代。',
+    task: '给节点添加一条声明式动画：垂直平移动画值从 0 到负 20 个用户单位，时长 1200 毫秒，仅设起止两帧，其余沿用默认。',
     expected: {
       type: 'node',
       animations: [
