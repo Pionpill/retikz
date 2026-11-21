@@ -607,6 +607,19 @@ export const kernelSection: Array<Section> = [
       },
       corePage,
       {
+        id: 'reconciler',
+        label: 'kernel.pkgReconciler',
+        sidebarGroup: 'kernel.pkgGroupCore',
+        children: [
+          {
+            id: 'compile-scheduling',
+            label: 'kernel.pkgReconcilerCompileScheduling',
+            difficulty: DocDifficulty.Internals,
+            meta: { pageType: 'architecture', audience: 'maintainer', sourceOfTruth: 'runtime' },
+          },
+        ],
+      },
+      {
         id: 'tex',
         label: 'kernel.pkgTex',
         sidebarGroup: 'kernel.pkgGroupExtension',

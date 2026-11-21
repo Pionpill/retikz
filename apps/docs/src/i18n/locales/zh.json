@@ -110,6 +110,8 @@
     "pkgFoundation": "基座 · foundation",
     "pkgFoundationApiReference": "API 参考",
     "pkgCore": "编译核心 · core",
+    "pkgReconciler": "编译协调 · reconciler",
+    "pkgReconcilerCompileScheduling": "执行 / 编译调度",
     "pkgInspect": "编译观测 · inspect",
     "pkgInspectBuiltins": "内置观测",
     "pkgInspectCustom": "自定义用法",

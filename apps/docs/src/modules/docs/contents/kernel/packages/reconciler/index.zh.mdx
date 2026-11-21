@@ -115,3 +115,15 @@ try {
 节点形状、坐标和连接端点的求值规则见[编译核心 · core](/kernel/packages/core)；将 Scene 绘制为 SVG 或 Canvas 见[渲染后端 · render](/kernel/packages/render)。Reconciler 负责在两者之间安排计算、复用结果并发布版本。
 
 读执行源码时，先看一次完整编译如何得到 Scene，再看 Weave 如何缩小下一次计算的范围。接入输出目标时则可以从协调层开始：先弄清结果何时对外可见，再按需追踪它是怎样算出来的。
+
+## 章节内容
+
+<LinkedSections
+  items={[
+    {
+      title: '执行 / 编译调度',
+      description: '沿一次完整编译追踪路径占位、节点几何登记与整图组装',
+      url: '/kernel/packages/reconciler/compile-scheduling',
+    },
+  ]}
+/>

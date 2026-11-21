@@ -115,3 +115,15 @@ First-scene timings run from session creation until the complete Scene is ready.
 See [Compilation Core](/kernel/packages/core) for the rules that determine node shapes, coordinates and connection endpoints, and [Render](/kernel/packages/render) for drawing a Scene with SVG or Canvas. Reconciler schedules the computation between them, reuses results and publishes revisions.
 
 When reading the compiler source, start with how a full compilation produces a Scene, then follow how Weave narrows the work on the next update. When integrating an output target, start with coordination: establish when a result becomes visible before tracing how it was computed.
+
+## Contents
+
+<LinkedSections
+  items={[
+    {
+      title: 'Execution / Compilation Scheduling',
+      description: 'Trace path slots, node geometry registration and scene assembly in a full compilation',
+      url: '/kernel/packages/reconciler/compile-scheduling',
+    },
+  ]}
+/>

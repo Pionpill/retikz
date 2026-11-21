@@ -110,6 +110,8 @@
     "pkgFoundation": "foundation",
     "pkgFoundationApiReference": "API reference",
     "pkgCore": "core",
+    "pkgReconciler": "Compilation Coordination · reconciler",
+    "pkgReconcilerCompileScheduling": "Execution / Compilation Scheduling",
     "pkgInspect": "inspect",
     "pkgInspectBuiltins": "Built-in inspection",
     "pkgInspectCustom": "Custom usage",
