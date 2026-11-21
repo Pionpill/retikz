@@ -160,7 +160,7 @@ const NodeBaseSchema = strictObject({
     .describe('Scales the node and its path attachment positions.'),
   label: union([NodeLabelSchema, array(NodeLabelSchema)])
     .optional()
-    .describe('Annotations attached to the node border.'),
+    .describe('Border annotations. Set text layout and styling on each label itself.'),
   zIndex: number().int().optional().describe('Higher values draw above siblings; ties keep source order.'),
   style: NodeStyleSchema.optional(),
   layout: NodeLayoutSchema.optional(),
