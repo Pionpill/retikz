@@ -26,10 +26,10 @@ describe('@retikz/vanilla 架构守卫', () => {
 
   it('no-renderer-core-duplication：经 @retikz/render/svg builder，不自写 Scene→SVG', () => {
     const mountSrc = readSrc('dom/mount-svg.ts');
-    const strSrc = readSrc('runtime/render-svg.ts');
+    const strSrc = readSrc('runtime/output/render-svg.ts');
 
     expect(mountSrc).toMatch(/from ['"]@retikz\/render\/svg['"]/);
-    expect(mountSrc).toMatch(/buildSvgFrameDocument/);
+    expect(mountSrc).toMatch(/buildSvgDocument/);
     expect(strSrc).toMatch(/from ['"]@retikz\/render\/svg['"]/);
 
     // 不在 vanilla 复制 prim→attrs（stroke-width 这类呈现属性映射是 svg 的活）
@@ -37,11 +37,13 @@ describe('@retikz/vanilla 架构守卫', () => {
   });
 
   it('participant-stays-private：根 processing 与 DOM materializer 不把 transaction participant 暴露为公共扩展点', () => {
-    const root = readSrc('processing/index.ts') + readSrc('processing/types.ts');
-    const dom = readSrc('dom/retained.ts');
+    const root =
+      readSrc('index.ts') +
+      readSrc('runtime/session/types.ts') +
+      readSrc('runtime/_input/types.ts') +
+      readSrc('runtime/compile/types.ts');
 
     expect(root).not.toMatch(/ProcessingTransactionParticipant|createDomProcessingController|updateParticipant/);
-    expect(dom).toMatch(/processing\/internal/);
   });
 
   it('ssr-import-no-dom：无 document 的 Node 下 import + renderToSvgString 不炸', async () => {

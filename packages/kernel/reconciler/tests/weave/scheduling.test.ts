@@ -1,7 +1,7 @@
 import type { IRNode, IRPathBase, IRScene, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { SceneReconciler } from '../../src';
+import { ReconcilerMode, SceneReconciler } from '../../src';
 import { WeaveManager } from '../../src/weave';
 import { compileTestSnapshot } from '../helpers/compilation';
 
@@ -281,7 +281,10 @@ describe('Weave 更新调度', () => {
   });
   it('会话 full 策略的空批次发布新版本并报告计算记录', () => {
     const visited: Array<number> = [];
-    const session = new SceneReconciler({}, { updateStrategy: 'full', trace: event => visited.push(event.visited) });
+    const session = new SceneReconciler(
+      {},
+      { mode: ReconcilerMode.Incremental, updateStrategy: 'full', trace: event => visited.push(event.visited) },
+    );
     const mounted = session.mount({ type: 'scene', version: 1, children: [{ type: 'node', position: [0, 0] }] });
     const updated = session.update({ operations: [] });
     expect(updated.revision).toBe(mounted.revision + 1);

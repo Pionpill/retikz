@@ -1,5 +1,5 @@
 import type { Scene } from '@retikz/core';
-import type { CompileResult, CompositeArtifact } from '@retikz/reconciler';
+import type { CompileResult } from '@retikz/reconciler';
 import type { AnimationControls } from '@retikz/render/animation';
 import {
   bindWaapiDescriptors,
@@ -15,21 +15,18 @@ import {
   resolvePointViaLayout,
   resolveSvgElement,
 } from '@retikz/render/hydration';
-import { buildSvgFrameDocument } from '@retikz/render/svg';
+import { buildSvgDocument } from '@retikz/render/svg';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
-import {
-  DEFAULT_ID_PREFIX,
-  VanillaViewMode,
-  captureVanillaRuntimeOptions,
-  computeDisplaySize,
-  toSceneResult,
-} from '../runtime';
+import { DEFAULT_ID_PREFIX, EMPTY_ARTIFACTS, sceneOfResult, toSceneResult } from '../runtime';
+import type { InputRender, InputRetainedRender } from '../runtime';
+import { VanillaViewMode } from './constants';
+import { calculateDisplaySize } from './display-size';
+import { createRetainedProcessingController } from './retained';
+import { applyAttrs, svgNodeToDom } from './svg-dom';
 import type {
   HydrateOptions,
   HydrationHandle,
-  InputRender,
-  InputRetainedRender,
   MountOptions,
   RawStaticMountOptions,
   RetainedMountOptions,
@@ -39,9 +36,7 @@ import type {
   StaticSvgView,
   VanillaRetainedRuntimeOptions,
   VanillaView,
-} from '../runtime';
-import { createRetainedProcessingController } from './retained';
-import { applyAttrs, svgNodeToDom } from './svg-dom';
+} from './types';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -54,10 +49,6 @@ const mountStaticSvg = (
   input: InputRender,
   options: StaticMountOptions | RawStaticMountOptions,
 ): StaticSvgView | StaticRawSvgView => {
-  if (typeof Element === 'undefined' || !(container instanceof Element)) {
-    throw new RetikzVanillaError(RetikzVanillaErrorCode.Dom, 'mountSvg: container must be a DOM Element.');
-  }
-
   const output = options.output ?? {};
   const animation = options.animation ?? {};
   const idPrefix = output.idPrefix ?? DEFAULT_ID_PREFIX;
@@ -65,30 +56,25 @@ const mountStaticSvg = (
   const animate = resolveAnimationEnabled(animation.enabled, prefersReducedMotion());
   let animationControls: AnimationControls | undefined;
   let currentScene: Scene;
-  let currentArtifacts: ReadonlyArray<CompositeArtifact> = Object.freeze([]);
   let currentCompileResult: CompileResult | undefined;
   const liveHydrationDisposers = new Set<() => void>();
 
   const renderInto = (next: InputRender): void => {
-    const { scene, artifacts, compileResult, layers } = toSceneResult(next, options);
+    const result = toSceneResult(next, options);
+    const scene = sceneOfResult(result);
     currentScene = scene;
-    currentArtifacts = artifacts;
-    currentCompileResult = compileResult;
-    const doc = buildSvgFrameDocument(
-      { primary: scene, layers },
-      {
-        idPrefix,
-        defaultFontFamily: options.defaultFontFamily,
-        animate,
-        snapshotAt: animation.snapshotAt,
-      },
-    );
+    currentCompileResult = 'compileResult' in result ? result.compileResult : undefined;
+    const doc = buildSvgDocument(scene, {
+      idPrefix,
+      animate,
+      snapshotAt: animation.snapshotAt,
+    });
 
     while (root.firstChild) root.removeChild(root.firstChild);
 
     for (const attr of [...root.attributes]) root.removeAttribute(attr.name);
     applyAttrs(root, doc);
-    const size = computeDisplaySize(scene.layout, output.width, output.height);
+    const size = calculateDisplaySize(scene.layout, output.width, output.height);
     root.setAttribute('width', String(size.width));
     root.setAttribute('height', String(size.height));
 
@@ -139,7 +125,7 @@ const mountStaticSvg = (
 
       disposed = true;
 
-      for (const disposeHydration of [...liveHydrationDisposers]) disposeHydration();
+      for (const disposeHydration of liveHydrationDisposers) disposeHydration();
       animationControls?.dispose();
       root.remove();
     },
@@ -147,7 +133,7 @@ const mountStaticSvg = (
       return animationControls;
     },
     get artifacts() {
-      return currentArtifacts;
+      return currentCompileResult?.artifacts ?? EMPTY_ARTIFACTS;
     },
     get compileResult() {
       return currentCompileResult;
@@ -162,13 +148,8 @@ const mountRetainedSvg = (
   options: RetainedMountOptions,
   runtimeOptions: VanillaRetainedRuntimeOptions,
 ): RetainedSvgView => {
-  if (typeof Element === 'undefined' || !(container instanceof Element)) {
-    throw new RetikzVanillaError(RetikzVanillaErrorCode.Dom, 'mountSvg: container must be a DOM Element.');
-  }
-
   const root = document.createElementNS(SVG_NS, 'svg');
   const output = options.output ?? {};
-  if (options.defaultFontFamily) root.style.fontFamily = options.defaultFontFamily;
   if (output.width !== undefined) root.setAttribute('width', String(output.width));
   if (output.height !== undefined) root.setAttribute('height', String(output.height));
   const processing = createRetainedProcessingController({
@@ -199,7 +180,7 @@ const mountRetainedSvg = (
       return processing.read().animation;
     },
     get artifacts() {
-      return processing.result().artifacts;
+      return processing.result().compileResult.artifacts;
     },
     get compileResult() {
       return processing.result().compileResult;
@@ -224,7 +205,7 @@ export const mountSvg: MountSvg = ((
     return mountStaticSvg(container, input, options as StaticMountOptions);
   }
 
-  const runtimeOptions = captureVanillaRuntimeOptions(options);
+  const runtimeOptions = options.runtime ?? { mode: VanillaViewMode.Retained };
 
   return runtimeOptions.mode === VanillaViewMode.Static
     ? mountStaticSvg(container, input, options as RawStaticMountOptions)

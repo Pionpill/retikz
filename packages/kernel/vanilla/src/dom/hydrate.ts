@@ -10,7 +10,7 @@ import {
   resolveSvgPointViaCtm,
 } from '@retikz/render/hydration';
 
-import type { HydrateOptions, HydrationHandle } from '../runtime';
+import type { HydrateOptions, HydrationHandle } from './types';
 
 /** 把用户 handler 水合到已挂的根 `<svg>` */
 export const hydrate = (root: SVGSVGElement, options: HydrateOptions): HydrationHandle => {

@@ -65,6 +65,29 @@ it('Node 与 Coordinate 的 opaque authoring 只进入来源站点，不进入�
   ]);
 });
 
+it('嵌套作用域只替换含简写或作者字段的分支', () => {
+  const unchanged = scope({}, [node({ position: [0, 0] })]);
+  const authored = scope({ authoring: undefined }, [path({ way: ['A', 'B'] })]);
+  const result = normalizeScene(scene([scope({}, [unchanged, authored])]));
+  const parent = result.ir.children[0];
+  if ('namespace' in parent || parent.type !== 'scope') throw new Error('Expected scope');
+  expect(parent.children[0]).toBe(unchanged);
+  expect(parent.children[1]).toEqual({
+    type: 'scope',
+    children: [
+      {
+        type: 'path',
+        children: [
+          { type: 'step', kind: 'move', to: { id: 'A' } },
+          { type: 'step', kind: 'line', to: { id: 'B' } },
+        ],
+      },
+    ],
+  });
+  expect(parent.children[1]).not.toHaveProperty('authoring');
+  expect(result.authoringSites).toEqual([]);
+});
+
 const EMPTY_COMPOSITE_DEPENDENCIES = Object.freeze({ roots: [], providers: [] });
 
 const boxComposite = defineComposite({

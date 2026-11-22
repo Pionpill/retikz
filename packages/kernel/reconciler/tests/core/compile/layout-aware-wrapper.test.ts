@@ -24,9 +24,9 @@ import {
   LayoutIntrinsicMode,
   naturalLayoutProposal,
 } from '../../../../core/src';
+import { compileScene } from '../../../src/compile';
 import { createCompositeScopeChild } from '../../../src/compile/execution/composite/handle';
 import { CompositeCompileState, createCompileRuntime } from '../../../src/compile/runtime';
-import { compileScene } from '../../../src/full';
 import { compileTestResult } from '../../helpers/compilation';
 import { sceneRectangles } from '../../helpers/scene-rectangles';
 

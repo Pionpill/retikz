@@ -7,7 +7,7 @@ export const layerZIndex = (layer: InputLayer): number =>
   layer.zIndex ?? (layer.name === BuiltinLayerName.Background ? 0 : layer.name === BuiltinLayerName.Overlay ? 100 : 10);
 
 /** 将直接子项包装为主层；显式图层检查重名后按层级稳定排序 */
-export const asLayerStack = (scene: InputScene): Array<InputLayer> => {
+export const normalizeSceneLayers = (scene: InputScene): Array<InputLayer> => {
   if (scene.layers === undefined) return [{ type: 'layer', name: BuiltinLayerName.Main, children: scene.children }];
   const names = new Set<string>();
   for (const { name } of scene.layers) {

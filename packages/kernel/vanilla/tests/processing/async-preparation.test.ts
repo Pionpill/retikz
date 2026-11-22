@@ -5,7 +5,7 @@ import type {
   InputEmbedContribution,
   InputScene,
   InputSceneChildren,
-  VanillaCompileDriverSession,
+  VanillaCompileResultExtensionSession,
 } from '../../src';
 import {
   embed,
@@ -27,6 +27,32 @@ const source = (adapter: InputEmbedAdapter<{ x: number }>, x = 0): InputSceneChi
 });
 
 describe('共享异步编写准备', () => {
+  it('更新期间取消生命周期不会发布候选，退出编译后释放会话', async () => {
+    const abort = new AbortController();
+    let cancel = false;
+    let commits = 0;
+    const session: VanillaCompileResultExtensionSession = {
+      resolve: () => {
+        if (cancel) abort.abort();
+        return [];
+      },
+      onCommit: () => {
+        commits++;
+      },
+    };
+    const controller = await createProcessingControllerAsync(
+      { type: 'scene', children: [] },
+      { signal: abort.signal, compileResultExtension: { create: () => session } },
+    );
+    const previous = controller.read();
+    cancel = true;
+    expect(await controller.update({ type: 'scene', children: [] })).toEqual({ kind: 'superseded' });
+    expect(controller.read()).toBe(previous);
+    expect(commits).toBe(1);
+    expect(() => controller.subscribe(() => undefined)).toThrow(/disposed/i);
+    controller.dispose();
+  });
+
   it('当驱动程序创建回调取消请求时，不开始静态编译', async () => {
     const abort = new AbortController();
     let resolutions = 0;
@@ -36,17 +62,13 @@ describe('共享异步编写准备', () => {
         { type: 'scene', children: [] },
         {
           signal: abort.signal,
-          compileDriver: {
+          compileResultExtension: {
             create: () => {
               abort.abort();
               return {
-                resolve: output => {
+                resolve: () => {
                   resolutions++;
-                  return {
-                    primary: output.result,
-                    layers: [],
-                    diagnostics: [],
-                  };
+                  return [];
                 },
               };
             },
@@ -61,15 +83,15 @@ describe('共享异步编写准备', () => {
     for (const phase of ['create', 'resolve'] as const) {
       const abort = new AbortController();
       let commits = 0;
-      const driver = {
+      const extension = {
         create: () => {
           if (phase === 'create') abort.abort();
           return {
-            resolve: (output: Parameters<VanillaCompileDriverSession['resolve']>[0]) => {
+            resolve: () => {
               if (phase === 'resolve') abort.abort();
-              return { primary: output.result, layers: [], diagnostics: [] };
+              return [];
             },
-            commit: () => {
+            onCommit: () => {
               commits++;
             },
           };
@@ -79,7 +101,7 @@ describe('共享异步编写准备', () => {
       await expect(
         createProcessingControllerAsync(
           { type: 'scene', children: [] },
-          { compileDriver: driver, signal: abort.signal },
+          { compileResultExtension: extension, signal: abort.signal },
         ),
       ).rejects.toThrow(/cancel|abort|invalid|disposed/);
       expect(commits).toBe(0);
@@ -89,21 +111,21 @@ describe('共享异步编写准备', () => {
   it('取代同步编译回调中无效的更新，而不发布其修订版本', async () => {
     let invalidate: (() => void) | undefined;
     let commits = 0;
-    const session: VanillaCompileDriverSession = {
-      resolve: output => {
+    const session: VanillaCompileResultExtensionSession = {
+      resolve: () => {
         const callback = invalidate;
         invalidate = undefined;
         callback?.();
 
-        return { primary: output.result, layers: [], diagnostics: [] };
+        return [];
       },
-      commit: () => {
+      onCommit: () => {
         commits++;
       },
     };
     const controller = await createProcessingControllerAsync(
       { type: 'scene', children: [] },
-      { compileDriver: { create: () => session } },
+      { compileResultExtension: { create: () => session } },
     );
     const published: Array<number> = [];
     controller.subscribe(result => published.push(result.revision));
@@ -162,9 +184,9 @@ describe('共享异步编写准备', () => {
     const synchronous = compileToScene(input);
     const asynchronous = await compileToSceneAsync(input);
 
-    expect(asynchronous.scene).toEqual(synchronous.scene);
+    expect(asynchronous.compileResult.scene).toEqual(synchronous.compileResult.scene);
 
-    const group = asynchronous.scene.primitives[0];
+    const group = asynchronous.compileResult.scene.primitives[0];
     if (group.type !== 'group') throw new Error('Expected the authored Scope group');
 
     expect(group.children).toHaveLength(2);
@@ -242,7 +264,9 @@ describe('共享异步编写准备', () => {
     const asynchronous = await compileToSceneAsync(input);
 
     expect(asyncContexts).toEqual(syncContexts);
-    expect(asynchronous.map(layer => layer.result.scene)).toEqual(sync.map(layer => layer.result.scene));
+    expect(asynchronous.map(layer => layer.result.compileResult.scene)).toEqual(
+      sync.map(layer => layer.result.compileResult.scene),
+    );
   });
 
   it('处理生命周期取消并防止发布后期忽略信号结果', async () => {
@@ -294,7 +318,7 @@ describe('共享异步编写准备', () => {
     const input: InputSceneChildren = { type: 'scene', children: [bound(1), bound(2)] };
     const sync = compileToScene(input);
     const asyncResult = await compileToSceneAsync(input);
-    expect(asyncResult.scene).toEqual(sync.scene);
+    expect(asyncResult.compileResult.scene).toEqual(sync.compileResult.scene);
     expect(executed).toEqual([1, 2]);
   });
 
@@ -367,7 +391,7 @@ describe('共享异步编写准备', () => {
     const sync = compileToScene(input);
     const asyncResult = await compileToSceneAsync(input);
 
-    expect(asyncResult.scene).toEqual(sync.scene);
+    expect(asyncResult.compileResult.scene).toEqual(sync.compileResult.scene);
   });
 
   it('使丢弃和提交互斥的终止状态', async () => {
@@ -404,14 +428,10 @@ describe('共享异步编写准备', () => {
     const candidate: Awaited<ReturnType<typeof prepareStaticProcessingAsync>> = await prepareStaticProcessingAsync(
       { type: 'scene', children: [] },
       {
-        compileDriver: {
+        compileResultExtension: {
           create: () => ({
-            resolve: output => ({
-              primary: output.result,
-              layers: [],
-              diagnostics: [],
-            }),
-            commit: () => {
+            resolve: () => [],
+            onCommit: () => {
               commits++;
               candidate.commit();
 

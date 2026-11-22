@@ -72,16 +72,6 @@ export function scene(
     | Omit<InputSceneChildren, 'type' | 'version'>
     | Omit<InputSceneLayers, 'type' | 'version'>,
 ): InputScene {
-  if (Array.isArray(input)) return { type: 'scene', children: input };
-  if ('layers' in input && input.layers !== undefined) {
-    const { children: _children, ...config } = input;
-    void _children;
-    return { type: 'scene', ...config };
-  }
-
-  const childrenInput = input as Omit<InputSceneChildren, 'type' | 'version'>;
-  const { layers: _layers, ...config } = childrenInput;
-  void _layers;
-
-  return { type: 'scene', ...config };
+  if ('layers' in input || 'children' in input) return { type: 'scene', ...input };
+  return { type: 'scene', children: input };
 }

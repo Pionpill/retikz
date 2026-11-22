@@ -48,12 +48,12 @@ SceneReconciler 保留现有公开操作，不增加新的准备句柄或公开�
 
 ### 模式与实例生命周期
 
-`incremental` 在创建时固定，默认仍为 `true`：
+`mode` 在创建时固定，默认为 `ReconcilerMode.Full`：
 
-- `false`：通过同一执行器完整编译，不保留 Weave 跨次缓存；支持完整替换与输出配置更新，拒绝批次更新及 `updateStrategy` 配置
-- `true`：首轮计算后保留 Weave 状态，后续权威批次复用有效阶段产物；既有 `auto | full` 策略及默认值保持
+- `ReconcilerMode.Full`：通过同一执行器完整编译，不保留 Weave 跨次缓存；支持完整替换与输出配置更新，拒绝批次更新及 `updateStrategy` 配置
+- `ReconcilerMode.Incremental`：首轮计算后保留 Weave 状态，后续权威批次复用有效阶段产物；既有 `auto | full` 策略及默认值保持
 
-一次性编译创建 `incremental: false` 的临时实例，调用 `mount` 取得结果，并在成功或失败后释放。已交付的普通 Scene、artifacts 和诊断不依赖实例继续存活。持续处理保持现有 controller 的实例生命周期、执行模式和默认值；本次不调整缓存策略或清理其它配置接口。
+一次性编译创建 `mode: ReconcilerMode.Full` 的临时实例，调用 `mount` 取得结果，并在成功或失败后释放。已交付的普通 Scene、artifacts 和诊断不依赖实例继续存活。持续处理保持现有 controller 的实例生命周期、执行模式和默认值；本次不调整缓存策略或清理其它配置接口。
 
 所有完整编译最终使用相同的同步协调器执行方式。warning 与非致命执行诊断采用协调器既有发布规则，不另造静态编译专属的派发逻辑。
 
@@ -86,7 +86,7 @@ Vanilla 继续拥有 `InputScene` 归一化、作者贡献准备、provider 依�
 
 Vanilla 的异步作者准备、取消、过期请求判断及既有静态处理句柄保持在 processing 层。准备结束进入同步编译前检查发布权，处理结果对外交付前继续执行既有失效检查。静态处理句柄管理已有的结果交付和驱动通知，不向 Reconciler 增加跨调用的编译提交阶段。
 
-现有 compile driver 从协调器输出读取同次 `result` 与真实 `diagnostics`，继续生成只读图层和扩展诊断，并按既有 processing 规则通知成功。主图编译由协调器完成，驱动保持 primary result 身份，不再自行调用独立完整编译函数，也不以空诊断替代真实输出。驱动失败仍按现有规则保留最后成功的 ProcessingResult；不扩大为已完成编译及 warning 的撤销协议。
+现有 compile result extension 从协调器输出读取同次 `result` 与真实 `diagnostics`，只返回扩展诊断，并通过可选的 `onCommit` 通知宿主帧已提交。主图编译由协调器完成，宿主保留原始 primary result 并连同扩展诊断交付提交回调，不再自行调用独立完整编译函数，也不以空诊断替代真实输出。扩展失败仍按现有规则保留最后成功的 ProcessingResult；不扩大为已完成编译及 warning 的撤销协议。
 
 Inspect、Plot、Table 等现有独立编译消费者同步迁移，领域输入、lowering、辅助绘图与结果语义保持。React 继续消费 Vanilla，不直接管理协调器或重建编译驱动。Vanilla 与框架包不新增局部批次 authoring、自动整树 diff 或作者身份推断。
 

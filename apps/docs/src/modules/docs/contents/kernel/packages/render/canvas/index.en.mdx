@@ -82,7 +82,9 @@ import { compileToScene } from '@retikz/vanilla';
 
 import { renderSceneToImage } from '@retikz/render/canvas-node';
 
-const { scene } = compileToScene(ir);
+const {
+  compileResult: { scene },
+} = compileToScene(ir);
 const png = await renderSceneToImage(scene, {
   width: 960,
   height: 540,

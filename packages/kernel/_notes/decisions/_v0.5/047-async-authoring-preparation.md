@@ -24,7 +24,7 @@ Tier 2 作者输入可能先等待数据引擎等异步结果，再生成可同�
 
 ## 决策：在同步编译前准备完整作者贡献
 
-`@retikz/vanilla` processing 提供异步作者入口。它确定与同步路径相同的声明位置、匿名身份和有效 Theme，先收集本次作者树的全部 preparation，准备成功后才依声明顺序执行并汇合 contribution。之后复用唯一的同步 Source 归一化、provider graph resolver、compile driver 和 static/retained 发布链。
+`@retikz/vanilla` processing 提供异步作者入口。它确定与同步路径相同的声明位置、匿名身份和有效 Theme，先收集本次作者树的全部 preparation，准备成功后才依声明顺序执行并汇合 contribution。之后复用唯一的同步 Source 归一化、provider graph resolver、compile result extension 和 static/retained 发布链。
 
 prepare 只检查能力、解析声明和建立依赖，不执行数据变换或搬运行数据。execute 完成领域计算并生成既有 InputEmbedContribution；所有 contribution 就绪后才开始 Core 编译和 Runtime transaction。准备失败或输入失效不发布部分 contribution、部分 Scene 或新 revision。
 

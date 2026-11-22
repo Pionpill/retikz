@@ -41,7 +41,7 @@
 |        | `onRightClick?`   | `HydrationHandler`       | —          | 右键该图元（DOM `contextmenu`）；默认不抑制浏览器菜单，handler 自行 `event.preventDefault()`                                                                                                    |
 |        | `onWheel?`        | `HydrationHandler`       | —          | 在该图元上滚轮（DOM `wheel`）                                                                                                                                                                   |
 | 动画   | `animations?`     | `IRPath['animations']`   | —          | 路径级时间轴动画；渲染端播放或降级为静态，不参与布局                                                                                                                                            |
-| 运行时 | `authoring?`      | `unknown`                | —          | 可选 compile driver 自行解释的 runtime-only authoring 载荷，不进入 Core IR                                                                                                                      |
+| 运行时 | `authoring?`      | `unknown`                | —          | 可选 compile result extension 自行解释的 runtime-only authoring 载荷，不进入 Core IR                                                                                                            |
 |        | `meta?`           | `IRPath['meta']`         | —          | 用户自定义元数据；可在事件 / 水合上下文中读取，不参与布局。须为 JSON 可序列化对象                                                                                                               |
 
 </ApiTable>
@@ -1044,7 +1044,7 @@ export declare const samplePathRoute: (
 | --------------- | ------------------------------------------ | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `animations?`   | `InputPathConfig['animations']`            | —      | 声明式动画 track 数组（关键帧 + 时长 / 缓动 / 触发器）；用法与 preset 见动画组件文档                                                                                         |
 | `arrow?`        | `IRPath['arrow'] \| '->' \| '<-' \| '<->'` | —      | 端点箭头配置，或用方向字符串快捷启用起点、终点或两端箭头                                                                                                                     |
-| `authoring?`    | `unknown`                                  | —      | 可选编译驱动自行解释的运行时载荷，不进入 Core IR                                                                                                                             |
+| `authoring?`    | `unknown`                                  | —      | 可选编译结果扩展自行解释的运行时载荷，不进入 Core IR                                                                                                                         |
 | `cornerRadius?` | `number`                                   | —      | 线段相交处的几何圆角半径；与只改变描边外观的 `lineJoin` 不同                                                                                                                 |
 | `id?`           | `string`                                   | —      | 可选稳定 id：供其它元素 anchor 引用，也是水合事件绑定的挂点（带 id 才能给 path 绑 onClick 等 handler）                                                                       |
 | `kind?`         | `string & {} \| "stroke"`                  | —      | Path provider 名；省略时使用内置 `stroke`                                                                                                                                    |

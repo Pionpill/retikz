@@ -24,7 +24,7 @@ const scene: IRScene = {
 };
 /** 展示 React commit 后收到的 Composite 领域产物 */
 const Demo: FC = () => {
-  const [artifacts, setArtifacts] = useState<ProcessingResult['artifacts']>([]);
+  const [artifacts, setArtifacts] = useState<ProcessingResult['compileResult']['artifacts']>([]);
   const layout = artifacts.find(artifact => artifact.namespace === 'layout' && artifact.type === 'flexLayout');
   return (
     <div className="grid gap-3">

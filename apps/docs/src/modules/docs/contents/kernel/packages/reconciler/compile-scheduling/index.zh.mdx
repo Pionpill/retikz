@@ -17,7 +17,7 @@ description: 跟随一次完整编译，看 Reconciler 如何组织 Core 的计�
 
 <ComponentPreview files="scheduling-overview" size="sm" hideCode type="flow" />
 
-会话接收根声明和编译选项，调用 <ApiSourceLink label="createCompileRuntime" path="packages/kernel/reconciler/src/reconcile/reconciler.ts" startLine={59}>`createCompileRuntime`</ApiSourceLink> 准备这次计算要用的能力与工作区，例如名称查询、资源登记和诊断收集。接着进入 <ApiSourceLink label="compileScene" path="packages/kernel/reconciler/src/full.ts" startLine={7}>`compileScene`</ApiSourceLink>：它把根的子项交给子树执行器，再把根声明、同一个运行环境和子树产物交给整图组装函数。会话从这个入口取回快照；具体何时计算一个元素，由执行器安排。
+会话接收根声明和编译选项，调用 <ApiSourceLink label="createCompileRuntime" path="packages/kernel/reconciler/src/reconcile/reconciler.ts" startLine={58}>`createCompileRuntime`</ApiSourceLink> 准备这次计算要用的能力与工作区，例如名称查询、资源登记和诊断收集。接着进入 <ApiSourceLink label="compileScene" path="packages/kernel/reconciler/src/compile/execution/scene.ts" startLine={69}>`compileScene`</ApiSourceLink>：它把根的子项交给子树执行器，再把根声明、同一个运行环境和子树产物交给整图组装函数。会话从这个入口取回快照；具体何时计算一个元素，由执行器安排。
 
 ## 声明顺序与求值顺序
 

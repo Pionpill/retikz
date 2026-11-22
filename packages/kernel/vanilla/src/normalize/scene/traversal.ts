@@ -1,11 +1,10 @@
-import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../error';
 import type {
   AnyInputEmbed,
   EmbedChildrenNormalizationResult,
   InputEmbedContext,
   InputEmbedContribution,
 } from '../element';
-import { isInputScope, normalizeEmbeddedChildren } from './children';
+import { normalizeEmbeddedChildren } from './children';
 import type { SceneNormalizeContext } from './context';
 import { childSourcePath, embedSlotSourcePath, inputEmbedIdentityOf, scopeContextOf } from './context';
 import { normalizeSceneLayer } from './normalize';
@@ -41,38 +40,29 @@ type InputSceneTraversal = Readonly<{
 
 /** adapter contribution 到达后按固定作者位置消费，不能在归一化时发现新计算 */
 const preparedContributionsOf = (
-  sites: ReadonlyArray<InputEmbedSite>,
   contributions: ReadonlyArray<InputEmbedContribution>,
 ): NonNullable<SceneNormalizeContext['prepared']> => {
   let index = 0;
-  return (input, path) => {
-    const site = sites[index];
-    if (index >= sites.length || site.input !== input || site.sourcePath !== path)
-      throw new RetikzVanillaError(
-        RetikzVanillaErrorCode.Normalize,
-        'Prepared contribution does not match its authoring position',
-      );
-    return contributions[index++];
-  };
+  return () => contributions[index++];
 };
 
 /** 沿唯一作者分派规则读取实际嵌入位置；opaque props 的子项由 adapter 明确登记 */
 const collectChildEmbedSites = (
   children: ReadonlyArray<InputChild>,
   ctx: SceneNormalizeContext,
-  offset = 0,
+  sites: Array<InputEmbedSite> = [],
 ): Array<InputEmbedSite> => {
-  const sites: Array<InputEmbedSite> = [];
-
   for (const [index, input] of children.entries()) {
-    const context = { ...ctx, sourcePath: childSourcePath(ctx, offset + index) };
-    if (input.type === 'embed' && !('namespace' in input)) {
+    if ('namespace' in input || (input.type !== 'scope' && input.type !== 'embed')) continue;
+    const context = { ...ctx, sourcePath: childSourcePath(ctx, index) };
+    if (input.type === 'embed') {
       const id = inputEmbedIdentityOf(input, context);
+      const identityPath = [...ctx.path, id];
       const location: Omit<InputEmbedContext, 'normalizeChildren'> = {
         id,
         kind: input.adapter.kind,
         layerId: ctx.layerId,
-        identityPath: [...ctx.path, id],
+        identityPath,
       };
 
       let slotIndex = 0;
@@ -83,7 +73,7 @@ const collectChildEmbedSites = (
         children: nested => {
           const nestedContext = {
             ...context,
-            path: [...ctx.path, id],
+            path: identityPath,
             sourcePath: embedSlotSourcePath(context.sourcePath, slotIndex++),
           };
           const nestedSites = collectChildEmbedSites(nested, nestedContext);
@@ -93,14 +83,14 @@ const collectChildEmbedSites = (
             normalize: contributions =>
               normalizeEmbeddedChildren(nested, {
                 ...nestedContext,
-                prepared: preparedContributionsOf(nestedSites, contributions),
+                prepared: preparedContributionsOf(contributions),
               }),
           };
         },
       });
-    } else if (isInputScope(input)) {
+    } else {
       const nested = scopeContextOf(input, context);
-      sites.push(...collectChildEmbedSites(input.children, nested));
+      collectChildEmbedSites(input.children, nested, sites);
     }
   }
 
@@ -121,6 +111,6 @@ export const createInputSceneTraversal = (scene: InputScene, layer: InputLayer):
   const sites = collectChildEmbedSites(layer.children, context);
   return {
     sites,
-    normalize: contributions => normalizeSceneLayer(scene, layer, preparedContributionsOf(sites, contributions)),
+    normalize: contributions => normalizeSceneLayer(scene, layer, preparedContributionsOf(contributions)),
   };
 };

@@ -5,6 +5,7 @@ export {
   assembleNode,
   assemblePaths,
   bindScopeOutputAnimations,
+  compileScene,
   createNodeCompileContext,
   createNodeResolveContext,
   createPathCompileContext,

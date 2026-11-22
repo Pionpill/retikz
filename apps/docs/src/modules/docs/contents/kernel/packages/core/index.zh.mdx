@@ -47,7 +47,7 @@ Reconciler 将这些产物组织成 Scene，Render 再消费 Scene。图元是�
 
 <PackageManagerInstall packages="@retikz/core @retikz/reconciler" />
 
-从 Core 导入 `IRScene` 声明场景，从 Reconciler 导入 `SceneReconciler` 执行。下面只进行一次完整编译，通过 `incremental: false` 关闭后续增量更新所需的状态保留。`mount(ir)` 建立会话的首次结果，`compilation.result.scene` 是可交给渲染器的 Scene。
+从 Core 导入 `IRScene` 声明场景，从 Reconciler 导入 `SceneReconciler` 执行。下面只进行一次完整编译，使用默认的全量模式，不启用后续增量更新所需的状态保留。`mount(ir)` 建立会话的首次结果，`compilation.result.scene` 是可交给渲染器的 Scene。
 
 ```ts
 import type { IRScene } from '@retikz/core';
@@ -69,7 +69,7 @@ const ir: IRScene = {
   ],
 };
 
-const reconciler = new SceneReconciler({}, { incremental: false });
+const reconciler = new SceneReconciler();
 
 try {
   const { compilation } = reconciler.mount(ir);

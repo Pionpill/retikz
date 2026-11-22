@@ -14,8 +14,8 @@ const translations: Readonly<Partial<Record<string, string>>> = {
 
   创建一组图元的作者侧作用域输入: 'Create authoring input for a group of drawing elements',
   '作者侧 Scope 输入': 'Scope authoring input',
-  '可选编译驱动自行解释的运行时载荷，不进入 Core IR':
-    'Optional runtime payload interpreted by a compile driver; excluded from Core IR',
+  '可选编译结果扩展自行解释的运行时载荷，不进入 Core IR':
+    'Optional runtime payload interpreted by a compile result extension; excluded from Core IR',
   '局部变换、样式、裁剪与引用配置': 'Local transforms, styles, clipping, and reference configuration',
   '按声明顺序保留的子图元，不复制子数组': 'Children retained in declaration order; the array is not copied',
   '保留配置与子图元引用的 Scope 输入，尚未归一化或编译':
@@ -67,8 +67,8 @@ const translations: Readonly<Partial<Record<string, string>>> = {
     'Cascading styles (graphic state and four element-default channels) are shared through ScopeStyleProps with `<Layout>`; this type adds Scope-specific container, namespace, transform, barrier, stacking, and clipping fields',
   'scope 整体的时间轴动画；渲染端播放或降级为静态，不参与布局，也不下传给子元素':
     'Timeline animations for the whole Scope; rendered as animation or a static fallback, without participating in layout or propagating to children',
-  '可选 compile driver 自行解释的 runtime-only authoring 载荷，不进入 Core IR':
-    'Optional runtime-only authoring payload interpreted by a compile driver; excluded from Core IR',
+  '可选 compile result extension 自行解释的 runtime-only authoring 载荷，不进入 Core IR':
+    'Optional runtime-only authoring payload interpreted by a compile result extension; excluded from Core IR',
   "scope id 注册的 synthetic 包络形状（受控枚举 'rectangle' | 'circle'，非 Node shape 那种开放 shape 引用）；缺省为 'rectangle'（AABB）":
     "Synthetic reference-envelope shape for the Scope id: the closed enum 'rectangle' | 'circle', rather than an open Node shape reference; defaults to 'rectangle' (axis-aligned bounding box)",
   'scope 子节点：嵌套 Node / Path / Coordinate / Scope': 'Scope children: nested Node, Path, Coordinate, or Scope',

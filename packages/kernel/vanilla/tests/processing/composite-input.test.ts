@@ -46,9 +46,9 @@ describe('预处理复合组件输入的消费', () => {
     const sync = compileToScene(input, options);
     const async = await compileToSceneAsync(input, options);
 
-    expect(async.scene).toEqual(sync.scene);
-    expect(JSON.stringify(async.scene)).toContain('left-ready');
-    expect(JSON.stringify(async.scene)).toContain('right-ready');
+    expect(async.compileResult.scene).toEqual(sync.compileResult.scene);
+    expect(JSON.stringify(async.compileResult.scene)).toContain('left-ready');
+    expect(JSON.stringify(async.compileResult.scene)).toContain('right-ready');
   });
 
   it('编写规范化为相同的 JSON 时更新准备好的输入', async () => {
@@ -59,8 +59,8 @@ describe('预处理复合组件输入的消费', () => {
 
     expect(outcome.kind).toBe('committed');
     expect(controller.read().revision).toBe(1);
-    expect(JSON.stringify(controller.read().scene)).toContain('second-ready');
-    expect(JSON.stringify(controller.read().scene)).not.toContain('first-ready');
+    expect(JSON.stringify(controller.read().compileResult.scene)).toContain('second-ready');
+    expect(JSON.stringify(controller.read().compileResult.scene)).not.toContain('first-ready');
 
     controller.dispose();
   });
@@ -102,7 +102,7 @@ describe('预处理复合组件输入的消费', () => {
       { compile: { composites: [leafDefinition, outerDefinition] } },
     );
 
-    expect(JSON.stringify(result.scene)).toContain('slot-ready');
-    expect(JSON.stringify(result.scene)).not.toContain('undefined');
+    expect(JSON.stringify(result.compileResult.scene)).toContain('slot-ready');
+    expect(JSON.stringify(result.compileResult.scene)).not.toContain('undefined');
   });
 });

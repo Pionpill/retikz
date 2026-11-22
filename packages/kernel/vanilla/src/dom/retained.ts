@@ -1,65 +1,28 @@
-import type { AnyCompositeDefinition } from '@retikz/core';
+import { ReconcilerMode } from '@retikz/reconciler';
 import type { ReconcilerDiagnostic } from '@retikz/reconciler';
 import { prefersReducedMotion, resolveAnimationEnabled } from '@retikz/render/animation';
 import type { RenderHandlerContribution, InputRenderRuntimeConfig, RetainedRendererRead } from '@retikz/render/runtime';
 import { builtinRetainedRendererFactory, createRetainedRenderTarget } from '@retikz/render/runtime';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
-import type { ProcessingOptions, ProcessingResult } from '../processing';
-import { createDomProcessingController } from '../processing/internal';
+import { SceneRuntime } from '../runtime';
 import type {
-  InternalProcessingController,
+  InputRetainedRender,
+  ProcessingResult,
   ProcessingTransactionParticipant,
   ProcessingTransactionParticipantFactory,
-} from '../processing/internal';
-import { captureRetainedUpdateOptions, computeDisplaySize } from '../runtime';
+  VanillaAnimationOptions,
+} from '../runtime';
+import { calculateDisplaySize } from './display-size';
 import type {
-  CommonOptions,
   HydrateOptions,
   HydrationHandle,
   RetainedCanvasUpdateOptions,
   RetainedMountCanvasOptions,
   RetainedMountOptions,
-  InputRetainedRender,
   RetainedSvgUpdateOptions,
-  RetainedVanillaCanvasUpdateOptions,
-  VanillaAnimationOptions,
   VanillaRetainedRuntimeOptions,
-} from '../runtime';
-
-/** 捕获 mount-lifetime composite definition record，保留 schema 与 callback identity */
-const captureCompositeDefinition = (definition: AnyCompositeDefinition): AnyCompositeDefinition =>
-  Object.freeze({
-    namespace: definition.namespace,
-    type: definition.type,
-    schema: definition.schema,
-    compile: definition.compile,
-    ...(definition.artifactSchema === undefined ? {} : { artifactSchema: definition.artifactSchema }),
-  }) as AnyCompositeDefinition;
-
-/** 捕获 retained runtime 会在后续 normalization 继续读取的 mount options */
-const captureRetainedMountOptions = (options: RetainedMountCanvasOptions): RetainedMountCanvasOptions => {
-  const composites = options.compile?.composites?.map(captureCompositeDefinition);
-
-  return Object.freeze({
-    ...options,
-    ...(options.compile === undefined
-      ? {}
-      : {
-          compile: Object.freeze({
-            ...options.compile,
-            ...(composites === undefined ? {} : { composites: Object.freeze(composites) }),
-          }),
-        }),
-  });
-};
-
-type RetainedRuntimeState = Readonly<{
-  /** 当前 committed 动画配置 */
-  animation: VanillaAnimationOptions;
-  /** 当前 committed Canvas 可变配置 */
-  canvas: RetainedVanillaCanvasUpdateOptions;
-}>;
+} from './types';
 
 type SvgRetainedRuntimeOptions = Readonly<{
   /** 要创建的 renderer 后端 */
@@ -70,7 +33,7 @@ type SvgRetainedRuntimeOptions = Readonly<{
   input: InputRetainedRender;
   /** runtime-lifetime mount 配置 */
   options: RetainedMountOptions;
-  /** 已在宿主创建前校验并复制的 Runtime 配置 */
+  /** 本次挂载使用的 retained Runtime 配置 */
   runtimeOptions: VanillaRetainedRuntimeOptions;
   /** SSR 与资源引用共用的稳定 id 前缀 */
   idPrefix: string;
@@ -85,7 +48,7 @@ type CanvasRetainedRuntimeOptions = Readonly<{
   input: InputRetainedRender;
   /** runtime-lifetime mount 配置 */
   options: RetainedMountCanvasOptions;
-  /** 已在宿主创建前校验并复制的 Runtime 配置 */
+  /** 本次挂载使用的 retained Runtime 配置 */
   runtimeOptions: VanillaRetainedRuntimeOptions;
   /** SSR 与资源引用共用的稳定 id 前缀 */
   idPrefix: string;
@@ -119,23 +82,17 @@ type DomRetainedProcessingController<TUpdateOptions extends RetainedSvgUpdateOpt
     result: () => ProcessingResult;
   }>;
 
-/** 复制并冻结 hydration handlers，避免调用方 mutation 改写已提交配置 */
-const captureHydrationHandlers = (handlers: HydrateOptions['handlers']): HydrateOptions['handlers'] =>
-  Object.freeze(
-    Object.fromEntries(Object.entries(handlers).map(([identity, events]) => [identity, Object.freeze({ ...events })])),
-  );
-
 /** 将当前 retained state 收敛为 Render Runtime config */
 const createRenderConfig = (
-  state: RetainedRuntimeState,
+  animation: VanillaAnimationOptions,
   handlers: ReadonlyArray<RenderHandlerContribution>,
   canvas: InputRenderRuntimeConfig['canvas'],
 ): InputRenderRuntimeConfig => {
   return {
     handlerContributions: handlers,
     animation: {
-      enabled: resolveAnimationEnabled(state.animation.enabled, prefersReducedMotion()),
-      ...(state.animation.snapshotAt === undefined ? {} : { snapshotAt: state.animation.snapshotAt }),
+      enabled: resolveAnimationEnabled(animation.enabled, prefersReducedMotion()),
+      ...(animation.snapshotAt === undefined ? {} : { snapshotAt: animation.snapshotAt }),
     },
     ...(canvas === undefined ? {} : { canvas }),
   };
@@ -145,7 +102,7 @@ const createRenderConfig = (
 const createRenderParticipantFactory = (
   options: RetainedRuntimeOptions,
   canvas: InputRenderRuntimeConfig['canvas'],
-  state: () => RetainedRuntimeState,
+  getAnimation: () => VanillaAnimationOptions,
   handlers: () => ReadonlyArray<RenderHandlerContribution>,
 ): Readonly<{
   factory: ProcessingTransactionParticipantFactory;
@@ -154,7 +111,7 @@ const createRenderParticipantFactory = (
   let lease: ReturnType<typeof createRetainedRenderTarget>['lease'] | undefined;
   let active: (() => RetainedRendererRead) | undefined;
 
-  const factory: ProcessingTransactionParticipantFactory = context => {
+  const factory: ProcessingTransactionParticipantFactory = () => {
     const rendererFactory = options.runtimeOptions.rendererFactory ?? builtinRetainedRendererFactory;
     const renderer =
       options.backend === 'svg'
@@ -163,7 +120,6 @@ const createRenderParticipantFactory = (
             host: options.host,
             rendererFactory,
             immutableOptions: { backend: 'svg', idPrefix: options.idPrefix },
-            resolveReadonlyLayers: context.resolveReadonlyLayers,
             configuration: () => createRenderConfig(current, currentHandlers, canvas),
             ...(lease === undefined ? {} : { rendererLease: lease }),
           })
@@ -176,100 +132,75 @@ const createRenderParticipantFactory = (
               idPrefix: options.idPrefix,
               ...(options.devicePixelRatio === undefined ? {} : { devicePixelRatio: options.devicePixelRatio }),
             },
-            resolveReadonlyLayers: context.resolveReadonlyLayers,
             configuration: () => createRenderConfig(current, currentHandlers, canvas),
             ...(lease === undefined ? {} : { rendererLease: lease }),
           });
-    let current = state();
+    let current = getAnimation();
     let currentHandlers = handlers();
 
     const updateConfig = (): void => {
-      current = state();
+      current = getAnimation();
       currentHandlers = handlers();
     };
 
-    return Object.freeze({
+    return {
       target: renderer.target,
       update: updateConfig,
       connect: () => {
         lease = renderer.lease;
         active = () => renderer.read();
       },
-    }) satisfies ProcessingTransactionParticipant;
+    } satisfies ProcessingTransactionParticipant;
   };
 
-  return Object.freeze({
+  return {
     factory,
     read: () => {
       if (active === undefined)
         throw new RetikzVanillaError(RetikzVanillaErrorCode.Dom, 'Vanilla DOM retained renderer is unavailable');
       return active();
     },
-  });
+  };
 };
 
 /** 创建 DOM 子入口使用的 retained processing controller */
 const createRetainedProcessingControllerImplementation = (
   options: RetainedRuntimeOptions,
 ): DomRetainedProcessingController<RetainedSvgUpdateOptions | RetainedCanvasUpdateOptions> => {
-  /** 构造 runtime-lifetime processing options */
-  const toProcessingOptions = (
-    processingOptions: CommonOptions,
-    updateStrategy: VanillaRetainedRuntimeOptions['updateStrategy'],
-  ): ProcessingOptions => {
-    const compile = { ...processingOptions.compile };
-
-    return {
-      compile,
-      defaultFontFamily: processingOptions.defaultFontFamily,
-      compileDriver: processingOptions.compileDriver,
-      reconciler: updateStrategy === undefined ? undefined : { incremental: true, updateStrategy },
-    };
-  };
-
-  const fixedOptions = captureRetainedMountOptions(options.options);
-  const { devicePixelRatio: _devicePixelRatio, ...initialCanvas } = fixedOptions.canvas ?? {};
-  void _devicePixelRatio;
-  const initialMutableOptions = captureRetainedUpdateOptions({
-    animation: fixedOptions.animation ?? {},
-    ...(options.backend === 'canvas' ? { canvas: initialCanvas } : {}),
-  });
-
-  let state: RetainedRuntimeState = Object.freeze({
-    animation: initialMutableOptions.animation ?? {},
-    canvas: ('canvas' in initialMutableOptions ? initialMutableOptions.canvas : undefined) ?? {},
-  });
-  let handlerContributions: ReadonlyArray<RenderHandlerContribution> = Object.freeze([]);
+  const { animation, compile, compileResultExtension, output } = options.options;
+  const { width, height } = output ?? {};
+  let currentAnimation = animation ?? {};
+  let handlerContributions: ReadonlyArray<RenderHandlerContribution> = [];
   let nextRegistration = 0;
 
   const canvas =
     options.backend === 'canvas'
-      ? Object.freeze({
-          ...(fixedOptions.output?.width === undefined ? {} : { width: fixedOptions.output.width }),
-          ...(fixedOptions.output?.height === undefined ? {} : { height: fixedOptions.output.height }),
-        })
+      ? {
+          ...(width === undefined ? {} : { width }),
+          ...(height === undefined ? {} : { height }),
+        }
       : undefined;
 
   const render = createRenderParticipantFactory(
     options,
     canvas,
-    () => state,
+    () => currentAnimation,
     () => handlerContributions,
   );
 
-  const processing: InternalProcessingController = createDomProcessingController(
+  const processing = SceneRuntime.fromSource(
     options.input,
-    toProcessingOptions(fixedOptions, options.runtimeOptions.updateStrategy),
+    {
+      compile,
+      compileResultExtension,
+      reconciler: { mode: ReconcilerMode.Incremental, updateStrategy: options.runtimeOptions.updateStrategy },
+    },
     render.factory,
   );
 
   // 只在 processing 成功发布后同步宿主尺寸，失败事务保留原显示尺寸
   const updateHostSize = (): void => {
-    const size = computeDisplaySize(
-      processing.read().scene.layout,
-      fixedOptions.output?.width,
-      fixedOptions.output?.height,
-    );
+    const size = calculateDisplaySize(processing.read().compileResult.scene.layout, width, height);
     if (options.backend === 'svg') {
       options.host.setAttribute('width', String(size.width));
       options.host.setAttribute('height', String(size.height));
@@ -281,20 +212,15 @@ const createRetainedProcessingControllerImplementation = (
 
   updateHostSize();
 
-  return Object.freeze({
+  return {
     update: (next, updateOptions = {}) => {
-      const captured = captureRetainedUpdateOptions(updateOptions);
-      const previousState = state;
-      state = Object.freeze({
-        animation: captured.animation ?? state.animation,
-        canvas: ('canvas' in captured ? captured.canvas : undefined) ?? state.canvas,
-      });
-
+      const previousAnimation = currentAnimation;
+      currentAnimation = updateOptions.animation ?? currentAnimation;
       try {
         processing.update(next);
         updateHostSize();
       } catch (cause) {
-        state = previousState;
+        currentAnimation = previousAnimation;
         throw cause;
       }
     },
@@ -303,9 +229,9 @@ const createRetainedProcessingControllerImplementation = (
       if (!Number.isSafeInteger(registration))
         throw new RetikzVanillaError(RetikzVanillaErrorCode.Dom, 'Vanilla retained hydration registration overflow');
 
-      const contribution = Object.freeze({ registration, handlers: captureHydrationHandlers(hydrateOptions.handlers) });
+      const contribution = { registration, handlers: hydrateOptions.handlers };
       const previousHandlers = handlerContributions;
-      handlerContributions = Object.freeze([...handlerContributions, contribution]);
+      handlerContributions = [...handlerContributions, contribution];
 
       try {
         processing.updateParticipant();
@@ -317,14 +243,12 @@ const createRetainedProcessingControllerImplementation = (
       nextRegistration += 1;
       let disposed = false;
 
-      return Object.freeze({
+      return {
         dispose: () => {
           if (disposed) return;
 
           const handlersBeforeDispose = handlerContributions;
-          handlerContributions = Object.freeze(
-            handlerContributions.filter(candidate => candidate.registration !== registration),
-          );
+          handlerContributions = handlerContributions.filter(candidate => candidate.registration !== registration);
 
           try {
             processing.updateParticipant();
@@ -335,13 +259,13 @@ const createRetainedProcessingControllerImplementation = (
 
           disposed = true;
         },
-      });
+      };
     },
     dispose: processing.dispose,
     diagnostics: processing.diagnostics as () => ReadonlyArray<ReconcilerDiagnostic>,
     read: () => render.read(),
     result: processing.read,
-  });
+  };
 };
 
 /** 创建与后端匹配 update options 的 retained processing controller */

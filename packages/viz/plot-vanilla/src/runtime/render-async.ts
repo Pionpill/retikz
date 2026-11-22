@@ -89,7 +89,7 @@ const renderPlotAsyncImpl = async <TSource = never>(
     },
   );
 
-  const svg = renderToSvgString(result.scene, {
+  const svg = renderToSvgString(result.compileResult.scene, {
     output: { width: layout?.width, height: layout?.height },
   });
   if (optionsLineage === undefined || optionsLineage === false) return svg;

@@ -25,14 +25,11 @@ describe('性能样本的语义验收', () => {
     expect(() => verifyBenchmarkSnapshot({ ...snapshot, diagnostics: [] }, snapshot, [])).toThrow();
   });
   it('警告回调被隔离后仍拒绝该样本', () => {
-    const session = new SceneReconciler(
-      {
-        onWarn: () => {
-          throw new Error('host warning failure');
-        },
+    const session = new SceneReconciler({
+      onWarn: () => {
+        throw new Error('host warning failure');
       },
-      { incremental: false },
-    );
+    });
     try {
       const result = session.mount(invalidReference);
       const isolated = session.diagnostics();

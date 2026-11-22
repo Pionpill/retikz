@@ -1,5 +1,5 @@
 import type { IRNode, IRScene } from '@retikz/core';
-import { SceneReconciler } from '@retikz/reconciler';
+import { ReconcilerMode, SceneReconciler } from '@retikz/reconciler';
 import { expect } from 'vitest';
 
 import { defineBenchmark } from '../../../../../scripts/benchmarks/scenario';
@@ -38,7 +38,10 @@ for (const count of [100, 1000, 10000])
           if (count !== 10000) return createUpdateBenchmark(workload, strategy);
           // 参考档只执行三次完整update；不另跑trace更新或同规模全量oracle
           const sourceBefore = JSON.stringify(workload.states);
-          const session = new SceneReconciler(benchmarkCompileOptions, { incremental: true, updateStrategy: strategy });
+          const session = new SceneReconciler(benchmarkCompileOptions, {
+            mode: ReconcilerMode.Incremental,
+            updateStrategy: strategy,
+          });
           let result = session.mount(first);
           const batches = workload.batches(session.getScopeId(), path => session.getScopeId(path));
           const batchesBefore = JSON.stringify(batches);

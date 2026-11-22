@@ -64,10 +64,7 @@ const renderPlotImpl = (
     contributions: [createPlotProviderContribution(data, options)],
   });
   const scene = (() => {
-    const reconciler = new SceneReconciler(
-      { ...providerDefinitions, themeDefinitions: options.themeDefinitions },
-      { incremental: false },
-    );
+    const reconciler = new SceneReconciler({ ...providerDefinitions, themeDefinitions: options.themeDefinitions });
     try {
       return reconciler.mount({
         version: 1,

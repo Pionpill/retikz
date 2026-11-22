@@ -12,6 +12,7 @@ import type { CompositeArtifactOf } from '../shared';
 import { orderCompileWarnings } from '../shared';
 import type { SceneCompilationSnapshot } from '../types';
 import type { SubtreeCompilation } from './subtree';
+import { assembleCompileSubtree } from './subtree';
 
 /** Scene 自动边界的默认留白 */
 const DEFAULT_LAYOUT_PADDING = 10;
@@ -63,3 +64,10 @@ export const finalizeSceneCompilation = <TComposite extends AnyCompositeDefiniti
     ...(provenance === undefined ? {} : { provenance }),
   });
 };
+
+/** 非增量 Scene 的完整遍历与快照组装，不保留跨批计算状态 */
+export const compileScene = <TComposite extends AnyCompositeDefinition>(
+  root: IRScene,
+  runtime: CompileRuntime,
+): SceneCompilationSnapshot<TComposite> =>
+  finalizeSceneCompilation<TComposite>(root, runtime, assembleCompileSubtree(root.children, runtime));

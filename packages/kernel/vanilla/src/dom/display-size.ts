@@ -1,5 +1,5 @@
 /** 从内容边界推导 DOM 宿主尺寸，单轴显式尺寸保持内容比例 */
-export const computeDisplaySize = (
+export const calculateDisplaySize = (
   layout: Readonly<{ width: number; height: number }>,
   width?: number,
   height?: number,

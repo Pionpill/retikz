@@ -34,13 +34,13 @@ it('在保留模式更新期间删除并恢复 Group 标题和标签', () => {
     controller.update(source(false));
     const hidden = controller.read();
 
-    expect(JSON.stringify(hidden.scene)).not.toContain('Description');
-    expect(JSON.stringify(hidden.scene)).not.toContain('Boundary');
-    expect(JSON.stringify(hidden.scene)).toContain('Item');
+    expect(JSON.stringify(hidden.compileResult.scene)).not.toContain('Description');
+    expect(JSON.stringify(hidden.compileResult.scene)).not.toContain('Boundary');
+    expect(JSON.stringify(hidden.compileResult.scene)).toContain('Item');
 
     controller.update(source(true));
 
-    expect(controller.read().scene).toEqual(initial.scene);
+    expect(controller.read().compileResult.scene).toEqual(initial.compileResult.scene);
   } finally {
     controller.dispose();
   }
@@ -152,7 +152,7 @@ describe('@retikz/diagram-vanilla/flow', () => {
       { compile: { measureText } },
     );
 
-    expect(artifactValueOf(result)).toMatchObject({ relations: [{ route: { kind, cornerRadius: 0 } }] });
+    expect(artifactValueOf(result.compileResult)).toMatchObject({ relations: [{ route: { kind, cornerRadius: 0 } }] });
   });
 
   it('从显式子路径导出完整的 Flow 编写表面', () => {
@@ -256,7 +256,7 @@ describe('@retikz/diagram-vanilla/flow', () => {
       { compile: { padding: 0, measureText } },
     );
 
-    expect(artifactValueOf(vanillaResult)).toMatchObject({
+    expect(artifactValueOf(vanillaResult.compileResult)).toMatchObject({
       layout: { definition: 'layered' },
       elements: [
         {

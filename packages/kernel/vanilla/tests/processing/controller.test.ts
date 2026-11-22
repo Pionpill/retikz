@@ -4,11 +4,44 @@ import { CompositeBaseSchema, defineComposite, defineTheme, ThemeMode } from '@r
 import { describe, expect, it, vi } from 'vitest';
 import { literal } from 'zod';
 
-import type { InputEmbedAdapter, InputScene, VanillaCompileDriver, VanillaCompileDriverSession } from '../../src';
-import { embed, createProcessingController, compileToScene, processToStaticResult } from '../../src';
-import { prepareProcessingInput } from '../../src/processing/prepare';
+import type {
+  InputEmbedAdapter,
+  InputScene,
+  VanillaCompileResultExtension,
+  VanillaCompileResultExtensionSession,
+} from '../../src';
+import { embed, createProcessingController, compileToScene } from '../../src';
+import { prepareProcessingInput } from '../../src/runtime/_input/prepare';
 
 describe('Vanilla 处理', () => {
+  it('提交回调不能重入写操作，订阅者始终读到正在通知的版本', () => {
+    const input: InputScene = { type: 'scene', children: [] };
+    const reenter = vi.fn<() => void>();
+    const session: VanillaCompileResultExtensionSession = {
+      resolve: () => [],
+      onCommit: reenter,
+    };
+    const controller = createProcessingController(input, { compileResultExtension: { create: () => session } });
+    const versions: Array<number> = [];
+    const failures: Array<unknown> = [];
+    reenter.mockImplementationOnce(() => {
+      try {
+        controller.update(input);
+      } catch (cause) {
+        failures.push(cause);
+      }
+    });
+    controller.subscribe(result => versions.push(result.revision, controller.read().revision));
+    try {
+      controller.update(input);
+      controller.update(input);
+      expect(failures).toHaveLength(1);
+      expect(versions).toEqual([1, 1, 2, 2]);
+    } finally {
+      controller.dispose();
+    }
+  });
+
   it('只在 processing prepare 中解析 InputEmbed 的 Composite contribution', () => {
     const definition = defineComposite({
       namespace: 'fixture',
@@ -121,7 +154,7 @@ describe('Vanilla 处理', () => {
     const second = controller.read();
 
     expect(second.revision).toBe(first.revision + 1);
-    expect(second.scene).not.toBe(first.scene);
+    expect(second.compileResult.scene).not.toBe(first.compileResult.scene);
     expect(Object.isFrozen(second)).toBe(true);
     expect(listener).toHaveBeenCalledWith(second);
 
@@ -257,16 +290,6 @@ describe('Vanilla 处理', () => {
     controller.dispose();
   });
 
-  it('预编译 Scene 只产生 static processing result', () => {
-    const scene = { layout: { x: 0, y: 0, width: 1, height: 1 }, primitives: [] };
-
-    const result = processToStaticResult(scene, {});
-
-    expect(result.revision).toBe(0);
-    expect(result.compileResult).toBeUndefined();
-    expect(result.scene).toBe(scene);
-  });
-
   it('已类型化 IRScene 直接进入 processing，不重走 Input normalize', () => {
     const ir: IRScene = {
       type: 'scene',
@@ -294,7 +317,7 @@ describe('Vanilla 处理', () => {
     const second = processing.read();
 
     expect(second.revision).toBe(first.revision + 1);
-    expect(second.scene).not.toBe(first.scene);
+    expect(second.compileResult.scene).not.toBe(first.compileResult.scene);
     expect(listener).toHaveBeenCalledWith(second);
     expect(() =>
       processing.update({
@@ -314,19 +337,15 @@ describe('Vanilla 处理', () => {
 
   it('controller 在更新间保留同一个 processing instance，并与 static 结果保持一致', () => {
     const instances: Array<object> = [];
-    const sessions = new WeakMap<object, VanillaCompileDriverSession>();
-    const driver: VanillaCompileDriver = {
+    const sessions = new WeakMap<object, VanillaCompileResultExtensionSession>();
+    const extension: VanillaCompileResultExtension = {
       create: input => {
         instances.push(input.instance);
         const existing = sessions.get(input.instance);
         if (existing !== undefined) return existing;
 
         const session = {
-          resolve: (output: Parameters<VanillaCompileDriverSession['resolve']>[0]) => ({
-            primary: output.result,
-            layers: [],
-            diagnostics: [],
-          }),
+          resolve: () => [],
         };
         sessions.set(input.instance, session);
 
@@ -338,35 +357,34 @@ describe('Vanilla 处理', () => {
       type: 'scene',
       children: [{ type: 'node', id: 'second', position: [20, 0] }],
     } satisfies InputScene;
-    const controller = createProcessingController(first, { compileDriver: driver });
+    const controller = createProcessingController(first, { compileResultExtension: extension });
 
     controller.update(second);
 
     expect(instances).toHaveLength(2);
     expect(instances[1]).toBe(instances[0]);
 
-    const staticResult = compileToScene(second, { compileDriver: driver });
+    const staticResult = compileToScene(second, { compileResultExtension: extension });
     const retainedResult = controller.read();
 
     expect(retainedResult.revision).toBe(1);
-    expect(retainedResult.scene).toEqual(staticResult.scene);
+    expect(retainedResult.compileResult.scene).toEqual(staticResult.compileResult.scene);
     expect(retainedResult.compileResult).toEqual(staticResult.compileResult);
-    expect(retainedResult.artifacts).toEqual(staticResult.artifacts);
-    expect(retainedResult.layers).toEqual(staticResult.layers);
-    expect(retainedResult.diagnostics).toEqual(staticResult.diagnostics);
+    expect(retainedResult.compileResult.artifacts).toEqual(staticResult.compileResult.artifacts);
+    expect(retainedResult.processingDiagnostics).toEqual(staticResult.processingDiagnostics);
 
     controller.dispose();
   });
 
-  it('compile driver 解析失败时不发布 retained candidate，并恢复上一份 driver 输入', () => {
+  it('compile result extension 解析失败时不发布 retained candidate，并恢复上一份 extension 输入', () => {
     let reject = false;
-    const session: VanillaCompileDriverSession = {
-      resolve: output => {
-        if (reject) throw new Error('expected driver resolution failure');
-        return { primary: output.result, layers: [], diagnostics: [] };
+    const session: VanillaCompileResultExtensionSession = {
+      resolve: () => {
+        if (reject) throw new Error('expected extension resolution failure');
+        return [];
       },
     };
-    const driver: VanillaCompileDriver = {
+    const extension: VanillaCompileResultExtension = {
       create: input => {
         reject = input.source.children.some(child => child.id === 'broken');
         return session;
@@ -374,7 +392,7 @@ describe('Vanilla 处理', () => {
     };
     const controller = createProcessingController(
       { type: 'scene', children: [{ type: 'node', id: 'stable', position: [0, 0] }] },
-      { compileDriver: driver },
+      { compileResultExtension: extension },
     );
     const stable = controller.read();
     const listener = vi.fn();
@@ -383,12 +401,14 @@ describe('Vanilla 处理', () => {
     expect(() =>
       controller.update({ type: 'scene', children: [{ type: 'node', id: 'broken', position: [20, 0] }] }),
     ).toThrow(
-      /Failed to publish the compilation|RENDER_RUNTIME_RENDERER_PREPARE_FAILED|Vanilla compile driver resolve failed/,
+      /Failed to publish the compilation|RENDER_RUNTIME_RENDERER_PREPARE_FAILED|Vanilla compile result extension resolve failed/,
     );
 
     expect(controller.read()).toBe(stable);
     expect(listener).not.toHaveBeenCalled();
-    expect(controller.diagnostics()).toEqual([expect.objectContaining({ code: 'VANILLA_COMPILE_DRIVER_FAILED' })]);
+    expect(controller.diagnostics()).toEqual([
+      expect.objectContaining({ code: 'VANILLA_COMPILE_RESULT_EXTENSION_FAILED' }),
+    ]);
 
     controller.update({ type: 'scene', children: [{ type: 'node', id: 'recovered', position: [40, 0] }] });
 

@@ -18,7 +18,7 @@ SceneReconciler returns revision and compilation. Drawing is at `output.compilat
 ```ts
 import { SceneReconciler } from '@retikz/reconciler';
 
-const reconciler = new SceneReconciler({}, { incremental: false });
+const reconciler = new SceneReconciler();
 try {
   const output = reconciler.mount({
     type: 'scene',
@@ -109,7 +109,7 @@ compileScene first calls assembleCompileSubtree to finish paths and child contri
     { label: 'Scene and primitive contract', path: 'packages/kernel/core/src/contract/scene/scene.ts' },
     { label: 'Layout bounds helpers', path: 'packages/kernel/core/src/compile/scene/bounds.ts' },
     { label: 'Scene layout calculation', path: 'packages/kernel/core/src/compile/scene/layout.ts' },
-    { label: 'Complete compilation entry', path: 'packages/kernel/reconciler/src/full.ts' },
+    { label: 'Complete compilation entry', path: 'packages/kernel/reconciler/src/compile/execution/scene.ts' },
     { label: 'Snapshot assembly', path: 'packages/kernel/reconciler/src/compile/execution/scene.ts' },
     { label: 'Snapshot and result types', path: 'packages/kernel/reconciler/src/compile/types.ts' },
     { label: 'Reconciler result and commit target', path: 'packages/kernel/reconciler/src/reconcile/types.ts' },

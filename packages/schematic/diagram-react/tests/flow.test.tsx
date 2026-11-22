@@ -7,7 +7,7 @@ import { createElement, Fragment } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
-import { prepareProcessingInput } from '../../../kernel/vanilla/src/processing/prepare';
+import { prepareProcessingInput } from '../../../kernel/vanilla/src/runtime/_input/prepare';
 import { RetikzDiagramReactError, RetikzDiagramReactErrorCode } from '../src';
 import * as FlowReact from '../src/flow';
 
@@ -786,7 +786,9 @@ describe('@retikz/diagram-react/flow', () => {
         measureText: text => ({ width: text.length * 8, height: 12, ascent: 9, descent: 3 }),
       },
     });
-    const artifact = result.artifacts.find(entry => entry.namespace === 'diagram' && entry.type === 'flow');
+    const artifact = result.compileResult.artifacts.find(
+      entry => entry.namespace === 'diagram' && entry.type === 'flow',
+    );
 
     expect(artifact?.value).toMatchObject({ elements: [{ id: 'only', kind: 'entity' }] });
   });
@@ -835,12 +837,13 @@ it('通过 React、Vanilla 和直接 Source 相同地编译弯曲和完整标签
   expect(FlowDiagramSchema.parse(vanilla)).toEqual(direct);
 
   const providers = prepareProcessingInput(input, {}).coreOptions;
-  const expected = compileToScene({ type: 'scene', version: 1, children: [direct] }, { compile: providers }).scene;
+  const expected = compileToScene({ type: 'scene', version: 1, children: [direct] }, { compile: providers })
+    .compileResult.scene;
 
-  expect(compileToScene({ type: 'scene', version: 1, children: [vanilla] }, { compile: providers }).scene).toEqual(
-    expected,
-  );
-  expect(compileToScene(input).scene).toEqual(expected);
+  expect(
+    compileToScene({ type: 'scene', version: 1, children: [vanilla] }, { compile: providers }).compileResult.scene,
+  ).toEqual(expected);
+  expect(compileToScene(input).compileResult.scene).toEqual(expected);
 });
 
 it('在所有编写条目中保留自动、显式贝塞尔曲线和平滑路由', () => {
@@ -905,12 +908,13 @@ it('在所有编写条目中保留自动、显式贝塞尔曲线和平滑路由'
   expect(FlowDiagramSchema.parse(vanilla)).toEqual(direct);
 
   const providers = prepareProcessingInput(input, {}).coreOptions;
-  const expected = compileToScene({ type: 'scene', version: 1, children: [direct] }, { compile: providers }).scene;
+  const expected = compileToScene({ type: 'scene', version: 1, children: [direct] }, { compile: providers })
+    .compileResult.scene;
 
-  expect(compileToScene({ type: 'scene', version: 1, children: [vanilla] }, { compile: providers }).scene).toEqual(
-    expected,
-  );
-  expect(compileToScene(input).scene).toEqual(expected);
+  expect(
+    compileToScene({ type: 'scene', version: 1, children: [vanilla] }, { compile: providers }).compileResult.scene,
+  ).toEqual(expected);
+  expect(compileToScene(input).compileResult.scene).toEqual(expected);
 });
 
 it('在 React、Vanilla 和 JSON 上保持端点约束和稀疏默认值相等', () => {

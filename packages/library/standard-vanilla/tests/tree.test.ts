@@ -19,11 +19,11 @@ it('重复节点身份的更新失败后保留上一棵完整树', () => {
     scene({ children: [tree({ root: { id: 'parent', children: ['A'] } })] }),
   );
   try {
-    const previous = controller.read().scene;
+    const previous = controller.read().compileResult.scene;
     expect(() =>
       controller.update(scene({ children: [tree({ root: { id: 'same', children: [{ id: 'same' }] } })] })),
     ).toThrow();
-    expect(controller.read().scene).toEqual(previous);
+    expect(controller.read().compileResult.scene).toEqual(previous);
   } finally {
     controller.dispose();
   }

@@ -23,34 +23,34 @@ Declare drawings through children or pass a complete scene through ir; ir takes 
 
 <ApiTable grouped>
 
-| Group      | Member             | Type                                                    | Default                       | Description                                                                                                                                                                              |
-| ---------- | ------------------ | ------------------------------------------------------- | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Main       | `children?`        | `ReactNode`                                             | —                             | Drawing content declared with JSX                                                                                                                                                        |
-|            | `ir?`              | `IRScene`                                               | —                             | Persisted Source IR, used instead of children                                                                                                                                            |
-| Layout     | `nodeDistance?`    | `number`                                                | `24`                          | Default relative node distance in drawing units; applies when position uses direction/of without distance                                                                                |
-| Style      | `fontSize?`        | `number`                                                | `16`                          | Default font size in drawing units; used when font.size is omitted and as the root size for presets and rem, without overriding explicit numeric sizes                                   |
-|            | `rootScope?`       | `Pick<InputScope, 'defaults'>`                          | —                             | Implicit root Scope overrides for JSX children; complete IR takes precedence, while host CSS style applies independently                                                                 |
-|            | `theme?`           | `IRScene['theme']`                                      | —                             | Theme written to the Scene root and inherited by descendant Composites                                                                                                                   |
-| Rendering  | `className?`       | `string`                                                | —                             | Host className                                                                                                                                                                           |
-|            | `height?`          | `number \| string`                                      | `computeDisplaySize`          | CSS height of SVG or Canvas; derived from content dimensions when omitted. A single numeric dimension determines the other from the content aspect ratio; CSS strings use browser layout |
-|            | `idPrefix?`        | `string`                                                | `useId`                       | SVG resource ID prefix; generated from React useId when omitted                                                                                                                          |
-|            | `renderer?`        | `'svg' \| 'canvas'`                                     | `'svg'`                       | Rendering backend; an explicit value takes precedence, otherwise inherits the Renderer context and falls back to SVG when no context is provided                                         |
-|            | `style?`           | `CSSProperties`                                         | —                             | Host inline styles                                                                                                                                                                       |
-|            | `viewBox?`         | `IRViewBox`                                             | —                             | Explicit viewport in drawing coordinates; overrides ir.viewBox. When omitted, uses the scene viewport or derives it from content if the scene has none                                   |
-|            | `width?`           | `number \| string`                                      | `computeDisplaySize`          | CSS width of SVG or Canvas; derived from content dimensions when omitted. A single numeric dimension determines the other from the content aspect ratio; CSS strings use browser layout  |
-| Callbacks  | `handlers?`        | `HydrationHandlers`                                     | —                             | Event handlers used when ir is supplied directly                                                                                                                                         |
-| Animation  | `animate?`         | `boolean`                                               | `resolveAnimationEnabled`     | Whether to play animations; the animation-mode context takes precedence, otherwise an unspecified value follows the system reduced-motion preference                                     |
-|            | `animationRef?`    | `Ref<AnimationControls \| null>`                        | —                             | Animation controller ref                                                                                                                                                                 |
-|            | `animations?`      | `ReadonlyArray<IRAnimationTrack>`                       | —                             | Scene-root animations                                                                                                                                                                    |
-|            | `snapshotAt?`      | `number`                                                | —                             | Animation sampling time in milliseconds; freezes the drawing at that time without playback and takes precedence over animate                                                             |
-| Runtime    | `authoring?`       | `unknown`                                               | —                             | JSX input metadata for a custom compileDriver; ignored when ir is supplied and excluded from persisted Scene IR                                                                          |
-|            | `runtime?`         | `LayoutRuntimeOptions`                                  | `LayoutRuntimeMode.Retained` | Select retained incremental updates or static full compilation; defaults to retained                                                                                                     |
-| Output     | `onArtifacts?`     | `(artifacts: ReadonlyArray<CompositeArtifact>) => void` | —                             | Notification after compilation artifacts are committed successfully                                                                                                                      |
-|            | `onCompileResult?` | `(result: CompileResult) => void`                       | —                             | Notification of the complete Core compilation result                                                                                                                                     |
-| Extensions | `compileDriver?`   | `VanillaCompileDriver`                                  | —                             | Compile driver that processes authoring input                                                                                                                                            |
-|            | `extensions?`      | `LayoutExtensions`                                      | —                             | Runtime extensions grouped by capability, using the Core compilation contract                                                                                                            |
-|            | `lowerTex?`        | `TexLowerer`                                            | —                             | Formula lowering capability                                                                                                                                                              |
-|            | `measureText?`     | `TextMeasurer`                                          | —                             | Custom text measurement; omitted uses Vanilla environment measurement with estimation when unavailable                                                                                   |
+| Group      | Member                    | Type                                                    | Default                      | Description                                                                                                                                                                              |
+| ---------- | ------------------------- | ------------------------------------------------------- | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Main       | `children?`               | `ReactNode`                                             | —                            | Drawing content declared with JSX                                                                                                                                                        |
+|            | `ir?`                     | `IRScene`                                               | —                            | Persisted Source IR, used instead of children                                                                                                                                            |
+| Layout     | `nodeDistance?`           | `number`                                                | `24`                         | Default relative node distance in drawing units; applies when position uses direction/of without distance                                                                                |
+| Style      | `fontSize?`               | `number`                                                | `16`                         | Default font size in drawing units; used when font.size is omitted and as the root size for presets and rem, without overriding explicit numeric sizes                                   |
+|            | `rootScope?`              | `Pick<InputScope, 'defaults'>`                          | —                            | Implicit root Scope overrides for JSX children; complete IR takes precedence, while host CSS style applies independently                                                                 |
+|            | `theme?`                  | `IRScene['theme']`                                      | —                            | Theme written to the Scene root and inherited by descendant Composites                                                                                                                   |
+| Rendering  | `className?`              | `string`                                                | —                            | Host className                                                                                                                                                                           |
+|            | `height?`                 | `number \| string`                                      | `computeDisplaySize`         | CSS height of SVG or Canvas; derived from content dimensions when omitted. A single numeric dimension determines the other from the content aspect ratio; CSS strings use browser layout |
+|            | `idPrefix?`               | `string`                                                | `useId`                      | SVG resource ID prefix; generated from React useId when omitted                                                                                                                          |
+|            | `renderer?`               | `'svg' \| 'canvas'`                                     | `'svg'`                      | Rendering backend; an explicit value takes precedence, otherwise inherits the Renderer context and falls back to SVG when no context is provided                                         |
+|            | `style?`                  | `CSSProperties`                                         | —                            | Host inline styles                                                                                                                                                                       |
+|            | `viewBox?`                | `IRViewBox`                                             | —                            | Explicit viewport in drawing coordinates; overrides ir.viewBox. When omitted, uses the scene viewport or derives it from content if the scene has none                                   |
+|            | `width?`                  | `number \| string`                                      | `computeDisplaySize`         | CSS width of SVG or Canvas; derived from content dimensions when omitted. A single numeric dimension determines the other from the content aspect ratio; CSS strings use browser layout  |
+| Callbacks  | `handlers?`               | `HydrationHandlers`                                     | —                            | Event handlers used when ir is supplied directly                                                                                                                                         |
+| Animation  | `animate?`                | `boolean`                                               | `resolveAnimationEnabled`    | Whether to play animations; the animation-mode context takes precedence, otherwise an unspecified value follows the system reduced-motion preference                                     |
+|            | `animationRef?`           | `Ref<AnimationControls \| null>`                        | —                            | Animation controller ref                                                                                                                                                                 |
+|            | `animations?`             | `ReadonlyArray<IRAnimationTrack>`                       | —                            | Scene-root animations                                                                                                                                                                    |
+|            | `snapshotAt?`             | `number`                                                | —                            | Animation sampling time in milliseconds; freezes the drawing at that time without playback and takes precedence over animate                                                             |
+| Runtime    | `authoring?`              | `unknown`                                               | —                            | JSX input metadata for a custom compileResultExtension; ignored when ir is supplied and excluded from persisted Scene IR                                                                 |
+|            | `runtime?`                | `LayoutRuntimeOptions`                                  | `LayoutRuntimeMode.Retained` | Select retained incremental updates or static full compilation; defaults to retained                                                                                                     |
+| Output     | `onArtifacts?`            | `(artifacts: ReadonlyArray<CompositeArtifact>) => void` | —                            | Notification after compilation artifacts are committed successfully                                                                                                                      |
+|            | `onCompileResult?`        | `(result: CompileResult) => void`                       | —                            | Notification of the complete Core compilation result                                                                                                                                     |
+| Extensions | `compileResultExtension?` | `VanillaCompileResultExtension`                         | —                            | Compile result extension that processes authoring input                                                                                                                                  |
+|            | `extensions?`             | `LayoutExtensions`                                      | —                            | Runtime extensions grouped by capability, using the Core compilation contract                                                                                                            |
+|            | `lowerTex?`               | `TexLowerer`                                            | —                            | Formula lowering capability                                                                                                                                                              |
+|            | `measureText?`            | `TextMeasurer`                                          | —                            | Custom text measurement; omitted uses Vanilla environment measurement with estimation when unavailable                                                                                   |
 
 </ApiTable>
 
@@ -68,7 +68,7 @@ export type LayoutProps = {
   theme?: IRScene['theme'];
   children?: ReactNode;
   authoring?: unknown;
-  compileDriver?: VanillaCompileDriver;
+  compileResultExtension?: VanillaCompileResultExtension;
   handlers?: HydrationHandlers;
   runtime?: LayoutRuntimeOptions;
   width?: number | string;
@@ -383,14 +383,14 @@ export type InputLayer = LayerOptions & {
 
 <ApiTable>
 
-| Member        | Type                                                                     | Default | Description                                                                       |
-| ------------- | ------------------------------------------------------------------------ | ------- | --------------------------------------------------------------------------------- |
-| `animations?` | `InputSceneChildren['animations']`                                       | —       | Root tracks can animate the viewBox.                                              |
-| `authoring?`  | `unknown`                                                                | —       | Optional runtime payload interpreted by a compile driver; excluded from Core IR   |
-| `theme?`      | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }` | —       | Root theme selection; sets only the name and mode fields to override.             |
-| `type`        | `"scene"`                                                                | —       | Discriminator marking this object as the root scene                               |
-| `version?`    | `never`                                                                  | —       | Authoring input excludes a version; normalization supplies the current IR version |
-| `viewBox?`    | `{ x: number; y: number; width: number; height: number; }`               | —       | Explicit framing; when omitted, bounds are computed from content plus padding.    |
+| Member        | Type                                                                     | Default | Description                                                                               |
+| ------------- | ------------------------------------------------------------------------ | ------- | ----------------------------------------------------------------------------------------- |
+| `animations?` | `InputSceneChildren['animations']`                                       | —       | Root tracks can animate the viewBox.                                                      |
+| `authoring?`  | `unknown`                                                                | —       | Optional runtime payload interpreted by a compile result extension; excluded from Core IR |
+| `theme?`      | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }` | —       | Root theme selection; sets only the name and mode fields to override.                     |
+| `type`        | `"scene"`                                                                | —       | Discriminator marking this object as the root scene                                       |
+| `version?`    | `never`                                                                  | —       | Authoring input excludes a version; normalization supplies the current IR version         |
+| `viewBox?`    | `{ x: number; y: number; width: number; height: number; }`               | —       | Explicit framing; when omitted, bounds are computed from content plus padding.            |
 
 </ApiTable>
 
@@ -442,16 +442,16 @@ export type InputScene = InputSceneChildren | InputSceneLayers;
 
 <ApiTable>
 
-| Member        | Type                                                                     | Default | Description                                                                       |
-| ------------- | ------------------------------------------------------------------------ | ------- | --------------------------------------------------------------------------------- |
-| `animations?` | `InputSceneChildren["animations"]`                                       | —       | Root tracks can animate the viewBox.                                              |
-| `authoring?`  | `unknown`                                                                | —       | Optional runtime payload interpreted by a compile driver; excluded from Core IR   |
-| `children`    | `ReadonlyArray<InputChild>`                                              | —       | Ordered children placed in the implicit default layer during normalization        |
-| `layers?`     | `never`                                                                  | —       | Explicit layers, normalized after a stable sort by zIndex                         |
-| `theme?`      | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }` | —       | Root theme selection; sets only the name and mode fields to override.             |
-| `type`        | `"scene"`                                                                | —       | Discriminator marking this object as the root scene                               |
-| `version?`    | `never`                                                                  | —       | Authoring input excludes a version; normalization supplies the current IR version |
-| `viewBox?`    | `{ x: number; y: number; width: number; height: number; }`               | —       | Explicit framing; when omitted, bounds are computed from content plus padding.    |
+| Member        | Type                                                                     | Default | Description                                                                               |
+| ------------- | ------------------------------------------------------------------------ | ------- | ----------------------------------------------------------------------------------------- |
+| `animations?` | `InputSceneChildren["animations"]`                                       | —       | Root tracks can animate the viewBox.                                                      |
+| `authoring?`  | `unknown`                                                                | —       | Optional runtime payload interpreted by a compile result extension; excluded from Core IR |
+| `children`    | `ReadonlyArray<InputChild>`                                              | —       | Ordered children placed in the implicit default layer during normalization                |
+| `layers?`     | `never`                                                                  | —       | Explicit layers, normalized after a stable sort by zIndex                                 |
+| `theme?`      | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }` | —       | Root theme selection; sets only the name and mode fields to override.                     |
+| `type`        | `"scene"`                                                                | —       | Discriminator marking this object as the root scene                                       |
+| `version?`    | `never`                                                                  | —       | Authoring input excludes a version; normalization supplies the current IR version         |
+| `viewBox?`    | `{ x: number; y: number; width: number; height: number; }`               | —       | Explicit framing; when omitted, bounds are computed from content plus padding.            |
 
 </ApiTable>
 
@@ -481,16 +481,16 @@ export type InputSceneChildren = InputSceneBase &
 
 <ApiTable>
 
-| Member        | Type                                                                     | Default | Description                                                                       |
-| ------------- | ------------------------------------------------------------------------ | ------- | --------------------------------------------------------------------------------- |
-| `animations?` | `InputSceneLayers["animations"]`                                         | —       | Root tracks can animate the viewBox.                                              |
-| `authoring?`  | `unknown`                                                                | —       | Optional runtime payload interpreted by a compile driver; excluded from Core IR   |
-| `children?`   | `never`                                                                  | —       | Ordered children placed in the implicit default layer during normalization        |
-| `layers`      | `ReadonlyArray<InputLayer>`                                              | —       | Explicit layers, normalized after a stable sort by zIndex                         |
-| `theme?`      | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }` | —       | Root theme selection; sets only the name and mode fields to override.             |
-| `type`        | `"scene"`                                                                | —       | Discriminator marking this object as the root scene                               |
-| `version?`    | `never`                                                                  | —       | Authoring input excludes a version; normalization supplies the current IR version |
-| `viewBox?`    | `{ x: number; y: number; width: number; height: number; }`               | —       | Explicit framing; when omitted, bounds are computed from content plus padding.    |
+| Member        | Type                                                                     | Default | Description                                                                               |
+| ------------- | ------------------------------------------------------------------------ | ------- | ----------------------------------------------------------------------------------------- |
+| `animations?` | `InputSceneLayers["animations"]`                                         | —       | Root tracks can animate the viewBox.                                                      |
+| `authoring?`  | `unknown`                                                                | —       | Optional runtime payload interpreted by a compile result extension; excluded from Core IR |
+| `children?`   | `never`                                                                  | —       | Ordered children placed in the implicit default layer during normalization                |
+| `layers`      | `ReadonlyArray<InputLayer>`                                              | —       | Explicit layers, normalized after a stable sort by zIndex                                 |
+| `theme?`      | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }` | —       | Root theme selection; sets only the name and mode fields to override.                     |
+| `type`        | `"scene"`                                                                | —       | Discriminator marking this object as the root scene                                       |
+| `version?`    | `never`                                                                  | —       | Authoring input excludes a version; normalization supplies the current IR version         |
+| `viewBox?`    | `{ x: number; y: number; width: number; height: number; }`               | —       | Explicit framing; when omitted, bounds are computed from content plus padding.            |
 
 </ApiTable>
 

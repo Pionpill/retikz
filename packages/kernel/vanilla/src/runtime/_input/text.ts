@@ -6,7 +6,7 @@ type BrowserTextMetrics = Pick<TextMetrics, 'width'> &
   Partial<Pick<TextMetrics, 'actualBoundingBoxAscent' | 'actualBoundingBoxDescent'>>;
 
 /** 为一次处理准备建立惰性测量器，只在环境能力获取失败时估算 */
-const createDefaultTextMeasurer = (): TextMeasurer => {
+export const createDefaultTextMeasurer = (): TextMeasurer => {
   let context: CanvasRenderingContext2D | null | undefined;
   return (text, font) => {
     if (context === undefined) {
@@ -31,15 +31,4 @@ const createDefaultTextMeasurer = (): TextMeasurer => {
     const descent = Math.max(0, metrics.actualBoundingBoxDescent ?? font.size * 0.2);
     return { width: metrics.width, height: ascent + descent || font.size * 1.2, ascent, descent };
   };
-};
-
-/** 统一显式测量器与默认测量器的宿主字体输入，不改变调用方字体对象 */
-export const createTextMeasurer = (
-  measureText: TextMeasurer | undefined,
-  defaultFontFamily: string | undefined,
-): TextMeasurer => {
-  const measurer = measureText ?? createDefaultTextMeasurer();
-  const family = defaultFontFamily?.trim();
-  if (!family) return measurer;
-  return (text, font, disableCache) => measurer(text, font.family?.trim() ? font : { ...font, family }, disableCache);
 };

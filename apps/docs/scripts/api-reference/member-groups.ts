@@ -167,7 +167,7 @@ export const apiReferenceMemberGroups: Readonly<Partial<Record<string, ApiRefere
       animationRef: 'Animation',
       runtime: 'Runtime',
       authoring: 'Runtime',
-      compileDriver: 'Extensions',
+      compileResultExtension: 'Extensions',
       extensions: 'Extensions',
       lowerTex: 'Extensions',
     },

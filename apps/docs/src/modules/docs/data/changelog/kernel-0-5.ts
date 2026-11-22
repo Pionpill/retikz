@@ -1035,8 +1035,8 @@ export const kernelV05: Release = {
         {
           label: { zh: '首次发布：全量与增量编译会话', en: 'First release: full and incremental compilation sessions' },
           content: {
-            zh: '直接 IR 消费者使用 SceneReconciler.mount / replace。默认增量会话接受 Weave 批次；incremental: false 不保留 Weave，也不接受批次。增量会话中，auto 空批次保留当前结果；full 空批次强制重算并在成功后推进版本。结束时调用 dispose。',
-            en: 'Use SceneReconciler.mount and replace for direct IR input. Incremental sessions accept Weave batches by default; incremental: false disables retained Weave state and batch updates. Empty auto batches keep the current result, while full batches force recomputation and advance the revision on success. Dispose the session when finished.',
+            zh: '直接 IR 消费者使用 SceneReconciler.mount / replace。显式增量会话接受 Weave 批次；mode: ReconcilerMode.Full 不保留 Weave，也不接受批次。增量会话中，auto 空批次保留当前结果；full 空批次强制重算并在成功后推进版本。结束时调用 dispose。',
+            en: 'Use SceneReconciler.mount and replace for direct IR input. Explicit incremental sessions accept Weave batches; mode: ReconcilerMode.Full disables retained Weave state and batch updates. Empty auto batches keep the current result, while full batches force recomputation and advance the revision on success. Dispose the session when finished.',
           },
         },
       ],
@@ -1055,8 +1055,8 @@ export const kernelV05: Release = {
                 en: 'First release: full and incremental compilation sessions',
               },
               content: {
-                zh: '直接 IR 消费者使用 SceneReconciler.mount / replace。默认增量会话接受 Weave 批次；incremental: false 不保留 Weave，也不接受批次。增量会话中，auto 空批次保留当前结果；full 空批次强制重算并在成功后推进版本。结束时调用 dispose。',
-                en: 'Use SceneReconciler.mount and replace for direct IR input. Incremental sessions accept Weave batches by default; incremental: false disables retained Weave state and batch updates. Empty auto batches keep the current result, while full batches force recomputation and advance the revision on success. Dispose the session when finished.',
+                zh: '直接 IR 消费者使用 SceneReconciler.mount / replace。显式增量会话接受 Weave 批次；mode: ReconcilerMode.Full 不保留 Weave，也不接受批次。增量会话中，auto 空批次保留当前结果；full 空批次强制重算并在成功后推进版本。结束时调用 dispose。',
+                en: 'Use SceneReconciler.mount and replace for direct IR input. Explicit incremental sessions accept Weave batches; mode: ReconcilerMode.Full disables retained Weave state and batch updates. Empty auto batches keep the current result, while full batches force recomputation and advance the revision on success. Dispose the session when finished.',
               },
             },
           ],

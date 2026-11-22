@@ -190,7 +190,9 @@ import { compileToScene } from '@retikz/vanilla';
 
 import { roundedRectClip } from './rounded-rect-clip';
 
-const { scene } = compileToScene(ir, { compile: { clips: [roundedRectClip] } });
+const {
+  compileResult: { scene },
+} = compileToScene(ir, { compile: { clips: [roundedRectClip] } });
 ```
 
 A `{ capability: 'clip', name: kind }` provider in a provider graph likewise creates a complete Definition and participates in the same conflict checks as explicit `clips`.

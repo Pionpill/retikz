@@ -1,16 +1,20 @@
 import { lowerPlotWithLineage } from '@retikz/plot';
 import type { CompileResult } from '@retikz/reconciler';
-import type { InputVanillaCompileDriver, VanillaCompileDriver, VanillaCompileDriverSession } from '@retikz/vanilla';
+import type {
+  InputVanillaCompileResultExtension,
+  VanillaCompileResultExtension,
+  VanillaCompileResultExtensionSession,
+} from '@retikz/vanilla';
 
 import type { PreparedPlotLineageNotification } from '../spec';
 
-/** 创建宿主作用域的链路驱动，retained 更新保留 session 身份并替换当前准备视图 */
-export const createPlotLineageCompileDriver = (): VanillaCompileDriver => {
+/** 创建宿主作用域的链路扩展，retained 更新保留 session 身份并替换当前准备视图 */
+export const createPlotLineageCompileResultExtension = (): VanillaCompileResultExtension => {
   const sessions = new WeakMap<
     object,
     {
-      session: VanillaCompileDriverSession;
-      updateSites: (sites: Array<PreparedPlotLineageNotification>, input: InputVanillaCompileDriver) => void;
+      session: VanillaCompileResultExtensionSession;
+      updateSites: (sites: Array<PreparedPlotLineageNotification>, input: InputVanillaCompileResultExtension) => void;
     }
   >();
   return {
@@ -27,7 +31,7 @@ export const createPlotLineageCompileDriver = (): VanillaCompileDriver => {
       const notifications = new WeakMap<CompileResult, Array<() => void>>();
       let currentSites = sites;
       let currentInput = input;
-      const session: VanillaCompileDriverSession = {
+      const session: VanillaCompileResultExtensionSession = {
         resolve: output => {
           notifications.set(
             output.result,
@@ -46,9 +50,9 @@ export const createPlotLineageCompileDriver = (): VanillaCompileDriver => {
               return () => site.onLineage(result.lineage);
             }),
           );
-          return { primary: output.result, layers: [], diagnostics: [] };
+          return [];
         },
-        commit: output => {
+        onCommit: output => {
           for (const notify of notifications.get(output.primary) ?? []) {
             try {
               notify();

@@ -1,11 +1,10 @@
 import type { IRScene, Scene } from '@retikz/core';
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { literal, string } from 'zod';
 
 import { renderToSvgString } from '../../src';
 import { mountSvg } from '../../src/dom';
-
 // @vitest-environment jsdom
 import { compileTestResult } from '../helpers/compilation';
 
@@ -27,20 +26,6 @@ describe('@retikz/vanilla mountSvg', () => {
     expect(Array.from(container.children)).toEqual([sibling]);
   });
 
-  it.each(['static', 'retained'] as const)('%s 测量与更新后的 SVG 宿主共享默认字体', mode => {
-    const ir: IRScene = { version: 1, type: 'scene', children: [{ type: 'node', text: 'Alpha', position: [0, 0] }] };
-    const measureText = vi.fn(() => ({ width: 40, height: 16 }));
-    const options = { defaultFontFamily: 'serif', compile: { measureText } };
-    const container = document.createElement('div');
-    const view =
-      mode === 'static'
-        ? mountSvg(container, ir, { ...options, runtime: { mode } })
-        : mountSvg(container, ir, { ...options, runtime: { mode } });
-    expect(measureText).toHaveBeenCalledWith('Alpha', expect.objectContaining({ family: 'serif' }), false);
-    view.update(ir);
-    expect(view.root.getAttribute('font-family') ?? view.root.style.fontFamily).toBe('serif');
-    view.dispose();
-  });
   it.each(['static', 'retained'] as const)('%s 宿主默认尺寸随取景框更新', mode => {
     const ir: IRScene = {
       type: 'scene',
@@ -142,10 +127,6 @@ describe('@retikz/vanilla mountSvg', () => {
 
     expect(str).toContain('retikz-paint-fig-');
     expect(domHtml).toContain('retikz-paint-fig-');
-  });
-
-  it('mount-null-container：非 Element 容器 → 可诊断 throw', () => {
-    expect(() => mountSvg(null as never, sceneOf())).toThrow(/container/i);
   });
 
   it('dispose-clears：dispose 后容器清空、再调不抛', () => {

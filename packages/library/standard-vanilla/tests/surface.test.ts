@@ -44,7 +44,7 @@ describe('表面（）', () => {
       },
     );
 
-    expect(JSON.stringify(result.scene)).toContain('surface-ready');
+    expect(JSON.stringify(result.compileResult.scene)).toContain('surface-ready');
     expect(executions).toBe(1);
   });
 

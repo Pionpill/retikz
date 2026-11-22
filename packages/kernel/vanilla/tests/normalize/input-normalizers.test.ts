@@ -149,13 +149,14 @@ describe('Vanilla 输入标准化器', () => {
     });
   });
 
-  it('拒绝不足两个步骤的非自包含路径', () => {
-    expect(() =>
+  it('单步路径只展开目标简写，几何诊断由 Core 处理', () => {
+    expect(
       normalizePath({
         type: 'path',
-        children: [{ type: 'step', kind: 'move', to: [0, 0] }],
+        authoring: 'trace',
+        children: [{ type: 'step', kind: 'fold', via: '-|-', fraction: 0.3, to: 'A' }],
       }),
-    ).toThrow('path requires at least 2 steps');
+    ).toEqual({ type: 'path', children: [{ type: 'step', kind: 'fold', via: '-|-', fraction: 0.3, to: { id: 'A' } }] });
   });
 
   it('允许单个自包含 rectangle 步骤', () => {

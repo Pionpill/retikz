@@ -1,16 +1,17 @@
 import type { Scene } from '@retikz/core';
 
+import type { InputRender, InputRetainedRender } from '../runtime';
+import { mountCanvas } from './mount-canvas';
+import { mountSvg } from './mount-svg';
 import type {
   CanvasView,
   MountCanvasOptions,
   MountOptions,
   RawStaticMountCanvasOptions,
   RawStaticMountOptions,
-  InputRender,
   RetainedCanvasView,
   RetainedMountCanvasOptions,
   RetainedMountOptions,
-  InputRetainedRender,
   RetainedSvgView,
   StaticCanvasView,
   StaticMountCanvasOptions,
@@ -19,9 +20,7 @@ import type {
   StaticRawSvgView,
   StaticSvgView,
   VanillaView,
-} from '../runtime';
-import { mountCanvas } from './mount-canvas';
-import { mountSvg } from './mount-svg';
+} from './types';
 
 /** Vanilla 挂载时使用的渲染器选择器 */
 export type MountRenderer = 'svg' | 'canvas';

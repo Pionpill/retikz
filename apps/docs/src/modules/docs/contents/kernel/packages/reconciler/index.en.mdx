@@ -53,11 +53,11 @@ For everyday drawing and updates, use the [Vanilla API](/kernel/packages/vanilla
 
 <PackageManagerInstall packages="@retikz/core @retikz/reconciler" />
 
-This example uses the default incremental mode to compile the drawing and then move B. The batch locates B by its root scope ID and node name; `input` supplies its complete updated declaration.
+This example uses the explicit incremental mode to compile the drawing and then move B. The batch locates B by its root scope ID and node name; `input` supplies its complete updated declaration.
 
 ```ts
 import type { IRScene } from '@retikz/core';
-import { SceneReconciler, WeaveOperationKind } from '@retikz/reconciler';
+import { ReconcilerMode, SceneReconciler, WeaveOperationKind } from '@retikz/reconciler';
 
 const ir: IRScene = {
   type: 'scene',
@@ -75,7 +75,7 @@ const ir: IRScene = {
   ],
 };
 
-const session = new SceneReconciler();
+const session = new SceneReconciler({}, { mode: ReconcilerMode.Incremental });
 try {
   const first = session.mount(ir);
   const next = session.update({
@@ -94,7 +94,7 @@ try {
 }
 ```
 
-The initial mount returns revision 0; moving B returns revision 1. With no output target attached, the caller can read the new Scene directly. For a one-off compilation, use `new SceneReconciler({}, { incremental: false })` to avoid retaining state between compilations. That mode accepts full replacements but does not accept batches of local edits.
+The initial mount returns revision 0; moving B returns revision 1. With no output target attached, the caller can read the new Scene directly. For a one-off compilation, use `new SceneReconciler()` to avoid retaining state between compilations. That mode accepts full replacements but does not accept batches of local edits.
 
 ## First compilation and subsequent updates
 

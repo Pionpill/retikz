@@ -31,10 +31,10 @@ This path does not use the generic Runtime package's Source / Computation regist
 
 <SourceLinks
   sources={[
-    { label: 'Input preparation', path: 'packages/kernel/vanilla/src/processing/prepare.ts' },
+    { label: 'Input preparation', path: 'packages/kernel/vanilla/src/runtime/_input/prepare.ts' },
     {
       label: 'Controller and session integration',
-      path: 'packages/kernel/vanilla/src/processing/internal/controller.ts',
+      path: 'packages/kernel/vanilla/src/runtime/session/runtime.ts',
     },
     { label: 'Replacement and configuration updates', path: 'packages/kernel/reconciler/src/reconcile/reconciler.ts' },
   ]}
@@ -42,7 +42,7 @@ This path does not use the generic Runtime package's Source / Computation regist
 
 ## Compilation and reuse
 
-A non-incremental session uses the full traversal driver for mount and replace. Weave independently handles initial construction, complete replacement, and batch updates in incremental sessions. Initial construction computes all authored elements in a new candidate tree; updates select invalid stages. Both drivers share Core stages and output assembly. `incremental` defaults to `true`, retaining authored Weave nodes and actual stage products. With `false`, mount and replace run without retained caches, and calling update throws. The options type uses `incremental` as its discriminant: `updateStrategy` is available only in incremental mode, and TypeScript rejects invalid combinations. `@retikz/reconciler` also exports `FullSceneReconcilerOptions` and `IncrementalSceneReconcilerOptions` for declaring the options of each mode separately. Probes, instance inputs, and artifacts keep the same semantics in both modes.
+A non-incremental session uses the full traversal driver for mount and replace. Weave independently handles initial construction, complete replacement, and batch updates in incremental sessions. Initial construction computes all authored elements in a new candidate tree; updates select invalid stages. Both drivers share Core stages and output assembly. Choosing `ReconcilerMode.Incremental` retains authored Weave nodes and actual stage products. With the default `ReconcilerMode.Full`, mount and replace run without retained caches, and calling update throws. The options type uses `mode` as its discriminant: `updateStrategy` is available only in incremental mode, and TypeScript rejects invalid combinations. `@retikz/reconciler` also exports `FullSceneReconcilerOptions` and `IncrementalSceneReconcilerOptions` for declaring the options of each mode separately. Probes, instance inputs, and artifacts keep the same semantics in both modes.
 
 <ComponentPreview files="update-reuse" size="md" hideCode type="flow" />
 

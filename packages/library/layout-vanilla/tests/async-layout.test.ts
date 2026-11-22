@@ -34,8 +34,8 @@ describe('Layout 异步编写', () => {
       const expected = compileToScene(input);
       const actual = await compileToSceneAsync(input);
 
-      expect(actual.scene).toEqual(expected.scene);
-      expect(JSON.stringify(actual.scene)).toContain('prepared-child');
+      expect(actual.compileResult.scene).toEqual(expected.compileResult.scene);
+      expect(JSON.stringify(actual.compileResult.scene)).toContain('prepared-child');
     }
 
     expect(executed).toBe(3);
@@ -75,6 +75,6 @@ describe('Layout 异步编写', () => {
       },
     );
 
-    expect(JSON.stringify(result.scene)).toContain('nested-bound-ready');
+    expect(JSON.stringify(result.compileResult.scene)).toContain('nested-bound-ready');
   });
 });

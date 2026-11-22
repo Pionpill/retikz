@@ -29,13 +29,10 @@ export const compileTable = <const TComposite extends AnyCompositeDefinition = n
   const tableDefinitions = lowerTables(datasets, options.lower);
   const composites = [...tableDefinitions, ...(compileOptions.composites ?? [])];
   const result = (() => {
-    const reconciler = new SceneReconciler(
-      {
-        ...compileOptions,
-        composites,
-      },
-      { incremental: false },
-    );
+    const reconciler = new SceneReconciler({
+      ...compileOptions,
+      composites,
+    });
     try {
       return reconciler.mount({
         type: 'scene',

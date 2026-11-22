@@ -26,7 +26,7 @@ Render 收到 Scene 时，节点尺寸和路径端点已经确定。要让文字
 
 Vanilla 在未提供 `compile.measureText` 时选择默认测量器，实际测量时才尝试获取 Canvas 2D 上下文。React 的 `Layout` 复用这条默认路径；显式传入 `measureText` 时则透传给 Vanilla。浏览器测量使用 Canvas 2D 的 `measureText` 查询字宽和字形上下边界，即使最后选择 SVG 后端也走这条测量路径；无需先挂载一个 SVG 文本元素再读取它的尺寸。
 
-字体族优先使用文字自身的配置，其次使用 Vanilla 的 `defaultFontFamily`；React 将 `Layout` 的 `style.fontFamily` 传入这一选项。默认浏览器测量器在字体族仍缺省时读取页面 `body` 的计算字体，最终使用 `sans-serif`。测量使用的字体应与实际显示的字体一致；只改变外围 CSS 的继承环境，不能保证已有几何随之更新。
+默认浏览器测量器优先使用文字自身的字体族，缺省时读取页面 `body` 的计算字体，最终使用 `sans-serif`。React 的 `Layout.style.fontFamily` 只影响宿主显示，不会传给测量器。需要按特定字体布局时，在文字上显式指定字体族，或提供自定义测量器。
 
 显式测量器优先于默认环境探测。没有浏览器环境或无法创建 Canvas 上下文时，默认测量器使用 Core 的 `fallbackMeasurer`；自定义测量器抛错、返回非法指标，或实际浏览器测量抛错时，不会静默改为估算。直接调用 Core 且未提供测量器时，也使用 `fallbackMeasurer`。
 
@@ -35,8 +35,8 @@ Vanilla 在未提供 `compile.measureText` 时选择默认测量器，实际测�
 <SourceLinks
   sources={[
     { label: 'React 透传度量与默认字体', path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx' },
-    { label: 'Vanilla 默认测量与字体补入', path: 'packages/kernel/vanilla/src/processing/text-measurement.ts' },
-    { label: 'Vanilla 传递编译选项', path: 'packages/kernel/vanilla/src/processing/prepare.ts' },
+    { label: 'Vanilla 默认测量与字体补入', path: 'packages/kernel/vanilla/src/runtime/_input/text.ts' },
+    { label: 'Vanilla 传递编译选项', path: 'packages/kernel/vanilla/src/runtime/_input/prepare.ts' },
     { label: '缺省文字估算器', path: 'packages/kernel/core/src/compile/text/helpers.ts' },
     { label: 'TextMetrics', path: 'packages/kernel/core/src/contract/text.ts' },
     { label: 'resolveTextMetrics', path: 'packages/kernel/core/src/resolve/text/metrics.ts' },

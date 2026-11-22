@@ -36,8 +36,8 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   '指向同一节点几何的额外 id；要求主 id，别名非空白且不重复':
     'Additional ids for the same node geometry; requires a primary id and distinct nonblank aliases',
   '命名坐标点的 React 输入，不绘制可见内容': 'React input for a named coordinate with no visible content',
-  '可选编译驱动解释的运行时载荷，不进入 Core IR':
-    'Optional runtime payload interpreted by a compile driver; excluded from Core IR',
+  '可选编译结果扩展解释的运行时载荷，不进入 Core IR':
+    'Optional runtime payload interpreted by a compile result extension; excluded from Core IR',
   '坐标点 id；路径端点和节点定位通过它引用此位置':
     'Coordinate ID used by path endpoints and node positioning to reference this position',
   '坐标点位置；不支持 Node 专属的自身锚点对齐': 'Coordinate position; does not support Node-only self-anchor alignment',

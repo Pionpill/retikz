@@ -48,9 +48,9 @@ React 的 Layout 调用 Vanilla 提供的处理能力，将控制器的创建、
 
 <SourceLinks
   sources={[
-    { label: '输入准备', path: 'packages/kernel/vanilla/src/processing/prepare.ts' },
-    { label: '单次处理', path: 'packages/kernel/vanilla/src/processing/static.ts' },
-    { label: '协调器与处理控制器装配', path: 'packages/kernel/vanilla/src/processing/internal/controller.ts' },
+    { label: '输入准备', path: 'packages/kernel/vanilla/src/runtime/_input/prepare.ts' },
+    { label: '单次处理', path: 'packages/kernel/vanilla/src/runtime/compile/static.ts' },
+    { label: '协调器与处理控制器装配', path: 'packages/kernel/vanilla/src/runtime/session/runtime.ts' },
   ]}
 />
 
@@ -119,17 +119,17 @@ Render 消费 Scene 中已经确定的几何。选择 SVG 时，它生成描述�
 
 ## 完整实现流程
 
-沿本例的 React JSX、static、SVG 分支阅读源码，可以依次追踪下面的入口。箭头表示执行阅读顺序；输入准备与编译驱动内部的调用也展开在图中。
+沿本例的 React JSX、static、SVG 分支阅读源码，可以依次追踪下面的入口。箭头表示执行阅读顺序；输入准备与编译结果扩展内部的调用也展开在图中。
 
 <ComponentPreview files="pipeline-implementation" size="lg" hideCode type="flow" />
 
-从 Layout 的 `createInputScene` 开始，进入 Vanilla 的 `prepareStaticProcessing`。其中，`prepareProcessingInput` 负责输入准备，静态驱动创建临时非增量 `SceneReconciler`，从 `mount` 结果读取同次编译产物与诊断，并在调用结束后释放。结果返回 React 的 `ProcessingResultHost` 后，经 `buildSvgFrameDocument` 与 `svgToReact` 转成 React 元素，最终由 React 提交到页面。
+从 Layout 的 `createInputScene` 开始，进入 Vanilla 的 `prepareStaticProcessing`。其中，`prepareProcessingInput` 负责输入准备，静态驱动创建临时非增量 `SceneReconciler`，从 `mount` 结果读取同次编译产物与诊断，并在调用结束后释放。结果返回 React 的 `ProcessingResultHost` 后，经 `buildSvgDocument` 与 `svgToReact` 转成 React 元素，最终由 React 提交到页面。
 
 <SourceLinks
   sources={[
     { label: 'React 场景入口', path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx' },
-    { label: 'Vanilla 同步处理', path: 'packages/kernel/vanilla/src/processing/static.ts' },
-    { label: '默认编译驱动', path: 'packages/kernel/vanilla/src/processing/compile-driver.ts' },
+    { label: 'Vanilla 同步处理', path: 'packages/kernel/vanilla/src/runtime/compile/static.ts' },
+    { label: '默认编译结果扩展', path: 'packages/kernel/vanilla/src/runtime/compile/result-extension.ts' },
     { label: 'SvgNode 转换为 React 元素', path: 'packages/kernel/react/src/render/svg/svg-to-react.ts' },
   ]}
 />

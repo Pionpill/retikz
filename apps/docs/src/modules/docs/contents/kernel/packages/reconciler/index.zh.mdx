@@ -53,11 +53,11 @@ description: 从两个节点和一条连线出发，了解 Reconciler 怎样执�
 
 <PackageManagerInstall packages="@retikz/core @retikz/reconciler" />
 
-下面在默认的增量模式下编译这张图，再更新 B。批次通过根作用域标识和节点名定位 B；`input` 给出更新后完整的节点声明。
+下面显式选择增量模式，编译这张图，再更新 B。批次通过根作用域标识和节点名定位 B；`input` 给出更新后完整的节点声明。
 
 ```ts
 import type { IRScene } from '@retikz/core';
-import { SceneReconciler, WeaveOperationKind } from '@retikz/reconciler';
+import { ReconcilerMode, SceneReconciler, WeaveOperationKind } from '@retikz/reconciler';
 
 const ir: IRScene = {
   type: 'scene',
@@ -75,7 +75,7 @@ const ir: IRScene = {
   ],
 };
 
-const session = new SceneReconciler();
+const session = new SceneReconciler({}, { mode: ReconcilerMode.Incremental });
 try {
   const first = session.mount(ir);
   const next = session.update({
@@ -94,7 +94,7 @@ try {
 }
 ```
 
-首次挂载返回版本 0，移动 B 后返回版本 1。示例没有接入输出目标，可以直接读取新 Scene。如果只需一次完整编译，可用 `new SceneReconciler({}, { incremental: false })` 关闭跨次状态保留；该模式支持完整替换，不接受局部编辑批次。
+首次挂载返回版本 0，移动 B 后返回版本 1。示例没有接入输出目标，可以直接读取新 Scene。如果只需一次完整编译，可用 `new SceneReconciler()` 关闭跨次状态保留；该模式支持完整替换，不接受局部编辑批次。
 
 ## 首次出图与后续更新的耗时
 

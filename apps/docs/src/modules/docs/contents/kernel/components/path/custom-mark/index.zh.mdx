@@ -87,7 +87,9 @@ import { compileToScene } from '@retikz/vanilla';
 
 import { ringMark } from './ring-mark';
 
-const { scene } = compileToScene(
+const {
+  compileResult: { scene },
+} = compileToScene(
   {
     version: 1,
     type: 'scene',

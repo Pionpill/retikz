@@ -31,15 +31,15 @@ React 将组件声明转换为 `InputScene`，Vanilla 再归一化为 `IRScene`�
 
 <SourceLinks
   sources={[
-    { label: '输入准备', path: 'packages/kernel/vanilla/src/processing/prepare.ts' },
-    { label: '控制器与会话接线', path: 'packages/kernel/vanilla/src/processing/internal/controller.ts' },
+    { label: '输入准备', path: 'packages/kernel/vanilla/src/runtime/_input/prepare.ts' },
+    { label: '控制器与会话接线', path: 'packages/kernel/vanilla/src/runtime/session/runtime.ts' },
     { label: '完整替换与配置更新', path: 'packages/kernel/reconciler/src/reconcile/reconciler.ts' },
   ]}
 />
 
 ## 编译与复用
 
-非增量会话由完整遍历驱动执行 mount / replace；增量会话由 Weave 独立执行首屏构建、完整替换和批次更新。首屏在新候选树上计算所有作者元素，更新时选择失效阶段；两种驱动共享 Core 阶段与输出组装能力。`incremental` 默认为 `true`，保留作者 Weave 树和实际阶段产物；设为 `false` 时不保留缓存，只允许 mount / replace，调用 update 会报错。配置类型以 `incremental` 为判别字段，`updateStrategy` 仅在增量模式下可配置，非法组合由 TypeScript 拒绝。`@retikz/reconciler` 同时导出 `FullSceneReconcilerOptions` 和 `IncrementalSceneReconcilerOptions`，可分别声明两种模式的配置。probe、实例输入和 artifacts 在两种模式下保持相同语义。
+非增量会话由完整遍历驱动执行 mount / replace；增量会话由 Weave 独立执行首屏构建、完整替换和批次更新。首屏在新候选树上计算所有作者元素，更新时选择失效阶段；两种驱动共享 Core 阶段与输出组装能力。显式选择 `ReconcilerMode.Incremental` 时，保留作者 Weave 树和实际阶段产物；默认的 `ReconcilerMode.Full` 不保留缓存，只允许 mount / replace，调用 update 会报错。配置类型以 `mode` 为判别字段，`updateStrategy` 仅在增量模式下可配置，非法组合由 TypeScript 拒绝。`@retikz/reconciler` 同时导出 `FullSceneReconcilerOptions` 和 `IncrementalSceneReconcilerOptions`，可分别声明两种模式的配置。probe、实例输入和 artifacts 在两种模式下保持相同语义。
 
 <ComponentPreview files="update-reuse" size="md" hideCode type="flow" />
 

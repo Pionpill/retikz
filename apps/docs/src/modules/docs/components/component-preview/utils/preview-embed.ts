@@ -47,7 +47,7 @@ type PreviewHostDimensions = Pick<LayoutProps, 'width' | 'height'>;
 
 const FLOW_HOST_PROP_KEYS = [
   'authoring',
-  'compileDriver',
+  'compileResultExtension',
   'handlers',
   'runtime',
   'width',

@@ -11,7 +11,7 @@ export { normalizeChartCoordinate } from '../normalize/chart';
 export type { InputChartHostTheme, InputChartPanel } from '../shared';
 
 /** Chart 服务端渲染选项 */
-export type ChartRenderOptions = Omit<RenderToStringOptions, 'compileDriver'>;
+export type ChartRenderOptions = Omit<RenderToStringOptions, 'compileResultExtension'>;
 
 /** Chart 单次编译与服务端渲染结果 */
 export type ChartRenderResult = Readonly<{
@@ -69,5 +69,5 @@ export const renderChartAsync = async (
   const request = chartRenderRequest(input, compile);
   const result = await compileToSceneAsync(request.source, { signal, compile: request.compile });
 
-  return { svg: renderToSvgString(result.scene, renderOptions), compileResult: result.compileResult };
+  return { svg: renderToSvgString(result.compileResult.scene, renderOptions), compileResult: result.compileResult };
 };

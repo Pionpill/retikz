@@ -51,11 +51,11 @@ React Layout calls Vanilla's processing APIs and connects controller creation, u
 
 <SourceLinks
   sources={[
-    { label: 'Input preparation', path: 'packages/kernel/vanilla/src/processing/prepare.ts' },
-    { label: 'Single-pass processing', path: 'packages/kernel/vanilla/src/processing/static.ts' },
+    { label: 'Input preparation', path: 'packages/kernel/vanilla/src/runtime/_input/prepare.ts' },
+    { label: 'Single-pass processing', path: 'packages/kernel/vanilla/src/runtime/compile/static.ts' },
     {
       label: 'Reconciler and controller assembly',
-      path: 'packages/kernel/vanilla/src/processing/internal/controller.ts',
+      path: 'packages/kernel/vanilla/src/runtime/session/runtime.ts',
     },
   ]}
 />
@@ -128,17 +128,20 @@ Static export can serialize the SVG tree into a string. Applications with an exi
 
 ## Implementation sequence
 
-Follow the example's React JSX, static, SVG branch through these entries. Arrows show the reading order of execution, including calls inside input preparation and the compile driver.
+Follow the example's React JSX, static, SVG branch through these entries. Arrows show the reading order of execution, including calls inside input preparation and the compile result extension.
 
 <ComponentPreview files="pipeline-implementation" size="lg" hideCode type="flow" />
 
-Start at Layout's `createInputScene`, then follow Vanilla's `prepareStaticProcessing`. Inside it, `prepareProcessingInput` prepares the input and the static driver creates a temporary non-incremental `SceneReconciler`, reads artifacts and diagnostics from the mount result, and disposes the instance when the call ends. The result returns to React's `ProcessingResultHost`; `buildSvgFrameDocument` and `svgToReact` produce React elements for React to commit to the page.
+Start at Layout's `createInputScene`, then follow Vanilla's `prepareStaticProcessing`. Inside it, `prepareProcessingInput` prepares the input and the static driver creates a temporary non-incremental `SceneReconciler`, reads artifacts and diagnostics from the mount result, and disposes the instance when the call ends. The result returns to React's `ProcessingResultHost`; `buildSvgDocument` and `svgToReact` produce React elements for React to commit to the page.
 
 <SourceLinks
   sources={[
     { label: 'React scene entry', path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx' },
-    { label: 'Vanilla synchronous processing', path: 'packages/kernel/vanilla/src/processing/static.ts' },
-    { label: 'Default compile driver', path: 'packages/kernel/vanilla/src/processing/compile-driver.ts' },
+    { label: 'Vanilla synchronous processing', path: 'packages/kernel/vanilla/src/runtime/compile/static.ts' },
+    {
+      label: 'Default compile result extension',
+      path: 'packages/kernel/vanilla/src/runtime/compile/result-extension.ts',
+    },
     { label: 'SvgNode to React elements', path: 'packages/kernel/react/src/render/svg/svg-to-react.ts' },
   ]}
 />

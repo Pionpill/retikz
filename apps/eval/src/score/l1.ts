@@ -28,7 +28,7 @@ export const scoreL1 = (candidate: unknown): L1Result => {
 
   try {
     const scene = (() => {
-      const reconciler = new SceneReconciler({}, { incremental: false });
+      const reconciler = new SceneReconciler();
       try {
         return reconciler.mount(parsed.data).compilation.result;
       } finally {

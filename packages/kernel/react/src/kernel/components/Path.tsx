@@ -10,7 +10,7 @@ import { TIKZ_PATH } from '../protocol';
 export type PathProps = HydrationEventProps & {
   /** 实例视觉覆盖，逐字段覆盖继承默认值 */
   style?: InputPath['style'];
-  /** 可选 compile driver 自行解释的 runtime-only authoring 载荷，不进入 Core IR */
+  /** 可选 compile result extension 自行解释的 runtime-only authoring 载荷，不进入 Core IR */
   authoring?: unknown;
   /**
    * 路径定义，省略时使用内置 stroke；自定义种类通过 Layout.extensions.paths 注册

@@ -1,5 +1,5 @@
 import type { Scene } from '@retikz/core';
-import type { CompileResult, CompositeArtifact } from '@retikz/reconciler';
+import type { CompileResult } from '@retikz/reconciler';
 import type { AnimationControls, IdClockRegistry } from '@retikz/render/animation';
 import {
   createClock,
@@ -11,7 +11,7 @@ import {
   sceneHasAutoplayTrigger,
 } from '@retikz/render/animation';
 import type { PrimAnimationResolution } from '@retikz/render/canvas';
-import { hitTest, renderFrameToCanvas } from '@retikz/render/canvas';
+import { hitTest, renderToCanvas } from '@retikz/render/canvas';
 import type { HydrationController } from '@retikz/render/hydration';
 import {
   collectCanvasVisibleAnimationIds,
@@ -21,21 +21,16 @@ import {
   isCanvasAnimationIdVisible,
   withCanvasAnimationEventHandlers,
 } from '@retikz/render/hydration';
-import type { RenderReadonlyLayer } from '@retikz/render/runtime';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
-import {
-  DEFAULT_ID_PREFIX,
-  VanillaViewMode,
-  captureVanillaRuntimeOptions,
-  computeDisplaySize,
-  toSceneResult,
-} from '../runtime';
+import { DEFAULT_ID_PREFIX, EMPTY_ARTIFACTS, sceneOfResult, toSceneResult } from '../runtime';
+import type { InputRender, InputRetainedRender } from '../runtime';
+import { VanillaViewMode } from './constants';
+import { calculateDisplaySize } from './display-size';
+import { createRetainedProcessingController } from './retained';
 import type {
   CanvasView,
   HydrateOptions,
-  InputRender,
-  InputRetainedRender,
   MountCanvasOptions,
   RawStaticMountCanvasOptions,
   RetainedCanvasView,
@@ -45,11 +40,10 @@ import type {
   StaticMountCanvasOptions,
   StaticRawCanvasView,
   VanillaRetainedRuntimeOptions,
-} from '../runtime';
-import { createRetainedProcessingController } from './retained';
+} from './types';
 
 /** 设备像素比：取有限正数、否则回退 1（镜像 react CanvasHost） */
-const resolveDevicePixelRatio = (override: number | undefined): number => {
+const getDevicePixelRatio = (override: number | undefined): number => {
   if (typeof override === 'number' && Number.isFinite(override) && override > 0) return override;
   const ratio = globalThis.devicePixelRatio;
   return typeof ratio === 'number' && Number.isFinite(ratio) && ratio > 0 ? ratio : 1;
@@ -67,16 +61,11 @@ const mountStaticCanvas = (
   input: InputRender,
   options: StaticMountCanvasOptions | RawStaticMountCanvasOptions,
 ): StaticCanvasView | StaticRawCanvasView => {
-  if (typeof Element === 'undefined' || !(container instanceof Element)) {
-    throw new RetikzVanillaError(RetikzVanillaErrorCode.Dom, 'mountCanvas: container must be a DOM Element.');
-  }
-
   const canvas = document.createElement('canvas');
-  if (options.defaultFontFamily) canvas.style.fontFamily = options.defaultFontFamily;
   const output = options.output ?? {};
   const animation = options.animation ?? {};
   const canvasOptions = options.canvas ?? {};
-  const ratio = resolveDevicePixelRatio(canvasOptions.devicePixelRatio);
+  const ratio = getDevicePixelRatio(canvasOptions.devicePixelRatio);
 
   // 未显式配置时跟随系统偏好；显式 enabled 值覆盖系统偏好。
   const animate = resolveAnimationEnabled(animation.enabled, prefersReducedMotion());
@@ -90,8 +79,6 @@ const mountStaticCanvas = (
   let visibleTeardown: (() => void) | undefined;
 
   let currentScene: Scene;
-  let currentLayers: ReadonlyArray<RenderReadonlyLayer> = Object.freeze([]);
-  let currentArtifacts: ReadonlyArray<CompositeArtifact> = Object.freeze([]);
   let currentCompileResult: CompileResult | undefined;
 
   // 存活的水合：onEvent 触发的 handler 表按「绑定时的 scene」合成（新增 / 移除的 onEvent track 决定注册哪些
@@ -109,16 +96,12 @@ const mountStaticCanvas = (
   /** 按当前时钟时刻 + per-id 登记表立即重绘一帧（per-id pause / stop 即时反映） */
   const renderFrame = (): void => {
     const time = clock?.time ?? 0;
-    renderFrameToCanvas(
-      canvas,
-      { primary: currentScene, layers: currentLayers },
-      {
-        devicePixelRatio: ratio,
-        time,
+    renderToCanvas(canvas, currentScene, {
+      devicePixelRatio: ratio,
+      time,
 
-        resolvePrimAnimation: id => resolvePrim(id, time),
-      },
-    );
+      resolvePrimAnimation: id => resolvePrim(id, time),
+    });
   };
 
   const startClockIfIdle = (): void => {
@@ -182,12 +165,11 @@ const mountStaticCanvas = (
   };
 
   const renderInto = (next: InputRender): void => {
-    const { scene, artifacts, compileResult, layers } = toSceneResult(next, options);
+    const result = toSceneResult(next, options);
+    const scene = sceneOfResult(result);
     currentScene = scene;
-    currentLayers = layers;
-    currentArtifacts = artifacts;
-    currentCompileResult = compileResult;
-    const size = computeDisplaySize(scene.layout, output.width, output.height);
+    currentCompileResult = 'compileResult' in result ? result.compileResult : undefined;
+    const size = calculateDisplaySize(scene.layout, output.width, output.height);
     canvas.width = Math.max(1, Math.round(size.width * ratio));
     canvas.height = Math.max(1, Math.round(size.height * ratio));
     canvas.style.width = `${size.width}px`;
@@ -197,35 +179,27 @@ const mountStaticCanvas = (
     // 截帧（animation.snapshotAt 给定）：按该时刻烘焙一帧、不起 rAF（定格），覆盖 animation.enabled。
     // animation.snapshotAt 来自 mount options、view 生命周期内恒定，故此分支下 clock / visible bridge 始终不建。
     if (animation.snapshotAt !== undefined) {
-      renderFrameToCanvas(
-        canvas,
-        { primary: scene, layers },
-        {
-          devicePixelRatio: ratio,
-          time: animation.snapshotAt,
-        },
-      );
+      renderToCanvas(canvas, scene, {
+        devicePixelRatio: ratio,
+        time: animation.snapshotAt,
+      });
       return;
     }
 
     // base 静态先画一帧；含动画且未降级时起 rAF 时钟逐帧重绘（共享时钟，per-track delay 在 evaluateTrack 内偏移）
-    renderFrameToCanvas(canvas, { primary: scene, layers }, { devicePixelRatio: ratio });
+    renderToCanvas(canvas, scene, { devicePixelRatio: ratio });
     clock?.dispose();
     clock = undefined;
     if (animate && sceneHasAnimations(scene)) {
       clock = createClock({
         durationMs: sceneAnimationDurationMs(scene),
         onFrame: time =>
-          renderFrameToCanvas(
-            canvas,
-            { primary: currentScene, layers: currentLayers },
-            {
-              devicePixelRatio: ratio,
-              time,
+          renderToCanvas(canvas, currentScene, {
+            devicePixelRatio: ratio,
+            time,
 
-              resolvePrimAnimation: id => resolvePrim(id, time),
-            },
-          ),
+            resolvePrimAnimation: id => resolvePrim(id, time),
+          }),
       });
       if (sceneHasAutoplayTrigger(scene)) clock.play();
     }
@@ -361,7 +335,7 @@ const mountStaticCanvas = (
       return clock;
     },
     get artifacts() {
-      return currentArtifacts;
+      return currentCompileResult?.artifacts ?? EMPTY_ARTIFACTS;
     },
     get compileResult() {
       return currentCompileResult;
@@ -376,14 +350,9 @@ const mountRetainedCanvas = (
   options: RetainedMountCanvasOptions,
   runtimeOptions: VanillaRetainedRuntimeOptions,
 ): RetainedCanvasView => {
-  if (typeof Element === 'undefined' || !(container instanceof Element)) {
-    throw new RetikzVanillaError(RetikzVanillaErrorCode.Dom, 'mountCanvas: container must be a DOM Element.');
-  }
-
   const canvas = document.createElement('canvas');
-  if (options.defaultFontFamily) canvas.style.fontFamily = options.defaultFontFamily;
   const output = options.output ?? {};
-  const ratio = resolveDevicePixelRatio(options.canvas?.devicePixelRatio);
+  const ratio = getDevicePixelRatio(options.canvas?.devicePixelRatio);
   if (output.width !== undefined) canvas.style.width = `${output.width}px`;
   if (output.height !== undefined) canvas.style.height = `${output.height}px`;
   canvas.style.objectFit = 'contain';
@@ -399,7 +368,7 @@ const mountRetainedCanvas = (
   container.appendChild(canvas);
 
   const clientToScene = (clientX: number, clientY: number): ScenePoint => {
-    const { layout } = processing.result().scene;
+    const { layout } = processing.result().compileResult.scene;
     const rect = canvas.getBoundingClientRect();
     const scale = Math.min(rect.width / layout.width, rect.height / layout.height);
     const offsetX = (rect.width - layout.width * scale) / 2;
@@ -426,7 +395,7 @@ const mountRetainedCanvas = (
       return processing.read().animation;
     },
     get artifacts() {
-      return processing.result().artifacts;
+      return processing.result().compileResult.artifacts;
     },
     get compileResult() {
       return processing.result().compileResult;
@@ -451,7 +420,7 @@ export const mountCanvas: MountCanvas = ((
     return mountStaticCanvas(container, input, options as StaticMountCanvasOptions);
   }
 
-  const runtimeOptions = captureVanillaRuntimeOptions(options);
+  const runtimeOptions = options.runtime ?? { mode: VanillaViewMode.Retained };
   if (runtimeOptions.mode === VanillaViewMode.Static) {
     return mountStaticCanvas(container, input, options as RawStaticMountCanvasOptions);
   }

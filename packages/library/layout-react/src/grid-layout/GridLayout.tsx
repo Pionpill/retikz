@@ -11,7 +11,7 @@ import { createInputLayoutItems } from '../shared';
 /** Grid 布局的 React 属性 */
 export type GridLayoutProps = Omit<InputGridLayoutConfig, 'children'> &
   Readonly<{
-    /** 交给可选编译驱动解释的不透明声明数据 */
+    /** 交给可选编译结果扩展解释的不透明声明数据 */
     authoring?: unknown;
     /** 必须由 Grid 类型布局项目组成的子元素；省略时容器为空
      * @default []

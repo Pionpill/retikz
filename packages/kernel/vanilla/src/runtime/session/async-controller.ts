@@ -1,49 +1,24 @@
 import type { IRScene } from '@retikz/core';
 
-import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
-import type { InputLayer, InputSceneChildren, InputSceneLayers } from '../normalize';
-import { asLayerStack } from '../normalize';
-import { assertPreparationActive } from './authoring';
-import { createPreparedInputProcessingController } from './internal';
-import { isLayerSource, resolveLayerOptions } from './layer';
-import { createLayerController } from './layer-controller';
-import { prepareProcessingInputAsync } from './prepare';
-import type { AsyncLayerProcessingController, LayerProcessingUpdateOutcome, InputPreparedProcessing } from './types';
-import type { AsyncProcessingController, AsyncProcessingOptions, ProcessingSource } from './types';
+import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../error';
+import type { InputLayer, InputSceneChildren, InputSceneLayers } from '../../normalize';
+import { normalizeSceneLayers } from '../../normalize';
+import { isLayerSource, mergeLayerOptions, assertPreparationActive, prepareProcessingInputAsync } from '../_input';
+import type { InputPreparedProcessing, AsyncProcessingOptions, ProcessingSource } from '../_input';
+import { createLayerController } from './layer';
+import { SceneRuntime } from './runtime';
+import type { AsyncLayerProcessingController, LayerProcessingUpdateOutcome, AsyncProcessingController } from './types';
 
 /** 共享作者 preparation 的请求失效控制；事务与 committed revision 仍由同步 controller 管理 */
 const createSingleControllerAsync = async (
   source: ProcessingSource,
   options: AsyncProcessingOptions = {},
 ): Promise<AsyncProcessingController> => {
-  const fixed: AsyncProcessingOptions = Object.freeze({
-    ...options,
-    compile: options.compile === undefined ? undefined : Object.freeze({ ...options.compile }),
-  });
-  const initialAbort = new AbortController();
-  const lifecycle = fixed.signal;
-  const abortInitial = (): void => initialAbort.abort(lifecycle?.reason);
-  if (lifecycle?.aborted) abortInitial();
-  lifecycle?.addEventListener('abort', abortInitial, { once: true });
-  let input;
-
-  try {
-    input = await prepareProcessingInputAsync(source, fixed, initialAbort.signal);
-    assertPreparationActive(initialAbort.signal);
-  } catch (cause) {
-    lifecycle?.removeEventListener('abort', abortInitial);
-    throw cause;
-  }
-
-  let controller;
-
-  try {
-    controller = createPreparedInputProcessingController(input, fixed, () =>
-      assertPreparationActive(initialAbort.signal),
-    );
-  } finally {
-    lifecycle?.removeEventListener('abort', abortInitial);
-  }
+  const lifecycle = options.signal;
+  const signal = lifecycle ?? new AbortController().signal;
+  const input = await prepareProcessingInputAsync(source, options, signal);
+  assertPreparationActive(signal);
+  const controller = SceneRuntime.fromPrepared(input, options, () => assertPreparationActive(signal));
 
   let disposed = false;
   let request = 0;
@@ -70,14 +45,12 @@ const createSingleControllerAsync = async (
     assertActive();
   }
 
-  return Object.freeze({
+  return {
     read: controller.read,
-    subscribe: listener => {
-      assertActive();
-      return controller.subscribe(listener);
-    },
+    subscribe: controller.subscribe,
     diagnostics: () => {
-      const result = Object.freeze([...diagnostics, ...controller.diagnostics()]);
+      if (diagnostics.length === 0) return controller.diagnostics();
+      const result = [...diagnostics, ...controller.diagnostics()];
       diagnostics.length = 0;
       return result;
     },
@@ -91,7 +64,7 @@ const createSingleControllerAsync = async (
       let transactionStarted = false;
 
       try {
-        const prepared = await prepareProcessingInputAsync(nextSource, fixed, abort.signal);
+        const prepared = await prepareProcessingInputAsync(nextSource, options, abort.signal);
         if (disposed || current !== request) return { kind: 'superseded' };
 
         assertPreparationActive(abort.signal);
@@ -107,7 +80,7 @@ const createSingleControllerAsync = async (
         if (current === request) pending = undefined;
       }
     },
-  } satisfies AsyncProcessingController);
+  } satisfies AsyncProcessingController;
 };
 
 /** 同一层的新准备取代旧请求；其它层的准备可独立完成 */
@@ -115,8 +88,6 @@ const createAsyncLayerController = async (
   source: InputSceneLayers,
   options: AsyncProcessingOptions,
 ): Promise<AsyncLayerProcessingController> => {
-  const rootFields = ({ layers: _layers, ...fields }: InputSceneLayers) => fields;
-  let root = rootFields(source);
   const lifecycle = new AbortController();
   const stop = () => lifecycle.abort(options.signal?.reason);
   if (options.signal?.aborted) stop();
@@ -126,13 +97,13 @@ const createAsyncLayerController = async (
   const prepareLayer = (scene: Omit<InputSceneLayers, 'layers'>, layer: InputLayer, signal: AbortSignal) =>
     prepareProcessingInputAsync(
       { ...scene, children: layer.children },
-      resolveLayerOptions(options, layer),
+      mergeLayerOptions(options, layer),
       signal,
       layer,
     );
   const prepareStack = async (scene: InputSceneLayers, signal: AbortSignal) => {
     const ready = new Map<string, InputPreparedProcessing>();
-    for (const layer of asLayerStack(scene)) ready.set(layer.name, await prepareLayer(scene, layer, signal));
+    for (const layer of normalizeSceneLayers(scene)) ready.set(layer.name, await prepareLayer(scene, layer, signal));
     assertPreparationActive(signal);
     return ready;
   };
@@ -177,14 +148,13 @@ const createAsyncLayerController = async (
     const check = () => assertPreparationActive(abort.signal);
     try {
       if ('name' in next) {
-        const prepared = await prepareLayer(root, next, abort.signal);
+        const prepared = await prepareLayer(controller.readRoot(), next, abort.signal);
         check();
         controller.replacePreparedLayer(next, prepared, check);
       } else {
         const ready = await prepareStack(next, abort.signal);
         check();
         controller.updatePreparedStack(next, ready, check);
-        root = rootFields(next);
       }
       return { kind: 'committed', result: controller.read() };
     } catch (cause) {

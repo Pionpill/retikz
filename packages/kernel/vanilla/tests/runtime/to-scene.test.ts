@@ -91,13 +91,13 @@ describe('toSceneResult 场景与编译结果', () => {
     expect(Object.isFrozen(compiled.compileResult.artifacts)).toBe(true);
   });
 
-  it('预编译 Scene 使用编译驱动时 fail-loud，不从 Scene 反推 authored sites', () => {
+  it('预编译 Scene 使用编译结果扩展时 fail-loud，不从 Scene 反推 authored sites', () => {
     expect(() =>
       toSceneResult(scene, {
-        compileDriver: {
+        compileResultExtension: {
           create: () => ({ resolve: output => output as never }),
         },
       }),
-    ).toThrow('Vanilla compile drivers require authored IR or an InputScene');
+    ).toThrow('Vanilla compile result extensions require authored IR or an InputScene');
   });
 });

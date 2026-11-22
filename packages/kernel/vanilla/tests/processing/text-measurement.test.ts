@@ -3,7 +3,7 @@ import { fallbackMeasurer } from '@retikz/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { compileToScene, compileToSceneAsync } from '../../src';
-import { prepareProcessingInput } from '../../src/processing/prepare';
+import { prepareProcessingInput } from '../../src/runtime/_input/prepare';
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -16,17 +16,17 @@ const source = {
 };
 
 describe('默认文字测量', () => {
-  it('显式测量器优先并收到宿主默认字体，文字自身字体覆盖宿主', () => {
+  it('显式测量器直接消费原始字体参数，不探测 Canvas', () => {
     const getContext = vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
     const custom = vi.fn(() => ({ width: 80, height: 16 }));
-    const prepared = prepareProcessingInput(source, { compile: { measureText: custom }, defaultFontFamily: 'serif' });
+    const prepared = prepareProcessingInput(source, { compile: { measureText: custom } });
     const font = { size: 16 };
     expect(prepared.coreOptions.measureText?.('Alpha', font)).toEqual({ width: 80, height: 16 });
-    expect(custom).toHaveBeenLastCalledWith('Alpha', { size: 16, family: 'serif' }, undefined);
+    expect(custom).toHaveBeenLastCalledWith('Alpha', font);
     prepared.coreOptions.measureText?.('Alpha', { size: 16, family: 'monospace' });
-    expect(custom).toHaveBeenLastCalledWith('Alpha', { size: 16, family: 'monospace' }, undefined);
+    expect(custom).toHaveBeenLastCalledWith('Alpha', { size: 16, family: 'monospace' });
     prepared.coreOptions.measureText?.('Alpha', font, true);
-    expect(custom).toHaveBeenLastCalledWith('Alpha', { size: 16, family: 'serif' }, true);
+    expect(custom).toHaveBeenLastCalledWith('Alpha', font, true);
     expect(font).toEqual({ size: 16 });
     expect(getContext).not.toHaveBeenCalled();
   });
@@ -53,7 +53,7 @@ describe('默认文字测量', () => {
     });
     const sync = compileToScene(source, {});
     const asyncResult = await compileToSceneAsync(source, {});
-    expect(asyncResult.scene).toEqual(sync.scene);
+    expect(asyncResult.compileResult.scene).toEqual(sync.compileResult.scene);
     expect(context.font).toBe('normal normal 16px serif');
     const failure = new Error('measurement failed');
     measureText.mockImplementation(() => {

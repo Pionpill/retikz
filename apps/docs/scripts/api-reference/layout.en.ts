@@ -28,8 +28,8 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   分层身份标识: 'Layer identity',
   同值保持声明顺序的分层排序值: 'Layer stacking order; equal values preserve declaration order',
   '作者侧 Scene 输入': 'Scene authoring input',
-  '可选编译驱动自行解释的运行时载荷，不进入 Core IR':
-    'Optional runtime payload interpreted by a compile driver; excluded from Core IR',
+  '可选编译结果扩展自行解释的运行时载荷，不进入 Core IR':
+    'Optional runtime payload interpreted by a compile result extension; excluded from Core IR',
   '使用 children 简写的作者侧 Scene 输入': 'Scene authoring input using a children list',
   '使用 Layer 列表的作者侧 Scene 输入': 'Scene authoring input using explicit layers',
   '创建作者侧 Scene 输入': 'Create scene authoring input',
@@ -75,7 +75,7 @@ const translations: Readonly<Partial<Record<string, string>>> = {
     'Select how drawings update through mode; retained supports an update strategy and diagnostics callback, while static accepts neither option',
   主题样式定义: 'Theme definitions',
   '通过 JSX 声明的图形内容': 'Drawing content declared with JSX',
-  处理作者输入的编译驱动: 'Compile driver that processes authoring input',
+  处理作者输入的编译结果扩展: 'Compile result extension that processes authoring input',
   '直接传入 ir 时使用的事件处理函数表': 'Event handlers used when ir is supplied directly',
   '选择 retained 增量更新或 static 完整编译模式；省略时使用 retained':
     'Select retained incremental updates or static full compilation; defaults to retained',
@@ -87,8 +87,8 @@ const translations: Readonly<Partial<Record<string, string>>> = {
     'Whether to play animations; the animation-mode context takes precedence, otherwise an unspecified value follows the system reduced-motion preference',
   'SVG 资源 id 前缀；省略时由 React useId 生成': 'SVG resource ID prefix; generated from React useId when omitted',
 
-  '供自定义 compileDriver 消费的 JSX 输入元数据；传入 ir 时忽略，不写入持久化 Scene IR':
-    'JSX input metadata for a custom compileDriver; ignored when ir is supplied and excluded from persisted Scene IR',
+  '供自定义 compileResultExtension 消费的 JSX 输入元数据；传入 ir 时忽略，不写入持久化 Scene IR':
+    'JSX input metadata for a custom compileResultExtension; ignored when ir is supplied and excluded from persisted Scene IR',
   '渲染后端；显式值优先，否则继承 Renderer 上下文，未提供上下文时使用 SVG':
     'Rendering backend; an explicit value takes precedence, otherwise inherits the Renderer context and falls back to SVG when no context is provided',
   '节点相对定位的默认距离，单位为绘图单位；position 使用 direction/of 且省略 distance 时生效':
@@ -130,12 +130,13 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   'Scene 根动画': 'Scene-root animations',
   自定义箭头定义: 'Custom arrow definitions',
   'artifact 请求': 'Requested compilation artifacts',
-  '只供 Vanilla compile driver 消费的 runtime metadata': 'Runtime metadata consumed only by the Vanilla compile driver',
+  '只供 Vanilla compile result extension 消费的 runtime metadata':
+    'Runtime metadata consumed only by the Vanilla compile result extension',
   自定义边界定义: 'Custom boundary definitions',
   'Kernel 或 Sugar JSX children': 'Kernel or Sugar JSX children',
   '宿主 className': 'Host className',
   自定义裁剪定义: 'Custom clip definitions',
-  'Vanilla 领域中立 compile driver': 'Domain-neutral Vanilla compile driver',
+  'Vanilla 领域中立 compile result extension': 'Domain-neutral Vanilla compile result extension',
   'Tier 2 composite definitions': 'Tier 2 composite definitions',
   'easing registry': 'Easing registry',
   默认字号: 'Default font size',

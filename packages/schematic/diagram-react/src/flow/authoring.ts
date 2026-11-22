@@ -19,7 +19,7 @@ import type { FlowRelationItem, FlowRelationsProps } from './FlowRelations';
 export type FlowDiagramLayoutHostProps = Pick<
   LayoutProps & LayoutExtensions,
   | 'authoring'
-  | 'compileDriver'
+  | 'compileResultExtension'
   | 'handlers'
   | 'runtime'
   | 'width'
@@ -50,7 +50,7 @@ export type FlowDiagramLayoutHostProps = Pick<
 /** Flow standalone-only Layout props 的完整字段表 */
 const flowDiagramLayoutHostPropKeys = [
   'authoring',
-  'compileDriver',
+  'compileResultExtension',
   'handlers',
   'runtime',
   'width',
@@ -310,7 +310,7 @@ export const collectFlowDiagramInput = (
   const {
     children,
     authoring: _authoring,
-    compileDriver: _compileDriver,
+    compileResultExtension: _compileResultExtension,
     handlers: _handlers,
     runtime: _runtime,
     width: _width,
@@ -340,7 +340,7 @@ export const collectFlowDiagramInput = (
     ...input
   } = props;
   void _authoring;
-  void _compileDriver;
+  void _compileResultExtension;
   void _handlers;
   void _runtime;
   void _width;

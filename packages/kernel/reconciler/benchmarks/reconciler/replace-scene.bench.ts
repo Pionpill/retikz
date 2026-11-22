@@ -1,5 +1,5 @@
 import type { IRScene } from '@retikz/core';
-import { SceneReconciler } from '@retikz/reconciler';
+import { ReconcilerMode, SceneReconciler } from '@retikz/reconciler';
 import { expect } from 'vitest';
 
 import { defineBenchmark } from '../../../../../scripts/benchmarks/scenario';
@@ -7,12 +7,12 @@ import { benchmarkCompileOptions, createBenchmarkNode } from './_execution';
 import { compileBenchmarkSnapshot, verifyBenchmarkSnapshot } from './_snapshot';
 
 for (const count of [100, 1000])
-  for (const incremental of [false, true])
+  for (const mode of [ReconcilerMode.Full, ReconcilerMode.Incremental])
     for (const change of ['same', 'equal', 'position'] as const)
       defineBenchmark(
         {
-          id: `reconciler/replace/scene/${change}/${count}/${incremental ? 'incremental' : 'full'}`,
-          dimensions: ['完整替换', 'scene', change, `${count} 作者节点`, incremental ? 'incremental' : 'full'],
+          id: `reconciler/replace/scene/${change}/${count}/${mode}`,
+          dimensions: ['完整替换', 'scene', change, `${count} 作者节点`, mode],
         },
         () => {
           const nodes = Array.from({ length: count }, (_, index) => createBenchmarkNode(index));
@@ -27,10 +27,7 @@ for (const count of [100, 1000])
           const states = [first, second];
           const before = JSON.stringify(states);
           const expected = states.map(scene => compileBenchmarkSnapshot(scene, benchmarkCompileOptions));
-          const session = new SceneReconciler(
-            benchmarkCompileOptions,
-            incremental ? { incremental: true } : { incremental: false },
-          );
+          const session = new SceneReconciler(benchmarkCompileOptions, { mode });
           let result = session.mount(first);
           let source = first;
           let direction = 0;

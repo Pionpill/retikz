@@ -79,6 +79,34 @@ export {
   scene,
   scope,
 } from './normalize';
-export * from './processing';
+export type {
+  ProcessingSource,
+  SingleSceneSource,
+  ProcessingOptions,
+  ProcessingResult,
+  LayerProcessingResult,
+  LayerProcessingController,
+  ProcessingController,
+  AsyncProcessingOptions,
+  PreparedAsyncStaticProcessing,
+  ProcessingUpdateOutcome,
+  AsyncProcessingController,
+  AsyncLayerProcessingController,
+  LayerProcessingUpdateOutcome,
+  PreparedStaticProcessing,
+  InputVanillaCompileResultExtension,
+  VanillaCompileResultExtension,
+  VanillaCompileResultExtensionSession,
+  VanillaCompileOutput,
+} from './runtime';
+export {
+  compileToScene,
+  compileToSceneAsync,
+  createProcessingController,
+  createProcessingControllerAsync,
+  defaultVanillaCompileResultExtension,
+  prepareStaticProcessing,
+  prepareStaticProcessingAsync,
+} from './runtime';
 export type { CommonOptions, InputRender, InputRetainedRender, RenderToStringOptions, SceneResult } from './runtime';
 export { renderToSvgString, toSceneResult } from './runtime';

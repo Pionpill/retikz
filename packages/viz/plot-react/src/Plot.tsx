@@ -22,7 +22,7 @@ import type {
   InputPlotPanel,
   MarkTransformShortcutDefinition,
 } from '@retikz/plot-vanilla';
-import { plotInputEmbedAdapter, createPlotLineageCompileDriver } from '@retikz/plot-vanilla';
+import { plotInputEmbedAdapter, createPlotLineageCompileResultExtension } from '@retikz/plot-vanilla';
 import type { LayoutExtensions, LayoutProps } from '@retikz/react';
 import { Layout } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
@@ -246,7 +246,7 @@ const PlotComponent: FC<PlotProps<unknown>> = props => {
     hostLineageMetadata,
   } = props;
   const ambientPlotThemeDefinitions = usePlotThemeDefinitions();
-  const lineageDriver = useMemo(() => createPlotLineageCompileDriver(), []);
+  const lineageResultExtension = useMemo(() => createPlotLineageCompileResultExtension(), []);
   const effectiveProps = useMemo(() => {
     if (ambientPlotThemeDefinitions === undefined) return props;
     const explicit = definitions?.plotThemeDefinitions;
@@ -270,7 +270,7 @@ const PlotComponent: FC<PlotProps<unknown>> = props => {
       renderer={renderer}
       extensions={{ themeDefinitions }}
       runtime={{ preparation: 'async', signal }}
-      compileDriver={lineageDriver}
+      compileResultExtension={lineageResultExtension}
     >
       <EmbeddablePlotContent
         {...authored}

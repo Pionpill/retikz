@@ -8,7 +8,7 @@ import {
   sceneHasAutoplayTrigger,
 } from '@retikz/render/animation';
 import type { PrimAnimationResolution } from '@retikz/render/canvas';
-import { hitTest, renderFrameToCanvas } from '@retikz/render/canvas';
+import { hitTest, renderToCanvas } from '@retikz/render/canvas';
 import type { HydrationContextBuilder, HydrationHandlers } from '@retikz/render/hydration';
 import {
   collectCanvasVisibleAnimationIds,
@@ -19,7 +19,6 @@ import {
   metaOf,
   withCanvasAnimationEventHandlers,
 } from '@retikz/render/hydration';
-import type { StaticRenderFrame } from '@retikz/render/runtime';
 import type { CSSProperties, FC, MutableRefObject, Ref } from 'react';
 import { useEffect, useReducer, useRef } from 'react';
 
@@ -65,8 +64,8 @@ const loadImage = (href: string, onReady: () => void): HTMLImageElement | null =
 
 /** 将编译后的静态帧接入 Canvas 宿主，并配置事件水合与动画播放 */
 export type CanvasHostProps = {
-  /** 已编译主图与只读辅助层 */
-  frame: StaticRenderFrame;
+  /** 已编译的主场景 */
+  scene: Scene;
   /**
    * 水合 handler 注册表（按图元 id）
    * @description 经 `createHydrationController(canvas, handlers, locate)` 绑到 `<canvas>`，
@@ -132,8 +131,7 @@ const clientToScene = (
 
 /** React canvas 宿主：管理 `<canvas>` 与全量重绘 effect */
 export const CanvasHost: FC<CanvasHostProps> = props => {
-  const { frame, handlers, width, height, className, style, animate, snapshotAt, animationRef } = props;
-  const scene = frame.primary;
+  const { scene, handlers, width, height, className, style, animate, snapshotAt, animationRef } = props;
   const initialRatio = devicePixelRatio();
   const displaySize = computeDisplaySize(scene.layout, width, height);
   const bitmapSize = computeDisplaySize(
@@ -200,7 +198,7 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
 
     // 截帧（snapshotAt 给定）：按该时刻画一帧、不起 rAF（定格）
     if (snapshotAt !== undefined) {
-      renderFrameToCanvas(canvas, frame, { ...baseOptions, time: snapshotAt });
+      renderToCanvas(canvas, scene, { ...baseOptions, time: snapshotAt });
       clockRef.current = null;
       renderFrameRef.current = null;
       assignRef(animationRef, null);
@@ -211,11 +209,11 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
     // 按当前时钟时刻 + per-id 登记表立即重绘一帧（ctx.animation 的 pause/stop 即时反映）
     renderFrameRef.current = () => {
       const time = clockRef.current?.time ?? 0;
-      renderFrameToCanvas(canvas, frame, { ...baseOptions, time, resolvePrimAnimation: id => resolvePrim(id, time) });
+      renderToCanvas(canvas, scene, { ...baseOptions, time, resolvePrimAnimation: id => resolvePrim(id, time) });
     };
 
     // base 静态先画一帧；含动画且未降级 → 起 rAF 共享时钟逐帧重绘（auto track 自动播；manual/onEvent/visible 默认渲染 base）
-    renderFrameToCanvas(canvas, frame, baseOptions);
+    renderToCanvas(canvas, scene, baseOptions);
     if (!animate || !sceneHasAnimations(scene)) {
       clockRef.current = null;
       assignRef(animationRef, null);
@@ -225,7 +223,7 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
     const clock = createClock({
       durationMs: sceneAnimationDurationMs(scene),
       onFrame: time =>
-        renderFrameToCanvas(canvas, frame, { ...baseOptions, time, resolvePrimAnimation: id => resolvePrim(id, time) }),
+        renderToCanvas(canvas, scene, { ...baseOptions, time, resolvePrimAnimation: id => resolvePrim(id, time) }),
     });
     clockRef.current = clock;
     assignRef(animationRef, clock); // 命令式句柄出口
@@ -238,7 +236,7 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
     };
     // className / style 不参与依赖：effect 不读取它们（仅 JSX 应用到 <canvas>），把内联 style={{...}} 的
     // 每次新引用纳入依赖会让本 effect 每次父渲染都 dispose+重建 rAF 时钟、动画从头重播。
-  }, [animate, snapshotAt, animationRef, frame, height, renderTick, scene, width]);
+  }, [animate, snapshotAt, animationRef, height, renderTick, scene, width]);
 
   useEffect(() => {
     const canvas = ref.current;

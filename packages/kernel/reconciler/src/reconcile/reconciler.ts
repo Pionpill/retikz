@@ -2,9 +2,8 @@ import type { AnyCompositeDefinition, IRScene } from '@retikz/core';
 import { RetikzError } from '@retikz/foundation';
 
 import type { CompileOptions } from '../compile';
-import { createCompileRuntime, formatCompileWarning } from '../compile';
+import { compileScene, createCompileRuntime, formatCompileWarning } from '../compile';
 import { RetikzReconcilerError, RetikzReconcilerErrorCode } from '../error';
-import { compileScene } from '../full';
 import type { WeaveBatch, WeavePreparedUpdate } from '../weave';
 import { WeaveManager } from '../weave';
 import {
@@ -30,7 +29,7 @@ export class SceneReconciler<const TComposite extends AnyCompositeDefinition = n
 
   /** 从当前执行选项读取模式，不重复保存派生状态 */
   private get mode(): ReconcilerMode {
-    return this.execution.incremental === false ? ReconcilerMode.Full : ReconcilerMode.Incremental;
+    return this.execution.mode ?? ReconcilerMode.Full;
   }
 
   constructor(

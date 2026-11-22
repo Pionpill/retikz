@@ -10,7 +10,7 @@ import { embed, normalizeScene, compileToScene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
-import { prepareProcessingInput } from '../../../../kernel/vanilla/src/processing/prepare';
+import { prepareProcessingInput } from '../../../../kernel/vanilla/src/runtime/_input/prepare';
 
 const schema = CodeBlockPropsSchema.safeExtend({ namespace: literal('test'), type: literal('service') });
 
@@ -67,6 +67,6 @@ describe('自定义代码块 Vanilla 编写', () => {
       },
     );
 
-    expect(actual.scene).toEqual(direct.scene);
+    expect(actual.compileResult.scene).toEqual(direct.compileResult.scene);
   });
 });

@@ -1,7 +1,14 @@
-import type { IRAxisLineTarget, IRPath, IRStep, IRCirclePathStep, IREllipsePathStep, IRTarget } from '@retikz/core';
+import type {
+  IRAxisLineTarget,
+  IRFoldStep,
+  IRPath,
+  IRStep,
+  IRCirclePathStep,
+  IREllipsePathStep,
+  IRTarget,
+} from '@retikz/core';
 import type { RequireExactlyOne } from '@retikz/foundation';
 
-import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../../error';
 import { parseAxisLineTarget, parseTargetSugar } from './target';
 import type { WayDSL } from './way';
 import { parseWay } from './way';
@@ -31,10 +38,10 @@ export type InputAxisLineStep = Omit<Extract<IRStep, { kind: 'axis-line' }>, 'to
 };
 
 /** 以作者侧 target 组装的 fold 步骤 */
-export type InputFoldStep = Omit<Extract<IRStep, { kind: 'fold' }>, 'to'> & {
-  /** 折线终点，可使用目标标识字符串简写 */
-  to: InputTarget;
-};
+export type InputFoldStep = (
+  | Omit<Extract<IRFoldStep, { via: '-|' | '|-' }>, 'to'>
+  | Omit<Extract<IRFoldStep, { via: '-|-' | '|-|' }>, 'to'>
+) & { to: InputTarget };
 
 /** 以作者侧 target 组装的 curve 步骤 */
 export type InputCurveStep = Omit<Extract<IRStep, { kind: 'curve' }>, 'to'> & {
@@ -94,7 +101,7 @@ export type InputStep =
 export type InputPathConfig = Omit<IRPath, 'type' | 'children' | 'arrow'> & {
   /** 端点箭头配置，或用方向字符串快捷启用起点、终点或两端箭头 */
   arrow?: IRPath['arrow'] | '->' | '<-' | '<->';
-  /** 可选编译驱动自行解释的运行时载荷，不进入 Core IR */
+  /** 可选编译结果扩展自行解释的运行时载荷，不进入 Core IR */
   authoring?: unknown;
 } & RequireExactlyOne<{
     /** 路径步骤序列；与 way 互斥 */
@@ -156,9 +163,6 @@ export const normalizePath = (input: InputPath): IRPath => {
   const { authoring: _authoring, way, children, arrow, ...path } = input;
   void _authoring;
   const authoredChildren = children !== undefined ? children.map(normalizeStep) : parseWay(way);
-  if (authoredChildren.length < 2 && authoredChildren[0]?.kind !== 'rectangle') {
-    throw new RetikzVanillaError(RetikzVanillaErrorCode.Normalize, 'normalizePath: path requires at least 2 steps');
-  }
   const normalizedArrow = normalizePathArrow(arrow);
 
   return {

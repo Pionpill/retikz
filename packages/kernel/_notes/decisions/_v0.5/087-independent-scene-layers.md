@@ -26,7 +26,7 @@ const BuiltinLayerName = {
 
 type LayerName = OpenString<ValueOf<typeof BuiltinLayerName>>;
 
-// 分别从两个现有分支移除宿主提交目标，保留 incremental 与 updateStrategy 的互斥约束。
+// 分别移除宿主提交目标，仅增量模式允许配置 updateStrategy。
 type LayerReconcilerOptions =
   Omit<FullSceneReconcilerOptions, 'target'> | Omit<IncrementalSceneReconcilerOptions, 'target'>;
 
@@ -52,10 +52,10 @@ type InputScene = InputSceneBase &
 例如，下列公共配置与场景输入分别传给 processing。背景和主图继承精度 3；背景实例显式启用增量，覆盖背景预设；浮层仅把精度改为 1，不改变会话模式。
 
 ```ts
-const options = { compile: { precision: 3 }, reconciler: { incremental: true } } satisfies LayerOptions;
+const options = { compile: { precision: 3 }, reconciler: { mode: ReconcilerMode.Incremental } } satisfies LayerOptions;
 const scene = {
   layers: [
-    { type: 'layer', name: 'background', reconciler: { incremental: true }, children: [] },
+    { type: 'layer', name: 'background', reconciler: { mode: ReconcilerMode.Incremental }, children: [] },
     { type: 'layer', name: 'main', children: [] },
     { type: 'layer', name: 'overlay', compile: { precision: 1 }, children: [] },
   ],
@@ -70,12 +70,12 @@ const scene = {
 
 作者以 `name: OpenString<'background' | 'main' | 'overlay'>` 标识图层。名称在视口内唯一且在层生命周期内稳定，重名输入拒绝；改名等价于移除旧层并创建新层。直接声明 `children` 等价于单个隐式 `main` 层，不自动创建另外两层。
 
-| 名称       | 缺省 zIndex | 具名会话预设       |
-| ---------- | ----------: | ------------------ |
-| background |           0 | incremental: false |
-| main       |          10 | 无覆盖             |
-| overlay    |         100 | 无覆盖             |
-| 其他名称   |          10 | 无覆盖             |
+| 名称       | 缺省 zIndex | 具名会话预设              |
+| ---------- | ----------: | ------------------------- |
+| background |           0 | mode: ReconcilerMode.Full |
+| main       |          10 | 无覆盖                    |
+| overlay    |         100 | 无覆盖                    |
+| 其他名称   |          10 | 无覆盖                    |
 
 层显式提供的 `zIndex` 优先于表中默认值；层按有效值升序绘制，相同值保留声明顺序。元素的 `zIndex` 只在本层内参与排序，不能穿越层边界。调整层序不改变元素身份，也不重新编译图元。
 
@@ -85,9 +85,9 @@ const scene = {
 
 两组分别按**字段**取值：单层显式值优先于内置名称预设，预设优先于视口公共配置，最后才使用既有底层默认值。省略或 `undefined` 表示继承；`false`、`0`、空列表均为显式值。列表、回调与对象字段整体替换，不拼接注册表、不串联回调、不递归合并。自定义名称与内置名称使用同一解析流程，名称本身不注册绘图能力。
 
-例如，公共 `compile.precision: 3` 与 `reconciler.incremental: true` 对所有层生效，但背景预设只覆盖后者；背景实例显式指定 `incremental: true` 即可恢复增量模式，精度仍为 3。先确定有效模式，再选适用字段：全量模式不继承 `updateStrategy`；在同一声明中显式组合 `incremental: false` 与 `updateStrategy` 不合法。增量会话的 `updateStrategy: 'full'` 是强制重算策略，不等于非增量会话。
+例如，公共 `compile.precision: 3` 与 `reconciler.mode: ReconcilerMode.Incremental` 对所有层生效，但背景预设只覆盖后者；背景实例显式指定 `mode: ReconcilerMode.Incremental` 即可恢复增量模式，精度仍为 3。先确定有效模式，再选适用字段：全量模式不继承 `updateStrategy`；在同一声明中显式组合 `mode: ReconcilerMode.Full` 与 `updateStrategy` 不合法。增量会话的 `updateStrategy: 'full'` 是强制重算策略，不等于非增量会话。
 
-每层独立持有 Reconciler 会话。全量模式只在本层需要编译时完整计算，不保留 Weave 树；增量模式才维护本层 Weave 树，并接受该会话的权威批次。完整替换和批次更新保持既有区别，不从完整输入猜测局部差异。模式随会话固定；有效模式改变时只重建目标层的会话，旧结果或批次地址不能用于新会话。省略模式时沿用 Reconciler 默认的增量模式，除非被配置或预设覆盖。
+每层独立持有 Reconciler 会话。全量模式只在本层需要编译时完整计算，不保留 Weave 树；增量模式才维护本层 Weave 树，并接受该会话的权威批次。完整替换和批次更新保持既有区别，不从完整输入猜测局部差异。模式随会话固定；有效模式改变时只重建目标层的会话，旧结果或批次地址不能用于新会话。省略模式时沿用 Reconciler 默认的全量模式，除非被配置或预设覆盖。
 
 ### 隔离与合成
 

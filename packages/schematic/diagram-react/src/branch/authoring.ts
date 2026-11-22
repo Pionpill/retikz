@@ -16,7 +16,7 @@ import { BranchNode } from './BranchNode';
 export type BranchDiagramLayoutHostProps = Pick<
   LayoutProps & LayoutExtensions,
   | 'authoring'
-  | 'compileDriver'
+  | 'compileResultExtension'
   | 'handlers'
   | 'runtime'
   | 'width'
@@ -47,7 +47,7 @@ export type BranchDiagramLayoutHostProps = Pick<
 /** Branch standalone-only Layout props 的完整字段表 */
 const branchDiagramLayoutHostPropKeys = [
   'authoring',
-  'compileDriver',
+  'compileResultExtension',
   'handlers',
   'runtime',
   'width',
@@ -121,7 +121,7 @@ export const collectBranchDiagramInput = (
   const {
     children,
     authoring: _authoring,
-    compileDriver: _compileDriver,
+    compileResultExtension: _compileResultExtension,
     handlers: _handlers,
     runtime: _runtime,
     width: _width,
@@ -151,7 +151,7 @@ export const collectBranchDiagramInput = (
     ...input
   } = props;
   void _authoring;
-  void _compileDriver;
+  void _compileResultExtension;
   void _handlers;
   void _runtime;
   void _width;

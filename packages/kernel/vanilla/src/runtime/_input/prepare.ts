@@ -1,5 +1,75 @@
-import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
-import type { InputEmbedContribution, InputEmbedPreparation, InputEmbedSite } from '../normalize';
+import { createCompositeInputBindings, resolveCoreProviderDependencies } from '@retikz/core';
+
+import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../error';
+import type {
+  InputAuthoringSite,
+  InputEmbedContribution,
+  InputEmbedPreparation,
+  InputEmbedSite,
+  InputLayer,
+  InputScene,
+} from '../../normalize';
+import { createInputSceneTraversal, isInputScene, BuiltinLayerName, normalizeSceneLayer } from '../../normalize';
+import { createDefaultTextMeasurer } from './text';
+import type { AsyncProcessingOptions, InputPreparedProcessing, ProcessingOptions, ProcessingSource } from './types';
+
+/** 单图入口的默认层；显式层必须已经过视口分派 */
+const implicitLayer = (source: InputScene): InputLayer => {
+  if (source.children === undefined)
+    throw new RetikzVanillaError(RetikzVanillaErrorCode.Processing, 'Expected a single scene, received a layer stack');
+  return { type: 'layer', name: BuiltinLayerName.Main, children: source.children };
+};
+
+const EMPTY_AUTHORING_SITES: ReadonlyArray<InputAuthoringSite> = Object.freeze([]);
+
+/** 绑定归一结果的实例输入、Core 定义与文字测量器，供同步和异步入口共用 */
+const prepareNormalizedInput = (
+  normalized: ReturnType<typeof normalizeSceneLayer>,
+  compile: ProcessingOptions['compile'],
+): InputPreparedProcessing => {
+  const definitions = resolveCoreProviderDependencies({
+    contributions: normalized.contributions,
+    definitions: compile,
+  });
+  return {
+    source: normalized.ir,
+    coreOptions: {
+      ...compile,
+      ...definitions,
+      ...(normalized.runtimeInputs === undefined
+        ? {}
+        : {
+            compositeInputs: createCompositeInputBindings(normalized.ir, normalized.runtimeInputs),
+          }),
+      measureText: compile?.measureText ?? createDefaultTextMeasurer(),
+    },
+    authoringSites: normalized.authoringSites,
+  };
+};
+
+/** 将 typed InputScene 或已类型化 IRScene 准备为 processing 的唯一 Core 输入 */
+export const prepareProcessingInput = (
+  source: ProcessingSource,
+  options: ProcessingOptions,
+  layer?: InputLayer,
+): InputPreparedProcessing => {
+  if (isInputScene(source)) {
+    const normalized = normalizeSceneLayer(source, layer ?? implicitLayer(source));
+    return prepareNormalizedInput(normalized, options.compile);
+  }
+
+  return {
+    source,
+    coreOptions:
+      options.compile?.measureText !== undefined
+        ? options.compile
+        : {
+            ...options.compile,
+            measureText: createDefaultTextMeasurer(),
+          },
+    authoringSites: EMPTY_AUTHORING_SITES,
+  };
+};
 
 /** 在任意等待与同步提交边界检查当前请求是否仍有效 */
 export const assertPreparationActive = (signal: AbortSignal): void => {
@@ -12,18 +82,18 @@ export const assertPreparationActive = (signal: AbortSignal): void => {
 };
 
 /** 领域中立的完整作者树准备；嵌套位置通过同一 context 登记 */
-export const prepareAuthoringContributions = async (
+const prepareAuthoringContributions = async (
   sites: ReadonlyArray<InputEmbedSite>,
   signal: AbortSignal,
 ): Promise<() => Promise<Array<InputEmbedContribution>>> => {
   let phase: 'preparing' | 'executing' = 'preparing';
 
   const prepareSites = async (
-    positions: ReadonlyArray<InputEmbedSite>,
+    embedSites: ReadonlyArray<InputEmbedSite>,
   ): Promise<() => Promise<Array<InputEmbedContribution>>> => {
     const preparations: Array<{ site: InputEmbedSite; preparation: InputEmbedPreparation }> = [];
 
-    for (const site of positions) {
+    for (const site of embedSites) {
       assertPreparationActive(signal);
       const adapter = site.input.adapter;
       if (adapter.prepare === undefined)
@@ -123,4 +193,24 @@ export const prepareAuthoringContributions = async (
     phase = 'executing';
     return execute();
   };
+};
+
+/** 等待完整作者贡献后进入同一同步 normalizer 与 provider graph resolver */
+export const prepareProcessingInputAsync = async (
+  source: ProcessingSource,
+  options: AsyncProcessingOptions,
+  signal: AbortSignal,
+  layer?: InputLayer,
+): Promise<InputPreparedProcessing> => {
+  assertPreparationActive(signal);
+  if (!isInputScene(source)) return prepareProcessingInput(source, options);
+
+  const traversal = createInputSceneTraversal(source, layer ?? implicitLayer(source));
+  const execute = await prepareAuthoringContributions(traversal.sites, signal);
+  assertPreparationActive(signal);
+  const contributions = await execute();
+  assertPreparationActive(signal);
+  const normalized = traversal.normalize(contributions);
+
+  return prepareNormalizedInput(normalized, options.compile);
 };

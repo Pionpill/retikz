@@ -26,7 +26,7 @@ Measurers receive the public `TextFont` contract, whose `size` and optional `wei
 
 Vanilla selects its default measurer when `compile.measureText` is absent and acquires a Canvas 2D context only when measurement is requested. React's `Layout` uses this default path, or forwards an explicit `measureText` to Vanilla. Browser measurement uses Canvas 2D `measureText` for width and glyph ascent and descent, including when SVG is the selected output backend. It does not need to mount an SVG text element first.
 
-Font family comes from the text's explicit configuration, then Vanilla's `defaultFontFamily`. React forwards `Layout`'s `style.fontFamily` through this option. If the family is still absent, the default browser measurer reads the computed font on the page's `body`, falling back to `sans-serif`. The font used for measurement should match the displayed font. Changing surrounding CSS inheritance alone does not guarantee that existing geometry updates.
+The default browser measurer uses the text’s explicit font family, then the computed font of the page’s `body`, then `sans-serif`. React’s `Layout.style.fontFamily` styles the host; it is not passed to the measurer. To lay out text with a specific font, set the family on the text or supply a custom measurer.
 
 An explicit measurer takes precedence over environment detection. Without a browser or a usable Canvas context, the default measurer uses Core's `fallbackMeasurer`. Exceptions from custom measurers, invalid metrics and actual browser measurement failures are not silently replaced with estimates. Calling Core directly without a measurer also uses `fallbackMeasurer`.
 
@@ -40,9 +40,9 @@ The fallback estimates width as `text.length × font.size × 0.55` and height as
     },
     {
       label: 'Vanilla default measurement and font forwarding',
-      path: 'packages/kernel/vanilla/src/processing/text-measurement.ts',
+      path: 'packages/kernel/vanilla/src/runtime/_input/text.ts',
     },
-    { label: 'Vanilla compile option forwarding', path: 'packages/kernel/vanilla/src/processing/prepare.ts' },
+    { label: 'Vanilla compile option forwarding', path: 'packages/kernel/vanilla/src/runtime/_input/prepare.ts' },
     { label: 'Fallback text measurer', path: 'packages/kernel/core/src/compile/text/helpers.ts' },
     { label: 'TextMetrics', path: 'packages/kernel/core/src/contract/text.ts' },
     { label: 'resolveTextMetrics', path: 'packages/kernel/core/src/resolve/text/metrics.ts' },

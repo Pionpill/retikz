@@ -1,8 +1,8 @@
-﻿import { calculateScopeEnvelopeBounds } from '@retikz/core';
+import { calculateScopeEnvelopeBounds } from '@retikz/core';
 import type { CompiledReferenceGeometry, IRCoordinate, IRNode, IRPosition, IRScene, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { SceneReconciler } from '../../src/reconcile';
+import { ReconcilerMode, SceneReconciler } from '../../src/reconcile';
 import { updateWeaveScopeEnvelope } from '../../src/weave/element/scope/envelope';
 import { compileTestSnapshot } from '../helpers/compilation';
 
@@ -14,6 +14,7 @@ describe('Scope 子贡献事务', () => {
       const session = new SceneReconciler(
         {},
         {
+          mode: ReconcilerMode.Incremental,
           captureProvenance,
           target: {
             prepare: () => ({
@@ -149,7 +150,7 @@ describe('Scope 边界复用', () => {
 });
 
 it('内部移动、外扩和回缩连续更新后，Scope 外部连接与全量结果一致', () => {
-  const session = new SceneReconciler();
+  const session = new SceneReconciler({}, { mode: ReconcilerMode.Incremental });
   const background: Array<IRCoordinate> = [
     { type: 'coordinate', id: 'lower', position: [-1000, -1000] },
     { type: 'coordinate', id: 'upper', position: [1000, 1000] },

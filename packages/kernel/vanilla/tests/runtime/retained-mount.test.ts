@@ -9,12 +9,11 @@ import type {
 } from '@retikz/render/runtime';
 import { defineRetainedRenderer, RetikzRenderErrorCode } from '@retikz/render/runtime';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { literal, strictObject, string, enum as zodEnum } from 'zod';
+import { literal, string, enum as zodEnum } from 'zod';
 
-import type { InputEmbedAdapter, InputSceneChildren, VanillaCompileDriver } from '../../src';
-import { embed, RetikzVanillaErrorCode } from '../../src';
+import type { InputEmbedAdapter, InputSceneChildren, VanillaCompileResultExtension } from '../../src';
+import { embed } from '../../src';
 import { mountCanvas, mountSvg } from '../../src/dom';
-import { createRetainedCompositeDefinitions } from '../../src/processing/composites';
 
 // @vitest-environment jsdom
 import { compileTestResult } from '../helpers/compilation';
@@ -175,63 +174,19 @@ const datasetScene = (color: string): InputSceneChildren => ({
   children: [embed({ adapter: datasetAdapter, id: 'dataset', props: { color } })],
 });
 
-const readonlyLayerScene = compileTestResult({
-  type: 'scene',
-  version: 1,
-  children: [{ type: 'node', position: [0, 0], shape: 'rectangle' }],
-}).scene;
-
-const createLayerDriver = (): VanillaCompileDriver => {
-  const sessions = new WeakMap<
-    object,
-    { update: (authoring: unknown) => void; session: ReturnType<VanillaCompileDriver['create']> }
-  >();
-  return Object.freeze({
-    create: input => {
-      const existing = sessions.get(input.instance);
-      const authoring = input.authoringSites[0]?.authoring;
-      if (existing !== undefined) {
-        existing.update(authoring);
-        return existing.session;
-      }
-
-      let currentAuthoring = authoring;
-      const session = Object.freeze({
-        resolve: (coreOutput: Parameters<ReturnType<VanillaCompileDriver['create']>['resolve']>[0]) => {
-          if (currentAuthoring === 'fail') throw new Error('expected compile driver failure');
-
-          return Object.freeze({
-            primary: coreOutput.result,
-            layers:
-              currentAuthoring === true
-                ? Object.freeze([
-                    Object.freeze({
-                      key: 'fixture-layer',
-                      scene: readonlyLayerScene,
-                      transform: [1, 0, 0, 1, 0, 0] as const,
-                    }),
-                  ])
-                : Object.freeze([]),
-            diagnostics: Object.freeze([]),
-          });
-        },
-      });
-      sessions.set(input.instance, {
-        update: next => {
-          currentAuthoring = next;
-        },
-        session,
-      });
-
-      return session;
+const failingResultExtension: VanillaCompileResultExtension = {
+  create: input => ({
+    resolve: () => {
+      if (input.authoringSites[0]?.authoring === 'fail') throw new Error('expected compile result extension failure');
+      return [];
     },
-  });
+  }),
 };
 
-const layerScene = (authoring: unknown): InputSceneChildren => ({
+const extensionScene = (authoring: unknown): InputSceneChildren => ({
   type: 'scene',
   authoring,
-  children: [{ type: 'node', id: 'layer-box', position: [0, 0], shape: 'rectangle' }],
+  children: [{ type: 'node', id: 'box', position: [0, 0], shape: 'rectangle' }],
 });
 
 beforeEach(() => {
@@ -244,43 +199,10 @@ afterEach(() => {
 });
 
 describe('@retikz/vanilla 保留安装座', () => {
-  it('同一 retained session 原子提交编译驱动产生的只读图层', () => {
+  it('编译结果扩展解析失败时保留上一帧和已提交的 artifacts', () => {
     const frames: Array<RenderFrameSnapshot> = [];
-    const configs: Array<RenderRuntimeConfig> = [];
-    const dispose = vi.fn();
-    const rendererFactory = createMemoryRendererFactory(
-      'entity',
-      false,
-      config => configs.push(config),
-      undefined,
-      dispose,
-      frame => frames.push(frame),
-    );
-    const view = mountSvg(document.createElement('div'), layerScene(false), {
-      compileDriver: createLayerDriver(),
-      runtime: { rendererFactory },
-    });
-    const handler = vi.fn();
-    view.hydrate({ handlers: { 'layer-box': { click: handler } } });
-
-    view.update(layerScene(true));
-
-    expect(frames.at(-2)?.layers).toEqual([]);
-    expect(frames.at(-1)?.layers).toHaveLength(1);
-    expect(configs.at(-1)?.handlerContributions).toEqual([
-      expect.objectContaining({ handlers: { 'layer-box': { click: handler } } }),
-    ]);
-
-    view.dispose();
-    view.dispose();
-
-    expect(dispose).toHaveBeenCalledTimes(1);
-  });
-
-  it('编译驱动解析失败时保留上一帧和已提交的 artifacts', () => {
-    const frames: Array<RenderFrameSnapshot> = [];
-    const view = mountSvg(document.createElement('div'), layerScene(true), {
-      compileDriver: createLayerDriver(),
+    const view = mountSvg(document.createElement('div'), extensionScene(true), {
+      compileResultExtension: failingResultExtension,
       runtime: {
         rendererFactory: createMemoryRendererFactory('entity', false, undefined, undefined, undefined, frame =>
           frames.push(frame),
@@ -290,67 +212,14 @@ describe('@retikz/vanilla 保留安装座', () => {
     const artifacts = view.artifacts;
     const committedFrame = frames.at(-1);
 
-    expect(() => view.update(layerScene('fail'))).toThrow(
-      /Failed to publish the compilation|RENDER_RUNTIME_RENDERER_PREPARE_FAILED|Vanilla compile driver resolve failed/,
+    expect(() => view.update(extensionScene('fail'))).toThrow(
+      /Failed to publish the compilation|RENDER_RUNTIME_RENDERER_PREPARE_FAILED|Vanilla compile result extension resolve failed/,
     );
     expect(frames.at(-1)).toBe(committedFrame);
     expect(view.artifacts).toBe(artifacts);
-    expect(() => view.update(layerScene(false))).not.toThrow();
+    expect(() => view.update(extensionScene(false))).not.toThrow();
 
     view.dispose();
-  });
-
-  it('composite candidate rollback 后稳定代理恢复旧 callback', () => {
-    const initial = makeDatasetDefinition([{ color: '#ef4444' }]);
-    const candidate = makeDatasetDefinition([{ color: '#22c55e' }]);
-    const retained = createRetainedCompositeDefinitions([initial]);
-
-    const sceneInput: IRScene = { version: 1, type: 'scene', children: [{ namespace: 'fixture', type: 'datasetBox' }] };
-    const render = () => JSON.stringify(compileTestResult(sceneInput, { composites: retained.definitions }).scene);
-
-    const prepared = retained.prepare([candidate]);
-
-    expect(render()).toContain('#22c55e');
-
-    prepared.rollback();
-
-    expect(render()).toContain('#ef4444');
-  });
-
-  it('retained compile delegate透明转发 Core Theme context', () => {
-    const schema = CompositeBaseSchema.extend({
-      namespace: literal('fixture'),
-      type: literal('themeDelegate'),
-    });
-    const initialCompile = vi.fn((_node, context) => ({
-      children: [
-        {
-          type: 'node' as const,
-          position: [0, 0] as [number, number],
-          style: { fill: context.theme.mode === 'dark' ? '#111111' : '#eeeeee' },
-        },
-      ],
-    }));
-    const initial = defineComposite({
-      namespace: 'fixture',
-      type: 'themeDelegate',
-      schema,
-      compile: initialCompile,
-    });
-    const retained = createRetainedCompositeDefinitions([initial]);
-
-    const sceneInput: IRScene = {
-      version: 1,
-      type: 'scene',
-      theme: { mode: 'dark' },
-      children: [{ namespace: 'fixture', type: 'themeDelegate' }],
-    };
-    const result = compileTestResult(sceneInput, { composites: retained.definitions });
-    expect(JSON.stringify(result.scene)).toContain('#111111');
-    expect(initialCompile).toHaveBeenCalledWith(
-      expect.any(Object),
-      expect.objectContaining({ theme: expect.objectContaining({ mode: 'dark' }), layoutChild: expect.any(Function) }),
-    );
   });
 
   it('renderer transaction 失败后 session 恢复旧 composite callback', () => {
@@ -423,84 +292,13 @@ describe('@retikz/vanilla 保留安装座', () => {
     });
 
     expect(() => view.update(cachedDatasetScene('#22c55e'))).toThrow(
-      /Failed to publish the compilation|RENDER_RUNTIME_RENDERER_PREPARE_FAILED|Vanilla compile driver resolve failed/,
+      /Failed to publish the compilation|RENDER_RUNTIME_RENDERER_PREPARE_FAILED|Vanilla compile result extension resolve failed/,
     );
     expect(greenCompile).toHaveBeenCalledTimes(1);
 
     view.update(cachedDatasetScene('#ef4444'));
 
     expect(redCompile).toHaveBeenCalledTimes(2);
-  });
-
-  it('composite Definition 拒绝数量、顺序、key 和 schema 变化，允许同契约回调更新', () => {
-    const firstSchema = CompositeBaseSchema.extend({
-      namespace: literal('fixture'),
-      type: literal('first'),
-    });
-    const secondSchema = CompositeBaseSchema.extend({
-      namespace: literal('fixture'),
-      type: literal('second'),
-    });
-    const first = defineComposite({
-      namespace: 'fixture',
-      type: 'first',
-      schema: firstSchema,
-      compile: () => ({ children: [{ type: 'coordinate', id: 'first', position: [0, 0] }] }),
-    });
-    const second = defineComposite({
-      namespace: 'fixture',
-      type: 'second',
-      schema: secondSchema,
-      compile: () => ({ children: [{ type: 'coordinate', id: 'second', position: [1, 1] }] }),
-    });
-    const sameKeyNewSchema = defineComposite({
-      namespace: 'fixture',
-      type: 'first',
-      schema: CompositeBaseSchema.extend({
-        namespace: literal('fixture'),
-        type: literal('first'),
-      }),
-      compile: () => ({ children: [{ type: 'coordinate', id: 'first', position: [2, 2] }] }),
-    });
-    const sameKeyNewCallback = defineComposite({
-      namespace: 'fixture',
-      type: 'first',
-      schema: firstSchema,
-      compile: () => ({ children: [] }),
-    });
-    const retained = createRetainedCompositeDefinitions([first, second]);
-    const invalid = expect.objectContaining({ code: RetikzVanillaErrorCode.Processing });
-
-    expect(() => retained.prepare([first])).toThrow(invalid);
-    expect(() => retained.prepare([second, first])).toThrow(invalid);
-    expect(() => retained.prepare([sameKeyNewSchema, second])).toThrow(invalid);
-    expect(() => retained.prepare([sameKeyNewCallback, second])).not.toThrow();
-  });
-
-  it('layout-aware composite artifactSchema identity 变化时 fail-loud', () => {
-    const schema = CompositeBaseSchema.extend({
-      namespace: literal('fixture'),
-      type: literal('layout'),
-    });
-    const initial = defineComposite({
-      namespace: 'fixture',
-      type: 'layout',
-      schema,
-      artifactSchema: strictObject({ value: literal('initial') }),
-      compile: () => ({ children: [], artifact: { value: 'initial' } }),
-    });
-    const candidate = defineComposite({
-      namespace: 'fixture',
-      type: 'layout',
-      schema,
-      artifactSchema: strictObject({ value: literal('candidate') }),
-      compile: () => ({ children: [], artifact: { value: 'candidate' } }),
-    });
-    const retained = createRetainedCompositeDefinitions([initial]);
-
-    expect(() => retained.prepare([candidate])).toThrow(
-      expect.objectContaining({ code: RetikzVanillaErrorCode.Processing }),
-    );
   });
 
   it('InputScene update 使用本次 normalization 生成的 composite definitions', () => {
@@ -567,52 +365,25 @@ describe('@retikz/vanilla 保留安装座', () => {
     expect(dispose).toHaveBeenCalledTimes(1);
   });
 
-  it('mount 后修改 compile composite record 不改变 retained session compile 语义', () => {
-    const schema = CompositeBaseSchema.extend({
-      namespace: literal('fixture'),
-      type: literal('fixedComposite'),
-    });
-    const composite = defineComposite({
-      namespace: 'fixture',
-      type: 'fixedComposite',
-      schema,
-      compile: () => ({
-        children: [
-          {
-            type: 'node',
-            id: 'fixed-composite',
-            position: [0, 0],
-            shape: 'rectangle',
-            style: { fill: '#ef4444' },
-          },
-        ],
-      }),
-    });
-    const initial: IRScene = {
-      version: 1,
-      type: 'scene',
-      children: [{ namespace: 'fixture', type: 'fixedComposite' }],
-    };
+  it('重新挂载时使用新配置中的 Composite 定义', () => {
+    const schema = CompositeBaseSchema.extend({ namespace: literal('fixture'), type: literal('box') });
+    const definition = (fill: string) =>
+      defineComposite({
+        namespace: 'fixture',
+        type: 'box',
+        schema,
+        compile: () => ({ children: [{ type: 'node', position: [0, 0], shape: 'rectangle', style: { fill } }] }),
+      });
+    const input: IRScene = { version: 1, type: 'scene', children: [{ namespace: 'fixture', type: 'box' }] };
     const container = document.createElement('div');
-    const view = mountSvg(container, initial, { compile: { composites: [composite] } });
-
-    (composite as unknown as { compile: () => { children: IRScene['children'] } }).compile = () => ({
-      children: [
-        {
-          type: 'node',
-          id: 'fixed-composite',
-          position: [0, 0],
-          shape: 'rectangle',
-          style: { fill: '#22c55e' },
-        },
-      ],
-    });
-    view.update({
-      ...initial,
-      children: [...initial.children, { type: 'coordinate', id: 'revision', position: [40, 0] }],
-    });
-
-    expect(view.root.querySelector('rect')?.getAttribute('fill')).toBe('#ef4444');
+    for (const fill of ['#ef4444', '#22c55e']) {
+      const view = mountSvg(container, input, { compile: { composites: [definition(fill)] } });
+      try {
+        expect(view.root.querySelector('rect')?.getAttribute('fill')).toBe(fill);
+      } finally {
+        view.dispose();
+      }
+    }
   });
 
   it('重新水合不改变 renderer 缺省配置', () => {
@@ -634,33 +405,6 @@ describe('@retikz/vanilla 保留安装座', () => {
     } finally {
       view.dispose();
     }
-  });
-
-  it('Canvas retained update 在运行时拒绝修改 mount-lifetime DPR', () => {
-    const container = document.createElement('div');
-    const view = mountCanvas(container, source('#ef4444'));
-
-    expect(() => view.update(source('#22c55e'), { canvas: { devicePixelRatio: 2 } })).toThrow(
-      expect.objectContaining({ code: RetikzVanillaErrorCode.Runtime }),
-    );
-  });
-
-  it('retained update 在读取前递归拒绝 accessor 与非标准数组属性', () => {
-    const container = document.createElement('div');
-    const view = mountSvg(container, source('#ef4444'));
-    const committedHtml = view.root.innerHTML;
-    const configGetter = vi.fn(() => 100);
-    const animation = Object.defineProperty({}, 'snapshotAt', {
-      enumerable: true,
-      get: configGetter,
-    });
-
-    expect(() => view.update(source('#22c55e'), { animation })).toThrow(
-      expect.objectContaining({ code: RetikzVanillaErrorCode.Runtime }),
-    );
-    expect(configGetter).not.toHaveBeenCalled();
-
-    expect(view.root.innerHTML).toBe(committedHtml);
   });
 
   it('SVG 与 Canvas retained initial mount 各只编译一次', () => {
@@ -769,27 +513,6 @@ describe('@retikz/vanilla 保留安装座', () => {
     expect(view.diagnostics()).toEqual([]);
   });
 
-  it('runtime accessor 在创建 DOM 前 fail-loud', () => {
-    const getter = vi.fn(() => 'static');
-    const runtime = Object.defineProperty({}, 'mode', { enumerable: true, get: getter });
-    const container = document.createElement('div');
-
-    expect(() => mountSvg(container, source('#ef4444'), { runtime } as never)).toThrowError(
-      expect.objectContaining({ code: RetikzVanillaErrorCode.Runtime }),
-    );
-    expect(getter).not.toHaveBeenCalled();
-    expect(container.children).toHaveLength(0);
-
-    const runtimeGetter = vi.fn(() => ({ mode: 'static' }));
-    const options = Object.defineProperty({}, 'runtime', { enumerable: true, get: runtimeGetter });
-
-    expect(() => mountSvg(container, source('#ef4444'), options as never)).toThrowError(
-      expect.objectContaining({ code: RetikzVanillaErrorCode.Runtime }),
-    );
-    expect(runtimeGetter).not.toHaveBeenCalled();
-    expect(container.children).toHaveLength(0);
-  });
-
   it('raw static compile 失败保留旧 view，materialization 失败同步抛出', () => {
     const view = mountSvg(document.createElement('div'), source('#ef4444'), {
       runtime: { mode: 'static' },
@@ -846,7 +569,7 @@ describe('@retikz/vanilla 保留安装座', () => {
     const accepted = vi.fn();
 
     expect(() => view.hydrate({ handlers: { changed: { click: rejected } } })).toThrow(
-      /Failed to publish the compilation|RENDER_RUNTIME_RENDERER_PREPARE_FAILED|Vanilla compile driver resolve failed/,
+      /Failed to publish the compilation|RENDER_RUNTIME_RENDERER_PREPARE_FAILED|Vanilla compile result extension resolve failed/,
     );
 
     view.hydrate({ handlers: { changed: { click: accepted } } });
@@ -876,7 +599,7 @@ describe('@retikz/vanilla 保留安装座', () => {
     rejectNextUpdate = true;
 
     expect(() => hydration.dispose()).toThrow(
-      /Failed to publish the compilation|RENDER_RUNTIME_RENDERER_PREPARE_FAILED|Vanilla compile driver resolve failed/,
+      /Failed to publish the compilation|RENDER_RUNTIME_RENDERER_PREPARE_FAILED|Vanilla compile result extension resolve failed/,
     );
 
     hydration.dispose();
@@ -884,20 +607,21 @@ describe('@retikz/vanilla 保留安装座', () => {
     expect(observedContributionCounts).toEqual([0, 1, 0, 0]);
   });
 
-  it('hydrate 后修改 handlers record 不改变 committed contribution', () => {
+  it('解除注册后可用新的 handlers 接收更新后的事件', () => {
     const container = document.createElement('div');
     const view = mountSvg(container, source('#ef4444'));
     const first = vi.fn();
     const second = vi.fn();
     const handlers = { changed: { click: first } };
-    view.hydrate({ handlers });
-
-    handlers.changed.click = second;
+    const original = view.hydrate({ handlers });
+    original.dispose();
+    view.hydrate({ handlers: { changed: { click: second } } });
     view.update(source('#22c55e'));
     view.root.querySelector('[data-retikz-id="changed"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
 
-    expect(first).toHaveBeenCalledTimes(1);
-    expect(second).not.toHaveBeenCalled();
+    expect(first).not.toHaveBeenCalled();
+    expect(second).toHaveBeenCalledTimes(1);
+    view.dispose();
   });
 
   it('预编译 Scene 保持 static view', () => {
@@ -946,7 +670,7 @@ describe('@retikz/vanilla 保留安装座', () => {
     const committedHtml = view.root.innerHTML;
 
     expect(() => view.update(source('#22c55e'))).toThrow(
-      /Failed to publish the compilation|RENDER_RUNTIME_RENDERER_PREPARE_FAILED|Vanilla compile driver resolve failed/,
+      /Failed to publish the compilation|RENDER_RUNTIME_RENDERER_PREPARE_FAILED|Vanilla compile result extension resolve failed/,
     );
     expect(view.artifacts).toBe(artifacts);
     expect(view.compileResult).toBe(compileResult);

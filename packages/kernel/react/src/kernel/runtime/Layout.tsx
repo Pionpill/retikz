@@ -14,6 +14,7 @@ import type {
   TextMeasurer,
   ThemeDefinition,
 } from '@retikz/core';
+import { ReconcilerMode } from '@retikz/reconciler';
 import type { CompositeArtifact } from '@retikz/reconciler';
 import type { CompileOptions, CompileResult } from '@retikz/reconciler';
 import type { ReconcilerDiagnostic } from '@retikz/reconciler';
@@ -28,7 +29,7 @@ import type {
   ProcessingOptions,
   ProcessingResult,
   SingleSceneSource,
-  VanillaCompileDriver,
+  VanillaCompileResultExtension,
 } from '@retikz/vanilla';
 import { createProcessingController, prepareStaticProcessing } from '@retikz/vanilla';
 import type { CSSProperties, FC, ReactNode, Ref } from 'react';
@@ -47,11 +48,6 @@ import type { LayoutRuntimeOptions } from './runtime-options';
 import { LayoutRuntimeMode } from './runtime-options';
 import { mergeThemeOverlays, useTheme } from './theme-context';
 import { mergeThemeDefinitions, useThemeDefinitions } from './theme-definitions-context';
-
-const styleFontFamily = (style: CSSProperties | undefined): string | undefined => {
-  const fontFamily = style?.fontFamily;
-  return typeof fontFamily === 'string' && fontFamily.trim().length > 0 ? fontFamily : undefined;
-};
 
 /** 同一条诊断消息进程内只告警一次 */
 const warnedMessages = new Set<string>();
@@ -202,10 +198,10 @@ export type LayoutProps = {
   theme?: IRScene['theme'];
   /** 通过 JSX 声明的图形内容 */
   children?: ReactNode;
-  /** 供自定义 compileDriver 消费的 JSX 输入元数据；传入 ir 时忽略，不写入持久化 Scene IR */
+  /** 供自定义 compileResultExtension 消费的 JSX 输入元数据；传入 ir 时忽略，不写入持久化 Scene IR */
   authoring?: unknown;
-  /** 处理作者输入的编译驱动 */
-  compileDriver?: VanillaCompileDriver;
+  /** 处理作者输入的编译结果扩展 */
+  compileResultExtension?: VanillaCompileResultExtension;
   /** 直接传入 ir 时使用的事件处理函数表 */
   handlers?: HydrationHandlers;
   /**
@@ -375,7 +371,7 @@ export const Layout: FC<LayoutProps> = props => {
     theme,
     children,
     authoring,
-    compileDriver,
+    compileResultExtension,
     handlers,
     runtime,
     width,
@@ -467,16 +463,13 @@ export const Layout: FC<LayoutProps> = props => {
     return { ...viewed, animations } as SingleSceneSource;
   }, [ambientTheme, irFromProp, reactInput, rootAnimations, theme, viewBox]);
 
-  const defaultFontFamily = styleFontFamily(style);
-
   const processingOptions = useMemo<ProcessingOptions | AsyncProcessingOptions>(
     () => ({
-      defaultFontFamily,
-      compileDriver,
+      compileResultExtension,
       ...(prepareAsync ? { signal } : {}),
-      ...(updateStrategy === undefined
+      ...(mode === LayoutRuntimeMode.Static
         ? {}
-        : { reconciler: { incremental: true, updateStrategy } }),
+        : { reconciler: { mode: ReconcilerMode.Incremental, updateStrategy } }),
       compile: {
         measureText,
         nodeDistance,
@@ -494,10 +487,10 @@ export const Layout: FC<LayoutProps> = props => {
       } satisfies CompileOptions,
     }),
     [
-      defaultFontFamily,
-      compileDriver,
+      compileResultExtension,
       prepareAsync,
       signal,
+      mode,
       updateStrategy,
       measureText,
       nodeDistance,

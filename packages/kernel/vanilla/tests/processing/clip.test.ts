@@ -5,7 +5,7 @@ import { literal, strictObject } from 'zod';
 
 import type { InputEmbedAdapter, InputScene } from '../../src';
 import { embed, createProcessingController, normalizeScene, compileToScene } from '../../src';
-import { prepareProcessingInput } from '../../src/processing/prepare';
+import { prepareProcessingInput } from '../../src/runtime/_input/prepare';
 import { compileTestResult } from '../helpers/compilation';
 
 const customClip = (): ClipDefinition =>
@@ -44,8 +44,8 @@ describe('Vanilla 裁剪处理等价性', () => {
     const staticResult = compileToScene(input, { compile });
     const retained = createProcessingController(input, { compile });
 
-    expect(staticResult.scene).toEqual(direct);
-    expect(retained.read().scene).toEqual(direct);
+    expect(staticResult.compileResult.scene).toEqual(direct);
+    expect(retained.read().compileResult.scene).toEqual(direct);
     expect(direct.resources?.clips).toEqual([
       expect.objectContaining({ kind: 'clip', path: expect.objectContaining({ fillRule: 'nonzero' }) }),
     ]);

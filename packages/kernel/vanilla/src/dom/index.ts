@@ -1,16 +1,12 @@
 export type {
   CanvasView,
   CanvasViewState,
-  CommonOptions,
   HydrateOptions,
   HydrationHandle,
-  InputRender,
-  InputRetainedRender,
   MountCanvasOptions,
   MountOptions,
   RawStaticMountCanvasOptions,
   RawStaticMountOptions,
-  RenderToStringOptions,
   RetainedCanvasUpdateOptions,
   RetainedCanvasView,
   RetainedMountCanvasOptions,
@@ -28,16 +24,22 @@ export type {
   StaticRawSvgView,
   StaticSvgView,
   StaticVanillaView,
-  VanillaAnimationOptions,
   VanillaCanvasOptions,
-  VanillaOutputOptions,
   VanillaRetainedRuntimeOptions,
   VanillaRuntimeOptions,
   VanillaStaticRuntimeOptions,
   VanillaView,
   VanillaViewState,
+} from './types';
+export type {
+  CommonOptions,
+  InputRender,
+  InputRetainedRender,
+  RenderToStringOptions,
+  VanillaAnimationOptions,
+  VanillaOutputOptions,
 } from '../runtime';
-export { VanillaViewMode } from '../runtime';
+export { VanillaViewMode } from './constants';
 export * from './hydrate';
 export * from './mount';
 export * from './mount-canvas';

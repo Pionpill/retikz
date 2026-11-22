@@ -4,7 +4,7 @@ import { CURRENT_IR_VERSION } from '@retikz/core';
 import { normalizeChild } from './children';
 import type { SceneNormalizeContext } from './context';
 import { childSourcePath } from './context';
-import { asLayerStack, layerZIndex } from './layers';
+import { normalizeSceneLayers, layerZIndex } from './layers';
 import type {
   InputAuthoringSite,
   InputLayer,
@@ -29,7 +29,7 @@ export const normalizeSceneLayer = (
   const runtimeInputs: Array<CompositeInputBinding> = [];
   const authoringSites: Array<InputAuthoringSite> = [];
   if (scene.authoring !== undefined)
-    authoringSites.push(Object.freeze({ kind: 'scene', sourcePath: '', type: 'scene', authoring: scene.authoring }));
+    authoringSites.push({ kind: 'scene', sourcePath: '', type: 'scene', authoring: scene.authoring });
 
   const context: SceneNormalizeContext = {
     layerId: layer.name,
@@ -61,9 +61,9 @@ export const normalizeSceneLayer = (
       ...(viewBox === undefined ? {} : { viewBox }),
       ...(animations === undefined ? {} : { animations }),
     },
-    contributions: Object.freeze([...contributions]),
-    ...(runtimeInputs.length === 0 ? {} : { runtimeInputs: Object.freeze(runtimeInputs) }),
-    authoringSites: Object.freeze(authoringSites),
+    contributions,
+    ...(runtimeInputs.length === 0 ? {} : { runtimeInputs }),
+    authoringSites,
   };
 };
 
@@ -71,16 +71,12 @@ export const normalizeSceneLayer = (
 export function normalizeScene(scene: InputSceneChildren): NormalizedScene;
 export function normalizeScene(scene: InputSceneLayers): ReadonlyArray<NamedLayerResult<NormalizedScene>>;
 export function normalizeScene(scene: InputScene): NormalizedScene | ReadonlyArray<NamedLayerResult<NormalizedScene>>;
-export function normalizeScene(scene: InputScene) {
+export function normalizeScene(scene: InputScene): NormalizedScene | ReadonlyArray<NamedLayerResult<NormalizedScene>> {
   if (scene.layers === undefined)
     return normalizeSceneLayer(scene, { type: 'layer', name: BuiltinLayerName.Main, children: scene.children });
-  return Object.freeze(
-    asLayerStack(scene).map(layer =>
-      Object.freeze({
-        name: layer.name,
-        zIndex: layerZIndex(layer),
-        result: normalizeSceneLayer(scene, layer),
-      }),
-    ),
-  );
+  return normalizeSceneLayers(scene).map(layer => ({
+    name: layer.name,
+    zIndex: layerZIndex(layer),
+    result: normalizeSceneLayer(scene, layer),
+  }));
 }

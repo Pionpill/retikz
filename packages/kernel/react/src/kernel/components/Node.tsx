@@ -7,7 +7,7 @@ import { TIKZ_NODE } from '../protocol';
 
 /** 可定位、可连接的节点输入，组合文字、视觉形状和连接面 */
 export type NodeProps = HydrationEventProps & {
-  /** 可选编译驱动解释的运行时载荷，不进入 Core IR */
+  /** 可选编译结果扩展解释的运行时载荷，不进入 Core IR */
   authoring?: InputNode['authoring'];
   /** 实例视觉覆盖，逐字段覆盖继承默认值 */
   style?: InputNode['style'];

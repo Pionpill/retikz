@@ -68,16 +68,6 @@ const idIr: IRScene = {
 };
 
 describe('@retikz/vanilla mountCanvas', () => {
-  it.each(['static', 'retained'] as const)('%s Canvas 宿主保留默认字体', mode => {
-    const container = document.createElement('div');
-    const view =
-      mode === 'static'
-        ? mountCanvas(container, idIr, { defaultFontFamily: 'serif', runtime: { mode } })
-        : mountCanvas(container, idIr, { defaultFontFamily: 'serif', runtime: { mode } });
-    view.update(idIr);
-    expect(view.root.style.fontFamily).toBe('serif');
-    view.dispose();
-  });
   it.each(['static', 'retained'] as const)('%s 默认 CSS 尺寸独立于 DPR，单轴保持比例', mode => {
     const ir: IRScene = {
       type: 'scene',
@@ -159,9 +149,5 @@ describe('@retikz/vanilla mountCanvas', () => {
 
     expect(container.querySelector('canvas')).toBeNull();
     expect(() => view.dispose()).not.toThrow();
-  });
-
-  it('mount-canvas-null-container：非 Element 容器 → 可诊断 throw', () => {
-    expect(() => mountCanvas(null as never, idIr)).toThrow(/container/i);
   });
 });

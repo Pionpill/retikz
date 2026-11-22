@@ -179,7 +179,7 @@ describe('React JSX Input 场景', () => {
     ]);
   });
 
-  it('保留 Path 与 Scope 的 runtime-only authoring，供 Vanilla compile driver 消费', () => {
+  it('保留 Path 与 Scope 的 runtime-only authoring，供 Vanilla compile result extension 消费', () => {
     const scopeAuthoring = Object.freeze({ scope: true });
     const pathAuthoring = Object.freeze({ path: true });
     const input = createInputScene(

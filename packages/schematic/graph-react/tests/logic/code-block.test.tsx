@@ -10,7 +10,7 @@ import { embed, createProcessingController, normalizeScene, compileToScene } fro
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
-import { prepareProcessingInput } from '../../../../kernel/vanilla/src/processing/prepare';
+import { prepareProcessingInput } from '../../../../kernel/vanilla/src/runtime/_input/prepare';
 
 const schema = CodeBlockPropsSchema.safeExtend({ namespace: literal('test'), type: literal('service') });
 
@@ -82,14 +82,14 @@ describe('自定义代码块 React 编写', () => {
       },
     );
 
-    expect(actual.scene).toEqual(vanilla.scene);
-    expect(actual.scene).toEqual(direct.scene);
+    expect(actual.compileResult.scene).toEqual(vanilla.compileResult.scene);
+    expect(actual.compileResult.scene).toEqual(direct.compileResult.scene);
 
     const retained = createProcessingController(input, {
       compile: { themeDefinitions: [coreStyle] },
     });
 
-    expect(retained.read().scene).toEqual(actual.scene);
+    expect(retained.read().compileResult.scene).toEqual(actual.compileResult.scene);
 
     retained.dispose();
   });

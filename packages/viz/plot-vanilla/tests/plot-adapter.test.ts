@@ -121,7 +121,7 @@ describe('Plot Vanilla Tier2 适配器', () => {
       ],
     });
     const [compiled] = compileToScene(inputScene);
-    const svg = renderToSvgString(compiled.result.scene, {
+    const svg = renderToSvgString(compiled.result.compileResult.scene, {
       output: { width: 360, height: 200 },
     });
 

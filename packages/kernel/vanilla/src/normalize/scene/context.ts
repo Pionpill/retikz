@@ -10,7 +10,7 @@ export type SceneNormalizeContext = {
   runtimeInputs: Array<CompositeInputBinding>;
   layerId: string;
   path: Array<string>;
-  prepared?: (input: AnyInputEmbed, path: string) => InputEmbedContribution;
+  prepared?: () => InputEmbedContribution;
   contributions: Array<CoreProviderContribution>;
   sourcePath: string;
   authoringSites: Array<InputAuthoringSite>;

@@ -11,7 +11,7 @@ import {
 import { describe, expect, it, vi } from 'vitest';
 
 import type { InputPlotEmbed } from '../src';
-import { plotInputEmbedAdapter, createPlotLineageCompileDriver, renderPlot, renderPlotAsync } from '../src';
+import { plotInputEmbedAdapter, createPlotLineageCompileResultExtension, renderPlot, renderPlotAsync } from '../src';
 
 const rows = [
   { x: 1, y: 2 },
@@ -43,7 +43,7 @@ describe('异步 Plot 编写', () => {
           }),
         ],
       });
-    const options = { compileDriver: createPlotLineageCompileDriver() };
+    const options = { compileResultExtension: createPlotLineageCompileResultExtension() };
     const a = await createProcessingControllerAsync(input(first), options);
     const b = await createProcessingControllerAsync(input(second), options);
 
@@ -72,7 +72,7 @@ describe('异步 Plot 编写', () => {
     const input = (onLineage: typeof second) =>
       embed<InputPlotEmbed>({ adapter: plotInputEmbedAdapter, props: { spec: spec(), datasets: { rows }, onLineage } });
     const source = scene({ children: [input(first), input(second)] });
-    const options = { compileDriver: createPlotLineageCompileDriver() };
+    const options = { compileResultExtension: createPlotLineageCompileResultExtension() };
 
     try {
       const discarded = await prepareStaticProcessingAsync(source, options);
@@ -86,7 +86,7 @@ describe('异步 Plot 编写', () => {
 
       expect(first).toHaveBeenCalledOnce();
       expect(second).toHaveBeenCalledOnce();
-      expect(committed.result.scene.primitives).toHaveLength(2);
+      expect(committed.result.compileResult.scene.primitives).toHaveLength(2);
     } finally {
       warn.mockRestore();
     }
@@ -160,8 +160,8 @@ describe('异步 Plot 编写', () => {
       });
     const result = await compileToSceneAsync(scene({ children: [input(rows), input([{ x: 3, y: 1 }])] }));
 
-    expect(result.scene.primitives).toHaveLength(2);
-    expect(JSON.stringify(result.scene).match(/"type":"ellipse"/g)).toHaveLength(3);
-    expect(JSON.stringify(result.scene)).not.toContain('dataBindings');
+    expect(result.compileResult.scene.primitives).toHaveLength(2);
+    expect(JSON.stringify(result.compileResult.scene).match(/"type":"ellipse"/g)).toHaveLength(3);
+    expect(JSON.stringify(result.compileResult.scene)).not.toContain('dataBindings');
   });
 });

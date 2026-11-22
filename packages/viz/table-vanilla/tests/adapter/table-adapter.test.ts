@@ -99,7 +99,7 @@ describe('Table Vanilla 适配器', () => {
       ],
     });
     const [compiled] = compileToScene(inputScene);
-    const svg = renderToSvgString(compiled.result.scene);
+    const svg = renderToSvgString(compiled.result.compileResult.scene);
 
     expect(svg).toContain('Ada');
     expect(svg).toContain('Lin');

@@ -51,7 +51,7 @@ export type InputPlotEmbed<TSource = never> = PlotSource &
     panel?: InputPlotPanel;
   }>;
 
-/** Plot contribution 提供给同 revision compile driver 的链路消费输入 */
+/** Plot contribution 提供给同 revision compile result extension 的链路消费输入 */
 export type PreparedPlotLineageNotification = Readonly<{
   /** 本请求借用的作者 Source */
   spec: IRPlot;

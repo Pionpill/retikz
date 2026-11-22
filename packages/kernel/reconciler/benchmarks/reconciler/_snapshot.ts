@@ -50,7 +50,7 @@ export const compileBenchmarkSnapshot = (
   captureProvenance = false,
   allowDiagnostics = false,
 ): SceneCompilationSnapshot<AnyCompositeDefinition> => {
-  const oracle = new SceneReconciler(options, { incremental: false, captureProvenance });
+  const oracle = new SceneReconciler(options, { captureProvenance });
   try {
     const result = oracle.mount(scene);
     expect(oracle.diagnostics()).toEqual([]);

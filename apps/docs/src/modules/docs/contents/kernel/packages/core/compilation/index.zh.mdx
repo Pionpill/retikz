@@ -63,7 +63,7 @@ const ir: IRScene = {
     },
   ],
 };
-const reconciler = new SceneReconciler({}, { incremental: false });
+const reconciler = new SceneReconciler();
 try {
   const result = reconciler.mount(ir).compilation.result;
   console.log(result.scene);

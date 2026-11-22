@@ -221,7 +221,7 @@ describe('Block React 编写', () => {
 
 const hostPropKeys = [
   'authoring',
-  'compileDriver',
+  'compileResultExtension',
   'handlers',
   'runtime',
   'width',
@@ -665,7 +665,7 @@ describe('Graph 独立式和嵌入式宿主分类', () => {
   it('转发完整的独立宿主表面，而不消费 Source 字段', () => {
     const props = {
       authoring: undefined,
-      compileDriver: undefined,
+      compileResultExtension: undefined,
       handlers: undefined,
       runtime: undefined,
       width: undefined,
@@ -758,13 +758,15 @@ describe('Graph Definition 选项等价性', () => {
       { compile: { padding: 0 } },
     );
 
-    expect(reactResult.scene).toEqual(vanillaResult.scene);
+    expect(reactResult.compileResult.scene).toEqual(vanillaResult.compileResult.scene);
 
-    type ScenePrimitive = (typeof reactResult.scene.primitives)[number];
+    type ScenePrimitive = (typeof reactResult.compileResult.scene.primitives)[number];
     const flatten = (primitives: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
       primitives.flatMap(primitive => (primitive.type === 'group' ? flatten(primitive.children) : [primitive]));
 
-    expect(flatten(reactResult.scene.primitives).find(primitive => primitive.id === 'edge')).toMatchObject({
+    expect(
+      flatten(reactResult.compileResult.scene.primitives).find(primitive => primitive.id === 'edge'),
+    ).toMatchObject({
       type: 'path',
       arrowEnd: { shape: 'open' },
       dashPattern: [4, 2],

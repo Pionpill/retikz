@@ -34,7 +34,7 @@ describe('Layout API 公开范围', () => {
     expect(source).toContain('Members · Layers');
     expect(source).toContain('normalization supplies the data version');
     expect(source).toContain("IRScene['theme']");
-    expect(source).toContain('`compileDriver?`');
+    expect(source).toContain('`compileResultExtension?`');
 
     const extensions = source.split('### LayoutExtensions\n')[1]?.split('\n### ')[0] ?? '';
     const fields = [...extensions.matchAll(/^\| `(?:readonly )?([^`?]+)\?` \|/gm)].map(match => match[1]);

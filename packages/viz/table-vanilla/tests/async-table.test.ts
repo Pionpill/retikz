@@ -56,7 +56,7 @@ describe('异步 Table 编写', () => {
     const input = (values: Array<number>) =>
       embedTable(spec, { dataBindings: { rows: { kind: 'source', source: { values } } }, dataTransformExecutor });
     const result = await compileToSceneAsync(scene({ children: [input([2, 6]), input([4])] }));
-    const svg = renderToSvgString(result.scene);
+    const svg = renderToSvgString(result.compileResult.scene);
 
     expect(svg).toContain('0.25');
     expect(svg).toContain('0.75');

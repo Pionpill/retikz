@@ -53,7 +53,7 @@ export type InputChild =
 type InputSceneBase = Omit<IRScene, 'version' | 'children'> & {
   /** 作者输入不接受版本号；归一化时写入当前 IR 版本 */
   version?: never;
-  /** 可选编译驱动自行解释的运行时载荷，不进入 Core IR */
+  /** 可选编译结果扩展自行解释的运行时载荷，不进入 Core IR */
   authoring?: unknown;
 };
 
@@ -74,7 +74,7 @@ export type InputSceneLayers = InputSceneBase & Extract<SceneSource, { layers: u
 /** 作者侧 Scene 输入 */
 export type InputScene = InputSceneChildren | InputSceneLayers;
 
-/** 归一化时报告给 processing driver 的作者来源类别 */
+/** 归一化时报告给 编译结果扩展 的作者来源类别 */
 export type InputAuthoringSiteKind = 'scene' | 'scope' | 'path' | 'node' | 'coordinate' | 'embeddable';
 
 /** 框架无关的作者来源信息 */
@@ -85,7 +85,7 @@ export type InputAuthoringSite = Readonly<{
   sourcePath: string;
   /** 当前输入的具体类型标识 */
   type: string;
-  /** 由编译驱动解释的原始作者载荷，不进入 Core IR */
+  /** 由编译结果扩展解释的原始作者载荷，不进入 Core IR */
   authoring: unknown;
 }>;
 

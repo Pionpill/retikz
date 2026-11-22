@@ -1,5 +1,5 @@
 import type { CompileOptions, ReconcilerResult, ReconcilerUpdateStrategy } from '@retikz/reconciler';
-import { SceneReconciler } from '@retikz/reconciler';
+import { ReconcilerMode, SceneReconciler } from '@retikz/reconciler';
 import { expect } from 'vitest';
 
 import type { BenchmarkExecution } from '../../../../../scripts/benchmarks/scenario';
@@ -25,7 +25,7 @@ export const createUpdateBenchmark = (
   const sourceBefore = JSON.stringify(workload.states);
   const compileOptions = { ...benchmarkCompileOptions, ...options.compileOptions, onWarn: () => {} };
   const execution = {
-    incremental: true as const,
+    mode: ReconcilerMode.Incremental,
     updateStrategy: strategy,
     captureProvenance: options.captureProvenance,
   };

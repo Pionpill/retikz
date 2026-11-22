@@ -4,8 +4,8 @@ import { defineTheme, ThemeMode } from '@retikz/core';
 import type {
   InputEmbedAdapter,
   ProcessingController,
-  VanillaCompileDriver,
-  VanillaCompileDriverSession,
+  VanillaCompileResultExtension,
+  VanillaCompileResultExtensionSession,
 } from '@retikz/vanilla';
 import * as vanilla from '@retikz/vanilla';
 import { StrictMode } from 'react';
@@ -16,25 +16,21 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Layout, Node, Scope } from '../../../src';
 
-/** 创建记录完整帧提交的 Vanilla compile driver */
-const createCommitTrackingCompileDriver = (): Readonly<{
-  driver: VanillaCompileDriver;
+/** 创建记录完整帧提交的 Vanilla compile result extension */
+const createCommitTrackingCompileResultExtension = (): Readonly<{
+  extension: VanillaCompileResultExtension;
   commit: ReturnType<typeof vi.fn>;
 }> => {
-  const sessions = new WeakMap<object, VanillaCompileDriverSession>();
+  const sessions = new WeakMap<object, VanillaCompileResultExtensionSession>();
   const commit = vi.fn();
-  const driver: VanillaCompileDriver = {
+  const extension: VanillaCompileResultExtension = {
     create: input => {
       const existing = sessions.get(input.instance);
       if (existing !== undefined) return existing;
 
-      const session: VanillaCompileDriverSession = {
-        resolve: output => ({
-          primary: output.result,
-          layers: [],
-          diagnostics: [],
-        }),
-        commit,
+      const session: VanillaCompileResultExtensionSession = {
+        resolve: () => [],
+        onCommit: commit,
       };
       sessions.set(input.instance, session);
 
@@ -42,7 +38,7 @@ const createCommitTrackingCompileDriver = (): Readonly<{
     },
   };
 
-  return Object.freeze({ driver, commit });
+  return Object.freeze({ extension, commit });
 };
 
 describe('<Layout> 的 Vanilla Input processing', () => {
@@ -73,11 +69,11 @@ describe('<Layout> 的 Vanilla Input processing', () => {
     await act(() => root.unmount());
   });
 
-  it('static processing 只在 React 提交后通知 compile driver', async () => {
-    const { driver, commit } = createCommitTrackingCompileDriver();
+  it('static processing 只在 React 提交后通知 compile result extension', async () => {
+    const { extension, commit } = createCommitTrackingCompileResultExtension();
 
     renderToStaticMarkup(
-      <Layout compileDriver={driver} runtime={{ mode: 'static' }}>
+      <Layout compileResultExtension={extension} runtime={{ mode: 'static' }}>
         <Node id="static-commit-node" position={[0, 0]} />
       </Layout>,
     );
@@ -88,7 +84,7 @@ describe('<Layout> 的 Vanilla Input processing', () => {
     const root = createRoot(container);
     await act(() =>
       root.render(
-        <Layout compileDriver={driver} runtime={{ mode: 'static' }}>
+        <Layout compileResultExtension={extension} runtime={{ mode: 'static' }}>
           <Node id="static-commit-node" position={[0, 0]} />
         </Layout>,
       ),
@@ -100,13 +96,13 @@ describe('<Layout> 的 Vanilla Input processing', () => {
   });
 
   it('retained 初次挂载只提交 controller 的成功结果', async () => {
-    const { driver, commit } = createCommitTrackingCompileDriver();
+    const { extension, commit } = createCommitTrackingCompileResultExtension();
     const container = document.createElement('div');
     const root = createRoot(container);
 
     await act(() =>
       root.render(
-        <Layout compileDriver={driver}>
+        <Layout compileResultExtension={extension}>
           <Node id="retained-commit-node" position={[0, 0]} />
         </Layout>,
       ),
@@ -118,14 +114,14 @@ describe('<Layout> 的 Vanilla Input processing', () => {
   });
 
   it('Strict Effects 不提交被丢弃的 retained fallback', async () => {
-    const { driver, commit } = createCommitTrackingCompileDriver();
+    const { extension, commit } = createCommitTrackingCompileResultExtension();
     const container = document.createElement('div');
     const root = createRoot(container);
 
     await act(() =>
       root.render(
         <StrictMode>
-          <Layout compileDriver={driver}>
+          <Layout compileResultExtension={extension}>
             <Node id="strict-commit-node" position={[0, 0]} />
           </Layout>
         </StrictMode>,
@@ -158,19 +154,15 @@ describe('<Layout> 的 Vanilla Input processing', () => {
 
   it('retained processing 将 JSX source 更新推入同一 Vanilla controller', async () => {
     const instances: Array<object> = [];
-    const sessions = new WeakMap<object, VanillaCompileDriverSession>();
-    const compileDriver: VanillaCompileDriver = {
+    const sessions = new WeakMap<object, VanillaCompileResultExtensionSession>();
+    const compileResultExtension: VanillaCompileResultExtension = {
       create: input => {
         instances.push(input.instance);
         const existing = sessions.get(input.instance);
         if (existing !== undefined) return existing;
 
-        const session: VanillaCompileDriverSession = {
-          resolve: output => ({
-            primary: output.result,
-            layers: [],
-            diagnostics: [],
-          }),
+        const session: VanillaCompileResultExtensionSession = {
+          resolve: () => [],
         };
         sessions.set(input.instance, session);
 
@@ -182,14 +174,14 @@ describe('<Layout> 的 Vanilla Input processing', () => {
 
     await act(() =>
       root.render(
-        <Layout compileDriver={compileDriver}>
+        <Layout compileResultExtension={compileResultExtension}>
           <Node id="first" position={[0, 0]} />
         </Layout>,
       ),
     );
     await act(() =>
       root.render(
-        <Layout compileDriver={compileDriver}>
+        <Layout compileResultExtension={compileResultExtension}>
           <Node id="second" position={[20, 0]} />
         </Layout>,
       ),

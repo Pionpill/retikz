@@ -4,7 +4,7 @@ import { expect, it } from 'vitest';
 import { literal } from 'zod';
 
 import { createProcessingController, compileToScene } from '../../src';
-import { prepareProcessingInput } from '../../src/processing/prepare';
+import { prepareProcessingInput } from '../../src/runtime/_input/prepare';
 import { compileTestResult } from '../helpers/compilation';
 
 it('保留完整 Path definition，并在 static 与 retained processing 中执行相同 compile 分支', () => {
@@ -30,8 +30,8 @@ it('保留完整 Path definition，并在 static 与 retained processing 中执�
   const direct = compileTestResult(input, options.compile).scene;
   const retained = createProcessingController(input, options);
   try {
-    expect(compileToScene(input, options).scene).toEqual(direct);
-    expect(retained.read().scene).toEqual(direct);
+    expect(compileToScene(input, options).compileResult.scene).toEqual(direct);
+    expect(retained.read().compileResult.scene).toEqual(direct);
     expect(direct.primitives).toContainEqual(expect.objectContaining({ type: 'ellipse', cx: 3, cy: 5 }));
   } finally {
     retained.dispose();

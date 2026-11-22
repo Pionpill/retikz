@@ -99,7 +99,7 @@ Marker components avoid intermediate DOM and duplicated drawing semantics, but J
 
 Frequently updated large figures can keep stable IR, children, and Core options outside the component or in `useMemo`, avoiding needless Input or processing-controller recreation. Passing the IR prop skips the JSX collector but still uses Vanilla processing for the subsequent compile.
 
-In retained mode, the Vanilla controller owns the Core Computation, runtime session, and update strategy; static mode prepares one lifecycle-free processing result. React subscribes to the controller's read-only result, then uses `ProcessingResultHost` to present its same-revision Scene, artifacts, readonly layers, and event wiring.
+In retained mode, the Vanilla controller owns the Core Computation, runtime session, and update strategy; static mode prepares one lifecycle-free processing result. React subscribes to the controller's read-only result, then uses `ProcessingResultHost` to present its same-revision Scene, artifacts, and event wiring.
 
 Definition arrays are canonicalized by ordered element identity, so recreating an equivalent container such as `[shape]` does not rebuild the processing controller. Changing a Definition itself, the renderer backend, `idPrefix`, or processing options remounts it. Concurrent scheduling and progressive materialization remain outside the current public contract.
 
@@ -108,20 +108,18 @@ Definition arrays are canonicalized by ordered element identity, so recreating a
     {
       label: 'Layout Definition-container canonicalization',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 146,
-      endLine: 173,
+      startLine: 141,
+      endLine: 168,
     },
     {
       label: 'React static fallback and retained-processing subscription',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 340,
-      endLine: 414,
+      startLine: 335,
+      endLine: 409,
     },
     {
       label: 'Vanilla retained controller creating the Core Computation and Runtime',
-      path: 'packages/kernel/vanilla/src/processing/internal/controller.ts',
-      startLine: 99,
-      endLine: 158,
+      path: 'packages/kernel/vanilla/src/runtime/session/runtime.ts',
     },
   ]}
 />
@@ -157,14 +155,12 @@ Changing `updateStrategy` between `auto` and `full` on a retained host disposes 
     {
       label: 'React dispatching static or retained processing',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 340,
-      endLine: 414,
+      startLine: 335,
+      endLine: 409,
     },
     {
       label: 'Vanilla retained controller Core Computation and update strategy',
-      path: 'packages/kernel/vanilla/src/processing/internal/controller.ts',
-      startLine: 99,
-      endLine: 183,
+      path: 'packages/kernel/vanilla/src/runtime/session/runtime.ts',
     },
   ]}
 />
@@ -175,20 +171,20 @@ Changing `updateStrategy` between `auto` and `full` on a retained host disposes 
 
 <ComponentPreview files="react-to-scene" size="xs" hideCode />
 
-| Stage                | Owner             | Responsibility                                                                                 |
-| -------------------- | ----------------- | ---------------------------------------------------------------------------------------------- |
-| Kernel / Sugar JSX   | `@retikz/react`   | Collect props and children; expand Sugar into Kernel first                                     |
-| `createInputScene()` | `@retikz/react`   | Walk the component tree, produce `InputScene`, with adapters bound to embeds                   |
-| `normalizeScene()`   | `@retikz/vanilla` | Normalize typed Input to `IRScene`, lower embeds, and aggregate composite dependencies         |
-| `IRScene`            | `@retikz/core`    | JSON-serializable drawing contract with no React element, hook, or DOM                         |
-| `SceneReconciler`    | `@retikz/core`    | Process composites; resolve registries, references, geometry, layout, resources, and animation |
-| `ProcessingResult`   | `@retikz/vanilla` | Return same-revision Scene, artifacts, readonly layers, and diagnostics                        |
+| Stage                | Owner             | Responsibility                                                                                         |
+| -------------------- | ----------------- | ------------------------------------------------------------------------------------------------------ |
+| Kernel / Sugar JSX   | `@retikz/react`   | Collect props and children; expand Sugar into Kernel first                                             |
+| `createInputScene()` | `@retikz/react`   | Walk the component tree, produce `InputScene`, with adapters bound to embeds                           |
+| `normalizeScene()`   | `@retikz/vanilla` | Normalize typed Input to `IRScene`, lower embeds, and aggregate composite dependencies                 |
+| `IRScene`            | `@retikz/core`    | JSON-serializable drawing contract with no React element, hook, or DOM                                 |
+| `SceneReconciler`    | `@retikz/core`    | Process composites; resolve registries, references, geometry, layout, resources, and animation         |
+| `ProcessingResult`   | `@retikz/vanilla` | Read Scene and artifacts from `compileResult`, and processing diagnostics from `processingDiagnostics` |
 
 `Layout` injects host capabilities such as text measurement, Definition registries, and the TeX lowerer as processing compile options, but those options do not put React into IR or Scene. Passing the `ir` prop skips the JSX collector. The `artifacts` prop requests opt-in outputs, while `onArtifacts` receives immutable same-compile artifacts after the selected host publishes; notification does not trigger another compile.
 
 The optional `@retikz/inspect/react` entry provides `InspectionOverlay`, which consumes a completed ordinary result and presents auxiliary content independently. Inspection requests do not enter primary IR or participate in primary compilation and commits.
 
-A `VanillaCompileDriver` may inject observers for the same compile, then resolve ordered readonly layers and extension diagnostics from the Core primary result and observer outputs. Static processing materializes the complete frame directly, while retained processing commits the primary figure and layers in one revision. The Inspect package wires into this general boundary; the base React package imports no Inspector definitions, palette, or selection logic. See [`@retikz/inspect`](/kernel/packages/inspect) for the complete setup.
+A `VanillaCompileResultExtension` session uses `resolve` to derive diagnostics from the current compilation without replacing its primary result. Its optional `onCommit` callback runs only after the host commits the frame. Plot uses this notification for lineage; Inspect consumes compiled output independently.
 
 <SourceLinks
   sources={[
@@ -200,15 +196,13 @@ A `VanillaCompileDriver` may inject observers for the same compile, then resolve
     },
     {
       label: 'Vanilla normalizing Input and merging composite dependencies',
-      path: 'packages/kernel/vanilla/src/processing/prepare.ts',
-      startLine: 63,
-      endLine: 97,
+      path: 'packages/kernel/vanilla/src/runtime/_input/prepare.ts',
     },
     {
       label: 'Layout constructing the processing source and options',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 444,
-      endLine: 571,
+      startLine: 439,
+      endLine: 562,
     },
     {
       label: 'Core IR to Scene compiler',
@@ -233,8 +227,8 @@ Event handlers are functions and cannot enter JSON IR. In children mode, React s
     {
       label: 'Layout passing source and options to Vanilla processing',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 444,
-      endLine: 571,
+      startLine: 439,
+      endLine: 562,
     },
     {
       label: 'React mapping a processing result to SVG or Canvas',

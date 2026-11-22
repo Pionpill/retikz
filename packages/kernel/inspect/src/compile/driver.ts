@@ -62,13 +62,10 @@ export const compileInspectionToScene = (
           );
         }
         const result = (() => {
-          const reconciler = new SceneReconciler(
-            {
-              ...options.compileOptions,
-              onWarn: warning => diagnostics.push({ origin: fragmentOrigin, cause: warning }),
-            },
-            { incremental: false },
-          );
+          const reconciler = new SceneReconciler({
+            ...options.compileOptions,
+            onWarn: warning => diagnostics.push({ origin: fragmentOrigin, cause: warning }),
+          });
           try {
             return reconciler.mount({ version: 1, type: 'scene', children: [structuredClone(fragment.child)] })
               .compilation.result;

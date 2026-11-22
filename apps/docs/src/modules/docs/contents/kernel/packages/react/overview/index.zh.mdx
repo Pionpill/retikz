@@ -99,7 +99,7 @@ export const Draw: FC<DrawProps> = props => <Path {...props} />;
 
 频繁更新的大图可在组件外或 `useMemo` 中持有稳定 IR、children 与 Core options，避免无意义地重建 Input 或 processing controller。直接传 `ir` prop 时会跳过 JSX collector，但仍由 Vanilla processing 统一执行后续编译。
 
-Vanilla controller 在 retained 模式中拥有 Core Computation、runtime session 与更新策略；static 模式只准备一次无生命周期的 processing。React 订阅该 controller 的只读结果，再以 `ProcessingResultHost` 呈现同 revision 的 Scene、artifacts、只读图层和事件接线。
+Vanilla controller 在 retained 模式中拥有 Core Computation、runtime session 与更新策略；static 模式只准备一次无生命周期的 processing。React 订阅该 controller 的只读结果，再以 `ProcessingResultHost` 呈现同 revision 的 Scene、artifacts和事件接线。
 
 Definition 数组按有序元素 identity 规范化，因此 render 时重新创建 `[shape]` 这类等价容器不会重建 processing controller。Definition 本身、renderer backend、`idPrefix` 或 processing options 改变时会重新挂载 controller。并发调度与 progressive materialization 仍不属于当前公开契约。
 
@@ -108,20 +108,18 @@ Definition 数组按有序元素 identity 规范化，因此 render 时重新创
     {
       label: 'Layout 的 Definition 容器规范化',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 146,
-      endLine: 173,
+      startLine: 141,
+      endLine: 168,
     },
     {
       label: 'React 的 static fallback 与 retained processing 订阅',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 340,
-      endLine: 414,
+      startLine: 335,
+      endLine: 409,
     },
     {
       label: 'Vanilla retained controller 创建 Core Computation 与 Runtime',
-      path: 'packages/kernel/vanilla/src/processing/internal/controller.ts',
-      startLine: 99,
-      endLine: 158,
+      path: 'packages/kernel/vanilla/src/runtime/session/runtime.ts',
     },
   ]}
 />
@@ -157,14 +155,12 @@ Definition 数组按有序元素 identity 规范化，因此 render 时重新创
     {
       label: 'React 分派 static 或 retained processing',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 340,
-      endLine: 414,
+      startLine: 335,
+      endLine: 409,
     },
     {
       label: 'Vanilla retained controller 的 Core Computation 与更新策略',
-      path: 'packages/kernel/vanilla/src/processing/internal/controller.ts',
-      startLine: 99,
-      endLine: 183,
+      path: 'packages/kernel/vanilla/src/runtime/session/runtime.ts',
     },
   ]}
 />
@@ -175,20 +171,20 @@ Definition 数组按有序元素 identity 规范化，因此 render 时重新创
 
 <ComponentPreview files="react-to-scene" size="xs" hideCode />
 
-| 阶段                 | 所有者            | 做什么                                                             |
-| -------------------- | ----------------- | ------------------------------------------------------------------ |
-| Kernel / Sugar JSX   | `@retikz/react`   | 收集 props 与 children；Sugar 先展开为 Kernel                      |
-| `createInputScene()` | `@retikz/react`   | 遍历组件树，生成 `InputScene`，嵌入项在构造时绑定 adapter          |
-| `normalizeScene()`   | `@retikz/vanilla` | 将 typed Input 归一为 `IRScene`，下沉 embeds 并汇总 composite 依赖 |
-| `IRScene`            | `@retikz/core`    | JSON 可序列化的绘图契约，不包含 React element、hook 或 DOM         |
-| `SceneReconciler`    | `@retikz/core`    | 处理 composite，解析 registry、引用、几何、布局、资源与动画        |
-| `ProcessingResult`   | `@retikz/vanilla` | 以同一 revision 返回 Scene、artifacts、readonly layers 与诊断      |
+| 阶段                 | 所有者            | 做什么                                                                                  |
+| -------------------- | ----------------- | --------------------------------------------------------------------------------------- |
+| Kernel / Sugar JSX   | `@retikz/react`   | 收集 props 与 children；Sugar 先展开为 Kernel                                           |
+| `createInputScene()` | `@retikz/react`   | 遍历组件树，生成 `InputScene`，嵌入项在构造时绑定 adapter                               |
+| `normalizeScene()`   | `@retikz/vanilla` | 将 typed Input 归一为 `IRScene`，下沉 embeds 并汇总 composite 依赖                      |
+| `IRScene`            | `@retikz/core`    | JSON 可序列化的绘图契约，不包含 React element、hook 或 DOM                              |
+| `SceneReconciler`    | `@retikz/core`    | 处理 composite，解析 registry、引用、几何、布局、资源与动画                             |
+| `ProcessingResult`   | `@retikz/vanilla` | 从 `compileResult` 读取 Scene 和 artifacts，从 `processingDiagnostics` 读取处理阶段诊断 |
 
 `Layout` 会把文本测量器、Definition registries、TeX lowerer 等宿主能力作为 processing 的 compile options 注入，但这些选项不会把 React 写进 IR 或 Scene。直接传 `ir` prop 时会跳过 JSX collector。`artifacts` prop 请求 opt-in 产物，`onArtifacts` 在所选 host 发布后接收同次 compile 的 immutable artifacts；不会为通知再编译一次。
 
 可选的 `@retikz/inspect/react` 提供 `InspectionOverlay`，消费主图已完成的普通编译结果并独立呈现辅助层。检查请求不进入主图 IR，也不参与主图的编译与提交。
 
-`VanillaCompileDriver` 可为同一次编译注入 observers，再从 Core primary 与 observer outputs 解析有序只读图层和扩展诊断。static processing 直接物化完整 frame；retained processing 在同一 revision 原子提交主图与图层。检查包在这个通用边界上接线，基础 React 包不导入任何 Inspector definition、配色或选择逻辑。完整用法见 [`@retikz/inspect`](/kernel/packages/inspect)。
+`VanillaCompileResultExtension` 会话通过 `resolve` 从本次编译结果派生诊断，不替换主结果。可选的 `onCommit` 在宿主成功提交该帧后才收到通知。Plot 用它通知数据来源；Inspect 独立消费编译结果。
 
 <SourceLinks
   sources={[
@@ -200,15 +196,13 @@ Definition 数组按有序元素 identity 规范化，因此 render 时重新创
     },
     {
       label: 'Vanilla 归一 Input 并合并 Composite dependencies',
-      path: 'packages/kernel/vanilla/src/processing/prepare.ts',
-      startLine: 63,
-      endLine: 97,
+      path: 'packages/kernel/vanilla/src/runtime/_input/prepare.ts',
     },
     {
       label: 'Layout 构造 processing source 与 options',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 444,
-      endLine: 571,
+      startLine: 439,
+      endLine: 562,
     },
     {
       label: 'Core IR 编译为 Scene',
@@ -233,8 +227,8 @@ Scene 已经没有 React 组件语义。Vanilla processing 负责保留或静态
     {
       label: 'Layout 将 source 与 options 交给 Vanilla processing',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 444,
-      endLine: 571,
+      startLine: 439,
+      endLine: 562,
     },
     {
       label: 'React 将 processing result 映射为 SVG 或 Canvas 宿主',

@@ -291,8 +291,8 @@ const translations: Readonly<Partial<Record<string, string>>> = {
     'Top-level defaults with optional `start` and `end` overrides merged field by field. On hollow shapes (open, openStealth, openDiamond, and openCircle), `fill` is a silent no-op',
   '`overlap` 为实际端点共享值，`start` / `end` 可逐端覆盖；比例从默认位置插值到最终视觉后缘与逻辑端点对齐的位置':
     'Shared `overlap` for actual endpoints, with per-end `start` and `end` overrides; interpolates from default placement to alignment of the final visual back edge with the logical endpoint',
-  '可选 compile driver 自行解释的 runtime-only authoring 载荷，不进入 Core IR':
-    'Optional runtime-only authoring payload interpreted by a compile driver; excluded from Core IR',
+  '可选 compile result extension 自行解释的 runtime-only authoring 载荷，不进入 Core IR':
+    'Optional runtime-only authoring payload interpreted by a compile result extension; excluded from Core IR',
   '应当全部是 `<Step />`': 'All children should be `<Step />`',
   '路径 id；其他 path / position 通过这个 id 引用本路径，也作为水合挂点供事件 handler 绑定':
     'Path id, used by other paths or positions to reference it and by hydration to bind event handlers',
@@ -351,8 +351,8 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   作者侧路径输入: 'Authoring input for a path',
   箭头的顶层默认与端点覆盖配置: 'Top-level arrow defaults and endpoint overrides',
   箭头端点的共享与逐端放置配置: 'Shared and per-end arrow placement settings',
-  '可选编译驱动自行解释的运行时载荷，不进入 Core IR':
-    'Optional runtime payload interpreted by a compile driver; excluded from Core IR',
+  '可选编译结果扩展自行解释的运行时载荷，不进入 Core IR':
+    'Optional runtime payload interpreted by a compile result extension; excluded from Core IR',
   作者侧路径步骤: 'Authoring path step',
   '创建作者侧路径输入，支持 id 简写与完整配置':
     'Create authoring path input with an id shorthand or full configuration',

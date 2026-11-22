@@ -50,7 +50,7 @@ export const gridLayoutInputEmbedAdapter: SynchronousInputEmbedAdapter<InputGrid
 
 /** 创建GridLayout 嵌入项
  * @param input 容器与子项输入，保留传入对象引用
- * @param authoring 交给编译驱动的不透明声明数据；省略时不附加声明
+ * @param authoring 交给编译结果扩展的不透明声明数据；省略时不附加声明
  * @returns 由布局适配器消费的 InputEmbed，不在创建时求解布局
  */
 export const gridLayout = (input: InputGridLayout, authoring?: unknown): InputEmbed<InputGridLayout> =>

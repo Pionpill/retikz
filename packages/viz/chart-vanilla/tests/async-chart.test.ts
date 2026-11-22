@@ -32,7 +32,7 @@ describe('Chart 异步数据准备', () => {
       };
       const child = embed({ props: chart.props, adapter: { ...scatterChartInputEmbedAdapter, prepare } });
       const result = await compileToSceneAsync(scene({ children: [scope({ theme: { mode } }, [child])] }));
-      return { prepared, svg: renderToSvgString(result.scene).toLowerCase() };
+      return { prepared, svg: renderToSvgString(result.compileResult.scene).toLowerCase() };
     };
     const light = await run('light');
     const dark = await run('dark');

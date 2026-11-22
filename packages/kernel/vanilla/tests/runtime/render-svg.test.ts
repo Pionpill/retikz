@@ -16,20 +16,11 @@ const nodeIr: IRScene = {
   children: [{ type: 'node', id: 'a', position: [0, 0], text: 'A' }],
 };
 
-it('SSR 自定义测量与 SVG 输出共享宿主默认字体', () => {
-  const measureText = vi.fn(() => ({ width: 20, height: 16 }));
-  const svg = renderToSvgString(nodeIr, { defaultFontFamily: 'serif', compile: { measureText } });
-  expect(measureText).toHaveBeenCalledWith('A', expect.objectContaining({ family: 'serif' }), false);
-  expect(svg).toContain('font-family="serif"');
-});
-
-it('预编译 Scene 只改变显示字体，不调用测量器或改变几何', () => {
+it('预编译 Scene 导出时不调用测量器或改变几何', () => {
   const scene = compileTestResult(nodeIr).scene;
   const snapshot = JSON.stringify(scene);
   const measureText = vi.fn(() => ({ width: 999, height: 16 }));
-  expect(renderToSvgString(scene, { defaultFontFamily: 'serif', compile: { measureText } })).toContain(
-    'font-family="serif"',
-  );
+  renderToSvgString(scene, { compile: { measureText } });
   expect(measureText).not.toHaveBeenCalled();
   expect(JSON.stringify(scene)).toBe(snapshot);
 });

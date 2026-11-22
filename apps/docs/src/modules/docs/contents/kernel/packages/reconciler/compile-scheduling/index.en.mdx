@@ -17,7 +17,7 @@ A full compilation begins when the session receives a scene declaration. Reconci
 
 <ComponentPreview files="scheduling-overview" size="sm" hideCode type="flow" />
 
-The session passes the root declaration and compilation options to <ApiSourceLink label="createCompileRuntime" path="packages/kernel/reconciler/src/reconcile/reconciler.ts" startLine={59}>`createCompileRuntime`</ApiSourceLink>, preparing capabilities and workspace state for name lookup, resource registration and diagnostics. <ApiSourceLink label="compileScene" path="packages/kernel/reconciler/src/full.ts" startLine={7}>`compileScene`</ApiSourceLink> then hands the root’s children to the subtree executor. It passes the resulting subtree, the root declaration and the same runtime to scene assembly. The session receives a snapshot from this entry point; the executor determines when each element can be computed.
+The session passes the root declaration and compilation options to <ApiSourceLink label="createCompileRuntime" path="packages/kernel/reconciler/src/reconcile/reconciler.ts" startLine={58}>`createCompileRuntime`</ApiSourceLink>, preparing capabilities and workspace state for name lookup, resource registration and diagnostics. <ApiSourceLink label="compileScene" path="packages/kernel/reconciler/src/compile/execution/scene.ts" startLine={69}>`compileScene`</ApiSourceLink> then hands the root’s children to the subtree executor. It passes the resulting subtree, the root declaration and the same runtime to scene assembly. The session receives a snapshot from this entry point; the executor determines when each element can be computed.
 
 ## Declaration order and evaluation order
 

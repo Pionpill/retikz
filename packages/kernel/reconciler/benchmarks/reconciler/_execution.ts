@@ -1,6 +1,6 @@
 import type { AnyCompositeDefinition, IRNode, IRScene, ScenePrimitive } from '@retikz/core';
 import type { CompileOptions, CompileResult } from '@retikz/reconciler';
-import { SceneReconciler } from '@retikz/reconciler';
+import { ReconcilerMode, SceneReconciler } from '@retikz/reconciler';
 import { expect } from 'vitest';
 
 import type { BenchmarkExecution } from '../../../../../scripts/benchmarks/scenario';
@@ -103,7 +103,9 @@ export const createReconcilerBenchmark = (
   };
   return {
     run: (): CompileResult => {
-      reconciler = new SceneReconciler(options, incremental ? { incremental: true } : { incremental: false });
+      reconciler = new SceneReconciler(options, {
+        mode: incremental ? ReconcilerMode.Incremental : ReconcilerMode.Full,
+      });
       return reconciler.mount(workload.ir).compilation.result;
     },
     verify: (result: CompileResult): void => {

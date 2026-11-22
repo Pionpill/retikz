@@ -1,5 +1,7 @@
+import { ReconcilerMode } from '@retikz/reconciler';
 import { describe, expect, it, vi } from 'vitest';
 
+import type { VanillaCompileResultExtensionSession } from '../../src';
 import {
   compileToScene,
   compileToSceneAsync,
@@ -14,15 +16,38 @@ import {
 const contents = (name: string, x: number) => layer({ name, children: [node({ id: 'box', position: [x, 0] })] });
 const source = () => scene({ layers: [contents('overlay', 40), contents('background', 0)] });
 describe('独立图层会话', () => {
+  it('整栈和单层提交的扩展回调均可读取已安装的新层', () => {
+    const observed: Array<boolean> = [];
+    const observe = vi.fn<NonNullable<VanillaCompileResultExtensionSession['onCommit']>>();
+    const session: VanillaCompileResultExtensionSession = {
+      resolve: () => [],
+      onCommit: observe,
+    };
+    const controller = createProcessingController(source(), { compileResultExtension: { create: () => session } });
+    observe.mockImplementation(output => {
+      observed.push(controller.read().some(entry => entry.result.compileResult === output.primary));
+    });
+    try {
+      controller.update(scene({ layers: [contents('new', 3)] }));
+      controller.replaceLayer(contents('new', 5));
+      controller.replaceLayer(contents('extra', 7));
+      expect(observed).toEqual([true, true, true]);
+    } finally {
+      controller.dispose();
+    }
+  });
+
   it('静态和异步入口不丢失没有 main 的层', async () => {
     const compiled = compileToScene(source());
     const asynchronous = await compileToSceneAsync(source());
     expect(compiled.map(entry => entry.name)).toEqual(['background', 'overlay']);
-    expect(asynchronous.map(entry => entry.result.scene)).toEqual(compiled.map(entry => entry.result.scene));
+    expect(asynchronous.map(entry => entry.result.compileResult.scene)).toEqual(
+      compiled.map(entry => entry.result.compileResult.scene),
+    );
     expect(compileToScene(scene({ layers: [] }))).toEqual([]);
   });
   it('只替换指定层，重排序不重算，旧批次不能用于重建后的会话', () => {
-    const controller = createProcessingController(source());
+    const controller = createProcessingController(source(), { reconciler: { mode: ReconcilerMode.Incremental } });
     try {
       const [background, overlay] = controller.read();
       expect(() => controller.updateLayer('background', { operations: [] }, background.result)).toThrow(/incremental/);
@@ -40,7 +65,7 @@ describe('独立图层会话', () => {
     }
   });
   it('按本层地址删除同名图元，不改变背景版本', () => {
-    const controller = createProcessingController(source());
+    const controller = createProcessingController(source(), { reconciler: { mode: ReconcilerMode.Incremental } });
     try {
       const [background, overlay] = controller.read();
       const scopeId = controller.getScopeId('overlay', [], overlay.result);
@@ -50,12 +75,42 @@ describe('独立图层会话', () => {
         overlay.result,
       );
       expect(controller.read()[0]).toBe(background);
-      expect(controller.read()[1].result.scene.primitives).toHaveLength(0);
+      expect(controller.read()[1].result.compileResult.scene.primitives).toHaveLength(0);
       expect(() => controller.getScopeId('overlay', [], overlay.result)).toThrow(/stale/i);
     } finally {
       controller.dispose();
     }
   });
+  it('整栈订阅发起的异步单层更新继承新栈的作者配置', async () => {
+    const roots: Array<unknown> = [];
+    const session: VanillaCompileResultExtensionSession = {
+      resolve: () => [],
+    };
+    const controller = await createProcessingControllerAsync(
+      { ...source(), authoring: 'initial' },
+      {
+        compileResultExtension: {
+          create: input => {
+            roots.push(input.authoringSites.find(site => site.kind === 'scene')?.authoring);
+            return session;
+          },
+        },
+      },
+    );
+    try {
+      let pending: ReturnType<typeof controller.replaceLayer> | undefined;
+      const unsubscribe = controller.subscribe(() => {
+        unsubscribe();
+        pending = controller.replaceLayer(contents('overlay', 80));
+      });
+      await controller.update({ ...source(), authoring: 'updated' });
+      expect(await pending).toMatchObject({ kind: 'committed' });
+      expect(roots.at(-1)).toBe('updated');
+    } finally {
+      controller.dispose();
+    }
+  });
+
   it('异步层替换不提交兄弟层', async () => {
     const controller = await createProcessingControllerAsync(source());
     try {
@@ -85,7 +140,7 @@ describe('独立图层会话', () => {
   });
 
   it('失败批次保留最后成功结果，不发布兄弟层或目标层的新版本', () => {
-    const controller = createProcessingController(source());
+    const controller = createProcessingController(source(), { reconciler: { mode: ReconcilerMode.Incremental } });
     try {
       const previous = controller.read();
       const entry = previous[1];
@@ -124,7 +179,9 @@ describe('独立图层会话', () => {
 
   it('背景可以显式覆盖全量预设，空批次不会发布结果', () => {
     const controller = createProcessingController(
-      scene({ layers: [layer({ name: 'background', reconciler: { incremental: true }, children: [] })] }),
+      scene({
+        layers: [layer({ name: 'background', reconciler: { mode: ReconcilerMode.Incremental }, children: [] })],
+      }),
     );
     try {
       const previous = controller.read();

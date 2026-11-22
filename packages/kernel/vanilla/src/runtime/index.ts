@@ -1,7 +1,26 @@
-export * from './constants';
-export * from './display-size';
-export * from './render-svg';
-export * from './retained-update-options';
-export * from './runtime-options';
-export * from './to-scene';
-export type * from './types';
+export type {
+  ProcessingSource,
+  SingleSceneSource,
+  ProcessingOptions,
+  InputPreparedProcessing,
+  AsyncProcessingOptions,
+} from './_input';
+export {
+  compileToScene,
+  compileToSceneAsync,
+  defaultVanillaCompileResultExtension,
+  prepareStaticProcessing,
+  prepareStaticProcessingAsync,
+} from './compile';
+export type {
+  InputVanillaCompileResultExtension,
+  VanillaCompileResultExtension,
+  VanillaCompileResultExtensionSession,
+  VanillaCompileOutput,
+  ProcessingResult,
+  LayerProcessingResult,
+  PreparedAsyncStaticProcessing,
+  PreparedStaticProcessing,
+} from './compile';
+export * from './output';
+export * from './session';

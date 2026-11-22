@@ -13,7 +13,7 @@ SVG 是 retikz 的默认渲染器。它把编译好的图画成一棵真实的 `
 
 SVG 字符串输出默认使用 Scene.layout 的宽高作为显示尺寸。通常省略输出 width / height；只指定一个数值轴时，另一轴按内容比例推导。
 
-`@retikz/render/svg` 的文档构建与字符串输出接受 `defaultFontFamily`，将它写入根 SVG 的 `font-family`，文字自身的字体族仍优先。该选项只影响显示，不重新计算 Scene；使用 Vanilla 时，同名选项同时用于编译测量与宿主显示。
+`@retikz/render/svg` 的文档构建与字符串输出接受 `defaultFontFamily`，将它写入根 SVG 的 `font-family`，文字自身的字体族仍优先。该选项只影响显示，不重新计算 Scene。
 
 ## 怎么用
 
