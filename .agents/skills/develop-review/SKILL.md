@@ -18,6 +18,8 @@ description: Use when auditing a retikz module or subsystem read-only to find be
 | 已登记 TODO 要修                  | [beta](../flow-development/references/beta.md)                    |
 | 新功能 / 新 IR / 新公开字段       | [alpha](../flow-development/references/alpha.md) / develop-design |
 
+需要用户确认时，按[全仓执行策略](../../../AGENTS.md#任务规模与执行策略)说明检查粒度、覆盖范围及建议。
+
 ## 启动前
 
 1. 用户声明范围：整个包（如 `@retikz/core`）或子系统 / 路径集。

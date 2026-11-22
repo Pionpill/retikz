@@ -7,6 +7,8 @@ description: Use when an approved large Retikz task or explicitly authorized aut
 
 用于执行计划获批的大型任务，或按 [test-performance](../test-performance/SKILL.md) 明确获准的自动性能优化；后者不因此升级任务规模或获得多 agent / Git 授权。多文件、多步骤或多个 commit 本身不构成触发理由。规模、授权与 Git 边界以根 AGENTS 为准，开发阶段流程读 flow-development；本入口只负责执行状态。
 
+需要用户确认时，按[全仓执行策略](../../../AGENTS.md#任务规模与执行策略)说明检查粒度、覆盖范围及建议。
+
 ## 状态
 
 Alpha 使用 ADR 对应的 ignored 镜像 plan 目录，其他长任务使用 notes/plans/<task>/ 或就近 _notes/plans/。维护 TASK_STATE.md，记录：
