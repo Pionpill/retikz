@@ -968,16 +968,19 @@ describe('Flow Diagram 编译事务', () => {
   );
 
   it('保持 Flow 关系标签居中于路径中点，无论其布局保留如何', () => {
+    const textMetrics = { ascent: 9, descent: 3 };
     const compile = (
       reservation: 'horizontal' | 'vertical',
       relationLabel: string | Array<string> = 'edge-label',
     ): {
       hasDetail: boolean;
       label: TextPrimitive;
+      routeMidpoint: [number, number];
       labelSize: { width: number; height: number };
       rotation: number | undefined;
     } => {
       let measuredLabelSize: { width: number; height: number } | undefined;
+      let routeMidpoint: [number, number] | undefined;
       const customLayout = definition(layoutInput => {
         const sourceElement = layoutInput.elements[0];
         const targetElement = layoutInput.elements[1];
@@ -998,7 +1001,9 @@ describe('Flow Diagram 编译事务', () => {
           targetBounds.x + targetBounds.width / 2,
           targetBounds.y + targetBounds.height / 2,
         ];
-        const turnX = 80;
+        // 两端水平段等长，因此路径中点落在竖直段的正中央
+        const turnX = (sourceCenter[0] + targetCenter[0]) / 2;
+        routeMidpoint = [turnX, (sourceCenter[1] + targetCenter[1]) / 2];
         const points: Array<[number, number]> = [
           sourceCenter,
           [turnX, sourceCenter[1]],
@@ -1057,7 +1062,7 @@ describe('Flow Diagram 编译事务', () => {
         {
           ...definitions,
           padding: 0,
-          measureText: text => ({ width: text.length * 8, height: 12, ascent: 9, descent: 3 }),
+          measureText: text => ({ width: text.length * 8, height: 12, ...textMetrics }),
         },
       );
       const label = textPrimitive(
@@ -1073,12 +1078,14 @@ describe('Flow Diagram 编译事务', () => {
         transform => transform.kind === 'rotate',
       );
       if (measuredLabelSize === undefined) throw new Error('missing measured relation label size');
+      if (routeMidpoint === undefined) throw new Error('missing test route midpoint');
 
       return {
         hasDetail:
           typeof relationLabel === 'string' || textPrimitive(result.scene.primitives, relationLabel[1]) !== undefined,
         label,
         labelSize: measuredLabelSize,
+        routeMidpoint,
         rotation: rotation?.kind === 'rotate' ? rotation.degrees : undefined,
       };
     };
@@ -1088,7 +1095,9 @@ describe('Flow Diagram 编译事务', () => {
 
     expect(horizontal.label.x).toBeCloseTo(vertical.label.x);
     expect(horizontal.label.y).toBeCloseTo(vertical.label.y);
-    expect(horizontal.label.y).toBeGreaterThan(70);
+    expect(horizontal.label.x).toBeCloseTo(horizontal.routeMidpoint[0]);
+    const labelCenterY = horizontal.label.y - (textMetrics.ascent - textMetrics.descent) / 2;
+    expect(labelCenterY).toBeCloseTo(horizontal.routeMidpoint[1]);
     expect(horizontal.rotation).toBeUndefined();
     expect(vertical.rotation).toBeUndefined();
 
