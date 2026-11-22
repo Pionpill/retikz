@@ -641,6 +641,12 @@ export const kernelSection: Array<Section> = [
             difficulty: DocDifficulty.Internals,
             meta: { pageType: 'architecture', audience: 'maintainer', sourceOfTruth: 'runtime' },
           },
+          {
+            id: 'compile-composite',
+            label: 'kernel.pkgReconcilerCompileComposite',
+            difficulty: DocDifficulty.Internals,
+            meta: { pageType: 'architecture', audience: 'maintainer', sourceOfTruth: 'runtime' },
+          },
         ],
       },
       {

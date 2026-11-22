@@ -1,0 +1,59 @@
+---
+title: Execution / Composite Evaluation
+description: How composites request size contributions, probe subtrees in isolation, and commit selected results to the parent frame
+---
+
+[Element assembly](/kernel/packages/reconciler/compile-elements) describes how nodes and paths produce primitives. A composite can represent several children with one higher-level declaration. Its definition expands the declaration; Reconciler finds the definition, invokes its callback, and feeds the output back into the current subtree. Measurement and probing are useful when placement depends on child sizes.
+
+## Overview
+
+An annotation component might return a leader path and a text node directly. Neither measurement nor replay is required: the two IR children enter the existing path and node compilation branches in output order. This illustrates the general composite execution path:
+
+1. **Bind the definition.** Subtree traversal delegates a composite declaration to <ApiSourceLink label="compileComposite" path="packages/kernel/reconciler/src/compile/execution/composite/compile.ts" startLine={285}>`compileComposite`</ApiSourceLink>. Reconciler uses its `namespace` and `type` to find the registered definition and resolves the input against its schema. During ordinary compilation, an unregistered component produces a warning and is skipped.
+2. **Invoke the callback.** Reconciler passes the resolved input and an evaluation context to the definition’s `compile` callback. Full evaluation returns output children. When the caller requests a size contribution, the component can instead return that contribution for the requested axis and finish here.
+3. **Dispatch the output.** Reconciler checks handle ownership and duplicate use before processing children in order. Plain IR is compiled recursively; a bound child keeps its runtime inputs; a generated scope follows scope traversal; a replay handle commits the selected probe transaction. The component may also supply explicit allocation bounds, alignment guides, or a declared domain artifact.
+
+The following sections follow the replay branch: when a component needs to know a child’s size before placing it, how does it obtain a candidate and commit that result to the parent?
+
+<ComponentAlert
+  type="tip"
+  title="What is a layout proposal?"
+  description="A proposal expresses size conditions imposed by a parent. It can ask how wide content would naturally be, or constrain the available width and ask how tall the content would be. The same child can give different answers under different proposals."
+/>
+
+## Measurement proposals
+
+A measurement answers two independent questions: **under what conditions should the child lay itself out**, and **which dimension should it report**? `proposal.x` and `proposal.y` set the conditions for width and height. The last argument to `measureChild` requests width (`'x'`), height (`'y'`), or both (`'both'`).
+
+Each axis uses <ApiSourceLink label="LayoutAxisProposal" path="packages/kernel/core/src/contract/composite/layout.ts" startLine={79}>`LayoutAxisProposal`</ApiSourceLink>. It has three proposal kinds; the intrinsic kind has two modes. Consider a width query:
+
+| Axis proposal                            | Question from the parent                                           | How to read the answer                                                                                                                  |
+| ---------------------------------------- | ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `{ kind: 'intrinsic', mode: 'minimum' }` | How narrow can the content be under its own layout rules?          | A wrapping label can break lines, but still needs room for unbreakable content and padding. This is its minimum width contribution.     |
+| `{ kind: 'intrinsic', mode: 'natural' }` | How wide would the child be without a width imposed by the parent? | The label follows its own settings, including any explicit maximum text width. Its natural width can exceed or equal its minimum width. |
+| `{ kind: 'range', min: 0, max: 120 }`    | How wide a layout slot should we reserve within these limits?      | Content needing only 80 can take 80 rather than filling 120. Omitting `max` leaves the range open above.                                |
+| `{ kind: 'exact', value: 120 }`          | Given a slot exactly 120 wide, how does the child lay itself out?  | The slot width is fixed at 120; the child still determines the extent of its drawing.                                                   |
+
+This proposal fixes the width and asks for natural height. Even a height-only query depends on the available width when content can wrap.
+
+```ts
+const proposal: LayoutProposal = {
+  x: { kind: 'exact', value: 120 },
+  y: { kind: 'intrinsic', mode: 'natural' },
+};
+const probe = context.measureChild(child, proposal, 'y');
+```
+
+## From measurement to layout probe and replay
+
+Read the four snapshots of rectangle A from left to right. The dimension line marks its measured natural width of 60. The second snapshot shows A at the local origin. In the third, the arrow and dashed outline show a proposed shift of 100 to the right; the parent frame still contains no A. The solid rectangle in the fourth snapshot is the committed A, centered at (100, 0) in the parent frame. If the width is known, start with the second snapshot.
+
+<ComponentPreview files="evaluation-flow" size="md" hideCode type="illustration" />
+
+- **Measure:** The component calls `measureChild` for a contribution along the requested axis. The method supplied by <ApiSourceLink label="createCompositeMeasurementMethods" path="packages/kernel/reconciler/src/compile/execution/composite/measurement.ts" startLine={196}>`createCompositeMeasurementMethods`</ApiSourceLink> reuses results within this compilation when the child, proposal, axis, and execution environment match. Measurement appends no primitives to the parent frame.
+- **Probe:** When the component calls `layoutChild`, <ApiSourceLink label="evaluateCompositeLayout" path="packages/kernel/reconciler/src/compile/execution/composite/probe.ts" startLine={55}>`evaluateCompositeLayout`</ApiSourceLink> evaluates the subtree in isolation. The component reads allocation bounds and alignment information to decide placement. Reconciler associates the pending primitives, resources, and warnings with a replay token. Discarding the result leaves the parent frame unchanged.
+- **Replay:** The component creates an output handle with `context.replay(result, wrapper)`, optionally specifying a placement transform or clip. Reconciler checks ownership and duplicate use with <ApiSourceLink label="preflightCompositeOutputs" path="packages/kernel/reconciler/src/compile/execution/composite/preflight.ts" startLine={14}>`preflightCompositeOutputs`</ApiSourceLink>, then <ApiSourceLink label="commitCompositeReplay" path="packages/kernel/reconciler/src/compile/execution/composite/replay.ts" startLine={32}>`commitCompositeReplay`</ApiSourceLink> commits primitives, resources, and layout contributions in output order. Named geometry moves with the subtree so later paths can find its final position.
+
+## Further reading
+
+[Runtime state](/kernel/packages/reconciler/compile-state) explains the lifetime of the measurement cache and probe workspace. [Scope and traversal](/kernel/packages/reconciler/compile-traversal) covers how the parent consumes geometry and layout contributions.

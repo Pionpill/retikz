@@ -116,6 +116,7 @@
     "pkgReconcilerCompileState": "执行 / 运行状态",
     "pkgReconcilerCompileTraversal": "执行 / 作用域与遍历",
     "pkgReconcilerCompileElements": "执行 / 元素组装",
+    "pkgReconcilerCompileComposite": "执行 / Composite 求值",
     "pkgInspect": "编译观测 · inspect",
     "pkgInspectBuiltins": "内置观测",
     "pkgInspectCustom": "自定义用法",

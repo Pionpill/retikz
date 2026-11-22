@@ -116,6 +116,7 @@
     "pkgReconcilerCompileState": "Execution / Runtime State",
     "pkgReconcilerCompileTraversal": "Execution / Scope Traversal",
     "pkgReconcilerCompileElements": "Execution / Element Assembly",
+    "pkgReconcilerCompileComposite": "Execution / Composite Evaluation",
     "pkgInspect": "inspect",
     "pkgInspectBuiltins": "Built-in inspection",
     "pkgInspectCustom": "Custom usage",
