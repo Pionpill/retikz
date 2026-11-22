@@ -29,6 +29,8 @@ description: 新增、移动、拆分或审查 Retikz 源码目录、文件、�
 
 ## 命名核心准则
 
+- 仅主动推进执行流程的对象使用 `Driver`；消费既有结果并附加产物或诊断的对象按扩展目标命名。返回贡献的方法按动作命名，仅响应事件的回调用 `on<Event>`。
+
 - 名称必须语义自解释；只看变量、参数、属性或函数名，就应能推断其作用、数据类别和适用范围。避免无上下文的 `data`、`value`、`item`、`base`、`target`、`result`、`key` 等泛化名称；只有在类型或局部上下文已经明确职责时才可简化
 - 函数通常采用动宾短语：前面的动词表达动作，后面的名词表达对象或细节，如 `resolvePath`、`formatName`、`isKeyEqual`；不要使用 `keyEqual` 这类缺少动作的名称。导出函数使用完整领域语义，如 `admitInspectionSelection`；仅内部使用且上下文已明确时可简化为 `admitSelection`
 - 变量、参数和属性通常采用“形容词或分类限定词 + 类别名”结构，最后一个单词表示其类别，如 `nodeSchema`、`basePath`。布尔值使用可读的谓词形式，如 `isKeyEqual` 或 `hasSelection`
