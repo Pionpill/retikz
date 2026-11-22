@@ -5,20 +5,16 @@ import type { JsonValue, OpenString, ValueOf } from './types';
 
 /** 递归 JSON 值 schema */
 export const JsonValueSchema: ZodType<JsonValue, JsonValue> = json().describe(
-  'Recursive JSON value: string, finite number, boolean, null, array, or object.',
+  'Any JSON value, including nested arrays and objects.',
 );
 
 /** 字符串键 JSON 对象 schema */
-export const JsonObjectSchema = record(string(), JsonValueSchema).describe(
-  'JSON object with string keys and recursive JSON values.',
-);
+export const JsonObjectSchema = record(string(), JsonValueSchema);
 
 /** 非空白字符串 schema */
-export const NonBlankStringSchema = string()
-  .regex(/\S/u, {
-    message: 'String must contain at least one non-whitespace character.',
-  })
-  .describe('String containing at least one non-whitespace character.');
+export const NonBlankStringSchema = string().regex(/\S/u, {
+  message: 'String must contain at least one non-whitespace character.',
+});
 
 /**
  * 从已知 const object enum 建立保留提示的开放非空字符串 schema
@@ -31,23 +27,20 @@ export const createOpenStringSchema = <const TValues extends Readonly<Record<str
   values: TValues,
 ): ZodType<OpenString<ValueOf<TValues>>, OpenString<ValueOf<TValues>>> =>
   union([zodEnum(values), NonBlankStringSchema.min(1)]).describe(
-    'Known string values or any custom string containing at least one non-whitespace character.',
+    'Known values are suggestions, not an exhaustive list.',
   );
 
 /** 正数 schema */
-export const PositiveNumberSchema = number().positive().describe('Finite number greater than zero.');
+export const PositiveNumberSchema = number().positive();
 
 /** 非负数 schema */
-export const NonNegativeNumberSchema = number().nonnegative().describe('Finite number greater than or equal to zero.');
+export const NonNegativeNumberSchema = number().nonnegative();
 
 /** 正整数 schema */
-export const PositiveIntegerSchema = number().int().positive().describe('Positive safe integer.');
+export const PositiveIntegerSchema = number().int().positive();
 
 /** 非负整数 schema */
-export const NonNegativeIntegerSchema = number().int().nonnegative().describe('Non-negative safe integer.');
+export const NonNegativeIntegerSchema = number().int().nonnegative();
 
 /** 闭区间 0..1 内的归一化数值 schema */
-export const NormalizedFractionSchema = number()
-  .min(0)
-  .max(1)
-  .describe('Normalized fraction in the inclusive 0..1 range.');
+export const NormalizedFractionSchema = number().min(0).max(1);

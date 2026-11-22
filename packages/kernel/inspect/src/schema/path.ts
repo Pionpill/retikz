@@ -2,7 +2,9 @@ import { boolean, strictObject } from 'zod';
 
 /** 最终 Scene 路径的检查选项 */
 export const PathInspectOptionsSchema = strictObject({
-  controlPoints: boolean().default(true).describe('Show quadratic and cubic control handles.'),
-  vertices: boolean().default(false).describe('Show final path vertices.'),
-  labels: boolean().default(false).describe('Show final command labels.'),
+  controlPoints: boolean().default(true).describe('Quadratic and cubic Bézier handles.'),
+  vertices: boolean().default(false),
+  labels: boolean()
+    .default(false)
+    .describe('Label control points by command index even when handles are hidden; vertex labels require vertices.'),
 });
