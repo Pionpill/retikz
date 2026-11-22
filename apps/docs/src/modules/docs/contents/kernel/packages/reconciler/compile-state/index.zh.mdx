@@ -1,0 +1,182 @@
+---
+title: 执行 / 运行状态
+description: 跟随树遍历，追踪名称与坐标、工作区资源及组件试算结果如何记录与使用
+---
+
+运行环境通过 <ApiSourceLink label="CompileState" path="packages/kernel/reconciler/src/compile/runtime/state/state.ts" startLine={23} endLine={30}>`CompileState`</ApiSourceLink> 保存一次编译的状态：
+
+```ts
+export type CompileState = Readonly<{
+  workspace: WorkspaceCompileState;
+  execution: ExecutionCompileState;
+  composite: CompositeCompileState;
+}>;
+```
+
+一次编译的状态分为三组：`execution` 记录当前遍历的名称与来源，`workspace` 收集几何边界、资源和诊断，`composite` 保存组件试算与正式放置之间要复用的数据。这三组状态分开的原因在组件试算时最明显：试算需要读取已有名称，却不能把未采用的图元资源和警告混入正式结果；而正式放置时，又必须能认出试算返回的凭证。
+
+## execution：遍历到哪里，名字就在哪里解析
+
+遍历一棵树时，执行器通过以下成员维护名称、变换和来源（<ApiSourceLink label="ExecutionCompileState" path="packages/kernel/reconciler/src/compile/runtime/state/state.ts" startLine={11} endLine={20}>`ExecutionCompileState`</ApiSourceLink>）：
+
+```ts
+type ExecutionCompileState = Readonly<{
+  namespaceStack: NamespaceStack;
+  provenanceTracker?: CompileProvenanceTracker;
+  scopeTransformComposer: ScopeTransformComposer;
+  withWarningOccurrence: <T>(occurrence: CompileOccurrenceLocator, execute: () => T) => T;
+}>;
+```
+
+假设根里有一个 A，子 Scope 开启了 `localNamespace`，向右平移 100，并依次声明一条引用 A 的路径和另一个 A。内层 A 的局部中心是 [10, 5]。沿这个例子看，路径需要回答两个独立的问题：**名字 A 指的是谁？它的几何在哪个坐标系里？**
+
+<ComponentPreview files="execution-lookup" size="md" hideCode type="flow" />
+
+### namespaceStack：当前可见的 A 是哪一个
+
+遍历器通过 <ApiSourceLink label="NamespaceStack" path="packages/kernel/reconciler/src/compile/runtime/state/namespace.ts" startLine={78}>`NamespaceStack`</ApiSourceLink> 管理两个栈；名字与几何保存在名称帧里：
+
+- `scopeAncestorStack: Array<{ scopeId: string; id?: string }>`：每进入一个 Scope，`enterScope` 就压入一项。即使 Scope 匿名，也会分配内部标识 `scopeId`；可选的 `id` 是声明中写的名字。`leaveScope` 弹出栈顶项。
+- `frameStack: Array<NamespaceFrame>`：从栈底的根帧到栈顶的当前帧。只有开启 `localNamespace` 的 Scope 才会压入和弹出局部帧。每个 `NamespaceFrame` 有三个字段：
+  - `identity: CompileNamespaceKey`：标识这一帧；覆盖帧内的名字不会改变帧身份。
+  - `entryMap: Map<string, NamespaceEntry>`：键是名字，值是当前生效的绑定。`register` 写栈顶帧，`lookupReference` 从栈顶向根查找。每条绑定保存 `geometry: CompiledReferenceGeometry`、声明位置 `irPath: PropertyPath` 和 `state: NamespaceEntryState`（已就绪的 `'resolved'` 或 Scope 占位的 `'scope-placeholder'`），另有可选的 `producer?: object` 和 `scopeId?: string`。
+  - `pathMap: Map<string, ReadonlyArray<PropertyPath>>`：键也是名字，值却是按声明顺序排列的位置列表。同一帧两次声明 A，`entryMap` 只保留后一次绑定，`pathMap` 保留两处位置，供重名诊断使用。
+- `currentPhase: NamespacePhase`：取值为 `'registering'` 或 `'resolving'`。前者允许登记；路径求值时切到后者，此时可以查名字，不能登记新绑定。
+
+在根和内层 Scope 之间再嵌一层局部作用域，只声明 B。右图展开了两个声明 A 的帧：从栈顶查 A，先命中内层的 `frame[2]`；退出内层后再查，中间的 `frame[1]` 只有 B，查找继续到根帧 `frame[0]`，返回根节点 A。
+
+<ComponentPreview files="namespace-frames" size="md" hideCode type="illustration" />
+
+### scopeTransformComposer：作用域的坐标变换
+
+名称帧记住了 A 的几何，但 A 的中心 `[10, 5]` 是在它所在的 Scope 内定义的。如果这个 Scope 向右平移 100，外层路径应该在 `[110, 5]` 找到 A。登记几何之前，`scopeTransformComposer` 按祖先到当前 Scope 的顺序合成沿途的变换，把节点的局部坐标换算成全局坐标。
+
+同一 Scope 中的 B 也要经过这组变换。只要 A、B 使用同一个变换数组，<ApiSourceLink label="ScopeTransformComposer.resolve" path="packages/kernel/reconciler/src/compile/runtime/state/transform.ts" startLine={19}>`resolve`</ApiSourceLink> 就能复用整条链的合成结果。**省掉的是重复合成变换的计算**；A、B 的位置不同，仍要各自用这个结果换算坐标。
+
+这里有两张缓存表。下面用 `Chain` 简写 `ReadonlyArray<Transform>`：
+
+- `insertions: WeakMap<Chain, WeakMap<Chain, Map<number, Chain>>>`：依次用父链、要插入的变换序列、插入位置查找组合后的子链。`append` 相当于插到父链末尾；用相同数组重复追加，会拿回同一个子链对象。
+- `transformCache: WeakMap<Chain, ComposedScopeTransform>`：以链数组本身为键，保存合成矩阵和累计旋转、缩放。前一张表复用的是链，这张表复用的是用这条链投影几何时所需的计算结果。
+
+下图中，外层 Scope₁ 向右平移 100（T），内层 Scope₂ 在父层的基础上绕原点旋转 90°（R）。左侧按从外到内的顺序保存声明，右侧展示每条链对应的 `ComposedScopeTransform` 的正向矩阵 `forward`。对同一个局部点 `[10, 5]`，外层只做平移，得到 `[110, 5]`；内层使用 `T × R`，先旋转到 `[-5, 10]`，再平移到 `[95, 10]`。同层的其他节点可以直接复用该层的矩阵。
+
+<ComponentPreview files="transform-cache" size="md" hideCode type="illustration" />
+
+组合器并不持有一个随遍历移动的“当前坐标系”。调用者传入变换链，`append` 不就地修改父链，所以返回父层、访问兄弟节点时不会沿用子层平移。需要转换一个点时，`apply` 从局部投影到全局，`inverse` 则反向转换。
+
+### withWarningOccurrence：为编译警告绑定来源
+
+编译器用 <ApiSourceLink label="withWarningOccurrence" path="packages/kernel/reconciler/src/compile/runtime/state/state.ts" startLine={52}>`withWarningOccurrence`</ApiSourceLink> 标记警告来自哪条声明。例如，延迟计算一条路径时，编译器暂时把来源切到这条路径。期间发出的警告都指向它；计算结束后，恢复之前的来源。
+
+图中三行是同一个来源栈的三个时刻：开始时栈顶是父级声明；进入路径回调时压入路径，此时发出的警告就记录在这条路径上。**路径回调返回或抛错时**，`finally` 执行 `pop`，父级声明重新成为栈顶。右侧已经收集的警告仍保留路径来源。
+
+<ComponentPreview files="warning-stack" size="md" hideCode type="illustration" />
+
+### provenanceTracker：从最终图元找回产生它的声明
+
+开启 `captureProvenance` 后，执行器用三张表记录“哪条声明发出了哪个图元”。此时图元对象已经存在，但不一定已经放进最终的 Scene：
+
+- `ownerMap: Map<CompileOwnerKey, Omit<CompileProvenanceOwner, 'emissions'>>`：按来源身份保存声明的种类、所属命名空间等信息。输出列表要等最终位置确定后再填。
+- `ordinalMap: Map<CompileOwnerKey, Map<string, number>>`：按来源、再按发射角色保存下一个序号。A 连续发出两个同角色矩形时，它们的序号是 0 和 1，与 Scene 下标无关。
+- `primitiveRecordMap: WeakMap<ScenePrimitive, Readonly<{ owner: CompileOwnerKey; role: string; ordinal: number }>>`：`recordPrimitives` 以图元对象为键，登记它的来源、角色和序号。图元随后被放进分组，仍可用同一个对象查回记录。
+
+以 A 发出的矩形 `p` 为例：左侧用对象本身作键，遍历时就能登记。右侧假设 `p` 最终位于根数组的第二项；这个下标要等 `capture` 遍历最终图元树才能填入。
+
+<ComponentPreview files="primitive-provenance" size="md" hideCode type="illustration" />
+
+等路径占位已经回填、Scope 分组也已组装，<ApiSourceLink label="CompileProvenanceTracker.capture" path="packages/kernel/reconciler/src/compile/provenance/tracker.ts" startLine={131}>`capture`</ApiSourceLink> 才遍历最终图元树，按实际位置生成 `primitivePath`，把它归入相应 owner 的输出记录。因此同一条声明即使发射多个图元，也能区分每次输出。未开启捕获时不会创建这份来源索引；名称查找、坐标投影和警告归属仍然正常工作。
+
+## workspace：一次计算留下哪些结果
+
+工作区（<ApiSourceLink label="WorkspaceCompileState" path="packages/kernel/reconciler/src/compile/runtime/state/workspace.ts" startLine={8}>`WorkspaceCompileState`</ApiSourceLink>）用于保存本次计算的连接边界、绘制与裁剪资源以及警告。
+
+```ts
+export type WorkspaceCompileState = Readonly<{
+  boundaryStore: BoundaryStore;
+  paintRegistry: PaintRegistry;
+  clipRegistry: ClipRegistry;
+  diagnosticCollector: CompileDiagnosticCollector;
+}>;
+```
+
+沿着节点 A 的编译过程看，下图三行分别回答：连线从哪里取得端点，渲染器从哪里取得渐变和裁剪，调用方又从哪里读到警告。
+
+<ComponentPreview files="workspace-outputs" size="md" hideCode type="flow" />
+
+### boundaryStore：复用连接边界和锚点
+
+路径通过名称栈找到 A 的几何后，还要根据连接方式求出端点。例如，两条路径都连到 A 的右侧锚点，第二条可以直接复用第一条算出的位置。<ApiSourceLink label="createBoundaryStore" path="packages/kernel/core/src/compile/boundary/store.ts" startLine={9}>`createBoundaryStore`</ApiSourceLink> 为这两步几何计算保留了不同粒度的缓存：
+
+- `stateMap: WeakMap<CanonicalNodeShape, BoundaryState>`：按形状绑定保存连接轮廓的计算结果。同一形状求不同锚点时可以共用轮廓；状态也记录哪些轮廓警告已发出。
+- `anchorCache: WeakMap<CompiledBoundaryGeometry, Map<string, Position>>`：先按节点的最终几何找到内层表，再按锚点及适用的边界条件找位置。改连 A 的左侧时要查另一个条目；投影后得到新的几何对象，也会使用独立的表。
+
+求出的坐标用于组装路径。整图收尾时，Scene 保留路径图元，工作区里的两张缓存表就完成了任务。
+
+<ComponentAlert
+  type="tip"
+  title="增量更新时，Weave 和 workspace 各复用什么？"
+  description="假设路径 p 从 A 改连到 B 的右侧，而 B 没有变化。Weave 跨批次保留了 B 的名称绑定，p 可以直接取到 B 的几何。当前批次共用一个新建的 workspace：第一条查询 B 右侧锚点的路径用这份几何算出坐标，后续路径查询同一锚点时就能复用该坐标。若 B 也移动了，则先更新 B 的几何，再求锚点。"
+/>
+
+下图以矩形 A 为例：中心是 `[100, 50]`，宽 40，连接边界与矩形边缘重合。上行按 A 的形状绑定找到 `BoundaryState`，里面的 Map 缓存连接轮廓，Set 记录已经发过回退警告的轮廓种类。下行按 A 的最终几何找到锚点表：右侧和左侧分别缓存 `[120, 50]` 和 `[80, 50]`。图中用 `A.right`、`A.left` 简写对应的查询键。
+
+<ComponentPreview files="boundary-state" size="md" hideCode type="illustration" />
+
+### paintRegistry、clipRegistry：把资源交给 Scene
+
+绘制和裁剪资源单独登记，是为了把编译和绘制分开。Core 将渐变、裁剪路径等声明解析为与渲染后端无关的资源，Reconciler 将资源收集到 Scene 中，图元通过引用使用它们。Render 绘制图元时才读取这些资源，应用填充或裁剪。
+
+例如，节点 A 使用渐变填充，又位于带裁剪的 Scope 中。编译时分别登记两项资源：
+
+- `paintRegistry: PaintRegistry`：登记渐变后返回绘制资源引用，写入 A 的填充。纯色可以直接作为绘制值使用。
+- `clipRegistry: ClipRegistry`：登记裁剪路径后返回资源 ID，写入该 Scope 对应分组的 `clipRef`。
+
+收尾时，<ApiSourceLink label="finalizeSceneCompilation" path="packages/kernel/reconciler/src/compile/execution/scene.ts" startLine={21}>`finalizeSceneCompilation`</ApiSourceLink> 从两张表读取资源，分别放进 `scene.resources.paints` 和 `scene.resources.clips`。渲染器据此解析图元上的引用。整张图都没有登记资源时，Scene 省略 `resources`。
+
+### diagnosticCollector：汇总本次警告
+
+上一节的来源栈决定警告指向哪条声明；`diagnosticCollector: CompileDiagnosticCollector` 决定这次计算保留哪些警告。每次调用 `collect(warning)` 都把警告追加到 `warnings`。整图收尾时复制这个列表，补入根动画解析产生的警告，排序后作为快照的 `diagnostics` 返回。试算有独立的收集器，因此放弃试算也会放弃它产生的警告。
+
+## composite：先试排，再决定是否放置
+
+`composite` 保存复合组件在本次编译中测量和试排子项的结果。组件可以复用已测得的尺寸，也可以在确定位置后，把选中的试排结果放入最终布局。各次试算使用独立的工作区，但共享本次根编译的 <ApiSourceLink label="CompositeCompileState" path="packages/kernel/reconciler/src/compile/runtime/state/composite.ts" startLine={153}>`CompositeCompileState`</ApiSourceLink>；下一次全量编译会创建新的状态。
+
+<ComponentAlert
+  type="tip"
+  title="布局里的「测量」和「试排」是什么？"
+  description="布局决定每个子项能占多大空间、放在哪里。测量回答“需要多宽或多高”，父组件用这个尺寸分配空间。试排回答“给它这么多空间，里面的内容会怎么排”，先算出一个候选结果；父组件选用它时，才把它放进最终布局。"
+/>
+
+例如，网格先用 `measureChild` 查询子项的宽度，据此确定列宽；再用 `layoutChild` 在列宽约束下试排子项，最后把选中的结果放进对应的单元格。
+
+下面摘出类中与测量和试排直接相关的三个字段：测量结果按键保存，试排事务和布局结果则分别用弱映射记录。
+
+```ts
+export class CompositeCompileState {
+  private measurements: Map<string, LayoutContribution> = new Map();
+  readonly replayTransactions: WeakMap<object, CompositeReplayTransaction> = new WeakMap();
+  readonly layoutResults: WeakMap<object, CompositeLayoutResultEntry> = new WeakMap();
+}
+```
+
+### measurements：相同条件下复用尺寸
+
+Grid 求列宽时通过 <ApiSourceLink label="measureLayoutAxis" path="packages/library/layout/src/composites/grid-layout/pipeline.ts" startLine={277}>`measureLayoutAxis`</ApiSourceLink> 分别询问子项的最小宽度和自然宽度。两次请求的约束不同，要分别求值。假设 A 的自然宽度为 80，下图上行是首次查询，下行是同一环境下再次询问自然宽度：
+
+<ComponentPreview files="measurement-cache" size="md" hideCode type="flow" />
+
+- `measurements: Map<string, LayoutContribution>`：键区分子项及其绑定输入、测量轴、布局约束和有效编译环境。值是成功的布局贡献，例如 `{ axis: 'x', width: 80 }`，Grid 可以直接拿宽度参与列宽计算。
+- 首次未命中时才试算子项并写入结果；再次命中时直接返回贡献，并把条目移到最近使用的位置。最多保留 4096 项，超出时淘汰最久未使用的一项。失败的试算不写入这张表。
+
+### layoutResults、replayTransactions：把选中的试排放回正式布局
+
+尺寸只够决定列宽。要把 A 放进单元格，Grid 还需要它的图元、几何及引用的资源。`layoutChild` 在隔离环境里试排 A；成功后，<ApiSourceLink label="createLayoutChild" path="packages/kernel/reconciler/src/compile/execution/composite/measurement.ts" startLine={107}>`createLayoutChild`</ApiSourceLink> 登记下图中的两条记录。沿箭头读：从返回给布局的结果对象出发，用其中关联的凭证找到仍待提交的事务。
+
+<ComponentPreview files="replay-identity" size="sm" hideCode type="illustration" />
+
+- `layoutResults: WeakMap<object, CompositeLayoutResultEntry>`：以原始结果对象为键，保存所属回调和重放凭证。Grid 决定位置后调用 `context.replay(result, wrapper)`，执行器据此校验归属，并创建带放置变换的输出子项。
+- `replayTransactions: WeakMap<object, CompositeReplayTransaction>`：以凭证为键，保存试排生成的图元、几何、资源、名称变更及警告。未选中的候选留在隔离环境中；选中的输出通过预检后，执行器标记 `used`，在最终位置重放这些结果。同一凭证只能放置一次，避免重复输出图元或发布警告。
+
+## 延伸阅读
+
+- [执行 / 运行上下文](/kernel/packages/reconciler/compile-runtime)：对照本次遍历读取的公共配置与服务。

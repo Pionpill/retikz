@@ -623,6 +623,12 @@ export const kernelSection: Array<Section> = [
             difficulty: DocDifficulty.Internals,
             meta: { pageType: 'architecture', audience: 'maintainer', sourceOfTruth: 'runtime' },
           },
+          {
+            id: 'compile-state',
+            label: 'kernel.pkgReconcilerCompileState',
+            difficulty: DocDifficulty.Internals,
+            meta: { pageType: 'architecture', audience: 'maintainer', sourceOfTruth: 'runtime' },
+          },
         ],
       },
       {

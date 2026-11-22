@@ -1,0 +1,182 @@
+---
+title: Execution / Runtime State
+description: Follow name lookup, coordinate transforms, workspace resources, and composite probes during traversal
+---
+
+The runtime holds the state of one compilation in <ApiSourceLink label="CompileState" path="packages/kernel/reconciler/src/compile/runtime/state/state.ts" startLine={23} endLine={30}>`CompileState`</ApiSourceLink>:
+
+```ts
+export type CompileState = Readonly<{
+  workspace: WorkspaceCompileState;
+  execution: ExecutionCompileState;
+  composite: CompositeCompileState;
+}>;
+```
+
+Each compilation has three groups of state: `execution` tracks names and source locations during traversal, `workspace` collects boundaries, resources, and diagnostics, and `composite` holds data shared between probes and final placement. A composite layout probe illustrates why it is split three ways: it needs access to existing names, must keep speculative resources and warnings out of the final output, and must give the final placement a way to recognize a selected probe result.
+
+## execution: resolving names during traversal
+
+During traversal, the executor tracks names, transforms, and source locations through these members (<ApiSourceLink label="ExecutionCompileState" path="packages/kernel/reconciler/src/compile/runtime/state/state.ts" startLine={11} endLine={20}>`ExecutionCompileState`</ApiSourceLink>):
+
+```ts
+type ExecutionCompileState = Readonly<{
+  namespaceStack: NamespaceStack;
+  provenanceTracker?: CompileProvenanceTracker;
+  scopeTransformComposer: ScopeTransformComposer;
+  withWarningOccurrence: <T>(occurrence: CompileOccurrenceLocator, execute: () => T) => T;
+}>;
+```
+
+Suppose the root contains A. A child Scope enables `localNamespace`, translates 100 units to the right, and declares a path referencing A before another node named A. The inner A has local center [10, 5]. Resolving the path requires two independent answers: **which A is visible, and in which coordinate system is its geometry expressed?**
+
+<ComponentPreview files="execution-lookup" size="md" hideCode type="flow" />
+
+### namespaceStack: which A is visible?
+
+The <ApiSourceLink label="NamespaceStack" path="packages/kernel/reconciler/src/compile/runtime/state/namespace.ts" startLine={78}>`NamespaceStack`</ApiSourceLink> class maintains two stacks. Name-to-geometry bindings live in the namespace frames:
+
+- `scopeAncestorStack: Array<{ scopeId: string; id?: string }>`: On entering a Scope, `enterScope` pushes one record. Even an anonymous Scope gets an internal `scopeId`; the optional `id` is its declared name. `leaveScope` pops the record.
+- `frameStack: Array<NamespaceFrame>`: Frames run from the root at the bottom to the current frame at the top. Only a Scope with `localNamespace` pushes and pops a local frame. Each `NamespaceFrame` has three fields:
+  - `identity: CompileNamespaceKey`: Identifies the frame. Replacing a name binding does not change the frame identity.
+  - `entryMap: Map<string, NamespaceEntry>`: Maps each name to its effective binding. `register` writes to the top frame; `lookupReference` searches from the top toward the root. Each binding stores `geometry: CompiledReferenceGeometry`, the declaration location `irPath: PropertyPath`, and `state: NamespaceEntryState` (either `'resolved'` or `'scope-placeholder'`), plus optional fields `producer?: object` and `scopeId?: string`.
+  - `pathMap: Map<string, ReadonlyArray<PropertyPath>>`: Maps the same name to a list of locations in declaration order. If A is declared twice in one frame, `entryMap` keeps the later binding while `pathMap` retains both locations for the duplicate-name diagnostic.
+- `currentPhase: NamespacePhase`: Either `'registering'` or `'resolving'`. Registration is allowed in the former; path evaluation switches to the latter so it can look up names without registering new bindings.
+
+Insert a local scope that declares only B between the root and the inner scope. The maps on the right show the two frames that bind A. Lookup starts at the top and finds A in `frame[2]`. After leaving the inner scope, the next lookup finds only B in `frame[1]` and continues to `frame[0]`, where it finds the root A.
+
+<ComponentPreview files="namespace-frames" size="md" hideCode type="illustration" />
+
+### scopeTransformComposer: coordinates across scopes
+
+The name frame stores A’s geometry, but its center `[10, 5]` is defined in its own Scope. If the Scope shifts 100 units to the right, a path outside it should find A at `[110, 5]`. Before geometry is registered, `scopeTransformComposer` composes the transforms from the outermost ancestor to the current Scope so that node positions can be expressed in global coordinates.
+
+A second node B in the same Scope uses those same transforms. When A and B share the same transform array, <ApiSourceLink label="ScopeTransformComposer.resolve" path="packages/kernel/reconciler/src/compile/runtime/state/transform.ts" startLine={19}>`resolve`</ApiSourceLink> reuses the composed result. **It is the composition that runs only once**; each node still applies that result to its own coordinates.
+
+The composer has two caches. Here, `Chain` stands for `ReadonlyArray<Transform>`:
+
+- `insertions: WeakMap<Chain, WeakMap<Chain, Map<number, Chain>>>`: looks up the resulting child chain by parent chain, inserted sequence, and insertion index. `append` inserts at the end; repeating it with the same arrays returns the same child array.
+- `transformCache: WeakMap<Chain, ComposedScopeTransform>`: maps the chain array itself to its matrix and accumulated rotation and scale. The first cache reuses the chain; this one reuses the calculation needed to project geometry through it.
+
+In the figure, the outer Scope₁ translates 100 units to the right (T). Its child Scope₂ adds a 90° rotation about the origin (R). The arrays on the left store declarations from outermost to innermost; the cache on the right shows the `forward` matrix of each chain’s `ComposedScopeTransform`. In the outer scope, the local point `[10, 5]` translates to `[110, 5]`. In the inner scope, `T × R` first rotates it to `[-5, 10]`, then translates it to `[95, 10]`. Other nodes in the same scope can reuse that matrix.
+
+<ComponentPreview files="transform-cache" size="md" hideCode type="illustration" />
+
+The composer does not maintain a mutable current coordinate system. The caller supplies a chain, and `append` leaves the parent chain untouched, so a sibling does not inherit the translation on returning from the child. For a point, `apply` projects local to global; `inverse` performs the reverse conversion.
+
+### withWarningOccurrence: bind compile warnings to their source
+
+The compiler uses <ApiSourceLink label="withWarningOccurrence" path="packages/kernel/reconciler/src/compile/runtime/state/state.ts" startLine={52}>`withWarningOccurrence`</ApiSourceLink> to identify which declaration a warning comes from. For example, while compiling a deferred path, it sets that path as the source of any warnings. When the computation ends, it restores the previous source.
+
+The three rows show the same stack over time. The parent declaration starts on top. Entering the path callback pushes the path, so a warning raised there is recorded against it. **When the callback returns or throws**, the `finally` block pops the path, restoring the parent to the top. The warning on the right keeps its path attribution.
+
+<ComponentPreview files="warning-stack" size="md" hideCode type="illustration" />
+
+### provenanceTracker: trace a final primitive to its declaration
+
+With `captureProvenance` enabled, three maps record which declaration emitted each primitive. At this point the object exists, but its position in the final Scene may not yet be known:
+
+- `ownerMap: Map<CompileOwnerKey, Omit<CompileProvenanceOwner, 'emissions'>>`: stores facts such as declaration kind and namespace by owner identity. The output list is filled only when final positions are known.
+- `ordinalMap: Map<CompileOwnerKey, Map<string, number>>`: holds the next ordinal for each owner and emission role. Two rectangles emitted by A with the same role receive ordinals 0 and 1, regardless of their Scene indices.
+- `primitiveRecordMap: WeakMap<ScenePrimitive, Readonly<{ owner: CompileOwnerKey; role: string; ordinal: number }>>`: `recordPrimitives` binds each primitive object to its owner, role, and ordinal. The same object still retrieves the record after the primitive is placed inside a group.
+
+For a rectangle object `p` emitted by A, the left-hand record can be made during traversal using the object itself as the key. On the right, suppose `p` ends up second in the root array: only `capture` can fill in that final index.
+
+<ComponentPreview files="primitive-provenance" size="md" hideCode type="illustration" />
+
+Only after path slots are filled and Scope groups assembled does <ApiSourceLink label="CompileProvenanceTracker.capture" path="packages/kernel/reconciler/src/compile/provenance/tracker.ts" startLine={131}>`capture`</ApiSourceLink> walk the final tree. It derives each `primitivePath` from the actual position and adds it to the corresponding owner’s emissions. Multiple primitives from one declaration remain distinguishable. Disabling capture skips this source index without changing name lookup, coordinate projection, or warning attribution.
+
+## workspace: where the results of a computation go
+
+The workspace (<ApiSourceLink label="WorkspaceCompileState" path="packages/kernel/reconciler/src/compile/runtime/state/workspace.ts" startLine={8}>`WorkspaceCompileState`</ApiSourceLink>) holds connection boundaries, paint and clip resources, and warnings for the current computation.
+
+```ts
+export type WorkspaceCompileState = Readonly<{
+  boundaryStore: BoundaryStore;
+  paintRegistry: PaintRegistry;
+  clipRegistry: ClipRegistry;
+  diagnosticCollector: CompileDiagnosticCollector;
+}>;
+```
+
+Follow node A through the three rows below: where a path gets its endpoint, where the renderer finds gradients and clips, and where the caller reads warnings.
+
+<ComponentPreview files="workspace-outputs" size="md" hideCode type="flow" />
+
+### boundaryStore: reuse connection boundaries and anchors
+
+After the namespace stack supplies A’s geometry, a path still needs an endpoint. If two paths attach to A’s right anchor, the second can reuse the position calculated for the first. <ApiSourceLink label="createBoundaryStore" path="packages/kernel/core/src/compile/boundary/store.ts" startLine={9}>`createBoundaryStore`</ApiSourceLink> keeps two caches at different levels:
+
+- `stateMap: WeakMap<CanonicalNodeShape, BoundaryState>` stores connection envelopes by shape binding. Different anchors on the same shape can share an envelope. The state also tracks which envelope warnings have already been issued.
+- `anchorCache: WeakMap<CompiledBoundaryGeometry, Map<string, Position>>` looks up a table by final geometry, then a position by anchor and applicable boundary conditions. A’s left anchor uses a different entry; newly projected geometry gets its own table.
+
+The endpoint becomes part of the path. The finished Scene retains the path primitive; the two lookup tables stay in the workspace.
+
+<ComponentAlert
+  type="tip"
+  title="What do Weave and the workspace reuse during an update?"
+  description="Suppose path p switches from A to the right side of B, and B is unchanged. Weave retains B’s name binding across batches, so p can read B’s geometry from it. The current batch shares a fresh workspace: the first path that requests B’s right anchor computes its coordinates from that geometry, and later paths can reuse those coordinates for the same anchor. If B also moves, its geometry is updated before the anchor is calculated."
+/>
+
+In the figure, rectangle A is centered at `[100, 50]`, is 40 units wide, and uses its edges as the connection boundary. The top row looks up `BoundaryState` by A’s shape binding: the map caches connection envelopes and the set records which envelope kinds have already triggered a fallback warning. The bottom row looks up anchors by A’s final geometry. Its right and left anchors cache `[120, 50]` and `[80, 50]`; `A.right` and `A.left` stand for their lookup keys.
+
+<ComponentPreview files="boundary-state" size="md" hideCode type="illustration" />
+
+### paintRegistry and clipRegistry: supply Scene resources
+
+Registering paint and clip resources separately keeps compilation independent of drawing. Core resolves declarations such as gradients and clip paths into backend-independent resources. Reconciler collects them in the Scene, and primitives carry references to them. Render reads the resources when drawing to apply the fill or clip.
+
+For example, node A has a gradient fill inside a clipped Scope. Compilation registers two resources:
+
+- `paintRegistry: PaintRegistry` registers the gradient and returns a paint reference for A’s fill. A solid color can be used directly.
+- `clipRegistry: ClipRegistry` registers the clip path and returns a resource ID for the Scope group’s `clipRef`.
+
+At finalization, <ApiSourceLink label="finalizeSceneCompilation" path="packages/kernel/reconciler/src/compile/execution/scene.ts" startLine={21}>`finalizeSceneCompilation`</ApiSourceLink> reads both registries into `scene.resources.paints` and `scene.resources.clips`. The renderer uses these collections to resolve the references. If both are empty, the Scene omits `resources`.
+
+### diagnosticCollector: gather warnings for this computation
+
+The occurrence stack identifies the declaration that raised a warning. The workspace’s `diagnosticCollector: CompileDiagnosticCollector` keeps the warnings from this computation: each call to `collect(warning)` appends to `warnings`. Finalization copies the list, adds any warnings from resolving root animations, sorts it, and returns it as the snapshot’s `diagnostics`. A probe has its own collector, so discarding a probe also discards its warnings.
+
+## composite: probe a child before placing it
+
+`composite` stores the results of measuring and laying out a composite component’s children during compilation. The component can reuse a measured size or place a selected layout result once it knows where the child belongs. Each probe uses its own workspace, but all probes share the root compilation’s <ApiSourceLink label="CompositeCompileState" path="packages/kernel/reconciler/src/compile/runtime/state/composite.ts" startLine={153}>`CompositeCompileState`</ApiSourceLink>. The next full compilation starts with fresh state.
+
+<ComponentAlert
+  type="tip"
+  title="What do measurement and trial layout mean?"
+  description="Layout determines how much space each child gets and where it goes. Measurement asks how wide or tall a child needs to be, so the parent can allocate space. Trial layout asks how the child’s contents would fit in that space. It produces a candidate that the parent can choose to place in the final layout."
+/>
+
+For example, a grid first uses `measureChild` to query child widths and size its columns. It then uses `layoutChild` to lay out a child under the column’s width constraint and places the selected result in its cell.
+
+This excerpt shows the three fields used for measurement and provisional layout. Measurements are stored by key; replay transactions and layout results each have their own weak map.
+
+```ts
+export class CompositeCompileState {
+  private measurements: Map<string, LayoutContribution> = new Map();
+  readonly replayTransactions: WeakMap<object, CompositeReplayTransaction> = new WeakMap();
+  readonly layoutResults: WeakMap<object, CompositeLayoutResultEntry> = new WeakMap();
+}
+```
+
+### measurements: reuse a size under the same constraints
+
+When sizing columns, Grid calls <ApiSourceLink label="measureLayoutAxis" path="packages/library/layout/src/composites/grid-layout/pipeline.ts" startLine={277}>`measureLayoutAxis`</ApiSourceLink> for a child’s minimum and natural widths. Those proposals differ, so each needs its own result. Suppose A’s natural width is 80. The top row shows the first request; the bottom row repeats it in the same environment.
+
+<ComponentPreview files="measurement-cache" size="md" hideCode type="flow" />
+
+- `measurements: Map<string, LayoutContribution>` distinguishes the child and bound inputs, measurement axis, proposal, and effective compilation environment. Its value is a successful layout contribution such as `{ axis: 'x', width: 80 }`, ready for Grid’s column calculation.
+- On a miss, the executor evaluates the child and stores the result. A hit returns the contribution directly and refreshes its recency. The cache holds up to 4096 entries and evicts the least recently used one when full. Failed probes are not cached.
+
+### layoutResults and replayTransactions: place the selected layout
+
+A width is enough to size a column. To place A in a cell, Grid also needs its primitives, geometry, and resources. `layoutChild` lays out A in isolation. On success, <ApiSourceLink label="createLayoutChild" path="packages/kernel/reconciler/src/compile/execution/composite/measurement.ts" startLine={107}>`createLayoutChild`</ApiSourceLink> records the two entries below. Follow the arrow from the returned layout result through its replay token to the transaction awaiting placement.
+
+<ComponentPreview files="replay-identity" size="sm" hideCode type="illustration" />
+
+- `layoutResults: WeakMap<object, CompositeLayoutResultEntry>` associates the original result object with its owning callback and replay token. Once Grid chooses a position, it calls `context.replay(result, wrapper)`. The executor checks ownership and creates an output child with the placement transform.
+- `replayTransactions: WeakMap<object, CompositeReplayTransaction>` maps the token to the probe’s primitives, geometry, resources, namespace changes, and warnings. Discarded candidates stay isolated. Once the selected output passes preflight, the executor marks the transaction `used` and replays it at the final position. One token permits one placement, so neither primitives nor warnings are published twice.
+
+## Further reading
+
+- [Execution / Runtime Context](/kernel/packages/reconciler/compile-runtime): Compare per-run state with the configuration and services traversal reads.
