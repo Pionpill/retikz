@@ -4,7 +4,6 @@ import { boundsOf, boundsToRect, expandBounds } from '@retikz/math';
 import type { Transform } from '../../contract';
 import type { CanonicalDropShadow, IRPosition } from '../../schemas';
 import { applyTransformChain } from '../shared';
-import type { CompileOutput } from './types';
 
 /** 把 bounds 字段中的负零规范化为稳定的正零 */
 export const canonicalizeBoundsRect = (bounds: Readonly<BoundsRect>): Readonly<BoundsRect> =>
@@ -104,12 +103,3 @@ export const projectBoundsRect = (rect: BoundsRect, transforms: ReadonlyArray<Tr
     applyTransformChain([rect.x + rect.width, rect.y + rect.height], transforms),
     applyTransformChain([rect.x, rect.y + rect.height], transforms),
   ]);
-
-/** 汇总输出的可见布局边界，保留各项阴影扩张语义 */
-export const calculateCompileOutputBounds = (contributions: CompileOutput['bounds']): AxisAlignedBounds | undefined => {
-  let bounds: AxisAlignedBounds | undefined;
-  for (const contribution of contributions) {
-    bounds = mergeLayoutBounds(bounds, contribution.boundsPoints, contribution.shadow);
-  }
-  return bounds;
-};

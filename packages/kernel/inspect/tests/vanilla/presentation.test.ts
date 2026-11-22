@@ -37,6 +37,12 @@ const options = {
   idPrefix: 'aux',
 };
 describe('独立辅助宿主', () => {
+  it('无检查请求时不创建辅助帧', () => {
+    const presentation = prepareInspectionPresentation(result, { ...options, requests: [] });
+    expect(presentation.frame).toBeNull();
+    expect(presentation.error).toBeUndefined();
+  });
+
   it('Canvas 呈现失败保留原因并清空辅助画布', () => {
     const canvas = document.createElement('canvas');
     const cause = new Error('canvas unavailable');

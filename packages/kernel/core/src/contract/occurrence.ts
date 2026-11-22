@@ -1,5 +1,5 @@
 import type { PropertyPath, ValueOf } from '@retikz/foundation';
-import { comparePropertyPaths, isPropertyPathEqual } from '@retikz/foundation';
+import { comparePropertyPaths } from '@retikz/foundation';
 
 /** compile occurrence 展开路径的阶段类别 */
 export const CompileExpansionKind = {
@@ -31,15 +31,6 @@ export type CompileOccurrenceLocator = Readonly<{
   /** 从原始 occurrence 到 provider 产物的结构化索引链 */
   expansionPath: ReadonlyArray<CompileExpansionSegment>;
 }>;
-
-/** 判断两个编译 occurrence 是否完全相同 */
-export const isCompileOccurrenceEqual = (left: CompileOccurrenceLocator, right: CompileOccurrenceLocator): boolean =>
-  isPropertyPathEqual(left.sourcePath, right.sourcePath) &&
-  left.expansionPath.length === right.expansionPath.length &&
-  left.expansionPath.every(
-    (segment, index) =>
-      segment.kind === right.expansionPath[index]?.kind && segment.index === right.expansionPath[index]?.index,
-  );
 
 /** 按字典序比较索引链，前缀相同时较短的链排在前面 */
 const compareIndexes = (left: ReadonlyArray<number>, right: ReadonlyArray<number>): number => {

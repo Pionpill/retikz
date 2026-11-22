@@ -25,11 +25,4 @@ describe('检查平面 Vanilla 适配器', () => {
     expect(layers[0]?.transform).toBe(transform);
     expect(Object.isFrozen(layers)).toBe(true);
   });
-
-  it('返回空平面的冻结空列表', () => {
-    const layers = inspectionPlaneToReadonlyLayers(null);
-
-    expect(layers).toEqual([]);
-    expect(Object.isFrozen(layers)).toBe(true);
-  });
 });

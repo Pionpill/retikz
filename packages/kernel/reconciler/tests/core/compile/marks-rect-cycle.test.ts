@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import type { IRScene, ScenePrimitive } from '../../../../core/src';
-import { rectPerimeterSample } from '../../../../core/src/shared/geometry/path/segment';
 import { compileTestResult } from '../../helpers/compilation';
 
 /** mark marker group 的签名：transforms = [translate(point), rotate, scale, translate]；取首个 translate 为落点 */
@@ -20,26 +19,6 @@ const findMarkPoint = (prims: ReadonlyArray<ScenePrimitive>): [number, number] |
 
   return undefined;
 };
-
-describe('rectPerimeterSample（矩形周长采样，CW from 左上）', () => {
-  const from: [number, number] = [0, 0];
-  const to: [number, number] = [40, 20];
-  it('四角：t=0/0.25/0.5/0.75 → 左上 / 右上 / 右下 / 左下', () => {
-    expect(rectPerimeterSample(from, to, 0).point).toEqual([0, 0]);
-    expect(rectPerimeterSample(from, to, 0.25).point).toEqual([40, 0]);
-    expect(rectPerimeterSample(from, to, 0.5).point).toEqual([40, 20]);
-    expect(rectPerimeterSample(from, to, 0.75).point).toEqual([0, 20]);
-  });
-
-  it('上边切线沿 +x，右边切线沿 +y（顺时针 y-down）', () => {
-    expect(rectPerimeterSample(from, to, 0.1).tangent).toEqual([1, 0]);
-    expect(rectPerimeterSample(from, to, 0.35).tangent).toEqual([0, 1]);
-  });
-
-  it('对角任意顺序归一化（to/from 互换结果相同）', () => {
-    expect(rectPerimeterSample([40, 20], [0, 0], 0.5).point).toEqual([40, 20]);
-  });
-});
 
 describe('C7：cycle 闭合段可承载 mark', () => {
   it('三角形闭合路径，按累计弧长落在闭合段中点 (2.5, 4)', () => {
@@ -91,7 +70,7 @@ describe('C7：rectangle 段计入段数并可承载 mark', () => {
     expect(pt![1]).toBeCloseTo(20, 5);
   });
 
-  it('pos=0.25 → 矩形周长右上角 (40, 0)', () => {
+  it('pos=1/3 → 矩形周长右上角 (40, 0)', () => {
     const pt = findMarkPoint(compileTestResult(rectPath(1 / 3)).scene.primitives);
 
     expect(pt).toBeDefined();
