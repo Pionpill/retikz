@@ -1,5 +1,5 @@
 import type { CompositeReplay } from '@retikz/core';
-import { createCompositeContractError, resolveClip } from '@retikz/core';
+import { createCompositeContractError, guardProviderOutput, resolveClip } from '@retikz/core';
 
 import type { CompositeCompileOwner, CompositeReplayTransaction } from '../../runtime';
 import { isCompositeOutputHandle } from './handle';
@@ -54,11 +54,13 @@ export const preflightCompositeOutputs = (
     }
 
     if (entry.child.kind === 'scope') {
+      const { props } = entry.child;
+      const clip = guardProviderOutput(owner.label, () => props.clip);
       const scopeClipPath =
-        entry.child.props.clip === undefined
+        clip === undefined
           ? undefined
           : execution.runtime.state.workspace.clipRegistry.lower(
-              resolveClip(entry.child.props.clip, {
+              resolveClip(clip, {
                 clipRegistry: execution.runtime.context.registries.clipRegistry,
                 irPath: ['clip'],
               }),

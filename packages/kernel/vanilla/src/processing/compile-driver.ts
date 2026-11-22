@@ -2,7 +2,7 @@ import type { AnyCompositeDefinition, IRScene } from '@retikz/core';
 import type { CompileOptions, SceneCompilationSnapshot } from '@retikz/reconciler';
 import { SceneReconciler } from '@retikz/reconciler';
 import type { RenderReadonlyLayer } from '@retikz/render/runtime';
-import { EMPTY_READONLY_LAYERS, snapshotReadonlyLayers } from '@retikz/render/runtime';
+import { EMPTY_READONLY_LAYERS, validateReadonlyLayers } from '@retikz/render/runtime';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
 import type { LayerReconcilerOptions } from '../normalize';
@@ -108,7 +108,7 @@ export const resolveVanillaCompileOutput = (
 
     const normalized = Object.freeze({
       primary: output.primary,
-      layers: snapshotReadonlyLayers(output.layers),
+      layers: validateReadonlyLayers(output.layers),
       diagnostics: Object.freeze([...output.diagnostics]),
     });
     let sessionOutputs = RESOLVED_VANILLA_COMPILE_OUTPUTS.get(session);

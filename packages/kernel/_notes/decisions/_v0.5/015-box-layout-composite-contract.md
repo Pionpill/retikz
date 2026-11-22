@@ -20,6 +20,8 @@ alpha.1 的 layout-aware composite 已能在一次完整 compile 中通过 `layo
 
 ## 决策
 
+普通 `IRChild` 是借用的、已类型化的编译输入。作者须在本次编译使用它期间（包括测量、布局和重放）保持子项及其成员稳定；编译器不为防范原地修改而复制或冻结它。运行时句柄仍按身份、回调归属及消费次数校验。下文 replay wrapper 的隔离保证不适用于普通子项。
+
 ### 双轴约束与 slot feedback
 
 `ChildLayoutConstraint` 保留 `intrinsic`，并把 `constrained.maxWidth` 改为可独立省略的 `width` / `height` 轴。每条轴支持：

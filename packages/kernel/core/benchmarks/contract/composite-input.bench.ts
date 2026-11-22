@@ -49,15 +49,8 @@ for (const count of [100, 1_000]) {
                 expect(result.bindings).toEqual([{ path: [], input: bindings[0].input }]);
                 expect(result.bindings[0].input).toBe(bindings[0].input);
               } else {
-                expect(result.source).toEqual(source);
-                expect(result.source).not.toBe(source);
-                expect(result.bindings).toHaveLength(bindings.length);
-                expect(Object.isFrozen(result.source)).toBe(true);
-                expect(Object.isFrozen(result.bindings)).toBe(true);
-                result.bindings.forEach((binding, index) => {
-                  expect(binding.path).toEqual(bindings[index].path);
-                  expect(binding.input).toBe(bindings[index].input);
-                });
+                expect(result.source).toBe(source);
+                expect(result.bindings).toBe(bindings);
               }
               expect(source).toEqual(before);
             },

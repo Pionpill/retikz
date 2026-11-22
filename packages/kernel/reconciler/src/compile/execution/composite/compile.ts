@@ -32,7 +32,7 @@ import type { CompositeArtifact } from '../../shared';
 import { createCompileChildPath, formatCompileOccurrence, freezeCompileArtifact } from '../../shared';
 import type { SubtreeCompileOptions, SubtreeCompileRuntime } from '../subtree';
 import { createCompositeCallbackContext } from './context';
-import { isCompositeOutputHandle, snapshotCompositeOutputChild } from './handle';
+import { isCompositeOutputHandle, readCompositeChild } from './handle';
 import { snapshotAlignmentGuides, snapshotAllocationBounds } from './layout';
 import { compileCompositeOutput } from './output';
 import { preflightCompositeOutputs } from './preflight';
@@ -76,11 +76,11 @@ const snapshotCompositeCompileResult = (
 
     const { children, allocationBounds, alignmentGuides, artifact } = callbackResult;
 
-    /** 子项快照：普通 IR 脱离回调对象，运行时句柄保留身份，供后续检查归属和使用次数 */
-    const snapshotChildren = Array.from(children, (output, outputIndex) => {
-      if (isCompositeOutputHandle(runtime, output)) return output;
-      return snapshotCompositeOutputChild(owner.label, output, outputIndex);
-    });
+    /** 普通子项直接借用；未登记的句柄不能作为普通 IR 进入分派 */
+    for (const [index, child] of children.entries()) {
+      if (!isCompositeOutputHandle(runtime, child))
+        readCompositeChild(owner.label, child, `output child at index ${index}`);
+    }
 
     /** 布局信息快照：保留组件显式声明的占位边界和对齐线，供父级布局消费 */
     const explicitAllocation =
@@ -117,7 +117,7 @@ const snapshotCompositeCompileResult = (
     /** 汇总完整布局结果，交给后续输出预检和编译阶段消费 */
     return {
       kind: 'layout' as const,
-      children: snapshotChildren,
+      children,
       explicitAllocation,
       explicitAlignmentGuides,
       compositeArtifact,

@@ -5,10 +5,10 @@ import type { AnimationControls } from '../animation';
 import { isRetikzRenderError, RetikzRenderError, RetikzRenderErrorCode } from '../error';
 import { createFullSceneRuntimeSnapshot } from '../scene';
 import type { ScenePatch } from '../scene';
-import { captureRuntimeConfig } from './config';
+import { prepareRuntimeConfig } from './config';
 import type { InputRenderRuntimeConfig } from './config';
 import type { RenderFrameSnapshot, StaticRenderFrame } from './frame';
-import { EMPTY_READONLY_LAYERS, snapshotReadonlyLayers } from './readonly-layer';
+import { EMPTY_READONLY_LAYERS, validateReadonlyLayers } from './readonly-layer';
 import type { RenderReadonlyLayer } from './readonly-layer';
 import { getRetainedRendererExecutor, isRetainedRenderer, isSvgHost, isCanvasHost } from './renderer';
 import type {
@@ -113,7 +113,7 @@ export const createRetainedRenderTarget = (input: RetainedRenderTargetOptions): 
             : createFullSceneRuntimeSnapshot(candidate.compilation.result.scene, revision, provenance!);
         const frame: RenderFrameSnapshot = Object.freeze({
           primary,
-          layers: snapshotReadonlyLayers(
+          layers: validateReadonlyLayers(
             options.resolveReadonlyLayers?.(candidate.compilation) ?? EMPTY_READONLY_LAYERS,
           ),
         });
@@ -128,11 +128,11 @@ export const createRetainedRenderTarget = (input: RetainedRenderTargetOptions): 
           };
           if (
             !runtimeStructuralEquals(normalized, primary.scene) ||
-            !runtimeStructuralEquals(snapshotReadonlyLayers(expected.layers), frame.layers)
+            !runtimeStructuralEquals(validateReadonlyLayers(expected.layers), frame.layers)
           )
             throw new RetikzRenderError({ code: RetikzRenderErrorCode.RuntimeRendererInitialFrameMismatch });
         }
-        const config = captureRuntimeConfig(options.configuration());
+        const config = prepareRuntimeConfig(options.configuration());
         const patch: ScenePatch | undefined =
           prior === undefined
             ? undefined

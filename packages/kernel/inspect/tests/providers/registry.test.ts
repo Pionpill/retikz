@@ -20,12 +20,14 @@ describe('检查器注册', () => {
       ]),
     ).toThrow();
   });
-  it('省略选项时仅接受空对象，定义与 subject 隔离冻结', () => {
+  it('注册借用 subject，不冻结调用方输入，缺省选项仅接受空对象', () => {
     const input = definition('test', 'path');
     const stored = getResolvedInspectorRegistry(createInspectorRegistry([input])).require(input);
     expect(stored.optionsSchema.parse({})).toEqual({});
     expect(() => stored.optionsSchema.parse({ unknown: true })).toThrow();
-    expect(Object.isFrozen(stored.subject)).toBe(true);
+    expect(stored.subject).toBe(input.subject);
+    expect(Object.isFrozen(input)).toBe(false);
+    expect(Object.isFrozen(input.subject)).toBe(false);
   });
   it('相同 subject 可以注册多个 key，重复完整 key 拒绝', () => {
     const first = createInspectorRegistry([definition('a', 'points')]);

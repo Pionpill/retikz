@@ -15,7 +15,7 @@ import {
   createRetainedRenderTarget,
   defineRetainedRenderer,
   isRetikzRenderError,
-  captureRuntimeConfig,
+  prepareRuntimeConfig,
   RetainedRendererCapability,
   RetikzRenderError,
   RetikzRenderErrorCode,
@@ -217,8 +217,8 @@ describe('@retikz/render/runtime 公共契约', () => {
   });
 });
 
-describe('captureRuntimeConfig', () => {
-  it('复制并递归冻结 config 容器，同时保留 callback identity', () => {
+describe('prepareRuntimeConfig', () => {
+  it('借用有序配置，不冻结调用方的 handlers', () => {
     const click = vi.fn();
     const protoClick = vi.fn();
     const input = {
@@ -233,31 +233,22 @@ describe('captureRuntimeConfig', () => {
       cachePolicy: 'static' as const,
     };
 
-    const session = captureRuntimeConfig(input);
-    const config = session;
-
-    input.handlerContributions.length = 0;
-    input.animation.enabled = false;
-    input.canvas.width = 640;
-
-    expect(config.handlerContributions).toHaveLength(1);
-    expect(config.animation?.enabled).toBe(true);
-    expect(config.canvas).toEqual({ width: 320, height: 180 });
+    const config = prepareRuntimeConfig(input);
+    expect(config).toBe(input);
     expect(config.handlerContributions?.[0]?.handlers.node?.click).toBe(click);
     expect(config.handlerContributions?.[0]?.handlers['__proto__']?.click).toBe(protoClick);
-    expect(Object.isFrozen(config)).toBe(true);
-    expect(Object.isFrozen(config.handlerContributions)).toBe(true);
-    expect(Object.isFrozen(config.handlerContributions?.[0]?.handlers.node)).toBe(true);
+    expect(Object.isFrozen(input.handlerContributions[0].handlers.node)).toBe(false);
   });
 
   it('按 registration 排序，并拒绝重复 registration 与非法动态字段', () => {
-    const sorted = captureRuntimeConfig({
+    const inputConfig = {
       handlerContributions: [
         { registration: 2, handlers: {} },
         { registration: 0, handlers: {} },
       ],
-    });
-
+    };
+    const sorted = prepareRuntimeConfig(inputConfig);
+    expect(inputConfig.handlerContributions.map(item => item.registration)).toEqual([2, 0]);
     expect(sorted.handlerContributions?.map(item => item.registration)).toEqual([0, 2]);
 
     for (const input of [
@@ -272,7 +263,7 @@ describe('captureRuntimeConfig', () => {
       { canvas: { height: Number.POSITIVE_INFINITY } },
     ]) {
       try {
-        captureRuntimeConfig(input);
+        prepareRuntimeConfig(input);
         throw new Error('expected invalid config to fail');
       } catch (error) {
         expect(error).toEqual(
@@ -282,47 +273,6 @@ describe('captureRuntimeConfig', () => {
         );
       }
     }
-  });
-
-  it('在读取前递归拒绝 config accessor 与非标准数组属性', () => {
-    const getter = vi.fn(() => 100);
-    const animation = Object.defineProperty({}, 'snapshotAt', {
-      enumerable: true,
-      get: getter,
-    });
-
-    expect(() => captureRuntimeConfig({ animation })).toThrow(
-      expect.objectContaining({
-        code: RetikzRenderErrorCode.RuntimeInputInvalid,
-      }),
-    );
-    expect(getter).not.toHaveBeenCalled();
-
-    const contributions = [{ registration: 0, handlers: {} }];
-    Object.defineProperty(contributions, Symbol('hidden'), { enumerable: true, value: true });
-
-    expect(() =>
-      captureRuntimeConfig({
-        handlerContributions: contributions,
-      }),
-    ).toThrow(
-      expect.objectContaining({
-        code: RetikzRenderErrorCode.RuntimeInputInvalid,
-      }),
-    );
-
-    const mapGetter = vi.fn(() => Array.prototype.map);
-    const contributionPrototype = Object.create(Array.prototype) as object;
-    Object.defineProperty(contributionPrototype, 'map', { configurable: true, get: mapGetter });
-    const inheritedContributions = [{ registration: 0, handlers: {} }];
-    Object.setPrototypeOf(inheritedContributions, contributionPrototype);
-
-    expect(() =>
-      captureRuntimeConfig({
-        handlerContributions: inheritedContributions,
-      }),
-    ).not.toThrow();
-    expect(mapGetter).not.toHaveBeenCalled();
   });
 });
 

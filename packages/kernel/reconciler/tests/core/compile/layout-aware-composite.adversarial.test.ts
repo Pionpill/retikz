@@ -986,32 +986,6 @@ describe('布局感知的复契约束和边界', () => {
     ).toThrow(RetikzCoreError);
   });
 
-  it('在可恢复调度边界之前拒绝访问器支持的 layoutChild 输入', () => {
-    const hostileChild: Record<string, unknown> = { id: 'point', position: [0, 0] };
-    Object.defineProperty(hostileChild, 'type', {
-      enumerable: true,
-      get: () => 'coordinate',
-    });
-    const parent = defineComposite({
-      namespace: 'test',
-      type: 'hostileLayoutChildParent',
-      schema: CompositeBaseSchema.extend({
-        namespace: literal('test'),
-        type: literal('hostileLayoutChildParent'),
-      }),
-      compile: (_, context) => {
-        context.layoutChild(hostileChild as IRChild, naturalLayoutProposal);
-        return { children: [] };
-      },
-    });
-
-    expect(() =>
-      compileTestResult(sceneOf({ namespace: 'test', type: 'hostileLayoutChildParent' }), {
-        composites: [parent],
-      }),
-    ).toThrow(RetikzCoreError);
-  });
-
   it('拒绝变换后的边变成非有限的自动分配边界', () => {
     const parent = defineComposite({
       namespace: 'test',

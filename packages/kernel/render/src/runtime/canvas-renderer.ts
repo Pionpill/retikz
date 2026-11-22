@@ -31,7 +31,7 @@ import type { RenderRuntimeConfig } from './config';
 import type { RenderFrameSnapshot } from './frame';
 import { mergeRenderHandlers } from './handlers';
 import type { RenderReadonlyLayer } from './readonly-layer';
-import { snapshotReadonlyLayers } from './readonly-layer';
+import { validateReadonlyLayers } from './readonly-layer';
 import type { RetainedCanvasRenderer, RetainedCanvasRendererImmutableOptions } from './renderer';
 import { defineRetainedRenderer } from './renderer';
 import type { SceneAnimationDescriptorDiff } from './runtime-options';
@@ -1542,7 +1542,7 @@ export const createBuiltinCanvasRetainedRenderer = (
     config: RenderRuntimeConfig,
   ): ReconcilerPreparedCommit => {
     const snapshot = frame.primary;
-    const layers = snapshotReadonlyLayers(frame.layers);
+    const layers = validateReadonlyLayers(frame.layers);
     const imageStage = imageLoader.stage(collectCanvasImageHrefs(snapshot, layers));
 
     try {

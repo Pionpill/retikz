@@ -68,7 +68,16 @@ describe('公开编译结果检查', () => {
       inspect: () => [],
     });
     const registry = createInspectorRegistry([definition]);
-    expect(compileInspectionToScene(primary, { registry, requests: [] }).inspection).toBeNull();
+    const unusedInput: CompileResult = {
+      ...primary,
+      get scene(): CompileResult['scene'] {
+        throw new Error('Empty requests must not read the primary scene');
+      },
+    };
+    expect(compileInspectionToScene(unusedInput, { registry, requests: [] })).toEqual({
+      inspection: null,
+      diagnostics: [],
+    });
     expect(() => compileInspectionToScene(primary, { registry, requests: [{ inspector: definition }] })).toThrow(
       RetikzInspectError,
     );

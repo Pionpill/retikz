@@ -79,7 +79,7 @@ type CompositeReplayWrapper = Readonly<{
 
 ### Layout-aware output 的编排语义
 
-`context.scope(props, children)` 创建 callback-local 的 opaque Scope output。`children` 可以是普通 `IRChild` 或当前 callback 产生的一次性 replay child；Core 在最终编译时把它们放入普通 Scope orchestration，而不是把 replay primitive 直接拼到父级 Scene。
+`context.createScope(props, children)` 创建 callback-local 的 opaque Scope output。Scope 借用属性和有序子项列表，不复制或冻结调用方对象；作者在本次编译结束前保持两者及其成员稳定。`children` 可以是普通 `IRChild` 或当前 callback 产生的一次性 replay child；Core 在最终编译时把它们放入普通 Scope orchestration，而不是把 replay primitive 直接拼到父级 Scene。
 
 1. authored Scope 的 `transforms` 按普通 Scope 的顺序在自身局部坐标中应用
 2. authored Scope 的 `placement` 在 intrinsic layout 和自身 transforms 完成后按普通 Scope 规则解析

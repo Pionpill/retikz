@@ -3,7 +3,6 @@ import { encodePropertyPath, hasPropertyPathPrefix, readPropertyPath, jsonStruct
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { IRChild, IRScene } from '../../schemas';
-import { cloneAndFreezeJson } from '../../shared';
 
 /** 精确 Source 属性路径，数字表示数组下标 */
 export type CompositeInputPath = PropertyPath;
@@ -40,13 +39,13 @@ export type CompositeRuntimeInputContext = Readonly<{
 export type CompositeInputScope = Readonly<{
   /** 当前原始 Source 子树 */
   source: unknown;
-  /** 当前子树在捕获 Source 中的位置；根节点省略 */
+  /** 当前子树在原始 Source 中的位置；根节点省略 */
   sourcePath?: CompositeInputPath;
   /** 相对当前 Source 子树的绑定 */
   bindings: ReadonlyArray<CompositeInputBinding>;
 }>;
 
-/** 绑定句柄对应的 Source 快照 WeakMap，句柄释放后允许快照回收 */
+/** 绑定句柄与原始 Source 及其绑定的配对关系 */
 const inputScopeMap = new WeakMap<CompositeInputBindings, CompositeInputScope>();
 
 /** 精确读取 Source 路径，不使用继承属性或模糊字段匹配 */
@@ -60,31 +59,28 @@ const readSourceAtPath = (source: unknown, path: CompositeInputPath): unknown =>
   return target;
 };
 
-/** 分离 Source 配对事实和路径，借用调用方只读输入 */
+/** 校验绑定路径并借用原始 Source 和绑定集合 */
 export const captureCompositeInputScope = (
-  source: unknown,
+  source: IRScene | IRChild,
   bindings: ReadonlyArray<CompositeInputBinding>,
 ): CompositeInputScope => {
-  const snapshot = cloneAndFreezeJson(source, 'Composite input Source');
   /** 本次捕获中已绑定的精确路径，用序列化形式检测重复 */
   const boundPaths = new Set<string>();
-  const captured = bindings.map(binding => {
+  for (const binding of bindings) {
     const key = encodePropertyPath(binding.path);
     if (boundPaths.has(key))
       throw new RetikzCoreError(RetikzCoreErrorCode.ContractViolation, `Duplicate composite input path ${key}`);
 
     boundPaths.add(key);
-    const target = readSourceAtPath(snapshot, binding.path);
+    const target = readSourceAtPath(source, binding.path);
     if (target === null || typeof target !== 'object' || !('namespace' in target) || !('type' in target))
       throw new RetikzCoreError(
         RetikzCoreErrorCode.ContractViolation,
         `Composite input path ${key} must select a composite Source`,
       );
+  }
 
-    return Object.freeze({ path: Object.freeze([...binding.path]), input: binding.input });
-  });
-
-  return Object.freeze({ source: snapshot, bindings: Object.freeze(captured) });
+  return Object.freeze({ source, bindings });
 };
 
 /** 在 Source parse/capture 前检查完整配对，并返回内部子树视图 */
@@ -94,14 +90,14 @@ export const resolveCompositeInputScope = (
 ): CompositeInputScope => {
   if (inputs === undefined) return { source, bindings: [] };
 
-  const snapshot = inputScopeMap.get(inputs);
-  if (snapshot === undefined || !jsonStructuralEquals(snapshot.source, source))
+  const scope = inputScopeMap.get(inputs);
+  if (scope === undefined || !jsonStructuralEquals(scope.source, source))
     throw new RetikzCoreError(
       RetikzCoreErrorCode.ContractViolation,
       'Composite input bindings do not match this Source',
     );
 
-  return snapshot;
+  return scope;
 };
 
 /** 从原始 Source 选择子树，并将其绑定重定位到局部路径 */
@@ -116,7 +112,7 @@ export const selectCompositeInputScope = (
     .map(binding => ({ path: binding.path.slice(path.length), input: binding.input })),
 });
 
-/** 为完整 Source 创建精确的 composite 实例运行时绑定 */
+/** 为完整 Source 创建实例绑定；调用方须在绑定使用期间保持 Source、路径和输入稳定 */
 export const createCompositeInputBindings = (
   source: IRScene,
   bindings: ReadonlyArray<CompositeInputBinding>,

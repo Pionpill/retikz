@@ -17,15 +17,8 @@ export const EMPTY_READONLY_LAYERS: ReadonlyArray<RenderReadonlyLayer> = Object.
 
 const hasOwn = (value: object, key: PropertyKey): boolean => Object.prototype.hasOwnProperty.call(value, key);
 
-/** 深度冻结对象，同时继续遍历已经浅冻结的外层对象 */
-const deepFreeze = <T>(value: T): T => {
-  if (typeof value !== 'object' || value === null) return value;
-  for (const child of Object.values(value)) deepFreeze(child);
-  return Object.isFrozen(value) ? value : Object.freeze(value);
-};
-
-/** 校验并冻结单帧有序只读图层 */
-export const snapshotReadonlyLayers = (
+/** 校验单帧有序图层；调用方在使用期间保持图层及其成员稳定 */
+export const validateReadonlyLayers = (
   input: ReadonlyArray<RenderReadonlyLayer>,
 ): ReadonlyArray<RenderReadonlyLayer> => {
   /** 递归拒绝只读图层 primitive 树中的公共身份、元数据与动画语义 */
@@ -68,5 +61,5 @@ export const snapshotReadonlyLayers = (
     for (const primitive of layer.scene.primitives) assertPrimitiveHasNoPublicRuntimeSemantics(primitive);
   }
 
-  return deepFreeze([...input]);
+  return input;
 };

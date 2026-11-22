@@ -20,13 +20,15 @@ export const compileInspectionToScene = (
   input: CompileResult,
   options: InspectionCompileOptions,
 ): InspectionCompileResult => {
+  if (options.requests.length === 0) return freezeInspectionValue({ inspection: null, diagnostics: [] });
+
   const snapshot = snapshotInspectionValue(input);
   const requests = prepareInspectionRequests(snapshot, options.registry, options.requests);
   const entries: Array<InspectionPlaneEntry> = [];
   const diagnostics: Array<InspectionDiagnostic> = [];
   for (const [colorScope, request] of requests.entries()) {
     const { definition, site, requestIndex, options: requestOptions } = request;
-    const inspector = snapshotInspectionValue({ namespace: definition.namespace, type: definition.type });
+    const inspector = Object.freeze({ namespace: definition.namespace, type: definition.type });
     const origin = { stage: 'inspect' as const, requestIndex, inspector, target: site.target };
     const context = Object.freeze({
       inspectorKey: inspector,

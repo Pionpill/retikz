@@ -54,7 +54,7 @@ export type CompositeProbeContext = {
 /** 在隔离工作区执行子布局并收集未提交贡献 */
 export const evaluateCompositeLayout = (
   probeContext: CompositeProbeContext,
-  clonedChild: IRChild,
+  child: IRChild,
   clonedProposal: LayoutProposal,
   probeOccurrence: CompileOccurrenceLocator,
   probeScopeChain: ReadonlyArray<Transform>,
@@ -106,7 +106,7 @@ export const evaluateCompositeLayout = (
   const sandboxRuntime: CompileRuntime = {
     context: {
       ...runtime.context,
-      compositeInputs: probeInputs ?? { source: clonedChild, bindings: [] },
+      compositeInputs: probeInputs ?? { source: child, bindings: [] },
       theme: probeTheme,
       padding: undefined,
     },
@@ -130,7 +130,7 @@ export const evaluateCompositeLayout = (
 
   let targetNamespace: NamespaceStack | undefined;
   let targetChain = probeScopeChain;
-  const laid = host.compileSubtree([clonedChild], sandboxRuntime, {
+  const laid = host.compileSubtree([child], sandboxRuntime, {
     transformChains: probeScopeChain,
     scopeDefaults: probeScopeDefaults,
     occurrence: probeOccurrence,
@@ -143,7 +143,7 @@ export const evaluateCompositeLayout = (
     ...(measurementAxis === undefined
       ? {
           captureScopeTargets: (scope, namespace, chain) => {
-            if (scope !== clonedChild) return;
+            if (scope !== child) return;
             targetNamespace = namespace.fork();
             // 查询者位于子项外部，但可读取其根局部名称；真正祖先仍不可引用
             targetNamespace.leaveScope();
@@ -190,7 +190,7 @@ export const evaluateCompositeLayout = (
 /** 将隔离布局结果封装为可选择重放的事务 */
 export const probeCompositeLayout = (
   probeContext: CompositeProbeContext,
-  clonedChild: IRChild,
+  child: IRChild,
   clonedProposal: LayoutProposal,
   probeOccurrence: CompileOccurrenceLocator,
   probeScopeChain: ReadonlyArray<Transform>,
@@ -219,7 +219,7 @@ export const probeCompositeLayout = (
     probeProvenanceTracker,
   } = evaluateCompositeLayout(
     probeContext,
-    clonedChild,
+    child,
     clonedProposal,
     probeOccurrence,
     probeScopeChain,

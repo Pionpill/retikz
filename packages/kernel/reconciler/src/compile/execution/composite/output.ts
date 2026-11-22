@@ -5,7 +5,7 @@ import type {
   SceneClipPath,
   Transform,
 } from '@retikz/core';
-import { CompileExpansionKind } from '@retikz/core';
+import { CompileExpansionKind, guardProviderOutput } from '@retikz/core';
 
 import type { CompileOwnerKey } from '../../provenance';
 import { createExecutionInvariantError } from '../../runtime';
@@ -75,7 +75,7 @@ export const compileCompositeOutput = (
     return;
   }
 
-  const runtimeScopeChild = runtimeScopeChildOf(output.props);
+  const runtimeScopeChild = guardProviderOutput(owner.label, () => runtimeScopeChildOf(output.props));
   const scopeSemanticOwner =
     semanticOwner === undefined
       ? undefined

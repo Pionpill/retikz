@@ -1,7 +1,7 @@
 import type { PaintValue, Scene, ScenePrimitive } from '@retikz/core';
 
 import type { StaticRenderFrame } from '../../runtime';
-import { EMPTY_READONLY_LAYERS, snapshotReadonlyLayers } from '../../runtime';
+import { EMPTY_READONLY_LAYERS, validateReadonlyLayers } from '../../runtime';
 import { resolveSceneResourceMap } from '../../shared';
 import { countScenePrimitiveOccurrences, startArrowPlacement, endArrowPlacement } from '../../shared';
 import type { RenderTraceReporter } from '../../trace';
@@ -152,7 +152,7 @@ export const buildSvgFragment = (scene: Scene, options: SvgDocumentOptions): Arr
  */
 export const buildSvgFrameDocument = (frame: StaticRenderFrame, options: SvgDocumentOptions): SvgNode => {
   const scene = frame.primary;
-  const layers = snapshotReadonlyLayers(frame.layers);
+  const layers = validateReadonlyLayers(frame.layers);
   const document: SvgNode = {
     tag: 'svg',
     attrs: {

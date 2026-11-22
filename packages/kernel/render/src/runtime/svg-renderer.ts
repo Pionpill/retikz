@@ -35,7 +35,7 @@ import type { RenderRuntimeConfig } from './config';
 import type { RenderFrameSnapshot } from './frame';
 import { mergeRenderHandlers } from './handlers';
 import type { RenderReadonlyLayer } from './readonly-layer';
-import { snapshotReadonlyLayers } from './readonly-layer';
+import { validateReadonlyLayers } from './readonly-layer';
 import type { RetainedSvgRenderer, RetainedSvgRendererImmutableOptions } from './renderer';
 import { defineRetainedRenderer } from './renderer';
 import type { SceneAnimationDescriptorDiff } from './runtime-options';
@@ -1683,7 +1683,7 @@ export const createBuiltinSvgRetainedRenderer = (
     config: RenderRuntimeConfig,
     mode: 'create' | 'adopt' = 'create',
   ): ReconcilerPreparedCommit => {
-    const layers = snapshotReadonlyLayers(frame.layers);
+    const layers = validateReadonlyLayers(frame.layers);
     const primaryToken = prepare(scenePatch, frame.primary, config, mode);
     const previousLayers = currentLayers;
     const adoptedLayerElements =

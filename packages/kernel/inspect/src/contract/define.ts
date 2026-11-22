@@ -24,7 +24,6 @@ export const sealInspectorDefinition = (definition: InputAnyInspectorDefinition)
   }
   return Object.freeze({
     ...definition,
-    subject: Object.freeze({ ...definition.subject }),
     optionsSchema: definition.optionsSchema ?? EmptyInspectorOptionsSchema,
   });
 };
@@ -36,4 +35,4 @@ export const defineInspector = <
   TValue extends JsonValue = JsonValue,
 >(
   definition: InputInspectorDefinition<TSubject, TOptions, TValue>,
-): InputInspectorDefinition<TSubject, TOptions, TValue> => Object.freeze(definition);
+): InputInspectorDefinition<TSubject, TOptions, TValue> => definition;
