@@ -1,5 +1,4 @@
 import { Blocks, Braces, Layers, Monitor, Puzzle, Sparkles } from 'lucide-react';
-
 /* oxlint-disable react/only-export-components -- 此文件导出 MDX 元素映射表（对象），不是 fast-refresh 边界 */
 import type { MDXComponents } from 'mdx/types';
 import type { ComponentPropsWithoutRef, FC } from 'react';

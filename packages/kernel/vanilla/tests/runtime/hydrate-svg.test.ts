@@ -4,7 +4,6 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { renderToSvgString } from '../../src';
 import { hydrate, mountSvg } from '../../src/dom';
-
 // @vitest-environment jsdom
 import { compileTestResult } from '../helpers/compilation';
 

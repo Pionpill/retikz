@@ -6,13 +6,13 @@
 
 ## 重点功能
 
-| 重点能力   | 目标                                 | 相关 ADR                                                                                                                                                                                   |
-| ---------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 基础图元   | 统一 Core IR、Scene 与基础图形表达   | [002](../../../decisions/settled/node-anchors.md)、[004](../../../decisions/settled/scene-rendering.md)                                                                                                  |
-| 节点定位   | 支持绝对位置、相对位置和命名占位     | [001](../../../decisions/settled/node-anchors.md)、[002](../../../decisions/settled/node-anchors.md)、[007](../../../decisions/settled/node-anchors.md)                                                         |
+| 重点能力   | 目标                                 | 相关 ADR                                                                                                                                                                                                               |
+| ---------- | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 基础图元   | 统一 Core IR、Scene 与基础图形表达   | [002](../../../decisions/settled/node-anchors.md)、[004](../../../decisions/settled/scene-rendering.md)                                                                                                                |
+| 节点定位   | 支持绝对位置、相对位置和命名占位     | [001](../../../decisions/settled/node-anchors.md)、[002](../../../decisions/settled/node-anchors.md)、[007](../../../decisions/settled/node-anchors.md)                                                                |
 | 路径与连接 | 表达有方向的连线、路径偏移与箭头     | [005](../../../decisions/settled/label-placement.md)、[006](../../../decisions/_v0.5/075-path-arrows-and-marks.md)、[021](../../../decisions/settled/path-arrows.md)、[022](../../../decisions/settled/path-arrows.md) |
-| 文字与标签 | 支持节点说明和沿路径放置的文字       | [003](../../../decisions/settled/label-placement.md)、[005](../../../decisions/settled/label-placement.md)                                                                                                         |
-| 公开入口   | 收敛绘图入口、viewBox 与后端中立命名 | [009](../../../decisions/settled/scene-rendering.md)、[019](../../../decisions/settled/scene-rendering.md)、[020](../../../decisions/settled/authoring-adapters.md)、[023](../../../decisions/settled/paint-stroke.md)  |
+| 文字与标签 | 支持节点说明和沿路径放置的文字       | [003](../../../decisions/settled/label-placement.md)、[005](../../../decisions/settled/label-placement.md)                                                                                                             |
+| 公开入口   | 收敛绘图入口、viewBox 与后端中立命名 | [009](../../../decisions/settled/scene-rendering.md)、[019](../../../decisions/settled/scene-rendering.md)、[020](../../../decisions/settled/authoring-adapters.md)、[023](../../../decisions/settled/paint-stroke.md) |
 
 ## 功能规划
 

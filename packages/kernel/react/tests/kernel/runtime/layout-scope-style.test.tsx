@@ -9,7 +9,6 @@ import { Draw, EdgeLabel, Layout, Node, Scope, Step } from '../../../src';
 import { Path } from '../../../src/kernel';
 import { wrapRootScope } from '../../../src/kernel/adapter';
 import type { ScopeStyleProps } from '../../../src/kernel/protocol';
-
 /**
  * <Layout> 顶层级联样式 props 测试（隐式根 Scope）
  * @description Layout 设级联样式 props（color / stroke / nodeDefault / pathDefault / labelDefault / ...）时把

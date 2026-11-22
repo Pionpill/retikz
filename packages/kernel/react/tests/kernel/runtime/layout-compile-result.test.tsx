@@ -1,5 +1,4 @@
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
-
 // @vitest-environment jsdom
 import type { CompileResult } from '@retikz/reconciler';
 import { createRoot } from 'react-dom/client';
