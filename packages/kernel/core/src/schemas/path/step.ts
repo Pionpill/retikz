@@ -245,7 +245,7 @@ const CirclePathStepBaseSchema = strictObject({
     .describe('Closing mode for a circle path: closed, chord, sector, or open. With angles, omitted fields use chord.'),
   label: PathLabelSchema.optional(),
 }).describe(
-  'CirclePath action: full circle (no angles, pen returns to center) or partial arc (with angles, closed per chord/open).',
+  'Circle subpath. The next step starts at the center after a full circle or sector, at the arc start after a chord, or at the arc end when open.',
 );
 
 /** 校验以游标为圆心的圆路径；局部圆弧必须同时给出起止角 */
@@ -257,7 +257,7 @@ export const CirclePathStepSchema = CirclePathStepBaseSchema.superRefine((step, 
 const EllipsePathStepBaseSchema = strictObject({
   type: literal('step'),
   kind: literal('ellipsePath').describe(
-    'Ellipse centered at the cursor. Without angles, emits a full ellipse; with angles, emits a partial arc closed by `closed`.',
+    'Ellipse subpath centered only at the current cursor. For an elliptical arc centered on another point or named target, use arc with center.',
   ),
   radius: StepAnisotropicRadiusSchema.describe('Ellipse radius object `{ x, y }` in user units.'),
   startAngle: number()
@@ -273,7 +273,7 @@ const EllipsePathStepBaseSchema = strictObject({
     ),
   label: PathLabelSchema.optional(),
 }).describe(
-  'EllipsePath action: full ellipse (no angles, pen returns to center) or partial elliptical arc (with angles, closed per chord/open).',
+  'Ellipse subpath. The next step starts at the center after a full ellipse or sector, at the arc start after a chord, or at the arc end when open.',
 );
 
 /** 校验以游标为中心的椭圆路径；局部椭圆弧必须同时给出起止角 */

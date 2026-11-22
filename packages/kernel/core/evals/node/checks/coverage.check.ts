@@ -32,6 +32,6 @@ describe('完整节点契约的离线覆盖清单', () => {
   });
 
   it('契约名称、结构、约束或描述变化后要求重新审阅用例', () => {
-    expect(report.contractSha256).toBe('c5a3944331931fa20fd7d7de5db4463c2f2e347ae2ef6c4b6e17042ef76c493c');
+    expect(report.contractSha256).toBe('b172acdebcb34ddff5127e9ccd319bfb96b0671f6a051a856f90b0995232611d');
   });
 });

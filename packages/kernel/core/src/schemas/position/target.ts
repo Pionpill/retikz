@@ -33,7 +33,7 @@ export const NodeTargetSchema = object({
   boundary: BoundarySchema.optional().describe(
     'Per-endpoint override of the target node connection surface. Used for auto-clipped endpoints and standard direction or angle anchors.',
   ),
-}).describe('Reference to an anchor on a previously resolved target.');
+}).describe('Direct references to resolved targets use an object with id, not a bare id string.');
 
 /** anchor 引用：命名 anchor / 角度 / 边上比例点 */
 export type IRAnchorRef = ZodInfer<typeof AnchorRefSchema>;

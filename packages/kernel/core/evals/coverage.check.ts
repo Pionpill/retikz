@@ -27,13 +27,13 @@ import { suite as clipFillRule } from './clip-fill-rule/suite';
 import { suite as composite } from './composite/suite';
 import { inspectContractSlices } from './contract-slices';
 import { suite as coordinate } from './coordinate/suite';
-import type { createEvalSuite } from './create-suite';
+import { createEvalSuite } from './create-suite';
 import { suite as drawable } from './drawable/suite';
 import { inspectNodeEvalCoverage, nodeEvalCases, gradeNodeAnswer } from './node/suite';
 import { suite as pathSuite } from './path/suite';
 import { suite as scene } from './scene/suite';
 import { suite as scope } from './scope/suite';
-import { suite as strokePath } from './stroke-path/suite';
+import { strokeAuthorSchema, suite as strokePath } from './stroke-path/suite';
 import { suite as tex } from './tex/suite';
 
 /** 只在离线索引中记录真实 Zod 对象身份；不改变发送给模型的 JSON Schema */
@@ -82,6 +82,7 @@ const inspect = (name: string, schema: ZodType, report: SchemaCoverageReport) =>
 const collect = <T>(name: string, schema: ZodType, suite: ReturnType<typeof createEvalSuite<T>>) =>
   inspect(name, schema, inspectSchemaEvalCoverage(suite.contract, suite.cases, suite.grade));
 it('每个模型可见的契约条目有直接或同源判分证据，或明确的宿主诊断', () => {
+  const strokeProvider = createEvalSuite(StrokePathSchema, strokePath.cases);
   const suites = [
     inspect('node', NodeSchema, inspectNodeEvalCoverage()),
     collect('boundary-label', BoundaryLabelSchema, boundaryLabel),
@@ -92,7 +93,8 @@ it('每个模型可见的契约条目有直接或同源判分证据，或明确�
     collect('path', PathSchema, pathSuite),
     collect('scene', SceneSchema, scene),
     collect('scope', ScopeSchema, scope),
-    collect('stroke-path', StrokePathSchema, strokePath),
+    collect('stroke-path', strokeAuthorSchema, strokePath),
+    collect('StrokePathSchema', StrokePathSchema, strokeProvider),
     collect('tex', TexContentSchema, tex),
   ];
   const hostSources = <T>(
@@ -194,13 +196,14 @@ it('每个模型可见的契约条目有直接或同源判分证据，或明确�
     for (const entry of report.entries) {
       if (entry.status !== 'gap') continue;
       if ((name === 'stroke-path' || name === 'StrokePathSchema') && entry.path === '$.kindOptions') {
-        const item = strokePath.cases.find(candidate => candidate.id === 'K001')!;
+        const subject = name === 'stroke-path' ? strokePath : strokeProvider;
+        const item = subject.cases.find(candidate => candidate.id === 'K001')!;
         const raw = JSON.stringify({ ...item.expected, kindOptions: {} });
-        const omitted = strokePath
+        const omitted = subject
           .grade(item, JSON.stringify(item.expected))
           .checks.find(check => check.path === entry.path && check.passed);
         expect(omitted).toBeDefined();
-        expect(strokePath.grade(item, raw).schemaValid).toBe(false);
+        expect(subject.grade(item, raw).schemaValid).toBe(false);
         entry.status = 'direct';
         entry.witnesses = [{ caseId: item.id, inputPath: entry.path, assertionPaths: [entry.path] }];
         continue;

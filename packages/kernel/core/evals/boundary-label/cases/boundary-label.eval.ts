@@ -27,7 +27,7 @@ export const cases: Array<CoreEvalCase<input<typeof BoundaryLabelSchema>>> = [
   },
   {
     id: 'B003',
-    task: '边界外标签仅写 Z 并显式顺时针旋转 20 度，不覆盖其余默认。',
+    task: '标签写 Z，在宿主局部坐标系中顺时针旋转 20 度。放置侧及其余配置沿用宿主，不覆盖。',
     expected: {
       text: 'Z',
       rotate: 20,
@@ -47,7 +47,7 @@ export const cases: Array<CoreEvalCase<input<typeof BoundaryLabelSchema>>> = [
   },
   {
     id: 'B005',
-    task: '宿主边界外的文字 X 仅改为斜体；不重设字号、颜色或宿主的默认距离。',
+    task: '边界标签写 X，仅把字体改为斜体。位置、距离和其余样式沿用宿主。',
     expected: {
       text: 'X',
       font: {

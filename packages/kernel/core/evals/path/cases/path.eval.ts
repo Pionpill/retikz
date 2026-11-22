@@ -194,7 +194,7 @@ export const cases: Array<CoreEvalCase<input<typeof PathSchema>>> = [
   },
   {
     id: 'P008',
-    task: '从原点以当前光标为圆心画半径 3 的 0 到 90 度圆弧；再以 A 为中心画横半径 4、纵半径 2 的 90 到 0 度椭圆弧。',
+    task: '从原点连续绘制两个弧步骤，中间不移动或另起子路径。先以当前光标为圆心画半径 3 的 0 到 90 度圆弧；再以 A 为中心画横半径 4、纵半径 2 的 90 到 0 度椭圆弧。',
     expected: {
       type: 'path',
       children: [
@@ -228,7 +228,7 @@ export const cases: Array<CoreEvalCase<input<typeof PathSchema>>> = [
   },
   {
     id: 'P009',
-    task: '从原点绘制半径 4、0 到 60 度的圆扇形，再绘制横纵半径 4 和 2、0 到 90 度的开放椭圆段。',
+    task: '从原点绘制半径 4、0 到 60 度的圆扇形，随后直接以扇形结束时的笔位为中心绘制横纵半径 4 和 2、0 到 90 度的开放椭圆段，中间不插入移动步骤。',
     expected: {
       type: 'path',
       children: [
@@ -417,7 +417,7 @@ export const cases: Array<CoreEvalCase<input<typeof PathSchema>>> = [
   },
   {
     id: 'P015',
-    task: '从原点连到 A。沿整条路径放两个标签：L 在圆角后按长度 30% 处，沿切线旋转、居中并断线，每侧留 2；R 位于终点下方距离 4。',
+    task: '从原点连到 A。沿整条路径放两个标签：L 在圆角后按长度 30% 处，沿切线旋转、居中并断线，每侧留 2；R 用终点关键字定位，在下方距离 4，不覆盖其度量方式。',
     expected: {
       type: 'path',
       children: [
@@ -719,7 +719,7 @@ export const cases: Array<CoreEvalCase<input<typeof PathSchema>>> = [
   },
   {
     id: 'P026',
-    task: '从原点开始，以当前光标为圆心画半径 5、0 至 80 度圆弧。只在这个绘制步骤的末端添加文字 L（使用终点关键字），不要给整条路径加标签。',
+    task: '从原点开始，以当前光标为圆心画半径 5、0 至 80 度的圆弧，笔停在弧末，不另建圆形子路径。只在这个绘制步骤的末端添加文字 L（使用终点关键字），不要给整条路径加标签。',
     expected: {
       type: 'path',
       children: [
@@ -860,7 +860,7 @@ export const cases: Array<CoreEvalCase<input<typeof PathSchema>>> = [
   },
   {
     id: 'P031',
-    task: '从以 A 为极点、45 度半径 8 的位置开始，直线连到从 B 向左 2、向下 3 的位置，两端都保留构造方式。此段添加两行标签，第一行 L 透明度一半，第二行 R。',
+    task: '从以 A 为极点、45 度半径 8 的位置开始，直线连到从 B 向左 2、向下 3 的位置，两端都保留构造方式。只在这条直线段上添加两行标签，第一行 L 透明度一半，第二行用纯字符串 R。',
     expected: {
       type: 'path',
       children: [
@@ -984,7 +984,7 @@ export const cases: Array<CoreEvalCase<input<typeof PathSchema>>> = [
   {
     id: 'P037',
     contrastId: 'P038',
-    task: '从 (1,2) 开始，用两段正交折线连到 (9,7)。先水平走，再竖直走。',
+    task: '从 (1,2) 开始，用一个含两段的正交折线步骤连到 (9,7)。先水平走，再竖直走。',
     expected: {
       type: 'path',
       children: [
@@ -996,7 +996,7 @@ export const cases: Array<CoreEvalCase<input<typeof PathSchema>>> = [
   {
     id: 'P038',
     contrastId: 'P037',
-    task: '从 (1,2) 开始，用两段正交折线连到 (9,7)。先竖直走，再水平走。',
+    task: '从 (1,2) 开始，用一个含两段的正交折线步骤连到 (9,7)。先竖直走，再水平走。',
     expected: {
       type: 'path',
       children: [

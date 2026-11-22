@@ -91,7 +91,7 @@ export const cases: Array<CoreEvalCase<input<typeof SceneSchema>>> = [
   },
   {
     id: 'S005',
-    task: '场景中先放节点 A 于 (1,3)，再放一个组，组内是 chart 域的 bar 对象，其 value 为 0。只给第二个顶层子项选深色模式。',
+    task: '场景中先放标识符为 A、不含文字的节点于 (1,3)，再放一个组，组内是 chart 域的 bar 对象，其 value 为 0。只给第二个顶层子项选深色模式。',
     expected: {
       type: 'scene',
       version: 1,
@@ -119,7 +119,7 @@ export const cases: Array<CoreEvalCase<input<typeof SceneSchema>>> = [
   },
   {
     id: 'S006',
-    task: '名为 paper 的浅色场景依次放作用域 legend 和节点 A。legend 内含节点 B，只在该组切为暗色，不重写主题名称；外围节点保持继承。',
+    task: '场景选择 paper 主题的浅色模式。依次放入标识符为 legend 的作用域和标识符为 A 的无文字节点。legend 内含标识符为 B 的无文字节点，只在该组切为暗色，不重写主题名称；外围节点保持继承。',
     expected: {
       type: 'scene',
       version: 1,
@@ -150,7 +150,7 @@ export const cases: Array<CoreEvalCase<input<typeof SceneSchema>>> = [
   },
   {
     id: 'S007',
-    task: '视框初始左上角 (0,0)，宽 40、高 30；仅在根上添加 300 毫秒镜头动画，从这个视框移动到 (5,6,40,30)。镜头内只有节点 A，不动画节点。',
+    task: '视框初始左上角 (0,0)，宽 40、高 30；仅在根上添加 300 毫秒镜头动画，从这个视框移动到 (5,6,40,30)。镜头内只有标识符为 A 的无文字节点，不动画节点。',
     expected: {
       type: 'scene',
       version: 1,

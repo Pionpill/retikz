@@ -40,7 +40,7 @@ export const cases: Array<CoreEvalCase<input<typeof DrawableInstanceSchema>>> = 
   },
   {
     id: 'D003',
-    task: '可绘制实例 host 在收到 pulse 事件后用 240 毫秒绕元素局部点 (2,4) 从 0 度转到 90 度。元数据另保留字符串 event 为 pulse，不能用元数据代替动画触发器。',
+    task: '标识符为 host 的可绘制实例在收到 pulse 事件后用 240 毫秒绕元素局部点 (2,4) 从 0 度转到 90 度。元数据另保留字符串 event 为 pulse，不能用元数据代替动画触发器。',
     expected: {
       id: 'host',
       meta: {
