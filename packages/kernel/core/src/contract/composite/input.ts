@@ -4,13 +4,10 @@ import { encodePropertyPath, hasPropertyPathPrefix, readPropertyPath, jsonStruct
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { IRChild, IRScene } from '../../schemas';
 
-/** 精确 Source 属性路径，数字表示数组下标 */
-export type CompositeInputPath = PropertyPath;
-
 /** 一个 composite 实例的已准备同步运行时输入 */
 export type CompositeInputBinding = Readonly<{
   /** 相对绑定 Source 的属性路径 */
-  path: CompositeInputPath;
+  path: PropertyPath;
   /** 由领域消费、调用期间借用的只读运行时值 */
   input: unknown;
 }>;
@@ -30,7 +27,7 @@ export type CompositeRuntimeInputContext = Readonly<{
   /** 当前 Source 位置的同步输入；未绑定时为 undefined */
   runtimeInput: unknown;
   /** 选择当前 composite 原始 Source 的作者子项并转交全部子树绑定 */
-  selectSourceChild: (path: CompositeInputPath) => CompositeBoundChild;
+  selectSourceChild: (path: PropertyPath) => CompositeBoundChild;
   /** 为生成的子项显式提供相对 child 的运行时绑定 */
   bindChild: (child: IRChild, bindings: ReadonlyArray<CompositeInputBinding>) => CompositeBoundChild;
 }>;
@@ -40,7 +37,7 @@ export type CompositeInputScope = Readonly<{
   /** 当前原始 Source 子树 */
   source: unknown;
   /** 当前子树在原始 Source 中的位置；根节点省略 */
-  sourcePath?: CompositeInputPath;
+  sourcePath?: PropertyPath;
   /** 相对当前 Source 子树的绑定 */
   bindings: ReadonlyArray<CompositeInputBinding>;
 }>;
@@ -49,7 +46,7 @@ export type CompositeInputScope = Readonly<{
 const inputScopeMap = new WeakMap<CompositeInputBindings, CompositeInputScope>();
 
 /** 精确读取 Source 路径，不使用继承属性或模糊字段匹配 */
-const readSourceAtPath = (source: unknown, path: CompositeInputPath): unknown => {
+const readSourceAtPath = (source: unknown, path: PropertyPath): unknown => {
   const target = readPropertyPath(source, path);
   if (target === undefined)
     throw new RetikzCoreError(
@@ -101,10 +98,7 @@ export const resolveCompositeInputScope = (
 };
 
 /** 从原始 Source 选择子树，并将其绑定重定位到局部路径 */
-export const selectCompositeInputScope = (
-  scope: CompositeInputScope,
-  path: CompositeInputPath,
-): CompositeInputScope => ({
+export const selectCompositeInputScope = (scope: CompositeInputScope, path: PropertyPath): CompositeInputScope => ({
   source: readSourceAtPath(scope.source, path),
   sourcePath: [...(scope.sourcePath ?? []), ...path],
   bindings: scope.bindings

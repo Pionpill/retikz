@@ -1,5 +1,6 @@
 import { createCompositeInputBindings } from '@retikz/core';
-import type { CompositeInputBinding, CompositeInputPath, IRComposite, IRScene } from '@retikz/core';
+import type { CompositeInputBinding, IRComposite, IRScene } from '@retikz/core';
+import type { PropertyPath } from '@retikz/foundation';
 import { expect } from 'vitest';
 
 import { defineBenchmark } from '../../../../../scripts/benchmarks/scenario';
@@ -32,7 +33,7 @@ for (const count of [100, 1_000]) {
           }
           const source: IRScene = { type: 'scene', version: 1, children };
           const before = structuredClone(source);
-          const path: CompositeInputPath = ['children', 0, ...suffix];
+          const path: PropertyPath = ['children', 0, ...suffix];
           const scope = operation === 'select' ? captureCompositeInputScope(source, bindings) : undefined;
           const handle = operation === 'resolve' ? createCompositeInputBindings(source, bindings) : undefined;
           const expectedLeaf = { namespace: 'bench', type: 'item', value: 0 };

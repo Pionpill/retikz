@@ -19,9 +19,10 @@ keywords: Composite、runtimeInputs、Source、Layout、revision、Vanilla
 ## 公开契约
 
 ```ts
-type CompositeInputPath = ReadonlyArray<string | number>;
+import type { PropertyPath } from '@retikz/foundation';
+
 type CompositeInputBinding = Readonly<{
-  path: CompositeInputPath;
+  path: PropertyPath;
   input: unknown;
 }>;
 
@@ -32,7 +33,7 @@ createCompositeInputBindings(
 
 interface CompositeRuntimeInputContext {
   readonly runtimeInput: unknown;
-  sourceChild(path: CompositeInputPath): CompositeBoundChild;
+  sourceChild(path: PropertyPath): CompositeBoundChild;
   bindChild(child: IRChild, bindings: ReadonlyArray<CompositeInputBinding>): CompositeBoundChild;
 }
 ```
