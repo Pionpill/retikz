@@ -1,4 +1,4 @@
-import type { ValueOf, OpenString } from '@retikz/foundation';
+import type { ValueOf } from '@retikz/foundation';
 import {
   createOpenStringSchema,
   NormalizedFractionSchema,
@@ -225,6 +225,3 @@ export type IRPatternLineStyle = ZodInfer<typeof PatternLineStyleSchema>;
 
 /** Pattern 相邻线条的稀疏周期样式 */
 export type IRPatternLineStyleCycle = ZodInfer<typeof PatternLineStyleCycleSchema>;
-
-/** 图案形状名称，支持内置名称和已注册的自定义名称 */
-export type PatternShapeName = OpenString<BuiltinPatternShape>;

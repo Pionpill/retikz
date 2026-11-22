@@ -96,13 +96,6 @@ export const GraphicStrokeSchema = strictObject({
   stroke: PaintValueSchema.optional().describe('Stroke paint for primary geometry: contextual color or IRPaint.'),
 });
 
-/** 校验主体几何共享的主色、填充与描边字段 */
-export const GraphicPaintSchema = strictObject({
-  ...GraphicColorSchema.shape,
-  fill: GraphicFillSchema.shape.fill,
-  stroke: GraphicStrokeSchema.shape.stroke,
-});
-
 /** 校验可独立继承的整体、填充与描边不透明度 */
 export const GraphicOpacityValueSchema = union([
   OpacitySchema,
