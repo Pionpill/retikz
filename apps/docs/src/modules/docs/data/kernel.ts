@@ -629,6 +629,12 @@ export const kernelSection: Array<Section> = [
             difficulty: DocDifficulty.Internals,
             meta: { pageType: 'architecture', audience: 'maintainer', sourceOfTruth: 'runtime' },
           },
+          {
+            id: 'compile-traversal',
+            label: 'kernel.pkgReconcilerCompileTraversal',
+            difficulty: DocDifficulty.Internals,
+            meta: { pageType: 'architecture', audience: 'maintainer', sourceOfTruth: 'runtime' },
+          },
         ],
       },
       {
