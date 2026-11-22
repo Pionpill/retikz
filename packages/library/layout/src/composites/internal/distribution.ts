@@ -168,5 +168,5 @@ export const distributeWeightedLayoutSizes = (
 
   if (Math.abs(remaining) <= layoutEpsilon(total, total - remaining)) remaining = 0;
 
-  return Object.freeze({ values: Object.freeze(values), remaining });
+  return { values, remaining };
 };

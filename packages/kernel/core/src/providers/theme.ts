@@ -55,19 +55,19 @@ const categoricalTones: Readonly<Record<ThemeMode, ReadonlyArray<CategoricalTone
   ),
 };
 
-const freezeCategorical = (palette: ReadonlyArray<CssColorValue>): NonEmptyReadonlyArray<CssColorValue> => {
+const freezeCategorical = (palette: Array<CssColorValue>): NonEmptyReadonlyArray<CssColorValue> => {
   if (palette.length === 0)
     throw new RetikzCoreError(RetikzCoreErrorCode.Provider, 'Core categorical palette must not be empty.');
-  return Object.freeze([...palette]) as NonEmptyReadonlyArray<CssColorValue>;
+  return Object.freeze(palette) as NonEmptyReadonlyArray<CssColorValue>;
 };
 
 const freezeColorView = (
   semantic: CoreSemanticColors,
-  categorical: ReadonlyArray<CssColorValue>,
+  categorical: NonEmptyReadonlyArray<CssColorValue>,
 ): CanonicalThemeColors =>
   Object.freeze({
-    semantic: Object.freeze({ ...semantic }),
-    categorical: freezeCategorical(categorical),
+    semantic: Object.freeze(semantic),
+    categorical,
   });
 
 const createCategoricalPalette = (mode: ThemeMode): NonEmptyReadonlyArray<CssColorValue> => {
@@ -102,10 +102,7 @@ const CORE_COLOR_PRESETS: Readonly<Record<ThemeMode, CanonicalThemeColors>> = Ob
 });
 
 /** 解析默认 baseline 的完整 shared colors */
-export const resolveDefaultCoreThemeColors = (mode: ThemeMode): CanonicalThemeColors => {
-  const preset = CORE_COLOR_PRESETS[mode];
-  return freezeColorView(preset.semantic, preset.categorical);
-};
+export const resolveDefaultCoreThemeColors = (mode: ThemeMode): CanonicalThemeColors => CORE_COLOR_PRESETS[mode];
 
 /** 按当前 mode 的默认 shared colors 补全一层 Theme 稀疏覆盖 */
 export const resolveCoreThemeColors = (mode: ThemeMode, overrides: ThemeColorOverrides): CanonicalThemeColors => {
@@ -118,7 +115,7 @@ export const resolveCoreThemeColors = (mode: ThemeMode, overrides: ThemeColorOve
       warning: overrides.semantic?.warning ?? preset.semantic.warning,
       guide: overrides.semantic?.guide ?? preset.semantic.guide,
     },
-    overrides.categorical ?? preset.categorical,
+    overrides.categorical === undefined ? preset.categorical : freezeCategorical([...overrides.categorical]),
   );
 };
 

@@ -132,11 +132,10 @@ export const resolveFlexLineMainProfile = (
 };
 
 /** 读取已形成 Flex lines 的最大主轴 profile */
-export const resolveFlexLinesMainProfile = (lines: ReadonlyArray<FlexLineMainProfile>): FlexLineMainProfile =>
-  Object.freeze({
-    minimum: lines.length === 0 ? 0 : Math.max(...lines.map(line => line.minimum)),
-    natural: lines.length === 0 ? 0 : Math.max(...lines.map(line => line.natural)),
-  });
+export const resolveFlexLinesMainProfile = (lines: ReadonlyArray<FlexLineMainProfile>): FlexLineMainProfile => ({
+  minimum: lines.length === 0 ? 0 : Math.max(...lines.map(line => line.minimum)),
+  natural: lines.length === 0 ? 0 : Math.max(...lines.map(line => line.natural)),
+});
 
 /** 汇总已形成 Flex lines 的 cross profile 与物理 line gap */
 export const resolveFlexLinesCrossProfile = (
@@ -153,10 +152,10 @@ export const resolveFlexLinesCrossProfile = (
 
   const gapTotal = gap * Math.max(0, lines.length - 1);
 
-  return Object.freeze({
+  return {
     minimum: compensatedLayoutSum([...lines.map(line => line.minimum), gapTotal]),
     natural: compensatedLayoutSum([...lines.map(line => line.natural), gapTotal]),
-  });
+  };
 };
 
 /** 按 authored order 把 items 稳定分成 flex lines，反向仅由 placement 表达 */
@@ -252,10 +251,10 @@ export const resolveFlexLineMainSizes = (
   }));
   const distributed = distributeWeightedLayoutSizes(weighted, distributable);
 
-  return Object.freeze({
+  return {
     values: distributed.values,
     remaining: availableMainSize - outerFixed - compensatedLayoutSum(distributed.values),
-  });
+  };
 };
 
 /** 把 line 剩余 main space 解析为确定的起始偏移和附加 item 间距 */
@@ -281,28 +280,28 @@ export const resolveFlexSpaceDistribution = (
   }
 
   if (remaining <= 0) {
-    if (distribution === LayoutDistribution.End) return Object.freeze({ leading: remaining, between: 0 });
-    if (distribution === LayoutDistribution.Center) return Object.freeze({ leading: remaining / 2, between: 0 });
-    return Object.freeze({ leading: 0, between: 0 });
+    if (distribution === LayoutDistribution.End) return { leading: remaining, between: 0 };
+    if (distribution === LayoutDistribution.Center) return { leading: remaining / 2, between: 0 };
+    return { leading: 0, between: 0 };
   }
 
-  if (distribution === LayoutDistribution.End) return Object.freeze({ leading: remaining, between: 0 });
-  if (distribution === LayoutDistribution.Center) return Object.freeze({ leading: remaining / 2, between: 0 });
+  if (distribution === LayoutDistribution.End) return { leading: remaining, between: 0 };
+  if (distribution === LayoutDistribution.Center) return { leading: remaining / 2, between: 0 };
   if (distribution === LayoutDistribution.SpaceBetween && itemCount > 1) {
-    return Object.freeze({ leading: 0, between: remaining / (itemCount - 1) });
+    return { leading: 0, between: remaining / (itemCount - 1) };
   }
 
   if (distribution === LayoutDistribution.SpaceAround && itemCount > 0) {
     const between = remaining / itemCount;
-    return Object.freeze({ leading: between / 2, between });
+    return { leading: between / 2, between };
   }
 
   if (distribution === LayoutDistribution.SpaceEvenly && itemCount > 0) {
     const between = remaining / (itemCount + 1);
-    return Object.freeze({ leading: between, between });
+    return { leading: between, between };
   }
 
-  return Object.freeze({ leading: 0, between: 0 });
+  return { leading: 0, between: 0 };
 };
 
 /** 计算一条 line 的结构 cross size 与 baseline target */
@@ -348,12 +347,12 @@ export const resolveFlexLineDistribution = (
   lineCount: number,
 ): Readonly<{ leading: number; between: number; stretch: number }> => {
   if (distribution === LayoutDistribution.Stretch && remaining > 0 && lineCount > 0) {
-    return Object.freeze({ leading: 0, between: 0, stretch: remaining / lineCount });
+    return { leading: 0, between: 0, stretch: remaining / lineCount };
   }
 
   const nonStretch = distribution === LayoutDistribution.Stretch ? LayoutDistribution.Start : distribution;
 
-  return Object.freeze({ ...resolveFlexSpaceDistribution(nonStretch, remaining, lineCount), stretch: 0 });
+  return { ...resolveFlexSpaceDistribution(nonStretch, remaining, lineCount), stretch: 0 };
 };
 
 /** 计算一个 alignment 在 line cross slot 中的 child slot 起点 */

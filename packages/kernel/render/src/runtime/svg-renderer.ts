@@ -556,7 +556,7 @@ const unwrapPrimitiveContent = (
     contentElement = childElement;
   }
 
-  return Object.freeze({ descriptor: contentDescriptor, element: contentElement });
+  return { descriptor: contentDescriptor, element: contentElement };
 };
 
 type SvgRootDescriptorPlan = Readonly<{
@@ -581,11 +581,7 @@ const buildRootDescriptorPlan = (
     if (headCount < 0)
       throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG root descriptor primitive count is invalid');
 
-    return Object.freeze({
-      head: Object.freeze(children.slice(0, headCount)),
-      wrappers: Object.freeze([]),
-      primitives: Object.freeze(children.slice(headCount)),
-    });
+    return { head: children.slice(0, headCount), wrappers: [], primitives: children.slice(headCount) };
   }
 
   const head = children.slice(0, -1);
@@ -611,11 +607,7 @@ const buildRootDescriptorPlan = (
     throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG camera wrapper primitive count is invalid');
   }
 
-  return Object.freeze({
-    head: Object.freeze(head),
-    wrappers: Object.freeze(wrappers),
-    primitives: Object.freeze(primitives),
-  });
+  return { head, wrappers, primitives };
 };
 
 const buildSubtreeDescriptor = (

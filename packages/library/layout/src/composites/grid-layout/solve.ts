@@ -51,7 +51,7 @@ export const materializeGridTracks = (
     });
   }
 
-  return Object.freeze(Array.from({ length: count }, (_, index) => explicit[index] ?? implicit));
+  return Array.from({ length: count }, (_, index) => explicit[index] ?? implicit);
 };
 
 /** 把已求解 track size 与分布间距转换为物理坐标 */
@@ -62,13 +62,11 @@ export const positionGridTracks = (
   between: number,
 ): ReadonlyArray<PositionedGridTrack> => {
   let cursor = start + leading;
-  return Object.freeze(
-    sizes.map(size => {
-      const positioned = Object.freeze({ start: cursor, size });
-      cursor += size + between;
-      return positioned;
-    }),
-  );
+  return sizes.map(size => {
+    const positioned = { start: cursor, size };
+    cursor += size + between;
+    return positioned;
+  });
 };
 
 /** 读取一个连续 track span 覆盖的完整物理区间 */
@@ -87,7 +85,7 @@ export const gridSpanRange = (
     });
   }
 
-  return Object.freeze({ start: first.start, size: last.start + last.size - first.start });
+  return { start: first.start, size: last.start + last.size - first.start };
 };
 
 /** 从 child result 读取纵轴无原点 slot size */
@@ -103,16 +101,16 @@ export const gridStructuralGuideOffset = (
   );
   const slotHeight = slotHeightOf(result);
   if (guide === undefined) {
-    return Object.freeze({
+    return {
       offset: name === BuiltinLayoutAlignmentGuideName.FirstBaseline ? 0 : slotHeight,
       real: false,
-    });
+    };
   }
 
-  return Object.freeze({
+  return {
     offset: Math.min(Math.max(guide.position - result.allocationBounds.y, 0), slotHeight),
     real: true,
-  });
+  };
 };
 
 /** 求解 single-row items 的结构高度与 baseline targets */
@@ -148,11 +146,11 @@ export const resolveGridRowMetrics = (participants: ReadonlyArray<GridBaselinePa
 
   const size = Math.max(ordinary, firstAscent + firstDescent, lastAscent + lastDescent);
 
-  return Object.freeze({
+  return {
     size,
     ...(hasFirst ? { firstTarget: firstAscent } : {}),
     ...(hasLast ? { lastTarget: size - lastDescent } : {}),
-  });
+  };
 };
 
 /** 以内缩 margin 从 grid area 得到非负 child slot */

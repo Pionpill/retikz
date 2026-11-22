@@ -52,14 +52,8 @@ export const createInputLayoutItems = <TKind extends LayoutItemKind>(
   };
 
   /** 收集单个布局子项的 React child，不在 React 内归一化 */
-  const resolveLayoutItemChild = (
-    props: LayoutItemAuthoringProps,
-    embedIdPrefix: string,
-  ): Readonly<{
-    /** 当前布局项目包含的作者侧子元素 */
-    child: InputChild;
-  }> => {
-    if (props.ir !== undefined) return Object.freeze({ child: props.ir });
+  const resolveLayoutItemChild = (props: LayoutItemAuthoringProps, embedIdPrefix: string): InputChild => {
+    if (props.ir !== undefined) return props.ir;
 
     const input = createInputScene(props.children, { embedIdPrefix });
     const normalizedChildren = input.children;
@@ -71,7 +65,7 @@ export const createInputLayoutItems = <TKind extends LayoutItemKind>(
       });
     }
 
-    return Object.freeze({ child: normalizedChildren[0] });
+    return normalizedChildren[0];
   };
 
   const items = flattenLayoutChildren(children).map((child, index) => {
@@ -88,15 +82,15 @@ export const createInputLayoutItems = <TKind extends LayoutItemKind>(
     const { children: itemChildren, ir, itemKey, ...item } = props;
     void itemChildren;
     void ir;
-    const resolved = resolveLayoutItemChild(props, `${context.id}:items:${index}`);
+    const childInput = resolveLayoutItemChild(props, `${context.id}:items:${index}`);
 
     return {
       ...item,
       kind: expectedKind,
       ...(itemKey === undefined ? {} : { key: itemKey }),
-      child: resolved.child,
+      child: childInput,
     } as LayoutItemInputByKind[TKind];
   });
 
-  return Object.freeze({ items });
+  return { items };
 };

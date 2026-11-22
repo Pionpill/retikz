@@ -33,15 +33,12 @@ export const compileInspectionToScene = (
       target: snapshotInspectionValue(site.target),
       result: snapshot,
       options: snapshotInspectionValue(requestOptions),
-      appearance: snapshotInspectionValue({
+      appearance: Object.freeze({
         colorScope,
         scopeColor: categoricalColorAt(DEFAULT_RESOLVED_THEME.colors.categorical, colorScope),
         semanticColors: DEFAULT_RESOLVED_THEME.colors.semantic,
       }),
       ...(site.transform === undefined ? {} : { transform: snapshotInspectionValue(site.transform) }),
-    });
-    const withWarnings = Object.freeze({
-      ...context,
       warn: (code: string, message: string): void => {
         diagnostics.push({ origin, cause: { code, message } });
       },
@@ -49,7 +46,7 @@ export const compileInspectionToScene = (
     let fragments: InspectorOutput;
     try {
       // 注册键与 subject 匹配已在选择阶段建立，异构注册表在此恢复调用关系
-      fragments = definition.inspect(site.value as never, withWarnings as never);
+      fragments = definition.inspect(site.value as never, context as never);
     } catch (cause) {
       throw wrapInspectionError(origin, cause);
     }

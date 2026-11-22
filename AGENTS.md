@@ -173,6 +173,7 @@ Control: <human-directed|llm-autonomous>
 
 - 仅用于开发调试的代码及其专属计算统一放入 `if (__DEV__)`；生产必需的校验、异常和用户诊断回调不得受此开关控制。Vite 入口接入共享 DEV 插件，仓库内 Node/tsx 源码入口预加载 `config/dev-runtime.mjs`；库产物保留环境判断，由消费方生产构建裁剪。业务源码不自行读取 `NODE_ENV` 或定义运行时 DEV 常量。
 - TypeScript ESM；目录、文件、符号、enum、registry 和组件命名统一遵循 `standard-name`。
+- 外部输入需要运行时不可变快照时，只在接收边界对本方拥有的数据使用 `Object.freeze` 等手段；不冻结借用的调用方对象。内部只读约束用 `readonly` / `ReadonlyArray` 表达，不为中间结果逐层复制或冻结。
 - 内部代码依赖明确的 TypeScript 类型契约，不为纯 JavaScript 调用额外维护 `unknown`、`typeof`、`Array.isArray`、对象结构探测、重复 `throw` 或错误分支；纯 JavaScript 调用方自行负责类型校验。
 - `packages/**/src` 由 Retikz 主动创建的错误必须是 `RetikzError` 或其子类，自定义错误类统一命名为 `RetikzXxxError`；每个发布包一般只保留一个统一的 `Retikz<Package>Error`，通过 code、message、details 与 cause 区分失败。只有错误边界独立且调用方确实需要按 class 分支，或存在额外稳定结构字段时，才允许增加专用错误类型。生产源码不得创建原生 `Error`；第三方或用户回调异常在 Retikz API 边界包装为 owner 错误并原样保留为 `cause`，测试可用原生 `Error` 模拟外部失败。
 - JSON、持久化配置和其他类型不明确的外部输入只在 parse / schema 入口完成一次解析和校验；adapter 只将已类型化的 `InputXxx` 调度至 Vanilla API `normalizeXxx`。纵向领域 `resolveXxx` 只校验补全后才出现的领域不变量与真实上下文错误；不得在 normalize、resolve、lower 或 emit 重复 schema 已覆盖或明确 TypeScript 类型已保证的校验。已类型化的 Tier 2 封装和扩展回调由作者负责满足契约，不强制 Schema 解析；用户编写的代码不等同于外部数据。校验边界按数据来源判断，不按包边界判断；内部调用、跨包传递和官方编译产物消费不得重复执行 schema 结构校验。Schema 仍可用于类型派生与权威默认值复用，不得借此重新解析完整内部对象。

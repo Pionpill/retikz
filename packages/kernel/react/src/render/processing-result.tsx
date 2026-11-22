@@ -118,7 +118,7 @@ export const ProcessingResultHost: FC<ProcessingResultHostProps> = props => {
     onCompileResult,
   } = props;
 
-  const frame = useMemo(() => Object.freeze({ primary: result.scene, layers: result.layers }), [result]);
+  const frame = useMemo(() => ({ primary: result.scene, layers: result.layers }), [result]);
   const document = useMemo(
     () =>
       backend === 'canvas'

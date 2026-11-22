@@ -44,7 +44,7 @@ import { AsyncLayoutContent } from './AsyncLayoutContent';
 import { collectHydrationHandlers } from './collect-hydration-handlers';
 import { useRendererMode } from './renderer-context';
 import type { LayoutRuntimeOptions } from './runtime-options';
-import { captureLayoutRuntimeOptions, LayoutRuntimeMode } from './runtime-options';
+import { LayoutRuntimeMode } from './runtime-options';
 import { mergeThemeOverlays, useTheme } from './theme-context';
 import { mergeThemeDefinitions, useThemeDefinitions } from './theme-definitions-context';
 
@@ -210,7 +210,7 @@ export type LayoutProps = {
   handlers?: HydrationHandlers;
   /**
    * 选择 retained 增量更新或 static 完整编译模式；省略时使用 retained
-   * @default captureLayoutRuntimeOptions
+   * @default LayoutRuntimeMode.Retained
    */
   runtime?: LayoutRuntimeOptions;
   /**
@@ -400,14 +400,14 @@ export const Layout: FC<LayoutProps> = props => {
   } = props;
 
   const { shapes, boundaries, clips, arrows, marks, patterns, paths, composites, themeDefinitions } = extensions ?? {};
-  const resolvedRuntime = captureLayoutRuntimeOptions(runtime);
+  const { mode = LayoutRuntimeMode.Retained, preparation, signal, updateStrategy, onDiagnostic } = runtime ?? {};
   const isClientRendering = useSyncExternalStore(
     subscribeClientRendering,
     clientRenderingSnapshot,
     serverRenderingSnapshot,
   );
 
-  const prepareAsync = resolvedRuntime.preparation === 'async' && isClientRendering;
+  const prepareAsync = preparation === 'async' && isClientRendering;
   const stableShapes = canonicalizeDefinitionArray(shapes);
   const stableBoundaries = canonicalizeDefinitionArray(boundaries);
   const stableClips = canonicalizeDefinitionArray(clips);
@@ -473,10 +473,10 @@ export const Layout: FC<LayoutProps> = props => {
     () => ({
       defaultFontFamily,
       compileDriver,
-      ...(prepareAsync ? { signal: resolvedRuntime.signal } : {}),
-      ...(resolvedRuntime.updateStrategy === undefined
+      ...(prepareAsync ? { signal } : {}),
+      ...(updateStrategy === undefined
         ? {}
-        : { reconciler: { incremental: true, updateStrategy: resolvedRuntime.updateStrategy } }),
+        : { reconciler: { incremental: true, updateStrategy } }),
       compile: {
         measureText,
         nodeDistance,
@@ -497,8 +497,8 @@ export const Layout: FC<LayoutProps> = props => {
       defaultFontFamily,
       compileDriver,
       prepareAsync,
-      resolvedRuntime.signal,
-      resolvedRuntime.updateStrategy,
+      signal,
+      updateStrategy,
       measureText,
       nodeDistance,
       fontSize,
@@ -517,7 +517,7 @@ export const Layout: FC<LayoutProps> = props => {
 
   const rawId = useId();
   const processingControllerIdentity = useMemo(
-    () => Object.freeze({ options: processingOptions, key: createProcessingControllerKey() }),
+    () => ({ options: processingOptions, key: createProcessingControllerKey() }),
     [processingOptions],
   );
   const resolvedIdPrefix = idPrefix ?? rawId.replace(/[^a-zA-Z0-9]/g, '');
@@ -541,29 +541,29 @@ export const Layout: FC<LayoutProps> = props => {
     onArtifacts,
     onCompileResult,
   };
-  const hostKey = `${resolvedRuntime.mode}:${renderer}:${resolvedIdPrefix}`;
+  const hostKey = `${mode}:${renderer}:${resolvedIdPrefix}`;
   if (prepareAsync)
     return (
       <AsyncLayoutContent
         key={processingControllerIdentity.key}
         source={source}
         options={processingOptions}
-        mode={resolvedRuntime.mode ?? LayoutRuntimeMode.Retained}
+        mode={mode}
         hostKey={hostKey}
         hostProps={hostProps}
-        onDiagnostic={resolvedRuntime.onDiagnostic}
+        onDiagnostic={onDiagnostic}
         deliverDiagnostics={deliverProcessingDiagnostics}
       />
     );
 
-  return resolvedRuntime.mode === LayoutRuntimeMode.Static ? (
+  return mode === LayoutRuntimeMode.Static ? (
     <StaticLayoutContent source={source} options={processingOptions} hostKey={hostKey} hostProps={hostProps} />
   ) : (
     <RetainedLayoutContent
       key={processingControllerIdentity.key}
       source={source}
       options={processingOptions}
-      onDiagnostic={resolvedRuntime.onDiagnostic}
+      onDiagnostic={onDiagnostic}
       hostKey={hostKey}
       hostProps={hostProps}
     />

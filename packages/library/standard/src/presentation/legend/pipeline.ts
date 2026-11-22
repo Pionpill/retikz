@@ -123,17 +123,16 @@ const profileFlexItemOf = (
   shrink: number;
   marginStart: number;
   marginEnd: number;
-}> =>
-  Object.freeze({
-    key,
-    sourceIndex,
-    flexBaseSlot: profile.natural,
-    min: profile.minimum,
-    grow: 0,
-    shrink: 0,
-    marginStart: 0,
-    marginEnd: 0,
-  });
+}> => ({
+  key,
+  sourceIndex,
+  flexBaseSlot: profile.natural,
+  min: profile.minimum,
+  grow: 0,
+  shrink: 0,
+  marginStart: 0,
+  marginEnd: 0,
+});
 
 /** 使用共享 Flex cross metrics 读取两个结构块的最大 cross profile */
 const flexCrossProfileOf = (
@@ -163,10 +162,10 @@ const rootProfile = (
     ? resolveFlexLineMainProfile(profileItems, [0, 1], titleGap)
     : flexCrossProfileOf(title, body);
 
-  return Object.freeze({
+  return {
     minimum: compensatedLayoutSum([paddingSize, profile.minimum]),
     natural: compensatedLayoutSum([paddingSize, profile.natural]),
-  });
+  };
 };
 
 /** 通过共享 Box size policy 解析 Legend 单轴 allocation */
@@ -316,25 +315,23 @@ const compileLegendRamp = (
   const authoredScopeProps = authoredScopePropsOf(node);
   const ramp = node.content;
   let nextOccurrence = 0;
-  const titleHandle =
-    node.title === undefined ? undefined : Object.freeze({ child: node.title, occurrence: nextOccurrence++ });
-  const sampleHandle = Object.freeze({ child: ramp.sample, occurrence: nextOccurrence++ });
+  const titleHandle = node.title === undefined ? undefined : { child: node.title, occurrence: nextOccurrence++ };
+  const sampleHandle = { child: ramp.sample, occurrence: nextOccurrence++ };
   const tickHandles = ramp.ticks.map(tick => {
-    const labelHandle =
-      tick.label === undefined ? undefined : Object.freeze({ child: tick.label, occurrence: nextOccurrence++ });
-    return Object.freeze({ ...(labelHandle === undefined ? {} : { labelHandle }) });
+    const labelHandle = tick.label === undefined ? undefined : { child: tick.label, occurrence: nextOccurrence++ };
+    return { ...(labelHandle === undefined ? {} : { labelHandle }) };
   });
 
   const titleMeasured = titleHandle === undefined ? undefined : measureLayoutChild(context, titleHandle);
   const sampleMeasured = measureLayoutChild(context, sampleHandle);
   const measuredTicks = ramp.ticks.map((tick, sourceIndex) => {
     const labelHandle = tickHandles[sourceIndex].labelHandle;
-    return Object.freeze({
+    return {
       key: tick.key,
       sourceIndex,
       offset: tick.offset,
       ...(labelHandle === undefined ? {} : { labelHandle, label: measureLayoutChild(context, labelHandle).natural }),
-    });
+    };
   });
 
   const localStructure = createLegendRampStructure(ramp, sampleMeasured.natural, measuredTicks);
@@ -388,7 +385,7 @@ const compileLegendRamp = (
             node.overflow,
           );
 
-    return Object.freeze({ tick, label });
+    return { tick, label };
   });
 
   const bodyChildren = [sample, ...finalTicks.flatMap(tick => (tick.label === null ? [] : [tick.label]))];
@@ -453,26 +450,24 @@ export const compileLegend = (
   const authoredScopeProps = authoredScopePropsOf(node);
 
   let nextOccurrence = 0;
-  const titleHandle =
-    node.title === undefined ? undefined : Object.freeze({ child: node.title, occurrence: nextOccurrence++ });
+  const titleHandle = node.title === undefined ? undefined : { child: node.title, occurrence: nextOccurrence++ };
   const itemHandles = node.content.items.map(item => {
-    const sampleHandle = Object.freeze({ child: item.sample, occurrence: nextOccurrence++ });
-    const labelHandle =
-      item.label === undefined ? undefined : Object.freeze({ child: item.label, occurrence: nextOccurrence++ });
+    const sampleHandle = { child: item.sample, occurrence: nextOccurrence++ };
+    const labelHandle = item.label === undefined ? undefined : { child: item.label, occurrence: nextOccurrence++ };
 
-    return Object.freeze({ sampleHandle, ...(labelHandle === undefined ? {} : { labelHandle }) });
+    return { sampleHandle, ...(labelHandle === undefined ? {} : { labelHandle }) };
   });
 
   const titleMeasured = titleHandle === undefined ? undefined : measureLayoutChild(context, titleHandle);
   const measured: Array<CompileMeasuredItem> = node.content.items.map((authored: IRLegendItem, sourceIndex) => {
     const handles = itemHandles[sourceIndex];
-    return Object.freeze({
+    return {
       authored,
       sourceIndex,
       sample: measureLayoutChild(context, handles.sampleHandle),
       ...(handles.labelHandle === undefined ? {} : { label: measureLayoutChild(context, handles.labelHandle) }),
       ...handles,
-    });
+    };
   });
 
   const padding = resolveLayoutSpacing(node.padding);
@@ -554,10 +549,10 @@ export const compileLegend = (
   const contentBounds = contentRectOf(allocation, padding);
   const titleHeight = titleResult?.slotSize.height ?? 0;
   const structuralBodyWidth = flowPlan.bounds.width;
-  const bodyOrigin = Object.freeze({
+  const bodyOrigin = {
     x: alignedContentX(contentBounds, structuralBodyWidth, node.contentAlign),
     y: contentBounds.y + titleHeight + effectiveTitleGap,
-  });
+  };
   const structuralPlacement = translatePairedFlowPlan(flowPlan, bodyOrigin);
 
   const finalItems = structuralPlacement.slots.map(slots => {
@@ -585,7 +580,7 @@ export const compileLegend = (
           );
     const children = label === null ? [sample] : [sample, label];
 
-    return Object.freeze({ measured: measuredItem, sample, label, geometry: geometryOf(children) });
+    return { measured: measuredItem, sample, label, geometry: geometryOf(children) };
   });
 
   const bodyAllocationRects = finalItems.map(item => item.geometry.allocationBounds);

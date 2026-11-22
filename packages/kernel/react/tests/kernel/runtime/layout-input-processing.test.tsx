@@ -16,14 +16,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Layout, Node, Scope } from '../../../src';
 
-const testTheme = defineTheme({
-  name: 'academic',
-  resolve: () => ({
-    semantic: { error: '#aa0000', success: '#00aa00', warning: '#aaaa00', guide: '#666666' },
-    categorical: ['#112233'],
-  }),
-});
-
 /** 创建记录完整帧提交的 Vanilla compile driver */
 const createCommitTrackingCompileDriver = (): Readonly<{
   driver: VanillaCompileDriver;
@@ -302,7 +294,9 @@ describe('<Layout> 的 Vanilla Input processing', () => {
     await act(() => root.unmount());
   });
 
-  it('仅通过 Vanilla processing 将嵌入式 Scope Theme 交给 React bridge', async () => {
+  it('Scope 主题由 Core 解析，embed 只收到作者位置', async () => {
+    const resolveTheme = vi.fn(() => ({}));
+    const testTheme = defineTheme({ name: 'academic', resolve: resolveTheme });
     const receiveContext = vi.fn();
     const adapter: InputEmbedAdapter = {
       kind: 'ThemeProbe',
@@ -331,12 +325,12 @@ describe('<Layout> 的 Vanilla Input processing', () => {
       ),
     );
 
-    expect(receiveContext).toHaveBeenCalledWith(
-      expect.objectContaining({
-        theme: expect.objectContaining({ name: 'academic', mode: ThemeMode.Dark }),
-        themeDefinitions: [testTheme],
-      }),
-    );
+    expect(resolveTheme).toHaveBeenCalledWith({ mode: ThemeMode.Dark });
+    expect(receiveContext).toHaveBeenCalled();
+    for (const [context] of receiveContext.mock.calls) {
+      expect(context).not.toHaveProperty('theme');
+      expect(context).not.toHaveProperty('themeDefinitions');
+    }
 
     await act(() => root.unmount());
   });

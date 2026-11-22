@@ -50,18 +50,3 @@ export type LayoutStaticRuntimeOptions = LayoutPreparationOptions &
 
 /** 通过 mode 选择图形更新方式；retained 支持更新策略和诊断回调，static 不接受这两个选项 */
 export type LayoutRuntimeOptions = LayoutRetainedRuntimeOptions | LayoutStaticRuntimeOptions;
-
-/** 在 render 阶段复制 Runtime 配置，避免后续突变改变本次分派 */
-export const captureLayoutRuntimeOptions = (runtime: LayoutRuntimeOptions | undefined): LayoutRuntimeOptions => {
-  if (runtime === undefined) return Object.freeze({ mode: LayoutRuntimeMode.Retained });
-  if (runtime.mode === LayoutRuntimeMode.Static)
-    return Object.freeze({ mode: runtime.mode, preparation: runtime.preparation, signal: runtime.signal });
-
-  return Object.freeze({
-    mode: LayoutRuntimeMode.Retained,
-    preparation: runtime.preparation,
-    signal: runtime.signal,
-    ...(runtime.updateStrategy === undefined ? {} : { updateStrategy: runtime.updateStrategy }),
-    ...(runtime.onDiagnostic === undefined ? {} : { onDiagnostic: runtime.onDiagnostic }),
-  });
-};

@@ -35,7 +35,7 @@ const snapshotLowerOptions = (input: TablesLoweringOptions): TablesLoweringOptio
 /** 创建供 React 与 Vanilla 宿主统一聚合的 Table runtime contribution */
 export const createTableRuntimeContribution = (input: InputTableRuntimeContribution): TableRuntimeContribution => {
   const tableProvider = createTableProvider(input.data ?? {}, snapshotLowerOptions(input.lowerOptions ?? {}));
-  const nestedProviders = [...(input.composites ?? [])].map(createTableNestedDefinitionProvider);
+  const nestedProviders = (input.composites ?? []).map(createTableNestedDefinitionProvider);
 
   return {
     roots: Object.freeze([tableProvider.key, ...nestedProviders.map(provider => provider.key)]),

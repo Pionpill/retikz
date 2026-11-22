@@ -135,7 +135,7 @@ export const resolveGridPlacements = (
     }
 
     occupied.push(rect);
-    resolved[placement.sourceIndex] = Object.freeze(placement);
+    resolved[placement.sourceIndex] = placement;
     columnCount = Math.max(columnCount, rect.columnEnd);
     rowCount = Math.max(rowCount, rect.rowEnd);
   };
@@ -264,21 +264,19 @@ export const resolveGridPlacements = (
     else cursorRow += rowSpan;
   }
 
-  return Object.freeze({
+  return {
     columnCount,
     rowCount,
-    items: Object.freeze(
-      resolved.map(value => {
-        if (value === undefined) {
-          throw new RetikzLayoutError({
-            code: RetikzLayoutErrorCode.PlacementInvalid,
-            message: 'GridLayout placement did not resolve every item',
-            details: { phase: 'resolution' },
-          });
-        }
+    items: resolved.map(value => {
+      if (value === undefined) {
+        throw new RetikzLayoutError({
+          code: RetikzLayoutErrorCode.PlacementInvalid,
+          message: 'GridLayout placement did not resolve every item',
+          details: { phase: 'resolution' },
+        });
+      }
 
-        return value;
-      }),
-    ),
-  });
+      return value;
+    }),
+  };
 };

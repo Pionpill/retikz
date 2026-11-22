@@ -69,7 +69,7 @@ export const bindWaapiDescriptorElements = (
   const pendingAnimations = new Set<Animation>();
   const pendingObservers = new Set<IntersectionObserver>();
   const pendingListenerCleanups = new Set<() => void>();
-  const styleOwner = Object.freeze({});
+  const styleOwner = {};
   const ownedStyles = new Map<SVGElement, WaapiStyleOwnership>();
   const hasIO = typeof IntersectionObserver !== 'undefined';
   let cleanupStarted = false;

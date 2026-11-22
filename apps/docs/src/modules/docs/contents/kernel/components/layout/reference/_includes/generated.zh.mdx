@@ -44,7 +44,7 @@
 |        | `animations?`      | `ReadonlyArray<IRAnimationTrack>`                       | —                             | Scene 根动画                                                                                             |
 |        | `snapshotAt?`      | `number`                                                | —                             | 动画采样时刻，单位为毫秒；指定后定格在该时刻，不播放动画，优先于 animate                                 |
 | 运行时 | `authoring?`       | `unknown`                                               | —                             | 供自定义 compileDriver 消费的 JSX 输入元数据；传入 ir 时忽略，不写入持久化 Scene IR                      |
-|        | `runtime?`         | `LayoutRuntimeOptions`                                  | `captureLayoutRuntimeOptions` | 选择 retained 增量更新或 static 完整编译模式；省略时使用 retained                                        |
+|        | `runtime?`         | `LayoutRuntimeOptions`                                  | `LayoutRuntimeMode.Retained` | 选择 retained 增量更新或 static 完整编译模式；省略时使用 retained                                        |
 | 输出   | `onArtifacts?`     | `(artifacts: ReadonlyArray<CompositeArtifact>) => void` | —                             | 编译附加产物成功提交后的通知                                                                             |
 |        | `onCompileResult?` | `(result: CompileResult) => void`                       | —                             | Core 完整编译结果通知                                                                                    |
 | 扩展   | `compileDriver?`   | `VanillaCompileDriver`                                  | —                             | 处理作者输入的编译驱动                                                                                   |
