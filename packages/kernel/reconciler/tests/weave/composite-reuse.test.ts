@@ -65,11 +65,11 @@ describe('Composite 增量贡献', () => {
     };
     const options = { composites: [definition] };
     const manager = new WeaveManager(source, options);
-    const mounted = manager.mount();
+    manager.mount();
     const changed: IRNode = { ...anchor, text: 'BB', style: { fill: 'blue' } };
     const candidate = manager.update({
       operations: [
-        { kind: 'update', target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'anchor' }, input: changed },
+        { kind: 'update', target: { kind: 'id', scopeId: manager.root.scopeId, id: 'anchor' }, input: changed },
       ],
     });
     expect(calls).toBe(1);
@@ -112,11 +112,11 @@ describe('Composite 增量贡献', () => {
     };
     const options = { composites: [definition] };
     const manager = new WeaveManager(source, options, { captureProvenance: true });
-    const mounted = manager.mount();
+    manager.mount();
     const moved: IRCoordinate = { type: 'coordinate', id: 'origin', position: [40, 20] };
     const candidate = manager.update({
       operations: [
-        { kind: 'update', target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'origin' }, input: moved },
+        { kind: 'update', target: { kind: 'id', scopeId: manager.root.scopeId, id: 'origin' }, input: moved },
       ],
     });
     expect(candidate.compilation).toEqual(
@@ -158,7 +158,7 @@ describe('Composite 增量贡献', () => {
     const options = { composites: [definition] };
     const execution = { captureProvenance: true };
     const session = new WeaveManager(source, options, execution);
-    const initial = session.mount();
+    session.mount();
     const changed: IRNode = {
       ...consumer,
       position: { direction: 'right', of: 'generated', distance: 50 },
@@ -168,7 +168,7 @@ describe('Composite 增量贡献', () => {
         operations: [
           {
             kind: 'update',
-            target: { kind: 'id', scopeId: initial.root.scopeId, id: 'consumer' },
+            target: { kind: 'id', scopeId: session.root.scopeId, id: 'consumer' },
             input: changed,
           },
         ],
@@ -225,7 +225,7 @@ describe('Composite 增量贡献', () => {
     const changedOther: IRNode = { ...other, position: [250, 20] };
     const independent = session.update({
       operations: [
-        { kind: 'update', target: { kind: 'id', scopeId: initial.root.scopeId, id: 'other' }, input: changedOther },
+        { kind: 'update', target: { kind: 'id', scopeId: session.root.scopeId, id: 'other' }, input: changedOther },
       ],
     });
     expect(calls).toBe(1);
@@ -242,7 +242,7 @@ describe('Composite 增量贡献', () => {
     const changedAnchor: IRNode = { ...anchor, position: [150, 50] };
     const changed = session.update({
       operations: [
-        { kind: 'update', target: { kind: 'id', scopeId: initial.root.scopeId, id: 'anchor' }, input: changedAnchor },
+        { kind: 'update', target: { kind: 'id', scopeId: session.root.scopeId, id: 'anchor' }, input: changedAnchor },
       ],
     });
     expect(calls).toBe(beforeChangedDependency + 1);
@@ -257,7 +257,7 @@ describe('Composite 增量贡献', () => {
     const beforeRetry = calls;
     const retry = session.update({
       operations: [
-        { kind: 'update', target: { kind: 'id', scopeId: initial.root.scopeId, id: 'other' }, input: other },
+        { kind: 'update', target: { kind: 'id', scopeId: session.root.scopeId, id: 'other' }, input: other },
       ],
     });
     expect(calls).toBe(beforeRetry);

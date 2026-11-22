@@ -57,8 +57,8 @@ describe('路径比例与几何独立选择', () => {
       { type: 'scene', version: 1, children: [{ type: 'path', children, marks: [{ shape: 'star', pos: 0.5 }] }] },
       { precision: 0 },
     );
-    const mounted = session.mount();
-    const node = readWeaveCurrent(mounted.root).children[0];
+    session.mount();
+    const node = readWeaveCurrent(session.root).children[0];
     if (node.type !== 'path') throw new Error('Expected path');
     const layout = readWeaveCurrent(node).compile?.value.stroke?.layout;
     expect(layout?.positions?.original.totalLength).toBeCloseTo(100.62, 6);
@@ -121,8 +121,8 @@ describe('路径比例与几何独立选择', () => {
         },
       ],
     });
-    const mounted = session.mount();
-    const path = readWeaveCurrent(mounted.root).children[0];
+    session.mount();
+    const path = readWeaveCurrent(session.root).children[0];
     if (path.type !== 'path') throw new Error('Expected path');
     const layout = readWeaveCurrent(path).compile?.value.stroke?.layout;
     expect(layout?.labels?.steps?.[1]?.placement?.logicalSample !== undefined).toBe(hasGap);
@@ -144,8 +144,8 @@ describe('路径比例与几何独立选择', () => {
         },
       ],
     });
-    const mounted = session.mount();
-    const path = readWeaveCurrent(mounted.root).children[0];
+    session.mount();
+    const path = readWeaveCurrent(session.root).children[0];
     if (path.type !== 'path') throw new Error('Expected path');
     const rotation = readWeaveCurrent(path).compile?.value.stroke?.layout?.marks?.[0]?.placement?.transforms[1];
     expect(rotation).toEqual({ kind: 'rotate', degrees: 90 });
@@ -173,8 +173,8 @@ describe('路径比例与几何独立选择', () => {
         },
       ],
     });
-    const mounted = session.mount();
-    const path = readWeaveCurrent(mounted.root).children[0];
+    session.mount();
+    const path = readWeaveCurrent(session.root).children[0];
     if (path.type !== 'path') throw new Error('Expected path');
     const point =
       readWeaveCurrent(path).compile?.value.stroke?.layout?.labels?.steps?.[1]?.placement?.logicalSample?.sample.point;

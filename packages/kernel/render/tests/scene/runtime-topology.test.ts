@@ -142,7 +142,7 @@ describe('Core 规范 Runtime 拓扑', () => {
       ['primitives', 1],
       ['primitives', 1, 'children', 0],
     ]);
-    expect(topology.map(node => node.order)).toEqual([0, 0, 1, 0]);
+    expect(topology.map(node => node.primitivePath.at(-1))).toEqual([0, 0, 1, 0]);
     expect(topology[1].parent).toEqual(topology[0].identity);
     expect(topology[3].parent).toEqual(topology[2].identity);
     expect(topology[1].identity).not.toEqual(topology[3].identity);

@@ -38,8 +38,6 @@ export type SceneRuntimeNode = Readonly<{
   semanticOwner: SceneIdentity;
   /** document root 或父 Group occurrence */
   parent: SceneIdentity;
-  /** 在同一 parent 内的 canonical 顺序 */
-  order: number;
   /** 相对完整 Scene 的属性路径，如 ['primitives', 0, 'children', 1] */
   primitivePath: PropertyPath;
   /** 可选用户公开 id */
@@ -54,8 +52,6 @@ export type SceneRuntimeSubtreeNode = Readonly<{
   semanticOwner: SceneIdentity;
   /** subtree 内父 occurrence，root 缺省 */
   parent?: SceneIdentity;
-  /** 在同一 parent 内的 canonical 顺序 */
-  order: number;
   /** 相对子树根图元的属性路径；根为 []，子项为 ['children', index] */
   primitivePath: PropertyPath;
   /** 可选用户公开 id */
@@ -99,8 +95,6 @@ export type ScenePatchOperation =
   | Readonly<{
       /** operation 判别符 */
       kind: 'update';
-      /** 被替换的现有 subtree root identity，必须等于 subtree.root */
-      identity: SceneIdentity;
       /** 替换 primitive 与 descendants 的完整相对 Scene subtree */
       subtree: SceneRuntimeSubtree;
     }>

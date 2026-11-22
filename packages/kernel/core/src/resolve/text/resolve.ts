@@ -30,7 +30,6 @@ export const resolveTextBlock = (
       return {
         segments: [{ text: line, font: resolveFont(undefined, { rootFontSize: context.rootFontSize, inheritedFont }) }],
         plainText: line,
-        hasMath: false,
         mixed: false,
       };
     }
@@ -146,7 +145,6 @@ const resolveTextLine = (
   return {
     segments,
     plainText,
-    hasMath: parsed.hasMath,
     mixed: parsed.hasMath || (typeof source === 'object' && 'segments' in source),
     ...(styled === undefined ? {} : { style: resolveExplicitStyle(styled, context) }),
   };

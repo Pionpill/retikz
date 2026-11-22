@@ -35,7 +35,8 @@ describe('Weave 批次更新', () => {
     );
     const source: IRScene = { type: 'scene', version: 1, children };
     const session = new WeaveManager(source);
-    const { root, compilation } = session.mount();
+    const { compilation } = session.mount();
+    const { root } = session;
     const before = compileTestResult(source);
     const changed = { ...children[75], position: [500, 0] as [number, number], zIndex: -1 };
     const update = (index: number, input: typeof changed | (typeof children)[number]) =>
@@ -75,7 +76,7 @@ describe('Weave 批次更新', () => {
     const options = { fontSize: 20 };
     const session = new WeaveManager(input, options);
     const mounted = session.mount();
-    const scope = readWeaveCurrent(mounted.root).children[0];
+    const scope = readWeaveCurrent(session.root).children[0];
     if (scope.type !== 'scope') throw new Error('Expected scope');
     const defaults = { node: { style: { font: { size: '2em', weight: 'bold' } } } } as const;
     const prepared = session.update({
@@ -110,7 +111,7 @@ describe('Weave 批次更新', () => {
     expect(before[0].path).toEqual(['children', 2, 'id']);
     const remove = () =>
       session.update({
-        operations: [{ kind: 'remove', target: { kind: 'child', scopeId: mounted.root.scopeId, index: 0 } }],
+        operations: [{ kind: 'remove', target: { kind: 'child', scopeId: session.root.scopeId, index: 0 } }],
       });
     const first = remove();
     expect(first.compilation.diagnostics).toEqual(
@@ -129,7 +130,8 @@ describe('Weave 批次更新', () => {
   it('匿名 Scope 身份跨更新保留，回滚不复用编号，不同会话使用不同根身份', () => {
     const input: IRScene = { type: 'scene', version: 1, children: [{ type: 'scope', children: [] }] };
     const session = new WeaveManager(input);
-    const { root } = session.mount();
+    session.mount();
+    const { root } = session;
     const initial = readWeaveCurrent(root).children[0];
     if (initial.type !== 'scope') throw new Error('Expected scope');
     const initialId = initial.scopeId;
@@ -150,7 +152,7 @@ describe('Weave 批次更新', () => {
     expect(inserted.scopeId).not.toBe(discarded.scopeId);
     expect(current[1]).toBe(initial);
     expect(initial.scopeId).toBe(initialId);
-    expect(new WeaveManager(input).mount().root.scopeId).not.toBe(root.scopeId);
+    expect(new WeaveManager(input).root.scopeId).not.toBe(root.scopeId);
     expect(second.compilation.result).toEqual(
       compileTestResult({ ...input, children: [{ type: 'scope', children: [] }, ...input.children] }),
     );
@@ -172,7 +174,8 @@ describe('Weave 批次更新', () => {
       ],
     };
     const session = new WeaveManager(input);
-    const { root } = session.mount();
+    session.mount();
+    const { root } = session;
     const originalRoot = readWeaveCurrent(root);
     const scope = originalRoot.children[0];
     if (scope.type !== 'scope') throw new Error('Expected scope');
@@ -196,7 +199,8 @@ describe('Weave 批次更新', () => {
   });
   it('插入后同批删除不提交未编译节点，空插入仍验证位置', () => {
     const session = new WeaveManager(scene);
-    const { root } = session.mount();
+    session.mount();
+    const { root } = session;
     const prepared = session.update({
       operations: [
         {
@@ -235,7 +239,8 @@ describe('Weave 批次更新', () => {
       ],
     };
     const session = new WeaveManager(input);
-    const { root } = session.mount();
+    session.mount();
+    const { root } = session;
     const scope = readWeaveCurrent(root).children[1];
     if (scope.type !== 'scope') throw new Error('Expected scope');
     const prepared = session.update({
@@ -283,7 +288,8 @@ describe('Weave 批次更新', () => {
       ],
     };
     const session = new WeaveManager(input);
-    const { root } = session.mount();
+    session.mount();
+    const { root } = session;
     const scope = readWeaveCurrent(root).children[1];
     if (scope.type !== 'scope') throw new Error('Expected scope');
     const prepared = session.update({
@@ -334,7 +340,8 @@ describe('Weave 批次更新', () => {
 
   it('最终确认后的旧回滚不会覆盖后续批次；候选存续时拒绝新批次', () => {
     const session = new WeaveManager(scene);
-    const { root } = session.mount();
+    session.mount();
+    const { root } = session;
     const first = session.update({
       operations: [
         {
@@ -366,7 +373,7 @@ describe('Weave 批次更新', () => {
   it('依赖消费者使用最终输入，独立分支复用，提交前保留旧树和输出', () => {
     const session = new WeaveManager(scene);
     const mounted = session.mount();
-    const root = mounted.root;
+    const root = session.root;
     const [a, b, independent] = readWeaveCurrent(root).children;
     const oldState = readWeaveCurrent(a);
     const oldIndependent = readWeaveCurrent(independent).compile?.value;
@@ -390,7 +397,7 @@ describe('Weave 批次更新', () => {
   it('按候选位置连续插入、修改和删除，并可在提交后回滚', () => {
     const session = new WeaveManager(scene);
     const mounted = session.mount();
-    const root = mounted.root;
+    const root = session.root;
     const before = readWeaveCurrent(root);
     const prepared = session.update({
       operations: [
@@ -428,7 +435,8 @@ describe('Weave 批次更新', () => {
       ],
     };
     const session = new WeaveManager(input);
-    const { root } = session.mount();
+    session.mount();
+    const { root } = session;
     const outer = readWeaveCurrent(root).children[0];
     if (outer.type !== 'scope') throw new Error('Expected scope');
     const prepared = session.update({
@@ -464,7 +472,8 @@ describe('Weave 批次更新', () => {
 
   it('删除后同名新增重新绑定，缺失引用失败不发布部分状态', () => {
     const session = new WeaveManager(scene);
-    const { root } = session.mount();
+    session.mount();
+    const { root } = session;
     const original = readWeaveCurrent(root);
     expect(() =>
       session.update({ operations: [{ kind: 'remove', target: { kind: 'id', scopeId: root.scopeId, id: 'a' } }] }),
@@ -506,7 +515,7 @@ it('宿主装饰默认更新与完整编译一致，并保留提交前结果', (
   const session = new WeaveManager(input);
   const mounted = session.mount();
   const before = structuredClone(mounted.compilation.result);
-  const scope = readWeaveCurrent(mounted.root).children[0];
+  const scope = readWeaveCurrent(session.root).children[0];
   if (scope.type !== 'scope') throw new Error('Expected scope');
   const properties = {
     type: 'scope' as const,
@@ -560,7 +569,7 @@ it('普通标记参数和路径更新与完整编译保持一致', () => {
     marks: [{ pos: 0.75, shape: 'dot', params: { radius: 6 } }],
   };
   const update = session.update({
-    operations: [{ kind: 'update', target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'host' }, input: path }],
+    operations: [{ kind: 'update', target: { kind: 'id', scopeId: session.root.scopeId, id: 'host' }, input: path }],
   });
   expect(update.compilation.result).toEqual(compileTestResult({ ...input, children: [path] }, options));
   expect(mounted.compilation.result).toEqual(before);

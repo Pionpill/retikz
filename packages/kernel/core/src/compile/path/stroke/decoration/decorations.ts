@@ -23,7 +23,7 @@ import { calculateEndpointArrowContact, emitEndpointArrowMark } from './shrink';
 const endpointResolutionOf = (resolution: StrokePathResolution, endpoint: 'start' | 'end') => {
   const arrow = resolution.canon.arrow?.[endpoint];
   if (arrow === undefined) return undefined;
-  const binding = resolution.arrows.get(arrow);
+  const binding = resolution.stroke.arrows.get(arrow);
   if (binding === undefined)
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Compile,
@@ -69,7 +69,7 @@ export const layoutStrokeMarks = (
         RetikzCoreErrorCode.Compile,
         `Cannot locate mark on a zero-length path at ${formatPropertyPath(resolution.irPath)}.marks[${index}]`,
       );
-    const binding = resolution.marks.get(mark);
+    const binding = resolution.stroke.marks.get(mark);
     if (binding === undefined)
       throw new RetikzCoreError(
         RetikzCoreErrorCode.Compile,
@@ -137,7 +137,7 @@ export const emitStrokeMarks = (
       primitives.push(cached.overall);
       continue;
     }
-    const binding = resolution.marks.get(mark);
+    const binding = resolution.stroke.marks.get(mark);
     const location = formatPropertyPath([...resolution.irPath, 'marks', index]);
     if (binding === undefined)
       throw new RetikzCoreError(RetikzCoreErrorCode.Compile, `Missing mark binding at ${location}`);

@@ -4,7 +4,7 @@ import { createDefaultInspectorRegistry } from '@retikz/inspect';
 import { prepareInspectionPresentation, renderInspectionToSvgString } from '@retikz/inspect/vanilla';
 import type { LayoutProps } from '@retikz/react';
 import { createInputScene } from '@retikz/react';
-import { toSceneResult, renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, renderToSvgString } from '@retikz/vanilla';
 import type { FC, ReactNode } from 'react';
 import { isValidElement } from 'react';
 
@@ -45,8 +45,7 @@ export const buildInspectionPreview = (
     themeDefinitions: PreviewThemeDefinitionBundle.core,
     measureText: browserMeasurer,
   };
-  const output = toSceneResult(input, { compile });
-  const result = output.compileResult ?? { scene: output.scene, artifacts: [] };
+  const { compileResult: result } = compileToScene(input, { compile });
   const options = {
     registry: props.registry ?? createDefaultInspectorRegistry(),
     requests: props.requests,
@@ -81,7 +80,7 @@ export const createBuiltinInspectPreviewSource = (
         </div>
       </div>
     );
-    const code = `import { toSceneResult, renderToSvgString } from '@retikz/vanilla';
+    const code = `import { compileToScene, renderToSvgString } from '@retikz/vanilla';
 import type { InputScene } from '@retikz/vanilla';
 import { createDefaultInspectorRegistry } from '@retikz/inspect';
 import type { InspectionRequest } from '@retikz/inspect';
@@ -93,8 +92,7 @@ import { browserMeasurer } from '@/modules/docs/components/component-preview/van
 const input: InputScene = ${JSON.stringify(output.input, null, 2)};
 const requests: ReadonlyArray<InspectionRequest> = ${JSON.stringify(element.props.requests, null, 2)};
 const compile = { clips: [pathClipDefinition], themeDefinitions: PreviewThemeDefinitionBundle.core, measureText: browserMeasurer };
-const primary = toSceneResult(input, { compile });
-const result = primary.compileResult ?? { scene: primary.scene, artifacts: [] };
+const { compileResult: result } = compileToScene(input, { compile });
 const options = { registry: createDefaultInspectorRegistry(), requests, compileOptions: compile, idPrefix: '${name}-inspection' };
 const auxiliary = prepareInspectionPresentation(result, options);
 export const primarySvg = renderToSvgString(result.scene, { output: { idPrefix: '${name}-primary' }, animation: { enabled: false } });

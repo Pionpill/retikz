@@ -489,10 +489,5 @@ export const resolvePath = (path: IRPathBase, context: PathResolveContext): Path
     definition: pathDefinition.definition,
   };
   if (pathDefinition.kind !== BuiltinPath.Stroke) return result;
-  const resolvedStroke = resolveStrokePathProviders(result, context);
-  return {
-    ...result,
-    canon: resolvedStroke.canon,
-    stroke: { arrows: resolvedStroke.arrows, marks: resolvedStroke.marks },
-  };
+  return resolveStrokePathProviders(result, context);
 };

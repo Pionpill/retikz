@@ -117,7 +117,7 @@ export const resolveStrokePathProviders = <TResolution extends PathResolution>(
   const children = path.children;
   const strokeTooShort = children === undefined || (children.length < 2 && children[0]?.kind !== 'rectangle');
   if (strokeTooShort) {
-    return { ...resolution, canon: path, arrows: new Map(), marks: new Map() };
+    return { ...resolution, canon: path, stroke: { arrows: new Map(), marks: new Map() } };
   }
 
   /** 按标记声明对象索引的解析结果 */
@@ -135,7 +135,6 @@ export const resolveStrokePathProviders = <TResolution extends PathResolution>(
   return {
     ...resolution,
     canon: path,
-    arrows: resolveEndpointArrowProviders(path.arrow, context),
-    marks,
+    stroke: { arrows: resolveEndpointArrowProviders(path.arrow, context), marks },
   };
 };

@@ -8,7 +8,7 @@ import type {
   ScenePrimitive,
 } from '../../contract';
 import { createCompositeContractError, createLayoutProbeRecoverableError, safeThrownDetail } from '../../resolve';
-import type { InputPaintResolution, PaintResolution, PatternResolution } from '../../resolve';
+import type { InputPaintResolution, PaintResolution } from '../../resolve';
 import type { IRPatternLineStyle } from '../../schemas';
 import { materializeScenePrimitives } from '../shared';
 import { formatResourceId, serializeResourceContent, storeSceneResource } from './identity';
@@ -105,8 +105,14 @@ export type PaintRegistry = {
 };
 
 /** compile 仅消费 resolve 阶段已绑定的 pattern 并调用 provider emit */
-const emitPatternTile = (resolution: PatternResolution, round: (n: number) => number): CompiledPatternTile => {
-  const { spec, definition, size, style } = resolution;
+const emitPatternTile = (
+  resolution: Extract<PaintResolution, { pattern: unknown }>,
+  round: (n: number) => number,
+): CompiledPatternTile => {
+  const {
+    spec,
+    pattern: { definition, size, style },
+  } = resolution;
   const context: PatternEmitContext = {
     size,
     ...style.base,
@@ -179,7 +185,7 @@ export const createPaintRegistry = (round: (n: number) => number): PaintRegistry
 
     const resource: PaintResource =
       'pattern' in resolution
-        ? { kind: 'paint', id: '', spec: resolution.spec, tile: emitPatternTile(resolution.pattern, round) }
+        ? { kind: 'paint', id: '', spec: resolution.spec, tile: emitPatternTile(resolution, round) }
         : resolution.spec.kind === 'image'
           ? { kind: 'paint', id: '', spec: resolution.spec }
           : { kind: 'paint', id: '', spec: resolution.spec };

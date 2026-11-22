@@ -158,7 +158,8 @@ export const createClipRegistry = (
 
   /** 降解当前裁剪并递归消费子声明，成功或异常退出均清理当前递归链 */
   const lowerClip = (resolution: ClipResolution, guard: ClipTraversalGuard): SceneClipPath => {
-    const { kind, definition, params, spec } = resolution;
+    const { definition, params, spec } = resolution;
+    const { kind } = spec;
     /** 本层加入递归链的对象，用于 finally 中成对移除 */
     const entered: Array<object> = [];
     for (const value of [spec, params]) {

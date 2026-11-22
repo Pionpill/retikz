@@ -36,5 +36,5 @@ export const resolveClip = (clip: IRClip, context: ClipResolveContext): ClipReso
 
   const resolve = (nested: IRClip): ClipResolution => resolveClip(nested, context);
 
-  return { spec: clip, kind, definition, params, resolve };
+  return { spec: clip, definition, params, resolve };
 };

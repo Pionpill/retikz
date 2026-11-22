@@ -115,7 +115,7 @@ describe('单次编译文字测量', () => {
       manager.update({
         operations: nodes.map(node => ({
           kind: 'update',
-          target: { kind: 'id', scopeId: mounted.root.scopeId, id: node.id! },
+          target: { kind: 'id', scopeId: manager.root.scopeId, id: node.id! },
           input: { ...node, text },
         })),
       });

@@ -9,6 +9,8 @@ description: 用无框架 InputScene 组织图形，并在根入口处理归一�
 
 应用从包根调用 `createProcessingController`、`prepareStaticProcessing` 或 `compileToScene`。自定义编译驱动通过 `VanillaCompileDriver` 及其输入、会话和输出契约接入；输入准备和驱动执行／提交 helper 由包内处理，不作为包根 API。
 
+输入既可能是作者声明，也可能是已有 Scene 时，用 `toSceneResult(input, options)`：已有 Scene 原样返回；作者声明返回与 `compileToScene` 相同的结果，从 `compileResult.scene` 读取主场景。只处理作者声明时直接用 `compileToScene`。
+
 ## 一次性编译
 
 将 Core IR 或 Vanilla InputScene 交给 `compileToScene` 即可取得 Scene 和 artifacts，无需创建或释放会话。配置继续使用 `options.compile`。需要异步作者准备时改用 `compileToSceneAsync`，并提供具备 prepare 能力的 adapter。

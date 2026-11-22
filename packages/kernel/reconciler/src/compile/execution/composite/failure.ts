@@ -25,7 +25,6 @@ export const createLayoutChildFailure = (
   failures.set(failure, {
     owner,
     providerKey,
-    sourcePath: occurrence.sourcePath,
     occurrence: Object.freeze({
       sourcePath: occurrence.sourcePath,
       expansionPath: Object.freeze(occurrence.expansionPath.map(segment => Object.freeze({ ...segment }))),
@@ -67,7 +66,7 @@ export const raiseLayoutChildFailure = (
 
   entry.consumed = true;
   throw createLayoutProbeRecoverableError(
-    `Layout child provider '${entry.providerKey}' failed at ${formatPropertyPath(entry.sourcePath)} (${formatCompileOccurrence(entry.occurrence)}): ${entry.detail}`,
+    `Layout child provider '${entry.providerKey}' failed at ${formatPropertyPath(entry.occurrence.sourcePath)} (${formatCompileOccurrence(entry.occurrence)}): ${entry.detail}`,
     { cause: entry.cause, detail: entry.detail, providerKey: entry.providerKey, occurrence: entry.occurrence },
   );
 };

@@ -11,7 +11,7 @@ describe('Scope 三层复用', () => {
     const source: IRScene = { type: 'scene', version: 1, children: [scope] };
     const session = new WeaveManager(source);
     const mounted = session.mount();
-    const entry = readWeaveCurrent(mounted.root).children[0];
+    const entry = readWeaveCurrent(session.root).children[0];
     if (entry.type !== 'scope') throw new Error('Expected scope');
     const previous = readWeaveCurrent(entry);
     expect(previous.resolve?.value).toBeDefined();
@@ -45,7 +45,7 @@ describe('Scope 三层复用', () => {
     };
     const session = new WeaveManager(source);
     const mounted = session.mount();
-    const child = readWeaveCurrent(mounted.root).children[1];
+    const child = readWeaveCurrent(session.root).children[1];
     if (child.type !== 'scope') throw new Error('Expected scope');
     const previous = readWeaveCurrent(child).compile?.value;
     const explicit: IRScope = { ...scope, transforms: [{ kind: 'offset-translate', of: 'origin', offset: [0, 0] }] };
@@ -53,7 +53,7 @@ describe('Scope 三层复用', () => {
       operations: [
         {
           kind: 'update',
-          target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'box' },
+          target: { kind: 'id', scopeId: session.root.scopeId, id: 'box' },
           input: explicit,
         },
       ],
@@ -67,7 +67,7 @@ describe('Scope 三层复用', () => {
       operations: [
         {
           kind: 'update',
-          target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'origin' },
+          target: { kind: 'id', scopeId: session.root.scopeId, id: 'origin' },
           input: moved,
         },
       ],

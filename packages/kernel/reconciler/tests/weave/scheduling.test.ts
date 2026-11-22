@@ -12,12 +12,12 @@ describe('Weave 更新调度', () => {
     const consumer: IRNode = { type: 'node', id: 'consumer', position: { direction: 'right', of: 'box' } };
     const source: IRScene = { type: 'scene', version: 1, children: [scope, consumer] };
     const session = new WeaveManager(source);
-    const mounted = session.mount();
+    session.mount();
     const nextChild: IRNode = { ...child, layout: { width: 90 } };
     const nextConsumer: IRNode = { ...consumer, style: { fill: 'red' } };
     const candidate = session.update({
       operations: [
-        { kind: 'update', target: { kind: 'child', scopeId: mounted.root.scopeId, index: 1 }, input: nextConsumer },
+        { kind: 'update', target: { kind: 'child', scopeId: session.root.scopeId, index: 1 }, input: nextConsumer },
         { kind: 'update', target: { kind: 'child', scopeId: session.getScopeId([0]), index: 0 }, input: nextChild },
       ],
     });
@@ -44,10 +44,10 @@ describe('Weave 更新调度', () => {
       operations: [
         {
           kind: 'update',
-          target: { kind: 'child', scopeId: mounted.root.scopeId, index: 1 },
+          target: { kind: 'child', scopeId: session.root.scopeId, index: 1 },
           input: { ...node, id: 'b' },
         },
-        { kind: 'update', target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'b' }, input: { ...node, id: 'c' } },
+        { kind: 'update', target: { kind: 'id', scopeId: session.root.scopeId, id: 'b' }, input: { ...node, id: 'c' } },
       ],
     });
     expect(candidate.compilation).toEqual(
@@ -86,11 +86,11 @@ describe('Weave 更新调度', () => {
       ],
     };
     const manager = new WeaveManager(source, {}, { captureProvenance: true });
-    const mounted = manager.mount();
+    manager.mount();
     const changed: IRNode = { ...other, position: [350, 0] };
     const candidate = manager.update({
       operations: [
-        { kind: 'update', target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'other' }, input: changed },
+        { kind: 'update', target: { kind: 'id', scopeId: manager.root.scopeId, id: 'other' }, input: changed },
       ],
     });
     expect(candidate.compilation).toEqual(
@@ -172,13 +172,13 @@ describe('Weave 更新调度', () => {
       ],
     };
     const manager = new WeaveManager(source);
-    const mounted = manager.mount();
+    manager.mount();
     const movedFirst: IRNode = { ...first, position: [20, 10] };
     const movedSecond: IRNode = { ...second, position: [180, 40] };
     const candidate = manager.update({
       operations: [
-        { kind: 'update', target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'b' }, input: movedSecond },
-        { kind: 'update', target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'a' }, input: movedFirst },
+        { kind: 'update', target: { kind: 'id', scopeId: manager.root.scopeId, id: 'b' }, input: movedSecond },
+        { kind: 'update', target: { kind: 'id', scopeId: manager.root.scopeId, id: 'a' }, input: movedFirst },
       ],
     });
     expect(candidate.compilation).toEqual(
@@ -211,18 +211,18 @@ describe('Weave 更新调度', () => {
         operations: [
           {
             kind: 'update',
-            target: { kind: 'child', scopeId: mounted.root.scopeId, index: 0 },
+            target: { kind: 'child', scopeId: session.root.scopeId, index: 0 },
             input: { ...edge('c'), kind: 'unregistered' },
           },
-          { kind: 'update', target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'c' }, input: changed },
+          { kind: 'update', target: { kind: 'id', scopeId: session.root.scopeId, id: 'c' }, input: changed },
         ],
       }),
     ).toThrow(/Unknown provider/);
     expect(mounted.compilation).toEqual(saved);
     const updated = session.update({
       operations: [
-        { kind: 'update', target: { kind: 'child', scopeId: mounted.root.scopeId, index: 0 }, input: edge('c') },
-        { kind: 'update', target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'c' }, input: changed },
+        { kind: 'update', target: { kind: 'child', scopeId: session.root.scopeId, index: 0 }, input: edge('c') },
+        { kind: 'update', target: { kind: 'id', scopeId: session.root.scopeId, id: 'c' }, input: changed },
       ],
     });
     expect(updated.compilation).toEqual(
@@ -259,7 +259,7 @@ describe('Weave 更新调度', () => {
     const source: IRScene = { type: 'scene', version: 1, children: [fixed, other] };
     const execution = { captureProvenance: true };
     const session = new WeaveManager(source, {}, execution);
-    const mounted = session.mount();
+    session.mount();
     const changed: IRNode = { ...other, position: [300, 0] };
     const candidate = session.update({
       operations: [
@@ -267,7 +267,7 @@ describe('Weave 更新调度', () => {
           kind: 'update',
           target: {
             kind: 'id',
-            scopeId: mounted.root.scopeId,
+            scopeId: session.root.scopeId,
             id: 'other',
           },
           input: changed,
@@ -305,7 +305,7 @@ describe('Weave 更新调度', () => {
       operations: [
         {
           kind: 'update',
-          target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'other' },
+          target: { kind: 'id', scopeId: session.root.scopeId, id: 'other' },
           input: changedOther,
         },
       ],
@@ -319,7 +319,7 @@ describe('Weave 更新调度', () => {
       operations: [
         {
           kind: 'insert',
-          parentId: mounted.root.scopeId,
+          parentId: session.root.scopeId,
           index: 1,
           elements: [missing],
         },

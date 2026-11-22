@@ -9,6 +9,8 @@ The package root works safely in SSR, build scripts, and other frameworks. Its d
 
 Applications use `createProcessingController`, `prepareStaticProcessing`, or `compileToScene` from the package root. Custom compile drivers implement `VanillaCompileDriver` with its input, session, and output contracts. Input preparation and driver execution/commit helpers remain internal.
 
+Use `toSceneResult(input, options)` for input that may already be a Scene. It returns that Scene unchanged, or the same processing result as `compileToScene` for authored input. Read the compiled scene at `compileResult.scene`. For authored input alone, use `compileToScene` directly.
+
 ## One-shot compilation
 
 Pass Core IR or a Vanilla InputScene to `compileToScene` to obtain a Scene and artifacts without creating or disposing a session. Compile configuration stays under `options.compile`. Use `compileToSceneAsync` for asynchronous authoring preparation, with adapters that provide prepare.

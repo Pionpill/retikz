@@ -41,6 +41,11 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
   /** 跨批次事实源与当前候选状态 */
   private readonly state: WeaveCompileState<TComposite>;
 
+  /** 读取此会话持有的稳定声明根 */
+  get root(): WeaveRoot {
+    return this.state.persistent.root;
+  }
+
   /** 内部编译操作只能在活动候选批次中执行 */
   private get batch(): WeaveBatchState {
     const batch = this.state.batch;
@@ -93,7 +98,7 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
       // 新树尚未对外发布；Runtime 再原子发布整棵树及输出
       batch.transaction.commit();
       batch.transaction.finish();
-      persistent.completed = { root: persistent.root, visited: batch.visited, compilation };
+      persistent.completed = { visited: batch.visited, compilation };
       persistent.addresses = batch.addresses;
       // 作者树接管声明；后续只在需要完整 Source 配对时才物化子数组
       persistent.source = { ...batch.source, children: [] };
@@ -221,7 +226,7 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
               .children.map(entry => editor.serializeEntryDeclaration(entry)),
           };
         const compilation = this.execute();
-        prepared = { root: persistent.root, visited: batch.visited, compilation };
+        prepared = { visited: batch.visited, compilation };
       }
 
       /** commit 后仍可恢复；只有发布成功后的 finish 才保存本批输入、索引和结果并释放候选 */

@@ -10,8 +10,6 @@ import { WeaveTransaction } from './transaction';
 
 /** 完成基础树编译后可提交的完整结果 */
 export type WeaveCompilation<TComposite extends AnyCompositeDefinition = AnyCompositeDefinition> = {
-  /** 保持身份稳定的声明根 */
-  root: WeaveRoot;
   /** 可交给输出事务提交的完整快照 */
   compilation: SceneCompilationSnapshot<TComposite>;
   /** 本次实际编译的元素数，不含缓存复用 */

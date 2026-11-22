@@ -816,7 +816,6 @@ const buildRootSubtree = (
       identity: node.identity,
       semanticOwner: node.semanticOwner,
       ...(node.primitivePath.length === 2 ? {} : { parent: node.parent }),
-      order: node.order,
       primitivePath: Object.freeze(node.primitivePath.slice(2)),
       ...(node.publicId === undefined ? {} : { publicId: node.publicId }),
     }),
@@ -1129,39 +1128,18 @@ type EntityScenePatchOperation = Extract<
   Readonly<{ kind: 'insert' | 'update' | 'remove' | 'move' }>
 >;
 
-/** 按 kind 提取单类 entity patch operation */
-type EntityScenePatchOperationOfKind<TKind extends EntityScenePatchOperation['kind']> = Extract<
-  EntityScenePatchOperation,
-  Readonly<{ kind: TKind }>
->;
-
 /** prepare 已解析完成、commit 无需再判断字段是否存在的 entity mutation plan */
 type PreparedEntityOperation =
-  | Readonly<{
-      kind: 'remove';
-      operation: EntityScenePatchOperationOfKind<'remove'>;
-      element: SVGElement;
-      parent: Node;
-      before: Node | null;
-    }>
-  | Readonly<{
-      kind: 'move';
-      operation: EntityScenePatchOperationOfKind<'move'>;
-      element: SVGElement;
-      parent: Node;
-      before: Node | null;
-    }>
-  | Readonly<{
-      kind: 'insert';
-      operation: EntityScenePatchOperationOfKind<'insert'>;
-      descriptor: SvgNode;
-      element: SVGElement;
-      parent: Node;
-      before: Node | null;
-    }>
+  | Readonly<
+      ({ kind: 'remove' } | { kind: 'move' } | { kind: 'insert' }) & {
+        element: SVGElement;
+        parent: Node;
+        before: Node | null;
+      }
+    >
   | Readonly<{
       kind: 'update';
-      operation: EntityScenePatchOperationOfKind<'update'>;
+      subtree: SceneRuntimeSubtree;
       descriptor: SvgNode;
       element: SVGElement;
       existing: SVGElement;
@@ -1330,7 +1308,6 @@ export const createBuiltinSvgRetainedRenderer = (
 
           return Object.freeze({
             kind: operation.kind,
-            operation,
             element,
             parent: element.parentNode,
             before: element.nextSibling,
@@ -1356,7 +1333,6 @@ export const createBuiltinSvgRetainedRenderer = (
 
           return Object.freeze({
             kind: operation.kind,
-            operation,
             element,
             parent,
             before,
@@ -1380,15 +1356,13 @@ export const createBuiltinSvgRetainedRenderer = (
 
           return Object.freeze({
             kind: operation.kind,
-            operation,
-            descriptor: subtreeDescriptor,
             element,
             parent,
             before,
           });
         }
 
-        const existing = currentElements.get(operation.identity);
+        const existing = currentElements.get(operation.subtree.root);
         if (existing === undefined || existing.parentNode === null)
           throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG update target is missing');
         if (existing.localName !== subtreeDescriptor.tag) {
@@ -1397,7 +1371,7 @@ export const createBuiltinSvgRetainedRenderer = (
 
           return Object.freeze({
             kind: operation.kind,
-            operation,
+            subtree: operation.subtree,
             descriptor: subtreeDescriptor,
             element,
             existing,
@@ -1408,7 +1382,7 @@ export const createBuiltinSvgRetainedRenderer = (
 
         return Object.freeze({
           kind: operation.kind,
-          operation,
+          subtree: operation.subtree,
           descriptor: subtreeDescriptor,
           element: existing,
           existing,
@@ -1472,9 +1446,6 @@ export const createBuiltinSvgRetainedRenderer = (
               continue;
             }
 
-            const operation = prepared.operation;
-            const subtree = operation.subtree;
-            const subtreeDescriptor = prepared.descriptor;
             if (prepared.kind === 'insert') {
               const parent = prepared.parent;
               const before = prepared.before;
@@ -1486,7 +1457,7 @@ export const createBuiltinSvgRetainedRenderer = (
               continue;
             }
 
-            const existing = prepared.existing;
+            const { existing, subtree, descriptor: subtreeDescriptor } = prepared;
             const element = prepared.element;
             if (element !== existing) {
               const parent = prepared.parent;

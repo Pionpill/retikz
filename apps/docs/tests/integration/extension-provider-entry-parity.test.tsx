@@ -89,8 +89,8 @@ describe('扩展根条目集成', () => {
     const vanilla = toSceneResult(source, { compile: definitions });
     const svg = renderToSvgString(source, { compile: definitions });
 
-    expect(vanilla.compileResult?.scene).toEqual(direct.scene);
-    expect(vanilla.compileResult?.artifacts).toEqual(direct.artifacts);
+    expect(vanilla.compileResult.scene).toEqual(direct.scene);
+    expect(vanilla.compileResult.artifacts).toEqual(direct.artifacts);
     expect(svg).toContain('optional shape');
     expect(svg).toContain('Source endpoint');
     expect(svg).toContain('Target endpoint');

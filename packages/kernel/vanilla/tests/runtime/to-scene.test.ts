@@ -21,9 +21,9 @@ describe('toSceneResult 场景与编译结果', () => {
     const vanilla = toSceneResult(inputScene({ theme, children: [child] }), {});
     const direct = toSceneResult({ type: 'scene', version: 1, theme, children: [child] }, {});
 
-    expect(vanilla.scene).toEqual(direct.scene);
-    expect(JSON.stringify(vanilla.scene)).toContain('#0a141f');
-    expect(JSON.stringify(vanilla.scene)).not.toContain('"fill":0.2');
+    expect(vanilla.compileResult.scene).toEqual(direct.compileResult.scene);
+    expect(JSON.stringify(vanilla.compileResult.scene)).toContain('#0a141f');
+    expect(JSON.stringify(vanilla.compileResult.scene)).not.toContain('"fill":0.2');
   });
 
   it('Vanilla Figure Theme 与直接 Core IR得到同一已物化 Scene', () => {
@@ -65,18 +65,17 @@ describe('toSceneResult 场景与编译结果', () => {
       },
     );
 
-    expect(vanilla.scene).toEqual(direct.scene);
-    expect(JSON.stringify(vanilla.scene)).not.toContain('theme');
+    expect(vanilla.compileResult.scene).toEqual(direct.compileResult.scene);
+    expect(JSON.stringify(vanilla.compileResult.scene)).not.toContain('theme');
   });
 
   it('预编译 Scene 不生成 compileResult', () => {
     const first = toSceneResult(scene, {});
 
-    expect(first.compileResult).toBeUndefined();
-    expect(Object.hasOwn(first, 'compileResult')).toBe(true);
+    expect(first).toBe(scene);
   });
 
-  it('同次返回 Composite artifacts，Scene 输入固定为空 immutable 数组', () => {
+  it('同次返回 Composite artifacts', () => {
     const marker = defineComposite({
       namespace: 'test',
       type: 'marker',
@@ -86,13 +85,10 @@ describe('toSceneResult 场景与编译结果', () => {
     });
     const ir: IRScene = { version: 1, type: 'scene', children: [{ namespace: 'test', type: 'marker', label: 'a' }] };
     const compiled = toSceneResult(ir, { compile: { composites: [marker] } });
-    const passedScene = toSceneResult(scene, { compile: {} });
-    expect(compiled.artifacts).toMatchObject([
+    expect(compiled.compileResult.artifacts).toMatchObject([
       { namespace: 'test', type: 'marker', occurrence: { sourcePath: ['children', 0], expansionPath: [] }, value: 'a' },
     ]);
-    expect(Object.isFrozen(compiled.artifacts)).toBe(true);
-    expect(passedScene.artifacts).toEqual([]);
-    expect(Object.isFrozen(passedScene.artifacts)).toBe(true);
+    expect(Object.isFrozen(compiled.compileResult.artifacts)).toBe(true);
   });
 
   it('预编译 Scene 使用编译驱动时 fail-loud，不从 Scene 反推 authored sites', () => {

@@ -39,7 +39,6 @@ describe('解析文本', () => {
       lines: [
         {
           plainText: 'a',
-          hasMath: true,
           style: { font: { size: expected.formulaSize } },
           segments: [
             { text: 'a', font: { size: expected.fontSize } },
@@ -92,7 +91,6 @@ describe('解析文本', () => {
     ).toMatchObject({
       segments: [{ text: 'a $x$ b', font: inheritedFont }],
       plainText: 'a $x$ b',
-      hasMath: false,
       mixed: false,
     });
     expect(
@@ -104,7 +102,6 @@ describe('解析文本', () => {
     ).toMatchObject({
       segments: [{ text: 'a ', font: inheritedFont }, { tex: 'x' }, { text: ' b', font: inheritedFont }],
       plainText: 'a  b',
-      hasMath: true,
       mixed: true,
     });
   });
@@ -166,7 +163,6 @@ describe('解析文本', () => {
       { text: 'a', fill: 'red', opacity: 0, font: { size: 18, family: 'mono', weight: 400 } },
       { tex: 'x', fill: 'blue', opacity: 0, fontSize: 9 },
     ]);
-    expect(resolved.hasMath).toBe(true);
     expect(resolved.mixed).toBe(true);
   });
 
@@ -178,7 +174,6 @@ describe('解析文本', () => {
     expect(resolved).toMatchObject({
       segments: [],
       plainText: '',
-      hasMath: false,
       mixed: true,
       style: { font: { size: 10 } },
     });

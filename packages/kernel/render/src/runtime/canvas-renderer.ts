@@ -551,12 +551,16 @@ const prepareDisplayListUpdate = (
   let dirty: CanvasBounds | undefined;
 
   for (const operation of patch.operations) {
-    const index = byIdentity.get(operation.identity);
+    const index = byIdentity.get(operation.subtree.root);
     const bounds = primitiveBounds(operation.subtree.primitive);
     if (index === undefined || bounds === undefined) return undefined;
 
     const previous = candidate[index];
-    candidate[index] = Object.freeze({ identity: operation.identity, primitive: operation.subtree.primitive, bounds });
+    candidate[index] = Object.freeze({
+      identity: operation.subtree.root,
+      primitive: operation.subtree.primitive,
+      bounds,
+    });
     dirty = unionBounds(dirty, unionBounds(previous.bounds, bounds));
   }
 

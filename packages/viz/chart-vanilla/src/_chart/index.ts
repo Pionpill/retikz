@@ -1,10 +1,9 @@
 import type { IRChartSource } from '@retikz/chart';
 import type { CompileResult } from '@retikz/reconciler';
 import type { RenderToStringOptions } from '@retikz/vanilla';
-import { renderToSvgString, scene, toSceneResult, compileToSceneAsync } from '@retikz/vanilla';
+import { renderToSvgString, scene, compileToScene, compileToSceneAsync } from '@retikz/vanilla';
 import type { AnyInputEmbed } from '@retikz/vanilla';
 
-import { RetikzChartVanillaError } from '../error';
 import type { InputChartHostTheme } from '../shared';
 
 export type { InputChartCoordinate } from '../normalize/chart';
@@ -56,11 +55,9 @@ const chartRenderRequest = (input: InputChartRender, compile: ChartRenderOptions
 export const renderChart = (input: InputChartRender, options: ChartRenderOptions = {}): ChartRenderResult => {
   const { compile, ...renderOptions } = options;
   const request = chartRenderRequest(input, compile);
-  const result = toSceneResult(request.source, { compile: request.compile });
-  if (result.compileResult === undefined)
-    throw new RetikzChartVanillaError('Chart processing must produce a Core compile result');
+  const result = compileToScene(request.source, { compile: request.compile });
 
-  return { svg: renderToSvgString(result.scene, renderOptions), compileResult: result.compileResult };
+  return { svg: renderToSvgString(result.compileResult.scene, renderOptions), compileResult: result.compileResult };
 };
 
 /** 准备完整作者树后通过同一Core编译渲染Chart，支持Promise计算 */

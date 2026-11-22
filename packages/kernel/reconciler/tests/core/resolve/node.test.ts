@@ -79,7 +79,7 @@ describe('resolveNode', () => {
     expect(result.style.fill).toMatchObject({
       kind: 'paint',
       spec: { kind: 'pattern', shape: 'dots' },
-      pattern: { name: 'dots', size: 8, definition: { emit: expect.any(Function) } },
+      pattern: { size: 8, definition: { emit: expect.any(Function) } },
     });
     expect(result.style.stroke).toBe('red');
     expect(source.style?.fill).toEqual({ kind: 'pattern', shape: 'dots' });
@@ -234,7 +234,7 @@ describe('resolveNode', () => {
         rotate: 0,
       },
       text: {
-        lines: [{ plainText: 'A', segments: [{ text: 'A', font: { size: 16 } }], mixed: false, hasMath: false }],
+        lines: [{ plainText: 'A', segments: [{ text: 'A', font: { size: 16 } }], mixed: false }],
         font: { size: 16 },
         lineHeight: 19.2,
         textAlign: 'middle',

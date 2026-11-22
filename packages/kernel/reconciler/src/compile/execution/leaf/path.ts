@@ -39,8 +39,6 @@ export type PendingPathEmission = InputPathCompilation & {
   };
   /** 产生 path primitive 的语义 owner */
   semanticOwner?: CompileOwnerKey;
-  /** 编译期排序用 zIndex，不写入 Scene primitive */
-  zIndex?: number;
 };
 
 /** 合并 path 样式并加入延迟 emit 队列，保留顶层绘制顺序占位 */
@@ -77,7 +75,6 @@ export const queuePathChild = (
     theme,
     scopeDefaults: defaults,
     ...(semanticOwner === undefined ? {} : { semanticOwner }),
-    zIndex: ir.zIndex,
   };
   output.pendingPathCount++;
   paths.push(pending);
@@ -156,8 +153,9 @@ export const assemblePaths = (
 
     output.pendingPathCount--;
 
-    if (pendingPath.zIndex !== undefined) {
-      for (const prim of primitives) output.zIndexMap.set(prim, pendingPath.zIndex);
+    const { zIndex } = pendingPath.path;
+    if (zIndex !== undefined) {
+      for (const prim of primitives) output.zIndexMap.set(prim, zIndex);
     }
     if (result !== null) {
       // ⚡两种内部边界汇总只读同一份已物化点集

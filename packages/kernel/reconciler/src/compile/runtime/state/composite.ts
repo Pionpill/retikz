@@ -18,7 +18,6 @@ import type {
   SceneResources,
   Transform,
 } from '@retikz/core';
-import type { PropertyPath } from '@retikz/foundation';
 
 import type { CompileProvenanceSnapshot } from '../../provenance';
 import type { CompositeArtifact } from '../../shared';
@@ -136,8 +135,6 @@ export type LayoutProbeFailureEntry = Readonly<{
   owner: CompositeCompileOwner;
   /** 最接近失败位置的 provider 标识 */
   providerKey: string;
-  /** 失败子项在原始 IR 中的路径 */
-  sourcePath: PropertyPath;
   /** 保留复合展开路径的完整失败位置 */
   occurrence: CompileOccurrenceLocator;
   /** 用于重新抛出时构造诊断的失败详情 */

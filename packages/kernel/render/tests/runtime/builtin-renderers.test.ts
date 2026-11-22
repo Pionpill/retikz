@@ -250,7 +250,6 @@ const createCorePair = (currentSource: IRScene, nextSource: IRScene) => {
       const root = nodes.find(node => node.primitivePath.length === 2)!;
       operations.push({
         kind: 'update',
-        identity: root.identity,
         subtree: {
           root: root.identity,
           primitive,
@@ -886,7 +885,6 @@ describe('内置保留渲染器', () => {
           identity: identities[0],
           semanticOwner: owner,
           parent: root,
-          order: 0,
           primitivePath: ['primitives', 0],
           publicId: 'owner',
         },
@@ -894,7 +892,6 @@ describe('内置保留渲染器', () => {
           identity: identities[1],
           semanticOwner: owner,
           parent: root,
-          order: 1,
           primitivePath: ['primitives', 1],
           publicId: 'owner',
         },
@@ -902,7 +899,6 @@ describe('内置保留渲染器', () => {
           identity: identities[2],
           semanticOwner: owner,
           parent: root,
-          order: 2,
           primitivePath: ['primitives', 2],
         },
       ],
@@ -1082,7 +1078,6 @@ describe('内置保留渲染器', () => {
         identity,
         semanticOwner: identity,
         parent: root,
-        order: index,
         primitivePath: ['primitives', index],
         publicId: index === 0 ? 'a' : 'b',
       })),
@@ -2533,7 +2528,6 @@ describe('内置保留渲染器', () => {
           identity,
           semanticOwner: identity,
           parent: root,
-          order: 0,
           primitivePath: ['primitives', 0],
           publicId: 'node',
         },
@@ -3290,7 +3284,6 @@ describe('内置保留渲染器', () => {
         identity: identities[index],
         semanticOwner: identities[index],
         parent: root,
-        order: index,
         primitivePath: ['primitives', index],
         publicId: item.id,
       })),
@@ -3350,7 +3343,6 @@ describe('内置保留渲染器', () => {
         operations: [
           {
             kind: 'update',
-            identity: identities[1],
             subtree: {
               root: identities[1],
               primitive: changedPrimitives[1],
@@ -3358,7 +3350,6 @@ describe('内置保留渲染器', () => {
                 {
                   identity: identities[1],
                   semanticOwner: identities[1],
-                  order: 0,
                   primitivePath: [],
                   publicId: 'node-b',
                 },
@@ -3455,7 +3446,6 @@ describe('内置保留渲染器', () => {
           identity,
           semanticOwner: identity,
           parent: root,
-          order: 0,
           primitivePath: ['primitives', 0],
           publicId: 'node',
         },
@@ -3493,11 +3483,10 @@ describe('内置保留渲染器', () => {
           operations: [
             {
               kind: 'update',
-              identity,
               subtree: {
                 root: identity,
                 primitive: nextPrimitive,
-                topology: [{ identity, semanticOwner: identity, order: 0, primitivePath: [], publicId: 'node' }],
+                topology: [{ identity, semanticOwner: identity, primitivePath: [], publicId: 'node' }],
               },
             },
           ],
@@ -3808,7 +3797,6 @@ describe('内置保留渲染器', () => {
           identity,
           semanticOwner: identity,
           parent: root,
-          order: 0,
           primitivePath: ['primitives', 0],
           publicId: 'node',
         },
@@ -3905,7 +3893,6 @@ describe('内置保留渲染器', () => {
         identity: identities[index],
         semanticOwner: identities[index],
         parent: root,
-        order: index,
         primitivePath: ['primitives', index],
         publicId: primitive.id,
       })),
@@ -4744,7 +4731,6 @@ describe('内置保留渲染器', () => {
         identity: identities[index],
         semanticOwner: identities[index],
         parent: root,
-        order: index,
         primitivePath: ['primitives', index],
         ...(primitive.id === undefined ? {} : { publicId: primitive.id }),
       })),
@@ -4756,7 +4742,6 @@ describe('内置保留渲染器', () => {
       nextRevision: next.revision,
       operations: [0, 1].map(index => ({
         kind: 'update' as const,
-        identity: identities[index],
         subtree: {
           root: identities[index],
           primitive: nextPrimitives[index],
@@ -4764,7 +4749,6 @@ describe('内置保留渲染器', () => {
             {
               identity: identities[index],
               semanticOwner: identities[index],
-              order: 0,
               primitivePath: [],
               publicId: nextPrimitives[index].id,
             },
@@ -5228,7 +5212,6 @@ describe('内置保留渲染器', () => {
         identity: identities[index],
         semanticOwner: identities[index],
         parent: root,
-        order: index,
         primitivePath: ['primitives', index],
         publicId: item.id,
       })),
@@ -5241,7 +5224,6 @@ describe('内置保留渲染器', () => {
       operations: [
         {
           kind: 'update',
-          identity: identities[1],
           subtree: {
             root: identities[1],
             primitive: nextPrimitives[1],
@@ -5249,7 +5231,6 @@ describe('内置保留渲染器', () => {
               {
                 identity: identities[1],
                 semanticOwner: identities[1],
-                order: 0,
                 primitivePath: [],
                 publicId: 'duplicate',
               },
@@ -5361,7 +5342,6 @@ describe('内置保留渲染器', () => {
         identity: identities[index],
         semanticOwner: identities[index],
         parent: root,
-        order: index,
         primitivePath: ['primitives', index],
       })),
     });
@@ -5407,11 +5387,10 @@ describe('内置保留渲染器', () => {
       operations: [
         {
           kind: 'update',
-          identity: identities[1],
           subtree: {
             root: identities[1],
             primitive: nextPrimitives[1],
-            topology: [{ identity: identities[1], semanticOwner: identities[1], order: 0, primitivePath: [] }],
+            topology: [{ identity: identities[1], semanticOwner: identities[1], primitivePath: [] }],
           },
         },
       ],
@@ -5457,7 +5436,7 @@ describe('内置保留渲染器', () => {
         animations: [],
         primitives: [primitive(duration)],
       },
-      topology: [{ identity, semanticOwner: identity, parent: root, order: 0, primitivePath: ['primitives', 0] }],
+      topology: [{ identity, semanticOwner: identity, parent: root, primitivePath: ['primitives', 0] }],
     });
     const current = snapshot(0, 300);
     const next = snapshot(1, 600);
@@ -5501,11 +5480,10 @@ describe('内置保留渲染器', () => {
         operations: [
           {
             kind: 'update',
-            identity,
             subtree: {
               root: identity,
               primitive: next.scene.primitives[0],
-              topology: [{ identity, semanticOwner: identity, order: 0, primitivePath: [] }],
+              topology: [{ identity, semanticOwner: identity, primitivePath: [] }],
             },
           },
         ],
@@ -5552,7 +5530,7 @@ describe('内置保留渲染器', () => {
         animations: [],
         primitives: [primitive(duration)],
       },
-      topology: [{ identity, semanticOwner: identity, parent: root, order: 0, primitivePath: ['primitives', 0] }],
+      topology: [{ identity, semanticOwner: identity, parent: root, primitivePath: ['primitives', 0] }],
     });
     const current = snapshot(0, 300);
     const next = snapshot(1, 600);
@@ -5600,11 +5578,10 @@ describe('内置保留渲染器', () => {
         operations: [
           {
             kind: 'update',
-            identity,
             subtree: {
               root: identity,
               primitive: next.scene.primitives[0],
-              topology: [{ identity, semanticOwner: identity, order: 0, primitivePath: [] }],
+              topology: [{ identity, semanticOwner: identity, primitivePath: [] }],
             },
           },
         ],
@@ -5658,7 +5635,6 @@ describe('内置保留渲染器', () => {
           identity,
           semanticOwner: identity,
           parent: root,
-          order: 0,
           primitivePath: ['primitives', 0],
           publicId: 'node',
         },
@@ -5702,11 +5678,10 @@ describe('内置保留渲染器', () => {
       operations: [
         {
           kind: 'update',
-          identity,
           subtree: {
             root: identity,
             primitive: next.scene.primitives[0],
-            topology: [{ identity, semanticOwner: identity, order: 0, primitivePath: [], publicId: 'node' }],
+            topology: [{ identity, semanticOwner: identity, primitivePath: [], publicId: 'node' }],
           },
         },
       ],
@@ -5757,7 +5732,6 @@ describe('内置保留渲染器', () => {
           identity,
           semanticOwner: identity,
           parent: root,
-          order: 0,
           primitivePath: ['primitives', 0],
           publicId: 'node',
         },
@@ -5821,11 +5795,10 @@ describe('内置保留渲染器', () => {
       operations: [
         {
           kind: 'update',
-          identity,
           subtree: {
             root: identity,
             primitive: next.scene.primitives[0],
-            topology: [{ identity, semanticOwner: identity, order: 0, primitivePath: [], publicId: 'node' }],
+            topology: [{ identity, semanticOwner: identity, primitivePath: [], publicId: 'node' }],
           },
         },
       ],

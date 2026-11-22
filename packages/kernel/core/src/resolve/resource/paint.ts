@@ -30,8 +30,6 @@ const resolvePattern = (
   const rawSize = spec.size ?? definition.defaultSize ?? DEFAULT_PATTERN_SIZE;
 
   return {
-    spec,
-    name: spec.shape,
     definition,
     size: context.round(rawSize),
     style: resolvePatternStyle(spec, DEFAULT_MOTIF_COLOR),

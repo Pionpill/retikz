@@ -37,7 +37,6 @@ export const compareTextBlocks = (
     if (line === next) return true;
     if (
       line.mixed !== next.mixed ||
-      line.hasMath !== next.hasMath ||
       line.plainText !== next.plainText ||
       !compareProperties(line.style?.font, next.style?.font) ||
       (appearance && (line.style?.fill !== next.style?.fill || line.style?.opacity !== next.style?.opacity)) ||

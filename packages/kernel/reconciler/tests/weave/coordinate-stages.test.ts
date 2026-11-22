@@ -36,14 +36,14 @@ describe('Coordinate 三层复用', () => {
     };
     const session = new WeaveManager(source);
     const mounted = session.mount();
-    const coordinate = readWeaveCurrent(mounted.root).children[2];
+    const coordinate = readWeaveCurrent(session.root).children[2];
     if (coordinate.type !== 'coordinate') throw new Error('Expected coordinate');
     const previous = readWeaveCurrent(coordinate).compile?.value;
     const explicit = session.update({
       operations: [
         {
           kind: 'update',
-          target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'c' },
+          target: { kind: 'id', scopeId: session.root.scopeId, id: 'c' },
           input: { type: 'coordinate', id: 'c', position: { of: 'a', direction: 'right', distance: 24 } },
         },
       ],
@@ -55,7 +55,7 @@ describe('Coordinate 三层复用', () => {
     expect(readWeaveCurrent(coordinate).compile?.value).toBe(previous);
     const changed = { type: 'coordinate', id: 'c', position: { of: 'b', direction: 'right', distance: 24 } } as const;
     const update = session.update({
-      operations: [{ kind: 'update', target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'c' }, input: changed }],
+      operations: [{ kind: 'update', target: { kind: 'id', scopeId: session.root.scopeId, id: 'c' }, input: changed }],
     });
     expect(update.compilation.result).toEqual(
       compileTestResult({ ...source, children: [source.children[0], source.children[1], changed, source.children[3]] }),
