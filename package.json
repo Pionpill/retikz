@@ -3,6 +3,8 @@
   "type": "module",
   "packageManager": "pnpm@11.7.0",
   "scripts": {
+    "review:members": "node --experimental-strip-types scripts/member-usage.ts",
+    "test:member-usage": "node --experimental-strip-types --test tests/member-usage.test.ts",
     "adr:search": "node scripts/adr-search.mjs",
     "test:adr-search": "node --experimental-strip-types --test tests/adr-search.test.ts",
     "test:dev-build": "node --experimental-strip-types --test tests/dev-build.test.ts",

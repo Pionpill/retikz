@@ -69,6 +69,23 @@ git status --short
 - 按 [实现规范](../develop-implement/SKILL.md#按需执行) 检查成功路径提前创建错误、未采用的回退计算、缓存命中前的无用工作及 React 昂贵初始化；追踪实参求值和被调函数的消费分支，不凭函数名或扫描命中判错。
 - finding 说明哪些路径未消费结果、调用频率依据及可安全后移的边界；区分确定的无用工作与未测量的耗时，不把必要校验、缓存键 / 快照或已在失败分支中的诊断误报为问题。
 
+## 可选：成员引用与公开 API 收敛
+
+默认不执行。发版前推荐开发者使用以收敛公开 API、清理无效内部内容；先取得用户对统计范围和 LLM 审阅的明确批准。“发版”“全量验证”或普通 review 不构成授权，不接入默认检查、CI 或自动发布链路
+
+```bash
+pnpm review:members --package @retikz/core --output notes/reports/core-member-usage.json
+pnpm review:members --package packages/kernel/core --output notes/reports/core-member-usage.json
+pnpm review:members --all --output notes/reports/all-member-usage.json
+```
+
+- `--package` 与 `--all` 必须二选一；单包只筛选报告成员，仍扫描全部包及生产 app 的 TypeScript 源码作为消费者。无 `--output` 时输出 JSON；报告留在 ignored `notes/reports/`
+- 公开面以 `package.json` 的显式 `exports` 为准，根入口与子入口同等审阅；没有根映射的合法子路径包不要求 `src/index.ts`。先核对 `publicEntries`、`missingEntries` 与 `unclassifiedExports`，通配符、条件分支差异和非源码目标须补查，不按目录存在推断公开 API
+- 查看 `scannedFiles`、`unresolvedModules`、语法诊断和局限后再读统计。排除 tests、evals、benchmarks、docs 及对应测试文件；类型引用计入有效引用，声明不计，import / 转导出与自引用单列
+- 对 `publicExports` 中每个根入口或子入口导出，按 `subpath` 分组，由 LLM 阅读声明、公共签名和消费链，判断是否直接服务包使命、是否值得向用户公开；仓内零引用不是删除依据。同一符号可从多个入口公开，导出的对象、类、类型所暴露成员仍需人工补查
+- 对内部成员，以有效引用位置核实真实消费者；零引用只作为候选。细读动态访问、回调注册、结构类型隐式使用、对象展开及循环互引，不能将静态引用次数等同于运行可达性
+- 报告分别列出公开 API 保留 / 收敛建议、内部冗余候选、证据及未覆盖范围；未解析模块或特殊包配置影响的成员不得标为“确定无引用”。删除、改导出与后续实现另按任务规模确认，不由脚本自动修改
+
 ## 分级
 
 - **BLOCKING**：真实 bug、非法状态、会阻碍后续设计收敛的结构问题。
