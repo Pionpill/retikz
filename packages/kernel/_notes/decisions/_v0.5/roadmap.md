@@ -66,6 +66,7 @@
 - Scope 矩形包络极值复用：[088](./088-scope-contribution-aggregation.md)。保持完整输出事务与圆形包络语义。
 - 建立 identity、事务、增量编译和 Scene patch 的共同底座。
 - 明确执行策略与 retained renderer 的协作边界。
+- [ ] 评估由 Reconciler 基于现有事务提供宿主无关的编译生命周期钩子，供 Vanilla 等宿主复用：同一候选只准备一次，准备产物直接交给提交方。区分底层编译提交与上层最终采用；Vanilla 仅在最终采用后通知领域扩展，取消或回滚不通知。
 - 本版本完成 Reconciler 的同步完整与增量编译能力：Core 保持唯一绘图语义及原子阶段，Reconciler 管理执行、缓存与依赖失效、candidate 隔离、结果生命周期和单目标原子提交。
 - 包边界确定为 Reconciler 单向依赖 Core、Foundation 与实际使用的 Math，Core 不反向依赖 Reconciler。Core 保留 IR、绘图语义与原子阶段产物；完整驱动、遍历和跨次缓存归 Reconciler。
 - Reconciler 管理编译树、依赖失效、缓存复用、会话 revision 与单目标提交；Render 根据已提交的编译来源和版本生成渲染身份、拓扑、运行时快照与 Scene Patch。
