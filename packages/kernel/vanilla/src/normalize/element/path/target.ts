@@ -35,6 +35,11 @@ export const parseTargetSugar = (input: InputTarget): IRTarget => {
   const plus = match[1];
   const dx = Number(match[2]);
   const dy = Number(match[3]);
+  if (!Number.isFinite(dx) || !Number.isFinite(dy))
+    throw new RetikzVanillaError(
+      RetikzVanillaErrorCode.Normalize,
+      `parseTargetSugar: non-finite relative offset '${input}'`,
+    );
   if (plus === '++') {
     return { relativeAccumulate: [dx, dy] };
   }

@@ -24,6 +24,10 @@ describe('parseTargetSugar', () => {
     expect(parseTargetSugar('+1e2,2')).toEqual({ relative: [100, 2] });
   });
 
+  it.each(['+1e309,0', '++0,-1e309'])('拒绝分量溢出的相对坐标 %s', input => {
+    expect(() => parseTargetSugar(input)).toThrow(/non-finite relative offset/);
+  });
+
   it('节点 id 类字符串解析为 NodeTarget 对象', () => {
     expect(parseTargetSugar('A')).toEqual({ id: 'A' });
     expect(parseTargetSugar('A.top')).toEqual({ id: 'A', anchor: 'top' });
