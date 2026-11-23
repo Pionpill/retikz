@@ -117,6 +117,7 @@
     "pkgReconcilerCompileTraversal": "Execution / Scope Traversal",
     "pkgReconcilerCompileElements": "Execution / Element Assembly",
     "pkgReconcilerCompileComposite": "Execution / Composite Evaluation",
+    "pkgReconcilerCompileArtifacts": "Execution / Artifacts and Provenance",
     "pkgInspect": "inspect",
     "pkgInspectBuiltins": "Built-in inspection",
     "pkgInspectCustom": "Custom usage",

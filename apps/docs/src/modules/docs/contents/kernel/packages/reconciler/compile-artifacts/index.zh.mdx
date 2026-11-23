@@ -1,0 +1,99 @@
+---
+title: 执行 / 产物与来源
+description: 沿着节点 B 的图元读取 Scene、绘制资源、领域产物、警告与来源记录
+---
+
+[元素组装](/kernel/packages/reconciler/compile-elements)里，连接 A、B 的路径先占位，等两个节点就绪再回填。现在把这张图交给两个消费者：渲染器要画出 B，检查器想知道哪些图元来自 B。前者只需要 Scene；后者还需要本次编译的来源记录。
+
+## 整体流程
+
+子树交出已排序的图元、可见边界和 Composite 产生的领域数据。Reconciler 用这些结果和本次工作区的资源组装快照。下面这张图中，绘图数据和领域数据从同一份编译结果分开交付。
+
+<ComponentPreview files="/kernel/packages/core/compilation-output/output-overview" size="lg" hideCode type="flow" />
+
+从会话返回值取出 <ApiSourceLink label="SceneCompilationSnapshot" path="packages/kernel/reconciler/src/compile/types.ts" startLine={127}>`SceneCompilationSnapshot`</ApiSourceLink> 后，按问题选择入口：
+
+| 我想知道什么                 | 从 `compilation` 读取 | 成功编译时                                            |
+| ---------------------------- | --------------------- | ----------------------------------------------------- |
+| 怎样画出完整画面？           | `result.scene`        | 始终有 Scene；没有绘制资源时省略 `scene.resources`    |
+| Composite 另外算出了什么？   | `result.artifacts`    | 始终有数组；没有实例返回领域产物时为 `[]`             |
+| 这次编译报告了哪些警告？     | `diagnostics`         | 始终有数组；没有警告时为 `[]`                         |
+| 哪条声明直接发出了这些图元？ | `provenance`          | 仅在 `captureProvenance: true` 时提供；默认省略该字段 |
+
+## 编译图元
+
+`compilation.result.scene` 的类型是 <ApiSourceLink label="Scene" path="packages/kernel/core/src/contract/scene/scene.ts" startLine={32}>`Scene`</ApiSourceLink>：
+
+```ts
+export type Scene = {
+  primitives: Array<ScenePrimitive>;
+  layout: BoundsRect;
+  resources?: SceneResources;
+  animations?: Array<IRAnimationTrack>;
+};
+```
+
+| 字段         | 是否必有 | 用途                                                                                 |
+| ------------ | -------- | ------------------------------------------------------------------------------------ |
+| `primitives` | 是       | 按绘制顺序排列的图元。节点 B 的矩形和文字都在这棵图元树中。                          |
+| `layout`     | 是       | 整张图的布局边界。指定了根 `viewBox` 时使用该范围，否则由可见边界和 `padding` 算出。 |
+| `resources`  | 否       | 图元引用的绘制资源（如渐变）和裁剪资源。两类资源都为空时省略。                       |
+| `animations` | 否       | 整张图的镜头动画轨道，用于随时间改变 `viewBox`。没有根动画轨道时省略。               |
+
+### primitives 图元
+
+**Render 主要消费的是 `scene.primitives`。** 它拿到的是可以按顺序绘制的图元，而不是待求解的节点和连线。以 A、B 和连接线为例：Core 算出节点的形状、文字布局和边界，执行层据此发出节点图元；路径等 A、B 的边界就绪后求出端点，再把路径图元填回预留的位置。一个带文字的矩形节点 B 可以产生一个组，里面分别是矩形和文字。
+
+图元类型由 <ApiSourceLink label="ScenePrimitive" path="packages/kernel/core/src/contract/scene/scene.ts" startLine={15}>`ScenePrimitive`</ApiSourceLink> 的 `type` 字段区分，共五种：
+
+| 类型      | Render 绘制什么                                        |
+| --------- | ------------------------------------------------------ |
+| `rect`    | 矩形，例如 B 的矩形外框                                |
+| `ellipse` | 椭圆或圆                                               |
+| `path`    | 由路径命令描述的线段、曲线或轮廓，例如连接 A 与 B 的线 |
+| `text`    | 已定位的文字                                           |
+| `group`   | 按顺序绘制 `children`，并对它们应用组上的变换或裁剪    |
+
+**绘制顺序在编译时确定。** 同一层的图元按 `zIndex` 从小到大稳定排序，未指定时按 0 处理。同值保持原有顺序，所以先声明的连接线即使最后才算好，也可以画在节点后面。若把连线的 `zIndex` 设为 1，而节点仍为 0，连线就会后画，重叠处盖住节点。组的子图元在组内排序；组作为整体参与父层排序。最终图元不保存 `zIndex`，Render 直接按数组顺序绘制。
+
+`layout` 是计算这些几何属性时一并得到的视图结果：组装器汇总可见边界并加上留白，得到整张图的布局范围；如果作者指定了根 `viewBox`，就使用指定范围。Render 不必重新测量节点。
+
+### resources / animations
+
+这两个可选字段交给 Render：一个说明**用什么填充或裁剪**，另一个说明**画面怎样随时间变化**。编译阶段负责登记资源和解析轨道，不负责绘制渐变或逐帧播放动画。
+
+- **`resources`**：编译图元时将渐变、图案、图片等绘制资源登记到 paint 表，将裁剪路径登记到 clip 表。图元只保存引用；组装 Scene 时从本次工作区取出两张表，两者都为空就省略该字段。
+- **`animations`**：组装 Scene 时解析根声明上的动画，将有效的镜头轨道放入该字段。它们描述根 `viewBox` 的关键帧，不是从子图元汇总出的动画列表。Render 在播放时使用轨道；没有根轨道时只需使用静态 `layout`。
+
+下图用示例 ID 表示实际的数据关系：沿箭头可以从图元找到资源，根动画则是 Scene 上独立的一组轨道。
+
+<ComponentPreview files="scene-data" size="lg" hideCode type="illustration" />
+
+## artifacts 领域产物
+
+`compilation.result.artifacts` 保存 Composite 除绘图外显式返回的数据。比如，一个统计组件可以不画任何图元，只返回计数。下面是一条 <ApiSourceLink label="CompositeArtifact" path="packages/kernel/reconciler/src/compile/shared/artifact.ts" startLine={12}>`CompositeArtifact`</ApiSourceLink> 记录的示例：
+
+```json
+{
+  "namespace": "example",
+  "type": "counter",
+  "occurrence": { "sourcePath": ["children", 2], "expansionPath": [] },
+  "value": { "count": 1 }
+}
+```
+
+`namespace` 与 `type` 标识组件定义，`value` 是该定义的 `artifactSchema` 描述的 JSON 值。`occurrence` 区分同一定义的不同实例：这里的产物来自输入根的第三个子项，没有经过嵌套展开。普通节点不会因为生成了图元就产生领域产物；没有组件返回产物时，数组为 `[]`。
+
+## provenance 图元来源
+
+`compilation.provenance` 回答的是另一个问题：**一条声明最终画出了哪些图元？** 在创建会话时传入 `new SceneReconciler({}, { captureProvenance: true })` 才会收集这份记录；默认快照不含该字段。
+
+来源快照的 <ApiSourceLink label="CompileProvenanceSnapshot" path="packages/kernel/reconciler/src/compile/provenance/types.ts" startLine={42}>`ownerMap`</ApiSourceLink> 为每条来源记录声明的种类、作者提供的 ID（若有），以及它直接发出的图元 `emissions`。以场景中唯一的带文字矩形节点 B 为例，找到 `id === 'B'` 的来源后，可以读到：
+
+| 发出角色（`role`） | 最终 Scene 中的位置（`primitivePath`） |
+| ------------------ | -------------------------------------- |
+| `node:group`       | `['primitives', 0]`                    |
+| `node:rect`        | `['primitives', 0, 'children', 0]`     |
+| `node:text`        | `['primitives', 0, 'children', 1]`     |
+
+图元发出时先登记来源，等分组和排序完成后才记录最终位置。因此，`artifacts` 中的 `occurrence` 指向**产生领域值的输入实例**，这里的 `primitivePath` 指向**本次输出中的图元**。来源键和图元位置都只对这份快照有效。
