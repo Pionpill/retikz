@@ -1,51 +1,37 @@
 ---
-title: Compilation Output
-description: Separate Core drawing contracts, Reconciler snapshot assembly, domain artifacts and renderer consumption
+title: Compilation / Output Artifacts
+description: Read Scene primitives, local coordinates, resource references and layout bounds
 ---
 
-Core defines primitives, resources and bounds calculations. Reconciler collects subtree contributions, finishes deferred paths and sorting, assembles Scene and associated results, then publishes through the session commit protocol.
+Core’s <ApiSourceLink label="Scene" path="packages/kernel/core/src/contract/scene/scene.ts" startLine={32}>`Scene`</ApiSourceLink> describes a drawing after layout. Node B’s position, shape and text are already determined; Render does not need the node declaration.
 
-## Overall Flow
-
-Drawing goes into Scene, domain results into artifacts, diagnostics into the compilation snapshot, and optional source information into provenance. These serve different consumers; renderers do not need Composite business input or layout algorithms.
-
-<ComponentPreview files="output-overview" size="lg" hideCode type="flow" />
-
-## What Callers Receive
-
-SceneReconciler returns revision and compilation. Drawing is at `output.compilation.result.scene`; artifacts are beside scene in result. Diagnostics belong to compilation.diagnostics rather than Scene.
+## Scene structure
 
 ```ts
-import { SceneReconciler } from '@retikz/reconciler';
-
-const reconciler = new SceneReconciler();
-try {
-  const output = reconciler.mount({
-    type: 'scene',
-    version: 1,
-    children: [{ type: 'node', text: 'A' }],
-  });
-  const { scene, artifacts } = output.compilation.result;
-  const diagnostics = output.compilation.diagnostics;
-  console.log(scene, artifacts, diagnostics);
-} finally {
-  reconciler.dispose();
-}
+export type Scene = {
+  primitives: Array<ScenePrimitive>;
+  layout: BoundsRect;
+  resources?: SceneResources;
+  animations?: Array<IRAnimationTrack>;
+};
 ```
 
-This is Reconciler's public result. Vanilla convenience processing can manage an internal coordinator's lifetime. Read each entry's return value through its owning package contract.
+| Field        | Required | Purpose                                                                                                                                   |
+| ------------ | -------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `primitives` | Yes      | Primitives in drawing order. Both B’s rectangle and its text belong to this primitive tree.                                               |
+| `layout`     | Yes      | Bounds of the whole drawing. An explicit root `viewBox` sets these bounds; otherwise they are computed from visible bounds and `padding`. |
+| `resources`  | No       | Paint resources (such as gradients) and clipping resources referenced by primitives. Omitted when both collections are empty.             |
+| `animations` | No       | Camera animation tracks that change the root `viewBox` over time. Omitted when there are no root animation tracks.                        |
 
-## Scene Is Laid-Out, Backend-Neutral Drawing
+## Primitives
 
-Scene.primitives is ordered for drawing. Layout contains x / y / width / height; resources and root animations are optional. Renderers do not receive authored Nodes, Scopes or domain Composites for another semantic compilation pass.
-
-| Primitive        | Determined content                                             |
-| ---------------- | -------------------------------------------------------------- |
-| RectPrimitive    | Rectangle geometry and appearance                              |
-| EllipsePrimitive | Ellipse geometry and appearance                                |
-| TextPrimitive    | Text, lines, baselines and fonts                               |
-| PathPrimitive    | Structured commands, paint and decoration data                 |
-| GroupPrimitive   | Children, shared transforms, clipping, identity and animations |
+| Primitive          | Determined content                                             |
+| ------------------ | -------------------------------------------------------------- |
+| `RectPrimitive`    | Rectangle geometry and appearance                              |
+| `EllipsePrimitive` | Ellipse geometry and appearance                                |
+| `TextPrimitive`    | Text, lines, baselines and fonts                               |
+| `PathPrimitive`    | Structured commands, paint and decoration data                 |
+| `GroupPrimitive`   | Children, shared transforms, clipping, identity and animations |
 
 These contracts hold drawing semantics for multiple backends, not DOM, Canvas contexts or SVG-only callbacks. Structured marker data can still carry endpoint decoration.
 
@@ -55,22 +41,17 @@ Scene need not flatten all primitives into world coordinates. Scope and Node gro
 
 A local rectangle at x=0 inside a group translated by 20 has world x=20. Writing 20 into both would apply the translation twice. Artifact coordinate spaces likewise follow their domain contracts rather than automatically becoming world-space data.
 
-## Shared Drawing Resources
+## Drawing resources and root animations
 
-Colors can appear directly on primitives. Gradients, patterns and images live in `Scene.resources.paints`, referenced by fill or stroke values. Clip paths live in `Scene.resources.clips`, referenced by a group's `clipRef`. Core paint / clip registries materialize backend-neutral resources and reuse content identities. Reconciler creates the workspace registries and preserves these categories through caching, replay and the final Scene.
+A primitive can carry a solid color directly. For a gradient, pattern or image, fill or stroke references a definition in `resources.paints` by ID. A group’s `clipRef` references a path in `resources.clips`. These IDs link uses to definitions within one Scene; they are not business identifiers.
 
-When `resources` is present, both `paints` and `clips` are arrays; an unused category is empty. Compilation can omit the entire field when there are no resources, while Render runtime snapshots always include both collections. Resources and the primitives referencing them take effect in the same revision.
+The diagram pairs primitive references on the left with definitions on the right. Camera tracks live separately in the root’s `animations` field: they describe a changing `viewBox`, not a resource in either table.
 
-Pattern Definitions can emit tile primitives, not separate resource tables. Extension outputs can reference only resources permitted by their host. Resources from isolated probes enter the real workspace only through selected replay; copying primitives without their resources is incomplete.
-
-Resource ids associate references and definitions in a Scene rather than providing business keys for callers to interpret. Backends materialize them separately; Core does not output DOM defs here.
-
-<SourceLinks
-  sources={[
-    { label: 'Paint materialization and reuse', path: 'packages/kernel/core/src/compile/resource/paint.ts' },
-    { label: 'Clip materialization and reuse', path: 'packages/kernel/core/src/compile/resource/clip.ts' },
-    { label: 'Replay resource import', path: 'packages/kernel/reconciler/src/compile/execution/composite/replay.ts' },
-  ]}
+<ComponentPreview
+  files="/kernel/packages/reconciler/compile-artifacts/scene-data"
+  size="lg"
+  hideCode
+  type="illustration"
 />
 
 ## Layout and the Different Bounds
@@ -81,58 +62,28 @@ Without viewBox, collected layout contributions are processed by Core bounds hel
 
 The A/B example contributes x=-30 through 210 and y=-20 through 20. Default padding gives `{ x: -40, y: -30, width: 260, height: 60 }`. Labels, shadows and decorations can affect output contributions.
 
-## Artifacts, Diagnostics and Provenance
-
-A Composite artifact carries namespace, type, structured occurrence and JSON value. Occurrence distinguishes author source from expansion location; generated ownership should not be guessed from a path string. Artifacts are ordered by the final logical tree and delivered separately from drawing.
-
-Diagnostics contain warnings that can be committed after successful compilation, including code, message and source data. Unselected probes do not leak warnings. Optional provenance links primitives to compilation sources and is not required by the renderer. Transaction rollback belongs to Reconciler rather than an individual Core emit function.
-
-Readonly snapshot, result and artifacts / diagnostics array shells do not imply that all Scene data is recursively frozen at runtime. Consumers respect result ownership rather than mutating published output as a substitute for updating declarations.
-
-<SourceLinks
-  sources={[
-    { label: 'Artifact envelope and ordering', path: 'packages/kernel/reconciler/src/compile/shared/artifact.ts' },
-    { label: 'Diagnostic ordering and sources', path: 'packages/kernel/reconciler/src/compile/shared/diagnostics.ts' },
-  ]}
-/>
-
-## Complete Implementation Flow
-
-The diagram follows complete traversal in a non-incremental session. Weave independently schedules initial construction, complete replacement, and batch updates in incremental sessions. Both drivers share element computation and snapshot assembly semantics.
-
-<ComponentPreview files="output-implementation" size="lg" hideCode type="flow" />
-
-compileScene first calls assembleCompileSubtree to finish paths and child contributions, then calls finalizeSceneCompilation to collect resources and assemble the snapshot. That function determines layout, root tracks, result and diagnostics without compiling entities again. SceneReconciler commits the complete candidate for consumers.
-
-<SourceLinks
-  sources={[
-    { label: 'Scene and primitive contract', path: 'packages/kernel/core/src/contract/scene/scene.ts' },
-    { label: 'Layout bounds helpers', path: 'packages/kernel/core/src/compile/scene/bounds.ts' },
-    { label: 'Scene layout calculation', path: 'packages/kernel/core/src/compile/scene/layout.ts' },
-    { label: 'Complete compilation entry', path: 'packages/kernel/reconciler/src/compile/execution/scene.ts' },
-    { label: 'Snapshot assembly', path: 'packages/kernel/reconciler/src/compile/execution/scene.ts' },
-    { label: 'Snapshot and result types', path: 'packages/kernel/reconciler/src/compile/types.ts' },
-    { label: 'Reconciler result and commit target', path: 'packages/kernel/reconciler/src/reconcile/types.ts' },
-  ]}
-/>
-
 ## Further Reading
 
 <LinkedSections
   items={[
+    {
+      title: 'Execution / Output Provenance',
+      description: 'See how a compilation assembles a snapshot and records primitive provenance',
+      url: '/kernel/packages/reconciler/compile-artifacts',
+    },
     { title: 'Overview', description: 'Core, Reconciler and Render responsibilities', url: '/kernel/packages/core/' },
     {
-      title: 'Compilation Flow',
+      title: 'Compilation / Overview',
       description: 'IR-to-Scene stages and readiness',
       url: '/kernel/packages/core/compilation',
     },
     {
-      title: 'Scope Compilation',
+      title: 'Compilation / Scope',
       description: 'Groups, layout and output projection',
       url: '/kernel/packages/core/scope-compilation',
     },
     {
-      title: 'Composite Compilation',
+      title: 'Compilation / Composite',
       description: 'Domain artifacts and isolated transactions',
       url: '/kernel/packages/core/composite-compilation',
     },

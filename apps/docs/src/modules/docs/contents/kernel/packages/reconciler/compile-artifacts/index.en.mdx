@@ -1,5 +1,5 @@
 ---
-title: Execution / Artifacts and Provenance
+title: Execution / Output Provenance
 description: Follow node B into the Scene, drawing resources, domain artifacts, warnings and provenance records
 ---
 
@@ -22,37 +22,11 @@ Given the <ApiSourceLink label="SceneCompilationSnapshot" path="packages/kernel/
 
 ## Compiled primitives
 
-The type of `compilation.result.scene` is <ApiSourceLink label="Scene" path="packages/kernel/core/src/contract/scene/scene.ts" startLine={32}>`Scene`</ApiSourceLink>:
-
-```ts
-export type Scene = {
-  primitives: Array<ScenePrimitive>;
-  layout: BoundsRect;
-  resources?: SceneResources;
-  animations?: Array<IRAnimationTrack>;
-};
-```
-
-| Field        | Required | Purpose                                                                                                                                   |
-| ------------ | -------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `primitives` | Yes      | Primitives in drawing order. Both B’s rectangle and its text belong to this primitive tree.                                               |
-| `layout`     | Yes      | Bounds of the whole drawing. An explicit root `viewBox` sets these bounds; otherwise they are computed from visible bounds and `padding`. |
-| `resources`  | No       | Paint resources (such as gradients) and clipping resources referenced by primitives. Omitted when both collections are empty.             |
-| `animations` | No       | Camera animation tracks that change the root `viewBox` over time. Omitted when there are no root animation tracks.                        |
+Compilation collects primitives and visible bounds from the subtrees and assembles `result.scene`. For field types and coordinate spaces, see Core’s [Compilation / Output Artifacts](/kernel/packages/core/compilation-output).
 
 ### Drawing primitives
 
 **Render primarily consumes `scene.primitives`.** It receives an ordered drawing, not node declarations and connections it still needs to solve. For A, B and their connecting path, Core computes the nodes’ shapes, text layout and boundaries. The executor emits primitives from those results. Once both boundaries are available, it computes the path endpoints and fills the reserved slot. A rectangular node B with text can produce a group containing a rectangle and a text primitive.
-
-The `type` of a <ApiSourceLink label="ScenePrimitive" path="packages/kernel/core/src/contract/scene/scene.ts" startLine={15}>`ScenePrimitive`</ApiSourceLink> has five possible values:
-
-| Type      | What Render draws                                                                               |
-| --------- | ----------------------------------------------------------------------------------------------- |
-| `rect`    | A rectangle, such as B’s rectangular outline                                                    |
-| `ellipse` | An ellipse or circle                                                                            |
-| `path`    | Segments, curves or outlines described by path commands, such as the connection between A and B |
-| `text`    | Positioned text                                                                                 |
-| `group`   | Its ordered `children`, with the group’s transforms or clip applied                             |
 
 **Compilation determines paint order.** Within each level, a stable sort orders primitives by ascending `zIndex`, treating an omitted value as 0. Ties preserve the original order: a path declared first can be drawn behind the nodes even if its endpoints were computed last. Give that path a `zIndex` of 1 and leave both nodes at 0, and it paints over them where they overlap. Children sort inside their group; the group sorts as a unit in its parent. The final primitives carry no `zIndex`. Render draws them in array order.
 
@@ -64,10 +38,6 @@ These optional fields tell Render **what to paint or clip with** and **how the v
 
 - **`resources`**: As primitives are compiled, paints such as gradients, patterns and images enter the paint registry; clipping paths enter the clip registry. Primitives keep references. Scene assembly collects both tables from this workspace and omits the field if both are empty.
 - **`animations`**: Scene assembly resolves animations on the root declaration and includes the valid camera tracks. They describe keyframes for the root `viewBox`, not a list of animations gathered from child primitives. Render uses the tracks during playback; without a root track it can use the static `layout`.
-
-Follow the example IDs in the diagram from primitive references to resource definitions. Root animation tracks sit separately on the Scene.
-
-<ComponentPreview files="scene-data" size="lg" hideCode type="illustration" />
 
 ## Domain artifacts
 

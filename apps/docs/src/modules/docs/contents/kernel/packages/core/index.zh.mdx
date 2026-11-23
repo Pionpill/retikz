@@ -108,31 +108,47 @@ Core 的阶段接收当前操作需要的输入与能力上下文，返回对应
 
 <LinkedSections
   items={[
-    { title: '语义解析', description: '理解 IR、Schema 与声明确定化', url: '/kernel/packages/core/resolution' },
+    { title: '基础 / 语义解析', description: '理解 IR、Schema 与声明确定化', url: '/kernel/packages/core/resolution' },
     {
-      title: '能力注册',
+      title: '基础 / 能力注册',
       description: '理解能力契约、注册键与统一消费',
       url: '/kernel/packages/core/definitions',
     },
     {
-      title: '能力依赖',
+      title: '基础 / 能力依赖',
       description: '理解提供者贡献、依赖闭包与内置能力',
       url: '/kernel/packages/core/providers',
     },
-    { title: '编译流程', description: '衔接 resolve、compile 与实体依赖', url: '/kernel/packages/core/compilation' },
-    { title: '坐标求值', description: '追踪引用读取与空间求值', url: '/kernel/packages/core/coordinates' },
-    { title: 'Node 编译', description: '追踪文字度量、形状布局与图元', url: '/kernel/packages/core/node-compilation' },
-    { title: 'Path 编译', description: '追踪目标绑定、路径几何与装饰', url: '/kernel/packages/core/path-compilation' },
     {
-      title: 'Scope 编译',
+      title: '编译 / 整体流程',
+      description: '衔接 resolve、compile 与实体依赖',
+      url: '/kernel/packages/core/compilation',
+    },
+    { title: '编译 / Coordinate', description: '追踪引用读取与空间求值', url: '/kernel/packages/core/coordinates' },
+    {
+      title: '编译 / Node',
+      description: '追踪文字度量、形状布局与图元',
+      url: '/kernel/packages/core/node-compilation',
+    },
+    {
+      title: '编译 / Path',
+      description: '追踪目标绑定、路径几何与装饰',
+      url: '/kernel/packages/core/path-compilation',
+    },
+    {
+      title: '编译 / Scope',
       description: '追踪继承、子项布局与局部变换',
       url: '/kernel/packages/core/scope-compilation',
     },
     {
-      title: 'Composite 编译',
+      title: '编译 / Composite',
       description: '追踪子项生成、布局协作与领域产物',
       url: '/kernel/packages/core/composite-compilation',
     },
-    { title: '编译输出', description: '理解图元、资源与最终输出契约', url: '/kernel/packages/core/compilation-output' },
+    {
+      title: '编译 / 产物输出',
+      description: '理解图元、资源与最终输出契约',
+      url: '/kernel/packages/core/compilation-output',
+    },
   ]}
 />
