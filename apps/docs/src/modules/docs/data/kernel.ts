@@ -665,6 +665,12 @@ export const kernelSection: Array<Section> = [
             difficulty: DocDifficulty.Internals,
             meta: { pageType: 'architecture', audience: 'maintainer', sourceOfTruth: 'runtime' },
           },
+          {
+            id: 'weave-scheduling',
+            label: 'kernel.pkgReconcilerWeaveScheduling',
+            difficulty: DocDifficulty.Internals,
+            meta: { pageType: 'architecture', audience: 'maintainer', sourceOfTruth: 'runtime' },
+          },
         ],
       },
       {

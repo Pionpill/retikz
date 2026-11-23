@@ -120,6 +120,7 @@
     "pkgReconcilerCompileArtifacts": "Execution / Output Provenance",
     "pkgReconcilerWeaveState": "Incremental / State Model",
     "pkgReconcilerWeaveChanges": "Incremental / Change Tracking",
+    "pkgReconcilerWeaveScheduling": "Incremental / Dependency Scheduling",
     "pkgInspect": "inspect",
     "pkgInspectBuiltins": "Built-in inspection",
     "pkgInspectCustom": "Custom usage",

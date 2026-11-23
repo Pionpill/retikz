@@ -120,6 +120,7 @@
     "pkgReconcilerCompileArtifacts": "执行 / 产物来源",
     "pkgReconcilerWeaveState": "增量 / 状态模型",
     "pkgReconcilerWeaveChanges": "增量 / 变更追踪",
+    "pkgReconcilerWeaveScheduling": "增量 / 依赖调度",
     "pkgInspect": "编译观测 · inspect",
     "pkgInspectBuiltins": "内置观测",
     "pkgInspectCustom": "自定义用法",
