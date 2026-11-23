@@ -77,7 +77,7 @@ describe('Vanilla 裁剪处理等价性', () => {
 
     expect(() =>
       prepareProcessingInput(embedded, {
-        compile: { clips: [customClip()] },
+        clips: [customClip()],
       }),
     ).toThrow(/definition conflict for clip:ticketClip/i);
   });

@@ -128,7 +128,7 @@ Static export can serialize the SVG tree into a string. Applications with an exi
 
 ## Implementation sequence
 
-Follow the example's React JSX, static, SVG branch through these entries. Arrows show the reading order of execution, including calls inside input preparation and the compile result extension.
+Follow the example's React JSX, static, SVG branch through these entries. Arrows show the reading order of execution, including calls inside input preparation.
 
 <ComponentPreview files="pipeline-implementation" size="lg" hideCode type="flow" />
 
@@ -138,10 +138,6 @@ Start at Layout's `createInputScene`, then follow Vanilla's `compileToScene`. In
   sources={[
     { label: 'React scene entry', path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx' },
     { label: 'Vanilla synchronous processing', path: 'packages/kernel/vanilla/src/runtime/compile/static.ts' },
-    {
-      label: 'Default compile result extension',
-      path: 'packages/kernel/vanilla/src/runtime/compile/result-extension.ts',
-    },
     { label: 'SvgNode to React elements', path: 'packages/kernel/react/src/render/svg/svg-to-react.ts' },
   ]}
 />

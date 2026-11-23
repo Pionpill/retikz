@@ -834,7 +834,7 @@ it('通过 React、Vanilla 和直接 Source 相同地编译弯曲和完整标签
   expect(FlowDiagramSchema.parse(normalized.ir.children[0])).toEqual(direct);
   expect(FlowDiagramSchema.parse(vanilla)).toEqual(direct);
 
-  const providers = prepareProcessingInput(input, {}).coreOptions;
+  const providers = prepareProcessingInput(input).coreOptions;
   const expected = compileToScene({ type: 'scene', version: 1, children: [direct] }, { compile: providers }).scene;
 
   expect(compileToScene({ type: 'scene', version: 1, children: [vanilla] }, { compile: providers }).scene).toEqual(
@@ -904,7 +904,7 @@ it('在所有编写条目中保留自动、显式贝塞尔曲线和平滑路由'
   expect(FlowDiagramSchema.parse(react.ir.children[0])).toEqual(direct);
   expect(FlowDiagramSchema.parse(vanilla)).toEqual(direct);
 
-  const providers = prepareProcessingInput(input, {}).coreOptions;
+  const providers = prepareProcessingInput(input).coreOptions;
   const expected = compileToScene({ type: 'scene', version: 1, children: [direct] }, { compile: providers }).scene;
 
   expect(compileToScene({ type: 'scene', version: 1, children: [vanilla] }, { compile: providers }).scene).toEqual(

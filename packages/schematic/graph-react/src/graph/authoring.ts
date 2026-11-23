@@ -22,7 +22,6 @@ import type { RelationProps } from './Relation';
 export type GraphLayoutHostProps = Pick<
   LayoutProps & LayoutExtensions,
   | 'authoring'
-  | 'compileResultExtension'
   | 'handlers'
   | 'runtime'
   | 'width'
@@ -52,7 +51,6 @@ export type GraphLayoutHostProps = Pick<
 /** Graph standalone-only Layout props 的完整字段表 */
 export const graphLayoutHostPropKeys = [
   'authoring',
-  'compileResultExtension',
   'handlers',
   'runtime',
   'width',

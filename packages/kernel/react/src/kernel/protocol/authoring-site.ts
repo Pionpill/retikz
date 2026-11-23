@@ -2,7 +2,7 @@
 export type LayoutAuthoringSiteKind = 'scene' | 'scope' | 'path' | 'embeddable';
 
 /**
- * React 声明构建时报告给可选编译结果扩展的位置
+ * React 声明归一化时收集的作者位置
  * @description 基础适配器只提供定位信息、元素类型与不解释的属性，具体扩展语义由驱动识别
  */
 export type LayoutAuthoringSite = Readonly<{

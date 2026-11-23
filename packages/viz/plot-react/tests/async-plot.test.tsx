@@ -4,6 +4,7 @@ import { createDataTransformExecutor } from '@retikz/data';
 import { preparePlotData, PlotSchema } from '@retikz/plot';
 import { Layout } from '@retikz/react';
 import { createRoot } from 'react-dom/client';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { act } from 'react-dom/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -77,6 +78,8 @@ describe('Plot 客户端异步准备', () => {
     });
     const preparedData = await task.execute();
     const onLineage = vi.fn();
+    renderToStaticMarkup(<Plot spec={plot} preparedData={preparedData} onLineage={onLineage} />);
+    expect(onLineage).not.toHaveBeenCalled();
     const container = document.createElement('div');
     document.body.append(container);
     const root = createRoot(container);
@@ -99,6 +102,15 @@ describe('Plot 客户端异步准备', () => {
     expect(JSON.stringify(onLineage.mock.calls[0])).toContain('0.75');
     expect(execute).toHaveBeenCalledOnce();
 
+    const replacement = vi.fn();
+    await act(() => root.render(<Plot spec={plot} preparedData={preparedData} onLineage={replacement} />));
+    expect(replacement).toHaveBeenCalledOnce();
+    expect(onLineage).toHaveBeenCalledOnce();
+    await act(() =>
+      root.render(<Plot spec={plot} preparedData={preparedData} lineage={false} onLineage={replacement} />),
+    );
+    expect(replacement).toHaveBeenCalledOnce();
+    expect(execute).toHaveBeenCalledOnce();
     act(() => root.unmount());
   });
 

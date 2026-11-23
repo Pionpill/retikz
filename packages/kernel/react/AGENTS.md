@@ -14,14 +14,14 @@
 
 - Kernel 组件把 JSX props 收集为 Vanilla Input：`Layout`、`Node`、`Path`、`Step`、`Text`、`Coordinate`、`Scope` 等。
 - Sugar 组件同步展开为 Kernel，最终由 Vanilla 产生的 IR 必须与等价 Vanilla Input 一致。
-- Scene 到 SVG / Canvas 的主逻辑属于 `@retikz/render`；Vanilla 拥有 compile result extension、Runtime session、idPrefix、commit 与结果发布，react 侧只拥有 host shell、React subscription 与 callback 映射。
+- Scene 到 SVG / Canvas 的主逻辑属于 `@retikz/render`；Vanilla 管理运行时会话、idPrefix 与成功帧发布。React 宿主采用帧后才调用 `Layout.onCompileResult`；领域回调由对应的 Tier 2 宿主交付，不在 React render 或 SSR 期间触发。
 - Tier 2（plot 等）独立成包；react 包不内置它们的语法或算法。
 - Tier 2 的跨 namespace Composite roots / providers 只收集后交给 Core provider graph resolver；React 不按 namespace 私下合并 definitions、datasets 或传递依赖。
 
 ## 硬约束
 
 - `react` / `react-dom` 保持 peerDependencies，本地开发再放 devDependencies。
-- 必须直接依赖 `@retikz/vanilla`。React 不直接调用 `@retikz/core` 的 authoring helper 或直接拼装 Source IR，也不实现 compile result extension、Runtime session 或 retained renderer 编排；它只调用 Vanilla 的公开 normalize / processing API 并把只读结果映射到 React 宿主。不 import app 包或 Tier 2 包。
+- 必须直接依赖 `@retikz/vanilla`。React 不直接调用 `@retikz/core` 的 authoring helper 或直接拼装 Source IR，也不实现 Runtime session 或 retained renderer 编排；它只调用 Vanilla 的公开 normalize / processing API 并把只读结果映射到 React 宿主。不 import app 包或 Tier 2 包。
 - 不新增第三方运行时依赖；确需新增时先说明理由。
 - 不引 Tailwind / shadcn / 样式库；adapter 输出原生 SVG / Canvas 宿主，样式由消费者或 props 控制。
 - `kernel/` 与 `sugar/` 必须 SSR-safe，不访问 `document` / `window` / `HTMLElement`。浏览器全局只允许在 `render/` 下出现。

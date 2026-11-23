@@ -36,5 +36,4 @@ export type RenderToStringOptions = {
 };
 
 /** DOM 挂载既可接收预编译场景，也可编译作者声明 */
-export type CommonOptions = Pick<RenderToStringOptions, 'output' | 'animation'> &
-  Pick<ProcessingOptions, 'compile' | 'compileResultExtension'>;
+export type CommonOptions = Pick<RenderToStringOptions, 'output' | 'animation'> & Pick<ProcessingOptions, 'compile'>;

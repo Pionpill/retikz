@@ -11,7 +11,7 @@ import { createInputLayoutItems } from '../shared';
 /** Overlay 布局的 React 属性 */
 export type OverlayLayoutProps = Omit<InputOverlayLayoutConfig, 'children'> &
   Readonly<{
-    /** 交给可选编译结果扩展解释的不透明声明数据 */
+    /** 归一化时保留的不透明声明数据 */
     authoring?: unknown;
     /** 必须由 Overlay 类型布局项目组成的子元素；省略时容器为空
      * @default []

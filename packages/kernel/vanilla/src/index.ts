@@ -73,19 +73,7 @@ export {
   scene,
   scope,
 } from './normalize';
-export type {
-  ProcessingOptions,
-  LayerProcessingController,
-  InputVanillaCompileResultExtension,
-  VanillaCompileResultExtension,
-  VanillaCompileResultExtensionSession,
-} from './runtime';
-export {
-  compileToScene,
-  SceneRuntime,
-  compileLayers,
-  createLayerController,
-  defaultVanillaCompileResultExtension,
-} from './runtime';
+export type { ProcessingOptions, LayerProcessingController } from './runtime';
+export { compileToScene, SceneRuntime, compileLayers, createLayerController } from './runtime';
 export type { CommonOptions, RenderToStringOptions } from './runtime';
 export { renderToSvgString } from './runtime';

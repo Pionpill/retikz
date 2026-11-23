@@ -5,7 +5,7 @@ import { TIKZ_COORDINATE } from '../protocol';
 
 /** 命名坐标点的 React 输入，不绘制可见内容 */
 export type CoordinateProps = {
-  /** 可选编译结果扩展解释的运行时载荷，不进入 Core IR */
+  /** 归一化时保留的作者元数据，不进入 Core IR */
   authoring?: unknown;
   /** 坐标点 id；路径端点和节点定位通过它引用此位置 */
   id: string;

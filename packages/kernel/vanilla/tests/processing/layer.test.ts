@@ -1,58 +1,41 @@
 import { ReconcilerMode } from '@retikz/reconciler';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { VanillaCompileResultExtensionSession } from '../../src';
-import { normalizeScene, compileLayers, createLayerController, layer, node, path, scene } from '../../src';
+import { embed, normalizeScene, compileLayers, createLayerController, layer, node, path, scene } from '../../src';
 
-const contents = (name: string, x: number, authoring?: unknown) =>
-  layer({ name, scene: scene({ authoring, children: [node({ id: 'box', position: [x, 0] })] }) });
+const contents = (name: string, x: number) =>
+  layer({ name, scene: scene({ children: [node({ id: 'box', position: [x, 0] })] }) });
 const source = () => [
   contents('overlay', 40),
   layer({ name: 'background', scene: normalizeScene(scene([node({ id: 'box', position: [0, 0] })])).ir }),
 ];
 describe('独立图层会话', () => {
-  it('整栈和单层提交的扩展回调均可读取已安装的新层', () => {
-    const observed: Array<boolean> = [];
-    const observe = vi.fn<NonNullable<VanillaCompileResultExtensionSession['onCommit']>>();
-    const session: VanillaCompileResultExtensionSession = {
-      resolve: () => undefined,
-      onCommit: observe,
-    };
-    const controller = createLayerController(source(), { compileResultExtension: { create: () => session } });
-    observe.mockImplementation(output => {
-      observed.push(controller.read().some(entry => entry.result.compilation.result === output));
-    });
-    try {
-      controller.update([contents('new', 3)]);
-      controller.replaceLayer(contents('new', 5));
-      controller.replaceLayer(contents('extra', 7));
-      expect(observed).toEqual([true, true, true]);
-    } finally {
-      controller.dispose();
-    }
-  });
-
-  it('整栈替换中销毁宿主时保留旧快照，不通知已编译的兄弟层', () => {
-    const resolve = vi.fn<VanillaCompileResultExtensionSession['resolve']>();
-    const onCommit = vi.fn();
-    const controller = createLayerController(source(), {
-      compileResultExtension: { create: () => ({ resolve, onCommit }) },
-    });
+  it('整栈替换失败时保留已发布的快照，不通知已编译的兄弟层', () => {
+    const controller = createLayerController(source());
     const previous = controller.read();
     const listener = vi.fn();
     controller.subscribe(listener);
-    onCommit.mockClear();
-    resolve
-      .mockImplementationOnce(() => undefined)
-      .mockImplementationOnce(() => {
-        controller.dispose();
-      });
-
-    expect(() => controller.update([contents('first', 1), contents('second', 2)])).toThrow();
-    expect(controller.read()).toBe(previous);
-    expect(onCommit).not.toHaveBeenCalled();
-    expect(listener).not.toHaveBeenCalled();
-    expect(() => controller.replaceLayer(contents('first', 3))).toThrow(/disposed/);
+    const failing = layer({
+      name: 'second',
+      scene: scene([
+        embed({
+          adapter: {
+            kind: 'broken',
+            lower: () => {
+              throw new Error('failed layer');
+            },
+          },
+          props: {},
+        }),
+      ]),
+    });
+    try {
+      expect(() => controller.update([contents('first', 1), failing])).toThrow();
+      expect(controller.read()).toBe(previous);
+      expect(listener).not.toHaveBeenCalled();
+    } finally {
+      controller.dispose();
+    }
   });
 
   it('静态编译不丢失没有 main 的层', () => {
@@ -95,28 +78,6 @@ describe('独立图层会话', () => {
       controller.dispose();
     }
   });
-  it('替换单层只使用本层场景的作者配置', () => {
-    const roots: Array<unknown> = [];
-    const session: VanillaCompileResultExtensionSession = {
-      resolve: () => undefined,
-    };
-    const controller = createLayerController([contents('overlay', 1, 'initial')], {
-      compileResultExtension: {
-        create: input => {
-          roots.push(input.authoringSites.find(site => site.kind === 'scene')?.authoring);
-          return session;
-        },
-      },
-    });
-    try {
-      controller.update([contents('overlay', 2, 'updated')]);
-      controller.replaceLayer(contents('overlay', 80));
-      expect(roots).toEqual(['initial', 'updated', undefined]);
-    } finally {
-      controller.dispose();
-    }
-  });
-
   it('层替换不提交兄弟层', () => {
     const controller = createLayerController(source());
     try {

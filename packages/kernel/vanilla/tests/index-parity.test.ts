@@ -37,8 +37,6 @@ describe('@retikz/vanilla 入口边界', () => {
       'createDomProcessingController',
       'updateParticipant',
       'prepareProcessingInput',
-      'ResultExtensionHost',
-      'compileVanillaWithResultExtension',
     ]) {
       expect(namespace[name]).toBeUndefined();
     }

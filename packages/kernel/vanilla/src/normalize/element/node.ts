@@ -2,7 +2,7 @@ import type { IRNode } from '@retikz/core';
 
 /** 作者侧节点输入 */
 export type InputNode = IRNode & {
-  /** 可选编译结果扩展解释的运行时载荷，不进入 Core IR */
+  /** 归一化时保留的作者元数据，不进入 Core IR */
   authoring?: unknown;
 };
 

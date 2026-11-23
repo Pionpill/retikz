@@ -41,7 +41,6 @@ const collectGraphInput = (props: GraphProps, embedId: string, rejectHostProps: 
   const {
     children,
     authoring: _authoring,
-    compileResultExtension: _compileResultExtension,
     handlers: _handlers,
     runtime: _runtime,
     width: _width,
@@ -70,7 +69,6 @@ const collectGraphInput = (props: GraphProps, embedId: string, rejectHostProps: 
     ...input
   } = props;
   void _authoring;
-  void _compileResultExtension;
   void _handlers;
   void _runtime;
   void _width;

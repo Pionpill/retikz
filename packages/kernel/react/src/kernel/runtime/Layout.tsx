@@ -21,7 +21,7 @@ import type { ReconcilerDiagnostic } from '@retikz/reconciler';
 import type { AnimationControls } from '@retikz/render/animation';
 import { resolveAnimationEnabled } from '@retikz/render/animation';
 import type { HydrationHandlers } from '@retikz/render/hydration';
-import type { InputScene, InputScope, ProcessingOptions, VanillaCompileResultExtension } from '@retikz/vanilla';
+import type { InputScene, InputScope, ProcessingOptions } from '@retikz/vanilla';
 import { isInputScene, SceneRuntime, compileToScene } from '@retikz/vanilla';
 import type { CSSProperties, FC, ReactNode, Ref } from 'react';
 import { useCallback, useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from 'react';
@@ -181,10 +181,8 @@ export type LayoutProps = {
   theme?: IRScene['theme'];
   /** 通过 JSX 声明的图形内容 */
   children?: ReactNode;
-  /** 供自定义 compileResultExtension 消费的 JSX 输入元数据；传入 ir 时忽略，不写入持久化 Scene IR */
+  /** 归一化时收集的 JSX 作者元数据；传入 ir 时忽略，不写入持久化 Scene IR */
   authoring?: unknown;
-  /** 处理作者输入的编译结果扩展 */
-  compileResultExtension?: VanillaCompileResultExtension;
   /** 直接传入 ir 时使用的事件处理函数表 */
   handlers?: HydrationHandlers;
   /**
@@ -263,41 +261,6 @@ const useProcessingResult = (controller: SceneRuntime | undefined, fallbackResul
 /** Processing result 宿主需要的固定属性 */
 type LayoutResultHostProps = Omit<React.ComponentProps<typeof ProcessingResultHost>, 'result'>;
 
-/** render 阶段解析扩展，仅在 React 采用该帧后交付通知 */
-const compileLayoutFrame = (source: InputScene | IRScene, options: ProcessingOptions) => {
-  const extension = options.compileResultExtension;
-  if (!extension) return { result: compileToScene(source, options) };
-
-  let pendingNotification: (() => void) | undefined;
-  const result = compileToScene(source, {
-    ...options,
-    compileResultExtension: {
-      create: input => {
-        const session = extension.create(input);
-        return {
-          resolve: snapshot => session.resolve(snapshot),
-          onCommit: output => {
-            pendingNotification = () => session.onCommit?.(output);
-          },
-        };
-      },
-    },
-  });
-
-  return {
-    result,
-    notifyCommit: () => {
-      const notify = pendingNotification;
-      pendingNotification = undefined;
-      try {
-        notify?.();
-      } catch (cause) {
-        if (__DEV__) console.warn('[retikz] Vanilla compile result extension onCommit failed', cause);
-      }
-    },
-  };
-};
-
 /** static 模式只执行一次无生命周期的 Vanilla processing */
 const StaticLayoutContent: FC<{
   source: InputScene | IRScene;
@@ -305,12 +268,8 @@ const StaticLayoutContent: FC<{
   hostKey: string;
   hostProps: LayoutResultHostProps;
 }> = ({ source, options, hostKey, hostProps }) => {
-  const processing = useMemo(() => compileLayoutFrame(source, options), [source, options]);
-  useEffect(() => {
-    processing.notifyCommit?.();
-  }, [processing]);
-
-  return <ProcessingResultHost key={hostKey} {...hostProps} result={processing.result} />;
+  const result = useMemo(() => compileToScene(source, options), [source, options]);
+  return <ProcessingResultHost key={hostKey} {...hostProps} result={result} />;
 };
 
 /** retained 模式复用同一 Vanilla controller，仅将后续 source 推入 update */
@@ -321,7 +280,7 @@ const RetainedLayoutContent: FC<{
   hostKey: string;
   hostProps: LayoutResultHostProps;
 }> = ({ source, options, onDiagnostic, hostKey, hostProps }) => {
-  const [fallbackResult] = useState(() => compileLayoutFrame(source, options).result);
+  const [fallbackResult] = useState(() => compileToScene(source, options));
   const [controller, setController] = useState<SceneRuntime | undefined>(undefined);
   const currentSourceRef = useRef(source);
   const result = useProcessingResult(controller, fallbackResult);
@@ -388,7 +347,6 @@ export const Layout: FC<LayoutProps> = props => {
     theme,
     children,
     authoring,
-    compileResultExtension,
     handlers,
     runtime,
     width,
@@ -475,7 +433,6 @@ export const Layout: FC<LayoutProps> = props => {
 
   const processingOptions = useMemo<ProcessingOptions>(
     () => ({
-      compileResultExtension,
       ...(mode === LayoutRuntimeMode.Static
         ? {}
         : { reconciler: { mode: ReconcilerMode.Incremental, updateStrategy } }),
@@ -496,7 +453,6 @@ export const Layout: FC<LayoutProps> = props => {
       } satisfies CompileOptions,
     }),
     [
-      compileResultExtension,
       mode,
       updateStrategy,
       measureText,

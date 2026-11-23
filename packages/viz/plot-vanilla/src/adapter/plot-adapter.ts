@@ -3,7 +3,7 @@ import type { IRPlot } from '@retikz/plot';
 import { createPlotProviderContribution, PLOT_NAMESPACE } from '@retikz/plot';
 import type { InputEmbedAdapter, InputEmbedContext } from '@retikz/vanilla';
 
-import type { InputPlotEmbed, PreparedPlotLineageNotification } from '../spec';
+import type { InputPlotEmbed } from '../spec';
 import { plotIROf } from '../spec';
 
 /** 将 Plot 根节点包进可选的面板 Scope */
@@ -37,20 +37,13 @@ export const plotInputEmbedAdapter = {
   lower: (props: InputPlotEmbed, _context: InputEmbedContext) => {
     const spec = plotIROf(props);
     const node = wrapPlotPanel(spec, props.panel);
-    const { preparedData, datasets, onLineage, lineage, hostLineageMetadata, lowerOptions } = props;
-    const authoring: PreparedPlotLineageNotification | undefined =
-      onLineage === undefined || lineage === false
-        ? undefined
-        : { spec, datasets, preparedData, onLineage, lineage: lineage ?? {}, hostLineageMetadata, lowerOptions };
+    const { preparedData, datasets, lowerOptions } = props;
     return {
       node,
       providerDependencies: createPlotProviderContribution(datasets ?? {}, lowerOptions),
       ...(preparedData === undefined
         ? {}
         : { runtimeInputs: [{ path: node === spec ? [] : ['children', 0], input: preparedData }] }),
-      ...(authoring === undefined
-        ? {}
-        : { authoringSites: [{ kind: 'embeddable', type: 'plot.prepared-lineage', authoring }] }),
     };
   },
 } satisfies InputEmbedAdapter<InputPlotEmbed>;

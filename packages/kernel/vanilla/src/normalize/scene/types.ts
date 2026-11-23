@@ -57,11 +57,11 @@ export type InputScene = Omit<IRScene, 'version' | 'children'> & {
   version?: never;
   /** 按声明顺序归一的子节点 */
   children: ReadonlyArray<InputChild>;
-  /** 可选编译结果扩展自行解释的运行时载荷，不进入 Core IR */
+  /** 归一化时保留的作者元数据，不进入 Core IR */
   authoring?: unknown;
 };
 
-/** 归一化时报告给 编译结果扩展 的作者来源类别 */
+/** 归一化时收集的作者来源类别 */
 export type InputAuthoringSiteKind = 'scene' | 'scope' | 'path' | 'node' | 'coordinate' | 'embeddable';
 
 /** 框架无关的作者来源信息 */
@@ -72,7 +72,7 @@ export type InputAuthoringSite = Readonly<{
   sourcePath: string;
   /** 当前输入的具体类型标识 */
   type: string;
-  /** 由编译结果扩展解释的原始作者载荷，不进入 Core IR */
+  /** 归一化时保留的原始作者载荷，不进入 Core IR */
   authoring: unknown;
 }>;
 

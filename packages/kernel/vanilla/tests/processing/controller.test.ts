@@ -5,22 +5,14 @@ import { ReconcilerMode } from '@retikz/reconciler';
 import { describe, expect, it, vi } from 'vitest';
 import { literal } from 'zod';
 
-import type {
-  InputEmbedAdapter,
-  InputScene,
-  VanillaCompileResultExtension,
-  VanillaCompileResultExtensionSession,
-} from '../../src';
+import type { InputEmbedAdapter, InputScene } from '../../src';
 import { scene, node, normalizeScene, renderToSvgString, embed, SceneRuntime, compileToScene } from '../../src';
 import { prepareProcessingInput } from '../../src/runtime/_input/prepare';
 
 describe('Vanilla 处理', () => {
   it('单图可替换为 IR；批次只接受当前版本，导出不再次编译或发布', () => {
-    const onCommit = vi.fn();
-    const resolve = vi.fn<VanillaCompileResultExtensionSession['resolve']>();
     const runtime = SceneRuntime.fromInput(scene([]), {
       reconciler: { mode: ReconcilerMode.Incremental },
-      compileResultExtension: { create: () => ({ resolve, onCommit }) },
     });
     try {
       const input = scene([node({ id: 'point', position: [5, 0] })]);
@@ -36,16 +28,10 @@ describe('Vanilla 处理', () => {
       };
       const listener = vi.fn();
       runtime.subscribe(listener);
-      const resolutions = resolve.mock.calls.length;
-      const commits = onCommit.mock.calls.length;
       expect(runtime.renderToSvgString()).toBe(renderToSvgString(expected.compilation.result.scene));
-      expect(resolve).toHaveBeenCalledTimes(resolutions);
-      expect(onCommit).toHaveBeenCalledTimes(commits);
       expect(listener).not.toHaveBeenCalled();
       runtime.update(remove, expected);
       const current = runtime.read();
-      expect(resolve.mock.lastCall?.[0]).toBe(current.compilation);
-      expect(onCommit.mock.lastCall?.[0]).toBe(current.compilation.result);
       expect(listener.mock.lastCall?.[0]).toBe(current);
       expect(current.compilation.result.scene.primitives).toHaveLength(0);
       expect(() => runtime.update(remove, expected)).toThrow(/stale/i);
@@ -56,14 +42,11 @@ describe('Vanilla 处理', () => {
     }
   });
 
-  it('提交回调不能重入写操作，订阅者始终读到正在通知的版本', () => {
+  it('订阅回调不能重入写操作，订阅者始终读到正在通知的版本', () => {
     const input: InputScene = { type: 'scene', children: [] };
     const reenter = vi.fn<() => void>();
-    const session: VanillaCompileResultExtensionSession = {
-      resolve: () => undefined,
-      onCommit: reenter,
-    };
-    const controller = SceneRuntime.fromInput(input, { compileResultExtension: { create: () => session } });
+    const controller = SceneRuntime.fromInput(input);
+    controller.subscribe(reenter);
     const versions: Array<number> = [];
     const failures: Array<unknown> = [];
     reenter.mockImplementationOnce(() => {
@@ -115,7 +98,7 @@ describe('Vanilla 处理', () => {
       children: [embed({ adapter, id: 'box', props: {} })],
     };
 
-    const prepared = prepareProcessingInput(input, {});
+    const prepared = prepareProcessingInput(input);
 
     expect(makeDefinition).toHaveBeenCalledTimes(1);
     expect(prepared.coreOptions.composites).toEqual([definition]);
@@ -151,7 +134,7 @@ describe('Vanilla 处理', () => {
           },
         ],
       },
-      { compile: { themeDefinitions: [themeName] } },
+      { themeDefinitions: [themeName] },
     );
 
     expect(prepared.source.children).toEqual([
@@ -170,7 +153,7 @@ describe('Vanilla 处理', () => {
       children: [{ type: 'node' as const, id: 'a', position: [0, 0] as [number, number] }],
     };
 
-    expect(prepareProcessingInput(source, {}).source).toEqual(source);
+    expect(prepareProcessingInput(source).source).toEqual(source);
   });
 
   it('retained controller 创建时保留 Core 编译诊断', () => {
@@ -341,10 +324,9 @@ describe('Vanilla 处理', () => {
       children: [{ type: 'node', id: 'source', position: [0, 0] }],
     };
 
-    const prepared = prepareProcessingInput(ir, {});
+    const prepared = prepareProcessingInput(ir);
 
     expect(prepared.source).toBe(ir);
-    expect(prepared.authoringSites).toEqual([]);
   });
 
   it('retained processing 只在成功 Runtime transaction 后替换完整 result', () => {
@@ -379,81 +361,33 @@ describe('Vanilla 处理', () => {
     processing.dispose();
   });
 
-  it('controller 在更新间保留同一个 processing instance，并与 static 结果保持一致', () => {
-    const instances: Array<object> = [];
-    const sessions = new WeakMap<object, VanillaCompileResultExtensionSession>();
-    const extension: VanillaCompileResultExtension = {
-      create: input => {
-        instances.push(input.instance);
-        const existing = sessions.get(input.instance);
-        if (existing !== undefined) return existing;
-
-        const session = {
-          resolve: () => undefined,
-        };
-        sessions.set(input.instance, session);
-
-        return session;
+  it('持续会话通过 diagnostics 交付并清空 warning 回调异常', () => {
+    const cause = new Error('warning callback failed');
+    const runtime = SceneRuntime.fromIR(
+      { type: 'scene', version: 1, children: [{ namespace: 'missing', type: 'composite' }] },
+      {
+        compile: {
+          onWarn: () => {
+            throw cause;
+          },
+        },
       },
-    };
-    const first = { type: 'scene', children: [{ type: 'node', id: 'first', position: [0, 0] }] } satisfies InputScene;
-    const second = {
-      type: 'scene',
-      children: [{ type: 'node', id: 'second', position: [20, 0] }],
-    } satisfies InputScene;
-    const controller = SceneRuntime.fromInput(first, { compileResultExtension: extension });
-
-    controller.replace(second);
-
-    expect(instances).toHaveLength(2);
-    expect(instances[1]).toBe(instances[0]);
-
-    const staticResult = compileToScene(second, { compileResultExtension: extension });
-    const retainedResult = controller.read();
-
-    expect(retainedResult.revision).toBe(1);
-    expect(retainedResult.compilation.result).toEqual(staticResult);
-
-    controller.dispose();
+    );
+    try {
+      expect(runtime.read().compilation.result.scene.primitives).toEqual([]);
+      expect(runtime.diagnostics()).toContain(cause);
+      expect(runtime.diagnostics()).toEqual([]);
+    } finally {
+      runtime.dispose();
+    }
   });
 
-  it('compile result extension 解析失败时不发布 retained candidate，并恢复上一份 extension 输入', () => {
-    let reject = false;
-    const session: VanillaCompileResultExtensionSession = {
-      resolve: () => {
-        if (reject) throw new Error('expected extension resolution failure');
-      },
-    };
-    const extension: VanillaCompileResultExtension = {
-      create: input => {
-        reject = input.source.children.some(child => child.id === 'broken');
-        return session;
-      },
-    };
-    const controller = SceneRuntime.fromInput(
-      { type: 'scene', children: [{ type: 'node', id: 'stable', position: [0, 0] }] },
-      { compileResultExtension: extension },
+  it('单次编译只通知一次 warning', () => {
+    const onWarn = vi.fn();
+    compileToScene(
+      { type: 'scene', version: 1, children: [{ namespace: 'missing', type: 'composite' }] },
+      { compile: { onWarn } },
     );
-    const stable = controller.read();
-    const listener = vi.fn();
-    controller.subscribe(listener);
-
-    expect(() =>
-      controller.replace({ type: 'scene', children: [{ type: 'node', id: 'broken', position: [20, 0] }] }),
-    ).toThrow(
-      /Failed to publish the compilation|RENDER_RUNTIME_RENDERER_PREPARE_FAILED|Vanilla compile result extension resolve failed/,
-    );
-
-    expect(controller.read()).toBe(stable);
-    expect(listener).not.toHaveBeenCalled();
-    expect(controller.diagnostics()).toEqual([
-      expect.objectContaining({ code: 'VANILLA_COMPILE_RESULT_EXTENSION_FAILED' }),
-    ]);
-
-    controller.replace({ type: 'scene', children: [{ type: 'node', id: 'recovered', position: [40, 0] }] });
-
-    expect(controller.read().revision).toBe(stable.revision + 1);
-
-    controller.dispose();
+    expect(onWarn).toHaveBeenCalledOnce();
   });
 });

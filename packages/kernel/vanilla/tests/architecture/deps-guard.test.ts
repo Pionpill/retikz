@@ -41,7 +41,7 @@ describe('@retikz/vanilla 架构守卫', () => {
       readSrc('index.ts') +
       readSrc('runtime/session/types.ts') +
       readSrc('runtime/_input/types.ts') +
-      readSrc('runtime/compile/types.ts');
+      readSrc('dom/index.ts');
 
     expect(root).not.toMatch(/ProcessingTransactionParticipant|createDomProcessingController|updateParticipant/);
   });

@@ -45,7 +45,7 @@ const translations: Record<string, string> = {
     'Input passed to the inspector option schema; omission is equivalent to an empty object',
   '当前快照内的目标；省略时选择全部匹配对象':
     'Target within the current snapshot; omission selects all matching objects',
-  'React 仅适配独立辅助呈现生命周期，不持有主图编译结果扩展':
+  'React 仅适配独立辅助呈现生命周期，不参与主图编译':
     'Adapts the independent overlay lifecycle to React without owning the primary compilation driver',
   '已提交主图的可选辅助层；尺寸与 viewport 由主图宿主提供':
     'Optional overlay for a committed primary result; the primary host supplies its dimensions and viewport',
@@ -209,8 +209,6 @@ const translations: Record<string, string> = {
     'A frozen marker for the Vanilla input authoring field; its requests are resolved during driver compilation',
   '固定注册表与可选选择规则、提交通知；selection 省略时仅使用 authoring 请求':
     'Fixed registry with optional selection and commit callbacks; omitting selection uses only authoring requests',
-  '供 Vanilla 宿主接入的编译结果扩展；诊断通知先于 onCommit，通知失败不回滚已提交结果':
-    'A compilation driver for Vanilla hosts; diagnostics are delivered before onCommit, and callback failure does not roll back committed results',
   '面向调用方的错误消息，错误码为 INSPECT_ERROR': 'Error message for callers; the error code is INSPECT_ERROR',
   '错误码、消息与可选详情、原始原因；省略 details 时使用包含 code 的只读对象':
     'Error code, message, optional details and original cause; omitted details use a readonly object containing code',
@@ -226,8 +224,8 @@ const translations: Record<string, string> = {
   '当前 Scene 可用的 Composite Definition 集合': 'Composite Definition collection available to the current Scene',
   '渲染后端；显式值优先，否则继承 Renderer 上下文，未提供上下文时使用 SVG':
     'Rendering backend; an explicit value takes priority, otherwise inherits the Renderer context and uses SVG when no context is provided',
-  '供自定义 compileResultExtension 消费的 JSX 输入元数据；传入 ir 时忽略，不写入持久化 Scene IR':
-    'JSX input metadata consumed by a custom compileResultExtension; ignored when ir is provided and excluded from persistent Scene IR',
+  '归一化时收集的 JSX 作者元数据；传入 ir 时忽略，不写入持久化 Scene IR':
+    'JSX authoring metadata collected during normalization; ignored when ir is provided and excluded from persistent Scene IR',
   '默认字号，单位为绘图单位；font.size 缺省时使用，同时作为字号预设与 rem 的根字号，不覆盖显式数字字号':
     'Default font size in drawing units; used when font.size is omitted and as the root size for font presets and rem, without overriding explicit numeric font sizes',
   '节点相对定位的默认距离，单位为绘图单位；position 使用 direction/of 且省略 distance 时生效':
@@ -537,15 +535,12 @@ const translations: Record<string, string> = {
     'Reuses base Path lowering and only attaches a runtime-only Inspector authoring marker',
   '复用基础 Scope lowering、只附加 runtime-only Inspector authoring 标记':
     'Reuses base Scope lowering and only attaches a runtime-only Inspector authoring marker',
-  'Inspect Vanilla 编译结果扩展的固定配置': 'Fixed configuration for the Inspect Vanilla compilation driver',
   'Vanilla site 可声明一个 request、多个 request，或 barrier':
     'A Vanilla site can declare one request, multiple requests, or a barrier',
   'Vanilla 可选 authoring 声明的一项 Inspector request':
     'One Inspector request in an optional Vanilla authoring declaration',
   '创建只由 Inspect Vanilla 驱动识别的 opaque authoring 标记':
     'Creates an opaque authoring marker recognized only by the Inspect Vanilla driver',
-  '创建绑定 Inspector registry、selection 与 committed callbacks 的 Vanilla 编译结果扩展':
-    'Creates a Vanilla compilation driver binding an Inspector registry, selection, and committed callbacks',
   '把一个 Vanilla authored site 的可选标记转换为通用 InspectionSelection rules':
     'Converts optional markers on a Vanilla authored site into shared InspectionSelection rules',
 };

@@ -5,8 +5,6 @@ import { RetikzError } from '@retikz/foundation';
 export const RetikzVanillaErrorCode = {
   /** 未被更精确分类覆盖的 Vanilla 错误 */
   Default: 'VANILLA_ERROR',
-  /** Compile result extension 执行失败 */
-  CompileResultExtensionFailed: 'VANILLA_COMPILE_RESULT_EXTENSION_FAILED',
   /** DOM host 操作失败 */
   Dom: 'VANILLA_DOM_ERROR',
   /** Authoring normalize 失败 */

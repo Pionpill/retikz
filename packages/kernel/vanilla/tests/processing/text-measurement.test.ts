@@ -19,7 +19,7 @@ describe('默认文字测量', () => {
   it('显式测量器直接消费原始字体参数，不探测 Canvas', () => {
     const getContext = vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
     const custom = vi.fn(() => ({ width: 80, height: 16 }));
-    const prepared = prepareProcessingInput(source, { compile: { measureText: custom } });
+    const prepared = prepareProcessingInput(source, { measureText: custom });
     const font = { size: 16 };
     expect(prepared.coreOptions.measureText?.('Alpha', font)).toEqual({ width: 80, height: 16 });
     expect(custom).toHaveBeenLastCalledWith('Alpha', font);
@@ -36,7 +36,7 @@ describe('默认文字测量', () => {
       if (mode === 'throw') throw new Error('Canvas unavailable');
       return null;
     });
-    const prepared = prepareProcessingInput(source, {});
+    const prepared = prepareProcessingInput(source);
     expect(prepared.coreOptions.measureText?.('Alpha', { size: 16 })).toEqual(fallbackMeasurer('Alpha', { size: 16 }));
   });
 
@@ -45,7 +45,7 @@ describe('默认文字测量', () => {
     const context = { font: '', measureText };
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(context as unknown as CanvasRenderingContext2D);
     document.body.style.fontFamily = 'serif';
-    expect(prepareProcessingInput(source, {}).coreOptions.measureText?.('Alpha', { size: 16 })).toEqual({
+    expect(prepareProcessingInput(source).coreOptions.measureText?.('Alpha', { size: 16 })).toEqual({
       width: 91,
       height: 15,
       ascent: 12,
@@ -57,7 +57,7 @@ describe('默认文字测量', () => {
     measureText.mockImplementation(() => {
       throw failure;
     });
-    expect(() => prepareProcessingInput(source, {}).coreOptions.measureText?.('Alpha', { size: 16 })).toThrow(failure);
+    expect(() => prepareProcessingInput(source).coreOptions.measureText?.('Alpha', { size: 16 })).toThrow(failure);
   });
 
   it('自定义异常与非法度量不能被替换成正常 Scene', () => {

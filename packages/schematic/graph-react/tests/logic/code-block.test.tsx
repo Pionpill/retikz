@@ -75,10 +75,8 @@ describe('自定义代码块 React 编写', () => {
     const direct = compileToScene(
       { type: 'scene', version: 1, children: [source] },
       {
-        compile: prepareProcessingInput(
-          { type: 'scene', children: [inputEmbed] },
-          { compile: { themeDefinitions: [coreStyle] } },
-        ).coreOptions,
+        compile: prepareProcessingInput({ type: 'scene', children: [inputEmbed] }, { themeDefinitions: [coreStyle] })
+          .coreOptions,
       },
     );
 

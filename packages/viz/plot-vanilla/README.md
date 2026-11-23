@@ -56,3 +56,5 @@ receives the typed `InputPlotEmbed` during the single Vanilla scene-normalizatio
 traversal, then delegates Plot IR lowering to `@retikz/plot`.
 
 See the [retikz docs site](https://pionpill.github.io/retikz/) for usage.
+
+Embedded plots contribute drawing input only. For standalone SVG and mark lineage, pass a `lineage` option to `renderPlot` or `renderPlotAsync` and read the returned `{ svg, lineage }` after the operation succeeds.

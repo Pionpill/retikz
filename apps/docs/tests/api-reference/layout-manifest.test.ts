@@ -28,7 +28,6 @@ describe('Layout API 公开范围', () => {
     expect(layerInput).toContain('scene: InputScene | IRScene');
     expect(layerInput).toContain('config?: LayerOptions');
     expect(source).toContain("IRScene['theme']");
-    expect(source).toContain('`compileResultExtension?`');
 
     const extensions = source.split('### LayoutExtensions\n')[1]?.split('\n### ')[0] ?? '';
     const fields = [...extensions.matchAll(/^\| `(?:readonly )?([^`?]+)\?` \|/gm)].map(match => match[1]);
@@ -46,7 +45,7 @@ describe('Layout API 公开范围', () => {
     ]);
     expect(extensions).toContain('ReadonlyArray<ClipDefinition>');
     expect(extensions).toContain('ReadonlyArray<AnyCompositeDefinition>');
-    expect(extensions).toContain('`BUILTIN_ARROWS`');
+    expect(extensions).toContain('`readonly arrows?` | `ReadonlyArray<ArrowDefinition>` | `undefined`');
     expect(extensions).toContain('`[]`');
     expect(extensions).toContain('`ThemeDefinitionsContext`');
     expect(extensions).not.toContain('import("');

@@ -22,7 +22,7 @@ The remaining members are inherited from `InputFlexLayoutConfig`, with `'childre
 
 | Member                | Type        | Default | Description                                                                    |
 | --------------------- | ----------- | ------- | ------------------------------------------------------------------------------ |
-| `readonly authoring?` | `unknown`   | —       | Opaque authoring data interpreted by an optional compilation driver            |
+| `readonly authoring?` | `unknown`   | —       | Opaque authoring data retained during normalization                            |
 | `readonly children?`  | `ReactNode` | `[]`    | Direct children must be flex layout items; omission creates an empty container |
 
 </ApiTable>
@@ -128,7 +128,7 @@ The remaining members are inherited from `InputFlexLayoutConfig`, with `'childre
 | ------------------------ | ------------------------------------ | ------- | -------------------------------------------------------------------------------- |
 | `children?`              | `ReadonlyArray<InputFlexLayoutItem>` | `[]`    | Authored direct items; omission is treated as an empty list                      |
 | `input` (Parameter)      | `InputFlexLayout`                    | —       | Container and item input; the input object reference is retained                 |
-| `authoring?` (Parameter) | `unknown`                            | —       | Opaque data for the compilation driver; omitted input adds no authoring data     |
+| `authoring?` (Parameter) | `unknown`                            | —       | Opaque data retained during normalization; omitted input adds no authoring data  |
 | Returns                  | `InputEmbed<InputFlexLayout>`        | —       | An InputEmbed consumed by the layout adapter; creation does not solve the layout |
 
 </ApiTable>

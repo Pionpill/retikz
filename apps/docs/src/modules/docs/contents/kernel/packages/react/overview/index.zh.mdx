@@ -108,14 +108,14 @@ Definition 数组按有序元素 identity 规范化，因此 render 时重新创
     {
       label: 'Layout 的 Definition 容器规范化',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 141,
-      endLine: 168,
+      startLine: 377,
+      endLine: 388,
     },
     {
       label: 'React 的 static fallback 与 retained processing 订阅',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 279,
-      endLine: 353,
+      startLine: 251,
+      endLine: 337,
     },
     {
       label: 'Vanilla retained controller 创建 Core Computation 与 Runtime',
@@ -155,8 +155,8 @@ Definition 数组按有序元素 identity 规范化，因此 render 时重新创
     {
       label: 'React 分派 static 或 retained processing',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 279,
-      endLine: 353,
+      startLine: 251,
+      endLine: 337,
     },
     {
       label: 'Vanilla retained controller 的 Core Computation 与更新策略',
@@ -184,7 +184,7 @@ Definition 数组按有序元素 identity 规范化，因此 render 时重新创
 
 可选的 `@retikz/inspect/react` 提供 `InspectionOverlay`，消费主图已完成的普通编译结果并独立呈现辅助层。检查请求不进入主图 IR，也不参与主图的编译与提交。
 
-`VanillaCompileResultExtension` 会话通过 `resolve` 从本次编译结果派生诊断，不替换主结果。可选的 `onCommit` 在宿主成功提交该帧后才收到通知。Plot 用它通知数据来源；Inspect 独立消费编译结果。
+需要整帧结果时使用 `Layout.onCompileResult`；它在 React 提交后交付当前编译结果，不在服务端渲染期间调用。
 
 <SourceLinks
   sources={[
@@ -201,8 +201,8 @@ Definition 数组按有序元素 identity 规范化，因此 render 时重新创
     {
       label: 'Layout 构造 processing source 与 options',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 423,
-      endLine: 529,
+      startLine: 408,
+      endLine: 480,
     },
     {
       label: 'Core IR 编译为 Scene',
@@ -227,8 +227,8 @@ Scene 已经没有 React 组件语义。Vanilla processing 负责保留或静态
     {
       label: 'Layout 将 source 与 options 交给 Vanilla processing',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 423,
-      endLine: 529,
+      startLine: 408,
+      endLine: 480,
     },
     {
       label: 'React 将 processing result 映射为 SVG 或 Canvas 宿主',

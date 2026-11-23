@@ -25,10 +25,10 @@ export const createLayerController = (source: ReadonlyArray<InputLayer>, options
     if (disposed) throw new RetikzVanillaError(RetikzVanillaErrorCode.Processing, 'Layer controller is disposed');
   };
 
-  const mount = (layer: InputLayer, pendingCommitNotifications: Array<() => void>): LayerSession => {
+  const mount = (layer: InputLayer): LayerSession => {
     const effective = mergeLayerOptions(options, layer);
-    const prepared = prepareProcessingInput(layer.scene, effective, layer.name);
-    const controller = HostedSceneRuntime.fromPrepared(prepared, effective, assertActive, pendingCommitNotifications);
+    const prepared = prepareProcessingInput(layer.scene, effective.compile, layer.name);
+    const controller = HostedSceneRuntime.fromPrepared(prepared, effective, assertActive);
     return {
       controller,
       execution: effective.reconciler,
@@ -38,11 +38,11 @@ export const createLayerController = (source: ReadonlyArray<InputLayer>, options
   const release = (layers: Map<string, LayerSession>) => {
     for (const { controller } of layers.values()) controller.dispose();
   };
-  const mountStack = (nextLayers: ReadonlyArray<InputLayer>, notifications: Array<() => void>) => {
+  const mountStack = (nextLayers: ReadonlyArray<InputLayer>) => {
     const ordered = normalizeSceneLayers(nextLayers);
     const layers = new Map<string, LayerSession>();
     try {
-      for (const layer of ordered) layers.set(layer.name, mount(layer, notifications));
+      for (const layer of ordered) layers.set(layer.name, mount(layer));
       assertActive();
       return layers;
     } catch (cause) {
@@ -50,15 +50,12 @@ export const createLayerController = (source: ReadonlyArray<InputLayer>, options
       throw cause;
     }
   };
-  const initialNotifications: Array<() => void> = [];
-  let sessions = mountStack(source, initialNotifications);
+  let sessions = mountStack(source);
   const snapshot = () =>
     Object.freeze(Array.from(sessions.values(), session => session.entry).sort((a, b) => a.zIndex - b.zIndex));
   let current = snapshot();
-  for (const notify of initialNotifications) notify();
-  const publish = (notifications: Array<() => void> = []) => {
+  const publish = () => {
     current = snapshot();
-    for (const notify of notifications) notify();
     for (const listener of listeners) {
       try {
         listener(current);
@@ -86,16 +83,14 @@ export const createLayerController = (source: ReadonlyArray<InputLayer>, options
   };
   const update = (next: ReadonlyArray<InputLayer>) =>
     write(() => {
-      const notifications: Array<() => void> = [];
-      const replacement = mountStack(next, notifications);
+      const replacement = mountStack(next);
       const previous = sessions;
       sessions = replacement;
       release(previous);
-      publish(notifications);
+      publish();
     });
   const replaceLayer = (layer: InputLayer) =>
     write(() => {
-      const notifications: Array<() => void> = [];
       const effective = mergeLayerOptions(options, layer);
       const previous = sessions.get(layer.name);
       const execution = previous?.execution;
@@ -106,19 +101,19 @@ export const createLayerController = (source: ReadonlyArray<InputLayer>, options
         execution?.trace === effective.reconciler.trace &&
         execution?.captureProvenance === effective.reconciler.captureProvenance
       ) {
-        const prepared = prepareProcessingInput(layer.scene, effective, layer.name);
-        previous.controller.updatePrepared(prepared, notifications);
+        const prepared = prepareProcessingInput(layer.scene, effective.compile, layer.name);
+        previous.controller.updatePrepared(prepared);
         previous.entry = Object.freeze({
           name: layer.name,
           zIndex: layerZIndex(layer),
           result: previous.controller.read(),
         });
       } else {
-        const replacement = mount(layer, notifications);
+        const replacement = mount(layer);
         sessions.set(layer.name, replacement);
         previous?.controller.dispose();
       }
-      publish(notifications);
+      publish();
     });
   return {
     read: () => current,
@@ -127,13 +122,12 @@ export const createLayerController = (source: ReadonlyArray<InputLayer>, options
     getScopeId: (name, path, expected) => get(name).controller.getScopeId(path, expected),
     updateLayer: (name, batch, expected) =>
       write(() => {
-        const notifications: Array<() => void> = [];
         const session = get(name);
-        session.controller.applyBatch(batch, expected, notifications);
+        session.controller.update(batch, expected);
         const result = session.controller.read();
         if (result === session.entry.result) return;
         session.entry = Object.freeze({ ...session.entry, result });
-        publish(notifications);
+        publish();
       }),
     setLayerOrder: (name, zIndex) =>
       write(() => {

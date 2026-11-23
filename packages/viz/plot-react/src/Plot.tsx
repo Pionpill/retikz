@@ -7,6 +7,7 @@ import type {
 } from '@retikz/data';
 import type { RequireExactlyOne } from '@retikz/foundation';
 import type { AssertEqual } from '@retikz/foundation';
+import { lowerPlotWithLineage } from '@retikz/plot';
 import type {
   IRPlot,
   PlotsLoweringOptions,
@@ -21,9 +22,9 @@ import type {
   InputPlotPanel,
   MarkTransformShortcutDefinition,
 } from '@retikz/plot-vanilla';
-import { plotInputEmbedAdapter, createPlotLineageCompileResultExtension } from '@retikz/plot-vanilla';
+import { plotInputEmbedAdapter } from '@retikz/plot-vanilla';
 import type { LayoutExtensions, LayoutProps } from '@retikz/react';
-import { Layout } from '@retikz/react';
+import { Layout, useTheme, useThemeDefinitions } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
 import { useMemo } from 'react';
 
@@ -199,7 +200,8 @@ const EmbeddablePlotContent = Object.assign(PlotContent, {
 const PlotComponent: FC<PlotProps> = props => {
   const { className, style, renderer, themeDefinitions, onLineage, definitions, lineage, hostLineageMetadata } = props;
   const ambientPlotThemeDefinitions = usePlotThemeDefinitions();
-  const lineageResultExtension = useMemo(() => createPlotLineageCompileResultExtension(), []);
+  const theme = useTheme();
+  const ambientDefinitions = useThemeDefinitions();
   const effectiveProps = useMemo(() => {
     if (ambientPlotThemeDefinitions === undefined) return props;
     const explicit = definitions?.plotThemeDefinitions;
@@ -214,6 +216,24 @@ const PlotComponent: FC<PlotProps> = props => {
   }, [ambientPlotThemeDefinitions, definitions, props]);
   const authored = resolvePlotAuthoring(effectiveProps);
   const panel = createPlotPanelInput(effectiveProps);
+  const notifyLineage =
+    onLineage && lineage !== false
+      ? () => {
+          const compiledDefinitions = [...(ambientDefinitions ?? []), ...(themeDefinitions ?? [])];
+          const result = lowerPlotWithLineage(
+            authored.spec,
+            authored.datasets ?? {},
+            {
+              ...authored.lowerOptions,
+              environment: { theme, compile: { themeDefinitions: compiledDefinitions } },
+              lineage: lineage ?? {},
+              hostLineageMetadata,
+            },
+            authored.preparedData,
+          );
+          onLineage(result.lineage);
+        }
+      : undefined;
 
   return (
     <Layout
@@ -221,15 +241,9 @@ const PlotComponent: FC<PlotProps> = props => {
       style={style}
       renderer={renderer}
       extensions={{ themeDefinitions }}
-      compileResultExtension={lineageResultExtension}
+      onCompileResult={notifyLineage}
     >
-      <EmbeddablePlotContent
-        {...authored}
-        {...(panel === undefined ? {} : { panel })}
-        lineage={lineage}
-        hostLineageMetadata={hostLineageMetadata}
-        onLineage={onLineage}
-      />
+      <EmbeddablePlotContent {...authored} {...(panel === undefined ? {} : { panel })} />
     </Layout>
   );
 };

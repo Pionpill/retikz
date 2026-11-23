@@ -3,13 +3,13 @@ import { translateLayoutApiReference } from './layout.en';
 
 /** 布局组件公开说明的受审阅英文翻译 */
 const translations: Readonly<Record<string, string>> = {
-  交给可选编译结果扩展解释的不透明声明数据: 'Opaque authoring data interpreted by an optional compilation driver',
+  归一化时保留的不透明声明数据: 'Opaque authoring data retained during normalization',
   '由 FlexLayout 静态读取的直属布局子项': 'Direct layout item read statically by FlexLayout',
   '由 GridLayout 静态读取的直属布局子项': 'Direct layout item read statically by GridLayout',
   '由 OverlayLayout 静态读取的直属布局子项': 'Direct layout item read statically by OverlayLayout',
   '容器与子项输入，保留传入对象引用': 'Container and item input; the input object reference is retained',
-  '交给编译结果扩展的不透明声明数据；省略时不附加声明':
-    'Opaque data for the compilation driver; omitted input adds no authoring data',
+  '归一化时保留的不透明声明数据；省略时不附加声明':
+    'Opaque data retained during normalization; omitted input adds no authoring data',
   '由布局适配器消费的 InputEmbed，不在创建时求解布局':
     'An InputEmbed consumed by the layout adapter; creation does not solve the layout',
   '直属布局 child 的作者侧输入': 'Authoring input for a direct layout child',
@@ -32,11 +32,8 @@ const translations: Readonly<Record<string, string>> = {
   'Layout 检查宿主的属性': 'Props for the layout inspection host',
   '除三种 Layout 布局检查器外合并的自定义检查 registry':
     'Custom inspector registry merged with the three layout inspectors',
-  'Layout 检查编译结果扩展的创建选项': 'Options for creating the layout inspection compilation driver',
   创建阻止当前图形或作用域内全部检查器的边界标记:
     'Create a barrier disabling all inspectors in the current drawing or scope',
-  '创建默认包含三种 Layout 布局检查器的 Vanilla 编译结果扩展':
-    'Create a Vanilla compilation driver including the three layout inspectors by default',
   '当前实例的检查请求，省略时为 true；false 关闭当前实例的请求':
     'Inspection request for this occurrence; defaults to true, while false disables its request',
   'FlexLayout 主轴方向取值': 'FlexLayout main-axis direction values',
@@ -167,8 +164,6 @@ const translations: Readonly<Record<string, string>> = {
     'Read-only guide children; does not solve again or mutate the layout artifact',
   '可选驱动配置；省略时只注册内置布局检查器':
     'Optional driver configuration; omission registers only the built-in layout inspectors',
-  '传给 Vanilla render 或 mount 入口的检查编译结果扩展':
-    'Inspection compilation driver passed to Vanilla render or mount',
   '交给 Vanilla authored site 的不透明屏障标记': 'Opaque barrier marker attached to a Vanilla authored site',
 };
 

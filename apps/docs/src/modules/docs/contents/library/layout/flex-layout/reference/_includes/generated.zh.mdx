@@ -22,7 +22,7 @@
 
 | 成员                  | 类型        | 默认值 | 说明                                                 |
 | --------------------- | ----------- | ------ | ---------------------------------------------------- |
-| `readonly authoring?` | `unknown`   | —      | 交给可选编译结果扩展解释的不透明声明数据             |
+| `readonly authoring?` | `unknown`   | —      | 归一化时保留的不透明声明数据                         |
 | `readonly children?`  | `ReactNode` | `[]`   | 必须由 Flex 类型布局项目组成的子元素；省略时容器为空 |
 
 </ApiTable>
@@ -124,12 +124,12 @@ export type FlexLayoutItemProps = Omit<InputFlexLayoutItemConfig, 'child' | 'key
 
 <ApiTable>
 
-| 成员                | 类型                                 | 默认值 | 说明                                               |
-| ------------------- | ------------------------------------ | ------ | -------------------------------------------------- |
-| `children?`         | `ReadonlyArray<InputFlexLayoutItem>` | `[]`   | 作者声明的直属子项，省略时按空列表处理             |
-| `input` (参数)      | `InputFlexLayout`                    | —      | 容器与子项输入，保留传入对象引用                   |
-| `authoring?` (参数) | `unknown`                            | —      | 交给编译结果扩展的不透明声明数据；省略时不附加声明 |
-| 返回值              | `InputEmbed<InputFlexLayout>`        | —      | 由布局适配器消费的 InputEmbed，不在创建时求解布局  |
+| 成员                | 类型                                 | 默认值 | 说明                                              |
+| ------------------- | ------------------------------------ | ------ | ------------------------------------------------- |
+| `children?`         | `ReadonlyArray<InputFlexLayoutItem>` | `[]`   | 作者声明的直属子项，省略时按空列表处理            |
+| `input` (参数)      | `InputFlexLayout`                    | —      | 容器与子项输入，保留传入对象引用                  |
+| `authoring?` (参数) | `unknown`                            | —      | 归一化时保留的不透明声明数据；省略时不附加声明    |
+| 返回值              | `InputEmbed<InputFlexLayout>`        | —      | 由布局适配器消费的 InputEmbed，不在创建时求解布局 |
 
 </ApiTable>
 

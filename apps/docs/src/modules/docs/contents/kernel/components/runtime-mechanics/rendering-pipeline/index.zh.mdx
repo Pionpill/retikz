@@ -119,7 +119,7 @@ Render 消费 Scene 中已经确定的几何。选择 SVG 时，它生成描述�
 
 ## 完整实现流程
 
-沿本例的 React JSX、static、SVG 分支阅读源码，可以依次追踪下面的入口。箭头表示执行阅读顺序；输入准备与编译结果扩展内部的调用也展开在图中。
+沿本例的 React JSX、static、SVG 分支阅读源码，可以依次追踪下面的入口。箭头表示执行阅读顺序；输入准备内部的调用也展开在图中。
 
 <ComponentPreview files="pipeline-implementation" size="lg" hideCode type="flow" />
 
@@ -129,7 +129,6 @@ Render 消费 Scene 中已经确定的几何。选择 SVG 时，它生成描述�
   sources={[
     { label: 'React 场景入口', path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx' },
     { label: 'Vanilla 同步处理', path: 'packages/kernel/vanilla/src/runtime/compile/static.ts' },
-    { label: '默认编译结果扩展', path: 'packages/kernel/vanilla/src/runtime/compile/result-extension.ts' },
     { label: 'SvgNode 转换为 React 元素', path: 'packages/kernel/react/src/render/svg/svg-to-react.ts' },
   ]}
 />

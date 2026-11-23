@@ -71,7 +71,7 @@ declare const compileToScene: (source: InputScene | IRScene, options?: Processin
 
 同步门面在完整作者输入就绪后编译并完成成功通知；一次编译使用临时非增量协调器并负责释放。默认文字测量、provider 解析、诊断归属及错误 cause 保持现有 Vanilla processing 规则。
 
-门面替换 Vanilla 既有 `processToStaticInputResult` 与 `processToStaticInputResultAsync`，旧名直接删除，不保留转发。Reconciler 不重新公开同名函数。需要持续更新时使用既有 controller；框架通过同一编译入口取得结果，并在宿主提交后交付扩展通知。React 与 Vanilla 继续表达同一作者和编译契约，React 仅持有框架生命周期及宿主接线。
+门面替换 Vanilla 既有 `processToStaticInputResult` 与 `processToStaticInputResultAsync`，旧名直接删除，不保留转发。Reconciler 不重新公开同名函数。需要持续更新时使用既有 controller；框架通过同一编译入口取得结果，并在宿主提交后通知结果消费者。React 与 Vanilla 继续表达同一作者和编译契约，React 仅持有框架生命周期及宿主接线。
 
 已编译的 Scene 不属于该作者编译门面的输入，继续使用既有 Scene 消费与渲染接口，不进行反向编译。
 
@@ -81,7 +81,7 @@ Vanilla 继续拥有 `InputScene` 归一化、作者贡献准备、provider 依�
 
 应用先等待领域任务，自行决定是否提交结果。Vanilla 按调用顺序同步更新，不管理请求取消、抢占或优先级。静态编译不暴露候选句柄，宿主负责自己的提交通知时机，不向 Reconciler 增加跨调用的编译提交阶段。
 
-现有 compile result extension 从协调器输出读取同次 `result` 与真实 `diagnostics`，不返回另一个结果，并通过可选的 `onCommit` 通知宿主帧已提交。主图编译由协调器完成，宿主保留原始 primary result 并原样交付提交回调，不再自行调用独立完整编译函数，也不以空诊断替代真实输出。扩展失败仍按现有规则保留最后成功的提交快照；不扩大为已完成编译及 warning 的撤销协议。
+Vanilla 不为编译结果创建扩展会话。单图计算状态由协调器提交，层栈和 React 各自决定何时对外发布。领域产物由对应领域消费，不借提交回调修改或回滚主图。
 
 Inspect、Plot、Table 等现有独立编译消费者同步迁移，领域输入、lowering、辅助绘图与结果语义保持。React 继续消费 Vanilla，不直接管理协调器或重建编译驱动。Vanilla 与框架包不新增局部批次 authoring、自动整树 diff 或作者身份推断。
 

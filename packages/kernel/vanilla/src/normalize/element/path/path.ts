@@ -101,7 +101,7 @@ export type InputStep =
 export type InputPathConfig = Omit<IRPath, 'type' | 'children' | 'arrow'> & {
   /** 端点箭头配置，或用方向字符串快捷启用起点、终点或两端箭头 */
   arrow?: IRPath['arrow'] | '->' | '<-' | '<->';
-  /** 可选编译结果扩展自行解释的运行时载荷，不进入 Core IR */
+  /** 归一化时保留的作者元数据，不进入 Core IR */
   authoring?: unknown;
 } & RequireExactlyOne<{
     /** 路径步骤序列；与 way 互斥 */

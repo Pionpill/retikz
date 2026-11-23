@@ -1,11 +1,11 @@
 import type { DataTransformImplementationProvider } from '@retikz/data';
 import { createDataTransformExecutor } from '@retikz/data';
 import { preparePlotData, PlotSchema } from '@retikz/plot';
-import { SceneRuntime, embed, compileToScene, scene } from '@retikz/vanilla';
-import { describe, expect, it, vi } from 'vitest';
+import { embed, compileToScene, scene } from '@retikz/vanilla';
+import { describe, expect, it } from 'vitest';
 
 import type { InputPlotEmbed } from '../src';
-import { plotInputEmbedAdapter, createPlotLineageCompileResultExtension, renderPlot, renderPlotAsync } from '../src';
+import { plotInputEmbedAdapter, renderPlot, renderPlotAsync } from '../src';
 
 const rows = [
   { x: 1, y: 2 },
@@ -24,61 +24,6 @@ const spec = () =>
   });
 
 describe('异步 Plot 编写', () => {
-  it('更新保留的血缘站点，同时保持共享驱动程序实例隔离', () => {
-    const first = vi.fn();
-    const second = vi.fn();
-    const replacement = vi.fn();
-    const input = (onLineage: typeof first) =>
-      scene({
-        children: [
-          embed<InputPlotEmbed>({
-            adapter: plotInputEmbedAdapter,
-            props: { spec: spec(), datasets: { rows }, onLineage, panel: { position: [24, 12], zIndex: 3 } },
-          }),
-        ],
-      });
-    const options = { compileResultExtension: createPlotLineageCompileResultExtension() };
-    const a = SceneRuntime.fromInput(input(first), options);
-    const b = SceneRuntime.fromInput(input(second), options);
-
-    try {
-      expect(first).toHaveBeenCalledOnce();
-      expect(second).toHaveBeenCalledOnce();
-      a.replace(input(replacement));
-      expect(replacement).toHaveBeenCalledOnce();
-      expect(first).toHaveBeenCalledOnce();
-      expect(second).toHaveBeenCalledOnce();
-      b.replace(input(second));
-      expect(second).toHaveBeenCalledTimes(2);
-      expect(replacement).toHaveBeenCalledOnce();
-    } finally {
-      a.dispose();
-      b.dispose();
-    }
-  });
-
-  it('一次性编译完成后独立通知每个血缘回调', () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
-    const first = vi.fn(() => {
-      throw new Error('author callback failed');
-    });
-    const second = vi.fn();
-    const input = (onLineage: typeof second) =>
-      embed<InputPlotEmbed>({ adapter: plotInputEmbedAdapter, props: { spec: spec(), datasets: { rows }, onLineage } });
-    const source = scene({ children: [input(first), input(second)] });
-    const options = { compileResultExtension: createPlotLineageCompileResultExtension() };
-
-    try {
-      const result = compileToScene(source, options);
-
-      expect(first).toHaveBeenCalledOnce();
-      expect(second).toHaveBeenCalledOnce();
-      expect(result.scene.primitives).toHaveLength(2);
-    } finally {
-      warn.mockRestore();
-    }
-  });
-
   it('保留行和规范结果的内置 SVG 等价性', async () => {
     const plot = spec();
     const expected = renderPlot(plot, { rows });

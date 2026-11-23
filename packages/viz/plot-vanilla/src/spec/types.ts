@@ -1,13 +1,6 @@
 import type { ExternalDatasets } from '@retikz/data';
 import type { RequireExactlyOne } from '@retikz/foundation';
-import type {
-  IRPlot,
-  PlotsLoweringOptions,
-  PlotHostLineageMetadata,
-  PlotLineageOptions,
-  PlotLineageRun,
-  PreparedPlotData,
-} from '@retikz/plot';
+import type { IRPlot, PlotsLoweringOptions, PreparedPlotData } from '@retikz/plot';
 import type { InputScope } from '@retikz/vanilla';
 
 import type { InputPlot } from '../normalize/plot';
@@ -34,32 +27,8 @@ export type InputPlotEmbed = PlotSource &
     readonly preparedData: PreparedPlotData;
   }> &
   Readonly<{
-    /** 可选的同次数据链路记录 */
-    lineage?: false | PlotLineageOptions;
-    /** 链路宿主元数据 */
-    hostLineageMetadata?: PlotHostLineageMetadata;
-    /** 同次完整帧提交后通知，不在 preparation 中调用 */
-    onLineage?: (lineage: PlotLineageRun) => void;
     /** 将绘图描述降低为 Core 图元时的运行时选项 */
     lowerOptions?: PlotsLoweringOptions;
     /** 作用于 Plot 根节点的可选 Core Scope */
     panel?: InputPlotPanel;
   }>;
-
-/** Plot contribution 提供给同 revision compile result extension 的链路消费输入 */
-export type PreparedPlotLineageNotification = Readonly<{
-  /** 本请求借用的作者 Source */
-  spec: IRPlot;
-  /** 已完成的数据计算 */
-  preparedData?: PreparedPlotData;
-  /** 未预计算时使用的行数据集 */
-  datasets?: ExternalDatasets;
-  /** 同次 lowering 配置 */
-  lowerOptions?: PlotsLoweringOptions;
-  /** 链路配置 */
-  lineage: PlotLineageOptions;
-  /** 元数据 */
-  hostLineageMetadata?: PlotHostLineageMetadata;
-  /** 帧成功提交后的通知 */
-  onLineage: (lineage: PlotLineageRun) => void;
-}>;

@@ -7,11 +7,11 @@ description: Organize graphics as framework-neutral InputScene data, normalize a
 
 The package root works safely in SSR, build scripts, and other frameworks. Its default text measurer probes browser Canvas when measurement is requested. Browser SVG and Canvas mounting live at `@retikz/vanilla/dom`. IR, schemas, geometry, and compile rules belong to `@retikz/core`; backend output belongs to `@retikz/render`.
 
-Applications use `SceneRuntime` or `compileToScene` from the package root. Custom compile result extensions implement `VanillaCompileResultExtension`. Input preparation and extension invocation helpers remain internal.
+Applications use `SceneRuntime` or `compileToScene` from the package root.
 
-An extension’s `resolve` reads the compilation snapshot before commit and returns nothing. After commit, `onCommit` receives the original compile result. Use `runtime.diagnostics()` for retained session diagnostics.
+Use `runtime.diagnostics()` to read retained session diagnostics.
 
-One-shot compilation and retained updates share input preparation. One-shot compilation returns a `CompileResult` directly. In retained mode, `runtime.read()` and subscribers receive the same committed `ReconcilerResult` snapshot. Read the frame’s output from `snapshot.compilation.result` and pass the snapshot itself as `expected` for incremental updates. Commit callbacks and subscribers may read the new result, but cannot start another synchronous update during that notification. A precompiled Scene goes straight to Render without creating a compilation session.
+One-shot compilation and retained updates share input preparation. One-shot compilation returns a `CompileResult` directly. In retained mode, `runtime.read()` and subscribers receive the same committed `ReconcilerResult` snapshot. Read the frame’s output from `snapshot.compilation.result` and pass the snapshot itself as `expected` for incremental updates. Subscribers may read the new result, but cannot start another synchronous update during that notification. A precompiled Scene goes straight to Render without creating a compilation session.
 
 To export an already compiled Scene, call `renderToSvgString(scene)`. It serializes the scene without recompiling it.
 
@@ -227,7 +227,7 @@ console.log(name, result.scene);
 
 `normalizeScene()` is exported from the package root. Hosts do not register adapters. To inspect a normalized result, call `normalizeScene(input)` and read the single result for `ir`, `contributions`, `runtimeInputs`, and `authoringSites`. Nodes without an `authoring` payload do not produce a site; sites explicitly contributed by adapters are retained.
 
-Callers must keep compile and render options, composite definitions, extension sessions, and registered handler maps stable while in use. In-place mutation is unsupported; Vanilla does not guarantee isolation from its effects. A domain adapter can process new props at the same authored position; dispose and remount to change a Composite schema, definition count, or execution branch.
+Callers must keep compile and render options, composite definitions, and registered handler maps stable while in use. In-place mutation is unsupported; Vanilla does not guarantee isolation from its effects. A domain adapter can process new props at the same authored position; dispose and remount to change a Composite schema, definition count, or execution branch.
 
 ## Responsibility boundaries
 
@@ -256,7 +256,7 @@ React applications use [`@retikz/react`](/kernel/packages/react/overview) to col
 | `InputEmbedAdapter`                  | type          | Lowers an `InputEmbed` to a Core contribution                                 |
 | `isInputScene` / `normalizeScene`    | normalization | Distinguish typed InputScene / IRScene and normalize authoring input          |
 | `SceneNormalizationResult`           | type          | IR, contributions, instance inputs, and authoring provenance                  |
-| `ProcessingOptions`                  | type          | Compile, result extension, and retained update strategy                       |
+| `ProcessingOptions`                  | type          | Compilation and retained update strategy                                      |
 | `SceneRuntime`                       | processing    | Framework-neutral retained processing controller                              |
 | `compileToScene`                     | processing    | One-shot synchronous compilation of InputScene or Core IR                     |
 | `renderToSvgString`                  | SSR           | Serialize a compiled Scene to an SVG string                                   |
@@ -267,4 +267,4 @@ React applications use [`@retikz/react`](/kernel/packages/react/overview) to col
 | `RetainedVanillaView`                | runtime       | Transactional retained view for IRScene / InputScene                          |
 | `StaticVanillaView`                  | runtime       | Full-redraw view for Scene, IRScene, or InputScene                            |
 | `RetikzVanillaError`                 | error         | The single Vanilla error class; code, details, and cause distinguish failures |
-| `RetikzVanillaErrorCode`             | const object  | Stable normalize, processing, runtime, DOM, and result extension error codes  |
+| `RetikzVanillaErrorCode`             | const object  | Stable normalize, processing, runtime, and DOM error codes                    |

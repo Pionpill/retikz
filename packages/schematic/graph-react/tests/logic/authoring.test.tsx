@@ -221,7 +221,6 @@ describe('Block React 编写', () => {
 
 const hostPropKeys = [
   'authoring',
-  'compileResultExtension',
   'handlers',
   'runtime',
   'width',
@@ -665,7 +664,6 @@ describe('Graph 独立式和嵌入式宿主分类', () => {
   it('转发完整的独立宿主表面，而不消费 Source 字段', () => {
     const props = {
       authoring: undefined,
-      compileResultExtension: undefined,
       handlers: undefined,
       runtime: undefined,
       width: undefined,

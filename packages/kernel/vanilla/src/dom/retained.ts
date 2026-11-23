@@ -123,7 +123,7 @@ const createRenderTarget = (options: RetainedRuntimeOptions, configuration: () =
 const createRetainedProcessingControllerImplementation = (
   options: RetainedRuntimeOptions,
 ): DomRetainedProcessingController<RetainedSvgUpdateOptions | RetainedCanvasUpdateOptions> => {
-  const { animation, compile, compileResultExtension, output } = options.options;
+  const { animation, compile, output } = options.options;
   const { width, height } = output ?? {};
   let currentAnimation = animation ?? {};
   let handlerContributions: ReadonlyArray<RenderHandlerContribution> = [];
@@ -142,7 +142,6 @@ const createRetainedProcessingControllerImplementation = (
     options.input,
     {
       compile,
-      compileResultExtension,
       reconciler: { mode: ReconcilerMode.Incremental, updateStrategy: options.runtimeOptions.updateStrategy },
     },
     () => {

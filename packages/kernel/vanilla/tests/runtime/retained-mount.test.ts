@@ -11,7 +11,7 @@ import { defineRetainedRenderer, RetikzRenderErrorCode } from '@retikz/render/ru
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { literal, string, enum as zodEnum } from 'zod';
 
-import type { InputEmbedAdapter, InputScene, VanillaCompileResultExtension } from '../../src';
+import type { InputEmbedAdapter, InputScene } from '../../src';
 import { embed } from '../../src';
 import { mountCanvas, mountSvg } from '../../src/dom';
 
@@ -174,21 +174,6 @@ const datasetScene = (color: string): InputScene => ({
   children: [embed({ adapter: datasetAdapter, id: 'dataset', props: { color } })],
 });
 
-const failingResultExtension: VanillaCompileResultExtension = {
-  create: input => ({
-    resolve: () => {
-      if (input.authoringSites[0]?.authoring === 'fail') throw new Error('expected compile result extension failure');
-      return [];
-    },
-  }),
-};
-
-const extensionScene = (authoring: unknown): InputScene => ({
-  type: 'scene',
-  authoring,
-  children: [{ type: 'node', id: 'box', position: [0, 0], shape: 'rectangle' }],
-});
-
 beforeEach(() => {
   const context = createRecordingContext();
   vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(() => context);
@@ -199,29 +184,6 @@ afterEach(() => {
 });
 
 describe('@retikz/vanilla 保留安装座', () => {
-  it('编译结果扩展解析失败时保留上一帧和已提交的 artifacts', () => {
-    const frames: Array<RenderFrameSnapshot> = [];
-    const view = mountSvg(document.createElement('div'), extensionScene(true), {
-      compileResultExtension: failingResultExtension,
-      runtime: {
-        rendererFactory: createMemoryRendererFactory('entity', false, undefined, undefined, undefined, frame =>
-          frames.push(frame),
-        ),
-      },
-    });
-    const artifacts = view.artifacts;
-    const committedFrame = frames.at(-1);
-
-    expect(() => view.update(extensionScene('fail'))).toThrow(
-      /Failed to publish the compilation|RENDER_RUNTIME_RENDERER_PREPARE_FAILED|Vanilla compile result extension resolve failed/,
-    );
-    expect(frames.at(-1)).toBe(committedFrame);
-    expect(view.artifacts).toBe(artifacts);
-    expect(() => view.update(extensionScene(false))).not.toThrow();
-
-    view.dispose();
-  });
-
   it('renderer transaction 失败后 session 恢复旧 composite callback', () => {
     const redCompile = vi.fn(() => ({
       children: [
@@ -292,7 +254,7 @@ describe('@retikz/vanilla 保留安装座', () => {
     });
 
     expect(() => view.update(cachedDatasetScene('#22c55e'))).toThrow(
-      /Failed to publish the compilation|RENDER_RUNTIME_RENDERER_PREPARE_FAILED|Vanilla compile result extension resolve failed/,
+      /Failed to publish the compilation|RENDER_RUNTIME_RENDERER_PREPARE_FAILED/,
     );
     expect(greenCompile).toHaveBeenCalledTimes(1);
 
@@ -569,7 +531,7 @@ describe('@retikz/vanilla 保留安装座', () => {
     const accepted = vi.fn();
 
     expect(() => view.hydrate({ handlers: { changed: { click: rejected } } })).toThrow(
-      /Failed to publish the compilation|RENDER_RUNTIME_RENDERER_PREPARE_FAILED|Vanilla compile result extension resolve failed/,
+      /Failed to publish the compilation|RENDER_RUNTIME_RENDERER_PREPARE_FAILED/,
     );
 
     view.hydrate({ handlers: { changed: { click: accepted } } });
@@ -599,7 +561,7 @@ describe('@retikz/vanilla 保留安装座', () => {
     rejectNextUpdate = true;
 
     expect(() => hydration.dispose()).toThrow(
-      /Failed to publish the compilation|RENDER_RUNTIME_RENDERER_PREPARE_FAILED|Vanilla compile result extension resolve failed/,
+      /Failed to publish the compilation|RENDER_RUNTIME_RENDERER_PREPARE_FAILED/,
     );
 
     hydration.dispose();
@@ -670,7 +632,7 @@ describe('@retikz/vanilla 保留安装座', () => {
     const committedHtml = view.root.innerHTML;
 
     expect(() => view.update(source('#22c55e'))).toThrow(
-      /Failed to publish the compilation|RENDER_RUNTIME_RENDERER_PREPARE_FAILED|Vanilla compile result extension resolve failed/,
+      /Failed to publish the compilation|RENDER_RUNTIME_RENDERER_PREPARE_FAILED/,
     );
     expect(view.artifacts).toBe(artifacts);
     expect(view.compileResult).toBe(compileResult);

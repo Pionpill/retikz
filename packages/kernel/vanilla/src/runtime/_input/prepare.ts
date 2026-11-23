@@ -1,18 +1,27 @@
 import { createCompositeInputBindings, resolveCoreProviderDependencies } from '@retikz/core';
 import type { IRScene } from '@retikz/core';
+import type { CompileOptions } from '@retikz/reconciler';
 
-import type { InputAuthoringSite, InputScene, LayerName } from '../../normalize';
+import type { InputScene, LayerName } from '../../normalize';
 import { isInputScene, BuiltinLayerName, normalizeSceneLayer } from '../../normalize';
 import { createDefaultTextMeasurer } from './text';
-import type { InputPreparedProcessing, ProcessingOptions } from './types';
+import type { InputPreparedProcessing } from './types';
 
-const EMPTY_AUTHORING_SITES: ReadonlyArray<InputAuthoringSite> = Object.freeze([]);
-
-/** 绑定归一结果的实例输入、Core 定义与文字测量器 */
-const prepareNormalizedInput = (
-  normalized: ReturnType<typeof normalizeSceneLayer>,
-  compile: ProcessingOptions['compile'],
+/** 准备单图编译输入；只有作者输入需要归一化并绑定组件依赖 */
+export const prepareProcessingInput = (
+  source: InputScene | IRScene,
+  compile?: CompileOptions,
+  layerName: LayerName = BuiltinLayerName.Main,
 ): InputPreparedProcessing => {
+  if (!isInputScene(source)) {
+    return {
+      source,
+      coreOptions:
+        compile?.measureText !== undefined ? compile : { ...compile, measureText: createDefaultTextMeasurer() },
+    };
+  }
+
+  const normalized = normalizeSceneLayer(source, layerName);
   const definitions = resolveCoreProviderDependencies({
     contributions: normalized.contributions,
     definitions: compile,
@@ -29,30 +38,5 @@ const prepareNormalizedInput = (
           }),
       measureText: compile?.measureText ?? createDefaultTextMeasurer(),
     },
-    authoringSites: normalized.authoringSites,
-  };
-};
-
-/** 将 typed InputScene 或已类型化 IRScene 准备为 processing 的唯一 Core 输入 */
-export const prepareProcessingInput = (
-  source: InputScene | IRScene,
-  options: ProcessingOptions,
-  layerName: LayerName = BuiltinLayerName.Main,
-): InputPreparedProcessing => {
-  if (isInputScene(source)) {
-    const normalized = normalizeSceneLayer(source, layerName);
-    return prepareNormalizedInput(normalized, options.compile);
-  }
-
-  return {
-    source,
-    coreOptions:
-      options.compile?.measureText !== undefined
-        ? options.compile
-        : {
-            ...options.compile,
-            measureText: createDefaultTextMeasurer(),
-          },
-    authoringSites: EMPTY_AUTHORING_SITES,
   };
 };

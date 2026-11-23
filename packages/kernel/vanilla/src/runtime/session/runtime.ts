@@ -6,8 +6,6 @@ import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../error';
 import type { InputScene } from '../../normalize';
 import { prepareProcessingInput } from '../_input';
 import type { InputPreparedProcessing, ProcessingOptions } from '../_input';
-import type { InputVanillaCompileResultExtension } from '../compile';
-import { ResultExtensionHost } from '../compile';
 import { renderToSvgString } from '../output';
 import type { RenderToStringOptions } from '../output';
 
@@ -15,8 +13,6 @@ import type { RenderToStringOptions } from '../output';
 export class SceneRuntime {
   private readonly listeners = new Set<(result: ReconcilerResult) => void>();
   private readonly failures: Array<unknown> = [];
-  private extensionSession?: ResultExtensionHost;
-  private extensionInput?: InputVanillaCompileResultExtension;
   private readonly reconciler: SceneReconciler<AnyCompositeDefinition>;
   /** 构造时随首次成功 mount 发布，之后只在底层提交成功后替换 */
   private current!: ReconcilerResult;
@@ -28,12 +24,7 @@ export class SceneRuntime {
     private readonly options: ProcessingOptions,
     createTarget?: () => ReconcilerCommitTarget,
     private readonly assertOwnerActive?: () => void,
-    notifications?: Array<() => void>,
   ) {
-    if (options.compileResultExtension) {
-      this.extensionInput = { ...initial, instance: {} };
-      this.extensionSession = ResultExtensionHost.open(options.compileResultExtension, this.extensionInput);
-    }
     this.assertActive();
     const target = createTarget?.();
     this.reconciler = new SceneReconciler(initial.coreOptions, {
@@ -42,7 +33,7 @@ export class SceneRuntime {
       target: this.createCommitTarget(target),
     });
     try {
-      this.publish(this.reconciler.mount(initial.source), notifications);
+      this.publish(this.reconciler.mount(initial.source));
     } catch (cause) {
       this.reconciler.dispose();
       throw cause;
@@ -51,12 +42,12 @@ export class SceneRuntime {
 
   /** 从单图作者声明及其嵌入贡献建立会话 */
   static fromInput(input: InputScene, options: ProcessingOptions = {}) {
-    return new SceneRuntime(prepareProcessingInput(input, options), options);
+    return new SceneRuntime(prepareProcessingInput(input, options.compile), options);
   }
 
   /** 从已类型化的 Core IR 建立会话 */
   static fromIR(ir: IRScene, options: ProcessingOptions = {}) {
-    return new SceneRuntime(prepareProcessingInput(ir, options), options);
+    return new SceneRuntime(prepareProcessingInput(ir, options.compile), options);
   }
 
   /** 导出最后一次成功提交的场景，不重新编译或发送通知 */
@@ -76,10 +67,10 @@ export class SceneRuntime {
 
   /** 原子替换完整作者输入或 IR */
   readonly replace = (source: InputScene | IRScene) =>
-    this.write(() => this.commitReplacement(prepareProcessingInput(source, this.options)));
+    this.write(() => this.commitReplacement(prepareProcessingInput(source, this.options.compile)));
 
-  protected replacePrepared(next: InputPreparedProcessing, notifications: Array<() => void>) {
-    this.write(() => this.commitReplacement(next, notifications));
+  protected replacePrepared(next: InputPreparedProcessing) {
+    this.write(() => this.commitReplacement(next));
   }
 
   /** 在输入准备、底层提交和通知期间保持单一写者；销毁立即生效，释放等到底层事务退出 */
@@ -99,31 +90,9 @@ export class SceneRuntime {
     }
   }
 
-  private commitReplacement(next: InputPreparedProcessing, notifications?: Array<() => void>) {
-    const extension = this.options.compileResultExtension;
-    const previousInput = this.extensionInput;
-    const nextInput = previousInput && { ...next, instance: previousInput.instance };
-    let committed: ReconcilerResult;
-    try {
-      if (extension && nextInput) this.extensionSession = ResultExtensionHost.open(extension, nextInput);
-      this.assertActive();
-      committed = this.reconciler.replace(next.source, next.coreOptions);
-    } catch (cause) {
-      if (!extension || !previousInput) throw cause;
-      try {
-        this.extensionSession = ResultExtensionHost.open(extension, previousInput);
-      } catch (recoveryError) {
-        throw new RetikzVanillaError({
-          code: RetikzVanillaErrorCode.Processing,
-          message: 'Failed to restore compile result extension',
-          cause,
-          details: { recoveryError },
-        });
-      }
-      throw cause;
-    }
-    this.extensionInput = nextInput;
-    this.publish(committed, notifications);
+  private commitReplacement(next: InputPreparedProcessing) {
+    this.assertActive();
+    this.publish(this.reconciler.replace(next.source, next.coreOptions));
   }
 
   /** 读取指定版本的 scope 地址 */
@@ -134,13 +103,9 @@ export class SceneRuntime {
 
   /** 将变更批次应用到指定的已提交版本 */
   update(batch: WeaveBatch, expected: ReconcilerResult) {
-    this.commitBatch(batch, expected);
-  }
-
-  protected commitBatch(batch: WeaveBatch, expected: ReconcilerResult, notifications?: Array<() => void>) {
     this.write(() => {
       const committed = this.reconciler.update(batch, expected);
-      if (committed !== expected) this.publish(committed, notifications);
+      if (committed !== expected) this.publish(committed);
     });
   }
 
@@ -164,12 +129,10 @@ export class SceneRuntime {
     if (!this.writing) this.reconciler.dispose();
   };
 
-  /** 扩展可拒绝候选，销毁可中断提交；宿主实际修改及恢复仍由原目标执行 */
+  /** 销毁可中断提交；宿主实际修改及恢复仍由原目标执行 */
   private createCommitTarget(target?: ReconcilerCommitTarget): ReconcilerCommitTarget {
     return {
       prepare: (candidate, previous) => {
-        // 扩展解析可能失败，须在宿主提交之前执行；发布时只发送对应提交的通知
-        this.extensionSession?.prepare(candidate.compilation);
         this.assertActive();
         const token = target?.prepare(candidate, previous);
         return {
@@ -186,13 +149,8 @@ export class SceneRuntime {
     };
   }
 
-  private publish(committed: ReconcilerResult, notifications?: Array<() => void>) {
-    const session = this.extensionSession;
+  private publish(committed: ReconcilerResult) {
     this.current = committed;
-    if (session) {
-      if (notifications) notifications.push(() => session.notifyCommit(committed.compilation.result));
-      else session.notifyCommit(committed.compilation.result);
-    }
     for (const listener of this.listeners) {
       try {
         listener(committed);
@@ -209,7 +167,7 @@ export class SceneRuntime {
   }
 }
 
-/** 包内宿主接线：DOM 提交目标与整栈延迟通知，不从包入口导出 */
+/** 包内宿主接线：DOM 提交目标与层栈会话，不从包入口导出 */
 export class HostedSceneRuntime extends SceneRuntime {
   /** 从作者输入建立同步会话 */
   static fromSource(
@@ -217,25 +175,16 @@ export class HostedSceneRuntime extends SceneRuntime {
     options: ProcessingOptions,
     createTarget?: () => ReconcilerCommitTarget,
   ) {
-    return new HostedSceneRuntime(prepareProcessingInput(source, options), options, createTarget);
+    return new HostedSceneRuntime(prepareProcessingInput(source, options.compile), options, createTarget);
   }
 
   /** 复用已完成的准备；不重新遍历作者输入 */
-  static fromPrepared(
-    initial: InputPreparedProcessing,
-    options: ProcessingOptions,
-    assertOwnerActive: () => void,
-    notifications: Array<() => void>,
-  ) {
-    return new HostedSceneRuntime(initial, options, undefined, assertOwnerActive, notifications);
+  static fromPrepared(initial: InputPreparedProcessing, options: ProcessingOptions, assertOwnerActive: () => void) {
+    return new HostedSceneRuntime(initial, options, undefined, assertOwnerActive);
   }
 
-  updatePrepared(next: InputPreparedProcessing, notifications: Array<() => void>) {
-    this.replacePrepared(next, notifications);
-  }
-
-  applyBatch(batch: WeaveBatch, expected: ReconcilerResult, notifications: Array<() => void>) {
-    this.commitBatch(batch, expected, notifications);
+  updatePrepared(next: InputPreparedProcessing) {
+    this.replacePrepared(next);
   }
 
   updateTarget() {

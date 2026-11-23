@@ -22,7 +22,7 @@ export type InspectionOverlayProps = Readonly<{
   onError?: (error: unknown) => void;
 }>;
 
-/** React 仅适配独立辅助呈现生命周期，不持有主图编译结果扩展 */
+/** React 仅适配独立辅助呈现生命周期，不参与主图编译 */
 export const InspectionOverlay: FC<InspectionOverlayProps> = props => {
   const { result, options, renderer = 'svg', onError } = props;
   const container = useRef<HTMLSpanElement>(null);

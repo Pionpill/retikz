@@ -1,11 +1,7 @@
 // @vitest-environment jsdom
 
 import { defineTheme, ThemeMode } from '@retikz/core';
-import type {
-  InputEmbedAdapter,
-  VanillaCompileResultExtension,
-  VanillaCompileResultExtensionSession,
-} from '@retikz/vanilla';
+import type { InputEmbedAdapter } from '@retikz/vanilla';
 import * as vanilla from '@retikz/vanilla';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -14,31 +10,6 @@ import { act } from 'react-dom/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Layout, Node, Scope } from '../../../src';
-
-/** 创建记录完整帧提交的 Vanilla compile result extension */
-const createCommitTrackingCompileResultExtension = (): Readonly<{
-  extension: VanillaCompileResultExtension;
-  commit: ReturnType<typeof vi.fn>;
-}> => {
-  const sessions = new WeakMap<object, VanillaCompileResultExtensionSession>();
-  const commit = vi.fn();
-  const extension: VanillaCompileResultExtension = {
-    create: input => {
-      const existing = sessions.get(input.instance);
-      if (existing !== undefined) return existing;
-
-      const session: VanillaCompileResultExtensionSession = {
-        resolve: () => undefined,
-        onCommit: commit,
-      };
-      sessions.set(input.instance, session);
-
-      return session;
-    },
-  };
-
-  return Object.freeze({ extension, commit });
-};
 
 describe('<Layout> 的 Vanilla Input processing', () => {
   beforeEach(() => {
@@ -68,11 +39,11 @@ describe('<Layout> 的 Vanilla Input processing', () => {
     await act(() => root.unmount());
   });
 
-  it('static processing 只在 React 提交后通知 compile result extension', async () => {
-    const { extension, commit } = createCommitTrackingCompileResultExtension();
+  it('static processing 只在 React 提交后通知编译结果', async () => {
+    const commit = vi.fn();
 
     renderToStaticMarkup(
-      <Layout compileResultExtension={extension} runtime={{ mode: 'static' }}>
+      <Layout onCompileResult={commit} runtime={{ mode: 'static' }}>
         <Node id="static-commit-node" position={[0, 0]} />
       </Layout>,
     );
@@ -83,11 +54,9 @@ describe('<Layout> 的 Vanilla Input processing', () => {
     const root = createRoot(container);
     await act(() =>
       root.render(
-        <StrictMode>
-          <Layout compileResultExtension={extension} runtime={{ mode: 'static' }}>
-            <Node id="static-commit-node" position={[0, 0]} />
-          </Layout>
-        </StrictMode>,
+        <Layout onCompileResult={commit} runtime={{ mode: 'static' }}>
+          <Node id="static-commit-node" position={[0, 0]} />
+        </Layout>,
       ),
     );
 
@@ -97,13 +66,13 @@ describe('<Layout> 的 Vanilla Input processing', () => {
   });
 
   it('retained 初次挂载只提交 controller 的成功结果', async () => {
-    const { extension, commit } = createCommitTrackingCompileResultExtension();
+    const commit = vi.fn();
     const container = document.createElement('div');
     const root = createRoot(container);
 
     await act(() =>
       root.render(
-        <Layout compileResultExtension={extension}>
+        <Layout onCompileResult={commit}>
           <Node id="retained-commit-node" position={[0, 0]} />
         </Layout>,
       ),
@@ -115,21 +84,21 @@ describe('<Layout> 的 Vanilla Input processing', () => {
   });
 
   it('Strict Effects 不提交被丢弃的 retained fallback', async () => {
-    const { extension, commit } = createCommitTrackingCompileResultExtension();
+    const commit = vi.fn();
     const container = document.createElement('div');
     const root = createRoot(container);
 
     await act(() =>
       root.render(
         <StrictMode>
-          <Layout compileResultExtension={extension}>
+          <Layout onCompileResult={commit}>
             <Node id="strict-commit-node" position={[0, 0]} />
           </Layout>
         </StrictMode>,
       ),
     );
 
-    expect(commit).toHaveBeenCalledTimes(2);
+    expect(commit).toHaveBeenCalledOnce();
 
     await act(() => root.unmount());
   });
@@ -154,42 +123,26 @@ describe('<Layout> 的 Vanilla Input processing', () => {
   });
 
   it('retained processing 将 JSX source 更新推入同一 Vanilla controller', async () => {
-    const instances: Array<object> = [];
-    const sessions = new WeakMap<object, VanillaCompileResultExtensionSession>();
-    const compileResultExtension: VanillaCompileResultExtension = {
-      create: input => {
-        instances.push(input.instance);
-        const existing = sessions.get(input.instance);
-        if (existing !== undefined) return existing;
-
-        const session: VanillaCompileResultExtensionSession = {
-          resolve: () => undefined,
-        };
-        sessions.set(input.instance, session);
-
-        return session;
-      },
-    };
+    const mount = vi.spyOn(vanilla.SceneRuntime, 'fromInput');
     const container = document.createElement('div');
     const root = createRoot(container);
 
     await act(() =>
       root.render(
-        <Layout compileResultExtension={compileResultExtension}>
+        <Layout>
           <Node id="first" position={[0, 0]} />
         </Layout>,
       ),
     );
     await act(() =>
       root.render(
-        <Layout compileResultExtension={compileResultExtension}>
+        <Layout>
           <Node id="second" position={[20, 0]} />
         </Layout>,
       ),
     );
 
-    expect(instances).toHaveLength(3);
-    expect(instances[2]).toBe(instances[1]);
+    expect(mount).toHaveBeenCalledOnce();
     expect(container.querySelector('[data-retikz-id="second"]')).not.toBeNull();
 
     await act(() => root.unmount());
