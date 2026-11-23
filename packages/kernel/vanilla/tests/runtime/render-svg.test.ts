@@ -1,10 +1,10 @@
 import type { BoundaryDefinition, ClipDefinition, IRScene } from '@retikz/core';
 import { defineBoundary, defineClip } from '@retikz/core';
 import { renderToSvgString as svgRenderToString } from '@retikz/render/svg';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { literal, number, strictObject } from 'zod';
 
-import { renderToSvgString } from '../../src';
+import { compileToScene, renderToSvgString } from '../../src';
 import { compileTestResult } from '../helpers/compilation';
 
 /*
@@ -16,12 +16,10 @@ const nodeIr: IRScene = {
   children: [{ type: 'node', id: 'a', position: [0, 0], text: 'A' }],
 };
 
-it('预编译 Scene 导出时不调用测量器或改变几何', () => {
+it('预编译 Scene 导出时不改变几何', () => {
   const scene = compileTestResult(nodeIr).scene;
   const snapshot = JSON.stringify(scene);
-  const measureText = vi.fn(() => ({ width: 999, height: 16 }));
-  renderToSvgString(scene, { compile: { measureText } });
-  expect(measureText).not.toHaveBeenCalled();
+  renderToSvgString(scene);
   expect(JSON.stringify(scene)).toBe(snapshot);
 });
 
@@ -120,13 +118,15 @@ describe('@retikz/vanilla renderToSvgString', () => {
   });
 
   it('ir-default-fallback-measurer：ir 入参在 Node 下确定（默认 fallback / 可注入 measureText）', () => {
-    const a = renderToSvgString(nodeIr);
-    const b = renderToSvgString(nodeIr);
+    const a = renderToSvgString(compileToScene(nodeIr).compileResult.scene);
+    const b = renderToSvgString(compileToScene(nodeIr).compileResult.scene);
 
     expect(a).toBe(b); // 同输入逐字一致 → 确定性（fallbackMeasurer）
 
     // 注入更宽的度量器 → 节点尺寸变 → 输出不同（证明 measureText 真生效、ir contract 完整）
-    const wide = renderToSvgString(nodeIr, { compile: { measureText: () => ({ width: 999, height: 40 }) } });
+    const wide = renderToSvgString(
+      compileToScene(nodeIr, { compile: { measureText: () => ({ width: 999, height: 40 }) } }).compileResult.scene,
+    );
 
     expect(wide).not.toBe(a);
   });
@@ -134,7 +134,7 @@ describe('@retikz/vanilla renderToSvgString', () => {
   it('empty-scene-string：空 scene 产合法 <svg>、不抛', () => {
     const empty = { layout: { x: 0, y: 0, width: 10, height: 10 }, primitives: [] };
 
-    expect(renderToSvgString(empty as never)).toMatch(/^<svg/);
+    expect(renderToSvgString(empty)).toMatch(/^<svg/);
   });
 
   it('显示尺寸显式覆盖，缺省跟随内容边界', () => {
@@ -155,16 +155,19 @@ describe('@retikz/vanilla renderToSvgString', () => {
   });
 
   it('将边界提供者传递给编译选项', () => {
-    expect(() => renderToSvgString(boundaryIr)).toThrow(/options\.boundaries/i);
-    expect(renderToSvgString(boundaryIr, { compile: { boundaries: [fixedBoundary()] } })).toMatch(/^<svg/);
+    expect(() => renderToSvgString(compileToScene(boundaryIr).compileResult.scene)).toThrow(/options\.boundaries/i);
+    expect(
+      renderToSvgString(compileToScene(boundaryIr, { compile: { boundaries: [fixedBoundary()] } }).compileResult.scene),
+    ).toMatch(/^<svg/);
   });
 
   it('将裁剪提供者传递给编译选项', () => {
-    expect(() => renderToSvgString(clipIr)).toThrow(/Unknown provider 'circleFrame'/);
+    expect(() => renderToSvgString(compileToScene(clipIr).compileResult.scene)).toThrow(
+      /Unknown provider 'circleFrame'/,
+    );
 
-    const svg = renderToSvgString(clipIr, {
-      compile: { clips: [circleFrameClip()] },
-    });
+    const { compileResult } = compileToScene(clipIr, { compile: { clips: [circleFrameClip()] } });
+    const svg = renderToSvgString(compileResult.scene);
 
     expect(svg).toContain('<clipPath');
     expect(svg).toContain('clip-rule="evenodd"');

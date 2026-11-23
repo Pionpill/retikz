@@ -1,5 +1,5 @@
 import { resolveCoreProviderDependencies } from '@retikz/core';
-import { createProcessingController, normalizeScene, scene } from '@retikz/vanilla';
+import { SceneRuntime, normalizeScene, scene } from '@retikz/vanilla';
 import { expect, it } from 'vitest';
 
 import { matrix, array, map } from '../src/collection';
@@ -25,7 +25,7 @@ it('进入保留处理时保持空单元格 JSON 安全', () => {
     map({ entries: [{ key: 'k', value: {} }] }),
   ]) {
     const input = scene({ children: [child] });
-    const controller = createProcessingController(input);
+    const controller = SceneRuntime.fromInput(input);
 
     expect(controller.read().compileResult.scene.primitives.length).toBeGreaterThan(0);
 

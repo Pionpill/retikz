@@ -13,7 +13,7 @@ For initial setup, see [Basic usage](/kernel/components/layout/usage). React pro
 
 ## Component declarations
 
-#### <ApiSourceLink label={"Layout"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={357}>Layout</ApiSourceLink> / <ApiSourceLink label={"LayoutProps"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={180}>LayoutProps</ApiSourceLink>
+#### <ApiSourceLink label={"Layout"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={358}>Layout</ApiSourceLink> / <ApiSourceLink label={"LayoutProps"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={179}>LayoutProps</ApiSourceLink>
 
 Declare drawings through children or pass a complete scene through ir; ir takes precedence when both are supplied. Subsequent updates use retained mode by default; runtime can select static mode for full compilation.
 
@@ -97,7 +97,7 @@ export type LayoutProps = {
 
 ## Execution and supporting contracts
 
-#### <ApiSourceLink label={"LayoutExtensions"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={134}>LayoutExtensions</ApiSourceLink>
+#### <ApiSourceLink label={"LayoutExtensions"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={133}>LayoutExtensions</ApiSourceLink>
 
 Pass these options through the extensions prop of Layout. Each field accepts an array of definitions; these runtime definitions are excluded from persisted scene data.
 
@@ -260,7 +260,7 @@ export const LayoutRuntimeMode = Object.freeze({
 export type LayoutRuntimeMode = ValueOf<typeof LayoutRuntimeMode>;
 ```
 
-#### <ApiSourceLink label={"scene"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={100}>scene</ApiSourceLink>
+#### <ApiSourceLink label={"scene"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={50}>scene</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -268,14 +268,10 @@ export type LayoutRuntimeMode = ValueOf<typeof LayoutRuntimeMode>;
 
 <ApiTable variant="parameters">
 
-| Overload | Category   | Name       | Type / signature            | Description                                                                                                                             |
-| -------- | ---------- | ---------- | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| 1        | Parameters | `children` | `ReadonlyArray<InputChild>` | Create a scene from a list of children<br />Ordered children; an empty array is allowed                                                 |
-|          | Returns    | —          | `InputSceneChildren`        | Scene input retaining the children array reference; normalization supplies the data version                                             |
-| 2        | Parameters | `input`    | `InputSceneChildrenOptions` | Create a scene from children and drawing-wide options<br />Children and drawing-wide options such as theme and viewBox; excludes layers |
-|          | Returns    | —          | `InputSceneChildren`        | Uncompiled scene input retaining the options and child references                                                                       |
-| 3        | Parameters | `input`    | `InputSceneLayersOptions`   | Create a scene from explicit layers<br />Layers and drawing-wide options; excludes children                                             |
-|          | Returns    | —          | `InputSceneLayers`          | Scene input retaining the layers array reference; normalization produces a separate result for each layer                               |
+| Category   | Name    | Type / signature                                                  | Description |
+| ---------- | ------- | ----------------------------------------------------------------- | ----------- |
+| Parameters | `input` | `InputScene['children'] \| Omit<InputScene, 'type' \| 'version'>` | —           |
+| Returns    | —       | `InputScene`                                                      | —           |
 
 </ApiTable>
 
@@ -284,16 +280,14 @@ export type LayoutRuntimeMode = ValueOf<typeof LayoutRuntimeMode>;
 <DocTab value="definition" label="Type definition">
 
 ```ts
-(children: ReadonlyArray<InputChild>): InputSceneChildren;
-(input: InputSceneChildrenOptions): InputSceneChildren;
-(input: InputSceneLayersOptions): InputSceneLayers;
+export declare const scene: (input: InputScene['children'] | Omit<InputScene, 'type' | 'version'>) => InputScene;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"layer"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={49}>layer</ApiSourceLink>
+#### <ApiSourceLink label={"layer"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={47}>layer</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -301,10 +295,10 @@ export type LayoutRuntimeMode = ValueOf<typeof LayoutRuntimeMode>;
 
 <ApiTable variant="parameters">
 
-| Category   | Name     | Type / signature           | Description                                                    |
-| ---------- | -------- | -------------------------- | -------------------------------------------------------------- |
-| Parameters | `config` | `Omit<InputLayer, 'type'>` | Layer name, stacking order, processing options, and children   |
-| Returns    | —        | `InputLayer`               | Input tagged as a layer; does not compile or copy its children |
+| Category   | Name     | Type / signature           | Description                                                 |
+| ---------- | -------- | -------------------------- | ----------------------------------------------------------- |
+| Parameters | `config` | `Omit<InputLayer, 'type'>` | Layer name, stacking order, processing options, and scene   |
+| Returns    | —        | `InputLayer`               | Input tagged as a layer; does not compile or copy the scene |
 
 </ApiTable>
 
@@ -330,14 +324,13 @@ export declare const layer: (config: Omit<InputLayer, 'type'>) => InputLayer;
 
 <ApiTable>
 
-| Member                 | Type                        | Default                                      | Description                                                   |
-| ---------------------- | --------------------------- | -------------------------------------------- | ------------------------------------------------------------- |
-| `children`             | `ReadonlyArray<InputChild>` | —                                            | Children normalized in declaration order                      |
-| `readonly compile?`    | `CompileOptions`            | —                                            | Compile options for this layer                                |
-| `name`                 | `LayerName`                 | —                                            | Unique layer name in the viewport                             |
-| `readonly reconciler?` | `LayerReconcilerOptions`    | —                                            | Reconciler execution options for this layer                   |
-| `type`                 | `'layer'`                   | —                                            | Authoring layer discriminator, fixed to layer                 |
-| `zIndex?`              | `number`                    | `background: 0; overlay: 100; otherwise: 10` | Layer stacking order; equal values preserve declaration order |
+| Member    | Type                    | Default                                      | Description                                                   |
+| --------- | ----------------------- | -------------------------------------------- | ------------------------------------------------------------- |
+| `config?` | `LayerOptions`          | —                                            | Execution options overriding the layer stack defaults         |
+| `name`    | `LayerName`             | —                                            | Unique layer name in the viewport                             |
+| `scene`   | `InputScene \| IRScene` | —                                            | The complete scene owned by this layer                        |
+| `type`    | `'layer'`               | —                                            | Authoring layer discriminator, fixed to layer                 |
+| `zIndex?` | `number`                | `background: 0; overlay: 100; otherwise: 10` | Layer stacking order; equal values preserve declaration order |
 
 </ApiTable>
 
@@ -346,11 +339,12 @@ export declare const layer: (config: Omit<InputLayer, 'type'>) => InputLayer;
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type InputLayer = LayerOptions & {
+export type InputLayer = {
   type: 'layer';
   name: LayerName;
   zIndex?: number;
-  children: ReadonlyArray<InputChild>;
+  scene: InputScene | IRScene;
+  config?: LayerOptions;
 };
 ```
 
@@ -358,64 +352,7 @@ export type InputLayer = LayerOptions & {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InputScene"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={75}>InputScene</ApiSourceLink>
-
-**Common members**
-
-<ApiTable>
-
-| Member        | Type                                                                     | Default | Description                                                                               |
-| ------------- | ------------------------------------------------------------------------ | ------- | ----------------------------------------------------------------------------------------- |
-| `animations?` | `InputSceneChildren['animations']`                                       | —       | Root tracks can animate the viewBox.                                                      |
-| `authoring?`  | `unknown`                                                                | —       | Optional runtime payload interpreted by a compile result extension; excluded from Core IR |
-| `theme?`      | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }` | —       | Root theme selection; sets only the name and mode fields to override.                     |
-| `type`        | `"scene"`                                                                | —       | Discriminator marking this object as the root scene                                       |
-| `version?`    | `never`                                                                  | —       | Authoring input excludes a version; normalization supplies the current IR version         |
-| `viewBox?`    | `{ x: number; y: number; width: number; height: number; }`               | —       | Explicit framing; when omitted, bounds are computed from content plus padding.            |
-
-</ApiTable>
-
-Common members apply to every branch; a value must also satisfy at least one branch.
-
-<DocTabs defaultValue="layers">
-
-<DocTab value="layers" label="Members · Layers">
-
-<ApiTable>
-
-| Member      | Type                        | Default | Description                                                                |
-| ----------- | --------------------------- | ------- | -------------------------------------------------------------------------- |
-| `children?` | `never`                     | —       | Ordered children placed in the implicit default layer during normalization |
-| `layers`    | `ReadonlyArray<InputLayer>` | —       | Explicit layers, normalized after a stable sort by zIndex                  |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="children" label="Members · Children">
-
-<ApiTable>
-
-| Member     | Type                        | Default | Description                                                                |
-| ---------- | --------------------------- | ------- | -------------------------------------------------------------------------- |
-| `children` | `ReadonlyArray<InputChild>` | —       | Ordered children placed in the implicit default layer during normalization |
-| `layers?`  | `never`                     | —       | Explicit layers, normalized after a stable sort by zIndex                  |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="definition" label="Type definition">
-
-```ts
-export type InputScene = InputSceneChildren | InputSceneLayers;
-```
-
-</DocTab>
-
-</DocTabs>
-
-#### <ApiSourceLink label={"InputSceneChildren"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={69}>InputSceneChildren</ApiSourceLink>
+#### <ApiSourceLink label={"InputScene"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={55}>InputScene</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -425,10 +362,9 @@ export type InputScene = InputSceneChildren | InputSceneLayers;
 
 | Member        | Type                                                                     | Default | Description                                                                               |
 | ------------- | ------------------------------------------------------------------------ | ------- | ----------------------------------------------------------------------------------------- |
-| `animations?` | `InputSceneChildren["animations"]`                                       | —       | Root tracks can animate the viewBox.                                                      |
+| `animations?` | `IRScene['animations']`                                                  | —       | Root tracks can animate the viewBox.                                                      |
 | `authoring?`  | `unknown`                                                                | —       | Optional runtime payload interpreted by a compile result extension; excluded from Core IR |
-| `children`    | `ReadonlyArray<InputChild>`                                              | —       | Ordered children placed in the implicit default layer during normalization                |
-| `layers?`     | `never`                                                                  | —       | Explicit layers, normalized after a stable sort by zIndex                                 |
+| `children`    | `ReadonlyArray<InputChild>`                                              | —       | Children normalized in declaration order                                                  |
 | `theme?`      | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }` | —       | Root theme selection; sets only the name and mode fields to override.                     |
 | `type`        | `"scene"`                                                                | —       | Discriminator marking this object as the root scene                                       |
 | `version?`    | `never`                                                                  | —       | Authoring input excludes a version; normalization supplies the current IR version         |
@@ -441,52 +377,11 @@ export type InputScene = InputSceneChildren | InputSceneLayers;
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type InputSceneChildren = InputSceneBase &
-  Extract<
-    SceneSource,
-    {
-      children: unknown;
-    }
-  >;
-```
-
-</DocTab>
-
-</DocTabs>
-
-#### <ApiSourceLink label={"InputSceneLayers"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={72}>InputSceneLayers</ApiSourceLink>
-
-<DocTabs defaultValue="members">
-
-<DocTab value="members" label="Members">
-
-<ApiTable>
-
-| Member        | Type                                                                     | Default | Description                                                                               |
-| ------------- | ------------------------------------------------------------------------ | ------- | ----------------------------------------------------------------------------------------- |
-| `animations?` | `InputSceneLayers["animations"]`                                         | —       | Root tracks can animate the viewBox.                                                      |
-| `authoring?`  | `unknown`                                                                | —       | Optional runtime payload interpreted by a compile result extension; excluded from Core IR |
-| `children?`   | `never`                                                                  | —       | Ordered children placed in the implicit default layer during normalization                |
-| `layers`      | `ReadonlyArray<InputLayer>`                                              | —       | Explicit layers, normalized after a stable sort by zIndex                                 |
-| `theme?`      | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }` | —       | Root theme selection; sets only the name and mode fields to override.                     |
-| `type`        | `"scene"`                                                                | —       | Discriminator marking this object as the root scene                                       |
-| `version?`    | `never`                                                                  | —       | Authoring input excludes a version; normalization supplies the current IR version         |
-| `viewBox?`    | `{ x: number; y: number; width: number; height: number; }`               | —       | Explicit framing; when omitted, bounds are computed from content plus padding.            |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="definition" label="Type definition">
-
-```ts
-export type InputSceneLayers = InputSceneBase &
-  Extract<
-    SceneSource,
-    {
-      layers: unknown;
-    }
-  >;
+export type InputScene = Omit<IRScene, 'version' | 'children'> & {
+  version?: never;
+  children: ReadonlyArray<InputChild>;
+  authoring?: unknown;
+};
 ```
 
 </DocTab>

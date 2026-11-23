@@ -73,7 +73,7 @@ export const Example = () => <Layout ir={ir} extensions={{ composites: [flexLayo
 <DocTab value="vanilla-api" label="Vanilla API">
 
 ```ts
-import { scene, renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, scene, renderToSvgString } from '@retikz/vanilla';
 import { flexLayout } from '@retikz/layout-vanilla';
 
 const input = scene({
@@ -88,7 +88,8 @@ const input = scene({
   ],
 });
 
-console.log(renderToSvgString(input));
+const { compileResult } = compileToScene(input);
+console.log(renderToSvgString(compileResult.scene));
 ```
 
 </DocTab>
@@ -96,7 +97,7 @@ console.log(renderToSvgString(input));
 
 ```ts
 import type { IRScene } from '@retikz/core';
-import { renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, renderToSvgString } from '@retikz/vanilla';
 import { flexLayoutDefinition } from '@retikz/layout';
 
 const ir: IRScene = {
@@ -115,7 +116,9 @@ const ir: IRScene = {
   ],
 };
 
-console.log(renderToSvgString(ir, { compile: { composites: [flexLayoutDefinition] } }));
+console.log(
+  renderToSvgString(compileToScene(ir, { compile: { composites: [flexLayoutDefinition] } }).compileResult.scene),
+);
 ```
 
 </DocTab>

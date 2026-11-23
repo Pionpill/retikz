@@ -1,4 +1,4 @@
-import { createProcessingController, compileToScene } from '@retikz/vanilla';
+import { SceneRuntime, compileToScene } from '@retikz/vanilla';
 import { expect, it } from 'vitest';
 
 import { branchDiagram } from '../src/branch';
@@ -28,18 +28,18 @@ it('更新标签而不保留过时的演示内容', () => {
       }),
     ],
   });
-  const controller = createProcessingController(source(true));
+  const controller = SceneRuntime.fromInput(source(true));
 
   try {
     const initial = controller.read();
 
     expect(JSON.stringify(initial.compileResult.scene)).toContain('Visible label');
 
-    controller.update(source(false));
+    controller.replace(source(false));
 
     expect(JSON.stringify(controller.read().compileResult.scene)).not.toContain('Visible label');
 
-    controller.update(source(true));
+    controller.replace(source(true));
 
     expect(controller.read().compileResult.scene).toEqual(initial.compileResult.scene);
   } finally {

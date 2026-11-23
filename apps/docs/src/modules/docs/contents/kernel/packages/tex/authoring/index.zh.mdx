@@ -61,7 +61,7 @@ export const Formula = () => {
 
 ```ts
 import { createMathJaxLowerTex } from '@retikz/tex';
-import { node, renderToSvgString, scene } from '@retikz/vanilla';
+import { compileToScene, node, renderToSvgString, scene } from '@retikz/vanilla';
 
 const lowerTex = await createMathJaxLowerTex({ profile: 'math' });
 const input = scene({
@@ -72,7 +72,8 @@ const input = scene({
     }),
   ],
 });
-const svg = renderToSvgString(input, { compile: { lowerTex } });
+const { compileResult } = compileToScene(input, { compile: { lowerTex } });
+const svg = renderToSvgString(compileResult.scene);
 ```
 
 </DocTab>

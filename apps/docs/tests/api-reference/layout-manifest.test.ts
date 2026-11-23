@@ -16,23 +16,17 @@ describe('Layout API 公开范围', () => {
     expect(headings).not.toContain('Node');
     expect(headings).not.toContain('Scope');
 
-    for (const name of [
-      'scene',
-      'InputScene',
-      'InputSceneChildren',
-      'InputSceneLayers',
-      'layer',
-      'InputLayer',
-      'IRScene',
-      'IRViewBox',
-    ])
+    for (const name of ['scene', 'InputScene', 'layer', 'InputLayer', 'IRScene', 'IRViewBox'])
       expect(headings).toContain(name);
 
     for (const owner of ['react', 'vanilla', 'core']) expect(source).toContain('## `@retikz/' + owner + '`');
 
-    expect(source).toContain('Members · Children');
-    expect(source).toContain('Members · Layers');
-    expect(source).toContain('normalization supplies the data version');
+    const sceneInput = source.split('### InputScene\n')[1]?.split('\n### ')[0] ?? '';
+    const layerInput = source.split('### InputLayer\n')[1]?.split('\n### ')[0] ?? '';
+    expect(sceneInput).toContain('ReadonlyArray<InputChild>');
+    expect(sceneInput).not.toContain('`layers`');
+    expect(layerInput).toContain('scene: InputScene | IRScene');
+    expect(layerInput).toContain('config?: LayerOptions');
     expect(source).toContain("IRScene['theme']");
     expect(source).toContain('`compileResultExtension?`');
 
@@ -44,6 +38,7 @@ describe('Layout API 公开范围', () => {
       'boundaries',
       'clips',
       'composites',
+      'marks',
       'paths',
       'patterns',
       'shapes',

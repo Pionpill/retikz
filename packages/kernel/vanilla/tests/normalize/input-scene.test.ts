@@ -7,6 +7,7 @@ import type { InputEmbedAdapter, InputPath, InputScene, InputStep } from '../../
 import {
   coordinate,
   embed,
+  compileLayers,
   layer,
   node,
   normalizePath,
@@ -134,28 +135,15 @@ const createBoxAdapter = (
 
 describe('@retikz/vanilla InputScene', () => {
   it('scene/path helper 只构造 Input，不提前解析 path grammar', () => {
-    const input = scene({
-      layers: [
-        layer({
-          name: 'main',
-          children: [
-            node({ id: 'source', position: [0, 0] }),
-            path({ id: 'edge', way: ['source', [24, 0]], style: { strokeWidth: 2 } }),
-          ],
-        }),
-      ],
-    });
-
+    const input = scene([
+      node({ id: 'source', position: [0, 0] }),
+      path({ id: 'edge', way: ['source', [24, 0]], style: { strokeWidth: 2 } }),
+    ]);
     expect(input).toMatchObject({
       type: 'scene',
-      layers: [
-        {
-          name: 'main',
-          children: [
-            { type: 'node', id: 'source' },
-            { type: 'path', id: 'edge', way: ['source', [24, 0]], style: { strokeWidth: 2 } },
-          ],
-        },
+      children: [
+        { type: 'node', id: 'source' },
+        { type: 'path', id: 'edge', way: ['source', [24, 0]], style: { strokeWidth: 2 } },
       ],
     });
     expect(input).not.toHaveProperty('version');
@@ -355,11 +343,10 @@ describe('@retikz/vanilla InputScene', () => {
   });
 
   it('显式层序优先，同层序保持声明顺序', () => {
-    const normalized = normalizeScene(
-      scene({
-        layers: [layer({ name: 'overlay', zIndex: 0, children: [] }), layer({ name: 'background', children: [] })],
-      }),
-    );
+    const normalized = compileLayers([
+      layer({ name: 'overlay', zIndex: 0, scene: scene([]) }),
+      layer({ name: 'background', scene: scene([]) }),
+    ]);
     expect(normalized.map(({ name }) => name)).toEqual(['overlay', 'background']);
   });
 
@@ -493,13 +480,8 @@ describe('@retikz/vanilla InputScene', () => {
       }),
     };
 
-    const normalized = normalizeScene(
-      scene({
-        layers: [layer({ name: 'main', children: [embed({ adapter, id: 'chart', props: { label: 'A' } })] })],
-      }),
-    );
-
-    expect(normalized[0].result.ir.children).toMatchObject([{ id: 'chart/root', children: [{ id: 'chart/label' }] }]);
+    const normalized = normalizeScene(scene([embed({ adapter, id: 'chart', props: { label: 'A' } })]));
+    expect(normalized.ir.children).toMatchObject([{ id: 'chart/root', children: [{ id: 'chart/label' }] }]);
 
     const wrappedAdapter: InputEmbedAdapter<Record<string, never>> = {
       kind: 'wrapped-output',

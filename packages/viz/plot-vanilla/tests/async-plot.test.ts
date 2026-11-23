@@ -1,7 +1,7 @@
 import type { DataTransformImplementationProvider } from '@retikz/data';
 import { createDataTransformExecutor } from '@retikz/data';
 import { preparePlotData, PlotSchema } from '@retikz/plot';
-import { createProcessingController, embed, prepareStaticProcessing, compileToScene, scene } from '@retikz/vanilla';
+import { SceneRuntime, embed, prepareStaticProcessing, compileToScene, scene } from '@retikz/vanilla';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { InputPlotEmbed } from '../src';
@@ -38,17 +38,17 @@ describe('异步 Plot 编写', () => {
         ],
       });
     const options = { compileResultExtension: createPlotLineageCompileResultExtension() };
-    const a = createProcessingController(input(first), options);
-    const b = createProcessingController(input(second), options);
+    const a = SceneRuntime.fromInput(input(first), options);
+    const b = SceneRuntime.fromInput(input(second), options);
 
     try {
       expect(first).toHaveBeenCalledOnce();
       expect(second).toHaveBeenCalledOnce();
-      a.update(input(replacement));
+      a.replace(input(replacement));
       expect(replacement).toHaveBeenCalledOnce();
       expect(first).toHaveBeenCalledOnce();
       expect(second).toHaveBeenCalledOnce();
-      b.update(input(second));
+      b.replace(input(second));
       expect(second).toHaveBeenCalledTimes(2);
       expect(replacement).toHaveBeenCalledOnce();
     } finally {

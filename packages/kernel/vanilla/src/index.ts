@@ -30,8 +30,6 @@ export type {
   InputPath,
   InputRectangleStep,
   InputScene,
-  InputSceneChildren,
-  InputSceneLayers,
   InputScope,
   InputSmoothStep,
   InputStep,
@@ -76,13 +74,10 @@ export {
   scope,
 } from './normalize';
 export type {
-  ProcessingSource,
-  SingleSceneSource,
   ProcessingOptions,
   ProcessingResult,
   LayerProcessingResult,
   LayerProcessingController,
-  ProcessingController,
   PreparedStaticProcessing,
   InputVanillaCompileResultExtension,
   VanillaCompileResultExtension,
@@ -91,9 +86,11 @@ export type {
 } from './runtime';
 export {
   compileToScene,
-  createProcessingController,
+  SceneRuntime,
+  compileLayers,
+  createLayerController,
   defaultVanillaCompileResultExtension,
   prepareStaticProcessing,
 } from './runtime';
-export type { CommonOptions, InputRender, InputRetainedRender, RenderToStringOptions, SceneResult } from './runtime';
-export { renderToSvgString, toSceneResult } from './runtime';
+export type { CommonOptions, RenderToStringOptions } from './runtime';
+export { renderToSvgString } from './runtime';

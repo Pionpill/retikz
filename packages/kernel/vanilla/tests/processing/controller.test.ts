@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import type { IRScene } from '@retikz/core';
 import { CompositeBaseSchema, defineComposite, defineTheme, ThemeMode } from '@retikz/core';
+import { ReconcilerMode } from '@retikz/reconciler';
 import { describe, expect, it, vi } from 'vitest';
 import { literal } from 'zod';
 
@@ -10,10 +11,48 @@ import type {
   VanillaCompileResultExtension,
   VanillaCompileResultExtensionSession,
 } from '../../src';
-import { embed, createProcessingController, compileToScene } from '../../src';
+import { scene, node, normalizeScene, renderToSvgString, embed, SceneRuntime, compileToScene } from '../../src';
 import { prepareProcessingInput } from '../../src/runtime/_input/prepare';
 
 describe('Vanilla 处理', () => {
+  it('单图可替换为 IR；批次只接受当前版本，导出不再次编译或发布', () => {
+    const onCommit = vi.fn();
+    const resolve = vi.fn(() => []);
+    const runtime = SceneRuntime.fromInput(scene([]), {
+      reconciler: { mode: ReconcilerMode.Incremental },
+      compileResultExtension: { create: () => ({ resolve, onCommit }) },
+    });
+    try {
+      const input = scene([node({ id: 'point', position: [5, 0] })]);
+      runtime.replace(normalizeScene(input).ir);
+      const expected = runtime.read();
+      const remove = {
+        operations: [
+          {
+            kind: 'remove' as const,
+            target: { kind: 'id' as const, id: 'point', scopeId: runtime.getScopeId([], expected) },
+          },
+        ],
+      };
+      const listener = vi.fn();
+      runtime.subscribe(listener);
+      const resolutions = resolve.mock.calls.length;
+      const commits = onCommit.mock.calls.length;
+      expect(runtime.renderToSvgString()).toBe(renderToSvgString(expected.compileResult.scene));
+      expect(resolve).toHaveBeenCalledTimes(resolutions);
+      expect(onCommit).toHaveBeenCalledTimes(commits);
+      expect(listener).not.toHaveBeenCalled();
+      runtime.update(remove, expected);
+      const current = runtime.read();
+      expect(current.compileResult.scene.primitives).toHaveLength(0);
+      expect(() => runtime.update(remove, expected)).toThrow(/stale/i);
+      expect(runtime.read()).toBe(current);
+      expect(listener).toHaveBeenCalledTimes(1);
+    } finally {
+      runtime.dispose();
+    }
+  });
+
   it('提交回调不能重入写操作，订阅者始终读到正在通知的版本', () => {
     const input: InputScene = { type: 'scene', children: [] };
     const reenter = vi.fn<() => void>();
@@ -21,20 +60,20 @@ describe('Vanilla 处理', () => {
       resolve: () => [],
       onCommit: reenter,
     };
-    const controller = createProcessingController(input, { compileResultExtension: { create: () => session } });
+    const controller = SceneRuntime.fromInput(input, { compileResultExtension: { create: () => session } });
     const versions: Array<number> = [];
     const failures: Array<unknown> = [];
     reenter.mockImplementationOnce(() => {
       try {
-        controller.update(input);
+        controller.replace(input);
       } catch (cause) {
         failures.push(cause);
       }
     });
     controller.subscribe(result => versions.push(result.revision, controller.read().revision));
     try {
-      controller.update(input);
-      controller.update(input);
+      controller.replace(input);
+      controller.replace(input);
       expect(failures).toHaveLength(1);
       expect(versions).toEqual([1, 1, 2, 2]);
     } finally {
@@ -133,7 +172,7 @@ describe('Vanilla 处理', () => {
 
   it('retained controller 创建时保留 Core 编译诊断', () => {
     expect(() =>
-      createProcessingController({
+      SceneRuntime.fromInput({
         type: 'scene',
         children: [{ type: 'node', id: 'broken', position: [0, 0], shape: 'missing-shape' }],
       }),
@@ -141,7 +180,7 @@ describe('Vanilla 处理', () => {
   });
 
   it('controller 仅在完整成功后发布不可变 revision，失败保持上一次结果', () => {
-    const controller = createProcessingController(
+    const controller = SceneRuntime.fromInput(
       { type: 'scene', children: [{ type: 'node', id: 'first', position: [0, 0] }] },
       {},
     );
@@ -149,7 +188,7 @@ describe('Vanilla 处理', () => {
     const listener = vi.fn();
     const unsubscribe = controller.subscribe(listener);
 
-    controller.update({ type: 'scene', children: [{ type: 'node', id: 'second', position: [20, 0] }] });
+    controller.replace({ type: 'scene', children: [{ type: 'node', id: 'second', position: [20, 0] }] });
 
     const second = controller.read();
 
@@ -159,7 +198,7 @@ describe('Vanilla 处理', () => {
     expect(listener).toHaveBeenCalledWith(second);
 
     expect(() =>
-      controller.update({
+      controller.replace({
         type: 'scene',
         children: [{ type: 'node', id: 'broken', position: [0, 0], shape: 'missing-shape' }],
       }),
@@ -167,14 +206,14 @@ describe('Vanilla 处理', () => {
     expect(controller.read()).toBe(second);
 
     unsubscribe();
-    controller.update({ type: 'scene', children: [{ type: 'node', id: 'third', position: [40, 0] }] });
+    controller.replace({ type: 'scene', children: [{ type: 'node', id: 'third', position: [40, 0] }] });
 
     expect(listener).toHaveBeenCalledTimes(1);
 
     controller.dispose();
 
     expect(() =>
-      controller.update({ type: 'scene', children: [{ type: 'node', id: 'after-dispose', position: [60, 0] }] }),
+      controller.replace({ type: 'scene', children: [{ type: 'node', id: 'after-dispose', position: [60, 0] }] }),
     ).toThrow(/disposed/i);
   });
 
@@ -204,19 +243,19 @@ describe('Vanilla 处理', () => {
       }),
     };
     const phases: Array<string> = [];
-    const controller = createProcessingController(
+    const controller = SceneRuntime.fromInput(
       { type: 'scene', children: [{ type: 'node', id: 'stable', position: [0, 0] }] },
       { reconciler: { trace: record => phases.push(record.phase) } },
     );
     const first = controller.read();
 
     expect(() =>
-      controller.update({ type: 'scene', children: [embed({ adapter, id: 'box', props: {} })] }),
+      controller.replace({ type: 'scene', children: [embed({ adapter, id: 'box', props: {} })] }),
     ).not.toThrow();
     expect(controller.read().revision).toBe(first.revision + 1);
 
     expect(() =>
-      controller.update({ type: 'scene', children: [{ type: 'node', id: 'restored', position: [20, 0] }] }),
+      controller.replace({ type: 'scene', children: [{ type: 'node', id: 'restored', position: [20, 0] }] }),
     ).not.toThrow();
     expect(controller.read().revision).toBe(first.revision + 2);
 
@@ -252,14 +291,14 @@ describe('Vanilla 处理', () => {
         },
       }),
     };
-    const controller = createProcessingController({
+    const controller = SceneRuntime.fromInput({
       type: 'scene',
       children: [{ type: 'node', id: 'stable', position: [0, 0] }],
     });
     const stable = controller.read();
 
     expect(() =>
-      controller.update({
+      controller.replace({
         type: 'scene',
         children: [embed({ adapter, id: 'broken', props: {} })],
       }),
@@ -273,7 +312,7 @@ describe('Vanilla 处理', () => {
   });
 
   it('订阅方异常不会回滚已提交 revision，并经诊断边界报告', () => {
-    const controller = createProcessingController({
+    const controller = SceneRuntime.fromInput({
       type: 'scene',
       children: [{ type: 'node', id: 'first', position: [0, 0] }],
     });
@@ -284,7 +323,7 @@ describe('Vanilla 处理', () => {
     });
 
     expect(() =>
-      controller.update({ type: 'scene', children: [{ type: 'node', id: 'second', position: [20, 0] }] }),
+      controller.replace({ type: 'scene', children: [{ type: 'node', id: 'second', position: [20, 0] }] }),
     ).not.toThrow();
     expect(controller.read().revision).toBe(first.revision + 1);
     expect(controller.diagnostics()).toContain(failure);
@@ -306,7 +345,7 @@ describe('Vanilla 处理', () => {
   });
 
   it('retained processing 只在成功 Runtime transaction 后替换完整 result', () => {
-    const processing = createProcessingController({
+    const processing = SceneRuntime.fromInput({
       type: 'scene',
       children: [{ type: 'node', id: 'first', position: [0, 0] }],
     });
@@ -314,7 +353,7 @@ describe('Vanilla 处理', () => {
     const listener = vi.fn();
     const unsubscribe = processing.subscribe(listener);
 
-    processing.update({ type: 'scene', children: [{ type: 'node', id: 'second', position: [20, 0] }] });
+    processing.replace({ type: 'scene', children: [{ type: 'node', id: 'second', position: [20, 0] }] });
 
     const second = processing.read();
 
@@ -322,7 +361,7 @@ describe('Vanilla 处理', () => {
     expect(second.compileResult.scene).not.toBe(first.compileResult.scene);
     expect(listener).toHaveBeenCalledWith(second);
     expect(() =>
-      processing.update({
+      processing.replace({
         type: 'scene',
         children: [{ type: 'node', id: 'broken', position: [0, 0], shape: 'missing-shape' }],
       }),
@@ -330,7 +369,7 @@ describe('Vanilla 处理', () => {
     expect(processing.read()).toBe(second);
 
     unsubscribe();
-    processing.update({ type: 'scene', children: [{ type: 'node', id: 'third', position: [40, 0] }] });
+    processing.replace({ type: 'scene', children: [{ type: 'node', id: 'third', position: [40, 0] }] });
 
     expect(listener).toHaveBeenCalledTimes(1);
 
@@ -359,9 +398,9 @@ describe('Vanilla 处理', () => {
       type: 'scene',
       children: [{ type: 'node', id: 'second', position: [20, 0] }],
     } satisfies InputScene;
-    const controller = createProcessingController(first, { compileResultExtension: extension });
+    const controller = SceneRuntime.fromInput(first, { compileResultExtension: extension });
 
-    controller.update(second);
+    controller.replace(second);
 
     expect(instances).toHaveLength(2);
     expect(instances[1]).toBe(instances[0]);
@@ -392,7 +431,7 @@ describe('Vanilla 处理', () => {
         return session;
       },
     };
-    const controller = createProcessingController(
+    const controller = SceneRuntime.fromInput(
       { type: 'scene', children: [{ type: 'node', id: 'stable', position: [0, 0] }] },
       { compileResultExtension: extension },
     );
@@ -401,7 +440,7 @@ describe('Vanilla 处理', () => {
     controller.subscribe(listener);
 
     expect(() =>
-      controller.update({ type: 'scene', children: [{ type: 'node', id: 'broken', position: [20, 0] }] }),
+      controller.replace({ type: 'scene', children: [{ type: 'node', id: 'broken', position: [20, 0] }] }),
     ).toThrow(
       /Failed to publish the compilation|RENDER_RUNTIME_RENDERER_PREPARE_FAILED|Vanilla compile result extension resolve failed/,
     );
@@ -412,7 +451,7 @@ describe('Vanilla 处理', () => {
       expect.objectContaining({ code: 'VANILLA_COMPILE_RESULT_EXTENSION_FAILED' }),
     ]);
 
-    controller.update({ type: 'scene', children: [{ type: 'node', id: 'recovered', position: [40, 0] }] });
+    controller.replace({ type: 'scene', children: [{ type: 'node', id: 'recovered', position: [40, 0] }] });
 
     expect(controller.read().revision).toBe(stable.revision + 1);
 

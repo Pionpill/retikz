@@ -43,14 +43,12 @@ normalizes the former and preserves the latter.
 ## Compose in a Vanilla scene
 
 ```ts
-import { plotInputEmbedAdapter, embedPlot } from '@retikz/plot-vanilla';
-import { renderToSvgString, scene } from '@retikz/vanilla';
+import { embedPlot } from '@retikz/plot-vanilla';
+import { compileToScene, renderToSvgString, scene } from '@retikz/vanilla';
 
 const input = scene([embedPlot({ spec }, { sales })]);
-const svg = renderToSvgString(input, {
-  adapters: [plotInputEmbedAdapter],
-  output: { width: 360, height: 200 },
-});
+const { compileResult } = compileToScene(input);
+const svg = renderToSvgString(compileResult.scene, { output: { width: 360, height: 200 } });
 ```
 
 Datasets and runtime callbacks stay outside `IRPlot`. `plotInputEmbedAdapter`

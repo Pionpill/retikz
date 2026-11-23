@@ -38,12 +38,13 @@ const view = mountSvg(container, ir);
 // view.root is the <svg>; view.update(next) uses the selected static or retained processing; view.dispose() unmounts
 ```
 
-**Vanilla (SSR / build-time)** — `renderToSvgString` returns an SVG string and runs in Node, estimating text dimensions when Canvas is unavailable:
+**Vanilla (SSR / build-time)** — `renderToSvgString` returns an SVG string and runs in Node, with text dimensions estimated at compile time when Canvas is unavailable:
 
 ```ts
-import { renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, renderToSvgString } from '@retikz/vanilla';
 
-const svg = renderToSvgString(ir); // '<svg ...>...</svg>', drop it into HTML
+const { compileResult } = compileToScene(ir);
+const svg = renderToSvgString(compileResult.scene); // '<svg ...>...</svg>', drop it into HTML
 ```
 
 The three entries have different input contracts:
@@ -52,7 +53,7 @@ The three entries have different input contracts:
 | ------------------- | ---------------------------------------- | ---------- |
 | React `<Layout>`    | JSX `children`<br />or `IRScene`         | SVG DOM    |
 | Vanilla `mountSvg`  | `Scene` / `IRScene`<br />or `InputScene` | SVG DOM    |
-| `renderToSvgString` | `Scene` / `IRScene`<br />or `InputScene` | SVG string |
+| `renderToSvgString` | `Scene`                                  | SVG string |
 
 ## Adding interaction to an SVG figure
 

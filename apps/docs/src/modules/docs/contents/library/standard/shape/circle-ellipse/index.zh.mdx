@@ -46,10 +46,11 @@ export const Example = () => <Layout ir={ir} composites={[circleDefinition]} />;
 
 ```ts
 import { shape } from '@retikz/standard-vanilla/shape';
-import { scene, renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, scene, renderToSvgString } from '@retikz/vanilla';
 
 const input = scene({ children: [shape.circle({ center: [0, 0], radius: 32 })] });
-const svg = renderToSvgString(input);
+const { compileResult } = compileToScene(input);
+const svg = renderToSvgString(compileResult.scene);
 console.log(svg);
 ```
 
@@ -59,14 +60,15 @@ console.log(svg);
 ```ts
 import type { IRScene } from '@retikz/core';
 import { circleDefinition } from '@retikz/standard/shape';
-import { renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, renderToSvgString } from '@retikz/vanilla';
 
 const ir: IRScene = {
   type: 'scene',
   version: 1,
   children: [{ namespace: 'standard', type: 'circle', center: [0, 0], radius: 32 }],
 };
-const svg = renderToSvgString(ir, { compile: { composites: [circleDefinition] } });
+const { compileResult } = compileToScene(ir, { compile: { composites: [circleDefinition] } });
+const svg = renderToSvgString(compileResult.scene);
 console.log(svg);
 ```
 

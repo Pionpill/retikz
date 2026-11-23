@@ -1,3 +1,4 @@
+import { compileLayers } from '@retikz/vanilla';
 import type { InputEmbedContext } from '@retikz/vanilla';
 import { compileToScene, layer, normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
@@ -115,12 +116,9 @@ describe('Plot Vanilla Tier2 适配器', () => {
   it('经 scene/layer runtime 渲染 Plot embed', () => {
     const spec = salesSpec('sales');
     const input = structuredClone(spec);
-    const inputScene = scene({
-      layers: [
-        layer({ name: 'chart', children: [embedPlot({ spec }, datasets, { layout: { width: 360, height: 200 } })] }),
-      ],
-    });
-    const [compiled] = compileToScene(inputScene);
+    const layerScene = scene([embedPlot({ spec }, datasets, { layout: { width: 360, height: 200 } })]);
+    const layers = [layer({ name: 'chart', scene: layerScene })];
+    const [compiled] = compileLayers(layers);
     const svg = renderToSvgString(compiled.result.compileResult.scene, {
       output: { width: 360, height: 200 },
     });
@@ -135,7 +133,7 @@ describe('Plot Vanilla Tier2 适配器', () => {
     const normalized = normalizeScene(inputScene);
 
     expect(JSON.stringify(normalized.ir)).not.toContain('lineage');
-    expect(renderToSvgString(inputScene)).not.toContain('lineage');
+    expect(renderToSvgString(compileToScene(inputScene).compileResult.scene)).not.toContain('lineage');
   });
 
   it('保留显式 root identity 且不为匿名 spec 派生 id', () => {
@@ -208,7 +206,7 @@ describe('Plot Vanilla Tier2 适配器', () => {
   it('缺失 dataset reference 时 fail-loud', () => {
     const inputScene = scene([embedPlot({ spec: salesSpec() }, {})]);
 
-    expect(() => renderToSvgString(inputScene)).toThrow(/sales/i);
+    expect(() => renderToSvgString(compileToScene(inputScene).compileResult.scene)).toThrow(/sales/i);
   });
 
   it('重用 Source id 并保留匿名 Source 而不发明 id', () => {

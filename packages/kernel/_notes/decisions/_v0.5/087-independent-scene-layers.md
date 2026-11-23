@@ -15,7 +15,7 @@ keywords: Layer、图层、OpenString、Reconciler、Weave、全量编译、增�
 
 ## 基础数据结构与公开契约
 
-以下 TypeScript 描述作者输入与处理选项，不是 Core IR。视口公共配置沿用 processing 的 `compile` 入口，并在同一级增加 `reconciler`；单层直接声明同形字段，不需要另设 `compileMode` 或重复传入公共配置。
+以下 TypeScript 描述作者输入与处理选项，不是 Core IR。视口公共配置沿用 processing 的 `compile` 入口，并在同一级增加 `reconciler`；单层的 config 声明同形字段，不需要另设 `compileMode` 或重复传入公共配置。
 
 ```ts
 const BuiltinLayerName = {
@@ -35,36 +35,26 @@ type LayerOptions = {
   reconciler?: LayerReconcilerOptions;
 };
 
-type InputLayer = LayerOptions & {
+type InputLayer = {
   type: 'layer';
   name: LayerName;
   zIndex?: number;
-  children: ReadonlyArray<InputChild>;
+  config?: LayerOptions;
+  scene: InputScene | IRScene;
 };
-
-type InputScene = InputSceneBase &
-  RequireExactlyOne<{
-    children: ReadonlyArray<InputChild>;
-    layers: ReadonlyArray<InputLayer>;
-  }>;
 ```
 
-例如，下列公共配置与场景输入分别传给 processing。背景和主图继承精度 3；背景实例显式启用增量，覆盖背景预设；浮层仅把精度改为 1，不改变会话模式。
+公共执行配置传给层栈入口；单层用 config 覆盖。视框、主题、动画与作者信息属于各自场景；多个场景需要同一视框时可共享调用方的配置。把已有 IR 放进图层不会再次执行作者归一化，也不会覆盖它的根字段。
 
 ```ts
-const options = { compile: { precision: 3 }, reconciler: { mode: ReconcilerMode.Incremental } } satisfies LayerOptions;
-const scene = {
-  layers: [
-    { type: 'layer', name: 'background', reconciler: { mode: ReconcilerMode.Incremental }, children: [] },
-    { type: 'layer', name: 'main', children: [] },
-    { type: 'layer', name: 'overlay', compile: { precision: 1 }, children: [] },
-  ],
-} satisfies InputScene;
+const layers = [layer({ name: 'background', scene: backgroundIR }), layer({ name: 'main', scene: scene(children) })];
+const results = compileLayers(layers, options); // 一次性编译
+const stack = createLayerController(layers, options); // 持续更新
 ```
 
 ### 输出形态
 
-结果由输入形式决定，不按层数推断。直接 children 或单个 Core IR 保持单图结果；显式 layers 返回按有效层序排列的具名结果列表，每项只包含本层的结果。即使只有一层也不展开，零层返回空列表。不要求存在 main，不选取某层作为视口级编译结果。归一化、静态编译与保留式计算结果读取遵循同一规则；driver 产生的只读辅助层仍归所属单图结果。
+单图编译始终返回一份结果；分层入口始终返回按层序排列的具名结果集合，即使为空或只有一层也不展开。层名不会改变 Core IR；作者输入中匿名嵌入的身份仍按所属层隔离。driver 产生的只读辅助层仍归所属单图结果。
 
 ### 名称与层序
 

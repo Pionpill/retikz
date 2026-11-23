@@ -1,6 +1,7 @@
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
 import type { IRDetailTable } from '@retikz/table';
 import { createManualTableIR, TableSchema } from '@retikz/table';
+import { compileLayers } from '@retikz/vanilla';
 import type { InputEmbedContext } from '@retikz/vanilla';
 import { compileToScene, layer, normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
@@ -87,24 +88,18 @@ describe('Table Vanilla 适配器', () => {
 
   it('进入场景/图层 SSR 并读取每个嵌入运行时数据', () => {
     const spec = detailSpec();
-    const inputScene = scene({
-      layers: [
-        layer({
-          name: 'content',
-          children: [
-            embedTable(spec, { data: { people: [{ name: 'Ada' }] } }),
-            embedTable({ ...spec, data: { reference: 'others' } }, { data: { others: [{ name: 'Lin' }] } }),
-          ],
-        }),
-      ],
-    });
-    const [compiled] = compileToScene(inputScene);
+    const layerScene = scene([
+      embedTable(spec, { data: { people: [{ name: 'Ada' }] } }),
+      embedTable({ ...spec, data: { reference: 'others' } }, { data: { others: [{ name: 'Lin' }] } }),
+    ]);
+    const layers = [layer({ name: 'content', scene: layerScene })];
+    const [compiled] = compileLayers(layers);
     const svg = renderToSvgString(compiled.result.compileResult.scene);
 
     expect(svg).toContain('Ada');
     expect(svg).toContain('Lin');
 
-    const [{ result: normalized }] = normalizeScene(inputScene);
+    const normalized = normalizeScene(layerScene);
 
     expect(normalized.ir.children).toHaveLength(2);
 
@@ -128,7 +123,7 @@ describe('Table Vanilla 适配器', () => {
     });
     const inputScene = scene([embedTable(spec, { composites: [badge] })]);
 
-    expect(renderToSvgString(inputScene)).toContain('Nested');
+    expect(renderToSvgString(compileToScene(inputScene).compileResult.scene)).toContain('Nested');
   });
 
   it('重复的匿名嵌入在 Source 中仍保持匿名', () => {

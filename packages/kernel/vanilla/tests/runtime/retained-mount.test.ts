@@ -11,7 +11,7 @@ import { defineRetainedRenderer, RetikzRenderErrorCode } from '@retikz/render/ru
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { literal, string, enum as zodEnum } from 'zod';
 
-import type { InputEmbedAdapter, InputSceneChildren, VanillaCompileResultExtension } from '../../src';
+import type { InputEmbedAdapter, InputScene, VanillaCompileResultExtension } from '../../src';
 import { embed } from '../../src';
 import { mountCanvas, mountSvg } from '../../src/dom';
 
@@ -39,7 +39,7 @@ const source = (fill: string): IRScene => ({
   ],
 });
 
-const inputScene = (fill: string): InputSceneChildren => ({
+const inputScene = (fill: string): InputScene => ({
   type: 'scene',
   children: source(fill).children,
 });
@@ -169,7 +169,7 @@ const datasetAdapter: InputEmbedAdapter<{ color: string }> = {
   }),
 };
 
-const datasetScene = (color: string): InputSceneChildren => ({
+const datasetScene = (color: string): InputScene => ({
   type: 'scene',
   children: [embed({ adapter: datasetAdapter, id: 'dataset', props: { color } })],
 });
@@ -183,7 +183,7 @@ const failingResultExtension: VanillaCompileResultExtension = {
   }),
 };
 
-const extensionScene = (authoring: unknown): InputSceneChildren => ({
+const extensionScene = (authoring: unknown): InputScene => ({
   type: 'scene',
   authoring,
   children: [{ type: 'node', id: 'box', position: [0, 0], shape: 'rectangle' }],
@@ -277,7 +277,7 @@ describe('@retikz/vanilla 保留安装座', () => {
         },
       }),
     };
-    const cachedDatasetScene = (color: '#ef4444' | '#22c55e'): InputSceneChildren => ({
+    const cachedDatasetScene = (color: '#ef4444' | '#22c55e'): InputScene => ({
       type: 'scene',
       children: [embed({ adapter, id: 'dataset', props: { color } })],
     });

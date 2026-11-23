@@ -1,7 +1,7 @@
 import type { IRScene, TexLowerer } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { renderToSvgString } from '../../src';
+import { compileToScene, renderToSvgString } from '../../src';
 
 const lowerTex: TexLowerer = () => ({
   paths: [
@@ -41,7 +41,8 @@ const scene: IRScene = {
 
 describe('Vanilla compile.lowerTex 直通', () => {
   it('把 custom lowerer 的多条路径与 paint 交给同一 Core consumer', () => {
-    const svg = renderToSvgString(scene, { compile: { lowerTex } });
+    const { compileResult } = compileToScene(scene, { compile: { lowerTex } });
+    const svg = renderToSvgString(compileResult.scene);
 
     expect(svg).toContain('fill="royalblue"');
     expect(svg).toContain('fill="crimson"');

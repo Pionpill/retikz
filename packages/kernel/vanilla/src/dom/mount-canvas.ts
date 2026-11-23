@@ -1,4 +1,4 @@
-import type { Scene } from '@retikz/core';
+import type { IRScene, Scene } from '@retikz/core';
 import type { CompileResult } from '@retikz/reconciler';
 import type { AnimationControls, IdClockRegistry } from '@retikz/render/animation';
 import {
@@ -23,11 +23,12 @@ import {
 } from '@retikz/render/hydration';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
-import { DEFAULT_ID_PREFIX, EMPTY_ARTIFACTS, sceneOfResult, toSceneResult } from '../runtime';
-import type { InputRender, InputRetainedRender } from '../runtime';
+import type { InputScene } from '../normalize';
+import { DEFAULT_ID_PREFIX } from '../runtime';
 import { VanillaViewMode } from './constants';
 import { calculateDisplaySize } from './display-size';
 import { createRetainedProcessingController } from './retained';
+import { resolveStaticMountScene, EMPTY_ARTIFACTS } from './static-scene';
 import type {
   CanvasView,
   HydrateOptions,
@@ -58,7 +59,7 @@ const getDevicePixelRatio = (override: number | undefined): number => {
  */
 const mountStaticCanvas = (
   container: Element,
-  input: InputRender,
+  input: Scene | InputScene | IRScene,
   options: StaticMountCanvasOptions | RawStaticMountCanvasOptions,
 ): StaticCanvasView | StaticRawCanvasView => {
   const canvas = document.createElement('canvas');
@@ -164,11 +165,10 @@ const mountStaticCanvas = (
     };
   };
 
-  const renderInto = (next: InputRender): void => {
-    const result = toSceneResult(next, options);
-    const scene = sceneOfResult(result);
+  const renderInto = (next: Scene | InputScene | IRScene): void => {
+    const { scene, compileResult } = resolveStaticMountScene(next, options);
     currentScene = scene;
-    currentCompileResult = 'compileResult' in result ? result.compileResult : undefined;
+    currentCompileResult = compileResult;
     const size = calculateDisplaySize(scene.layout, output.width, output.height);
     canvas.width = Math.max(1, Math.round(size.width * ratio));
     canvas.height = Math.max(1, Math.round(size.height * ratio));
@@ -309,7 +309,7 @@ const mountStaticCanvas = (
   return {
     mode: VanillaViewMode.Static,
     root: canvas,
-    update(next: InputRender) {
+    update(next: Scene | InputScene | IRScene) {
       if (disposed) throw new RetikzVanillaError(RetikzVanillaErrorCode.Dom, 'mountCanvas: view already disposed.');
 
       renderInto(next);
@@ -346,7 +346,7 @@ const mountStaticCanvas = (
 /** 把 IR / InputScene 挂成 retained Canvas Runtime */
 const mountRetainedCanvas = (
   container: Element,
-  input: InputRetainedRender,
+  input: InputScene | IRScene,
   options: RetainedMountCanvasOptions,
   runtimeOptions: VanillaRetainedRuntimeOptions,
 ): RetainedCanvasView => {
@@ -406,14 +406,14 @@ const mountRetainedCanvas = (
 /** `mountCanvas` 的 static / retained 输入重载 */
 type MountCanvas = {
   (container: Element, input: Scene, options?: StaticMountCanvasOptions): StaticCanvasView;
-  (container: Element, input: InputRetainedRender, options: RawStaticMountCanvasOptions): StaticRawCanvasView;
-  (container: Element, input: InputRetainedRender, options?: RetainedMountCanvasOptions): RetainedCanvasView;
+  (container: Element, input: InputScene | IRScene, options: RawStaticMountCanvasOptions): StaticRawCanvasView;
+  (container: Element, input: InputScene | IRScene, options?: RetainedMountCanvasOptions): RetainedCanvasView;
 };
 
 /** 按输入是否已编译，创建 static 或 retained Canvas view */
 export const mountCanvas: MountCanvas = ((
   container: Element,
-  input: Scene | InputRetainedRender,
+  input: Scene | InputScene | IRScene,
   options: StaticMountCanvasOptions | MountCanvasOptions = {},
 ): CanvasView => {
   if ('primitives' in input) {

@@ -1,12 +1,4 @@
-import type { Scene } from '@retikz/core';
-
-import type { ProcessingOptions, SingleSceneSource } from '../_input';
-
-/** mount / renderToSvgString 的入参：已编译 `Scene`、待编译 `IRScene` 或 Vanilla InputScene */
-export type InputRender = Scene | SingleSceneSource;
-
-/** 可进入 retained Runtime 的未编译输入 */
-export type InputRetainedRender = SingleSceneSource;
+import type { ProcessingOptions } from '../_input';
 
 /** 输出资源与显示尺寸选项 */
 export type VanillaOutputOptions = {
@@ -33,17 +25,16 @@ export type VanillaAnimationOptions = {
   snapshotAt?: number;
 };
 
-/**
- * render 与 mount 入口共享的选项
- * @description `output` 管输出资源和显示尺寸；`compile` 只在输入是 IR / InputScene 时传给
- *   Core 编译；`compileResultExtension` 提供领域中立扩展接线；`animation` 控制 SVG / Canvas runtime 动画；
- */
-export type CommonOptions = Pick<ProcessingOptions, 'compile' | 'compileResultExtension'> & {
+/** 已编译场景的 SVG 序列化选项 */
+export type RenderToStringOptions = {
+  /** 字符串输出不创建 DOM runtime */
+  readonly runtime?: never;
   /** 输出资源与显示尺寸选项 */
   output?: VanillaOutputOptions;
-  /** runtime 动画选项 */
+  /** 动画播放或截帧选项 */
   animation?: VanillaAnimationOptions;
 };
 
-/** SSR / build-time SVG string options；显式禁止 mount-only runtime 配置 */
-export type RenderToStringOptions = CommonOptions & Readonly<{ runtime?: never }>;
+/** DOM 挂载既可接收预编译场景，也可编译作者声明 */
+export type CommonOptions = Pick<RenderToStringOptions, 'output' | 'animation'> &
+  Pick<ProcessingOptions, 'compile' | 'compileResultExtension'>;

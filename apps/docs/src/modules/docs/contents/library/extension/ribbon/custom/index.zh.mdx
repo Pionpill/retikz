@@ -80,10 +80,10 @@ export const Example = () => (
 </DocTab>
 <DocTab value="vanilla" label="Vanilla">
 
-用 `scene` / `path` 构造输入，在 `renderToSvgString` 的 `compile.paths` 中装配同一 Definition：
+用 `scene` / `path` 构造输入，在 `compileToScene` 的 `compile.paths` 中装配同一 Definition：
 
 ```ts
-import { path, renderToSvgString, scene } from '@retikz/vanilla';
+import { compileToScene, path, renderToSvgString, scene } from '@retikz/vanilla';
 
 import { pulseRibbonDefinition } from './pulse-profile';
 
@@ -105,7 +105,8 @@ const input = scene({
   ],
 });
 
-export const svg = renderToSvgString(input, { compile: { paths: [pulseRibbonDefinition] } });
+const { compileResult } = compileToScene(input, { compile: { paths: [pulseRibbonDefinition] } });
+export const svg = renderToSvgString(compileResult.scene);
 ```
 
 </DocTab>
@@ -163,12 +164,13 @@ export const Example = () => <Layout ir={ir} extensions={{ paths: [pulseRibbonDe
 Vanilla 消费同一份 IR 时，在渲染选项中注入运行时 Definition：
 
 ```ts
-import { renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, renderToSvgString } from '@retikz/vanilla';
 
 import { pulseRibbonDefinition } from './pulse-profile';
 import { ir } from './ribbon-ir';
 
-export const svg = renderToSvgString(ir, { compile: { paths: [pulseRibbonDefinition] } });
+const { compileResult } = compileToScene(ir, { compile: { paths: [pulseRibbonDefinition] } });
+export const svg = renderToSvgString(compileResult.scene);
 ```
 
 </DocStep>
@@ -245,7 +247,7 @@ Provider 只负责把 Definition 和 runtime profile dataset 装配成普通 Cor
       name: 'compile.paths',
       kind: 'property',
       type: 'ReadonlyArray<AnyPathDefinition>',
-      description: 'Vanilla 渲染选项中的运行时 Definition 数组；renderToSvgString 消费 Vanilla 输入或 IR 时均在此装配',
+      description: 'Vanilla 编译选项中的运行时 Definition 数组；compileToScene 消费 Vanilla 输入或 IR 时均在此装配',
     },
     {
       name: 'Path.kindOptions.width',

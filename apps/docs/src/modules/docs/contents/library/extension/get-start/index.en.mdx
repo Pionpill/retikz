@@ -45,9 +45,9 @@ This code returns a complete SVG string that can be saved to a file or displayed
 
 ```ts
 import { crossShapeDefinition } from '@retikz/extension';
-import { renderToSvgString, scene } from '@retikz/vanilla';
+import { compileToScene, renderToSvgString, scene } from '@retikz/vanilla';
 
-const svg = renderToSvgString(
+const { compileResult } = compileToScene(
   scene({
     children: [
       {
@@ -61,6 +61,7 @@ const svg = renderToSvgString(
   }),
   { compile: { shapes: [crossShapeDefinition] } },
 );
+const svg = renderToSvgString(compileResult.scene);
 console.log(svg);
 ```
 

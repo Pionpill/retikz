@@ -46,10 +46,11 @@ export const Example = () => <Layout ir={ir} composites={[gridDefinition]} />;
 
 ```ts
 import { grid } from '@retikz/standard-vanilla/presentation';
-import { scene, renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, scene, renderToSvgString } from '@retikz/vanilla';
 
 const input = scene({ children: [grid({ bounds: { start: [0, 0], end: [120, 80] }, line: { spacing: 20 } })] });
-const svg = renderToSvgString(input);
+const { compileResult } = compileToScene(input);
+const svg = renderToSvgString(compileResult.scene);
 console.log(svg);
 ```
 
@@ -59,14 +60,15 @@ console.log(svg);
 ```ts
 import type { IRScene } from '@retikz/core';
 import { gridDefinition } from '@retikz/standard/presentation';
-import { renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, renderToSvgString } from '@retikz/vanilla';
 
 const ir: IRScene = {
   type: 'scene',
   version: 1,
   children: [{ namespace: 'standard', type: 'grid', bounds: { start: [0, 0], end: [120, 80] }, line: { spacing: 20 } }],
 };
-const svg = renderToSvgString(ir, { compile: { composites: [gridDefinition] } });
+const { compileResult } = compileToScene(ir, { compile: { composites: [gridDefinition] } });
+const svg = renderToSvgString(compileResult.scene);
 console.log(svg);
 ```
 

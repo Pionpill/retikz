@@ -63,7 +63,7 @@ if (root) createRoot(root).render(<Example />);
 
 ```ts
 import { grid } from '@retikz/standard-vanilla/presentation';
-import { renderToSvgString, scene } from '@retikz/vanilla';
+import { compileToScene, renderToSvgString, scene } from '@retikz/vanilla';
 
 const input = scene({
   children: [
@@ -73,7 +73,8 @@ const input = scene({
     }),
   ],
 });
-const svg = renderToSvgString(input);
+const { compileResult } = compileToScene(input);
+const svg = renderToSvgString(compileResult.scene);
 console.log(svg);
 ```
 

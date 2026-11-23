@@ -11,11 +11,6 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   '固定为 layer 的作者分层标识': 'Authoring layer discriminator, fixed to layer',
   '作者输入不接受版本号；归一化时写入当前 IR 版本':
     'Authoring input excludes a version; normalization supplies the current IR version',
-  'children 模式不接受显式 layers': 'The children variant excludes explicit layers',
-  '显式分层列表，按 zIndex 稳定排序后归一化': 'Explicit layers, normalized after a stable sort by zIndex',
-  'layers 模式不接受顶层 children': 'The layers variant excludes top-level children',
-  '有序子图元，归一化时置于隐式默认层': 'Ordered children placed in the implicit default layer during normalization',
-
   '作者侧 Layer 输入': 'Authoring input for a layer',
   作者侧图层: 'Authoring input for a layer',
   在视口内唯一的名称: 'Unique layer name in the viewport',
@@ -27,24 +22,13 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   '作者侧 Scene 输入': 'Scene authoring input',
   '可选编译结果扩展自行解释的运行时载荷，不进入 Core IR':
     'Optional runtime payload interpreted by a compile result extension; excluded from Core IR',
-  '使用 children 简写的作者侧 Scene 输入': 'Scene authoring input using a children list',
-  '使用 Layer 列表的作者侧 Scene 输入': 'Scene authoring input using explicit layers',
-  '创建作者侧 Scene 输入': 'Create scene authoring input',
-  用子图元列表创建场景: 'Create a scene from a list of children',
-  用子图元和全图配置创建场景: 'Create a scene from children and drawing-wide options',
-  用显式分层创建场景: 'Create a scene from explicit layers',
-  '有序子图元列表，允许空数组': 'Ordered children; an empty array is allowed',
-  '保留子数组引用的场景输入，数据版本在归一化时补齐':
-    'Scene input retaining the children array reference; normalization supplies the data version',
-  'children 与主题、视框等全图配置，不接受 layers':
-    'Children and drawing-wide options such as theme and viewBox; excludes layers',
-  '保留配置与子图元引用的场景输入，尚未编译': 'Uncompiled scene input retaining the options and child references',
-  'layers 与全图配置，不接受 children': 'Layers and drawing-wide options; excludes children',
-  '保留图层列表引用的场景输入；归一化时每个图层独立生成结果':
-    'Scene input retaining the layers array reference; normalization produces a separate result for each layer',
+  '单图作者输入，归一化时转换为 Core IR': 'Single-scene authoring input normalized into Core IR',
+  '构造单图作者输入，不编译或复制子图元': 'Build a single scene input without compiling or copying its children',
+  当前层的完整场景: 'The complete scene owned by this layer',
+  覆盖层栈的执行配置: 'Execution options overriding the layer stack defaults',
   创建作者侧分层输入: 'Create layer authoring input',
-  '分层名称、排序、计算配置与子图元': 'Layer name, stacking order, processing options, and children',
-  '带 layer 类别的输入，不编译或复制子图元': 'Input tagged as a layer; does not compile or copy its children',
+  '分层名称、排序、计算配置与场景': 'Layer name, stacking order, processing options, and scene',
+  '带 layer 类别的输入，不编译或复制场景': 'Input tagged as a layer; does not compile or copy the scene',
   'retikz 顶层绘制 IR，可序列化 JSON 形式的绘制描述': 'Root drawing IR, a JSON-serializable description of a drawing',
   '显式视框 IR 类型 `{ x, y, width, height }`': 'Explicit viewport IR: `{ x, y, width, height }`',
 

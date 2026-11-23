@@ -1,12 +1,15 @@
-import type { AnyCompositeDefinition } from '@retikz/core';
+import type { AnyCompositeDefinition, IRScene } from '@retikz/core';
 import type { ReconcilerCommitTarget, ReconcilerResult, WeaveBatch } from '@retikz/reconciler';
 import { SceneReconciler } from '@retikz/reconciler';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../error';
+import type { InputScene } from '../../normalize';
 import { prepareProcessingInput } from '../_input';
-import type { InputPreparedProcessing, ProcessingOptions, SingleSceneSource } from '../_input';
+import type { InputPreparedProcessing, ProcessingOptions } from '../_input';
 import type { InputVanillaCompileResultExtension, ProcessingResult } from '../compile';
 import { ResultExtensionHost, prepareCompileOutput } from '../compile';
+import { renderToSvgString } from '../output';
+import type { RenderToStringOptions } from '../output';
 
 /** 组合单场景编译和宿主提交；仅在底层事务成功后发布新的 Vanilla 结果 */
 export class SceneRuntime {
@@ -20,7 +23,7 @@ export class SceneRuntime {
   private disposed = false;
   private writing = false;
 
-  private constructor(
+  protected constructor(
     initial: InputPreparedProcessing,
     private readonly options: ProcessingOptions,
     createTarget?: () => ReconcilerCommitTarget,
@@ -46,38 +49,37 @@ export class SceneRuntime {
     }
   }
 
-  /** 从作者输入建立同步会话 */
-  static fromSource(
-    source: SingleSceneSource,
-    options: ProcessingOptions,
-    createTarget?: () => ReconcilerCommitTarget,
-  ) {
-    return new SceneRuntime(prepareProcessingInput(source, options), options, createTarget);
+  /** 从单图作者声明及其嵌入贡献建立会话 */
+  static fromInput(input: InputScene, options: ProcessingOptions = {}) {
+    return new SceneRuntime(prepareProcessingInput(input, options), options);
   }
 
-  /** 复用已完成的准备；不重新遍历作者输入 */
-  static fromPrepared(
-    initial: InputPreparedProcessing,
-    options: ProcessingOptions,
-    assertOwnerActive: () => void,
-    notifications: Array<() => void>,
-  ) {
-    return new SceneRuntime(initial, options, undefined, assertOwnerActive, notifications);
+  /** 从已类型化的 Core IR 建立会话 */
+  static fromIR(ir: IRScene, options: ProcessingOptions = {}) {
+    return new SceneRuntime(prepareProcessingInput(ir, options), options);
   }
 
+  /** 导出最后一次成功提交的场景，不重新编译或发送通知 */
+  renderToSvgString(options?: RenderToStringOptions) {
+    return renderToSvgString(this.current.compileResult.scene, options);
+  }
+
+  /** 读取最后一次成功提交的结果 */
   readonly read = (): ProcessingResult => this.current;
 
+  /** 订阅后续成功提交 */
   readonly subscribe = (listener: (result: ProcessingResult) => void) => {
     this.assertActive();
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
   };
 
-  readonly update = (source: SingleSceneSource) =>
-    this.write(() => this.replace(prepareProcessingInput(source, this.options)));
+  /** 原子替换完整作者输入或 IR */
+  readonly replace = (source: InputScene | IRScene) =>
+    this.write(() => this.commitReplacement(prepareProcessingInput(source, this.options)));
 
-  updatePrepared(next: InputPreparedProcessing, notifications: Array<() => void>) {
-    this.write(() => this.replace(next, notifications));
+  protected replacePrepared(next: InputPreparedProcessing, notifications: Array<() => void>) {
+    this.write(() => this.commitReplacement(next, notifications));
   }
 
   /** 在输入准备、底层提交和通知期间保持单一写者；销毁立即生效，释放等到底层事务退出 */
@@ -97,7 +99,7 @@ export class SceneRuntime {
     }
   }
 
-  private replace(next: InputPreparedProcessing, notifications?: Array<() => void>) {
+  private commitReplacement(next: InputPreparedProcessing, notifications?: Array<() => void>) {
     const extension = this.options.compileResultExtension;
     const previousInput = this.extensionInput;
     const nextInput = previousInput && { ...next, instance: previousInput.instance };
@@ -124,12 +126,18 @@ export class SceneRuntime {
     this.publish(committed, notifications);
   }
 
+  /** 读取指定版本的 scope 地址 */
   getScopeId(path: ReadonlyArray<number>, expected: ProcessingResult) {
     this.assertExpected(expected);
     return this.reconciler.getScopeId(path);
   }
 
-  applyBatch(batch: WeaveBatch, expected: ProcessingResult, notifications?: Array<() => void>) {
+  /** 将变更批次应用到指定的已提交版本 */
+  update(batch: WeaveBatch, expected: ProcessingResult) {
+    this.commitBatch(batch, expected);
+  }
+
+  protected commitBatch(batch: WeaveBatch, expected: ProcessingResult, notifications?: Array<() => void>) {
     this.write(() => {
       this.assertExpected(expected);
       const previous = this.reconciler.read();
@@ -138,10 +146,11 @@ export class SceneRuntime {
     });
   }
 
-  updateTarget() {
+  protected refreshTarget() {
     this.write(() => this.publish(this.reconciler.updateTarget()));
   }
 
+  /** 读取并清空本会话的诊断 */
   readonly diagnostics = (): ReadonlyArray<unknown> => {
     const diagnostics = this.reconciler.diagnostics();
     if (this.failures.length === 0) return diagnostics;
@@ -150,6 +159,7 @@ export class SceneRuntime {
     return failures;
   };
 
+  /** 释放会话并禁止后续写入 */
   readonly dispose = () => {
     this.disposed = true;
     this.listeners.clear();
@@ -209,6 +219,40 @@ export class SceneRuntime {
   private assertExpected(expected: ProcessingResult) {
     this.assertActive();
     if (this.current !== expected)
-      throw new RetikzVanillaError(RetikzVanillaErrorCode.Processing, 'Stale layer result');
+      throw new RetikzVanillaError(RetikzVanillaErrorCode.Processing, 'Stale scene result');
+  }
+}
+
+/** 包内宿主接线：DOM 提交目标与整栈延迟通知，不从包入口导出 */
+export class HostedSceneRuntime extends SceneRuntime {
+  /** 从作者输入建立同步会话 */
+  static fromSource(
+    source: InputScene | IRScene,
+    options: ProcessingOptions,
+    createTarget?: () => ReconcilerCommitTarget,
+  ) {
+    return new HostedSceneRuntime(prepareProcessingInput(source, options), options, createTarget);
+  }
+
+  /** 复用已完成的准备；不重新遍历作者输入 */
+  static fromPrepared(
+    initial: InputPreparedProcessing,
+    options: ProcessingOptions,
+    assertOwnerActive: () => void,
+    notifications: Array<() => void>,
+  ) {
+    return new HostedSceneRuntime(initial, options, undefined, assertOwnerActive, notifications);
+  }
+
+  updatePrepared(next: InputPreparedProcessing, notifications: Array<() => void>) {
+    this.replacePrepared(next, notifications);
+  }
+
+  applyBatch(batch: WeaveBatch, expected: ProcessingResult, notifications: Array<() => void>) {
+    this.commitBatch(batch, expected, notifications);
+  }
+
+  updateTarget() {
+    this.refreshTarget();
   }
 }

@@ -1,6 +1,6 @@
 import * as DiagramFlow from '@retikz/diagram/flow';
 import type { InputEmbed, InputEmbedAdapter, InputEmbedContext } from '@retikz/vanilla';
-import { createProcessingController, compileToScene } from '@retikz/vanilla';
+import { SceneRuntime, compileToScene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
 import * as FlowVanilla from '../src/flow';
@@ -27,18 +27,18 @@ it('在保留模式更新期间删除并恢复 Group 标题和标签', () => {
       }),
     ],
   });
-  const controller = createProcessingController(source(true));
+  const controller = SceneRuntime.fromInput(source(true));
 
   try {
     const initial = controller.read();
-    controller.update(source(false));
+    controller.replace(source(false));
     const hidden = controller.read();
 
     expect(JSON.stringify(hidden.compileResult.scene)).not.toContain('Description');
     expect(JSON.stringify(hidden.compileResult.scene)).not.toContain('Boundary');
     expect(JSON.stringify(hidden.compileResult.scene)).toContain('Item');
 
-    controller.update(source(true));
+    controller.replace(source(true));
 
     expect(controller.read().compileResult.scene).toEqual(initial.compileResult.scene);
   } finally {

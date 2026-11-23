@@ -60,7 +60,7 @@ The root `Layout` outputs SVG by default; this example needs no renderer configu
 
 ```ts
 import { flexLayout } from '@retikz/layout-vanilla';
-import { node, renderToSvgString, scene } from '@retikz/vanilla';
+import { compileToScene, node, renderToSvgString, scene } from '@retikz/vanilla';
 
 const input = scene({
   children: [
@@ -79,7 +79,8 @@ const input = scene({
     }),
   ],
 });
-const svg = renderToSvgString(input);
+const { compileResult } = compileToScene(input);
+const svg = renderToSvgString(compileResult.scene);
 console.log(svg);
 ```
 

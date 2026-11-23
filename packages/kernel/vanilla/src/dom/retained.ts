@@ -1,3 +1,4 @@
+import type { IRScene } from '@retikz/core';
 import { ReconcilerMode } from '@retikz/reconciler';
 import type { ReconcilerDiagnostic } from '@retikz/reconciler';
 import { prefersReducedMotion, resolveAnimationEnabled } from '@retikz/render/animation';
@@ -5,8 +6,9 @@ import type { RenderHandlerContribution, InputRenderRuntimeConfig, RetainedRende
 import { builtinRetainedRendererFactory, createRetainedRenderTarget } from '@retikz/render/runtime';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
-import { SceneRuntime } from '../runtime';
-import type { InputRetainedRender, ProcessingResult, VanillaAnimationOptions } from '../runtime';
+import type { InputScene } from '../normalize';
+import { HostedSceneRuntime } from '../runtime';
+import type { ProcessingResult, VanillaAnimationOptions } from '../runtime';
 import { calculateDisplaySize } from './display-size';
 import type {
   HydrateOptions,
@@ -24,7 +26,7 @@ type SvgRetainedRuntimeOptions = Readonly<{
   /** retained renderer 独占的宿主根元素 */
   host: SVGSVGElement;
   /** 初始完整 IR 或 InputScene */
-  input: InputRetainedRender;
+  input: InputScene | IRScene;
   /** runtime-lifetime mount 配置 */
   options: RetainedMountOptions;
   /** 本次挂载使用的 retained Runtime 配置 */
@@ -39,7 +41,7 @@ type CanvasRetainedRuntimeOptions = Readonly<{
   /** retained renderer 独占的宿主根元素 */
   host: HTMLCanvasElement;
   /** 初始完整 IR 或 InputScene */
-  input: InputRetainedRender;
+  input: InputScene | IRScene;
   /** runtime-lifetime mount 配置 */
   options: RetainedMountCanvasOptions;
   /** 本次挂载使用的 retained Runtime 配置 */
@@ -63,7 +65,7 @@ type RetainedProcessingControllerFactory = {
 type DomRetainedProcessingController<TUpdateOptions extends RetainedSvgUpdateOptions | RetainedCanvasUpdateOptions> =
   Readonly<{
     /** 原子提交下一份 InputScene 或 Source IR 与 renderer 可变配置 */
-    update: (source: InputRetainedRender, options?: TUpdateOptions) => void;
+    update: (source: InputScene | IRScene, options?: TUpdateOptions) => void;
     /** 向当前提交帧注册 hydration handlers */
     hydrate: (options: HydrateOptions) => HydrationHandle;
     /** 释放 processing runtime 与已挂载 renderer */
@@ -135,7 +137,7 @@ const createRetainedProcessingControllerImplementation = (
       : undefined;
 
   let render: ReturnType<typeof createRenderTarget>;
-  const processing = SceneRuntime.fromSource(
+  const processing = HostedSceneRuntime.fromSource(
     options.input,
     {
       compile,
@@ -167,7 +169,7 @@ const createRetainedProcessingControllerImplementation = (
       const previousAnimation = currentAnimation;
       currentAnimation = updateOptions.animation ?? currentAnimation;
       try {
-        processing.update(next);
+        processing.replace(next);
         updateHostSize();
       } catch (cause) {
         currentAnimation = previousAnimation;

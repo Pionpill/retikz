@@ -39,22 +39,21 @@ type InputPath = Omit<IRPath, 'children' | 'arrow'> & {
 } & RequireExactlyOne<{ children: ReadonlyArray<InputStep>; way: WayDSL }>;
 
 type InputScene = Omit<IRScene, 'type' | 'version' | 'children'> & {
-  readonly type?: 'scene';
+  readonly type: 'scene';
   readonly version?: never;
-} & (
-    | { readonly children: ReadonlyArray<InputChild>; readonly layers?: never }
-    | { readonly layers: ReadonlyArray<InputLayer>; readonly children?: never }
-  );
+  readonly authoring?: unknown;
+  readonly children: ReadonlyArray<InputChild>;
+};
 
 declare const normalizeNode: (input: InputNode) => IRNode;
 declare const normalizePath: (input: InputPath) => IRPath;
 declare const normalizeScope: (input: InputScope) => IRScope;
-declare const normalizeScene: (input: InputScene, options?: InputNormalizeOptions) => NormalizedInputScene;
+declare const normalizeScene: (input: InputScene) => NormalizedScene;
 ```
 
 进入 Scene、Layer 或 Scope 的作者子项必须显式携带实体 `type`；Node、Path、Scope 不根据其它字段推断类别。具名 helper 和框架组件负责填入各自类别，调用方无需重复声明。
 
-`InputScene` 取代既有 Vanilla plain spec，成为 plain API 与所有框架 adapter 共用的唯一顶层 typed authoring 契约；不保留另一个平行顶层 spec 或兼容别名。它要么直接拥有有序 `InputChild`，要么拥有有序 `InputLayer`，两种形态不能并存。Layer 只表达 authoring 顺序、身份与运行时缓存提示，不进入 Core IR；归一化以稳定顺序把其 children 汇入唯一的 `IRScene`，同时保留对应 runtime metadata。
+`InputScene` 取代既有 Vanilla plain spec，成为 plain API 与所有框架 adapter 共用的唯一顶层 typed authoring 契约；不保留另一个平行顶层 spec 或兼容别名。每个 InputScene 只声明一张图的有序子项。具名图层通过独立层栈组合完整场景，不进入 Core IR，也不改变单图归一化的结果形态。
 
 `version` 只属于 Core 可持久化 IR Schema：`IRScene.version` 固定为当前 IR 版本。`InputScene` 不携带 `version`，因此 Vanilla 可以在已类型化边界以它与 `IRScene` 区分；不以 `type`、children 或 layer 形态猜测输入阶段。
 
@@ -64,7 +63,7 @@ declare const normalizeScene: (input: InputScene, options?: InputNormalizeOption
 
 可选 authoring metadata 只用于 provenance 与 framework-neutral compile-result-extension observation：它随 `InputScene`、Layer、Child 或 Embed 的 authoring site 只读传递，normalizer 不解释、不把它变成图形语义，且它永不写入 Core IR、Scene、artifact、manifest 或 Composite dependency。它不是字段扩展、领域配置或第二条 Input 路径。
 
-`normalizeScene` 是统一顶层入口，返回 `NormalizedInputScene`：其中唯一的 Source IR、按显式 adapter 收集的 Composite dependency contribution、authoring provenance 与 runtime metadata 必须来自同一次有序归一化，不能由调用方再做第二次 children 遍历或手工合并。只有 `NormalizedInputScene.ir` 与 Vanilla processing 通过既有 Core resolver 得到的 definitions 能交给 Core；contribution、provenance 与 runtime metadata 只供 Vanilla processing 使用，既不成为 Core compile 的平行输入，也不替代既有 resolver 输入。其 options 只接收显式 Vanilla adapter 与 processing 已准备的窄 Theme context；调用方的 Core Composite definitions 与 Theme style definitions 只经 `ProcessingOptions.compile` 进入 Vanilla processing，再由该 owner 调度既有 Core resolver。`normalizeNode`、`normalizePath` 等实体 normalizer 仍直接返回对应 `IRXxx`，以便组合出该顶层结果。
+`normalizeScene` 是统一顶层入口，返回 `NormalizedScene`：其中唯一的 Source IR、按显式 adapter 收集的 Composite dependency contribution、authoring provenance 与 runtime metadata 必须来自同一次有序归一化，不能由调用方再做第二次 children 遍历或手工合并。只有 `NormalizedScene.ir` 与 Vanilla processing 通过既有 Core resolver 得到的 definitions 能交给 Core；contribution、provenance 与 runtime metadata 只供 Vanilla processing 使用，既不成为 Core compile 的平行输入，也不替代既有 resolver 输入。其 options 只接收显式 Vanilla adapter 与 processing 已准备的窄 Theme context；调用方的 Core Composite definitions 与 Theme style definitions 只经 `ProcessingOptions.compile` 进入 Vanilla processing，再由该 owner 调度既有 Core resolver。`normalizeNode`、`normalizePath` 等实体 normalizer 仍直接返回对应 `IRXxx`，以便组合出该顶层结果。
 
 `InputTarget`、`InputStep` 与其它实际存在的 authoring 子结构遵循同一规则：以最窄的 Source IR 类型派生，只在 authoring 形态确实不同处放宽。无差异的 Source IR 字段直接复用 `IRXxx`，不为命名完整性制造平行类型。
 
@@ -74,7 +73,7 @@ Core 的公开 schema 与类型只描述持久化 IR：`XxxSchema` 和由其推�
 
 Vanilla 根入口同时拥有不依赖 DOM 的处理链。它以 `InputScene | IRScene` 创建 framework-neutral processing controller；两者都是可更新的 source，`InputScene` 先经 Vanilla normalize，`IRScene` 不重复经 Input 或 schema parse。controller 创建时接收固定 processing configuration，更新时只接收下一个 source 与明确可更新的 processing configuration；浏览器宿主可在该 configuration 中注入文字度量等能力，但不得以此重建 compile result extension 或 session。
 
-controller 公开创建、更新、读取、订阅、诊断和释放边界。`read` 与订阅回调只交付不可变 processing result；每份 result 都带 controller 内单调递增的 committed revision，并包含同 revision 的 Core compile result、Scene、只读 layers、artifacts、diagnostics 与 runtime metadata。订阅只观察成功提交的完整 result，取消订阅后不再接收结果。一次更新只有在完整处理成功后才能替换 `read` 的结果并推进 revision；失败不会替换上一个 committed result、不会推进 revision，且通过 controller 的诊断边界报告。释放后 controller 不再接收更新或发布结果。
+controller 公开创建、更新、读取、订阅、诊断和释放边界。`read` 与订阅回调只交付不可变 processing result；每份 result 都带 controller 内单调递增的 committed revision，并包含同 revision 的 Core compile result、Scene、artifacts、diagnostics 与 runtime metadata。订阅只观察成功提交的完整 result，取消订阅后不再接收结果。一次更新只有在完整处理成功后才能替换 `read` 的结果并推进 revision；失败不会替换上一个 committed result、不会推进 revision，且通过 controller 的诊断边界报告。释放后 controller 不再接收更新或发布结果。
 
 processing 在创建 Runtime 前可以接收固定的、领域中立的 transaction participant。该 participant 只能声明 session 创建时所需的 owner snapshot、一次性 commit participant 与后续事务中可更新的 owner snapshot；它不能引入 IR、Schema、registry、compile 规则或第二个 session，也不能在 session 创建后动态追加。此契约是 Vanilla processing 与 DOM materializer 的内部协作边界，不从 Vanilla 根入口暴露为 DOM API 或通用第三方插件机制。
 
@@ -97,7 +96,7 @@ Core `parseXxx` 仍是另一条边界：它接受 unknown、序列化 JSON、字
 
 ## 行为、失败语义与兼容性
 
-- 默认行为：相同 authoring 含义无论来自 Vanilla helper、`InputScene` 或 React JSX，必须得到结构等价的 `NormalizedInputScene.ir`；直接 children 与等价 Layer 输入具有相同的 Core IR 与 contribution 顺序及 compile 结果。随后 Core compile 结果保持不变
+- 默认行为：相同 authoring 含义无论来自 Vanilla helper、`InputScene` 或 React JSX，必须得到结构等价的 `NormalizedScene.ir`；直接 children 与等价 Layer 输入具有相同的 Core IR 与 contribution 顺序及 compile 结果。随后 Core compile 结果保持不变
 - 失败与诊断：unknown、JSON、字符串与 DSL 仍只在 Core parser / schema 边界诊断。Vanilla normalizer 只诊断 TypeScript 不能表达且 Source IR schema 未覆盖的 authoring 组合不变量，不重复 schema 或类型已经保证的检查
 - 兼容性 / breaking：Core 不再导出 authoring `*Input` 类型和只服务该层的 helper；消费方改从 Vanilla 导入 `InputXxx` 与 `normalizeXxx`。不保留旧导入别名或自动迁移路径
 - React / Vanilla 等价性：React 生成同一 `InputScene` / `InputXxx` 语义并调用同一 Vanilla normalizer 与 processing controller；嵌入式 Tier 2 adapter 在 Vanilla 准备的有效 Scope Theme 下生成 contribution。React 特有的 Fragment / JSX children 遍历、Sugar 展开、开发期提示、hook、ref、React 状态订阅和宿主映射不进入 Vanilla

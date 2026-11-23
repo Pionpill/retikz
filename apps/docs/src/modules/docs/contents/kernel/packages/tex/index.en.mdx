@@ -21,10 +21,10 @@ Compare inline, explicit-segment, and display formulas below. Choose the intende
 
 Choose the injection entry for your host. Formulas enter MathJax lowering only after a lowerer is injected; without it, `$...$` strings stay compatible ordinary text and explicit math segments are skipped with a Core warning.
 
-| Host    | Entry              | Integration point                                                                |
-| ------- | ------------------ | -------------------------------------------------------------------------------- |
-| React   | `useLowerTex()`    | Inject the ready lowerer with `<Layout lowerTex={lowerTex}>`                     |
-| Vanilla | `createLowerTex()` | Pass `{ compile: { lowerTex } }` to `renderToSvgString` or another compile entry |
+| Host    | Entry              | Integration point                                            |
+| ------- | ------------------ | ------------------------------------------------------------ |
+| React   | `useLowerTex()`    | Inject the ready lowerer with `<Layout lowerTex={lowerTex}>` |
+| Vanilla | `createLowerTex()` | Pass `{ compile: { lowerTex } }` to `compileToScene`         |
 
 <DocTabs defaultValue="react">
 <DocTab value="react" label="React">
@@ -78,10 +78,10 @@ import { createLowerTex, createMathJaxEngine } from '@retikz/tex';
 </DocStep>
 <DocStep title="Integrate and render">
 
-Pass the lowerer as `compile.lowerTex` to `renderToSvgString` to produce an SVG string.
+Pass the lowerer as `compile.lowerTex` to `compileToScene`, then serialize the resulting Scene.
 
 ```ts
-import { node, renderToSvgString, scene } from '@retikz/vanilla';
+import { compileToScene, node, renderToSvgString, scene } from '@retikz/vanilla';
 import { createLowerTex, createMathJaxEngine } from '@retikz/tex';
 
 const lowerTex = createLowerTex(await createMathJaxEngine({ profile: 'math' }));
@@ -89,7 +89,8 @@ const input = scene({
   children: [node({ id: 'formula', position: [0, 0], text: '$\\frac{a}{b} = c$' })],
 });
 
-const svg = renderToSvgString(input, { compile: { lowerTex } });
+const { compileResult } = compileToScene(input, { compile: { lowerTex } });
+const svg = renderToSvgString(compileResult.scene);
 ```
 
 If the engine and lowerer do not need separate configuration, await `createMathJaxLowerTex(options)` instead. Vanilla does not require React or `@retikz/tex/react`.

@@ -1,5 +1,5 @@
 import { createInputScene, Layout, Node, Scope } from '@retikz/react';
-import { normalizeScene, renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, normalizeScene, renderToSvgString } from '@retikz/vanilla';
 import type { FC } from 'react';
 
 import { RawSvgFrame } from '@/modules/docs/components/component-preview/source-panel/RawSvgFrame';
@@ -45,9 +45,10 @@ export const previewSource = {
     const authoring = createInputScene(<Content />);
     const input = { ...authoring, ...(theme === undefined ? {} : { theme }) };
     const ir = normalizeScene(input).ir;
-    const svg = renderToSvgString(input, {
+    const { compileResult } = compileToScene(input, {
       compile: { clips: [roundedRectClip], measureText: browserMeasurer },
     });
+    const svg = renderToSvgString(compileResult.scene);
 
     return {
       ir: {

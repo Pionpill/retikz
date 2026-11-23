@@ -14,7 +14,7 @@ describe('@retikz/vanilla 入口边界', () => {
       'scope',
       'embed',
       'BuiltinLayerName',
-      'createProcessingController',
+      'SceneRuntime',
       'DrawWay',
       'parseNodeTarget',
       'parseTargetSugar',

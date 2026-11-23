@@ -80,10 +80,10 @@ export const Example = () => (
 </DocTab>
 <DocTab value="vanilla" label="Vanilla">
 
-Build input with `scene` / `path` and assemble the same Definition through `compile.paths` in `renderToSvgString`:
+Build input with `scene` / `path` and assemble the same Definition through `compile.paths` in `compileToScene`:
 
 ```ts
-import { path, renderToSvgString, scene } from '@retikz/vanilla';
+import { compileToScene, path, renderToSvgString, scene } from '@retikz/vanilla';
 
 import { pulseRibbonDefinition } from './pulse-profile';
 
@@ -105,7 +105,8 @@ const input = scene({
   ],
 });
 
-export const svg = renderToSvgString(input, { compile: { paths: [pulseRibbonDefinition] } });
+const { compileResult } = compileToScene(input, { compile: { paths: [pulseRibbonDefinition] } });
+export const svg = renderToSvgString(compileResult.scene);
 ```
 
 </DocTab>
@@ -163,12 +164,13 @@ export const Example = () => <Layout ir={ir} extensions={{ paths: [pulseRibbonDe
 To consume the same IR with Vanilla, inject the runtime Definition through the rendering options:
 
 ```ts
-import { renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, renderToSvgString } from '@retikz/vanilla';
 
 import { pulseRibbonDefinition } from './pulse-profile';
 import { ir } from './ribbon-ir';
 
-export const svg = renderToSvgString(ir, { compile: { paths: [pulseRibbonDefinition] } });
+const { compileResult } = compileToScene(ir, { compile: { paths: [pulseRibbonDefinition] } });
+export const svg = renderToSvgString(compileResult.scene);
 ```
 
 </DocStep>
@@ -247,7 +249,7 @@ These are the members needed to define, inject, and reference a profile. See the
       kind: 'property',
       type: 'ReadonlyArray<AnyPathDefinition>',
       description:
-        'Runtime Definitions in Vanilla rendering options; assemble them here when renderToSvgString consumes Vanilla input or IR',
+        'Runtime Definitions in Vanilla compile options; assemble them here when compileToScene consumes Vanilla input or IR',
     },
     {
       name: 'Path.kindOptions.width',

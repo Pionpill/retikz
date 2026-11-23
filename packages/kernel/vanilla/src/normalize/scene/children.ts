@@ -14,7 +14,7 @@ import type {
 import { normalizeNode, normalizePath } from '../element';
 import type { SceneNormalizeContext } from './context';
 import { childSourcePath, embedSlotSourcePath, inputEmbedIdentityOf, scopeContextOf } from './context';
-import type { InputAuthoringSite, InputChild } from './types';
+import type { InputScene, InputAuthoringSite, InputChild } from './types';
 
 /** 只有作者侧 target 简写需要转换，纯 Core 步骤保持原样 */
 const hasTargetShorthand = (step: InputStep): boolean =>
@@ -34,7 +34,7 @@ const isInputPath = (child: InputChild): child is InputPath =>
 
 /** 将嵌入 slot 的 Input child 在当前 Scene traversal 中归一化 */
 export const normalizeEmbeddedChildren = (
-  children: ReadonlyArray<InputChild>,
+  children: InputScene['children'],
   context: SceneNormalizeContext,
 ): EmbedChildrenNormalizationResult => {
   const contributions: Array<CoreProviderContribution> = [];

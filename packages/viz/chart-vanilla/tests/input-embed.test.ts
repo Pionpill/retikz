@@ -1,4 +1,4 @@
-import { renderToSvgString, scene } from '@retikz/vanilla';
+import { compileToScene, renderToSvgString, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
 import { scatterChart, scatterChartInputEmbedAdapter, bubbleChart } from '../src/point';
@@ -21,7 +21,8 @@ describe('Chart Vanilla 标准组成', () => {
   });
 
   it('渲染为共享 Vanilla 场景的子级', () => {
-    const svg = renderToSvgString(scene({ children: [scatterChart(input)] }));
+    const { compileResult } = compileToScene(scene({ children: [scatterChart(input)] }));
+    const svg = renderToSvgString(compileResult.scene);
 
     expect(svg).toContain('<svg');
     expect(svg).toContain('scatter');
@@ -35,7 +36,8 @@ describe('Chart Vanilla 标准组成', () => {
       encodings: { x: 'x', y: 'y', size: 'size' },
       panel: { position: [700, 0] },
     });
-    const svg = renderToSvgString(scene({ children: [scatterChart(input), bubble] }));
+    const { compileResult } = compileToScene(scene({ children: [scatterChart(input), bubble] }));
+    const svg = renderToSvgString(compileResult.scene);
 
     expect(svg).toContain('scatter');
     expect(svg).toContain('bubble');

@@ -1,6 +1,6 @@
 import { createInputScene, Node } from '@retikz/react';
 import { array, map } from '@retikz/standard-vanilla/collection';
-import { normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
+import { compileToScene, normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
 import { Array, ArrayItem, Map, MapEntry, MapKey, MapValue } from '../src/collection';
@@ -17,7 +17,9 @@ it('通过两个适配器保留具有显式 JSX 单元 ID 和数据的索引标�
   });
 
   expect(normalizeScene(marker).ir).toEqual(normalizeScene(vanillaInput).ir);
-  expect(renderToSvgString(marker)).toEqual(renderToSvgString(vanillaInput));
+  expect(renderToSvgString(compileToScene(marker).compileResult.scene)).toEqual(
+    renderToSvgString(compileToScene(vanillaInput).compileResult.scene),
+  );
 
   const data = createInputScene(<Array id="data" cellIdMode="index" data={['A', 'A']} />);
 
@@ -287,8 +289,11 @@ it('通过 React 和 Vanilla 传递混合的 JSON 数据，具有相同的贡献
 
   expect(reactArray.ir).toEqual(vanillaArray.ir);
   expect(reactArray.contributions).toEqual(vanillaArray.contributions);
-  expect(renderToSvgString(input)).toEqual(
-    renderToSvgString(scene({ children: [map({ data, defaultCell: { value: { layout: { width: 70 } } } })] })),
+  expect(renderToSvgString(compileToScene(input).compileResult.scene)).toEqual(
+    renderToSvgString(
+      compileToScene(scene({ children: [map({ data, defaultCell: { value: { layout: { width: 70 } } } })] }))
+        .compileResult.scene,
+    ),
   );
 });
 
@@ -308,7 +313,9 @@ it.each([false, [], ['map'], ['array']] as const)('保留数据扩展 %j 到 Rea
   expect(react.ir).toEqual(vanilla.ir);
   expect(react.ir.children[0]).toMatchObject({ data, dataExpand });
   expect(react.ir.children[1]).toMatchObject({ data: { value: data }, dataExpand });
-  expect(renderToSvgString(reactInput)).toEqual(renderToSvgString(vanillaInput));
+  expect(renderToSvgString(compileToScene(reactInput).compileResult.scene)).toEqual(
+    renderToSvgString(compileToScene(vanillaInput).compileResult.scene),
+  );
 });
 
 it('保留数据和标记输入中的容器标签以及匹配的 Vanilla 输出', () => {
@@ -330,9 +337,10 @@ it('保留数据和标记输入中的容器标签以及匹配的 Vanilla 输出'
 
   expect(normalizeScene(input).ir).toEqual(normalizeScene(vanillaInput).ir);
 
-  const svg = renderToSvgString(input);
+  const { compileResult } = compileToScene(input);
+  const svg = renderToSvgString(compileResult.scene);
 
-  expect(svg).toEqual(renderToSvgString(vanillaInput));
+  expect(svg).toEqual(renderToSvgString(compileToScene(vanillaInput).compileResult.scene));
   expect(svg).toContain('Container title');
   expect(svg).toContain('Below');
 });
@@ -357,7 +365,9 @@ it('骨架的格内外标号与 Map 键在 React 和 Vanilla 中等价', () => {
   const normalized = normalizeScene(react);
 
   expect(normalized.ir).toEqual(normalizeScene(vanilla).ir);
-  expect(renderToSvgString(react)).toEqual(renderToSvgString(vanilla));
+  expect(renderToSvgString(compileToScene(react).compileResult.scene)).toEqual(
+    renderToSvgString(compileToScene(vanilla).compileResult.scene),
+  );
 });
 it('空 marker 保留格子与 Map 角色，显式空文字仍然保留', () => {
   const react = createInputScene(
@@ -381,5 +391,7 @@ it('空 marker 保留格子与 Map 角色，显式空文字仍然保留', () => 
   const normalized = normalizeScene(react);
 
   expect(normalized.ir).toEqual(normalizeScene(vanilla).ir);
-  expect(renderToSvgString(react)).toEqual(renderToSvgString(vanilla));
+  expect(renderToSvgString(compileToScene(react).compileResult.scene)).toEqual(
+    renderToSvgString(compileToScene(vanilla).compileResult.scene),
+  );
 });

@@ -1,17 +1,10 @@
 import { createCompositeInputBindings, resolveCoreProviderDependencies } from '@retikz/core';
+import type { IRScene } from '@retikz/core';
 
-import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../error';
-import type { InputAuthoringSite, InputLayer, InputScene } from '../../normalize';
+import type { InputAuthoringSite, InputScene, LayerName } from '../../normalize';
 import { isInputScene, BuiltinLayerName, normalizeSceneLayer } from '../../normalize';
 import { createDefaultTextMeasurer } from './text';
-import type { InputPreparedProcessing, ProcessingOptions, ProcessingSource } from './types';
-
-/** 单图入口的默认层；显式层必须已经过视口分派 */
-const implicitLayer = (source: InputScene): InputLayer => {
-  if (source.children === undefined)
-    throw new RetikzVanillaError(RetikzVanillaErrorCode.Processing, 'Expected a single scene, received a layer stack');
-  return { type: 'layer', name: BuiltinLayerName.Main, children: source.children };
-};
+import type { InputPreparedProcessing, ProcessingOptions } from './types';
 
 const EMPTY_AUTHORING_SITES: ReadonlyArray<InputAuthoringSite> = Object.freeze([]);
 
@@ -42,12 +35,12 @@ const prepareNormalizedInput = (
 
 /** 将 typed InputScene 或已类型化 IRScene 准备为 processing 的唯一 Core 输入 */
 export const prepareProcessingInput = (
-  source: ProcessingSource,
+  source: InputScene | IRScene,
   options: ProcessingOptions,
-  layer?: InputLayer,
+  layerName: LayerName = BuiltinLayerName.Main,
 ): InputPreparedProcessing => {
   if (isInputScene(source)) {
-    const normalized = normalizeSceneLayer(source, layer ?? implicitLayer(source));
+    const normalized = normalizeSceneLayer(source, layerName);
     return prepareNormalizedInput(normalized, options.compile);
   }
 

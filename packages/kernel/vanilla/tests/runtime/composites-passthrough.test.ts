@@ -3,11 +3,11 @@ import { CompositeBaseSchema, defineComposite } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { literal, string } from 'zod';
 
-import { renderToSvgString } from '../../src';
+import { compileToScene, renderToSvgString } from '../../src';
 
 /*
  * @retikz/vanilla composites 透传（SSR / 构建期）
- * @description CommonOptions.compile 承载 core CompileOptions；composites 随 compile 自动透传给 SceneReconciler；展开在 core
+ * @description ProcessingOptions.compile 承载 core CompileOptions；composites 随 compile 自动透传给 SceneReconciler；展开在 core
  */
 const labeledBox = defineComposite({
   namespace: 'example',
@@ -29,12 +29,13 @@ const ir: IRScene = {
 };
 
 describe('@retikz/vanilla composites 透传', () => {
-  it('renderToSvgString 透传 composites → 渲染出 rect', () => {
-    expect(renderToSvgString(ir, { compile: { composites: [labeledBox] } })).toContain('<rect');
+  it('编译时注入 composite 后，SVG 包含展开的矩形', () => {
+    expect(
+      renderToSvgString(compileToScene(ir, { compile: { composites: [labeledBox] } }).compileResult.scene),
+    ).toContain('<rect');
   });
 
   it('未注入对应 composite → 跳过该节点（不抛、不渲染 rect）', () => {
-    expect(() => renderToSvgString(ir)).not.toThrow();
-    expect(renderToSvgString(ir)).not.toContain('<rect');
+    expect(renderToSvgString(compileToScene(ir).compileResult.scene)).not.toContain('<rect');
   });
 });

@@ -1,15 +1,15 @@
-import { createProcessingController, normalizeScene, scene } from '@retikz/vanilla';
+import { SceneRuntime, normalizeScene, scene } from '@retikz/vanilla';
 import type { InputPath } from '@retikz/vanilla';
 import { expect, it } from 'vitest';
 
 import { chain, matrix } from '../src/collection';
 
 it('嵌套内容失败时保留上一次完整链，随后可正常更新', () => {
-  const controller = createProcessingController(scene({ children: [chain({ items: ['A', 'B'] })] }));
+  const controller = SceneRuntime.fromInput(scene({ children: [chain({ items: ['A', 'B'] })] }));
   const previous = controller.read();
 
   expect(() =>
-    controller.update(
+    controller.replace(
       scene({
         children: [
           chain({
@@ -21,7 +21,7 @@ it('嵌套内容失败时保留上一次完整链，随后可正常更新', () =
   ).toThrow();
   expect(controller.read()).toBe(previous);
 
-  controller.update(scene({ children: [chain({ skeleton: { items: ['A', { branches: [['B'], ['C']] }, 'D'] } })] }));
+  controller.replace(scene({ children: [chain({ skeleton: { items: ['A', { branches: [['B'], ['C']] }, 'D'] } })] }));
 
   expect(controller.read().revision).toBe(previous.revision + 1);
 
@@ -34,7 +34,7 @@ it('三入口和嵌套内容进入 retained 时保持 JSON-safe', () => {
     chain({ data: [{ a: [1, 2] }] }),
     chain({ skeleton: { items: ['a', { branches: [['b'], ['c']] }, 'd'] } }),
   ]) {
-    const controller = createProcessingController(scene({ children: [child] }));
+    const controller = SceneRuntime.fromInput(scene({ children: [child] }));
 
     expect(controller.read().compileResult.scene.primitives.length).toBeGreaterThan(0);
 

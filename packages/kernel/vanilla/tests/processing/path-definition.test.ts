@@ -3,7 +3,7 @@ import { PathSchema } from '@retikz/core';
 import { expect, it } from 'vitest';
 import { literal } from 'zod';
 
-import { createProcessingController, compileToScene } from '../../src';
+import { SceneRuntime, compileToScene } from '../../src';
 import { prepareProcessingInput } from '../../src/runtime/_input/prepare';
 import { compileTestResult } from '../helpers/compilation';
 
@@ -28,7 +28,7 @@ it('保留完整 Path definition，并在 static 与 retained processing 中执�
   const prepared = prepareProcessingInput(input, options);
   expect(prepared.coreOptions.paths?.[0]).toBe(definition);
   const direct = compileTestResult(input, options.compile).scene;
-  const retained = createProcessingController(input, options);
+  const retained = SceneRuntime.fromIR(input, options);
   try {
     expect(compileToScene(input, options).compileResult.scene).toEqual(direct);
     expect(retained.read().compileResult.scene).toEqual(direct);

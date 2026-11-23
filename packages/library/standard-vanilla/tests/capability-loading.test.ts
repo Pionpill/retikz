@@ -1,6 +1,6 @@
 import { axes, frame, grid, legend, surface, surfaceChild } from '@retikz/standard-vanilla/presentation';
 import { createGrid, gridDefinition, LegendContentKind } from '@retikz/standard/presentation';
-import { normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
+import { compileToScene, normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
 const input = scene({
@@ -33,24 +33,26 @@ describe('Standard Vanilla 定义加载', () => {
       children: [createGrid({ bounds: { start: [0, 0], end: [20, 20] }, line: { spacing: 10 } })],
     };
 
-    expect(() => renderToSvgString(ir, { compile: { composites: [gridDefinition] } })).not.toThrow();
+    expect(() =>
+      renderToSvgString(compileToScene(ir, { compile: { composites: [gridDefinition] } }).compileResult.scene),
+    ).not.toThrow();
   });
 
   it('对相同显式定义对象进行去重，并拒绝同一键上的不同对象', () => {
     expect(() =>
       renderToSvgString(
-        scene({ children: [grid({ bounds: { start: [0, 0], end: [20, 20] }, line: { spacing: 10 } })] }),
-        {
-          compile: { composites: [gridDefinition] },
-        },
+        compileToScene(
+          scene({ children: [grid({ bounds: { start: [0, 0], end: [20, 20] }, line: { spacing: 10 } })] }),
+          { compile: { composites: [gridDefinition] } },
+        ).compileResult.scene,
       ),
     ).not.toThrow();
     expect(() =>
       renderToSvgString(
-        scene({ children: [grid({ bounds: { start: [0, 0], end: [20, 20] }, line: { spacing: 10 } })] }),
-        {
-          compile: { composites: [{ ...gridDefinition }] },
-        },
+        compileToScene(
+          scene({ children: [grid({ bounds: { start: [0, 0], end: [20, 20] }, line: { spacing: 10 } })] }),
+          { compile: { composites: [{ ...gridDefinition }] } },
+        ).compileResult.scene,
       ),
     ).toThrow(/definition conflict.*standard\.grid/i);
   });

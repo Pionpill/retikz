@@ -46,10 +46,11 @@ export const Example = () => <Layout ir={ir} composites={[starDefinition]} />;
 
 ```ts
 import { shape } from '@retikz/standard-vanilla/shape';
-import { scene, renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, scene, renderToSvgString } from '@retikz/vanilla';
 
 const input = scene({ children: [shape.star({ center: [0, 0], outerRadius: 36, innerRadius: 16, points: 5 })] });
-const svg = renderToSvgString(input);
+const { compileResult } = compileToScene(input);
+const svg = renderToSvgString(compileResult.scene);
 console.log(svg);
 ```
 
@@ -59,14 +60,15 @@ console.log(svg);
 ```ts
 import type { IRScene } from '@retikz/core';
 import { starDefinition } from '@retikz/standard/shape';
-import { renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, renderToSvgString } from '@retikz/vanilla';
 
 const ir: IRScene = {
   type: 'scene',
   version: 1,
   children: [{ namespace: 'standard', type: 'star', center: [0, 0], outerRadius: 36, innerRadius: 16, points: 5 }],
 };
-const svg = renderToSvgString(ir, { compile: { composites: [starDefinition] } });
+const { compileResult } = compileToScene(ir, { compile: { composites: [starDefinition] } });
+const svg = renderToSvgString(compileResult.scene);
 console.log(svg);
 ```
 

@@ -1,14 +1,8 @@
 import type { AnyCompositeDefinition, IRScene } from '@retikz/core';
 import type { CompileOptions } from '@retikz/reconciler';
 
-import type { InputAuthoringSite, LayerOptions, InputScene, InputSceneChildren } from '../../normalize';
+import type { InputAuthoringSite, LayerOptions } from '../../normalize';
 import type { VanillaCompileResultExtension } from '../compile';
-
-/** 可进入 Vanilla 框架无关 processing 的作者输入 */
-export type ProcessingSource = InputScene | IRScene;
-
-/** 单图作者输入或其持久化 IR */
-export type SingleSceneSource = InputSceneChildren | IRScene;
 
 /** 由调用方在 controller 生命周期内保持稳定的框架无关配置 */
 export type ProcessingOptions = LayerOptions &

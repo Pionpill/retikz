@@ -1,6 +1,6 @@
-import type { Scene } from '@retikz/core';
+import type { IRScene, Scene } from '@retikz/core';
 
-import type { InputRender, InputRetainedRender } from '../runtime';
+import type { InputScene } from '../normalize';
 import { mountCanvas } from './mount-canvas';
 import { mountSvg } from './mount-svg';
 import type {
@@ -51,23 +51,23 @@ type MountFn = {
   (container: Element, input: Scene, options: StaticMountUnifiedOptions & { renderer: 'canvas' }): StaticCanvasView;
   (
     container: Element,
-    input: InputRetainedRender,
+    input: InputScene | IRScene,
     options: RawStaticMountUnifiedOptions & { renderer: 'canvas' },
   ): StaticRawCanvasView;
   (
     container: Element,
-    input: InputRetainedRender,
+    input: InputScene | IRScene,
     options: RetainedMountUnifiedOptions & { renderer: 'canvas' },
   ): RetainedCanvasView;
   (container: Element, input: Scene, options?: StaticMountUnifiedOptions & { renderer?: 'svg' }): StaticSvgView;
   (
     container: Element,
-    input: InputRetainedRender,
+    input: InputScene | IRScene,
     options: RawStaticMountUnifiedOptions & { renderer?: 'svg' },
   ): StaticRawSvgView;
   (
     container: Element,
-    input: InputRetainedRender,
+    input: InputScene | IRScene,
     options?: RetainedMountUnifiedOptions & { renderer?: 'svg' },
   ): RetainedSvgView;
 };
@@ -75,7 +75,7 @@ type MountFn = {
 /** 按 renderer 把输入挂载为 SVG 或 Canvas view；缺省使用 SVG */
 export const mount: MountFn = ((
   container: Element,
-  input: InputRender,
+  input: Scene | InputScene | IRScene,
   options: StaticMountUnifiedOptions | MountUnifiedOptions = {},
 ): VanillaView | CanvasView => {
   if ('primitives' in input) {
@@ -87,12 +87,12 @@ export const mount: MountFn = ((
   const rawOptions = options as MountUnifiedOptions;
   const mountRawCanvas = mountCanvas as (
     target: Element,
-    source: InputRetainedRender,
+    source: InputScene | IRScene,
     mountOptions: MountCanvasOptions,
   ) => CanvasView;
   const mountRawSvg = mountSvg as (
     target: Element,
-    source: InputRetainedRender,
+    source: InputScene | IRScene,
     mountOptions: MountOptions,
   ) => VanillaView;
   if (rawOptions.renderer === 'canvas') return mountRawCanvas(container, input, rawOptions);

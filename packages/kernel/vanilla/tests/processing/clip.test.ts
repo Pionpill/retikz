@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { literal, strictObject } from 'zod';
 
 import type { InputEmbedAdapter, InputScene } from '../../src';
-import { embed, createProcessingController, normalizeScene, compileToScene } from '../../src';
+import { embed, SceneRuntime, normalizeScene, compileToScene } from '../../src';
 import { prepareProcessingInput } from '../../src/runtime/_input/prepare';
 import { compileTestResult } from '../helpers/compilation';
 
@@ -42,7 +42,7 @@ describe('Vanilla 裁剪处理等价性', () => {
     const compile = { clips: [customClip()] };
     const direct = compileTestResult(normalizeScene(input).ir, compile).scene;
     const staticResult = compileToScene(input, { compile });
-    const retained = createProcessingController(input, { compile });
+    const retained = SceneRuntime.fromInput(input, { compile });
 
     expect(staticResult.compileResult.scene).toEqual(direct);
     expect(retained.read().compileResult.scene).toEqual(direct);

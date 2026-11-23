@@ -73,15 +73,6 @@ type TypedChartComponent<TInput> = {
   createInputEmbedProps: (props: Readonly<Record<string, unknown>>) => TInput;
 };
 
-const sceneChildrenOf = (inputScene: InputScene): ReadonlyArray<InputChild> => {
-  if ('children' in inputScene) return inputScene.children ?? [];
-
-  return inputScene.layers
-    .map((layer, index) => ({ layer, index }))
-    .sort((left, right) => (left.layer.zIndex ?? 0) - (right.layer.zIndex ?? 0) || left.index - right.index)
-    .flatMap(({ layer }) => layer.children);
-};
-
 const GRAPH_DEFINITION_OPTION_KEYS = new Set([
   'diagramThemeDefinitions',
   'flowThemeDefinitions',
@@ -425,7 +416,7 @@ export const buildPreviewSourceIR = (
   runtime: IRScene,
   chartSources: ReadonlyArray<TypedChartSource>,
 ): IRScene => {
-  const inputChildren = sceneChildrenOf(input);
+  const inputChildren = input.children;
   if (inputChildren.length !== runtime.children.length) return runtime;
 
   const chartIndex = { value: 0 };

@@ -1,5 +1,5 @@
 import { SlopeChartSchema } from '@retikz/chart/line';
-import { normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
+import { compileToScene, normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
 import { slopeChart, slopeMark, normalizeSlopeChart } from '../../src/line';
@@ -27,7 +27,7 @@ describe('Slope Vanilla 输入闭环', () => {
   });
 
   it('Slope 和 Point provider 在同一场景独立编译并生成 SVG', () => {
-    const svg = renderToSvgString(
+    const { compileResult } = compileToScene(
       scene({
         children: [
           slopeChart({
@@ -47,6 +47,7 @@ describe('Slope Vanilla 输入闭环', () => {
         ],
       }),
     );
+    const svg = renderToSvgString(compileResult.scene);
     expect(svg).toContain('<svg');
     expect(svg).toContain('trend');
     expect(svg).toContain('observations');

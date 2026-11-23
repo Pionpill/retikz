@@ -13,7 +13,7 @@ description: 自定义图案通过 PatternDefinition 生成重复单元，使用
 
 <ComponentPreview files="custom-pattern-basic" size="sm" />
 
-React 使用 `extensions={{ patterns: [cross] }}`；Vanilla 在 mount / renderToSvgString 的 `compile: { patterns: [cross] }` 中注入。Core 编译时使用 CompileOptions.patterns。定义属于宿主配置，不能把 emit 函数写进 IR。
+React 使用 `extensions={{ patterns: [cross] }}`；Vanilla 在 mount / compileToScene 的 `compile: { patterns: [cross] }` 中注入。Core 编译时使用 CompileOptions.patterns。定义属于宿主配置，不能把 emit 函数写进 IR。
 
 ## 控制重复周期
 

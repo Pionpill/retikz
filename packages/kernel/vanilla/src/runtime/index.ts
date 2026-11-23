@@ -1,5 +1,10 @@
-export type { ProcessingSource, SingleSceneSource, ProcessingOptions, InputPreparedProcessing } from './_input';
-export { compileToScene, defaultVanillaCompileResultExtension, prepareStaticProcessing } from './compile';
+export type { ProcessingOptions, InputPreparedProcessing } from './_input';
+export {
+  compileLayers,
+  compileToScene,
+  defaultVanillaCompileResultExtension,
+  prepareStaticProcessing,
+} from './compile';
 export type {
   InputVanillaCompileResultExtension,
   VanillaCompileResultExtension,

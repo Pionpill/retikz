@@ -1,4 +1,4 @@
-import type { Scene } from '@retikz/core';
+import type { IRScene, Scene } from '@retikz/core';
 import type { CompileResult } from '@retikz/reconciler';
 import type { AnimationControls } from '@retikz/render/animation';
 import {
@@ -18,11 +18,12 @@ import {
 import { buildSvgDocument } from '@retikz/render/svg';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
-import { DEFAULT_ID_PREFIX, EMPTY_ARTIFACTS, sceneOfResult, toSceneResult } from '../runtime';
-import type { InputRender, InputRetainedRender } from '../runtime';
+import type { InputScene } from '../normalize';
+import { DEFAULT_ID_PREFIX } from '../runtime';
 import { VanillaViewMode } from './constants';
 import { calculateDisplaySize } from './display-size';
 import { createRetainedProcessingController } from './retained';
+import { resolveStaticMountScene, EMPTY_ARTIFACTS } from './static-scene';
 import { applyAttrs, svgNodeToDom } from './svg-dom';
 import type {
   HydrateOptions,
@@ -46,7 +47,7 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
  */
 const mountStaticSvg = (
   container: Element,
-  input: InputRender,
+  input: Scene | InputScene | IRScene,
   options: StaticMountOptions | RawStaticMountOptions,
 ): StaticSvgView | StaticRawSvgView => {
   const output = options.output ?? {};
@@ -59,11 +60,10 @@ const mountStaticSvg = (
   let currentCompileResult: CompileResult | undefined;
   const liveHydrationDisposers = new Set<() => void>();
 
-  const renderInto = (next: InputRender): void => {
-    const result = toSceneResult(next, options);
-    const scene = sceneOfResult(result);
+  const renderInto = (next: Scene | InputScene | IRScene): void => {
+    const { scene, compileResult } = resolveStaticMountScene(next, options);
     currentScene = scene;
-    currentCompileResult = 'compileResult' in result ? result.compileResult : undefined;
+    currentCompileResult = compileResult;
     const doc = buildSvgDocument(scene, {
       idPrefix,
       animate,
@@ -115,7 +115,7 @@ const mountStaticSvg = (
   return {
     mode: VanillaViewMode.Static,
     root,
-    update(next: InputRender) {
+    update(next: Scene | InputScene | IRScene) {
       if (disposed) throw new RetikzVanillaError(RetikzVanillaErrorCode.Dom, 'mountSvg: view already disposed.');
       renderInto(next);
     },
@@ -144,7 +144,7 @@ const mountStaticSvg = (
 /** 把 IR / InputScene 挂成 retained SVG Runtime */
 const mountRetainedSvg = (
   container: Element,
-  input: InputRetainedRender,
+  input: InputScene | IRScene,
   options: RetainedMountOptions,
   runtimeOptions: VanillaRetainedRuntimeOptions,
 ): RetainedSvgView => {
@@ -191,14 +191,14 @@ const mountRetainedSvg = (
 /** `mountSvg` 的 static / retained 输入重载 */
 type MountSvg = {
   (container: Element, input: Scene, options?: StaticMountOptions): StaticSvgView;
-  (container: Element, input: InputRetainedRender, options: RawStaticMountOptions): StaticRawSvgView;
-  (container: Element, input: InputRetainedRender, options?: RetainedMountOptions): RetainedSvgView;
+  (container: Element, input: InputScene | IRScene, options: RawStaticMountOptions): StaticRawSvgView;
+  (container: Element, input: InputScene | IRScene, options?: RetainedMountOptions): RetainedSvgView;
 };
 
 /** 挂载 SVG 视图；预编译 Scene 只能走 static 路径 */
 export const mountSvg: MountSvg = ((
   container: Element,
-  input: InputRender,
+  input: Scene | InputScene | IRScene,
   options: StaticMountOptions | MountOptions = {},
 ): VanillaView => {
   if ('primitives' in input) {

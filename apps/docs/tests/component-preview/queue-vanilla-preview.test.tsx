@@ -1,5 +1,5 @@
 import { createInputScene } from '@retikz/react';
-import { createProcessingController } from '@retikz/vanilla';
+import { SceneRuntime } from '@retikz/vanilla';
 import { expect, it } from 'vitest';
 
 import { buildPreviewIR } from '../../src/modules/docs/components/component-preview/utils';
@@ -22,7 +22,7 @@ it('Queue 操作箭头在 SVG 与保留模式更新中可独立切换', () => {
       }).props.children,
     );
   const first = input(true, true);
-  const controller = createProcessingController(first);
+  const controller = SceneRuntime.fromInput(first);
   try {
     for (const [incoming, outgoing] of [
       [false, true],
@@ -30,7 +30,7 @@ it('Queue 操作箭头在 SVG 与保留模式更新中可独立切换', () => {
       [false, false],
       [true, true],
     ]) {
-      controller.update(input(incoming, outgoing));
+      controller.replace(input(incoming, outgoing));
       const serialized = JSON.stringify(controller.read().compileResult.scene);
       expect(serialized.includes('dodgerblue')).toBe(incoming);
       expect(serialized.includes('darkorange')).toBe(outgoing);
@@ -79,10 +79,10 @@ it.each([true, false])('matrix=%s 时 Queue 虚线单元格在保留模式更新
   const input = (dashed: boolean) =>
     createInputScene(renderComposition({ matrix, dashed, connect: true }).props.children);
   const first = input(true);
-  const controller = createProcessingController(first);
+  const controller = SceneRuntime.fromInput(first);
   try {
     for (const dashed of [false, true, false]) {
-      controller.update(input(dashed));
+      controller.replace(input(dashed));
       expect(JSON.stringify(controller.read().compileResult.scene).includes('"dashPattern":[4,3]')).toBe(dashed);
     }
   } finally {
@@ -98,10 +98,10 @@ it('Queue 数量变化时保留模式更新可在各个方向移除并恢复两�
           .children,
       );
     const first = input('3');
-    const controller = createProcessingController(first);
+    const controller = SceneRuntime.fromInput(first);
     try {
       for (const count of ['0', '1', '3'] as const) {
-        controller.update(input(count));
+        controller.replace(input(count));
         const output = JSON.stringify(controller.read().compileResult.scene);
         for (const color of ['dodgerblue', 'darkorange']) expect(output.includes(color)).toBe(count !== '0');
       }

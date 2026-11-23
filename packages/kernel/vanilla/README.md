@@ -15,7 +15,7 @@ This package is ESM-only and requires Node.js 24 or newer.
 ## Authoring and SSR
 
 ```ts
-import { node, path, renderToSvgString, scene } from '@retikz/vanilla';
+import { compileToScene, node, path, renderToSvgString, scene } from '@retikz/vanilla';
 
 const input = scene({
   children: [
@@ -25,7 +25,8 @@ const input = scene({
   ],
 });
 
-const svg = renderToSvgString(input, { output: { width: 640, height: 360 } });
+const { compileResult } = compileToScene(input);
+const svg = renderToSvgString(compileResult.scene, { output: { width: 640, height: 360 } });
 ```
 
 ## One-shot compilation
@@ -36,7 +37,7 @@ import { compileToScene } from '@retikz/vanilla';
 const result = compileToScene(input);
 ```
 
-For a single graph this returns one processing result; explicit layers return an ordered list of named results. Pass compile configuration under `options.compile`. Await external data before constructing the input or calling the controller’s synchronous update.
+This returns one processing result. For retained work, create a `SceneRuntime` with `fromInput` or `fromIR`, replace the full source with `replace(source)`, or submit an incremental batch with `update(batch, expected)`. Export the committed frame with `runtime.renderToSvgString()`. Use `compileLayers` or `createLayerController` for named layers. Await external data before submitting a source.
 
 ## Browser mounting
 
@@ -52,7 +53,7 @@ view.dispose();
 
 - Root: `InputXxx`, `scene`, `layer`, `node`, `path`, `scope`, `embed`, `normalizeScene`, processing APIs, and `renderToSvgString`
 - DOM sub-entry: `@retikz/vanilla/dom` exports `mount`, `mountSvg`, `mountCanvas`, and `hydrate`
-- Tier 2 packages contribute through `InputEmbedAdapter`; callers provide adapters to the Vanilla processing or render options
+- Tier 2 packages contribute through `InputEmbedAdapter`; each embed carries its adapter into compilation
 
 Path authoring grammar and parsers (`DrawWay`, `WayDSL`, `WayItem`, `parseWay`, `parseWayWithTargets`, `parseNodeTarget`, and `parseTargetSugar`) are owned by `@retikz/vanilla`. String targets and Way operators expand into structured Core IR before compilation. Animation preset factories and extension registrars such as `fadeIn`, `defineArrow`, and `definePath` remain available from `@retikz/core`.
 

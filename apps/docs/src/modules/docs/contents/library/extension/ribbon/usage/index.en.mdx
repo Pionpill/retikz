@@ -79,7 +79,7 @@ export const Example = () => <Layout ir={ir} extensions={{ paths: [ribbonPathDef
 ```ts
 import type { IRRibbonPathOptions } from '@retikz/extension';
 import { ribbonPathDefinition } from '@retikz/extension';
-import { path, renderToSvgString, scene } from '@retikz/vanilla';
+import { compileToScene, path, renderToSvgString, scene } from '@retikz/vanilla';
 
 const input = scene({
   children: [
@@ -95,7 +95,9 @@ const input = scene({
   ],
 });
 
-console.log(renderToSvgString(input, { compile: { paths: [ribbonPathDefinition] } }));
+console.log(
+  renderToSvgString(compileToScene(input, { compile: { paths: [ribbonPathDefinition] } }).compileResult.scene),
+);
 ```
 
 </DocTab>
@@ -105,7 +107,7 @@ console.log(renderToSvgString(input, { compile: { paths: [ribbonPathDefinition] 
 import type { IRScene } from '@retikz/core';
 import type { IRRibbonPathOptions } from '@retikz/extension';
 import { ribbonPathDefinition } from '@retikz/extension';
-import { renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, renderToSvgString } from '@retikz/vanilla';
 
 const ir: IRScene = {
   type: 'scene',
@@ -124,7 +126,8 @@ const ir: IRScene = {
   ],
 };
 
-console.log(renderToSvgString(ir, { compile: { paths: [ribbonPathDefinition] } }));
+const { compileResult } = compileToScene(ir, { compile: { paths: [ribbonPathDefinition] } });
+console.log(renderToSvgString(compileResult.scene));
 ```
 
 </DocTab>

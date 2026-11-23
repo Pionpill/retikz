@@ -411,7 +411,7 @@ export const referenceGroups: Readonly<Partial<Record<string, ReadonlyArray<Refe
         zh: '直接调用',
         en: 'Direct calls',
       },
-      members: ['InputLayer', 'InputScene', 'InputSceneChildren', 'InputSceneLayers'],
+      members: ['InputLayer', 'InputScene'],
       schemas: [],
     },
     {

@@ -76,7 +76,7 @@ export const Example = () => <Layout ir={ir} composites={[legendDefinition]} />;
 
 ```ts
 import { legend } from '@retikz/standard-vanilla/presentation';
-import { scene, node, renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, scene, node, renderToSvgString } from '@retikz/vanilla';
 
 const input = scene({
   children: [
@@ -90,7 +90,8 @@ const input = scene({
     }),
   ],
 });
-const svg = renderToSvgString(input);
+const { compileResult } = compileToScene(input);
+const svg = renderToSvgString(compileResult.scene);
 console.log(svg);
 ```
 
@@ -100,7 +101,7 @@ console.log(svg);
 ```ts
 import type { IRScene } from '@retikz/core';
 import { legendDefinition } from '@retikz/standard/presentation';
-import { renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, renderToSvgString } from '@retikz/vanilla';
 
 const ir: IRScene = {
   type: 'scene',
@@ -122,7 +123,8 @@ const ir: IRScene = {
     },
   ],
 };
-const svg = renderToSvgString(ir, { compile: { composites: [legendDefinition] } });
+const { compileResult } = compileToScene(ir, { compile: { composites: [legendDefinition] } });
+const svg = renderToSvgString(compileResult.scene);
 console.log(svg);
 ```
 

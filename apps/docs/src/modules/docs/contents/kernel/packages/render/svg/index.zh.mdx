@@ -38,12 +38,13 @@ const view = mountSvg(container, ir);
 // view.root 是 <svg>；view.update(next) 走所选 static 或 retained processing；view.dispose() 卸载
 ```
 
-**Vanilla（SSR / 构建期）**——`renderToSvgString` 直接产 SVG 字符串，可在 Node 里跑；没有 Canvas 时默认估算文字尺寸：
+**Vanilla（SSR / 构建期）**——`renderToSvgString` 直接产 SVG 字符串，可在 Node 里跑；没有 Canvas 时，文字尺寸由编译步骤估算：
 
 ```ts
-import { renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, renderToSvgString } from '@retikz/vanilla';
 
-const svg = renderToSvgString(ir); // '<svg ...>...</svg>'，可直接放进 HTML
+const { compileResult } = compileToScene(ir);
+const svg = renderToSvgString(compileResult.scene); // '<svg ...>...</svg>'，可直接放进 HTML
 ```
 
 三个入口的输入能力不同：
@@ -52,7 +53,7 @@ const svg = renderToSvgString(ir); // '<svg ...>...</svg>'，可直接放进 HTM
 | ------------------- | ---------------------------------------- | ---------- |
 | React `<Layout>`    | JSX `children`<br />或 `IRScene`         | SVG DOM    |
 | Vanilla `mountSvg`  | `Scene` / `IRScene`<br />或 `InputScene` | SVG DOM    |
-| `renderToSvgString` | `Scene` / `IRScene`<br />或 `InputScene` | SVG 字符串 |
+| `renderToSvgString` | `Scene`                                  | SVG 字符串 |
 
 ## 给 SVG 图加交互
 

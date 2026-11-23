@@ -45,9 +45,9 @@ if (root) createRoot(root).render(<Example />);
 
 ```ts
 import { crossShapeDefinition } from '@retikz/extension';
-import { renderToSvgString, scene } from '@retikz/vanilla';
+import { compileToScene, renderToSvgString, scene } from '@retikz/vanilla';
 
-const svg = renderToSvgString(
+const { compileResult } = compileToScene(
   scene({
     children: [
       {
@@ -61,6 +61,7 @@ const svg = renderToSvgString(
   }),
   { compile: { shapes: [crossShapeDefinition] } },
 );
+const svg = renderToSvgString(compileResult.scene);
 console.log(svg);
 ```
 

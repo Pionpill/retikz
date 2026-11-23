@@ -1,6 +1,6 @@
 import type { CompositeInputBinding, CoreProviderContribution, IRChild } from '@retikz/core';
 
-import type { InputChild } from '../scene';
+import type { InputScene } from '../scene';
 
 /** 嵌入贡献内部按声明顺序收集的运行时作者来源 */
 export type InputEmbedAuthoringSite = Readonly<{
@@ -73,7 +73,7 @@ export type InputEmbedContext = {
   /** 从分层到当前节点的身份路径 */
   identityPath: Array<string>;
   /** 在当前根 Scene traversal 中归一化嵌入 slot 的已类型化 authoring 子项 */
-  normalizeChildren?: (children: ReadonlyArray<InputChild>) => EmbedChildrenNormalizationResult;
+  normalizeChildren?: (children: InputScene['children']) => EmbedChildrenNormalizationResult;
 };
 
 /** Tier 2 adapter 对 Source IR 与 Composite resolver 的贡献 */

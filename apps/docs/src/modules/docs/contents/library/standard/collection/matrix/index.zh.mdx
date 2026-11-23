@@ -35,9 +35,9 @@ export const Example = () => (
 
 ```ts
 import { matrix } from '@retikz/standard-vanilla/collection';
-import { scene, renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, scene, renderToSvgString } from '@retikz/vanilla';
 
-const svg = renderToSvgString(
+const { compileResult } = compileToScene(
   scene({
     children: [
       matrix({
@@ -49,6 +49,7 @@ const svg = renderToSvgString(
     ],
   }),
 );
+const svg = renderToSvgString(compileResult.scene);
 ```
 
 </DocTab>
@@ -57,9 +58,9 @@ const svg = renderToSvgString(
 ```ts
 import { matrixDefinition } from '@retikz/standard/collection';
 import { pathClipDefinition } from '@retikz/extension';
-import { renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, renderToSvgString } from '@retikz/vanilla';
 
-const svg = renderToSvgString(
+const { compileResult } = compileToScene(
   {
     type: 'scene',
     version: 1,
@@ -76,6 +77,7 @@ const svg = renderToSvgString(
   },
   { compile: { composites: [matrixDefinition], clips: [pathClipDefinition] } },
 );
+const svg = renderToSvgString(compileResult.scene);
 ```
 
 </DocTab>

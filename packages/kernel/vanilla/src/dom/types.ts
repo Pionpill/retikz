@@ -1,4 +1,4 @@
-import type { Scene } from '@retikz/core';
+import type { IRScene, Scene } from '@retikz/core';
 import type {
   CompileResult,
   CompositeArtifact,
@@ -9,7 +9,8 @@ import type { AnimationControls } from '@retikz/render/animation';
 import type { HydrationHandlers } from '@retikz/render/hydration';
 import type { RetainedRendererFactory } from '@retikz/render/runtime';
 
-import type { CommonOptions, InputRetainedRender, VanillaAnimationOptions } from '../runtime';
+import type { InputScene } from '../normalize';
+import type { CommonOptions, VanillaAnimationOptions } from '../runtime';
 import type { VanillaViewMode } from './constants';
 
 /** Canvas 专属 runtime 选项 */
@@ -122,7 +123,7 @@ export type RetainedSvgView = VanillaViewState<SVGSVGElement> &
     /** view 执行模式 */
     mode: typeof VanillaViewMode.Retained;
     /** 原子提交下一份未编译输入与可变 renderer config */
-    update: (next: InputRetainedRender, options?: RetainedSvgUpdateOptions) => void;
+    update: (next: InputScene | IRScene, options?: RetainedSvgUpdateOptions) => void;
     /** 返回并清空 Runtime diagnostics */
     diagnostics: () => ReadonlyArray<ReconcilerDiagnostic>;
   }>;
@@ -142,7 +143,7 @@ export type StaticRawSvgView = VanillaViewState<SVGSVGElement> &
     /** view 执行模式 */
     mode: typeof VanillaViewMode.Static;
     /** 完整归一化、编译并重绘下一份 IR 或 InputScene */
-    update: (next: InputRetainedRender) => void;
+    update: (next: InputScene | IRScene) => void;
   }>;
 
 /** `mountSvg` 返回的可判别 view */
@@ -196,7 +197,7 @@ export type RetainedCanvasView = CanvasViewState &
     /** view 执行模式 */
     mode: typeof VanillaViewMode.Retained;
     /** 原子提交下一份未编译输入与可变 renderer config */
-    update: (next: InputRetainedRender, options?: RetainedCanvasUpdateOptions) => void;
+    update: (next: InputScene | IRScene, options?: RetainedCanvasUpdateOptions) => void;
     /** 返回并清空 Runtime diagnostics */
     diagnostics: () => ReadonlyArray<ReconcilerDiagnostic>;
   }>;
@@ -216,7 +217,7 @@ export type StaticRawCanvasView = CanvasViewState &
     /** view 执行模式 */
     mode: typeof VanillaViewMode.Static;
     /** 完整归一化、编译并重绘下一份 IR 或 InputScene */
-    update: (next: InputRetainedRender) => void;
+    update: (next: InputScene | IRScene) => void;
   }>;
 
 /** `mountCanvas` 返回的可判别 view */

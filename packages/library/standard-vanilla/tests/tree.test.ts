@@ -1,5 +1,5 @@
 import { resolveCoreProviderDependencies } from '@retikz/core';
-import { createProcessingController, normalizeScene, scene } from '@retikz/vanilla';
+import { SceneRuntime, normalizeScene, scene } from '@retikz/vanilla';
 import { expect, it } from 'vitest';
 
 import { tree } from '../src/collection';
@@ -15,13 +15,11 @@ it('Tree自动装配并保留root稀疏Source', () => {
 });
 
 it('重复节点身份的更新失败后保留上一棵完整树', () => {
-  const controller = createProcessingController(
-    scene({ children: [tree({ root: { id: 'parent', children: ['A'] } })] }),
-  );
+  const controller = SceneRuntime.fromInput(scene({ children: [tree({ root: { id: 'parent', children: ['A'] } })] }));
   try {
     const previous = controller.read().compileResult.scene;
     expect(() =>
-      controller.update(scene({ children: [tree({ root: { id: 'same', children: [{ id: 'same' }] } })] })),
+      controller.replace(scene({ children: [tree({ root: { id: 'same', children: [{ id: 'same' }] } })] })),
     ).toThrow();
     expect(controller.read().compileResult.scene).toEqual(previous);
   } finally {

@@ -58,7 +58,7 @@ export const Example = () => <Layout ir={ir} extensions={{ clips: [circleClipDef
 
 ```ts
 import { circleClipDefinition } from '@retikz/extension';
-import { node, renderToSvgString, scene, scope } from '@retikz/vanilla';
+import { compileToScene, node, renderToSvgString, scene, scope } from '@retikz/vanilla';
 
 const input = scene({
   children: [
@@ -67,7 +67,8 @@ const input = scene({
     ]),
   ],
 });
-const svg = renderToSvgString(input, { compile: { clips: [circleClipDefinition] } });
+const { compileResult } = compileToScene(input, { compile: { clips: [circleClipDefinition] } });
+const svg = renderToSvgString(compileResult.scene);
 console.log(svg);
 ```
 
@@ -77,7 +78,7 @@ console.log(svg);
 ```ts
 import type { IRScene } from '@retikz/core';
 import { circleClipDefinition } from '@retikz/extension';
-import { renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, renderToSvgString } from '@retikz/vanilla';
 
 const ir: IRScene = {
   type: 'scene',
@@ -90,7 +91,8 @@ const ir: IRScene = {
     },
   ],
 };
-const svg = renderToSvgString(ir, { compile: { clips: [circleClipDefinition] } });
+const { compileResult } = compileToScene(ir, { compile: { clips: [circleClipDefinition] } });
+const svg = renderToSvgString(compileResult.scene);
 console.log(svg);
 ```
 

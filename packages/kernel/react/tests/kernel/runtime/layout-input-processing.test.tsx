@@ -3,7 +3,6 @@
 import { defineTheme, ThemeMode } from '@retikz/core';
 import type {
   InputEmbedAdapter,
-  ProcessingController,
   VanillaCompileResultExtension,
   VanillaCompileResultExtensionSession,
 } from '@retikz/vanilla';
@@ -201,13 +200,13 @@ describe('<Layout> 的 Vanilla Input processing', () => {
       severity: 'warning' as const,
       message: 'test diagnostic',
     });
-    const controller = vanilla.createProcessingController({
+    const controller = vanilla.SceneRuntime.fromInput({
       type: 'scene',
       children: [{ type: 'node', id: 'diagnostic-node', position: [0, 0] }],
     });
     const diagnostics = vi.fn(() => Object.freeze([diagnostic]));
-    const observedController: ProcessingController = Object.freeze({ ...controller, diagnostics });
-    vi.spyOn(vanilla, 'createProcessingController').mockReturnValue(observedController);
+    vi.spyOn(controller, 'diagnostics').mockImplementation(diagnostics);
+    vi.spyOn(vanilla.SceneRuntime, 'fromInput').mockReturnValue(controller);
     const onDiagnostic = vi.fn();
     const container = document.createElement('div');
     const root = createRoot(container);
@@ -222,15 +221,15 @@ describe('<Layout> 的 Vanilla Input processing', () => {
 
   it('Strict Effects 重放后在最终卸载时释放 Vanilla controller', async () => {
     vi.useFakeTimers();
-    const createController = vanilla.createProcessingController;
+    const createController = vanilla.SceneRuntime.fromInput;
     const disposers: Array<ReturnType<typeof vi.fn>> = [];
-    vi.spyOn(vanilla, 'createProcessingController').mockImplementation((source, options) => {
+    vi.spyOn(vanilla.SceneRuntime, 'fromInput').mockImplementation((source, options) => {
       const controller = createController(source, options);
       const dispose = vi.fn(controller.dispose);
-      const observedController = Object.freeze({ ...controller, dispose });
+      vi.spyOn(controller, 'dispose').mockImplementation(dispose);
       disposers.push(dispose);
 
-      return observedController;
+      return controller;
     });
     const container = document.createElement('div');
     const root = createRoot(container);

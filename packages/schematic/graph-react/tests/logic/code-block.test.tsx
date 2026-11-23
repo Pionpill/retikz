@@ -6,7 +6,7 @@ import {
   defineGraphTheme,
 } from '@retikz/graph';
 import type { InputEmbedAdapter } from '@retikz/vanilla';
-import { embed, createProcessingController, normalizeScene, compileToScene } from '@retikz/vanilla';
+import { embed, SceneRuntime, normalizeScene, compileToScene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
@@ -85,7 +85,7 @@ describe('自定义代码块 React 编写', () => {
     expect(actual.compileResult.scene).toEqual(vanilla.compileResult.scene);
     expect(actual.compileResult.scene).toEqual(direct.compileResult.scene);
 
-    const retained = createProcessingController(input, {
+    const retained = SceneRuntime.fromInput(input, {
       compile: { themeDefinitions: [coreStyle] },
     });
 

@@ -1,23 +1,21 @@
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../error';
 import { normalizeSceneLayers, layerZIndex } from '../../normalize';
-import type { InputLayer, InputSceneLayers, NamedLayerResult } from '../../normalize';
+import type { InputLayer, NamedLayerResult } from '../../normalize';
 import { prepareProcessingInput, mergeLayerOptions } from '../_input';
 import type { ProcessingOptions } from '../_input';
 import type { LayerProcessingResult, ProcessingResult } from '../compile';
-import { SceneRuntime } from './runtime';
+import { HostedSceneRuntime } from './runtime';
 import type { LayerProcessingController } from './types';
 
 /** 每层只持有自己的会话及最后一次成功发布的结果 */
 type LayerSession = {
-  controller: SceneRuntime;
+  controller: HostedSceneRuntime;
   execution: ProcessingOptions['reconciler'];
   entry: NamedLayerResult<ProcessingResult>;
 };
 
 /** 按名称定位会话，更新目标层时不遍历兄弟层的输入 */
-export const createLayerController = (source: InputSceneLayers, options: ProcessingOptions) => {
-  const rootFields = ({ layers: _layers, ...fields }: InputSceneLayers) => fields;
-  let root = rootFields(source);
+export const createLayerController = (source: ReadonlyArray<InputLayer>, options: ProcessingOptions = {}) => {
   let disposed = false;
   const listeners = new Set<(result: LayerProcessingResult) => void>();
   const diagnostics: Array<unknown> = [];
@@ -26,14 +24,10 @@ export const createLayerController = (source: InputSceneLayers, options: Process
     if (disposed) throw new RetikzVanillaError(RetikzVanillaErrorCode.Processing, 'Layer controller is disposed');
   };
 
-  const mount = (
-    scene: Omit<InputSceneLayers, 'layers'>,
-    layer: InputLayer,
-    pendingCommitNotifications: Array<() => void>,
-  ): LayerSession => {
+  const mount = (layer: InputLayer, pendingCommitNotifications: Array<() => void>): LayerSession => {
     const effective = mergeLayerOptions(options, layer);
-    const prepared = prepareProcessingInput({ ...scene, children: layer.children }, effective, layer);
-    const controller = SceneRuntime.fromPrepared(prepared, effective, assertActive, pendingCommitNotifications);
+    const prepared = prepareProcessingInput(layer.scene, effective, layer.name);
+    const controller = HostedSceneRuntime.fromPrepared(prepared, effective, assertActive, pendingCommitNotifications);
     return {
       controller,
       execution: effective.reconciler,
@@ -43,11 +37,11 @@ export const createLayerController = (source: InputSceneLayers, options: Process
   const release = (layers: Map<string, LayerSession>) => {
     for (const { controller } of layers.values()) controller.dispose();
   };
-  const mountStack = (scene: InputSceneLayers, notifications: Array<() => void>) => {
-    normalizeSceneLayers(scene);
+  const mountStack = (nextLayers: ReadonlyArray<InputLayer>, notifications: Array<() => void>) => {
+    const ordered = normalizeSceneLayers(nextLayers);
     const layers = new Map<string, LayerSession>();
     try {
-      for (const layer of scene.layers) layers.set(layer.name, mount(scene, layer, notifications));
+      for (const layer of ordered) layers.set(layer.name, mount(layer, notifications));
       assertActive();
       return layers;
     } catch (cause) {
@@ -89,12 +83,11 @@ export const createLayerController = (source: InputSceneLayers, options: Process
     if (!session) throw new RetikzVanillaError(RetikzVanillaErrorCode.Processing, 'Unknown layer: ' + name);
     return session;
   };
-  const update = (next: InputSceneLayers) =>
+  const update = (next: ReadonlyArray<InputLayer>) =>
     write(() => {
       const notifications: Array<() => void> = [];
       const replacement = mountStack(next, notifications);
       const previous = sessions;
-      root = rootFields(next);
       sessions = replacement;
       release(previous);
       publish(notifications);
@@ -112,7 +105,7 @@ export const createLayerController = (source: InputSceneLayers, options: Process
         execution?.trace === effective.reconciler.trace &&
         execution?.captureProvenance === effective.reconciler.captureProvenance
       ) {
-        const prepared = prepareProcessingInput({ ...root, children: layer.children }, effective, layer);
+        const prepared = prepareProcessingInput(layer.scene, effective, layer.name);
         previous.controller.updatePrepared(prepared, notifications);
         previous.entry = Object.freeze({
           name: layer.name,
@@ -120,7 +113,7 @@ export const createLayerController = (source: InputSceneLayers, options: Process
           result: previous.controller.read(),
         });
       } else {
-        const replacement = mount(root, layer, notifications);
+        const replacement = mount(layer, notifications);
         sessions.set(layer.name, replacement);
         previous?.controller.dispose();
       }

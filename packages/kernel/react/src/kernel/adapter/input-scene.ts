@@ -7,7 +7,7 @@ import type {
   AnyInputEmbed,
   InputNode,
   InputPath,
-  InputSceneChildren,
+  InputScene,
   InputScope,
   InputStep,
 } from '@retikz/vanilla';
@@ -462,7 +462,7 @@ const inputEmbedFromElement = (
 };
 
 /** 收集 JSX child 为 Vanilla Input，不解析 Core authoring grammar */
-const readSceneChildren = (children: ReactNode, context: InputContext): ReadonlyArray<InputChild> => {
+const readSceneChildren = (children: ReactNode, context: InputContext): InputScene['children'] => {
   const output: Array<InputChild> = [];
   const visit = (nodes: ReactNode): void =>
     Children.forEach(nodes, child => {
@@ -518,7 +518,7 @@ const readSceneChildren = (children: ReactNode, context: InputContext): Readonly
 };
 
 /** 收集 JSX children 为唯一 Vanilla InputScene */
-export const createInputScene = (children: ReactNode, options: InputSceneCreationOptions = {}): InputSceneChildren => {
+export const createInputScene = (children: ReactNode, options: InputSceneCreationOptions = {}): InputScene => {
   const context: InputContext = {
     ...(options.embedIdPrefix === undefined ? {} : { embedIdPrefix: options.embedIdPrefix }),
     nextAnonymousEmbed: { value: 0 },

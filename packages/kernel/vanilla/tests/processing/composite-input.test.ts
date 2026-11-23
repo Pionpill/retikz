@@ -8,8 +8,8 @@ import {
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
-import type { InputEmbedAdapter, InputEmbedContribution, InputSceneChildren } from '../../src';
-import { embed, createProcessingController, compileToScene } from '../../src';
+import type { InputEmbedAdapter, InputEmbedContribution, InputScene } from '../../src';
+import { embed, SceneRuntime, compileToScene } from '../../src';
 
 const leafDefinition = defineComposite({
   namespace: 'fixture',
@@ -29,7 +29,7 @@ const adapter: InputEmbedAdapter<{ text: string }> = {
   lower: props => makeContribution(props.text),
 };
 
-const source = (text: string): InputSceneChildren => ({
+const source = (text: string): InputScene => ({
   type: 'scene',
   children: [embed({ adapter, props: { text } })],
 });
@@ -61,7 +61,7 @@ describe('预处理复合组件输入的消费', () => {
   });
 
   it('匿名实例的输入不会串位', () => {
-    const input: InputSceneChildren = {
+    const input: InputScene = {
       type: 'scene',
       children: [...source('left-ready').children, ...source('right-ready').children],
     };
@@ -72,10 +72,10 @@ describe('预处理复合组件输入的消费', () => {
   });
 
   it('编写规范化为相同的 JSON 时更新准备好的输入', () => {
-    const controller = createProcessingController(source('first-ready'), {
+    const controller = SceneRuntime.fromInput(source('first-ready'), {
       compile: { composites: [leafDefinition] },
     });
-    controller.update(source('second-ready'));
+    controller.replace(source('second-ready'));
 
     expect(controller.read().revision).toBe(1);
     expect(JSON.stringify(controller.read().compileResult.scene)).toContain('second-ready');

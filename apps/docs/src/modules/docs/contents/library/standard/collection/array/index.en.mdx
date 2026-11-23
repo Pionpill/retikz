@@ -52,7 +52,7 @@ export const Example = () => <Layout ir={ir} composites={[arrayDefinition]} />;
 
 ```ts
 import { array } from '@retikz/standard-vanilla/collection';
-import { scene, renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, scene, renderToSvgString } from '@retikz/vanilla';
 
 const input = scene({
   children: [
@@ -61,7 +61,8 @@ const input = scene({
     }),
   ],
 });
-const svg = renderToSvgString(input);
+const { compileResult } = compileToScene(input);
+const svg = renderToSvgString(compileResult.scene);
 console.log(svg);
 ```
 
@@ -71,7 +72,7 @@ console.log(svg);
 ```ts
 import type { IRScene } from '@retikz/core';
 import { arrayDefinition } from '@retikz/standard/collection';
-import { renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, renderToSvgString } from '@retikz/vanilla';
 
 const ir: IRScene = {
   type: 'scene',
@@ -84,9 +85,8 @@ const ir: IRScene = {
     },
   ],
 };
-const svg = renderToSvgString(ir, {
-  compile: { composites: [arrayDefinition] },
-});
+const { compileResult } = compileToScene(ir, { compile: { composites: [arrayDefinition] } });
+const svg = renderToSvgString(compileResult.scene);
 console.log(svg);
 ```
 

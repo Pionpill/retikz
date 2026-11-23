@@ -1,5 +1,5 @@
 import { createInputScene } from '@retikz/react';
-import { createProcessingController } from '@retikz/vanilla';
+import { SceneRuntime } from '@retikz/vanilla';
 import { expect, it } from 'vitest';
 
 import { buildPreviewIR } from '../../src/modules/docs/components/component-preview/utils';
@@ -26,11 +26,11 @@ it('Tree 的保留模式更新移除并恢复节点及缺失槽位', () => {
       renderTreePreview({ direction: 'down', gap: '32', empty, missing, arrows: true, styled: true }).props.children,
     );
   const first = inputScene(false, true);
-  const controller = createProcessingController(first);
+  const controller = SceneRuntime.fromInput(first);
   try {
     for (const missing of [true, false])
       for (const empty of [true, false]) {
-        controller.update(inputScene(empty, missing));
+        controller.replace(inputScene(empty, missing));
         expect(JSON.stringify(controller.read().compileResult.scene).includes('dodgerblue')).toBe(!empty);
         expect(JSON.stringify(controller.read().compileResult.scene).includes('darkorange')).toBe(!empty);
       }
@@ -50,7 +50,7 @@ it('Tree 默认预览不将 undefined 写入 retained Source', () => {
       styled: false,
     }).props.children,
   );
-  const controller = createProcessingController(input);
+  const controller = SceneRuntime.fromInput(input);
   try {
     expect(controller.read().compileResult.scene.primitives.length).toBeGreaterThan(0);
   } finally {
