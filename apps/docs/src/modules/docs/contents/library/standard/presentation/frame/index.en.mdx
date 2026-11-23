@@ -65,13 +65,13 @@ export const Example = () => <Layout ir={ir} composites={[frameDefinition]} />;
 
 ```ts
 import { frame, frameTitle } from '@retikz/standard-vanilla/presentation';
-import { compileToScene, scene, node, renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, scene, node, renderToSvg } from '@retikz/vanilla';
 
 const input = scene({
   children: [frame({ title: frameTitle({ text: 'Group' }), children: [node({ position: [0, 0], text: 'A' })] })],
 });
 const compileResult = compileToScene(input);
-const svg = renderToSvgString(compileResult.scene);
+const svg = renderToSvg(compileResult.scene);
 console.log(svg);
 ```
 
@@ -81,7 +81,7 @@ console.log(svg);
 ```ts
 import type { IRScene } from '@retikz/core';
 import { frameDefinition } from '@retikz/standard/presentation';
-import { compileToScene, renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, renderToSvg } from '@retikz/vanilla';
 
 const ir: IRScene = {
   type: 'scene',
@@ -96,7 +96,7 @@ const ir: IRScene = {
   ],
 };
 const compileResult = compileToScene(ir, { compile: { composites: [frameDefinition] } });
-const svg = renderToSvgString(compileResult.scene);
+const svg = renderToSvg(compileResult.scene);
 console.log(svg);
 ```
 

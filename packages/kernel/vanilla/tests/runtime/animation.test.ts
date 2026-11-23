@@ -2,7 +2,7 @@
 import type { IRScene } from '@retikz/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { compileToScene, renderToSvgString } from '../../src';
+import { compileToScene, renderToSvg } from '../../src';
 import { mountCanvas, mountSvg } from '../../src/dom';
 
 /*
@@ -139,27 +139,27 @@ describe('mountSvg 动画', () => {
     expect(view.root.querySelector('style')).not.toBeNull();
   });
 
-  it('renderToSvgString 缺省跟随 prefers-reduced-motion', () => {
+  it('renderToSvg 缺省跟随 prefers-reduced-motion', () => {
     vi.stubGlobal('matchMedia', () => ({ matches: true }));
 
-    expect(renderToSvgString(compileToScene(loadIr).scene)).not.toContain('@keyframes');
+    expect(renderToSvg(compileToScene(loadIr).scene)).not.toContain('@keyframes');
   });
 
-  it('renderToSvgString 显式 enabled:true 覆盖 prefers-reduced-motion', () => {
+  it('renderToSvg 显式 enabled:true 覆盖 prefers-reduced-motion', () => {
     vi.stubGlobal('matchMedia', () => ({ matches: true }));
 
-    expect(renderToSvgString(compileToScene(loadIr).scene, { animation: { enabled: true } })).toContain('@keyframes');
+    expect(renderToSvg(compileToScene(loadIr).scene, { animation: { enabled: true } })).toContain('@keyframes');
   });
 });
 
 describe('SVG 静态截帧 {at:t}', () => {
-  it('renderToSvgString({at}) → 烘焙静态 opacity、无 @keyframes（SSR 海报帧）', () => {
-    const settled = renderToSvgString(compileToScene(loadIr).scene, { animation: { snapshotAt: 999 } });
+  it('renderToSvg({at}) → 烘焙静态 opacity、无 @keyframes（SSR 海报帧）', () => {
+    const settled = renderToSvg(compileToScene(loadIr).scene, { animation: { snapshotAt: 999 } });
 
     expect(settled).not.toContain('@keyframes');
     expect(settled).toContain('opacity="1"'); // 末态 = base
 
-    const start = renderToSvgString(compileToScene(loadIr).scene, { animation: { snapshotAt: 0 } });
+    const start = renderToSvg(compileToScene(loadIr).scene, { animation: { snapshotAt: 0 } });
 
     expect(start).toContain('opacity="0"'); // 起点帧
   });

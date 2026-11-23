@@ -1,5 +1,5 @@
 import { SlopeChartSchema } from '@retikz/chart/line';
-import { compileToScene, normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
+import { compileToScene, normalizeScene, renderToSvg, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
 import { slopeChart, slopeMark, normalizeSlopeChart } from '../../src/line';
@@ -47,7 +47,7 @@ describe('Slope Vanilla 输入闭环', () => {
         ],
       }),
     );
-    const svg = renderToSvgString(compileResult.scene);
+    const svg = renderToSvg(compileResult.scene);
     expect(svg).toContain('<svg');
     expect(svg).toContain('trend');
     expect(svg).toContain('observations');

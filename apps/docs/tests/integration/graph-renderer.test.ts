@@ -8,7 +8,7 @@ import { graph, normalizeGraph } from '@retikz/graph-vanilla';
 import { Node } from '@retikz/react';
 import { drawScene } from '@retikz/render/canvas';
 import { renderToSvgString } from '@retikz/render/svg';
-import { compileToScene, normalizeScene, renderToSvgString as renderVanillaToSvgString, scene } from '@retikz/vanilla';
+import { compileToScene, normalizeScene, renderToSvg, scene } from '@retikz/vanilla';
 import type { FC } from 'react';
 import { createElement, Fragment } from 'react';
 import { describe, expect, it, vi } from 'vitest';
@@ -203,7 +203,7 @@ describe('Graph 渲染器集成', () => {
     expect(() => drawScene(recordingContext(calls), compiled)).not.toThrow();
     expect(calls.length).toBeGreaterThan(0);
     expect(
-      renderVanillaToSvgString(compileToScene(vanillaInput).scene, {
+      renderToSvg(compileToScene(vanillaInput).scene, {
         output: { width: 280, height: 200 },
       }),
     ).toContain('<svg');

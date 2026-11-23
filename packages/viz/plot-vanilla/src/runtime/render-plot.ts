@@ -10,7 +10,7 @@ import type {
 } from '@retikz/plot';
 import { createPlotProviderContribution, lowerPlotWithLineage } from '@retikz/plot';
 import { SceneReconciler } from '@retikz/reconciler';
-import { renderToSvgString } from '@retikz/vanilla';
+import { renderToSvg } from '@retikz/vanilla';
 
 /** renderPlot 两种返回模式共享的根 Scene Theme 输入 */
 type PlotRenderThemeOptions = {
@@ -76,7 +76,7 @@ const renderPlotImpl = (
       reconciler.dispose();
     }
   })().scene;
-  const svg = renderToSvgString(scene, { output: { width: options.layout?.width, height: options.layout?.height } });
+  const svg = renderToSvg(scene, { output: { width: options.layout?.width, height: options.layout?.height } });
   if (!isLineageOptions(options)) return svg;
 
   const { lineage } = lowerPlotWithLineage(spec, data, {

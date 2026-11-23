@@ -1,4 +1,4 @@
-import { compileToScene, path, renderToSvgString, scene } from '@retikz/vanilla';
+import { compileToScene, path, renderToSvg, scene } from '@retikz/vanilla';
 
 import { ringMark } from './ring-mark';
 
@@ -20,4 +20,4 @@ export const ringScene = scene({
 
 /** 使用同一标记定义生成 SVG */
 const compileResult = compileToScene(ringScene, { compile: { marks: [ringMark] } });
-export const svg = renderToSvgString(compileResult.scene);
+export const svg = renderToSvg(compileResult.scene);

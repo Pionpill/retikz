@@ -6,7 +6,7 @@ Framework-neutral bindings for [`@retikz/table`](../table), retikz's renderer-ag
 
 ```ts
 import { detailTable, embedTable, renderTable } from '@retikz/table-vanilla';
-import { compileToScene, renderToSvgString, scene } from '@retikz/vanilla';
+import { compileToScene, renderToSvg, scene } from '@retikz/vanilla';
 
 const spec = detailTable({
   id: 'scores',
@@ -16,7 +16,7 @@ const spec = detailTable({
 
 const input = scene([embedTable(spec, { data: { scores: rows } })]);
 const compileResult = compileToScene(input);
-const svg = renderToSvgString(compileResult.scene);
+const svg = renderToSvg(compileResult.scene);
 
 const result = renderTable(spec, { data: { scores: rows }, artifacts: true });
 result.svg;

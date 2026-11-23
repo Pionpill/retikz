@@ -13,7 +13,7 @@ keywords: 'Table、DetailTable、ManualTable、React、Vanilla、composites、on
 
 只有 `@retikz/table` IR 与 lowering，用户仍需手动包 Scene、注册 composites 和调用 renderer。alpha.1 必须同时验证 React 与 Vanilla，避免后续 adapter 为便利性私自发明另一套 Table schema。
 
-Kernel `@retikz/vanilla` 已把主作者模型收敛为 plain spec，并提供 `figure/layer/embed`、`VanillaTier2Adapter`、统一 `mount().update()` 与 `renderToSvgString()`。Table 不能只复制旧的 Plot builder + SSR 入口，否则无法进入 Vanilla 的稳定 identity、layer metadata 与未来增量优化边界。
+Kernel `@retikz/vanilla` 已把主作者模型收敛为 plain spec，并提供 `figure/layer/embed`、`VanillaTier2Adapter`、统一 `mount().update()` 与 `renderToSvg()`。Table 不能只复制旧的 Plot builder + SSR 入口，否则无法进入 Vanilla 的稳定 identity、layer metadata 与未来增量优化边界。
 
 ## 决策：共享 plain authoring，React 分离组件，Vanilla 接入 Tier 2 runtime
 
@@ -236,7 +236,7 @@ const result = renderTable(spec, {
 - `createTableAdapter()` 无 datasets/options 参数；同一 adapter 可服务多个 Table embed，并在 `mount().update(nextFigure)` 时从新 embed props 读取新 data、lower options 与 composites
 - adapter 的 `lower()` 必须重新执行 `TableSchema.parse()`，使手写 `embed('table', ...)` 不能绕过 Table schema；嵌入副本的根 id 规范化为 `${embedId}/${spec.id ?? 'table'}`，且不得修改调用方 spec
 - adapter 贡献中的 Table provider 使用同一工厂引用；多个 Table embed 的参数通过下述共享 contribution contract 聚合，不用 module-level side channel 保存本轮 props
-- `renderTable()` 是一次性 SSR + manifest convenience：先 parse spec，再以 `data ?? {}`、`lowerOptions ?? {}` 调用 Table lowering，最后经 `compileToScene` 与 `renderToSvgString` 输出；它不作为浏览器更新或性能优化边界
+- `renderTable()` 是一次性 SSR + manifest convenience：先 parse spec，再以 `data ?? {}`、`lowerOptions ?? {}` 调用 Table lowering，最后经 `compileToScene` 与 `renderToSvg` 输出；它不作为浏览器更新或性能优化边界
 - `composites` 与 Table definitions 合并后进入 `CompileOptions.composites`，语义与 React / embed adapter 相同
 - `output` 复用 `RenderToStringOptions['output']`，其中 width / height / idPrefix 只控制 SVG 宿主输出，不改变 Table 固定轨道几何；不开放调用方覆盖内部 `compile.composites`
 - `{ artifacts: true }` 由 overload 返回 `RenderTableArtifactResult`；省略或显式 `false` 返回 SVG string

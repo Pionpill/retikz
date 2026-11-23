@@ -76,4 +76,4 @@ export {
 export type { ProcessingOptions, LayerProcessingController } from './runtime';
 export { compileToScene, SceneRuntime, compileLayers, createLayerController } from './runtime';
 export type { CommonOptions, RenderToStringOptions } from './runtime';
-export { renderToSvgString } from './runtime';
+export { renderToSvg } from './runtime';

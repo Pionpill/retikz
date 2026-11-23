@@ -46,11 +46,11 @@ export const Example = () => <Layout ir={ir} composites={[rectangleDefinition]} 
 
 ```ts
 import { shape } from '@retikz/standard-vanilla/shape';
-import { compileToScene, scene, renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, scene, renderToSvg } from '@retikz/vanilla';
 
 const input = scene({ children: [shape.rectangle({ center: [0, 0], width: 80, height: 48, cornerRadius: 6 })] });
 const compileResult = compileToScene(input);
-const svg = renderToSvgString(compileResult.scene);
+const svg = renderToSvg(compileResult.scene);
 console.log(svg);
 ```
 
@@ -60,7 +60,7 @@ console.log(svg);
 ```ts
 import type { IRScene } from '@retikz/core';
 import { rectangleDefinition } from '@retikz/standard/shape';
-import { compileToScene, renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, renderToSvg } from '@retikz/vanilla';
 
 const ir: IRScene = {
   type: 'scene',
@@ -68,7 +68,7 @@ const ir: IRScene = {
   children: [{ namespace: 'standard', type: 'rectangle', center: [0, 0], width: 80, height: 48, cornerRadius: 6 }],
 };
 const compileResult = compileToScene(ir, { compile: { composites: [rectangleDefinition] } });
-const svg = renderToSvgString(compileResult.scene);
+const svg = renderToSvg(compileResult.scene);
 console.log(svg);
 ```
 

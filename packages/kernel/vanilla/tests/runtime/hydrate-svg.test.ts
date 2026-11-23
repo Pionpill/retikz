@@ -2,7 +2,7 @@ import type { IRScene } from '@retikz/core';
 import type { HydrationContext } from '@retikz/render/hydration';
 import { describe, expect, it, vi } from 'vitest';
 
-import { compileToScene, renderToSvgString } from '../../src';
+import { compileToScene, renderToSvg } from '../../src';
 import { hydrate, mountSvg } from '../../src/dom';
 
 // @vitest-environment jsdom
@@ -68,9 +68,9 @@ describe('@retikz/vanilla hydrate（SVG 水合）', () => {
     container.remove();
   });
 
-  it('ssr-then-hydrate：renderToSvgString 产静态串 → 注入 DOM → hydrate 绑定成功、不重渲染', () => {
+  it('ssr-then-hydrate：renderToSvg 产静态串 → 注入 DOM → hydrate 绑定成功、不重渲染', () => {
     const compileResult = compileToScene(idIr);
-    const svg = renderToSvgString(compileResult.scene);
+    const svg = renderToSvg(compileResult.scene);
 
     expect(svg).toContain('data-retikz-id="a"');
 
@@ -129,7 +129,7 @@ describe('@retikz/vanilla hydrate（SVG 水合）', () => {
 
   it('standalone-hydrate-scene：传 scene → 富 context；不传 → 最小 context（meta/geometry undefined、animation no-op、不抛）', () => {
     const compileResult = compileToScene(metaIr);
-    const svg = renderToSvgString(compileResult.scene);
+    const svg = renderToSvg(compileResult.scene);
     const richContainer = document.createElement('div');
     document.body.appendChild(richContainer);
     richContainer.innerHTML = svg;

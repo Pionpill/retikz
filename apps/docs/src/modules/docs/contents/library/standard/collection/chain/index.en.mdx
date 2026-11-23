@@ -28,10 +28,10 @@ import { Chain } from '@retikz/standard-react/collection';
 
 ```ts
 import { chain } from '@retikz/standard-vanilla/collection';
-import { compileToScene, scene, renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, scene, renderToSvg } from '@retikz/vanilla';
 
 const compileResult = compileToScene(scene({ children: [chain({ items: ['A', 'B', 'C'] })] }));
-const svg = renderToSvgString(compileResult.scene);
+const svg = renderToSvg(compileResult.scene);
 ```
 
 </DocTab>

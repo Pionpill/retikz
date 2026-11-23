@@ -1,6 +1,6 @@
 import { createDataTransformExecutor } from '@retikz/data';
 import { prepareTableData } from '@retikz/table';
-import { compileToScene, renderToSvgString, scene } from '@retikz/vanilla';
+import { compileToScene, renderToSvg, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
 import { detailTable, embedTable, renderTable, renderTableAsync } from '../src';
@@ -62,7 +62,7 @@ describe('异步 Table 编写', () => {
       return embedTable(spec, { preparedData: await task.execute() });
     };
     const result = compileToScene(scene({ children: await Promise.all([input([2, 6]), input([4])]) }));
-    const svg = renderToSvgString(result.scene);
+    const svg = renderToSvg(result.scene);
 
     expect(svg).toContain('0.25');
     expect(svg).toContain('0.75');

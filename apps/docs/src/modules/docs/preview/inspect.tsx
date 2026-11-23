@@ -4,7 +4,7 @@ import { createDefaultInspectorRegistry } from '@retikz/inspect';
 import { prepareInspectionPresentation, renderInspectionToSvgString } from '@retikz/inspect/vanilla';
 import type { LayoutProps } from '@retikz/react';
 import { createInputScene } from '@retikz/react';
-import { compileToScene, renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, renderToSvg } from '@retikz/vanilla';
 import type { FC, ReactNode } from 'react';
 import { isValidElement } from 'react';
 
@@ -52,7 +52,7 @@ export const buildInspectionPreview = (
     compileOptions: compile,
     idPrefix: idPrefix + '-inspection',
   };
-  const primary = renderToSvgString(result.scene, {
+  const primary = renderToSvg(result.scene, {
     output: { idPrefix: idPrefix + '-primary' },
     animation: { enabled: false },
   });
@@ -80,7 +80,7 @@ export const createBuiltinInspectPreviewSource = (
         </div>
       </div>
     );
-    const code = `import { compileToScene, renderToSvgString } from '@retikz/vanilla';
+    const code = `import { compileToScene, renderToSvg } from '@retikz/vanilla';
 import type { InputScene } from '@retikz/vanilla';
 import { createDefaultInspectorRegistry } from '@retikz/inspect';
 import type { InspectionRequest } from '@retikz/inspect';
@@ -95,7 +95,7 @@ const compile = { clips: [pathClipDefinition], themeDefinitions: PreviewThemeDef
 const result = compileToScene(input, { compile });
 const options = { registry: createDefaultInspectorRegistry(), requests, compileOptions: compile, idPrefix: '${name}-inspection' };
 const auxiliary = prepareInspectionPresentation(result, options);
-export const primarySvg = renderToSvgString(result.scene, { output: { idPrefix: '${name}-primary' }, animation: { enabled: false } });
+export const primarySvg = renderToSvg(result.scene, { output: { idPrefix: '${name}-primary' }, animation: { enabled: false } });
 export const overlay = renderInspectionToSvgString(auxiliary, options);
 // 将 primarySvg 和 overlay 放入两个使用相同视口的独立容器`;
     const configFile = { filename: name + '.config.json', code: config, lang: 'json' as const };

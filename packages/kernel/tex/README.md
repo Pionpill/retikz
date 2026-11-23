@@ -37,14 +37,14 @@ export const Diagram = () => {
 ## Vanilla / core injection
 
 ```ts
-import { compileToScene, scene, node, renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, scene, node, renderToSvg } from '@retikz/vanilla';
 import { createMathJaxLowerTex } from '@retikz/tex';
 
 const lowerTex = await createMathJaxLowerTex({ profile: 'math' });
 
 const input = scene([node({ id: 'eq', position: [0, 0], text: '$\\frac{a}{b}=c$' })]);
 const compileResult = compileToScene(input, { compile: { lowerTex } });
-const svg = renderToSvgString(compileResult.scene);
+const svg = renderToSvg(compileResult.scene);
 ```
 
 The default `base` profile keeps MathJax minimal. `math` adds `ams`, `newcommand`, `boldsymbol`, `braket`, `cancel`, `cases`, `centernot`, `mathtools`, and `color`. Individual entries can be appended through `extensions`.

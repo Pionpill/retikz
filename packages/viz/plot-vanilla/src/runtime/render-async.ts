@@ -1,7 +1,7 @@
 import type { DataInputBindings, DataTransformExecutor } from '@retikz/data';
 import type { IRPlot } from '@retikz/plot';
 import { lowerPlotWithLineage, preparePlotData } from '@retikz/plot';
-import { embed, compileToScene, renderToSvgString, scene } from '@retikz/vanilla';
+import { embed, compileToScene, renderToSvg, scene } from '@retikz/vanilla';
 
 import { plotInputEmbedAdapter } from '../adapter';
 import type { PlotRenderLineageOptions, PlotRenderLineageResult, PlotRenderOptions } from './render-plot';
@@ -76,7 +76,7 @@ const renderPlotAsyncImpl = async <TSource = never>(
     },
   );
 
-  const svg = renderToSvgString(result.scene, {
+  const svg = renderToSvg(result.scene, {
     output: { width: layout?.width, height: layout?.height },
   });
   if (optionsLineage === undefined || optionsLineage === false) return svg;

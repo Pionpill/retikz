@@ -6,7 +6,7 @@ import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../error';
 import type { InputScene } from '../../normalize';
 import { prepareProcessingInput } from '../_input';
 import type { InputPreparedProcessing, ProcessingOptions } from '../_input';
-import { renderToSvgString } from '../output';
+import { renderToSvg } from '../output';
 import type { RenderToStringOptions } from '../output';
 
 /** 组合单场景编译和宿主提交；仅在底层事务成功后发布协调器原始快照 */
@@ -51,8 +51,8 @@ export class SceneRuntime {
   }
 
   /** 导出最后一次成功提交的场景，不重新编译或发送通知 */
-  renderToSvgString(options?: RenderToStringOptions) {
-    return renderToSvgString(this.current.compilation.result.scene, options);
+  renderToSvg(options?: RenderToStringOptions) {
+    return renderToSvg(this.current.compilation.result.scene, options);
   }
 
   /** 读取最后一次成功提交的结果 */

@@ -81,7 +81,7 @@ import { createLowerTex, createMathJaxEngine } from '@retikz/tex';
 通过 `compile.lowerTex` 将公式能力传给 `compileToScene`，再将得到的 Scene 导出为 SVG。
 
 ```ts
-import { compileToScene, node, renderToSvgString, scene } from '@retikz/vanilla';
+import { compileToScene, node, renderToSvg, scene } from '@retikz/vanilla';
 import { createLowerTex, createMathJaxEngine } from '@retikz/tex';
 
 const lowerTex = createLowerTex(await createMathJaxEngine({ profile: 'math' }));
@@ -90,7 +90,7 @@ const input = scene({
 });
 
 const compileResult = compileToScene(input, { compile: { lowerTex } });
-const svg = renderToSvgString(compileResult.scene);
+const svg = renderToSvg(compileResult.scene);
 ```
 
 如果不需要拆开 engine 和 lowerer，也可以直接等待 `createMathJaxLowerTex(options)`。Vanilla 不需要安装 React，也不使用 `@retikz/tex/react`。

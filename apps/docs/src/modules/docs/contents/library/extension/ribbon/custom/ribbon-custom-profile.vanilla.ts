@@ -1,5 +1,5 @@
 import { createRibbonPathDefinition, defineRibbonWidthProfile } from '@retikz/extension';
-import { compileToScene, path, renderToSvgString, scene } from '@retikz/vanilla';
+import { compileToScene, path, renderToSvg, scene } from '@retikz/vanilla';
 import { z } from 'zod';
 
 const pulseProfile = defineRibbonWidthProfile({
@@ -29,4 +29,4 @@ const input = scene({
 });
 
 const compileResult = compileToScene(input, { compile: { paths: [pulseRibbonDefinition] } });
-export const svg = renderToSvgString(compileResult.scene);
+export const svg = renderToSvg(compileResult.scene);

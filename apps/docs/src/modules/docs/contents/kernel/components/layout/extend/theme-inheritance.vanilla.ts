@@ -1,5 +1,5 @@
 import { ThemeMode } from '@retikz/core';
-import { compileToScene, renderToSvgString, scene } from '@retikz/vanilla';
+import { compileToScene, renderToSvg, scene } from '@retikz/vanilla';
 
 import { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';
 import { browserMeasurer } from '@/modules/docs/components/component-preview/vanilla-preview';
@@ -19,4 +19,4 @@ const compileResult = compileToScene(input, {
     themeDefinitions: PreviewThemeDefinitionBundle.core,
   },
 });
-export const svg = renderToSvgString(compileResult.scene, { output: { width: 240, height: 140 } });
+export const svg = renderToSvg(compileResult.scene, { output: { width: 240, height: 140 } });

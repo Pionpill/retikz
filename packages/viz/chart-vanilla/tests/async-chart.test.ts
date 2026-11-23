@@ -3,7 +3,7 @@ import { createScatterChartProviderContribution } from '@retikz/chart/point';
 import type { ThemeMode } from '@retikz/core';
 import type { DataTransformImplementationProvider } from '@retikz/data';
 import { createDataTransformExecutor } from '@retikz/data';
-import { compileToScene, scene, scope, renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, scene, scope, renderToSvg } from '@retikz/vanilla';
 import { describe, expect, it, vi } from 'vitest';
 
 import { renderChartAsync } from '../src';
@@ -31,7 +31,7 @@ describe('Chart 异步数据准备', () => {
     const run = (mode: ThemeMode) => {
       const child = scatterChart({ ...props, dataRef: 'rows', preparedData: prepared });
       const result = compileToScene(scene({ children: [scope({ theme: { mode } }, [child])] }));
-      return renderToSvgString(result.scene).toLowerCase();
+      return renderToSvg(result.scene).toLowerCase();
     };
     const light = run('light');
     const dark = run('dark');

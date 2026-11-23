@@ -123,7 +123,7 @@ retikz 0.3 focuses on general diagram primitives, now with multi-backend renderi
 | Multi-backend rendering (SVG / Canvas 2D) | The same IR compiles to either an SVG or a Canvas 2D backend                                                         |
 | Animation                                 | Declare animations on `<Layout>`, played by both SVG and Canvas backends; freeze a static frame for SSR poster shots |
 | Interactivity, events, and hydration      | Node / path events and hit-testing; hydrate on the client after SSR                                                  |
-| Framework-free / SSR                      | `@retikz/vanilla`'s `mountSvg` / `mountCanvas` and `renderToSvgString`                                               |
+| Framework-free / SSR                      | `@retikz/vanilla`'s `mountSvg` / `mountCanvas` and `renderToSvg`                                                     |
 
 Data-driven charts are handled by the emerging Tier 2 layer `@retikz/plot` (a standalone package, currently alpha); for flow layout, codecs, and additional render targets, see the [roadmap](https://pionpill.github.io/retikz/about/releases/roadmap).
 
@@ -155,7 +155,7 @@ The important design choice is that React JSX is only one input format. Once a d
 | [`@retikz/core`](https://www.npmjs.com/package/@retikz/core)       | Framework-neutral JSON IR, schemas, pure parsers, and the IR-to-Scene compiler                                                                   | `zod`                                               |
 | [`@retikz/render`](https://www.npmjs.com/package/@retikz/render)   | Scene render-backend namespace: `./svg` (Scene → SVG descriptor / string), `./canvas` (Scene → Canvas 2D), plus animation and hydration runtimes | `@retikz/core`                                      |
 | [`@retikz/react`](https://www.npmjs.com/package/@retikz/react)     | Official React components and JSX-to-IR builder, mounting both SVG and Canvas backends                                                           | `@retikz/core`, `@retikz/render`, peer `react >=18` |
-| [`@retikz/vanilla`](https://www.npmjs.com/package/@retikz/vanilla) | Official framework-free runtime: imperative `mountSvg` / `mountCanvas`, `renderToSvgString` (SSR), and a named builder                           | `@retikz/core`, `@retikz/render`                    |
+| [`@retikz/vanilla`](https://www.npmjs.com/package/@retikz/vanilla) | Official framework-free runtime: imperative `mountSvg` / `mountCanvas`, `renderToSvg` (SSR), and a named builder                                 | `@retikz/core`, `@retikz/render`                    |
 
 The four Tier 1 packages — core / render / react / vanilla — ship in lockstep under the same version.
 

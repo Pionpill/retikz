@@ -52,7 +52,7 @@ export const Example = () => <Layout ir={ir} />;
 
 ```ts
 import { pulse } from '@retikz/extension';
-import { compileToScene, node, renderToSvgString, scene } from '@retikz/vanilla';
+import { compileToScene, node, renderToSvg, scene } from '@retikz/vanilla';
 
 const input = scene({
   children: [
@@ -63,7 +63,7 @@ const input = scene({
   ],
 });
 const compileResult = compileToScene(input);
-const svg = renderToSvgString(compileResult.scene);
+const svg = renderToSvg(compileResult.scene);
 console.log(svg);
 ```
 
@@ -73,7 +73,7 @@ console.log(svg);
 ```ts
 import type { IRScene } from '@retikz/core';
 import { pulse } from '@retikz/extension';
-import { compileToScene, renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, renderToSvg } from '@retikz/vanilla';
 
 const ir: IRScene = {
   type: 'scene',
@@ -87,7 +87,7 @@ const ir: IRScene = {
   ],
 };
 const compileResult = compileToScene(ir);
-const svg = renderToSvgString(compileResult.scene);
+const svg = renderToSvg(compileResult.scene);
 console.log(svg);
 ```
 

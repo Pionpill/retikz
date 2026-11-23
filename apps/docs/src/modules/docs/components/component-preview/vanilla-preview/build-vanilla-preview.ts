@@ -124,7 +124,7 @@ import type { IRTable, TableProviderParams } from '@retikz/table';
 import { TableSchema, TableStructureKind } from '@retikz/table';
 import { embedTable } from '@retikz/table-vanilla';
 import type { InputChild } from '@retikz/vanilla';
-import { compileToScene, renderToSvgString, scene, scope } from '@retikz/vanilla';
+import { compileToScene, renderToSvg, scene, scope } from '@retikz/vanilla';
 
 import { PreviewThemeDefinitionBundle } from '../theme/presets';
 import {
@@ -216,7 +216,7 @@ const buildCorePreview = (preview: PreviewIR, options: BuildVanillaPreviewOption
   const compileResult = compileToScene(input, {
     compile: { paths: preview.paths, shapes: preview.shapes, measureText: options.measureText },
   });
-  const svg = renderToSvgString(compileResult.scene, { output: outputSize(preview) });
+  const svg = renderToSvg(compileResult.scene, { output: outputSize(preview) });
 
   try {
     return { code: irToVanillaCode(preview.sourceIr, { paths: preview.paths, shapes: preview.shapes }), svg };
@@ -855,7 +855,7 @@ const buildLibraryPreview = (preview: PreviewIR, options: BuildVanillaPreviewOpt
   const compileResult = compileToScene(renderInput, { compile });
   return {
     code: irToVanillaCode(preview.sourceIr, { theme: options.theme }),
-    svg: renderToSvgString(compileResult.scene, { output: outputSize(preview) }),
+    svg: renderToSvg(compileResult.scene, { output: outputSize(preview) }),
   };
 };
 
@@ -1161,7 +1161,7 @@ const buildTableCode = (
   };
   const optionsCode = formatVanillaValue(renderOptions);
 
-  return `import { embedTable } from '@retikz/table-vanilla';\nimport { compileToScene, renderToSvgString, scene } from '@retikz/vanilla';\n${importCode}\nconst spec = ${formatVanillaValue(spec)};\n${dataCode}const input = scene(${figureCode});\n\nconst compileResult = compileToScene(input);\nexport const svg = renderToSvgString(compileResult.scene, ${optionsCode});\n`;
+  return `import { embedTable } from '@retikz/table-vanilla';\nimport { compileToScene, renderToSvg, scene } from '@retikz/vanilla';\n${importCode}\nconst spec = ${formatVanillaValue(spec)};\n${dataCode}const input = scene(${figureCode});\n\nconst compileResult = compileToScene(input);\nexport const svg = renderToSvg(compileResult.scene, ${optionsCode});\n`;
 };
 
 const buildTablePreview = (
@@ -1194,7 +1194,7 @@ const buildTablePreview = (
   });
   return {
     code: buildTableCode(spec, resolvedDatasets, preview, options),
-    svg: renderToSvgString(compileResult.scene, { output: outputSize(preview) }),
+    svg: renderToSvg(compileResult.scene, { output: outputSize(preview) }),
     replacePreviewRender: false,
   };
 };
@@ -1228,7 +1228,7 @@ const buildFlowCode = (source: IRFlowDiagram, preview: PreviewIR, options: Build
     children: '__FLOW_CHILDREN__',
   }).replace("'__FLOW_CHILDREN__'", `[flowDiagram(${authoringCode})]`);
 
-  return `import { flowDiagram } from '@retikz/diagram-vanilla/flow';\nimport { compileToScene, renderToSvgString, scene } from '@retikz/vanilla';\nimport { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';\n\nconst input = scene(${figureCode});\n\nconst compileResult = compileToScene(input, { compile: { themeDefinitions: PreviewThemeDefinitionBundle.core } });\nexport const svg = renderToSvgString(compileResult.scene, { output: ${formatVanillaValue(outputSize(preview))} });\n`;
+  return `import { flowDiagram } from '@retikz/diagram-vanilla/flow';\nimport { compileToScene, renderToSvg, scene } from '@retikz/vanilla';\nimport { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';\n\nconst input = scene(${figureCode});\n\nconst compileResult = compileToScene(input, { compile: { themeDefinitions: PreviewThemeDefinitionBundle.core } });\nexport const svg = renderToSvg(compileResult.scene, { output: ${formatVanillaValue(outputSize(preview))} });\n`;
 };
 
 const buildFlowPreview = (
@@ -1260,7 +1260,7 @@ const buildFlowPreview = (
   });
   return {
     code: buildFlowCode(source, preview, options),
-    svg: renderToSvgString(compileResult.scene, { output: outputSize(preview) }),
+    svg: renderToSvg(compileResult.scene, { output: outputSize(preview) }),
   };
 };
 
@@ -1291,7 +1291,7 @@ const buildBranchCode = (source: IRBranchDiagram, preview: PreviewIR, options: B
     children: '__BRANCH_CHILDREN__',
   }).replace("'__BRANCH_CHILDREN__'", `[branchDiagram(${authoringCode})]`);
 
-  return `import { branchDiagram } from '@retikz/diagram-vanilla/branch';\nimport { compileToScene, renderToSvgString, scene } from '@retikz/vanilla';\nimport { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';\n\nconst input = scene(${figureCode});\n\nconst compileResult = compileToScene(input, { compile: { themeDefinitions: PreviewThemeDefinitionBundle.core } });\nexport const svg = renderToSvgString(compileResult.scene, { output: ${formatVanillaValue(outputSize(preview))} });\n`;
+  return `import { branchDiagram } from '@retikz/diagram-vanilla/branch';\nimport { compileToScene, renderToSvg, scene } from '@retikz/vanilla';\nimport { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';\n\nconst input = scene(${figureCode});\n\nconst compileResult = compileToScene(input, { compile: { themeDefinitions: PreviewThemeDefinitionBundle.core } });\nexport const svg = renderToSvg(compileResult.scene, { output: ${formatVanillaValue(outputSize(preview))} });\n`;
 };
 
 const buildBranchPreview = (
@@ -1322,7 +1322,7 @@ const buildBranchPreview = (
   });
   return {
     code: buildBranchCode(source, preview, options),
-    svg: renderToSvgString(compileResult.scene, { output: outputSize(preview) }),
+    svg: renderToSvg(compileResult.scene, { output: outputSize(preview) }),
   };
 };
 

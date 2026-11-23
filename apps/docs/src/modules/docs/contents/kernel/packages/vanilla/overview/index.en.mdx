@@ -13,7 +13,7 @@ Use `runtime.diagnostics()` to read retained session diagnostics.
 
 One-shot compilation and retained updates share input preparation. One-shot compilation returns a `CompileResult` directly. In retained mode, `runtime.read()` and subscribers receive the same committed `ReconcilerResult` snapshot. Read the frame’s output from `snapshot.compilation.result` and pass the snapshot itself as `expected` for incremental updates. Subscribers may read the new result, but cannot start another synchronous update during that notification. A precompiled Scene goes straight to Render without creating a compilation session.
 
-To export an already compiled Scene, call `renderToSvgString(scene)`. It serializes the scene without recompiling it.
+To export an already compiled Scene, call `renderToSvg(scene)`. It serializes the scene without recompiling it.
 
 ## One-shot compilation
 
@@ -40,7 +40,7 @@ import { SceneRuntime } from '@retikz/vanilla';
 const runtime = SceneRuntime.fromInput(input);
 try {
   runtime.replace(nextSource);
-  const svg = runtime.renderToSvgString();
+  const svg = runtime.renderToSvg();
 } finally {
   runtime.dispose();
 }
@@ -84,7 +84,7 @@ pnpm add @retikz/vanilla
 ```
 
 ```ts
-import { compileToScene, node, path, renderToSvgString, scene } from '@retikz/vanilla';
+import { compileToScene, node, path, renderToSvg, scene } from '@retikz/vanilla';
 import { mount } from '@retikz/vanilla/dom';
 
 const input = scene({
@@ -96,11 +96,11 @@ const input = scene({
 });
 
 const compileResult = compileToScene(input);
-const svg = renderToSvgString(compileResult.scene);
+const svg = renderToSvg(compileResult.scene);
 const view = mount(document.querySelector('#diagram')!, input);
 ```
 
-`renderToSvgString` needs no DOM, so it suits SSR, build-time generation, and saving SVG. `mount` hosts a browser view, creating SVG by default or Canvas with `renderer: 'canvas'`. The returned `view` owns later `update`, interaction hydration, animation controls, and disposal.
+`renderToSvg` needs no DOM, so it suits SSR, build-time generation, and saving SVG. `mount` hosts a browser view, creating SVG by default or Canvas with `renderer: 'canvas'`. The returned `view` owns later `update`, interaction hydration, animation controls, and disposal.
 
 `scene({ theme: { name, mode } })` writes a sparse Theme to the Input root, while `scope({ theme }, children)` uses the same local-inheritance form. Normalization reuses the Theme reference without mutating caller input; both routes finally use the same Core Theme and compile contract.
 
@@ -163,7 +163,7 @@ Blue nodes in this diagram belong to Vanilla input and processing; orange nodes 
 
 | API                 | Purpose                             | Returns                      |
 | ------------------- | ----------------------------------- | ---------------------------- |
-| `renderToSvgString` | Produce an `<svg>` string for SSR   | `string`                     |
+| `renderToSvg` | Produce an `<svg>` string for SSR   | `string`                     |
 | `mount`             | Mount SVG or Canvas by `renderer`   | `VanillaView` / `CanvasView` |
 | `mountSvg`          | Explicitly mount SVG DOM            | `VanillaView`                |
 | `mountCanvas`       | Explicitly mount Canvas             | `CanvasView`                 |
@@ -259,7 +259,7 @@ React applications use [`@retikz/react`](/kernel/packages/react/overview) to col
 | `ProcessingOptions`                  | type          | Compilation and retained update strategy                                      |
 | `SceneRuntime`                       | processing    | Framework-neutral retained processing controller                              |
 | `compileToScene`                     | processing    | One-shot synchronous compilation of InputScene or Core IR                     |
-| `renderToSvgString`                  | SSR           | Serialize a compiled Scene to an SVG string                                   |
+| `renderToSvg`                  | SSR           | Serialize a compiled Scene to an SVG string                                   |
 | `mount` / `mountSvg` / `mountCanvas` | DOM           | Mount a browser view from `@retikz/vanilla/dom`                               |
 | `VanillaRuntimeOptions`              | type          | Retained or static runtime config for InputScene / IRScene                    |
 | `VanillaRetainedRuntimeOptions`      | type          | Retained mode, update strategy, optional renderer factory                     |

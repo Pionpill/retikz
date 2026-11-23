@@ -62,7 +62,7 @@ export const Example = () => <Layout ir={ir} extensions={{ arrows: [diamondArrow
 
 ```ts
 import { diamondArrowDefinition } from '@retikz/extension';
-import { compileToScene, path, renderToSvgString, scene } from '@retikz/vanilla';
+import { compileToScene, path, renderToSvg, scene } from '@retikz/vanilla';
 
 const input = scene({
   children: [
@@ -76,7 +76,7 @@ const input = scene({
   ],
 });
 const compileResult = compileToScene(input, { compile: { arrows: [diamondArrowDefinition] } });
-const svg = renderToSvgString(compileResult.scene);
+const svg = renderToSvg(compileResult.scene);
 console.log(svg);
 ```
 
@@ -86,7 +86,7 @@ console.log(svg);
 ```ts
 import type { IRScene } from '@retikz/core';
 import { diamondArrowDefinition } from '@retikz/extension';
-import { compileToScene, renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, renderToSvg } from '@retikz/vanilla';
 
 const ir: IRScene = {
   type: 'scene',
@@ -104,7 +104,7 @@ const ir: IRScene = {
   ],
 };
 const compileResult = compileToScene(ir, { compile: { arrows: [diamondArrowDefinition] } });
-const svg = renderToSvgString(compileResult.scene);
+const svg = renderToSvg(compileResult.scene);
 console.log(svg);
 ```
 

@@ -83,7 +83,7 @@ export const Example = () => (
 用 `scene` / `path` 构造输入，在 `compileToScene` 的 `compile.paths` 中装配同一 Definition：
 
 ```ts
-import { compileToScene, path, renderToSvgString, scene } from '@retikz/vanilla';
+import { compileToScene, path, renderToSvg, scene } from '@retikz/vanilla';
 
 import { pulseRibbonDefinition } from './pulse-profile';
 
@@ -106,7 +106,7 @@ const input = scene({
 });
 
 const compileResult = compileToScene(input, { compile: { paths: [pulseRibbonDefinition] } });
-export const svg = renderToSvgString(compileResult.scene);
+export const svg = renderToSvg(compileResult.scene);
 ```
 
 </DocTab>
@@ -164,13 +164,13 @@ export const Example = () => <Layout ir={ir} extensions={{ paths: [pulseRibbonDe
 Vanilla 消费同一份 IR 时，在渲染选项中注入运行时 Definition：
 
 ```ts
-import { compileToScene, renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, renderToSvg } from '@retikz/vanilla';
 
 import { pulseRibbonDefinition } from './pulse-profile';
 import { ir } from './ribbon-ir';
 
 const compileResult = compileToScene(ir, { compile: { paths: [pulseRibbonDefinition] } });
-export const svg = renderToSvgString(compileResult.scene);
+export const svg = renderToSvg(compileResult.scene);
 ```
 
 </DocStep>

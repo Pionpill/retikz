@@ -3,7 +3,7 @@ import type { IRDetailTable } from '@retikz/table';
 import { createManualTableIR, TableSchema } from '@retikz/table';
 import { compileLayers } from '@retikz/vanilla';
 import type { InputEmbedContext } from '@retikz/vanilla';
-import { compileToScene, layer, normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
+import { compileToScene, layer, normalizeScene, renderToSvg, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 import { literal, string } from 'zod';
 
@@ -94,7 +94,7 @@ describe('Table Vanilla 适配器', () => {
     ]);
     const layers = [layer({ name: 'content', scene: layerScene })];
     const [compiled] = compileLayers(layers);
-    const svg = renderToSvgString(compiled.result.scene);
+    const svg = renderToSvg(compiled.result.scene);
 
     expect(svg).toContain('Ada');
     expect(svg).toContain('Lin');
@@ -123,7 +123,7 @@ describe('Table Vanilla 适配器', () => {
     });
     const inputScene = scene([embedTable(spec, { composites: [badge] })]);
 
-    expect(renderToSvgString(compileToScene(inputScene).scene)).toContain('Nested');
+    expect(renderToSvg(compileToScene(inputScene).scene)).toContain('Nested');
   });
 
   it('重复的匿名嵌入在 Source 中仍保持匿名', () => {

@@ -81,7 +81,7 @@ import { createLowerTex, createMathJaxEngine } from '@retikz/tex';
 Pass the lowerer as `compile.lowerTex` to `compileToScene`, then serialize the resulting Scene.
 
 ```ts
-import { compileToScene, node, renderToSvgString, scene } from '@retikz/vanilla';
+import { compileToScene, node, renderToSvg, scene } from '@retikz/vanilla';
 import { createLowerTex, createMathJaxEngine } from '@retikz/tex';
 
 const lowerTex = createLowerTex(await createMathJaxEngine({ profile: 'math' }));
@@ -90,7 +90,7 @@ const input = scene({
 });
 
 const compileResult = compileToScene(input, { compile: { lowerTex } });
-const svg = renderToSvgString(compileResult.scene);
+const svg = renderToSvg(compileResult.scene);
 ```
 
 If the engine and lowerer do not need separate configuration, await `createMathJaxLowerTex(options)` instead. Vanilla does not require React or `@retikz/tex/react`.

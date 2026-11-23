@@ -3,7 +3,7 @@ import { CompositeBaseSchema, defineComposite } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { literal, string } from 'zod';
 
-import { renderToSvgString } from '../../src';
+import { renderToSvg } from '../../src';
 import { mountSvg } from '../../src/dom';
 // @vitest-environment jsdom
 import { compileTestResult } from '../helpers/compilation';
@@ -120,7 +120,7 @@ describe('@retikz/vanilla mountSvg', () => {
       ],
     };
     const scene = compileTestResult(ir).scene;
-    const str = renderToSvgString(scene, { output: { idPrefix: 'fig' } });
+    const str = renderToSvg(scene, { output: { idPrefix: 'fig' } });
     const c = document.createElement('div');
     mountSvg(c, scene, { output: { idPrefix: 'fig' } });
     const domHtml = c.querySelector('svg')!.outerHTML;

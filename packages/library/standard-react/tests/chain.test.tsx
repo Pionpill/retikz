@@ -1,6 +1,6 @@
 import { createInputScene } from '@retikz/react';
 import { chain } from '@retikz/standard-vanilla/collection';
-import { compileToScene, normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
+import { compileToScene, normalizeScene, renderToSvg, scene } from '@retikz/vanilla';
 import { expect, it } from 'vitest';
 
 import { Chain, ChainCell, ChainParallel, ChainBranch, Matrix } from '../src/collection';
@@ -33,7 +33,7 @@ it('JSX 与 Vanilla 的嵌套分支和空单元等价', () => {
   });
 
   expect(normalizeScene(jsx).ir).toEqual(normalizeScene(vanilla).ir);
-  expect(renderToSvgString(compileToScene(jsx).scene)).toEqual(renderToSvgString(compileToScene(vanilla).scene));
+  expect(renderToSvg(compileToScene(jsx).scene)).toEqual(renderToSvg(compileToScene(vanilla).scene));
 });
 it('任意图形与骨架依赖自动闭合', () => {
   for (const element of [
@@ -50,7 +50,7 @@ it('任意图形与骨架依赖自动闭合', () => {
   ]) {
     const jsx = createInputScene(element);
 
-    expect(renderToSvgString(compileToScene(jsx).scene)).toContain('<svg');
+    expect(renderToSvg(compileToScene(jsx).scene)).toContain('<svg');
   }
 });
 it('错误 marker 不能被静默忽略', () => {

@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest';
 /*
  * @retikz/vanilla 架构守卫（node 环境）
  * @description 钉死三条不可越界：仅依赖 core/render（无 react）、不复制 Scene→SVG 内核、
- *   作 SSR 门面必须「导入不触 DOM」（无 document 的 Node 下 import + renderToSvgString 不炸）
+ *   作 SSR 门面必须「导入不触 DOM」（无 document 的 Node 下 import + renderToSvg 不炸）
  */
 const here = path.dirname(fileURLToPath(import.meta.url));
 
@@ -46,16 +46,16 @@ describe('@retikz/vanilla 架构守卫', () => {
     expect(root).not.toMatch(/ProcessingTransactionParticipant|createDomProcessingController|updateParticipant/);
   });
 
-  it('ssr-import-no-dom：无 document 的 Node 下 import + renderToSvgString 不炸', async () => {
+  it('ssr-import-no-dom：无 document 的 Node 下 import + renderToSvg 不炸', async () => {
     expect(typeof document).toBe('undefined'); // 确认在无 DOM 的 node 环境
 
     const mod = await import('../../src/index');
 
-    expect(typeof mod.renderToSvgString).toBe('function');
+    expect(typeof mod.renderToSvg).toBe('function');
     expect('mountSvg' in mod).toBe(false);
 
     const scene = { layout: { x: 0, y: 0, width: 10, height: 10 }, primitives: [] };
 
-    expect(() => mod.renderToSvgString(scene as never)).not.toThrow();
+    expect(() => mod.renderToSvg(scene as never)).not.toThrow();
   }, 15_000);
 });

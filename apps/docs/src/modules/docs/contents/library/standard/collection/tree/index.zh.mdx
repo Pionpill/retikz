@@ -28,9 +28,9 @@ import { Tree } from '@retikz/standard-react/collection';
 
 ```ts
 import { tree } from '@retikz/standard-vanilla/collection';
-import { compileToScene, scene, renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, scene, renderToSvg } from '@retikz/vanilla';
 
-renderToSvgString(compileToScene(scene({ children: [tree({ root: { content: 'A', children: ['B', 'C'] } })] })).scene);
+renderToSvg(compileToScene(scene({ children: [tree({ root: { content: 'A', children: ['B', 'C'] } })] })).scene);
 ```
 
 </DocTab>

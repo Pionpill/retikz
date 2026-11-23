@@ -4,7 +4,7 @@ import type { CoreProviderContribution } from '@retikz/core';
 import type { PlotDataPreparationOptions, PlotsLoweringOptions } from '@retikz/plot';
 import type { CompileResult } from '@retikz/reconciler';
 import type { ProcessingOptions, RenderToStringOptions } from '@retikz/vanilla';
-import { renderToSvgString, scene, compileToScene, embed } from '@retikz/vanilla';
+import { renderToSvg, scene, compileToScene, embed } from '@retikz/vanilla';
 import type { AnyInputEmbed } from '@retikz/vanilla';
 
 import { lowerChartInput } from '../shared';
@@ -67,7 +67,7 @@ export const renderChart = (input: InputChartRender, options: ChartRenderOptions
   const request = chartRenderRequest(input, compile);
   const result = compileToScene(request.source, { compile: request.compile });
 
-  return { svg: renderToSvgString(result.scene, renderOptions), compileResult: result };
+  return { svg: renderToSvg(result.scene, renderOptions), compileResult: result };
 };
 
 /** 只等待显式 Chart 领域计算，再同步编译同一份就绪结果 */

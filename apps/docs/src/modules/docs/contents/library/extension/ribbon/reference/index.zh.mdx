@@ -21,10 +21,10 @@ Ribbon 复用 Core 的 `Path` 组件，通过 `kind="ribbon"` 与 `kindOptions` 
 
 Vanilla 使用共享的 `path()` 构造相同输入，没有独立的 `ribbon()` 函数。Definition 在编译或渲染调用时显式注入；四种完整接入示例见[基础用法](/library/extension/ribbon/usage#接入方式)。
 
-| 入口                  | Ribbon 中的用途                                          | 参考入口                                                 |
-| --------------------- | -------------------------------------------------------- | -------------------------------------------------------- |
-| `path()`              | 设置 `kind: 'ribbon'`、`kindOptions` 和中心线 `children` | [Path API](/kernel/components/path/reference)            |
-| `scene()`             | 将流带 Path 放入场景                                     | [Layout API](/kernel/components/layout/reference)        |
-| `renderToSvgString()` | 将已编译的 Scene 序列化为 SVG 字符串                     | [SVG 接入示例](/library/extension/ribbon/usage#接入方式) |
+| 入口            | Ribbon 中的用途                                          | 参考入口                                                 |
+| --------------- | -------------------------------------------------------- | -------------------------------------------------------- |
+| `path()`        | 设置 `kind: 'ribbon'`、`kindOptions` 和中心线 `children` | [Path API](/kernel/components/path/reference)            |
+| `scene()`       | 将流带 Path 放入场景                                     | [Layout API](/kernel/components/layout/reference)        |
+| `renderToSvg()` | 将已编译的 Scene 序列化为 SVG 字符串                     | [SVG 接入示例](/library/extension/ribbon/usage#接入方式) |
 
 {/* @include library/extension/ribbon/reference/generated */}

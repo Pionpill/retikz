@@ -61,7 +61,7 @@ Create the formula engine, place the Node in a scene, and produce an SVG string:
 
 ```ts
 import { createMathJaxLowerTex } from '@retikz/tex';
-import { compileToScene, node, renderToSvgString, scene } from '@retikz/vanilla';
+import { compileToScene, node, renderToSvg, scene } from '@retikz/vanilla';
 
 const lowerTex = await createMathJaxLowerTex({ profile: 'math' });
 const input = scene({
@@ -73,7 +73,7 @@ const input = scene({
   ],
 });
 const compileResult = compileToScene(input, { compile: { lowerTex } });
-const svg = renderToSvgString(compileResult.scene);
+const svg = renderToSvg(compileResult.scene);
 ```
 
 </DocTab>

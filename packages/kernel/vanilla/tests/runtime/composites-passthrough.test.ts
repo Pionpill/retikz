@@ -3,7 +3,7 @@ import { CompositeBaseSchema, defineComposite } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { literal, string } from 'zod';
 
-import { compileToScene, renderToSvgString } from '../../src';
+import { compileToScene, renderToSvg } from '../../src';
 
 /*
  * @retikz/vanilla composites 透传（SSR / 构建期）
@@ -30,10 +30,10 @@ const ir: IRScene = {
 
 describe('@retikz/vanilla composites 透传', () => {
   it('编译时注入 composite 后，SVG 包含展开的矩形', () => {
-    expect(renderToSvgString(compileToScene(ir, { compile: { composites: [labeledBox] } }).scene)).toContain('<rect');
+    expect(renderToSvg(compileToScene(ir, { compile: { composites: [labeledBox] } }).scene)).toContain('<rect');
   });
 
   it('未注入对应 composite → 跳过该节点（不抛、不渲染 rect）', () => {
-    expect(renderToSvgString(compileToScene(ir).scene)).not.toContain('<rect');
+    expect(renderToSvg(compileToScene(ir).scene)).not.toContain('<rect');
   });
 });

@@ -10,7 +10,7 @@ import {
   overlayLayoutProvider,
 } from '@retikz/layout';
 import { flexLayout, gridLayout, overlayLayout } from '@retikz/layout-vanilla';
-import { compileToScene, normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
+import { compileToScene, normalizeScene, renderToSvg, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
 const nestedGrid = createGridLayout({ columns: [{ kind: 'fixed', value: 10 }] });
@@ -123,7 +123,7 @@ describe('Layout Vanilla 系列', () => {
       ],
     });
     expect(normalized.contributions.flatMap(contribution => contribution.providers)).toEqual([flexLayoutProvider]);
-    expect(renderToSvgString(compileToScene(input, { compile: { composites: [gridLayoutDefinition] } }).scene)).toMatch(
+    expect(renderToSvg(compileToScene(input, { compile: { composites: [gridLayoutDefinition] } }).scene)).toMatch(
       /^<svg/,
     );
   });

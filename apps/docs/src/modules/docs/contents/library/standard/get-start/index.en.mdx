@@ -63,7 +63,7 @@ Import grid and its adapter from the Standard subpath, then use Vanilla scene an
 
 ```ts
 import { grid } from '@retikz/standard-vanilla/presentation';
-import { compileToScene, renderToSvgString, scene } from '@retikz/vanilla';
+import { compileToScene, renderToSvg, scene } from '@retikz/vanilla';
 
 const input = scene({
   children: [
@@ -74,7 +74,7 @@ const input = scene({
   ],
 });
 const compileResult = compileToScene(input);
-const svg = renderToSvgString(compileResult.scene);
+const svg = renderToSvg(compileResult.scene);
 console.log(svg);
 ```
 

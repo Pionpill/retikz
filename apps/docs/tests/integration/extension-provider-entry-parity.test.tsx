@@ -9,7 +9,7 @@ import {
   ribbonPathDefinition,
 } from '@retikz/extension';
 import { Layout } from '@retikz/react';
-import { renderToSvgString, scene, compileToScene } from '@retikz/vanilla';
+import { renderToSvg, scene, compileToScene } from '@retikz/vanilla';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
@@ -75,10 +75,10 @@ describe('扩展根条目集成', () => {
       ],
     });
 
-    expect(() => renderToSvgString(compileToScene(input).scene)).toThrow(/cross/);
+    expect(() => renderToSvg(compileToScene(input).scene)).toThrow(/cross/);
 
     const compileResult = compileToScene(input, { compile: { shapes: [crossShapeDefinition] } });
-    const svg = renderToSvgString(compileResult.scene);
+    const svg = renderToSvg(compileResult.scene);
 
     expect(svg).toContain('<svg');
     expect(svg).toContain('#38bdf8');
@@ -88,7 +88,7 @@ describe('扩展根条目集成', () => {
   it('保持直接 Core 编译和 Vanilla 编译场景与精确的功能条目等效', () => {
     const direct = compileTestResult(source, definitions);
     const vanilla = compileToScene(source, { compile: definitions });
-    const svg = renderToSvgString(vanilla.scene);
+    const svg = renderToSvg(vanilla.scene);
 
     expect(vanilla.scene).toEqual(direct.scene);
     expect(vanilla.artifacts).toEqual(direct.artifacts);

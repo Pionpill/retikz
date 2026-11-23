@@ -6,7 +6,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { literal } from 'zod';
 
 import type { InputEmbedAdapter, InputScene } from '../../src';
-import { scene, node, normalizeScene, renderToSvgString, embed, SceneRuntime, compileToScene } from '../../src';
+import { scene, node, normalizeScene, renderToSvg, embed, SceneRuntime, compileToScene } from '../../src';
 import { prepareProcessingInput } from '../../src/runtime/_input/prepare';
 
 describe('Vanilla 处理', () => {
@@ -28,7 +28,7 @@ describe('Vanilla 处理', () => {
       };
       const listener = vi.fn();
       runtime.subscribe(listener);
-      expect(runtime.renderToSvgString()).toBe(renderToSvgString(expected.compilation.result.scene));
+      expect(runtime.renderToSvg()).toBe(renderToSvg(expected.compilation.result.scene));
       expect(listener).not.toHaveBeenCalled();
       runtime.update(remove, expected);
       const current = runtime.read();

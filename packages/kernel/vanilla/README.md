@@ -15,7 +15,7 @@ This package is ESM-only and requires Node.js 24 or newer.
 ## Authoring and SSR
 
 ```ts
-import { compileToScene, node, path, renderToSvgString, scene } from '@retikz/vanilla';
+import { compileToScene, node, path, renderToSvg, scene } from '@retikz/vanilla';
 
 const input = scene({
   children: [
@@ -26,7 +26,7 @@ const input = scene({
 });
 
 const compileResult = compileToScene(input);
-const svg = renderToSvgString(compileResult.scene, { output: { width: 640, height: 360 } });
+const svg = renderToSvg(compileResult.scene, { output: { width: 640, height: 360 } });
 ```
 
 ## One-shot compilation
@@ -37,7 +37,7 @@ import { compileToScene } from '@retikz/vanilla';
 const result = compileToScene(input);
 ```
 
-This returns the reconciler’s original `CompileResult`: read `result.scene` and `result.artifacts` directly. For retained work, create a `SceneRuntime` with `fromInput` or `fromIR`, replace the full source with `replace(source)`, or submit an incremental batch with `update(batch, expected)`. `runtime.read()` returns the committed `ReconcilerResult`, and `runtime.diagnostics()` drains session diagnostics. Export the committed frame with `runtime.renderToSvgString()`. Use `compileLayers` or `createLayerController` for named layers. Await external data before submitting a source.
+This returns the reconciler’s original `CompileResult`: read `result.scene` and `result.artifacts` directly. For retained work, create a `SceneRuntime` with `fromInput` or `fromIR`, replace the full source with `replace(source)`, or submit an incremental batch with `update(batch, expected)`. `runtime.read()` returns the committed `ReconcilerResult`, and `runtime.diagnostics()` drains session diagnostics. Export the committed frame with `runtime.renderToSvg()`. Use `compileLayers` or `createLayerController` for named layers. Await external data before submitting a source.
 
 ## Browser mounting
 
@@ -51,7 +51,7 @@ view.dispose();
 
 ## Exports
 
-- Root: `InputXxx`, `scene`, `layer`, `node`, `path`, `scope`, `embed`, `normalizeScene`, processing APIs, and `renderToSvgString`
+- Root: `InputXxx`, `scene`, `layer`, `node`, `path`, `scope`, `embed`, `normalizeScene`, processing APIs, and `renderToSvg`
 - DOM sub-entry: `@retikz/vanilla/dom` exports `mount`, `mountSvg`, `mountCanvas`, and `hydrate`
 - Tier 2 packages contribute through `InputEmbedAdapter`; each embed carries its adapter into compilation
 

@@ -127,7 +127,7 @@ const Demo = () => (
 
 ```ts
 import type { InputScene } from '@retikz/vanilla';
-import { compileToScene, renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, renderToSvg } from '@retikz/vanilla';
 import { roundedRectClip } from './rounded-rect-clip';
 
 const input: InputScene = {
@@ -178,7 +178,7 @@ const input: InputScene = {
   ],
 };
 const compileResult = compileToScene(input, { compile: { clips: [roundedRectClip] } });
-const svg = renderToSvgString(compileResult.scene);
+const svg = renderToSvg(compileResult.scene);
 ```
 
 </DocTab>

@@ -1,5 +1,5 @@
 import { Layout } from '@retikz/react';
-import { compileToScene, normalizeScene, renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, normalizeScene, renderToSvg } from '@retikz/vanilla';
 import type { FC } from 'react';
 
 import { RawSvgFrame } from '@/modules/docs/components/component-preview/source-panel';
@@ -24,7 +24,7 @@ export const previewSource = {
     const input = { ...ringScene, ...(theme === undefined ? {} : { theme }) };
     const ir = normalizeScene(input).ir;
     const compileResult = compileToScene(input, { compile: { marks: [ringMark] } });
-    const svg = renderToSvgString(compileResult.scene);
+    const svg = renderToSvg(compileResult.scene);
     return {
       ir: {
         files: [{ filename: 'custom-mark.ir.json', code: JSON.stringify(ir, null, 2), lang: 'json' as const }],

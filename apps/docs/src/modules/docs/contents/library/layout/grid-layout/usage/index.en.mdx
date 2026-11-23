@@ -81,7 +81,7 @@ export const Example = () => <Layout ir={ir} extensions={{ composites: [gridLayo
 <DocTab value="vanilla-api" label="Vanilla API">
 
 ```ts
-import { compileToScene, scene, renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, scene, renderToSvg } from '@retikz/vanilla';
 import { gridLayout } from '@retikz/layout-vanilla';
 
 const input = scene({
@@ -101,7 +101,7 @@ const input = scene({
 });
 
 const compileResult = compileToScene(input);
-console.log(renderToSvgString(compileResult.scene));
+console.log(renderToSvg(compileResult.scene));
 ```
 
 </DocTab>
@@ -109,7 +109,7 @@ console.log(renderToSvgString(compileResult.scene));
 
 ```ts
 import type { IRScene } from '@retikz/core';
-import { compileToScene, renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, renderToSvg } from '@retikz/vanilla';
 import { gridLayoutDefinition } from '@retikz/layout';
 
 const ir: IRScene = {
@@ -132,7 +132,7 @@ const ir: IRScene = {
   ],
 };
 
-console.log(renderToSvgString(compileToScene(ir, { compile: { composites: [gridLayoutDefinition] } }).scene));
+console.log(renderToSvg(compileToScene(ir, { compile: { composites: [gridLayoutDefinition] } }).scene));
 ```
 
 </DocTab>

@@ -83,7 +83,7 @@ export const Example = () => (
 Build input with `scene` / `path` and assemble the same Definition through `compile.paths` in `compileToScene`:
 
 ```ts
-import { compileToScene, path, renderToSvgString, scene } from '@retikz/vanilla';
+import { compileToScene, path, renderToSvg, scene } from '@retikz/vanilla';
 
 import { pulseRibbonDefinition } from './pulse-profile';
 
@@ -106,7 +106,7 @@ const input = scene({
 });
 
 const compileResult = compileToScene(input, { compile: { paths: [pulseRibbonDefinition] } });
-export const svg = renderToSvgString(compileResult.scene);
+export const svg = renderToSvg(compileResult.scene);
 ```
 
 </DocTab>
@@ -164,13 +164,13 @@ export const Example = () => <Layout ir={ir} extensions={{ paths: [pulseRibbonDe
 To consume the same IR with Vanilla, inject the runtime Definition through the rendering options:
 
 ```ts
-import { compileToScene, renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, renderToSvg } from '@retikz/vanilla';
 
 import { pulseRibbonDefinition } from './pulse-profile';
 import { ir } from './ribbon-ir';
 
 const compileResult = compileToScene(ir, { compile: { paths: [pulseRibbonDefinition] } });
-export const svg = renderToSvgString(compileResult.scene);
+export const svg = renderToSvg(compileResult.scene);
 ```
 
 </DocStep>

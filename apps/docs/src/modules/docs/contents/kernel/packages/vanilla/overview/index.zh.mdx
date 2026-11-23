@@ -13,7 +13,7 @@ description: 用无框架 InputScene 组织图形，并在根入口处理归一�
 
 单次编译和持续更新共用输入准备。单次编译直接返回 `CompileResult`；持续模式下，`runtime.read()` 和订阅回调拿到的是协调器已提交的同一个 `ReconcilerResult` 快照。用 `snapshot.compilation.result` 读取本帧编译产物，增量更新时把快照本身作为 `expected` 传回。订阅者可以读取新结果，不能在同一次同步通知中再次写入。预编译的 Scene 直接交给 Render，不创建编译会话。
 
-已有编译好的 Scene 时，直接用 `renderToSvgString(scene)` 导出 SVG。这个函数只读取场景，不会再次编译。
+已有编译好的 Scene 时，直接用 `renderToSvg(scene)` 导出 SVG。这个函数只读取场景，不会再次编译。
 
 ## 一次性编译
 
@@ -40,7 +40,7 @@ import { SceneRuntime } from '@retikz/vanilla';
 const runtime = SceneRuntime.fromInput(input);
 try {
   runtime.replace(nextSource);
-  const svg = runtime.renderToSvgString();
+  const svg = runtime.renderToSvg();
 } finally {
   runtime.dispose();
 }
@@ -84,7 +84,7 @@ pnpm add @retikz/vanilla
 ```
 
 ```ts
-import { compileToScene, node, path, renderToSvgString, scene } from '@retikz/vanilla';
+import { compileToScene, node, path, renderToSvg, scene } from '@retikz/vanilla';
 import { mount } from '@retikz/vanilla/dom';
 
 const input = scene({
@@ -96,11 +96,11 @@ const input = scene({
 });
 
 const compileResult = compileToScene(input);
-const svg = renderToSvgString(compileResult.scene);
+const svg = renderToSvg(compileResult.scene);
 const view = mount(document.querySelector('#diagram')!, input);
 ```
 
-`renderToSvgString` 可安全用于 SSR、构建期生成或保存 SVG；`mount` 用于浏览器宿主，默认创建 SVG，也可以通过 `renderer: 'canvas'` 切换到 Canvas。返回的 `view` 负责后续 `update`、交互水合、动画控制与释放。
+`renderToSvg` 可安全用于 SSR、构建期生成或保存 SVG；`mount` 用于浏览器宿主，默认创建 SVG，也可以通过 `renderer: 'canvas'` 切换到 Canvas。返回的 `view` 负责后续 `update`、交互水合、动画控制与释放。
 
 `scene({ theme: { name, mode } })` 会把稀疏 Theme 写入 Input 根，`scope({ theme }, children)` 复用同一局部继承写法。归一化沿用 Theme 引用，不修改调用方输入；最终两条路径都交给同一份 Core Theme 与 compile 契约。
 
@@ -163,7 +163,7 @@ Vanilla 构造函数不接收独立的 ID 字符串参数。`node({ id, position
 
 | API                 | 用途                                 | 返回                         |
 | ------------------- | ------------------------------------ | ---------------------------- |
-| `renderToSvgString` | SSR / 构建期产出 `<svg>` 字符串      | `string`                     |
+| `renderToSvg` | SSR / 构建期产出 `<svg>` 字符串      | `string`                     |
 | `mount`             | 按 `renderer` 挂载 SVG 或 Canvas     | `VanillaView` / `CanvasView` |
 | `mountSvg`          | 显式挂载 SVG DOM                     | `VanillaView`                |
 | `mountCanvas`       | 显式挂载 Canvas                      | `CanvasView`                 |
@@ -259,7 +259,7 @@ React 应用使用 [`@retikz/react`](/kernel/packages/react/overview) 收集 JSX
 | `ProcessingOptions`                  | type          | compile 与 retained 更新策略                             |
 | `SceneRuntime`                       | processing    | 无框架 retained processing controller                    |
 | `compileToScene`                     | processing    | 一次性同步编译 InputScene 或 Core IR                     |
-| `renderToSvgString`                  | SSR           | 将已编译的 Scene 序列化为 SVG 字符串                     |
+| `renderToSvg`                  | SSR           | 将已编译的 Scene 序列化为 SVG 字符串                     |
 | `mount` / `mountSvg` / `mountCanvas` | DOM           | 从 `@retikz/vanilla/dom` 挂载浏览器 view                 |
 | `VanillaRuntimeOptions`              | type          | InputScene / IRScene 的 retained 或 static runtime 配置  |
 | `VanillaRetainedRuntimeOptions`      | type          | retained 模式、更新策略与可选 renderer factory           |

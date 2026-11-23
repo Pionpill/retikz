@@ -66,7 +66,7 @@ export const Example = () => <Layout ir={ir} composites={[mapDefinition]} />;
 
 ```ts
 import { map } from '@retikz/standard-vanilla/collection';
-import { compileToScene, scene, renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, scene, renderToSvg } from '@retikz/vanilla';
 
 const input = scene({
   children: [
@@ -85,7 +85,7 @@ const input = scene({
   ],
 });
 const compileResult = compileToScene(input);
-const svg = renderToSvgString(compileResult.scene);
+const svg = renderToSvg(compileResult.scene);
 console.log(svg);
 ```
 
@@ -95,7 +95,7 @@ console.log(svg);
 ```ts
 import type { IRScene } from '@retikz/core';
 import { mapDefinition } from '@retikz/standard/collection';
-import { compileToScene, renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, renderToSvg } from '@retikz/vanilla';
 
 const ir: IRScene = {
   type: 'scene',
@@ -118,7 +118,7 @@ const ir: IRScene = {
   ],
 };
 const compileResult = compileToScene(ir, { compile: { composites: [mapDefinition] } });
-const svg = renderToSvgString(compileResult.scene);
+const svg = renderToSvg(compileResult.scene);
 console.log(svg);
 ```
 

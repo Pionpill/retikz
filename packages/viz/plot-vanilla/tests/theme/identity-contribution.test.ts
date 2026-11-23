@@ -26,7 +26,7 @@ vi.mock('@retikz/vanilla', async importOriginal => {
   const actual = await importOriginal<typeof RetikzVanilla>();
   return {
     ...actual,
-    renderToSvgString: vi.fn(() => '<svg />'),
+    renderToSvg: vi.fn(() => '<svg />'),
   };
 });
 

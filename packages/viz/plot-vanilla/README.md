@@ -44,11 +44,11 @@ normalizes the former and preserves the latter.
 
 ```ts
 import { embedPlot } from '@retikz/plot-vanilla';
-import { compileToScene, renderToSvgString, scene } from '@retikz/vanilla';
+import { compileToScene, renderToSvg, scene } from '@retikz/vanilla';
 
 const input = scene([embedPlot({ spec }, { sales })]);
 const compileResult = compileToScene(input);
-const svg = renderToSvgString(compileResult.scene, { output: { width: 360, height: 200 } });
+const svg = renderToSvg(compileResult.scene, { output: { width: 360, height: 200 } });
 ```
 
 Datasets and runtime callbacks stay outside `IRPlot`. `plotInputEmbedAdapter`

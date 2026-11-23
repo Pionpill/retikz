@@ -1,5 +1,5 @@
 import { createLegend, LegendContentKind, legendDefinition, legendProvider } from '@retikz/standard/presentation';
-import { compileToScene, normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
+import { compileToScene, normalizeScene, renderToSvg, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
 import type { InputLegend } from '../src/presentation';
@@ -37,11 +37,11 @@ describe('图例（）', () => {
     const embed = legend(input);
     const normalized = normalizeScene(scene({ children: [embed] }));
     const direct = normalized.ir.children[0];
-    const directOutput = renderToSvgString(
+    const directOutput = renderToSvg(
       compileToScene({ type: 'scene', version: 1, children: [direct] }, { compile: { composites: [legendDefinition] } })
         .scene,
     );
-    const vanillaOutput = renderToSvgString(
+    const vanillaOutput = renderToSvg(
       compileToScene(scene({ children: [embed] }), { compile: { composites: [legendDefinition] } }).scene,
     );
 
