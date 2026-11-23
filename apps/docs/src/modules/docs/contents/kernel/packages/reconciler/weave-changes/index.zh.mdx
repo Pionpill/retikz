@@ -1,0 +1,70 @@
+---
+title: 增量 / 变更追踪
+description: 跟随一次批次编辑，理解候选树如何维护地址、登记变化并保留回滚依据
+---
+
+[状态模型](/kernel/packages/reconciler/weave-state)介绍了跨更新保持身份的条目。变更追踪从这些条目出发：每条操作先修改候选树，让下一条操作能找到正确的目标；整批编辑结束后，Weave 才把受影响的条目交给调度器。
+
+## 候选树上的编辑
+
+沿用[包总纲](/kernel/packages/reconciler)中已挂载的增量会话：根的直接子项依次是 A、B 和连接它们的路径。下面用一个 <ApiSourceLink label="WeaveBatch" path="packages/kernel/reconciler/src/weave/shared/types.ts" startLine={427}>`WeaveBatch`</ApiSourceLink> 在 B 前插入 X，再移动刚插入的节点：
+
+```ts
+const scopeId = session.getScopeId();
+const next = session.update({
+  operations: [
+    {
+      kind: 'insert',
+      parentId: scopeId,
+      index: 1,
+      elements: [{ type: 'node', id: 'X', position: [90, 0] }],
+    },
+    {
+      kind: 'update',
+      target: { kind: 'child', scopeId, index: 1 },
+      input: { type: 'node', id: 'X', position: [90, 60] },
+    },
+  ],
+});
+```
+
+| 操作完成后 | 根的子项（按下标排列） | 下标 1 对应的节点    |
+| ---------- | ---------------------- | -------------------- |
+| 编辑前     | A、B、路径             | B                    |
+| 插入 X     | A、X、B、路径          | X，位置为 `[90, 0]`  |
+| 更新下标 1 | A、X、B、路径          | X，位置为 `[90, 60]` |
+
+更新和删除操作的 `target` 有三种定位方式：
+
+| 定位方式      | 地址示例                               | 定位规则                                                                                     |
+| ------------- | -------------------------------------- | -------------------------------------------------------------------------------------------- |
+| 按子项下标    | `{ kind: 'child', scopeId, index: 1 }` | 取当前候选容器的第 2 个直接子项。插入 X 后，同一下标指向 X，B 移到下标 2。                   |
+| 按元素 ID     | `{ kind: 'id', scopeId, id: 'B' }`     | 从指定容器查名称索引，未命中则向父级查找。示例中仍能找到 B。                                 |
+| 按 Scope 标识 | `{ kind: 'scope', scopeId }`           | 定位该标识对应的 Scope 本身。根不能作为更新或删除目标，但其标识可用作插入操作的 `parentId`。 |
+
+每步都通过 <ApiSourceLink label="applyOperation" path="packages/kernel/reconciler/src/weave/state/editor.ts" startLine={50}>`applyOperation`</ApiSourceLink> 修改声明。`insert` 把元素放在指定位置，`remove` 删除目标（Scope 连同子树一起删除），`update` 则替换同一类别元素的**完整自身输入**。所以示例第二步仍写出 X 的 ID；省略的旧字段不会被合并回来。更新 Scope 自身时，其子项保留。这两次编辑只触发一次批次编译，X 的中间位置不会生成一个单独的会话快照。
+
+## 地址与名称索引
+
+第一次操作没有修改 B 的声明，却改变了它在 IR 中的地址。<ApiSourceLink label="WeaveAddressIndex" path="packages/kernel/reconciler/src/weave/state/address.ts" startLine={11}>`WeaveAddressIndex`</ApiSourceLink> 同时维护“条目 → 当前路径”和“路径 → 条目”。插入 X 后，Weave 刷新插入位置及其后受影响的兄弟和子树；B 还是原来的条目，但旧地址不能再用来指代 B。第二步只改 X 的位置，不需要重建地址索引。
+
+<ComponentPreview files="address-index" size="md" hideCode type="illustration" />
+
+向下读是 `paths`（条目 → IR 路径），向上读是 `entries`（序列化路径 → 条目）。蓝色的 B 是同一条目：插入后它指向 `children[2]`，反查原地址 `children[1]` 则得到 X。
+
+修改 ID、节点别名或 Scope 的局部命名空间时，变化的是**名字能找到哪个条目**。索引必须逐步更新：如果先把 X 改名为 Y，下一条操作就可以用 Y 找它。但编译关心的是整批编辑后的结果。如果同批又把 Y 改成 Z，Weave 会把批末可见的绑定与批前比较，而不是因为 Y 曾短暂出现就重算所有查过 Y 的元素。
+
+## 初始受影响条目
+
+编辑过程中，<ApiSourceLink label="WeaveTracker" path="packages/kernel/reconciler/src/weave/state/tracker.ts" startLine={8}>`WeaveTracker`</ApiSourceLink> 登记两类工作：
+
+- **直接变化**：新增、替换输入或声明路径改变的条目需要处理。X 先插入再移动，多次登记按同一条目去重。删除条目时则断开它的读取关系，并从待处理集合中移除。
+- **需要核对的读取**：名称索引变化后，只检查读过相关名字的条目，包括以前查找失败的条目。若批前、批末看到的绑定身份或声明路径不同，就登记这个读取方，供调度器核对旧结果。
+
+这份集合只是增量调度的起点。插入 X 导致 B 的路径改变，与移动 B 导致连线端点改变，是两种不同的变化。追踪器不在编辑时沿连线展开所有间接影响；调度阶段才会检查消费者实际读取的结果。
+
+## 确认与恢复
+
+上述编辑、索引和计算都属于同一批候选。假设第二步误写成下标 9：目标不存在，准备失败，第一步插入的 X 也会被丢弃。下一批仍从 A、B 和路径开始。
+
+成功时，<ApiSourceLink label="WeaveTransaction" path="packages/kernel/reconciler/src/weave/state/transaction.ts" startLine={37}>`WeaveTransaction`</ApiSourceLink> 的 `commit` 先检查待提交条目，再让它们的当前状态指向候选状态。此时旧引用还在：如果还需要撤回本批，`rollback` 可以恢复原状态。只有 `finish` 最终确认后，本批的索引和编译快照才成为下次更新的基准。三个方法是 Weave 内部与会话之间的约定；上面的公开示例只调用一次 `session.update`。

@@ -119,6 +119,7 @@
     "pkgReconcilerCompileComposite": "执行 / Composite 求值",
     "pkgReconcilerCompileArtifacts": "执行 / 产物来源",
     "pkgReconcilerWeaveState": "增量 / 状态模型",
+    "pkgReconcilerWeaveChanges": "增量 / 变更追踪",
     "pkgInspect": "编译观测 · inspect",
     "pkgInspectBuiltins": "内置观测",
     "pkgInspectCustom": "自定义用法",
