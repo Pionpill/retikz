@@ -33,7 +33,7 @@ const isInputPath = (child: InputChild): child is InputPath =>
     child.children?.some(hasTargetShorthand) === true);
 
 /** 将嵌入 slot 的 Input child 在当前 Scene traversal 中归一化 */
-export const normalizeEmbeddedChildren = (
+const normalizeEmbeddedChildren = (
   children: InputScene['children'],
   context: SceneNormalizeContext,
 ): EmbedChildrenNormalizationResult => {

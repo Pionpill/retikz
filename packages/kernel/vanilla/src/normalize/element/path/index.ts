@@ -1,4 +1,4 @@
 export * from './node';
 export * from './path';
-export * from './target';
+export { parseTargetSugar } from './target';
 export * from './way';
