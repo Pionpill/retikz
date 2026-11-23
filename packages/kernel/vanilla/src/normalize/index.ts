@@ -53,5 +53,5 @@ export {
   parseWay,
   parseWayWithTargets,
 } from './element';
-export * from './helpers';
+export * from './factory';
 export * from './scene';
