@@ -11,8 +11,8 @@ import {
   prepareProcessingInputAsync,
 } from '../_input';
 import type { AsyncProcessingOptions, InputPreparedProcessing, ProcessingOptions, ProcessingSource } from '../_input';
-import type { InputVanillaCompileResultExtension, VanillaCompileOutput } from './result-extension';
-import { ResultExtensionHost, defaultVanillaCompileResultExtension } from './result-extension';
+import type { VanillaCompileOutput } from './result-extension';
+import { ResultExtensionHost, prepareCompileOutput } from './result-extension';
 import type { PreparedAsyncStaticProcessing, LayerProcessingResult, ProcessingResult } from './types';
 
 /** 已完成编译、等待宿主确认提交的 static processing 候选结果 */
@@ -66,13 +66,11 @@ const prepareStaticProcessingInput = (
   revision: number,
   signal?: AbortSignal,
 ): PreparedStaticProcessing => {
-  const input = { ...prepared, instance: {} };
-  const session = ResultExtensionHost.open(
-    options.compileResultExtension ?? defaultVanillaCompileResultExtension,
-    input,
-  );
+  const session =
+    options.compileResultExtension &&
+    ResultExtensionHost.open(options.compileResultExtension, { ...prepared, instance: {} });
   if (signal) assertPreparationActive(signal);
-  const output = compileVanillaWithResultExtension(input, session, options.reconciler);
+  const output = compileVanillaWithResultExtension(prepared, session, options.reconciler);
   if (signal) assertPreparationActive(signal);
   const result = Object.freeze({
     revision,
@@ -86,7 +84,7 @@ const prepareStaticProcessingInput = (
     commit: () => {
       if (committed) return;
       committed = true;
-      session.notifyCommit(output);
+      session?.notifyCommit(output);
     },
   };
 };
@@ -169,13 +167,13 @@ export function compileToScene<TSource extends ProcessingSource>(
 
 /** 为 static/SSR 执行与 retained Computation 同构的一次扩展编译 */
 export const compileVanillaWithResultExtension = (
-  input: InputVanillaCompileResultExtension,
-  session: ResultExtensionHost,
+  input: InputPreparedProcessing,
+  session: ResultExtensionHost | undefined,
   execution?: LayerReconcilerOptions,
 ): VanillaCompileOutput => {
   const reconciler = new SceneReconciler(input.coreOptions, execution);
   try {
-    const output = session.prepare(reconciler.mount(input.source).compilation);
+    const output = prepareCompileOutput(reconciler.mount(input.source).compilation, session);
     const diagnostics = reconciler.diagnostics();
     return diagnostics.length === 0
       ? output

@@ -96,6 +96,12 @@ export class ResultExtensionHost {
   }
 }
 
+/** 未配置扩展时直接交付编译结果，不创建扩展会话 */
+export const prepareCompileOutput = (
+  snapshot: VanillaReconcilerOutput,
+  session?: ResultExtensionHost,
+): VanillaCompileOutput => session?.prepare(snapshot) ?? { primary: snapshot.result, processingDiagnostics: [] };
+
 /** 缺省扩展：普通 Core compile、无扩展诊断 */
 export const defaultVanillaCompileResultExtension: VanillaCompileResultExtension = Object.freeze({
   create: () => ({

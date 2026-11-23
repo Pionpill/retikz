@@ -6,13 +6,7 @@ import { builtinRetainedRendererFactory, createRetainedRenderTarget } from '@ret
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
 import { SceneRuntime } from '../runtime';
-import type {
-  InputRetainedRender,
-  ProcessingResult,
-  ProcessingTransactionParticipant,
-  ProcessingTransactionParticipantFactory,
-  VanillaAnimationOptions,
-} from '../runtime';
+import type { InputRetainedRender, ProcessingResult, VanillaAnimationOptions } from '../runtime';
 import { calculateDisplaySize } from './display-size';
 import type {
   HydrateOptions,
@@ -98,69 +92,28 @@ const createRenderConfig = (
   };
 };
 
-/** 创建 DOM 子入口固定注入的 Render participant factory */
-const createRenderParticipantFactory = (
-  options: RetainedRuntimeOptions,
-  canvas: InputRenderRuntimeConfig['canvas'],
-  getAnimation: () => VanillaAnimationOptions,
-  handlers: () => ReadonlyArray<RenderHandlerContribution>,
-): Readonly<{
-  factory: ProcessingTransactionParticipantFactory;
-  read: () => RetainedRendererRead;
-}> => {
-  let lease: ReturnType<typeof createRetainedRenderTarget>['lease'] | undefined;
-  let active: (() => RetainedRendererRead) | undefined;
-
-  const factory: ProcessingTransactionParticipantFactory = () => {
-    const rendererFactory = options.runtimeOptions.rendererFactory ?? builtinRetainedRendererFactory;
-    const renderer =
-      options.backend === 'svg'
-        ? createRetainedRenderTarget({
-            backend: 'svg',
-            host: options.host,
-            rendererFactory,
-            immutableOptions: { backend: 'svg', idPrefix: options.idPrefix },
-            configuration: () => createRenderConfig(current, currentHandlers, canvas),
-            ...(lease === undefined ? {} : { rendererLease: lease }),
-          })
-        : createRetainedRenderTarget({
-            backend: 'canvas',
-            host: options.host,
-            rendererFactory,
-            immutableOptions: {
-              backend: 'canvas',
-              idPrefix: options.idPrefix,
-              ...(options.devicePixelRatio === undefined ? {} : { devicePixelRatio: options.devicePixelRatio }),
-            },
-            configuration: () => createRenderConfig(current, currentHandlers, canvas),
-            ...(lease === undefined ? {} : { rendererLease: lease }),
-          });
-    let current = getAnimation();
-    let currentHandlers = handlers();
-
-    const updateConfig = (): void => {
-      current = getAnimation();
-      currentHandlers = handlers();
-    };
-
-    return {
-      target: renderer.target,
-      update: updateConfig,
-      connect: () => {
-        lease = renderer.lease;
-        active = () => renderer.read();
-      },
-    } satisfies ProcessingTransactionParticipant;
-  };
-
-  return {
-    factory,
-    read: () => {
-      if (active === undefined)
-        throw new RetikzVanillaError(RetikzVanillaErrorCode.Dom, 'Vanilla DOM retained renderer is unavailable');
-      return active();
-    },
-  };
+/** 按宿主后端创建单个保留式渲染目标 */
+const createRenderTarget = (options: RetainedRuntimeOptions, configuration: () => InputRenderRuntimeConfig) => {
+  const rendererFactory = options.runtimeOptions.rendererFactory ?? builtinRetainedRendererFactory;
+  return options.backend === 'svg'
+    ? createRetainedRenderTarget({
+        backend: 'svg',
+        host: options.host,
+        rendererFactory,
+        immutableOptions: { backend: 'svg', idPrefix: options.idPrefix },
+        configuration,
+      })
+    : createRetainedRenderTarget({
+        backend: 'canvas',
+        host: options.host,
+        rendererFactory,
+        immutableOptions: {
+          backend: 'canvas',
+          idPrefix: options.idPrefix,
+          ...(options.devicePixelRatio === undefined ? {} : { devicePixelRatio: options.devicePixelRatio }),
+        },
+        configuration,
+      });
 };
 
 /** 创建 DOM 子入口使用的 retained processing controller */
@@ -181,13 +134,7 @@ const createRetainedProcessingControllerImplementation = (
         }
       : undefined;
 
-  const render = createRenderParticipantFactory(
-    options,
-    canvas,
-    () => currentAnimation,
-    () => handlerContributions,
-  );
-
+  let render: ReturnType<typeof createRenderTarget>;
   const processing = SceneRuntime.fromSource(
     options.input,
     {
@@ -195,7 +142,10 @@ const createRetainedProcessingControllerImplementation = (
       compileResultExtension,
       reconciler: { mode: ReconcilerMode.Incremental, updateStrategy: options.runtimeOptions.updateStrategy },
     },
-    render.factory,
+    () => {
+      render = createRenderTarget(options, () => createRenderConfig(currentAnimation, handlerContributions, canvas));
+      return render.target;
+    },
   );
 
   // 只在 processing 成功发布后同步宿主尺寸，失败事务保留原显示尺寸
@@ -234,7 +184,7 @@ const createRetainedProcessingControllerImplementation = (
       handlerContributions = [...handlerContributions, contribution];
 
       try {
-        processing.updateParticipant();
+        processing.updateTarget();
       } catch (cause) {
         handlerContributions = previousHandlers;
         throw cause;
@@ -251,7 +201,7 @@ const createRetainedProcessingControllerImplementation = (
           handlerContributions = handlerContributions.filter(candidate => candidate.registration !== registration);
 
           try {
-            processing.updateParticipant();
+            processing.updateTarget();
           } catch (cause) {
             handlerContributions = handlersBeforeDispose;
             throw cause;

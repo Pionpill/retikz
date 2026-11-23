@@ -203,10 +203,11 @@ describe('Vanilla 处理', () => {
         },
       }),
     };
-    const controller = createProcessingController({
-      type: 'scene',
-      children: [{ type: 'node', id: 'stable', position: [0, 0] }],
-    });
+    const phases: Array<string> = [];
+    const controller = createProcessingController(
+      { type: 'scene', children: [{ type: 'node', id: 'stable', position: [0, 0] }] },
+      { reconciler: { trace: record => phases.push(record.phase) } },
+    );
     const first = controller.read();
 
     expect(() =>
@@ -220,6 +221,7 @@ describe('Vanilla 处理', () => {
     expect(controller.read().revision).toBe(first.revision + 2);
 
     controller.dispose();
+    expect(phases).toEqual(['mount', 'update', 'update', 'unmount']);
   });
 
   it('候选 Composite topology 编译失败时保留旧 result 并记录 diagnostics', () => {
