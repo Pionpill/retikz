@@ -8,7 +8,8 @@ import { builtinRetainedRendererFactory, createRetainedRenderTarget } from '@ret
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
 import type { InputScene } from '../normalize';
-import { HostedSceneRuntime } from '../runtime';
+import { isInputScene } from '../normalize';
+import { SceneRuntime } from '../runtime';
 import type { VanillaAnimationOptions } from '../runtime';
 import { calculateDisplaySize } from './display-size';
 import type {
@@ -138,21 +139,21 @@ const createRetainedProcessingControllerImplementation = (
       : undefined;
 
   let render: ReturnType<typeof createRenderTarget>;
-  const processing = HostedSceneRuntime.fromSource(
-    options.input,
-    {
-      compile,
-      reconciler: { mode: ReconcilerMode.Incremental, updateStrategy: options.runtimeOptions.updateStrategy },
-    },
-    () => {
+  const processOptions = {
+    compile,
+    reconciler: { mode: ReconcilerMode.Incremental, updateStrategy: options.runtimeOptions.updateStrategy },
+    createTarget: () => {
       render = createRenderTarget(options, () => createRenderConfig(currentAnimation, handlerContributions, canvas));
       return render.target;
     },
-  );
+  };
+  const processing = isInputScene(options.input)
+    ? SceneRuntime.fromInput(options.input, processOptions)
+    : new SceneRuntime(options.input, processOptions);
 
   // 只在 processing 成功发布后同步宿主尺寸，失败事务保留原显示尺寸
   const updateHostSize = (): void => {
-    const size = calculateDisplaySize(processing.read().compilation.result.scene.layout, width, height);
+    const size = calculateDisplaySize(processing.current.compilation.result.scene.layout, width, height);
     if (options.backend === 'svg') {
       options.host.setAttribute('width', String(size.width));
       options.host.setAttribute('height', String(size.height));
@@ -169,7 +170,8 @@ const createRetainedProcessingControllerImplementation = (
       const previousAnimation = currentAnimation;
       currentAnimation = updateOptions.animation ?? currentAnimation;
       try {
-        processing.replace(next);
+        if (isInputScene(next)) processing.replaceInput(next);
+        else processing.replace(next);
         updateHostSize();
       } catch (cause) {
         currentAnimation = previousAnimation;
@@ -213,10 +215,10 @@ const createRetainedProcessingControllerImplementation = (
         },
       };
     },
-    dispose: processing.dispose,
-    diagnostics: processing.diagnostics as () => ReadonlyArray<ReconcilerDiagnostic>,
+    dispose: () => processing.dispose(),
+    diagnostics: () => processing.diagnostics() as ReadonlyArray<ReconcilerDiagnostic>,
     read: () => render.read(),
-    result: processing.read,
+    result: () => processing.current,
   };
 };
 

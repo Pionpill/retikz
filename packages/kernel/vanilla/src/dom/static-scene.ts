@@ -3,7 +3,7 @@ import type { CompositeArtifact } from '@retikz/reconciler';
 
 import type { InputScene } from '../normalize';
 import { compileToScene } from '../runtime';
-import type { CommonOptions } from '../runtime';
+import type { CommonOptions } from './types';
 
 /** 预编译场景没有编译产物 */
 export const EMPTY_ARTIFACTS: ReadonlyArray<CompositeArtifact> = Object.freeze([]);

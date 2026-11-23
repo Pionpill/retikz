@@ -6,7 +6,7 @@ export const pipelineImplementationI18n: Record<Lang, { titles: Array<string>; d
     titles: [
       'createInputScene',
       'compileToScene',
-      'prepareProcessingInput',
+      'SceneRuntime',
       'normalizeScene',
       'SceneReconciler',
       'CompileResult',
@@ -30,7 +30,7 @@ export const pipelineImplementationI18n: Record<Lang, { titles: Array<string>; d
     titles: [
       'createInputScene',
       'compileToScene',
-      'prepareProcessingInput',
+      'SceneRuntime',
       'normalizeScene',
       'SceneReconciler',
       'CompileResult',

@@ -25,16 +25,15 @@ Ordinary React and Vanilla input updates use complete replacement. Reconciler ba
 
 ## Input preparation
 
-React converts component declarations into `InputScene`, which Vanilla normalizes into `IRScene`; existing IR enters processing directly. `prepareProcessingInput` also prepares compilation configuration and Composite inputs. The controller owns a `SceneReconciler`, calling `mount` initially and `replace` for ordinary subsequent input.
+React converts component declarations to an `InputScene`. `SceneRuntime` normalizes authoring input and binds Composite instance inputs; existing IR goes directly to the reconciler. Initial and subsequent full inputs both call `SceneReconciler.replace`: the first commit is a mount, and later commits are updates.
 
 This path does not use the generic Runtime package's Source / Computation registry graph. `replace` explicitly rebuilds compilation output; it does not promise to skip compilation for equal document contents. Configuration-only changes can use `updateTarget` to retain compilation output.
 
 <SourceLinks
   sources={[
-    { label: 'Input preparation', path: 'packages/kernel/vanilla/src/runtime/_input/prepare.ts' },
     {
       label: 'Controller and session integration',
-      path: 'packages/kernel/vanilla/src/runtime/session/runtime.ts',
+      path: 'packages/kernel/vanilla/src/runtime/runtime.ts',
     },
     { label: 'Replacement and configuration updates', path: 'packages/kernel/reconciler/src/reconcile/reconciler.ts' },
   ]}
@@ -121,7 +120,7 @@ This diagram locates an ordinary Vanilla DOM input replacement. Member names are
 
 <ComponentPreview files="update-implementation" size="lg" hideCode type="flow" />
 
-Start at `prepareProcessingInput` and the controller, then follow mode dispatch in `SceneReconciler.replace`: non-incremental sessions use full traversal, while incremental sessions create a new Weave tree and call `executeWeaveMount`. `publish` prepares and commits the target; the Render target materializes candidate output as a host frame. The session then publishes its result and the controller notifies subscribers.
+Start at `SceneRuntime.replaceInput` for authoring input or `SceneRuntime.replace` for IR, then follow mode dispatch in `SceneReconciler.replace`: non-incremental sessions use full traversal, while incremental sessions create a new Weave tree and call `executeWeaveMount`. `publish` prepares and commits the target; the Render target materializes candidate output as a host frame. The session then publishes its result and the controller notifies subscribers.
 
 ## Further reading
 

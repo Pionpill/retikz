@@ -36,7 +36,6 @@ describe('@retikz/vanilla 入口边界', () => {
       'VanillaViewMode',
       'createDomProcessingController',
       'updateParticipant',
-      'prepareProcessingInput',
     ]) {
       expect(namespace[name]).toBeUndefined();
     }

@@ -258,7 +258,7 @@ export const LayoutRuntimeMode = Object.freeze({
 export type LayoutRuntimeMode = ValueOf<typeof LayoutRuntimeMode>;
 ```
 
-#### <ApiSourceLink label={"scene"} path={"packages/kernel/vanilla/src/normalize/factory.ts"} startLine={51}>scene</ApiSourceLink>
+#### <ApiSourceLink label={"scene"} path={"packages/kernel/vanilla/src/normalize/factory.ts"} startLine={44}>scene</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -285,7 +285,7 @@ export declare const scene: (input: InputScene['children'] | Omit<InputScene, 't
 
 </DocTabs>
 
-#### <ApiSourceLink label={"layer"} path={"packages/kernel/vanilla/src/normalize/factory.ts"} startLine={48}>layer</ApiSourceLink>
+#### <ApiSourceLink label={"layer"} path={"packages/kernel/vanilla/src/runtime/layers.ts"} startLine={43}>layer</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -314,7 +314,7 @@ export declare const layer: (config: Omit<InputLayer, 'type'>) => InputLayer;
 
 ## Direct calls
 
-#### <ApiSourceLink label={"InputLayer"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={29}>InputLayer</ApiSourceLink>
+#### <ApiSourceLink label={"InputLayer"} path={"packages/kernel/vanilla/src/runtime/layers.ts"} startLine={22}>InputLayer</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -324,7 +324,7 @@ export declare const layer: (config: Omit<InputLayer, 'type'>) => InputLayer;
 
 | Member    | Type                    | Default                                      | Description                                                   |
 | --------- | ----------------------- | -------------------------------------------- | ------------------------------------------------------------- |
-| `config?` | `LayerOptions`          | —                                            | Execution options overriding the layer stack defaults         |
+| `config?` | `ProcessOptions`        | —                                            | Execution options overriding the layer stack defaults         |
 | `name`    | `LayerName`             | —                                            | Unique layer name in the viewport                             |
 | `scene`   | `InputScene \| IRScene` | —                                            | The complete scene owned by this layer                        |
 | `type`    | `'layer'`               | —                                            | Authoring layer discriminator, fixed to layer                 |
@@ -342,7 +342,7 @@ export type InputLayer = {
   name: LayerName;
   zIndex?: number;
   scene: InputScene | IRScene;
-  config?: LayerOptions;
+  config?: ProcessOptions;
 };
 ```
 
@@ -350,7 +350,7 @@ export type InputLayer = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InputScene"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={55}>InputScene</ApiSourceLink>
+#### <ApiSourceLink label={"InputScene"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={15}>InputScene</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 

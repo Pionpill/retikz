@@ -30,8 +30,8 @@ it('Stack 操作箭头在 SVG 与保留模式更新中可独立切换', () => {
       [false, false],
       [true, true],
     ]) {
-      controller.replace(input(incoming, outgoing));
-      const serialized = JSON.stringify(controller.read().compilation.result.scene);
+      controller.replaceInput(input(incoming, outgoing));
+      const serialized = JSON.stringify(controller.current.compilation.result.scene);
       expect(serialized.includes('dodgerblue')).toBe(incoming);
       expect(serialized.includes('darkorange')).toBe(outgoing);
       const result = buildVanillaPreview(
@@ -82,8 +82,8 @@ it.each([true, false])('matrix=%s 时 Stack 虚线单元格在保留模式更新
   const controller = SceneRuntime.fromInput(first);
   try {
     for (const dashed of [false, true, false]) {
-      controller.replace(input(dashed));
-      expect(JSON.stringify(controller.read().compilation.result.scene).includes('"dashPattern":[4,3]')).toBe(dashed);
+      controller.replaceInput(input(dashed));
+      expect(JSON.stringify(controller.current.compilation.result.scene).includes('"dashPattern":[4,3]')).toBe(dashed);
     }
   } finally {
     controller.dispose();

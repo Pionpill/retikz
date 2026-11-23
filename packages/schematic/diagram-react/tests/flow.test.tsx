@@ -1,3 +1,4 @@
+import { resolveCoreProviderDependencies } from '@retikz/core';
 import { normalizeFlowDiagram } from '@retikz/diagram-vanilla/flow';
 import { FlowDiagramSchema } from '@retikz/diagram/flow';
 import { createInputScene } from '@retikz/react';
@@ -7,7 +8,6 @@ import { createElement, Fragment } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
-import { prepareProcessingInput } from '../../../kernel/vanilla/src/runtime/_input/prepare';
 import { RetikzDiagramReactError, RetikzDiagramReactErrorCode } from '../src';
 import * as FlowReact from '../src/flow';
 
@@ -834,7 +834,7 @@ it('通过 React、Vanilla 和直接 Source 相同地编译弯曲和完整标签
   expect(FlowDiagramSchema.parse(normalized.ir.children[0])).toEqual(direct);
   expect(FlowDiagramSchema.parse(vanilla)).toEqual(direct);
 
-  const providers = prepareProcessingInput(input).coreOptions;
+  const providers = resolveCoreProviderDependencies({ contributions: normalized.contributions });
   const expected = compileToScene({ type: 'scene', version: 1, children: [direct] }, { compile: providers }).scene;
 
   expect(compileToScene({ type: 'scene', version: 1, children: [vanilla] }, { compile: providers }).scene).toEqual(
@@ -904,7 +904,7 @@ it('在所有编写条目中保留自动、显式贝塞尔曲线和平滑路由'
   expect(FlowDiagramSchema.parse(react.ir.children[0])).toEqual(direct);
   expect(FlowDiagramSchema.parse(vanilla)).toEqual(direct);
 
-  const providers = prepareProcessingInput(input).coreOptions;
+  const providers = resolveCoreProviderDependencies({ contributions: react.contributions });
   const expected = compileToScene({ type: 'scene', version: 1, children: [direct] }, { compile: providers }).scene;
 
   expect(compileToScene({ type: 'scene', version: 1, children: [vanilla] }, { compile: providers }).scene).toEqual(

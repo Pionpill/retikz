@@ -12,8 +12,7 @@ import { embedTable, inputTableFromIR, tableInputEmbedAdapter } from '../../src'
 const contextOf = (id: string): InputEmbedContext => ({
   id,
   kind: 'table',
-  layerId: 'content',
-  identityPath: ['content', id],
+  identityPath: [id],
 });
 
 const detailSpec = (): IRDetailTable => ({

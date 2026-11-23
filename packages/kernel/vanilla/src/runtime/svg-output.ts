@@ -1,4 +1,9 @@
-import type { ProcessingOptions } from '../_input';
+import type { Scene } from '@retikz/core';
+import { prefersReducedMotion, resolveAnimationEnabled } from '@retikz/render/animation';
+import { renderToSvgString } from '@retikz/render/svg';
+
+/** 默认资源 id 前缀（确定性）；多实例同页须经 `options.output.idPrefix` 显式区分。SSR 与 mount 共用同一默认，避免两处漂移导致资源 id 失配 */
+export const DEFAULT_ID_PREFIX = 'r';
 
 /** 输出资源与显示尺寸选项 */
 export type VanillaOutputOptions = {
@@ -35,5 +40,18 @@ export type RenderToStringOptions = {
   animation?: VanillaAnimationOptions;
 };
 
-/** DOM 挂载既可接收预编译场景，也可编译作者声明 */
-export type CommonOptions = Pick<RenderToStringOptions, 'output' | 'animation'> & Pick<ProcessingOptions, 'compile'>;
+/** 将已编译的 Scene 与宿主输出选项交给 SVG 后端，不启动处理会话 */
+export const renderToSvg = (scene: Scene, options: RenderToStringOptions = {}): string => {
+  const output = options.output ?? {};
+  const animation = options.animation ?? {};
+  const animate = resolveAnimationEnabled(animation.enabled, prefersReducedMotion());
+
+  return renderToSvgString(scene, {
+    idPrefix: output.idPrefix ?? DEFAULT_ID_PREFIX,
+    animate,
+    snapshotAt: animation.snapshotAt,
+
+    width: output.width,
+    height: output.height,
+  });
+};

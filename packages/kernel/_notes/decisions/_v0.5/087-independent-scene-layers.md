@@ -26,20 +26,16 @@ const BuiltinLayerName = {
 
 type LayerName = OpenString<ValueOf<typeof BuiltinLayerName>>;
 
-// 分别移除宿主提交目标，仅增量模式允许配置 updateStrategy。
-type LayerReconcilerOptions =
-  Omit<FullSceneReconcilerOptions, 'target'> | Omit<IncrementalSceneReconcilerOptions, 'target'>;
-
-type LayerOptions = {
+type ProcessOptions = {
   compile?: CompileOptions;
-  reconciler?: LayerReconcilerOptions;
+  reconciler?: Omit<FullSceneReconcilerOptions, 'target'> | Omit<IncrementalSceneReconcilerOptions, 'target'>;
 };
 
 type InputLayer = {
   type: 'layer';
   name: LayerName;
   zIndex?: number;
-  config?: LayerOptions;
+  config?: ProcessOptions;
   scene: InputScene | IRScene;
 };
 ```
@@ -54,11 +50,11 @@ const stack = createLayerController(layers, options); // 持续更新
 
 ### 输出形态
 
-单图编译始终返回一份结果；分层入口始终返回按层序排列的具名结果集合，即使为空或只有一层也不展开。层名不会改变 Core IR；作者输入中匿名嵌入的身份仍按所属层隔离。driver 产生的只读辅助层仍归所属单图结果。
+单图编译始终返回一份结果；分层入口始终返回按层序排列的具名结果集合，即使为空或只有一层也不展开。图层包装完整场景。场景的归一化、匿名嵌入身份和 adapter 身份路径均不依赖层名；跨层定位由宿主结合层名与场景内身份完成。driver 产生的只读辅助层仍归所属单图结果。
 
 ### 名称与层序
 
-作者以 `name: OpenString<'background' | 'main' | 'overlay'>` 标识图层。名称在视口内唯一且在层生命周期内稳定，重名输入拒绝；改名等价于移除旧层并创建新层。直接声明 `children` 等价于单个隐式 `main` 层，不自动创建另外两层。
+作者以 `name: OpenString<'background' | 'main' | 'overlay'>` 标识图层。名称在视口内唯一且在层生命周期内稳定，重名输入拒绝；改名等价于移除旧层并创建新层。直接声明 `scene(children)` 只创建单图，不隐式创建图层。
 
 | 名称       | 缺省 zIndex | 具名会话预设              |
 | ---------- | ----------: | ------------------------- |

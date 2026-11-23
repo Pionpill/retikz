@@ -1,5 +1,6 @@
 import {
   ChildSchema,
+  createCompositeInputBindings,
   CompositeBaseSchema,
   defineComposite,
   LayoutChildProbeKind,
@@ -9,7 +10,7 @@ import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
 import type { InputEmbedAdapter, InputEmbedContribution, InputScene } from '../../src';
-import { embed, SceneRuntime, compileToScene } from '../../src';
+import { embed, SceneRuntime, compileToScene, normalizeScene } from '../../src';
 
 const leafDefinition = defineComposite({
   namespace: 'fixture',
@@ -71,15 +72,43 @@ describe('预处理复合组件输入的消费', () => {
     expect(JSON.stringify(sync.scene)).toContain('right-ready');
   });
 
+  it('直接传入 IR 时保留与其绑定的 Composite 实例输入', () => {
+    const { ir } = normalizeScene(source('authoring'));
+    const options = {
+      compile: {
+        composites: [leafDefinition],
+        compositeInputs: createCompositeInputBindings(ir, [{ path: ['children', 0], input: 'bound-to-ir' }]),
+      },
+    };
+    const runtime = new SceneRuntime(ir, options);
+    try {
+      expect(runtime.renderToSvg()).toContain('bound-to-ir');
+      expect(compileToScene(ir, options).scene).toEqual(runtime.current.compilation.result.scene);
+    } finally {
+      runtime.dispose();
+    }
+  });
+
   it('编写规范化为相同的 JSON 时更新准备好的输入', () => {
     const controller = SceneRuntime.fromInput(source('first-ready'), {
       compile: { composites: [leafDefinition] },
     });
-    controller.replace(source('second-ready'));
+    controller.replaceInput(source('second-ready'));
 
-    expect(controller.read().revision).toBe(1);
-    expect(JSON.stringify(controller.read().compilation.result.scene)).toContain('second-ready');
-    expect(JSON.stringify(controller.read().compilation.result.scene)).not.toContain('first-ready');
+    expect(controller.current.revision).toBe(1);
+    expect(JSON.stringify(controller.current.compilation.result.scene)).toContain('second-ready');
+    expect(JSON.stringify(controller.current.compilation.result.scene)).not.toContain('first-ready');
+
+    // IR 不携带作者侧实例输入，但仍使用调用方注册的 definition
+    controller.replace(normalizeScene(source('ir-only')).ir);
+    const irScene = JSON.stringify(controller.current.compilation.result.scene);
+    expect(irScene).toContain('undefined');
+    expect(irScene).not.toContain('first-ready');
+    expect(irScene).not.toContain('second-ready');
+
+    controller.replaceInput(source('third-ready'));
+    expect(controller.renderToSvg()).toContain('third-ready');
+    expect(controller.renderToSvg()).not.toContain('second-ready');
 
     controller.dispose();
   });

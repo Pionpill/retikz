@@ -34,8 +34,7 @@ const content: IRChild = { type: 'node', position: [0, 0], text: 'Badge' };
 const contextOf = (id: string): InputEmbedContext => ({
   id,
   kind: 'table',
-  layerId: 'default',
-  identityPath: ['default', id],
+  identityPath: [id],
 });
 
 type InputTableComponent = {

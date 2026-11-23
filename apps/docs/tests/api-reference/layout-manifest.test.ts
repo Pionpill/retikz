@@ -26,7 +26,7 @@ describe('Layout API 公开范围', () => {
     expect(sceneInput).toContain('ReadonlyArray<InputChild>');
     expect(sceneInput).not.toContain('`layers`');
     expect(layerInput).toContain('scene: InputScene | IRScene');
-    expect(layerInput).toContain('config?: LayerOptions');
+    expect(layerInput).toContain('config?: ProcessOptions');
     expect(source).toContain("IRScene['theme']");
 
     const extensions = source.split('### LayoutExtensions\n')[1]?.split('\n### ')[0] ?? '';

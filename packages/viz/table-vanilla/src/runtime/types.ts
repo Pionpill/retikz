@@ -1,11 +1,11 @@
 import type { IRScene } from '@retikz/core';
 import type { ExternalDatasets, DataInputBindings, DataTransformExecutor } from '@retikz/data';
 import type { IRTable, TablesLoweringOptions, TableLayoutManifest } from '@retikz/table';
-import type { ProcessingOptions, RenderToStringOptions } from '@retikz/vanilla';
+import type { ProcessOptions, RenderToStringOptions } from '@retikz/vanilla';
 
 /** renderTable 共享选项 */
 export type TableRenderCommonOptions = RenderToStringOptions &
-  Pick<ProcessingOptions, 'compile'> & {
+  Pick<ProcessOptions, 'compile'> & {
     /** renderTable 根级 Core Theme，与 React Layout 的 theme 语义相同 */
     theme?: IRScene['theme'];
     /** Table lowering 消费的外部 datasets */

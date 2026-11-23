@@ -26,7 +26,7 @@ describe('@retikz/vanilla 架构守卫', () => {
 
   it('no-renderer-core-duplication：经 @retikz/render/svg builder，不自写 Scene→SVG', () => {
     const mountSrc = readSrc('dom/mount-svg.ts');
-    const strSrc = readSrc('runtime/output/render-svg.ts');
+    const strSrc = readSrc('runtime/svg-output.ts');
 
     expect(mountSrc).toMatch(/from ['"]@retikz\/render\/svg['"]/);
     expect(mountSrc).toMatch(/buildSvgDocument/);
@@ -39,8 +39,8 @@ describe('@retikz/vanilla 架构守卫', () => {
   it('participant-stays-private：根 processing 与 DOM materializer 不把 transaction participant 暴露为公共扩展点', () => {
     const root =
       readSrc('index.ts') +
-      readSrc('runtime/session/types.ts') +
-      readSrc('runtime/_input/types.ts') +
+      readSrc('normalize/scene/types.ts') +
+      readSrc('runtime/layers.ts') +
       readSrc('dom/index.ts');
 
     expect(root).not.toMatch(/ProcessingTransactionParticipant|createDomProcessingController|updateParticipant/);

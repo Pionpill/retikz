@@ -55,8 +55,7 @@ const definitionOptionKeys = [
 const contextOf = (id: string, kind: string): InputEmbedContext => ({
   id,
   kind,
-  layerId: 'layer',
-  identityPath: ['layer', id],
+  identityPath: [id],
 });
 
 const lower = <TProps>(spec: InputEmbed<TProps>, adapter: InputEmbedAdapter<TProps>) =>

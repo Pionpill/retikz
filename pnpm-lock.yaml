@@ -1170,6 +1170,9 @@ importers:
         specifier: workspace:^
         version: link:../../kernel/vanilla
     devDependencies:
+      '@retikz/core':
+        specifier: workspace:^
+        version: link:../../kernel/core
       '@types/node':
         specifier: 'catalog:'
         version: 25.6.0
@@ -1287,6 +1290,9 @@ importers:
         specifier: workspace:^
         version: link:../../kernel/vanilla
     devDependencies:
+      '@retikz/core':
+        specifier: workspace:^
+        version: link:../../kernel/core
       '@types/node':
         specifier: 'catalog:'
         version: 25.6.0
@@ -1333,6 +1339,9 @@ importers:
         specifier: workspace:^
         version: link:../../kernel/vanilla
     devDependencies:
+      '@retikz/core':
+        specifier: workspace:^
+        version: link:../../kernel/core
       '@types/node':
         specifier: 'catalog:'
         version: 25.6.0

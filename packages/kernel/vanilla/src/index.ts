@@ -19,11 +19,6 @@ export type {
   InputEmbedContext,
   InputEmbedContribution,
   InputFoldStep,
-  InputLayer,
-  LayerName,
-  LayerOptions,
-  LayerReconcilerOptions,
-  NamedLayerResult,
   InputLineStep,
   InputMoveStep,
   InputNode,
@@ -57,9 +52,7 @@ export {
   coordinate,
   DrawWay,
   embed,
-  BuiltinLayerName,
   isInputScene,
-  layer,
   node,
   normalizeNode,
   normalizePath,
@@ -73,7 +66,22 @@ export {
   scene,
   scope,
 } from './normalize';
-export type { ProcessingOptions, LayerProcessingController } from './runtime';
-export { compileToScene, SceneRuntime, compileLayers, createLayerController } from './runtime';
-export type { CommonOptions, RenderToStringOptions } from './runtime';
-export { renderToSvg } from './runtime';
+export type { CommonOptions } from './dom';
+export type {
+  InputLayer,
+  LayerName,
+  LayerProcessingController,
+  LayerReconcilerOptions,
+  NamedLayerResult,
+  ProcessOptions,
+  RenderToStringOptions,
+} from './runtime';
+export {
+  BuiltinLayerName,
+  compileLayers,
+  compileToScene,
+  createLayerController,
+  layer,
+  renderToSvg,
+  SceneRuntime,
+} from './runtime';

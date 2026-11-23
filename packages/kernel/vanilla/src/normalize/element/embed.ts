@@ -68,9 +68,7 @@ export type InputEmbedContext = {
   id: string;
   /** 当前嵌入节点类型 */
   kind: string;
-  /** 所在分层 id */
-  layerId: string;
-  /** 从分层到当前节点的身份路径 */
+  /** 场景内从具名祖先到当前嵌入节点的身份路径 */
   identityPath: Array<string>;
   /** 在当前根 Scene traversal 中归一化嵌入 slot 的已类型化 authoring 子项 */
   normalizeChildren?: (children: InputScene['children']) => EmbedChildrenNormalizationResult;

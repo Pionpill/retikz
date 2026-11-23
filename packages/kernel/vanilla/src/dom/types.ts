@@ -10,8 +10,11 @@ import type { HydrationHandlers } from '@retikz/render/hydration';
 import type { RetainedRendererFactory } from '@retikz/render/runtime';
 
 import type { InputScene } from '../normalize';
-import type { CommonOptions, VanillaAnimationOptions } from '../runtime';
+import type { ProcessOptions, RenderToStringOptions, VanillaAnimationOptions } from '../runtime';
 import type { VanillaViewMode } from './constants';
+
+/** DOM 挂载既可接收预编译场景，也可编译作者声明 */
+export type CommonOptions = Pick<RenderToStringOptions, 'output' | 'animation'> & Pick<ProcessOptions, 'compile'>;
 
 /** Canvas 专属 runtime 选项 */
 export type VanillaCanvasOptions = {

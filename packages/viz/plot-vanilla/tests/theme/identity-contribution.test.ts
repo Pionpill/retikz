@@ -47,8 +47,7 @@ const data: ExternalDatasets = { sales: [{ x: 0, y: 1 }] };
 const contextOf = (id: string): InputEmbedContext => ({
   id,
   kind: 'plot',
-  layerId: 'chart',
-  identityPath: ['chart', id],
+  identityPath: [id],
 });
 
 const plotTheme = definePlotTheme({

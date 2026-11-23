@@ -64,10 +64,10 @@ SceneReconciler 保留现有公开操作，不增加新的准备句柄或公开�
 一次性作者编译使用以下入口：
 
 ```ts
-declare const compileToScene: (source: InputScene | IRScene, options?: ProcessingOptions) => CompileResult;
+declare const compileToScene: (source: InputScene | IRScene, options?: ProcessOptions) => CompileResult;
 ```
 
-单次编译接受 InputScene 或 IRScene，直接返回协调器的 CompileResult。持续处理的唯一公开单图实例是 SceneRuntime：fromInput / fromIR 指明来源；replace 完整替换，允许切换来源；update 只提交显式 Weave 批次并核验预期版本。实例的 renderToSvg 读取当前成功提交的结果，不重新计算或发通知。独立的 renderToSvg 只序列化已编译的 Scene；从声明一次性导出 SVG 时，先调用 compileToScene。具名层栈通过独立入口创建和读取，不改变单图的输入和返回类型。
+单次编译接受 InputScene 或 IRScene，直接返回协调器的 CompileResult。持续处理的唯一公开单图实例是 SceneRuntime：构造函数和 replace 接收完整 IR；fromInput 和 replaceInput 归一化作者输入并绑定本次贡献，同一会话允许切换来源；update 只提交显式 Weave 批次并核验预期版本。实例的 renderToSvg 读取当前成功提交的结果，不重新计算或发通知。独立的 renderToSvg 只序列化已编译的 Scene；从声明一次性导出 SVG 时，先调用 compileToScene。具名层栈通过独立入口创建和读取，不改变单图的输入和返回类型。
 
 同步门面在完整作者输入就绪后编译并完成成功通知；一次编译使用临时非增量协调器并负责释放。默认文字测量、provider 解析、诊断归属及错误 cause 保持现有 Vanilla processing 规则。
 
@@ -77,7 +77,7 @@ declare const compileToScene: (source: InputScene | IRScene, options?: Processin
 
 ### Vanilla 与其它消费者接入
 
-Vanilla 继续拥有 `InputScene` 归一化、作者贡献准备、provider 依赖收集；持续会话交付协调器的原始 ReconcilerResult。完整贡献就绪后进入同步协调器。已有 controller 初始调用 `mount`，完整输入更新调用 `replace`；一次性编译使用临时实例；从已有 Scene 输出 SVG 不创建实例。
+Vanilla 继续拥有 `InputScene` 归一化、作者贡献准备、provider 依赖收集；持续会话交付协调器的原始 ReconcilerResult。完整贡献就绪后进入同步协调器。首帧挂载和后续完整替换都将 IR 提交给同一协调器；一次性编译使用临时实例；从已有 Scene 输出 SVG 不创建实例。
 
 应用先等待领域任务，自行决定是否提交结果。Vanilla 按调用顺序同步更新，不管理请求取消、抢占或优先级。静态编译不暴露候选句柄，宿主负责自己的提交通知时机，不向 Reconciler 增加跨调用的编译提交阶段。
 

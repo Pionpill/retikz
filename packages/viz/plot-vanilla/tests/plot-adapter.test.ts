@@ -8,8 +8,7 @@ import { embedPlot, plot, plotInputEmbedAdapter, plotIROf } from '../src';
 const contextOf = (id: string): InputEmbedContext => ({
   id,
   kind: 'plot',
-  layerId: 'chart',
-  identityPath: ['chart', id],
+  identityPath: [id],
 });
 
 const salesSpec = (id?: string) =>

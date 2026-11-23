@@ -30,17 +30,17 @@ it('在保留模式更新期间删除并恢复 Group 标题和标签', () => {
   const controller = SceneRuntime.fromInput(source(true));
 
   try {
-    const initial = controller.read().compilation.result;
-    controller.replace(source(false));
-    const hidden = controller.read().compilation.result;
+    const initial = controller.current.compilation.result;
+    controller.replaceInput(source(false));
+    const hidden = controller.current.compilation.result;
 
     expect(JSON.stringify(hidden.scene)).not.toContain('Description');
     expect(JSON.stringify(hidden.scene)).not.toContain('Boundary');
     expect(JSON.stringify(hidden.scene)).toContain('Item');
 
-    controller.replace(source(true));
+    controller.replaceInput(source(true));
 
-    expect(controller.read().compilation.result.scene).toEqual(initial.scene);
+    expect(controller.current.compilation.result.scene).toEqual(initial.scene);
   } finally {
     controller.dispose();
   }
@@ -89,8 +89,7 @@ const adapterExport = (): InputEmbedAdapter<Readonly<Record<string, unknown>>> |
 const context: InputEmbedContext = {
   id: 'flow-embed',
   kind: 'diagram.flow',
-  layerId: 'layer',
-  identityPath: ['layer', 'flow-embed'],
+  identityPath: ['flow-embed'],
 };
 
 const sourceInput = {

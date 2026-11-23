@@ -86,7 +86,6 @@ const normalizeEmbed = (input: AnyInputEmbed, embedId: string, ctx: SceneNormali
     const context: InputEmbedContext = {
       id: embedId,
       kind: input.adapter.kind,
-      layerId: ctx.layerId,
       identityPath,
       normalizeChildren: children =>
         normalizeEmbeddedChildren(children, {

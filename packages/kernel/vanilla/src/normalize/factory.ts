@@ -1,5 +1,5 @@
 import type { InputCoordinate, InputNode, InputPath, InputPathConfig, InputScope } from './element';
-import type { InputLayer, InputScene } from './scene';
+import type { InputScene } from './scene';
 
 /**
  * 创建作者侧节点输入，身份由配置中的 id 声明
@@ -39,13 +39,6 @@ export const scope = (config: Omit<InputScope, 'type' | 'children'>, children: I
   ...config,
   children,
 });
-
-/**
- * 创建作者侧分层输入
- * @param config 分层名称、排序、计算配置与场景
- * @returns 带 layer 类别的输入，不编译或复制场景
- */
-export const layer = (config: Omit<InputLayer, 'type'>): InputLayer => ({ type: 'layer', ...config });
 
 /** 构造单图作者输入，不编译或复制子图元 */
 export const scene = (input: InputScene['children'] | Omit<InputScene, 'type' | 'version'>): InputScene =>

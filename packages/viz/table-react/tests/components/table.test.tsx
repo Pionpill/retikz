@@ -57,8 +57,7 @@ type InputTableComponent = {
 const contextOf = (id: string): InputEmbedContext => ({
   id,
   kind: 'table',
-  layerId: 'default',
-  identityPath: ['default', id],
+  identityPath: [id],
 });
 
 /** 读取 React 根组件构造的唯一 Table Vanilla 输入 */

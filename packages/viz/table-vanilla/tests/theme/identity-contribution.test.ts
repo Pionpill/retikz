@@ -7,8 +7,7 @@ import { inputTableFromIR, tableInputEmbedAdapter } from '../../src';
 const contextOf = (id: string): InputEmbedContext => ({
   id,
   kind: 'table',
-  layerId: 'content',
-  identityPath: ['content', id],
+  identityPath: [id],
 });
 
 describe('Table Vanilla 运行时风格契约', () => {

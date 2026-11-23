@@ -1,3 +1,4 @@
+import { resolveCoreProviderDependencies } from '@retikz/core';
 import {
   CodeBlockPropsSchema,
   createBlockHeader,
@@ -9,8 +10,6 @@ import type { InputEmbedAdapter } from '@retikz/vanilla';
 import { embed, SceneRuntime, normalizeScene, compileToScene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
-
-import { prepareProcessingInput } from '../../../../kernel/vanilla/src/runtime/_input/prepare';
 
 const schema = CodeBlockPropsSchema.safeExtend({ namespace: literal('test'), type: literal('service') });
 
@@ -75,8 +74,10 @@ describe('自定义代码块 React 编写', () => {
     const direct = compileToScene(
       { type: 'scene', version: 1, children: [source] },
       {
-        compile: prepareProcessingInput({ type: 'scene', children: [inputEmbed] }, { themeDefinitions: [coreStyle] })
-          .coreOptions,
+        compile: {
+          ...resolveCoreProviderDependencies({ contributions: [contribution] }),
+          themeDefinitions: [coreStyle],
+        },
       },
     );
 
@@ -87,7 +88,7 @@ describe('自定义代码块 React 编写', () => {
       compile: { themeDefinitions: [coreStyle] },
     });
 
-    expect(retained.read().compilation.result.scene).toEqual(actual.scene);
+    expect(retained.current.compilation.result.scene).toEqual(actual.scene);
 
     retained.dispose();
   });

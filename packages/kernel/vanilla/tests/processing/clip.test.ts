@@ -5,7 +5,6 @@ import { literal, strictObject } from 'zod';
 
 import type { InputEmbedAdapter, InputScene } from '../../src';
 import { embed, SceneRuntime, normalizeScene, compileToScene } from '../../src';
-import { prepareProcessingInput } from '../../src/runtime/_input/prepare';
 import { compileTestResult } from '../helpers/compilation';
 
 const customClip = (): ClipDefinition =>
@@ -45,7 +44,7 @@ describe('Vanilla 裁剪处理等价性', () => {
     const retained = SceneRuntime.fromInput(input, { compile });
 
     expect(staticResult.scene).toEqual(direct);
-    expect(retained.read().compilation.result.scene).toEqual(direct);
+    expect(retained.current.compilation.result.scene).toEqual(direct);
     expect(direct.resources?.clips).toEqual([
       expect.objectContaining({ kind: 'clip', path: expect.objectContaining({ fillRule: 'nonzero' }) }),
     ]);
@@ -76,8 +75,8 @@ describe('Vanilla 裁剪处理等价性', () => {
     };
 
     expect(() =>
-      prepareProcessingInput(embedded, {
-        clips: [customClip()],
+      compileToScene(embedded, {
+        compile: { clips: [customClip()] },
       }),
     ).toThrow(/definition conflict for clip:ticketClip/i);
   });

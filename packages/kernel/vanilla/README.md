@@ -37,7 +37,7 @@ import { compileToScene } from '@retikz/vanilla';
 const result = compileToScene(input);
 ```
 
-This returns the reconciler’s original `CompileResult`: read `result.scene` and `result.artifacts` directly. For retained work, create a `SceneRuntime` with `fromInput` or `fromIR`, replace the full source with `replace(source)`, or submit an incremental batch with `update(batch, expected)`. `runtime.read()` returns the committed `ReconcilerResult`, and `runtime.diagnostics()` drains session diagnostics. Export the committed frame with `runtime.renderToSvg()`. Use `compileLayers` or `createLayerController` for named layers. Await external data before submitting a source.
+This returns the reconciler’s original `CompileResult`: read `result.scene` and `result.artifacts` directly. For retained work, use `new SceneRuntime(ir, options)` for IR or `SceneRuntime.fromInput(input, options)` for authoring input, replace complete IR with `replace(ir)` or authoring input with `replaceInput(input)`, or submit an incremental batch with `update(batch, expected)`. `runtime.current` returns the committed `ReconcilerResult`, and `runtime.diagnostics()` drains session diagnostics. Export the committed frame with `runtime.renderToSvg()`. Use `compileLayers` or `createLayerController` for named layers. Await external data before submitting a source.
 
 ## Browser mounting
 

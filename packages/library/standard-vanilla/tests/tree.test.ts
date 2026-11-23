@@ -17,11 +17,11 @@ it('Tree自动装配并保留root稀疏Source', () => {
 it('重复节点身份的更新失败后保留上一棵完整树', () => {
   const controller = SceneRuntime.fromInput(scene({ children: [tree({ root: { id: 'parent', children: ['A'] } })] }));
   try {
-    const previous = controller.read().compilation.result.scene;
+    const previous = controller.current.compilation.result.scene;
     expect(() =>
-      controller.replace(scene({ children: [tree({ root: { id: 'same', children: [{ id: 'same' }] } })] })),
+      controller.replaceInput(scene({ children: [tree({ root: { id: 'same', children: [{ id: 'same' }] } })] })),
     ).toThrow();
-    expect(controller.read().compilation.result.scene).toEqual(previous);
+    expect(controller.current.compilation.result.scene).toEqual(previous);
   } finally {
     controller.dispose();
   }

@@ -6,10 +6,10 @@ import { chain, matrix } from '../src/collection';
 
 it('嵌套内容失败时保留上一次完整链，随后可正常更新', () => {
   const controller = SceneRuntime.fromInput(scene({ children: [chain({ items: ['A', 'B'] })] }));
-  const previous = controller.read();
+  const previous = controller.current;
 
   expect(() =>
-    controller.replace(
+    controller.replaceInput(
       scene({
         children: [
           chain({
@@ -19,11 +19,13 @@ it('嵌套内容失败时保留上一次完整链，随后可正常更新', () =
       }),
     ),
   ).toThrow();
-  expect(controller.read()).toBe(previous);
+  expect(controller.current).toBe(previous);
 
-  controller.replace(scene({ children: [chain({ skeleton: { items: ['A', { branches: [['B'], ['C']] }, 'D'] } })] }));
+  controller.replaceInput(
+    scene({ children: [chain({ skeleton: { items: ['A', { branches: [['B'], ['C']] }, 'D'] } })] }),
+  );
 
-  expect(controller.read().revision).toBe(previous.revision + 1);
+  expect(controller.current.revision).toBe(previous.revision + 1);
 
   controller.dispose();
 });
@@ -36,7 +38,7 @@ it('三入口和嵌套内容进入 retained 时保持 JSON-safe', () => {
   ]) {
     const controller = SceneRuntime.fromInput(scene({ children: [child] }));
 
-    expect(controller.read().compilation.result.scene.primitives.length).toBeGreaterThan(0);
+    expect(controller.current.compilation.result.scene.primitives.length).toBeGreaterThan(0);
 
     controller.dispose();
   }

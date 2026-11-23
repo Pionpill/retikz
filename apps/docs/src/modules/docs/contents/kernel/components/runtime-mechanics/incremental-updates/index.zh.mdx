@@ -25,14 +25,13 @@ description: 沿一次节点改色，追踪输入准备、Reconciler 会话、We
 
 ## 输入准备
 
-React 将组件声明转换为 `InputScene`，Vanilla 再归一化为 `IRScene`；已有 IR 直接进入处理流程。`prepareProcessingInput` 同时整理编译配置和 Composite 输入。控制器持有 `SceneReconciler`，初始化调用 `mount`，普通后续输入调用 `replace`。
+React 将组件声明转换为 `InputScene`。`SceneRuntime` 归一化作者输入并绑定 Composite 实例输入；已有 IR 则直接进入协调器。首次和后续完整输入都调用 `SceneReconciler.replace`：首次提交是 mount，之后是 update。
 
 这条链路不经过通用 Runtime 包的 Source／Computation 注册图。`replace` 显式重建编译结果，没有基于文档内容相等而跳过编译的保证。仅修改渲染配置时，控制器可调用 `updateTarget` 复用已有编译结果。
 
 <SourceLinks
   sources={[
-    { label: '输入准备', path: 'packages/kernel/vanilla/src/runtime/_input/prepare.ts' },
-    { label: '控制器与会话接线', path: 'packages/kernel/vanilla/src/runtime/session/runtime.ts' },
+    { label: '控制器与会话接线', path: 'packages/kernel/vanilla/src/runtime/runtime.ts' },
     { label: '完整替换与配置更新', path: 'packages/kernel/reconciler/src/reconcile/reconciler.ts' },
   ]}
 />
@@ -112,7 +111,7 @@ React Layout 先订阅成功发布的 `ReconcilerResult`，再构建宿主输出
 
 <ComponentPreview files="update-implementation" size="lg" hideCode type="flow" />
 
-从 `prepareProcessingInput` 进入控制器，再沿 `SceneReconciler.replace` 查看模式分派：非增量进入完整遍历，增量创建新 Weave 树并调用 `executeWeaveMount`。`publish` 调用目标准备和提交，Render 目标将候选结果物化为宿主帧；最后会话发布结果，控制器通知订阅者。
+作者输入从 `SceneRuntime.replaceInput` 进入会话，IR 则从 `SceneRuntime.replace` 进入，再沿 `SceneReconciler.replace` 查看模式分派：非增量进入完整遍历，增量创建新 Weave 树并调用 `executeWeaveMount`。`publish` 调用目标准备和提交，Render 目标将候选结果物化为宿主帧；最后会话发布结果，控制器通知订阅者。
 
 ## 延伸阅读
 

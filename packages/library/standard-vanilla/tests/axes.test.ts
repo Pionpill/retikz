@@ -26,8 +26,7 @@ describe('轴（）', () => {
     const contribution = axesInputEmbedAdapter.lower(embed.props, {
       id: 'runtime',
       kind: embed.adapter.kind,
-      layerId: 'main',
-      identityPath: ['main', 'runtime'],
+      identityPath: ['runtime'],
     });
 
     expect(contribution.node).toMatchObject({ id: 'authored-axes', meta: { source: 'vanilla' } });
@@ -38,8 +37,7 @@ describe('轴（）', () => {
     const contribution = axesInputEmbedAdapter.lower(embed.props, {
       id: 'runtime',
       kind: embed.adapter.kind,
-      layerId: 'main',
-      identityPath: ['main', 'runtime'],
+      identityPath: ['runtime'],
     });
 
     expect(embed).toMatchObject({ type: 'embed', adapter: { kind: 'standard.axes' } });

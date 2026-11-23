@@ -124,6 +124,7 @@ describe('<Layout> 的 Vanilla Input processing', () => {
 
   it('retained processing 将 JSX source 更新推入同一 Vanilla controller', async () => {
     const mount = vi.spyOn(vanilla.SceneRuntime, 'fromInput');
+    const replaceInput = vi.spyOn(vanilla.SceneRuntime.prototype, 'replaceInput');
     const container = document.createElement('div');
     const root = createRoot(container);
 
@@ -134,6 +135,7 @@ describe('<Layout> 的 Vanilla Input processing', () => {
         </Layout>,
       ),
     );
+    const initialSessions = mount.mock.results.map(result => result.value);
     await act(() =>
       root.render(
         <Layout>
@@ -142,7 +144,9 @@ describe('<Layout> 的 Vanilla Input processing', () => {
       ),
     );
 
-    expect(mount).toHaveBeenCalledOnce();
+    expect(mount).toHaveBeenCalledTimes(initialSessions.length);
+    expect(replaceInput).toHaveBeenCalledOnce();
+    expect(initialSessions).toContain(replaceInput.mock.contexts[0]);
     expect(container.querySelector('[data-retikz-id="second"]')).not.toBeNull();
 
     await act(() => root.unmount());
@@ -155,13 +159,13 @@ describe('<Layout> 的 Vanilla Input processing', () => {
       severity: 'warning' as const,
       message: 'test diagnostic',
     });
-    const controller = vanilla.SceneRuntime.fromInput({
-      type: 'scene',
-      children: [{ type: 'node', id: 'diagnostic-node', position: [0, 0] }],
-    });
     const diagnostics = vi.fn(() => Object.freeze([diagnostic]));
-    vi.spyOn(controller, 'diagnostics').mockImplementation(diagnostics);
-    vi.spyOn(vanilla.SceneRuntime, 'fromInput').mockReturnValue(controller);
+    const fromInput = vanilla.SceneRuntime.fromInput;
+    vi.spyOn(vanilla.SceneRuntime, 'fromInput').mockImplementation((...args) => {
+      const controller = fromInput(...args);
+      vi.spyOn(controller, 'diagnostics').mockImplementation(diagnostics);
+      return controller;
+    });
     const onDiagnostic = vi.fn();
     const container = document.createElement('div');
     const root = createRoot(container);
@@ -180,9 +184,7 @@ describe('<Layout> 的 Vanilla Input processing', () => {
     const disposers: Array<ReturnType<typeof vi.fn>> = [];
     vi.spyOn(vanilla.SceneRuntime, 'fromInput').mockImplementation((source, options) => {
       const controller = createController(source, options);
-      const dispose = vi.fn(controller.dispose);
-      vi.spyOn(controller, 'dispose').mockImplementation(dispose);
-      disposers.push(dispose);
+      disposers.push(vi.spyOn(controller, 'dispose'));
 
       return controller;
     });
@@ -199,7 +201,8 @@ describe('<Layout> 的 Vanilla Input processing', () => {
       ),
     );
 
-    expect(disposers).toHaveLength(2);
+    // 单次编译的会话已经释放；这里只统计 Strict Effects 创建的持续会话
+    expect(disposers.filter(dispose => dispose.mock.calls.length === 0)).toHaveLength(2);
 
     await act(() => root.unmount());
     await act(() => vi.runAllTimers());

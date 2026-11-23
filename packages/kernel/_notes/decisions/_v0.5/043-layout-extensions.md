@@ -49,4 +49,4 @@ type LayoutExtensions = Pick<
 - themeStyles 继续与已有 Provider 输入按原规则合并；theme selector 和 rootScope 行为不变。
 - 扩展是运行时配置，不进入持久化 IR；重复、未知名称和 Definition 错误仍由既有 Core 契约处理，不增加 adapter fallback。
 - 删除九个旧顶层属性，不保留别名或兼容读取。其余属性包括 lowerTex、easings、animationProperties 保持原样。
-- Vanilla 继续通过 ProcessingOptions.compile 接收同名扩展字段，与 React 共享 Definition 类型和实际编译路径；不为外层写法一致而改动 Vanilla 或 Core API。
+- Vanilla 继续通过 ProcessOptions.compile 接收同名扩展字段，与 React 共享 Definition 类型和实际编译路径；不为外层写法一致而改动 Vanilla 或 Core API。

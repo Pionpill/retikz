@@ -1,7 +1,7 @@
 import { fallbackMeasurer } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { createDefaultTextMeasurer } from '../../src/runtime/_input/text';
+import { createDefaultTextMeasurer } from '../../src/runtime/runtime';
 
 const browserMeasurer = createDefaultTextMeasurer();
 

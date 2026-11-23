@@ -21,7 +21,7 @@ import type { ReconcilerDiagnostic } from '@retikz/reconciler';
 import type { AnimationControls } from '@retikz/render/animation';
 import { resolveAnimationEnabled } from '@retikz/render/animation';
 import type { HydrationHandlers } from '@retikz/render/hydration';
-import type { InputScene, InputScope, ProcessingOptions } from '@retikz/vanilla';
+import type { InputScene, InputScope, ProcessOptions } from '@retikz/vanilla';
 import { isInputScene, SceneRuntime, compileToScene } from '@retikz/vanilla';
 import type { CSSProperties, FC, ReactNode, Ref } from 'react';
 import { useCallback, useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from 'react';
@@ -253,7 +253,7 @@ const useProcessingResult = (controller: SceneRuntime | undefined, fallbackResul
     (notify: () => void) => (controller === undefined ? () => undefined : controller.subscribe(() => notify())),
     [controller],
   );
-  const read = useCallback(() => controller?.read().compilation.result ?? fallbackResult, [controller, fallbackResult]);
+  const read = () => controller?.current.compilation.result ?? fallbackResult;
 
   return useSyncExternalStore(subscribe, read, read);
 };
@@ -264,7 +264,7 @@ type LayoutResultHostProps = Omit<React.ComponentProps<typeof ProcessingResultHo
 /** static 模式只执行一次无生命周期的 Vanilla processing */
 const StaticLayoutContent: FC<{
   source: InputScene | IRScene;
-  options: ProcessingOptions;
+  options: ProcessOptions;
   hostKey: string;
   hostProps: LayoutResultHostProps;
 }> = ({ source, options, hostKey, hostProps }) => {
@@ -275,7 +275,7 @@ const StaticLayoutContent: FC<{
 /** retained 模式复用同一 Vanilla controller，仅将后续 source 推入 update */
 const RetainedLayoutContent: FC<{
   source: InputScene | IRScene;
-  options: ProcessingOptions;
+  options: ProcessOptions;
   onDiagnostic?: (diagnostic: ReconcilerDiagnostic) => void;
   hostKey: string;
   hostProps: LayoutResultHostProps;
@@ -303,7 +303,7 @@ const RetainedLayoutContent: FC<{
   useEffect(() => {
     const nextController = isInputScene(currentSourceRef.current)
       ? SceneRuntime.fromInput(currentSourceRef.current, options)
-      : SceneRuntime.fromIR(currentSourceRef.current, options);
+      : new SceneRuntime(currentSourceRef.current, options);
     setController(nextController);
 
     return () => {
@@ -321,7 +321,10 @@ const RetainedLayoutContent: FC<{
     const previous = appliedSourceRef.current;
 
     try {
-      if (previous?.controller === controller && previous.source !== source) controller.replace(source);
+      if (previous?.controller === controller && previous.source !== source) {
+        if (isInputScene(source)) controller.replaceInput(source);
+        else controller.replace(source);
+      }
       appliedSourceRef.current = { controller, source };
     } catch {
       // controller 已记录受控诊断，保留最后一次成功 result 以维持现有宿主帧
@@ -431,7 +434,7 @@ export const Layout: FC<LayoutProps> = props => {
     return { ...viewed, animations } as InputScene | IRScene;
   }, [ambientTheme, irFromProp, reactInput, rootAnimations, theme, viewBox]);
 
-  const processingOptions = useMemo<ProcessingOptions>(
+  const processingOptions = useMemo<ProcessOptions>(
     () => ({
       ...(mode === LayoutRuntimeMode.Static
         ? {}

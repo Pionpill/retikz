@@ -8,7 +8,6 @@ import type { InputAuthoringSite } from './types';
 export type SceneNormalizeContext = {
   runtimePath: PropertyPath;
   runtimeInputs: Array<CompositeInputBinding>;
-  layerId: string;
   path: Array<string>;
   contributions: Array<CoreProviderContribution>;
   sourcePath: string;
@@ -17,7 +16,7 @@ export type SceneNormalizeContext = {
 
 /** 读取或为匿名 InputEmbed 确定仅运行时可见的稳定身份 */
 export const inputEmbedIdentityOf = (input: AnyInputEmbed, context: SceneNormalizeContext): string =>
-  input.id ?? `__retikz-embed:${context.layerId}:${context.sourcePath}:${input.adapter.kind}`;
+  input.id ?? `__retikz-embed:${context.sourcePath}:${input.adapter.kind}`;
 
 /** 当前父容器中一个 child 的 authoring 路径 */
 export const childSourcePath = (context: SceneNormalizeContext, index: number): string =>

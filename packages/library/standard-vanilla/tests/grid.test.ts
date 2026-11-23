@@ -16,8 +16,7 @@ describe('网格（）', () => {
     const contribution = gridInputEmbedAdapter.lower(embed.props, {
       id: 'runtime',
       kind: embed.adapter.kind,
-      layerId: 'main',
-      identityPath: ['main', 'runtime'],
+      identityPath: ['runtime'],
     });
 
     expect(contribution.node).toMatchObject({ id: 'authored-grid', meta: { source: 'vanilla' } });
@@ -31,8 +30,7 @@ describe('网格（）', () => {
     const contribution = gridInputEmbedAdapter.lower(embed.props, {
       id: 'runtime',
       kind: embed.adapter.kind,
-      layerId: 'main',
-      identityPath: ['main', 'runtime'],
+      identityPath: ['runtime'],
     });
 
     expect(embed).toMatchObject({ type: 'embed', adapter: { kind: 'standard.grid' } });
@@ -63,8 +61,7 @@ describe('网格（）', () => {
     const contribution = gridInputEmbedAdapter.lower(embed.props, {
       id: 'runtime',
       kind: embed.adapter.kind,
-      layerId: 'main',
-      identityPath: ['main', 'runtime'],
+      identityPath: ['runtime'],
     });
 
     expect(contribution.node).toEqual(createGrid(input));
@@ -83,8 +80,7 @@ describe('网格（）', () => {
     const contribution = gridInputEmbedAdapter.lower(embed.props, {
       id: 'runtime',
       kind: embed.adapter.kind,
-      layerId: 'main',
-      identityPath: ['main', 'runtime'],
+      identityPath: ['runtime'],
     });
 
     expect(contribution.node).toEqual(createGrid(input));

@@ -1,46 +1,6 @@
 import type { CompositeInputBinding, CoreProviderContribution, IRChild, IRCoordinate, IRScene } from '@retikz/core';
-import type { OpenString, ValueOf } from '@retikz/foundation';
-import type { CompileOptions, FullSceneReconcilerOptions, IncrementalSceneReconcilerOptions } from '@retikz/reconciler';
 
 import type { AnyInputEmbed, InputCoordinate, InputNode, InputPath, InputScope } from '../element';
-
-/** 内置作者图层名称 */
-export const BuiltinLayerName = { Background: 'background', Main: 'main', Overlay: 'overlay' } as const;
-
-export type LayerName = OpenString<ValueOf<typeof BuiltinLayerName>>;
-
-/** 视口宿主管理提交目标，各层配置执行方式 */
-export type LayerReconcilerOptions =
-  | Omit<FullSceneReconcilerOptions, 'target'>
-  | Omit<IncrementalSceneReconcilerOptions, 'target'>;
-
-/** 视口公共配置与单层覆盖 */
-export type LayerOptions = Readonly<{
-  /** 本层的编译选项 */
-  compile?: CompileOptions;
-  /** 本层的协调器执行选项 */
-  reconciler?: LayerReconcilerOptions;
-}>;
-
-/** 按画面顺序发布的独立图层结果 */
-export type NamedLayerResult<TResult> = Readonly<{ name: LayerName; zIndex: number; result: TResult }>;
-
-/** 作者侧图层 */
-export type InputLayer = {
-  /** 固定为 layer 的作者分层标识 */
-  type: 'layer';
-  /** 在视口内唯一的名称 */
-  name: LayerName;
-  /**
-   * 同值保持声明顺序的分层排序值
-   * @default background: 0; overlay: 100; otherwise: 10
-   */
-  zIndex?: number;
-  /** 当前层的完整场景 */
-  scene: InputScene | IRScene;
-  /** 覆盖层栈的执行配置 */
-  config?: LayerOptions;
-};
 
 /** 作者侧可写入 Scene 或 Scope 的子节点 */
 export type InputChild =

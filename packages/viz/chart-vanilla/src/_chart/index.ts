@@ -3,7 +3,7 @@ import type { IRChartSource } from '@retikz/chart';
 import type { CoreProviderContribution } from '@retikz/core';
 import type { PlotDataPreparationOptions, PlotsLoweringOptions } from '@retikz/plot';
 import type { CompileResult } from '@retikz/reconciler';
-import type { ProcessingOptions, RenderToStringOptions } from '@retikz/vanilla';
+import type { ProcessOptions, RenderToStringOptions } from '@retikz/vanilla';
 import { renderToSvg, scene, compileToScene, embed } from '@retikz/vanilla';
 import type { AnyInputEmbed } from '@retikz/vanilla';
 
@@ -15,7 +15,7 @@ export { normalizeChartCoordinate } from '../normalize/chart';
 export type { InputChartHostTheme, InputChartPanel } from '../shared';
 
 /** Chart 服务端渲染选项 */
-export type ChartRenderOptions = RenderToStringOptions & Pick<ProcessingOptions, 'compile'>;
+export type ChartRenderOptions = RenderToStringOptions & Pick<ProcessOptions, 'compile'>;
 
 /** Chart 单次编译与服务端渲染结果 */
 export type ChartRenderResult = Readonly<{

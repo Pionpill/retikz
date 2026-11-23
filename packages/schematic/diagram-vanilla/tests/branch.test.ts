@@ -31,17 +31,17 @@ it('更新标签而不保留过时的演示内容', () => {
   const controller = SceneRuntime.fromInput(source(true));
 
   try {
-    const initial = controller.read().compilation.result;
+    const initial = controller.current.compilation.result;
 
     expect(JSON.stringify(initial.scene)).toContain('Visible label');
 
-    controller.replace(source(false));
+    controller.replaceInput(source(false));
 
-    expect(JSON.stringify(controller.read().compilation.result.scene)).not.toContain('Visible label');
+    expect(JSON.stringify(controller.current.compilation.result.scene)).not.toContain('Visible label');
 
-    controller.replace(source(true));
+    controller.replaceInput(source(true));
 
-    expect(controller.read().compilation.result.scene).toEqual(initial.scene);
+    expect(controller.current.compilation.result.scene).toEqual(initial.scene);
   } finally {
     controller.dispose();
   }

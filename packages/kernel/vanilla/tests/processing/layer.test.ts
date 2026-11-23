@@ -1,7 +1,18 @@
 import { ReconcilerMode } from '@retikz/reconciler';
 import { describe, expect, it, vi } from 'vitest';
 
-import { embed, normalizeScene, compileLayers, createLayerController, layer, node, path, scene } from '../../src';
+import {
+  compileToScene,
+  scope,
+  embed,
+  normalizeScene,
+  compileLayers,
+  createLayerController,
+  layer,
+  node,
+  path,
+  scene,
+} from '../../src';
 
 const contents = (name: string, x: number) =>
   layer({ name, scene: scene({ children: [node({ id: 'box', position: [x, 0] })] }) });
@@ -42,6 +53,44 @@ describe('独立图层会话', () => {
     const compiled = compileLayers(source());
     expect(compiled.map(entry => entry.name)).toEqual(['background', 'overlay']);
     expect(compileLayers([])).toEqual([]);
+  });
+  it('同一场景在单图、不同层和同层替换时保留相同的嵌入身份', () => {
+    const paths: Array<Array<string>> = [];
+    const ids: Array<string> = [];
+    const drawing = scene([
+      scope({ id: 'group' }, [
+        embed({
+          adapter: {
+            kind: 'probe',
+            lower: (_props, context) => {
+              paths.push(context.identityPath);
+              ids.push(context.id);
+              return {
+                node: { type: 'node', id: context.id, position: [0, 0] },
+                providerDependencies: { roots: [], providers: [] },
+              };
+            },
+          },
+          props: {},
+        }),
+      ]),
+    ]);
+    const standalone = compileToScene(drawing);
+    const expectedPath = ['group', ids[0]];
+    expect(paths).toEqual([expectedPath]);
+
+    const layers = ['left', 'right'].map(name => layer({ name, scene: drawing }));
+    for (const { result } of compileLayers(layers)) expect(result.scene).toEqual(standalone.scene);
+    const controller = createLayerController(layers);
+    try {
+      const [left] = controller.read();
+      controller.replaceLayer(layers[1]);
+      expect(controller.read()[0]).toBe(left);
+      expect(controller.read()[1].result.compilation.result.scene).toEqual(standalone.scene);
+      expect(paths).toEqual(Array(6).fill(expectedPath));
+    } finally {
+      controller.dispose();
+    }
   });
   it('只替换指定层，重排序不重算，旧批次不能用于重建后的会话', () => {
     const controller = createLayerController(source(), { reconciler: { mode: ReconcilerMode.Incremental } });
@@ -88,6 +137,47 @@ describe('独立图层会话', () => {
     } finally {
       controller.dispose();
     }
+  });
+  it('替换已有层时使用该次配置，移除覆盖后恢复层栈配置', () => {
+    const stackWarning = vi.fn();
+    const layerWarning = vi.fn();
+    const controller = createLayerController([contents('overlay', 0)], { compile: { onWarn: stackWarning } });
+    const next = layer({ name: 'overlay', scene: scene([path({ way: [[0, 0], 'missing'] })]) });
+    try {
+      controller.replaceLayer({ ...next, config: { compile: { onWarn: layerWarning } } });
+      expect(layerWarning).toHaveBeenCalledOnce();
+      expect(stackWarning).not.toHaveBeenCalled();
+      controller.replaceLayer(next);
+      expect(stackWarning).toHaveBeenCalledOnce();
+      expect(layerWarning).toHaveBeenCalledOnce();
+    } finally {
+      controller.dispose();
+    }
+  });
+
+  it('新增层归一化期间销毁层栈，不发布尚未挂载的层', () => {
+    const controller = createLayerController([contents('main', 0)]);
+    const previous = controller.read();
+    const listener = vi.fn();
+    controller.subscribe(listener);
+    const next = layer({
+      name: 'overlay',
+      scene: scene([
+        embed({
+          adapter: {
+            kind: 'dispose-owner',
+            lower: () => {
+              controller.dispose();
+              return { node: { type: 'scope', children: [] }, providerDependencies: { roots: [], providers: [] } };
+            },
+          },
+          props: {},
+        }),
+      ]),
+    });
+    expect(() => controller.replaceLayer(next)).toThrow(/disposed/i);
+    expect(controller.read()).toBe(previous);
+    expect(listener).not.toHaveBeenCalled();
   });
   it('兄弟层的锚点不参与本层解析，警告仅交给本层回调', () => {
     const commonWarning = vi.fn();

@@ -27,7 +27,7 @@ it('进入保留处理时保持空单元格 JSON 安全', () => {
     const input = scene({ children: [child] });
     const controller = SceneRuntime.fromInput(input);
 
-    expect(controller.read().compilation.result.scene.primitives.length).toBeGreaterThan(0);
+    expect(controller.current.compilation.result.scene.primitives.length).toBeGreaterThan(0);
 
     controller.dispose();
   }
