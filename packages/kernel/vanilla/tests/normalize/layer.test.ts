@@ -7,7 +7,7 @@ describe('作者图层归一化', () => {
     expect(compileLayers([])).toEqual([]);
     const results = compileLayers([layer({ name: 'overlay', scene: scene([]) })]);
     expect(results.map(entry => entry.name)).toEqual(['overlay']);
-    expect(results[0].result.compileResult.scene.primitives).toEqual([]);
+    expect(results[0].result.scene.primitives).toEqual([]);
     expect(normalizeScene(scene([])).ir.children).toEqual([]);
   });
 
@@ -19,8 +19,8 @@ describe('作者图层归一化', () => {
     ]);
     expect(results.map(entry => entry.name)).toEqual(['background', 'overlay']);
     for (const { result } of results) {
-      expect(result.compileResult.scene.primitives).toHaveLength(1);
-      expect(result.compileResult.scene.primitives[0]).toMatchObject({ id: 'button' });
+      expect(result.scene.primitives).toHaveLength(1);
+      expect(result.scene.primitives[0]).toMatchObject({ id: 'button' });
     }
   });
 });

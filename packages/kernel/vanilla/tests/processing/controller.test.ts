@@ -17,7 +17,7 @@ import { prepareProcessingInput } from '../../src/runtime/_input/prepare';
 describe('Vanilla 处理', () => {
   it('单图可替换为 IR；批次只接受当前版本，导出不再次编译或发布', () => {
     const onCommit = vi.fn();
-    const resolve = vi.fn(() => []);
+    const resolve = vi.fn<VanillaCompileResultExtensionSession['resolve']>();
     const runtime = SceneRuntime.fromInput(scene([]), {
       reconciler: { mode: ReconcilerMode.Incremental },
       compileResultExtension: { create: () => ({ resolve, onCommit }) },
@@ -38,13 +38,16 @@ describe('Vanilla 处理', () => {
       runtime.subscribe(listener);
       const resolutions = resolve.mock.calls.length;
       const commits = onCommit.mock.calls.length;
-      expect(runtime.renderToSvgString()).toBe(renderToSvgString(expected.compileResult.scene));
+      expect(runtime.renderToSvgString()).toBe(renderToSvgString(expected.compilation.result.scene));
       expect(resolve).toHaveBeenCalledTimes(resolutions);
       expect(onCommit).toHaveBeenCalledTimes(commits);
       expect(listener).not.toHaveBeenCalled();
       runtime.update(remove, expected);
       const current = runtime.read();
-      expect(current.compileResult.scene.primitives).toHaveLength(0);
+      expect(resolve.mock.lastCall?.[0]).toBe(current.compilation);
+      expect(onCommit.mock.lastCall?.[0]).toBe(current.compilation.result);
+      expect(listener.mock.lastCall?.[0]).toBe(current);
+      expect(current.compilation.result.scene.primitives).toHaveLength(0);
       expect(() => runtime.update(remove, expected)).toThrow(/stale/i);
       expect(runtime.read()).toBe(current);
       expect(listener).toHaveBeenCalledTimes(1);
@@ -57,7 +60,7 @@ describe('Vanilla 处理', () => {
     const input: InputScene = { type: 'scene', children: [] };
     const reenter = vi.fn<() => void>();
     const session: VanillaCompileResultExtensionSession = {
-      resolve: () => [],
+      resolve: () => undefined,
       onCommit: reenter,
     };
     const controller = SceneRuntime.fromInput(input, { compileResultExtension: { create: () => session } });
@@ -193,8 +196,8 @@ describe('Vanilla 处理', () => {
     const second = controller.read();
 
     expect(second.revision).toBe(first.revision + 1);
-    expect(second.compileResult.scene).not.toBe(first.compileResult.scene);
-    expect(Object.isFrozen(second)).toBe(true);
+    expect(second.compilation.result.scene).not.toBe(first.compilation.result.scene);
+    expect(controller.read()).toBe(second);
     expect(listener).toHaveBeenCalledWith(second);
 
     expect(() =>
@@ -358,7 +361,7 @@ describe('Vanilla 处理', () => {
     const second = processing.read();
 
     expect(second.revision).toBe(first.revision + 1);
-    expect(second.compileResult.scene).not.toBe(first.compileResult.scene);
+    expect(second.compilation.result.scene).not.toBe(first.compilation.result.scene);
     expect(listener).toHaveBeenCalledWith(second);
     expect(() =>
       processing.replace({
@@ -386,7 +389,7 @@ describe('Vanilla 处理', () => {
         if (existing !== undefined) return existing;
 
         const session = {
-          resolve: () => [],
+          resolve: () => undefined,
         };
         sessions.set(input.instance, session);
 
@@ -409,10 +412,7 @@ describe('Vanilla 处理', () => {
     const retainedResult = controller.read();
 
     expect(retainedResult.revision).toBe(1);
-    expect(retainedResult.compileResult.scene).toEqual(staticResult.compileResult.scene);
-    expect(retainedResult.compileResult).toEqual(staticResult.compileResult);
-    expect(retainedResult.compileResult.artifacts).toEqual(staticResult.compileResult.artifacts);
-    expect(retainedResult.processingDiagnostics).toEqual(staticResult.processingDiagnostics);
+    expect(retainedResult.compilation.result).toEqual(staticResult);
 
     controller.dispose();
   });
@@ -422,7 +422,6 @@ describe('Vanilla 处理', () => {
     const session: VanillaCompileResultExtensionSession = {
       resolve: () => {
         if (reject) throw new Error('expected extension resolution failure');
-        return [];
       },
     };
     const extension: VanillaCompileResultExtension = {

@@ -21,7 +21,7 @@ describe('Chart Vanilla 标准组成', () => {
   });
 
   it('渲染为共享 Vanilla 场景的子级', () => {
-    const { compileResult } = compileToScene(scene({ children: [scatterChart(input)] }));
+    const compileResult = compileToScene(scene({ children: [scatterChart(input)] }));
     const svg = renderToSvgString(compileResult.scene);
 
     expect(svg).toContain('<svg');
@@ -36,7 +36,7 @@ describe('Chart Vanilla 标准组成', () => {
       encodings: { x: 'x', y: 'y', size: 'size' },
       panel: { position: [700, 0] },
     });
-    const { compileResult } = compileToScene(scene({ children: [scatterChart(input), bubble] }));
+    const compileResult = compileToScene(scene({ children: [scatterChart(input), bubble] }));
     const svg = renderToSvgString(compileResult.scene);
 
     expect(svg).toContain('scatter');

@@ -95,9 +95,7 @@ const input = scene({
   ],
 });
 
-console.log(
-  renderToSvgString(compileToScene(input, { compile: { paths: [ribbonPathDefinition] } }).compileResult.scene),
-);
+console.log(renderToSvgString(compileToScene(input, { compile: { paths: [ribbonPathDefinition] } }).scene));
 ```
 
 </DocTab>
@@ -126,7 +124,7 @@ const ir: IRScene = {
   ],
 };
 
-const { compileResult } = compileToScene(ir, { compile: { paths: [ribbonPathDefinition] } });
+const compileResult = compileToScene(ir, { compile: { paths: [ribbonPathDefinition] } });
 console.log(renderToSvgString(compileResult.scene));
 ```
 

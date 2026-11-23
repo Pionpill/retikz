@@ -39,10 +39,10 @@ describe('图例（）', () => {
     const direct = normalized.ir.children[0];
     const directOutput = renderToSvgString(
       compileToScene({ type: 'scene', version: 1, children: [direct] }, { compile: { composites: [legendDefinition] } })
-        .compileResult.scene,
+        .scene,
     );
     const vanillaOutput = renderToSvgString(
-      compileToScene(scene({ children: [embed] }), { compile: { composites: [legendDefinition] } }).compileResult.scene,
+      compileToScene(scene({ children: [embed] }), { compile: { composites: [legendDefinition] } }).scene,
     );
 
     expect(legendProvider.makeDefinition([])).toBe(legendDefinition);

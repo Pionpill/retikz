@@ -67,7 +67,7 @@ export const renderChart = (input: InputChartRender, options: ChartRenderOptions
   const request = chartRenderRequest(input, compile);
   const result = compileToScene(request.source, { compile: request.compile });
 
-  return { svg: renderToSvgString(result.compileResult.scene, renderOptions), compileResult: result.compileResult };
+  return { svg: renderToSvgString(result.scene, renderOptions), compileResult: result };
 };
 
 /** 只等待显式 Chart 领域计算，再同步编译同一份就绪结果 */

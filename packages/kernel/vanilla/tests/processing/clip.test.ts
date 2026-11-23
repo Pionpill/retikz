@@ -44,8 +44,8 @@ describe('Vanilla 裁剪处理等价性', () => {
     const staticResult = compileToScene(input, { compile });
     const retained = SceneRuntime.fromInput(input, { compile });
 
-    expect(staticResult.compileResult.scene).toEqual(direct);
-    expect(retained.read().compileResult.scene).toEqual(direct);
+    expect(staticResult.scene).toEqual(direct);
+    expect(retained.read().compilation.result.scene).toEqual(direct);
     expect(direct.resources?.clips).toEqual([
       expect.objectContaining({ kind: 'clip', path: expect.objectContaining({ fillRule: 'nonzero' }) }),
     ]);

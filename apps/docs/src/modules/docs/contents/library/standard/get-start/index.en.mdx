@@ -73,7 +73,7 @@ const input = scene({
     }),
   ],
 });
-const { compileResult } = compileToScene(input);
+const compileResult = compileToScene(input);
 const svg = renderToSvgString(compileResult.scene);
 console.log(svg);
 ```

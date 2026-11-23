@@ -1,7 +1,7 @@
 import type { DataTransformImplementationProvider } from '@retikz/data';
 import { createDataTransformExecutor } from '@retikz/data';
 import { preparePlotData, PlotSchema } from '@retikz/plot';
-import { SceneRuntime, embed, prepareStaticProcessing, compileToScene, scene } from '@retikz/vanilla';
+import { SceneRuntime, embed, compileToScene, scene } from '@retikz/vanilla';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { InputPlotEmbed } from '../src';
@@ -57,7 +57,7 @@ describe('异步 Plot 编写', () => {
     }
   });
 
-  it('独立通知已提交的血缘回调，并且从不通知未采用的候选', () => {
+  it('一次性编译完成后独立通知每个血缘回调', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const first = vi.fn(() => {
       throw new Error('author callback failed');
@@ -69,17 +69,11 @@ describe('异步 Plot 编写', () => {
     const options = { compileResultExtension: createPlotLineageCompileResultExtension() };
 
     try {
-      prepareStaticProcessing(source, options, 0);
-
-      expect(first).not.toHaveBeenCalled();
-      expect(second).not.toHaveBeenCalled();
-
-      const committed = prepareStaticProcessing(source, options, 0);
-      committed.commit();
+      const result = compileToScene(source, options);
 
       expect(first).toHaveBeenCalledOnce();
       expect(second).toHaveBeenCalledOnce();
-      expect(committed.result.compileResult.scene.primitives).toHaveLength(2);
+      expect(result.scene.primitives).toHaveLength(2);
     } finally {
       warn.mockRestore();
     }
@@ -161,6 +155,6 @@ describe('异步 Plot 编写', () => {
         ],
       }),
     );
-    expect(JSON.stringify(result.compileResult.scene).match(/"type":"ellipse"/g)).toHaveLength(3);
+    expect(JSON.stringify(result.scene).match(/"type":"ellipse"/g)).toHaveLength(3);
   });
 });

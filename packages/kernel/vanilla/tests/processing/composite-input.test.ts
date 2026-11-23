@@ -55,7 +55,7 @@ describe('预处理复合组件输入的消费', () => {
       },
     };
     const result = compileToScene({ type: 'scene', children: [embed({ adapter: parent, props: {} })] });
-    const group = result.compileResult.scene.primitives[0];
+    const group = result.scene.primitives[0];
     if (group.type !== 'group') throw new Error('Expected the authored Scope group');
     expect(new Set(group.children.map(item => item.id)).size).toBe(2);
   });
@@ -67,8 +67,8 @@ describe('预处理复合组件输入的消费', () => {
     };
     const options = { compile: { composites: [leafDefinition] } };
     const sync = compileToScene(input, options);
-    expect(JSON.stringify(sync.compileResult.scene)).toContain('left-ready');
-    expect(JSON.stringify(sync.compileResult.scene)).toContain('right-ready');
+    expect(JSON.stringify(sync.scene)).toContain('left-ready');
+    expect(JSON.stringify(sync.scene)).toContain('right-ready');
   });
 
   it('编写规范化为相同的 JSON 时更新准备好的输入', () => {
@@ -78,8 +78,8 @@ describe('预处理复合组件输入的消费', () => {
     controller.replace(source('second-ready'));
 
     expect(controller.read().revision).toBe(1);
-    expect(JSON.stringify(controller.read().compileResult.scene)).toContain('second-ready');
-    expect(JSON.stringify(controller.read().compileResult.scene)).not.toContain('first-ready');
+    expect(JSON.stringify(controller.read().compilation.result.scene)).toContain('second-ready');
+    expect(JSON.stringify(controller.read().compilation.result.scene)).not.toContain('first-ready');
 
     controller.dispose();
   });
@@ -116,7 +116,7 @@ describe('预处理复合组件输入的消费', () => {
       { compile: { composites: [leafDefinition, outerDefinition] } },
     );
 
-    expect(JSON.stringify(result.compileResult.scene)).toContain('slot-ready');
-    expect(JSON.stringify(result.compileResult.scene)).not.toContain('undefined');
+    expect(JSON.stringify(result.scene)).toContain('slot-ready');
+    expect(JSON.stringify(result.scene)).not.toContain('undefined');
   });
 });

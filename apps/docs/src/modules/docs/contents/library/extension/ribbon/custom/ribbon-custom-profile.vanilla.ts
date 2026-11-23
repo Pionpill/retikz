@@ -28,5 +28,5 @@ const input = scene({
   ],
 });
 
-const { compileResult } = compileToScene(input, { compile: { paths: [pulseRibbonDefinition] } });
+const compileResult = compileToScene(input, { compile: { paths: [pulseRibbonDefinition] } });
 export const svg = renderToSvgString(compileResult.scene);

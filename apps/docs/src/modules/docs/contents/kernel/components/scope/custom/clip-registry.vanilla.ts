@@ -44,7 +44,7 @@ const input: InputScene = {
   ],
 };
 
-const { compileResult } = compileToScene(input, {
+const compileResult = compileToScene(input, {
   compile: { clips: [roundedRectClip], measureText: browserMeasurer },
 });
 export const svg = renderToSvgString(compileResult.scene);

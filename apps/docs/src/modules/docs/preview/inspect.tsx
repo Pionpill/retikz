@@ -45,7 +45,7 @@ export const buildInspectionPreview = (
     themeDefinitions: PreviewThemeDefinitionBundle.core,
     measureText: browserMeasurer,
   };
-  const { compileResult: result } = compileToScene(input, { compile });
+  const result = compileToScene(input, { compile });
   const options = {
     registry: props.registry ?? createDefaultInspectorRegistry(),
     requests: props.requests,
@@ -92,7 +92,7 @@ import { browserMeasurer } from '@/modules/docs/components/component-preview/van
 const input: InputScene = ${JSON.stringify(output.input, null, 2)};
 const requests: ReadonlyArray<InspectionRequest> = ${JSON.stringify(element.props.requests, null, 2)};
 const compile = { clips: [pathClipDefinition], themeDefinitions: PreviewThemeDefinitionBundle.core, measureText: browserMeasurer };
-const { compileResult: result } = compileToScene(input, { compile });
+const result = compileToScene(input, { compile });
 const options = { registry: createDefaultInspectorRegistry(), requests, compileOptions: compile, idPrefix: '${name}-inspection' };
 const auxiliary = prepareInspectionPresentation(result, options);
 export const primarySvg = renderToSvgString(result.scene, { output: { idPrefix: '${name}-primary' }, animation: { enabled: false } });

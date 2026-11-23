@@ -1,9 +1,10 @@
+import type { ReconcilerResult } from '@retikz/reconciler';
+
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../error';
 import { normalizeSceneLayers, layerZIndex } from '../../normalize';
 import type { InputLayer, NamedLayerResult } from '../../normalize';
 import { prepareProcessingInput, mergeLayerOptions } from '../_input';
 import type { ProcessingOptions } from '../_input';
-import type { LayerProcessingResult, ProcessingResult } from '../compile';
 import { HostedSceneRuntime } from './runtime';
 import type { LayerProcessingController } from './types';
 
@@ -11,13 +12,13 @@ import type { LayerProcessingController } from './types';
 type LayerSession = {
   controller: HostedSceneRuntime;
   execution: ProcessingOptions['reconciler'];
-  entry: NamedLayerResult<ProcessingResult>;
+  entry: NamedLayerResult<ReconcilerResult>;
 };
 
 /** 按名称定位会话，更新目标层时不遍历兄弟层的输入 */
 export const createLayerController = (source: ReadonlyArray<InputLayer>, options: ProcessingOptions = {}) => {
   let disposed = false;
-  const listeners = new Set<(result: LayerProcessingResult) => void>();
+  const listeners = new Set<(result: ReadonlyArray<NamedLayerResult<ReconcilerResult>>) => void>();
   const diagnostics: Array<unknown> = [];
 
   const assertActive = () => {

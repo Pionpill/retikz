@@ -49,7 +49,7 @@ import { shape } from '@retikz/standard-vanilla/shape';
 import { compileToScene, scene, renderToSvgString } from '@retikz/vanilla';
 
 const input = scene({ children: [shape.polygon({ center: [0, 0], radius: 36, sides: 6 })] });
-const { compileResult } = compileToScene(input);
+const compileResult = compileToScene(input);
 const svg = renderToSvgString(compileResult.scene);
 console.log(svg);
 ```
@@ -67,7 +67,7 @@ const ir: IRScene = {
   version: 1,
   children: [{ namespace: 'standard', type: 'polygon', center: [0, 0], radius: 36, sides: 6 }],
 };
-const { compileResult } = compileToScene(ir, { compile: { composites: [polygonDefinition] } });
+const compileResult = compileToScene(ir, { compile: { composites: [polygonDefinition] } });
 const svg = renderToSvgString(compileResult.scene);
 console.log(svg);
 ```

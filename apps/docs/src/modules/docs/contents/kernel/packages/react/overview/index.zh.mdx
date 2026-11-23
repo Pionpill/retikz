@@ -171,14 +171,14 @@ Definition 数组按有序元素 identity 规范化，因此 render 时重新创
 
 <ComponentPreview files="react-to-scene" size="xs" hideCode />
 
-| 阶段                 | 所有者            | 做什么                                                                                  |
-| -------------------- | ----------------- | --------------------------------------------------------------------------------------- |
-| Kernel / Sugar JSX   | `@retikz/react`   | 收集 props 与 children；Sugar 先展开为 Kernel                                           |
-| `createInputScene()` | `@retikz/react`   | 遍历组件树，生成 `InputScene`，嵌入项在构造时绑定 adapter                               |
-| `normalizeScene()`   | `@retikz/vanilla` | 将 typed Input 归一为 `IRScene`，下沉 embeds 并汇总 composite 依赖                      |
-| `IRScene`            | `@retikz/core`    | JSON 可序列化的绘图契约，不包含 React element、hook 或 DOM                              |
-| `SceneReconciler`    | `@retikz/core`    | 处理 composite，解析 registry、引用、几何、布局、资源与动画                             |
-| `ProcessingResult`   | `@retikz/vanilla` | 从 `compileResult` 读取 Scene 和 artifacts，从 `processingDiagnostics` 读取处理阶段诊断 |
+| 阶段                 | 所有者               | 做什么                                                             |
+| -------------------- | -------------------- | ------------------------------------------------------------------ |
+| Kernel / Sugar JSX   | `@retikz/react`      | 收集 props 与 children；Sugar 先展开为 Kernel                      |
+| `createInputScene()` | `@retikz/react`      | 遍历组件树，生成 `InputScene`，嵌入项在构造时绑定 adapter          |
+| `normalizeScene()`   | `@retikz/vanilla`    | 将 typed Input 归一为 `IRScene`，下沉 embeds 并汇总 composite 依赖 |
+| `IRScene`            | `@retikz/core`       | JSON 可序列化的绘图契约，不包含 React element、hook 或 DOM         |
+| `SceneReconciler`    | `@retikz/core`       | 处理 composite，解析 registry、引用、几何、布局、资源与动画        |
+| `CompileResult`      | `@retikz/reconciler` | 一次编译的 Scene 和 artifacts                                      |
 
 `Layout` 会把文本测量器、Definition registries、TeX lowerer 等宿主能力作为 processing 的 compile options 注入，但这些选项不会把 React 写进 IR 或 Scene。直接传 `ir` prop 时会跳过 JSX collector。`artifacts` prop 请求 opt-in 产物，`onArtifacts` 在所选 host 发布后接收同次 compile 的 immutable artifacts；不会为通知再编译一次。
 

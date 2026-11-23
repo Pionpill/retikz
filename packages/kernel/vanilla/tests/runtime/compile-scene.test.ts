@@ -16,9 +16,9 @@ describe('compileToScene 场景与编译结果', () => {
     const vanilla = compileToScene(inputScene({ theme, children: [child] }), {});
     const direct = compileToScene({ type: 'scene', version: 1, theme, children: [child] }, {});
 
-    expect(vanilla.compileResult.scene).toEqual(direct.compileResult.scene);
-    expect(JSON.stringify(vanilla.compileResult.scene)).toContain('#0a141f');
-    expect(JSON.stringify(vanilla.compileResult.scene)).not.toContain('"fill":0.2');
+    expect(vanilla.scene).toEqual(direct.scene);
+    expect(JSON.stringify(vanilla.scene)).toContain('#0a141f');
+    expect(JSON.stringify(vanilla.scene)).not.toContain('"fill":0.2');
   });
 
   it('Vanilla Figure Theme 与直接 Core IR得到同一已物化 Scene', () => {
@@ -60,8 +60,8 @@ describe('compileToScene 场景与编译结果', () => {
       },
     );
 
-    expect(vanilla.compileResult.scene).toEqual(direct.compileResult.scene);
-    expect(JSON.stringify(vanilla.compileResult.scene)).not.toContain('theme');
+    expect(vanilla.scene).toEqual(direct.scene);
+    expect(JSON.stringify(vanilla.scene)).not.toContain('theme');
   });
 
   it('同次返回 Composite artifacts', () => {
@@ -74,9 +74,9 @@ describe('compileToScene 场景与编译结果', () => {
     });
     const ir: IRScene = { version: 1, type: 'scene', children: [{ namespace: 'test', type: 'marker', label: 'a' }] };
     const compiled = compileToScene(ir, { compile: { composites: [marker] } });
-    expect(compiled.compileResult.artifacts).toMatchObject([
+    expect(compiled.artifacts).toMatchObject([
       { namespace: 'test', type: 'marker', occurrence: { sourcePath: ['children', 0], expansionPath: [] }, value: 'a' },
     ]);
-    expect(Object.isFrozen(compiled.compileResult.artifacts)).toBe(true);
+    expect(Object.isFrozen(compiled.artifacts)).toBe(true);
   });
 });

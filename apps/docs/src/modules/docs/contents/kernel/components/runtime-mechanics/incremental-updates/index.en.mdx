@@ -82,11 +82,11 @@ Ordinary property updates retain address and name indexes. Insertions and remova
 
 ## Host commits
 
-Vanilla DOM connects a renderer through `createRetainedRenderTarget`, combining host commits with `ProcessingResult` publication in the session's output target. The target prepares a new frame and configuration. Changed compilation output produces `replaceScene`; configuration-only updates produce an empty-operation Patch. This integration does not derive per-primitive Patches automatically from complete-result differences.
+Vanilla DOM connects a renderer through `createRetainedRenderTarget`, combining host commits with `ReconcilerResult` publication in the session's output target. The target prepares a new frame and configuration. Changed compilation output produces `replaceScene`; configuration-only updates produce an empty-operation Patch. This integration does not derive per-primitive Patches automatically from complete-result differences.
 
 Scene snapshots record primitive identities, owners and topology from compilation provenance for Render validation and hydration. These identities are not Weave batch node addresses and do not guarantee local host updates.
 
-React Layout subscribes to a successfully published `ProcessingResult` before constructing host output. Reconciler target rollback guarantees do not cover React's own commit cycle.
+React Layout subscribes to a successfully published `ReconcilerResult` before constructing host output. Reconciler target rollback guarantees do not cover React's own commit cycle.
 
 <SourceLinks
   sources={[

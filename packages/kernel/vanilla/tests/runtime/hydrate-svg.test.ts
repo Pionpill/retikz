@@ -69,7 +69,7 @@ describe('@retikz/vanilla hydrate（SVG 水合）', () => {
   });
 
   it('ssr-then-hydrate：renderToSvgString 产静态串 → 注入 DOM → hydrate 绑定成功、不重渲染', () => {
-    const { compileResult } = compileToScene(idIr);
+    const compileResult = compileToScene(idIr);
     const svg = renderToSvgString(compileResult.scene);
 
     expect(svg).toContain('data-retikz-id="a"');
@@ -128,7 +128,7 @@ describe('@retikz/vanilla hydrate（SVG 水合）', () => {
   });
 
   it('standalone-hydrate-scene：传 scene → 富 context；不传 → 最小 context（meta/geometry undefined、animation no-op、不抛）', () => {
-    const { compileResult } = compileToScene(metaIr);
+    const compileResult = compileToScene(metaIr);
     const svg = renderToSvgString(compileResult.scene);
     const richContainer = document.createElement('div');
     document.body.appendChild(richContainer);

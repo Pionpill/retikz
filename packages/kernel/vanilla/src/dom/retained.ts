@@ -1,4 +1,5 @@
 import type { IRScene } from '@retikz/core';
+import type { ReconcilerResult } from '@retikz/reconciler';
 import { ReconcilerMode } from '@retikz/reconciler';
 import type { ReconcilerDiagnostic } from '@retikz/reconciler';
 import { prefersReducedMotion, resolveAnimationEnabled } from '@retikz/render/animation';
@@ -8,7 +9,7 @@ import { builtinRetainedRendererFactory, createRetainedRenderTarget } from '@ret
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
 import type { InputScene } from '../normalize';
 import { HostedSceneRuntime } from '../runtime';
-import type { ProcessingResult, VanillaAnimationOptions } from '../runtime';
+import type { VanillaAnimationOptions } from '../runtime';
 import { calculateDisplaySize } from './display-size';
 import type {
   HydrateOptions,
@@ -75,7 +76,7 @@ type DomRetainedProcessingController<TUpdateOptions extends RetainedSvgUpdateOpt
     /** 读取当前 committed renderer 状态 */
     read: () => RetainedRendererRead;
     /** 读取当前 committed processing result */
-    result: () => ProcessingResult;
+    result: () => ReconcilerResult;
   }>;
 
 /** 将当前 retained state 收敛为 Render Runtime config */
@@ -152,7 +153,7 @@ const createRetainedProcessingControllerImplementation = (
 
   // 只在 processing 成功发布后同步宿主尺寸，失败事务保留原显示尺寸
   const updateHostSize = (): void => {
-    const size = calculateDisplaySize(processing.read().compileResult.scene.layout, width, height);
+    const size = calculateDisplaySize(processing.read().compilation.result.scene.layout, width, height);
     if (options.backend === 'svg') {
       options.host.setAttribute('width', String(size.width));
       options.host.setAttribute('height', String(size.height));

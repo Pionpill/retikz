@@ -28,7 +28,7 @@ const createCommitTrackingCompileResultExtension = (): Readonly<{
       if (existing !== undefined) return existing;
 
       const session: VanillaCompileResultExtensionSession = {
-        resolve: () => [],
+        resolve: () => undefined,
         onCommit: commit,
       };
       sessions.set(input.instance, session);
@@ -83,9 +83,11 @@ describe('<Layout> 的 Vanilla Input processing', () => {
     const root = createRoot(container);
     await act(() =>
       root.render(
-        <Layout compileResultExtension={extension} runtime={{ mode: 'static' }}>
-          <Node id="static-commit-node" position={[0, 0]} />
-        </Layout>,
+        <StrictMode>
+          <Layout compileResultExtension={extension} runtime={{ mode: 'static' }}>
+            <Node id="static-commit-node" position={[0, 0]} />
+          </Layout>
+        </StrictMode>,
       ),
     );
 
@@ -161,7 +163,7 @@ describe('<Layout> 的 Vanilla Input processing', () => {
         if (existing !== undefined) return existing;
 
         const session: VanillaCompileResultExtensionSession = {
-          resolve: () => [],
+          resolve: () => undefined,
         };
         sessions.set(input.instance, session);
 

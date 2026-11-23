@@ -1,5 +1,5 @@
 import type { AnyCompositeDefinition } from '@retikz/core';
-import type { SceneCompilationSnapshot } from '@retikz/reconciler';
+import type { CompileResult, SceneCompilationSnapshot } from '@retikz/reconciler';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../error';
 import type { InputPreparedProcessing } from '../_input';
@@ -14,20 +14,12 @@ export type InputVanillaCompileResultExtension = InputPreparedProcessing &
     instance: object;
   }>;
 
-/** 同 revision 的 Core primary 与扩展诊断 */
-export type VanillaCompileOutput = Readonly<{
-  /** Core 同次 compile 的 primary result */
-  primary: VanillaReconcilerOutput['result'];
-  /** 扩展诊断与一次性执行期间收集的非致命异常 */
-  processingDiagnostics: ReadonlyArray<unknown>;
-}>;
-
 /** 一次 source/authoring 配置独占的 Vanilla 编译结果扩展 session */
 export type VanillaCompileResultExtensionSession = Readonly<{
-  /** 读取本次编译结果，只返回扩展产生的诊断 */
-  resolve: (coreOutput: VanillaReconcilerOutput) => ReadonlyArray<unknown>;
+  /** 在提交前读取本次编译结果，抛错可拒绝候选 */
+  resolve: (coreOutput: VanillaReconcilerOutput) => void;
   /** 整帧成功提交后的可选通知 */
-  onCommit?: (output: VanillaCompileOutput) => void;
+  onCommit?: (result: CompileResult) => void;
 }>;
 
 /** Vanilla 的领域中立可选编译结果扩展 */
@@ -51,7 +43,7 @@ const extensionError = (message: string, cause: unknown): RetikzVanillaError => 
 /** 管理扩展会话的候选编译结果与提交后通知 */
 export class ResultExtensionHost {
   private static readonly hosts = new WeakMap<VanillaCompileResultExtensionSession, ResultExtensionHost>();
-  private readonly outputs = new WeakMap<VanillaReconcilerOutput, VanillaCompileOutput>();
+  private readonly prepared = new WeakSet<VanillaReconcilerOutput>();
   private readonly session: VanillaCompileResultExtensionSession;
 
   private constructor(session: VanillaCompileResultExtensionSession) {
@@ -74,37 +66,29 @@ export class ResultExtensionHost {
   }
 
   /** 同一编译快照只准备一次，失败的候选不缓存 */
-  prepare(snapshot: VanillaReconcilerOutput): VanillaCompileOutput {
-    const cached = this.outputs.get(snapshot);
-    if (cached) return cached;
+  prepare(snapshot: VanillaReconcilerOutput): void {
+    if (this.prepared.has(snapshot)) return;
     try {
-      const output = { primary: snapshot.result, processingDiagnostics: this.session.resolve(snapshot) };
-      this.outputs.set(snapshot, output);
-      return output;
+      this.session.resolve(snapshot);
+      this.prepared.add(snapshot);
     } catch (cause) {
       throw extensionError('Vanilla compile result extension resolve failed', cause);
     }
   }
 
   /** 结果已提交，扩展通知失败不回滚宿主帧 */
-  notifyCommit(output: VanillaCompileOutput): void {
+  notifyCommit(result: CompileResult): void {
     try {
-      this.session.onCommit?.(output);
+      this.session.onCommit?.(result);
     } catch (cause) {
       if (__DEV__) console.warn('[retikz] Vanilla compile result extension onCommit failed', cause);
     }
   }
 }
 
-/** 未配置扩展时直接交付编译结果，不创建扩展会话 */
-export const prepareCompileOutput = (
-  snapshot: VanillaReconcilerOutput,
-  session?: ResultExtensionHost,
-): VanillaCompileOutput => session?.prepare(snapshot) ?? { primary: snapshot.result, processingDiagnostics: [] };
-
-/** 缺省扩展：普通 Core compile、无扩展诊断 */
+/** 缺省扩展：只使用原始编译结果 */
 export const defaultVanillaCompileResultExtension: VanillaCompileResultExtension = Object.freeze({
   create: () => ({
-    resolve: () => [],
+    resolve: () => undefined,
   }),
 });

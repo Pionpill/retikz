@@ -30,7 +30,7 @@ import { Queue } from '@retikz/standard-react/collection';
 import { queue } from '@retikz/standard-vanilla/collection';
 import { compileToScene, scene, renderToSvgString } from '@retikz/vanilla';
 
-const { compileResult } = compileToScene(scene({ children: [queue({ items: ['A', 'B', 'C'] })] }));
+const compileResult = compileToScene(scene({ children: [queue({ items: ['A', 'B', 'C'] })] }));
 const svg = renderToSvgString(compileResult.scene);
 ```
 

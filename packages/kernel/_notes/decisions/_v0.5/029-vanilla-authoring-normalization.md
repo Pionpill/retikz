@@ -48,7 +48,7 @@ type InputScene = Omit<IRScene, 'type' | 'version' | 'children'> & {
 declare const normalizeNode: (input: InputNode) => IRNode;
 declare const normalizePath: (input: InputPath) => IRPath;
 declare const normalizeScope: (input: InputScope) => IRScope;
-declare const normalizeScene: (input: InputScene) => NormalizedScene;
+declare const normalizeScene: (input: InputScene) => SceneNormalizationResult;
 ```
 
 进入 Scene、Layer 或 Scope 的作者子项必须显式携带实体 `type`；Node、Path、Scope 不根据其它字段推断类别。具名 helper 和框架组件负责填入各自类别，调用方无需重复声明。
@@ -63,7 +63,7 @@ declare const normalizeScene: (input: InputScene) => NormalizedScene;
 
 可选 authoring metadata 只用于 provenance 与 framework-neutral compile-result-extension observation：它随 `InputScene`、Layer、Child 或 Embed 的 authoring site 只读传递，normalizer 不解释、不把它变成图形语义，且它永不写入 Core IR、Scene、artifact、manifest 或 Composite dependency。它不是字段扩展、领域配置或第二条 Input 路径。
 
-`normalizeScene` 是统一顶层入口，返回 `NormalizedScene`：其中唯一的 Source IR、按显式 adapter 收集的 Composite dependency contribution、authoring provenance 与 runtime metadata 必须来自同一次有序归一化，不能由调用方再做第二次 children 遍历或手工合并。只有 `NormalizedScene.ir` 与 Vanilla processing 通过既有 Core resolver 得到的 definitions 能交给 Core；contribution、provenance 与 runtime metadata 只供 Vanilla processing 使用，既不成为 Core compile 的平行输入，也不替代既有 resolver 输入。其 options 只接收显式 Vanilla adapter 与 processing 已准备的窄 Theme context；调用方的 Core Composite definitions 与 Theme style definitions 只经 `ProcessingOptions.compile` 进入 Vanilla processing，再由该 owner 调度既有 Core resolver。`normalizeNode`、`normalizePath` 等实体 normalizer 仍直接返回对应 `IRXxx`，以便组合出该顶层结果。
+`normalizeScene` 是统一顶层入口，返回 `SceneNormalizationResult`：其中唯一的 Source IR、按显式 adapter 收集的 Composite dependency contribution、authoring provenance 与 runtime metadata 必须来自同一次有序归一化，不能由调用方再做第二次 children 遍历或手工合并。只有 `SceneNormalizationResult.ir` 与 Vanilla processing 通过既有 Core resolver 得到的 definitions 能交给 Core；contribution、provenance 与 runtime metadata 只供 Vanilla processing 使用，既不成为 Core compile 的平行输入，也不替代既有 resolver 输入。其 options 只接收显式 Vanilla adapter 与 processing 已准备的窄 Theme context；调用方的 Core Composite definitions 与 Theme style definitions 只经 `ProcessingOptions.compile` 进入 Vanilla processing，再由该 owner 调度既有 Core resolver。`normalizeNode`、`normalizePath` 等实体 normalizer 仍直接返回对应 `IRXxx`，以便组合出该顶层结果。
 
 `InputTarget`、`InputStep` 与其它实际存在的 authoring 子结构遵循同一规则：以最窄的 Source IR 类型派生，只在 authoring 形态确实不同处放宽。无差异的 Source IR 字段直接复用 `IRXxx`，不为命名完整性制造平行类型。
 
@@ -96,7 +96,7 @@ Core `parseXxx` 仍是另一条边界：它接受 unknown、序列化 JSON、字
 
 ## 行为、失败语义与兼容性
 
-- 默认行为：相同 authoring 含义无论来自 Vanilla helper、`InputScene` 或 React JSX，必须得到结构等价的 `NormalizedScene.ir`；直接 children 与等价 Layer 输入具有相同的 Core IR 与 contribution 顺序及 compile 结果。随后 Core compile 结果保持不变
+- 默认行为：相同 authoring 含义无论来自 Vanilla helper、`InputScene` 或 React JSX，必须得到结构等价的 `SceneNormalizationResult.ir`；直接 children 与等价 Layer 输入具有相同的 Core IR 与 contribution 顺序及 compile 结果。随后 Core compile 结果保持不变
 - 失败与诊断：unknown、JSON、字符串与 DSL 仍只在 Core parser / schema 边界诊断。Vanilla normalizer 只诊断 TypeScript 不能表达且 Source IR schema 未覆盖的 authoring 组合不变量，不重复 schema 或类型已经保证的检查
 - 兼容性 / breaking：Core 不再导出 authoring `*Input` 类型和只服务该层的 helper；消费方改从 Vanilla 导入 `InputXxx` 与 `normalizeXxx`。不保留旧导入别名或自动迁移路径
 - React / Vanilla 等价性：React 生成同一 `InputScene` / `InputXxx` 语义并调用同一 Vanilla normalizer 与 processing controller；嵌入式 Tier 2 adapter 在 Vanilla 准备的有效 Scope Theme 下生成 contribution。React 特有的 Fragment / JSX children 遍历、Sugar 展开、开发期提示、hook、ref、React 状态订阅和宿主映射不进入 Vanilla

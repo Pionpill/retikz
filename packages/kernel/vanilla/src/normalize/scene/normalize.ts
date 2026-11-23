@@ -4,14 +4,14 @@ import { CURRENT_IR_VERSION } from '@retikz/core';
 import { normalizeChild } from './children';
 import type { SceneNormalizeContext } from './context';
 import { childSourcePath } from './context';
-import type { InputAuthoringSite, InputScene, NormalizedScene, LayerName } from './types';
+import type { InputAuthoringSite, InputScene, SceneNormalizationResult, LayerName } from './types';
 import { BuiltinLayerName } from './types';
 
 /** 通过版本字段区分已类型化的作者输入与 Core IR */
 export const isInputScene = (input: InputScene | IRScene): input is InputScene => input.version === undefined;
 
 /** 将 InputScene 一次性归一为唯一 Source IR 与 contribution */
-export const normalizeSceneLayer = (scene: InputScene, layerName: LayerName): NormalizedScene => {
+export const normalizeSceneLayer = (scene: InputScene, layerName: LayerName): SceneNormalizationResult => {
   const contributions: Array<CoreProviderContribution> = [];
   const runtimeInputs: Array<CompositeInputBinding> = [];
   const authoringSites: Array<InputAuthoringSite> = [];
@@ -54,4 +54,5 @@ export const normalizeSceneLayer = (scene: InputScene, layerName: LayerName): No
 };
 
 /** 归一化单图，匿名图元使用默认主层身份 */
-export const normalizeScene = (scene: InputScene): NormalizedScene => normalizeSceneLayer(scene, BuiltinLayerName.Main);
+export const normalizeScene = (scene: InputScene): SceneNormalizationResult =>
+  normalizeSceneLayer(scene, BuiltinLayerName.Main);

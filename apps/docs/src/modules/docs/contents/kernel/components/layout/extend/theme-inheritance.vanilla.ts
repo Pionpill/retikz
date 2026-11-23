@@ -12,7 +12,7 @@ const input = scene({
   children: [{ namespace: 'theme-demo', type: 'card', label: 'Composite' }],
 });
 
-const { compileResult } = compileToScene(input, {
+const compileResult = compileToScene(input, {
   compile: {
     composites: [themeCardComposite],
     measureText: browserMeasurer,

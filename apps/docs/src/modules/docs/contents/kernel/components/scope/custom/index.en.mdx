@@ -177,7 +177,7 @@ const input: InputScene = {
     },
   ],
 };
-const { compileResult } = compileToScene(input, { compile: { clips: [roundedRectClip] } });
+const compileResult = compileToScene(input, { compile: { clips: [roundedRectClip] } });
 const svg = renderToSvgString(compileResult.scene);
 ```
 

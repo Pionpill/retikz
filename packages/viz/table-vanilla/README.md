@@ -15,7 +15,7 @@ const spec = detailTable({
 });
 
 const input = scene([embedTable(spec, { data: { scores: rows } })]);
-const { compileResult } = compileToScene(input);
+const compileResult = compileToScene(input);
 const svg = renderToSvgString(compileResult.scene);
 
 const result = renderTable(spec, { data: { scores: rows }, artifacts: true });

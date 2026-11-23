@@ -47,7 +47,7 @@ if (root) createRoot(root).render(<Example />);
 import { crossShapeDefinition } from '@retikz/extension';
 import { compileToScene, renderToSvgString, scene } from '@retikz/vanilla';
 
-const { compileResult } = compileToScene(
+const compileResult = compileToScene(
   scene({
     children: [
       {

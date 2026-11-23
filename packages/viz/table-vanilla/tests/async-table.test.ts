@@ -62,12 +62,12 @@ describe('异步 Table 编写', () => {
       return embedTable(spec, { preparedData: await task.execute() });
     };
     const result = compileToScene(scene({ children: await Promise.all([input([2, 6]), input([4])]) }));
-    const svg = renderToSvgString(result.compileResult.scene);
+    const svg = renderToSvgString(result.scene);
 
     expect(svg).toContain('0.25');
     expect(svg).toContain('0.75');
     expect(svg).toContain('0.5');
     expect(executions).toBe(2);
-    expect(result.compileResult.artifacts.filter(artifact => artifact.namespace === 'table')).toHaveLength(2);
+    expect(result.artifacts.filter(artifact => artifact.namespace === 'table')).toHaveLength(2);
   });
 });

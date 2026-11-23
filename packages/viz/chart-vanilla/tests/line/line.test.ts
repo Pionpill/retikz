@@ -27,7 +27,7 @@ describe('Line Vanilla 输入闭环', () => {
   });
 
   it('Line 和 Point provider 在同一场景独立编译并生成 SVG', () => {
-    const { compileResult } = compileToScene(
+    const compileResult = compileToScene(
       scene({
         children: [
           lineChart({

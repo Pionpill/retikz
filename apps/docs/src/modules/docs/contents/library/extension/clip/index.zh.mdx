@@ -65,7 +65,7 @@ const input = scene({
     ]),
   ],
 });
-const { compileResult } = compileToScene(input, { compile: { clips: [circleClipDefinition] } });
+const compileResult = compileToScene(input, { compile: { clips: [circleClipDefinition] } });
 const svg = renderToSvgString(compileResult.scene);
 console.log(svg);
 ```
@@ -89,7 +89,7 @@ const ir: IRScene = {
     },
   ],
 };
-const { compileResult } = compileToScene(ir, { compile: { clips: [circleClipDefinition] } });
+const compileResult = compileToScene(ir, { compile: { clips: [circleClipDefinition] } });
 const svg = renderToSvgString(compileResult.scene);
 console.log(svg);
 ```

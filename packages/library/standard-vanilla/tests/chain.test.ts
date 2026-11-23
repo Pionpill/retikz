@@ -36,7 +36,7 @@ it('三入口和嵌套内容进入 retained 时保持 JSON-safe', () => {
   ]) {
     const controller = SceneRuntime.fromInput(scene({ children: [child] }));
 
-    expect(controller.read().compileResult.scene.primitives.length).toBeGreaterThan(0);
+    expect(controller.read().compilation.result.scene.primitives.length).toBeGreaterThan(0);
 
     controller.dispose();
   }

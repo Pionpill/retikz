@@ -94,7 +94,7 @@ describe('Table Vanilla 适配器', () => {
     ]);
     const layers = [layer({ name: 'content', scene: layerScene })];
     const [compiled] = compileLayers(layers);
-    const svg = renderToSvgString(compiled.result.compileResult.scene);
+    const svg = renderToSvgString(compiled.result.scene);
 
     expect(svg).toContain('Ada');
     expect(svg).toContain('Lin');
@@ -123,7 +123,7 @@ describe('Table Vanilla 适配器', () => {
     });
     const inputScene = scene([embedTable(spec, { composites: [badge] })]);
 
-    expect(renderToSvgString(compileToScene(inputScene).compileResult.scene)).toContain('Nested');
+    expect(renderToSvgString(compileToScene(inputScene).scene)).toContain('Nested');
   });
 
   it('重复的匿名嵌入在 Source 中仍保持匿名', () => {

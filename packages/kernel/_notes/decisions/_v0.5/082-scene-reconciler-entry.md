@@ -53,7 +53,7 @@ SceneReconciler 保留现有公开操作，不增加新的准备句柄或公开�
 - `ReconcilerMode.Full`：通过同一执行器完整编译，不保留 Weave 跨次缓存；支持完整替换与输出配置更新，拒绝批次更新及 `updateStrategy` 配置
 - `ReconcilerMode.Incremental`：首轮计算后保留 Weave 状态，后续权威批次复用有效阶段产物；既有 `auto | full` 策略及默认值保持
 
-一次性编译创建 `mode: ReconcilerMode.Full` 的临时实例，调用 `mount` 取得结果，并在成功或失败后释放。已交付的普通 Scene、artifacts 和诊断不依赖实例继续存活。持续处理保持现有 controller 的实例生命周期、执行模式和默认值；本次不调整缓存策略或清理其它配置接口。
+一次性编译创建 `mode: ReconcilerMode.Full` 的临时实例，调用 `mount` 取得结果，并在成功或失败后释放。返回的 Scene 与 artifacts 不依赖实例继续存活，结果本身不携带额外的诊断数组。持续处理保持现有 controller 的实例生命周期、执行模式和默认值；本次不调整缓存策略或清理其它配置接口。
 
 所有完整编译最终使用相同的同步协调器执行方式。warning 与非致命执行诊断采用协调器既有发布规则，不另造静态编译专属的派发逻辑。
 
@@ -64,24 +64,24 @@ SceneReconciler 保留现有公开操作，不增加新的准备句柄或公开�
 一次性作者编译使用以下入口：
 
 ```ts
-declare const compileToScene: (source: InputScene | IRScene, options?: ProcessingOptions) => ProcessingResult;
+declare const compileToScene: (source: InputScene | IRScene, options?: ProcessingOptions) => CompileResult;
 ```
 
-单次编译接受 InputScene 或 IRScene，返回 revision 为 0 的单图 ProcessingResult。持续处理的唯一公开单图实例是 SceneRuntime：fromInput / fromIR 指明来源；replace 完整替换，允许切换来源；update 只提交显式 Weave 批次并核验预期版本。实例的 renderToSvgString 读取当前成功提交的结果，不重新计算或发通知。独立的 renderToSvgString 只序列化已编译的 Scene；从声明一次性导出 SVG 时，先调用 compileToScene。具名层栈通过独立入口创建和读取，不改变单图的输入和返回类型。
+单次编译接受 InputScene 或 IRScene，直接返回协调器的 CompileResult。持续处理的唯一公开单图实例是 SceneRuntime：fromInput / fromIR 指明来源；replace 完整替换，允许切换来源；update 只提交显式 Weave 批次并核验预期版本。实例的 renderToSvgString 读取当前成功提交的结果，不重新计算或发通知。独立的 renderToSvgString 只序列化已编译的 Scene；从声明一次性导出 SVG 时，先调用 compileToScene。具名层栈通过独立入口创建和读取，不改变单图的输入和返回类型。
 
 同步门面在完整作者输入就绪后编译并完成成功通知；一次编译使用临时非增量协调器并负责释放。默认文字测量、provider 解析、诊断归属及错误 cause 保持现有 Vanilla processing 规则。
 
-门面替换 Vanilla 既有 `processToStaticInputResult` 与 `processToStaticInputResultAsync`，旧名直接删除，不保留转发。Reconciler 不重新公开同名函数。需要持续更新时使用既有 controller；需要框架掌握交付时机时沿用已有候选处理接口。React 与 Vanilla 继续表达同一作者和编译契约，React 仅持有框架生命周期及宿主接线。
+门面替换 Vanilla 既有 `processToStaticInputResult` 与 `processToStaticInputResultAsync`，旧名直接删除，不保留转发。Reconciler 不重新公开同名函数。需要持续更新时使用既有 controller；框架通过同一编译入口取得结果，并在宿主提交后交付扩展通知。React 与 Vanilla 继续表达同一作者和编译契约，React 仅持有框架生命周期及宿主接线。
 
 已编译的 Scene 不属于该作者编译门面的输入，继续使用既有 Scene 消费与渲染接口，不进行反向编译。
 
 ### Vanilla 与其它消费者接入
 
-Vanilla 继续拥有 `InputScene` 归一化、作者贡献准备、provider 依赖收集及只读 ProcessingResult。完整贡献就绪后进入同步协调器。已有 controller 初始调用 `mount`，完整输入更新调用 `replace`；一次性编译使用临时实例；从已有 Scene 输出 SVG 不创建实例。
+Vanilla 继续拥有 `InputScene` 归一化、作者贡献准备、provider 依赖收集；持续会话交付协调器的原始 ReconcilerResult。完整贡献就绪后进入同步协调器。已有 controller 初始调用 `mount`，完整输入更新调用 `replace`；一次性编译使用临时实例；从已有 Scene 输出 SVG 不创建实例。
 
-应用先等待领域任务，自行决定是否提交结果。Vanilla 按调用顺序同步更新，不管理请求取消、抢占或优先级。静态处理句柄管理已有的结果交付和驱动通知，不向 Reconciler 增加跨调用的编译提交阶段。
+应用先等待领域任务，自行决定是否提交结果。Vanilla 按调用顺序同步更新，不管理请求取消、抢占或优先级。静态编译不暴露候选句柄，宿主负责自己的提交通知时机，不向 Reconciler 增加跨调用的编译提交阶段。
 
-现有 compile result extension 从协调器输出读取同次 `result` 与真实 `diagnostics`，只返回扩展诊断，并通过可选的 `onCommit` 通知宿主帧已提交。主图编译由协调器完成，宿主保留原始 primary result 并连同扩展诊断交付提交回调，不再自行调用独立完整编译函数，也不以空诊断替代真实输出。扩展失败仍按现有规则保留最后成功的 ProcessingResult；不扩大为已完成编译及 warning 的撤销协议。
+现有 compile result extension 从协调器输出读取同次 `result` 与真实 `diagnostics`，不返回另一个结果，并通过可选的 `onCommit` 通知宿主帧已提交。主图编译由协调器完成，宿主保留原始 primary result 并原样交付提交回调，不再自行调用独立完整编译函数，也不以空诊断替代真实输出。扩展失败仍按现有规则保留最后成功的提交快照；不扩大为已完成编译及 warning 的撤销协议。
 
 Inspect、Plot、Table 等现有独立编译消费者同步迁移，领域输入、lowering、辅助绘图与结果语义保持。React 继续消费 Vanilla，不直接管理协调器或重建编译驱动。Vanilla 与框架包不新增局部批次 authoring、自动整树 diff 或作者身份推断。
 

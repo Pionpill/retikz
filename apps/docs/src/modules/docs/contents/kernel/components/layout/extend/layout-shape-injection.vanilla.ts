@@ -27,5 +27,5 @@ const input = scene({
   ],
 });
 
-const { compileResult } = compileToScene(input, { compile: { measureText: browserMeasurer, shapes: [fileShape] } });
+const compileResult = compileToScene(input, { compile: { measureText: browserMeasurer, shapes: [fileShape] } });
 export const svg = renderToSvgString(compileResult.scene, { output: { width: 280, height: 140 } });

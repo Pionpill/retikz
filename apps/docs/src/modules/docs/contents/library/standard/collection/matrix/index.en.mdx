@@ -37,7 +37,7 @@ export const Example = () => (
 import { matrix } from '@retikz/standard-vanilla/collection';
 import { compileToScene, scene, renderToSvgString } from '@retikz/vanilla';
 
-const { compileResult } = compileToScene(
+const compileResult = compileToScene(
   scene({
     children: [
       matrix({
@@ -60,7 +60,7 @@ import { matrixDefinition } from '@retikz/standard/collection';
 import { pathClipDefinition } from '@retikz/extension';
 import { compileToScene, renderToSvgString } from '@retikz/vanilla';
 
-const { compileResult } = compileToScene(
+const compileResult = compileToScene(
   {
     type: 'scene',
     version: 1,

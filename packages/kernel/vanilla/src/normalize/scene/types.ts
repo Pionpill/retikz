@@ -77,7 +77,7 @@ export type InputAuthoringSite = Readonly<{
 }>;
 
 /** 单次 Scene 输入归一化的完整结果 */
-export type NormalizedScene = {
+export type SceneNormalizationResult = {
   /** 相对最终 Source IR 的 composite 实例输入 */
   runtimeInputs?: ReadonlyArray<CompositeInputBinding>;
   /** 唯一的 Core Source IR */

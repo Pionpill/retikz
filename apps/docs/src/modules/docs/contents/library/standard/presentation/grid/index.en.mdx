@@ -49,7 +49,7 @@ import { grid } from '@retikz/standard-vanilla/presentation';
 import { compileToScene, scene, renderToSvgString } from '@retikz/vanilla';
 
 const input = scene({ children: [grid({ bounds: { start: [0, 0], end: [120, 80] }, line: { spacing: 20 } })] });
-const { compileResult } = compileToScene(input);
+const compileResult = compileToScene(input);
 const svg = renderToSvgString(compileResult.scene);
 console.log(svg);
 ```
@@ -67,7 +67,7 @@ const ir: IRScene = {
   version: 1,
   children: [{ namespace: 'standard', type: 'grid', bounds: { start: [0, 0], end: [120, 80] }, line: { spacing: 20 } }],
 };
-const { compileResult } = compileToScene(ir, { compile: { composites: [gridDefinition] } });
+const compileResult = compileToScene(ir, { compile: { composites: [gridDefinition] } });
 const svg = renderToSvgString(compileResult.scene);
 console.log(svg);
 ```

@@ -30,9 +30,7 @@ import { Tree } from '@retikz/standard-react/collection';
 import { tree } from '@retikz/standard-vanilla/collection';
 import { compileToScene, scene, renderToSvgString } from '@retikz/vanilla';
 
-renderToSvgString(
-  compileToScene(scene({ children: [tree({ root: { content: 'A', children: ['B', 'C'] } })] })).compileResult.scene,
-);
+renderToSvgString(compileToScene(scene({ children: [tree({ root: { content: 'A', children: ['B', 'C'] } })] })).scene);
 ```
 
 </DocTab>

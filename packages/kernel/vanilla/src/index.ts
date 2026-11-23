@@ -34,7 +34,7 @@ export type {
   InputSmoothStep,
   InputStep,
   InputTarget,
-  NormalizedScene,
+  SceneNormalizationResult,
   WayArcOp,
   WayAxisLineOp,
   WayBendOp,
@@ -75,14 +75,10 @@ export {
 } from './normalize';
 export type {
   ProcessingOptions,
-  ProcessingResult,
-  LayerProcessingResult,
   LayerProcessingController,
-  PreparedStaticProcessing,
   InputVanillaCompileResultExtension,
   VanillaCompileResultExtension,
   VanillaCompileResultExtensionSession,
-  VanillaCompileOutput,
 } from './runtime';
 export {
   compileToScene,
@@ -90,7 +86,6 @@ export {
   compileLayers,
   createLayerController,
   defaultVanillaCompileResultExtension,
-  prepareStaticProcessing,
 } from './runtime';
 export type { CommonOptions, RenderToStringOptions } from './runtime';
 export { renderToSvgString } from './runtime';

@@ -31,7 +31,7 @@ describe('Chart 异步数据准备', () => {
     const run = (mode: ThemeMode) => {
       const child = scatterChart({ ...props, dataRef: 'rows', preparedData: prepared });
       const result = compileToScene(scene({ children: [scope({ theme: { mode } }, [child])] }));
-      return renderToSvgString(result.compileResult.scene).toLowerCase();
+      return renderToSvgString(result.scene).toLowerCase();
     };
     const light = run('light');
     const dark = run('dark');

@@ -15,12 +15,12 @@ describe('独立图层会话', () => {
     const observed: Array<boolean> = [];
     const observe = vi.fn<NonNullable<VanillaCompileResultExtensionSession['onCommit']>>();
     const session: VanillaCompileResultExtensionSession = {
-      resolve: () => [],
+      resolve: () => undefined,
       onCommit: observe,
     };
     const controller = createLayerController(source(), { compileResultExtension: { create: () => session } });
     observe.mockImplementation(output => {
-      observed.push(controller.read().some(entry => entry.result.compileResult === output.primary));
+      observed.push(controller.read().some(entry => entry.result.compilation.result === output));
     });
     try {
       controller.update([contents('new', 3)]);
@@ -33,7 +33,7 @@ describe('独立图层会话', () => {
   });
 
   it('整栈替换中销毁宿主时保留旧快照，不通知已编译的兄弟层', () => {
-    const resolve = vi.fn<VanillaCompileResultExtensionSession['resolve']>(() => []);
+    const resolve = vi.fn<VanillaCompileResultExtensionSession['resolve']>();
     const onCommit = vi.fn();
     const controller = createLayerController(source(), {
       compileResultExtension: { create: () => ({ resolve, onCommit }) },
@@ -43,10 +43,9 @@ describe('独立图层会话', () => {
     controller.subscribe(listener);
     onCommit.mockClear();
     resolve
-      .mockImplementationOnce(() => [])
+      .mockImplementationOnce(() => undefined)
       .mockImplementationOnce(() => {
         controller.dispose();
-        return [];
       });
 
     expect(() => controller.update([contents('first', 1), contents('second', 2)])).toThrow();
@@ -90,7 +89,7 @@ describe('独立图层会话', () => {
         overlay.result,
       );
       expect(controller.read()[0]).toBe(background);
-      expect(controller.read()[1].result.compileResult.scene.primitives).toHaveLength(0);
+      expect(controller.read()[1].result.compilation.result.scene.primitives).toHaveLength(0);
       expect(() => controller.getScopeId('overlay', [], overlay.result)).toThrow(/stale/i);
     } finally {
       controller.dispose();
@@ -99,7 +98,7 @@ describe('独立图层会话', () => {
   it('替换单层只使用本层场景的作者配置', () => {
     const roots: Array<unknown> = [];
     const session: VanillaCompileResultExtensionSession = {
-      resolve: () => [],
+      resolve: () => undefined,
     };
     const controller = createLayerController([contents('overlay', 1, 'initial')], {
       compileResultExtension: {

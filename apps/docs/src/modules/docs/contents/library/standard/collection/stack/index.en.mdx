@@ -30,7 +30,7 @@ import { Stack } from '@retikz/standard-react/collection';
 import { stack } from '@retikz/standard-vanilla/collection';
 import { compileToScene, scene, renderToSvgString } from '@retikz/vanilla';
 
-const { compileResult } = compileToScene(scene({ children: [stack({ items: ['A', 'B', 'C'] })] }));
+const compileResult = compileToScene(scene({ children: [stack({ items: ['A', 'B', 'C'] })] }));
 const svg = renderToSvgString(compileResult.scene);
 ```
 

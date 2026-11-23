@@ -758,15 +758,13 @@ describe('Graph Definition 选项等价性', () => {
       { compile: { padding: 0 } },
     );
 
-    expect(reactResult.compileResult.scene).toEqual(vanillaResult.compileResult.scene);
+    expect(reactResult.scene).toEqual(vanillaResult.scene);
 
-    type ScenePrimitive = (typeof reactResult.compileResult.scene.primitives)[number];
+    type ScenePrimitive = (typeof reactResult.scene.primitives)[number];
     const flatten = (primitives: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
       primitives.flatMap(primitive => (primitive.type === 'group' ? flatten(primitive.children) : [primitive]));
 
-    expect(
-      flatten(reactResult.compileResult.scene.primitives).find(primitive => primitive.id === 'edge'),
-    ).toMatchObject({
+    expect(flatten(reactResult.scene.primitives).find(primitive => primitive.id === 'edge')).toMatchObject({
       type: 'path',
       arrowEnd: { shape: 'open' },
       dashPattern: [4, 2],

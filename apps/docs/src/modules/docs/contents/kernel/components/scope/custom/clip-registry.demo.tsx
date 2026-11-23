@@ -45,7 +45,7 @@ export const previewSource = {
     const authoring = createInputScene(<Content />);
     const input = { ...authoring, ...(theme === undefined ? {} : { theme }) };
     const ir = normalizeScene(input).ir;
-    const { compileResult } = compileToScene(input, {
+    const compileResult = compileToScene(input, {
       compile: { clips: [roundedRectClip], measureText: browserMeasurer },
     });
     const svg = renderToSvgString(compileResult.scene);

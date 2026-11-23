@@ -171,14 +171,14 @@ Changing `updateStrategy` between `auto` and `full` on a retained host disposes 
 
 <ComponentPreview files="react-to-scene" size="xs" hideCode />
 
-| Stage                | Owner             | Responsibility                                                                                         |
-| -------------------- | ----------------- | ------------------------------------------------------------------------------------------------------ |
-| Kernel / Sugar JSX   | `@retikz/react`   | Collect props and children; expand Sugar into Kernel first                                             |
-| `createInputScene()` | `@retikz/react`   | Walk the component tree, produce `InputScene`, with adapters bound to embeds                           |
-| `normalizeScene()`   | `@retikz/vanilla` | Normalize typed Input to `IRScene`, lower embeds, and aggregate composite dependencies                 |
-| `IRScene`            | `@retikz/core`    | JSON-serializable drawing contract with no React element, hook, or DOM                                 |
-| `SceneReconciler`    | `@retikz/core`    | Process composites; resolve registries, references, geometry, layout, resources, and animation         |
-| `ProcessingResult`   | `@retikz/vanilla` | Read Scene and artifacts from `compileResult`, and processing diagnostics from `processingDiagnostics` |
+| Stage                | Owner                | Responsibility                                                                                 |
+| -------------------- | -------------------- | ---------------------------------------------------------------------------------------------- |
+| Kernel / Sugar JSX   | `@retikz/react`      | Collect props and children; expand Sugar into Kernel first                                     |
+| `createInputScene()` | `@retikz/react`      | Walk the component tree, produce `InputScene`, with adapters bound to embeds                   |
+| `normalizeScene()`   | `@retikz/vanilla`    | Normalize typed Input to `IRScene`, lower embeds, and aggregate composite dependencies         |
+| `IRScene`            | `@retikz/core`       | JSON-serializable drawing contract with no React element, hook, or DOM                         |
+| `SceneReconciler`    | `@retikz/core`       | Process composites; resolve registries, references, geometry, layout, resources, and animation |
+| `CompileResult`      | `@retikz/reconciler` | Scene and artifacts from one compilation                                                       |
 
 `Layout` injects host capabilities such as text measurement, Definition registries, and the TeX lowerer as processing compile options, but those options do not put React into IR or Scene. Passing the `ir` prop skips the JSX collector. The `artifacts` prop requests opt-in outputs, while `onArtifacts` receives immutable same-compile artifacts after the selected host publishes; notification does not trigger another compile.
 

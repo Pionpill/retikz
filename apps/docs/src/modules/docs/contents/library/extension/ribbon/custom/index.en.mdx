@@ -105,7 +105,7 @@ const input = scene({
   ],
 });
 
-const { compileResult } = compileToScene(input, { compile: { paths: [pulseRibbonDefinition] } });
+const compileResult = compileToScene(input, { compile: { paths: [pulseRibbonDefinition] } });
 export const svg = renderToSvgString(compileResult.scene);
 ```
 
@@ -169,7 +169,7 @@ import { compileToScene, renderToSvgString } from '@retikz/vanilla';
 import { pulseRibbonDefinition } from './pulse-profile';
 import { ir } from './ribbon-ir';
 
-const { compileResult } = compileToScene(ir, { compile: { paths: [pulseRibbonDefinition] } });
+const compileResult = compileToScene(ir, { compile: { paths: [pulseRibbonDefinition] } });
 export const svg = renderToSvgString(compileResult.scene);
 ```
 

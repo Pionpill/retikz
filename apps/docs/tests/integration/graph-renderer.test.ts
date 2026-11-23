@@ -203,7 +203,7 @@ describe('Graph 渲染器集成', () => {
     expect(() => drawScene(recordingContext(calls), compiled)).not.toThrow();
     expect(calls.length).toBeGreaterThan(0);
     expect(
-      renderVanillaToSvgString(compileToScene(vanillaInput).compileResult.scene, {
+      renderVanillaToSvgString(compileToScene(vanillaInput).scene, {
         output: { width: 280, height: 200 },
       }),
     ).toContain('<svg');

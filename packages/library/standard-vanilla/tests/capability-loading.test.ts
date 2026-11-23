@@ -34,7 +34,7 @@ describe('Standard Vanilla 定义加载', () => {
     };
 
     expect(() =>
-      renderToSvgString(compileToScene(ir, { compile: { composites: [gridDefinition] } }).compileResult.scene),
+      renderToSvgString(compileToScene(ir, { compile: { composites: [gridDefinition] } }).scene),
     ).not.toThrow();
   });
 
@@ -44,7 +44,7 @@ describe('Standard Vanilla 定义加载', () => {
         compileToScene(
           scene({ children: [grid({ bounds: { start: [0, 0], end: [20, 20] }, line: { spacing: 10 } })] }),
           { compile: { composites: [gridDefinition] } },
-        ).compileResult.scene,
+        ).scene,
       ),
     ).not.toThrow();
     expect(() =>
@@ -52,7 +52,7 @@ describe('Standard Vanilla 定义加载', () => {
         compileToScene(
           scene({ children: [grid({ bounds: { start: [0, 0], end: [20, 20] }, line: { spacing: 10 } })] }),
           { compile: { composites: [{ ...gridDefinition }] } },
-        ).compileResult.scene,
+        ).scene,
       ),
     ).toThrow(/definition conflict.*standard\.grid/i);
   });

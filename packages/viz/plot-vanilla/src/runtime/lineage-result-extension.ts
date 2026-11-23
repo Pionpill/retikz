@@ -50,10 +50,9 @@ export const createPlotLineageCompileResultExtension = (): VanillaCompileResultE
               return () => site.onLineage(result.lineage);
             }),
           );
-          return [];
         },
         onCommit: output => {
-          for (const notify of notifications.get(output.primary) ?? []) {
+          for (const notify of notifications.get(output) ?? []) {
             try {
               notify();
             } catch (cause) {

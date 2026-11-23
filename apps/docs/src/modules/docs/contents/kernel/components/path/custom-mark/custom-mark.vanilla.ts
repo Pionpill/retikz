@@ -19,5 +19,5 @@ export const ringScene = scene({
 });
 
 /** 使用同一标记定义生成 SVG */
-const { compileResult } = compileToScene(ringScene, { compile: { marks: [ringMark] } });
+const compileResult = compileToScene(ringScene, { compile: { marks: [ringMark] } });
 export const svg = renderToSvgString(compileResult.scene);

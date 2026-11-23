@@ -70,7 +70,7 @@ import { compileToScene, scene, node, renderToSvgString } from '@retikz/vanilla'
 const input = scene({
   children: [frame({ title: frameTitle({ text: 'Group' }), children: [node({ position: [0, 0], text: 'A' })] })],
 });
-const { compileResult } = compileToScene(input);
+const compileResult = compileToScene(input);
 const svg = renderToSvgString(compileResult.scene);
 console.log(svg);
 ```
@@ -95,7 +95,7 @@ const ir: IRScene = {
     },
   ],
 };
-const { compileResult } = compileToScene(ir, { compile: { composites: [frameDefinition] } });
+const compileResult = compileToScene(ir, { compile: { composites: [frameDefinition] } });
 const svg = renderToSvgString(compileResult.scene);
 console.log(svg);
 ```

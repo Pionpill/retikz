@@ -29,7 +29,7 @@ describe('Layout 子项归一化', () => {
     for (const container of containers) {
       const input = { type: 'scene' as const, children: [container] };
       const actual = compileToScene(input);
-      expect(JSON.stringify(actual.compileResult.scene)).toContain('prepared-child');
+      expect(JSON.stringify(actual.scene)).toContain('prepared-child');
     }
 
     expect(executed).toBe(3);
@@ -67,6 +67,6 @@ describe('Layout 子项归一化', () => {
       },
     );
 
-    expect(JSON.stringify(result.compileResult.scene)).toContain('nested-bound-ready');
+    expect(JSON.stringify(result.scene)).toContain('nested-bound-ready');
   });
 });

@@ -67,6 +67,6 @@ describe('自定义代码块 Vanilla 编写', () => {
       },
     );
 
-    expect(actual.compileResult.scene).toEqual(direct.compileResult.scene);
+    expect(actual.scene).toEqual(direct.scene);
   });
 });

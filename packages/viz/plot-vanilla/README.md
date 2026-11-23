@@ -47,7 +47,7 @@ import { embedPlot } from '@retikz/plot-vanilla';
 import { compileToScene, renderToSvgString, scene } from '@retikz/vanilla';
 
 const input = scene([embedPlot({ spec }, { sales })]);
-const { compileResult } = compileToScene(input);
+const compileResult = compileToScene(input);
 const svg = renderToSvgString(compileResult.scene, { output: { width: 360, height: 200 } });
 ```
 

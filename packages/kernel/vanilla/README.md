@@ -25,7 +25,7 @@ const input = scene({
   ],
 });
 
-const { compileResult } = compileToScene(input);
+const compileResult = compileToScene(input);
 const svg = renderToSvgString(compileResult.scene, { output: { width: 640, height: 360 } });
 ```
 
@@ -37,7 +37,7 @@ import { compileToScene } from '@retikz/vanilla';
 const result = compileToScene(input);
 ```
 
-This returns one processing result. For retained work, create a `SceneRuntime` with `fromInput` or `fromIR`, replace the full source with `replace(source)`, or submit an incremental batch with `update(batch, expected)`. Export the committed frame with `runtime.renderToSvgString()`. Use `compileLayers` or `createLayerController` for named layers. Await external data before submitting a source.
+This returns the reconciler’s original `CompileResult`: read `result.scene` and `result.artifacts` directly. For retained work, create a `SceneRuntime` with `fromInput` or `fromIR`, replace the full source with `replace(source)`, or submit an incremental batch with `update(batch, expected)`. `runtime.read()` returns the committed `ReconcilerResult`, and `runtime.diagnostics()` drains session diagnostics. Export the committed frame with `runtime.renderToSvgString()`. Use `compileLayers` or `createLayerController` for named layers. Await external data before submitting a source.
 
 ## Browser mounting
 

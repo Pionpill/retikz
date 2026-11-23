@@ -21,6 +21,6 @@ export const resolveStaticMountScene = (input: Scene | InputScene | IRScene, opt
     return { scene: input };
   }
 
-  const { compileResult } = compileToScene(input, options);
+  const compileResult = compileToScene(input, options);
   return { scene: compileResult.scene, compileResult };
 };

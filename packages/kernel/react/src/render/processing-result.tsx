@@ -1,3 +1,4 @@
+import type { CompileResult, CompositeArtifact } from '@retikz/reconciler';
 import type { AnimationControls } from '@retikz/render/animation';
 import { bindWaapiDescriptors, sceneHasAnimations } from '@retikz/render/animation';
 import type { HydrationHandlers } from '@retikz/render/hydration';
@@ -10,7 +11,6 @@ import {
   resolveSvgElement,
 } from '@retikz/render/hydration';
 import { buildSvgDocument } from '@retikz/render/svg';
-import type { ProcessingResult } from '@retikz/vanilla';
 import type { CSSProperties, FC, MutableRefObject, ReactElement, Ref } from 'react';
 import { cloneElement, useCallback, useEffect, useMemo, useRef } from 'react';
 
@@ -21,7 +21,7 @@ import { svgToReact } from './svg';
 /** Vanilla processing result 的 React 宿主属性 */
 export type ProcessingResultHostProps = Readonly<{
   /** Vanilla 已完成编译的完整处理结果 */
-  result: ProcessingResult;
+  result: CompileResult;
   /** 目标渲染后端 */
   backend: 'svg' | 'canvas';
   /** 当前 revision 的 hydration handler 注册表 */
@@ -43,9 +43,9 @@ export type ProcessingResultHostProps = Readonly<{
   /** 资源 id 前缀 */
   idPrefix: string;
   /** artifacts 成功提交通知 */
-  onArtifacts?: (artifacts: ProcessingResult['compileResult']['artifacts']) => void;
+  onArtifacts?: (artifacts: ReadonlyArray<CompositeArtifact>) => void;
   /** Core 完整编译结果通知 */
-  onCompileResult?: (result: NonNullable<ProcessingResult['compileResult']>) => void;
+  onCompileResult?: (result: CompileResult) => void;
 }>;
 
 /** 写入 callback ref 或 RefObject */
@@ -57,7 +57,7 @@ const assignRef = <T,>(ref: Ref<T> | undefined, value: T): void => {
 /** 将 hydration 与 SVG 动画控制器绑定到 React SVG 根节点 */
 const useSvgRootBinding = (
   handlers: HydrationHandlers,
-  result: ProcessingResult,
+  result: CompileResult,
   hasAnimations: boolean,
   publishAnimation: (controls: AnimationControls | null) => void,
 ): ((element: SVGSVGElement | null) => void) => {
@@ -73,9 +73,9 @@ const useSvgRootBinding = (
     const context = createContextBuilder({
       renderer: 'svg',
       root,
-      scene: result.compileResult.scene,
+      scene: result.scene,
       resolveElement: resolveSvgElement,
-      resolvePoint: resolvePointViaLayout(root, result.compileResult.scene.layout),
+      resolvePoint: resolvePointViaLayout(root, result.scene.layout),
       makeAnimation: id => createSvgAnimationControls(root, id),
     });
     const controller = createHydrationController(root, handlers, locateSvg, context);
@@ -118,7 +118,7 @@ export const ProcessingResultHost: FC<ProcessingResultHostProps> = props => {
     onCompileResult,
   } = props;
 
-  const scene = result.compileResult.scene;
+  const scene = result.scene;
   const document = useMemo(
     () =>
       backend === 'canvas'
@@ -131,7 +131,7 @@ export const ProcessingResultHost: FC<ProcessingResultHostProps> = props => {
     [backend, scene, idPrefix, animate, snapshotAt],
   );
 
-  const hasAnimations = backend === 'svg' && animate && sceneHasAnimations(result.compileResult.scene);
+  const hasAnimations = backend === 'svg' && animate && sceneHasAnimations(result.scene);
   const publishAnimation = useCallback(
     (controls: AnimationControls | null) => assignRef(animationRef, controls),
     [animationRef],
@@ -147,14 +147,14 @@ export const ProcessingResultHost: FC<ProcessingResultHostProps> = props => {
   }, [onArtifacts, onCompileResult]);
   useEffect(() => {
     try {
-      onArtifactsRef.current?.(result.compileResult.artifacts);
+      onArtifactsRef.current?.(result.artifacts);
     } catch (cause) {
       if (__DEV__) console.warn('[retikz] <Layout> onArtifacts callback failed', cause);
     }
   }, [result]);
   useEffect(() => {
     try {
-      onCompileResultRef.current?.(result.compileResult);
+      onCompileResultRef.current?.(result);
     } catch (cause) {
       if (__DEV__) console.warn('[retikz] <Layout> onCompileResult callback failed', cause);
     }
@@ -177,7 +177,7 @@ export const ProcessingResultHost: FC<ProcessingResultHostProps> = props => {
   }
 
   const svg = svgToReact(document as NonNullable<typeof document>) as ReactElement;
-  const size = computeDisplaySize(result.compileResult.scene.layout, width, height);
+  const size = computeDisplaySize(result.scene.layout, width, height);
 
   return cloneElement(svg, { ...size, className, style, ref: setRoot });
 };

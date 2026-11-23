@@ -90,7 +90,7 @@ const input = scene({
     }),
   ],
 });
-const { compileResult } = compileToScene(input);
+const compileResult = compileToScene(input);
 const svg = renderToSvgString(compileResult.scene);
 console.log(svg);
 ```
@@ -123,7 +123,7 @@ const ir: IRScene = {
     },
   ],
 };
-const { compileResult } = compileToScene(ir, { compile: { composites: [legendDefinition] } });
+const compileResult = compileToScene(ir, { compile: { composites: [legendDefinition] } });
 const svg = renderToSvgString(compileResult.scene);
 console.log(svg);
 ```

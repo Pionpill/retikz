@@ -35,9 +35,7 @@ it('JSX 行保留空单元格和具有 Vanilla 等价性的显式别名', () => 
   });
 
   expect(normalizeScene(jsx).ir).toEqual(normalizeScene(vanilla).ir);
-  expect(renderToSvgString(compileToScene(jsx).compileResult.scene)).toEqual(
-    renderToSvgString(compileToScene(vanilla).compileResult.scene),
-  );
+  expect(renderToSvgString(compileToScene(jsx).scene)).toEqual(renderToSvgString(compileToScene(vanilla).scene));
 });
 it('自动收集嵌套的 Matrix、Array、Map 和裁剪提供者', () => {
   const jsx = createInputScene(
@@ -61,7 +59,7 @@ it('自动收集嵌套的 Matrix、Array、Map 和裁剪提供者', () => {
     </Matrix>,
   );
 
-  expect(renderToSvgString(compileToScene(jsx).compileResult.scene)).toContain('<svg');
+  expect(renderToSvgString(compileToScene(jsx).scene)).toContain('<svg');
 });
 it('空 React 输入和所有三个显式输入均进行编译', () => {
   for (const element of [
@@ -72,7 +70,7 @@ it('空 React 输入和所有三个显式输入均进行编译', () => {
   ]) {
     const jsx = createInputScene(element);
 
-    expect(renderToSvgString(compileToScene(jsx).compileResult.scene)).toContain('<svg');
+    expect(renderToSvgString(compileToScene(jsx).scene)).toContain('<svg');
   }
 });
 it('拒绝放错位置的标记、多个可绘制子项和参差不齐的行', () => {
@@ -105,5 +103,5 @@ it('拒绝放错位置的标记、多个可绘制子项和参差不齐的行', (
     </Matrix>,
   );
 
-  expect(() => renderToSvgString(compileToScene(jsx).compileResult.scene)).toThrow();
+  expect(() => renderToSvgString(compileToScene(jsx).scene)).toThrow();
 });

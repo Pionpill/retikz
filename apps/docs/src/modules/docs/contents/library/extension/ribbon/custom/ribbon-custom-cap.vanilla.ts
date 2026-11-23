@@ -45,5 +45,5 @@ const input = scene({
   ],
 });
 
-const { compileResult } = compileToScene(input, { compile: { paths: [ribbonDefinition] } });
+const compileResult = compileToScene(input, { compile: { paths: [ribbonDefinition] } });
 export const svg = renderToSvgString(compileResult.scene);

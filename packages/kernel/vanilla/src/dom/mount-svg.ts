@@ -180,10 +180,10 @@ const mountRetainedSvg = (
       return processing.read().animation;
     },
     get artifacts() {
-      return processing.result().compileResult.artifacts;
+      return processing.result().compilation.result.artifacts;
     },
     get compileResult() {
-      return processing.result().compileResult;
+      return processing.result().compilation.result;
     },
   };
 };

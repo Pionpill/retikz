@@ -62,7 +62,7 @@ const input = scene({
     }),
   ],
 });
-const { compileResult } = compileToScene(input);
+const compileResult = compileToScene(input);
 const svg = renderToSvgString(compileResult.scene);
 console.log(svg);
 ```
@@ -86,7 +86,7 @@ const ir: IRScene = {
     },
   ],
 };
-const { compileResult } = compileToScene(ir);
+const compileResult = compileToScene(ir);
 const svg = renderToSvgString(compileResult.scene);
 console.log(svg);
 ```

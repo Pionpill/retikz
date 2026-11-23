@@ -82,14 +82,14 @@ describe('自定义代码块 React 编写', () => {
       },
     );
 
-    expect(actual.compileResult.scene).toEqual(vanilla.compileResult.scene);
-    expect(actual.compileResult.scene).toEqual(direct.compileResult.scene);
+    expect(actual.scene).toEqual(vanilla.scene);
+    expect(actual.scene).toEqual(direct.scene);
 
     const retained = SceneRuntime.fromInput(input, {
       compile: { themeDefinitions: [coreStyle] },
     });
 
-    expect(retained.read().compileResult.scene).toEqual(actual.compileResult.scene);
+    expect(retained.read().compilation.result.scene).toEqual(actual.scene);
 
     retained.dispose();
   });

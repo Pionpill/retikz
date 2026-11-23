@@ -7,7 +7,7 @@ import { Circle, Ellipse, Rectangle, Polygon, Star, Arc, Sector } from '../src/s
 
 const ir = (jsx: ReactNode) => {
   const input = createInputScene(jsx);
-  return { children: compileToScene(input).compileResult.scene };
+  return { children: compileToScene(input).scene };
 };
 
 const polarXY = (center: [number, number], rx: number, ry: number, angle: number): [number, number] => [

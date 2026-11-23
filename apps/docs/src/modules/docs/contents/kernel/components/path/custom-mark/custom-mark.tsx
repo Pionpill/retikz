@@ -23,7 +23,7 @@ export const previewSource = {
   buildViews: ({ theme }) => {
     const input = { ...ringScene, ...(theme === undefined ? {} : { theme }) };
     const ir = normalizeScene(input).ir;
-    const { compileResult } = compileToScene(input, { compile: { marks: [ringMark] } });
+    const compileResult = compileToScene(input, { compile: { marks: [ringMark] } });
     const svg = renderToSvgString(compileResult.scene);
     return {
       ir: {

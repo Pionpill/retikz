@@ -123,9 +123,9 @@ describe('Layout Vanilla 系列', () => {
       ],
     });
     expect(normalized.contributions.flatMap(contribution => contribution.providers)).toEqual([flexLayoutProvider]);
-    expect(
-      renderToSvgString(compileToScene(input, { compile: { composites: [gridLayoutDefinition] } }).compileResult.scene),
-    ).toMatch(/^<svg/);
+    expect(renderToSvgString(compileToScene(input, { compile: { composites: [gridLayoutDefinition] } }).scene)).toMatch(
+      /^<svg/,
+    );
   });
 
   it('通过输入项转发嵌套的 Layout 依赖项，无需 React 参与', () => {

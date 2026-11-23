@@ -118,14 +118,14 @@ describe('@retikz/vanilla renderToSvgString', () => {
   });
 
   it('ir-default-fallback-measurer：ir 入参在 Node 下确定（默认 fallback / 可注入 measureText）', () => {
-    const a = renderToSvgString(compileToScene(nodeIr).compileResult.scene);
-    const b = renderToSvgString(compileToScene(nodeIr).compileResult.scene);
+    const a = renderToSvgString(compileToScene(nodeIr).scene);
+    const b = renderToSvgString(compileToScene(nodeIr).scene);
 
     expect(a).toBe(b); // 同输入逐字一致 → 确定性（fallbackMeasurer）
 
     // 注入更宽的度量器 → 节点尺寸变 → 输出不同（证明 measureText 真生效、ir contract 完整）
     const wide = renderToSvgString(
-      compileToScene(nodeIr, { compile: { measureText: () => ({ width: 999, height: 40 }) } }).compileResult.scene,
+      compileToScene(nodeIr, { compile: { measureText: () => ({ width: 999, height: 40 }) } }).scene,
     );
 
     expect(wide).not.toBe(a);
@@ -155,18 +155,16 @@ describe('@retikz/vanilla renderToSvgString', () => {
   });
 
   it('将边界提供者传递给编译选项', () => {
-    expect(() => renderToSvgString(compileToScene(boundaryIr).compileResult.scene)).toThrow(/options\.boundaries/i);
-    expect(
-      renderToSvgString(compileToScene(boundaryIr, { compile: { boundaries: [fixedBoundary()] } }).compileResult.scene),
-    ).toMatch(/^<svg/);
+    expect(() => renderToSvgString(compileToScene(boundaryIr).scene)).toThrow(/options\.boundaries/i);
+    expect(renderToSvgString(compileToScene(boundaryIr, { compile: { boundaries: [fixedBoundary()] } }).scene)).toMatch(
+      /^<svg/,
+    );
   });
 
   it('将裁剪提供者传递给编译选项', () => {
-    expect(() => renderToSvgString(compileToScene(clipIr).compileResult.scene)).toThrow(
-      /Unknown provider 'circleFrame'/,
-    );
+    expect(() => renderToSvgString(compileToScene(clipIr).scene)).toThrow(/Unknown provider 'circleFrame'/);
 
-    const { compileResult } = compileToScene(clipIr, { compile: { clips: [circleFrameClip()] } });
+    const compileResult = compileToScene(clipIr, { compile: { clips: [circleFrameClip()] } });
     const svg = renderToSvgString(compileResult.scene);
 
     expect(svg).toContain('<clipPath');

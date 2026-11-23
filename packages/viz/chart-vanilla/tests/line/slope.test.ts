@@ -27,7 +27,7 @@ describe('Slope Vanilla 输入闭环', () => {
   });
 
   it('Slope 和 Point provider 在同一场景独立编译并生成 SVG', () => {
-    const { compileResult } = compileToScene(
+    const compileResult = compileToScene(
       scene({
         children: [
           slopeChart({

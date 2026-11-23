@@ -75,9 +75,9 @@ describe('扩展根条目集成', () => {
       ],
     });
 
-    expect(() => renderToSvgString(compileToScene(input).compileResult.scene)).toThrow(/cross/);
+    expect(() => renderToSvgString(compileToScene(input).scene)).toThrow(/cross/);
 
-    const { compileResult } = compileToScene(input, { compile: { shapes: [crossShapeDefinition] } });
+    const compileResult = compileToScene(input, { compile: { shapes: [crossShapeDefinition] } });
     const svg = renderToSvgString(compileResult.scene);
 
     expect(svg).toContain('<svg');
@@ -88,10 +88,10 @@ describe('扩展根条目集成', () => {
   it('保持直接 Core 编译和 Vanilla 编译场景与精确的功能条目等效', () => {
     const direct = compileTestResult(source, definitions);
     const vanilla = compileToScene(source, { compile: definitions });
-    const svg = renderToSvgString(vanilla.compileResult.scene);
+    const svg = renderToSvgString(vanilla.scene);
 
-    expect(vanilla.compileResult.scene).toEqual(direct.scene);
-    expect(vanilla.compileResult.artifacts).toEqual(direct.artifacts);
+    expect(vanilla.scene).toEqual(direct.scene);
+    expect(vanilla.artifacts).toEqual(direct.artifacts);
     expect(svg).toContain('optional shape');
     expect(svg).toContain('Source endpoint');
     expect(svg).toContain('Target endpoint');

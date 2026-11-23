@@ -88,7 +88,7 @@ const input = scene({
   ],
 });
 
-const { compileResult } = compileToScene(input);
+const compileResult = compileToScene(input);
 console.log(renderToSvgString(compileResult.scene));
 ```
 
@@ -116,9 +116,7 @@ const ir: IRScene = {
   ],
 };
 
-console.log(
-  renderToSvgString(compileToScene(ir, { compile: { composites: [flexLayoutDefinition] } }).compileResult.scene),
-);
+console.log(renderToSvgString(compileToScene(ir, { compile: { composites: [flexLayoutDefinition] } }).scene));
 ```
 
 </DocTab>

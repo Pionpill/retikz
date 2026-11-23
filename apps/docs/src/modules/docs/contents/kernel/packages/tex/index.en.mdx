@@ -89,7 +89,7 @@ const input = scene({
   children: [node({ id: 'formula', position: [0, 0], text: '$\\frac{a}{b} = c$' })],
 });
 
-const { compileResult } = compileToScene(input, { compile: { lowerTex } });
+const compileResult = compileToScene(input, { compile: { lowerTex } });
 const svg = renderToSvgString(compileResult.scene);
 ```
 

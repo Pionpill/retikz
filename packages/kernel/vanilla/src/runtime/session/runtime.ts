@@ -6,20 +6,20 @@ import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../error';
 import type { InputScene } from '../../normalize';
 import { prepareProcessingInput } from '../_input';
 import type { InputPreparedProcessing, ProcessingOptions } from '../_input';
-import type { InputVanillaCompileResultExtension, ProcessingResult } from '../compile';
-import { ResultExtensionHost, prepareCompileOutput } from '../compile';
+import type { InputVanillaCompileResultExtension } from '../compile';
+import { ResultExtensionHost } from '../compile';
 import { renderToSvgString } from '../output';
 import type { RenderToStringOptions } from '../output';
 
-/** 组合单场景编译和宿主提交；仅在底层事务成功后发布新的 Vanilla 结果 */
+/** 组合单场景编译和宿主提交；仅在底层事务成功后发布协调器原始快照 */
 export class SceneRuntime {
-  private readonly listeners = new Set<(result: ProcessingResult) => void>();
+  private readonly listeners = new Set<(result: ReconcilerResult) => void>();
   private readonly failures: Array<unknown> = [];
   private extensionSession?: ResultExtensionHost;
   private extensionInput?: InputVanillaCompileResultExtension;
   private readonly reconciler: SceneReconciler<AnyCompositeDefinition>;
   /** 构造时随首次成功 mount 发布，之后只在底层提交成功后替换 */
-  private current!: ProcessingResult;
+  private current!: ReconcilerResult;
   private disposed = false;
   private writing = false;
 
@@ -61,14 +61,14 @@ export class SceneRuntime {
 
   /** 导出最后一次成功提交的场景，不重新编译或发送通知 */
   renderToSvgString(options?: RenderToStringOptions) {
-    return renderToSvgString(this.current.compileResult.scene, options);
+    return renderToSvgString(this.current.compilation.result.scene, options);
   }
 
   /** 读取最后一次成功提交的结果 */
-  readonly read = (): ProcessingResult => this.current;
+  readonly read = (): ReconcilerResult => this.current;
 
   /** 订阅后续成功提交 */
-  readonly subscribe = (listener: (result: ProcessingResult) => void) => {
+  readonly subscribe = (listener: (result: ReconcilerResult) => void) => {
     this.assertActive();
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
@@ -127,22 +127,20 @@ export class SceneRuntime {
   }
 
   /** 读取指定版本的 scope 地址 */
-  getScopeId(path: ReadonlyArray<number>, expected: ProcessingResult) {
-    this.assertExpected(expected);
-    return this.reconciler.getScopeId(path);
+  getScopeId(path: ReadonlyArray<number>, expected: ReconcilerResult) {
+    this.assertActive();
+    return this.reconciler.getScopeId(path, expected);
   }
 
   /** 将变更批次应用到指定的已提交版本 */
-  update(batch: WeaveBatch, expected: ProcessingResult) {
+  update(batch: WeaveBatch, expected: ReconcilerResult) {
     this.commitBatch(batch, expected);
   }
 
-  protected commitBatch(batch: WeaveBatch, expected: ProcessingResult, notifications?: Array<() => void>) {
+  protected commitBatch(batch: WeaveBatch, expected: ReconcilerResult, notifications?: Array<() => void>) {
     this.write(() => {
-      this.assertExpected(expected);
-      const previous = this.reconciler.read();
-      const committed = this.reconciler.update(batch, previous);
-      if (committed !== previous) this.publish(committed, notifications);
+      const committed = this.reconciler.update(batch, expected);
+      if (committed !== expected) this.publish(committed, notifications);
     });
   }
 
@@ -170,7 +168,7 @@ export class SceneRuntime {
   private createCommitTarget(target?: ReconcilerCommitTarget): ReconcilerCommitTarget {
     return {
       prepare: (candidate, previous) => {
-        // 扩展解析可能失败，须在宿主提交之前执行；发布时复用同一快照的解析结果
+        // 扩展解析可能失败，须在宿主提交之前执行；发布时只发送对应提交的通知
         this.extensionSession?.prepare(candidate.compilation);
         this.assertActive();
         const token = target?.prepare(candidate, previous);
@@ -190,20 +188,14 @@ export class SceneRuntime {
 
   private publish(committed: ReconcilerResult, notifications?: Array<() => void>) {
     const session = this.extensionSession;
-    const output = prepareCompileOutput(committed.compilation, session);
-    const result = Object.freeze({
-      revision: committed.revision,
-      compileResult: output.primary,
-      processingDiagnostics: output.processingDiagnostics,
-    });
-    this.current = result;
+    this.current = committed;
     if (session) {
-      if (notifications) notifications.push(() => session.notifyCommit(output));
-      else session.notifyCommit(output);
+      if (notifications) notifications.push(() => session.notifyCommit(committed.compilation.result));
+      else session.notifyCommit(committed.compilation.result);
     }
     for (const listener of this.listeners) {
       try {
-        listener(result);
+        listener(committed);
       } catch (cause) {
         this.failures.push(cause);
       }
@@ -214,12 +206,6 @@ export class SceneRuntime {
     this.assertOwnerActive?.();
     if (this.disposed)
       throw new RetikzVanillaError(RetikzVanillaErrorCode.Processing, 'Processing controller is disposed');
-  }
-
-  private assertExpected(expected: ProcessingResult) {
-    this.assertActive();
-    if (this.current !== expected)
-      throw new RetikzVanillaError(RetikzVanillaErrorCode.Processing, 'Stale scene result');
   }
 }
 
@@ -248,7 +234,7 @@ export class HostedSceneRuntime extends SceneRuntime {
     this.replacePrepared(next, notifications);
   }
 
-  applyBatch(batch: WeaveBatch, expected: ProcessingResult, notifications: Array<() => void>) {
+  applyBatch(batch: WeaveBatch, expected: ReconcilerResult, notifications: Array<() => void>) {
     this.commitBatch(batch, expected, notifications);
   }
 

@@ -43,7 +43,7 @@ const view = mountSvg(container, ir);
 ```ts
 import { compileToScene, renderToSvgString } from '@retikz/vanilla';
 
-const { compileResult } = compileToScene(ir);
+const compileResult = compileToScene(ir);
 const svg = renderToSvgString(compileResult.scene); // '<svg ...>...</svg>', drop it into HTML
 ```
 

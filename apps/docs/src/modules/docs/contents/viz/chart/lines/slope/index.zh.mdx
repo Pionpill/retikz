@@ -118,7 +118,7 @@ const definitions = resolveCoreProviderDependencies({
   ],
 });
 
-export const svg = renderToSvgString(compileToScene(ir, { compile: definitions }).compileResult.scene);
+export const svg = renderToSvgString(compileToScene(ir, { compile: definitions }).scene);
 ```
 
 </DocTab>

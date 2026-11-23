@@ -43,7 +43,7 @@ Both entries deliver nodes A and B and their connecting path. Names, positions, 
 
 Vanilla handles configuration at the input layer: it normalizes `InputScene` into `IRScene`, assembles compile options and arranges Core execution. Existing IR enters here too. The prepared IR still contains references to A and B, ready for Core to calculate their connection points.
 
-Vanilla also assembles the processing mode. **static** creates a temporary non-incremental SceneReconciler and disposes it after compilation. In the default **retained** mode, the controller holds a reconciler and applies complete input updates through replace. The reconciler selects complete traversal or Weave scheduling according to the compilation mode; both drivers share drawing computation and output assembly.
+Vanilla also assembles the processing mode. **static** creates a temporary SceneReconciler and disposes it after compilation. In the default **retained** mode, the controller holds a reconciler and applies complete input updates through replace. The reconciler selects complete traversal or Weave scheduling according to the compilation mode; both drivers share drawing computation and output assembly.
 
 <ComponentPreview files="pipeline-processing" size="sm" hideCode type="flow" />
 
@@ -95,7 +95,7 @@ A is centered at `[0, 0]` and has width 60, putting its right edge at `x = 30`. 
 </DocTab>
 </DocTabs>
 
-These excerpts show the path structure. The complete Scene also contains rectangles, text and canvas information. Reconciler delivers Scene with Composite artifacts and diagnostics; Vanilla organizes them into `ProcessingResult` for the host. Drawing uses Scene, while applications can read other outputs as needed.
+These excerpts show the path structure. The complete Scene also contains rectangles, text and canvas information. Reconciler delivers Scene with Composite artifacts and diagnostics; Vanilla passes the original compile result to the host. Drawing uses Scene, while applications can read other outputs as needed.
 
 <SourceLinks
   sources={[
@@ -132,7 +132,7 @@ Follow the example's React JSX, static, SVG branch through these entries. Arrows
 
 <ComponentPreview files="pipeline-implementation" size="lg" hideCode type="flow" />
 
-Start at Layout's `createInputScene`, then follow Vanilla's `prepareStaticProcessing`. Inside it, `prepareProcessingInput` prepares the input and the static driver creates a temporary non-incremental `SceneReconciler`, reads artifacts and diagnostics from the mount result, and disposes the instance when the call ends. The result returns to React's `ProcessingResultHost`; `buildSvgDocument` and `svgToReact` produce React elements for React to commit to the page.
+Start at Layout's `createInputScene`, then follow Vanilla's `compileToScene`. Inside it, `prepareProcessingInput` prepares the input and the static driver creates a temporary `SceneReconciler`, reads `compilation.result` from the mount snapshot, and disposes the instance when the call ends. The result returns to React's `ProcessingResultHost`; `buildSvgDocument` and `svgToReact` produce React elements for React to commit to the page.
 
 <SourceLinks
   sources={[

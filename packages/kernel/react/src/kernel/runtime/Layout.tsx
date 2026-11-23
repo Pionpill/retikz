@@ -21,14 +21,8 @@ import type { ReconcilerDiagnostic } from '@retikz/reconciler';
 import type { AnimationControls } from '@retikz/render/animation';
 import { resolveAnimationEnabled } from '@retikz/render/animation';
 import type { HydrationHandlers } from '@retikz/render/hydration';
-import type {
-  InputScene,
-  InputScope,
-  ProcessingOptions,
-  ProcessingResult,
-  VanillaCompileResultExtension,
-} from '@retikz/vanilla';
-import { isInputScene, SceneRuntime, prepareStaticProcessing } from '@retikz/vanilla';
+import type { InputScene, InputScope, ProcessingOptions, VanillaCompileResultExtension } from '@retikz/vanilla';
+import { isInputScene, SceneRuntime, compileToScene } from '@retikz/vanilla';
 import type { CSSProperties, FC, ReactNode, Ref } from 'react';
 import { useCallback, useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 
@@ -256,21 +250,53 @@ export type LayoutProps = {
 };
 
 /** 订阅 Vanilla retained controller 的最后一次成功 result，在提交前回退静态结果 */
-const useProcessingResult = (
-  controller: SceneRuntime | undefined,
-  fallbackResult: ProcessingResult,
-): ProcessingResult => {
+const useProcessingResult = (controller: SceneRuntime | undefined, fallbackResult: CompileResult): CompileResult => {
   const subscribe = useCallback(
     (notify: () => void) => (controller === undefined ? () => undefined : controller.subscribe(() => notify())),
     [controller],
   );
-  const read = useCallback(() => controller?.read() ?? fallbackResult, [controller, fallbackResult]);
+  const read = useCallback(() => controller?.read().compilation.result ?? fallbackResult, [controller, fallbackResult]);
 
   return useSyncExternalStore(subscribe, read, read);
 };
 
 /** Processing result 宿主需要的固定属性 */
 type LayoutResultHostProps = Omit<React.ComponentProps<typeof ProcessingResultHost>, 'result'>;
+
+/** render 阶段解析扩展，仅在 React 采用该帧后交付通知 */
+const compileLayoutFrame = (source: InputScene | IRScene, options: ProcessingOptions) => {
+  const extension = options.compileResultExtension;
+  if (!extension) return { result: compileToScene(source, options) };
+
+  let pendingNotification: (() => void) | undefined;
+  const result = compileToScene(source, {
+    ...options,
+    compileResultExtension: {
+      create: input => {
+        const session = extension.create(input);
+        return {
+          resolve: snapshot => session.resolve(snapshot),
+          onCommit: output => {
+            pendingNotification = () => session.onCommit?.(output);
+          },
+        };
+      },
+    },
+  });
+
+  return {
+    result,
+    notifyCommit: () => {
+      const notify = pendingNotification;
+      pendingNotification = undefined;
+      try {
+        notify?.();
+      } catch (cause) {
+        if (__DEV__) console.warn('[retikz] Vanilla compile result extension onCommit failed', cause);
+      }
+    },
+  };
+};
 
 /** static 模式只执行一次无生命周期的 Vanilla processing */
 const StaticLayoutContent: FC<{
@@ -279,9 +305,9 @@ const StaticLayoutContent: FC<{
   hostKey: string;
   hostProps: LayoutResultHostProps;
 }> = ({ source, options, hostKey, hostProps }) => {
-  const processing = useMemo(() => prepareStaticProcessing(source, options, 0), [source, options]);
+  const processing = useMemo(() => compileLayoutFrame(source, options), [source, options]);
   useEffect(() => {
-    processing.commit();
+    processing.notifyCommit?.();
   }, [processing]);
 
   return <ProcessingResultHost key={hostKey} {...hostProps} result={processing.result} />;
@@ -295,7 +321,7 @@ const RetainedLayoutContent: FC<{
   hostKey: string;
   hostProps: LayoutResultHostProps;
 }> = ({ source, options, onDiagnostic, hostKey, hostProps }) => {
-  const [fallbackResult] = useState(() => prepareStaticProcessing(source, options, 0).result);
+  const [fallbackResult] = useState(() => compileLayoutFrame(source, options).result);
   const [controller, setController] = useState<SceneRuntime | undefined>(undefined);
   const currentSourceRef = useRef(source);
   const result = useProcessingResult(controller, fallbackResult);

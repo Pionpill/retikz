@@ -17,8 +17,6 @@ it('Tree字符串与对象配置的Source及SVG和Vanilla等价', () => {
     const vanilla = scene({ children: [tree(props)] });
 
     expect(normalizeScene(jsx).ir).toEqual(normalizeScene(vanilla).ir);
-    expect(renderToSvgString(compileToScene(jsx).compileResult.scene)).toEqual(
-      renderToSvgString(compileToScene(vanilla).compileResult.scene),
-    );
+    expect(renderToSvgString(compileToScene(jsx).scene)).toEqual(renderToSvgString(compileToScene(vanilla).scene));
   }
 });
