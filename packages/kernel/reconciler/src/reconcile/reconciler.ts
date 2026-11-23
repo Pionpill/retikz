@@ -16,7 +16,7 @@ import {
 import type { ReconcilerPreparedCommit, ReconcilerResult, SceneReconcilerOptions } from './types';
 
 /** 同步协调编译与一个输出目标，不依赖 DOM 或 Runtime 注册图 */
-export class SceneReconciler<const TComposite extends AnyCompositeDefinition = never> {
+export class SceneReconciler<const TComposite extends AnyCompositeDefinition = AnyCompositeDefinition> {
   private current: ReconcilerResult<TComposite> | undefined;
   private weave: WeaveManager<TComposite> | undefined;
   private status: ReconcilerStatus = ReconcilerStatus.Idle;

@@ -111,7 +111,7 @@ FlexLayout 先查询子项的尺寸贡献，再依据布局规则分配空间，
 
 ## 编译输出
 
-显式标注编译类型时，`SceneReconciler<TComposite>` 与 `CompileOptions<TComposite>` 的泛型表示复合 Definition 的元素类型或类型联合；`composites` 字段仍是只读数组。例如，两种定义可用 `typeof firstDefinition | typeof secondDefinition` 表达，通常也可直接由传入数组推断。`SceneCompilationSnapshot<TComposite>` 根据这些定义推导 artifact 联合；未传入定义的会话默认使用 `never`。
+标注会话类型时，直接写 `SceneReconciler` 即可，其泛型默认为 `AnyCompositeDefinition`。需要保留具体定义类型时，`SceneReconciler<TComposite>` 和 `CompileOptions<TComposite>` 中的 `TComposite` 表示 `composites` 只读数组的元素类型，例如 `typeof firstDefinition | typeof secondDefinition`。构造会话时通常可从传入的数组推断该类型，`SceneCompilationSnapshot<TComposite>` 据此推导 artifact 联合。
 
 Plot 确定尺寸后，根据比例尺和坐标系把三条数据映射到点的位置，按 x 的升序连接这些点，并生成 Scope、Node、Path 等 Core 声明。它通过 Core 编译这些子声明，返回选中的子布局结果。标题 Node 也走 Core 的文字和节点编译路径。
 

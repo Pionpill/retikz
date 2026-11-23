@@ -1,4 +1,3 @@
-import type { AnyCompositeDefinition } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import type { IRPlot } from '@retikz/plot';
 import { definePlotTheme } from '@retikz/plot';
@@ -14,7 +13,7 @@ vi.mock('@retikz/reconciler', async importOriginal => {
   const actual = await importOriginal<typeof RetikzReconciler>();
   return {
     ...actual,
-    SceneReconciler: class extends actual.SceneReconciler<AnyCompositeDefinition> {
+    SceneReconciler: class extends actual.SceneReconciler {
       constructor(options: CompileOptions = {}, execution: SceneReconcilerOptions = {}) {
         super(options, execution);
         compileCalls.push(options);

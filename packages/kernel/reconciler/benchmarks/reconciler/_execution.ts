@@ -1,4 +1,4 @@
-import type { AnyCompositeDefinition, IRNode, IRScene, ScenePrimitive } from '@retikz/core';
+import type { IRNode, IRScene, ScenePrimitive } from '@retikz/core';
 import type { CompileOptions, CompileResult } from '@retikz/reconciler';
 import { ReconcilerMode, SceneReconciler } from '@retikz/reconciler';
 import { expect } from 'vitest';
@@ -96,7 +96,7 @@ export const createReconcilerBenchmark = (
       warningCount++;
     },
   };
-  let reconciler: SceneReconciler<AnyCompositeDefinition> | undefined;
+  let reconciler: SceneReconciler | undefined;
   const dispose = () => {
     reconciler?.dispose();
     reconciler = undefined;

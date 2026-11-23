@@ -1,4 +1,4 @@
-import type { AnyCompositeDefinition, IRScene } from '@retikz/core';
+import type { IRScene } from '@retikz/core';
 import type { ReconcilerCommitTarget, ReconcilerResult, WeaveBatch } from '@retikz/reconciler';
 import { SceneReconciler } from '@retikz/reconciler';
 
@@ -13,7 +13,7 @@ import type { RenderToStringOptions } from '../output';
 export class SceneRuntime {
   private readonly listeners = new Set<(result: ReconcilerResult) => void>();
   private readonly failures: Array<unknown> = [];
-  private readonly reconciler: SceneReconciler<AnyCompositeDefinition>;
+  private readonly reconciler: SceneReconciler;
   /** 构造时随首次成功 mount 发布，之后只在底层提交成功后替换 */
   private current!: ReconcilerResult;
   private disposed = false;
