@@ -8,19 +8,18 @@ import { collectRegressionChartDeclarations } from './declaration-collection';
 
 /**
  * RegressionChart React 根属性
- * @template TNative 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
  */
-export type RegressionChartProps<TNative = never> = TypedChartCommonProps<IRRegressionChart, TNative>;
+export type RegressionChartProps = TypedChartCommonProps<IRRegressionChart>;
 
 /** Regression 具体类型的 Chart React 组件 */
 export const RegressionChart = createTypedChartComponent<
-  RegressionChartProps<unknown>,
+  RegressionChartProps,
   IRRegressionChart,
-  RegressionChartInputEmbedProps<unknown>
+  RegressionChartInputEmbedProps
 >(
   'RegressionChart',
   props =>
-    createTypedChartInput<RegressionChartProps<unknown>, IRRegressionChart, RegressionChartInputEmbedProps<unknown>>(
+    createTypedChartInput<RegressionChartProps, IRRegressionChart, RegressionChartInputEmbedProps>(
       props,
       collectRegressionChartDeclarations(props.children),
       input => regressionChart(input),

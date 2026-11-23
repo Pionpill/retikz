@@ -2,7 +2,7 @@ import { pathClipProvider } from '@retikz/extension';
 import type { IRArray, IRArrayCell } from '@retikz/standard/collection';
 import { createArray, arrayProvider } from '@retikz/standard/collection';
 import { embed } from '@retikz/vanilla';
-import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
+import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
 
 import { standardArrayEmbedKind } from '../shared/constants';
 import type { InputCell } from './cell';
@@ -39,7 +39,7 @@ export type InputArray = Omit<IRArray, 'namespace' | 'type' | 'items' | 'data' |
   );
 
 /** 将 Array 输入与嵌套内容交给根级 traversal */
-export const arrayInputEmbedAdapter: SynchronousInputEmbedAdapter<InputArray> = {
+export const arrayInputEmbedAdapter: InputEmbedAdapter<InputArray> = {
   kind: standardArrayEmbedKind,
   lower: (props, context) => {
     if (props.skeleton !== undefined)

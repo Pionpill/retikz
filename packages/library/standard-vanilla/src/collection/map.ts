@@ -2,7 +2,7 @@ import { pathClipProvider } from '@retikz/extension';
 import type { IRMap } from '@retikz/standard/collection';
 import { createMap, mapProvider } from '@retikz/standard/collection';
 import { embed } from '@retikz/vanilla';
-import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
+import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
 
 import { standardMapEmbedKind } from '../shared/constants';
 import type { InputCell } from './cell';
@@ -41,7 +41,7 @@ export type InputMap = Omit<IRMap, 'namespace' | 'type' | 'entries' | 'data' | '
   );
 
 /** 将 Map 输入与嵌套内容交给根级 traversal */
-export const mapInputEmbedAdapter: SynchronousInputEmbedAdapter<InputMap> = {
+export const mapInputEmbedAdapter: InputEmbedAdapter<InputMap> = {
   kind: standardMapEmbedKind,
   lower: (props, context) => {
     if (props.skeleton !== undefined)

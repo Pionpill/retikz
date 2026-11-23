@@ -88,60 +88,13 @@ export type InputEmbedContribution = {
   authoringSites?: ReadonlyArray<InputEmbedAuthoringSite>;
 };
 
-/** Tier 2 作者输入到 Core contribution 的适配器 */
-export type InputEmbedPreparation = Readonly<{
-  /** 单次执行，完成领域计算并产生同步贡献 */
-  execute: () => InputEmbedContribution | Promise<InputEmbedContribution>;
-}>;
-
-/** 嵌套作者输入的独立执行权 */
-export type InputEmbedChildrenPreparation = Readonly<{
-  /** 按作者顺序消费已准备的子项 */
-  execute: () => EmbedChildrenNormalizationResult | Promise<EmbedChildrenNormalizationResult>;
-}>;
-
-/** 共享 processing 提供的作者位置与失效信号 */
-export type InputEmbedPreparationContext = Readonly<Omit<InputEmbedContext, 'normalizeChildren'>> &
-  Readonly<{
-    /** 当前请求取消或被替代时终止 */
-    signal: AbortSignal;
-    /** 只在准备期间登记作者子项，不在执行时发现新依赖 */
-    prepareChildren: (children: ReadonlyArray<InputChild>) => Promise<InputEmbedChildrenPreparation>;
-  }>;
-
-/**
- * 同步入口只接受具有明确 lower 能力的 adapter
- * @template TProps lower 与可选 prepare 共同接受的领域属性类型
- */
-export type SynchronousInputEmbedAdapter<TProps = unknown> = {
-  /** `adapter.kind` 标识作者类型 */
+/** 将就绪的领域输入下沉为 Core contribution */
+export type InputEmbedAdapter<TProps = unknown> = {
+  /** 作者类型标识 */
   kind: string;
-  /** 将领域输入静态下沉为 Core contribution */
+  /** 同步产生当前实例的节点、依赖与运行时输入 */
   lower: (props: TProps, context: InputEmbedContext) => InputEmbedContribution;
-  /** 异步作者入口的能力准备，不执行领域计算 */
-  prepare?: (
-    props: TProps,
-    context: InputEmbedPreparationContext,
-  ) => InputEmbedPreparation | Promise<InputEmbedPreparation>;
 };
-
-/**
- * 同一 kind 的同步与异步作者能力
- * @template TProps adapter 的同步下沉或异步准备入口接受的领域属性类型
- */
-export type InputEmbedAdapter<TProps = unknown> =
-  | SynchronousInputEmbedAdapter<TProps>
-  | Readonly<{
-      /** 作者类型标识 */
-      kind: string;
-      /** 全树能力准备 */
-      prepare: (
-        props: TProps,
-        context: InputEmbedPreparationContext,
-      ) => InputEmbedPreparation | Promise<InputEmbedPreparation>;
-      /** 仅异步 adapter 不具有同步入口 */
-      lower?: never;
-    }>;
 
 /** 擦除领域属性泛型后的异构 adapter */
 export type AnyInputEmbedAdapter = InputEmbedAdapter<never>;

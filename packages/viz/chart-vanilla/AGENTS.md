@@ -24,5 +24,6 @@
 - 具体 adapter 从 InputEmbed props 中消费 `themeDefinitions` 并组装对应 chartType provider contribution；recipe / mark Definition 由具体 chartType 闭合，不作为平铺数组注入，也不进入 Source
 - `lowerOptions` 只携带 Plot lowering 选项；Plot theme token 和 Plot fragment 仍由 Plot owner 消费
 - 逐类型 `XxxChartInputEmbedAdapter` 只把规范化 Source、数据集与 runtime 交给统一 Chart contribution，不实现 chartType 分发、Theme cascade、mark lowering 或 renderer 特判
-- `renderChart()` 消费标准 InputEmbed 与显式 adapters，通过一次 Core compile 生成 SVG 和编译结果；它不是独立的 recipe 或 Plot 执行路径
+- `renderChart()` 消费绑定同步 adapter 的 InputEmbed，通过一次 Core compile 生成 SVG 和编译结果；它不是独立的 recipe 或 Plot 执行路径
+- `renderChartAsync` 等待显式 Chart Source 与匹配 provider 的领域计算，再按实例绑定就绪结果并同步渲染
 - 不保留 Base Chart、旧 `config`、根 `type: 'base'`、旧 Theme token 字段或兼容 alias

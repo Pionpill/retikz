@@ -1,5 +1,5 @@
 import { groupProviderKey } from '@retikz/graph';
-import type { SynchronousInputEmbedAdapter } from '@retikz/vanilla';
+import type { InputEmbedAdapter } from '@retikz/vanilla';
 
 import { groupEmbedKind } from './constants';
 import { createGraphInputEmbed } from './input-embed';
@@ -16,7 +16,7 @@ const inputOf = (props: GroupInputEmbedProps): InputGroup => {
 };
 
 /** Group Source 的 InputEmbed adapter */
-export const groupInputEmbedAdapter: SynchronousInputEmbedAdapter<GroupInputEmbedProps> = {
+export const groupInputEmbedAdapter: InputEmbedAdapter<GroupInputEmbedProps> = {
   kind: groupEmbedKind,
   lower: (props, context) => {
     const input = inputOf(props);

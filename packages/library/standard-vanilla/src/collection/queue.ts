@@ -2,7 +2,7 @@ import { pathClipProvider } from '@retikz/extension';
 import type { IRQueue, IRCell } from '@retikz/standard/collection';
 import { createQueue, queueProvider } from '@retikz/standard/collection';
 import { embed } from '@retikz/vanilla';
-import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
+import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
 
 import { standardQueueEmbedKind } from '../shared/constants';
 import type { InputCell } from './cell';
@@ -39,7 +39,7 @@ export type InputQueue = Omit<IRQueue, 'namespace' | 'type' | 'items' | 'data' |
   );
 
 /** 将 Queue 输入与嵌套内容交给根级 traversal */
-export const queueInputEmbedAdapter: SynchronousInputEmbedAdapter<InputQueue> = {
+export const queueInputEmbedAdapter: InputEmbedAdapter<InputQueue> = {
   kind: standardQueueEmbedKind,
   lower: (props, context) => {
     if (props.skeleton !== undefined)

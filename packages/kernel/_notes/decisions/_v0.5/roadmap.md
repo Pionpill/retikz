@@ -122,7 +122,7 @@ Composite 与布局试算进入同一 Reconciler 执行链路，Core 与领域�
 - 收敛动画属性与关键帧值契约，补齐填充／描边透明度和虚线偏移动画，统一 SVG／Canvas 求值边界：[074](./074-animation-property-contract.md)。
 - 箭头与 Pattern 内容统一使用基础场景图元，定义侧封装归能力 owner，补齐资源与运行时消费：[070](./070-marker-scene-primitives.md)。
 - Composite 统一使用 compile，布局能力按需调用，移除独立展开通道：[052](./052-unified-composite-compilation.md)。
-- 支持共享异步作者准备与实例运行时输入，保持同步编译和原子发布：[047](./047-async-authoring-preparation.md)、[048](./048-composite-runtime-input.md)。
+- 支持就绪实例输入的同步编译和原子发布：[048](./048-composite-runtime-input.md)。
 
 预期效果：
 

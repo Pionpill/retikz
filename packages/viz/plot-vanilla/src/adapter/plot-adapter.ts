@@ -1,10 +1,8 @@
 import type { IRScope } from '@retikz/core';
-import type { DataLineageOptions } from '@retikz/data';
 import type { IRPlot } from '@retikz/plot';
-import { createPlotProviderContribution, PLOT_NAMESPACE, preparePlotData } from '@retikz/plot';
-import type { InputEmbedContext, InputEmbedPreparationContext, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
+import { createPlotProviderContribution, PLOT_NAMESPACE } from '@retikz/plot';
+import type { InputEmbedAdapter, InputEmbedContext } from '@retikz/vanilla';
 
-import { RetikzPlotVanillaError } from '../error';
 import type { InputPlotEmbed, PreparedPlotLineageNotification } from '../spec';
 import { plotIROf } from '../spec';
 
@@ -37,68 +35,22 @@ const wrapPlotPanel = (node: IRPlot, panel: InputPlotEmbed['panel']): IRPlot | I
 export const plotInputEmbedAdapter = {
   kind: PLOT_NAMESPACE,
   lower: (props: InputPlotEmbed, _context: InputEmbedContext) => {
-    if (props.datasets === undefined || props.dataTransformExecutor !== undefined || props.signal !== undefined)
-      throw new RetikzPlotVanillaError('Plot dataBindings, executor or signal require async processing');
-
-    const spec = plotIROf(props);
-    const providerDependencies = createPlotProviderContribution(props.datasets, props.lowerOptions);
-
-    return {
-      node: wrapPlotPanel(spec, props.panel),
-      providerDependencies,
-    };
-  },
-  prepare: async <TSource>(
-    props: InputPlotEmbed<TSource>,
-    context: InputEmbedPreparationContext,
-    lineage?: DataLineageOptions,
-  ) => {
     const spec = plotIROf(props);
     const node = wrapPlotPanel(spec, props.panel);
-    const signal = props.signal === undefined ? context.signal : AbortSignal.any([props.signal, context.signal]);
-    const dataBindings =
-      props.dataBindings ??
-      Object.fromEntries(
-        Object.entries(props.datasets).map(([reference, rows]) => [reference, { kind: 'rows' as const, rows }]),
-      );
-    const preparation = await preparePlotData(
-      spec,
-      {
-        dataBindings,
-        dataTransformExecutor: props.dataTransformExecutor,
-        signal,
-        lineage:
-          lineage ??
-          (props.onLineage !== undefined && props.lineage !== false ? (props.lineage?.data ?? {}) : undefined),
-      },
-      props.lowerOptions,
-    );
-    const providerDependencies = createPlotProviderContribution({}, props.lowerOptions);
-
+    const { preparedData, datasets, onLineage, lineage, hostLineageMetadata, lowerOptions } = props;
+    const authoring: PreparedPlotLineageNotification | undefined =
+      onLineage === undefined || lineage === false
+        ? undefined
+        : { spec, datasets, preparedData, onLineage, lineage: lineage ?? {}, hostLineageMetadata, lowerOptions };
     return {
-      execute: async () => {
-        const preparedData = await preparation.execute();
-        const authoring: PreparedPlotLineageNotification | undefined =
-          props.onLineage === undefined || props.lineage === false
-            ? undefined
-            : {
-                spec,
-                preparedData,
-                lowerOptions: props.lowerOptions,
-                lineage: props.lineage ?? {},
-                hostLineageMetadata: props.hostLineageMetadata,
-                onLineage: props.onLineage,
-              };
-
-        return {
-          node,
-          providerDependencies,
-          runtimeInputs: [{ path: node === spec ? [] : ['children', 0], input: preparedData }],
-          ...(authoring === undefined
-            ? {}
-            : { authoringSites: [{ kind: 'embeddable' as const, type: 'plot.prepared-lineage', authoring }] }),
-        };
-      },
+      node,
+      providerDependencies: createPlotProviderContribution(datasets ?? {}, lowerOptions),
+      ...(preparedData === undefined
+        ? {}
+        : { runtimeInputs: [{ path: node === spec ? [] : ['children', 0], input: preparedData }] }),
+      ...(authoring === undefined
+        ? {}
+        : { authoringSites: [{ kind: 'embeddable', type: 'plot.prepared-lineage', authoring }] }),
     };
   },
-} satisfies SynchronousInputEmbedAdapter<InputPlotEmbed>;
+} satisfies InputEmbedAdapter<InputPlotEmbed>;

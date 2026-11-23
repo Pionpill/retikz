@@ -1,25 +1,20 @@
 import { SceneReconciler } from '@retikz/reconciler';
 
-import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../error';
 import type { LayerReconcilerOptions, InputSceneLayers } from '../../normalize';
 import { normalizeSceneLayers, layerZIndex } from '../../normalize';
-import {
-  isLayerSource,
-  mergeLayerOptions,
-  assertPreparationActive,
-  prepareProcessingInput,
-  prepareProcessingInputAsync,
-} from '../_input';
-import type { AsyncProcessingOptions, InputPreparedProcessing, ProcessingOptions, ProcessingSource } from '../_input';
+import { isLayerSource, mergeLayerOptions, prepareProcessingInput } from '../_input';
+import type { InputPreparedProcessing, ProcessingOptions, ProcessingSource } from '../_input';
 import type { VanillaCompileOutput } from './result-extension';
 import { ResultExtensionHost, prepareCompileOutput } from './result-extension';
-import type { PreparedAsyncStaticProcessing, LayerProcessingResult, ProcessingResult } from './types';
+import type { LayerProcessingResult, ProcessingResult } from './types';
 
 /** 已完成编译、等待宿主确认提交的 static processing 候选结果 */
-export type PreparedStaticProcessing<TResult = ProcessingResult> = Pick<
-  PreparedAsyncStaticProcessing<TResult>,
-  'result' | 'commit'
->;
+export type PreparedStaticProcessing<TResult = ProcessingResult> = Readonly<{
+  /** 已完成的编译结果 */
+  result: TResult;
+  /** 宿主采用结果后通知扩展；重复调用不重复通知 */
+  commit: () => void;
+}>;
 
 /** 分层输入返回逐层结果，单场景输入返回一份编译结果 */
 type StaticResultFor<TSource extends ProcessingSource> = TSource extends InputSceneLayers
@@ -64,14 +59,11 @@ const prepareStaticProcessingInput = (
   prepared: InputPreparedProcessing,
   options: ProcessingOptions,
   revision: number,
-  signal?: AbortSignal,
 ): PreparedStaticProcessing => {
   const session =
     options.compileResultExtension &&
     ResultExtensionHost.open(options.compileResultExtension, { ...prepared, instance: {} });
-  if (signal) assertPreparationActive(signal);
   const output = compileVanillaWithResultExtension(prepared, session, options.reconciler);
-  if (signal) assertPreparationActive(signal);
   const result = Object.freeze({
     revision,
     compileResult: output.primary,
@@ -88,72 +80,6 @@ const prepareStaticProcessingInput = (
     },
   };
 };
-
-/** 先准备完整作者树，再同步编译；发布权由调用方明确消费 */
-export function prepareStaticProcessingAsync<TSource extends ProcessingSource>(
-  source: TSource,
-  options?: AsyncProcessingOptions,
-  revision?: number,
-): Promise<PreparedAsyncStaticProcessing<StaticResultFor<TSource>>>;
-export async function prepareStaticProcessingAsync(
-  source: ProcessingSource,
-  options: AsyncProcessingOptions = {},
-  revision = 0,
-) {
-  const signal = options.signal ?? new AbortController().signal;
-  assertPreparationActive(signal);
-  let candidate: PreparedStaticProcessing<ProcessingResult | LayerProcessingResult>;
-  if (isLayerSource(source)) {
-    const layers = [];
-    for (const layer of normalizeSceneLayers(source)) {
-      const effective = mergeLayerOptions(options, layer);
-      const prepared = await prepareProcessingInputAsync(source, effective, signal, layer);
-      assertPreparationActive(signal);
-      layers.push({
-        name: layer.name,
-        zIndex: layerZIndex(layer),
-        candidate: prepareStaticProcessingInput(prepared, effective, revision, signal),
-      });
-    }
-    candidate = combinePreparedLayers(layers);
-  } else {
-    const prepared = await prepareProcessingInputAsync(source, options, signal);
-    assertPreparationActive(signal);
-    candidate = prepareStaticProcessingInput(prepared, options, revision, signal);
-  }
-  assertPreparationActive(signal);
-  let terminal: 'pending' | 'committed' | 'discarded' = 'pending';
-
-  return {
-    result: candidate.result,
-    commit: () => {
-      if (terminal === 'committed') return;
-      if (terminal === 'discarded')
-        throw new RetikzVanillaError(RetikzVanillaErrorCode.Processing, 'Cannot commit a discarded candidate');
-
-      assertPreparationActive(signal);
-      terminal = 'committed';
-      candidate.commit();
-    },
-    discard: () => {
-      if (terminal === 'discarded') return;
-      if (terminal === 'committed')
-        throw new RetikzVanillaError(RetikzVanillaErrorCode.Processing, 'Cannot discard a committed candidate');
-
-      terminal = 'discarded';
-    },
-  };
-}
-
-/** 异步准备作者输入后完成一次编译，返回无需管理会话生命周期的处理结果 */
-export async function compileToSceneAsync<TSource extends ProcessingSource>(
-  source: TSource,
-  options: AsyncProcessingOptions = {},
-): Promise<StaticResultFor<TSource>> {
-  const candidate = await prepareStaticProcessingAsync(source, options, 0);
-  candidate.commit();
-  return candidate.result;
-}
 
 /** 同步编译 InputScene 或 Core IR，返回 revision 为 0 且无需释放的处理结果 */
 export function compileToScene<TSource extends ProcessingSource>(

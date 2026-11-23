@@ -1,5 +1,5 @@
 import * as DiagramFlow from '@retikz/diagram/flow';
-import type { InputEmbed, SynchronousInputEmbedAdapter, InputEmbedContext } from '@retikz/vanilla';
+import type { InputEmbed, InputEmbedAdapter, InputEmbedContext } from '@retikz/vanilla';
 import { createProcessingController, compileToScene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
@@ -80,10 +80,10 @@ const functionExport = <TFunction extends (...arguments_: never) => unknown>(nam
   return typeof candidate === 'function' ? candidate : undefined;
 };
 
-const adapterExport = (): SynchronousInputEmbedAdapter<Readonly<Record<string, unknown>>> | undefined => {
+const adapterExport = (): InputEmbedAdapter<Readonly<Record<string, unknown>>> | undefined => {
   const value: unknown = FlowVanilla;
   if (typeof value !== 'object' || value === null || !('flowDiagramInputEmbedAdapter' in value)) return undefined;
-  return value.flowDiagramInputEmbedAdapter as SynchronousInputEmbedAdapter<Readonly<Record<string, unknown>>>;
+  return value.flowDiagramInputEmbedAdapter as InputEmbedAdapter<Readonly<Record<string, unknown>>>;
 };
 
 const context: InputEmbedContext = {

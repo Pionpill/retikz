@@ -8,9 +8,6 @@ const translations: Readonly<Partial<Record<string, string>>> = {
     'Height above the baseline; resolveTextMetrics derives an omitted value from total height and descent, or assigns half the total height when both are omitted',
   '基线以下的深度；省略时由 resolveTextMetrics 根据总高度与 ascent 补齐，两者均省略时各取总高度的一半':
     'Depth below the baseline; resolveTextMetrics derives an omitted value from total height and ascent, or assigns half the total height when both are omitted',
-  '客户端作者准备方式；同步 SSR 仍消费同步 lower':
-    'Client authoring preparation mode; synchronous SSR continues to use synchronous lower',
-  '异步 preparation 与 controller 的生命周期信号': 'Lifecycle signal for async preparation and the controller',
   '固定为 layer 的作者分层标识': 'Authoring layer discriminator, fixed to layer',
   '作者输入不接受版本号；归一化时写入当前 IR 版本':
     'Authoring input excludes a version; normalization supplies the current IR version',

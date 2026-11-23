@@ -3,7 +3,7 @@ import { BuiltinCompileWarningCode, CompositeBaseSchema, defineComposite, SceneS
 import { describe, expect, it, vi } from 'vitest';
 import { literal, string } from 'zod';
 
-import type { InputEmbedAdapter, InputPath, InputScene, InputStep, SynchronousInputEmbedAdapter } from '../../src';
+import type { InputEmbedAdapter, InputPath, InputScene, InputStep } from '../../src';
 import {
   coordinate,
   embed,
@@ -115,7 +115,7 @@ const createBoxAdapter = (
   makeDefinition = vi.fn<(contributions: ReadonlyArray<{ shared: object }>) => AnyCompositeDefinition>(
     () => boxComposite,
   ),
-): SynchronousInputEmbedAdapter<{ text: string; data: object }> => ({
+): InputEmbedAdapter<{ text: string; data: object }> => ({
   kind: 'fixture-box',
   lower: props => ({
     node: { namespace: 'fixture', type: 'box', text: props.text },
@@ -230,7 +230,7 @@ describe('@retikz/vanilla InputScene', () => {
 
   it('同步 adapter 失败由 Vanilla 报告并保留原始异常', () => {
     const cause = new Error('external adapter failure');
-    const adapter: SynchronousInputEmbedAdapter = {
+    const adapter: InputEmbedAdapter = {
       kind: 'broken',
       lower: () => {
         throw cause;
@@ -517,15 +517,5 @@ describe('@retikz/vanilla InputScene', () => {
     expect(wrapped.ir.children).toEqual([
       { type: 'scope', children: [{ type: 'node', id: 'chart', position: [0, 0] }] },
     ]);
-  });
-
-  it('同步入口定位只有 prepare 的 embed', () => {
-    const adapter = {
-      kind: 'async-only',
-      prepare: () => ({
-        execute: () => ({ node: node({ position: [0, 0] }), providerDependencies: EMPTY_COMPOSITE_DEPENDENCIES }),
-      }),
-    };
-    expect(() => normalizeScene(scene([embed({ adapter, id: 'x', props: {} })]))).toThrow(/x.*no synchronous lower/);
   });
 });

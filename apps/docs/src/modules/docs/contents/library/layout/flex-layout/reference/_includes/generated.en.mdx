@@ -114,7 +114,7 @@ export type FlexLayoutItemProps = Omit<InputFlexLayoutItemConfig, 'child' | 'key
 
 ## Direct calls
 
-#### <ApiSourceLink label={"flexLayout"} path={"packages/library/layout-vanilla/src/flex-layout.ts"} startLine={55}>flexLayout</ApiSourceLink> / <ApiSourceLink label={"InputFlexLayout"} path={"packages/library/layout-vanilla/src/normalize/types.ts"} startLine={27}>InputFlexLayout</ApiSourceLink>
+#### <ApiSourceLink label={"flexLayout"} path={"packages/library/layout-vanilla/src/flex-layout.ts"} startLine={36}>flexLayout</ApiSourceLink> / <ApiSourceLink label={"InputFlexLayout"} path={"packages/library/layout-vanilla/src/normalize/types.ts"} startLine={27}>InputFlexLayout</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -184,11 +184,10 @@ export type InputFlexLayoutItem = InputLayoutItem<InputFlexLayoutItemConfig>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"flexLayoutInputEmbedAdapter"} path={"packages/library/layout-vanilla/src/flex-layout.ts"} startLine={12}>flexLayoutInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"flexLayoutInputEmbedAdapter"} path={"packages/library/layout-vanilla/src/flex-layout.ts"} startLine={13}>flexLayoutInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const flexLayoutInputEmbedAdapter: SynchronousInputEmbedAdapter<InputFlexLayout> &
-  Required<Pick<SynchronousInputEmbedAdapter<InputFlexLayout>, 'prepare'>>;
+export declare const flexLayoutInputEmbedAdapter: InputEmbedAdapter<InputFlexLayout>;
 ```
 
 #### <ApiSourceLink label={"createFlexLayout"} path={"packages/library/layout/src/composites/flex-layout/composite.ts"} startLine={30}>createFlexLayout</ApiSourceLink> / <ApiSourceLink label={"InputFlexLayoutConfig"} path={"packages/library/layout/src/composites/flex-layout/types.ts"} startLine={25}>InputFlexLayoutConfig</ApiSourceLink>

@@ -2,16 +2,7 @@ import { ReconcilerMode } from '@retikz/reconciler';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { VanillaCompileResultExtensionSession } from '../../src';
-import {
-  compileToScene,
-  compileToSceneAsync,
-  createProcessingController,
-  createProcessingControllerAsync,
-  layer,
-  node,
-  path,
-  scene,
-} from '../../src';
+import { compileToScene, createProcessingController, layer, node, path, scene } from '../../src';
 
 const contents = (name: string, x: number) => layer({ name, children: [node({ id: 'box', position: [x, 0] })] });
 const source = () => scene({ layers: [contents('overlay', 40), contents('background', 0)] });
@@ -37,13 +28,33 @@ describe('独立图层会话', () => {
     }
   });
 
-  it('静态和异步入口不丢失没有 main 的层', async () => {
+  it('整栈替换中销毁宿主时保留旧快照，不通知已编译的兄弟层', () => {
+    const resolve = vi.fn<VanillaCompileResultExtensionSession['resolve']>(() => []);
+    const onCommit = vi.fn();
+    const controller = createProcessingController(source(), {
+      compileResultExtension: { create: () => ({ resolve, onCommit }) },
+    });
+    const previous = controller.read();
+    const listener = vi.fn();
+    controller.subscribe(listener);
+    onCommit.mockClear();
+    resolve
+      .mockImplementationOnce(() => [])
+      .mockImplementationOnce(() => {
+        controller.dispose();
+        return [];
+      });
+
+    expect(() => controller.update(scene({ layers: [contents('first', 1), contents('second', 2)] }))).toThrow();
+    expect(controller.read()).toBe(previous);
+    expect(onCommit).not.toHaveBeenCalled();
+    expect(listener).not.toHaveBeenCalled();
+    expect(() => controller.replaceLayer(contents('first', 3))).toThrow(/disposed/);
+  });
+
+  it('静态编译不丢失没有 main 的层', () => {
     const compiled = compileToScene(source());
-    const asynchronous = await compileToSceneAsync(source());
     expect(compiled.map(entry => entry.name)).toEqual(['background', 'overlay']);
-    expect(asynchronous.map(entry => entry.result.compileResult.scene)).toEqual(
-      compiled.map(entry => entry.result.compileResult.scene),
-    );
     expect(compileToScene(scene({ layers: [] }))).toEqual([]);
   });
   it('只替换指定层，重排序不重算，旧批次不能用于重建后的会话', () => {
@@ -81,12 +92,12 @@ describe('独立图层会话', () => {
       controller.dispose();
     }
   });
-  it('整栈订阅发起的异步单层更新继承新栈的作者配置', async () => {
+  it('替换单层时继承新栈的作者配置', () => {
     const roots: Array<unknown> = [];
     const session: VanillaCompileResultExtensionSession = {
       resolve: () => [],
     };
-    const controller = await createProcessingControllerAsync(
+    const controller = createProcessingController(
       { ...source(), authoring: 'initial' },
       {
         compileResultExtension: {
@@ -98,25 +109,19 @@ describe('独立图层会话', () => {
       },
     );
     try {
-      let pending: ReturnType<typeof controller.replaceLayer> | undefined;
-      const unsubscribe = controller.subscribe(() => {
-        unsubscribe();
-        pending = controller.replaceLayer(contents('overlay', 80));
-      });
-      await controller.update({ ...source(), authoring: 'updated' });
-      expect(await pending).toMatchObject({ kind: 'committed' });
+      controller.update({ ...source(), authoring: 'updated' });
+      controller.replaceLayer(contents('overlay', 80));
       expect(roots.at(-1)).toBe('updated');
     } finally {
       controller.dispose();
     }
   });
 
-  it('异步层替换不提交兄弟层', async () => {
-    const controller = await createProcessingControllerAsync(source());
+  it('层替换不提交兄弟层', () => {
+    const controller = createProcessingController(source());
     try {
       const previous = controller.read();
-      const update = await controller.replaceLayer(contents('overlay', 60));
-      expect(update.kind).toBe('committed');
+      controller.replaceLayer(contents('overlay', 60));
       expect(controller.read()[0]).toBe(previous[0]);
       expect(controller.read()[1]).not.toBe(previous[1]);
     } finally {
@@ -158,20 +163,6 @@ describe('独立图层会话', () => {
       ).toThrow();
       expect(controller.read()).toBe(previous);
       expect(listener).not.toHaveBeenCalled();
-    } finally {
-      controller.dispose();
-    }
-  });
-
-  it('同层异步请求只提交最新值，不取消另一层的更新', async () => {
-    const controller = await createProcessingControllerAsync(source());
-    try {
-      const stale = controller.replaceLayer(contents('overlay', 1));
-      const background = controller.replaceLayer(contents('background', 2));
-      const latest = controller.replaceLayer(contents('overlay', 3));
-      const outcomes = await Promise.all([stale, background, latest]);
-      expect(outcomes.map(outcome => outcome.kind)).toEqual(['superseded', 'committed', 'committed']);
-      expect(controller.read().map(entry => entry.result.revision)).toEqual([1, 1]);
     } finally {
       controller.dispose();
     }

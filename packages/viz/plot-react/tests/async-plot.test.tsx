@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import type { DataTransformImplementationProvider } from '@retikz/data';
 import { createDataTransformExecutor } from '@retikz/data';
-import { PlotSchema } from '@retikz/plot';
+import { preparePlotData, PlotSchema } from '@retikz/plot';
 import { Layout } from '@retikz/react';
 import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
@@ -69,6 +69,13 @@ describe('Plot 客户端异步准备', () => {
 
   it('呈现实际的 Promise 输出并在提交后提供相同的准备行', async () => {
     const { executor, execute } = fixture();
+    const plot = spec();
+    const task = await preparePlotData(plot, {
+      dataBindings: { rows: { kind: 'rows', rows } },
+      dataTransformExecutor: executor,
+      lineage: {},
+    });
+    const preparedData = await task.execute();
     const onLineage = vi.fn();
     const container = document.createElement('div');
     document.body.append(container);
@@ -76,9 +83,8 @@ describe('Plot 客户端异步准备', () => {
     await act(async () => {
       root.render(
         <Plot
-          spec={spec()}
-          data={{ rows }}
-          dataTransformExecutor={executor}
+          spec={plot}
+          preparedData={preparedData}
           lineage={{ rowValues: { fields: ['ratio'], maxRows: 2 } }}
           onLineage={onLineage}
         />,
@@ -96,21 +102,22 @@ describe('Plot 客户端异步准备', () => {
     act(() => root.unmount());
   });
 
-  it('使用具有不同匿名 Plot 绑定的外部 Layout 制剂', async () => {
+  it('同一 Layout 同步提交本地行和外部已完成的 Plot', async () => {
     const { executor, execute } = fixture();
     const container = document.createElement('div');
     document.body.append(container);
     const root = createRoot(container);
     const plot = spec();
+    const task = await preparePlotData(plot, {
+      dataBindings: { rows: { kind: 'rows', rows: [rows[0]] } },
+      dataTransformExecutor: executor,
+    });
+    const preparedData = await task.execute();
     await act(async () => {
       root.render(
-        <Layout runtime={{ preparation: 'async' }}>
-          <Plot spec={plot} dataBindings={{ rows: { kind: 'rows', rows } }} dataTransformExecutor={executor} />
-          <Plot
-            spec={plot}
-            dataBindings={{ rows: { kind: 'rows', rows: [rows[0]] } }}
-            dataTransformExecutor={executor}
-          />
+        <Layout>
+          <Plot spec={{ ...plot, dataExecution: { mode: 'builtin' } }} data={{ rows }} />
+          <Plot spec={plot} preparedData={preparedData} position={[24, 12]} />
         </Layout>,
       );
       await Promise.resolve();
@@ -118,7 +125,7 @@ describe('Plot 客户端异步准备', () => {
 
     expect(container.querySelectorAll('svg')).toHaveLength(1);
     expect(container.querySelectorAll('ellipse')).toHaveLength(3);
-    expect(execute).toHaveBeenCalledTimes(2);
+    expect(execute).toHaveBeenCalledOnce();
 
     act(() => root.unmount());
   });

@@ -31,13 +31,12 @@ const svg = renderToSvgString(input, { output: { width: 640, height: 360 } });
 ## One-shot compilation
 
 ```ts
-import { compileToScene, compileToSceneAsync } from '@retikz/vanilla';
+import { compileToScene } from '@retikz/vanilla';
 
 const result = compileToScene(input);
-const prepared = await compileToSceneAsync(input, { adapters });
 ```
 
-For a single graph both entries return its processing result; explicit layers return an ordered list of named results. Both entries run compilation and manage the internal compiler session. Pass compile configuration under `options.compile`. The async entry requires prepare-capable adapters.
+For a single graph this returns one processing result; explicit layers return an ordered list of named results. Pass compile configuration under `options.compile`. Await external data before constructing the input or calling the controller’s synchronous update.
 
 ## Browser mounting
 

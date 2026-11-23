@@ -1,5 +1,5 @@
 import { entityProviderKey } from '@retikz/graph';
-import type { SynchronousInputEmbedAdapter } from '@retikz/vanilla';
+import type { InputEmbedAdapter } from '@retikz/vanilla';
 
 import { entityEmbedKind } from './constants';
 import { createGraphInputEmbed } from './input-embed';
@@ -15,7 +15,7 @@ const inputOf = (props: EntityInputEmbedProps): InputEntity => {
 };
 
 /** Entity Source 的 InputEmbed adapter */
-export const entityInputEmbedAdapter: SynchronousInputEmbedAdapter<EntityInputEmbedProps> = {
+export const entityInputEmbedAdapter: InputEmbedAdapter<EntityInputEmbedProps> = {
   kind: entityEmbedKind,
   lower: props => ({
     node: normalizeEntity(inputOf(props)),

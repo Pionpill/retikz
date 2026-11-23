@@ -1,14 +1,14 @@
 import type { IRTree } from '@retikz/standard/collection';
 import { createTree, treeProvider } from '@retikz/standard/collection';
 import { embed } from '@retikz/vanilla';
-import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
+import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
 
 import { standardTreeEmbedKind } from '../shared/constants';
 
 /** Tree 的 root 输入，保留节点配置与作用域属性 */
 export type InputTree = Omit<IRTree, 'namespace' | 'type'>;
 /** Tree 通过同一 Standard composite 下沉 */
-export const treeInputEmbedAdapter: SynchronousInputEmbedAdapter<InputTree> = {
+export const treeInputEmbedAdapter: InputEmbedAdapter<InputTree> = {
   kind: standardTreeEmbedKind,
   lower: props => ({
     node: createTree({ namespace: 'standard', type: 'tree', ...props }),

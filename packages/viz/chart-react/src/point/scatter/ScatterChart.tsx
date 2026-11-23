@@ -8,19 +8,14 @@ import { collectScatterChartDeclarations } from './declaration-collection';
 
 /**
  * ScatterChart React 根属性
- * @template TNative 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
  */
-export type ScatterChartProps<TNative = never> = TypedChartCommonProps<IRScatterChart, TNative>;
+export type ScatterChartProps = TypedChartCommonProps<IRScatterChart>;
 
 /** Scatter 具体类型的 Chart React 组件 */
-export const ScatterChart = createTypedChartComponent<
-  ScatterChartProps<unknown>,
-  IRScatterChart,
-  ScatterChartInputEmbedProps<unknown>
->(
+export const ScatterChart = createTypedChartComponent<ScatterChartProps, IRScatterChart, ScatterChartInputEmbedProps>(
   'ScatterChart',
   props =>
-    createTypedChartInput<ScatterChartProps<unknown>, IRScatterChart, ScatterChartInputEmbedProps<unknown>>(
+    createTypedChartInput<ScatterChartProps, IRScatterChart, ScatterChartInputEmbedProps>(
       props,
       collectScatterChartDeclarations(props.children),
       input => scatterChart(input),

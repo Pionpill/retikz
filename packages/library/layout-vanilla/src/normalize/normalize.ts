@@ -8,10 +8,8 @@ import type {
   EmbedChildrenNormalizationResult,
   InputChild,
   InputEmbedAuthoringSite,
-  InputEmbedChildrenPreparation,
   InputEmbedContext,
   InputEmbedContribution,
-  InputEmbedPreparationContext,
 } from '@retikz/vanilla';
 
 type LayoutItem = InputFlexLayoutItemConfig | InputGridLayoutItemConfig | InputOverlayLayoutItemConfig;
@@ -87,23 +85,4 @@ export const normalizeLayoutItems = <TItem extends LayoutItem>(
     items,
     items.map(input => normalizeChildren([input.child])),
   );
-};
-
-/**
- * 在全树准备阶段登记 Layout child；执行阶段复用同一字段组装
- * @template TItem 异步准备完成后输出的布局项类型，保留输入的布局约束字段
- */
-export const prepareLayoutItems = async <TItem extends LayoutItem>(
-  inputs: ReadonlyArray<Omit<TItem, 'child'> & { child: InputChild }> | undefined,
-  context: InputEmbedPreparationContext,
-): Promise<() => Promise<ReturnType<typeof normalizeLayoutItems<TItem>>>> => {
-  const preparations: Array<InputEmbedChildrenPreparation> = [];
-
-  for (const input of inputs ?? []) preparations.push(await context.prepareChildren([input.child]));
-
-  return async () => {
-    const normalized: Array<EmbedChildrenNormalizationResult> = [];
-    for (const preparation of preparations) normalized.push(await preparation.execute());
-    return collectLayoutItems<TItem>(inputs ?? [], normalized);
-  };
 };

@@ -2,7 +2,7 @@
 import { fallbackMeasurer } from '@retikz/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { compileToScene, compileToSceneAsync } from '../../src';
+import { compileToScene } from '../../src';
 import { prepareProcessingInput } from '../../src/runtime/_input/prepare';
 
 afterEach(() => {
@@ -40,7 +40,7 @@ describe('默认文字测量', () => {
     expect(prepared.coreOptions.measureText?.('Alpha', { size: 16 })).toEqual(fallbackMeasurer('Alpha', { size: 16 }));
   });
 
-  it('Canvas 度量进入同步与异步准备，实际测量异常不降级', async () => {
+  it('Canvas 度量进入编译，实际测量异常不降级', () => {
     const measureText = vi.fn(() => ({ width: 91, actualBoundingBoxAscent: 12, actualBoundingBoxDescent: 3 }));
     const context = { font: '', measureText };
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(context as unknown as CanvasRenderingContext2D);
@@ -51,9 +51,7 @@ describe('默认文字测量', () => {
       ascent: 12,
       descent: 3,
     });
-    const sync = compileToScene(source, {});
-    const asyncResult = await compileToSceneAsync(source, {});
-    expect(asyncResult.compileResult.scene).toEqual(sync.compileResult.scene);
+    compileToScene(source);
     expect(context.font).toBe('normal normal 16px serif');
     const failure = new Error('measurement failed');
     measureText.mockImplementation(() => {

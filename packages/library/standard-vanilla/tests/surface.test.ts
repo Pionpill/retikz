@@ -7,13 +7,13 @@ import {
   surfaceProvider,
 } from '@retikz/standard/presentation';
 import type { InputEmbedAdapter } from '@retikz/vanilla';
-import { embed, normalizeScene, compileToSceneAsync, scene } from '@retikz/vanilla';
+import { embed, normalizeScene, compileToScene, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
 import { frame, surface, surfaceChild } from '../src/presentation';
 
 describe('表面（）', () => {
-  it('通过 Surface 探测转发任意嵌套复合组件的准备输入', async () => {
+  it('通过 Surface 探测转发任意嵌套复合组件的准备输入', () => {
     let executions = 0;
     const definition = {
       ...frameDefinition,
@@ -24,20 +24,18 @@ describe('表面（）', () => {
         children: [{ type: 'node' as const, position: [0, 0] as [number, number], text: String(context.runtimeInput) }],
       }),
     };
-    const adapter: InputEmbedAdapter<unknown> & Required<Pick<InputEmbedAdapter<unknown>, 'prepare'>> = {
+    const adapter: InputEmbedAdapter<unknown> = {
       kind: 'prepared',
-      prepare: () => ({
-        execute: () => {
-          executions++;
-          return {
-            node: createFrame({ children: [{ type: 'node', position: [0, 0], text: 'source-child' }] }),
-            runtimeInputs: [{ path: [], input: 'surface-ready' }],
-            providerDependencies: { roots: [], providers: [] },
-          };
-        },
-      }),
+      lower: () => {
+        executions++;
+        return {
+          node: createFrame({ children: [{ type: 'node', position: [0, 0], text: 'source-child' }] }),
+          runtimeInputs: [{ path: [], input: 'surface-ready' }],
+          providerDependencies: { roots: [], providers: [] },
+        };
+      },
     };
-    const result = await compileToSceneAsync(
+    const result = compileToScene(
       scene({ children: [surface({ padding: 4, child: embed({ adapter, props: {} }) })] }),
       {
         compile: { composites: [definition] },

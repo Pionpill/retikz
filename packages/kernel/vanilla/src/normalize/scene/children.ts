@@ -81,29 +81,21 @@ const normalizeEmbed = (input: AnyInputEmbed, embedId: string, ctx: SceneNormali
   const adapter = input.adapter;
   let contribution: InputEmbedContribution;
   try {
-    if (ctx.prepared) contribution = ctx.prepared();
-    else {
-      if (!adapter.lower)
-        throw new RetikzVanillaError(
-          RetikzVanillaErrorCode.Normalize,
-          `Embed "${embedId}" at ${ctx.sourcePath} has no synchronous lower adapter`,
-        );
-      const identityPath = [...ctx.path, embedId];
-      let slotIndex = 0;
-      const context: InputEmbedContext = {
-        id: embedId,
-        kind: input.adapter.kind,
-        layerId: ctx.layerId,
-        identityPath,
-        normalizeChildren: children =>
-          normalizeEmbeddedChildren(children, {
-            ...ctx,
-            path: identityPath,
-            sourcePath: embedSlotSourcePath(ctx.sourcePath, slotIndex++),
-          }),
-      };
-      contribution = adapter.lower(input.props as never, context);
-    }
+    const identityPath = [...ctx.path, embedId];
+    let slotIndex = 0;
+    const context: InputEmbedContext = {
+      id: embedId,
+      kind: input.adapter.kind,
+      layerId: ctx.layerId,
+      identityPath,
+      normalizeChildren: children =>
+        normalizeEmbeddedChildren(children, {
+          ...ctx,
+          path: identityPath,
+          sourcePath: embedSlotSourcePath(ctx.sourcePath, slotIndex++),
+        }),
+    };
+    contribution = adapter.lower(input.props as never, context);
   } catch (cause) {
     if (cause instanceof RetikzError) throw cause;
     throw new RetikzVanillaError(
@@ -147,7 +139,7 @@ export const normalizeChild = (input: InputChild, ctx: SceneNormalizeContext): I
   /** 带命名空间的复合节点已经是 Core IR，不按内置图元的 type 分派 */
   if ('namespace' in input) return input;
 
-  /** 嵌入项按作者位置确定身份，消费已准备的贡献或调用绑定的 adapter 下沉 */
+  /** 嵌入项按作者位置确定身份，调用绑定的 adapter 下沉 */
   if (input.type === 'embed') return normalizeEmbed(input, inputEmbedIdentityOf(input, ctx), ctx);
 
   /** 含作者简写或来源信息的路径需要归一化，纯 IR 路径可直接保留 */

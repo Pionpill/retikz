@@ -1,7 +1,7 @@
 import type { CompositeInputBinding, CoreProviderContribution } from '@retikz/core';
 import type { PropertyPath } from '@retikz/foundation';
 
-import type { AnyInputEmbed, InputEmbedContribution, InputScope } from '../element';
+import type { AnyInputEmbed, InputScope } from '../element';
 import type { InputAuthoringSite } from './types';
 
 /** 规范化过程共享的上下文 */
@@ -10,7 +10,6 @@ export type SceneNormalizeContext = {
   runtimeInputs: Array<CompositeInputBinding>;
   layerId: string;
   path: Array<string>;
-  prepared?: () => InputEmbedContribution;
   contributions: Array<CoreProviderContribution>;
   sourcePath: string;
   authoringSites: Array<InputAuthoringSite>;

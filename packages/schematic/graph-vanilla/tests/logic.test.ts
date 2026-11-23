@@ -11,7 +11,7 @@ import {
   groupProviderKey,
   relationProviderKey,
 } from '@retikz/graph';
-import type { InputEmbed, SynchronousInputEmbedAdapter, InputEmbedContext } from '@retikz/vanilla';
+import type { InputEmbed, InputEmbedAdapter, InputEmbedContext } from '@retikz/vanilla';
 import { normalizeScene, compileToScene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
@@ -59,7 +59,7 @@ const contextOf = (id: string, kind: string): InputEmbedContext => ({
   identityPath: ['layer', id],
 });
 
-const lower = <TProps>(spec: InputEmbed<TProps>, adapter: SynchronousInputEmbedAdapter<TProps>) =>
+const lower = <TProps>(spec: InputEmbed<TProps>, adapter: InputEmbedAdapter<TProps>) =>
   adapter.lower(spec.props, contextOf(spec.id ?? '__test-embed', spec.adapter.kind));
 describe('@retikz/graph-vanilla 封装边界', () => {
   it('为每个 Graph 语义组合导出一个适配器和构建器', async () => {

@@ -1,6 +1,6 @@
 import type { GraphDefinitionOptions } from '@retikz/graph';
 import { GraphProviderKey } from '@retikz/graph';
-import type { SynchronousInputEmbedAdapter } from '@retikz/vanilla';
+import type { InputEmbedAdapter } from '@retikz/vanilla';
 
 import { graphEmbedKind } from './constants';
 import { createGraphInputEmbed } from './input-embed';
@@ -35,7 +35,7 @@ const inputOf = (props: GraphInputEmbedProps): InputGraph => {
 };
 
 /** Graph Source root 的 InputEmbed adapter */
-export const graphInputEmbedAdapter: SynchronousInputEmbedAdapter<GraphInputEmbedProps> = {
+export const graphInputEmbedAdapter: InputEmbedAdapter<GraphInputEmbedProps> = {
   kind: graphEmbedKind,
   lower: (props, context) => {
     const input = inputOf(props);

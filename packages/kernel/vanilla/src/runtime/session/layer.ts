@@ -2,7 +2,7 @@ import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../error';
 import { normalizeSceneLayers, layerZIndex } from '../../normalize';
 import type { InputLayer, InputSceneLayers, NamedLayerResult } from '../../normalize';
 import { prepareProcessingInput, mergeLayerOptions } from '../_input';
-import type { InputPreparedProcessing, ProcessingOptions } from '../_input';
+import type { ProcessingOptions } from '../_input';
 import type { LayerProcessingResult, ProcessingResult } from '../compile';
 import { SceneRuntime } from './runtime';
 import type { LayerProcessingController } from './types';
@@ -14,32 +14,26 @@ type LayerSession = {
   entry: NamedLayerResult<ProcessingResult>;
 };
 
-/** 已完成异步准备的分层输入 */
-type PreparedLayers = ReadonlyMap<string, InputPreparedProcessing>;
-
 /** 按名称定位会话，更新目标层时不遍历兄弟层的输入 */
-export const createLayerController = (
-  source: InputSceneLayers,
-  options: ProcessingOptions,
-  initial?: PreparedLayers,
-  initialCheck?: () => void,
-) => {
+export const createLayerController = (source: InputSceneLayers, options: ProcessingOptions) => {
   const rootFields = ({ layers: _layers, ...fields }: InputSceneLayers) => fields;
   let root = rootFields(source);
   let disposed = false;
   const listeners = new Set<(result: LayerProcessingResult) => void>();
   const diagnostics: Array<unknown> = [];
 
+  const assertActive = () => {
+    if (disposed) throw new RetikzVanillaError(RetikzVanillaErrorCode.Processing, 'Layer controller is disposed');
+  };
+
   const mount = (
     scene: Omit<InputSceneLayers, 'layers'>,
     layer: InputLayer,
-    ready?: InputPreparedProcessing,
-    check?: () => void,
-    pendingCommitNotifications?: Array<() => void>,
+    pendingCommitNotifications: Array<() => void>,
   ): LayerSession => {
     const effective = mergeLayerOptions(options, layer);
-    const prepared = ready ?? prepareProcessingInput({ ...scene, children: layer.children }, effective, layer);
-    const controller = SceneRuntime.fromPrepared(prepared, effective, check, pendingCommitNotifications);
+    const prepared = prepareProcessingInput({ ...scene, children: layer.children }, effective, layer);
+    const controller = SceneRuntime.fromPrepared(prepared, effective, assertActive, pendingCommitNotifications);
     return {
       controller,
       execution: effective.reconciler,
@@ -49,18 +43,12 @@ export const createLayerController = (
   const release = (layers: Map<string, LayerSession>) => {
     for (const { controller } of layers.values()) controller.dispose();
   };
-  const mountStack = (
-    scene: InputSceneLayers,
-    notifications: Array<() => void>,
-    ready?: PreparedLayers,
-    check?: () => void,
-  ) => {
+  const mountStack = (scene: InputSceneLayers, notifications: Array<() => void>) => {
     normalizeSceneLayers(scene);
     const layers = new Map<string, LayerSession>();
     try {
-      for (const layer of scene.layers)
-        layers.set(layer.name, mount(scene, layer, ready?.get(layer.name), check, notifications));
-      check?.();
+      for (const layer of scene.layers) layers.set(layer.name, mount(scene, layer, notifications));
+      assertActive();
       return layers;
     } catch (cause) {
       release(layers);
@@ -68,7 +56,7 @@ export const createLayerController = (
     }
   };
   const initialNotifications: Array<() => void> = [];
-  let sessions = mountStack(source, initialNotifications, initial, initialCheck);
+  let sessions = mountStack(source, initialNotifications);
   const snapshot = () =>
     Object.freeze(Array.from(sessions.values(), session => session.entry).sort((a, b) => a.zIndex - b.zIndex));
   let current = snapshot();
@@ -83,9 +71,6 @@ export const createLayerController = (
         diagnostics.push(cause);
       }
     }
-  };
-  const assertActive = () => {
-    if (disposed) throw new RetikzVanillaError(RetikzVanillaErrorCode.Processing, 'Layer controller is disposed');
   };
   let writing = false;
   const write = (action: () => void) => {
@@ -104,26 +89,19 @@ export const createLayerController = (
     if (!session) throw new RetikzVanillaError(RetikzVanillaErrorCode.Processing, 'Unknown layer: ' + name);
     return session;
   };
-  const update = (next: InputSceneLayers, ready?: PreparedLayers, check?: () => void) =>
+  const update = (next: InputSceneLayers) =>
     write(() => {
       const notifications: Array<() => void> = [];
-      const replacement = mountStack(next, notifications, ready, () => {
-        assertActive();
-        check?.();
-      });
+      const replacement = mountStack(next, notifications);
       const previous = sessions;
       root = rootFields(next);
       sessions = replacement;
       release(previous);
       publish(notifications);
     });
-  const replaceLayer = (layer: InputLayer, ready?: InputPreparedProcessing, check?: () => void) =>
+  const replaceLayer = (layer: InputLayer) =>
     write(() => {
       const notifications: Array<() => void> = [];
-      const checkLayer = () => {
-        assertActive();
-        check?.();
-      };
       const effective = mergeLayerOptions(options, layer);
       const previous = sessions.get(layer.name);
       const execution = previous?.execution;
@@ -134,21 +112,21 @@ export const createLayerController = (
         execution?.trace === effective.reconciler.trace &&
         execution?.captureProvenance === effective.reconciler.captureProvenance
       ) {
-        const prepared = ready ?? prepareProcessingInput({ ...root, children: layer.children }, effective, layer);
-        previous.controller.updatePrepared(prepared, checkLayer, notifications);
+        const prepared = prepareProcessingInput({ ...root, children: layer.children }, effective, layer);
+        previous.controller.updatePrepared(prepared, notifications);
         previous.entry = Object.freeze({
           name: layer.name,
           zIndex: layerZIndex(layer),
           result: previous.controller.read(),
         });
       } else {
-        const replacement = mount(root, layer, ready, checkLayer, notifications);
+        const replacement = mount(root, layer, notifications);
         sessions.set(layer.name, replacement);
         previous?.controller.dispose();
       }
       publish(notifications);
     });
-  const controller: LayerProcessingController = {
+  return {
     read: () => current,
     update,
     replaceLayer,
@@ -193,6 +171,5 @@ export const createLayerController = (
       release(sessions);
       sessions.clear();
     },
-  };
-  return { ...controller, readRoot: () => root, updatePreparedStack: update, replacePreparedLayer: replaceLayer };
+  } satisfies LayerProcessingController;
 };

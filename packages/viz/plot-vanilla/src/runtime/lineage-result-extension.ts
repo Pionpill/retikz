@@ -38,7 +38,7 @@ export const createPlotLineageCompileResultExtension = (): VanillaCompileResultE
             currentSites.map(site => {
               const result = lowerPlotWithLineage(
                 site.spec,
-                {},
+                site.datasets ?? {},
                 {
                   ...site.lowerOptions,
                   environment: { theme: currentInput.source.theme, compile: currentInput.coreOptions },

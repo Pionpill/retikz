@@ -26,10 +26,3 @@ export type InputPreparedProcessing = Readonly<{
   /** 归一化时收集的作者来源 */
   authoringSites: ReadonlyArray<InputAuthoringSite>;
 }>;
-
-/** 异步作者准备配置；只接受已声明 prepare 能力的 adapter */
-export type AsyncProcessingOptions = ProcessingOptions &
-  Readonly<{
-    /** 单次静态请求或 controller 生命周期取消信号 */
-    signal?: AbortSignal;
-  }>;

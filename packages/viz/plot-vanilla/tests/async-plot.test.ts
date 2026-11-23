@@ -1,13 +1,7 @@
 import type { DataTransformImplementationProvider } from '@retikz/data';
 import { createDataTransformExecutor } from '@retikz/data';
-import { PlotSchema } from '@retikz/plot';
-import {
-  createProcessingControllerAsync,
-  embed,
-  prepareStaticProcessingAsync,
-  compileToSceneAsync,
-  scene,
-} from '@retikz/vanilla';
+import { preparePlotData, PlotSchema } from '@retikz/plot';
+import { createProcessingController, embed, prepareStaticProcessing, compileToScene, scene } from '@retikz/vanilla';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { InputPlotEmbed } from '../src';
@@ -30,7 +24,7 @@ const spec = () =>
   });
 
 describe('异步 Plot 编写', () => {
-  it('更新保留的血缘站点，同时保持共享驱动程序实例隔离', async () => {
+  it('更新保留的血缘站点，同时保持共享驱动程序实例隔离', () => {
     const first = vi.fn();
     const second = vi.fn();
     const replacement = vi.fn();
@@ -44,17 +38,17 @@ describe('异步 Plot 编写', () => {
         ],
       });
     const options = { compileResultExtension: createPlotLineageCompileResultExtension() };
-    const a = await createProcessingControllerAsync(input(first), options);
-    const b = await createProcessingControllerAsync(input(second), options);
+    const a = createProcessingController(input(first), options);
+    const b = createProcessingController(input(second), options);
 
     try {
       expect(first).toHaveBeenCalledOnce();
       expect(second).toHaveBeenCalledOnce();
-      expect((await a.update(input(replacement))).kind).toBe('committed');
+      a.update(input(replacement));
       expect(replacement).toHaveBeenCalledOnce();
       expect(first).toHaveBeenCalledOnce();
       expect(second).toHaveBeenCalledOnce();
-      expect((await b.update(input(second))).kind).toBe('committed');
+      b.update(input(second));
       expect(second).toHaveBeenCalledTimes(2);
       expect(replacement).toHaveBeenCalledOnce();
     } finally {
@@ -63,7 +57,7 @@ describe('异步 Plot 编写', () => {
     }
   });
 
-  it('独立通知已提交的血缘回调，并且从不通知丢弃的候选者', async () => {
+  it('独立通知已提交的血缘回调，并且从不通知未采用的候选', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const first = vi.fn(() => {
       throw new Error('author callback failed');
@@ -75,13 +69,12 @@ describe('异步 Plot 编写', () => {
     const options = { compileResultExtension: createPlotLineageCompileResultExtension() };
 
     try {
-      const discarded = await prepareStaticProcessingAsync(source, options);
-      discarded.discard();
+      prepareStaticProcessing(source, options, 0);
 
       expect(first).not.toHaveBeenCalled();
       expect(second).not.toHaveBeenCalled();
 
-      const committed = await prepareStaticProcessingAsync(source, options);
+      const committed = prepareStaticProcessing(source, options, 0);
       committed.commit();
 
       expect(first).toHaveBeenCalledOnce();
@@ -151,17 +144,23 @@ describe('异步 Plot 编写', () => {
     expect(() => renderPlot(plot, { rows })).toThrow(/async/i);
   });
 
-  it('在一个准备树中保持相同的匿名 Plot 输入不同', async () => {
+  it('本地行和外部结果按各自的实例路径进入同一帧', async () => {
     const plot = spec();
-    const input = (values: typeof rows) =>
-      embed<InputPlotEmbed>({
-        adapter: plotInputEmbedAdapter,
-        props: { spec: plot, dataBindings: { rows: { kind: 'rows', rows: values } } },
-      });
-    const result = await compileToSceneAsync(scene({ children: [input(rows), input([{ x: 3, y: 1 }])] }));
-
-    expect(result.compileResult.scene.primitives).toHaveLength(2);
+    const preparation = await preparePlotData(plot, {
+      dataBindings: { rows: { kind: 'rows', rows: [{ x: 3, y: 1 }] } },
+    });
+    const preparedData = await preparation.execute();
+    const result = compileToScene(
+      scene({
+        children: [
+          embed<InputPlotEmbed>({ adapter: plotInputEmbedAdapter, props: { spec: plot, datasets: { rows } } }),
+          embed<InputPlotEmbed>({
+            adapter: plotInputEmbedAdapter,
+            props: { spec: plot, preparedData, panel: { position: [24, 12] } },
+          }),
+        ],
+      }),
+    );
     expect(JSON.stringify(result.compileResult.scene).match(/"type":"ellipse"/g)).toHaveLength(3);
-    expect(JSON.stringify(result.compileResult.scene)).not.toContain('dataBindings');
   });
 });

@@ -1,14 +1,14 @@
 import { createBubbleChartProviderContribution } from '@retikz/chart/point';
 import { embed } from '@retikz/vanilla';
-import type { InputEmbed, InputEmbedContext, InputEmbedPreparationContext } from '@retikz/vanilla';
+import type { InputEmbed, InputEmbedContext } from '@retikz/vanilla';
 
 import { buildChartRuntime, typedChartPartsOf } from '../../authoring';
-import { lowerChartInput, prepareChartInput } from '../../shared';
+import { lowerChartInput } from '../../shared';
 import { normalizeBubbleChart } from './normalize';
 import type { BubbleChartInputEmbedProps } from './types';
 
 /** 在场景处理时规范化 BubbleChart 输入并复用统一数据准备 */
-const chartRuntimeOf = <TNative>(input: BubbleChartInputEmbedProps<TNative>) => {
+const chartRuntimeOf = (input: BubbleChartInputEmbedProps) => {
   const parts = typedChartPartsOf(input);
   const source = normalizeBubbleChart({
     ...parts.root,
@@ -29,22 +29,16 @@ const chartRuntimeOf = <TNative>(input: BubbleChartInputEmbedProps<TNative>) => 
   );
 };
 
-/** 绑定当前配方的同步转换与异步准备 */
+/** 绑定当前配方的同步转换 */
 export const bubbleChartInputEmbedAdapter = {
   kind: 'chart.bubble',
-  lower: <TNative>(input: BubbleChartInputEmbedProps<TNative>, _context: InputEmbedContext) =>
-    lowerChartInput(chartRuntimeOf(input)),
-  prepare: <TNative>(input: BubbleChartInputEmbedProps<TNative>, context: InputEmbedPreparationContext) =>
-    prepareChartInput(chartRuntimeOf(input), context),
+  lower: (input: BubbleChartInputEmbedProps, _context: InputEmbedContext) => lowerChartInput(chartRuntimeOf(input)),
 };
 
 /**
  * 创建可直接组合到 Vanilla Scene 的 Bubble 节点
- * @template TNative 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
  */
-export const bubbleChart = <TNative = never>(
-  input: BubbleChartInputEmbedProps<TNative>,
-): InputEmbed<BubbleChartInputEmbedProps<TNative>> =>
+export const bubbleChart = (input: BubbleChartInputEmbedProps): InputEmbed<BubbleChartInputEmbedProps> =>
   embed({
     adapter: bubbleChartInputEmbedAdapter,
     ...(input.id === undefined ? {} : { id: input.id }),

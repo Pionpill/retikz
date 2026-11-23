@@ -1,26 +1,23 @@
 import { LayoutItemKind, gridLayoutDefinition, createGridLayout } from '@retikz/layout';
 import type { InputEmbedAdapter, InputEmbedContribution } from '@retikz/vanilla';
-import { embed, compileToScene, compileToSceneAsync } from '@retikz/vanilla';
+import { embed, compileToScene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
 import { flexLayout, gridLayout, overlayLayout } from '../src';
 
-describe('Layout 异步编写', () => {
-  it('嵌套子项仅预处理一次且贡献与同步路径等价', async () => {
+describe('Layout 子项归一化', () => {
+  it('每个嵌套子项只下沉一次', () => {
     let executed = 0;
     const makeContribution = (): InputEmbedContribution => ({
       node: { type: 'node', position: [0, 0], text: 'prepared-child' },
       providerDependencies: { roots: [], providers: [] },
     });
-    const adapter: InputEmbedAdapter<unknown> & Required<Pick<InputEmbedAdapter<unknown>, 'lower' | 'prepare'>> = {
+    const adapter: InputEmbedAdapter<unknown> = {
       kind: 'prepared',
-      lower: makeContribution,
-      prepare: () => ({
-        execute: () => {
-          executed++;
-          return Promise.resolve(makeContribution());
-        },
-      }),
+      lower: () => {
+        executed++;
+        return makeContribution();
+      },
     };
     const child = embed({ adapter, props: {} });
     const containers = [
@@ -31,17 +28,14 @@ describe('Layout 异步编写', () => {
 
     for (const container of containers) {
       const input = { type: 'scene' as const, children: [container] };
-      const expected = compileToScene(input);
-      const actual = await compileToSceneAsync(input);
-
-      expect(actual.compileResult.scene).toEqual(expected.compileResult.scene);
+      const actual = compileToScene(input);
       expect(JSON.stringify(actual.compileResult.scene)).toContain('prepared-child');
     }
 
     expect(executed).toBe(3);
   });
 
-  it('将嵌套准备好的复合绑定重新定位到 Layout 项 Source 字段', async () => {
+  it('将嵌套准备好的复合绑定重新定位到 Layout 项 Source 字段', () => {
     const leafDefinition = {
       ...gridLayoutDefinition,
       compile: (
@@ -51,17 +45,15 @@ describe('Layout 异步编写', () => {
         children: [{ type: 'node' as const, position: [0, 0] as [number, number], text: String(context.runtimeInput) }],
       }),
     };
-    const adapter: InputEmbedAdapter<unknown> & Required<Pick<InputEmbedAdapter<unknown>, 'prepare'>> = {
+    const adapter: InputEmbedAdapter<unknown> = {
       kind: 'prepared',
-      prepare: () => ({
-        execute: () => ({
-          node: createGridLayout({ columns: [{ kind: 'fixed', value: 1 }] }),
-          runtimeInputs: [{ path: [], input: 'nested-bound-ready' }],
-          providerDependencies: { roots: [], providers: [] },
-        }),
+      lower: () => ({
+        node: createGridLayout({ columns: [{ kind: 'fixed', value: 1 }] }),
+        runtimeInputs: [{ path: [], input: 'nested-bound-ready' }],
+        providerDependencies: { roots: [], providers: [] },
       }),
     };
-    const result = await compileToSceneAsync(
+    const result = compileToScene(
       {
         type: 'scene',
         children: [

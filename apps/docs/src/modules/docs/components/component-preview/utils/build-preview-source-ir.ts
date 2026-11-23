@@ -51,7 +51,7 @@ import {
   normalizeRelation,
   relationEmbedKind,
 } from '@retikz/graph-vanilla';
-import type { AnyInputEmbed, SynchronousInputEmbedAdapter, InputChild, InputScope, InputScene } from '@retikz/vanilla';
+import type { AnyInputEmbed, InputEmbedAdapter, InputChild, InputScope, InputScene } from '@retikz/vanilla';
 import { embed, normalizeNode, normalizePath, normalizeScene, scene } from '@retikz/vanilla';
 import type { ReactNode } from 'react';
 import { Fragment, isValidElement } from 'react';
@@ -69,7 +69,7 @@ type TypedChartSource =
   | IRStripChart;
 
 type TypedChartComponent<TInput> = {
-  inputEmbedAdapter: SynchronousInputEmbedAdapter<TInput>;
+  inputEmbedAdapter: InputEmbedAdapter<TInput>;
   createInputEmbedProps: (props: Readonly<Record<string, unknown>>) => TInput;
 };
 

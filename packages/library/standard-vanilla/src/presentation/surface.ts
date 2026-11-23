@@ -7,12 +7,7 @@ import {
   surfaceProvider,
 } from '@retikz/standard/presentation';
 import { embed } from '@retikz/vanilla';
-import type {
-  InputChild,
-  InputEmbed,
-  SynchronousInputEmbedAdapter,
-  EmbedChildrenNormalizationResult,
-} from '@retikz/vanilla';
+import type { InputChild, InputEmbed, InputEmbedAdapter, EmbedChildrenNormalizationResult } from '@retikz/vanilla';
 
 import { standardSurfaceEmbedKind } from '../shared/constants';
 
@@ -61,9 +56,8 @@ const createSurfaceContribution = (props: InputSurface, normalized: EmbedChildre
   };
 };
 
-/** Standard Surface 的同步与异步 InputEmbed adapter */
-export const surfaceInputEmbedAdapter: SynchronousInputEmbedAdapter<InputSurface> &
-  Required<Pick<SynchronousInputEmbedAdapter<InputSurface>, 'prepare'>> = {
+/** Standard Surface 的 InputEmbed adapter */
+export const surfaceInputEmbedAdapter: InputEmbedAdapter<InputSurface> = {
   kind: standardSurfaceEmbedKind,
   lower: (props, context) => {
     const { child } = props;
@@ -79,10 +73,6 @@ export const surfaceInputEmbedAdapter: SynchronousInputEmbedAdapter<InputSurface
     const normalized = normalizeChildren([child]);
 
     return createSurfaceContribution(props, normalized);
-  },
-  prepare: async (props, context) => {
-    const child = await context.prepareChildren([props.child]);
-    return { execute: async () => createSurfaceContribution(props, await child.execute()) };
   },
 };
 

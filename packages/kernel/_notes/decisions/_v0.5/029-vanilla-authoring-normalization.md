@@ -11,7 +11,7 @@ keywords: 'Vanilla、Authoring、InputXxx、InputScene、IRScene、InputEmbed'
 - 决策日期：2026-08-13
 - 关联：[ADR-012](./012-computation-transaction-lifecycle.md) · [ADR-014](./014-scene-patch-retained-renderer.md)
 
-> 后续扩展：[ADR-047](./047-async-authoring-preparation.md) 定义异步 authoring prepare；同步入口只接受具备同步 lower 的 adapter。[ADR-048](./048-composite-runtime-input.md) 定义 Composite 实例运行输入，补充下文 metadata 与 Core 输入边界。
+> 后续扩展：[ADR-047](./047-async-authoring-preparation.md) 曾定义异步 authoring prepare，现已撤销；作者输入只通过同步 lower 下沉。[ADR-048](./048-composite-runtime-input.md) 定义 Composite 实例运行输入，补充下文 metadata 与 Core 输入边界。
 
 ## 背景与目标
 

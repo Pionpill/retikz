@@ -1,15 +1,13 @@
 ---
-description: Vanilla 统一异步作者输入准备与候选发布，支持 Tier 2 嵌入、SSR、更新和失效隔离，保持 Core 编译与 Runtime 事务同步
+description: 已撤销的历史设计：Vanilla 统一异步作者输入准备与候选发布，支持 Tier 2 嵌入、SSR、更新和失效隔离，保持 Core 编译与 Runtime 事务同步
 keywords: Vanilla、InputEmbed、prepare、Promise、SSR、revision、AbortSignal、processing
 ---
 
 # ADR-047：共享异步作者输入准备
 
-> 作者位置的 adapter 绑定与主题处理边界以 [088](./088-embed-adapter-binding.md) 为准。
+> 本提案已撤销。Vanilla 仅消费就绪输入；领域计算和请求取舍由调用方管理。下文保留原决策的动机与取舍，不是当前 API。实例数据的同步绑定见 [048](./048-composite-runtime-input.md)，编译与采用边界见 [082](./082-scene-reconciler-entry.md)。
 
-> 后续入口收敛：[ADR-082](./082-scene-reconciler-entry.md) 将下述一次性异步入口命名为 Vanilla 的 `compileToSceneAsync`，其作者准备、取消、结果与发布语义保持。
-
-- 状态：Accepted
+- 状态：Superseded
 - 决策日期：2026-10-02
 - 关联：[kernel v0.5 roadmap](./roadmap.md) · [包职能设计](../../../../../notes/architecture/package-responsibility-design.md) · [Core 能力边界](../../architecture/core-drawing-complete.md)
 - 前置：[Vanilla Authoring](./029-vanilla-authoring-normalization.md) · [匿名嵌入身份](./045-anonymous-input-embed-identity.md)

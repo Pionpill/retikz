@@ -8,19 +8,14 @@ import { collectStripChartDeclarations } from './declaration-collection';
 
 /**
  * StripChart React 根属性
- * @template TNative 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
  */
-export type StripChartProps<TNative = never> = TypedChartCommonProps<IRStripChart, TNative>;
+export type StripChartProps = TypedChartCommonProps<IRStripChart>;
 
 /** Strip 具体类型的 Chart React 组件 */
-export const StripChart = createTypedChartComponent<
-  StripChartProps<unknown>,
-  IRStripChart,
-  StripChartInputEmbedProps<unknown>
->(
+export const StripChart = createTypedChartComponent<StripChartProps, IRStripChart, StripChartInputEmbedProps>(
   'StripChart',
   props =>
-    createTypedChartInput<StripChartProps<unknown>, IRStripChart, StripChartInputEmbedProps<unknown>>(
+    createTypedChartInput<StripChartProps, IRStripChart, StripChartInputEmbedProps>(
       props,
       collectStripChartDeclarations(props.children),
       input => stripChart(input),

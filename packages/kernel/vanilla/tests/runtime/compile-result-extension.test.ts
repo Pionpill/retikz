@@ -2,6 +2,7 @@ import type { CompileWarning, IRScene } from '@retikz/core';
 import { RetikzError } from '@retikz/foundation';
 import { describe, expect, it, vi } from 'vitest';
 
+import { prepareStaticProcessing } from '../../src';
 import type { VanillaCompileResultExtension, VanillaCompileOutput } from '../../src';
 import { defaultVanillaCompileResultExtension, RetikzVanillaError, RetikzVanillaErrorCode } from '../../src';
 import type { VanillaReconcilerOutput } from '../../src/runtime/compile/result-extension';
@@ -24,6 +25,18 @@ const source: IRScene = {
 };
 
 describe('Vanilla 编译结果扩展程序', () => {
+  it('只有采用候选才通知，提交回调重入也只通知一次', () => {
+    const notify = vi.fn(() => candidate.commit());
+    const candidate = prepareStaticProcessing(
+      { type: 'scene', children: [] },
+      { compileResultExtension: { create: () => ({ resolve: () => [], onCommit: notify }) } },
+      0,
+    );
+    expect(notify).not.toHaveBeenCalled();
+    candidate.commit();
+    candidate.commit();
+    expect(notify).toHaveBeenCalledOnce();
+  });
   it('使用共享的 Retikz 错误契约', () => {
     const cause = new Error('extension cause');
     const error = new RetikzVanillaError({

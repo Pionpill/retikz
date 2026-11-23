@@ -17,14 +17,13 @@ Use `toSceneResult(input, options)` for input that may already be a Scene. It re
 
 ## One-shot compilation
 
-Pass Core IR or a Vanilla InputScene to `compileToScene` to obtain a Scene and artifacts without creating or disposing a session. Compile configuration stays under `options.compile`. Use `compileToSceneAsync` for asynchronous authoring preparation, with adapters that provide prepare.
+Pass Core IR or a Vanilla InputScene to `compileToScene` to obtain a Scene and artifacts without creating or disposing a session. Compile configuration stays under `options.compile`.
 
 ```ts
-import { compileToScene, compileToSceneAsync } from '@retikz/vanilla';
+import { compileToScene } from '@retikz/vanilla';
 
 const result = compileToScene(ir);
 const configured = compileToScene(ir, { compile: { padding: 10 } });
-const prepared = await compileToSceneAsync(input);
 
 console.log(result.compileResult.scene, result.compileResult.artifacts);
 ```
@@ -37,13 +36,28 @@ An explicit `compile.measureText` takes precedence. Otherwise, Vanilla lazily us
 
 When text has no explicit font family, the default browser measurer uses the computed font of the page’s `body`, then `sans-serif`. Host CSS affects display, not the geometry of an existing Scene. See [Text Metrics](/kernel/components/runtime-mechanics/text-metrics).
 
-## Async authoring preparation
+## Submit ready input
 
-The internal `prepareProcessingInputAsync` traverses the complete author tree and calls adapter.prepare for non-computing preflight, then runs preparation.execute and normalizes the contributions. Nested inputs register through context.prepareChildren; children cannot execute during preparation. Synchronous adapters provide lower; asynchronous adapters must provide prepare, without probing support by invoking lower.
+Await external data before constructing the input and calling `compileToScene` or the controller’s `update`. Updates follow submission order. The application decides whether to ignore an older request that finished late. Each embed adapter’s `lower` synchronously returns its node, dependencies and per-instance runtime inputs; those inputs stay outside JSON IR.
 
-Use `compileToSceneAsync(input, options?)` for one-shot compilation, or `prepareStaticProcessingAsync` for explicit commit/discard. Interactive hosts use `createProcessingControllerAsync` and await committed/discarded update outcomes. Signals and newer requests invalidate stale results; failure preserves committed output. Core compilation and renderers remain synchronous; Promises live at the authoring preparation boundary.
+For example, submit a Plot that uses an external executor alongside an ordinary node in one update:
 
-Contributions bind prepared runtimeInputs to actual Source positions outside JSON IR. Composite children use opaque child transport rather than guessing instances from ids, dataset names or object references. Domain hosts already connect this boundary; applications normally use their async entry points.
+```ts
+import { preparePlotData } from '@retikz/plot';
+import { plotInputEmbedAdapter } from '@retikz/plot-vanilla';
+import { embed, node, scene } from '@retikz/vanilla';
+
+const task = await preparePlotData(spec, { dataBindings, dataTransformExecutor });
+const preparedData = await task.execute();
+controller.update(
+  scene({
+    children: [
+      node({ id: 'origin', position: [0, 0] }),
+      embed({ adapter: plotInputEmbedAdapter, props: { spec, preparedData } }),
+    ],
+  }),
+);
+```
 
 ## Install and use
 
@@ -230,7 +244,6 @@ React applications use [`@retikz/react`](/kernel/packages/react/overview) to col
 | `ProcessingResult`                   | type          | Read Scene and artifacts from `compileResult`, and processing diagnostics from `processingDiagnostics` |
 | `createProcessingController`         | processing    | Framework-neutral retained processing controller                                                       |
 | `compileToScene`                     | processing    | One-shot synchronous compilation of InputScene or Core IR                                              |
-| `compileToSceneAsync`                | processing    | One-shot compilation after asynchronous authoring preparation                                          |
 | `prepareStaticProcessing`            | processing    | One lifecycle-free processing result                                                                   |
 | `renderToSvgString`                  | SSR           | Render InputScene, IRScene, or Scene as an SVG string                                                  |
 | `mount` / `mountSvg` / `mountCanvas` | DOM           | Mount a browser view from `@retikz/vanilla/dom`                                                        |

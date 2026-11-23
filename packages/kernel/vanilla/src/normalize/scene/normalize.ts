@@ -20,11 +20,7 @@ import { BuiltinLayerName } from './types';
 export const isInputScene = (input: InputScene | IRScene): input is InputScene => input.version === undefined;
 
 /** 将 InputScene 一次性归一为唯一 Source IR 与 contribution */
-export const normalizeSceneLayer = (
-  scene: InputScene,
-  layer: InputLayer,
-  prepared?: SceneNormalizeContext['prepared'],
-): NormalizedScene => {
+export const normalizeSceneLayer = (scene: InputScene, layer: InputLayer): NormalizedScene => {
   const contributions: Array<CoreProviderContribution> = [];
   const runtimeInputs: Array<CompositeInputBinding> = [];
   const authoringSites: Array<InputAuthoringSite> = [];
@@ -34,7 +30,6 @@ export const normalizeSceneLayer = (
   const context: SceneNormalizeContext = {
     layerId: layer.name,
     path: [layer.name],
-    prepared,
     contributions,
     runtimeInputs,
     runtimePath: [],

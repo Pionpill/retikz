@@ -16,11 +16,8 @@ export type {
   InputEmbed,
   InputEmbedAdapter,
   InputEmbedAuthoringSite,
-  InputEmbedChildrenPreparation,
   InputEmbedContext,
   InputEmbedContribution,
-  InputEmbedPreparation,
-  InputEmbedPreparationContext,
   InputFoldStep,
   InputLayer,
   LayerName,
@@ -40,7 +37,6 @@ export type {
   InputStep,
   InputTarget,
   NormalizedScene,
-  SynchronousInputEmbedAdapter,
   WayArcOp,
   WayAxisLineOp,
   WayBendOp,
@@ -87,12 +83,6 @@ export type {
   LayerProcessingResult,
   LayerProcessingController,
   ProcessingController,
-  AsyncProcessingOptions,
-  PreparedAsyncStaticProcessing,
-  ProcessingUpdateOutcome,
-  AsyncProcessingController,
-  AsyncLayerProcessingController,
-  LayerProcessingUpdateOutcome,
   PreparedStaticProcessing,
   InputVanillaCompileResultExtension,
   VanillaCompileResultExtension,
@@ -101,12 +91,9 @@ export type {
 } from './runtime';
 export {
   compileToScene,
-  compileToSceneAsync,
   createProcessingController,
-  createProcessingControllerAsync,
   defaultVanillaCompileResultExtension,
   prepareStaticProcessing,
-  prepareStaticProcessingAsync,
 } from './runtime';
 export type { CommonOptions, InputRender, InputRetainedRender, RenderToStringOptions, SceneResult } from './runtime';
 export { renderToSvgString, toSceneResult } from './runtime';

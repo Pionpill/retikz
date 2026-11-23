@@ -12,7 +12,7 @@ import type {
   InputEmbed,
   InputEmbedAuthoringSite,
   InputEmbedContext,
-  SynchronousInputEmbedAdapter,
+  InputEmbedAdapter,
 } from '@retikz/vanilla';
 
 import { standardLegendEmbedKind } from '../shared/constants';
@@ -84,7 +84,7 @@ const normalizeLegendSlot = (
 };
 
 /** Standard Legend 的 InputEmbed adapter */
-export const legendInputEmbedAdapter: SynchronousInputEmbedAdapter<InputLegend> = {
+export const legendInputEmbedAdapter: InputEmbedAdapter<InputLegend> = {
   kind: standardLegendEmbedKind,
   lower: (props, context) => {
     const collected: CollectedLegendSlots = { roots: [], providers: [], authoringSites: [] };

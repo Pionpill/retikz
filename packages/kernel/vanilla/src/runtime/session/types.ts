@@ -32,34 +32,3 @@ export type ProcessingController = Readonly<{
   /** 释放 controller，之后禁止更新与订阅 */
   dispose: () => void;
 }>;
-
-/** 单次作者更新最终是否仍拥有发布权 */
-export type ProcessingUpdateOutcome =
-  | Readonly<{
-      /** 更新已提交或被后续请求取代的结果判别 */
-      kind: 'committed';
-      /** 本次成功提交后可见的完整处理结果 */
-      result: ProcessingResult;
-    }>
-  | Readonly<{
-      /** 更新已提交或被后续请求取代的结果判别 */
-      kind: 'superseded';
-    }>;
-
-/** 异步准备后复用唯一的同步 retained 提交 */
-export type AsyncProcessingController = Readonly<Omit<ProcessingController, 'update'>> &
-  Readonly<{
-    /** 到达时立即使更早的准备请求失效 */
-    update: (source: SingleSceneSource) => Promise<ProcessingUpdateOutcome>;
-  }>;
-
-/** 允许作者贡献异步就绪的具名层控制器 */
-export type AsyncLayerProcessingController = Omit<LayerProcessingController, 'update' | 'replaceLayer'> & {
-  update: (source: InputSceneLayers) => Promise<LayerProcessingUpdateOutcome>;
-  replaceLayer: (layer: InputLayer) => Promise<LayerProcessingUpdateOutcome>;
-};
-
-/** 只有仍持有发布权的请求返回结果 */
-export type LayerProcessingUpdateOutcome =
-  | { kind: 'committed'; result: LayerProcessingResult }
-  | { kind: 'superseded' };

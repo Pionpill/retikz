@@ -8,7 +8,7 @@ keywords: Composite、runtimeInputs、Source、Layout、revision、Vanilla
 - 状态：Accepted
 - 决策日期：2026-10-03
 - 关联：[kernel v0.5 roadmap](./roadmap.md) · [包职能设计](../../../../../notes/architecture/package-responsibility-design.md) · [Core 能力边界](../../architecture/core-drawing-complete.md)
-- 前置：[布局 Composite](./007-layout-aware-composite.md) · [Provider graph](./027-composite-dependency-provider-graph.md) · [匿名作者身份](./045-anonymous-input-embed-identity.md) · [异步作者准备](./047-async-authoring-preparation.md)
+- 前置：[布局 Composite](./007-layout-aware-composite.md) · [Provider graph](./027-composite-dependency-provider-graph.md) · [匿名作者身份](./045-anonymous-input-embed-identity.md)
 
 ## 背景与决策
 
@@ -55,11 +55,11 @@ path 精确指向原始 Source 的 composite，数字为数组下标，空路径
 
 ## 作者接入与原子更新
 
-Vanilla InputEmbedContribution 可携带相对 node 的 runtimeInputs；NormalizedInputEmbedChildren 返回相对 children 数组的绑定。父 adapter 按实际输出字段重定位，Vanilla 只汇合为最终 Source 位置，不猜测领域 child slot。同步 lower 与异步 execute 使用同一贡献契约；React 构造 Vanilla Input，不生成 Source 路径或绑定。
+Vanilla InputEmbedContribution 可携带相对 node 的 runtimeInputs；NormalizedInputEmbedChildren 返回相对 children 数组的绑定。父 adapter 按实际输出字段重定位，Vanilla 只汇合为最终 Source 位置，不猜测领域 child slot。同步 lower 消费由调用方提供的就绪输入；React 构造 Vanilla Input，不生成 Source 路径或绑定。
 
 CoreCompositeInputSourceDefinition 保存绑定集合或 undefined，以集合 identity 判定变化。createCoreComputation 通过 CoreComputationRuntimeOptions.compositeInputSource 接入后，从当前 candidate snapshot 读取绑定，固定 CompileOptions 不再提供另一份。调用方必须将新 Source 与新绑定置于同一 Runtime transaction；JSON 未变而准备结果改变时，也须以新集合触发编译。
 
-Source、绑定和 Theme 属于同一请求。Vanilla 按 ADR-047 在同步编译和提交前检查失效；失败事务恢复上一份 Source、绑定和结果，取消或被替代的请求不能更新已提交绑定。
+每次同步更新同时提交 Source、绑定与 Theme；事务失败时保留上一份 Source、绑定与结果。提交前的异步任务及其结果取舍由调用方负责。
 
 ## 行为与兼容性
 

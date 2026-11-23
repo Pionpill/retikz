@@ -1,6 +1,6 @@
 ---
 description: 以 SceneReconciler 统一底层完整与增量编译，Vanilla 提供一次性编译门面并管理临时实例，保持输入归一化与渲染接入边界
-keywords: SceneReconciler、编译入口、Vanilla、SSR、incremental、compileToScene、compileToSceneAsync、生命周期
+keywords: SceneReconciler、编译入口、Vanilla、SSR、incremental、compileToScene、生命周期
 ---
 
 # ADR-082：以 SceneReconciler 统一编译入口
@@ -8,7 +8,7 @@ keywords: SceneReconciler、编译入口、Vanilla、SSR、incremental、compile
 - 状态：Accepted
 - 决策日期：2026-11-07
 - 接受日期：2026-11-07
-- 关联：[roadmap](./roadmap.md)、[统一执行器](./080-unified-reconciler-compilation.md)、[同步提交](./064-remove-runtime.md)、[编译产物](./077-compile-output-contract.md)、[异步作者准备](./047-async-authoring-preparation.md)、[Drawing Complete](../../architecture/core-drawing-complete.md)、[包职能设计](../../../../../notes/architecture/package-responsibility-design.md)
+- 关联：[roadmap](./roadmap.md)、[统一执行器](./080-unified-reconciler-compilation.md)、[同步提交](./064-remove-runtime.md)、[编译产物](./077-compile-output-contract.md)、[Drawing Complete](../../architecture/core-drawing-complete.md)、[包职能设计](../../../../../notes/architecture/package-responsibility-design.md)
 
 > 首轮调度归属由 [ADR-086](./086-independent-compilation-drivers.md) 调整为全量与 Weave 独立驱动；共享绘图语义、会话入口与事务约束保持
 
@@ -65,16 +65,11 @@ SceneReconciler 保留现有公开操作，不增加新的准备句柄或公开�
 
 ```ts
 declare const compileToScene: (source: ProcessingSource, options?: ProcessingOptions) => ProcessingResult;
-
-declare const compileToSceneAsync: (
-  source: ProcessingSource,
-  options?: AsyncProcessingOptions,
-) => Promise<ProcessingResult>;
 ```
 
 `ProcessingSource` 保持为 `InputScene | IRScene`，配置继续复用现有 processing options，编译参数位于 `options.compile`。省略 options 时使用既有默认配置。返回现有不可变 ProcessingResult，包括 Scene、artifacts、compileResult、layers 与 diagnostics，静态 revision 为 0；不增加另一套结果类型或要求调用方释放句柄。
 
-同步门面在完整作者输入就绪后编译并完成既有驱动成功通知；异步门面沿用异步作者准备、取消与失效检查，准备完成后复用同一个同步编译过程。两者均在内部使用临时非增量协调器并负责释放。默认文字测量、provider 解析、诊断归属及错误 cause 保持现有 Vanilla processing 规则。
+同步门面在完整作者输入就绪后编译并完成成功通知；一次编译使用临时非增量协调器并负责释放。默认文字测量、provider 解析、诊断归属及错误 cause 保持现有 Vanilla processing 规则。
 
 门面替换 Vanilla 既有 `processToStaticInputResult` 与 `processToStaticInputResultAsync`，旧名直接删除，不保留转发。Reconciler 不重新公开同名函数。需要持续更新时使用既有 controller；需要框架掌握交付时机时沿用已有候选处理接口。React 与 Vanilla 继续表达同一作者和编译契约，React 仅持有框架生命周期及宿主接线。
 
@@ -84,7 +79,7 @@ declare const compileToSceneAsync: (
 
 Vanilla 继续拥有 `InputScene` 归一化、作者贡献准备、provider 依赖收集及只读 ProcessingResult。完整贡献就绪后进入同步协调器。已有 controller 初始调用 `mount`，完整输入更新调用 `replace`；static、SSR 和其它一次性编译使用临时实例。
 
-Vanilla 的异步作者准备、取消、过期请求判断及既有静态处理句柄保持在 processing 层。准备结束进入同步编译前检查发布权，处理结果对外交付前继续执行既有失效检查。静态处理句柄管理已有的结果交付和驱动通知，不向 Reconciler 增加跨调用的编译提交阶段。
+应用先等待领域任务，自行决定是否提交结果。Vanilla 按调用顺序同步更新，不管理请求取消、抢占或优先级。静态处理句柄管理已有的结果交付和驱动通知，不向 Reconciler 增加跨调用的编译提交阶段。
 
 现有 compile result extension 从协调器输出读取同次 `result` 与真实 `diagnostics`，只返回扩展诊断，并通过可选的 `onCommit` 通知宿主帧已提交。主图编译由协调器完成，宿主保留原始 primary result 并连同扩展诊断交付提交回调，不再自行调用独立完整编译函数，也不以空诊断替代真实输出。扩展失败仍按现有规则保留最后成功的 ProcessingResult；不扩大为已完成编译及 warning 的撤销协议。
 

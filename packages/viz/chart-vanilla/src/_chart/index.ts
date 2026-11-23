@@ -1,10 +1,14 @@
+import { prepareChartData } from '@retikz/chart';
 import type { IRChartSource } from '@retikz/chart';
+import type { CoreProviderContribution } from '@retikz/core';
+import type { PlotDataPreparationOptions, PlotsLoweringOptions } from '@retikz/plot';
 import type { CompileResult } from '@retikz/reconciler';
 import type { RenderToStringOptions } from '@retikz/vanilla';
-import { renderToSvgString, scene, compileToScene, compileToSceneAsync } from '@retikz/vanilla';
+import { renderToSvgString, scene, compileToScene, embed } from '@retikz/vanilla';
 import type { AnyInputEmbed } from '@retikz/vanilla';
 
-import type { InputChartHostTheme } from '../shared';
+import { lowerChartInput } from '../shared';
+import type { InputChartPanel, InputChartHostTheme } from '../shared';
 
 export type { InputChartCoordinate } from '../normalize/chart';
 export { normalizeChartCoordinate } from '../normalize/chart';
@@ -22,14 +26,20 @@ export type ChartRenderResult = Readonly<{
 }>;
 
 /** Chart 异步服务端渲染选项 */
-export type ChartRenderAsyncOptions = ChartRenderOptions & {
-  /** 本次请求取消信号 */
-  signal?: AbortSignal;
-};
+export type ChartRenderAsyncOptions<TSource = never> = ChartRenderOptions &
+  InputChartHostTheme &
+  Omit<PlotDataPreparationOptions<TSource>, 'lineage'> & {
+    /** 与当前 Chart recipe 配套的 provider */
+    chartProviderContribution: CoreProviderContribution;
+    /** 领域准备与同步绘图共享的配置 */
+    lowerOptions?: PlotsLoweringOptions;
+    /** Chart 的宿主面板 */
+    panel?: InputChartPanel;
+  };
 
 type InputChartRender = AnyInputEmbed & { props: InputChartHostTheme & { layout?: IRChartSource['layout'] } };
 
-/** 两种入口共用相同的Scene与Core配置，异步生命周期由Vanilla负责 */
+/** 两种入口共用相同的Scene与Core配置 */
 const chartRenderRequest = (input: InputChartRender, compile: ChartRenderOptions['compile']) => {
   const themeDefinitions =
     input.props.themeDefinitions === undefined
@@ -60,14 +70,44 @@ export const renderChart = (input: InputChartRender, options: ChartRenderOptions
   return { svg: renderToSvgString(result.compileResult.scene, renderOptions), compileResult: result.compileResult };
 };
 
-/** 准备完整作者树后通过同一Core编译渲染Chart，支持Promise计算 */
-export const renderChartAsync = async (
-  input: InputChartRender,
-  options: ChartRenderAsyncOptions = {},
+/** 只等待显式 Chart 领域计算，再同步编译同一份就绪结果 */
+export const renderChartAsync = async <TSource = never>(
+  source: IRChartSource,
+  options: ChartRenderAsyncOptions<TSource>,
 ): Promise<ChartRenderResult> => {
-  const { compile, signal, ...renderOptions } = options;
-  const request = chartRenderRequest(input, compile);
-  const result = await compileToSceneAsync(request.source, { signal, compile: request.compile });
-
-  return { svg: renderToSvgString(result.compileResult.scene, renderOptions), compileResult: result.compileResult };
+  const {
+    chartProviderContribution,
+    lowerOptions,
+    panel,
+    theme,
+    themeDefinitions,
+    dataBindings,
+    dataTransformExecutor,
+    signal,
+    ...renderOptions
+  } = options;
+  const preparation = await prepareChartData(
+    source,
+    { dataBindings, dataTransformExecutor, signal },
+    chartProviderContribution,
+    lowerOptions,
+  );
+  const preparedData = await preparation.execute();
+  return renderChart(
+    embed({
+      adapter: { kind: source.namespace, lower: lowerChartInput },
+      props: {
+        source,
+        layout: source.layout,
+        theme,
+        themeDefinitions,
+        panel,
+        datasets: {},
+        preparedData,
+        chartProviderContribution,
+        lowerOptions,
+      },
+    }),
+    renderOptions,
+  );
 };

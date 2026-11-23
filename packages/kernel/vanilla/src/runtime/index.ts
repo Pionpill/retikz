@@ -1,17 +1,5 @@
-export type {
-  ProcessingSource,
-  SingleSceneSource,
-  ProcessingOptions,
-  InputPreparedProcessing,
-  AsyncProcessingOptions,
-} from './_input';
-export {
-  compileToScene,
-  compileToSceneAsync,
-  defaultVanillaCompileResultExtension,
-  prepareStaticProcessing,
-  prepareStaticProcessingAsync,
-} from './compile';
+export type { ProcessingSource, SingleSceneSource, ProcessingOptions, InputPreparedProcessing } from './_input';
+export { compileToScene, defaultVanillaCompileResultExtension, prepareStaticProcessing } from './compile';
 export type {
   InputVanillaCompileResultExtension,
   VanillaCompileResultExtension,
@@ -19,7 +7,6 @@ export type {
   VanillaCompileOutput,
   ProcessingResult,
   LayerProcessingResult,
-  PreparedAsyncStaticProcessing,
   PreparedStaticProcessing,
 } from './compile';
 export * from './output';

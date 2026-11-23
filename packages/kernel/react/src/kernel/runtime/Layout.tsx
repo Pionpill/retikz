@@ -22,8 +22,6 @@ import type { AnimationControls } from '@retikz/render/animation';
 import { resolveAnimationEnabled } from '@retikz/render/animation';
 import type { HydrationHandlers } from '@retikz/render/hydration';
 import type {
-  AsyncProcessingController,
-  AsyncProcessingOptions,
   InputScope,
   ProcessingController,
   ProcessingOptions,
@@ -41,7 +39,6 @@ import { ProcessingResultHost } from '../../render/processing-result';
 import { pickScopeStyle, wrapRootScope } from '../adapter';
 import { createInputScene } from '../adapter/input-scene';
 import { useAnimationMode } from './animation-context';
-import { AsyncLayoutContent } from './AsyncLayoutContent';
 import { collectHydrationHandlers } from './collect-hydration-handlers';
 import { useRendererMode } from './renderer-context';
 import type { LayoutRuntimeOptions } from './runtime-options';
@@ -53,13 +50,6 @@ import { mergeThemeDefinitions, useThemeDefinitions } from './theme-definitions-
 const warnedMessages = new Set<string>();
 
 let nextProcessingControllerKey = 0;
-
-/** React 为同步 SSR 与客户端选择同一作者输入的消费入口 */
-const subscribeClientRendering = (): (() => void) => () => undefined;
-
-const clientRenderingSnapshot = (): boolean => true;
-
-const serverRenderingSnapshot = (): boolean => false;
 
 const warnOnce = (message: string): void => {
   if (warnedMessages.has(message)) return;
@@ -93,7 +83,7 @@ const isReconcilerDiagnostic = (diagnostic: unknown): diagnostic is ReconcilerDi
 
 /** 逐条隔离通知 Runtime 结构化诊断，避免回调异常影响已提交 processing result */
 const deliverProcessingDiagnostics = (
-  controller: Pick<ProcessingController | AsyncProcessingController, 'diagnostics'>,
+  controller: Pick<ProcessingController, 'diagnostics'>,
   callback: ((diagnostic: ReconcilerDiagnostic) => void) | undefined,
 ): void => {
   for (const diagnostic of controller.diagnostics()) {
@@ -396,14 +386,7 @@ export const Layout: FC<LayoutProps> = props => {
   } = props;
 
   const { shapes, boundaries, clips, arrows, marks, patterns, paths, composites, themeDefinitions } = extensions ?? {};
-  const { mode = LayoutRuntimeMode.Retained, preparation, signal, updateStrategy, onDiagnostic } = runtime ?? {};
-  const isClientRendering = useSyncExternalStore(
-    subscribeClientRendering,
-    clientRenderingSnapshot,
-    serverRenderingSnapshot,
-  );
-
-  const prepareAsync = preparation === 'async' && isClientRendering;
+  const { mode = LayoutRuntimeMode.Retained, updateStrategy, onDiagnostic } = runtime ?? {};
   const stableShapes = canonicalizeDefinitionArray(shapes);
   const stableBoundaries = canonicalizeDefinitionArray(boundaries);
   const stableClips = canonicalizeDefinitionArray(clips);
@@ -463,10 +446,9 @@ export const Layout: FC<LayoutProps> = props => {
     return { ...viewed, animations } as SingleSceneSource;
   }, [ambientTheme, irFromProp, reactInput, rootAnimations, theme, viewBox]);
 
-  const processingOptions = useMemo<ProcessingOptions | AsyncProcessingOptions>(
+  const processingOptions = useMemo<ProcessingOptions>(
     () => ({
       compileResultExtension,
-      ...(prepareAsync ? { signal } : {}),
       ...(mode === LayoutRuntimeMode.Static
         ? {}
         : { reconciler: { mode: ReconcilerMode.Incremental, updateStrategy } }),
@@ -488,8 +470,6 @@ export const Layout: FC<LayoutProps> = props => {
     }),
     [
       compileResultExtension,
-      prepareAsync,
-      signal,
       mode,
       updateStrategy,
       measureText,
@@ -535,20 +515,6 @@ export const Layout: FC<LayoutProps> = props => {
     onCompileResult,
   };
   const hostKey = `${mode}:${renderer}:${resolvedIdPrefix}`;
-  if (prepareAsync)
-    return (
-      <AsyncLayoutContent
-        key={processingControllerIdentity.key}
-        source={source}
-        options={processingOptions}
-        mode={mode}
-        hostKey={hostKey}
-        hostProps={hostProps}
-        onDiagnostic={onDiagnostic}
-        deliverDiagnostics={deliverProcessingDiagnostics}
-      />
-    );
-
   return mode === LayoutRuntimeMode.Static ? (
     <StaticLayoutContent source={source} options={processingOptions} hostKey={hostKey} hostProps={hostProps} />
   ) : (

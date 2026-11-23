@@ -13,9 +13,9 @@ IRTable 只保存 JSON-safe 结构；datasets、Definitions、Core compile optio
 
 Detail 和绑定数据的 Custom Table 支持根 `transform` declaration 数组与 `dataExecution`。变换在 Structure 解析前完成；Manual 和无数据 Custom 不接受这些配置。`sourceIndex` 指向本次绑定结果，不等同于数据库主键或变换前行号。
 
-React Table / DetailTable 接收 `dataBindings`、`dataTransformExecutor`、`signal` 及独立 Data 定义/实现选项。dataBindings 与 data 互斥。DetailTable 可直接传 transform 与 dataExecution；Table 的根配置可覆盖 spec 入口，但不能同时在两处提供。ManualTable 不接受数据执行器。独立客户端自动准备；嵌入外层 Layout 时开启 `runtime={{ preparation: 'async' }}`。
+React Table、DetailTable 与 Vanilla 的 `embedTable` 都接收原始数据或 `preparedData`，二者互斥。对外接计算，应用先调用 `prepareTableData(spec, request, lowerOptions)` 并等待 `execute()`，再传入结果；行序和字段模型一起保留。
 
-Vanilla `embedTable(spec, { dataBindings, dataTransformExecutor, signal, lowerOptions })` 交给支持 prepare 的 tableInputEmbedAdapter。异步 SSR 用 `renderTableAsync(spec, options?)`：默认返回 Promise SVG；`artifacts: true` 返回 `{ svg, manifest }`，manifest 来自实际同次编译。同步 renderTable / compileTable 与 React SSR 只支持本地同步计算。完整执行方式和模型边界见 [Data 扩展机制](/viz/data/transform/extensions)。
+SSR 使用 `renderTableAsync(spec, options)` 等待同一领域计算。默认返回 SVG；`artifacts: true` 返回同一次编译的 `{ svg, manifest }`。见[数据计算](/viz/data/transform/computation)。
 
 ## 入口如何汇合
 
@@ -96,14 +96,14 @@ Standalone 的 `theme` 写入根 Core Scene；embedded Table 不启动局部 com
     {
       label: 'React standalone 的 Layout 与 manifest observer 接线',
       path: 'packages/viz/table-react/src/table-view.tsx',
-      startLine: 112,
-      endLine: 158,
+      startLine: 117,
+      endLine: 156,
     },
     {
       label: 'React embedded Table 向外层宿主贡献运行时输入',
       path: 'packages/viz/table-react/src/table-runtime.ts',
-      startLine: 270,
-      endLine: 280,
+      startLine: 266,
+      endLine: 273,
     },
     {
       label: 'runtime contribution 合并并冻结复制后的容器',

@@ -2,7 +2,7 @@ import { pathClipProvider } from '@retikz/extension';
 import type { IRChain, IRChainConnection, IRChainParallel, IRChainItem } from '@retikz/standard/collection';
 import { chainProvider, createChain } from '@retikz/standard/collection';
 import { embed } from '@retikz/vanilla';
-import type { InputPath, InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
+import type { InputPath, InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
 import { normalizePath } from '@retikz/vanilla';
 
 import { standardChainEmbedKind } from '../shared/constants';
@@ -89,7 +89,7 @@ const normalizeConnection = (defaultConnection: InputChainConnection): IRChainCo
 };
 
 /** 递归收集内容，通过 Kernel 归一化一次并保留依赖 */
-export const chainInputEmbedAdapter: SynchronousInputEmbedAdapter<InputChain> = {
+export const chainInputEmbedAdapter: InputEmbedAdapter<InputChain> = {
   kind: standardChainEmbedKind,
   lower: (props, context) => {
     const {

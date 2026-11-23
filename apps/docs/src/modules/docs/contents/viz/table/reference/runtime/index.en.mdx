@@ -13,9 +13,9 @@ IRTable stores only JSON-safe structure. Datasets, Definitions, Core compile opt
 
 Detail and data-bound Custom Tables accept root `transform` declarations and `dataExecution`. Transforms run before Structure resolution. Manual and unbound Custom Tables reject these settings. `sourceIndex` addresses the currently bound result rather than a database key or pre-transform row.
 
-React Table / DetailTable accept `dataBindings`, `dataTransformExecutor`, `signal`, and separate Data definitions/implementations. Bindings and raw data are exclusive. DetailTable accepts transform/dataExecution directly; Table accepts a root override but rejects duplicate configuration in the spec and props. ManualTable has no data executor. Standalone clients prepare automatically; embedded clients enable `runtime={{ preparation: 'async' }}` on their outer Layout.
+React Table, DetailTable and Vanilla’s `embedTable` accept either raw data or `preparedData`. For external computation call `prepareTableData(spec, request, lowerOptions)`, await its `execute()`, and pass the result. It preserves both row order and the field model.
 
-Vanilla `embedTable(spec, { dataBindings, dataTransformExecutor, signal, lowerOptions })` uses tableInputEmbedAdapter preparation. Async SSR uses `renderTableAsync(spec, options?)`: it returns a Promise SVG string, or `{ svg, manifest }` with `artifacts: true`. The manifest comes from the actual compilation. Synchronous renderTable/compileTable and React SSR use local synchronous computation. See [Data extensions](/viz/data/transform/extensions) for execution and model boundaries.
+For SSR, `renderTableAsync(spec, options)` waits for the same domain computation. It returns SVG by default or `{ svg, manifest }` from one compilation with `artifacts: true`. See [Data computation](/viz/data/transform/computation).
 
 ## How entries converge
 
@@ -96,14 +96,14 @@ Standalone `theme` writes the root Core Scene Theme. An embedded Table does not 
     {
       label: 'React standalone Layout and manifest observer wiring',
       path: 'packages/viz/table-react/src/table-view.tsx',
-      startLine: 112,
-      endLine: 158,
+      startLine: 117,
+      endLine: 156,
     },
     {
       label: 'React embedded Table runtime contribution to the outer host',
       path: 'packages/viz/table-react/src/table-runtime.ts',
-      startLine: 270,
-      endLine: 280,
+      startLine: 266,
+      endLine: 273,
     },
     {
       label: 'Runtime contribution merge and frozen copied containers',

@@ -1,5 +1,5 @@
 import type { AnyCompositeDefinition } from '@retikz/core';
-import type { ExternalDatasets, DataInputBindings, DataTransformExecutor } from '@retikz/data';
+import type { ExternalDatasets, DataTransformResult } from '@retikz/data';
 import type { ValueOf } from '@retikz/foundation';
 import type {
   InputDetailTableConfig,
@@ -48,23 +48,18 @@ export type InputCustomTable = Readonly<{
 /** 尚待 Table Vanilla 归一化的 Table authoring 输入 */
 export type InputTableVariant = InputDetailTable | InputManualTable | InputCustomTable;
 
-/**
- * Table InputEmbed adapter 消费的完整无框架输入
- * @template TSource 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
- */
-export type InputTable<TSource = never> = Readonly<{
-  /** 尚待归一化的 Table authoring 输入 */
-  table: InputTableVariant;
-  /** Table lowering 消费的外部 datasets */
-  data?: ExternalDatasets;
-  /** 规范结果或原生源绑定，与data互斥 */
-  dataBindings?: DataInputBindings<TSource>;
-  /** 本次数据执行器，运行时句柄不进入IR */
-  dataTransformExecutor?: DataTransformExecutor<TSource>;
-  /** 本次请求取消信号 */
-  signal?: AbortSignal;
-  /** Table definitions 与其他 lowering 选项 */
-  lowerOptions?: TablesLoweringOptions;
-  /** Cell 内嵌 Tier 2 内容所需的额外 composites */
-  composites?: ReadonlyArray<AnyCompositeDefinition>;
-}>;
+/** 已就绪的表格数据；无数据的 manual table 可以省略 */
+export type InputTableData =
+  | { data?: ExternalDatasets; preparedData?: never }
+  | { data?: never; preparedData: DataTransformResult };
+
+/** Table InputEmbed adapter 消费的完整无框架输入 */
+export type InputTable = InputTableData &
+  Readonly<{
+    /** 尚待归一化的 Table authoring 输入 */
+    table: InputTableVariant;
+    /** Table definitions 与其他 lowering 选项 */
+    lowerOptions?: TablesLoweringOptions;
+    /** Cell 内嵌 Tier 2 内容所需的额外 composites */
+    composites?: ReadonlyArray<AnyCompositeDefinition>;
+  }>;

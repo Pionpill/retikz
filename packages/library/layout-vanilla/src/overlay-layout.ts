@@ -1,17 +1,16 @@
 import type { InputOverlayLayoutItemConfig } from '@retikz/layout';
 import { createOverlayLayout, overlayLayoutProvider } from '@retikz/layout';
 import { embed } from '@retikz/vanilla';
-import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
+import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
 
 import type { InputOverlayLayout } from './normalize';
-import { normalizeLayoutItems, prepareLayoutItems } from './normalize';
+import { normalizeLayoutItems } from './normalize';
 
 /** Vanilla Overlay 布局嵌入项的稳定类别 */
 const overlayLayoutEmbedKind = 'layout.overlayLayout';
 
 /** Layout Overlay 布局的 InputEmbed adapter */
-export const overlayLayoutInputEmbedAdapter: SynchronousInputEmbedAdapter<InputOverlayLayout> &
-  Required<Pick<SynchronousInputEmbedAdapter<InputOverlayLayout>, 'prepare'>> = {
+export const overlayLayoutInputEmbedAdapter: InputEmbedAdapter<InputOverlayLayout> = {
   kind: overlayLayoutEmbedKind,
   lower: (props, context) => {
     const { children, ...input } = props;
@@ -25,25 +24,6 @@ export const overlayLayoutInputEmbedAdapter: SynchronousInputEmbedAdapter<InputO
         providers: [overlayLayoutProvider, ...normalized.providerDependencies.providers],
       },
       ...(normalized.authoringSites.length === 0 ? {} : { authoringSites: normalized.authoringSites }),
-    };
-  },
-  prepare: async (props, context) => {
-    const { children, ...input } = props;
-    const execute = await prepareLayoutItems<InputOverlayLayoutItemConfig>(children, context);
-
-    return {
-      execute: async () => {
-        const normalized = await execute();
-        return {
-          node: createOverlayLayout({ ...input, children: normalized.items }),
-          runtimeInputs: normalized.runtimeInputs,
-          providerDependencies: {
-            roots: [overlayLayoutProvider.key, ...normalized.providerDependencies.roots],
-            providers: [overlayLayoutProvider, ...normalized.providerDependencies.providers],
-          },
-          ...(normalized.authoringSites.length === 0 ? {} : { authoringSites: normalized.authoringSites }),
-        };
-      },
     };
   },
 };

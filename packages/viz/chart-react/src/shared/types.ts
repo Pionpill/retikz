@@ -1,6 +1,7 @@
 import type { ChartThemeDefinition } from '@retikz/chart';
 import type { InputChartPanel } from '@retikz/chart-vanilla';
-import type { DataInputBindings, DataTransformExecutor, ExternalRow } from '@retikz/data';
+import type { ExternalRow } from '@retikz/data';
+import type { PreparedPlotData } from '@retikz/plot';
 import type { PlotsLoweringOptions } from '@retikz/plot';
 import type { FC } from 'react';
 
@@ -24,35 +25,26 @@ export type ChartThemeDefinitionsProps = Readonly<{
 
 /**
  * Chart runtime 数据入口二选一；数据声明组件可提供缺省rows
- * @template TNative 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
  */
-export type ChartDataRuntimeProps<TNative = never> = (
+export type ChartDataRuntimeProps =
   | {
-      /** 直接提供的行数据，与 dataBindings 互斥 */
+      /** 直接提供的行数据，与 preparedData 互斥 */
       rows?: Array<ExternalRow>;
-      dataBindings?: never;
+      preparedData?: never;
     }
   | {
-      /** 按名称绑定的数据行、计算结果或原生源，与 rows 互斥 */
-      dataBindings: DataInputBindings<TNative>;
+      /** 当前图表已完成的数据计算，与 rows 互斥 */
+      preparedData: PreparedPlotData;
       rows?: never;
-    }
-) & {
-  /** Data执行器与函数默认值 */
-  dataTransformExecutor?: DataTransformExecutor<TNative>;
-  /** 本次准备取消信号 */
-  signal?: AbortSignal;
-};
+    };
 
 /**
  * 可嵌入 Chart React component 的静态 Vanilla Input 契约
  * @template TProps 具体图表 React 组件或声明组件接受的属性类型
  * @template TInput 交给 Vanilla factory 与嵌入 adapter 的领域输入类型
- * @template TAdapter 嵌入适配器类型，保留其同步或异步能力约束
+ * @template TAdapter 嵌入适配器类型，绑定同步下沉能力
  */
-export type InputEmbeddableChartComponent<TProps, TInput, TAdapter> = (<TNative = never>(
-  props: Omit<TProps, 'rows' | 'dataBindings' | 'dataTransformExecutor' | 'signal'> & ChartDataRuntimeProps<TNative>,
-) => ReturnType<FC<TProps>>) & {
+export type InputEmbeddableChartComponent<TProps, TInput, TAdapter> = FC<TProps> & {
   /** React 调试工具中显示的组件名称 */
   displayName?: string;
   /** 标识该组件可作为 Tier 2 嵌入内容收集 */

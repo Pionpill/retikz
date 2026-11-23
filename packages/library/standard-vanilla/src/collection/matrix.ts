@@ -2,7 +2,7 @@ import { pathClipProvider } from '@retikz/extension';
 import type { IRMatrix } from '@retikz/standard/collection';
 import { createMatrix, matrixProvider } from '@retikz/standard/collection';
 import { embed } from '@retikz/vanilla';
-import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
+import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
 
 import { standardMatrixEmbedKind } from '../shared/constants';
 import type { InputCell } from './cell';
@@ -36,7 +36,7 @@ export type InputMatrix = Omit<IRMatrix, 'namespace' | 'type' | 'items' | 'data'
   );
 
 /** 收集矩阵及格内 drawable 的依赖 */
-export const matrixInputEmbedAdapter: SynchronousInputEmbedAdapter<InputMatrix> = {
+export const matrixInputEmbedAdapter: InputEmbedAdapter<InputMatrix> = {
   kind: standardMatrixEmbedKind,
   lower: (props, context) => {
     if (props.skeleton !== undefined)

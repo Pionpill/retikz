@@ -1,12 +1,12 @@
 import type { InputAxes } from '@retikz/standard/presentation';
 import { axesProvider, createAxes } from '@retikz/standard/presentation';
 import { embed } from '@retikz/vanilla';
-import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
+import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
 
 import { standardAxesEmbedKind } from '../shared/constants';
 
 /** Standard Axes 的 InputEmbed adapter */
-export const axesInputEmbedAdapter: SynchronousInputEmbedAdapter<InputAxes> = {
+export const axesInputEmbedAdapter: InputEmbedAdapter<InputAxes> = {
   kind: standardAxesEmbedKind,
   lower: props => ({
     node: createAxes(props),

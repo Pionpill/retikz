@@ -19,21 +19,19 @@ export class SceneRuntime {
   private current!: ProcessingResult;
   private disposed = false;
   private writing = false;
-  private check?: () => void;
 
   private constructor(
     initial: InputPreparedProcessing,
     private readonly options: ProcessingOptions,
     createTarget?: () => ReconcilerCommitTarget,
-    check?: () => void,
+    private readonly assertOwnerActive?: () => void,
     notifications?: Array<() => void>,
   ) {
-    this.check = check;
     if (options.compileResultExtension) {
       this.extensionInput = { ...initial, instance: {} };
       this.extensionSession = ResultExtensionHost.open(options.compileResultExtension, this.extensionInput);
     }
-    this.check?.();
+    this.assertActive();
     const target = createTarget?.();
     this.reconciler = new SceneReconciler(initial.coreOptions, {
       ...options.reconciler,
@@ -46,7 +44,6 @@ export class SceneRuntime {
       this.reconciler.dispose();
       throw cause;
     }
-    this.check = undefined;
   }
 
   /** 从作者输入建立同步会话 */
@@ -62,10 +59,10 @@ export class SceneRuntime {
   static fromPrepared(
     initial: InputPreparedProcessing,
     options: ProcessingOptions,
-    check?: () => void,
-    notifications?: Array<() => void>,
+    assertOwnerActive: () => void,
+    notifications: Array<() => void>,
   ) {
-    return new SceneRuntime(initial, options, undefined, check, notifications);
+    return new SceneRuntime(initial, options, undefined, assertOwnerActive, notifications);
   }
 
   readonly read = (): ProcessingResult => this.current;
@@ -79,35 +76,22 @@ export class SceneRuntime {
   readonly update = (source: SingleSceneSource) =>
     this.write(() => this.replace(prepareProcessingInput(source, this.options)));
 
-  updatePrepared(next: InputPreparedProcessing, check?: () => void, notifications?: Array<() => void>) {
-    this.write(() => this.replace(next, notifications), check);
+  updatePrepared(next: InputPreparedProcessing, notifications: Array<() => void>) {
+    this.write(() => this.replace(next, notifications));
   }
 
-  /** 在输入准备、底层提交和通知期间保持单一写者；取消立即生效，释放等到底层事务退出 */
-  private write(action: () => void, check?: () => void) {
+  /** 在输入准备、底层提交和通知期间保持单一写者；销毁立即生效，释放等到底层事务退出 */
+  private write(action: () => void) {
     this.assertActive();
     if (this.writing)
       throw new RetikzVanillaError(RetikzVanillaErrorCode.Processing, 'Cannot reenter a processing update');
-    if (check) this.failures.push(...this.reconciler.diagnostics());
     this.writing = true;
-    this.check = () => {
-      this.assertActive();
-      check?.();
-    };
     try {
-      this.check();
       action();
     } catch (cause) {
-      try {
-        check?.();
-      } catch {
-        this.reconciler.diagnostics();
-        throw cause;
-      }
       this.failures.push(cause);
       throw cause;
     } finally {
-      this.check = undefined;
       this.writing = false;
       if (this.disposed) this.reconciler.dispose();
     }
@@ -120,7 +104,7 @@ export class SceneRuntime {
     let committed: ReconcilerResult;
     try {
       if (extension && nextInput) this.extensionSession = ResultExtensionHost.open(extension, nextInput);
-      this.check?.();
+      this.assertActive();
       committed = this.reconciler.replace(next.source, next.coreOptions);
     } catch (cause) {
       if (!extension || !previousInput) throw cause;
@@ -172,19 +156,19 @@ export class SceneRuntime {
     if (!this.writing) this.reconciler.dispose();
   };
 
-  /** 扩展可拒绝候选，作者请求可失效；宿主实际修改及恢复仍由原目标执行 */
+  /** 扩展可拒绝候选，销毁可中断提交；宿主实际修改及恢复仍由原目标执行 */
   private createCommitTarget(target?: ReconcilerCommitTarget): ReconcilerCommitTarget {
     return {
       prepare: (candidate, previous) => {
         // 扩展解析可能失败，须在宿主提交之前执行；发布时复用同一快照的解析结果
         this.extensionSession?.prepare(candidate.compilation);
-        this.check?.();
+        this.assertActive();
         const token = target?.prepare(candidate, previous);
         return {
           commit: () => {
-            this.check?.();
+            this.assertActive();
             token?.commit();
-            this.check?.();
+            this.assertActive();
           },
           rollback: () => token?.rollback(),
           dispose: () => token?.dispose(),
@@ -217,6 +201,7 @@ export class SceneRuntime {
   }
 
   private assertActive() {
+    this.assertOwnerActive?.();
     if (this.disposed)
       throw new RetikzVanillaError(RetikzVanillaErrorCode.Processing, 'Processing controller is disposed');
   }

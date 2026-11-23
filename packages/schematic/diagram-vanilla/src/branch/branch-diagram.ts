@@ -1,7 +1,7 @@
 import type { BranchDiagramDefinitionOptions } from '@retikz/diagram/branch';
 import { createBranchDiagramProviderContribution } from '@retikz/diagram/branch';
 import { embed } from '@retikz/vanilla';
-import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
+import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
 
 import { branchDiagramEmbedKind } from './constants';
 import type { InputBranchDiagram } from './normalize';
@@ -40,7 +40,7 @@ const inputOf = (props: BranchDiagramInputEmbedProps): InputBranchDiagram => {
 };
 
 /** Branch Diagram Source root 的 InputEmbed adapter */
-export const branchDiagramInputEmbedAdapter: SynchronousInputEmbedAdapter<BranchDiagramInputEmbedProps> = {
+export const branchDiagramInputEmbedAdapter: InputEmbedAdapter<BranchDiagramInputEmbedProps> = {
   kind: branchDiagramEmbedKind,
   lower: props => ({
     node: normalizeBranchDiagram(inputOf(props)),

@@ -38,7 +38,7 @@ export type SurfaceProps = Omit<InputSurfaceConfig, 'namespace' | 'type' | 'chil
 
 **Direct calls**
 
-#### <ApiSourceLink label={"InputSurface"} path={"packages/library/standard-vanilla/src/presentation/surface.ts"} startLine={23}>InputSurface</ApiSourceLink>
+#### <ApiSourceLink label={"InputSurface"} path={"packages/library/standard-vanilla/src/presentation/surface.ts"} startLine={18}>InputSurface</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -70,22 +70,21 @@ export type InputSurface = Omit<InputSurfaceConfig, 'namespace' | 'type' | 'chil
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InputSurfaceChild"} path={"packages/library/standard-vanilla/src/presentation/surface.ts"} startLine={20}>InputSurfaceChild</ApiSourceLink>
+#### <ApiSourceLink label={"InputSurfaceChild"} path={"packages/library/standard-vanilla/src/presentation/surface.ts"} startLine={15}>InputSurfaceChild</ApiSourceLink>
 
 ```ts
 export type InputSurfaceChild = InputChild;
 ```
 
-#### <ApiSourceLink label={"surfaceInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/presentation/surface.ts"} startLine={65}>surfaceInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"surfaceInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/presentation/surface.ts"} startLine={60}>surfaceInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const surfaceInputEmbedAdapter: SynchronousInputEmbedAdapter<InputSurface> &
-  Required<Pick<SynchronousInputEmbedAdapter<InputSurface>, 'prepare'>>;
+export declare const surfaceInputEmbedAdapter: InputEmbedAdapter<InputSurface>;
 ```
 
 **Execution and supporting contracts**
 
-#### <ApiSourceLink label={"surface"} path={"packages/library/standard-vanilla/src/presentation/surface.ts"} startLine={90}>surface</ApiSourceLink>
+#### <ApiSourceLink label={"surface"} path={"packages/library/standard-vanilla/src/presentation/surface.ts"} startLine={80}>surface</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -112,7 +111,7 @@ export declare const surface: (input: InputSurface) => InputEmbed<InputSurface>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"surfaceChild"} path={"packages/library/standard-vanilla/src/presentation/surface.ts"} startLine={31}>surfaceChild</ApiSourceLink>
+#### <ApiSourceLink label={"surfaceChild"} path={"packages/library/standard-vanilla/src/presentation/surface.ts"} startLine={26}>surfaceChild</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 

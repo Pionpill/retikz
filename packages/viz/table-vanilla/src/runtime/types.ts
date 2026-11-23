@@ -43,10 +43,9 @@ export type TableRenderer = {
  * 异步Table运行时选项，数据句柄不进入IR
  * @template TSource 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
  */
-export type TableRenderAsyncCommonOptions<TSource = never> = TableRenderCommonOptions &
+export type TableRenderAsyncCommonOptions<TSource = never> = Omit<TableRenderCommonOptions, 'data'> &
+  ({ data?: ExternalDatasets; dataBindings?: never } | { data?: never; dataBindings: DataInputBindings<TSource> }) &
   Readonly<{
-    /** 与data互斥的原始行、规范结果或原生源绑定 */
-    dataBindings?: DataInputBindings<TSource>;
     /** 本次请求的数据执行器 */
     dataTransformExecutor?: DataTransformExecutor<TSource>;
     /** 请求取消信号 */

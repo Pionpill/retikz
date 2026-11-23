@@ -111,7 +111,7 @@ export type OverlayLayoutItemProps = Omit<InputOverlayLayoutItemConfig, 'child' 
 
 ## Direct calls
 
-#### <ApiSourceLink label={"overlayLayout"} path={"packages/library/layout-vanilla/src/overlay-layout.ts"} startLine={55}>overlayLayout</ApiSourceLink> / <ApiSourceLink label={"InputOverlayLayout"} path={"packages/library/layout-vanilla/src/normalize/types.ts"} startLine={43}>InputOverlayLayout</ApiSourceLink>
+#### <ApiSourceLink label={"overlayLayout"} path={"packages/library/layout-vanilla/src/overlay-layout.ts"} startLine={36}>overlayLayout</ApiSourceLink> / <ApiSourceLink label={"InputOverlayLayout"} path={"packages/library/layout-vanilla/src/normalize/types.ts"} startLine={43}>InputOverlayLayout</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -184,11 +184,10 @@ export type InputOverlayLayoutItem = InputLayoutItem<InputOverlayLayoutItemConfi
 
 </DocTabs>
 
-#### <ApiSourceLink label={"overlayLayoutInputEmbedAdapter"} path={"packages/library/layout-vanilla/src/overlay-layout.ts"} startLine={12}>overlayLayoutInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"overlayLayoutInputEmbedAdapter"} path={"packages/library/layout-vanilla/src/overlay-layout.ts"} startLine={13}>overlayLayoutInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const overlayLayoutInputEmbedAdapter: SynchronousInputEmbedAdapter<InputOverlayLayout> &
-  Required<Pick<SynchronousInputEmbedAdapter<InputOverlayLayout>, 'prepare'>>;
+export declare const overlayLayoutInputEmbedAdapter: InputEmbedAdapter<InputOverlayLayout>;
 ```
 
 #### <ApiSourceLink label={"createOverlayLayout"} path={"packages/library/layout/src/composites/overlay-layout/composite.ts"} startLine={30}>createOverlayLayout</ApiSourceLink> / <ApiSourceLink label={"InputOverlayLayoutConfig"} path={"packages/library/layout/src/composites/overlay-layout/types.ts"} startLine={32}>InputOverlayLayoutConfig</ApiSourceLink>

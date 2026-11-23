@@ -1,17 +1,16 @@
 import type { InputGridLayoutItemConfig } from '@retikz/layout';
 import { createGridLayout, gridLayoutProvider } from '@retikz/layout';
 import { embed } from '@retikz/vanilla';
-import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
+import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
 
 import type { InputGridLayout } from './normalize';
-import { normalizeLayoutItems, prepareLayoutItems } from './normalize';
+import { normalizeLayoutItems } from './normalize';
 
 /** Vanilla Grid 布局嵌入项的稳定类别 */
 const gridLayoutEmbedKind = 'layout.gridLayout';
 
 /** Layout Grid 布局的 InputEmbed adapter */
-export const gridLayoutInputEmbedAdapter: SynchronousInputEmbedAdapter<InputGridLayout> &
-  Required<Pick<SynchronousInputEmbedAdapter<InputGridLayout>, 'prepare'>> = {
+export const gridLayoutInputEmbedAdapter: InputEmbedAdapter<InputGridLayout> = {
   kind: gridLayoutEmbedKind,
   lower: (props, context) => {
     const { children, ...input } = props;
@@ -25,25 +24,6 @@ export const gridLayoutInputEmbedAdapter: SynchronousInputEmbedAdapter<InputGrid
         providers: [gridLayoutProvider, ...normalized.providerDependencies.providers],
       },
       ...(normalized.authoringSites.length === 0 ? {} : { authoringSites: normalized.authoringSites }),
-    };
-  },
-  prepare: async (props, context) => {
-    const { children, ...input } = props;
-    const execute = await prepareLayoutItems<InputGridLayoutItemConfig>(children, context);
-
-    return {
-      execute: async () => {
-        const normalized = await execute();
-        return {
-          node: createGridLayout({ ...input, children: normalized.items }),
-          runtimeInputs: normalized.runtimeInputs,
-          providerDependencies: {
-            roots: [gridLayoutProvider.key, ...normalized.providerDependencies.roots],
-            providers: [gridLayoutProvider, ...normalized.providerDependencies.providers],
-          },
-          ...(normalized.authoringSites.length === 0 ? {} : { authoringSites: normalized.authoringSites }),
-        };
-      },
     };
   },
 };

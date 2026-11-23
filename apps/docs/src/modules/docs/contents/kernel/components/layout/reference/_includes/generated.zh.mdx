@@ -13,7 +13,7 @@
 
 ## 组件声明
 
-#### <ApiSourceLink label={"Layout"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={371}>Layout</ApiSourceLink> / <ApiSourceLink label={"LayoutProps"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={194}>LayoutProps</ApiSourceLink>
+#### <ApiSourceLink label={"Layout"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={357}>Layout</ApiSourceLink> / <ApiSourceLink label={"LayoutProps"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={180}>LayoutProps</ApiSourceLink>
 
 通过 children 声明图形，或通过 ir 传入完整场景；同时提供时使用 ir。默认使用 retained 模式处理后续更新，可通过 runtime 切换为 static 完整编译模式
 
@@ -97,7 +97,7 @@ export type LayoutProps = {
 
 ## 执行与辅助契约
 
-#### <ApiSourceLink label={"LayoutExtensions"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={148}>LayoutExtensions</ApiSourceLink>
+#### <ApiSourceLink label={"LayoutExtensions"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={134}>LayoutExtensions</ApiSourceLink>
 
 通过 Layout 的 extensions 属性传入，各字段接收对应的定义数组；这些运行时定义不写入可持久化的场景数据
 
@@ -143,7 +143,7 @@ export type LayoutExtensions = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"LayoutRetainedRuntimeOptions"} path={"packages/kernel/react/src/kernel/runtime/runtime-options.ts"} startLine={24}>LayoutRetainedRuntimeOptions</ApiSourceLink>
+#### <ApiSourceLink label={"LayoutRetainedRuntimeOptions"} path={"packages/kernel/react/src/kernel/runtime/runtime-options.ts"} startLine={14}>LayoutRetainedRuntimeOptions</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -155,8 +155,6 @@ export type LayoutExtensions = Readonly<{
 | -------------------------- | -------------------------------------------- | ------------------------------- | ------------------------------------------------------------------------ |
 | `readonly mode?`           | `typeof LayoutRuntimeMode.Retained`          | `LayoutRuntimeMode.Retained`    | 创建保留式 Runtime                                                       |
 | `readonly onDiagnostic?`   | `(diagnostic: ReconcilerDiagnostic) => void` | —                               | 接收图形更新的结构化诊断，按产生顺序通知；更新失败时保留最后一次成功画面 |
-| `readonly preparation?`    | `'sync' \| 'async'`                          | `'sync'`                        | 客户端作者准备方式；同步 SSR 仍消费同步 lower                            |
-| `readonly signal?`         | `AbortSignal`                                | —                               | 异步 preparation 与 controller 的生命周期信号                            |
 | `readonly updateStrategy?` | `ReconcilerUpdateStrategy`                   | `ReconcilerUpdateStrategy.Auto` | 更新策略；auto 按变更和执行器能力选择增量或完整执行，full 强制完整执行   |
 
 </ApiTable>
@@ -166,32 +164,18 @@ export type LayoutExtensions = Readonly<{
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type LayoutRetainedRuntimeOptions = LayoutPreparationOptions &
-  Readonly<{
-    mode?: typeof LayoutRuntimeMode.Retained;
-    updateStrategy?: ReconcilerUpdateStrategy;
-    onDiagnostic?: (diagnostic: ReconcilerDiagnostic) => void;
-  }>;
+export type LayoutRetainedRuntimeOptions = Readonly<{
+  mode?: typeof LayoutRuntimeMode.Retained;
+  updateStrategy?: ReconcilerUpdateStrategy;
+  onDiagnostic?: (diagnostic: ReconcilerDiagnostic) => void;
+}>;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"LayoutRuntimeOptions"} path={"packages/kernel/react/src/kernel/runtime/runtime-options.ts"} startLine={52}>LayoutRuntimeOptions</ApiSourceLink>
-
-**公共属性**
-
-<ApiTable>
-
-| 成员                    | 类型                | 默认值   | 说明                                          |
-| ----------------------- | ------------------- | -------- | --------------------------------------------- |
-| `readonly preparation?` | `'sync' \| 'async'` | `'sync'` | 客户端作者准备方式；同步 SSR 仍消费同步 lower |
-| `readonly signal?`      | `AbortSignal`       | —        | 异步 preparation 与 controller 的生命周期信号 |
-
-</ApiTable>
-
-公共属性适用于所有分支；输入还需满足至少一个分支的属性约束。
+#### <ApiSourceLink label={"LayoutRuntimeOptions"} path={"packages/kernel/react/src/kernel/runtime/runtime-options.ts"} startLine={40}>LayoutRuntimeOptions</ApiSourceLink>
 
 <DocTabs defaultValue="retained">
 
@@ -233,7 +217,7 @@ export type LayoutRuntimeOptions = LayoutRetainedRuntimeOptions | LayoutStaticRu
 
 </DocTabs>
 
-#### <ApiSourceLink label={"LayoutStaticRuntimeOptions"} path={"packages/kernel/react/src/kernel/runtime/runtime-options.ts"} startLine={41}>LayoutStaticRuntimeOptions</ApiSourceLink>
+#### <ApiSourceLink label={"LayoutStaticRuntimeOptions"} path={"packages/kernel/react/src/kernel/runtime/runtime-options.ts"} startLine={30}>LayoutStaticRuntimeOptions</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -241,13 +225,11 @@ export type LayoutRuntimeOptions = LayoutRetainedRuntimeOptions | LayoutStaticRu
 
 <ApiTable>
 
-| 成员                       | 类型                              | 默认值   | 说明                                                 |
-| -------------------------- | --------------------------------- | -------- | ---------------------------------------------------- |
-| `readonly mode`            | `typeof LayoutRuntimeMode.Static` | —        | 不创建 Runtime，直接完整编译与物化                   |
-| `readonly onDiagnostic?`   | `never`                           | —        | static 不创建 Runtime，因此不产生 Runtime 结构化诊断 |
-| `readonly preparation?`    | `'sync' \| 'async'`               | `'sync'` | 客户端作者准备方式；同步 SSR 仍消费同步 lower        |
-| `readonly signal?`         | `AbortSignal`                     | —        | 异步 preparation 与 controller 的生命周期信号        |
-| `readonly updateStrategy?` | `never`                           | —        | static 不支持 Computation 更新策略                   |
+| 成员                       | 类型                              | 默认值 | 说明                                                 |
+| -------------------------- | --------------------------------- | ------ | ---------------------------------------------------- |
+| `readonly mode`            | `typeof LayoutRuntimeMode.Static` | —      | 不创建 Runtime，直接完整编译与物化                   |
+| `readonly onDiagnostic?`   | `never`                           | —      | static 不创建 Runtime，因此不产生 Runtime 结构化诊断 |
+| `readonly updateStrategy?` | `never`                           | —      | static 不支持 Computation 更新策略                   |
 
 </ApiTable>
 
@@ -256,12 +238,11 @@ export type LayoutRuntimeOptions = LayoutRetainedRuntimeOptions | LayoutStaticRu
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type LayoutStaticRuntimeOptions = LayoutPreparationOptions &
-  Readonly<{
-    mode: typeof LayoutRuntimeMode.Static;
-    updateStrategy?: never;
-    onDiagnostic?: never;
-  }>;
+export type LayoutStaticRuntimeOptions = Readonly<{
+  mode: typeof LayoutRuntimeMode.Static;
+  updateStrategy?: never;
+  onDiagnostic?: never;
+}>;
 ```
 
 </DocTab>
