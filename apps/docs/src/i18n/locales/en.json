@@ -118,6 +118,7 @@
     "pkgReconcilerCompileElements": "Execution / Element Assembly",
     "pkgReconcilerCompileComposite": "Execution / Composite Evaluation",
     "pkgReconcilerCompileArtifacts": "Execution / Output Provenance",
+    "pkgReconcilerWeaveState": "Incremental / State Model",
     "pkgInspect": "inspect",
     "pkgInspectBuiltins": "Built-in inspection",
     "pkgInspectCustom": "Custom usage",
