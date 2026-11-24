@@ -73,7 +73,7 @@ export type {
   LayerReconcilerOptions,
   NamedLayerResult,
   ProcessOptions,
-  RenderToStringOptions,
+  ToSvgStringOptions as RenderToStringOptions,
 } from './runtime';
 export {
   BuiltinLayerName,

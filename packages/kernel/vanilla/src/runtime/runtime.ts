@@ -14,8 +14,8 @@ import { SceneReconciler } from '@retikz/reconciler';
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
 import type { InputScene, SceneNormalizationResult } from '../normalize';
 import { isInputScene, normalizeScene } from '../normalize';
-import { renderToSvg } from './svg-output';
-import type { RenderToStringOptions } from './svg-output';
+import { renderToSvg } from './svg';
+import type { ToSvgStringOptions } from './svg';
 
 /** 部分浏览器只提供字宽，不提供实际字形上下边界 */
 type BrowserTextMetrics = Pick<TextMetrics, 'width'> &
@@ -122,7 +122,7 @@ export class SceneRuntime {
   }
 
   /** 导出最后一次成功提交的场景，不重新编译或发送通知 */
-  renderToSvg(options?: RenderToStringOptions) {
+  toSvgString(options?: ToSvgStringOptions) {
     return renderToSvg(this.current.compilation.result.scene, options);
   }
 

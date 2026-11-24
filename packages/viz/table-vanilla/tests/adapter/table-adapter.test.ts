@@ -101,24 +101,24 @@ describe('Table Vanilla 适配器', () => {
     const stack = new LayerStack(layers);
     try {
       const runtime = stack.get('content');
-      expect(runtime.renderToSvg()).toContain('Lin');
+      expect(runtime.toSvgString()).toContain('Lin');
       const next = layerFromInput({
         name: 'content',
         scene: scene([embedTable(spec, { data: { people: [{ name: 'Mia' }] } })]),
       });
       stack.replaceLayer(next);
       expect(stack.get('content')).toBe(runtime);
-      expect(runtime.renderToSvg()).toContain('Mia');
-      expect(runtime.renderToSvg()).not.toContain('Ada');
+      expect(runtime.toSvgString()).toContain('Mia');
+      expect(runtime.toSvgString()).not.toContain('Ada');
       // 直接替换裸 IR 时不应继承上一帧的 Table 定义或实例数据
       const unboundSvg = renderToSvg(compileToScene(next.scene).scene);
       expect(unboundSvg).not.toContain('Mia');
       runtime.replace(next.scene);
-      expect(runtime.renderToSvg()).toBe(unboundSvg);
+      expect(runtime.toSvgString()).toBe(unboundSvg);
       stack.replaceLayer(next);
-      expect(runtime.renderToSvg()).toContain('Mia');
+      expect(runtime.toSvgString()).toContain('Mia');
       stack.replaceLayer(layer({ name: 'content', scene: next.scene }));
-      expect(runtime.renderToSvg()).toBe(unboundSvg);
+      expect(runtime.toSvgString()).toBe(unboundSvg);
     } finally {
       stack.dispose();
     }

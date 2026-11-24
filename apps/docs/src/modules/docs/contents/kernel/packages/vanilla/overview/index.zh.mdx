@@ -13,7 +13,7 @@ description: 用无框架 InputScene 组织图形，并在根入口处理归一�
 
 单次编译和持续更新共用输入准备。单次编译直接返回 `CompileResult`；持续模式下，只读属性 `runtime.current` 指向最近一次成功提交的 `ReconcilerResult` 快照，订阅回调收到的也是同一个对象。用 `snapshot.compilation.result` 读取本帧编译产物，增量更新时把快照本身作为 `expected` 传回。订阅回调读取本次快照；若要据此更新同一会话，应等本轮通知结束后再提交。预编译的 Scene 直接交给 Render，不创建编译会话。
 
-已有编译好的 Scene 时，直接用 `renderToSvg(scene)` 导出 SVG。这个函数只读取场景，不会再次编译。
+已有编译好的 Scene 时，直接用 `renderToSvg(scene)` 导出 SVG。这个函数只读取场景，不会再次编译。如需单独声明尺寸或动画配置的类型，可从包导出的 `RenderToStringOptions` 取 `NonNullable<RenderToStringOptions['output']>` 或 `NonNullable<RenderToStringOptions['animation']>`。
 
 ## 一次性编译
 
@@ -40,7 +40,7 @@ import { SceneRuntime } from '@retikz/vanilla';
 const runtime = SceneRuntime.fromInput(input);
 try {
   runtime.replaceInput(nextInput);
-  const svg = runtime.renderToSvg();
+  const svg = runtime.toSvgString();
 } finally {
   runtime.dispose();
 }
@@ -183,7 +183,7 @@ Vanilla 构造函数不接收独立的 ID 字符串参数。`node({ id, position
   sources={[
     {
       label: '将已编译的 Scene 导出为 SVG',
-      path: 'packages/kernel/vanilla/src/runtime/svg-output.ts',
+      path: 'packages/kernel/vanilla/src/runtime/svg.ts',
     },
     {
       label: 'DOM 统一 mount 分派',
@@ -209,7 +209,7 @@ const stack = new LayerStack(layers, options);
 try {
   const overlay = stack.get('overlay');
   overlay.replaceInput(nextInput);
-  const svg = overlay.renderToSvg();
+  const svg = overlay.toSvgString();
   stack.setLayerOrder('overlay', 120);
 } finally {
   stack.dispose();

@@ -10,9 +10,9 @@ import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
 import type { InputScene } from '../normalize';
 import { isInputScene } from '../normalize';
 import { SceneRuntime } from '../runtime';
-import type { VanillaAnimationOptions } from '../runtime';
 import { calculateDisplaySize } from './display-size';
 import type {
+  CommonOptions,
   HydrateOptions,
   HydrationHandle,
   RetainedCanvasUpdateOptions,
@@ -82,7 +82,7 @@ type DomRetainedProcessingController<TUpdateOptions extends RetainedSvgUpdateOpt
 
 /** 将当前 retained state 收敛为 Render Runtime config */
 const createRenderConfig = (
-  animation: VanillaAnimationOptions,
+  animation: NonNullable<CommonOptions['animation']>,
   handlers: ReadonlyArray<RenderHandlerContribution>,
   canvas: InputRenderRuntimeConfig['canvas'],
 ): InputRenderRuntimeConfig => {

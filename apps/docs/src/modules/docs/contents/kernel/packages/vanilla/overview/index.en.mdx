@@ -13,7 +13,7 @@ Use `runtime.diagnostics()` to read retained session diagnostics.
 
 One-shot compilation and retained updates share input preparation. One-shot compilation returns a `CompileResult` directly. In retained mode, the read-only `runtime.current` property exposes the same committed `ReconcilerResult` snapshot that subscribers receive. Read the frame’s output from `snapshot.compilation.result` and pass the snapshot itself as `expected` for incremental updates. Read the snapshot in the subscriber. If it triggers another update, submit it after the current notification returns. A precompiled Scene goes straight to Render without creating a compilation session.
 
-To export an already compiled Scene, call `renderToSvg(scene)`. It serializes the scene without recompiling it.
+To export an already compiled Scene, call `renderToSvg(scene)`. It serializes the scene without recompiling it. To type sizing or animation options separately, use `NonNullable<RenderToStringOptions['output']>` or `NonNullable<RenderToStringOptions['animation']>` with the exported `RenderToStringOptions` type.
 
 ## One-shot compilation
 
@@ -40,7 +40,7 @@ import { SceneRuntime } from '@retikz/vanilla';
 const runtime = SceneRuntime.fromInput(input);
 try {
   runtime.replaceInput(nextInput);
-  const svg = runtime.renderToSvg();
+  const svg = runtime.toSvgString();
 } finally {
   runtime.dispose();
 }
@@ -183,7 +183,7 @@ With `runtime: { mode: 'static' }`, every `update()` of an `InputScene` or `IRSc
   sources={[
     {
       label: 'Serialize a compiled Scene as SVG',
-      path: 'packages/kernel/vanilla/src/runtime/svg-output.ts',
+      path: 'packages/kernel/vanilla/src/runtime/svg.ts',
     },
     {
       label: 'Unified DOM mount dispatch',
@@ -209,7 +209,7 @@ const stack = new LayerStack(layers, options);
 try {
   const overlay = stack.get('overlay');
   overlay.replaceInput(nextInput);
-  const svg = overlay.renderToSvg();
+  const svg = overlay.toSvgString();
   stack.setLayerOrder('overlay', 120);
 } finally {
   stack.dispose();

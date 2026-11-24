@@ -82,7 +82,7 @@ describe('预处理复合组件输入的消费', () => {
     };
     const runtime = new SceneRuntime(ir, options);
     try {
-      expect(runtime.renderToSvg()).toContain('bound-to-ir');
+      expect(runtime.toSvgString()).toContain('bound-to-ir');
       expect(compileToScene(ir, options).scene).toEqual(runtime.current.compilation.result.scene);
     } finally {
       runtime.dispose();
@@ -107,8 +107,8 @@ describe('预处理复合组件输入的消费', () => {
     expect(irScene).not.toContain('second-ready');
 
     controller.replaceInput(source('third-ready'));
-    expect(controller.renderToSvg()).toContain('third-ready');
-    expect(controller.renderToSvg()).not.toContain('second-ready');
+    expect(controller.toSvgString()).toContain('third-ready');
+    expect(controller.toSvgString()).not.toContain('second-ready');
 
     controller.dispose();
   });

@@ -32,7 +32,7 @@ export type {
   VanillaView,
   VanillaViewState,
 } from './types';
-export type { RenderToStringOptions, VanillaAnimationOptions, VanillaOutputOptions } from '../runtime';
+export type { ToSvgStringOptions as RenderToStringOptions } from '../runtime';
 export { VanillaViewMode } from './constants';
 export * from './hydrate';
 export * from './mount';

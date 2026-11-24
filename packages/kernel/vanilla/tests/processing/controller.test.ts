@@ -26,7 +26,7 @@ describe('Vanilla 处理', () => {
       };
       const listener = vi.fn();
       runtime.subscribe(listener);
-      expect(runtime.renderToSvg()).toBe(renderToSvg(expected.compilation.result.scene));
+      expect(runtime.toSvgString()).toBe(renderToSvg(expected.compilation.result.scene));
       expect(listener).not.toHaveBeenCalled();
       runtime.update(remove, expected);
       const current = runtime.current;
