@@ -16,7 +16,7 @@ describe('Layout API 公开范围', () => {
     expect(headings).not.toContain('Node');
     expect(headings).not.toContain('Scope');
 
-    for (const name of ['scene', 'InputScene', 'layer', 'InputLayer', 'IRScene', 'IRViewBox'])
+    for (const name of ['scene', 'InputScene', 'layer', 'layerFromInput', 'InputLayer', 'IRScene', 'IRViewBox'])
       expect(headings).toContain(name);
 
     for (const owner of ['react', 'vanilla', 'core']) expect(source).toContain('## `@retikz/' + owner + '`');
@@ -25,7 +25,7 @@ describe('Layout API 公开范围', () => {
     const layerInput = source.split('### InputLayer\n')[1]?.split('\n### ')[0] ?? '';
     expect(sceneInput).toContain('ReadonlyArray<InputChild>');
     expect(sceneInput).not.toContain('`layers`');
-    expect(layerInput).toContain('scene: InputScene | IRScene');
+    expect(layerInput).toContain('scene: IRScene;');
     expect(layerInput).toContain('config?: ProcessOptions');
     expect(source).toContain("IRScene['theme']");
 

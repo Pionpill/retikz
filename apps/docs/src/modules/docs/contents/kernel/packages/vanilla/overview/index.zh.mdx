@@ -17,7 +17,7 @@ description: 用无框架 InputScene 组织图形，并在根入口处理归一�
 
 ## 一次性编译
 
-将 Core IR 或 Vanilla InputScene 交给 `compileToScene` 即可取得 Scene 和 artifacts，无需创建或释放会话。编译配置放在 `options.compile`。编译 InputScene 时，可用第三个参数 `layerName` 指定嵌入组件所在的层，默认是 `main`。
+将 Core IR 或 Vanilla InputScene 交给 `compileToScene` 即可取得 Scene 和 artifacts，无需创建或释放会话。编译配置放在 `options.compile`。
 
 ```ts
 import { compileToScene } from '@retikz/vanilla';
@@ -198,15 +198,31 @@ Vanilla 构造函数不接收独立的 ID 字符串参数。`node({ id, position
 
 ## 分层与嵌入
 
-`scene(children)` 创建单图输入，不会创建图层。`layer({ name, scene })` 包装完整的作者输入或 IR；换层不会改变匿名嵌入的身份，adapter 收到的身份路径只包含场景内的节点。使用 `compileLayers(layers)` 则始终得到具名结果列表，包括空列表或只有一层的情况。background、main、overlay 的默认层序分别为 0、10、100；自定义名称默认 10。相同层序保留声明顺序，元素不能跨层引用或越层绘制。
+`scene(children)` 创建单图输入，不会创建图层。已有 Core IR 时使用 `layer({ name, scene: ir })`。作者输入使用 `layerFromInput({ name, scene: input })`，创建时归一化一次，保留嵌入定义与实例数据；换层不会改变匿名嵌入的身份，adapter 收到的身份路径只包含场景内的节点。使用 `compileLayers(layers)` 则始终得到具名结果列表，包括空列表或只有一层的情况。background、main、overlay 的默认层序分别为 0、10、100；自定义名称默认 10。相同层序保留声明顺序，元素不能跨层引用或越层绘制。
 
-各层持有自己的完整场景，包括主题与视框。`createLayerController(layers, options)` 创建层栈；单图、层栈和单层的配置都使用 `ProcessOptions`。各层继承层栈的 `compile` 和 `reconciler`，可通过 `layer.config` 覆盖；背景预设使用全量模式，层实例可显式覆盖预设。更新浮层时调用 `controller.replaceLayer`，不必重新提交背景。渲染入口仍接收单图；可单独渲染持续层栈某项的 `result.compilation.result.scene`，不会自动合成整个列表。
+各层继承层栈的 `compile` 和 `reconciler` 配置，可通过 `layer.config` 覆盖。背景层默认采用全量编译。`LayerStack` 管理图层名称、层序和会话生命周期；`stack.get(name)` 返回本层实际的 `SceneRuntime`，可直接替换内容、提交增量更新、读取诊断或导出 SVG。
+
+```ts
+import { LayerStack } from '@retikz/vanilla';
+
+const stack = new LayerStack(layers, options);
+try {
+  const overlay = stack.get('overlay');
+  overlay.replaceInput(nextInput);
+  const svg = overlay.renderToSvg();
+  stack.setLayerOrder('overlay', 120);
+} finally {
+  stack.dispose();
+}
+```
+
+`stack.current` 是按层序排列的具名结果；`stack.subscribe(listener)` 也能收到通过子会话直接提交的更新。用 `stack.replaceLayer(inputLayer)` 添加或替换完整图层声明，用 `stack.replace(layers)` 替换整栈。生效配置改变时会重建目标会话，移除或重建后应重新按名获取，不要自行销毁借用的会话。渲染入口仍只接收单图，不自动合成层栈。
 
 Tier 2 能力通过 `embed({ adapter, id, props })` 接入。Vanilla 不解析组件，也不执行 hooks；它直接调用节点绑定的 `InputEmbedAdapter`，将已类型化 props 下沉为 Core child 与 Composite dependency contribution。
 
 ```ts
 import type { InputEmbedAdapter } from '@retikz/vanilla';
-import { compileLayers, embed, layer, node, scene } from '@retikz/vanilla';
+import { compileLayers, embed, layerFromInput, node, scene } from '@retikz/vanilla';
 
 type BadgeProps = { label: string };
 
@@ -219,7 +235,7 @@ const BadgeInputEmbedAdapter: InputEmbedAdapter<BadgeProps> = {
 };
 
 const layers = [
-  layer({
+  layerFromInput({
     name: 'content',
     scene: scene([embed({ adapter: BadgeInputEmbedAdapter, id: 'sales', props: { label: 'Sales' } })]),
   }),
@@ -249,7 +265,7 @@ React 应用使用 [`@retikz/react`](/kernel/packages/react/overview) 收集 JSX
 
 | API                                  | 类型          | 说明                                                     |
 | ------------------------------------ | ------------- | -------------------------------------------------------- |
-| `scene` / `layer`                    | Input helper  | 构造 Scene 与具名 Layer                                  |
+| `scene` / `layer` / `layerFromInput` | Input helper  | 构造 Scene 与具名 Layer                                  |
 | `node` / `coordinate` / `path`       | Input helper  | 构造 Core 图元或作者侧 Path 输入                         |
 | `scope` / `embed`                    | Input helper  | 构造作用域与 Tier 2 embed 输入                           |
 | `BuiltinLayerName`                   | const object  | 内置图层名称                                             |

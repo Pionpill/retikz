@@ -403,6 +403,7 @@ export const referenceGroups: Readonly<Partial<Record<string, ReadonlyArray<Refe
         'LayoutRuntimeMode',
         'scene',
         'layer',
+        'layerFromInput',
       ],
       schemas: [],
     },

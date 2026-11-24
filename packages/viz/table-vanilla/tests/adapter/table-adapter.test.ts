@@ -3,7 +3,7 @@ import type { IRDetailTable } from '@retikz/table';
 import { createManualTableIR, TableSchema } from '@retikz/table';
 import { compileLayers } from '@retikz/vanilla';
 import type { InputEmbedContext } from '@retikz/vanilla';
-import { compileToScene, layer, normalizeScene, renderToSvg, scene } from '@retikz/vanilla';
+import { compileToScene, layer, layerFromInput, LayerStack, normalizeScene, renderToSvg, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 import { literal, string } from 'zod';
 
@@ -91,18 +91,39 @@ describe('Table Vanilla 适配器', () => {
       embedTable(spec, { data: { people: [{ name: 'Ada' }] } }),
       embedTable({ ...spec, data: { reference: 'others' } }, { data: { others: [{ name: 'Lin' }] } }),
     ]);
-    const layers = [layer({ name: 'content', scene: layerScene })];
+    const layers = [layerFromInput({ name: 'content', scene: layerScene })];
     const [compiled] = compileLayers(layers);
     const svg = renderToSvg(compiled.result.scene);
 
     expect(svg).toContain('Ada');
     expect(svg).toContain('Lin');
 
-    const normalized = normalizeScene(layerScene);
-
-    expect(normalized.ir.children).toHaveLength(2);
-
-    for (const child of normalized.ir.children) expect(child).not.toHaveProperty('id');
+    const stack = new LayerStack(layers);
+    try {
+      const runtime = stack.get('content');
+      expect(runtime.renderToSvg()).toContain('Lin');
+      const next = layerFromInput({
+        name: 'content',
+        scene: scene([embedTable(spec, { data: { people: [{ name: 'Mia' }] } })]),
+      });
+      stack.replaceLayer(next);
+      expect(stack.get('content')).toBe(runtime);
+      expect(runtime.renderToSvg()).toContain('Mia');
+      expect(runtime.renderToSvg()).not.toContain('Ada');
+      // 直接替换裸 IR 时不应继承上一帧的 Table 定义或实例数据
+      const unboundSvg = renderToSvg(compileToScene(next.scene).scene);
+      expect(unboundSvg).not.toContain('Mia');
+      runtime.replace(next.scene);
+      expect(runtime.renderToSvg()).toBe(unboundSvg);
+      stack.replaceLayer(next);
+      expect(runtime.renderToSvg()).toContain('Mia');
+      stack.replaceLayer(layer({ name: 'content', scene: next.scene }));
+      expect(runtime.renderToSvg()).toBe(unboundSvg);
+    } finally {
+      stack.dispose();
+    }
+    expect(layers[0].scene.children).toHaveLength(2);
+    for (const child of layers[0].scene.children) expect(child).not.toHaveProperty('id');
   });
 
   it('通过共享适配器贡献传递额外的复合组件', () => {

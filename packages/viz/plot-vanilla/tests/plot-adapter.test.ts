@@ -1,6 +1,6 @@
 import { compileLayers } from '@retikz/vanilla';
 import type { InputEmbedContext } from '@retikz/vanilla';
-import { compileToScene, layer, normalizeScene, renderToSvg, scene } from '@retikz/vanilla';
+import { compileToScene, layerFromInput, normalizeScene, renderToSvg, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
 import { embedPlot, plot, plotInputEmbedAdapter, plotIROf } from '../src';
@@ -116,7 +116,7 @@ describe('Plot Vanilla Tier2 适配器', () => {
     const spec = salesSpec('sales');
     const input = structuredClone(spec);
     const layerScene = scene([embedPlot({ spec }, datasets, { layout: { width: 360, height: 200 } })]);
-    const layers = [layer({ name: 'chart', scene: layerScene })];
+    const layers = [layerFromInput({ name: 'chart', scene: layerScene })];
     const [compiled] = compileLayers(layers);
     const svg = renderToSvg(compiled.result.scene, {
       output: { width: 360, height: 200 },

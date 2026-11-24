@@ -23,7 +23,10 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   '归一化时保留的作者元数据，不进入 Core IR': 'Authoring metadata retained during normalization; excluded from Core IR',
   '单图作者输入，归一化时转换为 Core IR': 'Single-scene authoring input normalized into Core IR',
   '构造单图作者输入，不编译或复制子图元': 'Build a single scene input without compiling or copying its children',
-  当前层的完整场景: 'The complete scene owned by this layer',
+  '当前层的完整 Core IR': 'Complete Core IR for this layer',
+  '仅随当前场景参与编译的嵌入绑定，不属于图层默认配置': 'Embed bindings for this scene only; not layer defaults',
+  '创建图层时将作者输入一次转换为 IR，并保留其嵌入绑定':
+    'Normalize authored input once when creating a layer and retain its embed bindings',
   覆盖层栈的执行配置: 'Execution options overriding the layer stack defaults',
   创建作者侧分层输入: 'Create layer authoring input',
   '分层名称、排序、计算配置与场景': 'Layer name, stacking order, processing options, and scene',

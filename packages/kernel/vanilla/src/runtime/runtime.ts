@@ -63,25 +63,30 @@ type SceneRuntimeOptions = ProcessOptions & {
   readonly createTarget?: () => ReconcilerCommitTarget;
 };
 
+/** 只属于当前 IR 的嵌入定义来源及实例数据 */
+export type SceneInputBindings = Pick<SceneNormalizationResult, 'contributions' | 'runtimeInputs'>;
+
 /** 将作者贡献和实例输入绑定到本次归一化的 IR，不改变会话默认配置 */
-const bindInputCompileOptions = (
-  normalized: SceneNormalizationResult,
-  compileOptions: CompileOptions,
+export const bindInputCompileOptions = (
+  ir: IRScene,
+  bindings: SceneInputBindings | undefined,
+  compileOptions: CompileOptions = {},
 ): CompileOptions => {
+  if (!bindings) return compileOptions;
   const definitions = resolveCoreProviderDependencies({
-    contributions: normalized.contributions,
+    contributions: bindings.contributions,
     definitions: compileOptions,
   });
   const options = { ...compileOptions, ...definitions };
-  if (normalized.runtimeInputs !== undefined) {
-    options.compositeInputs = createCompositeInputBindings(normalized.ir, normalized.runtimeInputs);
+  if (bindings.runtimeInputs !== undefined) {
+    options.compositeInputs = createCompositeInputBindings(ir, bindings.runtimeInputs);
   }
   return options;
 };
 
 /** 单场景会话：将输入交给协调器，并在渲染目标提交成功后发布结果 */
 export class SceneRuntime {
-  private baseCompile: CompileOptions;
+  private readonly baseCompile: CompileOptions;
   private readonly listeners = new Set<(result: ReconcilerResult) => void>();
   private readonly failures: Array<unknown> = [];
   private readonly reconciler: SceneReconciler;
@@ -95,7 +100,7 @@ export class SceneRuntime {
   }
 
   /** 从已类型化的 Core IR 建立会话并提交首帧 */
-  constructor(ir: IRScene, options: SceneRuntimeOptions = {}) {
+  constructor(ir: IRScene, options: SceneRuntimeOptions & { bindings?: SceneInputBindings } = {}) {
     this.baseCompile = options.compile ?? {};
     this.reconciler = new SceneReconciler(undefined, {
       ...options.reconciler,
@@ -103,7 +108,7 @@ export class SceneRuntime {
       target: this.createCommitTarget(options.createTarget),
     });
     try {
-      this.compileIR(ir, this.baseCompile);
+      this.compileIR(ir, bindInputCompileOptions(ir, options.bindings, this.baseCompile));
     } catch (cause) {
       this.reconciler.dispose();
       throw cause;
@@ -113,14 +118,7 @@ export class SceneRuntime {
   /** 从单图作者声明及其嵌入贡献建立会话 */
   static fromInput(input: InputScene, options: SceneRuntimeOptions = {}) {
     const normalized = normalizeScene(input);
-    const baseCompile = options.compile ?? {};
-    const runtime = new SceneRuntime(normalized.ir, {
-      ...options,
-      compile: bindInputCompileOptions(normalized, baseCompile),
-    });
-    // 上一帧贡献不属于后续替换的默认配置
-    runtime.baseCompile = baseCompile;
-    return runtime;
+    return new SceneRuntime(normalized.ir, { ...options, bindings: normalized });
   }
 
   /** 导出最后一次成功提交的场景，不重新编译或发送通知 */
@@ -146,7 +144,7 @@ export class SceneRuntime {
     let normalized: SceneNormalizationResult;
     try {
       normalized = normalizeScene(input);
-      compile = bindInputCompileOptions(normalized, compile);
+      compile = bindInputCompileOptions(normalized.ir, normalized, compile);
     } catch (cause) {
       this.failures.push(cause);
       throw cause;

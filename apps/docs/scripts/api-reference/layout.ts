@@ -65,7 +65,7 @@ export const layoutApiReferenceConfigs: ReadonlyArray<ApiReferencePackageConfig>
       {
         source: path.resolve(repositoryRoot, 'packages/kernel/vanilla/src/index.ts'),
         title: { zh: '`@retikz/vanilla`', en: '`@retikz/vanilla`' },
-        symbols: ['scene', 'InputScene', 'layer', 'InputLayer'],
+        symbols: ['scene', 'InputScene', 'layer', 'layerFromInput', 'InputLayer'],
       },
     ],
     translate: translateLayoutApiReference,

@@ -70,7 +70,6 @@ export type { CommonOptions } from './dom';
 export type {
   InputLayer,
   LayerName,
-  LayerProcessingController,
   LayerReconcilerOptions,
   NamedLayerResult,
   ProcessOptions,
@@ -80,8 +79,9 @@ export {
   BuiltinLayerName,
   compileLayers,
   compileToScene,
-  createLayerController,
   layer,
+  layerFromInput,
+  LayerStack,
   renderToSvg,
   SceneRuntime,
 } from './runtime';

@@ -8,7 +8,7 @@ import {
   coordinate,
   embed,
   compileLayers,
-  layer,
+  layerFromInput,
   node,
   normalizePath,
   normalizeScene,
@@ -344,8 +344,8 @@ describe('@retikz/vanilla InputScene', () => {
 
   it('显式层序优先，同层序保持声明顺序', () => {
     const normalized = compileLayers([
-      layer({ name: 'overlay', zIndex: 0, scene: scene([]) }),
-      layer({ name: 'background', scene: scene([]) }),
+      layerFromInput({ name: 'overlay', zIndex: 0, scene: scene([]) }),
+      layerFromInput({ name: 'background', scene: scene([]) }),
     ]);
     expect(normalized.map(({ name }) => name)).toEqual(['overlay', 'background']);
   });

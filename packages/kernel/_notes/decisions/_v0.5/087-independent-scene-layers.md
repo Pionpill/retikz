@@ -36,16 +36,21 @@ type InputLayer = {
   name: LayerName;
   zIndex?: number;
   config?: ProcessOptions;
-  scene: InputScene | IRScene;
+  scene: IRScene;
+  bindings?: Pick<SceneNormalizationResult, 'contributions' | 'runtimeInputs'>;
 };
 ```
 
-公共执行配置传给层栈入口；单层用 config 覆盖。视框、主题、动画与作者信息属于各自场景；多个场景需要同一视框时可共享调用方的配置。把已有 IR 放进图层不会再次执行作者归一化，也不会覆盖它的根字段。
+公共执行配置传给层栈入口；单层用 config 覆盖。视框、主题、动画与作者信息属于各自场景；多个场景需要同一视框时可共享调用方的配置。图层只持有 IR。作者输入在创建图层时归一化一次；收集到的贡献与实例输入仅用于该场景，不进入会话默认配置。已有 IR 直接包装，不覆盖根字段。
 
 ```ts
-const layers = [layer({ name: 'background', scene: backgroundIR }), layer({ name: 'main', scene: scene(children) })];
+const layers = [
+  layer({ name: 'background', scene: backgroundIR }),
+  layerFromInput({ name: 'main', scene: scene(children) }),
+];
 const results = compileLayers(layers, options); // 一次性编译
-const stack = createLayerController(layers, options); // 持续更新
+const stack = new LayerStack(layers, options); // 持续更新
+const main = stack.get('main'); // 借用本层 SceneRuntime
 ```
 
 ### 输出形态
@@ -73,7 +78,7 @@ const stack = createLayerController(layers, options); // 持续更新
 
 例如，公共 `compile.precision: 3` 与 `reconciler.mode: ReconcilerMode.Incremental` 对所有层生效，但背景预设只覆盖后者；背景实例显式指定 `mode: ReconcilerMode.Incremental` 即可恢复增量模式，精度仍为 3。先确定有效模式，再选适用字段：全量模式不继承 `updateStrategy`；在同一声明中显式组合 `mode: ReconcilerMode.Full` 与 `updateStrategy` 不合法。增量会话的 `updateStrategy: 'full'` 是强制重算策略，不等于非增量会话。
 
-每层独立持有 Reconciler 会话。全量模式只在本层需要编译时完整计算，不保留 Weave 树；增量模式才维护本层 Weave 树，并接受该会话的权威批次。完整替换和批次更新保持既有区别，不从完整输入猜测局部差异。模式随会话固定；有效模式改变时只重建目标层的会话，旧结果或批次地址不能用于新会话。省略模式时沿用 Reconciler 默认的全量模式，除非被配置或预设覆盖。
+层栈按名称拥有独立的 SceneRuntime；单图读取、替换、增量更新、诊断与导出直接使用该实例。层栈发布按层序排列的具名快照，包含通过子会话直接提交的结果；移除、整栈替换或生效配置改变时，由层栈释放不再使用的实例。每层独立持有 Reconciler 会话。全量模式只在本层需要编译时完整计算，不保留 Weave 树；增量模式才维护本层 Weave 树，并接受该会话的权威批次。完整替换和批次更新保持既有区别，不从完整输入猜测局部差异。模式随会话固定；有效模式改变时只重建目标层的会话，旧结果或批次地址不能用于新会话。省略模式时沿用 Reconciler 默认的全量模式，除非被配置或预设覆盖。
 
 ### 隔离与合成
 

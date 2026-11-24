@@ -17,7 +17,7 @@ To export an already compiled Scene, call `renderToSvg(scene)`. It serializes th
 
 ## One-shot compilation
 
-Pass Core IR or a Vanilla InputScene to `compileToScene` to obtain a Scene and artifacts without creating or disposing a session. Pass compile options in `options.compile`. When compiling an InputScene, the optional third argument, `layerName`, sets the layer seen by embedded components. It defaults to `main`.
+Pass Core IR or a Vanilla InputScene to `compileToScene` to obtain a Scene and artifacts without creating or disposing a session. Pass compile options in `options.compile`.
 
 ```ts
 import { compileToScene } from '@retikz/vanilla';
@@ -198,15 +198,31 @@ With `runtime: { mode: 'static' }`, every `update()` of an `InputScene` or `IRSc
 
 ## Layers and embeds
 
-`scene(children)` creates a single-scene input, not a layer. `layer({ name, scene })` wraps a complete authored scene or IR. Moving it to another layer does not change anonymous embed IDs; adapters receive identity paths within the scene only. `compileLayers(layers)` always returns an ordered list of named results, even for zero or one layer. The default stacking values for background, main, and overlay are 0, 10, and 100; custom names default to 10. Ties keep declaration order. References and element stacking stay within a layer.
+`scene(children)` creates a single-scene input, not a layer. Use `layer({ name, scene: ir })` for Core IR. For authored input, `layerFromInput({ name, scene: input })` normalizes it once at creation and retains its embed definitions and instance data. Moving it to another layer does not change anonymous embed IDs; adapters receive identity paths within the scene only. `compileLayers(layers)` always returns an ordered list of named results, even for zero or one layer. The default stacking values for background, main, and overlay are 0, 10, and 100; custom names default to 10. Ties keep declaration order. References and element stacking stay within a layer.
 
-Each layer owns its scene, including its theme and viewBox. Create a stack with `createLayerController(layers, options)`. Single scenes, layer stacks, and individual layers use the same `ProcessOptions` type. Layers inherit `compile` and `reconciler` from the stack; use `layer.config` to override them. The background preset selects full compilation; settings on the instance override that preset. Use `controller.replaceLayer` to update an overlay without resubmitting the background. Rendering still accepts one graph: pass an retained entry’s `result.compilation.result.scene` to render it individually. The renderer does not composite the list.
+Layers inherit the stack’s `compile` and `reconciler` options and can override them with `layer.config`. Background layers default to full compilation. A `LayerStack` owns layer names, stacking order, and session lifetimes. `stack.get(name)` returns the actual `SceneRuntime`: use it directly to replace content, submit a batch, read diagnostics, or export SVG.
+
+```ts
+import { LayerStack } from '@retikz/vanilla';
+
+const stack = new LayerStack(layers, options);
+try {
+  const overlay = stack.get('overlay');
+  overlay.replaceInput(nextInput);
+  const svg = overlay.renderToSvg();
+  stack.setLayerOrder('overlay', 120);
+} finally {
+  stack.dispose();
+}
+```
+
+`stack.current` lists named results in stacking order. `stack.subscribe(listener)` also observes updates committed directly through a child session. Use `stack.replaceLayer(inputLayer)` to add or replace a complete layer declaration and `stack.replace(layers)` to replace the entire stack. A change in effective options rebuilds the affected session. Look it up again after rebuilding or removing and re-adding a layer; do not dispose borrowed sessions yourself. Rendering still takes one scene, not a composited layer stack.
 
 Tier 2 capabilities enter through `embed({ adapter, id, props })`. Vanilla does not parse components or run hooks. It calls the adapter bound to that node, lowering typed props into a Core child and Composite dependency contribution.
 
 ```ts
 import type { InputEmbedAdapter } from '@retikz/vanilla';
-import { compileLayers, embed, layer, node, scene } from '@retikz/vanilla';
+import { compileLayers, embed, layerFromInput, node, scene } from '@retikz/vanilla';
 
 type BadgeProps = { label: string };
 
@@ -219,7 +235,7 @@ const BadgeInputEmbedAdapter: InputEmbedAdapter<BadgeProps> = {
 };
 
 const layers = [
-  layer({
+  layerFromInput({
     name: 'content',
     scene: scene([embed({ adapter: BadgeInputEmbedAdapter, id: 'sales', props: { label: 'Sales' } })]),
   }),
@@ -249,7 +265,7 @@ React applications use [`@retikz/react`](/kernel/packages/react/overview) to col
 
 | API                                  | Kind          | Description                                                                   |
 | ------------------------------------ | ------------- | ----------------------------------------------------------------------------- |
-| `scene` / `layer`                    | Input helper  | Build a Scene input and named Layer                                           |
+| `scene` / `layer` / `layerFromInput` | Input helper  | Build a Scene input and named Layer                                           |
 | `node` / `coordinate` / `path`       | Input helper  | Build Core primitives or authoring Path input                                 |
 | `scope` / `embed`                    | Input helper  | Build Scope and Tier 2 embed input                                            |
 | `BuiltinLayerName`                   | const object  | Built-in layer names                                                          |

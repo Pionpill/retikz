@@ -1,14 +1,14 @@
 import type { IRScene } from '@retikz/core';
 import type { OpenString, ValueOf } from '@retikz/foundation';
-import { mergeDefinedProperties } from '@retikz/foundation';
+import { compareProperties, mergeDefinedProperties } from '@retikz/foundation';
 import { ReconcilerMode } from '@retikz/reconciler';
-import type { CompileResult, ReconcilerResult, WeaveBatch } from '@retikz/reconciler';
+import type { CompileResult, ReconcilerResult } from '@retikz/reconciler';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
-import { isInputScene } from '../normalize';
+import { normalizeScene } from '../normalize';
 import type { InputScene } from '../normalize';
-import { compileToScene, SceneRuntime } from './runtime';
-import type { ProcessOptions } from './runtime';
+import { bindInputCompileOptions, compileToScene, SceneRuntime } from './runtime';
+import type { ProcessOptions, SceneInputBindings } from './runtime';
 
 /** 内置作者图层名称 */
 export const BuiltinLayerName = { Background: 'background', Main: 'main', Overlay: 'overlay' } as const;
@@ -29,8 +29,10 @@ export type InputLayer = {
    * @default background: 0; overlay: 100; otherwise: 10
    */
   zIndex?: number;
-  /** 当前层的完整场景 */
-  scene: InputScene | IRScene;
+  /** 当前层的完整 Core IR */
+  scene: IRScene;
+  /** 仅随当前场景参与编译的嵌入绑定，不属于图层默认配置 */
+  bindings?: SceneInputBindings;
   /** 覆盖层栈的执行配置 */
   config?: ProcessOptions;
 };
@@ -42,6 +44,14 @@ export type InputLayer = {
  */
 export const layer = (config: Omit<InputLayer, 'type'>): InputLayer => ({ type: 'layer', ...config });
 
+/** 创建图层时将作者输入一次转换为 IR，并保留其嵌入绑定 */
+export const layerFromInput = (
+  config: Omit<InputLayer, 'type' | 'scene' | 'bindings'> & { scene: InputScene },
+): InputLayer => {
+  const { ir, contributions, runtimeInputs } = normalizeScene(config.scene);
+  return layer({ ...config, scene: ir, bindings: { contributions, runtimeInputs } });
+};
+
 export type LayerReconcilerOptions = NonNullable<ProcessOptions['reconciler']>;
 
 /** 读取显式层级或内置图层的默认层级 */
@@ -49,31 +59,15 @@ const layerZIndex = (inputLayer: InputLayer): number =>
   inputLayer.zIndex ??
   (inputLayer.name === BuiltinLayerName.Background ? 0 : inputLayer.name === BuiltinLayerName.Overlay ? 100 : 10);
 
-/** 显式图层检查重名后按层级稳定排序 */
-const orderLayers = (layers: ReadonlyArray<InputLayer>): Array<InputLayer> => {
+/** 同一层栈内的名称必须唯一 */
+const assertUniqueLayerNames = (layers: ReadonlyArray<InputLayer>) => {
   const names = new Set<string>();
   for (const { name } of layers) {
     if (names.has(name))
       throw new RetikzVanillaError(RetikzVanillaErrorCode.Normalize, 'Duplicate layer name: ' + name);
     names.add(name);
   }
-  return [...layers].sort((left, right) => layerZIndex(left) - layerZIndex(right));
 };
-
-/** 显式层栈的计算控制器；批次依赖本层此前交付的结果 */
-export type LayerProcessingController = Readonly<{
-  read: () => ReadonlyArray<NamedLayerResult<ReconcilerResult>>;
-  update: (source: ReadonlyArray<InputLayer>) => void;
-  replaceLayer: (inputLayer: InputLayer) => void;
-  /** 从本层已提交结果取得批次地址；不能跨会话或版本使用 */
-  getScopeId: (name: LayerName, path: ReadonlyArray<number>, expected: ReconcilerResult) => string;
-  updateLayer: (name: LayerName, batch: WeaveBatch, expected: ReconcilerResult) => void;
-  setLayerOrder: (name: LayerName, zIndex: number) => void;
-  removeLayer: (name: LayerName) => void;
-  subscribe: (listener: (result: ReadonlyArray<NamedLayerResult<ReconcilerResult>>) => void) => () => void;
-  diagnostics: () => ReadonlyArray<unknown>;
-  dispose: () => void;
-}>;
 
 /** 按调用方配置、背景层默认值、显式图层配置的优先顺序合并，仅增量模式保留更新策略 */
 const mergeLayerOptions = (
@@ -100,173 +94,199 @@ export const compileLayers = (
   layers: ReadonlyArray<InputLayer>,
   options: ProcessOptions = {},
 ): ReadonlyArray<NamedLayerResult<CompileResult>> => {
+  assertUniqueLayerNames(layers);
   return Object.freeze(
-    orderLayers(layers).map(inputLayer => {
-      const effective = mergeLayerOptions(options, inputLayer);
-      const result = compileToScene(inputLayer.scene, effective);
-      return Object.freeze({ name: inputLayer.name, zIndex: layerZIndex(inputLayer), result });
-    }),
+    [...layers]
+      .sort((left, right) => layerZIndex(left) - layerZIndex(right))
+      .map(inputLayer => {
+        const effective = mergeLayerOptions(options, inputLayer);
+        const result = compileToScene(inputLayer.scene, {
+          ...effective,
+          compile: bindInputCompileOptions(inputLayer.scene, inputLayer.bindings, effective.compile),
+        });
+        return Object.freeze({ name: inputLayer.name, zIndex: layerZIndex(inputLayer), result });
+      }),
   );
 };
 
-/** 每层只持有自己的会话及最后一次成功发布的结果 */
-type LayerSession = {
-  controller: SceneRuntime;
-  execution: ProcessOptions['reconciler'];
-  entry: NamedLayerResult<ReconcilerResult>;
+type LayerSnapshot = NamedLayerResult<ReconcilerResult>;
+
+/** 层栈拥有会话与生效的默认配置；未变图层复用上次发布的具名结果 */
+type LayerEntry = {
+  runtime: SceneRuntime;
+  options: ProcessOptions;
+  snapshot: LayerSnapshot;
 };
 
-/** 按名称定位会话，更新目标层时不遍历兄弟层的输入 */
-export const createLayerController = (source: ReadonlyArray<InputLayer>, options: ProcessOptions = {}) => {
-  let disposed = false;
-  const listeners = new Set<(result: ReadonlyArray<NamedLayerResult<ReconcilerResult>>) => void>();
-  const diagnostics: Array<unknown> = [];
+/** 独立场景的具名层栈；单图操作直接通过 get 取得的 runtime 执行 */
+export class LayerStack {
+  private entries = new Map<LayerName, LayerEntry>();
+  private snapshot: ReadonlyArray<LayerSnapshot> = Object.freeze([]);
+  private readonly listeners = new Set<(layers: ReadonlyArray<LayerSnapshot>) => void>();
+  private readonly failures: Array<unknown> = [];
+  private disposed = false;
+  private editing = false;
 
-  const assertActive = () => {
-    if (disposed) throw new RetikzVanillaError(RetikzVanillaErrorCode.Processing, 'Layer controller is disposed');
-  };
+  /** 按层序发布的最近一组结果 */
+  get current(): ReadonlyArray<LayerSnapshot> {
+    return this.snapshot;
+  }
 
-  const mount = (inputLayer: InputLayer): LayerSession => {
-    const effective = mergeLayerOptions(options, inputLayer);
-    const controller = isInputScene(inputLayer.scene)
-      ? SceneRuntime.fromInput(inputLayer.scene, effective)
-      : new SceneRuntime(inputLayer.scene, effective);
-    try {
-      // 首帧编译可触发用户回调；层栈销毁后不能接收新会话
-      assertActive();
-      return {
-        controller,
-        execution: effective.reconciler,
-        entry: Object.freeze({ name: inputLayer.name, zIndex: layerZIndex(inputLayer), result: controller.current }),
-      };
-    } catch (cause) {
-      controller.dispose();
-      throw cause;
-    }
-  };
-  const release = (layers: Map<string, LayerSession>) => {
-    for (const { controller } of layers.values()) controller.dispose();
-  };
-  const mountStack = (nextLayers: ReadonlyArray<InputLayer>) => {
-    const ordered = orderLayers(nextLayers);
-    const layers = new Map<string, LayerSession>();
-    try {
-      for (const inputLayer of ordered) layers.set(inputLayer.name, mount(inputLayer));
-      assertActive();
-      return layers;
-    } catch (cause) {
-      release(layers);
-      throw cause;
-    }
-  };
-  let sessions = mountStack(source);
-  const snapshot = () =>
-    Object.freeze(Array.from(sessions.values(), session => session.entry).sort((a, b) => a.zIndex - b.zIndex));
-  let current = snapshot();
-  const publish = () => {
-    current = snapshot();
-    for (const listener of listeners) {
+  constructor(
+    layers: ReadonlyArray<InputLayer>,
+    private readonly options: ProcessOptions = {},
+  ) {
+    this.replace(layers);
+  }
+
+  /** 借用指定层的会话；释放由层栈负责，未知名称抛错 */
+  get(name: LayerName): SceneRuntime {
+    return this.getEntry(name).runtime;
+  }
+
+  /** 先建立整组候选会话，全部成功才替换原层栈 */
+  replace(layers: ReadonlyArray<InputLayer>) {
+    this.edit(() => {
+      assertUniqueLayerNames(layers);
+      const next = new Map<LayerName, LayerEntry>();
       try {
-        listener(current);
+        for (const input of layers) next.set(input.name, this.mount(input, mergeLayerOptions(this.options, input)));
+        this.release(this.entries);
+        this.assertActive();
       } catch (cause) {
-        diagnostics.push(cause);
+        this.release(next);
+        throw cause;
       }
+      this.entries = next;
+    });
+  }
+
+  /** 新增或替换完整的图层声明；仅当会话默认配置不变时复用实例 */
+  replaceLayer(input: InputLayer) {
+    this.edit(() => {
+      const previous = this.entries.get(input.name);
+      const options = mergeLayerOptions(this.options, input);
+      if (previous && compareProperties(previous.options, options, { depth: 2 })) {
+        previous.runtime.replace(input.scene, bindInputCompileOptions(input.scene, input.bindings, options.compile));
+        const zIndex = layerZIndex(input);
+        if (previous.snapshot.zIndex !== zIndex) previous.snapshot = Object.freeze({ ...previous.snapshot, zIndex });
+      } else {
+        const next = this.mount(input, options);
+        try {
+          previous?.runtime.dispose();
+          this.assertActive();
+        } catch (cause) {
+          next.runtime.dispose();
+          throw cause;
+        }
+        this.entries.set(input.name, next);
+      }
+    });
+  }
+
+  /** 调整单层顺序，不重新编译场景 */
+  setLayerOrder(name: LayerName, zIndex: number) {
+    this.edit(() => {
+      const entry = this.getEntry(name);
+      if (entry.snapshot.zIndex !== zIndex) entry.snapshot = Object.freeze({ ...entry.snapshot, zIndex });
+    });
+  }
+
+  /** 移除并释放指定层 */
+  removeLayer(name: LayerName) {
+    this.edit(() => {
+      this.getEntry(name).runtime.dispose();
+      this.entries.delete(name);
+    });
+  }
+
+  /** 订阅整栈结构变化及任一子场景的成功提交 */
+  subscribe(listener: (layers: ReadonlyArray<LayerSnapshot>) => void) {
+    this.assertActive();
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
+  }
+
+  /** 读取并清空层栈订阅者的异常；单图诊断由对应 runtime 提供 */
+  diagnostics(): ReadonlyArray<unknown> {
+    return this.failures.splice(0);
+  }
+
+  /** 释放层栈拥有的全部会话；保留最后发布的快照 */
+  dispose() {
+    if (this.disposed) return;
+    this.disposed = true;
+    try {
+      this.release(this.entries);
+    } catch (cause) {
+      this.disposed = false;
+      if (!this.editing) this.publish();
+      throw cause;
     }
-  };
-  let writing = false;
-  const write = (action: () => void) => {
-    assertActive();
-    if (writing) throw new RetikzVanillaError(RetikzVanillaErrorCode.Processing, 'Cannot reenter a layer update');
-    writing = true;
+    this.listeners.clear();
+  }
+
+  private release(entries: Map<LayerName, LayerEntry>) {
+    for (const [name, entry] of entries) {
+      entry.runtime.dispose();
+      entries.delete(name);
+    }
+  }
+
+  private getEntry(name: LayerName): LayerEntry {
+    this.assertActive();
+    const entry = this.entries.get(name);
+    if (!entry) throw new RetikzVanillaError(RetikzVanillaErrorCode.Processing, 'Unknown layer: ' + name);
+    return entry;
+  }
+
+  private mount(input: InputLayer, options: ProcessOptions): LayerEntry {
+    const runtime = new SceneRuntime(input.scene, { ...options, bindings: input.bindings });
+    try {
+      this.assertActive();
+      const entry = {
+        runtime,
+        options,
+        snapshot: Object.freeze({ name: input.name, zIndex: layerZIndex(input), result: runtime.current }),
+      };
+      runtime.subscribe(result => {
+        entry.snapshot = Object.freeze({ ...entry.snapshot, result });
+        if (!this.editing && !this.disposed) this.publish();
+      });
+      return entry;
+    } catch (cause) {
+      runtime.dispose();
+      throw cause;
+    }
+  }
+
+  /** 声明替换可能同时改变子图结果和层序，只发布最终快照 */
+  private edit(action: () => void) {
+    this.assertActive();
+    if (this.editing) throw new RetikzVanillaError(RetikzVanillaErrorCode.Processing, 'Cannot reenter a layer update');
+    this.editing = true;
     try {
       action();
     } finally {
-      writing = false;
+      this.editing = false;
+      if (!this.disposed) this.publish();
     }
-  };
-  const get = (name: string) => {
-    assertActive();
-    const session = sessions.get(name);
-    if (!session) throw new RetikzVanillaError(RetikzVanillaErrorCode.Processing, 'Unknown layer: ' + name);
-    return session;
-  };
-  const update = (next: ReadonlyArray<InputLayer>) =>
-    write(() => {
-      const replacement = mountStack(next);
-      const previous = sessions;
-      sessions = replacement;
-      release(previous);
-      publish();
-    });
-  const replaceLayer = (inputLayer: InputLayer) =>
-    write(() => {
-      const effective = mergeLayerOptions(options, inputLayer);
-      const previous = sessions.get(inputLayer.name);
-      const execution = previous?.execution;
-      if (
-        previous &&
-        execution?.mode === effective.reconciler.mode &&
-        execution?.updateStrategy === effective.reconciler.updateStrategy &&
-        execution?.trace === effective.reconciler.trace &&
-        execution?.captureProvenance === effective.reconciler.captureProvenance
-      ) {
-        if (isInputScene(inputLayer.scene)) previous.controller.replaceInput(inputLayer.scene, effective.compile);
-        else previous.controller.replace(inputLayer.scene, effective.compile);
-        previous.entry = Object.freeze({
-          name: inputLayer.name,
-          zIndex: layerZIndex(inputLayer),
-          result: previous.controller.current,
-        });
-      } else {
-        const replacement = mount(inputLayer);
-        sessions.set(inputLayer.name, replacement);
-        previous?.controller.dispose();
+  }
+
+  private publish() {
+    const next = Array.from(this.entries.values(), entry => entry.snapshot).sort((a, b) => a.zIndex - b.zIndex);
+    if (next.length === this.snapshot.length && next.every((entry, index) => entry === this.snapshot[index])) return;
+    this.snapshot = Object.freeze(next);
+    for (const listener of this.listeners) {
+      try {
+        listener(this.snapshot);
+      } catch (cause) {
+        this.failures.push(cause);
       }
-      publish();
-    });
-  return {
-    read: () => current,
-    update,
-    replaceLayer,
-    getScopeId: (name, path, expected) => get(name).controller.getScopeId(path, expected),
-    updateLayer: (name, batch, expected) =>
-      write(() => {
-        const session = get(name);
-        session.controller.update(batch, expected);
-        const result = session.controller.current;
-        if (result === session.entry.result) return;
-        session.entry = Object.freeze({ ...session.entry, result });
-        publish();
-      }),
-    setLayerOrder: (name, zIndex) =>
-      write(() => {
-        const session = get(name);
-        if (session.entry.zIndex === zIndex) return;
-        session.entry = Object.freeze({ ...session.entry, zIndex });
-        publish();
-      }),
-    removeLayer: name =>
-      write(() => {
-        const session = get(name);
-        sessions.delete(name);
-        session.controller.dispose();
-        publish();
-      }),
-    subscribe: listener => {
-      assertActive();
-      listeners.add(listener);
-      return () => listeners.delete(listener);
-    },
-    diagnostics: () => {
-      for (const session of sessions.values()) diagnostics.push(...session.controller.diagnostics());
-      return diagnostics.splice(0);
-    },
-    dispose: () => {
-      if (disposed) return;
-      disposed = true;
-      listeners.clear();
-      release(sessions);
-      sessions.clear();
-    },
-  } satisfies LayerProcessingController;
-};
+    }
+  }
+
+  private assertActive() {
+    if (this.disposed) throw new RetikzVanillaError(RetikzVanillaErrorCode.Processing, 'Layer stack is disposed');
+  }
+}

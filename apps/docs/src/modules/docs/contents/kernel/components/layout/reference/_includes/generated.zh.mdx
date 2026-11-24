@@ -13,7 +13,7 @@
 
 ## 组件声明
 
-#### <ApiSourceLink label={"Layout"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={358}>Layout</ApiSourceLink> / <ApiSourceLink label={"LayoutProps"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={179}>LayoutProps</ApiSourceLink>
+#### <ApiSourceLink label={"Layout"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={346}>Layout</ApiSourceLink> / <ApiSourceLink label={"LayoutProps"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={173}>LayoutProps</ApiSourceLink>
 
 通过 children 声明图形，或通过 ir 传入完整场景；同时提供时使用 ir。默认使用 retained 模式处理后续更新，可通过 runtime 切换为 static 完整编译模式
 
@@ -95,7 +95,7 @@ export type LayoutProps = {
 
 ## 执行与辅助契约
 
-#### <ApiSourceLink label={"LayoutExtensions"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={133}>LayoutExtensions</ApiSourceLink>
+#### <ApiSourceLink label={"LayoutExtensions"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={127}>LayoutExtensions</ApiSourceLink>
 
 通过 Layout 的 extensions 属性传入，各字段接收对应的定义数组；这些运行时定义不写入可持久化的场景数据
 
@@ -285,7 +285,7 @@ export declare const scene: (input: InputScene['children'] | Omit<InputScene, 't
 
 </DocTabs>
 
-#### <ApiSourceLink label={"layer"} path={"packages/kernel/vanilla/src/runtime/layers.ts"} startLine={43}>layer</ApiSourceLink>
+#### <ApiSourceLink label={"layer"} path={"packages/kernel/vanilla/src/runtime/layers.ts"} startLine={45}>layer</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -312,6 +312,37 @@ export declare const layer: (config: Omit<InputLayer, 'type'>) => InputLayer;
 
 </DocTabs>
 
+#### <ApiSourceLink label={"layerFromInput"} path={"packages/kernel/vanilla/src/runtime/layers.ts"} startLine={48}>layerFromInput</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称     | 类型 / 签名                                                                                | 说明 |
+| ------ | -------- | ------------------------------------------------------------------------------------------ | ---- |
+| 参数   | `config` | `Omit<InputLayer, 'type' \| 'scene' \| 'bindings'> & {`<br />`scene: InputScene;`<br />`}` | —    |
+| 返回值 | —        | `InputLayer`                                                                               | —    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export declare const layerFromInput: (
+  config: Omit<InputLayer, 'type' | 'scene' | 'bindings'> & {
+    scene: InputScene;
+  },
+) => InputLayer;
+```
+
+</DocTab>
+
+</DocTabs>
+
 ## 直接调用
 
 #### <ApiSourceLink label={"InputLayer"} path={"packages/kernel/vanilla/src/runtime/layers.ts"} startLine={22}>InputLayer</ApiSourceLink>
@@ -322,13 +353,14 @@ export declare const layer: (config: Omit<InputLayer, 'type'>) => InputLayer;
 
 <ApiTable>
 
-| 成员      | 类型                    | 默认值                                       | 说明                         |
-| --------- | ----------------------- | -------------------------------------------- | ---------------------------- |
-| `config?` | `ProcessOptions`        | —                                            | 覆盖层栈的执行配置           |
-| `name`    | `LayerName`             | —                                            | 在视口内唯一的名称           |
-| `scene`   | `InputScene \| IRScene` | —                                            | 当前层的完整场景             |
-| `type`    | `'layer'`               | —                                            | 固定为 layer 的作者分层标识  |
-| `zIndex?` | `number`                | `background: 0; overlay: 100; otherwise: 10` | 同值保持声明顺序的分层排序值 |
+| 成员        | 类型                 | 默认值                                       | 说明                                               |
+| ----------- | -------------------- | -------------------------------------------- | -------------------------------------------------- |
+| `bindings?` | `SceneInputBindings` | —                                            | 仅随当前场景参与编译的嵌入绑定，不属于图层默认配置 |
+| `config?`   | `ProcessOptions`     | —                                            | 覆盖层栈的执行配置                                 |
+| `name`      | `LayerName`          | —                                            | 在视口内唯一的名称                                 |
+| `scene`     | `IRScene`            | —                                            | 当前层的完整 Core IR                               |
+| `type`      | `'layer'`            | —                                            | 固定为 layer 的作者分层标识                        |
+| `zIndex?`   | `number`             | `background: 0; overlay: 100; otherwise: 10` | 同值保持声明顺序的分层排序值                       |
 
 </ApiTable>
 
@@ -341,7 +373,8 @@ export type InputLayer = {
   type: 'layer';
   name: LayerName;
   zIndex?: number;
-  scene: InputScene | IRScene;
+  scene: IRScene;
+  bindings?: SceneInputBindings;
   config?: ProcessOptions;
 };
 ```
