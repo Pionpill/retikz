@@ -162,8 +162,6 @@ export type RendererFactory = {
 /** Render 私有 renderer executor */
 type RendererExecutor = Pick<RendererDefinitionBase, 'prepareMount' | 'prepare' | 'read' | 'dispose'>;
 
-const renderers = new WeakSet<object>();
-
 const rendererExecutors = new WeakMap<object, RendererExecutor>();
 
 /** 判断动态宿主是否为 SVGSVGElement，兼容跨 realm 与无 DOM 构造器测试环境 */
@@ -246,7 +244,6 @@ const defineRendererUnsafe = (input: InputRendererDefinition): Renderer => {
       },
     }),
   );
-  renderers.add(token);
 
   return token;
 };
@@ -265,7 +262,7 @@ export const defineRenderer = defineRendererImplementation as DefineRenderer;
 
 /** 判断动态值是否为当前 Render 实例创建的 renderer token */
 export const isRenderer = (value: unknown): value is Renderer =>
-  typeof value === 'object' && value !== null && renderers.has(value);
+  typeof value === 'object' && value !== null && rendererExecutors.has(value);
 
 /** 读取 nominal renderer 的 Render 私有 executor */
 export const getRendererExecutor = (renderer: Renderer): RendererExecutor | undefined =>

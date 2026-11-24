@@ -1,6 +1,5 @@
 import type { SceneClipPath } from '@retikz/core';
-import { comparePropertyPaths, encodePropertyPath } from '@retikz/foundation';
-import { readPropertyPath } from '@retikz/foundation';
+import { comparePropertyPaths, encodePropertyPath, readPropertyPath } from '@retikz/foundation';
 import type { PropertyPath } from '@retikz/foundation';
 
 import { isRetikzRenderError, RetikzRenderError, RetikzRenderErrorCode } from '../error';
@@ -13,8 +12,8 @@ import type {
   SceneRuntimeSnapshot,
   SceneRuntimeSubtree,
   SceneRuntimeSubtreeNode,
+  SceneIdentity,
 } from '../scene';
-import type { SceneIdentity } from '../scene';
 import { sceneIdentityEquals } from '../scene';
 import type { SceneIdentityMap } from './shared';
 import { createSceneIdentityMap, runtimeStructuralEquals } from './shared';
@@ -784,10 +783,7 @@ const assertScenePatchInternal = (
   const tree = buildMutableTree(current);
   const index = indexMutableTree(tree);
   const nextPlacements = createNextPlacementIndex(next);
-  let scene: RuntimeScene = {
-    ...current.scene,
-    primitives: materializeChildren(tree),
-  };
+  let scene: RuntimeScene = current.scene;
 
   for (const operation of patch.operations) {
     if (operation.kind === 'setResources') {

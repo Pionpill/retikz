@@ -1,8 +1,7 @@
 import { computeSceneTextBounds } from '@retikz/core';
 import type { Scene, SceneClipPath, ScenePrimitive } from '@retikz/core';
 
-import { resolveSceneResourceMap } from '../shared';
-import { startArrowPlacement, endArrowPlacement } from '../shared';
+import { resolveSceneResourceMap, startArrowPlacement, endArrowPlacement } from '../shared';
 import { applyTransform, buildClipPath, buildPath, DEG_TO_RAD, roundedRectPath } from './path-geometry';
 
 /** hitTest 命中点（Scene user units 坐标系） */
@@ -152,11 +151,13 @@ export const hitTest = (scene: Scene, point: HitPoint, options?: HitTestOptions)
     }
 
     if (prim.type === 'path') {
-      for (const [spec, placement] of [
-        [prim.arrowEnd, endArrowPlacement(prim.commands)],
-        [prim.arrowStart, startArrowPlacement(prim.commands)],
+      for (const [spec, getPlacement] of [
+        [prim.arrowEnd, endArrowPlacement],
+        [prim.arrowStart, startArrowPlacement],
       ] as const) {
-        if (!spec || !placement) continue;
+        if (!spec) continue;
+        const placement = getPlacement(prim.commands);
+        if (!placement) continue;
         ctx.save();
         ctx.translate(placement.vertex[0], placement.vertex[1]);
         ctx.rotate(placement.angle);

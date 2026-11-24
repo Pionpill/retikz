@@ -24,6 +24,7 @@ import {
   isCanvasAnimationIdVisible,
   withCanvasAnimationEventHandlers,
 } from '../hydration';
+import { recoverHydrationSetupFailure } from '../hydration/internal';
 import type { RuntimeScenePrimitive, SceneIdentity, ScenePatch, SceneRuntimeSnapshot } from '../scene';
 import { sceneIdentityEquals } from '../scene';
 import { computeDisplaySize, pathBounds, prepareRuntimeSceneContent } from '../shared';
@@ -46,7 +47,6 @@ import {
   createPublicIdPrimitivePathMap,
   createSceneIdentityMap,
   createSemanticOwnerPublicIdMap,
-  recoverHydrationSetupFailure,
   runBestEffortCleanup,
   runtimeStructuralEquals,
 } from './shared';
@@ -829,7 +829,7 @@ const createCanvasHydration = (
   const scene = prepareCanvasScene(snapshot);
   const topologyByPath = new Map(snapshot.topology.map(node => [encodePropertyPath(node.primitivePath), node]));
   const publicIdByOwner = createSemanticOwnerPublicIdMap(snapshot.topology);
-  const primitivePathsByPublicId = createPublicIdPrimitivePathMap(snapshot.topology);
+  const primitivePathsByPublicId = createPublicIdPrimitivePathMap(snapshot.topology, publicIdByOwner);
 
   /** 给内部 trigger collector 注入与 hydration target 相同的 semantic-owner public id 口径 */
   const stampAnimationOwners = (primitive: RuntimeScenePrimitive, path: PropertyPath): ScenePrimitive => {

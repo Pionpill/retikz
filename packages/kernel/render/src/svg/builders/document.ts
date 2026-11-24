@@ -1,9 +1,13 @@
-import type { PaintValue, Scene, ScenePrimitive } from '@retikz/core';
+import type { PaintValue, Scene } from '@retikz/core';
 
 import type { StaticRenderFrame } from '../../runtime';
 import { EMPTY_READONLY_LAYERS, validateReadonlyLayers } from '../../runtime';
-import { resolveSceneResourceMap } from '../../shared';
-import { countScenePrimitiveOccurrences, startArrowPlacement, endArrowPlacement } from '../../shared';
+import {
+  resolveSceneResourceMap,
+  countScenePrimitiveOccurrences,
+  startArrowPlacement,
+  endArrowPlacement,
+} from '../../shared';
 import type { RenderTraceReporter } from '../../trace';
 import { RenderTracePhase, RenderTraceUnit } from '../../trace';
 import { createSvgAnimationCollector } from '../animation';
@@ -13,7 +17,7 @@ import { formatViewBox } from '../view-box';
 import { buildClipDef } from './clip-defs';
 import { buildPaintDef } from './paint-defs';
 import type { SvgPrimitiveBuildContext } from './prim';
-import { buildPrim } from './prim';
+import { buildPrim, buildPrimitiveNodes } from './prim';
 import { buildSvgReadonlyLayer } from './readonly-layer';
 import { buildShadowDef, shadowHash } from './shadow-defs';
 
@@ -85,11 +89,13 @@ export const buildSvgFragment = (scene: Scene, options: SvgDocumentOptions): Arr
       clipRefUrl: id => `url(#${clipIdFor(id)})`,
       arrowContentFor: primitive => {
         const children: Array<SvgNode> = [];
-        for (const [spec, placement] of [
-          [primitive.arrowStart, startArrowPlacement(primitive.commands)],
-          [primitive.arrowEnd, endArrowPlacement(primitive.commands)],
+        for (const [spec, getPlacement] of [
+          [primitive.arrowStart, startArrowPlacement],
+          [primitive.arrowEnd, endArrowPlacement],
         ] as const) {
-          if (!spec || !placement) continue;
+          if (!spec) continue;
+          const placement = getPlacement(primitive.commands);
+          if (!placement) continue;
           const strokeWidth = primitive.strokeWidth ?? 1;
           const stroke =
             typeof primitive.stroke === 'object' && primitive.stroke.kind === 'contextStroke'
@@ -128,7 +134,7 @@ export const buildSvgFragment = (scene: Scene, options: SvgDocumentOptions): Arr
       definitions.set(id, () => buildClipDef(resource, id));
     }
   }
-  let prims = scene.primitives.filter((p): p is ScenePrimitive => Boolean(p)).map(p => buildPrim(p, context));
+  let prims = buildPrimitiveNodes(scene.primitives, context);
   if (collector) prims = collector.wrapCamera(prims, scene);
   const definitionNodes: Array<SvgNode> = [];
   for (const build of definitions.values()) definitionNodes.push(build());

@@ -1,8 +1,7 @@
 import { sceneIdentityEquals } from '../scene';
 import type { HydrationContextBuilder, HydrationContext } from './context';
 import { noopAnimationControls } from './context';
-import type { ElementHandlers, HydrationHandlers, Locate } from './events';
-import type { HydrationTarget } from './events';
+import type { ElementHandlers, HydrationHandlers, Locate, HydrationTarget } from './events';
 import { EVENT_DOM_TYPE, RetikzEvent } from './events';
 import { createHydrationSetupError } from './setup-failure';
 

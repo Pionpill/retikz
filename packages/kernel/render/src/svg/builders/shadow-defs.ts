@@ -2,11 +2,21 @@ import type { IRDropShadow } from '@retikz/core';
 import type { BoundsRect } from '@retikz/math';
 
 import type { SvgNode } from '../types';
-import { hashKey } from './arrow-collect';
 import { compact } from './attrs';
 
 /** shadow color 缺省（半透明黑）；compile 通常已补，渲染端再兜一层 */
 const DEFAULT_SHADOW_COLOR = 'rgba(0,0,0,0.5)';
+
+/** 将 shadow key 编码为稳定的 8 位十六进制 hash */
+const hashKey = (key: string): string => {
+  let h = 5381;
+
+  for (let i = 0; i < key.length; i++) {
+    h = ((h << 5) + h + key.charCodeAt(i)) | 0;
+  }
+
+  return (h >>> 0).toString(16).padStart(8, '0');
+};
 
 /**
  * IRDropShadow → 稳定字符串 key

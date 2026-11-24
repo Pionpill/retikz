@@ -18,6 +18,7 @@ import {
   createSvgAnimationControls,
   resolvePointViaLayout,
 } from '../hydration';
+import { recoverHydrationSetupFailure } from '../hydration/internal';
 import type {
   RuntimeScenePrimitive,
   SceneIdentity,
@@ -46,7 +47,6 @@ import {
   createPublicIdPrimitivePathMap,
   createSceneIdentityMap,
   createSemanticOwnerPublicIdMap,
-  recoverHydrationSetupFailure,
   runBestEffortCleanup,
   runtimeStructuralEquals,
 } from './shared';
@@ -1160,7 +1160,7 @@ const createSvgHydration = (
   const scene = snapshot.scene as unknown as Scene;
   const targets = new WeakMap<Element, HydrationTarget>();
   const publicIdByOwner = createSemanticOwnerPublicIdMap(snapshot.topology);
-  const primitivePathsByPublicId = createPublicIdPrimitivePathMap(snapshot.topology);
+  const primitivePathsByPublicId = createPublicIdPrimitivePathMap(snapshot.topology, publicIdByOwner);
   const animationElementsByIdentity = createSceneIdentityMap(
     groupSvgWaapiElements(host, snapshot, elements).occurrences.map(group => [group.identity, group.elements] as const),
   );

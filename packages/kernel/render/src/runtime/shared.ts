@@ -2,9 +2,8 @@ import type { PropertyPath } from '@retikz/foundation';
 
 import { RetikzRenderError, RetikzRenderErrorCode } from '../error';
 import type { HydrationController } from '../hydration';
-import { recoverHydrationSetupFailure } from '../hydration/setup-failure';
 import type { SceneIdentity } from '../scene';
-import { createSceneIdentityLookup, sceneIdentityEquals } from '../scene';
+import { assertUniqueSceneIdentities, sceneIdentityEquals } from '../scene';
 
 /** 判断动态值是否为普通对象 */
 const isPlainObject = (value: object): boolean => {
@@ -48,10 +47,9 @@ export const createSceneIdentityMap = <TValue>(
     byOwner.set(identity.owner, identities);
   }
 
-  for (const [owner, identities] of byOwner) createSceneIdentityLookup(owner, identities);
+  for (const [owner, identities] of byOwner) assertUniqueSceneIdentities(owner, identities);
 
   const locate = (identity: SceneIdentity, create: boolean): SceneIdentityMapNode<TValue> | undefined => {
-    sceneIdentityEquals(identity, identity);
     const existingRoot = roots.get(identity.owner);
     let current: SceneIdentityMapNode<TValue>;
     if (existingRoot === undefined) {
@@ -142,8 +140,8 @@ export const createSemanticOwnerPublicIdMap = (
 /** 按 effective public id 聚合完整 topology primitive paths */
 export const createPublicIdPrimitivePathMap = (
   topology: ReadonlyArray<Readonly<{ semanticOwner: SceneIdentity; primitivePath: PropertyPath; publicId?: string }>>,
+  publicIdByOwner: SceneIdentityMap<string>,
 ): ReadonlyMap<string, ReadonlyArray<PropertyPath>> => {
-  const publicIdByOwner = createSemanticOwnerPublicIdMap(topology);
   const pathsByPublicId = new Map<string, Array<PropertyPath>>();
 
   for (const node of topology) {
@@ -155,7 +153,7 @@ export const createPublicIdPrimitivePathMap = (
     pathsByPublicId.set(publicId, paths);
   }
 
-  return new Map(Array.from(pathsByPublicId, ([publicId, paths]) => [publicId, Object.freeze(paths.slice())] as const));
+  return new Map(Array.from(pathsByPublicId, ([publicId, paths]) => [publicId, Object.freeze(paths)] as const));
 };
 
 /** 比较 Runtime public DTO；函数与非普通对象按 identity 比较 */
@@ -230,5 +228,3 @@ export const createHydrationCleanupQueue = (): HydrationCleanupQueue => {
 
   return Object.freeze({ dispose, disposePending });
 };
-
-export { recoverHydrationSetupFailure };

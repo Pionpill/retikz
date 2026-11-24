@@ -7,8 +7,7 @@
  *   Scene-派生字段（meta / geometry / scene）在无 scene 时缺省、animation 在无 runtime 时 no-op
  */
 import type { Scene, ScenePrimitive } from '@retikz/core';
-import type { PropertyPath } from '@retikz/foundation';
-import type { JsonObject } from '@retikz/foundation';
+import type { PropertyPath, JsonObject } from '@retikz/foundation';
 import type { AffineMatrix, BoundsRect } from '@retikz/math';
 import { AFFINE_IDENTITY, applyAffine, multiplyAffine } from '@retikz/math';
 
