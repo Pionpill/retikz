@@ -228,6 +228,6 @@ export const createPathCompileContext = (
       clips: runtime.state.workspace.clipRegistry.getResources(),
     }),
     onWarn: runtime.state.workspace.diagnosticCollector.collect,
-    resolveTransform: runtime.state.execution.scopeTransformComposer.resolve,
+    resolveTransform: chain => runtime.state.execution.scopeTransformComposer.resolve(chain),
   };
 };

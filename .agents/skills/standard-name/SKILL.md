@@ -20,6 +20,7 @@ description: 新增、移动、拆分或审查 Retikz 源码目录、文件、�
 - 目录与非组件文件的语义部分使用 kebab-case；内部领域基础目录使用 `_<domain>` 的条件见 [分层命名](references/layers.md)。源码名通常用一至两个语义词，只有确实区分独立概念时才用第三个；`.test` / `.demo` / `.data` / locale 后缀不计入词数
 
 - 类型、接口、类、React 组件及 const object enum 使用 PascalCase。hook、store、context 分别使用 `useXxx`、`useXxxStore`、`useXxxContext`；其余值和函数使用 camelCase
+- 类方法统一使用普通方法语法，不用箭头函数类字段代替；需要脱离实例调用时显式绑定或转发，保留调用方依赖的 `this` 和回调身份
 - 类成员按“属性 → get / set 访问器 → 构造函数 → 公开方法 → 私有方法”排列；同一属性的 get / set 相邻，同一方法的重载声明与实现相邻，方法名应直接表达动作与职责
 - `index.ts` 只用作目录 barrel：导出 owner 的稳定表面，不承载业务逻辑
 - 默认按语义单文件组织强相关声明，仅内容较多且职责或依赖确需分离时拆技术分类文件；拆分后 `types.ts` 放导出或 owner 内共享类型，`constants.ts` 放稳定常量与 const object enum，`utils.ts` 只放没有更窄职责的纯 helper

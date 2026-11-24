@@ -35,7 +35,7 @@ export const assembleWeaveScopeOutput = (
   const guides = transformAlignmentGuides(
     resolveStructuralAlignmentGuides(children.alignmentGuides),
     transforms,
-    composer.resolve,
+    chain => composer.resolve(chain),
   );
   if (guides !== undefined) frame.state.alignmentGuides.push(...guides);
   const clipRef = emitScopeGroup(runtime, output, compiled, {
