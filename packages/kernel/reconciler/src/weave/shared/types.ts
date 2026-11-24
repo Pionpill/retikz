@@ -198,8 +198,6 @@ export type WeavePathState = WeaveElementStateBase & {
 
 /** Scope 状态，自身声明不重复保存 children */
 export type WeaveScopeState = WeaveElementStateBase & {
-  /** Scope 由子贡献组装输出 */
-  contribution?: never;
   /** 当前作者声明与有效继承上下文 */
   origin: Readonly<InputWeave<Omit<IRScope, 'children'>>>;
   /** 最近一次确定化记录 */
@@ -287,8 +285,6 @@ type WeaveCompositeState = WeaveElementStateBase & {
   origin: Readonly<InputWeave<IRComposite>>;
   /** 作者 Composite 的完整实例输出 */
   contribution?: WeaveContribution;
-  /** Composite 以贡献作为实例边界，不允许保存基础元素编译产物 */
-  compile?: never;
 };
 
 /** 作者 Composite 的不透明更新边界，不公开生成节点 */

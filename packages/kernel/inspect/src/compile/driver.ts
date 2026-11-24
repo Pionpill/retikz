@@ -28,6 +28,7 @@ export const compileInspectionToScene = (
   const diagnostics: Array<InspectionDiagnostic> = [];
   for (const [colorScope, request] of requests.entries()) {
     const { definition, site, requestIndex, options: requestOptions } = request;
+    const transform = 'transform' in site ? site.transform : undefined;
     const inspector = Object.freeze({ namespace: definition.namespace, type: definition.type });
     const origin = { stage: 'inspect' as const, requestIndex, inspector, target: site.target };
     const context = Object.freeze({
@@ -40,7 +41,7 @@ export const compileInspectionToScene = (
         scopeColor: categoricalColorAt(DEFAULT_RESOLVED_THEME.colors.categorical, colorScope),
         semanticColors: DEFAULT_RESOLVED_THEME.colors.semantic,
       }),
-      ...(site.transform === undefined ? {} : { transform: snapshotInspectionValue(site.transform) }),
+      ...(transform === undefined ? {} : { transform: snapshotInspectionValue(transform) }),
       warn: (code: string, message: string): void => {
         diagnostics.push({ origin, cause: { code, message } });
       },
@@ -78,7 +79,7 @@ export const compileInspectionToScene = (
             inspector,
             target: site.target,
             scene: sealInspectionScene(result.scene),
-            transform: fragment.coordinateSpace === 'local' ? (site.transform ?? AFFINE_IDENTITY) : AFFINE_IDENTITY,
+            transform: fragment.coordinateSpace === 'local' ? (transform ?? AFFINE_IDENTITY) : AFFINE_IDENTITY,
           });
       } catch (cause) {
         throw wrapInspectionError(fragmentOrigin, cause);

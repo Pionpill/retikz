@@ -97,7 +97,7 @@ export const createWeaveDependencyFlow = ({
     if (!pending.has(keyOf(entry)) && !executions.has(entry))
       pending.set(keyOf(entry), {
         entry,
-        check: entry.current?.contribution,
+        check: entry.type === 'scope' ? undefined : entry.current?.contribution,
         inputs: [],
         consume: () => {},
       });
@@ -160,7 +160,8 @@ export const createWeaveDependencyFlow = ({
     }
     const producer = task.entry;
     const state = transaction.readState(producer);
-    const previousBindings = producer.current?.contribution?.bindings ?? [];
+    const previousContribution = producer.type === 'scope' ? undefined : producer.current?.contribution;
+    const previousBindings = previousContribution?.bindings ?? [];
     const bindings = executions.get(producer)?.bindings ?? [];
     // 先比较生产者实际输出通道；只通知直接消费者，由其按查询及 prepared 槽位继续核对
     // ⚡同一生产者的本次通知只比较一次连续相同的通道，不跨生产者、阶段或事务复用
@@ -179,7 +180,7 @@ export const createWeaveDependencyFlow = ({
       previousChanged =
         kind === 'layout'
           ? !jsonStructuralEquals(
-              producer.current?.contribution?.output.geometries,
+              previousContribution?.output.geometries,
               executions.get(producer)!.frame.state.geometries,
             )
           : previousBindings.length !== bindings.length ||
@@ -216,7 +217,7 @@ export const createWeaveDependencyFlow = ({
           consumer.current?.origin.own.id !== undefined
         ) {
           const bounds = consumer.current.compile?.envelopeBounds;
-          const previous = producer.current?.contribution?.output.geometries;
+          const previous = previousContribution?.output.geometries;
           if (
             bounds !== undefined &&
             previous !== undefined &&

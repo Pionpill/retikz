@@ -15,7 +15,7 @@ import type { InspectionRequest } from './types';
 /** 当前快照中的实际对象及其空间事实 */
 type InspectionSite =
   | { target: Extract<InspectionTarget, { kind: 'primitive' }>; value: ScenePrimitive; transform: AffineMatrix }
-  | { target: Extract<InspectionTarget, { kind: 'artifact' }>; value: CompositeArtifact; transform?: never };
+  | { target: Extract<InspectionTarget, { kind: 'artifact' }>; value: CompositeArtifact };
 
 /** 已解析选项、唯一目标和定义的执行请求 */
 type PreparedInspectionRequest = {

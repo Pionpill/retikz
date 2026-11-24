@@ -1,5 +1,5 @@
 import type { IRScene } from '@retikz/core';
-import { describe, expect, it } from 'vitest';
+import { assert, describe, expect, it } from 'vitest';
 
 import type { InputWeaveElement, WeaveBatch } from '../../src/weave';
 import { readWeaveCurrent, WeaveManager } from '../../src/weave';
@@ -88,6 +88,7 @@ describe('Weave 编译产物复用', () => {
     session.mount();
     const root = session.root;
     const stable = root.current!.children[2];
+    assert(stable.type === 'node');
     const product = stable.current!.compile?.value;
     const replacement = {
       type: 'node' as const,
@@ -145,6 +146,7 @@ describe('Weave 编译产物复用', () => {
     const session = new WeaveManager(source);
     session.mount();
     const keep = session.root.current!.children[0];
+    assert(keep.type === 'node');
     const product = keep.current!.compile?.value;
     const updated = commitUpdate(session, {
       operations: [{ kind: 'remove', target: { kind: 'id', scopeId: session.root.scopeId, id: 'remove' } }],
@@ -174,6 +176,7 @@ describe('Weave 编译产物复用', () => {
     const session = new WeaveManager(source);
     session.mount();
     const stable = session.root.current!.children[0];
+    assert(stable.type === 'scope');
     const compilation = stable.current!.compile?.value;
     const replacement = { type: 'node' as const, id: 'moving', position: [80, 0] as [number, number] };
     const batch: WeaveBatch = {

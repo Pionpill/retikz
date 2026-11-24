@@ -1,4 +1,3 @@
-import type { IRChild } from '@retikz/core';
 import { BuiltinCompileWarningCode, projectScopeCompileLayouts } from '@retikz/core';
 import { compareProperties } from '@retikz/foundation';
 import type { PropertyPath } from '@retikz/foundation';
@@ -84,8 +83,8 @@ export const createWeaveOutputFlow = ({
     }
     const cached = assembled.get(entry);
     if (cached !== undefined) return cached;
-    const state = transaction.readState(entry);
     if (entry.type !== 'scope') {
+      const state = transaction.readState(entry);
       const contribution = state.contribution!;
       for (const warning of contribution.diagnostics)
         if (warning.code !== BuiltinCompileWarningCode.DuplicateNodeId)
@@ -104,7 +103,7 @@ export const createWeaveOutputFlow = ({
         parent === undefined
           ? undefined
           : tracker?.createOwner(
-              state.origin.own as IRChild,
+              state.origin.own,
               paths.get(entry)!.at(-1) as number,
               parent,
               false,

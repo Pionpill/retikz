@@ -81,7 +81,7 @@ export type InspectorContext<
   /** 报告非致命缺口；不会中止其他受支持输出 */
   warn: (code: string, message: string) => void;
 }> &
-  (TSubject extends { kind: 'primitive' } ? Readonly<{ transform: AffineMatrix }> : Readonly<{ transform?: never }>);
+  (TSubject extends { kind: 'primitive' } ? Readonly<{ transform: AffineMatrix }> : object);
 
 /** 内置与第三方共用的检查器定义 */
 export type InputInspectorDefinition<

@@ -53,6 +53,8 @@ git status --short
 
 每条 finding 必须有代码位置和成因，不能只写“可以优化”。
 
+- 对象类型只声明本分支拥有的字段，不用 `prop?: never` 罗列不支持的选项；仅在字段缺席参与判别，或契约要求对已有变量也强制互斥时保留。
+
 1. **结构**：目录职责、barrel 边界、同级模块 import、文件过大 / 过碎、层级归属、Kernel / Sugar / Tier 2 边界。
 2. **正确性与类型安全**：边界值、引用解析、重复调用、错误诊断、React / Vanilla 或 plot adapter 对等、`as any` / ignore / 非必要断言、测试覆盖。按 TypeScript 信任边界重点检查：内部已声明明确类型的核心逻辑中，不应堆积与业务无关的 `unknown`、`typeof`、`Array.isArray`、对象结构探测和对应 `throw`；JSON / 持久化等外部数据应在 parser / schema / adapter 入口校验一次，内部不重复防御。区分真正的入口校验、业务不变量和查找失败诊断，不要把这些必要检查误判为冗余。若审查目标是测试资产本身是否过期、重复或临时，转用 `test-review`，不要在本 skill 中混合展开。
 3. **复用与简化**：重复实现、死代码、可下沉 shared / math / core 的工具、过度工程、热路径重复计算，以及纯内部对象上无意义的 `Object.freeze`；只有公开输出或外部可获取的对象才需要冻结。

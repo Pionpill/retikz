@@ -1,6 +1,6 @@
 import type { IRPath, IRScene, MarkEmitContext, ScenePrimitive } from '@retikz/core';
 import { BuiltinCompileWarningCode } from '@retikz/core';
-import { describe, expect, it } from 'vitest';
+import { assert, describe, expect, it } from 'vitest';
 
 import { readWeaveCurrent, WeaveManager } from '../../src/weave';
 import { compileTestResult, compileTestSnapshot } from '../helpers/compilation';
@@ -375,6 +375,7 @@ describe('Weave 批次更新', () => {
     const mounted = session.mount();
     const root = session.root;
     const [a, b, independent] = readWeaveCurrent(root).children;
+    assert(independent.type === 'node');
     const oldState = readWeaveCurrent(a);
     const oldIndependent = readWeaveCurrent(independent).compile?.value;
     const oldOutput = JSON.stringify(mounted.compilation.result);

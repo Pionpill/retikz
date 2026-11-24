@@ -314,5 +314,4 @@ export type CompositeCompileResult<TArtifact extends JsonValue = never> = Readon
   allocationBounds?: Readonly<BoundsRect>;
   /** 当前组件局部坐标中的对齐线 */
   alignmentGuides?: ReadonlyArray<LayoutAlignmentGuide>;
-}> &
-  ([TArtifact] extends [never] ? { artifact?: never } : { artifact?: TArtifact });
+}> & { artifact?: TArtifact };

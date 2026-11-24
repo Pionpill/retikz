@@ -31,11 +31,7 @@ export type RetainedVanillaCanvasUpdateOptions = Omit<VanillaCanvasOptions, 'dev
 type RetainedAnimationUpdateOptions = Readonly<Pick<ToSvgStringOptions, 'animation'>>;
 
 /** Retained SVG view 单次 update 可原子提交的 renderer 配置 */
-export type RetainedSvgUpdateOptions = RetainedAnimationUpdateOptions &
-  Readonly<{
-    /** 显式禁止结构赋值 Canvas-only 配置 */
-    canvas?: never;
-  }>;
+export type RetainedSvgUpdateOptions = RetainedAnimationUpdateOptions;
 
 /** Retained Canvas view 单次 update 可原子提交的 renderer 配置 */
 export type RetainedCanvasUpdateOptions = RetainedAnimationUpdateOptions &

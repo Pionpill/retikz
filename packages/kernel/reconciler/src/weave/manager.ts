@@ -413,18 +413,18 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
       const state = transaction.readState(entry);
       const affected =
         batch.forceFull || tracker.isEntryAffected(entry) || state.pendingInputs.some(input => input.changes.size > 0);
+      const contribution = 'contribution' in state ? state.contribution : undefined;
       const request: WeaveUpdateRequest = {
         entry,
         check:
-          !batch.forceFull && tracker.canCheckEntry(entry) && state.contribution?.diagnostics.length === 0
-            ? state.contribution
+          !batch.forceFull && tracker.canCheckEntry(entry) && contribution?.diagnostics.length === 0
+            ? contribution
             : undefined,
         inputs: state.pendingInputs,
         consume: () => {
           transaction.editState(entry).pendingInputs = [];
         },
       };
-      const contribution = state.contribution;
 
       /** Scope 需要等待子布局再确认包络；其他元素可保留清洁贡献或交由调度器进一步核对 */
       if (entry.type === 'scope') {
