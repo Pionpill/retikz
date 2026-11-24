@@ -107,7 +107,7 @@ const canvasFontFamily = (canvas: HTMLCanvasElement): string | undefined => {
 
 /**
  * 把指针的 client 像素坐标逆 meet-fit 映射成 Scene user units
- * @description 与 `renderToCanvas` 的 `computeCanvasTransform` / vanilla `mountCanvas.clientToScene` 同口径：
+ * @description 与 `renderToCanvas` 的 `computeCanvasTransform` 同口径：
  *   读 `canvas.getBoundingClientRect()` 把 client 坐标降到 canvas 局部 CSS 像素（dpr 在 client→CSS 这步已无关），
  *   再去 letterbox offset、除 scale、加 layout origin。落在 letterbox 黑边外的点会得到 layout 区域外坐标，
  *   交由 `hitTest` 自然判为无命中

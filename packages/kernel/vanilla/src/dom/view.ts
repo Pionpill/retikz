@@ -3,26 +3,23 @@ import { ReconcilerMode } from '@retikz/reconciler';
 import type { ReconcilerDiagnostic } from '@retikz/reconciler';
 import { prefersReducedMotion, resolveAnimationEnabled } from '@retikz/render/animation';
 import type { HydrationHandlers } from '@retikz/render/hydration';
-import type { RenderHandlerContribution, InputRenderRuntimeConfig } from '@retikz/render/runtime';
+import type {
+  RenderHandlerContribution,
+  InputRendererFactory,
+  InputRenderRuntimeConfig,
+  RenderTarget,
+  RendererHost,
+} from '@retikz/render/runtime';
 import { builtinRendererFactory, computeDisplaySize, createRenderTarget } from '@retikz/render/runtime';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
 import type { InputScene } from '../normalize';
 import type { SceneInputBindings, RenderOptions } from '../runtime';
 import { SceneRuntime } from '../runtime';
-import type { MountOptions, ViewUpdateOptions } from './types';
+import type { MountOptions } from './types';
 
-/** 会话输入与所选后端的宿主参数 */
-type ViewOptions = Readonly<{
-  ir: IRScene;
-  bindings?: SceneInputBindings;
-  mountOptions: MountOptions;
-  idPrefix: string;
-}> &
-  (
-    | Readonly<{ backend: 'svg'; host: SVGSVGElement }>
-    | Readonly<{ backend: 'canvas'; host: HTMLCanvasElement; devicePixelRatio?: number }>
-  );
+/** 与下一帧场景一起提交的动画配置；Canvas 宿主选项在挂载时确定 */
+export type ViewUpdateOptions = Readonly<{ animation?: RenderOptions['animation'] }>;
 
 /** 根据当前动画、事件和 Canvas 选项构造渲染配置 */
 const createRenderConfig = (
@@ -40,129 +37,147 @@ const createRenderConfig = (
   };
 };
 
-/** 按宿主后端创建单个保留式渲染目标 */
-const createViewTarget = (options: ViewOptions, configuration: () => InputRenderRuntimeConfig) => {
-  const rendererFactory = options.mountOptions.runtime?.rendererFactory ?? builtinRendererFactory;
-  return options.backend === 'svg'
-    ? createRenderTarget({
-        backend: 'svg',
-        host: options.host,
-        rendererFactory,
-        immutableOptions: { backend: 'svg', idPrefix: options.idPrefix },
-        configuration,
-      })
-    : createRenderTarget({
-        backend: 'canvas',
-        host: options.host,
-        rendererFactory,
-        immutableOptions: {
-          backend: 'canvas',
-          idPrefix: options.idPrefix,
-          ...(options.devicePixelRatio === undefined ? {} : { devicePixelRatio: options.devicePixelRatio }),
-        },
-        configuration,
-      });
-};
+/** 管理一个 DOM 视图的编译、渲染与事件注册会话 */
+export class SceneView<TRoot extends RendererHost = RendererHost> {
+  private readonly runtime: SceneRuntime;
+  private readonly renderer: InputRendererFactory & { readonly host: TRoot };
+  private readonly size: Readonly<{ width?: number; height?: number }>;
+  // SceneRuntime 创建首帧时同步建立渲染目标
+  private render!: RenderTarget;
+  private currentAnimation: NonNullable<RenderOptions['animation']>;
+  private handlerContributions: ReadonlyArray<RenderHandlerContribution> = [];
+  private nextRegistration = 0;
+  private rootRemoved = false;
 
-/** 创建 SVG 和 Canvas 视图共用的会话操作 */
-export const createView = (options: ViewOptions) => {
-  const { animation, compile, output } = options.mountOptions;
-  const { width, height } = output ?? {};
-  let currentAnimation = animation ?? {};
-  let handlerContributions: ReadonlyArray<RenderHandlerContribution> = [];
-  let nextRegistration = 0;
+  /** 视图挂载的根元素 */
+  get root(): TRoot {
+    return this.renderer.host;
+  }
 
-  const canvas =
-    options.backend === 'canvas'
-      ? {
-          ...(width === undefined ? {} : { width }),
-          ...(height === undefined ? {} : { height }),
-        }
-      : undefined;
+  /** 最近一次成功提交的编译结果 */
+  get compileResult() {
+    return this.runtime.current.compilation.result;
+  }
 
-  let render: ReturnType<typeof createViewTarget>;
-  const processOptions = {
-    compile,
-    bindings: options.bindings,
-    reconciler: { mode: ReconcilerMode.Incremental, updateStrategy: options.mountOptions.runtime?.updateStrategy },
-    createTarget: () => {
-      render = createViewTarget(options, () => createRenderConfig(currentAnimation, handlerContributions, canvas));
-      return render.target;
-    },
-  };
-  const processing = new SceneRuntime(options.ir, processOptions);
+  /** 当前帧可用的动画控制 */
+  get animation() {
+    return this.render.read().animation;
+  }
 
-  // 只在 processing 成功发布后同步宿主尺寸，失败事务保留原显示尺寸
-  const updateHostSize = (): void => {
-    const size = computeDisplaySize(processing.current.compilation.result.scene.layout, width, height);
-    if (options.backend === 'svg') {
-      options.host.setAttribute('width', String(size.width));
-      options.host.setAttribute('height', String(size.height));
+  constructor(
+    ir: IRScene,
+    mountOptions: MountOptions,
+    renderer: InputRendererFactory & { readonly host: TRoot },
+    bindings?: SceneInputBindings,
+  ) {
+    const { animation, compile, output, runtime } = mountOptions;
+    this.renderer = renderer;
+    this.update = this.update.bind(this);
+    this.updateInput = this.updateInput.bind(this);
+    this.hydrate = this.hydrate.bind(this);
+    this.diagnostics = this.diagnostics.bind(this);
+    this.dispose = this.dispose.bind(this);
+    const { width, height } = output ?? {};
+    this.size = {
+      ...(width === undefined ? {} : { width }),
+      ...(height === undefined ? {} : { height }),
+    };
+    this.currentAnimation = animation ?? {};
+    const canvas = renderer.backend === 'canvas' ? this.size : undefined;
+
+    this.runtime = new SceneRuntime(ir, {
+      compile,
+      bindings,
+      reconciler: { mode: ReconcilerMode.Incremental, updateStrategy: runtime?.updateStrategy },
+      createTarget: () => {
+        this.render = createRenderTarget({
+          ...renderer,
+          rendererFactory: runtime?.rendererFactory ?? builtinRendererFactory,
+          configuration: () => createRenderConfig(this.currentAnimation, this.handlerContributions, canvas),
+        });
+        return this.render.target;
+      },
+    });
+    this.updateHostSize();
+  }
+
+  /** 提交下一份 IR 与可选动画配置 */
+  update(ir: IRScene, options?: ViewUpdateOptions) {
+    return this.commitUpdate(() => this.runtime.replace(ir), options);
+  }
+
+  /** 归一化作者输入并提交更新 */
+  updateInput(input: InputScene, options?: ViewUpdateOptions) {
+    return this.commitUpdate(() => this.runtime.replaceInput(input), options);
+  }
+
+  /** 注册事件处理函数，返回仅用于解除本次注册的句柄 */
+  hydrate({ handlers }: { handlers: HydrationHandlers }) {
+    const registration = this.nextRegistration;
+    if (!Number.isSafeInteger(registration))
+      throw new RetikzVanillaError(RetikzVanillaErrorCode.Dom, 'Vanilla DOM hydration registration overflow');
+
+    this.commitHandlers([...this.handlerContributions, { registration, handlers }]);
+    this.nextRegistration += 1;
+    let disposed = false;
+    return {
+      dispose: () => {
+        if (disposed) return;
+        this.commitHandlers(this.handlerContributions.filter(candidate => candidate.registration !== registration));
+        disposed = true;
+      },
+    };
+  }
+
+  /** 读取并清空会话诊断 */
+  diagnostics() {
+    return this.runtime.diagnostics() as ReadonlyArray<ReconcilerDiagnostic>;
+  }
+
+  /** 释放会话资源并移除根元素，重复调用不再卸载 */
+  dispose() {
+    this.runtime.dispose();
+    if (this.rootRemoved) return;
+    this.root.remove();
+    this.rootRemoved = true;
+  }
+
+  /** 仅在编译结果成功提交后同步宿主尺寸 */
+  private updateHostSize() {
+    const { width, height } = this.size;
+    const displaySize = computeDisplaySize(this.compileResult.scene.layout, width, height);
+    const { renderer } = this;
+    if (renderer.backend === 'svg') {
+      renderer.host.setAttribute('width', String(displaySize.width));
+      renderer.host.setAttribute('height', String(displaySize.height));
     } else {
-      options.host.style.width = `${size.width}px`;
-      options.host.style.height = `${size.height}px`;
+      renderer.host.style.width = `${displaySize.width}px`;
+      renderer.host.style.height = `${displaySize.height}px`;
     }
-  };
+  }
 
-  updateHostSize();
-
-  const commitUpdate = (replace: () => void, updateOptions?: ViewUpdateOptions) => {
-    const previousAnimation = currentAnimation;
-    currentAnimation = updateOptions?.animation ?? currentAnimation;
+  /** 随场景更新应用动画配置，失败时恢复旧配置 */
+  private commitUpdate(replace: () => void, options?: ViewUpdateOptions) {
+    const previousAnimation = this.currentAnimation;
+    this.currentAnimation = options?.animation ?? previousAnimation;
     try {
       replace();
-      updateHostSize();
+      this.updateHostSize();
     } catch (cause) {
-      currentAnimation = previousAnimation;
+      this.currentAnimation = previousAnimation;
       throw cause;
     }
-  };
+  }
 
-  return {
-    update: (ir: IRScene, updateOptions?: ViewUpdateOptions) =>
-      commitUpdate(() => processing.replace(ir), updateOptions),
-    updateInput: (input: InputScene, updateOptions?: ViewUpdateOptions) =>
-      commitUpdate(() => processing.replaceInput(input), updateOptions),
-    hydrate: ({ handlers }: { handlers: HydrationHandlers }) => {
-      const registration = nextRegistration;
-      if (!Number.isSafeInteger(registration))
-        throw new RetikzVanillaError(RetikzVanillaErrorCode.Dom, 'Vanilla DOM hydration registration overflow');
-
-      const contribution = { registration, handlers };
-      const previousHandlers = handlerContributions;
-      handlerContributions = [...handlerContributions, contribution];
-
-      try {
-        processing.updateTarget();
-      } catch (cause) {
-        handlerContributions = previousHandlers;
-        throw cause;
-      }
-
-      nextRegistration += 1;
-      let disposed = false;
-
-      return {
-        dispose: () => {
-          if (disposed) return;
-
-          const handlersBeforeDispose = handlerContributions;
-          handlerContributions = handlerContributions.filter(candidate => candidate.registration !== registration);
-
-          try {
-            processing.updateTarget();
-          } catch (cause) {
-            handlerContributions = handlersBeforeDispose;
-            throw cause;
-          }
-
-          disposed = true;
-        },
-      };
-    },
-    dispose: () => processing.dispose(),
-    diagnostics: () => processing.diagnostics() as ReadonlyArray<ReconcilerDiagnostic>,
-    read: () => render.read(),
-    result: () => processing.current.compilation.result,
-  };
-};
+  /** 将事件注册或解绑提交给渲染目标，失败时保留原注册 */
+  private commitHandlers(next: ReadonlyArray<RenderHandlerContribution>) {
+    const previous = this.handlerContributions;
+    this.handlerContributions = next;
+    try {
+      this.runtime.updateTarget();
+    } catch (cause) {
+      this.handlerContributions = previous;
+      throw cause;
+    }
+  }
+}

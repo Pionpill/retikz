@@ -24,16 +24,18 @@ describe('@retikz/vanilla 架构守卫', () => {
     expect(pkg.dependencies).not.toHaveProperty('react');
   });
 
-  it('no-renderer-core-duplication：经 @retikz/render/svg builder，不自写 Scene→SVG', () => {
-    const mountSrc = readSrc('dom/mount-svg.ts');
+  it('no-renderer-core-duplication：DOM 挂载与 SVG 字符串输出均委托给 Render', () => {
+    const mountSrc = readSrc('dom/mount.ts');
+    const viewSrc = readSrc('dom/view.ts');
     const strSrc = readSrc('runtime/svg.ts');
 
-    expect(mountSrc).toMatch(/from ['"]@retikz\/render\/svg['"]/);
-    expect(mountSrc).toMatch(/buildSvgDocument/);
+    expect(mountSrc).toMatch(/new SceneView(?:<RendererHost>)?\(/);
+    expect(viewSrc).toMatch(/from ['"]@retikz\/render\/runtime['"]/);
+    expect(viewSrc).toContain('createRenderTarget(');
     expect(strSrc).toMatch(/from ['"]@retikz\/render\/svg['"]/);
 
     // 不在 vanilla 复制 prim→attrs（stroke-width 这类呈现属性映射是 svg 的活）
-    expect(mountSrc + strSrc).not.toMatch(/['"]stroke-width['"]/);
+    expect(mountSrc + viewSrc + strSrc).not.toMatch(/['"]stroke-width['"]/);
   });
 
   it('participant-stays-private：根 processing 与 DOM materializer 不把 transaction participant 暴露为公共扩展点', () => {

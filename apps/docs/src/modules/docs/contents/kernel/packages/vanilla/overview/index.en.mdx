@@ -167,14 +167,14 @@ For an `InputScene`, `SceneRuntime` normalizes authoring shorthand to IR, resolv
 
 ## Execution and DOM boundary
 
-| API              | Purpose                             | Returns                  |
-| ---------------- | ----------------------------------- | ------------------------ |
-| `renderToSvg`    | Produce an `<svg>` string for SSR   | `string`                 |
-| `mount`          | Mount SVG or Canvas by `renderer`   | `SvgView` / `CanvasView` |
-| `mountFromInput` | Normalize and mount authored input  | SVG / Canvas view        |
-| `mountSvg`       | Explicitly mount SVG DOM            | `SvgView`                |
-| `mountCanvas`    | Explicitly mount Canvas             | `CanvasView`             |
-| `hydrate`        | Bind handlers to SSR / existing SVG | `HydrationController`    |
+| API              | Purpose                             | Returns                                                     |
+| ---------------- | ----------------------------------- | ----------------------------------------------------------- |
+| `renderToSvg`    | Produce an `<svg>` string for SSR   | `string`                                                    |
+| `mount`          | Mount SVG or Canvas by `renderer`   | `SceneView<SVGSVGElement>` / `SceneView<HTMLCanvasElement>` |
+| `mountFromInput` | Normalize and mount authored input  | SVG / Canvas view                                           |
+| `mountSvg`       | Explicitly mount SVG DOM            | `SceneView<SVGSVGElement>`                                  |
+| `mountCanvas`    | Explicitly mount Canvas             | `SceneView<HTMLCanvasElement>`                              |
+| `hydrate`        | Bind handlers to SSR / existing SVG | `HydrationController`                                       |
 
 Import the DOM mount APIs from `@retikz/vanilla/dom`. Use `mount(container, ir)`, `mountSvg`, or `mountCanvas` for IR. Use `mountFromInput(container, input)` for authored input: it normalizes once and keeps the frame’s embed definitions and instance data. Both entries create a session view. Replace the scene with `view.update(ir, options?)` or `view.updateInput(input, options?)`. A successful transaction publishes the scene, artifacts, and render configuration together; failure publishes no new frame. If rollback fails, dispose and remount the view.
 
@@ -266,25 +266,25 @@ React applications use [`@retikz/react`](/kernel/packages/react/overview) to col
 
 ## API summary
 
-| API                                  | Kind          | Description                                                                   |
-| ------------------------------------ | ------------- | ----------------------------------------------------------------------------- |
-| `scene` / `layer` / `layerFromInput` | Input helper  | Build a Scene input and named Layer                                           |
-| `node` / `coordinate` / `path`       | Input helper  | Build Core primitives or authoring Path input                                 |
-| `scope` / `embed`                    | Input helper  | Build Scope and Tier 2 embed input                                            |
-| `BuiltinLayerName`                   | const object  | Built-in layer names                                                          |
-| `InputScene` / `InputChild`          | type          | Framework-neutral authoring root and children                                 |
-| `InputLayer` / `InputNode`           | type          | Layer and Node input                                                          |
-| `InputPath` / `InputScope`           | type          | Path and Scope input with authoring sugar or payload                          |
-| `InputEmbed`                         | type          | Tier 2 embed input                                                            |
-| `InputEmbedAdapter`                  | type          | Lowers an `InputEmbed` to a Core contribution                                 |
-| `isInputScene` / `normalizeScene`    | normalization | Distinguish typed InputScene / IRScene and normalize authoring input          |
-| `SceneNormalizationResult`           | type          | IR, contributions, instance inputs, and authoring provenance                  |
-| `ProcessOptions`                     | type          | Compilation and session update strategy                                       |
-| `SceneRuntime`                       | processing    | Framework-neutral session processing controller                               |
-| `compileToScene`                     | processing    | One-shot synchronous compilation of InputScene or Core IR                     |
-| `renderToSvg`                        | SSR           | Serialize a compiled Scene to an SVG string                                   |
-| `mount` / `mountSvg` / `mountCanvas` | DOM           | Mount a browser view from `@retikz/vanilla/dom`                               |
-| `MountOptions['runtime']`            | type          | Update strategy and optional renderer factory for IR or authored input        |
-| `SvgView` / `CanvasView`             | runtime       | Transactional session view for IRScene / InputScene                           |
-| `RetikzVanillaError`                 | error         | The single Vanilla error class; code, details, and cause distinguish failures |
-| `RetikzVanillaErrorCode`             | const object  | Stable normalize, processing, runtime, and DOM error codes                    |
+| API                                                         | Kind          | Description                                                                   |
+| ----------------------------------------------------------- | ------------- | ----------------------------------------------------------------------------- |
+| `scene` / `layer` / `layerFromInput`                        | Input helper  | Build a Scene input and named Layer                                           |
+| `node` / `coordinate` / `path`                              | Input helper  | Build Core primitives or authoring Path input                                 |
+| `scope` / `embed`                                           | Input helper  | Build Scope and Tier 2 embed input                                            |
+| `BuiltinLayerName`                                          | const object  | Built-in layer names                                                          |
+| `InputScene` / `InputChild`                                 | type          | Framework-neutral authoring root and children                                 |
+| `InputLayer` / `InputNode`                                  | type          | Layer and Node input                                                          |
+| `InputPath` / `InputScope`                                  | type          | Path and Scope input with authoring sugar or payload                          |
+| `InputEmbed`                                                | type          | Tier 2 embed input                                                            |
+| `InputEmbedAdapter`                                         | type          | Lowers an `InputEmbed` to a Core contribution                                 |
+| `isInputScene` / `normalizeScene`                           | normalization | Distinguish typed InputScene / IRScene and normalize authoring input          |
+| `SceneNormalizationResult`                                  | type          | IR, contributions, instance inputs, and authoring provenance                  |
+| `ProcessOptions`                                            | type          | Compilation and session update strategy                                       |
+| `SceneRuntime`                                              | processing    | Framework-neutral session processing controller                               |
+| `compileToScene`                                            | processing    | One-shot synchronous compilation of InputScene or Core IR                     |
+| `renderToSvg`                                               | SSR           | Serialize a compiled Scene to an SVG string                                   |
+| `mount` / `mountSvg` / `mountCanvas`                        | DOM           | Mount a browser view from `@retikz/vanilla/dom`                               |
+| `MountOptions['runtime']`                                   | type          | Update strategy and optional renderer factory for IR or authored input        |
+| `SceneView<SVGSVGElement>` / `SceneView<HTMLCanvasElement>` | runtime       | Transactional session view for IRScene / InputScene                           |
+| `RetikzVanillaError`                                        | error         | The single Vanilla error class; code, details, and cause distinguish failures |
+| `RetikzVanillaErrorCode`                                    | const object  | Stable normalize, processing, runtime, and DOM error codes                    |

@@ -23,7 +23,7 @@ import { Layout, Node } from '@retikz/react';
 </Layout>;
 ```
 
-**Vanilla (browser)** — `mountCanvas` mounts the figure as a `<canvas>`; its view adds canvas-side hydration and coordinate mapping on top of what `mountSvg` returns:
+**Vanilla (browser)** — `mountCanvas` mounts the figure as a `<canvas>`; use the returned view to bind event handlers:
 
 ```ts
 import { mountCanvas } from '@retikz/vanilla/dom';

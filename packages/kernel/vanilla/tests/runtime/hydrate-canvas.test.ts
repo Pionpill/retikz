@@ -7,9 +7,9 @@ import { mountCanvas } from '../../src/dom';
 
 /*
  * @retikz/vanilla mountCanvas 的 canvas 水合（client 坐标 → 逆 meet-fit → hitTest 命中 → handler）
- * @description canvas 无逐图元 DOM，水合靠 client px 经 view.clientToScene 逆 meet-fit 成 Scene units，再 hitTest 命中 id。
+ * @description canvas 无逐图元 DOM，水合靠 client px 由渲染器逆向映射 成 Scene units，再 hitTest 命中 id。
  *   jsdom 无真实 canvas backend，故沿用 render 层 canvas-hittest 的做法——spy getContext 返回「几何忠实」的 2D
- *   context 充当原生 canvas 原语（记录子路径、射线法点测），mountCanvas / clientToScene / hitTest 的选择逻辑仍真实受测。
+ *   context 充当原生 canvas 原语（记录子路径、射线法点测），mountCanvas / hitTest 的选择逻辑仍真实受测。
  *   canvas getBoundingClientRect 也 spy 出受限容器（letterbox）的显示盒，喂确定坐标。
  *   命中 / 触发类断言验证 client 坐标逆 fit 后 hitTest 命中正确 id、handler 被调用；dispose 后不再触发
  */
@@ -258,18 +258,6 @@ const boxIr: IRScene = {
 };
 
 describe('@retikz/vanilla mountCanvas 水合（坐标映射 + hitTest）', () => {
-  it('coord-mapping：受限容器 letterbox 下 client 坐标经逆 fit → 正确 Scene 点', () => {
-    const container = document.createElement('div');
-    const view = mountCanvas(container, boxIr, { output: { width: CSS_WIDTH, height: CSS_HEIGHT } });
-
-    // Scene 中心 (50,50) → client (RECT_LEFT+50+50, RECT_TOP+50)
-    const { clientX, clientY } = sceneToClient(50, 50);
-    const scene = view.clientToScene(clientX, clientY);
-
-    expect(scene.x).toBeCloseTo(50, 5);
-    expect(scene.y).toBeCloseTo(50, 5);
-  });
-
   it('hydrate-hit：client 坐标 → 坐标映射 + hitTest 命中正确图元 id → handler 触发', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -324,6 +312,7 @@ describe('@retikz/vanilla mountCanvas 水合（坐标映射 + hitTest）', () =>
     expect(context?.meta).toEqual({ series: 'sales', i: 3 });
     expect(context?.geometry?.bbox.width).toBeGreaterThan(0);
     expect(context?.point?.x).toBeCloseTo(50, 5);
+    expect(context?.point?.y).toBeCloseTo(50, 5);
 
     // per-id 动画控制可调用、不抛（registry-backed，作用于命中元素）
     expect(typeof context?.animation.restart).toBe('function');

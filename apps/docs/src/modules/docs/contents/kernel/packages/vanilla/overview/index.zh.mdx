@@ -167,14 +167,14 @@ Vanilla 构造函数不接收独立的 ID 字符串参数。`node({ id, position
 
 ## 执行与 DOM 边界
 
-| API              | 用途                                 | 返回                     |
-| ---------------- | ------------------------------------ | ------------------------ |
-| `renderToSvg`    | SSR / 构建期产出 `<svg>` 字符串      | `string`                 |
-| `mount`          | 按 `renderer` 挂载 SVG 或 Canvas     | `SvgView` / `CanvasView` |
-| `mountFromInput` | 归一化作者输入后挂载                 | SVG / Canvas 视图        |
-| `mountSvg`       | 显式挂载 SVG DOM                     | `SvgView`                |
-| `mountCanvas`    | 显式挂载 Canvas                      | `CanvasView`             |
-| `hydrate`        | 对 SSR / 已有 SVG 根节点绑定 handler | `HydrationController`    |
+| API              | 用途                                 | 返回                                                        |
+| ---------------- | ------------------------------------ | ----------------------------------------------------------- |
+| `renderToSvg`    | SSR / 构建期产出 `<svg>` 字符串      | `string`                                                    |
+| `mount`          | 按 `renderer` 挂载 SVG 或 Canvas     | `SceneView<SVGSVGElement>` / `SceneView<HTMLCanvasElement>` |
+| `mountFromInput` | 归一化作者输入后挂载                 | SVG / Canvas 视图                                           |
+| `mountSvg`       | 显式挂载 SVG DOM                     | `SceneView<SVGSVGElement>`                                  |
+| `mountCanvas`    | 显式挂载 Canvas                      | `SceneView<HTMLCanvasElement>`                              |
+| `hydrate`        | 对 SSR / 已有 SVG 根节点绑定 handler | `HydrationController`                                       |
 
 DOM 挂载入口从 `@retikz/vanilla/dom` 导入。`mount(container, ir)`、`mountSvg`、`mountCanvas` 接收 IR；`mountFromInput(container, input)` 接收作者输入，归一化一次并保留本帧的嵌入定义与实例数据。两种来源都创建 session 视图：用 `view.update(ir, options?)` 或 `view.updateInput(input, options?)` 替换场景。成功时原子发布场景、产物与渲染配置；失败不发布新帧，若回滚失败则需要释放并重新挂载。
 
@@ -266,25 +266,25 @@ React 应用使用 [`@retikz/react`](/kernel/packages/react/overview) 收集 JSX
 
 ## API 摘要
 
-| API                                  | 类型          | 说明                                                     |
-| ------------------------------------ | ------------- | -------------------------------------------------------- |
-| `scene` / `layer` / `layerFromInput` | Input helper  | 构造 Scene 与具名 Layer                                  |
-| `node` / `coordinate` / `path`       | Input helper  | 构造 Core 图元或作者侧 Path 输入                         |
-| `scope` / `embed`                    | Input helper  | 构造作用域与 Tier 2 embed 输入                           |
-| `BuiltinLayerName`                   | const object  | 内置图层名称                                             |
-| `InputScene` / `InputChild`          | type          | 框架无关的作者输入根与子项                               |
-| `InputLayer` / `InputNode`           | type          | Layer 与 Node 输入                                       |
-| `InputPath` / `InputScope`           | type          | 可带作者侧语法糖或载荷的路径和作用域输入                 |
-| `InputEmbed`                         | type          | Tier 2 embed 输入                                        |
-| `InputEmbedAdapter`                  | type          | 将 `InputEmbed` 下沉为 Core contribution                 |
-| `isInputScene` / `normalizeScene`    | normalization | 区分已类型化的 InputScene / IRScene，并归一作者输入      |
-| `SceneNormalizationResult`           | type          | IR、contributions、实例输入 与作者来源                   |
-| `ProcessOptions`                     | type          | compile 与 session 更新策略                              |
-| `SceneRuntime`                       | processing    | 无框架 session processing controller                     |
-| `compileToScene`                     | processing    | 一次性同步编译 InputScene 或 Core IR                     |
-| `renderToSvg`                        | SSR           | 将已编译的 Scene 序列化为 SVG 字符串                     |
-| `mount` / `mountSvg` / `mountCanvas` | DOM           | 从 `@retikz/vanilla/dom` 挂载浏览器 view                 |
-| `MountOptions['runtime']`            | type          | IR / 作者输入挂载时的更新策略与可选 renderer factory     |
-| `SvgView` / `CanvasView`             | runtime       | IRScene / InputScene 的事务式 session view               |
-| `RetikzVanillaError`                 | error         | Vanilla 唯一错误类，通过 code、details 与 cause 区分失败 |
-| `RetikzVanillaErrorCode`             | const object  | normalize、processing、runtime、与 DOM 稳定错误码        |
+| API                                                         | 类型          | 说明                                                     |
+| ----------------------------------------------------------- | ------------- | -------------------------------------------------------- |
+| `scene` / `layer` / `layerFromInput`                        | Input helper  | 构造 Scene 与具名 Layer                                  |
+| `node` / `coordinate` / `path`                              | Input helper  | 构造 Core 图元或作者侧 Path 输入                         |
+| `scope` / `embed`                                           | Input helper  | 构造作用域与 Tier 2 embed 输入                           |
+| `BuiltinLayerName`                                          | const object  | 内置图层名称                                             |
+| `InputScene` / `InputChild`                                 | type          | 框架无关的作者输入根与子项                               |
+| `InputLayer` / `InputNode`                                  | type          | Layer 与 Node 输入                                       |
+| `InputPath` / `InputScope`                                  | type          | 可带作者侧语法糖或载荷的路径和作用域输入                 |
+| `InputEmbed`                                                | type          | Tier 2 embed 输入                                        |
+| `InputEmbedAdapter`                                         | type          | 将 `InputEmbed` 下沉为 Core contribution                 |
+| `isInputScene` / `normalizeScene`                           | normalization | 区分已类型化的 InputScene / IRScene，并归一作者输入      |
+| `SceneNormalizationResult`                                  | type          | IR、contributions、实例输入 与作者来源                   |
+| `ProcessOptions`                                            | type          | compile 与 session 更新策略                              |
+| `SceneRuntime`                                              | processing    | 无框架 session processing controller                     |
+| `compileToScene`                                            | processing    | 一次性同步编译 InputScene 或 Core IR                     |
+| `renderToSvg`                                               | SSR           | 将已编译的 Scene 序列化为 SVG 字符串                     |
+| `mount` / `mountSvg` / `mountCanvas`                        | DOM           | 从 `@retikz/vanilla/dom` 挂载浏览器 view                 |
+| `MountOptions['runtime']`                                   | type          | IR / 作者输入挂载时的更新策略与可选 renderer factory     |
+| `SceneView<SVGSVGElement>` / `SceneView<HTMLCanvasElement>` | runtime       | IRScene / InputScene 的事务式 session view               |
+| `RetikzVanillaError`                                        | error         | Vanilla 唯一错误类，通过 code、details 与 cause 区分失败 |
+| `RetikzVanillaErrorCode`                                    | const object  | normalize、processing、runtime、与 DOM 稳定错误码        |
