@@ -67,15 +67,15 @@ describe('Layout API 公开范围', () => {
 
     expect(headings.filter(name => name === 'LayoutRuntimeMode')).toHaveLength(1);
     expect(runtimeMode).toContain('export const LayoutRuntimeMode = Object.freeze({');
-    expect(runtimeMode).toContain("Retained: 'retained'");
+    expect(runtimeMode).toContain("Session: 'session'");
     expect(runtimeMode).toContain("Static: 'static'");
     expect(runtimeMode).toContain('export type LayoutRuntimeMode = ValueOf<typeof LayoutRuntimeMode>;');
 
     const runtimeOptions = source.split('### LayoutRuntimeOptions\n')[1]?.split('\n### ')[0] ?? '';
 
     expect(runtimeOptions.match(/<DocTabs\b/g)).toHaveLength(1);
-    expect(runtimeOptions).toContain('<DocTabs defaultValue="retained">');
-    expect(runtimeOptions).toContain('<DocTab value="retained" label="Members · Retained">');
+    expect(runtimeOptions).toContain('<DocTabs defaultValue="session">');
+    expect(runtimeOptions).toContain('<DocTab value="session" label="Members · Session">');
     expect(runtimeOptions).toContain('<DocTab value="static" label="Members · Static">');
     expect(runtimeOptions).toContain('<DocTab value="definition" label="Type definition">');
 
@@ -85,7 +85,7 @@ describe('Layout API 公开范围', () => {
     expect(staticBranch).toContain('`typeof LayoutRuntimeMode.Static`');
     expect(staticBranch).toMatch(/`readonly updateStrategy\?` \| `never`/);
     expect(runtimeOptions).toContain(
-      'export type LayoutRuntimeOptions = LayoutRetainedRuntimeOptions | LayoutStaticRuntimeOptions;',
+      'export type LayoutRuntimeOptions = LayoutSessionRuntimeOptions | LayoutStaticRuntimeOptions;',
     );
     expect(extensions).not.toContain('<details>');
     expect(source.replaceAll(/```[\s\S]*?```/g, '')).not.toMatch(/[\u3400-\u9fff]/u);

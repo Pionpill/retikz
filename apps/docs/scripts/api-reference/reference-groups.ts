@@ -397,7 +397,7 @@ export const referenceGroups: Readonly<Partial<Record<string, ReadonlyArray<Refe
       },
       members: [
         'LayoutExtensions',
-        'LayoutRetainedRuntimeOptions',
+        'LayoutSessionRuntimeOptions',
         'LayoutRuntimeOptions',
         'LayoutStaticRuntimeOptions',
         'LayoutRuntimeMode',

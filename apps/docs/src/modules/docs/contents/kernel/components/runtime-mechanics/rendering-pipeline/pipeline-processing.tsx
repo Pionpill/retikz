@@ -49,9 +49,9 @@ const PipelineProcessing: FC<PipelineProcessingProps> = props => {
                 text: [{ text: text.static[0] }, { text: text.static[1], font: { size: 12 }, fill: 'gray' }],
               },
               {
-                id: 'retained',
+                id: 'session',
                 role: 'activity',
-                text: [{ text: text.retained[0] }, { text: text.retained[1], font: { size: 12 }, fill: 'gray' }],
+                text: [{ text: text.session[0] }, { text: text.session[1], font: { size: 12 }, fill: 'gray' }],
               },
             ]}
           />
@@ -73,9 +73,9 @@ const PipelineProcessing: FC<PipelineProcessingProps> = props => {
         items={[
           { source: 'input', target: 'prepare', routing: { kind: 'orthogonal', cornerRadius: 0 } },
           { source: 'prepare', target: 'static', routing: { kind: 'orthogonal', cornerRadius: 0 } },
-          { source: 'prepare', target: 'retained', routing: { kind: 'orthogonal', cornerRadius: 0 } },
+          { source: 'prepare', target: 'session', routing: { kind: 'orthogonal', cornerRadius: 0 } },
           { source: 'static', target: 'core', routing: { kind: 'orthogonal', cornerRadius: 0 } },
-          { source: 'retained', target: 'core', routing: { kind: 'orthogonal', cornerRadius: 0 } },
+          { source: 'session', target: 'core', routing: { kind: 'orthogonal', cornerRadius: 0 } },
         ]}
       />
     </PreviewFlowDiagram>

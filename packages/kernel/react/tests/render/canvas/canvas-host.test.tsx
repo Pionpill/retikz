@@ -11,7 +11,7 @@ type TestCanvasContext = Readonly<{
   fillText: ReturnType<typeof vi.fn>;
 }>;
 
-/** 给 retained Canvas 提供完整的录制型原生 context surface */
+/** 给 session Canvas 提供完整的录制型原生 context surface */
 const createTestCanvasContext = (): TestCanvasContext => {
   const fillText = vi.fn();
   const target: Record<string | symbol, unknown> = {
@@ -49,7 +49,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('Layout retained renderer 规格', () => {
+describe('Layout renderer 规格', () => {
   it('默认 SVG 显示尺寸等于取景框，单轴保持比例', () => {
     const ir = {
       version: 1,
@@ -188,7 +188,7 @@ describe('Layout retained renderer 规格', () => {
     expect(markup).not.toContain('<canvas');
   });
 
-  it('svg-canvas-host-parity：同一 JSX 可进入两种 retained host shell', async () => {
+  it('svg-canvas-host-parity：同一 JSX 可进入两种 session host shell', async () => {
     const recorded = createTestCanvasContext();
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(() => recorded.context);
     const svgMarkup = renderToStaticMarkup(<Layout ir={{ version: 1, type: 'scene', children: [] }} />);

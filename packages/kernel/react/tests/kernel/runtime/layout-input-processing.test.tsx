@@ -65,7 +65,7 @@ describe('<Layout> 的 Vanilla Input processing', () => {
     await act(() => root.unmount());
   });
 
-  it('retained 初次挂载只提交 controller 的成功结果', async () => {
+  it('session 初次挂载只提交 controller 的成功结果', async () => {
     const commit = vi.fn();
     const container = document.createElement('div');
     const root = createRoot(container);
@@ -73,7 +73,7 @@ describe('<Layout> 的 Vanilla Input processing', () => {
     await act(() =>
       root.render(
         <Layout onCompileResult={commit}>
-          <Node id="retained-commit-node" position={[0, 0]} />
+          <Node id="session-commit-node" position={[0, 0]} />
         </Layout>,
       ),
     );
@@ -83,7 +83,7 @@ describe('<Layout> 的 Vanilla Input processing', () => {
     await act(() => root.unmount());
   });
 
-  it('Strict Effects 不提交被丢弃的 retained fallback', async () => {
+  it('Strict Effects 不提交被丢弃的 session fallback', async () => {
     const commit = vi.fn();
     const container = document.createElement('div');
     const root = createRoot(container);
@@ -103,7 +103,7 @@ describe('<Layout> 的 Vanilla Input processing', () => {
     await act(() => root.unmount());
   });
 
-  it('retained processing 在 Strict Effects 重放后仍保持可订阅', async () => {
+  it('session processing 在 Strict Effects 重放后仍保持可订阅', async () => {
     const container = document.createElement('div');
     const root = createRoot(container);
 
@@ -122,7 +122,7 @@ describe('<Layout> 的 Vanilla Input processing', () => {
     await act(() => root.unmount());
   });
 
-  it('retained processing 将 JSX source 更新推入同一 Vanilla controller', async () => {
+  it('session processing 将 JSX source 更新推入同一 Vanilla controller', async () => {
     const mount = vi.spyOn(vanilla.SceneRuntime, 'fromInput');
     const replaceInput = vi.spyOn(vanilla.SceneRuntime.prototype, 'replaceInput');
     const container = document.createElement('div');
@@ -210,7 +210,7 @@ describe('<Layout> 的 Vanilla Input processing', () => {
     for (const dispose of disposers) expect(dispose).toHaveBeenCalledTimes(1);
   });
 
-  it('retained source update 失败时保留最后成功宿主帧', async () => {
+  it('session source update 失败时保留最后成功宿主帧', async () => {
     const container = document.createElement('div');
     const root = createRoot(container);
 

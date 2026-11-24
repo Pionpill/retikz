@@ -39,19 +39,19 @@ The example displays the artifact count and the FlexLayout domain value outside 
 
 Choose whether to retain processing state and allow incremental computation:
 
-| Configuration               | Update behavior                             | Use case                                                            |
-| --------------------------- | ------------------------------------------- | ------------------------------------------------------------------- |
-| `retained + auto` (default) | Retain state; allow incremental computation | Local updates; keep the last successful result on failure           |
-| `retained + full`           | Retain state; recompute on changes          | Full recomputation;<br />keep the last successful result on failure |
-| `static`                    | Process the current figure afresh           | Reduce resident processing state                                    |
+| Configuration              | Update behavior                             | Use case                                                            |
+| -------------------------- | ------------------------------------------- | ------------------------------------------------------------------- |
+| `session + auto` (default) | Retain state; allow incremental computation | Local updates; keep the last successful result on failure           |
+| `session + full`           | Retain state; recompute on changes          | Full recomputation;<br />keep the last successful result on failure |
+| `static`                   | Process the current figure afresh           | Reduce resident processing state                                    |
 
 ```tsx
-<Layout /> {/* retained + auto */}
-<Layout runtime={{ mode: 'retained', updateStrategy: 'full' }} />
+<Layout /> {/* session + auto */}
+<Layout runtime={{ mode: 'session', updateStrategy: 'full' }} />
 <Layout runtime={{ mode: 'static' }} />
 ```
 
-If processing a subsequent input fails in retained mode, the last successful result stays visible. This does not provide undo or history navigation. Receive structured diagnostics through `runtime.onDiagnostic`, for example `runtime={{ onDiagnostic: diagnostic => console.warn(diagnostic) }}`.
+If processing a subsequent input fails in session mode, the last successful result stays visible. This does not provide undo or history navigation. Receive structured diagnostics through `runtime.onDiagnostic`, for example `runtime={{ onDiagnostic: diagnostic => console.warn(diagnostic) }}`.
 
 `runtime.mode: 'static'` cannot be combined with `updateStrategy` or `onDiagnostic`.
 

@@ -22,7 +22,7 @@ afterEach(() => {
 });
 
 describe('SVG 水合', () => {
-  it('retained SVG 禁用动画时仍可挂载带动画 track 的分组节点', async () => {
+  it('session SVG 禁用动画时仍可挂载带动画 track 的分组节点', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const root = createRoot(container);

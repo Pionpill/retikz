@@ -23,8 +23,8 @@ describe('Layout 公共 API', () => {
     expect(svg).toContain('viewBox=');
   });
 
-  it('公开封闭 mode 常量与 static/retained 判别配置', () => {
-    expect(LayoutRuntimeMode).toEqual({ Retained: 'retained', Static: 'static' });
+  it('公开封闭 mode 常量与 static/session 判别配置', () => {
+    expect(LayoutRuntimeMode).toEqual({ Session: 'session', Static: 'static' });
   });
 
   it('paths 接受带完整 subject schema 的自定义 Definition', () => {

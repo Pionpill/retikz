@@ -186,8 +186,8 @@ export type LayoutProps = {
   /** 直接传入 ir 时使用的事件处理函数表 */
   handlers?: HydrationHandlers;
   /**
-   * 选择 retained 增量更新或 static 完整编译模式；省略时使用 retained
-   * @default LayoutRuntimeMode.Retained
+   * 选择 session 增量更新或 static 完整编译模式；省略时使用 session
+   * @default LayoutRuntimeMode.Session
    */
   runtime?: LayoutRuntimeOptions;
   /**
@@ -247,7 +247,7 @@ export type LayoutProps = {
   onCompileResult?: (result: CompileResult) => void;
 };
 
-/** 订阅 Vanilla retained controller 的最后一次成功 result，在提交前回退静态结果 */
+/** 订阅 Vanilla session controller 的最后一次成功 result，在提交前回退静态结果 */
 const useProcessingResult = (controller: SceneRuntime | undefined, fallbackResult: CompileResult): CompileResult => {
   const subscribe = useCallback(
     (notify: () => void) => (controller === undefined ? () => undefined : controller.subscribe(() => notify())),
@@ -272,8 +272,8 @@ const StaticLayoutContent: FC<{
   return <ProcessingResultHost key={hostKey} {...hostProps} result={result} />;
 };
 
-/** retained 模式复用同一 Vanilla controller，仅将后续 source 推入 update */
-const RetainedLayoutContent: FC<{
+/** session 模式复用同一 Vanilla controller，仅将后续 source 推入 update */
+const SessionLayoutContent: FC<{
   source: InputScene | IRScene;
   options: ProcessOptions;
   onDiagnostic?: (diagnostic: ReconcilerDiagnostic) => void;
@@ -341,7 +341,7 @@ const RetainedLayoutContent: FC<{
 
 /**
  * 将 JSX 图形或场景 IR 渲染为 SVG 或 Canvas，并接入更新与动画
- * @description 通过 children 声明图形，或通过 ir 传入完整场景；同时提供时使用 ir。默认使用 retained 模式处理后续更新，可通过 runtime 切换为 static 完整编译模式
+ * @description 通过 children 声明图形，或通过 ir 传入完整场景；同时提供时使用 ir。默认使用 session 模式处理后续更新，可通过 runtime 切换为 static 完整编译模式
  */
 export const Layout: FC<LayoutProps> = props => {
   const {
@@ -374,7 +374,7 @@ export const Layout: FC<LayoutProps> = props => {
   } = props;
 
   const { shapes, boundaries, clips, arrows, marks, patterns, paths, composites, themeDefinitions } = extensions ?? {};
-  const { mode = LayoutRuntimeMode.Retained, updateStrategy, onDiagnostic } = runtime ?? {};
+  const { mode = LayoutRuntimeMode.Session, updateStrategy, onDiagnostic } = runtime ?? {};
   const stableShapes = canonicalizeDefinitionArray(shapes);
   const stableBoundaries = canonicalizeDefinitionArray(boundaries);
   const stableClips = canonicalizeDefinitionArray(clips);
@@ -504,7 +504,7 @@ export const Layout: FC<LayoutProps> = props => {
   return mode === LayoutRuntimeMode.Static ? (
     <StaticLayoutContent source={source} options={processingOptions} hostKey={hostKey} hostProps={hostProps} />
   ) : (
-    <RetainedLayoutContent
+    <SessionLayoutContent
       key={processingControllerIdentity.key}
       source={source}
       options={processingOptions}

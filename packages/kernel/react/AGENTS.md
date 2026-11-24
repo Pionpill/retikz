@@ -21,7 +21,7 @@
 ## 硬约束
 
 - `react` / `react-dom` 保持 peerDependencies，本地开发再放 devDependencies。
-- 必须直接依赖 `@retikz/vanilla`。React 不直接调用 `@retikz/core` 的 authoring helper 或直接拼装 Source IR，也不实现 Runtime session 或 retained renderer 编排；它只调用 Vanilla 的公开 normalize / processing API 并把只读结果映射到 React 宿主。不 import app 包或 Tier 2 包。
+- 必须直接依赖 `@retikz/vanilla`。React 不直接调用 `@retikz/core` 的 authoring helper 或直接拼装 Source IR，也不实现 Runtime session 或 renderer 编排；它只调用 Vanilla 的公开 normalize / processing API 并把只读结果映射到 React 宿主。不 import app 包或 Tier 2 包。
 - 不新增第三方运行时依赖；确需新增时先说明理由。
 - 不引 Tailwind / shadcn / 样式库；adapter 输出原生 SVG / Canvas 宿主，样式由消费者或 props 控制。
 - `kernel/` 与 `sugar/` 必须 SSR-safe，不访问 `document` / `window` / `HTMLElement`。浏览器全局只允许在 `render/` 下出现。
@@ -52,7 +52,7 @@ runtime/     Layout、hydration handler 收集、Vanilla processing 调度与 Re
 - `kernel/components` 可以依赖 `kernel/protocol`，不得依赖 `adapter` / `runtime` / `render` / `sugar`。
 - `kernel/adapter` 可以依赖 `kernel/components`、`kernel/protocol` 与 `@retikz/vanilla` 的公开 Input / normalizer，负责把 React props 构建为 Vanilla Input；不得依赖 `kernel/runtime` 或 `sugar`，不得直接实现 Core Source IR builder 或绕过 Vanilla。
 - `kernel/runtime` 可以依赖 `kernel/adapter`、`kernel/protocol` 与 Vanilla processing API；`sugar` 可以依赖 `kernel/components` 与 `kernel/protocol`，不得依赖 `kernel/runtime`。
-- `render` 只做 processing result 到 React host 的薄映射，不依赖 `kernel/runtime`，不创建 Runtime session 或 retained renderer；浏览器全局只允许在 `render/` 下出现。
+- `render` 只做 processing result 到 React host 的薄映射，不依赖 `kernel/runtime`，不创建 Runtime session 或 renderer；浏览器全局只允许在 `render/` 下出现。
 
 ## Kernel 组件
 
@@ -72,7 +72,7 @@ runtime/     Layout、hydration handler 收集、Vanilla processing 调度与 Re
 ## Renderer 接线
 
 - 输入是 Vanilla readonly processing result，不在 renderer 里重做 IR -> Scene 编译或 Runtime session。
-- `Layout` 的客户端 IR / JSX 路径由 Vanilla processing mode 选择常驻或临时非增量 SceneReconciler 执行，默认 retained；React 只声明 `<svg>` / `<canvas>` shell，并将 Vanilla result 交给 Render 接线。
+- `Layout` 的客户端 IR / JSX 路径由 Vanilla processing mode 选择常驻或临时非增量 SceneReconciler 执行，默认 session；React 只声明 `<svg>` / `<canvas>` shell，并将 Vanilla result 交给 Render 接线。
 - SSR SVG 只输出 opaque seed，首次客户端 layout effect 以 `adopt` 接管；后续 render 不重写 Render-owned descendants。
 - 坐标、anchor、bbox 等几何计算属于 core；react renderer 不重复实现。
 - SVG 输出形态优先改 `@retikz/render/svg`；react 侧保持 `SvgNode -> ReactElement` 薄映射。

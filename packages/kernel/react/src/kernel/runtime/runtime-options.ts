@@ -3,7 +3,7 @@ import type { ReconcilerDiagnostic, ReconcilerUpdateStrategy } from '@retikz/rec
 
 /** React Layout 的宿主执行模式 */
 export const LayoutRuntimeMode = Object.freeze({
-  Retained: 'retained',
+  Session: 'session',
   Static: 'static',
 } as const);
 
@@ -11,12 +11,12 @@ export const LayoutRuntimeMode = Object.freeze({
 export type LayoutRuntimeMode = ValueOf<typeof LayoutRuntimeMode>;
 
 /** 保留执行状态以处理后续图形更新；省略 runtime 或 mode 时使用此模式 */
-export type LayoutRetainedRuntimeOptions = Readonly<{
+export type LayoutSessionRuntimeOptions = Readonly<{
   /**
    * 创建保留式 Runtime
-   * @default LayoutRuntimeMode.Retained
+   * @default LayoutRuntimeMode.Session
    */
-  mode?: typeof LayoutRuntimeMode.Retained;
+  mode?: typeof LayoutRuntimeMode.Session;
   /**
    * 更新策略；auto 按变更和执行器能力选择增量或完整执行，full 强制完整执行
    * @default ReconcilerUpdateStrategy.Auto
@@ -36,5 +36,5 @@ export type LayoutStaticRuntimeOptions = Readonly<{
   onDiagnostic?: never;
 }>;
 
-/** 通过 mode 选择图形更新方式；retained 支持更新策略和诊断回调，static 不接受这两个选项 */
-export type LayoutRuntimeOptions = LayoutRetainedRuntimeOptions | LayoutStaticRuntimeOptions;
+/** 通过 mode 选择图形更新方式；session 支持更新策略和诊断回调，static 不接受这两个选项 */
+export type LayoutRuntimeOptions = LayoutSessionRuntimeOptions | LayoutStaticRuntimeOptions;

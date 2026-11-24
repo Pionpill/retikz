@@ -806,10 +806,10 @@ export const apiReferenceBranchLabels: Readonly<
   ],
   '@retikz/react#LayoutRuntimeOptions': [
     {
-      value: 'retained',
+      value: 'session',
       field: 'mode',
-      type: 'typeof LayoutRuntimeMode.Retained',
-      label: { zh: '保留模式', en: 'Retained' },
+      type: 'typeof LayoutRuntimeMode.Session',
+      label: { zh: '会话模式', en: 'Session' },
     },
     {
       value: 'static',

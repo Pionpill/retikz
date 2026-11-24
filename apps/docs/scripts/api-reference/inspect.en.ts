@@ -148,8 +148,8 @@ const translations: Record<string, string> = {
   动画缓动函数注册表: 'Animation easing function registry',
   '动画采样时刻，单位为毫秒；指定后定格在该时刻，不播放动画，优先于 animate':
     'Animation sample time in milliseconds; freezes at that time without playback and takes precedence over animate',
-  '选择 retained 增量更新或 static 完整编译模式；省略时使用 retained':
-    'Selects retained incremental updates or static full compilation; defaults to retained',
+  '选择 session 增量更新或 static 完整编译模式；省略时使用 session':
+    'Selects session incremental updates or static full compilation; defaults to session',
   请求生成的编译附加产物: 'Compilation artifacts requested for generation',
 
   '使用默认错误码创建 Inspect 错误': 'Creates an Inspect error with the default error code',
@@ -303,7 +303,7 @@ const translations: Record<string, string> = {
   '可选 scene requests，false 表示全图 barrier': 'Optional scene requests; false sets a barrier for the entire drawing',
   'JSX 子图的隐式根 Scope 覆盖；完整 ir 优先，style 宿主 CSS 独立生效':
     'Implicit root Scope overrides for JSX children; complete IR takes precedence, while host CSS style applies independently',
-  'retained 或 static processing 模式': 'Retained or static processing mode',
+  'session 或 static processing 模式': 'Session or static processing mode',
   '与 authored wrapper rules 合并的显式 selection': 'Explicit selection merged with authored wrapper rules',
   静态动画采样时刻: 'Time at which to sample a static animation frame',
   宿主内联样式: 'Host inline styles',
@@ -505,8 +505,8 @@ const translations: Record<string, string> = {
     'Runs an atomic Inspector compilation using Core observed compilation',
   '创建内置优先、第三方同路的默认 Inspector registry':
     'Creates the default Inspector registry with built-ins first and the same path for third-party definitions',
-  '为 static 或 retained Core compile 创建一次 Inspect observer definition':
-    'Creates an Inspect observer definition for static or retained Core compilation',
+  '为 static 或 session Core compile 创建一次 Inspect observer definition':
+    'Creates an Inspect observer definition for static or session Core compilation',
   '创建无全局状态的 Inspector registry': 'Creates an Inspector registry without global state',
   '合并多个已创建的 registry，保持各 registry 的定义顺序':
     'Merges created registries while preserving the definition order of each registry',
@@ -529,8 +529,8 @@ const translations: Record<string, string> = {
     'Optional Layout wrapper props binding an Inspect registry, selection, and callbacks',
   '可选 Inspect Path wrapper props': 'Props for the optional Inspect Path wrapper',
   '可选 Inspect Scope wrapper props': 'Props for the optional Inspect Scope wrapper',
-  '复用基础 Layout/static/retained runtime 的 Inspect 可选宿主':
-    'An optional Inspect host reusing the base Layout and static or retained runtime',
+  '复用基础 Layout/static/session runtime 的 Inspect 可选宿主':
+    'An optional Inspect host reusing the base Layout and static or session runtime',
   '复用基础 Path lowering、只附加 runtime-only Inspector authoring 标记':
     'Reuses base Path lowering and only attaches a runtime-only Inspector authoring marker',
   '复用基础 Scope lowering、只附加 runtime-only Inspector authoring 标记':

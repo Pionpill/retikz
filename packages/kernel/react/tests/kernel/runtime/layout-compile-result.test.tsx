@@ -54,7 +54,7 @@ describe('<Layout onCompileResult>', () => {
     expect(onCompileResult).not.toHaveBeenCalled();
   });
 
-  it.each(['static', 'retained'] as const)('以 %s 模式发布提交的完整结果', async mode => {
+  it.each(['static', 'session'] as const)('以 %s 模式发布提交的完整结果', async mode => {
     const onCompileResult = vi.fn();
     const container = document.createElement('div');
     const root = createRoot(container);

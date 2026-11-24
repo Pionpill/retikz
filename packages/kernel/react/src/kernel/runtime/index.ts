@@ -7,7 +7,7 @@ export type { RendererMode } from './renderer-context';
 export { RendererModeContext, useRendererMode } from './renderer-context';
 export type { RendererModeProviderProps } from './RendererModeProvider';
 export { RendererModeProvider } from './RendererModeProvider';
-export type { LayoutRetainedRuntimeOptions, LayoutRuntimeOptions, LayoutStaticRuntimeOptions } from './runtime-options';
+export type { LayoutSessionRuntimeOptions, LayoutRuntimeOptions, LayoutStaticRuntimeOptions } from './runtime-options';
 export { LayoutRuntimeMode } from './runtime-options';
 export { ThemeContext, useTheme } from './theme-context';
 export { useThemeDefinitions } from './theme-definitions-context';

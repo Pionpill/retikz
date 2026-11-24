@@ -63,7 +63,7 @@ Vanilla 拥有作者输入转换、处理结果投影、渲染配置接线和宿
 - 最终确认后的旧资源清理、观察回调失败只产生所属包诊断，不撤销已发布结果。销毁释放会话与宿主各自持有的资源，不允许销毁后继续更新。
 - 基础元素的批次结果保持与同一最终输入的 Core 完整编译可观察等价；延后 Path 引用、Scope 包络、名称可见性与自定义基础能力继续遵守现有 Core / Weave 契约。
 - 删除 Runtime 包、Source / Computation / Participant API 及对它们的包装出口，不保留旧名转发或兼容层。保留式 renderer 工厂调整为新的提交接线契约，调用方同步迁移。
-- Adapter 的 `static | retained` 模式及现有默认值保持；现有 `runtime` 配置字段是执行配置入口，不再表示依赖同名包，本决策不为包删除强制更名。`auto | full` 作为 Reconciler 执行策略保留既有含义：auto 的权威基础批次使用 Weave，完整输入走完整准备；full 使用最终输入完整准备。两种策略都不得掩盖无效批次。
+- Adapter 的 `static | session` 模式及现有默认值保持；现有 `runtime` 配置字段是执行配置入口，不再表示依赖同名包，本决策不为包删除强制更名。`auto | full` 作为 Reconciler 执行策略保留既有含义：auto 的权威基础批次使用 Weave，完整输入走完整准备；full 使用最终输入完整准备。两种策略都不得掩盖无效批次。
 - React 与 Vanilla 保持等价配置语义；完整输入更新、SSR、动画、水合、只读图层和已有 Composite 完整编译接线必须同步去除 Runtime 类型与运行依赖，但不增加 Composite 增量或交互地址能力。
 
 本决策获批后替代 [011](./011-runtime-identity-source-registry.md) 与 [012](./012-computation-transaction-lifecycle.md) 中独立 Runtime Source / Computation / Participant 的包契约；调整 [014](./014-scene-patch-renderer.md)、[016](./016-runtime-execution-policy.md)、[050](./050-runtime-trace-owner-declarations.md)、[055](./055-reconciler-extraction.md)、[061](./061-weave-core-integration.md) 和 [063](./063-weave-incremental-update.md) 对 Runtime 的所有权与接线要求。Core 绘图语义、Weave 批次语义、候选隔离和渲染一致性要求继续有效。Proposed 状态不改变现有实现与历史决策效力。

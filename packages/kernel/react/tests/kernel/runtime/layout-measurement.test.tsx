@@ -9,7 +9,7 @@ import { Layout, Node } from '../../../src';
 afterEach(() => vi.unstubAllGlobals());
 
 describe('Layout 测量接线', () => {
-  it.each(['static', 'retained'] as const)('%s 更换测量器后更新布局，宿主 CSS 字体仅影响显示', async mode => {
+  it.each(['static', 'session'] as const)('%s 更换测量器后更新布局，宿主 CSS 字体仅影响显示', async mode => {
     vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
     const container = document.createElement('div');
     const root = createRoot(container);

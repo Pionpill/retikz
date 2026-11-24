@@ -46,7 +46,7 @@ const layoutConfig: ApiReferencePackageConfig = {
         'LayoutExtensions',
         'LayoutRuntimeMode',
         'LayoutRuntimeOptions',
-        'LayoutRetainedRuntimeOptions',
+        'LayoutSessionRuntimeOptions',
         'LayoutStaticRuntimeOptions',
       ],
     },

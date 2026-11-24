@@ -39,19 +39,19 @@ description: 配置主题、注入能力、读取编译结果并控制更新
 
 根据是否保留处理状态、是否允许增量计算选择配置：
 
-| 配置                      | 更新方式                 | 适用目的                       |
-| ------------------------- | ------------------------ | ------------------------------ |
-| `retained + auto`（默认） | 保留状态，允许增量计算   | 局部更新；失败时保留已成功结果 |
-| `retained + full`         | 保留状态，变化时完整计算 | 完整计算；失败时保留已成功结果 |
-| `static`                  | 每次重新处理当前图形     | 减少常驻处理状态               |
+| 配置                     | 更新方式                 | 适用目的                       |
+| ------------------------ | ------------------------ | ------------------------------ |
+| `session + auto`（默认） | 保留状态，允许增量计算   | 局部更新；失败时保留已成功结果 |
+| `session + full`         | 保留状态，变化时完整计算 | 完整计算；失败时保留已成功结果 |
+| `static`                 | 每次重新处理当前图形     | 减少常驻处理状态               |
 
 ```tsx
-<Layout /> {/* retained + auto */}
-<Layout runtime={{ mode: 'retained', updateStrategy: 'full' }} />
+<Layout /> {/* session + auto */}
+<Layout runtime={{ mode: 'session', updateStrategy: 'full' }} />
 <Layout runtime={{ mode: 'static' }} />
 ```
 
-retained 模式处理后续输入失败时，继续显示上一次成功结果；这不表示提供撤销或历史回退。通过 `runtime.onDiagnostic` 接收结构化诊断，例如 `runtime={{ onDiagnostic: diagnostic => console.warn(diagnostic) }}`。
+session 模式处理后续输入失败时，继续显示上一次成功结果；这不表示提供撤销或历史回退。通过 `runtime.onDiagnostic` 接收结构化诊断，例如 `runtime={{ onDiagnostic: diagnostic => console.warn(diagnostic) }}`。
 
 `runtime.mode: 'static'` 不能与 `updateStrategy` 或 `onDiagnostic` 同时使用。
 
