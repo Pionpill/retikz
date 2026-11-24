@@ -59,4 +59,4 @@ declare const StandardClipProviders: ReadonlyArray<CoreDependencyProvider>;
 - 失败与诊断：无效 spec 由所属 definition 的 schema 诊断；缺少 child Clip provider、重复 kind、非法 JSON 路径、kind 不一致、递归循环或预算越界与非法 canonical path 沿 [Core v0.5 ADR-031](../../../../../kernel/_notes/decisions/_v0.5/031-single-clip-definition.md) 的统一错误边界 fail-loud
 - 兼容性 / breaking：删除五个 `XxxClipShapeDefinition`、五个 `XxxClipShapeProvider` 与 `StandardClipShapeDefinitions`，调用方只传 `clips` 或声明 `clip` provider roots。不保留 re-export、旧集合别名、自动补全或两级 provider fallback
 - Layout：allocation clip 继续使用 Core `rect`，不依赖 `@retikz/standard/clip`
-- React / Vanilla 等价性：Standard adapters、Surface、Chart、Table 与其它 consumer 只贡献完整 Clip providers；直接 Core、React、Vanilla、SSR 与 retained processing 使用同一个 registry 和诊断语义
+- React / Vanilla 等价性：Standard adapters、Surface、Chart、Table 与其它 consumer 只贡献完整 Clip providers；直接 Core、React、Vanilla、SSR 与 session processing 使用同一个 registry 和诊断语义

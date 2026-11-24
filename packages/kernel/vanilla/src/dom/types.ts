@@ -3,7 +3,7 @@ import type { CompileOptions, CompileResult, ReconcilerDiagnostic, ReconcilerUpd
 import type { AnimationControls } from '@retikz/render/animation';
 import type { HitPoint } from '@retikz/render/canvas';
 import type { HydrationController, HydrationHandlers } from '@retikz/render/hydration';
-import type { RetainedRendererFactory, RetainedRendererHost } from '@retikz/render/runtime';
+import type { RendererFactory, RendererHost } from '@retikz/render/runtime';
 
 import type { InputScene } from '../normalize';
 import type { RenderOptions } from '../runtime';
@@ -17,7 +17,7 @@ export type MountOptions = RenderOptions & {
     /** 更新策略，默认由协调器自动选择 */
     updateStrategy?: ReconcilerUpdateStrategy;
     /** 可选第三方渲染器工厂，缺省使用内置实现 */
-    rendererFactory?: RetainedRendererFactory;
+    rendererFactory?: RendererFactory;
   }>;
 };
 
@@ -31,7 +31,7 @@ export type MountCanvasOptions = MountOptions & {
 export type ViewUpdateOptions = Readonly<{ animation?: RenderOptions['animation'] }>;
 
 /** DOM 视图的宿主操作、编译结果与更新接口 */
-type View<TRoot extends RetainedRendererHost> = Readonly<{
+type View<TRoot extends RendererHost> = Readonly<{
   /** 挂载期间复用的根元素 */
   root: TRoot;
   /** 解绑事件并移除根元素 */

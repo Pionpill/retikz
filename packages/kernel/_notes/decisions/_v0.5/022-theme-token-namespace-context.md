@@ -84,7 +84,7 @@ type CompileOptions = Readonly<{
 
 Core 内置并公开 `CoreThemeTokenDefinition`。registry 构造先加入该 built-in，再按输入顺序合并 `CompileOptions.themeTokenDefinitions`：同一个 definition 对象重复出现时保留首次位置并去重；同一 namespace 出现不同 definition 对象时立即 fail-loud，诊断包含 namespace、首次来源和冲突来源；显式再次传入 `CoreThemeTokenDefinition` 只去重，任何其它 `core` namespace definition 都冲突。不得使用 last-wins，也不得仅凭 schema 或 namespace 相同就推断两个 definition 等价。
 
-所有会解析 Theme 的完整 compile、lowering-only 与 retained / fresh runtime 入口都消费这份同义 registry contract。registry 在读取 Scene / Scope Theme 或调用 Composite 前完成构造；Scene Theme 与每一层 Scope Theme 在生成 effective context 前先按其输入路径验证通用 bag，再由对应 namespace definition schema 校验 sparse owner map。只有全部校验通过的 detached、递归不可变 context 才会暴露给后代与 Composite，因此 unknown namespace 即使当前没有领域 consumer 也在声明它的 Theme 层 fail-loud。
+所有会解析 Theme 的完整 compile、lowering-only 与 session / fresh runtime 入口都消费这份同义 registry contract。registry 在读取 Scene / Scope Theme 或调用 Composite 前完成构造；Scene Theme 与每一层 Scope Theme 在生成 effective context 前先按其输入路径验证通用 bag，再由对应 namespace definition schema 校验 sparse owner map。只有全部校验通过的 detached、递归不可变 context 才会暴露给后代与 Composite，因此 unknown namespace 即使当前没有领域 consumer 也在声明它的 Theme 层 fail-loud。
 
 Definition 可以由 Core 内置 provider 或 owner 注入；Core 只比较 identity、namespace 并调用 schema，不解释领域类型或 token 语义。领域 helper（例如 `defineCoreThemeTokens`、`definePlotThemeTokens`）只返回纯 JSON contribution，不携带 schema、函数、ReactNode、class instance 或 renderer handle；不同 Scene / Scope 层级中同一 namespace 的覆盖是合法的。
 
@@ -138,7 +138,7 @@ type ResolvedThemeColors = Readonly<{
 
 ## 最终结果
 
-最终实现已闭合 namespaced Theme bag、Definition registry、Scene / Scope sparse inheritance、shared semantic / categorical colors 与 Inspector appearance；Core 保持只传播、校验和派生通用颜色视图，不解释 Tier 2 token。React、Vanilla 与 plain JSON authoring 共享同一 Theme IR 和 definition 聚合边界，fresh / retained compile 也保持可观察等价。
+最终实现已闭合 namespaced Theme bag、Definition registry、Scene / Scope sparse inheritance、shared semantic / categorical colors 与 Inspector appearance；Core 保持只传播、校验和派生通用颜色视图，不解释 Tier 2 token。React、Vanilla 与 plain JSON authoring 共享同一 Theme IR 和 definition 聚合边界，fresh / session compile 也保持可观察等价。
 
 ## 长期边界
 

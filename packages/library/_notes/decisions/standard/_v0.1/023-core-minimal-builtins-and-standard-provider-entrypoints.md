@@ -124,7 +124,7 @@ Core 是 dependency / assembly contract、resolver 和冲突语义的 owner。St
 - 直接 Core compile：调用方可以把从 Standard 子入口导入的单项 definitions 直接放入对应 `CompileOptions`；也可以显式调用 Core dependency resolver 组合若干 contributions
 - Vanilla：每个 Tier 2 adapter contribution 同时返回 Core child 与 Core provider contribution；Vanilla 收集后只调用 Core resolver，并把结果交给统一 compile 入口
 - React：每个 embeddable adapter 返回相同的 Core provider contribution；React builder 只按 authored tree 收集，Layout runtime 只调用 Core resolver
-- SSR、retained runtime 与观察编译：复用 Vanilla / React 得到的同一 resolved options，不拥有第二套 provider 状态
+- SSR、session runtime 与观察编译：复用 Vanilla / React 得到的同一 resolved options，不拥有第二套 provider 状态
 - 官方 Tier 2：在自身公开依赖中静态导入精确 Standard 子入口，并在其 adapter-neutral contribution 中声明 definitions。它不得假设宿主已经全量注册 Standard，也不得从生成后的 IR 反向扫描 provider 名称
 
 相同 IR、相同显式 definitions 和相同 contribution 顺序必须在直接 compile、Vanilla、React 与 SSR 产生相同 registry、Scene、artifact、spatial sidecar 和诊断。provider contribution 只存在于 authoring / compile assembly runtime，不进入 IR、Scene、manifest、artifact 或持久化 JSON。

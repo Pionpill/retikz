@@ -9,7 +9,7 @@ description: 沿一次节点改色，追踪输入准备、Reconciler 会话、We
   description="增量更新目前为实验性功能。完整输入更新、基础元素批次和宿主提交具有不同边界，不保证每次更新都只重算局部。"
 />
 
-把节点 A 从橙色改成蓝色，哪些工作需要重做？本文沿 Vanilla DOM 的 retained 更新追踪：Vanilla 准备输入，Reconciler 会话组合 Core 原子阶段，Render 准备并提交画面，成功后才发布新结果。React 订阅处理结果后显示它，拥有不同的宿主提交边界。
+把节点 A 从橙色改成蓝色，哪些工作需要重做？本文沿 Vanilla DOM 的 session 更新追踪：Vanilla 准备输入，Reconciler 会话组合 Core 原子阶段，Render 准备并提交画面，成功后才发布新结果。React 订阅处理结果后显示它，拥有不同的宿主提交边界。
 
 阅读前先了解[渲染链路](/kernel/components/runtime-mechanics/rendering-pipeline)中的 IR、Scene 与包职责。单次编译见 [Core 编译流程](/kernel/packages/core/compilation)。
 
@@ -72,7 +72,7 @@ Scope 先准备继承环境，再从子布局计算包络和最终投影，最�
 
 ## 宿主提交
 
-Vanilla DOM 通过 `createRetainedRenderTarget` 把 renderer 接入会话输出目标，并将 `ReconcilerResult` 的发布与宿主提交组合起来。目标准备新的 frame 和配置；编译结果变化时生成 `replaceScene`，仅配置更新时生成空操作 Patch。当前接线不会从完整结果差异自动生成逐图元 Patch。
+Vanilla DOM 通过 `createRenderTarget` 把 renderer 接入会话输出目标，并将 `ReconcilerResult` 的发布与宿主提交组合起来。目标准备新的 frame 和配置；编译结果变化时生成 `replaceScene`，仅配置更新时生成空操作 Patch。当前接线不会从完整结果差异自动生成逐图元 Patch。
 
 Scene 快照根据编译 provenance 记录图元身份、owner 与拓扑，供 Render 验证和水合使用。这些身份不等于 Weave 批次中的节点地址，也不保证宿主进行局部更新。
 

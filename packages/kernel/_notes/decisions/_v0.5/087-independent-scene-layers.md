@@ -7,7 +7,7 @@ keywords: Layer、图层、OpenString、Reconciler、Weave、全量编译、增�
 
 - 状态：Accepted
 - 决策日期：2026-11-19
-- 关联：[作者输入](./029-vanilla-authoring-normalization.md)、[会话入口](./082-scene-reconciler-entry.md)、[独立编译驱动](./086-independent-compilation-drivers.md)、[保留式渲染](./014-scene-patch-retained-renderer.md)
+- 关联：[作者输入](./029-vanilla-authoring-normalization.md)、[会话入口](./082-scene-reconciler-entry.md)、[独立编译驱动](./086-independent-compilation-drivers.md)、[保留式渲染](./014-scene-patch-renderer.md)
 
 ## 决策
 

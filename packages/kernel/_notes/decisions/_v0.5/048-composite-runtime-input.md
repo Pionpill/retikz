@@ -1,5 +1,5 @@
 ---
-description: 为真实 composite 实例绑定领域中立的同步运行时输入，显式传递嵌套与生成子项，保持布局测量、retained revision 与 JSON Source 隔离
+description: 为真实 composite 实例绑定领域中立的同步运行时输入，显式传递嵌套与生成子项，保持布局测量、session revision 与 JSON Source 隔离
 keywords: Composite、runtimeInputs、Source、Layout、revision、Vanilla
 ---
 

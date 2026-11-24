@@ -32,8 +32,8 @@ import type { RenderFrameSnapshot } from './frame';
 import { mergeRenderHandlers } from './handlers';
 import type { RenderReadonlyLayer } from './readonly-layer';
 import { validateReadonlyLayers } from './readonly-layer';
-import type { RetainedCanvasRenderer, RetainedCanvasRendererImmutableOptions } from './renderer';
-import { defineRetainedRenderer } from './renderer';
+import type { CanvasRenderer, CanvasRendererImmutableOptions } from './renderer';
+import { defineRenderer } from './renderer';
 import type { SceneAnimationDescriptorDiff } from './runtime-options';
 import {
   SceneAnimationOccurrenceChangeKind,
@@ -75,7 +75,7 @@ const runtimeAnimationsHaveAutoplay = (
   animations: RuntimeScenePrimitive['animations'] | SceneRuntimeSnapshot['scene']['animations'],
 ): boolean => animations?.some(track => track.trigger === undefined || track.trigger === 'load') === true;
 
-/** Canvas retained 局部重绘使用的 Scene 坐标包围盒 */
+/** Canvas 局部重绘使用的 Scene 坐标包围盒 */
 type CanvasBounds = Readonly<{ x: number; y: number; width: number; height: number }>;
 
 /** 顶层稳定 occurrence 与其保守绘制范围 */
@@ -574,7 +574,7 @@ type CanvasBitmapSize = Readonly<{ width: number; height: number }>;
 const resolveCanvasBitmapSize = (
   snapshot: SceneRuntimeSnapshot,
   config: RenderRuntimeConfig,
-  options: RetainedCanvasRendererImmutableOptions,
+  options: CanvasRendererImmutableOptions,
 ): CanvasBitmapSize => {
   const ratio = resolvedDevicePixelRatio(options);
   const size = computeDisplaySize(snapshot.scene.layout, config.canvas?.width, config.canvas?.height);
@@ -592,7 +592,7 @@ const createBitmap = (
   snapshot: SceneRuntimeSnapshot,
   layers: ReadonlyArray<RenderReadonlyLayer>,
   config: RenderRuntimeConfig,
-  options: RetainedCanvasRendererImmutableOptions,
+  options: CanvasRendererImmutableOptions,
   hostStyle: CanvasHostStyle,
   time: number | undefined,
   animationFrame: CanvasAnimationFrame | undefined,
@@ -623,7 +623,7 @@ const createBitmap = (
   return bitmap;
 };
 
-const resolvedDevicePixelRatio = (options: RetainedCanvasRendererImmutableOptions): number => {
+const resolvedDevicePixelRatio = (options: CanvasRendererImmutableOptions): number => {
   if (options.devicePixelRatio !== undefined) return options.devicePixelRatio;
   const ratio = globalThis.devicePixelRatio;
   return typeof ratio === 'number' && Number.isFinite(ratio) && ratio > 0 ? ratio : 1;
@@ -653,7 +653,7 @@ const createIncrementalBitmap = (
   committedBitmap: HTMLCanvasElement,
   snapshot: SceneRuntimeSnapshot,
   config: RenderRuntimeConfig,
-  options: RetainedCanvasRendererImmutableOptions,
+  options: CanvasRendererImmutableOptions,
   hostStyle: CanvasHostStyle,
   time: number | undefined,
   animationFrame: CanvasAnimationFrame | undefined,
@@ -688,7 +688,7 @@ const createIncrementalBitmap = (
   if (context === null)
     throw new RetikzRenderError(
       RetikzRenderErrorCode.Runtime,
-      'Canvas retained renderer cannot acquire an incremental 2D context',
+      'Canvas renderer cannot acquire an incremental 2D context',
     );
 
   context.save();
@@ -729,7 +729,7 @@ const createIncrementalBitmap = (
   if (rollbackContext === null)
     throw new RetikzRenderError(
       RetikzRenderErrorCode.Runtime,
-      'Canvas retained renderer cannot capture the dirty rollback region',
+      'Canvas renderer cannot capture the dirty rollback region',
     );
 
   rollbackContext.drawImage(
@@ -751,7 +751,7 @@ const createIncrementalBitmap = (
 const paintBitmap = (host: HTMLCanvasElement, bitmap: HTMLCanvasElement | undefined): void => {
   const context = host.getContext('2d');
   if (context === null)
-    throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'Canvas retained renderer cannot acquire a 2D context');
+    throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'Canvas renderer cannot acquire a 2D context');
 
   context.setTransform(1, 0, 0, 1, 0, 0);
   context.clearRect(0, 0, host.width, host.height);
@@ -767,10 +767,7 @@ const paintBitmapRegion = (
 ): void => {
   const context = target.getContext('2d');
   if (context === null)
-    throw new RetikzRenderError(
-      RetikzRenderErrorCode.Runtime,
-      'Canvas retained renderer cannot acquire a dirty 2D context',
-    );
+    throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'Canvas renderer cannot acquire a dirty 2D context');
 
   context.setTransform(1, 0, 0, 1, 0, 0);
   context.clearRect(region.x, region.y, region.width, region.height);
@@ -796,10 +793,7 @@ const captureBitmap = (host: HTMLCanvasElement): HTMLCanvasElement => {
   bitmap.height = host.height;
   const context = bitmap.getContext('2d');
   if (context === null)
-    throw new RetikzRenderError(
-      RetikzRenderErrorCode.Runtime,
-      'Canvas retained renderer cannot capture the committed bitmap',
-    );
+    throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'Canvas renderer cannot capture the committed bitmap');
 
   context.drawImage(host, 0, 0);
 
@@ -985,7 +979,7 @@ const createCanvasAnimation = (
   snapshot: SceneRuntimeSnapshot,
   layers: ReadonlyArray<RenderReadonlyLayer>,
   config: RenderRuntimeConfig,
-  options: RetainedCanvasRendererImmutableOptions,
+  options: CanvasRendererImmutableOptions,
   getImage: CanvasImageResolver,
 ): CanvasAnimationState | undefined => {
   if (
@@ -1493,11 +1487,11 @@ const createCanvasAnimation = (
   return state;
 };
 
-/** 创建内置 Canvas retained renderer */
-export const createBuiltinCanvasRetainedRenderer = (
+/** 创建内置 Canvas renderer */
+export const createBuiltinCanvasRenderer = (
   host: HTMLCanvasElement,
-  options: RetainedCanvasRendererImmutableOptions,
-): RetainedCanvasRenderer => {
+  options: CanvasRendererImmutableOptions,
+): CanvasRenderer => {
   const immutableOptions = Object.freeze({
     ...options,
     devicePixelRatio: resolvedDevicePixelRatio(options),
@@ -1852,7 +1846,7 @@ export const createBuiltinCanvasRetainedRenderer = (
     }
   };
 
-  return defineRetainedRenderer({
+  return defineRenderer({
     backend: 'canvas',
     host,
     capability: 'entity',
@@ -1861,7 +1855,7 @@ export const createBuiltinCanvasRetainedRenderer = (
     prepare: (patch, frame, config) => prepare(patch, frame, config),
     read: () => {
       if (currentSnapshot === undefined)
-        throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'Canvas retained renderer is not committed');
+        throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'Canvas renderer is not committed');
 
       return Object.freeze({
         frame: Object.freeze({ primary: currentSnapshot, layers: currentLayers }),

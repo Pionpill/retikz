@@ -7,7 +7,7 @@
     "layer": "renderer",
     "publishable": true
   },
-  "description": "retikz rendering backends and shared hydration, animation, and retained runtime contracts, exposed through explicit subpaths.",
+  "description": "retikz rendering backends and shared hydration, animation, and session runtime contracts, exposed through explicit subpaths.",
   "type": "module",
   "engines": {
     "node": ">=22.12.0"

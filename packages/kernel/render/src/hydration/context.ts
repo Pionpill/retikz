@@ -547,7 +547,7 @@ export type HydrationContextDependencies = {
    * 传 getter（`() => Scene`）支持 live scene——mount 后 `update()` 换图时每次命中读最新 Scene
    */
   scene?: Scene | (() => Scene | undefined);
-  /** retained topology 按 public id 聚合的 occurrence paths；缺省继续按持久 Scene id 查询 */
+  /** 会话拓扑 按 public id 聚合的 occurrence paths；缺省继续按持久 Scene id 查询 */
   resolvePrimitivePaths?: (id: string) => ReadonlyArray<PropertyPath> | undefined;
   /** 命中 DOM 元素定位（svg = closest；canvas = () => null） */
   resolveElement: (event: Event, id: string) => Element | null;

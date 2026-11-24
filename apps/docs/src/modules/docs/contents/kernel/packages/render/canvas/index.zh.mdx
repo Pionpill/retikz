@@ -29,15 +29,15 @@ import { Layout, Node } from '@retikz/react';
 import { mountCanvas } from '@retikz/vanilla/dom';
 
 const view = mountCanvas(container, ir);
-// view.root 是 <canvas>；view.update(next) 走所选 static 或 retained processing；view.dispose() 卸载
+// view.root 是 <canvas>；view.update(next) 走所选 static 或 session processing；view.dispose() 卸载
 ```
 
 两个入口的输入能力不同：
 
-| 入口                  | 接收的输入                               | 输出       |
-| --------------------- | ---------------------------------------- | ---------- |
-| React `<Layout>`      | JSX `children`<br />或 `IRScene`         | `<canvas>` |
-| Vanilla `mountCanvas` | `Scene` / `IRScene`<br />或 `InputScene` | `<canvas>` |
+| 入口                  | 接收的输入                       | 输出       |
+| --------------------- | -------------------------------- | ---------- |
+| React `<Layout>`      | JSX `children`<br />或 `IRScene` | `<canvas>` |
+| Vanilla `mountCanvas` | `IRScene`                        | `<canvas>` |
 
 `devicePixelRatio` 缺省读取 `globalThis.devicePixelRatio`，再回退到 1，让高清屏保留足够的位图分辨率。
 

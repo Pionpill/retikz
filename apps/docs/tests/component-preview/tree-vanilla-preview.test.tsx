@@ -39,7 +39,7 @@ it('Tree 的保留模式更新移除并恢复节点及缺失槽位', () => {
   }
 });
 
-it('Tree 默认预览不将 undefined 写入 retained Source', () => {
+it('Tree 默认预览不将 undefined 写入 会话输入', () => {
   const input = createInputScene(
     renderTreePreview({
       direction: 'down',

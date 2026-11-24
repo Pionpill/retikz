@@ -60,7 +60,7 @@ Path 的 scene/subtree 选择按 ADR-039 与其它 Inspector 一致，不保留�
 
 Render 只认识普通 Scene 图层：每项包含 key、scene 与 transform。主图单独决定 camera、fit、viewBox、布局、交互身份和增量 patch；辅助层不参与 viewport、hit-test、pointer、hydration、animation 或主图身份
 
-SVG、Canvas、SSR 和 retained renderer 先处理 primary，再按顺序处理 layers。每层资源隔离，key 在帧内唯一。retained 后端以同一个 prepared token 提交或回滚整帧；任一辅助层失败不能提交新的 primary
+SVG、Canvas、SSR 和 renderer 先处理 primary，再按顺序处理 layers。每层资源隔离，key 在帧内唯一。session 后端以同一个 prepared token 提交或回滚整帧；任一辅助层失败不能提交新的 primary
 
 Inspect 将 plane entry 映射为普通只读层。local 片段使用 observation transform，scene 片段使用单位矩阵，具体坐标契约见 ADR-039。辅助 Scene 在交付前移除公共 id、meta 和 animation，保留内部资源引用
 
@@ -68,7 +68,7 @@ Inspect 将 plane entry 映射为普通只读层。local 片段使用 observatio
 
 InspectionDiagnostic 记录 selection、subject、inspect、output 或 fragment 的 origin。selection 保留 rule index 和合法 target；其余阶段保留 Inspector key、owner、occurrence，输出阶段再记录 outputIndex。Core warning 的 code、message、path 作为 cause 保留，不伪装成 primary warning
 
-非致命辅助警告进入独立 diagnostics；ADR-039 的部分几何缺失可以警告并继续绘制其它支持项。非法选择、契约、回调和片段编译仍原子失败，retained 宿主保留上一 committed frame
+非致命辅助警告进入独立 diagnostics；ADR-039 的部分几何缺失可以警告并继续绘制其它支持项。非法选择、契约、回调和片段编译仍原子失败，session 宿主保留上一 committed frame
 
 相同 Source、definitions、选择和宿主参数产生同序结果。色彩与内置几何选项遵循 ADR-039 和当前 Core categorical / semantic 色板，不维护独立色值副本。开关 Inspect 不改变 primary Scene、artifacts、spatial handles、资源或命中结果
 

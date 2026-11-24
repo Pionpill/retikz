@@ -1,9 +1,9 @@
 ---
-description: Scene Patch 与 Retained Renderer
-keywords: 'Scene、Patch、Retained、Renderer、parent、rendererFactory、VanillaLayerCache、SceneRuntimeSnapshot'
+description: Scene Patch 与 Renderer
+keywords: 'Scene、Patch、Session、Renderer、parent、rendererFactory、VanillaLayerCache、SceneRuntimeSnapshot'
 ---
 
-# ADR-014：Scene Patch 与 Retained Renderer
+# ADR-014：Scene Patch 与 Renderer
 
 - 状态：Accepted
 - 决策日期：2026-07-26
@@ -12,7 +12,7 @@ keywords: 'Scene、Patch、Retained、Renderer、parent、rendererFactory、Vani
 
 ## 背景
 
-ADR-013 已让 Core 对完整 IR Snapshot 产出稳定的 Scene Patch，但旧 SVG、Canvas 与 React 更新入口仍以完整重建为主。缺少 retained identity topology、可回滚的 renderer commit 和唯一宿主所有权时，Core 的局部收益无法穿透到 DOM、bitmap、hit-test、resource、hydration 与 animation state。
+ADR-013 已让 Core 对完整 IR Snapshot 产出稳定的 Scene Patch，但旧 SVG、Canvas 与 React 更新入口仍以完整重建为主。缺少 session identity topology、可回滚的 renderer commit 和唯一宿主所有权时，Core 的局部收益无法穿透到 DOM、bitmap、hit-test、resource、hydration 与 animation state。
 
 持久 Scene 的局部 `id?` 也不足以表达 anonymous subtree、重复 public id、一个 semantic owner 对多个 primitive，以及 Group descendant 的稳定 occurrence。因此增量 renderer 不能从裸 Scene 猜 identity，必须消费 Core 同次编译产生的完整 runtime snapshot 与 patch。
 
@@ -38,7 +38,7 @@ Core 在 full 与 incremental final assembly 中都产出 deeply immutable 的 `
 
 Operation 规范化顺序固定为 resource → parent-before-child structural → layout → animation → child-before-parent remove。Structural target 不得重复或与 ancestor/descendant 重叠；`before` 必须是 next topology 中同 parent sibling；move 不能进入自身 descendant；replace 必须独占。无法证明局部 cover 时，Core 扩大到最近稳定 subtree 或直接 replace。
 
-Render participant 在调用 renderer 前用纯 validator 将 Patch 重放为 expected Scene/topology，并与 next Snapshot 交叉验证。Topology、Patch、revision 或 coherence 任一无效都具名 fail-loud，不能降级为 replace；空 Patch 只允许在 Scene/topology 语义不变时连续推进 revision。预编译裸 Scene 没有 topology，只保留既有 static full render，不进入 retained runtime。
+Render participant 在调用 renderer 前用纯 validator 将 Patch 重放为 expected Scene/topology，并与 next Snapshot 交叉验证。Topology、Patch、revision 或 coherence 任一无效都具名 fail-loud，不能降级为 replace；空 Patch 只允许在 Scene/topology 语义不变时连续推进 revision。预编译裸 Scene 没有 topology，只保留既有 static full render，不进入 session runtime。
 
 ### Runtime commit participant 与逻辑状态同一 transaction 发布
 
@@ -61,16 +61,16 @@ Participant context只暴露 owner-bound trace write surface与 `diagnose()`；R
 
 Runtime 最终 dispose 对 participant 做反向 best-effort cleanup：成功项永久完成，失败项写入 diagnostics 并保留为 pending；source/computation 只 retire 一次，随后同次调用再重试一次 pending participant。仍失败时 Runtime 只允许 revision、diagnostics 与后续 dispose，update/read 继续以 disposed fail-loud；后续 dispose 只重试 pending 项，全部成功后进入幂等 disposed。
 
-### Render retained runtime 是内置与第三方 renderer 的共同边界
+### Render session runtime 是内置与第三方 renderer 的共同边界
 
 `@retikz/render/runtime` 提供：
 
 - `RenderRuntimeSourceDefinition` 与调用方负责保持稳定的只读 `RenderRuntimeConfig`
-- nominal `defineRetainedRenderer()`、`RetainedRendererFactory` 与 `createRetainedRenderParticipant()`
+- nominal `defineRenderer()`、`RendererFactory` 与 `createRenderParticipant()`
 - `none | group | entity` capability
-- 内置 SVG / Canvas retained renderer
+- 内置 SVG / Canvas renderer
 
-Factory input是 backend/host/immutable options 的判别联合；构造前验证 backend与宿主类型，构造后验证 nominal renderer、backend与host identity。第三方 callback已抛 `RetainedRenderError`时保留原错误，其它 prepare throw包装为 `RETAINED_RENDERER_PREPARE_FAILED`；commit/rollback/dispose错误由Runtime participant envelope承接。
+Factory input是 backend/host/immutable options 的判别联合；构造前验证 backend与宿主类型，构造后验证 nominal renderer、backend与host identity。第三方 callback已抛 `RenderError`时保留原错误，其它 prepare throw包装为 `RENDERER_PREPARE_FAILED`；commit/rollback/dispose错误由Runtime participant envelope承接。
 
 Capability判断严格晚于全部 validation：
 
@@ -78,13 +78,13 @@ Capability判断严格晚于全部 validation：
 - `group`额外接受全局 config operation与稳定 Group subtree structural operation
 - `entity`接受全部规范化 operation
 
-合法但 capability不支持的 Patch在调用renderer前转换为独占 replace，并产生一条 `RETAINED_RENDERER_CAPABILITY_FALLBACK` warning与 fallback trace；无效输入永不 fallback，也不调用 renderer。
+合法但 capability不支持的 Patch在调用renderer前转换为独占 replace，并产生一条 `RENDERER_CAPABILITY_FALLBACK` warning与 fallback trace；无效输入永不 fallback，也不调用 renderer。
 
-Retained participant使用 `continuous` policy，维护私有 committed lineage snapshot。Config-only或无关 owner commit复制完整 Scene/topology、推进 revision并提交 empty Patch，不现场调用 renderer read。Renderer executor read只在全部commit后、Runtime publish前调用一次，并与 lineage snapshot交叉验证；公开 handle只通过 `runtime.participant()`读取 committed cache。
+Session participant使用 `continuous` policy，维护私有 committed lineage snapshot。Config-only或无关 owner commit复制完整 Scene/topology、推进 revision并提交 empty Patch，不现场调用 renderer read。Renderer executor read只在全部commit后、Runtime publish前调用一次，并与 lineage snapshot交叉验证；公开 handle只通过 `runtime.participant()`读取 committed cache。
 
 SVG 以 mutation journal/detached staging 原位更新 DOM，保留未变节点 identity；SSR adopt mismatch在 publish 前 full replace。Canvas 维护 candidate display list/index与 stable canvas，增量更新只捕获、绘制和提交 conservative dirty region；stroke、shadow、clip、transform、animation或重叠无法证明时扩大到 full path。Rollback成功时恢复旧宿主；rollback自身失败则按Runtime规则进入 broken或终止initial create。
 
-### React 与 Vanilla 共享同一 retained runtime
+### React 与 Vanilla 共享同一 session runtime
 
 React只拥有 `<svg>` / `<canvas>` host shell attributes/ref，Render独占 SVG descendants或Canvas bitmap/index。Render phase只生成 SSR-safe seed；layout effect创建、更新与释放 runtime。Compile options按JSON结构与Definition/callback identity规范化，语义变化时完整 teardown/recreate，不能热塞进旧 Core Computation。
 
@@ -108,18 +108,18 @@ Resource以canonical descriptor与candidate/committed consumer set staging，新
 
 - Core新增runtime-only Scene snapshot/topology/Patch contract，不修改持久IR/Scene schema
 - Runtime新增commit participant与runtime-bound read；未传participants时保持ADR-012既有行为
-- Render新增`@retikz/render/runtime` public subpath、retained factory/definition/participant/config与内置SVG/Canvas实现
-- React从package root导出`LayoutRuntimeOptions`，`<Layout runtime>`进入retained runtime
-- Vanilla IR/plain spec mount返回retained view并支持transactional update/diagnostics；预编译Scene继续static full render
+- Render新增`@retikz/render/runtime` public subpath、session factory/definition/participant/config与内置SVG/Canvas实现
+- React从package root导出`LayoutRuntimeOptions`，`<Layout runtime>`进入session runtime
+- Vanilla IR/plain spec mount返回session view并支持transactional update/diagnostics；预编译 Scene 直接交给 Render 绘制
 - 这是0.x公开行为调整，不提供旧写法别名或平行协议
 
 ## 最终实现
 
 - Runtime participant lifecycle、ownership、diagnostics、trace、read cache与rollback/broken envelope已实现
 - Core Computation支持额外invalidation source，并以canonical topology/Patch作为Render输入
-- Render完成validator、capability fallback、lineage、内置SVG/Canvas retained transaction、resource/hydration/animation与Canvas dirty-region路径
+- Render完成validator、capability fallback、lineage、内置SVG/Canvas session transaction、resource/hydration/animation与Canvas dirty-region路径
 - React完成host-shell、SSR adopt、StrictMode、commit后callback/ref与诊断出口
-- Vanilla完成retained/static判别、atomic update、composite callback transaction、artifact与hydration contribution
+- Vanilla完成session 挂载、atomic update、composite callback transaction、artifact与hydration contribution
 - Bench 提供 deterministic work-count 与独立 timing 报告；计时不进入产品契约
 
 ## 遗留边界
@@ -128,4 +128,4 @@ Resource以canonical descriptor与candidate/committed consumer set staging，新
 - selection、drag、brush、zoom与domain intent留给后续interaction contract
 - WebGL、远端renderer、跨页面cache与更细粒度Vanilla per-layer identity需要独立设计
 - `VanillaLayerCache`的实际renderer复用、semantic fingerprint与auto/static/dynamic等价性门禁尚未实现
-- React render-time仍需为SSR seed执行一次完整`compileToScene`；retained runtime减少的是commit/update成本，不承诺消除该render-time compile
+- React render-time仍需为SSR seed执行一次完整`compileToScene`；session runtime减少的是commit/update成本，不承诺消除该render-time compile

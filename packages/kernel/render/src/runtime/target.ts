@@ -10,27 +10,22 @@ import type { InputRenderRuntimeConfig } from './config';
 import type { RenderFrameSnapshot, StaticRenderFrame } from './frame';
 import { EMPTY_READONLY_LAYERS, validateReadonlyLayers } from './readonly-layer';
 import type { RenderReadonlyLayer } from './readonly-layer';
-import { getRetainedRendererExecutor, isRetainedRenderer, isSvgHost, isCanvasHost } from './renderer';
-import type {
-  RetainedRenderer,
-  RetainedRendererFactory,
-  RetainedRendererRead,
-  InputRetainedRendererFactory,
-} from './renderer';
+import { getRendererExecutor, isRenderer, isSvgHost, isCanvasHost } from './renderer';
+import type { Renderer, RendererFactory, RendererRead, InputRendererFactory } from './renderer';
 import { runtimeStructuralEquals } from './shared';
 import { assertSceneRuntimeSnapshot, sceneRuntimeSnapshotEquals, assertScenePatch } from './validator';
 
 /** 同一宿主重建编译会话时交接 renderer 的句柄 */
-export type RetainedRenderLease = Readonly<{ renderer: RetainedRenderer }>;
-const leaseOwners = new WeakMap<RetainedRenderLease, object>();
+export type RenderLease = Readonly<{ renderer: Renderer }>;
+const leaseOwners = new WeakMap<RenderLease, object>();
 /** 编译结果到保留式宿主的接线配置 */
-export type RetainedRenderTargetOptions = Readonly<{
+export type RenderTargetOptions = Readonly<{
   /** 宿主提交的可选观测出口 */
   trace?: PerformanceTraceSink;
   /** 创建当前宿主的后端实例 */
-  rendererFactory: RetainedRendererFactory;
+  rendererFactory: RendererFactory;
   /** 重建会话时可接管的现有后端 */
-  rendererLease?: RetainedRenderLease;
+  rendererLease?: RenderLease;
   /** 每次准备读取本次输出配置 */
   configuration: () => InputRenderRuntimeConfig;
   /** 从同一编译结果解析只读图层 */
@@ -39,26 +34,26 @@ export type RetainedRenderTargetOptions = Readonly<{
   mountMode?: 'create' | 'adopt';
 }> &
   (
-    | (Extract<InputRetainedRendererFactory, { backend: 'svg' }> &
+    | (Extract<InputRendererFactory, { backend: 'svg' }> &
         Readonly<{
           /** 接管 SVG 宿主时预期的首帧 */
           expectedInitialFrame?: StaticRenderFrame;
         }>)
-    | Extract<InputRetainedRendererFactory, { backend: 'canvas' }>
+    | Extract<InputRendererFactory, { backend: 'canvas' }>
   );
 /** Render 对外的读取及单目标提交能力 */
-export type RetainedRenderTarget = Readonly<{
+export type RenderTarget = Readonly<{
   /** 供会话调度的单目标提交协议 */
   target: ReconcilerCommitTarget;
   /** 仅返回最近成功提交的宿主状态 */
-  read: () => RetainedRendererRead;
+  read: () => RendererRead;
   /** 会话之间交接后端所有权的稳定句柄 */
-  lease: RetainedRenderLease;
+  lease: RenderLease;
 }>;
 
 /** 创建与计算会话解耦的宿主提交目标 */
-export const createRetainedRenderTarget = (input: RetainedRenderTargetOptions): RetainedRenderTarget => {
-  let options: RetainedRenderTargetOptions;
+export const createRenderTarget = (input: RenderTargetOptions): RenderTarget => {
+  let options: RenderTargetOptions;
   try {
     if (input.backend === 'svg') options = { ...input };
     else options = { ...input };
@@ -77,7 +72,7 @@ export const createRetainedRenderTarget = (input: RetainedRenderTargetOptions): 
     let disposeFailure: unknown;
     if (options.rendererLease === undefined) {
       try {
-        getRetainedRendererExecutor(renderer)?.dispose();
+        getRendererExecutor(renderer)?.dispose();
       } catch (cause) {
         disposeFailure = cause;
       }
@@ -87,11 +82,11 @@ export const createRetainedRenderTarget = (input: RetainedRenderTargetOptions): 
       cause: { renderer, disposeFailure },
     });
   }
-  const executor = getRetainedRendererExecutor(renderer);
+  const executor = getRendererExecutor(renderer);
   if (executor === undefined) throw new RetikzRenderError({ code: RetikzRenderErrorCode.RuntimeRendererInvalid });
   const lease = options.rendererLease ?? Object.freeze({ renderer });
   if (options.rendererLease === undefined) leaseOwners.set(lease, owner);
-  let committedRead: RetainedRendererRead | undefined;
+  let committedRead: RendererRead | undefined;
   let disposed = false;
   let currentFrame = options.rendererLease === undefined ? undefined : executor.read().frame;
   const offset = currentFrame === undefined ? 0 : currentFrame.primary.revision + 1;
@@ -215,8 +210,8 @@ export const createRetainedRenderTarget = (input: RetainedRenderTargetOptions): 
 };
 
 /** 验证 renderer 的宿主归属，不允许把别的宿主接入本目标 */
-const isRetikzRendererForHost = (renderer: RetainedRenderer, options: RetainedRenderTargetOptions): boolean =>
-  isRetainedRenderer(renderer) && renderer.backend === options.backend && renderer.host === options.host;
+const isRetikzRendererForHost = (renderer: Renderer, options: RenderTargetOptions): boolean =>
+  isRenderer(renderer) && renderer.backend === options.backend && renderer.host === options.host;
 
 const invalidRendererRead = (cause: unknown): never => {
   throw new RetikzRenderError({ code: RetikzRenderErrorCode.RuntimeRendererInvalid, cause });
@@ -320,10 +315,10 @@ const freezeAnimationControls = (
 };
 
 const snapshotRendererReadUnsafe = (
-  value: RetainedRendererRead,
+  value: RendererRead,
   lineage: RenderFrameSnapshot | undefined,
   animationControlsCache: WeakMap<object, AnimationControls>,
-): RetainedRendererRead => {
+): RendererRead => {
   const candidate: unknown = value;
   if (lineage === undefined || typeof candidate !== 'object' || candidate === null) {
     throw new RetikzRenderError({
@@ -360,10 +355,10 @@ const snapshotRendererReadUnsafe = (
 };
 
 const snapshotRendererRead = (
-  value: RetainedRendererRead,
+  value: RendererRead,
   lineage: RenderFrameSnapshot | undefined,
   animationControlsCache: WeakMap<object, AnimationControls>,
-): RetainedRendererRead => {
+): RendererRead => {
   try {
     return snapshotRendererReadUnsafe(value, lineage, animationControlsCache);
   } catch (cause) {

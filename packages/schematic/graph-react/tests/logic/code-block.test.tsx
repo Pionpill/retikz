@@ -84,12 +84,12 @@ describe('自定义代码块 React 编写', () => {
     expect(actual.scene).toEqual(vanilla.scene);
     expect(actual.scene).toEqual(direct.scene);
 
-    const retained = SceneRuntime.fromInput(input, {
+    const session = SceneRuntime.fromInput(input, {
       compile: { themeDefinitions: [coreStyle] },
     });
 
-    expect(retained.current.compilation.result.scene).toEqual(actual.scene);
+    expect(session.current.compilation.result.scene).toEqual(actual.scene);
 
-    retained.dispose();
+    session.dispose();
   });
 });

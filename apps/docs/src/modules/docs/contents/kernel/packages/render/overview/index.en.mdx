@@ -1,33 +1,33 @@
 ---
 title: '@retikz/render'
-description: Renders backend-neutral Scenes to SVG / Canvas and coordinates frame, event, animation and hydration updates through a retained commit target.
+description: Renders backend-neutral Scenes to SVG / Canvas and coordinates frame, event, animation and hydration updates through a session commit target.
 ---
 
 > This is package documentation, not component docs; to draw, start from [Components](/kernel/components/layout).
 
 This group covers how retikz actually paints a figure to the screen. Your figure is first compiled into a **renderer-agnostic Scene**, then handed to a backend: **SVG** emits a vector DOM where every primitive is a real, CSS-targetable element; **Canvas** paints the same Scene as a raster bitmap, suited to many primitives or frequent repaints. The backends share Scene semantics and align their output where each backend supports the required feature; check host capabilities and interaction needs before switching. **Hydration** is the mechanism both backends share: render statically first, then bind event handlers back to primitives by id on the client.
 
-Readonly layers are materialized with the primary figure through static-frame or retained commit APIs. `drawReadonlyLayer` and `buildSvgReadonlyLayer` are internal assembly helpers, excluded from the public Canvas/SVG subpaths. Public granular SVG builders remain available.
+Readonly layers are materialized with the primary figure through static-frame or session commit APIs. `drawReadonlyLayer` and `buildSvgReadonlyLayer` are internal assembly helpers, excluded from the public Canvas/SVG subpaths. Public granular SVG builders remain available.
 
 ## Responsibilities
 
-| Topic            | Responsibility                                                                               | Reach for it when                                                   |
-| ---------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| SVG              | Scene → vector DOM, or an SSR / build-time string                                            | The default: you want crisp vectors, CSS hit-testing, accessibility |
-| Canvas           | Scene → raster bitmap, immediate-mode drawing + hit-testing                                  | Hundreds of primitives, frequent repaints, performance first        |
-| Retained commits | Prepare and commit Scenes and configuration in a Reconciler session                          | Stable host identity and incremental updates                        |
-| Readonly layers  | Materialize domain-neutral ordinary Scene layers after the primary figure                    | Inspection, editor aids, or other readonly auxiliary content        |
-| Hydration        | Bind event handlers back to primitives by id after a static render (shared by both backends) | Adding click / hover interaction to a figure                        |
+| Topic           | Responsibility                                                                               | Reach for it when                                                   |
+| --------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| SVG             | Scene → vector DOM, or an SSR / build-time string                                            | The default: you want crisp vectors, CSS hit-testing, accessibility |
+| Canvas          | Scene → raster bitmap, immediate-mode drawing + hit-testing                                  | Hundreds of primitives, frequent repaints, performance first        |
+| Session commits | Prepare and commit Scenes and configuration in a Reconciler session                          | Stable host identity and incremental updates                        |
+| Readonly layers | Materialize domain-neutral ordinary Scene layers after the primary figure                    | Inspection, editor aids, or other readonly auxiliary content        |
+| Hydration       | Bind event handlers back to primitives by id after a static render (shared by both backends) | Adding click / hover interaction to a figure                        |
 
-## Retained commits
+## Session commits
 
-`createRetainedRenderTarget()` connects a Reconciler session to a retained renderer. Vanilla combines it with processing-result publication into one commit target: prepare the candidate frame and configuration, commit the host, then publish the session result. The first commit materializes a complete Scene. Changed compilation output produces `replaceScene`; a configuration-only update uses an empty-operation Patch and retains compilation output. Failed commits restore host and compilation state. Failed recovery puts the Reconciler session into the broken state, requiring disposal and recreation.
+`createRenderTarget()` connects a Reconciler session to a renderer. Vanilla combines it with processing-result publication into one commit target: prepare the candidate frame and configuration, commit the host, then publish the session result. The first commit materializes a complete Scene. Changed compilation output produces `replaceScene`; a configuration-only update uses an empty-operation Patch and retains compilation output. Failed commits restore host and compilation state. Failed recovery puts the Reconciler session into the broken state, requiring disposal and recreation.
 
 Final disposal performs reverse best-effort cleanup across hydration, animation, and the image loader. Once an SVG WAAPI binding or Canvas clock starts cleanup, public controls and event / visibility callbacks become inert immediately. Animations, observers, listeners, inline-style ownership, visibility listeners, and the clock are cleaned independently: successful items are not repeated, while failed items remain retryable by a later disposal call.
 
 `InputRenderRuntimeConfig` is a closed transaction config. `handlerContributions` merge hydration handlers in registration order, `animation` controls playback, snapshots, and extension registries, `cachePolicy` preserves a hint for future layer invalidation optimization, and `canvas.width` / `canvas.height` declare Canvas CSS user-space dimensions. The SVG and Canvas renderers do not yet use `cachePolicy` to reuse layers. Render borrows the configuration and read-only layers without freezing caller-owned objects. It builds a separate ordered list only when handler registrations arrive out of order. Keep them and their members stable while the renderer uses them. For updates, supply new values rather than mutating data referenced by an earlier frame. Omitted Canvas dimensions derive from the committed Scene layout and are multiplied by the session-lifetime DPR. Size changes and bitmap painting commit atomically, while dirty reuse is allowed only when the target size is stable.
 
-Import these retained APIs from `@retikz/render/runtime`; they are not exported from the `@retikz/render` package root. A third-party backend uses `RetainedRendererFactory` to create a nominal SVG or Canvas renderer and declares `none`, `group`, or `entity` capability. The Render commit target validates Snapshot / Patch revisions and result consistency; invalid Patches are rejected. The current integration produces complete replacements for compilation changes. Backend capability declarations do not make the session generate fine-grained operations automatically.
+Import these session APIs from `@retikz/render/runtime`; they are not exported from the `@retikz/render` package root. A third-party backend uses `RendererFactory` to create a nominal SVG or Canvas renderer and declares `none`, `group`, or `entity` capability. The Render commit target validates Snapshot / Patch revisions and result consistency; invalid Patches are rejected. The current integration produces complete replacements for compilation changes. Backend capability declarations do not make the session generate fine-grained operations automatically.
 
 ### Primary figure and readonly layers
 
@@ -35,7 +35,7 @@ Render owns runtime Scene identities, topology, snapshots and Patch contracts. I
 
 A topology node’s sibling order comes from the final index in its `primitivePath`; the subtree root has the relative path `[]`. An update patch targets `subtree.root` without a separate `identity`. Move and remove operations still take an `identity`.
 
-Static APIs use `StaticRenderFrame { primary: Scene, layers }`. Retained renderers use `RenderFrameSnapshot { primary: SceneRuntimeSnapshot, layers }`. Both materialize the primary figure and ordered readonly layers as one frame, so a failed retained transaction cannot publish a new figure with old layers.
+Static APIs use `StaticRenderFrame { primary: Scene, layers }`. renderers use `RenderFrameSnapshot { primary: SceneRuntimeSnapshot, layers }`. Both materialize the primary figure and ordered readonly layers as one frame, so a failed session transaction cannot publish a new figure with old layers.
 
 Every `RenderReadonlyLayer` contains a frame-unique `key`, an ordinary static `scene`, and its transform into primary Scene coordinates. SVG appends a `pointer-events="none"` group after the primary figure, executes each layer through the ordinary Scene-fragment path, and gives its resources an isolated prefix without hydration ids. Canvas applies the layer transform and calls the ordinary Scene drawing path; `hitTest` still reads only the primary Scene. A readonly layer never determines the viewBox, primary resources, animation, or primary identity, and cannot contain public `id`, `meta`, or animation fields.
 
@@ -55,24 +55,24 @@ Import `StaticRenderFrame` from `@retikz/render/runtime`; import each materializ
 
 <SourceLinks
   sources={[
-    { label: 'Retained config', path: 'packages/kernel/render/src/runtime/config.ts' },
+    { label: 'Session config', path: 'packages/kernel/render/src/runtime/config.ts' },
     { label: 'Reconciler commit target', path: 'packages/kernel/render/src/runtime/target.ts' },
     { label: 'Session publication and recovery', path: 'packages/kernel/reconciler/src/reconcile/reconciler.ts' },
     {
       label: 'SVG WAAPI independent resource cleanup',
-      path: 'packages/kernel/render/src/animation/retained/binding.ts',
+      path: 'packages/kernel/render/src/animation/binding.ts',
       startLine: 67,
       endLine: 205,
     },
     {
       label: 'SVG WAAPI trigger ownership',
-      path: 'packages/kernel/render/src/animation/retained/binding.ts',
+      path: 'packages/kernel/render/src/animation/binding.ts',
       startLine: 266,
       endLine: 341,
     },
     {
       label: 'SVG WAAPI setup cleanup recovery',
-      path: 'packages/kernel/render/src/animation/retained/binding.ts',
+      path: 'packages/kernel/render/src/animation/binding.ts',
       startLine: 344,
       endLine: 363,
     },
@@ -149,7 +149,7 @@ Import `StaticRenderFrame` from `@retikz/render/runtime`; import each materializ
       endLine: 50,
     },
     {
-      label: 'Static and retained frame contracts',
+      label: 'Static and session frame contracts',
       path: 'packages/kernel/render/src/runtime/frame.ts',
     },
     {
@@ -157,16 +157,16 @@ Import `StaticRenderFrame` from `@retikz/render/runtime`; import each materializ
       path: 'packages/kernel/render/src/runtime/readonly-layer.ts',
     },
     {
-      label: 'Retained renderer definition and factory contract',
+      label: 'renderer definition and factory contract',
       path: 'packages/kernel/render/src/runtime/renderer.ts',
       startLine: 52,
       endLine: 148,
     },
     {
-      label: 'Nominal retained renderer token construction',
+      label: 'Nominal renderer token construction',
       path: 'packages/kernel/render/src/runtime/renderer.ts',
-      startLine: 218,
-      endLine: 274,
+      startLine: 205,
+      endLine: 264,
     },
   ]}
 />

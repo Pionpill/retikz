@@ -9,7 +9,7 @@ import {
   bindWaapiDescriptorElements,
   isWaapiAnimationStyleOwned,
   recoverWaapiBindingSetupFailure,
-} from '../animation/retained';
+} from '../animation/binding';
 import { RetikzRenderError, RetikzRenderErrorCode } from '../error';
 import type { HydrationController, HydrationTarget } from '../hydration';
 import {
@@ -36,8 +36,8 @@ import type { RenderFrameSnapshot } from './frame';
 import { mergeRenderHandlers } from './handlers';
 import type { RenderReadonlyLayer } from './readonly-layer';
 import { validateReadonlyLayers } from './readonly-layer';
-import type { RetainedSvgRenderer, RetainedSvgRendererImmutableOptions } from './renderer';
-import { defineRetainedRenderer } from './renderer';
+import type { SvgRenderer, SvgRendererImmutableOptions } from './renderer';
+import { defineRenderer } from './renderer';
 import type { SceneAnimationDescriptorDiff } from './runtime-options';
 import { SceneAnimationOccurrenceChangeKind, diffSceneAnimationDescriptors } from './runtime-options';
 import type { SceneIdentityMap } from './shared';
@@ -227,7 +227,7 @@ const createMutationJournal = (): MutationJournal => {
   });
 };
 
-/** 从 SvgNode descriptor 创建尚未接入 retained identity index 的 SVG subtree */
+/** 从 SvgNode descriptor 创建尚未接入 身份索引 的 SVG subtree */
 const createSvgElement = (document: Document, node: SvgNode): SVGElement => {
   const element = document.createElementNS(SVG_NAMESPACE, node.tag);
 
@@ -614,7 +614,7 @@ const buildSubtreeDescriptor = (
   snapshot: SceneRuntimeSnapshot,
   subtree: SceneRuntimeSubtree,
   config: RenderRuntimeConfig,
-  options: RetainedSvgRendererImmutableOptions,
+  options: SvgRendererImmutableOptions,
 ): SvgNode => {
   const descriptor = buildSvgDocument(
     {
@@ -1059,7 +1059,7 @@ const createSvgAnimationState = (
   const created: Array<SvgAnimationControl> = [];
 
   try {
-    const retained = new Set<SvgAnimationControl>();
+    const reusedControls = new Set<SvgAnimationControl>();
     const bindings = grouped.occurrences.map(group => {
       const existing = previousByIdentity.get(group.identity);
       if (
@@ -1068,7 +1068,7 @@ const createSvgAnimationState = (
         changeByIdentity.get(group.identity) === SceneAnimationOccurrenceChangeKind.Unchanged &&
         sameAnimationElements(existing.elements, group.elements)
       ) {
-        retained.add(existing);
+        reusedControls.add(existing);
         return existing;
       }
 
@@ -1088,13 +1088,13 @@ const createSvgAnimationState = (
           ? undefined
           : createSvgAnimationControl(grouped.root, cleanupQueue);
     if (root !== undefined) {
-      if (root === previous?.root) retained.add(root);
+      if (root === previous?.root) reusedControls.add(root);
       else created.push(root);
     }
 
     const retired = [
-      ...(previous?.root === undefined || retained.has(previous.root) ? [] : [previous.root]),
-      ...(previous?.bindings.flatMap(binding => (retained.has(binding) ? [] : [binding])) ?? []),
+      ...(previous?.root === undefined || reusedControls.has(previous.root) ? [] : [previous.root]),
+      ...(previous?.bindings.flatMap(binding => (reusedControls.has(binding) ? [] : [binding])) ?? []),
     ];
     const all = [...(root === undefined ? [] : [root]), ...bindings];
     const reuseAggregate =
@@ -1188,7 +1188,7 @@ const createSvgHydration = (
     }
   }
 
-  /** 从事件 target 上溯到 retained topology 已索引的 occurrence 元素 */
+  /** 从事件 target 上溯到 会话拓扑已索引的 occurrence 元素 */
   const locateElement = (event: Event): Element | null => {
     let element = event.target instanceof Element ? event.target : null;
 
@@ -1221,11 +1221,11 @@ const createSvgHydration = (
   );
 };
 
-/** 生成一次完整 retained SVG 候选 descriptor */
+/** 生成一次完整 SVG 候选 descriptor */
 const buildDescriptor = (
   snapshot: SceneRuntimeSnapshot,
   config: RenderRuntimeConfig,
-  options: RetainedSvgRendererImmutableOptions,
+  options: SvgRendererImmutableOptions,
 ): SvgNode =>
   buildSvgDocument(prepareRuntimeSceneContent(snapshot.scene as unknown as Scene), {
     idPrefix: options.idPrefix,
@@ -1233,11 +1233,8 @@ const buildDescriptor = (
     snapshotAt: config.animation?.snapshotAt,
   });
 
-/** 创建内置 SVG retained renderer */
-export const createBuiltinSvgRetainedRenderer = (
-  host: SVGSVGElement,
-  options: RetainedSvgRendererImmutableOptions,
-): RetainedSvgRenderer => {
+/** 创建内置 SVG renderer */
+export const createBuiltinSvgRenderer = (host: SVGSVGElement, options: SvgRendererImmutableOptions): SvgRenderer => {
   let currentSnapshot: SceneRuntimeSnapshot | undefined;
   let currentLayers: ReadonlyArray<RenderReadonlyLayer> = Object.freeze([]);
   let currentLayerElements: ReadonlyArray<SVGElement> = Object.freeze([]);
@@ -1723,7 +1720,7 @@ export const createBuiltinSvgRetainedRenderer = (
     });
   };
 
-  return defineRetainedRenderer({
+  return defineRenderer({
     backend: 'svg',
     host,
     capability: 'entity',
@@ -1732,7 +1729,7 @@ export const createBuiltinSvgRetainedRenderer = (
     prepare: (scenePatch, frame, config) => prepareFrame(scenePatch, frame, config),
     read: () => {
       if (currentSnapshot === undefined)
-        throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG retained renderer is not committed');
+        throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG renderer is not committed');
 
       return Object.freeze({
         frame: Object.freeze({ primary: currentSnapshot, layers: currentLayers }),

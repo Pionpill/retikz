@@ -2,12 +2,12 @@ import type { AnyCompositeDefinition, IRScene } from '@retikz/core';
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
 import type { ReconcilerPreparedCommit } from '@retikz/reconciler';
 import type {
-  InputRetainedRendererFactory,
+  InputRendererFactory,
   RenderFrameSnapshot,
   RenderRuntimeConfig,
-  RetainedRendererFactory,
+  RendererFactory,
 } from '@retikz/render/runtime';
-import { defineRetainedRenderer, RetikzRenderErrorCode } from '@retikz/render/runtime';
+import { defineRenderer, RetikzRenderErrorCode } from '@retikz/render/runtime';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { literal, string, enum as zodEnum } from 'zod';
 
@@ -67,8 +67,8 @@ const createMemoryRendererFactory = (
   onFrame?: (frame: RenderFrameSnapshot) => void,
   failMount: boolean | (() => boolean) = false,
   onCreate?: () => void,
-): RetainedRendererFactory =>
-  ((input: InputRetainedRendererFactory) => {
+): RendererFactory =>
+  ((input: InputRendererFactory) => {
     onCreate?.();
     let current: RenderFrameSnapshot | undefined;
 
@@ -119,9 +119,9 @@ const createMemoryRendererFactory = (
     };
 
     return input.backend === 'svg'
-      ? defineRetainedRenderer({ ...definition, backend: 'svg', host: input.host })
-      : defineRetainedRenderer({ ...definition, backend: 'canvas', host: input.host });
-  }) as RetainedRendererFactory;
+      ? defineRenderer({ ...definition, backend: 'svg', host: input.host })
+      : defineRenderer({ ...definition, backend: 'canvas', host: input.host });
+  }) as RendererFactory;
 
 const datasetCompositeSchema = CompositeBaseSchema.extend({
   namespace: literal('fixture'),

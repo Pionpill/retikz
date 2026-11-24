@@ -3,13 +3,8 @@ import type { ReconcilerResult } from '@retikz/reconciler';
 import { SceneReconciler } from '@retikz/reconciler';
 import { describe, expect, it, vi } from 'vitest';
 
-import type {
-  RenderFrameSnapshot,
-  RenderReadonlyLayer,
-  RetainedRendererFactory,
-  StaticRenderFrame,
-} from '../../src/runtime';
-import { createRetainedRenderTarget, defineRetainedRenderer, RetikzRenderErrorCode } from '../../src/runtime';
+import type { RenderFrameSnapshot, RenderReadonlyLayer, RendererFactory, StaticRenderFrame } from '../../src/runtime';
+import { createRenderTarget, defineRenderer, RetikzRenderErrorCode } from '../../src/runtime';
 
 const svgHost = Object.freeze({ tagName: 'svg', namespaceURI: 'http://www.w3.org/2000/svg' }) as SVGSVGElement;
 
@@ -68,7 +63,7 @@ const createHarness = (
       dispose: () => undefined,
     });
   });
-  const renderer = defineRetainedRenderer({
+  const renderer = defineRenderer({
     backend: 'svg',
     host: svgHost,
     capability: 'entity',
@@ -82,11 +77,11 @@ const createHarness = (
     dispose: () => undefined,
   });
 
-  const handle = createRetainedRenderTarget({
+  const handle = createRenderTarget({
     backend: 'svg',
     host: svgHost,
-    immutableOptions: { backend: 'svg', idPrefix: 'retained-frame' },
-    rendererFactory: (() => renderer) as unknown as RetainedRendererFactory,
+    immutableOptions: { backend: 'svg', idPrefix: 'session-frame' },
+    rendererFactory: (() => renderer) as unknown as RendererFactory,
     configuration: () => ({}),
     ...(options.expectedInitialFrame === undefined ? {} : { expectedInitialFrame: options.expectedInitialFrame }),
     ...(options.resolveReadonlyLayers === undefined ? {} : { resolveReadonlyLayers: options.resolveReadonlyLayers }),

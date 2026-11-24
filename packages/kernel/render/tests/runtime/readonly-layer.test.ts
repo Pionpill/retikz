@@ -23,8 +23,8 @@ const makeLayer = (overrides: Partial<RenderReadonlyLayer> = {}): RenderReadonly
 
 describe('只读渲染层契约', () => {
   it('不公开或保留已删除的特定于检查的渲染契约', () => {
-    expect('RetainedRendererInspectionCapability' in runtime).toBe(false);
-    expect('RetainedRendererInspectionUnsupported' in runtime.RetikzRenderErrorCode).toBe(false);
+    expect('RendererInspectionCapability' in runtime).toBe(false);
+    expect('RendererInspectionUnsupported' in runtime.RetikzRenderErrorCode).toBe(false);
     expect(existsSync(fileURLToPath(new URL('../../src/svg/builders/inspection.ts', import.meta.url)))).toBe(false);
     expect(existsSync(fileURLToPath(new URL('../../src/canvas/draw-inspection.ts', import.meta.url)))).toBe(false);
   });

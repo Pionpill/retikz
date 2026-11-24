@@ -1,6 +1,6 @@
-import { RetikzRenderError, RetikzRenderErrorCode } from '../../error';
-import type { WaapiDescriptor } from '../../svg/animation';
-import type { AnimationControls } from '../runtime';
+import { RetikzRenderError, RetikzRenderErrorCode } from '../error';
+import type { WaapiDescriptor } from '../svg/animation';
+import type { AnimationControls } from './runtime';
 
 /** WAAPI 接管前的 inline transform style 快照 */
 type WaapiStyleBase = Readonly<{
@@ -52,13 +52,13 @@ const createWaapiBindingSetupError = (
   return error;
 };
 
-/** 判断指定 inline style 当前是否由 retained WAAPI binding 接管 */
+/** 判断指定 inline style 当前是否由 WAAPI binding 接管 */
 export const isWaapiAnimationStyleOwned = (element: SVGElement, key: string): boolean =>
   (key === 'transform-origin' || key === 'transformOrigin' || key === 'transform-box' || key === 'transformBox') &&
   waapiStyleOwnerships.has(element);
 
 /**
- * 为一组实际 descriptor elements 创建可门控的 retained WAAPI binding
+ * 为一组实际 descriptor elements 创建可门控的 WAAPI binding
  * @description gate 只控制事件与可见性触发，供 renderer 在 commit / rollback 间原子切换 binding ownership
  */
 export const bindWaapiDescriptorElements = (

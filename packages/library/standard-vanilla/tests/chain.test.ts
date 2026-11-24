@@ -30,7 +30,7 @@ it('嵌套内容失败时保留上一次完整链，随后可正常更新', () =
   controller.dispose();
 });
 
-it('三入口和嵌套内容进入 retained 时保持 JSON-safe', () => {
+it('三入口和嵌套内容进入编译会话时保持 JSON-safe', () => {
   for (const child of [
     chain({ items: [{ kind: 'cell' }, { kind: 'cell', content: matrix({ skeleton: { rows: 2, columns: 2 } }) }] }),
     chain({ data: [{ a: [1, 2] }] }),

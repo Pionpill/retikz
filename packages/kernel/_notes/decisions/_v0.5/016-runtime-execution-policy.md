@@ -35,7 +35,7 @@ type LayoutRuntimeOptions =
   | Readonly<{
       mode?: 'retained';
       updateStrategy?: RuntimeUpdateStrategy;
-      rendererFactory?: RetainedRendererFactory;
+      rendererFactory?: RendererFactory;
       onDiagnostic?: (diagnostic: RuntimeDiagnostic) => void;
     }>
   | Readonly<{
@@ -56,7 +56,7 @@ type LayoutRuntimeOptions =
 
 Runtime 的策略在创建时复制并固定。`full` 只改变有实际依赖变化的 Computation：无关 Computation 仍复用 committed artifact，continuous participant 仍按既有规则推进 revision。Computation graph 中任一 upstream full 仍使依赖 Computation full；upstream fallback 优先向下游传播。强制 full 直接调用 run，不消费或校验领域增量提示，成功结果标为 full。Runtime 仍校验 ChangeSet 的来源与 base revision；增量路径中提示内容的完整性与可用性由消费它的 Computation 判断，需要时返回 fallback。
 
-`auto | full` 是 Runtime 为保证 transaction 与 Computation graph outcome propagation 而拥有的封闭调度枚举，不接受第三方注册任意 strategy；开放 Computation 继续统一通过 `defineRuntimeComputation()`接入。`static | retained`同样只是 adapter 对两条既有宿主生命周期的封闭选择，不是绘图能力或可注册 provider；第三方 renderer 仍只通过现有 `RetainedRendererFactory`进入 retained 分支。
+`auto | full` 是 Runtime 为保证 transaction 与 Computation graph outcome propagation 而拥有的封闭调度枚举，不接受第三方注册任意 strategy；开放 Computation 继续统一通过 `defineRuntimeComputation()`接入。`static | retained`同样只是 adapter 对两条既有宿主生命周期的封闭选择，不是绘图能力或可注册 provider；第三方 renderer 仍只通过现有 `RendererFactory`进入 retained 分支。
 
 Render participant 将直接收到的独占 `replaceScene` 记录为 `full` work；renderer capability 把原局部 Patch 扩大成 replace 时仍记录 `fallback`并产生既有 warning；规范局部 Patch继续记录`incremental`。三种结果都必须与 next完整Snapshot 等价。
 

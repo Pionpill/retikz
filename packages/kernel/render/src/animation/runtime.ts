@@ -8,8 +8,8 @@
 import type { IRAnimationTrack, Scene } from '@retikz/core';
 
 import { visitSceneAnimations } from '../shared';
+import { bindWaapiDescriptorElements } from './binding';
 import { isAutoplayTrigger } from './channels';
-import { bindWaapiDescriptorElements } from './retained';
 
 /** 可能缺席的运行时全局（SSR / 老浏览器）：lib.dom 把它们类型成必有，这里显式放宽成可选以正确降级 */
 type OptionalGlobals = {

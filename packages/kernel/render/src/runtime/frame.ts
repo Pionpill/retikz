@@ -11,7 +11,7 @@ export type StaticRenderFrame = Readonly<{
   layers: ReadonlyArray<RenderReadonlyLayer>;
 }>;
 
-/** Retained renderer 原子提交的主图快照与有序只读图层 */
+/** renderer 原子提交的主图快照与有序只读图层 */
 export type RenderFrameSnapshot = Readonly<{
   /** Runtime 当前 revision 的主 Scene 快照 */
   primary: SceneRuntimeSnapshot;

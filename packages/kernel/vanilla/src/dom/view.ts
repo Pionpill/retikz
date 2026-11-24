@@ -4,7 +4,7 @@ import type { ReconcilerDiagnostic } from '@retikz/reconciler';
 import { prefersReducedMotion, resolveAnimationEnabled } from '@retikz/render/animation';
 import type { HydrationHandlers } from '@retikz/render/hydration';
 import type { RenderHandlerContribution, InputRenderRuntimeConfig } from '@retikz/render/runtime';
-import { builtinRetainedRendererFactory, computeDisplaySize, createRetainedRenderTarget } from '@retikz/render/runtime';
+import { builtinRendererFactory, computeDisplaySize, createRenderTarget } from '@retikz/render/runtime';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
 import type { InputScene } from '../normalize';
@@ -42,16 +42,16 @@ const createRenderConfig = (
 
 /** 按宿主后端创建单个保留式渲染目标 */
 const createViewTarget = (options: ViewOptions, configuration: () => InputRenderRuntimeConfig) => {
-  const rendererFactory = options.mountOptions.runtime?.rendererFactory ?? builtinRetainedRendererFactory;
+  const rendererFactory = options.mountOptions.runtime?.rendererFactory ?? builtinRendererFactory;
   return options.backend === 'svg'
-    ? createRetainedRenderTarget({
+    ? createRenderTarget({
         backend: 'svg',
         host: options.host,
         rendererFactory,
         immutableOptions: { backend: 'svg', idPrefix: options.idPrefix },
         configuration,
       })
-    : createRetainedRenderTarget({
+    : createRenderTarget({
         backend: 'canvas',
         host: options.host,
         rendererFactory,

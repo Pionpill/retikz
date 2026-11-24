@@ -7,13 +7,13 @@ import type { ReconcilerCommitTarget } from '@retikz/reconciler';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { bindWaapiDescriptors } from '../../src/animation';
-import { bindWaapiDescriptorElements, isWaapiAnimationStyleOwned } from '../../src/animation/retained';
+import { bindWaapiDescriptorElements, isWaapiAnimationStyleOwned } from '../../src/animation/binding';
 import { renderToCanvas } from '../../src/canvas';
 import { RetikzRenderError, RetikzRenderErrorCode } from '../../src/error';
 import type { HydrationAnimationControls, HydrationContext } from '../../src/hydration';
 import type { RenderFrameSnapshot, RenderReadonlyLayer, InputRenderRuntimeConfig } from '../../src/runtime';
-import { builtinRetainedRendererFactory, createRetainedRenderTarget } from '../../src/runtime';
-import { getRetainedRendererExecutor } from '../../src/runtime/renderer';
+import { builtinRendererFactory, createRenderTarget } from '../../src/runtime';
+import { getRendererExecutor } from '../../src/runtime/renderer';
 import type { RuntimeScenePrimitive, ScenePatch, ScenePatchOperation, SceneRuntimeSnapshot } from '../../src/scene';
 import { createSceneIdentity, createFullSceneRuntimeSnapshot } from '../../src/scene';
 import { compileTestSnapshot } from '../helpers/compilation';
@@ -162,18 +162,18 @@ const createSession = (
   let config = options.config ?? {};
   const handle =
     backend === 'svg'
-      ? createRetainedRenderTarget({
+      ? createRenderTarget({
           backend,
           host: host as SVGSVGElement,
-          rendererFactory: builtinRetainedRendererFactory,
+          rendererFactory: builtinRendererFactory,
           immutableOptions: { backend, idPrefix: 'builtin-test' },
           configuration: () => config,
           ...(options.mountMode === undefined ? {} : { mountMode: options.mountMode }),
         })
-      : createRetainedRenderTarget({
+      : createRenderTarget({
           backend,
           host: host as HTMLCanvasElement,
-          rendererFactory: builtinRetainedRendererFactory,
+          rendererFactory: builtinRendererFactory,
           immutableOptions: {
             backend,
             idPrefix: 'builtin-test',
@@ -311,12 +311,12 @@ it('清空分类资源时同时移除绘制与裁剪定义，回滚恢复完整�
   const pair = createCorePair(initial, replacement);
   expect(pair.next.scene.resources).toEqual({ paints: [], clips: [] });
   const host = document.createElementNS(SVG_NAMESPACE, 'svg');
-  const renderer = builtinRetainedRendererFactory({
+  const renderer = builtinRendererFactory({
     backend: 'svg',
     host,
     immutableOptions: { backend: 'svg', idPrefix: 'clear-resources' },
   });
-  const executor = getRetainedRendererExecutor(renderer);
+  const executor = getRendererExecutor(renderer);
   if (executor === undefined) throw new Error('expected builtin SVG renderer executor');
   const mount = executor.prepareMount(frameOf(pair.current), {}, 'create');
   mount.commit();
@@ -338,7 +338,7 @@ it('清空分类资源时同时移除绘制与裁剪定义，回滚恢复完整�
   executor.dispose();
 });
 
-it('共享 Pattern 文本在 retained 提交与回滚时对所有宿主原子生效', () => {
+it('共享 Pattern 文本在 session 提交与回滚时对所有宿主原子生效', () => {
   const source: IRScene = {
     type: 'scene',
     version: 1,
@@ -388,13 +388,13 @@ it('共享 Pattern 文本在 retained 提交与回滚时对所有宿主原子生
   const current = withText(pair.current, 'old');
   const next = withText(pair.next, 'new');
   const host = document.createElementNS(SVG_NAMESPACE, 'svg');
-  const renderer = builtinRetainedRendererFactory({
+  const renderer = builtinRendererFactory({
     backend: 'svg',
     host,
     immutableOptions: { backend: 'svg', idPrefix: 'resource-update' },
   });
-  const executor = getRetainedRendererExecutor(renderer);
-  if (!executor) throw new Error('expected retained renderer');
+  const executor = getRendererExecutor(renderer);
+  if (!executor) throw new Error('expected renderer');
   const mount = executor.prepareMount(frameOf(current), {}, 'create');
   mount.commit();
   mount.dispose();
@@ -422,15 +422,15 @@ it('共享 Pattern 文本在 retained 提交与回滚时对所有宿主原子生
 });
 
 describe('内置保留渲染器', () => {
-  it('SVG retained renderer 原子替换有序 readonly layers，rollback 恢复旧整帧', () => {
+  it('SVG renderer 原子替换有序 readonly layers，rollback 恢复旧整帧', () => {
     const pair = createCorePair(scene('#ef4444'), scene('#22c55e'));
     const host = document.createElementNS(SVG_NAMESPACE, 'svg');
-    const renderer = builtinRetainedRendererFactory({
+    const renderer = builtinRendererFactory({
       backend: 'svg',
       host,
       immutableOptions: { backend: 'svg', idPrefix: 'readonly-frame' },
     });
-    const executor = getRetainedRendererExecutor(renderer);
+    const executor = getRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin SVG renderer executor');
 
     const initialFrame = Object.freeze({ primary: pair.current, layers: readonlyLayersAt(4) });
@@ -481,7 +481,7 @@ describe('内置保留渲染器', () => {
     executor.dispose();
   });
 
-  it('Canvas retained renderer 后绘 readonly layers，但 hit-test 仍只命中 primary topology', () => {
+  it('Canvas renderer 后绘 readonly layers，但 hit-test 仍只命中 primary topology', () => {
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(function (this: HTMLCanvasElement) {
       return new Proxy({ canvas: this, globalAlpha: 1 } as unknown as CanvasRenderingContext2D, {
         get: (target, key) => {
@@ -516,12 +516,12 @@ describe('内置保留渲染器', () => {
     });
     document.body.appendChild(host);
     const click = vi.fn();
-    const renderer = builtinRetainedRendererFactory({
+    const renderer = builtinRendererFactory({
       backend: 'canvas',
       host,
       immutableOptions: { backend: 'canvas', idPrefix: 'readonly-hit-test', devicePixelRatio: 1 },
     });
-    const executor = getRetainedRendererExecutor(renderer);
+    const executor = getRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
 
     const mount = executor.prepareMount(
@@ -541,7 +541,7 @@ describe('内置保留渲染器', () => {
     executor.dispose();
   });
 
-  it('Canvas retained renderer 在 prepare 阶段收集并执行辅助 Scene 的 image resource', () => {
+  it('Canvas renderer 在 prepare 阶段收集并执行辅助 Scene 的 image resource', () => {
     class TestImage {
       static latest: TestImage | undefined;
       onload: ((event: Event) => void) | null = null;
@@ -575,12 +575,12 @@ describe('内置保留渲染器', () => {
     const host = document.createElement('canvas');
     host.width = 200;
     host.height = 100;
-    const renderer = builtinRetainedRendererFactory({
+    const renderer = builtinRendererFactory({
       backend: 'canvas',
       host,
       immutableOptions: { backend: 'canvas', idPrefix: 'readonly-image', devicePixelRatio: 1 },
     });
-    const executor = getRetainedRendererExecutor(renderer);
+    const executor = getRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
 
     const mount = executor.prepareMount(
@@ -915,12 +915,12 @@ describe('内置保留渲染器', () => {
     } as const;
 
     const svgHost = document.createElementNS(SVG_NAMESPACE, 'svg');
-    const svgRenderer = builtinRetainedRendererFactory({
+    const svgRenderer = builtinRendererFactory({
       backend: 'svg',
       host: svgHost,
       immutableOptions: { backend: 'svg', idPrefix: 'multi-owner-svg' },
     });
-    const svgExecutor = getRetainedRendererExecutor(svgRenderer);
+    const svgExecutor = getRendererExecutor(svgRenderer);
     if (svgExecutor === undefined) throw new Error('expected builtin SVG renderer executor');
 
     const svgMount = svgExecutor.prepareMount(frameOf(snapshot), svgConfig, 'create');
@@ -1014,12 +1014,12 @@ describe('内置保留渲染器', () => {
     const canvasConfig = {
       handlerContributions: [{ registration: 1, handlers: { owner: { click: canvasHandler } } }],
     } as const;
-    const canvasRenderer = builtinRetainedRendererFactory({
+    const canvasRenderer = builtinRendererFactory({
       backend: 'canvas',
       host: canvasHost,
       immutableOptions: { backend: 'canvas', idPrefix: 'multi-owner-canvas', devicePixelRatio: 1 },
     });
-    const canvasExecutor = getRetainedRendererExecutor(canvasRenderer);
+    const canvasExecutor = getRendererExecutor(canvasRenderer);
     if (canvasExecutor === undefined) throw new Error('expected builtin Canvas renderer executor');
 
     const canvasMount = canvasExecutor.prepareMount(frameOf(snapshot), canvasConfig, 'create');
@@ -1138,12 +1138,12 @@ describe('内置保留渲染器', () => {
         },
       ],
     } as const;
-    const renderer = builtinRetainedRendererFactory({
+    const renderer = builtinRendererFactory({
       backend: 'canvas',
       host,
       immutableOptions: { backend: 'canvas', idPrefix: 'canvas-leave-animation', devicePixelRatio: 1 },
     });
-    const executor = getRetainedRendererExecutor(renderer);
+    const executor = getRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
 
     const mount = executor.prepareMount(frameOf(snapshot), config, 'create');
@@ -1366,12 +1366,12 @@ describe('内置保留渲染器', () => {
     host.width = 200;
     host.height = 100;
     const add = vi.spyOn(host, 'addEventListener');
-    const renderer = builtinRetainedRendererFactory({
+    const renderer = builtinRendererFactory({
       backend: 'canvas',
       host,
       immutableOptions: { backend: 'canvas', idPrefix: 'canvas-hydration-rollback', devicePixelRatio: 1 },
     });
-    const executor = getRetainedRendererExecutor(renderer);
+    const executor = getRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
 
     const config = {
@@ -1568,12 +1568,12 @@ describe('内置保留渲染器', () => {
     });
 
     try {
-      const renderer = builtinRetainedRendererFactory({
+      const renderer = builtinRendererFactory({
         backend: 'svg',
         host,
         immutableOptions: { backend: 'svg', idPrefix: 'svg-dispose-failure' },
       });
-      const executor = getRetainedRendererExecutor(renderer);
+      const executor = getRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin SVG renderer executor');
 
       const mount = executor.prepareMount(
@@ -1675,12 +1675,12 @@ describe('内置保留渲染器', () => {
 
     try {
       const host = document.createElement('canvas');
-      const renderer = builtinRetainedRendererFactory({
+      const renderer = builtinRendererFactory({
         backend: 'canvas',
         host,
         immutableOptions: { backend: 'canvas', idPrefix: 'canvas-dispose-failure', devicePixelRatio: 1 },
       });
-      const executor = getRetainedRendererExecutor(renderer);
+      const executor = getRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
 
       const mount = executor.prepareMount(frameOf(snapshot), {}, 'create');
@@ -1718,12 +1718,12 @@ describe('内置保留渲染器', () => {
       });
     });
     const host = document.createElement('canvas');
-    const renderer = builtinRetainedRendererFactory({
+    const renderer = builtinRendererFactory({
       backend: 'canvas',
       host,
       immutableOptions: { backend: 'canvas', idPrefix: 'canvas-dispose-reentry', devicePixelRatio: 1 },
     });
-    const executor = getRetainedRendererExecutor(renderer);
+    const executor = getRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
 
     const mount = executor.prepareMount(frameOf(snapshot), {}, 'create');
@@ -1766,12 +1766,12 @@ describe('内置保留渲染器', () => {
 
     try {
       const host = document.createElement('canvas');
-      const renderer = builtinRetainedRendererFactory({
+      const renderer = builtinRendererFactory({
         backend: 'canvas',
         host,
         immutableOptions: { backend: 'canvas', idPrefix: 'canvas-clock-replace-reentry', devicePixelRatio: 1 },
       });
-      const executor = getRetainedRendererExecutor(renderer);
+      const executor = getRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
 
       const mount = executor.prepareMount(frameOf(current), {}, 'create');
@@ -1834,12 +1834,12 @@ describe('内置保留渲染器', () => {
 
     try {
       const host = document.createElement('canvas');
-      const renderer = builtinRetainedRendererFactory({
+      const renderer = builtinRendererFactory({
         backend: 'canvas',
         host,
         immutableOptions: { backend: 'canvas', idPrefix: 'canvas-visibility-dispose', devicePixelRatio: 1 },
       });
-      const executor = getRetainedRendererExecutor(renderer);
+      const executor = getRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
 
       const mount = executor.prepareMount(frameOf(snapshot), {}, 'create');
@@ -1911,12 +1911,12 @@ describe('内置保留渲染器', () => {
 
     try {
       const host = document.createElement('canvas');
-      const renderer = builtinRetainedRendererFactory({
+      const renderer = builtinRendererFactory({
         backend: 'canvas',
         host,
         immutableOptions: { backend: 'canvas', idPrefix: 'canvas-visibility-register-reentry', devicePixelRatio: 1 },
       });
-      const executor = getRetainedRendererExecutor(renderer);
+      const executor = getRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
 
       const mount = executor.prepareMount(frameOf(snapshot), {}, 'create');
@@ -1966,12 +1966,12 @@ describe('内置保留渲染器', () => {
 
     try {
       const host = document.createElement('canvas');
-      const renderer = builtinRetainedRendererFactory({
+      const renderer = builtinRendererFactory({
         backend: 'canvas',
         host,
         immutableOptions: { backend: 'canvas', idPrefix: 'canvas-visibility-sync-frame', devicePixelRatio: 1 },
       });
-      const executor = getRetainedRendererExecutor(renderer);
+      const executor = getRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
 
       const mount = executor.prepareMount(frameOf(snapshot), {}, 'create');
@@ -2021,12 +2021,12 @@ describe('内置保留渲染器', () => {
 
     try {
       const host = document.createElement('canvas');
-      const renderer = builtinRetainedRendererFactory({
+      const renderer = builtinRendererFactory({
         backend: 'canvas',
         host,
         immutableOptions: { backend: 'canvas', idPrefix: 'canvas-visibility-setup', devicePixelRatio: 1 },
       });
-      const executor = getRetainedRendererExecutor(renderer);
+      const executor = getRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
 
       const mount = executor.prepareMount(frameOf(snapshot), {}, 'create');
@@ -2063,12 +2063,12 @@ describe('内置保留渲染器', () => {
       });
     });
     const host = document.createElement('canvas');
-    const renderer = builtinRetainedRendererFactory({
+    const renderer = builtinRendererFactory({
       backend: 'canvas',
       host,
       immutableOptions: { backend: 'canvas', idPrefix: 'canvas-candidate-cleanup', devicePixelRatio: 1 },
     });
-    const executor = getRetainedRendererExecutor(renderer);
+    const executor = getRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
 
     const mount = executor.prepareMount(frameOf(pair.current), {}, 'create');
@@ -2113,12 +2113,12 @@ describe('内置保留渲染器', () => {
       });
     });
     const host = document.createElement('canvas');
-    const renderer = builtinRetainedRendererFactory({
+    const renderer = builtinRendererFactory({
       backend: 'canvas',
       host,
       immutableOptions: { backend: 'canvas', idPrefix: 'canvas-suspend-rollback', devicePixelRatio: 1 },
     });
-    const executor = getRetainedRendererExecutor(renderer);
+    const executor = getRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
 
     const mount = executor.prepareMount(frameOf(pair.current), {}, 'create');
@@ -2187,12 +2187,12 @@ describe('内置保留渲染器', () => {
 
     try {
       const host = document.createElement('canvas');
-      const renderer = builtinRetainedRendererFactory({
+      const renderer = builtinRendererFactory({
         backend: 'canvas',
         host,
         immutableOptions: { backend: 'canvas', idPrefix: 'canvas-resume-register-reentry', devicePixelRatio: 1 },
       });
-      const executor = getRetainedRendererExecutor(renderer);
+      const executor = getRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
 
       const mount = executor.prepareMount(frameOf(pair.current), {}, 'create');
@@ -2258,12 +2258,12 @@ describe('内置保留渲染器', () => {
 
     try {
       const host = document.createElement('canvas');
-      const renderer = builtinRetainedRendererFactory({
+      const renderer = builtinRendererFactory({
         backend: 'canvas',
         host,
         immutableOptions: { backend: 'canvas', idPrefix: 'canvas-coarse-pause-failure', devicePixelRatio: 1 },
       });
-      const executor = getRetainedRendererExecutor(renderer);
+      const executor = getRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
 
       const mount = executor.prepareMount(frameOf(current), {}, 'create');
@@ -2319,12 +2319,12 @@ describe('内置保留渲染器', () => {
 
     try {
       const host = document.createElement('canvas');
-      const renderer = builtinRetainedRendererFactory({
+      const renderer = builtinRendererFactory({
         backend: 'canvas',
         host,
         immutableOptions: { backend: 'canvas', idPrefix: 'canvas-clock-pause-rollback', devicePixelRatio: 1 },
       });
-      const executor = getRetainedRendererExecutor(renderer);
+      const executor = getRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
 
       const mount = executor.prepareMount(frameOf(pair.current), {}, 'create');
@@ -2389,12 +2389,12 @@ describe('内置保留渲染器', () => {
       });
     });
     const host = document.createElement('canvas');
-    const renderer = builtinRetainedRendererFactory({
+    const renderer = builtinRendererFactory({
       backend: 'canvas',
       host,
       immutableOptions: { backend: 'canvas', idPrefix: 'canvas-clock-recovery', devicePixelRatio: 1 },
     });
-    const executor = getRetainedRendererExecutor(renderer);
+    const executor = getRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
 
     const mount = executor.prepareMount(frameOf(current), {}, 'create');
@@ -2431,12 +2431,12 @@ describe('内置保留渲染器', () => {
   it('SVG prepare 在 commit 前拒绝已缺失的 entity mutation target', () => {
     const pair = createCorePair(scene('#ef4444'), scene('#22c55e'));
     const host = document.createElementNS(SVG_NAMESPACE, 'svg');
-    const renderer = builtinRetainedRendererFactory({
+    const renderer = builtinRendererFactory({
       backend: 'svg',
       host,
       immutableOptions: { backend: 'svg', idPrefix: 'svg-prepare-target' },
     });
-    const executor = getRetainedRendererExecutor(renderer);
+    const executor = getRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin SVG renderer executor');
 
     const mount = executor.prepareMount(frameOf(pair.current), {}, 'create');
@@ -2563,12 +2563,12 @@ describe('内置保留渲染器', () => {
       y: 0,
       toJSON: () => ({}),
     });
-    const renderer = builtinRetainedRendererFactory({
+    const renderer = builtinRendererFactory({
       backend: 'canvas',
       host,
       immutableOptions: { backend: 'canvas', idPrefix: 'root-animation-test', devicePixelRatio: 1 },
     });
-    const executor = getRetainedRendererExecutor(renderer);
+    const executor = getRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
 
     const mount = executor.prepareMount(frameOf(current), config, 'create');
@@ -3307,12 +3307,12 @@ describe('内置保留渲染器', () => {
 
     try {
       const host = document.createElementNS(SVG_NAMESPACE, 'svg');
-      const renderer = builtinRetainedRendererFactory({
+      const renderer = builtinRendererFactory({
         backend: 'svg',
         host,
         immutableOptions: { backend: 'svg', idPrefix: 'svg-animation-test' },
       });
-      const executor = getRetainedRendererExecutor(renderer);
+      const executor = getRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin SVG renderer executor');
 
       const mount = executor.prepareMount(frameOf(current), {}, 'create');
@@ -3465,12 +3465,12 @@ describe('内置保留渲染器', () => {
 
     try {
       const host = document.createElementNS(SVG_NAMESPACE, 'svg');
-      const renderer = builtinRetainedRendererFactory({
+      const renderer = builtinRendererFactory({
         backend: 'svg',
         host,
         immutableOptions: { backend: 'svg', idPrefix: 'svg-animation-element' },
       });
-      const executor = getRetainedRendererExecutor(renderer);
+      const executor = getRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin SVG renderer executor');
 
       const mount = executor.prepareMount(frameOf(current), {}, 'create');
@@ -3523,12 +3523,12 @@ describe('内置保留渲染器', () => {
     Object.defineProperty(SVGElement.prototype, 'animate', { configurable: true, value: animate });
 
     try {
-      const renderer = builtinRetainedRendererFactory({
+      const renderer = builtinRendererFactory({
         backend: 'svg',
         host,
         immutableOptions: { backend: 'svg', idPrefix: 'svg-animation-retire' },
       });
-      const executor = getRetainedRendererExecutor(renderer);
+      const executor = getRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin SVG renderer executor');
 
       const mount = executor.prepareMount(frameOf(pair.current), {}, 'create');
@@ -3582,12 +3582,12 @@ describe('内置保留渲染器', () => {
     });
 
     try {
-      const renderer = builtinRetainedRendererFactory({
+      const renderer = builtinRendererFactory({
         backend: 'svg',
         host,
         immutableOptions: { backend: 'svg', idPrefix: 'svg-animation-pause-rollback' },
       });
-      const executor = getRetainedRendererExecutor(renderer);
+      const executor = getRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin SVG renderer executor');
 
       const mount = executor.prepareMount(frameOf(pair.current), {}, 'create');
@@ -3630,12 +3630,12 @@ describe('内置保留渲染器', () => {
     });
 
     try {
-      const svgRenderer = builtinRetainedRendererFactory({
+      const svgRenderer = builtinRendererFactory({
         backend: 'svg',
         host: svgHost,
         immutableOptions: { backend: 'svg', idPrefix: 'svg-stale-controls' },
       });
-      const svgExecutor = getRetainedRendererExecutor(svgRenderer);
+      const svgExecutor = getRendererExecutor(svgRenderer);
       if (svgExecutor === undefined) throw new Error('expected builtin SVG renderer executor');
 
       const svgMount = svgExecutor.prepareMount(frameOf(svgPair.current), {}, 'create');
@@ -3677,12 +3677,12 @@ describe('内置保留渲染器', () => {
         set: (target, key, value) => Reflect.set(target, key, value),
       });
     });
-    const canvasRenderer = builtinRetainedRendererFactory({
+    const canvasRenderer = builtinRendererFactory({
       backend: 'canvas',
       host: canvasHost,
       immutableOptions: { backend: 'canvas', idPrefix: 'canvas-stale-controls', devicePixelRatio: 1 },
     });
-    const canvasExecutor = getRetainedRendererExecutor(canvasRenderer);
+    const canvasExecutor = getRendererExecutor(canvasRenderer);
     if (canvasExecutor === undefined) throw new Error('expected builtin Canvas renderer executor');
 
     const canvasMount = canvasExecutor.prepareMount(frameOf(canvasPair.current), {}, 'create');
@@ -3740,12 +3740,12 @@ describe('内置保留渲染器', () => {
     const host = document.createElement('canvas');
     host.width = 200;
     host.height = 100;
-    const renderer = builtinRetainedRendererFactory({
+    const renderer = builtinRendererFactory({
       backend: 'canvas',
       host,
       immutableOptions: { backend: 'canvas', idPrefix: 'canvas-visibility-cleanup', devicePixelRatio: 1 },
     });
-    const executor = getRetainedRendererExecutor(renderer);
+    const executor = getRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
 
     const mount = executor.prepareMount(frameOf(pair.current), {}, 'create');
@@ -3812,12 +3812,12 @@ describe('内置保留渲染器', () => {
 
     try {
       const host = document.createElementNS(SVG_NAMESPACE, 'svg');
-      const renderer = builtinRetainedRendererFactory({
+      const renderer = builtinRendererFactory({
         backend: 'svg',
         host,
         immutableOptions: { backend: 'svg', idPrefix: 'svg-animation-style' },
       });
-      const executor = getRetainedRendererExecutor(renderer);
+      const executor = getRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin SVG renderer executor');
 
       const mount = executor.prepareMount(frameOf(current), {}, 'create');
@@ -3915,12 +3915,12 @@ describe('内置保留渲染器', () => {
 
     try {
       const host = document.createElementNS(SVG_NAMESPACE, 'svg');
-      const renderer = builtinRetainedRendererFactory({
+      const renderer = builtinRendererFactory({
         backend: 'svg',
         host,
         immutableOptions: { backend: 'svg', idPrefix: 'svg-animation-failure' },
       });
-      const executor = getRetainedRendererExecutor(renderer);
+      const executor = getRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin SVG renderer executor');
 
       const mount = executor.prepareMount(frameOf(snapshot), {}, 'create');
@@ -3983,12 +3983,12 @@ describe('内置保留渲染器', () => {
 
     try {
       host = document.createElementNS(SVG_NAMESPACE, 'svg');
-      const renderer = builtinRetainedRendererFactory({
+      const renderer = builtinRendererFactory({
         backend: 'svg',
         host,
         immutableOptions: { backend: 'svg', idPrefix: 'svg-animation-reentry' },
       });
-      const executor = getRetainedRendererExecutor(renderer);
+      const executor = getRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin SVG renderer executor');
 
       const mount = executor.prepareMount(frameOf(snapshot), {}, 'create');
@@ -4099,12 +4099,12 @@ describe('内置保留渲染器', () => {
     seed.session.dispose();
 
     const host = document.createElementNS(SVG_NAMESPACE, 'svg');
-    const renderer = builtinRetainedRendererFactory({
+    const renderer = builtinRendererFactory({
       backend: 'svg',
       host,
       immutableOptions: { backend: 'svg', idPrefix: 'duplicate-test' },
     });
-    const executor = getRetainedRendererExecutor(renderer);
+    const executor = getRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin SVG renderer executor');
 
     const pointerEnter = vi.fn();
@@ -4331,12 +4331,12 @@ describe('内置保留渲染器', () => {
     host.width = 200;
     host.height = 100;
     document.body.appendChild(host);
-    const renderer = builtinRetainedRendererFactory({
+    const renderer = builtinRendererFactory({
       backend: 'canvas',
       host,
       immutableOptions: { backend: 'canvas', idPrefix: 'topology-order', devicePixelRatio: 1 },
     });
-    const executor = getRetainedRendererExecutor(renderer);
+    const executor = getRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
 
     const mount = executor.prepareMount(frameOf(reverseTopology(pair.current)), {}, 'create');
@@ -4403,12 +4403,12 @@ describe('内置保留渲染器', () => {
     host.width = 200;
     host.height = 100;
     document.body.appendChild(host);
-    const renderer = builtinRetainedRendererFactory({
+    const renderer = builtinRendererFactory({
       backend: 'canvas',
       host,
       immutableOptions: { backend: 'canvas', idPrefix: 'dirty-overlap', devicePixelRatio: 1 },
     });
-    const executor = getRetainedRendererExecutor(renderer);
+    const executor = getRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
 
     const mount = executor.prepareMount(frameOf(pair.current), {}, 'create');
@@ -4467,12 +4467,12 @@ describe('内置保留渲染器', () => {
     const host = document.createElement('canvas');
     host.width = 200;
     host.height = 100;
-    const renderer = builtinRetainedRendererFactory({
+    const renderer = builtinRendererFactory({
       backend: 'canvas',
       host,
       immutableOptions: { backend: 'canvas', idPrefix: 'dirty-copy', devicePixelRatio: 1 },
     });
-    const executor = getRetainedRendererExecutor(renderer);
+    const executor = getRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
 
     const mount = executor.prepareMount(frameOf(pair.current), {}, 'create');
@@ -4557,12 +4557,12 @@ describe('内置保留渲染器', () => {
     const host = document.createElement('canvas');
     host.width = 200;
     host.height = 100;
-    const renderer = builtinRetainedRendererFactory({
+    const renderer = builtinRendererFactory({
       backend: 'canvas',
       host,
       immutableOptions: { backend: 'canvas', idPrefix: 'offscreen-update', devicePixelRatio: 1 },
     });
-    const executor = getRetainedRendererExecutor(renderer);
+    const executor = getRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
 
     const mount = executor.prepareMount(frameOf(current), {}, 'create');
@@ -4610,12 +4610,12 @@ describe('内置保留渲染器', () => {
     const host = document.createElement('canvas');
     host.width = 200;
     host.height = 100;
-    const renderer = builtinRetainedRendererFactory({
+    const renderer = builtinRendererFactory({
       backend: 'canvas',
       host,
       immutableOptions: { backend: 'canvas', idPrefix: 'animated-full-update', devicePixelRatio: 1 },
     });
-    const executor = getRetainedRendererExecutor(renderer);
+    const executor = getRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
 
     const mount = executor.prepareMount(frameOf(pair.current), { animation: { snapshotAt: 100 } }, 'create');
@@ -4761,12 +4761,12 @@ describe('内置保留渲染器', () => {
     host.width = 120;
     host.height = 80;
     document.body.appendChild(host);
-    const renderer = builtinRetainedRendererFactory({
+    const renderer = builtinRendererFactory({
       backend: 'canvas',
       host,
       immutableOptions: { backend: 'canvas', idPrefix: 'pixel-oracle', devicePixelRatio: 1 },
     });
-    const executor = getRetainedRendererExecutor(renderer);
+    const executor = getRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
 
     const mount = executor.prepareMount(frameOf(current), {}, 'create');
@@ -4901,7 +4901,7 @@ describe('内置保留渲染器', () => {
     session.dispose();
   });
 
-  it('Canvas config size 在同一 retained session 内提交并强制 full repaint', () => {
+  it('Canvas config size 在同一 session 内提交并强制 full repaint', () => {
     const drawImage = vi.fn();
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(function (this: HTMLCanvasElement) {
       return new Proxy({ canvas: this, globalAlpha: 1 } as unknown as CanvasRenderingContext2D, {
@@ -5152,12 +5152,12 @@ describe('内置保留渲染器', () => {
     host.height = 100;
     document.body.appendChild(host);
     const pair = createCorePair(animatedScene('#ef4444', 'manual'), animatedScene('#22c55e', 'manual'));
-    const renderer = builtinRetainedRendererFactory({
+    const renderer = builtinRendererFactory({
       backend: 'canvas',
       host,
       immutableOptions: { backend: 'canvas', idPrefix: 'clock', devicePixelRatio: 1 },
     });
-    const executor = getRetainedRendererExecutor(renderer)!;
+    const executor = getRendererExecutor(renderer)!;
     const mount = executor.prepareMount(frameOf(pair.current), {}, 'create');
     mount.commit();
     mount.dispose();
@@ -5270,12 +5270,12 @@ describe('内置保留渲染器', () => {
     host.width = 240;
     host.height = 100;
     document.body.appendChild(host);
-    const renderer = builtinRetainedRendererFactory({
+    const renderer = builtinRendererFactory({
       backend: 'canvas',
       host,
       immutableOptions: { backend: 'canvas', idPrefix: 'animation-test', devicePixelRatio: 1 },
     });
-    const executor = getRetainedRendererExecutor(renderer);
+    const executor = getRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
 
     const mount = executor.prepareMount(frameOf(current), {}, 'create');
@@ -5368,12 +5368,12 @@ describe('内置保留渲染器', () => {
     const host = document.createElement('canvas');
     host.width = 100;
     host.height = 40;
-    const renderer = builtinRetainedRendererFactory({
+    const renderer = builtinRendererFactory({
       backend: 'canvas',
       host,
       immutableOptions: { backend: 'canvas', idPrefix: 'canvas-anonymous-animation', devicePixelRatio: 1 },
     });
-    const executor = getRetainedRendererExecutor(renderer);
+    const executor = getRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
 
     const mount = executor.prepareMount(frameOf(current), {}, 'create');
@@ -5460,12 +5460,12 @@ describe('内置保留渲染器', () => {
     const host = document.createElement('canvas');
     host.width = 40;
     host.height = 40;
-    const renderer = builtinRetainedRendererFactory({
+    const renderer = builtinRendererFactory({
       backend: 'canvas',
       host,
       immutableOptions: { backend: 'canvas', idPrefix: 'canvas-animation-envelope', devicePixelRatio: 1 },
     });
-    const executor = getRetainedRendererExecutor(renderer);
+    const executor = getRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
 
     const mount = executor.prepareMount(frameOf(current), {}, 'create');
@@ -5552,12 +5552,12 @@ describe('内置保留渲染器', () => {
     const host = document.createElement('canvas');
     host.width = 40;
     host.height = 40;
-    const renderer = builtinRetainedRendererFactory({
+    const renderer = builtinRendererFactory({
       backend: 'canvas',
       host,
       immutableOptions: { backend: 'canvas', idPrefix: 'canvas-ended-autoplay', devicePixelRatio: 1 },
     });
-    const executor = getRetainedRendererExecutor(renderer);
+    const executor = getRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
 
     const mount = executor.prepareMount(frameOf(current), {}, 'create');
@@ -5658,12 +5658,12 @@ describe('内置保留渲染器', () => {
     host.width = 100;
     host.height = 40;
     document.body.appendChild(host);
-    const renderer = builtinRetainedRendererFactory({
+    const renderer = builtinRendererFactory({
       backend: 'canvas',
       host,
       immutableOptions: { backend: 'canvas', idPrefix: 'canvas-visible-rebind', devicePixelRatio: 1 },
     });
-    const executor = getRetainedRendererExecutor(renderer);
+    const executor = getRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
 
     const mount = executor.prepareMount(frameOf(current), {}, 'create');
@@ -5775,12 +5775,12 @@ describe('内置保留渲染器', () => {
       toJSON: () => ({}),
     });
     document.body.appendChild(host);
-    const renderer = builtinRetainedRendererFactory({
+    const renderer = builtinRendererFactory({
       backend: 'canvas',
       host,
       immutableOptions: { backend: 'canvas', idPrefix: 'canvas-candidate-clock', devicePixelRatio: 1 },
     });
-    const executor = getRetainedRendererExecutor(renderer);
+    const executor = getRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
 
     const mount = executor.prepareMount(frameOf(current), {}, 'create');
@@ -5957,12 +5957,12 @@ describe('内置保留渲染器', () => {
     const host = document.createElement('canvas');
     host.width = 200;
     host.height = 100;
-    const renderer = builtinRetainedRendererFactory({
+    const renderer = builtinRendererFactory({
       backend: 'canvas',
       host,
       immutableOptions: { backend: 'canvas', idPrefix: 'image-race-test', devicePixelRatio: 1 },
     });
-    const executor = getRetainedRendererExecutor(renderer);
+    const executor = getRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
 
     const mount = executor.prepareMount(frameOf(current), {}, 'create');
@@ -6100,12 +6100,12 @@ describe('内置保留渲染器', () => {
     const host = document.createElement('canvas');
     host.width = 200;
     host.height = 100;
-    const renderer = builtinRetainedRendererFactory({
+    const renderer = builtinRendererFactory({
       backend: 'canvas',
       host,
       immutableOptions: { backend: 'canvas', idPrefix: 'image-prepare-test', devicePixelRatio: 1 },
     });
-    const executor = getRetainedRendererExecutor(renderer);
+    const executor = getRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
 
     expect(() => executor.prepareMount(frameOf(snapshot), {}, 'create')).toThrow('bitmap prepare failed');
@@ -6158,12 +6158,12 @@ describe('内置保留渲染器', () => {
     const host = document.createElement('canvas');
     host.width = 200;
     host.height = 100;
-    const renderer = builtinRetainedRendererFactory({
+    const renderer = builtinRendererFactory({
       backend: 'canvas',
       host,
       immutableOptions: { backend: 'canvas', idPrefix: 'image-ensure-cleanup', devicePixelRatio: 1 },
     });
-    const executor = getRetainedRendererExecutor(renderer);
+    const executor = getRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
 
     expect(() => executor.prepareMount(frameOf(snapshot), {}, 'create')).toThrow('second image rejected');

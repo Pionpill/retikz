@@ -4,14 +4,14 @@ import { isRetikzRenderError, RetikzRenderError, RetikzRenderErrorCode } from '.
 import type { HydrationHandlers } from '../hydration';
 import type { RuntimeDeepReadonly } from '../scene';
 
-/** Retained renderer layer cache 策略 */
+/** renderer layer cache 策略 */
 export const RenderCachePolicy = {
   Auto: 'auto',
   Static: 'static',
   Dynamic: 'dynamic',
 } as const;
 
-/** Retained renderer layer cache 策略取值 */
+/** renderer layer cache 策略取值 */
 export type RenderCachePolicy = ValueOf<typeof RenderCachePolicy>;
 
 /** 一份按注册顺序叠加的 hydration handlers */

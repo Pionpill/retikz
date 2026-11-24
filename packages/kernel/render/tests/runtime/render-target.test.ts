@@ -5,18 +5,13 @@ import { SceneReconciler } from '@retikz/reconciler';
 import type { ReconcilerPreparedCommit } from '@retikz/reconciler';
 import { describe, expect, it, vi } from 'vitest';
 
-import type {
-  RenderFrameSnapshot,
-  InputRenderRuntimeConfig,
-  RetainedRendererFactory,
-  RetainedRendererRead,
-} from '../../src/runtime';
+import type { RenderFrameSnapshot, InputRenderRuntimeConfig, RendererFactory, RendererRead } from '../../src/runtime';
 import {
-  createRetainedRenderTarget,
-  defineRetainedRenderer,
+  createRenderTarget,
+  defineRenderer,
   isRetikzRenderError,
   prepareRuntimeConfig,
-  RetainedRendererCapability,
+  RendererCapability,
   RetikzRenderError,
   RetikzRenderErrorCode,
 } from '../../src/runtime';
@@ -71,7 +66,7 @@ const createRendererHarness = (capability: 'none' | 'group' | 'entity' = 'entity
     if (current === undefined) throw new Error('renderer is not committed');
     return Object.freeze({ frame: current });
   });
-  const renderer = defineRetainedRenderer({
+  const renderer = defineRenderer({
     backend: 'svg',
     host: svgHost,
     capability,
@@ -92,8 +87,8 @@ const createHarness = (
 ) => {
   const renderer = createRendererHarness(capability);
   let config: InputRenderRuntimeConfig = {};
-  const factory = vi.fn(() => renderer.renderer) as unknown as RetainedRendererFactory;
-  const handle = createRetainedRenderTarget({
+  const factory = vi.fn(() => renderer.renderer) as unknown as RendererFactory;
+  const handle = createRenderTarget({
     trace,
     backend: 'svg',
     host: svgHost,
@@ -159,10 +154,10 @@ describe('@retikz/render/runtime 公共契约', () => {
   });
 
   it('以判别联合绑定 backend、host 和 immutable options', () => {
-    const svgRenderer = defineRetainedRenderer({
+    const svgRenderer = defineRenderer({
       backend: 'svg',
       host: svgHost,
-      capability: RetainedRendererCapability.Entity,
+      capability: RendererCapability.Entity,
       readonlyLayerCapability: 'supported',
       prepareMount: noopToken,
       prepare: noopToken,
@@ -185,7 +180,7 @@ describe('@retikz/render/runtime 公共契约', () => {
 
   it('拒绝无法与宿主 provenance 对齐的 renderer backend', () => {
     expect(() =>
-      defineRetainedRenderer({
+      defineRenderer({
         backend: 'webgl',
         host: canvasHost,
         capability: 'entity',
@@ -196,19 +191,19 @@ describe('@retikz/render/runtime 公共契约', () => {
           throw new Error('unused');
         },
         dispose: () => undefined,
-      } as unknown as Parameters<typeof defineRetainedRenderer>[0]),
+      } as unknown as Parameters<typeof defineRenderer>[0]),
     ).toThrowError(expect.objectContaining({ code: RetikzRenderErrorCode.RuntimeRendererInvalid }));
   });
 
   it('把 renderer Proxy getter throw 收敛为稳定 renderer error', () => {
     const getterFailure = new Error('getter failed');
-    const input = new Proxy({} as Parameters<typeof defineRetainedRenderer>[0], {
+    const input = new Proxy({} as Parameters<typeof defineRenderer>[0], {
       get: () => {
         throw getterFailure;
       },
     });
 
-    expect(() => defineRetainedRenderer(input)).toThrowError(
+    expect(() => defineRenderer(input)).toThrowError(
       expect.objectContaining({
         code: RetikzRenderErrorCode.RuntimeRendererInvalid,
         cause: getterFailure,
@@ -276,10 +271,10 @@ describe('prepareRuntimeConfig', () => {
   });
 });
 
-describe('createRetainedRenderTarget', () => {
+describe('createRenderTarget', () => {
   it('首次准备失败后释放尚未取得 lease ownership 的 renderer', () => {
     const dispose = vi.fn();
-    const renderer = defineRetainedRenderer({
+    const renderer = defineRenderer({
       backend: 'svg',
       host: svgHost,
       capability: 'none',
@@ -293,10 +288,10 @@ describe('createRetainedRenderTarget', () => {
       },
       dispose,
     });
-    const handle = createRetainedRenderTarget({
+    const handle = createRenderTarget({
       backend: 'svg',
       host: svgHost,
-      rendererFactory: vi.fn(() => renderer) as unknown as RetainedRendererFactory,
+      rendererFactory: vi.fn(() => renderer) as unknown as RendererFactory,
       immutableOptions: { backend: 'svg', idPrefix: 'failed' },
       configuration: () => ({}),
     });
@@ -374,7 +369,7 @@ describe('createRetainedRenderTarget', () => {
     void originalRead;
 
     let stale: RenderFrameSnapshot | undefined;
-    const mismatching = defineRetainedRenderer({
+    const mismatching = defineRenderer({
       backend: 'svg',
       host: svgHost,
       capability: 'entity',
@@ -390,10 +385,10 @@ describe('createRetainedRenderTarget', () => {
       },
       dispose: () => undefined,
     });
-    const handle = createRetainedRenderTarget({
+    const handle = createRenderTarget({
       backend: 'svg',
       host: svgHost,
-      rendererFactory: (() => mismatching) as unknown as RetainedRendererFactory,
+      rendererFactory: (() => mismatching) as unknown as RendererFactory,
       immutableOptions: { backend: 'svg', idPrefix: 'stale' },
       configuration: () => ({}),
     });
@@ -413,7 +408,7 @@ describe('createRetainedRenderTarget', () => {
   it('结构等价但可变的第三方 snapshot 不会泄漏到 committed public read', () => {
     let committed: RenderFrameSnapshot | undefined;
     let exposedClone: RenderFrameSnapshot | undefined;
-    const renderer = defineRetainedRenderer({
+    const renderer = defineRenderer({
       backend: 'svg',
       host: svgHost,
       capability: 'entity',
@@ -433,10 +428,10 @@ describe('createRetainedRenderTarget', () => {
       },
       dispose: () => undefined,
     });
-    const handle = createRetainedRenderTarget({
+    const handle = createRenderTarget({
       backend: 'svg',
       host: svgHost,
-      rendererFactory: (() => renderer) as unknown as RetainedRendererFactory,
+      rendererFactory: (() => renderer) as unknown as RendererFactory,
       immutableOptions: { backend: 'svg', idPrefix: 'mutable-read' },
       configuration: () => ({}),
     });
@@ -458,7 +453,7 @@ describe('createRetainedRenderTarget', () => {
 
   it('invalid renderer cleanup throw 不覆盖稳定 primary error', () => {
     const disposeFailure = new Error('cleanup failed');
-    const mismatching = defineRetainedRenderer({
+    const mismatching = defineRenderer({
       backend: 'canvas',
       host: canvasHost,
       capability: 'entity',
@@ -474,10 +469,10 @@ describe('createRetainedRenderTarget', () => {
     });
 
     try {
-      createRetainedRenderTarget({
+      createRenderTarget({
         backend: 'svg',
         host: svgHost,
-        rendererFactory: (() => mismatching) as unknown as RetainedRendererFactory,
+        rendererFactory: (() => mismatching) as unknown as RendererFactory,
         immutableOptions: { backend: 'svg', idPrefix: 'mismatch' },
         configuration: () => ({}),
       });
@@ -516,7 +511,7 @@ describe('createRetainedRenderTarget', () => {
       });
     };
 
-    const renderer = defineRetainedRenderer({
+    const renderer = defineRenderer({
       backend: 'svg',
       host: svgHost,
       capability: 'entity',
@@ -530,10 +525,10 @@ describe('createRetainedRenderTarget', () => {
       dispose,
     });
 
-    const handle = createRetainedRenderTarget({
+    const handle = createRenderTarget({
       backend: 'svg',
       host: svgHost,
-      rendererFactory: (() => renderer) as unknown as RetainedRendererFactory,
+      rendererFactory: (() => renderer) as unknown as RendererFactory,
       immutableOptions: { backend: 'svg', idPrefix: 'dispose-retry' },
       configuration: () => ({}),
     });
@@ -562,10 +557,10 @@ describe('createRetainedRenderTarget', () => {
     const factory = vi.fn();
 
     expect(() =>
-      createRetainedRenderTarget({
+      createRenderTarget({
         backend: 'svg',
         host: Object.freeze({ tagName: 'canvas' }) as unknown as SVGSVGElement,
-        rendererFactory: factory as RetainedRendererFactory,
+        rendererFactory: factory as RendererFactory,
         immutableOptions: { backend: 'svg', idPrefix: 'invalid' },
         configuration: () => ({}),
       }),
@@ -575,13 +570,13 @@ describe('createRetainedRenderTarget', () => {
 
   it('把 participant options getter throw 收敛为稳定 input error', () => {
     const getterFailure = new Error('options getter failed');
-    const options = new Proxy({} as Parameters<typeof createRetainedRenderTarget>[0], {
+    const options = new Proxy({} as Parameters<typeof createRenderTarget>[0], {
       get: () => {
         throw getterFailure;
       },
     });
 
-    expect(() => createRetainedRenderTarget(options)).toThrowError(
+    expect(() => createRenderTarget(options)).toThrowError(
       expect.objectContaining({
         code: RetikzRenderErrorCode.RuntimeParticipantInputInvalid,
         cause: getterFailure,
@@ -590,7 +585,7 @@ describe('createRetainedRenderTarget', () => {
   });
 
   it('把 renderer 未知 prepare throw 包装为稳定 RetikzRenderError cause', () => {
-    const renderer = defineRetainedRenderer({
+    const renderer = defineRenderer({
       backend: 'svg',
       host: svgHost,
       capability: 'entity',
@@ -604,10 +599,10 @@ describe('createRetainedRenderTarget', () => {
       },
       dispose: () => undefined,
     });
-    const handle = createRetainedRenderTarget({
+    const handle = createRenderTarget({
       backend: 'svg',
       host: svgHost,
-      rendererFactory: (() => renderer) as unknown as RetainedRendererFactory,
+      rendererFactory: (() => renderer) as unknown as RendererFactory,
       immutableOptions: { backend: 'svg', idPrefix: 'throw' },
       configuration: () => ({}),
     });
@@ -633,7 +628,7 @@ describe('createRetainedRenderTarget', () => {
       cause: Object.freeze({ fixture: true }),
     });
 
-    const renderer = defineRetainedRenderer({
+    const renderer = defineRenderer({
       backend: 'svg',
       host: svgHost,
       capability: 'entity',
@@ -647,11 +642,11 @@ describe('createRetainedRenderTarget', () => {
       },
       dispose: () => undefined,
     });
-    const handle = createRetainedRenderTarget({
+    const handle = createRenderTarget({
       backend: 'svg',
       host: svgHost,
-      rendererFactory: (() => renderer) as unknown as RetainedRendererFactory,
-      immutableOptions: { backend: 'svg', idPrefix: 'retained-error' },
+      rendererFactory: (() => renderer) as unknown as RendererFactory,
+      immutableOptions: { backend: 'svg', idPrefix: 'session-error' },
       configuration: () => ({}),
     });
 
@@ -669,7 +664,7 @@ describe('createRetainedRenderTarget', () => {
   it('把 renderer read getter throw 包装为稳定 snapshot mismatch cause', () => {
     const getterFailure = new Error('read getter failed');
 
-    const renderer = defineRetainedRenderer({
+    const renderer = defineRenderer({
       backend: 'svg',
       host: svgHost,
       capability: 'entity',
@@ -677,17 +672,17 @@ describe('createRetainedRenderTarget', () => {
       prepareMount: noopToken,
       prepare: noopToken,
       read: () =>
-        new Proxy({} as RetainedRendererRead, {
+        new Proxy({} as RendererRead, {
           get: () => {
             throw getterFailure;
           },
         }),
       dispose: () => undefined,
     });
-    const handle = createRetainedRenderTarget({
+    const handle = createRenderTarget({
       backend: 'svg',
       host: svgHost,
-      rendererFactory: (() => renderer) as unknown as RetainedRendererFactory,
+      rendererFactory: (() => renderer) as unknown as RendererFactory,
       immutableOptions: { backend: 'svg', idPrefix: 'read-getter' },
       configuration: () => ({}),
     });
@@ -709,7 +704,7 @@ describe('createRetainedRenderTarget', () => {
 
   it('在 publish 前拒绝 malformed AnimationControls', () => {
     let committed: RenderFrameSnapshot | undefined;
-    const renderer = defineRetainedRenderer({
+    const renderer = defineRenderer({
       backend: 'svg',
       host: svgHost,
       capability: 'entity',
@@ -721,14 +716,14 @@ describe('createRetainedRenderTarget', () => {
       prepare: noopToken,
       read: () => {
         if (committed === undefined) throw new Error('missing snapshot');
-        return { frame: committed, animation: {} as NonNullable<RetainedRendererRead['animation']> };
+        return { frame: committed, animation: {} as NonNullable<RendererRead['animation']> };
       },
       dispose: () => undefined,
     });
-    const handle = createRetainedRenderTarget({
+    const handle = createRenderTarget({
       backend: 'svg',
       host: svgHost,
-      rendererFactory: (() => renderer) as unknown as RetainedRendererFactory,
+      rendererFactory: (() => renderer) as unknown as RendererFactory,
       immutableOptions: { backend: 'svg', idPrefix: 'malformed-animation' },
       configuration: () => ({}),
     });
@@ -756,7 +751,7 @@ describe('createRetainedRenderTarget', () => {
       time: 12,
       running: false,
     };
-    const renderer = defineRetainedRenderer({
+    const renderer = defineRenderer({
       backend: 'svg',
       host: svgHost,
       capability: 'entity',
@@ -772,10 +767,10 @@ describe('createRetainedRenderTarget', () => {
       },
       dispose: () => undefined,
     });
-    const handle = createRetainedRenderTarget({
+    const handle = createRenderTarget({
       backend: 'svg',
       host: svgHost,
-      rendererFactory: (() => renderer) as unknown as RetainedRendererFactory,
+      rendererFactory: (() => renderer) as unknown as RendererFactory,
       immutableOptions: { backend: 'svg', idPrefix: 'animation-capture' },
       configuration: () => ({}),
     });

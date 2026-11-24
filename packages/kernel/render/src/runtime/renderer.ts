@@ -7,30 +7,30 @@ import type { ScenePatch } from '../scene';
 import type { RenderRuntimeConfig } from './config';
 import type { RenderFrameSnapshot } from './frame';
 
-/** Retained renderer 增量能力等级 */
-export const RetainedRendererCapability = {
+/** renderer 增量能力等级 */
+export const RendererCapability = {
   None: 'none',
   Group: 'group',
   Entity: 'entity',
 } as const;
 
-/** Retained renderer 增量能力等级取值 */
-export type RetainedRendererCapability = ValueOf<typeof RetainedRendererCapability>;
+/** renderer 增量能力等级取值 */
+export type RendererCapability = ValueOf<typeof RendererCapability>;
 
-/** Retained renderer 对只读 Scene 图层的支持等级 */
-export const RetainedRendererReadonlyLayerCapability = {
+/** renderer 对只读 Scene 图层的支持等级 */
+export const RendererReadonlyLayerCapability = {
   Supported: 'supported',
   Unsupported: 'unsupported',
 } as const;
 
-/** Retained renderer 只读 Scene 图层支持等级取值 */
-export type RetainedRendererReadonlyLayerCapability = ValueOf<typeof RetainedRendererReadonlyLayerCapability>;
+/** renderer 只读 Scene 图层支持等级取值 */
+export type RendererReadonlyLayerCapability = ValueOf<typeof RendererReadonlyLayerCapability>;
 
-/** Retained renderer 支持的宿主元素 */
-export type RetainedRendererHost = SVGSVGElement | HTMLCanvasElement;
+/** renderer 支持的宿主元素 */
+export type RendererHost = SVGSVGElement | HTMLCanvasElement;
 
 /** SVG renderer 的 session-lifetime immutable options */
-export type RetainedSvgRendererImmutableOptions = Readonly<{
+export type SvgRendererImmutableOptions = Readonly<{
   /** 渲染后端种类 */
   backend: 'svg';
   /** 资源与 descriptor id 前缀 */
@@ -38,7 +38,7 @@ export type RetainedSvgRendererImmutableOptions = Readonly<{
 }>;
 
 /** Canvas renderer 的 session-lifetime immutable options */
-export type RetainedCanvasRendererImmutableOptions = Readonly<{
+export type CanvasRendererImmutableOptions = Readonly<{
   /** 渲染后端种类 */
   backend: 'canvas';
   /** 资源与 descriptor id 前缀 */
@@ -47,25 +47,23 @@ export type RetainedCanvasRendererImmutableOptions = Readonly<{
   devicePixelRatio?: number;
 }>;
 
-/** Retained renderer 的 session-lifetime immutable options */
-export type RetainedRendererImmutableOptions =
-  | RetainedSvgRendererImmutableOptions
-  | RetainedCanvasRendererImmutableOptions;
+/** renderer 的 session-lifetime immutable options */
+export type RendererImmutableOptions = SvgRendererImmutableOptions | CanvasRendererImmutableOptions;
 
 /** 与一次 committed renderer state 对应的 immutable public read */
-export type RetainedRendererRead = Readonly<{
+export type RendererRead = Readonly<{
   /** renderer 当前原子物化的主图与只读图层 */
   frame: RenderFrameSnapshot;
   /** 与同一 revision 对应的动画控制器 */
   animation?: AnimationControls;
 }>;
 
-/** Retained renderer 私有 executor 公共作者契约 */
-export type RetainedRendererDefinitionBase = Readonly<{
+/** renderer 私有 executor 公共作者契约 */
+export type RendererDefinitionBase = Readonly<{
   /** renderer 支持的最大增量粒度 */
-  capability: RetainedRendererCapability;
+  capability: RendererCapability;
   /** renderer 是否能物化只读 Scene 图层 */
-  readonlyLayerCapability: RetainedRendererReadonlyLayerCapability;
+  readonlyLayerCapability: RendererReadonlyLayerCapability;
   /** staging 首次 materialization */
   prepareMount: (
     frame: RenderFrameSnapshot,
@@ -75,13 +73,13 @@ export type RetainedRendererDefinitionBase = Readonly<{
   /** staging 一次 Patch 与 config 原子更新 */
   prepare: (patch: ScenePatch, frame: RenderFrameSnapshot, config: RenderRuntimeConfig) => ReconcilerPreparedCommit;
   /** 读取已 commit 的 renderer state */
-  read: () => RetainedRendererRead;
+  read: () => RendererRead;
   /** 释放 renderer 与 host 资源 */
   dispose: () => void;
 }>;
 
-/** SVG retained renderer 作者输入 */
-export type InputRetainedSvgRendererDefinition = RetainedRendererDefinitionBase &
+/** SVG renderer 作者输入 */
+export type InputSvgRendererDefinition = RendererDefinitionBase &
   Readonly<{
     /** 标识 SVG 渲染后端 */
     backend: 'svg';
@@ -89,8 +87,8 @@ export type InputRetainedSvgRendererDefinition = RetainedRendererDefinitionBase 
     host: SVGSVGElement;
   }>;
 
-/** Canvas retained renderer 作者输入 */
-export type InputRetainedCanvasRendererDefinition = RetainedRendererDefinitionBase &
+/** Canvas renderer 作者输入 */
+export type InputCanvasRendererDefinition = RendererDefinitionBase &
   Readonly<{
     /** 标识 Canvas 渲染后端 */
     backend: 'canvas';
@@ -98,25 +96,23 @@ export type InputRetainedCanvasRendererDefinition = RetainedRendererDefinitionBa
     host: HTMLCanvasElement;
   }>;
 
-/** Retained renderer 作者输入 */
-export type InputRetainedRendererDefinition =
-  | InputRetainedSvgRendererDefinition
-  | InputRetainedCanvasRendererDefinition;
+/** renderer 作者输入 */
+export type InputRendererDefinition = InputSvgRendererDefinition | InputCanvasRendererDefinition;
 
-declare const retainedRendererBrand: unique symbol;
+declare const rendererBrand: unique symbol;
 
-/** Retained renderer nominal token 的共享字段 */
-export type RetainedRendererTokenBase = Readonly<{
+/** renderer nominal token 的共享字段 */
+export type RendererTokenBase = Readonly<{
   /** renderer 增量能力 */
-  capability: RetainedRendererCapability;
+  capability: RendererCapability;
   /** renderer 只读 Scene 图层支持等级 */
-  readonlyLayerCapability: RetainedRendererReadonlyLayerCapability;
+  readonlyLayerCapability: RendererReadonlyLayerCapability;
   /** 用于区分名义类型的不透明标记 */
-  [retainedRendererBrand]: true;
+  [rendererBrand]: true;
 }>;
 
 /** 保留式 SVG 渲染器的名义类型令牌 */
-export type RetainedSvgRenderer = RetainedRendererTokenBase &
+export type SvgRenderer = RendererTokenBase &
   Readonly<{
     /** 标识 SVG 渲染后端 */
     backend: 'svg';
@@ -125,7 +121,7 @@ export type RetainedSvgRenderer = RetainedRendererTokenBase &
   }>;
 
 /** 保留式 Canvas 渲染器的名义类型令牌 */
-export type RetainedCanvasRenderer = RetainedRendererTokenBase &
+export type CanvasRenderer = RendererTokenBase &
   Readonly<{
     /** 标识 Canvas 渲染后端 */
     backend: 'canvas';
@@ -134,17 +130,17 @@ export type RetainedCanvasRenderer = RetainedRendererTokenBase &
   }>;
 
 /** 保留式渲染器的名义类型令牌 */
-export type RetainedRenderer = RetainedSvgRenderer | RetainedCanvasRenderer;
+export type Renderer = SvgRenderer | CanvasRenderer;
 
-/** Retained renderer factory 的判别输入 */
-export type InputRetainedRendererFactory =
+/** renderer factory 的判别输入 */
+export type InputRendererFactory =
   | Readonly<{
       /** 选择与宿主元素匹配的渲染后端 */
       backend: 'svg';
       /** 工厂创建的渲染器所关联的根元素 */
       host: SVGSVGElement;
       /** 该挂载生命周期内固定的后端参数 */
-      immutableOptions: RetainedSvgRendererImmutableOptions;
+      immutableOptions: SvgRendererImmutableOptions;
     }>
   | Readonly<{
       /** 选择与宿主元素匹配的渲染后端 */
@@ -152,23 +148,23 @@ export type InputRetainedRendererFactory =
       /** 工厂创建的渲染器所关联的根元素 */
       host: HTMLCanvasElement;
       /** 该挂载生命周期内固定的后端参数 */
-      immutableOptions: RetainedCanvasRendererImmutableOptions;
+      immutableOptions: CanvasRendererImmutableOptions;
     }>;
 
-/** Adapter 可注入的 retained renderer factory */
-export type RetainedRendererFactory = {
-  /** 创建 SVG retained renderer */
-  (input: Extract<InputRetainedRendererFactory, Readonly<{ backend: 'svg' }>>): RetainedSvgRenderer;
-  /** 创建 Canvas retained renderer */
-  (input: Extract<InputRetainedRendererFactory, Readonly<{ backend: 'canvas' }>>): RetainedCanvasRenderer;
+/** Adapter 可注入的 renderer factory */
+export type RendererFactory = {
+  /** 创建 SVG renderer */
+  (input: Extract<InputRendererFactory, Readonly<{ backend: 'svg' }>>): SvgRenderer;
+  /** 创建 Canvas renderer */
+  (input: Extract<InputRendererFactory, Readonly<{ backend: 'canvas' }>>): CanvasRenderer;
 };
 
 /** Render 私有 renderer executor */
-type RetainedRendererExecutor = Pick<RetainedRendererDefinitionBase, 'prepareMount' | 'prepare' | 'read' | 'dispose'>;
+type RendererExecutor = Pick<RendererDefinitionBase, 'prepareMount' | 'prepare' | 'read' | 'dispose'>;
 
-const retainedRenderers = new WeakSet<object>();
+const renderers = new WeakSet<object>();
 
-const retainedRendererExecutors = new WeakMap<object, RetainedRendererExecutor>();
+const rendererExecutors = new WeakMap<object, RendererExecutor>();
 
 /** 判断动态宿主是否为 SVGSVGElement，兼容跨 realm 与无 DOM 构造器测试环境 */
 export const isSvgHost = (value: unknown): value is SVGSVGElement => {
@@ -198,15 +194,15 @@ export const isCanvasHost = (value: unknown): value is HTMLCanvasElement => {
   return Reflect.get(value, 'tagName')?.toString().toLowerCase() === 'canvas';
 };
 
-/** nominal retained renderer define helper 的判别重载 */
-export type DefineRetainedRenderer = {
-  /** 定义 SVG retained renderer */
-  (input: InputRetainedSvgRendererDefinition): RetainedSvgRenderer;
-  /** 定义 Canvas retained renderer */
-  (input: InputRetainedCanvasRendererDefinition): RetainedCanvasRenderer;
+/** nominal renderer define helper 的判别重载 */
+export type DefineRenderer = {
+  /** 定义 SVG renderer */
+  (input: InputSvgRendererDefinition): SvgRenderer;
+  /** 定义 Canvas renderer */
+  (input: InputCanvasRendererDefinition): CanvasRenderer;
 };
 
-const defineRetainedRendererUnsafe = (input: InputRetainedRendererDefinition): RetainedRenderer => {
+const defineRendererUnsafe = (input: InputRendererDefinition): Renderer => {
   const { backend, host, capability, readonlyLayerCapability, prepareMount, prepare, read, dispose } = input;
   const runtimeBackend: unknown = backend;
   const validHost = runtimeBackend === 'svg' ? isSvgHost(host) : runtimeBackend === 'canvas' && isCanvasHost(host);
@@ -219,14 +215,14 @@ const defineRetainedRendererUnsafe = (input: InputRetainedRendererDefinition): R
     host,
     capability,
     readonlyLayerCapability,
-  }) as RetainedRenderer;
+  }) as Renderer;
   let state: 'live' | 'disposing' | 'disposed' = 'live';
 
   const assertLive = (): void => {
     if (state !== 'live') throw new RetikzRenderError({ code: RetikzRenderErrorCode.RuntimeRendererDisposed });
   };
 
-  retainedRendererExecutors.set(
+  rendererExecutors.set(
     token,
     Object.freeze({
       prepareMount: (...arguments_) => {
@@ -250,27 +246,27 @@ const defineRetainedRendererUnsafe = (input: InputRetainedRendererDefinition): R
       },
     }),
   );
-  retainedRenderers.add(token);
+  renderers.add(token);
 
   return token;
 };
 
-const defineRetainedRendererImplementation = (input: InputRetainedRendererDefinition): RetainedRenderer => {
+const defineRendererImplementation = (input: InputRendererDefinition): Renderer => {
   try {
-    return defineRetainedRendererUnsafe(input);
+    return defineRendererUnsafe(input);
   } catch (cause) {
     if (isRetikzRenderError(cause)) throw cause;
     throw new RetikzRenderError({ code: RetikzRenderErrorCode.RuntimeRendererInvalid, cause });
   }
 };
 
-/** 定义 nominal retained renderer */
-export const defineRetainedRenderer = defineRetainedRendererImplementation as DefineRetainedRenderer;
+/** 定义 nominal renderer */
+export const defineRenderer = defineRendererImplementation as DefineRenderer;
 
 /** 判断动态值是否为当前 Render 实例创建的 renderer token */
-export const isRetainedRenderer = (value: unknown): value is RetainedRenderer =>
-  typeof value === 'object' && value !== null && retainedRenderers.has(value);
+export const isRenderer = (value: unknown): value is Renderer =>
+  typeof value === 'object' && value !== null && renderers.has(value);
 
 /** 读取 nominal renderer 的 Render 私有 executor */
-export const getRetainedRendererExecutor = (renderer: RetainedRenderer): RetainedRendererExecutor | undefined =>
-  retainedRendererExecutors.get(renderer);
+export const getRendererExecutor = (renderer: Renderer): RendererExecutor | undefined =>
+  rendererExecutors.get(renderer);

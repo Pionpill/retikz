@@ -29,15 +29,15 @@ import { Layout, Node } from '@retikz/react';
 import { mountCanvas } from '@retikz/vanilla/dom';
 
 const view = mountCanvas(container, ir);
-// view.root is the <canvas>; view.update(next) uses the selected static or retained processing; view.dispose() unmounts
+// view.root is the <canvas>; view.update(next) uses the selected static or session processing; view.dispose() unmounts
 ```
 
 The two entries have different input contracts:
 
-| Entry                 | Accepted input                           | Output     |
-| --------------------- | ---------------------------------------- | ---------- |
-| React `<Layout>`      | JSX `children`<br />or `IRScene`         | `<canvas>` |
-| Vanilla `mountCanvas` | `Scene` / `IRScene`<br />or `InputScene` | `<canvas>` |
+| Entry                 | Accepted input                   | Output     |
+| --------------------- | -------------------------------- | ---------- |
+| React `<Layout>`      | JSX `children`<br />or `IRScene` | `<canvas>` |
+| Vanilla `mountCanvas` | `IRScene`                        | `<canvas>` |
 
 `devicePixelRatio` defaults to `globalThis.devicePixelRatio` (falling back to 1), preserving enough bitmap resolution for high-DPI screens.
 

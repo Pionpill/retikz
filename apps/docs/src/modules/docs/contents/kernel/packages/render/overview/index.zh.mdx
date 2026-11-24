@@ -1,33 +1,33 @@
 ---
 title: '@retikz/render'
-description: 把渲染目标无关的 Scene 落到 SVG / Canvas，并以 retained 提交目标 原子提交 Patch、事件、动画与水合状态。
+description: 把渲染目标无关的 Scene 落到 SVG / Canvas，并以 session 提交目标 原子提交 Patch、事件、动画与水合状态。
 ---
 
 > 这里是包文档，不是组件教程；写图请从 [组件](/kernel/components/layout) 开始。
 
 这一组讲 retikz 怎么把图真正画到屏幕上。你写的图会先被编译成一份**与渲染器无关的 Scene**，再交给某个后端落地：**SVG** 产出矢量 DOM，每个图元都是页面上能被 CSS 命中的真实元素；**Canvas** 把同一份 Scene 画成像素位图，适合图元很多或高频重绘的场景。两个后端共享 Scene 语义，在各自支持的能力范围内对齐输出；切换前仍需确认目标宿主和交互需求。**水合**是两个后端共用的机制：先静态出图，客户端再按 id 把事件 handler 绑回图元。
 
-只读图层通过静态帧或 retained 提交入口随主图一起物化。`drawReadonlyLayer` 与 `buildSvgReadonlyLayer` 是内部组装函数，不由 Canvas／SVG 公开子入口导出；公开的细粒度 SVG builder 仍可使用。
+只读图层通过静态帧或 session 提交入口随主图一起物化。`drawReadonlyLayer` 与 `buildSvgReadonlyLayer` 是内部组装函数，不由 Canvas／SVG 公开子入口导出；公开的细粒度 SVG builder 仍可使用。
 
 ## 职责一览
 
-| 主题          | 职责                                                  | 何时查阅                               |
-| ------------- | ----------------------------------------------------- | -------------------------------------- |
-| SVG           | Scene → 矢量 DOM，或 SSR / 构建期的字符串输出         | 默认选它：要清晰矢量、CSS 命中、无障碍 |
-| Canvas        | Scene → 像素位图，即时模式绘制 + 命中查询             | 图元成百上千、高频重绘、性能优先       |
-| Retained 提交 | 在 Reconciler 会话中准备与提交 Scene 和配置           | 需要稳定宿主 identity 与增量更新       |
-| 只读图层      | 在主图之后物化领域中立的普通 Scene 图层               | 接入检查器、编辑器或其它只读辅助内容   |
-| 水合          | 静态出图后按 id 把事件 handler 绑回图元（两后端共用） | 给图加点击 / 悬停等交互                |
+| 主题         | 职责                                                  | 何时查阅                               |
+| ------------ | ----------------------------------------------------- | -------------------------------------- |
+| SVG          | Scene → 矢量 DOM，或 SSR / 构建期的字符串输出         | 默认选它：要清晰矢量、CSS 命中、无障碍 |
+| Canvas       | Scene → 像素位图，即时模式绘制 + 命中查询             | 图元成百上千、高频重绘、性能优先       |
+| Session 提交 | 在 Reconciler 会话中准备与提交 Scene 和配置           | 需要稳定宿主 identity 与增量更新       |
+| 只读图层     | 在主图之后物化领域中立的普通 Scene 图层               | 接入检查器、编辑器或其它只读辅助内容   |
+| 水合         | 静态出图后按 id 把事件 handler 绑回图元（两后端共用） | 给图加点击 / 悬停等交互                |
 
-## Retained 提交
+## Session 提交
 
-`createRetainedRenderTarget()` 创建连接 Reconciler 会话与 retained renderer 的提交目标。Vanilla 将它与处理结果发布组合成一个目标：先准备候选帧与配置，再提交宿主，成功后才发布会话结果。首次提交物化完整 Scene；编译结果变化时生成 `replaceScene`，仅配置变化时使用空操作 Patch 并保留编译结果。提交失败时恢复宿主与编译状态；恢复失败会使 Reconciler 会话进入 broken 状态，需要释放后重新创建。
+`createRenderTarget()` 创建连接 Reconciler 会话与 renderer 的提交目标。Vanilla 将它与处理结果发布组合成一个目标：先准备候选帧与配置，再提交宿主，成功后才发布会话结果。首次提交物化完整 Scene；编译结果变化时生成 `replaceScene`，仅配置变化时使用空操作 Patch 并保留编译结果。提交失败时恢复宿主与编译状态；恢复失败会使 Reconciler 会话进入 broken 状态，需要释放后重新创建。
 
 最终 dispose 会对 hydration、animation 与 image loader 做反向 best-effort cleanup。SVG WAAPI binding 或 Canvas clock 一旦开始清理，公开 controls 与事件 / 可见性回调立即失活；animation、observer、listener、inline style ownership、visibility listener 与 clock 分别清理，成功项不重复，失败项保留给后续 dispose 重试。
 
 `InputRenderRuntimeConfig` 是 closed transaction config：`handlerContributions` 按注册序合并水合 handler，`animation` 控制播放、截帧与扩展 registry，`cachePolicy` 保留未来 layer 失效优化的 hint，`canvas.width` / `canvas.height` 声明 Canvas CSS user-space 尺寸。当前 SVG / Canvas renderer 尚不按 `cachePolicy` 复用图层。Render 借用配置和只读图层，不冻结调用方的对象。只有 handler 注册项乱序时，才另外建立有序列表。渲染器使用这些值期间，请保持它们及其成员稳定；更新时传入新值，而不要原地修改旧帧引用的数据。Canvas 尺寸字段省略时从 committed Scene layout 推导，再乘 session-lifetime DPR 得到设备像素；尺寸更新与位图绘制原子 commit，dirty reuse 仅在目标尺寸稳定时成立。
 
-这些 retained API 从 `@retikz/render/runtime` 导入，不从 `@retikz/render` package root 导出。第三方后端通过 `RetainedRendererFactory` 创建 nominal SVG / Canvas renderer，并声明 `none` / `group` / `entity` capability。Render 提交目标校验 Snapshot / Patch 的版本与结果对应关系；无效 Patch 会被拒绝。当前接线对编译变化生成完整替换，后端能力声明不意味着会话自动产生细粒度操作。
+这些 session API 从 `@retikz/render/runtime` 导入，不从 `@retikz/render` package root 导出。第三方后端通过 `RendererFactory` 创建 nominal SVG / Canvas renderer，并声明 `none` / `group` / `entity` capability。Render 提交目标校验 Snapshot / Patch 的版本与结果对应关系；无效 Patch 会被拒绝。当前接线对编译变化生成完整替换，后端能力声明不意味着会话自动产生细粒度操作。
 
 ### 主图与只读图层
 
@@ -35,7 +35,7 @@ description: 把渲染目标无关的 Scene 落到 SVG / Canvas，并以 retaine
 
 拓扑节点在同级图元中的顺序由 `primitivePath` 的末尾索引决定，相对子树的根路径为 `[]`。构造 update patch 时，用 `subtree.root` 指定替换目标，不另传 `identity`；move 和 remove 仍通过 `identity` 指定目标。
 
-Static API 使用 `StaticRenderFrame { primary: Scene, layers }`，retained renderer 使用 `RenderFrameSnapshot { primary: SceneRuntimeSnapshot, layers }`。两者都把主图和有序只读图层作为一个 frame 物化；retained transaction 失败时不会发布新主图配旧图层。
+Static API 使用 `StaticRenderFrame { primary: Scene, layers }`，renderer 使用 `RenderFrameSnapshot { primary: SceneRuntimeSnapshot, layers }`。两者都把主图和有序只读图层作为一个 frame 物化；session transaction 失败时不会发布新主图配旧图层。
 
 每个 `RenderReadonlyLayer` 都携带单帧唯一的 `key`、普通静态 `scene` 和到主 Scene 坐标的 `transform`。SVG 在主图之后追加 `pointer-events="none"` 的分组，用普通 Scene fragment 路径执行每个图层，并为其资源生成独立前缀，不写 hydration id。Canvas 套用图层 transform 后调用普通 Scene 绘制路径；`hitTest` 仍只读取主 Scene。只读图层不会决定 viewBox、主资源、动画或主图 identity，也不能包含公共 `id`、`meta` 或动画字段。
 
@@ -55,24 +55,24 @@ Static API 使用 `StaticRenderFrame { primary: Scene, layers }`，retained rend
 
 <SourceLinks
   sources={[
-    { label: 'Retained config', path: 'packages/kernel/render/src/runtime/config.ts' },
+    { label: 'Session config', path: 'packages/kernel/render/src/runtime/config.ts' },
     { label: 'Reconciler commit target', path: 'packages/kernel/render/src/runtime/target.ts' },
     { label: 'Session publication and recovery', path: 'packages/kernel/reconciler/src/reconcile/reconciler.ts' },
     {
       label: 'SVG WAAPI 独立资源 cleanup',
-      path: 'packages/kernel/render/src/animation/retained/binding.ts',
+      path: 'packages/kernel/render/src/animation/binding.ts',
       startLine: 67,
       endLine: 205,
     },
     {
       label: 'SVG WAAPI trigger ownership',
-      path: 'packages/kernel/render/src/animation/retained/binding.ts',
+      path: 'packages/kernel/render/src/animation/binding.ts',
       startLine: 266,
       endLine: 341,
     },
     {
       label: 'SVG WAAPI setup cleanup recovery',
-      path: 'packages/kernel/render/src/animation/retained/binding.ts',
+      path: 'packages/kernel/render/src/animation/binding.ts',
       startLine: 344,
       endLine: 363,
     },
@@ -149,7 +149,7 @@ Static API 使用 `StaticRenderFrame { primary: Scene, layers }`，retained rend
       endLine: 50,
     },
     {
-      label: 'Static 与 retained frame 契约',
+      label: 'Static 与 session frame 契约',
       path: 'packages/kernel/render/src/runtime/frame.ts',
     },
     {
@@ -157,16 +157,16 @@ Static API 使用 `StaticRenderFrame { primary: Scene, layers }`，retained rend
       path: 'packages/kernel/render/src/runtime/readonly-layer.ts',
     },
     {
-      label: 'Retained renderer definition 与 factory contract',
+      label: 'renderer definition 与 factory contract',
       path: 'packages/kernel/render/src/runtime/renderer.ts',
       startLine: 52,
       endLine: 148,
     },
     {
-      label: 'Nominal retained renderer token 构造',
+      label: 'Nominal renderer token 构造',
       path: 'packages/kernel/render/src/runtime/renderer.ts',
-      startLine: 218,
-      endLine: 274,
+      startLine: 205,
+      endLine: 264,
     },
   ]}
 />
