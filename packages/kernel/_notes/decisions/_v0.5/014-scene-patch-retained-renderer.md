@@ -92,7 +92,7 @@ React只拥有 `<svg>` / `<canvas>` host shell attributes/ref，Render独占 SVG
 
 SSR SVG使用 opaque seed：server与首次client render写入同一稳定 `dangerouslySetInnerHTML`，后续React render不再改写renderer-owned descendants。首次layout effect以adopt模式接管；matching seed保留descendant identity，mismatch在首次committed callback前replace。StrictMode effect replay与最终unmount对每个renderer instance都只启动一次cleanup；成功dispose不重复，失败项可由Runtime重试。
 
-Vanilla对 IR/plain spec返回 `VanillaViewMode.Retained` view，对预编译 Scene返回 `VanillaViewMode.Static` view。Retained view的 `update()`把下一轮 normalization、artifacts、animation与可变Canvas config放进同一runtime transaction；失败保持全部旧值与对象identity。公开update options按后端收窄：SVG只接受animation，Canvas另接受`canvas.animationProperties`；Canvas DPR只在mount决定，变化必须dispose/remount。`RenderToStringOptions`与三组static mount options都以`runtime?: never`排除retained-only `rendererFactory`，retained mount options才暴露该配置；运行时按字段存在性拒绝static mount中的任意`runtime`输入，不能静默忽略空对象、未知字段或primitive值。`view.hydrate()`以可回滚handler contribution transaction添加和移除注册。
+Vanilla 的 IR 和作者输入挂载入口返回保留会话的视图；预编译 Scene 直接交给 Render，不属于 Vanilla DOM 挂载输入。Session view的 `update()`把下一轮 normalization、artifacts、animation与可变Canvas config放进同一runtime transaction；失败保持全部旧值与对象identity。公开update options按后端收窄：SVG只接受animation，Canvas另接受`canvas.animationProperties`；Canvas DPR只在mount决定，变化必须dispose/remount。仅 DOM 挂载选项提供可选的 renderer factory。`view.hydrate()`以可回滚handler contribution transaction添加和移除注册。
 
 Plain spec每轮可按datasets生成新的composite callback，但Definition数量、顺序/key、schema identity、expand/compile分支与artifact schema必须在runtime内稳定。稳定delegate在prepare切换candidate callback；失败rollback旧callback，成功同时推进内部composite revision owner，确保结构等价IR也会让Core重新编译并消费新数据。
 

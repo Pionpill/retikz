@@ -35,12 +35,12 @@ export const ServiceGraph = () => (
 
 <PackageManagerInstall packages="@retikz/graph-vanilla @retikz/vanilla" />
 
-Vanilla 先用 Graph builders 创建 InputScene，再把 Graph adapters 交给 `mount()`。adapter 会让挂载过程识别并处理 Graph 组件。
+Vanilla 先用 Graph builders 创建带有嵌入组件的 InputScene，再交给 `mountFromInput()` 转换和挂载。
 
 ```ts
 import { entity, graph, relation } from '@retikz/graph-vanilla';
 import { scene } from '@retikz/vanilla';
-import { mount } from '@retikz/vanilla/dom';
+import { mountFromInput } from '@retikz/vanilla/dom';
 
 const input = scene({
   viewBox: { x: 0, y: 0, width: 440, height: 160 },
@@ -60,7 +60,7 @@ const input = scene({
   ],
 });
 
-const view = mount(document.getElementById('diagram')!, input);
+const view = mountFromInput(document.getElementById('diagram')!, input);
 ```
 
 容器移除前调用 `view.dispose()`，释放本次挂载的运行时资源。

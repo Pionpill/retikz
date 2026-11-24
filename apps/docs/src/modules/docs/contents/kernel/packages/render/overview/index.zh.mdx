@@ -39,7 +39,9 @@ Static API 使用 `StaticRenderFrame { primary: Scene, layers }`，retained rend
 
 每个 `RenderReadonlyLayer` 都携带单帧唯一的 `key`、普通静态 `scene` 和到主 Scene 坐标的 `transform`。SVG 在主图之后追加 `pointer-events="none"` 的分组，用普通 Scene fragment 路径执行每个图层，并为其资源生成独立前缀，不写 hydration id。Canvas 套用图层 transform 后调用普通 Scene 绘制路径；`hitTest` 仍只读取主 Scene。只读图层不会决定 viewBox、主资源、动画或主图 identity，也不能包含公共 `id`、`meta` 或动画字段。
 
-第三方 retained renderer 通过 `readonlyLayerCapability: 'supported' | 'unsupported'` 明确声明支持情况；收到非空图层但声明 unsupported 时会直接报错，不会静默丢弃。Render 不认识 Inspector、配色或具体辅助图元；`@retikz/inspect` 只是只读图层的一个外部生产者，编辑器和其它工具也可复用同一能力。
+第三方 renderer 通过 `readonlyLayerCapability: 'supported' | 'unsupported'` 明确声明支持情况；收到非空图层但声明 unsupported 时会直接报错，不会静默丢弃。Render 不认识 Inspector、配色或具体辅助图元；`@retikz/inspect` 只是只读图层的一个外部生产者，编辑器和其它工具也可复用同一能力。
+
+宿主可从 `@retikz/render/runtime` 导入 `computeDisplaySize(scene.layout, width?, height?)` 计算显示尺寸。只指定宽或高时，另一轴按场景比例补齐；这不会改变场景的取景范围。
 
 ### 静态帧 API
 

@@ -30,10 +30,10 @@ describe('@retikz/vanilla 入口边界', () => {
 
     for (const name of [
       'mount',
+      'mountFromInput',
       'mountSvg',
       'mountCanvas',
       'hydrate',
-      'VanillaViewMode',
       'createDomProcessingController',
       'updateParticipant',
     ]) {

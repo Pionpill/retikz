@@ -35,12 +35,12 @@ export const ServiceGraph = () => (
 
 <PackageManagerInstall packages="@retikz/graph-vanilla @retikz/vanilla" />
 
-Vanilla first creates an InputScene with Graph builders, then passes Graph adapters to `mount()`. The adapter lets mounting recognize and process Graph components.
+Use Graph builders to create an InputScene with embedded components, then pass it to `mountFromInput()` to normalize and mount it.
 
 ```ts
 import { entity, graph, relation } from '@retikz/graph-vanilla';
 import { scene } from '@retikz/vanilla';
-import { mount } from '@retikz/vanilla/dom';
+import { mountFromInput } from '@retikz/vanilla/dom';
 
 const input = scene({
   viewBox: { x: 0, y: 0, width: 440, height: 160 },
@@ -60,7 +60,7 @@ const input = scene({
   ],
 });
 
-const view = mount(document.getElementById('diagram')!, input);
+const view = mountFromInput(document.getElementById('diagram')!, input);
 ```
 
 Call `view.dispose()` before removing the container to release resources for this mount.

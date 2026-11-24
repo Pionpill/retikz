@@ -61,7 +61,7 @@ export default Example;
 ```ts
 import { entity } from '@retikz/graph-vanilla';
 import { scene } from '@retikz/vanilla';
-import { mount } from '@retikz/vanilla/dom';
+import { mountFromInput } from '@retikz/vanilla/dom';
 
 const input = scene({
   children: [
@@ -73,7 +73,7 @@ const input = scene({
     }),
   ],
 });
-const view = mount(document.getElementById('diagram')!, input);
+const view = mountFromInput(document.getElementById('diagram')!, input);
 ```
 
 </DocTab>

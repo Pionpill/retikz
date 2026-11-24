@@ -137,7 +137,7 @@ describe('Vanilla 处理', () => {
     ]);
   });
 
-  it('retained controller 创建时保留 Core 编译诊断', () => {
+  it('session controller 创建时保留 Core 编译诊断', () => {
     expect(() =>
       SceneRuntime.fromInput({
         type: 'scene',
@@ -184,7 +184,7 @@ describe('Vanilla 处理', () => {
     ).toThrow(/disposed/i);
   });
 
-  it('retained controller 接受新增和移除 Composite contribution 的 InputScene 更新', () => {
+  it('session controller 接受新增和移除 Composite contribution 的 InputScene 更新', () => {
     const definition = defineComposite({
       namespace: 'fixture',
       type: 'box',
@@ -298,7 +298,7 @@ describe('Vanilla 处理', () => {
     controller.dispose();
   });
 
-  it('retained processing 只在成功 Runtime transaction 后替换完整 result', () => {
+  it('session processing 只在成功 Runtime transaction 后替换完整 result', () => {
     const processing = SceneRuntime.fromInput({
       type: 'scene',
       children: [{ type: 'node', id: 'first', position: [0, 0] }],

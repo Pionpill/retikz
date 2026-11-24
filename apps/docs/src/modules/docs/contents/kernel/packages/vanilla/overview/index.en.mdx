@@ -9,9 +9,9 @@ The package root works safely in SSR, build scripts, and other frameworks. Its d
 
 Applications use `SceneRuntime` or `compileToScene` from the package root.
 
-Use `runtime.diagnostics()` to read retained session diagnostics.
+Use `runtime.diagnostics()` to read session diagnostics.
 
-One-shot compilation and retained updates share input preparation. One-shot compilation returns a `CompileResult` directly. In retained mode, the read-only `runtime.current` property exposes the same committed `ReconcilerResult` snapshot that subscribers receive. Read the frame’s output from `snapshot.compilation.result` and pass the snapshot itself as `expected` for incremental updates. Read the snapshot in the subscriber. If it triggers another update, submit it after the current notification returns. A precompiled Scene goes straight to Render without creating a compilation session.
+One-shot compilation and session updates share input preparation. One-shot compilation returns a `CompileResult` directly. In session mode, the read-only `runtime.current` property exposes the same committed `ReconcilerResult` snapshot that subscribers receive. Read the frame’s output from `snapshot.compilation.result` and pass the snapshot itself as `expected` for incremental updates. Read the snapshot in the subscriber. If it triggers another update, submit it after the current notification returns. A precompiled Scene goes straight to Render without creating a compilation session.
 
 To export an already compiled Scene, call `renderToSvg(scene)`. It serializes the scene without recompiling it. To type sizing or animation options separately, use `NonNullable<RenderToStringOptions['output']>` or `NonNullable<RenderToStringOptions['animation']>` with the exported `RenderToStringOptions` type.
 
@@ -89,7 +89,7 @@ pnpm add @retikz/vanilla
 
 ```ts
 import { compileToScene, node, path, renderToSvg, scene } from '@retikz/vanilla';
-import { mount } from '@retikz/vanilla/dom';
+import { mountFromInput } from '@retikz/vanilla/dom';
 
 const input = scene({
   children: [
@@ -101,7 +101,7 @@ const input = scene({
 
 const compileResult = compileToScene(input);
 const svg = renderToSvg(compileResult.scene);
-const view = mount(document.querySelector('#diagram')!, input);
+const view = mountFromInput(document.querySelector('#diagram')!, input);
 ```
 
 `renderToSvg` needs no DOM, so it suits SSR, build-time generation, and saving SVG. `mount` hosts a browser view, creating SVG by default or Canvas with `renderer: 'canvas'`. The returned `view` owns later `update`, interaction hydration, animation controls, and disposal.
@@ -138,7 +138,7 @@ Blue nodes in this diagram belong to Vanilla input and processing; orange nodes 
 | ---------------- | ----------------- | ------------------------------------------------------------------------------- |
 | `InputScene`     | `@retikz/vanilla` | Normalizes input, lowers embeds, and collects contributions and authoring sites |
 | Core `IRScene`   | `@retikz/core`    | Skips Input normalization and prepares Core compilation                         |
-| Compiled `Scene` | `@retikz/core`    | Skips normalization and compilation; DOM can only redraw it statically          |
+| Compiled `Scene` | `@retikz/core`    | Skips normalization and compilation; pass it directly to Render                 |
 
 For an `InputScene`, `SceneRuntime` normalizes authoring shorthand to IR, resolves embedded components’ dependencies, and binds instance inputs to that IR. An `IRScene` goes directly to the reconciler. `compileToScene()` creates the same session, reads its first compilation result, and disposes it.
 
@@ -165,19 +165,20 @@ For an `InputScene`, `SceneRuntime` normalizes authoring shorthand to IR, resolv
 
 ## Execution and DOM boundary
 
-| API           | Purpose                             | Returns                      |
-| ------------- | ----------------------------------- | ---------------------------- |
-| `renderToSvg` | Produce an `<svg>` string for SSR   | `string`                     |
-| `mount`       | Mount SVG or Canvas by `renderer`   | `VanillaView` / `CanvasView` |
-| `mountSvg`    | Explicitly mount SVG DOM            | `VanillaView`                |
-| `mountCanvas` | Explicitly mount Canvas             | `CanvasView`                 |
-| `hydrate`     | Bind handlers to SSR / existing SVG | `HydrationHandle`            |
+| API              | Purpose                             | Returns                  |
+| ---------------- | ----------------------------------- | ------------------------ |
+| `renderToSvg`    | Produce an `<svg>` string for SSR   | `string`                 |
+| `mount`          | Mount SVG or Canvas by `renderer`   | `SvgView` / `CanvasView` |
+| `mountFromInput` | Normalize and mount authored input  | SVG / Canvas view        |
+| `mountSvg`       | Explicitly mount SVG DOM            | `SvgView`                |
+| `mountCanvas`    | Explicitly mount Canvas             | `CanvasView`             |
+| `hydrate`        | Bind handlers to SSR / existing SVG | `HydrationController`    |
 
-The last four APIs are imported from `@retikz/vanilla/dom`. By default, `InputScene` and `IRScene` create a `VanillaViewMode.Retained` view. `update(next, options?)` atomically publishes the same processing transaction's Scene, artifacts, events, and animation. A failed transaction publishes no new revision; if rollback itself fails, the view becomes broken and must be disposed and remounted.
+Import the DOM mount APIs from `@retikz/vanilla/dom`. Use `mount(container, ir)`, `mountSvg`, or `mountCanvas` for IR. Use `mountFromInput(container, input)` for authored input: it normalizes once and keeps the frame’s embed definitions and instance data. Both entries create a session view. Replace the scene with `view.update(ir, options?)` or `view.updateInput(input, options?)`. A successful transaction publishes the scene, artifacts, and render configuration together; failure publishes no new frame. If rollback fails, dispose and remount the view.
 
-With `runtime: { mode: 'static' }`, every `update()` of an `InputScene` or `IRScene` fully normalizes, compiles, and redraws without a Session, Snapshot, Patch, transaction, or rollback. A precompiled `Scene` is always static and accepts only another `Scene`.
+Both backends accept `animation` in the update options. Read the committed artifacts from `view.compileResult.artifacts`. Bind handlers with `view.hydrate({ handlers })` to use the current scene as the event context. Standalone `hydrate(svg, { handlers, scene })` accepts an optional scene for an existing SVG.
 
-`mode` and `updateStrategy` are fixed when mounting. `VanillaRetainedRuntimeOptions` permits `rendererFactory`; it is an optional DOM retained-backend extension point, and static mode rejects it. Dispose and remount to change the renderer, DPR, compile topology, or retained strategy.
+The update strategy and optional renderer factory are fixed at mount. Dispose and remount to change the renderer, DPR, compile topology, or update strategy.
 
 <SourceLinks
   sources={[
@@ -190,8 +191,8 @@ With `runtime: { mode: 'static' }`, every `update()` of an `InputScene` or `IRSc
       path: 'packages/kernel/vanilla/src/dom/mount.ts',
     },
     {
-      label: 'DOM retained processing controller',
-      path: 'packages/kernel/vanilla/src/dom/retained.ts',
+      label: 'DOM view',
+      path: 'packages/kernel/vanilla/src/dom/view.ts',
     },
   ]}
 />
@@ -276,15 +277,12 @@ React applications use [`@retikz/react`](/kernel/packages/react/overview) to col
 | `InputEmbedAdapter`                  | type          | Lowers an `InputEmbed` to a Core contribution                                 |
 | `isInputScene` / `normalizeScene`    | normalization | Distinguish typed InputScene / IRScene and normalize authoring input          |
 | `SceneNormalizationResult`           | type          | IR, contributions, instance inputs, and authoring provenance                  |
-| `ProcessOptions`                     | type          | Compilation and retained update strategy                                      |
-| `SceneRuntime`                       | processing    | Framework-neutral retained processing controller                              |
+| `ProcessOptions`                     | type          | Compilation and session update strategy                                       |
+| `SceneRuntime`                       | processing    | Framework-neutral session processing controller                               |
 | `compileToScene`                     | processing    | One-shot synchronous compilation of InputScene or Core IR                     |
 | `renderToSvg`                        | SSR           | Serialize a compiled Scene to an SVG string                                   |
 | `mount` / `mountSvg` / `mountCanvas` | DOM           | Mount a browser view from `@retikz/vanilla/dom`                               |
-| `VanillaRuntimeOptions`              | type          | Retained or static runtime config for InputScene / IRScene                    |
-| `VanillaRetainedRuntimeOptions`      | type          | Retained mode, update strategy, optional renderer factory                     |
-| `VanillaStaticRuntimeOptions`        | type          | Closed configuration permitting only `mode: 'static'`                         |
-| `RetainedVanillaView`                | runtime       | Transactional retained view for IRScene / InputScene                          |
-| `StaticVanillaView`                  | runtime       | Full-redraw view for Scene, IRScene, or InputScene                            |
+| `MountOptions['runtime']`            | type          | Update strategy and optional renderer factory for IR or authored input        |
+| `SvgView` / `CanvasView`             | runtime       | Transactional session view for IRScene / InputScene                           |
 | `RetikzVanillaError`                 | error         | The single Vanilla error class; code, details, and cause distinguish failures |
 | `RetikzVanillaErrorCode`             | const object  | Stable normalize, processing, runtime, and DOM error codes                    |

@@ -68,7 +68,7 @@ const idIr: IRScene = {
 };
 
 describe('@retikz/vanilla mountCanvas', () => {
-  it.each(['static', 'retained'] as const)('%s 默认 CSS 尺寸独立于 DPR，单轴保持比例', mode => {
+  it('默认 CSS 尺寸独立于 DPR，单轴保持比例', () => {
     const ir: IRScene = {
       type: 'scene',
       version: 1,
@@ -76,25 +76,20 @@ describe('@retikz/vanilla mountCanvas', () => {
       viewBox: { x: -20, y: -10, width: 240, height: 120 },
     };
     const container = document.createElement('div');
-    const view =
-      mode === 'static'
-        ? mountCanvas(container, ir, { runtime: { mode } })
-        : mountCanvas(container, ir, { runtime: { mode } });
+    const next: IRScene = { ...ir, viewBox: { x: 0, y: 0, width: 300, height: 100 } };
+    const view = mountCanvas(container, ir);
 
     expect(view.root.style.width).toBe('240px');
     expect(view.root.style.height).toBe('120px');
     expect(view.root.width).toBe(480);
 
-    view.update({ ...ir, viewBox: { x: 0, y: 0, width: 300, height: 100 } });
+    view.update(next);
 
     expect(view.root.style.width).toBe('300px');
     expect(view.root.width).toBe(600);
 
     view.dispose();
-    const scaled =
-      mode === 'static'
-        ? mountCanvas(container, ir, { runtime: { mode }, output: { width: 480 } })
-        : mountCanvas(container, ir, { runtime: { mode }, output: { width: 480 } });
+    const scaled = mountCanvas(container, ir, { output: { width: 480 } });
 
     expect(scaled.root.style.height).toBe('240px');
     expect(scaled.root.height).toBe(480);

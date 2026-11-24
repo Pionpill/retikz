@@ -1,101 +1,58 @@
-import type { IRScene, Scene } from '@retikz/core';
+import type { IRScene } from '@retikz/core';
 
 import type { InputScene } from '../normalize';
-import { mountCanvas } from './mount-canvas';
-import { mountSvg } from './mount-svg';
-import type {
-  CanvasView,
-  MountCanvasOptions,
-  MountOptions,
-  RawStaticMountCanvasOptions,
-  RawStaticMountOptions,
-  RetainedCanvasView,
-  RetainedMountCanvasOptions,
-  RetainedMountOptions,
-  RetainedSvgView,
-  StaticCanvasView,
-  StaticMountCanvasOptions,
-  StaticMountOptions,
-  StaticRawCanvasView,
-  StaticRawSvgView,
-  StaticSvgView,
-  VanillaView,
-} from './types';
+import { normalizeScene } from '../normalize';
+import type { SceneInputBindings } from '../runtime';
+import { mountCanvasView } from './mount-canvas';
+import { mountSvgView } from './mount-svg';
+import type { MountOptions, MountCanvasOptions, CanvasView, SvgView } from './types';
 
-/** Vanilla 挂载时使用的渲染器选择器 */
+/** DOM 挂载使用的渲染后端 */
 export type MountRenderer = 'svg' | 'canvas';
 
-/** 统一 mount 入口选项 */
-export type RetainedMountUnifiedOptions = (RetainedMountOptions | RetainedMountCanvasOptions) & {
-  /** 渲染后端；缺省使用 SVG */
-  renderer?: MountRenderer;
-};
+/** IR 和作者输入的挂载选项；缺省使用 SVG */
+export type MountUnifiedOptions = MountCanvasOptions & { renderer?: MountRenderer };
 
-/** 统一 raw-input static mount 入口选项 */
-export type RawStaticMountUnifiedOptions = (RawStaticMountOptions | RawStaticMountCanvasOptions) & {
-  /** 渲染后端；缺省使用 SVG */
-  renderer?: MountRenderer;
-};
+/** 挂载完整 IR 并保留场景会话；首帧绑定不写入会话默认配置 */
+const mountIR = (container: Element, ir: IRScene, options: MountUnifiedOptions, bindings?: SceneInputBindings) =>
+  options.renderer === 'canvas'
+    ? mountCanvasView(container, ir, options, bindings)
+    : mountSvgView(container, ir, options, bindings);
 
-/** 统一 raw-input mount 入口选项 */
-export type MountUnifiedOptions = RetainedMountUnifiedOptions | RawStaticMountUnifiedOptions;
-
-/** 统一 static mount 入口选项 */
-export type StaticMountUnifiedOptions = (StaticMountOptions | StaticMountCanvasOptions) & {
-  /** 渲染后端；缺省使用 SVG */
-  renderer?: MountRenderer;
-};
-
-/** 按 renderer 选择 SVG 或 Canvas runtime 挂载 */
-type MountFn = {
-  (container: Element, input: Scene, options: StaticMountUnifiedOptions & { renderer: 'canvas' }): StaticCanvasView;
-  (
-    container: Element,
-    input: InputScene | IRScene,
-    options: RawStaticMountUnifiedOptions & { renderer: 'canvas' },
-  ): StaticRawCanvasView;
-  (
-    container: Element,
-    input: InputScene | IRScene,
-    options: RetainedMountUnifiedOptions & { renderer: 'canvas' },
-  ): RetainedCanvasView;
-  (container: Element, input: Scene, options?: StaticMountUnifiedOptions & { renderer?: 'svg' }): StaticSvgView;
-  (
-    container: Element,
-    input: InputScene | IRScene,
-    options: RawStaticMountUnifiedOptions & { renderer?: 'svg' },
-  ): StaticRawSvgView;
-  (
-    container: Element,
-    input: InputScene | IRScene,
-    options?: RetainedMountUnifiedOptions & { renderer?: 'svg' },
-  ): RetainedSvgView;
-};
-
-/** 按 renderer 把输入挂载为 SVG 或 Canvas view；缺省使用 SVG */
-export const mount: MountFn = ((
+/** 挂载完整 IR 并保留场景会话 */
+export function mount(
   container: Element,
-  input: Scene | InputScene | IRScene,
-  options: StaticMountUnifiedOptions | MountUnifiedOptions = {},
-): VanillaView | CanvasView => {
-  if ('primitives' in input) {
-    const staticOptions = options as StaticMountUnifiedOptions;
-    if (staticOptions.renderer === 'canvas') return mountCanvas(container, input, staticOptions);
-    return mountSvg(container, input, staticOptions);
-  }
+  ir: IRScene,
+  options: MountUnifiedOptions & { renderer: 'canvas' },
+): CanvasView;
+export function mount(container: Element, ir: IRScene, options?: MountUnifiedOptions & { renderer?: 'svg' }): SvgView;
+export function mount(container: Element, ir: IRScene, options: MountUnifiedOptions = {}): CanvasView | SvgView {
+  return mountIR(container, ir, options);
+}
 
-  const rawOptions = options as MountUnifiedOptions;
-  const mountRawCanvas = mountCanvas as (
-    target: Element,
-    source: InputScene | IRScene,
-    mountOptions: MountCanvasOptions,
-  ) => CanvasView;
-  const mountRawSvg = mountSvg as (
-    target: Element,
-    source: InputScene | IRScene,
-    mountOptions: MountOptions,
-  ) => VanillaView;
-  if (rawOptions.renderer === 'canvas') return mountRawCanvas(container, input, rawOptions);
+/** 将作者输入归一化一次，并随 IR 传递本帧嵌入绑定 */
+export function mountFromInput(
+  container: Element,
+  input: InputScene,
+  options: MountUnifiedOptions & { renderer: 'canvas' },
+): CanvasView;
+export function mountFromInput(
+  container: Element,
+  input: InputScene,
+  options?: MountUnifiedOptions & { renderer?: 'svg' },
+): SvgView;
+export function mountFromInput(
+  container: Element,
+  input: InputScene,
+  options: MountUnifiedOptions = {},
+): CanvasView | SvgView {
+  const { ir, contributions, runtimeInputs } = normalizeScene(input);
+  return mountIR(container, ir, options, { contributions, runtimeInputs });
+}
 
-  return mountRawSvg(container, input, rawOptions);
-}) as MountFn;
+/** 将完整 IR 挂载为 SVG 视图 */
+export const mountSvg: (container: Element, ir: IRScene, options?: MountOptions) => SvgView = mountSvgView;
+
+/** 将完整 IR 挂载为 Canvas 视图 */
+export const mountCanvas: (container: Element, ir: IRScene, options?: MountCanvasOptions) => CanvasView =
+  mountCanvasView;

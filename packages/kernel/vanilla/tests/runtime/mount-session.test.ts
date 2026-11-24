@@ -13,10 +13,9 @@ import { literal, string, enum as zodEnum } from 'zod';
 
 import type { InputEmbedAdapter, InputScene } from '../../src';
 import { embed } from '../../src';
-import { mountCanvas, mountSvg } from '../../src/dom';
+import { mountCanvas, mountFromInput, mountSvg } from '../../src/dom';
 
 // @vitest-environment jsdom
-import { compileTestResult } from '../helpers/compilation';
 
 const source = (fill: string): IRScene => ({
   version: 1,
@@ -37,11 +36,6 @@ const source = (fill: string): IRScene => ({
       style: { fill: '#ffffff' },
     },
   ],
-});
-
-const inputScene = (fill: string): InputScene => ({
-  type: 'scene',
-  children: source(fill).children,
 });
 
 const createRecordingContext = (): CanvasRenderingContext2D => {
@@ -249,29 +243,36 @@ describe('@retikz/vanilla 保留安装座', () => {
       rejectNextUpdate = false;
       return reject;
     });
-    const view = mountSvg(document.createElement('div'), cachedDatasetScene('#ef4444'), {
+    const view = mountFromInput(document.createElement('div'), cachedDatasetScene('#ef4444'), {
       runtime: { rendererFactory },
     });
 
-    expect(() => view.update(cachedDatasetScene('#22c55e'))).toThrow(
+    expect(() => view.updateInput(cachedDatasetScene('#22c55e'))).toThrow(
       /Failed to publish the compilation|RENDER_RUNTIME_RENDERER_PREPARE_FAILED/,
     );
     expect(greenCompile).toHaveBeenCalledTimes(1);
 
-    view.update(cachedDatasetScene('#ef4444'));
+    view.updateInput(cachedDatasetScene('#ef4444'));
 
     expect(redCompile).toHaveBeenCalledTimes(2);
   });
 
-  it('InputScene update 使用本次 normalization 生成的 composite definitions', () => {
+  it('作者输入复用本帧嵌入定义，之后可直接提交 IR', () => {
     const container = document.createElement('div');
-    const view = mountSvg(container, datasetScene('#ef4444'));
+    const lower = vi.spyOn(datasetAdapter, 'lower');
+    const input = datasetScene('#ef4444');
+    const view = mountFromInput(container, input);
 
     expect(view.root.querySelector('rect')?.getAttribute('fill')).toBe('#ef4444');
 
-    view.update(datasetScene('#22c55e'));
+    expect(lower).toHaveBeenCalledTimes(1);
+    view.updateInput(datasetScene('#22c55e'));
 
     expect(view.root.querySelector('rect')?.getAttribute('fill')).toBe('#22c55e');
+    view.update(source('#3b82f6'));
+    expect(view.root.querySelector('[data-retikz-id="changed"]')?.getAttribute('fill')).toBe('#3b82f6');
+    expect(lower).toHaveBeenCalledTimes(2);
+    view.dispose();
   });
 
   it('Composite topology 切换复用 renderer，候选失败时保留已提交状态', () => {
@@ -296,7 +297,7 @@ describe('@retikz/vanilla 保留安装座', () => {
     });
     const initialCompileResult = view.compileResult;
 
-    view.update(datasetScene('#22c55e'));
+    view.updateInput(datasetScene('#22c55e'));
 
     expect(rendererFactoryCalls).toBe(1);
     expect(frames).toHaveLength(2);
@@ -350,7 +351,7 @@ describe('@retikz/vanilla 保留安装座', () => {
 
   it('重新水合不改变 renderer 缺省配置', () => {
     const observedCachePolicies: Array<RenderRuntimeConfig['cachePolicy']> = [];
-    const view = mountSvg(
+    const view = mountFromInput(
       document.createElement('div'),
       { type: 'scene', children: source('#fff').children },
       {
@@ -369,7 +370,7 @@ describe('@retikz/vanilla 保留安装座', () => {
     }
   });
 
-  it('SVG 与 Canvas retained initial mount 各只编译一次', () => {
+  it('SVG 与 Canvas session initial mount 各只编译一次', () => {
     const compile = vi.fn(() => ({
       children: [
         {
@@ -412,11 +413,9 @@ describe('@retikz/vanilla 保留安装座', () => {
     canvas.dispose();
   });
 
-  it('IR SVG 使用 retained session，并保留未变节点 identity', () => {
+  it('IR SVG 使用 session，并保留未变节点 identity', () => {
     const container = document.createElement('div');
     const view = mountSvg(container, source('#ef4444'));
-
-    expect(view.mode).toBe('retained');
 
     const stable = view.root.querySelector('[data-retikz-id="stable"]');
 
@@ -426,41 +425,10 @@ describe('@retikz/vanilla 保留安装座', () => {
     expect(view.diagnostics()).toEqual([]);
   });
 
-  it('IR/InputScene SVG static view 完整重绘、复用 root 并更新 artifacts', () => {
-    const container = document.createElement('div');
-    const view = mountSvg(container, source('#ef4444'), {
-      runtime: { mode: 'static' },
-      compile: {},
-    });
-    const root = view.root;
-
-    view.update(inputScene('#22c55e'));
-
-    expect(view.mode).toBe('static');
-    expect(view.root).toBe(root);
-    expect(view.root.querySelector('[data-retikz-id="changed"]')?.getAttribute('fill')).toBe('#22c55e');
-    expect(view.artifacts).toEqual([]);
-  });
-
-  it('IR/InputScene Canvas static view 完整重绘并复用 root', () => {
-    const container = document.createElement('div');
-    const view = mountCanvas(container, source('#ef4444'), {
-      runtime: { mode: 'static' },
-      output: { width: 100, height: 100 },
-    });
-    const root = view.root;
-
-    view.update(inputScene('#22c55e'));
-
-    expect(view.mode).toBe('static');
-    expect(view.root).toBe(root);
-  });
-
-  it('retained full 保留 Session 但每次更新发布 replaceScene', () => {
+  it('session full 保留 Session 但每次更新发布 replaceScene', () => {
     const patches: Array<unknown> = [];
     const view = mountSvg(document.createElement('div'), source('#ef4444'), {
       runtime: {
-        mode: 'retained',
         updateStrategy: 'full',
         rendererFactory: createMemoryRendererFactory('entity', false, undefined, patch => patches.push(patch)),
       },
@@ -468,43 +436,19 @@ describe('@retikz/vanilla 保留安装座', () => {
 
     view.update(source('#22c55e'));
 
-    expect(view.mode).toBe('retained');
     expect(patches).toEqual([
       expect.objectContaining({ operations: [expect.objectContaining({ kind: 'replaceScene' })] }),
     ]);
     expect(view.diagnostics()).toEqual([]);
   });
 
-  it('raw static compile 失败保留旧 view，materialization 失败同步抛出', () => {
-    const view = mountSvg(document.createElement('div'), source('#ef4444'), {
-      runtime: { mode: 'static' },
-      compile: {},
-    });
-    const html = view.root.innerHTML;
-    const artifacts = view.artifacts;
-    const invalid: IRScene = {
-      ...source('#22c55e'),
-      children: [{ type: 'node', id: 'invalid', position: [0, 0], shape: 'missing-shape' }],
-    };
-
-    expect(() => view.update(invalid)).toThrow();
-    expect(view.root.innerHTML).toBe(html);
-    expect(view.artifacts).toBe(artifacts);
-
-    vi.spyOn(view.root, 'appendChild').mockImplementationOnce(() => {
-      throw new Error('materialization failed');
-    });
-
-    expect(() => view.update(source('#22c55e'))).toThrow('materialization failed');
-  });
-
-  it('retained hydrate 以 contribution transaction 添加和移除 handler', () => {
+  it('session hydrate 以 contribution transaction 添加和移除 handler', () => {
     const container = document.createElement('div');
     const view = mountSvg(container, source('#ef4444'));
     const handler = vi.fn();
     const hydration = view.hydrate({ handlers: { changed: { click: handler } } });
     const target = view.root.querySelector('[data-retikz-id="changed"]');
-    if (target === null) throw new Error('missing retained target');
+    if (target === null) throw new Error('missing session target');
 
     target.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     hydration.dispose();
@@ -513,7 +457,7 @@ describe('@retikz/vanilla 保留安装座', () => {
     expect(handler).toHaveBeenCalledTimes(1);
   });
 
-  it('retained hydrate 添加失败不泄漏 contribution', () => {
+  it('session hydrate 添加失败不泄漏 contribution', () => {
     const container = document.createElement('div');
     const observedConfigs: Array<RenderRuntimeConfig> = [];
     let rejectNextUpdate = true;
@@ -541,7 +485,7 @@ describe('@retikz/vanilla 保留安装座', () => {
     ]);
   });
 
-  it('retained hydrate 移除失败时 handle 保持 active 并可重试', () => {
+  it('session hydrate 移除失败时 handle 保持 active 并可重试', () => {
     const container = document.createElement('div');
     const observedContributionCounts: Array<number> = [];
     let rejectNextUpdate = false;
@@ -586,24 +530,13 @@ describe('@retikz/vanilla 保留安装座', () => {
     view.dispose();
   });
 
-  it('预编译 Scene 保持 static view', () => {
+  it('IR Canvas 使用 session', () => {
     const container = document.createElement('div');
-    const view = mountSvg(container, compileTestResult(source('#ef4444')).scene);
+    const session = mountCanvas(container, source('#ef4444'), { output: { width: 100, height: 100 } });
 
-    expect(view.mode).toBe('static');
-  });
+    expect(session.compileResult).toBeDefined();
 
-  it('IR Canvas 使用 retained session，预编译 Scene 使用 static view', () => {
-    const retainedContainer = document.createElement('div');
-    const retained = mountCanvas(retainedContainer, source('#ef4444'), { output: { width: 100, height: 100 } });
-    const staticContainer = document.createElement('div');
-    const staticView = mountCanvas(staticContainer, compileTestResult(source('#ef4444')).scene);
-
-    expect(retained.mode).toBe('retained');
-    expect(staticView.mode).toBe('static');
-
-    retained.dispose();
-    staticView.dispose();
+    session.dispose();
   });
 
   it('replace-only renderer 接受完整替换，不报告局部能力回退', () => {
@@ -621,25 +554,23 @@ describe('@retikz/vanilla 保留安装座', () => {
     expect(view.diagnostics()).toEqual([]);
   });
 
-  it('renderer update 失败时保留 committed artifacts 与编译结果', () => {
+  it('renderer update 失败时保留已提交的编译结果与画面', () => {
     const container = document.createElement('div');
     const view = mountSvg(container, source('#ef4444'), {
       compile: {},
       runtime: { rendererFactory: createMemoryRendererFactory('entity', true) },
     });
-    const artifacts = view.artifacts;
     const compileResult = view.compileResult;
     const committedHtml = view.root.innerHTML;
 
     expect(() => view.update(source('#22c55e'))).toThrow(
       /Failed to publish the compilation|RENDER_RUNTIME_RENDERER_PREPARE_FAILED/,
     );
-    expect(view.artifacts).toBe(artifacts);
     expect(view.compileResult).toBe(compileResult);
     expect(view.root.innerHTML).toBe(committedHtml);
   });
 
-  it('retained view 重复 dispose 时只重试失败 renderer cleanup', () => {
+  it('session view 重复 dispose 时只重试失败 renderer cleanup', () => {
     const disposeFailure = new Error('dispose failed');
     let remainingFailures = 2;
     const dispose = vi.fn(() => {

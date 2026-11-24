@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { scene } from '@retikz/vanilla';
-import { mount } from '@retikz/vanilla/dom';
+import { mountFromInput } from '@retikz/vanilla/dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { detailTable, embedTable } from '../../src';
@@ -49,22 +49,22 @@ describe('Table Vanilla 安装运行时', () => {
         children: [embedTable(spec, { data: { people: [{ name }] } })],
       });
     const svgContainer = document.createElement('div');
-    const svgView = mount(svgContainer, tableFigure('Ada'));
+    const svgView = mountFromInput(svgContainer, tableFigure('Ada'));
     const svgRoot = svgView.root;
 
     expect(svgRoot.textContent).toContain('Ada');
 
-    svgView.update(tableFigure('Grace'));
+    svgView.updateInput(tableFigure('Grace'));
 
     expect(svgView.root).toBe(svgRoot);
     expect(svgRoot.textContent).toContain('Grace');
 
     const canvasContainer = document.createElement('div');
-    const canvasView = mount(canvasContainer, tableFigure('Lin'), {
+    const canvasView = mountFromInput(canvasContainer, tableFigure('Lin'), {
       renderer: 'canvas',
     });
     const canvasRoot = canvasView.root;
-    canvasView.update(tableFigure('Edsger'));
+    canvasView.updateInput(tableFigure('Edsger'));
 
     expect(canvasView.root).toBe(canvasRoot);
     expect(canvasRoot).toBeInstanceOf(HTMLCanvasElement);

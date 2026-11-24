@@ -41,15 +41,15 @@ describe('Vanilla 裁剪处理等价性', () => {
     const compile = { clips: [customClip()] };
     const direct = compileTestResult(normalizeScene(input).ir, compile).scene;
     const staticResult = compileToScene(input, { compile });
-    const retained = SceneRuntime.fromInput(input, { compile });
+    const session = SceneRuntime.fromInput(input, { compile });
 
     expect(staticResult.scene).toEqual(direct);
-    expect(retained.current.compilation.result.scene).toEqual(direct);
+    expect(session.current.compilation.result.scene).toEqual(direct);
     expect(direct.resources?.clips).toEqual([
       expect.objectContaining({ kind: 'clip', path: expect.objectContaining({ fillRule: 'nonzero' }) }),
     ]);
 
-    retained.dispose();
+    session.dispose();
   });
 
   it('在提供者图冲突检查中包含显式裁剪', () => {

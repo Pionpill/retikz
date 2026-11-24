@@ -99,7 +99,7 @@ export default Demo;
 
 ```ts
 import { node, path, scene, scope } from '@retikz/vanilla';
-import { mount } from '@retikz/vanilla/dom';
+import { mountFromInput } from '@retikz/vanilla/dom';
 
 const input = scene({
   children: [
@@ -112,7 +112,7 @@ const input = scene({
   ],
 });
 
-const view = mount(document.getElementById('diagram')!, input);
+const view = mountFromInput(document.getElementById('diagram')!, input);
 ```
 
 容器移除前调用 `view.dispose()` 释放挂载资源。

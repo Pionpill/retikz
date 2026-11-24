@@ -100,7 +100,7 @@ Vanilla 使用相同 definition，通过 `mount` 的 `compile` 选项注入；HT
 
 ```ts
 import { path, scene } from '@retikz/vanilla';
-import { mount } from '@retikz/vanilla/dom';
+import { mountFromInput } from '@retikz/vanilla/dom';
 
 const input = scene({
   children: [
@@ -114,7 +114,7 @@ const input = scene({
     }),
   ],
 });
-const view = mount(document.getElementById('diagram')!, input, {
+const view = mountFromInput(document.getElementById('diagram')!, input, {
   compile: { paths: [highlight] },
 });
 // Dispose when the host is removed.

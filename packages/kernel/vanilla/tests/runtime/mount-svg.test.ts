@@ -1,32 +1,35 @@
-import type { IRScene, Scene } from '@retikz/core';
+// @vitest-environment jsdom
+import type { IRScene } from '@retikz/core';
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { literal, string } from 'zod';
 
 import { renderToSvg } from '../../src';
-import { mountSvg } from '../../src/dom';
-// @vitest-environment jsdom
+import { mountFromInput, mountSvg } from '../../src/dom';
 import { compileTestResult } from '../helpers/compilation';
 
 /*
  * @retikz/vanilla mountSvg（无框架浏览器 DOM，jsdom 环境）
  */
-const sceneOf = (text = 'A'): ReturnType<typeof compileTestResult>['scene'] => {
-  const ir: IRScene = { version: 1, type: 'scene', children: [{ type: 'node', id: 'a', position: [0, 0], text }] };
-  return compileTestResult(ir).scene;
-};
+const sceneOf = (width = 20): IRScene => ({
+  version: 1,
+  type: 'scene',
+  children: [
+    { type: 'node', id: 'a', position: [0, 0], shape: 'rectangle', layout: { minimumSize: { width, height: 20 } } },
+  ],
+});
 
 describe('@retikz/vanilla mountSvg', () => {
-  it('卸载默认 retained SVG 时仅移除当前宿主', () => {
+  it('卸载默认 session SVG 时仅移除当前宿主', () => {
     const container = document.createElement('div');
     const sibling = container.appendChild(document.createElement('span'));
-    const view = mountSvg(container, { type: 'scene', children: [] });
+    const view = mountFromInput(container, { type: 'scene', children: [] });
     expect(view.root.parentNode).toBe(container);
     view.dispose();
     expect(Array.from(container.children)).toEqual([sibling]);
   });
 
-  it.each(['static', 'retained'] as const)('%s 宿主默认尺寸随取景框更新', mode => {
+  it('宿主默认尺寸随取景框更新', () => {
     const ir: IRScene = {
       type: 'scene',
       version: 1,
@@ -34,15 +37,13 @@ describe('@retikz/vanilla mountSvg', () => {
       viewBox: { x: -20, y: -10, width: 240, height: 120 },
     };
     const container = document.createElement('div');
-    const view =
-      mode === 'static'
-        ? mountSvg(container, ir, { runtime: { mode } })
-        : mountSvg(container, ir, { runtime: { mode } });
+    const next: IRScene = { ...ir, viewBox: { x: 0, y: 0, width: 300, height: 100 } };
+    const view = mountSvg(container, ir);
 
     expect(view.root.getAttribute('width')).toBe('240');
     expect(view.root.getAttribute('height')).toBe('120');
 
-    view.update({ ...ir, viewBox: { x: 0, y: 0, width: 300, height: 100 } });
+    view.update(next);
 
     expect(view.root.getAttribute('width')).toBe('300');
     expect(view.root.getAttribute('height')).toBe('100');
@@ -62,10 +63,10 @@ describe('@retikz/vanilla mountSvg', () => {
 
   it('view-update-reuses-root：update 复用同一 root 元素、attrs 更新、不多挂', () => {
     const c = document.createElement('div');
-    const view = mountSvg(c, sceneOf('A'));
+    const view = mountSvg(c, sceneOf());
     const r1 = view.root;
     const vb1 = r1.getAttribute('viewBox');
-    view.update(sceneOf('AAAAAAAAAAAAAAA')); // 更宽文本 → viewBox 变
+    view.update(sceneOf(100));
 
     expect(view.root).toBe(r1); // 元素恒等、未被替换
     expect(c.querySelectorAll('svg').length).toBe(1); // 没多挂一个
@@ -87,10 +88,10 @@ describe('@retikz/vanilla mountSvg', () => {
     };
     const c = document.createElement('div');
     const view = mountSvg(c, ir, { compile: { composites: [marker] } });
-    expect(view.artifacts).toMatchObject([{ namespace: 'test', type: 'marker', value: 'first' }]);
+    expect(view.compileResult.artifacts).toMatchObject([{ namespace: 'test', type: 'marker', value: 'first' }]);
     expect(view.root.querySelector('[data-retikz-id="first"]')).not.toBeNull();
     view.update({ version: 1, type: 'scene', children: [{ namespace: 'test', type: 'marker', label: 'second' }] });
-    expect(view.artifacts).toMatchObject([{ namespace: 'test', type: 'marker', value: 'second' }]);
+    expect(view.compileResult.artifacts).toMatchObject([{ namespace: 'test', type: 'marker', value: 'second' }]);
     expect(view.root.querySelector('[data-retikz-id="first"]')).toBeNull();
     expect(view.root.querySelector('[data-retikz-id="second"]')).not.toBeNull();
     view.dispose();
@@ -122,7 +123,7 @@ describe('@retikz/vanilla mountSvg', () => {
     const scene = compileTestResult(ir).scene;
     const str = renderToSvg(scene, { output: { idPrefix: 'fig' } });
     const c = document.createElement('div');
-    mountSvg(c, scene, { output: { idPrefix: 'fig' } });
+    mountSvg(c, ir, { output: { idPrefix: 'fig' } });
     const domHtml = c.querySelector('svg')!.outerHTML;
 
     expect(str).toContain('retikz-paint-fig-');
@@ -143,7 +144,7 @@ describe('@retikz/vanilla mountSvg', () => {
 
   it('empty-scene-mounts：空 scene 挂出空 <svg>、不抛', () => {
     const c = document.createElement('div');
-    const empty: Scene = { layout: { x: 0, y: 0, width: 10, height: 10 }, primitives: [] };
+    const empty: IRScene = { version: 1, type: 'scene', children: [] };
 
     expect(() => mountSvg(c, empty)).not.toThrow();
     expect(c.querySelector('svg')).not.toBeNull();

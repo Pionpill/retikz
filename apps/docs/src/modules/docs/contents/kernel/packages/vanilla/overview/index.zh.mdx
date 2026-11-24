@@ -89,7 +89,7 @@ pnpm add @retikz/vanilla
 
 ```ts
 import { compileToScene, node, path, renderToSvg, scene } from '@retikz/vanilla';
-import { mount } from '@retikz/vanilla/dom';
+import { mountFromInput } from '@retikz/vanilla/dom';
 
 const input = scene({
   children: [
@@ -101,7 +101,7 @@ const input = scene({
 
 const compileResult = compileToScene(input);
 const svg = renderToSvg(compileResult.scene);
-const view = mount(document.querySelector('#diagram')!, input);
+const view = mountFromInput(document.querySelector('#diagram')!, input);
 ```
 
 `renderToSvg` 可安全用于 SSR、构建期生成或保存 SVG；`mount` 用于浏览器宿主，默认创建 SVG，也可以通过 `renderer: 'canvas'` 切换到 Canvas。返回的 `view` 负责后续 `update`、交互水合、动画控制与释放。
@@ -134,11 +134,11 @@ Vanilla 构造函数不接收独立的 ID 字符串参数。`node({ id, position
 
 <ComponentPreview files="vanilla-pipeline" size="xs" hideCode />
 
-| 输入             | 所有者            | processing 如何处理                                   |
-| ---------------- | ----------------- | ----------------------------------------------------- |
-| `InputScene`     | `@retikz/vanilla` | normalize 输入、下沉 embed、收集贡献与作者来源        |
-| Core `IRScene`   | `@retikz/core`    | 跳过 Input 归一，直接准备 Core 编译                   |
-| 已编译的 `Scene` | `@retikz/core`    | 跳过归一与编译，只能由 DOM 子入口进行 static 完整重绘 |
+| 输入             | 所有者            | processing 如何处理                            |
+| ---------------- | ----------------- | ---------------------------------------------- |
+| `InputScene`     | `@retikz/vanilla` | normalize 输入、下沉 embed、收集贡献与作者来源 |
+| Core `IRScene`   | `@retikz/core`    | 跳过 Input 归一，直接准备 Core 编译            |
+| 已编译的 `Scene` | `@retikz/core`    | 跳过归一与编译，直接交给 Render 绘制           |
 
 输入为 `InputScene` 时，`SceneRuntime` 将作者简写归一为 IR，解析嵌入组件的依赖，并将实例输入绑定到本次 IR。输入为 `IRScene` 时，会话直接把它交给协调器。`compileToScene()` 创建同样的会话，读取首帧编译结果后释放它。
 
@@ -165,19 +165,20 @@ Vanilla 构造函数不接收独立的 ID 字符串参数。`node({ id, position
 
 ## 执行与 DOM 边界
 
-| API           | 用途                                 | 返回                         |
-| ------------- | ------------------------------------ | ---------------------------- |
-| `renderToSvg` | SSR / 构建期产出 `<svg>` 字符串      | `string`                     |
-| `mount`       | 按 `renderer` 挂载 SVG 或 Canvas     | `VanillaView` / `CanvasView` |
-| `mountSvg`    | 显式挂载 SVG DOM                     | `VanillaView`                |
-| `mountCanvas` | 显式挂载 Canvas                      | `CanvasView`                 |
-| `hydrate`     | 对 SSR / 已有 SVG 根节点绑定 handler | `HydrationHandle`            |
+| API              | 用途                                 | 返回                     |
+| ---------------- | ------------------------------------ | ------------------------ |
+| `renderToSvg`    | SSR / 构建期产出 `<svg>` 字符串      | `string`                 |
+| `mount`          | 按 `renderer` 挂载 SVG 或 Canvas     | `SvgView` / `CanvasView` |
+| `mountFromInput` | 归一化作者输入后挂载                 | SVG / Canvas 视图        |
+| `mountSvg`       | 显式挂载 SVG DOM                     | `SvgView`                |
+| `mountCanvas`    | 显式挂载 Canvas                      | `CanvasView`             |
+| `hydrate`        | 对 SSR / 已有 SVG 根节点绑定 handler | `HydrationController`    |
 
-后四项都从 `@retikz/vanilla/dom` 导入。默认情况下，`InputScene` 与 `IRScene` 创建 `VanillaViewMode.Retained` view：`update(next, options?)` 通过同一个 processing transaction 原子发布 Scene、artifacts、事件与动画。失败 transaction 不发布新 revision；若 rollback 自身失败，view 进入 broken 状态，必须 dispose 后 remount。
+DOM 挂载入口从 `@retikz/vanilla/dom` 导入。`mount(container, ir)`、`mountSvg`、`mountCanvas` 接收 IR；`mountFromInput(container, input)` 接收作者输入，归一化一次并保留本帧的嵌入定义与实例数据。两种来源都创建 session 视图：用 `view.update(ir, options?)` 或 `view.updateInput(input, options?)` 替换场景。成功时原子发布场景、产物与渲染配置；失败不发布新帧，若回滚失败则需要释放并重新挂载。
 
-显式传 `runtime: { mode: 'static' }` 时，`InputScene` 或 `IRScene` 的每次 `update()` 都会完整归一、编译与重绘，不创建 Session、Snapshot、Patch、transaction 或 rollback。预编译 `Scene` 也总是 static，只接受下一份 `Scene`。
+两个后端的单次更新选项都只接受 `animation`。从 `view.compileResult.artifacts` 读取最近成功提交的编译产物。用 `view.hydrate({ handlers })` 绑定事件，事件上下文跟随当前场景。对已有 SVG 单独调用 `hydrate(svg, { handlers, scene })` 时，可传入场景来提供上下文。
 
-`mode` 与 `updateStrategy` 在 mount 时固定。`VanillaRetainedRuntimeOptions` 允许注入 `rendererFactory`；这是 DOM retained 后端的可选扩展点，static 模式不能传它。需要改变 renderer、DPR、compile topology 或 retained 策略时，先 dispose，再 remount。
+`updateStrategy` 和可选的 `rendererFactory` 在挂载时确定。要更换渲染器、DPR、编译拓扑或更新策略，先释放视图，再重新挂载。
 
 <SourceLinks
   sources={[
@@ -190,8 +191,8 @@ Vanilla 构造函数不接收独立的 ID 字符串参数。`node({ id, position
       path: 'packages/kernel/vanilla/src/dom/mount.ts',
     },
     {
-      label: 'DOM retained processing controller',
-      path: 'packages/kernel/vanilla/src/dom/retained.ts',
+      label: 'DOM 视图',
+      path: 'packages/kernel/vanilla/src/dom/view.ts',
     },
   ]}
 />
@@ -276,15 +277,12 @@ React 应用使用 [`@retikz/react`](/kernel/packages/react/overview) 收集 JSX
 | `InputEmbedAdapter`                  | type          | 将 `InputEmbed` 下沉为 Core contribution                 |
 | `isInputScene` / `normalizeScene`    | normalization | 区分已类型化的 InputScene / IRScene，并归一作者输入      |
 | `SceneNormalizationResult`           | type          | IR、contributions、实例输入 与作者来源                   |
-| `ProcessOptions`                     | type          | compile 与 retained 更新策略                             |
-| `SceneRuntime`                       | processing    | 无框架 retained processing controller                    |
+| `ProcessOptions`                     | type          | compile 与 session 更新策略                              |
+| `SceneRuntime`                       | processing    | 无框架 session processing controller                     |
 | `compileToScene`                     | processing    | 一次性同步编译 InputScene 或 Core IR                     |
 | `renderToSvg`                        | SSR           | 将已编译的 Scene 序列化为 SVG 字符串                     |
 | `mount` / `mountSvg` / `mountCanvas` | DOM           | 从 `@retikz/vanilla/dom` 挂载浏览器 view                 |
-| `VanillaRuntimeOptions`              | type          | InputScene / IRScene 的 retained 或 static runtime 配置  |
-| `VanillaRetainedRuntimeOptions`      | type          | retained 模式、更新策略与可选 renderer factory           |
-| `VanillaStaticRuntimeOptions`        | type          | 只允许 `mode: 'static'` 的封闭配置                       |
-| `RetainedVanillaView`                | runtime       | IRScene / InputScene 的事务式 retained view              |
-| `StaticVanillaView`                  | runtime       | Scene、IRScene 或 InputScene 的完整重绘 view             |
+| `MountOptions['runtime']`            | type          | IR / 作者输入挂载时的更新策略与可选 renderer factory     |
+| `SvgView` / `CanvasView`             | runtime       | IRScene / InputScene 的事务式 session view               |
 | `RetikzVanillaError`                 | error         | Vanilla 唯一错误类，通过 code、details 与 cause 区分失败 |
 | `RetikzVanillaErrorCode`             | const object  | normalize、processing、runtime、与 DOM 稳定错误码        |

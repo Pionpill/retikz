@@ -6,9 +6,7 @@ import { renderToSvgString } from '@retikz/render/svg';
 export const DEFAULT_ID_PREFIX = 'r';
 
 /** 已编译场景的 SVG 序列化选项 */
-export type ToSvgStringOptions = {
-  /** 字符串输出不创建 DOM runtime */
-  readonly runtime?: never;
+export type RenderOptions = {
   /** 输出资源与显示尺寸选项 */
   output?: {
     /** SVG 资源 id 前缀；SSR 与客户端挂载应使用同一值 */
@@ -28,7 +26,7 @@ export type ToSvgStringOptions = {
 };
 
 /** 将已编译的 Scene 与宿主输出选项交给 SVG 后端，不启动处理会话 */
-export const renderToSvg = (scene: Scene, options: ToSvgStringOptions = {}): string => {
+export const renderToSvg = (scene: Scene, options: RenderOptions = {}): string => {
   const output = options.output ?? {};
   const animation = options.animation ?? {};
   const animate = resolveAnimationEnabled(animation.enabled, prefersReducedMotion());

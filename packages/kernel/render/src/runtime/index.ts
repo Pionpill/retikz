@@ -12,6 +12,7 @@ export type {
   SceneRuntimeSubtree,
   SceneRuntimeSubtreeNode,
 } from '../scene';
+export { computeDisplaySize } from '../shared';
 export * from '../trace';
 export * from './builtin';
 export * from './config';

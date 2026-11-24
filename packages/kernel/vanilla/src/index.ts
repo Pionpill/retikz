@@ -66,14 +66,13 @@ export {
   scene,
   scope,
 } from './normalize';
-export type { CommonOptions } from './dom';
 export type {
   InputLayer,
   LayerName,
   LayerReconcilerOptions,
   NamedLayerResult,
   ProcessOptions,
-  ToSvgStringOptions as RenderToStringOptions,
+  RenderOptions as RenderToStringOptions,
 } from './runtime';
 export {
   BuiltinLayerName,

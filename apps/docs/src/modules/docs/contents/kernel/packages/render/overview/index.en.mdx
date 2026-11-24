@@ -39,7 +39,9 @@ Static APIs use `StaticRenderFrame { primary: Scene, layers }`. Retained rendere
 
 Every `RenderReadonlyLayer` contains a frame-unique `key`, an ordinary static `scene`, and its transform into primary Scene coordinates. SVG appends a `pointer-events="none"` group after the primary figure, executes each layer through the ordinary Scene-fragment path, and gives its resources an isolated prefix without hydration ids. Canvas applies the layer transform and calls the ordinary Scene drawing path; `hitTest` still reads only the primary Scene. A readonly layer never determines the viewBox, primary resources, animation, or primary identity, and cannot contain public `id`, `meta`, or animation fields.
 
-A third-party retained renderer declares `readonlyLayerCapability: 'supported' | 'unsupported'`; receiving non-empty layers while unsupported fails loudly instead of silently dropping them. Render knows nothing about Inspectors, palettes, or specific auxiliary primitives. `@retikz/inspect` is only one external producer of readonly layers, and editors or other tools can reuse the same capability.
+A third-party renderer declares `readonlyLayerCapability: 'supported' | 'unsupported'`; receiving non-empty layers while unsupported fails loudly instead of silently dropping them. Render knows nothing about Inspectors, palettes, or specific auxiliary primitives. `@retikz/inspect` is only one external producer of readonly layers, and editors or other tools can reuse the same capability.
+
+Hosts can import `computeDisplaySize(scene.layout, width?, height?)` from `@retikz/render/runtime` to size an output element. Set only the width or height to preserve the scene’s aspect ratio without changing its viewBox.
 
 ### Static frame APIs
 
