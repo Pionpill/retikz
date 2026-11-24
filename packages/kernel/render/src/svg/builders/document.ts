@@ -45,7 +45,7 @@ export type SvgDocumentOptions = {
 
 /**
  * Scene → SVG 内容子树（`<defs>` + primitives，无 `<svg>` 外壳）
- * @description 给 Vanilla `mountSvg` 往已有容器塞、或需要自定义 `<svg>` 外壳的 caller 用
+ * @description 给 Vanilla `mountSceneView` 往已有容器塞、或需要自定义 `<svg>` 外壳的 caller 用
  */
 export const buildSvgFragment = (scene: Scene, options: SvgDocumentOptions): Array<SvgNode> => {
   const safeIdPrefix = toSafeSvgToken(options.idPrefix);

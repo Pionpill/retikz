@@ -118,7 +118,7 @@ export const Gateway = () => (
 ```ts
 import { graph, entity } from '@retikz/graph-vanilla';
 import { scene } from '@retikz/vanilla';
-import { mountFromInput } from '@retikz/vanilla/dom';
+import { mountSceneView } from '@retikz/vanilla/dom';
 import { serviceRole, gatewayKind, availabilityPredicate, availabilityRules } from './entity-definition.data';
 
 const input = scene({
@@ -140,7 +140,7 @@ const input = scene({
     }),
   ],
 });
-const view = mountFromInput(document.getElementById('diagram')!, input);
+const view = mountSceneView(document.getElementById('diagram')!, input);
 ```
 
 </DocTab>

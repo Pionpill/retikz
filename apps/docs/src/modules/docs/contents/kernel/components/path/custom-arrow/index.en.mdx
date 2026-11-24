@@ -113,7 +113,7 @@ Vanilla uses the same definition through the `compile` option of `mount`. Prepar
 
 ```ts
 import { path, scene } from '@retikz/vanilla';
-import { mountFromInput } from '@retikz/vanilla/dom';
+import { mountSceneView } from '@retikz/vanilla/dom';
 
 const input = scene({
   children: [
@@ -126,7 +126,7 @@ const input = scene({
     }),
   ],
 });
-const view = mountFromInput(document.getElementById('diagram')!, input, {
+const view = mountSceneView(document.getElementById('diagram')!, input, {
   compile: { arrows: [bracket] },
 });
 // Dispose when the host is removed.

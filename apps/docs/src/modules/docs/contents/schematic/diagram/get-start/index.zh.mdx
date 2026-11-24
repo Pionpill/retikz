@@ -47,12 +47,12 @@ export const RequestDiagram = () => (
 
 <PackageManagerInstall packages="@retikz/diagram-vanilla @retikz/vanilla" />
 
-在页面中准备 `<div id="diagram"></div>` 容器，再运行以下代码。`flowDiagram()` 创建图的输入，adapter 让 `mountFromInput()` 识别并编译它；根 `children` 列出直接成员，关系通过 id 引用它们。
+在页面中准备 `<div id="diagram"></div>` 容器，再运行以下代码。`flowDiagram()` 创建图的输入，adapter 让 `mountSceneView()` 识别并编译它；根 `children` 列出直接成员，关系通过 id 引用它们。
 
 ```ts
 import { flowDiagram } from '@retikz/diagram-vanilla/flow';
 import { scene } from '@retikz/vanilla';
-import { mountFromInput } from '@retikz/vanilla/dom';
+import { mountSceneView } from '@retikz/vanilla/dom';
 
 const input = scene({
   children: [
@@ -75,7 +75,7 @@ const input = scene({
   ],
 });
 
-const view = mountFromInput(document.getElementById('diagram')!, input);
+const view = mountSceneView(document.getElementById('diagram')!, input);
 ```
 
 移除容器前调用 `view.dispose()`，释放挂载资源。

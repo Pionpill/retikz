@@ -93,7 +93,7 @@ export default Demo;
 
 ```ts
 import { scene, node, path } from '@retikz/vanilla';
-import { mountFromInput } from '@retikz/vanilla/dom';
+import { mountSceneView } from '@retikz/vanilla/dom';
 
 const input = scene({
   children: [
@@ -104,7 +104,7 @@ const input = scene({
   ],
 });
 
-const view = mountFromInput(document.getElementById('diagram')!, input);
+const view = mountSceneView(document.getElementById('diagram')!, input);
 ```
 
 容器移除前调用 `view.dispose()` 释放挂载资源。
@@ -116,7 +116,7 @@ const view = mountFromInput(document.getElementById('diagram')!, input);
 
 ```ts
 import type { IRScene } from '@retikz/core';
-import { mount } from '@retikz/vanilla/dom';
+import { mountSceneView } from '@retikz/vanilla/dom';
 
 const ir: IRScene = {
   version: 1,

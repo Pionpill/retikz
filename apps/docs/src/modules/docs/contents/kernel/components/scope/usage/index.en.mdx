@@ -99,7 +99,7 @@ Build Scope with `@retikz/vanilla`, then mount it into an existing `diagram` con
 
 ```ts
 import { node, path, scene, scope } from '@retikz/vanilla';
-import { mountFromInput } from '@retikz/vanilla/dom';
+import { mountSceneView } from '@retikz/vanilla/dom';
 
 const input = scene({
   children: [
@@ -112,7 +112,7 @@ const input = scene({
   ],
 });
 
-const view = mountFromInput(document.getElementById('diagram')!, input);
+const view = mountSceneView(document.getElementById('diagram')!, input);
 ```
 
 Call `view.dispose()` before removing the container to release mounted resources.
@@ -124,7 +124,7 @@ Pass existing IR directly to `mount`, without React or rebuilding the Scope subt
 
 ```ts
 import type { IRScene } from '@retikz/core';
-import { mount } from '@retikz/vanilla/dom';
+import { mountSceneView } from '@retikz/vanilla/dom';
 
 const ir: IRScene = {
   version: 1,

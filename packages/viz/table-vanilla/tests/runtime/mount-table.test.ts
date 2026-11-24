@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { scene } from '@retikz/vanilla';
-import { mountFromInput } from '@retikz/vanilla/dom';
+import { mountSceneView } from '@retikz/vanilla/dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { detailTable, embedTable } from '../../src';
@@ -49,7 +49,7 @@ describe('Table Vanilla 安装运行时', () => {
         children: [embedTable(spec, { data: { people: [{ name }] } })],
       });
     const svgContainer = document.createElement('div');
-    const svgView = mountFromInput(svgContainer, tableFigure('Ada'));
+    const svgView = mountSceneView(svgContainer, tableFigure('Ada'));
     const svgRoot = svgView.root;
 
     expect(svgRoot.textContent).toContain('Ada');
@@ -60,7 +60,7 @@ describe('Table Vanilla 安装运行时', () => {
     expect(svgRoot.textContent).toContain('Grace');
 
     const canvasContainer = document.createElement('div');
-    const canvasView = mountFromInput(canvasContainer, tableFigure('Lin'), {
+    const canvasView = mountSceneView(canvasContainer, tableFigure('Lin'), {
       renderer: 'canvas',
     });
     const canvasRoot = canvasView.root;

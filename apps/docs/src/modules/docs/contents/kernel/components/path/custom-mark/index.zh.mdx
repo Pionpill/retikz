@@ -57,7 +57,7 @@ HTML 中先准备 `<div id="diagram"></div>`，将定义放入 `mount` 的 `comp
 
 ```ts
 import { path, scene } from '@retikz/vanilla';
-import { mountFromInput } from '@retikz/vanilla/dom';
+import { mountSceneView } from '@retikz/vanilla/dom';
 import { ringMark } from './ring-mark';
 
 const input = scene({
@@ -71,7 +71,7 @@ const input = scene({
     }),
   ],
 });
-const view = mountFromInput(document.getElementById('diagram')!, input, {
+const view = mountSceneView(document.getElementById('diagram')!, input, {
   compile: { marks: [ringMark] },
 });
 // 移除宿主时调用 view.dispose()

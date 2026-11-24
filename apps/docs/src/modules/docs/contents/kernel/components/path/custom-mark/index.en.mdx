@@ -57,7 +57,7 @@ Prepare `<div id="diagram"></div>` in HTML and register the definition in `mount
 
 ```ts
 import { path, scene } from '@retikz/vanilla';
-import { mountFromInput } from '@retikz/vanilla/dom';
+import { mountSceneView } from '@retikz/vanilla/dom';
 import { ringMark } from './ring-mark';
 
 const input = scene({
@@ -71,7 +71,7 @@ const input = scene({
     }),
   ],
 });
-const view = mountFromInput(document.getElementById('diagram')!, input, {
+const view = mountSceneView(document.getElementById('diagram')!, input, {
   compile: { marks: [ringMark] },
 });
 // Call view.dispose() when removing the host

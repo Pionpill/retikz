@@ -54,7 +54,7 @@ describe('@retikz/vanilla 架构守卫', () => {
     const mod = await import('../../src/index');
 
     expect(typeof mod.renderToSvg).toBe('function');
-    expect('mountSvg' in mod).toBe(false);
+    expect('mountSceneView' in mod).toBe(false);
 
     const scene = { layout: { x: 0, y: 0, width: 10, height: 10 }, primitives: [] };
 

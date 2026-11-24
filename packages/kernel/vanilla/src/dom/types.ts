@@ -1,5 +1,5 @@
 import type { CompileOptions, ReconcilerUpdateStrategy } from '@retikz/reconciler';
-import type { RendererFactory } from '@retikz/render/runtime';
+import type { RendererFactory, InputRendererFactory } from '@retikz/render/runtime';
 
 import type { RenderOptions } from '../runtime';
 
@@ -14,10 +14,8 @@ export type MountOptions = RenderOptions & {
     /** 可选第三方渲染器工厂，缺省使用内置实现 */
     rendererFactory?: RendererFactory;
   }>;
-};
-
-/** 挂载 IR 或作者输入到 Canvas 的选项 */
-export type MountCanvasOptions = MountOptions & {
+  /** 渲染后端，缺省使用 SVG */
+  renderer?: InputRendererFactory['backend'];
   /** 挂载时确定设备像素比，缺省读取宿主的设备像素比 */
   canvas?: { readonly devicePixelRatio?: number };
 };

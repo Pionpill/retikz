@@ -28,15 +28,7 @@ describe('@retikz/vanilla 入口边界', () => {
   it('no-dom-root-export：DOM mount/hydrate 只由 @retikz/vanilla/dom 提供', () => {
     const namespace = vanilla as Record<string, unknown>;
 
-    for (const name of [
-      'mount',
-      'mountFromInput',
-      'mountSvg',
-      'mountCanvas',
-      'hydrate',
-      'createDomProcessingController',
-      'updateParticipant',
-    ]) {
+    for (const name of ['mountSceneView', 'hydrate', 'createDomProcessingController', 'updateParticipant']) {
       expect(namespace[name]).toBeUndefined();
     }
   });

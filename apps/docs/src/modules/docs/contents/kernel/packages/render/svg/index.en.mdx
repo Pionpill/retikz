@@ -29,12 +29,12 @@ import { Layout, Node } from '@retikz/react';
 </Layout>;
 ```
 
-**Vanilla (browser)** — `mountSvg` mounts the figure as DOM; the returned view exposes `root` (the `<svg>`) and `dispose`:
+**Vanilla (browser)** — `mountSceneView` mounts the figure as DOM; the returned view exposes `root` (the `<svg>`) and `dispose`:
 
 ```ts
-import { mountSvg } from '@retikz/vanilla/dom';
+import { mountSceneView } from '@retikz/vanilla/dom';
 
-const view = mountSvg(container, ir);
+const view = mountSceneView(container, ir);
 // view.root is the <svg>; view.update(next) uses the selected static or session processing; view.dispose() unmounts
 ```
 
@@ -49,11 +49,11 @@ const svg = renderToSvg(compileResult.scene); // '<svg ...>...</svg>', drop it i
 
 The three entries have different input contracts:
 
-| Entry              | Accepted input                   | Output     |
-| ------------------ | -------------------------------- | ---------- |
-| React `<Layout>`   | JSX `children`<br />or `IRScene` | SVG DOM    |
-| Vanilla `mountSvg` | `IRScene`                        | SVG DOM    |
-| `renderToSvg`      | `Scene`                          | SVG string |
+| Entry                    | Accepted input                   | Output     |
+| ------------------------ | -------------------------------- | ---------- |
+| React `<Layout>`         | JSX `children`<br />or `IRScene` | SVG DOM    |
+| Vanilla `mountSceneView` | `IRScene`                        | SVG DOM    |
+| `renderToSvg`            | `Scene`                          | SVG string |
 
 ## Adding interaction to an SVG figure
 

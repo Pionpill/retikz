@@ -24,7 +24,7 @@ export type HitTestOptions = {
   /**
    * hitTest 复用的 2D context（路径构建 + isPointInPath / isPointInStroke）
    * @description 即时模式无逐图元 DOM，命中靠把每个图元的几何重建进一个 2D context 后调原生点测。
-   *   生产环境由挂载方（vanilla mountCanvas / react CanvasHost）传入已有 `<canvas>` 的 context；
+   *   生产环境由挂载方（vanilla mountSceneView / react CanvasHost）传入已有 `<canvas>` 的 context；
    *   缺省时实现自建离屏 context（无 canvas 环境则无法点测）
    */
   context2d?: CanvasRenderingContext2D;

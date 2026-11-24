@@ -68,7 +68,7 @@ export default () => <Layout ir={ir} />;
 
 ```ts
 import { node, path, scene } from '@retikz/vanilla';
-import { mountFromInput } from '@retikz/vanilla/dom';
+import { mountSceneView } from '@retikz/vanilla/dom';
 
 const input = scene({
   children: [
@@ -81,7 +81,7 @@ const input = scene({
     path({ way: ['a', 'b'] }),
   ],
 });
-const view = mountFromInput(document.getElementById('diagram')!, input);
+const view = mountSceneView(document.getElementById('diagram')!, input);
 ```
 
 </DocTab>
@@ -89,7 +89,7 @@ const view = mountFromInput(document.getElementById('diagram')!, input);
 
 ```ts
 import type { IRScene } from '@retikz/core';
-import { mount } from '@retikz/vanilla/dom';
+import { mountSceneView } from '@retikz/vanilla/dom';
 
 const ir: IRScene = {
   version: 1,

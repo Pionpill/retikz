@@ -44,7 +44,7 @@ createRoot(document.getElementById('diagram')!).render(
 
 ```ts
 import { node, path, scene } from '@retikz/vanilla';
-import { mountFromInput } from '@retikz/vanilla/dom';
+import { mountSceneView } from '@retikz/vanilla/dom';
 
 const input = scene({
   children: [
@@ -56,7 +56,7 @@ const input = scene({
   ],
 });
 
-const view = mountFromInput(document.getElementById('diagram')!, input);
+const view = mountSceneView(document.getElementById('diagram')!, input);
 ```
 
 `scene` 表示整张图；每个 `node` 的 `position` 决定位置。`marks` 为路径添加标记，`pos: 1` 表示路径末端，`kind: 'arrow'` 选择箭头。

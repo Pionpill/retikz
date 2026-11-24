@@ -97,13 +97,13 @@ export default Demo;
 
 ```ts
 import { node, scene } from '@retikz/vanilla';
-import { mountFromInput } from '@retikz/vanilla/dom';
+import { mountSceneView } from '@retikz/vanilla/dom';
 import { horizontalPorts } from './horizontal-ports';
 
 const input = scene({
   children: [node({ id: 'io', position: [0, 0], text: 'IO', boundary: 'horizontal-ports' })],
 });
-const view = mountFromInput(document.getElementById('diagram')!, input, { compile: { boundaries: [horizontalPorts] } });
+const view = mountSceneView(document.getElementById('diagram')!, input, { compile: { boundaries: [horizontalPorts] } });
 ```
 
 页面需已有 `diagram` 容器；移除容器前调用 `view.dispose()`。

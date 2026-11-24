@@ -13,7 +13,7 @@ import { literal, string, enum as zodEnum } from 'zod';
 
 import type { InputEmbedAdapter, InputScene } from '../../src';
 import { embed } from '../../src';
-import { mountCanvas, mountFromInput, mountSvg } from '../../src/dom';
+import { mountSceneView } from '../../src/dom';
 
 // @vitest-environment jsdom
 
@@ -243,7 +243,7 @@ describe('@retikz/vanilla 保留安装座', () => {
       rejectNextUpdate = false;
       return reject;
     });
-    const view = mountFromInput(document.createElement('div'), cachedDatasetScene('#ef4444'), {
+    const view = mountSceneView(document.createElement('div'), cachedDatasetScene('#ef4444'), {
       runtime: { rendererFactory },
     });
 
@@ -261,7 +261,7 @@ describe('@retikz/vanilla 保留安装座', () => {
     const container = document.createElement('div');
     const lower = vi.spyOn(datasetAdapter, 'lower');
     const input = datasetScene('#ef4444');
-    const view = mountFromInput(container, input);
+    const view = mountSceneView(container, input);
 
     expect(view.root.querySelector('rect')?.getAttribute('fill')).toBe('#ef4444');
 
@@ -292,7 +292,7 @@ describe('@retikz/vanilla 保留安装座', () => {
         rendererFactoryCalls += 1;
       },
     );
-    const view = mountSvg(document.createElement('div'), source('#ef4444'), {
+    const view = mountSceneView(document.createElement('div'), source('#ef4444'), {
       runtime: { rendererFactory },
     });
     const initialCompileResult = view.compileResult;
@@ -340,7 +340,7 @@ describe('@retikz/vanilla 保留安装座', () => {
     const input: IRScene = { version: 1, type: 'scene', children: [{ namespace: 'fixture', type: 'box' }] };
     const container = document.createElement('div');
     for (const fill of ['#ef4444', '#22c55e']) {
-      const view = mountSvg(container, input, { compile: { composites: [definition(fill)] } });
+      const view = mountSceneView(container, input, { compile: { composites: [definition(fill)] } });
       try {
         expect(view.root.querySelector('rect')?.getAttribute('fill')).toBe(fill);
       } finally {
@@ -351,7 +351,7 @@ describe('@retikz/vanilla 保留安装座', () => {
 
   it('重新水合不改变 renderer 缺省配置', () => {
     const observedCachePolicies: Array<RenderRuntimeConfig['cachePolicy']> = [];
-    const view = mountFromInput(
+    const view = mountSceneView(
       document.createElement('div'),
       { type: 'scene', children: source('#fff').children },
       {
@@ -396,14 +396,15 @@ describe('@retikz/vanilla 保留安装座', () => {
       children: [{ namespace: 'fixture', type: 'compileOnce' }],
     };
 
-    const svg = mountSvg(document.createElement('div'), input, { compile: { composites: [composite] } });
+    const svg = mountSceneView(document.createElement('div'), input, { compile: { composites: [composite] } });
 
     expect(compile).toHaveBeenCalledTimes(1);
 
     svg.dispose();
     compile.mockClear();
 
-    const canvas = mountCanvas(document.createElement('div'), input, {
+    const canvas = mountSceneView(document.createElement('div'), input, {
+      renderer: 'canvas',
       compile: { composites: [composite] },
       output: { width: 100, height: 100 },
     });
@@ -415,7 +416,7 @@ describe('@retikz/vanilla 保留安装座', () => {
 
   it('IR SVG 使用 session，并保留未变节点 identity', () => {
     const container = document.createElement('div');
-    const view = mountSvg(container, source('#ef4444'));
+    const view = mountSceneView(container, source('#ef4444'));
 
     const stable = view.root.querySelector('[data-retikz-id="stable"]');
 
@@ -427,7 +428,7 @@ describe('@retikz/vanilla 保留安装座', () => {
 
   it('session full 保留 Session 但每次更新发布 replaceScene', () => {
     const patches: Array<unknown> = [];
-    const view = mountSvg(document.createElement('div'), source('#ef4444'), {
+    const view = mountSceneView(document.createElement('div'), source('#ef4444'), {
       runtime: {
         updateStrategy: 'full',
         rendererFactory: createMemoryRendererFactory('entity', false, undefined, patch => patches.push(patch)),
@@ -444,7 +445,7 @@ describe('@retikz/vanilla 保留安装座', () => {
 
   it('session hydrate 以 contribution transaction 添加和移除 handler', () => {
     const container = document.createElement('div');
-    const view = mountSvg(container, source('#ef4444'));
+    const view = mountSceneView(container, source('#ef4444'));
     const handler = vi.fn();
     const hydration = view.hydrate({ handlers: { changed: { click: handler } } });
     const target = view.root.querySelector('[data-retikz-id="changed"]');
@@ -470,7 +471,7 @@ describe('@retikz/vanilla 保留安装座', () => {
       },
       config => observedConfigs.push(config),
     );
-    const view = mountSvg(container, source('#ef4444'), { runtime: { rendererFactory } });
+    const view = mountSceneView(container, source('#ef4444'), { runtime: { rendererFactory } });
     const rejected = vi.fn();
     const accepted = vi.fn();
 
@@ -498,7 +499,7 @@ describe('@retikz/vanilla 保留安装座', () => {
       },
       config => observedContributionCounts.push(config.handlerContributions?.length ?? 0),
     );
-    const view = mountSvg(container, source('#ef4444'), { runtime: { rendererFactory } });
+    const view = mountSceneView(container, source('#ef4444'), { runtime: { rendererFactory } });
     const handler = vi.fn();
     const hydration = view.hydrate({ handlers: { changed: { click: handler } } });
 
@@ -515,7 +516,7 @@ describe('@retikz/vanilla 保留安装座', () => {
 
   it('解除注册后可用新的 handlers 接收更新后的事件', () => {
     const container = document.createElement('div');
-    const view = mountSvg(container, source('#ef4444'));
+    const view = mountSceneView(container, source('#ef4444'));
     const first = vi.fn();
     const second = vi.fn();
     const handlers = { changed: { click: first } };
@@ -532,7 +533,10 @@ describe('@retikz/vanilla 保留安装座', () => {
 
   it('IR Canvas 使用 session', () => {
     const container = document.createElement('div');
-    const session = mountCanvas(container, source('#ef4444'), { output: { width: 100, height: 100 } });
+    const session = mountSceneView(container, source('#ef4444'), {
+      renderer: 'canvas',
+      output: { width: 100, height: 100 },
+    });
 
     expect(session.compileResult).toBeDefined();
 
@@ -542,7 +546,7 @@ describe('@retikz/vanilla 保留安装座', () => {
   it('replace-only renderer 接受完整替换，不报告局部能力回退', () => {
     const container = document.createElement('div');
     const patches: Array<unknown> = [];
-    const view = mountSvg(container, source('#ef4444'), {
+    const view = mountSceneView(container, source('#ef4444'), {
       runtime: { rendererFactory: createMemoryRendererFactory('none', false, undefined, patch => patches.push(patch)) },
     });
 
@@ -556,7 +560,7 @@ describe('@retikz/vanilla 保留安装座', () => {
 
   it('renderer update 失败时保留已提交的编译结果与画面', () => {
     const container = document.createElement('div');
-    const view = mountSvg(container, source('#ef4444'), {
+    const view = mountSceneView(container, source('#ef4444'), {
       compile: {},
       runtime: { rendererFactory: createMemoryRendererFactory('entity', true) },
     });
@@ -580,7 +584,7 @@ describe('@retikz/vanilla 保留安装座', () => {
       }
     });
     const container = document.createElement('div');
-    const view = mountSvg(container, source('#ef4444'), {
+    const view = mountSceneView(container, source('#ef4444'), {
       runtime: {
         rendererFactory: createMemoryRendererFactory('entity', false, undefined, undefined, dispose),
       },

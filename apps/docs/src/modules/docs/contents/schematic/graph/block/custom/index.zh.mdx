@@ -69,7 +69,7 @@ const Example: FC = () => (
 
 ```ts
 import { embed, scene } from '@retikz/vanilla';
-import { mountFromInput } from '@retikz/vanilla/dom';
+import { mountSceneView } from '@retikz/vanilla/dom';
 
 const source: ServiceSource = {
   namespace: 'example',
@@ -79,7 +79,7 @@ const source: ServiceSource = {
   logic: { body: { kind: 'text', text: 'loadUser(id)' } },
 };
 const input = scene({ children: [embed({ adapter, props: source })] });
-const view = mountFromInput(document.getElementById('diagram')!, input, {
+const view = mountSceneView(document.getElementById('diagram')!, input, {
   compile: { themeDefinitions: [coreStyle] },
 });
 // view.dispose() on teardown
