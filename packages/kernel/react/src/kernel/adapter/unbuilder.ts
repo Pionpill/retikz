@@ -172,12 +172,15 @@ const childToElement = (child: IRKernelChild, key: number): ReactNode => {
     case 'node':
       return createElement(Node, { key, ...nodePropsFromIR(child) });
     case 'path':
+      if (child.kind !== undefined && child.children === undefined) {
+        return createElement(Path, { ...pickDefined(child, PATH_FIELDS), key, kind: child.kind });
+      }
       // PATH_FIELDS 字段表透传纯字段（与 builder.ts 共享、互锁防漂移）——含 rotate / scale / marks 等所有非 type/children 字段；
       // children 特化处理。改用 pickDefined 与 node / scope 分支一致，避免手写列字段漏掉后续新增。
       return createElement(Path, {
         key,
         ...pickDefined(child, PATH_FIELDS),
-        children: child.children?.map((s, j) => stepToElement(s, j)),
+        children: child.children?.map((s, j) => stepToElement(s, j)) ?? [],
       });
     case 'coordinate':
       return createElement(Coordinate, {

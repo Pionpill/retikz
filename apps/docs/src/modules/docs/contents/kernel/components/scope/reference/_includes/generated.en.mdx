@@ -8,7 +8,7 @@ This page selects Scope-owned and directly clipping-related schemas from `@retik
 
 ## Component declarations
 
-#### <ApiSourceLink label={"Scope"} path={"packages/kernel/react/src/kernel/components/Scope.tsx"} startLine={63}>Scope</ApiSourceLink> / <ApiSourceLink label={"ScopeProps"} path={"packages/kernel/react/src/kernel/components/Scope.tsx"} startLine={10}>ScopeProps</ApiSourceLink>
+#### <ApiSourceLink label={"Scope"} path={"packages/kernel/react/src/kernel/components/Scope.tsx"} startLine={20}>Scope</ApiSourceLink> / <ApiSourceLink label={"ScopeProps"} path={"packages/kernel/react/src/kernel/components/Scope.tsx"} startLine={10}>ScopeProps</ApiSourceLink>
 
 Provides local styles, namespaces, origin or anchor positioning, local transforms, clipping, and reference bounds for a group of nodes and paths
 
@@ -18,30 +18,30 @@ Provides local styles, namespaces, origin or anchor positioning, local transform
 
 <ApiTable grouped>
 
-| Group     | Member            | Type                                    | Default       | Description                                                                                                                                                                                                                                                           |
-| --------- | ----------------- | --------------------------------------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Main      | `children?`       | `ReactNode`                             | —             | Scope children: nested Node, Path, Coordinate, or Scope                                                                                                                                                                                                               |
-|           | `id?`             | `string`                                | —             | Optional Scope reference id; makes the group envelope available as a reference target<br />External paths and positions can reference these bounds using `scope.id`, `scope.id.<anchor>`, or `scope.id.<deg>`; this external handle is unaffected by `localNamespace` |
-|           | `localNamespace?` | `boolean`                               | `false`       | Whether to create a local namespace; when true, child ids are hidden from outer scopes<br />Child IDs can only be referenced inside this Scope; they are inaccessible outside it, while `scope.id` itself remains accessible from the outer scope                     |
-| Geometry  | `boundingShape?`  | <ApiValues name="ScopeBoundingShape" /> | `'rectangle'` | Envelope shape used when referencing the group by id; supports rectangles or circles and defaults to an axis-aligned rectangle                                                                                                                                        |
-|           | `clip?`           | `IRScope['clip']`                       | —             | Clip region in Scope-local coordinates (rect, circle, ellipse, polygon, path, compound, or custom); clips all children when supplied                                                                                                                                  |
-|           | `position?`       | `IRScope['position']`                   | `[0, 0]`      | Scope origin position in parent coordinates or final anchor alignment<br />A coordinate position is applied outside local transforms. The anchor form aligns selfAnchor on the transformed envelope to target; selfAnchor defaults to center                          |
-|           | `transforms?`     | `Array<IRTransform>`                    | —             | Local transform list following SVG transform-list order; the last item acts on a local point first<br />Supports translate, polar-translate, at-translate, offset-translate, between-translate, rotate, and scale                                                     |
-| Style     | `defaults?`       | `InputScope['defaults']`                | —             | Default styles for descendant Nodes, Paths, Labels, and Arrows; explicit element values win and `reset` blocks selected outer channels                                                                                                                                |
-|           | `theme?`          | `IRScope['theme']`                      | —             | Local Theme overriding only declared fields, inherited by descendant Composites                                                                                                                                                                                       |
-|           | `zIndex?`         | `number`                                | `0`           | Explicit stacking order of the whole Scope among siblings, without changing child order; defaults to 0, preserving declaration order                                                                                                                                  |
-| Callbacks | `onClick?`        | `HydrationHandler`                      | —             | Click on this element (DOM `click`)                                                                                                                                                                                                                                   |
-|           | `onDoubleClick?`  | `HydrationHandler`                      | —             | Double-click on this element (DOM `dblclick`)                                                                                                                                                                                                                         |
-|           | `onPointerDown?`  | `HydrationHandler`                      | —             | Pointer pressed on this element (DOM `pointerdown`)                                                                                                                                                                                                                   |
-|           | `onPointerEnter?` | `HydrationHandler`                      | —             | Pointer enters this element, synthesized from `pointermove` and hit-ID state; moving between children does not trigger it again                                                                                                                                       |
-|           | `onPointerLeave?` | `HydrationHandler`                      | —             | Pointer leaves this element, synthesized from `pointermove` and hit-ID state                                                                                                                                                                                          |
-|           | `onPointerMove?`  | `HydrationHandler`                      | —             | Pointer moves over this element (DOM `pointermove`)                                                                                                                                                                                                                   |
-|           | `onPointerUp?`    | `HydrationHandler`                      | —             | Pointer released on this element (DOM `pointerup`)                                                                                                                                                                                                                    |
-|           | `onRightClick?`   | `HydrationHandler`                      | —             | Context menu on this element (DOM `contextmenu`); the browser menu is not suppressed by default, so the handler must call `event.preventDefault()` if needed                                                                                                          |
-|           | `onWheel?`        | `HydrationHandler`                      | —             | Wheel input over this element (DOM `wheel`)                                                                                                                                                                                                                           |
-| Animation | `animations?`     | `Array<IRAnimationTrack>`               | —             | Timeline animations for the whole Scope; rendered as animation or a static fallback, without participating in layout or propagating to children                                                                                                                       |
-| Runtime   | `authoring?`      | `unknown`                               | —             | Authoring metadata retained when collecting JSX; excluded from Core IR                                                                                                                                                                                                |
-|           | `meta?`           | `IRScope['meta']`                       | —             | JSON-serializable user metadata available in event and hydration contexts; does not participate in layout or propagate to children                                                                                                                                    |
+| Group     | Member            | Type                                                                                                                                          | Default | Description                                                                                                                                                  |
+| --------- | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Main      | `children?`       | `ReactNode`                                                                                                                                   | —       | JSX children collected in declaration order                                                                                                                  |
+|           | `id?`             | `string`                                                                                                                                      | —       | —                                                                                                                                                            |
+|           | `localNamespace?` | `false \| true`                                                                                                                               | —       | —                                                                                                                                                            |
+| Geometry  | `boundingShape?`  | <ApiValues name="ScopeBoundingShape" />                                                                                                       | —       | —                                                                                                                                                            |
+|           | `clip?`           | `{ kind: string; params: Record<string, JsonValue>; } \| { kind: "rect"; params: { x: number; y: number; width: number; height: number; }; }` | —       | —                                                                                                                                                            |
+|           | `position?`       | `IRScopePosition`                                                                                                                             | —       | Origin position in the parent frame or final anchor alignment; defaults to the origin                                                                        |
+|           | `transforms?`     | `ScopeOptions['transforms']`                                                                                                                  | —       | —                                                                                                                                                            |
+| Style     | `defaults?`       | `ScopeOptions['defaults']`                                                                                                                    | —       | —                                                                                                                                                            |
+|           | `theme?`          | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                      | —       | —                                                                                                                                                            |
+|           | `zIndex?`         | `number`                                                                                                                                      | —       | —                                                                                                                                                            |
+| Callbacks | `onClick?`        | `HydrationHandler`                                                                                                                            | —       | Click on this element (DOM `click`)                                                                                                                          |
+|           | `onDoubleClick?`  | `HydrationHandler`                                                                                                                            | —       | Double-click on this element (DOM `dblclick`)                                                                                                                |
+|           | `onPointerDown?`  | `HydrationHandler`                                                                                                                            | —       | Pointer pressed on this element (DOM `pointerdown`)                                                                                                          |
+|           | `onPointerEnter?` | `HydrationHandler`                                                                                                                            | —       | Pointer enters this element, synthesized from `pointermove` and hit-ID state; moving between children does not trigger it again                              |
+|           | `onPointerLeave?` | `HydrationHandler`                                                                                                                            | —       | Pointer leaves this element, synthesized from `pointermove` and hit-ID state                                                                                 |
+|           | `onPointerMove?`  | `HydrationHandler`                                                                                                                            | —       | Pointer moves over this element (DOM `pointermove`)                                                                                                          |
+|           | `onPointerUp?`    | `HydrationHandler`                                                                                                                            | —       | Pointer released on this element (DOM `pointerup`)                                                                                                           |
+|           | `onRightClick?`   | `HydrationHandler`                                                                                                                            | —       | Context menu on this element (DOM `contextmenu`); the browser menu is not suppressed by default, so the handler must call `event.preventDefault()` if needed |
+|           | `onWheel?`        | `HydrationHandler`                                                                                                                            | —       | Wheel input over this element (DOM `wheel`)                                                                                                                  |
+| Animation | `animations?`     | `Array<IRAnimationTrack>`                                                                                                                     | —       | —                                                                                                                                                            |
+| Runtime   | `authoring?`      | `unknown`                                                                                                                                     | —       | Authoring metadata retained during normalization; excluded from Core IR                                                                                      |
+|           | `meta?`           | `Record<string, JsonValue>`                                                                                                                   | —       | —                                                                                                                                                            |
 
 </ApiTable>
 
@@ -52,19 +52,8 @@ Provides local styles, namespaces, origin or anchor positioning, local transform
 ```ts
 export declare const Scope: FC<ScopeProps>;
 
-export type ScopeProps = ScopeStyleProps &
+export type ScopeProps = ScopeOptions &
   HydrationEventProps & {
-    theme?: IRScope['theme'];
-    id?: string;
-    localNamespace?: boolean;
-    transforms?: Array<IRTransform>;
-    position?: IRScope['position'];
-    zIndex?: IRScope['zIndex'];
-    clip?: IRScope['clip'];
-    boundingShape?: IRScope['boundingShape'];
-    meta?: IRScope['meta'];
-    animations?: IRScope['animations'];
-    authoring?: unknown;
     children?: ReactNode;
   };
 ```
@@ -83,9 +72,9 @@ export type ScopeProps = ScopeStyleProps &
 
 <ApiTable>
 
-| Member      | Type                     | Default | Description                                                                                                                            |
-| ----------- | ------------------------ | ------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `defaults?` | `InputScope['defaults']` | —       | Default styles for descendant Nodes, Paths, Labels, and Arrows; explicit element values win and `reset` blocks selected outer channels |
+| Member      | Type                       | Default | Description |
+| ----------- | -------------------------- | ------- | ----------- |
+| `defaults?` | `ScopeOptions['defaults']` | —       | —           |
 
 </ApiTable>
 
@@ -94,9 +83,7 @@ export type ScopeProps = ScopeStyleProps &
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type ScopeStyleProps = {
-  defaults?: InputScope['defaults'];
-};
+export type ScopeStyleProps = Pick<ScopeOptions, 'defaults'>;
 ```
 
 </DocTab>
@@ -105,7 +92,7 @@ export type ScopeStyleProps = {
 
 ## Direct calls
 
-#### <ApiSourceLink label={"scope"} path={"packages/kernel/vanilla/src/normalize/factory.ts"} startLine={37}>scope</ApiSourceLink> / <ApiSourceLink label={"InputScope"} path={"packages/kernel/vanilla/src/normalize/element/scope.ts"} startLine={6}>InputScope</ApiSourceLink>
+#### <ApiSourceLink label={"scope"} path={"packages/kernel/vanilla/src/normalize/factory.ts"} startLine={51}>scope</ApiSourceLink> / <ApiSourceLink label={"InputScope"} path={"packages/kernel/vanilla/src/normalize/element/scope.ts"} startLine={6}>InputScope</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -115,7 +102,7 @@ export type ScopeStyleProps = {
 
 | Group     | Member                 | Type                                                                                                                                          | Default | Description                                                                                                                                    |
 | --------- | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| Main      | `children`             | `ReadonlyArray<InputChild>`                                                                                                                   | —       | Children processed in declaration order within this Scope                                                                                      |
+| Main      | `children`             | `InputScene['children']`                                                                                                                      | —       | Children processed in declaration order within this Scope                                                                                      |
 |           | `id?`                  | `string`                                                                                                                                      | —       | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace.                                            |
 |           | `localNamespace?`      | `false \| true`                                                                                                                               | —       | When true, child node, coordinate, and nested-scope ids stay local to this scope. The scope id itself still registers in the parent namespace. |
 |           | `type`                 | `'scope'`                                                                                                                                     | —       | Container discriminator, fixed to scope                                                                                                        |
@@ -129,8 +116,8 @@ export type ScopeStyleProps = {
 | Animation | `animations?`          | `IRScope['animations']`                                                                                                                       | —       | Animate the group without affecting layout or propagating tracks to children.                                                                  |
 | Runtime   | `authoring?`           | `unknown`                                                                                                                                     | —       | Authoring metadata retained during normalization; excluded from Core IR                                                                        |
 |           | `meta?`                | `Record<string, JsonValue>`                                                                                                                   | —       | Copied unchanged to Scene primitives without affecting compilation.                                                                            |
-|           | `config` (Parameter)   | `Omit<InputScope, 'type' \| 'children'>`                                                                                                      | —       | Local transforms, styles, clipping, and reference configuration                                                                                |
-|           | `children` (Parameter) | `ReadonlyArray<InputChild>`                                                                                                                   | —       | Children retained in declaration order; the array is not copied                                                                                |
+|           | `options` (Parameter)  | `ScopeOptions`                                                                                                                                | —       | Local transforms, styles, clipping, and reference configuration                                                                                |
+|           | `children` (Parameter) | `InputScene['children']`                                                                                                                      | —       | Children retained in declaration order; the array is not copied                                                                                |
 |           | Returns                | `InputScope`                                                                                                                                  | —       | Scope input retaining options and child references, before normalization or compilation                                                        |
 
 </ApiTable>
@@ -140,13 +127,10 @@ export type ScopeStyleProps = {
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export declare const scope: (
-  config: Omit<InputScope, 'type' | 'children'>,
-  children: ReadonlyArray<InputChild>,
-) => InputScope;
+export declare const scope: (options: ScopeOptions, children: InputScene['children']) => InputScope;
 
 export type InputScope = Omit<IRScope, 'children'> & {
-  children: ReadonlyArray<InputChild>;
+  children: InputScene['children'];
   authoring?: unknown;
 };
 ```
@@ -154,6 +138,12 @@ export type InputScope = Omit<IRScope, 'children'> & {
 </DocTab>
 
 </DocTabs>
+
+#### <ApiSourceLink label={"ScopeOptions"} path={"packages/kernel/vanilla/src/normalize/factory.ts"} startLine={13}>ScopeOptions</ApiSourceLink>
+
+```ts
+export type ScopeOptions = Omit<InputScope, 'type' | 'children'>;
+```
 
 ## Persistent configuration
 

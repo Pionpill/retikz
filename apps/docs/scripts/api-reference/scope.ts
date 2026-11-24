@@ -69,6 +69,7 @@ const scopeConfig: ApiReferencePackageConfig = {
     {
       source: path.resolve(repositoryRoot, 'packages/kernel/react/src/index.ts'),
       title: { zh: '`@retikz/react`', en: '`@retikz/react`' },
+      fullMemberSymbols: ['ScopeProps', 'ScopeStyleProps'],
       symbols: ['Scope', 'ScopeProps', 'ScopeStyleProps'],
       symbolPairs: [['Scope', 'ScopeProps']],
       memberValueSets: {
@@ -93,7 +94,7 @@ export const scopeApiReferenceConfigs: ReadonlyArray<ApiReferencePackageConfig> 
       {
         source: path.resolve(repositoryRoot, 'packages/kernel/vanilla/src/index.ts'),
         title: { zh: '`@retikz/vanilla`', en: '`@retikz/vanilla`' },
-        symbols: ['scope', 'InputScope'],
+        symbols: ['scope', 'ScopeOptions', 'InputScope'],
         fullMemberSymbols: ['InputScope'],
         symbolPairs: [['scope', 'InputScope']],
       },

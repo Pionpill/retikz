@@ -1,5 +1,9 @@
 /** 经核对的绘制 API 英文说明，源码标识符保持不变 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  '自定义路径定义直接提供几何，不传步骤来源': 'The custom path definition supplies its geometry without a step source',
+  '具名路径构造函数的配置，必须选择一种步骤来源': 'Path options specifying exactly one source of steps',
+  '路径走向简写，与 JSX 子步骤二选一': 'Path shorthand, mutually exclusive with JSX step children',
+  '按声明顺序收集的 Step 子元素': 'Step children collected in declaration order',
   路径定位比例的解释方式: 'Interpretation of a normalized path position',
   按有效绘制段分配参数区间: 'Allocate equal parameter intervals to drawable segments',
   按所选路径的累计长度定位: 'Locate by cumulative length of the selected path',

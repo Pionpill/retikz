@@ -11,7 +11,7 @@ const JsxParser = Parser.extend(jsx());
 const COMPONENT_REGISTRY: Record<string, FC<Record<string, unknown>> | undefined> = {
   Layout,
   Node,
-  Path,
+  Path: Path as unknown as FC<Record<string, unknown>>,
   Step: Step as unknown as FC<Record<string, unknown>>,
   Text: Text as unknown as FC<Record<string, unknown>>,
   Coordinate: Coordinate as unknown as FC<Record<string, unknown>>,
@@ -85,6 +85,12 @@ const walkJsxElement = (node: AstNode, key?: number): ReactElement => {
     .map((child, index) => walkChild(child, index))
     .filter((child): child is ReactNode => child !== null);
 
+  if (Component === Path) {
+    const hasChildren = children.length > 0 || props.children !== undefined;
+    if (hasChildren && props.way !== undefined) throw new Error('Path 不能同时指定 way 和 children');
+    if (!hasChildren && props.way === undefined && (props.kind === undefined || props.kind === 'stroke'))
+      throw new Error('普通 Path 必须指定 way 或 children');
+  }
   return createElement(Component, props, ...children);
 };
 

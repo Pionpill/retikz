@@ -174,6 +174,12 @@ describe('parseRetikzJsx — 正常流程', () => {
 });
 
 describe('parseRetikzJsx — 错误情况', () => {
+  it('普通 Path 必须指定一个步骤来源，自定义几何可不传步骤', () => {
+    expect(parseErr('<Path />')).toMatch(/必须指定/);
+    expect(parseErr('<Path way={[]}><Step to="A" /></Path>')).toMatch(/不能同时指定/);
+    expect(typeName(parseOk('<Path kind="ribbon" kindOptions={{ mode: "boundary" }} />'))).toBe('Path');
+  });
+
   it('空源码', () => {
     expect(parseErr('')).toMatch(/源码为空/);
     expect(parseErr('   \n  ')).toMatch(/源码为空/);

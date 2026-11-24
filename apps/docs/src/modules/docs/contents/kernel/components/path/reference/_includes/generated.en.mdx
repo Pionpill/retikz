@@ -6,43 +6,86 @@ Vanilla normalizes `way` into steps. `arrow` and `marks` share the same structur
 
 ## Component declarations
 
-#### <ApiSourceLink label={"Path"} path={"packages/kernel/react/src/kernel/components/Path.tsx"} startLine={69}>Path</ApiSourceLink> / <ApiSourceLink label={"PathProps"} path={"packages/kernel/react/src/kernel/components/Path.tsx"} startLine={10}>PathProps</ApiSourceLink>
+#### <ApiSourceLink label={"Path"} path={"packages/kernel/react/src/kernel/components/Path.tsx"} startLine={33}>Path</ApiSourceLink> / <ApiSourceLink label={"PathProps"} path={"packages/kernel/react/src/kernel/components/Path.tsx"} startLine={10}>PathProps</ApiSourceLink>
 
 This component does not render DOM itself; `<Layout>` produces the final path from steps, styles, arrows, and marks
 
-<DocTabs defaultValue="members">
+**Common members**
 
-<DocTab value="members" label="Members">
+<ApiTable>
 
-<ApiTable grouped>
+| Member            | Type                                  | Default | Description                                                                                                                                           |
+| ----------------- | ------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `animations?`     | `PathOptions['animations']`           | —       | Passed to emitted primitives without affecting layout or bounds. Not inherited across scopes.                                                         |
+| `cornerRadius?`   | `number`                              | —       | Geometric corner radius applied to line-to-line joints. Distinct from `lineJoin`, which only styles stroke corners. Omitted fields keep sharp joints. |
+| `id?`             | `string`                              | —       | Stable reference ID for the emitted primitive.                                                                                                        |
+| `kindOptions?`    | `Record<string, JsonValue>`           | —       | JSON-safe option object consumed by the selected path provider.                                                                                       |
+| `label?`          | `PathOptions['label']`                | —       | Host label attached to this path-like relation.                                                                                                       |
+| `marks?`          | `PathOptions['marks']`                | —       | Marks placed by step parameters or cumulative length on original or rounded geometry; direction follows the path tangent.                             |
+| `meta?`           | `Record<string, JsonValue>`           | —       | Copied unchanged to Scene primitives without affecting compilation.                                                                                   |
+| `onClick?`        | `HydrationHandler`                    | —       | Click on this element (DOM `click`)                                                                                                                   |
+| `onDoubleClick?`  | `HydrationHandler`                    | —       | Double-click on this element (DOM `dblclick`)                                                                                                         |
+| `onPointerDown?`  | `HydrationHandler`                    | —       | Pointer pressed on this element (DOM `pointerdown`)                                                                                                   |
+| `onPointerEnter?` | `HydrationHandler`                    | —       | Pointer enters this element, synthesized from `pointermove` and hit-ID state; moving between children does not trigger it again                       |
+| `onPointerLeave?` | `HydrationHandler`                    | —       | Pointer leaves this element, synthesized from `pointermove` and hit-ID state                                                                          |
+| `onPointerMove?`  | `HydrationHandler`                    | —       | Pointer moves over this element (DOM `pointermove`)                                                                                                   |
+| `onPointerUp?`    | `HydrationHandler`                    | —       | Pointer released on this element (DOM `pointerup`)                                                                                                    |
+| `onRightClick?`   | `HydrationHandler`                    | —       | Context menu on this element (DOM `contextmenu`); call `event.preventDefault()` in the handler to suppress the browser menu                           |
+| `onWheel?`        | `HydrationHandler`                    | —       | Wheel input over this element (DOM `wheel`)                                                                                                           |
+| `rotate?`         | `number`                              | —       | Rotate the whole path around its bounding-box center. Endpoints resolve before rotation wraps the resulting geometry.                                 |
+| `scale?`          | `number \| { x: number; y: number; }` | —       | Scale the whole path around its bounding-box center. Applied with rotate around the same center.                                                      |
+| `style?`          | `PathOptions['style']`                | —       | Path visual overrides; fields independently override inherited defaults.                                                                              |
+| `zIndex?`         | `number`                              | —       | Sibling stacking order. Higher draws on top; ties keep source order. Defaults to 0.                                                                   |
 
-| Group     | Member            | Type                     | Default    | Description                                                                                                                                                                                                                                                                                                         |
-| --------- | ----------------- | ------------------------ | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Main      | `children?`       | `ReactNode`              | —          | All children should be `<Step />`                                                                                                                                                                                                                                                                                   |
-|           | `id?`             | `IRPath['id']`           | —          | Path id, used by other paths or positions to reference it and by hydration to bind event handlers                                                                                                                                                                                                                   |
-|           | `kind?`           | `IRPath['kind']`         | `'stroke'` | Path; defaults to built-in stroke. Register custom kinds through Layout.extensions.paths                                                                                                                                                                                                                            |
-|           | `kindOptions?`    | `IRPath['kindOptions']`  | —          | JSON options for the selected path; built-in stroke does not accept this field                                                                                                                                                                                                                                      |
-|           | `label?`          | `IRPath['label']`        | —          | One or more geometry labels attached to the whole path                                                                                                                                                                                                                                                              |
-|           | `way?`            | `WayDSL`                 | —          | TikZ-style route shorthand, parsed into steps by Vanilla                                                                                                                                                                                                                                                            |
-| Geometry  | `arrow?`          | `InputPath['arrow']`     | —          | Arrow configuration at the path start and end<br />Supports ->, &lt;-, and &lt;-> direction shorthands, or start and end objects for individual endpoint configuration                                                                                                                                              |
-|           | `cornerRadius?`   | `IRPath['cornerRadius']` | —          | Geometric rounding radius at polyline corners (TikZ `rounded corners=`)<br />Insert a tangent arc at each line-to-line joint, changing geometry rather than only stroke appearance. Curve, arc, Bézier, and fold joints stay sharp; the radius is clamped to adjacent segment lengths. Omission keeps sharp corners |
-|           | `marks?`          | `IRPath['marks']`        | —          | Place primitive marks by arc-length fraction along the path<br />Reuse arrow appearance or registered mark definitions without shortening the path at any position                                                                                                                                                  |
-|           | `rotate?`         | `IRPath['rotate']`       | —          | Rotate the whole path in degrees about its bounding-box center; positive angles are visually clockwise in screen-down coordinates<br />Equivalent to a Scope rotating the path around its bounding-box center; endpoints resolve in the current scope before rotation                                               |
-|           | `scale?`          | `IRPath['scale']`        | —          | Scale the whole path around its bounding-box center: a number for uniform scaling or `{ x, y }` for independent axes                                                                                                                                                                                                |
-| Style     | `style?`          | `InputPath['style']`     | —          | Instance visual overrides, replacing inherited defaults field by field                                                                                                                                                                                                                                              |
-|           | `zIndex?`         | `IRPath['zIndex']`       | `0`        | Explicit stack order: larger values are above; defaults to 0, equal values preserve declaration order, and comparison is limited to siblings                                                                                                                                                                        |
-| Callbacks | `onClick?`        | `HydrationHandler`       | —          | Click on this element (DOM `click`)                                                                                                                                                                                                                                                                                 |
-|           | `onDoubleClick?`  | `HydrationHandler`       | —          | Double-click on this element (DOM `dblclick`)                                                                                                                                                                                                                                                                       |
-|           | `onPointerDown?`  | `HydrationHandler`       | —          | Pointer pressed on this element (DOM `pointerdown`)                                                                                                                                                                                                                                                                 |
-|           | `onPointerEnter?` | `HydrationHandler`       | —          | Pointer enters this element, synthesized from `pointermove` and hit-ID state; moving between children does not trigger it again                                                                                                                                                                                     |
-|           | `onPointerLeave?` | `HydrationHandler`       | —          | Pointer leaves this element, synthesized from `pointermove` and hit-ID state                                                                                                                                                                                                                                        |
-|           | `onPointerMove?`  | `HydrationHandler`       | —          | Pointer moves over this element (DOM `pointermove`)                                                                                                                                                                                                                                                                 |
-|           | `onPointerUp?`    | `HydrationHandler`       | —          | Pointer released on this element (DOM `pointerup`)                                                                                                                                                                                                                                                                  |
-|           | `onRightClick?`   | `HydrationHandler`       | —          | Context menu on this element (DOM `contextmenu`); call `event.preventDefault()` in the handler to suppress the browser menu                                                                                                                                                                                         |
-|           | `onWheel?`        | `HydrationHandler`       | —          | Wheel input over this element (DOM `wheel`)                                                                                                                                                                                                                                                                         |
-| Animation | `animations?`     | `IRPath['animations']`   | —          | Path-level timeline animation; rendered as animation or a static fallback, without participating in layout                                                                                                                                                                                                          |
-| Runtime   | `authoring?`      | `unknown`                | —          | Authoring metadata retained when collecting JSX; excluded from Core IR                                                                                                                                                                                                                                              |
-|           | `meta?`           | `IRPath['meta']`         | —          | JSON-serializable user metadata available in event and hydration contexts; does not participate in layout                                                                                                                                                                                                           |
+</ApiTable>
+
+Common members apply to every branch; a value must also satisfy at least one branch.
+
+<DocTabs defaultValue="definition">
+
+<DocTab value="definition" label="Members · Definition geometry">
+
+<ApiTable>
+
+| Member       | Type                              | Default | Description                                                                                    |
+| ------------ | --------------------------------- | ------- | ---------------------------------------------------------------------------------------------- |
+| `arrow?`     | `PathOptions['arrow']`            | —       | Endpoint arrow configuration, or a direction shorthand enabling the start, end, or both arrows |
+| `authoring?` | `never`                           | —       | Authoring metadata retained during normalization; excluded from Core IR                        |
+| `children?`  | `never`                           | —       | —                                                                                              |
+| `kind`       | `NonNullable<IRPathBase['kind']>` | —       | Path provider name. Omitted means built-in `stroke`.                                           |
+| `way?`       | `never`                           | —       | —                                                                                              |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="children" label="Members · JSX steps">
+
+<ApiTable>
+
+| Member       | Type                                       | Default | Description                                                                                    |
+| ------------ | ------------------------------------------ | ------- | ---------------------------------------------------------------------------------------------- |
+| `arrow?`     | `IRPath['arrow'] \| '->' \| '<-' \| '<->'` | —       | Endpoint arrow configuration, or a direction shorthand enabling the start, end, or both arrows |
+| `authoring?` | `unknown`                                  | —       | Authoring metadata retained during normalization; excluded from Core IR                        |
+| `children`   | `Exclude<ReactNode, undefined>`            | —       | Step children collected in declaration order                                                   |
+| `kind?`      | `string & {} \| "stroke"`                  | —       | Path provider name. Omitted means built-in `stroke`.                                           |
+| `way?`       | `never`                                    | —       | Path shorthand, mutually exclusive with JSX step children                                      |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="way" label="Members · Way shorthand">
+
+<ApiTable>
+
+| Member       | Type                                       | Default | Description                                                                                    |
+| ------------ | ------------------------------------------ | ------- | ---------------------------------------------------------------------------------------------- |
+| `arrow?`     | `IRPath['arrow'] \| '->' \| '<-' \| '<->'` | —       | Endpoint arrow configuration, or a direction shorthand enabling the start, end, or both arrows |
+| `authoring?` | `unknown`                                  | —       | Authoring metadata retained during normalization; excluded from Core IR                        |
+| `children?`  | `never`                                    | —       | Step children collected in declaration order                                                   |
+| `kind?`      | `string & {} \| "stroke"`                  | —       | Path provider name. Omitted means built-in `stroke`.                                           |
+| `way`        | `WayDSL`                                   | —       | Path shorthand, mutually exclusive with JSX step children                                      |
 
 </ApiTable>
 
@@ -53,31 +96,28 @@ This component does not render DOM itself; `<Layout>` produces the final path fr
 ```ts
 export declare const Path: FC<PathProps>;
 
-export type PathProps = HydrationEventProps & {
-  style?: InputPath['style'];
-  authoring?: unknown;
-  kind?: IRPath['kind'];
-  kindOptions?: IRPath['kindOptions'];
-  label?: IRPath['label'];
-  id?: IRPath['id'];
-  meta?: IRPath['meta'];
-  animations?: IRPath['animations'];
-  cornerRadius?: IRPath['cornerRadius'];
-  arrow?: InputPath['arrow'];
-  zIndex?: IRPath['zIndex'];
-  rotate?: IRPath['rotate'];
-  scale?: IRPath['scale'];
-  marks?: IRPath['marks'];
-  way?: WayDSL;
-  children?: ReactNode;
-};
+export type PathProps = Omit<PathOptions, 'way' | 'children'> &
+  HydrationEventProps &
+  (
+    | RequireExactlyOne<{
+        way: WayDSL;
+        children: Exclude<ReactNode, undefined>;
+      }>
+    | {
+        kind: NonNullable<IRPathBase['kind']>;
+        way?: never;
+        children?: never;
+        authoring?: never;
+        arrow?: IRPathBase['arrow'];
+      }
+  );
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"Draw"} path={"packages/kernel/react/src/sugar/path/Draw.tsx"} startLine={29}>Draw</ApiSourceLink> / <ApiSourceLink label={"DrawProps"} path={"packages/kernel/react/src/sugar/path/Draw.tsx"} startLine={10}>DrawProps</ApiSourceLink>
+#### <ApiSourceLink label={"Draw"} path={"packages/kernel/react/src/sugar/path/Draw.tsx"} startLine={19}>Draw</ApiSourceLink> / <ApiSourceLink label={"DrawProps"} path={"packages/kernel/react/src/sugar/path/Draw.tsx"} startLine={8}>DrawProps</ApiSourceLink>
 
 React only provides JSX sugar; `normalizePath` is the sole parser dispatch point for `way`
 
@@ -87,14 +127,14 @@ React only provides JSX sugar; `normalizePath` is the sole parser dispatch point
 
 <ApiTable>
 
-| Member                   | Type                     | Default | Description                                                            |
-| ------------------------ | ------------------------ | ------- | ---------------------------------------------------------------------- |
-| `readonly arrow?`        | `PathProps['arrow']`     | —       | Arrow configuration at the path start and end                          |
-| `readonly cornerRadius?` | `IRPath['cornerRadius']` | —       | Geometric rounding radius at polyline corners                          |
-| `readonly marks?`        | `PathProps['marks']`     | —       | Place primitive marks by arc-length fraction along the path            |
-| `readonly style?`        | `InputPath['style']`     | —       | Instance visual overrides, replacing inherited defaults field by field |
-| `readonly way`           | `WayDSL`                 | —       | TikZ-style route shorthand                                             |
-| `readonly zIndex?`       | `IRPath['zIndex']`       | —       | Stack order among siblings                                             |
+| Member                   | Type                 | Default | Description                                                                                                                                           |
+| ------------------------ | -------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `readonly arrow?`        | `PathProps['arrow']` | —       | Endpoint arrow configuration, or a direction shorthand enabling the start, end, or both arrows                                                        |
+| `readonly cornerRadius?` | `number`             | —       | Geometric corner radius applied to line-to-line joints. Distinct from `lineJoin`, which only styles stroke corners. Omitted fields keep sharp joints. |
+| `readonly marks?`        | `PathProps['marks']` | —       | Marks placed by step parameters or cumulative length on original or rounded geometry; direction follows the path tangent.                             |
+| `readonly style?`        | `PathProps['style']` | —       | Path visual overrides; fields independently override inherited defaults.                                                                              |
+| `readonly way`           | `WayDSL`             | —       | TikZ-style route shorthand                                                                                                                            |
+| `readonly zIndex?`       | `number`             | —       | Sibling stacking order. Higher draws on top; ties keep source order. Defaults to 0.                                                                   |
 
 </ApiTable>
 
@@ -105,21 +145,18 @@ React only provides JSX sugar; `normalizePath` is the sole parser dispatch point
 ```ts
 export declare const Draw: FC<DrawProps>;
 
-export type DrawProps = Readonly<{
-  style?: InputPath['style'];
-  way: WayDSL;
-  cornerRadius?: IRPath['cornerRadius'];
-  arrow?: PathProps['arrow'];
-  marks?: PathProps['marks'];
-  zIndex?: IRPath['zIndex'];
-}>;
+export type DrawProps = Readonly<
+  Pick<PathProps, 'style' | 'cornerRadius' | 'arrow' | 'marks' | 'zIndex'> & {
+    way: WayDSL;
+  }
+>;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"Step"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={263}>Step</ApiSourceLink> / <ApiSourceLink label={"StepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={244}>StepProps</ApiSourceLink>
+#### <ApiSourceLink label={"Step"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={257}>Step</ApiSourceLink> / <ApiSourceLink label={"StepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={238}>StepProps</ApiSourceLink>
 
 Declare a path action such as moving, drawing a line or curve, drawing an arc, or closing a subpath
 
@@ -146,7 +183,7 @@ export type StepProps =
 
 ## Execution and supporting contracts
 
-#### <ApiSourceLink label={"ArcStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={155}>ArcStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"ArcStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={149}>ArcStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -186,7 +223,7 @@ export type ArcStepProps = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"AxisLineStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={40}>AxisLineStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"AxisLineStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={34}>AxisLineStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -200,7 +237,7 @@ export type ArcStepProps = {
 | `children?` | `ReactNode`                  | —       | Sugar form                                                                                    |
 | `kind`      | `'axis-line'`                | —       | Discriminant for a single-axis step                                                           |
 | `label?`    | `IRStepLabel`                | —       | Edge label                                                                                    |
-| `to`        | `IRAxisLineTarget \| string` | —       | Projection target: Cartesian coordinates, a NodeTarget, or the corresponding string shorthand |
+| `to`        | `InputAxisLineTarget`        | —       | Projection target: Cartesian coordinates, a NodeTarget, or the corresponding string shorthand |
 
 </ApiTable>
 
@@ -212,7 +249,7 @@ export type ArcStepProps = {
 export type AxisLineStepProps = {
   kind: 'axis-line';
   axis: 'horizontal' | 'vertical';
-  to: IRAxisLineTarget | string;
+  to: InputAxisLineTarget;
   label?: IRStepLabel;
   children?: ReactNode;
 };
@@ -222,7 +259,7 @@ export type AxisLineStepProps = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"BendStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={127}>BendStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"BendStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={121}>BendStepProps</ApiSourceLink>
 
 Supports symmetric bends and asymmetric bends or loops. Explicit out/in angles take precedence during compilation. With all three omitted, defaults to a symmetric left bend. When `from == to`, explicit out/in angles create a loop
 
@@ -268,7 +305,7 @@ export type BendStepProps = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"CirclePathStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={173}>CirclePathStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"CirclePathStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={167}>CirclePathStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -308,7 +345,7 @@ export type CirclePathStepProps = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"CubicStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={107}>CubicStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"CubicStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={101}>CubicStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -346,7 +383,7 @@ export type CubicStepProps = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"CurveStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={93}>CurveStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"CurveStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={87}>CurveStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -382,7 +419,7 @@ export type CurveStepProps = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"CycleStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={87}>CycleStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"CycleStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={81}>CycleStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -410,7 +447,7 @@ export type CycleStepProps = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"EllipsePathStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={191}>EllipsePathStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"EllipsePathStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={185}>EllipsePathStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -450,7 +487,7 @@ export type EllipsePathStepProps = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"FoldStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={69}>FoldStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"FoldStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={63}>FoldStepProps</ApiSourceLink>
 
 `-|` and `|-` use one turn; `-|-` and `|-|` use two turns, with normalized `fraction` controlling the middle leg
 
@@ -515,7 +552,7 @@ export type FoldStepProps = FoldStepBaseProps &
 
 </DocTabs>
 
-#### <ApiSourceLink label={"LineStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={28}>LineStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"LineStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={22}>LineStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -549,7 +586,7 @@ export type LineStepProps = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"MoveStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={20}>MoveStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"MoveStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={14}>MoveStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -579,7 +616,7 @@ export type MoveStepProps = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"RectangleStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={209}>RectangleStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"RectangleStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={203}>RectangleStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -613,7 +650,7 @@ export type RectangleStepProps = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"SmoothStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={225}>SmoothStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"SmoothStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={219}>SmoothStepProps</ApiSourceLink>
 
 The cursor is the implicit first knot; the curve passes through each entry in `points`, using centripetal Catmull–Rom converted to cubics. A preceding step must set the cursor, which ends at the last point. `tension` defaults to 1; values below 1 tighten the curve and values above 1 increase the bulge
 
@@ -1031,7 +1068,7 @@ export declare const samplePathRoute: (
 
 ## Direct calls
 
-#### <ApiSourceLink label={"path"} path={"packages/kernel/vanilla/src/normalize/factory.ts"} startLine={26}>path</ApiSourceLink> / <ApiSourceLink label={"InputPath"} path={"packages/kernel/vanilla/src/normalize/element/path/path.ts"} startLine={107}>InputPath</ApiSourceLink>
+#### <ApiSourceLink label={"path"} path={"packages/kernel/vanilla/src/normalize/factory.ts"} startLine={40}>path</ApiSourceLink> / <ApiSourceLink label={"InputPath"} path={"packages/kernel/vanilla/src/normalize/element/path/path.ts"} startLine={114}>InputPath</ApiSourceLink>
 
 **Common members**
 
@@ -1039,19 +1076,19 @@ export declare const samplePathRoute: (
 
 | Member          | Type                                       | Default | Description                                                                                                                                           |
 | --------------- | ------------------------------------------ | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `animations?`   | `InputPathConfig['animations']`            | —       | Passed to emitted primitives without affecting layout or bounds. Not inherited across scopes.                                                         |
+| `animations?`   | `PathOptions['animations']`                | —       | Passed to emitted primitives without affecting layout or bounds. Not inherited across scopes.                                                         |
 | `arrow?`        | `IRPath['arrow'] \| '->' \| '<-' \| '<->'` | —       | Endpoint arrow configuration, or a direction shorthand enabling the start, end, or both arrows                                                        |
 | `authoring?`    | `unknown`                                  | —       | Authoring metadata retained during normalization; excluded from Core IR                                                                               |
 | `cornerRadius?` | `number`                                   | —       | Geometric corner radius applied to line-to-line joints. Distinct from `lineJoin`, which only styles stroke corners. Omitted fields keep sharp joints. |
 | `id?`           | `string`                                   | —       | Stable reference ID for the emitted primitive.                                                                                                        |
 | `kind?`         | `string & {} \| "stroke"`                  | —       | Path provider name. Omitted means built-in `stroke`.                                                                                                  |
 | `kindOptions?`  | `Record<string, JsonValue>`                | —       | JSON-safe option object consumed by the selected path provider.                                                                                       |
-| `label?`        | `InputPathConfig['label']`                 | —       | Host label attached to this path-like relation.                                                                                                       |
-| `marks?`        | `InputPathConfig['marks']`                 | —       | Marks placed by step parameters or cumulative length on original or rounded geometry; direction follows the path tangent.                             |
+| `label?`        | `PathOptions['label']`                     | —       | Host label attached to this path-like relation.                                                                                                       |
+| `marks?`        | `PathOptions['marks']`                     | —       | Marks placed by step parameters or cumulative length on original or rounded geometry; direction follows the path tangent.                             |
 | `meta?`         | `Record<string, JsonValue>`                | —       | Copied unchanged to Scene primitives without affecting compilation.                                                                                   |
 | `rotate?`       | `number`                                   | —       | Rotate the whole path around its bounding-box center. Endpoints resolve before rotation wraps the resulting geometry.                                 |
 | `scale?`        | `number \| { x: number; y: number; }`      | —       | Scale the whole path around its bounding-box center. Applied with rotate around the same center.                                                      |
-| `style?`        | `InputPathConfig['style']`                 | —       | Path visual overrides; fields independently override inherited defaults.                                                                              |
+| `style?`        | `PathOptions['style']`                     | —       | Path visual overrides; fields independently override inherited defaults.                                                                              |
 | `type`          | `"path"`                                   | —       | Discriminator marking this child as a path.                                                                                                           |
 | `zIndex?`       | `number`                                   | —       | Sibling stacking order. Higher draws on top; ties keep source order. Defaults to 0.                                                                   |
 
@@ -1090,16 +1127,28 @@ Common members apply to every branch; a value must also satisfy at least one bra
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export declare const path: (config: InputPathConfig) => InputPath;
+export declare const path: (options: PathOptions) => InputPath;
 
-export type InputPath = Pick<IRPath, 'type'> & InputPathConfig;
+export type InputPath = Pick<IRPath, 'type'> & PathOptions;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InputStep"} path={"packages/kernel/vanilla/src/normalize/element/path/path.ts"} startLine={78}>InputStep</ApiSourceLink>
+#### <ApiSourceLink label={"PathOptions"} path={"packages/kernel/vanilla/src/normalize/element/path/path.ts"} startLine={101}>PathOptions</ApiSourceLink>
+
+```ts
+export type PathOptions = Omit<IRPath, 'type' | 'children' | 'arrow'> & {
+  arrow?: IRPath['arrow'] | '->' | '<-' | '<->';
+  authoring?: unknown;
+} & RequireExactlyOne<{
+    children: ReadonlyArray<InputStep>;
+    way: WayDSL;
+  }>;
+```
+
+#### <ApiSourceLink label={"InputStep"} path={"packages/kernel/vanilla/src/normalize/element/path/path.ts"} startLine={85}>InputStep</ApiSourceLink>
 
 ```ts
 export type InputStep =

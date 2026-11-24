@@ -1,58 +1,15 @@
-import type { IRScope, IRTransform } from '@retikz/core';
+import type { ScopeOptions } from '@retikz/vanilla';
 import type { FC, ReactNode } from 'react';
 
-import type { HydrationEventProps, ScopeStyleProps } from '../protocol';
+import type { HydrationEventProps } from '../protocol';
 import { TIKZ_SCOPE } from '../protocol';
 
 /**
  * 为一组图元设置局部样式、命名空间、变换、裁剪和引用包络
  */
-export type ScopeProps = ScopeStyleProps &
+export type ScopeProps = ScopeOptions &
   HydrationEventProps & {
-    /** 仅覆盖已声明字段并由后代 Composite 继承的局部 Theme */
-    theme?: IRScope['theme'];
-    /**
-     * 可选 scope 引用 id；设值后可把整个 scope 的包络当作引用目标
-     * @description 外部 path / position 可用 `scope.id` / `scope.id.<anchor>` / `scope.id.<deg>` 引用该包络；
-     *   这个外部句柄不受 `localNamespace` 影响
-     */
-    id?: string;
-    /**
-     * 是否创建本地命名空间；true 时子节点 id 不向外层作用域公开
-     * @description 子节点 id 只在本 scope 内可引用；外部无法引用这些子节点 id，但 `scope.id` 自己仍可从外层引用
-     * @default false
-     */
-    localNamespace?: boolean;
-    /**
-     * 局部 transform 列表；遵循 SVG transform list，最后一项先作用于局部点
-     * @description 支持 translate / polar-translate / at-translate / offset-translate / between-translate / rotate / scale
-     */
-    transforms?: Array<IRTransform>;
-    /**
-     * Scope 在父坐标系中的原点位置或最终锚点对齐
-     * @description 坐标位置在局部 transforms 外侧应用；anchor 形式将变换后包络的 selfAnchor 对齐 target，selfAnchor 缺省为 center
-     * @default [0, 0]
-     */
-    position?: IRScope['position'];
-    /**
-     * 显式栈序：作用于 scope 整体在父层的位置（不影响 scope 内部子元素相对栈序）；缺省 0 = 声明顺序
-     * @default 0
-     */
-    zIndex?: IRScope['zIndex'];
-    /** 裁剪区（rect / circle / ellipse / polygon / path / compound / custom，scope 局部坐标）；设值则裁剪 scope 内全部子元素 */
-    clip?: IRScope['clip'];
-    /**
-     * 通过 id 引用整组图元时使用的包络形状；支持矩形或圆形，默认使用轴对齐矩形包络
-     * @default 'rectangle'
-     */
-    boundingShape?: IRScope['boundingShape'];
-    /** 用户自定义元数据；可在事件 / 水合上下文中读取，不参与布局，也不下传给子元素。须为 JSON 可序列化对象 */
-    meta?: IRScope['meta'];
-    /** scope 整体的时间轴动画；渲染端播放或降级为静态，不参与布局，也不下传给子元素 */
-    animations?: IRScope['animations'];
-    /** 收集 JSX 时保留的作者元数据，不进入 Core IR */
-    authoring?: unknown;
-    /** scope 子节点：嵌套 Node / Path / Coordinate / Scope */
+    /** 当前作用域内按声明顺序收集的 JSX 图元 */
     children?: ReactNode;
   };
 

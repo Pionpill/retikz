@@ -1,11 +1,5 @@
-import type {
-  IRAxisLineTarget,
-  IRControlPoint,
-  IRStepAnisotropicRadius,
-  IRStepRadius,
-  IRTarget,
-  IRStepLabel,
-} from '@retikz/core';
+import type { IRControlPoint, IRStepAnisotropicRadius, IRStepRadius, IRStepLabel } from '@retikz/core';
+import type { InputAxisLineTarget, InputTarget } from '@retikz/vanilla';
 import type { FC, ReactNode } from 'react';
 
 import { TIKZ_STEP } from '../protocol';
@@ -14,7 +8,7 @@ import { TIKZ_STEP } from '../protocol';
  * React DSL 层的 target 类型：core 对象 `IRTarget` + 字符串 shorthand（`'A'` / `'A.north'` / `'A.30'` / `'+dx,dy'`）
  * @description 对象形态适合精确描述节点锚点、坐标和相对位移；字符串 shorthand 适合手写 JSX 时快速引用常见目标
  */
-export type DslTarget = IRTarget | string;
+export type DslTarget = InputTarget;
 
 /** Move action：移动游标但不绘制（TikZ `(A)`） */
 export type MoveStepProps = {
@@ -43,7 +37,7 @@ export type AxisLineStepProps = {
   /** 保持的当前 host 局部轴 */
   axis: 'horizontal' | 'vertical';
   /** 投影目标，仅支持笛卡尔坐标、NodeTarget 或对应字符串 shorthand */
-  to: IRAxisLineTarget | string;
+  to: InputAxisLineTarget;
   /** 边标注 */
   label?: IRStepLabel;
   /** sugar 形态 */

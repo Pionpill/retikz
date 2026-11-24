@@ -59,7 +59,7 @@ runtime/     Layout、hydration handler 收集、Vanilla processing 调度与 Re
 - Kernel 组件不渲染真实 DOM，由 builder 同步遍历 props 后丢弃。
 - 禁止在 Kernel 组件中使用 React hooks、`React.Children.map` 或 `cloneElement`；children 遍历由 builder 负责。
 - 每个 Kernel 组件对应一个 Vanilla Input；新增 prop 必须先改 core schema 与 Vanilla Input，再由 React props 类型同步暴露。
-- Props 类型优先从 Vanilla Input 派生；只有无 authoring 差异的持久化字段才直接复用 schema 推导的 IR 类型，不手写平行 schema。
+- Props 优先从对应 Vanilla 工厂的 Options 派生；无对应工厂时复用已有 Vanilla Input 或其字段；只有无 authoring 差异的持久化字段才直接复用 schema 推导的 IR 类型，不手写平行 schema。
 - 必须设置 `displayName`，builder 以稳定 displayName 识别节点类型。
 
 ## Sugar 组件

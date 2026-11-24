@@ -1542,8 +1542,7 @@ const projectSchemaMembers = (
     if (!field) throw new Error(`Missing ${schemaName}.${member.name} Schema field`);
 
     const english = schemaDescription(field);
-    if (Boolean(english) !== Boolean(chinese))
-      throw new Error(`Unpaired ${schemaName}.${member.name} Schema description`);
+    if (english && !chinese) throw new Error(`Unpaired ${schemaName}.${member.name} Schema description`);
 
     return {
       ...member,

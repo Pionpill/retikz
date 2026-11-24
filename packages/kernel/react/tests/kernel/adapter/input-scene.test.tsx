@@ -41,21 +41,22 @@ describe('React JSX Input 场景', () => {
     ]);
   });
 
-  it('当 JSX 同时提供显式步骤和 way 时只采用步骤', () => {
-    const input = createInputScene(
-      <Path way={[]}>
-        <Step to="A" />
-        <Step to="B" />
+  it('JSX 子步骤和 way 两种写法归一为相同的路径', () => {
+    const steps = createInputScene(
+      <Path>
+        <Step to={[0, 0]} />
+        <Step to={[100, 0]} />
       </Path>,
     );
-    expect(normalizeScene(input).ir.children).toMatchObject([
-      {
-        children: [
-          { kind: 'move', to: { id: 'A' } },
-          { kind: 'line', to: { id: 'B' } },
-        ],
-      },
-    ]);
+    const shorthand = createInputScene(
+      <Path
+        way={[
+          [0, 0],
+          [100, 0],
+        ]}
+      />,
+    );
+    expect(normalizeScene(shorthand).ir).toEqual(normalizeScene(steps).ir);
   });
   it.each(['->', '<-', '<->'] as const)('Path 与 Draw 的 %s 简写统一由 Vanilla 转换', arrow => {
     const endpoints = arrow === '->' ? { end: {} } : arrow === '<-' ? { start: {} } : { start: {}, end: {} };

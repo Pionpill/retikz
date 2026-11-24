@@ -5,6 +5,8 @@ description: Organize graphics as framework-neutral InputScene data, normalize a
 
 `@retikz/vanilla` is the API foundation shared by all framework adapters. It organizes ordinary TypeScript data as an `InputScene`, normalizes that input into Core `IRScene`, and runs shared processing. React, Vue, and other framework packages only collect their framework input and host the result.
 
+Import factory option types from the package root: `node(options)` accepts `NodeOptions`, `coordinate(options)` accepts `CoordinateOptions`, and `path(options)` accepts `PathOptions`. In `scope(options, children)`, `ScopeOptions` excludes the children passed separately. Pass either `SceneOptions` or a child array to `scene(input)`.
+
 The package root works safely in SSR, build scripts, and other frameworks. Its default text measurer probes browser Canvas when measurement is requested. Browser SVG and Canvas mounting live at `@retikz/vanilla/dom`. IR, schemas, geometry, and compile rules belong to `@retikz/core`; backend output belongs to `@retikz/render`.
 
 Applications use `SceneRuntime` or `compileToScene` from the package root.

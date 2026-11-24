@@ -1,5 +1,7 @@
 /** 经核对的 Scope API 英文说明，标识符保持源码原样 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  '创建作用域时传给 scope 的选项；子图元单独传入': 'Options for scope; pass children separately',
+  '当前作用域内按声明顺序收集的 JSX 图元': 'JSX children collected in declaration order',
   'Scope 在父坐标系中的原点位置或最终锚点对齐': 'Scope origin position in parent coordinates or final anchor alignment',
   '坐标位置在局部 transforms 外侧应用；anchor 形式将变换后包络的 selfAnchor 对齐 target，selfAnchor 缺省为 center':
     'A coordinate position is applied outside local transforms. The anchor form aligns selfAnchor on the transformed envelope to target; selfAnchor defaults to center',

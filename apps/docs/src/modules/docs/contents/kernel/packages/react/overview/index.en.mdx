@@ -5,6 +5,8 @@ description: Author Kernel and Sugar components in JSX, construct a Vanilla Inpu
 
 `@retikz/react` is the primary entry for React applications. You declare figures with JSX components such as `<Layout>`, `<Node>`, `<Path>`, `<Scope>`, and `<Draw>`; its collector turns props and children into an `@retikz/vanilla` `InputScene`, then `<Layout>` hosts the processed SVG or Canvas result.
 
+When wrapping a JSX component, import its props from `@retikz/react`. `CoordinateProps` is identical to Vanilla’s `CoordinateOptions`; `NodeProps` also accepts hydration events and text children. For a step-based path, provide either `way` or `children`, never both. React takes JSX children; the Vanilla factory takes a step array. A custom React path whose definition supplies the geometry can omit both, as in boundary-mode Ribbon.
+
 It owns React authoring and result hosting rather than new drawing semantics. IR, schemas, geometry, and compilation belong to `@retikz/core`; Input normalization, composite dependency resolution, the Core Computation, and session processing state belong to `@retikz/vanilla`.
 
 The package root exposes components, Props, and authoring protocols. `Layout` handles style selection, component-name lookup, and event collection internally. The source helpers `pickScopeStyle`, `getDisplayName`, and `collectHydrationHandlers` are not package-root exports.
@@ -81,14 +83,14 @@ export const Draw: FC<DrawProps> = props => <Path {...props} />;
     {
       label: 'Node IR marker implementation',
       path: 'packages/kernel/react/src/kernel/components/Node.tsx',
-      startLine: 76,
-      endLine: 82,
+      startLine: 14,
+      endLine: 20,
     },
     {
       label: 'Draw forwarding input to Path',
       path: 'packages/kernel/react/src/sugar/path/Draw.tsx',
-      startLine: 25,
-      endLine: 28,
+      startLine: 15,
+      endLine: 19,
     },
   ]}
 />

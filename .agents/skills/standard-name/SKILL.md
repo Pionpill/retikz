@@ -45,7 +45,8 @@ description: 新增、移动、拆分或审查 Retikz 源码目录、文件、�
 
 - 前缀必须描述整个类型在所属领域内的保证，不能因为个别字段已处理就给整个对象加阶段前缀；阶段词统一见 [分层命名](references/layers.md#按语义阶段命名符号)
 - 主体及后缀明确数据用途，如 `MergedNodeStyle`、`CompiledNodeLayout`；结构角色如 `NodeResolveContext`、`NodeDefinition` 无需额外阶段前缀。避免用 `Data`、`Info` 等泛词掩盖真实用途
-- 输入类型统一使用 `InputXxx`，包括 authoring、操作参数、Definition 和 Options 输入；用途与角色保留在后缀，如 `InputNodeLayout`、`InputNodeOptions`、`InputNodeDefinition`，不使用 `XxxInput`。此前缀不限定所属包，也不表示输入未经类型检查；仅在需要独立输入契约时定义类型
+- 除下述 Vanilla 作者工厂与 React 组件外，输入类型统一使用 `InputXxx`，包括 authoring、操作参数、Definition 和 Options 输入；用途与角色保留在后缀，如 `InputNodeLayout`、`InputNodeOptions`、`InputNodeDefinition`，不使用 `XxxInput`。此前缀不限定所属包，也不表示输入未经类型检查；仅在需要独立输入契约时定义类型
+- Vanilla 作者工厂的选项对象命名为 `XxxOptions`，形参用 `options`，构造结果仍用 `InputXxx`。React 组件输入命名为 `XxxProps`；有对应工厂时从其 Options 派生，只补充或替换 JSX 特有字段，无对应工厂时不另造 Options
 - 仅为实际存在且需要区分的形态命名，不为凑齐命名结构新增类型、包装或状态；既有 `IRXxx`、`InputXxx`、`BuiltinXxx` 等专用角色按分层规则使用，不堆叠同义限定词
 - 函数仍用“动作 + 对象”，如 `mergeNodeStyle`；变量按实际内容命名，如 `mergedNodeStyle`，局部上下文明确时可简化。枚举成员、常量、目录和文件继续遵循各自形式，不机械套用类型组合
 

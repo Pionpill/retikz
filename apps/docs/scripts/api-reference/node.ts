@@ -13,6 +13,7 @@ const repositoryRoot = path.resolve(import.meta.dirname, '../../../..');
 /** 节点家族的公开入口切片；类型和说明仍从源码提取 */
 const nodeEntries: ReadonlyArray<{ owner: string } & Omit<ApiReferenceEntry, 'source' | 'title'>> = [
   {
+    fullMemberSymbols: ['NodeProps', 'CoordinateProps'],
     owner: 'react',
     symbols: ['Node', 'NodeProps', 'Text', 'TextProps', 'Coordinate', 'CoordinateProps'],
     symbolPairs: [
@@ -52,7 +53,7 @@ const nodeEntries: ReadonlyArray<{ owner: string } & Omit<ApiReferenceEntry, 'so
       },
       InputCoordinate: { position: "IRCoordinate['position']" },
     },
-    symbols: ['node', 'coordinate', 'InputNode', 'InputCoordinate'],
+    symbols: ['node', 'coordinate', 'NodeOptions', 'CoordinateOptions', 'InputNode', 'InputCoordinate'],
   },
   {
     owner: 'core',

@@ -394,10 +394,10 @@ const inputNodeFromProps = (props: NodeProps): InputNode => {
 
 /** 把 <Path> props 组装为 Vanilla InputPath */
 const inputPathFromProps = (props: PathProps): InputPath | IRPathBase => {
-  const fields = pickDefined(props, PATH_FIELDS);
-  if (props.children !== undefined) {
-    return { ...fields, type: 'path', authoring: props.authoring, children: readPathChildren(props.children) };
+  if (props.children === undefined && props.way === undefined) {
+    return { ...pickDefined(props, PATH_FIELDS), type: 'path' };
   }
+  const fields = pickDefined(props, PATH_FIELDS);
   if (props.way !== undefined) {
     return {
       ...fields,
@@ -406,14 +406,7 @@ const inputPathFromProps = (props: PathProps): InputPath | IRPathBase => {
       ...(props.authoring === undefined ? {} : { authoring: props.authoring }),
     };
   }
-  const { arrow, ...path } = fields;
-  if (typeof arrow === 'string' || props.authoring !== undefined) {
-    throw new RetikzReactError(
-      RetikzReactErrorCode.Kernel,
-      '<Path> with authoring or arrow shorthand requires children or way',
-    );
-  }
-  return { ...path, type: 'path', ...(arrow === undefined ? {} : { arrow }) };
+  return { ...fields, type: 'path', authoring: props.authoring, children: readPathChildren(props.children) };
 };
 
 /** 把 <Coordinate> props 组装为 Vanilla 命名坐标输入 */

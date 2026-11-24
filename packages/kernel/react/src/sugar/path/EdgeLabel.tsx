@@ -4,15 +4,7 @@ import type { FC } from 'react';
 import { TIKZ_EDGE_LABEL } from '../../kernel/protocol';
 
 /** 以子文本声明路径段标签，并配置沿段位置、偏移和描边中断 */
-export type EdgeLabelProps = {
-  /** 段上位置（TikZ `midway` / `near start` / `near end`），缺省 'midway' */
-  position?: IRStepLabel['position'];
-  /** 相对段方向 / 视觉方位的偏移侧，缺省 'top' */
-  side?: IRStepLabel['side'];
-  /** 是否沿采样点切线旋转标签 */
-  sloped?: IRStepLabel['sloped'];
-  /** 是否请求在兼容的 Stroke 宿主上断开描边 */
-  interrupt?: IRStepLabel['interrupt'];
+export type EdgeLabelProps = Pick<IRStepLabel, 'position' | 'side' | 'sloped' | 'interrupt'> & {
   /** 标签文字内容；必须是字符串 */
   children: string;
 };

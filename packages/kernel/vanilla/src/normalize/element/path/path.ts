@@ -98,7 +98,7 @@ export type InputStep =
   | InputSmoothStep;
 
 /** 具名路径构造函数的配置，必须选择一种步骤来源 */
-export type InputPathConfig = Omit<IRPath, 'type' | 'children' | 'arrow'> & {
+export type PathOptions = Omit<IRPath, 'type' | 'children' | 'arrow'> & {
   /** 端点箭头配置，或用方向字符串快捷启用起点、终点或两端箭头 */
   arrow?: IRPath['arrow'] | '->' | '<-' | '<->';
   /** 归一化时保留的作者元数据，不进入 Core IR */
@@ -111,7 +111,7 @@ export type InputPathConfig = Omit<IRPath, 'type' | 'children' | 'arrow'> & {
   }>;
 
 /** 作者侧路径输入 */
-export type InputPath = Pick<IRPath, 'type'> & InputPathConfig;
+export type InputPath = Pick<IRPath, 'type'> & PathOptions;
 
 /** 将方向简写转换为端点箭头对象，供 Kernel 与领域路径作者入口复用 */
 export const normalizePathArrow = (arrow: InputPath['arrow']): IRPath['arrow'] =>

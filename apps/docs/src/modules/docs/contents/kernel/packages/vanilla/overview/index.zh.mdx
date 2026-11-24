@@ -5,6 +5,8 @@ description: 用无框架 InputScene 组织图形，并在根入口处理归一�
 
 `@retikz/vanilla` 是所有框架适配器共用的 API 基础包。它用普通 TypeScript 数据组织 `InputScene`，将其归一为 Core `IRScene`，再运行共享的 processing；React、Vue 等框架包只需要负责各自的输入收集和宿主接线。
 
+Vanilla 工厂的选项类型由包根导出：`node(options)` 用 `NodeOptions`，`coordinate(options)` 用 `CoordinateOptions`，`path(options)` 用 `PathOptions`。`scope(options, children)` 的 `ScopeOptions` 不含子图元；`scene(input)` 可以接收 `SceneOptions` 或直接接收子图元数组。
+
 包根可安全用于 SSR、构建脚本或其它框架。默认文字测量器在实际测量时探测浏览器 Canvas；浏览器 SVG / Canvas 挂载位于 `@retikz/vanilla/dom` 子入口。IR、schema、几何与编译规则属于 `@retikz/core`，后端输出属于 `@retikz/render`。
 
 应用从包根调用 `SceneRuntime` 或 `compileToScene`。

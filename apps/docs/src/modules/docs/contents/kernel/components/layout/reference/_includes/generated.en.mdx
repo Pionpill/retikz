@@ -258,7 +258,7 @@ export const LayoutRuntimeMode = Object.freeze({
 export type LayoutRuntimeMode = ValueOf<typeof LayoutRuntimeMode>;
 ```
 
-#### <ApiSourceLink label={"scene"} path={"packages/kernel/vanilla/src/normalize/factory.ts"} startLine={44}>scene</ApiSourceLink>
+#### <ApiSourceLink label={"scene"} path={"packages/kernel/vanilla/src/normalize/factory.ts"} startLine={58}>scene</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -266,10 +266,10 @@ export type LayoutRuntimeMode = ValueOf<typeof LayoutRuntimeMode>;
 
 <ApiTable variant="parameters">
 
-| Category   | Name    | Type / signature                                                  | Description |
-| ---------- | ------- | ----------------------------------------------------------------- | ----------- |
-| Parameters | `input` | `InputScene['children'] \| Omit<InputScene, 'type' \| 'version'>` | —           |
-| Returns    | —       | `InputScene`                                                      | —           |
+| Category   | Name    | Type / signature                         | Description |
+| ---------- | ------- | ---------------------------------------- | ----------- |
+| Parameters | `input` | `InputScene['children'] \| SceneOptions` | —           |
+| Returns    | —       | `InputScene`                             | —           |
 
 </ApiTable>
 
@@ -278,7 +278,7 @@ export type LayoutRuntimeMode = ValueOf<typeof LayoutRuntimeMode>;
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export declare const scene: (input: InputScene['children'] | Omit<InputScene, 'type' | 'version'>) => InputScene;
+export declare const scene: (input: InputScene['children'] | SceneOptions) => InputScene;
 ```
 
 </DocTab>
@@ -377,6 +377,36 @@ export type InputLayer = {
   bindings?: SceneInputBindings;
   config?: ProcessOptions;
 };
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"SceneOptions"} path={"packages/kernel/vanilla/src/normalize/factory.ts"} startLine={16}>SceneOptions</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member        | Type                                                                     | Default | Description                                                                    |
+| ------------- | ------------------------------------------------------------------------ | ------- | ------------------------------------------------------------------------------ |
+| `animations?` | `InputScene['animations']`                                               | —       | Root tracks can animate the viewBox.                                           |
+| `authoring?`  | `unknown`                                                                | —       | Authoring metadata retained during normalization; excluded from Core IR        |
+| `children`    | `ReadonlyArray<InputChild>`                                              | —       | Children normalized in declaration order                                       |
+| `theme?`      | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }` | —       | Root theme selection; sets only the name and mode fields to override.          |
+| `viewBox?`    | `{ x: number; y: number; width: number; height: number; }`               | —       | Explicit framing; when omitted, bounds are computed from content plus padding. |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type SceneOptions = Omit<InputScene, 'type' | 'version'>;
 ```
 
 </DocTab>

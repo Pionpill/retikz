@@ -1,5 +1,9 @@
 /** 经审阅的节点 API 英文说明，代码标识符保持原样 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  '创建节点时传给 node 的选项': 'Options accepted by node',
+  '创建命名坐标时传给 coordinate 的选项': 'Options accepted by coordinate',
+  '节点文字或带样式的 Text 子元素；显式 text 优先':
+    'Node text or styled Text children; an explicit text prop takes precedence',
   形状包围内容所需的未旋转外接盒几何: 'Unrotated bounding-box geometry required for a shape to enclose its content',
   '根据包含 padding 的内容半轴和 params，计算完整形状的未旋转外接盒半轴及中心偏移':
     'Compute the unrotated bounding-box half-axes and center offset of the complete shape from the content half-axes including padding and the shape parameters',

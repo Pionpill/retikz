@@ -412,7 +412,7 @@ export const referenceGroups: Readonly<Partial<Record<string, ReadonlyArray<Refe
         zh: '直接调用',
         en: 'Direct calls',
       },
-      members: ['InputLayer', 'InputScene'],
+      members: ['InputLayer', 'SceneOptions', 'InputScene'],
       schemas: [],
     },
     {
@@ -438,7 +438,7 @@ export const referenceGroups: Readonly<Partial<Record<string, ReadonlyArray<Refe
         zh: '直接调用',
         en: 'Direct calls',
       },
-      members: ['node / InputNode', 'coordinate / InputCoordinate'],
+      members: ['node / InputNode', 'NodeOptions', 'coordinate / InputCoordinate', 'CoordinateOptions'],
       schemas: [],
     },
     {
@@ -530,7 +530,7 @@ export const referenceGroups: Readonly<Partial<Record<string, ReadonlyArray<Refe
         zh: '直接调用',
         en: 'Direct calls',
       },
-      members: ['path / InputPath', 'InputStep'],
+      members: ['path / InputPath', 'PathOptions', 'InputStep'],
       schemas: [],
     },
     {
@@ -602,7 +602,7 @@ export const referenceGroups: Readonly<Partial<Record<string, ReadonlyArray<Refe
         zh: '直接调用',
         en: 'Direct calls',
       },
-      members: ['scope / InputScope'],
+      members: ['scope / InputScope', 'ScopeOptions'],
       schemas: [],
     },
     {

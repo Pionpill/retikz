@@ -19,6 +19,7 @@ export const drawApiReferenceConfigs: ReadonlyArray<ApiReferencePackageConfig> =
       {
         source: path.resolve(repositoryRoot, 'packages/kernel/react/src/index.ts'),
         title: { zh: '`@retikz/react`', en: '`@retikz/react`' },
+        fullMemberSymbols: ['PathProps', 'DrawProps'],
         symbolPairs: [
           ['Path', 'PathProps'],
           ['Draw', 'DrawProps'],
@@ -62,9 +63,10 @@ export const drawApiReferenceConfigs: ReadonlyArray<ApiReferencePackageConfig> =
         source: path.resolve(repositoryRoot, 'packages/kernel/vanilla/src/index.ts'),
         title: { zh: '`@retikz/vanilla`', en: '`@retikz/vanilla`' },
         fullMemberSymbols: ['InputPath'],
+        declarationOnlySymbols: ['PathOptions'],
         symbolPairs: [['path', 'InputPath']],
         omitPairedCallDetails: true,
-        symbols: ['path', 'InputPath', 'InputStep', 'DrawWay', 'WayDSL', 'WayItem'],
+        symbols: ['path', 'PathOptions', 'InputPath', 'InputStep', 'DrawWay', 'WayDSL', 'WayItem'],
       },
     ],
     translate: translateDrawApiReference,

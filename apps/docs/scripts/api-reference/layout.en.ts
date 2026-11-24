@@ -1,5 +1,6 @@
 /** 经核对的 Layout API 英文说明，签名与标识符保持源码原样 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  '创建场景时传给 scene 的对象选项': 'Object options accepted by scene',
   沿路径放置的标记定义: 'Definitions of markers placed along a path',
   '自定义文字测量；省略时使用 Vanilla 的环境测量与估算降级':
     'Custom text measurement; omitted uses Vanilla environment measurement with estimation when unavailable',

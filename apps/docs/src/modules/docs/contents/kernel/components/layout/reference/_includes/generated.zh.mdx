@@ -258,7 +258,7 @@ export const LayoutRuntimeMode = Object.freeze({
 export type LayoutRuntimeMode = ValueOf<typeof LayoutRuntimeMode>;
 ```
 
-#### <ApiSourceLink label={"scene"} path={"packages/kernel/vanilla/src/normalize/factory.ts"} startLine={44}>scene</ApiSourceLink>
+#### <ApiSourceLink label={"scene"} path={"packages/kernel/vanilla/src/normalize/factory.ts"} startLine={58}>scene</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -266,10 +266,10 @@ export type LayoutRuntimeMode = ValueOf<typeof LayoutRuntimeMode>;
 
 <ApiTable variant="parameters">
 
-| 类别   | 名称    | 类型 / 签名                                                       | 说明 |
-| ------ | ------- | ----------------------------------------------------------------- | ---- |
-| 参数   | `input` | `InputScene['children'] \| Omit<InputScene, 'type' \| 'version'>` | —    |
-| 返回值 | —       | `InputScene`                                                      | —    |
+| 类别   | 名称    | 类型 / 签名                              | 说明 |
+| ------ | ------- | ---------------------------------------- | ---- |
+| 参数   | `input` | `InputScene['children'] \| SceneOptions` | —    |
+| 返回值 | —       | `InputScene`                             | —    |
 
 </ApiTable>
 
@@ -278,7 +278,7 @@ export type LayoutRuntimeMode = ValueOf<typeof LayoutRuntimeMode>;
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export declare const scene: (input: InputScene['children'] | Omit<InputScene, 'type' | 'version'>) => InputScene;
+export declare const scene: (input: InputScene['children'] | SceneOptions) => InputScene;
 ```
 
 </DocTab>
@@ -377,6 +377,36 @@ export type InputLayer = {
   bindings?: SceneInputBindings;
   config?: ProcessOptions;
 };
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"SceneOptions"} path={"packages/kernel/vanilla/src/normalize/factory.ts"} startLine={16}>SceneOptions</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员          | 类型                                                                     | 默认值 | 说明                                                            |
+| ------------- | ------------------------------------------------------------------------ | ------ | --------------------------------------------------------------- |
+| `animations?` | `InputScene['animations']`                                               | —      | 场景根动画轨道，可包含 viewBox 取景动画；省略时不添加根动画轨道 |
+| `authoring?`  | `unknown`                                                                | —      | 归一化时保留的作者元数据，不进入 Core IR                        |
+| `children`    | `ReadonlyArray<InputChild>`                                              | —      | 按声明顺序归一的子节点                                          |
+| `theme?`      | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }` | —      | 场景根主题选择；只填写需要覆盖的 name 与 mode 字段              |
+| `viewBox?`    | `{ x: number; y: number; width: number; height: number; }`               | —      | 显式指定取景范围；省略时根据内容范围与留白自动计算              |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type SceneOptions = Omit<InputScene, 'type' | 'version'>;
 ```
 
 </DocTab>

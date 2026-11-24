@@ -5,6 +5,8 @@ description: 用 JSX 组织 Kernel 与 Sugar 组件，构造 Vanilla InputScene�
 
 `@retikz/react` 是 React 应用的首选入口。你用 `<Layout>`、`<Node>`、`<Path>`、`<Scope>`、`<Draw>` 等 JSX 组件声明图形；包内 collector 把 props 与 children 收集为 `@retikz/vanilla` 的 `InputScene`，再由 `<Layout>` 宿主 processing 结果的 SVG 或 Canvas。
 
+为组件封装 JSX 时，从 `@retikz/react` 导入对应的 Props。`CoordinateProps` 与 Vanilla 的 `CoordinateOptions` 相同；`NodeProps` 还接受水合事件和文字子节点。用步骤构造路径时，`way` 与 `children` 必须二选一：React 接受 JSX 子步骤，Vanilla 工厂接受步骤数组。React 自定义路径由定义提供几何时（如边界模式的 Ribbon），可以两者都不传。
+
 它负责 React 写法和结果宿主，不另造图形语义：IR、schema、几何与编译规则属于 `@retikz/core`；Input 归一、composite 依赖解析、Core Computation 与 session processing 状态属于 `@retikz/vanilla`。
 
 包根提供组件、Props 和作者协议；样式筛选、组件名称读取与事件收集由 `Layout` 内部完成。`pickScopeStyle`、`getDisplayName` 和 `collectHydrationHandlers` 是源码中的内部助手，不从包根导出。
@@ -81,14 +83,14 @@ export const Draw: FC<DrawProps> = props => <Path {...props} />;
     {
       label: 'Node 的 IR 标记实现',
       path: 'packages/kernel/react/src/kernel/components/Node.tsx',
-      startLine: 76,
-      endLine: 82,
+      startLine: 14,
+      endLine: 20,
     },
     {
       label: 'Draw 将输入透传给 Path',
       path: 'packages/kernel/react/src/sugar/path/Draw.tsx',
-      startLine: 25,
-      endLine: 28,
+      startLine: 15,
+      endLine: 19,
     },
   ]}
 />
