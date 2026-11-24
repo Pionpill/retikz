@@ -171,11 +171,10 @@ For an `InputScene`, `SceneRuntime` normalizes authoring shorthand to IR, resolv
 | ---------------- | --------------------------------- | ----------------------------------------------------------- |
 | `renderToSvg`    | Produce an `<svg>` string for SSR | `string`                                                    |
 | `mountSceneView` | Mount SVG or Canvas by `renderer` | `SceneView<SVGSVGElement>` / `SceneView<HTMLCanvasElement>` |
-| `hydrate`        | Bind handlers to SSR / existing SVG | `HydrationController`    |
 
 Import the DOM mount APIs from `@retikz/vanilla/dom`. Call `mountSceneView(container, source)` with IR or authored input. IR is mounted directly; authored input is normalized once with its embed definitions and instance data. SVG is the default; pass `{ renderer: 'canvas' }` for Canvas. Replace the scene with `view.update(ir, options?)` or `view.updateInput(input, options?)`. A successful transaction publishes the scene, artifacts, and render configuration together; failure publishes no new frame. If rollback fails, dispose and remount the view.
 
-Both backends accept `animation` in the update options. Read the committed artifacts from `view.compileResult.artifacts`. Bind handlers with `view.hydrate({ handlers })` to use the current scene as the event context. Standalone `hydrate(svg, { handlers, scene })` accepts an optional scene for an existing SVG.
+Both backends accept `animation` in the update options. Read the committed artifacts from `view.compileResult.artifacts`. Bind handlers with `view.hydrate({ handlers })` to use the current scene as the event context.
 
 The update strategy and optional renderer factory are fixed at mount. Dispose and remount to change the renderer, DPR, compile topology, or update strategy.
 

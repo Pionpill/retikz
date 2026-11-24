@@ -171,11 +171,10 @@ Vanilla 构造函数不接收独立的 ID 字符串参数。`node({ id, position
 | ---------------- | -------------------------------- | ----------------------------------------------------------- |
 | `renderToSvg`    | SSR / 构建期产出 `<svg>` 字符串  | `string`                                                    |
 | `mountSceneView` | 按 `renderer` 挂载 SVG 或 Canvas | `SceneView<SVGSVGElement>` / `SceneView<HTMLCanvasElement>` |
-| `hydrate`        | 对 SSR / 已有 SVG 根节点绑定 handler | `HydrationController`    |
 
 DOM 挂载入口从 `@retikz/vanilla/dom` 导入。`mountSceneView(container, source)` 直接挂载 IR；作者输入只归一化一次，并保留本帧的嵌入定义与实例数据。默认使用 SVG，传入 `{ renderer: 'canvas' }` 可选择 Canvas。用 `view.update(ir, options?)` 或 `view.updateInput(input, options?)` 替换场景。成功时原子发布场景、产物与渲染配置；失败不发布新帧，若回滚失败则需要释放并重新挂载。
 
-两个后端的单次更新选项都只接受 `animation`。从 `view.compileResult.artifacts` 读取最近成功提交的编译产物。用 `view.hydrate({ handlers })` 绑定事件，事件上下文跟随当前场景。对已有 SVG 单独调用 `hydrate(svg, { handlers, scene })` 时，可传入场景来提供上下文。
+两个后端的单次更新选项都只接受 `animation`。从 `view.compileResult.artifacts` 读取最近成功提交的编译产物。用 `view.hydrate({ handlers })` 绑定事件，事件上下文跟随当前场景。
 
 `updateStrategy` 和可选的 `rendererFactory` 在挂载时确定。要更换渲染器、DPR、编译拓扑或更新策略，先释放视图，再重新挂载。
 

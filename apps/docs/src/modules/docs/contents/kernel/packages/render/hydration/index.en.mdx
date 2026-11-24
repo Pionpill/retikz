@@ -64,23 +64,21 @@ When you feed IR directly (`<Layout ir={...}>`, no JSX children) there are no co
 />
 ```
 
-## Vanilla: hydrate and mountSceneView
+## Vanilla: bind view events
 
-Without a framework, render the figure first and then call a hydration function. SVG and Canvas each have their own entry point, but the `handlers` you pass in have the same shape.
-
-**SVG** — root-level delegation on an already-mounted `<svg>` (from `mountSceneView` or an injected SSR string):
+Both SVG and Canvas views register handlers through the mounted view’s `hydrate` method. SVG is the default:
 
 ```ts
-import { mountSceneView, hydrate } from '@retikz/vanilla/dom';
+import { mountSceneView } from '@retikz/vanilla/dom';
 
 const view = mountSceneView(container, ir);
-const handle = hydrate(view.root, {
+const handle = view.hydrate({
   handlers: { box: { click: event => toggle('box') } },
 });
 // handle.dispose() unbinds; view.dispose() unbinds too
 ```
 
-**Canvas** — `mountSceneView` mounts the IR into a `<canvas>`; the returned view carries its own coordinate mapping, and `view.hydrate` locates elements via a hit query:
+**Canvas** — `mountSceneView` mounts the IR into a `<canvas>`; after you bind handlers with `view.hydrate`, the renderer maps pointer coordinates to the scene and hit-tests the point:
 
 ```ts
 import { mountSceneView } from '@retikz/vanilla/dom';
@@ -92,23 +90,6 @@ const handle = view.hydrate({
 ```
 
 `handlers` is a `{ [id]: { eventName: handler } }` table; event names are `click` / `doubleClick` / `rightClick` / `pointerDown` / `pointerUp` / `pointerMove` / `pointerEnter` / `pointerLeave` / `wheel` (a one-to-one match with React's `on<Event>`, with the `on` prefix dropped and the first letter lowercased).
-
-After SSR, bind via the standalone `hydrate(svg, options)` entry. This entry only hydrates the `<svg>` root obtained from the injected SSR output; it does not support Canvas. Canvas callers must use `mountSceneView(container, ir, { renderer: 'canvas' }).hydrate()`, whose view supplies the Scene, hit query, and coordinate mapping. To give standalone SVG context its meta / geometry / animation controls, also pass the `compileResult.scene` returned by Vanilla's `compileToScene(ir)`; otherwise you get only the minimal context (bottom):
-
-```ts
-import { compileToScene } from '@retikz/vanilla';
-import { hydrate, mountSceneView } from '@retikz/vanilla/dom';
-
-// the view from mountSceneView carries view.hydrate; context uses this view's Scene automatically
-mountSceneView(container, ir).hydrate({ handlers: { box: { click: (event, context) => context.animation.restart() } } });
-
-// standalone SVG hydration after SSR: pass scene for a rich context (meta / geometry / animation)
-const {
-  compileResult: { scene },
-} = compileToScene(ir);
-const svg = container.querySelector('svg')!;
-hydrate(svg, { handlers, scene });
-```
 
 ## The handler context
 
@@ -124,7 +105,7 @@ The handler's second arg `context` fills in "the semantic element that was hit" 
 | `point`     | The pointer position in scene user units (inverse meet-fit); `null` for non-pointer events                                            |
 | `geometry`  | Union bounding box `bbox` + `center` of all primitives sharing this id (scene user units); `undefined` without a scene                |
 | `animation` | Animation controls: `play` / `pause` / `restart` / `stop` / `seek` (default target is the hit element; pass an id to control another) |
-| `scene`     | The current Scene (escape hatch); `undefined` when standalone `hydrate` got no scene                                                  |
+| `scene`     | The view’s current Scene                                                                                                              |
 
 **Triggering animation from a callback**: give an element a `trigger: 'manual'` animation (no autoplay, waits for a command), then call `context.animation.restart()` inside the handler to replay it on click:
 
