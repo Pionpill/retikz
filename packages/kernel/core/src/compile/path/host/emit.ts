@@ -1,6 +1,6 @@
 import type { PathCompileResult, PathDefinitionCompileContext } from '../../../contract';
 import { compileBuiltinStroke } from '../../../providers';
-import { createCompositeContractError, guardProviderOutput } from '../../../resolve';
+import { createContractViolationError, guardProviderOutput } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
 import { snapshotProviderPosition, snapshotScenePrimitives } from '../../shared';
 import type { BoundPathResolution, PathCompileContext, PreparedPathCompilation } from '../types';
@@ -15,7 +15,7 @@ const snapshotPathCompileResult = (
   guardProviderOutput(`Path '${kind}'`, () => {
     if (value === null) return null;
     if ('resources' in value)
-      throw createCompositeContractError(`Path '${kind}' output: provider cannot declare resources.`);
+      throw createContractViolationError(`Path '${kind}' output: provider cannot declare resources.`);
     const result = value;
     const primitives = snapshotScenePrimitives(`Path '${kind}'`, result.primitives, allowedResourceIds);
     const rawBoundsPoints = result.boundsPoints;

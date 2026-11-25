@@ -1,5 +1,5 @@
 import type { GroupPrimitive, PathCommand, PathPrimitive } from '../../contract';
-import { combineOpacity, guardProviderOutput, createCompositeContractError } from '../../resolve';
+import { combineOpacity, guardProviderOutput, createContractViolationError } from '../../resolve';
 import type { IRTexContent } from '../../schemas';
 import { assertProviderOutputNonNegative, BuiltinCompileWarningCode, snapshotProviderOutputJson } from '../shared';
 import type { TextLinePaint, TextLayoutContext } from './types';
@@ -61,7 +61,7 @@ const snapshotLoweredTex = (value: LoweredTex): LoweredTex =>
     assertProviderOutputNonNegative('lowerTex', snapshot.height, 'result.height');
     assertProviderOutputNonNegative('lowerTex', snapshot.depth, 'result.depth');
     if (snapshot.depth > snapshot.height) {
-      throw createCompositeContractError('lowerTex emit produced result.depth greater than result.height.');
+      throw createContractViolationError('lowerTex emit produced result.depth greater than result.height.');
     }
     snapshot.paths.forEach((path, index) => {
       const pathName = `paths[${index}]`;

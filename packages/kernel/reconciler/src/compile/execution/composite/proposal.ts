@@ -1,5 +1,5 @@
 import type { CompileOccurrenceLocator, LayoutAxisProposal, LayoutProposal } from '@retikz/core';
-import { LayoutAxisProposalKind, createCompositeContractError, isCompositeContractError } from '@retikz/core';
+import { LayoutAxisProposalKind, createContractViolationError, isContractViolationError } from '@retikz/core';
 import type { BoundsRect } from '@retikz/math';
 
 import { formatCompileOccurrence } from '../../shared';
@@ -9,7 +9,7 @@ const canonicalizeZero = (value: number): number => (Object.is(value, -0) ? 0 : 
 
 /** 创建带 composite occurrence 的非法 proposal 错误 */
 const invalidProposal = (compositeKey: string, occurrence: CompileOccurrenceLocator, detail: string): never => {
-  throw createCompositeContractError(
+  throw createContractViolationError(
     `Composite '${compositeKey}' at ${formatCompileOccurrence(occurrence)} called layoutChild with an invalid proposal; ${detail}.`,
   );
 };
@@ -66,7 +66,7 @@ export const cloneLayoutProposal = (
       y: cloneLayoutAxisProposal(proposal.y, 'y', compositeKey, occurrence),
     });
   } catch (cause) {
-    if (isCompositeContractError(cause)) throw cause;
+    if (isContractViolationError(cause)) throw cause;
     return invalidProposal(compositeKey, occurrence, 'proposal validation failed');
   }
 };

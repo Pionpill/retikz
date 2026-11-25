@@ -6,7 +6,7 @@ import type {
   CompositeReplayWrapper,
   IRChild,
 } from '@retikz/core';
-import { createCompositeContractError, guardProviderOutput } from '@retikz/core';
+import { createContractViolationError, guardProviderOutput } from '@retikz/core';
 
 import type {
   CompileRuntime,
@@ -29,7 +29,7 @@ export const readCompositeChild = (owner: string, value: unknown, location: stri
     )
       return value as IRChild;
   }
-  throw createCompositeContractError(
+  throw createContractViolationError(
     `${owner} received an invalid ${location}; the value may be forged or belong to another compile session.`,
   );
 };
@@ -53,16 +53,16 @@ export const createCompositeReplayChild = (
 ): CompositeCompileChild =>
   guardProviderOutput(owner.label, () => {
     if (result === null || typeof result !== 'object') {
-      throw createCompositeContractError(`${owner.label} received an invalid or forged layout result.`);
+      throw createContractViolationError(`${owner.label} received an invalid or forged layout result.`);
     }
 
     const layoutResult = session.layoutResults.get(result);
     if (layoutResult === undefined) {
-      throw createCompositeContractError(`${owner.label} received an invalid or forged layout result.`);
+      throw createContractViolationError(`${owner.label} received an invalid or forged layout result.`);
     }
 
     if (layoutResult.owner !== owner) {
-      throw createCompositeContractError(
+      throw createContractViolationError(
         `${owner.label} received a layout result that does not belong to this composite callback.`,
       );
     }
@@ -91,7 +91,7 @@ export const createCompositeScopeChild = (
       const entry = session.outputChildren.get(child);
       if (entry === undefined) readCompositeChild(owner.label, child, `output child at index ${index}`);
       else if (entry.owner !== owner)
-        throw createCompositeContractError(
+        throw createContractViolationError(
           `${owner.label} received an output child that does not belong to this composite callback.`,
         );
     }

@@ -7,7 +7,7 @@ import type {
   PatternEmitOutput,
   ScenePrimitive,
 } from '../../contract';
-import { createCompositeContractError, createLayoutProbeRecoverableError, safeThrownDetail } from '../../resolve';
+import { createContractViolationError, createLayoutProbeRecoverableError, safeThrownDetail } from '../../resolve';
 import type { InputPaintResolution, PaintResolution } from '../../resolve';
 import type { IRPatternLineStyle } from '../../schemas';
 import { materializeScenePrimitives } from '../shared';
@@ -135,14 +135,14 @@ const emitPatternTile = (
 
   let tileSize = size;
   if ('resources' in emitted) {
-    throw createCompositeContractError(`Pattern '${spec.shape}' output: provider cannot declare resources.`);
+    throw createContractViolationError(`Pattern '${spec.shape}' output: provider cannot declare resources.`);
   }
   let emittedMotif: Iterable<ScenePrimitive>;
   // 同时检查两个字段，避免将携带单个同名元数据字段的 iterable 误判为完整 tile
   if ('tileSize' in emitted && 'motif' in emitted) {
     emittedMotif = emitted.motif;
     if (!Number.isFinite(emitted.tileSize) || emitted.tileSize <= 0) {
-      throw createCompositeContractError(
+      throw createContractViolationError(
         `Pattern '${spec.shape}' emit returned an invalid tileSize (${String(emitted.tileSize)}); it must be a finite number greater than 0.`,
       );
     }

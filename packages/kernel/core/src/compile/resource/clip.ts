@@ -1,7 +1,7 @@
 import type { ClipResource, PathCommand, SceneClipPath } from '../../contract';
 import {
   guardProviderOutput,
-  createCompositeContractError,
+  createContractViolationError,
   createLayoutProbeRecoverableError,
   isFatalProbeError,
   isLayoutProbeRecoverableError,
@@ -36,7 +36,7 @@ const canonicalizeClipPath = (path: SceneClipPath, owner: string, round: (n: num
     const roundRadius = (radius: number, field: string): number => {
       const rounded = round(radius);
       if (!Number.isFinite(rounded) || rounded <= 0) {
-        throw createCompositeContractError(
+        throw createContractViolationError(
           `Clip shape 'path' has an invalid ${field} (${String(rounded)}); it must be a finite number greater than 0.`,
         );
       }
@@ -56,7 +56,7 @@ const canonicalizeClipPath = (path: SceneClipPath, owner: string, round: (n: num
           break;
         case 'line':
           if (!hasActiveSubpath) {
-            throw createCompositeContractError(
+            throw createContractViolationError(
               `${owner} lower returned '${command.kind}' at command ${index} without an active subpath.`,
             );
           }
@@ -65,7 +65,7 @@ const canonicalizeClipPath = (path: SceneClipPath, owner: string, round: (n: num
           break;
         case 'quad':
           if (!hasActiveSubpath) {
-            throw createCompositeContractError(
+            throw createContractViolationError(
               `${owner} lower returned '${command.kind}' at command ${index} without an active subpath.`,
             );
           }
@@ -78,7 +78,7 @@ const canonicalizeClipPath = (path: SceneClipPath, owner: string, round: (n: num
           break;
         case 'cubic':
           if (!hasActiveSubpath) {
-            throw createCompositeContractError(
+            throw createContractViolationError(
               `${owner} lower returned '${command.kind}' at command ${index} without an active subpath.`,
             );
           }
@@ -118,7 +118,7 @@ const canonicalizeClipPath = (path: SceneClipPath, owner: string, round: (n: num
           break;
         case 'close':
           if (!hasActiveSubpath) {
-            throw createCompositeContractError(
+            throw createContractViolationError(
               `${owner} lower returned '${command.kind}' at command ${index} without an active subpath.`,
             );
           }
@@ -129,7 +129,7 @@ const canonicalizeClipPath = (path: SceneClipPath, owner: string, round: (n: num
     }
 
     if (!hasDrawingSegment) {
-      throw createCompositeContractError(`${owner} lower returned a SceneClipPath without a drawing segment.`);
+      throw createContractViolationError(`${owner} lower returned a SceneClipPath without a drawing segment.`);
     }
 
     return {
@@ -165,14 +165,14 @@ export const createClipRegistry = (
     for (const value of [spec, params]) {
       if (entered.includes(value)) continue;
       if (guard.activeObjects.has(value)) {
-        throw createCompositeContractError('Clip traversal detected a cyclic clip object.');
+        throw createContractViolationError('Clip traversal detected a cyclic clip object.');
       }
       guard.activeObjects.add(value);
       entered.push(value);
     }
     try {
       if (guard.visitedCount >= guard.maxCount) {
-        throw createCompositeContractError(
+        throw createContractViolationError(
           `Clip traversal exceeded CompileOptions.maxClipDepth ${guard.maxCount} while entering clip '${kind}'.`,
         );
       }
@@ -183,7 +183,7 @@ export const createClipRegistry = (
           round,
           lower: nested => {
             if (guard.activeObjects.has(nested)) {
-              throw createCompositeContractError('Clip traversal detected a cyclic clip object.');
+              throw createContractViolationError('Clip traversal detected a cyclic clip object.');
             }
             return lowerClip(resolution.resolve(nested), guard);
           },

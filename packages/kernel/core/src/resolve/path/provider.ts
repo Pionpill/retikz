@@ -5,7 +5,7 @@ import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { getProviderDefinition } from '../../providers';
 import type { IRArrowStyle, IRPathBase } from '../../schemas';
 import { DEFAULT_ARROW_SHAPE } from '../../schemas';
-import { createCompositeContractError } from '../diagnostics';
+import { createContractViolationError } from '../diagnostics';
 import { parseProviderPayload } from '../provider';
 import { resolveMarkStyle } from './mark';
 import type {
@@ -81,7 +81,7 @@ const resolveArrowMark = (mark: MarkColorSource, context: PathResolveContext): C
     shrink: ((tipX - contactX) * resolvedLength) / baseSize - ARROW_PATH_CONTACT_OVERLAP,
   };
   if (!Number.isFinite(geometry.shrink)) {
-    throw createCompositeContractError(
+    throw createContractViolationError(
       `Arrow '${shape}' resolved shrink is non-finite; use smaller tip/contact/length values.`,
     );
   }

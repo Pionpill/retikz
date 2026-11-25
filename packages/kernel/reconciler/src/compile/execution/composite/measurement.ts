@@ -2,7 +2,7 @@ import type { CanonicalTheme, CompositeCompileContext } from '@retikz/core';
 import {
   CompileExpansionKind,
   LayoutChildProbeKind,
-  createCompositeContractError,
+  createContractViolationError,
   guardProviderOutput,
   isFatalProbeError,
 } from '@retikz/core';
@@ -34,7 +34,7 @@ const createMeasureChild = (
     const clonedProposal = cloneLayoutProposal(proposal, key, occurrence);
     const inputEntry = runtime.state.composite.outputChildren.get(nextChild);
     if (inputEntry !== undefined && (inputEntry.owner !== owner || inputEntry.child.kind !== 'bound'))
-      throw createCompositeContractError(`${owner.label} measureChild requires a child from this callback`);
+      throw createContractViolationError(`${owner.label} measureChild requires a child from this callback`);
     const inputs = inputEntry?.child.kind === 'bound' ? inputEntry.child.runtimeInputs : undefined;
     const child =
       inputEntry?.child.kind === 'bound'
@@ -115,7 +115,7 @@ const createLayoutChild = (
     const clonedProposal = cloneLayoutProposal(proposal, key, occurrence);
     const inputEntry = runtime.state.composite.outputChildren.get(nextChild);
     if (inputEntry !== undefined && (inputEntry.owner !== owner || inputEntry.child.kind !== 'bound'))
-      throw createCompositeContractError(
+      throw createContractViolationError(
         `${owner.label} layoutChild requires an authored or bound child from this callback`,
       );
 

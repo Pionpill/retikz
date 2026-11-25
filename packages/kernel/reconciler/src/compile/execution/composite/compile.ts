@@ -13,7 +13,7 @@ import {
   allocationPointsOf,
   bindComposite,
   cloneAndFreezeJson,
-  createCompositeContractError,
+  createContractViolationError,
   createLayoutProbeRecoverableError,
   guardProviderOutput,
   isFatalProbeError,
@@ -59,10 +59,10 @@ const snapshotCompositeCompileResult = (
     /** 尺寸测量分支：只有贡献结果带 kind，检查请求模式、返回轴和有限非负尺寸后直接返回 */
     if ('kind' in callbackResult) {
       if (measurementAxis === undefined)
-        throw createCompositeContractError(`${owner.label} returned a contribution during full layout`);
+        throw createContractViolationError(`${owner.label} returned a contribution during full layout`);
       const { contribution } = callbackResult;
       if (contribution.axis !== measurementAxis)
-        throw createCompositeContractError(`${owner.label} returned a different contribution axis`);
+        throw createContractViolationError(`${owner.label} returned a different contribution axis`);
       const dimensions =
         contribution.axis === 'x'
           ? [contribution.width]
@@ -70,7 +70,7 @@ const snapshotCompositeCompileResult = (
             ? [contribution.height]
             : [contribution.width, contribution.height];
       if (dimensions.some(dimension => !Number.isFinite(dimension) || dimension < 0))
-        throw createCompositeContractError(`${owner.label} returned an invalid contribution size`);
+        throw createContractViolationError(`${owner.label} returned an invalid contribution size`);
       return { kind: 'contribution' as const, contribution: Object.freeze({ ...contribution }) };
     }
 
@@ -94,7 +94,7 @@ const snapshotCompositeCompileResult = (
     let compositeArtifact: CompositeArtifact | undefined;
     if (artifact !== undefined) {
       if (definition.artifactSchema === undefined) {
-        throw createCompositeContractError(`Composite '${key}' returned artifact without artifactSchema.`);
+        throw createContractViolationError(`Composite '${key}' returned artifact without artifactSchema.`);
       }
 
       let frozenArtifact: JsonValue;
@@ -103,7 +103,7 @@ const snapshotCompositeCompileResult = (
         frozenArtifact = cloneAndFreezeJson(artifact, `Composite '${key}' artifact`);
       } catch (cause) {
         const detail = safeThrownDetail(cause);
-        throw createCompositeContractError(`${owner.label} returned a non-JSON artifact: ${detail}`, { cause });
+        throw createContractViolationError(`${owner.label} returned a non-JSON artifact: ${detail}`, { cause });
       }
 
       compositeArtifact = freezeCompileArtifact({

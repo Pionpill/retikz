@@ -114,7 +114,7 @@ proposal 的 x / y 分别使用 intrinsic、range 或 exact。intrinsic 查询 m
 
 `measureChild(child, proposal, axis)` 只查询所需轴的尺寸贡献，没有 replay。上下文 evaluation 指明当前请求完整 layout 还是某个轴的 contribution；能直接计算尺寸的 Composite 可返回对应 contribution，避免为纯查询生成完整子树。
 
-`layoutChild(child, proposal)` 进行完整隔离布局，返回 resolved / failed。成功结果包含可重放的布局；失败句柄可用于舍弃方案或通过 raise 抛出。契约错误和执行不变量等致命错误仍直接传播，不是所有错误都能当作布局备选失败。
+`layoutChild(child, proposal)` 进行完整隔离布局，返回 resolved / failed。成功结果包含可重放的布局；失败句柄可用于舍弃方案或通过 raise 抛出。契约错误和执行不变量等致命错误仍直接传播，不是所有错误都能当作布局备选失败。可用 `isContractViolationError(cause)` 识别 `createContractViolationError` 创建的错误；该契约也适用于 Shape、Clip 等扩展，不限于 Composite。
 
 普通 IR 子项由编译器借用，不会被复制或冻结。从交给测量、布局或返回为输出起，到本次编译结束（包括回放），请不要原地修改子项或其成员。需要不同布局时传入新的子项。
 

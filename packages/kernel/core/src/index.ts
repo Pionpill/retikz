@@ -20,10 +20,10 @@ export {
 export {
   DEFAULT_RESOLVED_THEME,
   bindComposite,
-  createCompositeContractError,
+  createContractViolationError,
   createLayoutProbeRecoverableError,
   guardProviderOutput,
-  isCompositeContractError,
+  isContractViolationError,
   isFatalProbeError,
   isLayoutProbeRecoverableError,
   mergeArrowDefaults,

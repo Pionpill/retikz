@@ -1,5 +1,5 @@
 import type { CompileOccurrenceLocator, LayoutChildFailure, LayoutProbeRecoverableError } from '@retikz/core';
-import { createCompositeContractError, createLayoutProbeRecoverableError } from '@retikz/core';
+import { createContractViolationError, createLayoutProbeRecoverableError } from '@retikz/core';
 import { formatPropertyPath } from '@retikz/foundation';
 
 import type { LayoutProbeFailureEntry } from '../../runtime';
@@ -44,24 +44,24 @@ export const raiseLayoutChildFailure = (
   failure: unknown,
 ): never => {
   if (failure === null || typeof failure !== 'object') {
-    throw createCompositeContractError(`${owner.label} received an invalid or forged layout child failure`);
+    throw createContractViolationError(`${owner.label} received an invalid or forged layout child failure`);
   }
 
   const entry = failures.get(failure);
   if (entry === undefined) {
-    throw createCompositeContractError(
+    throw createContractViolationError(
       `${owner.label} received a layout child failure that does not belong to this compile or was forged`,
     );
   }
 
   if (entry.owner !== owner) {
-    throw createCompositeContractError(
+    throw createContractViolationError(
       `${owner.label} received a layout child failure that does not belong to this composite callback`,
     );
   }
 
   if (entry.consumed) {
-    throw createCompositeContractError(`${owner.label} received a layout child failure that was already raised`);
+    throw createContractViolationError(`${owner.label} received a layout child failure that was already raised`);
   }
 
   entry.consumed = true;
