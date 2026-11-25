@@ -267,8 +267,6 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
     const batch = this.batch;
     const { transaction, editor, tracker } = batch;
     const root = this.state.persistent.root;
-    let entries = batch.addresses?.entries ?? new WeaveLookup<string, WeaveEntry>();
-    let paths = batch.addresses?.paths ?? new Map<WeaveEntry, PropertyPath>();
     const keyOf = (path: PropertyPath) => JSON.stringify(path);
 
     /** 建立作者条目、继承上下文与名称索引，不展开 Composite 生成树，也不执行图元计算 */
@@ -279,7 +277,6 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
       style: CanonicalScopeInheritance,
       inheritedIds: Map<string, WeaveEntry>,
     ): void => {
-      const parentState = transaction.editState(parent);
       const ids =
         parent.type === 'root' || transaction.readState(parent).origin.own.localNamespace
           ? new WeaveLookup<string, WeaveEntry>()
@@ -287,30 +284,20 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
       if (parent.type === 'root') transaction.editState(parent).ids = ids;
       else if (transaction.readState(parent).origin.own.localNamespace) transaction.editState(parent).ids = ids;
       for (const [index, child] of children.entries()) {
-        const path = createCompileChildPath(prefix, index);
-        const entry = batch.updating ? parentState.children[index] : editor.createEntry(child, parent, style);
-        if (!batch.updating) tracker.registerEntryBinding(entry);
-        entries.set(keyOf(path), entry);
-        paths.set(entry, path);
-        if (batch.updating && !isPropertyPathEqual(batch.previousEntryIrPaths.get(entry) ?? [], path))
-          tracker.invalidateEntry(entry);
-        if (!batch.updating) {
-          const state = transaction.editState(entry);
-          state.origin = { ...state.origin, context: style };
-        }
-
+        const entry = editor.createEntry(child, parent, style);
+        tracker.registerEntryBinding(entry);
         if (!('namespace' in child) && child.id !== undefined) ids.set(child.id, entry);
         if (!('namespace' in child) && child.type === 'node') for (const id of child.aliasIds ?? []) ids.set(id, entry);
-        if (entry.type === 'scope' && !('namespace' in child) && child.type === 'scope')
+        if (entry.type === 'scope' && !('namespace' in child) && child.type === 'scope') {
+          const path = createCompileChildPath(prefix, index);
           visit(
             child.children,
             entry,
             path,
-            batch.updating
-              ? transaction.readState(entry).origin.context
-              : resolveScopeInheritance(child, this.context.shared.registries.themeRegistry, style, path),
+            resolveScopeInheritance(child, this.context.shared.registries.themeRegistry, style, path),
             ids,
           );
+        }
       }
     };
 
@@ -323,11 +310,9 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
         resolveScopeInheritance(batch.source, this.context.shared.registries.themeRegistry),
         new Map(),
       );
-    if (batch.addresses === undefined) {
-      batch.addresses = new WeaveAddressIndex(root, transaction);
-      entries = batch.addresses.entries;
-      paths = batch.addresses.paths;
-    }
+    // ⚡首帧建树只建立声明；最终地址索引统一生成路径，不再逐条复制临时索引
+    batch.addresses ??= new WeaveAddressIndex(root, transaction);
+    const { entries, paths } = batch.addresses;
 
     /** 将读取路径归属到最近的作者条目；别名和 Composite 生成内容不另建条目身份 */
     const findProducer = (path: PropertyPath): WeaveEntry | undefined => {

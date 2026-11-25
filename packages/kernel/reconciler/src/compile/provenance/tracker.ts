@@ -11,6 +11,9 @@ import type {
   CompileProvenanceSnapshot,
 } from './types';
 
+/** Weave 内部捕获单个基础元素，不经包根导出 */
+export const captureLeafProvenance = Symbol('captureLeafProvenance');
+
 /** 收集单次编译的来源事实，不判断跨次身份或绑定 revision */
 export class CompileProvenanceTracker {
   /** 文档根身份 */
@@ -129,12 +132,29 @@ export class CompileProvenanceTracker {
 
   /** 按最终 Scene 位置生成独立快照，后续收集不修改已交付结果 */
   capture(primitives: ReadonlyArray<ScenePrimitive>): CompileProvenanceSnapshot {
+    return this.captureOwners(primitives, this.root, this.ownerMap);
+  }
+
+  /** ⚡基础元素不会创建子来源；只快照自身，避免为每份叶子贡献复制整张来源表 */
+  [captureLeafProvenance](
+    primitives: ReadonlyArray<ScenePrimitive>,
+    owner: CompileOwnerKey,
+  ): CompileProvenanceSnapshot {
+    return this.captureOwners(primitives, owner, [[owner, this.ownerMap.get(owner)!]]);
+  }
+
+  /** 为选定范围登记图元的局部路径，保留没有图元的来源 */
+  private captureOwners(
+    primitives: ReadonlyArray<ScenePrimitive>,
+    root: CompileOwnerKey,
+    owners: Iterable<readonly [CompileOwnerKey, Omit<CompileProvenanceOwner, 'emissions'>]>,
+  ): CompileProvenanceSnapshot {
     /** 当前快照按来源聚合图元，保留没有发射图元的实体 */
     const ownerMap = new Map<
       CompileOwnerKey,
       Omit<CompileProvenanceOwner, 'emissions'> & { emissions: Array<CompileProvenanceEmission> }
     >();
-    for (const [key, owner] of this.ownerMap) ownerMap.set(key, { ...owner, emissions: [] });
+    for (const [key, owner] of owners) ownerMap.set(key, { ...owner, emissions: [] });
 
     const visit = (items: ReadonlyArray<ScenePrimitive>, prefix: PropertyPath): void => {
       items.forEach((primitive, index) => {
@@ -154,7 +174,7 @@ export class CompileProvenanceTracker {
       Object.freeze(owner);
     }
 
-    return Object.freeze({ root: this.root, ownerMap });
+    return Object.freeze({ root, ownerMap });
   }
 
   /** 记录单次输入出现的来源，重复 IR 引用仍分配独立键 */

@@ -305,6 +305,7 @@ export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinitio
                 }
               : transaction.readState(entry).compile!.resources,
             { sourcePath: path, expansionPath: [] },
+            entry.type !== 'composite',
             execution.semanticOwner,
           ),
           execution.reads ?? transaction.readState(entry).referenceReads,
