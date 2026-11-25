@@ -686,6 +686,7 @@ export const referenceGroups: Readonly<Partial<Record<string, ReadonlyArray<Refe
         'assertNonEmptyString',
         'assertPositiveNumber',
         'createReadonlyMap',
+        'pickDefined',
         'mergeDefinedProperties',
         'mergeProperties',
       ],

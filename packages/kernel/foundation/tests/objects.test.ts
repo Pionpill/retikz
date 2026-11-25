@@ -1,4 +1,10 @@
-import { compareProperties, mergeDefinedProperties, mergeProperties, RetikzFoundationError } from '@retikz/foundation';
+import {
+  compareProperties,
+  mergeDefinedProperties,
+  mergeProperties,
+  pickDefined,
+  RetikzFoundationError,
+} from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 
 describe('compareProperties', () => {
@@ -261,4 +267,22 @@ describe('mergeProperties', () => {
       expect(error).toMatchObject({ cause });
     }
   });
+});
+
+it('按指定键提取有定义的值，不读取未选属性', () => {
+  const key = Symbol('selected');
+  const source = {
+    [key]: false,
+    empty: '',
+    zero: 0,
+    nil: null,
+    missing: undefined,
+    ['__proto__']: 'value',
+    get ignored(): never {
+      throw new Error('not selected');
+    },
+  };
+  const selected = pickDefined(source, [key, 'empty', 'zero', 'nil', 'missing', '__proto__']);
+  expect(selected).toStrictEqual({ [key]: false, empty: '', zero: 0, nil: null, ['__proto__']: 'value' });
+  expect(Object.getPrototypeOf(selected)).toBe(Object.prototype);
 });

@@ -1,4 +1,5 @@
 import type { IRPath, IRPathBase } from '@retikz/core';
+import { pickDefined } from '@retikz/foundation';
 import type { AssertEqual, RequireExactlyOne } from '@retikz/foundation';
 import type { InputPath, InputStep, PathOptions, WayDSL } from '@retikz/vanilla';
 import type { FC, ReactNode } from 'react';
@@ -6,7 +7,6 @@ import { Children, Fragment, isValidElement } from 'react';
 
 import type { HydrationEventProps } from '../../hydration';
 import { KernelDisplayName, getDisplayName } from '../../protocol';
-import { pickDefined } from '../../shared';
 import { inputStepFromProps } from './Step';
 import type { StepProps } from './Step';
 

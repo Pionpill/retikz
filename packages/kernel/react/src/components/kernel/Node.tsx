@@ -1,4 +1,5 @@
 import type { IRLine, IRNode } from '@retikz/core';
+import { pickDefined } from '@retikz/foundation';
 import type { AssertEqual } from '@retikz/foundation';
 import type { InputNode, NodeOptions } from '@retikz/vanilla';
 import type { FC, ReactNode } from 'react';
@@ -6,7 +7,6 @@ import { Fragment, isValidElement } from 'react';
 
 import type { HydrationEventProps } from '../../hydration';
 import { KernelDisplayName, getDisplayName } from '../../protocol';
-import { pickDefined } from '../../shared';
 import { textElementToLineSpec } from './Text';
 
 /** 可定位、可连接的节点输入，组合文字、视觉形状和连接面 */

@@ -130,3 +130,33 @@ export const mergeProperties = <T extends object>(
 
   return merged;
 };
+
+/**
+ * 按指定键浅选属性，跳过 undefined，保留 null 和其他值
+ * @param source 待读取的源对象
+ * @param fields 要读取的属性键
+ * @returns 仅包含选中且有定义的属性的新对象
+ * @throws 属性读取失败时抛出 RetikzFoundationError，原始异常保留为 cause
+ */
+export const pickDefined = <TSource extends object, TKey extends keyof TSource>(
+  source: TSource,
+  fields: ReadonlyArray<TKey>,
+): Partial<Pick<TSource, TKey>> => {
+  const picked: Partial<Pick<TSource, TKey>> = {};
+  try {
+    for (const key of fields) {
+      const value = source[key];
+      if (value !== undefined) {
+        Object.defineProperty(picked, key, { value, enumerable: true, configurable: true, writable: true });
+      }
+    }
+  } catch (cause) {
+    throw new RetikzFoundationError({
+      code: RetikzFoundationErrorCode.Default,
+      message: 'Failed to select object properties.',
+      details: {},
+      cause,
+    });
+  }
+  return picked;
+};

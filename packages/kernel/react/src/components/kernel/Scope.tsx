@@ -1,11 +1,11 @@
 import type { IRScope } from '@retikz/core';
+import { pickDefined } from '@retikz/foundation';
 import type { AssertEqual } from '@retikz/foundation';
 import type { InputScope, ScopeOptions } from '@retikz/vanilla';
 import type { FC, ReactNode } from 'react';
 
 import type { HydrationEventProps } from '../../hydration';
 import { KernelDisplayName } from '../../protocol';
-import { pickDefined } from '../../shared';
 
 /**
  * 为一组图元设置局部样式、命名空间、变换、裁剪和引用包络
