@@ -25,7 +25,7 @@ describe('Node 阶段复用', () => {
     session.mount();
     const moved: IRNode = { ...node, label: [{ text: 'label', position: 'bottom' }] };
     measured.length = 0;
-    const move = session.update({
+    const move = session.prepareUpdate({
       operations: [{ kind: 'update', target: { kind: 'id', scopeId: session.root.scopeId, id: 'body' }, input: moved }],
     });
     expect(measured).toEqual([]);
@@ -34,7 +34,7 @@ describe('Node 阶段复用', () => {
     move.finish();
     const renamed: IRNode = { ...moved, label: [{ text: 'renamed', position: 'bottom' }] };
     measured.length = 0;
-    const rename = session.update({
+    const rename = session.prepareUpdate({
       operations: [
         { kind: 'update', target: { kind: 'id', scopeId: session.root.scopeId, id: 'body' }, input: renamed },
       ],
@@ -62,7 +62,7 @@ describe('Node 阶段复用', () => {
     expect(layout?.shape).toBeDefined();
     const beforeMove = measurements;
     const moved: IRNode = { ...node, position: [50, 30] };
-    const move = session.update({
+    const move = session.prepareUpdate({
       operations: [{ kind: 'update', target: { kind: 'id', scopeId: session.root.scopeId, id: 'body' }, input: moved }],
     });
     expect(measurements).toBe(beforeMove);
@@ -73,7 +73,7 @@ describe('Node 阶段复用', () => {
     expect(readWeaveCurrent(entry).compile?.value.layout.shape).toBe(layout?.shape);
     const narrower: IRNode = { ...moved, layout: { width: 80 } };
     const beforeResize = measurements;
-    const resize = session.update({
+    const resize = session.prepareUpdate({
       operations: [
         { kind: 'update', target: { kind: 'id', scopeId: session.root.scopeId, id: 'body' }, input: narrower },
       ],
@@ -123,7 +123,7 @@ describe('Node 阶段复用', () => {
     session.mount();
     const before = { ...calls };
     const resized: IRNode = { ...node, layout: { minimumSize: 80 } };
-    const update = session.update({
+    const update = session.prepareUpdate({
       operations: [{ kind: 'update', target: { kind: 'id', scopeId: session.root.scopeId, id: 'a' }, input: resized }],
     });
     expect(calls.center).toBe(before.center);
@@ -159,7 +159,7 @@ describe('Node 阶段复用', () => {
     expect(layout).toBeDefined();
     const before = measurements;
     const repainted = { ...body, style: { textColor: 'blue' } };
-    const paint = session.update({
+    const paint = session.prepareUpdate({
       operations: [
         { kind: 'update', target: { kind: 'id', scopeId: session.root.scopeId, id: 'body' }, input: repainted },
       ],
@@ -173,7 +173,7 @@ describe('Node 阶段复用', () => {
     expect(readWeaveCurrent(entry).compile?.value.layout.overall).toBe(layout);
     const origin: IRCoordinate = { type: 'coordinate', id: 'origin', position: [50, 0] };
     const beforeMove = measurements;
-    const moved = session.update({
+    const moved = session.prepareUpdate({
       operations: [
         { kind: 'update', target: { kind: 'id', scopeId: session.root.scopeId, id: 'origin' }, input: origin },
       ],
@@ -203,7 +203,7 @@ describe('Node 阶段复用', () => {
     const previous = readWeaveCurrent(entry).compile?.value;
     expect(previous).toBeDefined();
     const next: IRScope = { ...scope, defaults: { node: { style: { fill: 'blue' } } } };
-    const update = session.update({
+    const update = session.prepareUpdate({
       operations: [
         { kind: 'update', target: { kind: 'id', scopeId: session.root.scopeId, id: 'container' }, input: next },
       ],

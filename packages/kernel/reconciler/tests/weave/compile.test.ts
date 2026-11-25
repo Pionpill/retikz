@@ -409,7 +409,7 @@ it.each(['opacity', 'viewBox'] as const)('Path 可见性变化更新 Scope 动�
     ],
   };
   for (const path of [visible, empty, visible]) {
-    const candidate = session.update({
+    const candidate = session.prepareUpdate({
       operations: [
         { kind: 'update', target: { kind: 'child', scopeId: session.getScopeId([0]), index: 0 }, input: path },
       ],

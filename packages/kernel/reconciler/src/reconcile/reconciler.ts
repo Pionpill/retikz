@@ -94,7 +94,7 @@ export class SceneReconciler<const TComposite extends AnyCompositeDefinition = A
       return expected;
     this.status = ReconcilerStatus.Preparing;
     try {
-      const prepared = this.weave.update(batch, this.execution.updateStrategy === ReconcilerUpdateStrategy.Full);
+      const prepared = this.weave.prepareUpdate(batch, this.execution.updateStrategy === ReconcilerUpdateStrategy.Full);
       const published = this.publish(
         { revision: this.nextRevision(), compilation: prepared.compilation },
         this.weave,

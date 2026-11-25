@@ -39,7 +39,7 @@ describe('Coordinate 三层复用', () => {
     const coordinate = readWeaveCurrent(session.root).children[2];
     if (coordinate.type !== 'coordinate') throw new Error('Expected coordinate');
     const previous = readWeaveCurrent(coordinate).compile?.value;
-    const explicit = session.update({
+    const explicit = session.prepareUpdate({
       operations: [
         {
           kind: 'update',
@@ -54,7 +54,7 @@ describe('Coordinate 三层复用', () => {
     explicit.finish();
     expect(readWeaveCurrent(coordinate).compile?.value).toBe(previous);
     const changed = { type: 'coordinate', id: 'c', position: { of: 'b', direction: 'right', distance: 24 } } as const;
-    const update = session.update({
+    const update = session.prepareUpdate({
       operations: [{ kind: 'update', target: { kind: 'id', scopeId: session.root.scopeId, id: 'c' }, input: changed }],
     });
     expect(update.compilation.result).toEqual(

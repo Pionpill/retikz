@@ -7,7 +7,7 @@ import { compileTestResult, compileTestSnapshot } from '../helpers/compilation';
 
 /** 在内部编译测试中完成候选提交与事务清理 */
 const commitUpdate = (manager: WeaveManager, batch: WeaveBatch) => {
-  const prepared = manager.update(batch);
+  const prepared = manager.prepareUpdate(batch);
   prepared.commit();
   prepared.finish();
   return prepared;
@@ -185,7 +185,7 @@ describe('Weave 编译产物复用', () => {
       ],
     };
     const expected = compileTestResult({ ...source, children: [source.children[0], replacement] });
-    const discarded = session.update(batch);
+    const discarded = session.prepareUpdate(batch);
     expect(discarded.compilation.result).toEqual(expected);
     discarded.rollback();
 

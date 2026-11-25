@@ -31,7 +31,7 @@ describe('Path 三层复用', () => {
       [5, true],
     ] as const) {
       const next: IRPathBase = { ...path, cornerRadius };
-      const update = session.update({
+      const update = session.prepareUpdate({
         operations: [
           { kind: 'update', target: { kind: 'id', scopeId: session.root.scopeId, id: 'corner' }, input: next },
         ],
@@ -81,7 +81,7 @@ describe('Path 三层复用', () => {
     const session = new WeaveManager(source, options);
     session.mount();
     const next = { ...path, cornerRadius: 0 };
-    const update = session.update({
+    const update = session.prepareUpdate({
       operations: [
         { kind: 'update', target: { kind: 'id', scopeId: session.root.scopeId, id: 'conditional' }, input: next },
       ],
@@ -121,7 +121,7 @@ describe('Path 三层复用', () => {
       [],
     ]) {
       const next: IRPathBase = { ...path, marks };
-      const update = session.update({
+      const update = session.prepareUpdate({
         operations: [
           { kind: 'update', target: { kind: 'id', scopeId: session.root.scopeId, id: 'painted' }, input: next },
         ],
@@ -155,7 +155,7 @@ describe('Path 三层复用', () => {
     const session = new WeaveManager(source);
     session.mount();
     const next: IRPathBase = { ...path, marks: [{ shape: 'star', pos: 0.8 }] };
-    const placement = session.update({
+    const placement = session.prepareUpdate({
       operations: [
         { kind: 'update', target: { kind: 'id', scopeId: session.root.scopeId, id: 'linked' }, input: next },
       ],
@@ -163,7 +163,7 @@ describe('Path 三层复用', () => {
     placement.commit();
     placement.finish();
     const coordinate = { type: 'coordinate', id: 'endpoint', position: [200, 50] } as const;
-    const update = session.update({
+    const update = session.prepareUpdate({
       operations: [
         {
           kind: 'update',
@@ -207,7 +207,7 @@ describe('Path 三层复用', () => {
       [0.6, 'step', 'original'],
     ] as const) {
       const next: IRPathBase = { ...path, marks: [{ shape: 'star', pos, positionMode, positionGeometry }] };
-      const update = session.update({
+      const update = session.prepareUpdate({
         operations: [
           { kind: 'update', target: { kind: 'id', scopeId: session.root.scopeId, id: 'moving' }, input: next },
         ],
@@ -244,7 +244,7 @@ describe('Path 三层复用', () => {
     expect(previous?.stroke?.layout?.geometry).toBeDefined();
     for (const text of ['label', 'renamed']) {
       const next: IRPathBase = { ...path, label: [{ text, position: 0.8 }] };
-      const update = session.update({
+      const update = session.prepareUpdate({
         operations: [
           { kind: 'update', target: { kind: 'id', scopeId: session.root.scopeId, id: 'line' }, input: next },
         ],
@@ -274,7 +274,7 @@ describe('Path 三层复用', () => {
     const node = readWeaveCurrent(session.root).children[0];
     if (node.type !== 'path') throw new Error('Expected path');
     const previous = readWeaveCurrent(node).compile?.value;
-    const update = session.update({
+    const update = session.prepareUpdate({
       operations: [
         {
           kind: 'update',
@@ -325,7 +325,7 @@ describe('Path 三层复用', () => {
         blendMode: 'normal',
       },
     };
-    const update = session.update({
+    const update = session.prepareUpdate({
       operations: [
         {
           kind: 'update',

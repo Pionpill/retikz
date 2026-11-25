@@ -135,7 +135,7 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
    * @param forceFull 是否强制计算全部作者条目并禁用旧阶段产物复用，默认 false
    * @returns 编译快照及事务控制；commit 切换状态但保留恢复依据，finish 最终确认，rollback 放弃或恢复
    */
-  update(input: WeaveBatch, forceFull = false): WeavePreparedUpdate<TComposite> {
+  prepareUpdate(input: WeaveBatch, forceFull = false): WeavePreparedUpdate<TComposite> {
     const persistent = this.state.persistent;
     const completed = persistent.completed;
     if (completed === undefined)
@@ -407,7 +407,7 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
     const pending = new Map<string, WeaveUpdateRequest>();
 
     /** 首轮及 full 选择全部作者条目，auto 仅选择已登记变化 */
-    const requested = !batch.updating || batch.forceFull ? paths.keys() : tracker.requests;
+    const requested = !batch.updating || batch.forceFull ? paths.keys() : tracker.requestedEntries;
     for (const entry of requested) {
       const path = keyOf(paths.get(entry)!);
       const state = transaction.readState(entry);
@@ -476,7 +476,7 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
 
     /** 挂载或声明索引变化后补齐 Scope 对子布局的聚合依赖，仅属性更新时沿用既有结构依赖 */
     if (!batch.updating || batch.indexesChanged)
-      for (const entry of batch.updating ? tracker.requests : entries.values()) {
+      for (const entry of batch.updating ? tracker.requestedEntries : entries.values()) {
         if (entry.type === 'scope') tracker.updateScopeLayoutDependencies(entry);
       }
     return compilation;

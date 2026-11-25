@@ -43,7 +43,7 @@ describe('正文和标签共享文本能力', () => {
     const manager = new WeaveManager(input, { measureText });
     manager.mount();
     const next = { ...pathOf({ text: 'abcdef', font, ...layout, opacity: 0.5 }), id: 'path-text' };
-    const update = manager.update({
+    const update = manager.prepareUpdate({
       operations: [
         { kind: 'update', target: { kind: 'id', scopeId: manager.root.scopeId, id: 'path-text' }, input: next },
       ],
@@ -100,7 +100,7 @@ describe('正文和标签共享文本能力', () => {
         layout: { ...layout, maxTextWidth: width },
         label: { text: 'label\nnext', ...layout, maxTextWidth: width, opacity: 0.5 },
       };
-      const update = manager.update({
+      const update = manager.prepareUpdate({
         operations: [
           { kind: 'update', target: { kind: 'id', scopeId: manager.root.scopeId, id: 'text' }, input: next },
         ],

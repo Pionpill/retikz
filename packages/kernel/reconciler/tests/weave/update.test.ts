@@ -40,7 +40,7 @@ describe('Weave 批次更新', () => {
     const before = compileTestResult(source);
     const changed = { ...children[75], position: [500, 0] as [number, number], zIndex: -1 };
     const update = (index: number, input: typeof changed | (typeof children)[number]) =>
-      session.update({
+      session.prepareUpdate({
         operations: [{ kind: 'update', target: { kind: 'child', scopeId: root.scopeId, index }, input }],
       });
     const rejected = update(75, changed);
@@ -79,7 +79,7 @@ describe('Weave 批次更新', () => {
     const scope = readWeaveCurrent(session.root).children[0];
     if (scope.type !== 'scope') throw new Error('Expected scope');
     const defaults = { node: { style: { font: { size: '2em', weight: 'bold' } } } } as const;
-    const prepared = session.update({
+    const prepared = session.prepareUpdate({
       operations: [
         {
           kind: 'update',
@@ -110,7 +110,7 @@ describe('Weave 批次更新', () => {
     expect(before.filter(warning => warning.code === BuiltinCompileWarningCode.DuplicateNodeId)).toHaveLength(1);
     expect(before[0].path).toEqual(['children', 2, 'id']);
     const remove = () =>
-      session.update({
+      session.prepareUpdate({
         operations: [{ kind: 'remove', target: { kind: 'child', scopeId: session.root.scopeId, index: 0 } }],
       });
     const first = remove();
@@ -136,7 +136,7 @@ describe('Weave 批次更新', () => {
     if (initial.type !== 'scope') throw new Error('Expected scope');
     const initialId = initial.scopeId;
     const insert = () =>
-      session.update({
+      session.prepareUpdate({
         operations: [{ kind: 'insert', parentId: root.scopeId, index: 0, elements: [{ type: 'scope', children: [] }] }],
       });
     const first = insert();
@@ -182,7 +182,7 @@ describe('Weave 批次更新', () => {
     const originalScope = readWeaveCurrent(scope);
     const nestedScope = originalScope.children[0];
     const originalNestedScope = readWeaveCurrent(nestedScope);
-    const prepared = session.update({
+    const prepared = session.prepareUpdate({
       operations: [{ kind: 'remove', target: { kind: 'scope', scopeId: scope.scopeId } }],
     });
     expect(prepared.compilation.result).toEqual(compileTestResult({ ...input, children: [input.children[1]] }));
@@ -201,7 +201,7 @@ describe('Weave 批次更新', () => {
     const session = new WeaveManager(scene);
     session.mount();
     const { root } = session;
-    const prepared = session.update({
+    const prepared = session.prepareUpdate({
       operations: [
         {
           kind: 'insert',
@@ -217,7 +217,7 @@ describe('Weave 批次更新', () => {
     expect(prepared.compilation.result).toEqual(compileTestResult(scene));
     expect(readWeaveCurrent(root).scopeIds.size).toBe(1);
     expect(() =>
-      session.update({ operations: [{ kind: 'insert', parentId: root.scopeId, index: -1, elements: [] }] }),
+      session.prepareUpdate({ operations: [{ kind: 'insert', parentId: root.scopeId, index: -1, elements: [] }] }),
     ).toThrow();
   });
 
@@ -243,7 +243,7 @@ describe('Weave 批次更新', () => {
     const { root } = session;
     const scope = readWeaveCurrent(root).children[1];
     if (scope.type !== 'scope') throw new Error('Expected scope');
-    const prepared = session.update({
+    const prepared = session.prepareUpdate({
       operations: [
         {
           kind: 'update',
@@ -292,7 +292,7 @@ describe('Weave 批次更新', () => {
     const { root } = session;
     const scope = readWeaveCurrent(root).children[1];
     if (scope.type !== 'scope') throw new Error('Expected scope');
-    const prepared = session.update({
+    const prepared = session.prepareUpdate({
       operations: [
         {
           kind: 'update',
@@ -314,7 +314,7 @@ describe('Weave 批次更新', () => {
     prepared.commit();
     prepared.finish();
     expect(() =>
-      session.update({
+      session.prepareUpdate({
         operations: [
           {
             kind: 'update',
@@ -325,7 +325,7 @@ describe('Weave 批次更新', () => {
       }),
     ).toThrow(/ancestor Scope/);
     expect(() =>
-      session.update({
+      session.prepareUpdate({
         operations: [
           {
             kind: 'insert',
@@ -342,7 +342,7 @@ describe('Weave 批次更新', () => {
     const session = new WeaveManager(scene);
     session.mount();
     const { root } = session;
-    const first = session.update({
+    const first = session.prepareUpdate({
       operations: [
         {
           kind: 'update',
@@ -351,10 +351,10 @@ describe('Weave 批次更新', () => {
         },
       ],
     });
-    expect(() => session.update({ operations: [] })).toThrow(/candidate/);
+    expect(() => session.prepareUpdate({ operations: [] })).toThrow(/candidate/);
     first.commit();
     first.finish();
-    const second = session.update({
+    const second = session.prepareUpdate({
       operations: [
         {
           kind: 'update',
@@ -380,7 +380,7 @@ describe('Weave 批次更新', () => {
     const oldIndependent = readWeaveCurrent(independent).compile?.value;
     const oldOutput = JSON.stringify(mounted.compilation.result);
     const own = { type: 'node' as const, id: 'a', position: [60, 20] as [number, number] };
-    const prepared = session.update({
+    const prepared = session.prepareUpdate({
       operations: [{ kind: 'update', target: { kind: 'id', scopeId: root.scopeId, id: 'a' }, input: own }],
     });
     expect(readWeaveCurrent(a)).toBe(oldState);
@@ -400,7 +400,7 @@ describe('Weave 批次更新', () => {
     const mounted = session.mount();
     const root = session.root;
     const before = readWeaveCurrent(root);
-    const prepared = session.update({
+    const prepared = session.prepareUpdate({
       operations: [
         { kind: 'insert', parentId: root.scopeId, index: 0, elements: [{ type: 'node', id: 'new', position: [9, 9] }] },
         {
@@ -421,7 +421,7 @@ describe('Weave 批次更新', () => {
     expect(readWeaveCurrent(root).ids.has('new')).toBe(true);
     prepared.rollback();
     expect(readWeaveCurrent(root)).toBe(before);
-    const retried = session.update({ operations: [] });
+    const retried = session.prepareUpdate({ operations: [] });
     expect(retried.compilation.result).toBe(mounted.compilation.result);
     retried.commit();
     retried.finish();
@@ -440,7 +440,7 @@ describe('Weave 批次更新', () => {
     const { root } = session;
     const outer = readWeaveCurrent(root).children[0];
     if (outer.type !== 'scope') throw new Error('Expected scope');
-    const prepared = session.update({
+    const prepared = session.prepareUpdate({
       operations: [
         {
           kind: 'update',
@@ -477,11 +477,13 @@ describe('Weave 批次更新', () => {
     const { root } = session;
     const original = readWeaveCurrent(root);
     expect(() =>
-      session.update({ operations: [{ kind: 'remove', target: { kind: 'id', scopeId: root.scopeId, id: 'a' } }] }),
+      session.prepareUpdate({
+        operations: [{ kind: 'remove', target: { kind: 'id', scopeId: root.scopeId, id: 'a' } }],
+      }),
     ).toThrow();
     expect(readWeaveCurrent(root)).toBe(original);
     const replacement = { type: 'node' as const, id: 'a', text: 'replacement' };
-    const prepared = session.update({
+    const prepared = session.prepareUpdate({
       operations: [
         { kind: 'remove', target: { kind: 'id', scopeId: root.scopeId, id: 'a' } },
         { kind: 'insert', parentId: root.scopeId, index: 0, elements: [replacement] },
@@ -526,7 +528,7 @@ it('宿主装饰默认更新与完整编译一致，并保留提交前结果', (
       path: { label: { distance: 12, sloped: true }, arrow: { shape: 'stealth', scale: 2 } },
     },
   };
-  const updated = session.update({
+  const updated = session.prepareUpdate({
     operations: [{ kind: 'update', target: { kind: 'scope', scopeId: scope.scopeId }, input: properties }],
   });
   expect(updated.compilation.result).toEqual(compileTestResult({ ...input, children: [{ ...properties, children }] }));
@@ -569,7 +571,7 @@ it('普通标记参数和路径更新与完整编译保持一致', () => {
     ],
     marks: [{ pos: 0.75, shape: 'dot', params: { radius: 6 } }],
   };
-  const update = session.update({
+  const update = session.prepareUpdate({
     operations: [{ kind: 'update', target: { kind: 'id', scopeId: session.root.scopeId, id: 'host' }, input: path }],
   });
   expect(update.compilation.result).toEqual(compileTestResult({ ...input, children: [path] }, options));

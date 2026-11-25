@@ -41,7 +41,7 @@ describe('Composite 增量贡献', () => {
     const options = { composites: [first, second] };
     const manager = new WeaveManager(source, options);
     const mounted = manager.mount();
-    const candidate = manager.update({ operations: [] }, true);
+    const candidate = manager.prepareUpdate({ operations: [] }, true);
     expect(candidate.compilation).toEqual(mounted.compilation);
     candidate.rollback();
   });
@@ -67,7 +67,7 @@ describe('Composite 增量贡献', () => {
     const manager = new WeaveManager(source, options);
     manager.mount();
     const changed: IRNode = { ...anchor, text: 'BB', style: { fill: 'blue' } };
-    const candidate = manager.update({
+    const candidate = manager.prepareUpdate({
       operations: [
         { kind: 'update', target: { kind: 'id', scopeId: manager.root.scopeId, id: 'anchor' }, input: changed },
       ],
@@ -114,7 +114,7 @@ describe('Composite 增量贡献', () => {
     const manager = new WeaveManager(source, options, { captureProvenance: true });
     manager.mount();
     const moved: IRCoordinate = { type: 'coordinate', id: 'origin', position: [40, 20] };
-    const candidate = manager.update({
+    const candidate = manager.prepareUpdate({
       operations: [
         { kind: 'update', target: { kind: 'id', scopeId: manager.root.scopeId, id: 'origin' }, input: moved },
       ],
@@ -164,7 +164,7 @@ describe('Composite 增量贡献', () => {
       position: { direction: 'right', of: 'generated', distance: 50 },
     };
     const prepare = () =>
-      session.update({
+      session.prepareUpdate({
         operations: [
           {
             kind: 'update',
@@ -223,7 +223,7 @@ describe('Composite 增量贡献', () => {
     const initial = session.mount();
     const snapshot = structuredClone(initial.compilation.result);
     const changedOther: IRNode = { ...other, position: [250, 20] };
-    const independent = session.update({
+    const independent = session.prepareUpdate({
       operations: [
         { kind: 'update', target: { kind: 'id', scopeId: session.root.scopeId, id: 'other' }, input: changedOther },
       ],
@@ -240,7 +240,7 @@ describe('Composite 增量贡献', () => {
     independent.finish();
     const beforeChangedDependency = calls;
     const changedAnchor: IRNode = { ...anchor, position: [150, 50] };
-    const changed = session.update({
+    const changed = session.prepareUpdate({
       operations: [
         { kind: 'update', target: { kind: 'id', scopeId: session.root.scopeId, id: 'anchor' }, input: changedAnchor },
       ],
@@ -255,7 +255,7 @@ describe('Composite 增量贡献', () => {
     );
     changed.rollback();
     const beforeRetry = calls;
-    const retry = session.update({
+    const retry = session.prepareUpdate({
       operations: [
         { kind: 'update', target: { kind: 'id', scopeId: session.root.scopeId, id: 'other' }, input: other },
       ],
