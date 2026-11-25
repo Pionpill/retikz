@@ -13,6 +13,7 @@ export {
   createTreePositionContext,
   emitScopeGroup,
   finalizeSceneCompilation,
+  needsScopeEnvelope,
   prepareScopeExecution,
   queuePathChild,
   resolveStructuralAlignmentGuides,

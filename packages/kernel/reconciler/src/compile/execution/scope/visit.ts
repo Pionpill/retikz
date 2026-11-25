@@ -1,6 +1,7 @@
 import type { CompiledScope, IRScope, Transform } from '@retikz/core';
 import {
   compileScope,
+  compileScopeRectangleEnvelope,
   prepareScopePlacement,
   projectLayoutWithTransform,
   projectPublishedReference,
@@ -23,6 +24,19 @@ import type {
   ScopeExecutionOptions,
   ScopeExecutionSteps,
 } from './types';
+
+// ⚡当前 Core 契约要求提供几何；普通匿名分组内部复用空产物，不用于布局查询或发布
+const unusedEnvelope = compileScopeRectangleEnvelope(undefined);
+
+/** 当前契约下，具名、显式形状及依赖自身锚点的放置仍需包络 */
+export const needsScopeEnvelope = (
+  ir: Omit<IRScope, 'children'>,
+  preparation: ReturnType<typeof prepareScopePlacement>,
+): boolean =>
+  ir.id !== undefined ||
+  ir.boundingShape !== undefined ||
+  preparation.preliminaryTransforms === undefined ||
+  preparation.positionTarget !== undefined;
 
 /** 有 scope.id 时注册占位布局，返回后续替换所需的父 namespace frame 深度 */
 const registerScopeLayoutPlaceholder = (
@@ -122,6 +136,9 @@ export const prepareScopeExecution = (
     runtime.state.execution.namespaceStack.pushFrame();
   }
 
+  // ⚡匿名普通分组不读取自身包络；只有命名、显式外框或自身锚点才需要它
+  const needsEnvelope = needsScopeEnvelope(ir, preparation);
+  const skipChildGeometries = frame.context.skipGeometries === true && !needsEnvelope;
   const state: SubtreeCompileState = {
     primitives: [],
     geometries: [],
@@ -139,6 +156,7 @@ export const prepareScopeExecution = (
     const scopeFrame: SubtreeCompileRuntime = {
       context: {
         compositeInput,
+        skipGeometries: skipChildGeometries,
         layout: layoutContext,
         transformChains: preliminaryScopeChain,
         pathPrefix: createCompileChildPath(locatorPrefix, index),
@@ -157,7 +175,7 @@ export const prepareScopeExecution = (
 
   const compileContext = {
     ...scopeGeometryContext,
-    layouts: state.geometries,
+    layouts: needsEnvelope ? state.geometries : [],
     resolvedClipPath: preResolvedClipPath,
     registerClip: runtime.state.workspace.clipRegistry.register,
     registerClipPath: runtime.state.workspace.clipRegistry.registerPath,
@@ -193,15 +211,16 @@ export const prepareScopeExecution = (
       );
     }
 
-    const finalEnvelope =
-      scopeTransforms.length === 0
-        ? intrinsicLayout
-        : projectLayoutWithTransform(
-            intrinsicLayout,
-            runtime.state.execution.scopeTransformComposer.resolve(scopeTransforms),
-          );
-    frameState.geometries.push(...projectScopeCompileLayouts(ir, intrinsicLayout, state.geometries, scopeTransforms));
+    if (!frame.context.skipGeometries)
+      frameState.geometries.push(...projectScopeCompileLayouts(ir, intrinsicLayout, state.geometries, scopeTransforms));
     if (ir.id !== undefined) {
+      const finalEnvelope =
+        scopeTransforms.length === 0
+          ? intrinsicLayout
+          : projectLayoutWithTransform(
+              intrinsicLayout,
+              runtime.state.execution.scopeTransformComposer.resolve(scopeTransforms),
+            );
       const globalEnvelope = projectLayoutWithTransform(
         finalEnvelope,
         runtime.state.execution.scopeTransformComposer.resolve(transformChains),
@@ -277,6 +296,7 @@ export const prepareScopeExecution = (
     childFrame: {
       context: {
         compositeInput,
+        skipGeometries: skipChildGeometries,
         layout: layoutContext,
         transformChains: preliminaryScopeChain,
         pathPrefix: scopeGeometryContext.irPath,
@@ -292,6 +312,7 @@ export const prepareScopeExecution = (
       return compiledScope;
     },
     preparation,
+    unusedEnvelope: needsEnvelope ? undefined : unusedEnvelope,
     canon,
     compileContext,
   };
@@ -302,7 +323,9 @@ export const visitScope = (...args: Parameters<typeof prepareScopeExecution>): v
   const steps = prepareScopeExecution(...args);
   try {
     steps.children();
-    const compiled = compileScope(steps.canon, steps.compileContext, { layout: { preparation: steps.preparation } });
+    const compiled = compileScope(steps.canon, steps.compileContext, {
+      layout: { preparation: steps.preparation, envelope: steps.unusedEnvelope },
+    });
     steps.project(compiled);
     steps.paths();
   } finally {

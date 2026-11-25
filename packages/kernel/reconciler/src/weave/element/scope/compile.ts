@@ -58,7 +58,7 @@ export const executeWeaveScope = (
   // 1. 以已完成的准备结果、子布局和变换等通道作为编译复用依据
   const compileInputs = {
     preparation: steps.preparation,
-    layouts: steps.childFrame.state.geometries,
+    layouts: steps.compileContext.layouts,
     scopeChain: context.transformChains,
     childCount: steps.childFrame.state.primitives.length,
     preResolvedClipPath: steps.compileContext.resolvedClipPath,
@@ -88,7 +88,7 @@ export const executeWeaveScope = (
 
   // 3. 重新计算包络，并合并准备阶段与本轮编译的诊断和读取事实
   const envelopeBounds =
-    canon.envelope.kind === ScopeBoundingShape.Circle
+    steps.unusedEnvelope !== undefined || canon.envelope.kind === ScopeBoundingShape.Circle
       ? undefined
       : previousCompile?.envelopeBounds !== undefined &&
           previous?.resolve?.value.envelope.kind !== ScopeBoundingShape.Circle
@@ -99,7 +99,8 @@ export const executeWeaveScope = (
           )
         : calculateScopeEnvelopeBounds(compileInputs.layouts);
   const envelope =
-    canon.envelope.kind === ScopeBoundingShape.Circle ? undefined : compileScopeRectangleEnvelope(envelopeBounds);
+    steps.unusedEnvelope ??
+    (canon.envelope.kind === ScopeBoundingShape.Circle ? undefined : compileScopeRectangleEnvelope(envelopeBounds));
   const observation = createWeaveObservation(runtime);
   const local = observation.runtime;
   const compiled = runtime.state.execution.namespaceStack.observeReferences(observation.read, () =>

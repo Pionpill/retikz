@@ -83,7 +83,7 @@ export const assembleNode = (
     alignmentGuides.push(...nodeAlignmentGuides);
   }
 
-  geometries.push(nodeGeometry);
+  if (!frame.context.skipGeometries) geometries.push(nodeGeometry);
 };
 
 /** 创建全量与增量共用的 Node 确定化上下文 */

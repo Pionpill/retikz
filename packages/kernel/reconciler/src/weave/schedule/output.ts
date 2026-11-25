@@ -114,7 +114,7 @@ export const createWeaveOutputFlow = ({
     const scope = transaction.readState(entry);
     const childState = emptyOutput();
     // ⚡具名 Scope 只投影自己的包络，输出收集无需再复制子布局
-    const includeLayouts = scope.origin.own.id === undefined;
+    const includeLayouts = scope.origin.own.id === undefined && !contextOf(scope.parent).skipGeometries;
     for (const child of scope.children) appendState(childState, outputOf(child), includeLayouts);
     const result = emptyOutput();
     importSceneResources(
@@ -173,7 +173,7 @@ export const createWeaveOutputFlow = ({
     artifacts: [],
   });
   /** 包络读取清洁布局，不提前物化绘制或来源所有者 */
-  const layoutOf = (entry: WeaveEntry): WeaveAssembledOutput => {
+  const layoutOf = (entry: WeaveEntry, includeLayouts = true): WeaveAssembledOutput => {
     if (entry.type !== 'scope') return transaction.readState(entry).contribution!.output;
     const state = transaction.readState(entry);
     const children = emptyOutput();
@@ -181,18 +181,19 @@ export const createWeaveOutputFlow = ({
       if (child.type === 'path') continue;
       ensure(child);
       if (child.type === 'scope') requireProjection(child);
-      appendState(children, executions.get(child)?.frame.state ?? layoutOf(child));
+      appendState(children, executions.get(child)?.frame.state ?? layoutOf(child, includeLayouts), includeLayouts);
     }
     const result = emptyOutput();
     const compiled = state.compile!.value;
-    result.geometries.push(
-      ...projectScopeCompileLayouts(
-        state.origin.own,
-        { shape: compiled.shape, boundary: compiled.boundary, geometry: compiled.layout.overall.geometry },
-        children.geometries,
-        compiled.layout.overall.transforms,
-      ),
-    );
+    if (includeLayouts)
+      result.geometries.push(
+        ...projectScopeCompileLayouts(
+          state.origin.own,
+          { shape: compiled.shape, boundary: compiled.boundary, geometry: compiled.layout.overall.geometry },
+          children.geometries,
+          compiled.layout.overall.transforms,
+        ),
+      );
     result.primitives.push(...children.primitives);
     return result;
   };
@@ -211,10 +212,11 @@ export const createWeaveOutputFlow = ({
     destination: SubtreeCompileState,
     execution: WeaveElementExecution,
     output: CompileElementExecutor['output'],
+    includeLayouts: boolean,
   ) => {
     const state = execution.frame.state;
     destination.primitives.push(...state.primitives);
-    destination.geometries.push(...state.geometries);
+    if (includeLayouts) destination.geometries.push(...state.geometries);
     destination.publications.push(...state.publications);
     destination.bounds.push(...state.bounds);
     destination.allocations.push(...state.allocations);

@@ -55,6 +55,7 @@ export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinitio
     compileSubtree: assembleCompileSubtree,
     // ⚡Scene 根输出不消费父布局占位，跳过逐层传播；独立 Composite 测量仍按需开启
     skipAllocation: true,
+    skipRootGeometries: true,
   });
   const initialFrame = rootExecutor.createRootRuntime();
   const rootFrame = executionContext.hasBoundInputs
@@ -309,8 +310,10 @@ export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinitio
         if (child.type === 'path') continue;
         if (child.type === 'scope') requireProjection(child);
         else ensure(child);
-        if (executions.has(child)) append(steps.childFrame.state, executions.get(child)!, execution.executor.output);
-        else appendState(steps.childFrame.state, layoutOf(child));
+        const includeLayouts = !steps.childFrame.context.skipGeometries;
+        if (executions.has(child))
+          append(steps.childFrame.state, executions.get(child)!, execution.executor.output, includeLayouts);
+        else appendState(steps.childFrame.state, layoutOf(child, includeLayouts), includeLayouts);
       }
       const state = transaction.readState(entry);
       const result = executeWeaveScope(

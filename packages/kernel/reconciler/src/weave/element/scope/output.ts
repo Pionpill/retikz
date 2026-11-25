@@ -23,7 +23,8 @@ export const assembleWeaveScopeOutput = (
   const transforms = compiled.layout.overall.transforms;
   const composer = runtime.state.execution.scopeTransformComposer;
   const intrinsic = { shape: compiled.shape, boundary: compiled.boundary, geometry: compiled.layout.overall.geometry };
-  frame.state.geometries.push(...projectScopeCompileLayouts(own, intrinsic, children.geometries, transforms));
+  if (!frame.context.skipGeometries)
+    frame.state.geometries.push(...projectScopeCompileLayouts(own, intrinsic, children.geometries, transforms));
   frame.state.artifacts.push(...children.artifacts);
   for (const allocation of children.allocations) {
     if (allocation.skipAllocation) continue;

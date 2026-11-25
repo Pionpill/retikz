@@ -70,6 +70,8 @@ export type ScopeExecutionSteps = {
   readonly compiled: CompiledScope;
   /** Core 的放置准备结果 */
   preparation: ReturnType<typeof prepareScopePlacement>;
+  /** 普通匿名 Scope 不查询自身几何时使用的内部空产物 */
+  unusedEnvelope?: CompiledScope['layout']['envelope'];
   /** 在已准备的继承与局部变换下构建子布局 */
   children: () => void;
   /** 子级继承前已确定的自身配置 */

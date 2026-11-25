@@ -70,4 +70,8 @@ export const compileScene = <TComposite extends AnyCompositeDefinition>(
   root: IRScene,
   runtime: CompileRuntime,
 ): SceneCompilationSnapshot<TComposite> =>
-  finalizeSceneCompilation<TComposite>(root, runtime, assembleCompileSubtree(root.children, runtime));
+  finalizeSceneCompilation<TComposite>(
+    root,
+    runtime,
+    assembleCompileSubtree(root.children, runtime, { skipRootGeometries: true }),
+  );

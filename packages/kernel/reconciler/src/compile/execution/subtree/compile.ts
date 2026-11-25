@@ -58,6 +58,8 @@ export type SubtreeCompileOptions = {
   measurementAxis?: LayoutMeasurementAxis;
   /** 查询 probe 在 Scope 出栈前读取最终引用环境，不向公共 context 暴露可变状态 */
   captureScopeTargets?: (child: IRScope, namespace: NamespaceStack, chain: ReadonlyArray<Transform>) => void;
+  /** Scene 根不消费向上的局部几何 */
+  skipRootGeometries?: boolean;
   /** 当前执行是否为 layoutChild 隔离 probe */
   probe?: boolean;
   /** probe 继承的当前 scope chain */
@@ -112,6 +114,8 @@ export type SubtreeCompileHost = {
 
 /** 当前递归子树的继承环境和布局输入 */
 export type SubtreeCompileContext = Readonly<{
+  /** 父通道无人消费局部几何，命名发布与视觉边界仍独立处理 */
+  skipGeometries?: boolean;
   /** 当前原始 Source 子树及其组件运行时输入绑定，生成的普通 child 不继承 */
   compositeInput?: CompositeInputScope;
   /** 子树的布局约束与父布局占位策略，省略时使用默认行为 */

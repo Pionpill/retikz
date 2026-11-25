@@ -194,10 +194,11 @@ export const createWeaveDependencyFlow = ({
       if (
         state.consumers.size > 0 &&
         task.phase === 'project' &&
-        !jsonStructuralEquals(
-          producer.current?.compile?.value.layout.overall,
-          executions.get(producer)!.scope!.compiled.layout.overall,
-        )
+        (transaction.readState(producer).origin.own.id === undefined ||
+          !jsonStructuralEquals(
+            producer.current?.compile?.value.layout.overall,
+            executions.get(producer)!.scope!.compiled.layout.overall,
+          ))
       )
         for (const consumer of state.consumers) notify(consumer);
     } else {

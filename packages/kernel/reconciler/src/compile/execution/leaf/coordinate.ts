@@ -44,5 +44,5 @@ export const assembleCoordinate = (
   });
   publications.push(coordinateLayout);
   allocations.push({ boundsPoints: [localCenter], skipAllocation: layout?.skipAllocation });
-  geometries.push(compiled);
+  if (!frame.context.skipGeometries) geometries.push(compiled);
 };

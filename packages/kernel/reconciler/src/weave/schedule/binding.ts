@@ -1,4 +1,4 @@
-import {
+﻿import {
   projectLayoutWithTransform,
   projectPublishedReference,
   registerFatalProbeError,
@@ -17,7 +17,13 @@ import type {
   SubtreeCompileContext,
   SubtreeCompileRuntime,
 } from '../../compile';
-import { assembleCompileSubtree, CompileElementExecutor, createDuplicateWarning, NamespaceStack } from '../../compile';
+import {
+  needsScopeEnvelope,
+  assembleCompileSubtree,
+  CompileElementExecutor,
+  createDuplicateWarning,
+  NamespaceStack,
+} from '../../compile';
 import type { WeaveEntry, WeaveRoot, WeaveScopeEntry } from '../shared';
 import type { WeaveNameIndex, WeaveTransaction } from '../state';
 import type { WeaveTaskAddress } from './task';
@@ -82,6 +88,8 @@ export const createWeaveBindingFlow = ({
     const transforms = state.compile?.context.preparation.preliminaryTransforms;
     return {
       ...outer,
+      skipGeometries:
+        outer.skipGeometries === true && !needsScopeEnvelope(state.origin.own, state.compile!.context.preparation),
       inheritance: state.resolve!.value.inheritance,
       pathPrefix: paths.get(parent)!,
       compileOwner: ownerOf(parent),
@@ -267,7 +275,14 @@ export const createWeaveBindingFlow = ({
       const facts = scopeFacts(parent);
       chains = composer.append(facts.context.transformChains, facts.transforms);
     }
-    const frame = { context: { ...parentContext, transformChains: chains }, state: executor.createRootRuntime().state };
+    const frame = {
+      context: {
+        ...parentContext,
+        transformChains: chains,
+        skipGeometries: entry.type === 'scope' && parentContext.skipGeometries,
+      },
+      state: executor.createRootRuntime().state,
+    };
     const execution = { runtime: candidate, executor, frame, bindings: [] };
     executions.set(entry, execution);
     return execution;

@@ -215,7 +215,7 @@ export type WeaveScopeState = WeaveElementStateBase & {
       /** 后代计算前的放置准备 */
       preparation: ScopePlacementPreparation;
       /** 子布局构成的包络输入 */
-      layouts: Array<CompiledReferenceGeometry>;
+      layouts: ReadonlyArray<CompiledReferenceGeometry>;
       /** 编译使用的祖先变换链 */
       scopeChain: ReadonlyArray<Transform>;
       /** 参与输出绑定的直接子图元数量 */

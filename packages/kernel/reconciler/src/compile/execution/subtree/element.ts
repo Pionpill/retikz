@@ -71,6 +71,7 @@ export class CompileElementExecutor {
 
     return {
       context: {
+        skipGeometries: this.options.skipRootGeometries,
         layout: {
           childProposal: this.options.proposal ?? naturalLayoutProposal,
           // ⚡默认跳过无人消费的父布局占位传播，测量和增量驱动按需显式开启
@@ -328,7 +329,7 @@ export class CompileElementExecutor {
       const zIndex = contribution.primitiveZIndices[index];
       if (zIndex !== undefined) this.output.zIndexMap.set(primitive, zIndex);
     }
-    runtime.state.geometries.push(...contribution.geometries);
+    if (!runtime.context.skipGeometries) runtime.state.geometries.push(...contribution.geometries);
     runtime.state.publications.push(...contribution.publications);
     runtime.state.bounds.push(...contribution.bounds);
     for (const allocation of contribution.allocations) {
