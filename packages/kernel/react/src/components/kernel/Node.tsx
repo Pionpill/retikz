@@ -6,7 +6,7 @@ import type { FC, ReactNode } from 'react';
 import { Fragment, isValidElement } from 'react';
 
 import type { HydrationEventProps } from '../../hydration';
-import { KernelDisplayName, getDisplayName } from '../../protocol';
+import { KernelDisplayName, getDisplayName } from '../../shared';
 import { textElementToLineSpec } from './Text';
 
 /** 可定位、可连接的节点输入，组合文字、视觉形状和连接面 */

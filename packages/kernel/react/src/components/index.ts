@@ -17,6 +17,7 @@ export type {
   PathProps,
   RectangleStepProps,
   ScopeProps,
+  ScopeStyleProps,
   SmoothStepProps,
   StepProps,
   TextProps,

@@ -5,7 +5,10 @@ import type { InputScope, ScopeOptions } from '@retikz/vanilla';
 import type { FC, ReactNode } from 'react';
 
 import type { HydrationEventProps } from '../../hydration';
-import { KernelDisplayName } from '../../protocol';
+import { KernelDisplayName } from '../../shared';
+
+/** Scope 的级联视觉覆盖与后代默认通道，Layout 通过 rootScope 承载 */
+export type ScopeStyleProps = Pick<ScopeOptions, 'defaults'>;
 
 /**
  * 为一组图元设置局部样式、命名空间、变换、裁剪和引用包络

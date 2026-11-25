@@ -2,7 +2,7 @@ import type { CompiledArrowEnd, ScenePrimitive, SceneResource } from '@retikz/co
 import { buildArrowMarker, buildClipDef, buildPaintDef, buildPrim } from '@retikz/render/svg';
 import type { Key, ReactElement } from 'react';
 
-import { svgToReact } from '../../../src/render/svg';
+import { svgToReact } from '../../../src/render/svg-to-react';
 
 /** 将 Render builder 输出转换为可断言的 React 图元 */
 export const renderPrim = (primitive: ScenePrimitive, key: Key, context: Parameters<typeof buildPrim>[1] = {}) =>

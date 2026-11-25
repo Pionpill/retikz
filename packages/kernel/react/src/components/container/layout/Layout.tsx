@@ -21,16 +21,17 @@ import type { ReconcilerDiagnostic } from '@retikz/reconciler';
 import type { AnimationControls } from '@retikz/render/animation';
 import { resolveAnimationEnabled } from '@retikz/render/animation';
 import type { HydrationHandlers } from '@retikz/render/hydration';
-import type { InputScene, InputScope, ProcessOptions } from '@retikz/vanilla';
+import type { InputScene, ProcessOptions } from '@retikz/vanilla';
 import { isInputScene, SceneRuntime, compileToScene } from '@retikz/vanilla';
 import type { CSSProperties, FC, ReactNode, Ref } from 'react';
 import { useCallback, useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 
 import { RetikzReactError, RetikzReactErrorCode } from '../../../error';
 import { collectHydrationHandlers } from '../../../hydration';
-import { KernelDisplayName } from '../../../protocol';
-import { usePrefersReducedMotion } from '../../../render/animation';
 import { ProcessingResultHost } from '../../../render/processing-result';
+import { usePrefersReducedMotion } from '../../../render/reduced-motion';
+import { KernelDisplayName } from '../../../shared';
+import type { ScopeStyleProps } from '../../kernel';
 import { useAnimationMode } from '../animation-mode';
 import { useRendererMode } from '../renderer-mode';
 import { mergeThemeOverlays, useTheme } from '../theme';
@@ -175,7 +176,7 @@ export type LayoutProps = {
   /** 自定义文字测量；省略时使用 Vanilla 的环境测量与估算降级 */
   measureText?: TextMeasurer;
   /** JSX 子图的隐式根 Scope 覆盖；完整 ir 优先，style 宿主 CSS 独立生效 */
-  rootScope?: Pick<InputScope, 'defaults'>;
+  rootScope?: ScopeStyleProps;
   /** 直接传入持久化 Source IR，与 children 二选一 */
   ir?: IRScene;
   /** 写入 Scene 根并由后代 Composite 继承的 Theme */

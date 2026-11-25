@@ -2,10 +2,9 @@ import type { ElementHandlers, HydrationHandler, HydrationHandlers } from '@reti
 import type { ReactNode } from 'react';
 import { Children, Fragment, isValidElement } from 'react';
 
-import { KernelDisplayName, getDisplayName } from '../protocol';
-import { resolveInputEmbedAdapter } from '../protocol';
-import type { HydrationEventPropName } from './event-props';
-import { EVENT_PROP_TO_NAME } from './event-props';
+import { KernelDisplayName, getDisplayName, resolveInputEmbedAdapter } from '../shared';
+import type { HydrationEventPropName } from './event';
+import { EVENT_PROP_TO_NAME } from './event';
 
 /** 从一个元素 props 读出 `on<Event>` handler，翻译成 RetikzEvent → handler 的 ElementHandlers（无 handler 返回空对象） */
 const readElementHandlers = (props: Record<string, unknown>): ElementHandlers => {

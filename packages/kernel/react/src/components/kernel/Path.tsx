@@ -6,7 +6,7 @@ import type { FC, ReactNode } from 'react';
 import { Children, Fragment, isValidElement } from 'react';
 
 import type { HydrationEventProps } from '../../hydration';
-import { KernelDisplayName, getDisplayName } from '../../protocol';
+import { KernelDisplayName, getDisplayName } from '../../shared';
 import { inputStepFromProps } from './Step';
 import type { StepProps } from './Step';
 

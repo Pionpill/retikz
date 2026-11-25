@@ -33,10 +33,9 @@ src/index.ts            包根公开 API，不暴露内部转换函数
 components/kernel/      每个图元一个组件文件，同文件定义 Props、组件和局部转换函数
 components/sugar/       用 Kernel JSX 表达的作者简写
 components/container/   Layout、场景收集，以及 Provider 与各自的 context
-protocol/               元素识别、嵌入协议与共享作者契约
 hydration/              React 事件 props、事件名映射与 handler 收集
 render/                 SVG / Canvas 宿主与 processing result 映射
-shared/                 跨图元复用的纯函数
+shared/                 跨模块共享的组件展示名与嵌入协议
 ```
 
 - `components/kernel/index.ts` 汇总组件、Props 和内部 adapter；包根只公开声明与已有公开入口，不导出图元 adapter。

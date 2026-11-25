@@ -22,7 +22,7 @@ import {
 import type { CSSProperties, FC, MutableRefObject, Ref } from 'react';
 import { useEffect, useReducer, useRef } from 'react';
 
-import { computeDisplaySize } from '../display-size';
+import { computeDisplaySize } from './display-size';
 
 /** 按 href 缓存的图片加载态（image paint server 用；跨 CanvasHost 实例共享去重） */
 type ImageEntry = { img: HTMLImageElement; loaded: boolean; failed: boolean; waiters: Set<() => void> };

@@ -1,9 +1,9 @@
-import { pickDefined } from '@retikz/foundation';
 import type { AssertEqual } from '@retikz/foundation';
+import { pickDefined } from '@retikz/foundation';
 import type { ReactNode } from 'react';
 import { createElement } from 'react';
 
-import type { ScopeStyleProps } from '../../../protocol';
+import type { ScopeStyleProps } from '../../kernel';
 import { Scope } from '../../kernel';
 
 /**

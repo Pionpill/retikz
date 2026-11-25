@@ -14,9 +14,9 @@ import { buildSvgDocument } from '@retikz/render/svg';
 import type { CSSProperties, FC, MutableRefObject, ReactElement, Ref } from 'react';
 import { cloneElement, useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { CanvasHost } from './canvas';
+import { CanvasHost } from './CanvasHost';
 import { computeDisplaySize } from './display-size';
-import { svgToReact } from './svg';
+import { svgToReact } from './svg-to-react';
 
 /** Vanilla processing result 的 React 宿主属性 */
 export type ProcessingResultHostProps = Readonly<{

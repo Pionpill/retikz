@@ -16,7 +16,7 @@ import type {
 import type { FC, ReactNode } from 'react';
 import { Children, Fragment, isValidElement } from 'react';
 
-import { KernelDisplayName, getDisplayName } from '../../protocol';
+import { KernelDisplayName, getDisplayName } from '../../shared';
 
 /**
  * React DSL 层的 target 类型：core 对象 `IRTarget` + 字符串 shorthand（`'A'` / `'A.north'` / `'A.30'` / `'+dx,dy'`）

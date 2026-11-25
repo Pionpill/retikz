@@ -1,2 +1,2 @@
-export * from './collect-hydration-handlers';
-export * from './event-props';
+export * from './collect';
+export * from './event';

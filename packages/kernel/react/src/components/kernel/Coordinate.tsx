@@ -1,7 +1,7 @@
 import type { CoordinateOptions, InputCoordinate } from '@retikz/vanilla';
 import type { FC } from 'react';
 
-import { KernelDisplayName } from '../../protocol';
+import { KernelDisplayName } from '../../shared';
 
 /** 命名坐标点的 React 输入，不绘制可见内容 */
 export type CoordinateProps = CoordinateOptions;

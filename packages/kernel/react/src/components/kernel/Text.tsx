@@ -2,7 +2,7 @@ import type { IRLine, TextLineSchema } from '@retikz/core';
 import type { FC, ReactElement } from 'react';
 import type { output } from 'zod';
 
-import { KernelDisplayName } from '../../protocol';
+import { KernelDisplayName } from '../../shared';
 
 /** Node 内单行文字的内容与样式覆盖 */
 export type TextProps = Pick<output<typeof TextLineSchema>, 'fill' | 'opacity' | 'font'> & {

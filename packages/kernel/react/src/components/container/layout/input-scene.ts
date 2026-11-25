@@ -4,7 +4,7 @@ import type { ReactNode, ReactElement } from 'react';
 import { Children, Fragment, isValidElement } from 'react';
 
 import { RetikzReactError, RetikzReactErrorCode } from '../../../error';
-import { KernelDisplayName, createInputEmbedProps, getDisplayName, resolveInputEmbedAdapter } from '../../../protocol';
+import { KernelDisplayName, createInputEmbedProps, getDisplayName, resolveInputEmbedAdapter } from '../../../shared';
 import { inputCoordinateFromProps, inputNodeFromProps, inputPathFromProps, inputScopeFromProps } from '../../kernel';
 import type { CoordinateProps, NodeProps, PathProps, ScopeProps } from '../../kernel';
 

@@ -3,7 +3,7 @@ import { buildSvgDocument, renderToSvgString } from '@retikz/render/svg';
 import type { ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
-import { svgToReact } from '../../../src/render/svg';
+import { svgToReact } from '../../../src/render/svg-to-react';
 
 type AnyElement = ReactElement<Record<string, unknown> & { children?: unknown }>;
 
