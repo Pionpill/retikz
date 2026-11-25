@@ -44,16 +44,6 @@ export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinitio
 ) => {
   const { source, runtime, recordComputed, writeContribution, root, transaction, paths, names } = executionContext;
   const { canReuse, retained, pending } = selection;
-  // ⚡本次执行期间路径已固定，复用任务键以避免深 Scope 调度重复序列化
-  const keys = new Map<WeaveEntry, string>();
-  const keyOf = (entry: WeaveEntry) => {
-    let key = keys.get(entry);
-    if (key === undefined) {
-      key = JSON.stringify(paths.get(entry));
-      keys.set(entry, key);
-    }
-    return key;
-  };
   const executions = new Map<WeaveEntry, WeaveElementExecution>();
   const namespaces = new Map<WeaveRoot | WeaveScopeEntry, CompileNamespaceKey>();
   const owners = new Map<WeaveScopeEntry, CompileOwnerKey>();
@@ -85,8 +75,8 @@ export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinitio
   };
   const outputAddress = (entry: WeaveEntry): WeaveTaskAddress => ({ entry, phase: 'output' });
   const consume = (entry: WeaveEntry) => {
-    pending.get(keyOf(entry))?.consume();
-    pending.delete(keyOf(entry));
+    pending.get(entry)?.consume();
+    pending.delete(entry);
   };
   const assembled = new Map<WeaveEntry, WeaveAssembledOutput>();
   /** 子输出可见性变化只更新祖先分组输出，不失效子布局 */
@@ -98,7 +88,6 @@ export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinitio
       executions,
       assembled,
       changedOutputs,
-      keyOf,
       prepareAddress,
       outputAddress,
       requestTask: address => queue.request(address),
@@ -119,7 +108,6 @@ export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinitio
     requireTask: address => queue.require(address),
     prepareAddress,
     pending,
-    keyOf,
     scopeIds,
   });
   const { outputOf, layoutOf, appendState, append, collectDeclarationsIfChanged } = createWeaveOutputFlow({
@@ -132,7 +120,6 @@ export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinitio
     changedOutputs,
     rootExecutor,
     recordComputed,
-    keyOf,
     prepareAddress,
     outputAddress,
     requireTask: address => queue.require(address),
@@ -399,7 +386,7 @@ export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinitio
       }
       return;
     }
-    let contribution = retained.get(keyOf(entry)) ?? pending.get(keyOf(entry))?.check;
+    let contribution = retained.get(entry) ?? pending.get(entry)?.check;
     const namespace = execution.runtime.state.execution.namespaceStack;
     if (contribution !== undefined && !contextMatches(entry, entry.type === 'path')) contribution = undefined;
     if (contribution !== undefined) {
@@ -503,7 +490,7 @@ export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinitio
     execution.bindingsReady = true;
   }, notifyConsumers);
 
-  for (const { entry } of pending.values()) {
+  for (const entry of pending.keys()) {
     queue.request(prepareAddress(entry));
     queue.request(outputAddress(entry));
   }

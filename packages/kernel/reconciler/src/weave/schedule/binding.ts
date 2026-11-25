@@ -38,8 +38,7 @@ type WeaveBindingFlowContext = {
   requireProjection: (entry: WeaveScopeEntry) => void;
   requireTask: (address: WeaveTaskAddress) => void;
   prepareAddress: (entry: WeaveEntry) => WeaveTaskAddress;
-  pending: Map<string, WeaveUpdateRequest>;
-  keyOf: (entry: WeaveEntry) => string;
+  pending: Map<WeaveEntry, WeaveUpdateRequest>;
   scopeIds: IdAllocator;
 };
 
@@ -59,7 +58,6 @@ export const createWeaveBindingFlow = ({
   requireTask,
   prepareAddress,
   pending,
-  keyOf,
   scopeIds,
 }: WeaveBindingFlowContext) => {
   const composer = runtime.state.execution.scopeTransformComposer;
@@ -232,7 +230,7 @@ export const createWeaveBindingFlow = ({
     const existing = executions.get(entry);
     if (existing !== undefined) return existing;
     const parent = transaction.readState(entry).parent;
-    if (parent.type !== 'root' && pending.has(keyOf(parent))) requireTask(prepareAddress(parent));
+    if (parent.type !== 'root' && pending.has(parent)) requireTask(prepareAddress(parent));
     const parentContext = contextOf(parent);
     const state = transaction.editState(entry);
     state.origin = { ...state.origin, context: parentContext.inheritance };

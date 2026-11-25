@@ -12,11 +12,10 @@ import type { WeaveAssembledOutput, WeaveElementExecution, WeaveUpdateRequest } 
 
 type WeaveDependencyContext = {
   transaction: WeaveTransaction;
-  pending: Map<string, WeaveUpdateRequest>;
+  pending: Map<WeaveEntry, WeaveUpdateRequest>;
   executions: Map<WeaveEntry, WeaveElementExecution>;
   assembled: Map<WeaveEntry, WeaveAssembledOutput>;
   changedOutputs: Set<WeaveScopeEntry>;
-  keyOf: (entry: WeaveEntry) => string;
   prepareAddress: (entry: WeaveEntry) => WeaveTaskAddress;
   outputAddress: (entry: WeaveEntry) => WeaveTaskAddress;
   requestTask: (address: WeaveTaskAddress) => void;
@@ -45,14 +44,13 @@ export const createWeaveDependencyFlow = ({
   executions,
   assembled,
   changedOutputs,
-  keyOf,
   prepareAddress,
   outputAddress,
   requestTask,
   requireTask,
 }: WeaveDependencyContext) => {
   // ⚡直接变化的子项已在本批请求中，查询父级就绪时无需遍历兄弟寻找它
-  const initialEntry = pending.size === 1 ? pending.values().next().value?.entry : undefined;
+  const initialEntry = pending.size === 1 ? pending.keys().next().value : undefined;
   const initialParent = initialEntry?.current?.parent;
   const layoutParent =
     initialEntry !== undefined &&
@@ -70,14 +68,14 @@ export const createWeaveDependencyFlow = ({
     return ancestors;
   };
   const mayChange = (entry: WeaveEntry, seen = new Set<WeaveEntry>()): boolean => {
-    if (pending.has(keyOf(entry)) || executions.has(entry)) return true;
+    if (pending.has(entry) || executions.has(entry)) return true;
     if (entry === layoutParent) return true;
     if (seen.has(entry)) return false;
     seen.add(entry);
     const state = transaction.readState(entry);
     for (const producer of state.dependencies.keys()) if (mayChange(producer, seen)) return true;
     for (const ancestor of ancestorsOf(entry)) {
-      if (pending.has(keyOf(ancestor)) || executions.has(ancestor)) return true;
+      if (pending.has(ancestor) || executions.has(ancestor)) return true;
       for (const [producer, kinds] of transaction.readState(ancestor).dependencies)
         if (kinds.some(kind => kind !== 'layout') && mayChange(producer, seen)) return true;
     }
@@ -94,9 +92,8 @@ export const createWeaveDependencyFlow = ({
   const notify = (entry: WeaveEntry) => {
     assembled.delete(entry);
     for (const ancestor of ancestorsOf(entry)) assembled.delete(ancestor);
-    if (!pending.has(keyOf(entry)) && !executions.has(entry))
-      pending.set(keyOf(entry), {
-        entry,
+    if (!pending.has(entry) && !executions.has(entry))
+      pending.set(entry, {
         check: entry.type === 'scope' ? undefined : entry.current?.contribution,
         inputs: [],
         consume: () => {},
@@ -119,7 +116,7 @@ export const createWeaveDependencyFlow = ({
   const ensure = (entry: WeaveEntry) => {
     if (!mayChange(entry)) return;
     ensureDependencies(entry);
-    if (pending.has(keyOf(entry))) requireTask(prepareAddress(entry));
+    if (pending.has(entry)) requireTask(prepareAddress(entry));
   };
   const requireProjection = (entry: WeaveScopeEntry) => {
     ensure(entry);

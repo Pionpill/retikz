@@ -386,21 +386,19 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
       );
     };
 
-    /** 初始选中条目中可直接保留的清洁输出贡献 */
-    const retained = new Map<string, WeaveContribution>();
+    /** ⚡调度期间作者身份稳定，直接按条目寻址而不序列化声明路径 */
+    const retained = new Map<WeaveEntry, WeaveContribution>();
     /** 待计算或待验证的声明，进入此集合不代表其全部阶段都需要重算 */
-    const pending = new Map<string, WeaveUpdateRequest>();
+    const pending = new Map<WeaveEntry, WeaveUpdateRequest>();
 
     /** 首轮及 full 选择全部作者条目，auto 仅选择已登记变化 */
     const requested = !batch.updating || batch.forceFull ? paths.keys() : tracker.requestedEntries;
     for (const entry of requested) {
-      const path = keyOf(paths.get(entry)!);
       const state = transaction.readState(entry);
       const affected =
         batch.forceFull || tracker.isEntryAffected(entry) || state.pendingInputs.some(input => input.changes.size > 0);
       const contribution = 'contribution' in state ? state.contribution : undefined;
       const request: WeaveUpdateRequest = {
-        entry,
         check:
           !batch.forceFull && tracker.canCheckEntry(entry) && contribution?.diagnostics.length === 0
             ? contribution
@@ -413,10 +411,10 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
 
       /** Scope 需要等待子布局再确认包络；其他元素可保留清洁贡献或交由调度器进一步核对 */
       if (entry.type === 'scope') {
-        pending.set(path, request);
+        pending.set(entry, request);
       } else if (!affected && contribution !== undefined && contribution.diagnostics.length === 0)
-        retained.set(path, contribution);
-      else pending.set(path, request);
+        retained.set(entry, contribution);
+      else pending.set(entry, request);
     }
 
     /** 调度器通过这些能力读取候选状态并回写结果，不在此切换已提交状态槽 */

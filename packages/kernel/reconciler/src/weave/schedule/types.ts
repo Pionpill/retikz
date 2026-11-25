@@ -19,8 +19,6 @@ export type WeaveAssembledOutput = SubtreeCompileState | WeaveContribution['outp
 
 /** 候选直接变化与完成确认；依赖在读取点核对实际结果 */
 export type WeaveUpdateRequest = {
-  /** 本次通知对应的稳定作者身份 */
-  entry: WeaveEntry;
   /** 自身输入未变时可以核对的旧贡献 */
   check?: WeaveContribution;
   /** 本批声明变化 */
@@ -90,7 +88,7 @@ export type WeaveExecutionSelection = {
   /** 判断该条目是否允许使用旧阶段产物 */
   canReuse: (entry: WeaveEntry) => boolean;
   /** 驱动选定的清洁贡献 */
-  retained: ReadonlyMap<string, WeaveContribution>;
+  retained: ReadonlyMap<WeaveEntry, WeaveContribution>;
   /** 待计算或待验证的声明 */
-  pending: Map<string, WeaveUpdateRequest>;
+  pending: Map<WeaveEntry, WeaveUpdateRequest>;
 };

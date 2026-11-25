@@ -29,13 +29,12 @@ type WeaveOutputFlowContext = {
   runtime: CompileRuntime;
   transaction: WeaveTransaction;
   paths: ReadonlyMap<WeaveEntry, PropertyPath>;
-  pending: Map<string, WeaveUpdateRequest>;
+  pending: Map<WeaveEntry, WeaveUpdateRequest>;
   executions: Map<WeaveEntry, WeaveElementExecution>;
   assembled: Map<WeaveEntry, WeaveAssembledOutput>;
   changedOutputs: Set<WeaveScopeEntry>;
   rootExecutor: CompileElementExecutor;
   recordComputed: WeaveExecutionContext['recordComputed'];
-  keyOf: (entry: WeaveEntry) => string;
   prepareAddress: (entry: WeaveEntry) => WeaveTaskAddress;
   outputAddress: (entry: WeaveEntry) => WeaveTaskAddress;
   requireTask: (address: WeaveTaskAddress) => void;
@@ -57,7 +56,6 @@ export const createWeaveOutputFlow = ({
   changedOutputs,
   rootExecutor,
   recordComputed,
-  keyOf,
   prepareAddress,
   outputAddress,
   requireTask,
@@ -70,7 +68,7 @@ export const createWeaveOutputFlow = ({
   const tracker = runtime.state.execution.provenanceTracker;
   /** ⚡清洁贡献直接物化输出，不进入元素执行器或候选写入 */
   const outputOf = (entry: WeaveEntry): WeaveAssembledOutput => {
-    if (pending.size !== 0 && pending.has(keyOf(entry))) requireTask(prepareAddress(entry));
+    if (pending.size !== 0 && pending.has(entry)) requireTask(prepareAddress(entry));
     const execution = executions.get(entry);
     if (execution !== undefined) {
       requireTask(outputAddress(entry));
