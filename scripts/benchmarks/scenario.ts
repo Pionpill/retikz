@@ -1,7 +1,6 @@
 import { expect, inject, test } from 'vitest';
 
-import { measureAllocations } from './allocation';
-import { referenceSampling, sampling } from './sampling';
+import { largeWorkloadSampling, referenceSampling, sampling } from './sampling';
 import type { BenchmarkIdentity, BenchmarkMeasurement } from './types';
 
 /** 生命周期钩子在单次计时之外执行；dispose 在成功或失败后释放整个场景 */
@@ -11,6 +10,8 @@ export type BenchmarkExecution<T> = {
   beforeEach?: () => void;
   afterEach?: () => void;
   dispose?: () => void;
+  /** 按运行顺序返回同次操作的分段样本；公共驱动剔除预热 */
+  readSampleTimings?: () => ReadonlyArray<Readonly<Record<string, number>>>;
   observations?: Readonly<Record<string, number>>;
 };
 
@@ -40,14 +41,20 @@ export const defineBenchmark = <T>(
       }
       const execution = setup();
       try {
+        const { measureAllocations } = await import('./allocation');
         task.meta.allocation = await measureAllocations(execution);
       } finally {
         execution.dispose?.();
       }
       return;
     }
-    const { run, verify, beforeEach, afterEach, dispose, observations } = setup();
-    const options = reference ? referenceSampling : sampling;
+    const { run, verify, beforeEach, afterEach, dispose, observations, readSampleTimings } = setup();
+    const options = reference
+      ? referenceSampling
+      : (identity.workloadSize ?? 0) >= 10_000
+        ? largeWorkloadSampling
+        : sampling;
+    const expectedCalls = options.iterations + options.warmupIterations;
     let calls = 0;
     let result: T | undefined;
     const measurement: BenchmarkMeasurement = {
@@ -60,19 +67,19 @@ export const defineBenchmark = <T>(
     try {
       const measured = await bench(name, { async: false, beforeEach, afterEach }, () => {
         calls++;
-        // 即使测量引擎改变，也不允许参考档额外执行算法
-        if (reference && calls > 3) throw new Error('Reference workload exceeded three calls');
+        if (calls > expectedCalls) throw new Error('Benchmark exceeded its configured call limit');
         result = run();
       }).run(options);
-      if (reference) {
-        expect(calls).toBe(3);
-        expect(measured.latency.samples).toHaveLength(3);
-      } else {
-        expect(calls).toBe(sampling.iterations + sampling.warmupIterations);
-        expect(measured.latency.samples).toHaveLength(sampling.iterations);
-      }
+      expect(calls).toBe(expectedCalls);
+      expect(measured.latency.samples).toHaveLength(options.iterations);
       // run 可以合法返回 undefined，因此用调用次数而非返回值判断是否执行
       expect(calls).toBeGreaterThan(0);
+      if (readSampleTimings) {
+        const timings = readSampleTimings();
+        expect(timings.length).toBe(calls);
+        measurement.sampleTimingsMs = timings.slice(options.warmupIterations);
+        expect(measurement.sampleTimingsMs.length).toBe(options.iterations);
+      }
       verify(result as T);
     } finally {
       measurement.calls = calls;

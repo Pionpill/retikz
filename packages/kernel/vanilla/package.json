@@ -67,6 +67,7 @@
     "dist/**/*"
   ],
   "scripts": {
+    "bench:browser": "vitest bench --run --config vitest.browser.bench.config.ts",
     "dev": "vite",
     "build": "vite build",
     "lint": "oxlint .",
@@ -82,6 +83,8 @@
     "@retikz/reconciler": "workspace:*"
   },
   "devDependencies": {
+    "@vitest/browser-playwright": "catalog:",
+    "playwright": "catalog:",
     "@types/node": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
