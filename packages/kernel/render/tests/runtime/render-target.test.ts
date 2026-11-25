@@ -400,6 +400,10 @@ describe('createRenderTarget', () => {
     session.mount(scene('A'));
     const before = handle.read();
 
+    expect(() => session.updateTarget()).toThrowError(RetikzRenderError);
+    expect(session.read().revision).toBe(0);
+    expect(handle.read()).toBe(before);
+
     expect(() => session.replace(scene('B'))).toThrowError(RetikzRenderError);
     expect(session.read().revision).toBe(0);
     expect(handle.read()).toBe(before);

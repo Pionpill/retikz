@@ -104,7 +104,7 @@ export const createRenderTarget = (input: RenderTargetOptions): RenderTarget => 
           throw new RetikzRenderError({ code: RetikzRenderErrorCode.RuntimeScenePatchSnapshotMismatch });
         const primary =
           sameCompilation && prior !== undefined
-            ? { ...prior.primary, revision }
+            ? Object.freeze({ ...prior.primary, revision })
             : createFullSceneRuntimeSnapshot(candidate.compilation.result.scene, revision, provenance!);
         const frame: RenderFrameSnapshot = Object.freeze({
           primary,
@@ -136,7 +136,15 @@ export const createRenderTarget = (input: RenderTargetOptions): RenderTarget => 
                 nextRevision: revision,
                 operations: sameCompilation ? [] : [{ kind: 'replaceScene', snapshot: primary }],
               };
-        if (patch !== undefined && prior !== undefined) assertScenePatch(prior.primary, patch, primary);
+        // 本目标只为同一 compilation 构造空补丁：根、Scene 和拓扑沿用已提交帧，仅推进版本
+        const reusesValidatedPrimary =
+          sameCompilation &&
+          prior !== undefined &&
+          priorRead?.frame === prior &&
+          Number.isSafeInteger(revision) &&
+          revision === prior.primary.revision + 1;
+        if (patch !== undefined && prior !== undefined && !reusesValidatedPrimary)
+          assertScenePatch(prior.primary, patch, primary);
         const token =
           patch === undefined
             ? executor.prepareMount(frame, config, options.mountMode ?? 'create')
@@ -145,7 +153,12 @@ export const createRenderTarget = (input: RenderTargetOptions): RenderTarget => 
         return {
           commit: () => {
             token.commit();
-            committedRead = snapshotRendererRead(executor.read(), frame, animationControlsCache);
+            committedRead = snapshotRendererRead(
+              executor.read(),
+              frame,
+              animationControlsCache,
+              reusesValidatedPrimary,
+            );
             currentFrame = frame;
             leaseOwners.set(lease, owner);
             committed = true;
@@ -318,6 +331,7 @@ const snapshotRendererReadUnsafe = (
   value: RendererRead,
   lineage: RenderFrameSnapshot | undefined,
   animationControlsCache: WeakMap<object, AnimationControls>,
+  reusesValidatedPrimary: boolean,
 ): RendererRead => {
   const candidate: unknown = value;
   if (lineage === undefined || typeof candidate !== 'object' || candidate === null) {
@@ -337,15 +351,18 @@ const snapshotRendererReadUnsafe = (
   }
 
   const frame = rawFrame as RenderFrameSnapshot;
-  assertSceneRuntimeSnapshot(frame.primary);
-  if (
-    !sceneRuntimeSnapshotEquals(frame.primary, lineage.primary) ||
-    !runtimeStructuralEquals(frame.layers, lineage.layers)
-  ) {
-    throw new RetikzRenderError({
-      code: RetikzRenderErrorCode.RuntimeScenePatchSnapshotMismatch,
-      cause: { expected: lineage, received: frame },
-    });
+  // 只有原样交还的帧可复用提交目标的验证；其它读回值仍按第三方输出完整检查
+  if (!reusesValidatedPrimary || frame !== lineage) {
+    assertSceneRuntimeSnapshot(frame.primary);
+    if (
+      !sceneRuntimeSnapshotEquals(frame.primary, lineage.primary) ||
+      !runtimeStructuralEquals(frame.layers, lineage.layers)
+    ) {
+      throw new RetikzRenderError({
+        code: RetikzRenderErrorCode.RuntimeScenePatchSnapshotMismatch,
+        cause: { expected: lineage, received: frame },
+      });
+    }
   }
 
   return Object.freeze({
@@ -358,9 +375,10 @@ const snapshotRendererRead = (
   value: RendererRead,
   lineage: RenderFrameSnapshot | undefined,
   animationControlsCache: WeakMap<object, AnimationControls>,
+  reusesValidatedPrimary: boolean,
 ): RendererRead => {
   try {
-    return snapshotRendererReadUnsafe(value, lineage, animationControlsCache);
+    return snapshotRendererReadUnsafe(value, lineage, animationControlsCache, reusesValidatedPrimary);
   } catch (cause) {
     if (isRetikzRenderError(cause)) throw cause;
     throw new RetikzRenderError({ code: RetikzRenderErrorCode.RuntimeScenePatchSnapshotMismatch, cause });
