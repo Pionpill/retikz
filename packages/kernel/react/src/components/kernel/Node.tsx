@@ -5,7 +5,7 @@ import type { FC, ReactNode } from 'react';
 import { Fragment, isValidElement } from 'react';
 
 import type { HydrationEventProps } from '../../hydration';
-import { TIKZ_NODE, TIKZ_TEXT, getDisplayName } from '../../protocol';
+import { KernelDisplayName, getDisplayName } from '../../protocol';
 import { pickDefined } from '../../shared';
 import { textElementToLineSpec } from './Text';
 
@@ -22,7 +22,7 @@ export type NodeProps = NodeOptions &
  *   SVG 或 Canvas
  */
 export const Node: FC<NodeProps> = () => null;
-Node.displayName = TIKZ_NODE;
+Node.displayName = KernelDisplayName.Node;
 
 /**
  * IRNode 纯透传字段表（除 type / position / text / label 特化字段外）
@@ -129,7 +129,7 @@ const collectChildLines = (children: unknown): Array<IRLine> => {
       return;
     }
 
-    if (getDisplayName(node) === TIKZ_TEXT) {
+    if (getDisplayName(node) === KernelDisplayName.Text) {
       const line = textElementToLineSpec(node);
       if (line !== undefined) {
         flush();

@@ -5,7 +5,7 @@ import type { FC, ReactNode } from 'react';
 import { Children, Fragment, isValidElement } from 'react';
 
 import type { HydrationEventProps } from '../../hydration';
-import { TIKZ_PATH, TIKZ_STEP, getDisplayName } from '../../protocol';
+import { KernelDisplayName, getDisplayName } from '../../protocol';
 import { pickDefined } from '../../shared';
 import { inputStepFromProps } from './Step';
 import type { StepProps } from './Step';
@@ -32,7 +32,7 @@ export type PathProps = Omit<PathOptions, 'way' | 'children'> &
  * @description 本组件自身不渲染 DOM；最终路径由 `<Layout>` 根据 step 序列、样式、箭头和标记输出
  */
 export const Path: FC<PathProps> = () => null;
-Path.displayName = TIKZ_PATH;
+Path.displayName = KernelDisplayName.Path;
 
 /**
  * IRPath 纯透传字段表（除 type / children 特化字段外）
@@ -71,7 +71,7 @@ const readPathChildren = (children: ReactNode): ReadonlyArray<InputStep> => {
         return;
       }
 
-      if (getDisplayName(child) === TIKZ_STEP) {
+      if (getDisplayName(child) === KernelDisplayName.Step) {
         steps.push(inputStepFromProps(child.props as StepProps, steps.length === 0));
         return;
       }

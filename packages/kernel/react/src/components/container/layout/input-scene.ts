@@ -4,15 +4,7 @@ import type { ReactNode, ReactElement } from 'react';
 import { Children, Fragment, isValidElement } from 'react';
 
 import { RetikzReactError, RetikzReactErrorCode } from '../../../error';
-import {
-  getDisplayName,
-  createInputEmbedProps,
-  resolveInputEmbedAdapter,
-  TIKZ_SCOPE,
-  TIKZ_PATH,
-  TIKZ_COORDINATE,
-  TIKZ_NODE,
-} from '../../../protocol';
+import { KernelDisplayName, createInputEmbedProps, getDisplayName, resolveInputEmbedAdapter } from '../../../protocol';
 import { inputCoordinateFromProps, inputNodeFromProps, inputPathFromProps, inputScopeFromProps } from '../../kernel';
 import type { CoordinateProps, NodeProps, PathProps, ScopeProps } from '../../kernel';
 
@@ -80,16 +72,16 @@ const readSceneChildren = (children: ReactNode, context: InputContext): InputSce
       }
 
       switch (getDisplayName(child)) {
-        case TIKZ_NODE:
+        case KernelDisplayName.Node:
           output.push(inputNodeFromProps(child.props as NodeProps));
           return;
-        case TIKZ_PATH:
+        case KernelDisplayName.Path:
           output.push(inputPathFromProps(child.props as PathProps));
           return;
-        case TIKZ_COORDINATE:
+        case KernelDisplayName.Coordinate:
           output.push(inputCoordinateFromProps(child.props as CoordinateProps));
           return;
-        case TIKZ_SCOPE: {
+        case KernelDisplayName.Scope: {
           const props = child.props as ScopeProps;
           output.push(inputScopeFromProps(props, readSceneChildren(props.children, context)));
           return;

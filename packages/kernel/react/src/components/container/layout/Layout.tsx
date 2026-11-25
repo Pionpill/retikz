@@ -28,6 +28,7 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState, useSyncExtern
 
 import { RetikzReactError, RetikzReactErrorCode } from '../../../error';
 import { collectHydrationHandlers } from '../../../hydration';
+import { KernelDisplayName } from '../../../protocol';
 import { usePrefersReducedMotion } from '../../../render/animation';
 import { ProcessingResultHost } from '../../../render/processing-result';
 import { useAnimationMode } from '../animation-mode';
@@ -513,3 +514,4 @@ export const Layout: FC<LayoutProps> = props => {
     />
   );
 };
+Layout.displayName = KernelDisplayName.Layout;

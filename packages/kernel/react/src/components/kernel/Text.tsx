@@ -2,7 +2,7 @@ import type { IRLine, TextLineSchema } from '@retikz/core';
 import type { FC, ReactElement } from 'react';
 import type { output } from 'zod';
 
-import { TIKZ_TEXT } from '../../protocol';
+import { KernelDisplayName } from '../../protocol';
 
 /** Node 内单行文字的内容与样式覆盖 */
 export type TextProps = Pick<output<typeof TextLineSchema>, 'fill' | 'opacity' | 'font'> & {
@@ -15,7 +15,7 @@ export type TextProps = Pick<output<typeof TextLineSchema>, 'fill' | 'opacity' |
  * @description 声明一行节点文本；与字符串内容按 JSX 顺序合并，字段只覆盖当前这一行
  */
 export const Text: FC<TextProps> = () => null;
-Text.displayName = TIKZ_TEXT;
+Text.displayName = KernelDisplayName.Text;
 
 /** 将 <Text> 元素读取为一条节点文本行 */
 export const textElementToLineSpec = (element: ReactElement): IRLine | undefined => {

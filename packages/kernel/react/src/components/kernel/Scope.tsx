@@ -4,7 +4,7 @@ import type { InputScope, ScopeOptions } from '@retikz/vanilla';
 import type { FC, ReactNode } from 'react';
 
 import type { HydrationEventProps } from '../../hydration';
-import { TIKZ_SCOPE } from '../../protocol';
+import { KernelDisplayName } from '../../protocol';
 import { pickDefined } from '../../shared';
 
 /**
@@ -21,7 +21,7 @@ export type ScopeProps = ScopeOptions &
  * @description 给一组节点 / 路径提供局部样式、命名空间、原点或锚点定位、局部变换、裁剪和引用包络
  */
 export const Scope: FC<ScopeProps> = () => null;
-Scope.displayName = TIKZ_SCOPE;
+Scope.displayName = KernelDisplayName.Scope;
 
 /**
  * IRScope 纯透传字段表（除 type / children 特化字段外）

@@ -1,6 +1,7 @@
 import type { WayDSL } from '@retikz/vanilla';
 import type { FC } from 'react';
 
+import { KernelDisplayName } from '../../../protocol';
 import type { PathProps } from '../../kernel';
 import { Path } from '../../kernel';
 
@@ -17,3 +18,4 @@ export type DrawProps = Readonly<
  * @description React 只负责 JSX sugar；`normalizePath` 是 `way` 的唯一 parser 调度位置
  */
 export const Draw: FC<DrawProps> = props => <Path {...props} />;
+Draw.displayName = KernelDisplayName.Draw;

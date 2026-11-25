@@ -65,9 +65,11 @@ React still operates where it adds value. It subscribes to the read-only Vanilla
 
 Kernel components such as `<Node>`, `<Path>`, and `<Scope>` are **Input markers**, not DOM components. They return `null` and expose only a stable `displayName` that tells the React collector which primitive they represent. A `<Node>` therefore does not produce an intermediate `<div>` or acquire a second browser-layout model.
 
+Import `KernelDisplayName` from the package root instead of the former individual constants. It names the built-in markers as well as Layout and Draw; for example, `KernelDisplayName.EdgeLabel` is `RetikzKernelEdgeLabel`.
+
 ```tsx
 export const Node: FC<NodeProps> = () => null;
-Node.displayName = TIKZ_NODE;
+Node.displayName = KernelDisplayName.Node;
 ```
 
 Sugar components do not add another IR. `<Draw>` forwards authoring input to `<Path>`; Vanilla's `normalizePath` calls `parseWay` to expand `way` into standard Core steps. React does not duplicate path grammar parsing.
@@ -193,8 +195,8 @@ Use `Layout.onCompileResult` to receive the compiled frame after React commits. 
     {
       label: 'React collecting JSX into an InputScene',
       path: 'packages/kernel/react/src/components/container/layout/input-scene.ts',
-      startLine: 72,
-      endLine: 136,
+      startLine: 64,
+      endLine: 128,
     },
     {
       label: 'Vanilla normalizing Input and merging composite dependencies',

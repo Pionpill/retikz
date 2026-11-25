@@ -65,9 +65,11 @@ React 仍然在合适的边界发挥作用：它订阅 Vanilla processing 的只
 
 `<Node>`、`<Path>`、`<Scope>` 等 Kernel 组件是 **Input 标记**，不是 DOM 组件。它们自身返回 `null`，只用稳定的 `displayName` 告诉 React collector“这是什么图元”；因此 `<Node>` 不会先生成一个 `<div>`，也不会拥有另一套浏览器布局语义。
 
+内置标记以及 Layout、Draw 的展示名称由包根导出的 `KernelDisplayName` 统一提供，取代原先的独立常量。例如，`KernelDisplayName.EdgeLabel` 的值为 `RetikzKernelEdgeLabel`。
+
 ```tsx
 export const Node: FC<NodeProps> = () => null;
-Node.displayName = TIKZ_NODE;
+Node.displayName = KernelDisplayName.Node;
 ```
 
 Sugar 组件也不新增 IR。例如 `<Draw>` 将作者输入透传给 `<Path>`，由 Vanilla 的 `normalizePath` 调用 `parseWay`，把 `way` 展开为标准 Core Step。React 不重复实现路径语法解析。
@@ -193,8 +195,8 @@ Definition 数组按有序元素 identity 规范化，因此 render 时重新创
     {
       label: 'React 收集 JSX 为 InputScene',
       path: 'packages/kernel/react/src/components/container/layout/input-scene.ts',
-      startLine: 72,
-      endLine: 136,
+      startLine: 64,
+      endLine: 128,
     },
     {
       label: 'Vanilla 归一 Input 并合并 Composite dependencies',

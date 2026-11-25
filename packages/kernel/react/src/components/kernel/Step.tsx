@@ -16,7 +16,7 @@ import type {
 import type { FC, ReactNode } from 'react';
 import { Children, Fragment, isValidElement } from 'react';
 
-import { TIKZ_EDGE_LABEL, TIKZ_STEP, getDisplayName } from '../../protocol';
+import { KernelDisplayName, getDisplayName } from '../../protocol';
 
 /**
  * React DSL 层的 target 类型：core 对象 `IRTarget` + 字符串 shorthand（`'A'` / `'A.north'` / `'A.30'` / `'+dx,dy'`）
@@ -111,7 +111,7 @@ export type StepProps =
  * @description 声明路径中的一个动作，例如移动、连线、曲线、圆弧或闭合
  */
 export const Step: FC<StepProps> = () => null;
-Step.displayName = TIKZ_STEP;
+Step.displayName = KernelDisplayName.Step;
 
 type EdgeLabelElementProps = Readonly<{
   position?: IRStepLabel['position'];
@@ -132,7 +132,7 @@ const readEdgeLabel = (children: ReactNode): IRStepLabel | undefined => {
         return;
       }
 
-      if (getDisplayName(child) !== TIKZ_EDGE_LABEL) {
+      if (getDisplayName(child) !== KernelDisplayName.EdgeLabel) {
         if (typeof child.type === 'function') visit((child.type as (props: unknown) => ReactNode)(child.props));
         return;
       }

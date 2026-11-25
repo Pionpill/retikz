@@ -1,4 +1,4 @@
-import { createInputScene } from '@retikz/react';
+import { Layout, Node, Path, createInputScene } from '@retikz/react';
 import { normalizeScene } from '@retikz/vanilla';
 import type { ReactElement, ReactNode } from 'react';
 import { isValidElement } from 'react';
@@ -20,15 +20,6 @@ const parseErr = (source: string): string => {
   return result.error;
 };
 
-/** 取 ReactElement 顶层 type 的短名（去掉 `@retikz/` 前缀），断言"确实是 retikz 真实组件" */
-const typeName = (element: ReactElement): string | undefined => {
-  const type = element.type as { displayName?: string; name?: string };
-  const raw = type.displayName ?? type.name;
-  if (raw === undefined) return undefined;
-
-  return raw.startsWith('@retikz/') ? raw.slice('@retikz/'.length) : raw;
-};
-
 /** 将 JSX child 通过唯一的 React-to-Vanilla Input 路径归一为 Source IR */
 const normalizeReactChildren = (children: ReactNode) => {
   const input = createInputScene(children);
@@ -40,30 +31,30 @@ describe('parseRetikzJsx — 正常流程', () => {
     const element = parseOk('<Layout />');
 
     expect(isValidElement(element)).toBe(true);
-    expect(typeName(element)).toBe('Layout');
+    expect(element.type).toBe(Layout);
   });
 
   it('Layout 作根 + Node child', () => {
     const element = parseOk('<Layout><Node>Hi</Node></Layout>');
 
-    expect(typeName(element)).toBe('Layout');
+    expect(element.type).toBe(Layout);
 
     const node = (element.props as { children?: ReactNode }).children as ReactElement;
 
-    expect(typeName(node)).toBe('Node');
+    expect(node.type).toBe(Node);
   });
 
   it('解析带文本 child 的 Node', () => {
     const element = parseOk('<Layout><Node>Hello</Node></Layout>');
 
-    expect(typeName(element)).toBe('Layout');
+    expect(element.type).toBe(Layout);
 
     const props = element.props as { children?: ReactNode };
 
     // React 单 child 时 props.children 不裹数组
     const node = props.children as ReactElement;
 
-    expect(typeName(node)).toBe('Node');
+    expect(node.type).toBe(Node);
 
     const nodeProps = node.props as { children?: ReactNode };
 
@@ -138,7 +129,7 @@ describe('parseRetikzJsx — 正常流程', () => {
   it('源码前后空白容忍', () => {
     const element = parseOk('   \n  <Layout />  \n  ');
 
-    expect(typeName(element)).toBe('Layout');
+    expect(element.type).toBe(Layout);
   });
 
   it('与 Vanilla normalizeScene 串联：能产出合法 IR', () => {
@@ -177,7 +168,7 @@ describe('parseRetikzJsx — 错误情况', () => {
   it('普通 Path 必须指定一个步骤来源，自定义几何可不传步骤', () => {
     expect(parseErr('<Path />')).toMatch(/必须指定/);
     expect(parseErr('<Path way={[]}><Step to="A" /></Path>')).toMatch(/不能同时指定/);
-    expect(typeName(parseOk('<Path kind="ribbon" kindOptions={{ mode: "boundary" }} />'))).toBe('Path');
+    expect(parseOk('<Path kind="ribbon" kindOptions={{ mode: "boundary" }} />').type).toBe(Path);
   });
 
   it('空源码', () => {

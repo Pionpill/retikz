@@ -2,7 +2,7 @@ import type { ElementHandlers, HydrationHandler, HydrationHandlers } from '@reti
 import type { ReactNode } from 'react';
 import { Children, Fragment, isValidElement } from 'react';
 
-import { getDisplayName, TIKZ_COORDINATE, TIKZ_NODE, TIKZ_PATH, TIKZ_SCOPE } from '../protocol';
+import { KernelDisplayName, getDisplayName } from '../protocol';
 import { resolveInputEmbedAdapter } from '../protocol';
 import type { HydrationEventPropName } from './event-props';
 import { EVENT_PROP_TO_NAME } from './event-props';
@@ -72,13 +72,13 @@ const visit = (registry: Map<string, ElementHandlers>, children: ReactNode): voi
     const name = getDisplayName(child);
 
     switch (name) {
-      case TIKZ_SCOPE:
+      case KernelDisplayName.Scope:
         // Scope 容器递归收集子图元的事件
         visit(registry, props.children as ReactNode);
         return;
-      case TIKZ_NODE:
-      case TIKZ_PATH:
-      case TIKZ_COORDINATE:
+      case KernelDisplayName.Node:
+      case KernelDisplayName.Path:
+      case KernelDisplayName.Coordinate:
         // Kernel 叶子：children 是 Step / Text / Label，无事件挂点，不递归。
         return;
     }
