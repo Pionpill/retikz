@@ -4,7 +4,6 @@ import { RetikzCoreError, RetikzCoreErrorCode } from '../../../../error';
 import type { CanonicalPathStep } from '../../../../resolve';
 import type { IRPosition, IRTarget } from '../../../../schemas';
 import { isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../../../shared';
-import { pointOfTarget } from '../../target';
 import type { StrokeLoweringContext } from '../types';
 import { isStrokeTargetStep } from './helpers';
 
@@ -86,7 +85,7 @@ export const evaluateStrokeStep = (
         continue;
       }
 
-      const resolved = pointOfTarget(originalPoint, targetView, scopeChain);
+      const resolved = targetView.pointOfTarget(originalPoint, scopeChain);
       if (!resolved) {
         points.push(originalPoint);
         continue;
