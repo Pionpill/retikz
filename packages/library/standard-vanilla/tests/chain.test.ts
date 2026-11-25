@@ -9,7 +9,7 @@ it('嵌套内容失败时保留上一次完整链，随后可正常更新', () =
   const previous = controller.current;
 
   expect(() =>
-    controller.replaceInput(
+    controller.replace(
       scene({
         children: [
           chain({
@@ -21,9 +21,7 @@ it('嵌套内容失败时保留上一次完整链，随后可正常更新', () =
   ).toThrow();
   expect(controller.current).toBe(previous);
 
-  controller.replaceInput(
-    scene({ children: [chain({ skeleton: { items: ['A', { branches: [['B'], ['C']] }, 'D'] } })] }),
-  );
+  controller.replace(scene({ children: [chain({ skeleton: { items: ['A', { branches: [['B'], ['C']] }, 'D'] } })] }));
 
   expect(controller.current.revision).toBe(previous.revision + 1);
 

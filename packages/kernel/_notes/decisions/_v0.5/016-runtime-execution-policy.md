@@ -85,7 +85,7 @@ mountSceneView(container, spec, { renderer: 'canvas', runtime: { updateStrategy:
 mountSceneView(container, ir); // session + auto
 ```
 
-Vanilla DOM 挂载 IR 或作者输入时保留会话。`mountSceneView` 归一化作者输入并携带该帧的嵌入绑定；两种来源都可用 `view.update(ir)` 或 `view.updateInput(input)` 替换场景。预编译 Scene 直接交给 Render，不通过 Vanilla DOM 挂载。
+Vanilla DOM 挂载 IR 或作者输入时保留会话。`mountSceneView` 归一化作者输入并携带该帧的嵌入绑定；两种来源都可用 `view.replace(ir)` 或 `view.replace(input)` 替换场景。预编译 Scene 直接交给 Render，不通过 Vanilla DOM 挂载。
 
 ## 最终结果
 

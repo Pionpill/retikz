@@ -41,7 +41,7 @@ import { SceneRuntime } from '@retikz/vanilla';
 
 const runtime = SceneRuntime.fromInput(input);
 try {
-  runtime.replaceInput(nextInput);
+  runtime.replace(nextInput);
   const svg = runtime.toSvgString();
 } finally {
   runtime.dispose();
@@ -50,7 +50,7 @@ try {
 
 完整替换可以在作者输入与 IR 之间切换，不推导 diff。增量模式下，先用 `expected = runtime.current` 取得当前版本，通过 `runtime.getScopeId(path, expected)` 寻址，再用 `runtime.update(batch, expected)` 提交。旧版本会被拒绝。导出只读取最后一次成功提交的帧。
 
-`replace(ir)` 接收完整 IR；`replaceInput(input)` 接收作者输入。两者都使用会话的基础编译配置，不沿用上一帧的作者绑定。若仅为本次替换指定编译配置，分别用 `replace(ir, compile)` 或 `replaceInput(input, compile)`。
+同一 `replace(source)` 入口接收完整 IR 或作者输入，默认使用会话的基础编译配置，不沿用上一帧的作者绑定。若仅为本次替换指定编译配置，用 `replace(source, compile)`。
 
 如果自行对接渲染宿主，可在构造时传入 `createTarget`，让会话在首次提交时创建并复用渲染目标。仅事件处理器等宿主状态变化时，调用 `updateTarget()` 重新提交已编译结果，无需替换场景。
 
@@ -62,7 +62,7 @@ try {
 
 ## 输入就绪后再提交
 
-应用先等待数据，再构造输入并调用 `compileToScene` 或单图会话的 `replaceInput`。提交顺序就是更新顺序；是否忽略较晚返回的旧请求由应用决定。嵌入 adapter 的 `lower` 同步返回节点、依赖及按实例绑定的运行时输入，后者不写入 JSON IR。
+应用先等待数据，再构造输入并调用 `compileToScene` 或单图会话的 `replace`。提交顺序就是更新顺序；是否忽略较晚返回的旧请求由应用决定。嵌入 adapter 的 `lower` 同步返回节点、依赖及按实例绑定的运行时输入，后者不写入 JSON IR。
 
 例如，外接执行器的 Plot 可以和普通节点在同一次更新中提交：
 
@@ -73,7 +73,7 @@ import { embed, node, scene } from '@retikz/vanilla';
 
 const task = await preparePlotData(spec, { dataBindings, dataTransformExecutor });
 const preparedData = await task.execute();
-runtime.replaceInput(
+runtime.replace(
   scene({
     children: [
       node({ id: 'origin', position: [0, 0] }),
@@ -106,7 +106,7 @@ const svg = renderToSvg(compileResult.scene);
 const view = mountSceneView(document.querySelector('#diagram')!, input);
 ```
 
-`renderToSvg` 可安全用于 SSR、构建期生成或保存 SVG；`mountSceneView` 用于浏览器宿主，默认创建 SVG，也可以通过 `renderer: 'canvas'` 切换到 Canvas。返回的 `view` 负责后续 `update`、交互水合、动画控制与释放。
+`renderToSvg` 可安全用于 SSR、构建期生成或保存 SVG；`mountSceneView` 用于浏览器宿主，默认创建 SVG，也可以通过 `renderer: 'canvas'` 切换到 Canvas。返回的 `view` 负责后续 `replace`、交互水合、动画控制与释放。
 
 `scene({ theme: { name, mode } })` 会把稀疏 Theme 写入 Input 根，`scope({ theme }, children)` 复用同一局部继承写法。归一化沿用 Theme 引用，不修改调用方输入；最终两条路径都交给同一份 Core Theme 与 compile 契约。
 
@@ -172,9 +172,11 @@ Vanilla 构造函数不接收独立的 ID 字符串参数。`node({ id, position
 | `renderToSvg`    | SSR / 构建期产出 `<svg>` 字符串  | `string`                                                    |
 | `mountSceneView` | 按 `renderer` 挂载 SVG 或 Canvas | `SceneView<SVGSVGElement>` / `SceneView<HTMLCanvasElement>` |
 
-DOM 挂载入口从 `@retikz/vanilla/dom` 导入。`mountSceneView(container, source)` 直接挂载 IR；作者输入只归一化一次，并保留本帧的嵌入定义与实例数据。默认使用 SVG，传入 `{ renderer: 'canvas' }` 可选择 Canvas。用 `view.update(ir, options?)` 或 `view.updateInput(input, options?)` 替换场景。成功时原子发布场景、产物与渲染配置；失败不发布新帧，若回滚失败则需要释放并重新挂载。
+DOM 挂载入口从 `@retikz/vanilla/dom` 导入。`mountSceneView(container, source)` 直接挂载 IR；作者输入只归一化一次，并保留本帧的嵌入定义与实例数据。默认使用 SVG，传入 `{ renderer: 'canvas' }` 可选择 Canvas。用 `view.replace(source, options?)` 替换场景。成功时原子发布场景、产物与渲染配置；失败不发布新帧，若回滚失败则需要释放并重新挂载。
 
-两个后端的单次更新选项都只接受 `animation`。从 `view.compileResult.artifacts` 读取最近成功提交的编译产物。用 `view.hydrate({ handlers })` 绑定事件，事件上下文跟随当前场景。
+若后端在运行时才确定，可以传入 `MountOptions` 变量；此时根元素类型为 `SVGSVGElement | HTMLCanvasElement`。用 `view.diagnostics()` 读取并清空诊断；返回值是 `ReadonlyArray<unknown>`，可能含回调抛出的原始值，处理前应先判型。
+
+两个后端的单次更新选项都只接受 `animation`。从 `view.compileResult.artifacts` 读取最近成功提交的编译产物。用 `view.hydrate({ handlers })` 绑定事件，事件上下文跟随当前场景。视图方法通过实例调用；如需传递清理回调，使用 `() => view.dispose()`，不要直接传 `view.dispose`。
 
 `updateStrategy` 和可选的 `rendererFactory` 在挂载时确定。要更换渲染器、DPR、编译拓扑或更新策略，先释放视图，再重新挂载。
 
@@ -207,7 +209,7 @@ import { LayerStack } from '@retikz/vanilla';
 const stack = new LayerStack(layers, options);
 try {
   const overlay = stack.get('overlay');
-  overlay.replaceInput(nextInput);
+  overlay.replace(nextInput);
   const svg = overlay.toSvgString();
   stack.setLayerOrder('overlay', 120);
 } finally {

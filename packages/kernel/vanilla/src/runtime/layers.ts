@@ -150,7 +150,8 @@ export class LayerStack {
       assertUniqueLayerNames(layers);
       const next = new Map<LayerName, LayerEntry>();
       try {
-        for (const input of layers) next.set(input.name, this.mount(input, mergeLayerOptions(this.options, input)));
+        for (const input of layers)
+          next.set(input.name, this.createLayerEntry(input, mergeLayerOptions(this.options, input)));
         this.release(this.entries);
         this.assertActive();
       } catch (cause) {
@@ -171,7 +172,7 @@ export class LayerStack {
         const zIndex = layerZIndex(input);
         if (previous.snapshot.zIndex !== zIndex) previous.snapshot = Object.freeze({ ...previous.snapshot, zIndex });
       } else {
-        const next = this.mount(input, options);
+        const next = this.createLayerEntry(input, options);
         try {
           previous?.runtime.dispose();
           this.assertActive();
@@ -240,7 +241,8 @@ export class LayerStack {
     return entry;
   }
 
-  private mount(input: InputLayer, options: ProcessOptions): LayerEntry {
+  /** 建立该层的会话、初始快照及后续提交订阅 */
+  private createLayerEntry(input: InputLayer, options: ProcessOptions): LayerEntry {
     const runtime = new SceneRuntime(input.scene, { ...options, bindings: input.bindings });
     try {
       this.assertActive();

@@ -124,7 +124,7 @@ describe('<Layout> 的 Vanilla Input processing', () => {
 
   it('session processing 将 JSX source 更新推入同一 Vanilla controller', async () => {
     const mount = vi.spyOn(vanilla.SceneRuntime, 'fromInput');
-    const replaceInput = vi.spyOn(vanilla.SceneRuntime.prototype, 'replaceInput');
+    const replace = vi.spyOn(vanilla.SceneRuntime.prototype, 'replace');
     const container = document.createElement('div');
     const root = createRoot(container);
 
@@ -145,8 +145,8 @@ describe('<Layout> 的 Vanilla Input processing', () => {
     );
 
     expect(mount).toHaveBeenCalledTimes(initialSessions.length);
-    expect(replaceInput).toHaveBeenCalledOnce();
-    expect(initialSessions).toContain(replaceInput.mock.contexts[0]);
+    expect(replace).toHaveBeenCalledOnce();
+    expect(initialSessions).toContain(replace.mock.contexts[0]);
     expect(container.querySelector('[data-retikz-id="second"]')).not.toBeNull();
 
     await act(() => root.unmount());

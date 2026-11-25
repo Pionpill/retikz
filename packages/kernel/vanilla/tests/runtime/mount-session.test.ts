@@ -13,6 +13,7 @@ import { literal, string, enum as zodEnum } from 'zod';
 
 import type { InputEmbedAdapter, InputScene } from '../../src';
 import { embed } from '../../src';
+import type { MountOptions } from '../../src/dom';
 import { mountSceneView } from '../../src/dom';
 
 // @vitest-environment jsdom
@@ -177,7 +178,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('@retikz/vanilla 保留安装座', () => {
+describe('mountSceneView 会话生命周期', () => {
   it('renderer transaction 失败后 session 恢复旧 composite callback', () => {
     const redCompile = vi.fn(() => ({
       children: [
@@ -247,12 +248,12 @@ describe('@retikz/vanilla 保留安装座', () => {
       runtime: { rendererFactory },
     });
 
-    expect(() => view.updateInput(cachedDatasetScene('#22c55e'))).toThrow(
+    expect(() => view.replace(cachedDatasetScene('#22c55e'))).toThrow(
       /Failed to publish the compilation|RENDER_RUNTIME_RENDERER_PREPARE_FAILED/,
     );
     expect(greenCompile).toHaveBeenCalledTimes(1);
 
-    view.updateInput(cachedDatasetScene('#ef4444'));
+    view.replace(cachedDatasetScene('#ef4444'));
 
     expect(redCompile).toHaveBeenCalledTimes(2);
   });
@@ -266,10 +267,10 @@ describe('@retikz/vanilla 保留安装座', () => {
     expect(view.root.querySelector('rect')?.getAttribute('fill')).toBe('#ef4444');
 
     expect(lower).toHaveBeenCalledTimes(1);
-    view.updateInput(datasetScene('#22c55e'));
+    view.replace(datasetScene('#22c55e'));
 
     expect(view.root.querySelector('rect')?.getAttribute('fill')).toBe('#22c55e');
-    view.update(source('#3b82f6'));
+    view.replace(source('#3b82f6'));
     expect(view.root.querySelector('[data-retikz-id="changed"]')?.getAttribute('fill')).toBe('#3b82f6');
     expect(lower).toHaveBeenCalledTimes(2);
     view.dispose();
@@ -297,7 +298,7 @@ describe('@retikz/vanilla 保留安装座', () => {
     });
     const initialCompileResult = view.compileResult;
 
-    view.updateInput(datasetScene('#22c55e'));
+    view.replace(datasetScene('#22c55e'));
 
     expect(rendererFactoryCalls).toBe(1);
     expect(frames).toHaveLength(2);
@@ -311,7 +312,7 @@ describe('@retikz/vanilla 保留安装座', () => {
 
     rejectNextPrepare = true;
 
-    expect(() => view.update(source('#3b82f6'))).toThrowError(
+    expect(() => view.replace(source('#3b82f6'))).toThrowError(
       expect.objectContaining({ code: RetikzRenderErrorCode.RuntimeRendererPrepareFailed }),
     );
 
@@ -396,22 +397,18 @@ describe('@retikz/vanilla 保留安装座', () => {
       children: [{ namespace: 'fixture', type: 'compileOnce' }],
     };
 
-    const svg = mountSceneView(document.createElement('div'), input, { compile: { composites: [composite] } });
-
-    expect(compile).toHaveBeenCalledTimes(1);
-
-    svg.dispose();
-    compile.mockClear();
-
-    const canvas = mountSceneView(document.createElement('div'), input, {
-      renderer: 'canvas',
-      compile: { composites: [composite] },
-      output: { width: 100, height: 100 },
-    });
-
-    expect(compile).toHaveBeenCalledTimes(1);
-
-    canvas.dispose();
+    for (const renderer of ['svg', 'canvas'] as const) {
+      const options: MountOptions = {
+        renderer,
+        compile: { composites: [composite] },
+        output: { width: 100, height: 100 },
+      };
+      const view = mountSceneView(document.createElement('div'), input, options);
+      expect(view.root.tagName.toLowerCase()).toBe(renderer);
+      expect(compile).toHaveBeenCalledTimes(1);
+      view.dispose();
+      compile.mockClear();
+    }
   });
 
   it('IR SVG 使用 session，并保留未变节点 identity', () => {
@@ -420,7 +417,7 @@ describe('@retikz/vanilla 保留安装座', () => {
 
     const stable = view.root.querySelector('[data-retikz-id="stable"]');
 
-    view.update(source('#22c55e'));
+    view.replace(source('#22c55e'));
 
     expect(view.root.querySelector('[data-retikz-id="stable"]')).toBe(stable);
     expect(view.diagnostics()).toEqual([]);
@@ -435,7 +432,7 @@ describe('@retikz/vanilla 保留安装座', () => {
       },
     });
 
-    view.update(source('#22c55e'));
+    view.replace(source('#22c55e'));
 
     expect(patches).toEqual([
       expect.objectContaining({ operations: [expect.objectContaining({ kind: 'replaceScene' })] }),
@@ -523,7 +520,7 @@ describe('@retikz/vanilla 保留安装座', () => {
     const original = view.hydrate({ handlers });
     original.dispose();
     view.hydrate({ handlers: { changed: { click: second } } });
-    view.update(source('#22c55e'));
+    view.replace(source('#22c55e'));
     view.root.querySelector('[data-retikz-id="changed"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
 
     expect(first).not.toHaveBeenCalled();
@@ -550,7 +547,7 @@ describe('@retikz/vanilla 保留安装座', () => {
       runtime: { rendererFactory: createMemoryRendererFactory('none', false, undefined, patch => patches.push(patch)) },
     });
 
-    view.update(source('#22c55e'));
+    view.replace(source('#22c55e'));
 
     expect(patches).toEqual([
       expect.objectContaining({ operations: [expect.objectContaining({ kind: 'replaceScene' })] }),
@@ -567,7 +564,7 @@ describe('@retikz/vanilla 保留安装座', () => {
     const compileResult = view.compileResult;
     const committedHtml = view.root.innerHTML;
 
-    expect(() => view.update(source('#22c55e'))).toThrow(
+    expect(() => view.replace(source('#22c55e'))).toThrow(
       /Failed to publish the compilation|RENDER_RUNTIME_RENDERER_PREPARE_FAILED/,
     );
     expect(view.compileResult).toBe(compileResult);
@@ -596,7 +593,7 @@ describe('@retikz/vanilla 保留安装座', () => {
     expect(view.diagnostics()).toEqual([
       expect.objectContaining({ code: 'RECONCILER_CLEANUP_FAILED', cause: disposeFailure }),
     ]);
-    expect(() => view.update(source('#22c55e'))).toThrow('Processing controller is disposed');
+    expect(() => view.replace(source('#22c55e'))).toThrow('Processing controller is disposed');
 
     expect(() => view.dispose()).not.toThrow();
     expect(() => view.dispose()).not.toThrow();

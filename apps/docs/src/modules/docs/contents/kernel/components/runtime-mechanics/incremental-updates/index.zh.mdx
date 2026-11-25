@@ -111,7 +111,7 @@ React Layout 先订阅成功发布的 `ReconcilerResult`，再构建宿主输出
 
 <ComponentPreview files="update-implementation" size="lg" hideCode type="flow" />
 
-作者输入从 `SceneRuntime.replaceInput` 进入会话，IR 则从 `SceneRuntime.replace` 进入，再沿 `SceneReconciler.replace` 查看模式分派：非增量进入完整遍历，增量创建新 Weave 树并调用 `executeWeaveMount`。`publish` 调用目标准备和提交，Render 目标将候选结果物化为宿主帧；最后会话发布结果，控制器通知订阅者。
+作者输入和 IR 都从 `SceneRuntime.replace` 进入会话，再沿 `SceneReconciler.replace` 查看模式分派：非增量进入完整遍历，增量创建新 Weave 树并调用 `executeWeaveMount`。`publish` 调用目标准备和提交，Render 目标将候选结果物化为宿主帧；最后会话发布结果，控制器通知订阅者。
 
 ## 延伸阅读
 

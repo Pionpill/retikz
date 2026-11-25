@@ -155,7 +155,7 @@ describe('Vanilla 处理', () => {
     const listener = vi.fn();
     const unsubscribe = controller.subscribe(listener);
 
-    controller.replaceInput({ type: 'scene', children: [{ type: 'node', id: 'second', position: [20, 0] }] });
+    controller.replace({ type: 'scene', children: [{ type: 'node', id: 'second', position: [20, 0] }] });
 
     const second = controller.current;
 
@@ -165,7 +165,7 @@ describe('Vanilla 处理', () => {
     expect(listener).toHaveBeenCalledWith(second);
 
     expect(() =>
-      controller.replaceInput({
+      controller.replace({
         type: 'scene',
         children: [{ type: 'node', id: 'broken', position: [0, 0], shape: 'missing-shape' }],
       }),
@@ -173,14 +173,14 @@ describe('Vanilla 处理', () => {
     expect(controller.current).toBe(second);
 
     unsubscribe();
-    controller.replaceInput({ type: 'scene', children: [{ type: 'node', id: 'third', position: [40, 0] }] });
+    controller.replace({ type: 'scene', children: [{ type: 'node', id: 'third', position: [40, 0] }] });
 
     expect(listener).toHaveBeenCalledTimes(1);
 
     controller.dispose();
 
     expect(() =>
-      controller.replaceInput({ type: 'scene', children: [{ type: 'node', id: 'after-dispose', position: [60, 0] }] }),
+      controller.replace({ type: 'scene', children: [{ type: 'node', id: 'after-dispose', position: [60, 0] }] }),
     ).toThrow(/disposed/i);
   });
 
@@ -217,12 +217,12 @@ describe('Vanilla 处理', () => {
     const first = controller.current;
 
     expect(() =>
-      controller.replaceInput({ type: 'scene', children: [embed({ adapter, id: 'box', props: {} })] }),
+      controller.replace({ type: 'scene', children: [embed({ adapter, id: 'box', props: {} })] }),
     ).not.toThrow();
     expect(controller.current.revision).toBe(first.revision + 1);
 
     expect(() =>
-      controller.replaceInput({ type: 'scene', children: [{ type: 'node', id: 'restored', position: [20, 0] }] }),
+      controller.replace({ type: 'scene', children: [{ type: 'node', id: 'restored', position: [20, 0] }] }),
     ).not.toThrow();
     expect(controller.current.revision).toBe(first.revision + 2);
 
@@ -265,7 +265,7 @@ describe('Vanilla 处理', () => {
     const stable = controller.current;
 
     expect(() =>
-      controller.replaceInput({
+      controller.replace({
         type: 'scene',
         children: [embed({ adapter, id: 'broken', props: {} })],
       }),
@@ -290,7 +290,7 @@ describe('Vanilla 处理', () => {
     });
 
     expect(() =>
-      controller.replaceInput({ type: 'scene', children: [{ type: 'node', id: 'second', position: [20, 0] }] }),
+      controller.replace({ type: 'scene', children: [{ type: 'node', id: 'second', position: [20, 0] }] }),
     ).not.toThrow();
     expect(controller.current.revision).toBe(first.revision + 1);
     expect(controller.diagnostics()).toContain(failure);
@@ -307,7 +307,7 @@ describe('Vanilla 处理', () => {
     const listener = vi.fn();
     const unsubscribe = processing.subscribe(listener);
 
-    processing.replaceInput({ type: 'scene', children: [{ type: 'node', id: 'second', position: [20, 0] }] });
+    processing.replace({ type: 'scene', children: [{ type: 'node', id: 'second', position: [20, 0] }] });
 
     const second = processing.current;
 
@@ -315,7 +315,7 @@ describe('Vanilla 处理', () => {
     expect(second.compilation.result.scene).not.toBe(first.compilation.result.scene);
     expect(listener).toHaveBeenCalledWith(second);
     expect(() =>
-      processing.replaceInput({
+      processing.replace({
         type: 'scene',
         children: [{ type: 'node', id: 'broken', position: [0, 0], shape: 'missing-shape' }],
       }),
@@ -323,7 +323,7 @@ describe('Vanilla 处理', () => {
     expect(processing.current).toBe(second);
 
     unsubscribe();
-    processing.replaceInput({ type: 'scene', children: [{ type: 'node', id: 'third', position: [40, 0] }] });
+    processing.replace({ type: 'scene', children: [{ type: 'node', id: 'third', position: [40, 0] }] });
 
     expect(listener).toHaveBeenCalledTimes(1);
 

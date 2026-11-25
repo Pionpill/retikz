@@ -520,7 +520,7 @@ describe('@retikz/vanilla mount 水合（坐标映射 + hitTest）', () => {
         },
       ],
     };
-    view.update(animatedIr);
+    view.replace(animatedIr);
 
     // 同一已存活水合，无需重新 hydrate；点击现应激活 per-id 时钟（rebind 反映新 onEvent track）
     view.root.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX, clientY }));

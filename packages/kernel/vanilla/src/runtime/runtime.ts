@@ -133,23 +133,23 @@ export class SceneRuntime {
     return () => this.listeners.delete(listener);
   }
 
-  /** 原子替换完整 IR；省略配置时使用会话基础配置，显式配置仅对本次替换生效 */
-  replace(ir: IRScene, compile: CompileOptions = this.baseCompile) {
-    this.compileIR(ir, compile);
-  }
+  /** 完整替换 IR 或作者输入；显式配置和作者绑定仅对本次编译生效 */
+  replace(source: IRScene | InputScene, compile: CompileOptions = this.baseCompile) {
+    if (!isInputScene(source)) {
+      this.compileIR(source, compile);
+      return;
+    }
 
-  /** 归一化作者输入并完整替换；本次绑定不影响后续 IR 或作者输入 */
-  replaceInput(input: InputScene, compile: CompileOptions = this.baseCompile) {
     this.assertActive();
     let normalized: SceneNormalizationResult;
     try {
-      normalized = normalizeScene(input);
+      normalized = normalizeScene(source);
       compile = bindInputCompileOptions(normalized.ir, normalized, compile);
     } catch (cause) {
       this.failures.push(cause);
       throw cause;
     }
-    this.replace(normalized.ir, compile);
+    this.compileIR(normalized.ir, compile);
   }
 
   /** 使用已编译结果刷新提交目标并发布新版本，不重新编译场景 */

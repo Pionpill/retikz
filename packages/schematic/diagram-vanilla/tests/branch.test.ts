@@ -35,11 +35,11 @@ it('更新标签而不保留过时的演示内容', () => {
 
     expect(JSON.stringify(initial.scene)).toContain('Visible label');
 
-    controller.replaceInput(source(false));
+    controller.replace(source(false));
 
     expect(JSON.stringify(controller.current.compilation.result.scene)).not.toContain('Visible label');
 
-    controller.replaceInput(source(true));
+    controller.replace(source(true));
 
     expect(controller.current.compilation.result.scene).toEqual(initial.scene);
   } finally {

@@ -30,7 +30,7 @@ it('Tree 的保留模式更新移除并恢复节点及缺失槽位', () => {
   try {
     for (const missing of [true, false])
       for (const empty of [true, false]) {
-        controller.replaceInput(inputScene(empty, missing));
+        controller.replace(inputScene(empty, missing));
         expect(JSON.stringify(controller.current.compilation.result.scene).includes('dodgerblue')).toBe(!empty);
         expect(JSON.stringify(controller.current.compilation.result.scene).includes('darkorange')).toBe(!empty);
       }

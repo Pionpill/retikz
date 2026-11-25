@@ -93,7 +93,7 @@ describe('预处理复合组件输入的消费', () => {
     const controller = SceneRuntime.fromInput(source('first-ready'), {
       compile: { composites: [leafDefinition] },
     });
-    controller.replaceInput(source('second-ready'));
+    controller.replace(source('second-ready'));
 
     expect(controller.current.revision).toBe(1);
     expect(JSON.stringify(controller.current.compilation.result.scene)).toContain('second-ready');
@@ -106,7 +106,7 @@ describe('预处理复合组件输入的消费', () => {
     expect(irScene).not.toContain('first-ready');
     expect(irScene).not.toContain('second-ready');
 
-    controller.replaceInput(source('third-ready'));
+    controller.replace(source('third-ready'));
     expect(controller.toSvgString()).toContain('third-ready');
     expect(controller.toSvgString()).not.toContain('second-ready');
 

@@ -19,6 +19,7 @@ export function mountSceneView(
   source: InputScene | IRScene,
   options?: MountOptions & { renderer?: 'svg' },
 ): SceneView<SVGSVGElement>;
+export function mountSceneView(container: Element, source: InputScene | IRScene, options?: MountOptions): SceneView;
 export function mountSceneView(
   container: Element,
   source: InputScene | IRScene,

@@ -31,14 +31,14 @@ it('在保留模式更新期间删除并恢复 Group 标题和标签', () => {
 
   try {
     const initial = controller.current.compilation.result;
-    controller.replaceInput(source(false));
+    controller.replace(source(false));
     const hidden = controller.current.compilation.result;
 
     expect(JSON.stringify(hidden.scene)).not.toContain('Description');
     expect(JSON.stringify(hidden.scene)).not.toContain('Boundary');
     expect(JSON.stringify(hidden.scene)).toContain('Item');
 
-    controller.replaceInput(source(true));
+    controller.replace(source(true));
 
     expect(controller.current.compilation.result.scene).toEqual(initial.scene);
   } finally {

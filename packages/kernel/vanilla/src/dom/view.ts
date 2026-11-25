@@ -1,6 +1,5 @@
 import type { IRScene } from '@retikz/core';
 import { ReconcilerMode } from '@retikz/reconciler';
-import type { ReconcilerDiagnostic } from '@retikz/reconciler';
 import { prefersReducedMotion, resolveAnimationEnabled } from '@retikz/render/animation';
 import type { HydrationHandlers } from '@retikz/render/hydration';
 import type {
@@ -72,11 +71,6 @@ export class SceneView<TRoot extends RendererHost = RendererHost> {
   ) {
     const { animation, compile, output, runtime } = mountOptions;
     this.renderer = renderer;
-    this.update = this.update.bind(this);
-    this.updateInput = this.updateInput.bind(this);
-    this.hydrate = this.hydrate.bind(this);
-    this.diagnostics = this.diagnostics.bind(this);
-    this.dispose = this.dispose.bind(this);
     const { width, height } = output ?? {};
     this.size = {
       ...(width === undefined ? {} : { width }),
@@ -101,14 +95,17 @@ export class SceneView<TRoot extends RendererHost = RendererHost> {
     this.updateHostSize();
   }
 
-  /** 提交下一份 IR 与可选动画配置 */
-  update(ir: IRScene, options?: ViewUpdateOptions) {
-    return this.commitUpdate(() => this.runtime.replace(ir), options);
-  }
-
-  /** 归一化作者输入并提交更新 */
-  updateInput(input: InputScene, options?: ViewUpdateOptions) {
-    return this.commitUpdate(() => this.runtime.replaceInput(input), options);
+  /** 用完整 IR 或作者输入替换场景，并原子应用本次动画配置 */
+  replace(source: IRScene | InputScene, options?: ViewUpdateOptions) {
+    const previousAnimation = this.currentAnimation;
+    this.currentAnimation = options?.animation ?? previousAnimation;
+    try {
+      this.runtime.replace(source);
+      this.updateHostSize();
+    } catch (cause) {
+      this.currentAnimation = previousAnimation;
+      throw cause;
+    }
   }
 
   /** 注册事件处理函数，返回仅用于解除本次注册的句柄 */
@@ -131,7 +128,7 @@ export class SceneView<TRoot extends RendererHost = RendererHost> {
 
   /** 读取并清空会话诊断 */
   diagnostics() {
-    return this.runtime.diagnostics() as ReadonlyArray<ReconcilerDiagnostic>;
+    return this.runtime.diagnostics();
   }
 
   /** 释放会话资源并移除根元素，重复调用不再卸载 */
@@ -153,19 +150,6 @@ export class SceneView<TRoot extends RendererHost = RendererHost> {
     } else {
       renderer.host.style.width = `${displaySize.width}px`;
       renderer.host.style.height = `${displaySize.height}px`;
-    }
-  }
-
-  /** 随场景更新应用动画配置，失败时恢复旧配置 */
-  private commitUpdate(replace: () => void, options?: ViewUpdateOptions) {
-    const previousAnimation = this.currentAnimation;
-    this.currentAnimation = options?.animation ?? previousAnimation;
-    try {
-      replace();
-      this.updateHostSize();
-    } catch (cause) {
-      this.currentAnimation = previousAnimation;
-      throw cause;
     }
   }
 

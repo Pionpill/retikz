@@ -54,7 +54,7 @@ describe('Table Vanilla 安装运行时', () => {
 
     expect(svgRoot.textContent).toContain('Ada');
 
-    svgView.updateInput(tableFigure('Grace'));
+    svgView.replace(tableFigure('Grace'));
 
     expect(svgView.root).toBe(svgRoot);
     expect(svgRoot.textContent).toContain('Grace');
@@ -64,7 +64,7 @@ describe('Table Vanilla 安装运行时', () => {
       renderer: 'canvas',
     });
     const canvasRoot = canvasView.root;
-    canvasView.updateInput(tableFigure('Edsger'));
+    canvasView.replace(tableFigure('Edsger'));
 
     expect(canvasView.root).toBe(canvasRoot);
     expect(canvasRoot).toBeInstanceOf(HTMLCanvasElement);

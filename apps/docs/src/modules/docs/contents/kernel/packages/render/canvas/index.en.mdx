@@ -29,7 +29,7 @@ import { Layout, Node } from '@retikz/react';
 import { mountSceneView } from '@retikz/vanilla/dom';
 
 const view = mountSceneView(container, ir, { renderer: 'canvas' });
-// view.root is the <canvas>; view.update(next) uses the selected static or session processing; view.dispose() unmounts
+// view.root is the <canvas>; view.replace(next) replaces the complete scene; view.dispose() unmounts
 ```
 
 The two entries have different input contracts:

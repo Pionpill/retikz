@@ -213,7 +213,7 @@ const tableFigure = figure({
 });
 
 const view = mountSceneView(container, tableFigure, { adapters: [adapter] });
-view.update(
+view.replace(
   figure({
     layers: [layer('content', [embedTable('sales-panel', spec, { data: { sales: nextRows } })])],
   }),

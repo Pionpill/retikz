@@ -56,8 +56,8 @@ describe('独立图层会话', () => {
       expect(stack.current.map(entry => entry.name)).toEqual(['other', 'overlay']);
       expect(listener).toHaveBeenCalledExactlyOnceWith(stack.current);
       expect(stack.get('overlay')).not.toBe(overlay);
-      expect(() => overlay.replaceInput(scene([]))).toThrow(/disposed/i);
-      expect(() => background.replaceInput(scene([]))).toThrow(/disposed/i);
+      expect(() => overlay.replace(scene([]))).toThrow(/disposed/i);
+      expect(() => background.replace(scene([]))).toThrow(/disposed/i);
       expect(() => stack.get('background')).toThrow(/Unknown layer/);
     } finally {
       stack.dispose();
@@ -149,12 +149,12 @@ describe('独立图层会话', () => {
       expect(stack.current[0]).toBe(previous[0]);
       expect(stack.current[1]).not.toBe(previous[1]);
 
-      overlay.replaceInput(scene([]));
+      overlay.replace(scene([]));
       expect(listener).toHaveBeenCalledTimes(2);
       expect(stack.current[1].result).toBe(overlay.current);
       expect(stack.current[0]).toBe(previous[0]);
       stack.removeLayer('overlay');
-      expect(() => overlay.replaceInput(scene([]))).toThrow(/disposed/i);
+      expect(() => overlay.replace(scene([]))).toThrow(/disposed/i);
       expect(() => stack.get('overlay')).toThrow(/Unknown layer/);
     } finally {
       stack.dispose();
@@ -170,12 +170,12 @@ describe('独立图层会话', () => {
       expect(layerWarning).toHaveBeenCalledOnce();
       expect(stackWarning).not.toHaveBeenCalled();
       const beforeReset = stack.get('overlay');
-      beforeReset.replaceInput(scene([path({ way: [[0, 0], 'missing'] })]));
+      beforeReset.replace(scene([path({ way: [[0, 0], 'missing'] })]));
       expect(layerWarning).toHaveBeenCalledTimes(2);
       stack.replaceLayer(next);
       expect(stackWarning).toHaveBeenCalledOnce();
       expect(layerWarning).toHaveBeenCalledTimes(2);
-      expect(() => beforeReset.replaceInput(scene([]))).toThrow(/disposed/i);
+      expect(() => beforeReset.replace(scene([]))).toThrow(/disposed/i);
     } finally {
       stack.dispose();
     }

@@ -35,7 +35,7 @@ import { Layout, Node } from '@retikz/react';
 import { mountSceneView } from '@retikz/vanilla/dom';
 
 const view = mountSceneView(container, ir);
-// view.root is the <svg>; view.update(next) uses the selected static or session processing; view.dispose() unmounts
+// view.root is the <svg>; view.replace(next) replaces the complete scene; view.dispose() unmounts
 ```
 
 **Vanilla (SSR / build-time)** — `renderToSvg` returns an SVG string and runs in Node, with text dimensions estimated at compile time when Canvas is unavailable:

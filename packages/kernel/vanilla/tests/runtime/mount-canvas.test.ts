@@ -83,7 +83,7 @@ describe('@retikz/vanilla mount', () => {
     expect(view.root.style.height).toBe('120px');
     expect(view.root.width).toBe(480);
 
-    view.update(next);
+    view.replace(next);
 
     expect(view.root.style.width).toBe('300px');
     expect(view.root.width).toBe(600);

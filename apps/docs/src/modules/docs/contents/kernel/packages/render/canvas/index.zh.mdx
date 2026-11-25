@@ -29,7 +29,7 @@ import { Layout, Node } from '@retikz/react';
 import { mountSceneView } from '@retikz/vanilla/dom';
 
 const view = mountSceneView(container, ir, { renderer: 'canvas' });
-// view.root 是 <canvas>；view.update(next) 走所选 static 或 session processing；view.dispose() 卸载
+// view.root 是 <canvas>；view.replace(next) 完整替换场景；view.dispose() 卸载
 ```
 
 两个入口的输入能力不同：

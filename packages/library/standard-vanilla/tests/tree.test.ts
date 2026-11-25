@@ -19,7 +19,7 @@ it('重复节点身份的更新失败后保留上一棵完整树', () => {
   try {
     const previous = controller.current.compilation.result.scene;
     expect(() =>
-      controller.replaceInput(scene({ children: [tree({ root: { id: 'same', children: [{ id: 'same' }] } })] })),
+      controller.replace(scene({ children: [tree({ root: { id: 'same', children: [{ id: 'same' }] } })] })),
     ).toThrow();
     expect(controller.current.compilation.result.scene).toEqual(previous);
   } finally {

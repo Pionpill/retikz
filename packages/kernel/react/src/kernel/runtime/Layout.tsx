@@ -322,8 +322,7 @@ const SessionLayoutContent: FC<{
 
     try {
       if (previous?.controller === controller && previous.source !== source) {
-        if (isInputScene(source)) controller.replaceInput(source);
-        else controller.replace(source);
+        controller.replace(source);
       }
       appliedSourceRef.current = { controller, source };
     } catch {

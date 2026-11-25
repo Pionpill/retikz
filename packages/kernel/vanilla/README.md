@@ -37,7 +37,7 @@ import { compileToScene } from '@retikz/vanilla';
 const result = compileToScene(input);
 ```
 
-This returns the reconciler’s original `CompileResult`: read `result.scene` and `result.artifacts` directly. For session work, use `new SceneRuntime(ir, options)` for IR or `SceneRuntime.fromInput(input, options)` for authoring input, replace complete IR with `replace(ir)` or authoring input with `replaceInput(input)`, or submit an incremental batch with `update(batch, expected)`. `runtime.current` returns the committed `ReconcilerResult`, and `runtime.diagnostics()` drains session diagnostics. Export the committed frame with `runtime.toSvgString()`. Use `layer({ name, scene: ir })` for Core IR or `layerFromInput({ name, scene: input })` to normalize authored input once and retain its embed bindings. Use `compileLayers` for one-shot layer compilation. For session layers, create a `LayerStack`, use `stack.get(name)` to work with a scene directly, and dispose the stack when finished. Await external data before submitting a source.
+This returns the reconciler’s original `CompileResult`: read `result.scene` and `result.artifacts` directly. For session work, use `new SceneRuntime(ir, options)` for IR or `SceneRuntime.fromInput(input, options)` for authoring input, pass either form to `replace(source)` for a full replacement, or submit an incremental batch with `update(batch, expected)`. `runtime.current` returns the committed `ReconcilerResult`, and `runtime.diagnostics()` drains session diagnostics. Export the committed frame with `runtime.toSvgString()`. Use `layer({ name, scene: ir })` for Core IR or `layerFromInput({ name, scene: input })` to normalize authored input once and retain its embed bindings. Use `compileLayers` for one-shot layer compilation. For session layers, create a `LayerStack`, use `stack.get(name)` to work with a scene directly, and dispose the stack when finished. Await external data before submitting a source.
 
 ## Browser mounting
 
@@ -45,7 +45,7 @@ This returns the reconciler’s original `CompileResult`: read `result.scene` an
 import { mountSceneView } from '@retikz/vanilla/dom';
 
 const view = mountSceneView(document.querySelector('#diagram')!, input);
-view.updateInput(input);
+view.replace(input);
 view.dispose();
 ```
 

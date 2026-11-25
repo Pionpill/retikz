@@ -35,7 +35,7 @@ import { Layout, Node } from '@retikz/react';
 import { mountSceneView } from '@retikz/vanilla/dom';
 
 const view = mountSceneView(container, ir);
-// view.root 是 <svg>；view.update(next) 走所选 static 或 session processing；view.dispose() 卸载
+// view.root 是 <svg>；view.replace(next) 完整替换场景；view.dispose() 卸载
 ```
 
 **Vanilla（SSR / 构建期）**——`renderToSvg` 直接产 SVG 字符串，可在 Node 里跑；没有 Canvas 时，文字尺寸由编译步骤估算：

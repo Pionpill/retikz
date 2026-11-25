@@ -41,7 +41,7 @@ import { SceneRuntime } from '@retikz/vanilla';
 
 const runtime = SceneRuntime.fromInput(input);
 try {
-  runtime.replaceInput(nextInput);
+  runtime.replace(nextInput);
   const svg = runtime.toSvgString();
 } finally {
   runtime.dispose();
@@ -50,7 +50,7 @@ try {
 
 A full replacement may switch between authored input and IR; it does not infer a diff. In incremental mode, read the current version with `expected = runtime.current`, resolve addresses with `runtime.getScopeId(path, expected)`, then submit `runtime.update(batch, expected)`. Stale versions are rejected. Exporting reads the last committed frame.
 
-Use `replace(ir)` for complete IR and `replaceInput(input)` for authoring input. Both use the session’s base compilation options, not the previous frame’s authoring bindings. To override the options for one replacement, use `replace(ir, compile)` or `replaceInput(input, compile)` respectively.
+Use `replace(source, compile?)` for either complete IR or authoring input. By default it uses the session’s base compilation options, not the previous frame’s authoring bindings.
 
 When integrating a renderer, pass `createTarget` to the constructor to create the render target on the first commit and reuse it thereafter. If only host state such as event handlers changes, call `updateTarget()` to recommit the compiled result without replacing the scene.
 
@@ -62,7 +62,7 @@ When text has no explicit font family, the default browser measurer uses the com
 
 ## Submit ready input
 
-Await external data before constructing the input and calling `compileToScene` or the runtime’s `replaceInput`. Updates follow submission order. The application decides whether to ignore an older request that finished late. Each embed adapter’s `lower` synchronously returns its node, dependencies and per-instance runtime inputs; those inputs stay outside JSON IR.
+Await external data before constructing the input and calling `compileToScene` or the runtime’s `replace`. Updates follow submission order. The application decides whether to ignore an older request that finished late. Each embed adapter’s `lower` synchronously returns its node, dependencies and per-instance runtime inputs; those inputs stay outside JSON IR.
 
 For example, submit a Plot that uses an external executor alongside an ordinary node in one update:
 
@@ -73,7 +73,7 @@ import { embed, node, scene } from '@retikz/vanilla';
 
 const task = await preparePlotData(spec, { dataBindings, dataTransformExecutor });
 const preparedData = await task.execute();
-runtime.replaceInput(
+runtime.replace(
   scene({
     children: [
       node({ id: 'origin', position: [0, 0] }),
@@ -106,7 +106,7 @@ const svg = renderToSvg(compileResult.scene);
 const view = mountSceneView(document.querySelector('#diagram')!, input);
 ```
 
-`renderToSvg` needs no DOM, so it suits SSR, build-time generation, and saving SVG. `mountSceneView` hosts a browser view, creating SVG by default or Canvas with `renderer: 'canvas'`. The returned `view` owns later `update`, interaction hydration, animation controls, and disposal.
+`renderToSvg` needs no DOM, so it suits SSR, build-time generation, and saving SVG. `mountSceneView` hosts a browser view, creating SVG by default or Canvas with `renderer: 'canvas'`. The returned `view` provides `replace`, interaction hydration, animation controls, and disposal.
 
 `scene({ theme: { name, mode } })` writes a sparse Theme to the Input root, while `scope({ theme }, children)` uses the same local-inheritance form. Normalization reuses the Theme reference without mutating caller input; both routes finally use the same Core Theme and compile contract.
 
@@ -172,9 +172,11 @@ For an `InputScene`, `SceneRuntime` normalizes authoring shorthand to IR, resolv
 | `renderToSvg`    | Produce an `<svg>` string for SSR | `string`                                                    |
 | `mountSceneView` | Mount SVG or Canvas by `renderer` | `SceneView<SVGSVGElement>` / `SceneView<HTMLCanvasElement>` |
 
-Import the DOM mount APIs from `@retikz/vanilla/dom`. Call `mountSceneView(container, source)` with IR or authored input. IR is mounted directly; authored input is normalized once with its embed definitions and instance data. SVG is the default; pass `{ renderer: 'canvas' }` for Canvas. Replace the scene with `view.update(ir, options?)` or `view.updateInput(input, options?)`. A successful transaction publishes the scene, artifacts, and render configuration together; failure publishes no new frame. If rollback fails, dispose and remount the view.
+Import the DOM mount APIs from `@retikz/vanilla/dom`. Call `mountSceneView(container, source)` with IR or authored input. IR is mounted directly; authored input is normalized once with its embed definitions and instance data. SVG is the default; pass `{ renderer: 'canvas' }` for Canvas. Replace the scene with `view.replace(source, options?)`. A successful transaction publishes the scene, artifacts, and render configuration together; failure publishes no new frame. If rollback fails, dispose and remount the view.
 
-Both backends accept `animation` in the update options. Read the committed artifacts from `view.compileResult.artifacts`. Bind handlers with `view.hydrate({ handlers })` to use the current scene as the event context.
+You can also pass a `MountOptions` variable when the backend is chosen at runtime; the root then has type `SVGSVGElement | HTMLCanvasElement`. Calling `view.diagnostics()` drains the diagnostics. Its `ReadonlyArray<unknown>` can include original values thrown by callbacks; narrow each value before accessing its fields.
+
+Both backends accept `animation` in the update options. Read the committed artifacts from `view.compileResult.artifacts`. Bind handlers with `view.hydrate({ handlers })` to use the current scene as the event context. Call view methods on the instance; pass `() => view.dispose()` rather than `view.dispose` as a cleanup callback.
 
 The update strategy and optional renderer factory are fixed at mount. Dispose and remount to change the renderer, DPR, compile topology, or update strategy.
 
@@ -207,7 +209,7 @@ import { LayerStack } from '@retikz/vanilla';
 const stack = new LayerStack(layers, options);
 try {
   const overlay = stack.get('overlay');
-  overlay.replaceInput(nextInput);
+  overlay.replace(nextInput);
   const svg = overlay.toSvgString();
   stack.setLayerOrder('overlay', 120);
 } finally {

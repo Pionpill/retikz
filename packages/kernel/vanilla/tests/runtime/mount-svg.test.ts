@@ -43,7 +43,7 @@ describe('@retikz/vanilla mount', () => {
     expect(view.root.getAttribute('width')).toBe('240');
     expect(view.root.getAttribute('height')).toBe('120');
 
-    view.update(next);
+    view.replace(next);
 
     expect(view.root.getAttribute('width')).toBe('300');
     expect(view.root.getAttribute('height')).toBe('100');
@@ -66,7 +66,7 @@ describe('@retikz/vanilla mount', () => {
     const view = mountSceneView(c, sceneOf());
     const r1 = view.root;
     const vb1 = r1.getAttribute('viewBox');
-    view.update(sceneOf(100));
+    view.replace(sceneOf(100));
 
     expect(view.root).toBe(r1); // 元素恒等、未被替换
     expect(c.querySelectorAll('svg').length).toBe(1); // 没多挂一个
@@ -90,7 +90,7 @@ describe('@retikz/vanilla mount', () => {
     const view = mountSceneView(c, ir, { compile: { composites: [marker] } });
     expect(view.compileResult.artifacts).toMatchObject([{ namespace: 'test', type: 'marker', value: 'first' }]);
     expect(view.root.querySelector('[data-retikz-id="first"]')).not.toBeNull();
-    view.update({ version: 1, type: 'scene', children: [{ namespace: 'test', type: 'marker', label: 'second' }] });
+    view.replace({ version: 1, type: 'scene', children: [{ namespace: 'test', type: 'marker', label: 'second' }] });
     expect(view.compileResult.artifacts).toMatchObject([{ namespace: 'test', type: 'marker', value: 'second' }]);
     expect(view.root.querySelector('[data-retikz-id="first"]')).toBeNull();
     expect(view.root.querySelector('[data-retikz-id="second"]')).not.toBeNull();
