@@ -7,7 +7,8 @@ import { Fragment, isValidElement } from 'react';
 
 import type { HydrationEventProps } from '../../hydration';
 import { KernelDisplayName, getDisplayName } from '../../shared';
-import { textElementToLineSpec } from './Text';
+import { textLineFromProps } from './Text';
+import type { TextProps } from './Text';
 
 /** 可定位、可连接的节点输入，组合文字、视觉形状和连接面 */
 export type NodeProps = NodeOptions &
@@ -130,12 +131,8 @@ const collectChildLines = (children: unknown): Array<IRLine> => {
     }
 
     if (getDisplayName(node) === KernelDisplayName.Text) {
-      const line = textElementToLineSpec(node);
-      if (line !== undefined) {
-        flush();
-        lines.push(line);
-      }
-
+      flush();
+      lines.push(textLineFromProps(node.props as TextProps));
       return;
     }
 
@@ -150,7 +147,7 @@ const collectChildLines = (children: unknown): Array<IRLine> => {
 
 /** 读取 Node 的显式 text 或 JSX children */
 const readNodeText = (props: NodeProps): IRNode['text'] => {
-  if (typeof props.text === 'string' || Array.isArray(props.text)) return props.text;
+  if (props.text !== undefined) return props.text;
 
   const lines = collectChildLines(props.children);
   if (lines.length === 0) return undefined;

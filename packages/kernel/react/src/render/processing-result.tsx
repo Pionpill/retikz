@@ -48,10 +48,13 @@ export type ProcessingResultHostProps = Readonly<{
   onCompileResult?: (result: CompileResult) => void;
 }>;
 
-/** 写入 callback ref 或 RefObject */
-const assignRef = <T,>(ref: Ref<T> | undefined, value: T): void => {
-  if (typeof ref === 'function') ref(value);
-  else if (ref !== undefined && ref !== null) (ref as MutableRefObject<T>).current = value;
+/** 将两个渲染后端发布的控制器写入宿主的回调或对象 ref */
+const assignAnimationRef = (
+  ref: Ref<AnimationControls | null> | undefined,
+  controls: AnimationControls | null,
+): void => {
+  if (typeof ref === 'function') ref(controls);
+  else if (ref) (ref as MutableRefObject<AnimationControls | null>).current = controls;
 };
 
 /** 将 hydration 与 SVG 动画控制器绑定到 React SVG 根节点 */
@@ -111,7 +114,6 @@ export const ProcessingResultHost: FC<ProcessingResultHostProps> = props => {
     style,
     animate,
     snapshotAt,
-
     animationRef,
     idPrefix,
     onArtifacts,
@@ -133,7 +135,7 @@ export const ProcessingResultHost: FC<ProcessingResultHostProps> = props => {
 
   const hasAnimations = backend === 'svg' && animate && sceneHasAnimations(result.scene);
   const publishAnimation = useCallback(
-    (controls: AnimationControls | null) => assignRef(animationRef, controls),
+    (controls: AnimationControls | null) => assignAnimationRef(animationRef, controls),
     [animationRef],
   );
   const setRoot = useSvgRootBinding(handlers, result, hasAnimations, publishAnimation);
@@ -171,7 +173,7 @@ export const ProcessingResultHost: FC<ProcessingResultHostProps> = props => {
         style={style}
         animate={animate}
         snapshotAt={snapshotAt}
-        animationRef={animationRef}
+        publishAnimation={publishAnimation}
       />
     );
   }

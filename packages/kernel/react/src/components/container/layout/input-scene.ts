@@ -37,7 +37,7 @@ const componentLabel = (type: unknown): string => {
 /** React JSX traversal 期间共享的 Tier 2 bridge */
 type InputContext = {
   embedIdPrefix?: string;
-  nextAnonymousEmbed: { value: number };
+  nextAnonymousEmbed: number;
 };
 
 /** 将 React 元素组装为匹配其静态 Vanilla adapter 的 InputEmbed */
@@ -49,8 +49,7 @@ const inputEmbedFromElement = (
   const props = element.props as Record<string, unknown>;
   const explicitId = typeof props.id === 'string' && props.id.length > 0 ? props.id : undefined;
   const id =
-    explicitId ??
-    `${context.embedIdPrefix ?? '__retikz-react-embed'}:${adapter.kind}:${context.nextAnonymousEmbed.value++}`;
+    explicitId ?? `${context.embedIdPrefix ?? '__retikz-react-embed'}:${adapter.kind}:${context.nextAnonymousEmbed++}`;
   const authoredProps = createInputEmbedProps(element.type, props, { id, kind: adapter.kind });
   return embed({
     adapter,
@@ -122,7 +121,7 @@ const readSceneChildren = (children: ReactNode, context: InputContext): InputSce
 export const createInputScene = (children: ReactNode, options: InputSceneCreationOptions = {}): InputScene => {
   const context: InputContext = {
     ...(options.embedIdPrefix === undefined ? {} : { embedIdPrefix: options.embedIdPrefix }),
-    nextAnonymousEmbed: { value: 0 },
+    nextAnonymousEmbed: 0,
   };
   return { type: 'scene', children: readSceneChildren(children, context) };
 };

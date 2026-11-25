@@ -40,7 +40,7 @@ const mergeElement = (registry: Map<string, ElementHandlers>, id: unknown, handl
 
   const existing = registry.get(id);
   if (existing === undefined) {
-    registry.set(id, { ...handlers });
+    registry.set(id, handlers);
     return;
   }
 

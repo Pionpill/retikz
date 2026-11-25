@@ -82,7 +82,7 @@ const deliverProcessingDiagnostics = (
   callback: ((diagnostic: ReconcilerDiagnostic) => void) | undefined,
 ): void => {
   for (const diagnostic of controller.diagnostics()) {
-    if (!isReconcilerDiagnostic(diagnostic) || callback === undefined) continue;
+    if (callback === undefined || !isReconcilerDiagnostic(diagnostic)) continue;
 
     try {
       callback(diagnostic);

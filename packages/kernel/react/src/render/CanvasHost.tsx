@@ -19,7 +19,7 @@ import {
   metaOf,
   withCanvasAnimationEventHandlers,
 } from '@retikz/render/hydration';
-import type { CSSProperties, FC, MutableRefObject, Ref } from 'react';
+import type { CSSProperties, FC } from 'react';
 import { useEffect, useReducer, useRef } from 'react';
 
 import { computeDisplaySize } from './display-size';
@@ -85,13 +85,7 @@ export type CanvasHostProps = {
   /** 静态截帧时刻（毫秒）；给定时按该时刻画一帧、不起 rAF（定格），覆盖 animate */
   snapshotAt?: number;
   /** 命令式动画句柄出口：写入 rAF 时钟 AnimationControls（无动画 / 截帧 / 降级时为 null） */
-  animationRef?: Ref<AnimationControls | null>;
-};
-
-/** 写入 ref（兼容 callback ref 与 RefObject）；value 为 null 表示清空 */
-const assignRef = <T,>(ref: Ref<T> | undefined, value: T): void => {
-  if (typeof ref === 'function') ref(value);
-  else if (ref) (ref as MutableRefObject<T>).current = value;
+  publishAnimation: (controls: AnimationControls | null) => void;
 };
 
 const devicePixelRatio = (): number => {
@@ -131,7 +125,7 @@ const clientToScene = (
 
 /** React canvas 宿主：管理 `<canvas>` 与全量重绘 effect */
 export const CanvasHost: FC<CanvasHostProps> = props => {
-  const { scene, handlers, width, height, className, style, animate, snapshotAt, animationRef } = props;
+  const { scene, handlers, width, height, className, style, animate, snapshotAt, publishAnimation } = props;
   const initialRatio = devicePixelRatio();
   const displaySize = computeDisplaySize(scene.layout, width, height);
   const bitmapSize = computeDisplaySize(
@@ -201,7 +195,7 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
       renderToCanvas(canvas, scene, { ...baseOptions, time: snapshotAt });
       clockRef.current = null;
       renderFrameRef.current = null;
-      assignRef(animationRef, null);
+      publishAnimation(null);
 
       return undefined;
     }
@@ -216,7 +210,7 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
     renderToCanvas(canvas, scene, baseOptions);
     if (!animate || !sceneHasAnimations(scene)) {
       clockRef.current = null;
-      assignRef(animationRef, null);
+      publishAnimation(null);
       return undefined;
     }
 
@@ -226,17 +220,17 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
         renderToCanvas(canvas, scene, { ...baseOptions, time, resolvePrimAnimation: id => resolvePrim(id, time) }),
     });
     clockRef.current = clock;
-    assignRef(animationRef, clock); // 命令式句柄出口
+    publishAnimation(clock); // 命令式句柄出口
     if (sceneHasAutoplayTrigger(scene)) clock.play();
 
     return () => {
       clock.dispose();
       clockRef.current = null;
-      assignRef(animationRef, null);
+      publishAnimation(null);
     };
     // className / style 不参与依赖：effect 不读取它们（仅 JSX 应用到 <canvas>），把内联 style={{...}} 的
     // 每次新引用纳入依赖会让本 effect 每次父渲染都 dispose+重建 rAF 时钟、动画从头重播。
-  }, [animate, snapshotAt, animationRef, height, renderTick, scene, width]);
+  }, [animate, snapshotAt, publishAnimation, height, renderTick, scene, width]);
 
   useEffect(() => {
     const canvas = ref.current;

@@ -206,7 +206,7 @@
               "inputPathFromProps",
               "inputScopeFromProps",
               "inputStepFromProps",
-              "textElementToLineSpec"
+              "textLineFromProps"
             ]
           }
         ]
