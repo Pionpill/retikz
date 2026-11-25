@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { cameraTo, colorShift, drawOn, fadeIn, loop, scaleIn, slideIn, stagger } from '../../src';
+import { cameraTo, colorShift, drawOn, fadeIn, loop, scaleIn, slideIn, stagger } from '../src';
 
 describe('Sugar=Kernel 等价（默认参数）', () => {
-  it('解析 fadeIn、drawOn 和 scaleIn 动画预设', () => {
+  it('从预设生成淡入、描边和缩放轨道', () => {
     expect(fadeIn()).toEqual({
       property: 'opacity',
       keyframes: [

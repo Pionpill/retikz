@@ -1,7 +1,7 @@
 export * from './compile';
 export * from './contract';
 export * from './error';
-export * from './parse';
+export * from './animation-presets';
 export {
   ellipseShape,
   polygon,
