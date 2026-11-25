@@ -13,4 +13,4 @@ export {
   isEmbeddableMarked,
   resolveInputEmbedAdapter,
 } from './protocol';
-export type { LayoutAuthoringSite, LayoutAuthoringSiteKind, ReactInputEmbedContext, ScopeStyleProps } from './protocol';
+export type { ReactInputEmbedContext, ScopeStyleProps } from './protocol';

@@ -1219,8 +1219,8 @@ export const kernelV05: Release = {
         {
           label: { zh: 'BREAKING 冗余 API 清理', en: 'BREAKING unused API cleanup' },
           content: {
-            zh: '移除 createLayoutAuthoringSite 冻结包装函数及未被 Layout 消费的内部 SVG 包装组件；LayoutAuthoringSite 类型与 Layout 渲染行为保持。',
-            en: 'Removes the createLayoutAuthoringSite freeze wrapper and internal SVG wrappers unused by Layout. LayoutAuthoringSite and Layout rendering behavior remain unchanged.',
+            zh: '移除 createLayoutAuthoringSite 冻结包装函数、LayoutAuthoringSite 和 LayoutAuthoringSiteKind 类型，以及未被 Layout 使用的内部 SVG 包装组件。Layout 渲染行为不变。',
+            en: 'Removes the createLayoutAuthoringSite freeze wrapper, the LayoutAuthoringSite and LayoutAuthoringSiteKind types, and internal SVG wrappers unused by Layout. Layout rendering behavior is unchanged.',
           },
         },
         {
