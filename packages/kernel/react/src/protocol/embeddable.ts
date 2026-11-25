@@ -1,6 +1,6 @@
 import type { AnyInputEmbedAdapter } from '@retikz/vanilla';
 
-import { RetikzReactError, RetikzReactErrorCode } from '../../error';
+import { RetikzReactError, RetikzReactErrorCode } from '../error';
 
 /** React 收集父级为嵌入组件输入工厂提供的稳定上下文 */
 export type ReactInputEmbedContext = Readonly<{

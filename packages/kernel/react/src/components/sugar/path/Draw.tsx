@@ -1,8 +1,8 @@
 import type { WayDSL } from '@retikz/vanilla';
 import type { FC } from 'react';
 
-import type { PathProps } from '../../kernel/components';
-import { Path } from '../../kernel/components';
+import type { PathProps } from '../../kernel';
+import { Path } from '../../kernel';
 
 /** Draw 的作者侧属性 */
 export type DrawProps = Readonly<

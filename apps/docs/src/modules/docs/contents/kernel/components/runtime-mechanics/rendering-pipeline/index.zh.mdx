@@ -31,8 +31,11 @@ React 中的 `Node`、`Path`、`Step` 只做声明。`Layout` 收集整棵声明
 
 <SourceLinks
   sources={[
-    { label: 'Layout 收集声明并调用 Vanilla', path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx' },
-    { label: 'JSX 转换为 InputScene', path: 'packages/kernel/react/src/kernel/adapter/input-scene.ts' },
+    {
+      label: 'Layout 收集声明并调用 Vanilla',
+      path: 'packages/kernel/react/src/components/container/layout/Layout.tsx',
+    },
+    { label: 'JSX 转换为 InputScene', path: 'packages/kernel/react/src/components/container/layout/input-scene.ts' },
   ]}
 />
 
@@ -121,7 +124,7 @@ Render 消费 Scene 中已经确定的几何。选择 SVG 时，它生成描述�
 
 <SourceLinks
   sources={[
-    { label: 'React 场景入口', path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx' },
+    { label: 'React 场景入口', path: 'packages/kernel/react/src/components/container/layout/Layout.tsx' },
     { label: 'Vanilla 同步处理', path: 'packages/kernel/vanilla/src/runtime/runtime.ts' },
     { label: 'SvgNode 转换为 React 元素', path: 'packages/kernel/react/src/render/svg/svg-to-react.ts' },
   ]}

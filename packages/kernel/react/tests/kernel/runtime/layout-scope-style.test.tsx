@@ -6,9 +6,9 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { Draw, EdgeLabel, Layout, Node, Scope, Step } from '../../../src';
-import { Path } from '../../../src/kernel';
-import { wrapRootScope } from '../../../src/kernel/adapter';
-import type { ScopeStyleProps } from '../../../src/kernel/protocol';
+import { Path } from '../../../src';
+import { wrapRootScope } from '../../../src/components/container/layout';
+import type { ScopeStyleProps } from '../../../src/protocol';
 
 /**
  * <Layout> 顶层级联样式 props 测试（隐式根 Scope）

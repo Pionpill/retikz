@@ -26,18 +26,18 @@ import { isInputScene, SceneRuntime, compileToScene } from '@retikz/vanilla';
 import type { CSSProperties, FC, ReactNode, Ref } from 'react';
 import { useCallback, useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 
-import { RetikzReactError, RetikzReactErrorCode } from '../../error';
-import { usePrefersReducedMotion } from '../../render/animation';
-import { ProcessingResultHost } from '../../render/processing-result';
-import { pickScopeStyle, wrapRootScope } from '../adapter';
-import { createInputScene } from '../adapter/input-scene';
-import { useAnimationMode } from './animation-context';
-import { collectHydrationHandlers } from './collect-hydration-handlers';
-import { useRendererMode } from './renderer-context';
+import { RetikzReactError, RetikzReactErrorCode } from '../../../error';
+import { collectHydrationHandlers } from '../../../hydration';
+import { usePrefersReducedMotion } from '../../../render/animation';
+import { ProcessingResultHost } from '../../../render/processing-result';
+import { useAnimationMode } from '../animation-mode';
+import { useRendererMode } from '../renderer-mode';
+import { mergeThemeOverlays, useTheme } from '../theme';
+import { mergeThemeDefinitions, useThemeDefinitions } from '../theme';
+import { createInputScene } from './input-scene';
+import { pickScopeStyle, wrapRootScope } from './root-scope';
 import type { LayoutRuntimeOptions } from './runtime-options';
 import { LayoutRuntimeMode } from './runtime-options';
-import { mergeThemeOverlays, useTheme } from './theme-context';
-import { mergeThemeDefinitions, useThemeDefinitions } from './theme-definitions-context';
 
 /** 同一条诊断消息进程内只告警一次 */
 const warnedMessages = new Set<string>();

@@ -2,10 +2,10 @@ import type { ElementHandlers, HydrationHandler, HydrationHandlers } from '@reti
 import type { ReactNode } from 'react';
 import { Children, Fragment, isValidElement } from 'react';
 
-import type { HydrationEventPropName } from '../protocol';
 import { getDisplayName, TIKZ_COORDINATE, TIKZ_NODE, TIKZ_PATH, TIKZ_SCOPE } from '../protocol';
 import { resolveInputEmbedAdapter } from '../protocol';
-import { EVENT_PROP_TO_NAME } from '../protocol';
+import type { HydrationEventPropName } from './event-props';
+import { EVENT_PROP_TO_NAME } from './event-props';
 
 /** 从一个元素 props 读出 `on<Event>` handler，翻译成 RetikzEvent → handler 的 ElementHandlers（无 handler 返回空对象） */
 const readElementHandlers = (props: Record<string, unknown>): ElementHandlers => {
@@ -73,7 +73,7 @@ const visit = (registry: Map<string, ElementHandlers>, children: ReactNode): voi
 
     switch (name) {
       case TIKZ_SCOPE:
-        // 容器：递归子级（与 builder 的 buildScopeFromProps → readSceneChildren 同源）。
+        // Scope 容器递归收集子图元的事件
         visit(registry, props.children as ReactNode);
         return;
       case TIKZ_NODE:

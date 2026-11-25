@@ -5,7 +5,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject } from 'zod';
 
-import { Layout, Node, Path, Step } from '../../../src/kernel';
+import { Layout, Node, Path, Step } from '../../../src';
 
 /**
  * <Layout shapes={...}> 自定义 shape 注入透传

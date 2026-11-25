@@ -5,7 +5,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
-import { Layout, Node, Scope, Text, ThemeProvider } from '../../../src/kernel';
+import { Layout, Node, Scope, Text, ThemeProvider } from '../../../src';
 
 const testThemeDefinitions = ['academic', 'vibrant', 'clean'].map(name =>
   defineTheme({

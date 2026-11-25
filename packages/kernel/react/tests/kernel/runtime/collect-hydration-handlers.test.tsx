@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { Node, Path, Scope, Step } from '../../../src';
 import type { PathProps } from '../../../src';
-import { collectHydrationHandlers } from '../../../src/kernel/runtime/collect-hydration-handlers';
+import { collectHydrationHandlers } from '../../../src/hydration';
 
 /**
  * 水合：collectHydrationHandlers（与 InputScene 遍历同源，按 id 收 handler）

@@ -2,9 +2,9 @@ import { defineArrow } from '@retikz/core';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
-import { Layout } from '../../../src/kernel';
-import { Path } from '../../../src/kernel';
-import { Step } from '../../../src/kernel';
+import { Layout } from '../../../src';
+import { Path } from '../../../src';
+import { Step } from '../../../src';
 
 const TestOpenArrowDefinition = defineArrow({
   name: 'testOpen',

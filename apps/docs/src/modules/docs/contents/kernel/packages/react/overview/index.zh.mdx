@@ -82,13 +82,13 @@ export const Draw: FC<DrawProps> = props => <Path {...props} />;
   sources={[
     {
       label: 'Node 的 IR 标记实现',
-      path: 'packages/kernel/react/src/kernel/components/Node.tsx',
-      startLine: 14,
-      endLine: 20,
+      path: 'packages/kernel/react/src/components/kernel/Node.tsx',
+      startLine: 20,
+      endLine: 25,
     },
     {
       label: 'Draw 将输入透传给 Path',
-      path: 'packages/kernel/react/src/sugar/path/Draw.tsx',
+      path: 'packages/kernel/react/src/components/sugar/path/Draw.tsx',
       startLine: 15,
       endLine: 19,
     },
@@ -109,13 +109,13 @@ Definition 数组按有序元素 identity 规范化，因此 render 时重新创
   sources={[
     {
       label: 'Layout 的 Definition 容器规范化',
-      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      path: 'packages/kernel/react/src/components/container/layout/Layout.tsx',
       startLine: 377,
       endLine: 388,
     },
     {
       label: 'React 的 static fallback 与 session processing 订阅',
-      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      path: 'packages/kernel/react/src/components/container/layout/Layout.tsx',
       startLine: 251,
       endLine: 337,
     },
@@ -150,13 +150,13 @@ Definition 数组按有序元素 identity 规范化，因此 render 时重新创
   sources={[
     {
       label: 'Layout runtime 判别配置',
-      path: 'packages/kernel/react/src/kernel/runtime/runtime-options.ts',
+      path: 'packages/kernel/react/src/components/container/layout/runtime-options.ts',
       startLine: 4,
       endLine: 40,
     },
     {
       label: 'React 分派 static 或 session processing',
-      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      path: 'packages/kernel/react/src/components/container/layout/Layout.tsx',
       startLine: 251,
       endLine: 337,
     },
@@ -192,9 +192,9 @@ Definition 数组按有序元素 identity 规范化，因此 render 时重新创
   sources={[
     {
       label: 'React 收集 JSX 为 InputScene',
-      path: 'packages/kernel/react/src/kernel/adapter/input-scene.ts',
-      startLine: 466,
-      endLine: 528,
+      path: 'packages/kernel/react/src/components/container/layout/input-scene.ts',
+      startLine: 72,
+      endLine: 136,
     },
     {
       label: 'Vanilla 归一 Input 并合并 Composite dependencies',
@@ -202,7 +202,7 @@ Definition 数组按有序元素 identity 规范化，因此 render 时重新创
     },
     {
       label: 'Layout 构造 processing source 与 options',
-      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      path: 'packages/kernel/react/src/components/container/layout/Layout.tsx',
       startLine: 408,
       endLine: 480,
     },
@@ -228,7 +228,7 @@ Scene 已经没有 React 组件语义。Vanilla processing 负责保留或静态
   sources={[
     {
       label: 'Layout 将 source 与 options 交给 Vanilla processing',
-      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      path: 'packages/kernel/react/src/components/container/layout/Layout.tsx',
       startLine: 408,
       endLine: 480,
     },
@@ -240,7 +240,7 @@ Scene 已经没有 React 组件语义。Vanilla processing 负责保留或静态
     },
     {
       label: 'JSX handler 运行时旁路',
-      path: 'packages/kernel/react/src/kernel/runtime/collect-hydration-handlers.ts',
+      path: 'packages/kernel/react/src/hydration/collect-hydration-handlers.ts',
       startLine: 53,
       endLine: 94,
     },

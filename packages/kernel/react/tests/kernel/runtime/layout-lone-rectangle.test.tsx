@@ -1,9 +1,9 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
-import { Layout } from '../../../src/kernel';
-import { Path } from '../../../src/kernel';
-import { Step } from '../../../src/kernel';
+import { Layout } from '../../../src';
+import { Path } from '../../../src';
+import { Step } from '../../../src';
 
 /**
  * 回归：自包含 rectangle step 单独成 <Path>（无前置 move）应正常渲染

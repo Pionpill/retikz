@@ -24,35 +24,24 @@
 - 必须直接依赖 `@retikz/vanilla`。React 不直接调用 `@retikz/core` 的 authoring helper 或直接拼装 Source IR，也不实现 Runtime session 或 renderer 编排；它只调用 Vanilla 的公开 normalize / processing API 并把只读结果映射到 React 宿主。不 import app 包或 Tier 2 包。
 - 不新增第三方运行时依赖；确需新增时先说明理由。
 - 不引 Tailwind / shadcn / 样式库；adapter 输出原生 SVG / Canvas 宿主，样式由消费者或 props 控制。
-- `kernel/` 与 `sugar/` 必须 SSR-safe，不访问 `document` / `window` / `HTMLElement`。浏览器全局只允许在 `render/` 下出现。
+- `components/` 必须 SSR-safe，不访问 `document` / `window` / `HTMLElement`。浏览器全局只允许在 `render/` 下出现。
 
 ## 目录职责
 
 ```text
-src/index.ts   公开 API，只聚合允许公开的一级 owner barrel
-kernel/        React DSL Kernel：组件、JSX ↔ Vanilla Input adapter、Layout runtime
-sugar/         Sugar 组件与同步展开 helper，可按 path / shapes 分组
-render/        React 宿主渲染接线，可按 svg / canvas / text 分组
+src/index.ts            包根公开 API，不暴露内部转换函数
+components/kernel/      每个图元一个组件文件，同文件定义 Props、组件和局部转换函数
+components/sugar/       用 Kernel JSX 表达的作者简写
+components/container/   Layout、场景收集，以及 Provider 与各自的 context
+protocol/               元素识别、嵌入协议与共享作者契约
+hydration/              React 事件 props、事件名映射与 handler 收集
+render/                 SVG / Canvas 宿主与 processing result 映射
+shared/                 跨图元复用的纯函数
 ```
 
-新增模块时按职责放置；不要在 `render/` 外写浏览器特化逻辑。
-
-`kernel/` 内部按 owner 拆分：
-
-```text
-components/  Kernel DSL 标记组件：Layout 之外的 Node / Path / Step / Scope / Coordinate / Text
-protocol/    displayName、水合事件 props、embeddable 协议等跨 owner 共享契约
-adapter/     JSX ↔ Vanilla Input 转换逻辑：React children 解包、字段透传与调度
-runtime/     Layout、hydration handler 收集、Vanilla processing 调度与 React subscription
-```
-
-- 用户可用 React 组件文件用 `PascalCase.tsx`；非组件纯逻辑用 `kebab-case.ts`。
-- 内部 helper 用语义名，不用 `_xxx.ts`；例如 `fields.ts`、`display-names.ts`、`shape-helpers.ts`。
-- 每个 owner 目录用 `index.ts` barrel 收口；`src/index.ts` 只聚合允许进入包公共面的一级 owner。
-- `kernel/components` 可以依赖 `kernel/protocol`，不得依赖 `adapter` / `runtime` / `render` / `sugar`。
-- `kernel/adapter` 可以依赖 `kernel/components`、`kernel/protocol` 与 `@retikz/vanilla` 的公开 Input / normalizer，负责把 React props 构建为 Vanilla Input；不得依赖 `kernel/runtime` 或 `sugar`，不得直接实现 Core Source IR builder 或绕过 Vanilla。
-- `kernel/runtime` 可以依赖 `kernel/adapter`、`kernel/protocol` 与 Vanilla processing API；`sugar` 可以依赖 `kernel/components` 与 `kernel/protocol`，不得依赖 `kernel/runtime`。
-- `render` 只做 processing result 到 React host 的薄映射，不依赖 `kernel/runtime`，不创建 Runtime session 或 renderer；浏览器全局只允许在 `render/` 下出现。
+- `components/kernel/index.ts` 汇总组件、Props 和内部 adapter；包根只公开声明与已有公开入口，不导出图元 adapter。
+- 图元 adapter 只转换当前元素，可接收步骤序号信息或已收集的子项，不依赖 Layout、runtime 或 renderer。整棵场景的遍历、嵌入上下文及图元分派归 `components/container/layout`。
+- Sugar 可以依赖 Kernel，Kernel 不依赖 Sugar 实现；`render` 不依赖容器，不创建编译会话。
 
 ## Kernel 组件
 

@@ -8,7 +8,7 @@ Node.position 可省略，Core 解析时使用局部原点 [0, 0]；直接 schem
 
 ## 组件声明
 
-#### <ApiSourceLink label={"Node"} path={"packages/kernel/react/src/kernel/components/Node.tsx"} startLine={19}>Node</ApiSourceLink> / <ApiSourceLink label={"NodeProps"} path={"packages/kernel/react/src/kernel/components/Node.tsx"} startLine={8}>NodeProps</ApiSourceLink>
+#### <ApiSourceLink label={"Node"} path={"packages/kernel/react/src/components/kernel/Node.tsx"} startLine={24}>Node</ApiSourceLink> / <ApiSourceLink label={"NodeProps"} path={"packages/kernel/react/src/components/kernel/Node.tsx"} startLine={13}>NodeProps</ApiSourceLink>
 
 声明一个带位置、文本、形状和样式的可引用节点；组件自身不渲染 DOM，最终由 `<Layout>` 输出到
 SVG 或 Canvas
@@ -67,7 +67,7 @@ export type NodeProps = NodeOptions &
 
 </DocTabs>
 
-#### <ApiSourceLink label={"Text"} path={"packages/kernel/react/src/kernel/components/Text.tsx"} startLine={17}>Text</ApiSourceLink> / <ApiSourceLink label={"TextProps"} path={"packages/kernel/react/src/kernel/components/Text.tsx"} startLine={8}>TextProps</ApiSourceLink>
+#### <ApiSourceLink label={"Text"} path={"packages/kernel/react/src/components/kernel/Text.tsx"} startLine={17}>Text</ApiSourceLink> / <ApiSourceLink label={"TextProps"} path={"packages/kernel/react/src/components/kernel/Text.tsx"} startLine={8}>TextProps</ApiSourceLink>
 
 声明一行节点文本；与字符串内容按 JSX 顺序合并，字段只覆盖当前这一行
 
@@ -102,7 +102,7 @@ export type TextProps = Pick<output<typeof TextLineSchema>, 'fill' | 'opacity' |
 
 </DocTabs>
 
-#### <ApiSourceLink label={"Coordinate"} path={"packages/kernel/react/src/kernel/components/Coordinate.tsx"} startLine={13}>Coordinate</ApiSourceLink> / <ApiSourceLink label={"CoordinateProps"} path={"packages/kernel/react/src/kernel/components/Coordinate.tsx"} startLine={7}>CoordinateProps</ApiSourceLink>
+#### <ApiSourceLink label={"Coordinate"} path={"packages/kernel/react/src/components/kernel/Coordinate.tsx"} startLine={13}>Coordinate</ApiSourceLink> / <ApiSourceLink label={"CoordinateProps"} path={"packages/kernel/react/src/components/kernel/Coordinate.tsx"} startLine={7}>CoordinateProps</ApiSourceLink>
 
 命名一个可引用的点，供后续 path 与其它 node 的 `at.of` 使用；自身不渲染、不参与 viewBox 扩展
 

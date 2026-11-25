@@ -8,7 +8,7 @@ Node.position is optional and resolves to the local origin [0, 0] in Core; direc
 
 ## Component declarations
 
-#### <ApiSourceLink label={"Node"} path={"packages/kernel/react/src/kernel/components/Node.tsx"} startLine={19}>Node</ApiSourceLink> / <ApiSourceLink label={"NodeProps"} path={"packages/kernel/react/src/kernel/components/Node.tsx"} startLine={8}>NodeProps</ApiSourceLink>
+#### <ApiSourceLink label={"Node"} path={"packages/kernel/react/src/components/kernel/Node.tsx"} startLine={24}>Node</ApiSourceLink> / <ApiSourceLink label={"NodeProps"} path={"packages/kernel/react/src/components/kernel/Node.tsx"} startLine={13}>NodeProps</ApiSourceLink>
 
 Declares a referenceable node with position, text, shape, and style. The component itself creates no DOM; `<Layout>` renders it to SVG or Canvas
 
@@ -66,7 +66,7 @@ export type NodeProps = NodeOptions &
 
 </DocTabs>
 
-#### <ApiSourceLink label={"Text"} path={"packages/kernel/react/src/kernel/components/Text.tsx"} startLine={17}>Text</ApiSourceLink> / <ApiSourceLink label={"TextProps"} path={"packages/kernel/react/src/kernel/components/Text.tsx"} startLine={8}>TextProps</ApiSourceLink>
+#### <ApiSourceLink label={"Text"} path={"packages/kernel/react/src/components/kernel/Text.tsx"} startLine={17}>Text</ApiSourceLink> / <ApiSourceLink label={"TextProps"} path={"packages/kernel/react/src/components/kernel/Text.tsx"} startLine={8}>TextProps</ApiSourceLink>
 
 Declares one text line, combined with strings in JSX order; overrides apply only to this line
 
@@ -101,7 +101,7 @@ export type TextProps = Pick<output<typeof TextLineSchema>, 'fill' | 'opacity' |
 
 </DocTabs>
 
-#### <ApiSourceLink label={"Coordinate"} path={"packages/kernel/react/src/kernel/components/Coordinate.tsx"} startLine={13}>Coordinate</ApiSourceLink> / <ApiSourceLink label={"CoordinateProps"} path={"packages/kernel/react/src/kernel/components/Coordinate.tsx"} startLine={7}>CoordinateProps</ApiSourceLink>
+#### <ApiSourceLink label={"Coordinate"} path={"packages/kernel/react/src/components/kernel/Coordinate.tsx"} startLine={13}>Coordinate</ApiSourceLink> / <ApiSourceLink label={"CoordinateProps"} path={"packages/kernel/react/src/components/kernel/Coordinate.tsx"} startLine={7}>CoordinateProps</ApiSourceLink>
 
 Names a referenceable point for paths and other node positions; emits no visible output and does not enlarge the viewBox
 

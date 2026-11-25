@@ -6,7 +6,7 @@
 
 ## 组件声明
 
-#### <ApiSourceLink label={"Path"} path={"packages/kernel/react/src/kernel/components/Path.tsx"} startLine={33}>Path</ApiSourceLink> / <ApiSourceLink label={"PathProps"} path={"packages/kernel/react/src/kernel/components/Path.tsx"} startLine={10}>PathProps</ApiSourceLink>
+#### <ApiSourceLink label={"Path"} path={"packages/kernel/react/src/components/kernel/Path.tsx"} startLine={34}>Path</ApiSourceLink> / <ApiSourceLink label={"PathProps"} path={"packages/kernel/react/src/components/kernel/Path.tsx"} startLine={14}>PathProps</ApiSourceLink>
 
 本组件自身不渲染 DOM；最终路径由 `<Layout>` 根据 step 序列、样式、箭头和标记输出
 
@@ -17,6 +17,7 @@
 | 成员              | 类型                                  | 默认值 | 说明                                                                                                                                                                         |
 | ----------------- | ------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `animations?`     | `PathOptions['animations']`           | —      | 声明式动画 track 数组（关键帧 + 时长 / 缓动 / 触发器）；用法与 preset 见动画组件文档                                                                                         |
+| `authoring?`      | `unknown`                             | —      | 归一化时保留的作者元数据，不进入 Core IR                                                                                                                                     |
 | `cornerRadius?`   | `number`                              | —      | 线段相交处的几何圆角半径；与只改变描边外观的 `lineJoin` 不同                                                                                                                 |
 | `id?`             | `string`                              | —      | 可选稳定 id：供其它元素 anchor 引用，也是水合事件绑定的挂点（带 id 才能给 path 绑 onClick 等 handler）                                                                       |
 | `kindOptions?`    | `Record<string, JsonValue>`           | —      | 由选定 Path provider 消费的 JSON-safe 参数对象；完整 schema 在后续解析                                                                                                       |
@@ -41,35 +42,18 @@
 
 公共属性适用于所有分支；输入还需满足至少一个分支的属性约束。
 
-<DocTabs defaultValue="definition">
-
-<DocTab value="definition" label="属性 · 定义提供几何">
-
-<ApiTable>
-
-| 成员         | 类型                              | 默认值 | 说明                                                     |
-| ------------ | --------------------------------- | ------ | -------------------------------------------------------- |
-| `arrow?`     | `PathOptions['arrow']`            | —      | 端点箭头配置，或用方向字符串快捷启用起点、终点或两端箭头 |
-| `authoring?` | `never`                           | —      | 归一化时保留的作者元数据，不进入 Core IR                 |
-| `children?`  | `never`                           | —      | —                                                        |
-| `kind`       | `NonNullable<IRPathBase['kind']>` | —      | Path provider 名；省略时使用内置 `stroke`                |
-| `way?`       | `never`                           | —      | —                                                        |
-
-</ApiTable>
-
-</DocTab>
+<DocTabs defaultValue="children">
 
 <DocTab value="children" label="属性 · JSX 子步骤">
 
 <ApiTable>
 
-| 成员         | 类型                                       | 默认值 | 说明                                                     |
-| ------------ | ------------------------------------------ | ------ | -------------------------------------------------------- |
-| `arrow?`     | `IRPath['arrow'] \| '->' \| '<-' \| '<->'` | —      | 端点箭头配置，或用方向字符串快捷启用起点、终点或两端箭头 |
-| `authoring?` | `unknown`                                  | —      | 归一化时保留的作者元数据，不进入 Core IR                 |
-| `children`   | `Exclude<ReactNode, undefined>`            | —      | 按声明顺序收集的 Step 子元素                             |
-| `kind?`      | `string & {} \| "stroke"`                  | —      | Path provider 名；省略时使用内置 `stroke`                |
-| `way?`       | `never`                                    | —      | 路径走向简写，与 JSX 子步骤二选一                        |
+| 成员       | 类型                                       | 默认值 | 说明                                                     |
+| ---------- | ------------------------------------------ | ------ | -------------------------------------------------------- |
+| `arrow?`   | `IRPath['arrow'] \| '->' \| '<-' \| '<->'` | —      | 端点箭头配置，或用方向字符串快捷启用起点、终点或两端箭头 |
+| `children` | `Exclude<ReactNode, undefined>`            | —      | 按声明顺序收集的 Step 子元素                             |
+| `kind?`    | `string & {} \| "stroke"`                  | —      | Path provider 名；省略时使用内置 `stroke`                |
+| `way?`     | `never`                                    | —      | 路径走向简写，与 JSX 子步骤二选一                        |
 
 </ApiTable>
 
@@ -79,13 +63,25 @@
 
 <ApiTable>
 
-| 成员         | 类型                                       | 默认值 | 说明                                                     |
-| ------------ | ------------------------------------------ | ------ | -------------------------------------------------------- |
-| `arrow?`     | `IRPath['arrow'] \| '->' \| '<-' \| '<->'` | —      | 端点箭头配置，或用方向字符串快捷启用起点、终点或两端箭头 |
-| `authoring?` | `unknown`                                  | —      | 归一化时保留的作者元数据，不进入 Core IR                 |
-| `children?`  | `never`                                    | —      | 按声明顺序收集的 Step 子元素                             |
-| `kind?`      | `string & {} \| "stroke"`                  | —      | Path provider 名；省略时使用内置 `stroke`                |
-| `way`        | `WayDSL`                                   | —      | 路径走向简写，与 JSX 子步骤二选一                        |
+| 成员        | 类型                                       | 默认值 | 说明                                                     |
+| ----------- | ------------------------------------------ | ------ | -------------------------------------------------------- |
+| `arrow?`    | `IRPath['arrow'] \| '->' \| '<-' \| '<->'` | —      | 端点箭头配置，或用方向字符串快捷启用起点、终点或两端箭头 |
+| `children?` | `never`                                    | —      | 按声明顺序收集的 Step 子元素                             |
+| `kind?`     | `string & {} \| "stroke"`                  | —      | Path provider 名；省略时使用内置 `stroke`                |
+| `way`       | `WayDSL`                                   | —      | 路径走向简写，与 JSX 子步骤二选一                        |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="属性 · 定义提供几何">
+
+<ApiTable>
+
+| 成员     | 类型                              | 默认值 | 说明                                                     |
+| -------- | --------------------------------- | ------ | -------------------------------------------------------- |
+| `arrow?` | `PathOptions['arrow']`            | —      | 端点箭头配置，或用方向字符串快捷启用起点、终点或两端箭头 |
+| `kind`   | `NonNullable<IRPathBase['kind']>` | —      | Path provider 名；省略时使用内置 `stroke`                |
 
 </ApiTable>
 
@@ -105,9 +101,6 @@ export type PathProps = Omit<PathOptions, 'way' | 'children'> &
       }>
     | {
         kind: NonNullable<IRPathBase['kind']>;
-        way?: never;
-        children?: never;
-        authoring?: never;
         arrow?: IRPathBase['arrow'];
       }
   );
@@ -117,7 +110,7 @@ export type PathProps = Omit<PathOptions, 'way' | 'children'> &
 
 </DocTabs>
 
-#### <ApiSourceLink label={"Draw"} path={"packages/kernel/react/src/sugar/path/Draw.tsx"} startLine={19}>Draw</ApiSourceLink> / <ApiSourceLink label={"DrawProps"} path={"packages/kernel/react/src/sugar/path/Draw.tsx"} startLine={8}>DrawProps</ApiSourceLink>
+#### <ApiSourceLink label={"Draw"} path={"packages/kernel/react/src/components/sugar/path/Draw.tsx"} startLine={19}>Draw</ApiSourceLink> / <ApiSourceLink label={"DrawProps"} path={"packages/kernel/react/src/components/sugar/path/Draw.tsx"} startLine={8}>DrawProps</ApiSourceLink>
 
 React 只负责 JSX sugar；`normalizePath` 是 `way` 的唯一 parser 调度位置
 
@@ -156,7 +149,7 @@ export type DrawProps = Readonly<
 
 </DocTabs>
 
-#### <ApiSourceLink label={"Step"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={112}>Step</ApiSourceLink> / <ApiSourceLink label={"StepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={93}>StepProps</ApiSourceLink>
+#### <ApiSourceLink label={"Step"} path={"packages/kernel/react/src/components/kernel/Step.tsx"} startLine={113}>Step</ApiSourceLink> / <ApiSourceLink label={"StepProps"} path={"packages/kernel/react/src/components/kernel/Step.tsx"} startLine={94}>StepProps</ApiSourceLink>
 
 声明路径中的一个动作，例如移动、连线、曲线、圆弧或闭合
 
@@ -183,7 +176,7 @@ export type StepProps =
 
 ## 执行与辅助契约
 
-#### <ApiSourceLink label={"ArcStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={69}>ArcStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"ArcStepProps"} path={"packages/kernel/react/src/components/kernel/Step.tsx"} startLine={70}>ArcStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -215,7 +208,7 @@ export type ArcStepProps = StepFields<InputArcStep> & StepLabelChildren;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"AxisLineStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={44}>AxisLineStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"AxisLineStepProps"} path={"packages/kernel/react/src/components/kernel/Step.tsx"} startLine={45}>AxisLineStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -245,7 +238,7 @@ export type AxisLineStepProps = StepFields<InputAxisLineStep> & StepLabelChildre
 
 </DocTabs>
 
-#### <ApiSourceLink label={"BendStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={66}>BendStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"BendStepProps"} path={"packages/kernel/react/src/components/kernel/Step.tsx"} startLine={67}>BendStepProps</ApiSourceLink>
 
 支持对称弯与非对称弯 / 自环两种模式；同给时 out/in 优先（编译层）。
 三者全省时默认 left 对称弯。`from == to`（同节点 / 同坐标）配合 out/in 画自环
@@ -282,7 +275,7 @@ export type BendStepProps = StepFields<InputBendStep> & StepLabelChildren;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"CirclePathStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={72}>CirclePathStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"CirclePathStepProps"} path={"packages/kernel/react/src/components/kernel/Step.tsx"} startLine={73}>CirclePathStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -314,7 +307,7 @@ export type CirclePathStepProps = StepFields<IRCirclePathStep> & StepLabelChildr
 
 </DocTabs>
 
-#### <ApiSourceLink label={"CubicStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={59}>CubicStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"CubicStepProps"} path={"packages/kernel/react/src/components/kernel/Step.tsx"} startLine={60}>CubicStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -345,7 +338,7 @@ export type CubicStepProps = StepFields<InputCubicStep> & StepLabelChildren;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"CurveStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={56}>CurveStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"CurveStepProps"} path={"packages/kernel/react/src/components/kernel/Step.tsx"} startLine={57}>CurveStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -375,7 +368,7 @@ export type CurveStepProps = StepFields<InputCurveStep> & StepLabelChildren;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"CycleStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={53}>CycleStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"CycleStepProps"} path={"packages/kernel/react/src/components/kernel/Step.tsx"} startLine={54}>CycleStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -408,7 +401,7 @@ export type CycleStepProps = StepFields<
 
 </DocTabs>
 
-#### <ApiSourceLink label={"EllipsePathStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={75}>EllipsePathStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"EllipsePathStepProps"} path={"packages/kernel/react/src/components/kernel/Step.tsx"} startLine={76}>EllipsePathStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -440,7 +433,7 @@ export type EllipsePathStepProps = StepFields<IREllipsePathStep> & StepLabelChil
 
 </DocTabs>
 
-#### <ApiSourceLink label={"FoldStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={50}>FoldStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"FoldStepProps"} path={"packages/kernel/react/src/components/kernel/Step.tsx"} startLine={51}>FoldStepProps</ApiSourceLink>
 
 `-|` / `|-` 使用一个转折点；`-|-` / `|-|` 使用两个转折点，并可用归一化 `fraction` 调整中间腿位置
 
@@ -496,7 +489,7 @@ export type FoldStepProps = StepFields<InputFoldStep> & StepLabelChildren;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"LineStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={39}>LineStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"LineStepProps"} path={"packages/kernel/react/src/components/kernel/Step.tsx"} startLine={40}>LineStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -527,7 +520,7 @@ export type LineStepProps = Omit<InputLineStep, 'type' | 'kind'> &
 
 </DocTabs>
 
-#### <ApiSourceLink label={"MoveStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={36}>MoveStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"MoveStepProps"} path={"packages/kernel/react/src/components/kernel/Step.tsx"} startLine={37}>MoveStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -554,7 +547,7 @@ export type MoveStepProps = StepFields<InputMoveStep>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"RectangleStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={78}>RectangleStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"RectangleStepProps"} path={"packages/kernel/react/src/components/kernel/Step.tsx"} startLine={79}>RectangleStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -583,7 +576,7 @@ export type RectangleStepProps = StepFields<InputRectangleStep>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"SmoothStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={85}>SmoothStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"SmoothStepProps"} path={"packages/kernel/react/src/components/kernel/Step.tsx"} startLine={86}>SmoothStepProps</ApiSourceLink>
 
 游标为隐式首 knot，曲线依次穿过 `points` 每个点；编译期经 centripetal Catmull-Rom 转成 cubic 链。
 需前置 step 设游标；游标终于 `points` 末项。`tension` 缺省 1（标准 centripetal CR），&lt;1 更紧、>1 更鼓

@@ -7,9 +7,9 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { literal, string } from 'zod';
 
-import { Layout } from '../../../src/kernel';
-import { createInputScene } from '../../../src/kernel/adapter/input-scene';
-import { collectHydrationHandlers } from '../../../src/kernel/runtime/collect-hydration-handlers';
+import { Layout } from '../../../src';
+import { createInputScene } from '../../../src/components/container/layout';
+import { collectHydrationHandlers } from '../../../src/hydration';
 
 /**
  * 端到端回归护栏：可嵌入 Tier2 子组件的函数体在静态遍历期间「绝不被调用 / 渲染」

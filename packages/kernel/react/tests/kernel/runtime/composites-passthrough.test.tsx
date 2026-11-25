@@ -4,7 +4,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { literal, string } from 'zod';
 
-import { Layout } from '../../../src/kernel';
+import { Layout } from '../../../src';
 
 /**
  * <Layout composites={...}> Tier 2 透传

@@ -13,7 +13,7 @@
 
 ## 组件声明
 
-#### <ApiSourceLink label={"Layout"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={346}>Layout</ApiSourceLink> / <ApiSourceLink label={"LayoutProps"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={173}>LayoutProps</ApiSourceLink>
+#### <ApiSourceLink label={"Layout"} path={"packages/kernel/react/src/components/container/layout/Layout.tsx"} startLine={345}>Layout</ApiSourceLink> / <ApiSourceLink label={"LayoutProps"} path={"packages/kernel/react/src/components/container/layout/Layout.tsx"} startLine={173}>LayoutProps</ApiSourceLink>
 
 通过 children 声明图形，或通过 ir 传入完整场景；同时提供时使用 ir。默认使用 session 模式处理后续更新，可通过 runtime 切换为 static 完整编译模式
 
@@ -95,7 +95,7 @@ export type LayoutProps = {
 
 ## 执行与辅助契约
 
-#### <ApiSourceLink label={"LayoutExtensions"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={127}>LayoutExtensions</ApiSourceLink>
+#### <ApiSourceLink label={"LayoutExtensions"} path={"packages/kernel/react/src/components/container/layout/Layout.tsx"} startLine={127}>LayoutExtensions</ApiSourceLink>
 
 通过 Layout 的 extensions 属性传入，各字段接收对应的定义数组；这些运行时定义不写入可持久化的场景数据
 
@@ -141,7 +141,7 @@ export type LayoutExtensions = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"LayoutSessionRuntimeOptions"} path={"packages/kernel/react/src/kernel/runtime/runtime-options.ts"} startLine={14}>LayoutSessionRuntimeOptions</ApiSourceLink>
+#### <ApiSourceLink label={"LayoutSessionRuntimeOptions"} path={"packages/kernel/react/src/components/container/layout/runtime-options.ts"} startLine={14}>LayoutSessionRuntimeOptions</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -173,7 +173,7 @@ export type LayoutSessionRuntimeOptions = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"LayoutRuntimeOptions"} path={"packages/kernel/react/src/kernel/runtime/runtime-options.ts"} startLine={40}>LayoutRuntimeOptions</ApiSourceLink>
+#### <ApiSourceLink label={"LayoutRuntimeOptions"} path={"packages/kernel/react/src/components/container/layout/runtime-options.ts"} startLine={40}>LayoutRuntimeOptions</ApiSourceLink>
 
 <DocTabs defaultValue="session">
 
@@ -215,7 +215,7 @@ export type LayoutRuntimeOptions = LayoutSessionRuntimeOptions | LayoutStaticRun
 
 </DocTabs>
 
-#### <ApiSourceLink label={"LayoutStaticRuntimeOptions"} path={"packages/kernel/react/src/kernel/runtime/runtime-options.ts"} startLine={30}>LayoutStaticRuntimeOptions</ApiSourceLink>
+#### <ApiSourceLink label={"LayoutStaticRuntimeOptions"} path={"packages/kernel/react/src/components/container/layout/runtime-options.ts"} startLine={30}>LayoutStaticRuntimeOptions</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -247,7 +247,7 @@ export type LayoutStaticRuntimeOptions = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"LayoutRuntimeMode"} path={"packages/kernel/react/src/kernel/runtime/runtime-options.ts"} startLine={5}>LayoutRuntimeMode</ApiSourceLink>
+#### <ApiSourceLink label={"LayoutRuntimeMode"} path={"packages/kernel/react/src/components/container/layout/runtime-options.ts"} startLine={5}>LayoutRuntimeMode</ApiSourceLink>
 
 ```ts
 export const LayoutRuntimeMode = Object.freeze({

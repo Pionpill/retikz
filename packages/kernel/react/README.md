@@ -46,7 +46,7 @@ style names through `defineTheme` and the matching owner-local definitions they 
 
 - Kernel: `Layout` / `ThemeProvider` / `Node` / `Path` / `Step` / `Text` / `Coordinate` / `Scope`
 - Sugar: `Draw` and the shape components (`Circle` / `Rectangle` / …)
-- IR interop: `convertIRToReactNode`; the conversion preserves Tier 1 structure and accepts composite definitions to lower Tier 2 IR into equivalent Kernel JSX
+- Render an existing IR scene directly with `<Layout ir={ir} />`.
 - Core grammar vocabulary and extension definitions stay owned by `@retikz/core`; import them from that package when needed
 
 ## Docs

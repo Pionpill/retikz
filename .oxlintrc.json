@@ -195,6 +195,24 @@
       }
     },
     {
+      "files": ["packages/kernel/react/src/components/kernel/*.tsx"],
+      "rules": {
+        "react/only-export-components": [
+          "error",
+          {
+            "allowExportNames": [
+              "inputCoordinateFromProps",
+              "inputNodeFromProps",
+              "inputPathFromProps",
+              "inputScopeFromProps",
+              "inputStepFromProps",
+              "textElementToLineSpec"
+            ]
+          }
+        ]
+      }
+    },
+    {
       "files": ["apps/docs/src/modules/docs/contents/**/*.tsx"],
       "rules": {
         "react/only-export-components": [

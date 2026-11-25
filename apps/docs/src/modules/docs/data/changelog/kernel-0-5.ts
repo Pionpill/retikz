@@ -1210,6 +1210,13 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
+          label: { zh: '移除 IR 转 JSX 接口', en: 'Removed IR-to-JSX conversion' },
+          content: {
+            zh: 'React 不再导出 convertIRToReactNode。已有 IR 场景可直接传给 <Layout ir={ir} /> 渲染；JSX 转 Vanilla 输入的接口保持不变。',
+            en: 'React no longer exports convertIRToReactNode. Render an existing IR scene directly with <Layout ir={ir} />. JSX-to-Vanilla input conversion is unchanged.',
+          },
+        },
+        {
           label: { zh: 'BREAKING 冗余 API 清理', en: 'BREAKING unused API cleanup' },
           content: {
             zh: '移除 createLayoutAuthoringSite 冻结包装函数及未被 Layout 消费的内部 SVG 包装组件；LayoutAuthoringSite 类型与 Layout 渲染行为保持。',

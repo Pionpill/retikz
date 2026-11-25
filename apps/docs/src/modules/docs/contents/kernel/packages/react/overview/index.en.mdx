@@ -82,13 +82,13 @@ export const Draw: FC<DrawProps> = props => <Path {...props} />;
   sources={[
     {
       label: 'Node IR marker implementation',
-      path: 'packages/kernel/react/src/kernel/components/Node.tsx',
-      startLine: 14,
-      endLine: 20,
+      path: 'packages/kernel/react/src/components/kernel/Node.tsx',
+      startLine: 20,
+      endLine: 25,
     },
     {
       label: 'Draw forwarding input to Path',
-      path: 'packages/kernel/react/src/sugar/path/Draw.tsx',
+      path: 'packages/kernel/react/src/components/sugar/path/Draw.tsx',
       startLine: 15,
       endLine: 19,
     },
@@ -109,13 +109,13 @@ Definition arrays are canonicalized by ordered element identity, so recreating a
   sources={[
     {
       label: 'Layout Definition-container canonicalization',
-      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      path: 'packages/kernel/react/src/components/container/layout/Layout.tsx',
       startLine: 377,
       endLine: 388,
     },
     {
       label: 'React static fallback and session-processing subscription',
-      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      path: 'packages/kernel/react/src/components/container/layout/Layout.tsx',
       startLine: 251,
       endLine: 337,
     },
@@ -150,13 +150,13 @@ Changing `updateStrategy` between `auto` and `full` on a session host disposes t
   sources={[
     {
       label: 'Discriminated Layout runtime options',
-      path: 'packages/kernel/react/src/kernel/runtime/runtime-options.ts',
+      path: 'packages/kernel/react/src/components/container/layout/runtime-options.ts',
       startLine: 4,
       endLine: 40,
     },
     {
       label: 'React dispatching static or session processing',
-      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      path: 'packages/kernel/react/src/components/container/layout/Layout.tsx',
       startLine: 251,
       endLine: 337,
     },
@@ -192,9 +192,9 @@ Use `Layout.onCompileResult` to receive the compiled frame after React commits. 
   sources={[
     {
       label: 'React collecting JSX into an InputScene',
-      path: 'packages/kernel/react/src/kernel/adapter/input-scene.ts',
-      startLine: 466,
-      endLine: 528,
+      path: 'packages/kernel/react/src/components/container/layout/input-scene.ts',
+      startLine: 72,
+      endLine: 136,
     },
     {
       label: 'Vanilla normalizing Input and merging composite dependencies',
@@ -202,7 +202,7 @@ Use `Layout.onCompileResult` to receive the compiled frame after React commits. 
     },
     {
       label: 'Layout constructing the processing source and options',
-      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      path: 'packages/kernel/react/src/components/container/layout/Layout.tsx',
       startLine: 408,
       endLine: 480,
     },
@@ -228,7 +228,7 @@ Event handlers are functions and cannot enter JSON IR. In children mode, React s
   sources={[
     {
       label: 'Layout passing source and options to Vanilla processing',
-      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      path: 'packages/kernel/react/src/components/container/layout/Layout.tsx',
       startLine: 408,
       endLine: 480,
     },
@@ -240,7 +240,7 @@ Event handlers are functions and cannot enter JSON IR. In children mode, React s
     },
     {
       label: 'JSX handler runtime side channel',
-      path: 'packages/kernel/react/src/kernel/runtime/collect-hydration-handlers.ts',
+      path: 'packages/kernel/react/src/hydration/collect-hydration-handlers.ts',
       startLine: 53,
       endLine: 94,
     },

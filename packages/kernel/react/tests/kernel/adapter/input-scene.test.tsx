@@ -3,10 +3,9 @@ import { SceneSchema } from '@retikz/core';
 import { normalizeScene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
-import { Node, Path, Scope, Step } from '../../../src/kernel';
-import { createInputScene } from '../../../src/kernel/adapter/input-scene';
-import { convertIRToReactNode } from '../../../src/kernel/adapter/unbuilder';
-import { Draw, EdgeLabel } from '../../../src/sugar';
+import { Node, Path, Scope, Step } from '../../../src';
+import { createInputScene } from '../../../src/components/container/layout';
+import { Draw, EdgeLabel } from '../../../src/components/sugar';
 import { compileTestResult } from '../../helpers/compilation';
 
 describe('React JSX Input 场景', () => {
@@ -94,31 +93,19 @@ describe('React JSX Input 场景', () => {
     expect(fromDraw).toEqual(explicit);
     expect(compileTestResult(fromDraw).scene).toEqual(compileTestResult(explicit).scene);
   });
-  it('通过 JSX、Vanilla 和 IR 往返保留多行节点标签', () => {
+  it('JSX 节点的多行标签归一后符合 IR schema', () => {
     const text = ['first', { text: 'second', fill: '#ff0000' }];
     const label = { text, textAlign: 'end' as const, lineHeight: 24, maxTextWidth: 30, opacity: 0.5 };
     const input = createInputScene(<Node label={label} />);
     const ir = normalizeScene(input).ir;
     expect(ir.children[0]).toMatchObject({ label });
     expect(SceneSchema.parse(ir).children[0]).toMatchObject({ label });
-    const child = ir.children[0];
-    if ('namespace' in child || child.type !== 'node') throw new Error('expected Kernel node');
-    const rebuilt = createInputScene(convertIRToReactNode({ ...ir, children: [child] }));
-    expect(normalizeScene(rebuilt).ir).toEqual(ir);
-    expect(compileTestResult(normalizeScene(rebuilt).ir).scene).toEqual(compileTestResult(ir).scene);
   });
-  it('通过 JSX、Vanilla 标准化和 IR 往返保留 Node 别名', () => {
+  it('JSX 节点归一后保留别名', () => {
     const input = createInputScene(<Node id="primary" aliasIds={['alternate']} position={[0, 0]} text="A" />);
     const ir = normalizeScene(input).ir;
 
     expect(ir.children[0]).toMatchObject({ id: 'primary', aliasIds: ['alternate'] });
-
-    const child = ir.children[0];
-    if ('namespace' in child || child.type !== 'node') throw new Error('expected Kernel node');
-    const kernel = { ...ir, children: [child] };
-    const rebuilt = createInputScene(convertIRToReactNode(kernel));
-
-    expect(normalizeScene(rebuilt).ir).toEqual(ir);
   });
 
   it('将 Kernel JSX 收集为 Vanilla Input，并由 Vanilla 解析字符串 target', () => {
@@ -263,7 +250,7 @@ describe('React JSX Input 场景', () => {
   });
 });
 
-it('Scope 包络在 React、Vanilla 和 IR roundtrip 中保持等价', () => {
+it('JSX 作用域归一后保留包络形状和子节点', () => {
   const input = createInputScene(
     <Scope id="group" boundingShape="circle">
       <Node position={[0, 0]} />
@@ -271,16 +258,11 @@ it('Scope 包络在 React、Vanilla 和 IR roundtrip 中保持等价', () => {
   );
   const ir = normalizeScene(input).ir;
 
-  expect(ir.children[0]).toMatchObject({ id: 'group', boundingShape: 'circle' });
-
-  const scope = ir.children[0];
-  if ('namespace' in scope || scope.type !== 'scope') throw new Error('expected Kernel scope');
-  const child = scope.children[0];
-  if ('namespace' in child || child.type !== 'node') throw new Error('expected Kernel node');
-  const kernel = { ...ir, children: [{ ...scope, children: [child] }] };
-  const restored = normalizeScene(createInputScene(convertIRToReactNode(kernel))).ir;
-
-  expect(compileTestResult(restored).scene).toEqual(compileTestResult(ir).scene);
+  expect(ir.children[0]).toMatchObject({
+    id: 'group',
+    boundingShape: 'circle',
+    children: [{ type: 'node', position: [0, 0] }],
+  });
 });
 
 it('React 与 Vanilla 保留独立端点箭头和任意位置标记', () => {
@@ -313,8 +295,5 @@ it('React 与 Vanilla 保留独立端点箭头和任意位置标记', () => {
     ],
   }).ir;
   expect(jsx).toEqual(vanilla);
-  const child = jsx.children[0];
-  if ('namespace' in child || child.type !== 'path') throw new Error('expected path');
-  expect(normalizeScene(createInputScene(convertIRToReactNode({ ...jsx, children: [child] }))).ir).toEqual(jsx);
   expect(jsx.children[0]).toMatchObject({ arrow, marks });
 });

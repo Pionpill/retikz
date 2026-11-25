@@ -29,13 +29,13 @@ description: 解释 Layout 的隐式根作用域、自动视窗、显示尺寸�
   sources={[
     {
       label: '按有效覆盖决定是否包装根 Scope',
-      path: 'packages/kernel/react/src/kernel/adapter/input-scene.ts',
-      startLine: 547,
-      endLine: 550,
+      path: 'packages/kernel/react/src/components/container/layout/root-scope.ts',
+      startLine: 46,
+      endLine: 49,
     },
     {
       label: 'Layout 的 ir 分支与 rootScope 边界',
-      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      path: 'packages/kernel/react/src/components/container/layout/Layout.tsx',
       startLine: 400,
       endLine: 414,
     },
@@ -74,7 +74,7 @@ $$
   sources={[
     {
       label: 'Layout：显式 viewBox 覆盖输入值',
-      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      path: 'packages/kernel/react/src/components/container/layout/Layout.tsx',
       startLine: 416,
       endLine: 432,
     },
@@ -174,13 +174,13 @@ Layout 把主题写入输入场景，供后续处理读取；它不会把主题�
   sources={[
     {
       label: 'Layout：合并 Provider、输入与显式主题',
-      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      path: 'packages/kernel/react/src/components/container/layout/Layout.tsx',
       startLine: 416,
       endLine: 432,
     },
     {
       label: 'Theme 的逐字段合并',
-      path: 'packages/kernel/react/src/kernel/runtime/theme-context.ts',
+      path: 'packages/kernel/react/src/components/container/theme/theme-context.ts',
       startLine: 5,
       endLine: 20,
     },
@@ -202,7 +202,7 @@ Layout 把主题写入输入场景，供后续处理读取；它不会把主题�
     },
     {
       label: '嵌套 ThemeProvider 的继承',
-      path: 'packages/kernel/react/src/kernel/runtime/ThemeProvider.tsx',
+      path: 'packages/kernel/react/src/components/container/theme/ThemeProvider.tsx',
       startLine: 18,
       endLine: 25,
     },

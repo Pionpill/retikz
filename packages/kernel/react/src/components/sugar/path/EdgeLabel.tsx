@@ -1,7 +1,7 @@
 import type { IRStepLabel } from '@retikz/core';
 import type { FC } from 'react';
 
-import { TIKZ_EDGE_LABEL } from '../../kernel/protocol';
+import { TIKZ_EDGE_LABEL } from '../../../protocol';
 
 /** 以子文本声明路径段标签，并配置沿段位置、偏移和描边中断 */
 export type EdgeLabelProps = Pick<IRStepLabel, 'position' | 'side' | 'sloped' | 'interrupt'> & {
