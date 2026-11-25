@@ -60,7 +60,7 @@ export type PreviewIR = {
 export const buildPreviewIR = (Component: ComponentPreviewDemoComponent, lang: Lang = 'zh'): PreviewIR => {
   const rootElement = resolvePreviewRootElement(Component({ lang }));
   const props = (rootElement?.props ?? {}) as PreviewRootProps & Record<string, unknown>;
-  const isEmbeddableRoot = isEmbeddableMarked(rootElement?.type);
+  const isEmbeddableRoot = rootElement !== null && isEmbeddableMarked(rootElement.type);
   const EmbeddableRoot = rootElement?.type as FC<Record<string, unknown>> | undefined;
   let childNode =
     isEmbeddableRoot && EmbeddableRoot !== undefined

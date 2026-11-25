@@ -17,7 +17,7 @@ import type { PlotLineageProps } from '@retikz/plot-react';
 import { Plot } from '@retikz/plot-react';
 import type { LayoutExtensions, LayoutProps } from '@retikz/react';
 import { resolveInputEmbedAdapter } from '@retikz/react';
-import type { ReactNode } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { createElement, Fragment, isValidElement } from 'react';
 
 type PlotStandaloneProps = Pick<
@@ -122,7 +122,7 @@ const preparePreviewChartProps = (
 
 /** 把 standalone 预览根投影为同一组件 InputEmbed 可消费的内容 props */
 export const previewEmbedPropsOf = (
-  component: unknown,
+  component: ReactElement['type'],
   props: Readonly<Record<string, unknown>>,
 ): Readonly<Record<string, unknown>> => {
   const adapter = resolveInputEmbedAdapter(component);
@@ -149,7 +149,7 @@ export const previewEmbedPropsOf = (
 
 /** 读取预览根最终交给外层 Layout 的输出尺寸 */
 export const previewHostDimensionsOf = (
-  component: unknown,
+  component: ReactElement['type'],
   props: Readonly<Record<string, unknown>>,
 ): PreviewHostDimensions => {
   const adapter = resolveInputEmbedAdapter(component);

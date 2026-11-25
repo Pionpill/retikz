@@ -80,6 +80,8 @@ export const Draw: FC<DrawProps> = props => <Path {...props} />;
 
 `readSceneChildren` walks children synchronously: it recognizes Kernel markers, unwraps fragments, and directly invokes function Sugar before recursing into the result. This does not pass through the React DOM renderer, so Kernel and Sugar must be hook-free, side-effect-free function components. `createInputScene()` produces the single `InputScene` with adapters bound to each embed for Vanilla normalization.
 
+To check whether a React element is marked as embeddable, pass `element.type` to `isEmbeddableMarked`. To obtain its adapter, use `resolveInputEmbedAdapter(element.type)`. If the element is optional, check that it exists first.
+
 <SourceLinks
   sources={[
     {

@@ -80,6 +80,8 @@ export const Draw: FC<DrawProps> = props => <Path {...props} />;
 
 `readSceneChildren` 同步遍历 children：识别 Kernel 标记、展开 Fragment，并直接调用函数式 Sugar 后继续递归。这个过程不经过 React DOM renderer，所以 Kernel / Sugar 必须是无 hook、无副作用的函数组件；`createInputScene()` 产出唯一的 `InputScene`（嵌入项已绑定 adapter），再交给 Vanilla normalize。
 
+检查一个 React 元素是否可嵌入时，把 `element.type` 传给 `isEmbeddableMarked`；需要适配器时使用 `resolveInputEmbedAdapter(element.type)`。元素可能不存在时，先判断元素是否存在。
+
 <SourceLinks
   sources={[
     {

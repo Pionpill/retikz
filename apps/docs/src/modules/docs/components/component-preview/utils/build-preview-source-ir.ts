@@ -53,7 +53,7 @@ import {
 } from '@retikz/graph-vanilla';
 import type { AnyInputEmbed, InputEmbedAdapter, InputChild, InputScope, InputScene } from '@retikz/vanilla';
 import { embed, normalizeNode, normalizePath, normalizeScene, scene } from '@retikz/vanilla';
-import type { ReactNode } from 'react';
+import type { FC, ReactNode } from 'react';
 import { Fragment, isValidElement } from 'react';
 
 import { previewEmbedPropsOf } from './preview-embed';
@@ -68,7 +68,7 @@ type TypedChartSource =
   | IRRegressionChart
   | IRStripChart;
 
-type TypedChartComponent<TInput> = {
+type TypedChartComponent<TProps, TInput> = FC<TProps> & {
   inputEmbedAdapter: InputEmbedAdapter<TInput>;
   createInputEmbedProps: (props: Readonly<Record<string, unknown>>) => TInput;
 };
@@ -334,7 +334,7 @@ const sourceChildOf = (
 
 /** 从 typed Chart React component 的同一 Vanilla bridge 读取精简 Source IR */
 const typedChartSourceOf = <TProps, TInput>(
-  component: TypedChartComponent<TInput>,
+  component: TypedChartComponent<TProps, TInput>,
   props: TProps,
 ): TypedChartSource => {
   const input = component.createInputEmbedProps(
