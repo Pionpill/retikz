@@ -66,7 +66,7 @@ export type NodeProps = NodeOptions &
 
 </DocTabs>
 
-#### <ApiSourceLink label={"Text"} path={"packages/kernel/react/src/kernel/components/Text.tsx"} startLine={22}>Text</ApiSourceLink> / <ApiSourceLink label={"TextProps"} path={"packages/kernel/react/src/kernel/components/Text.tsx"} startLine={7}>TextProps</ApiSourceLink>
+#### <ApiSourceLink label={"Text"} path={"packages/kernel/react/src/kernel/components/Text.tsx"} startLine={17}>Text</ApiSourceLink> / <ApiSourceLink label={"TextProps"} path={"packages/kernel/react/src/kernel/components/Text.tsx"} startLine={8}>TextProps</ApiSourceLink>
 
 Declares one text line, combined with strings in JSX order; overrides apply only to this line
 
@@ -76,12 +76,12 @@ Declares one text line, combined with strings in JSX order; overrides apply only
 
 <ApiTable>
 
-| Member     | Type               | Default | Description                                                                |
-| ---------- | ------------------ | ------- | -------------------------------------------------------------------------- |
-| `children` | `string \| number` | —       | Line content as a string or number; numbers render as text                 |
-| `fill?`    | `string \| number` | —       | Per-line color override; inherits the Node block default when omitted      |
-| `font?`    | `IRFont`           | —       | Per-line font overrides; missing fields inherit the Node block font        |
-| `opacity?` | `number`           | —       | Per-line opacity from 0 to 1; inherits the Node block default when omitted |
+| Member     | Type                                                                                                                                                                                  | Default | Description                                                                                      |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------ |
+| `children` | `string \| number`                                                                                                                                                                    | —       | Line content as a string or number; numbers render as text                                       |
+| `fill?`    | `string \| number`                                                                                                                                                                    | —       | Per-line text color: an exact CSS color or a weight derived from the effective block text color. |
+| `font?`    | `{ family?: string \| undefined; size?: string \| number \| undefined; weight?: number \| "normal" \| "bold" \| undefined; style?: "normal" \| "italic" \| "oblique" \| undefined; }` | —       | Per-line font overrides; missing fields inherit from block-level `font`                          |
+| `opacity?` | `number`                                                                                                                                                                              | —       | Opacity.                                                                                         |
 
 </ApiTable>
 
@@ -92,16 +92,8 @@ Declares one text line, combined with strings in JSX order; overrides apply only
 ```ts
 export declare const Text: FC<TextProps>;
 
-export type TextProps = {
+export type TextProps = Pick<output<typeof TextLineSchema>, 'fill' | 'opacity' | 'font'> & {
   children: string | number;
-  fill?: Extract<
-    IRLine,
-    {
-      text: string;
-    }
-  >['fill'];
-  opacity?: number;
-  font?: IRFont;
 };
 ```
 

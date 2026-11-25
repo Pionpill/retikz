@@ -13,7 +13,7 @@ const repositoryRoot = path.resolve(import.meta.dirname, '../../../..');
 /** 节点家族的公开入口切片；类型和说明仍从源码提取 */
 const nodeEntries: ReadonlyArray<{ owner: string } & Omit<ApiReferenceEntry, 'source' | 'title'>> = [
   {
-    fullMemberSymbols: ['NodeProps', 'CoordinateProps'],
+    fullMemberSymbols: ['NodeProps', 'CoordinateProps', 'TextProps'],
     owner: 'react',
     symbols: ['Node', 'NodeProps', 'Text', 'TextProps', 'Coordinate', 'CoordinateProps'],
     symbolPairs: [
@@ -90,7 +90,16 @@ export const nodeApiConfigs: ReadonlyArray<ApiReferencePackageConfig> = nodeEntr
     },
   ],
   translate: translateNodeApiReference,
-  schemaLocalizations: nodeSchemas,
+  schemaLocalizations: {
+    ...nodeSchemas,
+    TextLineSchema: {
+      descriptions: {
+        fill: '行级文字颜色，可指定颜色或相对于文本块颜色的权重',
+        font: '行级字体覆盖，缺省字段继承文本块字体',
+        opacity: '行级透明度，取值范围为 0 到 1',
+      },
+    },
+  },
   resolveSchemaLocalization: resolveStandardSchemaLocalization,
 }));
 

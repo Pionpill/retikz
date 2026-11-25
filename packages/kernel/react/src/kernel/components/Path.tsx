@@ -19,9 +19,6 @@ export type PathProps = Omit<PathOptions, 'way' | 'children'> &
     | {
         /** 自定义路径定义直接提供几何，不传步骤来源 */
         kind: NonNullable<IRPathBase['kind']>;
-        way?: never;
-        children?: never;
-        authoring?: never;
         arrow?: IRPathBase['arrow'];
       }
   );

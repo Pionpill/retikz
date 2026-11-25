@@ -156,7 +156,7 @@ export type DrawProps = Readonly<
 
 </DocTabs>
 
-#### <ApiSourceLink label={"Step"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={257}>Step</ApiSourceLink> / <ApiSourceLink label={"StepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={238}>StepProps</ApiSourceLink>
+#### <ApiSourceLink label={"Step"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={112}>Step</ApiSourceLink> / <ApiSourceLink label={"StepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={93}>StepProps</ApiSourceLink>
 
 声明路径中的一个动作，例如移动、连线、曲线、圆弧或闭合
 
@@ -183,7 +183,7 @@ export type StepProps =
 
 ## 执行与辅助契约
 
-#### <ApiSourceLink label={"ArcStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={149}>ArcStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"ArcStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={69}>ArcStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -191,15 +191,15 @@ export type StepProps =
 
 <ApiTable>
 
-| 成员         | 类型           | 默认值 | 说明                                                                                |
-| ------------ | -------------- | ------ | ----------------------------------------------------------------------------------- |
-| `center?`    | `DslTarget`    | —      | 显式圆心；缺省取游标（上一 step anchor）                                            |
-| `children?`  | `ReactNode`    | —      | sugar 形态                                                                          |
-| `endAngle`   | `number`       | —      | 终止角度（度），sweep 方向由 startAngle vs endAngle 决定                            |
-| `kind`       | `'arc'`        | —      | 弧段 step 鉴别字面量                                                                |
-| `label?`     | `IRStepLabel`  | —      | 边标注                                                                              |
-| `radius`     | `IRStepRadius` | —      | 弧半径；number 表示正圆，&#123; x, y &#125; 表示椭圆                                |
-| `startAngle` | `number`       | —      | 起始角度（度，0° = +x、90° = +y screen-down；与 ArcStep / Node label 角度约定一致） |
+| 成员         | 类型                                  | 默认值 | 说明                                                          |
+| ------------ | ------------------------------------- | ------ | ------------------------------------------------------------- |
+| `center?`    | `InputTarget`                         | —      | 显式圆心目标，省略时沿用 Core 弧段的圆心推导语义              |
+| `children?`  | `ReactNode`                           | —      | sugar 形态                                                    |
+| `endAngle`   | `number`                              | —      | 弧终止角（°）；扫向由 startAngle 与 endAngle 大小关系隐式决定 |
+| `kind`       | `"arc"`                               | —      | —                                                             |
+| `label?`     | `ArcStepProps["label"]`               | —      | 边标注：附在本段上的文字标签                                  |
+| `radius`     | `number \| { x: number; y: number; }` | —      | 弧半径：数字表示正圆弧；对象 `{ x, y }` 表示椭圆弧            |
+| `startAngle` | `number`                              | —      | 弧起始角（°），0=+x、90=+y（屏幕向下）                        |
 
 </ApiTable>
 
@@ -208,22 +208,14 @@ export type StepProps =
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type ArcStepProps = {
-  kind: 'arc';
-  startAngle: number;
-  endAngle: number;
-  radius: IRStepRadius;
-  center?: DslTarget;
-  label?: IRStepLabel;
-  children?: ReactNode;
-};
+export type ArcStepProps = StepFields<InputArcStep> & StepLabelChildren;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"AxisLineStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={34}>AxisLineStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"AxisLineStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={44}>AxisLineStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -231,13 +223,13 @@ export type ArcStepProps = {
 
 <ApiTable>
 
-| 成员        | 类型                         | 默认值 | 说明                                                          |
-| ----------- | ---------------------------- | ------ | ------------------------------------------------------------- |
-| `axis`      | `'horizontal' \| 'vertical'` | —      | 保持的当前 host 局部轴                                        |
-| `children?` | `ReactNode`                  | —      | sugar 形态                                                    |
-| `kind`      | `'axis-line'`                | —      | 单轴连接 step 鉴别字面量                                      |
-| `label?`    | `IRStepLabel`                | —      | 边标注                                                        |
-| `to`        | `InputAxisLineTarget`        | —      | 投影目标，仅支持笛卡尔坐标、NodeTarget 或对应字符串 shorthand |
+| 成员        | 类型                         | 默认值 | 说明                                                       |
+| ----------- | ---------------------------- | ------ | ---------------------------------------------------------- |
+| `axis`      | `"horizontal" \| "vertical"` | —      | 当前 host 的局部轴：horizontal 取目标 x；vertical 取目标 y |
+| `children?` | `ReactNode`                  | —      | sugar 形态                                                 |
+| `kind`      | `"axis-line"`                | —      | —                                                          |
+| `label?`    | `AxisLineStepProps["label"]` | —      | 边标注：按投影后的真实线段采样                             |
+| `to`        | `InputAxisLineTarget`        | —      | 仅决定指定轴分量的目标，可使用目标标识字符串简写           |
 
 </ApiTable>
 
@@ -246,20 +238,14 @@ export type ArcStepProps = {
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type AxisLineStepProps = {
-  kind: 'axis-line';
-  axis: 'horizontal' | 'vertical';
-  to: InputAxisLineTarget;
-  label?: IRStepLabel;
-  children?: ReactNode;
-};
+export type AxisLineStepProps = StepFields<InputAxisLineStep> & StepLabelChildren;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"BendStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={121}>BendStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"BendStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={66}>BendStepProps</ApiSourceLink>
 
 支持对称弯与非对称弯 / 自环两种模式；同给时 out/in 优先（编译层）。
 三者全省时默认 left 对称弯。`from == to`（同节点 / 同坐标）配合 out/in 画自环
@@ -270,17 +256,17 @@ export type AxisLineStepProps = {
 
 <ApiTable>
 
-| 成员             | 类型                | 默认值   | 说明                                                                                       |
-| ---------------- | ------------------- | -------- | ------------------------------------------------------------------------------------------ |
-| `bendAngle?`     | `number`            | `30`     | 对称弯模式的弯角度（度），缺省 30                                                          |
-| `bendDirection?` | `'left' \| 'right'` | `'left'` | 对称弯模式的弯向：'left' / 'right'（视觉左右，相对 from→to）；可选，与 out/in 互补         |
-| `children?`      | `ReactNode`         | —        | sugar 形态                                                                                 |
-| `inAngle?`       | `number`            | —        | 屏幕绝对入射角（度）；任一 outAngle / inAngle 触发切线模式，缺省入射角为 180               |
-| `kind`           | `'bend'`            | —        | 弧形简记 step 鉴别字面量                                                                   |
-| `label?`         | `IRStepLabel`       | —        | 边标注                                                                                     |
-| `looseness?`     | `number`            | —        | 切线模式的正数控制点距离倍率，默认 1；也缩放自环默认大小，对称模式忽略                     |
-| `outAngle?`      | `number`            | —        | 屏幕绝对出射角（度）；任一 outAngle / inAngle 触发切线模式，缺省出射角为 0，优先于对称配置 |
-| `to`             | `DslTarget`         | —        | 终点                                                                                       |
+| 成员             | 类型                     | 默认值 | 说明                                                                                                                                                       |
+| ---------------- | ------------------------ | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `bendAngle?`     | `number`                 | —      | 弯曲角度（°），默认 30；限 (-180, 180)                                                                                                                     |
+| `bendDirection?` | `"right" \| "left"`      | —      | 弧形偏转方向（相对 from→to 弦的视觉左 / 右），可选；给 bendDirection/bendAngle 出对称弧，或给 outAngle/inAngle 出非对称曲线 / 自环（同时给时 out/in 优先） |
+| `children?`      | `ReactNode`              | —      | sugar 形态                                                                                                                                                 |
+| `inAngle?`       | `number`                 | —      | 屏幕绝对入射角（°）；任一 out/in 触发切线模式，缺省入射角为 180                                                                                            |
+| `kind`           | `"bend"`                 | —      | —                                                                                                                                                          |
+| `label?`         | `BendStepProps["label"]` | —      | 边标注：附在本段上的文字标签                                                                                                                               |
+| `looseness?`     | `number`                 | —      | 切线模式的正数控制点距离倍率，默认 1；越大曲线越松，也缩放自环尺寸；对称模式忽略                                                                           |
+| `outAngle?`      | `number`                 | —      | 屏幕绝对出射角（°）；任一 out/in 触发切线模式，缺省出射角为 0，优先于对称参数                                                                              |
+| `to`             | `InputTarget`            | —      | 弯曲路径的终点，可使用目标标识字符串简写                                                                                                                   |
 
 </ApiTable>
 
@@ -289,24 +275,14 @@ export type AxisLineStepProps = {
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type BendStepProps = {
-  kind: 'bend';
-  bendDirection?: 'left' | 'right';
-  bendAngle?: number;
-  outAngle?: number;
-  inAngle?: number;
-  looseness?: number;
-  to: DslTarget;
-  label?: IRStepLabel;
-  children?: ReactNode;
-};
+export type BendStepProps = StepFields<InputBendStep> & StepLabelChildren;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"CirclePathStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={167}>CirclePathStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"CirclePathStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={72}>CirclePathStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -314,15 +290,15 @@ export type BendStepProps = {
 
 <ApiTable>
 
-| 成员          | 类型                                        | 默认值 | 说明                                                                                        |
-| ------------- | ------------------------------------------- | ------ | ------------------------------------------------------------------------------------------- |
-| `children?`   | `ReactNode`                                 | —      | sugar 形态                                                                                  |
-| `closed?`     | `'closed' \| 'chord' \| 'open' \| 'sector'` | —      | 闭合模式：无角度=closed（整圆）；带角度=chord（弦，默认）/ sector（连回中心）/ open（纯弧） |
-| `endAngle?`   | `number`                                    | —      | 部分圆终止角（度）                                                                          |
-| `kind`        | `'circlePath'`                              | —      | 整圆 step 鉴别字面量                                                                        |
-| `label?`      | `IRStepLabel`                               | —      | 边标注                                                                                      |
-| `radius`      | `number`                                    | —      | 圆半径（user units）                                                                        |
-| `startAngle?` | `number`                                    | —      | 部分圆起始角（度）；与 endAngle 同给才生效                                                  |
+| 成员          | 类型                                        | 默认值 | 说明                                                                                    |
+| ------------- | ------------------------------------------- | ------ | --------------------------------------------------------------------------------------- |
+| `children?`   | `ReactNode`                                 | —      | sugar 形态                                                                              |
+| `closed?`     | `"closed" \| "chord" \| "open" \| "sector"` | —      | 闭合模式：整圆只允许 closed；部分圆允许 chord（弦，默认）/ open（纯弧）/ sector（扇形） |
+| `endAngle?`   | `number`                                    | —      | 部分圆终止角（°）                                                                       |
+| `kind`        | `"circlePath"`                              | —      | 动作种类：`circlePath` —— 无角度时整圆（笔回圆心）；带 startAngle+endAngle 时部分圆     |
+| `label?`      | `CirclePathStepProps["label"]`              | —      | 边标注：附在本段上的文字标签                                                            |
+| `radius`      | `number`                                    | —      | 圆半径（用户单位）                                                                      |
+| `startAngle?` | `number`                                    | —      | 部分圆起始角（°）；与 endAngle 同给才生效                                               |
 
 </ApiTable>
 
@@ -331,22 +307,14 @@ export type BendStepProps = {
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type CirclePathStepProps = {
-  kind: 'circlePath';
-  radius: number;
-  startAngle?: number;
-  endAngle?: number;
-  closed?: 'closed' | 'chord' | 'open' | 'sector';
-  label?: IRStepLabel;
-  children?: ReactNode;
-};
+export type CirclePathStepProps = StepFields<IRCirclePathStep> & StepLabelChildren;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"CubicStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={101}>CubicStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"CubicStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={59}>CubicStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -354,14 +322,14 @@ export type CirclePathStepProps = {
 
 <ApiTable>
 
-| 成员        | 类型             | 默认值 | 说明                       |
-| ----------- | ---------------- | ------ | -------------------------- |
-| `children?` | `ReactNode`      | —      | sugar 形态                 |
-| `control1`  | `IRControlPoint` | —      | 第一控制点（影响起点切线） |
-| `control2`  | `IRControlPoint` | —      | 第二控制点（影响终点切线） |
-| `kind`      | `'cubic'`        | —      | 三次贝塞尔 step 鉴别字面量 |
-| `label?`    | `IRStepLabel`    | —      | 边标注                     |
-| `to`        | `DslTarget`      | —      | 曲线终点                   |
+| 成员        | 类型                      | 默认值 | 说明                                         |
+| ----------- | ------------------------- | ------ | -------------------------------------------- |
+| `children?` | `ReactNode`               | —      | sugar 形态                                   |
+| `control1`  | `[number, number]`        | —      | 第一个控制点（影响起点切线）                 |
+| `control2`  | `[number, number]`        | —      | 第二个控制点（影响终点切线）                 |
+| `kind`      | `"cubic"`                 | —      | —                                            |
+| `label?`    | `CubicStepProps["label"]` | —      | 边标注：附在本段上的文字标签                 |
+| `to`        | `InputTarget`             | —      | 三次贝塞尔曲线终点，可使用目标标识字符串简写 |
 
 </ApiTable>
 
@@ -370,21 +338,14 @@ export type CirclePathStepProps = {
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type CubicStepProps = {
-  kind: 'cubic';
-  control1: IRControlPoint;
-  control2: IRControlPoint;
-  to: DslTarget;
-  label?: IRStepLabel;
-  children?: ReactNode;
-};
+export type CubicStepProps = StepFields<InputCubicStep> & StepLabelChildren;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"CurveStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={87}>CurveStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"CurveStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={56}>CurveStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -392,13 +353,13 @@ export type CubicStepProps = {
 
 <ApiTable>
 
-| 成员        | 类型             | 默认值 | 说明                            |
-| ----------- | ---------------- | ------ | ------------------------------- |
-| `children?` | `ReactNode`      | —      | sugar 形态                      |
-| `control`   | `IRControlPoint` | —      | 控制点（仅支持笛卡尔 `[x, y]`） |
-| `kind`      | `'curve'`        | —      | 二次贝塞尔 step 鉴别字面量      |
-| `label?`    | `IRStepLabel`    | —      | 边标注                          |
-| `to`        | `DslTarget`      | —      | 曲线终点                        |
+| 成员        | 类型                      | 默认值 | 说明                                         |
+| ----------- | ------------------------- | ------ | -------------------------------------------- |
+| `children?` | `ReactNode`               | —      | sugar 形态                                   |
+| `control`   | `[number, number]`        | —      | 二次贝塞尔单控制点                           |
+| `kind`      | `"curve"`                 | —      | —                                            |
+| `label?`    | `CurveStepProps["label"]` | —      | 边标注：附在本段上的文字标签                 |
+| `to`        | `InputTarget`             | —      | 二次贝塞尔曲线终点，可使用目标标识字符串简写 |
 
 </ApiTable>
 
@@ -407,20 +368,14 @@ export type CubicStepProps = {
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type CurveStepProps = {
-  kind: 'curve';
-  control: IRControlPoint;
-  to: DslTarget;
-  label?: IRStepLabel;
-  children?: ReactNode;
-};
+export type CurveStepProps = StepFields<InputCurveStep> & StepLabelChildren;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"CycleStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={81}>CycleStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"CycleStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={53}>CycleStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -428,9 +383,9 @@ export type CurveStepProps = {
 
 <ApiTable>
 
-| 成员   | 类型      | 默认值 | 说明                                                                             |
-| ------ | --------- | ------ | -------------------------------------------------------------------------------- |
-| `kind` | `'cycle'` | —      | 闭合 step 鉴别字面量；无 `to` / `label` / `children`——不可挂边标注、不消耗目标点 |
+| 成员   | 类型      | 默认值 | 说明 |
+| ------ | --------- | ------ | ---- |
+| `kind` | `"cycle"` | —      | —    |
 
 </ApiTable>
 
@@ -439,16 +394,21 @@ export type CurveStepProps = {
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type CycleStepProps = {
-  kind: 'cycle';
-};
+export type CycleStepProps = StepFields<
+  Extract<
+    InputStep,
+    {
+      kind: 'cycle';
+    }
+  >
+>;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"EllipsePathStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={185}>EllipsePathStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"EllipsePathStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={75}>EllipsePathStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -456,15 +416,15 @@ export type CycleStepProps = {
 
 <ApiTable>
 
-| 成员          | 类型                                        | 默认值 | 说明                                                                              |
-| ------------- | ------------------------------------------- | ------ | --------------------------------------------------------------------------------- |
-| `children?`   | `ReactNode`                                 | —      | sugar 形态                                                                        |
-| `closed?`     | `'closed' \| 'chord' \| 'open' \| 'sector'` | —      | 闭合模式：无角度=closed（整椭圆）；带角度=chord（默认）/ sector（连回中心）/ open |
-| `endAngle?`   | `number`                                    | —      | 部分椭圆终止角（度）                                                              |
-| `kind`        | `'ellipsePath'`                             | —      | 整椭圆 step 鉴别字面量                                                            |
-| `label?`      | `IRStepLabel`                               | —      | 边标注                                                                            |
-| `radius`      | `IRStepAnisotropicRadius`                   | —      | 椭圆的 x、y 轴半径                                                                |
-| `startAngle?` | `number`                                    | —      | 部分椭圆起始角（度）；与 endAngle 同给才生效                                      |
+| 成员          | 类型                                        | 默认值 | 说明                                                                                     |
+| ------------- | ------------------------------------------- | ------ | ---------------------------------------------------------------------------------------- |
+| `children?`   | `ReactNode`                                 | —      | sugar 形态                                                                               |
+| `closed?`     | `"closed" \| "chord" \| "open" \| "sector"` | —      | 闭合模式：整椭圆只允许 closed；部分椭圆允许 chord（默认）/ open / sector                 |
+| `endAngle?`   | `number`                                    | —      | 部分椭圆终止角（°）                                                                      |
+| `kind`        | `"ellipsePath"`                             | —      | 动作种类：`ellipsePath` —— 无角度时整椭圆（笔回中心）；带 startAngle+endAngle 时部分椭圆 |
+| `label?`      | `EllipsePathStepProps["label"]`             | —      | 边标注：附在本段上的文字标签                                                             |
+| `radius`      | `{ x: number; y: number; }`                 | —      | 椭圆半径对象 `{ x, y }`（半长轴 / 半短轴）                                               |
+| `startAngle?` | `number`                                    | —      | 部分椭圆起始角（°）；与 endAngle 同给才生效                                              |
 
 </ApiTable>
 
@@ -473,22 +433,14 @@ export type CycleStepProps = {
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type EllipsePathStepProps = {
-  kind: 'ellipsePath';
-  radius: IRStepAnisotropicRadius;
-  startAngle?: number;
-  endAngle?: number;
-  closed?: 'closed' | 'chord' | 'open' | 'sector';
-  label?: IRStepLabel;
-  children?: ReactNode;
-};
+export type EllipsePathStepProps = StepFields<IREllipsePathStep> & StepLabelChildren;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"FoldStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={63}>FoldStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"FoldStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={50}>FoldStepProps</ApiSourceLink>
 
 `-|` / `|-` 使用一个转折点；`-|-` / `|-|` 使用两个转折点，并可用归一化 `fraction` 调整中间腿位置
 
@@ -496,12 +448,12 @@ export type EllipsePathStepProps = {
 
 <ApiTable>
 
-| 成员        | 类型          | 默认值 | 说明                 |
-| ----------- | ------------- | ------ | -------------------- |
-| `children?` | `ReactNode`   | —      | sugar 形态           |
-| `kind`      | `'fold'`      | —      | 折角 step 鉴别字面量 |
-| `label?`    | `IRStepLabel` | —      | 边标注               |
-| `to`        | `DslTarget`   | —      | 折角终点             |
+| 成员        | 类型                     | 默认值 | 说明                                                     |
+| ----------- | ------------------------ | ------ | -------------------------------------------------------- |
+| `children?` | `ReactNode`              | —      | sugar 形态                                               |
+| `kind`      | `"fold"`                 | —      | 动作种类：`fold`（两段或三段正交折线）                   |
+| `label?`    | `FoldStepProps["label"]` | —      | 边标注：附在本段上的文字标签（按 position 落在对应支段） |
+| `to`        | `InputTarget`            | —      | —                                                        |
 
 </ApiTable>
 
@@ -513,9 +465,9 @@ export type EllipsePathStepProps = {
 
 <ApiTable>
 
-| 成员  | 类型             | 默认值 | 说明         |
-| ----- | ---------------- | ------ | ------------ |
-| `via` | `'-\|' \| '\|-'` | —      | 两段折角走向 |
+| 成员  | 类型             | 默认值 | 说明                                                    |
+| ----- | ---------------- | ------ | ------------------------------------------------------- |
+| `via` | `"-\|" \| "\|-"` | —      | 折角方向：`-\|` / `\|-` 为两段；`-\|-` / `\|-\|` 为三段 |
 
 </ApiTable>
 
@@ -525,10 +477,10 @@ export type EllipsePathStepProps = {
 
 <ApiTable>
 
-| 成员        | 类型                | 默认值 | 说明               |
-| ----------- | ------------------- | ------ | ------------------ |
-| `fraction?` | `number`            | `0.5`  | 中间腿的归一化位置 |
-| `via`       | `'-\|-' \| '\|-\|'` | —      | 三段折角走向       |
+| 成员        | 类型                | 默认值 | 说明                                                       |
+| ----------- | ------------------- | ------ | ---------------------------------------------------------- |
+| `fraction?` | `number`            | —      | 仅三段 via 可用：中间腿的归一化位置 0..1，省略时编译为 0.5 |
+| `via`       | `"-\|-" \| "\|-\|"` | —      | 折角方向：`-\|` / `\|-` 为两段；`-\|-` / `\|-\|` 为三段    |
 
 </ApiTable>
 
@@ -537,23 +489,14 @@ export type EllipsePathStepProps = {
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type FoldStepProps = FoldStepBaseProps &
-  (
-    | {
-        via: '-|' | '|-';
-      }
-    | {
-        via: '-|-' | '|-|';
-        fraction?: number;
-      }
-  );
+export type FoldStepProps = StepFields<InputFoldStep> & StepLabelChildren;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"LineStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={22}>LineStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"LineStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={39}>LineStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -561,12 +504,12 @@ export type FoldStepProps = FoldStepBaseProps &
 
 <ApiTable>
 
-| 成员        | 类型          | 默认值 | 说明                                                                          |
-| ----------- | ------------- | ------ | ----------------------------------------------------------------------------- |
-| `children?` | `ReactNode`   | —      | sugar 形态：`<Step><EdgeLabel>...</EdgeLabel></Step>`；其它 children 静默忽略 |
-| `kind?`     | `'line'`      | —      | 省略时，首个步骤为 move，后续步骤为 line                                      |
-| `label?`    | `IRStepLabel` | —      | 边标注，等价于 sugar `<EdgeLabel>` child                                      |
-| `to`        | `DslTarget`   | —      | 直线终点                                                                      |
+| 成员        | 类型                     | 默认值 | 说明                               |
+| ----------- | ------------------------ | ------ | ---------------------------------- |
+| `children?` | `ReactNode`              | —      | sugar 形态                         |
+| `kind?`     | `"line"`                 | —      | —                                  |
+| `label?`    | `InputLineStep['label']` | —      | 边标注：附在本段上的文字标签       |
+| `to`        | `InputTarget`            | —      | 直线终点，可使用目标标识字符串简写 |
 
 </ApiTable>
 
@@ -575,19 +518,16 @@ export type FoldStepProps = FoldStepBaseProps &
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type LineStepProps = {
-  kind?: 'line';
-  to: DslTarget;
-  label?: IRStepLabel;
-  children?: ReactNode;
-};
+export type LineStepProps = Omit<InputLineStep, 'type' | 'kind'> &
+  Partial<Pick<InputLineStep, 'kind'>> &
+  StepLabelChildren;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"MoveStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={14}>MoveStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"MoveStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={36}>MoveStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -595,10 +535,10 @@ export type LineStepProps = {
 
 <ApiTable>
 
-| 成员   | 类型        | 默认值 | 说明                 |
-| ------ | ----------- | ------ | -------------------- |
-| `kind` | `'move'`    | —      | 移动 step 鉴别字面量 |
-| `to`   | `DslTarget` | —      | 移动目标点           |
+| 成员   | 类型          | 默认值 | 说明                                       |
+| ------ | ------------- | ------ | ------------------------------------------ |
+| `kind` | `"move"`      | —      | —                                          |
+| `to`   | `InputTarget` | —      | 移动后的目标位置，可使用目标标识字符串简写 |
 
 </ApiTable>
 
@@ -607,17 +547,14 @@ export type LineStepProps = {
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type MoveStepProps = {
-  kind: 'move';
-  to: DslTarget;
-};
+export type MoveStepProps = StepFields<InputMoveStep>;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"RectangleStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={203}>RectangleStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"RectangleStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={78}>RectangleStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -628,9 +565,9 @@ export type MoveStepProps = {
 | 成员            | 类型          | 默认值 | 说明                                               |
 | --------------- | ------------- | ------ | -------------------------------------------------- |
 | `cornerRadius?` | `number`      | —      | 四角同圆角半径；缺省直角，compile clamp 到边长一半 |
-| `from`          | `DslTarget`   | —      | 一角                                               |
-| `kind`          | `'rectangle'` | —      | 矩形 step 鉴别字面量                               |
-| `to`            | `DslTarget`   | —      | 对角（顺序无关）                                   |
+| `from`          | `InputTarget` | —      | 矩形的一个对角点，可使用目标标识字符串简写         |
+| `kind`          | `"rectangle"` | —      | —                                                  |
+| `to`            | `InputTarget` | —      | 矩形的另一个对角点，可使用目标标识字符串简写       |
 
 </ApiTable>
 
@@ -639,19 +576,14 @@ export type MoveStepProps = {
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type RectangleStepProps = {
-  kind: 'rectangle';
-  from: DslTarget;
-  to: DslTarget;
-  cornerRadius?: number;
-};
+export type RectangleStepProps = StepFields<InputRectangleStep>;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"SmoothStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={219}>SmoothStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"SmoothStepProps"} path={"packages/kernel/react/src/kernel/components/Step.tsx"} startLine={85}>SmoothStepProps</ApiSourceLink>
 
 游标为隐式首 knot，曲线依次穿过 `points` 每个点；编译期经 centripetal Catmull-Rom 转成 cubic 链。
 需前置 step 设游标；游标终于 `points` 末项。`tension` 缺省 1（标准 centripetal CR），&lt;1 更紧、>1 更鼓
@@ -662,13 +594,13 @@ export type RectangleStepProps = {
 
 <ApiTable>
 
-| 成员        | 类型               | 默认值 | 说明                                                            |
-| ----------- | ------------------ | ------ | --------------------------------------------------------------- |
-| `children?` | `ReactNode`        | —      | sugar 形态                                                      |
-| `kind`      | `'smooth'`         | —      | 平滑曲线 step 鉴别字面量                                        |
-| `label?`    | `IRStepLabel`      | —      | 边标注，沿生成 cubic 按贝塞尔参数定位                           |
-| `points`    | `Array<DslTarget>` | —      | 游标之后依次穿过的点（顺序敏感）；单点 = 一段曲线，游标终于末点 |
-| `tension?`  | `number`           | `1`    | 切线长度乘子（TikZ `tension`）；缺省 1，&lt;1 更紧、>1 更鼓     |
+| 成员        | 类型                       | 默认值 | 说明                                                            |
+| ----------- | -------------------------- | ------ | --------------------------------------------------------------- |
+| `children?` | `ReactNode`                | —      | sugar 形态                                                      |
+| `kind`      | `"smooth"`                 | —      | —                                                               |
+| `label?`    | `InputSmoothStep['label']` | —      | 附着在整条平滑曲线上的边标注                                    |
+| `points`    | `Array<InputTarget>`       | —      | 游标之后依次穿过的点（顺序敏感）；单点 = 一段曲线，游标终于末点 |
+| `tension?`  | `number`                   | —      | 控制切线长度与曲线松紧的正数倍率；默认 1                        |
 
 </ApiTable>
 
@@ -677,13 +609,9 @@ export type RectangleStepProps = {
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type SmoothStepProps = {
-  kind: 'smooth';
-  points: Array<DslTarget>;
-  tension?: number;
-  label?: IRStepLabel;
-  children?: ReactNode;
-};
+export type SmoothStepProps = Omit<InputSmoothStep, 'type' | 'points'> & {
+  points: Array<InputTarget>;
+} & StepLabelChildren;
 ```
 
 </DocTab>

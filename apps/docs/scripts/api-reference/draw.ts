@@ -1,7 +1,7 @@
 import { mkdirSync } from 'node:fs';
 import path from 'node:path';
 
-import { pathLabelSchemaDescriptions, pathSchemaDescriptions } from '../schema-reference/path';
+import { pathLabelSchemaDescriptions, pathSchemaDescriptions, resolveStepLocalization } from '../schema-reference/path';
 import { translateDrawApiReference } from './draw.en';
 import { writeReferenceFile } from './merged-reference';
 import type { ApiReferenceLanguage, ApiReferencePackageConfig } from './tex';
@@ -49,6 +49,7 @@ export const drawApiReferenceConfigs: ReadonlyArray<ApiReferencePackageConfig> =
       },
     ],
     translate: translateDrawApiReference,
+    resolveSchemaLocalization: resolveStepLocalization,
     schemaLocalizations: {
       PathLabelSchema: { descriptions: pathLabelSchemaDescriptions },
       PathSchema: { descriptions: pathSchemaDescriptions },

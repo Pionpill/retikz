@@ -1,18 +1,13 @@
-import type { IRFont, IRLine } from '@retikz/core';
+import type { TextLineSchema } from '@retikz/core';
 import type { FC } from 'react';
+import type { output } from 'zod';
 
 import { TIKZ_TEXT } from '../protocol';
 
 /** Node 内单行文字的内容与样式覆盖 */
-export type TextProps = {
+export type TextProps = Pick<output<typeof TextLineSchema>, 'fill' | 'opacity' | 'font'> & {
   /** 行内容（字符串或数字；数字按文本渲染） */
   children: string | number;
-  /** 行级覆盖颜色；不填走 Node 块级默认 */
-  fill?: Extract<IRLine, { text: string }>['fill'];
-  /** 行级透明度 0~1；不填走 Node 块级默认 */
-  opacity?: number;
-  /** 行级字体覆盖；缺省字段继承 Node 的 `font` 块级值 */
-  font?: IRFont;
 };
 
 /**

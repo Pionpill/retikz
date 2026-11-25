@@ -1399,12 +1399,16 @@ const matchesSchemaMemberType = (schema: z.core.$ZodType, node: ts.TypeNode): bo
   if (schema instanceof z.ZodUnion) return schema.options.some(option => matchesSchemaMemberType(option, node));
 
   if (ts.isLiteralTypeNode(node)) {
+    if (schema instanceof z.ZodEnum && ts.isStringLiteral(node.literal))
+      return schema.options.includes(node.literal.text);
     if (!(schema instanceof z.ZodLiteral))
       return !(schema instanceof z.ZodNumber || schema instanceof z.ZodString || schema instanceof z.ZodObject);
     return [...schema.values].some(
       value => JSON.stringify(value) === node.literal.getText().replace(/^'([^']*)'$/, '"$1"'),
     );
   }
+  if (schema instanceof z.ZodEnum && ts.isUnionTypeNode(node))
+    return node.types.every(member => matchesSchemaMemberType(schema, member));
   if (node.kind === ts.SyntaxKind.NumberKeyword)
     return !(schema instanceof z.ZodLiteral || schema instanceof z.ZodString || schema instanceof z.ZodObject);
   if (node.kind === ts.SyntaxKind.StringKeyword)

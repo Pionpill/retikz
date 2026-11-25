@@ -9,6 +9,7 @@ description: Use when changing Retikz package structure, dependencies, schemas, 
 
 ## 必须保持
 
+- React 类型（尤其是组件 Props）优先复用对应 Vanilla 或领域核心包的公开类型；只为 JSX 或宿主差异补充、替换字段，不重复声明同义结构。
 - 顶级成员声明之间留一个空行；连续 re-export 声明之间不留空行。成员有 JSDoc 或前置注释时，空行放在注释之前，注释紧贴对应声明。
 - 函数、类等成员内部，职责或处理阶段明确不同的逻辑段之间留一个空行；同一逻辑段内不逐句插入空行。逻辑分段由 LLM 自审，不以格式化通过代替检查。
 - 领域包拥有 schema、resolve、lowering 与 Scene 语义；Vanilla 组装 Input → IR，React 等 adapter 调度 Vanilla，不绕开它新建 IR builder。

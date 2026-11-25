@@ -1,5 +1,18 @@
-import type { IRControlPoint, IRStepAnisotropicRadius, IRStepRadius, IRStepLabel } from '@retikz/core';
-import type { InputAxisLineTarget, InputTarget } from '@retikz/vanilla';
+import type { IRCirclePathStep, IREllipsePathStep } from '@retikz/core';
+import type {
+  InputMoveStep,
+  InputLineStep,
+  InputAxisLineStep,
+  InputFoldStep,
+  InputCurveStep,
+  InputCubicStep,
+  InputBendStep,
+  InputArcStep,
+  InputRectangleStep,
+  InputSmoothStep,
+  InputStep,
+  InputTarget,
+} from '@retikz/vanilla';
 import type { FC, ReactNode } from 'react';
 
 import { TIKZ_STEP } from '../protocol';
@@ -10,227 +23,69 @@ import { TIKZ_STEP } from '../protocol';
  */
 export type DslTarget = InputTarget;
 
-/** Move action：移动游标但不绘制（TikZ `(A)`） */
-export type MoveStepProps = {
-  /** 移动 step 鉴别字面量 */
-  kind: 'move';
-  /** 移动目标点 */
-  to: DslTarget;
-};
-
-/** Line action：从当前游标到目标点画直线（TikZ `(A) -- (B)`） */
-export type LineStepProps = {
-  /** 省略时，首个步骤为 move，后续步骤为 line */
-  kind?: 'line';
-  /** 直线终点 */
-  to: DslTarget;
-  /** 边标注，等价于 sugar `<EdgeLabel>` child */
-  label?: IRStepLabel;
-  /** sugar 形态：`<Step><EdgeLabel>...</EdgeLabel></Step>`；其它 children 静默忽略 */
+/** 可用 EdgeLabel 子元素声明步骤标签 */
+type StepLabelChildren = {
+  /** sugar 形态 */
   children?: ReactNode;
 };
+
+/** 对每个输入分支独立移除 JSX 已表达的 type，保留 fold 的 via 与 fraction 关联 */
+type StepFields<TStep extends InputStep> = TStep extends InputStep ? Omit<TStep, 'type'> : never;
+
+/** Move action：移动游标但不绘制 */
+export type MoveStepProps = StepFields<InputMoveStep>;
+
+/** Line action：从当前游标到目标点画直线 */
+export type LineStepProps = Omit<InputLineStep, 'type' | 'kind'> &
+  Partial<Pick<InputLineStep, 'kind'>> &
+  StepLabelChildren;
 
 /** Axis-line action：把目标投影到当前 host 的一个局部轴并画单段直线 */
-export type AxisLineStepProps = {
-  /** 单轴连接 step 鉴别字面量 */
-  kind: 'axis-line';
-  /** 保持的当前 host 局部轴 */
-  axis: 'horizontal' | 'vertical';
-  /** 投影目标，仅支持笛卡尔坐标、NodeTarget 或对应字符串 shorthand */
-  to: InputAxisLineTarget;
-  /** 边标注 */
-  label?: IRStepLabel;
-  /** sugar 形态 */
-  children?: ReactNode;
-};
-
-/** Fold action 共享属性 */
-type FoldStepBaseProps = {
-  /** 折角 step 鉴别字面量 */
-  kind: 'fold';
-  /** 折角终点 */
-  to: DslTarget;
-  /** 边标注 */
-  label?: IRStepLabel;
-  /** sugar 形态 */
-  children?: ReactNode;
-};
+export type AxisLineStepProps = StepFields<InputAxisLineStep> & StepLabelChildren;
 
 /**
  * Fold action：两段或三段正交折线
  * @description `-|` / `|-` 使用一个转折点；`-|-` / `|-|` 使用两个转折点，并可用归一化 `fraction` 调整中间腿位置
  */
-export type FoldStepProps = FoldStepBaseProps &
-  (
-    | {
-        /** 两段折角走向 */
-        via: '-|' | '|-';
-      }
-    | {
-        /** 三段折角走向 */
-        via: '-|-' | '|-|';
-        /**
-         * 中间腿的归一化位置
-         * @default 0.5
-         */
-        fraction?: number;
-      }
-  );
+export type FoldStepProps = StepFields<InputFoldStep> & StepLabelChildren;
 
-/** Cycle action：把当前子路径闭合回最近一次 move 起点（TikZ `cycle`） */
-export type CycleStepProps = {
-  /** 闭合 step 鉴别字面量；无 `to` / `label` / `children`——不可挂边标注、不消耗目标点 */
-  kind: 'cycle';
-};
+/** Cycle action：把当前子路径闭合回最近一次 move 起点 */
+export type CycleStepProps = StepFields<Extract<InputStep, { kind: 'cycle' }>>;
 
-/** Curve action：二次贝塞尔，一个控制点（TikZ `.. controls (B) ..`） */
-export type CurveStepProps = {
-  /** 二次贝塞尔 step 鉴别字面量 */
-  kind: 'curve';
-  /** 控制点（仅支持笛卡尔 `[x, y]`） */
-  control: IRControlPoint;
-  /** 曲线终点 */
-  to: DslTarget;
-  /** 边标注 */
-  label?: IRStepLabel;
-  /** sugar 形态 */
-  children?: ReactNode;
-};
+/** Curve action：二次贝塞尔，一个控制点 */
+export type CurveStepProps = StepFields<InputCurveStep> & StepLabelChildren;
 
-/** Cubic action：三次贝塞尔，两个控制点（TikZ `.. controls (B) and (C) ..`） */
-export type CubicStepProps = {
-  /** 三次贝塞尔 step 鉴别字面量 */
-  kind: 'cubic';
-  /** 第一控制点（影响起点切线） */
-  control1: IRControlPoint;
-  /** 第二控制点（影响终点切线） */
-  control2: IRControlPoint;
-  /** 曲线终点 */
-  to: DslTarget;
-  /** 边标注 */
-  label?: IRStepLabel;
-  /** sugar 形态 */
-  children?: ReactNode;
-};
+/** Cubic action：三次贝塞尔，两个控制点 */
+export type CubicStepProps = StepFields<InputCubicStep> & StepLabelChildren;
 
 /**
- * Bend action：弧形简记，自动算控制点生成 cubic（TikZ `to[bend left=N]` / `to[out=…, in=…]`）
+ * Bend action：弧形简记，自动算控制点生成 cubic
  * @description 支持对称弯与非对称弯 / 自环两种模式；同给时 out/in 优先（编译层）。
  *   三者全省时默认 left 对称弯。`from == to`（同节点 / 同坐标）配合 out/in 画自环
  */
-export type BendStepProps = {
-  /** 弧形简记 step 鉴别字面量 */
-  kind: 'bend';
-  /**
-   * 对称弯模式的弯向：'left' / 'right'（视觉左右，相对 from→to）；可选，与 out/in 互补
-   * @default 'left'
-   */
-  bendDirection?: 'left' | 'right';
-  /**
-   * 对称弯模式的弯角度（度），缺省 30
-   * @default 30
-   */
-  bendAngle?: number;
-  /** 屏幕绝对出射角（度）；任一 outAngle / inAngle 触发切线模式，缺省出射角为 0，优先于对称配置 */
-  outAngle?: number;
-  /** 屏幕绝对入射角（度）；任一 outAngle / inAngle 触发切线模式，缺省入射角为 180 */
-  inAngle?: number;
-  /** 切线模式的正数控制点距离倍率，默认 1；也缩放自环默认大小，对称模式忽略 */
-  looseness?: number;
-  /** 终点 */
-  to: DslTarget;
-  /** 边标注 */
-  label?: IRStepLabel;
-  /** sugar 形态 */
-  children?: ReactNode;
-};
+export type BendStepProps = StepFields<InputBendStep> & StepLabelChildren;
 
-/** Arc action：按起末角度绘制圆弧 / 椭圆弧段；圆心缺省取游标，可显式指定（TikZ `arc[start angle=…, end angle=…, radius=…]`） */
-export type ArcStepProps = {
-  /** 弧段 step 鉴别字面量 */
-  kind: 'arc';
-  /** 起始角度（度，0° = +x、90° = +y screen-down；与 ArcStep / Node label 角度约定一致） */
-  startAngle: number;
-  /** 终止角度（度），sweep 方向由 startAngle vs endAngle 决定 */
-  endAngle: number;
-  /** 弧半径；number 表示正圆，{ x, y } 表示椭圆 */
-  radius: IRStepRadius;
-  /** 显式圆心；缺省取游标（上一 step anchor） */
-  center?: DslTarget;
-  /** 边标注 */
-  label?: IRStepLabel;
-  /** sugar 形态 */
-  children?: ReactNode;
-};
+/** Arc action：按起末角度绘制圆弧 / 椭圆弧段；圆心缺省取游标，可显式指定 */
+export type ArcStepProps = StepFields<InputArcStep> & StepLabelChildren;
 
-/** CirclePath action：以游标为圆心绘制圆；无角度=整圆（画完回圆心），带角度=部分圆（TikZ `circle[radius=…]`） */
-export type CirclePathStepProps = {
-  /** 整圆 step 鉴别字面量 */
-  kind: 'circlePath';
-  /** 圆半径（user units） */
-  radius: number;
-  /** 部分圆起始角（度）；与 endAngle 同给才生效 */
-  startAngle?: number;
-  /** 部分圆终止角（度） */
-  endAngle?: number;
-  /** 闭合模式：无角度=closed（整圆）；带角度=chord（弦，默认）/ sector（连回中心）/ open（纯弧） */
-  closed?: 'closed' | 'chord' | 'open' | 'sector';
-  /** 边标注 */
-  label?: IRStepLabel;
-  /** sugar 形态 */
-  children?: ReactNode;
-};
+/** CirclePath action：以游标为圆心绘制圆；无角度=整圆（画完回圆心），带角度=部分圆 */
+export type CirclePathStepProps = StepFields<IRCirclePathStep> & StepLabelChildren;
 
-/** EllipsePath action：以游标为圆心绘制椭圆；无角度=整椭圆（画完回圆心），带角度=部分椭圆（TikZ `ellipse[x radius=…, y radius=…]`） */
-export type EllipsePathStepProps = {
-  /** 整椭圆 step 鉴别字面量 */
-  kind: 'ellipsePath';
-  /** 椭圆的 x、y 轴半径 */
-  radius: IRStepAnisotropicRadius;
-  /** 部分椭圆起始角（度）；与 endAngle 同给才生效 */
-  startAngle?: number;
-  /** 部分椭圆终止角（度） */
-  endAngle?: number;
-  /** 闭合模式：无角度=closed（整椭圆）；带角度=chord（默认）/ sector（连回中心）/ open */
-  closed?: 'closed' | 'chord' | 'open' | 'sector';
-  /** 边标注 */
-  label?: IRStepLabel;
-  /** sugar 形态 */
-  children?: ReactNode;
-};
+/** EllipsePath action：以游标为圆心绘制椭圆；无角度=整椭圆（画完回圆心），带角度=部分椭圆 */
+export type EllipsePathStepProps = StepFields<IREllipsePathStep> & StepLabelChildren;
 
-/** Rectangle action：两对角定义的轴对齐矩形（可圆角）；编译为 path 命令（TikZ `(a) rectangle (b)`） */
-export type RectangleStepProps = {
-  /** 矩形 step 鉴别字面量 */
-  kind: 'rectangle';
-  /** 一角 */
-  from: DslTarget;
-  /** 对角（顺序无关） */
-  to: DslTarget;
-  /** 四角同圆角半径；缺省直角，compile clamp 到边长一半 */
-  cornerRadius?: number;
-};
+/** Rectangle action：两对角定义的轴对齐矩形（可圆角）；编译为 path 命令 */
+export type RectangleStepProps = StepFields<InputRectangleStep>;
 
 /**
- * Smooth action：过当前游标 + `points` 的平滑曲线（TikZ `plot[smooth]` / Hobby 风格）
+ * Smooth action：过当前游标 + `points` 的平滑曲线
  * @description 游标为隐式首 knot，曲线依次穿过 `points` 每个点；编译期经 centripetal Catmull-Rom 转成 cubic 链。
  *   需前置 step 设游标；游标终于 `points` 末项。`tension` 缺省 1（标准 centripetal CR），<1 更紧、>1 更鼓
  */
-export type SmoothStepProps = {
-  /** 平滑曲线 step 鉴别字面量 */
-  kind: 'smooth';
+export type SmoothStepProps = Omit<InputSmoothStep, 'type' | 'points'> & {
   /** 游标之后依次穿过的点（顺序敏感）；单点 = 一段曲线，游标终于末点 */
-  points: Array<DslTarget>;
-  /**
-   * 切线长度乘子（TikZ `tension`）；缺省 1，<1 更紧、>1 更鼓
-   * @default 1
-   */
-  tension?: number;
-  /** 边标注，沿生成 cubic 按贝塞尔参数定位 */
-  label?: IRStepLabel;
-  /** sugar 形态 */
-  children?: ReactNode;
-};
+  points: Array<InputTarget>;
+} & StepLabelChildren;
 
 /**
  * @description 十三种 kind：'move'（首步默认） / 'line'（后续步骤默认） / 'axis-line'（单轴投影连接） / 'fold'（折角） / 'cycle'（闭合） / 'curve'（二次贝塞尔） / 'cubic'（三次贝塞尔） / 'bend'（弧形简记） / 'arc'（圆 / 椭圆弧段） / 'circlePath'（整圆 / 部分圆） / 'ellipsePath'（整椭圆 / 部分椭圆） / 'rectangle'（矩形） / 'smooth'（过点平滑曲线）。除 'move' / 'cycle' / 'rectangle' 外均可挂 `label?: IRStepLabel`，等价于 sugar `<EdgeLabel>` child（prop 优先）；'smooth' 用 `points` 而非 `to`。每个 kind 有对应 named type export，便于 wrapper / forwardRef / `Pick<>` 派生

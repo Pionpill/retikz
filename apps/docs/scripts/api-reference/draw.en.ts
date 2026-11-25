@@ -1,5 +1,15 @@
 /** 经核对的绘制 API 英文说明，源码标识符保持不变 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  '显式圆心目标，省略时沿用 Core 弧段的圆心推导语义': 'Explicit arc center; omit it to let Core infer the center',
+  '仅决定指定轴分量的目标，可使用目标标识字符串简写':
+    'Target for the selected axis only; accepts a target reference string',
+  '弯曲路径的终点，可使用目标标识字符串简写': 'Bend endpoint; accepts a target reference string',
+  '三次贝塞尔曲线终点，可使用目标标识字符串简写': 'Cubic Bézier endpoint; accepts a target reference string',
+  '二次贝塞尔曲线终点，可使用目标标识字符串简写': 'Quadratic Bézier endpoint; accepts a target reference string',
+  '直线终点，可使用目标标识字符串简写': 'Line endpoint; accepts a target reference string',
+  '移动后的目标位置，可使用目标标识字符串简写': 'Move destination; accepts a target reference string',
+  '矩形的一个对角点，可使用目标标识字符串简写': 'First rectangle corner; accepts a target reference string',
+  '矩形的另一个对角点，可使用目标标识字符串简写': 'Opposite rectangle corner; accepts a target reference string',
   '自定义路径定义直接提供几何，不传步骤来源': 'The custom path definition supplies its geometry without a step source',
   '具名路径构造函数的配置，必须选择一种步骤来源': 'Path options specifying exactly one source of steps',
   '路径走向简写，与 JSX 子步骤二选一': 'Path shorthand, mutually exclusive with JSX step children',
@@ -202,8 +212,8 @@ const translations: Readonly<Partial<Record<string, string>>> = {
     'Create path authoring input, with identity declared by the configuration id',
   '路径步骤序列；与 way 互斥': 'Path steps; mutually exclusive with way',
 
-  'Arc action：按起末角度绘制圆弧 / 椭圆弧段；圆心缺省取游标，可显式指定（TikZ `arc[start angle=…, end angle=…, radius=…]`）':
-    'Arc action: draw a circular or elliptical arc between angles; the center defaults to the cursor and can be specified explicitly (TikZ `arc[start angle=…, end angle=…, radius=…]`)',
+  'Arc action：按起末角度绘制圆弧 / 椭圆弧段；圆心缺省取游标，可显式指定':
+    'Arc action: draw a circular or elliptical arc between angles; the center defaults to the cursor and can be specified explicitly',
   '显式圆心；缺省取游标（上一 step anchor）': 'Explicit center; defaults to the cursor (the previous step anchor)',
   'sugar 形态': 'Sugar form',
   '终止角度（度），sweep 方向由 startAngle vs endAngle 决定':
@@ -219,8 +229,7 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   '单轴连接 step 鉴别字面量': 'Discriminant for a single-axis step',
   '投影目标，仅支持笛卡尔坐标、NodeTarget 或对应字符串 shorthand':
     'Projection target: Cartesian coordinates, a NodeTarget, or the corresponding string shorthand',
-  'Bend action：弧形简记，自动算控制点生成 cubic（TikZ `to[bend left=N]` / `to[out=…, in=…]`）':
-    'Bend action: curve shorthand that computes cubic control points (TikZ `to[bend left=N]` or `to[out=…, in=…]`)',
+  'Bend action：弧形简记，自动算控制点生成 cubic': 'Bend action: curve shorthand that computes cubic control points',
   '支持对称弯与非对称弯 / 自环两种模式；同给时 out/in 优先（编译层）。\n  三者全省时默认 left 对称弯。`from == to`（同节点 / 同坐标）配合 out/in 画自环':
     'Supports symmetric bends and asymmetric bends or loops. Explicit out/in angles take precedence during compilation. With all three omitted, defaults to a symmetric left bend. When `from == to`, explicit out/in angles create a loop',
   '对称弯模式的弯角度（度），缺省 30': 'Symmetric bend angle in degrees; defaults to 30',
@@ -234,8 +243,8 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   '非对称弯 / 自环模式的出射角（度，TikZ `out=`）；与 inAngle 一起编译成 cubic，给定时优先于 bendDirection':
     'Outgoing angle in degrees for asymmetric bends or loops (TikZ `out=`); combined with inAngle into a cubic and takes precedence over bendDirection',
   终点: 'Endpoint',
-  'CirclePath action：以游标为圆心绘制圆；无角度=整圆（画完回圆心），带角度=部分圆（TikZ `circle[radius=…]`）':
-    'CirclePath action: draw around the cursor; without angles, draw a full circle and return to its center; with angles, draw a partial circle (TikZ `circle[radius=…]`)',
+  'CirclePath action：以游标为圆心绘制圆；无角度=整圆（画完回圆心），带角度=部分圆':
+    'CirclePath action: draw around the cursor; without angles, draw a full circle and return to its center; with angles, draw a partial circle',
   '闭合模式：无角度=closed（整圆）；带角度=chord（弦，默认）/ sector（连回中心）/ open（纯弧）':
     'Closure: without angles, closed; with angles, chord (default), sector (back to center), or open (arc only)',
   '部分圆终止角（度）': 'Partial-circle end angle in degrees',
@@ -243,18 +252,16 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   '圆半径（user units）': 'Circle radius in user units',
   '部分圆起始角（度）；与 endAngle 同给才生效':
     'Partial-circle start angle in degrees; applies only together with endAngle',
-  'Cubic action：三次贝塞尔，两个控制点（TikZ `.. controls (B) and (C) ..`）':
-    'Cubic action: cubic Bézier with two control points (TikZ `.. controls (B) and (C) ..`)',
+  'Cubic action：三次贝塞尔，两个控制点': 'Cubic action: cubic Bézier with two control points',
   '第一控制点（影响起点切线）': 'First control point, affecting the start tangent',
   '第二控制点（影响终点切线）': 'Second control point, affecting the end tangent',
   '三次贝塞尔 step 鉴别字面量': 'Discriminant for a cubic Bézier step',
   曲线终点: 'Curve endpoint',
-  'Curve action：二次贝塞尔，一个控制点（TikZ `.. controls (B) ..`）':
-    'Curve action: quadratic Bézier with one control point (TikZ `.. controls (B) ..`)',
+  'Curve action：二次贝塞尔，一个控制点': 'Curve action: quadratic Bézier with one control point',
   '控制点（仅支持笛卡尔 `[x, y]`）': 'Control point; only Cartesian `[x, y]` is supported',
   '二次贝塞尔 step 鉴别字面量': 'Discriminant for a quadratic Bézier step',
-  'Cycle action：把当前子路径闭合回最近一次 move 起点（TikZ `cycle`）':
-    'Cycle action: close the current subpath to the most recent move point (TikZ `cycle`)',
+  'Cycle action：把当前子路径闭合回最近一次 move 起点':
+    'Cycle action: close the current subpath to the most recent move point',
   '闭合 step 鉴别字面量；无 `to` / `label` / `children`——不可挂边标注、不消耗目标点':
     'Closure discriminant; accepts no `to`, `label`, or `children`, attaches no edge label, and consumes no target',
   'Draw 的作者侧属性': 'Authoring props for Draw',
@@ -265,8 +272,8 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   '实例视觉覆盖，逐字段覆盖继承默认值': 'Instance visual overrides, replacing inherited defaults field by field',
   'TikZ 风格的路径走向简写': 'TikZ-style route shorthand',
   '同层 stack 顺序': 'Stack order among siblings',
-  'EllipsePath action：以游标为圆心绘制椭圆；无角度=整椭圆（画完回圆心），带角度=部分椭圆（TikZ `ellipse[x radius=…, y radius=…]`）':
-    'EllipsePath action: draw around the cursor; without angles, draw a full ellipse and return to its center; with angles, draw a partial ellipse (TikZ `ellipse[x radius=…, y radius=…]`)',
+  'EllipsePath action：以游标为圆心绘制椭圆；无角度=整椭圆（画完回圆心），带角度=部分椭圆':
+    'EllipsePath action: draw around the cursor; without angles, draw a full ellipse and return to its center; with angles, draw a partial ellipse',
   '闭合模式：无角度=closed（整椭圆）；带角度=chord（默认）/ sector（连回中心）/ open':
     'Closure: without angles, closed; with angles, chord (default), sector (back to center), or open',
   '部分椭圆终止角（度）': 'Partial-ellipse end angle in degrees',
@@ -277,14 +284,13 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   'Fold action：两段或三段正交折线': 'Fold action: a two- or three-segment orthogonal polyline',
   '`-|` / `|-` 使用一个转折点；`-|-` / `|-|` 使用两个转折点，并可用归一化 `fraction` 调整中间腿位置':
     '`-|` and `|-` use one turn; `-|-` and `|-|` use two turns, with normalized `fraction` controlling the middle leg',
-  'Line action：从当前游标到目标点画直线（TikZ `(A) -- (B)`）':
-    'Line action: draw from the cursor to a target (TikZ `(A) -- (B)`)',
+  'Line action：从当前游标到目标点画直线': 'Line action: draw from the cursor to a target',
   'sugar 形态：`<Step><EdgeLabel>...</EdgeLabel></Step>`；其它 children 静默忽略':
     'Sugar form: `<Step><EdgeLabel>...</EdgeLabel></Step>`; other children are silently ignored',
   '省略时，首个步骤为 move，后续步骤为 line': 'When omitted, the first step is a move and subsequent steps are lines',
   '边标注，等价于 sugar `<EdgeLabel>` child': 'Edge label, equivalent to a sugar `<EdgeLabel>` child',
   直线终点: 'Line endpoint',
-  'Move action：移动游标但不绘制（TikZ `(A)`）': 'Move action: move the cursor without drawing (TikZ `(A)`)',
+  'Move action：移动游标但不绘制': 'Move action: move the cursor without drawing',
   '移动 step 鉴别字面量': 'Discriminant for a move step',
   移动目标点: 'Move target',
   '路径级时间轴动画；渲染端播放或降级为静态，不参与布局':
@@ -328,15 +334,14 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   'TikZ 风格路径走向简写，由 Vanilla 统一解析为步骤': 'TikZ-style route shorthand, parsed into steps by Vanilla',
   '显式栈序：大者在上；缺省 0 = 声明顺序；同值稳定保序；只在同层子节点间生效':
     'Explicit stack order: larger values are above; defaults to 0, equal values preserve declaration order, and comparison is limited to siblings',
-  'Rectangle action：两对角定义的轴对齐矩形（可圆角）；编译为 path 命令（TikZ `(a) rectangle (b)`）':
-    'Rectangle action: an axis-aligned rectangle from opposite corners, optionally rounded, compiled to path commands (TikZ `(a) rectangle (b)`)',
+  'Rectangle action：两对角定义的轴对齐矩形（可圆角）；编译为 path 命令':
+    'Rectangle action: an axis-aligned rectangle from opposite corners, optionally rounded, compiled to path commands',
   '四角同圆角半径；缺省直角，compile clamp 到边长一半':
     'Shared corner radius; omitted means sharp corners, and compilation clamps it to half the side length',
   一角: 'One corner',
   '矩形 step 鉴别字面量': 'Discriminant for a rectangle step',
   '对角（顺序无关）': 'Opposite corner; order is irrelevant',
-  'Smooth action：过当前游标 + `points` 的平滑曲线（TikZ `plot[smooth]` / Hobby 风格）':
-    'Smooth action: a smooth curve through the cursor and `points` (TikZ `plot[smooth]` or Hobby-style input)',
+  'Smooth action：过当前游标 + `points` 的平滑曲线': 'Smooth action: a smooth curve through the cursor and `points`',
   '游标为隐式首 knot，曲线依次穿过 `points` 每个点；编译期经 centripetal Catmull-Rom 转成 cubic 链。\n  需前置 step 设游标；游标终于 `points` 末项。`tension` 缺省 1（标准 centripetal CR），<1 更紧、>1 更鼓':
     'The cursor is the implicit first knot; the curve passes through each entry in `points`, using centripetal Catmull–Rom converted to cubics. A preceding step must set the cursor, which ends at the last point. `tension` defaults to 1; values below 1 tighten the curve and values above 1 increase the bulge',
   '平滑曲线 step 鉴别字面量': 'Discriminant for a smooth step',
