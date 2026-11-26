@@ -78,6 +78,8 @@ export class WeaveTracker {
     append = false,
   ): void {
     const oldRecord = this.transaction.readState(this.root).records.get(entry);
+    // ⚡新条目没有读取和诊断时，不创建空记录或改写依赖图
+    if (oldRecord === undefined && compileReads.length === 0 && diagnostics.length === 0) return;
     const previous = append ? oldRecord : undefined;
     const reads = [...(previous?.reads ?? []), ...compileReads];
     const sameReads =

@@ -20,9 +20,10 @@ export const createWeaveObservation = (
   const diagnostics: Array<CompileWarning> = [];
   const workspace = runtime.state.workspace;
   const warningCount = workspace.diagnosticCollector.warnings.length;
-  const resourceIds = new Set<string>();
+  // ⚡仅在登记首个资源时分配集合
+  let resourceIds: Set<string> | undefined;
   const retainResource = (id: string): string => {
-    resourceIds.add(id);
+    (resourceIds ??= new Set()).add(id);
     return id;
   };
   const paintRegistry: PaintRegistry = {
@@ -38,9 +39,9 @@ export const createWeaveObservation = (
     },
     // ⚡未登记资源的计算不枚举其它元素已经登记的全局资源
     getResources: () =>
-      resourceIds.size === 0
+      resourceIds === undefined
         ? []
-        : workspace.paintRegistry.getResources().filter(resource => resourceIds.has(resource.id)),
+        : workspace.paintRegistry.getResources().filter(resource => resourceIds!.has(resource.id)),
   };
   const clipRegistry: ClipRegistry = {
     lower: workspace.clipRegistry.lower,
@@ -48,9 +49,9 @@ export const createWeaveObservation = (
     registerPath: clip => retainResource(workspace.clipRegistry.registerPath(clip)),
     importResource: resource => retainResource(workspace.clipRegistry.importResource(resource)),
     getResources: () =>
-      resourceIds.size === 0
+      resourceIds === undefined
         ? []
-        : workspace.clipRegistry.getResources().filter(resource => resourceIds.has(resource.id)),
+        : workspace.clipRegistry.getResources().filter(resource => resourceIds!.has(resource.id)),
   };
   const local: CompileRuntime = {
     ...runtime,

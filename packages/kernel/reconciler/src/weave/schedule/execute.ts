@@ -277,7 +277,10 @@ export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinitio
           (name, referenceEntry, kind) => reads.push({ name, entry: referenceEntry, kind, readiness: 'output' }),
           () => execution.executor.finish(execution.frame.state),
         );
-      } else execution.executor.finish(execution.frame.state);
+      } else if (entry.type !== 'node' || execution.frame.state.primitives.length > 1) {
+        // ⚡Node 不排队延迟路径；至多一个图元无需排序，贡献捕获直接使用已组装的状态
+        execution.executor.finish(execution.frame.state);
+      }
       if (entry.type !== 'scope' && execution.retained === undefined) {
         writeContribution(
           entry,
