@@ -1,6 +1,6 @@
 import type { AnyCompositeDefinition, IRChild } from '@retikz/core';
-import { projectPublishedReference, selectCompositeInputScope } from '@retikz/core';
-import { compareProperties, createIdAllocator } from '@retikz/foundation';
+import { projectPublishedReference } from '@retikz/core';
+import { createIdAllocator } from '@retikz/foundation';
 
 import {
   assembleCompileSubtree,
@@ -10,18 +10,11 @@ import {
   CompileElementExecutor,
   createExecutionInvariantError,
   finalizeSceneCompilation,
-  prepareScopeExecution,
   queuePathChild,
 } from '../../compile';
 import type { CompileNamespaceKey, CompileOwnerKey } from '../../compile';
 import { captureWeaveContribution, materializeWeaveContribution, materializeWeaveOutput } from '../contribution';
-import {
-  executeWeaveCoordinate,
-  executeWeaveNode,
-  executeWeavePath,
-  executeWeaveScope,
-  resolveWeaveScope,
-} from '../element';
+import { executeWeaveCoordinate, executeWeaveNode, executeWeavePath } from '../element';
 import type { WeaveEntry, WeaveReferenceRead, WeaveRoot, WeaveScopeEntry } from '../shared';
 import { matchWeaveReferences } from '../shared';
 import { createWeaveBindingFlow } from './binding';
@@ -29,6 +22,7 @@ import { createWeaveDependencyFlow } from './dependency';
 import { createWeaveOutputFlow } from './output';
 import { WeaveTaskQueue } from './queue';
 import { collectWeaveRootBlocks } from './root-output';
+import { prepareScheduledScope, projectScheduledScope, publishScheduledScope } from './scope';
 import type { WeaveTaskAddress } from './task';
 import type {
   WeaveAssembledOutput,
@@ -215,40 +209,7 @@ export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinitio
       }
       if (entry.type === 'scope') {
         requireProjection(entry);
-        const steps = execution.scope!;
-        // 包络已完成；此后只替换输出收集，不改变其布局事实
-        steps.childFrame.state.primitives.length = 0;
-        steps.childFrame.state.bounds.length = 0;
-        steps.childFrame.state.allocations.length = 0;
-        steps.childFrame.state.alignmentGuides.length = 0;
-        for (const child of transaction.readState(entry).children) {
-          const childState = outputOf(child);
-          steps.childFrame.state.primitives.push(...childState.primitives);
-          steps.childFrame.state.bounds.push(...childState.bounds);
-          steps.childFrame.state.allocations.push(...childState.allocations);
-          steps.childFrame.state.alignmentGuides.push(...childState.alignmentGuides);
-          for (const primitive of childState.primitives) {
-            if (primitive.type === 'path-placeholder') continue;
-            const zIndex = rootExecutor.output.zIndexMap.get(primitive);
-            if (zIndex !== undefined) execution.executor.output.zIndexMap.set(primitive, zIndex);
-          }
-        }
-        steps.paths();
-        steps.dispose();
-        const warnings = runtime.state.workspace.diagnosticCollector.warnings;
-        const warningCount = warnings.length;
-        steps.publish();
-        const outputDiagnostics = warnings.slice(warningCount);
-        const result = execution.scopeResult!;
-        const state = transaction.editState(entry);
-        state.resolve = result.resolve;
-        state.compile = { ...result.compile, value: steps.compiled, outputDiagnostics };
-        recordComputed(
-          entry,
-          { ...result.compile, outputDiagnostics, value: steps.compiled },
-          result.reused,
-          result.referenceReads,
-        );
+        publishScheduledScope(entry, execution, executionContext, rootExecutor, outputOf);
       }
       if (entry.type === 'path' && execution.retained === undefined) {
         const namespace = execution.runtime.state.execution.namespaceStack;
@@ -318,18 +279,7 @@ export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinitio
           append(steps.childFrame.state, executions.get(child)!, execution.executor.output, includeLayouts);
         else appendState(steps.childFrame.state, layoutOf(child, includeLayouts), includeLayouts);
       }
-      const state = transaction.readState(entry);
-      const result = executeWeaveScope(
-        execution.runtime,
-        state.origin.own,
-        execution.frame.context,
-        steps,
-        execution.scopeDiagnostics ?? [],
-        execution.scopeReads ?? [],
-        canReuse(entry) ? state : undefined,
-      );
-      execution.scopeResult = result;
-      steps.project(result.compile.value);
+      projectScheduledScope(entry, execution, transaction, canReuse);
       return;
     }
     ensureDependencies(entry);
@@ -337,57 +287,7 @@ export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinitio
     const { executor, frame } = execution;
     const state = transaction.readState(entry);
     if (entry.type === 'scope') {
-      const own = transaction.readState(entry).origin.own;
-      const owner = ownerOf(entry);
-      const scopeFrame = {
-        ...frame,
-        context: {
-          ...frame.context,
-          compositeInput:
-            frame.context.compositeInput === undefined
-              ? undefined
-              : selectCompositeInputScope(frame.context.compositeInput, ['children', index]),
-        },
-      };
-      const warningCount = runtime.state.workspace.diagnosticCollector.warnings.length;
-      const canon = resolveWeaveScope(
-        execution.runtime,
-        own,
-        path,
-        scopeFrame.context,
-        canReuse(entry) ? transaction.readState(entry) : undefined,
-      );
-      const scopeReads: Array<WeaveReferenceRead> = [];
-      execution.scopeReads = scopeReads;
-      execution.scope = execution.runtime.state.execution.namespaceStack.observeReferences(
-        (name, referenceEntry, kind) => scopeReads.push({ name, entry: referenceEntry, kind, readiness: 'prepare' }),
-        () =>
-          prepareScopeExecution(
-            execution.runtime,
-            executor.output,
-            {
-              compileChildren: () => {
-                throw createExecutionInvariantError('Authored Scope cannot traverse children during update');
-              },
-            },
-            { ...own, children: [] },
-            index,
-            scopeFrame,
-            { semanticOwner: owner, resolvedScope: canon },
-          ),
-      );
-      execution.scopeDiagnostics = runtime.state.workspace.diagnosticCollector.warnings.slice(warningCount);
-      if (
-        !contextMatches(entry, false, false) ||
-        !compareProperties(entry.current?.resolve?.value.inheritance, execution.scope.childFrame.context.inheritance, {
-          depth: 2,
-        }) ||
-        !compareProperties(
-          entry.current?.compile?.context.preparation.preliminaryTransforms,
-          execution.scope.preparation.preliminaryTransforms,
-          { depth: 2 },
-        )
-      ) {
+      if (prepareScheduledScope(entry, execution, executionContext, ownerOf, canReuse, contextMatches)) {
         for (const child of transaction.readState(entry).children) notify(child);
       }
       return;
