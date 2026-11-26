@@ -3,10 +3,16 @@ import { embed } from '@retikz/vanilla';
 import type { ReactNode, ReactElement } from 'react';
 import { Children, Fragment, isValidElement } from 'react';
 
-import { RetikzReactError, RetikzReactErrorCode } from '../../../error';
-import { KernelDisplayName, createInputEmbedProps, getDisplayName, resolveInputEmbedAdapter } from '../../../shared';
-import { inputCoordinateFromProps, inputNodeFromProps, inputPathFromProps, inputScopeFromProps } from '../../kernel';
-import type { CoordinateProps, NodeProps, PathProps, ScopeProps } from '../../kernel';
+import { RetikzReactError, RetikzReactErrorCode } from '../../error';
+import { KernelDisplayName, createInputEmbedProps, getDisplayName, resolveInputEmbedAdapter } from '../../shared';
+import { convertCoordinateProps } from '../Coordinate';
+import type { CoordinateProps } from '../Coordinate';
+import { convertNodeProps } from '../node';
+import type { NodeProps } from '../node';
+import { convertPathProps } from '../path';
+import type { PathProps } from '../path';
+import { convertScopeProps } from '../Scope';
+import type { ScopeProps } from '../Scope';
 
 /** 局部 JSX 收集时为匿名嵌入分配稳定 identity 的选项 */
 export type InputSceneCreationOptions = Readonly<{
@@ -19,19 +25,12 @@ const isClassComponent = (type: unknown): boolean =>
   typeof type === 'function' &&
   (type as { prototype?: { isReactComponent?: unknown } }).prototype?.isReactComponent !== undefined;
 
-/** 取得元素 type 的可读名称用于诊断 */
-const componentLabel = (type: unknown): string => {
-  if (typeof type === 'string') return type;
-  if (typeof type === 'function') {
-    const component = type as { displayName?: string; name?: string };
-    return component.displayName ?? component.name ?? 'Unknown';
-  }
-
-  if (type !== null && typeof type === 'object') {
-    return (type as { displayName?: string }).displayName ?? 'Unknown';
-  }
-
-  return String(type);
+/** 取得 React 元素用于诊断的可读名称 */
+const componentLabel = (element: ReactElement): string => {
+  const displayName = getDisplayName(element);
+  if (displayName !== undefined) return displayName;
+  if (typeof element.type === 'function') return element.type.name;
+  return typeof element.type === 'symbol' ? String(element.type) : 'Unknown';
 };
 
 /** React JSX traversal 期间共享的 Tier 2 bridge */
@@ -72,17 +71,17 @@ const readSceneChildren = (children: ReactNode, context: InputContext): InputSce
 
       switch (getDisplayName(child)) {
         case KernelDisplayName.Node:
-          output.push(inputNodeFromProps(child.props as NodeProps));
+          output.push(convertNodeProps(child.props as NodeProps));
           return;
         case KernelDisplayName.Path:
-          output.push(inputPathFromProps(child.props as PathProps));
+          output.push(convertPathProps(child.props as PathProps));
           return;
         case KernelDisplayName.Coordinate:
-          output.push(inputCoordinateFromProps(child.props as CoordinateProps));
+          output.push(convertCoordinateProps(child.props as CoordinateProps));
           return;
         case KernelDisplayName.Scope: {
           const props = child.props as ScopeProps;
-          output.push(inputScopeFromProps(props, readSceneChildren(props.children, context)));
+          output.push(convertScopeProps(props, readSceneChildren(props.children, context)));
           return;
         }
       }
@@ -91,7 +90,7 @@ const readSceneChildren = (children: ReactNode, context: InputContext): InputSce
         if (isClassComponent(child.type)) {
           throw new RetikzReactError(
             RetikzReactErrorCode.Kernel,
-            `[retikz] <Layout> children 含类组件 <${componentLabel(child.type)}>。Kernel / Sugar 组件必须是函数组件`,
+            `[retikz] <Layout> children 含类组件 <${componentLabel(child)}>。Kernel / Sugar 组件必须是函数组件`,
           );
         }
 
@@ -108,7 +107,7 @@ const readSceneChildren = (children: ReactNode, context: InputContext): InputSce
 
       if (__DEV__) {
         console.warn(
-          `[retikz] <Layout> children 含无法识别的元素 <${componentLabel(child.type)}>，已忽略。只有 Kernel、Sugar 与 React.Fragment 会被转换为 Input`,
+          `[retikz] <Layout> children 含无法识别的元素 <${componentLabel(child)}>，已忽略。只有 Kernel、Sugar 与 React.Fragment 会被转换为 Input`,
         );
       }
     });

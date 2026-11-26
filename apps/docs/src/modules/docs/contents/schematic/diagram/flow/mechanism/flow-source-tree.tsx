@@ -1,5 +1,5 @@
 import { FlowEntities, FlowGroup, FlowLayout, FlowRelations } from '@retikz/diagram-react/flow';
-import { Layout, Node, Path, Scope } from '@retikz/react';
+import { Draw, Layout, Node, Scope } from '@retikz/react';
 import { Array, Map, MapEntry, MapKey, MapValue } from '@retikz/standard-react/collection';
 import type { FC } from 'react';
 
@@ -62,13 +62,13 @@ const FlowSourceTree: FC<FlowSourceTreeProps> = props => {
         }}
         defaultCell={{ style: { font: { size: 13 } } }}
       />
-      <Path
+      <Draw
         way={['source.bottom', 'tree.top']}
         arrow="->"
         label={{ text: t.resolve, font: { size: 12 }, textColor: 'gray', sloped: false, side: 'right', distance: 90 }}
       />
       <Node id="output" position={[257, 410]} text={t.output} style={{ stroke: 'none', font: { size: 12 } }} />
-      <Path
+      <Draw
         way={['tree.bottom', 'output.top']}
         arrow="->"
         label={{ text: t.render, font: { size: 12 }, textColor: 'gray', sloped: false, side: 'right', distance: 90 }}

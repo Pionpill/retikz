@@ -7,7 +7,7 @@ description: 解释路径写法、游标、端点引用、箭头接合与标签�
 
 ## 两种写法如何汇合
 
-`<Draw way={['a', '-|', 'b']}>` 与先移动到 a、再折角连接 b 的两个 Step 表达同一条路线。React 的 Draw 只把输入交给 Path；Vanilla 的 `normalizePath` 再调用 `parseWay`，统一生成有序步骤。
+`<Draw way={['a', '-|', 'b']}>` 与先移动到 a、再折角连接 b 的两个 Step 表达同一条路线。Draw 调用 Vanilla 的 `parseWay`，再把解析结果作为有序的 Step 子元素传给 Path。
 
 - 作者输入：为了便于编写而提供的 `way` 与字符串目标
 - Source IR：可保存为 JSON 的 Path、Step 与 marks；仍保留节点引用
@@ -21,7 +21,7 @@ description: 解释路径写法、游标、端点引用、箭头接合与标签�
 
 <SourceLinks
   sources={[
-    { label: 'Draw 透传给 Path', path: 'packages/kernel/react/src/components/sugar/Draw.tsx', startLine: 20 },
+    { label: 'Draw 将 way 展开为子步骤', path: 'packages/kernel/react/src/components/path/Draw.tsx', startLine: 25 },
     {
       label: 'way、步骤与箭头的统一入口',
       path: 'packages/kernel/vanilla/src/normalize/element/path/path.ts',

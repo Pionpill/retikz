@@ -1,4 +1,4 @@
-import { Layout, Node, Path, createInputScene } from '@retikz/react';
+import { Draw, Layout, Node, Path, createInputScene } from '@retikz/react';
 import { normalizeScene } from '@retikz/vanilla';
 import type { ReactElement, ReactNode } from 'react';
 import { isValidElement } from 'react';
@@ -165,9 +165,22 @@ describe('parseRetikzJsx — 正常流程', () => {
 });
 
 describe('parseRetikzJsx — 错误情况', () => {
+  it('标签子元素不占用节点正文或路径步骤来源', () => {
+    expect(parseOk('<Node text="body"><NodeLabel>L</NodeLabel></Node>').type).toBe(Node);
+    expect(parseOk('<Draw way={[[0,0],[1,1]]}><PathLabel>L</PathLabel></Draw>').type).toBe(Draw);
+    expect(parseErr('<Path><PathLabel>L</PathLabel></Path>')).toMatch(/必须指定/);
+  });
+
+  it('节点允许省略正文，但不接受两种正文来源', () => {
+    expect(parseOk('<Node />').type).toBe(Node);
+    expect(parseErr('<Node text="">B</Node>')).toMatch(/不能同时指定 text 和 children/);
+  });
+
   it('普通 Path 必须指定一个步骤来源，自定义几何可不传步骤', () => {
     expect(parseErr('<Path />')).toMatch(/必须指定/);
-    expect(parseErr('<Path way={[]}><Step to="A" /></Path>')).toMatch(/不能同时指定/);
+    expect(parseErr('<Path way={[]}><Step to="A" /></Path>')).toMatch(/不支持 way/);
+    expect(parseErr('<Draw />')).toMatch(/必须指定 way/);
+    expect(parseErr('<Draw way={[[0,0],[1,1]]}><Step to="A" /></Draw>')).toMatch(/只接受 PathLabel/);
     expect(parseOk('<Path kind="ribbon" kindOptions={{ mode: "boundary" }} />').type).toBe(Path);
   });
 

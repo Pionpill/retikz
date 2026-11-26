@@ -1,3 +1,9 @@
+/** 节点及 Frame 标题共用的可选正文来源 */
+const nodeContentBranches = [
+  { value: 'text', field: 'text', required: true, label: { zh: '正文属性', en: 'Text prop' } },
+  { value: 'children', field: 'text', type: 'never', label: { zh: 'JSX 子元素', en: 'JSX children' } },
+] as const;
+
 /** LLM 审阅的分支名称，以判别字段类型或入口必填性匹配，避免依赖 TypeScript 分支顺序 */
 export const apiReferenceBranchLabels: Readonly<
   Partial<
@@ -770,10 +776,12 @@ export const apiReferenceBranchLabels: Readonly<
     { value: 'primitive', field: 'kind', type: "'primitive'", label: { zh: '场景图元', en: 'Scene primitive' } },
     { value: 'artifact', field: 'kind', type: "'artifact'", label: { zh: '复合产物', en: 'Composite artifact' } },
   ],
+  '@retikz/react#NodeProps': nodeContentBranches,
+  '@retikz/standard-react/presentation#FrameTitleProps': nodeContentBranches,
+  '@retikz/standard-react/presentation#FrameDescriptionProps': nodeContentBranches,
   '@retikz/react#PathProps': [
     { value: 'definition', field: 'kind', required: true, label: { zh: '定义提供几何', en: 'Definition geometry' } },
     { value: 'children', field: 'children', required: true, label: { zh: 'JSX 子步骤', en: 'JSX steps' } },
-    { value: 'way', field: 'way', required: true, label: { zh: '路径简写', en: 'Way shorthand' } },
   ],
   '@retikz/vanilla#InputPath': [
     { value: 'children', field: 'children', required: true, label: { zh: '显式步骤', en: 'Explicit steps' } },

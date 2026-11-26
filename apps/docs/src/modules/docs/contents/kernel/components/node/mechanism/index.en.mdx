@@ -197,11 +197,11 @@ Registering a duplicate id in the same frame replaces the old entry and emits a 
   ]}
 />
 
-## Line normalization and precedence
+## Line normalization
 
 `<Text>` is a marker component that returns `null`; it creates no DOM or graphic by itself. It is recognized only while `<Node>` collects its children, where the React inputs converge on the same `Node.text` contract:
 
-For example, `<Node>A<Text fill="red">B</Text>C</Node>` produces three lines: A, red B, and C. Its text input is shown below. Supplying `text="X"` instead selects only X.
+For example, `<Node>A<Text fill="red">B</Text>C</Node>` produces three lines: A, red B, and C. Its text input is shown below.
 
 ```ts
 ['A', { text: 'B', fill: 'red' }, 'C'];
@@ -209,7 +209,7 @@ For example, `<Node>A<Text fill="red">B</Text>C</Node>` produces three lines: A,
 
 <ComponentPreview files="text-normalization" size="xs" type="flow" hideCode />
 
-An explicit `text` prop wins. When it is present, children do not participate in text collection. Without `text`, the adapter recursively reads strings, numbers, arrays, Fragments, and `<Text>` markers in JSX order:
+Explicit `text` and JSX body content are mutually exclusive; `NodeLabel` children do not count as body content. For JSX children, the adapter recursively reads strings, numbers, arrays, Fragments, and `<Text>` markers in JSX order:
 
 | Input             | Normalization rule                                     | `Node.text` result |
 | ----------------- | ------------------------------------------------------ | ------------------ |
@@ -223,15 +223,15 @@ This also explains both boundaries: `<Text>` only works inside `<Node>`, and it 
   sources={[
     {
       label: 'Text marker component',
-      path: 'packages/kernel/react/src/components/kernel/Text.tsx',
-      startLine: 13,
-      endLine: 18,
+      path: 'packages/kernel/react/src/components/node/Text.tsx',
+      startLine: 14,
+      endLine: 19,
     },
     {
       label: 'Node child-line normalization',
-      path: 'packages/kernel/react/src/components/kernel/Node.tsx',
-      startLine: 88,
-      endLine: 156,
+      path: 'packages/kernel/react/src/components/node/Node.tsx',
+      startLine: 65,
+      endLine: 130,
     },
   ]}
 />

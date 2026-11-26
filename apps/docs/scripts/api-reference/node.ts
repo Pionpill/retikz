@@ -15,22 +15,14 @@ const nodeEntries: ReadonlyArray<{ owner: string } & Omit<ApiReferenceEntry, 'so
   {
     fullMemberSymbols: ['NodeProps', 'CoordinateProps', 'TextProps'],
     owner: 'react',
-    symbols: ['Node', 'NodeProps', 'Text', 'TextProps', 'Coordinate', 'CoordinateProps'],
+    symbols: ['Node', 'NodeProps', 'Text', 'TextProps', 'NodeLabel', 'NodeLabelProps', 'Coordinate', 'CoordinateProps'],
     symbolPairs: [
       ['Node', 'NodeProps'],
       ['Text', 'TextProps'],
+      ['NodeLabel', 'NodeLabelProps'],
       ['Coordinate', 'CoordinateProps'],
     ],
     memberTypeLabels: {
-      NodeProps: {
-        aliasIds: 'Array<string>',
-        animations: 'Array<IRAnimationTrack>',
-        authoring: 'unknown',
-        layout: 'IRNodeLayout',
-        style: 'IRNodeStyle',
-        shape: 'IRShapeValue',
-        zIndex: 'number',
-      },
       TextProps: { fill: 'string | number' },
     },
   },

@@ -70,6 +70,17 @@ const view = mount(document.getElementById('diagram')!, ir);
 </DocTab>
 </DocTabs>
 
+JSX 也可用 `NodeLabel` 声明标签。配置标签排在前面，子标签按书写顺序追加；标签不参与节点正文。
+
+```tsx
+import { Node, NodeLabel } from '@retikz/react';
+
+<Node text="正文" label={{ text: 'A' }}>
+  <NodeLabel>B</NodeLabel>
+  <NodeLabel>C</NodeLabel>
+</Node>;
+```
+
 ## 添加标签
 
 `label` 接受一个对象或对象数组。先选择附着位置，再按需调整样式：

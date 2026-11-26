@@ -86,6 +86,23 @@ const view = mount(document.getElementById('diagram')!, ir);
 </DocTab>
 </DocTabs>
 
+用 `PathLabel` 标注整条路径，或用 `StepLabel` 标注单个步骤。整条路径的配置标签排在前面，子标签按书写顺序追加，不计入步骤。
+
+```tsx
+import { Draw, PathLabel } from '@retikz/react';
+
+<Draw
+  way={[
+    [0, 0],
+    [4, 0],
+  ]}
+  label={{ text: 'A' }}
+>
+  <PathLabel>B</PathLabel>
+  <PathLabel>C</PathLabel>
+</Draw>;
+```
+
 ## 选择标签范围
 
 | 写法                   | 作用范围       | 何时使用           |

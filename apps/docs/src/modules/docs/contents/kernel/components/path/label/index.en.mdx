@@ -86,6 +86,23 @@ const view = mount(document.getElementById('diagram')!, ir);
 </DocTab>
 </DocTabs>
 
+Use `PathLabel` for the whole path and `StepLabel` for one step. Configured path labels come first, followed by child labels in JSX order. Labels do not count as steps.
+
+```tsx
+import { Draw, PathLabel } from '@retikz/react';
+
+<Draw
+  way={[
+    [0, 0],
+    [4, 0],
+  ]}
+  label={{ text: 'A' }}
+>
+  <PathLabel>B</PathLabel>
+  <PathLabel>C</PathLabel>
+</Draw>;
+```
+
 ## Choose the label scope
 
 | Syntax               | Scope                        | When to use               |

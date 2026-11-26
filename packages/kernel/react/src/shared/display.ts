@@ -5,12 +5,14 @@ import type { ReactElement } from 'react';
 export const KernelDisplayName = {
   Coordinate: 'RetikzKernelCoordinate',
   Draw: 'RetikzKernelDraw',
-  EdgeLabel: 'RetikzKernelEdgeLabel',
   Layout: 'RetikzKernelLayout',
   Node: 'RetikzKernelNode',
+  NodeLabel: 'RetikzKernelNodeLabel',
   Path: 'RetikzKernelPath',
+  PathLabel: 'RetikzKernelPathLabel',
   Scope: 'RetikzKernelScope',
   Step: 'RetikzKernelStep',
+  StepLabel: 'RetikzKernelStepLabel',
   Text: 'RetikzKernelText',
 } as const;
 

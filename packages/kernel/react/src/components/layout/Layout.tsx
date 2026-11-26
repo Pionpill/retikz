@@ -1,3 +1,4 @@
+import type { RenderMode } from '@retikz/render/runtime';
 import type {
   AnyCompositeDefinition,
   AnyPathDefinition,
@@ -26,16 +27,16 @@ import { isInputScene, SceneRuntime, compileToScene } from '@retikz/vanilla';
 import type { CSSProperties, FC, ReactNode, Ref } from 'react';
 import { useCallback, useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 
-import { RetikzReactError, RetikzReactErrorCode } from '../../../error';
-import { collectHydrationHandlers } from '../../../hydration';
-import { ProcessingResultHost } from '../../../render/processing-result';
-import { usePrefersReducedMotion } from '../../../render/reduced-motion';
-import { KernelDisplayName } from '../../../shared';
-import type { ScopeStyleProps } from '../../kernel';
-import { useAnimationMode } from '../animation-mode';
-import { useRendererMode } from '../renderer-mode';
-import { mergeThemeOverlays, useTheme } from '../theme';
-import { mergeThemeDefinitions, useThemeDefinitions } from '../theme';
+import { RetikzReactError, RetikzReactErrorCode } from '../../error';
+import { collectHydrationHandlers } from '../../hydration';
+import { ProcessingResultHost } from '../../render/processing-result';
+import { usePrefersReducedMotion } from '../../render/reduced-motion';
+import { KernelDisplayName } from '../../shared';
+import type { ScopeStyleProps } from '../Scope';
+import { useAnimationMode } from './use-animation-mode';
+import { useRendererMode } from './use-renderer-mode';
+import { mergeThemeOverlays, useTheme } from './use-theme';
+import { mergeThemeDefinitions, useThemeDefinitions } from './use-theme';
 import { createInputScene } from './input-scene';
 import { pickScopeStyle, wrapRootScope } from './root-scope';
 import type { LayoutRuntimeOptions } from './runtime-options';
@@ -212,7 +213,7 @@ export type LayoutProps = {
    * 渲染后端；显式值优先，否则继承 Renderer 上下文，未提供上下文时使用 SVG
    * @default 'svg'
    */
-  renderer?: 'svg' | 'canvas';
+  renderer?: RenderMode;
   /**
    * 是否播放动画；由动画模式上下文优先决定，未指定时遵循系统减少动态效果偏好
    * @default resolveAnimationEnabled

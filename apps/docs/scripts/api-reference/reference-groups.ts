@@ -430,7 +430,7 @@ export const referenceGroups: Readonly<Partial<Record<string, ReadonlyArray<Refe
         zh: '组件声明',
         en: 'Component declarations',
       },
-      members: ['Node / NodeProps', 'Text / TextProps', 'Coordinate / CoordinateProps'],
+      members: ['Node / NodeProps', 'Text / TextProps', 'NodeLabel / NodeLabelProps', 'Coordinate / CoordinateProps'],
       schemas: [],
     },
     {
@@ -488,7 +488,13 @@ export const referenceGroups: Readonly<Partial<Record<string, ReadonlyArray<Refe
         zh: '组件声明',
         en: 'Component declarations',
       },
-      members: ['Path / PathProps', 'Draw / DrawProps', 'Step / StepProps'],
+      members: [
+        'Path / PathProps',
+        'Draw / DrawProps',
+        'Step / StepProps',
+        'StepLabel / StepLabelProps',
+        'PathLabel / PathLabelProps',
+      ],
       schemas: [],
     },
     {

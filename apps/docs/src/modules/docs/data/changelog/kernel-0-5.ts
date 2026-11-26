@@ -1210,6 +1210,20 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
+          label: { zh: '路径简写由 Draw 展开', en: 'Draw expands path shorthand' },
+          content: {
+            zh: 'React Path 不再接受 way；将 <Path way={…}> 改为 <Draw way={…}>，或在 Path 下显式声明 Step。Vanilla 的 path({ way }) 不变。',
+            en: 'React Path no longer accepts way. Use <Draw way={…}> or declare explicit Step children inside Path. Vanilla path({ way }) is unchanged.',
+          },
+        },
+        {
+          label: { zh: 'JSX 标签组件', en: 'JSX label components' },
+          content: {
+            zh: 'EdgeLabel 更名为 StepLabel。使用 NodeLabel 和 PathLabel 可通过子元素声明多个节点或整条路径标签；它们按 JSX 顺序追加在 label 配置之后。',
+            en: 'EdgeLabel was renamed to StepLabel. Use NodeLabel and PathLabel children to append node or whole-path labels after the label prop in JSX order.',
+          },
+        },
+        {
           label: { zh: '移除 IR 转 JSX 接口', en: 'Removed IR-to-JSX conversion' },
           content: {
             zh: 'React 不再导出 convertIRToReactNode。已有 IR 场景可直接传给 <Layout ir={ir} /> 渲染；JSX 转 Vanilla 输入的接口保持不变。',

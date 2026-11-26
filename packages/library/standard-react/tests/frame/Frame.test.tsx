@@ -50,9 +50,7 @@ describe('<Frame>', () => {
       headerDirection: 'vertical' as const,
       children: (
         <>
-          <FrameTitle text="Explicit title" style={{ font: { family: 'serif' } }}>
-            Ignored title
-          </FrameTitle>
+          <FrameTitle text="Explicit title" style={{ font: { family: 'serif' } }} />
           <FrameDescription layout={{ maxTextWidth: 220 }}>One registry contract.</FrameDescription>
           <Node position={[0, 0]} text="A" />
         </>

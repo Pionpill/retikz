@@ -16,11 +16,16 @@ export type FrameProps = Omit<InputFrameConfig, 'children' | 'title' | 'descript
   children: ReactNode;
 };
 
+/** 按正文来源分支移除标题不使用的位置与事件字段 */
+type FrameHeaderProps<TNode extends NodeProps> = TNode extends NodeProps
+  ? Omit<TNode, 'position' | keyof HydrationEventProps>
+  : never;
+
 /** Frame 主标题接受的 JSON-safe Node authoring 字段 */
-export type FrameTitleProps = Omit<NodeProps, 'position' | keyof HydrationEventProps>;
+export type FrameTitleProps = FrameHeaderProps<NodeProps>;
 
 /** Frame 辅助说明接受的 JSON-safe Node authoring 字段 */
-export type FrameDescriptionProps = Omit<NodeProps, 'position' | keyof HydrationEventProps>;
+export type FrameDescriptionProps = FrameHeaderProps<NodeProps>;
 
 type FrameParts = {
   body: Array<ReactNode>;

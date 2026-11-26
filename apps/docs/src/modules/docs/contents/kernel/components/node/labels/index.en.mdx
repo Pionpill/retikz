@@ -70,6 +70,17 @@ const view = mount(document.getElementById('diagram')!, ir);
 </DocTab>
 </DocTabs>
 
+Use `NodeLabel` children to declare additional labels in JSX. Configured labels come first, followed by child labels in JSX order. Labels do not contribute to the body text.
+
+```tsx
+import { Node, NodeLabel } from '@retikz/react';
+
+<Node text="body" label={{ text: 'A' }}>
+  <NodeLabel>B</NodeLabel>
+  <NodeLabel>C</NodeLabel>
+</Node>;
+```
+
 ## Adding labels
 
 `label` accepts one object or an array. Choose the attachment point, then adjust its style:

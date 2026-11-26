@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { Node } from '../../../src/components/kernel';
+import { Node } from '../../../src/components';
 import { normalizeReactInput } from '../../helpers/normalize-input';
 
 describe('Node 可选位置', () => {

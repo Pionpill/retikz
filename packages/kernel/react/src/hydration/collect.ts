@@ -76,6 +76,7 @@ const visit = (registry: Map<string, ElementHandlers>, children: ReactNode): voi
         visit(registry, props.children as ReactNode);
         return;
       case KernelDisplayName.Node:
+      case KernelDisplayName.Draw:
       case KernelDisplayName.Path:
       case KernelDisplayName.Coordinate:
         // Kernel 叶子：children 是 Step / Text / Label，无事件挂点，不递归。

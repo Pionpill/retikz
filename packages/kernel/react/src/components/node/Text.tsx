@@ -1,4 +1,5 @@
 import type { IRLine, TextLineSchema } from '@retikz/core';
+import { pickDefined } from '@retikz/foundation';
 import type { FC } from 'react';
 import type { output } from 'zod';
 
@@ -11,21 +12,19 @@ export type TextProps = Pick<output<typeof TextLineSchema>, 'fill' | 'opacity' |
 };
 
 /**
- * Text 是 Node 内的"行级"标记组件——本身不渲染
- * @description 声明一行节点文本；与字符串内容按 JSX 顺序合并，字段只覆盖当前这一行
+ * 节点文本行
+ * @description 在节点内声明一行文字，可单独设置行样式
  */
 export const Text: FC<TextProps> = () => null;
 Text.displayName = KernelDisplayName.Text;
 
 /** 将 Text 声明的内容与样式转换为节点文本行 */
-export const textLineFromProps = (props: TextProps): IRLine => {
+export const convertTextProps = (props: TextProps): IRLine => {
   const text = String(props.children);
   if (props.fill === undefined && props.opacity === undefined && props.font === undefined) return text;
 
   return {
     text,
-    ...(props.fill === undefined ? {} : { fill: props.fill }),
-    ...(props.opacity === undefined ? {} : { opacity: props.opacity }),
-    ...(props.font === undefined ? {} : { font: props.font }),
+    ...pickDefined(props, ['fill', 'opacity', 'font']),
   };
 };

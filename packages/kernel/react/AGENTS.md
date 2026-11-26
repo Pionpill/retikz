@@ -30,16 +30,15 @@
 
 ```text
 src/index.ts            包根公开 API，不暴露内部转换函数
-components/kernel/      每个图元一个组件文件，同文件定义 Props、组件和局部转换函数
-components/sugar/       用 Kernel JSX 表达的作者简写
-components/container/   Layout、场景收集，以及 Provider 与各自的 context
+components/             简单图元直接放在根目录；node/、path/ 汇总各自的图元、步骤和标签
+components/layout/      Layout、场景收集与根作用域；每组 hook、Provider 与 context 同放一个 use-*.tsx 文件
 hydration/              React 事件 props、事件名映射与 handler 收集
 render/                 SVG / Canvas 宿主与 processing result 映射
 shared/                 跨模块共享的组件展示名与嵌入协议
 ```
 
-- `components/kernel/index.ts` 汇总组件、Props 和内部 adapter；包根只公开声明与已有公开入口，不导出图元 adapter。
-- 图元 adapter 只转换当前元素，可接收步骤序号信息或已收集的子项，不依赖 Layout、runtime 或 renderer。整棵场景的遍历、嵌入上下文及图元分派归 `components/container/layout`。
+- 组件家族的 `index.ts` 汇总同组组件与内部 adapter，`components/index.ts` 精选公共导出；包根只公开声明与已有公开入口，不导出图元 adapter。
+- 图元 adapter 只转换当前元素，可接收步骤序号信息或已收集的子项，不依赖 Layout、runtime 或 renderer。整棵场景的遍历、嵌入上下文及图元分派归 `components/layout`。
 - Sugar 可以依赖 Kernel，Kernel 不依赖 Sugar 实现；`render` 不依赖容器，不创建编译会话。
 
 ## Kernel 组件

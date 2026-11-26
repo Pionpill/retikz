@@ -8,7 +8,7 @@ import { describe, expect, it } from 'vitest';
 import { literal, string } from 'zod';
 
 import { Layout } from '../../../src';
-import { createInputScene } from '../../../src/components/container/layout';
+import { createInputScene } from '../../../src/components/layout';
 import { collectHydrationHandlers } from '../../../src/hydration';
 
 /**

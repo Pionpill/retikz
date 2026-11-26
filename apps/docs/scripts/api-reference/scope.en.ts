@@ -33,8 +33,7 @@ const translations: Readonly<Partial<Record<string, string>>> = {
     'Whether to create a local namespace; when true, child ids are hidden from outer scopes',
   '通过 id 引用整组图元时使用的包络形状；支持矩形或圆形，默认使用轴对齐矩形包络':
     'Envelope shape used when referencing the group by id; supports rectangles or circles and defaults to an axis-aligned rectangle',
-  '将子图元组合为作用域，统一设置样式、变换、定位与裁剪':
-    'Group child elements into a scope with shared styling, transforms, placement, and clipping',
+  局部作用域: 'Local scope',
   '为一组图元设置局部样式、命名空间、变换、裁剪和引用包络':
     'Configure local styles, namespaces, transforms, clipping, and reference bounds for a group of elements',
 
@@ -60,8 +59,7 @@ const translations: Readonly<Partial<Record<string, string>>> = {
     'Supports translate, polar-translate, at-translate, offset-translate, between-translate, rotate, and scale',
   'Scope 容器组件——TikZ `\\begin{scope}[...]...\\end{scope}` 同义':
     'Scope container, equivalent to TikZ `\\begin{scope}[...]...\\end{scope}`',
-  '给一组节点 / 路径提供局部样式、命名空间、原点或锚点定位、局部变换、裁剪和引用包络':
-    'Provides local styles, namespaces, origin or anchor positioning, local transforms, clipping, and reference bounds for a group of nodes and paths',
+  '为一组子图元设置共同的样式、变换和裁剪': 'Groups child elements under shared styles, transforms, and clipping',
   '—': '—',
   '': '',
   '级联样式子集（graphic state + 四通道 every-X）抽到共享 ScopeStyleProps，与 `<Layout>` 复用；\n  本类型额外带容器 / 命名空间 / 局部变换 / 屏障 / 栈序 / 裁剪等 scope 专属字段':

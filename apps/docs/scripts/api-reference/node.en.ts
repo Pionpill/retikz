@@ -1,9 +1,14 @@
 /** 经审阅的节点 API 英文说明，代码标识符保持原样 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  声明附着于节点的标签: 'Declares a label attached to the node',
+  'Node 标签的内容和外观': 'Node label content and appearance',
+  标签正文: 'Label content',
+  '声明一个带位置、文本、形状和样式的可引用节点': 'Declares a referenceable node with position, text, shape, and style',
+  绘图节点: 'Drawing node',
   '创建节点时传给 node 的选项': 'Options accepted by node',
   '创建命名坐标时传给 coordinate 的选项': 'Options accepted by coordinate',
-  '节点文字或带样式的 Text 子元素；显式 text 优先':
-    'Node text or styled Text children; an explicit text prop takes precedence',
+  '节点文字或带样式的 Text 子元素，可混排 NodeLabel；无正文时可省略':
+    'Node text or styled Text children, optionally mixed with NodeLabel elements. Omit for a node without body text',
   形状包围内容所需的未旋转外接盒几何: 'Unrotated bounding-box geometry required for a shape to enclose its content',
   '根据包含 padding 的内容半轴和 params，计算完整形状的未旋转外接盒半轴及中心偏移':
     'Compute the unrotated bounding-box half-axes and center offset of the complete shape from the content half-axes including padding and the shape parameters',
@@ -98,16 +103,11 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   '行级字体覆盖；缺省字段继承 Node 的 `font` 块级值':
     'Per-line font overrides; missing fields inherit the Node block font',
   '行级透明度 0~1；不填走 Node 块级默认': 'Per-line opacity from 0 to 1; inherits the Node block default when omitted',
-  '命名坐标点——TikZ `\\coordinate (id) at (x, y);` 同义':
-    'Coordinate placeholder, equivalent to TikZ `\\coordinate (id) at (x, y);`',
+  命名坐标点: 'Named coordinate',
   '命名一个可引用的点，供后续 path 与其它 node 的 `at.of` 使用；自身不渲染、不参与 viewBox 扩展':
     'Names a referenceable point for paths and other node positions; emits no visible output and does not enlarge the viewBox',
-  'Node 声明一个可引用的节点': 'Node declares a referenceable node',
-  '声明一个带位置、文本、形状和样式的可引用节点；组件自身不渲染 DOM，最终由 `<Layout>` 输出到\n  SVG 或 Canvas':
-    'Declares a referenceable node with position, text, shape, and style. The component itself creates no DOM; `<Layout>` renders it to SVG or Canvas',
-  'Text 是 Node 内的"行级"标记组件——本身不渲染': 'Text is a line marker inside Node and does not render independently',
-  '声明一行节点文本；与字符串内容按 JSX 顺序合并，字段只覆盖当前这一行':
-    'Declares one text line, combined with strings in JSX order; overrides apply only to this line',
+  节点文本行: 'Node text line',
+  '在节点内声明一行文字，可单独设置行样式': 'Declares a line of node text with optional line-specific styling',
   作者侧命名坐标输入: 'Authoring input for a named coordinate',
   作者侧节点输入: 'Node authoring input',
   作者侧节点标签: 'Node label authoring input',

@@ -195,18 +195,44 @@
       }
     },
     {
-      "files": ["packages/kernel/react/src/components/kernel/*.tsx"],
+      "files": [
+        "packages/kernel/react/src/components/{Coordinate,Scope}.tsx",
+        "packages/kernel/react/src/components/node/{Node,Text}.tsx",
+        "packages/kernel/react/src/components/path/{Path,Step}.tsx"
+      ],
       "rules": {
         "react/only-export-components": [
           "error",
           {
             "allowExportNames": [
-              "inputCoordinateFromProps",
-              "inputNodeFromProps",
-              "inputPathFromProps",
-              "inputScopeFromProps",
-              "inputStepFromProps",
-              "textLineFromProps"
+              "convertCoordinateProps",
+              "convertNodeProps",
+              "convertPathProps",
+              "readPathChildren",
+              "convertScopeProps",
+              "convertStepProps",
+              "convertTextProps"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["packages/kernel/react/src/components/layout/use-*.tsx"],
+      "rules": {
+        "react/only-export-components": [
+          "error",
+          {
+            "allowExportNames": [
+              "AnimationModeContext",
+              "RendererModeContext",
+              "ThemeContext",
+              "useAnimationMode",
+              "useRendererMode",
+              "useTheme",
+              "useThemeDefinitions",
+              "mergeThemeDefinitions",
+              "mergeThemeOverlays"
             ]
           }
         ]

@@ -1,5 +1,16 @@
 /** 经核对的绘制 API 英文说明，源码标识符保持不变 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  '附加的整条路径标签，不接受额外步骤': 'Additional whole-path labels; extra steps are not accepted',
+  声明附着于整条路径的标签: 'Declares a label attached to the whole path',
+  'Path 标签的内容和外观': 'Path label content and appearance',
+  标签正文: 'Label content',
+  路径段标签: 'Path segment label',
+  '以 Step 子元素声明标签；显式 label 优先':
+    'Declares a segment label as a Step child; an explicit label takes precedence',
+  '以子文本声明路径段标签，并配置沿段位置、偏移和描边中断':
+    'Text, placement and stroke interruption for a segment label',
+  '标签文字内容；必须是字符串': 'Label text; must be a string',
+  路径步骤属性: 'Path step props',
   '显式圆心目标，省略时沿用 Core 弧段的圆心推导语义': 'Explicit arc center; omit it to let Core infer the center',
   '仅决定指定轴分量的目标，可使用目标标识字符串简写':
     'Target for the selected axis only; accepts a target reference string',
@@ -103,10 +114,9 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   标记定义生成局部图元所需的宿主上下文: 'Host context for emitting mark-local primitives',
   宿主路径的有效描边: 'Effective host path stroke',
   编译坐标精度取整: 'Round coordinates to compile precision',
-  "十三种 kind：'move'（首步默认） / 'line'（后续步骤默认） / 'axis-line'（单轴投影连接） / 'fold'（折角） / 'cycle'（闭合） / 'curve'（二次贝塞尔） / 'cubic'（三次贝塞尔） / 'bend'（弧形简记） / 'arc'（圆 / 椭圆弧段） / 'circlePath'（整圆 / 部分圆） / 'ellipsePath'（整椭圆 / 部分椭圆） / 'rectangle'（矩形） / 'smooth'（过点平滑曲线）。除 'move' / 'cycle' / 'rectangle' 外均可挂 `label?: IRStepLabel`，等价于 sugar `<EdgeLabel>` child（prop 优先）；'smooth' 用 `points` 而非 `to`。每个 kind 有对应 named type export，便于 wrapper / forwardRef / `Pick<>` 派生":
-    "Thirteen kinds: 'move' (first step default), 'line' (subsequent step default), 'axis-line' (single-axis projection), 'fold', 'cycle', 'curve' (quadratic Bézier), 'cubic', 'bend', 'arc', 'circlePath', 'ellipsePath', 'rectangle', and 'smooth'. All except 'move', 'cycle', and 'rectangle' accept `label?: IRStepLabel`, equivalent to an `<EdgeLabel>` child with the prop taking precedence. 'smooth' uses `points` instead of `to`. Named types for each kind support wrappers and derived props",
-  '声明路径中的一个动作，例如移动、连线、曲线、圆弧或闭合':
-    'Declare a path action such as moving, drawing a line or curve, drawing an arc, or closing a subpath',
+  'kind 决定可用字段；省略时首步为 move，后续为 line':
+    'The kind determines the available fields; when omitted, the first step is a move and later steps are lines',
+  '声明移动、连线或闭合等路径动作': 'Declares a path action such as moving, drawing a segment, or closing a subpath',
   '有效描边；实心定义默认无轮廓，空心定义缺少主色时继承宿主描边':
     'Effective stroke; filled definitions have no outline by default, while hollow definitions without a master color inherit the host stroke',
   '原定义对象，保留路径和产物类型，不复制或修改输入':
@@ -201,8 +211,8 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   保留配置字段的路径作者输入: 'Path authoring input preserving the configuration fields',
 
   '椭圆的 x、y 轴半径': 'Ellipse radii on the x and y axes',
-  '用步骤或路径简写声明路径，并设置样式、箭头与交互':
-    'Declare a path with steps or shorthand, and configure its style, arrows, and interactions',
+  '用子步骤声明路径，并设置样式、箭头与交互':
+    'Declare a path with child steps and configure its style, arrows, and interactions',
   '路径定义，省略时使用内置 stroke；自定义种类通过 Layout.extensions.paths 注册':
     'Path; defaults to built-in stroke. Register custom kinds through Layout.extensions.paths',
   '所选路径定义的 JSON 参数；内置 stroke 不接受此字段':
@@ -271,6 +281,7 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   折线拐角几何圆角半径: 'Geometric rounding radius at polyline corners',
   '实例视觉覆盖，逐字段覆盖继承默认值': 'Instance visual overrides, replacing inherited defaults field by field',
   'TikZ 风格的路径走向简写': 'TikZ-style route shorthand',
+  路径走向简写: 'Route shorthand',
   '同层 stack 顺序': 'Stack order among siblings',
   'EllipsePath action：以游标为圆心绘制椭圆；无角度=整椭圆（画完回圆心），带角度=部分椭圆':
     'EllipsePath action: draw around the cursor; without angles, draw a full ellipse and return to its center; with angles, draw a partial ellipse',
@@ -285,10 +296,10 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   '`-|` / `|-` 使用一个转折点；`-|-` / `|-|` 使用两个转折点，并可用归一化 `fraction` 调整中间腿位置':
     '`-|` and `|-` use one turn; `-|-` and `|-|` use two turns, with normalized `fraction` controlling the middle leg',
   'Line action：从当前游标到目标点画直线': 'Line action: draw from the cursor to a target',
-  'sugar 形态：`<Step><EdgeLabel>...</EdgeLabel></Step>`；其它 children 静默忽略':
-    'Sugar form: `<Step><EdgeLabel>...</EdgeLabel></Step>`; other children are silently ignored',
+  'sugar 形态：`<Step><StepLabel>...</StepLabel></Step>`；其它 children 静默忽略':
+    'Sugar form: `<Step><StepLabel>...</StepLabel></Step>`; other children are silently ignored',
   '省略时，首个步骤为 move，后续步骤为 line': 'When omitted, the first step is a move and subsequent steps are lines',
-  '边标注，等价于 sugar `<EdgeLabel>` child': 'Edge label, equivalent to a sugar `<EdgeLabel>` child',
+  '边标注，等价于 sugar `<StepLabel>` child': 'Edge label, equivalent to a sugar `<StepLabel>` child',
   直线终点: 'Line endpoint',
   'Move action：移动游标但不绘制': 'Move action: move the cursor without drawing',
   '移动 step 鉴别字面量': 'Discriminant for a move step',
@@ -350,13 +361,12 @@ const translations: Readonly<Partial<Record<string, string>>> = {
     'Ordered points after the cursor; one point creates one segment, and the cursor ends at the last point',
   '切线长度乘子（TikZ `tension`）；缺省 1，<1 更紧、>1 更鼓':
     'Tangent-length multiplier (TikZ `tension`); defaults to 1, with lower values tighter and higher values more rounded',
-  'Sugar 组件，将路径 grammar 原样调度给 Vanilla': 'Sugar component forwarding path grammar to Vanilla unchanged',
-  'React 只负责 JSX sugar；`normalizePath` 是 `way` 的唯一 parser 调度位置':
-    'React only provides JSX sugar; `normalizePath` is the sole parser dispatch point for `way`',
-  'Path 用一组 `<Step>` 声明路径': 'Path declares a route using a sequence of `<Step>` elements',
-  '本组件自身不渲染 DOM；最终路径由 `<Layout>` 根据 step 序列、样式、箭头和标记输出':
-    'This component does not render DOM itself; `<Layout>` produces the final path from steps, styles, arrows, and marks',
-  'Step 是 DSL 标记组件——本身不渲染': 'Step is a DSL marker component and does not render itself',
+  路径简写: 'Path shorthand',
+  '用 way 声明整条路径': 'Declares a complete path using way',
+  绘图路径: 'Drawing path',
+  '通过子步骤描述路径，也可由自定义路径定义提供几何':
+    'Describes a path with child steps, or uses geometry supplied by a custom path definition',
+  路径步骤: 'Path step',
   作者侧路径输入: 'Authoring input for a path',
   箭头的顶层默认与端点覆盖配置: 'Top-level arrow defaults and endpoint overrides',
   箭头端点的共享与逐端放置配置: 'Shared and per-end arrow placement settings',

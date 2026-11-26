@@ -3,7 +3,7 @@ title: Text · 文本
 description: 编写节点正文、多行和行内样式，控制折行与对齐
 ---
 
-节点正文由 `text` 或 children 提供；显式 `text` 优先。多行排布由 Node 管理，React 的 `<Text>` 只为其中一整行设置样式。同一行需要多段样式时使用 `{ segments }`，不能把 Text 当成行内 span。
+节点正文可用 `text` 或 JSX 正文子元素声明，两者互斥；无正文时均可省略。标签不计入正文。多行排布由 Node 管理，React 的 `<Text>` 只为其中一整行设置样式。同一行需要多段样式时使用 `{ segments }`，不能把 Text 当成行内 span。
 
 先阅读[基础用法](/kernel/components/node/usage)，再按本页组织节点正文。
 
@@ -104,7 +104,7 @@ const view = mount(document.getElementById('diagram')!, ir);
 - 每行可覆盖 `fill` / `opacity` / `font`，也可以用 [`<Text>` 子元素](/kernel/components/node/text)表达相同结构
 - 多行内容换到不同 `shape` 后，外接边界继续遵循各形状自己的外接规则
 
-`text` prop 优先于 `children`；二者同时提供时使用 `text`。块级 `style.font` 是 `{ family?, size?, weight?, style? }`，其它通用视觉属性可在[基础用法](/kernel/components/node/usage)调整。
+块级 `style.font` 是 `{ family?, size?, weight?, style? }`，其它通用视觉属性可在[基础用法](/kernel/components/node/usage)调整。
 
 ## 行级样式
 
@@ -180,7 +180,7 @@ Text 只在 Node 中生效，每个 Text 的 children 是字符串或数字。�
         name: 'text',
         kind: 'property',
         type: 'string | Array<IRLine>',
-        description: `显式提供节点正文，优先于 \`children\`：
+        description: `显式提供节点正文，与 \`children\` 互斥：
 
 - \`string\`：普通字符串是一行；其中的 \`\\n\` 形成硬分行，也可含 \`$...$\` 公式 sugar
 - \`Array<IRLine>\`：多行数组至少包含一行；每项可为 \`string\`、\`{ text, fill?, opacity?, font? }\`，或 \`{ segments: Array<IRTextSegment | IRMathSegment>, fill?, opacity?, font? }\`

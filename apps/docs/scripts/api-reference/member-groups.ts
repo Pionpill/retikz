@@ -206,23 +206,6 @@ export const apiReferenceMemberGroups: Readonly<Partial<Record<string, ApiRefere
     order: ['Main', 'Geometry', 'Style', 'Animation', 'Runtime'],
     members: scopeMemberGroups,
   },
-  '@retikz/react#NodeProps': {
-    order: ['Main', 'Geometry', 'Style', 'Callbacks', 'Animation', 'Runtime'],
-    members: {
-      ...nodeMemberGroups,
-      authoring: 'Runtime',
-      children: 'Main',
-      onClick: 'Callbacks',
-      onDoubleClick: 'Callbacks',
-      onPointerDown: 'Callbacks',
-      onPointerEnter: 'Callbacks',
-      onPointerLeave: 'Callbacks',
-      onPointerMove: 'Callbacks',
-      onPointerUp: 'Callbacks',
-      onRightClick: 'Callbacks',
-      onWheel: 'Callbacks',
-    },
-  },
   '@retikz/vanilla#InputNode': {
     order: ['Main', 'Geometry', 'Style', 'Animation', 'Runtime'],
     members: { ...nodeMemberGroups, authoring: 'Runtime', type: 'Main' },

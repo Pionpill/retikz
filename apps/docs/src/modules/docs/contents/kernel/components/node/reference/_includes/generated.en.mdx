@@ -8,44 +8,68 @@ Node.position is optional and resolves to the local origin [0, 0] in Core; direc
 
 ## Component declarations
 
-#### <ApiSourceLink label={"Node"} path={"packages/kernel/react/src/components/kernel/Node.tsx"} startLine={24}>Node</ApiSourceLink> / <ApiSourceLink label={"NodeProps"} path={"packages/kernel/react/src/components/kernel/Node.tsx"} startLine={13}>NodeProps</ApiSourceLink>
+#### <ApiSourceLink label={"Node"} path={"packages/kernel/react/src/components/node/Node.tsx"} startLine={30}>Node</ApiSourceLink> / <ApiSourceLink label={"NodeProps"} path={"packages/kernel/react/src/components/node/Node.tsx"} startLine={15}>NodeProps</ApiSourceLink>
 
-Declares a referenceable node with position, text, shape, and style. The component itself creates no DOM; `<Layout>` renders it to SVG or Canvas
+Declares a referenceable node with position, text, shape, and style
 
-<DocTabs defaultValue="members">
+**Common members**
 
-<DocTab value="members" label="Members">
+<ApiTable>
 
-<ApiTable grouped>
+| Member            | Type                                                                                             | Default  | Description                                                                                                                                                  |
+| ----------------- | ------------------------------------------------------------------------------------------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `aliasIds?`       | `Array<string>`                                                                                  | —        | Aliases for the same node. They require id and must differ from it and from each other.                                                                      |
+| `animations?`     | `NodeOptions['animations']`                                                                      | —        | Carried into Scene primitives without affecting layout. Not inherited across scopes.                                                                         |
+| `authoring?`      | `unknown`                                                                                        | —        | Authoring metadata retained during normalization; excluded from Core IR                                                                                      |
+| `boundary?`       | `NodeOptions['boundary']`                                                                        | —        | Default connection surface; individual path endpoints can override it.                                                                                       |
+| `cornerRadius?`   | `number`                                                                                         | —        | Rectangle corner radius in user units. shape.params.cornerRadius takes precedence.                                                                           |
+| `id?`             | `string`                                                                                         | —        | Unique ID for referencing this node.                                                                                                                         |
+| `label?`          | `NodeOptions['label']`                                                                           | —        | Border annotations. Set text layout and styling on each label itself.                                                                                        |
+| `layout?`         | `NodeOptions['layout']`                                                                          | —        | —                                                                                                                                                            |
+| `meta?`           | `Record<string, JsonValue>`                                                                      | —        | Copied unchanged to Scene primitives; does not affect compilation.                                                                                           |
+| `onClick?`        | `HydrationHandler`                                                                               | —        | Click on this element (DOM `click`)                                                                                                                          |
+| `onDoubleClick?`  | `HydrationHandler`                                                                               | —        | Double-click on this element (DOM `dblclick`)                                                                                                                |
+| `onPointerDown?`  | `HydrationHandler`                                                                               | —        | Pointer pressed on this element (DOM `pointerdown`)                                                                                                          |
+| `onPointerEnter?` | `HydrationHandler`                                                                               | —        | Pointer enters this element, synthesized from `pointermove` and hit-ID state; moving between children does not trigger it again                              |
+| `onPointerLeave?` | `HydrationHandler`                                                                               | —        | Pointer leaves this element, synthesized from `pointermove` and hit-ID state                                                                                 |
+| `onPointerMove?`  | `HydrationHandler`                                                                               | —        | Pointer moves over this element (DOM `pointermove`)                                                                                                          |
+| `onPointerUp?`    | `HydrationHandler`                                                                               | —        | Pointer released on this element (DOM `pointerup`)                                                                                                           |
+| `onRightClick?`   | `HydrationHandler`                                                                               | —        | Context menu on this element (DOM `contextmenu`); the browser menu is not suppressed by default, so call `event.preventDefault()` in the handler when needed |
+| `onWheel?`        | `HydrationHandler`                                                                               | —        | Wheel input over this element (DOM `wheel`)                                                                                                                  |
+| `position?`       | `ZodInfer<typeof NodeSchema>['position']`                                                        | `[0, 0]` | Node center position; Core resolves an omitted value to the origin of the current local coordinate system                                                    |
+| `rotate?`         | `number`                                                                                         | —        | Rotation in degrees around the node center; positive is visually clockwise.                                                                                  |
+| `scale?`          | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; }` | —        | Scales the node and its path attachment positions.                                                                                                           |
+| `shape?`          | `NodeOptions['shape']`                                                                           | —        | Defaults to rectangle.                                                                                                                                       |
+| `style?`          | `NodeOptions['style']`                                                                           | —        | Node visual overrides; fields independently override inherited defaults.                                                                                     |
+| `zIndex?`         | `number`                                                                                         | —        | Higher values draw above siblings; ties keep source order.                                                                                                   |
 
-| Group     | Member            | Type                                                                                             | Default  | Description                                                                                                                                                  |
-| --------- | ----------------- | ------------------------------------------------------------------------------------------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Main      | `aliasIds?`       | `Array<string>`                                                                                  | —        | Aliases for the same node. They require id and must differ from it and from each other.                                                                      |
-|           | `children?`       | `ReactNode`                                                                                      | —        | Node text or styled Text children; an explicit text prop takes precedence                                                                                    |
-|           | `id?`             | `string`                                                                                         | —        | Unique ID for referencing this node.                                                                                                                         |
-|           | `label?`          | `NodeOptions['label']`                                                                           | —        | Border annotations. Set text layout and styling on each label itself.                                                                                        |
-|           | `text?`           | `NodeOptions['text']`                                                                            | —        | Text inside the node.                                                                                                                                        |
-| Geometry  | `boundary?`       | `NodeOptions['boundary']`                                                                        | —        | Default connection surface; individual path endpoints can override it.                                                                                       |
-|           | `cornerRadius?`   | `number`                                                                                         | —        | Rectangle corner radius in user units. shape.params.cornerRadius takes precedence.                                                                           |
-|           | `layout?`         | `IRNodeLayout`                                                                                   | —        | —                                                                                                                                                            |
-|           | `position?`       | `ZodInfer<typeof NodeSchema>['position']`                                                        | `[0, 0]` | Node center position; Core resolves an omitted value to the origin of the current local coordinate system                                                    |
-|           | `rotate?`         | `number`                                                                                         | —        | Rotation in degrees around the node center; positive is visually clockwise.                                                                                  |
-|           | `scale?`          | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; }` | —        | Scales the node and its path attachment positions.                                                                                                           |
-|           | `shape?`          | `IRShapeValue`                                                                                   | —        | Defaults to rectangle.                                                                                                                                       |
-| Style     | `style?`          | `IRNodeStyle`                                                                                    | —        | Node visual overrides; fields independently override inherited defaults.                                                                                     |
-|           | `zIndex?`         | `number`                                                                                         | —        | Higher values draw above siblings; ties keep source order.                                                                                                   |
-| Callbacks | `onClick?`        | `HydrationHandler`                                                                               | —        | Click on this element (DOM `click`)                                                                                                                          |
-|           | `onDoubleClick?`  | `HydrationHandler`                                                                               | —        | Double-click on this element (DOM `dblclick`)                                                                                                                |
-|           | `onPointerDown?`  | `HydrationHandler`                                                                               | —        | Pointer pressed on this element (DOM `pointerdown`)                                                                                                          |
-|           | `onPointerEnter?` | `HydrationHandler`                                                                               | —        | Pointer enters this element, synthesized from `pointermove` and hit-ID state; moving between children does not trigger it again                              |
-|           | `onPointerLeave?` | `HydrationHandler`                                                                               | —        | Pointer leaves this element, synthesized from `pointermove` and hit-ID state                                                                                 |
-|           | `onPointerMove?`  | `HydrationHandler`                                                                               | —        | Pointer moves over this element (DOM `pointermove`)                                                                                                          |
-|           | `onPointerUp?`    | `HydrationHandler`                                                                               | —        | Pointer released on this element (DOM `pointerup`)                                                                                                           |
-|           | `onRightClick?`   | `HydrationHandler`                                                                               | —        | Context menu on this element (DOM `contextmenu`); the browser menu is not suppressed by default, so call `event.preventDefault()` in the handler when needed |
-|           | `onWheel?`        | `HydrationHandler`                                                                               | —        | Wheel input over this element (DOM `wheel`)                                                                                                                  |
-| Animation | `animations?`     | `Array<IRAnimationTrack>`                                                                        | —        | Carried into Scene primitives without affecting layout. Not inherited across scopes.                                                                         |
-| Runtime   | `authoring?`      | `unknown`                                                                                        | —        | Authoring metadata retained during normalization; excluded from Core IR                                                                                      |
-|           | `meta?`           | `Record<string, JsonValue>`                                                                      | —        | Copied unchanged to Scene primitives; does not affect compilation.                                                                                           |
+</ApiTable>
+
+Common members apply to every branch; a value must also satisfy at least one branch.
+
+<DocTabs defaultValue="text">
+
+<DocTab value="text" label="Members · Text prop">
+
+<ApiTable>
+
+| Member      | Type                                          | Default | Description |
+| ----------- | --------------------------------------------- | ------- | ----------- |
+| `children?` | `ReactElement \| ReadonlyArray<ReactElement>` | —       | —           |
+| `text`      | `NonNullable<NodeOptions['text']>`            | —       | —           |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="children" label="Members · JSX children">
+
+<ApiTable>
+
+| Member      | Type        | Default | Description                                                                                                    |
+| ----------- | ----------- | ------- | -------------------------------------------------------------------------------------------------------------- |
+| `children?` | `ReactNode` | —       | Node text or styled Text children, optionally mixed with NodeLabel elements. Omit for a node without body text |
+| `text?`     | `never`     | —       | —                                                                                                              |
 
 </ApiTable>
 
@@ -56,19 +80,27 @@ Declares a referenceable node with position, text, shape, and style. The compone
 ```ts
 export declare const Node: FC<NodeProps>;
 
-export type NodeProps = NodeOptions &
-  HydrationEventProps & {
-    children?: ReactNode;
-  };
+export type NodeProps = Omit<NodeOptions, 'text'> &
+  HydrationEventProps &
+  (
+    | {
+        text: NonNullable<NodeOptions['text']>;
+        children?: ReactElement | ReadonlyArray<ReactElement>;
+      }
+    | {
+        text?: never;
+        children?: ReactNode;
+      }
+  );
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"Text"} path={"packages/kernel/react/src/components/kernel/Text.tsx"} startLine={17}>Text</ApiSourceLink> / <ApiSourceLink label={"TextProps"} path={"packages/kernel/react/src/components/kernel/Text.tsx"} startLine={8}>TextProps</ApiSourceLink>
+#### <ApiSourceLink label={"Text"} path={"packages/kernel/react/src/components/node/Text.tsx"} startLine={18}>Text</ApiSourceLink> / <ApiSourceLink label={"TextProps"} path={"packages/kernel/react/src/components/node/Text.tsx"} startLine={9}>TextProps</ApiSourceLink>
 
-Declares one text line, combined with strings in JSX order; overrides apply only to this line
+Declares a line of node text with optional line-specific styling
 
 <DocTabs defaultValue="members">
 
@@ -101,7 +133,39 @@ export type TextProps = Pick<output<typeof TextLineSchema>, 'fill' | 'opacity' |
 
 </DocTabs>
 
-#### <ApiSourceLink label={"Coordinate"} path={"packages/kernel/react/src/components/kernel/Coordinate.tsx"} startLine={13}>Coordinate</ApiSourceLink> / <ApiSourceLink label={"CoordinateProps"} path={"packages/kernel/react/src/components/kernel/Coordinate.tsx"} startLine={7}>CoordinateProps</ApiSourceLink>
+#### <ApiSourceLink label={"NodeLabel"} path={"packages/kernel/react/src/components/node/NodeLabel.tsx"} startLine={13}>NodeLabel</ApiSourceLink> / <ApiSourceLink label={"NodeLabelProps"} path={"packages/kernel/react/src/components/node/NodeLabel.tsx"} startLine={7}>NodeLabelProps</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Direct members">
+
+The remaining members are inherited from `IRNodeLabel`, with `'text'` removed. See “Type definition” for the complete composition.
+
+<ApiTable>
+
+| Member     | Type                  | Default | Description   |
+| ---------- | --------------------- | ------- | ------------- |
+| `children` | `IRNodeLabel['text']` | —       | Label content |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export declare const NodeLabel: FC<NodeLabelProps>;
+
+export type NodeLabelProps = Omit<IRNodeLabel, 'text'> & {
+  children: IRNodeLabel['text'];
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"Coordinate"} path={"packages/kernel/react/src/components/Coordinate.tsx"} startLine={14}>Coordinate</ApiSourceLink> / <ApiSourceLink label={"CoordinateProps"} path={"packages/kernel/react/src/components/Coordinate.tsx"} startLine={8}>CoordinateProps</ApiSourceLink>
 
 Names a referenceable point for paths and other node positions; emits no visible output and does not enlarge the viewBox
 

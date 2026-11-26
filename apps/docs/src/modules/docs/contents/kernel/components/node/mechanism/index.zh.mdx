@@ -194,11 +194,11 @@ Map 的 key 是 `id`，value 包含 `layout` 和 `state`。`layout` 是已解析
   ]}
 />
 
-## 行归一化与优先级
+## 行归一化
 
 `<Text>` 是一个返回 `null` 的标记组件，本身不创建 DOM 或图形。只有 `<Node>` 收集 children 时会识别这个标记，并把不同 JSX 输入归一到同一份 `Node.text` 契约：
 
-例如 `<Node>A<Text fill="red">B</Text>C</Node>` 会产生三行：第一行 A、第二行红色 B、第三行 C。对应文本输入如下；若同时提供 `text="X"`，最终只采用 X。
+例如 `<Node>A<Text fill="red">B</Text>C</Node>` 会产生三行：第一行 A、第二行红色 B、第三行 C。对应文本输入如下。
 
 ```ts
 ['A', { text: 'B', fill: 'red' }, 'C'];
@@ -206,7 +206,7 @@ Map 的 key 是 `id`，value 包含 `layout` 和 `state`。`layout` 是已解析
 
 <ComponentPreview files="text-normalization" size="xs" type="flow" hideCode />
 
-显式 `text` prop 优先；只要它存在，children 就不再参与文本收集。没有 `text` prop 时，适配层按 JSX 顺序递归读取字符串、数字、数组、Fragment 与 `<Text>`：
+显式 `text` 与 JSX 正文互斥；`NodeLabel` 不计入正文。使用子元素时，适配层按 JSX 顺序递归读取字符串、数字、数组、Fragment 与 `<Text>`：
 
 | 输入            | 归一规则                                     | `Node.text` 结果 |
 | --------------- | -------------------------------------------- | ---------------- |
@@ -220,15 +220,15 @@ Map 的 key 是 `id`，value 包含 `layout` 和 `state`。`layout` 是已解析
   sources={[
     {
       label: 'Text 标记组件',
-      path: 'packages/kernel/react/src/components/kernel/Text.tsx',
-      startLine: 13,
-      endLine: 18,
+      path: 'packages/kernel/react/src/components/node/Text.tsx',
+      startLine: 14,
+      endLine: 19,
     },
     {
       label: 'Node children 行归一化',
-      path: 'packages/kernel/react/src/components/kernel/Node.tsx',
-      startLine: 88,
-      endLine: 156,
+      path: 'packages/kernel/react/src/components/node/Node.tsx',
+      startLine: 65,
+      endLine: 130,
     },
   ]}
 />

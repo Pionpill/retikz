@@ -6,9 +6,9 @@ Vanilla normalizes `way` into steps. `arrow` and `marks` share the same structur
 
 ## Component declarations
 
-#### <ApiSourceLink label={"Path"} path={"packages/kernel/react/src/components/kernel/Path.tsx"} startLine={34}>Path</ApiSourceLink> / <ApiSourceLink label={"PathProps"} path={"packages/kernel/react/src/components/kernel/Path.tsx"} startLine={14}>PathProps</ApiSourceLink>
+#### <ApiSourceLink label={"Path"} path={"packages/kernel/react/src/components/path/Path.tsx"} startLine={31}>Path</ApiSourceLink> / <ApiSourceLink label={"PathProps"} path={"packages/kernel/react/src/components/path/Path.tsx"} startLine={15}>PathProps</ApiSourceLink>
 
-This component does not render DOM itself; `<Layout>` produces the final path from steps, styles, arrows, and marks
+Describes a path with child steps, or uses geometry supplied by a custom path definition
 
 **Common members**
 
@@ -51,24 +51,8 @@ Common members apply to every branch; a value must also satisfy at least one bra
 | Member     | Type                                       | Default | Description                                                                                    |
 | ---------- | ------------------------------------------ | ------- | ---------------------------------------------------------------------------------------------- |
 | `arrow?`   | `IRPath['arrow'] \| '->' \| '<-' \| '<->'` | —       | Endpoint arrow configuration, or a direction shorthand enabling the start, end, or both arrows |
-| `children` | `Exclude<ReactNode, undefined>`            | —       | Step children collected in declaration order                                                   |
+| `children` | `Exclude<ReactNode, undefined>`            | —       | —                                                                                              |
 | `kind?`    | `string & {} \| "stroke"`                  | —       | Path provider name. Omitted means built-in `stroke`.                                           |
-| `way?`     | `never`                                    | —       | Path shorthand, mutually exclusive with JSX step children                                      |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="way" label="Members · Way shorthand">
-
-<ApiTable>
-
-| Member      | Type                                       | Default | Description                                                                                    |
-| ----------- | ------------------------------------------ | ------- | ---------------------------------------------------------------------------------------------- |
-| `arrow?`    | `IRPath['arrow'] \| '->' \| '<-' \| '<->'` | —       | Endpoint arrow configuration, or a direction shorthand enabling the start, end, or both arrows |
-| `children?` | `never`                                    | —       | Step children collected in declaration order                                                   |
-| `kind?`     | `string & {} \| "stroke"`                  | —       | Path provider name. Omitted means built-in `stroke`.                                           |
-| `way`       | `WayDSL`                                   | —       | Path shorthand, mutually exclusive with JSX step children                                      |
 
 </ApiTable>
 
@@ -78,10 +62,11 @@ Common members apply to every branch; a value must also satisfy at least one bra
 
 <ApiTable>
 
-| Member   | Type                              | Default | Description                                                                                    |
-| -------- | --------------------------------- | ------- | ---------------------------------------------------------------------------------------------- |
-| `arrow?` | `PathOptions['arrow']`            | —       | Endpoint arrow configuration, or a direction shorthand enabling the start, end, or both arrows |
-| `kind`   | `NonNullable<IRPathBase['kind']>` | —       | Path provider name. Omitted means built-in `stroke`.                                           |
+| Member      | Type                                          | Default | Description                                                                                    |
+| ----------- | --------------------------------------------- | ------- | ---------------------------------------------------------------------------------------------- |
+| `arrow?`    | `PathOptions['arrow']`                        | —       | Endpoint arrow configuration, or a direction shorthand enabling the start, end, or both arrows |
+| `children?` | `ReactElement \| ReadonlyArray<ReactElement>` | —       | —                                                                                              |
+| `kind`      | `NonNullable<IRPathBase['kind']>`             | —       | Path provider name. Omitted means built-in `stroke`.                                           |
 
 </ApiTable>
 
@@ -95,13 +80,13 @@ export declare const Path: FC<PathProps>;
 export type PathProps = Omit<PathOptions, 'way' | 'children'> &
   HydrationEventProps &
   (
-    | RequireExactlyOne<{
-        way: WayDSL;
+    | {
         children: Exclude<ReactNode, undefined>;
-      }>
+      }
     | {
         kind: NonNullable<IRPathBase['kind']>;
         arrow?: IRPathBase['arrow'];
+        children?: ReactElement | ReadonlyArray<ReactElement>;
       }
   );
 ```
@@ -110,9 +95,9 @@ export type PathProps = Omit<PathOptions, 'way' | 'children'> &
 
 </DocTabs>
 
-#### <ApiSourceLink label={"Draw"} path={"packages/kernel/react/src/components/sugar/Draw.tsx"} startLine={20}>Draw</ApiSourceLink> / <ApiSourceLink label={"DrawProps"} path={"packages/kernel/react/src/components/sugar/Draw.tsx"} startLine={9}>DrawProps</ApiSourceLink>
+#### <ApiSourceLink label={"Draw"} path={"packages/kernel/react/src/components/path/Draw.tsx"} startLine={25}>Draw</ApiSourceLink> / <ApiSourceLink label={"DrawProps"} path={"packages/kernel/react/src/components/path/Draw.tsx"} startLine={12}>DrawProps</ApiSourceLink>
 
-React only provides JSX sugar; `normalizePath` is the sole parser dispatch point for `way`
+Declares a complete path using way
 
 <DocTabs defaultValue="members">
 
@@ -120,14 +105,33 @@ React only provides JSX sugar; `normalizePath` is the sole parser dispatch point
 
 <ApiTable>
 
-| Member                   | Type                 | Default | Description                                                                                                                                           |
-| ------------------------ | -------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `readonly arrow?`        | `PathProps['arrow']` | —       | Endpoint arrow configuration, or a direction shorthand enabling the start, end, or both arrows                                                        |
-| `readonly cornerRadius?` | `number`             | —       | Geometric corner radius applied to line-to-line joints. Distinct from `lineJoin`, which only styles stroke corners. Omitted fields keep sharp joints. |
-| `readonly marks?`        | `PathProps['marks']` | —       | Marks placed by step parameters or cumulative length on original or rounded geometry; direction follows the path tangent.                             |
-| `readonly style?`        | `PathProps['style']` | —       | Path visual overrides; fields independently override inherited defaults.                                                                              |
-| `readonly way`           | `WayDSL`             | —       | TikZ-style route shorthand                                                                                                                            |
-| `readonly zIndex?`       | `number`             | —       | Sibling stacking order. Higher draws on top; ties keep source order. Defaults to 0.                                                                   |
+| Member                     | Type                                          | Default | Description                                                                                                                                           |
+| -------------------------- | --------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `readonly animations?`     | `PathProps['animations']`                     | —       | Passed to emitted primitives without affecting layout or bounds. Not inherited across scopes.                                                         |
+| `readonly arrow?`          | `PathProps['arrow']`                          | —       | Endpoint arrow configuration, or a direction shorthand enabling the start, end, or both arrows                                                        |
+| `readonly authoring?`      | `unknown`                                     | —       | Authoring metadata retained during normalization; excluded from Core IR                                                                               |
+| `readonly children?`       | `ReactElement \| ReadonlyArray<ReactElement>` | —       | Additional whole-path labels; extra steps are not accepted                                                                                            |
+| `readonly cornerRadius?`   | `number`                                      | —       | Geometric corner radius applied to line-to-line joints. Distinct from `lineJoin`, which only styles stroke corners. Omitted fields keep sharp joints. |
+| `readonly id?`             | `string`                                      | —       | Stable reference ID for the emitted primitive.                                                                                                        |
+| `readonly kind?`           | `string \| string & {}`                       | —       | Path provider name. Omitted means built-in `stroke`.                                                                                                  |
+| `readonly kindOptions?`    | `Record<string, JsonValue>`                   | —       | JSON-safe option object consumed by the selected path provider.                                                                                       |
+| `readonly label?`          | `PathProps['label']`                          | —       | Host label attached to this path-like relation.                                                                                                       |
+| `readonly marks?`          | `PathProps['marks']`                          | —       | Marks placed by step parameters or cumulative length on original or rounded geometry; direction follows the path tangent.                             |
+| `readonly meta?`           | `Record<string, JsonValue>`                   | —       | Copied unchanged to Scene primitives without affecting compilation.                                                                                   |
+| `readonly onClick?`        | `HydrationHandler`                            | —       | Click on this element (DOM `click`)                                                                                                                   |
+| `readonly onDoubleClick?`  | `HydrationHandler`                            | —       | Double-click on this element (DOM `dblclick`)                                                                                                         |
+| `readonly onPointerDown?`  | `HydrationHandler`                            | —       | Pointer pressed on this element (DOM `pointerdown`)                                                                                                   |
+| `readonly onPointerEnter?` | `HydrationHandler`                            | —       | Pointer enters this element, synthesized from `pointermove` and hit-ID state; moving between children does not trigger it again                       |
+| `readonly onPointerLeave?` | `HydrationHandler`                            | —       | Pointer leaves this element, synthesized from `pointermove` and hit-ID state                                                                          |
+| `readonly onPointerMove?`  | `HydrationHandler`                            | —       | Pointer moves over this element (DOM `pointermove`)                                                                                                   |
+| `readonly onPointerUp?`    | `HydrationHandler`                            | —       | Pointer released on this element (DOM `pointerup`)                                                                                                    |
+| `readonly onRightClick?`   | `HydrationHandler`                            | —       | Context menu on this element (DOM `contextmenu`); call `event.preventDefault()` in the handler to suppress the browser menu                           |
+| `readonly onWheel?`        | `HydrationHandler`                            | —       | Wheel input over this element (DOM `wheel`)                                                                                                           |
+| `readonly rotate?`         | `number`                                      | —       | Rotate the whole path around its bounding-box center. Endpoints resolve before rotation wraps the resulting geometry.                                 |
+| `readonly scale?`          | `number \| { x: number; y: number; }`         | —       | Scale the whole path around its bounding-box center. Applied with rotate around the same center.                                                      |
+| `readonly style?`          | `PathProps['style']`                          | —       | Path visual overrides; fields independently override inherited defaults.                                                                              |
+| `readonly way`             | `WayDSL`                                      | —       | Route shorthand                                                                                                                                       |
+| `readonly zIndex?`         | `number`                                      | —       | Sibling stacking order. Higher draws on top; ties keep source order. Defaults to 0.                                                                   |
 
 </ApiTable>
 
@@ -139,8 +143,9 @@ React only provides JSX sugar; `normalizePath` is the sole parser dispatch point
 export declare const Draw: FC<DrawProps>;
 
 export type DrawProps = Readonly<
-  Pick<PathProps, 'style' | 'cornerRadius' | 'arrow' | 'marks' | 'zIndex'> & {
+  Omit<PathProps, 'children'> & {
     way: WayDSL;
+    children?: ReactElement | ReadonlyArray<ReactElement>;
   }
 >;
 ```
@@ -149,11 +154,11 @@ export type DrawProps = Readonly<
 
 </DocTabs>
 
-#### <ApiSourceLink label={"Step"} path={"packages/kernel/react/src/components/kernel/Step.tsx"} startLine={113}>Step</ApiSourceLink> / <ApiSourceLink label={"StepProps"} path={"packages/kernel/react/src/components/kernel/Step.tsx"} startLine={94}>StepProps</ApiSourceLink>
+#### <ApiSourceLink label={"Step"} path={"packages/kernel/react/src/components/path/Step.tsx"} startLine={115}>Step</ApiSourceLink> / <ApiSourceLink label={"StepProps"} path={"packages/kernel/react/src/components/path/Step.tsx"} startLine={96}>StepProps</ApiSourceLink>
 
-Declare a path action such as moving, drawing a line or curve, drawing an arc, or closing a subpath
+Declares a path action such as moving, drawing a segment, or closing a subpath
 
-Thirteen kinds: 'move' (first step default), 'line' (subsequent step default), 'axis-line' (single-axis projection), 'fold', 'cycle', 'curve' (quadratic Bézier), 'cubic', 'bend', 'arc', 'circlePath', 'ellipsePath', 'rectangle', and 'smooth'. All except 'move', 'cycle', and 'rectangle' accept `label?: IRStepLabel`, equivalent to an `<EdgeLabel>` child with the prop taking precedence. 'smooth' uses `points` instead of `to`. Named types for each kind support wrappers and derived props
+The kind determines the available fields; when omitted, the first step is a move and later steps are lines
 
 ```ts
 export declare const Step: FC<StepProps>;
@@ -174,9 +179,77 @@ export type StepProps =
   | SmoothStepProps;
 ```
 
+#### <ApiSourceLink label={"StepLabel"} path={"packages/kernel/react/src/components/path/StepLabel.tsx"} startLine={16}>StepLabel</ApiSourceLink> / <ApiSourceLink label={"StepLabelProps"} path={"packages/kernel/react/src/components/path/StepLabel.tsx"} startLine={7}>StepLabelProps</ApiSourceLink>
+
+Declares a segment label as a Step child; an explicit label takes precedence
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member       | Type                                                                                                                 | Default | Description                                                                                                                                       |
+| ------------ | -------------------------------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `children`   | `string`                                                                                                             | —       | Label text; must be a string                                                                                                                      |
+| `interrupt?` | `false \| true`                                                                                                      | —       | Whether this label requests a gap in a compatible host stroke. Omitted values use the host policy.                                                |
+| `position?`  | `number \| "at-start" \| "very-near-start" \| "near-start" \| "midway" \| "near-end" \| "very-near-end" \| "at-end"` | —       | Normalized position within the host path or step: keyword or number. Interpreted using positionMode and positionGeometry.                         |
+| `side?`      | `"top" \| "right" \| "bottom" \| "left" \| "center"`                                                                 | —       | Side relative to the label anchor; center places text on the path independently of sloped. Omitted values use top, or center when sloped is true. |
+| `sloped?`    | `false \| true`                                                                                                      | —       | Rotate along the sampled tangent.                                                                                                                 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export declare const StepLabel: FC<StepLabelProps>;
+
+export type StepLabelProps = Pick<IRStepLabel, 'position' | 'side' | 'sloped' | 'interrupt'> & {
+  children: string;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"PathLabel"} path={"packages/kernel/react/src/components/path/PathLabel.tsx"} startLine={13}>PathLabel</ApiSourceLink> / <ApiSourceLink label={"PathLabelProps"} path={"packages/kernel/react/src/components/path/PathLabel.tsx"} startLine={7}>PathLabelProps</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Direct members">
+
+The remaining members are inherited from `IRPathLabel`, with `'text'` removed. See “Type definition” for the complete composition.
+
+<ApiTable>
+
+| Member     | Type                  | Default | Description   |
+| ---------- | --------------------- | ------- | ------------- |
+| `children` | `IRPathLabel['text']` | —       | Label content |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export declare const PathLabel: FC<PathLabelProps>;
+
+export type PathLabelProps = Omit<IRPathLabel, 'text'> & {
+  children: IRPathLabel['text'];
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
 ## Execution and supporting contracts
 
-#### <ApiSourceLink label={"ArcStepProps"} path={"packages/kernel/react/src/components/kernel/Step.tsx"} startLine={70}>ArcStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"ArcStepProps"} path={"packages/kernel/react/src/components/path/Step.tsx"} startLine={71}>ArcStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -208,7 +281,7 @@ export type ArcStepProps = StepFields<InputArcStep> & StepLabelChildren;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"AxisLineStepProps"} path={"packages/kernel/react/src/components/kernel/Step.tsx"} startLine={45}>AxisLineStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"AxisLineStepProps"} path={"packages/kernel/react/src/components/path/Step.tsx"} startLine={46}>AxisLineStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -238,7 +311,7 @@ export type AxisLineStepProps = StepFields<InputAxisLineStep> & StepLabelChildre
 
 </DocTabs>
 
-#### <ApiSourceLink label={"BendStepProps"} path={"packages/kernel/react/src/components/kernel/Step.tsx"} startLine={67}>BendStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"BendStepProps"} path={"packages/kernel/react/src/components/path/Step.tsx"} startLine={68}>BendStepProps</ApiSourceLink>
 
 Supports symmetric bends and asymmetric bends or loops. Explicit out/in angles take precedence during compilation. With all three omitted, defaults to a symmetric left bend. When `from == to`, explicit out/in angles create a loop
 
@@ -274,7 +347,7 @@ export type BendStepProps = StepFields<InputBendStep> & StepLabelChildren;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"CirclePathStepProps"} path={"packages/kernel/react/src/components/kernel/Step.tsx"} startLine={73}>CirclePathStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"CirclePathStepProps"} path={"packages/kernel/react/src/components/path/Step.tsx"} startLine={74}>CirclePathStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -306,7 +379,7 @@ export type CirclePathStepProps = StepFields<IRCirclePathStep> & StepLabelChildr
 
 </DocTabs>
 
-#### <ApiSourceLink label={"CubicStepProps"} path={"packages/kernel/react/src/components/kernel/Step.tsx"} startLine={60}>CubicStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"CubicStepProps"} path={"packages/kernel/react/src/components/path/Step.tsx"} startLine={61}>CubicStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -337,7 +410,7 @@ export type CubicStepProps = StepFields<InputCubicStep> & StepLabelChildren;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"CurveStepProps"} path={"packages/kernel/react/src/components/kernel/Step.tsx"} startLine={57}>CurveStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"CurveStepProps"} path={"packages/kernel/react/src/components/path/Step.tsx"} startLine={58}>CurveStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -367,7 +440,7 @@ export type CurveStepProps = StepFields<InputCurveStep> & StepLabelChildren;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"CycleStepProps"} path={"packages/kernel/react/src/components/kernel/Step.tsx"} startLine={54}>CycleStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"CycleStepProps"} path={"packages/kernel/react/src/components/path/Step.tsx"} startLine={55}>CycleStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -400,7 +473,7 @@ export type CycleStepProps = StepFields<
 
 </DocTabs>
 
-#### <ApiSourceLink label={"EllipsePathStepProps"} path={"packages/kernel/react/src/components/kernel/Step.tsx"} startLine={76}>EllipsePathStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"EllipsePathStepProps"} path={"packages/kernel/react/src/components/path/Step.tsx"} startLine={77}>EllipsePathStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -432,7 +505,7 @@ export type EllipsePathStepProps = StepFields<IREllipsePathStep> & StepLabelChil
 
 </DocTabs>
 
-#### <ApiSourceLink label={"FoldStepProps"} path={"packages/kernel/react/src/components/kernel/Step.tsx"} startLine={51}>FoldStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"FoldStepProps"} path={"packages/kernel/react/src/components/path/Step.tsx"} startLine={52}>FoldStepProps</ApiSourceLink>
 
 `-|` and `|-` use one turn; `-|-` and `|-|` use two turns, with normalized `fraction` controlling the middle leg
 
@@ -488,7 +561,7 @@ export type FoldStepProps = StepFields<InputFoldStep> & StepLabelChildren;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"LineStepProps"} path={"packages/kernel/react/src/components/kernel/Step.tsx"} startLine={40}>LineStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"LineStepProps"} path={"packages/kernel/react/src/components/path/Step.tsx"} startLine={41}>LineStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -519,7 +592,7 @@ export type LineStepProps = Omit<InputLineStep, 'type' | 'kind'> &
 
 </DocTabs>
 
-#### <ApiSourceLink label={"MoveStepProps"} path={"packages/kernel/react/src/components/kernel/Step.tsx"} startLine={37}>MoveStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"MoveStepProps"} path={"packages/kernel/react/src/components/path/Step.tsx"} startLine={38}>MoveStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -546,7 +619,7 @@ export type MoveStepProps = StepFields<InputMoveStep>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"RectangleStepProps"} path={"packages/kernel/react/src/components/kernel/Step.tsx"} startLine={79}>RectangleStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"RectangleStepProps"} path={"packages/kernel/react/src/components/path/Step.tsx"} startLine={80}>RectangleStepProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -575,7 +648,7 @@ export type RectangleStepProps = StepFields<InputRectangleStep>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"SmoothStepProps"} path={"packages/kernel/react/src/components/kernel/Step.tsx"} startLine={86}>SmoothStepProps</ApiSourceLink>
+#### <ApiSourceLink label={"SmoothStepProps"} path={"packages/kernel/react/src/components/path/Step.tsx"} startLine={87}>SmoothStepProps</ApiSourceLink>
 
 The cursor is the implicit first knot; the curve passes through each entry in `points`, using centripetal Catmull–Rom converted to cubics. A preceding step must set the cursor, which ends at the last point. `tension` defaults to 1; values below 1 tighten the curve and values above 1 increase the bulge
 

@@ -25,7 +25,7 @@ const PathLabelInterval: FC<PathLabelIntervalProps> = props => {
           </Path>
           {index === 0 ? (
             <>
-              <Path
+              <Draw
                 way={[
                   [45, -50],
                   [145, -50],
@@ -45,7 +45,7 @@ const PathLabelInterval: FC<PathLabelIntervalProps> = props => {
                 style={{ stroke: 'gray', dashPattern: [1, 4], lineCap: 'round' }}
               />
               <Node position={cutCenter} text="label" style={{ stroke: 'none', font: { size: 13 } }} />
-              <Path
+              <Draw
                 way={[
                   [66, -65],
                   [114, -65],
@@ -76,7 +76,7 @@ const PathLabelInterval: FC<PathLabelIntervalProps> = props => {
           )}
         </Scope>
       ))}
-      <Path
+      <Draw
         way={[
           [0, 110],
           [600, 110],
@@ -84,7 +84,7 @@ const PathLabelInterval: FC<PathLabelIntervalProps> = props => {
         arrow="->"
         label={{ text: t.distance, side: 'bottom', distance: 55, textColor: 'gray', font: { size: 12 } }}
       />
-      <Path
+      <Draw
         way={[
           [(cutStart / cutLength) * 560, 110],
           [(cutEnd / cutLength) * 560, 110],

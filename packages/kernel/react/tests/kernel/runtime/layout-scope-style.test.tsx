@@ -5,10 +5,10 @@ import type { ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { Draw, EdgeLabel, Layout, Node, Scope, Step } from '../../../src';
+import { Draw, StepLabel, Layout, Node, Scope, Step } from '../../../src';
 import { Path } from '../../../src';
 import type { ScopeStyleProps } from '../../../src';
-import { wrapRootScope } from '../../../src/components/container/layout';
+import { wrapRootScope } from '../../../src/components/layout';
 
 /**
  * <Layout> 顶层级联样式 props 测试（隐式根 Scope）
@@ -194,7 +194,7 @@ describe('Happy：Layout 级联样式 → 子图元继承', () => {
         <Path>
           <Step kind="move" to="a" />
           <Step kind="line" to="b">
-            <EdgeLabel>e</EdgeLabel>
+            <StepLabel>e</StepLabel>
           </Step>
         </Path>
       </>,

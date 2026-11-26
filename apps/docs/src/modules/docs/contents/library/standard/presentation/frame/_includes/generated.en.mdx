@@ -2,7 +2,7 @@
 
 **Component declarations**
 
-#### <ApiSourceLink label={"Frame"} path={"packages/library/standard-react/src/presentation/frame/Frame.tsx"} startLine={137}>Frame</ApiSourceLink> / <ApiSourceLink label={"FrameProps"} path={"packages/library/standard-react/src/presentation/frame/Frame.tsx"} startLine={14}>FrameProps</ApiSourceLink>
+#### <ApiSourceLink label={"Frame"} path={"packages/library/standard-react/src/presentation/frame/Frame.tsx"} startLine={142}>Frame</ApiSourceLink> / <ApiSourceLink label={"FrameProps"} path={"packages/library/standard-react/src/presentation/frame/Frame.tsx"} startLine={14}>FrameProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -36,25 +36,143 @@ export type FrameProps = Omit<InputFrameConfig, 'children' | 'title' | 'descript
 
 </DocTabs>
 
-#### <ApiSourceLink label={"FrameTitle"} path={"packages/library/standard-react/src/presentation/frame/Frame.tsx"} startLine={145}>FrameTitle</ApiSourceLink> / <ApiSourceLink label={"FrameTitleProps"} path={"packages/library/standard-react/src/presentation/frame/Frame.tsx"} startLine={20}>FrameTitleProps</ApiSourceLink>
+#### <ApiSourceLink label={"FrameTitle"} path={"packages/library/standard-react/src/presentation/frame/Frame.tsx"} startLine={150}>FrameTitle</ApiSourceLink> / <ApiSourceLink label={"FrameTitleProps"} path={"packages/library/standard-react/src/presentation/frame/Frame.tsx"} startLine={25}>FrameTitleProps</ApiSourceLink>
+
+**Common members**
+
+<ApiTable>
+
+| Member          | Type                                                                                             | Default | Description                                                                             |
+| --------------- | ------------------------------------------------------------------------------------------------ | ------- | --------------------------------------------------------------------------------------- |
+| `aliasIds?`     | `Array<string>`                                                                                  | —       | Aliases for the same node. They require id and must differ from it and from each other. |
+| `animations?`   | `FrameTitleProps["animations"]`                                                                  | —       | Carried into Scene primitives without affecting layout. Not inherited across scopes.    |
+| `authoring?`    | `unknown`                                                                                        | —       | Authoring metadata retained during normalization; excluded from Core IR                 |
+| `boundary?`     | `FrameTitleProps["boundary"]`                                                                    | —       | Default connection surface; individual path endpoints can override it.                  |
+| `cornerRadius?` | `number`                                                                                         | —       | Rectangle corner radius in user units. shape.params.cornerRadius takes precedence.      |
+| `id?`           | `string`                                                                                         | —       | Unique ID for referencing this node.                                                    |
+| `label?`        | `FrameTitleProps["label"]`                                                                       | —       | Border annotations. Set text layout and styling on each label itself.                   |
+| `layout?`       | `FrameTitleProps["layout"]`                                                                      | —       | —                                                                                       |
+| `meta?`         | `Record<string, JsonValue>`                                                                      | —       | Copied unchanged to Scene primitives; does not affect compilation.                      |
+| `rotate?`       | `number`                                                                                         | —       | Rotation in degrees around the node center; positive is visually clockwise.             |
+| `scale?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; }` | —       | Scales the node and its path attachment positions.                                      |
+| `shape?`        | `FrameTitleProps["shape"]`                                                                       | —       | Defaults to rectangle.                                                                  |
+| `style?`        | `FrameTitleProps["style"]`                                                                       | —       | Node visual overrides; fields independently override inherited defaults.                |
+| `zIndex?`       | `number`                                                                                         | —       | Higher values draw above siblings; ties keep source order.                              |
+
+</ApiTable>
+
+Common members apply to every branch; a value must also satisfy at least one branch.
+
+<DocTabs defaultValue="text">
+
+<DocTab value="text" label="Members · Text prop">
+
+<ApiTable>
+
+| Member      | Type                                          | Default | Description |
+| ----------- | --------------------------------------------- | ------- | ----------- |
+| `children?` | `ReactElement \| ReadonlyArray<ReactElement>` | —       | —           |
+| `text`      | `NonNullable<NodeOptions['text']>`            | —       | —           |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="children" label="Members · JSX children">
+
+<ApiTable>
+
+| Member      | Type        | Default | Description                                                                                                    |
+| ----------- | ----------- | ------- | -------------------------------------------------------------------------------------------------------------- |
+| `children?` | `ReactNode` | —       | Node text or styled Text children, optionally mixed with NodeLabel elements. Omit for a node without body text |
+| `text?`     | `never`     | —       | —                                                                                                              |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
 
 ```ts
 export declare const FrameTitle: FC<FrameTitleProps>;
 
-export type FrameTitleProps = Omit<NodeProps, 'position' | keyof HydrationEventProps>;
+export type FrameTitleProps = FrameHeaderProps<NodeProps>;
 ```
 
-#### <ApiSourceLink label={"FrameDescription"} path={"packages/library/standard-react/src/presentation/frame/Frame.tsx"} startLine={156}>FrameDescription</ApiSourceLink> / <ApiSourceLink label={"FrameDescriptionProps"} path={"packages/library/standard-react/src/presentation/frame/Frame.tsx"} startLine={23}>FrameDescriptionProps</ApiSourceLink>
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"FrameDescription"} path={"packages/library/standard-react/src/presentation/frame/Frame.tsx"} startLine={161}>FrameDescription</ApiSourceLink> / <ApiSourceLink label={"FrameDescriptionProps"} path={"packages/library/standard-react/src/presentation/frame/Frame.tsx"} startLine={28}>FrameDescriptionProps</ApiSourceLink>
+
+**Common members**
+
+<ApiTable>
+
+| Member          | Type                                                                                             | Default | Description                                                                             |
+| --------------- | ------------------------------------------------------------------------------------------------ | ------- | --------------------------------------------------------------------------------------- |
+| `aliasIds?`     | `Array<string>`                                                                                  | —       | Aliases for the same node. They require id and must differ from it and from each other. |
+| `animations?`   | `FrameDescriptionProps["animations"]`                                                            | —       | Carried into Scene primitives without affecting layout. Not inherited across scopes.    |
+| `authoring?`    | `unknown`                                                                                        | —       | Authoring metadata retained during normalization; excluded from Core IR                 |
+| `boundary?`     | `FrameDescriptionProps["boundary"]`                                                              | —       | Default connection surface; individual path endpoints can override it.                  |
+| `cornerRadius?` | `number`                                                                                         | —       | Rectangle corner radius in user units. shape.params.cornerRadius takes precedence.      |
+| `id?`           | `string`                                                                                         | —       | Unique ID for referencing this node.                                                    |
+| `label?`        | `FrameDescriptionProps["label"]`                                                                 | —       | Border annotations. Set text layout and styling on each label itself.                   |
+| `layout?`       | `FrameDescriptionProps["layout"]`                                                                | —       | —                                                                                       |
+| `meta?`         | `Record<string, JsonValue>`                                                                      | —       | Copied unchanged to Scene primitives; does not affect compilation.                      |
+| `rotate?`       | `number`                                                                                         | —       | Rotation in degrees around the node center; positive is visually clockwise.             |
+| `scale?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; }` | —       | Scales the node and its path attachment positions.                                      |
+| `shape?`        | `FrameDescriptionProps["shape"]`                                                                 | —       | Defaults to rectangle.                                                                  |
+| `style?`        | `FrameDescriptionProps["style"]`                                                                 | —       | Node visual overrides; fields independently override inherited defaults.                |
+| `zIndex?`       | `number`                                                                                         | —       | Higher values draw above siblings; ties keep source order.                              |
+
+</ApiTable>
+
+Common members apply to every branch; a value must also satisfy at least one branch.
+
+<DocTabs defaultValue="text">
+
+<DocTab value="text" label="Members · Text prop">
+
+<ApiTable>
+
+| Member      | Type                                          | Default | Description |
+| ----------- | --------------------------------------------- | ------- | ----------- |
+| `children?` | `ReactElement \| ReadonlyArray<ReactElement>` | —       | —           |
+| `text`      | `NonNullable<NodeOptions['text']>`            | —       | —           |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="children" label="Members · JSX children">
+
+<ApiTable>
+
+| Member      | Type        | Default | Description                                                                                                    |
+| ----------- | ----------- | ------- | -------------------------------------------------------------------------------------------------------------- |
+| `children?` | `ReactNode` | —       | Node text or styled Text children, optionally mixed with NodeLabel elements. Omit for a node without body text |
+| `text?`     | `never`     | —       | —                                                                                                              |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
 
 ```ts
 export declare const FrameDescription: FC<FrameDescriptionProps>;
 
-export type FrameDescriptionProps = Omit<NodeProps, 'position' | keyof HydrationEventProps>;
+export type FrameDescriptionProps = FrameHeaderProps<NodeProps>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 **Direct calls**
 
-#### <ApiSourceLink label={"InputFrame"} path={"packages/library/standard-vanilla/src/presentation/frame.ts"} startLine={34}>InputFrame</ApiSourceLink>
+#### <ApiSourceLink label={"InputFrame"} path={"packages/library/standard-vanilla/src/presentation/frame.ts"} startLine={28}>InputFrame</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -88,7 +206,7 @@ export type InputFrame = Omit<InputFrameConfig, 'id' | 'children'> & {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"frameInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/presentation/frame.ts"} startLine={55}>frameInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"frameInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/presentation/frame.ts"} startLine={49}>frameInputEmbedAdapter</ApiSourceLink>
 
 ```ts
 export declare const frameInputEmbedAdapter: InputEmbedAdapter<InputFrame>;
@@ -96,7 +214,7 @@ export declare const frameInputEmbedAdapter: InputEmbedAdapter<InputFrame>;
 
 **Execution and supporting contracts**
 
-#### <ApiSourceLink label={"frame"} path={"packages/library/standard-vanilla/src/presentation/frame.ts"} startLine={136}>frame</ApiSourceLink>
+#### <ApiSourceLink label={"frame"} path={"packages/library/standard-vanilla/src/presentation/frame.ts"} startLine={130}>frame</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -123,7 +241,7 @@ export declare const frame: (input: InputFrame) => InputEmbed<InputFrame>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"frameDescription"} path={"packages/library/standard-vanilla/src/presentation/frame.ts"} startLine={52}>frameDescription</ApiSourceLink>
+#### <ApiSourceLink label={"frameDescription"} path={"packages/library/standard-vanilla/src/presentation/frame.ts"} startLine={46}>frameDescription</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -150,7 +268,7 @@ export declare const frameDescription: (input: InputFrameDescription) => IRFrame
 
 </DocTabs>
 
-#### <ApiSourceLink label={"frameTitle"} path={"packages/library/standard-vanilla/src/presentation/frame.ts"} startLine={49}>frameTitle</ApiSourceLink>
+#### <ApiSourceLink label={"frameTitle"} path={"packages/library/standard-vanilla/src/presentation/frame.ts"} startLine={43}>frameTitle</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -185,21 +303,21 @@ export declare const frameTitle: (input: InputFrameTitle) => IRFrameTitle;
 
 <ApiTable>
 
-| Member          | Type                                                                                             | Default | Description                                                                                                                                                                   |
-| --------------- | ------------------------------------------------------------------------------------------------ | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `animations?`   | `ZodInfer<typeof FrameDescriptionSchema.shape["animations"]>`                                    | —       | Declarative animation tracks for this node. Tracks are carried into emitted Scene primitives, do not affect layout, and are not inherited across scopes.                      |
-| `boundary?`     | `ZodInfer<typeof FrameDescriptionSchema.shape["boundary"]>`                                      | —       | Default connection surface for edges meeting this node. Per-edge endpoints may override it.                                                                                   |
-| `cornerRadius?` | `number`                                                                                         | —       | Top-level corner radius in user units. Only effective on `rectangle` shape.                                                                                                   |
-| `id?`           | `string`                                                                                         | —       | Optional unique id; required if any path needs to reference this node by string                                                                                               |
-| `label?`        | `ZodInfer<typeof FrameDescriptionSchema.shape["label"]>`                                         | —       | Extra label or labels attached around the node border. Each label is positioned by `position` and `distance`.                                                                 |
-| `layout?`       | `ZodInfer<typeof FrameDescriptionSchema.shape["layout"]>`                                        | —       | Node size, spacing, and text layout overrides.                                                                                                                                |
-| `meta?`         | `Record<string, JsonValue>`                                                                      | —       | Opaque JSON metadata carried by this node. Preserved into emitted Scene primitives and ignored by the compiler.                                                               |
-| `rotate?`       | `number`                                                                                         | —       | Rotation in degrees around the node center; positive is visually clockwise.                                                                                                   |
-| `scale?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; }` | —       | Node scale factor. Number applies to both axes; object x / y override default. Affects path attachment positions.                                                             |
-| `shape?`        | `ZodInfer<typeof FrameDescriptionSchema.shape["shape"]>`                                         | —       | Node visual shape: bare shape name or `{ type, params }`. Built-ins and registered shapes are allowed; unregistered names fail at compile time. Omitted fields use rectangle. |
-| `style?`        | `ZodInfer<typeof FrameDescriptionSchema.shape["style"]>`                                         | —       | Node visual overrides; fields independently override inherited defaults.                                                                                                      |
-| `text`          | `ZodInfer<typeof FrameDescriptionSchema.shape["text"]>`                                          | —       | Required Core Node text rendered as Frame header content.                                                                                                                     |
-| `zIndex?`       | `number`                                                                                         | —       | Stacking order among sibling IR children. Higher draws on top; equal values keep source order within the same parent group.                                                   |
+| Member          | Type                                                                                             | Default | Description                                                                          |
+| --------------- | ------------------------------------------------------------------------------------------------ | ------- | ------------------------------------------------------------------------------------ |
+| `animations?`   | `ZodInfer<typeof FrameDescriptionSchema.shape["animations"]>`                                    | —       | Carried into Scene primitives without affecting layout. Not inherited across scopes. |
+| `boundary?`     | `ZodInfer<typeof FrameDescriptionSchema.shape["boundary"]>`                                      | —       | Default connection surface; individual path endpoints can override it.               |
+| `cornerRadius?` | `number`                                                                                         | —       | Rectangle corner radius in user units. shape.params.cornerRadius takes precedence.   |
+| `id?`           | `string`                                                                                         | —       | Unique ID for referencing this node.                                                 |
+| `label?`        | `ZodInfer<typeof FrameDescriptionSchema.shape["label"]>`                                         | —       | Border annotations. Set text layout and styling on each label itself.                |
+| `layout?`       | `ZodInfer<typeof FrameDescriptionSchema.shape["layout"]>`                                        | —       | —                                                                                    |
+| `meta?`         | `Record<string, JsonValue>`                                                                      | —       | Copied unchanged to Scene primitives; does not affect compilation.                   |
+| `rotate?`       | `number`                                                                                         | —       | Rotation in degrees around the node center; positive is visually clockwise.          |
+| `scale?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; }` | —       | Scales the node and its path attachment positions.                                   |
+| `shape?`        | `ZodInfer<typeof FrameDescriptionSchema.shape["shape"]>`                                         | —       | Defaults to rectangle.                                                               |
+| `style?`        | `ZodInfer<typeof FrameDescriptionSchema.shape["style"]>`                                         | —       | Node visual overrides; fields independently override inherited defaults.             |
+| `text`          | `ZodInfer<typeof FrameDescriptionSchema.shape["text"]>`                                          | —       | Required Core Node text rendered as Frame header content.                            |
+| `zIndex?`       | `number`                                                                                         | —       | Higher values draw above siblings; ties keep source order.                           |
 
 </ApiTable>
 
@@ -235,21 +353,21 @@ export type InputFrameConfig = Omit<IRFrame, 'namespace' | 'type'>;
 
 <ApiTable>
 
-| Member          | Type                                                                                             | Default | Description                                                                                                                                                                   |
-| --------------- | ------------------------------------------------------------------------------------------------ | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `animations?`   | `ZodInfer<typeof FrameTitleSchema.shape["animations"]>`                                          | —       | Declarative animation tracks for this node. Tracks are carried into emitted Scene primitives, do not affect layout, and are not inherited across scopes.                      |
-| `boundary?`     | `ZodInfer<typeof FrameTitleSchema.shape["boundary"]>`                                            | —       | Default connection surface for edges meeting this node. Per-edge endpoints may override it.                                                                                   |
-| `cornerRadius?` | `number`                                                                                         | —       | Top-level corner radius in user units. Only effective on `rectangle` shape.                                                                                                   |
-| `id?`           | `string`                                                                                         | —       | Optional unique id; required if any path needs to reference this node by string                                                                                               |
-| `label?`        | `ZodInfer<typeof FrameTitleSchema.shape["label"]>`                                               | —       | Extra label or labels attached around the node border. Each label is positioned by `position` and `distance`.                                                                 |
-| `layout?`       | `ZodInfer<typeof FrameTitleSchema.shape["layout"]>`                                              | —       | Node size, spacing, and text layout overrides.                                                                                                                                |
-| `meta?`         | `Record<string, JsonValue>`                                                                      | —       | Opaque JSON metadata carried by this node. Preserved into emitted Scene primitives and ignored by the compiler.                                                               |
-| `rotate?`       | `number`                                                                                         | —       | Rotation in degrees around the node center; positive is visually clockwise.                                                                                                   |
-| `scale?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; }` | —       | Node scale factor. Number applies to both axes; object x / y override default. Affects path attachment positions.                                                             |
-| `shape?`        | `ZodInfer<typeof FrameTitleSchema.shape["shape"]>`                                               | —       | Node visual shape: bare shape name or `{ type, params }`. Built-ins and registered shapes are allowed; unregistered names fail at compile time. Omitted fields use rectangle. |
-| `style?`        | `ZodInfer<typeof FrameTitleSchema.shape["style"]>`                                               | —       | Node visual overrides; fields independently override inherited defaults.                                                                                                      |
-| `text`          | `ZodInfer<typeof FrameTitleSchema.shape["text"]>`                                                | —       | Required Core Node text rendered as Frame header content.                                                                                                                     |
-| `zIndex?`       | `number`                                                                                         | —       | Stacking order among sibling IR children. Higher draws on top; equal values keep source order within the same parent group.                                                   |
+| Member          | Type                                                                                             | Default | Description                                                                          |
+| --------------- | ------------------------------------------------------------------------------------------------ | ------- | ------------------------------------------------------------------------------------ |
+| `animations?`   | `ZodInfer<typeof FrameTitleSchema.shape["animations"]>`                                          | —       | Carried into Scene primitives without affecting layout. Not inherited across scopes. |
+| `boundary?`     | `ZodInfer<typeof FrameTitleSchema.shape["boundary"]>`                                            | —       | Default connection surface; individual path endpoints can override it.               |
+| `cornerRadius?` | `number`                                                                                         | —       | Rectangle corner radius in user units. shape.params.cornerRadius takes precedence.   |
+| `id?`           | `string`                                                                                         | —       | Unique ID for referencing this node.                                                 |
+| `label?`        | `ZodInfer<typeof FrameTitleSchema.shape["label"]>`                                               | —       | Border annotations. Set text layout and styling on each label itself.                |
+| `layout?`       | `ZodInfer<typeof FrameTitleSchema.shape["layout"]>`                                              | —       | —                                                                                    |
+| `meta?`         | `Record<string, JsonValue>`                                                                      | —       | Copied unchanged to Scene primitives; does not affect compilation.                   |
+| `rotate?`       | `number`                                                                                         | —       | Rotation in degrees around the node center; positive is visually clockwise.          |
+| `scale?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; }` | —       | Scales the node and its path attachment positions.                                   |
+| `shape?`        | `ZodInfer<typeof FrameTitleSchema.shape["shape"]>`                                               | —       | Defaults to rectangle.                                                               |
+| `style?`        | `ZodInfer<typeof FrameTitleSchema.shape["style"]>`                                               | —       | Node visual overrides; fields independently override inherited defaults.             |
+| `text`          | `ZodInfer<typeof FrameTitleSchema.shape["text"]>`                                                | —       | Required Core Node text rendered as Frame header content.                            |
+| `zIndex?`       | `number`                                                                                         | —       | Higher values draw above siblings; ties keep source order.                           |
 
 </ApiTable>
 

@@ -3,8 +3,8 @@ import { pickDefined } from '@retikz/foundation';
 import type { ReactNode } from 'react';
 import { createElement } from 'react';
 
-import type { ScopeStyleProps } from '../../kernel';
-import { Scope } from '../../kernel';
+import type { ScopeStyleProps } from '../Scope';
+import { Scope } from '../Scope';
 
 /**
  * ScopeStyleProps 的 key 表——`hasScopeStyle` 判定 + 合成根 Scope 字段透传共用

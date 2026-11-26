@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { Path } from '../../../src';
 import { Step } from '../../../src';
-import { Draw } from '../../../src/components/sugar';
+import { Draw } from '../../../src/components';
 import { normalizeReactInput } from '../../helpers/normalize-input';
 
 /**
