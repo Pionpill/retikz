@@ -133,9 +133,7 @@ describe('<Layout 边界> 自定义边界直通', () => {
 
 describe('<Layout 裁剪> 完整的裁剪定义直通', () => {
   it('将一个完整的裁剪注册表转发给静态 Vanilla 处理和 SSR', () => {
-    const svg = renderToStaticMarkup(
-      <Layout ir={clippedIr} extensions={{ clips: [customClip()] }} runtime={{ mode: 'static' }} />,
-    );
+    const svg = renderToStaticMarkup(<Layout ir={clippedIr} extensions={{ clips: [customClip()] }} />);
 
     expect(svg).toContain('<clipPath');
   });

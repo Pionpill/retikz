@@ -17,7 +17,7 @@ Our example has rectangular nodes A and B centered at `[0, 0]` and `[180, 0]`, e
 
 <ComponentPreview files="pipeline-example" size="xs" />
 
-The preview source offers React, Vanilla and IR views. The example uses static mode to follow one complete processing pass.
+The preview source offers React, Vanilla and IR views. The example follows the first complete compilation.
 
 ## Declarations and input
 
@@ -33,9 +33,9 @@ Both entries deliver nodes A and B and their connecting path. Names, positions, 
   sources={[
     {
       label: 'Layout collects declarations and calls Vanilla',
-      path: 'packages/kernel/react/src/components/container/layout/Layout.tsx',
+      path: 'packages/kernel/react/src/components/layout/Layout.tsx',
     },
-    { label: 'JSX to InputScene', path: 'packages/kernel/react/src/components/container/layout/input-scene.ts' },
+    { label: 'JSX to InputScene', path: 'packages/kernel/react/src/components/layout/input-scene.ts' },
   ]}
 />
 
@@ -43,7 +43,7 @@ Both entries deliver nodes A and B and their connecting path. Names, positions, 
 
 Vanilla handles configuration at the input layer: it normalizes `InputScene` into `IRScene`, assembles compile options and arranges Core execution. Existing IR enters here too. The prepared IR still contains references to A and B, ready for Core to calculate their connection points.
 
-Vanilla also assembles the processing mode. **static** creates a temporary `SceneRuntime` and disposes it after reading the first result. The default **session** mode keeps the session and accepts either authoring input or complete IR through `replace`. The reconciler selects complete traversal or Weave scheduling according to the compilation mode; both drivers share drawing computation and output assembly.
+Layout uses `compileToScene` for its first render. After the client commits, it creates a Vanilla `SceneRuntime` and passes later authoring input or complete IR to `replace`. The reconciler defaults to full mode and can be configured for incremental mode via `reconciler`. Complete replacements always compile in full.
 
 <ComponentPreview files="pipeline-processing" size="sm" hideCode type="flow" />
 
@@ -123,7 +123,7 @@ Static export can serialize the SVG tree into a string. Applications with an exi
 
 ## Implementation sequence
 
-Follow the example's React JSX, static, SVG branch through these entries. Arrows show the reading order of execution, including calls inside input preparation.
+Follow the example's first render from React JSX to SVG through these entries. Arrows show the reading order of execution, including calls inside input preparation.
 
 <ComponentPreview files="pipeline-implementation" size="lg" hideCode type="flow" />
 
@@ -131,7 +131,7 @@ Start at Layout's `createInputScene`, then follow Vanilla's `compileToScene`. It
 
 <SourceLinks
   sources={[
-    { label: 'React scene entry', path: 'packages/kernel/react/src/components/container/layout/Layout.tsx' },
+    { label: 'React scene entry', path: 'packages/kernel/react/src/components/layout/Layout.tsx' },
     { label: 'Vanilla synchronous processing', path: 'packages/kernel/vanilla/src/runtime/runtime.ts' },
     { label: 'SvgNode to React elements', path: 'packages/kernel/react/src/render/svg-to-react.ts' },
   ]}

@@ -44,18 +44,13 @@ describe('<Layout onCompileResult>', () => {
   it('在 SSR 渲染期间不发布用户回调', () => {
     const onCompileResult = vi.fn();
     renderToStaticMarkup(
-      <Layout
-        ir={scene(10)}
-        extensions={{ composites: [card] }}
-        onCompileResult={onCompileResult}
-        runtime={{ mode: 'static' }}
-      />,
+      <Layout ir={scene(10)} extensions={{ composites: [card] }} onCompileResult={onCompileResult} />,
     );
 
     expect(onCompileResult).not.toHaveBeenCalled();
   });
 
-  it.each(['static', 'session'] as const)('以 %s 模式发布提交的完整结果', async mode => {
+  it.each(['full', 'incremental'] as const)('以 %s 模式发布提交的完整结果', async mode => {
     const onCompileResult = vi.fn();
     const container = document.createElement('div');
     const root = createRoot(container);
@@ -66,7 +61,7 @@ describe('<Layout onCompileResult>', () => {
           ir={scene(10)}
           extensions={{ composites: [card] }}
           onCompileResult={onCompileResult}
-          runtime={{ mode }}
+          reconciler={{ mode }}
         />,
       ),
     );
@@ -84,14 +79,7 @@ describe('<Layout onCompileResult>', () => {
     const root = createRoot(container);
 
     await act(() =>
-      root.render(
-        <Layout
-          ir={scene(10)}
-          extensions={{ composites: [card] }}
-          onCompileResult={onCompileResult}
-          runtime={{ mode: 'static' }}
-        />,
-      ),
+      root.render(<Layout ir={scene(10)} extensions={{ composites: [card] }} onCompileResult={onCompileResult} />),
     );
 
     const reactResult = onCompileResult.mock.calls[0]?.[0] as CompileResult;

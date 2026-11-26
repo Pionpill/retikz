@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import type { IRScene } from '@retikz/core';
 import { defineTheme, ThemeMode } from '@retikz/core';
 import type { InputEmbedAdapter } from '@retikz/vanilla';
 import * as vanilla from '@retikz/vanilla';
@@ -22,13 +23,13 @@ describe('<Layout> 的 Vanilla Input processing', () => {
     document.body.replaceChildren();
   });
 
-  it('将 JSX children 作为 InputScene 交给 static processing', async () => {
+  it('将 JSX children 作为 InputScene 交给 Vanilla 编译', async () => {
     const container = document.createElement('div');
     const root = createRoot(container);
 
     await act(() =>
       root.render(
-        <Layout runtime={{ mode: 'static' }}>
+        <Layout>
           <Node id="input-node" position={[0, 0]} />
         </Layout>,
       ),
@@ -39,12 +40,12 @@ describe('<Layout> 的 Vanilla Input processing', () => {
     await act(() => root.unmount());
   });
 
-  it('static processing 只在 React 提交后通知编译结果', async () => {
+  it('只在 React 提交后通知编译结果', async () => {
     const commit = vi.fn();
 
     renderToStaticMarkup(
-      <Layout onCompileResult={commit} runtime={{ mode: 'static' }}>
-        <Node id="static-commit-node" position={[0, 0]} />
+      <Layout onCompileResult={commit}>
+        <Node id="commit-node" position={[0, 0]} />
       </Layout>,
     );
 
@@ -54,26 +55,8 @@ describe('<Layout> 的 Vanilla Input processing', () => {
     const root = createRoot(container);
     await act(() =>
       root.render(
-        <Layout onCompileResult={commit} runtime={{ mode: 'static' }}>
-          <Node id="static-commit-node" position={[0, 0]} />
-        </Layout>,
-      ),
-    );
-
-    expect(commit).toHaveBeenCalledTimes(1);
-
-    await act(() => root.unmount());
-  });
-
-  it('session 初次挂载只提交 controller 的成功结果', async () => {
-    const commit = vi.fn();
-    const container = document.createElement('div');
-    const root = createRoot(container);
-
-    await act(() =>
-      root.render(
         <Layout onCompileResult={commit}>
-          <Node id="session-commit-node" position={[0, 0]} />
+          <Node id="commit-node" position={[0, 0]} />
         </Layout>,
       ),
     );
@@ -83,7 +66,36 @@ describe('<Layout> 的 Vanilla Input processing', () => {
     await act(() => root.unmount());
   });
 
-  it('Strict Effects 不提交被丢弃的 session fallback', async () => {
+  it('透传协调器选项，等价配置不重建会话，更换模式释放旧会话', async () => {
+    const trace = vi.fn();
+    const notify = vi.fn();
+    const ir: IRScene = { type: 'scene', version: 1, children: [] };
+    const theme = defineTheme({ name: 'academic', resolve: () => ({}) });
+    const root = createRoot(document.createElement('div'));
+    const render = (mode: 'full' | 'incremental') =>
+      root.render(
+        <Layout
+          ir={ir}
+          reconciler={{ mode, trace }}
+          extensions={{ themeDefinitions: [theme] }}
+          onCompileResult={notify}
+        />,
+      );
+
+    await act(() => render('full'));
+    await act(() => render('full'));
+    expect(notify).toHaveBeenCalledTimes(1);
+    expect(trace).not.toHaveBeenCalledWith(expect.objectContaining({ phase: 'unmount' }));
+
+    await act(() => render('incremental'));
+    expect(notify).toHaveBeenCalledTimes(2);
+    expect(trace).toHaveBeenCalledWith(expect.objectContaining({ phase: 'unmount' }));
+    trace.mockClear();
+    await act(() => root.unmount());
+    expect(trace).toHaveBeenCalledWith(expect.objectContaining({ phase: 'unmount' }));
+  });
+
+  it('Strict Effects 不提交被丢弃的首帧', async () => {
     const commit = vi.fn();
     const container = document.createElement('div');
     const root = createRoot(container);
@@ -103,7 +115,7 @@ describe('<Layout> 的 Vanilla Input processing', () => {
     await act(() => root.unmount());
   });
 
-  it('session processing 在 Strict Effects 重放后仍保持可订阅', async () => {
+  it('Layout 在 Strict Effects 重放后仍保持可订阅', async () => {
     const container = document.createElement('div');
     const root = createRoot(container);
 
@@ -122,7 +134,7 @@ describe('<Layout> 的 Vanilla Input processing', () => {
     await act(() => root.unmount());
   });
 
-  it('session processing 将 JSX source 更新推入同一 Vanilla controller', async () => {
+  it('Layout 将 JSX source 更新推入同一 Vanilla controller', async () => {
     const mount = vi.spyOn(vanilla.SceneRuntime, 'fromInput');
     const replace = vi.spyOn(vanilla.SceneRuntime.prototype, 'replace');
     const container = document.createElement('div');
@@ -152,7 +164,7 @@ describe('<Layout> 的 Vanilla Input processing', () => {
     await act(() => root.unmount());
   });
 
-  it('将 Vanilla controller 的结构化诊断转发给 runtime.onDiagnostic', async () => {
+  it('将 Vanilla controller 的结构化诊断转发给 onDiagnostic', async () => {
     const diagnostic = Object.freeze({
       code: 'RUNTIME_TEST_DIAGNOSTIC',
       phase: 'run' as const,
@@ -170,7 +182,7 @@ describe('<Layout> 的 Vanilla Input processing', () => {
     const container = document.createElement('div');
     const root = createRoot(container);
 
-    await act(() => root.render(<Layout runtime={{ onDiagnostic }} />));
+    await act(() => root.render(<Layout onDiagnostic={onDiagnostic} />));
 
     expect(onDiagnostic).toHaveBeenCalledWith(diagnostic);
     expect(diagnostics).toHaveBeenCalledTimes(1);
@@ -179,7 +191,6 @@ describe('<Layout> 的 Vanilla Input processing', () => {
   });
 
   it('Strict Effects 重放后在最终卸载时释放 Vanilla controller', async () => {
-    vi.useFakeTimers();
     const createController = vanilla.SceneRuntime.fromInput;
     const disposers: Array<ReturnType<typeof vi.fn>> = [];
     vi.spyOn(vanilla.SceneRuntime, 'fromInput').mockImplementation((source, options) => {
@@ -201,16 +212,15 @@ describe('<Layout> 的 Vanilla Input processing', () => {
       ),
     );
 
-    // 单次编译的会话已经释放；这里只统计 Strict Effects 创建的持续会话
-    expect(disposers.filter(dispose => dispose.mock.calls.length === 0)).toHaveLength(2);
+    // 首帧编译和 Strict Effects 丢弃的会话已释放
+    expect(disposers.filter(dispose => dispose.mock.calls.length === 0)).toHaveLength(1);
 
     await act(() => root.unmount());
-    await act(() => vi.runAllTimers());
 
     for (const dispose of disposers) expect(dispose).toHaveBeenCalledTimes(1);
   });
 
-  it('session source update 失败时保留最后成功宿主帧', async () => {
+  it('source update 失败时保留最后成功宿主帧', async () => {
     const container = document.createElement('div');
     const root = createRoot(container);
 

@@ -13,7 +13,7 @@ const UpdateExample: FC<UpdateExampleProps> = props => {
   const { lang = 'zh' } = props;
   const t = updateExampleI18n[lang];
   return (
-    <Layout runtime={{ mode: 'static' }} style={{ maxWidth: '100%', height: 'auto' }}>
+    <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       {[t.before, t.after].map((title, index) => (
         <Scope key={title} id={`state-${index}`} position={[index * 300, 0]}>
           <Node position={[40, -55]} style={{ stroke: 'none', fill: 'none', font: { size: 14 } }}>

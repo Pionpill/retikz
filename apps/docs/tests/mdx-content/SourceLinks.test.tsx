@@ -37,9 +37,9 @@ describe('<SourceLinks>', () => {
         sources={[
           {
             label: '输入归一',
-            path: 'packages/kernel/react/src/components/container/layout/Layout.tsx',
-            startLine: 399,
-            endLine: 455,
+            path: 'packages/kernel/react/src/components/layout/Layout.tsx',
+            startLine: 266,
+            endLine: 282,
           },
         ]}
       />,
@@ -48,7 +48,7 @@ describe('<SourceLinks>', () => {
     expect(html).toContain('源码入口：');
     expect(html).toContain('输入归一');
     expect(html).toContain(
-      'href="https://github.com/Pionpill/retikz/blob/main/packages/kernel/react/src/components/container/layout/Layout.tsx#L399-L455"',
+      'href="https://github.com/Pionpill/retikz/blob/main/packages/kernel/react/src/components/layout/Layout.tsx#L266-L282"',
     );
     expect(html).toContain('target="_blank"');
     expect(html).toContain('rel="noopener noreferrer"');
@@ -58,13 +58,11 @@ describe('<SourceLinks>', () => {
   it('省略行号时链接到完整文件', () => {
     const SourceLinks = getSourceLinks();
     const html = renderToStaticMarkup(
-      <SourceLinks
-        sources={[{ label: 'Layout', path: 'packages/kernel/react/src/components/container/layout/Layout.tsx' }]}
-      />,
+      <SourceLinks sources={[{ label: 'Layout', path: 'packages/kernel/react/src/components/layout/Layout.tsx' }]} />,
     );
 
     expect(html).toContain(
-      'href="https://github.com/Pionpill/retikz/blob/main/packages/kernel/react/src/components/container/layout/Layout.tsx"',
+      'href="https://github.com/Pionpill/retikz/blob/main/packages/kernel/react/src/components/layout/Layout.tsx"',
     );
   });
 
@@ -72,16 +70,14 @@ describe('<SourceLinks>', () => {
     const SourceLinks = getSourceLinks();
     const html = renderToStaticMarkup(
       <SourceLinks
-        sources={[
-          { label: 'Layout', path: 'packages/kernel/react/src/components/container/layout/Layout.tsx', startLine: 12 },
-        ]}
+        sources={[{ label: 'Layout', path: 'packages/kernel/react/src/components/layout/Layout.tsx', startLine: 12 }]}
       />,
     );
 
     expect(html).toContain('data-source-link-open="true"');
     expect(html).toContain('<button');
     expect(html).toContain(
-      'href="https://github.com/Pionpill/retikz/blob/main/packages/kernel/react/src/components/container/layout/Layout.tsx#L12"',
+      'href="https://github.com/Pionpill/retikz/blob/main/packages/kernel/react/src/components/layout/Layout.tsx#L12"',
     );
   });
 
@@ -90,9 +86,7 @@ describe('<SourceLinks>', () => {
     const SourceLinks = getSourceLinks();
     const html = renderToStaticMarkup(
       <SourceLinks
-        sources={[
-          { label: 'input normalization', path: 'packages/kernel/react/src/components/container/layout/Layout.tsx' },
-        ]}
+        sources={[{ label: 'input normalization', path: 'packages/kernel/react/src/components/layout/Layout.tsx' }]}
       />,
     );
 

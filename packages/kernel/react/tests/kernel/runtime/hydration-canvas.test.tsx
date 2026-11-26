@@ -81,7 +81,7 @@ describe('Canvas 水合', () => {
     harness.restore();
   });
 
-  it('static Canvas 继续通过 hitTest 分发 hydration handler', async () => {
+  it('增量协调器下 Canvas 继续通过 hitTest 分发 hydration handler', async () => {
     const harness = installCanvasHarness();
     const onClick = vi.fn();
     const container = document.createElement('div');
@@ -90,7 +90,7 @@ describe('Canvas 水合', () => {
 
     await act(() => {
       root.render(
-        <Layout renderer="canvas" width={SIZE} height={SIZE} runtime={{ mode: 'static' }}>
+        <Layout renderer="canvas" reconciler={{ mode: 'incremental' }} width={SIZE} height={SIZE}>
           <Node id="a" position={[0, 0]} onClick={onClick} style={{ fill: 'red' }} layout={{ minimumSize: 2 }} />
         </Layout>,
       );

@@ -1,5 +1,14 @@
 /** 经核对的 Layout API 英文说明，签名与标识符保持源码原样 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  '协调器执行选项；省略时使用完整编译': 'Reconciler options; defaults to full compilation',
+  接收协调器的结构化诊断: 'Receives structured reconciler diagnostics',
+  'Layout 支持注册的编译扩展': 'Compile extensions accepted by Layout',
+  '统一设置子树的动画模式；嵌套时以最近的设置为准':
+    'Sets the animation mode for descendants; the nearest provider takes precedence',
+  动画模式提供器: 'Animation mode provider',
+  '设置子树的默认渲染后端；Layout 的 renderer 优先':
+    'Sets the default backend for descendants; an explicit Layout renderer takes precedence',
+  渲染模式提供器: 'Renderer mode provider',
   '创建场景时传给 scene 的对象选项': 'Object options accepted by scene',
   沿路径放置的标记定义: 'Definitions of markers placed along a path',
   '自定义文字测量；省略时使用 Vanilla 的环境测量与估算降级':
@@ -43,25 +52,12 @@ const translations: Readonly<Partial<Record<string, string>>> = {
     'Explicit viewport in drawing coordinates; overrides ir.viewBox. When omitted, uses the scene viewport or derives it from content if the scene has none',
   '动画采样时刻，单位为毫秒；指定后定格在该时刻，不播放动画，优先于 animate':
     'Animation sampling time in milliseconds; freezes the drawing at that time without playback and takes precedence over animate',
-  '将 JSX 图形或场景 IR 渲染为 SVG 或 Canvas，并接入更新与动画':
-    'Render JSX drawings or scene IR as SVG or Canvas, with updates and animation',
-  '通过 children 声明图形，或通过 ir 传入完整场景；同时提供时使用 ir。默认使用 session 模式处理后续更新，可通过 runtime 切换为 static 完整编译模式':
-    'Declare drawings through children or pass a complete scene through ir; ir takes precedence when both are supplied. Subsequent updates use session mode by default; runtime can select static mode for full compilation.',
-  '保留执行状态以处理后续图形更新；省略 runtime 或 mode 时使用此模式':
-    'Keep execution state for subsequent drawing updates; used when runtime or mode is omitted',
-  '更新策略；auto 按变更和执行器能力选择增量或完整执行，full 强制完整执行':
-    'Update strategy; auto selects incremental or full execution based on changes and executor capabilities, while full forces full execution',
-  '接收图形更新的结构化诊断，按产生顺序通知；更新失败时保留最后一次成功画面':
-    'Receive structured diagnostics from drawing updates in the order they occur; failed updates preserve the last successful drawing',
-  '每次输入变化时完整编译图形，不保留增量执行状态':
-    'Compile the complete drawing whenever input changes, without retaining incremental execution state',
-  '通过 mode 选择图形更新方式；session 支持更新策略和诊断回调，static 不接受这两个选项':
-    'Select how drawings update through mode; session supports an update strategy and diagnostics callback, while static accepts neither option',
+  绘图容器: 'Drawing container',
+  '将 JSX 子图元或传入的 ir 渲染为 SVG 或 Canvas；同时提供时使用 ir':
+    'Renders JSX children or an IR scene as SVG or Canvas; ir takes precedence when both are supplied',
   主题样式定义: 'Theme definitions',
   '通过 JSX 声明的图形内容': 'Drawing content declared with JSX',
   '直接传入 ir 时使用的事件处理函数表': 'Event handlers used when ir is supplied directly',
-  '选择 session 增量更新或 static 完整编译模式；省略时使用 session':
-    'Select session incremental updates or static full compilation; defaults to session',
   动画缓动函数注册表: 'Animation easing registry',
   可动画属性注册表: 'Animatable property registry',
   请求生成的编译附加产物: 'Requested compilation artifacts',
@@ -78,15 +74,6 @@ const translations: Readonly<Partial<Record<string, string>>> = {
     'Default relative node distance in drawing units; applies when position uses direction/of without distance',
   '默认字号，单位为绘图单位；font.size 缺省时使用，同时作为字号预设与 rem 的根字号，不覆盖显式数字字号':
     'Default font size in drawing units; used when font.size is omitted and as the root size for presets and rem, without overriding explicit numeric sizes',
-  '创建保留式 Runtime': 'Creates a session Runtime',
-  '按 Vanilla processing controller 的队列顺序接收 Runtime 结构化诊断':
-    'Receives structured Runtime diagnostics in the queue order of the Vanilla processing controller',
-  'Computation 更新策略': 'Computation update strategy',
-  '不创建 Runtime，直接完整编译与物化':
-    'Compiles and materializes the complete result directly, without creating a Runtime',
-  'static 不创建 Runtime，因此不产生 Runtime 结构化诊断':
-    'Static mode creates no Runtime and therefore emits no structured Runtime diagnostics',
-  'static 不支持 Computation 更新策略': 'Static mode does not support a Computation update strategy',
   '为 Layout 注册自定义形状、箭头、裁剪及其他绘图扩展':
     'Register custom shapes, arrows, clips, and other drawing extensions for Layout',
   '通过 Layout 的 extensions 属性传入，各字段接收对应的定义数组；这些运行时定义不写入可持久化的场景数据':
@@ -134,7 +121,6 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   渲染目标: 'Rendering target',
   'JSX 子图的隐式根 Scope 覆盖；完整 ir 优先，style 宿主 CSS 独立生效':
     'Implicit root Scope overrides for JSX children; complete IR takes precedence, while host CSS style applies independently',
-  'session 或 static processing 模式': 'Session or static processing mode',
   自定义形状定义: 'Custom shape definitions',
   静态动画采样时刻: 'Time at which to sample a static animation frame',
   宿主内联样式: 'Host inline styles',
@@ -144,15 +130,10 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   显式视框: 'Explicit viewport',
   'SVG 或 Canvas CSS 宽度；缺省取内容宽度，单轴数值尺寸按内容比例补齐另一轴':
     'CSS width of SVG or Canvas; defaults to content width, with a single numeric axis deriving the other from the content aspect ratio',
-  'React Layout session Runtime 配置': 'Session Runtime configuration for React Layout',
-  'React Layout 宿主执行模式取值': 'React Layout host execution mode value',
-  'React Layout 的判别 Runtime 配置': 'Discriminated Runtime configuration for React Layout',
-  'React Layout static Runtime 配置': 'Static Runtime configuration for React Layout',
   'React Layout：JSX 转 Vanilla Input，随后只宿主化 Vanilla processing result':
     'React Layout converts JSX to Vanilla Input, then hosts the Vanilla processing result',
   'React 不创建 Core Computation、Runtime 或 renderer；所有处理状态归 Vanilla':
     'React does not create Core Computations, Runtimes, or renderers; Vanilla owns all processing state',
-  'React Layout 的宿主执行模式': 'React Layout host execution modes',
 };
 
 /** 新增说明缺少翻译时阻止生成 */

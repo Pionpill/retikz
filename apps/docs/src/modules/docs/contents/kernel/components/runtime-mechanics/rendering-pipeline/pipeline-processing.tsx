@@ -44,14 +44,14 @@ const PipelineProcessing: FC<PipelineProcessingProps> = props => {
           <FlowEntities
             items={[
               {
-                id: 'static',
+                id: 'initial',
                 role: 'activity',
-                text: [{ text: text.static[0] }, { text: text.static[1], font: { size: 12 }, fill: 'gray' }],
+                text: [{ text: text.initial[0] }, { text: text.initial[1], font: { size: 12 }, fill: 'gray' }],
               },
               {
-                id: 'session',
+                id: 'mounted',
                 role: 'activity',
-                text: [{ text: text.session[0] }, { text: text.session[1], font: { size: 12 }, fill: 'gray' }],
+                text: [{ text: text.mounted[0] }, { text: text.mounted[1], font: { size: 12 }, fill: 'gray' }],
               },
             ]}
           />
@@ -72,10 +72,10 @@ const PipelineProcessing: FC<PipelineProcessingProps> = props => {
       <FlowRelations
         items={[
           { source: 'input', target: 'prepare', routing: { kind: 'orthogonal', cornerRadius: 0 } },
-          { source: 'prepare', target: 'static', routing: { kind: 'orthogonal', cornerRadius: 0 } },
-          { source: 'prepare', target: 'session', routing: { kind: 'orthogonal', cornerRadius: 0 } },
-          { source: 'static', target: 'core', routing: { kind: 'orthogonal', cornerRadius: 0 } },
-          { source: 'session', target: 'core', routing: { kind: 'orthogonal', cornerRadius: 0 } },
+          { source: 'prepare', target: 'initial', routing: { kind: 'orthogonal', cornerRadius: 0 } },
+          { source: 'prepare', target: 'mounted', routing: { kind: 'orthogonal', cornerRadius: 0 } },
+          { source: 'initial', target: 'core', routing: { kind: 'orthogonal', cornerRadius: 0 } },
+          { source: 'mounted', target: 'core', routing: { kind: 'orthogonal', cornerRadius: 0 } },
         ]}
       />
     </PreviewFlowDiagram>

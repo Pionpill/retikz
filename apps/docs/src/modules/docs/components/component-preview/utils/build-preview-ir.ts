@@ -1,5 +1,5 @@
 import type { AnyPathDefinition, CoreProviderContribution, IRScene } from '@retikz/core';
-import { createInputScene, isEmbeddableMarked, Layout, wrapRootScope } from '@retikz/react';
+import { createInputScene, isEmbeddableMarked, Layout, Scope } from '@retikz/react';
 import type { LayoutProps } from '@retikz/react';
 import { normalizeScene } from '@retikz/vanilla';
 import type { FC, ReactElement, ReactNode } from 'react';
@@ -66,8 +66,8 @@ export const buildPreviewIR = (Component: ComponentPreviewDemoComponent, lang: L
     isEmbeddableRoot && EmbeddableRoot !== undefined
       ? createElement(EmbeddableRoot, previewEmbedPropsOf(EmbeddableRoot, props))
       : props.children;
-  if (rootElement?.type === Layout && props.ir === undefined) {
-    childNode = wrapRootScope(props.children, props.rootScope ?? {});
+  if (rootElement?.type === Layout && props.ir === undefined && props.rootScope?.defaults !== undefined) {
+    childNode = createElement(Scope, { defaults: props.rootScope.defaults }, props.children);
   }
 
   const normalized =

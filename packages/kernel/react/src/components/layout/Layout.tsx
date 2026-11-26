@@ -1,51 +1,34 @@
-import type { RenderMode } from '@retikz/render/runtime';
+import type { IRAnimationTrack, IRScene, IRViewBox, TexLowerer, TextMeasurer } from '@retikz/core';
+import { compareProperties } from '@retikz/foundation';
 import type {
-  AnyCompositeDefinition,
-  AnyPathDefinition,
-  ArrowDefinition,
-  BoundaryDefinition,
-  ClipDefinition,
-  IRAnimationTrack,
-  IRScene,
-  IRViewBox,
-  MarkDefinition,
-  PatternDefinition,
-  ShapeDefinition,
-  TexLowerer,
-  TextMeasurer,
-  ThemeDefinition,
-} from '@retikz/core';
-import { ReconcilerMode } from '@retikz/reconciler';
-import type { CompositeArtifact } from '@retikz/reconciler';
-import type { CompileOptions, CompileResult } from '@retikz/reconciler';
-import type { ReconcilerDiagnostic } from '@retikz/reconciler';
+  CompileOptions,
+  CompileResult,
+  CompositeArtifact,
+  ReconcilerDiagnostic,
+  ReconcilerResult,
+} from '@retikz/reconciler';
 import type { AnimationControls } from '@retikz/render/animation';
 import { resolveAnimationEnabled } from '@retikz/render/animation';
 import type { HydrationHandlers } from '@retikz/render/hydration';
+import type { RenderMode } from '@retikz/render/runtime';
 import type { InputScene, ProcessOptions } from '@retikz/vanilla';
 import { isInputScene, SceneRuntime, compileToScene } from '@retikz/vanilla';
 import type { CSSProperties, FC, ReactNode, Ref } from 'react';
-import { useCallback, useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 
-import { RetikzReactError, RetikzReactErrorCode } from '../../error';
 import { collectHydrationHandlers } from '../../hydration';
 import { ProcessingResultHost } from '../../render/processing-result';
 import { usePrefersReducedMotion } from '../../render/reduced-motion';
 import { KernelDisplayName } from '../../shared';
 import type { ScopeStyleProps } from '../Scope';
+import { Scope } from '../Scope';
+import { createInputScene } from './input-scene';
 import { useAnimationMode } from './use-animation-mode';
 import { useRendererMode } from './use-renderer-mode';
-import { mergeThemeOverlays, useTheme } from './use-theme';
-import { mergeThemeDefinitions, useThemeDefinitions } from './use-theme';
-import { createInputScene } from './input-scene';
-import { pickScopeStyle, wrapRootScope } from './root-scope';
-import type { LayoutRuntimeOptions } from './runtime-options';
-import { LayoutRuntimeMode } from './runtime-options';
+import { mergeThemeDefinitions, mergeThemeOverlays, useTheme, useThemeDefinitions } from './use-theme';
 
 /** 同一条诊断消息进程内只告警一次 */
 const warnedMessages = new Set<string>();
-
-let nextProcessingControllerKey = 0;
 
 const warnOnce = (message: string): void => {
   if (warnedMessages.has(message)) return;
@@ -56,12 +39,6 @@ const warnOnce = (message: string): void => {
 /** 判断两个 sparse Theme 是否具有完全相同的 selector */
 const isSameTheme = (left: IRScene['theme'] | undefined, right: IRScene['theme'] | undefined): boolean =>
   left?.name === right?.name && left?.mode === right?.mode;
-
-/** 为固定 processing options 创建仅供 React 重挂载使用的内部 key */
-const createProcessingControllerKey = (): number => {
-  nextProcessingControllerKey += 1;
-  return nextProcessingControllerKey;
-};
 
 /** 判断 processing diagnostics 中的值是否为 Runtime 的结构化诊断 */
 const isReconcilerDiagnostic = (diagnostic: unknown): diagnostic is ReconcilerDiagnostic => {
@@ -93,84 +70,13 @@ const deliverProcessingDiagnostics = (
   }
 };
 
-type DefinitionArrayNode = {
-  children: WeakMap<object, DefinitionArrayNode>;
-  value?: ReadonlyArray<object>;
-};
-
-const definitionArrayRoot: DefinitionArrayNode = { children: new WeakMap() };
-
-/** 按有序元素 identity 规范化 Definition 容器，避免等价 inline 数组重建 processing controller */
-const canonicalizeDefinitionArray = <TDefinition extends object>(
-  definitions: ReadonlyArray<TDefinition> | undefined,
-): ReadonlyArray<TDefinition> | undefined => {
-  if (definitions === undefined || definitions.length === 0) return undefined;
-
-  let current = definitionArrayRoot;
-
-  for (const definition of definitions) {
-    let child = current.children.get(definition);
-    if (child === undefined) {
-      child = { children: new WeakMap() };
-      current.children.set(definition, child);
-    }
-
-    current = child;
-  }
-
-  current.value ??= Object.freeze([...definitions]);
-
-  return current.value as ReadonlyArray<TDefinition>;
-};
-
-/**
- * 为 Layout 注册自定义形状、箭头、裁剪及其他绘图扩展
- * @description 通过 Layout 的 extensions 属性传入，各字段接收对应的定义数组；这些运行时定义不写入可持久化的场景数据
- */
-export type LayoutExtensions = Readonly<{
-  /**
-   * 形状定义
-   * @default undefined
-   */
-  shapes?: ReadonlyArray<ShapeDefinition>;
-  /**
-   * 连接表面定义
-   * @default undefined
-   */
-  boundaries?: ReadonlyArray<BoundaryDefinition>;
-  /**
-   * 裁剪定义
-   * @default undefined
-   */
-  clips?: ReadonlyArray<ClipDefinition>;
-  /**
-   * 箭头定义
-   * @default undefined
-   */
-  arrows?: ReadonlyArray<ArrowDefinition>;
-  /** 沿路径放置的标记定义 */
-  marks?: ReadonlyArray<MarkDefinition>;
-  /**
-   * 图案定义
-   * @default undefined
-   */
-  patterns?: ReadonlyArray<PatternDefinition>;
-  /**
-   * 路径定义
-   * @default undefined
-   */
-  paths?: ReadonlyArray<AnyPathDefinition>;
-  /**
-   * Tier 2 composite 展开逻辑
-   * @default []
-   */
-  composites?: ReadonlyArray<AnyCompositeDefinition>;
-  /**
-   * 主题样式定义
-   * @default ThemeDefinitionsContext
-   */
-  themeDefinitions?: ReadonlyArray<ThemeDefinition>;
-}>;
+/** Layout 支持注册的编译扩展 */
+export type LayoutExtensions = Readonly<
+  Pick<
+    CompileOptions,
+    'shapes' | 'boundaries' | 'clips' | 'arrows' | 'marks' | 'patterns' | 'paths' | 'composites' | 'themeDefinitions'
+  >
+>;
 
 /** React Layout 的公开属性 */
 export type LayoutProps = {
@@ -188,11 +94,10 @@ export type LayoutProps = {
   authoring?: unknown;
   /** 直接传入 ir 时使用的事件处理函数表 */
   handlers?: HydrationHandlers;
-  /**
-   * 选择 session 增量更新或 static 完整编译模式；省略时使用 session
-   * @default LayoutRuntimeMode.Session
-   */
-  runtime?: LayoutRuntimeOptions;
+  /** 协调器执行选项；省略时使用完整编译 */
+  reconciler?: ProcessOptions['reconciler'];
+  /** 接收协调器的结构化诊断 */
+  onDiagnostic?: (diagnostic: ReconcilerDiagnostic) => void;
   /**
    * SVG 或 Canvas CSS 宽度；缺省按内容尺寸计算，单轴数值尺寸按内容比例补齐另一轴，CSS 字符串尺寸由浏览器排版
    * @default computeDisplaySize
@@ -250,100 +155,63 @@ export type LayoutProps = {
   onCompileResult?: (result: CompileResult) => void;
 };
 
-/** 订阅 Vanilla session controller 的最后一次成功 result，在提交前回退静态结果 */
-const useProcessingResult = (controller: SceneRuntime | undefined, fallbackResult: CompileResult): CompileResult => {
-  const subscribe = useCallback(
-    (notify: () => void) => (controller === undefined ? () => undefined : controller.subscribe(() => notify())),
-    [controller],
+/**
+ * 将 Vanilla 会话接入 React 生命周期；服务端和首次渲染先使用一次性编译结果
+ */
+const useLayoutResult = (
+  source: InputScene | IRScene,
+  options: ProcessOptions,
+  onDiagnostic: LayoutProps['onDiagnostic'],
+) => {
+  const [frame, setFrame] = useState(() => ({
+    result: compileToScene(source, { compile: options.compile }),
+    hasCommitted: false,
+  }));
+  const active = useRef<{ runtime: SceneRuntime; source: InputScene | IRScene; options: ProcessOptions }>();
+
+  useEffect(
+    () => () => {
+      active.current?.runtime.dispose();
+      active.current = undefined;
+    },
+    [],
   );
-  const read = () => controller?.current.compilation.result ?? fallbackResult;
-
-  return useSyncExternalStore(subscribe, read, read);
-};
-
-/** Processing result 宿主需要的固定属性 */
-type LayoutResultHostProps = Omit<React.ComponentProps<typeof ProcessingResultHost>, 'result'>;
-
-/** static 模式只执行一次无生命周期的 Vanilla processing */
-const StaticLayoutContent: FC<{
-  source: InputScene | IRScene;
-  options: ProcessOptions;
-  hostKey: string;
-  hostProps: LayoutResultHostProps;
-}> = ({ source, options, hostKey, hostProps }) => {
-  const result = useMemo(() => compileToScene(source, options), [source, options]);
-  return <ProcessingResultHost key={hostKey} {...hostProps} result={result} />;
-};
-
-/** session 模式复用同一 Vanilla controller，仅将后续 source 推入 update */
-const SessionLayoutContent: FC<{
-  source: InputScene | IRScene;
-  options: ProcessOptions;
-  onDiagnostic?: (diagnostic: ReconcilerDiagnostic) => void;
-  hostKey: string;
-  hostProps: LayoutResultHostProps;
-}> = ({ source, options, onDiagnostic, hostKey, hostProps }) => {
-  const [fallbackResult] = useState(() => compileToScene(source, options));
-  const [controller, setController] = useState<SceneRuntime | undefined>(undefined);
-  const currentSourceRef = useRef(source);
-  const result = useProcessingResult(controller, fallbackResult);
-  const appliedSourceRef = useRef<Readonly<{ controller: SceneRuntime; source: InputScene | IRScene }> | undefined>(
-    undefined,
-  );
-  const pendingDisposalRef = useRef<
-    Readonly<{ controller: SceneRuntime; timer: ReturnType<typeof setTimeout> }> | undefined
-  >(undefined);
-
-  const onDiagnosticRef = useRef(onDiagnostic);
-  useEffect(() => {
-    onDiagnosticRef.current = onDiagnostic;
-  }, [onDiagnostic]);
 
   useEffect(() => {
-    currentSourceRef.current = source;
-  }, [source]);
-
-  useEffect(() => {
-    const nextController = isInputScene(currentSourceRef.current)
-      ? SceneRuntime.fromInput(currentSourceRef.current, options)
-      : new SceneRuntime(currentSourceRef.current, options);
-    setController(nextController);
-
-    return () => {
-      const timer = setTimeout(() => {
-        nextController.dispose();
-        if (pendingDisposalRef.current?.timer === timer) pendingDisposalRef.current = undefined;
-      });
-      pendingDisposalRef.current = { controller: nextController, timer };
-    };
-  }, [options]);
-
-  useEffect(() => {
-    if (controller === undefined) return;
-
-    const previous = appliedSourceRef.current;
-
-    try {
-      if (previous?.controller === controller && previous.source !== source) {
-        controller.replace(source);
-      }
-      appliedSourceRef.current = { controller, source };
-    } catch {
-      // controller 已记录受控诊断，保留最后一次成功 result 以维持现有宿主帧
-    } finally {
-      deliverProcessingDiagnostics(controller, onDiagnosticRef.current);
+    const previous = active.current;
+    if (!previous || !compareProperties(previous.options.reconciler, options.reconciler)) {
+      const runtime = isInputScene(source)
+        ? SceneRuntime.fromInput(source, options)
+        : new SceneRuntime(source, options);
+      previous?.runtime.dispose();
+      active.current = { runtime, source, options };
+      const publish = ({ compilation }: ReconcilerResult) =>
+        setFrame({ result: compilation.result, hasCommitted: true });
+      runtime.subscribe(publish);
+      publish(runtime.current);
+      deliverProcessingDiagnostics(runtime, onDiagnostic);
+      return;
     }
-  }, [controller, source]);
 
-  const resultHostProps =
-    controller === undefined ? { ...hostProps, onArtifacts: undefined, onCompileResult: undefined } : hostProps;
+    // 内联扩展数组按有序定义引用比较，不因容器变化重新编译
+    if (previous.source === source && compareProperties(previous.options.compile, options.compile, { depth: 2 }))
+      return;
 
-  return <ProcessingResultHost key={hostKey} {...resultHostProps} result={result} />;
+    active.current = { runtime: previous.runtime, source, options };
+    try {
+      previous.runtime.replace(source, options.compile);
+    } catch {
+      // Vanilla 保留最后一次成功结果，失败不发布新帧
+    }
+    deliverProcessingDiagnostics(previous.runtime, onDiagnostic);
+  }, [source, options, onDiagnostic]);
+
+  return frame;
 };
 
 /**
- * 将 JSX 图形或场景 IR 渲染为 SVG 或 Canvas，并接入更新与动画
- * @description 通过 children 声明图形，或通过 ir 传入完整场景；同时提供时使用 ir。默认使用 session 模式处理后续更新，可通过 runtime 切换为 static 完整编译模式
+ * 绘图容器
+ * @description 将 JSX 子图元或传入的 ir 渲染为 SVG 或 Canvas；同时提供时使用 ir
  */
 export const Layout: FC<LayoutProps> = props => {
   const {
@@ -353,7 +221,8 @@ export const Layout: FC<LayoutProps> = props => {
     children,
     authoring,
     handlers,
-    runtime,
+    reconciler,
+    onDiagnostic,
     width,
     height,
     viewBox,
@@ -375,23 +244,7 @@ export const Layout: FC<LayoutProps> = props => {
     rootScope,
   } = props;
 
-  const { shapes, boundaries, clips, arrows, marks, patterns, paths, composites, themeDefinitions } = extensions ?? {};
-  const { mode = LayoutRuntimeMode.Session, updateStrategy, onDiagnostic } = runtime ?? {};
-  const stableShapes = canonicalizeDefinitionArray(shapes);
-  const stableBoundaries = canonicalizeDefinitionArray(boundaries);
-  const stableClips = canonicalizeDefinitionArray(clips);
-  const stableArrows = canonicalizeDefinitionArray(arrows);
-  const stableMarks = canonicalizeDefinitionArray(marks);
-  const stablePatterns = canonicalizeDefinitionArray(patterns);
-  const stablePaths = canonicalizeDefinitionArray(paths);
-  const stableComposites = canonicalizeDefinitionArray(composites);
   const ambientThemeDefinitions = useThemeDefinitions();
-  const stableThemeDefinitions = canonicalizeDefinitionArray(
-    useMemo(
-      () => mergeThemeDefinitions(ambientThemeDefinitions, themeDefinitions),
-      [ambientThemeDefinitions, themeDefinitions],
-    ),
-  );
 
   const reducedMotion = usePrefersReducedMotion();
   const animationMode = useAnimationMode();
@@ -403,28 +256,21 @@ export const Layout: FC<LayoutProps> = props => {
   const renderer = rendererProp ?? contextRenderer ?? 'svg';
 
   const ambientTheme = useTheme();
-  const scopeStyle = useMemo(() => rootScope ?? {}, [rootScope]);
   if (__DEV__) {
-    if (irFromProp !== undefined && Object.keys(pickScopeStyle(scopeStyle)).length > 0) {
+    if (irFromProp !== undefined && rootScope?.defaults !== undefined) {
       warnOnce('[retikz] <Layout>：同时提供 `ir` 与 `rootScope` 时，`rootScope` 被忽略，`ir` 已是完整 IR');
     }
   }
 
-  const reactInput = useMemo(() => {
-    if (irFromProp !== undefined) return undefined;
-
-    const input = createInputScene(wrapRootScope(children, scopeStyle));
-
+  const base = useMemo(() => {
+    if (irFromProp !== undefined) return irFromProp;
+    const input = createInputScene(
+      rootScope?.defaults === undefined ? children : <Scope defaults={rootScope.defaults}>{children}</Scope>,
+    );
     return authoring === undefined ? input : { ...input, authoring };
-  }, [authoring, children, irFromProp, scopeStyle]);
+  }, [authoring, children, irFromProp, rootScope]);
 
   const source = useMemo<InputScene | IRScene>(() => {
-    const base: InputScene | IRScene =
-      irFromProp ??
-      reactInput ??
-      (() => {
-        throw new RetikzReactError(RetikzReactErrorCode.Kernel, '[retikz] <Layout> requires ir or children');
-      })();
     const mergedTheme = mergeThemeOverlays(ambientTheme, base.theme, theme);
     const themed =
       mergedTheme === undefined || isSameTheme(base.theme, mergedTheme) ? base : { ...base, theme: mergedTheme };
@@ -434,85 +280,47 @@ export const Layout: FC<LayoutProps> = props => {
     const animations = viewed.animations === undefined ? rootAnimations : [...viewed.animations, ...rootAnimations];
 
     return { ...viewed, animations } as InputScene | IRScene;
-  }, [ambientTheme, irFromProp, reactInput, rootAnimations, theme, viewBox]);
+  }, [ambientTheme, base, rootAnimations, theme, viewBox]);
 
-  const processingOptions = useMemo<ProcessOptions>(
+  const options = useMemo<ProcessOptions>(
     () => ({
-      ...(mode === LayoutRuntimeMode.Static
-        ? {}
-        : { reconciler: { mode: ReconcilerMode.Incremental, updateStrategy } }),
+      reconciler,
       compile: {
+        ...extensions,
         measureText,
         nodeDistance,
         fontSize,
-        shapes: stableShapes,
-        boundaries: stableBoundaries,
-        clips: stableClips,
-        arrows: stableArrows,
-        marks: stableMarks,
-        patterns: stablePatterns,
-        paths: stablePaths,
-        composites: stableComposites,
-        themeDefinitions: stableThemeDefinitions,
         lowerTex,
-      } satisfies CompileOptions,
+        themeDefinitions: mergeThemeDefinitions(ambientThemeDefinitions, extensions?.themeDefinitions),
+      },
     }),
-    [
-      mode,
-      updateStrategy,
-      measureText,
-      nodeDistance,
-      fontSize,
-      stableShapes,
-      stableBoundaries,
-      stableClips,
-      stableArrows,
-      stableMarks,
-      stablePatterns,
-      stablePaths,
-      stableComposites,
-      stableThemeDefinitions,
-      lowerTex,
-    ],
+    [ambientThemeDefinitions, extensions, fontSize, lowerTex, measureText, nodeDistance, reconciler],
   );
+  const { result, hasCommitted } = useLayoutResult(source, options, onDiagnostic);
 
   const rawId = useId();
-  const processingControllerIdentity = useMemo(
-    () => ({ options: processingOptions, key: createProcessingControllerKey() }),
-    [processingOptions],
-  );
   const resolvedIdPrefix = idPrefix ?? rawId.replace(/[^a-zA-Z0-9]/g, '');
   const resolvedHandlers = useMemo(
     () => (irFromProp === undefined ? collectHydrationHandlers(children) : (handlers ?? {})),
     [children, handlers, irFromProp],
   );
 
-  const hostProps: LayoutResultHostProps = {
-    backend: renderer,
-    handlers: resolvedHandlers,
-    width,
-    height,
-    className,
-    style,
-    animate,
-    snapshotAt,
-    animationRef,
-
-    idPrefix: resolvedIdPrefix,
-    onArtifacts,
-    onCompileResult,
-  };
-  const hostKey = `${mode}:${renderer}:${resolvedIdPrefix}`;
-  return mode === LayoutRuntimeMode.Static ? (
-    <StaticLayoutContent source={source} options={processingOptions} hostKey={hostKey} hostProps={hostProps} />
-  ) : (
-    <SessionLayoutContent
-      key={processingControllerIdentity.key}
-      source={source}
-      options={processingOptions}
-      onDiagnostic={onDiagnostic}
-      hostKey={hostKey}
-      hostProps={hostProps}
+  return (
+    <ProcessingResultHost
+      key={`${renderer}:${resolvedIdPrefix}`}
+      result={result}
+      backend={renderer}
+      handlers={resolvedHandlers}
+      width={width}
+      height={height}
+      className={className}
+      style={style}
+      animate={animate}
+      snapshotAt={snapshotAt}
+      animationRef={animationRef}
+      idPrefix={resolvedIdPrefix}
+      onArtifacts={hasCommitted ? onArtifacts : undefined}
+      onCompileResult={hasCommitted ? onCompileResult : undefined}
     />
   );
 };

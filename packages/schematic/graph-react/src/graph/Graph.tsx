@@ -42,7 +42,8 @@ const collectGraphInput = (props: GraphProps, embedId: string, rejectHostProps: 
     children,
     authoring: _authoring,
     handlers: _handlers,
-    runtime: _runtime,
+    reconciler: _reconciler,
+    onDiagnostic: _onDiagnostic,
     width: _width,
     height: _height,
     viewBox: _viewBox,
@@ -70,7 +71,8 @@ const collectGraphInput = (props: GraphProps, embedId: string, rejectHostProps: 
   } = props;
   void _authoring;
   void _handlers;
-  void _runtime;
+  void _reconciler;
+  void _onDiagnostic;
   void _width;
   void _height;
   void _viewBox;

@@ -15,12 +15,8 @@ Compare the two identical sets of nodes below: A has no fill of its own; B expli
 
 On both sides, A inherits blue and B stays orange. **defaults** supplies values that descendants have not set explicitly; it does not forcibly rewrite node properties. `rootScope.defaults.style` supplies general drawing styles such as `fill / stroke / opacity`. The figure uses `dodgerblue` and `darkorange` with translucent fills to keep the node text legible.
 
-Internally, `wrapRootScope` selects effective `defaults` overrides, creates an ordinary Scope only when needed, and places the original children inside it. The left side reuses that wrapper function; the right side declares Scope directly. Both therefore use the same inheritance rules.
+Layout leaves the children unchanged when `rootScope.defaults` is omitted. Providing `defaults` creates an ordinary Scope, even for `{}` or `{ reset: false }`. React does not inspect its contents.
 
-Wrapping depends on whether the configuration contributes an override, not merely whether the `rootScope` object exists:
-
-- **No effective override**: when omitted, `{}`, or limited to empty overrides such as `defaults: { style: {} }` and `defaults: {}`, use the original children without adding a synthetic Scope.
-- **Effective override**: actual styles, defaults, or an effective `defaults.reset` wrap the children in an ordinary Scope and reuse its inheritance rules. A `reset` of `true` or a nonempty channel list cuts the corresponding outer name inheritance; `false` or an empty list alone does not trigger wrapping.
 - **ir supplied**: use the complete child structure described by IR, ignoring any children and `rootScope` supplied alongside it. Change the IR itself to change its scopes; host CSS `style` remains applicable.
 
 **The synthetic Scope is not a local namespace.** `rootScope` only accepts `defaults`. Use an explicit Scope inside the drawing for `localNamespace`; see [Scope usage](/kernel/components/scope/usage) for naming and references.
@@ -28,16 +24,15 @@ Wrapping depends on whether the configuration contributes an override, not merel
 <SourceLinks
   sources={[
     {
-      label: 'Choose whether effective overrides require a root Scope',
-      path: 'packages/kernel/react/src/components/container/layout/root-scope.ts',
-      startLine: 46,
-      endLine: 49,
+      label: 'Wrap children when defaults are supplied',
+      path: 'packages/kernel/react/src/components/layout/Layout.tsx',
+      startLine: 267,
     },
     {
       label: 'Layout: ir and rootScope boundaries',
-      path: 'packages/kernel/react/src/components/container/layout/Layout.tsx',
-      startLine: 400,
-      endLine: 414,
+      path: 'packages/kernel/react/src/components/layout/Layout.tsx',
+      startLine: 259,
+      endLine: 270,
     },
   ]}
 />
@@ -74,9 +69,9 @@ Moving, adding, or removing elements can therefore change the automatic viewport
   sources={[
     {
       label: 'Layout: explicit viewBox overrides the input',
-      path: 'packages/kernel/react/src/components/container/layout/Layout.tsx',
-      startLine: 416,
-      endLine: 432,
+      path: 'packages/kernel/react/src/components/layout/Layout.tsx',
+      startLine: 272,
+      endLine: 282,
     },
     {
       label: 'Core: select an explicit viewport or automatic bounds',
@@ -177,13 +172,13 @@ Two further boundaries affect final colors:
   sources={[
     {
       label: 'Layout: merge Provider, input, and explicit themes',
-      path: 'packages/kernel/react/src/components/container/layout/Layout.tsx',
-      startLine: 416,
-      endLine: 432,
+      path: 'packages/kernel/react/src/components/layout/Layout.tsx',
+      startLine: 272,
+      endLine: 282,
     },
     {
       label: 'Field-wise Theme merge',
-      path: 'packages/kernel/react/src/components/container/theme/theme-context.ts',
+      path: 'packages/kernel/react/src/components/layout/use-theme.tsx',
       startLine: 5,
       endLine: 13,
     },
@@ -205,9 +200,9 @@ Two further boundaries affect final colors:
     },
     {
       label: 'Nested ThemeProvider inheritance',
-      path: 'packages/kernel/react/src/components/container/theme/ThemeProvider.tsx',
-      startLine: 18,
-      endLine: 25,
+      path: 'packages/kernel/react/src/components/layout/use-theme.tsx',
+      startLine: 46,
+      endLine: 54,
     },
   ]}
 />

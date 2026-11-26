@@ -1205,10 +1205,17 @@ export const kernelV05: Release = {
       pkg: '@retikz/react',
       version: 'v0.5',
       description: {
-        zh: 'React 支持新的定位、连线与标签能力；Layout 默认管理持续更新，也可选择一次完整渲染，并能通知应用获取编译产物。',
-        en: 'React exposes new placement, path, and label capabilities. Layout manages ongoing updates by default, offers full static rendering, and can notify applications of compile artifacts.',
+        zh: 'React 支持新的定位、连线与标签能力；Layout 复用 Vanilla 的协调器配置，并在成功提交后通知应用获取编译产物。',
+        en: 'React exposes new placement, path, and label capabilities. Layout uses Vanilla reconciler options and publishes compile artifacts after successful commits.',
       },
       highlights: [
+        {
+          label: { zh: 'Layout 复用协调器配置', en: 'Layout uses reconciler options' },
+          content: {
+            zh: '移除 React 的 runtime 属性与 session/static 模式。使用 reconciler 配置协调器（默认 full），原 runtime.onDiagnostic 改为顶层 onDiagnostic。完整输入变化始终通过 replace 完整编译。',
+            en: 'Removes the React runtime prop and session/static modes. Configure the reconciler through reconciler (full by default), and move runtime.onDiagnostic to the top-level onDiagnostic prop. Replacing complete input always recompiles in full.',
+          },
+        },
         {
           label: { zh: '路径简写由 Draw 展开', en: 'Draw expands path shorthand' },
           content: {
@@ -1238,13 +1245,6 @@ export const kernelV05: Release = {
           },
         },
         {
-          label: { zh: 'Layout 异步准备桥接', en: 'Layout async preparation bridge' },
-          content: {
-            zh: 'runtime.preparation 支持 sync/async，缺省 sync；async 复用 Vanilla controller，不创建领域私有请求状态机。React 同步 SSR 保持同步；异步 SSR 使用 Vanilla 入口。',
-            en: 'runtime.preparation supports sync/async and defaults to sync. Async mode reuses the Vanilla controller without domain-private request state machines. React synchronous SSR remains synchronous; async SSR uses Vanilla entry points.',
-          },
-        },
-        {
           label: { zh: '等价 authoring', en: 'Equivalent authoring' },
           content: {
             zh: '`NodeProps.position`、`ScopeProps.placement` / transform `pivot`、`<Step kind="axis-line">` 与 `<Draw>` 的 `horizontalTo` / `verticalTo`、`-|-` / `|-|` 均生成 Core 定义的同一 IR。',
@@ -1256,13 +1256,6 @@ export const kernelV05: Release = {
           content: {
             zh: '`<Layout>` 通过 `artifacts={{ nodeLayouts: true }}` 请求 Node layout，并在 React commit 后由 `onArtifacts` 接收 immutable artifacts；可用 `isNodeLayoutCompileArtifact()` 筛选。',
             en: '`<Layout>` requests Node layouts through `artifacts={{ nodeLayouts: true }}` and reports immutable artifacts through `onArtifacts` after the React commit; `isNodeLayoutCompileArtifact()` narrows the result.',
-          },
-        },
-        {
-          label: { zh: 'Layout 执行策略', en: 'Layout execution policy' },
-          content: {
-            zh: '`<Layout runtime>` 默认 `retained + auto`，也可选择保留事务的 `retained + full` 或不创建 Session/Snapshot 的 `static`。strategy 改变时在同一 host 重建 Session，mode 改变时释放并替换宿主；static 与 renderer factory、diagnostic callback 互斥。',
-            en: '`<Layout runtime>` defaults to `retained + auto` and can instead select transactional `retained + full` or `static` without a Session or Snapshot. Strategy changes rebuild the Session on the same host, while mode changes replace the host. Static mode excludes renderer factories and diagnostic callbacks.',
           },
         },
       ],

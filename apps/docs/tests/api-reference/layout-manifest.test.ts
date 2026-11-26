@@ -30,9 +30,8 @@ describe('Layout API 公开范围', () => {
     expect(source).toContain("IRScene['theme']");
 
     const extensions = source.split('### LayoutExtensions\n')[1]?.split('\n### ')[0] ?? '';
-    const fields = [...extensions.matchAll(/^\| `(?:readonly )?([^`?]+)\?` \|/gm)].map(match => match[1]);
-
-    expect(fields).toEqual([
+    expect(extensions).toContain('Pick<CompileOptions,');
+    for (const field of [
       'arrows',
       'boundaries',
       'clips',
@@ -42,18 +41,8 @@ describe('Layout API 公开范围', () => {
       'patterns',
       'shapes',
       'themeDefinitions',
-    ]);
-    expect(extensions).toContain('ReadonlyArray<ClipDefinition>');
-    expect(extensions).toContain('ReadonlyArray<AnyCompositeDefinition>');
-    expect(extensions).toContain('`readonly arrows?` | `ReadonlyArray<ArrowDefinition>` | `undefined`');
-    expect(extensions).toContain('`[]`');
-    expect(extensions).toContain('`ThemeDefinitionsContext`');
-    expect(extensions).not.toContain('import("');
-    expect(extensions).not.toContain('$ZodTypeInternals');
-    expect(extensions).toContain('<DocTabs defaultValue="members">');
-    expect(extensions).toMatch(
-      /\| Member \|[\s\S]*<DocTab value="definition" label="Type definition">[\s\S]*export type LayoutExtensions = Readonly<\{/,
-    );
+    ])
+      expect(extensions).toContain(`'${field}'`);
 
     const layoutProps = source.split('### Layout / LayoutProps\n')[1]?.split('\n### ')[0] ?? '';
 
@@ -63,30 +52,8 @@ describe('Layout API 公开范围', () => {
     );
     expect(layoutProps).toContain('`computeDisplaySize`');
 
-    const runtimeMode = source.split('### LayoutRuntimeMode\n')[1]?.split('\n### ')[0] ?? '';
-
-    expect(headings.filter(name => name === 'LayoutRuntimeMode')).toHaveLength(1);
-    expect(runtimeMode).toContain('export const LayoutRuntimeMode = Object.freeze({');
-    expect(runtimeMode).toContain("Session: 'session'");
-    expect(runtimeMode).toContain("Static: 'static'");
-    expect(runtimeMode).toContain('export type LayoutRuntimeMode = ValueOf<typeof LayoutRuntimeMode>;');
-
-    const runtimeOptions = source.split('### LayoutRuntimeOptions\n')[1]?.split('\n### ')[0] ?? '';
-
-    expect(runtimeOptions.match(/<DocTabs\b/g)).toHaveLength(1);
-    expect(runtimeOptions).toContain('<DocTabs defaultValue="session">');
-    expect(runtimeOptions).toContain('<DocTab value="session" label="Members · Session">');
-    expect(runtimeOptions).toContain('<DocTab value="static" label="Members · Static">');
-    expect(runtimeOptions).toContain('<DocTab value="definition" label="Type definition">');
-
-    const staticBranch =
-      runtimeOptions.split('<DocTab value="static" label="Members · Static">')[1]?.split('</DocTab>')[0] ?? '';
-
-    expect(staticBranch).toContain('`typeof LayoutRuntimeMode.Static`');
-    expect(staticBranch).toMatch(/`readonly updateStrategy\?` \| `never`/);
-    expect(runtimeOptions).toContain(
-      'export type LayoutRuntimeOptions = LayoutSessionRuntimeOptions | LayoutStaticRuntimeOptions;',
-    );
+    expect(layoutProps).toContain("ProcessOptions['reconciler']");
+    expect(layoutProps).toContain('onDiagnostic');
     expect(extensions).not.toContain('<details>');
     expect(source.replaceAll(/```[\s\S]*?```/g, '')).not.toMatch(/[\u3400-\u9fff]/u);
 

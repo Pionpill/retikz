@@ -15,12 +15,8 @@ description: 解释 Layout 的隐式根作用域、自动视窗、显示尺寸�
 
 两边的 A 都继承蓝色，B 都保留橙色。**defaults** 为未显式配置的后代图元提供默认值，不会强制改写节点属性；`rootScope.defaults.style` 则提供 `fill / stroke / opacity` 等通用绘图样式。图中的蓝色使用 `dodgerblue`，橙色使用 `darkorange`，均以低透明度填充，便于同时看清节点文字。
 
-实现上，`wrapRootScope` 先挑出有效的 `defaults`，有覆盖时才创建普通 Scope，再把原 children 放进去。图的左侧复用了这个包装函数，右侧直接声明 Scope，因此两种写法最终沿用同一套继承规则。
+未设置 `rootScope.defaults` 时，Layout 直接使用原 children。显式提供 `defaults` 时就包一层普通 Scope，即使值是 `{}` 或 `{ reset: false }`。React 不检查内部字段。
 
-包装与否取决于是否存在有效覆盖，而不是有没有传入 `rootScope` 这个对象：
-
-- **无有效覆盖**：不传、传 `{}`，或只传 `defaults: { style: {} }`、`defaults: {}` 等空覆盖时，直接使用原 children，不增加合成 Scope。
-- **有有效覆盖**：有实际样式、默认值或有效的 `defaults.reset` 时，包装一层普通 Scope，沿用既有继承规则。`reset` 为 `true` 或非空通道列表时表示切断相应的外层样式继承；`false` 或空列表本身不触发包装。
 - **直接传入 ir**：使用 IR 已描述的完整子图，忽略同时传入的 children 和 `rootScope`。要改变其中的作用域，应修改 IR 本身；宿主 CSS `style` 仍然生效。
 
 **这层合成 Scope 不是局部命名空间。** `rootScope` 只接收 `defaults`；需要 `localNamespace` 时，应在子图中显式使用 Scope，命名与引用机制见 [Scope 用法](/kernel/components/scope/usage)。
@@ -28,16 +24,15 @@ description: 解释 Layout 的隐式根作用域、自动视窗、显示尺寸�
 <SourceLinks
   sources={[
     {
-      label: '按有效覆盖决定是否包装根 Scope',
-      path: 'packages/kernel/react/src/components/container/layout/root-scope.ts',
-      startLine: 46,
-      endLine: 49,
+      label: '按 defaults 决定是否包装根 Scope',
+      path: 'packages/kernel/react/src/components/layout/Layout.tsx',
+      startLine: 267,
     },
     {
       label: 'Layout 的 ir 分支与 rootScope 边界',
-      path: 'packages/kernel/react/src/components/container/layout/Layout.tsx',
-      startLine: 400,
-      endLine: 414,
+      path: 'packages/kernel/react/src/components/layout/Layout.tsx',
+      startLine: 259,
+      endLine: 270,
     },
   ]}
 />
@@ -74,9 +69,9 @@ $$
   sources={[
     {
       label: 'Layout：显式 viewBox 覆盖输入值',
-      path: 'packages/kernel/react/src/components/container/layout/Layout.tsx',
-      startLine: 416,
-      endLine: 432,
+      path: 'packages/kernel/react/src/components/layout/Layout.tsx',
+      startLine: 272,
+      endLine: 282,
     },
     {
       label: 'Core：选择显式视窗或自动边界',
@@ -174,13 +169,13 @@ Layout 把主题写入输入场景，供后续处理读取；它不会把主题�
   sources={[
     {
       label: 'Layout：合并 Provider、输入与显式主题',
-      path: 'packages/kernel/react/src/components/container/layout/Layout.tsx',
-      startLine: 416,
-      endLine: 432,
+      path: 'packages/kernel/react/src/components/layout/Layout.tsx',
+      startLine: 272,
+      endLine: 282,
     },
     {
       label: 'Theme 的逐字段合并',
-      path: 'packages/kernel/react/src/components/container/theme/theme-context.ts',
+      path: 'packages/kernel/react/src/components/layout/use-theme.tsx',
       startLine: 5,
       endLine: 13,
     },
@@ -202,9 +197,9 @@ Layout 把主题写入输入场景，供后续处理读取；它不会把主题�
     },
     {
       label: '嵌套 ThemeProvider 的继承',
-      path: 'packages/kernel/react/src/components/container/theme/ThemeProvider.tsx',
-      startLine: 18,
-      endLine: 25,
+      path: 'packages/kernel/react/src/components/layout/use-theme.tsx',
+      startLine: 46,
+      endLine: 54,
     },
   ]}
 />

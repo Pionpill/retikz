@@ -17,7 +17,7 @@ description: 用两个节点和一条连线，理解 React / Vanilla 输入如�
 
 <ComponentPreview files="pipeline-example" size="xs" />
 
-预览源码可切换 React、Vanilla 与 IR。本例使用 static 模式，便于观察一次完整处理。
+预览源码可切换 React、Vanilla 与 IR。本例展示首帧的完整编译。
 
 ## 声明与输入
 
@@ -33,9 +33,9 @@ React 中的 `Node`、`Path`、`Step` 只做声明。`Layout` 收集整棵声明
   sources={[
     {
       label: 'Layout 收集声明并调用 Vanilla',
-      path: 'packages/kernel/react/src/components/container/layout/Layout.tsx',
+      path: 'packages/kernel/react/src/components/layout/Layout.tsx',
     },
-    { label: 'JSX 转换为 InputScene', path: 'packages/kernel/react/src/components/container/layout/input-scene.ts' },
+    { label: 'JSX 转换为 InputScene', path: 'packages/kernel/react/src/components/layout/input-scene.ts' },
   ]}
 />
 
@@ -43,7 +43,7 @@ React 中的 `Node`、`Path`、`Step` 只做声明。`Layout` 收集整棵声明
 
 Vanilla 在输入层统一处理配置：将 `InputScene` 归一化为 `IRScene`，整理编译选项，再安排 Core 执行。已有 IR 也从这里接入。本例经过输入准备后，IR 中仍保留 A、B 的名称引用，等待 Core 计算连接位置。
 
-Vanilla 还负责处理模式的装配。**static** 创建临时 `SceneRuntime`，读取首帧后释放；默认的 **session** 模式保留会话，通过 `replace` 接收后续作者输入或完整 IR。协调器按编译模式选择完整遍历或 Weave，两者共享元素计算与输出语义。
+Layout 首次渲染通过 `compileToScene` 获取画面。客户端提交后创建 Vanilla 的 `SceneRuntime`，并通过 `replace` 传入后续的作者输入或完整 IR。协调器默认完整编译，也可通过 `reconciler` 配置为增量模式；完整替换始终完整编译。
 
 <ComponentPreview files="pipeline-processing" size="sm" hideCode type="flow" />
 
@@ -116,7 +116,7 @@ Render 消费 Scene 中已经确定的几何。选择 SVG 时，它生成描述�
 
 ## 完整实现流程
 
-沿本例的 React JSX、static、SVG 分支阅读源码，可以依次追踪下面的入口。箭头表示执行阅读顺序；输入准备内部的调用也展开在图中。
+沿本例的 React JSX 首帧到 SVG 的路径阅读源码，可以依次追踪下面的入口。箭头表示执行阅读顺序；输入准备内部的调用也展开在图中。
 
 <ComponentPreview files="pipeline-implementation" size="lg" hideCode type="flow" />
 
@@ -124,7 +124,7 @@ Render 消费 Scene 中已经确定的几何。选择 SVG 时，它生成描述�
 
 <SourceLinks
   sources={[
-    { label: 'React 场景入口', path: 'packages/kernel/react/src/components/container/layout/Layout.tsx' },
+    { label: 'React 场景入口', path: 'packages/kernel/react/src/components/layout/Layout.tsx' },
     { label: 'Vanilla 同步处理', path: 'packages/kernel/vanilla/src/runtime/runtime.ts' },
     { label: 'SvgNode 转换为 React 元素', path: 'packages/kernel/react/src/render/svg-to-react.ts' },
   ]}

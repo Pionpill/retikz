@@ -222,7 +222,8 @@ describe('Block React 编写', () => {
 const hostPropKeys = [
   'authoring',
   'handlers',
-  'runtime',
+  'reconciler',
+  'onDiagnostic',
   'width',
   'height',
   'viewBox',
@@ -665,7 +666,8 @@ describe('Graph 独立式和嵌入式宿主分类', () => {
     const props = {
       authoring: undefined,
       handlers: undefined,
-      runtime: undefined,
+      reconciler: { mode: 'incremental' },
+      onDiagnostic: () => undefined,
       width: undefined,
       height: undefined,
       viewBox: undefined,

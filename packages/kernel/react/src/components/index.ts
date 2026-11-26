@@ -4,8 +4,6 @@ export {
   AnimationModeContext,
   AnimationModeProvider,
   Layout,
-  LayoutRuntimeMode,
-  wrapRootScope,
   RendererModeContext,
   RendererModeProvider,
   ThemeContext,
@@ -22,9 +20,6 @@ export type {
   InputSceneCreationOptions,
   LayoutExtensions,
   LayoutProps,
-  LayoutRuntimeOptions,
-  LayoutSessionRuntimeOptions,
-  LayoutStaticRuntimeOptions,
   RendererModeProviderProps,
   ThemeProviderProps,
 } from './layout';

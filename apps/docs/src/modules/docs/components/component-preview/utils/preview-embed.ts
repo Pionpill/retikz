@@ -48,7 +48,8 @@ type PreviewHostDimensions = Pick<LayoutProps, 'width' | 'height'>;
 const FLOW_HOST_PROP_KEYS = [
   'authoring',
   'handlers',
-  'runtime',
+  'reconciler',
+  'onDiagnostic',
   'width',
   'height',
   'viewBox',

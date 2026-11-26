@@ -181,11 +181,11 @@ describe('buildPreviewIR', () => {
     expect(vanilla.svg).toContain('stroke="#123456"');
   });
 
-  it.each<LayoutProps['rootScope']>([undefined, {}, { defaults: { style: {} } }, { defaults: { reset: false } }])(
-    '不为无效的 rootScope %j 或宿主 props 添加 Scope',
+  it.each<LayoutProps['rootScope']>([undefined, {}, { defaults: undefined }])(
+    'rootScope %j 没有 defaults 时不添加 Scope',
     rootScope => {
       const preview = buildPreviewIR(() => (
-        <Layout rootScope={rootScope} style={{ opacity: 0.5 }} runtime={{ mode: 'static' }}>
+        <Layout rootScope={rootScope} style={{ opacity: 0.5 }}>
           <Node id="A" position={[0, 0]} />
         </Layout>
       ));

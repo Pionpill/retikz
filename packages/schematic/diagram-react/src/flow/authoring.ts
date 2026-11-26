@@ -20,7 +20,8 @@ export type FlowDiagramLayoutHostProps = Pick<
   LayoutProps & LayoutExtensions,
   | 'authoring'
   | 'handlers'
-  | 'runtime'
+  | 'reconciler'
+  | 'onDiagnostic'
   | 'width'
   | 'height'
   | 'viewBox'
@@ -50,7 +51,8 @@ export type FlowDiagramLayoutHostProps = Pick<
 const flowDiagramLayoutHostPropKeys = [
   'authoring',
   'handlers',
-  'runtime',
+  'reconciler',
+  'onDiagnostic',
   'width',
   'height',
   'viewBox',
@@ -309,7 +311,8 @@ export const collectFlowDiagramInput = (
     children,
     authoring: _authoring,
     handlers: _handlers,
-    runtime: _runtime,
+    reconciler: _reconciler,
+    onDiagnostic: _onDiagnostic,
     width: _width,
     height: _height,
     viewBox: _viewBox,
@@ -338,7 +341,8 @@ export const collectFlowDiagramInput = (
   } = props;
   void _authoring;
   void _handlers;
-  void _runtime;
+  void _reconciler;
+  void _onDiagnostic;
   void _width;
   void _height;
   void _viewBox;

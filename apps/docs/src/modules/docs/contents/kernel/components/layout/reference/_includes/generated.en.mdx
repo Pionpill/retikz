@@ -13,9 +13,9 @@ For initial setup, see [Basic usage](/kernel/components/layout/usage). React pro
 
 ## Component declarations
 
-#### <ApiSourceLink label={"Layout"} path={"packages/kernel/react/src/components/container/layout/Layout.tsx"} startLine={347}>Layout</ApiSourceLink> / <ApiSourceLink label={"LayoutProps"} path={"packages/kernel/react/src/components/container/layout/Layout.tsx"} startLine={175}>LayoutProps</ApiSourceLink>
+#### <ApiSourceLink label={"Layout"} path={"packages/kernel/react/src/components/layout/Layout.tsx"} startLine={216}>Layout</ApiSourceLink> / <ApiSourceLink label={"LayoutProps"} path={"packages/kernel/react/src/components/layout/Layout.tsx"} startLine={82}>LayoutProps</ApiSourceLink>
 
-Declare drawings through children or pass a complete scene through ir; ir takes precedence when both are supplied. Subsequent updates use session mode by default; runtime can select static mode for full compilation.
+Renders JSX children or an IR scene as SVG or Canvas; ir takes precedence when both are supplied
 
 <DocTabs defaultValue="members">
 
@@ -23,33 +23,34 @@ Declare drawings through children or pass a complete scene through ir; ir takes 
 
 <ApiTable grouped>
 
-| Group      | Member             | Type                                                    | Default                     | Description                                                                                                                                                                              |
-| ---------- | ------------------ | ------------------------------------------------------- | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Main       | `children?`        | `ReactNode`                                             | —                           | Drawing content declared with JSX                                                                                                                                                        |
-|            | `ir?`              | `IRScene`                                               | —                           | Persisted Source IR, used instead of children                                                                                                                                            |
-| Layout     | `nodeDistance?`    | `number`                                                | `24`                        | Default relative node distance in drawing units; applies when position uses direction/of without distance                                                                                |
-| Style      | `fontSize?`        | `number`                                                | `16`                        | Default font size in drawing units; used when font.size is omitted and as the root size for presets and rem, without overriding explicit numeric sizes                                   |
-|            | `rootScope?`       | `ScopeStyleProps`                                       | —                           | Implicit root Scope overrides for JSX children; complete IR takes precedence, while host CSS style applies independently                                                                 |
-|            | `theme?`           | `IRScene['theme']`                                      | —                           | Theme written to the Scene root and inherited by descendant Composites                                                                                                                   |
-| Rendering  | `className?`       | `string`                                                | —                           | Host className                                                                                                                                                                           |
-|            | `height?`          | `number \| string`                                      | `computeDisplaySize`        | CSS height of SVG or Canvas; derived from content dimensions when omitted. A single numeric dimension determines the other from the content aspect ratio; CSS strings use browser layout |
-|            | `idPrefix?`        | `string`                                                | `useId`                     | SVG resource ID prefix; generated from React useId when omitted                                                                                                                          |
-|            | `renderer?`        | `'svg' \| 'canvas'`                                     | `'svg'`                     | Rendering backend; an explicit value takes precedence, otherwise inherits the Renderer context and falls back to SVG when no context is provided                                         |
-|            | `style?`           | `CSSProperties`                                         | —                           | Host inline styles                                                                                                                                                                       |
-|            | `viewBox?`         | `IRViewBox`                                             | —                           | Explicit viewport in drawing coordinates; overrides ir.viewBox. When omitted, uses the scene viewport or derives it from content if the scene has none                                   |
-|            | `width?`           | `number \| string`                                      | `computeDisplaySize`        | CSS width of SVG or Canvas; derived from content dimensions when omitted. A single numeric dimension determines the other from the content aspect ratio; CSS strings use browser layout  |
-| Callbacks  | `handlers?`        | `HydrationHandlers`                                     | —                           | Event handlers used when ir is supplied directly                                                                                                                                         |
-| Animation  | `animate?`         | `boolean`                                               | `resolveAnimationEnabled`   | Whether to play animations; the animation-mode context takes precedence, otherwise an unspecified value follows the system reduced-motion preference                                     |
-|            | `animationRef?`    | `Ref<AnimationControls \| null>`                        | —                           | Animation controller ref                                                                                                                                                                 |
-|            | `animations?`      | `ReadonlyArray<IRAnimationTrack>`                       | —                           | Scene-root animations                                                                                                                                                                    |
-|            | `snapshotAt?`      | `number`                                                | —                           | Animation sampling time in milliseconds; freezes the drawing at that time without playback and takes precedence over animate                                                             |
-| Runtime    | `authoring?`       | `unknown`                                               | —                           | JSX authoring metadata collected during normalization; ignored when ir is supplied and excluded from persisted Scene IR                                                                  |
-|            | `runtime?`         | `LayoutRuntimeOptions`                                  | `LayoutRuntimeMode.Session` | Select session incremental updates or static full compilation; defaults to session                                                                                                       |
-| Output     | `onArtifacts?`     | `(artifacts: ReadonlyArray<CompositeArtifact>) => void` | —                           | Notification after compilation artifacts are committed successfully                                                                                                                      |
-|            | `onCompileResult?` | `(result: CompileResult) => void`                       | —                           | Notification of the complete Core compilation result                                                                                                                                     |
-| Extensions | `extensions?`      | `LayoutExtensions`                                      | —                           | Runtime extensions grouped by capability, using the Core compilation contract                                                                                                            |
-|            | `lowerTex?`        | `TexLowerer`                                            | —                           | Formula lowering capability                                                                                                                                                              |
-|            | `measureText?`     | `TextMeasurer`                                          | —                           | Custom text measurement; omitted uses Vanilla environment measurement with estimation when unavailable                                                                                   |
+| Group      | Member             | Type                                                    | Default                   | Description                                                                                                                                                                              |
+| ---------- | ------------------ | ------------------------------------------------------- | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Main       | `children?`        | `ReactNode`                                             | —                         | Drawing content declared with JSX                                                                                                                                                        |
+|            | `ir?`              | `IRScene`                                               | —                         | Persisted Source IR, used instead of children                                                                                                                                            |
+| Layout     | `nodeDistance?`    | `number`                                                | `24`                      | Default relative node distance in drawing units; applies when position uses direction/of without distance                                                                                |
+| Style      | `fontSize?`        | `number`                                                | `16`                      | Default font size in drawing units; used when font.size is omitted and as the root size for presets and rem, without overriding explicit numeric sizes                                   |
+|            | `rootScope?`       | `ScopeStyleProps`                                       | —                         | Implicit root Scope overrides for JSX children; complete IR takes precedence, while host CSS style applies independently                                                                 |
+|            | `theme?`           | `IRScene['theme']`                                      | —                         | Theme written to the Scene root and inherited by descendant Composites                                                                                                                   |
+| Rendering  | `className?`       | `string`                                                | —                         | Host className                                                                                                                                                                           |
+|            | `height?`          | `number \| string`                                      | `computeDisplaySize`      | CSS height of SVG or Canvas; derived from content dimensions when omitted. A single numeric dimension determines the other from the content aspect ratio; CSS strings use browser layout |
+|            | `idPrefix?`        | `string`                                                | `useId`                   | SVG resource ID prefix; generated from React useId when omitted                                                                                                                          |
+|            | `renderer?`        | `RenderMode`                                            | `'svg'`                   | Rendering backend; an explicit value takes precedence, otherwise inherits the Renderer context and falls back to SVG when no context is provided                                         |
+|            | `style?`           | `CSSProperties`                                         | —                         | Host inline styles                                                                                                                                                                       |
+|            | `viewBox?`         | `IRViewBox`                                             | —                         | Explicit viewport in drawing coordinates; overrides ir.viewBox. When omitted, uses the scene viewport or derives it from content if the scene has none                                   |
+|            | `width?`           | `number \| string`                                      | `computeDisplaySize`      | CSS width of SVG or Canvas; derived from content dimensions when omitted. A single numeric dimension determines the other from the content aspect ratio; CSS strings use browser layout  |
+| Callbacks  | `handlers?`        | `HydrationHandlers`                                     | —                         | Event handlers used when ir is supplied directly                                                                                                                                         |
+| Animation  | `animate?`         | `boolean`                                               | `resolveAnimationEnabled` | Whether to play animations; the animation-mode context takes precedence, otherwise an unspecified value follows the system reduced-motion preference                                     |
+|            | `animationRef?`    | `Ref<AnimationControls \| null>`                        | —                         | Animation controller ref                                                                                                                                                                 |
+|            | `animations?`      | `ReadonlyArray<IRAnimationTrack>`                       | —                         | Scene-root animations                                                                                                                                                                    |
+|            | `snapshotAt?`      | `number`                                                | —                         | Animation sampling time in milliseconds; freezes the drawing at that time without playback and takes precedence over animate                                                             |
+| Runtime    | `authoring?`       | `unknown`                                               | —                         | JSX authoring metadata collected during normalization; ignored when ir is supplied and excluded from persisted Scene IR                                                                  |
+|            | `onDiagnostic?`    | `(diagnostic: ReconcilerDiagnostic) => void`            | —                         | Receives structured reconciler diagnostics                                                                                                                                               |
+|            | `reconciler?`      | `ProcessOptions['reconciler']`                          | —                         | Reconciler options; defaults to full compilation                                                                                                                                         |
+| Output     | `onArtifacts?`     | `(artifacts: ReadonlyArray<CompositeArtifact>) => void` | —                         | Notification after compilation artifacts are committed successfully                                                                                                                      |
+|            | `onCompileResult?` | `(result: CompileResult) => void`                       | —                         | Notification of the complete Core compilation result                                                                                                                                     |
+| Extensions | `extensions?`      | `LayoutExtensions`                                      | —                         | Runtime extensions grouped by capability, using the Core compilation contract                                                                                                            |
+|            | `lowerTex?`        | `TexLowerer`                                            | —                         | Formula lowering capability                                                                                                                                                              |
+|            | `measureText?`     | `TextMeasurer`                                          | —                         | Custom text measurement; omitted uses Vanilla environment measurement with estimation when unavailable                                                                                   |
 
 </ApiTable>
 
@@ -68,13 +69,14 @@ export type LayoutProps = {
   children?: ReactNode;
   authoring?: unknown;
   handlers?: HydrationHandlers;
-  runtime?: LayoutRuntimeOptions;
+  reconciler?: ProcessOptions['reconciler'];
+  onDiagnostic?: (diagnostic: ReconcilerDiagnostic) => void;
   width?: number | string;
   height?: number | string;
   viewBox?: IRViewBox;
   className?: string;
   style?: CSSProperties;
-  renderer?: 'svg' | 'canvas';
+  renderer?: RenderMode;
   animate?: boolean;
   snapshotAt?: number;
   animationRef?: Ref<AnimationControls | null>;
@@ -95,167 +97,15 @@ export type LayoutProps = {
 
 ## Execution and supporting contracts
 
-#### <ApiSourceLink label={"LayoutExtensions"} path={"packages/kernel/react/src/components/container/layout/Layout.tsx"} startLine={129}>LayoutExtensions</ApiSourceLink>
-
-Pass these options through the extensions prop of Layout. Each field accepts an array of definitions; these runtime definitions are excluded from persisted scene data.
-
-<DocTabs defaultValue="members">
-
-<DocTab value="members" label="Members">
-
-<ApiTable>
-
-| Member                       | Type                                    | Default                   | Description                                |
-| ---------------------------- | --------------------------------------- | ------------------------- | ------------------------------------------ |
-| `readonly arrows?`           | `ReadonlyArray<ArrowDefinition>`        | `undefined`               | Arrow definitions                          |
-| `readonly boundaries?`       | `ReadonlyArray<BoundaryDefinition>`     | `undefined`               | Connection boundary definitions            |
-| `readonly clips?`            | `ReadonlyArray<ClipDefinition>`         | `undefined`               | Clip definitions                           |
-| `readonly composites?`       | `ReadonlyArray<AnyCompositeDefinition>` | `[]`                      | Tier 2 composite expansion logic           |
-| `readonly marks?`            | `ReadonlyArray<MarkDefinition>`         | —                         | Definitions of markers placed along a path |
-| `readonly paths?`            | `ReadonlyArray<AnyPathDefinition>`      | `undefined`               | Path definitions                           |
-| `readonly patterns?`         | `ReadonlyArray<PatternDefinition>`      | `undefined`               | Pattern definitions                        |
-| `readonly shapes?`           | `ReadonlyArray<ShapeDefinition>`        | `undefined`               | Shape definitions                          |
-| `readonly themeDefinitions?` | `ReadonlyArray<ThemeDefinition>`        | `ThemeDefinitionsContext` | Theme definitions                          |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="definition" label="Type definition">
+#### <ApiSourceLink label={"LayoutExtensions"} path={"packages/kernel/react/src/components/layout/Layout.tsx"} startLine={74}>LayoutExtensions</ApiSourceLink>
 
 ```ts
-export type LayoutExtensions = Readonly<{
-  shapes?: ReadonlyArray<ShapeDefinition>;
-  boundaries?: ReadonlyArray<BoundaryDefinition>;
-  clips?: ReadonlyArray<ClipDefinition>;
-  arrows?: ReadonlyArray<ArrowDefinition>;
-  marks?: ReadonlyArray<MarkDefinition>;
-  patterns?: ReadonlyArray<PatternDefinition>;
-  paths?: ReadonlyArray<AnyPathDefinition>;
-  composites?: ReadonlyArray<AnyCompositeDefinition>;
-  themeDefinitions?: ReadonlyArray<ThemeDefinition>;
-}>;
-```
-
-</DocTab>
-
-</DocTabs>
-
-#### <ApiSourceLink label={"LayoutSessionRuntimeOptions"} path={"packages/kernel/react/src/components/container/layout/runtime-options.ts"} startLine={14}>LayoutSessionRuntimeOptions</ApiSourceLink>
-
-<DocTabs defaultValue="members">
-
-<DocTab value="members" label="Members">
-
-<ApiTable>
-
-| Member                     | Type                                         | Default                         | Description                                                                                                                              |
-| -------------------------- | -------------------------------------------- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `readonly mode?`           | `typeof LayoutRuntimeMode.Session`           | `LayoutRuntimeMode.Session`     | Creates a session Runtime                                                                                                                |
-| `readonly onDiagnostic?`   | `(diagnostic: ReconcilerDiagnostic) => void` | —                               | Receive structured diagnostics from drawing updates in the order they occur; failed updates preserve the last successful drawing         |
-| `readonly updateStrategy?` | `ReconcilerUpdateStrategy`                   | `ReconcilerUpdateStrategy.Auto` | Update strategy; auto selects incremental or full execution based on changes and executor capabilities, while full forces full execution |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="definition" label="Type definition">
-
-```ts
-export type LayoutSessionRuntimeOptions = Readonly<{
-  mode?: typeof LayoutRuntimeMode.Session;
-  updateStrategy?: ReconcilerUpdateStrategy;
-  onDiagnostic?: (diagnostic: ReconcilerDiagnostic) => void;
-}>;
-```
-
-</DocTab>
-
-</DocTabs>
-
-#### <ApiSourceLink label={"LayoutRuntimeOptions"} path={"packages/kernel/react/src/components/container/layout/runtime-options.ts"} startLine={40}>LayoutRuntimeOptions</ApiSourceLink>
-
-<DocTabs defaultValue="session">
-
-<DocTab value="session" label="Members · Session">
-
-<ApiTable>
-
-| Member                     | Type                                         | Default                         | Description                                                                                                                              |
-| -------------------------- | -------------------------------------------- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `readonly mode?`           | `typeof LayoutRuntimeMode.Session`           | `LayoutRuntimeMode.Session`     | Creates a session Runtime                                                                                                                |
-| `readonly onDiagnostic?`   | `(diagnostic: ReconcilerDiagnostic) => void` | —                               | Receive structured diagnostics from drawing updates in the order they occur; failed updates preserve the last successful drawing         |
-| `readonly updateStrategy?` | `ReconcilerUpdateStrategy`                   | `ReconcilerUpdateStrategy.Auto` | Update strategy; auto selects incremental or full execution based on changes and executor capabilities, while full forces full execution |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="static" label="Members · Static">
-
-<ApiTable>
-
-| Member                     | Type                              | Default | Description                                                                          |
-| -------------------------- | --------------------------------- | ------- | ------------------------------------------------------------------------------------ |
-| `readonly mode`            | `typeof LayoutRuntimeMode.Static` | —       | Compiles and materializes the complete result directly, without creating a Runtime   |
-| `readonly onDiagnostic?`   | `never`                           | —       | Static mode creates no Runtime and therefore emits no structured Runtime diagnostics |
-| `readonly updateStrategy?` | `never`                           | —       | Static mode does not support a Computation update strategy                           |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="definition" label="Type definition">
-
-```ts
-export type LayoutRuntimeOptions = LayoutSessionRuntimeOptions | LayoutStaticRuntimeOptions;
-```
-
-</DocTab>
-
-</DocTabs>
-
-#### <ApiSourceLink label={"LayoutStaticRuntimeOptions"} path={"packages/kernel/react/src/components/container/layout/runtime-options.ts"} startLine={30}>LayoutStaticRuntimeOptions</ApiSourceLink>
-
-<DocTabs defaultValue="members">
-
-<DocTab value="members" label="Members">
-
-<ApiTable>
-
-| Member                     | Type                              | Default | Description                                                                          |
-| -------------------------- | --------------------------------- | ------- | ------------------------------------------------------------------------------------ |
-| `readonly mode`            | `typeof LayoutRuntimeMode.Static` | —       | Compiles and materializes the complete result directly, without creating a Runtime   |
-| `readonly onDiagnostic?`   | `never`                           | —       | Static mode creates no Runtime and therefore emits no structured Runtime diagnostics |
-| `readonly updateStrategy?` | `never`                           | —       | Static mode does not support a Computation update strategy                           |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="definition" label="Type definition">
-
-```ts
-export type LayoutStaticRuntimeOptions = Readonly<{
-  mode: typeof LayoutRuntimeMode.Static;
-  updateStrategy?: never;
-  onDiagnostic?: never;
-}>;
-```
-
-</DocTab>
-
-</DocTabs>
-
-#### <ApiSourceLink label={"LayoutRuntimeMode"} path={"packages/kernel/react/src/components/container/layout/runtime-options.ts"} startLine={5}>LayoutRuntimeMode</ApiSourceLink>
-
-```ts
-export const LayoutRuntimeMode = Object.freeze({
-  Session: 'session',
-  Static: 'static',
-} as const);
-
-export type LayoutRuntimeMode = ValueOf<typeof LayoutRuntimeMode>;
+export type LayoutExtensions = Readonly<
+  Pick<
+    CompileOptions,
+    'shapes' | 'boundaries' | 'clips' | 'arrows' | 'marks' | 'patterns' | 'paths' | 'composites' | 'themeDefinitions'
+  >
+>;
 ```
 
 #### <ApiSourceLink label={"scene"} path={"packages/kernel/vanilla/src/normalize/factory.ts"} startLine={58}>scene</ApiSourceLink>

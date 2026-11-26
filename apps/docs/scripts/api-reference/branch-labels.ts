@@ -817,20 +817,6 @@ export const apiReferenceBranchLabels: Readonly<
     { value: 'two-segments', field: 'via', type: "'-|' | '|-'", label: { zh: '两段折线', en: 'Two segments' } },
     { value: 'three-segments', field: 'via', type: "'-|-' | '|-|'", label: { zh: '三段折线', en: 'Three segments' } },
   ],
-  '@retikz/react#LayoutRuntimeOptions': [
-    {
-      value: 'session',
-      field: 'mode',
-      type: 'typeof LayoutRuntimeMode.Session',
-      label: { zh: '会话模式', en: 'Session' },
-    },
-    {
-      value: 'static',
-      field: 'mode',
-      type: 'typeof LayoutRuntimeMode.Static',
-      label: { zh: '静态模式', en: 'Static' },
-    },
-  ],
   '@retikz/standard-react/collection#QueueProps': [
     { value: 'items', field: 'items', required: true, label: { zh: '显式单元格', en: 'Explicit cells' } },
     { value: 'data', field: 'data', required: true, label: { zh: 'JSON 数据', en: 'JSON data' } },

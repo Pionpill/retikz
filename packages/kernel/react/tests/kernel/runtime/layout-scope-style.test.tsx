@@ -1,6 +1,7 @@
 import type { IRScene } from '@retikz/core';
 import type { EllipsePrimitive, PathPrimitive, RectPrimitive, ScenePrimitive, TextPrimitive } from '@retikz/core';
 import { SceneSchema } from '@retikz/core';
+import * as vanilla from '@retikz/vanilla';
 import type { ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -8,7 +9,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Draw, StepLabel, Layout, Node, Scope, Step } from '../../../src';
 import { Path } from '../../../src';
 import type { ScopeStyleProps } from '../../../src';
-import { wrapRootScope } from '../../../src/components/layout';
 
 /**
  * <Layout> 顶层级联样式 props 测试（隐式根 Scope）
@@ -18,7 +18,7 @@ import { wrapRootScope } from '../../../src/components/layout';
  *   - 边界：无样式 prop 时 IR 形态逐字节不变（不包空 scope）/ 空 children / 单通道只进该通道
  *   - 错误路径：与 `ir` prop 并用 → dev warn + 样式忽略 / 非法 nodeDefault 不被 Layout 吞掉、走 schema 校验报错
  *   - 交互：内层 `<Scope>` 覆盖 / 图元显式属性胜出 / 内层 `<Scope resetStyle>` 屏障切断继承
- *   断言层：wrapRootScope（Layout 实际调用的合成函数）+ Vanilla normalize 出 IR 形态；SceneReconciler 出已解析 primitive 样式
+ *   断言层：从 Layout 读取编译输入并通过 Vanilla normalize 出 IR 形态；SceneReconciler 出已解析 primitive 样式
  */
 import { compileTestResult } from '../../helpers/compilation';
 import { normalizeReactInput } from '../../helpers/normalize-input';
@@ -37,9 +37,19 @@ const flatten = (prims: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
   return out;
 };
 
-/** 复刻 Layout 的 IR 构造：wrapRootScope（按需包合成根 Scope）→ Vanilla normalize */
-const layoutIR = (style: ScopeStyleProps, children: ReactNode): IRScene =>
-  normalizeReactInput(wrapRootScope(children, style));
+/** 读取 Layout 实际交给 Vanilla 的场景输入，不执行待测输入的编译 */
+const layoutIR = (rootScope: ScopeStyleProps, children: ReactNode): IRScene => {
+  const compile = vi
+    .spyOn(vanilla, 'compileToScene')
+    .mockReturnValue(compileTestResult({ version: 1, type: 'scene', children: [] }));
+  try {
+    renderToStaticMarkup(<Layout rootScope={rootScope}>{children}</Layout>);
+    const [source] = compile.mock.calls[0];
+    return vanilla.isInputScene(source) ? vanilla.normalizeScene(source).ir : source;
+  } finally {
+    compile.mockRestore();
+  }
+};
 
 /** Layout 流水线编译后的全部叶子 primitive */
 const layoutPrims = (style: ScopeStyleProps, children: ReactNode): Array<ScenePrimitive> =>
@@ -75,17 +85,7 @@ afterEach(() => {
 });
 
 describe('rootScope 的空覆盖与命名空间边界', () => {
-  const noops: Array<ScopeStyleProps> = [
-    {},
-    { defaults: { style: {} } },
-    { defaults: { style: { fill: undefined } } },
-    { defaults: {} },
-    { defaults: { node: { style: {}, layout: {}, label: {} }, path: { style: {}, label: {}, arrow: {} } } },
-    { defaults: { node: { style: { fill: undefined } }, reset: false } },
-    { defaults: { reset: [] } },
-  ];
-
-  it.each(noops)('空覆盖保持输入 identity 和显式 Scope', rootScope => {
+  it.each<ScopeStyleProps>([{}, { defaults: undefined }])('没有 defaults 时保留原子树', rootScope => {
     const children = (
       <Scope id="explicit">
         <Node id="n" position={[0, 0]} />
@@ -246,25 +246,16 @@ describe('边界：无样式 / 空 children / 单通道', () => {
     expect(() => compileTestResult(ir).scene).not.toThrow();
   });
 
-  it('layout_empty_object_default_no_wrap：空对象 default（nodeDefault={{}}）不携带样式指令 → 不包合成 scope', () => {
-    const children = (
-      <Node id="A" position={[0, 0]}>
-        A
-      </Node>
-    );
+  it.each<NonNullable<ScopeStyleProps['defaults']>>([{}, { style: {} }, { reset: false }, { reset: [] }])(
+    '显式提供 defaults %j 即创建根 Scope',
+    defaults => {
+      const ir = layoutIR({ defaults }, <Node id="A" />);
+      expect(ir.children[0]).toMatchObject({ type: 'scope', defaults, children: [{ type: 'node', id: 'A' }] });
+    },
+  );
 
-    // 空对象 default 是 no-op，不应无谓包一层空 scope 改变 IR 拓扑（避免无谓的空 scope）
-    const emptyDefaults = layoutIR(
-      {
-        defaults: { node: { label: {} }, path: { label: {}, arrow: {} } },
-      },
-      children,
-    );
-
-    expect(emptyDefaults).toEqual(normalizeReactInput(children));
-    expect(emptyDefaults.children.every(c => c.type !== 'scope')).toBe(true);
-
-    // 但标量 falsy-defined 值（strokeWidth=0）是有意义样式 → 仍包 scope
+  it('保留为零的样式值', () => {
+    const children = <Node id="A" />;
     const zeroWidth = layoutIR(
       {
         defaults: { style: { strokeWidth: 0 } },

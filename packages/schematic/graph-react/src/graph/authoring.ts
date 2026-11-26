@@ -23,7 +23,8 @@ export type GraphLayoutHostProps = Pick<
   LayoutProps & LayoutExtensions,
   | 'authoring'
   | 'handlers'
-  | 'runtime'
+  | 'reconciler'
+  | 'onDiagnostic'
   | 'width'
   | 'height'
   | 'viewBox'
@@ -52,7 +53,8 @@ export type GraphLayoutHostProps = Pick<
 export const graphLayoutHostPropKeys = [
   'authoring',
   'handlers',
-  'runtime',
+  'reconciler',
+  'onDiagnostic',
   'width',
   'height',
   'viewBox',

@@ -395,16 +395,7 @@ export const referenceGroups: Readonly<Partial<Record<string, ReadonlyArray<Refe
         zh: '执行与辅助契约',
         en: 'Execution and supporting contracts',
       },
-      members: [
-        'LayoutExtensions',
-        'LayoutSessionRuntimeOptions',
-        'LayoutRuntimeOptions',
-        'LayoutStaticRuntimeOptions',
-        'LayoutRuntimeMode',
-        'scene',
-        'layer',
-        'layerFromInput',
-      ],
+      members: ['LayoutExtensions', 'scene', 'layer', 'layerFromInput'],
       schemas: [],
     },
     {

@@ -9,7 +9,7 @@ import { Layout, Node } from '../../../src';
 afterEach(() => vi.unstubAllGlobals());
 
 describe('Layout 测量接线', () => {
-  it.each(['static', 'session'] as const)('%s 更换测量器后更新布局，宿主 CSS 字体仅影响显示', async mode => {
+  it.each(['full', 'incremental'] as const)('%s 更换测量器后更新布局，宿主 CSS 字体仅影响显示', async mode => {
     vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
     const container = document.createElement('div');
     const root = createRoot(container);
@@ -17,7 +17,7 @@ describe('Layout 测量接线', () => {
     const second = vi.fn(() => ({ width: 100, height: 16 }));
     const render = (measureText: typeof first, fontFamily: string) =>
       root.render(
-        <Layout measureText={measureText} style={{ fontFamily }} runtime={{ mode }}>
+        <Layout measureText={measureText} style={{ fontFamily }} reconciler={{ mode }}>
           <Node position={[0, 0]}>Alpha</Node>
         </Layout>,
       );
