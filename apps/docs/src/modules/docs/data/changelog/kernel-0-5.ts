@@ -406,6 +406,13 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
+          label: { zh: '移除 CompileOutput 类型导出', en: 'Removed the CompileOutput type export' },
+          content: {
+            zh: 'Core 不再导出测试辅助代码使用的 CompileOutput 类型。普通编译结果仍通过 Reconciler 的 CompileResult 读取，Scene 与 artifacts 不变。',
+            en: 'Core no longer exports the CompileOutput type used by test helpers. Read ordinary compilation results through the Reconciler CompileResult; scene and artifacts are unchanged.',
+          },
+        },
+        {
           label: { zh: 'BREAKING：整图编译移出 Core', en: 'BREAKING: whole-scene compilation moves out of Core' },
           content: {
             zh: 'Core 保留 IR、Definition、原子计算与 Scene。一次性编译从 @retikz/vanilla 调用 compileToScene；直接处理 IR 或需要批次更新时，从 @retikz/reconciler 创建 SceneReconciler。独立的 @retikz/runtime 不再是 Kernel 依赖。',

@@ -19,7 +19,9 @@ import type {
   CompiledBoundaryGeometry,
   CompiledNode,
   CanonicalNode,
-  CompileOutput,
+  CompileBounds,
+  ScenePrimitive,
+  SceneResources,
   CompiledPath,
   CompiledScope,
   CompiledCoordinate,
@@ -34,13 +36,21 @@ import type { PropertyPath } from '@retikz/foundation';
 
 import type { WeaveElementRuntime } from './atomic-runtime';
 
+/** 测试夹具将原子绘制结果与当前测试工作区的资源和排序值放在一起 */
+type ElementTestOutput = Readonly<{
+  primitives: Array<ScenePrimitive>;
+  bounds: ReadonlyArray<CompileBounds>;
+  resources: SceneResources;
+  zIndex?: number;
+}>;
+
 /** 节点阶段产物与当前工作区绘制输出，分别交给执行器保存 */
 export type WeaveNodeCompilation = {
   /** Core 产生的权威布局阶段结果 */
   canon: CanonicalNode;
   compiled: CompiledNode;
   /** 绘制阶段输出及资源 */
-  output: CompileOutput;
+  output: ElementTestOutput;
 };
 
 /** 在候选工作区组合节点解析、布局与输出，不发布结果 */
@@ -95,7 +105,7 @@ export type WeavePathCompilation = {
   /** Core 宿主编译阶段结果 */
   compiled: CompiledPath;
   /** 绘制输出及其资源 */
-  output: CompileOutput;
+  output: ElementTestOutput;
 };
 
 /** 在引用就绪点组合路径准备与 kind 宿主计算 */
@@ -163,7 +173,7 @@ export type WeaveScopeCompilation = {
   /** 不含后代的分组包装属性 */
   group: Omit<GroupPrimitive, 'children' | 'animations'>;
   /** 自身图元、资源及绘制顺序 */
-  output: CompileOutput;
+  output: ElementTestOutput;
   /** Core 产生的包络与自身变换 */
   compiled: CompiledScope;
   canon: CanonicalScope;
