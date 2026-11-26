@@ -3,7 +3,7 @@ title: 执行 / 产物来源
 description: 沿着节点 B 的图元读取 Scene、绘制资源、领域产物、警告与来源记录
 ---
 
-[元素组装](/kernel/packages/reconciler/compile-elements)里，连接 A、B 的路径先占位，等两个节点就绪再回填。现在把这张图交给两个消费者：渲染器要画出 B，检查器想知道哪些图元来自 B。前者只需要 Scene；后者还需要本次编译的来源记录。
+[元素组装](/kernel/packages/reconciler/compile-elements)里，连接 A、B 的路径先占位，等两个节点就绪再回填。现在把这张图交给两个消费者：静态 SVG 导出直接从 Scene 画出 B；保留式渲染器还要用本次编译的来源记录识别 B 发射的图元。
 
 ## 整体流程
 

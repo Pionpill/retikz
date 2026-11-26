@@ -5,12 +5,14 @@ keywords: 'Inspector、sourcePath、InspectorDefinition、inspect、IRChild'
 
 # ADR-021：将 Inspector 抽离为可选扩展包
 
-- 状态：Accepted
+- 状态：Superseded
 - 决策日期：2026-08-06
 - 接受日期：2026-08-07
 - 关联：[Standard Layout Inspector ADR-012](../../../../library/_notes/decisions/standard/_v0.1/012-layout-inspector.md) · [Standard Inspector 视觉语义 ADR-013](../../../../library/_notes/decisions/standard/_v0.1/013-layout-inspector-visual-semantics.md)
 
-> 输入、选择、上下文、内置能力与失败语义已由 [078](./078-inspect-compiled-output.md) 替代；Core 观测及检查专用出口由 [077](./077-compile-output-contract.md) 删除。仅保留可选包、统一扩展与普通只读层原则。
+> 输入、选择、上下文、内置能力与失败语义已由 [078](./078-inspect-compiled-output.md) 替代；Core 观测及检查专用出口由 [077](./077-compile-output-contract.md) 删除。当时保留的可选包、统一扩展与只读层后续亦已退役。
+
+> [090](./090-remove-inspect.md) 退役通用 Inspect 和单图只读辅助层；原有主图编译、领域产物与具名 Scene 图层不受影响。
 
 ## 背景与目标
 

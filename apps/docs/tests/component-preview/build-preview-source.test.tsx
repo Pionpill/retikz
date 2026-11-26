@@ -29,9 +29,6 @@ import {
   previewEmbedPropsOf,
 } from '../../src/modules/docs/components/component-preview/utils';
 import { buildVanillaPreview } from '../../src/modules/docs/components/component-preview/vanilla-preview';
-import PathInspectorDemo, {
-  previewSource as pathInspectorPreviewSource,
-} from '../../src/modules/docs/contents/kernel/components/path/step/path-inspector.demo';
 import FramePlaygroundDemo, {
   previewSource as framePlaygroundPreviewSource,
 } from '../../src/modules/docs/contents/library/standard/presentation/frame/frame-playground.demo';
@@ -161,8 +158,6 @@ const staticIR = buildPreviewIR(StaticDemo).ir;
 
 const alternateIR = buildPreviewIR(AlternateDemo).ir;
 
-const PathInspectorCanonical: FC = () => pathInspectorPreviewSource.canonicalRender();
-
 const createInput = (overrides: Record<string, unknown> = {}) => ({
   Component: StaticDemo,
   name: 'demo',
@@ -235,18 +230,6 @@ describe('buildPreviewSource', () => {
     expect(complete.previewIr?.sourceIr).toEqual(initial.previewIr?.sourceIr);
     expect(complete.source?.vanilla?.files[0]?.code).toContain('renderChart');
     expect(renderToStaticMarkup(complete.source?.vanilla?.render?.('svg'))).toContain('<svg');
-  });
-
-  it('让 Path Inspector 保持可见，同时不写入 canonical IR 与 Vanilla', () => {
-    const preview = buildPreviewIR(PathInspectorCanonical);
-    const vanilla = buildVanillaPreview(preview);
-    const html = renderToStaticMarkup(<PathInspectorDemo />);
-
-    expect(preview).not.toHaveProperty('inspectionRoots');
-    expect(vanilla.code).not.toMatch(/\binspect\b/);
-    expect(vanilla.svg).not.toContain('data-retikz-readonly-layer');
-    expect(html).toContain('data-retikz-readonly-layer');
-    expect(html).toContain('stroke-dasharray="4 3"');
   });
 
   it('默认从静态 demo 派生 React、IR 与 Vanilla 源码', () => {

@@ -768,14 +768,6 @@ export const apiReferenceBranchLabels: Readonly<
     },
     { value: 'malformed-svg', field: 'kind', type: "'malformed-svg'", label: { zh: '无效 SVG', en: 'Malformed SVG' } },
   ],
-  '@retikz/inspect#InspectionTarget': [
-    { value: 'primitive', field: 'kind', type: "'primitive'", label: { zh: '场景图元', en: 'Scene primitive' } },
-    { value: 'artifact', field: 'kind', type: "'artifact'", label: { zh: '复合产物', en: 'Composite artifact' } },
-  ],
-  '@retikz/inspect#InspectorSubject': [
-    { value: 'primitive', field: 'kind', type: "'primitive'", label: { zh: '场景图元', en: 'Scene primitive' } },
-    { value: 'artifact', field: 'kind', type: "'artifact'", label: { zh: '复合产物', en: 'Composite artifact' } },
-  ],
   '@retikz/react#NodeProps': nodeContentBranches,
   '@retikz/standard-react/presentation#FrameTitleProps': nodeContentBranches,
   '@retikz/standard-react/presentation#FrameDescriptionProps': nodeContentBranches,

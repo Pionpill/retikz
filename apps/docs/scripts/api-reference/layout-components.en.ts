@@ -1,4 +1,3 @@
-import { translateInspectApiReference } from './inspect.en';
 import { translateLayoutApiReference } from './layout.en';
 
 /** 布局组件公开说明的受审阅英文翻译 */
@@ -25,17 +24,6 @@ const translations: Readonly<Record<string, string>> = {
   剩余空间分布方式: 'Remaining-space distribution mode',
   布局项目所属的容器种类: 'Container kind owning a layout item',
   容器视觉溢出策略: 'Container visual overflow policy',
-  '是否检查当前布局实例，或覆盖本实例的检查选项':
-    'Whether to inspect the current layout occurrence, or override its inspection options',
-  '默认注册三种 Layout 布局检查器的可选布局宿主':
-    'Optional inspection host registering all three layout inspectors by default',
-  'Layout 检查宿主的属性': 'Props for the layout inspection host',
-  '除三种 Layout 布局检查器外合并的自定义检查 registry':
-    'Custom inspector registry merged with the three layout inspectors',
-  创建阻止当前图形或作用域内全部检查器的边界标记:
-    'Create a barrier disabling all inspectors in the current drawing or scope',
-  '当前实例的检查请求，省略时为 true；false 关闭当前实例的请求':
-    'Inspection request for this occurrence; defaults to true, while false disables its request',
   'FlexLayout 主轴方向取值': 'FlexLayout main-axis direction values',
   '创建 FlexLayout 时允许省略固定 discriminator 与 可选字段的输入':
     'FlexLayout input allowing fixed discriminators and optional fields to be omitted',
@@ -77,15 +65,6 @@ const translations: Readonly<Record<string, string>> = {
   'Layout FlexLayout 的官方 Core layout-aware composite definition':
     'Official layout-aware composite definition for FlexLayout',
   'FlexLayout 的 Core Composite dependency provider': 'Composite dependency provider for FlexLayout',
-  '为当前 Flex 布局实例声明检查请求': 'Declare an inspection request for the current FlexLayout occurrence',
-  '带检查能力的 Flex 布局属性': 'Props for FlexLayout with inspection support',
-  '创建带当前实例检查请求的FlexLayout 嵌入项':
-    'Create a FlexLayout embed with an inspection request for this occurrence',
-  'Flex 布局检查器的预设选项': 'Preset options for the FlexLayout inspector',
-  '从最终 Flex 布局产物生成辅助内容的检查器定义':
-    'Inspector definition generating guides from the final FlexLayout artifact',
-  'Flex 布局检查器的稳定注册键': 'Stable registration key for the FlexLayout inspector',
-  '把 Flex 布局产物转换为普通 Core 辅助子元素': 'Convert a FlexLayout artifact into ordinary Core guide children',
   'FlexLayout factory 接受的作者输入': 'Authoring input accepted by the FlexLayout factory',
   'FlexLayout item 的作者输入': 'Authoring input for a FlexLayout item',
   'FlexLayout 的 canonical JSON IR': 'Persistent JSON input for FlexLayout',
@@ -104,15 +83,6 @@ const translations: Readonly<Record<string, string>> = {
   'Layout GridLayout 的官方 Core layout-aware composite definition':
     'Official layout-aware composite definition for GridLayout',
   'GridLayout 的 Core Composite dependency provider': 'Composite dependency provider for GridLayout',
-  '为当前 Grid 布局实例声明检查请求': 'Declare an inspection request for the current GridLayout occurrence',
-  '带检查能力的 Grid 布局属性': 'Props for GridLayout with inspection support',
-  '创建带当前实例检查请求的GridLayout 嵌入项':
-    'Create a GridLayout embed with an inspection request for this occurrence',
-  'Grid 布局检查器的预设选项': 'Preset options for the GridLayout inspector',
-  '从最终 Grid 布局产物生成辅助内容的检查器定义':
-    'Inspector definition generating guides from the final GridLayout artifact',
-  'Grid 布局检查器的稳定注册键': 'Stable registration key for the GridLayout inspector',
-  '把 Grid 布局产物转换为普通 Core 辅助子元素': 'Convert a GridLayout artifact into ordinary Core guide children',
   'GridLayout factory 接受的作者输入': 'Authoring input accepted by the GridLayout factory',
   'GridLayout item 的作者输入': 'Authoring input for a GridLayout item',
   'GridLayout 的 canonical JSON IR': 'Persistent JSON input for GridLayout',
@@ -131,15 +101,6 @@ const translations: Readonly<Record<string, string>> = {
   'Layout OverlayLayout 的官方 Core layout-aware composite definition':
     'Official layout-aware composite definition for OverlayLayout',
   'OverlayLayout 的 Core Composite dependency provider': 'Composite dependency provider for OverlayLayout',
-  '为当前 Overlay 布局实例声明检查请求': 'Declare an inspection request for the current OverlayLayout occurrence',
-  '带检查能力的 Overlay 布局属性': 'Props for OverlayLayout with inspection support',
-  '创建带当前实例检查请求的OverlayLayout 嵌入项':
-    'Create a OverlayLayout embed with an inspection request for this occurrence',
-  'Overlay 布局检查器的预设选项': 'Preset options for the OverlayLayout inspector',
-  '从最终 Overlay 布局产物生成辅助内容的检查器定义':
-    'Inspector definition generating guides from the final OverlayLayout artifact',
-  'Overlay 布局检查器的稳定注册键': 'Stable registration key for the OverlayLayout inspector',
-  '把 Overlay 布局产物转换为普通 Core 辅助子元素': 'Convert a OverlayLayout artifact into ordinary Core guide children',
   'OverlayLayout factory 接受的作者输入': 'Authoring input accepted by the OverlayLayout factory',
   'OverlayLayout item 的作者输入': 'Authoring input for a OverlayLayout item',
   'OverlayLayout 的 canonical JSON IR': 'Persistent JSON input for OverlayLayout',
@@ -159,22 +120,12 @@ const translations: Readonly<Record<string, string>> = {
     'Direct children must be overlay layout items; omission creates an empty container',
   '作者声明的直属子项，省略时按空列表处理': 'Authored direct items; omission is treated as an empty list',
   同次编译已求解的布局产物: 'Solved layout artifact from the same compilation',
-  包含已解析检查选项与主题外观的检查上下文: 'Inspection context containing resolved options and themed appearance',
-  '只读辅助子图形列表，不重新求解或修改布局产物':
-    'Read-only guide children; does not solve again or mutate the layout artifact',
-  '可选驱动配置；省略时只注册内置布局检查器':
-    'Optional driver configuration; omission registers only the built-in layout inspectors',
-  '交给 Vanilla authored site 的不透明屏障标记': 'Opaque barrier marker attached to a Vanilla authored site',
 };
 
-/** 复用宿主与检查器词典，未收录说明仍阻止生成 */
+/** 复用布局宿主词典，未收录说明仍阻止生成 */
 export const translateLayoutComponentApiReference = (source: string): string => {
   if (!/[\u3400-\u9fff]/u.test(source)) return source;
   if (translations[source]) return translations[source];
 
-  try {
-    return translateInspectApiReference(source);
-  } catch {
-    return translateLayoutApiReference(source);
-  }
+  return translateLayoutApiReference(source);
 };

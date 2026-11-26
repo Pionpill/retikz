@@ -57,10 +57,7 @@ const Demo: FC<PrinciplesPackagesProps> = props => {
           </FlowGroup>
           <FlowLayout id="optional-capabilities" kind="linear" direction="right" align="center">
             <FlowEntities
-              items={[
-                { id: 'tex', text: text.tex, role: 'activity', kind: LogicFigureEntityKind.Secondary },
-                { id: 'inspect', text: text.inspect, role: 'activity', kind: LogicFigureEntityKind.Secondary },
-              ]}
+              items={[{ id: 'tex', text: text.tex, role: 'activity', kind: LogicFigureEntityKind.Secondary }]}
             />
           </FlowLayout>
         </FlowLayout>
@@ -87,12 +84,6 @@ const Demo: FC<PrinciplesPackagesProps> = props => {
           { source: 'render', target: 'svg' },
           { source: 'render', target: 'canvas' },
           { source: 'tex', target: 'compile', role: BuiltinRelationRole.Dependency, style: { dashPattern: [4, 3] } },
-          {
-            source: 'compile',
-            target: 'inspect',
-            role: BuiltinRelationRole.Dependency,
-            style: { dashPattern: [4, 3] },
-          },
         ]}
       />
     </PreviewFlowDiagram>

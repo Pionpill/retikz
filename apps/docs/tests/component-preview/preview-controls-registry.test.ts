@@ -337,12 +337,12 @@ describe('预览控制注册表', () => {
   });
 
   it('优先解析单文件多语言图，同时保留旧双语 demo 回退', () => {
-    const inspectSegments = ['kernel', 'packages', 'inspect', 'mechanism'];
-    const inspectKey = buildComponentKey(inspectSegments, 'inspect-compile-flow');
+    const principlesSegments = ['kernel', 'components', 'design', 'principles'];
+    const principlesKey = buildComponentKey(principlesSegments, 'principles-packages');
 
-    expect(resolveDemoKey(inspectSegments, 'inspect-compile-flow', 'zh')).toBe(inspectKey);
-    expect(resolveDemoKey(inspectSegments, 'inspect-compile-flow', 'en')).toBe(inspectKey);
-    expect(demoModules[inspectKey]?.default).toBeTypeOf('function');
+    expect(resolveDemoKey(principlesSegments, 'principles-packages', 'zh')).toBe(principlesKey);
+    expect(resolveDemoKey(principlesSegments, 'principles-packages', 'en')).toBe(principlesKey);
+    expect(demoModules[principlesKey]?.default).toBeTypeOf('function');
     expect(resolveDemoKey(['viz', 'table', 'reference', 'runtime'], 'table-runtime-transaction', 'zh')).toBe(
       '../../contents/viz/table/reference/runtime/table-runtime-transaction.zh.demo.tsx',
     );

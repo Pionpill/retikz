@@ -1,15 +1,13 @@
+import type { Scene } from '@retikz/core';
 import type { PerformanceTraceSink } from '@retikz/foundation';
-import type { ReconcilerCommitTarget, ReconcilerResult } from '@retikz/reconciler';
+import type { ReconcilerCommitTarget } from '@retikz/reconciler';
 
 import type { AnimationControls } from '../animation';
 import { isRetikzRenderError, RetikzRenderError, RetikzRenderErrorCode } from '../error';
 import { createFullSceneRuntimeSnapshot } from '../scene';
-import type { ScenePatch } from '../scene';
+import type { ScenePatch, SceneRuntimeSnapshot } from '../scene';
 import { prepareRuntimeConfig } from './config';
 import type { InputRenderRuntimeConfig } from './config';
-import type { RenderFrameSnapshot, StaticRenderFrame } from './frame';
-import { EMPTY_READONLY_LAYERS, validateReadonlyLayers } from './readonly-layer';
-import type { RenderReadonlyLayer } from './readonly-layer';
 import { getRendererExecutor, isRenderer, isSvgHost, isCanvasHost } from './renderer';
 import type { Renderer, RendererFactory, RendererRead, InputRendererFactory } from './renderer';
 import { runtimeStructuralEquals } from './shared';
@@ -28,8 +26,6 @@ export type RenderTargetOptions = Readonly<{
   rendererLease?: RenderLease;
   /** 每次准备读取本次输出配置 */
   configuration: () => InputRenderRuntimeConfig;
-  /** 从同一编译结果解析只读图层 */
-  resolveReadonlyLayers?: (output: ReconcilerResult['compilation']) => ReadonlyArray<RenderReadonlyLayer>;
   /** 首次建立新宿主或接管已有宿主 */
   mountMode?: 'create' | 'adopt';
 }> &
@@ -37,7 +33,7 @@ export type RenderTargetOptions = Readonly<{
     | (Extract<InputRendererFactory, { backend: 'svg' }> &
         Readonly<{
           /** 接管 SVG 宿主时预期的首帧 */
-          expectedInitialFrame?: StaticRenderFrame;
+          expectedInitialScene?: Scene;
         }>)
     | Extract<InputRendererFactory, { backend: 'canvas' }>
   );
@@ -88,13 +84,13 @@ export const createRenderTarget = (input: RenderTargetOptions): RenderTarget => 
   if (options.rendererLease === undefined) leaseOwners.set(lease, owner);
   let committedRead: RendererRead | undefined;
   let disposed = false;
-  let currentFrame = options.rendererLease === undefined ? undefined : executor.read().frame;
-  const offset = currentFrame === undefined ? 0 : currentFrame.primary.revision + 1;
+  let currentSnapshot = options.rendererLease === undefined ? undefined : executor.read().snapshot;
+  const offset = currentSnapshot === undefined ? 0 : currentSnapshot.revision + 1;
   const animationControlsCache = new WeakMap<object, AnimationControls>();
   const target: ReconcilerCommitTarget = {
     prepare: (candidate, previous) => {
       try {
-        const prior = currentFrame;
+        const prior = currentSnapshot;
         const priorRead = committedRead;
         const priorOwner = leaseOwners.get(lease);
         const revision = candidate.revision + offset;
@@ -104,27 +100,16 @@ export const createRenderTarget = (input: RenderTargetOptions): RenderTarget => 
           throw new RetikzRenderError({ code: RetikzRenderErrorCode.RuntimeScenePatchSnapshotMismatch });
         const primary =
           sameCompilation && prior !== undefined
-            ? Object.freeze({ ...prior.primary, revision })
+            ? Object.freeze({ ...prior, revision })
             : createFullSceneRuntimeSnapshot(candidate.compilation.result.scene, revision, provenance!);
-        const frame: RenderFrameSnapshot = Object.freeze({
-          primary,
-          layers: validateReadonlyLayers(
-            options.resolveReadonlyLayers?.(candidate.compilation) ?? EMPTY_READONLY_LAYERS,
-          ),
-        });
-        if (frame.layers.length > 0 && renderer.readonlyLayerCapability !== 'supported')
-          throw new RetikzRenderError({ code: RetikzRenderErrorCode.RuntimeRendererReadonlyLayerUnsupported });
-        if (previous === undefined && options.backend === 'svg' && options.expectedInitialFrame !== undefined) {
-          const expected = options.expectedInitialFrame;
+        if (previous === undefined && options.backend === 'svg' && options.expectedInitialScene !== undefined) {
+          const expected = options.expectedInitialScene;
           const normalized = {
-            ...expected.primary,
-            resources: expected.primary.resources ?? { paints: [], clips: [] },
-            animations: expected.primary.animations ?? [],
+            ...expected,
+            resources: expected.resources ?? { paints: [], clips: [] },
+            animations: expected.animations ?? [],
           };
-          if (
-            !runtimeStructuralEquals(normalized, primary.scene) ||
-            !runtimeStructuralEquals(validateReadonlyLayers(expected.layers), frame.layers)
-          )
+          if (!runtimeStructuralEquals(normalized, primary.scene))
             throw new RetikzRenderError({ code: RetikzRenderErrorCode.RuntimeRendererInitialFrameMismatch });
         }
         const config = prepareRuntimeConfig(options.configuration());
@@ -132,7 +117,7 @@ export const createRenderTarget = (input: RenderTargetOptions): RenderTarget => 
           prior === undefined
             ? undefined
             : {
-                baseRevision: prior.primary.revision,
+                baseRevision: prior.revision,
                 nextRevision: revision,
                 operations: sameCompilation ? [] : [{ kind: 'replaceScene', snapshot: primary }],
               };
@@ -140,33 +125,33 @@ export const createRenderTarget = (input: RenderTargetOptions): RenderTarget => 
         const reusesValidatedPrimary =
           sameCompilation &&
           prior !== undefined &&
-          priorRead?.frame === prior &&
+          priorRead?.snapshot === prior &&
           Number.isSafeInteger(revision) &&
-          revision === prior.primary.revision + 1;
+          revision === prior.revision + 1;
         if (patch !== undefined && prior !== undefined && !reusesValidatedPrimary)
-          assertScenePatch(prior.primary, patch, primary);
+          assertScenePatch(prior, patch, primary);
         const token =
           patch === undefined
-            ? executor.prepareMount(frame, config, options.mountMode ?? 'create')
-            : executor.prepare(patch, frame, config);
+            ? executor.prepareMount(primary, config, options.mountMode ?? 'create')
+            : executor.prepare(patch, primary, config);
         let committed = false;
         return {
           commit: () => {
             token.commit();
             committedRead = snapshotRendererRead(
               executor.read(),
-              frame,
+              primary,
               animationControlsCache,
               reusesValidatedPrimary,
             );
-            currentFrame = frame;
+            currentSnapshot = primary;
             leaseOwners.set(lease, owner);
             committed = true;
           },
           rollback: () => {
             committed = false;
             token.rollback();
-            currentFrame = prior;
+            currentSnapshot = prior;
             committedRead = priorRead;
             if (priorOwner === undefined) leaseOwners.delete(lease);
             else leaseOwners.set(lease, priorOwner);
@@ -208,7 +193,7 @@ export const createRenderTarget = (input: RenderTargetOptions): RenderTarget => 
         executor.dispose();
         leaseOwners.delete(lease);
       }
-      currentFrame = undefined;
+      currentSnapshot = undefined;
     },
   };
   return {
@@ -329,7 +314,7 @@ const freezeAnimationControls = (
 
 const snapshotRendererReadUnsafe = (
   value: RendererRead,
-  lineage: RenderFrameSnapshot | undefined,
+  lineage: SceneRuntimeSnapshot | undefined,
   animationControlsCache: WeakMap<object, AnimationControls>,
   reusesValidatedPrimary: boolean,
 ): RendererRead => {
@@ -341,39 +326,36 @@ const snapshotRendererReadUnsafe = (
     });
   }
 
-  const rawFrame: unknown = Reflect.get(candidate, 'frame');
+  const rawSnapshot: unknown = Reflect.get(candidate, 'snapshot');
   const animation = Reflect.get(candidate, 'animation') as AnimationControls | undefined;
-  if (typeof rawFrame !== 'object' || rawFrame === null) {
+  if (typeof rawSnapshot !== 'object' || rawSnapshot === null) {
     throw new RetikzRenderError({
       code: RetikzRenderErrorCode.RuntimeScenePatchSnapshotMismatch,
       cause: value,
     });
   }
 
-  const frame = rawFrame as RenderFrameSnapshot;
+  const snapshot = rawSnapshot as SceneRuntimeSnapshot;
   // 只有原样交还的帧可复用提交目标的验证；其它读回值仍按第三方输出完整检查
-  if (!reusesValidatedPrimary || frame !== lineage) {
-    assertSceneRuntimeSnapshot(frame.primary);
-    if (
-      !sceneRuntimeSnapshotEquals(frame.primary, lineage.primary) ||
-      !runtimeStructuralEquals(frame.layers, lineage.layers)
-    ) {
+  if (!reusesValidatedPrimary || snapshot !== lineage) {
+    assertSceneRuntimeSnapshot(snapshot);
+    if (!sceneRuntimeSnapshotEquals(snapshot, lineage)) {
       throw new RetikzRenderError({
         code: RetikzRenderErrorCode.RuntimeScenePatchSnapshotMismatch,
-        cause: { expected: lineage, received: frame },
+        cause: { expected: lineage, received: snapshot },
       });
     }
   }
 
   return Object.freeze({
-    frame: lineage,
+    snapshot: lineage,
     ...(animation === undefined ? {} : { animation: freezeAnimationControls(animation, animationControlsCache) }),
   });
 };
 
 const snapshotRendererRead = (
   value: RendererRead,
-  lineage: RenderFrameSnapshot | undefined,
+  lineage: SceneRuntimeSnapshot | undefined,
   animationControlsCache: WeakMap<object, AnimationControls>,
   reusesValidatedPrimary: boolean,
 ): RendererRead => {

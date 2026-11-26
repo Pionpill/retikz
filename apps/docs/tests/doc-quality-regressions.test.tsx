@@ -1,6 +1,5 @@
 import { cloneAndFreezeJson } from '@retikz/foundation';
 import type { FC } from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import { buildPreviewIR } from '../src/modules/docs/components/component-preview/utils';
@@ -12,7 +11,6 @@ import LearningPathSpineDemo from '../src/modules/docs/contents/kernel/galleries
 import LearningPathStacksDemo from '../src/modules/docs/contents/kernel/galleries/learning-path/learning-path-03-stacks.demo';
 import LearningPathPathsDemo from '../src/modules/docs/contents/kernel/galleries/learning-path/learning-path-04-paths.demo';
 import LearningPathDashedDemo from '../src/modules/docs/contents/kernel/galleries/learning-path/learning-path-05-dashed.demo';
-import InspectCustomDemo from '../src/modules/docs/contents/kernel/packages/inspect/custom/inspect-custom.demo';
 import { previewSource as RibbonGeometryPreviewSource } from '../src/modules/docs/contents/library/extension/ribbon/usage/ribbon-geometry.demo';
 import { previewSource as LegendColorFormsPreviewSource } from '../src/modules/docs/contents/viz/plot/guide/legend/legend-color-forms';
 import { createPreviewControlContract } from '../src/modules/docs/contents/viz/plot/guide/legend/legend-color-forms.controls';
@@ -48,9 +46,5 @@ describe('Docs 质量巡检回归', () => {
     ['Origin 博客 AI 路线图', AiRoadmapDemo],
   ] satisfies Array<readonly [string, FC]>)('%s 的 canonical IR 是 JSON-safe', (_name, Demo) => {
     expectCanonicalPreviewToBeJsonSafe(Demo);
-  });
-
-  it('自定义端点 Inspector 输出合法的 Core Node', () => {
-    expect(() => renderToStaticMarkup(<InspectCustomDemo />)).not.toThrow();
   });
 });

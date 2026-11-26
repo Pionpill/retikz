@@ -3,9 +3,8 @@ import type { ReconcilerPreparedCommit } from '@retikz/reconciler';
 
 import type { AnimationControls } from '../animation';
 import { isRetikzRenderError, RetikzRenderError, RetikzRenderErrorCode } from '../error';
-import type { ScenePatch } from '../scene';
+import type { ScenePatch, SceneRuntimeSnapshot } from '../scene';
 import type { RenderRuntimeConfig } from './config';
-import type { RenderFrameSnapshot } from './frame';
 
 /** renderer 增量能力等级 */
 export const RendererCapability = {
@@ -16,15 +15,6 @@ export const RendererCapability = {
 
 /** renderer 增量能力等级取值 */
 export type RendererCapability = ValueOf<typeof RendererCapability>;
-
-/** renderer 对只读 Scene 图层的支持等级 */
-export const RendererReadonlyLayerCapability = {
-  Supported: 'supported',
-  Unsupported: 'unsupported',
-} as const;
-
-/** renderer 只读 Scene 图层支持等级取值 */
-export type RendererReadonlyLayerCapability = ValueOf<typeof RendererReadonlyLayerCapability>;
 
 /** renderer 支持的宿主元素 */
 export type RendererHost = SVGSVGElement | HTMLCanvasElement;
@@ -52,8 +42,8 @@ export type RendererImmutableOptions = SvgRendererImmutableOptions | CanvasRende
 
 /** 与一次 committed renderer state 对应的 immutable public read */
 export type RendererRead = Readonly<{
-  /** renderer 当前原子物化的主图与只读图层 */
-  frame: RenderFrameSnapshot;
+  /** renderer 最近一次成功提交的主图快照 */
+  snapshot: SceneRuntimeSnapshot;
   /** 与同一 revision 对应的动画控制器 */
   animation?: AnimationControls;
 }>;
@@ -62,16 +52,14 @@ export type RendererRead = Readonly<{
 export type RendererDefinitionBase = Readonly<{
   /** renderer 支持的最大增量粒度 */
   capability: RendererCapability;
-  /** renderer 是否能物化只读 Scene 图层 */
-  readonlyLayerCapability: RendererReadonlyLayerCapability;
   /** staging 首次 materialization */
   prepareMount: (
-    frame: RenderFrameSnapshot,
+    snapshot: SceneRuntimeSnapshot,
     config: RenderRuntimeConfig,
     mode: 'create' | 'adopt',
   ) => ReconcilerPreparedCommit;
   /** staging 一次 Patch 与 config 原子更新 */
-  prepare: (patch: ScenePatch, frame: RenderFrameSnapshot, config: RenderRuntimeConfig) => ReconcilerPreparedCommit;
+  prepare: (patch: ScenePatch, snapshot: SceneRuntimeSnapshot, config: RenderRuntimeConfig) => ReconcilerPreparedCommit;
   /** 读取已 commit 的 renderer state */
   read: () => RendererRead;
   /** 释放 renderer 与 host 资源 */
@@ -105,8 +93,6 @@ declare const rendererBrand: unique symbol;
 export type RendererTokenBase = Readonly<{
   /** renderer 增量能力 */
   capability: RendererCapability;
-  /** renderer 只读 Scene 图层支持等级 */
-  readonlyLayerCapability: RendererReadonlyLayerCapability;
   /** 用于区分名义类型的不透明标记 */
   [rendererBrand]: true;
 }>;
@@ -204,7 +190,7 @@ export type DefineRenderer = {
 };
 
 const defineRendererUnsafe = (input: InputRendererDefinition): Renderer => {
-  const { backend, host, capability, readonlyLayerCapability, prepareMount, prepare, read, dispose } = input;
+  const { backend, host, capability, prepareMount, prepare, read, dispose } = input;
   const runtimeBackend: unknown = backend;
   const validHost = runtimeBackend === 'svg' ? isSvgHost(host) : runtimeBackend === 'canvas' && isCanvasHost(host);
   if (!validHost) {
@@ -215,7 +201,6 @@ const defineRendererUnsafe = (input: InputRendererDefinition): Renderer => {
     backend,
     host,
     capability,
-    readonlyLayerCapability,
   }) as Renderer;
   let state: 'live' | 'disposing' | 'disposed' = 'live';
 

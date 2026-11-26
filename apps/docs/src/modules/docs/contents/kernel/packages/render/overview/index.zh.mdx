@@ -7,8 +7,6 @@ description: 把渲染目标无关的 Scene 落到 SVG / Canvas，并以 session
 
 这一组讲 retikz 怎么把图真正画到屏幕上。你写的图会先被编译成一份**与渲染器无关的 Scene**，再交给某个后端落地：**SVG** 产出矢量 DOM，每个图元都是页面上能被 CSS 命中的真实元素；**Canvas** 把同一份 Scene 画成像素位图，适合图元很多或高频重绘的场景。两个后端共享 Scene 语义，在各自支持的能力范围内对齐输出；切换前仍需确认目标宿主和交互需求。**水合**是两个后端共用的机制：先静态出图，客户端再按 id 把事件 handler 绑回图元。
 
-只读图层通过静态帧或 session 提交入口随主图一起物化。`drawReadonlyLayer` 与 `buildSvgReadonlyLayer` 是内部组装函数，不由 Canvas／SVG 公开子入口导出；公开的细粒度 SVG builder 仍可使用。
-
 从 `@retikz/render/runtime` 导入 `RenderMode` 可为渲染后端选项标注类型。Vanilla 挂载和 React Layout 的 `renderer` 均接受 `svg` 或 `canvas`。
 
 ## 职责一览
@@ -18,7 +16,6 @@ description: 把渲染目标无关的 Scene 落到 SVG / Canvas，并以 session
 | SVG          | Scene → 矢量 DOM，或 SSR / 构建期的字符串输出         | 默认选它：要清晰矢量、CSS 命中、无障碍 |
 | Canvas       | Scene → 像素位图，即时模式绘制 + 命中查询             | 图元成百上千、高频重绘、性能优先       |
 | Session 提交 | 在 Reconciler 会话中准备与提交 Scene 和配置           | 需要稳定宿主 identity 与增量更新       |
-| 只读图层     | 在主图之后物化领域中立的普通 Scene 图层               | 接入检查器、编辑器或其它只读辅助内容   |
 | 水合         | 静态出图后按 id 把事件 handler 绑回图元（两后端共用） | 给图加点击 / 悬停等交互                |
 
 ## Session 提交
@@ -27,33 +24,27 @@ description: 把渲染目标无关的 Scene 落到 SVG / Canvas，并以 session
 
 最终 dispose 会对 hydration、animation 与 image loader 做反向 best-effort cleanup。SVG WAAPI binding 或 Canvas clock 一旦开始清理，公开 controls 与事件 / 可见性回调立即失活；animation、observer、listener、inline style ownership、visibility listener 与 clock 分别清理，成功项不重复，失败项保留给后续 dispose 重试。
 
-`InputRenderRuntimeConfig` 是 closed transaction config：`handlerContributions` 按注册序合并水合 handler，`animation` 控制播放、截帧与扩展 registry，`cachePolicy` 保留未来 layer 失效优化的 hint，`canvas.width` / `canvas.height` 声明 Canvas CSS user-space 尺寸。当前 SVG / Canvas renderer 尚不按 `cachePolicy` 复用图层。Render 借用配置和只读图层，不冻结调用方的对象。只有 handler 注册项乱序时，才另外建立有序列表。渲染器使用这些值期间，请保持它们及其成员稳定；更新时传入新值，而不要原地修改旧帧引用的数据。Canvas 尺寸字段省略时从 committed Scene layout 推导，再乘 session-lifetime DPR 得到设备像素；尺寸更新与位图绘制原子 commit，dirty reuse 仅在目标尺寸稳定时成立。
+`InputRenderRuntimeConfig` 是 closed transaction config：`handlerContributions` 按注册序合并水合 handler，`animation` 控制播放、截帧与扩展 registry，`cachePolicy` 保留未来 layer 失效优化的 hint，`canvas.width` / `canvas.height` 声明 Canvas CSS user-space 尺寸。当前 SVG / Canvas renderer 尚不按 `cachePolicy` 复用图层。Render 借用配置，不冻结调用方的对象。只有 handler 注册项乱序时，才另外建立有序列表。渲染器使用这些值期间，请保持它们及其成员稳定；更新时传入新值，而不要原地修改旧帧引用的数据。Canvas 尺寸字段省略时从 committed Scene layout 推导，再乘 session-lifetime DPR 得到设备像素；尺寸更新与位图绘制原子 commit，dirty reuse 仅在目标尺寸稳定时成立。
 
 这些 session API 从 `@retikz/render/runtime` 导入，不从 `@retikz/render` package root 导出。第三方后端通过 `RendererFactory` 创建 nominal SVG / Canvas renderer，并声明 `none` / `group` / `entity` capability。Render 提交目标校验 Snapshot / Patch 的版本与结果对应关系；无效 Patch 会被拒绝。当前接线对编译变化生成完整替换，后端能力声明不意味着会话自动产生细粒度操作。
 
-### 主图与只读图层
+### Scene 快照
 
 运行时 Scene 身份、拓扑、快照和 Patch 契约由 Render 拥有，相关类型从 `@retikz/render/runtime` 导入，包括 `SceneIdentity`、`SceneRuntimeSnapshot` 和 `ScenePatch`。Reconciler 交付完整编译结果、来源信息和候选版本；Render 提交目标据此建立渲染快照。身份或拓扑构造失败使用 `RetikzRenderError` 报告。
 
 拓扑节点在同级图元中的顺序由 `primitivePath` 的末尾索引决定，相对子树的根路径为 `[]`。构造 update patch 时，用 `subtree.root` 指定替换目标，不另传 `identity`；move 和 remove 仍通过 `identity` 指定目标。
 
-Static API 使用 `StaticRenderFrame { primary: Scene, layers }`，renderer 使用 `RenderFrameSnapshot { primary: SceneRuntimeSnapshot, layers }`。两者都把主图和有序只读图层作为一个 frame 物化；session transaction 失败时不会发布新主图配旧图层。
-
-每个 `RenderReadonlyLayer` 都携带单帧唯一的 `key`、普通静态 `scene` 和到主 Scene 坐标的 `transform`。SVG 在主图之后追加 `pointer-events="none"` 的分组，用普通 Scene fragment 路径执行每个图层，并为其资源生成独立前缀，不写 hydration id。Canvas 套用图层 transform 后调用普通 Scene 绘制路径；`hitTest` 仍只读取主 Scene。只读图层不会决定 viewBox、主资源、动画或主图 identity，也不能包含公共 `id`、`meta` 或动画字段。
-
-第三方 renderer 通过 `readonlyLayerCapability: 'supported' | 'unsupported'` 明确声明支持情况；收到非空图层但声明 unsupported 时会直接报错，不会静默丢弃。Render 不认识 Inspector、配色或具体辅助图元；`@retikz/inspect` 只是只读图层的一个外部生产者，编辑器和其它工具也可复用同一能力。
+静态 API 接收 `Scene`。自定义 renderer 接收 `SceneRuntimeSnapshot`，成功提交后通过 `read().snapshot` 返回该快照。
 
 宿主可从 `@retikz/render/runtime` 导入 `computeDisplaySize(scene.layout, width?, height?)` 计算显示尺寸。只指定宽或高时，另一轴按场景比例补齐；这不会改变场景的取景范围。
 
-### 静态帧 API
+### 静态 Scene API
 
-`StaticRenderFrame` 从 `@retikz/render/runtime` 导入；具体物化函数仍按后端从 SVG / Canvas subpath 导入。
-
-| API                                            | 导入路径                | 产物                            |
-| ---------------------------------------------- | ----------------------- | ------------------------------- |
-| `buildSvgFrameDocument(frame, options)`        | `@retikz/render/svg`    | 包含主图与只读图层的 `SvgNode`  |
-| `renderFrameToSvgString(frame, options)`       | `@retikz/render/svg`    | 可用于 SSR 的完整 SVG 字符串    |
-| `renderFrameToCanvas(canvas, frame, options?)` | `@retikz/render/canvas` | 原子绘制到目标 Canvas，无返回值 |
+| API                                       | 导入路径                | 产物                         |
+| ----------------------------------------- | ----------------------- | ---------------------------- |
+| `buildSvgDocument(scene, options)`        | `@retikz/render/svg`    | SVG 文档描述树               |
+| `renderToSvgString(scene, options)`       | `@retikz/render/svg`    | 可用于 SSR 的完整 SVG 字符串 |
+| `renderToCanvas(canvas, scene, options?)` | `@retikz/render/canvas` | 绘制到目标 Canvas，无返回值  |
 
 <SourceLinks
   sources={[
@@ -81,14 +72,14 @@ Static API 使用 `StaticRenderFrame { primary: Scene, layers }`，renderer 使�
     {
       label: 'SVG aggregate controls cleanup',
       path: 'packages/kernel/render/src/runtime/svg-renderer.ts',
-      startLine: 83,
-      endLine: 120,
+      startLine: 79,
+      endLine: 116,
     },
     {
       label: 'SVG animation retry queue',
       path: 'packages/kernel/render/src/runtime/svg-renderer.ts',
-      startLine: 122,
-      endLine: 153,
+      startLine: 118,
+      endLine: 149,
     },
     {
       label: '共享 rAF frame continuation gate',
@@ -105,70 +96,62 @@ Static API 使用 `StaticRenderFrame { primary: Scene, layers }`，renderer 使�
     {
       label: 'Canvas animation retry queue',
       path: 'packages/kernel/render/src/runtime/canvas-renderer.ts',
-      startLine: 213,
-      endLine: 235,
+      startLine: 209,
+      endLine: 231,
     },
     {
       label: 'Canvas visibility cleanup',
       path: 'packages/kernel/render/src/runtime/canvas-renderer.ts',
-      startLine: 1043,
-      endLine: 1185,
+      startLine: 1021,
+      endLine: 1163,
     },
     {
       label: 'Canvas clock replacement gate',
       path: 'packages/kernel/render/src/runtime/canvas-renderer.ts',
-      startLine: 1200,
-      endLine: 1225,
+      startLine: 1178,
+      endLine: 1203,
     },
     {
       label: 'Canvas controls final cleanup',
       path: 'packages/kernel/render/src/runtime/canvas-renderer.ts',
-      startLine: 1267,
-      endLine: 1290,
+      startLine: 1245,
+      endLine: 1268,
     },
     {
       label: 'Canvas candidate cleanup retention',
       path: 'packages/kernel/render/src/runtime/canvas-renderer.ts',
-      startLine: 1643,
-      endLine: 1651,
+      startLine: 1606,
+      endLine: 1614,
     },
     {
       label: 'Canvas animation rollback cleanup',
       path: 'packages/kernel/render/src/runtime/canvas-renderer.ts',
-      startLine: 1745,
-      endLine: 1769,
+      startLine: 1707,
+      endLine: 1731,
     },
     {
       label: 'Canvas renderer final dispose',
       path: 'packages/kernel/render/src/runtime/canvas-renderer.ts',
-      startLine: 1865,
-      endLine: 1890,
+      startLine: 1825,
+      endLine: 1849,
     },
     {
       label: 'Renderer capability 与公开 read',
       path: 'packages/kernel/render/src/runtime/renderer.ts',
-      startLine: 9,
-      endLine: 50,
-    },
-    {
-      label: 'Static 与 session frame 契约',
-      path: 'packages/kernel/render/src/runtime/frame.ts',
-    },
-    {
-      label: '只读图层校验',
-      path: 'packages/kernel/render/src/runtime/readonly-layer.ts',
+      startLine: 8,
+      endLine: 40,
     },
     {
       label: 'renderer definition 与 factory contract',
       path: 'packages/kernel/render/src/runtime/renderer.ts',
-      startLine: 52,
-      endLine: 148,
+      startLine: 42,
+      endLine: 134,
     },
     {
       label: 'Nominal renderer token 构造',
       path: 'packages/kernel/render/src/runtime/renderer.ts',
-      startLine: 205,
-      endLine: 264,
+      startLine: 191,
+      endLine: 249,
     },
   ]}
 />

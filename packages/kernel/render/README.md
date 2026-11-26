@@ -30,7 +30,7 @@ pnpm add @napi-rs/canvas
 | `@retikz/render/canvas-node` | Render a compiled `Scene` to a Node canvas and export image bytes.                            | Node.js                        | `@napi-rs/canvas` |
 | `@retikz/render/hydration`   | Locate rendered SVG/Canvas nodes and bind runtime interaction or animation controllers.       | Browser DOM hosts              | None              |
 | `@retikz/render/animation`   | Shared animation evaluation, clocks, runtime, easing, and custom property registry utilities. | Browser and Node runtimes      | None              |
-| `@retikz/render/runtime`     | Render sessions, readonly layers, patch validation, and runtime host contracts.        | Browser and Node hosts         | None              |
+| `@retikz/render/runtime`     | Render sessions, Scene snapshots, patch validation, and runtime host contracts.               | Browser and Node hosts         | None              |
 
 ## `@retikz/render/svg`
 

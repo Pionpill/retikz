@@ -870,8 +870,8 @@ export const kernelV05: Release = {
       pkg: '@retikz/inspect',
       version: 'v0.5',
       description: {
-        zh: '通过可选检查工具查看最终路径、分组坐标系与裁剪边缘；检查内容与主图隔离，不接入时不执行检查逻辑。',
-        en: 'Use optional inspection tools to view final paths, group coordinate systems, and clip boundaries. Inspection stays separate from the main figure and does not run when unused.',
+        zh: '此包已从开发线移除。以下记录保留早期版本提供的 Path、Group 和 Clip 检查能力。',
+        en: 'This package has been removed from the development line. The entries below document Path, Group, and Clip inspection in earlier versions.',
       },
       highlights: [
         {
@@ -1071,6 +1071,13 @@ export const kernelV05: Release = {
         en: 'Drawing updates can preserve unchanged SVG elements and reduce Canvas repainting, with rendering, events, and animation state committed together.',
       },
       highlights: [
+        {
+          label: { zh: '移除 Inspect 与辅助帧', en: 'Removed Inspect and auxiliary frames' },
+          content: {
+            zh: '不再提供 @retikz/inspect。静态 SVG / Canvas 直接消费 Scene，自定义 renderer 直接接收 SceneRuntimeSnapshot，并通过 read().snapshot 交付最近的提交。具名 Scene 图层和 Composite 产物不变。',
+            en: 'The @retikz/inspect package is retired. Static SVG and Canvas render a Scene directly. Custom renderers receive a SceneRuntimeSnapshot and expose the latest commit through read().snapshot. Named Scene layers and Composite artifacts are unchanged.',
+          },
+        },
         {
           label: { zh: '运行时快照与 Scene Patch', en: 'Runtime snapshots and Scene patches' },
           content: {

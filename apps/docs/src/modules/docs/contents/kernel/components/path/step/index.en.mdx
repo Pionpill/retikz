@@ -264,12 +264,6 @@ The five-pointed star below has no node `boundary`. The panel starts on the circ
 
 ## Path-level capabilities
 
-### Control-point inspection
-
-Pass an ordinary compilation result to the path inspector in `@retikz/inspect` to display final Bézier control points and handles; `labels` adds command indices. Auxiliary content is compiled and presented independently. See [`@retikz/inspect`](/kernel/packages/inspect) for setup.
-
-<ComponentPreview files="path-inspector" size="sm" />
-
 ### Whole-path transform
 
 `rotate` (degrees) / `scale` (a number for uniform, or `{ x, y }` for non-uniform) transform the whole path around its **bounding-box center**, sparing a wrapping `<Scope transforms>` for a single path. Arrows and labels follow the path transform. The dotted path preserves the original geometry while the panel's rotation and two-axis scale affect only the solid path for direct comparison.

@@ -709,36 +709,6 @@ export const kernelSection: Array<Section> = [
         ],
       },
       {
-        id: 'inspect',
-        label: 'kernel.pkgInspect',
-        sidebarGroup: 'kernel.pkgGroupExtension',
-        children: [
-          {
-            id: 'builtins',
-            meta: { pageType: 'guide', audience: 'user' },
-            label: 'kernel.pkgInspectBuiltins',
-            difficulty: DocDifficulty.Beginner,
-          },
-          {
-            id: 'custom',
-            label: 'kernel.pkgInspectCustom',
-            difficulty: DocDifficulty.Advanced,
-            meta: extensionGuide('kernel.inspect'),
-          },
-          { id: 'mechanism', label: 'kernel.pkgInspectMechanism', difficulty: DocDifficulty.Internals },
-          {
-            id: 'reference',
-            label: 'kernel.pkgInspectApiReference',
-            meta: {
-              pageType: 'reference',
-              audience: 'integrator',
-              capability: 'kernel.inspect.api',
-              sourceOfTruth: 'runtime',
-            },
-          },
-        ],
-      },
-      {
         id: 'vanilla',
         label: 'kernel.pkgVanilla',
         sidebarGroup: 'kernel.pkgGroupFramework',

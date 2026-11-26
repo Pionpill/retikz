@@ -6,13 +6,13 @@
 
 ## 重点功能
 
-| 重点能力           | 目标                                        | 相关 ADR                              |
-| ------------------ | ------------------------------------------- | ------------------------------------- |
-| 布局所有权         | 建立独立 Layout owner 与统一公开入口        | [001](./001-layout-package-family.md) |
-| Flex / Grid        | 提供线性排版和二维网格组织能力              | [001](./001-layout-package-family.md) |
-| Overlay 与共同表面 | 统一叠放、容器约束、测量与放置              | [001](./001-layout-package-family.md) |
-| 组合与诊断         | 支持跨组件复用、布局 artifact 与 inspection | [001](./001-layout-package-family.md) |
-| 跨宿主入口         | 直接 IR、React 与 Vanilla 复用同一布局契约  | [001](./001-layout-package-family.md) |
+| 重点能力           | 目标                                       | 相关 ADR                              |
+| ------------------ | ------------------------------------------ | ------------------------------------- |
+| 布局所有权         | 建立独立 Layout owner 与统一公开入口       | [001](./001-layout-package-family.md) |
+| Flex / Grid        | 提供线性排版和二维网格组织能力             | [001](./001-layout-package-family.md) |
+| Overlay 与共同表面 | 统一叠放、容器约束、测量与放置             | [001](./001-layout-package-family.md) |
+| 组合与诊断         | 支持跨组件复用、布局 artifact              | [001](./001-layout-package-family.md) |
+| 跨宿主入口         | 直接 IR、React 与 Vanilla 复用同一布局契约 | [001](./001-layout-package-family.md) |
 
 ## 功能规划
 
@@ -74,7 +74,7 @@
 规划内容：
 
 - 提供跨 owner 已验证复用的布局组合能力。
-- 提供 layout artifact 与独立 inspection 入口，保留真实布局结果。
+- 提供 layout artifact，保留真实布局结果。
 
 预期效果：
 

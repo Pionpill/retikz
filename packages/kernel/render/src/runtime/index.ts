@@ -16,8 +16,6 @@ export { computeDisplaySize } from '../shared';
 export * from '../trace';
 export * from './builtin';
 export * from './config';
-export * from './frame';
-export * from './readonly-layer';
 export type {
   CanvasRenderer,
   CanvasRendererImmutableOptions,
@@ -37,5 +35,5 @@ export type {
   SvgRenderer,
   SvgRendererImmutableOptions,
 } from './renderer';
-export { defineRenderer, isRenderer, RendererCapability, RendererReadonlyLayerCapability } from './renderer';
+export { defineRenderer, isRenderer, RendererCapability } from './renderer';
 export * from './target';

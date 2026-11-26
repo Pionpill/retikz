@@ -1,9 +1,6 @@
 import type { Scene } from '@retikz/core';
 
 import { RetikzRenderError, RetikzRenderErrorCode } from '../error';
-import type { StaticRenderFrame } from '../runtime';
-import { validateReadonlyLayers } from '../runtime';
-import { drawReadonlyLayer } from './draw-readonly-layer';
 import { drawScene } from './draw-scene';
 import { createCssColorNormalizer, sceneFitMatrix } from './internal';
 import type { RenderOptions } from './types';
@@ -54,11 +51,7 @@ const normalizeCssColorViaCanvas = createCssColorNormalizer(() =>
 );
 
 /** 将 Scene 渲染到 HTMLCanvasElement */
-export const renderFrameToCanvas = (
-  canvas: HTMLCanvasElement,
-  frame: StaticRenderFrame,
-  options: RenderOptions = {},
-): void => {
+export const renderToCanvas = (canvas: HTMLCanvasElement, scene: Scene, options: RenderOptions = {}): void => {
   const assertPositiveFinite = (name: string, value: number): void => {
     if (!Number.isFinite(value) || value <= 0) {
       throw new RetikzRenderError(
@@ -68,8 +61,6 @@ export const renderFrameToCanvas = (
     }
   };
 
-  const scene = frame.primary;
-  const layers = validateReadonlyLayers(frame.layers);
   const ctx = canvas.getContext('2d');
   if (!ctx)
     throw new RetikzRenderError(RetikzRenderErrorCode.Canvas, 'renderToCanvas: unable to acquire 2d canvas context.');
@@ -116,10 +107,4 @@ export const renderFrameToCanvas = (
     resolveCssColor: options.resolveCssColor ?? normalizeCssColorViaCanvas,
   };
   drawScene(ctx, scene, drawOptions);
-
-  for (const layer of layers) drawReadonlyLayer(ctx, layer, drawOptions);
 };
-
-/** 将 Scene 渲染到 HTMLCanvasElement，等价于使用空只读图层的静态 frame */
-export const renderToCanvas = (canvas: HTMLCanvasElement, scene: Scene, options: RenderOptions = {}): void =>
-  renderFrameToCanvas(canvas, { primary: scene, layers: Object.freeze([]) }, options);

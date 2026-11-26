@@ -264,12 +264,6 @@ const view = mount(document.getElementById('diagram')!, ir);
 
 ## 路径级能力
 
-### 控制点检查
-
-安装 `@retikz/inspect` 后，将普通编译结果交给路径检查器，即可显示最终贝塞尔曲线的控制点与控制柄；`labels` 可额外显示命令编号。辅助图单独编译和呈现。接入方式见 [`@retikz/inspect`](/kernel/packages/inspect)。
-
-<ComponentPreview files="path-inspector" size="sm" />
-
 ### 整体变换
 
 `rotate`（度）/ `scale`（数字等比，或 `{ x, y }` 非等比）把整条 path 绕**包围盒中心**变换，免去为单条 path 包一层 `<Scope transforms>`。箭头和标签随路径一起变换。虚点线路径保留原始几何，面板中的旋转与二维缩放只作用于实线路径，便于对照。

@@ -11,6 +11,8 @@ keywords: 'Layout、Inspector、inspect、CompileResult、InputScope.inspect、i
 - 关联：[alpha.2 roadmap](./roadmap.md) · [ADR-011](./011-layout-artifacts-capabilities-adapters.md) · [Kernel ADR-021](../../../../../kernel/_notes/decisions/_v0.5/021-extensible-inspector-content.md)
 - 后继：[Layout ADR-001](../../layout/_v0.1/001-layout-package-family.md) 接管当前 Layout Inspector owner；本 ADR 保留 Standard 验证期历史
 
+> 有关 Inspector 与 /inspect 入口的条款已由 [Kernel ADR-090](../../../../../kernel/_notes/decisions/_v0.5/090-remove-inspect.md) 替代；Layout 领域产物保持独立。
+
 ## 后续演进
 
 [Kernel ADR-021](../../../../../kernel/_notes/decisions/_v0.5/021-extensible-inspector-content.md) 进一步取代本 ADR 中由 Core、Render 与基础 adapter 内置 Inspector 的归属。Core 只保留最终 occurrence 观测与隔离片段编译；Inspector contract、选择策略、辅助平面和宿主接线迁入可选 `@retikz/inspect`，Layout 实现迁入 `@retikz/standard/inspect`

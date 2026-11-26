@@ -16,6 +16,8 @@ keywords: Runtime、Reconciler、Weave、事务、Render、依赖移除
 
 > 静态编译不创建协调器会话的约定由 [ADR-082](./082-scene-reconciler-entry.md) 替代：完整与增量编译统一通过现有 SceneReconciler，一次性调用使用临时非增量实例
 
+> [090](./090-remove-inspect.md) 退役通用 Inspect 和单图只读辅助层；原有主图编译、领域产物与具名 Scene 图层不受影响。
+
 ## 背景与目标
 
 Weave 已拥有编译树、批次操作、依赖传播、缓存及候选状态隔离。现有公开链路仍通过 Runtime Source / Computation 包装完整输入，更新回退到完整准备，未直接使用已有 Weave 批次能力。通用计算图与完整快照捕获增加接线复杂度，不能作为元素增量计算的必要条件。

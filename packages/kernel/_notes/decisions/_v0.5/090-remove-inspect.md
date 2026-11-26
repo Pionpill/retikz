@@ -5,7 +5,8 @@ keywords: Inspect、InspectorDefinition、InspectionPlane、RenderReadonlyLayer�
 
 # ADR-090：删除通用 Inspect 与单图只读辅助层
 
-- 状态：Proposed
+- 状态：Accepted
+- 接受日期：2026-11-26
 - 决策日期：2026-11-26
 - 关联：[roadmap](./roadmap.md) · [021](./021-extensible-inspector-content.md) · [039](./039-builtin-inspection.md) · [077](./077-compile-output-contract.md) · [078](./078-inspect-compiled-output.md) · [087（具名图层）](./087-independent-scene-layers.md) · [包职责](../../../../../notes/architecture/package-responsibility-design.md)
 

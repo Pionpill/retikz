@@ -145,8 +145,6 @@ const explicit = (
 
 `Layout` 会把文本测量器、Definition registries、TeX lowerer 等宿主能力作为 processing 的 compile options 注入，但这些选项不会把 React 写进 IR 或 Scene。直接传 `ir` prop 时会跳过 JSX collector。`artifacts` prop 请求 opt-in 产物，`onArtifacts` 在所选 host 发布后接收同次 compile 的 immutable artifacts；不会为通知再编译一次。
 
-可选的 `@retikz/inspect/react` 提供 `InspectionOverlay`，消费主图已完成的普通编译结果并独立呈现辅助层。检查请求不进入主图 IR，也不参与主图的编译与提交。
-
 需要整帧结果时使用 `Layout.onCompileResult`；它在 React 提交后交付当前编译结果，不在服务端渲染期间调用。
 
 <SourceLinks

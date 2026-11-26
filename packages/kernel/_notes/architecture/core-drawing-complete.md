@@ -64,7 +64,7 @@ Composite assembly 与 composite registry 是相邻但不同的契约：registry
 
 Spatial sidecar 与 Scene 也是相邻但不同的产物：Scene 只承载 renderer execution；qualified handles 与 Scene、artifacts、diagnostics provenance 在同一 compile revision 生成和提交，但由 Core query / tooling 消费。外层 Composite 只能为 descendant owner path 增加前缀，不能复制、重命名或丢弃内部 handle。
 
-Core shared colors 是跨包 value contract，不是领域 palette。Inspect 从普通编译结果独立生成辅助 IR，自行使用公共色板形成 `InspectionAppearanceContext`，不要求 Core 提供观测或对象主题。领域产物缺少可靠 Scene 坐标时不绘制叠加内容。
+Core shared colors 是跨包 value contract，不是领域 palette。
 
 ## 5. 准入原则
 

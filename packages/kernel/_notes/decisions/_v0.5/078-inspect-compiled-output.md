@@ -5,10 +5,12 @@ keywords: Inspect、CompileResult、Scene、CompositeArtifact、InspectorDefinit
 
 # ADR-078：Inspect 消费普通编译结果
 
-- 状态：Accepted
+- 状态：Superseded
 - 决策日期：2026-10-29
 - 接受日期：2026-10-29
 - 关联：[roadmap](./roadmap.md) · [077](./077-compile-output-contract.md) · [021](./021-extensible-inspector-content.md) · [039](./039-builtin-inspection.md) · [绘图完备性](../../architecture/core-drawing-complete.md)
+
+> [090](./090-remove-inspect.md) 退役通用 Inspect 和单图只读辅助层；原有主图编译、领域产物与具名 Scene 图层不受影响。
 
 ## 背景与目标
 

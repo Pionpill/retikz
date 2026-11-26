@@ -3,7 +3,7 @@ title: Execution / Output Provenance
 description: Follow node B into the Scene, drawing resources, domain artifacts, warnings and provenance records
 ---
 
-In [Element Assembly](/kernel/packages/reconciler/compile-elements), the path connecting A to B reserves a slot and fills it once both nodes are ready. Now give the drawing to two consumers: a renderer needs to draw B, while an inspector needs to identify the primitives B emitted. The renderer needs only the Scene. The inspector also needs provenance from this compilation.
+In [Element Assembly](/kernel/packages/reconciler/compile-elements), the path connecting A to B reserves a slot and fills it once both nodes are ready. Now give the drawing to two consumers: a static SVG export draws B directly from the Scene; a retained renderer also uses compilation provenance to identify the primitives B emitted.
 
 ## Overview
 

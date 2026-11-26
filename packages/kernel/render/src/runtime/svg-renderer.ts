@@ -30,13 +30,9 @@ import type {
 } from '../scene';
 import { prepareRuntimeSceneContent } from '../shared';
 import type { SvgNode } from '../svg';
-import { buildSvgDocument, buildSvgFragment } from '../svg';
-import { buildSvgReadonlyLayer } from '../svg/builders';
+import { buildSvgDocument } from '../svg';
 import type { RenderRuntimeConfig } from './config';
-import type { RenderFrameSnapshot } from './frame';
 import { mergeRenderHandlers } from './handlers';
-import type { RenderReadonlyLayer } from './readonly-layer';
-import { validateReadonlyLayers } from './readonly-layer';
 import type { SvgRenderer, SvgRendererImmutableOptions } from './renderer';
 import { defineRenderer } from './renderer';
 import type { SceneAnimationDescriptorDiff } from './runtime-options';
@@ -436,13 +432,7 @@ const descriptorMatchesElement = (element: SVGElement, node: SvgNode, root: bool
   if (!root && element.style.length !== expectedStyles.length) return false;
 
   const children = node.children ?? [];
-  const actualChildren = root
-    ? Array.from(element.childNodes).filter(
-        child =>
-          !(child instanceof element.ownerDocument.defaultView!.SVGElement) ||
-          child.getAttribute('data-retikz-readonly-layer') === null,
-      )
-    : Array.from(element.childNodes);
+  const actualChildren = Array.from(element.childNodes);
   if (actualChildren.length !== children.length) return false;
 
   return children.every((child, index) => {
@@ -1236,8 +1226,6 @@ const buildDescriptor = (
 /** 创建内置 SVG renderer */
 export const createBuiltinSvgRenderer = (host: SVGSVGElement, options: SvgRendererImmutableOptions): SvgRenderer => {
   let currentSnapshot: SceneRuntimeSnapshot | undefined;
-  let currentLayers: ReadonlyArray<RenderReadonlyLayer> = Object.freeze([]);
-  let currentLayerElements: ReadonlyArray<SVGElement> = Object.freeze([]);
   let currentAnimation: SvgAnimationState | undefined;
   let currentHydration: HydrationController | undefined;
   let currentOwnedAttributes = new Set<string>();
@@ -1645,94 +1633,18 @@ export const createBuiltinSvgRenderer = (host: SVGSVGElement, options: SvgRender
     });
   };
 
-  const prepareFrame = (
-    scenePatch: ScenePatch | undefined,
-    frame: RenderFrameSnapshot,
-    config: RenderRuntimeConfig,
-    mode: 'create' | 'adopt' = 'create',
-  ): ReconcilerPreparedCommit => {
-    const layers = validateReadonlyLayers(frame.layers);
-    const primaryToken = prepare(scenePatch, frame.primary, config, mode);
-    const previousLayers = currentLayers;
-    const adoptedLayerElements =
-      mode === 'adopt'
-        ? Array.from(host.children).filter(child => child.getAttribute('data-retikz-readonly-layer') !== null)
-        : [];
-    const previousElements =
-      currentLayerElements.length > 0
-        ? currentLayerElements
-        : adoptedLayerElements.filter(
-            (element): element is SVGElement => element instanceof host.ownerDocument.defaultView!.SVGElement,
-          );
-    let candidateElements: ReadonlyArray<SVGElement> = Object.freeze([]);
-
-    try {
-      candidateElements = Object.freeze(
-        layers.map(layer =>
-          createSvgElement(
-            host.ownerDocument,
-            buildSvgReadonlyLayer(
-              layer,
-              buildSvgFragment(layer.scene, {
-                idPrefix: `${options.idPrefix}-layer-${layer.key}`,
-                animate: false,
-              }),
-            ),
-          ),
-        ),
-      );
-    } catch (cause) {
-      try {
-        runBestEffortCleanup([() => primaryToken.rollback(), () => primaryToken.dispose()]);
-      } catch {
-        // 辅助 Scene 物化错误保持为 prepare 的主因
-      }
-
-      throw cause;
-    }
-
-    let committed = false;
-
-    return Object.freeze({
-      commit: () => {
-        primaryToken.commit();
-
-        for (const element of previousElements) element.remove();
-
-        for (const element of candidateElements) host.appendChild(element);
-        currentLayers = layers;
-        currentLayerElements = candidateElements;
-        committed = true;
-      },
-      rollback: () => {
-        primaryToken.rollback();
-
-        for (const element of candidateElements) element.remove();
-
-        for (const element of previousElements) if (element.parentNode !== host) host.appendChild(element);
-        currentLayers = previousLayers;
-        currentLayerElements = previousElements;
-      },
-      dispose: () => {
-        primaryToken.dispose();
-        if (!committed) for (const element of candidateElements) element.remove();
-      },
-    });
-  };
-
   return defineRenderer({
     backend: 'svg',
     host,
     capability: 'entity',
-    readonlyLayerCapability: 'supported',
-    prepareMount: (frame, config, mode) => prepareFrame(undefined, frame, config, mode),
-    prepare: (scenePatch, frame, config) => prepareFrame(scenePatch, frame, config),
+    prepareMount: (snapshot, config, mode) => prepare(undefined, snapshot, config, mode),
+    prepare,
     read: () => {
       if (currentSnapshot === undefined)
         throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG renderer is not committed');
 
       return Object.freeze({
-        frame: Object.freeze({ primary: currentSnapshot, layers: currentLayers }),
+        snapshot: currentSnapshot,
         ...(currentAnimation === undefined ? {} : { animation: currentAnimation.controls }),
       });
     },
@@ -1752,8 +1664,6 @@ export const createBuiltinSvgRenderer = (host: SVGSVGElement, options: SvgRender
         () => candidateAnimationCleanup.disposePending(),
         () => {
           currentSnapshot = undefined;
-          currentLayers = Object.freeze([]);
-          currentLayerElements = Object.freeze([]);
           currentOwnedAttributes = new Set();
           currentOwnedStyles = new Set();
           currentElements = createSceneIdentityMap([]);

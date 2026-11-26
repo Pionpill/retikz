@@ -22,7 +22,6 @@ Layout 拥有：
 - Flex、Grid、Overlay 等领域无关排版 schema、Definition、solver 与 composition
 - child measure / place / replay 的布局会话组合
 - allocation、slot、visual / visible bounds、clip 与 Layout artifact
-- Layout inspection 及 React / Vanilla 等价 authoring
 
 Layout 不拥有 Core IR、Scene、renderer、字体测量实现、跨 compile cache、GraphModel、领域关系、算法布局或编辑器运行时。
 
@@ -31,8 +30,7 @@ Layout 不拥有 Core IR、Scene、renderer、字体测量实现、跨 compile c
 ```text
 @retikz/layout
   ├─ 排版 schema、Definition、solver 与 artifact
-  ├─ 稳定 composition capability
-  └─ 可选 inspection capability
+  └─ 稳定 composition capability
 
 @retikz/layout-react ───→ @retikz/layout + @retikz/react
 @retikz/layout-vanilla ─→ @retikz/layout + @retikz/vanilla
@@ -45,8 +43,6 @@ Layout 不拥有 Core IR、Scene、renderer、字体测量实现、跨 compile c
 `@retikz/layout` 根入口面向直接作者，提供 FlexLayout、GridLayout、OverlayLayout、LayoutItem、对应 Definition / factory / schema、公开类型与 Layout artifact 契约。
 
 `@retikz/layout/compose` 面向 Standard、Graph 与其它 Tier 2 owner，提供稳定且最小的布局组合能力，包括 canonical layout compile、child measure / place / replay、spacing / slot / clip、artifact 几何和确有跨 owner 复用证据的排版算法。它是公开 capability，不是内部目录镜像；仅有单一调用点或暴露私有状态的 helper 继续留在包内。
-
-`@retikz/layout/inspect` 是可选 inspection 入口，消费独立 `@retikz/inspect` 契约而不污染 Layout 根入口。React 与 Vanilla 包提供对应 `/inspect` authoring 入口。
 
 React 根入口为三个容器分别提供 `FlexLayoutItem`、`GridLayoutItem`、`OverlayLayoutItem`。子项组件身份确定所属容器，JSX 不再显式传 `kind`；adapter 补充判别字段后复用 Vanilla Input。JSON IR 与 Vanilla 保留原有带 `kind` 的布局子项契约，共享尺寸与内容语义不受 React 命名影响
 
@@ -70,7 +66,7 @@ Layout 输入保持 JSON-safe，schema 对非法数值、互斥字段、重复 i
 
 ## 文档与演进
 
-文档站在 Library 模块的 `Layout · 布局` 分组维护介绍、布局组件、composition / inspection 指南、参考和独立更新日志；顺序位于 `Standard · 拓展` 之后。
+文档站在 Library 模块的 `Layout · 布局` 分组维护介绍、布局组件、composition 指南、参考和独立更新日志；顺序位于 `Standard · 拓展` 之后。
 
 新增排版模型必须证明它属于领域无关容器约束，能够复用 Core layout-aware contract，并形成 schema、solver、artifact、adapter、tests 与 docs 闭环。依赖图关系、全局优化、拓扑或路由的能力不进入 Layout roadmap。
 

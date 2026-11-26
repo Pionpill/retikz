@@ -7,8 +7,6 @@ description: Renders backend-neutral Scenes to SVG / Canvas and coordinates fram
 
 This group covers how retikz actually paints a figure to the screen. Your figure is first compiled into a **renderer-agnostic Scene**, then handed to a backend: **SVG** emits a vector DOM where every primitive is a real, CSS-targetable element; **Canvas** paints the same Scene as a raster bitmap, suited to many primitives or frequent repaints. The backends share Scene semantics and align their output where each backend supports the required feature; check host capabilities and interaction needs before switching. **Hydration** is the mechanism both backends share: render statically first, then bind event handlers back to primitives by id on the client.
 
-Readonly layers are materialized with the primary figure through static-frame or session commit APIs. `drawReadonlyLayer` and `buildSvgReadonlyLayer` are internal assembly helpers, excluded from the public Canvas/SVG subpaths. Public granular SVG builders remain available.
-
 Import the `RenderMode` type from `@retikz/render/runtime` for backend selection. Both the Vanilla mount API and React Layout accept `svg` or `canvas` for `renderer`.
 
 ## Responsibilities
@@ -18,7 +16,6 @@ Import the `RenderMode` type from `@retikz/render/runtime` for backend selection
 | SVG             | Scene → vector DOM, or an SSR / build-time string                                            | The default: you want crisp vectors, CSS hit-testing, accessibility |
 | Canvas          | Scene → raster bitmap, immediate-mode drawing + hit-testing                                  | Hundreds of primitives, frequent repaints, performance first        |
 | Session commits | Prepare and commit Scenes and configuration in a Reconciler session                          | Stable host identity and incremental updates                        |
-| Readonly layers | Materialize domain-neutral ordinary Scene layers after the primary figure                    | Inspection, editor aids, or other readonly auxiliary content        |
 | Hydration       | Bind event handlers back to primitives by id after a static render (shared by both backends) | Adding click / hover interaction to a figure                        |
 
 ## Session commits
@@ -27,33 +24,27 @@ Import the `RenderMode` type from `@retikz/render/runtime` for backend selection
 
 Final disposal performs reverse best-effort cleanup across hydration, animation, and the image loader. Once an SVG WAAPI binding or Canvas clock starts cleanup, public controls and event / visibility callbacks become inert immediately. Animations, observers, listeners, inline-style ownership, visibility listeners, and the clock are cleaned independently: successful items are not repeated, while failed items remain retryable by a later disposal call.
 
-`InputRenderRuntimeConfig` is a closed transaction config. `handlerContributions` merge hydration handlers in registration order, `animation` controls playback, snapshots, and extension registries, `cachePolicy` preserves a hint for future layer invalidation optimization, and `canvas.width` / `canvas.height` declare Canvas CSS user-space dimensions. The SVG and Canvas renderers do not yet use `cachePolicy` to reuse layers. Render borrows the configuration and read-only layers without freezing caller-owned objects. It builds a separate ordered list only when handler registrations arrive out of order. Keep them and their members stable while the renderer uses them. For updates, supply new values rather than mutating data referenced by an earlier frame. Omitted Canvas dimensions derive from the committed Scene layout and are multiplied by the session-lifetime DPR. Size changes and bitmap painting commit atomically, while dirty reuse is allowed only when the target size is stable.
+`InputRenderRuntimeConfig` is a closed transaction config. `handlerContributions` merge hydration handlers in registration order, `animation` controls playback, snapshots, and extension registries, `cachePolicy` preserves a hint for future layer invalidation optimization, and `canvas.width` / `canvas.height` declare Canvas CSS user-space dimensions. The SVG and Canvas renderers do not yet use `cachePolicy` to reuse layers. Render borrows the configuration without freezing caller-owned objects. It builds a separate ordered list only when handler registrations arrive out of order. Keep them and their members stable while the renderer uses them. For updates, supply new values rather than mutating data referenced by an earlier frame. Omitted Canvas dimensions derive from the committed Scene layout and are multiplied by the session-lifetime DPR. Size changes and bitmap painting commit atomically, while dirty reuse is allowed only when the target size is stable.
 
 Import these session APIs from `@retikz/render/runtime`; they are not exported from the `@retikz/render` package root. A third-party backend uses `RendererFactory` to create a nominal SVG or Canvas renderer and declares `none`, `group`, or `entity` capability. The Render commit target validates Snapshot / Patch revisions and result consistency; invalid Patches are rejected. The current integration produces complete replacements for compilation changes. Backend capability declarations do not make the session generate fine-grained operations automatically.
 
-### Primary figure and readonly layers
+### Scene snapshots
 
 Render owns runtime Scene identities, topology, snapshots and Patch contracts. Import their types, including `SceneIdentity`, `SceneRuntimeSnapshot` and `ScenePatch`, from `@retikz/render/runtime`. Reconciler delivers the complete compilation result, provenance and candidate revision; the Render commit target uses them to build the rendering snapshot. Identity or topology construction failures are reported as `RetikzRenderError`.
 
 A topology node’s sibling order comes from the final index in its `primitivePath`; the subtree root has the relative path `[]`. An update patch targets `subtree.root` without a separate `identity`. Move and remove operations still take an `identity`.
 
-Static APIs use `StaticRenderFrame { primary: Scene, layers }`. renderers use `RenderFrameSnapshot { primary: SceneRuntimeSnapshot, layers }`. Both materialize the primary figure and ordered readonly layers as one frame, so a failed session transaction cannot publish a new figure with old layers.
-
-Every `RenderReadonlyLayer` contains a frame-unique `key`, an ordinary static `scene`, and its transform into primary Scene coordinates. SVG appends a `pointer-events="none"` group after the primary figure, executes each layer through the ordinary Scene-fragment path, and gives its resources an isolated prefix without hydration ids. Canvas applies the layer transform and calls the ordinary Scene drawing path; `hitTest` still reads only the primary Scene. A readonly layer never determines the viewBox, primary resources, animation, or primary identity, and cannot contain public `id`, `meta`, or animation fields.
-
-A third-party renderer declares `readonlyLayerCapability: 'supported' | 'unsupported'`; receiving non-empty layers while unsupported fails loudly instead of silently dropping them. Render knows nothing about Inspectors, palettes, or specific auxiliary primitives. `@retikz/inspect` is only one external producer of readonly layers, and editors or other tools can reuse the same capability.
+Static APIs consume a `Scene`. A custom renderer receives a `SceneRuntimeSnapshot` and returns it as `read().snapshot` after a successful commit.
 
 Hosts can import `computeDisplaySize(scene.layout, width?, height?)` from `@retikz/render/runtime` to size an output element. Set only the width or height to preserve the scene’s aspect ratio without changing its viewBox.
 
-### Static frame APIs
+### Static Scene APIs
 
-Import `StaticRenderFrame` from `@retikz/render/runtime`; import each materialization function from its SVG or Canvas backend subpath.
-
-| API                                            | Import path             | Result                                                         |
-| ---------------------------------------------- | ----------------------- | -------------------------------------------------------------- |
-| `buildSvgFrameDocument(frame, options)`        | `@retikz/render/svg`    | An `SvgNode` containing the primary figure and readonly layers |
-| `renderFrameToSvgString(frame, options)`       | `@retikz/render/svg`    | A complete SVG string for SSR                                  |
-| `renderFrameToCanvas(canvas, frame, options?)` | `@retikz/render/canvas` | Atomically paints the target Canvas and returns nothing        |
+| API                                       | Import path             | Result                                       |
+| ----------------------------------------- | ----------------------- | -------------------------------------------- |
+| `buildSvgDocument(scene, options)`        | `@retikz/render/svg`    | The SVG document tree                        |
+| `renderToSvgString(scene, options)`       | `@retikz/render/svg`    | A complete SVG string for SSR                |
+| `renderToCanvas(canvas, scene, options?)` | `@retikz/render/canvas` | Paints the target Canvas and returns nothing |
 
 <SourceLinks
   sources={[
@@ -81,14 +72,14 @@ Import `StaticRenderFrame` from `@retikz/render/runtime`; import each materializ
     {
       label: 'SVG aggregate controls cleanup',
       path: 'packages/kernel/render/src/runtime/svg-renderer.ts',
-      startLine: 83,
-      endLine: 120,
+      startLine: 79,
+      endLine: 116,
     },
     {
       label: 'SVG animation retry queue',
       path: 'packages/kernel/render/src/runtime/svg-renderer.ts',
-      startLine: 122,
-      endLine: 153,
+      startLine: 118,
+      endLine: 149,
     },
     {
       label: 'Shared rAF frame continuation gate',
@@ -105,70 +96,62 @@ Import `StaticRenderFrame` from `@retikz/render/runtime`; import each materializ
     {
       label: 'Canvas animation retry queue',
       path: 'packages/kernel/render/src/runtime/canvas-renderer.ts',
-      startLine: 213,
-      endLine: 235,
+      startLine: 209,
+      endLine: 231,
     },
     {
       label: 'Canvas visibility cleanup',
       path: 'packages/kernel/render/src/runtime/canvas-renderer.ts',
-      startLine: 1043,
-      endLine: 1185,
+      startLine: 1021,
+      endLine: 1163,
     },
     {
       label: 'Canvas clock replacement gate',
       path: 'packages/kernel/render/src/runtime/canvas-renderer.ts',
-      startLine: 1200,
-      endLine: 1225,
+      startLine: 1178,
+      endLine: 1203,
     },
     {
       label: 'Canvas controls final cleanup',
       path: 'packages/kernel/render/src/runtime/canvas-renderer.ts',
-      startLine: 1267,
-      endLine: 1290,
+      startLine: 1245,
+      endLine: 1268,
     },
     {
       label: 'Canvas candidate cleanup retention',
       path: 'packages/kernel/render/src/runtime/canvas-renderer.ts',
-      startLine: 1643,
-      endLine: 1651,
+      startLine: 1606,
+      endLine: 1614,
     },
     {
       label: 'Canvas animation rollback cleanup',
       path: 'packages/kernel/render/src/runtime/canvas-renderer.ts',
-      startLine: 1745,
-      endLine: 1769,
+      startLine: 1707,
+      endLine: 1731,
     },
     {
       label: 'Canvas renderer final dispose',
       path: 'packages/kernel/render/src/runtime/canvas-renderer.ts',
-      startLine: 1865,
-      endLine: 1890,
+      startLine: 1825,
+      endLine: 1849,
     },
     {
       label: 'Renderer capability and public read',
       path: 'packages/kernel/render/src/runtime/renderer.ts',
-      startLine: 9,
-      endLine: 50,
-    },
-    {
-      label: 'Static and session frame contracts',
-      path: 'packages/kernel/render/src/runtime/frame.ts',
-    },
-    {
-      label: 'Readonly-layer validation',
-      path: 'packages/kernel/render/src/runtime/readonly-layer.ts',
+      startLine: 8,
+      endLine: 40,
     },
     {
       label: 'renderer definition and factory contract',
       path: 'packages/kernel/render/src/runtime/renderer.ts',
-      startLine: 52,
-      endLine: 148,
+      startLine: 42,
+      endLine: 134,
     },
     {
       label: 'Nominal renderer token construction',
       path: 'packages/kernel/render/src/runtime/renderer.ts',
-      startLine: 205,
-      endLine: 264,
+      startLine: 191,
+      endLine: 249,
     },
   ]}
 />

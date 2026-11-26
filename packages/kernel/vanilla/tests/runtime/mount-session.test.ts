@@ -3,7 +3,7 @@ import { CompositeBaseSchema, defineComposite } from '@retikz/core';
 import type { ReconcilerPreparedCommit } from '@retikz/reconciler';
 import type {
   InputRendererFactory,
-  RenderFrameSnapshot,
+  SceneRuntimeSnapshot,
   RenderRuntimeConfig,
   RendererFactory,
 } from '@retikz/render/runtime';
@@ -65,15 +65,15 @@ const createMemoryRendererFactory = (
   onConfig?: (config: RenderRuntimeConfig) => void,
   onPatch?: (patch: unknown) => void,
   onDispose?: () => void,
-  onFrame?: (frame: RenderFrameSnapshot) => void,
+  onFrame?: (snapshot: SceneRuntimeSnapshot) => void,
   failMount: boolean | (() => boolean) = false,
   onCreate?: () => void,
 ): RendererFactory =>
   ((input: InputRendererFactory) => {
     onCreate?.();
-    let current: RenderFrameSnapshot | undefined;
+    let current: SceneRuntimeSnapshot | undefined;
 
-    const prepare = (frame: RenderFrameSnapshot): ReconcilerPreparedCommit => {
+    const prepare = (snapshot: SceneRuntimeSnapshot): ReconcilerPreparedCommit => {
       if (current !== undefined) {
         const shouldFail = typeof failUpdate === 'function' ? failUpdate() : failUpdate;
         if (shouldFail) throw new Error('expected update failure');
@@ -83,8 +83,8 @@ const createMemoryRendererFactory = (
 
       return Object.freeze({
         commit: () => {
-          current = frame;
-          onFrame?.(frame);
+          current = snapshot;
+          onFrame?.(snapshot);
         },
         rollback: () => {
           current = previous;
@@ -95,23 +95,22 @@ const createMemoryRendererFactory = (
 
     const definition = {
       capability,
-      readonlyLayerCapability: 'supported' as const,
-      prepareMount: (frame: RenderFrameSnapshot, config: RenderRuntimeConfig) => {
+      prepareMount: (snapshot: SceneRuntimeSnapshot, config: RenderRuntimeConfig) => {
         const shouldFail = typeof failMount === 'function' ? failMount() : failMount;
         if (shouldFail) throw new Error('expected mount failure');
 
         onConfig?.(config);
 
-        return prepare(frame);
+        return prepare(snapshot);
       },
-      prepare: (patch: unknown, frame: RenderFrameSnapshot, config: RenderRuntimeConfig) => {
+      prepare: (patch: unknown, snapshot: SceneRuntimeSnapshot, config: RenderRuntimeConfig) => {
         onPatch?.(patch);
         onConfig?.(config);
-        return prepare(frame);
+        return prepare(snapshot);
       },
       read: () => {
         if (current === undefined) throw new Error('memory renderer is not committed');
-        return Object.freeze({ frame: current });
+        return Object.freeze({ snapshot: current });
       },
       dispose: () => {
         current = undefined;
@@ -277,7 +276,7 @@ describe('mountSceneView 会话生命周期', () => {
   });
 
   it('Composite topology 切换复用 renderer，候选失败时保留已提交状态', () => {
-    const frames: Array<RenderFrameSnapshot> = [];
+    const frames: Array<SceneRuntimeSnapshot> = [];
     const dispose = vi.fn();
     let rejectNextPrepare = false;
     let rendererFactoryCalls = 0;
@@ -287,7 +286,7 @@ describe('mountSceneView 会话生命周期', () => {
       undefined,
       undefined,
       dispose,
-      frame => frames.push(frame),
+      snapshot => frames.push(snapshot),
       false,
       () => {
         rendererFactoryCalls += 1;
@@ -302,7 +301,7 @@ describe('mountSceneView 会话生命周期', () => {
 
     expect(rendererFactoryCalls).toBe(1);
     expect(frames).toHaveLength(2);
-    expect(Number(frames[1]?.primary.revision)).toBe(Number(frames[0]?.primary.revision) + 1);
+    expect(Number(frames[1]?.revision)).toBe(Number(frames[0]?.revision) + 1);
     expect(view.compileResult).not.toBe(initialCompileResult);
     expect(view.diagnostics()).toEqual([]);
 

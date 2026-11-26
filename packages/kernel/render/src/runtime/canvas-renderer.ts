@@ -12,7 +12,7 @@ import {
   sceneHasAutoplayTrigger,
 } from '../animation';
 import type { PrimAnimationResolution } from '../canvas';
-import { hitTest, renderFrameToCanvas, renderToCanvas } from '../canvas';
+import { hitTest, renderToCanvas } from '../canvas';
 import { RetikzRenderError, RetikzRenderErrorCode } from '../error';
 import type { HydrationAnimationControls, HydrationController, HydrationTarget } from '../hydration';
 import {
@@ -29,10 +29,7 @@ import type { RuntimeScenePrimitive, SceneIdentity, ScenePatch, SceneRuntimeSnap
 import { sceneIdentityEquals } from '../scene';
 import { computeDisplaySize, pathBounds, prepareRuntimeSceneContent } from '../shared';
 import type { RenderRuntimeConfig } from './config';
-import type { RenderFrameSnapshot } from './frame';
 import { mergeRenderHandlers } from './handlers';
-import type { RenderReadonlyLayer } from './readonly-layer';
-import { validateReadonlyLayers } from './readonly-layer';
 import type { CanvasRenderer, CanvasRendererImmutableOptions } from './renderer';
 import { defineRenderer } from './renderer';
 import type { SceneAnimationDescriptorDiff } from './runtime-options';
@@ -126,7 +123,6 @@ type CanvasAnimationState = Readonly<{
   /** 构造不触碰 committed state 的 candidate Scene/registry */
   stage: (
     snapshot: SceneRuntimeSnapshot,
-    layers: ReadonlyArray<RenderReadonlyLayer>,
     config: RenderRuntimeConfig,
     diff: SceneAnimationDescriptorDiff,
   ) => CanvasAnimationCandidate;
@@ -373,15 +369,10 @@ const createCanvasImageLoader = (onReady: () => void): CanvasImageLoader => {
   });
 };
 
-/** 收集完整 frame 当前由 paint resource 消费的 image href */
-const collectCanvasImageHrefs = (
-  snapshot: SceneRuntimeSnapshot,
-  layers: ReadonlyArray<RenderReadonlyLayer>,
-): ReadonlySet<string> =>
+/** 收集当前 Scene 的 image paint 资源地址 */
+const collectCanvasImageHrefs = (snapshot: SceneRuntimeSnapshot): ReadonlySet<string> =>
   new Set(
-    [snapshot.scene, ...layers.map(layer => layer.scene)].flatMap(scene =>
-      (scene.resources?.paints ?? []).flatMap(resource => (resource.spec.kind === 'image' ? [resource.spec.href] : [])),
-    ),
+    snapshot.scene.resources.paints.flatMap(resource => (resource.spec.kind === 'image' ? [resource.spec.href] : [])),
   );
 
 /** Full 与 incremental bitmap 必须继承的宿主 CSS 绘制上下文 */
@@ -590,7 +581,6 @@ const createBitmap = (
   host: HTMLCanvasElement,
   size: CanvasBitmapSize,
   snapshot: SceneRuntimeSnapshot,
-  layers: ReadonlyArray<RenderReadonlyLayer>,
   config: RenderRuntimeConfig,
   options: CanvasRendererImmutableOptions,
   hostStyle: CanvasHostStyle,
@@ -601,24 +591,18 @@ const createBitmap = (
   const bitmap = host.ownerDocument.createElement('canvas');
   bitmap.width = size.width;
   bitmap.height = size.height;
-  renderFrameToCanvas(
-    bitmap,
-    { primary: animationFrame?.scene ?? prepareCanvasScene(snapshot), layers },
-    {
-      devicePixelRatio: options.devicePixelRatio,
-      time,
-      ...(animationFrame === undefined
-        ? {}
-        : { rootAnimationTime: animationFrame.resolveRootAnimationTime(time ?? 0) }),
-      ...(animationFrame === undefined
-        ? {}
-        : { resolvePrimAnimation: (id: string | undefined) => animationFrame.resolvePrimAnimation(id, time ?? 0) }),
+  renderToCanvas(bitmap, animationFrame?.scene ?? prepareCanvasScene(snapshot), {
+    devicePixelRatio: options.devicePixelRatio,
+    time,
+    ...(animationFrame === undefined ? {} : { rootAnimationTime: animationFrame.resolveRootAnimationTime(time ?? 0) }),
+    ...(animationFrame === undefined
+      ? {}
+      : { resolvePrimAnimation: (id: string | undefined) => animationFrame.resolvePrimAnimation(id, time ?? 0) }),
 
-      defaultFontFamily: hostStyle.defaultFontFamily,
-      currentColor: hostStyle.currentColor,
-      getImage,
-    },
-  );
+    defaultFontFamily: hostStyle.defaultFontFamily,
+    currentColor: hostStyle.currentColor,
+    getImage,
+  });
 
   return bitmap;
 };
@@ -977,7 +961,6 @@ const createCanvasAnimationOccurrenceIndex = (
 const createCanvasAnimation = (
   host: HTMLCanvasElement,
   snapshot: SceneRuntimeSnapshot,
-  layers: ReadonlyArray<RenderReadonlyLayer>,
   config: RenderRuntimeConfig,
   options: CanvasRendererImmutableOptions,
   getImage: CanvasImageResolver,
@@ -995,7 +978,6 @@ const createCanvasAnimation = (
   let occurrenceIndex = createCanvasAnimationOccurrenceIndex(snapshot, undefined, allocateToken);
   let animationSnapshot = snapshot;
   let scene = occurrenceIndex.scene;
-  let currentLayers = layers;
   let animationConfig = config;
   let registry: IdClockRegistry = createIdClockRegistry();
   let timelineEndByToken = new Map<string, number | null>();
@@ -1025,18 +1007,14 @@ const createCanvasAnimation = (
   const renderFrame = (time = clock.time): void => {
     if (!enabled || cleanupStarted) return;
 
-    renderFrameToCanvas(
-      host,
-      { primary: scene, layers: currentLayers },
-      {
-        devicePixelRatio: options.devicePixelRatio,
-        time,
-        rootAnimationTime: Math.max(0, time - rootTimelineStart),
+    renderToCanvas(host, scene, {
+      devicePixelRatio: options.devicePixelRatio,
+      time,
+      rootAnimationTime: Math.max(0, time - rootTimelineStart),
 
-        resolvePrimAnimation: id => resolveWithRegistry(registry, id, time),
-        getImage,
-      },
-    );
+      resolvePrimAnimation: id => resolveWithRegistry(registry, id, time),
+      getImage,
+    });
   };
 
   const bindVisibility = (): void => {
@@ -1330,7 +1308,7 @@ const createCanvasAnimation = (
       const defaultToken = occurrenceIndex.tokensByPublicId.get(publicId)?.[0];
       return defaultToken === undefined ? createClockAnimationControls(undefined) : createHydrationControls(publicId);
     },
-    stage: (nextSnapshot, nextLayers, nextConfig, diff) => {
+    stage: (nextSnapshot, nextConfig, diff) => {
       const nextOccurrenceIndex = createCanvasAnimationOccurrenceIndex(nextSnapshot, occurrenceIndex, allocateToken);
       const candidateRegistry = createIdClockRegistry();
       candidateRegistry.restore(registry.capture());
@@ -1382,7 +1360,6 @@ const createCanvasAnimation = (
           const previousOccurrenceIndex = occurrenceIndex;
           const previousAnimationSnapshot = animationSnapshot;
           const previousScene = scene;
-          const previousLayers = currentLayers;
           const previousConfig = animationConfig;
           const previousRegistry = registry;
           const previousTimelineEndByToken = timelineEndByToken;
@@ -1393,7 +1370,6 @@ const createCanvasAnimation = (
           occurrenceIndex = nextOccurrenceIndex;
           animationSnapshot = nextSnapshot;
           scene = nextOccurrenceIndex.scene;
-          currentLayers = nextLayers;
           animationConfig = nextConfig;
           registry = candidateRegistry;
           timelineEndByToken = candidateTimelineEndByToken;
@@ -1411,7 +1387,6 @@ const createCanvasAnimation = (
             occurrenceIndex = previousOccurrenceIndex;
             animationSnapshot = previousAnimationSnapshot;
             scene = previousScene;
-            currentLayers = previousLayers;
             animationConfig = previousConfig;
             registry = previousRegistry;
             timelineEndByToken = previousTimelineEndByToken;
@@ -1431,7 +1406,6 @@ const createCanvasAnimation = (
             occurrenceIndex = previousOccurrenceIndex;
             animationSnapshot = previousAnimationSnapshot;
             scene = previousScene;
-            currentLayers = previousLayers;
             animationConfig = previousConfig;
             registry = previousRegistry;
             timelineEndByToken = previousTimelineEndByToken;
@@ -1497,7 +1471,6 @@ export const createBuiltinCanvasRenderer = (
     devicePixelRatio: resolvedDevicePixelRatio(options),
   });
   let currentSnapshot: SceneRuntimeSnapshot | undefined;
-  let currentLayers: ReadonlyArray<RenderReadonlyLayer> = Object.freeze([]);
   let currentBitmap: HTMLCanvasElement | undefined;
   let currentAnimation: CanvasAnimationState | undefined;
   let currentHydration: HydrationController | undefined;
@@ -1519,7 +1492,6 @@ export const createBuiltinCanvasRenderer = (
       host,
       resolveCanvasBitmapSize(currentSnapshot, currentConfig, immutableOptions),
       currentSnapshot,
-      currentLayers,
       currentConfig,
       immutableOptions,
       readCanvasHostStyle(host),
@@ -1536,12 +1508,10 @@ export const createBuiltinCanvasRenderer = (
 
   const prepare = (
     patch: ScenePatch | undefined,
-    frame: RenderFrameSnapshot,
+    snapshot: SceneRuntimeSnapshot,
     config: RenderRuntimeConfig,
   ): ReconcilerPreparedCommit => {
-    const snapshot = frame.primary;
-    const layers = validateReadonlyLayers(frame.layers);
-    const imageStage = imageLoader.stage(collectCanvasImageHrefs(snapshot, layers));
+    const imageStage = imageLoader.stage(collectCanvasImageHrefs(snapshot));
 
     try {
       const animationDiff = diffSceneAnimationDescriptors(currentSnapshot, snapshot);
@@ -1556,9 +1526,7 @@ export const createBuiltinCanvasRenderer = (
       const candidateTime = reuseAnimation
         ? currentAnimation?.controls.time
         : (config.animation?.snapshotAt ?? (config.animation?.enabled === false ? undefined : 0));
-      const animationCandidate = reuseAnimation
-        ? currentAnimation?.stage(snapshot, layers, config, animationDiff)
-        : undefined;
+      const animationCandidate = reuseAnimation ? currentAnimation?.stage(snapshot, config, animationDiff) : undefined;
 
       const targetSize = resolveCanvasBitmapSize(snapshot, config, immutableOptions);
       const bitmapSizeStable =
@@ -1572,14 +1540,11 @@ export const createBuiltinCanvasRenderer = (
         currentBitmap !== undefined &&
         bitmapSizeStable &&
         currentSnapshot?.scene === snapshot.scene &&
-        runtimeStructuralEquals(currentLayers, layers) &&
         runtimeStructuralEquals(currentPaintConfig, config.animation) &&
         runtimeStructuralEquals(currentHostStyle, hostStyle);
 
       const displayUpdate =
-        reuseBitmap || !bitmapSizeStable || currentLayers.length > 0 || layers.length > 0
-          ? undefined
-          : prepareDisplayListUpdate(currentDisplayList, patch);
+        reuseBitmap || !bitmapSizeStable ? undefined : prepareDisplayListUpdate(currentDisplayList, patch);
 
       // display list 会拒绝任意层级的 animation，dirty rollback 因而可安全读取 committed bitmap
       const incrementalBitmap =
@@ -1607,7 +1572,6 @@ export const createBuiltinCanvasRenderer = (
                 host,
                 targetSize,
                 snapshot,
-                layers,
                 config,
                 immutableOptions,
                 hostStyle,
@@ -1625,7 +1589,6 @@ export const createBuiltinCanvasRenderer = (
           : captureBitmap(host);
 
       const previousSnapshot = currentSnapshot;
-      const previousLayers = currentLayers;
       const previousBitmap = currentBitmap;
       const previousAnimation = currentAnimation;
       const previousHydration = currentHydration;
@@ -1684,7 +1647,7 @@ export const createBuiltinCanvasRenderer = (
           if (reuseAnimation) animation = previousAnimation;
           else {
             try {
-              animation = createCanvasAnimation(host, snapshot, layers, config, immutableOptions, imageLoader.getImage);
+              animation = createCanvasAnimation(host, snapshot, config, immutableOptions, imageLoader.getImage);
             } catch (cause) {
               const setupFailure = recoverCanvasAnimationSetupFailure(cause);
               if (setupFailure !== undefined) {
@@ -1735,7 +1698,6 @@ export const createBuiltinCanvasRenderer = (
           }
 
           currentSnapshot = snapshot;
-          currentLayers = layers;
           currentBitmap = incrementalBitmap === undefined ? bitmap : previousBitmap;
           currentHydration = hydration;
           currentAnimation = animation;
@@ -1780,7 +1742,6 @@ export const createBuiltinCanvasRenderer = (
             },
             () => {
               currentSnapshot = previousSnapshot;
-              currentLayers = previousLayers;
               currentBitmap = previousBitmap;
               currentHydration = previousHydration;
               currentAnimation = previousAnimation;
@@ -1850,15 +1811,14 @@ export const createBuiltinCanvasRenderer = (
     backend: 'canvas',
     host,
     capability: 'entity',
-    readonlyLayerCapability: 'supported',
-    prepareMount: (frame, config) => prepare(undefined, frame, config),
-    prepare: (patch, frame, config) => prepare(patch, frame, config),
+    prepareMount: (snapshot, config) => prepare(undefined, snapshot, config),
+    prepare,
     read: () => {
       if (currentSnapshot === undefined)
         throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'Canvas renderer is not committed');
 
       return Object.freeze({
-        frame: Object.freeze({ primary: currentSnapshot, layers: currentLayers }),
+        snapshot: currentSnapshot,
         ...(currentAnimation === undefined ? {} : { animation: currentAnimation.controls }),
       });
     },
@@ -1880,7 +1840,6 @@ export const createBuiltinCanvasRenderer = (
         () => {
           currentBitmap = undefined;
           currentSnapshot = undefined;
-          currentLayers = Object.freeze([]);
           currentPaintConfig = undefined;
           currentDisplayList = undefined;
           currentConfig = undefined;

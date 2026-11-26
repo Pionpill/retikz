@@ -8,4 +8,3 @@ export * from './clip-defs';
 export * from './document';
 export * from './paint-defs';
 export * from './prim';
-export * from './readonly-layer';

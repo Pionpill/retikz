@@ -1,7 +1,5 @@
 import type { PaintValue, Scene } from '@retikz/core';
 
-import type { StaticRenderFrame } from '../../runtime';
-import { EMPTY_READONLY_LAYERS, validateReadonlyLayers } from '../../runtime';
 import {
   resolveSceneResourceMap,
   countScenePrimitiveOccurrences,
@@ -18,7 +16,6 @@ import { buildClipDef } from './clip-defs';
 import { buildPaintDef } from './paint-defs';
 import type { SvgPrimitiveBuildContext } from './prim';
 import { buildPrim, buildPrimitiveNodes } from './prim';
-import { buildSvgReadonlyLayer } from './readonly-layer';
 import { buildShadowDef, shadowHash } from './shadow-defs';
 
 /** `buildSvgDocument` / `buildSvgFragment` 选项 */
@@ -156,29 +153,14 @@ export const buildSvgFragment = (scene: Scene, options: SvgDocumentOptions): Arr
  * @description `@retikz/render/svg` 的核心总装入口。width / height / className / 框架级 style 等 svg 元素附加由
  *   framework adapter 自理（非本包职责）
  */
-export const buildSvgFrameDocument = (frame: StaticRenderFrame, options: SvgDocumentOptions): SvgNode => {
-  const scene = frame.primary;
-  const layers = validateReadonlyLayers(frame.layers);
+export const buildSvgDocument = (scene: Scene, options: SvgDocumentOptions): SvgNode => {
   const document: SvgNode = {
     tag: 'svg',
     attrs: {
       viewBox: formatViewBox(scene.layout),
       ...(options.defaultFontFamily ? { 'font-family': options.defaultFontFamily } : {}),
     },
-    children: [
-      ...buildSvgFragment(scene, options),
-      ...layers.map(layer =>
-        buildSvgReadonlyLayer(
-          layer,
-          buildSvgFragment(layer.scene, {
-            ...options,
-            idPrefix: `${options.idPrefix}-layer-${layer.key}`,
-            animate: false,
-            trace: undefined,
-          }),
-        ),
-      ),
-    ],
+    children: buildSvgFragment(scene, options),
   };
   if (options.trace !== undefined) {
     const visited = countScenePrimitiveOccurrences(scene.primitives);
@@ -198,7 +180,3 @@ export const buildSvgFrameDocument = (frame: StaticRenderFrame, options: SvgDocu
 
   return document;
 };
-
-/** Scene → 整棵 `<svg>` 描述树，等价于使用空只读图层的静态 frame */
-export const buildSvgDocument = (scene: Scene, options: SvgDocumentOptions): SvgNode =>
-  buildSvgFrameDocument({ primary: scene, layers: EMPTY_READONLY_LAYERS }, options);

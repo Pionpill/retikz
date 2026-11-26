@@ -9,6 +9,8 @@ keywords: Layer、图层、OpenString、Reconciler、Weave、全量编译、增�
 - 决策日期：2026-11-19
 - 关联：[作者输入](./029-vanilla-authoring-normalization.md)、[会话入口](./082-scene-reconciler-entry.md)、[独立编译驱动](./086-independent-compilation-drivers.md)、[保留式渲染](./014-scene-patch-renderer.md)
 
+> [090](./090-remove-inspect.md) 退役通用 Inspect 和单图只读辅助层；原有主图编译、领域产物与具名 Scene 图层不受影响。
+
 ## 决策
 
 一个视口可以同时承载多张计算上独立的图。Layer 是视口内具名的 Scene 编译与更新单元，不是 Core IR 节点。背景、主图和交互浮层即使共用坐标系，也不需要共用一棵声明树。按名称提交一层的更新，不要求调用方重新提交视口或兄弟层的输入，也不调度兄弟层的编译。

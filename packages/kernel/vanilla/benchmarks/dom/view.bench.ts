@@ -2,7 +2,7 @@ import { defineRenderer } from '@retikz/render/runtime';
 import type {
   RendererFactory,
   InputRendererFactory,
-  RenderFrameSnapshot,
+  SceneRuntimeSnapshot,
   RenderRuntimeConfig,
 } from '@retikz/render/runtime';
 import { mountSceneView } from '@retikz/vanilla/dom';
@@ -15,26 +15,25 @@ import { pathScene } from '../_scene-workloads';
 /** 只接收已提交帧，不执行 SVG 或 Canvas 绘制 */
 const recordingFactory = (observe: (config: RenderRuntimeConfig) => void): RendererFactory =>
   ((input: InputRendererFactory) => {
-    let frame: RenderFrameSnapshot;
-    const prepare = (next: RenderFrameSnapshot, config: RenderRuntimeConfig) => {
-      const previous = frame;
+    let snapshot: SceneRuntimeSnapshot;
+    const prepare = (next: SceneRuntimeSnapshot, config: RenderRuntimeConfig) => {
+      const previous = snapshot;
       return {
         commit: () => {
-          frame = next;
+          snapshot = next;
           observe(config);
         },
         rollback: () => {
-          frame = previous;
+          snapshot = previous;
         },
         dispose: () => {},
       };
     };
     const renderer = {
       capability: 'none' as const,
-      readonlyLayerCapability: 'supported' as const,
       prepareMount: prepare,
-      prepare: (_: unknown, next: RenderFrameSnapshot, config: RenderRuntimeConfig) => prepare(next, config),
-      read: () => ({ frame }),
+      prepare: (_: unknown, next: SceneRuntimeSnapshot, config: RenderRuntimeConfig) => prepare(next, config),
+      read: () => ({ snapshot }),
       dispose: () => {},
     };
     return input.backend === 'svg'

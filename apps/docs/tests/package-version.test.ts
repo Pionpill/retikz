@@ -4,7 +4,6 @@ import { getDocPackageVersion, getPackageReleaseVersion } from '@/modules/docs/d
 
 import corePackage from '../../../packages/kernel/core/package.json';
 import foundationPackage from '../../../packages/kernel/foundation/package.json';
-import inspectPackage from '../../../packages/kernel/inspect/package.json';
 import mathPackage from '../../../packages/kernel/math/package.json';
 import reactPackage from '../../../packages/kernel/react/package.json';
 import reconcilerPackage from '../../../packages/kernel/reconciler/package.json';
@@ -21,7 +20,6 @@ describe('包版本注册表', () => {
       mathPackage.version,
       reconcilerPackage.version,
       corePackage.version,
-      inspectPackage.version,
       renderPackage.version,
       reactPackage.version,
       vanillaPackage.version,

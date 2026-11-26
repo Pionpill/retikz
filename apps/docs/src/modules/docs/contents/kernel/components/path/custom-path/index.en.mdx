@@ -73,8 +73,6 @@ const highlight = definePath<HighlightPath>({
 
 `name` is the registry key; it is not inferred from an internal Zod schema literal. `schema` is the complete source subject schema: Core's open `PathSchema` accepts shared host fields first, then the selected definition parses `kind`, `kindOptions`, and any cross-field constraints during resolution. The definition and compile function are runtime capability and never enter IR.
 
-For inspection output, use the public `ownerOutput` contract with an independent Inspector; see [Inspect](/kernel/packages/inspect).
-
 ## Register and use
 
 React injects definitions through `<Layout extensions={{ paths }}>`; direct core calls use `CompileOptions.paths`. A Path references only the registered name and instance options.
@@ -135,9 +133,6 @@ Output must not carry `resources` or `clipRef`. Resource references may only pas
 | Path references an unknown kind                 | Compile lists available names and `options.paths`         |
 | The selected definition schema rejects the Path | Error includes kind name and the relevant IR path         |
 | Provider returns `null`                         | The Path produces no primitives                           |
-| Selected non-null result omits owner output     | Core observation fails loudly                             |
-| Owner output or Inspector subject fails schema  | The corresponding validation stage fails loudly           |
-| Inspector returns an invalid Core child         | Error includes owner, occurrence, and output index        |
 | `boundsPoints` misses actual output bounds      | Auto layout and Path-level rotate/scale become inaccurate |
 
 A custom kind must return renderer-neutral Scene primitives. It cannot embed SVG elements, Canvas instances, ReactNode values, or functions, and it cannot require renderers to understand the custom `kind`.
@@ -151,13 +146,13 @@ These are the members most often used to define, inject, and reference a custom 
     {
       name: 'definePath',
       kind: 'function',
-      type: '<TPath, TOwnerOutput>(definition: PathDefinition<TPath, TOwnerOutput>) => PathDefinition<TPath, TOwnerOutput>',
+      type: '<TPath>(definition: PathDefinition<TPath>) => PathDefinition<TPath>',
       description: 'Create a registrable whole-Path provider and validate its name and basic schema contract.',
     },
     {
       name: 'PathDefinition',
       kind: 'type',
-      type: 'PathDefinition<TPath, TOwnerOutput>',
+      type: 'PathDefinition<TPath>',
       description: 'Declare the kind name, complete Path schema, and compilation function that emits Scene primitives.',
     },
     {

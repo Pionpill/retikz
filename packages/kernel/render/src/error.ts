@@ -37,8 +37,6 @@ export const RetikzRenderErrorCode = {
   RuntimeRendererPrepareFailed: 'RENDER_RUNTIME_RENDERER_PREPARE_FAILED',
   /** renderer 已释放 */
   RuntimeRendererDisposed: 'RENDER_RUNTIME_RENDERER_DISPOSED',
-  /** renderer 不支持只读图层 */
-  RuntimeRendererReadonlyLayerUnsupported: 'RENDER_RUNTIME_RENDERER_READONLY_LAYER_UNSUPPORTED',
   /** renderer 初始帧不匹配 */
   RuntimeRendererInitialFrameMismatch: 'RENDER_RUNTIME_RENDERER_INITIAL_FRAME_MISMATCH',
   /** Render participant 输入无效 */
