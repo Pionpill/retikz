@@ -13,7 +13,7 @@
 | 增量运行时     | 完成 Reconciler 编译树、依赖响应与同步增量计算闭环                     | [011](./011-runtime-identity-source-registry.md)、[012](./012-computation-transaction-lifecycle.md)、[013](./013-incremental-core-compile.md)、[014](./014-scene-patch-renderer.md)、[016](./016-runtime-execution-policy.md)                                                                         |
 | 基础契约与入口 | 建立 Foundation、统一 authoring 与能力依赖接入                         | [019](./019-core-atomic-contracts.md)、[023](./023-foundation-package.md)、[026](./026-foundation-schema-primitives.md)、[027](./027-composite-dependency-provider-graph.md)、[029](./029-vanilla-authoring-normalization.md)、[088](./088-embed-adapter-binding.md)                                  |
 | 颜色与 Source  | 统一颜色解析、Theme 来源、Source 分组与 schema 边界                    | [024](./024-lightweight-theme-resolution.md)、[032](./032-contextual-color-resolution.md)、[035](./035-json-undefined-field-contracts.md)、[036](./036-source-ir-semantic-grouping.md)、[037](./037-theme-source-fragments.md)、[071](./071-macro-visual-property-resolution.md)                      |
-| 路径与诊断     | 完善裁剪、居中标签断线、箭头重叠与 Inspect                             | [021](./021-extensible-inspector-content.md)、[031](./031-single-clip-definition.md)、[073](./073-clip-params-envelope.md)、[033](./033-stroke-path-label-interruption.md)、[034](./034-path-endpoint-arrow-overlap.md)、[039](./039-builtin-inspection.md)                                           |
+| 路径与诊断     | 完善裁剪、居中标签断线、箭头重叠，退役通用 Inspect                     | [031](./031-single-clip-definition.md)、[073](./073-clip-params-envelope.md)、[033](./033-stroke-path-label-interruption.md)、[034](./034-path-endpoint-arrow-overlap.md)、[090](./090-remove-inspect.md)                                                                                             |
 | Scope 外框     | 在保持内容包络、锚点与布局不变的前提下添加背景装饰                     | [044](./044-scope-frame.md)                                                                                                                                                                                                                                                                           |
 | 候选方向       | Headless Interaction、协作并发、渐进物化与生成会话；不作为本版本必交项 | [040](./040-cooperative-concurrent-runtime.md)、[041](./041-progressive-materialization.md)、[042](./042-generation-session.md)                                                                                                                                                                       |
 
@@ -162,8 +162,8 @@ Composite 与布局试算进入同一 Reconciler 执行链路，Core 与领域�
 - 分离端点箭头与沿线标记，支持普通图元标记和箭头外观复用，统一弧长定位：[075](./075-path-arrows-and-marks.md)。
 - 标签与标记支持参数、弧长两种定位模式，独立选择圆角前后几何，并复用高频位置更新所需的几何度量：[083](./083-path-position-modes.md)。
 - 优化标签断线的编译开销：按实际断线需求选择处理路径，无需断线时跳过专用计算，有断线需求时才进入完整截断链路；保持标签定位、箭头与最终绘制结果一致。
-- Inspect 从普通编译结果生成独立辅助绘图，按真实图元与领域产物限定能力，保持主图编译和提交独立：[078](./078-inspect-compiled-output.md)。
-- [ ] Inspect 重新设计与 Layout 检查支持：保留当前结果消费架构，单独设计可恢复的观测能力及 Layout 对 Inspect 的支持；只消费 compile / pipeline 已有产物，不为 Inspect 扩充主体契约或影响主体功能。
+- 结果消费式 Inspect 的既有设计：[078](./078-inspect-compiled-output.md)。
+- [ ] 退役通用 Inspect 与单图只读辅助层；保留领域编译产物和具名 Scene 图层，不为布局展示新增主体契约：[090](./090-remove-inspect.md)。
 
 预期效果：
 
@@ -179,7 +179,7 @@ Composite 与布局试算进入同一 Reconciler 执行链路，Core 与领域�
 规划内容：
 
 - 保留 Headless Interaction、Concurrent、渐进物化与生成会话候选。
-- 编译输出收敛为 Scene 与 Composite artifacts，删除 Core 观测、节点公共产物与空间句柄：[077](./077-compile-output-contract.md)。Inspect 的结果消费方案见 [078](./078-inspect-compiled-output.md)。
+- 编译输出收敛为 Scene 与 Composite artifacts，删除 Core 观测、节点公共产物与空间句柄：[077](./077-compile-output-contract.md)。普通编译结果不随 Inspect 退役而删除，见 [090](./090-remove-inspect.md)。
 - 候选不作为必交项；设计接受、实现授权与实际交付分别判断。
 
 预期效果：
