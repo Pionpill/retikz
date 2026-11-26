@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import type { IRScene } from '@retikz/core';
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { literal, string } from 'zod';
 
 import { renderToSvg } from '../../src';
@@ -20,6 +20,19 @@ const sceneOf = (width = 20): IRScene => ({
 });
 
 describe('@retikz/vanilla mount', () => {
+  it('默认完整编译，显式增量模式使用元素编译', () => {
+    const trace = vi.fn();
+    const container = document.createElement('div');
+    const full = mountSceneView(container, sceneOf(), { reconciler: { trace }, width: '50%' });
+    expect(full.root.getAttribute('width')).toBe('50%');
+    expect(trace).toHaveBeenCalledWith(expect.objectContaining({ phase: 'mount', unit: 'scene-compile' }));
+    full.dispose();
+    trace.mockClear();
+    const incremental = mountSceneView(container, sceneOf(), { reconciler: { mode: 'incremental', trace } });
+    expect(trace).toHaveBeenCalledWith(expect.objectContaining({ phase: 'mount', unit: 'element-compile' }));
+    incremental.dispose();
+  });
+
   it('卸载默认 session SVG 时仅移除当前宿主', () => {
     const container = document.createElement('div');
     const sibling = container.appendChild(document.createElement('span'));
@@ -123,7 +136,7 @@ describe('@retikz/vanilla mount', () => {
     const scene = compileTestResult(ir).scene;
     const str = renderToSvg(scene, { output: { idPrefix: 'fig' } });
     const c = document.createElement('div');
-    mountSceneView(c, ir, { output: { idPrefix: 'fig' } });
+    mountSceneView(c, ir, { idPrefix: 'fig' });
     const domHtml = c.querySelector('svg')!.outerHTML;
 
     expect(str).toContain('retikz-paint-fig-');

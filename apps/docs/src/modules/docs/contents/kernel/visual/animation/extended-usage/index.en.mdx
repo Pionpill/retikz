@@ -65,11 +65,13 @@ Snapshots suit SSR, posters, and thumbnails without ongoing playback rules.
 
 ### Playback policy
 
-| Intent        | React             | Vanilla                  |
-| ------------- | ----------------- | ------------------------ |
-| Follow system | Omit animate      | Omit animation.enabled   |
-| Force on      | `animate={true}`  | animation.enabled: true  |
-| Force off     | `animate={false}` | animation.enabled: false |
+| Intent        | React             | Vanilla DOM    |
+| ------------- | ----------------- | -------------- |
+| Follow system | Omit animate      | Omit animate   |
+| Force on      | `animate={true}`  | animate: true  |
+| Force off     | `animate={false}` | animate: false |
+
+SVG string export still uses `animation.enabled` and `animation.snapshotAt`.
 
 Explicit enablement overrides the system reduced-motion preference and should follow application accessibility policy. Disabling animation without a snapshot displays base properties rather than evaluating the final frame.
 

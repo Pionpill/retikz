@@ -176,9 +176,11 @@ Import the DOM mount APIs from `@retikz/vanilla/dom`. Call `mountSceneView(conta
 
 You can also pass a `MountOptions` variable when the backend is chosen at runtime; the root then has type `SVGSVGElement | HTMLCanvasElement`. Calling `view.diagnostics()` drains the diagnostics. Its `ReadonlyArray<unknown>` can include original values thrown by callbacks; narrow each value before accessing its fields.
 
-Both backends accept `animation` in the update options. Read the committed artifacts from `view.compileResult.artifacts`. Bind handlers with `view.hydrate({ handlers })` to use the current scene as the event context. Call view methods on the instance; pass `() => view.dispose()` rather than `view.dispose` as a cleanup callback.
+Both backends accept `animate` and `snapshotAt` in update options. Read the committed artifacts from `view.compileResult.artifacts`. Bind handlers with `view.hydrate({ handlers })` to use the current scene as the event context. Call view methods on the instance; pass `() => view.dispose()` rather than `view.dispose` as a cleanup callback.
 
 The update strategy and optional renderer factory are fixed at mount. Dispose and remount to change the renderer, DPR, compile topology, or update strategy.
+
+DOM mounting and React Layout share `SceneViewOptions`. For example, `{ width: "100%", compile: { padding: 12 }, handlers }` has the same meaning on both hosts. The reconciler defaults to full compilation; use `reconciler` to request an incremental session. Initial handlers are active on the first frame; hydrate adds independent registrations.
 
 <SourceLinks
   sources={[
@@ -282,7 +284,7 @@ React applications use [`@retikz/react`](/kernel/packages/react/overview) to col
 | `compileToScene`                     | processing    | One-shot synchronous compilation of InputScene or Core IR                     |
 | `renderToSvg`                        | SSR           | Serialize a compiled Scene to an SVG string                                   |
 | `mountSceneView`                     | DOM           | Mount a browser view from `@retikz/vanilla/dom`                               |
-| `MountOptions['runtime']`            | type          | Update strategy and optional renderer factory for IR or authored input        |
+| `SceneViewOptions`                   | type          | Compile, reconciler, display and event options shared by DOM and React        |
 | `SceneView`                          | runtime       | Transactional session view for IRScene / InputScene                           |
 | `RetikzVanillaError`                 | error         | The single Vanilla error class; code, details, and cause distinguish failures |
 | `RetikzVanillaErrorCode`             | const object  | Stable normalize, processing, runtime, and DOM error codes                    |

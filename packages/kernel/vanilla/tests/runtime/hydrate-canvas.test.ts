@@ -263,7 +263,8 @@ describe('@retikz/vanilla mount 水合（坐标映射 + hitTest）', () => {
     document.body.appendChild(container);
     const view = mountSceneView(container, boxIr, {
       renderer: 'canvas',
-      output: { width: CSS_WIDTH, height: CSS_HEIGHT },
+      width: CSS_WIDTH,
+      height: CSS_HEIGHT,
     });
     const onClick = vi.fn();
     view.hydrate({ handlers: { box: { click: onClick } } });
@@ -296,7 +297,8 @@ describe('@retikz/vanilla mount 水合（坐标映射 + hitTest）', () => {
     document.body.appendChild(container);
     const view = mountSceneView(container, metaBoxIr, {
       renderer: 'canvas',
-      output: { width: CSS_WIDTH, height: CSS_HEIGHT },
+      width: CSS_WIDTH,
+      height: CSS_HEIGHT,
     });
     let context: HydrationContext | undefined;
     view.hydrate({
@@ -334,7 +336,8 @@ describe('@retikz/vanilla mount 水合（坐标映射 + hitTest）', () => {
     document.body.appendChild(container);
     const view = mountSceneView(container, boxIr, {
       renderer: 'canvas',
-      output: { width: CSS_WIDTH, height: CSS_HEIGHT },
+      width: CSS_WIDTH,
+      height: CSS_HEIGHT,
     });
     const onClick = vi.fn();
     view.hydrate({ handlers: { box: { click: onClick } } });
@@ -354,7 +357,8 @@ describe('@retikz/vanilla mount 水合（坐标映射 + hitTest）', () => {
     document.body.appendChild(container);
     const view = mountSceneView(container, boxIr, {
       renderer: 'canvas',
-      output: { width: CSS_WIDTH, height: CSS_HEIGHT },
+      width: CSS_WIDTH,
+      height: CSS_HEIGHT,
     });
     const onEnter = vi.fn();
     view.hydrate({ handlers: { box: { pointerEnter: onEnter } } });
@@ -389,7 +393,8 @@ describe('@retikz/vanilla mount 水合（坐标映射 + hitTest）', () => {
     document.body.appendChild(container);
     const view = mountSceneView(container, boxIr, {
       renderer: 'canvas',
-      output: { width: CSS_WIDTH, height: CSS_HEIGHT },
+      width: CSS_WIDTH,
+      height: CSS_HEIGHT,
     });
     const onLeave = vi.fn();
     view.hydrate({ handlers: { box: { pointerLeave: onLeave } } });
@@ -414,7 +419,8 @@ describe('@retikz/vanilla mount 水合（坐标映射 + hitTest）', () => {
     document.body.appendChild(container);
     const view = mountSceneView(container, boxIr, {
       renderer: 'canvas',
-      output: { width: CSS_WIDTH, height: CSS_HEIGHT },
+      width: CSS_WIDTH,
+      height: CSS_HEIGHT,
     });
     const onClick = vi.fn();
     const handle = view.hydrate({ handlers: { box: { click: onClick } } });
@@ -461,7 +467,8 @@ describe('@retikz/vanilla mount 水合（坐标映射 + hitTest）', () => {
     document.body.appendChild(container);
     const view = mountSceneView(container, ir, {
       renderer: 'canvas',
-      output: { width: CSS_WIDTH, height: CSS_HEIGHT },
+      width: CSS_WIDTH,
+      height: CSS_HEIGHT,
     });
     view.hydrate({ handlers: {} });
 
@@ -485,7 +492,8 @@ describe('@retikz/vanilla mount 水合（坐标映射 + hitTest）', () => {
     document.body.appendChild(container);
     const view = mountSceneView(container, boxIr, {
       renderer: 'canvas',
-      output: { width: CSS_WIDTH, height: CSS_HEIGHT },
+      width: CSS_WIDTH,
+      height: CSS_HEIGHT,
     });
     view.hydrate({ handlers: {} });
 
@@ -535,7 +543,8 @@ describe('@retikz/vanilla mount 水合（坐标映射 + hitTest）', () => {
     document.body.appendChild(container);
     const view = mountSceneView(container, boxIr, {
       renderer: 'canvas',
-      output: { width: CSS_WIDTH, height: CSS_HEIGHT },
+      width: CSS_WIDTH,
+      height: CSS_HEIGHT,
     });
     const onClick = vi.fn();
     view.hydrate({ handlers: { box: { click: onClick } } });

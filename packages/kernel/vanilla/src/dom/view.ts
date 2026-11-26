@@ -1,5 +1,4 @@
 import type { IRScene } from '@retikz/core';
-import { ReconcilerMode } from '@retikz/reconciler';
 import { prefersReducedMotion, resolveAnimationEnabled } from '@retikz/render/animation';
 import type { HydrationHandlers } from '@retikz/render/hydration';
 import type {
@@ -13,23 +12,23 @@ import { builtinRendererFactory, computeDisplaySize, createRenderTarget } from '
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
 import type { InputScene } from '../normalize';
-import type { SceneInputBindings, RenderOptions } from '../runtime';
+import type { SceneInputBindings, SceneViewOptions } from '../runtime';
 import { SceneRuntime } from '../runtime';
 import type { MountOptions } from './types';
 
 /** 与下一帧场景一起提交的动画配置；Canvas 宿主选项在挂载时确定 */
-export type ViewUpdateOptions = Readonly<{ animation?: RenderOptions['animation'] }>;
+export type ViewUpdateOptions = Pick<SceneViewOptions, 'animate' | 'snapshotAt'>;
 
 /** 根据当前动画、事件和 Canvas 选项构造渲染配置 */
 const createRenderConfig = (
-  animation: NonNullable<RenderOptions['animation']>,
+  animation: ViewUpdateOptions,
   handlers: ReadonlyArray<RenderHandlerContribution>,
   canvas: InputRenderRuntimeConfig['canvas'],
 ): InputRenderRuntimeConfig => {
   return {
     handlerContributions: handlers,
     animation: {
-      enabled: resolveAnimationEnabled(animation.enabled, prefersReducedMotion()),
+      enabled: resolveAnimationEnabled(animation.animate, prefersReducedMotion()),
       ...(animation.snapshotAt === undefined ? {} : { snapshotAt: animation.snapshotAt }),
     },
     ...(canvas === undefined ? {} : { canvas }),
@@ -40,10 +39,10 @@ const createRenderConfig = (
 export class SceneView<TRoot extends RendererHost = RendererHost> {
   private readonly runtime: SceneRuntime;
   private readonly renderer: InputRendererFactory & { readonly host: TRoot };
-  private readonly size: Readonly<{ width?: number; height?: number }>;
+  private readonly size: Pick<SceneViewOptions, 'width' | 'height'>;
   // SceneRuntime 创建首帧时同步建立渲染目标
   private render!: RenderTarget;
-  private currentAnimation: NonNullable<RenderOptions['animation']>;
+  private currentAnimation: ViewUpdateOptions;
   private handlerContributions: ReadonlyArray<RenderHandlerContribution> = [];
   private nextRegistration = 0;
   private rootRemoved = false;
@@ -69,24 +68,27 @@ export class SceneView<TRoot extends RendererHost = RendererHost> {
     renderer: InputRendererFactory & { readonly host: TRoot },
     bindings?: SceneInputBindings,
   ) {
-    const { animation, compile, output, runtime } = mountOptions;
+    const { animate, snapshotAt, compile, width, height, reconciler, rendererFactory, handlers } = mountOptions;
     this.renderer = renderer;
-    const { width, height } = output ?? {};
-    this.size = {
-      ...(width === undefined ? {} : { width }),
-      ...(height === undefined ? {} : { height }),
-    };
-    this.currentAnimation = animation ?? {};
-    const canvas = renderer.backend === 'canvas' ? this.size : undefined;
+    this.size = { width, height };
+    this.currentAnimation = { animate, snapshotAt };
+    if (handlers !== undefined) this.handlerContributions = [{ registration: this.nextRegistration++, handlers }];
+    const canvas =
+      renderer.backend === 'canvas'
+        ? {
+            width: typeof width === 'number' ? width : undefined,
+            height: typeof height === 'number' ? height : undefined,
+          }
+        : undefined;
 
     this.runtime = new SceneRuntime(ir, {
       compile,
       bindings,
-      reconciler: { mode: ReconcilerMode.Incremental, updateStrategy: runtime?.updateStrategy },
+      reconciler,
       createTarget: () => {
         this.render = createRenderTarget({
           ...renderer,
-          rendererFactory: runtime?.rendererFactory ?? builtinRendererFactory,
+          rendererFactory: rendererFactory ?? builtinRendererFactory,
           configuration: () => createRenderConfig(this.currentAnimation, this.handlerContributions, canvas),
         });
         return this.render.target;
@@ -98,7 +100,7 @@ export class SceneView<TRoot extends RendererHost = RendererHost> {
   /** 用完整 IR 或作者输入替换场景，并原子应用本次动画配置 */
   replace(source: IRScene | InputScene, options?: ViewUpdateOptions) {
     const previousAnimation = this.currentAnimation;
-    this.currentAnimation = options?.animation ?? previousAnimation;
+    this.currentAnimation = options === undefined ? previousAnimation : { ...previousAnimation, ...options };
     try {
       this.runtime.replace(source);
       this.updateHostSize();
@@ -148,8 +150,9 @@ export class SceneView<TRoot extends RendererHost = RendererHost> {
       renderer.host.setAttribute('width', String(displaySize.width));
       renderer.host.setAttribute('height', String(displaySize.height));
     } else {
-      renderer.host.style.width = `${displaySize.width}px`;
-      renderer.host.style.height = `${displaySize.height}px`;
+      renderer.host.style.width = typeof displaySize.width === 'number' ? `${displaySize.width}px` : displaySize.width;
+      renderer.host.style.height =
+        typeof displaySize.height === 'number' ? `${displaySize.height}px` : displaySize.height;
     }
   }
 

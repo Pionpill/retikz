@@ -2,7 +2,7 @@ import type { Scene } from '@retikz/core';
 import { prefersReducedMotion, resolveAnimationEnabled } from '@retikz/render/animation';
 import { renderToSvgString } from '@retikz/render/svg';
 
-/** 默认资源 id 前缀（确定性）；多实例同页须经 `options.output.idPrefix` 显式区分。SSR 与 mount 共用同一默认，避免两处漂移导致资源 id 失配 */
+/** 默认资源 id 前缀（确定性）；SSR 使用 output.idPrefix，DOM 挂载使用 idPrefix；同页多实例须指定不同前缀 */
 export const DEFAULT_ID_PREFIX = 'r';
 
 /** 已编译场景的 SVG 序列化选项 */

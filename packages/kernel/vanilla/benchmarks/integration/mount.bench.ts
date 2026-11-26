@@ -20,8 +20,12 @@ for (const spec of sceneCases)
         let view: SceneView | undefined;
         const mount = () =>
           backend === 'svg'
-            ? mountSceneView(container, workload.ir, { output })
-            : mountSceneView(container, workload.ir, { renderer: 'canvas', output, canvas: { devicePixelRatio: 1 } });
+            ? mountSceneView(container, workload.ir, output)
+            : mountSceneView(container, workload.ir, {
+                renderer: 'canvas',
+                ...output,
+                canvas: { devicePixelRatio: 1 },
+              });
         return {
           beforeEach: () => view?.dispose(),
           run: () => {

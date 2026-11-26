@@ -7,7 +7,7 @@ import { mountSceneView } from '../../src/dom';
 
 /*
  * runtime 播放控制（jsdom）：mount load→CSS 自播 / 交互→WAAPI 桥；mount rAF 时钟 + trigger；
- *   {animation:{enabled:false}} + prefers-reduced-motion 降级；view.animation 句柄
+ *   {animate:false} + prefers-reduced-motion 降级；view.animation 句柄
  */
 
 /** 录制型 2d context（jsdom 无 2d backend） */
@@ -112,8 +112,8 @@ describe('mount 动画', () => {
     expect(style!.textContent).toContain('@keyframes');
   });
 
-  it('{animation:{enabled:false}} → 无 <style>（静态 base）', () => {
-    const view = mountSceneView(document.createElement('div'), loadIr, { animation: { enabled: false } });
+  it('{animate:false} → 无 <style>（静态 base）', () => {
+    const view = mountSceneView(document.createElement('div'), loadIr, { animate: false });
 
     expect(view.root.querySelector('style')).toBeNull();
   });
@@ -132,9 +132,9 @@ describe('mount 动画', () => {
     expect(view.root.querySelector('style')).toBeNull();
   });
 
-  it('{animation:{enabled:true}} 覆盖 prefers-reduced-motion', () => {
+  it('{animate:true} 覆盖 prefers-reduced-motion', () => {
     vi.stubGlobal('matchMedia', () => ({ matches: true }));
-    const view = mountSceneView(document.createElement('div'), loadIr, { animation: { enabled: true } });
+    const view = mountSceneView(document.createElement('div'), loadIr, { animate: true });
 
     expect(view.root.querySelector('style')).not.toBeNull();
   });
@@ -165,7 +165,7 @@ describe('SVG 静态截帧 {at:t}', () => {
   });
 
   it('mountSceneView({at}) → 定格帧、无 <style>', () => {
-    const view = mountSceneView(document.createElement('div'), loadIr, { animation: { snapshotAt: 0 } });
+    const view = mountSceneView(document.createElement('div'), loadIr, { snapshotAt: 0 });
 
     expect(view.root.querySelector('style')).toBeNull();
     expect(view.root.querySelector('[data-retikz-id="a"]')?.getAttribute('opacity')).toBe('0');
@@ -176,30 +176,33 @@ describe('mount 动画', () => {
   it('load track → 起 rAF 时钟 + view.animation 句柄', () => {
     const view = mountSceneView(document.createElement('div'), loadIr, {
       renderer: 'canvas',
-      output: { width: 100, height: 100 },
+      width: 100,
+      height: 100,
     });
 
     expect(rafSpy).toHaveBeenCalled();
     expect(view.animation).toBeDefined();
   });
 
-  it('{animation:{enabled:false}} → 不起 rAF、无 animation 句柄（静态）', () => {
+  it('{animate:false} → 不起 rAF、无 animation 句柄（静态）', () => {
     const view = mountSceneView(document.createElement('div'), loadIr, {
       renderer: 'canvas',
-      output: { width: 100, height: 100 },
-      animation: { enabled: false },
+      width: 100,
+      height: 100,
+      animate: false,
     });
 
     expect(rafSpy).not.toHaveBeenCalled();
     expect(view.animation).toBeUndefined();
   });
 
-  it('{animation:{enabled:true}} 覆盖 prefers-reduced-motion', () => {
+  it('{animate:true} 覆盖 prefers-reduced-motion', () => {
     vi.stubGlobal('matchMedia', () => ({ matches: true }));
     const view = mountSceneView(document.createElement('div'), loadIr, {
       renderer: 'canvas',
-      output: { width: 100, height: 100 },
-      animation: { enabled: true },
+      width: 100,
+      height: 100,
+      animate: true,
     });
 
     expect(rafSpy).toHaveBeenCalled();
@@ -209,7 +212,8 @@ describe('mount 动画', () => {
   it('manual-only track → 不自动起 rAF，但有 view.animation 句柄；play() 起时钟', () => {
     const view = mountSceneView(document.createElement('div'), manualIr, {
       renderer: 'canvas',
-      output: { width: 100, height: 100 },
+      width: 100,
+      height: 100,
     });
 
     expect(rafSpy).not.toHaveBeenCalled();
@@ -228,7 +232,8 @@ describe('mount 动画', () => {
     };
     const view = mountSceneView(document.createElement('div'), plainIr, {
       renderer: 'canvas',
-      output: { width: 100, height: 100 },
+      width: 100,
+      height: 100,
     });
 
     expect(rafSpy).not.toHaveBeenCalled();
@@ -268,7 +273,7 @@ describe('mount visible-trigger 监听合帧', () => {
     document.body.appendChild(container);
 
     // visible-only scene 不自动起播放时钟；挂载会排一帧首测相交
-    mountSceneView(container, visibleIr, { renderer: 'canvas', output: { width: 100, height: 100 } });
+    mountSceneView(container, visibleIr, { renderer: 'canvas', width: 100, height: 100 });
     const baseline = rafSpy.mock.calls.length;
 
     // 同一帧内（rafSpy 不真回调，已排的 rAF 不会清空）连发多次 scroll/resize → 不应再排新 rAF

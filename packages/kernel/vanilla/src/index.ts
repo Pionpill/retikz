@@ -77,6 +77,7 @@ export type {
   LayerReconcilerOptions,
   NamedLayerResult,
   ProcessOptions,
+  SceneViewOptions,
   RenderOptions as RenderToStringOptions,
 } from './runtime';
 export {

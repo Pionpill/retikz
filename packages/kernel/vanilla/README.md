@@ -44,7 +44,11 @@ This returns the reconciler’s original `CompileResult`: read `result.scene` an
 ```ts
 import { mountSceneView } from '@retikz/vanilla/dom';
 
-const view = mountSceneView(document.querySelector('#diagram')!, input);
+const view = mountSceneView(document.querySelector('#diagram')!, input, {
+  width: '100%',
+  compile: { padding: 12 },
+  reconciler: { mode: 'full' },
+});
 view.replace(input);
 view.dispose();
 ```
@@ -52,7 +56,7 @@ view.dispose();
 ## Exports
 
 - Root: `InputXxx`, `scene`, `layer`, `layerFromInput`, `node`, `path`, `scope`, `embed`, `normalizeScene`, processing APIs, and `renderToSvg`
-- DOM sub-entry: `@retikz/vanilla/dom` exports `mountSceneView` for Core IR or authored input; bind event handlers with `view.hydrate({ handlers })`
+- DOM sub-entry: `@retikz/vanilla/dom` exports `mountSceneView` for Core IR or authored input; supply initial handlers at mount or add handlers later with `view.hydrate({ handlers })`
 - Tier 2 packages contribute through `InputEmbedAdapter`; each embed carries its adapter into compilation
 
 Path authoring grammar and parsers (`DrawWay`, `WayDSL`, `WayItem`, `parseWay`, `parseWayWithTargets`, `parseNodeTarget`, and `parseTargetSugar`) are owned by `@retikz/vanilla`. String targets and Way operators expand into structured Core IR before compilation. Animation preset factories and extension registrars such as `fadeIn`, `defineArrow`, and `definePath` remain available from `@retikz/core`.

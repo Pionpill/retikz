@@ -35,12 +35,10 @@ export function mountSceneView(
     ir = source;
   }
 
-  const { width, height, idPrefix = DEFAULT_ID_PREFIX } = options.output ?? {};
+  const { idPrefix = DEFAULT_ID_PREFIX } = options;
   let renderer: InputRendererFactory;
   if (options.renderer === 'canvas') {
     const host = document.createElement('canvas');
-    if (width !== undefined) host.style.width = `${width}px`;
-    if (height !== undefined) host.style.height = `${height}px`;
     host.style.objectFit = 'contain';
 
     let devicePixelRatio = options.canvas?.devicePixelRatio;
@@ -51,8 +49,6 @@ export function mountSceneView(
     renderer = { backend: 'canvas', host, immutableOptions: { backend: 'canvas', idPrefix, devicePixelRatio } };
   } else {
     const host = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    if (width !== undefined) host.setAttribute('width', String(width));
-    if (height !== undefined) host.setAttribute('height', String(height));
     renderer = { backend: 'svg', host, immutableOptions: { backend: 'svg', idPrefix } };
   }
 

@@ -50,7 +50,7 @@ for (const operation of ['mount', 'hydrate', 'unbind', 'dispose']) {
     const rendererFactory = recordingFactory(config => {
       handlers = config.handlerContributions?.length ?? 0;
     });
-    const mount = () => mountSceneView(container, initial, { runtime: { rendererFactory } });
+    const mount = () => mountSceneView(container, initial, { rendererFactory });
     return {
       beforeEach: () => {
         view?.dispose();

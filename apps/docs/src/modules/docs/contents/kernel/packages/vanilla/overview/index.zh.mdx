@@ -176,9 +176,11 @@ DOM 挂载入口从 `@retikz/vanilla/dom` 导入。`mountSceneView(container, so
 
 若后端在运行时才确定，可以传入 `MountOptions` 变量；此时根元素类型为 `SVGSVGElement | HTMLCanvasElement`。用 `view.diagnostics()` 读取并清空诊断；返回值是 `ReadonlyArray<unknown>`，可能含回调抛出的原始值，处理前应先判型。
 
-两个后端的单次更新选项都只接受 `animation`。从 `view.compileResult.artifacts` 读取最近成功提交的编译产物。用 `view.hydrate({ handlers })` 绑定事件，事件上下文跟随当前场景。视图方法通过实例调用；如需传递清理回调，使用 `() => view.dispose()`，不要直接传 `view.dispose`。
+两个后端通过 `animate`、`snapshotAt` 更新动画。从 `view.compileResult.artifacts` 读取最近成功提交的编译产物。用 `view.hydrate({ handlers })` 绑定事件，事件上下文跟随当前场景。视图方法通过实例调用；如需传递清理回调，使用 `() => view.dispose()`，不要直接传 `view.dispose`。
 
 `updateStrategy` 和可选的 `rendererFactory` 在挂载时确定。要更换渲染器、DPR、编译拓扑或更新策略，先释放视图，再重新挂载。
+
+DOM 挂载与 React Layout 共用 `SceneViewOptions`。例如 `{ width: "100%", compile: { padding: 12 }, handlers }` 在两端含义相同。协调器默认完整编译；使用 `reconciler` 显式选择增量会话。初始 handlers 从首帧生效，后续可通过 hydrate 增加独立注册。
 
 <SourceLinks
   sources={[
@@ -282,7 +284,7 @@ React 应用使用 [`@retikz/react`](/kernel/packages/react/overview) 收集 JSX
 | `compileToScene`                     | processing    | 一次性同步编译 InputScene 或 Core IR                     |
 | `renderToSvg`                        | SSR           | 将已编译的 Scene 序列化为 SVG 字符串                     |
 | `mountSceneView`                     | DOM           | 从 `@retikz/vanilla/dom` 挂载浏览器 view                 |
-| `MountOptions['runtime']`            | type          | IR / 作者输入挂载时的更新策略与可选 renderer factory     |
+| `SceneViewOptions`                   | type          | Vanilla DOM 与 React 共用的编译、协调器、显示与事件配置  |
 | `SceneView`                          | runtime       | IRScene / InputScene 的事务式 session view               |
 | `RetikzVanillaError`                 | error         | Vanilla 唯一错误类，通过 code、details 与 cause 区分失败 |
 | `RetikzVanillaErrorCode`             | const object  | normalize、processing、runtime、与 DOM 稳定错误码        |

@@ -37,3 +37,4 @@ export type {
 } from './renderer';
 export { defineRenderer, isRenderer, RendererCapability } from './renderer';
 export * from './target';
+export { mergeRenderHandlers } from './handlers';

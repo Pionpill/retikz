@@ -244,7 +244,7 @@ describe('mountSceneView 会话生命周期', () => {
       return reject;
     });
     const view = mountSceneView(document.createElement('div'), cachedDatasetScene('#ef4444'), {
-      runtime: { rendererFactory },
+      rendererFactory,
     });
 
     expect(() => view.replace(cachedDatasetScene('#22c55e'))).toThrow(
@@ -293,7 +293,7 @@ describe('mountSceneView 会话生命周期', () => {
       },
     );
     const view = mountSceneView(document.createElement('div'), source('#ef4444'), {
-      runtime: { rendererFactory },
+      rendererFactory,
     });
     const initialCompileResult = view.compileResult;
 
@@ -355,11 +355,9 @@ describe('mountSceneView 会话生命周期', () => {
       document.createElement('div'),
       { type: 'scene', children: source('#fff').children },
       {
-        runtime: {
-          rendererFactory: createMemoryRendererFactory('entity', false, config =>
-            observedCachePolicies.push(config.cachePolicy),
-          ),
-        },
+        rendererFactory: createMemoryRendererFactory('entity', false, config =>
+          observedCachePolicies.push(config.cachePolicy),
+        ),
       },
     );
     try {
@@ -400,7 +398,8 @@ describe('mountSceneView 会话生命周期', () => {
       const options: MountOptions = {
         renderer,
         compile: { composites: [composite] },
-        output: { width: 100, height: 100 },
+        width: 100,
+        height: 100,
       };
       const view = mountSceneView(document.createElement('div'), input, options);
       expect(view.root.tagName.toLowerCase()).toBe(renderer);
@@ -425,10 +424,8 @@ describe('mountSceneView 会话生命周期', () => {
   it('session full 保留 Session 但每次更新发布 replaceScene', () => {
     const patches: Array<unknown> = [];
     const view = mountSceneView(document.createElement('div'), source('#ef4444'), {
-      runtime: {
-        updateStrategy: 'full',
-        rendererFactory: createMemoryRendererFactory('entity', false, undefined, patch => patches.push(patch)),
-      },
+      reconciler: { mode: 'incremental', updateStrategy: 'full' },
+      rendererFactory: createMemoryRendererFactory('entity', false, undefined, patch => patches.push(patch)),
     });
 
     view.replace(source('#22c55e'));
@@ -467,7 +464,7 @@ describe('mountSceneView 会话生命周期', () => {
       },
       config => observedConfigs.push(config),
     );
-    const view = mountSceneView(container, source('#ef4444'), { runtime: { rendererFactory } });
+    const view = mountSceneView(container, source('#ef4444'), { rendererFactory });
     const rejected = vi.fn();
     const accepted = vi.fn();
 
@@ -495,7 +492,7 @@ describe('mountSceneView 会话生命周期', () => {
       },
       config => observedContributionCounts.push(config.handlerContributions?.length ?? 0),
     );
-    const view = mountSceneView(container, source('#ef4444'), { runtime: { rendererFactory } });
+    const view = mountSceneView(container, source('#ef4444'), { rendererFactory });
     const handler = vi.fn();
     const hydration = view.hydrate({ handlers: { changed: { click: handler } } });
 
@@ -531,7 +528,8 @@ describe('mountSceneView 会话生命周期', () => {
     const container = document.createElement('div');
     const session = mountSceneView(container, source('#ef4444'), {
       renderer: 'canvas',
-      output: { width: 100, height: 100 },
+      width: 100,
+      height: 100,
     });
 
     expect(session.compileResult).toBeDefined();
@@ -543,7 +541,7 @@ describe('mountSceneView 会话生命周期', () => {
     const container = document.createElement('div');
     const patches: Array<unknown> = [];
     const view = mountSceneView(container, source('#ef4444'), {
-      runtime: { rendererFactory: createMemoryRendererFactory('none', false, undefined, patch => patches.push(patch)) },
+      rendererFactory: createMemoryRendererFactory('none', false, undefined, patch => patches.push(patch)),
     });
 
     view.replace(source('#22c55e'));
@@ -558,7 +556,7 @@ describe('mountSceneView 会话生命周期', () => {
     const container = document.createElement('div');
     const view = mountSceneView(container, source('#ef4444'), {
       compile: {},
-      runtime: { rendererFactory: createMemoryRendererFactory('entity', true) },
+      rendererFactory: createMemoryRendererFactory('entity', true),
     });
     const compileResult = view.compileResult;
     const committedHtml = view.root.innerHTML;
@@ -581,9 +579,7 @@ describe('mountSceneView 会话生命周期', () => {
     });
     const container = document.createElement('div');
     const view = mountSceneView(container, source('#ef4444'), {
-      runtime: {
-        rendererFactory: createMemoryRendererFactory('entity', false, undefined, undefined, dispose),
-      },
+      rendererFactory: createMemoryRendererFactory('entity', false, undefined, undefined, dispose),
     });
 
     expect(() => view.dispose()).not.toThrow();

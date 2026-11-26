@@ -41,6 +41,21 @@ const findById = (container: Element, id: string): Element | null =>
   container.querySelector(`[data-retikz-id="${id}"]`);
 
 describe('@retikz/vanilla hydrate（SVG 水合）', () => {
+  it('首帧绑定初始 handlers，释放后续注册不会移除初始回调', () => {
+    const initial = vi.fn();
+    const later = vi.fn();
+    const view = mountSceneView(document.createElement('div'), idIr, { handlers: { a: { click: initial } } });
+    const target = findById(view.root, 'a')!;
+    target.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    const registration = view.hydrate({ handlers: { a: { click: later } } });
+    target.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    registration.dispose();
+    target.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(initial).toHaveBeenCalledTimes(3);
+    expect(later).toHaveBeenCalledOnce();
+    view.dispose();
+  });
+
   it('hydrate-click：mount 后点击带 data-retikz-id 的图元 → 对应 handler 触发', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);

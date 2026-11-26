@@ -22,7 +22,7 @@ dom/       DOM mount、hydrate、view lifecycle
 - helper 只能构造或归一化既有 Core IR；不得新增平行字段语义。
 - `runtime` 组合 Reconciler 与 Render，管理框架无关的会话与 SSR 接线。会话只向订阅者发布成功帧；图层栈须在所有层成功后才发布。领域结果回调由对应宿主交付，不由 Vanilla 分发。
 - 预编译 Scene 直接进入输出，Scene → SVG / Canvas 算法保持在 `@retikz/render`。
-- 预编译 `Scene` 只创建 static processing result；IR / InputScene 由 processing mode 选择常驻 SceneReconciler 或临时非增量 SceneReconciler 执行，默认 session；Patch、fallback 与 rollback 只属于 session 路径并委托 Render participant。
+- DOM 与 React 使用同一份 `SceneViewOptions`，编译与协调器配置直接交给 `SceneRuntime`；不在宿主固定增量模式。纯编译和 SVG 序列化不接收 DOM 事件或 CSS 配置。
 - 根入口导入与 SSR 调用必须安全；仅默认文字测量器可按需探测 Canvas 与读取默认字体，其余 DOM 访问只在 `dom/` 的 mount / hydrate 路径发生；框架包不调用该子入口。
 - Tier 2 adapter 只同步消费就绪输入；数据等待与请求取消由发起方管理。adapter 把领域输入转成 Core IR contribution，不把领域 schema 或算法内置到 vanilla。
 - Tier 2 adapter 的 Composite roots / providers 只收集后交给 Core provider graph resolver；Vanilla 不维护单 namespace maker 聚合、私有拓扑、dataset 冲突或 definition 去重语义。
