@@ -11,7 +11,7 @@ import { bindWaapiDescriptorElements, isWaapiAnimationStyleOwned } from '../../s
 import { renderToCanvas } from '../../src/canvas';
 import { RetikzRenderError, RetikzRenderErrorCode } from '../../src/error';
 import type { HydrationAnimationControls, HydrationContext } from '../../src/hydration';
-import type { RenderFrameSnapshot, RenderReadonlyLayer, InputRenderRuntimeConfig } from '../../src/runtime';
+import type { RenderMode, RenderFrameSnapshot, RenderReadonlyLayer, InputRenderRuntimeConfig } from '../../src/runtime';
 import { builtinRendererFactory, createRenderTarget } from '../../src/runtime';
 import { getRendererExecutor } from '../../src/runtime/renderer';
 import type { RuntimeScenePrimitive, ScenePatch, ScenePatchOperation, SceneRuntimeSnapshot } from '../../src/scene';
@@ -149,7 +149,7 @@ const canvasLifecycleScene = (duration: number): IRScene => ({
 });
 
 const createSession = (
-  backend: 'svg' | 'canvas',
+  backend: RenderMode,
   host: SVGSVGElement | HTMLCanvasElement,
   options: Readonly<{
     config?: InputRenderRuntimeConfig;

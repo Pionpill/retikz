@@ -1,5 +1,5 @@
 import type { CompileOptions, ReconcilerUpdateStrategy } from '@retikz/reconciler';
-import type { RendererFactory, InputRendererFactory } from '@retikz/render/runtime';
+import type { RendererFactory, RenderMode } from '@retikz/render/runtime';
 
 import type { RenderOptions } from '../runtime';
 
@@ -15,7 +15,7 @@ export type MountOptions = RenderOptions & {
     rendererFactory?: RendererFactory;
   }>;
   /** 渲染后端，缺省使用 SVG */
-  renderer?: InputRendererFactory['backend'];
+  renderer?: RenderMode;
   /** 挂载时确定设备像素比，缺省读取宿主的设备像素比 */
   canvas?: { readonly devicePixelRatio?: number };
 };

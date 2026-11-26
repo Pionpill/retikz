@@ -1,3 +1,4 @@
+import type { RenderMode } from '../runtime';
 import { sceneIdentityEquals } from '../scene';
 import type { HydrationContextBuilder, HydrationContext } from './context';
 import { noopAnimationControls } from './context';
@@ -25,7 +26,7 @@ const collectUsedEvents = (handlers: HydrationHandlers): Set<RetikzEvent> => {
 };
 
 /** 命中 id 但调用方未提供 buildContext 时的最小 context（renderer 按实际后端传入；animation no-op） */
-const minimalContext = (root: EventTarget, id: string, renderer: 'svg' | 'canvas'): HydrationContext => ({
+const minimalContext = (root: EventTarget, id: string, renderer: RenderMode): HydrationContext => ({
   id,
   renderer,
   element: null,
@@ -42,7 +43,7 @@ const invoke = (
   event: Event,
   root: EventTarget,
   buildContext: HydrationContextBuilder | undefined,
-  renderer: 'svg' | 'canvas',
+  renderer: RenderMode,
 ): void => {
   if (id === null || !Object.hasOwn(handlers, id)) return;
 
@@ -110,7 +111,7 @@ export const createHydrationController = (
   handlers: HydrationHandlers,
   locate: Locate,
   buildContext?: HydrationContextBuilder,
-  renderer: 'svg' | 'canvas' = 'svg',
+  renderer: RenderMode = 'svg',
 ): HydrationController => {
   const used = collectUsedEvents(handlers);
   const teardowns: Array<() => void> = [];

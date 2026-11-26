@@ -1,3 +1,4 @@
+import type { RenderMode } from '@retikz/render/runtime';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
@@ -5,11 +6,11 @@ import * as componentPreviewExports from '../../src/modules/docs/components/comp
 import * as previewContextExports from '../../src/modules/docs/components/component-preview/context';
 import type { PreviewControlRuntimeState } from '../../src/modules/docs/components/component-preview/preview-panel';
 import { usePreviewControlRuntime } from '../../src/modules/docs/components/component-preview/preview-panel';
-import type { PreviewControlState, RendererMode } from '../../src/modules/docs/components/component-preview/types';
+import type { PreviewControlState } from '../../src/modules/docs/components/component-preview/types';
 
 type ProbeProps = {
   controlState: PreviewControlState;
-  rendererMode: RendererMode;
+  rendererMode: RenderMode;
   onRuntime: (state: PreviewControlRuntimeState) => void;
 };
 

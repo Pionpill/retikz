@@ -9,6 +9,8 @@ description: 把渲染目标无关的 Scene 落到 SVG / Canvas，并以 session
 
 只读图层通过静态帧或 session 提交入口随主图一起物化。`drawReadonlyLayer` 与 `buildSvgReadonlyLayer` 是内部组装函数，不由 Canvas／SVG 公开子入口导出；公开的细粒度 SVG builder 仍可使用。
 
+从 `@retikz/render/runtime` 导入 `RenderMode` 可为渲染后端选项标注类型。Vanilla 挂载和 React Layout 的 `renderer` 均接受 `svg` 或 `canvas`。
+
 ## 职责一览
 
 | 主题         | 职责                                                  | 何时查阅                               |

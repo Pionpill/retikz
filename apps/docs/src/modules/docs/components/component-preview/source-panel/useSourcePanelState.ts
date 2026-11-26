@@ -1,3 +1,4 @@
+import type { RenderMode } from '@retikz/render/runtime';
 import type { ReactNode } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -6,7 +7,6 @@ import type {
   ComponentSourceFile,
   DiffLineKind,
   DiffMode,
-  RendererMode,
   SourceLang,
   SourceView,
 } from '../types';
@@ -45,9 +45,9 @@ export type SourcePanelState = {
   /** 当前源码文件。 */
   activeFile?: ComponentSourceFile;
   /** 当前源码视图对应的预览渲染器。 */
-  activeRender?: (mode: RendererMode) => ReactNode;
+  activeRender?: (mode: RenderMode) => ReactNode;
   /** 当前源码视图固定使用的渲染目标；缺省时由预览面板自行选择。 */
-  activeRendererMode?: RendererMode;
+  activeRendererMode?: RenderMode;
   /** 当前 diff 模式。 */
   diffMode: DiffMode;
   /** 切换 diff 模式。 */

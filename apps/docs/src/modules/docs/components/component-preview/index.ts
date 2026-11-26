@@ -47,7 +47,6 @@ export type {
   PreviewTableView,
   PreviewTextControlField,
   PreviewThemeMode,
-  RendererMode,
   SizeKey,
 } from './types';
 export { formatIR } from './utils';

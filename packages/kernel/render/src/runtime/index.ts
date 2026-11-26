@@ -26,6 +26,7 @@ export type {
   InputRendererDefinition,
   InputRendererFactory,
   InputSvgRendererDefinition,
+  RenderMode,
   Renderer,
   RendererDefinitionBase,
   RendererFactory,

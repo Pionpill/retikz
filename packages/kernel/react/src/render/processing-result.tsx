@@ -10,6 +10,7 @@ import {
   resolvePointViaLayout,
   resolveSvgElement,
 } from '@retikz/render/hydration';
+import type { RenderMode } from '@retikz/render/runtime';
 import { buildSvgDocument } from '@retikz/render/svg';
 import type { CSSProperties, FC, MutableRefObject, ReactElement, Ref } from 'react';
 import { cloneElement, useCallback, useEffect, useMemo, useRef } from 'react';
@@ -23,7 +24,7 @@ export type ProcessingResultHostProps = Readonly<{
   /** Vanilla 已完成编译的完整处理结果 */
   result: CompileResult;
   /** 目标渲染后端 */
-  backend: 'svg' | 'canvas';
+  backend: RenderMode;
   /** 当前 revision 的 hydration handler 注册表 */
   handlers: HydrationHandlers;
   /** SVG 或 Canvas CSS 宽度 */

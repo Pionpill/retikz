@@ -1,6 +1,7 @@
 import type { IRScene } from '@retikz/core';
 import { SceneSchema } from '@retikz/core';
 import { Layout } from '@retikz/react';
+import type { RenderMode } from '@retikz/render/runtime';
 
 import type { Lang } from '@/i18n';
 
@@ -9,7 +10,6 @@ import type {
   ComponentPreviewFileConfig,
   ComponentRenderSource,
   PreviewSourceConfig,
-  RendererMode,
 } from '../types';
 import type { PreviewIR } from '../utils';
 import { buildPreviewIR, buildReactSourceFiles, formatIR, irHasComposite } from '../utils';
@@ -220,7 +220,7 @@ export const buildPreviewSource = (input: BuildPreviewSourceInput): BuildPreview
             files: [{ filename: `${name}.ir.json`, code: irJson, lang: 'json' as const }],
             render:
               previewIr !== null && !hasComposite
-                ? (mode: RendererMode) => (
+                ? (mode: RenderMode) => (
                     <Layout
                       ir={previewIr.ir}
                       renderer={mode}

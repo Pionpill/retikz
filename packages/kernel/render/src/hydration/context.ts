@@ -12,6 +12,7 @@ import type { AffineMatrix, BoundsRect } from '@retikz/math';
 import { AFFINE_IDENTITY, applyAffine, multiplyAffine } from '@retikz/math';
 
 import type { IdClockRegistry } from '../animation';
+import type { RenderMode } from '../runtime';
 import { pathControlPoints } from '../shared';
 
 /**
@@ -61,7 +62,7 @@ export type HydrationContext = {
   /** provenance：同 id 图元共享的 meta（认 datum / series / layer）；无 / 无 scene 时 undefined */
   meta?: JsonObject;
   /** 渲染后端 */
-  renderer: 'svg' | 'canvas';
+  renderer: RenderMode;
   /** 命中 DOM 元素：SVG = 被点中的那片 `data-retikz-id` 图元；Canvas → null（无逐元素 DOM，用 `root` + `point`） */
   element: Element | null;
   /** figure 根（svg root 或 canvas） */
@@ -538,7 +539,7 @@ export const resolveSvgElement = (event: Event): Element | null => {
 /** createContextBuilder 的 renderer 专有片段 */
 export type HydrationContextDependencies = {
   /** 渲染后端 */
-  renderer: 'svg' | 'canvas';
+  renderer: RenderMode;
   /** figure 根（svg root / canvas） */
   root: Element;
   /**

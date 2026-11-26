@@ -132,6 +132,9 @@ export type CanvasRenderer = RendererTokenBase &
 /** 保留式渲染器的名义类型令牌 */
 export type Renderer = SvgRenderer | CanvasRenderer;
 
+/** 渲染后端类型，由内置渲染器的 backend 判别字段派生 */
+export type RenderMode = Renderer['backend'];
+
 /** renderer factory 的判别输入 */
 export type InputRendererFactory =
   | Readonly<{

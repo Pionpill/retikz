@@ -1,4 +1,4 @@
-import type { RendererMode } from '../../types';
+import type { RenderMode } from '@retikz/render/runtime';
 
 const downloadBlob = (blob: Blob, fileName: string): void => {
   const url = URL.createObjectURL(blob);
@@ -63,11 +63,7 @@ const downloadCanvas = (renderPane: HTMLElement, fileName: string): void => {
 };
 
 /** 下载当前预览图：SVG 模式导出 `.svg`，Canvas 模式导出 `.png`。 */
-export const downloadPreviewImage = (
-  renderPane: HTMLElement | null,
-  name: string,
-  rendererMode: RendererMode,
-): void => {
+export const downloadPreviewImage = (renderPane: HTMLElement | null, name: string, rendererMode: RenderMode): void => {
   if (!renderPane) return;
 
   const fileName = name || 'retikz';

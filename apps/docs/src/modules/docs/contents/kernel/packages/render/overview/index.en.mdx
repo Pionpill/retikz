@@ -9,6 +9,8 @@ This group covers how retikz actually paints a figure to the screen. Your figure
 
 Readonly layers are materialized with the primary figure through static-frame or session commit APIs. `drawReadonlyLayer` and `buildSvgReadonlyLayer` are internal assembly helpers, excluded from the public Canvas/SVG subpaths. Public granular SVG builders remain available.
 
+Import the `RenderMode` type from `@retikz/render/runtime` for backend selection. Both the Vanilla mount API and React Layout accept `svg` or `canvas` for `renderer`.
+
 ## Responsibilities
 
 | Topic           | Responsibility                                                                               | Reach for it when                                                   |

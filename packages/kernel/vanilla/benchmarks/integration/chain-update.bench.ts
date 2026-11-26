@@ -1,6 +1,7 @@
 import type { IRScene, IRNode } from '@retikz/core';
 import type { WeaveBatch } from '@retikz/reconciler';
 import { builtinRendererFactory, createRenderTarget } from '@retikz/render/runtime';
+import type { RenderMode } from '@retikz/render/runtime';
 import { SceneRuntime } from '@retikz/vanilla';
 import { expect } from 'vitest';
 
@@ -8,7 +9,7 @@ import { connectedWorkload } from '../_mixed-workloads';
 import { defineIntegrationBenchmark } from './_benchmark';
 
 /** 接入真实后端并同步提交增量计算的结果 */
-const attach = (ir: IRScene, backend: 'svg' | 'canvas') => {
+const attach = (ir: IRScene, backend: RenderMode) => {
   const renderer =
     backend === 'svg'
       ? ({
