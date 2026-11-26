@@ -27,34 +27,24 @@ describe('Layout API 公开范围', () => {
     expect(sceneInput).not.toContain('`layers`');
     expect(layerInput).toContain('scene: IRScene;');
     expect(layerInput).toContain('config?: ProcessOptions');
-    expect(source).toContain("IRScene['theme']");
-
-    const extensions = source.split('### LayoutExtensions\n')[1]?.split('\n### ')[0] ?? '';
-    expect(extensions).toContain('Pick<CompileOptions,');
-    for (const field of [
-      'arrows',
-      'boundaries',
-      'clips',
-      'composites',
-      'marks',
-      'paths',
-      'patterns',
-      'shapes',
-      'themeDefinitions',
-    ])
-      expect(extensions).toContain(`'${field}'`);
 
     const layoutProps = source.split('### Layout / LayoutProps\n')[1]?.split('\n### ')[0] ?? '';
 
-    expect(layoutProps).toContain('| Group | Member | Type | Default | Description |');
+    const irBranch = layoutProps.split('<DocTab value="ir"')[1]?.split('</DocTab>')[0];
+    const jsxBranch = layoutProps.split('<DocTab value="children"')[1]?.split('</DocTab>')[0];
+    expect(irBranch).toContain('`ir`');
+    expect(irBranch).toContain('`children?` | `never`');
+    expect(jsxBranch).toContain('`children`');
+    expect(jsxBranch).toContain('`ir?` | `never`');
     expect(layoutProps).toMatch(
-      /```ts\n(?:(?!```)[\s\S])*export declare const Layout: FC<LayoutProps>;(?:(?!```)[\s\S])*export type LayoutProps = \{/,
+      /```ts\n(?:(?!```)[\s\S])*export declare const Layout: FC<LayoutProps>;(?:(?!```)[\s\S])*export type LayoutProps = Omit<SceneOptions,/,
     );
     expect(layoutProps).toContain('`computeDisplaySize`');
 
-    expect(layoutProps).toContain("ProcessOptions['reconciler']");
+    expect(layoutProps).toContain('SceneViewOptions');
+    expect(layoutProps).toContain('readonly compile?');
+    expect(layoutProps).toContain('readonly reconciler?');
     expect(layoutProps).toContain('onDiagnostic');
-    expect(extensions).not.toContain('<details>');
     expect(source.replaceAll(/```[\s\S]*?```/g, '')).not.toMatch(/[\u3400-\u9fff]/u);
 
     const paths = [...source.matchAll(/path=\{"([^"}]+)"\}/g)].map(match => match[1]);

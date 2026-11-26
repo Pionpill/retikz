@@ -113,7 +113,7 @@ Changes to external measurement conditions also need application wiring. The cur
 | Change                             | Current handling                                                                                                                                       |
 | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Node text or font configuration    | Normal input updates enter processing; a local incremental fast path is not guaranteed                                                                 |
-| React formula engine becomes ready | `useLowerTex` returns ready, and the application passes `lowerTex` to Layout; changed compile options trigger processing again                         |
+| React formula engine becomes ready | `useLowerTex` returns ready, and the application sets `compile.lowerTex` on Layout; changed compile options trigger processing again                         |
 | Browser font file finishes loading | Hosts do not subscribe to font-loading events; compile initially after fonts are available, or explicitly recompile / recreate the processing instance |
 
 For example, compilation may use a fallback font before the intended font loads. SVG text may then display the new glyphs while the node retains its old width. Drawing the same Scene again cannot correct that size: compilation must use the new metrics. In React, a parent render with unchanged input and options is also insufficient to guarantee recomputation.

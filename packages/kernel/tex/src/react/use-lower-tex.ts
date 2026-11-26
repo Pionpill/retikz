@@ -78,9 +78,9 @@ const getOrCreateEngineEntry = (extensions: Array<MathJaxExtension>, engineKey: 
  *
  * const Formula: FC = () => {
  *   const lowerTexState = useLowerTex({ profile: MathJaxProfile.Math });
- *   if (lowerTexState.status !== 'ready') return <Layout />;
+ *   if (lowerTexState.status !== 'ready') return <Layout>{null}</Layout>;
  *
- *   return <Layout lowerTex={lowerTexState.lowerTex}>{'$x^2$'}</Layout>;
+ *   return <Layout compile={{ lowerTex: lowerTexState.lowerTex }}>{'$x^2$'}</Layout>;
  * };
  * ```
  */

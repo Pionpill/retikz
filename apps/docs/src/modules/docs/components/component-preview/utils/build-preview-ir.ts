@@ -1,6 +1,7 @@
-import type { AnyPathDefinition, CoreProviderContribution, IRScene } from '@retikz/core';
+import type { CoreProviderContribution, IRScene, IRTheme, IRViewBox } from '@retikz/core';
 import { createInputScene, isEmbeddableMarked, Layout, Scope } from '@retikz/react';
-import type { LayoutProps } from '@retikz/react';
+import type { ScopeStyleProps } from '@retikz/react';
+import type { CompileOptions } from '@retikz/reconciler';
 import { normalizeScene } from '@retikz/vanilla';
 import type { FC, ReactElement, ReactNode } from 'react';
 import { createElement, isValidElement } from 'react';
@@ -14,12 +15,12 @@ import { previewEmbedPropsOf, previewHostDimensionsOf } from './preview-embed';
 const COMPONENT_EXPANSION_LIMIT = 16;
 
 type PreviewRootProps = {
-  theme?: LayoutProps['theme'];
-  extensions?: LayoutProps['extensions'];
-  rootScope?: LayoutProps['rootScope'];
+  theme?: IRTheme;
+  compile?: CompileOptions;
+  rootScope?: ScopeStyleProps;
   children?: ReactNode;
   ir?: IRScene;
-  viewBox?: IRScene['viewBox'];
+  viewBox?: IRViewBox;
 };
 
 type FunctionComponentProps = Record<string, unknown> & {
@@ -51,9 +52,8 @@ export type PreviewIR = {
   contributions: Array<CoreProviderContribution>;
   width?: number | string;
   height?: number | string;
-  paths?: ReadonlyArray<AnyPathDefinition>;
-  /** 宿主注册的形状定义，不进入 JSON IR */
-  shapes?: NonNullable<LayoutProps['extensions']>['shapes'];
+  /** Layout 传入的编译选项 */
+  compile?: CompileOptions;
 };
 
 /** 从 React demo 派生 preview IR。 */
@@ -108,15 +108,13 @@ export const buildPreviewIR = (Component: ComponentPreviewDemoComponent, lang: L
 
   const hostDimensions =
     rootElement !== null && (isLayout || isEmbeddableRoot) ? previewHostDimensionsOf(rootElement.type, props) : {};
-  const paths = isLayout ? props.extensions?.paths : undefined;
 
   return {
     ir,
     sourceIr,
     contributions: [...normalized.contributions],
     ...hostDimensions,
-    paths,
-    shapes: isLayout ? props.extensions?.shapes : undefined,
+    compile: isLayout ? props.compile : undefined,
   };
 };
 

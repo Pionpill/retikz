@@ -76,7 +76,13 @@ describe('Layout renderer 规格', () => {
     const root = createRoot(container);
 
     try {
-      await act(() => root.render(<Layout renderer="canvas" viewBox={{ x: -20, y: -10, width: 240, height: 120 }} />));
+      await act(() =>
+        root.render(
+          <Layout renderer="canvas" viewBox={{ x: -20, y: -10, width: 240, height: 120 }}>
+            {null}
+          </Layout>,
+        ),
+      );
       const canvas = container.querySelector('canvas');
 
       expect(canvas?.style.width).toBe('240px');
@@ -84,7 +90,13 @@ describe('Layout renderer 规格', () => {
       expect(canvas?.width).toBe(480);
       expect(canvas?.height).toBe(240);
 
-      await act(() => root.render(<Layout renderer="canvas" viewBox={{ x: 0, y: 0, width: 300, height: 100 }} />));
+      await act(() =>
+        root.render(
+          <Layout renderer="canvas" viewBox={{ x: 0, y: 0, width: 300, height: 100 }}>
+            {null}
+          </Layout>,
+        ),
+      );
 
       expect(container.querySelector('canvas')).toBe(canvas);
       expect(canvas?.style.width).toBe('300px');

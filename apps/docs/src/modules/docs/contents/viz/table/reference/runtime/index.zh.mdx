@@ -130,7 +130,7 @@ Standalone 的 `theme` 写入根 Core Scene；embedded Table 不启动局部 com
 
 | 共享属性                   | 类型                                               | 默认值 | 描述                                               |
 | -------------------------- | -------------------------------------------------- | ------ | -------------------------------------------------- |
-| `containerStyle?`          | `LayoutProps['style']`                             | —      | standalone 宿主 CSS；embedded 不支持               |
+| `containerStyle?`          | `CSSProperties`                                    | —      | standalone 宿主 CSS；embedded 不支持               |
 | `formatterDefinitions?`    | `TablesLoweringOptions['formatterDefinitions']`    | `[]`   | 自定义 Cell formatter definitions                  |
 | `structureDefinitions?`    | `TablesLoweringOptions['structureDefinitions']`    | `[]`   | 自定义 Structure definitions                       |
 | `presentationDefinitions?` | `TablesLoweringOptions['presentationDefinitions']` | `[]`   | 自定义 Cell presentation definitions               |
@@ -145,13 +145,13 @@ standalone runtime 构造 canonical `children[0]` 根 Scene，并从 `Layout.onA
 
 ### Theme 输入
 
-| 输入                 | 类型                              | 默认值 | 作用                                                              |
-| -------------------- | --------------------------------- | ------ | ----------------------------------------------------------------- |
-| `theme?`             | `IRScene['theme']`                | —      | standalone 根 Core Theme；embedded 时由外层 `<Layout theme>` 提供 |
-| `themeDefinitions?`  | `LayoutProps['themeDefinitions']` | `[]`   | standalone Core theme definitions；embedded 时由外层提供          |
-| `defaultAppearance?` | `IRTable['defaultAppearance']`    | `{}`   | 已存在 Cell 的稀疏外观默认值                                      |
-| `defaultVisual?`     | `IRTable['defaultVisual']`        | `{}`   | 已存在 visual encoding 的颜色范围默认值                           |
-| `defaultTable?`      | `IRTable['defaultTable']`         | `{}`   | 稀疏 defaults 片段，优先级低于同级显式 Source 字段                |
+| 输入                 | 类型                             | 默认值 | 作用                                                              |
+| -------------------- | -------------------------------- | ------ | ----------------------------------------------------------------- |
+| `theme?`             | `IRScene['theme']`               | —      | standalone 根 Core Theme；embedded 时由外层 `<Layout theme>` 提供 |
+| `themeDefinitions?`  | `ReadonlyArray<ThemeDefinition>` | `[]`   | standalone Core theme definitions；embedded 时由外层提供          |
+| `defaultAppearance?` | `IRTable['defaultAppearance']`   | `{}`   | 已存在 Cell 的稀疏外观默认值                                      |
+| `defaultVisual?`     | `IRTable['defaultVisual']`       | `{}`   | 已存在 visual encoding 的颜色范围默认值                           |
+| `defaultTable?`      | `IRTable['defaultTable']`        | `{}`   | 稀疏 defaults 片段，优先级低于同级显式 Source 字段                |
 
 `theme.name` / `theme.mode` 选择当前 Core 环境和同名 Table theme definition。Core 的 `colors.categorical` 投影为 Table 的 `defaultVisual.categorical`，再按 Source defaults 与显式 layout 字段覆盖；host `containerStyle` 仍只是 CSS，不进入这一 cascade。自定义 style 在 standalone 模式分别通过 `themeDefinitions` 与 `tableThemeDefinitions` 注入，也可在 React 子树中组合 Core `ThemeProvider` 与 `TableThemeProvider` ambient 注入；embedded 模式的 Core definition 由外层 Layout 提供。
 

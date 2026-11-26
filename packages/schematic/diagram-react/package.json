@@ -90,6 +90,7 @@
     "@retikz/diagram-vanilla": "workspace:*",
     "@retikz/foundation": "workspace:^",
     "@retikz/react": "workspace:^",
+    "@retikz/reconciler": "workspace:^",
     "@retikz/vanilla": "workspace:^"
   },
   "devDependencies": {

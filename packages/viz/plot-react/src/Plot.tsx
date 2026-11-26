@@ -23,8 +23,9 @@ import type {
   MarkTransformShortcutDefinition,
 } from '@retikz/plot-vanilla';
 import { plotInputEmbedAdapter } from '@retikz/plot-vanilla';
-import type { LayoutExtensions, LayoutProps } from '@retikz/react';
+import type { LayoutProps } from '@retikz/react';
 import { Layout, useTheme, useThemeDefinitions } from '@retikz/react';
+import type { CompileOptions } from '@retikz/reconciler';
 import type { FC, ReactNode } from 'react';
 import { useMemo } from 'react';
 
@@ -35,10 +36,7 @@ import { usePlotThemeDefinitions } from './theme-context';
 /** <Plot> 作为 Layout 子面板时可直接承接的 Scope 输入 */
 export type PlotPanelProps = InputPlotPanel;
 
-type PlotLayoutHostProps = Pick<
-  LayoutProps & LayoutExtensions,
-  'className' | 'style' | 'renderer' | 'themeDefinitions'
->;
+type PlotLayoutHostProps = Pick<LayoutProps & CompileOptions, 'className' | 'style' | 'renderer' | 'themeDefinitions'>;
 
 /** React adapter 暴露的运行时图元链路 props */
 export type PlotLineageProps = {
@@ -240,7 +238,7 @@ const PlotComponent: FC<PlotProps> = props => {
       className={className}
       style={style}
       renderer={renderer}
-      extensions={{ themeDefinitions }}
+      compile={{ themeDefinitions }}
       onCompileResult={notifyLineage}
     >
       <EmbeddablePlotContent {...authored} {...(panel === undefined ? {} : { panel })} />

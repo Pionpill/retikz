@@ -7,7 +7,7 @@ description: 按需装配菱形、风筝形、方形、直线倒钩、阻断线�
 
 ## 接入方式
 
-按需从 `@retikz/extension` 导入 Definition，例如 `diamondArrowDefinition`；或使用包含全部端点的 `extensionArrowDefinitions`。导入不会全局注册端点。React 传给 `Layout.extensions.arrows`，Vanilla 传给 `compile.arrows`。
+按需从 `@retikz/extension` 导入 Definition，例如 `diamondArrowDefinition`；或使用包含全部端点的 `extensionArrowDefinitions`。导入不会全局注册端点。React 传给 `Layout.compile.arrows`，Vanilla 传给 `compile.arrows`。
 
 <ComponentPreview files="entry" size="xs" hideCode />
 
@@ -19,7 +19,7 @@ import { diamondArrowDefinition } from '@retikz/extension';
 import { Draw, Layout } from '@retikz/react';
 
 export const Example = () => (
-  <Layout extensions={{ arrows: [diamondArrowDefinition] }}>
+  <Layout compile={{ arrows: [diamondArrowDefinition] }}>
     <Draw
       way={[
         [0, 0],
@@ -54,7 +54,7 @@ const ir: IRScene = {
     },
   ],
 };
-export const Example = () => <Layout ir={ir} extensions={{ arrows: [diamondArrowDefinition] }} />;
+export const Example = () => <Layout ir={ir} compile={{ arrows: [diamondArrowDefinition] }} />;
 ```
 
 </DocTab>
@@ -126,7 +126,7 @@ console.log(svg);
 
 #### diamondArrowDefinition / openDiamondArrowDefinition
 
-将下列 Definition 传入 `Layout.extensions.arrows` 或 `compile.arrows`，用 `arrow.end.shape` 选择端点：
+将下列 Definition 传入 `Layout.compile.arrows` 或 `compile.arrows`，用 `arrow.end.shape` 选择端点：
 
 | Definition                   | `shape`       | 默认长 × 宽 |
 | ---------------------------- | ------------- | ----------- |
@@ -159,7 +159,7 @@ console.log(svg);
 
 #### kiteArrowDefinition / openKiteArrowDefinition
 
-将下列 Definition 传入 `Layout.extensions.arrows` 或 `compile.arrows`，用 `arrow.end.shape` 选择端点：
+将下列 Definition 传入 `Layout.compile.arrows` 或 `compile.arrows`，用 `arrow.end.shape` 选择端点：
 
 | Definition                | `shape`    | 默认长 × 宽 |
 | ------------------------- | ---------- | ----------- |
@@ -192,7 +192,7 @@ console.log(svg);
 
 #### squareArrowDefinition / openSquareArrowDefinition
 
-将下列 Definition 传入 `Layout.extensions.arrows` 或 `compile.arrows`，用 `arrow.end.shape` 选择端点：
+将下列 Definition 传入 `Layout.compile.arrows` 或 `compile.arrows`，用 `arrow.end.shape` 选择端点：
 
 | Definition                  | `shape`      | 默认长 × 宽 |
 | --------------------------- | ------------ | ----------- |
@@ -225,7 +225,7 @@ console.log(svg);
 
 #### straightBarbArrowDefinition
 
-将下列 Definition 传入 `Layout.extensions.arrows` 或 `compile.arrows`，用 `arrow.end.shape` 选择端点：
+将下列 Definition 传入 `Layout.compile.arrows` 或 `compile.arrows`，用 `arrow.end.shape` 选择端点：
 
 | Definition                    | `shape`        | 默认长 × 宽 |
 | ----------------------------- | -------------- | ----------- |
@@ -257,7 +257,7 @@ console.log(svg);
 
 #### barArrowDefinition
 
-将下列 Definition 传入 `Layout.extensions.arrows` 或 `compile.arrows`，用 `arrow.end.shape` 选择端点：
+将下列 Definition 传入 `Layout.compile.arrows` 或 `compile.arrows`，用 `arrow.end.shape` 选择端点：
 
 | Definition           | `shape` | 默认长 × 宽 |
 | -------------------- | ------- | ----------- |
@@ -293,7 +293,7 @@ console.log(svg);
 
 #### crowFootArrowDefinition
 
-将下列 Definition 传入 `Layout.extensions.arrows` 或 `compile.arrows`，用 `arrow.end.shape` 选择端点：
+将下列 Definition 传入 `Layout.compile.arrows` 或 `compile.arrows`，用 `arrow.end.shape` 选择端点：
 
 | Definition                | `shape`    | 默认长 × 宽 |
 | ------------------------- | ---------- | ----------- |

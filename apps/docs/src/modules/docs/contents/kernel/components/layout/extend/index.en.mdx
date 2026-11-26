@@ -17,13 +17,15 @@ Start with [Basic usage](/kernel/components/layout/usage). Use the options below
 
 Explicit `theme` fields override the root theme in existing IR; omitted fields keep their values. See [Theme](/kernel/components/design/theme) for inheritance rules.
 
-## Capability injection
+## Compile options
 
-Pass extension definitions by capability through `Layout.extensions`. `shapes` is one category: the `ShapeDefinition` below supplies the folded file's footprint, connection boundary, and emitted primitives, then registers through `extensions={{ shapes: [fileShape] }}`. Both Nodes reference the registered `drawio-file` name, and the connector ends on the custom outline.
+Pass the complete Vanilla `compile` configuration, including layout settings such as `padding` and `precision`, as well as extension definitions. For example: `<Layout ir={sceneIR} compile={{ padding: 12, precision: 3 }} />`.
+
+Pass extension definitions by capability through `Layout.compile`. `shapes` is one category: the `ShapeDefinition` below supplies the folded file's footprint, connection boundary, and emitted primitives, then registers through `compile={{ shapes: [fileShape] }}`. Both Nodes reference the registered `drawio-file` name, and the connector ends on the custom outline.
 
 <ComponentPreview files={['layout-shape-injection', 'layout-file-shape.ts']} size="sm" />
 
-`extensions` also supports connection boundaries (`boundaries`), clipping regions (`clips`), arrows (`arrows`), patterns (`patterns`), path definitions (`paths`), composites (`composites`), and themes (`themeDefinitions`). These definitions enter their respective registries through `extensions` and are consumed during compilation.
+`compile` also supports connection boundaries (`boundaries`), clipping regions (`clips`), arrows (`arrows`), patterns (`patterns`), path definitions (`paths`), composites (`composites`), and themes (`themeDefinitions`). These definitions enter their respective registries through `compile` and are consumed during compilation.
 
 This section demonstrates shape injection only; later custom-usage guides for each topic explain how to define and use the other capabilities. See the [API reference](/kernel/components/layout/reference) for the complete fields.
 
@@ -40,9 +42,9 @@ The example displays the artifact count and the FlexLayout domain value outside 
 Layout passes `reconciler` to Vanilla. The default `full` mode does not retain an incremental cache; `incremental` retains the cache and supports batch update strategies. In either mode, new JSX or complete IR goes through `replace` and is compiled in full. Layout does not infer a batch from changed props.
 
 ```tsx
-<Layout />
-<Layout reconciler={{ mode: 'incremental', updateStrategy: 'auto' }} />
-<Layout onDiagnostic={diagnostic => console.warn(diagnostic.message)} />
+<Layout><Node /></Layout>
+<Layout ir={sceneIR} reconciler={{ mode: 'incremental', updateStrategy: 'auto' }} />
+<Layout ir={sceneIR} onDiagnostic={diagnostic => console.warn(diagnostic.message)} />
 ```
 
 If replacing the input fails, the last successful result stays visible. Both modes deliver structured diagnostics through `onDiagnostic`.
@@ -59,9 +61,9 @@ These are the props most relevant to this page. See the [API reference](/kernel/
 <ComponentProps
   items={[
     {
-      name: 'extensions',
+      name: 'compile',
       kind: 'property',
-      type: 'LayoutExtensions',
+      type: 'CompileOptions',
       description: 'Injects custom definitions into React Layout, including clips, boundaries, and path capabilities',
     },
     {

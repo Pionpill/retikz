@@ -28,7 +28,7 @@ const ribbonDefinition = createRibbonPathDefinition({ caps: [pointedCap] });
 
 /** 自定义端帽复用首尾端面基底 */
 export const renderRibbonCustomCapPreview = (values: { depth: number }) => (
-  <Layout viewBox={{ x: -230, y: -100, width: 460, height: 200 }} extensions={{ paths: [ribbonDefinition] }}>
+  <Layout viewBox={{ x: -230, y: -100, width: 460, height: 200 }} compile={{ paths: [ribbonDefinition] }}>
     <Path
       kind="ribbon"
       kindOptions={{

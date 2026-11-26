@@ -1,8 +1,14 @@
 /** 经核对的 Layout API 英文说明，签名与标识符保持源码原样 */
 const translations: Readonly<Partial<Record<string, string>>> = {
-  '协调器执行选项；省略时使用完整编译': 'Reconciler options; defaults to full compilation',
+  '渲染后端；缺省使用 SVG，框架宿主可从上下文继承':
+    'Renderer; defaults to SVG and may be inherited from framework context',
+  'SVG 资源 id 前缀；省略时由宿主生成': 'SVG resource ID prefix; supplied by the host when omitted',
+  '是否播放动画；未指定时遵循系统减少动态效果偏好': 'Enable playback; defaults to the system reduced-motion preference',
+  '按图元 id 绑定的初始事件处理函数表': 'Initial event handlers keyed by drawing element ID',
+  'DOM 与框架宿主共享的场景视图配置': 'Scene view options shared by DOM and framework hosts',
+  编译选项: 'Compile options',
+  '协调器执行选项；提交目标由宿主接入': 'Reconciler execution options; the host supplies the commit target',
   接收协调器的结构化诊断: 'Receives structured reconciler diagnostics',
-  'Layout 支持注册的编译扩展': 'Compile extensions accepted by Layout',
   '统一设置子树的动画模式；嵌套时以最近的设置为准':
     'Sets the animation mode for descendants; the nearest provider takes precedence',
   动画模式提供器: 'Animation mode provider',
@@ -53,8 +59,8 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   '动画采样时刻，单位为毫秒；指定后定格在该时刻，不播放动画，优先于 animate':
     'Animation sampling time in milliseconds; freezes the drawing at that time without playback and takes precedence over animate',
   绘图容器: 'Drawing container',
-  '将 JSX 子图元或传入的 ir 渲染为 SVG 或 Canvas；同时提供时使用 ir':
-    'Renders JSX children or an IR scene as SVG or Canvas; ir takes precedence when both are supplied',
+  '将 JSX 子图元或完整 IR 渲染为 SVG 或 Canvas，必须选择一种输入':
+    'Renders either JSX children or a complete IR scene as SVG or Canvas; exactly one input is required',
   主题样式定义: 'Theme definitions',
   '通过 JSX 声明的图形内容': 'Drawing content declared with JSX',
   '直接传入 ir 时使用的事件处理函数表': 'Event handlers used when ir is supplied directly',
@@ -76,8 +82,6 @@ const translations: Readonly<Partial<Record<string, string>>> = {
     'Default font size in drawing units; used when font.size is omitted and as the root size for presets and rem, without overriding explicit numeric sizes',
   '为 Layout 注册自定义形状、箭头、裁剪及其他绘图扩展':
     'Register custom shapes, arrows, clips, and other drawing extensions for Layout',
-  '通过 Layout 的 extensions 属性传入，各字段接收对应的定义数组；这些运行时定义不写入可持久化的场景数据':
-    'Pass these options through the extensions prop of Layout. Each field accepts an array of definitions; these runtime definitions are excluded from persisted scene data.',
   形状定义: 'Shape definitions',
   连接表面定义: 'Connection boundary definitions',
   裁剪定义: 'Clip definitions',

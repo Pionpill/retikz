@@ -19,10 +19,9 @@ import {
   metaOf,
   withCanvasAnimationEventHandlers,
 } from '@retikz/render/hydration';
+import { computeDisplaySize } from '@retikz/render/runtime';
 import type { CSSProperties, FC } from 'react';
 import { useEffect, useReducer, useRef } from 'react';
-
-import { computeDisplaySize } from './display-size';
 
 /** 按 href 缓存的图片加载态（image paint server 用；跨 CanvasHost 实例共享去重） */
 type ImageEntry = { img: HTMLImageElement; loaded: boolean; failed: boolean; waiters: Set<() => void> };
@@ -133,8 +132,8 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
     typeof width === 'number' ? width : undefined,
     typeof height === 'number' ? height : undefined,
   );
-  const initialBitmapWidth = Number(bitmapSize.width);
-  const initialBitmapHeight = Number(bitmapSize.height);
+  const initialBitmapWidth = bitmapSize.width;
+  const initialBitmapHeight = bitmapSize.height;
   const ref = useRef<HTMLCanvasElement>(null);
 
   // rAF 时钟句柄：render effect 写、hydration effect 的 context.animation 读 live，update 后自动跟随
@@ -175,8 +174,8 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
       typeof width === 'number' ? width : undefined,
       typeof height === 'number' ? height : undefined,
     );
-    canvas.width = Math.max(1, Math.round(Number(canvasSize.width) * ratio));
-    canvas.height = Math.max(1, Math.round(Number(canvasSize.height) * ratio));
+    canvas.width = Math.max(1, Math.round(canvasSize.width * ratio));
+    canvas.height = Math.max(1, Math.round(canvasSize.height * ratio));
     const baseOptions = {
       devicePixelRatio: ratio,
       defaultFontFamily: canvasFontFamily(canvas),

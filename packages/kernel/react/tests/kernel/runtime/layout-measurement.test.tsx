@@ -17,7 +17,7 @@ describe('Layout 测量接线', () => {
     const second = vi.fn(() => ({ width: 100, height: 16 }));
     const render = (measureText: typeof first, fontFamily: string) =>
       root.render(
-        <Layout measureText={measureText} style={{ fontFamily }} reconciler={{ mode }}>
+        <Layout compile={{ measureText }} style={{ fontFamily }} reconciler={{ mode }}>
           <Node position={[0, 0]}>Alpha</Node>
         </Layout>,
       );
@@ -35,7 +35,7 @@ describe('Layout 测量接线', () => {
   it('SSR 保留显示字体，不将宿主 CSS 字体注入测量', () => {
     const measureText = vi.fn(() => ({ width: 80, height: 16 }));
     const html = renderToStaticMarkup(
-      <Layout measureText={measureText} style={{ fontFamily: 'serif' }}>
+      <Layout compile={{ measureText }} style={{ fontFamily: 'serif' }}>
         <Node position={[0, 0]}>Alpha</Node>
       </Layout>,
     );

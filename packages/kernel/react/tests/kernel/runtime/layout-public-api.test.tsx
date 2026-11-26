@@ -1,22 +1,26 @@
+import type { AnyPathDefinition } from '@retikz/core';
 import { definePath, PathSchema } from '@retikz/core';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import type { infer as ZodInfer } from 'zod';
 import { literal } from 'zod';
 
-import type { LayoutExtensions, LayoutProps } from '../../../src';
+import type { LayoutProps } from '../../../src';
 import { Layout, Node } from '../../../src';
 
 describe('Layout 公共 API', () => {
   it('从包条目导出 Layout 及其公共选项类型', () => {
-    const props: LayoutProps = { width: 120, height: 80, reconciler: { mode: 'incremental' } };
-    const svg = renderToStaticMarkup(
-      <Layout {...props}>
+    const props: LayoutProps = {
+      width: 120,
+      height: 80,
+      reconciler: { mode: 'incremental' },
+      children: (
         <Node id="a" position={[0, 0]}>
           A
         </Node>
-      </Layout>,
-    );
+      ),
+    };
+    const svg = renderToStaticMarkup(<Layout {...props} />);
 
     expect(svg).toContain('<svg');
     expect(svg).toContain('viewBox=');
@@ -29,7 +33,7 @@ describe('Layout 公共 API', () => {
       schema,
       compile: context => context.emitStroke(),
     });
-    const paths: NonNullable<LayoutExtensions['paths']> = [definition];
+    const paths: ReadonlyArray<AnyPathDefinition> = [definition];
 
     expect(paths).toEqual([definition]);
   });

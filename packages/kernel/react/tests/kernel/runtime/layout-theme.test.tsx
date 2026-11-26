@@ -166,7 +166,7 @@ describe('<Layout 主题>', () => {
     const markup = renderToStaticMarkup(
       <Layout
         theme={{ name: 'academic', mode: ThemeMode.Dark }}
-        extensions={{ themeDefinitions: testThemeDefinitions }}
+        compile={{ themeDefinitions: testThemeDefinitions }}
         width={100}
         height={100}
       >
@@ -186,7 +186,7 @@ describe('<Layout 主题>', () => {
       <Layout
         ir={input}
         theme={theme}
-        extensions={{ composites: [themedBox], themeDefinitions: testThemeDefinitions }}
+        compile={{ composites: [themedBox], themeDefinitions: testThemeDefinitions }}
 
         width={100}
         height={100}
@@ -205,7 +205,7 @@ describe('<Layout 主题>', () => {
       <Layout
         ir={input}
         theme={theme}
-        extensions={{ composites: [themedBox], themeDefinitions: testThemeDefinitions }}
+        compile={{ composites: [themedBox], themeDefinitions: testThemeDefinitions }}
 
         width={100}
         height={100}
@@ -219,7 +219,7 @@ describe('<Layout 主题>', () => {
     const markup = renderToStaticMarkup(
       <Layout
         ir={{ ...input, theme: { name: 'academic', mode: ThemeMode.Dark } }}
-        extensions={{ composites: [themedBox], themeDefinitions: testThemeDefinitions }}
+        compile={{ composites: [themedBox], themeDefinitions: testThemeDefinitions }}
 
         width={100}
         height={100}
@@ -245,7 +245,7 @@ describe('<Layout 主题>', () => {
           ],
         }}
         theme={{ name: 'vibrant', mode: ThemeMode.Dark }}
-        extensions={{ themeDefinitions: testThemeDefinitions }}
+        compile={{ themeDefinitions: testThemeDefinitions }}
         width={100}
         height={100}
       />,
@@ -265,7 +265,7 @@ describe('<Layout 主题>', () => {
             children: [{ namespace: 'theme-test', type: 'probe' }],
           }}
           theme={{ name: 'clean' }}
-          extensions={{ composites: [themeProbe] }}
+          compile={{ composites: [themeProbe] }}
           width={100}
           height={100}
         />
@@ -293,7 +293,7 @@ describe('<Layout 主题>', () => {
     const markup = renderToStaticMarkup(
       <Layout
         theme={{ name: 'academic', mode: ThemeMode.Light }}
-        extensions={{ themeDefinitions: testThemeDefinitions }}
+        compile={{ themeDefinitions: testThemeDefinitions }}
         width={100}
         height={100}
       >
@@ -309,7 +309,7 @@ describe('<Layout 主题>', () => {
   it('不同 Scope 内的匿名嵌入组件保持不同的内部 identity', () => {
     expect(() =>
       renderToStaticMarkup(
-        <Layout extensions={{ themeDefinitions: testThemeDefinitions }} width={100} height={100}>
+        <Layout compile={{ themeDefinitions: testThemeDefinitions }} width={100} height={100}>
           <Scope>
             <ThemedBox />
           </Scope>

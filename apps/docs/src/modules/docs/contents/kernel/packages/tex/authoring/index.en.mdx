@@ -47,7 +47,7 @@ export const Formula = () => {
   if (state.status === 'error') return <div>{state.diagnostic.message}</div>;
 
   return (
-    <Layout lowerTex={state.lowerTex}>
+    <Layout compile={{ lowerTex: state.lowerTex }}>
       <Node text={[{ segments: [{ tex: '\\sin\\alpha = \\frac{1}{2}', fill: 'red' }, { text: ' (length)' }] }]} />
     </Layout>
   );

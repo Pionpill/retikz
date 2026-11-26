@@ -12,7 +12,7 @@ export type SectorExamplePreviewValues = {
 
 /** 绘制示例图形 */
 export const renderSectorExamplePreview = (values: SectorExamplePreviewValues) => (
-  <Layout viewBox={{ x: -105, y: -85, width: 210, height: 170 }} extensions={{ shapes: [sectorShapeDefinition] }}>
+  <Layout viewBox={{ x: -105, y: -85, width: 210, height: 170 }} compile={{ shapes: [sectorShapeDefinition] }}>
     <Node
       position={[0, 0]}
       shape={{ type: 'sector', params: values }}

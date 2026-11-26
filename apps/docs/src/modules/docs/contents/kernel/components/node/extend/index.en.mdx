@@ -136,7 +136,7 @@ const view = mount(document.getElementById('diagram')!, ir);
   defaultSourceFile="node-position.preview.tsx"
 />
 
-Referenced objects must have completed layout and registration (usually earlier siblings). Directional placement inherits its default distance from `<Layout nodeDistance>`, while `fraction: 0.5` is the midpoint for `between`. See the full input union in the [API reference](/kernel/components/node/reference), or use [Coordinate](/kernel/components/node/coordinate) for invisible helper points.
+Referenced objects must have completed layout and registration (usually earlier siblings). Directional placement inherits its default distance from `Layout.compile.nodeDistance`, while `fraction: 0.5` is the midpoint for `between`. See the full input union in the [API reference](/kernel/components/node/reference), or use [Coordinate](/kernel/components/node/coordinate) for invisible helper points.
 
 ## Anchor placement
 
@@ -178,7 +178,7 @@ With no `anchor`, the edge clips automatically toward the opposite endpoint. Sta
 
 `layout.margin` pushes automatic endpoints, standard directional anchors, and angular anchors outward and expands the layout footprint. Shape-specific anchors and side-fraction points stay on the visual outline. A boundary’s `gap` changes only connection geometry, not the layout footprint; neither changes the visible shape.
 
-`shape` has two forms: shapes without required parameters accept a bare string, while parametric shapes such as `polygon`, `sector`, and `star` require `{ type, params }`. Core provides `rectangle` / `ellipse` / `polygon` by default and exposes `circle` / `diamond` as basic presets; optional Node shapes such as `sector` / `star` must first be injected through `<Layout extensions={{ shapes }}>` or `CompileOptions.shapes`. By size source, they divide into text-container shapes that wrap "text + padding" and geometric shapes sized by radii or angles. A Sector with `innerRadius === outerRadius` is the open-arc state.
+`shape` has two forms: shapes without required parameters accept a bare string, while parametric shapes such as `polygon`, `sector`, and `star` require `{ type, params }`. Core provides `rectangle` / `ellipse` / `polygon` by default and exposes `circle` / `diamond` as basic presets; optional Node shapes such as `sector` / `star` must first be injected through `<Layout compile={{ shapes }}>` or `CompileOptions.shapes`. By size source, they divide into text-container shapes that wrap "text + padding" and geometric shapes sized by radii or angles. A Sector with `innerRadius === outerRadius` is the open-arc state.
 
 See each shape page for its parameters and shape-specific anchors:
 
@@ -190,7 +190,7 @@ See each shape page for its parameters and shape-specific anchors:
 | polygon / diamond | `{ type:'polygon', params }` / `'diamond'` | [Polygon](/kernel/components/node/shape#polygon--diamond)         |
 | star              | `{ type:'star', params }`                  | [Star](/library/extension/shape)                                  |
 
-`shape` also accepts names registered through `<Layout extensions={{ shapes }}>` / `CompileOptions.shapes`; parametric registered shapes continue to use `{ type, params }`. See [Custom Shapes](/kernel/components/node/custom-shape).
+`shape` also accepts names registered through `<Layout compile={{ shapes }}>` / `CompileOptions.shapes`; parametric registered shapes continue to use `{ type, params }`. See [Custom Shapes](/kernel/components/node/custom-shape).
 
 `boundary` defaults to `'shape'` and can also use `'circle'`, `'rectangle'`, `'ellipse'`, or a registered connection surface. It changes only automatic endpoints and standard anchors, never the node footprint or visual contour. All three built-in alternatives accept `{ fit, gap }`: `fit: 'tight'` (the default) uses an enclosing contour supplied by the visual shape for a closer fit, while `fit: 'bounds'` encloses its axis-aligned bounding rectangle (AABB); `gap` then adjusts the radius or half-axes outward (positive) or inward (negative). Rectangle produces the same result for both fit modes.
 

@@ -13,44 +13,64 @@
 
 ## 组件声明
 
-#### <ApiSourceLink label={"Layout"} path={"packages/kernel/react/src/components/layout/Layout.tsx"} startLine={216}>Layout</ApiSourceLink> / <ApiSourceLink label={"LayoutProps"} path={"packages/kernel/react/src/components/layout/Layout.tsx"} startLine={82}>LayoutProps</ApiSourceLink>
+#### <ApiSourceLink label={"Layout"} path={"packages/kernel/react/src/components/layout/Layout.tsx"} startLine={57}>Layout</ApiSourceLink> / <ApiSourceLink label={"LayoutProps"} path={"packages/kernel/react/src/components/layout/Layout.tsx"} startLine={51}>LayoutProps</ApiSourceLink>
 
-将 JSX 子图元或传入的 ir 渲染为 SVG 或 Canvas；同时提供时使用 ir
+将 JSX 子图元或完整 IR 渲染为 SVG 或 Canvas，必须选择一种输入
 
-<DocTabs defaultValue="members">
+**公共属性**
 
-<DocTab value="members" label="属性">
+<ApiTable>
 
-<ApiTable grouped>
+| 成员                   | 类型                                                                                              | 默认值                    | 说明                                                                                                     |
+| ---------------------- | ------------------------------------------------------------------------------------------------- | ------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `animate?`             | `boolean`                                                                                         | `resolveAnimationEnabled` | 是否播放动画；未指定时遵循系统减少动态效果偏好                                                           |
+| `animationRef?`        | `Ref<AnimationControls \| null>`                                                                  | —                         | 动画控制器出口                                                                                           |
+| `animations?`          | `SceneOptions['animations']`                                                                      | —                         | —                                                                                                        |
+| `authoring?`           | `unknown`                                                                                         | —                         | 归一化时保留的作者元数据，不进入 Core IR                                                                 |
+| `className?`           | `string`                                                                                          | —                         | 宿主 className                                                                                           |
+| `readonly compile?`    | `CompileOptions`                                                                                  | —                         | 编译选项                                                                                                 |
+| `handlers?`            | `HydrationHandlers`                                                                               | —                         | 按图元 id 绑定的初始事件处理函数表                                                                       |
+| `height?`              | `number \| string`                                                                                | `computeDisplaySize`      | SVG 或 Canvas CSS 高度；缺省按内容尺寸计算，单轴数值尺寸按内容比例补齐另一轴，CSS 字符串尺寸由浏览器排版 |
+| `idPrefix?`            | `string`                                                                                          | —                         | SVG 资源 id 前缀；省略时由宿主生成                                                                       |
+| `onArtifacts?`         | `(artifacts: ReadonlyArray<CompositeArtifact>) => void`                                           | —                         | 编译附加产物成功提交后的通知                                                                             |
+| `onCompileResult?`     | `(result: CompileResult) => void`                                                                 | —                         | Core 完整编译结果通知                                                                                    |
+| `onDiagnostic?`        | `(diagnostic: ReconcilerDiagnostic) => void`                                                      | —                         | 接收协调器的结构化诊断                                                                                   |
+| `readonly reconciler?` | `Omit<FullSceneReconcilerOptions, 'target'> \| Omit<IncrementalSceneReconcilerOptions, 'target'>` | —                         | 协调器执行选项；提交目标由宿主接入                                                                       |
+| `renderer?`            | `RenderMode`                                                                                      | `'svg'`                   | 渲染后端；缺省使用 SVG，框架宿主可从上下文继承                                                           |
+| `rootScope?`           | `ScopeStyleProps`                                                                                 | —                         | JSX 子图的隐式根 Scope 覆盖；完整 ir 优先，style 宿主 CSS 独立生效                                       |
+| `snapshotAt?`          | `number`                                                                                          | —                         | 动画采样时刻，单位为毫秒；指定后定格在该时刻，不播放动画，优先于 animate                                 |
+| `style?`               | `CSSProperties`                                                                                   | —                         | 宿主内联样式                                                                                             |
+| `theme?`               | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                          | —                         | —                                                                                                        |
+| `viewBox?`             | `{ x: number; y: number; width: number; height: number; }`                                        | —                         | —                                                                                                        |
+| `width?`               | `number \| string`                                                                                | `computeDisplaySize`      | SVG 或 Canvas CSS 宽度；缺省按内容尺寸计算，单轴数值尺寸按内容比例补齐另一轴，CSS 字符串尺寸由浏览器排版 |
 
-| 分组   | 成员               | 类型                                                    | 默认值                    | 说明                                                                                                     |
-| ------ | ------------------ | ------------------------------------------------------- | ------------------------- | -------------------------------------------------------------------------------------------------------- |
-| 主要   | `children?`        | `ReactNode`                                             | —                         | 通过 JSX 声明的图形内容                                                                                  |
-|        | `ir?`              | `IRScene`                                               | —                         | 直接传入持久化 Source IR，与 children 二选一                                                             |
-| 布局   | `nodeDistance?`    | `number`                                                | `24`                      | 节点相对定位的默认距离，单位为绘图单位；position 使用 direction/of 且省略 distance 时生效                |
-| 样式   | `fontSize?`        | `number`                                                | `16`                      | 默认字号，单位为绘图单位；font.size 缺省时使用，同时作为字号预设与 rem 的根字号，不覆盖显式数字字号      |
-|        | `rootScope?`       | `ScopeStyleProps`                                       | —                         | JSX 子图的隐式根 Scope 覆盖；完整 ir 优先，style 宿主 CSS 独立生效                                       |
-|        | `theme?`           | `IRScene['theme']`                                      | —                         | 写入 Scene 根并由后代 Composite 继承的 Theme                                                             |
-| 渲染   | `className?`       | `string`                                                | —                         | 宿主 className                                                                                           |
-|        | `height?`          | `number \| string`                                      | `computeDisplaySize`      | SVG 或 Canvas CSS 高度；缺省按内容尺寸计算，单轴数值尺寸按内容比例补齐另一轴，CSS 字符串尺寸由浏览器排版 |
-|        | `idPrefix?`        | `string`                                                | `useId`                   | SVG 资源 id 前缀；省略时由 React useId 生成                                                              |
-|        | `renderer?`        | `RenderMode`                                            | `'svg'`                   | 渲染后端；显式值优先，否则继承 Renderer 上下文，未提供上下文时使用 SVG                                   |
-|        | `style?`           | `CSSProperties`                                         | —                         | 宿主内联样式                                                                                             |
-|        | `viewBox?`         | `IRViewBox`                                             | —                         | 显式视框，使用绘图坐标；优先于 ir.viewBox，省略时沿用场景视框，场景未指定时按内容计算                    |
-|        | `width?`           | `number \| string`                                      | `computeDisplaySize`      | SVG 或 Canvas CSS 宽度；缺省按内容尺寸计算，单轴数值尺寸按内容比例补齐另一轴，CSS 字符串尺寸由浏览器排版 |
-| 回调   | `handlers?`        | `HydrationHandlers`                                     | —                         | 直接传入 ir 时使用的事件处理函数表                                                                       |
-| 动画   | `animate?`         | `boolean`                                               | `resolveAnimationEnabled` | 是否播放动画；由动画模式上下文优先决定，未指定时遵循系统减少动态效果偏好                                 |
-|        | `animationRef?`    | `Ref<AnimationControls \| null>`                        | —                         | 动画控制器出口                                                                                           |
-|        | `animations?`      | `ReadonlyArray<IRAnimationTrack>`                       | —                         | Scene 根动画                                                                                             |
-|        | `snapshotAt?`      | `number`                                                | —                         | 动画采样时刻，单位为毫秒；指定后定格在该时刻，不播放动画，优先于 animate                                 |
-| 运行时 | `authoring?`       | `unknown`                                               | —                         | 归一化时收集的 JSX 作者元数据；传入 ir 时忽略，不写入持久化 Scene IR                                     |
-|        | `onDiagnostic?`    | `(diagnostic: ReconcilerDiagnostic) => void`            | —                         | 接收协调器的结构化诊断                                                                                   |
-|        | `reconciler?`      | `ProcessOptions['reconciler']`                          | —                         | 协调器执行选项；省略时使用完整编译                                                                       |
-| 输出   | `onArtifacts?`     | `(artifacts: ReadonlyArray<CompositeArtifact>) => void` | —                         | 编译附加产物成功提交后的通知                                                                             |
-|        | `onCompileResult?` | `(result: CompileResult) => void`                       | —                         | Core 完整编译结果通知                                                                                    |
-| 扩展   | `extensions?`      | `LayoutExtensions`                                      | —                         | 按能力分类的运行时扩展注册，复用 Core 编译契约                                                           |
-|        | `lowerTex?`        | `TexLowerer`                                            | —                         | 公式下沉能力                                                                                             |
-|        | `measureText?`     | `TextMeasurer`                                          | —                         | 自定义文字测量；省略时使用 Vanilla 的环境测量与估算降级                                                  |
+</ApiTable>
+
+公共属性适用于所有分支；输入还需满足至少一个分支的属性约束。
+
+<DocTabs defaultValue="children">
+
+<DocTab value="children" label="属性 · JSX 子元素">
+
+<ApiTable>
+
+| 成员       | 类型        | 默认值 | 说明                                         |
+| ---------- | ----------- | ------ | -------------------------------------------- |
+| `children` | `ReactNode` | —      | 通过 JSX 声明的图形内容                      |
+| `ir?`      | `never`     | —      | 直接传入持久化 Source IR，与 children 二选一 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="ir" label="属性 · 完整 IR">
+
+<ApiTable>
+
+| 成员        | 类型      | 默认值 | 说明                                         |
+| ----------- | --------- | ------ | -------------------------------------------- |
+| `children?` | `never`   | —      | 通过 JSX 声明的图形内容                      |
+| `ir`        | `IRScene` | —      | 直接传入持久化 Source IR，与 children 二选一 |
 
 </ApiTable>
 
@@ -61,34 +81,7 @@
 ```ts
 export declare const Layout: FC<LayoutProps>;
 
-export type LayoutProps = {
-  measureText?: TextMeasurer;
-  rootScope?: ScopeStyleProps;
-  ir?: IRScene;
-  theme?: IRScene['theme'];
-  children?: ReactNode;
-  authoring?: unknown;
-  handlers?: HydrationHandlers;
-  reconciler?: ProcessOptions['reconciler'];
-  onDiagnostic?: (diagnostic: ReconcilerDiagnostic) => void;
-  width?: number | string;
-  height?: number | string;
-  viewBox?: IRViewBox;
-  className?: string;
-  style?: CSSProperties;
-  renderer?: RenderMode;
-  animate?: boolean;
-  snapshotAt?: number;
-  animationRef?: Ref<AnimationControls | null>;
-  animations?: ReadonlyArray<IRAnimationTrack>;
-  idPrefix?: string;
-  nodeDistance?: number;
-  fontSize?: number;
-  extensions?: LayoutExtensions;
-  lowerTex?: TexLowerer;
-  onArtifacts?: (artifacts: ReadonlyArray<CompositeArtifact>) => void;
-  onCompileResult?: (result: CompileResult) => void;
-};
+export type LayoutProps = Omit<SceneOptions, 'children'> & SceneViewOptions & LayoutAdapterProps;
 ```
 
 </DocTab>
@@ -97,16 +90,47 @@ export type LayoutProps = {
 
 ## 执行与辅助契约
 
-#### <ApiSourceLink label={"LayoutExtensions"} path={"packages/kernel/react/src/components/layout/Layout.tsx"} startLine={74}>LayoutExtensions</ApiSourceLink>
+#### <ApiSourceLink label={"SceneViewOptions"} path={"packages/kernel/vanilla/src/runtime/view-options.ts"} startLine={7}>SceneViewOptions</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员                   | 类型                                                                                              | 默认值                    | 说明                                                                                                     |
+| ---------------------- | ------------------------------------------------------------------------------------------------- | ------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `animate?`             | `boolean`                                                                                         | `resolveAnimationEnabled` | 是否播放动画；未指定时遵循系统减少动态效果偏好                                                           |
+| `readonly compile?`    | `CompileOptions`                                                                                  | —                         | 编译选项                                                                                                 |
+| `handlers?`            | `HydrationHandlers`                                                                               | —                         | 按图元 id 绑定的初始事件处理函数表                                                                       |
+| `height?`              | `number \| string`                                                                                | `computeDisplaySize`      | SVG 或 Canvas CSS 高度；缺省按内容尺寸计算，单轴数值尺寸按内容比例补齐另一轴，CSS 字符串尺寸由浏览器排版 |
+| `idPrefix?`            | `string`                                                                                          | —                         | SVG 资源 id 前缀；省略时由宿主生成                                                                       |
+| `readonly reconciler?` | `Omit<FullSceneReconcilerOptions, 'target'> \| Omit<IncrementalSceneReconcilerOptions, 'target'>` | —                         | 协调器执行选项；提交目标由宿主接入                                                                       |
+| `renderer?`            | `RenderMode`                                                                                      | `'svg'`                   | 渲染后端；缺省使用 SVG，框架宿主可从上下文继承                                                           |
+| `snapshotAt?`          | `number`                                                                                          | —                         | 动画采样时刻，单位为毫秒；指定后定格在该时刻，不播放动画，优先于 animate                                 |
+| `width?`               | `number \| string`                                                                                | `computeDisplaySize`      | SVG 或 Canvas CSS 宽度；缺省按内容尺寸计算，单轴数值尺寸按内容比例补齐另一轴，CSS 字符串尺寸由浏览器排版 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
 
 ```ts
-export type LayoutExtensions = Readonly<
-  Pick<
-    CompileOptions,
-    'shapes' | 'boundaries' | 'clips' | 'arrows' | 'marks' | 'patterns' | 'paths' | 'composites' | 'themeDefinitions'
-  >
->;
+export type SceneViewOptions = ProcessOptions & {
+  renderer?: RenderMode;
+  width?: number | string;
+  height?: number | string;
+  idPrefix?: string;
+  animate?: boolean;
+  snapshotAt?: number;
+  handlers?: HydrationHandlers;
+};
 ```
+
+</DocTab>
+
+</DocTabs>
 
 #### <ApiSourceLink label={"scene"} path={"packages/kernel/vanilla/src/normalize/factory.ts"} startLine={58}>scene</ApiSourceLink>
 

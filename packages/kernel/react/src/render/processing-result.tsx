@@ -1,4 +1,4 @@
-import type { CompileResult, CompositeArtifact } from '@retikz/reconciler';
+import type { CompileResult } from '@retikz/reconciler';
 import type { AnimationControls } from '@retikz/render/animation';
 import { bindWaapiDescriptors, sceneHasAnimations } from '@retikz/render/animation';
 import type { HydrationHandlers } from '@retikz/render/hydration';
@@ -11,43 +11,28 @@ import {
   resolveSvgElement,
 } from '@retikz/render/hydration';
 import type { RenderMode } from '@retikz/render/runtime';
+import { computeDisplaySize } from '@retikz/render/runtime';
 import { buildSvgDocument } from '@retikz/render/svg';
-import type { CSSProperties, FC, MutableRefObject, ReactElement, Ref } from 'react';
+import type { FC, MutableRefObject, ReactElement, Ref } from 'react';
 import { cloneElement, useCallback, useEffect, useMemo, useRef } from 'react';
 
+import type { LayoutProps } from '../components';
 import { CanvasHost } from './CanvasHost';
-import { computeDisplaySize } from './display-size';
 import { svgToReact } from './svg-to-react';
 
 /** Vanilla processing result 的 React 宿主属性 */
-export type ProcessingResultHostProps = Readonly<{
-  /** Vanilla 已完成编译的完整处理结果 */
-  result: CompileResult;
-  /** 目标渲染后端 */
-  backend: RenderMode;
-  /** 当前 revision 的 hydration handler 注册表 */
-  handlers: HydrationHandlers;
-  /** SVG 或 Canvas CSS 宽度 */
-  width?: number | string;
-  /** SVG 或 Canvas CSS 高度 */
-  height?: number | string;
-  /** 宿主 className */
-  className?: string;
-  /** 宿主内联样式 */
-  style?: CSSProperties;
-  /** 是否播放动画 */
-  animate: boolean;
-  /** 静态动画采样时刻 */
-  snapshotAt?: number;
-  /** 动画控制器出口 */
-  animationRef?: Ref<AnimationControls | null>;
-  /** 资源 id 前缀 */
-  idPrefix: string;
-  /** artifacts 成功提交通知 */
-  onArtifacts?: (artifacts: ReadonlyArray<CompositeArtifact>) => void;
-  /** Core 完整编译结果通知 */
-  onCompileResult?: (result: CompileResult) => void;
-}>;
+export type ProcessingResultHostProps = Readonly<
+  Pick<
+    LayoutProps,
+    'width' | 'height' | 'className' | 'style' | 'snapshotAt' | 'animationRef' | 'onArtifacts' | 'onCompileResult'
+  > &
+    Required<Pick<LayoutProps, 'handlers' | 'animate' | 'idPrefix'>> & {
+      /** Vanilla 已完成编译的完整处理结果 */
+      result: CompileResult;
+      /** 目标渲染后端 */
+      backend: RenderMode;
+    }
+>;
 
 /** 将两个渲染后端发布的控制器写入宿主的回调或对象 ref */
 const assignAnimationRef = (

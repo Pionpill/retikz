@@ -58,8 +58,8 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   '连线接触的边界；省略时沿用视觉形状，也可选择已注册的连接面或形状，不改变节点外观':
     'Connection boundary; follows the visual shape when omitted, or selects a registered boundary or shape without changing appearance',
   'children 内容：文本': 'Text supplied as children',
-  '与 `text` 二选一、`text` 优先；支持字符串内嵌 `\\n` / 模板字面量 / 字符串数组 / 混 `<Text>` 带样式行。\n字符串里可写行内公式 `$...$`（inline）/ `$$...$$`（display），编译期在注入 `<Layout lowerTex>` 时解析；未注入则字面渲染':
-    'Choose children or `text`; `text` takes precedence. Supports embedded `\\n`, template literals, string arrays, and styled `<Text>` lines. Strings may contain `$...$` inline or `$$...$$` display formulas, parsed when `<Layout lowerTex>` is supplied and rendered literally otherwise',
+  '与 `text` 二选一、`text` 优先；支持字符串内嵌 `\\n` / 模板字面量 / 字符串数组 / 混 `<Text>` 带样式行。\n字符串里可写行内公式 `$...$`（inline）/ `$$...$$`（display），编译期在注入 `<Layout compile={{ lowerTex }}>` 时解析；未注入则字面渲染':
+    'Choose children or `text`; `text` takes precedence. Supports embedded `\\n`, template literals, string arrays, and styled `<Text>` lines. Strings may contain `$...$` inline or `$$...$$` display formulas, parsed when `<Layout compile={{ lowerTex }}>` is supplied and rendered literally otherwise',
   "圆角半径（用户单位）；只对 `rectangle` shape 生效。建议用形状 params 形式 `shape={{ type: 'rectangle', params: { cornerRadius } }}`":
     "Corner radius in user units; affects only `rectangle`. Prefer shape parameters: `shape={{ type: 'rectangle', params: { cornerRadius } }}`",
   '节点 id；路径端点和其他节点通过它引用本节点':
@@ -89,8 +89,8 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   '绕节点中心旋转的角度，单位为度；正值顺时针': 'Rotation around the node center in degrees; positive is clockwise',
   '均匀或分轴缩放；影响节点尺寸、字号、间距和路径附着点':
     'Uniform or per-axis scaling of node size, font size, spacing, and path attachment points',
-  '视觉形状：无必填参数时可写名称，带参形状使用 `{ type, params }`；可选形状通过 Layout.extensions.shapes 注册':
-    'Visual shape: use a name when no parameters are required, or `{ type, params }` for parameterized shapes; register optional shapes through Layout.extensions.shapes',
+  '视觉形状：无必填参数时可写名称，带参形状使用 `{ type, params }`；可选形状通过 Layout.compile.shapes 注册':
+    'Visual shape: use a name when no parameters are required, or `{ type, params }` for parameterized shapes; register optional shapes through Layout.compile.shapes',
   '实例视觉覆盖，逐字段覆盖继承默认值': 'Instance visual overrides, applied field by field over inherited defaults',
   '显式 text，优先级高于 children': 'Explicit text, taking precedence over children',
   '`string` 单行（可含 `$...$` 公式）/ `Array<string | IRLine>` 多行可对单行覆盖 fill / opacity / font，\n或行内混排 `{ segments: [{ text }, { tex }] }`（每 segment 可单独着色）':

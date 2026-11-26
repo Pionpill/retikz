@@ -213,8 +213,8 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   '椭圆的 x、y 轴半径': 'Ellipse radii on the x and y axes',
   '用子步骤声明路径，并设置样式、箭头与交互':
     'Declare a path with child steps and configure its style, arrows, and interactions',
-  '路径定义，省略时使用内置 stroke；自定义种类通过 Layout.extensions.paths 注册':
-    'Path; defaults to built-in stroke. Register custom kinds through Layout.extensions.paths',
+  '路径定义，省略时使用内置 stroke；自定义种类通过 Layout.compile.paths 注册':
+    'Path; defaults to built-in stroke. Register custom kinds through Layout.compile.paths',
   '所选路径定义的 JSON 参数；内置 stroke 不接受此字段':
     'JSON options for the selected path; built-in stroke does not accept this field',
   附着于整条路径的一个或多个几何标签: 'One or more geometry labels attached to the whole path',

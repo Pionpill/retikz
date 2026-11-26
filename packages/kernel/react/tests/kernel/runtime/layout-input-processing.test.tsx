@@ -77,7 +77,7 @@ describe('<Layout> 的 Vanilla Input processing', () => {
         <Layout
           ir={ir}
           reconciler={{ mode, trace }}
-          extensions={{ themeDefinitions: [theme] }}
+          compile={{ themeDefinitions: [theme] }}
           onCompileResult={notify}
         />,
       );
@@ -182,7 +182,7 @@ describe('<Layout> 的 Vanilla Input processing', () => {
     const container = document.createElement('div');
     const root = createRoot(container);
 
-    await act(() => root.render(<Layout onDiagnostic={onDiagnostic} />));
+    await act(() => root.render(<Layout onDiagnostic={onDiagnostic}>{null}</Layout>));
 
     expect(onDiagnostic).toHaveBeenCalledWith(diagnostic);
     expect(diagnostics).toHaveBeenCalledTimes(1);
@@ -276,7 +276,7 @@ describe('<Layout> 的 Vanilla Input processing', () => {
 
     await act(() =>
       root.render(
-        <Layout theme={{ name: 'academic', mode: ThemeMode.Light }} extensions={{ themeDefinitions: [testTheme] }}>
+        <Layout theme={{ name: 'academic', mode: ThemeMode.Light }} compile={{ themeDefinitions: [testTheme] }}>
           <Scope theme={{ mode: ThemeMode.Dark }}>
             <ThemeProbe />
           </Scope>

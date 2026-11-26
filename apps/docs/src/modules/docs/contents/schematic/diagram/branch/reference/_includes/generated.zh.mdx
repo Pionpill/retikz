@@ -113,7 +113,7 @@ export type BranchProps = InputBranch;
 
 ```ts
 export type BranchDiagramLayoutHostProps = Pick<
-  LayoutProps & LayoutExtensions,
+  LayoutProps & CompileOptions,
   | 'authoring'
   | 'handlers'
   | 'reconciler'

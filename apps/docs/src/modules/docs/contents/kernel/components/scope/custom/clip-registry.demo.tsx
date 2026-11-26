@@ -53,7 +53,7 @@ export const previewSource = {
     return {
       ir: {
         files: [{ filename: 'clip-registry.ir.json', code: JSON.stringify(ir, null, 2), lang: 'json' as const }],
-        render: mode => <Layout ir={ir} renderer={mode} extensions={{ clips: [roundedRectClip] }} />,
+        render: mode => <Layout ir={ir} renderer={mode} compile={{ clips: [roundedRectClip] }} />,
       },
       vanilla: {
         files: [{ filename: 'clip-registry.vanilla.ts', code: vanillaCode.trimEnd(), lang: 'ts' as const }],
@@ -65,7 +65,7 @@ export const previewSource = {
 } satisfies PreviewSourceConfig;
 
 const Demo: FC = () => (
-  <Layout extensions={{ clips: [roundedRectClip] }}>
+  <Layout compile={{ clips: [roundedRectClip] }}>
     <Content />
   </Layout>
 );

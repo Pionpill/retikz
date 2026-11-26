@@ -39,7 +39,7 @@ description: 用 defineMark 定义局部图元，注册后通过 shape 和 param
 import { Draw, Layout } from '@retikz/react';
 import { ringMark } from './ring-mark';
 
-<Layout extensions={{ marks: [ringMark] }}>
+<Layout compile={{ marks: [ringMark] }}>
   <Draw
     way={[
       [0, 0],
@@ -146,7 +146,7 @@ const {
       description: '自定义参数、已解析样式与坐标精度函数。',
     },
     {
-      name: 'Layout.extensions.marks',
+      name: 'Layout.compile.marks',
       kind: 'property',
       type: 'ReadonlyArray<MarkDefinition>',
       description: 'React 宿主注册入口；Core 使用 CompileOptions.marks，Vanilla mount 使用 compile.marks。',

@@ -8,7 +8,7 @@ import { useState } from 'react';
 import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview';
 
 export const previewSource = { deriveIR: false } satisfies PreviewSourceConfig;
-const extensions = { composites: [flexLayoutDefinition] };
+const compile = { composites: [flexLayoutDefinition] };
 const scene: IRScene = {
   version: 1,
   type: 'scene',
@@ -28,7 +28,7 @@ const Demo: FC = () => {
   const layout = artifacts.find(artifact => artifact.namespace === 'layout' && artifact.type === 'flexLayout');
   return (
     <div className="grid gap-3">
-      <Layout ir={scene} extensions={extensions} onArtifacts={setArtifacts} />
+      <Layout ir={scene} compile={compile} onArtifacts={setArtifacts} />
       <div className="rounded-md border bg-muted/40 px-3 py-2 text-sm">Composite artifacts: {artifacts.length}</div>
       <pre className="max-h-40 overflow-auto rounded-md border p-3 text-xs">
         {JSON.stringify(layout?.value, null, 2)}

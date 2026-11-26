@@ -7,7 +7,8 @@ import type {
   InputFlowRelation,
 } from '@retikz/diagram-vanilla/flow';
 import type { FlowDiagramDefinitionOptions } from '@retikz/diagram/flow';
-import type { LayoutExtensions, LayoutProps, ReactInputEmbedContext } from '@retikz/react';
+import type { LayoutProps, ReactInputEmbedContext } from '@retikz/react';
+import type { CompileOptions } from '@retikz/reconciler';
 import type { FC, ReactElement, ReactNode } from 'react';
 import { Children, Fragment, isValidElement } from 'react';
 
@@ -17,7 +18,7 @@ import type { FlowRelationItem, FlowRelationsProps } from './FlowRelations';
 
 /** Flow standalone 模式承接的完整 Layout 宿主属性 */
 export type FlowDiagramLayoutHostProps = Pick<
-  LayoutProps & LayoutExtensions,
+  LayoutProps & CompileOptions,
   | 'authoring'
   | 'handlers'
   | 'reconciler'

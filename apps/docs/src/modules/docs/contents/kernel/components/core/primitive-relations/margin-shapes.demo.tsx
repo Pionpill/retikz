@@ -11,7 +11,7 @@ import type { FC } from 'react';
 const M = 18;
 
 const Demo: FC = () => (
-  <Layout extensions={{ shapes: [starShapeDefinition] }}>
+  <Layout compile={{ shapes: [starShapeDefinition] }}>
     {/* 椭圆：rect 驱动，margin 外扩 → 端点退开 margin */}
     <Node
       id="ell"

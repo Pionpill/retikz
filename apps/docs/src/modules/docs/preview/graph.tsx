@@ -1,5 +1,6 @@
 import type { GraphLayoutHostProps } from '@retikz/graph-react';
 import { Layout } from '@retikz/react';
+import type { LayoutProps } from '@retikz/react';
 import type { ReactElement, ReactNode } from 'react';
 import { createElement, isValidElement } from 'react';
 
@@ -27,14 +28,14 @@ const graphCanonicalRender = (node: ReactNode): ReactNode => {
       : element.props;
   const { children, width, height, viewBox, className, renderer, themeDefinitions, ...graphProps } = resolvedProps;
 
-  const hostProps: GraphLayoutHostProps = {
+  const hostProps = {
     ...(width === undefined ? {} : { width }),
     ...(height === undefined ? {} : { height }),
     ...(viewBox === undefined ? {} : { viewBox }),
     ...(className === undefined ? {} : { className }),
     ...(renderer === undefined ? {} : { renderer }),
-    ...(themeDefinitions === undefined ? {} : { themeDefinitions }),
-  };
+    ...(themeDefinitions === undefined ? {} : { compile: { themeDefinitions } }),
+  } satisfies Omit<LayoutProps, 'ir' | 'children'>;
 
   return <Layout {...hostProps}>{createElement(PreviewGraph, graphProps, children)}</Layout>;
 };

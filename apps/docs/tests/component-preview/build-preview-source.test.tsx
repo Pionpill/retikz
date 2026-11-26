@@ -173,7 +173,7 @@ const createInput = (overrides: Record<string, unknown> = {}) => ({
 describe('buildPreviewSource', () => {
   it('形状扩展贯穿 IR 预览、Vanilla 渲染与生成源码，Definition 不进入 JSON', () => {
     const Demo: FC = () => (
-      <Layout extensions={{ shapes: [sectorShapeDefinition] }}>
+      <Layout compile={{ shapes: [sectorShapeDefinition] }}>
         <Node
           position={[0, 0]}
           shape={{

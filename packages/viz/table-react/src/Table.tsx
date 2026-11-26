@@ -1,19 +1,20 @@
 import type { AnyCompositeDefinition } from '@retikz/core';
 import type { DataTransformResult, ExternalRow, IRDataExecution } from '@retikz/data';
 import type { RequireExactlyOne } from '@retikz/foundation';
-import type { LayoutExtensions, LayoutProps } from '@retikz/react';
+import type { LayoutProps } from '@retikz/react';
+import type { CompileOptions } from '@retikz/reconciler';
 import type { IRTable, TablesLoweringOptions, TableLayoutManifest } from '@retikz/table';
 import type { InputTable, InputTableData } from '@retikz/table-vanilla';
 import { tableInputEmbedAdapter } from '@retikz/table-vanilla';
 import type { InputEmbedAdapter } from '@retikz/vanilla';
-import type { FC } from 'react';
+import type { CSSProperties, FC } from 'react';
 
 import { createReactTableInput, ReactTableRuntimeKind, resolveReactTableRuntime } from './table-runtime';
 import { TableRuntimeView } from './table-view';
 
 /** Table standalone 入口复用的 Kernel Layout 宿主 props */
 export type TableLayoutHostProps = Pick<
-  LayoutProps & LayoutExtensions,
+  LayoutProps & CompileOptions,
   | 'handlers'
   | 'width'
   | 'height'
@@ -38,7 +39,7 @@ export type TableLayoutHostProps = Pick<
   | 'lowerTex'
 > & {
   /** standalone Layout 宿主容器的 CSS 样式 */
-  containerStyle?: LayoutProps['style'];
+  containerStyle?: CSSProperties;
 };
 
 /** 三个 Table 组件共享的宿主展示与 lowering props */

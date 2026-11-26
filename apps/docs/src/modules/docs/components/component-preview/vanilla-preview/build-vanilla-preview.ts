@@ -214,12 +214,12 @@ const buildCorePreview = (preview: PreviewIR, options: BuildVanillaPreviewOption
     children: preview.ir.children.map(convertCoreChild),
   });
   const compileResult = compileToScene(input, {
-    compile: { paths: preview.paths, shapes: preview.shapes, measureText: options.measureText },
+    compile: { ...preview.compile, measureText: preview.compile?.measureText ?? options.measureText },
   });
   const svg = renderToSvg(compileResult.scene, { output: outputSize(preview) });
 
   try {
-    return { code: irToVanillaCode(preview.sourceIr, { paths: preview.paths, shapes: preview.shapes }), svg };
+    return { code: irToVanillaCode(preview.sourceIr, preview.compile), svg };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     return { ...diagnostic(message), svg };

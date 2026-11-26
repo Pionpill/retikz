@@ -18,7 +18,6 @@ export type {
   AnimationMode,
   AnimationModeProviderProps,
   InputSceneCreationOptions,
-  LayoutExtensions,
   LayoutProps,
   RendererModeProviderProps,
   ThemeProviderProps,

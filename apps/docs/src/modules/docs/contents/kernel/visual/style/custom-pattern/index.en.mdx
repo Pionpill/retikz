@@ -9,11 +9,11 @@ Import definePattern from `@retikz/core`. Supply a name, optional defaultSize, a
 
 `defaultSize` must be a finite positive number. `definePattern` checks it when the definition is created and throws immediately for invalid values. When supplying a definition object directly, the author is responsible for meeting the same constraint.
 
-This example defines cross, registers it through Layout.extensions.patterns, and references the same name in fill.shape.
+This example defines cross, registers it through Layout.compile.patterns, and references the same name in fill.shape.
 
 <ComponentPreview files="custom-pattern-basic" size="sm" />
 
-React uses `extensions={{ patterns: [cross] }}`. Vanilla supplies `compile: { patterns: [cross] }` to mount / compileToScene. Core uses CompileOptions.patterns. Definitions belong to host configuration; emit functions cannot enter IR.
+React uses `compile={{ patterns: [cross] }}`. Vanilla supplies `compile: { patterns: [cross] }` to mount / compileToScene. Core uses CompileOptions.patterns. Definitions belong to host configuration; emit functions cannot enter IR.
 
 ## Control the period
 
@@ -39,7 +39,7 @@ These are the entries used here; see the full declarations in [API](/kernel/visu
 <ComponentProps
   items={[
     {
-      name: 'extensions.patterns',
+      name: 'compile.patterns',
       kind: 'property',
       type: 'Array<PatternDefinition>',
       description:

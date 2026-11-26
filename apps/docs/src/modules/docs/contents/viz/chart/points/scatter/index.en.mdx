@@ -78,7 +78,7 @@ const definitions = resolveCoreProviderDependencies({
   ],
 });
 
-export const Example = () => <Layout ir={ir} extensions={definitions} />;
+export const Example = () => <Layout ir={ir} compile={{ ...definitions }} />;
 ```
 
 </DocTab>

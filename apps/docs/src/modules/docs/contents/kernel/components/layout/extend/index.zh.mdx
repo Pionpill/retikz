@@ -17,13 +17,15 @@ description: 配置主题、注入能力、读取编译结果并控制更新
 
 `theme` 的显式字段覆盖已有 IR 的根主题；未声明字段保留原值。完整继承规则见[主题](/kernel/components/design/theme)。
 
-## 能力注入
+## 编译配置
 
-通过 `Layout.extensions` 按能力类别传入扩展定义。`shapes` 只是其中的形状扩展：下面的 `ShapeDefinition` 定义折角文件的占位、连接边界与输出图元，再通过 `extensions={{ shapes: [fileShape] }}` 注册。两个 Node 引用注册名 `drawio-file`，连线端点停在自定义轮廓上。
+`compile` 接受 Vanilla 完整的编译配置，既可以设置布局参数，也可以注册扩展。例如：`<Layout ir={sceneIR} compile={{ padding: 12, precision: 3 }} />`。
+
+通过 `Layout.compile` 按能力类别传入扩展定义。`shapes` 只是其中的形状扩展：下面的 `ShapeDefinition` 定义折角文件的占位、连接边界与输出图元，再通过 `compile={{ shapes: [fileShape] }}` 注册。两个 Node 引用注册名 `drawio-file`，连线端点停在自定义轮廓上。
 
 <ComponentPreview files={['layout-shape-injection', 'layout-file-shape.ts']} size="sm" />
 
-`extensions` 还支持连接边界（`boundaries`）、裁剪区（`clips`）、箭头（`arrows`）、图案（`patterns`）、路径类型（`paths`）、复合组件（`composites`）和主题风格（`themeDefinitions`）。这些定义统一通过 `extensions` 进入对应注册表，由编译过程消费。
+`compile` 还支持连接边界（`boundaries`）、裁剪区（`clips`）、箭头（`arrows`）、图案（`patterns`）、路径类型（`paths`）、复合组件（`composites`）和主题风格（`themeDefinitions`）。这些定义统一通过 `compile` 进入对应注册表，由编译过程消费。
 
 本节只展示形状扩展的接入方式；其他能力的定义与使用将在后续对应主题的自定义指南中分别说明。完整字段见 [API 参考](/kernel/components/layout/reference)。
 
@@ -40,9 +42,9 @@ description: 配置主题、注入能力、读取编译结果并控制更新
 `reconciler` 直接透传给 Vanilla。默认的 `full` 不保留增量缓存；`incremental` 保留缓存并支持协调器的批次更新策略。两种模式下，Layout 收到新的 JSX 或完整 IR 都调用 `replace` 完整编译，不会把 props 变化推断成增量批次。
 
 ```tsx
-<Layout />
-<Layout reconciler={{ mode: 'incremental', updateStrategy: 'auto' }} />
-<Layout onDiagnostic={diagnostic => console.warn(diagnostic.message)} />
+<Layout><Node /></Layout>
+<Layout ir={sceneIR} reconciler={{ mode: 'incremental', updateStrategy: 'auto' }} />
+<Layout ir={sceneIR} onDiagnostic={diagnostic => console.warn(diagnostic.message)} />
 ```
 
 后续输入替换失败时，Layout 继续显示上一次成功结果。两种模式均可通过 `onDiagnostic` 接收结构化诊断。
@@ -59,9 +61,9 @@ description: 配置主题、注入能力、读取编译结果并控制更新
 <ComponentProps
   items={[
     {
-      name: 'extensions',
+      name: 'compile',
       kind: 'property',
-      type: 'LayoutExtensions',
+      type: 'CompileOptions',
       description: '向 React Layout 注入自定义定义，包括裁剪区、连接面和路径能力',
     },
     {

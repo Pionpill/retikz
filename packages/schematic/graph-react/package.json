@@ -72,6 +72,7 @@
     "@retikz/graph": "workspace:*",
     "@retikz/graph-vanilla": "workspace:*",
     "@retikz/react": "workspace:^",
+    "@retikz/reconciler": "workspace:^",
     "@retikz/vanilla": "workspace:^"
   },
   "devDependencies": {

@@ -25,7 +25,7 @@ export const Diagram = () => {
   const lowerTexState = useLowerTex({ profile: 'math' });
 
   return (
-    <Layout lowerTex={lowerTexState.status === 'ready' ? lowerTexState.lowerTex : undefined}>
+    <Layout compile={{ lowerTex: lowerTexState.status === 'ready' ? lowerTexState.lowerTex : undefined }}>
       <Node position={[0, 0]}>{'$\\frac{a}{b}=c$'}</Node>
     </Layout>
   );

@@ -21,7 +21,7 @@ import { createElement, isValidElement } from 'react';
 const JsxParser = Parser.extend(jsx());
 
 const COMPONENT_REGISTRY: Record<string, FC<Record<string, unknown>> | undefined> = {
-  Layout,
+  Layout: Layout as unknown as FC<Record<string, unknown>>,
   Node,
   Path: Path as unknown as FC<Record<string, unknown>>,
   Step: Step as unknown as FC<Record<string, unknown>>,

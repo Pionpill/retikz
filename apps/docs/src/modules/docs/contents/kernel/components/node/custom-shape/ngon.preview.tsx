@@ -104,7 +104,7 @@ export type NgonPreviewValues = {
 /** 绘制示例图形 */
 export const NgonPreview = (values: NgonPreviewValues) => {
   return (
-    <Layout viewBox={{ x: -230, y: -125, width: 460, height: 250 }} extensions={{ shapes: [ngon] }}>
+    <Layout viewBox={{ x: -230, y: -125, width: 460, height: 250 }} compile={{ shapes: [ngon] }}>
       <Node
         id="source"
         position={[-155, 0]}

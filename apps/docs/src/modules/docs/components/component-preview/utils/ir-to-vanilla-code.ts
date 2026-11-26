@@ -11,6 +11,7 @@ import type {
   IRScope,
   IRStep,
   AnyPathDefinition,
+  ShapeDefinition,
 } from '@retikz/core';
 import type { IRFlowDiagram } from '@retikz/diagram/flow';
 import { FlowDiagramSchema } from '@retikz/diagram/flow';
@@ -38,7 +39,6 @@ import {
   RelationSchema,
 } from '@retikz/graph';
 import type { InputGraphChild } from '@retikz/graph-vanilla';
-import type { LayoutProps } from '@retikz/react';
 import type { IRQueue, IRStack } from '@retikz/standard/collection';
 import type { IRChain, IRChainItem } from '@retikz/standard/collection';
 import type { IRCell, IRMatrix, IRArray, IRArrayCell, IRMap } from '@retikz/standard/collection';
@@ -146,7 +146,7 @@ export type IrToVanillaCodeOptions = Readonly<{
   /** 当前图显式装配的 Path Definition */
   paths?: ReadonlyArray<AnyPathDefinition>;
   /** 当前图显式装配的形状定义 */
-  shapes?: NonNullable<LayoutProps['extensions']>['shapes'];
+  shapes?: ReadonlyArray<ShapeDefinition>;
 }>;
 
 type WayFrag = { text: string; comment?: boolean };

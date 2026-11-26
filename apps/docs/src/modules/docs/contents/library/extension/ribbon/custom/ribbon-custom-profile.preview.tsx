@@ -12,7 +12,7 @@ const pulseRibbonDefinition = createRibbonPathDefinition({ profiles: [pulseProfi
 
 /** 控件修改持久化 params，运行时 profile 函数据此计算轮廓 */
 export const renderRibbonCustomProfilePreview = (values: { base: number; peak: number }) => (
-  <Layout viewBox={{ x: -260, y: -130, width: 520, height: 260 }} extensions={{ paths: [pulseRibbonDefinition] }}>
+  <Layout viewBox={{ x: -260, y: -130, width: 520, height: 260 }} compile={{ paths: [pulseRibbonDefinition] }}>
     <Path
       kind="ribbon"
       kindOptions={{

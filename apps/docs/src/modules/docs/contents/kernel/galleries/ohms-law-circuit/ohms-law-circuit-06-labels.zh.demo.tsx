@@ -9,7 +9,7 @@ const INK = 'currentColor';
 const FONT = { family: 'Arial, sans-serif' } as const;
 
 const CircuitDemo: FC = () => (
-  <Layout extensions={{ shapes: [...circuitShapes, circuitMeter] }}>
+  <Layout compile={{ shapes: [...circuitShapes, circuitMeter] }}>
     <Scope
       defaults={{
         node: {

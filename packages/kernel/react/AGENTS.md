@@ -59,7 +59,7 @@ shared/                 跨模块共享的组件展示名与嵌入协议
 ## Renderer 接线
 
 - 输入是 Vanilla readonly processing result，不在 renderer 里重做 IR -> Scene 编译或 Runtime session。
-- `Layout` 透传 Vanilla 的 `reconciler` 选项；客户端复用 `SceneRuntime`，完整 IR / JSX 输入变化走 `replace`。React 不定义编译模式或推导增量批次。
+- `Layout` 复用 Vanilla 的 `SceneViewOptions`，只补 JSX 与 React 生命周期属性；客户端复用 `SceneRuntime`，完整 IR / JSX 输入变化走 `replace`。React 不定义编译模式或推导增量批次。
 - SSR SVG 只输出 opaque seed，首次客户端 layout effect 以 `adopt` 接管；后续 render 不重写 Render-owned descendants。
 - 坐标、anchor、bbox 等几何计算属于 core；react renderer 不重复实现。
 - SVG 输出形态优先改 `@retikz/render/svg`；react 侧保持 `SvgNode -> ReactElement` 薄映射。

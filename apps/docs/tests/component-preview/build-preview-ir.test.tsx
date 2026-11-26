@@ -5,7 +5,7 @@ import { Entity, Graph } from '@retikz/graph-react';
 import { graph, block } from '@retikz/graph-vanilla';
 import { Plot, PointMark } from '@retikz/plot-react';
 import { Draw, Layout, Node } from '@retikz/react';
-import type { LayoutProps } from '@retikz/react';
+import type { ScopeStyleProps } from '@retikz/react';
 import { Circle, Ellipse, Rectangle, Polygon, Star, Arc, Sector } from '@retikz/standard-react/shape';
 import type { InputEmbedAdapter } from '@retikz/vanilla';
 import type { FC } from 'react';
@@ -76,7 +76,11 @@ const HookedEmbeddable: FC & {
   inputEmbedAdapter?: InputEmbedAdapter;
 } = () => {
   useMemo(() => 1, []);
-  return <Layout width={40} height={20} />;
+  return (
+    <Layout width={40} height={20}>
+      {null}
+    </Layout>
+  );
 };
 
 HookedEmbeddable.displayName = 'HookedEmbeddable';
@@ -181,7 +185,7 @@ describe('buildPreviewIR', () => {
     expect(vanilla.svg).toContain('stroke="#123456"');
   });
 
-  it.each<LayoutProps['rootScope']>([undefined, {}, { defaults: undefined }])(
+  it.each<ScopeStyleProps | undefined>([undefined, {}, { defaults: undefined }])(
     'rootScope %j 没有 defaults 时不添加 Scope',
     rootScope => {
       const preview = buildPreviewIR(() => (

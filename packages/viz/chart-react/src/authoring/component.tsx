@@ -379,7 +379,7 @@ export const createTypedChartComponent = <
     const standalone = prepareStandaloneChartDeclarations(children, layout);
     const embeddedProps = { ...effectiveProps, children: standalone.children } as TProps;
 
-    return createElement(Layout, standalone.host, createElement(Component, embeddedProps));
+    return createElement(Layout, { ...standalone.host, children: createElement(Component, embeddedProps) });
   };
 
   const chart = Component as unknown as InputEmbeddableChartComponent<TProps, TInput, InputEmbedAdapter<TInput>>;

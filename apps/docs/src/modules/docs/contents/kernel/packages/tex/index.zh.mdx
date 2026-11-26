@@ -21,10 +21,10 @@ description: 浏览 @retikz/tex 的公式解析、lowering 与运行时接入
 
 按宿主选择注入入口。公式只有在 lowerer 注入后才会进入 MathJax lowering；未注入时，`$...$` 仍按普通文字兼容处理，显式 math segment 会被跳过并产生 Core warning。
 
-| 宿主    | 入口               | 接入位置                                                    |
-| ------- | ------------------ | ----------------------------------------------------------- |
-| React   | `useLowerTex()`    | 在 `<Layout lowerTex={lowerTex}>` 注入 ready 状态的 lowerer |
-| Vanilla | `createLowerTex()` | 将 `{ compile: { lowerTex } }` 传给 `compileToScene`        |
+| 宿主    | 入口               | 接入位置                                                       |
+| ------- | ------------------ | -------------------------------------------------------------- |
+| React   | `useLowerTex()`    | 在 `<Layout compile={{ lowerTex }}>` 注入 ready 状态的 lowerer |
+| Vanilla | `createLowerTex()` | 将 `{ compile: { lowerTex } }` 传给 `compileToScene`           |
 
 <DocTabs defaultValue="react">
 <DocTab value="react" label="React">
@@ -53,7 +53,7 @@ const Diagram = () => {
   if (lowerTexState.status === 'error') return <div>{lowerTexState.diagnostic.message}</div>;
 
   return (
-    <Layout lowerTex={lowerTexState.lowerTex}>
+    <Layout compile={{ lowerTex: lowerTexState.lowerTex }}>
       <Node position={[0, 0]}>{'$\\frac{a}{b} = c$'}</Node>
     </Layout>
   );

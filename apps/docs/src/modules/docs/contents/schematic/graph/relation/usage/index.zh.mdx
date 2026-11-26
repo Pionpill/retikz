@@ -50,7 +50,7 @@ const ir: IRScene = {
     { namespace: 'graph', type: 'relation', role: 'flow', source: { id: 'sender' }, target: { id: 'receiver' } },
   ],
 };
-const Example: FC = () => <Layout ir={ir} extensions={{ composites: createGraphDefinitions() }} />;
+const Example: FC = () => <Layout ir={ir} compile={{ composites: createGraphDefinitions() }} />;
 export default Example;
 ```
 

@@ -21,7 +21,7 @@ import { circleClipDefinition } from '@retikz/extension';
 import { Layout, Node, Scope } from '@retikz/react';
 
 export const Example = () => (
-  <Layout extensions={{ clips: [circleClipDefinition] }}>
+  <Layout compile={{ clips: [circleClipDefinition] }}>
     <Scope clip={{ kind: 'circle', params: { cx: 0, cy: 0, r: 50 } }}>
       <Node layout={{ minimumSize: { width: 160, height: 120 } }} />
     </Scope>
@@ -48,7 +48,7 @@ const ir: IRScene = {
     },
   ],
 };
-export const Example = () => <Layout ir={ir} extensions={{ clips: [circleClipDefinition] }} />;
+export const Example = () => <Layout ir={ir} compile={{ clips: [circleClipDefinition] }} />;
 ```
 
 </DocTab>

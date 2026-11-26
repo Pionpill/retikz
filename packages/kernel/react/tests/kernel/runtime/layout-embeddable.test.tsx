@@ -142,7 +142,7 @@ describe('<Layout> 复合提供者图', () => {
     User.inputEmbedAdapter = userAdapter;
 
     const svg = renderToStaticMarkup(
-      <Layout width={100} height={100} extensions={{ composites: [definitionOf(userKey)] }}>
+      <Layout width={100} height={100} compile={{ composites: [definitionOf(userKey)] }}>
         <Demo id="embedded" data={null} />
         <User id="manual" data={null} />
       </Layout>,
@@ -196,7 +196,7 @@ describe('<Layout> 复合提供者图', () => {
 
     expect(() =>
       renderToStaticMarkup(
-        <Layout width={100} height={100} extensions={{ composites: [definitionOf(key)] }}>
+        <Layout width={100} height={100} compile={{ composites: [definitionOf(key)] }}>
           <Valid id="conflict" data={null} />
         </Layout>,
       ),

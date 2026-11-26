@@ -768,6 +768,10 @@ export const apiReferenceBranchLabels: Readonly<
     },
     { value: 'malformed-svg', field: 'kind', type: "'malformed-svg'", label: { zh: '无效 SVG', en: 'Malformed SVG' } },
   ],
+  '@retikz/react#LayoutProps': [
+    { value: 'ir', field: 'ir', required: true, label: { zh: '完整 IR', en: 'Complete IR' } },
+    { value: 'children', field: 'children', required: true, label: { zh: 'JSX 子元素', en: 'JSX children' } },
+  ],
   '@retikz/react#NodeProps': nodeContentBranches,
   '@retikz/standard-react/presentation#FrameTitleProps': nodeContentBranches,
   '@retikz/standard-react/presentation#FrameDescriptionProps': nodeContentBranches,

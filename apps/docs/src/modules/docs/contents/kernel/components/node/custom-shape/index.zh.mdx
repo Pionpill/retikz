@@ -1,6 +1,6 @@
 ---
 title: 自定义形状
-description: 用 ShapeDefinition 扩展 Node 的占位、连接边界、anchor 与 Scene 输出，并通过 Layout.extensions.shapes 或 CompileOptions.shapes 注入统一形状注册表。
+description: 用 ShapeDefinition 扩展 Node 的占位、连接边界、anchor 与 Scene 输出，并通过 Layout.compile.shapes 或 CompileOptions.shapes 注入统一形状注册表。
 ---
 
 内置形状无法表达 cylinder、cloud 或业务图标时，可以注册一份 `ShapeDefinition`。IR（中间表示）仍只保存 `shape: 'hexagon'` 或 `{ type, params }` 这样的 JSON 引用；包含函数的定义留在运行时。
@@ -72,7 +72,7 @@ const badge = defineShape({
 
 ## 注入与使用
 
-定义创建后，通过 core 的 `CompileOptions.shapes` 或 React 的 `<Layout extensions={{ shapes }}>` 注入。两种入口接收同一份 `ReadonlyArray<ShapeDefinition>`。
+定义创建后，通过 core 的 `CompileOptions.shapes` 或 React 的 `<Layout compile={{ shapes }}>` 注入。两种入口接收同一份 `ReadonlyArray<ShapeDefinition>`。
 
 ```ts
 import { compileToScene } from '@retikz/vanilla';
@@ -85,7 +85,7 @@ const {
 ```tsx
 import { Layout, Node } from '@retikz/react';
 
-<Layout extensions={{ shapes: [badge] }}>
+<Layout compile={{ shapes: [badge] }}>
   <Node id="status" shape="badge" position={[0, 0]} text="Ready" />
 </Layout>;
 ```
@@ -129,7 +129,7 @@ IR 只写注册名或带参引用；宿主负责在每次编译时提供相同�
       description: '声明参数 schema、内容外接、连接点、锚点与 Scene 输出；通过 defineShape 定义',
     },
     {
-      name: 'Layout.extensions.shapes',
+      name: 'Layout.compile.shapes',
       kind: 'property',
       type: 'ReadonlyArray<ShapeDefinition>',
       description: '注入运行时定义；IR 的 shape 只保存名称与 JSON 参数',

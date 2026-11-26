@@ -14,7 +14,7 @@ This page supports two import styles:
 
 Both styles explicitly assemble capabilities for the current figure. Importing the package does not register shapes globally.
 
-All four entries draw the same cross. React passes the Definition through `Layout.extensions.shapes`; Vanilla passes it through `compile.shapes`. The shape name and JSON parameters belong to the node data, while the Definition is configured for this rendering invocation.
+All four entries draw the same cross. React passes the Definition through `Layout.compile.shapes`; Vanilla passes it through `compile.shapes`. The shape name and JSON parameters belong to the node data, while the Definition is configured for this rendering invocation.
 
 <ComponentPreview files="entry" size="xs" hideCode />
 
@@ -26,7 +26,7 @@ import { crossShapeDefinition } from '@retikz/extension';
 import { Layout, Node } from '@retikz/react';
 
 export const Example = () => (
-  <Layout extensions={{ shapes: [crossShapeDefinition] }}>
+  <Layout compile={{ shapes: [crossShapeDefinition] }}>
     <Node
       shape="cross"
       layout={{ minimumSize: { width: 80, height: 80 } }}
@@ -56,7 +56,7 @@ const ir: IRScene = {
     },
   ],
 };
-export const Example = () => <Layout ir={ir} extensions={{ shapes: [crossShapeDefinition] }} />;
+export const Example = () => <Layout ir={ir} compile={{ shapes: [crossShapeDefinition] }} />;
 ```
 
 </DocTab>

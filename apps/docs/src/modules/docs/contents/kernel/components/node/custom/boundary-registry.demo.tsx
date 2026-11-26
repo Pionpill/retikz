@@ -24,7 +24,7 @@ const horizontalPorts: BoundaryDefinition = defineBoundary({
 });
 
 const Demo: FC = () => (
-  <Layout extensions={{ boundaries: [horizontalPorts] }}>
+  <Layout compile={{ boundaries: [horizontalPorts] }}>
     <Node id="source" position={[-150, 0]} text="A" shape="circle" style={{ fill: 'lightgray', stroke: 'gray' }} />
     <Node
       id="controller"

@@ -1224,6 +1224,20 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
+          label: { zh: 'DOM 与 React 共享视图配置', en: 'Shared DOM and React view options' },
+          content: {
+            zh: 'SceneViewOptions 统一尺寸、动画、初始事件、compile 与 reconciler。DOM 挂载的 output 与 animation 字段改为平铺，runtime.rendererFactory 改为 rendererFactory，更新策略放入 reconciler；默认完整编译。SVG 字符串导出不变。',
+            en: 'SceneViewOptions unifies sizing, animation, initial handlers, compile and reconciler. For DOM mounts, flatten output and animation, move runtime.rendererFactory to rendererFactory and configure update strategy under reconciler. Full compilation is the default. SVG string export is unchanged.',
+          },
+        },
+        {
+          label: { zh: 'Layout 透传完整编译配置', en: 'Layout forwards all compile options' },
+          content: {
+            zh: '使用 compile 传入 Vanilla 的完整编译配置。原顶层的 measureText、lowerTex、nodeDistance、fontSize 以及 extensions 中的定义均移至 compile；reconciler 仍独立配置。',
+            en: 'Use compile for the complete Vanilla compile options. Move measureText, lowerTex, nodeDistance, fontSize and the definitions formerly under extensions into compile. The reconciler prop remains separate.',
+          },
+        },
+        {
           label: { zh: 'Layout 复用协调器配置', en: 'Layout uses reconciler options' },
           content: {
             zh: '移除 React 的 runtime 属性与 session/static 模式。使用 reconciler 配置协调器（默认 full），原 runtime.onDiagnostic 改为顶层 onDiagnostic。完整输入变化始终通过 replace 完整编译。',

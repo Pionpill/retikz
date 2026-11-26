@@ -220,13 +220,7 @@ export const buildPreviewSource = (input: BuildPreviewSourceInput): BuildPreview
             files: [{ filename: `${name}.ir.json`, code: irJson, lang: 'json' as const }],
             render:
               previewIr !== null && !hasComposite
-                ? (mode: RenderMode) => (
-                    <Layout
-                      ir={previewIr.ir}
-                      renderer={mode}
-                      extensions={{ paths: previewIr.paths, shapes: previewIr.shapes }}
-                    />
-                  )
+                ? (mode: RenderMode) => <Layout ir={previewIr.ir} renderer={mode} compile={previewIr.compile} />
                 : undefined,
           },
         }

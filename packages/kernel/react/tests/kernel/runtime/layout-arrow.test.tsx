@@ -44,7 +44,7 @@ describe('Layout 箭头样式输出', () => {
 
   it('自定义空心箭头保留定义输出的无填充语义', () => {
     const svg = renderToStaticMarkup(
-      <Layout width={100} height={100} extensions={{ arrows: [TestOpenArrowDefinition] }}>
+      <Layout width={100} height={100} compile={{ arrows: [TestOpenArrowDefinition] }}>
         <Path arrow={{ end: { shape: 'testOpen', fill: 'red' } }}>
           <Step kind="move" to={[0, 0]} />
           <Step kind="line" to={[80, 0]} />

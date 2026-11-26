@@ -33,7 +33,7 @@ const ir: IRScene = {
 describe('<Layout composites> Tier 2 透传', () => {
   it('注入 composites 后含 composite 的 IR 渲染出 rect', () => {
     const svg = renderToStaticMarkup(
-      <Layout width={100} height={100} ir={ir} extensions={{ composites: [labeledBox] }} />,
+      <Layout width={100} height={100} ir={ir} compile={{ composites: [labeledBox] }} />,
     );
 
     expect(svg).toContain('<rect');

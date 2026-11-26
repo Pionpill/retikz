@@ -12,10 +12,7 @@ export const previewControls = previewControlContract.controls;
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   const detail = { length: values.length, width: values.width, lineWidth: values.lineWidth, color: values.color };
   return (
-    <Layout
-      viewBox={{ x: -190, y: -55, width: 380, height: 110 }}
-      extensions={{ arrows: [straightBarbArrowDefinition] }}
-    >
+    <Layout viewBox={{ x: -190, y: -55, width: 380, height: 110 }} compile={{ arrows: [straightBarbArrowDefinition] }}>
       <Draw
         way={[
           [-110, 0],

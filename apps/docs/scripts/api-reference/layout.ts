@@ -40,7 +40,8 @@ const layoutConfig: ApiReferencePackageConfig = {
       source: path.resolve(repositoryRoot, 'packages/kernel/react/src/index.ts'),
       title: { zh: '`@retikz/react`', en: '`@retikz/react`' },
       symbolPairs: [['Layout', 'LayoutProps']],
-      symbols: ['Layout', 'LayoutProps', 'LayoutExtensions'],
+      fullMemberSymbols: ['LayoutProps'],
+      symbols: ['Layout', 'LayoutProps'],
     },
   ],
   translate: translateLayoutApiReference,
@@ -57,7 +58,7 @@ export const layoutApiReferenceConfigs: ReadonlyArray<ApiReferencePackageConfig>
       {
         source: path.resolve(repositoryRoot, 'packages/kernel/vanilla/src/index.ts'),
         title: { zh: '`@retikz/vanilla`', en: '`@retikz/vanilla`' },
-        symbols: ['scene', 'SceneOptions', 'InputScene', 'layer', 'layerFromInput', 'InputLayer'],
+        symbols: ['SceneViewOptions', 'scene', 'SceneOptions', 'InputScene', 'layer', 'layerFromInput', 'InputLayer'],
       },
     ],
     translate: translateLayoutApiReference,

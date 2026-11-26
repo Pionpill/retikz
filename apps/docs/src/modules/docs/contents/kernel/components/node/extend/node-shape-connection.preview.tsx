@@ -85,7 +85,7 @@ export type NodeShapeConnectionPreviewValues = {
 /** 绘制示例图形 */
 export const NodeShapeConnectionPreview = (values: NodeShapeConnectionPreviewValues) => {
   return (
-    <Layout extensions={{ shapes: [boundaryGuideShape, sectorShapeDefinition, starShapeDefinition] }}>
+    <Layout compile={{ shapes: [boundaryGuideShape, sectorShapeDefinition, starShapeDefinition] }}>
       <Node
         id="A"
         position={[-150, 0]}

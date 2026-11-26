@@ -12,7 +12,7 @@ export type StarExamplePreviewValues = {
 
 /** 绘制示例图形 */
 export const renderStarExamplePreview = (values: StarExamplePreviewValues) => (
-  <Layout viewBox={{ x: -105, y: -85, width: 210, height: 170 }} extensions={{ shapes: [starShapeDefinition] }}>
+  <Layout viewBox={{ x: -105, y: -85, width: 210, height: 170 }} compile={{ shapes: [starShapeDefinition] }}>
     <Node
       position={[0, 0]}
       shape={{ type: 'star', params: values }}

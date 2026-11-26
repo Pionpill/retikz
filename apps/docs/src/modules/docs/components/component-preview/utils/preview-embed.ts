@@ -15,15 +15,13 @@ import { FlowDiagram } from '@retikz/diagram-react/flow';
 import type { AssertEqual } from '@retikz/foundation';
 import type { PlotLineageProps } from '@retikz/plot-react';
 import { Plot } from '@retikz/plot-react';
-import type { LayoutExtensions, LayoutProps } from '@retikz/react';
+import type { LayoutProps } from '@retikz/react';
 import { resolveInputEmbedAdapter } from '@retikz/react';
+import type { CompileOptions } from '@retikz/reconciler';
 import type { ReactElement, ReactNode } from 'react';
 import { createElement, Fragment, isValidElement } from 'react';
 
-type PlotStandaloneProps = Pick<
-  LayoutProps & LayoutExtensions,
-  'className' | 'style' | 'renderer' | 'themeDefinitions'
-> &
+type PlotStandaloneProps = Pick<LayoutProps & CompileOptions, 'className' | 'style' | 'renderer' | 'themeDefinitions'> &
   PlotLineageProps;
 
 const PLOT_STANDALONE_PROP_KEYS = [
@@ -151,7 +149,7 @@ export const previewEmbedPropsOf = (
 /** 读取预览根最终交给外层 Layout 的输出尺寸 */
 export const previewHostDimensionsOf = (
   component: ReactElement['type'],
-  props: Readonly<Record<string, unknown>>,
+  props: Readonly<Record<string, unknown>> & PreviewHostDimensions,
 ): PreviewHostDimensions => {
   const adapter = resolveInputEmbedAdapter(component);
   if (
@@ -169,7 +167,7 @@ export const previewHostDimensionsOf = (
     return preparePreviewChartProps(props).host;
 
   return {
-    ...(props.width === undefined ? {} : { width: props.width as LayoutProps['width'] }),
-    ...(props.height === undefined ? {} : { height: props.height as LayoutProps['height'] }),
+    ...(props.width === undefined ? {} : { width: props.width }),
+    ...(props.height === undefined ? {} : { height: props.height }),
   };
 };

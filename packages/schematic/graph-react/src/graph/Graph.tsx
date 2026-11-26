@@ -146,13 +146,28 @@ const GraphComponent: FC<GraphProps> = props => {
       },
     };
   }, [ambientGraphThemeDefinitions, generatedId, props]);
-  const { shapes, boundaries, clips, arrows, patterns, paths, composites, themeDefinitions, ...hostProps } =
-    graphLayoutHostPropsOf(props);
+  const {
+    nodeDistance,
+    fontSize,
+    lowerTex,
+    shapes,
+    boundaries,
+    clips,
+    arrows,
+    patterns,
+    paths,
+    composites,
+    themeDefinitions,
+    ...hostProps
+  } = graphLayoutHostPropsOf(props);
 
   return (
     <Layout
       {...hostProps}
-      extensions={{
+      compile={{
+        nodeDistance,
+        fontSize,
+        lowerTex,
         shapes,
         boundaries,
         clips,

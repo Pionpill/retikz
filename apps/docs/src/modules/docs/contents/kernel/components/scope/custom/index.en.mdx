@@ -83,14 +83,14 @@ The Definition is a shared React / Vanilla runtime object and never becomes pers
 <DocTabs defaultValue="react">
 <DocTab value="react" label="React">
 
-Register the Definition through `Layout.extensions.clips`; Scope contains only its persistent `kind` and parameters.
+Register the Definition through `Layout.compile.clips`; Scope contains only its persistent `kind` and parameters.
 
 ```tsx
 import { Layout, Node, Scope } from '@retikz/react';
 import { roundedRectClip } from './rounded-rect-clip';
 
 const Demo = () => (
-  <Layout extensions={{ clips: [roundedRectClip] }}>
+  <Layout compile={{ clips: [roundedRectClip] }}>
     <Scope clip={{ kind: 'rounded-rect', params: { x: -150, y: -72, width: 300, height: 144, radius: 36 } }}>
       <Node
         position={[-88, -8]}
@@ -200,13 +200,13 @@ A `{ capability: 'clip', name: kind }` provider in a provider graph likewise cre
 
 ## Errors and limits
 
-| Case                             | Result                                                                                                   |
-| -------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| Duplicate kind                   | The registry reports a definition conflict and never overwrites it                                       |
-| Unknown `clip.kind`              | Reports the kind and suggests Core `options.clips`, React `extensions.clips`, or Vanilla `compile.clips` |
-| Definition / spec kind differs   | Fails as a provider contract violation before `lower`                                                    |
-| Spec fails its schema            | Reports the provider key, schema phase, and validation cause                                             |
-| Recursion exceeds `maxClipDepth` | Fails; the root and recursive children share a budget of 32 conversions, one per invocation              |
+| Case                             | Result                                                                                                |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Duplicate kind                   | The registry reports a definition conflict and never overwrites it                                    |
+| Unknown `clip.kind`              | Reports the kind and suggests Core `options.clips`, React `compile.clips`, or Vanilla `compile.clips` |
+| Definition / spec kind differs   | Fails as a provider contract violation before `lower`                                                 |
+| Spec fails its schema            | Reports the provider key, schema phase, and validation cause                                          |
+| Recursion exceeds `maxClipDepth` | Fails; the root and recursive children share a budget of 32 conversions, one per invocation           |
 
 A compound shape appends child commands in authored order and applies its outer `fillRule`; it is not a geometric intersection. Use nested `<Scope clip>` elements for intersection.
 
@@ -238,7 +238,7 @@ These are the members most often used to define, inject, and reference a custom 
       description: 'Provides precision rounding and child-clip path generation',
     },
     {
-      name: 'Layout.extensions.clips',
+      name: 'Layout.compile.clips',
       kind: 'property',
       type: 'ReadonlyArray<ClipDefinition>',
       description: 'The React-host entry point for registering clips',

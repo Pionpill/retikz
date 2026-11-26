@@ -1,6 +1,6 @@
 ---
 title: Custom shapes
-description: Extend Node layout, connection boundaries, anchors, and Scene output with ShapeDefinition, then inject it through Layout.extensions.shapes or CompileOptions.shapes.
+description: Extend Node layout, connection boundaries, anchors, and Scene output with ShapeDefinition, then inject it through Layout.compile.shapes or CompileOptions.shapes.
 ---
 
 When built-in shapes cannot express a cylinder, cloud, or domain-specific icon, register a `ShapeDefinition`. The IR (intermediate representation) still stores only a JSON reference such as `shape: 'hexagon'` or `{ type, params }`; the function-bearing definition stays at runtime.
@@ -72,7 +72,7 @@ Some graphics cannot express their connection rules as “intersect a ray from t
 
 ## Inject and use
 
-After creating the definition, inject it through core's `CompileOptions.shapes` or React's `<Layout extensions={{ shapes }}>`. Both entry points accept the same `ReadonlyArray<ShapeDefinition>`.
+After creating the definition, inject it through core's `CompileOptions.shapes` or React's `<Layout compile={{ shapes }}>`. Both entry points accept the same `ReadonlyArray<ShapeDefinition>`.
 
 ```ts
 import { compileToScene } from '@retikz/vanilla';
@@ -85,7 +85,7 @@ const {
 ```tsx
 import { Layout, Node } from '@retikz/react';
 
-<Layout extensions={{ shapes: [badge] }}>
+<Layout compile={{ shapes: [badge] }}>
   <Node id="status" shape="badge" position={[0, 0]} text="Ready" />
 </Layout>;
 ```
@@ -130,7 +130,7 @@ By default, `scaleParams` deep-scales every numeric leaf by `Math.sqrt(sx * sy)`
         'Declare parameter schema, content bounds, connection points, anchors and Scene output through defineShape',
     },
     {
-      name: 'Layout.extensions.shapes',
+      name: 'Layout.compile.shapes',
       kind: 'property',
       type: 'ReadonlyArray<ShapeDefinition>',
       description: 'Inject runtime definitions; IR shape stores only the name and JSON parameters',

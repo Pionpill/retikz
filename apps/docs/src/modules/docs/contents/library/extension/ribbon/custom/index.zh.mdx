@@ -53,7 +53,7 @@ export const pulseRibbonDefinition = createRibbonPathDefinition({ profiles: [pul
 <DocTabs defaultValue="react">
 <DocTab value="react" label="React">
 
-将 Definition 传入 `Layout.extensions.paths`，用 Path 与 Step 描述中心线：
+将 Definition 传入 `Layout.compile.paths`，用 Path 与 Step 描述中心线：
 
 ```tsx
 import { Layout, Path, Step } from '@retikz/react';
@@ -61,7 +61,7 @@ import { Layout, Path, Step } from '@retikz/react';
 import { pulseRibbonDefinition } from './pulse-profile';
 
 export const Example = () => (
-  <Layout viewBox={{ x: -260, y: -130, width: 520, height: 260 }} extensions={{ paths: [pulseRibbonDefinition] }}>
+  <Layout viewBox={{ x: -260, y: -130, width: 520, height: 260 }} compile={{ paths: [pulseRibbonDefinition] }}>
     <Path
       kind="ribbon"
       kindOptions={{
@@ -155,7 +155,7 @@ import { Layout } from '@retikz/react';
 import { pulseRibbonDefinition } from './pulse-profile';
 import { ir } from './ribbon-ir';
 
-export const Example = () => <Layout ir={ir} extensions={{ paths: [pulseRibbonDefinition] }} />;
+export const Example = () => <Layout ir={ir} compile={{ paths: [pulseRibbonDefinition] }} />;
 ```
 
 </DocStep>
@@ -238,7 +238,7 @@ Provider 只负责把 Definition 和 runtime profile dataset 装配成普通 Cor
       description: '把自定义 profiles 与内置 bulge 合入同一个 ribbon Definition',
     },
     {
-      name: 'Layout.extensions.paths',
+      name: 'Layout.compile.paths',
       kind: 'property',
       type: 'ReadonlyArray<PathDefinition>',
       description: '在当前图显式注入唯一的 Ribbon Definition；导入模块本身不会注册',

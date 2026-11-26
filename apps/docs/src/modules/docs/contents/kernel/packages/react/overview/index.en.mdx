@@ -115,14 +115,14 @@ Equivalent inline extension arrays such as `[shape]` do not trigger recompilatio
 Layout passes `reconciler` to Vanilla. The default `full` mode does not retain an incremental cache; `incremental` retains the cache and supports batch update strategies. In either mode, new JSX or complete IR goes through `replace` and is compiled in full. Layout does not infer a batch from changed props.
 
 ```tsx
-<Layout />
-<Layout reconciler={{ mode: 'incremental', updateStrategy: 'auto' }} />
-<Layout onDiagnostic={diagnostic => console.warn(diagnostic.message)} />
+<Layout><Node /></Layout>
+<Layout ir={sceneIR} reconciler={{ mode: 'incremental', updateStrategy: 'auto' }} />
+<Layout ir={sceneIR} onDiagnostic={diagnostic => console.warn(diagnostic.message)} />
 ```
 
 <SourceLinks
   sources={[
-    { label: 'Layout', path: 'packages/kernel/react/src/components/layout/Layout.tsx', startLine: 161 },
+    { label: 'Layout', path: 'packages/kernel/react/src/components/layout/Layout.tsx', startLine: 134 },
     { label: 'SceneRuntime', path: 'packages/kernel/vanilla/src/runtime/runtime.ts' },
     { label: 'SceneReconcilerOptions', path: 'packages/kernel/reconciler/src/reconcile/types.ts' },
   ]}
@@ -162,8 +162,8 @@ Use `Layout.onCompileResult` to receive the compiled frame after React commits. 
     {
       label: 'Layout constructing the processing source and options',
       path: 'packages/kernel/react/src/components/layout/Layout.tsx',
-      startLine: 266,
-      endLine: 298,
+      startLine: 98,
+      endLine: 133,
     },
     {
       label: 'Core IR to Scene compiler',
@@ -181,21 +181,21 @@ Scene no longer contains React component semantics. Vanilla processing obtains t
 | SVG    | Manages the processing controller, Core Computation, and Scene result | Maps the result with `ProcessingResultHost` and binds hydration |
 | Canvas | Manages the processing controller, Core Computation, and Scene result | Maps the result with `ProcessingResultHost` to a Canvas host    |
 
-Event handlers are functions and cannot enter JSON IR. In children mode, React separately runs `collectHydrationHandlers` to collect functions by primitive id, then binds them after rendering through SVG location or Canvas hit-testing. With the `ir` prop, the `handlers` prop supplies this runtime side channel instead.
+Handlers stay outside IR. React collects JSX events and then adds explicit handlers by element ID; both run in that order for the same event. Complete IR uses only the explicit table.
 
 <SourceLinks
   sources={[
     {
       label: 'Layout passing source and options to Vanilla processing',
       path: 'packages/kernel/react/src/components/layout/Layout.tsx',
-      startLine: 266,
-      endLine: 298,
+      startLine: 98,
+      endLine: 133,
     },
     {
       label: 'React mapping a processing result to SVG or Canvas',
       path: 'packages/kernel/react/src/render/processing-result.tsx',
-      startLine: 106,
-      endLine: 185,
+      startLine: 91,
+      endLine: 170,
     },
     {
       label: 'JSX handler runtime side channel',

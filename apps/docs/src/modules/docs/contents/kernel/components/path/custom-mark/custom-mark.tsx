@@ -28,7 +28,7 @@ export const previewSource = {
     return {
       ir: {
         files: [{ filename: 'custom-mark.ir.json', code: JSON.stringify(ir, null, 2), lang: 'json' as const }],
-        render: mode => <Layout ir={ir} renderer={mode} extensions={{ marks: [ringMark] }} />,
+        render: mode => <Layout ir={ir} renderer={mode} compile={{ marks: [ringMark] }} />,
       },
       vanilla: {
         files: [{ filename: 'custom-mark.vanilla.ts', code: vanillaCode.trimEnd(), lang: 'ts' as const }],

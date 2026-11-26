@@ -102,7 +102,7 @@ describe('扩展根条目集成', () => {
 
   it('通过 React SSR 呈现相同的显式组装的能力集', () => {
     const markup = renderToStaticMarkup(
-      <Layout ir={source} extensions={definitions} idPrefix="extension-provider-entry" />,
+      <Layout ir={source} compile={definitions} idPrefix="extension-provider-entry" />,
     );
 
     expect(markup).toContain('<svg');

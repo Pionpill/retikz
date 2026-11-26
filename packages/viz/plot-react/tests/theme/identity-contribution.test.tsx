@@ -49,7 +49,7 @@ describe('Plot React InputEmbed 路由', () => {
 
     const layout = capturedLayouts.at(-1);
 
-    expect(layout?.extensions).toEqual({ themeDefinitions: [] });
+    expect(layout?.compile).toEqual({ themeDefinitions: [] });
     expect(layout).not.toHaveProperty('ir');
     expect(layout).not.toHaveProperty('composites');
     expect(Reflect.has(Plot, 'inputEmbedAdapter')).toBe(true);

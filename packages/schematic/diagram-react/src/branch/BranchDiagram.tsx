@@ -34,13 +34,28 @@ BranchRuntimeEmbed.createInputEmbedProps = props => (props as BranchRuntimeEmbed
 const BranchDiagramComponent: FC<BranchDiagramProps> = props => {
   const generatedId = useId();
   const input = useMemo(() => collectBranchDiagramInput(props, false), [props]);
-  const { shapes, boundaries, clips, arrows, patterns, paths, composites, themeDefinitions, ...hostProps } =
-    branchDiagramLayoutHostPropsOf(props);
+  const {
+    nodeDistance,
+    fontSize,
+    lowerTex,
+    shapes,
+    boundaries,
+    clips,
+    arrows,
+    patterns,
+    paths,
+    composites,
+    themeDefinitions,
+    ...hostProps
+  } = branchDiagramLayoutHostPropsOf(props);
 
   return (
     <Layout
       {...hostProps}
-      extensions={{
+      compile={{
+        nodeDistance,
+        fontSize,
+        lowerTex,
         shapes,
         boundaries,
         clips,

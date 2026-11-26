@@ -5,7 +5,8 @@ import type {
   InputBranchNode,
 } from '@retikz/diagram-vanilla/branch';
 import type { BranchDiagramDefinitionOptions } from '@retikz/diagram/branch';
-import type { LayoutExtensions, LayoutProps, ReactInputEmbedContext } from '@retikz/react';
+import type { LayoutProps, ReactInputEmbedContext } from '@retikz/react';
+import type { CompileOptions } from '@retikz/reconciler';
 import type { ReactNode } from 'react';
 import { Children, Fragment, isValidElement } from 'react';
 
@@ -14,7 +15,7 @@ import { Branch } from './Branch';
 import { BranchNode } from './BranchNode';
 
 export type BranchDiagramLayoutHostProps = Pick<
-  LayoutProps & LayoutExtensions,
+  LayoutProps & CompileOptions,
   | 'authoring'
   | 'handlers'
   | 'reconciler'

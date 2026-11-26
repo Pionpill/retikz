@@ -1,3 +1,4 @@
+import type { IRScene } from '@retikz/core';
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
 
 // @vitest-environment jsdom
@@ -43,9 +44,7 @@ afterEach(() => {
 describe('<Layout onCompileResult>', () => {
   it('在 SSR 渲染期间不发布用户回调', () => {
     const onCompileResult = vi.fn();
-    renderToStaticMarkup(
-      <Layout ir={scene(10)} extensions={{ composites: [card] }} onCompileResult={onCompileResult} />,
-    );
+    renderToStaticMarkup(<Layout ir={scene(10)} compile={{ composites: [card] }} onCompileResult={onCompileResult} />);
 
     expect(onCompileResult).not.toHaveBeenCalled();
   });
@@ -59,7 +58,7 @@ describe('<Layout onCompileResult>', () => {
       root.render(
         <Layout
           ir={scene(10)}
-          extensions={{ composites: [card] }}
+          compile={{ composites: [card] }}
           onCompileResult={onCompileResult}
           reconciler={{ mode }}
         />,
@@ -73,17 +72,27 @@ describe('<Layout onCompileResult>', () => {
   });
 
   it('保留直接编译的Scene 和领域产物', async () => {
-    const direct = compileTestResult(scene(10), { composites: [card] });
+    const compile = { composites: [card], padding: 36, precision: 1 };
+    const direct = compileTestResult(scene(10), compile);
     const onCompileResult = vi.fn();
     const container = document.createElement('div');
     const root = createRoot(container);
 
-    await act(() =>
-      root.render(<Layout ir={scene(10)} extensions={{ composites: [card] }} onCompileResult={onCompileResult} />),
-    );
+    await act(() => root.render(<Layout ir={scene(10)} compile={compile} onCompileResult={onCompileResult} />));
 
     const reactResult = onCompileResult.mock.calls[0]?.[0] as CompileResult;
     expect(reactResult).toEqual(direct);
+    await act(() => root.unmount());
+  });
+
+  it('移除 compile 后恢复默认编译配置', async () => {
+    const ir: IRScene = { type: 'scene', version: 1, children: [{ type: 'node', id: 'n', position: [0, 0] }] };
+    const onCompileResult = vi.fn();
+    const root = createRoot(document.createElement('div'));
+    await act(() => root.render(<Layout ir={ir} compile={{ padding: 40 }} onCompileResult={onCompileResult} />));
+    expect(onCompileResult).toHaveBeenLastCalledWith(compileTestResult(ir, { padding: 40 }));
+    await act(() => root.render(<Layout ir={ir} onCompileResult={onCompileResult} />));
+    expect(onCompileResult).toHaveBeenLastCalledWith(compileTestResult(ir));
     await act(() => root.unmount());
   });
 
@@ -93,11 +102,11 @@ describe('<Layout onCompileResult>', () => {
     const root = createRoot(container);
 
     await act(() =>
-      root.render(<Layout ir={scene(10)} extensions={{ composites: [card] }} onCompileResult={onCompileResult} />),
+      root.render(<Layout ir={scene(10)} compile={{ composites: [card] }} onCompileResult={onCompileResult} />),
     );
     const initial = onCompileResult.mock.calls[0]?.[0];
     await act(() =>
-      root.render(<Layout ir={scene(20)} extensions={{ composites: [card] }} onCompileResult={onCompileResult} />),
+      root.render(<Layout ir={scene(20)} compile={{ composites: [card] }} onCompileResult={onCompileResult} />),
     );
 
     expect(onCompileResult).toHaveBeenCalledTimes(2);
@@ -119,7 +128,7 @@ describe('<Layout onCompileResult>', () => {
     });
 
     await act(() =>
-      root.render(<Layout ir={scene(10)} extensions={{ composites: [card] }} onCompileResult={onCompileResult} />),
+      root.render(<Layout ir={scene(10)} compile={{ composites: [card] }} onCompileResult={onCompileResult} />),
     );
 
     expect(container.querySelector('svg')).not.toBeNull();

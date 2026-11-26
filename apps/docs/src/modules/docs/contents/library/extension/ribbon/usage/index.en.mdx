@@ -31,7 +31,7 @@ import { ribbonPathDefinition } from '@retikz/extension';
 import { Layout, Path, Step } from '@retikz/react';
 
 export const Example = () => (
-  <Layout extensions={{ paths: [ribbonPathDefinition] }}>
+  <Layout compile={{ paths: [ribbonPathDefinition] }}>
     <Path
       kind="ribbon"
       kindOptions={{ width: { kind: 'taper', start: 32, end: 12 } } satisfies IRRibbonPathOptions}
@@ -70,7 +70,7 @@ const ir: IRScene = {
   ],
 };
 
-export const Example = () => <Layout ir={ir} extensions={{ paths: [ribbonPathDefinition] }} />;
+export const Example = () => <Layout ir={ir} compile={{ paths: [ribbonPathDefinition] }} />;
 ```
 
 </DocTab>

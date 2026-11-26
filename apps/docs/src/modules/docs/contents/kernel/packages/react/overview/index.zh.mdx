@@ -115,14 +115,14 @@ const explicit = (
 `reconciler` 直接透传给 Vanilla。默认的 `full` 不保留增量缓存；`incremental` 保留缓存并支持协调器的批次更新策略。两种模式下，Layout 收到新的 JSX 或完整 IR 都调用 `replace` 完整编译，不会把 props 变化推断成增量批次。
 
 ```tsx
-<Layout />
-<Layout reconciler={{ mode: 'incremental', updateStrategy: 'auto' }} />
-<Layout onDiagnostic={diagnostic => console.warn(diagnostic.message)} />
+<Layout><Node /></Layout>
+<Layout ir={sceneIR} reconciler={{ mode: 'incremental', updateStrategy: 'auto' }} />
+<Layout ir={sceneIR} onDiagnostic={diagnostic => console.warn(diagnostic.message)} />
 ```
 
 <SourceLinks
   sources={[
-    { label: 'Layout', path: 'packages/kernel/react/src/components/layout/Layout.tsx', startLine: 161 },
+    { label: 'Layout', path: 'packages/kernel/react/src/components/layout/Layout.tsx', startLine: 134 },
     { label: 'SceneRuntime', path: 'packages/kernel/vanilla/src/runtime/runtime.ts' },
     { label: 'SceneReconcilerOptions', path: 'packages/kernel/reconciler/src/reconcile/types.ts' },
   ]}
@@ -162,8 +162,8 @@ const explicit = (
     {
       label: 'Layout 构造 processing source 与 options',
       path: 'packages/kernel/react/src/components/layout/Layout.tsx',
-      startLine: 266,
-      endLine: 298,
+      startLine: 98,
+      endLine: 133,
     },
     {
       label: 'Core IR 编译为 Scene',
@@ -181,21 +181,21 @@ Scene 已经没有 React 组件语义。Vanilla processing 负责发布当前 re
 | SVG    | 管理 processing controller、Core Computation 与 Scene 结果 | 用 `ProcessingResultHost` 映射为稳定 SVG 并绑定 hydration |
 | Canvas | 管理 processing controller、Core Computation 与 Scene 结果 | 用 `ProcessingResultHost` 映射为 Canvas 宿主              |
 
-事件 handler 是函数，不能进入 JSON IR。children 模式下，React 侧会用另一条 `collectHydrationHandlers` 扫描按图元 id 收集函数；渲染完成后再绑定到 SVG 定位或 Canvas hit-test。直接传 `ir` prop 时，则通过 `handlers` prop 提供这条运行时旁路。
+事件函数不进入 IR。React 先收集 JSX 图元事件，再按图元 id 合并显式 `handlers`；同一事件依次调用两者。传入完整 IR 时只使用显式事件表。
 
 <SourceLinks
   sources={[
     {
       label: 'Layout 将 source 与 options 交给 Vanilla processing',
       path: 'packages/kernel/react/src/components/layout/Layout.tsx',
-      startLine: 266,
-      endLine: 298,
+      startLine: 98,
+      endLine: 133,
     },
     {
       label: 'React 将 processing result 映射为 SVG 或 Canvas 宿主',
       path: 'packages/kernel/react/src/render/processing-result.tsx',
-      startLine: 106,
-      endLine: 185,
+      startLine: 91,
+      endLine: 170,
     },
     {
       label: 'JSX handler 运行时旁路',

@@ -10,7 +10,7 @@ export type CustomMarkPreviewProps = { radius: number; position: number; scale: 
 export const CustomMarkPreview: FC<CustomMarkPreviewProps> = props => {
   const { radius, position, scale, color } = props;
   return (
-    <Layout extensions={{ marks: [ringMark] }} viewBox={{ x: -160, y: -60, width: 320, height: 120 }}>
+    <Layout compile={{ marks: [ringMark] }} viewBox={{ x: -160, y: -60, width: 320, height: 120 }}>
       <Draw
         way={[
           [-120, 0],

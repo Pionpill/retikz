@@ -22,7 +22,7 @@ An ArrowDefinition serves both Path endpoints and `marks[].shape`. It does not o
 
 A custom arrow extends **endpoint marker geometry**. IR stores only an open shape name and visual parameters. After the host injects an `ArrowDefinition`, core resolves it from the shared registry and emits renderer-neutral `ScenePrimitive` geometry during compilation.
 
-The example below registers a hollow `bracket` arrow through `<Layout extensions={{ arrows }}>`. Its definition, injection, and Draw usage live in one runnable file.
+The example below registers a hollow `bracket` arrow through `<Layout compile={{ arrows }}>`. Its definition, injection, and Draw usage live in one runnable file.
 
 <ComponentPreview files="custom-arrow-basic" size="xs" />
 
@@ -83,7 +83,7 @@ The effective Path `color` overrides the arrow's own `color`; explicit arrow `st
 
 ## Register and use
 
-React injects definitions through `<Layout extensions={{ arrows }}>`; direct core calls use `CompileOptions.arrows`. Endpoints and path marks then reference the registered name.
+React injects definitions through `<Layout compile={{ arrows }}>`; direct core calls use `CompileOptions.arrows`. Endpoints and path marks then reference the registered name.
 
 Registration checks the definition's geometry: `backX`, `lineContactX`, and explicit `tipX` and `outerInset` must be finite; an explicit `baseSize` must be finite and positive. They must satisfy `backX <= lineContactX <= tipX`. An omitted `tipX` uses `baseSize`, or `10` when both are omitted. Invalid definitions are rejected at registration even when the drawing does not reference them. Non-finite results from scaling and other calculations are still checked during compilation.
 
@@ -93,7 +93,7 @@ Registration checks the definition's geometry: `backX`, `lineContactX`, and expl
 ```tsx
 import { Draw, Layout } from '@retikz/react';
 
-<Layout extensions={{ arrows: [bracket] }}>
+<Layout compile={{ arrows: [bracket] }}>
   <Draw
     way={[
       [0, 0],
@@ -173,7 +173,7 @@ These are the members most often used to define, inject, and reference a custom 
         'Declare the arrow name, hollow state, base size, and `emit` function that produces marker primitives.',
     },
     {
-      name: 'Layout.extensions.arrows',
+      name: 'Layout.compile.arrows',
       kind: 'property',
       type: 'ReadonlyArray<ArrowDefinition>',
       description: 'Inject arrow definitions into a React Layout so Path and Draw can resolve them by name.',

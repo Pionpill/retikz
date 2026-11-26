@@ -83,7 +83,7 @@ import type { FC } from 'react';
 import { horizontalPorts } from './horizontal-ports';
 
 const Demo: FC = () => (
-  <Layout extensions={{ boundaries: [horizontalPorts] }}>
+  <Layout compile={{ boundaries: [horizontalPorts] }}>
     <Node id="io" position={[0, 0]} boundary="horizontal-ports">
       IO
     </Node>
@@ -159,7 +159,7 @@ compileToScene(ir, { compile: { boundaries: [biasedPorts, biasedPorts] } });
       description: '注册表与编译器消费的连接面定义',
     },
     {
-      name: 'Layout.extensions.boundaries',
+      name: 'Layout.compile.boundaries',
       kind: 'property',
       type: 'ReadonlyArray<BoundaryDefinition>',
       description: 'React 宿主注入连接面定义的入口',

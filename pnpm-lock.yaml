@@ -1117,6 +1117,9 @@ importers:
       '@retikz/react':
         specifier: workspace:^
         version: link:../../kernel/react
+      '@retikz/reconciler':
+        specifier: workspace:^
+        version: link:../../kernel/reconciler
       '@retikz/vanilla':
         specifier: workspace:^
         version: link:../../kernel/vanilla
@@ -1237,6 +1240,9 @@ importers:
       '@retikz/react':
         specifier: workspace:^
         version: link:../../kernel/react
+      '@retikz/reconciler':
+        specifier: workspace:^
+        version: link:../../kernel/reconciler
       '@retikz/vanilla':
         specifier: workspace:^
         version: link:../../kernel/vanilla

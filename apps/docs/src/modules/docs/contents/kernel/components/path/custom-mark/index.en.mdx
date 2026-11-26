@@ -39,7 +39,7 @@ Registration checks static geometry: `baseSize` must be finite and positive, and
 import { Draw, Layout } from '@retikz/react';
 import { ringMark } from './ring-mark';
 
-<Layout extensions={{ marks: [ringMark] }}>
+<Layout compile={{ marks: [ringMark] }}>
   <Draw
     way={[
       [0, 0],
@@ -146,7 +146,7 @@ Emit basic Scene primitives, not DOM, ReactNode, or unmeasured text. Resource re
       description: 'Custom parameters, resolved styles, and a coordinate precision function.',
     },
     {
-      name: 'Layout.extensions.marks',
+      name: 'Layout.compile.marks',
       kind: 'property',
       type: 'ReadonlyArray<MarkDefinition>',
       description: 'The React registration entry. Core uses CompileOptions.marks; Vanilla mount uses compile.marks.',

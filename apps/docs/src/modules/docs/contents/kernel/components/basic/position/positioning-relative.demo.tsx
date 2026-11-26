@@ -4,7 +4,7 @@ import type { FC } from 'react';
 const labelFont = { size: 12 };
 
 const Demo: FC = () => (
-  <Layout nodeDistance={70}>
+  <Layout compile={{ nodeDistance: 70 }}>
     <Node id="center" position={[0, 0]}>
       A
     </Node>

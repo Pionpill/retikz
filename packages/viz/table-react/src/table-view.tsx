@@ -38,7 +38,19 @@ const isRootTableArtifact = (artifact: CompositeArtifact): artifact is TableComp
 export const TableRuntimeView: FC<Readonly<{ runtime: ReactTableRuntime }>> = ({ runtime }) => {
   const { table, lowerOptions, composites, onManifest, display, datasetReference, datasetSource, preparedData } =
     runtime;
-  const { shapes, boundaries, clips, arrows, patterns, paths, themeDefinitions, ...hostProps } = display;
+  const {
+    nodeDistance,
+    fontSize,
+    lowerTex,
+    shapes,
+    boundaries,
+    clips,
+    arrows,
+    patterns,
+    paths,
+    themeDefinitions,
+    ...hostProps
+  } = display;
   const tableKey = JSON.stringify(table);
   const stableTable = useMemo<InputTableVariant>(() => JSON.parse(tableKey) as InputTableVariant, [tableKey]);
 
@@ -149,7 +161,18 @@ export const TableRuntimeView: FC<Readonly<{ runtime: ReactTableRuntime }>> = ({
     <Layout
       onArtifacts={onManifest === undefined ? undefined : handleArtifacts}
       {...hostProps}
-      extensions={{ shapes, boundaries, clips, arrows, patterns, paths, themeDefinitions }}
+      compile={{
+        nodeDistance,
+        fontSize,
+        lowerTex,
+        shapes,
+        boundaries,
+        clips,
+        arrows,
+        patterns,
+        paths,
+        themeDefinitions,
+      }}
     >
       {inputChild}
     </Layout>

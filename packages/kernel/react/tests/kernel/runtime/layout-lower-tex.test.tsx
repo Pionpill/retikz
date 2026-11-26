@@ -29,10 +29,10 @@ const lowerTex: TexLowerer = () => ({
   depth: 2,
 });
 
-describe('<Layout lowerTex>多路径直通', () => {
+describe('<Layout compile={{ lowerTex }}>多路径直通', () => {
   it('把 custom lowerer 的多条路径与 paint 交给同一 Core consumer', () => {
     const svg = renderToStaticMarkup(
-      <Layout lowerTex={lowerTex}>
+      <Layout compile={{ lowerTex }}>
         <Node position={[0, 0]} text={[{ segments: [{ tex: 'x', fill: 'royalblue' }] }]} />
       </Layout>,
     );

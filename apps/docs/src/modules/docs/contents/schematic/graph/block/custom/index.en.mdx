@@ -58,7 +58,7 @@ const source: ServiceSource = {
   logic: { body: { kind: 'text', text: 'loadUser(id)' } },
 };
 const Example: FC = () => (
-  <Layout extensions={{ themeDefinitions: [coreStyle] }}>
+  <Layout compile={{ themeDefinitions: [coreStyle] }}>
     <ServiceBlock {...source} />
   </Layout>
 );

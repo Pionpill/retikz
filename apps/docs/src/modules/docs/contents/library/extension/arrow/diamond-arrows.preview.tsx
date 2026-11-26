@@ -14,7 +14,7 @@ export const renderDiamondArrowsPreview = (values: DiamondArrowsPreviewValues) =
   return (
     <Layout
       viewBox={{ x: -210, y: -80, width: 420, height: 160 }}
-      extensions={{ arrows: [diamondArrowDefinition, openDiamondArrowDefinition] }}
+      compile={{ arrows: [diamondArrowDefinition, openDiamondArrowDefinition] }}
     >
       <Draw
         way={[

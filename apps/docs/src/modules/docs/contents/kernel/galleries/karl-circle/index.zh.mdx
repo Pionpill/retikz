@@ -63,7 +63,7 @@ description: 学术 / 教材类绘图示例——30° 角下 sin / cos / tan 的
 
 ### 步骤 2：加坐标轴 + 端点标签 + 命名锚
 
-x 轴和 y 轴用 [Draw](/kernel/components/path/usage) 配 `arrow="->"` 一键画带箭头的线段。轴端的 `x` / `y` 现在写成 [@retikz/tex](/kernel/packages/tex/authoring) 的 `$x$` / `$y$` 行内公式（[Node](/kernel/components/node/usage) 文本里的 `$...$`），渲染成数学斜体字母（`stroke="none"` 去掉默认外框）。这是本页第一处公式，所以**从这一步起每个 demo 都用 `useLowerTex()` 启动 MathJax、再注入 `<Layout lowerTex>`**；没注入时 `$...$` 一律字面、含公式的内容静默降级、不崩。[Coordinate](/kernel/components/node/coordinate) 给两个端点命名（`x-axis` / `y-axis`），后续 step 可以用 id 字符串引用——本例其实没引用到，但保留以贴合 TikZ 的 `coordinate(x axis)` 风格习惯。
+x 轴和 y 轴用 [Draw](/kernel/components/path/usage) 配 `arrow="->"` 一键画带箭头的线段。轴端的 `x` / `y` 现在写成 [@retikz/tex](/kernel/packages/tex/authoring) 的 `$x$` / `$y$` 行内公式（[Node](/kernel/components/node/usage) 文本里的 `$...$`），渲染成数学斜体字母（`stroke="none"` 去掉默认外框）。这是本页第一处公式，所以**从这一步起每个 demo 都用 `useLowerTex()` 启动 MathJax、再注入 `<Layout compile={{ lowerTex }}>`**；没注入时 `$...$` 一律字面、含公式的内容静默降级、不崩。[Coordinate](/kernel/components/node/coordinate) 给两个端点命名（`x-axis` / `y-axis`），后续 step 可以用 id 字符串引用——本例其实没引用到，但保留以贴合 TikZ 的 `coordinate(x axis)` 风格习惯。
 
 <ComponentPreview files={{ file: 'karl-circle-02-axes', diffFrom: 'karl-circle-01-circle' }} size="lg" />
 

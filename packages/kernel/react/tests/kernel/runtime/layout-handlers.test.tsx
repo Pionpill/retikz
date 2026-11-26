@@ -7,13 +7,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Layout, Node } from '../../../src';
 import { normalizeReactInput } from '../../helpers/normalize-input';
 
-/**
- * 水合：JSX 模式下 `handlers` prop 被忽略（契约）
- * @description <Layout> 的 `handlers` prop 仅在 `ir` prop 模式生效（无 JSX children 可收集时按 id 提供注册表）。
- *   JSX/标记组件模式下事件经组件自身的 `on<Event>` props 收集，错误传入的 `handlers` prop 应被静默忽略、不报错、
- *   也不参与分发。对照组验证 `ir` prop 模式下 `handlers` prop 确实生效，钉死两条路径的分工
- */
-
 const SIZE = 200;
 
 beforeEach(() => {
@@ -25,10 +18,10 @@ afterEach(() => {
 });
 
 describe('JSX 模式 handlers prop 契约', () => {
-  it('JSX children + 误传 handlers prop：只走 JSX 的 on<Event>，handlers prop 被忽略', async () => {
+  it('同一事件先调用 JSX 回调，再调用显式 handlers', async () => {
     const fromJsx = vi.fn();
     const fromHandlersProp = vi.fn();
-    const bogusHandlers: HydrationHandlers = { a: { click: fromHandlersProp } };
+    const handlers: HydrationHandlers = { a: { click: fromHandlersProp } };
 
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -36,7 +29,7 @@ describe('JSX 模式 handlers prop 契约', () => {
 
     await act(() => {
       root.render(
-        <Layout renderer="svg" width={SIZE} height={SIZE} handlers={bogusHandlers}>
+        <Layout renderer="svg" width={SIZE} height={SIZE} handlers={handlers}>
           <Node id="a" position={[0, 0]} onClick={fromJsx} style={{ fill: 'red' }} layout={{ minimumSize: 2 }} />
         </Layout>,
       );
@@ -50,17 +43,17 @@ describe('JSX 模式 handlers prop 契约', () => {
       target!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
 
-    // JSX 路径触发；handlers prop 完全没参与（即便它也注册了 id="a" 的 click）
+    expect(fromJsx.mock.invocationCallOrder[0]).toBeLessThan(fromHandlersProp.mock.invocationCallOrder[0]);
     expect(fromJsx).toHaveBeenCalledTimes(1);
-    expect(fromHandlersProp).not.toHaveBeenCalled();
+    expect(fromHandlersProp).toHaveBeenCalledOnce();
 
     root.unmount();
     container.remove();
   });
 
-  it('JSX children 上无 on<Event> + 误传 handlers prop：handlers prop 不补位，点击无任何回调', async () => {
+  it('JSX 子元素没有回调时使用显式 handlers', async () => {
     const fromHandlersProp = vi.fn();
-    const bogusHandlers: HydrationHandlers = { a: { click: fromHandlersProp } };
+    const handlers: HydrationHandlers = { a: { click: fromHandlersProp } };
 
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -68,7 +61,7 @@ describe('JSX 模式 handlers prop 契约', () => {
 
     await act(() => {
       root.render(
-        <Layout renderer="svg" width={SIZE} height={SIZE} handlers={bogusHandlers}>
+        <Layout renderer="svg" width={SIZE} height={SIZE} handlers={handlers}>
           <Node id="a" position={[0, 0]} style={{ fill: 'red' }} layout={{ minimumSize: 2 }} />
         </Layout>,
       );
@@ -82,13 +75,13 @@ describe('JSX 模式 handlers prop 契约', () => {
       target!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
 
-    expect(fromHandlersProp).not.toHaveBeenCalled();
+    expect(fromHandlersProp).toHaveBeenCalledOnce();
 
     root.unmount();
     container.remove();
   });
 
-  it('对照：ir prop 模式下 handlers prop 生效（同一 prop 仅此路径有效）', async () => {
+  it('完整 IR 使用显式 handlers', async () => {
     const fromHandlersProp = vi.fn();
     const ir = normalizeReactInput(
       <Node id="a" position={[0, 0]} style={{ fill: 'red' }} layout={{ minimumSize: 2 }} />,

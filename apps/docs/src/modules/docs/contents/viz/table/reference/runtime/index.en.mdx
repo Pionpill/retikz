@@ -130,7 +130,7 @@ The two `ManualTable` authoring modes are mutually exclusive. Props mode forward
 
 | Shared prop                | Type                                               | Default | Description                                            |
 | -------------------------- | -------------------------------------------------- | ------- | ------------------------------------------------------ |
-| `containerStyle?`          | `LayoutProps['style']`                             | —       | Standalone host CSS; unsupported when embedded         |
+| `containerStyle?`          | `CSSProperties`                                    | —       | Standalone host CSS; unsupported when embedded         |
 | `formatterDefinitions?`    | `TablesLoweringOptions['formatterDefinitions']`    | `[]`    | Custom Cell formatter definitions                      |
 | `structureDefinitions?`    | `TablesLoweringOptions['structureDefinitions']`    | `[]`    | Custom Structure definitions                           |
 | `presentationDefinitions?` | `TablesLoweringOptions['presentationDefinitions']` | `[]`    | Custom Cell presentation definitions                   |
@@ -145,13 +145,13 @@ The owner factories merge the five definition categories and composites by stabl
 
 ### Theme inputs
 
-| Input                | Type                              | Default | Purpose                                                                   |
-| -------------------- | --------------------------------- | ------- | ------------------------------------------------------------------------- |
-| `theme?`             | `IRScene['theme']`                | —       | Standalone root Core Theme; embedded mode uses the outer `<Layout theme>` |
-| `themeDefinitions?`  | `LayoutProps['themeDefinitions']` | `[]`    | Standalone Core theme definitions; supplied by the outer host             |
-| `defaultAppearance?` | `IRTable['defaultAppearance']`    | `{}`    | Sparse appearance defaults for existing Cells                             |
-| `defaultVisual?`     | `IRTable['defaultVisual']`        | `{}`    | Default color ranges for existing visual encodings                        |
-| `defaultTable?`      | `IRTable['defaultTable']`         | `{}`    | Sparse defaults below explicit Source fields                              |
+| Input                | Type                             | Default | Purpose                                                                   |
+| -------------------- | -------------------------------- | ------- | ------------------------------------------------------------------------- |
+| `theme?`             | `IRScene['theme']`               | —       | Standalone root Core Theme; embedded mode uses the outer `<Layout theme>` |
+| `themeDefinitions?`  | `ReadonlyArray<ThemeDefinition>` | `[]`    | Standalone Core theme definitions; supplied by the outer host             |
+| `defaultAppearance?` | `IRTable['defaultAppearance']`   | `{}`    | Sparse appearance defaults for existing Cells                             |
+| `defaultVisual?`     | `IRTable['defaultVisual']`       | `{}`    | Default color ranges for existing visual encodings                        |
+| `defaultTable?`      | `IRTable['defaultTable']`        | `{}`    | Sparse defaults below explicit Source fields                              |
 
 `theme.name` / `theme.mode` select the Core environment and the same-named Table theme definition. Core `colors.categorical` projects into Table `defaultVisual.categorical`, after which Source defaults and explicit layout fields can replace default leaves. Host `containerStyle` remains CSS and is outside this cascade. Custom styles enter standalone mode through `themeDefinitions` and `tableThemeDefinitions`; React subtrees may instead combine the Core `ThemeProvider` with `TableThemeProvider`. In embedded mode the outer Layout supplies the Core definition.
 

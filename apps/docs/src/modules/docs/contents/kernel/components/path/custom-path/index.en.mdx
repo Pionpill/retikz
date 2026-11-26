@@ -23,7 +23,7 @@ The `primitives` and `boundsPoints` returned by `compile` accept `Iterable`, inc
 
 A custom Path extends **how the whole path is emitted**. IR stores only an open `kind` and JSON-safe `kindOptions`. After the host injects a `PathDefinition`, core resolves it from the shared registry and lets it produce Scene primitives.
 
-The `highlight` kind below reuses Core stroke emission and emits a wide underlay and a thin centerline from one path. Its definition, `<Layout extensions={{ paths }}>` injection, and usage live in one runnable example.
+The `highlight` kind below reuses Core stroke emission and emits a wide underlay and a thin centerline from one path. Its definition, `<Layout compile={{ paths }}>` injection, and usage live in one runnable example.
 
 <ComponentPreview files="custom-path-highlight" size="xs" />
 
@@ -75,7 +75,7 @@ const highlight = definePath<HighlightPath>({
 
 ## Register and use
 
-React injects definitions through `<Layout extensions={{ paths }}>`; direct core calls use `CompileOptions.paths`. A Path references only the registered name and instance options.
+React injects definitions through `<Layout compile={{ paths }}>`; direct core calls use `CompileOptions.paths`. A Path references only the registered name and instance options.
 
 <DocTabs defaultValue="react">
 <DocTab value="react" label="React">
@@ -83,7 +83,7 @@ React injects definitions through `<Layout extensions={{ paths }}>`; direct core
 ```tsx
 import { Layout, Path, Step } from '@retikz/react';
 
-<Layout extensions={{ paths: [highlight] }}>
+<Layout compile={{ paths: [highlight] }}>
   <Path kind="highlight" kindOptions={{ strokeWidth: 12 }}>
     <Step kind="move" to={[0, 0]} />
     <Step kind="line" to={[120, 0]} />
@@ -156,7 +156,7 @@ These are the members most often used to define, inject, and reference a custom 
       description: 'Declare the kind name, complete Path schema, and compilation function that emits Scene primitives.',
     },
     {
-      name: 'Layout.extensions.paths',
+      name: 'Layout.compile.paths',
       kind: 'property',
       type: 'ReadonlyArray<AnyPathDefinition>',
       description: 'Inject Path definitions into a React Layout.',

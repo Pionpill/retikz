@@ -21,10 +21,10 @@ Compare inline, explicit-segment, and display formulas below. Choose the intende
 
 Choose the injection entry for your host. Formulas enter MathJax lowering only after a lowerer is injected; without it, `$...$` strings stay compatible ordinary text and explicit math segments are skipped with a Core warning.
 
-| Host    | Entry              | Integration point                                            |
-| ------- | ------------------ | ------------------------------------------------------------ |
-| React   | `useLowerTex()`    | Inject the ready lowerer with `<Layout lowerTex={lowerTex}>` |
-| Vanilla | `createLowerTex()` | Pass `{ compile: { lowerTex } }` to `compileToScene`         |
+| Host    | Entry              | Integration point                                               |
+| ------- | ------------------ | --------------------------------------------------------------- |
+| React   | `useLowerTex()`    | Inject the ready lowerer with `<Layout compile={{ lowerTex }}>` |
+| Vanilla | `createLowerTex()` | Pass `{ compile: { lowerTex } }` to `compileToScene`            |
 
 <DocTabs defaultValue="react">
 <DocTab value="react" label="React">
@@ -53,7 +53,7 @@ const Diagram = () => {
   if (lowerTexState.status === 'error') return <div>{lowerTexState.diagnostic.message}</div>;
 
   return (
-    <Layout lowerTex={lowerTexState.lowerTex}>
+    <Layout compile={{ lowerTex: lowerTexState.lowerTex }}>
       <Node position={[0, 0]}>{'$\\frac{a}{b} = c$'}</Node>
     </Layout>
   );

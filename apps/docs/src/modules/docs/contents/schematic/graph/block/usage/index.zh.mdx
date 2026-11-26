@@ -79,7 +79,7 @@ const ir: IRScene = {
     },
   ],
 };
-const Example: FC = () => <Layout ir={ir} extensions={{ composites: createGraphDefinitions() }} />;
+const Example: FC = () => <Layout ir={ir} compile={{ composites: createGraphDefinitions() }} />;
 export default Example;
 ```
 

@@ -82,7 +82,7 @@ const clippedIr: IRScene = {
 describe('<Layout shapes> 自定义 shape 注入', () => {
   it('注入 shapes 后 <Node shape="hexagon"> 渲染出自定义 emit（ellipse）', () => {
     const svg = renderToStaticMarkup(
-      <Layout width={100} height={100} extensions={{ shapes: [radialShape()] }}>
+      <Layout width={100} height={100} compile={{ shapes: [radialShape()] }}>
         <Node id="A" shape="hexagon" position={[0, 0]} text="hex" />
       </Layout>,
     );
@@ -105,7 +105,7 @@ describe('<Layout 边界> 自定义边界直通', () => {
   it('将边界提供者传递给 SceneReconciler', () => {
     expect(() =>
       renderToStaticMarkup(
-        <Layout width={120} height={80} extensions={{ boundaries: [fixedBoundary()] }}>
+        <Layout width={120} height={80} compile={{ boundaries: [fixedBoundary()] }}>
           <Node id="A" position={[0, 0]} boundary="pin" layout={{ minimumSize: 40 }} />
           <Path>
             <Step kind="move" to={[100, 0]} />
@@ -133,7 +133,7 @@ describe('<Layout 边界> 自定义边界直通', () => {
 
 describe('<Layout 裁剪> 完整的裁剪定义直通', () => {
   it('将一个完整的裁剪注册表转发给静态 Vanilla 处理和 SSR', () => {
-    const svg = renderToStaticMarkup(<Layout ir={clippedIr} extensions={{ clips: [customClip()] }} />);
+    const svg = renderToStaticMarkup(<Layout ir={clippedIr} compile={{ clips: [customClip()] }} />);
 
     expect(svg).toContain('<clipPath');
   });

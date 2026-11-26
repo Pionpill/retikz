@@ -18,7 +18,7 @@ export const renderRibbonLabelPreview = (values: RibbonLabelPreviewValues, lang:
       : ({ placement: 'outside', side: values.side } as const);
 
   return (
-    <Layout viewBox={{ x: -280, y: -130, width: 560, height: 260 }} extensions={{ paths: [ribbonPathDefinition] }}>
+    <Layout viewBox={{ x: -280, y: -130, width: 560, height: 260 }} compile={{ paths: [ribbonPathDefinition] }}>
       <Path
         kind="ribbon"
         kindOptions={{
