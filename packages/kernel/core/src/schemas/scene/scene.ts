@@ -48,7 +48,7 @@ export const SceneSchema = strictObject({
   viewBox: ViewBoxSchema.optional().describe(
     'Explicit framing; when omitted, bounds are computed from content plus padding.',
   ),
-  animations: array(AnimationTrackSchema).optional().describe('Root tracks can animate the viewBox.'),
+  animations: array(AnimationTrackSchema).readonly().optional().describe('Root tracks can animate the viewBox.'),
 }).describe('JSON-serializable scene data describing one drawing.');
 
 /**
