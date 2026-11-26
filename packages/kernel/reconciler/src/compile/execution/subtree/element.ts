@@ -91,8 +91,15 @@ export class CompileElementExecutor {
     };
   }
 
-  /** 完成延迟输出与最终排序，不负责选择失效元素 */
-  finish(state: SubtreeCompileState): SubtreeCompilation {
+  /** 全量遍历当前根的子项；增量调度独立构建同形状态 */
+  compileRootChildren(): SubtreeCompileState {
+    const frame = this.createRootRuntime();
+    this.compileChildren(this.rootChildren, frame, true);
+    return frame.state;
+  }
+
+  /** 完成绘制输出；根 Scene 无需父布局测量与重放数据 */
+  finishDrawing(state: SubtreeCompileState) {
     flushPendingPathEmissions(this.runtime, this.output, state.paths);
 
     let visualBounds: SubtreeCompilation['visualBounds'];
@@ -112,20 +119,24 @@ export class CompileElementExecutor {
       (a, b) => (this.output.zIndexMap.get(a) ?? 0) - (this.output.zIndexMap.get(b) ?? 0),
     );
 
+    return { primitives, visualBounds, artifacts: orderCompileArtifacts(state.artifacts) };
+  }
+
+  /** 子树同时交付父布局测量与重放所需的几何和顺序 */
+  finish(state: SubtreeCompileState): SubtreeCompilation {
+    const drawing = this.finishDrawing(state);
     const alignmentGuides = resolveStructuralAlignmentGuides(state.alignmentGuides);
 
     return {
-      primitives,
-      primitiveZIndices: primitives.map(primitive => this.output.zIndexMap.get(primitive)),
+      ...drawing,
+      primitiveZIndices: drawing.primitives.map(primitive => this.output.zIndexMap.get(primitive)),
       layout: {
         ...(this.rootContribution === undefined ? {} : { contribution: this.rootContribution }),
         allocations: state.allocations.filter(allocation => allocation.skipAllocation !== true),
         ...(alignmentGuides === undefined ? {} : { alignmentGuides }),
       },
-      visualBounds,
       geometries: state.geometries,
       bounds: state.bounds,
-      artifacts: orderCompileArtifacts(state.artifacts),
     };
   }
 

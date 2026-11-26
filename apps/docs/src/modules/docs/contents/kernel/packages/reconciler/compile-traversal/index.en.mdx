@@ -17,7 +17,7 @@ Using the structures from [Runtime State](/kernel/packages/reconciler/compile-st
 
 ## Traversing a scope’s subtree
 
-Full compilation starts with <ApiSourceLink label="assembleCompileSubtree" path="packages/kernel/reconciler/src/compile/execution/subtree/compile.ts" startLine={163}>`assembleCompileSubtree`</ApiSourceLink> visiting the root children. When traversal reaches a scope, <ApiSourceLink label="visitScope" path="packages/kernel/reconciler/src/compile/execution/scope/visit.ts" startLine={303}>`visitScope`</ApiSourceLink> schedules the three stages below for its subtree. The parent resumes at the next sibling only after the inner visit finishes.
+Full compilation starts with <ApiSourceLink label="compileRootChildren" path="packages/kernel/reconciler/src/compile/execution/subtree/element.ts" startLine={95}>`compileRootChildren`</ApiSourceLink> visiting the root children. When traversal reaches a scope, <ApiSourceLink label="visitScope" path="packages/kernel/reconciler/src/compile/execution/scope/visit.ts" startLine={303}>`visitScope`</ApiSourceLink> schedules the three stages below for its subtree. The parent resumes at the next sibling only after the inner visit finishes.
 
 1. **Enter:** Prepare a child execution frame from the parent settings, push a local name frame if requested, then visit children in declaration order.
 2. **Return from the children:** Use the collected layouts to calculate the scope’s bounds and final transforms, update the geometry, and resolve this scope’s pending paths.

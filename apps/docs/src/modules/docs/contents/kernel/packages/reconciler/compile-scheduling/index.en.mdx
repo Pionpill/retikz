@@ -17,7 +17,7 @@ A full compilation begins when the session receives a scene declaration. Reconci
 
 <ComponentPreview files="scheduling-overview" size="sm" hideCode type="flow" />
 
-The session passes the root declaration and compilation options to <ApiSourceLink label="createCompileRuntime" path="packages/kernel/reconciler/src/reconcile/reconciler.ts" startLine={58}>`createCompileRuntime`</ApiSourceLink>, preparing capabilities and workspace state for name lookup, resource registration and diagnostics. <ApiSourceLink label="compileScene" path="packages/kernel/reconciler/src/compile/execution/scene.ts" startLine={69}>`compileScene`</ApiSourceLink> then hands the root’s children to the subtree executor. It passes the resulting subtree, the root declaration and the same runtime to scene assembly. The session receives a snapshot from this entry point; the executor determines when each element can be computed.
+The session passes the root declaration and compilation options to <ApiSourceLink label="createCompileRuntime" path="packages/kernel/reconciler/src/reconcile/reconciler.ts" startLine={58}>`createCompileRuntime`</ApiSourceLink>, preparing capabilities and workspace state for name lookup, resource registration and diagnostics. <ApiSourceLink label="compileScene" path="packages/kernel/reconciler/src/compile/execution/scene.ts" startLine={69}>`compileScene`</ApiSourceLink> then hands the root’s children to the subtree executor. It passes the resulting drawing output, the root declaration and the same runtime to scene assembly. The session receives a snapshot from this entry point; the executor determines when each element can be computed.
 
 ## Declaration order and evaluation order
 
@@ -33,7 +33,7 @@ In the Core example below, the root declares a path, node A and node B in that o
   type="illustration"
 />
 
-Traversal starts at the root. <ApiSourceLink label="assembleCompileSubtree" path="packages/kernel/reconciler/src/compile/execution/subtree/compile.ts" startLine={163}>`assembleCompileSubtree`</ApiSourceLink> creates a frame for the root’s children and visits them in declaration order. Track the contents of the same primitive
+Traversal starts at the root. <ApiSourceLink label="compileRootChildren" path="packages/kernel/reconciler/src/compile/execution/subtree/element.ts" startLine={95}>`compileRootChildren`</ApiSourceLink> creates a frame for the root’s children and visits them in declaration order. Track the contents of the same primitive
 list:
 
 | When               | What the executor does                                                                                                                                                                                                                                                                      | Primitive list (abbreviated) |
@@ -62,7 +62,7 @@ This sequence explains when Reconciler invokes each stage. For the calculation o
 
 ## From subtree to scene snapshot
 
-After filling the path slot, the subtree returns ordered primitives, visible bounds and any domain artifacts produced by Composites. <ApiSourceLink label="finalizeSceneCompilation" path="packages/kernel/reconciler/src/compile/execution/scene.ts" startLine={20}>`finalizeSceneCompilation`</ApiSourceLink> assembles the scene: an explicit `viewBox` determines its layout; otherwise the compiler derives it from visible bounds and padding. Paint and clip resources, when present, come from the same workspace. This step does not visit the nodes and paths again.
+After filling the path slot, the root returns only ordered primitives, visible bounds and any Composite artifacts. It does not assemble parent measurement or replay data. <ApiSourceLink label="finalizeSceneCompilation" path="packages/kernel/reconciler/src/compile/execution/scene.ts" startLine={20}>`finalizeSceneCompilation`</ApiSourceLink> assembles the scene: an explicit `viewBox` determines its layout; otherwise the compiler derives it from visible bounds and padding. Paint and clip resources, when present, come from the same workspace. This step does not visit the nodes and paths again.
 
 The caller reads the renderable Scene from `compilation.result.scene` on the mount result. Domain artifacts live alongside the Scene in `artifacts`; diagnostics and optional provenance belong to the compilation snapshot. A renderer can consume drawing data alone, while tools can inspect records from the same compilation.
 

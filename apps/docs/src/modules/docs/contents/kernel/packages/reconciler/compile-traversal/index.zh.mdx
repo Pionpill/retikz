@@ -17,7 +17,7 @@ Reconciler 以子树（subtree）为单位遍历声明：从场景根的 `childr
 
 ## 遍历 Scope 承载的子树
 
-全量编译从 <ApiSourceLink label="assembleCompileSubtree" path="packages/kernel/reconciler/src/compile/execution/subtree/compile.ts" startLine={163}>`assembleCompileSubtree`</ApiSourceLink> 遍历根子项。遇到 Scope 时，<ApiSourceLink label="visitScope" path="packages/kernel/reconciler/src/compile/execution/scope/visit.ts" startLine={303}>`visitScope`</ApiSourceLink> 为它的子树安排下面三个阶段；内层结束后，父层才继续处理下一个兄弟项。
+全量编译从 <ApiSourceLink label="compileRootChildren" path="packages/kernel/reconciler/src/compile/execution/subtree/element.ts" startLine={95}>`compileRootChildren`</ApiSourceLink> 遍历根子项。遇到 Scope 时，<ApiSourceLink label="visitScope" path="packages/kernel/reconciler/src/compile/execution/scope/visit.ts" startLine={303}>`visitScope`</ApiSourceLink> 为它的子树安排下面三个阶段；内层结束后，父层才继续处理下一个兄弟项。
 
 1. **进入**：根据父层配置准备子执行帧，按需压入局部名称帧，然后按声明顺序访问子项。
 2. **返回**：子项遍历结束，用收集到的布局计算 Scope 的边界和最终变换，更新几何，再求值本层待处理的路径。

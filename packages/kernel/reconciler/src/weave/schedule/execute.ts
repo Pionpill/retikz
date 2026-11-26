@@ -508,5 +508,5 @@ export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinitio
     appendState(rootFrame.state, outputOf(entry)),
   );
   if (pending.size !== 0) throw createExecutionInvariantError('Weave computations did not reach output readiness');
-  return finalizeSceneCompilation<TComposite>(source, runtime, blocks ?? rootExecutor.finish(rootFrame.state));
+  return finalizeSceneCompilation<TComposite>(source, runtime, blocks ?? rootExecutor.finishDrawing(rootFrame.state));
 };
