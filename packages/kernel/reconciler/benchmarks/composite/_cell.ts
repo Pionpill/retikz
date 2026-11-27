@@ -4,9 +4,9 @@ import type { CompileOptions } from '@retikz/reconciler';
 import { expect } from 'vitest';
 import { boolean, literal, number, strictObject } from 'zod';
 
-import { benchmarkCompileOptions, createBenchmarkNode } from './_execution';
-import { compileBenchmarkSnapshot } from './_snapshot';
-import { createUpdateWorkload, updateChild } from './_update-workload';
+import { benchmarkCompileOptions, createBenchmarkNode } from '../reconcile/_execution';
+import { compileBenchmarkSnapshot } from '../reconcile/_snapshot';
+import { createUpdateWorkload, updateChild } from '../reconcile/_update-workload';
 
 /** 用同一注册契约比较直接展开与试算后重放，不引入领域算法 */
 const benchmarkComposite: AnyCompositeDefinition = defineComposite({
@@ -60,9 +60,19 @@ export const createCompositeWorkload = (count: number, replay: boolean) => {
   };
 };
 
-/** Composite 声明不接受 Weave 自身修改；通过外部生产者更新检查复用和失效 */
-export const createCompositeUpdate = (count: number, replay: boolean, change: 'paint' | 'position') => {
+/** 分别更新中间实例或外部生产者，检查独立实例、复用和失效 */
+export const createCompositeUpdate = (count: number, replay: boolean, change: 'paint' | 'position' | 'instance') => {
   const first = createCompositeScene(count, replay);
+  if (change === 'instance') {
+    const index = 1 + Math.floor(count / 2);
+    const item = { namespace: 'benchmark', type: 'cell', replay, slot: index - 1 };
+    const nextItem = { ...item, slot: count };
+    return createUpdateWorkload(
+      [first, { ...first, children: first.children.map((child, i) => (i === index ? nextItem : child)) }],
+      root => [[updateChild(root, index, nextItem)], [updateChild(root, index, item)]],
+      1,
+    );
+  }
   const original: IRNode = { ...createBenchmarkNode(0), id: 'anchor' };
   const next: IRNode =
     change === 'paint'

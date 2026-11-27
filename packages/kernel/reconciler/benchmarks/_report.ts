@@ -47,8 +47,10 @@ export const formatReconcilerComparison = (report: BenchmarkReport): string => {
   const updates = new Set(
     [...scenarios.keys()].flatMap(id => id?.match(/^reconciler\/update\/(.+)\/(auto|full)$/)?.slice(1, 2) ?? []),
   );
-  for (const key of updates)
+  for (const key of updates) {
+    if (key.startsWith('composite/') && !scenarios.has('reconciler/update/' + key + '/full')) continue;
     lines.push(`| ${key} | ${paired(`reconciler/update/${key}/auto`, `reconciler/update/${key}/full`)} |`);
+  }
   lines.push(
     '',
     '## 更新工作量（独立计时外验证）',

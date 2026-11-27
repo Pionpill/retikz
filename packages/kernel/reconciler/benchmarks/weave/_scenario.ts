@@ -6,7 +6,7 @@ import type { BenchmarkExecution } from '../../../../../scripts/benchmarks/scena
 import { ReconcilerMode, SceneReconciler } from '../../src';
 import type { CompileOptions, CompileResult, ReconcilerResult } from '../../src';
 import type { InputWeaveOwn, WeaveBatch } from '../../src/weave';
-import { benchmarkCompileOptions } from '../reconciler/_execution';
+import { benchmarkCompileOptions } from '../reconcile/_execution';
 
 /** 单次更新及独立的完整 Scene 参照，不声明内部阶段命中预期 */
 export type CacheStep = {
