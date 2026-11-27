@@ -13,8 +13,15 @@ import {
   legendDefinition,
   LegendSchema,
 } from '../src/presentation';
+import * as shapeExports from '../src/shape';
 
 describe('@retikz/standard 系列出口', () => {
+  it('不从公共入口导出 Block 内部结构', () => {
+    for (const exports of [standardExports, shapeExports, collectionExports, presentationExports]) {
+      expect(Object.keys(exports).some(name => /Block/.test(name))).toBe(false);
+    }
+  });
+
   it('公开其家族条目中的演示复合组件', () => {
     expect(axesDefinition).toBe(presentationExports.axesDefinition);
     expect(frameDefinition).toBe(presentationExports.frameDefinition);

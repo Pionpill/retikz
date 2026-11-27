@@ -11,6 +11,7 @@
 | 开放接入           | 官方与自定义能力通过 Definition 直接接入              | [021](./021-direct-definition-loading.md)、[023](./023-core-minimal-builtins-and-standard-provider-entrypoints.md)                                                                  |
 | 通用呈现           | 提供 Grid、Axes、Frame 与 Legend                      | [001](./001-grid-composite.md)、[002](./002-axes-composite.md)、[003](./003-frame-composite.md)、[014](./014-generic-legend.md)                                                     |
 | 集合结构扩展       | 提供 Matrix、Chain、Stack、Queue、Tree 的静态结构呈现 | —                                                                                                                                                                                   |
+| 结构块内部框架     | 统一上层封装的 Header、Content、Footer 与内部组合     | [044](./044-block-composition.md)                                                                                                                                                   |
 | Schema 原子组合    | 全包组合优先，保留各 owner 的领域契约                 | [035](./035-path-schema-atomic-reuse.md)                                                                                                                                            |
 | Surface 与内容组合 | 让面板承载任意已有绘图内容                            | [015](./015-presentation-composite-reuse.md)、[022](./022-arbitrary-child-surface.md)                                                                                               |
 | 图形与端点         | 补齐可选 Shape、Ribbon、Clip 与端点 Marker            | [024](./024-ribbon-as-standard-path-kind.md)、[025](./025-sector-shape-unification.md)、[027](./027-single-clip-definition.md)、[028](./028-diagram-shapes-and-endpoint-markers.md) |
@@ -94,6 +95,12 @@ Matrix 的三种输入、行列索引与单元格引用方案见 [038](./038-mat
 预期效果：
 
 面板内容可以继续使用已有绘图组件，不需要换成专用内容模型。
+
+### 结构块内部框架
+
+在 Standard 内部统一外框、Header、Content、Footer 与可选 Section，复用既有文字与布局能力。基础框架不提供公共导出、独立入口或持久化 Source，仅由后续 ClassBlock 等上层封装对外暴露能力。相关决策：[044](./044-block-composition.md)。
+
+盒外观、尺寸与排列复用 Surface / Layout / Core，Standard 不依赖 Graph 或建立平行布局机制。类图、对象图、函数实体的公共契约及旧 Graph Block 消费者整体迁移另行设计；跨包只消费上层公开能力，不依赖私有框架。
 
 ### 图形与端点
 

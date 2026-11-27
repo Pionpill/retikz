@@ -230,6 +230,7 @@
     "changelog": "Changelog",
     "changelogV01": "v0.1",
     "standardShapes": "Shapes",
+    "standardBlocks": "Blocks",
     "standardCircleEllipse": "Circle / Ellipse",
     "standardRectangle": "Rectangle",
     "standardPolygon": "Polygon",

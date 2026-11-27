@@ -3,6 +3,8 @@
 > **状态：长期分组边界已确认。** Library 包含 Standard、Extension 与 Layout；官方 Core provider 归 Extension，Tier 2 绘图组合归 Standard，排版布局归 Layout。
 >
 > 关联：[`../../AGENTS.md`](../../AGENTS.md) · [`Standard 拓展库设计`](./standard-library-design.md) · [`Layout 布局库设计`](./layout-library-design.md) · [`能力完备性与模块边界`](../../../../notes/architecture/capability-design.md)
+>
+> 规划中：[Widgets · 图内交互部件](./widgets-library-design.md)，待 Kernel 交互能力就绪后实现，不属于当前已交付的包。
 
 ---
 
